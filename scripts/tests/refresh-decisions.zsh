@@ -24,4 +24,10 @@ check "3 days left does not warn"         no  "$(should_warn $((now + 3 * day)) 
 check "1 day left warns"                  yes "$(should_warn $((now + day)) $now)"
 check "no state warns"                    yes "$(should_warn "" $now)"
 
+# The script builds the real app; the profile state is kept per bundle ID.
+check "builds the Tagwerk scheme"         Tagwerk "$SCHEME"
+check "uses the app bundle ID"            com.melvinmng.tagwerk "$BUNDLE_ID"
+check "builds from app/"                  app "$PROJECT_DIR_NAME"
+check "expiry state per bundle ID"        profile-expiry.com.melvinmng.tagwerk "${EXPIRY_FILE:t}"
+
 exit $(( failures > 0 ))
