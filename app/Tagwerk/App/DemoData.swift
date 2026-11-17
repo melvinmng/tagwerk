@@ -114,6 +114,13 @@ enum DemoData {
         try event("Klausur Statistik", uni, at(3, 10), at(3, 12))
         try event("Abgabe Hausarbeit", uni, at(40, 0), at(41, 0), allDay: true)
         try event("Teamtreffen", work, at(1, 9, 30), at(1, 11))
+        let sport = EKEvent(eventStore: store)
+        sport.calendar = work
+        sport.title = "Sport"
+        sport.startDate = at(1, 17)
+        sport.endDate = at(1, 18)
+        sport.addRecurrenceRule(EKRecurrenceRule(recurrenceWith: .weekly, interval: 1, end: nil))
+        try store.save(sport, span: .futureEvents, commit: false)
 
         func reminder(_ title: String, due: Int?, priority: Int = 0, recurrence: EKRecurrenceRule? = nil) throws {
             let item = EKReminder(eventStore: store)

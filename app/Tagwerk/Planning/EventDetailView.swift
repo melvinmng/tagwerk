@@ -1,3 +1,4 @@
+import RemindersKit
 import SwiftUI
 import TagwerkCore
 
@@ -9,13 +10,29 @@ struct EventDetailView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.openURL) private var openURL
     @State private var search = ""
+    @State private var editing = false
+    @State private var askingDelete = false
 
     var body: some View {
         NavigationStack {
             Form {
+                if let notice {
+                    Section {
+                        Label(notice.title, systemImage: notice.symbol).font(.subheadline.weight(.semibold))
+                        Text(notice.text).font(.subheadline).foregroundStyle(.secondary)
+                    }
+                }
+
                 Section {
                     Text(event.title).font(.headline)
                     Text(timeText).foregroundStyle(.secondary)
+                    if let calendar = model.calendarTitle(event.calendarID) {
+                        LabeledContent("Kalender", value: calendar + (event.isEditable ? "" : " 🔒"))
+                    }
+                    if let location = event.location, !location.isEmpty { LabeledContent("Ort", value: location) }
+                    if let notes = event.notes, !notes.isEmpty, notes != CalendarBlockRules.blockNotes {
+                        Text(notes).font(.subheadline).foregroundStyle(.secondary)
+                    }
                 }
 
                 if !event.mergedCalendarIDs.isEmpty {
@@ -34,7 +51,7 @@ struct EventDetailView: View {
                 Section("Verknüpfte Aufgabe") {
                     if let task = model.linkedTask(eventID: event.id) {
                         LabeledContent(task.title, value: originText)
-                        Button("Aufgabe öffnen") {
+                        Button("Aufgabe zeigen") {
                             dismiss()
                             onOpenTask(task)
                         }
@@ -46,8 +63,15 @@ struct EventDetailView: View {
                     }
                 }
 
+                if event.isEditable && !event.isInvitation {
+                    Section {
+                        Button("Bearbeiten") { editing = true }
+                        Button("Termin löschen", role: .destructive) { askingDelete = true }
+                    }
+                }
+
                 Section {
-                    Button("Im Kalender öffnen") {
+                    Button(event.isInvitation ? "In Kalender-App antworten" : "Im Kalender öffnen") {
                         if let url = URL(string: "calshow:\(Int(event.start.timeIntervalSinceReferenceDate))") { openURL(url) }
                     }
                 }
@@ -55,7 +79,39 @@ struct EventDetailView: View {
             .navigationTitle("Termin")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Fertig") { dismiss() } } }
+            .sheet(isPresented: $editing, onDismiss: { dismiss() }) {
+                EventEditSheet(model: model, existing: event, day: PlanDay(date: event.start, calendar: model.calendar))
+            }
+            .confirmationDialog(event.isRecurring ? "Dieser Termin wiederholt sich" : "Termin löschen?",
+                                isPresented: $askingDelete, titleVisibility: .visible) {
+                if event.isRecurring {
+                    Button("Nur diesen Termin löschen", role: .destructive) { delete(.thisEvent) }
+                    Button("Diesen und alle folgenden löschen", role: .destructive) { delete(.futureEvents) }
+                } else {
+                    Button("Löschen", role: .destructive) { delete(.thisEvent) }
+                }
+            }
         }
+    }
+
+    private func delete(_ span: EventSpan) {
+        Task {
+            await model.deleteEvent(event, span: span)
+            dismiss()
+        }
+    }
+
+    /// Why an event cannot be changed in Tagwerk (mockups J4, J5).
+    private var notice: (title: String, symbol: String, text: String)? {
+        if event.isInvitation {
+            return ("Einladung", "envelope",
+                    "Titel und Zeit legt die einladende Person fest. Zusagen oder Absagen geht nur in der Kalender-App.")
+        }
+        if !event.isEditable {
+            return ("Schreibgeschützt", "lock",
+                    "Dieser Kalender ist abonniert oder schreibgeschützt. Ändern und Löschen sind hier nicht möglich; verknüpfen geht trotzdem.")
+        }
+        return nil
     }
 
     private var taskPicker: some View {

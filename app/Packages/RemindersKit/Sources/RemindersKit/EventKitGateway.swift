@@ -286,6 +286,18 @@ extension EventKitGateway: CalendarStore {
         return Self.calendarEvent(event)
     }
 
+    public func eventCalendars() -> [ListInfo] {
+        calendars()
+    }
+
+    /// The store and event for Apple's event editor ("Weitere Optionen …"); a new event when `id` is nil.
+    public func eventForSystemEditor(id: String?, calendarID: String?) -> (store: EKEventStore, event: EKEvent) {
+        if let id, let event = ekEvent(id: id) { return (store, event) }
+        let event = EKEvent(eventStore: store)
+        event.calendar = calendarID.flatMap { store.calendar(withIdentifier: $0) } ?? store.defaultCalendarForNewEvents
+        return (store, event)
+    }
+
     public func writableCalendars() -> [ListInfo] {
         store.calendars(for: .event).filter(\.allowsContentModifications).map(Self.listInfo)
     }

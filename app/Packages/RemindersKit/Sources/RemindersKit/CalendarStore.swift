@@ -60,6 +60,8 @@ public protocol CalendarStore: AnyObject {
     func createPlanCalendar(named: String) throws -> ListInfo
     /// Event calendars that allow changes.
     func writableCalendars() -> [ListInfo]
+    /// All event calendars (names for the event detail).
+    func eventCalendars() -> [ListInfo]
     func createBlock(_ draft: BlockDraft, in calendarID: String) throws -> CalendarEvent
     func createEvent(_ draft: EventDraft) throws -> CalendarEvent
     /// Throws a conflict when `expectedVersion` is stale, `.notFound` when gone, and refuses read-only events.

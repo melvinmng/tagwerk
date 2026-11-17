@@ -10,6 +10,7 @@ struct PlanView: View {
     @State private var deleting: TaskItem?
     @State private var planningDateFor: TaskItem?
     @State private var dueDateFor: TaskItem?
+    @State private var creatingEvent = false
 
     var body: some View {
         NavigationStack {
@@ -54,6 +55,7 @@ struct PlanView: View {
                     Task { await model.taskList.reschedule(item.id, option: .date(day)) }
                 }
             }
+            .sheet(isPresented: $creatingEvent) { EventEditSheet(model: model, existing: nil, day: model.anchor) }
             .alert("Hinweis", isPresented: hasError) {
                 Button("OK") { model.clearError() }
             } message: { Text(model.lastError ?? "") }
@@ -62,10 +64,16 @@ struct PlanView: View {
 
     private var header: some View {
         VStack(spacing: 8) {
-            Picker("Ansicht", selection: $model.scope) {
-                ForEach(PlanScope.allCases, id: \.self) { Text($0.title).tag($0) }
+            HStack {
+                Picker("Ansicht", selection: $model.scope) {
+                    ForEach(PlanScope.allCases, id: \.self) { Text($0.title).tag($0) }
+                }
+                .pickerStyle(.segmented)
+                Button { creatingEvent = true } label: { Image(systemName: "plus").frame(width: 22, height: 22) }
+                    .buttonStyle(.bordered)
+                    .buttonBorderShape(.circle)
+                    .accessibilityLabel("Neuer Termin")
             }
-            .pickerStyle(.segmented)
             // The day view draws its own large header (mockup A1).
             if model.scope != .day {
                 HStack {

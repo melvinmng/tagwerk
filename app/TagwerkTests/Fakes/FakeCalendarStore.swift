@@ -34,6 +34,8 @@ final class FakeCalendarStore: CalendarStore {
 
     func writableCalendars() -> [ListInfo] { calendars }
 
+    func eventCalendars() -> [ListInfo] { calendars }
+
     func createEvent(_ draft: EventDraft) throws -> CalendarEvent {
         counter += 1
         var event = CalendarEvent(id: "event-\(counter)", externalID: nil, calendarID: draft.calendarID, title: draft.title,

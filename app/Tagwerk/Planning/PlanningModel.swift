@@ -410,6 +410,21 @@ final class PlanningModel {
 
     var writableCalendars: [ListInfo] { calendarStore.writableCalendars() }
 
+    func calendarTitle(_ id: String) -> String? {
+        calendarStore.eventCalendars().first { $0.id == id }?.title
+    }
+
+    /// "überschneidet …" when a planned event overlaps others on its day, else "passt in die freie Zeit".
+    func fitText(start: Date, end: Date, excluding eventID: String?) -> String {
+        let interval = DateInterval(start: start, end: max(start, end))
+        let overlapping = calendarStore.events(in: interval, calendarIDs: nil)
+            .filter { !$0.isAllDay && $0.id != eventID && $0.start < end && $0.end > start }
+        if let first = overlapping.first {
+            return overlapping.count == 1 ? "überschneidet „\(first.title)“" : "überschneidet \(overlapping.count) Termine"
+        }
+        return "passt in die freie Zeit"
+    }
+
     /// New events go to the plan calendar unless the user picks another one.
     var defaultEventCalendarID: String? { calendarStore.planCalendar(id: settings.planCalendarID)?.id }
 
