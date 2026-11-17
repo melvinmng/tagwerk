@@ -51,7 +51,13 @@ struct TaskListView: View {
             }
             .overlay {
                 if model.sections.isEmpty && problemSources.isEmpty {
-                    ContentUnavailableView("Keine Aufgaben", systemImage: "checkmark.circle")
+                    if !model.loadingSources.isDisjoint(with: model.filter.sources) {
+                        ProgressView("Aufgaben werden geladen …")
+                    } else if model.filter == .github {
+                        ContentUnavailableView("Keine zugewiesenen Issues in offenen Projects", systemImage: "checkmark.circle")
+                    } else {
+                        ContentUnavailableView("Keine Aufgaben", systemImage: "checkmark.circle")
+                    }
                 }
             }
             .safeAreaInset(edge: .bottom) { undoBar }
@@ -98,16 +104,8 @@ struct TaskListView: View {
                     Task { await model.reschedule(item.id, option: .date(day)) }
                 }
             }
-            .confirmationDialog("Verschieben", isPresented: isRescheduling, presenting: reschedulingItem) { item in
-                Button("Morgen") { Task { await model.reschedule(item.id, option: .tomorrow) } }
-                Button("Wochenende (Sa)") { Task { await model.reschedule(item.id, option: .weekend) } }
-                Button("Nächste Woche (Mo)") { Task { await model.reschedule(item.id, option: .nextMonday) } }
-                Button("Datum wählen …") { pickingDateFor = item }
-            }
-            .confirmationDialog(deleting.map(Self.deleteQuestion) ?? "", isPresented: isDeleting,
-                                titleVisibility: .visible, presenting: deleting) { item in
-                Button(Self.deleteTitle(for: item), role: .destructive) { Task { await model.delete(item.id) } }
-            }
+
+
             .alert("Hinweis", isPresented: hasError) {
                 Button("OK") { model.clearError() }
             } message: {
@@ -126,6 +124,17 @@ struct TaskListView: View {
                     ? await model.containers(for: item.id.source) : []
                 editing = item
             }
+        }
+        // Dialogs hang on the row, so iOS shows them next to the affected task (above or below it).
+        .confirmationDialog("Verschieben", isPresented: dialogBinding($reschedulingItem, for: item)) {
+            Button("Morgen") { Task { await model.reschedule(item.id, option: .tomorrow) } }
+            Button("Wochenende (Sa)") { Task { await model.reschedule(item.id, option: .weekend) } }
+            Button("Nächste Woche (Mo)") { Task { await model.reschedule(item.id, option: .nextMonday) } }
+            Button("Datum wählen …") { pickingDateFor = item }
+        }
+        .confirmationDialog(Self.deleteQuestion(for: item), isPresented: dialogBinding($deleting, for: item),
+                            titleVisibility: .visible) {
+            Button(Self.deleteTitle(for: item), role: .destructive) { Task { await model.delete(item.id) } }
         }
         .swipeActions(edge: .leading) {
             if isWritable(item) {
@@ -224,16 +233,14 @@ struct TaskListView: View {
         }
     }
 
-    private var isRescheduling: Binding<Bool> {
-        Binding(get: { reschedulingItem != nil }, set: { if !$0 { reschedulingItem = nil } })
+    /// True while `selection` holds `item`; closing the dialog clears the selection.
+    private func dialogBinding(_ selection: Binding<TaskItem?>, for item: TaskItem) -> Binding<Bool> {
+        Binding(get: { selection.wrappedValue?.id == item.id },
+                set: { if !$0, selection.wrappedValue?.id == item.id { selection.wrappedValue = nil } })
     }
 
     private var isSigningIn: Binding<Bool> {
         Binding(get: { gitHubLogin != nil }, set: { if !$0 { gitHubLogin = nil } })
-    }
-
-    private var isDeleting: Binding<Bool> {
-        Binding(get: { deleting != nil }, set: { if !$0 { deleting = nil } })
     }
 
     static func deleteTitle(for item: TaskItem) -> String {

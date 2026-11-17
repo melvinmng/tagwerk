@@ -31,9 +31,12 @@ public protocol TaskProvider: AnyObject {
     var offlineSince: Date? { get }
     /// Why the cache is shown when it is not a connection problem (e.g. a server error); else `nil`.
     var offlineReason: String? { get }
+    /// Last known tasks, shown at once while `openTasks` is still running (e.g. GitHub at app start).
+    var cachedTasks: [TaskItem] { get }
 }
 
 extension TaskProvider {
     public var offlineSince: Date? { nil }
     public var offlineReason: String? { nil }
+    public var cachedTasks: [TaskItem] { [] }
 }

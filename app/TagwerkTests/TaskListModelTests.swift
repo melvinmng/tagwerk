@@ -192,6 +192,24 @@ struct TaskListModelTests {
         #expect(model.items.filter { $0.id == id }.count == 1)
     }
 
+    /// At start the GitHub cache is shown at once; the slow (or offline) fetch replaces it later.
+    @Test func reload_showsCachedItemsWhileSourceLoads() async {
+        let slow = FakeTaskProvider(source: .github, tasks: [makeTask("#1 neu", source: .github)])
+        slow.cached = [makeTask("#1 aus Cache", source: .github)]
+        slow.gate = Gate()
+        let model = TaskListModel(providers: [slow], now: testNow, calendar: testCalendar())
+        let running = Task { await model.reload() }
+
+        await waitUntil { model.items.contains { $0.title == "#1 aus Cache" } }
+        #expect(model.items.map(\.title) == ["#1 aus Cache"])
+        #expect(model.loadingSources == [.github])
+
+        slow.gate?.open()
+        await running.value
+        #expect(model.items.map(\.title) == ["#1 neu"])
+        #expect(model.loadingSources.isEmpty)
+    }
+
     @Test func complete_removesItemAfterSuccess() async {
         let model = makeModel()
         await model.reload()

@@ -71,6 +71,8 @@ final class TaskListModel {
     private(set) var sourceStates: [TaskSource: SourceState] = [:]
     private(set) var lastCompleted: TaskItem?
     private(set) var lastError: String?
+    /// Sources whose current load has not finished yet.
+    private(set) var loadingSources: Set<TaskSource> = []
 
     private(set) var providers: [any TaskProvider]
     /// Sources whose sign-in ended; their state stays visible until they are registered again.
@@ -123,6 +125,10 @@ final class TaskListModel {
 
     private func load(_ provider: any TaskProvider, generation: Int) async {
         let source = provider.source
+        loadingSources.insert(source)
+        if !items.contains(where: { $0.id.source == source }) {
+            items += provider.cachedTasks  // show the last known state while loading
+        }
         let result: Result<[TaskItem], Error>
         do {
             result = .success(try await provider.openTasks())
@@ -131,6 +137,7 @@ final class TaskListModel {
         }
         // A newer load or a write to this source started meanwhile: this snapshot is stale.
         guard generations[source] == generation else { return }
+        loadingSources.remove(source)
 
         switch result {
         case .success(let loaded):
@@ -167,6 +174,7 @@ final class TaskListModel {
     /// Removes a source after a voluntary sign-out.
     func unregister(_ source: TaskSource) async {
         nextGeneration(for: source)  // results of loads still running are discarded
+        loadingSources.remove(source)
         providers.removeAll { $0.source == source }
         signedOutSources.remove(source)
         await reload()
@@ -174,6 +182,7 @@ final class TaskListModel {
 
     private func signOut(_ source: TaskSource) {
         nextGeneration(for: source)
+        loadingSources.remove(source)
         providers.removeAll { $0.source == source }
         items.removeAll { $0.id.source == source }
         signedOutSources.insert(source)

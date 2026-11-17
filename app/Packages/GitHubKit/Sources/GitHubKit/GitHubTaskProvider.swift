@@ -31,6 +31,15 @@ public final class GitHubTaskProvider: TaskProvider {
         self.now = now
     }
 
+    /// Tasks from the offline cache, available before the first request finishes.
+    public var cachedTasks: [TaskItem] {
+        if records.isEmpty, let cached = cache.load() {
+            remember(cached.records)
+            if projects.isEmpty { projects = Self.projects(in: cached.records) }
+        }
+        return displayed()
+    }
+
     /// Projects selected when the user has not chosen any (design §12.1).
     public var defaultSelectedProjectIDs: Set<String> {
         GitHubMapping.defaultSelectedProjectIDs(projects: projects, visibleIssues: Array(records.values))

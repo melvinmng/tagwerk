@@ -16,7 +16,8 @@ struct EstimateHoursTests {
         #expect(EstimateHours.minutes(fromHours: 0.8) == 45)
         #expect(EstimateHours.minutes(fromHours: 0.9) == 60)
         #expect(EstimateHours.minutes(fromHours: 0.1) == 15)
-        #expect(EstimateHours.minutes(fromHours: 30) == 1440)
+        #expect(EstimateHours.minutes(fromHours: 30) == 1800)
+        #expect(EstimateHours.minutes(fromHours: 120) == 7200)
         #expect(EstimateHours.minutes(fromHours: 0) == nil)
         #expect(EstimateHours.minutes(fromHours: nil) == nil)
     }
@@ -25,7 +26,7 @@ struct EstimateHoursTests {
         #expect(EstimateHours.stepped(minutes: nil, by: 1) == 15)
         #expect(EstimateHours.stepped(minutes: 15, by: -1) == nil)
         #expect(EstimateHours.stepped(minutes: 45, by: 1) == 60)
-        #expect(EstimateHours.stepped(minutes: 1440, by: 1) == 1440)
+        #expect(EstimateHours.stepped(minutes: 1440, by: 1) == 1455)
     }
 }
 

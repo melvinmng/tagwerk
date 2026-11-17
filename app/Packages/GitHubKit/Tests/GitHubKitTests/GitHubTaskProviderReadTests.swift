@@ -55,6 +55,13 @@ struct GitHubTaskProviderReadTests {
         #expect(provider.offlineSince == cachedAt)
     }
 
+    @Test func cachedTasks_showsCacheBeforeAnyRequest() {
+        cache.snapshot = ([makeRecord(placements: [makePlacement(makeProject(1))])], fixedNow)
+        let provider = makeProvider()
+        #expect(provider.cachedTasks.map(\.title) == ["Login-Fehler beheben"])
+        #expect(transport.requests.isEmpty)
+    }
+
     @Test func openTasks_networkErrorWithoutCache_fails() async {
         transport.enqueue("/graphql", .failure(.notConnectedToInternet))
         await #expect(throws: TaskWriteError.self) { try await makeProvider().openTasks() }

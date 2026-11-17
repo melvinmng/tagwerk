@@ -36,7 +36,10 @@ final class AppEnvironment {
         self.taskList = taskList
 
         let clientID = Bundle.main.object(forInfoDictionaryKey: "GitHubClientID") as? String ?? ""
-        let transport = URLSessionTransport()
+        // GitHub requests fail after 15 s instead of the default 60 s, so the cache appears quickly offline.
+        let configuration = URLSessionConfiguration.default
+        configuration.timeoutIntervalForRequest = 15
+        let transport = URLSessionTransport(session: URLSession(configuration: configuration))
         let loginClient = DeviceFlowClient(clientID: clientID, transport: transport)
         let tokens = TokenManager(store: KeychainCredentialStore(), client: loginClient)
         self.gitHubLoginClient = loginClient
