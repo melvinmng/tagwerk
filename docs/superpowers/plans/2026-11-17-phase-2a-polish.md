@@ -4,7 +4,7 @@
 
 **Goal:** Die Rückmeldungen aus der Geräteprüfung beheben, bevor Phase 2a gemergt wird.
 
-**Spec:** `docs/superpowers/specs/2026-11-17-phase-2-design.md`. Gestaltung der Elemente in Task 7 nach `docs/superpowers/mockups/2026-11-17-phase-2a-polish-mockups.html`, sobald freigegeben.
+**Spec:** `docs/superpowers/specs/2026-11-17-phase-2-design.md`. Gestaltung der Elemente in Task 7 nach `docs/superpowers/mockups/2026-11-17-phase-2a-polish-mockups.html`. **Freigegeben am 2026-11-17: 1A, 2A, 3A (Zahl ist eintippbar), 4A.**
 
 ## Global Constraints
 
