@@ -14,3 +14,5 @@ Secrets.xcconfig
 .build/
 .swiftpm/
 spike/build/
+
+app/build/

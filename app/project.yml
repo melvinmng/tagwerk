@@ -1,0 +1,54 @@
+name: Tagwerk
+options:
+  bundleIdPrefix: com.melvinmng.tagwerk
+  developmentLanguage: de
+  deploymentTarget:
+    iOS: "27.0"
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    SWIFT_STRICT_CONCURRENCY: complete
+    SWIFT_EMIT_LOC_STRINGS: YES
+    CODE_SIGN_STYLE: Automatic
+    DEVELOPMENT_TEAM: K44K4GXH9G
+packages:
+  TagwerkCore:
+    path: Packages/TagwerkCore
+targets:
+  Tagwerk:
+    type: application
+    platform: iOS
+    sources: [Tagwerk]
+    dependencies:
+      - package: TagwerkCore
+    info:
+      path: Tagwerk/Info.plist
+      properties:
+        CFBundleDisplayName: Tagwerk
+        UILaunchScreen: {}
+        NSRemindersFullAccessUsageDescription: "Tagwerk liest und bearbeitet deine Erinnerungen, um sie mit deinen anderen Aufgaben zusammenzuführen."
+        NSCalendarsFullAccessUsageDescription: "Tagwerk liest deinen Kalender, um deinen Tag zu planen."
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.melvinmng.tagwerk
+        GENERATE_INFOPLIST_FILE: NO
+  TagwerkTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources: [TagwerkTests]
+    dependencies:
+      - target: Tagwerk
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+        PRODUCT_BUNDLE_IDENTIFIER: com.melvinmng.tagwerk.tests
+        TEST_HOST: "$(BUILT_PRODUCTS_DIR)/Tagwerk.app/Tagwerk"
+        BUNDLE_LOADER: "$(TEST_HOST)"
+schemes:
+  Tagwerk:
+    build:
+      targets:
+        Tagwerk: all
+        TagwerkTests: [test]
+    test:
+      targets: [TagwerkTests]
