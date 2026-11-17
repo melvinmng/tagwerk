@@ -12,6 +12,7 @@ struct TaskListView: View {
     @State private var editingContainers: [TaskContainer] = []
     @State private var gitHubLogin: GitHubLoginModel?
     @State private var deleting: TaskItem?
+    @State private var showsOfflineInfo = false
     @Environment(\.openURL) private var openURL
     @Environment(AppEnvironment.self) private var environment
 
@@ -56,6 +57,7 @@ struct TaskListView: View {
             .safeAreaInset(edge: .bottom) { undoBar }
             .navigationTitle("Aufgaben")
             .toolbar {
+                ToolbarItem(placement: .topBarTrailing) { offlineIndicator }
                 ToolbarItem(placement: .primaryAction) {
                     Button { isCreating = true } label: { Label("Neue Aufgabe", systemImage: "plus") }
                 }
@@ -111,8 +113,8 @@ struct TaskListView: View {
     }
 
     private func row(_ item: TaskItem, section: TaskSection) -> some View {
-        TaskRow(item: item, section: section, now: model.now(), calendar: model.calendar) {
-            if isWritable(item) { Task { await model.complete(item.id) } }
+        TaskRow(item: item, section: section, now: model.now(), calendar: model.calendar, isReadOnly: !isWritable(item)) {
+            if isWritable(item) { Task { await model.complete(item.id) } } else { showsOfflineInfo = true }
         }
         .onTapGesture {
             Task {
@@ -145,18 +147,46 @@ struct TaskListView: View {
 
     @ViewBuilder private var undoBar: some View {
         if let completed = model.lastCompleted {
-            HStack {
-                Text("Erledigt: \(completed.title)").lineLimit(1)
-                Spacer()
-                Button("Rückgängig") { Task { await model.undoComplete() } }
-                    .fontWeight(.semibold)
+            UndoCapsule(title: completed.title, duration: 5,
+                        onUndo: { Task { await model.undoComplete() } },
+                        onExpire: { if model.lastCompleted?.id == completed.id { model.dismissUndo() } })
+                .id(completed.id)
+                .transition(.move(edge: .bottom).combined(with: .opacity))
+        }
+    }
+
+    /// Time of the cached GitHub data while GitHub is offline.
+    private var gitHubOfflineSince: Date? {
+        if case .offline(let since) = model.sourceStates[.github] { return since }
+        return nil
+    }
+
+    /// Mockup 4A: a quiet toolbar symbol; tapping it (or a read-only row) shows the details.
+    @ViewBuilder private var offlineIndicator: some View {
+        if let since = gitHubOfflineSince {
+            Button { showsOfflineInfo = true } label: {
+                Image(systemName: "icloud.slash")
+                    .symbolEffect(.bounce, value: since)
             }
-            .padding(12)
-            .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 12))
-            .padding(.horizontal)
-            .task(id: completed.id) {
-                try? await Task.sleep(for: .seconds(4))
-                if model.lastCompleted?.id == completed.id { model.dismissUndo() }
+            .tint(.secondary)
+            .accessibilityLabel("GitHub offline")
+            .accessibilityValue("Stand \(since.formatted(.dateTime.day().month(.wide).hour().minute()))")
+            .accessibilityHint("Zeigt Details")
+            .popover(isPresented: $showsOfflineInfo) {
+                VStack(alignment: .leading, spacing: 8) {
+                    Label("GitHub offline", systemImage: "icloud.slash").font(.headline)
+                    Text("Stand \(since.formatted(.dateTime.day().month().hour().minute()))")
+                    Text("GitHub-Aufgaben sind nur lesbar, bis die Verbindung zurück ist.")
+                        .font(.subheadline).foregroundStyle(.secondary)
+                    Button("Erneut versuchen") {
+                        showsOfflineInfo = false
+                        Task { await model.reload(only: [.github]) }
+                    }
+                    .buttonStyle(.borderedProminent)
+                }
+                .padding()
+                .frame(maxWidth: 300)
+                .presentationCompactAdaptation(.popover)
             }
         }
     }
@@ -175,7 +205,8 @@ struct TaskListView: View {
     private var problemSources: [TaskSource] {
         TaskSource.allCases.filter { source in
             guard model.filter.sources.contains(source), let state = model.sourceStates[source] else { return false }
-            return state != .loaded
+            // Offline is a quiet state shown in the toolbar, not a row (mockup 4A).
+            return state != .loaded && !state.isOffline
         }
     }
 
@@ -243,10 +274,7 @@ private struct SourceProblemRow: View {
                     .foregroundStyle(.secondary)
                 Button("Mit GitHub anmelden", action: signIn)
             }
-        case .offline(let since):
-            Label("\(name): Stand \(since.formatted(.dateTime.day().month().hour().minute())), offline", systemImage: "wifi.slash")
-                .foregroundStyle(.secondary)
-        case .loaded, nil:
+        case .offline, .loaded, nil:
             EmptyView()
         }
     }

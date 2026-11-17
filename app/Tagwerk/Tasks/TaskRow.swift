@@ -7,17 +7,19 @@ struct TaskRow: View {
     let section: TaskSection
     let now: Date
     let calendar: Calendar
+    var isReadOnly = false
     let onComplete: () -> Void
 
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
             Button(action: onComplete) {
-                Image(systemName: "circle")
+                Image(systemName: isReadOnly ? "circle.dashed" : "circle")
                     .font(.title3)
                     .foregroundStyle(.secondary)
+                    .opacity(isReadOnly ? 0.45 : 1)
             }
             .buttonStyle(.plain)
-            .accessibilityLabel("Erledigt")
+            .accessibilityLabel(isReadOnly ? "Nur lesbar, GitHub offline" : "Erledigt")
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(displayTitle)

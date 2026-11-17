@@ -30,11 +30,19 @@ struct TaskEditorView: View {
             Form {
                 if model.conflict != nil {
                     ConflictBanner(
-                        onReload: { Task { await model.reloadFromSource() } },
+                        sourceName: sourceName,
+                        changes: model.conflictChanges,
+                        onReload: {
+                            Task {
+                                await model.reloadFromSource()
+                                AccessibilityNotification.Announcement("Stand von \(sourceName) geladen").post()
+                            }
+                        },
                         onSaveAnyway: { Task { await finish(model.saveAnyway()) } }
                     )
                     .listRowInsets(EdgeInsets())
                     .listRowBackground(Color.clear)
+                    .transition(.opacity.combined(with: .move(edge: .top)))
                 }
                 if isReadOnly {
                     Label("Offline: Änderungen sind gerade nicht möglich.", systemImage: "wifi.slash")
@@ -75,9 +83,7 @@ struct TaskEditorView: View {
                     if model.isVisible(.due) { dueFields }
                     if model.isVisible(.priority) { PriorityPicker(priority: $model.draft.priority, choices: model.priorityChoices) }
                     if model.isVisible(.estimate) {
-                        Stepper(value: estimate, in: 0...1440, step: 15) {
-                            LabeledContent("Geschätzt", value: model.draft.estimateMinutes.map { "\($0) min" } ?? "–")
-                        }
+                        EstimateField(minutes: $model.draft.estimateMinutes)
                     }
                 }
 
@@ -111,6 +117,7 @@ struct TaskEditorView: View {
                     }
                 }
             }
+            .animation(.default, value: model.conflict == nil)
             .navigationTitle(title)
             .confirmationDialog(TaskListView.deleteQuestion(for: model.original), isPresented: $confirmsDelete,
                                 titleVisibility: .visible) {
@@ -146,6 +153,14 @@ struct TaskEditorView: View {
             DatePicker("Datum", selection: dueDate, displayedComponents: due.hasTime ? [.date, .hourAndMinute] : [.date])
                 .environment(\.calendar, calendar)
                 .environment(\.timeZone, calendar.timeZone)
+        }
+    }
+
+    private var sourceName: String {
+        switch model.original.id.source {
+        case .github: "GitHub"
+        case .reminders: "Erinnerungen"
+        case .local: "diesem Gerät"
         }
     }
 
@@ -190,13 +205,6 @@ struct TaskEditorView: View {
                 let includeTime = model.draft.due?.hasTime ?? false
                 model.draft.due = DueDate(date: date, includeTime: includeTime, calendar: calendar)
             }
-        )
-    }
-
-    private var estimate: Binding<Int> {
-        Binding(
-            get: { model.draft.estimateMinutes ?? 0 },
-            set: { model.draft.estimateMinutes = $0 == 0 ? nil : $0 }
         )
     }
 

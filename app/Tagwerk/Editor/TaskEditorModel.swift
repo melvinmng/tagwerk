@@ -38,6 +38,11 @@ final class TaskEditorModel {
 
     var canComment: Bool { addComment != nil }
 
+    /// Fields changed at the source since opening, for the conflict card.
+    var conflictChanges: [ConflictChange] {
+        conflict.map { ConflictChange.changes(original: original, draft: draft, current: $0) } ?? []
+    }
+
     /// Reminders know four levels (!!!, !!, !, none), so they offer P1–P4 without "Keine".
     var priorityChoices: [Priority?] { Self.priorityChoices(for: original.id.source) }
 
