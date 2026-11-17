@@ -21,6 +21,9 @@ struct TagwerkApp: App {
             RootView()
                 .environment(environment)
                 .task {
+                    #if DEBUG && targetEnvironment(simulator)
+                    await DemoData.seedIfRequested(environment)
+                    #endif
                     environment.startObservingChanges()
                     await environment.activateGitHubIfSignedIn()
                     environment.startReconnectWatch()
