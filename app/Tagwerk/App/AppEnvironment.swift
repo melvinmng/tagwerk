@@ -27,6 +27,26 @@ final class AppEnvironment {
         self.taskList = TaskListModel(providers: [reminders, LocalTaskProvider(context: context)])
     }
 
+    func makeSetupModel() -> SetupModel {
+        SetupModel(store: gateway, settings: settings)
+    }
+
+    /// Current authorization of a source that needs system permission; `nil` for sources without one.
+    func accessState(for source: TaskSource) -> AccessState? {
+        source == .reminders ? gateway.accessState : nil
+    }
+
+    /// Asks the system for access (only possible while it is undetermined) and reloads the list.
+    func requestAccess(for source: TaskSource) async {
+        guard source == .reminders else { return }
+        _ = try? await gateway.requestAccess()
+        await taskList.reload()
+    }
+
+    func restartSetup() {
+        settings.setupCompleted = false
+    }
+
     /// Reloads the list whenever Reminders or Calendar report a change.
     func startObservingChanges() {
         guard changeObservation == nil else { return }

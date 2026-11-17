@@ -33,9 +33,16 @@ public final class EventKitGateway: ReminderStore {
 
     public var accessState: AccessState { Self.accessState(EKEventStore.authorizationStatus(for: .reminder)) }
 
+    public var calendarAccessState: AccessState { Self.accessState(EKEventStore.authorizationStatus(for: .event)) }
+
     public func requestAccess() async throws -> AccessState {
         _ = try await store.requestFullAccessToReminders()
         return accessState
+    }
+
+    public func requestCalendarAccess() async throws -> AccessState {
+        _ = try await store.requestFullAccessToEvents()
+        return calendarAccessState
     }
 
     // MARK: Lists and calendars
@@ -44,7 +51,6 @@ public final class EventKitGateway: ReminderStore {
         store.calendars(for: .reminder).map(Self.listInfo)
     }
 
-    /// Event calendars, for the calendar selection in settings.
     public func calendars() -> [ListInfo] {
         store.calendars(for: .event).map(Self.listInfo)
     }

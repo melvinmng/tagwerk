@@ -7,6 +7,8 @@ import TagwerkCore
 @MainActor
 final class FakeReminderStore: ReminderStore {
     var accessState: AccessState = .fullAccess
+    var calendarAccessState: AccessState = .fullAccess
+    var calendarInfos: [ListInfo] = []
     var listInfos: [ListInfo] = []
     var records: [String: ReminderRecord] = [:]
     var defaultListID = "inbox"
@@ -15,7 +17,11 @@ final class FakeReminderStore: ReminderStore {
 
     func requestAccess() async throws -> AccessState { accessState }
 
+    func requestCalendarAccess() async throws -> AccessState { calendarAccessState }
+
     func lists() -> [ListInfo] { listInfos }
+
+    func calendars() -> [ListInfo] { calendarInfos }
 
     func openReminders(in listIDs: Set<String>?) async -> [ReminderRecord] {
         records.values

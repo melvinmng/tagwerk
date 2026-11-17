@@ -10,6 +10,7 @@ struct TaskListView: View {
     @State private var editing: TaskItem?
     @State private var editingContainers: [TaskContainer] = []
     @Environment(\.openURL) private var openURL
+    @Environment(AppEnvironment.self) private var environment
 
     var body: some View {
         NavigationStack {
@@ -24,9 +25,15 @@ struct TaskListView: View {
                 }
 
                 ForEach(problemSources, id: \.self) { source in
-                    SourceProblemRow(source: source, state: model.sourceStates[source]) {
-                        if let url = URL(string: UIApplication.openSettingsURLString) { openURL(url) }
-                    }
+                    SourceProblemRow(
+                        source: source,
+                        state: model.sourceStates[source],
+                        canRequest: environment.accessState(for: source) == .notDetermined,
+                        requestAccess: { Task { await environment.requestAccess(for: source) } },
+                        openSettings: {
+                            if let url = URL(string: UIApplication.openSettingsURLString) { openURL(url) }
+                        }
+                    )
                 }
 
                 ForEach(model.sections, id: \.0) { section, items in
@@ -142,6 +149,8 @@ struct TaskListView: View {
 private struct SourceProblemRow: View {
     let source: TaskSource
     let state: SourceState?
+    let canRequest: Bool
+    let requestAccess: () -> Void
     let openSettings: () -> Void
 
     var body: some View {
@@ -149,10 +158,17 @@ private struct SourceProblemRow: View {
         case .noAccess:
             VStack(alignment: .leading, spacing: 8) {
                 Text("Kein Zugriff auf \(name)").font(.headline)
-                Text("Erlaube den Vollzugriff in den Einstellungen, damit Tagwerk sie anzeigen kann.")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                Button("Einstellungen öffnen", action: openSettings)
+                if canRequest {
+                    Text("Erlaube den Zugriff, damit Tagwerk sie anzeigen kann.")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                    Button("Zugriff erlauben", action: requestAccess)
+                } else {
+                    Text("Erlaube den Vollzugriff in den Einstellungen, damit Tagwerk sie anzeigen kann.")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                    Button("Einstellungen öffnen", action: openSettings)
+                }
             }
         case .failed(let message):
             Label("\(name): \(message)", systemImage: "exclamationmark.triangle")

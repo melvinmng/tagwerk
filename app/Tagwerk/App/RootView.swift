@@ -8,11 +8,17 @@ struct RootView: View {
             TaskListView(model: environment.taskList)
                 .tabItem { Label("Aufgaben", systemImage: "checklist") }
 
-            NavigationStack {
-                Text("Einstellungen folgen hier.")
-                    .navigationTitle("Einstellungen")
-            }
-            .tabItem { Label("Einstellungen", systemImage: "gearshape") }
+            SettingsView()
+                .tabItem { Label("Einstellungen", systemImage: "gearshape") }
         }
+        .fullScreenCover(isPresented: showsSetup) {
+            SetupView(model: environment.makeSetupModel()) {
+                await environment.taskList.reload()
+            }
+        }
+    }
+
+    private var showsSetup: Binding<Bool> {
+        Binding(get: { !environment.settings.setupCompleted }, set: { _ in })
     }
 }

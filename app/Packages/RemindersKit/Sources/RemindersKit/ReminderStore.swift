@@ -4,8 +4,12 @@ import TagwerkCore
 @MainActor
 public protocol ReminderStore: AnyObject {
     var accessState: AccessState { get }
+    var calendarAccessState: AccessState { get }
     func requestAccess() async throws -> AccessState
+    func requestCalendarAccess() async throws -> AccessState
     func lists() -> [ListInfo]
+    /// Event calendars, for the calendar selection.
+    func calendars() -> [ListInfo]
     /// Incomplete reminders in the given lists; `nil` means all lists.
     func openReminders(in listIDs: Set<String>?) async -> [ReminderRecord]
     /// Fresh state of one reminder (refreshed from the store), or `nil` if it no longer exists.
