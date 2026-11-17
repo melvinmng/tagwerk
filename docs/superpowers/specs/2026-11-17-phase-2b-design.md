@@ -129,7 +129,7 @@ Sprung: vom Termin (Tagesansicht, Termin-Detail in Tagwerk) zur Aufgabe und von 
 - **Tag:** Kopfzeile mit ganztägigen Terminen und wichtigen Deadlines, Kapazität, Zeitleiste mit Terminen, Tagwerk-Blöcken und KI-Vorschlägen (lila gestrichelt, ✓/✕, Begründung aufklappbar, „Alle übernehmen“), Liste der dem Tag zugeordneten Aufgaben ohne Uhrzeit.
 - **Woche:** sieben Tage mit Kapazität, Deadline-Markierungen und zugeordneten Aufgaben; Ziehen zwischen Tagen und aus einer Ablage „Nicht eingeplant“; „Woche planen“.
 - **Monat:** Raster mit Last pro Tag und hervorgehobenen Deadlines; Tippen öffnet den Tag; „Monat planen“ verteilt auf Tage.
-- **Gedrückthalten** (Aufgabe in allen Listen und Ansichten): Heute, Morgen, Wochenende, Nächste Woche, Datum wählen …, Erledigt, Löschen bzw. „Als nicht geplant schließen“, „Mit KI planen“, „Über diese Aufgabe sprechen“, „Verknüpfte Termine“ (falls vorhanden).
+- **Gedrückthalten** (Aufgabe in allen Listen und Ansichten): Einplanen (Heute, Morgen, Wochenende, Nächste Woche, Datum wählen …), Fälligkeit verschieben …, Erledigt, Löschen bzw. „Als nicht geplant schließen“, „Mit KI planen“, „Über diese Aufgabe sprechen“, „Verknüpfte Termine“ (falls vorhanden).
 - **KI-Knopf:** schwebend, in allen Tabs, verdeckt weder ＋ noch Tab-Leiste noch Wischbereiche (Platzierung nach Mockup).
 
 ## 8. KI
@@ -141,7 +141,7 @@ ChatGPTProvider mit allen Anforderungen aus Phase 2 §7 (Modellliste, `store:fal
 ### 8.2 Planen
 
 - Auslöser: „Tag planen“, „Woche planen“, „Monat planen“, „Mit KI planen“ (eine Aufgabe).
-- Eingabe: Zeitraum, Arbeitszeit, Pausen, Puffer, Kapazität je Tag, Termine (Titel, Zeit, ganztägig, Deadline ja/nein), wiederkehrender Aufwand, offene Aufgaben (Quelle, Titel, Fälligkeit, Priorität, Aufwand, wichtig ja/nein, bereits zugeordnet), bestehende Plan-Blöcke. Obergrenze für die Zahl der Aufgaben: dem Umsetzenden überlassen (bisher 40 für einen Tag).
+- Eingabe: Zeitraum, Arbeitszeit je Wochentag, freie Tage, Pausen, Puffer, Kapazität je Tag, Termine (Titel, Zeit, ganztägig, Deadline ja/nein), wiederkehrender Aufwand, offene Aufgaben (Quelle, Titel, Fälligkeit, Priorität, Aufwand, wichtig ja/nein, bereits zugeordnet), bestehende Plan-Blöcke. Obergrenze für die Zahl der Aufgaben: dem Umsetzenden überlassen (bisher 40 für einen Tag).
 - Ausgabe per `text.format` json_schema (strict): Tag → `blocks` (taskId, start, minutes, reason); Woche/Monat → `assignments` (taskId, day, reason); jeweils `unscheduled`, `risks`, `estimates`.
 - Lokale Prüfung vor der Anzeige (ohne KI): keine Überschneidung mit Terminen oder anderen Blöcken, innerhalb der Arbeitszeit, Pausen und Puffer eingehalten, Kapazität je Tag nicht überschritten, jede taskId existiert, kein Tag nach der Fälligkeit, wenn es eine gibt. Ungültige Vorschläge landen unter „nicht eingeplant“ mit Grund.
 - Annahme einzeln oder „Alle übernehmen“: Tag → Termine im Plan-Kalender; Woche/Monat → `DayAssignment`.
@@ -170,7 +170,27 @@ Unverändert nach Phase 2 §8 und §12.8. Zusätzlich: Benachrichtigungen für w
 | **2b-2 KI** | ChatGPT-Anmeldung, Planen (Tag/Woche/Monat) mit lokaler Prüfung, Assistent-Knopf mit Funktionen, Chat zum Issue mit Repo-Funktionen, KI-Einträge im Menü, Verknüpfungsvorschläge | Mit KI planen und sprechen |
 | **2b-3 Benachrichtigungen & Hintergrund** | Phase 2 §8, Deadline-Kalender-Benachrichtigungen, `BGAppRefreshTask` | Deadline-Erinnerungen |
 
-## 11. Dem Umsetzenden überlassen
+## 11. Klärungen nach dem Builder-Check
+
+Die mit *(Nutzer)* markierten Punkte hat der Nutzer am 2026-11-17 entschieden, die mit *(Planer)* markierten habe ich festgelegt.
+
+1. **Einplanen vs. Fälligkeit** *(Nutzer)*: Ziehen in Woche/Monat und „Einplanen: Heute / Morgen / Wochenende / Nächste Woche / Datum …“ setzen nur den **Arbeitstag** (`DayAssignment`) in Tagwerk; die Fälligkeit bleibt. „Fälligkeit verschieben …“ ist ein eigener Menüpunkt und ändert sie wie in 2a (Reminders, GitHub „Due date“, lokal). Liegt der Arbeitstag nach der Fälligkeit, warnt Tagwerk (Markierung am Tag), blockiert aber nicht. *(Planer)*
+2. **Arbeitstage** *(Nutzer)*: Arbeitszeit **pro Wochentag** (Beginn, Ende oder „frei“), Mittagspause und Puffer weiterhin global. Zusätzlich einzelne Tage als frei markierbar (`DayOff`). Standard: Mo–Fr 09:00–18:00, Sa/So frei. Freie Tage haben Kapazität 0; die KI plant dort nichts ein, Ziehen ist möglich (mit Überbuchungsanzeige).
+3. **Arbeitstag und Zeitblöcke** *(Planer)*: Ein Zeitblock für eine Aufgabe setzt deren Arbeitstag auf den Tag des Blocks (bei mehreren Blöcken: der früheste noch offene). Eine Aufgabe darf **mehrere Blöcke** haben (z. B. 2 h + 1 h). „Einplanen auf einen anderen Tag“ fragt, ob die zukünftigen Blöcke mitwandern oder gelöscht werden; vergangene Blöcke bleiben.
+4. **Verknüpfte Termine zählen als Planung** *(Planer)*: Ein Termin, der mit einer Aufgabe verknüpft ist (egal in welchem Kalender), zählt als geplante Last dieser Aufgabe und nicht zusätzlich als fremde belegte Zeit. Nicht verknüpfte Termine zählen als belegte Zeit. Ganztägige, abgelehnte und als „frei“ markierte Termine verbrauchen keine Zeit. Termine aus Deadline-Kalendern mit Uhrzeit (z. B. eine Klausur) verbrauchen Zeit.
+5. **Puffer** *(Planer)*: vor und nach jedem belegenden Termin; zwischen direkt aufeinanderfolgenden Terminen nur einmal.
+6. **Epics** *(Planer)*: Ein Epic ist ein Issue mit Label `epic` (Konvention von t3gh). Zugehörigkeit über GitHubs **Sub-Issues** (Feld `parent` des Issues). GitHubKit lädt zu jedem zugewiesenen Issue sein Parent-Issue mit Titel, Labels und „Due date“ nach, auch wenn das Epic nicht dir zugewiesen ist. Epics, die dir zugewiesen sind, erscheinen normal als Aufgabe; nicht zugewiesene nur als Deadline-Markierung.
+7. **„Gehört zu einer wichtigen Deadline“** *(Planer)*: Sub-Issues gehören zu ihrem Epic; Aufgaben gehören zu einem Termin aus einem Deadline-Kalender nur über eine Verknüpfung (manuell oder bestätigter KI-Vorschlag). Lokale Regel: Eine zugehörige Aufgabe darf nicht nach dem Anker eingeplant werden (wird verworfen).
+8. **Überfällige Tageszuordnungen** *(Planer)*: Nicht erledigte Aufgaben mit einem Arbeitstag in der Vergangenheit werden nicht automatisch verschoben; sie erscheinen im Tag „Heute“ in einem Abschnitt „Von früher übrig“ mit „Auf heute“ und „Neu einplanen“. Erledigte, gelöschte oder geschlossene Aufgaben verlieren ihre Tageszuordnung.
+9. **Wiederkehrender Aufwand** *(Planer)*: Tagwerk berechnet die Vorkommen aus der `EKRecurrenceRule` der Erinnerung (täglich, wöchentlich mit Wochentagen, monatlich, mit Intervall und Ende); nicht unterstützte Regeln zeigen einen Hinweis und reservieren nur am nächsten Fälligkeitstag. Die Erinnerung selbst erscheint weiterhin in „Aufgaben“, ihre Zeit zählt aber nur einmal (über den Aufwand). Den Hinweis „erledigt“ für vorzeitig erledigte Vorkommen gibt es nicht (EventKit führt keine Vorkommens-Historie); die reservierte Zeit bleibt.
+10. **KI-Planung, Auswahl der Aufgaben** *(Planer)*: Tag: dem Tag zugeordnete, am Tag oder früher fällige und wichtige Aufgaben. Woche/Monat: nicht zugeordnete offene Aufgaben, sortiert nach Fälligkeit und Priorität; bestehende Zuordnungen bleiben unangetastet (die KI darf sie nur als Risiko nennen). Obergrenze 60 Aufgaben je Aufruf. Verwirft die lokale Prüfung Vorschläge, wird **einmal** mit den Verstößen nachgefragt; danach landen verbleibende unter „nicht eingeplant“.
+11. **Funktionen im Chat** *(Planer)*: `plan_period` startet nach Bestätigung die normale Planung (§8.2); die Vorschläge erscheinen in der Planen-Ansicht, der Chat zeigt eine Zusammenfassung mit Sprung dorthin. `update_task` kann alles, was `TaskEdit` kann (inkl. Labels, Project-Felder); Kommentare über eine eigene Funktion `add_comment` (bestätigungspflichtig).
+12. **Plan-Kalender** *(Planer)*: Standard ist ein neuer Kalender „Tagwerk“ in iCloud, falls verfügbar (damit Blöcke auf Mac und Watch sichtbar sind), sonst lokal. Fehlt er später (gelöscht), sperrt Tagwerk das Schreiben von Blöcken und bietet „Neu anlegen“ oder „Anderen wählen“ an.
+13. **Benachrichtigungen für Deadline-Kalender** *(Planer)*: Termine mit Uhrzeit: Beginn minus Vorlauf; ganztägige: am Vortag 18:00. Sie zählen zum Budget von 50. Ein eigener Schalter in den Einstellungen (Standard an), weil der Kalender selbst schon erinnern kann.
+14. **Tabs** *(Planer)*: „Planen“ ersetzt den nie gebauten „Heute“-Tab; „Tag“ mit dem heutigen Datum ist die frühere Heute-Ansicht.
+15. **Reihenfolge** *(Planer)*: Plan 2b-1 wird vollständig geplant und gebaut, 2b-2 und 2b-3 danach. Die UI-Tasks in 2b-1 folgen den freigegebenen Mockups.
+
+## 12. Dem Umsetzenden überlassen
 
 Konkrete Prompts und JSON-Schemas, Funktionssignaturen im Detail, Obergrenzen für Kontextgrößen, Darstellung innerhalb der freigegebenen Mockups, Ordnerstruktur, Testaufbau, Animationen.
 
