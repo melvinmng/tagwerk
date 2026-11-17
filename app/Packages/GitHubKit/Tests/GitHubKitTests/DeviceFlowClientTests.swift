@@ -60,6 +60,17 @@ struct DeviceFlowClientTests {
         #expect(recorder.sleeps == [.seconds(5), .seconds(12)])
     }
 
+    /// The app is suspended while the user confirms the code in Safari; the in-flight poll then
+    /// fails with a lost connection. Polling must continue instead of aborting the login.
+    @Test func poll_transientNetworkError_keepsPolling() async throws {
+        transport.enqueue("/login/oauth/access_token", .failure(.networkConnectionLost))
+        transport.enqueue("/login/oauth/access_token", .failure(.notConnectedToInternet))
+        transport.enqueueJSON("/login/oauth/access_token", #"{"access_token":"gho_test","token_type":"bearer"}"#)
+        let credentials = try await client.pollForToken(code)
+        #expect(credentials.accessToken == "gho_test")
+        #expect(transport.requests.count == 3)
+    }
+
     @Test func poll_expired_throwsExpired() async {
         transport.enqueueJSON("/login/oauth/access_token", #"{"error":"expired_token"}"#)
         await #expect(throws: GitHubAuthError.expired) { try await client.pollForToken(code) }

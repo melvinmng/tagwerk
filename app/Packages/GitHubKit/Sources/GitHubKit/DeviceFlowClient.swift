@@ -60,11 +60,18 @@ public struct DeviceFlowClient: Sendable {
         var interval = code.interval
         while now() < deadline {
             try await sleep(.seconds(interval))
-            let json = try await post(Self.tokenURL, [
-                ("client_id", clientID),
-                ("device_code", code.deviceCode),
-                ("grant_type", "urn:ietf:params:oauth:grant-type:device_code"),
-            ])
+            let json: [String: Any]
+            do {
+                json = try await post(Self.tokenURL, [
+                    ("client_id", clientID),
+                    ("device_code", code.deviceCode),
+                    ("grant_type", "urn:ietf:params:oauth:grant-type:device_code"),
+                ])
+            } catch GitHubAuthError.network {
+                // iOS suspends the app while the user confirms in Safari, which drops the
+                // in-flight request. The device code stays valid, so keep polling.
+                continue
+            }
             switch json["error"] as? String {
             case nil:
                 return try credentials(from: json)
