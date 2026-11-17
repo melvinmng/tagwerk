@@ -12,22 +12,22 @@ struct ChatGPTProbe: Probe {
 
     static func filterModels(_ body: Data) -> [String] {
         let json = try? JSONSerialization.jsonObject(with: body) as? [String: Any]
-        let models = json?["data"] as? [[String: Any]] ?? []
-        return models.filter { $0["visibility"] as? String == "list" }.compactMap { $0["id"] as? String }
+        let models = json?["models"] as? [[String: Any]] ?? []
+        return models.filter { $0["visibility"] as? String == "list" }.compactMap { $0["slug"] as? String }
     }
 
     static func allModelIDs(_ body: Data) -> [String] {
         let json = try? JSONSerialization.jsonObject(with: body) as? [String: Any]
-        return (json?["data"] as? [[String: Any]] ?? []).compactMap { $0["id"] as? String }
+        return (json?["models"] as? [[String: Any]] ?? []).compactMap { $0["slug"] as? String }
     }
 
     /// Human-readable diagnostics of the models response, used when no model is marked as listed.
     static func summarizeModels(_ body: Data) -> String {
         let json = try? JSONSerialization.jsonObject(with: body) as? [String: Any]
-        guard let models = json?["data"] as? [[String: Any]] else {
+        guard let models = json?["models"] as? [[String: Any]] else {
             return "unerwartete Antwort: " + String(decoding: body.prefix(200), as: UTF8.self)
         }
-        let entries = models.prefix(5).map { "\($0["id"] as? String ?? "?")[\($0["visibility"] as? String ?? "-")]" }
+        let entries = models.prefix(5).map { "\($0["slug"] as? String ?? "?")[\($0["visibility"] as? String ?? "-")]" }
         return "\(models.count) Modelle: " + entries.joined(separator: ", ")
     }
 

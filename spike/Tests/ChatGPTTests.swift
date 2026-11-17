@@ -83,12 +83,12 @@ final class ChatGPTAuthTests: XCTestCase {
 
 final class ChatGPTProbeTests: XCTestCase {
     func test_filterModels_keepsOnlyListedModels() {
-        let body = Data(#"{"data":[{"id":"gpt-a","visibility":"list"},{"id":"gpt-b","visibility":"hidden"},{"id":"gpt-c"}]}"#.utf8)
+        let body = Data(#"{"models":[{"slug":"gpt-a","display_name":"A","visibility":"list"},{"slug":"gpt-b","visibility":"hide"},{"slug":"gpt-c"}]}"#.utf8)
         XCTAssertEqual(ChatGPTProbe.filterModels(body), ["gpt-a"])
     }
 
     func test_summarizeModels_showsIdsAndVisibility() {
-        let body = Data(#"{"object":"list","data":[{"id":"gpt-x","visibility":"hidden"},{"id":"gpt-y"}]}"#.utf8)
+        let body = Data(#"{"models":[{"slug":"gpt-x","visibility":"hidden"},{"slug":"gpt-y"}]}"#.utf8)
         let summary = ChatGPTProbe.summarizeModels(body)
         XCTAssertTrue(summary.contains("2 Modelle"))
         XCTAssertTrue(summary.contains("gpt-x[hidden]"))
