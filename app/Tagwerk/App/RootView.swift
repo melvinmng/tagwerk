@@ -36,7 +36,7 @@ struct RootView: View {
             if let provider = environment.taskList.provider(for: task.id.source) {
                 TaskEditorView(item: task, provider: provider, calendar: environment.taskList.calendar, containers: [],
                                onDelete: { version in Task { await environment.taskList.delete(task.id, version: version) } },
-                               planned: environment.planning.plannedInfo(for: task.id),
+                               planning: environment.planning,
                                onShowDay: showDay) { saved in
                     environment.taskList.didSave(saved)
                 }

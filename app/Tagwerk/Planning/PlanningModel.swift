@@ -74,6 +74,34 @@ struct DayPlan: Identifiable, Equatable {
     let isPast: Bool
 }
 
+/// Planning changes made in the task editor; applied together with "Sichern" (design §13.4 C4, §13.8 G4).
+struct PlannedEdit: Equatable {
+    struct Block: Equatable, Identifiable {
+        var id: String { event.id }
+        let event: CalendarEvent
+        var start: Date
+        var minutes: Int
+        var isDeleted = false
+    }
+
+    struct NewBlock: Equatable, Identifiable {
+        let id = UUID()
+        var start: Date
+        var minutes: Int
+    }
+
+    var day: PlanDay?
+    /// Moving to another day moves future blocks along (otherwise they are deleted).
+    var moveBlocks = true
+    var blocks: [Block]
+    var newBlocks: [NewBlock] = []
+    /// Recurring reminders only: effort in minutes and whether it applies from this day on.
+    var recurringMinutes: Int?
+    var recurringForAll = false
+    let originalDay: PlanDay?
+    let originalRecurringMinutes: Int?
+}
+
 /// Moving a task with future time blocks needs a decision: move the blocks along or delete them.
 struct PendingBlockDecision: Equatable {
     let taskID: TaskID
@@ -209,6 +237,66 @@ final class PlanningModel {
             return
         }
         planStore.assign(id, to: day)
+        await reload()
+    }
+
+    /// Assigns with a decision made beforehand (editor switch "Zeitblöcke mitverschieben").
+    func assign(_ id: TaskID, to day: PlanDay, moveBlocks: Bool) async {
+        do {
+            if moveBlocks {
+                try blocks.moveFutureBlocks(of: id, to: day, after: now())
+            } else {
+                try blocks.deleteFutureBlocks(of: id, after: now())
+            }
+        } catch {
+            lastError = TaskListModel.message(for: error)
+        }
+        planStore.assign(id, to: day)
+        await reload()
+    }
+
+    /// Current planning of a task for the editor.
+    func plannedEdit(for task: TaskItem) -> PlannedEdit {
+        let info = plannedInfo(for: task.id)
+        let recurring = recurringItem(for: task, on: today)
+        return PlannedEdit(day: info.day, blocks: info.blocks.map {
+            PlannedEdit.Block(event: $0, start: $0.start, minutes: Int($0.end.timeIntervalSince($0.start) / 60))
+        }, recurringMinutes: recurring?.minutes, originalDay: info.day, originalRecurringMinutes: recurring?.minutes)
+    }
+
+    /// Writes only what changed: blocks first (so moving the day sees their new times), then the day and effort.
+    func applyPlanning(_ edit: PlannedEdit, for task: TaskItem) async {
+        for block in edit.blocks {
+            let original = Int(block.event.end.timeIntervalSince(block.event.start) / 60)
+            do {
+                if block.isDeleted {
+                    try calendarStore.deleteBlock(id: block.event.id, expectedVersion: block.event.version)
+                } else if block.start != block.event.start || block.minutes != original {
+                    _ = try calendarStore.moveBlock(id: block.event.id, to: block.start,
+                                                    end: block.start.addingTimeInterval(TimeInterval(max(15, block.minutes) * 60)),
+                                                    expectedVersion: block.event.version)
+                }
+            } catch {
+                lastError = TaskListModel.message(for: error)
+            }
+        }
+        for new in edit.newBlocks {
+            do {
+                try blocks.createBlock(for: task, start: new.start, minutes: max(15, new.minutes))
+            } catch {
+                lastError = TaskListModel.message(for: error)
+            }
+        }
+        if edit.day != edit.originalDay {
+            if let day = edit.day {
+                await assign(task.id, to: day, moveBlocks: edit.moveBlocks)
+            } else {
+                planStore.unassign(task.id)
+            }
+        }
+        if edit.recurringMinutes != edit.originalRecurringMinutes, recurringItem(for: task, on: today) != nil {
+            await setRecurringEffort(edit.recurringMinutes, reminderID: task.id.rawValue, day: today, forAll: edit.recurringForAll)
+        }
         await reload()
     }
 

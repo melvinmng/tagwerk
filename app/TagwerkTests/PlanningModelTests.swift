@@ -541,6 +541,41 @@ struct PlanningModelTests {
         #expect(planStore.assignment(for: id("Fahrrad")) == today)
     }
 
+    @Test func assign_withMoveBlocksFlag_movesWithoutPendingDecision() async throws {
+        let model = await model()
+        let task = try #require(taskList.items.first { $0.title == "Fahrrad" })
+        let block = try blocks.createBlock(for: task, start: at(19, 14), minutes: 60)
+        await model.assign(task.id, to: PlanDay(year: 2026, month: 11, day: 24), moveBlocks: true)
+        #expect(model.pendingBlockDecision == nil)
+        #expect(calendarStore.event(id: block.id)?.start == at(24, 14))
+    }
+
+    @Test func applyPlanning_changesBlocksDeletesAndAdds() async throws {
+        let model = await model()
+        let task = try #require(taskList.items.first { $0.title == "Fahrrad" })
+        let first = try blocks.createBlock(for: task, start: at(19, 9), minutes: 60)
+        let second = try blocks.createBlock(for: task, start: at(19, 14), minutes: 60)
+        var edit = model.plannedEdit(for: task)
+        #expect(edit.blocks.count == 2)
+        edit.blocks[0].start = at(19, 16)
+        edit.blocks[0].minutes = 90
+        edit.blocks[1].isDeleted = true
+        edit.newBlocks = [PlannedEdit.NewBlock(start: at(20, 10), minutes: 30)]
+        await model.applyPlanning(edit, for: task)
+        #expect(calendarStore.event(id: first.id)?.start == at(19, 16))
+        #expect(calendarStore.event(id: first.id)?.end == at(19, 17, 30))
+        #expect(calendarStore.event(id: second.id) == nil)
+        #expect(calendarStore.storedEvents.contains { $0.start == at(20, 10) })
+    }
+
+    @Test func applyPlanning_unchanged_writesNothing() async throws {
+        let model = await model()
+        let task = try #require(taskList.items.first { $0.title == "Fahrrad" })
+        let block = try blocks.createBlock(for: task, start: at(19, 9), minutes: 60)
+        await model.applyPlanning(model.plannedEdit(for: task), for: task)
+        #expect(calendarStore.event(id: block.id)?.version == block.version)
+    }
+
     @Test func duration_padsMinutes() {
         #expect(CapacityText.duration(125) == "2 h 05")
         #expect(CapacityText.duration(45) == "45 min")

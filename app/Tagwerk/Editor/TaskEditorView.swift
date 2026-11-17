@@ -11,17 +11,19 @@ struct TaskEditorView: View {
 
     let isReadOnly: Bool
     let onDelete: ((String) -> Void)?
-    let planned: (day: PlanDay?, blocks: [CalendarEvent])?
+    let planning: PlanningModel?
     let onShowDay: ((PlanDay) -> Void)?
+    @State private var plannedEdit: PlannedEdit?
     @State private var labelText = ""
     @State private var confirmsDelete = false
 
     init(item: TaskItem, provider: any TaskProvider, calendar: Calendar, containers: [TaskContainer],
          addComment: TaskEditorModel.CommentAction? = nil, isReadOnly: Bool = false,
-         onDelete: ((String) -> Void)? = nil, planned: (day: PlanDay?, blocks: [CalendarEvent])? = nil,
+         onDelete: ((String) -> Void)? = nil, planning: PlanningModel? = nil,
          onShowDay: ((PlanDay) -> Void)? = nil, onSaved: @escaping (TaskItem) -> Void) {
         self.onDelete = onDelete
-        self.planned = planned
+        self.planning = planning
+        _plannedEdit = State(initialValue: planning?.plannedEdit(for: item))
         self.onShowDay = onShowDay
         _model = State(initialValue: TaskEditorModel(item: item, provider: provider, addComment: addComment))
         self.calendar = calendar
@@ -102,21 +104,13 @@ struct TaskEditorView: View {
                     Toggle("Erledigt", isOn: $model.draft.isCompleted)
                 }
 
-                if let planned, planned.day != nil || !planned.blocks.isEmpty {
-                    Section("Geplant") {
-                        if let day = planned.day {
-                            Button {
-                                dismiss()
-                                onShowDay?(day)
-                            } label: {
-                                LabeledContent("Arbeitstag", value: day.startDate(in: calendar).formatted(.dateTime.weekday(.abbreviated).day().month()) + " ›")
-                            }
-                            .foregroundStyle(.primary)
-                        }
-                        ForEach(planned.blocks) { block in
-                            LabeledContent("Zeitblock", value: block.start.formatted(.dateTime.weekday(.abbreviated).day().month().hour().minute()))
-                        }
-                    }
+                if let planning, plannedEdit != nil {
+                    PlannedSection(edit: plannedBinding, calendar: calendar,
+                                   isRecurring: planning.recurringItem(for: model.original, on: planning.today) != nil,
+                                   onShowDay: onShowDay.map { show in { day in
+                                       dismiss()
+                                       show(day)
+                                   } })
                 }
 
                 if model.canComment {
@@ -197,7 +191,16 @@ struct TaskEditorView: View {
     private func finish(_ success: Bool) {
         guard success else { return }
         if let saved = model.saved { onSaved(saved) }
+        if let planning, let plannedEdit, plannedEdit != planning.plannedEdit(for: model.original) {
+            let task = model.saved ?? model.original
+            Task { await planning.applyPlanning(plannedEdit, for: task) }
+        }
         dismiss()
+    }
+
+    private var plannedBinding: Binding<PlannedEdit> {
+        Binding(get: { plannedEdit ?? PlannedEdit(day: nil, blocks: [], originalDay: nil, originalRecurringMinutes: nil) },
+                set: { plannedEdit = $0 })
     }
 
     // MARK: Bindings for optional fields

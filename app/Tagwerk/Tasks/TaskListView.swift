@@ -87,7 +87,7 @@ struct TaskListView: View {
                                    addComment: commentAction(for: provider),
                                    isReadOnly: model.sourceStates[item.id.source]?.isOffline == true,
                                    onDelete: { version in Task { await model.delete(item.id, version: version) } },
-                                   planned: environment.planning.plannedInfo(for: item.id),
+                                   planning: environment.planning,
                                    onShowDay: onShowDay) { saved in
                         model.didSave(saved)
                     }
