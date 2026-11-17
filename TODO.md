@@ -8,7 +8,7 @@
 GitHub-Konto: @melvinmng · bestätigt zuweisbar · geprüft 2026-11-17 · ich
 
 - [ ] [#1](https://github.com/melvinmng/tagwerk/issues/1) Phase 1: Machbarkeit auf dem iPhone nachweisen {status: In review; prio: P1 (Very High)}
-- [ ] [#2](https://github.com/melvinmng/tagwerk/issues/2) Phase 2: Aufgaben, Kalender und KI-Tagesplan umsetzen {status: Backlog; prio: P2 (High)}
+- [ ] [#2](https://github.com/melvinmng/tagwerk/issues/2) Phase 2: Aufgaben, Kalender und KI-Tagesplan umsetzen {status: In progress; prio: P2 (High)}
 - [ ] [#3](https://github.com/melvinmng/tagwerk/issues/3) Phase 3: Ernährung, Trinken und Training erfassen {status: Backlog; prio: P3 (Medium)}
 - [ ] [#4](https://github.com/melvinmng/tagwerk/issues/4) Phase 4: Widget, Kurzbefehle und Wochenrückblick ergänzen {status: Backlog; prio: P4 (Low)}
 - [x] [#5](https://github.com/melvinmng/tagwerk/issues/5) Test-App mit XcodeGen anlegen und signieren {status: Done; prio: P1 (Very High); aufwand: 1h; epic: #1}
@@ -25,10 +25,12 @@ GitHub-Konto: @melvinmng · bestätigt zuweisbar · geprüft 2026-11-17 · ich
 
 _Automatisch aus [Tagwerk](https://github.com/users/melvinmng/projects/17) erzeugt. Nicht von Hand bearbeiten; Aufgaben oben unter den Personen pflegen._
 
-### Backlog (3)
-- [#2](https://github.com/melvinmng/tagwerk/issues/2) Phase 2: Aufgaben, Kalender und KI-Tagesplan umsetzen · @melvinmng · Prio P2 (High)
+### Backlog (2)
 - [#3](https://github.com/melvinmng/tagwerk/issues/3) Phase 3: Ernährung, Trinken und Training erfassen · @melvinmng · Prio P3 (Medium)
 - [#4](https://github.com/melvinmng/tagwerk/issues/4) Phase 4: Widget, Kurzbefehle und Wochenrückblick ergänzen · @melvinmng · Prio P4 (Low)
+
+### In Arbeit (1)
+- [#2](https://github.com/melvinmng/tagwerk/issues/2) Phase 2: Aufgaben, Kalender und KI-Tagesplan umsetzen · @melvinmng · Prio P2 (High)
 
 ### In Prüfung (1)
 - [#1](https://github.com/melvinmng/tagwerk/issues/1) Phase 1: Machbarkeit auf dem iPhone nachweisen · @melvinmng · Prio P1 (Very High)
