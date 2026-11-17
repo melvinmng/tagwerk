@@ -30,11 +30,14 @@ enum TimelineRow: Identifiable, Equatable {
     case event(CalendarEvent)
     case block(CalendarEvent, TaskID)
     case lunch(startMinutes: Int, minutes: Int)
+    /// A free stretch to drop tasks into (list mode, design §13.4 C2).
+    case gap(Range<Int>)
 
     var id: String {
         switch self {
         case .event(let event), .block(let event, _): event.id
         case .lunch: "lunch"
+        case .gap(let range): "gap-\(range.lowerBound)"
         }
     }
 
@@ -42,6 +45,7 @@ enum TimelineRow: Identifiable, Equatable {
         switch self {
         case .event(let event), .block(let event, _): event.title
         case .lunch: "Mittagspause"
+        case .gap: "frei"
         }
     }
 }
@@ -303,12 +307,45 @@ final class PlanningModel {
     }
 
     /// All-day events of the day; all-day events from deadline calendars appear as deadlines instead.
+    /// The timeline with free stretches between the rows, ordered by start time.
+    func timelineWithGaps(for plan: DayPlan) -> [TimelineRow] {
+        let dayStart = plan.day.startDate(in: calendar)
+        func start(_ row: TimelineRow) -> Int {
+            switch row {
+            case .event(let event), .block(let event, _): minutes(event.start, from: dayStart)
+            case .lunch(let start, _): start
+            case .gap(let range): range.lowerBound
+            }
+        }
+        let rows = timeline(for: plan) + gaps(for: plan).map(TimelineRow.gap)
+        return rows.enumerated().sorted { lhs, rhs in
+            let left = start(lhs.element), right = start(rhs.element)
+            return left != right ? left < right : lhs.offset < rhs.offset
+        }
+        .map(\.element)
+    }
+
+    /// Dropping a task on a free stretch or the hour grid creates a block there (effort or 60 min).
+    func dropTask(key: String, atMinutes startMinutes: Int, on day: PlanDay) async {
+        guard let id = TaskID(key: key), let task = taskList.items.first(where: { $0.id == id }) else { return }
+        let length = task.estimateMinutes ?? 60
+        let range = clampedBlock(startMinutes: snapped(minutes: startMinutes), duration: length, dayLength: dayLength(day))
+        await createBlock(for: task, start: day.startDate(in: calendar).addingTimeInterval(TimeInterval(range.lowerBound * 60)),
+                          minutes: range.count)
+    }
+
     func allDayEvents(for plan: DayPlan) -> [CalendarEvent] {
         let deadlineCalendars = Set(settings.deadlineCalendarIDs ?? [])
         return (plan.events + plan.blocks).filter { $0.isAllDay && !deadlineCalendars.contains($0.calendarID) }
     }
 
     // MARK: Time blocks (design §13.4)
+
+    /// The day timeline as an hour grid instead of rows (switch in the day view, stored in the settings).
+    var showsHourGrid: Bool {
+        get { settings.dayTimelineStyle == "grid" }
+        set { settings.dayTimelineStyle = newValue ? "grid" : "list" }
+    }
 
     /// Moves a block to `toStartMinutes` (snapped to 15 min, kept inside the day) on `day`, keeping its length.
     /// Moving to another day also moves the task's planned day.

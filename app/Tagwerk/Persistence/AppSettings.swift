@@ -29,6 +29,8 @@ final class AppSettings {
     var defaultTaskMinutes: Int = 30
     /// Shows identical events from several calendars as one row (design §13.11).
     var mergeDuplicateEvents: Bool = true
+    /// Day timeline as rows with free stretches ("list") or as a to-scale hour grid ("grid"), design §13.4.
+    var dayTimelineStyle: String = "list"
 
     var weekSchedule: WeekSchedule {
         get { weekScheduleData.flatMap { try? JSONDecoder().decode(WeekSchedule.self, from: $0) } ?? .standard }

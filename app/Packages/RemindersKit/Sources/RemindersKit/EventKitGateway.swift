@@ -51,6 +51,11 @@ public final class EventKitGateway: ReminderStore {
         store.calendars(for: .reminder).map(Self.listInfo)
     }
 
+    /// Drops cached calendars and items, e.g. after another `EKEventStore` created calendars.
+    public func discardCachedData() {
+        store.reset()
+    }
+
     public func calendars() -> [ListInfo] {
         store.calendars(for: .event).map(Self.listInfo)
     }

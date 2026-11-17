@@ -24,6 +24,7 @@ enum DemoData {
             }
             try wipe(store)
             let ids = try seed(store)
+            environment.gateway.discardCachedData()
             let settings = environment.settings
             settings.setupCompleted = true
             settings.selectedCalendarIDs = nil
@@ -31,10 +32,25 @@ enum DemoData {
             settings.planCalendarID = ids.planCalendar
             settings.deadlineCalendarIDs = [ids.deadlineCalendar]
             await environment.taskList.reload()
+            await planSamples(environment)
             await environment.planning.reload()
             print("DemoData: sample data created")
         } catch {
             print("DemoData: seeding failed: \(error)")
+        }
+    }
+
+    /// Tomorrow: "Pretest vorbereiten" with a 60-minute block at 14:00 and "Einkaufen" planned without time.
+    private static func planSamples(_ environment: AppEnvironment) async {
+        let planning = environment.planning
+        let tomorrow = planning.today.adding(days: 1, calendar: planning.calendar)
+        let items = environment.taskList.items
+        if let pretest = items.first(where: { $0.title == "Pretest vorbereiten" }) {
+            let start = tomorrow.startDate(in: planning.calendar).addingTimeInterval(14 * 3600)
+            await planning.createBlock(for: pretest, start: start, minutes: 60)
+        }
+        if let shopping = items.first(where: { $0.title == "Einkaufen" }) {
+            await planning.assign(shopping.id, to: tomorrow)
         }
     }
 

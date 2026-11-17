@@ -523,6 +523,24 @@ struct PlanningModelTests {
         #expect(model.anchor == PlanDay(year: 2026, month: 12, day: 12))
     }
 
+    @Test func timelineWithGaps_insertsFreeStretchesInOrder() async throws {
+        calendarStore.storedEvents = [CalendarEvent(id: "e", externalID: nil, calendarID: "work", title: "Vorlesung",
+                                                    start: at(18, 14), end: at(18, 15), isAllDay: false, url: nil,
+                                                    isBusy: true, version: "1")]
+        let model = await model()
+        let rows = model.timelineWithGaps(for: try #require(model.days.first))
+        #expect(rows.map(\.label) == ["frei", "Mittagspause", "frei", "Vorlesung", "frei"])
+    }
+
+    @Test func dropTask_intoGap_createsBlockWithEstimate() async throws {
+        let model = await model()
+        await model.dropTask(key: id("Fahrrad").key, atMinutes: 13 * 60, on: today)
+        let block = try #require(calendarStore.storedEvents.first)
+        #expect(block.start == at(18, 13))
+        #expect(block.end == at(18, 14))  // no estimate: 60 min
+        #expect(planStore.assignment(for: id("Fahrrad")) == today)
+    }
+
     @Test func duration_padsMinutes() {
         #expect(CapacityText.duration(125) == "2 h 05")
         #expect(CapacityText.duration(45) == "45 min")

@@ -10,6 +10,8 @@ struct DayView: View {
     let menuActions: (TaskItem) -> TaskMenuActions
     @State private var editingHours = false
     @State private var blockFor: TaskItem?
+    @State private var movingBlock: CalendarEvent?
+    @State private var showsGrid = false
 
     var body: some View {
         if let plan = model.days.first {
@@ -44,10 +46,29 @@ struct DayView: View {
                     .listRowBackground(Color.clear)
                 }
 
-                Section("Ablauf") {
-                    let rows = model.timeline(for: plan)
-                    if rows.isEmpty { Text("Keine Termine").foregroundStyle(.secondary) }
-                    ForEach(rows) { row in timelineRow(row, plan: plan) }
+                Section {
+                    if showsGrid {
+                        HourGrid(model: model, plan: plan, onOpenEvent: onOpenEvent) { block, taskID in
+                            blockMenu(block, taskID)
+                        }
+                        .listRowInsets(EdgeInsets(top: 8, leading: 12, bottom: 8, trailing: 12))
+                    } else {
+                        let rows = model.timelineWithGaps(for: plan)
+                        if rows.isEmpty { Text("Keine Termine").foregroundStyle(.secondary) }
+                        ForEach(rows) { row in timelineRow(row, plan: plan) }
+                    }
+                } header: {
+                    HStack {
+                        Text("Ablauf")
+                        Spacer()
+                        Button {
+                            showsGrid.toggle()
+                            model.showsHourGrid = showsGrid
+                        } label: {
+                            Image(systemName: showsGrid ? "list.bullet" : "calendar.day.timeline.left")
+                        }
+                        .accessibilityLabel(showsGrid ? "Als Liste zeigen" : "Als Stundenraster zeigen")
+                    }
                 }
 
                 if !plan.recurring.isEmpty {
@@ -113,6 +134,8 @@ struct DayView: View {
                     Task { await model.reload() }
                 }
             }
+            .onAppear { showsGrid = model.showsHourGrid }
+            .sheet(item: $movingBlock) { block in BlockDaySheet(block: block, model: model) }
             .sheet(item: $blockFor) { task in
                 BlockSheet(task: task, day: plan.day, hours: model.workHours(on: plan.day), now: model.now(),
                            calendar: model.calendar) { start, minutes in
@@ -145,6 +168,10 @@ struct DayView: View {
         }
         .foregroundStyle(.primary)
         .accessibilityHint("Arbeitszeit an diesem Tag ändern")
+    }
+
+    private func blockMenu(_ block: CalendarEvent, _ taskID: TaskID) -> BlockMenu {
+        BlockMenu(block: block, taskID: taskID, model: model, onShowTask: onOpenTask) { movingBlock = $0 }
     }
 
     /// The shared menu plus the day-only entries that replaced the swipe actions.
@@ -181,17 +208,40 @@ struct DayView: View {
             }
             .foregroundStyle(.primary)
         case .block(let event, let taskID):
-            Button { onOpenEvent(event) } label: {
+            Menu { blockMenu(event, taskID) } label: {
                 TimelineLine(time: event.start, title: event.title,
-                             detail: CapacityText.duration(Int(event.end.timeIntervalSince(event.start) / 60)) + " · verknüpft",
+                             detail: CapacityText.duration(Int(event.end.timeIntervalSince(event.start) / 60)) + " · Zeitblock",
                              color: .green)
             }
             .foregroundStyle(.primary)
-            .contextMenu { Button("Aufgabe öffnen") { onOpenTask(taskID) } }
+        case .gap(let range):
+            GapLine(text: "frei \(clock(range.lowerBound, on: plan.day))–\(clock(range.upperBound, on: plan.day))")
+                .dropDestination(for: String.self) { keys, _ in
+                    guard let key = keys.first else { return false }
+                    Task { await model.dropTask(key: key, atMinutes: range.lowerBound, on: plan.day) }
+                    return true
+                }
         case .lunch(let start, let minutes):
             TimelineLine(time: plan.day.startDate(in: model.calendar).addingTimeInterval(TimeInterval(start * 60)),
                          title: "Mittagspause", detail: CapacityText.duration(minutes), color: .gray)
         }
+    }
+}
+
+/// A free stretch in the timeline; tasks can be dropped on it (mockup C2).
+private struct GapLine: View {
+    let text: String
+
+    var body: some View {
+        HStack(spacing: 10) {
+            Color.clear.frame(width: 48)
+            RoundedRectangle(cornerRadius: 2).strokeBorder(.secondary, style: StrokeStyle(lineWidth: 1, dash: [3])).frame(width: 4)
+            Text(text).font(.caption).foregroundStyle(.secondary)
+            Spacer()
+            Image(systemName: "plus.circle").font(.caption).foregroundStyle(.tertiary)
+        }
+        .frame(minHeight: 24)
+        .accessibilityLabel(text + ", Aufgabe hier ablegen")
     }
 }
 
