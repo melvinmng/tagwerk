@@ -34,6 +34,16 @@ GitHub-Konto: @melvinmng · bestätigt zuweisbar · geprüft 2026-11-17 · ich
 - [x] [#29](https://github.com/melvinmng/tagwerk/issues/29) GitHub-Oberfläche bauen {status: Done; prio: P2 (High); aufwand: 3h; epic: #2}
 - [x] [#30](https://github.com/melvinmng/tagwerk/issues/30) GitHub auf dem iPhone prüfen {status: Done; prio: P2 (High); aufwand: 1h; epic: #2}
 - [x] [#32](https://github.com/melvinmng/tagwerk/issues/32) test234 {status: Done; prio: P1 (Very High); fällig: 2026-11-17; aufwand: 1h 30m}
+- [ ] [#34](https://github.com/melvinmng/tagwerk/issues/34) Tage, Arbeitszeit und Kapazität berechnen {status: In review; prio: P2 (High); aufwand: 3h; epic: #2}
+- [ ] [#35](https://github.com/melvinmng/tagwerk/issues/35) Wichtige Deadlines und Epics erkennen {status: In review; prio: P2 (High); aufwand: 3h; epic: #2}
+- [ ] [#36](https://github.com/melvinmng/tagwerk/issues/36) Termine lesen und Zeitblöcke schreiben {status: In review; prio: P2 (High); aufwand: 3h; epic: #2}
+- [ ] [#37](https://github.com/melvinmng/tagwerk/issues/37) Arbeitstage und Planungs-Einstellungen speichern {status: In review; prio: P2 (High); aufwand: 3h; epic: #2}
+- [ ] [#38](https://github.com/melvinmng/tagwerk/issues/38) Zeitblöcke und Verknüpfungen umsetzen {status: In review; prio: P2 (High); aufwand: 3h; epic: #2}
+- [ ] [#39](https://github.com/melvinmng/tagwerk/issues/39) Wiederkehrenden Aufwand reservieren {status: In review; epic: #2; prio: P2 (High); aufwand: 3h}
+- [ ] [#40](https://github.com/melvinmng/tagwerk/issues/40) Planungsmodell für Tag, Woche und Monat bauen {status: In review; prio: P2 (High); aufwand: 4h; epic: #2}
+- [ ] [#41](https://github.com/melvinmng/tagwerk/issues/41) Tab Planen mit Tag, Woche und Monat bauen {status: In review; prio: P2 (High); aufwand: 6h; epic: #2}
+- [ ] [#42](https://github.com/melvinmng/tagwerk/issues/42) Kontextmenü, Termin-Sprung und Aufwand-Sheet bauen {status: In review; prio: P2 (High); aufwand: 3h; epic: #2}
+- [ ] [#43](https://github.com/melvinmng/tagwerk/issues/43) Planen einrichten und auf dem iPhone prüfen {status: In progress; prio: P2 (High); aufwand: 4h; epic: #2}
 
 ## Notizen
 
@@ -46,8 +56,20 @@ _Automatisch aus [Tagwerk](https://github.com/users/melvinmng/projects/17) erzeu
 - [#3](https://github.com/melvinmng/tagwerk/issues/3) Phase 3: Ernährung, Trinken und Training erfassen · @melvinmng · Prio P3 (Medium)
 - [#4](https://github.com/melvinmng/tagwerk/issues/4) Phase 4: Widget, Kurzbefehle und Wochenrückblick ergänzen · @melvinmng · Prio P4 (Low)
 
-### In Arbeit (1)
+### In Arbeit (2)
 - [#2](https://github.com/melvinmng/tagwerk/issues/2) Phase 2: Aufgaben, Kalender und KI-Tagesplan umsetzen · @melvinmng · Prio P2 (High)
+- [#43](https://github.com/melvinmng/tagwerk/issues/43) Planen einrichten und auf dem iPhone prüfen · @melvinmng · Prio P2 (High) · 4h
+
+### In Prüfung (9)
+- [#34](https://github.com/melvinmng/tagwerk/issues/34) Tage, Arbeitszeit und Kapazität berechnen · @melvinmng · Prio P2 (High) · 3h
+- [#35](https://github.com/melvinmng/tagwerk/issues/35) Wichtige Deadlines und Epics erkennen · @melvinmng · Prio P2 (High) · 3h
+- [#36](https://github.com/melvinmng/tagwerk/issues/36) Termine lesen und Zeitblöcke schreiben · @melvinmng · Prio P2 (High) · 3h
+- [#37](https://github.com/melvinmng/tagwerk/issues/37) Arbeitstage und Planungs-Einstellungen speichern · @melvinmng · Prio P2 (High) · 3h
+- [#38](https://github.com/melvinmng/tagwerk/issues/38) Zeitblöcke und Verknüpfungen umsetzen · @melvinmng · Prio P2 (High) · 3h
+- [#39](https://github.com/melvinmng/tagwerk/issues/39) Wiederkehrenden Aufwand reservieren · @melvinmng · Prio P2 (High) · 3h
+- [#40](https://github.com/melvinmng/tagwerk/issues/40) Planungsmodell für Tag, Woche und Monat bauen · @melvinmng · Prio P2 (High) · 4h
+- [#41](https://github.com/melvinmng/tagwerk/issues/41) Tab Planen mit Tag, Woche und Monat bauen · @melvinmng · Prio P2 (High) · 6h
+- [#42](https://github.com/melvinmng/tagwerk/issues/42) Kontextmenü, Termin-Sprung und Aufwand-Sheet bauen · @melvinmng · Prio P2 (High) · 3h
 
 ### Nicht zugeordnet (0)
 
