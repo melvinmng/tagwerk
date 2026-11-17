@@ -31,6 +31,8 @@ final class AppSettings {
     var mergeDuplicateEvents: Bool = true
     /// Day timeline as rows with free stretches ("list") or as a to-scale hour grid ("grid"), design §13.4.
     var dayTimelineStyle: String = "list"
+    /// The day opens in the row list instead of the hour grid (grid is the default, design §13.15 S1).
+    var prefersTimelineList: Bool = false
 
     var weekSchedule: WeekSchedule {
         get { weekScheduleData.flatMap { try? JSONDecoder().decode(WeekSchedule.self, from: $0) } ?? .standard }

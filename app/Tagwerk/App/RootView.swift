@@ -44,9 +44,8 @@ struct RootView: View {
             }
         }
         .sheet(item: $openEvent) { event in
-            EventDetailView(event: event, model: environment.planning) { task in
-                showTask(task.id)
-            }
+            EntrySheet(entry: .event(event, environment.planning.linkedTask(eventID: event.id)?.id),
+                       model: environment.planning, onShowTask: showTask)
         }
         .sheet(item: $recurringEdit) { edit in
             RecurringEffortSheet(item: edit.item, day: edit.day, model: environment.planning)

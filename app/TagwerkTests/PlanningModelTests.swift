@@ -772,6 +772,38 @@ struct PlanningModelTests {
         #expect(try #require(model.days.first).events.count == 2)
     }
 
+    @Test func setTime_foreignWritableEvent_snapsAndKeepsFields() async throws {
+        var seminar = CalendarEvent(id: "s", externalID: nil, calendarID: "work", title: "Seminar", start: at(18, 10),
+                                    end: at(18, 11), isAllDay: false, url: nil, isBusy: true, version: "1")
+        seminar.notes = "Raum 2.14"
+        calendarStore.storedEvents = [seminar]
+        let model = await model()
+        await model.setTime(of: seminar, startMinutes: 14 * 60 + 8, endMinutes: 15 * 60 + 53, span: .thisEvent)
+        let moved = try #require(calendarStore.event(id: "s"))
+        #expect(moved.start == at(18, 14, 15))
+        #expect(moved.end == at(18, 16))
+        #expect(moved.notes == "Raum 2.14")
+    }
+
+    @Test func setTime_keepsAtLeastQuarterHour() async throws {
+        let model = await model()
+        let task = try #require(taskList.items.first { $0.title == "Fahrrad" })
+        let block = try blocks.createBlock(for: task, start: at(18, 14), minutes: 60)
+        await model.setTime(of: block, startMinutes: 14 * 60, endMinutes: 14 * 60 + 3, span: .thisEvent)
+        #expect(calendarStore.event(id: block.id)?.end == at(18, 14, 15))
+    }
+
+    @Test func canDrag_onlyWritableTimedEvents() async throws {
+        var invitation = CalendarEvent(id: "i", externalID: nil, calendarID: "work", title: "Runde", start: at(18, 10),
+                                       end: at(18, 11), isAllDay: false, url: nil, isBusy: true, version: "1")
+        invitation.isInvitation = true
+        let own = CalendarEvent(id: "o", externalID: nil, calendarID: "work", title: "Lernen", start: at(18, 10),
+                                end: at(18, 11), isAllDay: false, url: nil, isBusy: true, version: "1")
+        let model = await model()
+        #expect(model.canDrag(own))
+        #expect(!model.canDrag(invitation))
+    }
+
     @Test func duration_padsMinutes() {
         #expect(CapacityText.duration(125) == "2 h 05")
         #expect(CapacityText.duration(45) == "45 min")

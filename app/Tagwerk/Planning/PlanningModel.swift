@@ -494,6 +494,28 @@ final class PlanningModel {
         return (plan.events + plan.blocks).filter { $0.isAllDay && !deadlineCalendars.contains($0.calendarID) }
     }
 
+    /// Events whose time can change by dragging: writable, timed and not someone else's invitation.
+    func canDrag(_ event: CalendarEvent) -> Bool {
+        event.isEditable && !event.isInvitation && !event.isAllDay
+    }
+
+    /// Sets start and end of an event on its day in one write (snapped to 15 min, at least 15 min, inside the
+    /// day). Other fields stay. A Tagwerk block keeps its task's planned day in step.
+    func setTime(of event: CalendarEvent, startMinutes: Int, endMinutes: Int, span: EventSpan) async {
+        let day = PlanDay(date: event.start, calendar: calendar)
+        let start = snapped(minutes: startMinutes)
+        let range = clampedBlock(startMinutes: start, duration: snapped(minutes: endMinutes) - start, dayLength: dayLength(day))
+        var draft = EventDraft(event)
+        draft.start = day.startDate(in: calendar).addingTimeInterval(TimeInterval(range.lowerBound * 60))
+        draft.end = draft.start.addingTimeInterval(TimeInterval(range.count * 60))
+        do {
+            _ = try calendarStore.updateEvent(id: event.id, with: draft, span: span, expectedVersion: event.version)
+        } catch {
+            lastError = TaskListModel.message(for: error)
+        }
+        await reload()
+    }
+
     // MARK: Lunch per day (design §13.15 L1)
 
     /// The lunch break of a day: a day's own value, else the setting; `nil` without a break.
@@ -579,8 +601,8 @@ final class PlanningModel {
 
     /// The day timeline as an hour grid instead of rows (switch in the day view, stored in the settings).
     var showsHourGrid: Bool {
-        get { settings.dayTimelineStyle == "grid" }
-        set { settings.dayTimelineStyle = newValue ? "grid" : "list" }
+        get { !settings.prefersTimelineList }
+        set { settings.prefersTimelineList = !newValue }
     }
 
     /// Moves a block to `toStartMinutes` (snapped to 15 min, kept inside the day) on `day`, keeping its length.
