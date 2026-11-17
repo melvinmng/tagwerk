@@ -1,13 +1,16 @@
 # Automatische Neuinstallation
 
-Mit dem kostenlosen Apple-Account läuft das Provisioning-Profil nach 7 Tagen ab. `refresh-install.sh` baut die App ab Tag 5 neu und installiert sie per Kabel oder WLAN auf das iPhone. Die Daten in der App bleiben dabei erhalten.
+Mit dem kostenlosen Apple-Account läuft das Provisioning-Profil nach 7 Tagen ab. `refresh-install.sh` baut die App neu, sobald das installierte Profil weniger als 3 Tage gültig ist. Vor jedem Build löscht es das zwischengespeicherte Profil, damit Xcode ein frisches 7-Tage-Profil ausstellt. Danach installiert es die App und installiert sie per Kabel oder WLAN auf das iPhone. Die Daten in der App bleiben dabei erhalten.
 
 ## Funktionsweise
 
 - Ein LaunchAgent startet das Skript stündlich und beim Anmelden. Steht keine Installation an, endet es sofort.
 - Gebaut wird aus einem eigenen Klon außerhalb von iCloud (`~/Library/Developer/Tagwerk/src`). Prozesse, die launchd startet, dürfen iCloud Drive nicht ohne Weiteres lesen, außerdem kann iCloud Dateien auslagern.
 - Das Protokoll steht in `~/Library/Logs/Tagwerk/refresh.log`, die Build-Ausgabe in `build.log`.
-- Ist das iPhone ab Tag 6 nicht erreichbar, erscheint eine Mitteilung auf dem Mac.
+- Gebaut wird der Branch `main` (`TAGWERK_BRANCH` überschreibt das).
+- Jeder Fehler (Gerät nicht erreichbar, Git, Build, Signierung, Installation) erzeugt eine Mitteilung auf dem Mac, sobald das Profil weniger als 2 Tage gültig ist.
+- Zustand: `~/Library/Application Support/Tagwerk/profile-expiry` (Ablauf des installierten Profils, Unix-Zeit).
+- Tests der Entscheidungslogik: `zsh scripts/tests/refresh-decisions.zsh`.
 
 ## Voraussetzungen
 
