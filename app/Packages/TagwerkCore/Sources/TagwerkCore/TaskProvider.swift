@@ -29,8 +29,11 @@ public protocol TaskProvider: AnyObject {
     func delete(_ id: TaskID, expectedVersion: String?) async throws
     /// Time of the cached data when the source could only be read offline; `nil` when live.
     var offlineSince: Date? { get }
+    /// Why the cache is shown when it is not a connection problem (e.g. a server error); else `nil`.
+    var offlineReason: String? { get }
 }
 
 extension TaskProvider {
     public var offlineSince: Date? { nil }
+    public var offlineReason: String? { nil }
 }

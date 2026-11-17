@@ -40,8 +40,9 @@ enum SourceState: Equatable {
     case loaded, noAccess, failed(String)
     /// The sign-in ended; the source was removed until the user signs in again.
     case signedOut
-    /// Shown from the offline cache with the time of the cached data.
-    case offline(since: Date)
+    /// Shown from the offline cache with the time of the cached data and, for errors other than a
+    /// missing connection, the reason.
+    case offline(since: Date, reason: String? = nil)
 
     var isOffline: Bool {
         if case .offline = self { return true }
@@ -135,7 +136,7 @@ final class TaskListModel {
         case .success(let loaded):
             items.removeAll { $0.id.source == source }
             items += loaded
-            sourceStates[source] = provider.offlineSince.map { .offline(since: $0) } ?? .loaded
+            sourceStates[source] = provider.offlineSince.map { .offline(since: $0, reason: provider.offlineReason) } ?? .loaded
         case .failure(TaskWriteError.signedOut):
             signOut(source)
         case .failure(TaskWriteError.accessDenied):

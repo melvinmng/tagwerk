@@ -84,10 +84,21 @@ struct GitHubTaskProviderReadTests {
         #expect(provider.offlineSince == fixedNow.addingTimeInterval(-60))
     }
 
-    @Test func openTasks_graphQLError_returnsCache() async throws {
+    @Test func openTasks_graphQLError_returnsCacheWithReason() async throws {
         cache.snapshot = ([makeRecord(placements: [makePlacement(makeProject(1))])], fixedNow)
         transport.enqueueJSON("/graphql", #"{"errors":[{"message":"Something went wrong"}]}"#)
-        #expect(try await makeProvider().openTasks().count == 1)
+        let provider = makeProvider()
+        #expect(try await provider.openTasks().count == 1)
+        #expect(provider.offlineReason == "Something went wrong")
+    }
+
+    @Test func openTasks_networkError_hasNoReason() async throws {
+        cache.snapshot = ([makeRecord(placements: [makePlacement(makeProject(1))])], fixedNow)
+        transport.enqueue("/graphql", .failure(.notConnectedToInternet))
+        let provider = makeProvider()
+        _ = try await provider.openTasks()
+        #expect(provider.offlineSince != nil)
+        #expect(provider.offlineReason == nil)
     }
 
     @Test func openTasks_tokenRefreshServerError_returnsCache() async throws {

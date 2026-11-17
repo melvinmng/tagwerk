@@ -47,6 +47,16 @@ struct TaskListModelTests {
         #expect(model.sourceStates[.reminders] == .failed("kaputt"))
     }
 
+    @Test func reload_githubCacheBecauseOfError_carriesReason() async {
+        let github = FakeTaskProvider(source: .github, tasks: [makeTask("#42 Login", source: .github)])
+        let since = testNow()
+        github.offlineSince = since
+        github.offlineReason = "GitHub antwortet mit Fehler 502."
+        let model = TaskListModel(providers: [github], now: testNow, calendar: testCalendar())
+        await model.reload()
+        #expect(model.sourceStates[.github] == .offline(since: since, reason: "GitHub antwortet mit Fehler 502."))
+    }
+
     @Test func reload_githubOffline_marksOfflineAndShowsItems() async {
         let github = FakeTaskProvider(source: .github, tasks: [makeTask("#42 Login", source: .github)])
         let since = testNow().addingTimeInterval(-600)

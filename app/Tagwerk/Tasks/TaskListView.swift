@@ -157,7 +157,13 @@ struct TaskListView: View {
 
     /// Time of the cached GitHub data while GitHub is offline.
     private var gitHubOfflineSince: Date? {
-        if case .offline(let since) = model.sourceStates[.github] { return since }
+        if case .offline(let since, _) = model.sourceStates[.github] { return since }
+        return nil
+    }
+
+    /// Reason when the cache is shown because of an error rather than a missing connection.
+    private var gitHubOfflineReason: String? {
+        if case .offline(_, let reason) = model.sourceStates[.github] { return reason }
         return nil
     }
 
@@ -174,9 +180,13 @@ struct TaskListView: View {
             .accessibilityHint("Zeigt Details")
             .popover(isPresented: $showsOfflineInfo) {
                 VStack(alignment: .leading, spacing: 8) {
-                    Label("GitHub offline", systemImage: "icloud.slash").font(.headline)
+                    Label(gitHubOfflineReason == nil ? "GitHub offline" : "GitHub nicht erreichbar",
+                          systemImage: "icloud.slash").font(.headline)
                     Text("Stand \(since.formatted(.dateTime.day().month().hour().minute()))")
-                    Text("GitHub-Aufgaben sind nur lesbar, bis die Verbindung zurück ist.")
+                    if let reason = gitHubOfflineReason {
+                        Text(reason).font(.subheadline)
+                    }
+                    Text("GitHub-Aufgaben sind nur lesbar, bis GitHub wieder antwortet.")
                         .font(.subheadline).foregroundStyle(.secondary)
                     Button("Erneut versuchen") {
                         showsOfflineInfo = false

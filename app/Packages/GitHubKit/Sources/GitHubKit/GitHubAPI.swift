@@ -38,7 +38,7 @@ public struct GitHubAPI: Sendable {
         var cursor: String?
         repeat {
             let data: ProjectsQuery.SearchData = try await query(
-                ProjectsQuery.assignedIssues, variables: CursorVariables(cursor: cursor)
+                ProjectsQuery.assignedIssues, variables: CursorVariables(cursor: cursor), allowPartial: true
             )
             for node in data.search.nodes.compactMap({ $0 }) {
                 let placements = (node.projectItems?.nodes ?? []).compactMap { item -> ProjectPlacement? in
@@ -72,7 +72,10 @@ public struct GitHubAPI: Sendable {
     // MARK: Transport
 
     /// Runs a GraphQL document and decodes its `data` member.
-    func query<Result: Decodable, Variables: Encodable & Sendable>(_ document: String, variables: Variables) async throws -> Result {
+    /// With `allowPartial`, errors next to usable data (e.g. one node of an organization that has not
+    /// approved the app) are ignored; the affected nodes arrive as `null` and are skipped.
+    func query<Result: Decodable, Variables: Encodable & Sendable>(_ document: String, variables: Variables,
+                                                                   allowPartial: Bool = false) async throws -> Result {
         let body = try JSONEncoder().encode(GraphQLRequest(query: document, variables: variables))
         let data = try await send(method: "POST", url: Self.graphQLURL, body: body)
         let decoder = JSONDecoder()
@@ -83,6 +86,7 @@ public struct GitHubAPI: Sendable {
         } catch {
             throw GitHubAPIError.decoding(String(describing: error))
         }
+        if allowPartial, let result = envelope.data { return result }
         if let message = envelope.errors?.first?.message { throw GitHubAPIError.graphQL(message) }
         guard let result = envelope.data else { throw GitHubAPIError.decoding("missing data") }
         return result

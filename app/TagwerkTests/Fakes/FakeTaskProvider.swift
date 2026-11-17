@@ -17,6 +17,7 @@ final class FakeTaskProvider: TaskProvider {
     var conflictOnNextApply: TaskItem?
     var applyError: TaskWriteError?
     var offlineSince: Date?
+    var offlineReason: String?
     /// When set, `openTasks` takes its snapshot first and then waits for the gate (a slow source).
     var gate: Gate?
     private(set) var openTasksCalls = 0

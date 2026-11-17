@@ -8,6 +8,7 @@ import TagwerkCore
 public final class GitHubTaskProvider: TaskProvider {
     public let source: TaskSource = .github
     public private(set) var offlineSince: Date?
+    public private(set) var offlineReason: String?
     public private(set) var projects: [ProjectInfo] = []
     public private(set) var login: String?
 
@@ -45,6 +46,7 @@ public final class GitHubTaskProvider: TaskProvider {
             remember(visible)
             cache.store(visible, fetchedAt: now())
             offlineSince = nil
+            offlineReason = nil
             return displayed()
         } catch {
             // Any read failure except an ended sign-in shows the cache (design §9: "Offline / Fehler").
@@ -56,6 +58,7 @@ public final class GitHubTaskProvider: TaskProvider {
             remember(cached.records)
             if projects.isEmpty { projects = Self.projects(in: cached.records) }
             offlineSince = cached.fetchedAt
+            if case .failed(let message) = mapped { offlineReason = message } else { offlineReason = nil }
             return displayed()
         }
     }

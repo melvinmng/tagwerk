@@ -115,4 +115,13 @@ struct GitHubAPITests {
         #expect(issue.placements.first?.due == DueDate(year: 2026, month: 11, day: 21))
         #expect(transport.requests.first?.bodyString.contains("I_1") == true)
     }
+
+    /// One unreadable node (e.g. an organization that has not approved the app) must not fail the search.
+    @Test func search_partialErrorsWithData_succeeds() async throws {
+        transport.enqueueJSON("/graphql", Fixtures.viewerProjects)
+        let page = Fixtures.assignedPage2.replacingOccurrences(of: "{\"data\":", with: #"{"errors":[{"message":"Resource not accessible by integration"}],"data":"#)
+        transport.enqueueJSON("/graphql", page)
+        let result = try await makeAPI().openProjectIssues()
+        #expect(result.issues.map(\.issueID) == ["I_2"])
+    }
 }
