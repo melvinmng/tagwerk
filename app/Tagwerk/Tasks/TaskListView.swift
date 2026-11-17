@@ -7,6 +7,8 @@ struct TaskListView: View {
     @State private var isCreating = false
     @State private var reschedulingItem: TaskItem?
     @State private var pickingDateFor: TaskItem?
+    @State private var editing: TaskItem?
+    @State private var editingContainers: [TaskContainer] = []
     @Environment(\.openURL) private var openURL
 
     var body: some View {
@@ -50,6 +52,14 @@ struct TaskListView: View {
             .refreshable { await model.reload() }
             .task { await model.reload() }
             .sheet(isPresented: $isCreating) { NewTaskSheet(model: model) }
+            .sheet(item: $editing) { item in
+                if let provider = model.provider(for: item.id.source) {
+                    TaskEditorView(item: item, provider: provider, calendar: model.calendar,
+                                   containers: editingContainers) { saved in
+                        model.didSave(saved)
+                    }
+                }
+            }
             .sheet(item: $pickingDateFor) { item in
                 RescheduleDateSheet(item: item, calendar: model.calendar, now: model.now()) { day in
                     Task { await model.reschedule(item.id, option: .date(day)) }
@@ -71,6 +81,13 @@ struct TaskListView: View {
     private func row(_ item: TaskItem, section: TaskSection) -> some View {
         TaskRow(item: item, section: section, now: model.now(), calendar: model.calendar) {
             Task { await model.complete(item.id) }
+        }
+        .onTapGesture {
+            Task {
+                editingContainers = item.editableFields.contains(.container)
+                    ? await model.containers(for: item.id.source) : []
+                editing = item
+            }
         }
         .swipeActions(edge: .leading) {
             Button { Task { await model.complete(item.id) } } label: {
