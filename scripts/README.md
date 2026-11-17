@@ -39,15 +39,15 @@ launchctl print gui/$(id -u)/de.tagwerk.refresh | grep -E "state|last exit code"
 tail ~/Library/Logs/Tagwerk/refresh.log
 ```
 
-Sofort neu installieren, im echten launchd-Kontext:
+Sofort neu installieren:
 
 ```zsh
-launchctl setenv TAGWERK_FORCE 1
-launchctl kickstart -k gui/$(id -u)/de.tagwerk.refresh
-launchctl unsetenv TAGWERK_FORCE
+TAGWERK_FORCE=1 ~/Library/Developer/Tagwerk/src/scripts/refresh-install.sh
 ```
 
-Fragt der Schlüsselbund beim ersten Lauf nach `codesign`, auf „Immer erlauben“ klicken.
+`launchctl setenv TAGWERK_FORCE 1` mit anschließendem `kickstart` ist unzuverlässig: Ein sofortiges `launchctl unsetenv` kann die Variable entfernen, bevor der Job sie liest. Der Job beendet sich dann ohne Logeintrag, weil die Installation noch nicht fällig ist.
+
+Fragt der Schlüsselbund beim ersten Lauf nach `codesign`, auf „Immer erlauben“ klicken. Meldet `build.log` „No Accounts“, ist Xcode nicht mehr bei der Apple-ID angemeldet: Xcode → Settings → Accounts.
 
 ## Umstieg vom Spike auf die App (einmalig)
 
@@ -55,9 +55,7 @@ Seit dem Merge von Phase 2a baut der LaunchAgent die echte App statt `TagwerkSpi
 
 1. Nach dem Merge auf `main` installiert der nächste stündliche Lauf die App, weil für `com.melvinmng.tagwerk` noch kein Ablaufdatum gespeichert ist. Sofort geht es so:
    ```zsh
-   launchctl setenv TAGWERK_FORCE 1
-   launchctl kickstart -k gui/$(id -u)/de.tagwerk.refresh
-   launchctl unsetenv TAGWERK_FORCE
+   TAGWERK_FORCE=1 ~/Library/Developer/Tagwerk/src/scripts/refresh-install.sh
    ```
 2. In `refresh.log` muss `install: ok` stehen.
 3. Die Spike-App vom iPhone löschen. Das gibt einen der drei App-Plätze frei.
