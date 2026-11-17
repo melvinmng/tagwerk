@@ -77,3 +77,32 @@ enum Fixtures {
       ]}}}}
     """
 }
+
+extension Fixtures {
+    /// Issue I_1 in project 1 (Status, Priority, Due date, Estimate (h)) and project 2 (Status, Due date, Estimate (MDs)).
+    static func issue(state: String = "OPEN", status1: String = "Ready", status2: String = "Ready",
+                      updatedAt: String = "2026-11-17T13:00:00Z", title: String = "Issue 1") -> String {
+        """
+        {"data":{"node":{"__typename":"Issue","id":"I_1","number":1,"title":"\(title)","body":"Beschreibung","state":"\(state)",
+          "updatedAt":"\(updatedAt)","url":"https://github.com/beispiel/app/issues/1",
+          "repository":{"nameWithOwner":"beispiel/app"},"assignees":{"nodes":[{"login":"octo"}]},"labels":{"nodes":[{"name":"bug"}]},
+          "projectItems":{"nodes":[
+            {"id":"PVTI_a","updatedAt":"2026-11-17T13:00:00Z","isArchived":false,
+             "project":{"id":"PVT_1","number":1,"title":"App","closed":false,"fields":{"nodes":[
+               {"id":"F_status","name":"Status","options":[{"id":"OPT_ready","name":"Ready"},{"id":"OPT_done","name":"Done"}]},
+               {"id":"F_prio","name":"Priority","options":[{"id":"OPT_p1","name":"P1 (Very High)"},{"id":"OPT_p2","name":"P2 (High)"}]},
+               {"id":"F_due","name":"Due date"},{"id":"F_est","name":"Estimate (h)"}]}},
+             "fieldValues":{"nodes":[{"name":"\(status1)","field":{"name":"Status"}},{"date":"2026-11-20","field":{"name":"Due date"}}]}},
+            {"id":"PVTI_c","updatedAt":"2026-11-17T13:00:00Z","isArchived":false,
+             "project":{"id":"PVT_2","number":2,"title":"Studium","closed":false,"fields":{"nodes":[
+               {"id":"F2_status","name":"Status","options":[{"id":"OPT2_ready","name":"Ready"},{"id":"OPT2_done","name":"Done"}]},
+               {"id":"F2_due","name":"Due date"},{"id":"F2_est","name":"Estimate (MDs)"}]}},
+             "fieldValues":{"nodes":[{"name":"\(status2)","field":{"name":"Status"}}]}}
+          ]}}}}
+        """
+    }
+
+    static let mutationOK = #"{"data":{"updateProjectV2ItemFieldValue":{"projectV2Item":{"id":"x"}}}}"#
+    static let clearOK = #"{"data":{"clearProjectV2ItemFieldValue":{"projectV2Item":{"id":"x"}}}}"#
+    static let issuePatchOK = #"{"id":1,"node_id":"I_1","number":1}"#
+}
