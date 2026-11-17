@@ -5,6 +5,8 @@ public enum RescheduleOption: Sendable, Hashable {
     case tomorrow
     /// The next Monday strictly after today (on a Monday: one week later).
     case nextMonday
+    /// The next Saturday strictly after today (on a Saturday: one week later).
+    case weekend
     case date(DueDate)
 }
 
@@ -18,12 +20,17 @@ public func rescheduled(_ due: DueDate?, option: RescheduleOption, now: Date, ca
         let tomorrow = calendar.date(byAdding: .day, value: 1, to: startOfToday) ?? startOfToday
         target = DueDate(date: tomorrow, includeTime: false, calendar: calendar)
     case .nextMonday:
-        let monday = calendar.nextDate(
-            after: startOfToday, matching: DateComponents(weekday: 2), matchingPolicy: .nextTime
-        ) ?? startOfToday
-        target = DueDate(date: monday, includeTime: false, calendar: calendar)
+        target = nextWeekday(2, after: startOfToday, calendar: calendar)
+    case .weekend:
+        target = nextWeekday(7, after: startOfToday, calendar: calendar)
     case .date(let day):
         target = DueDate(year: day.year, month: day.month, day: day.day)
     }
     return due?.movedTo(day: target) ?? target
+}
+
+/// The next date with `weekday` (1 = Sunday … 7 = Saturday) strictly after `day`, without time.
+private func nextWeekday(_ weekday: Int, after day: Date, calendar: Calendar) -> DueDate {
+    let date = calendar.nextDate(after: day, matching: DateComponents(weekday: weekday), matchingPolicy: .nextTime) ?? day
+    return DueDate(date: date, includeTime: false, calendar: calendar)
 }

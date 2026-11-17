@@ -44,4 +44,21 @@ struct RescheduleTests {
         let now = instant(2026, 11, 30, 10, 0)
         #expect(rescheduled(nil, option: .tomorrow, now: now, calendar: calendar) == DueDate(year: 2026, month: 12, day: 1))
     }
+
+    @Test func reschedule_weekend_onWednesday_isComingSaturday() {
+        let now = instant(2026, 11, 18, 10, 0)
+        let due = DueDate(year: 2026, month: 11, day: 18, hour: 9, minute: 30)
+        #expect(rescheduled(due, option: .weekend, now: now, calendar: calendar)
+                == DueDate(year: 2026, month: 11, day: 21, hour: 9, minute: 30))
+    }
+
+    @Test func reschedule_weekend_onSaturday_isNextSaturday() {
+        let now = instant(2026, 11, 21, 10, 0)
+        #expect(rescheduled(nil, option: .weekend, now: now, calendar: calendar) == DueDate(year: 2026, month: 11, day: 28))
+    }
+
+    @Test func reschedule_weekend_onSunday_isSixDaysLater() {
+        let now = instant(2026, 11, 22, 10, 0)
+        #expect(rescheduled(nil, option: .weekend, now: now, calendar: calendar) == DueDate(year: 2026, month: 11, day: 28))
+    }
 }

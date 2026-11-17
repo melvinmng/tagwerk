@@ -92,6 +92,7 @@ struct TaskListView: View {
             }
             .confirmationDialog("Verschieben", isPresented: isRescheduling, presenting: reschedulingItem) { item in
                 Button("Morgen") { Task { await model.reschedule(item.id, option: .tomorrow) } }
+                Button("Wochenende (Sa)") { Task { await model.reschedule(item.id, option: .weekend) } }
                 Button("Nächste Woche (Mo)") { Task { await model.reschedule(item.id, option: .nextMonday) } }
                 Button("Datum wählen …") { pickingDateFor = item }
             }
