@@ -12,3 +12,11 @@ struct GitHubConfigTests {
         #expect(Bundle.main.object(forInfoDictionaryKey: "GitHubClientID") as? String == "Ov23liLkF2p4Nh2ztZg0")
     }
 }
+
+struct AppIconTests {
+    @Test func appIcon_isBundled() {
+        let icons = Bundle.main.object(forInfoDictionaryKey: "CFBundleIcons") as? [String: Any]
+        let primary = icons?["CFBundlePrimaryIcon"] as? [String: Any]
+        #expect(primary?["CFBundleIconName"] as? String == "AppIcon")
+    }
+}

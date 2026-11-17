@@ -45,6 +45,7 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.melvinmng.tagwerk
         GENERATE_INFOPLIST_FILE: NO
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
   TagwerkTests:
     type: bundle.unit-test
     platform: iOS
