@@ -120,14 +120,28 @@ struct TaskEditorModelTests {
     }
 
     @Test func editor_postComment_callsProvider() async {
-        var posted: [(TaskID, String)] = []
-        let model = TaskEditorModel(item: item, provider: provider, addComment: { posted.append(($0, $1)) })
+        var posted: [(TaskID, String, String)] = []
+        let model = TaskEditorModel(item: item, provider: provider, addComment: { posted.append(($0, $1, $2)); return nil })
         model.comment = "  Erledigt bis Freitag  "
         await model.postComment()
         #expect(posted.count == 1)
         #expect(posted.first?.1 == "Erledigt bis Freitag")
+        #expect(posted.first?.2 == "1")
         #expect(model.comment.isEmpty)
         #expect(model.canComment)
+        #expect(model.refreshed == nil)
+    }
+
+    @Test func editor_postComment_adoptsNewVersionForNextSave() async {
+        var fresh = item
+        fresh.version = "after-comment"
+        let model = TaskEditorModel(item: item, provider: provider, addComment: { _, _, _ in fresh })
+        model.comment = "Notiz"
+        await model.postComment()
+        #expect(model.refreshed?.version == "after-comment")
+        model.draft.title = "Neu"
+        _ = await model.save()
+        #expect(provider.appliedEdits.last?.expectedVersion == "after-comment")
     }
 
     @Test func editor_withoutCommentSupport_cannotComment() {

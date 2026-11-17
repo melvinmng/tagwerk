@@ -13,7 +13,7 @@ struct TaskEditorView: View {
     @State private var labelText = ""
 
     init(item: TaskItem, provider: any TaskProvider, calendar: Calendar, containers: [TaskContainer],
-         addComment: ((TaskID, String) async throws -> Void)? = nil, isReadOnly: Bool = false,
+         addComment: TaskEditorModel.CommentAction? = nil, isReadOnly: Bool = false,
          onSaved: @escaping (TaskItem) -> Void) {
         _model = State(initialValue: TaskEditorModel(item: item, provider: provider, addComment: addComment))
         self.calendar = calendar
@@ -92,7 +92,7 @@ struct TaskEditorView: View {
                     Section("Kommentar") {
                         TextField("Kommentar schreiben", text: $model.comment, axis: .vertical).lineLimit(2...6)
                         Button("Senden") { Task { await model.postComment() } }
-                            .disabled(isReadOnly || model.comment.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                            .disabled(isReadOnly || model.isPostingComment || model.comment.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                     }
                 }
 
@@ -110,7 +110,10 @@ struct TaskEditorView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Abbrechen") { dismiss() }
+                    Button("Abbrechen") {
+                        if let refreshed = model.refreshed { onSaved(refreshed) }
+                        dismiss()
+                    }
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Sichern") { Task { await finish(model.save()) } }

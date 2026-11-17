@@ -93,10 +93,17 @@ public final class GitHubTaskProvider: TaskProvider {
         }
     }
 
-    public func addComment(to id: TaskID, body: String) async throws {
-        guard let record = records[id.rawValue] else { throw TaskWriteError.notFound }
+    /// Posts a comment. A comment changes the issue's version, so the fresh item is returned when
+    /// the issue was unchanged before posting; callers adopt its version to avoid a false conflict.
+    /// Returns `nil` when the issue had changed meanwhile (the comment is posted anyway).
+    public func addComment(to id: TaskID, body: String, expectedVersion: String) async throws -> TaskItem? {
         do {
-            try await GitHubWriter(api: api).addComment(record, body: body)
+            guard let before = try await api.issue(nodeID: id.rawValue) else { throw TaskWriteError.notFound }
+            let unchanged = GitHubMapping.taskItem(before).version == expectedVersion
+            try await GitHubWriter(api: api).addComment(before, body: body)
+            guard let fresh = try await api.issue(nodeID: id.rawValue) else { throw TaskWriteError.notFound }
+            records[fresh.issueID] = fresh
+            return unchanged ? GitHubMapping.taskItem(fresh) : nil
         } catch {
             throw Self.taskError(error)
         }

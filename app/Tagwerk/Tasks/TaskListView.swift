@@ -155,9 +155,9 @@ struct TaskListView: View {
         model.sourceStates[item.id.source]?.isOffline != true
     }
 
-    private func commentAction(for provider: any TaskProvider) -> ((TaskID, String) async throws -> Void)? {
+    private func commentAction(for provider: any TaskProvider) -> TaskEditorModel.CommentAction? {
         guard let gitHub = provider as? GitHubTaskProvider else { return nil }
-        return { id, text in try await gitHub.addComment(to: id, body: text) }
+        return { id, text, version in try await gitHub.addComment(to: id, body: text, expectedVersion: version) }
     }
 
     /// Sources in the current filter that could not be loaded.

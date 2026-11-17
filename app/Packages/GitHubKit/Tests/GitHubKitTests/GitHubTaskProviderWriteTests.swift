@@ -223,12 +223,34 @@ struct GitHubTaskProviderWriteTests {
 
     @Test func addComment_postsBody() async throws {
         let provider = makeProvider()
-        _ = try await loadItem(provider)
+        let item = try await loadItem(provider)
+        transport.enqueueJSON("/graphql", Fixtures.issue())
         transport.enqueueJSON("/repos/beispiel/app/issues/1/comments", #"{"id":5}"#)
-        try await provider.addComment(to: issueID, body: "Erledigt bis Freitag")
-        let request = try #require(transport.requests.last)
+        transport.enqueueJSON("/graphql", Fixtures.issue(updatedAt: "2026-11-17T16:00:00Z"))
+        _ = try await provider.addComment(to: issueID, body: "Erledigt bis Freitag", expectedVersion: item.version)
+        let request = try #require(transport.requests.first { $0.url?.path == "/repos/beispiel/app/issues/1/comments" })
         #expect(request.httpMethod == "POST")
-        #expect(request.url?.path == "/repos/beispiel/app/issues/1/comments")
         #expect(request.bodyString.contains("Erledigt bis Freitag"))
+    }
+
+    @Test func addComment_matchingVersion_returnsFreshItem() async throws {
+        let provider = makeProvider()
+        let item = try await loadItem(provider)
+        transport.enqueueJSON("/graphql", Fixtures.issue())
+        transport.enqueueJSON("/repos/beispiel/app/issues/1/comments", #"{"id":5}"#)
+        transport.enqueueJSON("/graphql", Fixtures.issue(updatedAt: "2026-11-17T16:00:00Z"))
+        let fresh = try await provider.addComment(to: issueID, body: "Notiz", expectedVersion: item.version)
+        #expect(fresh?.version.hasPrefix("2026-11-17T16:00:00Z") == true)
+    }
+
+    @Test func addComment_staleVersion_postsAndReturnsNil() async throws {
+        let provider = makeProvider()
+        let item = try await loadItem(provider)
+        transport.enqueueJSON("/graphql", Fixtures.issue(updatedAt: "2026-11-17T15:00:00Z", title: "Extern"))
+        transport.enqueueJSON("/repos/beispiel/app/issues/1/comments", #"{"id":5}"#)
+        transport.enqueueJSON("/graphql", Fixtures.issue(updatedAt: "2026-11-17T16:00:00Z", title: "Extern"))
+        let fresh = try await provider.addComment(to: issueID, body: "Notiz", expectedVersion: item.version)
+        #expect(fresh == nil)
+        #expect(transport.requests.contains { $0.url?.path == "/repos/beispiel/app/issues/1/comments" })
     }
 }

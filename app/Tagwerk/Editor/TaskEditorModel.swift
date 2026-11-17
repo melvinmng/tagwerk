@@ -20,9 +20,15 @@ final class TaskEditorModel {
     var comment = ""
 
     private let provider: any TaskProvider
-    private let addComment: ((TaskID, String) async throws -> Void)?
+    /// Fresh state after the user's own comment; handed to the list when the sheet closes.
+    private(set) var refreshed: TaskItem?
+    private(set) var isPostingComment = false
 
-    init(item: TaskItem, provider: any TaskProvider, addComment: ((TaskID, String) async throws -> Void)? = nil) {
+    /// Posts a comment for (task, text, expected version); returns the fresh item when nothing else changed.
+    typealias CommentAction = (TaskID, String, String) async throws -> TaskItem?
+    private let addComment: CommentAction?
+
+    init(item: TaskItem, provider: any TaskProvider, addComment: CommentAction? = nil) {
         self.draft = item
         self.original = item
         self.provider = provider
@@ -34,9 +40,16 @@ final class TaskEditorModel {
 
     func postComment() async {
         let text = comment.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard let addComment, !text.isEmpty else { return }
+        guard let addComment, !text.isEmpty, !isPostingComment else { return }
+        isPostingComment = true
+        defer { isPostingComment = false }
         do {
-            try await addComment(original.id, text)
+            if let fresh = try await addComment(original.id, text, original.version) {
+                // Only our own comment changed the issue: keep the user's edits, adopt the new version.
+                original.version = fresh.version
+                draft.version = fresh.version
+                refreshed = fresh
+            }
             comment = ""
             errorMessage = nil
         } catch {
