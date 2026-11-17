@@ -478,7 +478,7 @@ final class PlanningModel {
     /// Dropping a task on a free stretch or the hour grid creates a block there (effort or 60 min).
     func dropTask(key: String, atMinutes startMinutes: Int, on day: PlanDay) async {
         guard let id = TaskID(key: key), let task = taskList.items.first(where: { $0.id == id }) else { return }
-        let length = task.estimateMinutes ?? 60
+        let length = suggestedBlockMinutes(for: task)
         let range = clampedBlock(startMinutes: snapped(minutes: startMinutes), duration: length, dayLength: dayLength(day))
         await createBlock(for: task, start: day.startDate(in: calendar).addingTimeInterval(TimeInterval(range.lowerBound * 60)),
                           minutes: range.count)
@@ -545,6 +545,17 @@ final class PlanningModel {
             lastError = TaskListModel.message(for: error)
         }
         await reload()
+    }
+
+    /// Length for a new block: what is left of the estimate after existing blocks, else the estimate,
+    /// and the default duration for tasks without an estimate.
+    func suggestedBlockMinutes(for task: TaskItem) -> Int {
+        guard let estimate = task.estimateMinutes else { return settings.defaultTaskMinutes }
+        let since = today.adding(days: -60, calendar: calendar).startDate(in: calendar)
+        let blocked = blocks.futureBlocks(for: task.id, after: since)
+            .reduce(0) { $0 + Int($1.end.timeIntervalSince($1.start) / 60) }
+        let remaining = estimate - blocked
+        return remaining >= 15 ? remaining : estimate
     }
 
     /// Deletes a block; the task keeps its planned day.

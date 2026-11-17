@@ -25,6 +25,14 @@ struct EventMergingTests {
         #expect(mergingDuplicates([event("a", "work"), event("b", "shared", minutes: 60)], links: [:]).count == 2)
     }
 
+    @Test func copyWithMoreInformation_isKept() {
+        var detailed = event("b", "shared")
+        detailed.notes = "Raum 2.14"
+        detailed.location = "Campus"
+        let merged = mergingDuplicates([event("a", "work"), detailed], links: [:])
+        #expect(merged.map(\.id) == ["b"])
+    }
+
     @Test func linkedCopy_isKept() {
         let merged = mergingDuplicates([event("a", "work"), event("b", "shared")],
                                        links: ["b": TaskID(source: .local, rawValue: "x")])

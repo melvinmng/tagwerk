@@ -537,7 +537,7 @@ struct PlanningModelTests {
         await model.dropTask(key: id("Fahrrad").key, atMinutes: 13 * 60, on: today)
         let block = try #require(calendarStore.storedEvents.first)
         #expect(block.start == at(18, 13))
-        #expect(block.end == at(18, 14))  // no estimate: 60 min
+        #expect(block.end == at(18, 13, 30))  // no estimate: default duration
         #expect(planStore.assignment(for: id("Fahrrad")) == today)
     }
 
@@ -676,6 +676,21 @@ struct PlanningModelTests {
         let moved = try #require(calendarStore.event(id: block.id))
         await model.resizeBlockStart(moved, toStartMinutes: 15 * 60)  // past the end: keeps at least 15 min
         #expect(calendarStore.event(id: block.id)?.start == at(18, 14, 45))
+    }
+
+    @Test func suggestedBlockMinutes_estimateMinusExistingBlocks() async throws {
+        local.tasks.append(TaskItem(id: id("Lesen"), title: "Lesen", notes: nil, due: nil, priority: nil, estimateMinutes: 150,
+                                    isCompleted: false, container: TaskContainer(id: "local", name: "Lokal", colorHex: nil),
+                                    url: nil, version: "1", editableFields: []))
+        let model = await model()
+        let task = try #require(taskList.items.first { $0.title == "Lesen" })
+        #expect(model.suggestedBlockMinutes(for: task) == 150)
+        _ = try blocks.createBlock(for: task, start: at(19, 9), minutes: 60)
+        #expect(model.suggestedBlockMinutes(for: task) == 90)
+        _ = try blocks.createBlock(for: task, start: at(19, 14), minutes: 120)
+        #expect(model.suggestedBlockMinutes(for: task) == 150)  // fully blocked: the estimate again
+        let noEstimate = try #require(taskList.items.first { $0.title == "Fahrrad" })
+        #expect(model.suggestedBlockMinutes(for: noEstimate) == 30)  // default duration
     }
 
     @Test func duration_padsMinutes() {

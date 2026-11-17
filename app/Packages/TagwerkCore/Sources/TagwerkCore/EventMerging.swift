@@ -31,10 +31,24 @@ public func mergingDuplicates(_ events: [CalendarEvent], links: [String: TaskID]
                 batch.append(event)
                 return true
             }
-            var kept = batch.first { links[$0.id] != nil } ?? batch[0]
+            var kept = batch.first { links[$0.id] != nil } ?? batch.reduce(batch[0]) { best, next in informationScore(next) > informationScore(best) ? next : best }
             kept.mergedCalendarIDs = batch.filter { $0.id != kept.id }.map(\.calendarID)
             result.append(kept)
         }
         return result
     }
 }
+
+/// How much an event tells: notes, location, link; placeholder titles ("Busy", "Away", …) count against it.
+func informationScore(_ event: CalendarEvent) -> Int {
+    var score = 0
+    if !(event.notes ?? "").isEmpty { score += 2 }
+    if !(event.location ?? "").isEmpty { score += 2 }
+    if event.url != nil { score += 1 }
+    if placeholderTitles.contains(normalizedTitle(event.title)) { score -= 3 }
+    return score
+}
+
+/// Titles that mirrored or shared calendars use instead of the real one (design §13, merge suggestions in 2b-2).
+public let placeholderTitles: Set<String> = ["busy", "away", "free", "tentative", "beschäftigt", "abwesend", "frei",
+                                             "vorläufig", "out of office", "privat"]

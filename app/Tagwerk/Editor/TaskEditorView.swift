@@ -111,9 +111,10 @@ struct TaskEditorView: View {
                                        dismiss()
                                        show(day)
                                    } },
+                                   suggestedMinutes: planning.suggestedBlockMinutes(for: model.original),
                                    suggestedStart: { day in
                                        suggestedBlockStart(on: day, hours: planning.workHours(on: day),
-                                                           minutes: model.original.estimateMinutes ?? 60,
+                                                           minutes: planning.suggestedBlockMinutes(for: model.original),
                                                            now: planning.now(), calendar: calendar)
                                    })
                 }

@@ -9,6 +9,7 @@ struct PlannedSection: View {
     let isRecurring: Bool
     let onShowDay: ((PlanDay) -> Void)?
     /// Start for a new block on a day: next full hour within working hours (design §13).
+    let suggestedMinutes: Int
     let suggestedStart: (PlanDay) -> Date
 
     var body: some View {
@@ -61,7 +62,7 @@ struct PlannedSection: View {
             }
             Button("Zeitblock hinzufügen") {
                 let day = edit.day ?? PlanDay(date: .now, calendar: calendar)
-                edit.newBlocks.append(PlannedEdit.NewBlock(start: suggestedStart(day), minutes: 60))
+                edit.newBlocks.append(PlannedEdit.NewBlock(start: suggestedStart(day), minutes: suggestedMinutes))
             }
         } header: {
             Text("Geplant")
