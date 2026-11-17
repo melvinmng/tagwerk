@@ -13,6 +13,7 @@ struct TaskListView: View {
     @State private var gitHubLogin: GitHubLoginModel?
     @State private var deleting: TaskItem?
     @State private var showsOfflineInfo = false
+    @State private var planningDateFor: TaskItem?
     @Environment(\.openURL) private var openURL
     @Environment(AppEnvironment.self) private var environment
 
@@ -81,7 +82,8 @@ struct TaskListView: View {
                                    containers: editingContainers,
                                    addComment: commentAction(for: provider),
                                    isReadOnly: model.sourceStates[item.id.source]?.isOffline == true,
-                                   onDelete: { version in Task { await model.delete(item.id, version: version) } }) { saved in
+                                   onDelete: { version in Task { await model.delete(item.id, version: version) } },
+                                   planned: environment.planning.plannedInfo(for: item.id)) { saved in
                         model.didSave(saved)
                     }
                 }
@@ -97,6 +99,11 @@ struct TaskListView: View {
                                 }
                             }
                     }
+                }
+            }
+            .sheet(item: $planningDateFor) { item in
+                RescheduleDateSheet(item: item, calendar: model.calendar, now: model.now()) { day in
+                    Task { await environment.planning.assign(item.id, to: PlanDay(day)) }
                 }
             }
             .sheet(item: $pickingDateFor) { item in
@@ -124,6 +131,9 @@ struct TaskListView: View {
                     ? await model.containers(for: item.id.source) : []
                 editing = item
             }
+        }
+        .contextMenu {
+            TaskContextMenu(item: item, actions: menuActions(for: item))
         }
         // Dialogs hang on the row, so iOS shows them next to the affected task (above or below it).
         .confirmationDialog("Verschieben", isPresented: dialogBinding($reschedulingItem, for: item)) {
@@ -215,6 +225,19 @@ struct TaskListView: View {
                 .presentationCompactAdaptation(.popover)
             }
         }
+    }
+
+    private func menuActions(for item: TaskItem) -> TaskMenuActions {
+        TaskMenuActions(
+            plan: { option in Task { await environment.planning.plan(item.id, option: option) } },
+            planOnDate: { planningDateFor = item },
+            moveDue: { option in Task { await model.reschedule(item.id, option: option) } },
+            moveDueOnDate: { pickingDateFor = item },
+            complete: { Task { await model.complete(item.id) } },
+            delete: { deleting = item },
+            editEffort: nil,
+            isWritable: isWritable(item)
+        )
     }
 
     /// Offline sources (GitHub cache) are read-only.

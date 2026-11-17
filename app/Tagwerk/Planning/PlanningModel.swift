@@ -81,6 +81,9 @@ final class PlanningModel {
     private(set) var leftovers: [TaskItem] = []
     /// Important deadlines from today over the next 14 days (deadline card of the day view).
     private(set) var upcomingDeadlines: [ImportantDeadline] = []
+    /// Reminder IDs with a repetition rule (for "Aufwand ändern …").
+    private(set) var recurringReminderIDs: Set<String> = []
+    private var resolvedLinks: [String: ResolvedLink] = [:]
     private(set) var pendingBlockDecision: PendingBlockDecision?
     private(set) var lastError: String?
 
@@ -137,8 +140,10 @@ final class PlanningModel {
         let interval = DateInterval(start: range.lowerBound.startDate(in: calendar),
                                     end: range.upperBound.adding(days: 1, calendar: calendar).startDate(in: calendar))
         let events = calendarStore.events(in: interval, calendarIDs: readableCalendarIDs())
-        let links = Dictionary(resolveLinks(events: events, tasks: open, manual: blocks.links.manualLinks())
-                                .map { ($0.eventID, $0.taskID) }, uniquingKeysWith: { first, _ in first })
+        let resolved = resolveLinks(events: events, tasks: open, manual: blocks.links.manualLinks())
+        resolvedLinks = Dictionary(resolved.map { ($0.eventID, $0) }, uniquingKeysWith: { first, _ in first })
+        recurringReminderIDs = recurringIDs
+        let links = resolvedLinks.mapValues(\.taskID)
         let deadlines = importantDeadlines(tasks: open, events: events,
                                            deadlineCalendarIDs: Set(settings.deadlineCalendarIDs ?? []),
                                            in: range, calendar: calendar)
@@ -189,6 +194,44 @@ final class PlanningModel {
         }
         planStore.assign(decision.taskID, to: decision.day)
         await reload()
+    }
+
+    /// "Einplanen: Heute / Morgen / …" – sets only the planned day, never the source's due date.
+    func plan(_ id: TaskID, option: RescheduleOption) async {
+        await assign(id, to: planDay(for: option))
+    }
+
+    func link(eventID: String, to taskID: TaskID) async {
+        blocks.links.link(eventID: eventID, to: taskID)
+        await reload()
+    }
+
+    func unlink(eventID: String) async {
+        blocks.links.unlink(eventID: eventID)
+        await reload()
+    }
+
+    func linkOrigin(eventID: String) -> LinkOrigin? {
+        resolvedLinks[eventID]?.origin
+    }
+
+    func linkedTask(eventID: String) -> TaskItem? {
+        resolvedLinks[eventID].flatMap { link in taskList.items.first { $0.id == link.taskID } }
+    }
+
+    /// "Nur dieser Tag" (`forAll == false`) or "Alle" from this day on.
+    func setRecurringEffort(_ minutes: Int?, reminderID: String, day: PlanDay, forAll: Bool) async {
+        if forAll {
+            efforts.setForAll(minutes, reminderID: reminderID, from: day)
+        } else {
+            efforts.setForDay(minutes ?? 0, reminderID: reminderID, day: day)
+        }
+        await reload()
+    }
+
+    /// Planned day and future blocks of a task, for the editor's "Geplant" section.
+    func plannedInfo(for id: TaskID) -> (day: PlanDay?, blocks: [CalendarEvent]) {
+        (planStore.assignment(for: id), blocks.futureBlocks(for: id, after: today.startDate(in: calendar)))
     }
 
     /// Writes a time block for `task` into the plan calendar (and plans the task for that day).

@@ -201,4 +201,50 @@ struct PlanningModelTests {
         #expect(model.days.first?.recurring == [RecurringItem(reminderID: "k", title: "Karteikarten", minutes: 180)])
         #expect(model.days.first?.capacity.availableMinutes == 300)
     }
+
+    @Test func planDay_forTodayTomorrowWeekend_matchesRescheduleDates() async {
+        let model = await model()
+        #expect(model.planDay(for: .today) == today)
+        #expect(model.planDay(for: .tomorrow) == PlanDay(year: 2026, month: 11, day: 19))
+        #expect(model.planDay(for: .weekend) == PlanDay(year: 2026, month: 11, day: 21))
+        #expect(model.planDay(for: .nextMonday) == PlanDay(year: 2026, month: 11, day: 23))
+    }
+
+    @Test func contextMenu_einplanen_doesNotWriteSource() async {
+        let model = await model()
+        await model.plan(id("Abgabe"), option: .tomorrow)
+        #expect(planStore.assignment(for: id("Abgabe")) == PlanDay(year: 2026, month: 11, day: 19))
+        #expect(local.appliedEdits.isEmpty)
+    }
+
+    @Test func eventDetail_linkManually_showsInDay() async {
+        calendarStore.storedEvents = [CalendarEvent(id: "e", externalID: nil, calendarID: "work", title: "Arbeitsblock",
+                                                    start: at(18, 14), end: at(18, 15), isAllDay: false, url: nil,
+                                                    isBusy: true, version: "1")]
+        let model = await model()
+        #expect(model.days.first?.links["e"] == nil)
+        await model.link(eventID: "e", to: id("Fahrrad"))
+        #expect(model.days.first?.links["e"] == id("Fahrrad"))
+        #expect(model.linkOrigin(eventID: "e") == .manual)
+        await model.unlink(eventID: "e")
+        #expect(model.days.first?.links["e"] == nil)
+    }
+
+    @Test func recurringEffort_setForDayAndForAll() async {
+        let model = await model()
+        await model.setRecurringEffort(60, reminderID: "k", day: today, forAll: false)
+        #expect(model.efforts.minutes(for: "k", on: today) == 60)
+        #expect(model.efforts.minutes(for: "k", on: today.adding(days: 1, calendar: calendar)) == nil)
+        await model.setRecurringEffort(120, reminderID: "k", day: today, forAll: true)
+        #expect(model.efforts.minutes(for: "k", on: today.adding(days: 1, calendar: calendar)) == 120)
+    }
+
+    @Test func plannedInfo_forEditor() async throws {
+        let model = await model()
+        let task = try #require(taskList.items.first { $0.title == "Fahrrad" })
+        _ = try blocks.createBlock(for: task, start: at(19, 9), minutes: 30)
+        let info = model.plannedInfo(for: task.id)
+        #expect(info.day == PlanDay(year: 2026, month: 11, day: 19))
+        #expect(info.blocks.count == 1)
+    }
 }

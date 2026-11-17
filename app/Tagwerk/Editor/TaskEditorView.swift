@@ -11,13 +11,18 @@ struct TaskEditorView: View {
 
     let isReadOnly: Bool
     let onDelete: ((String) -> Void)?
+    let planned: (day: PlanDay?, blocks: [CalendarEvent])?
+    let onShowDay: ((PlanDay) -> Void)?
     @State private var labelText = ""
     @State private var confirmsDelete = false
 
     init(item: TaskItem, provider: any TaskProvider, calendar: Calendar, containers: [TaskContainer],
          addComment: TaskEditorModel.CommentAction? = nil, isReadOnly: Bool = false,
-         onDelete: ((String) -> Void)? = nil, onSaved: @escaping (TaskItem) -> Void) {
+         onDelete: ((String) -> Void)? = nil, planned: (day: PlanDay?, blocks: [CalendarEvent])? = nil,
+         onShowDay: ((PlanDay) -> Void)? = nil, onSaved: @escaping (TaskItem) -> Void) {
         self.onDelete = onDelete
+        self.planned = planned
+        self.onShowDay = onShowDay
         _model = State(initialValue: TaskEditorModel(item: item, provider: provider, addComment: addComment))
         self.calendar = calendar
         self.containers = containers
@@ -95,6 +100,23 @@ struct TaskEditorView: View {
 
                 Section {
                     Toggle("Erledigt", isOn: $model.draft.isCompleted)
+                }
+
+                if let planned, planned.day != nil || !planned.blocks.isEmpty {
+                    Section("Geplant") {
+                        if let day = planned.day {
+                            Button {
+                                dismiss()
+                                onShowDay?(day)
+                            } label: {
+                                LabeledContent("Arbeitstag", value: day.startDate(in: calendar).formatted(.dateTime.weekday(.abbreviated).day().month()) + " ›")
+                            }
+                            .foregroundStyle(.primary)
+                        }
+                        ForEach(planned.blocks) { block in
+                            LabeledContent("Zeitblock", value: block.start.formatted(.dateTime.weekday(.abbreviated).day().month().hour().minute()))
+                        }
+                    }
                 }
 
                 if model.canComment {

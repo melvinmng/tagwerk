@@ -7,13 +7,17 @@ struct PlanView: View {
     let onOpenTask: (TaskID) -> Void
     let onOpenEvent: (CalendarEvent) -> Void
     let onEditRecurring: (RecurringItem, PlanDay) -> Void
+    @State private var deleting: TaskItem?
+    @State private var planningDateFor: TaskItem?
+    @State private var dueDateFor: TaskItem?
 
     var body: some View {
         NavigationStack {
             Group {
                 switch model.scope {
-                case .day: DayView(model: model, onOpenTask: onOpenTask, onOpenEvent: onOpenEvent, onEditRecurring: onEditRecurring)
-                case .week: WeekView(model: model, onOpenTask: onOpenTask)
+                case .day: DayView(model: model, onOpenTask: onOpenTask, onOpenEvent: onOpenEvent,
+                                   onEditRecurring: onEditRecurring, menuActions: menuActions)
+                case .week: WeekView(model: model, onOpenTask: onOpenTask, menuActions: menuActions)
                 case .month:
                     MonthView(model: model) { day in
                         model.anchor = day
@@ -33,6 +37,22 @@ struct PlanView: View {
                 Button("Abbrechen", role: .cancel) { model.cancelBlockDecision() }
             } message: {
                 Text("Für diese Aufgabe gibt es geplante Zeitblöcke im Kalender.")
+            }
+            .confirmationDialog(deleting.map(TaskListView.deleteQuestion) ?? "", isPresented: isDeleting,
+                                titleVisibility: .visible, presenting: deleting) { item in
+                Button(TaskListView.deleteTitle(for: item), role: .destructive) {
+                    Task { await model.taskList.delete(item.id); await model.reload() }
+                }
+            }
+            .sheet(item: $planningDateFor) { item in
+                RescheduleDateSheet(item: item, calendar: model.calendar, now: model.now()) { day in
+                    Task { await model.assign(item.id, to: PlanDay(day)) }
+                }
+            }
+            .sheet(item: $dueDateFor) { item in
+                RescheduleDateSheet(item: item, calendar: model.calendar, now: model.now()) { day in
+                    Task { await model.taskList.reschedule(item.id, option: .date(day)) }
+                }
             }
             .alert("Hinweis", isPresented: hasError) {
                 Button("OK") { model.clearError() }
@@ -83,6 +103,29 @@ struct PlanView: View {
             let moved = model.calendar.date(byAdding: .month, value: direction, to: model.anchor.startDate(in: model.calendar))
             model.anchor = moved.map { PlanDay(date: $0, calendar: model.calendar) } ?? model.anchor
         }
+    }
+
+    private func menuActions(for item: TaskItem) -> TaskMenuActions {
+        let writable = model.taskList.sourceStates[item.id.source]?.isOffline != true
+        let isRecurring = item.id.source == .reminders && model.recurringReminderIDs.contains(item.id.rawValue)
+        return TaskMenuActions(
+            plan: { option in Task { await model.plan(item.id, option: option) } },
+            planOnDate: { planningDateFor = item },
+            moveDue: { option in Task { await model.taskList.reschedule(item.id, option: option) } },
+            moveDueOnDate: { dueDateFor = item },
+            complete: { Task { await model.taskList.complete(item.id); await model.reload() } },
+            delete: { deleting = item },
+            editEffort: isRecurring ? {
+                let day = model.anchor
+                let minutes = model.efforts.minutes(for: item.id.rawValue, on: day) ?? 0
+                onEditRecurring(RecurringItem(reminderID: item.id.rawValue, title: item.title, minutes: minutes), day)
+            } : nil,
+            isWritable: writable
+        )
+    }
+
+    private var isDeleting: Binding<Bool> {
+        Binding(get: { deleting != nil }, set: { if !$0 { deleting = nil } })
     }
 
     private var hasPendingDecision: Binding<Bool> {

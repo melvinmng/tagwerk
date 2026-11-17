@@ -5,6 +5,7 @@ import TagwerkCore
 struct WeekView: View {
     @Bindable var model: PlanningModel
     let onOpenTask: (TaskID) -> Void
+    let menuActions: (TaskItem) -> TaskMenuActions
     @State private var targetedDay: PlanDay?
 
     var body: some View {
@@ -15,6 +16,7 @@ struct WeekView: View {
                         PlannedTaskRow(task: task, isPastDue: plan.isPastDue.contains(task.id))
                             .contentShape(Rectangle())
                             .onTapGesture { onOpenTask(task.id) }
+                            .contextMenu { TaskContextMenu(item: task, actions: menuActions(task)) }
                     }
                     ForEach(plan.deadlines) { deadline in
                         Label(deadline.title, systemImage: "flag.fill").foregroundStyle(.red).font(.subheadline)

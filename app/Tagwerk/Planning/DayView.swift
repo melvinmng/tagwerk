@@ -7,6 +7,7 @@ struct DayView: View {
     let onOpenTask: (TaskID) -> Void
     let onOpenEvent: (CalendarEvent) -> Void
     let onEditRecurring: (RecurringItem, PlanDay) -> Void
+    let menuActions: (TaskItem) -> TaskMenuActions
     @State private var editingHours = false
     @State private var blockFor: TaskItem?
 
@@ -52,6 +53,7 @@ struct DayView: View {
                         PlannedTaskRow(task: task, isPastDue: plan.isPastDue.contains(task.id))
                             .contentShape(Rectangle())
                             .onTapGesture { onOpenTask(task.id) }
+                            .contextMenu { TaskContextMenu(item: task, actions: menuActions(task)) }
                             .swipeActions {
                                 Button("Zeitblock") { blockFor = task }.tint(.blue)
                                 Button("Ausplanen") { Task { await model.unassign(task.id) } }.tint(.gray)
@@ -65,6 +67,8 @@ struct DayView: View {
                             HStack {
                                 Text(task.title)
                                 Spacer()
+                                Button("Neu einplanen") { onOpenTask(task.id) }
+                                    .buttonStyle(.borderless)
                                 Button("Auf heute") { Task { await model.assign(task.id, to: model.today) } }
                                     .buttonStyle(.borderless)
                             }
