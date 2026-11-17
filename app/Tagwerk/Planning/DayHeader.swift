@@ -1,7 +1,7 @@
 import SwiftUI
 import TagwerkCore
 
-/// Head of the day view (mockup A1): relative caption, large date that opens a month picker, arrows.
+/// Head of day, week and month (mockup A1): relative caption, large title that opens a month picker, arrows.
 struct DayHeader: View {
     @Bindable var model: PlanningModel
     let onShowMonth: () -> Void
@@ -12,9 +12,9 @@ struct DayHeader: View {
             HStack {
                 Text(caption)
                     .font(.caption.weight(.semibold))
-                    .foregroundStyle(model.anchor == model.today ? Color.accentColor : .secondary)
+                    .foregroundStyle(isCurrent ? Color.accentColor : .secondary)
                 Spacer()
-                if model.anchor != model.today {
+                if !isCurrent {
                     Button("Heute") { model.anchor = model.today }
                         .font(.caption.weight(.semibold))
                         .buttonStyle(.borderless)
@@ -30,7 +30,7 @@ struct DayHeader: View {
                 .buttonStyle(.plain)
                 .accessibilityHint("Datum wählen")
                 .popover(isPresented: $picking) {
-                    DatePickerPopover(model: model, onShowMonth: {
+                    DatePickerPopover(model: model, onShowMonth: model.scope == .month ? nil : {
                         picking = false
                         onShowMonth()
                     }, onDone: { picking = false })
@@ -38,9 +38,9 @@ struct DayHeader: View {
                 Spacer()
                 HStack(spacing: 4) {
                     Button { model.step(-1) } label: { Image(systemName: "chevron.left").frame(width: 22, height: 22) }
-                        .accessibilityLabel("Vorheriger Tag")
+                        .accessibilityLabel(previousLabel)
                     Button { model.step(1) } label: { Image(systemName: "chevron.right").frame(width: 22, height: 22) }
-                        .accessibilityLabel("Nächster Tag")
+                        .accessibilityLabel(nextLabel)
                 }
                 .buttonStyle(.bordered)
                 .buttonBorderShape(.circle)
@@ -49,12 +49,47 @@ struct DayHeader: View {
         }
     }
 
+    /// The shown period contains today.
+    private var isCurrent: Bool { model.range.contains(model.today) && (model.scope != .month || model.anchor.month == model.today.month) }
+
+    private var previousLabel: String {
+        switch model.scope { case .day: "Vorheriger Tag"; case .week: "Vorherige Woche"; case .month: "Vorheriger Monat" }
+    }
+
+    private var nextLabel: String {
+        switch model.scope { case .day: "Nächster Tag"; case .week: "Nächste Woche"; case .month: "Nächster Monat" }
+    }
+
     private var title: String {
-        model.anchor.startDate(in: model.calendar).formatted(.dateTime.weekday(.wide).day().month(.abbreviated))
+        let start = model.anchor.startDate(in: model.calendar)
+        switch model.scope {
+        case .day:
+            return start.formatted(.dateTime.weekday(.wide).day().month(.abbreviated))
+        case .week:
+            let range = model.range
+            let first = range.lowerBound.startDate(in: model.calendar), last = range.upperBound.startDate(in: model.calendar)
+            return range.lowerBound.month == range.upperBound.month
+                ? "\(range.lowerBound.day).–\(last.formatted(.dateTime.day().month(.abbreviated)))"
+                : "\(first.formatted(.dateTime.day().month(.abbreviated))) – \(last.formatted(.dateTime.day().month(.abbreviated)))"
+        case .month:
+            return start.formatted(.dateTime.month(.wide))
+        }
+    }
+
+    /// Day: "HEUTE · KW 47"; week: "DIESE WOCHE · KW 47"; month: "DIESER MONAT · 2026".
+    private var caption: String {
+        let week = model.calendar.component(.weekOfYear, from: model.anchor.startDate(in: model.calendar))
+        switch model.scope {
+        case .day: return dayCaption
+        case .week:
+            return ((isCurrent ? "Diese Woche · " : "") + "KW \(week)").uppercased()
+        case .month:
+            return ((isCurrent ? "Dieser Monat · " : "") + "\(model.anchor.year)").uppercased()
+        }
     }
 
     /// "HEUTE · KW 47", "MORGEN · KW 47", "VOR 3 TAGEN · KW 46".
-    private var caption: String {
+    private var dayCaption: String {
         let distance = model.calendar.dateComponents([.day], from: model.today.startDate(in: model.calendar),
                                                      to: model.anchor.startDate(in: model.calendar)).day ?? 0
         let relative: String = switch distance {
@@ -72,7 +107,7 @@ struct DayHeader: View {
 /// Month calendar to jump to a day (mockup A1, date tapped).
 struct DatePickerPopover: View {
     @Bindable var model: PlanningModel
-    let onShowMonth: () -> Void
+    let onShowMonth: (() -> Void)?
     let onDone: () -> Void
 
     var body: some View {
@@ -86,7 +121,7 @@ struct DatePickerPopover: View {
                     onDone()
                 }
                 Spacer()
-                Button("Monatsansicht ›", action: onShowMonth)
+                if let onShowMonth { Button("Monatsansicht ›", action: onShowMonth) }
             }
             .padding(.horizontal, 8)
         }

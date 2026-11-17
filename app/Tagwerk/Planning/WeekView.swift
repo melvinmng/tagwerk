@@ -10,6 +10,9 @@ struct WeekView: View {
 
     var body: some View {
         List {
+            DayHeader(model: model) { model.scope = .month }
+                .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
+                .listRowBackground(Color.clear)
             ForEach(model.days) { plan in
                 Section {
                     ForEach(plan.assigned) { task in

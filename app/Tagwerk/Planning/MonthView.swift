@@ -15,6 +15,9 @@ struct MonthView: View {
 
     var body: some View {
         ScrollView {
+            DayHeader(model: model) {}
+                .padding(.horizontal)
+                .padding(.bottom, 8)
             LazyVGrid(columns: columns, spacing: 4) {
                 ForEach(["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"], id: \.self) { Text($0).font(.caption2).foregroundStyle(.secondary) }
                 ForEach(model.days) { plan in
@@ -115,7 +118,9 @@ private struct MonthDayDetail: View {
             ForEach(plan.deadlines) { deadline in
                 Label(deadline.title, systemImage: "flag.fill").foregroundStyle(.red).font(.subheadline)
             }
-            ForEach((plan.events + plan.blocks).sorted { $0.start < $1.start }) { event in
+            // All-day events of deadline calendars already appear as deadlines above.
+            ForEach((model.allDayEvents(for: plan) + (plan.events + plan.blocks).filter { !$0.isAllDay })
+                .sorted { $0.start < $1.start }) { event in
                 Button { onOpenEvent(event) } label: {
                     HStack(alignment: .firstTextBaseline) {
                         Text(event.isAllDay ? "ganztägig" : event.start.formatted(date: .omitted, time: .shortened))

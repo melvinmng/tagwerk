@@ -75,40 +75,10 @@ struct PlanView: View {
                     .buttonBorderShape(.circle)
                     .accessibilityLabel("Neuer Termin")
             }
-            // The day view draws its own large header (mockup A1).
-            if model.scope != .day {
-                HStack {
-                    Button { step(-1) } label: { Image(systemName: "chevron.left") }.accessibilityLabel("Zurück")
-                    Spacer()
-                    Text(title).font(.headline)
-                    Spacer()
-                    Button { step(1) } label: { Image(systemName: "chevron.right") }.accessibilityLabel("Weiter")
-                }
-                if model.anchor != model.today {
-                    Button("Heute") { model.anchor = model.today }.font(.caption)
-                }
-            }
         }
         .padding(.horizontal)
         .padding(.bottom, 6)
         .background(.bar)
-    }
-
-    private var title: String {
-        let date = model.anchor.startDate(in: model.calendar)
-        switch model.scope {
-        case .day:
-            return date.formatted(.dateTime.weekday(.wide).day().month(.wide)) + (model.anchor == model.today ? " · Heute" : "")
-        case .week:
-            let range = model.range
-            return "\(range.lowerBound.day).–\(range.upperBound.startDate(in: model.calendar).formatted(.dateTime.day().month(.wide)))"
-        case .month:
-            return date.formatted(.dateTime.month(.wide).year())
-        }
-    }
-
-    private func step(_ direction: Int) {
-        model.step(direction)
     }
 
     private func menuActions(for item: TaskItem) -> TaskMenuActions {
