@@ -1,0 +1,1570 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tagwerk · Phase 2b · Feedback-Runde · Mockups A–K</title>
+<style>
+  /* Mockup frame uses the host theme (with fallbacks); phone screens depict the app in iOS dark mode. */
+  :root { color-scheme: light dark; }
+  body { font: 14px var(--font-sans, system-ui, sans-serif); color: var(--foreground, CanvasText); margin: 16px; }
+  h1 { font-size: 20px; margin: 0 0 4px; }
+  h2 { font-size: 18px; margin: 38px 0 4px; padding-top: 16px; border-top: 1px solid rgba(128,128,128,.3); display: flex; align-items: center; gap: 10px; }
+  .area { display: inline-grid; place-items: center; width: 34px; height: 34px; border-radius: 9px; background: #0a84ff; color: #fff; font: 800 19px system-ui; flex-shrink: 0; }
+  .lead { color: var(--muted-foreground, #777); margin: 0 0 14px; line-height: 1.5; max-width: 980px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(392px, 1fr)); gap: 22px; align-items: start; }
+  .label { font: 600 13px var(--font-sans, system-ui); color: var(--muted-foreground, #777); margin: 0 0 8px 4px; }
+  .label b { color: var(--foreground, CanvasText); }
+  .code { display: inline-block; background: rgba(128,128,128,.28); color: var(--foreground, CanvasText); border-radius: 6px; padding: 1px 8px; font: 800 13px system-ui; margin-right: 4px; }
+  .code.r { background: #30d158; color: #000; }
+  .rec { background: #30d158; color: #000; font-size: 11px; font-weight: 700; padding: 1px 7px; border-radius: 99px; margin-left: 4px; }
+  .pc { font-size: 12.5px; color: var(--muted-foreground, #777); line-height: 1.5; margin: 8px 4px 0; max-width: 390px; }
+  .pc b { color: var(--foreground, CanvasText); }
+  .box { border: 1px solid rgba(48,209,88,.5); background: rgba(48,209,88,.07); border-radius: 12px; padding: 12px 16px; margin-top: 16px; line-height: 1.55; font-size: 13px; max-width: 1100px; }
+  .box h3 { margin: 0 0 6px; font-size: 14px; }
+  .box ul { margin: 4px 0 0; padding-left: 18px; }
+  .box.neutral { border-color: rgba(128,128,128,.4); background: rgba(128,128,128,.07); }
+  .box.warn { border-color: rgba(255,159,10,.6); background: rgba(255,159,10,.08); }
+  code { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; background: rgba(128,128,128,.16); padding: 1px 4px; border-radius: 4px; }
+  table.sum { border-collapse: collapse; font-size: 13px; margin-top: 6px; }
+  table.sum td, table.sum th { padding: 5px 14px 5px 0; vertical-align: top; text-align: left; border-bottom: 1px solid rgba(128,128,128,.22); }
+  table.sum th { font-size: 12px; color: var(--muted-foreground, #777); }
+
+  .phone {
+    --bg: #000; --card: #1c1c1e; --card2: #2c2c2e; --sep: #38383a; --text: #fff; --sub: #8e8e93;
+    --blue: #0a84ff; --green: #30d158; --orange: #ff9f0a; --red: #ff453a; --purple: #bf5af2; --teal: #64d2ff; --mint: #7cf0c3;
+    background: var(--bg); color: var(--text); border-radius: 40px; padding: 14px 12px 12px;
+    font: 15px -apple-system, "SF Pro Text", system-ui, sans-serif; border: 6px solid #2a2a2c;
+    width: 390px; max-width: 100%; box-sizing: border-box; min-height: 760px;
+    display: flex; flex-direction: column; position: relative; overflow: hidden;
+  }
+  .status { display: flex; justify-content: space-between; font: 600 13px system-ui; padding: 0 12px 10px; }
+  .title { font: 700 26px system-ui; padding: 0 6px; }
+  .row { display: flex; align-items: center; gap: 8px; }
+  .nav { display: flex; justify-content: space-between; align-items: center; padding: 2px 6px 8px; }
+  .nav .a { color: var(--blue); } .nav .a.b { font-weight: 600; }
+  .nav .c { font-weight: 600; }
+  .chip { font-size: 11px; padding: 2px 7px; border-radius: 99px; background: var(--card2); color: #c7c7cc; white-space: nowrap; }
+  .chip.p1 { background: rgba(255,69,58,.22); color: #ff8a82; font-weight: 700; }
+  .chip.ai { background: rgba(191,90,242,.2); color: #dcb0f7; }
+  .chip.auto { background: rgba(10,132,255,.2); color: #8cc4ff; }
+  .chip.warn { background: rgba(255,159,10,.2); color: #ffc266; }
+  .chip.on { background: var(--blue); color: #fff; font-weight: 600; }
+  .section { color: var(--sub); font: 600 12px system-ui; text-transform: uppercase; letter-spacing: .4px; margin: 10px 8px 4px; display: flex; justify-content: space-between; }
+  .section span { text-transform: none; letter-spacing: 0; font-weight: 500; }
+  .list { background: var(--card); border-radius: 18px; overflow: hidden; margin-bottom: 6px; }
+  .item { display: flex; align-items: flex-start; gap: 10px; padding: 9px 12px; border-bottom: 1px solid var(--sep); }
+  .item:last-child { border-bottom: 0; }
+  .item.hl { background: rgba(10,132,255,.22); box-shadow: inset 0 0 0 1.5px var(--blue); }
+  .circle { width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--sub); flex-shrink: 0; margin-top: 1px; box-sizing: border-box; }
+  .circle.sel { background: var(--blue); border-color: var(--blue); color: #fff; font: 700 11px/14px system-ui; text-align: center; }
+  .item .t { flex: 1; font-size: 14px; min-width: 0; }
+  .item .s { color: var(--sub); font-size: 12px; margin-top: 2px; }
+  .due-red { color: var(--red); } .due-orange { color: var(--orange); }
+  .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 4px; }
+  .seg { display: flex; background: var(--card2); border-radius: 99px; padding: 2px; margin: 0 2px 8px; }
+  .seg span { flex: 1; text-align: center; padding: 6px 2px; font-size: 13px; border-radius: 99px; color: #c7c7cc; }
+  .seg span.on { background: #636366; color: #fff; font-weight: 600; }
+  .field { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 10px 12px; border-bottom: 1px solid var(--sep); font-size: 14px; }
+  .field:last-child { border-bottom: 0; }
+  .field .v { color: var(--sub); text-align: right; }
+  .field .l { color: var(--blue); }
+  .field.dis { opacity: .45; }
+  .pick { background: #3a3a3c; border-radius: 8px; padding: 4px 9px; font-size: 13.5px; color: #fff; white-space: nowrap; }
+  .pick.b { color: var(--blue); }
+  .tog { width: 40px; height: 24px; border-radius: 99px; background: #48484a; position: relative; flex-shrink: 0; }
+  .tog::after { content: ""; position: absolute; top: 2px; left: 2px; width: 20px; height: 20px; border-radius: 50%; background: #fff; }
+  .tog.on { background: var(--green); } .tog.on::after { left: 18px; }
+  .note { color: var(--sub); font-size: 11.5px; padding: 4px 8px; line-height: 1.4; }
+  .spacer { flex: 1; }
+  .b { flex: 1; text-align: center; border-radius: 99px; padding: 9px 6px; font-weight: 600; font-size: 14px; }
+  .b.plain { background: var(--card2); color: var(--blue); }
+  .b.prom { background: var(--blue); color: #fff; }
+  .b.aib { background: rgba(191,90,242,.24); color: #e9cdfb; }
+  .b.red { background: rgba(255,69,58,.18); color: #ff8a82; }
+  .btns { display: flex; gap: 8px; }
+  .sm { border-radius: 99px; padding: 5px 11px; font-weight: 600; font-size: 12.5px; white-space: nowrap; align-self: center; }
+  .sm.ok { background: var(--blue); color: #fff; } .sm.no { background: #48484a; color: #d1d1d6; }
+  .lnk { color: var(--blue); font-weight: 600; white-space: nowrap; }
+
+  /* Liquid Glass approximation */
+  .glass { background: rgba(72,72,78,.62); backdrop-filter: blur(18px) saturate(1.6); -webkit-backdrop-filter: blur(18px) saturate(1.6);
+    border: 1px solid rgba(255,255,255,.16); box-shadow: inset 0 1px 0 rgba(255,255,255,.18), 0 8px 24px rgba(0,0,0,.55); }
+
+  /* Tab bar as on the device screenshots: centred capsule, selected tab as a dark pill */
+  .tb { margin: auto auto 0; width: 80%; display: flex; border-radius: 99px; padding: 5px; font-size: 10px; color: #d1d1d6; text-align: center; box-sizing: border-box; }
+  .tb span { flex: 1; padding: 4px 0 3px; border-radius: 99px; }
+  .tb .on { color: var(--blue); background: rgba(0,0,0,.5); font-weight: 600; }
+  .ico { font-size: 17px; display: block; font-style: normal; line-height: 20px; }
+  .tbrow { display: flex; gap: 8px; align-items: center; margin-top: auto; padding-top: 8px; }
+  .tbrow .tb { flex: 1; width: auto; margin: 0; }
+  .aibtn { width: 52px; height: 52px; border-radius: 50%; display: grid; place-items: center; font-size: 22px; color: var(--mint); flex-shrink: 0; }
+  .tbgap { margin-top: 8px; }
+
+  /* New day header */
+  .topbar { display: flex; align-items: center; gap: 8px; padding: 0 2px 10px; }
+  .topbar .seg { flex: 1; margin: 0; }
+  .rbtn { width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; font-size: 20px; flex-shrink: 0; color: #fff; }
+  .rbtn.ai { color: var(--mint); font-size: 17px; }
+  .hdr { display: flex; align-items: flex-end; justify-content: space-between; gap: 8px; padding: 4px 6px 12px; }
+  .kick { font: 600 12px system-ui; color: var(--blue); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 2px; }
+  .bigdate { font: 700 28px/1.15 system-ui; letter-spacing: -.3px; }
+  .bigdate .car { font-size: 15px; color: var(--sub); vertical-align: 4px; }
+  .stepper { display: flex; border-radius: 99px; flex-shrink: 0; }
+  .stepper span { width: 38px; height: 34px; display: grid; place-items: center; color: #fff; font-size: 18px; }
+  .stepper span + span { border-left: 1px solid rgba(255,255,255,.14); }
+  .wk { display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; padding: 0 2px 10px; }
+  .wk small { display: block; color: var(--sub); font: 600 10.5px system-ui; margin-bottom: 4px; }
+  .wk b { display: inline-grid; place-items: center; width: 32px; height: 32px; border-radius: 50%; font: 600 15px system-ui; }
+  .wk .on b { background: var(--blue); }
+  .wk .dld b { box-shadow: inset 0 0 0 1.5px var(--red); color: #ff8a82; }
+  .wk .off b { color: #6e6e73; }
+  .wk i { display: block; width: 20px; height: 3px; border-radius: 99px; background: #3a3a3c; margin: 4px auto 0; overflow: hidden; }
+  .wk i u { display: block; height: 100%; background: var(--green); }
+  .wk i u.ov { background: var(--red); }
+  .pop { position: absolute; left: 14px; right: 14px; top: 154px; border-radius: 24px; padding: 12px 12px 10px; z-index: 5; background: rgba(44,44,46,.97); box-shadow: 0 16px 40px rgba(0,0,0,.75); border: 1px solid rgba(255,255,255,.12); }
+  .pop .ph { display: flex; justify-content: space-between; align-items: center; padding: 2px 6px 8px; font-weight: 600; }
+  .pop .ph span { color: var(--blue); }
+  .mcal { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; text-align: center; font-size: 15px; }
+  .mcal small { color: var(--sub); font: 600 10.5px system-ui; padding-bottom: 4px; }
+  .mcal span { height: 34px; display: grid; place-items: center; border-radius: 50%; position: relative; }
+  .mcal .o { color: #48484a; }
+  .mcal .td { background: var(--blue); font-weight: 700; }
+  .mcal .fl::after { content: ""; position: absolute; bottom: 2px; width: 5px; height: 5px; border-radius: 50%; background: var(--red); }
+  .dimall { position: absolute; inset: 0; background: rgba(0,0,0,.45); z-index: 4; }
+  .pills { display: flex; gap: 6px; flex-wrap: wrap; padding: 0 4px 8px; }
+  .pill { font-size: 12px; padding: 4px 9px; border-radius: 99px; background: var(--card); color: #d1d1d6; white-space: nowrap; }
+
+  /* Deadlines */
+  .dl { background: rgba(255,69,58,.14); border: 1px solid rgba(255,69,58,.5); border-radius: 18px; padding: 8px 12px; margin-bottom: 8px; }
+  .dl .h { color: #ff8a82; font: 700 12px system-ui; text-transform: uppercase; letter-spacing: .4px; margin-bottom: 2px; }
+  .dl .r { display: flex; gap: 8px; align-items: baseline; padding: 5px 0; border-top: 1px solid rgba(255,69,58,.25); font-size: 13.5px; }
+  .dl .r:first-of-type { border-top: 0; }
+  .dl .r .g { width: 16px; color: var(--red); text-align: center; flex-shrink: 0; }
+  .dl .r .n { flex: 1; min-width: 0; }
+  .dl .r .n small { display: block; color: #c7c7cc; font-size: 11.5px; }
+  .dl .r .w { color: #ff8a82; font-weight: 600; font-size: 12px; white-space: nowrap; }
+  .flag { color: var(--red); font-weight: 700; }
+
+  /* Capacity */
+  .cap { background: var(--card); border-radius: 18px; padding: 10px 12px; margin-bottom: 8px; }
+  .cap .top { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+  .cap .top b { font-size: 17px; }
+  .cap .top b.neg { color: #ff8a82; }
+  .cap .top span { color: var(--sub); font-size: 12px; white-space: nowrap; }
+  .cap .sub { color: #c7c7cc; font-size: 12px; margin-top: 1px; }
+  .cap .sub2 { color: var(--sub); font-size: 11.5px; margin-top: 5px; }
+  .cap .sub2.w { color: #ffc266; }
+  .bar { display: flex; height: 10px; border-radius: 99px; overflow: hidden; background: #3a3a3c; margin: 7px 0 6px; gap: 1.5px; position: relative; }
+  .bar i { display: block; height: 100%; }
+  .k-ev { background: var(--blue); } .k-br { background: #8e8e93; } .k-re { background: var(--teal); }
+  .k-bu { background: repeating-linear-gradient(135deg, #8e8e93 0 3px, #48484a 3px 6px); }
+  .k-pl { background: var(--green); } .k-fr { background: #3a3a3c; } .k-ov { background: var(--red); }
+  .k-pa { background: repeating-linear-gradient(135deg, #232326 0 4px, #323236 4px 8px); }
+  .k-du { background: repeating-linear-gradient(135deg, var(--orange) 0 3px, #6b4a10 3px 6px); }
+  .cap .lg { display: flex; flex-wrap: wrap; gap: 3px 10px; font-size: 11px; color: #c7c7cc; }
+  .cap .lg i { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 4px; }
+  .cap .act { display: flex; gap: 8px; margin-top: 9px; }
+  .tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+  .tile { background: var(--card); border-radius: 18px; padding: 10px 12px; }
+  .tile small { display: block; color: var(--sub); font-size: 11.5px; }
+  .tile b { font-size: 19px; display: block; margin: 1px 0; }
+  .strip { position: relative; margin: 8px 0 2px; }
+  .strip .bar { height: 16px; border-radius: 6px; margin: 0; }
+  .strip .past { position: absolute; left: 0; top: 0; bottom: 0; background: rgba(0,0,0,.62); border-radius: 6px 0 0 6px; }
+  .strip .now { position: absolute; top: -4px; bottom: -4px; width: 2px; background: var(--red); border-radius: 2px; }
+  .strip .now::before { content: "13:20"; position: absolute; top: -15px; left: -14px; font: 600 10px system-ui; color: #ff8a82; }
+  .axis { display: flex; justify-content: space-between; font: 10px ui-monospace, monospace; color: var(--sub); }
+  .anno { font: 600 10.5px system-ui; color: #ffd60a; margin: 6px 6px 3px; }
+
+  /* Timeline */
+  .tl { display: flex; flex-direction: column; gap: 5px; }
+  .time { width: 40px; color: var(--sub); font: 12px ui-monospace, monospace; flex-shrink: 0; align-self: flex-start; padding-top: 7px; }
+  .block { flex: 1; min-width: 0; border-radius: 12px; padding: 7px 10px; font-size: 13.5px; }
+  .block .meta { color: #c7c7cc; font-size: 11.5px; margin-top: 2px; }
+  .block.event { background: rgba(10,132,255,.22); border-left: 4px solid var(--blue); }
+  .block.planned { background: rgba(48,209,88,.18); border-left: 4px solid var(--green); }
+  .block.planned.act { box-shadow: 0 0 0 2px var(--green); }
+  .block.recur { background: rgba(100,210,255,.14); border-left: 4px solid var(--teal); }
+  .block.quiet { background: repeating-linear-gradient(135deg, #1c1c1e 0 6px, #232326 6px 12px); color: var(--sub); padding: 5px 10px; font-size: 12.5px; }
+  .block.free { border: 1.5px dashed #48484a; color: var(--sub); font-size: 12.5px; padding: 5px 10px; }
+  .block.free.drop { border-color: var(--mint); color: var(--mint); background: rgba(124,240,195,.1); }
+  .block.free.no { opacity: .45; }
+  .block.gone { border: 1.5px dashed #48484a; background: none; color: #636366; }
+  .past-row { opacity: .45; }
+  .lift { position: absolute; left: 66px; right: 30px; border-radius: 12px; padding: 9px 12px; font-size: 13.5px; transform: rotate(-2deg); z-index: 3; }
+  .lift small { display: block; color: #c7c7cc; font-size: 11.5px; }
+  .cals { display: inline-flex; vertical-align: -1px; margin-right: 4px; }
+  .cals .dot { margin-right: -3px; box-shadow: 0 0 0 1.5px #16324f; }
+
+  /* Hour grid (variant) */
+  .hg { position: relative; height: 290px; margin: 2px 0 6px 44px; border-left: 1px solid var(--sep); }
+  .hg .hl { position: absolute; left: -44px; right: 0; border-top: 1px solid #2c2c2e; font: 11px ui-monospace, monospace; color: var(--sub); padding-left: 2px; height: 0; }
+  .hg .hl span { position: relative; top: -8px; background: var(--bg); padding-right: 4px; }
+  .hg .ev { position: absolute; left: 4px; right: 4px; border-radius: 9px; padding: 4px 8px; font-size: 12.5px; box-sizing: border-box; overflow: hidden; }
+  .hg .ev small { color: #c7c7cc; font-size: 11px; display: block; }
+  .hg .ev.e { background: rgba(10,132,255,.24); border-left: 4px solid var(--blue); }
+  .hg .ev.q { background: repeating-linear-gradient(135deg, #1c1c1e 0 6px, #232326 6px 12px); color: var(--sub); }
+  .hg .ev.p { background: rgba(48,209,88,.3); border-left: 4px solid var(--green); box-shadow: 0 8px 22px rgba(0,0,0,.6), 0 0 0 1.5px var(--green); z-index: 2; }
+  .hg .ev.o { border: 1.5px dashed #48484a; color: #636366; }
+  .hg .grab { position: absolute; left: 50%; width: 30px; height: 5px; margin-left: -15px; border-radius: 99px; background: #fff; z-index: 3; }
+
+  /* Week rows */
+  .day { background: var(--card); border-radius: 16px; padding: 8px 10px; margin-bottom: 5px; }
+  .day.today { box-shadow: inset 0 0 0 1.5px var(--blue); }
+  .day.drop { box-shadow: inset 0 0 0 2px var(--mint); background: rgba(124,240,195,.1); }
+  .day.past { opacity: .5; }
+  .day .hd { display: flex; align-items: center; gap: 8px; }
+  .day .hd b { width: 50px; font-size: 13.5px; flex-shrink: 0; }
+  .day .hd .bar { flex: 1; margin: 0; height: 8px; }
+  .day .hd .n { font: 12px system-ui; font-variant-numeric: tabular-nums; color: #c7c7cc; white-space: nowrap; min-width: 92px; text-align: right; }
+  .day .hd .n.over { color: #ff8a82; font-weight: 700; }
+  .tk { display: flex; align-items: center; gap: 6px; font-size: 13px; padding: 5px 0 0 2px; }
+  .tk .grip { color: #636366; font-size: 13px; letter-spacing: -2px; }
+  .tk .nm { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .tk .d { color: var(--sub); font-size: 11.5px; white-space: nowrap; }
+  .tk.dlrow { color: #ffb3ad; font-weight: 600; }
+  .ghost { border: 1.5px dashed var(--mint); border-radius: 9px; padding: 5px 8px; margin-top: 5px; color: var(--mint); font-size: 12.5px; }
+
+  /* Drawer for unplanned tasks */
+  .drawer { margin: 6px -6px 0; border-radius: 24px; padding: 6px 10px 8px; background: #1c1c1e; border: 1px solid rgba(255,255,255,.1); box-shadow: 0 -8px 24px rgba(0,0,0,.6); }
+  .drawer .grab, .grab { width: 36px; height: 5px; border-radius: 99px; background: #636366; margin: 0 auto 8px; }
+  .drawer .dh { display: flex; justify-content: space-between; align-items: center; font-weight: 600; padding: 0 4px 6px; }
+  .drawer .dh span { color: var(--sub); font-weight: 500; font-size: 12.5px; }
+  .drawer .list { background: var(--card2); margin-top: 6px; }
+  .drawer .list .item { border-color: #48484a; padding: 8px 10px; }
+  .search { background: #3a3a3c; border-radius: 10px; padding: 7px 10px; color: var(--sub); font-size: 13.5px; margin: 0 2px 8px; }
+  .fch { display: flex; gap: 6px; overflow: hidden; padding: 0 2px; }
+  .grip2 { color: #636366; letter-spacing: -2px; align-self: center; }
+  .plusb { width: 26px; height: 26px; border-radius: 50%; background: rgba(10,132,255,.24); color: var(--blue); display: grid; place-items: center; font-weight: 700; flex-shrink: 0; align-self: center; }
+  .daych { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+  .daych div { background: var(--card2); border-radius: 12px; text-align: center; padding: 6px 0; font-size: 11px; color: #c7c7cc; }
+  .daych div b { display: block; font-size: 14px; color: #fff; }
+  .daych div.t { box-shadow: inset 0 0 0 1.5px var(--blue); }
+  .daych div.off { opacity: .4; }
+
+  /* Month */
+  .mgrid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; margin-bottom: 8px; }
+  .mgrid .wd { text-align: center; color: var(--sub); font: 600 10.5px system-ui; padding-bottom: 2px; }
+  .mc2 { border-radius: 10px; background: var(--card); height: 38px; padding: 3px 3px 0; text-align: center; font: 600 13px system-ui; position: relative; box-sizing: border-box; }
+  .mc2.out { background: none; color: #48484a; }
+  .mc2.past { color: #6e6e73; }
+  .mc2.today { box-shadow: inset 0 0 0 1.5px var(--blue); color: var(--blue); }
+  .mc2.sel { background: #fff; color: #000; }
+  .mc2.dl2 { background: rgba(255,69,58,.3); box-shadow: inset 0 0 0 1.5px var(--red); color: #fff; }
+  .mc2 .ld { position: absolute; left: 6px; right: 6px; bottom: 5px; height: 4px; border-radius: 99px; background: #3a3a3c; overflow: hidden; }
+  .mc2.sel .ld { background: #c7c7cc; }
+  .mc2 .ld i { display: block; height: 100%; background: var(--green); }
+  .mc2 .ld i.hi { background: var(--orange); } .mc2 .ld i.ov { background: var(--red); }
+  .agh { display: flex; justify-content: space-between; align-items: baseline; padding: 4px 6px 6px; }
+  .agh b { font-size: 16px; }
+  .agh small { display: block; color: var(--sub); font-size: 12px; font-weight: 400; }
+
+  /* Context menu */
+  .blurbg { position: absolute; inset: 0; padding: 60px 12px; filter: blur(5px); opacity: .32; }
+  .fg { position: relative; z-index: 1; display: flex; flex-direction: column; flex: 1; }
+  .preview { background: var(--card); border-radius: 18px; padding: 11px 12px; margin: 6px 2px 8px; box-shadow: 0 10px 30px rgba(0,0,0,.6); }
+  .menu { border-radius: 18px; overflow: hidden; margin: 0 2px; width: 276px; background: rgba(58,58,62,.92); }
+  .menu.abs { position: absolute; z-index: 6; }
+  .menu .mi { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; font-size: 15px; border-bottom: 1px solid rgba(255,255,255,.1); min-height: 22px; gap: 8px; }
+  .menu .mi:last-child { border-bottom: 0; }
+  .menu .mi i { font-style: normal; color: #d1d1d6; font-size: 15px; }
+  .menu .mi small { display: block; color: #aeaeb2; font-size: 11.5px; margin-top: 1px; }
+  .menu .mi.ai { color: #e9cdfb; opacity: .55; } .menu .mi.ai i { color: var(--purple); }
+  .menu .mi.de { color: var(--red); } .menu .mi.de i { color: var(--red); }
+  .menu .gap { height: 7px; background: rgba(0,0,0,.35); }
+  .menu .mh { padding: 8px 14px 5px; font: 600 11.5px system-ui; color: #aeaeb2; }
+  .cg { display: grid; grid-template-columns: repeat(4, 1fr); border-bottom: 1px solid rgba(255,255,255,.1); }
+  .cg.c2 { grid-template-columns: repeat(2, 1fr); } .cg.c3 { grid-template-columns: repeat(3, 1fr); }
+  .cg div { text-align: center; padding: 9px 2px 8px; font-size: 11.5px; border-right: 1px solid rgba(255,255,255,.1); line-height: 1.25; }
+  .cg div:last-child { border-right: 0; }
+  .cg div.chk { background: rgba(10,132,255,.25); }
+  .cg.txt div { font-size: 14px; padding: 11px 2px; }
+  .cal { display: block; width: 26px; height: 24px; margin: 0 auto 4px; border-radius: 6px; border: 1.5px solid #d1d1d6; border-top-width: 5px; font: 700 11px/17px system-ui; box-sizing: content-box; }
+
+  /* Sheets */
+  .under { opacity: .35; padding: 0 6px 10px; }
+  .sheetp { background: #1c1c1e; margin: 0 -12px -12px; border-radius: 30px 30px 0 0; padding: 8px 12px 14px; flex: 1; display: flex; flex-direction: column; box-shadow: 0 -8px 30px rgba(0,0,0,.6); }
+  .sheetp .list { background: var(--card2); }
+  .sheetp .list .item, .sheetp .list .field { border-color: #48484a; }
+  .shead { display: flex; justify-content: space-between; align-items: center; padding: 0 4px 10px; }
+  .shead b { font-size: 16px; }
+  .shead .gb { border-radius: 99px; padding: 6px 12px; font-size: 14px; }
+  .banner { border-radius: 14px; padding: 9px 12px; font-size: 12.5px; line-height: 1.4; margin-bottom: 8px; }
+  .banner b { display: block; font-size: 13px; margin-bottom: 1px; }
+  .banner.lock { background: rgba(142,142,147,.2); color: #d1d1d6; }
+  .banner.inv { background: rgba(10,132,255,.16); color: #cfe5ff; }
+  .banner.ok { background: rgba(48,209,88,.14); color: #b9f2c8; }
+  .banner.tw { background: rgba(124,240,195,.1); border: 1px solid rgba(124,240,195,.35); color: #c9f7e6; }
+  .dimov { position: absolute; inset: 0; background: rgba(0,0,0,.5); z-index: 2; }
+  .asheet { position: absolute; left: 10px; right: 10px; bottom: 14px; display: flex; flex-direction: column; gap: 8px; z-index: 3; }
+  .asheet .grp { border-radius: 18px; overflow: hidden; background: rgba(58,58,60,.97); }
+  .asheet .m { padding: 12px 16px; text-align: center; font-size: 12px; color: #c7c7cc; border-bottom: 1px solid #545458; line-height: 1.4; }
+  .asheet .m b { display: block; color: #fff; font-size: 13px; margin-bottom: 2px; }
+  .asheet .act { padding: 14px; text-align: center; color: var(--blue); font-size: 16px; border-bottom: 1px solid #545458; }
+  .asheet .act small { display: block; color: #aeaeb2; font-size: 11.5px; margin-top: 2px; }
+  .asheet .act:last-child { border-bottom: 0; } .asheet .act.c { font-weight: 600; } .asheet .act.d { color: var(--red); }
+  .est { display: flex; align-items: center; background: #3a3a3c; border-radius: 99px; height: 34px; }
+  .est .pm { width: 40px; text-align: center; font-size: 21px; color: var(--blue); line-height: 34px; }
+  .est .val { min-width: 58px; text-align: center; font: 600 14.5px system-ui; font-variant-numeric: tabular-nums; border-left: 1px solid #545458; border-right: 1px solid #545458; line-height: 22px; padding: 0 6px; }
+  .radio { width: 20px; height: 20px; border-radius: 50%; border: 2px solid #636366; flex-shrink: 0; box-sizing: border-box; }
+  .radio.on { border: 6px solid var(--blue); background: #fff; }
+
+  /* Selection bar, toast, annotation zones */
+  .selbar { display: flex; gap: 6px; align-items: center; border-radius: 99px; padding: 6px; margin-top: 8px; }
+  .selbar .b { padding: 10px 6px; font-size: 13.5px; }
+  .selinfo { font-size: 12px; color: #ffc266; text-align: center; padding: 6px 4px 0; }
+  .toast { border-radius: 99px; padding: 7px 8px 7px 12px; display: flex; align-items: center; gap: 8px; margin: 0 2px 6px; font-size: 13px; }
+  .toast .tx { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .toast .un { background: rgba(10,132,255,.28); border-radius: 99px; padding: 6px 12px; font-weight: 600; white-space: nowrap; }
+  .zone { display: flex; align-items: flex-end; justify-content: flex-end; position: absolute; border: 1.5px dashed #ffd60a; border-radius: 10px; color: #ffd60a; font: 600 10px system-ui; padding: 2px 5px; z-index: 4; pointer-events: none; box-sizing: border-box; }
+  .swipe { display: flex; justify-content: space-between; align-items: center; color: #ffd60a; font: 600 11px system-ui; border: 1.5px dashed #ffd60a; border-radius: 10px; padding: 4px 8px; margin: 6px 2px; }
+  .swact { display: flex; margin-bottom: 0; }
+  .swact .ac { width: 74px; display: grid; place-items: center; font: 600 12px system-ui; color: #fff; }
+</style>
+</head>
+<body>
+
+<h1>Tagwerk · Phase 2b · Feedback-Runde · Mockups A–K</h1>
+<p class="lead">Antwort auf das Geräte-Feedback vom 17. November 2026. Je Bereich A–K stehen zwei bis drei Varianten; die Empfehlung trägt ein grünes Kürzel. Freigabe bitte als Liste der Kürzel, zum Beispiel „A1, B1, C1, C2, C4 …“. Alle Daten sind erfunden, Stichtag ist Dienstag, 17. November 2026, „jetzt“ ist 13:20 Uhr. Die Bildschirme zeigen den Dunkelmodus wie auf den Screenshots; Symbole sind Platzhalter für SF Symbols. Gelb gestrichelte Flächen sind Anmerkungen und nicht Teil der Oberfläche.</p>
+
+<div class="box neutral">
+  <h3>Empfehlungen auf einen Blick</h3>
+  <table class="sum">
+    <tr><th>Bereich</th><th>Empfehlung</th><th>Kern</th></tr>
+    <tr><td><b>A</b> Kopf Tag</td><td><span class="code r">A1</span></td><td>Großer Datumstitel im Inhalt, Antippen öffnet den Monatskalender, Wischen wechselt den Tag.</td></tr>
+    <tr><td><b>B</b> Freie Zeit</td><td><span class="code r">B1</span></td><td>Heute eine Zahl „noch frei ab jetzt“, Gesamtwert des Tages als Unterzeile; Vergangenes schraffiert.</td></tr>
+    <tr><td><b>C</b> Zeitblöcke</td><td><span class="code r">C1</span><span class="code r">C2</span><span class="code r">C4</span></td><td>Menü beim Antippen, Ziehen auf freie Lücken, Arbeitstag und Blöcke im Bearbeiten-Sheet direkt änderbar.</td></tr>
+    <tr><td><b>D</b> Ungeplant</td><td><span class="code r">D1</span></td><td>Ausziehbare Ablage mit Liste, Suche und Filter; Standardfilter „in diesem Zeitraum fällig“.</td></tr>
+    <tr><td><b>E</b> Monat</td><td><span class="code r">E1</span></td><td>Tag antippen zeigt seine Einträge unter dem Raster; „Tag öffnen ›“ und zweiter Tipp wechseln in die Tagesansicht.</td></tr>
+    <tr><td><b>F</b> Kontextmenü</td><td><span class="code r">F1</span></td><td>Zwei benannte Abschnitte („Einplanen · nur in Tagwerk“ / „Fälligkeit · ändert die Quelle“), vier Ziele als 2 × 2.</td></tr>
+    <tr><td><b>G</b> Aufgaben</td><td><span class="code r">G1</span><span class="code r">G3</span><span class="code r">G4</span></td><td>Auswahlmodus mit „Für heute einplanen“, Sprung mit Hervorhebung, wiederkehrende Aufgaben mit getrennten Karten „Erinnerung“ und „In Tagwerk“.</td></tr>
+    <tr><td><b>H</b> Fälliges</td><td><span class="code r">H1</span></td><td>„Heute fällig“ erscheint automatisch und zählt zur Last; Überfälliges erscheint, zählt aber erst nach „Heute“.</td></tr>
+    <tr><td><b>I</b> Doppelte Termine</td><td><span class="code r">I1</span></td><td>Gleicher Titel, Beginn, Ende und Ganztags-Status werden zu einer Zeile mit Kennzeichen „2 Kalender“.</td></tr>
+    <tr><td><b>J</b> Termine schreiben</td><td><span class="code r">J1</span><span class="code r">J2</span></td><td>Eigene Detail- und Kurzform in Tagwerk, „Weitere Optionen …“ öffnet den Systemeditor; Schreibschutz und Einladungen ehrlich gesperrt.</td></tr>
+    <tr><td><b>K</b> KI</td><td><span class="code r">K1</span><span class="code r">K3</span></td><td>Knopf bleibt neben der Tab-Leiste; ein Modell für alles mit Vorgabe „Automatisch“.</td></tr>
+  </table>
+</div>
+
+<!-- ============================== A ============================== -->
+<h2><span class="area">A</span> Kopf der Tagesansicht · Datum, Wischen, Kalenderauswahl</h2>
+<p class="lead">Heute: Titel „Planen“, darunter Tag/Woche/Monat, darunter das Datum in Überschriftgröße zwischen zwei Pfeilen, „Heute“ als kleiner Link darunter. Das Datum ist die wichtigste Angabe der Ansicht und zugleich die kleinste Zeile des Kopfs. In allen Varianten entfällt der Titel „Planen“ (er steht schon in der Tab-Leiste); Tag/Woche/Monat rückt in die Navigationsleiste, daneben ＋.</p>
+<div class="grid">
+  <div>
+    <p class="label"><span class="code r">A1</span><b>Großer Datumstitel im Inhalt</b> <span class="rec">Empfehlung</span></p>
+    <div class="phone">
+      <div class="status"><span>13:20</span><span>●●● 5G</span></div>
+      <div class="topbar"><div class="seg"><span class="on">Tag</span><span>Woche</span><span>Monat</span></div><span class="rbtn glass">＋</span></div>
+      <div class="hdr">
+        <div><div class="kick">Heute · KW 47</div><div class="bigdate">Dienstag, 17. Nov. <span class="car">⌄</span></div></div>
+        <div class="stepper glass"><span>‹</span><span>›</span></div>
+      </div>
+      <div class="dl">
+        <div class="h">⚑ Deadlines</div>
+        <div class="r"><span class="g">⚑</span><span class="n">Abgabe Exposé<small>Kalender „Uni“ · ganztägig</small></span><span class="w">heute</span></div>
+        <div class="r"><span class="g">⚑</span><span class="n">Statistik-Klausur<small>Kalender „Uni“ · Fr 20. Nov, 10:00</small></span><span class="w">in 3 Tagen</span></div>
+      </div>
+      <div class="cap">
+        <div class="top"><b>1 h 10 noch frei</b><span>⚙︎</span></div>
+        <div class="sub">ab jetzt · 13:20 bis 18:00</div>
+        <div class="bar"><i class="k-pa" style="flex:260"></i><i class="k-ev" style="flex:60"></i><i class="k-bu" style="flex:30"></i><i class="k-re" style="flex:30"></i><i class="k-pl" style="flex:90"></i><i class="k-fr" style="flex:70"></i></div>
+      </div>
+      <div class="pills"><span class="pill">Ganztägig</span><span class="pill"><span class="dot" style="background:#64d2ff"></span>Sprechstunde entfällt</span></div>
+      <div class="swipe"><span>←</span><span>Wischen im Inhalt wechselt den Tag</span><span>→</span></div>
+      <div class="tl">
+        <div class="row past-row"><span class="time">09:00</span><div class="block event">Seminar<div class="meta">bis 10:30</div></div></div>
+        <div class="row past-row"><span class="time">10:45</span><div class="block planned">#42 Login-Fehler beheben<div class="meta">1 h · Zeitblock</div></div></div>
+        <div class="row"><span class="time">14:00</span><div class="block planned">Pretest vorbereiten<div class="meta">1 h · Zeitblock</div></div></div>
+        <div class="row"><span class="time">15:30</span><div class="block event">Team-Meeting<div class="meta">bis 16:30</div></div></div>
+      </div>
+      <div class="tb glass"><span class="on"><i class="ico">▦</i>Planen</span><span><i class="ico">☑︎</i>Aufgaben</span><span><i class="ico">⚙︎</i>Einstellungen</span></div>
+    </div>
+    <p class="pc"><b>Pro:</b> Das Datum ist die größte Zeile (28 pt), steht im Inhalt statt in der Leiste und scrollt nicht weg (fester Kopf). Die Zeile darüber sagt den Abstand zu heute („Heute“, „Morgen“, „in 4 Tagen“, „vor 2 Tagen“). Die Pfeile bleiben als bedienbare Alternative zur Wischgeste. <b>Contra:</b> rund 20 pt mehr Höhe als heute.</p>
+    <p class="pc"><b>Nebenbei behoben (Screenshot 2):</b> Ganztägige Einträge aus einem Deadline-Kalender stehen nur noch in der Deadline-Karte. „Ganztägig“ wird eine Chip-Zeile und zeigt nur die übrigen ganztägigen Termine.</p>
+  </div>
+  <div>
+    <p class="label"><span class="code r">A1</span><b>Datum angetippt</b>: Monatskalender als Popover</p>
+    <div class="phone">
+      <div class="status"><span>13:20</span><span>●●● 5G</span></div>
+      <div class="topbar"><div class="seg"><span class="on">Tag</span><span>Woche</span><span>Monat</span></div><span class="rbtn glass">＋</span></div>
+      <div class="hdr">
+        <div><div class="kick">Heute · KW 47</div><div class="bigdate">Dienstag, 17. Nov. <span class="car">⌃</span></div></div>
+        <div class="stepper glass"><span>‹</span><span>›</span></div>
+      </div>
+      <div class="dimall" style="top:150px"></div>
+      <div class="pop">
+        <div class="ph"><b>November 2026</b><span>‹ &nbsp; ›</span></div>
+        <div class="mcal">
+          <small>Mo</small><small>Di</small><small>Mi</small><small>Do</small><small>Fr</small><small>Sa</small><small>So</small>
+          <span class="o">26</span><span class="o">27</span><span class="o">28</span><span class="o">29</span><span class="o">30</span><span class="o">31</span><span>1</span>
+          <span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span>
+          <span>9</span><span>10</span><span>11</span><span>12</span><span>13</span><span>14</span><span>15</span>
+          <span>16</span><span class="td fl">17</span><span>18</span><span>19</span><span class="fl">20</span><span>21</span><span>22</span>
+          <span>23</span><span>24</span><span class="fl">25</span><span>26</span><span>27</span><span>28</span><span>29</span>
+          <span>30</span><span class="o">1</span><span class="o">2</span><span class="o">3</span><span class="o">4</span><span class="o">5</span><span class="o">6</span>
+        </div>
+        <div class="btns" style="margin-top:8px"><div class="b plain">Heute</div><div class="b plain">Monatsansicht ›</div></div>
+      </div>
+      <div class="dl" style="opacity:.5"><div class="h">⚑ Deadlines</div><div class="r"><span class="g">⚑</span><span class="n">Abgabe Exposé</span><span class="w">heute</span></div></div>
+      <div class="spacer"></div>
+      <div class="tb glass"><span class="on"><i class="ico">▦</i>Planen</span><span><i class="ico">☑︎</i>Aufgaben</span><span><i class="ico">⚙︎</i>Einstellungen</span></div>
+    </div>
+    <p class="pc">Ein Tipp auf einen Tag springt dorthin und schließt das Popover. Rote Punkte markieren Tage mit wichtiger Deadline. „Heute“ ersetzt den bisherigen kleinen Link unter dem Datum; außerhalb von heute erscheint zusätzlich eine Kapsel „Heute“ links neben den Pfeilen.</p>
+  </div>
+  <div>
+    <p class="label"><span class="code">A2</span><b>Wochenstreifen wie Apple Kalender</b></p>
+    <div class="phone">
+      <div class="status"><span>13:20</span><span>●●● 5G</span></div>
+      <div class="topbar"><div class="seg"><span class="on">Tag</span><span>Woche</span><span>Monat</span></div><span class="rbtn glass">＋</span></div>
+      <div class="wk">
+        <div><small>Mo</small><b>16</b><i><u style="width:100%"></u></i></div>
+        <div class="on"><small>Di</small><b>17</b><i><u style="width:75%"></u></i></div>
+        <div><small>Mi</small><b>18</b><i><u style="width:50%"></u></i></div>
+        <div><small>Do</small><b>19</b><i><u class="ov" style="width:100%"></u></i></div>
+        <div class="dld"><small>Fr</small><b>20</b><i><u style="width:30%"></u></i></div>
+        <div class="off"><small>Sa</small><b>21</b><i></i></div>
+        <div class="off"><small>So</small><b>22</b><i></i></div>
+      </div>
+      <div class="hdr" style="padding-top:0"><div><div class="bigdate" style="font-size:22px">Dienstag, 17. November <span class="car">⌄</span></div></div><span class="chip on">Heute</span></div>
+      <div class="dl"><div class="h">⚑ Deadlines</div><div class="r"><span class="g">⚑</span><span class="n">Abgabe Exposé<small>Kalender „Uni“ · ganztägig</small></span><span class="w">heute</span></div></div>
+      <div class="cap"><div class="top"><b>1 h 10 noch frei</b><span>⚙︎</span></div><div class="sub">ab jetzt · 13:20 bis 18:00</div><div class="bar"><i class="k-pa" style="flex:260"></i><i class="k-ev" style="flex:60"></i><i class="k-bu" style="flex:30"></i><i class="k-re" style="flex:30"></i><i class="k-pl" style="flex:90"></i><i class="k-fr" style="flex:70"></i></div></div>
+      <div class="tl">
+        <div class="row"><span class="time">14:00</span><div class="block planned">Pretest vorbereiten<div class="meta">1 h · Zeitblock</div></div></div>
+        <div class="row"><span class="time">15:30</span><div class="block event">Team-Meeting<div class="meta">bis 16:30</div></div></div>
+      </div>
+      <div class="tb glass"><span class="on"><i class="ico">▦</i>Planen</span><span><i class="ico">☑︎</i>Aufgaben</span><span><i class="ico">⚙︎</i>Einstellungen</span></div>
+    </div>
+    <p class="pc"><b>Pro:</b> Jeder Tag der Woche ist einen Tipp entfernt, Auslastung und Deadline-Tage sind schon im Kopf sichtbar; Wischen auf dem Streifen wechselt die Woche. <b>Contra:</b> etwa 60 pt mehr Höhe, und der Streifen wiederholt, was die Ansicht „Woche“ schon leistet. Zwei Wischflächen mit unterschiedlicher Wirkung (Streifen = Woche, Inhalt = Tag) müssen gelernt werden.</p>
+  </div>
+  <div>
+    <p class="label"><span class="code">A3</span><b>Datum als Titel der Navigationsleiste</b></p>
+    <div class="phone">
+      <div class="status"><span>13:20</span><span>●●● 5G</span></div>
+      <div class="nav" style="padding-bottom:10px"><span class="rbtn glass">‹</span><span class="c" style="font-size:18px">Di., 17. November ⌄<br><span style="color:var(--blue);font:600 11px system-ui;display:block;text-align:center">Heute</span></span><span class="rbtn glass">›</span></div>
+      <div class="seg"><span class="on">Tag</span><span>Woche</span><span>Monat</span></div>
+      <div class="dl"><div class="h">⚑ Deadlines</div><div class="r"><span class="g">⚑</span><span class="n">Abgabe Exposé<small>Kalender „Uni“ · ganztägig</small></span><span class="w">heute</span></div></div>
+      <div class="cap"><div class="top"><b>1 h 10 noch frei</b><span>⚙︎</span></div><div class="sub">ab jetzt · 13:20 bis 18:00</div><div class="bar"><i class="k-pa" style="flex:260"></i><i class="k-ev" style="flex:60"></i><i class="k-bu" style="flex:30"></i><i class="k-re" style="flex:30"></i><i class="k-pl" style="flex:90"></i><i class="k-fr" style="flex:70"></i></div></div>
+      <div class="tl">
+        <div class="row"><span class="time">14:00</span><div class="block planned">Pretest vorbereiten<div class="meta">1 h · Zeitblock</div></div></div>
+        <div class="row"><span class="time">15:30</span><div class="block event">Team-Meeting<div class="meta">bis 16:30</div></div></div>
+      </div>
+      <div class="spacer"></div>
+      <div class="tb glass"><span class="on"><i class="ico">▦</i>Planen</span><span><i class="ico">☑︎</i>Aufgaben</span><span><i class="ico">⚙︎</i>Einstellungen</span></div>
+    </div>
+    <p class="pc"><b>Pro:</b> kleinster Umbau, keine zusätzliche Höhe. <b>Contra:</b> Das Datum bleibt ganz oben und auf 18 pt begrenzt (Navigationstitel wachsen nicht mit), also genau die beiden beanstandeten Punkte. ＋ für „Neuer Termin“ (Bereich J) hat keinen Platz mehr neben den Pfeilen.</p>
+  </div>
+</div>
+<div class="box">
+  <h3>Empfehlung A: A1</h3>
+  <ul>
+    <li><b>Begründung:</b> A1 löst beide Beanstandungen (zu klein, zu weit oben) mit dem geringsten Höhenverbrauch. A2 ist die reichere Navigation, kostet aber Platz, der in der Tagesansicht für Deadlines, Kapazität und Ablauf gebraucht wird, und doppelt die Wochenansicht.</li>
+    <li><b>Wischen und bestehende Wischaktionen kollidieren.</b> Die Tagesansicht ist heute eine <code>List</code> mit <code>.swipeActions</code> („Zeitblock“, „Ausplanen“) auf den Zeilen „Geplant ohne Uhrzeit“. Eine waagerechte Tagesgeste über denselben Zeilen ist mehrdeutig. Vorschlag: In der Tagesansicht entfallen die Zeilen-Wischaktionen; ihre Funktionen liegen im Menü beim Antippen (Bereich C) und im Kontextmenü. Im Tab „Aufgaben“ bleiben die Wischaktionen unverändert.</li>
+    <li><b>SwiftUI:</b> Segmented Control als <code>ToolbarItem(placement: .principal)</code>, ＋ als <code>.primaryAction</code>. Tageswechsel als waagerechtes Blättern: <code>ScrollView(.horizontal)</code> mit <code>LazyHStack</code>, <code>.scrollTargetBehavior(.paging)</code>, <code>.scrollPosition(id:)</code> und <code>.containerRelativeFrame(.horizontal)</code> je Tag (iOS 17+), alternativ <code>TabView</code> mit <code>.tabViewStyle(.page(indexDisplayMode: .never))</code> über drei Seiten (gestern, heute, morgen) mit Neuzentrierung. Senkrechte <code>List</code> je Seite ist damit verträglich, weil die Achsen verschieden sind.</li>
+    <li><b>Kalenderauswahl:</b> <code>DatePicker(selection:displayedComponents: .date)</code> mit <code>.datePickerStyle(.graphical)</code> in einem <code>.popover</code> mit <code>.presentationCompactAdaptation(.popover)</code> (dieses Muster nutzt die App schon für den Offline-Hinweis). Die roten Deadline-Punkte kann der System-Picker nicht darstellen; mit Punkten braucht es ein eigenes Raster (<code>LazyVGrid</code>, dieselbe Zelle wie in der Monatsansicht). Ohne Punkte reicht der System-Picker.</li>
+    <li><b>Bedienhilfen:</b> Die Pfeile bleiben; der Datumstitel erhält <code>.accessibilityAdjustableAction</code> (hoch/runter = nächster/voriger Tag), der Tageswechsel eine <code>.sensoryFeedback(.selection, trigger:)</code>.</li>
+    <li><b>Am Gerät zu prüfen:</b> ob das Blättern mit <code>.refreshable</code> und dem Ziehen von Zeitblöcken (Bereich C, langes Drücken, senkrecht) sauber zusammenspielt.</li>
+  </ul>
+</div>
+
+<!-- ============================== B ============================== -->
+<h2><span class="area">B</span> Freie Zeit · heute nur, was ab jetzt noch frei ist</h2>
+<p class="lead">Heute zeigt die Karte „2 h 5 frei von 2 h 5“, auch wenn der halbe Arbeitstag schon vorbei ist. Beispielrechnung für alle Varianten (Arbeitszeit 09–18 Uhr, jetzt 13:20): ganzer Tag 9 h − 2 h 30 Termine − 1 h Pause − 45 min Puffer − 30 min Wiederkehrendes = 4 h 15 verfügbar, davon 2 h 30 geplant, also 1 h 45 frei. Ab jetzt: 4 h 40 Restfenster − 1 h Termin − 30 min Puffer − 30 min Wiederkehrendes = 2 h 40 verfügbar, davon 1 h 30 noch offen geplant, also <b>1 h 10 noch frei</b>. Die Differenz von 35 min ist freie Zeit, die bereits verstrichen ist.</p>
+<div class="grid">
+  <div>
+    <p class="label"><span class="code r">B1</span><b>Eine Zahl, je nach Tag anders gemeint</b> <span class="rec">Empfehlung</span></p>
+    <div class="phone">
+      <div class="status"><span>13:20</span><span>●●● 5G</span></div>
+      <div class="anno">Heute (Di 17.), 13:20 Uhr</div>
+      <div class="cap">
+        <div class="top"><b>1 h 10 noch frei</b><span>⚙︎</span></div>
+        <div class="sub">ab jetzt · 13:20 bis 18:00</div>
+        <div class="bar"><i class="k-pa" style="flex:260"></i><i class="k-ev" style="flex:60"></i><i class="k-bu" style="flex:30"></i><i class="k-re" style="flex:30"></i><i class="k-pl" style="flex:90"></i><i class="k-fr" style="flex:70"></i></div>
+        <div class="lg"><span><i class="k-pa"></i>vorbei</span><span><i class="k-ev"></i>Termin 1 h</span><span><i class="k-bu"></i>Puffer 30 min</span><span><i class="k-re"></i>↻ 30 min</span><span><i class="k-pl"></i>Geplant 1 h 30</span></div>
+        <div class="sub2">Ganzer Tag: 1 h 45 frei von 4 h 15</div>
+      </div>
+      <div class="anno">Heute, 18:40 Uhr (Arbeitszeit vorbei, 30 min offen)</div>
+      <div class="cap">
+        <div class="top"><b>Arbeitszeit vorbei</b><span>⚙︎</span></div>
+        <div class="sub">30 min Geplantes ist noch offen</div>
+        <div class="bar"><i class="k-pa" style="flex:1"></i></div>
+        <div class="act"><div class="b plain">Auf morgen</div><div class="b plain">Heute länger …</div></div>
+      </div>
+      <div class="anno">Morgen (Mi 18.) und alle künftigen Tage</div>
+      <div class="cap">
+        <div class="top"><b>2 h 30 frei</b><span>von 5 h</span></div>
+        <div class="bar"><i class="k-pl" style="flex:150"></i><i class="k-fr" style="flex:150"></i></div>
+      </div>
+      <div class="anno">Künftiger Tag ohne Planung</div>
+      <div class="cap">
+        <div class="top"><b>5 h frei</b><span>nichts geplant</span></div>
+        <div class="bar"><i class="k-fr" style="flex:1"></i></div>
+      </div>
+      <div class="anno">Gestern (Mo 16.) und alle vergangenen Tage</div>
+      <div class="cap" style="opacity:.75">
+        <div class="top"><b>Vergangen</b><span>3 h geplant</span></div>
+        <div class="sub">2 von 3 Aufgaben erledigt · 1 steht unter „Von früher offen“</div>
+      </div>
+      <div class="spacer"></div>
+    </div>
+    <p class="pc"><b>Pro:</b> Die große Zahl beantwortet immer die Frage „Wie viel kann ich hier noch einplanen?“. Heute ist das der Rest ab jetzt, in der Zukunft der ganze Tag, in der Vergangenheit gibt es nichts mehr einzuplanen. Der Gesamtwert des Tages bleibt als Unterzeile nachlesbar. <b>Contra:</b> dieselbe Stelle bedeutet je nach Tag etwas anderes; deshalb das Wort „noch“ und die Zeile „ab jetzt“.</p>
+  </div>
+  <div>
+    <p class="label"><span class="code">B2</span><b>Zwei Angaben nebeneinander</b></p>
+    <div class="phone">
+      <div class="status"><span>13:20</span><span>●●● 5G</span></div>
+      <div class="anno">Heute (Di 17.), 13:20 Uhr</div>
+      <div class="tiles">
+        <div class="tile" style="box-shadow:inset 0 0 0 1.5px var(--green)"><small>Ab jetzt frei</small><b>1 h 10</b><small>bis 18:00</small></div>
+        <div class="tile"><small>Ganzer Tag</small><b>1 h 45</b><small>frei von 4 h 15</small></div>
+      </div>
+      <div class="cap"><div class="bar" style="margin-top:2px"><i class="k-pa" style="flex:260"></i><i class="k-ev" style="flex:60"></i><i class="k-bu" style="flex:30"></i><i class="k-re" style="flex:30"></i><i class="k-pl" style="flex:90"></i><i class="k-fr" style="flex:70"></i></div><div class="lg"><span><i class="k-pa"></i>vorbei</span><span><i class="k-ev"></i>Termin</span><span><i class="k-pl"></i>Geplant</span></div></div>
+      <div class="anno">Künftiger Tag: nur eine Kachel</div>
+      <div class="tiles"><div class="tile" style="grid-column:1 / 3"><small>Mi 18. November</small><b>2 h 30 frei</b><small>von 5 h</small></div></div>
+      <div class="spacer"></div>
+    </div>
+    <p class="pc"><b>Pro:</b> beide Werte gleichrangig sichtbar, keine Umdeutung. <b>Contra:</b> zwei große Zahlen, von denen für das Einplanen nur eine zählt; in Woche und Monat (schmale Zeile) passt nur eine, dort müsste also doch entschieden werden. Die Karte wird höher.</p>
+  </div>
+  <div>
+    <p class="label"><span class="code">B3</span><b>Tagesstreifen mit Jetzt-Marke</b></p>
+    <div class="phone">
+      <div class="status"><span>13:20</span><span>●●● 5G</span></div>
+      <div class="anno">Heute (Di 17.), 13:20 Uhr</div>
+      <div class="cap">
+        <div class="top"><b>1 h 10 noch frei</b><span>⚙︎</span></div>
+        <div class="sub" style="margin-bottom:18px">in 3 Lücken bis 18:00</div>
+        <div class="strip">
+          <div class="bar"><i class="k-ev" style="flex:90"></i><i class="k-bu" style="flex:15"></i><i class="k-pl" style="flex:60"></i><i class="k-fr" style="flex:15"></i><i class="k-br" style="flex:60"></i><i class="k-fr" style="flex:60"></i><i class="k-pl" style="flex:60"></i><i class="k-fr" style="flex:15"></i><i class="k-bu" style="flex:15"></i><i class="k-ev" style="flex:60"></i><i class="k-bu" style="flex:15"></i><i class="k-fr" style="flex:75"></i></div>
+          <div class="past" style="width:48.1%"></div>
+          <div class="now" style="left:48.1%"></div>
+        </div>
+        <div class="axis"><span>09</span><span>12</span><span>15</span><span>18</span></div>
+        <div class="sub2">Ganzer Tag: 1 h 45 frei von 4 h 15</div>
+      </div>
+      <div class="spacer"></div>
+    </div>
+    <p class="pc"><b>Pro:</b> zeigt, <i>wo</i> die freie Zeit liegt (Lücken an ihrer echten Stelle), die Jetzt-Marke erklärt die Zahl ohne Worte. <b>Contra:</b> Aufwand ohne Uhrzeit (wiederkehrend, „Geplant ohne Uhrzeit“) hat auf einer Zeitachse keinen Ort; der Streifen zeigt dann mehr freie Fläche, als die Zahl nennt. Für die schmalen Balken in Woche und Monat nicht lesbar.</p>
+  </div>
+</div>
+<div class="box">
+  <h3>Empfehlung B: B1</h3>
+  <ul>
+    <li><b>Regel für heute:</b> noch frei = (Arbeitsende − max(jetzt, Arbeitsbeginn)) − Termine ab jetzt (laufende anteilig) − Pause, soweit sie noch bevorsteht − Puffer künftiger Termine − wiederkehrender Aufwand − offene geplante Last (nicht erledigte zugeordnete Aufgaben, bei Zeitblöcken nur der Teil nach jetzt). Vor Arbeitsbeginn ist das identisch mit dem Tageswert.</li>
+    <li><b>Vergangene Tage</b> zeigen keine freie Zeit mehr, nur „Vergangen“ mit Geplantem und Erledigtem. <b>Künftige Tage</b> bleiben wie heute, mit einer Korrektur: Ist nichts geplant, steht „5 h frei“ statt „5 h frei von 5 h“.</li>
+    <li><b>Woche und Monat:</b> Die Zeile bzw. Zelle von heute nutzt denselben Restwert und denselben schraffierten Abschnitt „vorbei“. Vergangene Tage der Woche sind gedimmt.</li>
+    <li><b>Überbuchung heute</b> bezieht sich auf den Rest: „40 min zu viel für heute“, mit dem Angebot „Auf morgen“.</li>
+    <li><b>Schreibweise:</b> „2 h 5“ ist zweideutig (2,5 Stunden?). Vorschlag: Minuten zweistellig, also „2 h 05“.</li>
+    <li><b>Offen (siehe Fragen am Ende):</b> Wiederkehrender Aufwand zählt nach §6.3 auch dann weiter, wenn das Vorkommen heute schon erledigt ist. Für eine Restanzeige ist das unplausibel. EventKit rückt eine erledigte wiederkehrende Erinnerung auf das nächste Vorkommen vor; liegt dessen Fälligkeit nach heute, könnte Tagwerk den Aufwand für heute als erledigt werten.</li>
+    <li><b>SwiftUI:</b> Berechnung als reine Funktion in <code>TagwerkCore</code> (<code>DayCapacity</code> um den Zeitpunkt „jetzt“ erweitern), Aktualisierung über <code>TimelineView(.everyMinute)</code> um die Karte und beim Wechsel von <code>scenePhase</code> auf <code>.active</code>. Für VoiceOver ein Satz: „Heute noch 1 Stunde 10 Minuten frei, bis 18 Uhr“.</li>
+  </ul>
+</div>
+
+<!-- ============================== C ============================== -->
+<h2><span class="area">C</span> Zeitblöcke verschieben und ändern</h2>
+<p class="lead">Heute öffnet ein Tipp auf einen Zeitblock nur das Termin-Sheet, und im Bearbeiten-Sheet ist „Zeitblock“ eine graue, nicht änderbare Zeile. Gewünscht: Ziehen in der Zeitleiste, ein Menü beim Antippen, Uhrzeit und Dauer ändern, Block löschen, und dasselbe im Abschnitt „Geplant“ des Bearbeiten-Sheets. C1 (Menü) und C4 (Sheet) haben je eine Fassung; für das Ziehen stehen C2 und C3 zur Wahl.</p>
+<div class="grid">
+  <div>
+    <p class="label"><span class="code r">C1</span><b>Menü beim Antippen eines Blocks</b> <span class="rec">Empfehlung</span></p>
+    <div class="phone">
+      <div class="status"><span>13:20</span><span>●●● 5G</span></div>
+      <div class="topbar"><div class="seg"><span class="on">Tag</span><span>Woche</span><span>Monat</span></div><span class="rbtn glass">＋</span></div>
+      <div class="hdr"><div><div class="kick">Heute · KW 47</div><div class="bigdate">Dienstag, 17. Nov. <span class="car">⌄</span></div></div></div>
+      <div class="tl">
+        <div class="row" style="opacity:.3"><span class="time">12:00</span><div class="block quiet">Mittagspause · 1 h</div></div>
+        <div class="row" style="opacity:.3"><span class="time">13:00</span><div class="block free">frei bis 14:00 · 1 h</div></div>
+        <div class="row"><span class="time">14:00</span><div class="block planned act">Pretest vorbereiten<div class="meta">1 h · Zeitblock · Kalender „Tagwerk“</div></div></div>
+      </div>
+      <div class="menu glass" style="margin: 8px 0 0 46px">
+        <div class="mh">Beginn · 14:00</div>
+        <div class="cg c2 txt"><div>− 15 min</div><div>＋ 15 min</div></div>
+        <div class="mh">Dauer · 1 h</div>
+        <div class="cg c2 txt"><div>− 15 min</div><div>＋ 15 min</div></div>
+        <div class="mi">Uhrzeit und Dauer …<i>◷</i></div>
+        <div class="mi">Auf anderen Tag …<i>▦</i></div>
+        <div class="gap"></div>
+        <div class="mi">Aufgabe zeigen<i>☑︎</i></div>
+        <div class="mi">Termindetails<i>ⓘ</i></div>
+        <div class="gap"></div>
+        <div class="mi de">Zeitblock löschen<i>✕</i></div>
+      </div>
+      <div class="spacer"></div>
+      <div class="tb glass"><span class="on"><i class="ico">▦</i>Planen</span><span><i class="ico">☑︎</i>Aufgaben</span><span><i class="ico">⚙︎</i>Einstellungen</span></div>
+    </div>
+    <p class="pc"><b>Pro:</b> Die häufigsten Korrekturen (eine Viertelstunde früher, später, kürzer, länger) kosten zwei Tipps und kein Sheet; die Schrittknöpfe lassen das Menü offen, sodass mehrere Schritte hintereinander gehen. „Zeitblock löschen“ entfernt nur den Termin; die Aufgabe und ihr Arbeitstag bleiben. <b>Contra:</b> Der Tipp öffnet nicht mehr direkt die Details; die liegen einen Eintrag tiefer.</p>
+    <p class="pc">Fremde Termine (blau) bekommen dasselbe Muster mit eigenen Einträgen: „Bearbeiten …“, „Mit Aufgabe verknüpfen …“, „Löschen“ (Bereich J). Schreibgeschützte Termine zeigen nur „Termindetails“ und „Mit Aufgabe verknüpfen …“.</p>
+  </div>
+  <div>
+    <p class="label"><span class="code r">C2</span><b>Ziehen auf freie Lücken</b> (Zeilen-Zeitleiste bleibt) <span class="rec">Empfehlung</span></p>
+    <div class="phone">
+      <div class="status"><span>13:20</span><span>●●● 5G</span></div>
+      <div class="topbar"><div class="seg"><span class="on">Tag</span><span>Woche</span><span>Monat</span></div><span class="rbtn glass">＋</span></div>
+      <div class="hdr"><div><div class="kick">Heute · KW 47</div><div class="bigdate">Dienstag, 17. Nov. <span class="car">⌄</span></div></div></div>
+      <div class="tl">
+        <div class="row past-row"><span class="time">10:45</span><div class="block planned">#42 Login-Fehler beheben<div class="meta">1 h · Zeitblock</div></div></div>
+        <div class="row"><span class="time">12:00</span><div class="block quiet">Mittagspause · 1 h</div></div>
+        <div class="row"><span class="time">13:20</span><div class="block free no">frei bis 14:00 · 40 min · zu kurz für 1 h</div></div>
+        <div class="row"><span class="time">14:00</span><div class="block gone">Pretest vorbereiten<div class="meta" style="color:#636366">bisheriger Platz</div></div></div>
+        <div class="row"><span class="time">15:00</span><div class="block free no">frei bis 15:15 · 15 min · zu kurz für 1 h</div></div>
+        <div class="row"><span class="time">15:30</span><div class="block event">Team-Meeting<div class="meta">bis 16:30</div></div></div>
+        <div class="row"><span class="time">16:45</span><div class="block free drop">Hier ablegen: 16:45 bis 17:45<div class="meta" style="color:var(--mint)">Lücke bis 18:00 · 1 h 15</div></div></div>
+      </div>
+      <div class="lift glass" style="top:392px">Pretest vorbereiten<small>1 h · wird zu 16:45 bis 17:45</small></div>
+      <div class="spacer"></div>
+      <div class="toast glass tbgap" style="opacity:.6"><span class="tx">Nach dem Ablegen: „Verschoben auf 16:45“</span><span class="un">Widerrufen</span></div>
+      <div class="tb glass" style="margin-top:0"><span class="on"><i class="ico">▦</i>Planen</span><span><i class="ico">☑︎</i>Aufgaben</span><span><i class="ico">⚙︎</i>Einstellungen</span></div>
+    </div>
+    <p class="pc"><b>Pro:</b> Freie Lücken werden eigene Zeilen („frei bis 18:00 · 1 h 15“) und sind damit immer sichtbar, auch ohne Ziehen. Beim Ziehen werden sie zu Ablagezielen; der Block rastet am Anfang der Lücke ein, zu kurze Lücken sind gedimmt. Bleibt bei jeder Schriftgröße lesbar und nutzt die vorhandene Technik. <b>Contra:</b> kein freies Platzieren mitten in einer langen Lücke; die Feinkorrektur läuft über die Schrittknöpfe aus C1.</p>
+  </div>
+  <div>
+    <p class="label"><span class="code">C3</span><b>Ziehen im maßstäblichen Stundenraster</b></p>
+    <div class="phone">
+      <div class="status"><span>13:20</span><span>●●● 5G</span></div>
+      <div class="topbar"><div class="seg"><span class="on">Tag</span><span>Woche</span><span>Monat</span></div><span class="rbtn glass">＋</span></div>
+      <div class="hdr"><div><div class="kick">Heute · KW 47</div><div class="bigdate">Dienstag, 17. Nov. <span class="car">⌄</span></div></div></div>
+      <div class="hg">
+        <div class="hl" style="top:0"><span>12:00</span></div>
+        <div class="hl" style="top:48px"><span>13:00</span></div>
+        <div class="hl" style="top:96px"><span>14:00</span></div>
+        <div class="hl" style="top:144px"><span>15:00</span></div>
+        <div class="hl" style="top:192px"><span>16:00</span></div>
+        <div class="hl" style="top:240px"><span>17:00</span></div>
+        <div class="hl" style="top:288px"><span>18:00</span></div>
+        <div class="ev q" style="top:1px;height:46px">Mittagspause</div>
+        <div class="ev o" style="top:97px;height:46px">bisher 14:00</div>
+        <div class="ev p" style="top:228px;height:48px">Pretest vorbereiten<small>16:45 bis 17:45</small></div>
+        <div class="grab" style="top:225px"></div><div class="grab" style="top:273px"></div>
+        <div class="ev e" style="top:169px;height:46px">Team-Meeting<small>15:30 bis 16:30</small></div>
+      </div>
+      <div class="note">Körper ziehen = verschieben, Griff oben oder unten ziehen = Dauer ändern, Raster 15 Minuten.</div>
+      <div class="spacer"></div>
+      <div class="tb glass"><span class="on"><i class="ico">▦</i>Planen</span><span><i class="ico">☑︎</i>Aufgaben</span><span><i class="ico">⚙︎</i>Einstellungen</span></div>
+    </div>
+    <p class="pc"><b>Pro:</b> das aus Apple Kalender bekannte Verhalten, beliebige Uhrzeit, Dauer per Griff, überlappende Termine nebeneinander darstellbar. <b>Contra:</b> ersetzt die am 17. November freigegebene Zeilen-Zeitleiste (Mockup a), die wegen Dynamic Type bewusst nicht maßstäblich ist: Ein 15-Minuten-Block ist bei 48 pt je Stunde 12 pt hoch und trägt keinen Text. Deutlich mehr Bauaufwand (eigenes Layout, Gesten, automatisches Scrollen am Rand, Spalten für Überschneidungen) und ein langer leerer Bildschirm an Tagen mit wenig Terminen.</p>
+  </div>
+  <div>
+    <p class="label"><span class="code r">C4</span><b>Bearbeiten-Sheet, Abschnitt „Geplant“</b> <span class="rec">Empfehlung</span></p>
+    <div class="phone">
+      <div class="status"><span>13:20</span><span>●●● 5G</span></div>
+      <div class="sheetp" style="margin-top:6px">
+        <div class="shead"><span class="gb glass">Abbrechen</span><b>Issue #57</b><span class="gb glass" style="font-weight:600">Sichern</span></div>
+        <div class="list">
+          <div class="field"><span>Pretest vorbereiten</span></div>
+          <div class="field"><span>Fällig</span><span class="v">Fr 20. Nov.</span></div>
+          <div class="field"><span>Aufwand</span><span class="v">2 h</span></div>
+        </div>
+        <div class="section">Geplant <span>1 h von 2 h Aufwand</span></div>
+        <div class="list">
+          <div class="field"><span>Arbeitstag</span><span><span class="pick">Mi 18. Nov.</span> <span style="color:var(--sub)">⊗</span></span></div>
+          <div class="field"><span style="color:var(--red)">⊖</span><span style="flex:1">Zeitblock</span><span class="pick">Mi 18.</span><span class="pick">16:00</span><span class="pick">1 h ⌄</span></div>
+          <div class="field"><span class="l">＋ Zeitblock hinzufügen</span><span class="v" style="font-size:12px">noch 1 h offen</span></div>
+        </div>
+        <div class="note">Arbeitstag und Zeitblöcke liegen nur in Tagwerk und im Kalender „Tagwerk“. Die Fälligkeit (Fr 20. Nov.) ändert sich dadurch nicht.</div>
+        <div class="banner ok" style="margin-top:4px"><b>Passt</b>Mi 18. Nov., 16:00 bis 17:00 ist frei. Danach sind an dem Tag noch 1 h 30 frei.</div>
+        <div class="list"><div class="field"><span class="l">Im Tag zeigen ›</span></div></div>
+        <div class="list"><div class="field"><span class="l">Auf GitHub öffnen</span></div></div>
+        <div class="spacer"></div>
+      </div>
+    </div>
+    <p class="pc">Alle drei Werte sind direkt änderbar: Arbeitstag (Datum, ⊗ plant aus), je Block Tag, Beginn und Dauer, ⊖ löscht den Block. Ändert man den Arbeitstag, wandert der Block sichtbar mit (die Zeile darunter springt auf denselben Tag); bei mehreren Blöcken erscheint ein Schalter „Zeitblöcke mitverschieben“ statt des heutigen Dialogs. Überschneidet sich die gewählte Zeit mit einem Termin, wird das grüne Feld orange („Überschneidet sich mit Team-Meeting“), ohne das Sichern zu sperren.</p>
+  </div>
+</div>
+<div class="box">
+  <h3>Empfehlung C: C1 + C2 + C4 (C3 nur, wenn freies Platzieren wichtiger ist als der Umbau)</h3>
+  <ul>
+    <li><b>Warum C2 statt C3:</b> C2 erfüllt „Ziehen in der Zeitleiste“ innerhalb des freigegebenen Aufbaus und macht freie Lücken dauerhaft sichtbar, was auch ohne Ziehen beim Planen hilft. C3 ist das vollständigere Werkzeug, widerruft aber die Entscheidung für die Zeilen-Zeitleiste und ist der größte Einzelumbau dieser Runde. Wer überlappende Termine oft hat (die Screenshots zeigen „Away“ und „Mittagspause“ gleichzeitig), profitiert von C3 stärker; das ist die eigentliche Abwägung.</li>
+    <li><b>Sichern im Sheet (C4):</b> Änderungen unter „Geplant“ werden wie alle anderen Felder erst mit „Sichern“ wirksam und mit „Abbrechen“ verworfen. Technisch sind es getrennte Schreibvorgänge (Quelle zuerst, dann Kalender und <code>DayAssignment</code>); schlägt das Sichern in der Quelle mit einem Konflikt fehl, bleibt das Sheet offen und nichts von der Planung ist geschrieben.</li>
+    <li><b>Konfliktschutz:</b> Vor jedem Ändern oder Löschen wird der Termin neu geladen und verglichen (§5.2). Wurde er in der Kalender-App verändert, zeigt Tagwerk den neuen Stand und fragt erneut.</li>
+    <li><b>SwiftUI zu C1:</b> Die Blockzeile wird Etikett eines <code>Menu { … } label: { … }</code> mit <code>.buttonStyle(.plain)</code>. Überschriften über <code>Section("Beginn · 14:00")</code>, die Schrittpaare als <code>ControlGroup</code> mit je zwei <code>Button</code>; <code>.menuActionDismissBehavior(.disabled)</code> an den Schrittknöpfen hält das Menü offen. „Uhrzeit und Dauer …“ öffnet das vorhandene <code>BlockSheet</code> im Änderungsmodus (<code>DatePicker</code> <code>.hourAndMinute</code>, <code>EstimateField</code>). Am Gerät zu prüfen: ob die Abschnittstitel bei offenem Menü den neuen Wert sofort zeigen.</li>
+    <li><b>SwiftUI zu C2:</b> <code>.draggable</code> am Block und <code>.dropDestination(for:action:isTargeted:)</code> an den Lückenzeilen, wie schon in der Wochenansicht. Die Lücken lassen sich aus den zusammengeführten Zeiträumen ableiten, die <code>Capacity.swift</code> schon bildet (dort bisher nur als Gesamtlänge). Schreiben über <code>EKEventStore.save(_:span:commit:)</code>, Rückgängig über die vorhandene Kapsel. Für VoiceOver dieselben Ziele als <code>accessibilityActions</code> („Verschieben auf 16:45“).</li>
+    <li><b>SwiftUI zu C3:</b> eigenes <code>Layout</code> oder <code>ZStack</code> mit berechneten <code>offset</code>-Werten, <code>LongPressGesture().sequenced(before: DragGesture())</code>, Einrasten auf 15 Minuten, <code>.sensoryFeedback</code> je Rasterschritt. Ab Größe AX1 müsste trotzdem auf die Zeilenform zurückgefallen werden.</li>
+    <li><b>SwiftUI zu C4:</b> <code>DatePicker</code> im Stil <code>.compact</code> mit <code>[.date]</code> und <code>[.hourAndMinute]</code>, Dauer als <code>Picker</code> im Stil <code>.menu</code> (15-Minuten-Schritte), Löschen über <code>.onDelete</code> bzw. die rote Schaltfläche, Schreiben nach dem Sichern im <code>PlanningModel</code>.</li>
+  </ul>
+</div>
+
+<!-- ============================== D ============================== -->
+<h2><span class="area">D</span> „Ungeplant“ in Woche und Monat</h2>
+<p class="lead">Heute: eine einzeilige, waagerecht scrollende Chip-Leiste mit 156 Einträgen, von denen höchstens zwei sichtbar sind, ohne Fälligkeit, Aufwand, Suche oder Sortierung. Das eigentliche Problem ist nicht nur die Form, sondern die Menge: Für die Planung einer Woche sind die wenigen Aufgaben relevant, die in dieser Woche fällig oder überfällig sind, nicht alle 156. Ziehen auf Tage bleibt in D1 erhalten.</p>
+<div class="grid">
+  <div>
+    <p class="label"><span class="code r">D1</span><b>Ausziehbare Ablage, eingeklappt</b> <span class="rec">Empfehlung</span></p>
+    <div class="phone">
+      <div class="status"><span>13:20</span><span>●●● 5G</span></div>
+      <div class="topbar"><div class="seg"><span>Tag</span><span class="on">Woche</span><span>Monat</span></div><span class="rbtn glass">＋</span></div>
+      <div class="hdr"><div><div class="kick">Diese Woche · KW 47</div><div class="bigdate">16.–22. November</div></div><div class="stepper glass"><span>‹</span><span>›</span></div></div>
+      <div class="day past"><div class="hd"><b>Mo 16.</b><div class="bar"><i class="k-pa" style="flex:1"></i></div><span class="n">vergangen</span></div></div>
+      <div class="day today"><div class="hd"><b>Di 17.</b><div class="bar"><i class="k-pa" style="flex:260"></i><i class="k-pl" style="flex:210"></i><i class="k-fr" style="flex:70"></i></div><span class="n">1 h 10 noch frei</span></div>
+        <div class="tk"><span class="grip">⋮⋮</span><span class="nm">Mail an Lerngruppe</span><span class="d">30 min</span></div></div>
+      <div class="day"><div class="hd"><b>Mi 18.</b><div class="bar"><i class="k-pl" style="flex:1"></i><i class="k-fr" style="flex:1"></i></div><span class="n">2 h 30 frei</span></div>
+        <div class="tk"><span class="grip">⋮⋮</span><span class="nm">Pretest vorbereiten</span><span class="d">▦ 16:00 · 1 h</span></div></div>
+      <div class="day"><div class="hd"><b>Do 19.</b><div class="bar"><i class="k-pl" style="flex:5"></i><i class="k-fr" style="flex:1"></i></div><span class="n">35 min frei</span></div>
+        <div class="tk"><span class="grip">⋮⋮</span><span class="nm">Kapitel 2 gliedern</span><span class="d">2 h</span></div></div>
+      <div class="day"><div class="hd"><b>Fr 20.</b><div class="bar"><i class="k-pl" style="flex:1"></i><i class="k-fr" style="flex:3"></i></div><span class="n">3 h 10 frei</span></div>
+        <div class="tk dlrow"><span>⚑</span><span class="nm">Statistik-Klausur · 10:00</span><span class="d" style="color:#ff8a82">Deadline</span></div></div>
+      <div class="day" style="opacity:.6"><div class="hd"><b>Sa 21.</b><span class="n" style="flex:1;text-align:left">kein Arbeitstag</span></div></div>
+      <div class="day" style="opacity:.6"><div class="hd"><b>So 22.</b><span class="n" style="flex:1;text-align:left">kein Arbeitstag</span></div></div>
+      <div class="spacer"></div>
+      <div class="drawer"><div class="grab"></div><div class="dh">Ungeplant<span>9 diese Woche fällig · 4 überfällig &nbsp;⌃</span></div></div>
+      <div class="tb glass tbgap"><span class="on"><i class="ico">▦</i>Planen</span><span><i class="ico">☑︎</i>Aufgaben</span><span><i class="ico">⚙︎</i>Einstellungen</span></div>
+    </div>
+    <p class="pc">Eingeklappt ist die Ablage eine einzige Zeile mit der Zahl, die für die Woche zählt („9 diese Woche fällig“), nicht mit 156. Tippen oder Hochziehen öffnet sie zur halben Höhe. Leere Tage sind nur noch eine Zeile hoch statt einer eigenen Karte mit „–“; freie Tage stehen als flache Zeile am Ende.</p>
+  </div>
+  <div>
+    <p class="label"><span class="code r">D1</span><b>Ablage aufgezogen</b>, beim Ziehen auf Mittwoch</p>
+    <div class="phone">
+      <div class="status"><span>13:20</span><span>●●● 5G</span></div>
+      <div class="topbar"><div class="seg"><span>Tag</span><span class="on">Woche</span><span>Monat</span></div><span class="rbtn glass">＋</span></div>
+      <div class="day past" style="padding:5px 10px"><div class="hd"><b>Mo 16.</b><div class="bar"><i class="k-pa" style="flex:1"></i></div><span class="n">vergangen</span></div></div>
+      <div class="day today" style="padding:5px 10px"><div class="hd"><b>Di 17.</b><div class="bar"><i class="k-pa" style="flex:260"></i><i class="k-pl" style="flex:210"></i><i class="k-fr" style="flex:70"></i></div><span class="n">1 h 10 noch frei</span></div></div>
+      <div class="day drop" style="padding:5px 10px"><div class="hd"><b>Mi 18.</b><div class="bar"><i class="k-pl" style="flex:9"></i><i class="k-fr" style="flex:1"></i></div><span class="n" style="color:var(--mint)">2 h 30 → 30 min frei</span></div></div>
+      <div class="day" style="padding:5px 10px"><div class="hd"><b>Do 19.</b><div class="bar"><i class="k-pl" style="flex:5"></i><i class="k-fr" style="flex:1"></i></div><span class="n">35 min frei</span></div></div>
+      <div class="day" style="padding:5px 10px"><div class="hd"><b>Fr 20.</b><div class="bar"><i class="k-pl" style="flex:1"></i><i class="k-fr" style="flex:3"></i></div><span class="n"><span class="flag">⚑</span> 3 h 10 frei</span></div></div>
+      <div class="day" style="padding:5px 10px;opacity:.6"><div class="hd"><b>Sa / So</b><span class="n" style="flex:1;text-align:left">kein Arbeitstag</span></div></div>
+      <div class="lift glass" style="top:176px;left:90px;right:30px">Übungsblatt 5<small>2 h · fällig Do 19. Nov.</small></div>
+      <div class="drawer" style="flex:1;display:flex;flex-direction:column">
+        <div class="grab"></div>
+        <div class="dh">Ungeplant<span>⌄</span></div>
+        <div class="search">⌕ Suchen</div>
+        <div class="fch"><span class="chip on">Diese Woche fällig 9</span><span class="chip">Überfällig 4</span><span class="chip">P1 3</span><span class="chip">Alle 156</span></div>
+        <div class="list">
+          <div class="item" style="opacity:.3"><span class="grip2">⋮⋮</span><div class="t">Übungsblatt 5<div class="s">Do 19. Nov. · 2 h · <span class="dot" style="background:#ff9f0a"></span>Lernen</div></div><span class="plusb">＋</span></div>
+          <div class="item"><span class="grip2">⋮⋮</span><div class="t">#61 Passwort-Reset testen<div class="s">Fr 20. Nov. · 1 h · <span class="dot" style="background:#30d158"></span>Projekt Alpha</div></div><span class="chip p1" style="align-self:center">P1</span><span class="plusb">＋</span></div>
+          <div class="item"><span class="grip2">⋮⋮</span><div class="t">Literatur sichten<div class="s">Sa 21. Nov. · geschätzt 30 min · <span class="dot" style="background:#0a84ff"></span>Hausarbeit</div></div><span class="plusb">＋</span></div>
+          <div class="item"><span class="grip2">⋮⋮</span><div class="t">Folien fürs Seminar<div class="s">So 22. Nov. · 1 h 30 · <span class="dot" style="background:#ff9f0a"></span>Lernen</div></div><span class="plusb">＋</span></div>
+        </div>
+      </div>
+      <div class="tb glass tbgap"><span class="on"><i class="ico">▦</i>Planen</span><span><i class="ico">☑︎</i>Aufgaben</span><span><i class="ico">⚙︎</i>Einstellungen</span></div>
+    </div>
+    <p class="pc">Offen schrumpfen die Tage auf je eine Zeile, damit alle sieben als Ablageziel sichtbar bleiben; das Ziel zeigt die Folge („2 h 30 → 30 min frei“). Jede Zeile nennt Fälligkeit, Aufwand und Quelle. ＋ ist der Weg ohne Ziehen: Menü „Heute / Morgen / … / Anderer Tag“. Sortiert nach Fälligkeit, dann Priorität. In der Monatsansicht gilt derselbe Aufbau mit dem Filter „In diesem Monat fällig“; das Raster bleibt darüber als Ablageziel stehen (siehe E1).</p>
+  </div>
+  <div>
+    <p class="label"><span class="code">D2</span><b>Eigene Liste mit Mehrfachauswahl</b>, ohne Ziehen</p>
+    <div class="phone">
+      <div class="status"><span>13:20</span><span>●●● 5G</span></div>
+      <div class="nav"><span class="a">‹ Woche</span><span class="c">Ungeplant</span><span class="a" style="font-weight:600">Fertig</span></div>
+      <div class="search">⌕ Suchen</div>
+      <div class="fch" style="padding-bottom:4px"><span class="chip on">Diese Woche fällig 9</span><span class="chip">Überfällig 4</span><span class="chip">P1 3</span><span class="chip">Alle 156</span></div>
+      <div class="section">Diese Woche fällig</div>
+      <div class="list">
+        <div class="item"><span class="circle sel">✓</span><div class="t">Übungsblatt 5<div class="s">Do 19. Nov. · 2 h</div></div></div>
+        <div class="item"><span class="circle sel">✓</span><div class="t">#61 Passwort-Reset testen<div class="s">Fr 20. Nov. · 1 h</div></div><span class="chip p1">P1</span></div>
+        <div class="item"><span class="circle"></span><div class="t">Literatur sichten<div class="s">Sa 21. Nov. · geschätzt 30 min</div></div></div>
+        <div class="item"><span class="circle"></span><div class="t">Folien fürs Seminar<div class="s">So 22. Nov. · 1 h 30</div></div></div>
+      </div>
+      <div class="section">Überfällig</div>
+      <div class="list">
+        <div class="item"><span class="circle"></span><div class="t">Formular abschicken<div class="s"><span class="due-red">seit Fr 13. Nov.</span> · geschätzt 30 min</div></div></div>
+      </div>
+      <div class="spacer"></div>
+      <div class="note" style="text-align:center;color:#c7c7cc">2 ausgewählt · 3 h · einplanen auf:</div>
+      <div class="daych">
+        <div class="off"><b>Mo</b>vorbei</div><div class="t"><b>Di</b>1 h 10</div><div><b>Mi</b>2 h 30</div><div><b>Do</b>35 min</div><div><b>Fr</b>3 h 10</div><div class="off"><b>Sa</b>frei</div><div class="off"><b>So</b>frei</div>
+      </div>
+    </div>
+    <p class="pc"><b>Pro:</b> volle Höhe für die Liste, mehrere Aufgaben in einem Zug auf einen Tag (Tagesleiste unten zeigt die freie Zeit), für VoiceOver der einfachste Weg. <b>Contra:</b> kein Ziehen, und der Inhalt der Tage ist beim Zuordnen nicht sichtbar; die Woche ist eine Ebene entfernt. Widerspricht dem Hinweis, dass Ziehen möglich bleiben soll.</p>
+  </div>
+</div>
+<div class="box">
+  <h3>Empfehlung D: D1</h3>
+  <ul>
+    <li><b>Standardfilter statt Vollmenge:</b> Woche zeigt zuerst „Diese Woche fällig“ plus die Zahl der überfälligen, Monat „In diesem Monat fällig“. „Alle 156“ ist ein Filter weiter rechts. Das ersetzt die heutige Begrenzung auf die ersten 40 Einträge, die willkürlich abschneidet.</li>
+    <li><b>Drei Höhen:</b> eingeklappt (eine Zeile), halb (Liste, Tage als Ziele sichtbar), voll (nur Liste, zum Suchen). Beim Loslassen einer Aufgabe über einem Tag bleibt die Ablage offen, damit mehrere nacheinander verteilt werden können.</li>
+    <li><b>SwiftUI:</b> eigenes Panel in <code>.safeAreaInset(edge: .bottom)</code> mit einem Höhenzustand und <code>DragGesture</code> am Griff, Liste als <code>ScrollView</code> + <code>LazyVStack</code>, Zeilen mit <code>.draggable(task.id.key)</code> (derselbe Transfertyp wie heute), Tage mit dem vorhandenen <code>.dropDestination</code>. Suche als <code>TextField</code>, weil <code>.searchable</code> an eine Navigationsleiste gebunden ist.</li>
+    <li><b>Bewusst kein System-Sheet:</b> <code>.sheet</code> mit <code>.presentationDetents</code> und <code>.presentationBackgroundInteraction(.enabled(upThrough: .medium))</code> wäre weniger Code, legt sich aber über die Tab-Leiste, und das Ziehen aus einem Sheet auf die Ansicht dahinter ist nicht verlässlich dokumentiert. Das wäre vor einer Entscheidung dafür am Gerät zu prüfen.</li>
+    <li><b>Möglich, aber nicht vorausgesetzt:</b> mehrere Aufgaben auf einmal ziehen. Dafür gibt es seit iOS 26 Container-Ziehen (<code>dragContainer</code>); ob es mit diesem Panel trägt, wäre ein eigener Versuch. D2 bleibt als Ausbaustufe denkbar: die Tagesleiste aus D2 als Aktion der Mehrfachauswahl in D1.</li>
+  </ul>
+</div>
+
+<!-- ============================== E ============================== -->
+<h2><span class="area">E</span> Monat · Tag antippen zeigt seine Einträge</h2>
+<p class="lead">Heute springt ein Tipp auf einen Tag sofort in die Tagesansicht, und unter dem Raster steht nur die Liste der Deadlines. Gewünscht ist das Verhalten des Apple Kalenders: Tag wählen, Einträge darunter lesen, im Monat bleiben. Vorauswahl beim Öffnen ist heute.</p>
+<div class="grid">
+  <div>
+    <p class="label"><span class="code r">E1</span><b>Tagesliste unter dem Raster, sichtbarer Sprung</b> <span class="rec">Empfehlung</span></p>
+    <div class="phone">
+      <div class="status"><span>13:20</span><span>●●● 5G</span></div>
+      <div class="topbar"><div class="seg"><span>Tag</span><span>Woche</span><span class="on">Monat</span></div><span class="rbtn glass">＋</span></div>
+      <div class="hdr" style="padding-bottom:8px"><div><div class="bigdate">November 2026</div></div><div class="stepper glass"><span>‹</span><span>›</span></div></div>
+      <div class="mgrid">
+        <div class="wd">Mo</div><div class="wd">Di</div><div class="wd">Mi</div><div class="wd">Do</div><div class="wd">Fr</div><div class="wd">Sa</div><div class="wd">So</div>
+        <div class="mc2 out">26</div><div class="mc2 out">27</div><div class="mc2 out">28</div><div class="mc2 out">29</div><div class="mc2 out">30</div><div class="mc2 out">31</div><div class="mc2 past">1</div>
+        <div class="mc2 past">2</div><div class="mc2 past">3</div><div class="mc2 past">4</div><div class="mc2 past">5</div><div class="mc2 past">6</div><div class="mc2 past">7</div><div class="mc2 past">8</div>
+        <div class="mc2 past">9</div><div class="mc2 past">10</div><div class="mc2 past">11</div><div class="mc2 past">12</div><div class="mc2 past">13</div><div class="mc2 past">14</div><div class="mc2 past">15</div>
+        <div class="mc2 past">16</div><div class="mc2 today">17<div class="ld"><i style="width:75%"></i></div></div><div class="mc2 sel">18<div class="ld"><i style="width:50%"></i></div></div><div class="mc2">19<div class="ld"><i class="hi" style="width:88%"></i></div></div><div class="mc2 dl2">20<div class="ld"><i style="width:30%"></i></div></div><div class="mc2">21</div><div class="mc2">22</div>
+        <div class="mc2">23<div class="ld"><i style="width:20%"></i></div></div><div class="mc2">24</div><div class="mc2 dl2">25<div class="ld"><i style="width:40%"></i></div></div><div class="mc2">26<div class="ld"><i class="ov" style="width:100%"></i></div></div><div class="mc2">27</div><div class="mc2">28</div><div class="mc2">29</div>
+        <div class="mc2">30</div><div class="mc2 out">1</div><div class="mc2 out">2</div><div class="mc2 out">3</div><div class="mc2 out">4</div><div class="mc2 out">5</div><div class="mc2 out">6</div>
+      </div>
+      <div class="agh"><b>Mittwoch, 18. Nov.<small>2 h 30 frei von 5 h</small></b><span class="lnk">Tag öffnen ›</span></div>
+      <div class="list">
+        <div class="item"><span class="time" style="padding-top:1px">09:00</span><div class="t"><span class="dot" style="background:var(--blue)"></span>Seminar<div class="s">bis 10:30 · Kalender „Uni“</div></div></div>
+        <div class="item"><span class="time" style="padding-top:1px">16:00</span><div class="t"><span class="dot" style="background:var(--green)"></span>Pretest vorbereiten<div class="s">Zeitblock · 1 h</div></div></div>
+        <div class="item"><span class="circle"></span><div class="t">Mail an Lerngruppe<div class="s">ohne Uhrzeit · 30 min</div></div></div>
+      </div>
+      <div class="spacer"></div>
+      <div class="drawer"><div class="grab"></div><div class="dh">Ungeplant<span>12 im November fällig &nbsp;⌃</span></div></div>
+      <div class="tb glass tbgap"><span class="on"><i class="ico">▦</i>Planen</span><span><i class="ico">☑︎</i>Aufgaben</span><span><i class="ico">⚙︎</i>Einstellungen</span></div>
+    </div>
+    <p class="pc"><b>Erster Tipp</b> wählt den Tag (weiße Zelle) und zeigt Deadlines, Termine, Zeitblöcke und Aufgaben ohne Uhrzeit darunter. <b>Wechsel in „Tag“ auf drei Wegen:</b> der sichtbare Link „Tag öffnen ›“, ein zweiter Tipp auf den schon gewählten Tag, und langes Drücken (Menü wie in E2). Die Einträge sind antippbar wie in der Tagesansicht. Die Monatsliste der Deadlines rückt als einklappbarer Abschnitt unter die Tagesliste.</p>
+  </div>
+  <div>
+    <p class="label"><span class="code">E2</span><b>Wechsel nur über langes Drücken</b></p>
+    <div class="phone">
+      <div class="status"><span>13:20</span><span>●●● 5G</span></div>
+      <div class="topbar"><div class="seg"><span>Tag</span><span>Woche</span><span class="on">Monat</span></div><span class="rbtn glass">＋</span></div>
+      <div class="hdr" style="padding-bottom:8px"><div><div class="bigdate">November 2026</div></div><div class="stepper glass"><span>‹</span><span>›</span></div></div>
+      <div class="mgrid" style="opacity:.35">
+        <div class="wd">Mo</div><div class="wd">Di</div><div class="wd">Mi</div><div class="wd">Do</div><div class="wd">Fr</div><div class="wd">Sa</div><div class="wd">So</div>
+        <div class="mc2 past">9</div><div class="mc2 past">10</div><div class="mc2 past">11</div><div class="mc2 past">12</div><div class="mc2 past">13</div><div class="mc2 past">14</div><div class="mc2 past">15</div>
+        <div class="mc2 past">16</div><div class="mc2 today">17</div><div class="mc2">18</div><div class="mc2">19</div><div class="mc2 dl2">20</div><div class="mc2">21</div><div class="mc2">22</div>
+      </div>
+      <div style="display:flex;gap:10px;align-items:flex-start;padding-left:96px;margin-top:-52px;position:relative;z-index:2">
+        <div class="mc2 sel" style="width:48px;box-shadow:0 8px 22px rgba(0,0,0,.7)">18<div class="ld"><i style="width:50%"></i></div></div>
+      </div>
+      <div class="menu glass" style="margin:10px 0 0 60px;position:relative;z-index:2">
+        <div class="mi">Tag öffnen<i>▦</i></div>
+        <div class="mi">Aufgabe hier einplanen …<i>＋</i></div>
+        <div class="mi">Neuer Termin<i>◷</i></div>
+        <div class="mi">Arbeitszeit an diesem Tag …<i>⚙︎</i></div>
+      </div>
+      <div class="spacer"></div>
+      <div class="tb glass"><span class="on"><i class="ico">▦</i>Planen</span><span><i class="ico">☑︎</i>Aufgaben</span><span><i class="ico">⚙︎</i>Einstellungen</span></div>
+    </div>
+    <p class="pc"><b>Pro:</b> keine zusätzliche Schaltfläche, das Menü bündelt gleich weitere Tagesaktionen. <b>Contra:</b> Langes Drücken ist unsichtbar; wer es nicht kennt, findet aus dem Monat nicht mehr in den Tag, außer über das Segment „Tag“ (das dann beim zuletzt gewählten Tag öffnet). Als einziger Weg zu schwach, als Ergänzung zu E1 sinnvoll.</p>
+  </div>
+  <div>
+    <p class="label"><span class="code">E3</span><b>Tagesblatt als Sheet</b></p>
+    <div class="phone">
+      <div class="status"><span>13:20</span><span>●●● 5G</span></div>
+      <div class="topbar"><div class="seg"><span>Tag</span><span>Woche</span><span class="on">Monat</span></div><span class="rbtn glass">＋</span></div>
+      <div class="hdr" style="padding-bottom:8px"><div><div class="bigdate">November 2026</div></div></div>
+      <div class="mgrid" style="opacity:.6">
+        <div class="wd">Mo</div><div class="wd">Di</div><div class="wd">Mi</div><div class="wd">Do</div><div class="wd">Fr</div><div class="wd">Sa</div><div class="wd">So</div>
+        <div class="mc2 past">9</div><div class="mc2 past">10</div><div class="mc2 past">11</div><div class="mc2 past">12</div><div class="mc2 past">13</div><div class="mc2 past">14</div><div class="mc2 past">15</div>
+        <div class="mc2 past">16</div><div class="mc2 today">17</div><div class="mc2 sel">18</div><div class="mc2">19</div><div class="mc2 dl2">20</div><div class="mc2">21</div><div class="mc2">22</div>
+        <div class="mc2">23</div><div class="mc2">24</div><div class="mc2 dl2">25</div><div class="mc2">26</div><div class="mc2">27</div><div class="mc2">28</div><div class="mc2">29</div>
+      </div>
+      <div class="sheetp">
+        <div class="grab"></div>
+        <div class="shead"><b>Mittwoch, 18. Nov.</b><span class="gb glass">Fertig</span></div>
+        <div class="list">
+          <div class="item"><span class="time" style="padding-top:1px">09:00</span><div class="t"><span class="dot" style="background:var(--blue)"></span>Seminar<div class="s">bis 10:30</div></div></div>
+          <div class="item"><span class="time" style="padding-top:1px">16:00</span><div class="t"><span class="dot" style="background:var(--green)"></span>Pretest vorbereiten<div class="s">Zeitblock · 1 h</div></div></div>
+          <div class="item"><span class="circle"></span><div class="t">Mail an Lerngruppe<div class="s">ohne Uhrzeit · 30 min</div></div></div>
+        </div>
+        <div class="btns" style="margin-top:6px"><div class="b prom">Tag öffnen</div></div>
+        <div class="spacer"></div>
+      </div>
+    </div>
+    <p class="pc"><b>Pro:</b> Raster bleibt in voller Größe, das Blatt hat Platz für lange Tage. <b>Contra:</b> modal: Jeder Tageswechsel braucht Schließen und neu Tippen, oder das Blatt verdeckt die untere Rasterhälfte. Die Ablage „Ungeplant“ und das Ziehen auf Tage sind dahinter nicht erreichbar.</p>
+  </div>
+</div>
+<div class="box">
+  <h3>Empfehlung E: E1 (mit dem Menü aus E2 als Zusatz)</h3>
+  <ul>
+    <li><b>Begründung:</b> E1 ist das gewünschte Kalender-Verhalten und hält den Wechsel in „Tag“ sichtbar. Der zweite Tipp auf den gewählten Tag ist die schnelle Form für Geübte, der Link die auffindbare.</li>
+    <li><b>Platz mit der Ablage aus D1:</b> Tagesliste und Ablage teilen sich den unteren Bereich. Eingeklappt bleibt die Ablage eine Zeile; aufgezogen überdeckt sie die Tagesliste, das Raster bleibt Ablageziel. Beides gleichzeitig wäre auf dem iPhone zu eng.</li>
+    <li><b>Zellen bleiben, wie freigegeben:</b> Auslastungsbalken und rote Deadline-Zellen (Mockup c-A); neu ist nur die Auswahl (weiße Zelle, nie nur über Farbe: zusätzlich <code>.accessibilityAddTraits(.isSelected)</code>).</li>
+    <li><b>SwiftUI:</b> <code>@State</code> für den gewählten Tag im <code>PlanningModel</code>, Zelle als <code>Button</code>: ist der Tag schon gewählt, wechselt der Tipp in die Tagesansicht. Kein <code>onTapGesture(count: 2)</code>, weil ein Doppeltipp-Erkenner den einfachen Tipp verzögert. <code>.contextMenu</code> an der Zelle für E2, <code>.dropDestination</code> bleibt. Die Tagesdaten liegen in <code>model.days</code> bereits vor; Termine des Tages brauchen dieselbe Abfrage wie die Tagesansicht.</li>
+  </ul>
+</div>
+
+<!-- ============================== F ============================== -->
+<h2><span class="area">F</span> Kontextmenü · Einplanen und Fälligkeit unterscheidbar machen</h2>
+<p class="lead">Zwei Mängel im Screenshot: Erstens steht „Heute / Morgen / Wochenende“ ohne jede Aussage darüber, <i>was</i> gesetzt wird, direkt über „Fälligkeit verschieben …“; dass das eine nur den Arbeitstag in Tagwerk setzt und das andere die Quelle ändert, ist nicht erkennbar. Zweitens zeigt iOS in einer <code>ControlGroup</code> im Menü höchstens drei beschriftete Elemente; das vierte („Nächste Woche“) ist als eigene Zeile herausgefallen, und „Wochenende“ wird getrennt („Woch-enende“). Beispiel: GitHub-Issue, fällig Fr 20. November, noch nicht eingeplant.</p>
+<div class="grid">
+  <div>
+    <p class="label"><span class="code r">F1</span><b>Zwei benannte Abschnitte, vier Ziele als 2 × 2</b> <span class="rec">Empfehlung</span></p>
+    <div class="phone">
+      <div class="blurbg"><div class="list"><div class="item"><span class="circle"></span><div class="t">Kapitel 2 gliedern</div></div><div class="item"><span class="circle"></span><div class="t">Übungsblatt 5</div></div><div class="item"><span class="circle"></span><div class="t">Literatur sichten</div></div><div class="item"><span class="circle"></span><div class="t">Folien fürs Seminar</div></div></div></div>
+      <div class="fg">
+        <div class="status"><span>13:20</span><span>●●● 5G</span></div>
+        <div class="preview"><div class="row" style="align-items:flex-start"><span class="circle"></span><div style="flex:1"><div style="font-size:14.5px">#57 Pretest vorbereiten</div><div style="color:var(--sub);font-size:12px;margin-top:2px">fällig Fr 20. Nov. · <span class="dot" style="background:#30d158"></span>Projekt Alpha</div><div style="color:var(--sub);font-size:12px;margin-top:1px">▦ nicht eingeplant</div></div><span class="chip">P2</span></div></div>
+        <div class="menu glass">
+          <div class="mh">Einplanen · nur in Tagwerk</div>
+          <div class="cg c2"><div><span class="cal">17</span>Heute</div><div><span class="cal">18</span>Morgen</div></div>
+          <div class="cg c2"><div><span class="cal">Sa</span>Wochenende</div><div><span class="cal">Mo</span>Nächste Woche</div></div>
+          <div class="mi">Anderer Tag …<i>▦</i></div>
+          <div class="gap"></div>
+          <div class="mh">Fälligkeit · ändert GitHub</div>
+          <div class="mi"><span>Fälligkeit verschieben<small>jetzt Fr 20. Nov.</small></span><i>›</i></div>
+          <div class="gap"></div>
+          <div class="mi ai">Mit KI planen · folgt in 2b-2<i>✦</i></div>
+          <div class="gap"></div>
+          <div class="mi">Erledigt<i>✓</i></div>
+          <div class="mi de">Als nicht geplant schließen<i>⊘</i></div>
+        </div>
+        <div class="spacer"></div>
+      </div>
+    </div>
+    <p class="pc"><b>Pro:</b> Jeder Abschnitt sagt, wo die Änderung landet: „nur in Tagwerk“ gegenüber „ändert GitHub“ (bei Erinnerungen „ändert die Erinnerung“, bei lokalen Aufgaben entfällt der Zusatz). Die Fälligkeit zeigt ihren aktuellen Wert, damit klar ist, was verschoben würde. Alle vier Ziele mit vollem Wort, ohne Trennung, zwei je Zeile. <b>Contra:</b> durch die zweite Reihe und die beiden Abschnittstitel etwas höher als das heutige Menü. Zwei gestapelte Gruppen sind am Gerät zu bestätigen.</p>
+    <p class="pc">Ist die Aufgabe schon eingeplant, trägt das passende Ziel einen Haken, die Vorschau zeigt „▦ Mi 18. Nov.“, und unter „Anderer Tag …“ erscheint „Ausplanen“.</p>
+  </div>
+  <div>
+    <p class="label"><span class="code">F2</span><b>Dreierreihe mit den häufigsten Zielen</b></p>
+    <div class="phone">
+      <div class="blurbg"><div class="list"><div class="item"><span class="circle"></span><div class="t">Kapitel 2 gliedern</div></div><div class="item"><span class="circle"></span><div class="t">Übungsblatt 5</div></div><div class="item"><span class="circle"></span><div class="t">Literatur sichten</div></div></div></div>
+      <div class="fg">
+        <div class="status"><span>13:20</span><span>●●● 5G</span></div>
+        <div class="preview"><div class="row" style="align-items:flex-start"><span class="circle"></span><div style="flex:1"><div style="font-size:14.5px">#57 Pretest vorbereiten</div><div style="color:var(--sub);font-size:12px;margin-top:2px">fällig Fr 20. Nov. · <span class="dot" style="background:#30d158"></span>Projekt Alpha</div></div><span class="chip">P2</span></div></div>
+        <div class="menu glass">
+          <div class="mh">Einplanen · nur in Tagwerk</div>
+          <div class="cg c3"><div><span class="cal">17</span>Heute</div><div><span class="cal">18</span>Morgen</div><div><span class="cal">Mo</span>Nächste Woche</div></div>
+          <div class="mi">Wochenende (Sa 21.)<i>▦</i></div>
+          <div class="mi">Anderer Tag …<i>▦</i></div>
+          <div class="gap"></div>
+          <div class="mh">Fälligkeit · ändert GitHub</div>
+          <div class="mi"><span>Fälligkeit verschieben<small>jetzt Fr 20. Nov.</small></span><i>›</i></div>
+          <div class="gap"></div>
+          <div class="mi">Erledigt<i>✓</i></div>
+          <div class="mi de">Als nicht geplant schließen<i>⊘</i></div>
+        </div>
+        <div class="spacer"></div>
+      </div>
+    </div>
+    <p class="pc"><b>Pro:</b> bleibt innerhalb dessen, was iOS nachweislich darstellt (drei beschriftete Elemente), „Nächste Woche“ ist wieder in der Schnellreihe. <b>Contra:</b> „Wochenende“ wird zur Listenzeile, das Menü ist dadurch so lang wie F1; „Nächste Woche“ bricht in der schmalen Spalte weiterhin auf zwei Zeilen um.</p>
+  </div>
+  <div>
+    <p class="label"><span class="code">F3</span><b>Zwei Untermenüs</b></p>
+    <div class="phone">
+      <div class="blurbg"><div class="list"><div class="item"><span class="circle"></span><div class="t">Kapitel 2 gliedern</div></div><div class="item"><span class="circle"></span><div class="t">Übungsblatt 5</div></div><div class="item"><span class="circle"></span><div class="t">Literatur sichten</div></div></div></div>
+      <div class="fg">
+        <div class="status"><span>13:20</span><span>●●● 5G</span></div>
+        <div class="preview"><div class="row" style="align-items:flex-start"><span class="circle"></span><div style="flex:1"><div style="font-size:14.5px">#57 Pretest vorbereiten</div><div style="color:var(--sub);font-size:12px;margin-top:2px">fällig Fr 20. Nov. · <span class="dot" style="background:#30d158"></span>Projekt Alpha</div></div><span class="chip">P2</span></div></div>
+        <div class="menu glass" style="opacity:.55">
+          <div class="mi"><span>Einplanen<small>Arbeitstag · nur in Tagwerk</small></span><i>›</i></div>
+          <div class="mi"><span>Fälligkeit ändern<small>in GitHub · jetzt Fr 20. Nov.</small></span><i>›</i></div>
+          <div class="gap"></div>
+          <div class="mi">Erledigt<i>✓</i></div>
+          <div class="mi de">Als nicht geplant schließen<i>⊘</i></div>
+        </div>
+        <div class="menu glass" style="margin:-150px 0 0 70px;position:relative;z-index:2;width:240px">
+          <div class="mh">Einplanen</div>
+          <div class="mi">Heute<i>☀︎</i></div>
+          <div class="mi">Morgen<i>→</i></div>
+          <div class="mi">Wochenende (Sa)<i>▦</i></div>
+          <div class="mi">Nächste Woche (Mo)<i>⇥</i></div>
+          <div class="mi">Anderer Tag …<i>▦</i></div>
+        </div>
+        <div class="spacer"></div>
+      </div>
+    </div>
+    <p class="pc"><b>Pro:</b> kürzestes Hauptmenü (vier Zeilen), beide Vorgänge stehen gleichrangig mit Erklärung nebeneinander, stabil bei jeder Schriftgröße. <b>Contra:</b> Die häufigste Aktion („Heute einplanen“) kostet einen Tipp mehr, was der Entscheidung „Aktionen mit einem Tipp“ (§2) widerspricht.</p>
+  </div>
+</div>
+<div class="box">
+  <h3>Empfehlung F: F1, mit F2 als Rückfall, falls zwei Gruppen nicht sauber darstellbar sind</h3>
+  <ul>
+    <li><b>Unterscheidung über drei Merkmale:</b> Abschnittstitel mit Ort der Änderung, der Quellname im Fälligkeits-Abschnitt („ändert GitHub“ / „ändert die Erinnerung“), und der aktuelle Wert als Unterzeile. Im Untermenü „Fälligkeit verschieben“ stehen dieselben Ziele als Liste wie heute.</li>
+    <li><b>Zum Limit:</b> Eine <code>ControlGroup</code> im Kontextmenü zeigt im Standardstil höchstens drei Elemente mit Symbol und Text; weitere fallen als Zeilen heraus (so im Screenshot). <code>.controlGroupStyle(.compactMenu)</code> und <code>.palette</code> zeigen vier und mehr, aber nur als Symbole. Symbole ohne Wort hat die Freigabe von d-A bereits ausgeschlossen. F1 umgeht das Limit mit <b>zwei</b> <code>ControlGroup</code>s zu je zwei Elementen.</li>
+    <li><b>SwiftUI:</b> <code>Section("Einplanen · nur in Tagwerk") { ControlGroup { … }; ControlGroup { … }; Button("Anderer Tag …") }</code>, <code>Section("Fälligkeit · ändert GitHub") { Menu { … } label: { Text("Fälligkeit verschieben"); Text("jetzt Fr 20. Nov.") } }</code>. Ein zweites <code>Text</code> im Etikett stellt iOS im Menü als Unterzeile dar. Haken über <code>Toggle</code> bzw. <code>Label</code> mit <code>checkmark</code>. Ab <code>dynamicTypeSize.isAccessibilitySize</code> wie heute als flache Liste.</li>
+    <li><b>Vorschau überlappt Text (Screenshot 6):</b> Die angehobene Zeile liegt über der Abschnittsüberschrift „Diese Woche“, weil iOS sie unter das hohe Menü schiebt. F1 ist nicht kürzer als das heutige Menü (nur F3 wäre es deutlich), die Höhe allein löst das also nicht. Wirksamer Ansatz: eine eigene, deckende Vorschau über <code>.contextMenu(menuItems:preview:)</code> mit fester Breite und <code>.contentShape(.contextMenuPreview, RoundedRectangle(cornerRadius: 18))</code>. Ob die Überlagerung damit ganz verschwindet, ist am Gerät zu prüfen; das Verschieben der Vorschau steuert das System.</li>
+    <li><b>Gilt überall gleich:</b> dieselbe <code>TaskContextMenu</code> in „Aufgaben“, Tag, Woche und in der Ablage „Ungeplant“.</li>
+  </ul>
+</div>
+
+<!-- ============================== G ============================== -->
+<h2><span class="area">G</span> Aufgaben-Tab · Mehrfachauswahl, Sprung vom Termin, Wiederkehrendes</h2>
+<p class="lead">Vier Wünsche: mehrere Aufgaben auf einmal für heute einplanen (G1/G2), „Aufgabe öffnen“ aus einem Termin soll in die Liste springen statt das Sheet zu öffnen (G3), Antippen bearbeitet weiterhin direkt, und wiederkehrende Aufgaben bekommen ↻, einen einstellbaren Aufwand und die Wahl „Nur heute“ / „Alle“ (G4/G5). Einschränkung für G4/G5: <code>EKEventStore.save(_:commit:)</code> für Erinnerungen hat keinen Parameter für ein einzelnes Vorkommen. „Nur heute“ kann deshalb nur gelten, was Tagwerk selbst speichert.</p>
+<div class="grid">
+  <div>
+    <p class="label"><span class="code r">G1</span><b>Auswahlmodus mit Aktionsleiste</b> <span class="rec">Empfehlung</span></p>
+    <div class="phone">
+      <div class="status"><span>13:20</span><span>●●● 5G</span></div>
+      <div class="nav"><span class="a">Alle</span><span class="c">3 ausgewählt</span><span class="a" style="font-weight:600">Fertig</span></div>
+      <div class="section">Heute</div>
+      <div class="list">
+        <div class="item"><span class="circle"></span><div class="t">Mail an Lerngruppe<div class="s"><span class="due-orange">heute</span> · ▦ heute · <span class="dot" style="background:#ff9f0a"></span>Lernen</div></div></div>
+        <div class="item"><span class="circle"></span><div class="t">↻ Karteikarten<div class="s"><span class="due-orange">heute</span> · täglich · 30 min je Tag · <span class="dot" style="background:#ff9f0a"></span>Lernen</div></div></div>
+      </div>
+      <div class="section">Diese Woche</div>
+      <div class="list">
+        <div class="item"><span class="circle sel">✓</span><div class="t">Übungsblatt 5<div class="s">Do 19.11. · 1 h 30 · <span class="dot" style="background:#ff9f0a"></span>Lernen</div></div></div>
+        <div class="item"><span class="circle sel">✓</span><div class="t">#61 Passwort-Reset testen<div class="s">Fr 20.11. · 30 min · <span class="dot" style="background:#30d158"></span>Projekt Alpha</div></div><span class="chip p1">P1</span></div>
+        <div class="item"><span class="circle"></span><div class="t">#57 Pretest vorbereiten<div class="s">Fr 20.11. · ▦ Mi 16:00 · <span class="dot" style="background:#30d158"></span>Projekt Alpha</div></div><span class="chip">P2</span></div>
+        <div class="item"><span class="circle sel">✓</span><div class="t">Literatur sichten<div class="s">Sa 21.11. · geschätzt 30 min · <span class="dot" style="background:#0a84ff"></span>Hausarbeit</div></div></div>
+      </div>
+      <div class="spacer"></div>
+      <div class="selinfo">3 Aufgaben · 2 h 30 · heute noch 1 h 10 frei, also 1 h 20 zu viel</div>
+      <div class="selbar glass"><div class="b prom" style="flex:1.6">Für heute einplanen</div><div class="b plain">Anderer Tag ⌄</div><div class="b plain" style="flex:.35">⋯</div></div>
+    </div>
+    <p class="pc"><b>Einstieg:</b> „Auswählen“ in der Navigationsleiste links neben ＋, oder mit zwei Fingern über die Zeilen streichen. Die Aktionsleiste ersetzt in diesem Modus die Tab-Leiste. Die Zeile darüber rechnet die Auswahl gegen die Restzeit von heute (Bereich B) und warnt, ohne zu sperren. „Anderer Tag“ bietet Morgen, Wochenende, Nächste Woche, Datum; „⋯“ enthält Erledigt, Fälligkeit verschieben und Löschen. <b>Contra:</b> ein Modus mehr; Wischaktionen sind währenddessen aus.</p>
+    <p class="pc">Neu in jeder Zeile: „▦ Mi 16:00“ bzw. „▦ heute“ zeigt Arbeitstag oder Zeitblock, ↻ steht vor dem Titel wiederkehrender Aufgaben, dahinter Rhythmus und Aufwand je Tag.</p>
+  </div>
+  <div>
+    <p class="label"><span class="code">G2</span><b>Ohne Modus: Wischaktion „Heute“</b></p>
+    <div class="phone">
+      <div class="status"><span>13:20</span><span>●●● 5G</span></div>
+      <div class="nav"><span class="title" style="padding:0">Aufgaben</span><span class="rbtn glass">＋</span></div>
+      <div class="section">Diese Woche</div>
+      <div class="list">
+        <div class="swact"><div class="ac" style="background:var(--green)">✓<br>Erledigt</div><div class="ac" style="background:var(--blue)">▦<br>Heute</div><div class="item" style="flex:1;border-bottom:0"><span class="circle"></span><div class="t">Übungsblatt 5<div class="s">Do 19.11. · 1 h 30</div></div></div></div>
+        <div class="item" style="border-top:1px solid var(--sep)"><span class="circle"></span><div class="t">#61 Passwort-Reset testen<div class="s">Fr 20.11. · 30 min · <span class="dot" style="background:#30d158"></span>Projekt Alpha</div></div><span class="chip p1">P1</span></div>
+        <div class="item"><span class="circle"></span><div class="t">Literatur sichten<div class="s">Sa 21.11. · geschätzt 30 min</div></div></div>
+      </div>
+      <div class="spacer"></div>
+      <div class="tb glass"><span><i class="ico">▦</i>Planen</span><span class="on"><i class="ico">☑︎</i>Aufgaben</span><span><i class="ico">⚙︎</i>Einstellungen</span></div>
+    </div>
+    <p class="pc"><b>Pro:</b> kein Modus, eine Geste je Aufgabe, bleibt neben G1 möglich. <b>Contra:</b> erfüllt „Mehrfachauswahl“ nicht: drei Aufgaben sind drei Gesten, und es gibt keine Summe gegen die freie Zeit. Zwei Aktionen auf derselben Wischseite erhöhen das Risiko, versehentlich „Erledigt“ auszulösen.</p>
+  </div>
+  <div>
+    <p class="label"><span class="code r">G3</span><b>„Aufgabe zeigen“ aus einem Termin</b>: Sprung mit Hervorhebung <span class="rec">Empfehlung</span></p>
+    <div class="phone">
+      <div class="status"><span>13:20</span><span>●●● 5G</span></div>
+      <div class="nav"><span class="title" style="padding:0">Aufgaben</span><span class="rbtn glass">＋</span></div>
+      <div class="section">Heute</div>
+      <div class="list"><div class="item"><span class="circle"></span><div class="t">Mail an Lerngruppe<div class="s"><span class="due-orange">heute</span> · ▦ heute</div></div></div></div>
+      <div class="section">Diese Woche</div>
+      <div class="list">
+        <div class="item"><span class="circle"></span><div class="t">Übungsblatt 5<div class="s">Do 19.11. · 1 h 30</div></div></div>
+        <div class="item hl"><span class="circle"></span><div class="t">#57 Pretest vorbereiten<div class="s">Fr 20.11. · ▦ heute 14:00 · <span class="dot" style="background:#30d158"></span>Projekt Alpha</div></div><span class="chip">P2</span></div>
+        <div class="item"><span class="circle"></span><div class="t">#61 Passwort-Reset testen<div class="s">Fr 20.11. · 30 min</div></div><span class="chip p1">P1</span></div>
+        <div class="item"><span class="circle"></span><div class="t">Literatur sichten<div class="s">Sa 21.11. · geschätzt 30 min</div></div></div>
+      </div>
+      <div class="spacer"></div>
+      <div class="toast glass"><span class="tx">Vom Zeitblock heute, 14:00</span><span class="un">‹ Zurück zum Tag</span></div>
+      <div class="tb glass" style="margin-top:0"><span><i class="ico">▦</i>Planen</span><span class="on"><i class="ico">☑︎</i>Aufgaben</span><span><i class="ico">⚙︎</i>Einstellungen</span></div>
+    </div>
+    <p class="pc">Der Eintrag heißt künftig „Aufgabe zeigen“ (statt „Aufgabe öffnen“): Tagwerk wechselt in „Aufgaben“, rollt die Zeile in die Mitte und hebt sie etwa zwei Sekunden hervor (Rahmen plus Fläche, bei „Bewegung reduzieren“ ohne Pulsieren). Ein aktiver Filter, der die Aufgabe ausblendet, wird auf „Alle“ gestellt. Die Kapsel führt zurück zum Tag. Ein Tipp auf die Zeile öffnet wie bisher direkt das Bearbeiten-Sheet.</p>
+  </div>
+  <div>
+    <p class="label"><span class="code r">G4</span><b>Wiederkehrende Aufgabe bearbeiten</b>: zwei getrennte Karten <span class="rec">Empfehlung</span></p>
+    <div class="phone">
+      <div class="status"><span>13:20</span><span>●●● 5G</span></div>
+      <div class="sheetp" style="margin-top:6px">
+        <div class="shead"><span class="gb glass">Abbrechen</span><b>↻ Karteikarten</b><span class="gb glass" style="font-weight:600">Sichern</span></div>
+        <div class="section">Erinnerung <span>gilt immer für alle Tage</span></div>
+        <div class="list">
+          <div class="field"><span>Karteikarten</span></div>
+          <div class="field"><span>Fällig</span><span class="v">täglich · 18:00</span></div>
+          <div class="field"><span>Liste</span><span class="v"><span class="dot" style="background:#ff9f0a"></span>Lernen</span></div>
+        </div>
+        <div class="note">Apple Erinnerungen kennt kein „nur dieses Vorkommen“. Titel, Fälligkeit, Liste und Notiz ändern sich immer für die ganze Serie.</div>
+        <div class="section">In Tagwerk <span>Di 17. November</span></div>
+        <div class="banner tw" style="padding:8px">
+          <div class="seg" style="background:#3a3a3c;margin:0 0 8px"><span class="on">Nur heute</span><span>Alle ab heute</span></div>
+          <div class="list" style="margin:0">
+            <div class="field"><span>Aufwand je Tag</span><div class="est"><span class="pm">−</span><span class="val">15 min</span><span class="pm">+</span></div></div>
+            <div class="field"><span>Zeitblock heute</span><span><span class="pick">17:00</span> <span class="pick">15 min ⌄</span></span></div>
+            <div class="field"><span>Di 17. November</span><span class="v"><s>30 min</s> → <b style="color:#fff">15 min</b></span></div>
+            <div class="field"><span>Alle anderen Tage</span><span class="v">bleiben bei 30 min</span></div>
+          </div>
+        </div>
+        <div class="list"><div class="field"><span>Heutiges Vorkommen erledigt</span><span class="tog"></span></div></div>
+        <div class="spacer"></div>
+      </div>
+    </div>
+    <p class="pc"><b>Pro:</b> Die Wahl „Nur heute / Alle ab heute“ steht <i>innerhalb</i> der Karte „In Tagwerk“ und gilt sichtbar nur für Aufwand und Zeitblock. Die Karte „Erinnerung“ sagt in ihrer Überschrift, dass sie immer die Serie ändert. So kann der Schalter nichts versprechen, was EventKit nicht hält. Die Folgezeilen übernehmen das freigegebene Muster g-A. <b>Contra:</b> längeres Sheet als bei einmaligen Aufgaben.</p>
+  </div>
+  <div>
+    <p class="label"><span class="code">G5</span><b>Rückfrage beim Sichern</b></p>
+    <div class="phone">
+      <div class="status"><span>13:20</span><span>●●● 5G</span></div>
+      <div class="sheetp" style="margin-top:6px">
+        <div class="shead"><span class="gb glass">Abbrechen</span><b>↻ Karteikarten</b><span class="gb glass" style="font-weight:600">Sichern</span></div>
+        <div class="list">
+          <div class="field"><span>Karteikarten Statistik</span></div>
+          <div class="field"><span>Fällig</span><span class="v">täglich · 18:00</span></div>
+          <div class="field"><span>Aufwand je Tag</span><div class="est"><span class="pm">−</span><span class="val">15 min</span><span class="pm">+</span></div></div>
+        </div>
+        <div class="spacer"></div>
+      </div>
+      <div class="dimov"></div>
+      <div class="asheet">
+        <div class="grp"><div class="m"><b>Änderungen an „Karteikarten“ sichern</b>Titel geändert · Aufwand 15 min statt 30 min</div>
+          <div class="act">Nur heute<small>gilt nur für den Aufwand. Der Titel ändert sich trotzdem für alle Tage.</small></div>
+          <div class="act">Alle ab heute</div></div>
+        <div class="grp"><div class="act c">Abbrechen</div></div>
+      </div>
+    </div>
+    <p class="pc"><b>Pro:</b> aus der Kalender-App bekannt, das Formular bleibt kurz. <b>Contra:</b> Die Frage „Nur heute?“ erscheint auch dann, wenn ein Feld geändert wurde, für das es die Wahl gar nicht gibt. Die Wahrheit steht dann im Kleingedruckten einer Schaltfläche; das ist die Stelle, an der sie am ehesten überlesen wird.</p>
+  </div>
+</div>
+<div class="box">
+  <h3>Empfehlung G: G1 + G3 + G4 (G2 kann zusätzlich bleiben, ist aber kein Ersatz)</h3>
+  <ul>
+    <li><b>Antippen = Bearbeiten</b> bleibt, wie heute im Tab „Aufgaben“. Neu ist nur, dass Sprünge aus Terminen in der Liste landen und nicht im Sheet.</li>
+    <li><b>Ehrlichkeit bei „Nur heute“:</b> Titel, Fälligkeit, Liste, Notiz und Priorität einer wiederkehrenden Erinnerung gelten immer für die Serie. „Nur heute“ betrifft ausschließlich Aufwand (<code>RecurringEffortOverride</code>) und den Zeitblock des Tages. „Erledigt“ hakt das heutige Vorkommen ab; die Erinnerung springt in Apple Erinnerungen auf das nächste.</li>
+    <li><b>Offene Folge von „Alle ab heute“ beim Zeitblock:</b> Das wäre ein täglich wiederkehrender Termin im Kalender „Tagwerk“ (Serientermin mit derselben Regel wie die Erinnerung). Das Design kennt bisher nur einzelne Blöcke. Vorschlag für diese Runde: „Alle ab heute“ gilt für den Aufwand; der Zeitblock bleibt je Tag. Siehe offene Fragen.</li>
+    <li><b>SwiftUI zu G1:</b> <code>List(selection: $selection)</code> mit <code>Set&lt;TaskID&gt;</code> und <code>.environment(\.editMode, $editMode)</code>; das Streichen mit zwei Fingern liefert die Liste dann selbst. Aktionsleiste als <code>ToolbarItemGroup(placement: .bottomBar)</code>, Tab-Leiste im Modus mit <code>.toolbarVisibility(.hidden, for: .tabBar)</code> ausblenden. Zu beachten: Die Zeilen nutzen heute <code>.onTapGesture</code> zum Öffnen; im Auswahlmodus muss diese Geste aus sein, sonst greift die Auswahl nicht. Zuweisung über das vorhandene <code>planning.plan(_:option:)</code> je Aufgabe.</li>
+    <li><b>SwiftUI zu G3:</b> Auswahl der <code>TabView</code> programmatisch setzen, <code>ScrollViewReader</code> mit <code>proxy.scrollTo(id, anchor: .center)</code>, Hervorhebung über <code>.listRowBackground</code> mit zeitlich begrenztem Zustand; Filter vorher zurücksetzen (<code>model.filter</code>).</li>
+    <li><b>SwiftUI zu G4:</b> Erkennung über <code>EKReminder.hasRecurrenceRules</code> (liegt als <code>recurringReminderIDs</code> schon vor), Aufwandsfeld ist das vorhandene <code>EstimateField</code>, Geltung als <code>Picker(.segmented)</code>. Wird das Sheet ohne Tagesbezug geöffnet (aus „Aufgaben“), ist der Bezugstag heute.</li>
+  </ul>
+</div>
+
+<!-- ============================== H ============================== -->
+<h2><span class="area">H</span> Überfälliges und heute Fälliges automatisch im Tag</h2>
+<p class="lead">Wunsch: Was überfällig oder heute fällig ist, soll ohne eigenes Zutun in der Planung von heute stehen. Das berührt zwei freigegebene Regeln. §11.8 zeigt nur Aufgaben mit einem <i>Arbeitstag</i> in der Vergangenheit („Von früher übrig“), nicht Aufgaben mit überschrittener <i>Fälligkeit</i>. §6.1 zählt nur zugeordnete Aufgaben und Blöcke zur Last. Die Entwurfsfrage ist deshalb nicht das Anzeigen, sondern: Zählt automatisch Erschienenes zur Last? Beispiel: 1 h 10 noch frei (wie in B), 45 min heute fällig und nicht eingeplant, 2 h 15 überfällig.</p>
+<div class="grid">
+  <div>
+    <p class="label"><span class="code r">H1</span><b>Geteilt: heute Fälliges zählt, Überfälliges wartet auf einen Tipp</b> <span class="rec">Empfehlung</span></p>
+    <div class="phone">
+      <div class="status"><span>13:20</span><span>●●● 5G</span></div>
+      <div class="hdr"><div><div class="kick">Heute · KW 47</div><div class="bigdate">Dienstag, 17. Nov. <span class="car">⌄</span></div></div></div>
+      <div class="cap">
+        <div class="top"><b>25 min noch frei</b><span>⚙︎</span></div>
+        <div class="sub">ab jetzt · 13:20 bis 18:00</div>
+        <div class="bar"><i class="k-pa" style="flex:260"></i><i class="k-ev" style="flex:60"></i><i class="k-bu" style="flex:30"></i><i class="k-re" style="flex:30"></i><i class="k-pl" style="flex:90"></i><i class="k-du" style="flex:45"></i><i class="k-fr" style="flex:25"></i></div>
+        <div class="lg"><span><i class="k-pl"></i>Geplant 1 h 30</span><span><i class="k-du"></i>Heute fällig 45 min</span></div>
+        <div class="sub2 w">＋ 2 h 15 Überfälliges ist nicht eingerechnet</div>
+      </div>
+      <div class="section">Heute fällig <span>zählt mit · 45 min</span></div>
+      <div class="list">
+        <div class="item"><span class="circle"></span><div class="t">Formular abschicken<div class="s"><span class="due-orange">heute</span> · 15 min</div></div><span class="chip auto" style="align-self:center">automatisch</span></div>
+        <div class="item"><span class="circle"></span><div class="t">Übungsblatt 4 abgeben<div class="s"><span class="due-orange">heute 18:00</span> · 30 min</div></div><span class="chip auto" style="align-self:center">automatisch</span></div>
+      </div>
+      <div class="section">Geplant ohne Uhrzeit</div>
+      <div class="list"><div class="item"><span class="circle"></span><div class="t">Mail an Lerngruppe<div class="s">30 min</div></div></div></div>
+      <div class="section">Von früher offen <span>5 · zählt nicht mit</span></div>
+      <div class="list">
+        <div class="item"><span class="circle"></span><div class="t">Literaturliste ergänzen<div class="s"><span class="due-red">fällig seit Fr 13. Nov.</span> · 1 h</div></div><span class="sm ok">Heute</span></div>
+        <div class="item"><span class="circle"></span><div class="t">Rückmeldung an Betreuung<div class="s">geplant für Mo 16. Nov. · 45 min</div></div><span class="sm ok">Heute</span></div>
+        <div class="field"><span class="l">3 weitere zeigen</span><span class="l">Neu einplanen …</span></div>
+      </div>
+      <div class="tb glass tbgap"><span class="on"><i class="ico">▦</i>Planen</span><span><i class="ico">☑︎</i>Aufgaben</span><span><i class="ico">⚙︎</i>Einstellungen</span></div>
+    </div>
+    <p class="pc"><b>Heute fällig</b> ohne eigenen Arbeitstag gilt als für heute eingeplant (abgeleitet, nichts wird gespeichert) und zählt zur Last: Was heute fällig ist, muss heute Platz finden. <b>Überfälliges</b> erscheint in demselben Abschnitt wie „Von früher übrig“ (jetzt „Von früher offen“, mit Grund je Zeile), zählt aber erst nach „Heute“. Die Karte nennt die nicht eingerechnete Summe ausdrücklich. <b>Contra:</b> zwei Regeln statt einer; die Trennlinie muss in der Oberfläche stehen („zählt mit“ / „zählt nicht mit“).</p>
+  </div>
+  <div>
+    <p class="label"><span class="code">H2</span><b>Alles Fällige zählt sofort</b></p>
+    <div class="phone">
+      <div class="status"><span>13:20</span><span>●●● 5G</span></div>
+      <div class="hdr"><div><div class="kick">Heute · KW 47</div><div class="bigdate">Dienstag, 17. Nov. <span class="car">⌄</span></div></div></div>
+      <div class="cap">
+        <div class="top"><b class="neg">1 h 50 zu viel</b><span>⚙︎</span></div>
+        <div class="sub">ab jetzt · 13:20 bis 18:00</div>
+        <div class="bar"><i class="k-pa" style="flex:260"></i><i class="k-ov" style="flex:280"></i></div>
+        <div class="act"><div class="b plain">Überfälliges verteilen …</div></div>
+      </div>
+      <div class="section">Fällig <span>7 · 3 h · zählt mit</span></div>
+      <div class="list">
+        <div class="item"><span class="circle"></span><div class="t">Formular abschicken<div class="s"><span class="due-orange">heute</span> · 15 min</div></div></div>
+        <div class="item"><span class="circle"></span><div class="t">Übungsblatt 4 abgeben<div class="s"><span class="due-orange">heute 18:00</span> · 30 min</div></div></div>
+        <div class="item"><span class="circle"></span><div class="t">Literaturliste ergänzen<div class="s"><span class="due-red">seit Fr 13. Nov.</span> · 1 h</div></div></div>
+        <div class="item"><span class="circle"></span><div class="t">Rückmeldung an Betreuung<div class="s"><span class="due-red">seit Mo 16. Nov.</span> · 45 min</div></div></div>
+        <div class="field"><span class="l">3 weitere zeigen</span></div>
+      </div>
+      <div class="section">Geplant ohne Uhrzeit</div>
+      <div class="list"><div class="item"><span class="circle"></span><div class="t">Mail an Lerngruppe<div class="s">30 min</div></div></div></div>
+      <div class="spacer"></div>
+      <div class="tb glass"><span class="on"><i class="ico">▦</i>Planen</span><span><i class="ico">☑︎</i>Aufgaben</span><span><i class="ico">⚙︎</i>Einstellungen</span></div>
+    </div>
+    <p class="pc"><b>Pro:</b> eine Regel, streng und einfach: Fällig heißt heute. <b>Contra:</b> Ein Rückstand macht die Anzeige dauerhaft rot. Bei einem längeren Rückstand (viele alte Erinnerungen, jede ohne Aufwand mit 30 min gerechnet) steht jeden Tag „zu viel“, und die Zahl verliert ihre Aussage genau dann, wenn sie gebraucht wird. Die KI-Planung bekäme einen von vornherein überbuchten Tag.</p>
+  </div>
+  <div>
+    <p class="label"><span class="code">H3</span><b>Nur anzeigen, nichts zählt</b></p>
+    <div class="phone">
+      <div class="status"><span>13:20</span><span>●●● 5G</span></div>
+      <div class="hdr"><div><div class="kick">Heute · KW 47</div><div class="bigdate">Dienstag, 17. Nov. <span class="car">⌄</span></div></div></div>
+      <div class="cap">
+        <div class="top"><b>1 h 10 noch frei</b><span>⚙︎</span></div>
+        <div class="sub">ab jetzt · 13:20 bis 18:00</div>
+        <div class="bar"><i class="k-pa" style="flex:260"></i><i class="k-ev" style="flex:60"></i><i class="k-bu" style="flex:30"></i><i class="k-re" style="flex:30"></i><i class="k-pl" style="flex:90"></i><i class="k-fr" style="flex:70"></i></div>
+        <div class="sub2 w">＋ 3 h Fälliges ist nicht eingerechnet</div>
+      </div>
+      <div class="section">Fällig, nicht eingeplant <span>7 · 3 h</span></div>
+      <div class="list">
+        <div class="item"><span class="circle"></span><div class="t">Formular abschicken<div class="s"><span class="due-orange">heute</span> · 15 min</div></div><span class="sm ok">Heute</span></div>
+        <div class="item"><span class="circle"></span><div class="t">Übungsblatt 4 abgeben<div class="s"><span class="due-orange">heute 18:00</span> · 30 min</div></div><span class="sm ok">Heute</span></div>
+        <div class="item"><span class="circle"></span><div class="t">Literaturliste ergänzen<div class="s"><span class="due-red">seit Fr 13. Nov.</span> · 1 h</div></div><span class="sm ok">Heute</span></div>
+        <div class="field"><span class="l">4 weitere zeigen</span></div>
+      </div>
+      <div class="section">Geplant ohne Uhrzeit</div>
+      <div class="list"><div class="item"><span class="circle"></span><div class="t">Mail an Lerngruppe<div class="s">30 min</div></div></div></div>
+      <div class="spacer"></div>
+      <div class="tb glass"><span class="on"><i class="ico">▦</i>Planen</span><span><i class="ico">☑︎</i>Aufgaben</span><span><i class="ico">⚙︎</i>Einstellungen</span></div>
+    </div>
+    <p class="pc"><b>Pro:</b> §6.1 bleibt unverändert, die Last enthält nur, was bewusst eingeplant wurde. <b>Contra:</b> Die Karte meldet „1 h 10 frei“, obwohl 45 min heute fällig sind. Wer danach plant, überbucht sich, ohne es zu sehen; der Hinweis darunter ist nur ein Nachsatz. Erfüllt den Wunsch nur dem Buchstaben nach (sichtbar, aber nicht „in der Planung“).</p>
+  </div>
+</div>
+<div class="box">
+  <h3>Empfehlung H: H1</h3>
+  <ul>
+    <li><b>Begründung:</b> Heute Fälliges hat einen eindeutigen Tag und eine begrenzte Menge; es mitzuzählen macht die Restzeit ehrlicher. Überfälliges ist ein Rückstand unbekannter Größe und Gültigkeit; es automatisch zu zählen, würde die Kapazitätsanzeige an genau den Tagen unbrauchbar machen, an denen Rückstand besteht (H2). Es gar nicht zu zählen, ließe die Anzeige zu optimistisch (H3).</li>
+    <li><b>Genaue Regel:</b> „Heute fällig“ = offene Aufgabe mit Fälligkeit heute, ohne Arbeitstag und ohne Zeitblock. Hat sie einen Arbeitstag an einem anderen Tag, gilt dieser (dort erscheint wie bisher die Warnung „nach Fälligkeit“). Wiederkehrende Erinnerungen zählen weiter nur über ihren Aufwand (§11.9), nicht doppelt.</li>
+    <li><b>„Von früher offen“ vereint zwei Gründe:</b> Arbeitstag in der Vergangenheit (bisher §11.8) und Fälligkeit in der Vergangenheit ohne Arbeitstag (neu). Jede Zeile nennt ihren Grund. „Heute“ legt eine echte Tageszuordnung an; „Neu einplanen …“ öffnet die Ablage aus D1 mit dem Filter „Überfällig“. Mehr als drei Zeilen werden eingeklappt.</li>
+    <li><b>Nur in der Tagesansicht von heute.</b> In Woche und Monat zählt heute Fälliges in der Zeile von heute mit; Überfälliges steht in der Ablage unter „Überfällig“.</li>
+    <li><b>Passt zur KI-Planung:</b> §11.10 wählt für „Tag planen“ ohnehin „dem Tag zugeordnete, am Tag oder früher fällige“ Aufgaben aus. H1 zeigt also vorab, was die KI einbeziehen würde.</li>
+    <li><b>SwiftUI:</b> reine Ableitung im <code>PlanningModel</code> (keine neuen gespeicherten Daten), Abschnitte als <code>Section</code>, Einklappen über einen Zustand oder <code>DisclosureGroup</code>, „Heute“ über das vorhandene <code>model.assign(_:to:)</code>.</li>
+  </ul>
+</div>
+
+<!-- ============================== I ============================== -->
+<h2><span class="area">I</span> Doppelte Termine zusammenfassen</h2>
+<p class="lead">Im Ablauf steht derselbe Termin zweimal untereinander (gleicher Titel, gleiche Zeit). Wahrscheinliche Ursache: Er liegt in zwei Kalendern, etwa im eigenen und in einem abonnierten oder gespiegelten. Tagwerk liest beide und zeigt beide. Unabhängig von der Anzeige darf belegte Zeit nur einmal zählen.</p>
+<div class="grid">
+  <div>
+    <p class="label"><span class="code r">I1</span><b>Zusammenfassen mit Kennzeichen</b> <span class="rec">Empfehlung</span></p>
+    <div class="phone">
+      <div class="status"><span>13:20</span><span>●●● 5G</span></div>
+      <div class="hdr"><div><div class="kick">Morgen · KW 47</div><div class="bigdate">Mittwoch, 18. Nov. <span class="car">⌄</span></div></div></div>
+      <div class="section">Ablauf <span>3 doppelte zusammengefasst</span></div>
+      <div class="tl">
+        <div class="row"><span class="time">09:00</span><div class="block event">Seminar<div class="meta"><span class="cals"><span class="dot" style="background:#30d158"></span><span class="dot" style="background:#ff9f0a"></span></span>&nbsp; bis 10:30 · 2 Kalender</div></div></div>
+        <div class="row"><span class="time">10:45</span><div class="block event">Blocker<div class="meta"><span class="cals"><span class="dot" style="background:#ff453a"></span><span class="dot" style="background:#bf5af2"></span></span>&nbsp; bis 12:00 · 2 Kalender</div></div></div>
+        <div class="row"><span class="time">12:00</span><div class="block quiet">Mittagspause · 1 h</div></div>
+        <div class="row"><span class="time">13:00</span><div class="block event">Vorlesung<div class="meta"><span class="cals"><span class="dot" style="background:#30d158"></span><span class="dot" style="background:#ff9f0a"></span></span>&nbsp; bis 15:30 · 2 Kalender</div></div></div>
+        <div class="row"><span class="time">16:00</span><div class="block planned">Pretest vorbereiten<div class="meta">1 h · Zeitblock</div></div></div>
+      </div>
+      <div class="note">Vorher: sieben Zeilen, davon drei doppelt. Die farbigen Punkte sind die Kalenderfarben.</div>
+      <div class="spacer"></div>
+      <div class="tb glass"><span class="on"><i class="ico">▦</i>Planen</span><span><i class="ico">☑︎</i>Aufgaben</span><span><i class="ico">⚙︎</i>Einstellungen</span></div>
+    </div>
+    <p class="pc"><b>Regel:</b> Termine gelten als derselbe, wenn Titel (ohne Groß-/Kleinschreibung und Randleerzeichen), Beginn, Ende und der Status „ganztägig“ übereinstimmen und sie in <i>verschiedenen</i> Kalendern liegen. Sie werden zu einer Zeile mit überlappenden Kalenderpunkten und dem Wort „2 Kalender“. <b>Contra:</b> Zwei echte, verschiedene Termine mit gleichem Titel und gleicher Zeit würden verschmolzen; für die Kapazität ist das folgenlos (die Zeit ist ohnehin nur einmal belegt), für die Anzeige gibt es „Getrennt anzeigen“ im Detail.</p>
+  </div>
+  <div>
+    <p class="label"><span class="code r">I1</span><b>Termindetail eines zusammengefassten Termins</b></p>
+    <div class="phone">
+      <div class="status"><span>13:20</span><span>●●● 5G</span></div>
+      <div class="under"><div class="row"><span class="time">09:00</span><div class="block event">Seminar</div></div></div>
+      <div class="sheetp">
+        <div class="grab"></div>
+        <div class="shead"><span class="gb glass">Fertig</span><b>Termin</b><span class="gb glass">Bearbeiten</span></div>
+        <div class="list">
+          <div class="field"><span style="font-weight:600">Seminar</span></div>
+          <div class="field"><span>Zeit</span><span class="v">Mi 18. Nov., 09:00 bis 10:30</span></div>
+        </div>
+        <div class="section">In 2 Kalendern</div>
+        <div class="list">
+          <div class="item"><span class="dot" style="background:#30d158;margin-top:5px"></span><div class="t">Uni<div class="s">bearbeitbar · Änderungen und Verknüpfungen gehen hierhin</div></div></div>
+          <div class="item"><span class="dot" style="background:#ff9f0a;margin-top:5px"></span><div class="t">Stundenplan (Abo) <span style="color:var(--sub)">🔒&#xFE0E;</span><div class="s">schreibgeschützt</div></div></div>
+          <div class="field"><span class="l">Getrennt anzeigen</span></div>
+        </div>
+        <div class="section">Verknüpfte Aufgabe</div>
+        <div class="list"><div class="field"><span class="l">⛓ Mit Aufgabe verknüpfen …</span></div></div>
+        <div class="spacer"></div>
+      </div>
+    </div>
+    <p class="pc"><b>Welche Kopie führt:</b> zuerst ein beschreibbarer Kalender vor einem schreibgeschützten, dann ein Deadline-Kalender vor anderen, sonst die Reihenfolge der Kalenderliste. Ist eine Kopie eine Deadline oder mit einer Aufgabe verknüpft, gilt das für die zusammengefasste Zeile. Bearbeiten ändert nur die führende Kopie; liegt die zweite in einem Abo, zieht sie von selbst nach oder bleibt als getrennte Zeile stehen, sobald sie nicht mehr übereinstimmt.</p>
+  </div>
+  <div>
+    <p class="label"><span class="code">I2</span><b>Nicht zusammenfassen, Kalender ausblenden</b></p>
+    <div class="phone">
+      <div class="status"><span>13:20</span><span>●●● 5G</span></div>
+      <div class="nav"><span class="a">‹ Einstellungen</span><span class="c">Kalender in Tagwerk</span><span></span></div>
+      <div class="section">Anzeigen und einrechnen</div>
+      <div class="list">
+        <div class="field"><span><span class="dot" style="background:#30d158"></span>Uni</span><span class="tog on"></span></div>
+        <div class="field"><span><span class="dot" style="background:#ff9f0a"></span>Stundenplan (Abo)</span><span class="tog"></span></div>
+        <div class="field"><span><span class="dot" style="background:#ff453a"></span>Arbeit</span><span class="tog on"></span></div>
+        <div class="field"><span><span class="dot" style="background:#bf5af2"></span>Arbeit (gespiegelt)</span><span class="tog"></span></div>
+        <div class="field"><span><span class="dot" style="background:#0a84ff"></span>Privat</span><span class="tog on"></span></div>
+        <div class="field"><span><span class="dot" style="background:#8e8e93"></span>Geburtstage</span><span class="tog on"></span></div>
+      </div>
+      <div class="note">Ausgeblendete Kalender erscheinen nicht im Ablauf und belegen keine Zeit.</div>
+      <div class="list"><div class="field"><span>Gleiche Termine zusammenfassen</span><span class="tog on"></span></div></div>
+      <div class="spacer"></div>
+      <div class="tb glass"><span><i class="ico">▦</i>Planen</span><span><i class="ico">☑︎</i>Aufgaben</span><span class="on"><i class="ico">⚙︎</i>Einstellungen</span></div>
+    </div>
+    <p class="pc"><b>Pro:</b> keine Heuristik, volle Kontrolle; hilft auch gegen Kalender, die man in Tagwerk gar nicht sehen will. <b>Contra:</b> Handarbeit, und sie versagt, wenn nur <i>einzelne</i> Termine doppelt liegen: Wer den zweiten Kalender ausblendet, verliert auch dessen übrige Termine. Als alleinige Lösung zu grob, als Ergänzung zu I1 nützlich (dann mit dem Schalter in der letzten Zeile).</p>
+  </div>
+</div>
+<div class="box">
+  <h3>Empfehlung I: I1; die Kalenderliste aus I2 als Ergänzung, wenn gewünscht</h3>
+  <ul>
+    <li><b>Schlüssel:</b> (normalisierter Titel, Beginn, Ende, ganztägig). Zuvor werden Termine mit gleichem <code>calendarItemExternalIdentifier</code> und gleichem Beginn zusammengefasst; das trifft denselben Eintrag auch dann, wenn ein Kalender den Titel leicht anders schreibt. Termine <i>desselben</i> Kalenders werden nie verschmolzen.</li>
+    <li><b>Kapazität unabhängig von der Anzeige:</b> Belegte Zeit ist die Vereinigung der Zeiträume, nicht ihre Summe. Zwei Termine von 10:00 bis 12:30 belegen 2 h 30, nicht 5 h. Das leistet die Rechnung bereits (<code>Capacity.swift</code> führt überlappende Zeiträume zusammen); die doppelten Zeilen verfälschen also nur die Anzeige, nicht die freie Zeit. Im Design-Dokument steht diese Regel noch nicht und sollte in §6.1 ergänzt werden.</li>
+    <li><b>Nie nur über Farbe:</b> Das Wort „2 Kalender“ steht immer dabei; VoiceOver liest „Seminar, 9 Uhr bis 10 Uhr 30, in 2 Kalendern“.</li>
+    <li><b>Grenze der Regel:</b> Platzhalter wie gleichnamige Blocker aus einem gespiegelten Arbeitskalender werden zusammengefasst, wenn sie zeitgleich sind. Ein <i>abweichend betitelter</i> Platzhalter für denselben Zeitraum (im einen Kalender der echte Titel, im anderen nur „Belegt“) wird nicht erkannt; dagegen hilft nur das Ausblenden des Kalenders (I2).</li>
+    <li><b>SwiftUI / EventKit:</b> Gruppierung im <code>PlanningModel</code> vor dem Aufbau der Zeitleiste (<code>Dictionary(grouping:by:)</code> über den Schlüssel), führende Kopie über <code>EKCalendar.allowsContentModifications</code>; Einstellungen in <code>AppSettings</code> (ausgeblendete Kalender, Schalter „zusammenfassen“).</li>
+  </ul>
+</div>
+
+<!-- ============================== J ============================== -->
+<h2><span class="area">J</span> Termine in allen Apple-Kalendern anlegen, ändern, löschen</h2>
+<p class="lead">Bisher schreibt Tagwerk nur Zeitblöcke in den Plan-Kalender (§5.2). Gewünscht ist, Termine jedes Kalenders in Tagwerk zu erstellen, zu ändern und zu löschen. Drei Grenzen setzt EventKit: Kalender mit <code>allowsContentModifications == false</code> (Feiertage, Geburtstage, Abos) sind nicht beschreibbar; Einladungen lassen sich weder beantworten noch lassen sich Teilnehmende hinzufügen; für Serien gibt es genau zwei Reichweiten (<code>EKSpan.thisEvent</code>, <code>.futureEvents</code>), kein „alle, auch vergangene“.</p>
+<div class="grid">
+  <div>
+    <p class="label"><span class="code r">J1</span><b>Termindetail in Tagwerk</b> (beschreibbarer Kalender) <span class="rec">Empfehlung</span></p>
+    <div class="phone">
+      <div class="status"><span>13:20</span><span>●●● 5G</span></div>
+      <div class="under"><div class="row"><span class="time">09:00</span><div class="block event">Seminar</div></div></div>
+      <div class="sheetp">
+        <div class="grab"></div>
+        <div class="shead"><span class="gb glass">Fertig</span><b>Termin</b><span class="gb glass" style="font-weight:600">Bearbeiten</span></div>
+        <div class="list">
+          <div class="field"><span style="font-weight:600;font-size:16px">Seminar</span></div>
+          <div class="field"><span>Zeit</span><span class="v">Mi 18. Nov., 09:00 bis 10:30</span></div>
+          <div class="field"><span>Wiederholt</span><span class="v">↻ wöchentlich</span></div>
+          <div class="field"><span>Kalender</span><span class="v"><span class="dot" style="background:#30d158"></span>Uni</span></div>
+          <div class="field"><span>Ort</span><span class="v">Raum 2.14</span></div>
+        </div>
+        <div class="section">Verknüpfte Aufgabe</div>
+        <div class="list"><div class="field"><span class="l">⛓ Mit Aufgabe verknüpfen …</span></div></div>
+        <div class="list">
+          <div class="field"><span class="l">In Kalender-App öffnen</span></div>
+          <div class="field"><span style="color:var(--red)">Termin löschen</span></div>
+        </div>
+        <div class="spacer"></div>
+      </div>
+    </div>
+    <p class="pc">Lesen zuerst, Ändern über „Bearbeiten“ (öffnet J2 mit den Werten des Termins). So bleibt der Tipp auf einen Termin harmlos. Der Abschnitt „Verknüpfte Aufgabe“ ist der freigegebene aus Mockup h. „Termin löschen“ fragt nach; bei Serien mit J6.</p>
+  </div>
+  <div>
+    <p class="label"><span class="code r">J2</span><b>Neuer Termin / Bearbeiten: Kurzform mit Übergang zum Systemeditor</b> <span class="rec">Empfehlung</span></p>
+    <div class="phone">
+      <div class="status"><span>13:20</span><span>●●● 5G</span></div>
+      <div class="sheetp" style="margin-top:6px">
+        <div class="shead"><span class="gb glass">Abbrechen</span><b>Neuer Termin</b><span class="gb glass" style="font-weight:600">Hinzufügen</span></div>
+        <div class="list"><div class="field"><span>Sprechstunde</span></div></div>
+        <div class="list">
+          <div class="field"><span>Ganztägig</span><span class="tog"></span></div>
+          <div class="field"><span>Beginn</span><span><span class="pick">Mi 18. Nov.</span> <span class="pick">13:00</span></span></div>
+          <div class="field"><span>Ende</span><span><span class="pick">Mi 18. Nov.</span> <span class="pick">14:00</span></span></div>
+          <div class="field"><span>Wiederholen</span><span class="v">Nie ⌄</span></div>
+        </div>
+        <div class="banner ok"><b>Passt</b>13:00 bis 14:00 ist frei. Danach bleiben an dem Tag 1 h 30 frei.</div>
+        <div class="list">
+          <div class="field"><span>Kalender</span><span class="v"><span class="dot" style="background:#0a84ff"></span>Privat ⌄</span></div>
+          <div class="field"><span style="color:var(--sub)">Ort</span></div>
+          <div class="field"><span style="color:var(--sub)">Notiz</span></div>
+        </div>
+        <div class="list"><div class="field"><span class="l">⛓ Mit Aufgabe verknüpfen …</span></div></div>
+        <div class="list"><div class="field"><span class="l">Weitere Optionen …</span><span class="v" style="font-size:12px">Erinnerung, Zeitzone, eigene Wiederholung</span></div></div>
+        <div class="spacer"></div>
+      </div>
+    </div>
+    <p class="pc"><b>Pro:</b> Die Felder, die beim Planen zählen (Titel, Zeit, Kalender, einfache Wiederholung), liegen in Tagwerk, mit zwei Dingen, die der Systemeditor nicht kann: dem Abgleich mit der freien Zeit und der Verknüpfung zur Aufgabe. Alles Seltene öffnet den Systemeditor mit den bereits eingetragenen Werten. Einstieg: ＋ in „Planen“ (Menü „Neuer Termin“ / „Neue Aufgabe“) oder Tipp auf eine freie Lücke (C2). <b>Contra:</b> zwei Formulare für denselben Gegenstand.</p>
+  </div>
+  <div>
+    <p class="label"><span class="code">J3</span><b>Nur der Systemeditor</b></p>
+    <div class="phone">
+      <div class="status"><span>13:20</span><span>●●● 5G</span></div>
+      <div class="sheetp" style="margin-top:6px;background:#1c1c1e">
+        <div class="shead"><span style="color:var(--red)">Abbrechen</span><b>Neues Ereignis</b><span style="color:var(--sub);font-weight:600">Hinzufügen</span></div>
+        <div class="list"><div class="field"><span style="color:var(--sub)">Titel</span></div><div class="field"><span style="color:var(--sub)">Ort oder Videoanruf</span></div></div>
+        <div class="list">
+          <div class="field"><span>Ganztägig</span><span class="tog"></span></div>
+          <div class="field"><span>Beginn</span><span><span class="pick">18. Nov. 2026</span> <span class="pick">13:00</span></span></div>
+          <div class="field"><span>Ende</span><span><span class="pick">18. Nov. 2026</span> <span class="pick">14:00</span></span></div>
+          <div class="field"><span>Wegzeit</span><span class="v">Keine ›</span></div>
+          <div class="field"><span>Wiederholen</span><span class="v">Nie ›</span></div>
+        </div>
+        <div class="list"><div class="field"><span>Kalender</span><span class="v"><span class="dot" style="background:#0a84ff"></span>Privat ›</span></div><div class="field"><span>Eingeladene</span><span class="v">Keine ›</span></div></div>
+        <div class="list"><div class="field"><span>Hinweis</span><span class="v">Keiner ›</span></div></div>
+        <div class="note">Systemansicht aus EventKitUI, Aussehen und Felder bestimmt iOS.</div>
+        <div class="spacer"></div>
+      </div>
+    </div>
+    <p class="pc"><b>Pro:</b> kleinster Aufwand, vollständiger Funktionsumfang, Schreibschutz und Serienfragen erledigt iOS selbst. <b>Contra:</b> kein Platz für Tagwerk-eigenes: keine Anzeige der freien Zeit, keine Verknüpfung zur Aufgabe im selben Schritt, fremdes Aussehen mitten in der App. Die Verknüpfung müsste nach dem Sichern in einem zweiten Schritt folgen.</p>
+  </div>
+  <div>
+    <p class="label"><span class="code r">J4</span><b>Schreibgeschützter Kalender</b></p>
+    <div class="phone">
+      <div class="status"><span>13:20</span><span>●●● 5G</span></div>
+      <div class="sheetp" style="margin-top:6px">
+        <div class="grab"></div>
+        <div class="shead"><span class="gb glass">Fertig</span><b>Termin</b><span></span></div>
+        <div class="banner lock"><b>🔒&#xFE0E; Schreibgeschützt</b>Der Kalender „Feiertage“ ist abonniert. Ändern und Löschen sind hier nicht möglich.</div>
+        <div class="list">
+          <div class="field"><span style="font-weight:600;font-size:16px">Feiertag</span></div>
+          <div class="field"><span>Zeit</span><span class="v">Mi 18. Nov. · ganztägig</span></div>
+          <div class="field"><span>Kalender</span><span class="v"><span class="dot" style="background:#64d2ff"></span>Feiertage 🔒&#xFE0E;</span></div>
+        </div>
+        <div class="list"><div class="field"><span class="l">⛓ Mit Aufgabe verknüpfen …</span></div><div class="field"><span class="l">In Kalender-App öffnen</span></div></div>
+        <div class="section">Kalenderwahl in J2</div>
+        <div class="list">
+          <div class="field"><span><span class="dot" style="background:#0a84ff"></span>Privat</span><span style="color:var(--blue)">✓</span></div>
+          <div class="field"><span><span class="dot" style="background:#30d158"></span>Uni</span></div>
+          <div class="field"><span><span class="dot" style="background:#7cf0c3"></span>Tagwerk</span><span class="v" style="font-size:12px">für Zeitblöcke</span></div>
+          <div class="field dis"><span><span class="dot" style="background:#64d2ff"></span>Feiertage 🔒&#xFE0E;</span><span class="v" style="font-size:12px">Abo</span></div>
+          <div class="field dis"><span><span class="dot" style="background:#8e8e93"></span>Geburtstage 🔒&#xFE0E;</span><span class="v" style="font-size:12px">aus Kontakten</span></div>
+        </div>
+        <div class="spacer"></div>
+      </div>
+    </div>
+    <p class="pc">„Bearbeiten“ und „Termin löschen“ fehlen ganz, statt ausgegraut zu sein; das Feld oben sagt, warum. Verknüpfen bleibt möglich, weil die Verknüpfung nur in Tagwerk liegt. In der Kalenderwahl stehen nicht beschreibbare Kalender gedimmt am Ende mit Grund.</p>
+  </div>
+  <div>
+    <p class="label"><span class="code r">J5</span><b>Einladung</b></p>
+    <div class="phone">
+      <div class="status"><span>13:20</span><span>●●● 5G</span></div>
+      <div class="sheetp" style="margin-top:6px">
+        <div class="grab"></div>
+        <div class="shead"><span class="gb glass">Fertig</span><b>Termin</b><span></span></div>
+        <div class="banner inv"><b>Einladung</b>Titel und Zeit legt die einladende Person fest. Zusagen oder Absagen geht nur in der Kalender-App; iOS erlaubt das anderen Apps nicht.</div>
+        <div class="list">
+          <div class="field"><span style="font-weight:600;font-size:16px">Projekt-Abstimmung</span></div>
+          <div class="field"><span>Zeit</span><span class="v">Do 19. Nov., 11:00 bis 12:00</span></div>
+          <div class="field"><span>Eingeladen von</span><span class="v">Teamleitung</span></div>
+          <div class="field"><span>Teilnehmende</span><span class="v">4</span></div>
+          <div class="field"><span>Dein Status</span><span class="v"><span class="chip warn">offen</span></span></div>
+        </div>
+        <div class="btns" style="margin:6px 0"><div class="b prom">In Kalender-App antworten</div></div>
+        <div class="list"><div class="field"><span class="l">⛓ Mit Aufgabe verknüpfen …</span></div></div>
+        <div class="note">Offene und zugesagte Einladungen belegen Zeit, abgelehnte nicht (§11.4).</div>
+        <div class="spacer"></div>
+      </div>
+    </div>
+    <p class="pc">Termine, bei denen jemand anderes einlädt, bleiben in Tagwerk lesbar und verknüpfbar, aber nicht änderbar. Eigene Termine mit Eingeladenen lassen sich ändern; die Liste der Eingeladenen selbst nur über „Weitere Optionen …“ bzw. die Kalender-App.</p>
+  </div>
+  <div>
+    <p class="label"><span class="code r">J6</span><b>Serientermin sichern oder löschen</b></p>
+    <div class="phone">
+      <div class="status"><span>13:20</span><span>●●● 5G</span></div>
+      <div class="sheetp" style="margin-top:6px">
+        <div class="shead"><span class="gb glass">Abbrechen</span><b>Termin bearbeiten</b><span class="gb glass" style="font-weight:600">Sichern</span></div>
+        <div class="list"><div class="field"><span>Seminar</span></div></div>
+        <div class="list">
+          <div class="field"><span>Beginn</span><span><span class="pick">Mi 18. Nov.</span> <span class="pick b">09:30</span></span></div>
+          <div class="field"><span>Ende</span><span><span class="pick">Mi 18. Nov.</span> <span class="pick b">11:00</span></span></div>
+          <div class="field"><span>Wiederholen</span><span class="v">wöchentlich ⌄</span></div>
+        </div>
+        <div class="spacer"></div>
+      </div>
+      <div class="dimov"></div>
+      <div class="asheet">
+        <div class="grp"><div class="m"><b>Dieser Termin wiederholt sich wöchentlich</b>Beginn 09:30 statt 09:00</div>
+          <div class="act">Nur dieser Termin</div>
+          <div class="act">Dieser und alle folgenden</div></div>
+        <div class="grp"><div class="act c">Abbrechen</div></div>
+      </div>
+    </div>
+    <p class="pc">Die beiden Schaltflächen entsprechen genau den zwei Reichweiten von EventKit. Vergangene Vorkommen bleiben immer unverändert; das steht so nicht zur Wahl und wird deshalb auch nicht angeboten. Beim Löschen dieselbe Frage mit roten Einträgen („Nur diesen Termin löschen“ / „Diesen und alle folgenden löschen“).</p>
+  </div>
+</div>
+<div class="box">
+  <h3>Empfehlung J: J1 + J2 als Kombination, J4 bis J6 als feste Regeln; J3 nur als Sparfassung</h3>
+  <ul>
+    <li><b>Begründung:</b> Ein vollständiger eigener Termineditor würde die Kalender-App nachbauen (Zeitzonen, freie Wiederholungsregeln, Erinnerungen, Wegzeit, Anhänge) und wäre die größte Fehlerquelle für das Anti-Ziel „Daten-Drift“. Nur der Systemeditor verschenkt, was Tagwerk ausmacht. Die Kombination hält den häufigen Fall in Tagwerk und den seltenen bei iOS.</li>
+    <li><b>Standardkalender für neue Termine:</b> der zuletzt gewählte, sonst <code>EKEventStore.defaultCalendarForNewEvents</code>. Der Plan-Kalender „Tagwerk“ bleibt den Zeitblöcken vorbehalten, ist aber wählbar.</li>
+    <li><b>Schutz vor Versehen:</b> Löschen fragt immer nach und nennt Kalender und Zeit. Vor jedem Schreiben wird der Termin neu geladen und verglichen (§5.2 gilt dann für alle Kalender, nicht nur für Tagwerk-Blöcke).</li>
+    <li><b>EventKit:</b> <code>EKEventStore.save(_:span:commit:)</code> und <code>remove(_:span:commit:)</code> mit <code>.thisEvent</code> / <code>.futureEvents</code>; Schreibschutz über <code>EKCalendar.allowsContentModifications</code> und <code>EKCalendar.type</code> (<code>.subscription</code>, <code>.birthday</code>); Einladungen über <code>EKEvent.organizer</code> und <code>attendees</code> (nur lesbar); Serien über <code>hasRecurrenceRules</code>, einfache Regeln über <code>EKRecurrenceRule</code>. Vollzugriff auf Kalender hat die App bereits, weil sie Termine liest.</li>
+    <li><b>SwiftUI:</b> J1 und J2 als <code>Form</code> im <code>.sheet</code>; Kalenderwahl als <code>Picker</code> mit <code>.pickerStyle(.navigationLink)</code>, nicht beschreibbare Einträge mit <code>.disabled(true)</code> bzw. <code>.selectionDisabled()</code>; die Serienfrage als <code>.confirmationDialog</code>. „Weitere Optionen …“ und J3: <code>EKEventEditViewController</code> mit <code>EKEventEditViewDelegate</code> in einem <code>UIViewControllerRepresentable</code>; das noch nicht gesicherte <code>EKEvent</code> wird übergeben, sodass die Eingaben erhalten bleiben. „In Kalender-App öffnen“ wie bisher über <code>calshow:</code>.</li>
+    <li><b>Am Gerät zu prüfen:</b> wie sich ein aus dem Systemeditor zurückgegebener Termin mit eigener Wiederholungsregel in der Kurzform darstellt (Vorschlag: „Wiederholen: eigene Regel“, nur dort änderbar).</li>
+  </ul>
+</div>
+
+<!-- ============================== K ============================== -->
+<h2><span class="area">K</span> KI (Plan 2b-2) · Platz des Knopfs und Modellauswahl</h2>
+<p class="lead">Freigegeben ist e-A: abgesetzter Knopf rechts neben der Tab-Leiste. Zu prüfen war, ob das neben der neuen Gestaltung hält: Ablage „Ungeplant“ (D1), Aktionsleiste der Mehrfachauswahl (G1), Wischen zwischen Tagen (A1), ＋ oben rechts. Dazu die Modellauswahl in den Einstellungen. Modellnamen in K3 und K4 sind Platzhalter; die echte Liste liefert ChatGPT zur Laufzeit.</p>
+<div class="grid">
+  <div>
+    <p class="label"><span class="code r">K1</span><b>Neben der Tab-Leiste</b> (wie e-A) <span class="rec">Empfehlung</span></p>
+    <div class="phone">
+      <div class="status"><span>13:20</span><span>●●● 5G</span></div>
+      <div class="topbar"><div class="seg"><span>Tag</span><span class="on">Woche</span><span>Monat</span></div><span class="rbtn glass">＋</span></div>
+      <div class="zone" style="top:38px;right:8px;width:46px;height:44px"></div>
+      <div class="hdr"><div><div class="kick">Diese Woche · KW 47</div><div class="bigdate">16.–22. November</div></div><div class="stepper glass"><span>‹</span><span>›</span></div></div>
+      <div class="day today"><div class="hd"><b>Di 17.</b><div class="bar"><i class="k-pa" style="flex:260"></i><i class="k-pl" style="flex:210"></i><i class="k-fr" style="flex:70"></i></div><span class="n">1 h 10 noch frei</span></div><div class="tk"><span class="grip">⋮⋮</span><span class="nm">Mail an Lerngruppe</span><span class="d">30 min</span></div></div>
+      <div class="day"><div class="hd"><b>Mi 18.</b><div class="bar"><i class="k-pl" style="flex:1"></i><i class="k-fr" style="flex:1"></i></div><span class="n">2 h 30 frei</span></div><div class="tk"><span class="grip">⋮⋮</span><span class="nm">Pretest vorbereiten</span><span class="d">▦ 16:00 · 1 h</span></div></div>
+      <div class="day"><div class="hd"><b>Do 19.</b><div class="bar"><i class="k-pl" style="flex:5"></i><i class="k-fr" style="flex:1"></i></div><span class="n">35 min frei</span></div><div class="tk"><span class="grip">⋮⋮</span><span class="nm">Kapitel 2 gliedern</span><span class="d">2 h</span></div></div>
+      <div class="day"><div class="hd"><b>Fr 20.</b><div class="bar"><i class="k-pl" style="flex:1"></i><i class="k-fr" style="flex:3"></i></div><span class="n">3 h 10 frei</span></div><div class="tk dlrow"><span>⚑</span><span class="nm">Statistik-Klausur · 10:00</span></div></div>
+      <div class="zone" style="left:8px;right:8px;top:150px;height:330px;border-color:rgba(255,214,10,.6)">Inhalt, Wischen, Ziehen: frei</div>
+      <div class="spacer"></div>
+      <div class="drawer"><div class="grab"></div><div class="dh">Ungeplant<span>9 diese Woche fällig &nbsp;⌃</span></div></div>
+      <div class="tbrow"><div class="tb glass"><span class="on"><i class="ico">▦</i>Planen</span><span><i class="ico">☑︎</i>Aufgaben</span><span><i class="ico">⚙︎</i>Einstellungen</span></div><div class="aibtn glass">✦</div></div>
+    </div>
+    <p class="pc"><b>Pro:</b> Der Knopf liegt auf der Linie der Tab-Leiste und damit unter der Ablage, unter jeder Liste und außerhalb aller Wisch- und Ziehflächen; ＋ sitzt oben rechts. Auch die Rückgängig-Kapsel behält ihre Breite. Im Auswahlmodus (G1) ersetzt die Aktionsleiste Tab-Leiste und Knopf gemeinsam; dort wird er nicht gebraucht. In Sheets liegt dasselbe Symbol in der Werkzeugleiste. <b>Contra:</b> Die Tab-Leiste wird schmaler; siehe Machbarkeit unten.</p>
+  </div>
+  <div>
+    <p class="label"><span class="code">K2</span><b>Oben rechts neben ＋</b></p>
+    <div class="phone">
+      <div class="status"><span>13:20</span><span>●●● 5G</span></div>
+      <div class="topbar"><div class="seg"><span>Tag</span><span class="on">Woche</span><span>Monat</span></div><span class="rbtn glass ai">✦</span><span class="rbtn glass">＋</span></div>
+      <div class="hdr"><div><div class="kick">Diese Woche · KW 47</div><div class="bigdate">16.–22. November</div></div><div class="stepper glass"><span>‹</span><span>›</span></div></div>
+      <div class="day today"><div class="hd"><b>Di 17.</b><div class="bar"><i class="k-pa" style="flex:260"></i><i class="k-pl" style="flex:210"></i><i class="k-fr" style="flex:70"></i></div><span class="n">1 h 10 noch frei</span></div></div>
+      <div class="day"><div class="hd"><b>Mi 18.</b><div class="bar"><i class="k-pl" style="flex:1"></i><i class="k-fr" style="flex:1"></i></div><span class="n">2 h 30 frei</span></div></div>
+      <div class="day"><div class="hd"><b>Do 19.</b><div class="bar"><i class="k-pl" style="flex:5"></i><i class="k-fr" style="flex:1"></i></div><span class="n">35 min frei</span></div></div>
+      <div class="spacer"></div>
+      <div class="drawer"><div class="grab"></div><div class="dh">Ungeplant<span>9 diese Woche fällig &nbsp;⌃</span></div></div>
+      <div class="tb glass tbgap"><span class="on"><i class="ico">▦</i>Planen</span><span><i class="ico">☑︎</i>Aufgaben</span><span><i class="ico">⚙︎</i>Einstellungen</span></div>
+    </div>
+    <p class="pc"><b>Pro:</b> kollidiert mit nichts am unteren Rand, rein mit Standardmitteln baubar (<code>ToolbarItem</code>), in jedem Tab an derselben Stelle. <b>Contra:</b> am weitesten vom Daumen entfernt; in „Planen“ wird der Platz für Tag/Woche/Monat enger; zwei runde Knöpfe nebeneinander sind leicht zu verwechseln. Weicht von der freigegebenen Entscheidung e-A ab.</p>
+  </div>
+  <div>
+    <p class="label"><span class="code r">K3</span><b>Modellauswahl: ein Modell, Vorgabe „Automatisch“</b> <span class="rec">Empfehlung</span></p>
+    <div class="phone">
+      <div class="status"><span>13:20</span><span>●●● 5G</span></div>
+      <div class="nav"><span class="a">‹ Einstellungen</span><span class="c">KI</span><span></span></div>
+      <div class="section">Konto</div>
+      <div class="list">
+        <div class="field"><span>ChatGPT</span><span class="v" style="color:var(--green)">angemeldet</span></div>
+        <div class="field"><span style="color:var(--red)">Abmelden</span></div>
+      </div>
+      <div class="section">Modell <span>Liste von ChatGPT · heute 09:12</span></div>
+      <div class="list">
+        <div class="item"><span class="radio on"></span><div class="t">Automatisch<div class="s">Tagwerk nimmt das Standardmodell deines Abos</div></div></div>
+        <div class="item"><span class="radio"></span><div class="t">Modell A<div class="s">Kennung vom Dienst · Platzhalter</div></div></div>
+        <div class="item"><span class="radio"></span><div class="t">Modell B<div class="s">Kennung vom Dienst · Platzhalter</div></div></div>
+        <div class="item"><span class="radio"></span><div class="t">Modell C<div class="s">Kennung vom Dienst · Platzhalter</div></div></div>
+        <div class="field"><span class="l">Liste aktualisieren</span></div>
+      </div>
+      <div class="note">Gilt für Planen und Assistent. Ist das gewählte Modell nicht mehr verfügbar, wechselt Tagwerk auf „Automatisch“ und sagt es beim nächsten Aufruf.</div>
+      <div class="list"><div class="field"><span>Datenschutzhinweis</span><span class="v">›</span></div></div>
+      <div class="spacer"></div>
+      <div class="tb glass"><span><i class="ico">▦</i>Planen</span><span><i class="ico">☑︎</i>Aufgaben</span><span class="on"><i class="ico">⚙︎</i>Einstellungen</span></div>
+    </div>
+    <p class="pc"><b>Pro:</b> eine Entscheidung, ein Ort; „Automatisch“ funktioniert ohne Wissen über Modellnamen und überlebt Änderungen des Angebots. Die Liste zeigt genau, was der Dienst meldet, ohne erfundene Beschreibungen. <b>Contra:</b> kein getrenntes Abwägen von Tempo (Chat) und Gründlichkeit (Wochenplan).</p>
+  </div>
+  <div>
+    <p class="label"><span class="code">K4</span><b>Getrennte Modelle für Planen und Assistent</b></p>
+    <div class="phone">
+      <div class="status"><span>13:20</span><span>●●● 5G</span></div>
+      <div class="nav"><span class="a">‹ Einstellungen</span><span class="c">KI</span><span></span></div>
+      <div class="section">Modelle <span>Liste von ChatGPT · heute 09:12</span></div>
+      <div class="list">
+        <div class="field"><span>Planen (Tag, Woche, Monat)</span><span class="v">Modell B ›</span></div>
+        <div class="field"><span>Assistent und Chat</span><span class="v">Automatisch ›</span></div>
+      </div>
+      <div class="note">Planen läuft selten und darf länger dauern; der Chat soll schnell antworten.</div>
+      <div class="list"><div class="field"><span class="l">Liste aktualisieren</span></div></div>
+      <div class="spacer"></div>
+      <div class="tb glass"><span><i class="ico">▦</i>Planen</span><span><i class="ico">☑︎</i>Aufgaben</span><span class="on"><i class="ico">⚙︎</i>Einstellungen</span></div>
+    </div>
+    <p class="pc"><b>Pro:</b> ein gründliches Modell für den Plan, ein schnelles für das Gespräch. <b>Contra:</b> zwei Einstellungen, deren Unterschied nur versteht, wer die Modelle kennt; für eine private App vermutlich mehr Schalter als Nutzen. Lässt sich später aus K3 heraus ergänzen, ohne etwas umzubauen.</p>
+  </div>
+</div>
+<div class="box">
+  <h3>Empfehlung K: K1 + K3</h3>
+  <ul>
+    <li><b>K1 hält gegen alle neuen Elemente:</b> Ablage (D1) liegt über der Leiste, Aktionsleiste (G1) ersetzt sie, Tageswischen (A1) findet im Inhalt statt, ＋ ist oben. Kein neuer Konflikt.</li>
+    <li><b>Machbarkeit, wichtig:</b> Auf den Screenshots ist die Tab-Leiste eine zentrierte Kapsel, rechts und links bleiben je rund 45 pt. Ein frei darübergelegter Knopf von 52 pt (<code>.overlay(alignment: .bottomTrailing)</code> mit <code>.glassEffect(in: .circle)</code>) passt dort nicht hinein, und die Lage der System-Leiste lässt sich nicht verschieben. Der vorgesehene Weg ist der abgesetzte Platz, den iOS selbst anbietet: ein <code>Tab</code> mit <code>role: .search</code> wird rechts als runder Einzelknopf neben die Kapsel gesetzt. Tagwerk würde diesen Platz mit eigenem Symbol belegen und die Auswahl abfangen, um das Chat-Sheet zu öffnen, statt den Tab zu wechseln. Das ist eine Zweckentfremdung der Suchrolle und <b>vor dem Bau am Gerät zu prüfen</b> (Symbol, Beschriftung für VoiceOver, Verhalten beim Abfangen). Trägt es nicht, ist K2 der Rückfall.</li>
+    <li><b>Nicht empfohlen:</b> <code>.tabViewBottomAccessory</code> (Leiste über der Tab-Leiste, iOS 26) für den Assistenten. Der Platz würde mit der Ablage „Ungeplant“ und der Rückgängig-Kapsel konkurrieren.</li>
+    <li><b>K3, Verhalten:</b> Die Liste kommt aus der Modellliste des Anbieters (Phase 2 §7), wird beim Öffnen der Seite und höchstens einmal täglich geladen und lokal gemerkt. Gezeigt wird nur, was der Dienst liefert (Name, Kennung); Tagwerk erfindet keine Eigenschaften dazu. Modelle, mit denen der verifizierte Funktionsaufruf nicht geht, sollten nicht wählbar sein, sofern der Dienst das erkennen lässt.</li>
+    <li><b>SwiftUI:</b> eigene Seite unter „Einstellungen“ mit <code>Picker</code> im Stil <code>.inline</code> (Auswahl mit Haken) in einer <code>Form</code>, gespeichert in <code>AppSettings</code> (additiv, Standard „Automatisch“); Ladezustand und Fehler als Zeile in der Liste, nicht als Dialog.</li>
+  </ul>
+</div>
+
+<!-- ============================== Abschluss ============================== -->
+<h2><span class="area" style="background:#636366">§</span> Folgen für das Design-Dokument und offene Fragen</h2>
+<div class="box warn">
+  <h3>Änderungen am freigegebenen Design (<code>2026-11-17-phase-2b-design.md</code>), falls die Empfehlungen freigegeben werden</h3>
+  <ul>
+    <li><b>§2, §3 („Kalender“), §5.2, §6.5 · Bereich J:</b> „Tagwerk schreibt nur in diesen Kalender“ gilt nicht mehr. Neu: Zeitblöcke weiterhin nur im Plan-Kalender, Termine in jedem beschreibbaren Kalender; Konfliktschutz für alle Termine; Serienreichweite „nur dieser / dieser und alle folgenden“.</li>
+    <li><b>§6.1 · Bereiche B, H, I:</b> Restkapazität für heute (ab jetzt); heute Fälliges ohne Arbeitstag zählt zur Last; festhalten, was der Code schon tut: belegte Zeit ist die Vereinigung überlappender Termine, doppelte Termine zählen einmal.</li>
+    <li><b>§6.3, §11.9 · Bereiche B, G:</b> Geltung „Nur heute / Alle ab heute“ auch im Bearbeiten-Sheet; Klarstellung, dass sie nur Tagwerk-eigene Werte betrifft; je nach Antwort auf Frage 3 und 6 weitere Anpassung.</li>
+    <li><b>§6.4 und Mockup h · Bereich G:</b> „Aufgabe öffnen“ wird „Aufgabe zeigen“ und führt in die Liste statt ins Sheet.</li>
+    <li><b>§6.5, §11.3 · Bereich C:</b> Zeitblöcke sind nachträglich änderbar (Zeit, Dauer, Tag, Löschen) über Menü, Ziehen und Bearbeiten-Sheet; im Sheet ersetzt ein Schalter den Dialog „mitverschieben?“.</li>
+    <li><b>§7 Tag und Mockup a · Bereiche A, C, H:</b> neuer Kopf, Tageswischen, Wegfall der Zeilen-Wischaktionen in der Tagesansicht, Lückenzeilen im Ablauf, Abschnitte „Heute fällig“ und „Von früher offen“, „Ganztägig“ ohne Deadline-Einträge.</li>
+    <li><b>§7 Woche und Mockup b-A · Bereich D:</b> Ablage als ausziehbares Panel mit Filter statt Chip-Leiste.</li>
+    <li><b>§7 Monat und Mockup c-A · Bereich E:</b> „Tippen öffnet den Tag“ wird „Tippen wählt den Tag und zeigt seine Einträge“.</li>
+    <li><b>§7 Gedrückthalten, §11.1 und Mockup d-A · Bereich F:</b> Viererreihe wird 2 × 2 mit Abschnittstiteln; inhaltlich bleibt §11.1 unverändert.</li>
+    <li><b>§11.8 · Bereich H:</b> „Von früher übrig“ wird „Von früher offen“ und nimmt Überfälliges ohne Arbeitstag auf.</li>
+    <li><b>§5.1 (Einstellungen), §8.1 · Bereiche I, K:</b> neue Einstellungen: ausgeblendete Kalender, „Gleiche Termine zusammenfassen“, KI-Modell.</li>
+    <li><b>§7 KI-Knopf · Bereich K:</b> Platz unverändert; Umsetzung über den abgesetzten Platz der Tab-Leiste, mit Rückfall K2.</li>
+  </ul>
+</div>
+<div class="box neutral">
+  <h3>Offene Fragen</h3>
+  <ol style="margin:4px 0 0;padding-left:20px">
+    <li><b>H:</b> Soll Überfälliges wirklich nur erscheinen und erst nach „Heute“ zählen (H1), oder von selbst zählen (H2)? Und ist einverstanden, dass heute Fälliges ohne Zutun zur Last zählt?</li>
+    <li><b>C:</b> Reicht Ziehen auf freie Lücken (C2), oder ist freies Platzieren im Stundenraster (C3) den größeren Umbau und den Abschied von der Zeilen-Zeitleiste wert?</li>
+    <li><b>G:</b> Soll „Alle ab heute“ bei wiederkehrenden Aufgaben auch einen täglich wiederkehrenden Zeitblock im Kalender anlegen, oder gilt es nur für den Aufwand?</li>
+    <li><b>A:</b> Dürfen die Wischaktionen „Zeitblock“ und „Ausplanen“ in der Tagesansicht entfallen, damit Wischen eindeutig den Tag wechselt?</li>
+    <li><b>J:</b> Ist die Kombination aus Kurzform und Systemeditor recht, oder soll Tagwerk auch Erinnerungen und eigene Wiederholungsregeln selbst abbilden? In welchem Kalender sollen neue Termine standardmäßig landen?</li>
+    <li><b>B:</b> Soll wiederkehrender Aufwand für heute entfallen, sobald das heutige Vorkommen erledigt ist? Das wäre plausibler für die Restzeit, widerspricht aber §6.3.</li>
+    <li><b>I:</b> Sind die doppelten Einträge tatsächlich derselbe Termin in zwei Kalendern, oder Platzhalter aus einem gespiegelten Kalender? Davon hängt ab, ob I1 allein reicht oder die Kalenderliste aus I2 dazukommen soll.</li>
+    <li><b>D:</b> Ist „in diesem Zeitraum fällig“ als Standardfilter der Ablage richtig, oder sollen Aufgaben ohne Fälligkeit dort gleichrangig stehen?</li>
+    <li><b>K:</b> Ein Modell für alles (K3), oder getrennt für Planen und Chat (K4)?</li>
+  </ol>
+</div>
+<div class="box neutral">
+  <h3>Was diese Mockups nicht zeigen</h3>
+  <ul>
+    <li>Helles Erscheinungsbild, Querformat und die größten Dynamic-Type-Stufen. Aussagen dazu sind Entwurfsannahmen.</li>
+    <li>Lade- und Fehlerzustände beim Schreiben in Kalender (kein Zugriff, Termin inzwischen gelöscht, Kalender entfernt).</li>
+    <li>Die Monatsansicht mit aufgezogener Ablage und die Wochenansicht im Auswahlmodus; beide folgen D1 bzw. G1.</li>
+    <li>Alle als „am Gerät zu prüfen“ markierten Punkte sind Annahmen über das Verhalten von iOS 27, abgeleitet aus den Schnittstellen bis iOS 26 und den Screenshots; sie sind nicht getestet.</li>
+  </ul>
+</div>
+
+</body>
+</html>

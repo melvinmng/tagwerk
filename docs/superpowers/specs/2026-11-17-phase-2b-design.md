@@ -1,6 +1,6 @@
 # Tagwerk – Phase 2b Design: Planen, Kalender und KI
 
-Stand: 2026-11-17 · Status: **freigegeben am 2026-11-17** · Baut auf: `2026-11-17-tagwerk-design.md` (Hauptdesign), `2026-11-17-phase-2-design.md` (Phase 2, darin §7 und §8 für KI und Benachrichtigungen), `../spikes/2026-11-17-feasibility-results.md` (u. a. Nachtrag Function Calling). Mockups: `../mockups/2026-11-17-phase-2b-mockups.html` (freigegeben am 2026-11-17: a, b-A, c-A, d-A, e-A, f, g-A, h; je Bereich die grün markierte Empfehlung).
+Stand: 2026-11-17 · Status: **freigegeben am 2026-11-17** · Baut auf: `2026-11-17-tagwerk-design.md` (Hauptdesign), `2026-11-17-phase-2-design.md` (Phase 2, darin §7 und §8 für KI und Benachrichtigungen), `../spikes/2026-11-17-feasibility-results.md` (u. a. Nachtrag Function Calling). Mockups: `../mockups/2026-11-17-phase-2b-mockups.html` (freigegeben am 2026-11-17: a, b-A, c-A, d-A, e-A, f, g-A, h; je Bereich die grün markierte Empfehlung). Nachtrag nach der Geräteprüfung: `../mockups/2026-11-18-phase-2b-feedback-mockups.html` (freigegeben am 2026-11-17, siehe §13); wo er abweicht, gilt §13.
 
 Dieser Nachtrag ersetzt für Phase 2b den bisherigen Plan „2b: KI-Tagesplan, Heute-Tab, Benachrichtigungen“ aus Phase 2 §11. Wo er dem Phase-2-Design widerspricht, gilt dieser Nachtrag.
 
@@ -45,7 +45,7 @@ Tagwerk zeigt seit Phase 2a alle Aufgaben in einer Liste. Was fehlt, ist das eig
 | KI-Vorschläge | Einzeln annehmen oder „Alle übernehmen“. |
 | KI-Assistent | Schwebender Knopf überall; kennt den Kontext; handelt über Funktionen; jede Änderung als Aktionskarte bestätigen. Function Calling über das ChatGPT-Abo ist auf dem iPhone verifiziert. |
 | Chat zum Issue | Kontext: Issue, Kommentare, Labels, Project-Felder, Nachbar-Issues in Project/Epic. Repo-Inhalte (README, Doku, Dateien, PRs) holt die KI auf Nachfrage per Funktion; die Anweisungen sagen ihr ausdrücklich, dass sie das kann. |
-| Kalender | Tagwerk **schreibt** angenommene Zeitblöcke in den Kalender (hebt das Nicht-Ziel „Schreiben in den Kalender“ aus Phase 2 §1 auf). |
+| Kalender | Tagwerk **schreibt** angenommene Zeitblöcke in den Kalender (hebt das Nicht-Ziel „Schreiben in den Kalender“ aus Phase 2 §1 auf). Erweitert in §13: Termine aller beschreibbaren Kalender lassen sich in Tagwerk anlegen, ändern und löschen. |
 | Verknüpfung | Termin ↔ Aufgabe mit Sprung in beide Richtungen; automatisch erkannt, manuell, KI-Vorschlag. |
 | Gedrückthalten | Heute, Morgen, Wochenende, Nächste Woche, Datum wählen, Erledigt, Löschen/Schließen, „Mit KI planen“, „Über diese Aufgabe sprechen“. Gestaltung mit Fable. |
 | Ansatz | **A: Der Kalender ist die Quelle für Zeitblöcke** (siehe §4). |
@@ -80,9 +80,9 @@ Alle neuen SwiftData-Attribute sind optional oder haben Standardwerte (Regel aus
 
 ### 5.2 Kalender
 
-- **Plan-Kalender:** In der Einrichtung bzw. den Einstellungen wählbar; Standard ist ein neu angelegter lokaler bzw. iCloud-Kalender „Tagwerk“ (je nachdem, welche Quelle verfügbar ist). Tagwerk schreibt nur in diesen Kalender.
+- **Plan-Kalender:** In der Einrichtung bzw. den Einstellungen wählbar; Standard ist ein neu angelegter lokaler bzw. iCloud-Kalender „Tagwerk“ (je nachdem, welche Quelle verfügbar ist). Zeitblöcke landen in diesem Kalender; er ist auch der Standard für neue Termine (§13.10).
 - **Deadline-Kalender:** Mehrfachauswahl in den Einstellungen, standardmäßig leer. Ganztägige und zeitgebundene Termine daraus gelten als wichtige Deadlines.
-- Vor dem Ändern oder Löschen eines Tagwerk-Termins wird er neu geladen und verglichen (Konfliktschutz wie Phase 2 §5).
+- Vor dem Ändern oder Löschen eines Termins (Tagwerk-Block oder fremder Termin) wird er neu geladen und verglichen (Konfliktschutz wie Phase 2 §5).
 
 ## 6. Regeln
 
@@ -194,6 +194,24 @@ Die mit *(Nutzer)* markierten Punkte hat der Nutzer am 2026-11-17 entschieden, d
 ## 12. Dem Umsetzenden überlassen
 
 Konkrete Prompts und JSON-Schemas, Funktionssignaturen im Detail, Obergrenzen für Kontextgrößen, Darstellung innerhalb der freigegebenen Mockups, Ordnerstruktur, Testaufbau, Animationen.
+
+## 13. Nachtrag nach der Geräteprüfung von 2b-1 (2026-11-17)
+
+Der Nutzer hat 2b-1 auf dem iPhone geprüft. Die Gestaltung wurde mit Fable als Advisor erarbeitet und als Mockup `../mockups/2026-11-18-phase-2b-feedback-mockups.html` freigegeben: **A1, B1, C1+C2+C3+C4, D1, E1+E2, F1 (Rückfall F2), G1+G2+G3+G4, H1, I1, J1+J2+J4+J5+J6, K1+K3**. Die Punkte unten gehen §6, §7 und §11 vor, wo sie abweichen.
+
+1. **Kopf der Tagesansicht (A1):** Großer Datumstitel im Inhalt statt in der Navigationsleiste; Antippen öffnet einen Monatskalender als Popover, waagerechtes Wischen im Inhalt wechselt den Tag, die Pfeile bleiben. Die Wischaktionen „Zeitblock“ und „Ausplanen“ auf Aufgabenzeilen der Tagesansicht entfallen (Nutzer); beides geht über Antippen bzw. Menü.
+2. **Freie Zeit (B1):** Am heutigen Tag zählt nur die Zeit ab jetzt („1 h 10 noch frei“), der Tageswert steht als Unterzeile; vergangene Tage zeigen „Vergangen“, künftige wie bisher. Dauern als „2 h 05“. Ergänzt §6.1: Restkapazität = Kapazität des Tages, beschränkt auf das Intervall [jetzt, Arbeitsende].
+3. **Erledigtes Vorkommen (Nutzer):** Hakt der Nutzer das heutige Vorkommen einer wiederkehrenden Erinnerung **in Tagwerk** ab, gibt Tagwerk dessen reservierten Aufwand für diesen Tag frei (Tagwerk merkt sich das Vorkommen lokal). Abhaken in der Erinnerungen-App ist nicht erkennbar (EventKit führt keine Vorkommens-Historie). Ersetzt den letzten Satz von §6.3 und §11.9.
+4. **Zeitblöcke ändern (C1–C4):** Antippen eines Blocks öffnet ein Menü (Beginn/Dauer ±15 min, „Auf anderen Tag“, „Löschen“). Die Tagesansicht hat ein **maßstäbliches Stundenraster** (C3: Körper ziehen = verschieben, Griff = Dauer, Raster 15 min) und die bisherige Zeilen-Zeitleiste mit Lückenzeilen (C2: Aufgabe auf eine freie Lücke ziehen); **umschaltbar** per Schalter in der Tagesansicht (Nutzer). Im Bearbeiten-Sheet (C4) sind Arbeitstag, Blockzeit und Dauer direkt änderbar, Blöcke löschbar; „Blöcke mitverschieben“ wird dort ein Schalter statt eines Dialogs.
+5. **Ablage „Ungeplant“ (D1):** Ausziehbare Ablage in drei Höhen mit Liste, Suche und Filter statt der Chip-Leiste. Standard: zuerst die im angezeigten Zeitraum fälligen Aufgaben, darunter die ohne Fälligkeit (Nutzer). Ziehen auf Tage bleibt, „＋“ ist der Weg ohne Ziehen.
+6. **Monat (E1+E2):** Tippen wählt einen Tag und zeigt seine Termine, Deadlines und Aufgaben unter dem Raster. In „Tag“ geht es über „Tag öffnen ›“, einen zweiten Tipp oder langes Drücken (Menü mit „Tag öffnen“, „Aufgabe hier einplanen …“, „Neuer Termin“, „Arbeitszeit an diesem Tag …“).
+7. **Kontextmenü (F1, Rückfall F2):** Zwei benannte Abschnitte „Einplanen · nur in Tagwerk“ (Heute, Morgen, Wochenende, Nächste Woche als 2 × 2 beschriftete Elemente, dazu „Anderer Tag …“) und „Fälligkeit · ändert <Quelle>“ mit dem aktuellen Fälligkeitswert. Zeigt iOS zwei gestapelte Gruppen nicht sauber, gilt F2 (Dreierreihe Heute/Morgen/Nächste Woche, Wochenende als Zeile).
+8. **Aufgaben-Tab (G1–G4):** Auswahlmodus mit „Für heute einplanen“ und Summe gegen die Restzeit (G1); Wischaktion „Heute“ ohne Modus (G2); „Aufgabe öffnen“ an Terminen heißt „Aufgabe zeigen“ und springt in die Aufgabenliste mit Hervorhebung (G3, ändert §6.4). Antippen öffnet das Bearbeiten-Sheet. Wiederkehrende Erinnerungen tragen ↻; das Sheet trennt „Erinnerung“ (gilt immer für alle Tage, EventKit kennt beim Speichern von Erinnerungen keine Reichweite) und „In Tagwerk“ mit „Nur heute / Alle ab heute“ für Aufwand und Zeitblock (G4). „Alle ab heute“ ändert nur den Aufwand und legt keinen Serien-Zeitblock an (Nutzer).
+9. **Fälliges (H1):** Heute fällige Aufgaben erscheinen im heutigen Tag automatisch und zählen zur Last. Überfällige erscheinen im Abschnitt „Von früher offen“ (ersetzt „Von früher übrig“, §11.8, und nimmt auch Überfälliges ohne Arbeitstag auf) und zählen erst nach „Heute“ zur Last.
+10. **Termine in allen Kalendern (J1, J2, J4–J6):** Ersetzt den Grundsatz „Tagwerk schreibt nur in den Plan-Kalender“. Eigene Detailansicht und Kurzform zum Anlegen/Ändern mit Abgleich gegen die freie Zeit; „Weitere Optionen …“ öffnet Apples Termin-Editor. Neue Termine landen standardmäßig im **Plan-Kalender** (Nutzer). Schreibgeschützte Kalender (Abos, Feiertage, Geburtstage) zeigen keine Bearbeiten-/Löschen-Aktionen und nennen den Grund (J4); Einladungen anderer sind lesbar und verknüpfbar, aber nicht änderbar, Antworten nur in der Kalender-App (J5); Serien fragen beim Sichern und Löschen „Nur dieser Termin“ / „Dieser und alle folgenden“ (J6, entspricht `EKSpan`). Versionsprüfung wie §5.2.
+11. **Doppelte Termine (I1):** Termine mit gleichem Titel, Beginn, Ende und Ganztags-Status aus verschiedenen Kalendern werden eine Zeile mit „2 Kalender“; im Detail „Getrennt anzeigen“. Neue Einstellung „Gleiche Termine zusammenfassen“ (Standard an). Die freie Zeit war nie betroffen (Vereinigung überlappender Intervalle in §6.1).
+12. **KI (K1+K3, für 2b-2):** Der KI-Knopf sitzt neben der Tab-Leiste (abgesetzter Platz der Tab-Leiste; Rückfall K2 oben rechts neben ＋, falls das am Gerät nicht trägt). Ein Modell für alle KI-Funktionen, wählbar aus der Modellliste von ChatGPT (`GET /v1/models`, `visibility == "list"`), Vorgabe „Automatisch“ (§8.1).
+13. **Bereits behoben (ohne Gestaltung):** Deadline-Kalender-Termine erscheinen als Deadline statt unter „Ganztägig“, die Deadline-Karte folgt dem angezeigten Tag; neue Zeitblöcke beginnen standardmäßig zur nächsten vollen Stunde innerhalb der Arbeitszeit, nie in der Vergangenheit; „Aufwand ändern …“ und der Sprung zum Arbeitstag funktionieren auch aus dem Aufgaben-Tab; „Nächste Woche“ ist im Menü erreichbar.
 
 ## Quellen
 
