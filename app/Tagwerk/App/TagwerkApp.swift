@@ -1,0 +1,29 @@
+import SwiftData
+import SwiftUI
+
+@main
+struct TagwerkApp: App {
+    @State private var environment: AppEnvironment
+
+    init() {
+        do {
+            let container = try ModelContainerFactory.make(inMemory: false)
+            _environment = State(initialValue: try AppEnvironment(modelContainer: container))
+        } catch {
+            // A broken store makes the app unusable; fail loudly instead of losing data silently.
+            fatalError("Failed to open the SwiftData store: \(error)")
+        }
+    }
+
+    var body: some Scene {
+        WindowGroup {
+            RootView()
+                .environment(environment)
+                .task {
+                    environment.startObservingChanges()
+                    await environment.activateGitHubIfSignedIn()
+                }
+        }
+        .modelContainer(environment.modelContainer)
+    }
+}

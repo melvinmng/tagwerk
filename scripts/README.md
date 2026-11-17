@@ -9,7 +9,8 @@ Mit dem kostenlosen Apple-Account läuft das Provisioning-Profil nach 7 Tagen ab
 - Das Protokoll steht in `~/Library/Logs/Tagwerk/refresh.log`, die Build-Ausgabe in `build.log`.
 - Gebaut wird der Branch `main` (`TAGWERK_BRANCH` überschreibt das).
 - Jeder Fehler (Gerät nicht erreichbar, Git, Build, Signierung, Installation) erzeugt eine Mitteilung auf dem Mac, sobald das Profil weniger als 2 Tage gültig ist.
-- Zustand: `~/Library/Application Support/Tagwerk/profile-expiry` (Ablauf des installierten Profils, Unix-Zeit).
+- Gebaut wird die App unter `app/` (Scheme `Tagwerk`, Bundle-ID `com.melvinmng.tagwerk`).
+- Zustand: `~/Library/Application Support/Tagwerk/profile-expiry.<Bundle-ID>` (Ablauf des installierten Profils, Unix-Zeit). Der Zustand gilt pro App, eine neue Bundle-ID startet deshalb als fällig.
 - Tests der Entscheidungslogik: `zsh scripts/tests/refresh-decisions.zsh`.
 
 ## Voraussetzungen
@@ -38,15 +39,29 @@ launchctl print gui/$(id -u)/de.tagwerk.refresh | grep -E "state|last exit code"
 tail ~/Library/Logs/Tagwerk/refresh.log
 ```
 
-Sofort neu installieren, im echten launchd-Kontext:
+Sofort neu installieren:
 
 ```zsh
-launchctl setenv TAGWERK_FORCE 1
-launchctl kickstart -k gui/$(id -u)/de.tagwerk.refresh
-launchctl unsetenv TAGWERK_FORCE
+TAGWERK_FORCE=1 ~/Library/Developer/Tagwerk/src/scripts/refresh-install.sh
 ```
 
-Fragt der Schlüsselbund beim ersten Lauf nach `codesign`, auf „Immer erlauben“ klicken.
+`launchctl setenv TAGWERK_FORCE 1` mit anschließendem `kickstart` ist unzuverlässig: Ein sofortiges `launchctl unsetenv` kann die Variable entfernen, bevor der Job sie liest. Der Job beendet sich dann ohne Logeintrag, weil die Installation noch nicht fällig ist.
+
+Fragt der Schlüsselbund beim ersten Lauf nach `codesign`, auf „Immer erlauben“ klicken. Meldet `build.log` „No Accounts“, ist Xcode nicht mehr bei der Apple-ID angemeldet: Xcode → Settings → Accounts.
+
+## Umstieg vom Spike auf die App (einmalig)
+
+Seit dem Merge von Phase 2a baut der LaunchAgent die echte App statt `TagwerkSpike`.
+
+1. Nach dem Merge auf `main` installiert der nächste stündliche Lauf die App, weil für `com.melvinmng.tagwerk` noch kein Ablaufdatum gespeichert ist. Sofort geht es so:
+   ```zsh
+   TAGWERK_FORCE=1 ~/Library/Developer/Tagwerk/src/scripts/refresh-install.sh
+   ```
+2. In `refresh.log` muss `install: ok` stehen.
+3. Die Spike-App vom iPhone löschen. Das gibt einen der drei App-Plätze frei.
+4. Die alte Datei `profile-expiry` (ohne Bundle-ID) wird nicht mehr gelesen und kann gelöscht werden.
+
+Zum Entwickeln installiert `scripts/install-dev.sh` den aktuellen Stand des Arbeitsverzeichnisses, ohne den Zustand des LaunchAgents zu verändern.
 
 ## Entfernen
 

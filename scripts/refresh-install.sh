@@ -11,9 +11,9 @@
 
 set -u
 
-SCHEME="TagwerkSpike"
-BUNDLE_ID="com.melvinmng.tagwerk.spike"
-PROJECT_DIR_NAME="spike"
+SCHEME="Tagwerk"
+BUNDLE_ID="com.melvinmng.tagwerk"
+PROJECT_DIR_NAME="app"
 BRANCH="${TAGWERK_BRANCH:-main}"
 DUE_WITHIN_SECONDS=$(( 3 * 86400 ))   # refresh when less than 3 days of profile lifetime remain
 WARN_WITHIN_SECONDS=$(( 2 * 86400 ))  # notify about failures when less than 2 days remain
@@ -26,7 +26,7 @@ SRC="$BASE/src"
 DERIVED="$BASE/DerivedData-refresh"
 STATE_DIR="$HOME/Library/Application Support/Tagwerk"
 CONFIG_FILE="$STATE_DIR/config"
-EXPIRY_FILE="$STATE_DIR/profile-expiry"
+EXPIRY_FILE="$STATE_DIR/profile-expiry.$BUNDLE_ID"  # per app, so a new bundle ID starts as due
 LOG_DIR="$HOME/Library/Logs/Tagwerk"
 LOG="$LOG_DIR/refresh.log"
 BUILD_LOG="$LOG_DIR/build.log"

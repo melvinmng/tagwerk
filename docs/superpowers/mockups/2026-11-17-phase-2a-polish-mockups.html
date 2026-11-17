@@ -1,0 +1,524 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tagwerk · Phase 2a · Feinschliff-Mockups</title>
+<style>
+  /* Mockup frame uses the host theme (with fallbacks); phone screens depict the app in iOS dark mode. */
+  :root { color-scheme: light dark; }
+  body { font: 14px var(--font-sans, system-ui, sans-serif); color: var(--foreground, CanvasText); margin: 16px; }
+  h1 { font-size: 20px; margin: 0 0 4px; }
+  h2 { font-size: 17px; margin: 34px 0 4px; padding-top: 14px; border-top: 1px solid rgba(128,128,128,.3); }
+  .lead { color: var(--muted-foreground, #777); margin: 0 0 14px; line-height: 1.5; max-width: 900px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 20px; }
+  .label { font: 600 13px var(--font-sans, system-ui); color: var(--muted-foreground, #777); margin: 0 0 8px 4px; }
+  .label b { color: var(--foreground, CanvasText); }
+  .rec { background: #30d158; color: #000; font-size: 11px; font-weight: 700; padding: 1px 7px; border-radius: 99px; margin-left: 4px; }
+  .pc { font-size: 12.5px; color: var(--muted-foreground, #777); line-height: 1.5; margin: 8px 4px 0; }
+  .pc b { color: var(--foreground, CanvasText); }
+  .box { border: 1px solid rgba(48,209,88,.5); background: rgba(48,209,88,.07); border-radius: 12px; padding: 12px 16px; margin-top: 16px; line-height: 1.55; font-size: 13px; max-width: 1100px; }
+  .box h3 { margin: 0 0 6px; font-size: 14px; }
+  .box ul { margin: 4px 0 0; padding-left: 18px; }
+  code { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; background: rgba(128,128,128,.16); padding: 1px 4px; border-radius: 4px; }
+
+  .phone {
+    --bg: #000; --card: #1c1c1e; --card2: #2c2c2e; --sep: #38383a; --text: #fff; --sub: #8e8e93;
+    --blue: #0a84ff; --green: #30d158; --orange: #ff9f0a; --red: #ff453a; --purple: #bf5af2; --teal: #64d2ff;
+    background: var(--bg); color: var(--text); border-radius: 34px; padding: 14px 12px 10px;
+    font: 15px -apple-system, "SF Pro Text", system-ui, sans-serif; border: 6px solid #2a2a2c;
+    min-height: 500px; display: flex; flex-direction: column; position: relative; overflow: hidden;
+  }
+  .status { display: flex; justify-content: space-between; font: 600 13px system-ui; padding: 0 10px 8px; }
+  .title { font: 700 30px system-ui; padding: 2px 6px 2px; }
+  .row { display: flex; align-items: center; gap: 10px; }
+  .nav { display: flex; justify-content: space-between; align-items: center; padding: 4px 6px 10px; }
+  .nav .a { color: var(--blue); } .nav .a.b { font-weight: 600; }
+  .chip { font-size: 11px; padding: 2px 7px; border-radius: 99px; background: var(--card2); color: var(--sub); white-space: nowrap; }
+  .section { color: var(--sub); font: 600 12px system-ui; text-transform: uppercase; letter-spacing: .4px; margin: 10px 6px 4px; }
+  .list { background: var(--card); border-radius: 12px; overflow: hidden; margin-bottom: 6px; }
+  .item { display: flex; align-items: flex-start; gap: 10px; padding: 9px 12px; border-bottom: 1px solid var(--sep); }
+  .item:last-child { border-bottom: 0; }
+  .circle { width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--sub); flex-shrink: 0; margin-top: 1px; }
+  .circle.done { border-color: var(--green); background: var(--green); color: #000; font: 700 12px/18px system-ui; text-align: center; }
+  .circle.locked { border-style: dashed; opacity: .45; }
+  .item .t { flex: 1; font-size: 14px; }
+  .item .s { color: var(--sub); font-size: 12px; margin-top: 2px; }
+  .due-red { color: var(--red); } .due-orange { color: var(--orange); }
+  .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 4px; }
+  .seg { display: flex; background: var(--card2); border-radius: 9px; padding: 2px; margin: 0 2px 8px; }
+  .seg span { flex: 1; text-align: center; padding: 5px 2px; font-size: 11px; border-radius: 7px; color: var(--sub); }
+  .seg span.on { background: #636366; color: #fff; font-weight: 600; }
+  .field { display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; border-bottom: 1px solid var(--sep); font-size: 14px; }
+  .field:last-child { border-bottom: 0; }
+  .field .v { color: var(--sub); }
+  .tabbar { margin-top: auto; display: flex; justify-content: space-around; border-top: 1px solid var(--sep); padding-top: 8px; font-size: 10px; color: var(--sub); text-align: center; }
+  .tabbar .on { color: var(--blue); }
+  .ico { font-size: 18px; display: block; font-style: normal; }
+  .note { color: var(--sub); font-size: 11px; padding: 4px 8px; }
+  .spacer { flex: 1; }
+
+  /* Liquid Glass approximation */
+  .glass { background: rgba(72,72,78,.62); backdrop-filter: blur(18px) saturate(1.6); -webkit-backdrop-filter: blur(18px) saturate(1.6);
+    border: 1px solid rgba(255,255,255,.16); box-shadow: inset 0 1px 0 rgba(255,255,255,.18), 0 8px 24px rgba(0,0,0,.55); }
+
+  /* 1 Undo */
+  .toast { border-radius: 99px; padding: 8px 8px 8px 12px; display: flex; align-items: center; gap: 10px; margin: 0 4px 10px; }
+  .toast .ok { width: 26px; height: 26px; border-radius: 50%; background: var(--green); color: #000; font: 700 15px/26px system-ui; text-align: center; flex-shrink: 0; }
+  .toast .tx { flex: 1; min-width: 0; }
+  .toast .tx small { display: block; color: #c7c7cc; font-size: 11px; }
+  .toast .tx span { display: block; font-size: 14px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .undo { display: flex; align-items: center; gap: 6px; background: rgba(10,132,255,.28); color: #fff; font-weight: 600; font-size: 14px; border-radius: 99px; padding: 8px 14px 8px 8px; min-height: 28px; }
+  .ring { width: 22px; height: 22px; border-radius: 50%; background: conic-gradient(#fff 0 65%, rgba(255,255,255,.25) 65% 100%); display: grid; place-items: center; }
+  .ring i { width: 17px; height: 17px; border-radius: 50%; background: #1d4f86; font: 700 11px/17px system-ui; text-align: center; font-style: normal; }
+  .pill { align-self: flex-end; border-radius: 99px; padding: 10px 16px; margin: 0 6px 10px; font-weight: 600; font-size: 14px; color: #fff; }
+  .struck { text-decoration: line-through; color: var(--sub); }
+  .inline-undo { color: var(--blue); font-weight: 600; font-size: 13px; align-self: center; }
+
+  /* 2 Conflict */
+  .cf { background: var(--card); border-radius: 14px; padding: 12px; margin-bottom: 10px; border: 1px solid rgba(255,159,10,.45); }
+  .cf .h { display: flex; gap: 10px; align-items: flex-start; }
+  .cf .badge { width: 28px; height: 28px; border-radius: 8px; background: rgba(255,159,10,.2); color: var(--orange); font: 700 16px/28px system-ui; text-align: center; flex-shrink: 0; }
+  .cf .h b { display: block; font-size: 15px; }
+  .cf .h span { color: var(--sub); font-size: 12px; }
+  .diff { margin: 10px 0; border-top: 1px solid var(--sep); }
+  .diff div { display: grid; grid-template-columns: 74px 1fr; gap: 6px; padding: 7px 0; border-bottom: 1px solid var(--sep); font-size: 13px; }
+  .diff .k { color: var(--sub); }
+  .diff s { color: var(--sub); }
+  .diff em { display: block; font-style: normal; font-size: 11.5px; color: var(--orange); margin-top: 2px; }
+  .btns { display: flex; gap: 8px; }
+  .b { flex: 1; text-align: center; border-radius: 99px; padding: 9px 6px; font-weight: 600; font-size: 14px; }
+  .b.plain { background: var(--card2); color: var(--blue); }
+  .b.prom { background: var(--blue); color: #fff; }
+  .cf .foot { color: var(--sub); font-size: 11.5px; margin-top: 8px; line-height: 1.4; }
+  .slim { background: rgba(255,159,10,.14); border-radius: 12px; padding: 9px 12px; margin-bottom: 10px; font-size: 13px; }
+  .slim .o { color: var(--orange); }
+  .slim .acts { display: flex; gap: 18px; margin-top: 6px; color: var(--blue); font-weight: 600; }
+  .mark { color: var(--orange); font-size: 11.5px; display: block; }
+  .dim { position: absolute; inset: 0; background: rgba(0,0,0,.5); }
+  .sheet { position: absolute; left: 10px; right: 10px; bottom: 12px; display: flex; flex-direction: column; gap: 8px; }
+  .sheet .grp { border-radius: 16px; overflow: hidden; background: rgba(58,58,60,.96); }
+  .sheet .msg { padding: 12px 16px; text-align: center; font-size: 12px; color: #c7c7cc; border-bottom: 1px solid #545458; }
+  .sheet .msg b { display: block; color: #fff; font-size: 13px; margin-bottom: 2px; }
+  .sheet .act { padding: 14px; text-align: center; color: var(--blue); font-size: 17px; border-bottom: 1px solid #545458; }
+  .sheet .act:last-child { border-bottom: 0; }
+  .sheet .act.c { font-weight: 600; }
+
+  /* 3 Estimate */
+  .est { display: flex; align-items: center; background: var(--card2); border-radius: 99px; height: 36px; }
+  .est .pm { width: 44px; text-align: center; font-size: 22px; color: var(--blue); line-height: 36px; }
+  .est .pm.off { color: #55555a; }
+  .est .val { min-width: 62px; text-align: center; font: 600 15px system-ui; font-variant-numeric: tabular-nums; border-left: 1px solid var(--sep); border-right: 1px solid var(--sep); line-height: 22px; padding: 0 6px; }
+  .est .val small { color: var(--sub); font-weight: 400; font-size: 13px; }
+  .est .val.focus { outline: 2px solid var(--blue); outline-offset: 3px; border-radius: 4px; border-color: transparent; }
+  .caret { display: inline-block; width: 2px; height: 16px; background: var(--blue); vertical-align: -2px; margin-left: 1px; }
+  .chips { display: flex; gap: 6px; padding: 0 12px 11px; overflow: hidden; }
+  .qc { font-size: 13px; padding: 6px 11px; border-radius: 99px; background: var(--card2); color: var(--blue); white-space: nowrap; }
+  .qc.on { background: var(--blue); color: #fff; font-weight: 600; }
+  .qc.none { color: var(--sub); }
+  .stepper { display: flex; background: var(--card2); border-radius: 8px; height: 30px; }
+  .stepper span { width: 44px; text-align: center; font-size: 20px; line-height: 30px; }
+  .stepper span + span { border-left: 1px solid #48484a; }
+  .tf { color: var(--text); font-variant-numeric: tabular-nums; }
+  .kb { margin: auto -12px -10px; background: #1a1a1c; padding: 0 6px 12px; }
+  .kb .bar { display: flex; justify-content: flex-end; padding: 9px 12px; color: var(--blue); font-weight: 600; }
+  .kb .keys { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+  .kb .keys span { background: #48484a; border-radius: 7px; text-align: center; padding: 8px 0; font-size: 20px; }
+  .kb .keys span.fn { background: transparent; }
+  .panel { padding: 12px; border-top: 1px solid var(--sep); }
+  .big { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .big .rb { width: 44px; height: 44px; border-radius: 50%; background: var(--card2); color: var(--blue); font-size: 24px; line-height: 42px; text-align: center; }
+  .big .n { font: 700 30px system-ui; font-variant-numeric: tabular-nums; }
+  .big .n small { font-size: 16px; color: var(--sub); font-weight: 500; }
+
+  /* 4 Offline */
+  .tool { display: flex; align-items: center; gap: 14px; }
+  .glyph { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; background: var(--card); }
+  .glyph svg, .ic svg { display: block; }
+  .plus { color: var(--blue); font-size: 26px; }
+  .pop { position: absolute; right: 44px; top: 86px; width: 232px; border-radius: 16px; padding: 12px 14px; font-size: 13px; line-height: 1.4; z-index: 2; }
+  .pop::before { content: ""; position: absolute; top: -7px; right: 22px; width: 14px; height: 14px; background: rgba(86,86,92,.95); transform: rotate(45deg); border-radius: 3px; }
+  .pop b { display: block; font-size: 14px; margin-bottom: 2px; }
+  .pop .m { color: #c7c7cc; }
+  .pop .l { color: var(--blue); font-weight: 600; margin-top: 8px; display: block; }
+  .capline { display: flex; align-items: center; gap: 6px; color: var(--sub); font-size: 12px; padding: 0 8px 6px; }
+  .capline .more { margin-left: auto; }
+  .ic { display: inline-block; vertical-align: -2px; margin-right: 3px; }
+</style>
+</head>
+<body>
+
+<h1>Tagwerk · Phase 2a · Feinschliff-Mockups</h1>
+<p class="lead">Vier kleine UI-Elemente, je 2–3 Varianten. <span class="rec">Empfehlung</span> markiert die bevorzugte Variante. Alle Daten sind Platzhalter. Die Mockups zeigen den Dunkelmodus; im Hellmodus gelten dieselben Strukturen mit iOS-Systemfarben. Glasflächen sind in HTML nur angenähert, auf dem Gerät übernimmt <code>.glassEffect</code> Brechung und Lesbarkeit.</p>
+
+<!-- ============================================================ 1 -->
+<h2>1 · Rückgängig nach „Erledigt“</h2>
+<p class="lead">Ist-Zustand: graues Material-Rechteck „Erledigt: Titel   Rückgängig“, verschwindet nach 4 s ohne Ankündigung. Schwächen: wirkt wie ein Fehlerbalken, Aktion ist reiner Text (kleines Ziel), die Frist ist unsichtbar, VoiceOver erfährt nichts davon.</p>
+<div class="grid">
+
+  <div>
+    <p class="label"><b>1A · Glas-Kapsel mit Frist-Ring</b> <span class="rec">Empfehlung</span></p>
+    <div class="phone">
+      <div class="status"><span>9:41</span><span>●●● 5G</span></div>
+      <div class="row" style="justify-content:space-between;padding-right:8px"><div class="title">Aufgaben</div><span class="plus">＋</span></div>
+      <div class="seg"><span class="on" style="flex:.6">Alle</span><span style="flex:1.4">Erinnerungen</span><span>GitHub</span><span>Lokal</span></div>
+      <div class="section">Heute</div>
+      <div class="list">
+        <div class="item"><span class="circle"></span><div class="t">Kapitel 2 gliedern<div class="s due-orange">heute · <span class="dot" style="background:var(--purple)"></span>Projekt</div></div></div>
+      </div>
+      <div class="section">Diese Woche</div>
+      <div class="list">
+        <div class="item"><span class="circle"></span><div class="t">#57 Tests für Export<div class="s">Fr · <span class="chip">beispiel/app</span> P3</div></div></div>
+        <div class="item"><span class="circle"></span><div class="t">Einkaufen<div class="s">Do · <span class="dot" style="background:var(--green)"></span>Privat</div></div></div>
+      </div>
+      <div class="spacer"></div>
+      <div class="toast glass">
+        <span class="ok">✓</span>
+        <div class="tx"><small>Erledigt</small><span>#42 Login-Fehler beheben</span></div>
+        <div class="undo"><span class="ring"><i>↩</i></span>Rückgängig</div>
+      </div>
+      <div class="tabbar"><span><i class="ico">☀︎</i>Heute</span><span class="on"><i class="ico">☑︎</i>Aufgaben</span><span><i class="ico">⚙︎</i>Einstellungen</span></div>
+    </div>
+    <p class="pc"><b>+</b> Grüner Haken = Erfolg statt Warnung; Titel bleibt als Kontext; eigene Taste mit 44-pt-Ziel in Daumenhöhe; Ring zeigt die Restzeit. <b>−</b> Verdeckt kurz den unteren Listenrand (durch <code>safeAreaInset</code> aber kein Inhalt dauerhaft verdeckt).</p>
+  </div>
+
+  <div>
+    <p class="label"><b>1B · In der Zeile</b>: Aufgabe bleibt kurz stehen</p>
+    <div class="phone">
+      <div class="status"><span>9:41</span><span>●●● 5G</span></div>
+      <div class="row" style="justify-content:space-between;padding-right:8px"><div class="title">Aufgaben</div><span class="plus">＋</span></div>
+      <div class="seg"><span class="on" style="flex:.6">Alle</span><span style="flex:1.4">Erinnerungen</span><span>GitHub</span><span>Lokal</span></div>
+      <div class="section">Heute</div>
+      <div class="list">
+        <div class="item"><span class="circle done">✓</span><div class="t struck">#42 Login-Fehler beheben<div class="s">erledigt</div></div><span class="inline-undo">Rückgängig</span></div>
+        <div class="item"><span class="circle"></span><div class="t">Kapitel 2 gliedern<div class="s due-orange">heute · <span class="dot" style="background:var(--purple)"></span>Projekt</div></div></div>
+      </div>
+      <div class="section">Diese Woche</div>
+      <div class="list">
+        <div class="item"><span class="circle"></span><div class="t">#57 Tests für Export<div class="s">Fr · <span class="chip">beispiel/app</span> P3</div></div></div>
+      </div>
+      <div class="spacer"></div>
+      <div class="note">Zeile blendet nach 4 s aus; Tippen auf den Haken macht ebenfalls rückgängig.</div>
+      <div class="tabbar"><span><i class="ico">☀︎</i>Heute</span><span class="on"><i class="ico">☑︎</i>Aufgaben</span><span><i class="ico">⚙︎</i>Einstellungen</span></div>
+    </div>
+    <p class="pc"><b>+</b> Kein Overlay, Muster aus Apple Erinnerungen bekannt. <b>−</b> Ziel wandert mit der Zeile (oben schlecht einhändig erreichbar); die Liste springt beim späten Ausblenden; bei Wischgeste kollidiert die stehen bleibende Zeile mit der Wischanimation; Modell muss „erledigt, aber noch sichtbar“ führen.</p>
+  </div>
+
+  <div>
+    <p class="label"><b>1C · Minimal-Pille</b>: nur die Aktion</p>
+    <div class="phone">
+      <div class="status"><span>9:41</span><span>●●● 5G</span></div>
+      <div class="row" style="justify-content:space-between;padding-right:8px"><div class="title">Aufgaben</div><span class="plus">＋</span></div>
+      <div class="seg"><span class="on" style="flex:.6">Alle</span><span style="flex:1.4">Erinnerungen</span><span>GitHub</span><span>Lokal</span></div>
+      <div class="section">Heute</div>
+      <div class="list">
+        <div class="item"><span class="circle"></span><div class="t">Kapitel 2 gliedern<div class="s due-orange">heute · <span class="dot" style="background:var(--purple)"></span>Projekt</div></div></div>
+      </div>
+      <div class="section">Diese Woche</div>
+      <div class="list">
+        <div class="item"><span class="circle"></span><div class="t">#57 Tests für Export<div class="s">Fr · <span class="chip">beispiel/app</span> P3</div></div></div>
+        <div class="item"><span class="circle"></span><div class="t">Einkaufen<div class="s">Do · <span class="dot" style="background:var(--green)"></span>Privat</div></div></div>
+      </div>
+      <div class="spacer"></div>
+      <div class="pill glass">↩ Rückgängig</div>
+      <div class="tabbar"><span><i class="ico">☀︎</i>Heute</span><span class="on"><i class="ico">☑︎</i>Aufgaben</span><span><i class="ico">⚙︎</i>Einstellungen</span></div>
+    </div>
+    <p class="pc"><b>+</b> Kleinste Fläche, rechts unten ideal für den rechten Daumen. <b>−</b> Ohne Titel unklar, <i>was</i> rückgängig gemacht wird (kritisch nach versehentlichem Wischen); für Linkshänder schlechter; keine Erfolgsbestätigung.</p>
+  </div>
+</div>
+
+<div class="box">
+  <h3>Empfehlung 1A</h3>
+  Einzige Variante, die Bestätigung, Kontext und Aktion an einer festen, einhändig erreichbaren Stelle bündelt. Die Frist wird sichtbar, statt den Balken kommentarlos verschwinden zu lassen.
+  <ul>
+    <li><b>Dynamic Type:</b> Titel maximal 2 Zeilen; ab Bedienungshilfen-Größen per <code>ViewThatFits</code> Taste unter den Text, Form wechselt von Kapsel zu abgerundetem Rechteck (Radius 22).</li>
+    <li><b>VoiceOver:</b> Beim Erscheinen <code>AccessibilityNotification.Announcement("Erledigt: … Rückgängig verfügbar")</code>; Taste mit Label „Rückgängig“, Hinweis „Markiert die Aufgabe wieder als offen“. Ring ist dekorativ (<code>.accessibilityHidden</code>).</li>
+    <li><b>Frist:</b> 4 s sind für Screenreader-Nutzung zu kurz (WCAG 2.2.1, anpassbare Zeitlimits). Vorschlag: 5 s regulär, bei aktivem VoiceOver/Schaltersteuerung kein Auto-Ausblenden bis zur nächsten Aktion. Bei „Bewegung reduzieren“ Ring statisch, Ein-/Ausblenden nur per Deckkraft.</li>
+    <li><b>Kontrast:</b> Weißer Text auf Glas; Haken schwarz auf Systemgrün. Farbe trägt nie allein die Bedeutung (Haken-Symbol + Wort „Erledigt“).</li>
+    <li><b>SwiftUI:</b> bestehendes <code>.safeAreaInset(edge: .bottom)</code> behalten; Inhalt <code>HStack { Image(systemName: "checkmark.circle.fill"); VStack{…}; Button{…} }</code> mit <code>.glassEffect(.regular, in: .capsule)</code>, Taste <code>.buttonStyle(.glass)</code> bzw. getönt. Ring: <code>Circle().trim(from: 0, to: rest).stroke()</code>, linear über die Frist animiert. <code>.transition(.move(edge: .bottom).combined(with: .opacity))</code>, <code>.sensoryFeedback(.success, trigger: completed.id)</code>.</li>
+  </ul>
+</div>
+
+<!-- ============================================================ 2 -->
+<h2>2 · Konflikt-Banner im Editor</h2>
+<p class="lead">Ist-Zustand: orange Fläche mit orangem Text und zwei Textlinks. Schwächen: sagt nicht, <i>was</i> sich geändert hat; die Folgen beider Aktionen bleiben unklar (was geht verloren?); orange Schrift auf hellem Grund verfehlt im Hellmodus 4,5:1. Der Konflikt entsteht beim Sichern (<code>TaskWriteError.conflict(current:)</code>); der frische Stand liegt vor, die Differenz <code>original → conflict</code> und <code>original → draft</code> ist also berechenbar. Beispiel: eigene Änderungen an Priorität (P2 → P1) und Geschätzt (1 h → 1,5 h).</p>
+<div class="grid">
+
+  <div>
+    <p class="label"><b>2A · Diff-Karte</b> <span class="rec">Empfehlung</span></p>
+    <div class="phone" style="min-height:560px">
+      <div class="status"><span>9:41</span><span>●●● 5G</span></div>
+      <div class="nav"><span class="a">Abbrechen</span><b>Issue #42</b><span class="a b">Sichern</span></div>
+      <div class="cf">
+        <div class="h"><span class="badge">⟳</span><div><b>Auf GitHub geändert</b><span>Seit dem Öffnen wurden 3 Felder geändert.</span></div></div>
+        <div class="diff">
+          <div><span class="k">Fällig</span><span><s>18.11.</s> → 20.11.</span></div>
+          <div><span class="k">Labels</span><span><s>bug</s> → bug, ios</span></div>
+          <div><span class="k">Priorität</span><span><s>P2</s> → P3<em>⚠︎ Du hast P1 gewählt</em></span></div>
+        </div>
+        <div class="btns"><span class="b plain">Neu laden</span><span class="b prom">Trotzdem sichern</span></div>
+        <div class="foot"><b style="color:#c7c7cc">Neu laden</b> verwirft deine 2 Änderungen. <b style="color:#c7c7cc">Trotzdem sichern</b> schreibt nur Priorität und Geschätzt; Fällig und Labels bleiben wie auf GitHub.</div>
+      </div>
+      <div class="list">
+        <div class="field"><span>Titel</span><span class="v">Login-Fehler beheben</span></div>
+        <div class="field"><span>Fällig</span><span class="v">18.11.</span></div>
+        <div class="field"><span>Priorität</span><span class="v">P1 (Urgent)</span></div>
+        <div class="field"><span>Geschätzt</span><span class="v">1,5 h</span></div>
+      </div>
+    </div>
+    <p class="pc"><b>+</b> Beantwortet „was ist passiert, was passiert bei welcher Taste“ ohne Nachdenken; echte Überschneidung (nur Priorität) ist hervorgehoben. <b>−</b> Höchste Karte; bei vielen geänderten Feldern auf 3 Zeilen + „2 weitere“ begrenzen, lange Texte (Beschreibung) nur als „Beschreibung geändert“.</p>
+  </div>
+
+  <div>
+    <p class="label"><b>2B · Schmaler Hinweis + Feldmarken</b></p>
+    <div class="phone" style="min-height:560px">
+      <div class="status"><span>9:41</span><span>●●● 5G</span></div>
+      <div class="nav"><span class="a">Abbrechen</span><b>Issue #42</b><span class="a b">Sichern</span></div>
+      <div class="slim">
+        <span class="o">⟳</span> 3 Felder wurden auf GitHub geändert.
+        <div class="acts"><span>Neu laden</span><span>Trotzdem sichern</span></div>
+      </div>
+      <div class="list">
+        <div class="field"><span>Titel</span><span class="v">Login-Fehler beheben</span></div>
+        <div class="field"><span>Fällig<span class="mark">auf GitHub jetzt: 20.11.</span></span><span class="v">18.11.</span></div>
+        <div class="field"><span>Priorität<span class="mark">⚠︎ auf GitHub jetzt: P3</span></span><span class="v">P1 (Urgent)</span></div>
+        <div class="field"><span>Labels<span class="mark">auf GitHub jetzt: bug, ios</span></span><span class="v">bug</span></div>
+        <div class="field"><span>Geschätzt</span><span class="v">1,5 h</span></div>
+      </div>
+      <div class="list" style="padding:10px 12px;font-size:13px;color:var(--sub);min-height:60px">Beschreibung (Markdown) …</div>
+    </div>
+    <p class="pc"><b>+</b> Kompakt; die neue Angabe steht direkt am Feld. <b>−</b> Information verteilt sich über das Formular und kann außerhalb des sichtbaren Bereichs liegen; Folgen der Tasten bleiben unerklärt; Textlinks sind kleine Ziele; jede Feldzeile braucht eine Konflikt-Variante (mehr Code).</p>
+  </div>
+
+  <div>
+    <p class="label"><b>2C · Abfrage beim Sichern</b>: Dialog statt Banner</p>
+    <div class="phone" style="min-height:560px">
+      <div class="status"><span>9:41</span><span>●●● 5G</span></div>
+      <div class="nav"><span class="a">Abbrechen</span><b>Issue #42</b><span class="a b">Sichern</span></div>
+      <div class="list">
+        <div class="field"><span>Titel</span><span class="v">Login-Fehler beheben</span></div>
+        <div class="field"><span>Fällig</span><span class="v">18.11.</span></div>
+        <div class="field"><span>Priorität</span><span class="v">P1 (Urgent)</span></div>
+        <div class="field"><span>Labels</span><span class="v">bug</span></div>
+        <div class="field"><span>Geschätzt</span><span class="v">1,5 h</span></div>
+      </div>
+      <div class="dim"></div>
+      <div class="sheet">
+        <div class="grp">
+          <div class="msg"><b>Auf GitHub geändert</b>Fällig, Labels und Priorität wurden geändert, seit du das Issue geöffnet hast.</div>
+          <div class="act">Trotzdem sichern</div>
+          <div class="act">Neu laden</div>
+        </div>
+        <div class="grp"><div class="act c">Abbrechen</div></div>
+      </div>
+    </div>
+    <p class="pc"><b>+</b> Vollständig nativ (<code>confirmationDialog</code>), kaum Layoutarbeit, Tasten ganz unten. <b>−</b> Modal: der Vergleich mit den eigenen Eingaben ist verdeckt; kein Platz für Alt/Neu-Werte; nach „Abbrechen“ ist der Konflikt unsichtbar, bis erneut gesichert wird.</p>
+  </div>
+</div>
+
+<div class="box">
+  <h3>Empfehlung 2A</h3>
+  Der Kern des Problems ist fehlende Information, nicht die Farbe. Nur 2A zeigt die geänderten Felder mit Alt- und Neu-Wert, trennt harmlose Änderungen (Fällig, Labels: bleiben erhalten) von echter Überschneidung (Priorität) und benennt die Folge jeder Taste. Die Funktion bleibt unverändert.
+  <ul>
+    <li><b>Tastenhierarchie:</b> „Trotzdem sichern“ ist hervorgehoben, weil es die begonnene Absicht (Sichern) fortsetzt; „Neu laden“ ist neutral. Keine rote Rolle: beides ist legitim, die Fußzeile nennt den Verlust. Ohne Überschneidung entfällt die Warnzeile, die Fußzeile lautet dann „… überschreibt nichts auf GitHub“.</li>
+    <li><b>Nach „Neu laden“:</b> Karte verschwindet mit Animation, Felder zeigen den Quellstand; kurze VoiceOver-Ansage „Stand von GitHub geladen“.</li>
+    <li><b>Kontrast:</b> Fließtext in <code>.primary</code>/<code>.secondary</code>; Orange nur für Symbol, Rahmen und die eine Warnzeile (dort mit Symbol ⚠︎, nicht nur Farbe). Behebt das Hellmodus-Problem der bisherigen Vollorange-Schrift.</li>
+    <li><b>Dynamic Type:</b> Diff-Zeilen als <code>LabeledContent</code>, brechen bei großen Schriften untereinander um; Tasten stapeln sich per <code>ViewThatFits</code> vertikal.</li>
+    <li><b>VoiceOver:</b> Karte als Container „Konflikt“; jede Zeile ein Element: „Priorität, auf GitHub von P2 zu P3 geändert, du hast P1 gewählt“. Beim Erscheinen Fokus auf die Überschrift (<code>.accessibilityFocused</code>), weil die Karte nach dem Tippen auf „Sichern“ oben außerhalb des Fokus entsteht.</li>
+    <li><b>SwiftUI:</b> eigene <code>Section</code> oben im <code>Form</code> (wie bisher), darin <code>VStack</code> mit <code>Label</code>, <code>ForEach(changes) { LabeledContent($0.name) { Text("\(alt) → \(neu)") } }</code>, zwei <code>Button</code> mit <code>.buttonStyle(.bordered)</code> / <code>.borderedProminent</code>, <code>.buttonBorderShape(.capsule)</code>, <code>.controlSize(.large)</code>. Rahmen über <code>.listRowBackground</code> mit <code>RoundedRectangle().strokeBorder(.orange.opacity(0.45))</code>. Neu nötig: Funktion, die aus <code>original</code>, <code>draft</code> und <code>conflict</code> die Liste <code>[FieldChange(field, old, new, collidesWithDraft)]</code> bildet; <code>ScrollViewReader.scrollTo</code> zur Karte beim Auftreten.</li>
+  </ul>
+</div>
+
+<!-- ============================================================ 3 -->
+<h2>3 · Geschätzter Aufwand in Stunden</h2>
+<p class="lead">Ist-Zustand: <code>Stepper</code> in Minuten (Schritt 15, Anzeige „60 min“), keine Direkteingabe. Anforderung: Stunden ab 0,25 in 0,25er-Schritten, Tippen <i>und</i> +/−. Gemeinsame Regeln für alle Varianten: Dezimalkomma aus der Locale; Bereich 0,25–24 h; Eingabe wird beim Verlassen auf das nächste Viertel gerundet und begrenzt; leer = „kein Aufwand“; gespeichert wird weiter <code>estimateMinutes</code> (Stunden × 60), das Datenmodell bleibt unverändert.</p>
+<div class="grid">
+
+  <div>
+    <p class="label"><b>3A · Kombi-Kapsel + Schnellwerte</b> <span class="rec">Empfehlung</span></p>
+    <div class="phone">
+      <div class="status"><span>9:41</span><span>●●● 5G</span></div>
+      <div class="nav"><span class="a">Abbrechen</span><b>Issue #42</b><span class="a b">Sichern</span></div>
+      <div class="list">
+        <div class="field"><span>Fällig</span><span class="v">18.11.</span></div>
+        <div class="field"><span>Priorität</span><span class="v">P2 (High)</span></div>
+        <div class="field" style="border-bottom:0;padding-bottom:9px"><span>Geschätzt</span>
+          <span class="est"><span class="pm">−</span><span class="val">0,75 <small>h</small></span><span class="pm">+</span></span></div>
+        <div class="chips"><span class="qc none">Kein</span><span class="qc">0,25</span><span class="qc">0,5</span><span class="qc">1</span><span class="qc">2</span><span class="qc">4</span></div>
+      </div>
+      <div class="section">Leerer Zustand</div>
+      <div class="list">
+        <div class="field" style="border-bottom:0;padding-bottom:9px"><span>Geschätzt</span>
+          <span class="est"><span class="pm off">−</span><span class="val" style="color:var(--sub);font-weight:400">–</span><span class="pm">+</span></span></div>
+        <div class="chips"><span class="qc on" style="background:#48484a">Kein</span><span class="qc">0,25</span><span class="qc">0,5</span><span class="qc">1</span><span class="qc">2</span><span class="qc">4</span></div>
+      </div>
+      <div class="note">− bei 0,25 h leert das Feld · + im leeren Feld setzt 0,25 h · Gedrückthalten wiederholt · Schnellwerte in Stunden</div>
+    </div>
+    <p class="pc"><b>+</b> Ein zusammenhängendes Bedienelement: Zahl in der Mitte ist das Textfeld, −/+ sitzen als 44-pt-Ziele direkt daneben; Schnellwerte decken die häufigsten Fälle mit einem Tipp ab. <b>−</b> Belegt zwei Zeilenhöhen; etwas mehr eigener Aufbau als der System-Stepper.</p>
+  </div>
+
+  <div>
+    <p class="label"><b>3A · beim Tippen</b></p>
+    <div class="phone">
+      <div class="status"><span>9:41</span><span>●●● 5G</span></div>
+      <div class="nav"><span class="a">Abbrechen</span><b>Issue #42</b><span class="a b">Sichern</span></div>
+      <div class="list">
+        <div class="field"><span>Priorität</span><span class="v">P2 (High)</span></div>
+        <div class="field" style="border-bottom:0;padding-bottom:9px"><span>Geschätzt</span>
+          <span class="est"><span class="pm">−</span><span class="val focus">1,5<i class="caret"></i> <small>h</small></span><span class="pm">+</span></span></div>
+        <div class="chips"><span class="qc none">Kein</span><span class="qc">0,25</span><span class="qc">0,5</span><span class="qc">1</span><span class="qc">2</span><span class="qc">4</span></div>
+      </div>
+      <div class="note">Tippen auf die Zahl markiert den ganzen Wert. „1,3“ wird beim Verlassen zu 1,25; „30“ zu 24.</div>
+      <div class="kb">
+        <div class="bar">Fertig</div>
+        <div class="keys"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span><span class="fn">,</span><span>0</span><span class="fn">⌫</span></div>
+      </div>
+    </div>
+    <p class="pc">Ziffernblock mit Dezimalkomma (<code>.decimalPad</code>). Da dieser keine Eingabetaste hat, schließt „Fertig“ in der Tastaturleiste die Eingabe; −/+ und Schnellwerte bleiben während des Tippens bedienbar.</p>
+  </div>
+
+  <div>
+    <p class="label"><b>3B · Textfeld + System-Stepper</b></p>
+    <div class="phone">
+      <div class="status"><span>9:41</span><span>●●● 5G</span></div>
+      <div class="nav"><span class="a">Abbrechen</span><b>Issue #42</b><span class="a b">Sichern</span></div>
+      <div class="list">
+        <div class="field"><span>Fällig</span><span class="v">18.11.</span></div>
+        <div class="field"><span>Priorität</span><span class="v">P2 (High)</span></div>
+        <div class="field"><span>Geschätzt</span>
+          <span class="row"><span class="tf">0,75 <span style="color:var(--sub)">h</span></span><span class="stepper"><span>−</span><span>+</span></span></span></div>
+      </div>
+      <div class="note">Leeren: Feldinhalt löschen oder − bis unter 0,25 h.</div>
+    </div>
+    <p class="pc"><b>+</b> Geringster Aufwand, 100 % Systemkomponenten, eine Zeile. <b>−</b> Zahl und Stepper wirken wie zwei getrennte Elemente; dass die Zahl antippbar ist, ist kaum erkennbar; für 4 h sind 16 Tipps oder Tastatur nötig; „kein Aufwand“ ist versteckt.</p>
+  </div>
+
+  <div>
+    <p class="label"><b>3C · Aufklappende Zeile</b></p>
+    <div class="phone">
+      <div class="status"><span>9:41</span><span>●●● 5G</span></div>
+      <div class="nav"><span class="a">Abbrechen</span><b>Issue #42</b><span class="a b">Sichern</span></div>
+      <div class="list">
+        <div class="field"><span>Fällig</span><span class="v">18.11.</span></div>
+        <div class="field"><span>Priorität</span><span class="v">P2 (High)</span></div>
+        <div class="field" style="border-bottom:0"><span>Geschätzt</span><span style="color:var(--blue)">0,75 h ⌃</span></div>
+        <div class="panel">
+          <div class="big"><span class="rb">−</span><span class="n">0,75 <small>h</small></span><span class="rb">+</span></div>
+          <div class="chips" style="padding:0;justify-content:space-between"><span class="qc">0,25</span><span class="qc">0,5</span><span class="qc">1</span><span class="qc">2</span><span class="qc">4</span><span class="qc none">Kein</span></div>
+        </div>
+      </div>
+      <div class="note">Zugeklappt nur „Geschätzt  0,75 h“, wie die kompakte Datumsauswahl.</div>
+    </div>
+    <p class="pc"><b>+</b> Formular bleibt ruhig; größte Ziele und größte Zahl. <b>−</b> Ein zusätzlicher Tipp vor jeder Änderung; das Aufklappen verschiebt die Felder darunter; für ein einzelnes Zahlenfeld viel Fläche.</p>
+  </div>
+</div>
+
+<div class="box">
+  <h3>Empfehlung 3A</h3>
+  Erfüllt „tippen und +/−“ in einem sichtbar zusammengehörenden Element und ohne Zusatztipp. Schnellwerte und „Kein“ machen die häufigsten Eingaben und das Leeren zu Ein-Tipp-Aktionen. 3B ist die Rückfalloption, falls der Aufwand minimal bleiben soll.
+  <ul>
+    <li><b>Format:</b> „0,25 h“, „1 h“, „1,5 h“ (0–2 Nachkommastellen, Locale-Komma). Auch die Listen-/Planungsanzeige sollte von „60 min“ auf dieses Format wechseln, sonst entstehen zwei Einheiten.</li>
+    <li><b>Dynamic Type:</b> Bei Bedienungshilfen-Größen Kapsel per <code>ViewThatFits</code> unter die Beschriftung; Schnellwerte in horizontalem <code>ScrollView</code>, nichts wird abgeschnitten.</li>
+    <li><b>VoiceOver:</b> Gesamtes Element als anpassbarer Wert: Label „Geschätzter Aufwand“, Wert „0,75 Stunden“ bzw. „kein Aufwand“, Wischen hoch/runter = ±0,25 (<code>.accessibilityAdjustableAction</code>). Schnellwerte mit Label „1 Stunde“ und Trait „ausgewählt“.</li>
+    <li><b>Erreichbarkeit/Kontrast:</b> −/+ je 44 × 36 pt mit erweitertem <code>contentShape</code>; deaktiviertes − (leerer Zustand) bleibt sichtbar, ist aber auch für VoiceOver als „nicht verfügbar“ markiert.</li>
+    <li><b>SwiftUI:</b> <code>LabeledContent("Geschätzt") { HStack { Button(−); TextField("–", value: $hours, format: .number.precision(.fractionLength(0...2))).keyboardType(.decimalPad).multilineTextAlignment(.center).focused($focus); Text("h"); Button(+) } .background(.quaternary, in: .capsule) }</code>; Tasten mit <code>.buttonRepeatBehavior(.enabled)</code> und <code>.buttonStyle(.borderless)</code> (sonst löst im <code>Form</code> die ganze Zeile aus). Schnellwerte: <code>ScrollView(.horizontal) { ForEach([0.25, 0.5, 1, 2, 4]) { Button … } }</code> mit <code>.buttonStyle(.bordered)</code>, <code>.buttonBorderShape(.capsule)</code>. „Fertig“ über <code>.toolbar { ToolbarItemGroup(placement: .keyboard) }</code>. Runden/Begrenzen in einem <code>Binding&lt;Double?&gt;</code> auf <code>estimateMinutes</code> sowie in <code>.onChange(of: focus)</code>.</li>
+  </ul>
+</div>
+
+<!-- ============================================================ 4 -->
+<h2>4 · Dezenter Offline-Hinweis für GitHub</h2>
+<p class="lead">Ist-Zustand: eigene Listenzeile „GitHub: Stand 17. Nov., 14:05, offline“ oberhalb der Aufgaben. Schwächen: sieht aus wie eine Aufgabe bzw. Fehlermeldung, verschiebt die Liste und erklärt nicht, dass GitHub-Einträge schreibgeschützt sind. Ziel: kaum sichtbar, aber auffindbar; Zeitstempel erst auf Tippen.</p>
+<div class="grid">
+
+  <div>
+    <p class="label"><b>4A · Symbol in der Leiste + Popover</b> <span class="rec">Empfehlung</span></p>
+    <div class="phone">
+      <div class="status"><span>9:41</span><span>●●● 5G</span></div>
+      <div class="row" style="justify-content:space-between;padding-right:4px"><div class="title">Aufgaben</div>
+        <div class="tool">
+          <span class="glyph"><svg width="20" height="16" viewBox="0 0 20 16" fill="none" stroke="#8e8e93" stroke-width="1.6" stroke-linecap="round"><path d="M5.5 13.5h9a3.5 3.5 0 0 0 .6-6.95A5 5 0 0 0 5.6 5.3 4.1 4.1 0 0 0 5.5 13.5z"/><path d="M3 1.5l14 13"/></svg></span>
+          <span class="plus">＋</span></div></div>
+      <div class="seg"><span class="on" style="flex:.6">Alle</span><span style="flex:1.4">Erinnerungen</span><span>GitHub</span><span>Lokal</span></div>
+      <div class="pop glass" style="background:rgba(86,86,92,.95)">
+        <b>GitHub ist offline</b>
+        <span class="m">Stand: 17. Nov., 14:05<br>Issues lassen sich gerade nur lesen.</span>
+        <span class="l">Erneut versuchen</span>
+      </div>
+      <div class="section">Heute</div>
+      <div class="list">
+        <div class="item"><span class="circle locked"></span><div class="t">#42 Login-Fehler beheben<div class="s due-orange">heute · <span class="chip">beispiel/app</span> P2</div></div></div>
+        <div class="item"><span class="circle"></span><div class="t">Kapitel 2 gliedern<div class="s due-orange">heute · <span class="dot" style="background:var(--purple)"></span>Projekt</div></div></div>
+      </div>
+      <div class="section">Diese Woche</div>
+      <div class="list">
+        <div class="item"><span class="circle locked"></span><div class="t">#57 Tests für Export<div class="s">Fr · <span class="chip">beispiel/app</span> P3</div></div></div>
+        <div class="item"><span class="circle"></span><div class="t">Einkaufen<div class="s">Do · <span class="dot" style="background:var(--green)"></span>Privat</div></div></div>
+      </div>
+      <div class="spacer"></div>
+      <div class="tabbar"><span><i class="ico">☀︎</i>Heute</span><span class="on"><i class="ico">☑︎</i>Aufgaben</span><span><i class="ico">⚙︎</i>Einstellungen</span></div>
+    </div>
+    <p class="pc">Popover hier geöffnet dargestellt; im Ruhezustand ist nur das graue Wolken-Symbol neben ＋ zu sehen. <b>+</b> Keine Listenzeile, bleibt beim Scrollen sichtbar, Tippen zeigt Stand und Folge. Gestrichelte, gedimmte Kreise markieren schreibgeschützte Zeilen. <b>−</b> Ein reines Symbol muss einmal gelernt werden.</p>
+  </div>
+
+  <div>
+    <p class="label"><b>4B · Fußnotenzeile über der Liste</b></p>
+    <div class="phone">
+      <div class="status"><span>9:41</span><span>●●● 5G</span></div>
+      <div class="row" style="justify-content:space-between;padding-right:8px"><div class="title">Aufgaben</div><span class="plus">＋</span></div>
+      <div class="seg"><span class="on" style="flex:.6">Alle</span><span style="flex:1.4">Erinnerungen</span><span>GitHub</span><span>Lokal</span></div>
+      <div class="capline"><span class="ic"><svg width="15" height="12" viewBox="0 0 20 16" fill="none" stroke="#8e8e93" stroke-width="1.8" stroke-linecap="round"><path d="M5.5 13.5h9a3.5 3.5 0 0 0 .6-6.95A5 5 0 0 0 5.6 5.3 4.1 4.1 0 0 0 5.5 13.5z"/><path d="M3 1.5l14 13"/></svg></span>GitHub offline · Stand 14:05<span class="more">ⓘ</span></div>
+      <div class="section">Heute</div>
+      <div class="list">
+        <div class="item"><span class="circle"></span><div class="t">#42 Login-Fehler beheben<div class="s due-orange">heute · <span class="chip">beispiel/app</span> P2</div></div></div>
+        <div class="item"><span class="circle"></span><div class="t">Kapitel 2 gliedern<div class="s due-orange">heute · <span class="dot" style="background:var(--purple)"></span>Projekt</div></div></div>
+      </div>
+      <div class="section">Diese Woche</div>
+      <div class="list">
+        <div class="item"><span class="circle"></span><div class="t">#57 Tests für Export<div class="s">Fr · <span class="chip">beispiel/app</span> P3</div></div></div>
+      </div>
+      <div class="spacer"></div>
+      <div class="note">Tippen auf die Zeile klappt „Stand 17. Nov., 14:05 · nur lesbar“ auf.</div>
+      <div class="tabbar"><span><i class="ico">☀︎</i>Heute</span><span class="on"><i class="ico">☑︎</i>Aufgaben</span><span><i class="ico">⚙︎</i>Einstellungen</span></div>
+    </div>
+    <p class="pc"><b>+</b> Selbsterklärend durch Text, sehr leicht umzusetzen (bestehende Zeile ohne Hintergrund, <code>.footnote</code>, <code>.secondary</code>). <b>−</b> Kostet weiterhin eine Zeile Höhe, scrollt weg, steht weit weg von den betroffenen Zeilen; Sekundärgrau in 12 pt ist kontrastschwach.</p>
+  </div>
+
+  <div>
+    <p class="label"><b>4C · Nur an den betroffenen Zeilen</b></p>
+    <div class="phone">
+      <div class="status"><span>9:41</span><span>●●● 5G</span></div>
+      <div class="row" style="justify-content:space-between;padding-right:8px"><div class="title">Aufgaben</div><span class="plus">＋</span></div>
+      <div class="seg"><span class="on" style="flex:.6">Alle</span><span style="flex:1.4">Erinnerungen</span><span>GitHub</span><span>Lokal</span></div>
+      <div class="section">Heute</div>
+      <div class="list">
+        <div class="item"><span class="circle locked"></span><div class="t">#42 Login-Fehler beheben<div class="s due-orange">heute · <span class="chip"><span class="ic"><svg width="12" height="10" viewBox="0 0 20 16" fill="none" stroke="#8e8e93" stroke-width="2" stroke-linecap="round"><path d="M5.5 13.5h9a3.5 3.5 0 0 0 .6-6.95A5 5 0 0 0 5.6 5.3 4.1 4.1 0 0 0 5.5 13.5z"/><path d="M3 1.5l14 13"/></svg></span>beispiel/app</span> P2</div></div></div>
+        <div class="item"><span class="circle"></span><div class="t">Kapitel 2 gliedern<div class="s due-orange">heute · <span class="dot" style="background:var(--purple)"></span>Projekt</div></div></div>
+      </div>
+      <div class="section">Diese Woche</div>
+      <div class="list">
+        <div class="item"><span class="circle locked"></span><div class="t">#57 Tests für Export<div class="s">Fr · <span class="chip"><span class="ic"><svg width="12" height="10" viewBox="0 0 20 16" fill="none" stroke="#8e8e93" stroke-width="2" stroke-linecap="round"><path d="M5.5 13.5h9a3.5 3.5 0 0 0 .6-6.95A5 5 0 0 0 5.6 5.3 4.1 4.1 0 0 0 5.5 13.5z"/><path d="M3 1.5l14 13"/></svg></span>beispiel/app</span> P3</div></div></div>
+        <div class="item"><span class="circle"></span><div class="t">Einkaufen<div class="s">Do · <span class="dot" style="background:var(--green)"></span>Privat</div></div></div>
+      </div>
+      <div class="spacer"></div>
+      <div class="note">Tippen auf einen gesperrten Kreis: kurzer Hinweis „GitHub offline · Stand 14:05“.</div>
+      <div class="tabbar"><span><i class="ico">☀︎</i>Heute</span><span class="on"><i class="ico">☑︎</i>Aufgaben</span><span><i class="ico">⚙︎</i>Einstellungen</span></div>
+    </div>
+    <p class="pc"><b>+</b> Hinweis genau dort, wo die Einschränkung wirkt; keine zusätzliche Fläche. <b>−</b> Wiederholt sich in jeder GitHub-Zeile (bei vielen Issues unruhig); kein zentraler Ort für Stand und „Erneut versuchen“; ohne GitHub-Zeilen im Filter unsichtbar.</p>
+  </div>
+</div>
+
+<div class="box">
+  <h3>Empfehlung 4A (mit den gedimmten Kreisen aus 4C)</h3>
+  Die Leiste ist der native Ort für einen Zustand, der die ganze Liste betrifft; das Symbol ist die leiseste Form, die trotzdem dauerhaft sichtbar bleibt. Die gedimmten Kreise beantworten zusätzlich an der Zeile, warum sich ein Issue nicht abhaken lässt. Die wiederholten Wolken-Symbole aus 4C entfallen.
+  <ul>
+    <li><b>Sichtbarkeit:</b> Symbol nur, solange <code>sourceStates[.github]?.isOffline == true</code>; beim ersten Wechsel in den Offline-Zustand einmalig <code>.symbolEffect(.bounce)</code>, danach statisch. Die bisherige <code>.offline</code>-Zeile in <code>SourceProblemRow</code> entfällt; <code>.failed</code>, <code>.noAccess</code>, <code>.signedOut</code> bleiben Zeilen, weil sie eine Handlung verlangen.</li>
+    <li><b>Schreibschutz an der Zeile:</b> Tippen auf einen gedimmten Kreis öffnet dasselbe Popover (heute passiert bei <code>!isWritable</code> nichts, was wie ein Defekt wirkt). Wischaktionen bleiben wie bisher ausgeblendet.</li>
+    <li><b>VoiceOver:</b> Symbol-Label „GitHub offline“, Wert „Stand 17. November, 14:05“, Hinweis „Zeigt Details“. Gesperrte Zeilen erhalten den Zusatz „nur lesbar, GitHub offline“, damit der Zustand nicht allein über Deckkraft vermittelt wird.</li>
+    <li><b>Dynamic Type / Kontrast:</b> SF-Symbol skaliert mit; Sekundärgrau auf Leistenhintergrund liegt als Grafik über 3:1. Popover-Text in <code>.primary</code>, umbricht frei. Kein Orange oder Rot: offline ist ein Zustand, kein Fehler.</li>
+    <li><b>Erreichbarkeit:</b> Die Leiste liegt oben; vertretbar, weil der Hinweis selten und rein informativ ist. Der handlungsnahe Zugang (Kreis antippen) liegt in der Liste.</li>
+    <li><b>SwiftUI:</b> <code>ToolbarItem(placement: .topBarTrailing) { Button { showOffline = true } label: { Image(systemName: "icloud.slash") } .tint(.secondary) .popover(isPresented: $showOffline) { VStack{…}.padding().presentationCompactAdaptation(.popover) } }</code>; Zeitstempel über <code>Text(date, format: .dateTime.day().month().hour().minute())</code>; „Erneut versuchen“ ruft <code>model.reload()</code>. In <code>TaskRow</code>: Kreis mit <code>.opacity(0.45)</code> und gestricheltem <code>StrokeStyle(dash:)</code> bei <code>!isWritable</code>.</li>
+  </ul>
+</div>
+
+</body>
+</html>
