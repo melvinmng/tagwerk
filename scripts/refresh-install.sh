@@ -7,12 +7,11 @@
 #   --force    install now, regardless of the remaining profile lifetime
 #   TAGWERK_FORCE=1 in the environment has the same effect as --force
 #
-# Exit codes: 0 installed or not due, 1 build failed, 2 device unreachable, 3 signing failed
+# Exit codes: 0 installed or not due, 1 build failed, 2 device unreachable, 3 signing failed, 64 configuration invalid
 
 set -u
 
 SCHEME="Tagwerk"
-BUNDLE_ID="com.melvinmng.tagwerk"
 PROJECT_DIR_NAME="app"
 BRANCH="${TAGWERK_BRANCH:-main}"
 DUE_WITHIN_SECONDS=$(( 3 * 86400 ))   # refresh when less than 3 days of profile lifetime remain
@@ -25,8 +24,6 @@ BASE="$HOME/Library/Developer/Tagwerk"
 SRC="$BASE/src"
 DERIVED="$BASE/DerivedData-refresh"
 STATE_DIR="$HOME/Library/Application Support/Tagwerk"
-CONFIG_FILE="$STATE_DIR/config"
-EXPIRY_FILE="$STATE_DIR/profile-expiry.$BUNDLE_ID"  # per app, so a new bundle ID starts as due
 LOG_DIR="$HOME/Library/Logs/Tagwerk"
 LOG="$LOG_DIR/refresh.log"
 BUILD_LOG="$LOG_DIR/build.log"
@@ -52,13 +49,8 @@ should_warn() {
 
 mkdir -p "$STATE_DIR" "$LOG_DIR"
 
-# Device identifiers stay out of the repository; the config file defines DEVICE_ID.
-if [[ ! -f "$CONFIG_FILE" ]]; then
-  echo "Missing $CONFIG_FILE with DEVICE_ID=<UDID> (see scripts/README.md)" >&2
-  exit 64
-fi
-source "$CONFIG_FILE"
-: "${DEVICE_ID:?DEVICE_ID must be set in $CONFIG_FILE}"
+source "${0:A:h}/install-config.zsh" || exit 64
+EXPIRY_FILE="$STATE_DIR/profile-expiry.$TAGWERK_BUNDLE_ID"
 
 dry_run=0
 force=0
@@ -105,7 +97,7 @@ remove_cached_profiles() {
   for file in "$PROFILES_DIR"/*.mobileprovision(N); do
     plist=$(/usr/bin/security cms -D -i "$file" 2>/dev/null) || continue
     app=$(print -r -- "$plist" | /usr/bin/plutil -extract Entitlements.application-identifier raw - 2>/dev/null)
-    [[ "$app" == *".$BUNDLE_ID" ]] || continue
+    [[ "$app" == "$DEVELOPMENT_TEAM.$TAGWERK_BUNDLE_ID" ]] || continue
     rm -f -- "$file" && log "profile: removed cached profile $(basename "$file")"
   done
 }
@@ -143,7 +135,8 @@ remove_cached_profiles
 
 if ! xcodebuild -project "$SRC/$PROJECT_DIR_NAME/$SCHEME.xcodeproj" -scheme "$SCHEME" \
     -destination "id=$DEVICE_ID" -derivedDataPath "$DERIVED" \
-    -allowProvisioningUpdates build > "$BUILD_LOG" 2>&1; then
+    -allowProvisioningUpdates -allowProvisioningDeviceRegistration \
+    "${BUILD_SETTINGS[@]}" build > "$BUILD_LOG" 2>&1; then
   if grep -qE "error: .*([Pp]rovisioning|[Ss]igning|certificate)" "$BUILD_LOG"; then
     fail 3 "build: signing failed (see $BUILD_LOG)" "Signierung fehlgeschlagen: Xcode öffnen und Apple-ID-Anmeldung prüfen."
   fi
