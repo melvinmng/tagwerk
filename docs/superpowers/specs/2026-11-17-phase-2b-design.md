@@ -1,6 +1,6 @@
 # Tagwerk – Phase 2b Design: Planen, Kalender und KI
 
-Stand: 2026-11-17 · Status: **Entwurf zur Freigabe** · Baut auf: `2026-11-17-tagwerk-design.md` (Hauptdesign), `2026-11-17-phase-2-design.md` (Phase 2, darin §7 und §8 für KI und Benachrichtigungen), `../spikes/2026-11-17-feasibility-results.md` (u. a. Nachtrag Function Calling). Mockups: `../mockups/2026-11-17-phase-2b-mockups.html` (Freigabe folgt; je Bereich gilt die grün markierte Empfehlung).
+Stand: 2026-11-17 · Status: **freigegeben am 2026-11-17** · Baut auf: `2026-11-17-tagwerk-design.md` (Hauptdesign), `2026-11-17-phase-2-design.md` (Phase 2, darin §7 und §8 für KI und Benachrichtigungen), `../spikes/2026-11-17-feasibility-results.md` (u. a. Nachtrag Function Calling). Mockups: `../mockups/2026-11-17-phase-2b-mockups.html` (freigegeben am 2026-11-17: a, b-A, c-A, d-A, e-A, f, g-A, h; je Bereich die grün markierte Empfehlung).
 
 Dieser Nachtrag ersetzt für Phase 2b den bisherigen Plan „2b: KI-Tagesplan, Heute-Tab, Benachrichtigungen“ aus Phase 2 §11. Wo er dem Phase-2-Design widerspricht, gilt dieser Nachtrag.
 
@@ -104,7 +104,7 @@ Sie erscheinen in allen Ansichten hervorgehoben (Gestaltung nach Mockups), im Ta
 ### 6.3 Wiederkehrender Aufwand
 
 - Gilt für Erinnerungen mit Wiederholungsregel. Der Aufwand belegt an jedem Tag, an dem die Serie ein Vorkommen hat, Zeit, bevor anderes verplant wird.
-- Anpassen: „Nur dieser Tag“ (Override für das Datum) oder „Alle“ (Grundwert). Ein Override von 0 entfernt den Aufwand an diesem Tag.
+- Anpassen: „Nur dieser Tag“ (Override für das Datum) oder „Alle“ (neuer Grundwert **ab diesem Tag**; vergangene Tage behalten ihren Wert, Mockup g-A). Ein Override von 0 entfernt den Aufwand an diesem Tag.
 - Erledigst du das Vorkommen vorzeitig, bleibt die Zeit dieses Tages belegt (die Kapazitätsanzeige zeigt es als erledigt).
 
 ### 6.4 Verknüpfung Termin ↔ Aufgabe
