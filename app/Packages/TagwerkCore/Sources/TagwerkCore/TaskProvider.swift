@@ -6,6 +6,8 @@ public enum TaskWriteError: Error, Equatable, Sendable {
     case conflict(current: TaskItem)
     case notFound
     case accessDenied
+    /// The sign-in of the source ended (e.g. expired or revoked); the user must sign in again.
+    case signedOut
     /// The source is only available from its offline cache; writing is blocked.
     case offline
     case failed(String)

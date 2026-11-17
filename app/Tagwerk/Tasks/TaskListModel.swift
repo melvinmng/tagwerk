@@ -28,6 +28,8 @@ enum TaskFilter: CaseIterable, Hashable {
 /// Load state of one source.
 enum SourceState: Equatable {
     case loaded, noAccess, failed(String)
+    /// The sign-in ended; the source was removed until the user signs in again.
+    case signedOut
     /// Shown from the offline cache with the time of the cached data.
     case offline(since: Date)
 
@@ -58,7 +60,11 @@ final class TaskListModel {
     private(set) var lastCompleted: TaskItem?
     private(set) var lastError: String?
 
-    var providers: [any TaskProvider]
+    private(set) var providers: [any TaskProvider]
+    /// Sources whose sign-in ended; their state stays visible until they are registered again.
+    private var signedOutSources: Set<TaskSource> = []
+    /// Called once when a source reports that its sign-in ended.
+    @ObservationIgnored var onSignedOut: ((TaskSource) -> Void)?
     let now: () -> Date
     let calendar: Calendar
 
@@ -90,14 +96,40 @@ final class TaskListModel {
             do {
                 loaded += try await provider.openTasks()
                 states[provider.source] = provider.offlineSince.map { .offline(since: $0) } ?? .loaded
+            } catch TaskWriteError.signedOut {
+                signOut(provider.source)
             } catch TaskWriteError.accessDenied {
                 states[provider.source] = .noAccess
             } catch {
                 states[provider.source] = .failed(Self.message(for: error))
             }
         }
+        for source in signedOutSources { states[source] = .signedOut }
         items = loaded
         sourceStates = states
+    }
+
+    /// Adds a source (e.g. after signing in) and loads the list.
+    func register(_ provider: any TaskProvider) async {
+        providers.removeAll { $0.source == provider.source }
+        providers.append(provider)
+        signedOutSources.remove(provider.source)
+        await reload()
+    }
+
+    /// Removes a source after a voluntary sign-out.
+    func unregister(_ source: TaskSource) async {
+        providers.removeAll { $0.source == source }
+        signedOutSources.remove(source)
+        await reload()
+    }
+
+    private func signOut(_ source: TaskSource) {
+        providers.removeAll { $0.source == source }
+        items.removeAll { $0.id.source == source }
+        signedOutSources.insert(source)
+        sourceStates[source] = .signedOut
+        onSignedOut?(source)
     }
 
     func complete(_ id: TaskID) async {
@@ -165,6 +197,8 @@ final class TaskListModel {
         } catch TaskWriteError.conflict {
             lastError = "Die Aufgabe wurde inzwischen geändert. Die Liste ist jetzt aktuell."
             await reload()
+        } catch TaskWriteError.signedOut {
+            signOut(id.source)
         } catch {
             lastError = Self.message(for: error)
         }
@@ -183,6 +217,7 @@ final class TaskListModel {
         switch error {
         case TaskWriteError.failed(let message): message
         case TaskWriteError.accessDenied: "Kein Zugriff auf diese Quelle."
+        case TaskWriteError.signedOut: "Die Anmeldung ist abgelaufen. Bitte melde dich neu an."
         case TaskWriteError.notFound: "Die Aufgabe existiert nicht mehr."
         case TaskWriteError.offline: "Offline: Änderungen an GitHub sind gerade nicht möglich."
         case TaskWriteError.conflict: "Die Aufgabe wurde inzwischen geändert."

@@ -29,7 +29,8 @@ final class AppEnvironment {
         }
         self.settings = settings
         self.gateway = gateway
-        self.taskList = TaskListModel(providers: [reminders, LocalTaskProvider(context: context)])
+        let taskList = TaskListModel(providers: [reminders, LocalTaskProvider(context: context)])
+        self.taskList = taskList
 
         let clientID = Bundle.main.object(forInfoDictionaryKey: "GitHubClientID") as? String ?? ""
         let transport = URLSessionTransport()
@@ -45,21 +46,23 @@ final class AppEnvironment {
             cache: cache,
             selectedProjectIDs: { settings.selectedProjectIDs.map(Set.init) }
         )
+        // An ended GitHub sign-in (expired or revoked) forgets the cached issues of that account.
+        taskList.onSignedOut = { source in
+            if source == .github { cache.clear() }
+        }
     }
 
     /// Adds GitHub to the task list when credentials exist.
     func activateGitHubIfSignedIn() async {
         guard await gitHubTokens.isSignedIn, taskList.provider(for: .github) == nil else { return }
-        taskList.providers.append(gitHub)
-        await taskList.reload()
+        await taskList.register(gitHub)
     }
 
     /// Removes GitHub from the task list after signing out and forgets cached issues.
     func deactivateGitHub() async {
-        taskList.providers.removeAll { $0.source == .github }
         gitHubCache.clear()
         settings.selectedProjectIDs = nil
-        await taskList.reload()
+        await taskList.unregister(.github)
     }
 
     var isGitHubActive: Bool { taskList.provider(for: .github) != nil }

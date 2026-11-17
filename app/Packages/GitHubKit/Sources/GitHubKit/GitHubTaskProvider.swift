@@ -32,7 +32,7 @@ public final class GitHubTaskProvider: TaskProvider {
     }
 
     public func openTasks() async throws -> [TaskItem] {
-        guard await tokens.isSignedIn else { throw TaskWriteError.accessDenied }
+        guard await tokens.isSignedIn else { throw TaskWriteError.signedOut }
         do {
             let result = try await api.openProjectIssues()
             let visible = result.issues.filter { GitHubMapping.isVisible($0, login: result.login) }
@@ -42,14 +42,17 @@ public final class GitHubTaskProvider: TaskProvider {
             cache.store(visible, fetchedAt: now())
             offlineSince = nil
             return displayed()
-        } catch GitHubAPIError.network {
-            guard let cached = cache.load() else { throw TaskWriteError.failed("Keine Verbindung zu GitHub.") }
+        } catch {
+            // Any read failure except an ended sign-in shows the cache (design §9: "Offline / Fehler").
+            let mapped = Self.taskError(error)
+            if mapped == .signedOut { throw mapped }
+            guard let cached = cache.load() else {
+                throw mapped == .offline ? TaskWriteError.failed("Keine Verbindung zu GitHub.") : mapped
+            }
             remember(cached.records)
             if projects.isEmpty { projects = Self.projects(in: cached.records) }
             offlineSince = cached.fetchedAt
             return displayed()
-        } catch {
-            throw Self.taskError(error)
         }
     }
 
@@ -214,7 +217,9 @@ public final class GitHubTaskProvider: TaskProvider {
     static func taskError(_ error: Error) -> TaskWriteError {
         switch error {
         case let error as TaskWriteError: error
-        case GitHubAuthError.signedOut: .accessDenied
+        case GitHubAuthError.signedOut: .signedOut
+        case GitHubAuthError.network: .offline
+        case GitHubAuthError.server(let message): .failed("GitHub-Anmeldung: \(message)")
         case GitHubAPIError.network: .offline
         case GitHubAPIError.graphQL(let message): .failed(message)
         case GitHubAPIError.http(let status): .failed("GitHub antwortet mit Fehler \(status).")

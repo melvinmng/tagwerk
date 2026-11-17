@@ -63,9 +63,47 @@ struct GitHubTaskProviderReadTests {
         await #expect(throws: TaskWriteError.self) { try await makeProvider().openTasks() }
     }
 
-    @Test func openTasks_signedOut_throwsAccessDenied() async {
-        await #expect(throws: TaskWriteError.accessDenied) { try await makeProvider(signedIn: false).openTasks() }
+    @Test func openTasks_signedOut_throwsSignedOut() async {
+        await #expect(throws: TaskWriteError.signedOut) { try await makeProvider(signedIn: false).openTasks() }
         #expect(transport.requests.isEmpty)
+    }
+
+    @Test func openTasks_refreshRejected_throwsSignedOut() async {
+        let expired = GitHubCredentials(accessToken: "gho_old", refreshToken: "ghr_old",
+                                        accessExpiresAt: fixedNow.addingTimeInterval(-10), refreshExpiresAt: nil)
+        let client = DeviceFlowClient(clientID: "client", transport: transport, sleep: { _ in }, now: { fixedNow })
+        let tokens = TokenManager(store: MemoryCredentialStore(expired), client: client, now: { fixedNow })
+        let provider = GitHubTaskProvider(api: GitHubAPI(transport: transport, tokens: tokens), tokens: tokens, cache: cache,
+                                          selectedProjectIDs: { nil }, now: { fixedNow })
+        transport.enqueueJSON("/login/oauth/access_token", #"{"error":"bad_refresh_token"}"#)
+        await #expect(throws: TaskWriteError.signedOut) { try await provider.openTasks() }
+    }
+
+    @Test func openTasks_serverError_returnsCacheAndSetsOffline() async throws {
+        cache.snapshot = ([makeRecord(placements: [makePlacement(makeProject(1))])], fixedNow.addingTimeInterval(-60))
+        transport.enqueueJSON("/graphql", status: 502, "<html>bad gateway</html>")
+        let provider = makeProvider()
+        #expect(try await provider.openTasks().count == 1)
+        #expect(provider.offlineSince == fixedNow.addingTimeInterval(-60))
+    }
+
+    @Test func openTasks_graphQLError_returnsCache() async throws {
+        cache.snapshot = ([makeRecord(placements: [makePlacement(makeProject(1))])], fixedNow)
+        transport.enqueueJSON("/graphql", #"{"errors":[{"message":"Something went wrong"}]}"#)
+        #expect(try await makeProvider().openTasks().count == 1)
+    }
+
+    @Test func openTasks_tokenRefreshServerError_returnsCache() async throws {
+        cache.snapshot = ([makeRecord(placements: [makePlacement(makeProject(1))])], fixedNow)
+        let expired = GitHubCredentials(accessToken: "gho_old", refreshToken: "ghr_old",
+                                        accessExpiresAt: fixedNow.addingTimeInterval(-10), refreshExpiresAt: nil)
+        let client = DeviceFlowClient(clientID: "client", transport: transport, sleep: { _ in }, now: { fixedNow })
+        let tokens = TokenManager(store: MemoryCredentialStore(expired), client: client, now: { fixedNow })
+        let provider = GitHubTaskProvider(api: GitHubAPI(transport: transport, tokens: tokens), tokens: tokens, cache: cache,
+                                          selectedProjectIDs: { nil }, now: { fixedNow })
+        transport.enqueueJSON("/login/oauth/access_token", status: 503, "unavailable")
+        #expect(try await provider.openTasks().count == 1)
+        #expect(provider.offlineSince == fixedNow)
     }
 
     @Test func openTasks_respectsSelectedProjects() async throws {

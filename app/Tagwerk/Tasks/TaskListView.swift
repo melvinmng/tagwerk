@@ -10,6 +10,7 @@ struct TaskListView: View {
     @State private var pickingDateFor: TaskItem?
     @State private var editing: TaskItem?
     @State private var editingContainers: [TaskContainer] = []
+    @State private var gitHubLogin: GitHubLoginModel?
     @Environment(\.openURL) private var openURL
     @Environment(AppEnvironment.self) private var environment
 
@@ -31,6 +32,7 @@ struct TaskListView: View {
                         state: model.sourceStates[source],
                         canRequest: environment.accessState(for: source) == .notDetermined,
                         requestAccess: { Task { await environment.requestAccess(for: source) } },
+                        signIn: { gitHubLogin = environment.makeGitHubLoginModel() },
                         openSettings: {
                             if let url = URL(string: UIApplication.openSettingsURLString) { openURL(url) }
                         }
@@ -67,6 +69,19 @@ struct TaskListView: View {
                                    addComment: commentAction(for: provider),
                                    isReadOnly: model.sourceStates[item.id.source]?.isOffline == true) { saved in
                         model.didSave(saved)
+                    }
+                }
+            }
+            .sheet(isPresented: isSigningIn) {
+                if let gitHubLogin {
+                    NavigationStack {
+                        Form { GitHubLoginView(model: gitHubLogin) { self.gitHubLogin = nil } }
+                            .navigationTitle("GitHub")
+                            .toolbar {
+                                ToolbarItem(placement: .cancellationAction) {
+                                    Button("Schließen") { gitHubLogin.cancel(); self.gitHubLogin = nil }
+                                }
+                            }
                     }
                 }
             }
@@ -157,6 +172,10 @@ struct TaskListView: View {
         Binding(get: { reschedulingItem != nil }, set: { if !$0 { reschedulingItem = nil } })
     }
 
+    private var isSigningIn: Binding<Bool> {
+        Binding(get: { gitHubLogin != nil }, set: { if !$0 { gitHubLogin = nil } })
+    }
+
     private var hasError: Binding<Bool> {
         Binding(get: { model.lastError != nil }, set: { if !$0 { model.clearError() } })
     }
@@ -168,6 +187,7 @@ private struct SourceProblemRow: View {
     let state: SourceState?
     let canRequest: Bool
     let requestAccess: () -> Void
+    let signIn: () -> Void
     let openSettings: () -> Void
 
     var body: some View {
@@ -190,8 +210,16 @@ private struct SourceProblemRow: View {
         case .failed(let message):
             Label("\(name): \(message)", systemImage: "exclamationmark.triangle")
                 .foregroundStyle(.orange)
+        case .signedOut:
+            VStack(alignment: .leading, spacing: 8) {
+                Text("\(name): Anmeldung abgelaufen").font(.headline)
+                Text("Melde dich neu an, damit Tagwerk deine Issues wieder anzeigt.")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                Button("Mit GitHub anmelden", action: signIn)
+            }
         case .offline(let since):
-            Label("\(name): Stand \(since.formatted(date: .omitted, time: .shortened)), offline", systemImage: "wifi.slash")
+            Label("\(name): Stand \(since.formatted(.dateTime.day().month().hour().minute())), offline", systemImage: "wifi.slash")
                 .foregroundStyle(.secondary)
         case .loaded, nil:
             EmptyView()

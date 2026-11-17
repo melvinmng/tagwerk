@@ -58,6 +58,42 @@ struct TaskListModelTests {
         #expect(model.availableFilters.contains(.github))
     }
 
+    @Test func reload_providerSignedOut_removesProviderAndKeepsSignedOutState() async {
+        let github = FakeTaskProvider(source: .github, tasks: [makeTask("#1", source: .github)])
+        github.readError = .signedOut
+        var lost: [TaskSource] = []
+        let model = TaskListModel(providers: [local, github], now: testNow, calendar: testCalendar())
+        model.onSignedOut = { lost.append($0) }
+        await model.reload()
+        #expect(model.provider(for: .github) == nil)
+        #expect(model.sourceStates[.github] == .signedOut)
+        #expect(lost == [.github])
+        #expect(!model.availableFilters.contains(.github))
+        await model.reload()
+        #expect(model.sourceStates[.github] == .signedOut)
+    }
+
+    @Test func register_afterSignOut_clearsSignedOutState() async {
+        let github = FakeTaskProvider(source: .github, tasks: [makeTask("#1", source: .github)])
+        github.readError = .signedOut
+        let model = TaskListModel(providers: [github], now: testNow, calendar: testCalendar())
+        await model.reload()
+        github.readError = nil
+        await model.register(github)
+        #expect(model.sourceStates[.github] == .loaded)
+        #expect(model.items.map(\.title) == ["#1"])
+    }
+
+    @Test func write_signedOut_removesProvider() async {
+        let github = FakeTaskProvider(source: .github, tasks: [makeTask("#1", source: .github)])
+        let model = TaskListModel(providers: [github], now: testNow, calendar: testCalendar())
+        await model.reload()
+        github.applyError = .signedOut
+        await model.complete(TaskID(source: .github, rawValue: "#1"))
+        #expect(model.provider(for: .github) == nil)
+        #expect(model.sourceStates[.github] == .signedOut)
+    }
+
     @Test func complete_removesItemAfterSuccess() async {
         let model = makeModel()
         await model.reload()
