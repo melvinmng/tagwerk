@@ -87,6 +87,19 @@ final class ChatGPTProbeTests: XCTestCase {
         XCTAssertEqual(ChatGPTProbe.filterModels(body), ["gpt-a"])
     }
 
+    func test_summarizeModels_showsIdsAndVisibility() {
+        let body = Data(#"{"object":"list","data":[{"id":"gpt-x","visibility":"hidden"},{"id":"gpt-y"}]}"#.utf8)
+        let summary = ChatGPTProbe.summarizeModels(body)
+        XCTAssertTrue(summary.contains("2 Modelle"))
+        XCTAssertTrue(summary.contains("gpt-x[hidden]"))
+        XCTAssertTrue(summary.contains("gpt-y[-]"))
+    }
+
+    func test_summarizeModels_unexpectedShape_showsRawPrefix() {
+        let summary = ChatGPTProbe.summarizeModels(Data(#"{"models":["a"]}"#.utf8))
+        XCTAssertTrue(summary.contains("{\"models\""))
+    }
+
     func test_parseStream_accumulatesDeltasAndDetectsCompletion() {
         let stream = """
         event: response.output_text.delta

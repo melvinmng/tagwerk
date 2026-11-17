@@ -16,6 +16,21 @@ struct ChatGPTProbe: Probe {
         return models.filter { $0["visibility"] as? String == "list" }.compactMap { $0["id"] as? String }
     }
 
+    static func allModelIDs(_ body: Data) -> [String] {
+        let json = try? JSONSerialization.jsonObject(with: body) as? [String: Any]
+        return (json?["data"] as? [[String: Any]] ?? []).compactMap { $0["id"] as? String }
+    }
+
+    /// Human-readable diagnostics of the models response, used when no model is marked as listed.
+    static func summarizeModels(_ body: Data) -> String {
+        let json = try? JSONSerialization.jsonObject(with: body) as? [String: Any]
+        guard let models = json?["data"] as? [[String: Any]] else {
+            return "unerwartete Antwort: " + String(decoding: body.prefix(200), as: UTF8.self)
+        }
+        let entries = models.prefix(5).map { "\($0["id"] as? String ?? "?")[\($0["visibility"] as? String ?? "-")]" }
+        return "\(models.count) Modelle: " + entries.joined(separator: ", ")
+    }
+
     static func parseStream(_ stream: String) -> StreamOutcome {
         var outcome = StreamOutcome()
         for line in stream.split(separator: "\n") where line.hasPrefix("data:") {
@@ -89,9 +104,12 @@ struct ChatGPTProbe: Probe {
             guard let token = try await ChatGPTSessionStore.shared.validAccessToken() else {
                 return ProbeResult(name: name, ok: true, detail: "übersprungen (nicht angemeldet)", skipped: true)
             }
-            let models = try await listModels(token: token)
+            let modelsBody = try await listModels(token: token)
+            let listed = Self.filterModels(modelsBody)
+            let models = listed.isEmpty ? Self.allModelIDs(modelsBody) : listed
+            let modelNote = listed.isEmpty ? " – keins mit visibility=list, Diagnose: \(Self.summarizeModels(modelsBody))" : ""
             guard let model = models.first else {
-                return ProbeResult(name: name, ok: false, detail: "Keine Modelle für dieses Konto freigegeben")
+                return ProbeResult(name: name, ok: false, detail: "Keine Modelle. \(Self.summarizeModels(modelsBody))")
             }
             let plain = try await stream(Self.makeResponsesRequest(
                 accessToken: token, model: model, instructions: "Antworte knapp auf Deutsch.",
@@ -107,7 +125,7 @@ struct ChatGPTProbe: Probe {
             return ProbeResult(
                 name: name, ok: ok,
                 detail: """
-                Modell \(model) (\(models.count) verfügbar)
+                Modell \(model) (\(models.count) verfügbar\(modelNote))
                 Text: \(plain.completed ? plain.text : "Fehler \(plain.errorCode ?? "?")")
                 JSON-Schema: \(schema.completed ? (schemaValid ? "ok " + schema.text : "kein gültiges JSON") : "Fehler \(schema.errorCode ?? "?")")
                 Bild: \(image.completed ? image.text : "Fehler \(image.errorCode ?? "?")")
@@ -118,13 +136,13 @@ struct ChatGPTProbe: Probe {
         }
     }
 
-    private func listModels(token: String) async throws -> [String] {
+    private func listModels(token: String) async throws -> Data {
         var request = URLRequest(url: URL(string: "https://api.openai.com/v1/models")!)
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         let (data, response) = try await URLSession.shared.data(for: request)
         let status = (response as? HTTPURLResponse)?.statusCode ?? 0
         guard status == 200 else { throw ChatGPTAuthError.serverError(Self.describe(status: status, body: data)) }
-        return Self.filterModels(data)
+        return data
     }
 
     private func stream(_ request: URLRequest) async throws -> StreamOutcome {
