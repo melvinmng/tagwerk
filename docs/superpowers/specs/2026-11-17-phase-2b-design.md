@@ -224,6 +224,19 @@ Der Nutzer hat 2b-1 auf dem iPhone geprüft. Die Gestaltung wurde mit Fable als 
 - **„Heute“ (Auswahl, Wischen):** Künftige Zeitblöcke wandern ohne Rückfrage mit, wie beim Einplanen auf andere Tage.
 - **Doppelte Termine:** Eine nicht verknüpfte Kopie eines verknüpften Termins zählt nicht als belegte Zeit.
 
+### 13.15 Geräte-Feedback Runde 3 (2026-11-17)
+
+Freigegeben aus `../mockups/2026-11-18-phase-2b-feedback-round3-mockups.html`: **L1, G1, S1, D1, U1, F1, R1, M1**. Geht §6, §7, §11 und §13.4–13.14 vor, wo es abweicht.
+
+1. **Mittagspause (L1):** Die Pause ist ein Eintrag im Raster und lässt sich wie ein Termin verschieben und in der Länge ändern. Die Änderung gilt nur für diesen Tag (`DayOverride` um optionalen Pausenbeginn und -dauer erweitert, Dauer 0 = keine Pause). Eine Leiste bietet danach „Für alle Tage“ (ändert die Einstellung) und „Widerrufen“ (Nutzer). §6.1: Die Pause ist globaler Standard mit Abweichung je Tag.
+2. **Griffe (G1):** Erst 0,3 s Halten wählt einen Eintrag aus; dann erscheinen die Griffe für Beginn und Ende. Antippen öffnet das Blatt (U1), Wischen scrollt, ein Tipp daneben beendet die Auswahl.
+3. **Flüssiges Ziehen (S1):** Das Raster ist eine eigene Scrollansicht, nicht mehr eine Listenzeile. Der Eintrag folgt dem Finger ungerundet, nur Ziellinie und Uhrzeit rasten auf 15 min ein, mit Haptik je Schritt. Gespeichert wird einmal beim Loslassen, ohne Neuladen dazwischen. Das Raster ist die Standardansicht des Tages; die Liste bleibt wählbar (Nutzer). Die Ablage „Ungeplant“ in Woche und Monat bewegt sich per Versatz statt per Höhe.
+4. **Ohne Uhrzeit ins Raster (D1):** Eine Leiste „Ohne Uhrzeit“ liegt unten am Raster. Halten und Ziehen einer Aufgabe zeigt einen maßstäblichen Vorschau-Block; Loslassen legt den Zeitblock an.
+5. **Ein Blatt für alles (U1):** Termine, Zeitblöcke und Pause öffnen dasselbe Blatt: Kopf, Beginn und Dauer mit ±15 min, „Zählt als Belegt/Frei“, Aufgabe, Aktionen. Gesperrte Zeilen bleiben sichtbar und nennen den Grund. Ersetzt Block-Menü, Block-Dialog und die bisherige Termin-Detailansicht. Verschieben per Ziehen gilt für alle Termine in beschreibbaren Kalendern, nicht nur für Tagwerk-Blöcke.
+6. **„Frei“ (F1):** Eine lokale Markierung in Tagwerk (`EventAvailabilityMark`), Vorrang vor `EKEvent.availability`; der Kalender bleibt unverändert, auch bei Abos und Einladungen (Nutzer). Freie Termine sind grau gestrichelt mit dem Wort „Frei“ und zählen nicht zur belegten Zeit; Vorschläge und Blöcke dürfen hinein. Auswahlmodus in der Tagesansicht mit „Auf Frei setzen“ / „Belegt“. Bei Serienterminen fragt Tagwerk „Nur an diesem Tag / Auch alle künftigen“ (Nutzer).
+7. **Eine Aufwandsschätzung (R1):** Wiederkehrende Erinnerungen haben ein einziges Aufwandsfeld (Wert des Tages). Die Frage „Nur am … / Für alle ab …“ kommt beim Sichern und nur, wenn der Aufwand geändert wurde; Titel, Fälligkeit und Priorität gelten ohne Rückfrage für alle. Serientermine fragen „Nur diesen / alle folgenden“ beim Loslassen nach dem Ziehen und beim Sichern. Ersetzt die zwei Karten aus §13.8 (G4).
+8. **Zusammenfassen (M1):** Automatisch nur bei gleichem Titel, Beginn und Ende. Gezeigt wird die Kopie nach Rangfolge: verknüpft, dann Zahl der gefüllten Felder, dann beschreibbar, dann Reihenfolge. Gleiche Zeit mit Platzhaltertitel („Busy“, „Away“, „Free“, „Tentative“ …) auf der einen Seite erkennt Tagwerk **lokal ohne KI** und zeigt eine Vorschlagskarte „Zusammenfassen / Getrennt lassen“, optional „künftig immer“ (Nutzer; §8.4 bleibt unverändert). Die KI hilft nur, wenn der Nutzer den Assistenten fragt.
+
 ## Quellen
 
 - Verifikation Function Calling: `../spikes/2026-11-17-feasibility-results.md`, Nachtrag Phase 2b.

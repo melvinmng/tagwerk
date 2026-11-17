@@ -1,0 +1,721 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tagwerk · Phase 2b · Feedback-Runde 3 · Mockups L, G, S, D, U, F, R, M</title>
+<style>
+  /* Mockup frame uses the host theme (with fallbacks); phone screens depict the app in iOS dark mode. */
+  :root { color-scheme: light dark; }
+  body { font: 14px var(--font-sans, system-ui, sans-serif); color: var(--foreground, CanvasText); margin: 16px; }
+  h1 { font-size: 20px; margin: 0 0 4px; }
+  h2 { font-size: 18px; margin: 38px 0 4px; padding-top: 16px; border-top: 1px solid rgba(128,128,128,.3); display: flex; align-items: center; gap: 10px; }
+  .area { display: inline-grid; place-items: center; width: 34px; height: 34px; border-radius: 9px; background: #0a84ff; color: #fff; font: 800 19px system-ui; flex-shrink: 0; }
+  .lead { color: var(--muted-foreground, #777); margin: 0 0 14px; line-height: 1.5; max-width: 980px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(392px, 1fr)); gap: 22px; align-items: start; }
+  .label { font: 600 13px var(--font-sans, system-ui); color: var(--muted-foreground, #777); margin: 0 0 8px 4px; }
+  .label b { color: var(--foreground, CanvasText); }
+  .code { display: inline-block; background: rgba(128,128,128,.28); color: var(--foreground, CanvasText); border-radius: 6px; padding: 1px 8px; font: 800 13px system-ui; margin-right: 4px; }
+  .code.r { background: #30d158; color: #000; }
+  .rec { background: #30d158; color: #000; font-size: 11px; font-weight: 700; padding: 1px 7px; border-radius: 99px; margin-left: 4px; }
+  .pc { font-size: 12.5px; color: var(--muted-foreground, #777); line-height: 1.5; margin: 8px 4px 0; max-width: 390px; }
+  .pc b { color: var(--foreground, CanvasText); }
+  .box { border: 1px solid rgba(48,209,88,.5); background: rgba(48,209,88,.07); border-radius: 12px; padding: 12px 16px; margin-top: 16px; line-height: 1.55; font-size: 13px; max-width: 1100px; }
+  .box h3 { margin: 0 0 6px; font-size: 14px; }
+  .box ul, .box ol { margin: 4px 0 0; padding-left: 20px; }
+  .box.neutral { border-color: rgba(128,128,128,.4); background: rgba(128,128,128,.07); }
+  .box.warn { border-color: rgba(255,159,10,.6); background: rgba(255,159,10,.08); }
+  code { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; background: rgba(128,128,128,.16); padding: 1px 4px; border-radius: 4px; }
+  pre { font: 12px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; background: rgba(128,128,128,.14); padding: 10px 12px; border-radius: 10px; overflow-x: auto; margin: 8px 0 0; }
+  table.sum { border-collapse: collapse; font-size: 13px; margin-top: 6px; }
+  table.sum td, table.sum th { padding: 5px 14px 5px 0; vertical-align: top; text-align: left; border-bottom: 1px solid rgba(128,128,128,.22); }
+  table.sum th { font-size: 12px; color: var(--muted-foreground, #777); }
+
+  /* State diagram for area S */
+  .flow { display: flex; flex-wrap: wrap; align-items: stretch; gap: 6px; margin-top: 8px; }
+  .st { border: 1.5px solid rgba(128,128,128,.5); border-radius: 12px; padding: 8px 10px; width: 150px; font-size: 12px; line-height: 1.4; box-sizing: border-box; }
+  .st b { display: block; font-size: 13px; margin-bottom: 2px; }
+  .st.act { border-color: #30d158; background: rgba(48,209,88,.1); }
+  .st.err { border-color: #ff453a; background: rgba(255,69,58,.08); }
+  .st.ask { border-color: #0a84ff; background: rgba(10,132,255,.08); }
+  .ar { align-self: center; font: 600 11px system-ui; color: var(--muted-foreground, #777); text-align: center; width: 74px; line-height: 1.25; }
+  .ar::after { content: "→"; display: block; font-size: 18px; }
+
+  .phone {
+    --bg: #000; --card: #1c1c1e; --card2: #2c2c2e; --sep: #38383a; --text: #fff; --sub: #8e8e93;
+    --blue: #0a84ff; --green: #30d158; --orange: #ff9f0a; --red: #ff453a; --purple: #bf5af2; --teal: #64d2ff; --mint: #7cf0c3;
+    background: var(--bg); color: var(--text); border-radius: 40px; padding: 14px 12px 12px;
+    font: 15px -apple-system, "SF Pro Text", system-ui, sans-serif; border: 6px solid #2a2a2c;
+    width: 390px; max-width: 100%; box-sizing: border-box; min-height: 760px;
+    display: flex; flex-direction: column; position: relative; overflow: hidden;
+  }
+  .status { display: flex; justify-content: space-between; font: 600 13px system-ui; padding: 0 12px 10px; }
+  .chip { font-size: 11px; padding: 2px 7px; border-radius: 99px; background: var(--card2); color: #c7c7cc; white-space: nowrap; }
+  .chip.ai { background: rgba(191,90,242,.2); color: #dcb0f7; }
+  .chip.auto { background: rgba(10,132,255,.2); color: #8cc4ff; }
+  .chip.warn { background: rgba(255,159,10,.2); color: #ffc266; }
+  .chip.gr { background: rgba(48,209,88,.2); color: #9ff0b4; }
+  .section { color: var(--sub); font: 600 12px system-ui; text-transform: uppercase; letter-spacing: .4px; margin: 10px 8px 4px; display: flex; justify-content: space-between; }
+  .section span { text-transform: none; letter-spacing: 0; font-weight: 500; }
+  .list { background: var(--card); border-radius: 18px; overflow: hidden; margin-bottom: 6px; }
+  .item { display: flex; align-items: flex-start; gap: 10px; padding: 9px 12px; border-bottom: 1px solid var(--sep); }
+  .item:last-child { border-bottom: 0; }
+  .item .t { flex: 1; font-size: 14px; min-width: 0; }
+  .item .s { color: var(--sub); font-size: 12px; margin-top: 2px; }
+  .seg { display: flex; background: var(--card2); border-radius: 99px; padding: 2px; margin: 0 2px 8px; }
+  .seg span { flex: 1; text-align: center; padding: 6px 2px; font-size: 13px; border-radius: 99px; color: #c7c7cc; }
+  .seg span.on { background: #636366; color: #fff; font-weight: 600; }
+  .field { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 10px 12px; border-bottom: 1px solid var(--sep); font-size: 14px; }
+  .field:last-child { border-bottom: 0; }
+  .field .v { color: var(--sub); text-align: right; }
+  .field .l { color: var(--blue); }
+  .field .d { color: var(--red); }
+  .field.dis { opacity: .45; }
+  .pick { background: #3a3a3c; border-radius: 8px; padding: 4px 9px; font-size: 13.5px; color: #fff; white-space: nowrap; }
+  .note { color: var(--sub); font-size: 11.5px; padding: 4px 8px; line-height: 1.4; }
+  .spacer { flex: 1; }
+  .b { flex: 1; text-align: center; border-radius: 99px; padding: 9px 6px; font-weight: 600; font-size: 14px; }
+  .b.plain { background: var(--card2); color: var(--blue); }
+  .b.prom { background: var(--blue); color: #fff; }
+  .btns { display: flex; gap: 8px; }
+  .sm { border-radius: 99px; padding: 5px 11px; font-weight: 600; font-size: 12.5px; white-space: nowrap; align-self: center; }
+  .sm.ok { background: var(--blue); color: #fff; } .sm.no { background: #48484a; color: #d1d1d6; }
+  .glass { background: rgba(72,72,78,.62); backdrop-filter: blur(18px) saturate(1.6); -webkit-backdrop-filter: blur(18px) saturate(1.6);
+    border: 1px solid rgba(255,255,255,.16); box-shadow: inset 0 1px 0 rgba(255,255,255,.18), 0 8px 24px rgba(0,0,0,.55); }
+  .tb { margin: auto auto 0; width: 80%; display: flex; border-radius: 99px; padding: 5px; font-size: 10px; color: #d1d1d6; text-align: center; box-sizing: border-box; }
+  .tb span { flex: 1; padding: 4px 0 3px; border-radius: 99px; }
+  .tb .on { color: var(--blue); background: rgba(0,0,0,.5); font-weight: 600; }
+  .ico { font-size: 17px; display: block; font-style: normal; line-height: 20px; }
+  .topbar { display: flex; align-items: center; gap: 8px; padding: 0 2px 10px; }
+  .topbar .seg { flex: 1; margin: 0; }
+  .rbtn { width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; font-size: 20px; flex-shrink: 0; color: #fff; }
+  .hdr { display: flex; align-items: flex-end; justify-content: space-between; gap: 8px; padding: 4px 6px 10px; }
+  .kick { font: 600 12px system-ui; color: var(--blue); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 2px; }
+  .bigdate { font: 700 26px/1.15 system-ui; letter-spacing: -.3px; }
+  .bigdate .car { font-size: 15px; color: var(--sub); vertical-align: 4px; }
+  .cap { background: var(--card); border-radius: 18px; padding: 9px 12px; margin-bottom: 8px; }
+  .cap .top { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+  .cap .top b { font-size: 16px; }
+  .cap .top span { color: var(--sub); font-size: 12px; white-space: nowrap; }
+  .cap .top span.up { color: #9ff0b4; font-weight: 600; }
+  .abl { display: flex; justify-content: space-between; align-items: center; color: var(--sub); font: 600 12px system-ui; text-transform: uppercase; letter-spacing: .4px; margin: 4px 8px 12px; }
+  .abl span { text-transform: none; letter-spacing: 0; color: var(--blue); font-size: 13px; }
+
+  /* Hour grid, 48 pt per hour */
+  .hg { position: relative; margin: 2px 0 6px 44px; border-left: 1px solid var(--sep); }
+  .hg .hl { position: absolute; left: -44px; right: 0; border-top: 1px solid #2c2c2e; font: 11px ui-monospace, monospace; color: var(--sub); padding-left: 2px; height: 0; }
+  .hg .hl span { position: relative; top: -8px; background: var(--bg); padding-right: 4px; }
+  .hg .ev { position: absolute; left: 4px; right: 4px; border-radius: 9px; padding: 4px 8px; font-size: 12.5px; box-sizing: border-box; overflow: hidden; }
+  .hg .ev small { color: #c7c7cc; font-size: 11px; display: block; }
+  .hg .ev.e { background: rgba(10,132,255,.24); border-left: 4px solid var(--blue); }
+  .hg .ev.p { background: rgba(48,209,88,.22); border-left: 4px solid var(--green); }
+  .hg .ev.q { background: repeating-linear-gradient(135deg, #1c1c1e 0 6px, #2a2a2d 6px 12px); color: #c7c7cc; border-left: 4px solid #636366; }
+  .hg .ev.f { background: rgba(142,142,147,.1); border: 1px dashed #636366; border-left: 4px solid #636366; color: var(--sub); }
+  .hg .ev.f small { color: #6e6e73; }
+  .hg .ev.o { border: 1.5px dashed #48484a; color: #636366; background: none; }
+  .hg .ev.ai { background: rgba(191,90,242,.14); border: 1.5px dashed var(--purple); color: #e9cdfb; }
+  .hg .ev.sel { box-shadow: 0 10px 26px rgba(0,0,0,.7), 0 0 0 2px currentColor; z-index: 3; overflow: visible; }
+  .hg .ev.sel.p { color: var(--green); background: rgba(48,209,88,.36); }
+  .hg .ev.sel.e { color: var(--blue); background: rgba(10,132,255,.4); }
+  .hg .ev.sel.q { color: #aeaeb2; }
+  .hg .ev.sel > span, .hg .ev.sel > small { color: #fff; }
+  .hg .ev.sel > small { opacity: .8; }
+  .hg .ev.ghost { background: rgba(48,209,88,.3); border: 1.5px dashed var(--green); z-index: 3; box-shadow: 0 10px 26px rgba(0,0,0,.7); }
+  .knob { position: absolute; width: 12px; height: 12px; border-radius: 50%; background: #fff; border: 2.5px solid currentColor; box-sizing: border-box; z-index: 4; }
+  .knob.t { top: -7px; right: 14px; } .knob.bt { bottom: -7px; left: 14px; }
+  .tlab { position: absolute; left: -44px; width: 40px; font: 700 11px ui-monospace, monospace; color: #fff; background: var(--red); border-radius: 5px; text-align: center; padding: 1px 0; z-index: 5; margin-top: -8px; }
+  .snap { position: absolute; left: 0; right: 0; border-top: 1.5px solid var(--red); z-index: 2; }
+  .ck { position: absolute; right: 8px; top: 6px; width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--sub); box-sizing: border-box; background: rgba(0,0,0,.4); }
+  .ck.on { background: var(--blue); border-color: var(--blue); color: #fff; font: 700 11px/14px system-ui; text-align: center; }
+  .lockb { float: right; font-size: 10px; opacity: .8; }
+
+  /* Tray and drawer */
+  .tray { margin: 6px -6px 0; border-radius: 24px; padding: 6px 10px 10px; background: #1c1c1e; border: 1px solid rgba(255,255,255,.1); box-shadow: 0 -8px 24px rgba(0,0,0,.6); }
+  .grab { width: 36px; height: 5px; border-radius: 99px; background: #636366; margin: 0 auto 8px; }
+  .tray .dh { display: flex; justify-content: space-between; align-items: center; font-weight: 600; padding: 0 4px 8px; }
+  .tray .dh span { color: var(--sub); font-weight: 500; font-size: 12.5px; }
+  .tchips { display: flex; gap: 6px; overflow: hidden; }
+  .tchip { background: var(--card2); border-radius: 12px; padding: 6px 10px; font-size: 12.5px; white-space: nowrap; }
+  .tchip small { display: block; color: var(--sub); font-size: 11px; }
+  .tchip.gone { opacity: .3; border: 1px dashed #636366; background: none; }
+
+  /* Sheets, dialogs, toast */
+  .under { opacity: .35; padding: 0 6px 10px; }
+  .sheetp { background: #1c1c1e; margin: 0 -12px -12px; border-radius: 30px 30px 0 0; padding: 8px 12px 14px; flex: 1; display: flex; flex-direction: column; box-shadow: 0 -8px 30px rgba(0,0,0,.6); }
+  .sheetp .list { background: var(--card2); }
+  .sheetp .list .item, .sheetp .list .field { border-color: #48484a; }
+  .shead { display: flex; justify-content: space-between; align-items: center; padding: 0 4px 10px; }
+  .shead b { font-size: 16px; }
+  .shead .gb { border-radius: 99px; padding: 6px 12px; font-size: 14px; }
+  .ehead { display: flex; gap: 10px; padding: 2px 6px 10px; }
+  .ehead i { width: 5px; border-radius: 3px; flex-shrink: 0; }
+  .ehead b { font-size: 18px; display: block; }
+  .ehead small { color: #c7c7cc; font-size: 13px; display: block; margin: 2px 0 5px; }
+  .banner { border-radius: 14px; padding: 9px 12px; font-size: 12.5px; line-height: 1.4; margin-bottom: 8px; }
+  .banner b { display: block; font-size: 13px; margin-bottom: 1px; }
+  .banner.lock { background: rgba(142,142,147,.2); color: #d1d1d6; }
+  .banner.ai { background: rgba(191,90,242,.12); border: 1px solid rgba(191,90,242,.45); color: #ecd9fb; }
+  .dimov { position: absolute; inset: 0; background: rgba(0,0,0,.5); z-index: 6; }
+  .asheet { position: absolute; left: 10px; right: 10px; bottom: 14px; display: flex; flex-direction: column; gap: 8px; z-index: 7; }
+  .asheet .grp { border-radius: 18px; overflow: hidden; background: rgba(58,58,60,.97); }
+  .asheet .m { padding: 12px 16px; text-align: center; font-size: 12px; color: #c7c7cc; border-bottom: 1px solid #545458; line-height: 1.4; }
+  .asheet .m b { display: block; color: #fff; font-size: 13px; margin-bottom: 2px; }
+  .asheet .act { padding: 13px; text-align: center; color: var(--blue); font-size: 16px; border-bottom: 1px solid #545458; }
+  .asheet .act small { display: block; color: #aeaeb2; font-size: 11.5px; margin-top: 2px; }
+  .asheet .act:last-child { border-bottom: 0; } .asheet .act.c { font-weight: 600; }
+  .est { display: flex; align-items: center; background: #3a3a3c; border-radius: 99px; height: 32px; }
+  .est .pm { width: 36px; text-align: center; font-size: 20px; color: var(--blue); line-height: 32px; }
+  .est .val { min-width: 56px; text-align: center; font: 600 14px system-ui; font-variant-numeric: tabular-nums; border-left: 1px solid #545458; border-right: 1px solid #545458; line-height: 22px; padding: 0 6px; }
+  .mseg { display: flex; background: #3a3a3c; border-radius: 9px; padding: 2px; }
+  .mseg span { padding: 4px 12px; font-size: 13px; border-radius: 7px; color: #c7c7cc; }
+  .mseg span.on { background: #636366; color: #fff; font-weight: 600; }
+  .selbar { display: flex; gap: 6px; align-items: center; border-radius: 26px; padding: 6px; margin-top: 8px; }
+  .selbar .b { padding: 10px 6px; font-size: 13.5px; }
+  .selinfo { font-size: 12px; color: #9ff0b4; text-align: center; padding: 6px 4px 0; }
+  .toast { border-radius: 99px; padding: 7px 8px 7px 14px; display: flex; align-items: center; gap: 6px; margin: 6px 2px; font-size: 12.5px; }
+  .toast .tx { flex: 1; min-width: 0; line-height: 1.25; }
+  .toast .un { background: rgba(10,132,255,.28); border-radius: 99px; padding: 6px 11px; font-weight: 600; white-space: nowrap; }
+  .toast .un.q { background: #48484a; }
+  .anno { font: 600 10.5px system-ui; color: #ffd60a; margin: 6px 6px 3px; }
+</style>
+</head>
+<body>
+
+<h1>Tagwerk · Phase 2b · Feedback-Runde 3 · Mockups L, G, S, D, U, F, R, M</h1>
+<p class="lead">Antwort auf das Geräte-Feedback zur Tagesansicht. Je Bereich steht die Empfehlung mit grünem Kürzel, Alternativen sind als zweite Variante oder als Textkarte genannt. Freigabe bitte als Liste der Kürzel. Alle Daten sind erfunden, Stichtag ist Dienstag, 17. November 2026, „jetzt“ ist 13:20 Uhr. Die Bilder sind statisches HTML; Bewegung, Haptik und Scrollverhalten sind beschrieben, nicht gezeigt. Aussagen zu Ursachen des Ruckelns stammen aus der Lektüre des Codes und sind am Gerät nicht gemessen.</p>
+
+<div class="box neutral">
+  <h3>Empfehlungen auf einen Blick</h3>
+  <table class="sum">
+    <tr><th>Bereich</th><th>Empfehlung</th><th>Kern</th></tr>
+    <tr><td><b>L</b> Mittagspause</td><td><span class="code r">L1</span></td><td>Pause ist ein normaler Rastereintrag. Ziehen ändert nur diesen Tag; eine Leiste bietet „Für alle Tage“ und „Widerrufen“.</td></tr>
+    <tr><td><b>G</b> Griffe</td><td><span class="code r">G1</span></td><td>Halten wählt einen Eintrag aus; erst dann erscheinen zwei Griffe. Antippen daneben beendet die Auswahl.</td></tr>
+    <tr><td><b>S</b> Flüssigkeit</td><td><span class="code r">S1</span></td><td>Raster in eigener <code>ScrollView</code>, ein Ziehzustand als <code>@GestureState</code>, Einrasten und Speichern erst beim Loslassen, kein Reload dazwischen.</td></tr>
+    <tr><td><b>D</b> Ohne Uhrzeit</td><td><span class="code r">D1</span></td><td>Leiste „Ohne Uhrzeit“ unten am Raster; Aufgabe halten und als maßstäblichen Block auf eine Uhrzeit ziehen.</td></tr>
+    <tr><td><b>U</b> Antippen</td><td><span class="code r">U1</span></td><td>Ein Blatt für Termine, Zeitblöcke und Pause mit gleichem Aufbau; Zeitblöcke haben zusätzliche Zeilen.</td></tr>
+    <tr><td><b>F</b> Frei</td><td><span class="code r">F1</span></td><td>Markierung nur in Tagwerk, für jeden Kalender möglich; Auswahlmodus mit „Auf Frei setzen“.</td></tr>
+    <tr><td><b>R</b> Serien</td><td><span class="code r">R1</span></td><td>Ein Aufwandsfeld. Die Frage nach der Reichweite kommt beim Sichern bzw. Loslassen und nur, wenn sie etwas ändert.</td></tr>
+    <tr><td><b>M</b> Zusammenfassen</td><td><span class="code r">M1</span></td><td>Bei gleichem Titel zeigt Tagwerk die Kopie mit den meisten Angaben; bei anderem Titel nur ein Vorschlag.</td></tr>
+  </table>
+</div>
+
+<!-- ============================== L ============================== -->
+<h2><span class="area">L</span> Mittagspause in der Tagesansicht anpassen</h2>
+<p class="lead">Heute kommt die Pause aus <code>AppSettings.lunchStartMinutes</code> und <code>lunchDurationMinutes</code> und ist im Raster ein toter Eintrag (<code>HourGrid.swift</code>, Zeile 70). Zu entscheiden ist, wie weit eine Änderung reicht und wie Tagwerk danach fragt.</p>
+<div class="grid">
+  <div>
+    <p class="label"><span class="code r">L1</span><b>Nur dieser Tag, Leiste bietet „Für alle Tage“</b> <span class="rec">Empfehlung</span></p>
+    <div class="phone">
+      <div class="status"><span>13:20</span><span>●●● 5G</span></div>
+      <div class="topbar"><div class="seg"><span class="on">Tag</span><span>Woche</span><span>Monat</span></div><span class="rbtn glass">＋</span></div>
+      <div class="hdr"><div><div class="kick">Heute · KW 47</div><div class="bigdate">Dienstag, 17. Nov. <span class="car">⌄</span></div></div></div>
+      <div class="cap"><div class="top"><b>2 h 25 noch frei</b><span class="up">Pause heute 45 min</span></div></div>
+      <div class="abl">Ablauf<span>Auswählen · ☰</span></div>
+      <div class="hg" style="height:290px">
+        <div class="hl" style="top:0"><span>10:00</span></div><div class="hl" style="top:48px"><span>11:00</span></div><div class="hl" style="top:96px"><span>12:00</span></div><div class="hl" style="top:144px"><span>13:00</span></div><div class="hl" style="top:192px"><span>14:00</span></div><div class="hl" style="top:240px"><span>15:00</span></div><div class="hl" style="top:288px"><span>16:00</span></div>
+        <div class="ev e" style="top:1px;height:46px">Team-Runde<small>10:00 bis 11:00</small></div>
+        <div class="ev o" style="top:97px;height:46px">Standard 12:00 bis 13:00</div>
+        <div class="ev q sel" style="top:121px;height:35px"><span>☕ Mittagspause · nur heute</span><small>12:30 bis 13:15</small><i class="knob t"></i><i class="knob bt"></i></div>
+        <div class="ev p" style="top:193px;height:46px">Bericht gliedern<small>14:00 bis 15:00 · Zeitblock</small></div>
+      </div>
+      <div class="spacer"></div>
+      <div class="toast glass"><span class="tx">Pause heute 12:30 bis 13:15</span><span class="un q">Für alle Tage</span><span class="un">Widerrufen</span></div>
+      <div class="tb glass" style="margin-top:0"><span class="on"><i class="ico">▦</i>Planen</span><span><i class="ico">☑︎</i>Aufgaben</span><span><i class="ico">⚙︎</i>Einstellungen</span></div>
+    </div>
+    <p class="pc"><b>Begründung:</b> Wer in der Ansicht eines Tages zieht, meint in der Regel diesen Tag; eine Rückfrage nach jedem Ziehen würde den häufigen Fall bremsen. Die Leiste bleibt etwa sechs Sekunden und macht den seltenen Fall („immer so“) mit einem Tipp erreichbar; der Eintrag trägt danach „nur heute“. <b>Technik:</b> <code>DayOverrideRecord</code> bekommt die optionalen Attribute <code>lunchStartMinutes</code> und <code>lunchMinutes</code> (0 = keine Pause); <code>dayPlan(…)</code> und <code>gaps(for:)</code> lesen <code>override ?? settings</code>, <code>CapacityInput</code> bleibt unverändert. „Für alle Tage“ schreibt die Einstellung und löscht die Abweichung des Tages.</p>
+  </div>
+  <div>
+    <p class="label"><span class="code">L2</span><b>Rückfrage bei jedem Loslassen</b></p>
+    <div class="phone">
+      <div class="status"><span>13:20</span><span>●●● 5G</span></div>
+      <div class="topbar"><div class="seg"><span class="on">Tag</span><span>Woche</span><span>Monat</span></div><span class="rbtn glass">＋</span></div>
+      <div class="hdr"><div><div class="kick">Heute · KW 47</div><div class="bigdate">Dienstag, 17. Nov. <span class="car">⌄</span></div></div></div>
+      <div class="hg" style="height:194px">
+        <div class="hl" style="top:0"><span>11:00</span></div><div class="hl" style="top:48px"><span>12:00</span></div><div class="hl" style="top:96px"><span>13:00</span></div><div class="hl" style="top:144px"><span>14:00</span></div><div class="hl" style="top:192px"><span>15:00</span></div>
+        <div class="ev o" style="top:49px;height:46px">Standard 12:00 bis 13:00</div>
+        <div class="ev q" style="top:73px;height:35px;border:1.5px dashed #aeaeb2">☕ Mittagspause<small>12:30 bis 13:15 · noch nicht gesichert</small></div>
+      </div>
+      <div class="dimov"></div>
+      <div class="asheet">
+        <div class="grp">
+          <div class="m"><b>Mittagspause geändert</b>12:30 bis 13:15 statt 12:00 bis 13:00</div>
+          <div class="act">Nur heute<small>Dienstag, 17. November</small></div>
+          <div class="act">Für alle Tage<small>ändert die Einstellung</small></div>
+        </div>
+        <div class="grp"><div class="act c">Abbrechen</div></div>
+      </div>
+    </div>
+    <p class="pc"><b>Pro:</b> gleiche Form wie die Serienfrage in R, nichts geschieht stillschweigend. <b>Contra:</b> Die Pause ist ein Tagwerk-eigener, sofort widerrufbarer Wert; ein modaler Dialog nach jeder kleinen Korrektur kostet mehr, als ein Irrtum hier kosten kann. Bei Serienterminen ist der Dialog nötig, weil <code>EKSpan</code> vor dem Schreiben in einen fremden Kalender feststehen muss; dieser Zwang fehlt hier.</p>
+  </div>
+</div>
+<div class="box neutral">
+  <h3>Für beide Varianten</h3>
+  <ul>
+    <li>Die Pause lässt sich wie ein Zeitblock halten, verschieben und per Griff verlängern oder kürzen (15-Minuten-Raster, mindestens 15 Minuten). Antippen öffnet das Blatt aus U mit „Heute keine Pause“ und „Standard wiederherstellen“.</li>
+    <li>Die Zeilenliste zeigt dieselbe Abweichung als „Mittagspause · nur heute“. Die Arbeitszeit-Abweichung desselben Tages bleibt unberührt; deshalb müssen alle Felder der Abweichung einzeln optional sein.</li>
+    <li>Die KI-Planung (§8.2) erhält die Pause je Tag statt eines globalen Werts.</li>
+  </ul>
+</div>
+
+<!-- ============================== G ============================== -->
+<h2><span class="area">G</span> Griffe erst nach langem Halten</h2>
+<p class="lead">Heute zeigt jeder Zeitblock dauerhaft zwei Griffe (<code>GridEntry.handle</code>). Sie verdecken bei kurzen Blöcken den Titel und laden zu Fehlgriffen beim Scrollen ein.</p>
+<div class="grid">
+  <div>
+    <p class="label"><span class="code r">G1</span><b>Ruhezustand: keine Griffe</b> <span class="rec">Empfehlung</span></p>
+    <div class="phone" style="min-height:560px">
+      <div class="status"><span>13:20</span><span>●●● 5G</span></div>
+      <div class="abl" style="margin-top:6px">Ablauf<span>Auswählen · ☰</span></div>
+      <div class="hg" style="height:290px">
+        <div class="hl" style="top:0"><span>13:00</span></div><div class="hl" style="top:48px"><span>14:00</span></div><div class="hl" style="top:96px"><span>15:00</span></div><div class="hl" style="top:144px"><span>16:00</span></div><div class="hl" style="top:192px"><span>17:00</span></div><div class="hl" style="top:240px"><span>18:00</span></div><div class="hl" style="top:288px"><span>19:00</span></div>
+        <div class="ev p" style="top:49px;height:46px">Bericht gliedern<small>14:00 bis 15:00 · Zeitblock</small></div>
+        <div class="ev e" style="top:121px;height:46px">Team-Runde<small>15:30 bis 16:30</small></div>
+        <div class="ev e" style="top:193px;height:34px"><span class="lockb">🔒</span>Sprechstunde<small>17:00 bis 17:45</small></div>
+      </div>
+      <div class="note">Antippen öffnet das Blatt (U). Wischen scrollt, auch über Einträgen. Halten wählt aus.</div>
+      <div class="spacer"></div>
+      <div class="tb glass"><span class="on"><i class="ico">▦</i>Planen</span><span><i class="ico">☑︎</i>Aufgaben</span><span><i class="ico">⚙︎</i>Einstellungen</span></div>
+    </div>
+  </div>
+  <div>
+    <p class="label"><span class="code r">G1</span><b>Nach 0,3 s Halten: ausgewählt, Griffe sichtbar</b> <span class="rec">Empfehlung</span></p>
+    <div class="phone" style="min-height:560px">
+      <div class="status"><span>13:20</span><span>●●● 5G</span></div>
+      <div class="abl" style="margin-top:6px">Ablauf<span style="font-weight:700">Fertig</span></div>
+      <div class="hg" style="height:290px">
+        <div class="hl" style="top:0"><span>13:00</span></div><div class="hl" style="top:48px"><span>14:00</span></div><div class="hl" style="top:96px"><span>15:00</span></div><div class="hl" style="top:144px"><span>16:00</span></div><div class="hl" style="top:192px"><span>17:00</span></div><div class="hl" style="top:240px"><span>18:00</span></div><div class="hl" style="top:288px"><span>19:00</span></div>
+        <div class="ev p sel" style="top:49px;height:46px"><span>Bericht gliedern</span><small>14:00 bis 15:00 · Zeitblock</small><i class="knob t"></i><i class="knob bt"></i></div>
+        <div class="ev e" style="top:121px;height:46px;opacity:.55">Team-Runde<small>15:30 bis 16:30</small></div>
+        <div class="ev e" style="top:193px;height:34px;opacity:.55"><span class="lockb">🔒</span>Sprechstunde<small>17:00 bis 17:45</small></div>
+      </div>
+      <div class="note">Körper ziehen verschiebt sofort, Griff oben rechts ändert den Beginn, Griff unten links das Ende. Tipp daneben oder „Fertig“ beendet die Auswahl.</div>
+      <div class="spacer"></div>
+      <div class="tb glass"><span class="on"><i class="ico">▦</i>Planen</span><span><i class="ico">☑︎</i>Aufgaben</span><span><i class="ico">⚙︎</i>Einstellungen</span></div>
+    </div>
+    <p class="pc"><b>Begründung:</b> entspricht dem Verhalten der Kalender-App und trennt drei Gesten sauber: Tippen = Details, Wischen = Scrollen, Halten = Bearbeiten. Die Auswahl bleibt nach dem Loslassen bestehen, damit die Griffe in Ruhe getroffen werden können. <b>Technik:</b> <code>@State selection: DayEntry.ID?</code> im Raster; <code>LongPressGesture(minimumDuration: 0.3)</code> setzt sie und geht per <code>.sequenced(before: DragGesture(…))</code> ohne Absetzen ins Verschieben über; <code>.sensoryFeedback(.impact(weight: .medium), trigger: selection)</code>. Griffe haben eine Trefferfläche von 44 × 44 pt über <code>.contentShape(Rectangle())</code>, auch wenn der Punkt 12 pt misst.</p>
+  </div>
+</div>
+<div class="box neutral">
+  <h3>Regeln zu G1 und verworfene Alternative G2</h3>
+  <ul>
+    <li>Auswählbar sind Zeitblöcke, die Mittagspause und Termine in beschreibbaren Kalendern (<code>isEditable &amp;&amp; !isInvitation</code>). Schreibgeschützte Termine und Einladungen tragen 🔒, Halten gibt dort <code>.sensoryFeedback(.error, …)</code> und öffnet nichts.</li>
+    <li>Kurze Einträge (unter 30 min) werden in der Auswahl auf mindestens 30 pt Höhe dargestellt, damit beide Griffe getrennt treffbar bleiben.</li>
+    <li><b>G2 (nicht empfohlen):</b> Antippen wählt aus, zweiter Tipp öffnet Details. Das spart das Halten, macht aber den häufigsten Wunsch (Details ansehen) zum Doppeltipp und widerspricht U.</li>
+  </ul>
+</div>
+
+<!-- ============================== S ============================== -->
+<h2><span class="area">S</span> Flüssiges Verschieben · Zustandsbild und technischer Ansatz</h2>
+<p class="lead">Kein Variantenvergleich, sondern ein Ablauf. Der Eindruck „rundet schon beim Schieben“ lässt sich aus dem Code nicht bestätigen: <code>moveGesture</code> rundet erst in <code>moveBlock</code>. Plausibler sind die vier unten genannten Ursachen; sie sind aus dem Code abgeleitet und sollten vor dem Umbau einmal mit Instruments (Vorlage „SwiftUI“, Spur „Hitches“) am Gerät bestätigt werden.</p>
+<div class="grid">
+  <div>
+    <p class="label"><span class="code r">S1</span><b>Während des Ziehens</b> <span class="rec">Empfehlung</span></p>
+    <div class="phone" style="min-height:600px">
+      <div class="status"><span>13:20</span><span>●●● 5G</span></div>
+      <div class="abl" style="margin-top:6px">Ablauf<span style="font-weight:700">Fertig</span></div>
+      <div class="hg" style="height:338px">
+        <div class="hl" style="top:0"><span>13:00</span></div><div class="hl" style="top:48px"><span>14:00</span></div><div class="hl" style="top:96px"><span>15:00</span></div><div class="hl" style="top:144px"><span>16:00</span></div><div class="hl" style="top:192px"><span>17:00</span></div><div class="hl" style="top:240px"><span>18:00</span></div><div class="hl" style="top:288px"><span>19:00</span></div><div class="hl" style="top:336px"><span>20:00</span></div>
+        <div class="ev o" style="top:49px;height:46px">bisher 14:00 bis 15:00</div>
+        <div class="ev e" style="top:121px;height:46px;opacity:.55">Team-Runde<small>15:30 bis 16:30</small></div>
+        <div class="snap" style="top:204px"></div><div class="tlab" style="top:204px">17:15</div>
+        <div class="ev p sel" style="top:209px;height:46px"><span>Bericht gliedern</span><small>17:15 bis 18:15</small><i class="knob t"></i><i class="knob bt"></i></div>
+      </div>
+      <div class="anno">Block liegt 5 pt unter der roten Linie: Er folgt dem Finger genau, die Linie und die Uhrzeit zeigen das Ziel nach dem Einrasten.</div>
+      <div class="anno">Untere 60 pt: Rand-Zone, das Raster scrollt von selbst weiter.</div>
+      <div class="spacer"></div>
+    </div>
+    <p class="pc"><b>Kern:</b> Die Position folgt dem Finger ohne Rundung; gerundet werden nur die rote Ziellinie und die Uhrzeit in der Zeitspalte. Jeder Wechsel der gerundeten Uhrzeit gibt einen Haptik-Tick über <code>.sensoryFeedback(.selection, trigger: snappedStartMinutes)</code>. Beim Loslassen gleitet der Block mit <code>withAnimation(.snappy(duration: 0.2))</code> auf die Linie.</p>
+  </div>
+  <div style="grid-column: span 2; min-width: 0">
+    <p class="label"><b>Zustände eines Eintrags</b></p>
+    <div class="flow">
+      <div class="st"><b>Ruhe</b>Tippen öffnet das Blatt, Wischen scrollt.</div>
+      <div class="ar">0,3 s halten, Haptik</div>
+      <div class="st act"><b>Ausgewählt</b>Griffe sichtbar, Scrollen bleibt möglich.</div>
+      <div class="ar">Finger bewegt sich</div>
+      <div class="st act"><b>Ziehen</b>Folgt dem Finger 1:1. Ziellinie und Uhrzeit gerundet. Tick je 15 min. Rand-Zone scrollt. Kein Reload.</div>
+      <div class="ar">loslassen</div>
+      <div class="st act"><b>Einrasten</b>Animation auf 15 min. Neue Zeit sofort im Modell (vorläufig).</div>
+      <div class="ar">nur bei Serie</div>
+      <div class="st ask"><b>Reichweite</b>„Nur dieser / alle folgenden“ (R). Abbrechen federt zurück.</div>
+      <div class="ar">sonst direkt</div>
+      <div class="st"><b>Schreiben</b>Ein <code>save</code> in EventKit, danach stiller Abgleich.</div>
+      <div class="ar">Fehler, Konflikt</div>
+      <div class="st err"><b>Zurückfedern</b>Alte Zeit, Meldung mit Grund.</div>
+    </div>
+    <table class="sum" style="margin-top:14px">
+      <tr><th>Beobachtung im Code</th><th>Vermutete Wirkung</th><th>Maßnahme</th></tr>
+      <tr><td>Das Raster ist eine Zeile der <code>List</code> (<code>DayView.swift</code>, Zeile 53) mit <code>GeometryReader</code>.</td><td>Die Pan-Geste der Liste und die Halten-Ziehen-Geste konkurrieren; die Liste misst die sehr hohe Zeile bei Zustandswechseln neu.</td><td>Im Rastermodus ist die Tagesansicht eine <code>ScrollView</code> mit Kopfkarten und dem Raster als <code>ZStack</code>; die Zeilenliste bleibt <code>List</code>. Während des Ziehens <code>.scrollDisabled(true)</code>.</td></tr>
+      <tr><td>Griff-Gesten messen in <code>.local</code>, während <code>.padding(.top, topOffset)</code> denselben Griff verschiebt (<code>HourGrid.swift</code>, Zeilen 134–164).</td><td>Rückkopplung: Die Bewegung des Griffs verändert die gemessene Strecke. Das erklärt Zittern beim Ändern der Länge.</td><td><code>DragGesture(minimumDistance: 0, coordinateSpace: .named("grid"))</code> für alle Gesten des Rasters.</td></tr>
+      <tr><td>Nach dem Loslassen <code>moveOffset = 0</code>, dann <code>moveBlock</code> mit vollem <code>reload()</code> inklusive Abruf der Erinnerungen (<code>PlanningModel.swift</code>, Zeilen 502–518).</td><td>Der Block springt zurück auf die alte Zeit und erst nach dem Reload auf die neue. Das wirkt wie Ruckeln oder ein verlorener Zug.</td><td>Vorläufiger Wert im Modell (<code>pendingRanges[eventID]</code>), der Eintrag bleibt am Ziel; der Reload ersetzt ihn still. Benachrichtigungen <code>.EKEventStoreChanged</code> während einer Geste zurückstellen.</td></tr>
+      <tr><td>Ziehzustand als <code>@State</code> je Eintrag; <code>onEnded</code> läuft bei abgebrochener Geste nicht.</td><td>Übernimmt die Liste die Geste, bleibt ein Versatz stehen; der Block hängt neben seiner Zeit.</td><td>Ein <code>@GestureState</code> im Raster; er setzt sich bei Ende und Abbruch selbst zurück.</td></tr>
+      <tr><td>Ablage „Ungeplant“: <code>.frame(height: height.points - dragOffset)</code> innerhalb von <code>.safeAreaInset</code> (<code>UnplannedDrawer.swift</code>, Zeile 31), Inhalt erst nach dem Einrasten eingefügt (Zeile 29).</td><td>Jedes Bild ändert den Einzug der Wochen- bzw. Monatsliste dahinter und löst deren Layout aus; beim Einrasten entsteht die Liste neu.</td><td>Ablage mit fester Maximalhöhe als <code>.overlay(alignment: .bottom)</code>, bewegt nur über <code>.offset(y:)</code> bzw. <code>.visualEffect</code>; der Einzug der Liste bleibt konstant 64 pt; Inhalt immer im Baum. Zielhöhe aus <code>value.predictedEndTranslation</code>, Animation <code>.snappy</code>.</td></tr>
+    </table>
+<pre>// One drag session for the whole grid; entries only render it.
+@GestureState private var drag: GridDrag?      // clears itself when the gesture ends or is cancelled
+@State private var selection: DayEntry.ID?
+@State private var scrollPosition = ScrollPosition()
+
+private func moveGesture(for entry: DayEntry) -> some Gesture {
+    LongPressGesture(minimumDuration: 0.3)
+        .sequenced(before: DragGesture(minimumDistance: 0, coordinateSpace: .named("grid")))
+        .updating($drag) { value, state, _ in
+            guard case .second(true, let dragValue?) = value else { return }
+            state = GridDrag(entryID: entry.id, translation: dragValue.translation.height,
+                             fingerY: dragValue.location.y)
+        }
+        .onEnded { value in commitMove(of: entry, value) }   // snap, provisional model update, one EventKit save
+}</pre>
+    <p class="pc" style="max-width:none"><b>Rand-Scrollen:</b> Liegt <code>fingerY</code> näher als 60 pt am sichtbaren Rand, verschiebt ein Takt über <code>TimelineView(.animation)</code> die <code>ScrollPosition</code> (<code>scrollTo(y:)</code>) mit bis zu 600 pt/s; der gescrollte Weg wird zur Ziehstrecke addiert, damit der Block unter dem Finger bleibt. <code>onScrollGeometryChange</code> liefert den sichtbaren Ausschnitt. Dieser Teil ist der unsicherste: Ob <code>.scrollDisabled</code> und programmatisches Scrollen während einer laufenden Geste zusammen sauber arbeiten, ist am Gerät zu prüfen; Rückfall wäre ein <code>UIScrollView</code>-Zugriff über <code>UIViewRepresentable</code>. Stundenlinien und unbeteiligte Einträge liegen in eigenen, <code>Equatable</code>-fähigen Views, damit je Bild nur der gezogene Eintrag neu berechnet wird.</p>
+  </div>
+</div>
+
+<!-- ============================== D ============================== -->
+<h2><span class="area">D</span> Aufgaben ohne Uhrzeit ins Raster ziehen</h2>
+<p class="lead">Heute liegen die ziehbaren Zeilen („Geplant ohne Uhrzeit“, <code>.draggable(task.id.key)</code>) in derselben <code>List</code> unter dem Raster. Wer dorthin scrollt, hat das Raster nicht mehr im Bild; das Ablegeziel ist also praktisch nicht erreichbar.</p>
+<div class="grid">
+  <div>
+    <p class="label"><span class="code r">D1</span><b>Leiste „Ohne Uhrzeit“ am unteren Rand, eigener Ziehvorgang</b> <span class="rec">Empfehlung</span></p>
+    <div class="phone">
+      <div class="status"><span>13:20</span><span>●●● 5G</span></div>
+      <div class="topbar"><div class="seg"><span class="on">Tag</span><span>Woche</span><span>Monat</span></div><span class="rbtn glass">＋</span></div>
+      <div class="hdr"><div><div class="kick">Heute · KW 47</div><div class="bigdate">Dienstag, 17. Nov. <span class="car">⌄</span></div></div></div>
+      <div class="abl">Ablauf<span>Auswählen · ☰</span></div>
+      <div class="hg" style="height:290px">
+        <div class="hl" style="top:0"><span>13:00</span></div><div class="hl" style="top:48px"><span>14:00</span></div><div class="hl" style="top:96px"><span>15:00</span></div><div class="hl" style="top:144px"><span>16:00</span></div><div class="hl" style="top:192px"><span>17:00</span></div><div class="hl" style="top:240px"><span>18:00</span></div><div class="hl" style="top:288px"><span>19:00</span></div>
+        <div class="ev p" style="top:49px;height:46px">Bericht gliedern<small>14:00 bis 15:00 · Zeitblock</small></div>
+        <div class="ev e" style="top:121px;height:46px">Team-Runde<small>15:30 bis 16:30</small></div>
+        <div class="snap" style="top:204px"></div><div class="tlab" style="top:204px">17:15</div>
+        <div class="ev ghost" style="top:207px;height:36px">Folien prüfen<small>17:15 bis 18:00 · 45 min</small></div>
+      </div>
+      <div class="spacer"></div>
+      <div class="tray">
+        <div class="grab"></div>
+        <div class="dh">Ohne Uhrzeit <span>3 Aufgaben · 2 h 15</span></div>
+        <div class="tchips">
+          <div class="tchip gone">Folien prüfen<small>45 min</small></div>
+          <div class="tchip">Angebot nachfassen<small>30 min</small></div>
+          <div class="tchip">Literatur sichten<small>1 h · heute fällig</small></div>
+        </div>
+      </div>
+    </div>
+    <p class="pc"><b>Begründung:</b> Die Aufgaben bleiben neben dem Raster sichtbar, und der gezogene Eintrag erscheint sofort als Block in der Länge seines Aufwands mit derselben Ziellinie, Haptik und demselben Rand-Scrollen wie in S. <b>Technik:</b> Leiste als <code>.overlay(alignment: .bottom)</code> der Raster-<code>ScrollView</code> im selben benannten Koordinatenraum; Halten startet dieselbe Ziehsitzung (<code>GridDrag</code> mit <code>taskID</code> statt <code>entryID</code>), Loslassen über dem Raster ruft das vorhandene <code>model.dropTask(key:atMinutes:on:)</code>. Loslassen über der Leiste bricht ab. Antippen eines Chips öffnet weiterhin das vorhandene <code>BlockSheet</code> als Weg ohne Ziehen.</p>
+  </div>
+  <div>
+    <p class="label"><span class="code">D2</span><b>System-Drag-and-drop beibehalten</b> (Textvariante)</p>
+    <div class="box neutral" style="margin-top:0">
+      <ul>
+        <li>Raster aus der <code>List</code> lösen, Zeilen bleiben <code>.draggable</code>, das Raster bekommt statt <code>.dropDestination</code> einen <code>DropDelegate</code>, dessen <code>dropUpdated(info:)</code> die Ziellinie führt.</li>
+        <li><b>Pro:</b> wenig neuer Code; Ablage aus Woche und Monat nutzt dieselbe Technik.</li>
+        <li><b>Contra:</b> Die Vorschau ist die abgehobene Zeile, kein maßstäblicher Block; die Abhebeverzögerung des Systems ist nicht einstellbar; Haptik je 15 Minuten und das Verhalten am Rand weichen vom Verschieben vorhandener Blöcke ab. Zwei Ziehgefühle in einer Ansicht waren der Kern der Kritik.</li>
+      </ul>
+    </div>
+    <div class="box neutral">
+      <h3>Inhalt der Leiste</h3>
+      <ul>
+        <li>„Geplant ohne Uhrzeit“ und „Heute fällig“ des angezeigten Tages, in dieser Reihenfolge; eingeklappt eine Zeile Chips, aufgezogen eine Liste (gleiche Bauart wie die Ablage „Ungeplant“ nach dem Umbau aus S).</li>
+        <li>Die Abschnitte unter dem Raster entfallen im Rastermodus, sonst stünde jede Aufgabe zweimal da. In der Zeilenliste bleibt alles wie bisher (Ziehen auf Lückenzeilen).</li>
+        <li>Wird eine Aufgabe zum Block, verschwindet sie aus der Leiste; „Widerrufen“ in der Leiste nach dem Ablegen löscht den Block wieder.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ============================== U ============================== -->
+<h2><span class="area">U</span> Ein Blatt für Termine, Zeitblöcke und Pause</h2>
+<p class="lead">Heute öffnet ein Zeitblock im Raster einen <code>confirmationDialog</code>, in der Zeilenliste ein <code>Menu</code>, ein fremder Termin dagegen <code>EventDetailView</code> als Sheet. Drei Formen für dieselbe Geste.</p>
+<div class="grid">
+  <div>
+    <p class="label"><span class="code r">U1</span><b>Zeitblock</b>: gleicher Aufbau, zusätzliche Zeilen <span class="rec">Empfehlung</span></p>
+    <div class="phone">
+      <div class="status"><span>13:20</span><span>●●● 5G</span></div>
+      <div class="under"><div class="bigdate">Dienstag, 17. Nov.</div></div>
+      <div class="sheetp">
+        <div class="grab"></div>
+        <div class="ehead"><i style="background:var(--green)"></i><div><b>Bericht gliedern</b><small>Di. 17. Nov. · 14:00 bis 15:00</small><span class="chip gr">Zeitblock</span> <span class="chip">Kalender „Tagwerk“</span></div></div>
+        <div class="list">
+          <div class="field"><span>Beginn</span><div class="est"><span class="pm">−</span><span class="val">14:00</span><span class="pm">＋</span></div></div>
+          <div class="field"><span>Dauer</span><div class="est"><span class="pm">−</span><span class="val">1 h</span><span class="pm">＋</span></div></div>
+          <div class="field"><span>Zählt als</span><div class="mseg"><span class="on">Belegt</span><span>Frei</span></div></div>
+        </div>
+        <div class="section">Aufgabe</div>
+        <div class="list">
+          <div class="field"><span>Bericht gliedern</span><span class="v">P2 · 2 h geschätzt</span></div>
+          <div class="field"><span class="l">Aufgabe zeigen</span><span class="l">Erledigt ✓</span></div>
+        </div>
+        <div class="list">
+          <div class="field"><span class="l">Auf anderen Tag …</span></div>
+          <div class="field"><span class="l">Bearbeiten …</span></div>
+          <div class="field"><span class="d">Zeitblock löschen</span></div>
+        </div>
+      </div>
+    </div>
+    <p class="pc"><b>Begründung:</b> Kopf, Zeit, „Zählt als“, Aufgabe und Aktionen stehen immer in derselben Reihenfolge; ein Zeitblock unterscheidet sich nur durch gefüllte statt leere Zeilen. Die Schrittknöpfe aus dem bisherigen Dialog (±15 min) bleiben erhalten und wirken sofort. <b>Technik:</b> ein <code>enum DayEntry { case event, block, lunch }</code> und ein <code>EntrySheet</code> über <code>.sheet(item:)</code> mit <code>.presentationDetents([.medium, .large])</code>; es ersetzt <code>blockDialogButtons</code>, <code>BlockMenu</code> und <code>EventDetailView</code>.</p>
+  </div>
+  <div>
+    <p class="label"><span class="code r">U1</span><b>Fremder Termin, schreibgeschützt</b>: dasselbe Blatt <span class="rec">Empfehlung</span></p>
+    <div class="phone">
+      <div class="status"><span>13:20</span><span>●●● 5G</span></div>
+      <div class="under"><div class="bigdate">Dienstag, 17. Nov.</div></div>
+      <div class="sheetp">
+        <div class="grab"></div>
+        <div class="ehead"><i style="background:var(--blue)"></i><div><b>Sprechstunde</b><small>Di. 17. Nov. · 17:00 bis 17:45 · Raum 2.14</small><span class="chip">🔒 Kalender „Hochschule“</span> <span class="chip auto">↻ wöchentlich</span></div></div>
+        <div class="list">
+          <div class="field dis"><span>Beginn</span><span class="v">17:00</span></div>
+          <div class="field dis"><span>Dauer</span><span class="v">45 min</span></div>
+          <div class="field"><span>Zählt als</span><div class="mseg"><span>Belegt</span><span class="on">Frei</span></div></div>
+        </div>
+        <div class="note">Abonnierter Kalender: Zeit und Titel sind hier nicht änderbar. „Frei“ gilt nur in Tagwerk, der Kalender bleibt unverändert.</div>
+        <div class="section">Aufgabe</div>
+        <div class="list">
+          <div class="field"><span class="l">Mit Aufgabe verknüpfen …</span></div>
+        </div>
+        <div class="list">
+          <div class="field"><span class="l">Im Kalender öffnen</span></div>
+        </div>
+      </div>
+    </div>
+    <p class="pc"><b>Begründung:</b> Gesperrte Zeilen bleiben sichtbar und nennen den Grund, statt zu fehlen; so ist erkennbar, dass es dasselbe Blatt ist. „Zählt als“ ist die eine Zeile, die auch bei Schreibschutz bedienbar bleibt (F). Die Pause nutzt dasselbe Blatt mit Beginn, Dauer, „Heute keine Pause“ und „Standard wiederherstellen“.</p>
+  </div>
+</div>
+<div class="box neutral">
+  <h3>Verworfene Alternative U2</h3>
+  <ul><li><b>Kontextmenü für alles (<code>Menu</code> beim Antippen):</b> schneller für ±15 min, aber ohne Platz für Ort, Notiz, Sperrgrund und die Verknüpfung; für fremde Termine wäre danach doch ein Blatt nötig, und der Unterschied wäre wieder da.</li></ul>
+</div>
+
+<!-- ============================== F ============================== -->
+<h2><span class="area">F</span> Termine als „Frei“ markieren</h2>
+<p class="lead">Heute gilt ein Termin als frei, wenn <code>EKEvent.availability == .free</code> oder die Einladung abgelehnt ist (<code>EventKitGateway.swift</code>, Zeile 386). Setzen lässt sich das in Tagwerk nicht.</p>
+<div class="grid">
+  <div>
+    <p class="label"><span class="code r">F1</span><b>Auswahlmodus in der Tagesansicht</b> <span class="rec">Empfehlung</span></p>
+    <div class="phone">
+      <div class="status"><span>13:20</span><span>●●● 5G</span></div>
+      <div class="hdr"><div><div class="kick">Mittwoch · KW 47</div><div class="bigdate">Mittwoch, 18. Nov. <span class="car">⌄</span></div></div></div>
+      <div class="abl">3 ausgewählt<span style="font-weight:700">Fertig</span></div>
+      <div class="hg" style="height:338px">
+        <div class="hl" style="top:0"><span>09:00</span></div><div class="hl" style="top:48px"><span>10:00</span></div><div class="hl" style="top:96px"><span>11:00</span></div><div class="hl" style="top:144px"><span>12:00</span></div><div class="hl" style="top:192px"><span>13:00</span></div><div class="hl" style="top:240px"><span>14:00</span></div><div class="hl" style="top:288px"><span>15:00</span></div><div class="hl" style="top:336px"><span>16:00</span></div>
+        <div class="ev e" style="top:1px;height:70px">Vorlesung Statistik<small>09:00 bis 10:30 · 🔒</small><i class="ck on">✓</i></div>
+        <div class="ev e" style="top:97px;height:46px">Tutorium<small>11:00 bis 12:00 · 🔒</small><i class="ck on">✓</i></div>
+        <div class="ev q" style="top:145px;height:46px;opacity:.5">☕ Mittagspause</div>
+        <div class="ev e" style="top:193px;height:46px">Team-Runde<small>13:00 bis 14:00</small><i class="ck"></i></div>
+        <div class="ev e" style="top:265px;height:46px">Sprechstunde<small>14:30 bis 15:30 · Einladung</small><i class="ck on">✓</i></div>
+      </div>
+      <div class="spacer"></div>
+      <div class="selinfo">Auf Frei setzen gibt an diesem Tag 3 h 30 frei</div>
+      <div class="selbar glass"><span class="b plain">Alle Termine</span><span class="b prom">Auf Frei setzen</span><span class="b plain">Belegt</span></div>
+    </div>
+    <p class="pc"><b>Begründung:</b> „Auswählen“ steht neben dem Umschalter Liste/Raster; im Modus wählt jeder Tipp einen Termin, Zeitblöcke und Pause sind ausgegraut. Die Zeile über der Leiste nennt die Wirkung auf die freie Zeit, bevor etwas geschieht. Enthält die Auswahl Serientermine, fragt Tagwerk beim Bestätigen einmal „Nur an diesem Tag / Auch alle künftigen Termine dieser Serien“ (Prinzip aus R).</p>
+  </div>
+  <div>
+    <p class="label"><span class="code r">F1</span><b>Ergebnis: grau, zählt nicht, bleibt sichtbar</b> <span class="rec">Empfehlung</span></p>
+    <div class="phone">
+      <div class="status"><span>13:20</span><span>●●● 5G</span></div>
+      <div class="hdr"><div><div class="kick">Mittwoch · KW 47</div><div class="bigdate">Mittwoch, 18. Nov. <span class="car">⌄</span></div></div></div>
+      <div class="cap"><div class="top"><b>6 h 15 frei</b><span class="up">+3 h 30 durch „Frei“</span></div></div>
+      <div class="abl">Ablauf<span>Auswählen · ☰</span></div>
+      <div class="hg" style="height:338px">
+        <div class="hl" style="top:0"><span>09:00</span></div><div class="hl" style="top:48px"><span>10:00</span></div><div class="hl" style="top:96px"><span>11:00</span></div><div class="hl" style="top:144px"><span>12:00</span></div><div class="hl" style="top:192px"><span>13:00</span></div><div class="hl" style="top:240px"><span>14:00</span></div><div class="hl" style="top:288px"><span>15:00</span></div><div class="hl" style="top:336px"><span>16:00</span></div>
+        <div class="ev f" style="top:1px;height:70px;right:50%">Vorlesung Statistik<small>09:00 bis 10:30 · Frei</small></div>
+        <div class="ev ai" style="top:1px;height:46px;left:51%">✦ Literatur sichten<small>09:00 bis 10:00 · Vorschlag</small></div>
+        <div class="ev f" style="top:97px;height:46px">Tutorium<small>11:00 bis 12:00 · Frei</small></div>
+        <div class="ev q" style="top:145px;height:46px">☕ Mittagspause</div>
+        <div class="ev e" style="top:193px;height:46px">Team-Runde<small>13:00 bis 14:00</small></div>
+        <div class="ev f" style="top:265px;height:46px">Sprechstunde<small>14:30 bis 15:30 · Frei · Einladung</small></div>
+      </div>
+      <div class="note">Freie Termine: grauer, gestrichelter Rahmen und Wort „Frei“. KI-Vorschläge und eigene Blöcke dürfen daneben liegen.</div>
+      <div class="spacer"></div>
+      <div class="tb glass"><span class="on"><i class="ico">▦</i>Planen</span><span><i class="ico">☑︎</i>Aufgaben</span><span><i class="ico">⚙︎</i>Einstellungen</span></div>
+    </div>
+    <p class="pc"><b>Technik:</b> neues SwiftData-Modell <code>EventAvailabilityMark</code> (<code>eventKey</code> wie bei <code>EventTaskLink</code>: <code>calendarItemExternalIdentifier</code> plus Datum des Vorkommens, <code>scope</code> Vorkommen oder Serie, <code>countsAsBusy: Bool</code>). Wirksam ist <code>mark?.countsAsBusy ?? (availability != .free &amp;&amp; !declined)</code>; das Ergebnis füllt das vorhandene <code>CalendarEvent.isBusy</code>, <code>busyIntervals(…)</code> und <code>gaps(for:)</code> bleiben unverändert. Die Unterscheidung zur Pause (schraffiert) trägt nicht allein die Farbe, sondern Rahmenart und Wort.</p>
+  </div>
+</div>
+<div class="box neutral">
+  <h3>Warum lokal und nicht <code>EKEvent.availability</code> (Variante F2, nicht empfohlen)</h3>
+  <ul>
+    <li><code>availability</code> lässt sich nur setzen, wenn der Kalender beschreibbar ist (<code>EKCalendar.allowsContentModifications</code>), der Termin keine fremde Einladung ist und der Kalender den Wert führt (<code>EKCalendar.supportedEventAvailabilities</code>; lokale, abonnierte und Geburtstagskalender melden in der Regel „nicht unterstützt“). Für den genannten Anwendungsfall (abonnierte Kalender, Einladungen) greift das also meist nicht.</li>
+    <li>Wo es greift, ändert es, was andere sehen (Frei/Gebucht-Auskunft bei Exchange und CalDAV). Das ist eine Außenwirkung, die „zählt für meine Tagesplanung nicht“ nicht meint.</li>
+    <li>Ein Mischbetrieb (schreiben, wo möglich, sonst lokal) ergäbe zwei Verhaltensweisen hinter einem Schalter. Deshalb: immer lokal, sichtbar gemacht durch den Satz „gilt nur in Tagwerk“ im Blatt. Ein im Kalender bereits als frei geführter Termin erscheint gleich, mit „Frei · laut Kalender“, und lässt sich lokal auf „Belegt“ zurückstellen.</li>
+    <li><b>Grenze:</b> Die Markierung liegt in der lokalen Datenbank; andere Geräte und die Kalender-App sehen sie nicht. Bei gespiegelten Kalendern, die ihre Kennungen neu vergeben, kann sie verloren gehen (gleiche Einschränkung wie bei <code>EventTaskLink</code>).</li>
+  </ul>
+</div>
+
+<!-- ============================== R ============================== -->
+<h2><span class="area">R</span> Wiederkehrendes: eine Schätzung, Frage erst beim Sichern</h2>
+<p class="lead">Heute zeigt das Bearbeiten-Sheet einer wiederkehrenden Erinnerung zwei Aufwände („Geschätzt“ aus <code>draft.estimateMinutes</code> und „In Tagwerk · Aufwand“ aus <code>edit.recurringMinutes</code>) sowie ein Segment „Nur heute / Alle ab heute“ und eine Karte „Erinnerung · alle Tage“ (<code>PlannedSection.swift</code>, Zeilen 15–34).</p>
+<div class="grid">
+  <div>
+    <p class="label"><span class="code r">R1</span><b>Bearbeiten: ein Feld, keine Reichweiten-Auswahl</b> <span class="rec">Empfehlung</span></p>
+    <div class="phone">
+      <div class="status"><span>13:20</span><span>●●● 5G</span></div>
+      <div class="sheetp" style="margin-top:0;border-radius:30px">
+        <div class="shead"><span class="gb glass">Abbrechen</span><b>Aufgabe</b><span class="gb glass" style="color:var(--blue);font-weight:700">Sichern</span></div>
+        <div class="list">
+          <div class="field"><span>Protokoll nachtragen</span></div>
+          <div class="field"><span>Wiederholung</span><span class="v">↻ täglich, Mo–Fr</span></div>
+        </div>
+        <div class="list">
+          <div class="field"><span>Fällig</span><span class="pick">17. Nov. 2026</span></div>
+          <div class="field"><span>Priorität</span><span class="pick">P2</span></div>
+          <div class="field"><span>Aufwand</span><div class="est"><span class="pm">−</span><span class="val">45 min</span><span class="pm">＋</span></div></div>
+        </div>
+        <div class="note">Aufwand je Tag der Serie. Bisher 30 min.</div>
+        <div class="section">Geplant</div>
+        <div class="list">
+          <div class="field"><span>Arbeitstag</span><span class="pick">Di. 17. Nov.</span></div>
+          <div class="field"><span class="l">Zeitblock hinzufügen</span></div>
+        </div>
+        <div class="spacer"></div>
+      </div>
+    </div>
+    <p class="pc"><b>Begründung:</b> Titel, Fälligkeit und Priorität sehen aus wie bei jeder Aufgabe; nichts deutet eine Wahl an, die es nicht gibt. Die Wiederholung steht als eine Zeile oben. <b>Technik:</b> Für wiederkehrende Erinnerungen bindet <code>EstimateField</code> an den wirksamen Tageswert (<code>RecurringEffortOverride</code> des Bezugstags, sonst <code>RecurringEffort</code>); <code>ReminderEstimate</code> wird für sie nicht mehr angezeigt und einmalig als Grundwert übernommen, falls noch keiner besteht. <code>PlannedEdit.recurringForAll</code> entfällt als Formularzustand.</p>
+  </div>
+  <div>
+    <p class="label"><span class="code r">R1</span><b>Beim Sichern: Frage nur, wenn der Aufwand geändert wurde</b> <span class="rec">Empfehlung</span></p>
+    <div class="phone">
+      <div class="status"><span>13:20</span><span>●●● 5G</span></div>
+      <div class="sheetp" style="margin-top:0;border-radius:30px;opacity:.5">
+        <div class="shead"><span class="gb glass">Abbrechen</span><b>Aufgabe</b><span class="gb glass" style="color:var(--blue);font-weight:700">Sichern</span></div>
+        <div class="list"><div class="field"><span>Protokoll nachtragen</span></div><div class="field"><span>Aufwand</span><span class="v">45 min</span></div></div>
+        <div class="spacer"></div>
+      </div>
+      <div class="dimov"></div>
+      <div class="asheet">
+        <div class="grp">
+          <div class="m"><b>Aufwand geändert: 30 min → 45 min</b>Diese Aufgabe wiederholt sich. Titel und Priorität gelten für alle Tage.</div>
+          <div class="act">Nur am Di. 17. Nov.</div>
+          <div class="act">Für alle ab Di. 17. Nov.</div>
+        </div>
+        <div class="grp"><div class="act c">Abbrechen</div></div>
+      </div>
+    </div>
+    <p class="pc"><b>Begründung:</b> Die Frage erscheint genau dann, wenn eine Antwort etwas bewirkt, und nennt den Tag beim Namen statt „heute“. Wurde nur Titel, Fälligkeit oder Priorität geändert, sichert Tagwerk ohne Rückfrage. <b>Technik:</b> <code>confirmationDialog(_:isPresented:titleVisibility:)</code> auf „Sichern“, Bedingung <code>isRecurring &amp;&amp; minutes != originalMinutes</code>; die Antwort geht in das vorhandene <code>setRecurringEffort(_:reminderID:day:forAll:)</code>. Bezugstag ist der in „Planen“ angezeigte Tag, sonst das nächste Vorkommen ab heute.</p>
+  </div>
+  <div>
+    <p class="label"><span class="code r">R1</span><b>Serientermin gezogen: Frage beim Loslassen</b> <span class="rec">Empfehlung</span></p>
+    <div class="phone">
+      <div class="status"><span>13:20</span><span>●●● 5G</span></div>
+      <div class="abl" style="margin-top:6px">Ablauf<span style="font-weight:700">Fertig</span></div>
+      <div class="hg" style="height:242px">
+        <div class="hl" style="top:0"><span>14:00</span></div><div class="hl" style="top:48px"><span>15:00</span></div><div class="hl" style="top:96px"><span>16:00</span></div><div class="hl" style="top:144px"><span>17:00</span></div><div class="hl" style="top:192px"><span>18:00</span></div><div class="hl" style="top:240px"><span>19:00</span></div>
+        <div class="ev o" style="top:73px;height:46px">bisher 15:30 bis 16:30</div>
+        <div class="ev e" style="top:145px;height:46px;border:1.5px dashed var(--blue)">↻ Team-Runde<small>17:00 bis 18:00 · noch nicht gesichert</small></div>
+      </div>
+      <div class="dimov"></div>
+      <div class="asheet">
+        <div class="grp">
+          <div class="m"><b>Dieser Termin wiederholt sich</b>Verschieben von 15:30 auf 17:00</div>
+          <div class="act">Nur diesen Termin</div>
+          <div class="act">Diesen und alle folgenden</div>
+        </div>
+        <div class="grp"><div class="act c">Abbrechen<small>Termin springt zurück</small></div></div>
+      </div>
+    </div>
+    <p class="pc"><b>Begründung:</b> Dieselbe Frage wie im Bearbeiten-Sheet (J6), nur am Ende der Geste; der Termin steht bis zur Antwort gestrichelt am Ziel und der alte Platz bleibt sichtbar. Sie gilt für Verschieben, Griffe und die Schrittknöpfe im Blatt. <b>Technik:</b> Zustand „Reichweite“ aus S; die Antwort wird zu <code>EKSpan.thisEvent</code> bzw. <code>.futureEvents</code> in <code>EKEventStore.save(_:span:commit:)</code> über das vorhandene <code>updateEvent(_:with:span:)</code>. Tagwerk-Zeitblöcke sind keine Serien und fragen nie.</p>
+  </div>
+</div>
+<div class="box neutral">
+  <h3>Verworfene Alternative R2</h3>
+  <ul><li><b>Zeile „Gilt für“ erscheint erst nach einer Änderung im Formular:</b> spart den Dialog, sieht aber weiterhin wie eine Einstellung der Aufgabe aus und steht neben Feldern, für die sie nicht gilt. Genau das war die Kritik.</li></ul>
+</div>
+
+<!-- ============================== M ============================== -->
+<h2><span class="area">M</span> Zusammenfassen: der inhaltsreichere Eintrag gewinnt</h2>
+<p class="lead">Heute fasst <code>mergingDuplicates</code> Termine mit gleichem normalisierten Titel, Beginn, Ende und Ganztags-Status zusammen und zeigt eine verknüpfte Kopie, sonst die erste der Eingabe. Welche Kopie die erste ist, hängt von der Reihenfolge der Kalender ab.</p>
+<div class="grid">
+  <div>
+    <p class="label"><span class="code r">M1</span><b>Gleicher Titel: Kopie mit den meisten Angaben</b> <span class="rec">Empfehlung</span></p>
+    <div class="phone">
+      <div class="status"><span>13:20</span><span>●●● 5G</span></div>
+      <div class="under"><div class="bigdate">Mittwoch, 18. Nov.</div></div>
+      <div class="sheetp">
+        <div class="grab"></div>
+        <div class="ehead"><i style="background:var(--blue)"></i><div><b>Vorlesung Statistik</b><small>Mi. 18. Nov. · 09:00 bis 10:30 · Raum 2.14</small><span class="chip">2 Kalender</span></div></div>
+        <div class="list">
+          <div class="field"><span>Notiz</span><span class="v">Kapitel 4, Übungsblatt mitbringen</span></div>
+          <div class="field"><span>Zählt als</span><div class="mseg"><span class="on">Belegt</span><span>Frei</span></div></div>
+        </div>
+        <div class="section">In 2 Kalendern <span>angezeigt wird der erste</span></div>
+        <div class="list">
+          <div class="item"><div class="t">Kalender „Hochschule“ 🔒<div class="s">Ort, Notiz · wird angezeigt</div></div><span class="chip gr">gezeigt</span></div>
+          <div class="item"><div class="t">Kalender „Privat“<div class="s">nur Titel und Zeit</div></div></div>
+          <div class="field"><span class="l">Getrennt anzeigen</span></div>
+        </div>
+        <div class="note">Automatisch zusammengefasst wird nur bei gleichem Titel, Beginn und Ende.</div>
+      </div>
+    </div>
+    <p class="pc"><b>Begründung:</b> Die Auswahl der gezeigten Kopie wird eine feste Rangfolge statt Zufall der Kalenderreihenfolge: verknüpft mit einer Aufgabe, dann Zahl der gefüllten Felder (Ort, Notiz, URL), dann beschreibbarer Kalender, dann Eingabereihenfolge. Das Blatt nennt, welche Kopie gezeigt wird und warum. <b>Technik:</b> in <code>mergingDuplicates</code> ersetzt <code>batch.max(by:)</code> über einen <code>informationScore</code> die Zeile <code>batch.first { links[$0.id] != nil } ?? batch[0]</code>; reine Funktion in <code>TagwerkCore</code>, per Unit-Test prüfbar.</p>
+  </div>
+  <div>
+    <p class="label"><span class="code r">M1</span><b>Anderer Titel, gleiche Zeit: Vorschlagskarte</b> (Plan 2b-2) <span class="rec">Empfehlung</span></p>
+    <div class="phone">
+      <div class="status"><span>13:20</span><span>●●● 5G</span></div>
+      <div class="hdr"><div><div class="kick">Mittwoch · KW 47</div><div class="bigdate">Mittwoch, 18. Nov. <span class="car">⌄</span></div></div></div>
+      <div class="banner ai">
+        <b>✦ Derselbe Termin?</b>
+        Beide liegen am Mi. 18. Nov. von 09:00 bis 10:30.
+        <div class="list" style="background:rgba(0,0,0,.35);margin:8px 0">
+          <div class="item"><div class="t">Vorlesung Statistik<div class="s">Kalender „Hochschule“ · Ort, Notiz</div></div><span class="chip gr">bleibt sichtbar</span></div>
+          <div class="item"><div class="t">Busy<div class="s">Kalender „Arbeit“ · Platzhalter ohne Angaben</div></div></div>
+        </div>
+        <div class="btns"><span class="b prom">Zusammenfassen</span><span class="b plain">Getrennt lassen</span></div>
+        <div style="margin-top:8px;font-size:12px;color:#c7c7cc">☐ Künftig immer, wenn „Busy“ aus „Arbeit“ zeitgleich mit einem anderen Termin liegt</div>
+      </div>
+      <div class="abl">Ablauf<span>Auswählen · ☰</span></div>
+      <div class="hg" style="height:146px">
+        <div class="hl" style="top:0"><span>09:00</span></div><div class="hl" style="top:48px"><span>10:00</span></div><div class="hl" style="top:96px"><span>11:00</span></div><div class="hl" style="top:144px"><span>12:00</span></div>
+        <div class="ev e" style="top:1px;height:70px;right:50%">Vorlesung Statistik<small>09:00 bis 10:30</small></div>
+        <div class="ev e" style="top:1px;height:70px;left:51%">Busy<small>09:00 bis 10:30</small></div>
+      </div>
+      <div class="spacer"></div>
+      <div class="tb glass"><span class="on"><i class="ico">▦</i>Planen</span><span><i class="ico">☑︎</i>Aufgaben</span><span><i class="ico">⚙︎</i>Einstellungen</span></div>
+    </div>
+    <p class="pc"><b>Begründung:</b> Ohne Zustimmung wird nichts zusammengelegt, was verschieden heißt; die Karte zeigt beide Einträge, nennt den Grund und welcher sichtbar bleibt. „Getrennt lassen“ merkt sich die Ablehnung. <b>Technik:</b> angenommene Paare als SwiftData <code>EventMergeLink</code> (zwei <code>eventKey</code>, Herkunft), abgelehnte als <code>DismissedMergeSuggestion</code>, analog zu <code>DismissedLinkSuggestion</code>; <code>mergingDuplicates</code> erhält die bestätigten Paare als zweiten Eingang.</p>
+  </div>
+</div>
+<div class="box warn">
+  <h3>Einwand zum täglichen KI-Vorschlag</h3>
+  <ul>
+    <li><b>Widerspruch zu §8.4:</b> Dort steht „Keine KI-Aufrufe ohne deine Aktion, auch nicht im Hintergrund-Refresh“. Ein täglicher Vorschlag ohne Zutun wäre genau so ein Aufruf und schickt Termintitel an OpenAI. Das braucht eine ausdrückliche Entscheidung (Frage 3).</li>
+    <li><b>Der genannte Fall braucht keine KI:</b> Gleiche Zeit, verschiedene Kalender und ein Titel aus einer Platzhalterliste („Busy“, „Away“, „Free“, „Tentative“, „Beschäftigt“, „Abwesend“, „Frei“, „Mit Vorbehalt“) lässt sich lokal erkennen und als dieselbe Karte ohne ✦ vorschlagen. Die KI wäre erst für abweichende echte Titel nötig („Stat. VL“ ↔ „Vorlesung Statistik“).</li>
+    <li><b>Freie Zeit:</b> Zeitgleiche Termine zählen schon heute nur einmal (Vereinigung der Intervalle in <code>capacity</code>). Das Zusammenfassen ändert nur die Anzeige. Wird der sichtbare Termin auf „Frei“ gesetzt, muss die Markierung für alle zusammengefassten Kopien gelten, sonst belegt der Platzhalter die Zeit weiter.</li>
+  </ul>
+</div>
+
+<!-- ============================== § ============================== -->
+<h2><span class="area" style="background:#636366">§</span> Folgen für das Design-Dokument und offene Fragen</h2>
+<div class="box warn">
+  <h3>Änderungen an <code>2026-11-17-phase-2b-design.md</code>, falls die Empfehlungen freigegeben werden</h3>
+  <ul>
+    <li><b>§5.1 · L, F, M, R:</b> <code>DayOverride</code> um Pausenbeginn und Pausendauer erweitern; neue Modelle <code>EventAvailabilityMark</code>, <code>EventMergeLink</code>, <code>DismissedMergeSuggestion</code>; <code>ReminderEstimate</code> gilt nicht mehr für wiederkehrende Erinnerungen.</li>
+    <li><b>§6.1, §11.2, §11.4 · L, F:</b> „Mittagspause weiterhin global“ wird „globaler Standard, je Tag abweichend“. „Als frei markierte Termine“ meint künftig die Tagwerk-Markierung mit Vorrang vor dem Kalenderwert.</li>
+    <li><b>§6.3, §13.8 (G4) · R:</b> Die getrennten Karten „Erinnerung“ / „In Tagwerk“ und das Segment entfallen; eine Schätzung, Reichweitenfrage beim Sichern.</li>
+    <li><b>§13.4 (C1, C3), §13.14 (C3, C1/C4) · G, S, U, D:</b> Griffe nur im Auswahlzustand; Antippen öffnet für alle Einträge dasselbe Blatt statt Menü bzw. Dialog; Raster als eigene Scrollansicht; Verschieben auch für Termine in beschreibbaren Kalendern; Leiste „Ohne Uhrzeit“ im Rastermodus.</li>
+    <li><b>§13.5, §13.14 (D1) · S:</b> Ablage als Überlagerung mit festem Einzug statt höhenveränderlichem Panel.</li>
+    <li><b>§13.10 (J6) · R:</b> Serienfrage auch nach Ziehen, Griff und Schrittknopf, nicht nur im Bearbeiten-Sheet.</li>
+    <li><b>§13.11 (I1) · M:</b> Rangfolge der gezeigten Kopie; automatisches Zusammenfassen ausdrücklich nur bei gleichem Titel; Vorschlagskarte für abweichende Titel.</li>
+    <li><b>§7 Tag · F, D:</b> Auswahlmodus für Termine und Leiste „Ohne Uhrzeit“ ergänzen.</li>
+    <li><b>§8.2, §8.4, §10 · L, F, M:</b> KI-Eingabe mit Pause je Tag und Belegt-Status nach Markierung; Regel zu Aufrufen ohne Aktion je nach Antwort auf Frage 3; Zusammenfass-Vorschläge in Plan 2b-2 aufnehmen.</li>
+  </ul>
+</div>
+<div class="box neutral">
+  <h3>Offene Fragen (4)</h3>
+  <ol>
+    <li><b>L:</b> Reicht „Ziehen ändert nur diesen Tag, Leiste bietet Für alle Tage“ (L1), oder soll Tagwerk jedes Mal fragen (L2)? Und meint „alle“ wirklich alle Tage oder nur denselben Wochentag (die Arbeitszeit ist je Wochentag geregelt)?</li>
+    <li><b>F:</b> Ist einverstanden, dass „Frei“ nur in Tagwerk auf diesem Gerät gilt und weder die Kalender-App noch andere Geräte es sehen? Soll die Mehrfachauswahl bei Serien standardmäßig alle künftigen Vorkommen treffen?</li>
+    <li><b>M:</b> Darf Tagwerk einmal täglich ohne Zutun die KI mit Termintiteln aufrufen (Änderung von §8.4, als Einstellung abschaltbar), oder genügt die lokale Platzhalter-Erkennung, und die KI prüft nur im Rahmen von „Tag planen“?</li>
+    <li><b>D, S:</b> Soll das Stundenraster die Standardansicht werden? Ziehen auf eine Uhrzeit und die Leiste „Ohne Uhrzeit“ gibt es nur dort; die Zeilenliste bliebe als Leseansicht mit Lückenzeilen bestehen.</li>
+  </ol>
+</div>
+<div class="box neutral">
+  <h3>Was diese Mockups nicht zeigen</h3>
+  <ul>
+    <li>Bewegung, Haptik und Scrollverhalten; sie sind nur beschrieben. Die Ursachen in S sind aus dem Code gelesen und nicht gemessen.</li>
+    <li>Helles Erscheinungsbild, Querformat, große Dynamic-Type-Stufen und VoiceOver. Für VoiceOver braucht das Raster Ersatzaktionen (<code>accessibilityAdjustableAction</code> für ±15 min), weil Halten und Ziehen dort nicht trägt.</li>
+    <li>Fehlerzustände beim Schreiben (Termin inzwischen geändert, Kalender entfernt) und die Zeilenliste mit den neuen Zuständen.</li>
+    <li>Aussagen zum Verhalten von iOS 27 beruhen auf den Schnittstellen bis iOS 26; nichts davon ist am Gerät geprüft.</li>
+  </ul>
+</div>
+
+</body>
+</html>
