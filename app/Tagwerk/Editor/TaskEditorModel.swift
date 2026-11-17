@@ -15,12 +15,33 @@ final class TaskEditorModel {
     /// Result of the last successful save, handed back to the list.
     private(set) var saved: TaskItem?
 
-    private let provider: any TaskProvider
+    /// Projects that field changes apply to (GitHub issues in several projects); default: all.
+    var targetProjects: Set<String>
+    var comment = ""
 
-    init(item: TaskItem, provider: any TaskProvider) {
+    private let provider: any TaskProvider
+    private let addComment: ((TaskID, String) async throws -> Void)?
+
+    init(item: TaskItem, provider: any TaskProvider, addComment: ((TaskID, String) async throws -> Void)? = nil) {
         self.draft = item
         self.original = item
         self.provider = provider
+        self.addComment = addComment
+        self.targetProjects = Set(item.subContainers.map(\.id))
+    }
+
+    var canComment: Bool { addComment != nil }
+
+    func postComment() async {
+        let text = comment.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard let addComment, !text.isEmpty else { return }
+        do {
+            try await addComment(original.id, text)
+            comment = ""
+            errorMessage = nil
+        } catch {
+            errorMessage = TaskListModel.message(for: error)
+        }
     }
 
     var hasChanges: Bool { !TaskEdit.diff(from: original, to: draft).isEmpty }
@@ -45,6 +66,7 @@ final class TaskEditorModel {
             let current = try await provider.task(id: original.id) ?? conflict ?? original
             original = current
             draft = current
+            targetProjects = Set(current.subContainers.map(\.id))
             conflict = nil
             errorMessage = nil
         } catch {
@@ -53,8 +75,10 @@ final class TaskEditorModel {
     }
 
     private func write(expectedVersion: String?) async -> Bool {
-        let edit = TaskEdit.diff(from: original, to: draft)
+        var edit = TaskEdit.diff(from: original, to: draft)
         guard !edit.isEmpty else { return true }
+        let allProjects = Set(original.subContainers.map(\.id))
+        if !targetProjects.isEmpty, targetProjects != allProjects { edit.targetSubContainerIDs = targetProjects }
         isSaving = true
         defer { isSaving = false }
         do {

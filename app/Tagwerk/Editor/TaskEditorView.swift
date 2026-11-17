@@ -9,11 +9,16 @@ struct TaskEditorView: View {
     let onSaved: (TaskItem) -> Void
     @Environment(\.dismiss) private var dismiss
 
+    let isReadOnly: Bool
+    @State private var labelText = ""
+
     init(item: TaskItem, provider: any TaskProvider, calendar: Calendar, containers: [TaskContainer],
+         addComment: ((TaskID, String) async throws -> Void)? = nil, isReadOnly: Bool = false,
          onSaved: @escaping (TaskItem) -> Void) {
-        _model = State(initialValue: TaskEditorModel(item: item, provider: provider))
+        _model = State(initialValue: TaskEditorModel(item: item, provider: provider, addComment: addComment))
         self.calendar = calendar
         self.containers = containers
+        self.isReadOnly = isReadOnly
         self.onSaved = onSaved
     }
 
@@ -28,12 +33,28 @@ struct TaskEditorView: View {
                     .listRowInsets(EdgeInsets())
                     .listRowBackground(Color.clear)
                 }
+                if isReadOnly {
+                    Label("Offline: Änderungen sind gerade nicht möglich.", systemImage: "wifi.slash")
+                        .foregroundStyle(.secondary)
+                }
                 if let message = model.errorMessage {
                     Label(message, systemImage: "exclamationmark.triangle").foregroundStyle(.red)
                 }
 
                 Section {
                     TextField("Titel", text: $model.draft.title, axis: .vertical)
+                    if model.original.id.source == .github {
+                        LabeledContent("Repo", value: model.original.container.name)
+                    }
+                    if model.isVisible(.labels) {
+                        TextField("Labels (kommagetrennt)", text: $labelText)
+                            .textInputAutocapitalization(.never)
+                            .onChange(of: labelText) { _, text in
+                                model.draft.labels = text.split(separator: ",")
+                                    .map { $0.trimmingCharacters(in: .whitespaces) }
+                                    .filter { !$0.isEmpty }
+                            }
+                    }
                     if model.isVisible(.container), !containers.isEmpty {
                         Picker("Liste", selection: containerID) {
                             ForEach(containers, id: \.id) { Text($0.name).tag($0.id) }
@@ -42,6 +63,12 @@ struct TaskEditorView: View {
                 }
 
                 Section {
+                    if model.original.subContainers.count > 1 {
+                        Picker("Ändern in", selection: projectTarget) {
+                            Text("Alle Projects").tag(String?.none)
+                            ForEach(model.original.subContainers, id: \.id) { Text($0.name).tag(Optional($0.id)) }
+                        }
+                    }
                     if model.isVisible(.due) { dueFields }
                     if model.isVisible(.priority) { PriorityPicker(priority: $model.draft.priority) }
                     if model.isVisible(.estimate) {
@@ -52,7 +79,7 @@ struct TaskEditorView: View {
                 }
 
                 if model.isVisible(.notes) {
-                    Section("Notiz") {
+                    Section(model.original.id.source == .github ? "Beschreibung (Markdown)" : "Notiz") {
                         TextField("Notiz", text: notes, axis: .vertical).lineLimit(3...10)
                     }
                 }
@@ -60,8 +87,26 @@ struct TaskEditorView: View {
                 Section {
                     Toggle("Erledigt", isOn: $model.draft.isCompleted)
                 }
+
+                if model.canComment {
+                    Section("Kommentar") {
+                        TextField("Kommentar schreiben", text: $model.comment, axis: .vertical).lineLimit(2...6)
+                        Button("Senden") { Task { await model.postComment() } }
+                            .disabled(isReadOnly || model.comment.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                    }
+                }
+
+                if let url = model.original.url {
+                    Section {
+                        Link("Auf GitHub öffnen", destination: url)
+                    }
+                }
             }
-            .navigationTitle(model.original.title)
+            .navigationTitle(title)
+            .onAppear { labelText = (model.draft.labels ?? []).joined(separator: ", ") }
+            .onChange(of: model.original.version) { _, _ in
+                labelText = (model.draft.labels ?? []).joined(separator: ", ")
+            }
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -69,7 +114,7 @@ struct TaskEditorView: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Sichern") { Task { await finish(model.save()) } }
-                        .disabled(model.isSaving || model.draft.title.trimmingCharacters(in: .whitespaces).isEmpty)
+                        .disabled(isReadOnly || model.isSaving || model.draft.title.trimmingCharacters(in: .whitespaces).isEmpty)
                 }
             }
         }
@@ -82,6 +127,13 @@ struct TaskEditorView: View {
             DatePicker("Datum", selection: dueDate, displayedComponents: due.hasTime ? [.date, .hourAndMinute] : [.date])
                 .environment(\.calendar, calendar)
         }
+    }
+
+    private var title: String {
+        if model.original.id.source == .github, let number = model.original.url?.lastPathComponent, Int(number) != nil {
+            return "Issue #\(number)"
+        }
+        return model.original.title
     }
 
     private func finish(_ success: Bool) {
@@ -132,6 +184,19 @@ struct TaskEditorView: View {
         Binding(
             get: { model.draft.notes ?? "" },
             set: { model.draft.notes = $0.isEmpty ? nil : $0 }
+        )
+    }
+
+    /// `nil` = all projects, otherwise exactly one project.
+    private var projectTarget: Binding<String?> {
+        Binding(
+            get: {
+                let all = Set(model.original.subContainers.map(\.id))
+                return model.targetProjects == all ? nil : model.targetProjects.first
+            },
+            set: { id in
+                model.targetProjects = id.map { [$0] } ?? Set(model.original.subContainers.map(\.id))
+            }
         )
     }
 

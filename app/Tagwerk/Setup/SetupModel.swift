@@ -4,12 +4,13 @@ import RemindersKit
 
 /// Steps of the first-launch setup. GitHub, ChatGPT and notifications are added by later plans.
 enum SetupStep: CaseIterable, Hashable {
-    case reminders, calendar
+    case reminders, calendar, github
 
     var title: String {
         switch self {
         case .reminders: "Erinnerungen"
         case .calendar: "Kalender"
+        case .github: "GitHub"
         }
     }
 
@@ -17,6 +18,7 @@ enum SetupStep: CaseIterable, Hashable {
         switch self {
         case .reminders: "Tagwerk zeigt deine Erinnerungen zusammen mit deinen anderen Aufgaben und kann sie bearbeiten."
         case .calendar: "Tagwerk liest deine Termine, um deinen Tag zu planen. Der Kalender wird nicht verändert."
+        case .github: "Tagwerk zeigt dir zugewiesene Issues aus deinen offenen GitHub Projects und kann sie bearbeiten."
         }
     }
 }
@@ -45,6 +47,7 @@ final class SetupModel {
             switch step {
             case .reminders: results[step] = try await store.requestAccess()
             case .calendar: results[step] = try await store.requestCalendarAccess()
+            case .github: return  // interactive login, completed via markSignedIn()
             }
         } catch {
             results[step] = .denied
@@ -53,6 +56,13 @@ final class SetupModel {
     }
 
     func skip() {
+        advance()
+    }
+
+    /// Completes the GitHub step after a successful login.
+    func markSignedIn() {
+        guard current == .github else { return }
+        results[.github] = .fullAccess
         advance()
     }
 

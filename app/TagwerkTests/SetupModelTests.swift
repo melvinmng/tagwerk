@@ -48,6 +48,8 @@ struct SetupModelTests {
         model.skip()
         await model.grant()
         #expect(store.calendarRequests == 1)
+        #expect(model.current == .github)
+        model.skip()
         #expect(model.isFinished)
         #expect(settings.selectedCalendarIDs == ["work"])
     }
@@ -57,6 +59,7 @@ struct SetupModelTests {
         let model = SetupModel(store: store, settings: settings)
         model.skip()
         await model.grant()
+        model.skip()
         #expect(settings.selectedCalendarIDs == ["holidays"])
     }
 
@@ -66,11 +69,13 @@ struct SetupModelTests {
         let model = SetupModel(store: store, settings: settings)
         model.skip()
         await model.grant()
+        model.skip()
         #expect(settings.selectedCalendarIDs == nil)
     }
 
     @Test func finish_marksSetupCompleted() {
         let model = SetupModel(store: store, settings: settings)
+        model.skip()
         model.skip()
         #expect(!settings.setupCompleted)
         model.skip()
@@ -78,7 +83,17 @@ struct SetupModelTests {
         #expect(settings.setupCompleted)
     }
 
+    @Test func githubStep_markSignedIn_recordsAndFinishes() async {
+        let model = SetupModel(store: store, settings: settings)
+        model.skip()
+        model.skip()
+        #expect(model.current == .github)
+        model.markSignedIn()
+        #expect(model.results[.github] == .fullAccess)
+        #expect(model.isFinished)
+    }
+
     @Test func steps_haveGermanTitles() {
-        #expect(SetupStep.allCases.map(\.title) == ["Erinnerungen", "Kalender"])
+        #expect(SetupStep.allCases.map(\.title) == ["Erinnerungen", "Kalender", "GitHub"])
     }
 }

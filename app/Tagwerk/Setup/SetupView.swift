@@ -3,10 +3,12 @@ import SwiftUI
 /// First-launch setup (mockup 4): one step at a time, each can be skipped.
 struct SetupView: View {
     @State private var model: SetupModel
+    @State private var loginModel: GitHubLoginModel
     let onFinish: () async -> Void
 
-    init(model: SetupModel, onFinish: @escaping () async -> Void) {
+    init(model: SetupModel, loginModel: GitHubLoginModel, onFinish: @escaping () async -> Void) {
         _model = State(initialValue: model)
+        _loginModel = State(initialValue: loginModel)
         self.onFinish = onFinish
     }
 
@@ -22,9 +24,16 @@ struct SetupView: View {
                 if let step = model.current {
                     Section {
                         Text(step.explanation)
-                        Button("Erlauben") { Task { await model.grant() } }
-                            .buttonStyle(.borderedProminent)
-                        Button("Überspringen") { model.skip() }
+                        if step == .github {
+                            GitHubLoginView(model: loginModel) { model.markSignedIn() }
+                        } else {
+                            Button("Erlauben") { Task { await model.grant() } }
+                                .buttonStyle(.borderedProminent)
+                        }
+                        Button("Überspringen") {
+                            if step == .github { loginModel.cancel() }
+                            model.skip()
+                        }
                     } header: {
                         Text(step.title)
                     } footer: {

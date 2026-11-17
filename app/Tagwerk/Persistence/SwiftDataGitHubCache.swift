@@ -19,6 +19,13 @@ final class SwiftDataGitHubCache: GitHubCache {
         return (records, state.fetchedAt)
     }
 
+    /// Removes all cached issues, e.g. after signing out.
+    func clear() {
+        try? context.delete(model: CachedGitHubIssue.self)
+        try? context.delete(model: GitHubSyncState.self)
+        try? context.save()
+    }
+
     func store(_ records: [GitHubIssueRecord], fetchedAt: Date) {
         let encoder = JSONEncoder()
         do {

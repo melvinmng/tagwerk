@@ -96,4 +96,41 @@ struct TaskEditorModelTests {
         #expect(!model.isVisible(.estimate))
         #expect(!model.isVisible(.container))
     }
+
+    @Test func editor_multiProject_defaultsToAllProjects() async {
+        var multi = item
+        multi.subContainers = [TaskContainer(id: "PVT_1", name: "App", colorHex: nil), TaskContainer(id: "PVT_2", name: "Studium", colorHex: nil)]
+        provider.tasks = [multi]
+        let model = TaskEditorModel(item: multi, provider: provider)
+        #expect(model.targetProjects == ["PVT_1", "PVT_2"])
+        model.draft.priority = .p1
+        _ = await model.save()
+        #expect(provider.appliedEdits.last?.edit.targetSubContainerIDs == nil)
+    }
+
+    @Test func editor_multiProject_restrictedTarget_isSent() async {
+        var multi = item
+        multi.subContainers = [TaskContainer(id: "PVT_1", name: "App", colorHex: nil), TaskContainer(id: "PVT_2", name: "Studium", colorHex: nil)]
+        provider.tasks = [multi]
+        let model = TaskEditorModel(item: multi, provider: provider)
+        model.targetProjects = ["PVT_2"]
+        model.draft.priority = .p1
+        _ = await model.save()
+        #expect(provider.appliedEdits.last?.edit.targetSubContainerIDs == ["PVT_2"])
+    }
+
+    @Test func editor_postComment_callsProvider() async {
+        var posted: [(TaskID, String)] = []
+        let model = TaskEditorModel(item: item, provider: provider, addComment: { posted.append(($0, $1)) })
+        model.comment = "  Erledigt bis Freitag  "
+        await model.postComment()
+        #expect(posted.count == 1)
+        #expect(posted.first?.1 == "Erledigt bis Freitag")
+        #expect(model.comment.isEmpty)
+        #expect(model.canComment)
+    }
+
+    @Test func editor_withoutCommentSupport_cannotComment() {
+        #expect(!TaskEditorModel(item: item, provider: provider).canComment)
+    }
 }

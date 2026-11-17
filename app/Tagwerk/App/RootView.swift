@@ -12,7 +12,7 @@ struct RootView: View {
                 .tabItem { Label("Einstellungen", systemImage: "gearshape") }
         }
         .fullScreenCover(isPresented: showsSetup) {
-            SetupView(model: environment.makeSetupModel()) {
+            SetupView(model: environment.makeSetupModel(), loginModel: environment.makeGitHubLoginModel()) {
                 await environment.taskList.reload()
             }
         }

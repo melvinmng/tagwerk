@@ -75,3 +75,14 @@ struct AppSettingsGitHubTests {
         #expect(try AppSettings.current(in: container.mainContext).selectedProjectIDs == nil)
     }
 }
+
+@MainActor
+struct SwiftDataGitHubCacheClearTests {
+    @Test func cache_clear_removesSnapshot() throws {
+        let container = try ModelContainerFactory.make(inMemory: true)
+        let cache = SwiftDataGitHubCache(context: container.mainContext)
+        cache.store([], fetchedAt: Date(timeIntervalSince1970: 1))
+        cache.clear()
+        #expect(cache.load() == nil)
+    }
+}

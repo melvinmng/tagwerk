@@ -20,7 +20,7 @@ struct TaskRow: View {
             .accessibilityLabel("Erledigt")
 
             VStack(alignment: .leading, spacing: 2) {
-                Text(item.title)
+                Text(displayTitle)
                 HStack(spacing: 6) {
                     if let due = item.due {
                         Text(DueText.text(due, now: now, calendar: calendar))
@@ -47,6 +47,12 @@ struct TaskRow: View {
             }
         }
         .contentShape(Rectangle())
+    }
+
+    /// GitHub issues show their number, as in "#42 Login-Fehler beheben".
+    private var displayTitle: String {
+        guard item.id.source == .github, let number = item.url?.lastPathComponent, Int(number) != nil else { return item.title }
+        return "#\(number) \(item.title)"
     }
 
     private var dueColor: Color {

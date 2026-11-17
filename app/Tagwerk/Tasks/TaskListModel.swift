@@ -30,6 +30,11 @@ enum SourceState: Equatable {
     case loaded, noAccess, failed(String)
     /// Shown from the offline cache with the time of the cached data.
     case offline(since: Date)
+
+    var isOffline: Bool {
+        if case .offline = self { return true }
+        return false
+    }
 }
 
 extension Calendar {

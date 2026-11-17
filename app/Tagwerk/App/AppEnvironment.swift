@@ -16,6 +16,7 @@ final class AppEnvironment {
     let gitHubTokens: TokenManager
     let gitHubLoginClient: DeviceFlowClient
     let gitHub: GitHubTaskProvider
+    private let gitHubCache: SwiftDataGitHubCache
     @ObservationIgnored private var changeObservation: Task<Void, Never>?
 
     init(modelContainer: ModelContainer) throws {
@@ -36,10 +37,12 @@ final class AppEnvironment {
         let tokens = TokenManager(store: KeychainCredentialStore(), client: loginClient)
         self.gitHubLoginClient = loginClient
         self.gitHubTokens = tokens
+        let cache = SwiftDataGitHubCache(context: context)
+        self.gitHubCache = cache
         self.gitHub = GitHubTaskProvider(
             api: GitHubAPI(transport: transport, tokens: tokens),
             tokens: tokens,
-            cache: SwiftDataGitHubCache(context: context),
+            cache: cache,
             selectedProjectIDs: { settings.selectedProjectIDs.map(Set.init) }
         )
     }
@@ -51,10 +54,26 @@ final class AppEnvironment {
         await taskList.reload()
     }
 
-    /// Removes GitHub from the task list after signing out.
+    /// Removes GitHub from the task list after signing out and forgets cached issues.
     func deactivateGitHub() async {
         taskList.providers.removeAll { $0.source == .github }
+        gitHubCache.clear()
+        settings.selectedProjectIDs = nil
         await taskList.reload()
+    }
+
+    var isGitHubActive: Bool { taskList.provider(for: .github) != nil }
+
+    func makeGitHubLoginModel() -> GitHubLoginModel {
+        GitHubLoginModel(
+            login: gitHubLoginClient,
+            tokens: gitHubTokens,
+            onSignedIn: { [weak self] in
+                await self?.activateGitHubIfSignedIn()
+                return self?.gitHub.login
+            },
+            onSignedOut: { [weak self] in await self?.deactivateGitHub() }
+        )
     }
 
     func makeSetupModel() -> SetupModel {

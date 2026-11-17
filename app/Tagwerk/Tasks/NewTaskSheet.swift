@@ -1,3 +1,4 @@
+import GitHubKit
 import SwiftUI
 import TagwerkCore
 
@@ -15,11 +16,25 @@ struct NewTaskSheet: View {
     @State private var priority: Priority?
     @State private var listID: String?
     @State private var reminderLists: [TaskContainer] = []
+    @State private var repositories: [String] = []
+    @State private var repository: String?
+    @State private var projectID: String?
+    @State private var gitHubError: String?
+
+    private var gitHub: GitHubTaskProvider? { model.provider(for: .github) as? GitHubTaskProvider }
 
     private var targets: [TaskSource] {
-        [.local, .reminders].filter { source in
-            model.provider(for: source) != nil && model.sourceStates[source] != .noAccess
+        [.local, .reminders, .github].filter { source in
+            guard model.provider(for: source) != nil, let state = model.sourceStates[source] else {
+                return source == .local
+            }
+            return state == .loaded
         }
+    }
+
+    private var canSave: Bool {
+        guard !title.trimmingCharacters(in: .whitespaces).isEmpty else { return false }
+        return target != .github || (repository != nil && projectID != nil)
     }
 
     var body: some View {
@@ -28,7 +43,7 @@ struct NewTaskSheet: View {
                 if targets.count > 1 {
                     Picker("Anlegen als", selection: $target) {
                         ForEach(targets, id: \.self) { source in
-                            Text(source == .local ? "Lokal" : "Erinnerung").tag(source)
+                            Text(label(for: source)).tag(source)
                         }
                     }
                     .pickerStyle(.segmented)
@@ -37,6 +52,22 @@ struct NewTaskSheet: View {
                 Section {
                     TextField("Titel", text: $title)
                     TextField("Notiz", text: $notes, axis: .vertical)
+                }
+
+                if target == .github {
+                    Section {
+                        Picker("Repository", selection: $repository) {
+                            Text("Wählen …").tag(String?.none)
+                            ForEach(repositories, id: \.self) { Text($0).tag(Optional($0)) }
+                        }
+                        Picker("Project", selection: $projectID) {
+                            Text("Wählen …").tag(String?.none)
+                            ForEach(gitHub?.projects ?? []) { Text($0.title).tag(Optional($0.id)) }
+                        }
+                    } footer: {
+                        Text(gitHubError ?? "Das Issue wird dir zugewiesen.")
+                    }
+                    .task(id: target) { await loadRepositories() }
                 }
 
                 if target == .reminders, !reminderLists.isEmpty {
@@ -66,7 +97,7 @@ struct NewTaskSheet: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Hinzufügen") { Task { await save() } }
-                        .disabled(title.trimmingCharacters(in: .whitespaces).isEmpty)
+                        .disabled(!canSave)
                 }
             }
             .task { reminderLists = await model.containers(for: .reminders) }
@@ -79,10 +110,30 @@ struct NewTaskSheet: View {
             notes: notes.isEmpty ? nil : notes,
             due: hasDue ? DueDate(date: dueDate, includeTime: hasTime, calendar: model.calendar) : nil,
             priority: priority,
-            containerID: target == .reminders ? listID : nil
+            containerID: target == .reminders ? listID : target == .github ? repository : nil,
+            subContainerID: target == .github ? projectID : nil
         )
         await model.create(draft, in: target)
         dismiss()
+    }
+}
+
+extension NewTaskSheet {
+    private func label(for source: TaskSource) -> String {
+        switch source {
+        case .local: "Lokal"
+        case .reminders: "Erinnerung"
+        case .github: "GitHub-Issue"
+        }
+    }
+
+    private func loadRepositories() async {
+        guard repositories.isEmpty, let gitHub else { return }
+        do {
+            repositories = try await gitHub.repositories()
+        } catch {
+            gitHubError = TaskListModel.message(for: error)
+        }
     }
 }
 

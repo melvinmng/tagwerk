@@ -1,3 +1,4 @@
+import GitHubKit
 import SwiftUI
 import TagwerkCore
 
@@ -62,7 +63,9 @@ struct TaskListView: View {
             .sheet(item: $editing) { item in
                 if let provider = model.provider(for: item.id.source) {
                     TaskEditorView(item: item, provider: provider, calendar: model.calendar,
-                                   containers: editingContainers) { saved in
+                                   containers: editingContainers,
+                                   addComment: commentAction(for: provider),
+                                   isReadOnly: model.sourceStates[item.id.source]?.isOffline == true) { saved in
                         model.didSave(saved)
                     }
                 }
@@ -87,7 +90,7 @@ struct TaskListView: View {
 
     private func row(_ item: TaskItem, section: TaskSection) -> some View {
         TaskRow(item: item, section: section, now: model.now(), calendar: model.calendar) {
-            Task { await model.complete(item.id) }
+            if isWritable(item) { Task { await model.complete(item.id) } }
         }
         .onTapGesture {
             Task {
@@ -97,16 +100,20 @@ struct TaskListView: View {
             }
         }
         .swipeActions(edge: .leading) {
-            Button { Task { await model.complete(item.id) } } label: {
-                Label("Erledigt", systemImage: "checkmark")
+            if isWritable(item) {
+                Button { Task { await model.complete(item.id) } } label: {
+                    Label("Erledigt", systemImage: "checkmark")
+                }
+                .tint(.green)
             }
-            .tint(.green)
         }
         .swipeActions(edge: .trailing) {
-            Button { reschedulingItem = item } label: {
-                Label("Verschieben", systemImage: "calendar")
+            if isWritable(item) {
+                Button { reschedulingItem = item } label: {
+                    Label("Verschieben", systemImage: "calendar")
+                }
+                .tint(.orange)
             }
-            .tint(.orange)
         }
     }
 
@@ -126,6 +133,16 @@ struct TaskListView: View {
                 if model.lastCompleted?.id == completed.id { model.dismissUndo() }
             }
         }
+    }
+
+    /// Offline sources (GitHub cache) are read-only.
+    private func isWritable(_ item: TaskItem) -> Bool {
+        model.sourceStates[item.id.source]?.isOffline != true
+    }
+
+    private func commentAction(for provider: any TaskProvider) -> ((TaskID, String) async throws -> Void)? {
+        guard let gitHub = provider as? GitHubTaskProvider else { return nil }
+        return { id, text in try await gitHub.addComment(to: id, body: text) }
     }
 
     /// Sources in the current filter that could not be loaded.
