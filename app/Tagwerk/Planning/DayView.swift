@@ -84,7 +84,8 @@ struct DayView: View {
                 }
             }
             .sheet(item: $blockFor) { task in
-                BlockSheet(task: task, day: plan.day, calendar: model.calendar) { start, minutes in
+                BlockSheet(task: task, day: plan.day, hours: model.workHours(on: plan.day), now: model.now(),
+                           calendar: model.calendar) { start, minutes in
                     Task { await model.createBlock(for: task, start: start, minutes: minutes) }
                 }
             }

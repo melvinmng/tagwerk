@@ -42,3 +42,24 @@ public func workHours(on day: PlanDay, schedule: WeekSchedule, overrides: [PlanD
     case nil: return schedule.hoursByWeekday[day.weekday(in: calendar)]
     }
 }
+
+/// Suggested start of a new time block on `day`: on future days the start of work; today the next
+/// full hour, at least the start of work and at most the latest start that still ends by the end of
+/// work, but never in the past. Days off use 09:00 (today: the next full hour).
+public func suggestedBlockStart(on day: PlanDay, hours: WorkHours?, minutes: Int, now: Date, calendar: Calendar) -> Date {
+    let dayStart = day.startDate(in: calendar)
+    let today = PlanDay(date: now, calendar: calendar)
+    let fallbackMinutes = 9 * 60
+    guard day == today else {
+        return dayStart.addingTimeInterval(TimeInterval((hours?.startMinutes ?? fallbackMinutes) * 60))
+    }
+    let nowMinutes = Int(now.timeIntervalSince(dayStart) / 60)
+    let nextFullHour = (nowMinutes / 60 + 1) * 60
+    var start = nextFullHour
+    if let hours {
+        let latest = max(hours.startMinutes, ((hours.endMinutes - minutes) / 60) * 60)
+        start = min(max(nextFullHour, hours.startMinutes), latest)
+        if start < nowMinutes { start = nextFullHour }
+    }
+    return dayStart.addingTimeInterval(TimeInterval(start * 60))
+}

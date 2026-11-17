@@ -72,13 +72,15 @@ struct BlockSheet: View {
     @State private var start: Date
     @State private var minutes: Int?
 
-    init(task: TaskItem, day: PlanDay, calendar: Calendar, onCreate: @escaping (Date, Int) -> Void) {
+    init(task: TaskItem, day: PlanDay, hours: WorkHours?, now: Date, calendar: Calendar,
+         onCreate: @escaping (Date, Int) -> Void) {
         self.task = task
         self.day = day
         self.calendar = calendar
         self.onCreate = onCreate
-        _start = State(initialValue: day.startDate(in: calendar).addingTimeInterval(9 * 3600))
-        _minutes = State(initialValue: task.estimateMinutes ?? 60)
+        let minutes = task.estimateMinutes ?? 60
+        _start = State(initialValue: suggestedBlockStart(on: day, hours: hours, minutes: minutes, now: now, calendar: calendar))
+        _minutes = State(initialValue: minutes)
     }
 
     var body: some View {
