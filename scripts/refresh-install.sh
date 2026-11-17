@@ -2,9 +2,10 @@
 # Rebuilds the Tagwerk app with a fresh free-team provisioning profile and installs it
 # on the iPhone before the 7-day profile expires. Intended to run hourly via launchd.
 #
-# Usage: refresh-install.sh [--dry-run] [--force]
-#   --dry-run  only report due state, device reachability and signing identity
-#   --force    install even if the last install is less than REFRESH_AFTER_DAYS old
+# Usage: refresh-install.sh [--dry-run] [--force] [--renew-profile]
+#   --dry-run        only report due state, device reachability, signing identity and profile expiry
+#   --force          install even if the last install is less than REFRESH_AFTER_DAYS old
+#   --renew-profile  delete the cached provisioning profile so Xcode issues a new 7-day profile
 #   TAGWERK_FORCE=1 in the environment has the same effect as --force
 #
 # Exit codes: 0 installed or not due, 1 build failed, 2 device unreachable, 3 signing failed
@@ -12,6 +13,9 @@
 set -u
 
 SCHEME="TagwerkSpike"
+BUNDLE_ID="com.melvinmng.tagwerk.spike"
+RENEW_PROFILE_WITHIN_DAYS=3
+PROFILES_DIR="$HOME/Library/Developer/Xcode/UserData/Provisioning Profiles"
 PROJECT_DIR_NAME="spike"
 BRANCH="${TAGWERK_BRANCH:-spike/feasibility}"
 REFRESH_AFTER_DAYS=5
@@ -43,11 +47,13 @@ source "$CONFIG_FILE"
 
 dry_run=0
 force=0
+renew_profile=0
 [[ "${TAGWERK_FORCE:-0}" == "1" ]] && force=1
 for arg in "$@"; do
   case "$arg" in
     --dry-run) dry_run=1 ;;
     --force) force=1 ;;
+    --renew-profile) renew_profile=1 ;;
     *) echo "Unknown option: $arg" >&2; exit 64 ;;
   esac
 done
@@ -74,6 +80,30 @@ device_reachable() {
   xcrun devicectl device info details --device "$DEVICE_ID" --timeout 30 >/dev/null 2>&1
 }
 
+# Prints "<expiry epoch> <path>" for every cached profile of this app.
+cached_profiles() {
+  local file plist app expiry
+  for file in "$PROFILES_DIR"/*.mobileprovision(N); do
+    plist=$(/usr/bin/security cms -D -i "$file" 2>/dev/null) || continue
+    app=$(print -r -- "$plist" | /usr/bin/plutil -extract Entitlements.application-identifier raw - 2>/dev/null)
+    [[ "$app" == *".$BUNDLE_ID" ]] || continue
+    expiry=$(print -r -- "$plist" | /usr/bin/plutil -extract ExpirationDate raw - 2>/dev/null)
+    print -r -- "$(/bin/date -j -u -f '%Y-%m-%dT%H:%M:%SZ' "$expiry" '+%s') $file"
+  done
+}
+
+# Deletes cached profiles that expire too soon (or all with --renew-profile),
+# because Xcode otherwise reuses a profile that would expire right after the install.
+remove_expiring_profiles() {
+  local limit=$(( $(/bin/date '+%s') + RENEW_PROFILE_WITHIN_DAYS * 86400 ))
+  local expiry file
+  cached_profiles | while read -r expiry file; do
+    if (( renew_profile == 1 || expiry < limit )); then
+      rm -f -- "$file" && log "profile: removed cached profile expiring $(/bin/date -r "$expiry" '+%Y-%m-%d')"
+    fi
+  done
+}
+
 signing_identity_present() {
   /usr/bin/security find-identity -v -p codesigning 2>/dev/null | grep -q "Apple Development"
 }
@@ -88,6 +118,7 @@ if (( dry_run == 1 )); then
   echo "due: $([[ $due == 1 ]] && echo yes || echo no)"
   if device_reachable; then echo "device: reachable"; else echo "device: unreachable"; fi
   if signing_identity_present; then echo "signing identity: present"; else echo "signing identity: missing"; fi
+  cached_profiles | while read -r expiry file; do echo "profile expires: $(/bin/date -r "$expiry" '+%Y-%m-%d %H:%M')"; done
   exit 0
 fi
 
@@ -112,6 +143,8 @@ fi
 
 ( cd "$SRC/$PROJECT_DIR_NAME" && xcodegen -q ) || { log "build: xcodegen failed"; exit 1; }
 
+remove_expiring_profiles
+
 if ! xcodebuild -project "$SRC/$PROJECT_DIR_NAME/$SCHEME.xcodeproj" -scheme "$SCHEME" \
     -destination "id=$DEVICE_ID" -derivedDataPath "$DERIVED" \
     -allowProvisioningUpdates build > "$BUILD_LOG" 2>&1; then
@@ -131,5 +164,6 @@ if ! xcrun devicectl device install app --device "$DEVICE_ID" "$APP_PATH" >> "$B
 fi
 
 /bin/date '+%Y-%m-%dT%H:%M:%S' > "$STATE_FILE"
-log "install: ok"
+new_expiry=$(/usr/bin/security cms -D -i "$APP_PATH/embedded.mobileprovision" 2>/dev/null | /usr/bin/plutil -extract ExpirationDate raw - 2>/dev/null)
+log "install: ok (profile expires $new_expiry)"
 exit 0
