@@ -1,38 +1,138 @@
 # Tagwerk
 
-Private iOS app that brings Apple Reminders, GitHub issues and the calendar into one place, with an AI day planner and tracking for nutrition and training.
+Tagwerk ist eine iPhone-App für lokale Aufgaben, Apple Erinnerungen und GitHub-Issues. Kalenderintegration und KI-Tagesplanung werden in Phase 2 ausgebaut. Ernährung und Training sind geplant. Den Entwicklungsstand findest du in [TODO.md](TODO.md).
 
-Status: Phase 2 in progress. Design and plans live in `docs/superpowers/`.
+## Tagwerk auf deinem iPhone installieren
 
-## Layout
+Du brauchst einen Mac mit Apple-Chip und **macOS Tahoe 26.6 oder neuer**, ein iPhone mit **iOS 27.0 oder neuer**, ein USB-Datenkabel und einen eigenen kostenlosen **Apple Account**. Die Anleitung verwendet **Xcode 27.2**. Für die lokale Installation genügt das **Personal Team** in Xcode. Eine Mitgliedschaft im kostenpflichtigen Apple Developer Program ist dafür nicht erforderlich. [Xcode-Systemanforderungen](https://developer.apple.com/xcode/system-requirements/) · [Apple-Account und Personal Team](https://developer.apple.com/help/account/basics/about-your-developer-account/)
 
-- `app/` – the iOS app (XcodeGen, `app/project.yml`; the generated `.xcodeproj` is not checked in)
-  - `app/Tagwerk/` – SwiftUI app target (task list, editor, setup, settings, SwiftData persistence)
-  - `app/Packages/TagwerkCore` – task model, sections and date logic (Foundation only)
-  - `app/Packages/RemindersKit` – EventKit access with conflict-checked writes
-  - `app/Packages/SecureStore` – keychain storage
-  - `app/Packages/GitHubKit` – GitHub device-flow login, token refresh, Projects (GraphQL) and Issues (REST)
-- `scripts/` – build and install helpers, see `scripts/README.md`
-- `spike/` – Phase 1 feasibility app (reference only, removed after the switch)
+### 1. Xcode und XcodeGen auf dem Mac installieren
 
-## Development
+1. Lade **Xcode 27.2** aus dem Mac App Store oder von Apple Developer. Lege die App als **Xcode.app** unter **Programme** ab. Die Skripte verwenden den Pfad `/Applications/Xcode.app`. [Xcode-Downloads](https://developer.apple.com/xcode/)
+2. Öffne Xcode, akzeptiere die Lizenz und installiere beim ersten Start die benötigten Komponenten für **iOS**. Falls der Dialog bereits geschlossen ist, findest du sie unter **Xcode → Settings → Components**. [Xcode-Komponenten installieren](https://developer.apple.com/documentation/xcode/downloading-and-installing-additional-xcode-components)
+3. Öffne **Xcode → Settings → Accounts** und füge deinen eigenen Apple Account hinzu. In **Xcode → Settings → Locations** wählst du unter **Command Line Tools** deine Xcode-Version aus.
+4. Installiere **Homebrew**, falls `brew --version` noch nicht funktioniert. Übernimm die angezeigten **Next steps** des Installers, damit `brew` im Terminal verfügbar ist. [Homebrew installieren](https://brew.sh/)
+5. Öffne **Terminal** und führe diese Befehle aus. Der letzte Befehl sollte die installierte Xcode-Version anzeigen.
 
-Requirements: Xcode 27.2, XcodeGen 2.46, simulator "iPhone 18 Pro".
+   ```zsh
+   brew install xcodegen
+   xcodegen --version
+   xcodebuild -version
+   ```
+
+### 2. Quellcode laden und iPhone koppeln
+
+Kopiere die Befehle ins Terminal. Der Klon liegt außerhalb von iCloud Drive, damit der Hintergrundprozess später darauf zugreifen kann. GitHub erlaubt den Download aus dem öffentlichen Repository ohne Anmeldung. Wenn du auch die Quelle für künftige Builds selbst verwalten möchtest, kannst du die URL durch die HTTPS-URL deines eigenen öffentlichen Forks ersetzen.
 
 ```zsh
-app/test-all.sh          # all package tests and the app tests in the simulator
-scripts/install-dev.sh   # build the working tree and install it on the iPhone
+mkdir -p "$HOME/Library/Developer/Tagwerk"
+git clone --branch main https://github.com/melvinmng/tagwerk.git "$HOME/Library/Developer/Tagwerk/src"
+cd "$HOME/Library/Developer/Tagwerk/src"
+(cd app && xcodegen)
+open app/Tagwerk.xcodeproj
 ```
 
-Both scripts set `DEVELOPER_DIR` themselves. The device identifier is read from `~/Library/Application Support/Tagwerk/config` and never stored in the repository.
+1. Verbinde dein entsperrtes iPhone per USB mit dem Mac. Bestätige eventuelle Rückfragen auf dem Mac und auf dem iPhone **Diesem Computer vertrauen**.
+2. Öffne in Xcode **Xcode → Open Developer Tool → Device Hub** und wähle das iPhone. Folge den Anweisungen zur Kopplung und warte, bis das Gerät einsatzbereit ist. [Geräte in Xcode koppeln](https://developer.apple.com/documentation/xcode/managing-your-simulated-and-physical-devices-in-device-hub)
+3. Aktiviere auf dem iPhone **Einstellungen → Datenschutz & Sicherheit → Entwicklermodus**. Starte das iPhone über den Dialog neu und bestätige anschließend die Aktivierung. Falls der Menüpunkt fehlt, beginne zuerst die Kopplung in Xcode. [Entwicklermodus aktivieren](https://developer.apple.com/documentation/xcode/enabling-developer-mode-on-a-device)
 
-## GitHub
+### 3. App zum ersten Mal starten
 
-Sign in under Settings → GitHub or during setup ("Mit GitHub anmelden"). Tagwerk uses the OAuth app "Tagwerk" with the device flow: the app shows a code, you enter it at github.com/login/device. Requested scopes: `repo project offline_access`. There is no client secret; the client ID lives in `app/Config/GitHub.xcconfig`.
+1. Wähle im Xcode-Projektnavigator das Projekt **Tagwerk** und unter **Targets** den Eintrag **Tagwerk**. Öffne **Signing & Capabilities** und trage unter **Bundle Identifier** eine eigene eindeutige App-ID ein, zum Beispiel `local.tagwerk.anna-47f2`. Verwende in deinem Wert nur Buchstaben, Ziffern, Punkte und Bindestriche. Falls Xcode meldet, dass die ID schon vergeben ist, wähle einen anderen Suffix.
+2. Aktiviere **Automatically manage signing** und wähle unter **Team** deinen eigenen Eintrag **Personal Team**.
+3. Wähle oben in Xcode das Scheme **Tagwerk** und dein **physisches iPhone** als Ziel. Starte den Build über ▶ oder **⌘R**. Xcode erstellt das Signierzertifikat und das Installationsprofil für dein Team. Falls das iPhone dem Entwickler erst vertrauen muss, wähle deinen Eintrag unter **Einstellungen → Allgemein → VPN & Geräteverwaltung** und folge dem Dialog.
+4. Öffne Tagwerk auf dem iPhone und folge der Einrichtung. Erlaube den Zugriff auf Erinnerungen und Kalender nach Bedarf. Wähle bei GitHub zunächst **Überspringen**. Sobald die Aufgabenansicht erscheint, kannst du eine lokale Aufgabe anlegen und damit die Installation prüfen.
 
-- Tokens are stored in the keychain (this device only). The access token expires after 8 hours and is renewed automatically with the refresh token; an unused sign-in expires after about 6 months.
-- Signing out deletes the tokens and the cached issues on the device. To revoke access completely: github.com → Settings → Applications → Authorized OAuth Apps → Tagwerk.
-- Read: all open GitHub Projects of your account; shown are open issues assigned to you whose project status is not "Done". Fields are matched by name: Status, Priority (P1–P5), Due date, Estimate (h) or Estimate (MDs, 8 h per day).
-- Write: title, description, labels, comments, close/reopen (REST); Due date, Priority, Estimate and Status (GraphQL). "Done" closes the issue first and then sets the status in every project. New issues are assigned to you and added to the chosen project with status "Ready".
-- Before every write the issue is reloaded; if it changed meanwhile, the editor offers "Neu laden" or "Trotzdem sichern".
-- Offline, the list shows the last fetched state ("Stand: hh:mm, offline") and writing is disabled.
+### 4. Geräte-ID und Signierung für den Hintergrundbetrieb speichern
+
+Xcode hat deine Auswahl im erzeugten Projekt gespeichert. Lies die Werte aus, **bevor du XcodeGen erneut ausführst**. Führe diesen Block mit angeschlossenem iPhone im Terminal aus.
+
+```zsh
+cd "$HOME/Library/Developer/Tagwerk/src"
+xcodebuild -project app/Tagwerk.xcodeproj -target Tagwerk -configuration Debug -showBuildSettings \
+  | awk '$1 == "DEVELOPMENT_TEAM" || $1 == "PRODUCT_BUNDLE_IDENTIFIER"'
+xcrun xctrace list devices
+```
+
+- `DEVELOPMENT_TEAM` ist die zehnstellige ID deines Personal Teams.
+- `PRODUCT_BUNDLE_IDENTIFIER` ist die App-ID, die du in Xcode eingetragen hast.
+- `DEVICE_ID` ist die Geräte-ID (UDID) deines iPhones. Kopiere in der Ausgabe unter **Devices** die Kennung in der letzten Klammer hinter dem Namen deines iPhones.
+
+Lege die lokale Konfiguration an.
+
+```zsh
+mkdir -p "$HOME/Library/Application Support/Tagwerk"
+nano "$HOME/Library/Application Support/Tagwerk/config"
+```
+
+Füge die drei Zeilen ein und ersetze **alle Beispielwerte** durch deine eigenen Werte. Die Werte stehen direkt hinter dem Gleichheitszeichen. Speichere mit **Ctrl+O**, bestätige mit **Enter** und beende den Editor mit **Ctrl+X**.
+
+```zsh
+DEVICE_ID=DEINE_IPHONE_UDID
+DEVELOPMENT_TEAM=DEINE_TEAM_ID
+TAGWERK_BUNDLE_ID=local.tagwerk.anna-47f2
+```
+
+Behalte bei Neuinstallationen dasselbe Team und dieselbe Bundle-ID bei. Unter dieser Identität installiert iOS neue Builds als Update, sodass deine lokalen App-Daten erhalten bleiben. Die Konfiguration liegt in deinem Benutzerordner außerhalb des Git-Klons.
+
+### 5. Automatische Erneuerung aktivieren
+
+Das Installationsprofil eines kostenlosen Personal Teams gilt **sieben Tage**. Das mitgelieferte Skript prüft die Restlaufzeit bei der Mac-Anmeldung und anschließend einmal pro Stunde. Bei weniger als drei Tagen Restlaufzeit erstellt es mit Xcode ein neues Profil und installiert die App erneut. Der Mac muss dafür angemeldet und wach sein. Das iPhone muss per USB oder im selben WLAN für Xcode erreichbar sein. Bei abgelaufenem Profil kannst du die App mit demselben Team und derselben Bundle-ID erneut installieren und wieder öffnen. [Apples Regeln für Personal Teams](https://developer.apple.com/help/account/basics/about-your-developer-account/)
+
+1. Teste zuerst mit angeschlossenem iPhone. Der erste Befehl zeigt die Erreichbarkeit an. Der zweite baut und installiert Tagwerk mit der lokalen Konfiguration.
+
+   ```zsh
+   cd "$HOME/Library/Developer/Tagwerk/src"
+   scripts/refresh-install.sh --dry-run
+   scripts/refresh-install.sh --force
+   tail "$HOME/Library/Logs/Tagwerk/refresh.log"
+   ```
+
+   Im Protokoll sollte `install: ok` mit einem Ablaufdatum stehen. Öffne Tagwerk und prüfe, ob deine lokale Testaufgabe noch da ist. Falls der Schlüsselbund nach Zugriff durch `codesign` auf deinen Signierschlüssel fragt, wähle **Immer erlauben**, damit auch der Hintergrundprozess signieren kann.
+
+2. Für den Betrieb ohne Kabel verbinde Mac und iPhone mit demselben WLAN. Ziehe das USB-Kabel ab und wiederhole `scripts/refresh-install.sh --dry-run`. Erwartet wird `device: reachable`. Falls nötig, öffne den **Device Hub** und kopple das iPhone über **+ → Pair Nearby Device** im WLAN oder nutze die Kabelverbindung weiter. [Drahtlose Kopplung in Xcode](https://developer.apple.com/documentation/xcode/managing-your-simulated-and-physical-devices-in-device-hub)
+
+3. Installiere den mitgelieferten LaunchAgent. Er startet das Skript in deinem macOS-Benutzerkonto. Führe diesen Block aus dem Git-Klon aus.
+
+   ```zsh
+   mkdir -p "$HOME/Library/LaunchAgents"
+   cp scripts/de.tagwerk.refresh.plist "$HOME/Library/LaunchAgents/"
+   launchctl bootstrap "gui/$(id -u)" "$HOME/Library/LaunchAgents/de.tagwerk.refresh.plist"
+   launchctl print "gui/$(id -u)/de.tagwerk.refresh"
+   ```
+
+   `launchctl print` sollte den Dienst anzeigen. Zwischen den Prüfungen kann er inaktiv sein. Vor einem fälligen Build holt das Skript die neuesten Änderungen von `origin/main` aus deinem Klon. Zum manuellen Erneuern, zur Fehlersuche und zum Abschalten siehe [Installationsskripte](scripts/README.md).
+
+## GitHub-Aufgaben verbinden (optional)
+
+Für Aufgaben aus GitHub verwendest du eine **eigene OAuth App**. Die lokale App und Apple Erinnerungen kannst du bereits nach Schritt 3 verwenden.
+
+1. Öffne auf GitHub **Settings → Developer settings → OAuth Apps → New OAuth App**. Gib einen Namen und als **Homepage URL** die URL des Tagwerk-Repositories oder deines Forks an. Das Formular verlangt eine **Authorization callback URL**. Dafür kannst du beispielsweise `http://localhost` eintragen, da der verwendete Device Flow keine Rückleitung benötigt. Aktiviere **Enable Device Flow** und registriere die App. Falls GitHub **Expire user access tokens** anbietet, lasse die Option aktiv. [OAuth App erstellen](https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/creating-an-oauth-app) · [GitHub Device Flow](https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/authorizing-oauth-apps#device-flow)
+2. Kopiere die **Client ID** und ergänze in deiner lokalen Datei `~/Library/Application Support/Tagwerk/config` eine Zeile `GITHUB_CLIENT_ID=DEINE_CLIENT_ID`. Die öffentlich sichtbare Client ID genügt für diesen Anmeldeweg. Ein Client Secret brauchst du dafür nicht.
+3. Installiere die App mit der neuen Einstellung erneut.
+
+   ```zsh
+   "$HOME/Library/Developer/Tagwerk/src/scripts/refresh-install.sh" --force
+   ```
+
+4. Öffne in Tagwerk **Einstellungen → GitHub → Mit GitHub anmelden**. Gib den angezeigten Code im Browser bei GitHub ein. Prüfe, dass dort dein eigenes Konto und deine eigene OAuth App angezeigt werden, bevor du den Zugriff bestätigst. Anschließend kannst du deine Projects in Tagwerk auswählen.
+
+Tagwerk fordert Zugriff auf Repositories und Projects an (`repo` und `project`). `offline_access` dient der Erneuerung zeitlich begrenzter Tokens. Die Zugangstokens liegen im Schlüsselbund des iPhones. Du kannst dich in Tagwerk abmelden und die Berechtigung in GitHub unter **Settings → Applications → Authorized OAuth Apps** widerrufen.
+
+Tagwerk lädt dir zugewiesene offene Issues aus offenen Projects, soweit sie im Project keiner **Done**-Spalte zugeordnet sind. Unterstützte Project-Felder sind **Status**, **Priority** (P1–P5), **Due date**, **Estimate (h)** und **Estimate (MDs)** mit 8 Stunden je MD. Vor dem Schreiben lädt Tagwerk das Issue erneut und zeigt bei zwischenzeitlichen Änderungen einen Konflikt an. Offline zeigt die App den zuletzt geladenen Stand an.
+
+Du kannst Titel, Beschreibung, Labels und Project-Felder bearbeiten, Kommentare schreiben und Issues schließen oder wieder öffnen. Neue Issues weist dir Tagwerk selbst zu und legt sie im gewählten Project mit Status **Ready** an. Beim Abhaken schließt Tagwerk zuerst das Issue und setzt anschließend den Status in den zugehörigen Projects.
+
+## Entwicklung
+
+- [`app/`](app/) enthält die SwiftUI-App und ihre lokalen Swift-Pakete. XcodeGen erzeugt das Xcode-Projekt aus [`app/project.yml`](app/project.yml).
+- [`scripts/`](scripts/) enthält die Geräteinstallation und den LaunchAgent.
+- [`docs/superpowers/`](docs/superpowers/) enthält Entwürfe und Implementierungspläne.
+- [`spike/`](spike/) ist der Machbarkeitsprototyp aus Phase 1.
+
+Die Tests verwenden Xcode 27.2, XcodeGen 2.46 und einen iOS-Simulator **iPhone 18 Pro**. Für die Simulator-Tests genügt die heruntergeladene iOS-Simulatorlaufzeit in Xcode.
+
+```zsh
+app/test-all.sh          # Swift package and app tests in the simulator
+scripts/install-dev.sh   # Install the current checkout using the local device configuration
+```
