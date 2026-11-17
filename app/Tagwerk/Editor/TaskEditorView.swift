@@ -70,7 +70,7 @@ struct TaskEditorView: View {
                         }
                     }
                     if model.isVisible(.due) { dueFields }
-                    if model.isVisible(.priority) { PriorityPicker(priority: $model.draft.priority) }
+                    if model.isVisible(.priority) { PriorityPicker(priority: $model.draft.priority, choices: model.priorityChoices) }
                     if model.isVisible(.estimate) {
                         Stepper(value: estimate, in: 0...1440, step: 15) {
                             LabeledContent("Geschätzt", value: model.draft.estimateMinutes.map { "\($0) min" } ?? "–")

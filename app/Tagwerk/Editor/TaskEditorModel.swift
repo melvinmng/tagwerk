@@ -38,6 +38,13 @@ final class TaskEditorModel {
 
     var canComment: Bool { addComment != nil }
 
+    /// Reminders know four levels (!!!, !!, !, none), so they offer P1–P4 without "Keine".
+    var priorityChoices: [Priority?] { Self.priorityChoices(for: original.id.source) }
+
+    static func priorityChoices(for source: TaskSource) -> [Priority?] {
+        source == .reminders ? [.p1, .p2, .p3, .p4] : [nil] + Priority.allCases.map { $0 }
+    }
+
     /// GitHub's "Due date" field holds a date only.
     var supportsDueTime: Bool { original.id.source != .github }
 

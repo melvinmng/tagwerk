@@ -153,4 +153,11 @@ struct TaskEditorModelTests {
         #expect(!TaskEditorModel(item: issue, provider: FakeTaskProvider(source: .github, tasks: [issue])).supportsDueTime)
         #expect(TaskEditorModel(item: item, provider: provider).supportsDueTime)
     }
+
+    @Test func priorityChoices_remindersOfferFourLevels() {
+        #expect(TaskEditorModel(item: item, provider: provider).priorityChoices == [.p1, .p2, .p3, .p4])
+        let local = makeTask("Lokal", source: .local)
+        #expect(TaskEditorModel(item: local, provider: FakeTaskProvider(source: .local, tasks: [local])).priorityChoices
+                == [nil, .p1, .p2, .p3, .p4, .p5])
+    }
 }

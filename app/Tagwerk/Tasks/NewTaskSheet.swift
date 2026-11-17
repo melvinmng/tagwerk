@@ -88,7 +88,7 @@ struct NewTaskSheet: View {
                             .environment(\.calendar, model.calendar)
                             .environment(\.timeZone, model.calendar.timeZone)
                     }
-                    PriorityPicker(priority: $priority)
+                    PriorityPicker(priority: $priority, choices: TaskEditorModel.priorityChoices(for: target))
                 }
             }
             .navigationTitle("Neue Aufgabe")
@@ -103,6 +103,12 @@ struct NewTaskSheet: View {
                 }
             }
             .task { reminderLists = await model.containers(for: .reminders) }
+            .onChange(of: target) { _, newTarget in
+                // Keep the picker selection valid for the target's priority levels.
+                if !TaskEditorModel.priorityChoices(for: newTarget).contains(priority) {
+                    priority = newTarget == .reminders ? .p4 : nil
+                }
+            }
         }
     }
 
@@ -139,15 +145,15 @@ extension NewTaskSheet {
     }
 }
 
-/// Priority choice "Keine", P1 … P5.
+/// Priority choice among the levels a source supports.
 struct PriorityPicker: View {
     @Binding var priority: Priority?
+    var choices: [Priority?] = [nil] + Priority.allCases.map { $0 }
 
     var body: some View {
         Picker("Priorität", selection: $priority) {
-            Text("Keine").tag(Priority?.none)
-            ForEach(Priority.allCases, id: \.self) { value in
-                Text(value.label).tag(Optional(value))
+            ForEach(choices, id: \.self) { value in
+                Text(value?.label ?? "Keine").tag(value)
             }
         }
     }

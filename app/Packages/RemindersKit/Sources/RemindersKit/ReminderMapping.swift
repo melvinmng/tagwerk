@@ -3,27 +3,24 @@ import TagwerkCore
 
 /// Pure conversions between reminder snapshots and tasks.
 public enum ReminderMapping {
-    /// EK 1 → P1, 2–4 → P2, 5 → P3, 6–8 → P4, 9 → P5, anything else → none.
+    /// The Reminders app shows EK 1 as "!!!", 5 as "!!", 9 as "!" and 0 without marks. These four
+    /// levels map to P1 (critical) … P4 (low, no marks). Values in between follow RFC 5545 bands.
     public static func priority(fromEK value: Int) -> Priority? {
         switch value {
-        case 1: .p1
-        case 2...4: .p2
-        case 5: .p3
-        case 6...8: .p4
-        case 9: .p5
-        default: nil
+        case 1...4: .p1
+        case 5: .p2
+        case 6...9: .p3
+        default: .p4
         }
     }
 
-    /// P1 → 1, P2 → 3, P3 → 5, P4 → 7, P5 → 9, none → 0.
+    /// P1 → 1, P2 → 5, P3 → 9, P4/P5/none → 0 (no marks in the Reminders app).
     public static func ekPriority(from priority: Priority?) -> Int {
         switch priority {
         case .p1: 1
-        case .p2: 3
-        case .p3: 5
-        case .p4: 7
-        case .p5: 9
-        case nil: 0
+        case .p2: 5
+        case .p3: 9
+        case .p4, .p5, nil: 0
         }
     }
 
