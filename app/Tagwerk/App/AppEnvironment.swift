@@ -30,7 +30,7 @@ final class AppEnvironment {
         let context = modelContainer.mainContext
         let settings = try AppSettings.current(in: context)
         let gateway = EventKitGateway()
-        let reminders = RemindersTaskProvider(store: gateway) {
+        let reminders = RemindersTaskProvider(store: gateway, estimates: SwiftDataEstimateStore(context: context)) {
             settings.selectedReminderListIDs.map(Set.init)
         }
         self.settings = settings

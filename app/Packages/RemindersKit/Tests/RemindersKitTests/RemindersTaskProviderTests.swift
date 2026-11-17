@@ -134,4 +134,24 @@ struct RemindersTaskProviderTests {
             try await provider().delete(TaskID(source: .reminders, rawValue: "gone"), expectedVersion: nil)
         }
     }
+
+    @Test func estimate_storedLocallyNotInEventKit() async throws {
+        let estimates = MemoryEstimateStore()
+        let sut = RemindersTaskProvider(store: store, estimates: estimates, selectedListIDs: { nil })
+        let item = try #require(try await sut.task(id: TaskID(source: .reminders, rawValue: "a")))
+        #expect(item.editableFields.contains(.estimate))
+        var edit = TaskEdit()
+        edit.estimateMinutes = .set(90)
+        let saved = try await sut.apply(edit, to: item.id, expectedVersion: item.version)
+        #expect(saved.estimateMinutes == 90)
+        #expect(estimates.minutes(for: "a") == 90)
+        #expect(store.saveCount == 0)
+    }
+}
+
+@MainActor
+final class MemoryEstimateStore: EstimateStore {
+    private var values: [String: Int] = [:]
+    func minutes(for reminderID: String) -> Int? { values[reminderID] }
+    func setMinutes(_ minutes: Int?, for reminderID: String) { values[reminderID] = minutes }
 }

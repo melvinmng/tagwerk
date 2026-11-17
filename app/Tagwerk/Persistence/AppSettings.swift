@@ -1,5 +1,6 @@
 import Foundation
 import SwiftData
+import TagwerkCore
 
 /// User preferences, stored as a single SwiftData object.
 /// Schema rule: later attributes must be optional or have a default value.
@@ -18,6 +19,19 @@ final class AppSettings {
     var setupCompleted: Bool = false
     /// `nil` means the default project selection (projects with assigned open issues).
     var selectedProjectIDs: [String]? = nil
+    /// JSON of `WeekSchedule`; `nil` means the standard week (Mon–Fri 09:00–18:00).
+    var weekScheduleData: Data? = nil
+    /// Calendar Tagwerk writes time blocks into.
+    var planCalendarID: String? = nil
+    /// Calendars whose events count as important deadlines.
+    var deadlineCalendarIDs: [String]? = nil
+    /// Duration counted for tasks without effort.
+    var defaultTaskMinutes: Int = 30
+
+    var weekSchedule: WeekSchedule {
+        get { weekScheduleData.flatMap { try? JSONDecoder().decode(WeekSchedule.self, from: $0) } ?? .standard }
+        set { weekScheduleData = try? JSONEncoder().encode(newValue) }
+    }
 
     init() {}
 

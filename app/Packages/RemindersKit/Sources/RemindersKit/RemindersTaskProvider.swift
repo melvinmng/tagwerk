@@ -1,14 +1,24 @@
 import TagwerkCore
 
+/// Local effort for reminders: EventKit cannot store one, so it lives in Tagwerk.
+@MainActor
+public protocol EstimateStore: AnyObject {
+    func minutes(for reminderID: String) -> Int?
+    func setMinutes(_ minutes: Int?, for reminderID: String)
+}
+
 /// Task source for Apple Reminders with a version check before every write.
 @MainActor
 public final class RemindersTaskProvider: TaskProvider {
     public let source: TaskSource = .reminders
     private let store: ReminderStore
+    private let estimates: EstimateStore?
     private let selectedListIDs: @MainActor () -> Set<String>?
 
-    public init(store: ReminderStore, selectedListIDs: @escaping @MainActor () -> Set<String>?) {
+    public init(store: ReminderStore, estimates: EstimateStore? = nil,
+                selectedListIDs: @escaping @MainActor () -> Set<String>?) {
         self.store = store
+        self.estimates = estimates
         self.selectedListIDs = selectedListIDs
     }
 
@@ -36,7 +46,11 @@ public final class RemindersTaskProvider: TaskProvider {
         if let expectedVersion, expectedVersion != currentItem.version {
             throw TaskWriteError.conflict(current: currentItem)
         }
-        let saved = try perform { try store.save(ReminderMapping.applying(edit, to: current)) }
+        if case .set(let minutes) = edit.estimateMinutes { estimates?.setMinutes(minutes, for: current.id) }
+        var reminderEdit = edit
+        reminderEdit.estimateMinutes = .unchanged
+        guard !reminderEdit.isEmpty else { return map(current, lists: lists) }
+        let saved = try perform { try store.save(ReminderMapping.applying(reminderEdit, to: current)) }
         return map(saved, lists: lists)
     }
 
@@ -58,6 +72,7 @@ public final class RemindersTaskProvider: TaskProvider {
                 ekPriority: ReminderMapping.ekPriority(from: draft.priority), listID: draft.containerID
             )
         }
+        if let minutes = draft.estimateMinutes { estimates?.setMinutes(minutes, for: record.id) }
         return map(record, lists: listsByID())
     }
 
@@ -81,6 +96,11 @@ public final class RemindersTaskProvider: TaskProvider {
 
     private func map(_ record: ReminderRecord, lists: [String: ListInfo]) -> TaskItem {
         let list = lists[record.listID] ?? ListInfo(id: record.listID, title: "Erinnerungen", colorHex: nil, kind: .other)
-        return ReminderMapping.taskItem(record, list: list)
+        var item = ReminderMapping.taskItem(record, list: list)
+        if let estimates {
+            item.estimateMinutes = estimates.minutes(for: record.id)
+            item.editableFields.insert(.estimate)
+        }
+        return item
     }
 }
