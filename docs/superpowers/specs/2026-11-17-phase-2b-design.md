@@ -73,7 +73,8 @@ Tagwerk zeigt seit Phase 2a alle Aufgaben in einer Liste. Was fehlt, ist das eig
 | Lokale Aufwandsschätzung für Erinnerungen | SwiftData `ReminderEstimate` | aus Phase 2 §4 („KI-Schätzung, editierbar, lokal“) |
 | KI-Planvorschläge | SwiftData `PlanSuggestion` | bis zur Annahme/Ablehnung; angenommen → Termin bzw. `DayAssignment` |
 | Chatverläufe | SwiftData `ChatThread`/`ChatMessage` | lokal, löschbar; pro Aufgabe ein Verlauf, plus ein allgemeiner |
-| Einstellungen | `AppSettings` (additiv) | Plan-Kalender, Deadline-Kalender, Standard-Blockdauer |
+| Einstellungen | `AppSettings` (additiv) | Plan-Kalender, Deadline-Kalender, Standard-Blockdauer, Arbeitszeit je Wochentag |
+| Abweichende Arbeitszeit eines Tages | SwiftData `DayOverride` | `day`, `start`/`end` in Minuten oder `isOff`; gesetzt in der Tagesansicht oder per KI |
 
 Alle neuen SwiftData-Attribute sind optional oder haben Standardwerte (Regel aus Plan 2a).
 
@@ -149,7 +150,7 @@ ChatGPTProvider mit allen Anforderungen aus Phase 2 §7 (Modellliste, `store:fal
 ### 8.3 Assistent und Chat zum Issue
 
 - Ein Chat-Sheet, geöffnet über den KI-Knopf (Kontext: aktuelle Ansicht und Zeitraum) oder „Über diese Aufgabe sprechen“ (Kontext: diese Aufgabe; bei Issues zusätzlich Kommentare, Labels, Project-Felder, Nachbar-Issues in Project/Epic).
-- Funktionen (Function Calling, verifiziert): `create_task`, `update_task`, `reschedule_task`, `complete_task`, `assign_to_day`, `create_time_block`, `link_event_to_task`, `plan_period` sowie lesend `list_tasks`, `list_events`, `get_task`, und für GitHub `get_issue_comments`, `get_repository_readme`, `get_repository_file`, `search_repository`, `get_pull_request`.
+- Funktionen (Function Calling, verifiziert): `create_task`, `update_task`, `reschedule_task`, `complete_task`, `assign_to_day`, `create_time_block`, `link_event_to_task`, `set_day_hours`, `plan_period` sowie lesend `list_tasks`, `list_events`, `get_task`, und für GitHub `get_issue_comments`, `get_repository_readme`, `get_repository_file`, `search_repository`, `get_pull_request`.
 - **Lesende Funktionen** laufen ohne Rückfrage. **Ändernde Funktionen** erscheinen als Aktionskarte im Chat; erst dein Tipp führt sie aus. Das Ergebnis geht als `function_call_output` an das Modell zurück.
 - Die Anweisungen an das Modell nennen ausdrücklich, dass es bei GitHub-Issues weitere Repo-Inhalte per Funktion holen kann und wann das sinnvoll ist.
 - Der Verlauf wird bei jedem Aufruf vollständig mitgeschickt (wegen `store:false`).
@@ -175,7 +176,7 @@ Unverändert nach Phase 2 §8 und §12.8. Zusätzlich: Benachrichtigungen für w
 Die mit *(Nutzer)* markierten Punkte hat der Nutzer am 2026-11-17 entschieden, die mit *(Planer)* markierten habe ich festgelegt.
 
 1. **Einplanen vs. Fälligkeit** *(Nutzer)*: Ziehen in Woche/Monat und „Einplanen: Heute / Morgen / Wochenende / Nächste Woche / Datum …“ setzen nur den **Arbeitstag** (`DayAssignment`) in Tagwerk; die Fälligkeit bleibt. „Fälligkeit verschieben …“ ist ein eigener Menüpunkt und ändert sie wie in 2a (Reminders, GitHub „Due date“, lokal). Liegt der Arbeitstag nach der Fälligkeit, warnt Tagwerk (Markierung am Tag), blockiert aber nicht. *(Planer)*
-2. **Arbeitstage** *(Nutzer)*: Arbeitszeit **pro Wochentag** (Beginn, Ende oder „frei“), Mittagspause und Puffer weiterhin global. Zusätzlich einzelne Tage als frei markierbar (`DayOff`). Standard: Mo–Fr 09:00–18:00, Sa/So frei. Freie Tage haben Kapazität 0; die KI plant dort nichts ein, Ziehen ist möglich (mit Überbuchungsanzeige).
+2. **Arbeitstage** *(Nutzer)*: Arbeitszeit **pro Wochentag** (Beginn, Ende oder „frei“), Mittagspause und Puffer weiterhin global. Standard: Mo–Fr 09:00–18:00, Sa/So frei *(Planer)*. Für **einzelne Tage** lässt sich das abweichend einstellen (`DayOverride`: anderer Beginn/Ende, „frei“ oder zusätzliche Stunden), direkt in der Tagesansicht über die Kapazitätsanzeige. Auch die **KI** kann das setzen, z. B. „Ich habe heute bis 20 Uhr Zeit“: Funktion `set_day_hours` (bestätigungspflichtig, Aktionskarte). Freie Tage haben Kapazität 0; die KI plant dort nichts ein, Ziehen ist möglich (mit Überbuchungsanzeige).
 3. **Arbeitstag und Zeitblöcke** *(Planer)*: Ein Zeitblock für eine Aufgabe setzt deren Arbeitstag auf den Tag des Blocks (bei mehreren Blöcken: der früheste noch offene). Eine Aufgabe darf **mehrere Blöcke** haben (z. B. 2 h + 1 h). „Einplanen auf einen anderen Tag“ fragt, ob die zukünftigen Blöcke mitwandern oder gelöscht werden; vergangene Blöcke bleiben.
 4. **Verknüpfte Termine zählen als Planung** *(Planer)*: Ein Termin, der mit einer Aufgabe verknüpft ist (egal in welchem Kalender), zählt als geplante Last dieser Aufgabe und nicht zusätzlich als fremde belegte Zeit. Nicht verknüpfte Termine zählen als belegte Zeit. Ganztägige, abgelehnte und als „frei“ markierte Termine verbrauchen keine Zeit. Termine aus Deadline-Kalendern mit Uhrzeit (z. B. eine Klausur) verbrauchen Zeit.
 5. **Puffer** *(Planer)*: vor und nach jedem belegenden Termin; zwischen direkt aufeinanderfolgenden Terminen nur einmal.
