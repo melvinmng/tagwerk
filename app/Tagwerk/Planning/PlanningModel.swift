@@ -326,6 +326,18 @@ final class PlanningModel {
         await reload()
     }
 
+    /// "Für heute einplanen" from the task list selection: planned day only, the source stays unchanged.
+    func planToday(_ ids: [TaskID]) async {
+        for id in ids { planStore.assign(id, to: today) }
+        await reload()
+    }
+
+    /// Effort of the given tasks, counting tasks without effort with the default duration.
+    func plannedMinutes(for ids: [TaskID]) -> Int {
+        let wanted = Set(ids)
+        return taskList.items.filter { wanted.contains($0.id) }.reduce(0) { $0 + ($1.estimateMinutes ?? settings.defaultTaskMinutes) }
+    }
+
     /// Completes a pending `assign`: move future blocks to the new day or delete them.
     func resolveBlocks(move: Bool) async {
         guard let decision = pendingBlockDecision else { return }

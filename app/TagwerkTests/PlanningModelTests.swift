@@ -605,6 +605,22 @@ struct PlanningModelTests {
         #expect(model.monthSelection == PlanDay(year: 2026, month: 12, day: 1))
     }
 
+    @Test func planToday_assignsAllWithoutWritingSource() async {
+        let model = await model()
+        await model.planToday([id("Fahrrad"), id("Abgabe")])
+        #expect(planStore.assignment(for: id("Fahrrad")) == today)
+        #expect(planStore.assignment(for: id("Abgabe")) == today)
+        #expect(local.appliedEdits.isEmpty)
+    }
+
+    @Test func plannedMinutes_usesEstimateOrDefault() async {
+        local.tasks.append(TaskItem(id: id("Lesen"), title: "Lesen", notes: nil, due: nil, priority: nil, estimateMinutes: 90,
+                                    isCompleted: false, container: TaskContainer(id: "local", name: "Lokal", colorHex: nil),
+                                    url: nil, version: "1", editableFields: []))
+        let model = await model()
+        #expect(model.plannedMinutes(for: [id("Fahrrad"), id("Lesen")]) == 120)
+    }
+
     @Test func duration_padsMinutes() {
         #expect(CapacityText.duration(125) == "2 h 05")
         #expect(CapacityText.duration(45) == "45 min")

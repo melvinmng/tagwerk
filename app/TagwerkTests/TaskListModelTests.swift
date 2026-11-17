@@ -12,6 +12,15 @@ struct TaskListModelTests {
         TaskListModel(providers: [reminders, local], now: testNow, calendar: testCalendar())
     }
 
+    @Test func highlight_setsAndClears() {
+        let model = makeModel()
+        let id = TaskID(source: .local, rawValue: "Fahrrad")
+        model.highlight(id)
+        #expect(model.highlightedTaskID == id)
+        model.clearHighlight()
+        #expect(model.highlightedTaskID == nil)
+    }
+
     @Test func reload_mergesAllProviders() async {
         let model = makeModel()
         await model.reload()

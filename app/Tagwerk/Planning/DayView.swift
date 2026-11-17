@@ -5,6 +5,7 @@ import TagwerkCore
 struct DayView: View {
     @Bindable var model: PlanningModel
     let onOpenTask: (TaskID) -> Void
+    let onShowTask: (TaskID) -> Void
     let onOpenEvent: (CalendarEvent) -> Void
     let onEditRecurring: (RecurringItem, PlanDay) -> Void
     let menuActions: (TaskItem) -> TaskMenuActions
@@ -171,7 +172,7 @@ struct DayView: View {
     }
 
     private func blockMenu(_ block: CalendarEvent, _ taskID: TaskID) -> BlockMenu {
-        BlockMenu(block: block, taskID: taskID, model: model, onShowTask: onOpenTask) { movingBlock = $0 }
+        BlockMenu(block: block, taskID: taskID, model: model, onShowTask: onShowTask) { movingBlock = $0 }
     }
 
     /// The shared menu plus the day-only entries that replaced the swipe actions.

@@ -22,17 +22,31 @@ struct TaskContextMenu: View {
     @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
-        Section("Einplanen") {
+        // Mockup F1: the planned day lives in Tagwerk only; the due date changes the source.
+        Section("Einplanen · nur in Tagwerk") {
             if typeSize >= .accessibility1 {
-                planButtons
+                planButton(.today); planButton(.tomorrow); planButton(.weekend); planButton(.nextMonday)
             } else {
-                // The palette style fits four icons in one row (the default style allows only three).
-                ControlGroup { planButtons }
-                    .controlGroupStyle(.palette)
+                ControlGroup { planButton(.today); planButton(.tomorrow) }
+                ControlGroup { planButton(.weekend); planButton(.nextMonday) }
             }
-            Button("Datum wählen …", systemImage: "calendar") { actions.planOnDate() }
+            Button("Anderer Tag …", systemImage: "calendar") { actions.planOnDate() }
         }
-        if actions.createBlock != nil || actions.unassign != nil {
+        if actions.isWritable {
+            Section("Fälligkeit · ändert \(sourceName)") {
+                Menu {
+                    Button("Heute") { actions.moveDue(.today) }
+                    Button("Morgen") { actions.moveDue(.tomorrow) }
+                    Button("Wochenende (Sa)") { actions.moveDue(.weekend) }
+                    Button("Nächste Woche (Mo)") { actions.moveDue(.nextMonday) }
+                    Button("Datum wählen …") { actions.moveDueOnDate() }
+                } label: {
+                    Label("Fälligkeit verschieben", systemImage: "calendar.badge.clock")
+                    Text(dueText)
+                }
+            }
+        }
+        if actions.createBlock != nil || actions.unassign != nil || actions.editEffort != nil {
             Section {
                 if let createBlock = actions.createBlock {
                     Button("Zeitblock …", systemImage: "calendar.day.timeline.left") { createBlock() }
@@ -40,28 +54,38 @@ struct TaskContextMenu: View {
                 if let unassign = actions.unassign {
                     Button("Ausplanen", systemImage: "calendar.badge.minus") { unassign() }
                 }
+                if let editEffort = actions.editEffort {
+                    Button("Aufwand ändern …", systemImage: "arrow.trianglehead.2.clockwise") { editEffort() }
+                }
             }
         }
         if actions.isWritable {
-            Menu("Fälligkeit verschieben …", systemImage: "calendar.badge.clock") {
-                Button("Heute") { actions.moveDue(.today) }
-                Button("Morgen") { actions.moveDue(.tomorrow) }
-                Button("Wochenende (Sa)") { actions.moveDue(.weekend) }
-                Button("Nächste Woche (Mo)") { actions.moveDue(.nextMonday) }
-                Button("Datum wählen …") { actions.moveDueOnDate() }
+            Section {
+                Button("Erledigt", systemImage: "checkmark.circle") { actions.complete() }
+                Button(TaskListView.deleteTitle(for: item), systemImage: "trash", role: .destructive) { actions.delete() }
             }
-            if let editEffort = actions.editEffort {
-                Button("Aufwand ändern …", systemImage: "arrow.trianglehead.2.clockwise") { editEffort() }
-            }
-            Button("Erledigt", systemImage: "checkmark.circle") { actions.complete() }
-            Button(TaskListView.deleteTitle(for: item), systemImage: "trash", role: .destructive) { actions.delete() }
         }
     }
 
-    @ViewBuilder private var planButtons: some View {
-        Button("Heute", systemImage: "sun.max") { actions.plan(.today) }
-        Button("Morgen", systemImage: "sunrise") { actions.plan(.tomorrow) }
-        Button("Wochenende", systemImage: "sofa") { actions.plan(.weekend) }
-        Button("Nächste Woche", systemImage: "arrow.forward.to.line") { actions.plan(.nextMonday) }
+    private func planButton(_ option: RescheduleOption) -> some View {
+        switch option {
+        case .today: Button("Heute", systemImage: "sun.max") { actions.plan(.today) }
+        case .tomorrow: Button("Morgen", systemImage: "sunrise") { actions.plan(.tomorrow) }
+        case .weekend: Button("Wochenende", systemImage: "sofa") { actions.plan(.weekend) }
+        default: Button("Nächste Woche", systemImage: "arrow.forward.to.line") { actions.plan(.nextMonday) }
+        }
+    }
+
+    private var sourceName: String {
+        switch item.id.source {
+        case .github: "GitHub"
+        case .reminders: "Erinnerung"
+        case .local: "Tagwerk"
+        }
+    }
+
+    private var dueText: String {
+        guard let due = item.due else { return "keine Fälligkeit" }
+        return "jetzt " + DueText.text(due, now: .now, calendar: .tagwerk)
     }
 }

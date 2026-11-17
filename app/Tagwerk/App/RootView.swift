@@ -19,6 +19,7 @@ struct RootView: View {
             PlanView(model: environment.planning,
                      onOpenTask: { id in editingTask = environment.taskList.items.first { $0.id == id } },
                      onOpenEvent: { event in openEvent = event },
+                     onShowTask: showTask,
                      onEditRecurring: { item, day in recurringEdit = RecurringEdit(item: item, day: day) })
                 .tabItem { Label("Planen", systemImage: "calendar") }
                 .tag(0)
@@ -44,10 +45,7 @@ struct RootView: View {
         }
         .sheet(item: $openEvent) { event in
             EventDetailView(event: event, model: environment.planning) { task in
-                Task { @MainActor in
-                    try? await Task.sleep(for: .milliseconds(350))  // let the event sheet close first
-                    editingTask = task
-                }
+                showTask(task.id)
             }
         }
         .sheet(item: $recurringEdit) { edit in
@@ -57,6 +55,15 @@ struct RootView: View {
             SetupView(model: environment.makeSetupModel(), loginModel: environment.makeGitHubLoginModel()) {
                 await environment.taskList.reload()
             }
+        }
+    }
+
+    /// "Aufgabe zeigen": the task list with the task scrolled into view and marked (design §13.8 G3).
+    private func showTask(_ id: TaskID) {
+        selectedTab = 1
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(350))  // let a sheet close and the tab appear first
+            environment.taskList.highlight(id)
         }
     }
 

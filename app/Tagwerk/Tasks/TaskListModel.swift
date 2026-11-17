@@ -70,6 +70,8 @@ final class TaskListModel {
     private(set) var items: [TaskItem] = []
     private(set) var sourceStates: [TaskSource: SourceState] = [:]
     private(set) var lastCompleted: TaskItem?
+    /// Task to scroll to and mark briefly after "Aufgabe zeigen" (design §13.8 G3).
+    private(set) var highlightedTaskID: TaskID?
     private(set) var lastError: String?
     /// Sources whose current load has not finished yet.
     private(set) var loadingSources: Set<TaskSource> = []
@@ -228,6 +230,14 @@ final class TaskListModel {
         } catch {
             lastError = Self.message(for: error)
         }
+    }
+
+    func highlight(_ id: TaskID) {
+        highlightedTaskID = id
+    }
+
+    func clearHighlight() {
+        highlightedTaskID = nil
     }
 
     func dismissUndo() {

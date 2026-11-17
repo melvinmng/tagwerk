@@ -6,6 +6,7 @@ struct PlanView: View {
     @Bindable var model: PlanningModel
     let onOpenTask: (TaskID) -> Void
     let onOpenEvent: (CalendarEvent) -> Void
+    let onShowTask: (TaskID) -> Void
     let onEditRecurring: (RecurringItem, PlanDay) -> Void
     @State private var deleting: TaskItem?
     @State private var planningDateFor: TaskItem?
@@ -16,7 +17,7 @@ struct PlanView: View {
         NavigationStack {
             Group {
                 switch model.scope {
-                case .day: DayView(model: model, onOpenTask: onOpenTask, onOpenEvent: onOpenEvent,
+                case .day: DayView(model: model, onOpenTask: onOpenTask, onShowTask: onShowTask, onOpenEvent: onOpenEvent,
                                    onEditRecurring: onEditRecurring, menuActions: menuActions)
                 case .week: WeekView(model: model, onOpenTask: onOpenTask, menuActions: menuActions)
                 case .month:

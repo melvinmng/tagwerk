@@ -18,12 +18,15 @@ struct TaskListView: View {
     @State private var deleting: TaskItem?
     @State private var showsOfflineInfo = false
     @State private var planningDateFor: TaskItem?
+    @State private var isSelecting = false
+    @State private var selection = Set<TaskID>()
     @Environment(\.openURL) private var openURL
     @Environment(AppEnvironment.self) private var environment
 
     var body: some View {
         NavigationStack {
-            List {
+            ScrollViewReader { proxy in
+            List(selection: $selection) {
                 if model.availableFilters.count > 2 {
                     Picker("Filter", selection: $model.filter) {
                         ForEach(model.availableFilters, id: \.self) { Text($0.title).tag($0) }
@@ -65,13 +68,30 @@ struct TaskListView: View {
                     }
                 }
             }
-            .safeAreaInset(edge: .bottom) { undoBar }
+            .environment(\.editMode, .constant(isSelecting ? .active : .inactive))
+            .onChange(of: model.highlightedTaskID) { _, id in
+                guard let id else { return }
+                model.filter = .all
+                withAnimation { proxy.scrollTo(id, anchor: .center) }
+                Task {
+                    try? await Task.sleep(for: .seconds(3))
+                    withAnimation { model.clearHighlight() }
+                }
+            }
+            }
+            .safeAreaInset(edge: .bottom) { isSelecting ? AnyView(selectionBar) : AnyView(undoBar) }
             .animation(.spring(duration: 0.35), value: model.lastCompleted?.id)
             .onChange(of: gitHubOfflineSince == nil) { _, online in if online { showsOfflineInfo = false } }
             .navigationTitle("Aufgaben")
             .toolbar {
                 if gitHubOfflineSince != nil {
                     ToolbarItem(placement: .topBarTrailing) { offlineIndicator }
+                }
+                ToolbarItem(placement: .topBarLeading) {
+                    Button(isSelecting ? "Fertig" : "Auswählen") {
+                        isSelecting.toggle()
+                        selection.removeAll()
+                    }
                 }
                 ToolbarItem(placement: .primaryAction) {
                     Button { isCreating = true } label: { Label("Neue Aufgabe", systemImage: "plus") }
@@ -127,10 +147,18 @@ struct TaskListView: View {
     }
 
     private func row(_ item: TaskItem, section: TaskSection) -> some View {
-        TaskRow(item: item, section: section, now: model.now(), calendar: model.calendar, isReadOnly: !isWritable(item)) {
+        TaskRow(item: item, section: section, now: model.now(), calendar: model.calendar, isReadOnly: !isWritable(item),
+                isRecurring: item.id.source == .reminders && environment.planning.recurringReminderIDs.contains(item.id.rawValue)) {
             if isWritable(item) { Task { await model.complete(item.id) } } else { showsOfflineInfo = true }
         }
+        .tag(item.id)
+        .id(item.id)
+        .listRowBackground(model.highlightedTaskID == item.id ? Color.accentColor.opacity(0.25) : nil)
         .onTapGesture {
+            guard !isSelecting else {
+                if selection.contains(item.id) { selection.remove(item.id) } else { selection.insert(item.id) }
+                return
+            }
             Task {
                 editingContainers = item.editableFields.contains(.container)
                     ? await model.containers(for: item.id.source) : []
@@ -159,6 +187,10 @@ struct TaskListView: View {
                 }
                 .tint(.green)
             }
+            Button { Task { await environment.planning.planToday([item.id]) } } label: {
+                Label("Heute", systemImage: "sun.max")
+            }
+            .tint(.orange)
         }
         .swipeActions(edge: .trailing) {
             if isWritable(item) {
@@ -172,6 +204,32 @@ struct TaskListView: View {
                 .tint(.red)
             }
         }
+    }
+
+    /// Mockup G1: selected effort against the time still free today.
+    private var selectionBar: some View {
+        let minutes = environment.planning.plannedMinutes(for: Array(selection))
+        let remaining = environment.planning.days.first { $0.day == environment.planning.today }?.capacity.remainingMinutes
+        return HStack {
+            VStack(alignment: .leading, spacing: 2) {
+                Text("\(selection.count) ausgewählt · \(CapacityText.duration(minutes))").font(.subheadline.weight(.semibold))
+                if let remaining {
+                    Text("heute noch \(CapacityText.duration(max(0, remaining))) frei")
+                        .font(.caption).foregroundStyle(minutes > remaining ? .red : .secondary)
+                }
+            }
+            Spacer()
+            Button("Für heute einplanen") {
+                let ids = Array(selection)
+                Task { await environment.planning.planToday(ids) }
+                selection.removeAll()
+                isSelecting = false
+            }
+            .buttonStyle(.borderedProminent)
+            .disabled(selection.isEmpty)
+        }
+        .padding()
+        .background(.bar)
     }
 
     @ViewBuilder private var undoBar: some View {
