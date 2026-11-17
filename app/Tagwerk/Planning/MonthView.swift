@@ -60,7 +60,8 @@ struct MonthView: View {
                 .padding()
             }
         }
-        .safeAreaInset(edge: .bottom) { UnplannedDrawer(model: model) }
+        .safeAreaInset(edge: .bottom) { Color.clear.frame(height: model.unplanned.isEmpty ? 0 : 56) }
+        .overlay(alignment: .bottom) { UnplannedDrawer(model: model) }
         .sheet(item: $newEventDay) { day in EventEditSheet(model: model, existing: nil, day: day) }
         .sheet(item: $hoursDay) { day in
             DayOverrideSheet(day: day, calendar: model.calendar, current: model.workHours(on: day)) { value in

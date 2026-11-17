@@ -22,17 +22,20 @@ struct UnplannedDrawer: View {
         }
     }
 
+    /// Fixed height, moved by an offset: the views behind keep their layout while the drawer follows the finger.
     var body: some View {
         if !model.unplanned.isEmpty {
+            let full = Height.large.points
             VStack(spacing: 0) {
                 handle
-                if height != .collapsed { content }
+                content
             }
-            .frame(height: max(64, height.points - dragOffset), alignment: .top)
+            .frame(height: full, alignment: .top)
             .frame(maxWidth: .infinity)
             .background(.bar, in: UnevenRoundedRectangle(topLeadingRadius: 18, topTrailingRadius: 18))
             .clipShape(UnevenRoundedRectangle(topLeadingRadius: 18, topTrailingRadius: 18))
-            .animation(.snappy, value: height)
+            .offset(y: min(full - Height.collapsed.points, max(0, full - height.points + dragOffset)))
+            .animation(.interactiveSpring(response: 0.32, dampingFraction: 0.86), value: height)
         }
     }
 
@@ -54,10 +57,11 @@ struct UnplannedDrawer: View {
         .padding(.bottom, 8)
         .contentShape(Rectangle())
         .onTapGesture { height = height == .collapsed ? .medium : (height == .medium ? .large : .collapsed) }
-        .gesture(DragGesture()
+        .gesture(DragGesture(coordinateSpace: .global)
             .updating($dragOffset) { value, state, _ in state = value.translation.height }
             .onEnded { value in
-                let target = height.points - value.translation.height
+                // Throw: the predicted end decides, so a quick flick opens or closes without dragging far.
+                let target = height.points - value.predictedEndTranslation.height
                 height = Height.allCases.min { abs($0.points - target) < abs($1.points - target) } ?? .collapsed
             })
         .accessibilityElement(children: .combine)

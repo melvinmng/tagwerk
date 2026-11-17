@@ -51,7 +51,8 @@ struct WeekView: View {
                 }
             }
         }
-        .safeAreaInset(edge: .bottom) { UnplannedDrawer(model: model) }
+        .safeAreaInset(edge: .bottom) { Color.clear.frame(height: model.unplanned.isEmpty ? 0 : 56) }
+        .overlay(alignment: .bottom) { UnplannedDrawer(model: model) }
     }
 }
 
