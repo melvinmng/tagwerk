@@ -14,6 +14,7 @@ final class AppEnvironment {
     let gateway: EventKitGateway
     let settings: AppSettings
     let taskList: TaskListModel
+    let planning: PlanningModel
     let gitHubTokens: TokenManager
     let gitHubLoginClient: DeviceFlowClient
     let gitHub: GitHubTaskProvider
@@ -37,6 +38,11 @@ final class AppEnvironment {
         self.gateway = gateway
         let taskList = TaskListModel(providers: [reminders, LocalTaskProvider(context: context)])
         self.taskList = taskList
+        let planStore = PlanStore(context: context)
+        let blockPlanner = BlockPlanner(store: gateway, planStore: planStore, links: EventLinkStore(context: context),
+                                        settings: settings, calendar: .tagwerk)
+        self.planning = PlanningModel(taskList: taskList, calendarStore: gateway, reminderStore: gateway, planStore: planStore,
+                                      efforts: RecurringEffortStore(context: context), blocks: blockPlanner, settings: settings)
 
         let clientID = Bundle.main.object(forInfoDictionaryKey: "GitHubClientID") as? String ?? ""
         // GitHub requests fail after 15 s instead of the default 60 s, so the cache appears quickly offline.
@@ -153,6 +159,7 @@ final class AppEnvironment {
             for await _ in changes {
                 // EventKit changes concern Reminders only; GitHub and local tasks stay as they are.
                 await self?.taskList.reload(only: [.reminders])
+                await self?.planning.reload()
             }
         }
     }

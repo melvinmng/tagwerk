@@ -151,4 +151,54 @@ struct PlanningModelTests {
         _ = await model()
         #expect(planStore.assignment(for: id("Fahrrad")) == nil)
     }
+
+    @Test func dayView_ordersRowsByTime_withLunch() async {
+        calendarStore.storedEvents = [
+            CalendarEvent(id: "late", externalID: nil, calendarID: "work", title: "Team-Meeting", start: at(18, 15), end: at(18, 16),
+                          isAllDay: false, url: nil, isBusy: true, version: "1"),
+            CalendarEvent(id: "early", externalID: nil, calendarID: "work", title: "Vorlesung", start: at(18, 9), end: at(18, 10, 30),
+                          isAllDay: false, url: nil, isBusy: true, version: "1"),
+            CalendarEvent(id: "allday", externalID: nil, calendarID: "work", title: "Projektwoche", start: at(18, 0), end: at(19, 0),
+                          isAllDay: true, url: nil, isBusy: true, version: "1"),
+        ]
+        let model = await model()
+        let day = try! #require(model.days.first)
+        let rows = model.timeline(for: day)
+        #expect(rows.map(\.label) == ["Vorlesung", "Mittagspause", "Team-Meeting"])
+        #expect(model.allDayEvents(for: day).map(\.title) == ["Projektwoche"])
+    }
+
+    @Test func dayView_upcomingDeadlines_nextFourteenDays() async {
+        local.tasks.append(TaskItem(id: id("Klausurvorbereitung"), title: "Klausurvorbereitung", notes: nil,
+                                    due: DueDate(year: 2026, month: 11, day: 30), priority: .p1, estimateMinutes: nil,
+                                    isCompleted: false, container: TaskContainer(id: "local", name: "Lokal", colorHex: nil),
+                                    url: nil, version: "1", editableFields: []))
+        local.tasks.append(TaskItem(id: id("Später"), title: "Später", notes: nil,
+                                    due: DueDate(year: 2026, month: 12, day: 15), priority: .p1, estimateMinutes: nil,
+                                    isCompleted: false, container: TaskContainer(id: "local", name: "Lokal", colorHex: nil),
+                                    url: nil, version: "1", editableFields: []))
+        let model = await model()
+        #expect(model.upcomingDeadlines.map(\.title) == ["Klausurvorbereitung"])
+    }
+
+    @Test func createBlock_fromDayView_writesEventAndAssigns() async throws {
+        let model = await model()
+        let task = try #require(taskList.items.first { $0.title == "Fahrrad" })
+        await model.createBlock(for: task, start: at(18, 14), minutes: 45)
+        #expect(calendarStore.storedEvents.count == 1)
+        #expect(model.days.first?.blocks.count == 1)
+        #expect(model.days.first?.capacity.plannedMinutes == 45)
+    }
+
+    @Test func recurringItems_listEffortOfTheDay() async {
+        accessStore.openRecords = [ReminderRecord(id: "k", title: "Karteikarten", notes: nil, due: DueDate(year: 2026, month: 11, day: 16),
+                                                  ekPriority: 0, isCompleted: false, listID: "l", lastModified: nil,
+                                                  recurrence: Recurrence(rule: .daily(interval: 1), start: PlanDay(year: 2026, month: 11, day: 16),
+                                                                         end: nil, count: nil))]
+        accessStore.accessState = .fullAccess
+        RecurringEffortStore(context: container.mainContext).setForAll(180, reminderID: "k", from: PlanDay(year: 2026, month: 11, day: 1))
+        let model = await model()
+        #expect(model.days.first?.recurring == [RecurringItem(reminderID: "k", title: "Karteikarten", minutes: 180)])
+        #expect(model.days.first?.capacity.availableMinutes == 300)
+    }
 }

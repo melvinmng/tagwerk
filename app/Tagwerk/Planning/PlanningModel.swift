@@ -15,6 +15,35 @@ enum PlanScope: String, CaseIterable, Hashable {
     }
 }
 
+/// Effort a recurring reminder reserves on one day.
+struct RecurringItem: Hashable, Identifiable {
+    var id: String { reminderID }
+    let reminderID: String
+    let title: String
+    let minutes: Int
+}
+
+/// One row of the day timeline, in time order.
+enum TimelineRow: Identifiable, Equatable {
+    case event(CalendarEvent)
+    case block(CalendarEvent, TaskID)
+    case lunch(startMinutes: Int, minutes: Int)
+
+    var id: String {
+        switch self {
+        case .event(let event), .block(let event, _): event.id
+        case .lunch: "lunch"
+        }
+    }
+
+    var label: String {
+        switch self {
+        case .event(let event), .block(let event, _): event.title
+        case .lunch: "Mittagspause"
+        }
+    }
+}
+
 /// Everything one day shows in the planning views.
 struct DayPlan: Identifiable, Equatable {
     var id: PlanDay { day }
@@ -31,6 +60,8 @@ struct DayPlan: Identifiable, Equatable {
     let links: [String: TaskID]
     /// Assigned tasks whose planned day lies after their due date.
     let isPastDue: Set<TaskID>
+    /// Recurring effort reserved on this day.
+    let recurring: [RecurringItem]
 }
 
 /// Moving a task with future time blocks needs a decision: move the blocks along or delete them.
@@ -48,6 +79,8 @@ final class PlanningModel {
     private(set) var days: [DayPlan] = []
     private(set) var unplanned: [TaskItem] = []
     private(set) var leftovers: [TaskItem] = []
+    /// Important deadlines from today over the next 14 days (deadline card of the day view).
+    private(set) var upcomingDeadlines: [ImportantDeadline] = []
     private(set) var pendingBlockDecision: PendingBlockDecision?
     private(set) var lastError: String?
 
@@ -125,6 +158,7 @@ final class PlanningModel {
 
         let assignedIDs = Set(planStore.assignments(in: PlanDay(year: 1, month: 1, day: 1)...PlanDay(year: 9999, month: 12, day: 31)).keys)
         unplanned = open.filter { !assignedIDs.contains($0.id) }
+        upcomingDeadlines = loadUpcomingDeadlines(open: open)
         leftovers = planStore.leftovers(before: today, openTaskIDs: Set(open.map(\.id))).compactMap { tasksByID[$0] }
     }
 
@@ -157,6 +191,31 @@ final class PlanningModel {
         await reload()
     }
 
+    /// Writes a time block for `task` into the plan calendar (and plans the task for that day).
+    func createBlock(for task: TaskItem, start: Date, minutes: Int) async {
+        do {
+            try blocks.createBlock(for: task, start: start, minutes: minutes)
+        } catch {
+            lastError = TaskListModel.message(for: error)
+        }
+        await reload()
+    }
+
+    /// Timed rows of a day: events, linked blocks and the lunch break, ordered by start time.
+    func timeline(for plan: DayPlan) -> [TimelineRow] {
+        let dayStart = plan.day.startDate(in: calendar)
+        var rows: [(Int, TimelineRow)] = plan.events.filter { !$0.isAllDay }.map { (minutes($0.start, from: dayStart), .event($0)) }
+        rows += plan.blocks.compactMap { block in plan.links[block.id].map { (minutes(block.start, from: dayStart), .block(block, $0)) } }
+        if !plan.capacity.isDayOff, settings.lunchDurationMinutes > 0 {
+            rows.append((settings.lunchStartMinutes, .lunch(startMinutes: settings.lunchStartMinutes, minutes: settings.lunchDurationMinutes)))
+        }
+        return rows.sorted { $0.0 < $1.0 }.map(\.1)
+    }
+
+    func allDayEvents(for plan: DayPlan) -> [CalendarEvent] {
+        (plan.events + plan.blocks).filter(\.isAllDay)
+    }
+
     func cancelBlockDecision() {
         pendingBlockDecision = nil
     }
@@ -173,6 +232,11 @@ final class PlanningModel {
     /// The day an "Einplanen" option stands for, using the same rules as rescheduling.
     func planDay(for option: RescheduleOption) -> PlanDay {
         PlanDay(rescheduled(nil, option: option, now: now(), calendar: calendar))
+    }
+
+    func workHours(on day: PlanDay) -> WorkHours? {
+        TagwerkCore.workHours(on: day, schedule: settings.weekSchedule, overrides: planStore.overrides(in: day...day),
+                              calendar: calendar)
     }
 
     func clearError() {
@@ -208,7 +272,7 @@ final class PlanningModel {
             }
         }
         let input = CapacityInput(
-            hours: workHours(on: day, schedule: settings.weekSchedule, overrides: overrides, calendar: calendar),
+            hours: TagwerkCore.workHours(on: day, schedule: settings.weekSchedule, overrides: overrides, calendar: calendar),
             lunchStartMinutes: settings.lunchStartMinutes, lunchMinutes: settings.lunchDurationMinutes,
             bufferMinutes: settings.bufferMinutes,
             busyIntervals: busyIntervals(events: dayEvents, on: day, calendar: calendar, excluding: Set(links.keys)),
@@ -216,10 +280,29 @@ final class PlanningModel {
             plannedMinutes: planned, estimatedCount: estimated
         )
         let pastDue = Set(assigned.filter { task in task.due.map { PlanDay($0) < day } ?? false }.map(\.id))
+        let recurring = reminders.compactMap { reminder -> RecurringItem? in
+            guard let recurrence = reminder.recurrence,
+                  !occurrences(of: recurrence, in: day...day, calendar: calendar).isEmpty,
+                  let minutes = efforts.minutes(for: reminder.id, on: day), minutes > 0 else { return nil }
+            return RecurringItem(reminderID: reminder.id, title: reminder.title, minutes: minutes)
+        }
         return DayPlan(day: day, capacity: capacity(input), deadlines: deadlines.filter { $0.day == day },
                        events: dayEvents.filter { links[$0.id] == nil }, blocks: linkedEvents,
                        assigned: assigned, links: links.filter { id, _ in linkedEvents.contains { $0.id == id } },
-                       isPastDue: pastDue)
+                       isPastDue: pastDue, recurring: recurring)
+    }
+
+    private func minutes(_ date: Date, from dayStart: Date) -> Int {
+        Int(date.timeIntervalSince(dayStart) / 60)
+    }
+
+    private func loadUpcomingDeadlines(open: [TaskItem]) -> [ImportantDeadline] {
+        let range = today...today.adding(days: 13, calendar: calendar)
+        let interval = DateInterval(start: range.lowerBound.startDate(in: calendar),
+                                    end: range.upperBound.adding(days: 1, calendar: calendar).startDate(in: calendar))
+        let deadlineCalendars = Set(settings.deadlineCalendarIDs ?? [])
+        let events = deadlineCalendars.isEmpty ? [] : calendarStore.events(in: interval, calendarIDs: deadlineCalendars)
+        return importantDeadlines(tasks: open, events: events, deadlineCalendarIDs: deadlineCalendars, in: range, calendar: calendar)
     }
 
     /// Selected calendars plus plan and deadline calendars; `nil` (all) when nothing is selected.
