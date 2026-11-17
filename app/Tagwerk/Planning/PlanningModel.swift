@@ -62,8 +62,9 @@ struct DayPlan: Identifiable, Equatable {
     let blocks: [CalendarEvent]
     /// Tasks planned for this day (day assignment).
     let assigned: [TaskItem]
-    /// Today only: open tasks due today without a planned day or block; they count as load (design §13.9).
-    let dueToday: [TaskItem]
+    /// Today only: open tasks due today (recurring ones too) that are not planned for today and have no block
+    /// today ("Heute offen, nicht zugeordnet"); non-recurring ones count as load (design §13.9).
+    let openToday: [TaskItem]
     /// Event ID → task for `blocks`.
     let links: [String: TaskID]
     /// Assigned tasks whose planned day lies after their due date.
@@ -213,15 +214,15 @@ final class PlanningModel {
         unplanned = open.filter { allAssignments[$0.id] == nil }
         upcomingDeadlines = loadUpcomingDeadlines(open: open)
         let today = self.today
-        overdue = open.filter { task in
-            if let planned = allAssignments[task.id] { return planned < today }
-            return task.due.map { PlanDay($0) < today } ?? false
-        }
-        .sorted { lhs, rhs in
-            let left = lhs.due.map(PlanDay.init), right = rhs.due.map(PlanDay.init)
-            if left != right { return (left ?? PlanDay(year: 9999, month: 12, day: 31)) < (right ?? PlanDay(year: 9999, month: 12, day: 31)) }
-            return lhs.title.localizedStandardCompare(rhs.title) == .orderedAscending
-        }
+        // Overdue: due before today, or planned for an earlier day and not due today or later ("liegen geblieben").
+        // Planned for today or later, or due today, is not overdue.
+        overdue = sortedTasks(open.filter { task in
+            let due = task.due.map(PlanDay.init)
+            if let planned = allAssignments[task.id], planned >= today { return false }
+            if let due, due >= today { return false }
+            if let due { return due < today }
+            return allAssignments[task.id].map { $0 < today } ?? false
+        }, calendar: calendar)
     }
 
     /// Day picked in the month grid (mockup E1); see `monthSelection`.
@@ -241,11 +242,7 @@ final class PlanningModel {
         let query = search.trimmingCharacters(in: .whitespaces)
         let matching = unplanned.filter { query.isEmpty || $0.title.localizedCaseInsensitiveContains(query) }
         let range = self.range
-        let latest = PlanDay(year: 9999, month: 12, day: 31)
-        let sorted = matching.sorted { lhs, rhs in
-            let left = lhs.due.map(PlanDay.init) ?? latest, right = rhs.due.map(PlanDay.init) ?? latest
-            return left != right ? left < right : lhs.title.localizedStandardCompare(rhs.title) == .orderedAscending
-        }
+        let sorted = sortedTasks(matching, calendar: calendar)
         let inRange = { (task: TaskItem) in task.due.map { range.contains(PlanDay($0)) } ?? false }
         return (sorted.filter(inRange), sorted.filter { !inRange($0) })
     }
@@ -496,18 +493,10 @@ final class PlanningModel {
         return (plan.events + plan.blocks).filter { $0.isAllDay && !deadlineCalendars.contains($0.calendarID) }
     }
 
-    /// Tasks without a time that belong to this day, for the "Ohne Uhrzeit" bar (design §13.15 D1): planned for
-    /// the day, due today, recurring reminders occurring today and (today only) overdue tasks; each once.
+    /// Tasks without a time planned for this day, for the "Ohne Uhrzeit" panel (design §13.15 D1): only what the
+    /// user committed to the day; due-today, recurring and overdue tasks wait in their own sections below.
     func timelessTasks(for plan: DayPlan) -> [TaskItem] {
-        var result = plan.assigned + plan.dueToday
-        let blocked = Set(plan.links.values)
-        let recurring = plan.recurring.filter { !$0.isDone }.compactMap { item in
-            taskList.items.first { $0.id == TaskID(source: .reminders, rawValue: item.reminderID) }
-        }
-        result += recurring
-        if plan.day == today { result += overdue }
-        var seen = Set<TaskID>()
-        return result.filter { !blocked.contains($0.id) && seen.insert($0.id).inserted }
+        plan.assigned
     }
 
     /// Events whose time can change by dragging: writable, timed and not someone else's invitation.
@@ -584,6 +573,20 @@ final class PlanningModel {
     /// Busy minutes the selection would free on its day (shown before "Auf Frei setzen").
     func busyMinutes(of events: [CalendarEvent]) -> Int {
         events.filter { $0.isBusy && !$0.isAllDay }.reduce(0) { $0 + Int($1.end.timeIntervalSince($1.start) / 60) }
+    }
+
+    /// Stored merge rules ("künftig immer"): title, calendar name and whether they merge or keep apart.
+    func mergeRules() -> [(key: String, title: String, calendar: String, merges: Bool)] {
+        marks.mergeDecisions().compactMap { decision in
+            guard let title = decision.ruleTitle, let calendarID = decision.ruleCalendarID else { return nil }
+            return (decision.key, title, calendarTitle(calendarID) ?? "Kalender", decision.isMerged)
+        }
+        .sorted { $0.title < $1.title }
+    }
+
+    func deleteMergeRule(key: String) async {
+        marks.deleteMergeDecision(key: key)
+        await reload()
     }
 
     /// Forgets every "Zusammenfassen / Getrennt lassen" decision, including "künftig immer" rules.
@@ -857,14 +860,14 @@ final class PlanningModel {
         // Tasks with a time block on this day appear in the timeline only, not as "planned without time".
         let assigned = assignments.filter { $0.value == day && !tasksWithBlocks.contains($0.key) }
             .compactMap { tasksByID[$0.key] }
-            .sorted { $0.title.localizedStandardCompare($1.title) == .orderedAscending }
+        let assignedSorted = sortedTasks(assigned, calendar: calendar)
 
-        let dueToday = day == today
-            ? open.filter { task in
-                allAssignments[task.id] == nil && !tasksWithBlocks.contains(task.id)
+        let openToday = day == today
+            ? sortedTasks(open.filter { task in
+                allAssignments[task.id] != day && !tasksWithBlocks.contains(task.id)
                     && task.due.map { PlanDay($0) == day } == true
-            }
-            .sorted { $0.title.localizedStandardCompare($1.title) == .orderedAscending }
+                    && (allAssignments[task.id].map { $0 < day } ?? true)
+            }, calendar: calendar)
             : []
 
         var planned = linkedEvents.reduce(0) { total, event in
@@ -872,7 +875,7 @@ final class PlanningModel {
             return total + max(0, Int(to.timeIntervalSince(from) / 60))
         }
         var estimated = 0
-        for task in assigned + dueToday where !tasksWithBlocks.contains(task.id) {
+        for task in assignedSorted + openToday where !tasksWithBlocks.contains(task.id) {
             // Recurring reminders count once, through their recurring effort.
             if task.id.source == .reminders, recurringIDs.contains(task.id.rawValue) { continue }
             if let minutes = task.estimateMinutes {
@@ -912,7 +915,7 @@ final class PlanningModel {
         let shown = dayEvents
         return DayPlan(day: day, capacity: capacity(input), deadlines: deadlines.filter { $0.day == day },
                        events: shown.filter { links[$0.id] == nil }, blocks: shown.filter { links[$0.id] != nil && !$0.isAllDay },
-                       assigned: assigned, dueToday: dueToday, links: links.filter { id, _ in linkedEvents.contains { $0.id == id } },
+                       assigned: assignedSorted, openToday: openToday, links: links.filter { id, _ in linkedEvents.contains { $0.id == id } },
                        isPastDue: pastDue, recurring: recurring, isPast: day < today)
     }
 

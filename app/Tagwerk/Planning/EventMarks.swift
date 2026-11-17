@@ -158,6 +158,12 @@ final class EventMarkStore {
         try? context.save()
     }
 
+    /// "Künftig immer" rules and one-off merges, for the settings list.
+    func deleteMergeDecision(key: String) {
+        for decision in mergeDecisions() where decision.key == key { context.delete(decision) }
+        try? context.save()
+    }
+
     func clearMergeDecisions() {
         for decision in mergeDecisions() { context.delete(decision) }
         try? context.save()

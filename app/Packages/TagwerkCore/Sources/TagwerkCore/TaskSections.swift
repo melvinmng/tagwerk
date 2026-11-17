@@ -43,7 +43,13 @@ public func groupedSections(_ items: [TaskItem], now: Date, calendar: Calendar) 
     }
 }
 
-private func isOrderedBefore(_ lhs: TaskItem, _ rhs: TaskItem, calendar: Calendar) -> Bool {
+/// The app-wide task order: earliest due first (none last), then priority (P1 first, none last), then source
+/// (Reminders, GitHub, local), then title. Used by every list of tasks.
+public func sortedTasks(_ items: [TaskItem], calendar: Calendar) -> [TaskItem] {
+    items.sorted { isOrderedBefore($0, $1, calendar: calendar) }
+}
+
+public func isOrderedBefore(_ lhs: TaskItem, _ rhs: TaskItem, calendar: Calendar) -> Bool {
     let lhsDue = lhs.due?.startDate(in: calendar) ?? .distantFuture
     let rhsDue = rhs.due?.startDate(in: calendar) ?? .distantFuture
     if lhsDue != rhsDue { return lhsDue < rhsDue }

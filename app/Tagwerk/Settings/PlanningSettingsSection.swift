@@ -25,6 +25,7 @@ struct PlanningSettingsSection: View {
             Stepper("Standarddauer: \(CapacityText.duration(settings.defaultTaskMinutes))",
                     value: $settings.defaultTaskMinutes, in: 15...240, step: 15)
             Toggle("Termine zusammenfassen (mit Rückfrage)", isOn: $settings.mergeDuplicateEvents)
+            NavigationLink("Zusammenfassen-Regeln") { MergeRulesView(model: environment.planning) }
             Button("Zusammenfassungen zurücksetzen") { Task { await environment.planning.resetMergeDecisions() } }
             NavigationLink("Kalender-Diagnose") { CalendarDiagnosticsView(model: environment.planning) }
         } header: {

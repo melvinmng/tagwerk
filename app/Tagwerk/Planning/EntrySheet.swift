@@ -297,7 +297,7 @@ struct TaskLinkPicker: View {
     }
 
     private var filtered: [TaskItem] {
-        let open = model.taskList.items.filter { !$0.isCompleted }
+        let open = sortedTasks(model.taskList.items.filter { !$0.isCompleted }, calendar: model.calendar)
         guard !search.isEmpty else { return open }
         return open.filter { $0.title.localizedCaseInsensitiveContains(search) }
     }

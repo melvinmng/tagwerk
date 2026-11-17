@@ -217,7 +217,8 @@ struct CapacityCard: View {
     }
 }
 
-/// Recurring effort, tasks due today and overdue tasks (both modes; the grid shows planned tasks in its bar).
+/// Below the timeline: planned tasks (list mode), "Heute offen, nicht zugeordnet" and "Überfällig"
+/// (design §13.15 D1, user feedback 2026-11-18). Recurring reminders appear in these sections with their effort.
 struct TaskSections: View {
     let model: PlanningModel
     let plan: DayPlan
@@ -227,40 +228,26 @@ struct TaskSections: View {
     let menuActions: (TaskItem) -> TaskMenuActions
 
     var body: some View {
-        if !plan.recurring.isEmpty {
-            Section("Wiederkehrend") {
-                ForEach(plan.recurring) { item in
-                    Button { onEditRecurring(item, plan.day) } label: {
-                        LabeledContent("↻ \(item.title)", value: item.isDone ? "erledigt" : CapacityText.duration(item.minutes))
-                            .strikethrough(item.isDone)
-                    }
-                    .foregroundStyle(.primary)
-                }
-            }
-        }
         if showsPlanned {
             Section("Geplant ohne Uhrzeit") {
                 if plan.assigned.isEmpty {
-                    Text("Ziehe Aufgaben in der Woche hierher oder nutze „Einplanen“.").font(.subheadline).foregroundStyle(.secondary)
+                    Text("Nutze „Heute“ unten oder „Einplanen“ im Menü einer Aufgabe.").font(.subheadline).foregroundStyle(.secondary)
                 }
                 ForEach(plan.assigned) { task in taskRow(task, isPastDue: plan.isPastDue.contains(task.id)) }
             }
-            if !plan.dueToday.isEmpty {
-                Section("Heute fällig") {
-                    ForEach(plan.dueToday) { task in taskRow(task, isPastDue: false) }
-                }
+        }
+        if !plan.openToday.isEmpty {
+            Section {
+                ForEach(plan.openToday) { task in commitRow(task) }
+            } header: {
+                Text("Heute offen, nicht zugeordnet")
+            } footer: {
+                Text("„Heute“ legt die Aufgabe für heute fest; dann lässt sie sich ins Raster ziehen.")
             }
         }
-        if model.anchor == model.today, !model.overdue.isEmpty {
-            Section("Von früher offen") {
-                ForEach(model.overdue) { task in
-                    HStack {
-                        Text(task.title)
-                        Spacer()
-                        Button("Neu einplanen") { onOpenTask(task.id) }.buttonStyle(.borderless)
-                        Button("Heute") { Task { await model.assign(task.id, to: model.today) } }.buttonStyle(.borderless)
-                    }
-                }
+        if plan.day == model.today, !model.overdue.isEmpty {
+            Section("Überfällig") {
+                ForEach(model.overdue) { task in commitRow(task, overdue: true) }
             }
         }
     }
@@ -270,6 +257,36 @@ struct TaskSections: View {
             .contentShape(Rectangle())
             .onTapGesture { onOpenTask(task.id) }
             .contextMenu { TaskContextMenu(item: task, actions: menuActions(task)) }
+    }
+
+    /// A task that is not yet committed to today, with its effort for recurring reminders and "Heute".
+    private func commitRow(_ task: TaskItem, overdue: Bool = false) -> some View {
+        let recurring = model.recurringItem(for: task, on: plan.day)
+        return HStack {
+            VStack(alignment: .leading, spacing: 2) {
+                Text((recurring != nil ? "↻ " : "") + task.title).lineLimit(2)
+                HStack(spacing: 6) {
+                    if let recurring, recurring.minutes > 0 {
+                        Text("\(CapacityText.duration(recurring.minutes)) reserviert")
+                    } else {
+                        Text(EstimateHours.text(minutes: task.estimateMinutes))
+                    }
+                    if overdue, let due = task.due {
+                        Text("fällig \(DueText.text(due, now: model.now(), calendar: model.calendar))").foregroundStyle(.red)
+                    } else if overdue, let planned = model.planStore.assignment(for: task.id) {
+                        Text("geplant \(planned.startDate(in: model.calendar).formatted(.dateTime.weekday(.abbreviated).day().month()))")
+                            .foregroundStyle(.orange)
+                    }
+                }
+                .font(.caption).foregroundStyle(.secondary)
+            }
+            Spacer()
+            Button("Heute") { Task { await model.assign(task.id, to: model.today) } }
+                .buttonStyle(.bordered)
+        }
+        .contentShape(Rectangle())
+        .onTapGesture { onOpenTask(task.id) }
+        .contextMenu { TaskContextMenu(item: task, actions: menuActions(task)) }
     }
 }
 

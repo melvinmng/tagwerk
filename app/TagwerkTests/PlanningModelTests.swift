@@ -114,22 +114,38 @@ struct PlanningModelTests {
         local.tasks.append(makeTask("Heute fällig", source: .local, due: DueDate(year: 2026, month: 11, day: 18)))
         let model = await model()
         let day = try #require(model.days.first)
-        #expect(day.dueToday.map(\.title) == ["Heute fällig"])
+        #expect(day.openToday.map(\.title) == ["Heute fällig"])
         #expect(day.capacity.plannedMinutes == 30)
+    }
+
+    @Test func openToday_staleAssignment_dueToday_isOpenNotOverdue() async throws {
+        local.tasks.append(makeTask("Verschoben", source: .local, due: DueDate(year: 2026, month: 11, day: 18)))
+        planStore.assign(id("Verschoben"), to: PlanDay(year: 2026, month: 11, day: 16))
+        let model = await model()
+        #expect(try #require(model.days.first).openToday.map(\.title) == ["Verschoben"])
+        #expect(model.overdue.isEmpty)
+    }
+
+    @Test func overdue_recurringPastDue_isOverdue() async throws {
+        let reminders = FakeTaskProvider(source: .reminders,
+                                         tasks: [makeTask("k", source: .reminders, due: DueDate(year: 2026, month: 11, day: 16))])
+        await taskList.register(reminders)
+        let model = await model()
+        #expect(model.overdue.map(\.id.rawValue) == ["k"])
     }
 
     @Test func dueToday_withAssignmentElsewhere_notShown() async throws {
         local.tasks.append(makeTask("Heute fällig", source: .local, due: DueDate(year: 2026, month: 11, day: 18)))
         planStore.assign(id("Heute fällig"), to: PlanDay(year: 2026, month: 11, day: 20))
         let model = await model()
-        #expect(try #require(model.days.first).dueToday.isEmpty)
+        #expect(try #require(model.days.first).openToday.isEmpty)
     }
 
     @Test func dueToday_onlyOnToday() async throws {
         let model = await model()
         model.anchor = PlanDay(year: 2026, month: 11, day: 19)
         await model.reload()
-        #expect(try #require(model.days.first).dueToday.isEmpty)  // "Abgabe" is due on the 19th, but that is not today
+        #expect(try #require(model.days.first).openToday.isEmpty)  // "Abgabe" is due on the 19th, but that is not today
     }
 
     @Test func overdue_includesPastDueWithoutAssignment_notCounted() async throws {
@@ -156,7 +172,7 @@ struct PlanningModelTests {
         await taskList.register(reminders)
         let model = await model()
         let day = try #require(model.days.first)
-        #expect(day.dueToday.map(\.id.rawValue) == ["k"])
+        #expect(day.openToday.map(\.id.rawValue) == ["k"])
         #expect(day.capacity.plannedMinutes == 0)
     }
 
@@ -587,7 +603,7 @@ struct PlanningModelTests {
         await model.reload()
         let sections = model.unplannedSections(search: "")
         #expect(sections.dueInRange.map(\.title) == ["Abgabe"])
-        #expect(sections.other.map(\.title) == ["Später fällig", "Fahrrad", "Login"])
+        #expect(sections.other.map(\.title) == ["Später fällig", "Login", "Fahrrad"])  // due, then source order
     }
 
     @Test func unplannedSections_searchFiltersBoth() async {
@@ -807,21 +823,18 @@ struct PlanningModelTests {
         #expect(!model.canDrag(invitation))
     }
 
-    @Test func timelessTasks_includeRecurringAndOverdueToday() async throws {
-        accessStore.openRecords = [ReminderRecord(id: "k", title: "Training", notes: nil, due: DueDate(year: 2026, month: 11, day: 16),
-                                                  ekPriority: 0, isCompleted: false, listID: "l", lastModified: nil,
-                                                  recurrence: Recurrence(rule: .daily(interval: 1), start: PlanDay(year: 2026, month: 11, day: 16),
-                                                                         end: nil, count: nil))]
-        accessStore.accessState = .fullAccess
-        let reminders = FakeTaskProvider(source: .reminders,
-                                         tasks: [makeTask("k", source: .reminders, due: DueDate(year: 2026, month: 11, day: 16))])
-        await taskList.register(reminders)
-        local.tasks.append(makeTask("Vergessen", source: .local, due: DueDate(year: 2026, month: 11, day: 15)))
-        RecurringEffortStore(context: container.mainContext).setForAll(60, reminderID: "k", from: PlanDay(year: 2026, month: 11, day: 1))
+    @Test func timelessTasks_onlyTasksPlannedForTheDay_inTaskOrder() async throws {
+        local.tasks.append(TaskItem(id: id("Wichtig"), title: "Wichtig", notes: nil, due: DueDate(year: 2026, month: 11, day: 20),
+                                    priority: .p1, estimateMinutes: nil, isCompleted: false,
+                                    container: TaskContainer(id: "local", name: "Lokal", colorHex: nil), url: nil, version: "1",
+                                    editableFields: []))
+        local.tasks.append(makeTask("Heute fällig", source: .local, due: DueDate(year: 2026, month: 11, day: 18)))
         planStore.assign(id("Fahrrad"), to: today)
+        planStore.assign(id("Wichtig"), to: today)
         let model = await model()
-        let titles = model.timelessTasks(for: try #require(model.days.first)).map(\.id.rawValue)
-        #expect(titles == ["Fahrrad", "k", "Vergessen"])
+        let day = try #require(model.days.first)
+        #expect(model.timelessTasks(for: day).map(\.title) == ["Wichtig", "Fahrrad"])  // due first, none last
+        #expect(day.openToday.map(\.title) == ["Heute fällig"])
     }
 
     @Test func timelessTasks_otherDay_onlyAssigned() async throws {
