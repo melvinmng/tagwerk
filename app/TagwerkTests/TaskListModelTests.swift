@@ -321,3 +321,45 @@ struct CreationTargetTests {
         #expect(TaskFilter.github.creationTarget(available: [.local, .reminders]) == .local)
     }
 }
+
+struct ReconnectPolicyTests {
+    @Test func delay_growsAndCapsAtFiveMinutes() {
+        #expect(ReconnectPolicy.delay(afterAttempts: 0) == .seconds(30))
+        #expect(ReconnectPolicy.delay(afterAttempts: 1) == .seconds(60))
+        #expect(ReconnectPolicy.delay(afterAttempts: 2) == .seconds(120))
+        #expect(ReconnectPolicy.delay(afterAttempts: 3) == .seconds(240))
+        #expect(ReconnectPolicy.delay(afterAttempts: 4) == .seconds(300))
+        #expect(ReconnectPolicy.delay(afterAttempts: 10) == .seconds(300))
+    }
+
+    @Test func needsRetry_onlyForOfflineOrFailed() {
+        #expect(ReconnectPolicy.needsRetry(.offline(since: .now)))
+        #expect(ReconnectPolicy.needsRetry(.failed("x")))
+        #expect(!ReconnectPolicy.needsRetry(.loaded))
+        #expect(!ReconnectPolicy.needsRetry(.signedOut))
+        #expect(!ReconnectPolicy.needsRetry(.noAccess))
+        #expect(!ReconnectPolicy.needsRetry(nil))
+    }
+}
+
+@MainActor
+struct ReconnectTests {
+    /// While GitHub is offline, the list retries on its own and leaves the offline state when it answers again.
+    @Test func reconnect_retriesUntilOnline() async {
+        let github = FakeTaskProvider(source: .github, tasks: [makeTask("#1", source: .github)])
+        github.offlineSince = testNow()
+        let model = TaskListModel(providers: [github], now: testNow, calendar: testCalendar())
+        await model.reload()
+        #expect(model.sourceStates[.github]?.isOffline == true)
+
+        var sleeps: [Duration] = []
+        let reconnect = Reconnector(model: model, source: .github, sleep: { duration in
+            sleeps.append(duration)
+            if sleeps.count == 2 { github.offlineSince = nil }  // back online before the second retry
+        })
+        await reconnect.runUntilOnline()
+
+        #expect(sleeps == [.seconds(30), .seconds(60)])
+        #expect(model.sourceStates[.github] == .loaded)
+    }
+}

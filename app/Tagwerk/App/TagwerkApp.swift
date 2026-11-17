@@ -4,6 +4,7 @@ import SwiftUI
 @main
 struct TagwerkApp: App {
     @State private var environment: AppEnvironment
+    @Environment(\.scenePhase) private var scenePhase
 
     init() {
         do {
@@ -22,6 +23,10 @@ struct TagwerkApp: App {
                 .task {
                     environment.startObservingChanges()
                     await environment.activateGitHubIfSignedIn()
+                    environment.startReconnectWatch()
+                }
+                .onChange(of: scenePhase) { _, phase in
+                    if phase == .active { Task { await environment.retryGitHubIfNeeded() } }
                 }
         }
         .modelContainer(environment.modelContainer)

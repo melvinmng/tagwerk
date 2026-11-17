@@ -1,5 +1,6 @@
 import Foundation
 import GitHubKit
+import Network
 import Observation
 import RemindersKit
 import SwiftData
@@ -21,6 +22,8 @@ final class AppEnvironment {
     /// Age after which the repository/project catalog is fetched again.
     static let catalogMaxAge: TimeInterval = 5 * 60
     @ObservationIgnored private var changeObservation: Task<Void, Never>?
+    @ObservationIgnored private var reconnectWatch: Task<Void, Never>?
+    @ObservationIgnored private var pathMonitor: NWPathMonitor?
 
     init(modelContainer: ModelContainer) throws {
         self.modelContainer = modelContainer
@@ -112,6 +115,34 @@ final class AppEnvironment {
 
     func restartSetup() {
         settings.setupCompleted = false
+    }
+
+    /// Keeps GitHub from staying offline: retries with growing pauses while it is offline or failing,
+    /// and at once when the network comes back.
+    func startReconnectWatch() {
+        guard reconnectWatch == nil else { return }
+        let reconnector = Reconnector(model: taskList, source: .github)
+        reconnectWatch = Task { [weak self] in
+            while !Task.isCancelled {
+                if let self, ReconnectPolicy.needsRetry(self.taskList.sourceStates[.github]) {
+                    await reconnector.runUntilOnline()
+                }
+                try? await Task.sleep(for: .seconds(15))
+            }
+        }
+        let monitor = NWPathMonitor()
+        monitor.pathUpdateHandler = { [weak self] path in
+            guard path.status == .satisfied else { return }
+            Task { @MainActor in await self?.retryGitHubIfNeeded() }
+        }
+        monitor.start(queue: DispatchQueue(label: "de.tagwerk.network"))
+        pathMonitor = monitor
+    }
+
+    /// Immediate retry, e.g. when the network returns or the app comes to the foreground.
+    func retryGitHubIfNeeded() async {
+        guard ReconnectPolicy.needsRetry(taskList.sourceStates[.github]) else { return }
+        await taskList.reload(only: [.github])
     }
 
     /// Reloads the list whenever Reminders or Calendar report a change.
