@@ -7,7 +7,7 @@
 ### melvinmng
 GitHub-Konto: @melvinmng · bestätigt zuweisbar · geprüft 2026-11-17 · ich
 
-- [ ] [#1](https://github.com/melvinmng/tagwerk/issues/1) Phase 1: Machbarkeit auf dem iPhone nachweisen {status: In review; prio: P1 (Very High)}
+- [x] [#1](https://github.com/melvinmng/tagwerk/issues/1) Phase 1: Machbarkeit auf dem iPhone nachweisen {status: Done; prio: P1 (Very High)}
 - [ ] [#2](https://github.com/melvinmng/tagwerk/issues/2) Phase 2: Aufgaben, Kalender und KI-Tagesplan umsetzen {status: In progress; prio: P2 (High)}
 - [ ] [#3](https://github.com/melvinmng/tagwerk/issues/3) Phase 3: Ernährung, Trinken und Training erfassen {status: Backlog; prio: P3 (Medium)}
 - [ ] [#4](https://github.com/melvinmng/tagwerk/issues/4) Phase 4: Widget, Kurzbefehle und Wochenrückblick ergänzen {status: Backlog; prio: P4 (Low)}
@@ -32,12 +32,10 @@ _Automatisch aus [Tagwerk](https://github.com/users/melvinmng/projects/17) erzeu
 ### In Arbeit (1)
 - [#2](https://github.com/melvinmng/tagwerk/issues/2) Phase 2: Aufgaben, Kalender und KI-Tagesplan umsetzen · @melvinmng · Prio P2 (High)
 
-### In Prüfung (1)
-- [#1](https://github.com/melvinmng/tagwerk/issues/1) Phase 1: Machbarkeit auf dem iPhone nachweisen · @melvinmng · Prio P1 (Very High)
-
 ### Nicht zugeordnet (0)
 
-### Zuletzt erledigt (8)
+### Zuletzt erledigt (9)
+- [#1](https://github.com/melvinmng/tagwerk/issues/1) Phase 1: Machbarkeit auf dem iPhone nachweisen · @melvinmng
 - [#10](https://github.com/melvinmng/tagwerk/issues/10) Ergebnisse auf dem iPhone prüfen und dokumentieren · @melvinmng
 - [#9](https://github.com/melvinmng/tagwerk/issues/9) Automatische Neuinstallation per launchd einrichten · @melvinmng
 - [#8](https://github.com/melvinmng/tagwerk/issues/8) Claude- und GitHub-Aufruf prüfen · @melvinmng
