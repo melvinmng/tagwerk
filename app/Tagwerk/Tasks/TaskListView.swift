@@ -173,6 +173,9 @@ private struct SourceProblemRow: View {
         case .failed(let message):
             Label("\(name): \(message)", systemImage: "exclamationmark.triangle")
                 .foregroundStyle(.orange)
+        case .offline(let since):
+            Label("\(name): Stand \(since.formatted(date: .omitted, time: .shortened)), offline", systemImage: "wifi.slash")
+                .foregroundStyle(.secondary)
         case .loaded, nil:
             EmptyView()
         }

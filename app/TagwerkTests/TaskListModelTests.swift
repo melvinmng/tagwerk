@@ -47,6 +47,17 @@ struct TaskListModelTests {
         #expect(model.sourceStates[.reminders] == .failed("kaputt"))
     }
 
+    @Test func reload_githubOffline_marksOfflineAndShowsItems() async {
+        let github = FakeTaskProvider(source: .github, tasks: [makeTask("#42 Login", source: .github)])
+        let since = testNow().addingTimeInterval(-600)
+        github.offlineSince = since
+        let model = TaskListModel(providers: [github], now: testNow, calendar: testCalendar())
+        await model.reload()
+        #expect(model.sourceStates[.github] == .offline(since: since))
+        #expect(model.items.map(\.title) == ["#42 Login"])
+        #expect(model.availableFilters.contains(.github))
+    }
+
     @Test func complete_removesItemAfterSuccess() async {
         let model = makeModel()
         await model.reload()

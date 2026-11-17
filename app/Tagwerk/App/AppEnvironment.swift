@@ -1,4 +1,5 @@
 import Foundation
+import GitHubKit
 import Observation
 import RemindersKit
 import SwiftData
@@ -12,6 +13,9 @@ final class AppEnvironment {
     let gateway: EventKitGateway
     let settings: AppSettings
     let taskList: TaskListModel
+    let gitHubTokens: TokenManager
+    let gitHubLoginClient: DeviceFlowClient
+    let gitHub: GitHubTaskProvider
     @ObservationIgnored private var changeObservation: Task<Void, Never>?
 
     init(modelContainer: ModelContainer) throws {
@@ -25,6 +29,32 @@ final class AppEnvironment {
         self.settings = settings
         self.gateway = gateway
         self.taskList = TaskListModel(providers: [reminders, LocalTaskProvider(context: context)])
+
+        let clientID = Bundle.main.object(forInfoDictionaryKey: "GitHubClientID") as? String ?? ""
+        let transport = URLSessionTransport()
+        let loginClient = DeviceFlowClient(clientID: clientID, transport: transport)
+        let tokens = TokenManager(store: KeychainCredentialStore(), client: loginClient)
+        self.gitHubLoginClient = loginClient
+        self.gitHubTokens = tokens
+        self.gitHub = GitHubTaskProvider(
+            api: GitHubAPI(transport: transport, tokens: tokens),
+            tokens: tokens,
+            cache: SwiftDataGitHubCache(context: context),
+            selectedProjectIDs: { settings.selectedProjectIDs.map(Set.init) }
+        )
+    }
+
+    /// Adds GitHub to the task list when credentials exist.
+    func activateGitHubIfSignedIn() async {
+        guard await gitHubTokens.isSignedIn, taskList.provider(for: .github) == nil else { return }
+        taskList.providers.append(gitHub)
+        await taskList.reload()
+    }
+
+    /// Removes GitHub from the task list after signing out.
+    func deactivateGitHub() async {
+        taskList.providers.removeAll { $0.source == .github }
+        await taskList.reload()
     }
 
     func makeSetupModel() -> SetupModel {

@@ -28,6 +28,8 @@ enum TaskFilter: CaseIterable, Hashable {
 /// Load state of one source.
 enum SourceState: Equatable {
     case loaded, noAccess, failed(String)
+    /// Shown from the offline cache with the time of the cached data.
+    case offline(since: Date)
 }
 
 extension Calendar {
@@ -82,7 +84,7 @@ final class TaskListModel {
         for provider in providers {
             do {
                 loaded += try await provider.openTasks()
-                states[provider.source] = .loaded
+                states[provider.source] = provider.offlineSince.map { .offline(since: $0) } ?? .loaded
             } catch TaskWriteError.accessDenied {
                 states[provider.source] = .noAccess
             } catch {
@@ -177,6 +179,7 @@ final class TaskListModel {
         case TaskWriteError.failed(let message): message
         case TaskWriteError.accessDenied: "Kein Zugriff auf diese Quelle."
         case TaskWriteError.notFound: "Die Aufgabe existiert nicht mehr."
+        case TaskWriteError.offline: "Offline: Änderungen an GitHub sind gerade nicht möglich."
         case TaskWriteError.conflict: "Die Aufgabe wurde inzwischen geändert."
         default: error.localizedDescription
         }

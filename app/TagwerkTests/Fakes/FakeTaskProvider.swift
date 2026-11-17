@@ -16,6 +16,7 @@ final class FakeTaskProvider: TaskProvider {
     /// When set, the next `apply` throws `.conflict(current:)` with this item and replaces the stored one.
     var conflictOnNextApply: TaskItem?
     var applyError: TaskWriteError?
+    var offlineSince: Date?
     private(set) var appliedEdits: [AppliedEdit] = []
     private var revision = 100
 

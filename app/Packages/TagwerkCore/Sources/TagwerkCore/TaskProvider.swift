@@ -1,9 +1,13 @@
+import Foundation
+
 /// Errors a source reports when reading or writing a task.
 public enum TaskWriteError: Error, Equatable, Sendable {
     /// The task changed since it was loaded; `current` is the fresh state.
     case conflict(current: TaskItem)
     case notFound
     case accessDenied
+    /// The source is only available from its offline cache; writing is blocked.
+    case offline
     case failed(String)
 }
 
@@ -18,4 +22,10 @@ public protocol TaskProvider: AnyObject {
     /// `nil` writes regardless ("Trotzdem sichern").
     func apply(_ edit: TaskEdit, to id: TaskID, expectedVersion: String?) async throws -> TaskItem
     func create(_ draft: TaskDraft) async throws -> TaskItem
+    /// Time of the cached data when the source could only be read offline; `nil` when live.
+    var offlineSince: Date? { get }
+}
+
+extension TaskProvider {
+    public var offlineSince: Date? { nil }
 }

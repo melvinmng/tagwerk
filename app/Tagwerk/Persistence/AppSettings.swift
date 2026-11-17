@@ -16,6 +16,8 @@ final class AppSettings {
     /// `nil` means all reminder lists.
     var selectedReminderListIDs: [String]? = nil
     var setupCompleted: Bool = false
+    /// `nil` means the default project selection (projects with assigned open issues).
+    var selectedProjectIDs: [String]? = nil
 
     init() {}
 

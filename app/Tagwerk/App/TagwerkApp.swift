@@ -19,7 +19,10 @@ struct TagwerkApp: App {
         WindowGroup {
             RootView()
                 .environment(environment)
-                .task { environment.startObservingChanges() }
+                .task {
+                    environment.startObservingChanges()
+                    await environment.activateGitHubIfSignedIn()
+                }
         }
         .modelContainer(environment.modelContainer)
     }
