@@ -56,6 +56,10 @@ for package_dir in "$SCRIPT_DIR"/Packages/*(/N); do
   package_name="${package_dir:t}"
   CURRENT_STAGE="package $package_name"
   echo "==> $CURRENT_STAGE"
+  if [[ ! -d "$package_dir/Tests" ]]; then
+    echo "    no Tests directory, covered by the app test bundle"
+    continue
+  fi
   cd "$package_dir"
   scheme=$(resolve_package_scheme "$package_name") || stage_failed
   run_tests -scheme "$scheme" -destination "$DESTINATION" || stage_failed
