@@ -25,6 +25,11 @@ struct TagwerkApp: App {
                     await DemoData.seedIfRequested(environment)
                     #endif
                     environment.startObservingChanges()
+                    // The "Planen" tab is shown first; it needs the tasks without waiting for the task tab.
+                    if environment.settings.setupCompleted {
+                        await environment.taskList.reload()
+                        await environment.planning.reload()
+                    }
                     await environment.activateGitHubIfSignedIn()
                     environment.startReconnectWatch()
                 }

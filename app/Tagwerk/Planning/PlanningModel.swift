@@ -217,6 +217,32 @@ final class PlanningModel {
         }
     }
 
+    /// Day picked in the month grid (mockup E1); see `monthSelection`.
+    var selectedDay: PlanDay?
+
+    /// The picked day when it lies in the shown month, else today when it does, else the first of the month.
+    var monthSelection: PlanDay {
+        let inMonth = { (day: PlanDay) in day.year == self.anchor.year && day.month == self.anchor.month }
+        if let selectedDay, inMonth(selectedDay) { return selectedDay }
+        if inMonth(today) { return today }
+        return PlanDay(year: anchor.year, month: anchor.month, day: 1)
+    }
+
+    /// Unplanned tasks for the drawer (mockup D1): due within the shown range first, then the rest
+    /// (by due date, then title); `search` filters both.
+    func unplannedSections(search: String) -> (dueInRange: [TaskItem], other: [TaskItem]) {
+        let query = search.trimmingCharacters(in: .whitespaces)
+        let matching = unplanned.filter { query.isEmpty || $0.title.localizedCaseInsensitiveContains(query) }
+        let range = self.range
+        let latest = PlanDay(year: 9999, month: 12, day: 31)
+        let sorted = matching.sorted { lhs, rhs in
+            let left = lhs.due.map(PlanDay.init) ?? latest, right = rhs.due.map(PlanDay.init) ?? latest
+            return left != right ? left < right : lhs.title.localizedStandardCompare(rhs.title) == .orderedAscending
+        }
+        let inRange = { (task: TaskItem) in task.due.map { range.contains(PlanDay($0)) } ?? false }
+        return (sorted.filter(inRange), sorted.filter { !inRange($0) })
+    }
+
     // MARK: Actions
 
     /// One day, week or month forward (`1`) or back (`-1`), for arrows and swiping.

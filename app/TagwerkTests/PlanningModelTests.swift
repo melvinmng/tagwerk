@@ -576,6 +576,35 @@ struct PlanningModelTests {
         #expect(calendarStore.event(id: block.id)?.version == block.version)
     }
 
+    @Test func unplannedSections_dueInRangeFirst_thenOthers() async {
+        local.tasks.append(makeTask("Später fällig", source: .local, due: DueDate(year: 2026, month: 12, day: 3)))
+        let model = await model()
+        model.scope = .week
+        await model.reload()
+        let sections = model.unplannedSections(search: "")
+        #expect(sections.dueInRange.map(\.title) == ["Abgabe"])
+        #expect(sections.other.map(\.title) == ["Später fällig", "Fahrrad", "Login"])
+    }
+
+    @Test func unplannedSections_searchFiltersBoth() async {
+        let model = await model()
+        model.scope = .week
+        await model.reload()
+        let sections = model.unplannedSections(search: "fahr")
+        #expect(sections.dueInRange.isEmpty)
+        #expect(sections.other.map(\.title) == ["Fahrrad"])
+    }
+
+    @Test func monthSelection_defaultsToTodayInMonth_elseFirst() async {
+        let model = await model()
+        model.scope = .month
+        #expect(model.monthSelection == today)
+        model.selectedDay = PlanDay(year: 2026, month: 11, day: 25)
+        #expect(model.monthSelection == PlanDay(year: 2026, month: 11, day: 25))
+        model.step(1)
+        #expect(model.monthSelection == PlanDay(year: 2026, month: 12, day: 1))
+    }
+
     @Test func duration_padsMinutes() {
         #expect(CapacityText.duration(125) == "2 h 05")
         #expect(CapacityText.duration(45) == "45 min")

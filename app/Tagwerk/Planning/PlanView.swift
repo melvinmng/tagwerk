@@ -20,10 +20,10 @@ struct PlanView: View {
                                    onEditRecurring: onEditRecurring, menuActions: menuActions)
                 case .week: WeekView(model: model, onOpenTask: onOpenTask, menuActions: menuActions)
                 case .month:
-                    MonthView(model: model) { day in
+                    MonthView(model: model, onSelectDay: { day in
                         model.anchor = day
                         model.scope = .day
-                    }
+                    }, onOpenEvent: onOpenEvent, onOpenTask: onOpenTask)
                 }
             }
             .safeAreaInset(edge: .top) { header }

@@ -48,34 +48,7 @@ struct WeekView: View {
                 }
             }
         }
-        .safeAreaInset(edge: .bottom) { UnplannedTray(model: model) }
+        .safeAreaInset(edge: .bottom) { UnplannedDrawer(model: model) }
     }
 }
 
-/// Unplanned tasks to drag onto days (mockup b-A); dragging is never the only way (see the menu).
-struct UnplannedTray: View {
-    let model: PlanningModel
-
-    var body: some View {
-        if !model.unplanned.isEmpty {
-            VStack(alignment: .leading, spacing: 6) {
-                Text("Ungeplant · \(model.unplanned.count)").font(.caption.weight(.semibold)).foregroundStyle(.secondary)
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 8) {
-                        ForEach(model.unplanned.prefix(40)) { task in
-                            Text(task.title)
-                                .font(.subheadline)
-                                .lineLimit(1)
-                                .padding(.horizontal, 10).padding(.vertical, 6)
-                                .background(.thinMaterial, in: Capsule())
-                                .draggable(task.id.key)
-                        }
-                    }
-                }
-            }
-            .padding(.horizontal)
-            .padding(.vertical, 8)
-            .background(.bar)
-        }
-    }
-}
