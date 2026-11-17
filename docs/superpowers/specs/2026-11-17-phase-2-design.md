@@ -1,6 +1,6 @@
 # Tagwerk – Phase 2 Design (Nachtrag)
 
-Stand: 2026-11-17 · Status: **Entwurf, wartet auf Freigabe** · Baut auf: `2026-11-17-tagwerk-design.md` (Hauptdesign) und `../spikes/2026-11-17-feasibility-results.md` (Ergebnisse Phase 1)
+Stand: 2026-11-17 · Status: **Entwurf nach Builder-Check, wartet auf Freigabe** · Baut auf: `2026-11-17-tagwerk-design.md` (Hauptdesign) und `../spikes/2026-11-17-feasibility-results.md` (Ergebnisse Phase 1)
 
 ## 1. Ziel von Phase 2
 
@@ -66,10 +66,12 @@ Felder, die ein Project nicht hat (z. B. keine Priority-Spalte), bleiben leer un
 **Login (Device Flow):**
 
 1. Einmalige Einrichtung durch dich: eine OAuth-App unter github.com/settings/developers anlegen und dort „Enable Device Flow“ aktivieren. Die Client-ID ist kein Geheimnis und liegt in `app/Config/GitHub.xcconfig`. Ein Client-Secret wird für den Device Flow nicht gebraucht.
-2. Die App fordert einen Gerätecode mit `scope=repo project` an, zeigt den Benutzercode an und öffnet `github.com/login/device`.
+2. Die App fordert einen Gerätecode mit `scope=repo project offline_access` an, zeigt den Benutzercode an und öffnet `github.com/login/device`.
 3. Die App fragt den Token im vorgegebenen Intervall ab und beachtet `slow_down`, `authorization_pending`, `expired_token` und `access_denied`.
 4. Der Token liegt im Schlüsselbund (`AfterFirstUnlockThisDeviceOnly`).
 5. Ein-Klick-Abmeldung löscht den lokalen Token. Hinweis in der App: vollständig widerrufen auf github.com unter Settings → Applications.
+6. **Laufzeit:** Tokens von OAuth-Apps laufen standardmäßig **nicht** ab, sie gelten bis zum Widerruf. Die App fordert zusätzlich den Scope `offline_access` an, der laut GitHub-Doku einen ablaufenden Token mit Refresh-Token anfordert. Ob das im Device Flow wirkt, ist ungeprüft (Plan 2a, Task 1). Wirkt es, erneuert die App den Token wie bei ChatGPT, mit genau einer laufenden Erneuerung. Wirkt es nicht, bleibt der Widerruf die einzige Grenze, und die Einstellungen sagen das offen.
+7. **Ausweichweg:** Liefert der Device Flow den Scope `project` nicht, kann man einen klassischen Token mit `repo project` einfügen. Ab dort läuft derselbe Code. Plan 2a prüft das als erste Aufgabe, noch vor jeder Oberfläche.
 
 **Lesen:**
 - GraphQL `viewer.projectsV2(first: 20, query: "is:open")` → Items mit Feldwerten (Status, Priority, Due date, Estimate) und verknüpftem Issue (Titel, Repo, Zustand, Assignees, `updatedAt`).
@@ -132,7 +134,7 @@ DayPlan {
 - Der Rücksprung-Server ignoriert Anfragen mit falschem `state`, statt den Login abzubrechen.
 - Der Rücksprung-Server wartet auf `.ready`, bevor das Login-Sheet öffnet. Ein belegter Port wird als Fehler angezeigt.
 - Die HTTP-Anfrage wird vollständig gelesen, bis `\r\n\r\n`.
-- Die `nonce` wird nicht mehr gesendet, weil das ID-Token nicht ausgewertet wird. Damit entfällt eine halbe Prüfung.
+- Die `nonce` wird weiter gesendet, wie die OpenAI-Doku es vorsieht und wie der Login auf dem Gerät funktioniert. Der `nonce`-Claim des ID-Tokens aus dem Token-Endpunkt wird mit dem gesendeten Wert verglichen. Das ist nur eine Dekodierung, eine Signaturprüfung ist über TLS nicht nötig.
 - Fehlertexte für 429 `subscription_sharing_usage_limit_exceeded` und 401 `subscription_sharing_invalid_user`.
 
 **Ausweichlösung:** Ist ChatGPT nicht angemeldet oder liefert es einen Fehler, bietet die App die Claude-API an, sofern ein Key hinterlegt ist. Anbieterwechsel nur manuell, nie automatisch.
@@ -178,8 +180,8 @@ Freigegebene Mockups (`docs/superpowers/mockups/2026-11-17-phase-2-mockups.html`
 
 Geprüft gegen die echten Projects (GraphQL, 2026-11-17) oder aus früheren Entscheidungen abgeleitet. Die mit *(Planer)* markierten Punkte habe ich festgelegt.
 
-1. **Feldstruktur:** Alle offenen, eigenen Projects stammen aus derselben Vorlage: Status (Backlog/Ready/In progress/Blocked/In review/Done), Priority (P1–P5), Due date, Start date, Estimate. Die App ordnet Felder **nach Namen** zu. „Estimate (h)“ zählt in Stunden, „Estimate (MDs)“ in Personentagen zu 8 h. Fehlt ein Feld, bleibt es leer (§4). Projects mit `template == true` werden übersprungen. *(Planer)*
-2. **Nur eigene Projects:** `viewer.projectsV2` liefert Projects deines Kontos. Projects von Organisationen gehören nicht zu Phase 2, sie bräuchten eine Freigabe der OAuth-App durch die Organisation. *(Planer)*
+1. **Feldstruktur:** Alle offenen, eigenen Projects stammen aus derselben Vorlage: Status (Backlog/Ready/In progress/Blocked/In review/Done), Priority (P1–P5), Due date, Start date, Estimate. Die App ordnet Felder **nach Namen** zu. „Estimate (h)“ zählt in Stunden, „Estimate (MDs)“ in Personentagen zu 8 h. Fehlt ein Feld, bleibt es leer (§4). Die Vorlage #9 trägt **kein** `template`-Flag (geprüft). Deshalb gilt: Standardmäßig sind alle offenen Projects ausgewählt, in denen mindestens ein dir zugewiesenes offenes Issue liegt. Damit fällt #9 weg, ohne dass man sie per Namen erkennen muss. Die Auswahl lässt sich in den Einstellungen ändern. *(Planer)*
+2. **Nur eigene Projects:** `viewer.projectsV2` liefert Projects deines Kontos. Geprüft am 2026-11-17: Alle 126 dir zugewiesenen offenen Issues liegen in Repos deines Kontos, ihre Project-Items in deinen eigenen Projects. Projects von Organisationen gehören nicht zu Phase 2, sie bräuchten eine Freigabe der OAuth-App durch die Organisation. *(Planer)*
 3. **Issue in mehreren Projects:** Identität ist das **Issue**, nicht das Project-Item. Es erscheint einmal. Gezeigt werden die früheste Fälligkeit und die höchste Priorität. „Erledigt“ setzt den Status in allen Projects auf „Done“. Ändert man ein Feld, fragt die App bei mehreren Projects, wo es geändert werden soll (Standard: alle). *(Planer)*
 4. **GitHub-Issues anlegen:** gehört dazu (Hauptdesign §10 F1). Das ＋ bietet „Lokal“, „Erinnerung“ und „GitHub-Issue“ an. Für ein Issue wählt man Repo und Project, danach folgen `addProjectV2ItemById` und die Feldwerte, zugewiesen an dich. Meilensteine werden in Phase 2 nicht bearbeitet. *(Planer)*
 5. **Status:** Als offen gilt ein Item, wenn das Issue offen ist **und** der Status nicht „Done“ lautet. Wiedereröffnen setzt den Status „Ready“, wie der Project-Workflow „Item reopened“. *(Planer)*
