@@ -181,6 +181,49 @@ struct PlanningModelTests {
         #expect(model.upcomingDeadlines.map(\.title) == ["Klausurvorbereitung"])
     }
 
+    @Test func deadlineCalendarEvent_isDeadline_notAllDayEvent() async throws {
+        settings.deadlineCalendarIDs = ["uni"]
+        calendarStore.storedEvents = [
+            CalendarEvent(id: "anmeldung", externalID: nil, calendarID: "uni", title: "Anmeldung Abschlussarbeit",
+                          start: at(18, 0), end: at(19, 0), isAllDay: true, url: nil, isBusy: true, version: "1"),
+            CalendarEvent(id: "frei", externalID: nil, calendarID: "work", title: "Projektwoche",
+                          start: at(18, 0), end: at(19, 0), isAllDay: true, url: nil, isBusy: true, version: "1"),
+        ]
+        let model = await model()
+        let day = try #require(model.days.first)
+        #expect(model.allDayEvents(for: day).map(\.title) == ["Projektwoche"])
+        #expect(day.deadlines.map(\.title) == ["Anmeldung Abschlussarbeit"])
+        #expect(model.upcomingDeadlines.map(\.title) == ["Anmeldung Abschlussarbeit"])
+    }
+
+    @Test func timedDeadlineEvent_staysInTimelineAndConsumesTime() async throws {
+        settings.deadlineCalendarIDs = ["uni"]
+        calendarStore.storedEvents = [CalendarEvent(id: "klausur", externalID: nil, calendarID: "uni", title: "Klausur",
+                                                    start: at(18, 10), end: at(18, 12), isAllDay: false, url: nil,
+                                                    isBusy: true, version: "1")]
+        let model = await model()
+        let day = try #require(model.days.first)
+        #expect(model.timeline(for: day).map(\.label).contains("Klausur"))
+        #expect(day.capacity.availableMinutes == 360)
+        #expect(day.deadlines.map(\.title) == ["Klausur"])
+    }
+
+    @Test func upcomingDeadlines_followTheShownDay() async {
+        settings.deadlineCalendarIDs = ["uni"]
+        calendarStore.storedEvents = [CalendarEvent(id: "anmeldung", externalID: nil, calendarID: "uni", title: "Anmeldung",
+                                                    start: date(2027, 1, 18), end: date(2027, 1, 19), isAllDay: true,
+                                                    url: nil, isBusy: true, version: "1")]
+        let model = await model()
+        #expect(model.upcomingDeadlines.isEmpty)
+        model.anchor = PlanDay(year: 2027, month: 1, day: 18)
+        await model.reload()
+        #expect(model.upcomingDeadlines.map(\.title) == ["Anmeldung"])
+    }
+
+    private func date(_ year: Int, _ month: Int, _ day: Int) -> Date {
+        calendar.date(from: DateComponents(year: year, month: month, day: day))!
+    }
+
     @Test func createBlock_fromDayView_writesEventAndAssigns() async throws {
         let model = await model()
         let task = try #require(taskList.items.first { $0.title == "Fahrrad" })
@@ -207,6 +250,30 @@ struct PlanningModelTests {
         let model = await model()
         #expect(model.days.first?.recurring == [RecurringItem(reminderID: "k", title: "Karteikarten", minutes: 180)])
         #expect(model.days.first?.capacity.availableMinutes == 300)
+    }
+
+    @Test func recurringItem_onlyForRecurringReminders_withCurrentEffort() async throws {
+        accessStore.openRecords = [
+            ReminderRecord(id: "k", title: "Karteikarten", notes: nil, due: DueDate(year: 2026, month: 11, day: 18),
+                           ekPriority: 0, isCompleted: false, listID: "l", lastModified: nil,
+                           recurrence: Recurrence(rule: .daily(interval: 1), start: PlanDay(year: 2026, month: 11, day: 18),
+                                                  end: nil, count: nil)),
+            ReminderRecord(id: "e", title: "Einmalig", notes: nil, due: nil, ekPriority: 0, isCompleted: false,
+                           listID: "l", lastModified: nil),
+        ]
+        accessStore.accessState = .fullAccess
+        let model = await model()
+        func reminder(_ raw: String, _ title: String) -> TaskItem {
+            TaskItem(id: TaskID(source: .reminders, rawValue: raw), title: title, notes: nil, due: nil, priority: nil,
+                     estimateMinutes: nil, isCompleted: false, container: TaskContainer(id: "l", name: "Liste", colorHex: nil),
+                     url: nil, version: "1", editableFields: [])
+        }
+        let recurring = reminder("k", "Karteikarten")
+        let once = reminder("e", "Einmalig")
+        #expect(model.recurringItem(for: recurring, on: today) == RecurringItem(reminderID: "k", title: "Karteikarten", minutes: 0))
+        #expect(model.recurringItem(for: once, on: today) == nil)
+        await model.setRecurringEffort(45, reminderID: "k", day: today, forAll: true)
+        #expect(model.recurringItem(for: recurring, on: today)?.minutes == 45)
     }
 
     @Test func planDay_forTodayTomorrowWeekend_matchesRescheduleDates() async {

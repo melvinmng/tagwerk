@@ -79,7 +79,7 @@ final class PlanningModel {
     private(set) var days: [DayPlan] = []
     private(set) var unplanned: [TaskItem] = []
     private(set) var leftovers: [TaskItem] = []
-    /// Important deadlines from today over the next 14 days (deadline card of the day view).
+    /// Important deadlines from the anchor day over the next 14 days (deadline card of the day view).
     private(set) var upcomingDeadlines: [ImportantDeadline] = []
     /// Reminder IDs with a repetition rule (for "Aufwand ändern …").
     private(set) var recurringReminderIDs: Set<String> = []
@@ -229,6 +229,13 @@ final class PlanningModel {
         await reload()
     }
 
+    /// The recurring-effort entry of a reminder with a repetition rule on `day`; `nil` for other tasks.
+    func recurringItem(for task: TaskItem, on day: PlanDay) -> RecurringItem? {
+        guard task.id.source == .reminders, recurringReminderIDs.contains(task.id.rawValue) else { return nil }
+        return RecurringItem(reminderID: task.id.rawValue, title: task.title,
+                             minutes: efforts.minutes(for: task.id.rawValue, on: day) ?? 0)
+    }
+
     /// Planned day and future blocks of a task, for the editor's "Geplant" section.
     func plannedInfo(for id: TaskID) -> (day: PlanDay?, blocks: [CalendarEvent]) {
         (planStore.assignment(for: id), blocks.futureBlocks(for: id, after: today.startDate(in: calendar)))
@@ -255,8 +262,10 @@ final class PlanningModel {
         return rows.sorted { $0.0 < $1.0 }.map(\.1)
     }
 
+    /// All-day events of the day; all-day events from deadline calendars appear as deadlines instead.
     func allDayEvents(for plan: DayPlan) -> [CalendarEvent] {
-        (plan.events + plan.blocks).filter(\.isAllDay)
+        let deadlineCalendars = Set(settings.deadlineCalendarIDs ?? [])
+        return (plan.events + plan.blocks).filter { $0.isAllDay && !deadlineCalendars.contains($0.calendarID) }
     }
 
     func cancelBlockDecision() {
@@ -341,8 +350,9 @@ final class PlanningModel {
         Int(date.timeIntervalSince(dayStart) / 60)
     }
 
+    /// Deadlines from the shown day over the next 14 days.
     private func loadUpcomingDeadlines(open: [TaskItem]) -> [ImportantDeadline] {
-        let range = today...today.adding(days: 13, calendar: calendar)
+        let range = anchor...anchor.adding(days: 13, calendar: calendar)
         let interval = DateInterval(start: range.lowerBound.startDate(in: calendar),
                                     end: range.upperBound.adding(days: 1, calendar: calendar).startDate(in: calendar))
         let deadlineCalendars = Set(settings.deadlineCalendarIDs ?? [])

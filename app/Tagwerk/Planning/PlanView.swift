@@ -107,7 +107,6 @@ struct PlanView: View {
 
     private func menuActions(for item: TaskItem) -> TaskMenuActions {
         let writable = model.taskList.sourceStates[item.id.source]?.isOffline != true
-        let isRecurring = item.id.source == .reminders && model.recurringReminderIDs.contains(item.id.rawValue)
         return TaskMenuActions(
             plan: { option in Task { await model.plan(item.id, option: option) } },
             planOnDate: { planningDateFor = item },
@@ -115,11 +114,9 @@ struct PlanView: View {
             moveDueOnDate: { dueDateFor = item },
             complete: { Task { await model.taskList.complete(item.id); await model.reload() } },
             delete: { deleting = item },
-            editEffort: isRecurring ? {
-                let day = model.anchor
-                let minutes = model.efforts.minutes(for: item.id.rawValue, on: day) ?? 0
-                onEditRecurring(RecurringItem(reminderID: item.id.rawValue, title: item.title, minutes: minutes), day)
-            } : nil,
+            editEffort: model.recurringItem(for: item, on: model.anchor).map { recurring in
+                { onEditRecurring(recurring, model.anchor) }
+            },
             isWritable: writable
         )
     }

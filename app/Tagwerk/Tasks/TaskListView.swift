@@ -5,6 +5,10 @@ import TagwerkCore
 /// The "Aufgaben" tab (mockup 2).
 struct TaskListView: View {
     @Bindable var model: TaskListModel
+    /// Shows a planned day in the "Planen" tab (editor section "Geplant").
+    var onShowDay: ((PlanDay) -> Void)?
+    /// Opens the effort sheet of a recurring reminder.
+    var onEditRecurring: ((RecurringItem, PlanDay) -> Void)?
     @State private var isCreating = false
     @State private var reschedulingItem: TaskItem?
     @State private var pickingDateFor: TaskItem?
@@ -83,7 +87,8 @@ struct TaskListView: View {
                                    addComment: commentAction(for: provider),
                                    isReadOnly: model.sourceStates[item.id.source]?.isOffline == true,
                                    onDelete: { version in Task { await model.delete(item.id, version: version) } },
-                                   planned: environment.planning.plannedInfo(for: item.id)) { saved in
+                                   planned: environment.planning.plannedInfo(for: item.id),
+                                   onShowDay: onShowDay) { saved in
                         model.didSave(saved)
                     }
                 }
@@ -235,7 +240,10 @@ struct TaskListView: View {
             moveDueOnDate: { pickingDateFor = item },
             complete: { Task { await model.complete(item.id) } },
             delete: { deleting = item },
-            editEffort: nil,
+            editEffort: onEditRecurring.flatMap { open in
+                let today = environment.planning.today
+                return environment.planning.recurringItem(for: item, on: today).map { recurring in { open(recurring, today) } }
+            },
             isWritable: isWritable(item)
         )
     }

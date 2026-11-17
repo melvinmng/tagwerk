@@ -23,7 +23,8 @@ struct RootView: View {
                 .tabItem { Label("Planen", systemImage: "calendar") }
                 .tag(0)
 
-            TaskListView(model: environment.taskList)
+            TaskListView(model: environment.taskList, onShowDay: showDay,
+                         onEditRecurring: { item, day in recurringEdit = RecurringEdit(item: item, day: day) })
                 .tabItem { Label("Aufgaben", systemImage: "checklist") }
                 .tag(1)
 
