@@ -21,6 +21,19 @@ struct TaskListModelTests {
         #expect(model.highlightedTaskID == nil)
     }
 
+    @Test func bulkActions_completeRescheduleDelete() async {
+        local.tasks.append(makeTask("Lesen", source: .local))
+        let model = makeModel()
+        await model.reload()
+        let fahrrad = TaskID(source: .local, rawValue: "Fahrrad"), lesen = TaskID(source: .local, rawValue: "Lesen")
+        await model.reschedule([fahrrad, lesen], option: .tomorrow)
+        #expect(model.items.filter { [fahrrad, lesen].contains($0.id) }.allSatisfy { $0.due == DueDate(year: 2026, month: 11, day: 19) })
+        await model.complete([fahrrad, lesen])
+        #expect(!model.items.contains { [fahrrad, lesen].contains($0.id) })
+        await model.delete([TaskID(source: .reminders, rawValue: "Einkaufen")])
+        #expect(model.items.isEmpty)
+    }
+
     @Test func reload_mergesAllProviders() async {
         let model = makeModel()
         await model.reload()

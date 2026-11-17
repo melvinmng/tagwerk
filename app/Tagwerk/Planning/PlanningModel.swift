@@ -326,6 +326,19 @@ final class PlanningModel {
         await reload()
     }
 
+    /// Plans a selection for `day`; future blocks move along without asking (one decision for many tasks).
+    func plan(_ ids: [TaskID], to day: PlanDay) async {
+        for id in ids {
+            do {
+                try blocks.moveFutureBlocks(of: id, to: day, after: now())
+            } catch {
+                lastError = TaskListModel.message(for: error)
+            }
+            planStore.assign(id, to: day)
+        }
+        await reload()
+    }
+
     /// "Für heute einplanen" from the task list selection: planned day only, the source stays unchanged.
     func planToday(_ ids: [TaskID]) async {
         for id in ids { planStore.assign(id, to: today) }

@@ -20,6 +20,8 @@ struct TaskListView: View {
     @State private var planningDateFor: TaskItem?
     @State private var isSelecting = false
     @State private var selection = Set<TaskID>()
+    @State private var bulkDate: BulkDateTarget?
+    @State private var confirmsBulkDelete = false
     @Environment(\.openURL) private var openURL
     @Environment(AppEnvironment.self) private var environment
 
@@ -91,6 +93,12 @@ struct TaskListView: View {
                     Button(isSelecting ? "Fertig" : "Auswählen") {
                         isSelecting.toggle()
                         selection.removeAll()
+                    }
+                }
+                if isSelecting {
+                    ToolbarItem(placement: .topBarLeading) {
+                        let all = Set(model.sections.flatMap { $0.1 }.map(\.id))
+                        Button(selection == all ? "Keine" : "Alle") { selection = selection == all ? [] : all }
                     }
                 }
                 ToolbarItem(placement: .primaryAction) {
@@ -219,17 +227,78 @@ struct TaskListView: View {
                 }
             }
             Spacer()
-            Button("Für heute einplanen") {
-                let ids = Array(selection)
-                Task { await environment.planning.planToday(ids) }
-                selection.removeAll()
-                isSelecting = false
+            Menu {
+                bulkMenu
+            } label: {
+                Label("Aktionen", systemImage: "ellipsis.circle").labelStyle(.iconOnly).font(.title2)
             }
-            .buttonStyle(.borderedProminent)
             .disabled(selection.isEmpty)
+            Button("Heute") { runBulk { ids in await environment.planning.planToday(ids) } }
+                .buttonStyle(.borderedProminent)
+                .disabled(selection.isEmpty)
         }
         .padding()
         .background(.bar)
+        .sheet(item: $bulkDate) { target in
+            BulkDateSheet(title: target == .plan ? "Einplanen am" : "Fällig am", calendar: model.calendar) { date in
+                switch target {
+                case .plan: runBulk { ids in await environment.planning.plan(ids, to: PlanDay(date: date, calendar: model.calendar)) }
+                case .due: runBulk(writableOnly: true) { ids in await model.reschedule(ids, option: .date(DueDate(date: date, includeTime: false, calendar: model.calendar))) }
+                }
+            }
+        }
+        .confirmationDialog("\(selection.count) Aufgaben löschen?", isPresented: $confirmsBulkDelete, titleVisibility: .visible) {
+            Button("Löschen", role: .destructive) { runBulk(writableOnly: true) { ids in await model.delete(ids) } }
+        } message: {
+            Text("Erinnerungen und lokale Aufgaben werden gelöscht, GitHub-Issues als „nicht geplant“ geschlossen.")
+        }
+    }
+
+    /// Mockup F1 for a selection: planned day, due date, done, delete.
+    @ViewBuilder private var bulkMenu: some View {
+        Section("Einplanen · nur in Tagwerk") {
+            ControlGroup {
+                Button("Heute", systemImage: "sun.max") { runBulk { ids in await environment.planning.planToday(ids) } }
+                Button("Morgen", systemImage: "sunrise") { bulkPlan(.tomorrow) }
+            }
+            ControlGroup {
+                Button("Wochenende", systemImage: "sofa") { bulkPlan(.weekend) }
+                Button("Nächste Woche", systemImage: "arrow.forward.to.line") { bulkPlan(.nextMonday) }
+            }
+            Button("Anderer Tag …", systemImage: "calendar") { bulkDate = .plan }
+        }
+        Section("Fälligkeit · ändert die Quelle") {
+            Menu {
+                Button("Heute") { bulkDue(.today) }
+                Button("Morgen") { bulkDue(.tomorrow) }
+                Button("Wochenende (Sa)") { bulkDue(.weekend) }
+                Button("Nächste Woche (Mo)") { bulkDue(.nextMonday) }
+                Button("Datum wählen …") { bulkDate = .due }
+            } label: {
+                Label("Fälligkeit verschieben", systemImage: "calendar.badge.clock")
+            }
+        }
+        Section {
+            Button("Erledigt", systemImage: "checkmark.circle") { runBulk(writableOnly: true) { ids in await model.complete(ids) } }
+            Button("Löschen …", systemImage: "trash", role: .destructive) { confirmsBulkDelete = true }
+        }
+    }
+
+    private func bulkPlan(_ option: RescheduleOption) {
+        let day = environment.planning.planDay(for: option)
+        runBulk { ids in await environment.planning.plan(ids, to: day) }
+    }
+
+    private func bulkDue(_ option: RescheduleOption) {
+        runBulk(writableOnly: true) { ids in await model.reschedule(ids, option: option) }
+    }
+
+    /// Runs an action on the selection and leaves selection mode. Writes to the source skip offline (read-only) tasks.
+    private func runBulk(writableOnly: Bool = false, _ action: @escaping ([TaskID]) async -> Void) {
+        let ids = model.items.filter { selection.contains($0.id) && (!writableOnly || isWritable($0)) }.map(\.id)
+        selection.removeAll()
+        isSelecting = false
+        Task { await action(ids) }
     }
 
     @ViewBuilder private var undoBar: some View {
@@ -398,5 +467,40 @@ private struct SourceProblemRow: View {
         case .github: "GitHub"
         case .local: "lokale Aufgaben"
         }
+    }
+}
+
+enum BulkDateTarget: Identifiable {
+    case plan, due
+    var id: Self { self }
+}
+
+/// Picks one date for a selection of tasks (planned day or due date).
+struct BulkDateSheet: View {
+    let title: String
+    let calendar: Calendar
+    let onPick: (Date) -> Void
+    @Environment(\.dismiss) private var dismiss
+    @State private var date = Date.now
+
+    var body: some View {
+        NavigationStack {
+            DatePicker(title, selection: $date, displayedComponents: .date)
+                .datePickerStyle(.graphical)
+                .environment(\.calendar, calendar)
+                .padding()
+                .navigationTitle(title)
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    ToolbarItem(placement: .cancellationAction) { Button("Abbrechen") { dismiss() } }
+                    ToolbarItem(placement: .confirmationAction) {
+                        Button("Übernehmen") {
+                            onPick(date)
+                            dismiss()
+                        }
+                    }
+                }
+        }
+        .presentationDetents([.medium, .large])
     }
 }

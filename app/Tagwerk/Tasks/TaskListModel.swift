@@ -232,6 +232,20 @@ final class TaskListModel {
         }
     }
 
+    // MARK: Actions on a selection (same as for one task)
+
+    func complete(_ ids: [TaskID]) async {
+        for id in ids { await complete(id) }
+    }
+
+    func reschedule(_ ids: [TaskID], option: RescheduleOption) async {
+        for id in ids { await reschedule(id, option: option) }
+    }
+
+    func delete(_ ids: [TaskID]) async {
+        for id in ids { await delete(id) }
+    }
+
     func highlight(_ id: TaskID) {
         highlightedTaskID = id
     }

@@ -621,6 +621,17 @@ struct PlanningModelTests {
         #expect(model.plannedMinutes(for: [id("Fahrrad"), id("Lesen")]) == 120)
     }
 
+    @Test func planMany_assignsAll_movesBlocksWithoutAsking() async throws {
+        let model = await model()
+        let task = try #require(taskList.items.first { $0.title == "Fahrrad" })
+        let block = try blocks.createBlock(for: task, start: at(19, 14), minutes: 60)
+        await model.plan([id("Fahrrad"), id("Abgabe")], to: PlanDay(year: 2026, month: 11, day: 23))
+        #expect(planStore.assignment(for: id("Fahrrad")) == PlanDay(year: 2026, month: 11, day: 23))
+        #expect(planStore.assignment(for: id("Abgabe")) == PlanDay(year: 2026, month: 11, day: 23))
+        #expect(model.pendingBlockDecision == nil)
+        #expect(calendarStore.event(id: block.id)?.start == at(23, 14))
+    }
+
     @Test func duration_padsMinutes() {
         #expect(CapacityText.duration(125) == "2 h 05")
         #expect(CapacityText.duration(45) == "45 min")
