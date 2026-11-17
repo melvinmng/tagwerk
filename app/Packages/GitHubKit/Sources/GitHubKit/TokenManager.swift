@@ -12,6 +12,8 @@ public actor TokenManager {
     private var credentials: GitHubCredentials?
     private var didLoad = false
     private var refreshTask: Task<GitHubCredentials, Error>?
+    /// Incremented on sign-out; a refresh that finishes after a sign-out must not store its tokens.
+    private var session = 0
 
     public init(store: CredentialStore, client: DeviceFlowClient, now: @escaping @Sendable () -> Date = Date.init) {
         self.store = store
@@ -50,6 +52,7 @@ public actor TokenManager {
     }
 
     public func signOut() async throws {
+        session += 1
         refreshTask?.cancel()
         refreshTask = nil
         try clear()
@@ -71,13 +74,16 @@ public actor TokenManager {
         }
         guard let refreshToken = credentials?.refreshToken else { throw GitHubAuthError.signedOut }
         let client = self.client
+        let startedIn = session
         let task = Task { try await client.refresh(refreshToken) }
         refreshTask = task
-        defer { refreshTask = nil }
+        defer { if session == startedIn { refreshTask = nil } }
         do {
             let fresh = try await task.value
-            try store.save(fresh)
+            guard session == startedIn else { throw GitHubAuthError.signedOut }
+            // Keep the rotated tokens in memory even if the keychain write fails: the old refresh token is spent.
             credentials = fresh
+            try store.save(fresh)
             return fresh
         } catch GitHubAuthError.server(let code) where Self.signOutErrors.contains(code) {
             try? clear()

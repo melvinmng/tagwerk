@@ -113,3 +113,53 @@ struct TokenManagerTests {
         #expect(await manager.isSignedIn == false)
     }
 }
+
+/// Transport that holds every request until released.
+final class GatedTransport: HTTPTransport {
+    let inner: StubTransport
+    let gate = AsyncGate()
+    init(_ inner: StubTransport) { self.inner = inner }
+
+    func send(_ request: URLRequest) async throws -> (Data, HTTPURLResponse) {
+        await gate.wait()
+        return try await inner.send(request)
+    }
+}
+
+actor AsyncGate {
+    private var isOpen = false
+    private var waiters: [CheckedContinuation<Void, Never>] = []
+    var waiting: Int { waiters.count }
+
+    func wait() async {
+        if isOpen { return }
+        await withCheckedContinuation { waiters.append($0) }
+    }
+
+    func release() {
+        isOpen = true
+        waiters.forEach { $0.resume() }
+        waiters = []
+    }
+}
+
+struct TokenManagerSignOutRaceTests {
+    @Test func signOutDuringRefresh_staysSignedOut() async throws {
+        let stub = StubTransport()
+        stub.enqueueJSON("/login/oauth/access_token", #"{"access_token":"gho_new","expires_in":28800,"refresh_token":"ghr_new"}"#)
+        let transport = GatedTransport(stub)
+        let store = MemoryCredentialStore(GitHubCredentials(accessToken: "gho_old", refreshToken: "ghr_old",
+                                                            accessExpiresAt: fixedNow.addingTimeInterval(-10), refreshExpiresAt: nil))
+        let client = DeviceFlowClient(clientID: "client", transport: transport, sleep: { _ in }, now: { fixedNow })
+        let manager = TokenManager(store: store, client: client, now: { fixedNow })
+
+        let refreshing = Task { try await manager.validAccessToken() }
+        for _ in 0..<500 where await transport.gate.waiting == 0 { await Task.yield() }
+        try await manager.signOut()
+        await transport.gate.release()
+        _ = try? await refreshing.value
+
+        #expect(store.current == nil)
+        #expect(await manager.isSignedIn == false)
+    }
+}
