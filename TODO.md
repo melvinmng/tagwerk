@@ -44,6 +44,17 @@ GitHub-Konto: @melvinmng · bestätigt zuweisbar · geprüft 2026-11-17 · ich
 - [ ] [#41](https://github.com/melvinmng/tagwerk/issues/41) Tab Planen mit Tag, Woche und Monat bauen {status: In review; prio: P2 (High); aufwand: 6h; epic: #2}
 - [ ] [#42](https://github.com/melvinmng/tagwerk/issues/42) Kontextmenü, Termin-Sprung und Aufwand-Sheet bauen {status: In review; prio: P2 (High); aufwand: 3h; epic: #2}
 - [ ] [#43](https://github.com/melvinmng/tagwerk/issues/43) Planen einrichten und auf dem iPhone prüfen {status: In progress; prio: P2 (High); aufwand: 4h; epic: #2}
+- [ ] [#45](https://github.com/melvinmng/tagwerk/issues/45) Tagesansicht mit großem Datum, Tageswischen und Datumsauswahl {status: Ready; prio: P2 (High); aufwand: 3h; epic: #2}
+- [ ] [#46](https://github.com/melvinmng/tagwerk/issues/46) Freie Zeit ab jetzt anzeigen und erledigte Vorkommen freigeben {status: Ready; prio: P2 (High); aufwand: 3h; epic: #2}
+- [ ] [#47](https://github.com/melvinmng/tagwerk/issues/47) Zeitblöcke per Menü, Lücken und umschaltbarem Stundenraster ändern {status: Ready; prio: P2 (High); aufwand: 8h; epic: #2}
+- [ ] [#48](https://github.com/melvinmng/tagwerk/issues/48) Planung im Bearbeiten-Sheet ändern, inkl. „Nur heute / Alle ab heute“ {status: Ready; prio: P2 (High); aufwand: 4h; epic: #2}
+- [ ] [#49](https://github.com/melvinmng/tagwerk/issues/49) Ablage „Ungeplant“ für Woche und Monat neu bauen {status: Ready; prio: P2 (High); aufwand: 4h; epic: #2}
+- [ ] [#50](https://github.com/melvinmng/tagwerk/issues/50) Monat: Tag auswählen und Tagesmenü {status: Ready; prio: P2 (High); aufwand: 3h; epic: #2}
+- [ ] [#51](https://github.com/melvinmng/tagwerk/issues/51) Kontextmenü mit Abschnitten „Einplanen“ und „Fälligkeit“ {status: Ready; prio: P2 (High); aufwand: 2h; epic: #2}
+- [ ] [#52](https://github.com/melvinmng/tagwerk/issues/52) Aufgaben-Tab: Mehrfachauswahl, Wischen „Heute“, „Aufgabe zeigen“, ↻ {status: Ready; prio: P2 (High); aufwand: 4h; epic: #2}
+- [ ] [#53](https://github.com/melvinmng/tagwerk/issues/53) Heute Fälliges automatisch, „Von früher offen“ {status: Ready; prio: P2 (High); aufwand: 2h; epic: #2}
+- [ ] [#54](https://github.com/melvinmng/tagwerk/issues/54) Gleiche Termine aus mehreren Kalendern zusammenfassen {status: Ready; prio: P2 (High); aufwand: 2h; epic: #2}
+- [ ] [#55](https://github.com/melvinmng/tagwerk/issues/55) Termine in allen Kalendern anlegen, ändern und löschen {status: Ready; prio: P2 (High); aufwand: 6h; epic: #2}
 
 ## Notizen
 
@@ -55,6 +66,19 @@ _Automatisch aus [Tagwerk](https://github.com/users/melvinmng/projects/17) erzeu
 ### Backlog (2)
 - [#3](https://github.com/melvinmng/tagwerk/issues/3) Phase 3: Ernährung, Trinken und Training erfassen · @melvinmng · Prio P3 (Medium)
 - [#4](https://github.com/melvinmng/tagwerk/issues/4) Phase 4: Widget, Kurzbefehle und Wochenrückblick ergänzen · @melvinmng · Prio P4 (Low)
+
+### Bereit (11)
+- [#45](https://github.com/melvinmng/tagwerk/issues/45) Tagesansicht mit großem Datum, Tageswischen und Datumsauswahl · @melvinmng · Prio P2 (High) · 3h
+- [#46](https://github.com/melvinmng/tagwerk/issues/46) Freie Zeit ab jetzt anzeigen und erledigte Vorkommen freigeben · @melvinmng · Prio P2 (High) · 3h
+- [#47](https://github.com/melvinmng/tagwerk/issues/47) Zeitblöcke per Menü, Lücken und umschaltbarem Stundenraster ändern · @melvinmng · Prio P2 (High) · 8h
+- [#48](https://github.com/melvinmng/tagwerk/issues/48) Planung im Bearbeiten-Sheet ändern, inkl. „Nur heute / Alle ab heute“ · @melvinmng · Prio P2 (High) · 4h
+- [#49](https://github.com/melvinmng/tagwerk/issues/49) Ablage „Ungeplant“ für Woche und Monat neu bauen · @melvinmng · Prio P2 (High) · 4h
+- [#50](https://github.com/melvinmng/tagwerk/issues/50) Monat: Tag auswählen und Tagesmenü · @melvinmng · Prio P2 (High) · 3h
+- [#51](https://github.com/melvinmng/tagwerk/issues/51) Kontextmenü mit Abschnitten „Einplanen“ und „Fälligkeit“ · @melvinmng · Prio P2 (High) · 2h
+- [#52](https://github.com/melvinmng/tagwerk/issues/52) Aufgaben-Tab: Mehrfachauswahl, Wischen „Heute“, „Aufgabe zeigen“, ↻ · @melvinmng · Prio P2 (High) · 4h
+- [#53](https://github.com/melvinmng/tagwerk/issues/53) Heute Fälliges automatisch, „Von früher offen“ · @melvinmng · Prio P2 (High) · 2h
+- [#54](https://github.com/melvinmng/tagwerk/issues/54) Gleiche Termine aus mehreren Kalendern zusammenfassen · @melvinmng · Prio P2 (High) · 2h
+- [#55](https://github.com/melvinmng/tagwerk/issues/55) Termine in allen Kalendern anlegen, ändern und löschen · @melvinmng · Prio P2 (High) · 6h
 
 ### In Arbeit (2)
 - [#2](https://github.com/melvinmng/tagwerk/issues/2) Phase 2: Aufgaben, Kalender und KI-Tagesplan umsetzen · @melvinmng · Prio P2 (High)
