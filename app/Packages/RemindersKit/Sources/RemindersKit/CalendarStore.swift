@@ -105,6 +105,29 @@ public enum CalendarBlockRules {
         isRecurring ? "\(eventIdentifier)|\(Int(occurrence.timeIntervalSince1970))" : eventIdentifier
     }
 
+    /// Events that share an ID within one fetch (seen with subscribed calendars) get their occurrence start
+    /// appended, so every event stays distinguishable; unique IDs stay unchanged.
+    /// The same item can also appear in two calendars of one account (e.g. Exchange: a lecture and its "Busy"
+    /// copy) with one identifier; those IDs get the calendar as well (`<identifier>#<calendarID>|<seconds>`).
+    public static func uniqueIDs(_ events: [CalendarEvent]) -> [CalendarEvent] {
+        let groups = Dictionary(grouping: events, by: \.id)
+        return events.map { event in
+            guard let group = groups[event.id], group.count > 1 else { return event }
+            var event = event
+            let (identifier, occurrence) = parseOccurrenceID(event.id)
+            let spansCalendars = Set(group.map(\.calendarID)).count > 1
+            let scoped = spansCalendars ? "\(identifier)#\(event.calendarID)" : identifier
+            event.id = occurrenceID(eventIdentifier: scoped, occurrence: occurrence ?? event.start, isRecurring: true)
+            return event
+        }
+    }
+
+    /// Splits `<identifier>#<calendarID>` (see `uniqueIDs`); plain identifiers have no calendar.
+    public static func parseCalendarScope(_ identifier: String) -> (String, String?) {
+        guard let separator = identifier.lastIndex(of: "#") else { return (identifier, nil) }
+        return (String(identifier[..<separator]), String(identifier[identifier.index(after: separator)...]))
+    }
+
     public static func parseOccurrenceID(_ id: String) -> (String, Date?) {
         guard let separator = id.lastIndex(of: "|"), let seconds = Int(id[id.index(after: separator)...]) else {
             return (id, nil)

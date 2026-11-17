@@ -2,9 +2,9 @@ import Foundation
 
 /// A calendar event as Tagwerk sees it. For recurring events, `id` identifies one occurrence.
 public struct CalendarEvent: Sendable, Hashable, Identifiable {
-    public let id: String
+    public var id: String
     public let externalID: String?
-    public let calendarID: String
+    public var calendarID: String
     public var title: String
     public var start: Date
     public var end: Date

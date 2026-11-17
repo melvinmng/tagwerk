@@ -244,7 +244,7 @@ extension EventKitGateway: CalendarStore {
             calendars = selected
         }
         let predicate = store.predicateForEvents(withStart: interval.start, end: interval.end, calendars: calendars)
-        return store.events(matching: predicate).map(Self.calendarEvent)
+        return CalendarBlockRules.uniqueIDs(store.events(matching: predicate).map(Self.calendarEvent))
     }
 
     public func event(id: String) -> CalendarEvent? {
@@ -355,16 +355,18 @@ extension EventKitGateway: CalendarStore {
     }
 
     private func ekEvent(id: String) -> EKEvent? {
-        let (identifier, occurrence) = CalendarBlockRules.parseOccurrenceID(id)
+        let (scopedIdentifier, occurrence) = CalendarBlockRules.parseOccurrenceID(id)
+        let (identifier, calendarID) = CalendarBlockRules.parseCalendarScope(scopedIdentifier)
         guard let occurrence else {
             let event = store.event(withIdentifier: identifier)
             event?.refresh()
             return event
         }
+        let calendars = calendarID.flatMap { store.calendar(withIdentifier: $0) }.map { [$0] }
         // One occurrence of a series: `occurrenceDate` keeps the original time even after the occurrence was
         // moved on its own, so search a wide window around it.
         let predicate = store.predicateForEvents(withStart: occurrence.addingTimeInterval(-60 * 86_400),
-                                                 end: occurrence.addingTimeInterval(60 * 86_400), calendars: nil)
+                                                 end: occurrence.addingTimeInterval(60 * 86_400), calendars: calendars)
         return store.events(matching: predicate).first {
             $0.eventIdentifier == identifier && abs(($0.occurrenceDate ?? $0.startDate).timeIntervalSince(occurrence)) < 1
         }
@@ -374,8 +376,11 @@ extension EventKitGateway: CalendarStore {
         let declined = event.attendees?.first(where: \.isCurrentUser)?.participantStatus == .declined
         let identifier = event.eventIdentifier ?? event.calendarItemIdentifier
         var result = CalendarEvent(
+            // Subscribed calendars and detached occurrences can share one identifier across many events, so
+            // they always get the occurrence in their ID (see `CalendarBlockRules.uniqueIDs` for the rest).
             id: CalendarBlockRules.occurrenceID(eventIdentifier: identifier, occurrence: event.occurrenceDate ?? event.startDate,
-                                                isRecurring: event.hasRecurrenceRules),
+                                                isRecurring: event.hasRecurrenceRules || event.isDetached
+                                                    || event.calendar?.type == .subscription),
             externalID: event.calendarItemExternalIdentifier,
             calendarID: event.calendar?.calendarIdentifier ?? "",
             title: event.title ?? "",
