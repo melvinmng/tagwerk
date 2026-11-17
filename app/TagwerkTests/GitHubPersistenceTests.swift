@@ -86,3 +86,19 @@ struct SwiftDataGitHubCacheClearTests {
         #expect(cache.load() == nil)
     }
 }
+
+
+@MainActor
+struct SwiftDataCatalogStoreTests {
+    @Test func catalog_roundTripsAndReplaces() throws {
+        let container = try ModelContainerFactory.make(inMemory: true)
+        let store = SwiftDataGitHubCatalogStore(context: container.mainContext)
+        #expect(store.load() == nil)
+        let project = ProjectInfo(id: "PVT_1", number: 1, title: "App", fields: [], repositories: ["beispiel/app"])
+        store.store(GitHubCatalog(repositories: ["beispiel/app"], projects: [project], fetchedAt: Date(timeIntervalSince1970: 1)))
+        store.store(GitHubCatalog(repositories: ["beispiel/web"], projects: [project], fetchedAt: Date(timeIntervalSince1970: 2)))
+        #expect(store.load()?.repositories == ["beispiel/web"])
+        #expect(store.load()?.projects.first?.repositories == ["beispiel/app"])
+        #expect(try container.mainContext.fetchCount(FetchDescriptor<CachedGitHubCatalog>()) == 1)
+    }
+}

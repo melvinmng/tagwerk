@@ -17,6 +17,9 @@ final class AppEnvironment {
     let gitHubLoginClient: DeviceFlowClient
     let gitHub: GitHubTaskProvider
     private let gitHubCache: SwiftDataGitHubCache
+    private let gitHubCatalogStore: SwiftDataGitHubCatalogStore
+    /// Age after which the repository/project catalog is fetched again.
+    static let catalogMaxAge: TimeInterval = 5 * 60
     @ObservationIgnored private var changeObservation: Task<Void, Never>?
 
     init(modelContainer: ModelContainer) throws {
@@ -39,16 +42,22 @@ final class AppEnvironment {
         self.gitHubLoginClient = loginClient
         self.gitHubTokens = tokens
         let cache = SwiftDataGitHubCache(context: context)
+        let catalogStore = SwiftDataGitHubCatalogStore(context: context)
         self.gitHubCache = cache
+        self.gitHubCatalogStore = catalogStore
         self.gitHub = GitHubTaskProvider(
             api: GitHubAPI(transport: transport, tokens: tokens),
             tokens: tokens,
             cache: cache,
+            catalogStore: catalogStore,
             selectedProjectIDs: { settings.selectedProjectIDs.map(Set.init) }
         )
         // An ended GitHub sign-in (expired or revoked) forgets the cached issues of that account.
         taskList.onSignedOut = { source in
-            if source == .github { cache.clear() }
+            if source == .github {
+                cache.clear()
+                catalogStore.clear()
+            }
         }
     }
 
@@ -56,11 +65,14 @@ final class AppEnvironment {
     func activateGitHubIfSignedIn() async {
         guard await gitHubTokens.isSignedIn, taskList.provider(for: .github) == nil else { return }
         await taskList.register(gitHub)
+        // Refresh repositories and project links at every start, so creating an issue needs no wait.
+        _ = await gitHub.catalog(maxAge: 0)
     }
 
     /// Removes GitHub from the task list after signing out and forgets cached issues.
     func deactivateGitHub() async {
         gitHubCache.clear()
+        gitHubCatalogStore.clear()
         settings.selectedProjectIDs = nil
         await taskList.unregister(.github)
     }

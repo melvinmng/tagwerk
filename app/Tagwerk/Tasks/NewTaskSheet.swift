@@ -23,9 +23,9 @@ struct NewTaskSheet: View {
     @State private var priority: Priority?
     @State private var listID: String?
     @State private var reminderLists: [TaskContainer] = []
-    @State private var repositories: [String] = []
+    @State private var catalog: GitHubCatalog?
     @State private var repository: String?
-    @State private var projectID: String?
+    @State private var projectIDs: Set<String> = []
     @State private var gitHubError: String?
 
     private var gitHub: GitHubTaskProvider? { model.provider(for: .github) as? GitHubTaskProvider }
@@ -44,7 +44,7 @@ struct NewTaskSheet: View {
 
     private var canSave: Bool {
         guard !title.trimmingCharacters(in: .whitespaces).isEmpty else { return false }
-        return target != .github || (repository != nil && projectID != nil)
+        return target != .github || (repository != nil && !projectIDs.isEmpty)
     }
 
     var body: some View {
@@ -68,16 +68,31 @@ struct NewTaskSheet: View {
                     Section {
                         Picker("Repository", selection: $repository) {
                             Text("Wählen …").tag(String?.none)
-                            ForEach(repositories, id: \.self) { Text($0).tag(Optional($0)) }
-                        }
-                        Picker("Project", selection: $projectID) {
-                            Text("Wählen …").tag(String?.none)
-                            ForEach(gitHub?.projects ?? []) { Text($0.title).tag(Optional($0.id)) }
+                            ForEach(catalog?.repositories ?? [], id: \.self) { Text($0).tag(Optional($0)) }
                         }
                     } footer: {
                         Text(gitHubError ?? "Das Issue wird dir zugewiesen.")
                     }
-                    .task(id: target) { await loadRepositories() }
+                    Section("Projects") {
+                        ForEach(catalog?.projects ?? []) { project in
+                            Button {
+                                if projectIDs.contains(project.id) { projectIDs.remove(project.id) } else { projectIDs.insert(project.id) }
+                            } label: {
+                                HStack {
+                                    Text(project.title).foregroundStyle(.primary)
+                                    Spacer()
+                                    if projectIDs.contains(project.id) { Image(systemName: "checkmark").foregroundStyle(.tint) }
+                                }
+                            }
+                        }
+                    }
+                    .task(id: target) { await loadCatalog() }
+                    .onChange(of: repository) { _, repo in
+                        // Preselect the projects linked to the chosen repository.
+                        guard let repo, let catalog else { return }
+                        let linked = catalog.projectIDs(linkedTo: repo)
+                        if !linked.isEmpty { projectIDs = Set(linked) }
+                    }
                 }
 
                 if target == .reminders, !reminderLists.isEmpty {
@@ -129,7 +144,7 @@ struct NewTaskSheet: View {
             due: hasDue ? DueDate(date: dueDate, includeTime: hasTime && target != .github, calendar: model.calendar) : nil,
             priority: priority,
             containerID: target == .reminders ? listID : target == .github ? repository : nil,
-            subContainerID: target == .github ? projectID : nil
+            subContainerIDs: target == .github ? (catalog?.projects ?? []).map(\.id).filter(projectIDs.contains) : []
         )
         await model.create(draft, in: target)
         dismiss()
@@ -145,13 +160,10 @@ extension NewTaskSheet {
         }
     }
 
-    private func loadRepositories() async {
-        guard repositories.isEmpty, let gitHub else { return }
-        do {
-            repositories = try await gitHub.repositories()
-        } catch {
-            gitHubError = TaskListModel.message(for: error)
-        }
+    private func loadCatalog() async {
+        guard let gitHub else { return }
+        catalog = await gitHub.catalog(maxAge: AppEnvironment.catalogMaxAge)
+        if catalog == nil { gitHubError = "Repositories konnten nicht geladen werden." }
     }
 }
 

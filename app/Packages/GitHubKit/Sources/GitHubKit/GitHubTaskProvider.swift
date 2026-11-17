@@ -14,16 +14,18 @@ public final class GitHubTaskProvider: TaskProvider {
     @ObservationIgnored let api: GitHubAPI
     @ObservationIgnored let tokens: TokenManager
     @ObservationIgnored private let cache: GitHubCache
+    @ObservationIgnored private let catalogStore: GitHubCatalogStore?
     @ObservationIgnored private let selectedProjectIDs: @MainActor () -> Set<String>?
     @ObservationIgnored let now: () -> Date
     /// Full records of visible issues, keyed by issue node ID (all placements, unfiltered).
     private(set) var records: [String: GitHubIssueRecord] = [:]
 
-    public init(api: GitHubAPI, tokens: TokenManager, cache: GitHubCache,
+    public init(api: GitHubAPI, tokens: TokenManager, cache: GitHubCache, catalogStore: GitHubCatalogStore? = nil,
                 selectedProjectIDs: @escaping @MainActor () -> Set<String>?, now: @escaping () -> Date = Date.init) {
         self.api = api
         self.tokens = tokens
         self.cache = cache
+        self.catalogStore = catalogStore
         self.selectedProjectIDs = selectedProjectIDs
         self.now = now
     }
@@ -132,39 +134,62 @@ public final class GitHubTaskProvider: TaskProvider {
     }
 
     /// Creates an issue assigned to the viewer in `draft.containerID` (repository) and adds it to
-    /// project `draft.subContainerID` with the draft's field values and status "Ready".
+    /// every project in `draft.subContainerIDs` with the draft's field values and status "Ready".
     public func create(_ draft: TaskDraft) async throws -> TaskItem {
-        guard let repository = draft.containerID, let projectID = draft.subContainerID else {
-            throw TaskWriteError.failed("Bitte Repository und Project wählen.")
+        guard let repository = draft.containerID, !draft.subContainerIDs.isEmpty else {
+            throw TaskWriteError.failed("Bitte Repository und mindestens ein Project wählen.")
         }
         do {
             let (viewer, available) = try await api.viewerProjects()
             login = viewer
             projects = available
-            guard let project = available.first(where: { $0.id == projectID }) else { throw TaskWriteError.notFound }
+            let targets = draft.subContainerIDs.compactMap { id in available.first { $0.id == id } }
+            guard targets.count == draft.subContainerIDs.count else { throw TaskWriteError.notFound }
 
             let writer = GitHubWriter(api: api)
             let issueID = try await writer.createIssue(repository: repository, title: draft.title, body: draft.notes, assignee: viewer)
-            let itemID = try await writer.addToProject(projectID: project.id, contentID: issueID)
-            let placement = ProjectPlacement(project: project, itemID: itemID, itemUpdatedAt: now(),
-                                             status: nil, priority: nil, due: nil, estimateMinutes: nil)
-            if let due = draft.due {
-                try await writer.setField(placement, fieldName: GitHubMapping.dueField, value: .date(due))
+            for project in targets {
+                try await addToProject(project, issueID: issueID, draft: draft, writer: writer)
             }
-            if let priority = draft.priority, let option = GitHubMapping.priorityOption(priority, in: project) {
-                try await writer.setField(placement, fieldName: GitHubMapping.priorityField, value: .singleSelect(option))
-            }
-            if let minutes = draft.estimateMinutes, let fieldName = GitHubMapping.estimateFieldName(in: project) {
-                try await writer.setField(placement, fieldName: fieldName,
-                                          value: .number(GitHubMapping.fieldValue(fromMinutes: minutes, fieldName: fieldName)))
-            }
-            try await writer.setField(placement, fieldName: GitHubMapping.statusField, value: .singleSelect(GitHubMapping.reopenStatus))
 
             guard let fresh = try await api.issue(nodeID: issueID) else { throw TaskWriteError.notFound }
             records[fresh.issueID] = fresh
             return GitHubMapping.taskItem(fresh)
         } catch {
             throw Self.taskError(error)
+        }
+    }
+
+    private func addToProject(_ project: ProjectInfo, issueID: String, draft: TaskDraft, writer: GitHubWriter) async throws {
+        let itemID = try await writer.addToProject(projectID: project.id, contentID: issueID)
+        let placement = ProjectPlacement(project: project, itemID: itemID, itemUpdatedAt: now(),
+                                         status: nil, priority: nil, due: nil, estimateMinutes: nil)
+        if let due = draft.due {
+            try await writer.setField(placement, fieldName: GitHubMapping.dueField, value: .date(due))
+        }
+        if let priority = draft.priority, let option = GitHubMapping.priorityOption(priority, in: project) {
+            try await writer.setField(placement, fieldName: GitHubMapping.priorityField, value: .singleSelect(option))
+        }
+        if let minutes = draft.estimateMinutes, let fieldName = GitHubMapping.estimateFieldName(in: project) {
+            try await writer.setField(placement, fieldName: fieldName,
+                                      value: .number(GitHubMapping.fieldValue(fromMinutes: minutes, fieldName: fieldName)))
+        }
+        try await writer.setField(placement, fieldName: GitHubMapping.statusField, value: .singleSelect(GitHubMapping.reopenStatus))
+    }
+
+    /// Repositories and projects for creating an issue: the stored catalog while it is younger than
+    /// `maxAge`, otherwise fetched again. Offline, the stored catalog is returned regardless of age.
+    public func catalog(maxAge: TimeInterval) async -> GitHubCatalog? {
+        let stored = catalogStore?.load()
+        if let stored, now().timeIntervalSince(stored.fetchedAt) < maxAge { return stored }
+        do {
+            async let repositories = api.ownedRepositories()
+            async let viewer = api.viewerProjects()
+            let fresh = GitHubCatalog(repositories: try await repositories, projects: try await viewer.projects, fetchedAt: now())
+            catalogStore?.store(fresh)
+            return fresh
+        } catch {
+            return stored
         }
     }
 

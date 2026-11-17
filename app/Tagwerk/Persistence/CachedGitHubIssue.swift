@@ -16,6 +16,18 @@ final class CachedGitHubIssue {
     }
 }
 
+/// Repositories and projects for creating issues (JSON of `GitHubCatalog`), a single object.
+@Model
+final class CachedGitHubCatalog {
+    var payload: Data
+    var fetchedAt: Date
+
+    init(payload: Data, fetchedAt: Date) {
+        self.payload = payload
+        self.fetchedAt = fetchedAt
+    }
+}
+
 /// Time of the last successful GitHub fetch, kept separately so that an empty result is cached too.
 @Model
 final class GitHubSyncState {

@@ -20,12 +20,25 @@ public struct ProjectInfo: Codable, Sendable, Equatable, Identifiable {
     public let number: Int
     public let title: String
     public let fields: [ProjectField]
+    /// Repositories linked to the project ("owner/name"); empty when unknown.
+    public let repositories: [String]
 
-    public init(id: String, number: Int, title: String, fields: [ProjectField]) {
+    public init(id: String, number: Int, title: String, fields: [ProjectField], repositories: [String] = []) {
         self.id = id
         self.number = number
         self.title = title
         self.fields = fields
+        self.repositories = repositories
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(String.self, forKey: .id)
+        number = try container.decode(Int.self, forKey: .number)
+        title = try container.decode(String.self, forKey: .title)
+        fields = try container.decode([ProjectField].self, forKey: .fields)
+        // Caches written before repositories existed lack the key.
+        repositories = try container.decodeIfPresent([String].self, forKey: .repositories) ?? []
     }
 
     public func field(named name: String) -> ProjectField? {

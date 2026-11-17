@@ -28,6 +28,7 @@ enum ProjectsQuery {
     static let viewerProjects = """
     query { viewer { login projectsV2(first: 20, query: "is:open") { nodes {
       id number title closed
+      repositories(first: 20) { nodes { nameWithOwner } }
       \(fieldsSelection)
     } } } }
     """
@@ -80,6 +81,7 @@ enum ProjectsQuery {
         let title: String
         let closed: Bool
         let fields: Nodes<FieldNode>
+        let repositories: Nodes<IssueContent.Repository>?
 
         var info: ProjectInfo {
             ProjectInfo(
@@ -88,7 +90,8 @@ enum ProjectsQuery {
                     guard let id = node.id, let name = node.name else { return nil }
                     return ProjectField(id: id, name: name,
                                         options: Dictionary((node.options ?? []).map { ($0.name, $0.id) }, uniquingKeysWith: { a, _ in a }))
-                }
+                },
+                repositories: repositories?.nodes.map(\.nameWithOwner) ?? []
             )
         }
     }

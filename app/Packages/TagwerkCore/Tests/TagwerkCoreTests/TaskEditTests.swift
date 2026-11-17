@@ -65,6 +65,6 @@ struct TaskEditLabelsTests {
         #expect(item.subContainers.isEmpty)
         #expect(item.labels == nil)
         #expect(TaskEdit().targetSubContainerIDs == nil)
-        #expect(TaskDraft(title: "x").subContainerID == nil)
+        #expect(TaskDraft(title: "x").subContainerIDs.isEmpty)
     }
 }

@@ -2,14 +2,14 @@
 enum Fixtures {
     static let viewerProjects = """
     {"data":{"viewer":{"login":"octo","projectsV2":{"nodes":[
-      {"id":"PVT_1","number":1,"title":"App","closed":false,"fields":{"nodes":[
+      {"id":"PVT_1","number":1,"title":"App","closed":false,"repositories":{"nodes":[{"nameWithOwner":"beispiel/app"}]},"fields":{"nodes":[
         {"id":"F_status","name":"Status","options":[{"id":"OPT_ready","name":"Ready"},{"id":"OPT_done","name":"Done"}]},
         {"id":"F_prio","name":"Priority","options":[{"id":"OPT_p2","name":"P2 (High)"},{"id":"OPT_p3","name":"P3 (Medium)"}]},
         {"id":"F_due","name":"Due date"},
         {"id":"F_est","name":"Estimate (h)"},
         {"id":"F_title","name":"Title"}
       ]}},
-      {"id":"PVT_2","number":2,"title":"Studium","closed":false,"fields":{"nodes":[
+      {"id":"PVT_2","number":2,"title":"Studium","closed":false,"repositories":{"nodes":[{"nameWithOwner":"beispiel/studium"},{"nameWithOwner":"beispiel/app"}]},"fields":{"nodes":[
         {"id":"F2_status","name":"Status","options":[{"id":"OPT2_ready","name":"Ready"},{"id":"OPT2_done","name":"Done"}]},
         {"id":"F2_due","name":"Due date"},
         {"id":"F2_est","name":"Estimate (MDs)"}

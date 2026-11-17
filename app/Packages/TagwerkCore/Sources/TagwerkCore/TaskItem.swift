@@ -84,12 +84,12 @@ public struct TaskDraft: Sendable, Hashable {
     public var estimateMinutes: Int?
     /// Target container; `nil` lets the source pick its default.
     public var containerID: String?
-    /// Secondary target, such as the GitHub Project of a new issue.
-    public var subContainerID: String?
+    /// Secondary targets, such as the GitHub Projects of a new issue.
+    public var subContainerIDs: [String]
 
     public init(title: String, notes: String? = nil, due: DueDate? = nil, priority: Priority? = nil,
-                estimateMinutes: Int? = nil, containerID: String? = nil, subContainerID: String? = nil) {
-        self.subContainerID = subContainerID
+                estimateMinutes: Int? = nil, containerID: String? = nil, subContainerIDs: [String] = []) {
+        self.subContainerIDs = subContainerIDs
         self.title = title
         self.notes = notes
         self.due = due
