@@ -31,3 +31,45 @@ enum EstimateHours {
         return min(next, maxMinutes)
     }
 }
+
+/// Text and value of the effort field. Every keystroke updates the value at once, so saving
+/// while the keyboard is open never loses input; steps and quick values rewrite the text.
+struct EstimateInput: Equatable {
+    private(set) var text: String
+    private(set) var minutes: Int?
+
+    init(minutes: Int?) {
+        self.minutes = minutes
+        self.text = minutes.map(EstimateHours.number) ?? ""
+    }
+
+    /// Typed text: empty or 0 means no effort, an unreadable entry keeps the last value.
+    mutating func typed(_ newText: String) {
+        text = newText
+        let normalized = newText.replacingOccurrences(of: ",", with: ".").trimmingCharacters(in: .whitespaces)
+        if normalized.isEmpty {
+            minutes = nil
+        } else if let hours = Double(normalized) {
+            minutes = EstimateHours.minutes(fromHours: hours)
+        }
+    }
+
+    mutating func step(_ direction: Int) {
+        minutes = EstimateHours.stepped(minutes: minutes, by: direction)
+        syncText()
+    }
+
+    mutating func choose(_ value: Int?) {
+        minutes = value
+        syncText()
+    }
+
+    /// Leaving the field shows the stored value in canonical form; the value itself stays.
+    mutating func endEditing() {
+        syncText()
+    }
+
+    private mutating func syncText() {
+        text = minutes.map(EstimateHours.number) ?? ""
+    }
+}

@@ -55,3 +55,47 @@ struct ConflictChangesTests {
         #expect(ConflictChange.changes(original: original, draft: draft, current: current).isEmpty)
     }
 }
+
+struct EstimateInputTests {
+    @Test func typing_updatesMinutesImmediately() {
+        var input = EstimateInput(minutes: nil)
+        input.typed("2")
+        #expect(input.minutes == 120)
+        input.typed("0,8")
+        #expect(input.minutes == 45)
+        #expect(input.text == "0,8")
+    }
+
+    @Test func typeThenStep_stepsFromTypedValueAndShowsIt() {
+        var input = EstimateInput(minutes: 60)
+        input.typed("2")
+        input.step(1)
+        input.step(1)
+        #expect(input.minutes == 150)
+        #expect(input.text == "2,5")
+    }
+
+    @Test func quickValue_overridesTypedText() {
+        var input = EstimateInput(minutes: 60)
+        input.typed("3")
+        input.choose(30)
+        #expect(input.minutes == 30)
+        #expect(input.text == "0,5")
+    }
+
+    @Test func endEditing_normalisesTextButKeepsOffGridValue() {
+        var input = EstimateInput(minutes: 50)
+        input.endEditing()
+        #expect(input.minutes == 50)
+    }
+
+    @Test func emptyText_meansNoEffort_invalidTextKeepsValue() {
+        var input = EstimateInput(minutes: 60)
+        input.typed("abc")
+        #expect(input.minutes == 60)
+        input.typed("")
+        #expect(input.minutes == nil)
+        input.typed("0")
+        #expect(input.minutes == nil)
+    }
+}
