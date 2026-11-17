@@ -49,3 +49,22 @@ struct TaskEditTests {
         #expect(Priority.allCases.map(\.label) == ["P1", "P2", "P3", "P4", "P5"])
     }
 }
+
+struct TaskEditLabelsTests {
+    @Test func taskEdit_diff_labels() {
+        var original = makeItem("A")
+        original.labels = ["bug"]
+        var changed = original
+        changed.labels = ["bug", "ui"]
+        #expect(TaskEdit.diff(from: original, to: changed).labels == .set(["bug", "ui"]))
+        #expect(TaskEdit.diff(from: original, to: original).labels.isUnchanged)
+    }
+
+    @Test func taskItem_defaults_noSubContainersNoLabels() {
+        let item = makeItem("A")
+        #expect(item.subContainers.isEmpty)
+        #expect(item.labels == nil)
+        #expect(TaskEdit().targetSubContainerIDs == nil)
+        #expect(TaskDraft(title: "x").subContainerID == nil)
+    }
+}

@@ -31,7 +31,7 @@ public struct TaskContainer: Sendable, Hashable, Codable {
 
 /// Fields the editor can show and change. A source lists only the fields it supports.
 public enum TaskField: Sendable, Hashable, Codable {
-    case title, notes, due, priority, estimate, container
+    case title, notes, due, priority, estimate, container, labels
 }
 
 /// Source-independent view of a task.
@@ -48,11 +48,16 @@ public struct TaskItem: Identifiable, Sendable, Hashable {
     /// Opaque change marker of the source, compared before every write.
     public var version: String
     public var editableFields: Set<TaskField>
+    /// Secondary groupings, such as the GitHub Projects an issue belongs to.
+    public var subContainers: [TaskContainer]
+    /// Labels, for sources that have them (GitHub); `nil` otherwise.
+    public var labels: [String]?
 
     public init(
         id: TaskID, title: String, notes: String?, due: DueDate?, priority: Priority?,
         estimateMinutes: Int?, isCompleted: Bool, container: TaskContainer, url: URL?,
-        version: String, editableFields: Set<TaskField>
+        version: String, editableFields: Set<TaskField>,
+        subContainers: [TaskContainer] = [], labels: [String]? = nil
     ) {
         self.id = id
         self.title = title
@@ -65,6 +70,8 @@ public struct TaskItem: Identifiable, Sendable, Hashable {
         self.url = url
         self.version = version
         self.editableFields = editableFields
+        self.subContainers = subContainers
+        self.labels = labels
     }
 }
 
@@ -77,9 +84,12 @@ public struct TaskDraft: Sendable, Hashable {
     public var estimateMinutes: Int?
     /// Target container; `nil` lets the source pick its default.
     public var containerID: String?
+    /// Secondary target, such as the GitHub Project of a new issue.
+    public var subContainerID: String?
 
     public init(title: String, notes: String? = nil, due: DueDate? = nil, priority: Priority? = nil,
-                estimateMinutes: Int? = nil, containerID: String? = nil) {
+                estimateMinutes: Int? = nil, containerID: String? = nil, subContainerID: String? = nil) {
+        self.subContainerID = subContainerID
         self.title = title
         self.notes = notes
         self.due = due

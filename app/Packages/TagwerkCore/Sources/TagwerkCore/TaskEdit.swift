@@ -20,12 +20,16 @@ public struct TaskEdit: Sendable, Equatable {
     public var estimateMinutes: FieldChange<Int?> = .unchanged
     public var containerID: FieldChange<String> = .unchanged
     public var isCompleted: FieldChange<Bool> = .unchanged
+    public var labels: FieldChange<[String]> = .unchanged
+    /// Sub-containers (e.g. GitHub Projects) that field changes apply to; `nil` means all.
+    public var targetSubContainerIDs: Set<String>? = nil
 
     public init() {}
 
     public var isEmpty: Bool {
         title.isUnchanged && notes.isUnchanged && due.isUnchanged && priority.isUnchanged
             && estimateMinutes.isUnchanged && containerID.isUnchanged && isCompleted.isUnchanged
+            && labels.isUnchanged
     }
 
     /// Builds an edit that sets exactly the fields in which `edited` differs from `original`.
@@ -38,6 +42,7 @@ public struct TaskEdit: Sendable, Equatable {
         if edited.estimateMinutes != original.estimateMinutes { edit.estimateMinutes = .set(edited.estimateMinutes) }
         if edited.container.id != original.container.id { edit.containerID = .set(edited.container.id) }
         if edited.isCompleted != original.isCompleted { edit.isCompleted = .set(edited.isCompleted) }
+        if edited.labels != original.labels { edit.labels = .set(edited.labels ?? []) }
         return edit
     }
 }

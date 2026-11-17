@@ -12,10 +12,6 @@ let package = Package(
     ],
     targets: [
         .target(name: "GitHubKit", dependencies: ["TagwerkCore"]),
-        .testTarget(
-            name: "GitHubKitTests",
-            dependencies: ["GitHubKit", "TagwerkCore"],
-            resources: [.copy("Fixtures")]
-        )
+        .testTarget(name: "GitHubKitTests", dependencies: ["GitHubKit", "TagwerkCore"])
     ]
 )
