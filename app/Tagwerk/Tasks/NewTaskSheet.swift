@@ -7,7 +7,14 @@ struct NewTaskSheet: View {
     let model: TaskListModel
     @Environment(\.dismiss) private var dismiss
 
-    @State private var target: TaskSource = .local
+    @State private var target: TaskSource
+
+    init(model: TaskListModel) {
+        self.model = model
+        let available = Set(Self.availableTargets(in: model))
+        _target = State(initialValue: model.filter.creationTarget(available: available))
+        _priority = State(initialValue: model.filter.creationTarget(available: available) == .reminders ? .p4 : nil)
+    }
     @State private var title = ""
     @State private var notes = ""
     @State private var hasDue = false
@@ -23,7 +30,10 @@ struct NewTaskSheet: View {
 
     private var gitHub: GitHubTaskProvider? { model.provider(for: .github) as? GitHubTaskProvider }
 
-    private var targets: [TaskSource] {
+    private var targets: [TaskSource] { Self.availableTargets(in: model) }
+
+    /// Sources a task can be created in right now (registered and loaded; Local always).
+    static func availableTargets(in model: TaskListModel) -> [TaskSource] {
         [.local, .reminders, .github].filter { source in
             guard model.provider(for: source) != nil, let state = model.sourceStates[source] else {
                 return source == .local

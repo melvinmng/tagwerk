@@ -232,3 +232,18 @@ struct TagwerkCalendarTests {
         #expect(Calendar.tagwerk.firstWeekday == 2)
     }
 }
+
+struct CreationTargetTests {
+    @Test func creationTarget_followsFilter_allMeansReminders() {
+        let all: Set<TaskSource> = [.reminders, .github, .local]
+        #expect(TaskFilter.all.creationTarget(available: all) == .reminders)
+        #expect(TaskFilter.reminders.creationTarget(available: all) == .reminders)
+        #expect(TaskFilter.github.creationTarget(available: all) == .github)
+        #expect(TaskFilter.local.creationTarget(available: all) == .local)
+    }
+
+    @Test func creationTarget_unavailableSource_fallsBackToLocal() {
+        #expect(TaskFilter.all.creationTarget(available: [.local]) == .local)
+        #expect(TaskFilter.github.creationTarget(available: [.local, .reminders]) == .local)
+    }
+}

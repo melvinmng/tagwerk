@@ -15,6 +15,16 @@ enum TaskFilter: CaseIterable, Hashable {
         }
     }
 
+    /// Source preselected by "＋": the filtered source, or Reminders for "Alle"; Local if unavailable.
+    func creationTarget(available: Set<TaskSource>) -> TaskSource {
+        let preferred: TaskSource = switch self {
+        case .all, .reminders: .reminders
+        case .github: .github
+        case .local: .local
+        }
+        return available.contains(preferred) ? preferred : .local
+    }
+
     var sources: Set<TaskSource> {
         switch self {
         case .all: Set(TaskSource.allCases)
