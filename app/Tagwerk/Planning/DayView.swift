@@ -62,15 +62,26 @@ struct DayView: View {
                     }
                 }
 
-                if model.anchor == model.today, !model.leftovers.isEmpty {
-                    Section("Von früher übrig") {
-                        ForEach(model.leftovers) { task in
+                if !plan.dueToday.isEmpty {
+                    Section("Heute fällig") {
+                        ForEach(plan.dueToday) { task in
+                            PlannedTaskRow(task: task, isPastDue: false)
+                                .contentShape(Rectangle())
+                                .onTapGesture { onOpenTask(task.id) }
+                                .contextMenu { TaskContextMenu(item: task, actions: menuActions(task)) }
+                        }
+                    }
+                }
+
+                if model.anchor == model.today, !model.overdue.isEmpty {
+                    Section("Von früher offen") {
+                        ForEach(model.overdue) { task in
                             HStack {
                                 Text(task.title)
                                 Spacer()
                                 Button("Neu einplanen") { onOpenTask(task.id) }
                                     .buttonStyle(.borderless)
-                                Button("Auf heute") { Task { await model.assign(task.id, to: model.today) } }
+                                Button("Heute") { Task { await model.assign(task.id, to: model.today) } }
                                     .buttonStyle(.borderless)
                             }
                         }

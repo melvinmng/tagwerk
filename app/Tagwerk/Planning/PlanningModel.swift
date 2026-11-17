@@ -58,6 +58,8 @@ struct DayPlan: Identifiable, Equatable {
     let blocks: [CalendarEvent]
     /// Tasks planned for this day (day assignment).
     let assigned: [TaskItem]
+    /// Today only: open tasks due today without a planned day or block; they count as load (design §13.9).
+    let dueToday: [TaskItem]
     /// Event ID → task for `blocks`.
     let links: [String: TaskID]
     /// Assigned tasks whose planned day lies after their due date.
@@ -82,7 +84,9 @@ final class PlanningModel {
     var anchor: PlanDay
     private(set) var days: [DayPlan] = []
     private(set) var unplanned: [TaskItem] = []
-    private(set) var leftovers: [TaskItem] = []
+    /// Open tasks planned before today or due before today without a planned day; not counted as load until
+    /// they are moved to a day (design §13.9).
+    private(set) var overdue: [TaskItem] = []
     /// Important deadlines from the anchor day over the next 14 days (deadline card of the day view).
     private(set) var upcomingDeadlines: [ImportantDeadline] = []
     /// Reminder IDs with a repetition rule (for "Aufwand ändern …").
@@ -154,21 +158,31 @@ final class PlanningModel {
         let assignments = planStore.assignments(in: range)
         let overrides = planStore.overrides(in: range)
         let tasksByID = Dictionary(open.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
+        let everything = PlanDay(year: 1, month: 1, day: 1)...PlanDay(year: 9999, month: 12, day: 31)
+        let allAssignments = planStore.assignments(in: everything)
 
         var result: [DayPlan] = []
         var day = range.lowerBound
         while day <= range.upperBound {
             result.append(dayPlan(day, events: events, links: links, deadlines: deadlines, assignments: assignments,
                                   overrides: overrides, tasksByID: tasksByID, reminders: reminders,
-                                  recurringIDs: recurringIDs))
+                                  recurringIDs: recurringIDs, open: open, allAssignments: allAssignments))
             day = day.adding(days: 1, calendar: calendar)
         }
         days = result
 
-        let assignedIDs = Set(planStore.assignments(in: PlanDay(year: 1, month: 1, day: 1)...PlanDay(year: 9999, month: 12, day: 31)).keys)
-        unplanned = open.filter { !assignedIDs.contains($0.id) }
+        unplanned = open.filter { allAssignments[$0.id] == nil }
         upcomingDeadlines = loadUpcomingDeadlines(open: open)
-        leftovers = planStore.leftovers(before: today, openTaskIDs: Set(open.map(\.id))).compactMap { tasksByID[$0] }
+        let today = self.today
+        overdue = open.filter { task in
+            if let planned = allAssignments[task.id] { return planned < today }
+            return task.due.map { PlanDay($0) < today } ?? false
+        }
+        .sorted { lhs, rhs in
+            let left = lhs.due.map(PlanDay.init), right = rhs.due.map(PlanDay.init)
+            if left != right { return (left ?? PlanDay(year: 9999, month: 12, day: 31)) < (right ?? PlanDay(year: 9999, month: 12, day: 31)) }
+            return lhs.title.localizedStandardCompare(rhs.title) == .orderedAscending
+        }
     }
 
     // MARK: Actions
@@ -320,7 +334,8 @@ final class PlanningModel {
 
     private func dayPlan(_ day: PlanDay, events: [CalendarEvent], links: [String: TaskID], deadlines: [ImportantDeadline],
                          assignments: [TaskID: PlanDay], overrides: [PlanDay: DayOverride], tasksByID: [TaskID: TaskItem],
-                         reminders: [ReminderRecord], recurringIDs: Set<String>) -> DayPlan {
+                         reminders: [ReminderRecord], recurringIDs: Set<String>, open: [TaskItem],
+                         allAssignments: [TaskID: PlanDay]) -> DayPlan {
         let start = day.startDate(in: calendar)
         let end = day.adding(days: 1, calendar: calendar).startDate(in: calendar)
         let dayEvents = events.filter { $0.end > start && $0.start < end }.sorted { $0.start < $1.start }
@@ -331,12 +346,20 @@ final class PlanningModel {
             .compactMap { tasksByID[$0.key] }
             .sorted { $0.title.localizedStandardCompare($1.title) == .orderedAscending }
 
+        let dueToday = day == today
+            ? open.filter { task in
+                allAssignments[task.id] == nil && !tasksWithBlocks.contains(task.id)
+                    && task.due.map { PlanDay($0) == day } == true
+            }
+            .sorted { $0.title.localizedStandardCompare($1.title) == .orderedAscending }
+            : []
+
         var planned = linkedEvents.reduce(0) { total, event in
             let from = max(event.start, start), to = min(event.end, end)
             return total + max(0, Int(to.timeIntervalSince(from) / 60))
         }
         var estimated = 0
-        for task in assigned where !tasksWithBlocks.contains(task.id) {
+        for task in assigned + dueToday where !tasksWithBlocks.contains(task.id) {
             // Recurring reminders count once, through their recurring effort.
             if task.id.source == .reminders, recurringIDs.contains(task.id.rawValue) { continue }
             if let minutes = task.estimateMinutes {
@@ -374,7 +397,7 @@ final class PlanningModel {
         let shown = settings.mergeDuplicateEvents ? mergingDuplicates(dayEvents, links: links) : dayEvents
         return DayPlan(day: day, capacity: capacity(input), deadlines: deadlines.filter { $0.day == day },
                        events: shown.filter { links[$0.id] == nil }, blocks: shown.filter { links[$0.id] != nil && !$0.isAllDay },
-                       assigned: assigned, links: links.filter { id, _ in linkedEvents.contains { $0.id == id } },
+                       assigned: assigned, dueToday: dueToday, links: links.filter { id, _ in linkedEvents.contains { $0.id == id } },
                        isPastDue: pastDue, recurring: recurring, isPast: day < today)
     }
 

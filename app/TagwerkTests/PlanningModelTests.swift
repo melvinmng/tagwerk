@@ -103,10 +103,60 @@ struct PlanningModelTests {
         #expect(Set(model.unplanned.map(\.title)) == ["Abgabe", "Login"])
     }
 
-    @Test func leftovers_showPastOpenAssignments() async {
+    @Test func overdue_showPastOpenAssignments() async {
         planStore.assign(id("Fahrrad"), to: PlanDay(year: 2026, month: 11, day: 16))
         let model = await model()
-        #expect(model.leftovers.map(\.title) == ["Fahrrad"])
+        #expect(model.overdue.map(\.title) == ["Fahrrad"])
+    }
+
+    @Test func dueToday_appearsAndCountsAsLoad() async throws {
+        local.tasks.append(makeTask("Heute fällig", source: .local, due: DueDate(year: 2026, month: 11, day: 18)))
+        let model = await model()
+        let day = try #require(model.days.first)
+        #expect(day.dueToday.map(\.title) == ["Heute fällig"])
+        #expect(day.capacity.plannedMinutes == 30)
+    }
+
+    @Test func dueToday_withAssignmentElsewhere_notShown() async throws {
+        local.tasks.append(makeTask("Heute fällig", source: .local, due: DueDate(year: 2026, month: 11, day: 18)))
+        planStore.assign(id("Heute fällig"), to: PlanDay(year: 2026, month: 11, day: 20))
+        let model = await model()
+        #expect(try #require(model.days.first).dueToday.isEmpty)
+    }
+
+    @Test func dueToday_onlyOnToday() async throws {
+        let model = await model()
+        model.anchor = PlanDay(year: 2026, month: 11, day: 19)
+        await model.reload()
+        #expect(try #require(model.days.first).dueToday.isEmpty)  // "Abgabe" is due on the 19th, but that is not today
+    }
+
+    @Test func overdue_includesPastDueWithoutAssignment_notCounted() async throws {
+        local.tasks.append(makeTask("Vergessen", source: .local, due: DueDate(year: 2026, month: 11, day: 15)))
+        let model = await model()
+        #expect(model.overdue.map(\.title) == ["Vergessen"])
+        #expect(try #require(model.days.first).capacity.plannedMinutes == 0)
+    }
+
+    @Test func overdue_afterAssignToday_movesIntoAssigned() async throws {
+        local.tasks.append(makeTask("Vergessen", source: .local, due: DueDate(year: 2026, month: 11, day: 15)))
+        let model = await model()
+        await model.assign(id("Vergessen"), to: today)
+        #expect(model.overdue.isEmpty)
+        #expect(try #require(model.days.first).assigned.map(\.title) == ["Vergessen"])
+    }
+
+    @Test func recurringReminderDueToday_countsOnceViaEffort() async throws {
+        accessStore.openRecords = [ReminderRecord(id: "k", title: "Training", notes: nil, due: DueDate(year: 2026, month: 11, day: 18),
+                                                  ekPriority: 0, isCompleted: false, listID: "l", lastModified: nil,
+                                                  recurrence: Recurrence(rule: .daily(interval: 1), start: today, end: nil, count: nil))]
+        accessStore.accessState = .fullAccess
+        let reminders = FakeTaskProvider(source: .reminders, tasks: [makeTask("k", source: .reminders, due: DueDate(year: 2026, month: 11, day: 18))])
+        await taskList.register(reminders)
+        let model = await model()
+        let day = try #require(model.days.first)
+        #expect(day.dueToday.map(\.id.rawValue) == ["k"])
+        #expect(day.capacity.plannedMinutes == 0)
     }
 
     @Test func assign_afterDue_marksPastDue() async {
