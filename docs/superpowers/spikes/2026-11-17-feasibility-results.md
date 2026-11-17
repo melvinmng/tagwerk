@@ -53,3 +53,17 @@ Geprüft mit der OAuth-App „Tagwerk“ (Client-ID `Ov23liLkF2p4Nh2ztZg0`, Devi
 2. Erneuert wird vor Ablauf (Puffer 5 min) und nach einem 401. Abgemeldet wird nur, wenn die Erneuerung selbst mit `bad_refresh_token` oder `incorrect_client_credentials` scheitert. Netzfehler melden nicht ab.
 3. Access-Token, Refresh-Token und beide Ablaufzeitpunkte werden zusammen als ein Schlüsselbund-Eintrag gespeichert, damit nie ein halber Stand entsteht.
 4. Offen: Ob der Ablauf von `offline_access` oder von einer Einstellung der OAuth-App kommt, ist nicht unterscheidbar. Die App fordert `offline_access` immer an und verarbeitet beide Fälle (Token mit oder ohne `expires_in`).
+
+## Nachtrag Phase 2b: Function Calling über das ChatGPT-Abo (2026-11-17)
+
+Geprüft auf dem iPhone mit der Spike-App, angemeldet über „Sign in with ChatGPT“ (die Sitzung aus Phase 1, danach auch eine Neuanmeldung). Die Testprobe wurde nicht committet.
+
+| Prüfung | Ergebnis |
+|---|---|
+| Modell | `gpt-6.1-sol` (erstes Modell mit `visibility == "list"`) |
+| Schritt 1: Responses-Aufruf mit zwei Funktionen (`create_task`, `reschedule_task`, `strict: true`), `store:false`, `stream:true` | ✅ `response.completed`. Beide Funktionen wurden **parallel** in einer Antwort aufgerufen, die Argumente entsprechen dem Schema (`{"due":"2026-11-18","priority":"P2","title":"Testaufgabe"}`, `{"task_id":"local-7","due":"2026-11-20"}`). |
+| Schritt 2: zweiter Aufruf mit `function_call` und `function_call_output` im `input` (ohne `previous_response_id`, weil `store:false`) | ✅ `response.completed`. Das Modell fasst die Ergebnisse zusammen und bemerkt sogar die abweichende ID in der Test-Rückmeldung. |
+
+**Folgen für Phase 2b:** Der KI-Assistent kann App-Funktionen aufrufen. Der Verlauf eines Gesprächs muss vollständig im `input` mitgeschickt werden, weil `store:false` keine serverseitige Fortsetzung erlaubt.
+
+**Login auf dem Mac:** Im Mac-Browser endete die Erstregistrierung (`client_id=dynamic_agent_client`) nach der Passkey-Anmeldung mit „Signup not complete“. Auf dem iPhone funktionierten sowohl die bestehende Sitzung als auch eine Neuanmeldung. Die Ursache wird gesondert geklärt; für die App betrifft es nur Tests auf dem Mac.

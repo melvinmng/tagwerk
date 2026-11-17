@@ -127,6 +127,7 @@ struct TaskListView: View {
         }
         // Dialogs hang on the row, so iOS shows them next to the affected task (above or below it).
         .confirmationDialog("Verschieben", isPresented: dialogBinding($reschedulingItem, for: item)) {
+            Button("Heute") { Task { await model.reschedule(item.id, option: .today) } }
             Button("Morgen") { Task { await model.reschedule(item.id, option: .tomorrow) } }
             Button("Wochenende (Sa)") { Task { await model.reschedule(item.id, option: .weekend) } }
             Button("Nächste Woche (Mo)") { Task { await model.reschedule(item.id, option: .nextMonday) } }

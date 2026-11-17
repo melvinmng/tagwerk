@@ -34,7 +34,7 @@ public func section(for item: TaskItem, now: Date, calendar: Calendar) -> TaskSe
 }
 
 /// Groups items into non-empty sections in display order. Within a section: earliest due first,
-/// then priority (P1 first, none last), then title.
+/// then priority (P1 first, none last), then source (Reminders, GitHub, local), then title.
 public func groupedSections(_ items: [TaskItem], now: Date, calendar: Calendar) -> [(TaskSection, [TaskItem])] {
     let bySection = Dictionary(grouping: items) { section(for: $0, now: now, calendar: calendar) }
     return TaskSection.allCases.compactMap { section in
@@ -50,5 +50,8 @@ private func isOrderedBefore(_ lhs: TaskItem, _ rhs: TaskItem, calendar: Calenda
     let lhsPriority = lhs.priority?.rawValue ?? Int.max
     let rhsPriority = rhs.priority?.rawValue ?? Int.max
     if lhsPriority != rhsPriority { return lhsPriority < rhsPriority }
+    let lhsSource = TaskSource.allCases.firstIndex(of: lhs.id.source) ?? 0
+    let rhsSource = TaskSource.allCases.firstIndex(of: rhs.id.source) ?? 0
+    if lhsSource != rhsSource { return lhsSource < rhsSource }
     return lhs.title.localizedStandardCompare(rhs.title) == .orderedAscending
 }

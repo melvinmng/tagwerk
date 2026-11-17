@@ -61,4 +61,12 @@ struct RescheduleTests {
         let now = instant(2026, 11, 22, 10, 0)
         #expect(rescheduled(nil, option: .weekend, now: now, calendar: calendar) == DueDate(year: 2026, month: 11, day: 28))
     }
+
+    @Test func reschedule_today_keepsTime() {
+        let now = instant(2026, 11, 18, 10, 0)
+        let due = DueDate(year: 2026, month: 11, day: 15, hour: 9, minute: 30)
+        #expect(rescheduled(due, option: .today, now: now, calendar: calendar)
+                == DueDate(year: 2026, month: 11, day: 18, hour: 9, minute: 30))
+        #expect(rescheduled(nil, option: .today, now: now, calendar: calendar) == DueDate(year: 2026, month: 11, day: 18))
+    }
 }

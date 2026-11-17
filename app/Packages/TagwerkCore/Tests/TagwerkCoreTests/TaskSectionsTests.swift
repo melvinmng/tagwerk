@@ -53,6 +53,20 @@ struct TaskSectionsTests {
         #expect(groups.first?.1.map(\.title) == ["D", "B", "A", "C", "E"])
     }
 
+    /// Same due date and priority: Reminders, then GitHub, then local tasks, so sources do not interleave.
+    @Test func grouped_sameDueAndPriority_groupsBySource() {
+        let due = DueDate(year: 2026, month: 11, day: 20)
+        let items = [
+            makeItem("A lokal", due: due, priority: .p2, source: .local),
+            makeItem("B GitHub", due: due, priority: .p2, source: .github),
+            makeItem("C Erinnerung", due: due, priority: .p2, source: .reminders),
+            makeItem("D GitHub", due: due, priority: .p2, source: .github),
+            makeItem("E Erinnerung P1", due: due, priority: .p1, source: .local),
+        ]
+        let groups = groupedSections(items, now: now, calendar: calendar)
+        #expect(groups.first?.1.map(\.title) == ["E Erinnerung P1", "C Erinnerung", "B GitHub", "D GitHub", "A lokal"])
+    }
+
     @Test func grouped_omitsEmptySections() {
         let items = [
             makeItem("Überfällig", due: DueDate(year: 2026, month: 11, day: 1)),
