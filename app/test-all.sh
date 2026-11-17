@@ -44,7 +44,10 @@ resolve_package_scheme() {
   print -r -- "$schemes_json" | /usr/bin/python3 -c '
 import json, sys
 name = sys.argv[1]
-schemes = json.load(sys.stdin)["workspace"]["schemes"]
+try:
+    schemes = json.load(sys.stdin)["workspace"]["schemes"]
+except (ValueError, KeyError):
+    schemes = [name]
 print(name if name in schemes else name + "-Package")
 ' "$package_name"
 }
