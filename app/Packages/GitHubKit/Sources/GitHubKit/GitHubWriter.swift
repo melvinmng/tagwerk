@@ -48,6 +48,30 @@ struct GitHubWriter: Sendable {
             project: placement.project.id, item: placement.itemID, field: field.id, value: encoded))
     }
 
+    /// Creates an issue assigned to `assignee` and returns its node ID.
+    func createIssue(repository: String, title: String, body: String?, assignee: String) async throws -> String {
+        struct NewIssue: Encodable, Sendable { let title: String; let body: String?; let assignees: [String] }
+        struct Created: Decodable { let node_id: String }
+        let data = try await api.rest("POST", "repos/\(repository)/issues",
+                                      body: NewIssue(title: title, body: body, assignees: [assignee]))
+        do {
+            return try JSONDecoder().decode(Created.self, from: data).node_id
+        } catch {
+            throw GitHubAPIError.decoding(String(describing: error))
+        }
+    }
+
+    /// Adds an issue to a project and returns the new item ID.
+    func addToProject(projectID: String, contentID: String) async throws -> String {
+        struct Variables: Encodable, Sendable { let project: String; let content: String }
+        struct Result: Decodable {
+            struct Payload: Decodable { struct Item: Decodable { let id: String }; let item: Item }
+            let addProjectV2ItemById: Payload
+        }
+        let result: Result = try await api.query(Self.addMutation, variables: Variables(project: projectID, content: contentID))
+        return result.addProjectV2ItemById.item.id
+    }
+
     func addComment(_ record: GitHubIssueRecord, body: String) async throws {
         try await api.rest("POST", "repos/\(record.repository)/issues/\(record.number)/comments", body: ["body": body])
     }
@@ -59,6 +83,12 @@ struct GitHubWriter: Sendable {
       updateProjectV2ItemFieldValue(input: {projectId: $project, itemId: $item, fieldId: $field, value: $value}) {
         projectV2Item { id }
       }
+    }
+    """
+
+    static let addMutation = """
+    mutation($project: ID!, $content: ID!) {
+      addProjectV2ItemById(input: {projectId: $project, contentId: $content}) { item { id } }
     }
     """
 

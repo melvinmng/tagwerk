@@ -99,8 +99,50 @@ public final class GitHubTaskProvider: TaskProvider {
         }
     }
 
+    /// Creates an issue assigned to the viewer in `draft.containerID` (repository) and adds it to
+    /// project `draft.subContainerID` with the draft's field values and status "Ready".
     public func create(_ draft: TaskDraft) async throws -> TaskItem {
-        throw TaskWriteError.failed("Anlegen von GitHub-Issues folgt.")
+        guard let repository = draft.containerID, let projectID = draft.subContainerID else {
+            throw TaskWriteError.failed("Bitte Repository und Project wählen.")
+        }
+        do {
+            let (viewer, available) = try await api.viewerProjects()
+            login = viewer
+            projects = available
+            guard let project = available.first(where: { $0.id == projectID }) else { throw TaskWriteError.notFound }
+
+            let writer = GitHubWriter(api: api)
+            let issueID = try await writer.createIssue(repository: repository, title: draft.title, body: draft.notes, assignee: viewer)
+            let itemID = try await writer.addToProject(projectID: project.id, contentID: issueID)
+            let placement = ProjectPlacement(project: project, itemID: itemID, itemUpdatedAt: now(),
+                                             status: nil, priority: nil, due: nil, estimateMinutes: nil)
+            if let due = draft.due {
+                try await writer.setField(placement, fieldName: GitHubMapping.dueField, value: .date(due))
+            }
+            if let priority = draft.priority, let option = GitHubMapping.priorityOption(priority, in: project) {
+                try await writer.setField(placement, fieldName: GitHubMapping.priorityField, value: .singleSelect(option))
+            }
+            if let minutes = draft.estimateMinutes, let fieldName = GitHubMapping.estimateFieldName(in: project) {
+                try await writer.setField(placement, fieldName: fieldName,
+                                          value: .number(GitHubMapping.fieldValue(fromMinutes: minutes, fieldName: fieldName)))
+            }
+            try await writer.setField(placement, fieldName: GitHubMapping.statusField, value: .singleSelect(GitHubMapping.reopenStatus))
+
+            guard let fresh = try await api.issue(nodeID: issueID) else { throw TaskWriteError.notFound }
+            records[fresh.issueID] = fresh
+            return GitHubMapping.taskItem(fresh)
+        } catch {
+            throw Self.taskError(error)
+        }
+    }
+
+    /// Repositories offered when creating an issue.
+    public func repositories() async throws -> [String] {
+        do {
+            return try await api.ownedRepositories()
+        } catch {
+            throw Self.taskError(error)
+        }
     }
 
     // MARK: Helpers

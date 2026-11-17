@@ -93,15 +93,32 @@ public struct GitHubAPI: Sendable {
         try await query(document, variables: [String: String]())
     }
 
+    /// Repositories owned by the viewer, most recently pushed first.
+    public func ownedRepositories() async throws -> [String] {
+        struct Repository: Decodable { let full_name: String }
+        let data = try await rest("GET", "user/repos", query: [
+            URLQueryItem(name: "affiliation", value: "owner"),
+            URLQueryItem(name: "sort", value: "pushed"),
+            URLQueryItem(name: "per_page", value: "100"),
+        ])
+        do {
+            return try JSONDecoder().decode([Repository].self, from: data).map(\.full_name)
+        } catch {
+            throw GitHubAPIError.decoding(String(describing: error))
+        }
+    }
+
     /// Sends a REST request with an optional JSON body and returns the response body.
     @discardableResult
-    func rest(_ method: String, _ path: String, body: (any Encodable & Sendable)? = nil) async throws -> Data {
-        let url = Self.restBaseURL.appending(path: path)
+    func rest(_ method: String, _ path: String, query: [URLQueryItem] = [],
+              body: (any Encodable & Sendable)? = nil) async throws -> Data {
+        var url = Self.restBaseURL.appending(path: path)
+        if !query.isEmpty { url.append(queryItems: query) }
         let data = try body.map { try JSONEncoder().encode($0) }
         return try await send(method: method, url: url, body: data)
     }
 
-    private func viewerProjects() async throws -> (login: String, projects: [ProjectInfo]) {
+    func viewerProjects() async throws -> (login: String, projects: [ProjectInfo]) {
         let data: ProjectsQuery.ViewerData = try await query(ProjectsQuery.viewerProjects)
         let projects = data.viewer.projectsV2.nodes.filter { !$0.closed }.map(\.info).sorted { $0.number < $1.number }
         return (data.viewer.login, projects)
