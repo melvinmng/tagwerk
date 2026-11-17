@@ -34,3 +34,22 @@ Zum Vergleich hat ChatGPT dieselbe Mahlzeit sinnvoll zerlegt: 2 Brötchen (300 k
 
 - KI-Anbieter: ChatGPT-Abo als Standard. Apples Modell nur für zahlenfreie Hilfsaufgaben. Claude-API als Ausweichlösung.
 - Keine Blocker für Weg 1 (native App mit kostenlosem Account).
+
+## Nachtrag Phase 2a: GitHub Device Flow (2026-11-17)
+
+Geprüft mit der OAuth-App „Tagwerk“ (Client-ID `Ov23liLkF2p4Nh2ztZg0`, Device Flow aktiviert, ohne Client-Secret) per `curl` vom Mac. Angefordert wurde `scope=repo project offline_access`. Der Token wurde weder geloggt noch gespeichert, die lokalen Dateien sind gelöscht.
+
+| Prüfung | Ergebnis |
+|---|---|
+| Gewährte Scopes (Header `X-OAuth-Scopes` von `GET /user`) | `project, repo`. `project` wird gewährt, der Ausweichweg aus Design §5 Punkt 7 entfällt. |
+| `viewer.projectsV2(first: 20, query: "is:open")` | ok, 7 offene Projects mit den Feldern Status, Priority, Due date, Start date, „Estimate (h)“ |
+| Laufzeit des Access-Tokens | **läuft ab**: `expires_in` 28800 (8 h), Präfix `gho_`, Header `github-authentication-token-expiration` gesetzt |
+| Refresh-Token | vorhanden, `refresh_token_expires_in` 15638400 (≈ 181 Tage) |
+| Erneuerung ohne Client-Secret | **ok**: `POST /login/oauth/access_token` mit `client_id`, `grant_type=refresh_token`, `refresh_token`. Neuer Access-Token mit denselben Scopes, 8 h. |
+| Rotation | Der Refresh-Token rotiert. Der alte Access-Token liefert sofort 401. Ein zweiter Einsatz des alten Refresh-Tokens scheitert mit `incorrect_client_credentials` (nicht `bad_refresh_token`). |
+
+**Folgen für Plan 2a-GitHub:**
+1. Design §5 Punkt 6 gilt in der Variante „wirkt“: Die App erneuert den Token selbst, mit genau einer laufenden Erneuerung (der Refresh-Token ist nur einmal verwendbar, zwei parallele Erneuerungen melden die App ab).
+2. Erneuert wird vor Ablauf (Puffer 5 min) und nach einem 401. Abgemeldet wird nur, wenn die Erneuerung selbst mit `bad_refresh_token` oder `incorrect_client_credentials` scheitert. Netzfehler melden nicht ab.
+3. Access-Token, Refresh-Token und beide Ablaufzeitpunkte werden zusammen als ein Schlüsselbund-Eintrag gespeichert, damit nie ein halber Stand entsteht.
+4. Offen: Ob der Ablauf von `offline_access` oder von einer Einstellung der OAuth-App kommt, ist nicht unterscheidbar. Die App fordert `offline_access` immer an und verarbeitet beide Fälle (Token mit oder ohne `expires_in`).
