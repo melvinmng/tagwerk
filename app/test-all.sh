@@ -10,13 +10,31 @@ SCRIPT_DIR="${0:A:h}"
 DESTINATION='platform=iOS Simulator,name=iPhone 18 Pro'
 CURRENT_STAGE="setup"
 
-on_exit() {
-  local exit_code=$?
-  if (( exit_code != 0 )); then
-    echo "TESTS FAILED in stage: $CURRENT_STAGE" >&2
-  fi
+# Reports the failing stage and stops the script.
+stage_failed() {
+  echo "TESTS FAILED in stage: $CURRENT_STAGE" >&2
+  exit 1
 }
-trap on_exit EXIT
+
+LOG_DIR="${TMPDIR:-/tmp}/tagwerk-tests"
+mkdir -p "$LOG_DIR"
+
+# Runs xcodebuild test, keeps the full log and fails when no test was executed.
+run_tests() {
+  local log="$LOG_DIR/${CURRENT_STAGE// /-}.log"
+  if ! xcodebuild test "$@" > "$log" 2>&1; then
+    grep -E "error:|✘|failed" "$log" | tail -n 30 >&2 || true
+    echo "Full log: $log" >&2
+    return 1
+  fi
+  local summary
+  summary=$(grep -E "Test run with [0-9]+ tests?" "$log" | tail -n 1 || true)
+  if [[ -z "$summary" || "$summary" == *"with 0 tests"* ]]; then
+    echo "No tests were executed (log: $log)" >&2
+    return 1
+  fi
+  echo "    ${summary##*] }"
+}
 
 # Resolves the scheme to test: "<Pkg>" if the package exposes a single product, else "<Pkg>-Package".
 resolve_package_scheme() {
@@ -36,18 +54,18 @@ for package_dir in "$SCRIPT_DIR"/Packages/*(/N); do
   CURRENT_STAGE="package $package_name"
   echo "==> $CURRENT_STAGE"
   cd "$package_dir"
-  scheme=$(resolve_package_scheme "$package_name")
-  xcodebuild test -scheme "$scheme" -destination "$DESTINATION" -quiet
+  scheme=$(resolve_package_scheme "$package_name") || stage_failed
+  run_tests -scheme "$scheme" -destination "$DESTINATION" || stage_failed
 done
 
 CURRENT_STAGE="app (xcodegen)"
 echo "==> $CURRENT_STAGE"
 cd "$SCRIPT_DIR"
-xcodegen --quiet
+xcodegen --quiet || stage_failed
 
 CURRENT_STAGE="app scheme Tagwerk"
 echo "==> $CURRENT_STAGE"
-xcodebuild test -project "$SCRIPT_DIR/Tagwerk.xcodeproj" -scheme Tagwerk -destination "$DESTINATION" -quiet
+run_tests -project "$SCRIPT_DIR/Tagwerk.xcodeproj" -scheme Tagwerk -destination "$DESTINATION" || stage_failed
 
 CURRENT_STAGE="done"
 echo "ALL TESTS PASSED"
