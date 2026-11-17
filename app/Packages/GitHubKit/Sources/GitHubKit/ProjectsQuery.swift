@@ -42,7 +42,7 @@ enum ProjectsQuery {
           \(issueSelection)
           projectItems(first: 20) { nodes {
             id updatedAt isArchived
-            project { id }
+            project { id number title closed \(fieldsSelection) }
             \(fieldValuesSelection)
           } }
         } }

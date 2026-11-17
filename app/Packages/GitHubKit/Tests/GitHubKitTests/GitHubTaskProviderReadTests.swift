@@ -34,13 +34,13 @@ struct GitHubTaskProviderReadTests {
         let provider = makeProvider()
         let items = try await provider.openTasks()
 
-        #expect(items.map(\.id.rawValue) == ["I_1"])
+        #expect(items.map(\.id.rawValue) == ["I_1", "I_3"])
         #expect(items.first?.due == DueDate(year: 2026, month: 11, day: 18))
-        #expect(cache.snapshot?.records.map(\.issueID) == ["I_1"])
+        #expect(cache.snapshot?.records.map(\.issueID) == ["I_1", "I_3"])
         #expect(cache.snapshot?.fetchedAt == fixedNow)
         #expect(provider.offlineSince == nil)
         #expect(provider.login == "octo")
-        #expect(provider.projects.map(\.number) == [1, 2])
+        #expect(provider.projects.map(\.number) == [1, 2, 4])
     }
 
     @Test func openTasks_networkError_returnsCacheAndSetsOffline() async throws {
@@ -121,7 +121,7 @@ struct GitHubTaskProviderReadTests {
         let provider = makeProvider(selection: nil)
         let item = try #require(try await provider.openTasks().first)
         #expect(Set(item.subContainers.map(\.id)) == ["PVT_1", "PVT_2"])
-        #expect(provider.defaultSelectedProjectIDs == ["PVT_1", "PVT_2"])
+        #expect(provider.defaultSelectedProjectIDs == ["PVT_1", "PVT_2", "PVT_foreign"])
     }
 }
 

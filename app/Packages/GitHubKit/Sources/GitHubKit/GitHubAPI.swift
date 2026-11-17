@@ -28,11 +28,12 @@ public struct GitHubAPI: Sendable {
         try await viewerProjects().login
     }
 
-    /// The viewer's open projects and the open issues assigned to the viewer that sit in them.
-    /// Items in other owners' projects and archived items are ignored.
+    /// Open issues assigned to the viewer in open projects, and those projects: the viewer's own plus
+    /// every readable project of another owner (person or organization) that holds such an issue.
+    /// Archived items and closed projects are ignored.
     public func openProjectIssues() async throws -> (login: String, projects: [ProjectInfo], issues: [GitHubIssueRecord]) {
-        let (login, projects) = try await viewerProjects()
-        let projectsByID = Dictionary(projects.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
+        let (login, ownProjects) = try await viewerProjects()
+        var projectsByID = Dictionary(ownProjects.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
         var issues: [GitHubIssueRecord] = []
         var cursor: String?
         repeat {
@@ -41,9 +42,11 @@ public struct GitHubAPI: Sendable {
             )
             for node in data.search.nodes.compactMap({ $0 }) {
                 let placements = (node.projectItems?.nodes ?? []).compactMap { item -> ProjectPlacement? in
-                    guard !item.isArchived, let reference = item.project, let project = projectsByID[reference.id] else {
-                        return nil
+                    guard !item.isArchived, let reference = item.project else { return nil }
+                    if projectsByID[reference.id] == nil, let node = reference.node, !node.closed {
+                        projectsByID[reference.id] = node.info
                     }
+                    guard let project = projectsByID[reference.id] else { return nil }
                     return item.placement(in: project)
                 }
                 guard !placements.isEmpty, let record = node.content.record(placements: placements) else { continue }
@@ -51,6 +54,7 @@ public struct GitHubAPI: Sendable {
             }
             cursor = data.search.pageInfo.hasNextPage ? data.search.pageInfo.endCursor : nil
         } while cursor != nil
+        let projects = projectsByID.values.sorted { ($0.number, $0.id) < ($1.number, $1.id) }
         return (login, projects, issues)
     }
 

@@ -26,8 +26,8 @@ enum Fixtures {
         """
     }
 
-    /// Search page 1: issue 1 in projects 1 and 2 (plus an archived item), issue 3 only in a project
-    /// that does not belong to the viewer.
+    /// Search page 1: issue 1 in projects 1 and 2 (plus an archived item), issue 3 in a project of
+    /// another owner (readable) and in a closed project.
     static let assignedPage1 = """
     {"data":{"search":{"pageInfo":{"hasNextPage":true,"endCursor":"CURSOR_1"},"nodes":[
       \(issueWithItems(id: "I_1", number: 1, items: [
@@ -36,7 +36,8 @@ enum Fixtures {
         #"{"id":"PVTI_old","updatedAt":"2026-11-01T12:00:00Z","isArchived":true,"project":{"id":"PVT_1"},"fieldValues":{"nodes":[]}}"#,
       ])),
       \(issueWithItems(id: "I_3", number: 3, items: [
-        #"{"id":"PVTI_f","updatedAt":"2026-11-17T12:00:00Z","isArchived":false,"project":{"id":"PVT_foreign"},"fieldValues":{"nodes":[]}}"#,
+        #"{"id":"PVTI_f","updatedAt":"2026-11-17T12:00:00Z","isArchived":false,"project":{"id":"PVT_foreign","number":4,"title":"Team-Board","closed":false,"fields":{"nodes":[{"id":"FF_status","name":"Status","options":[{"id":"OPTF_ready","name":"Ready"},{"id":"OPTF_done","name":"Done"}]},{"id":"FF_due","name":"Due date"}]}},"fieldValues":{"nodes":[{"name":"Ready","field":{"name":"Status"}},{"date":"2026-11-25","field":{"name":"Due date"}}]}}"#,
+        #"{"id":"PVTI_g","updatedAt":"2026-11-17T12:00:00Z","isArchived":false,"project":{"id":"PVT_closed","number":7,"title":"Alt","closed":true,"fields":{"nodes":[]}},"fieldValues":{"nodes":[]}}"#,
       ])),
       {}
     ]}}}

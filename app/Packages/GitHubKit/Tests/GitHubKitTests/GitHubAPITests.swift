@@ -25,18 +25,29 @@ struct GitHubAPITests {
         #expect(transport.requests.count == 3)
         #expect(transport.requests[1].bodyString.contains("assignee:@me"))
         #expect(transport.requests[2].bodyString.contains("CURSOR_1"))
-        #expect(Set(result.issues.map(\.issueID)) == ["I_1", "I_2"])
+        #expect(Set(result.issues.map(\.issueID)) == ["I_1", "I_2", "I_3"])
         #expect(result.login == "octo")
-        #expect(result.projects.map(\.number) == [1, 2])
+        #expect(result.projects.map(\.number) == [1, 2, 4])
     }
 
-    @Test func api_skipsArchivedItemsAndForeignProjects() async throws {
+    @Test func api_skipsArchivedItemsAndClosedProjects() async throws {
         enqueueAllProjects()
         let result = try await makeAPI().openProjectIssues()
-        #expect(!result.issues.contains { $0.issueID == "I_3" })
         #expect(!result.issues.contains { $0.issueID == "I_4" })
         #expect(result.issues.first { $0.issueID == "I_1" }?.placements.map(\.itemID).sorted() == ["PVTI_a", "PVTI_c"])
-        #expect(result.issues.count == 2)
+        #expect(result.issues.first { $0.issueID == "I_3" }?.placements.map(\.itemID) == ["PVTI_f"])
+        #expect(result.issues.count == 3)
+    }
+
+    /// Projects of other owners (people or organizations) count when the login can read them.
+    @Test func api_includesReadableProjectsOfOtherOwners() async throws {
+        enqueueAllProjects()
+        let result = try await makeAPI().openProjectIssues()
+        let issue = try #require(result.issues.first { $0.issueID == "I_3" })
+        let placement = try #require(issue.placements.first)
+        #expect(placement.project.title == "Team-Board")
+        #expect(placement.due == DueDate(year: 2026, month: 11, day: 25))
+        #expect(placement.project.field(named: "Status")?.options["Done"] == "OPTF_done")
     }
 
     @Test func api_mergesIssueAcrossProjects() async throws {
