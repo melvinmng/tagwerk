@@ -82,7 +82,7 @@ struct NewTaskSheet: View {
                 Section {
                     Toggle("Fällig", isOn: $hasDue.animation())
                     if hasDue {
-                        Toggle("Uhrzeit", isOn: $hasTime)
+                        if target != .github { Toggle("Uhrzeit", isOn: $hasTime) }
                         DatePicker("Datum", selection: $dueDate,
                                    displayedComponents: hasTime ? [.date, .hourAndMinute] : [.date])
                             .environment(\.calendar, model.calendar)
@@ -110,7 +110,7 @@ struct NewTaskSheet: View {
         let draft = TaskDraft(
             title: title.trimmingCharacters(in: .whitespaces),
             notes: notes.isEmpty ? nil : notes,
-            due: hasDue ? DueDate(date: dueDate, includeTime: hasTime, calendar: model.calendar) : nil,
+            due: hasDue ? DueDate(date: dueDate, includeTime: hasTime && target != .github, calendar: model.calendar) : nil,
             priority: priority,
             containerID: target == .reminders ? listID : target == .github ? repository : nil,
             subContainerID: target == .github ? projectID : nil

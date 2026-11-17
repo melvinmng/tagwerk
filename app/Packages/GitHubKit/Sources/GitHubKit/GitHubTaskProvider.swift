@@ -1,19 +1,21 @@
 import Foundation
+import Observation
 import TagwerkCore
 
 /// Task source for issues assigned to the user in their open GitHub Projects.
 @MainActor
+@Observable
 public final class GitHubTaskProvider: TaskProvider {
     public let source: TaskSource = .github
     public private(set) var offlineSince: Date?
     public private(set) var projects: [ProjectInfo] = []
     public private(set) var login: String?
 
-    let api: GitHubAPI
-    let tokens: TokenManager
-    private let cache: GitHubCache
-    private let selectedProjectIDs: @MainActor () -> Set<String>?
-    let now: () -> Date
+    @ObservationIgnored let api: GitHubAPI
+    @ObservationIgnored let tokens: TokenManager
+    @ObservationIgnored private let cache: GitHubCache
+    @ObservationIgnored private let selectedProjectIDs: @MainActor () -> Set<String>?
+    @ObservationIgnored let now: () -> Date
     /// Full records of visible issues, keyed by issue node ID (all placements, unfiltered).
     private(set) var records: [String: GitHubIssueRecord] = [:]
 

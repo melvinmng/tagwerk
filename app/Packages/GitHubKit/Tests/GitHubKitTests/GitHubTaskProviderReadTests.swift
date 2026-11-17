@@ -127,3 +127,38 @@ struct GitHubTaskProviderReadTests {
         #expect(provider.defaultSelectedProjectIDs == ["PVT_1", "PVT_2"])
     }
 }
+
+import Observation
+
+@MainActor
+struct GitHubTaskProviderObservationTests {
+    /// Settings show login and projects; they must redraw when a load fills them.
+    @Test func openTasks_notifiesObserversOfLoginAndProjects() async throws {
+        let transport = StubTransport()
+        transport.enqueueJSON("/graphql", Fixtures.viewerProjects)
+        transport.enqueueJSON("/graphql", Fixtures.itemsProject1Page1)
+        transport.enqueueJSON("/graphql", Fixtures.itemsProject1Page2)
+        transport.enqueueJSON("/graphql", Fixtures.itemsProject2)
+        let credentials = GitHubCredentials(accessToken: "gho_valid", refreshToken: "ghr", accessExpiresAt: nil, refreshExpiresAt: nil)
+        let client = DeviceFlowClient(clientID: "client", transport: transport, sleep: { _ in }, now: { fixedNow })
+        let tokens = TokenManager(store: MemoryCredentialStore(credentials), client: client, now: { fixedNow })
+        let provider = GitHubTaskProvider(api: GitHubAPI(transport: transport, tokens: tokens), tokens: tokens,
+                                          cache: MemoryGitHubCache(), selectedProjectIDs: { nil }, now: { fixedNow })
+        let changed = Flag()
+        withObservationTracking {
+            _ = provider.login
+            _ = provider.projects
+        } onChange: {
+            changed.set()
+        }
+        _ = try await provider.openTasks()
+        #expect(changed.value)
+    }
+}
+
+final class Flag: @unchecked Sendable {
+    private let lock = NSLock()
+    private var flag = false
+    var value: Bool { lock.withLock { flag } }
+    func set() { lock.withLock { flag = true } }
+}

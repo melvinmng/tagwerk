@@ -126,7 +126,7 @@ struct TaskEditorView: View {
     @ViewBuilder private var dueFields: some View {
         Toggle("Fällig", isOn: hasDue.animation())
         if let due = model.draft.due {
-            Toggle("Uhrzeit", isOn: hasTime)
+            if model.supportsDueTime { Toggle("Uhrzeit", isOn: hasTime) }
             DatePicker("Datum", selection: dueDate, displayedComponents: due.hasTime ? [.date, .hourAndMinute] : [.date])
                 .environment(\.calendar, calendar)
                 .environment(\.timeZone, calendar.timeZone)

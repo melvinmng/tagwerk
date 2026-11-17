@@ -147,4 +147,10 @@ struct TaskEditorModelTests {
     @Test func editor_withoutCommentSupport_cannotComment() {
         #expect(!TaskEditorModel(item: item, provider: provider).canComment)
     }
+
+    @Test func supportsDueTime_falseForGitHub() {
+        let issue = makeTask("#1", source: .github)
+        #expect(!TaskEditorModel(item: issue, provider: FakeTaskProvider(source: .github, tasks: [issue])).supportsDueTime)
+        #expect(TaskEditorModel(item: item, provider: provider).supportsDueTime)
+    }
 }

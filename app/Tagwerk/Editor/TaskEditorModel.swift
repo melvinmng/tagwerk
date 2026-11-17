@@ -38,6 +38,9 @@ final class TaskEditorModel {
 
     var canComment: Bool { addComment != nil }
 
+    /// GitHub's "Due date" field holds a date only.
+    var supportsDueTime: Bool { original.id.source != .github }
+
     func postComment() async {
         let text = comment.trimmingCharacters(in: .whitespacesAndNewlines)
         guard let addComment, !text.isEmpty, !isPostingComment else { return }
