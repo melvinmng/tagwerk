@@ -341,8 +341,19 @@ final class PlanningModel {
 
     /// "Für heute einplanen" from the task list selection: planned day only, the source stays unchanged.
     func planToday(_ ids: [TaskID]) async {
-        for id in ids { planStore.assign(id, to: today) }
-        await reload()
+        await plan(ids, to: today)
+    }
+
+    /// Current planned day for the menu row (mockup F1).
+    func plannedText(for id: TaskID) -> String {
+        guard let day = planStore.assignment(for: id) else { return "noch nicht eingeplant" }
+        return "Arbeitstag: " + day.startDate(in: calendar).formatted(.dateTime.weekday(.abbreviated).day().month())
+    }
+
+    /// Block menu and dragging only for Tagwerk's own blocks in a writable calendar; other linked events
+    /// open their event detail (with the series question) instead.
+    func canEditAsBlock(_ event: CalendarEvent) -> Bool {
+        event.url.flatMap(TaskLinkURL.parse) != nil && event.isEditable && !event.isInvitation
     }
 
     /// Effort of the given tasks, counting tasks without effort with the default duration.
@@ -521,6 +532,21 @@ final class PlanningModel {
         await reload()
     }
 
+    /// Moves the start of a block (snapped to 15 min) and keeps its end; at least 15 minutes remain.
+    func resizeBlockStart(_ block: CalendarEvent, toStartMinutes: Int) async {
+        let day = PlanDay(date: block.start, calendar: calendar)
+        let dayStart = day.startDate(in: calendar)
+        let endMinutes = Int(block.end.timeIntervalSince(dayStart) / 60)
+        let startMinutes = min(max(0, snapped(minutes: toStartMinutes)), endMinutes - 15)
+        do {
+            _ = try calendarStore.moveBlock(id: block.id, to: dayStart.addingTimeInterval(TimeInterval(startMinutes * 60)),
+                                            end: block.end, expectedVersion: block.version)
+        } catch {
+            lastError = TaskListModel.message(for: error)
+        }
+        await reload()
+    }
+
     /// Deletes a block; the task keeps its planned day.
     func deleteBlock(_ block: CalendarEvent) async {
         do {
@@ -673,7 +699,8 @@ final class PlanningModel {
             hours: TagwerkCore.workHours(on: day, schedule: settings.weekSchedule, overrides: overrides, calendar: calendar),
             lunchStartMinutes: settings.lunchStartMinutes, lunchMinutes: settings.lunchDurationMinutes,
             bufferMinutes: settings.bufferMinutes,
-            busyIntervals: busyIntervals(events: dayEvents, on: day, calendar: calendar, excluding: Set(links.keys)),
+            busyIntervals: busyIntervals(events: dayEvents, on: day, calendar: calendar,
+                                         excluding: Set(links.keys).union(copiesOfLinked(dayEvents, links: links))),
             recurringMinutes: efforts.reservedMinutes(on: day, reminders: reminders, calendar: calendar),
             plannedMinutes: planned, estimatedCount: estimated
         )
@@ -699,6 +726,19 @@ final class PlanningModel {
                        events: shown.filter { links[$0.id] == nil }, blocks: shown.filter { links[$0.id] != nil && !$0.isAllDay },
                        assigned: assigned, dueToday: dueToday, links: links.filter { id, _ in linkedEvents.contains { $0.id == id } },
                        isPastDue: pastDue, recurring: recurring, isPast: day < today)
+    }
+
+    /// Unlinked copies (same title and time in another calendar) of linked events: their time is already
+    /// counted as the task's planned load (design §13.11).
+    private func copiesOfLinked(_ events: [CalendarEvent], links: [String: TaskID]) -> Set<String> {
+        let linked = events.filter { links[$0.id] != nil }
+        return Set(events.filter { event in
+            links[event.id] == nil && linked.contains {
+                $0.calendarID != event.calendarID && $0.start == event.start && $0.end == event.end
+                    && $0.isAllDay == event.isAllDay
+                    && $0.title.lowercased().split(whereSeparator: \.isWhitespace) == event.title.lowercased().split(whereSeparator: \.isWhitespace)
+            }
+        }.map(\.id))
     }
 
     private func minutes(_ date: Date, from dayStart: Date) -> Int {

@@ -34,7 +34,13 @@ struct TagwerkApp: App {
                     environment.startReconnectWatch()
                 }
                 .onChange(of: scenePhase) { _, phase in
-                    if phase == .active { Task { await environment.retryGitHubIfNeeded() } }
+                    if phase == .active {
+                        Task {
+                            await environment.retryGitHubIfNeeded()
+                            // Remaining time and "today" move on while the app is in the background.
+                            await environment.planning.reload()
+                        }
+                    }
                 }
         }
         .modelContainer(environment.modelContainer)

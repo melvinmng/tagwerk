@@ -123,7 +123,8 @@ struct PlanView: View {
             editEffort: model.recurringItem(for: item, on: model.anchor).map { recurring in
                 { onEditRecurring(recurring, model.anchor) }
             },
-            isWritable: writable
+            isWritable: writable,
+            plannedText: model.plannedText(for: item.id)
         )
     }
 

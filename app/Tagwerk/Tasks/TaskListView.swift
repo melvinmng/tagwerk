@@ -373,7 +373,8 @@ struct TaskListView: View {
                 let today = environment.planning.today
                 return environment.planning.recurringItem(for: item, on: today).map { recurring in { open(recurring, today) } }
             },
-            isWritable: isWritable(item)
+            isWritable: isWritable(item),
+            plannedText: environment.planning.plannedText(for: item.id)
         )
     }
 

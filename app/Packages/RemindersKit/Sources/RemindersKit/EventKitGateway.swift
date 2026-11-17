@@ -361,9 +361,10 @@ extension EventKitGateway: CalendarStore {
             event?.refresh()
             return event
         }
-        // One occurrence of a series: search the day around it.
-        let predicate = store.predicateForEvents(withStart: occurrence.addingTimeInterval(-1),
-                                                 end: occurrence.addingTimeInterval(86_400), calendars: nil)
+        // One occurrence of a series: `occurrenceDate` keeps the original time even after the occurrence was
+        // moved on its own, so search a wide window around it.
+        let predicate = store.predicateForEvents(withStart: occurrence.addingTimeInterval(-60 * 86_400),
+                                                 end: occurrence.addingTimeInterval(60 * 86_400), calendars: nil)
         return store.events(matching: predicate).first {
             $0.eventIdentifier == identifier && abs(($0.occurrenceDate ?? $0.startDate).timeIntervalSince(occurrence)) < 1
         }

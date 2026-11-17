@@ -75,9 +75,13 @@ struct EventEditSheet: View {
                 Button("Diesen und alle folgenden") { save(span: .futureEvents) }
             }
             .sheet(item: $systemEditor) { request in
-                SystemEventEditor(store: request.store, event: request.event) {
+                SystemEventEditor(store: request.store, event: request.event) { saved in
                     systemEditor = nil
-                    Task { await model.reload() }
+                    Task {
+                        // A new event was saved only to open Apple's editor; cancelling there removes it again.
+                        if !saved, let created = request.createdEvent { await model.deleteEvent(created, span: .thisEvent) }
+                        await model.reload()
+                    }
                     dismiss()
                 }
                 .ignoresSafeArea()
@@ -104,9 +108,13 @@ struct EventEditSheet: View {
     private func openSystemEditor() {
         Task {
             var id = existing?.id
-            if id == nil, !draft.title.isEmpty { id = await model.createEvent(draft)?.id }
+            var created: CalendarEvent?
+            if id == nil, !draft.title.isEmpty {
+                created = await model.createEvent(draft)
+                id = created?.id
+            }
             let pair = environment.gateway.eventForSystemEditor(id: id, calendarID: draft.calendarID)
-            systemEditor = SystemEditorRequest(store: pair.store, event: pair.event)
+            systemEditor = SystemEditorRequest(store: pair.store, event: pair.event, createdEvent: created)
         }
     }
 }
@@ -115,13 +123,16 @@ struct SystemEditorRequest: Identifiable {
     let id = UUID()
     let store: EKEventStore
     let event: EKEvent
+    /// Set when Tagwerk saved a new event just to open Apple's editor.
+    var createdEvent: CalendarEvent?
 }
 
 /// Apple's full event editor (repeat rules, attendees, alerts).
 struct SystemEventEditor: UIViewControllerRepresentable {
     let store: EKEventStore
     let event: EKEvent
-    let onFinish: () -> Void
+    /// `true` when the user saved, `false` when cancelled.
+    let onFinish: (Bool) -> Void
 
     func makeUIViewController(context: Context) -> EKEventEditViewController {
         let controller = EKEventEditViewController()
@@ -136,14 +147,14 @@ struct SystemEventEditor: UIViewControllerRepresentable {
     func makeCoordinator() -> Coordinator { Coordinator(onFinish: onFinish) }
 
     final class Coordinator: NSObject, EKEventEditViewDelegate {
-        let onFinish: () -> Void
+        let onFinish: (Bool) -> Void
 
-        init(onFinish: @escaping () -> Void) {
+        init(onFinish: @escaping (Bool) -> Void) {
             self.onFinish = onFinish
         }
 
         func eventEditViewController(_ controller: EKEventEditViewController, didCompleteWith action: EKEventEditViewAction) {
-            onFinish()
+            onFinish(action != .canceled)
         }
     }
 }

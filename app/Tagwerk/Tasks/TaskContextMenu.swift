@@ -13,6 +13,8 @@ struct TaskMenuActions {
     var isWritable: Bool
     /// Day view only: create a time block / remove the planned day (replace the former swipe actions).
     var createBlock: (() -> Void)? = nil
+    /// "Arbeitstag: Mi. 18. Nov." or "noch nicht eingeplant".
+    var plannedText = "noch nicht eingeplant"
     var unassign: (() -> Void)? = nil
 }
 
@@ -27,6 +29,8 @@ struct TaskContextMenu: View {
             if typeSize >= .accessibility1 {
                 planButton(.today); planButton(.tomorrow); planButton(.weekend); planButton(.nextMonday)
             } else {
+                // iOS hides the section title when control groups come first; this row keeps it and shows the current day.
+                Text(actions.plannedText)
                 ControlGroup { planButton(.today); planButton(.tomorrow) }
                 ControlGroup { planButton(.weekend); planButton(.nextMonday) }
             }

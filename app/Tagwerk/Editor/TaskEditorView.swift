@@ -110,7 +110,12 @@ struct TaskEditorView: View {
                                    onShowDay: onShowDay.map { show in { day in
                                        dismiss()
                                        show(day)
-                                   } })
+                                   } },
+                                   suggestedStart: { day in
+                                       suggestedBlockStart(on: day, hours: planning.workHours(on: day),
+                                                           minutes: model.original.estimateMinutes ?? 60,
+                                                           now: planning.now(), calendar: calendar)
+                                   })
                 }
 
                 if model.canComment {

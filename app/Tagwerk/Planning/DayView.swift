@@ -12,6 +12,7 @@ struct DayView: View {
     @State private var editingHours = false
     @State private var blockFor: TaskItem?
     @State private var movingBlock: CalendarEvent?
+    @State private var blockActions: CalendarEvent?
     @State private var showsGrid = false
 
     var body: some View {
@@ -49,9 +50,7 @@ struct DayView: View {
 
                 Section {
                     if showsGrid {
-                        HourGrid(model: model, plan: plan, onOpenEvent: onOpenEvent) { block, taskID in
-                            blockMenu(block, taskID)
-                        }
+                        HourGrid(model: model, plan: plan, onOpenEvent: onOpenEvent) { block in blockActions = block }
                         .listRowInsets(EdgeInsets(top: 8, leading: 12, bottom: 8, trailing: 12))
                     } else {
                         let rows = model.timelineWithGaps(for: plan)
@@ -136,6 +135,10 @@ struct DayView: View {
                 }
             }
             .onAppear { showsGrid = model.showsHourGrid }
+            .confirmationDialog(blockActions?.title ?? "", isPresented: hasBlockActions, titleVisibility: .visible,
+                                presenting: blockActions) { block in
+                blockDialogButtons(block, plan: plan)
+            }
             .sheet(item: $movingBlock) { block in BlockDaySheet(block: block, model: model) }
             .sheet(item: $blockFor) { task in
                 BlockSheet(task: task, day: plan.day, hours: model.workHours(on: plan.day), now: model.now(),
@@ -169,6 +172,26 @@ struct DayView: View {
         }
         .foregroundStyle(.primary)
         .accessibilityHint("Arbeitszeit an diesem Tag ändern")
+    }
+
+    private var hasBlockActions: Binding<Bool> {
+        Binding(get: { blockActions != nil }, set: { if !$0 { blockActions = nil } })
+    }
+
+    /// The block menu's actions as dialog buttons (hour grid, mockup C1).
+    @ViewBuilder
+    private func blockDialogButtons(_ block: CalendarEvent, plan: DayPlan) -> some View {
+        let minutes = Int(block.end.timeIntervalSince(block.start) / 60)
+        let start = Int(block.start.timeIntervalSince(plan.day.startDate(in: model.calendar)) / 60)
+        Button("15 min früher") { Task { await model.moveBlock(block, toStartMinutes: start - 15, on: plan.day) } }
+        Button("15 min später") { Task { await model.moveBlock(block, toStartMinutes: start + 15, on: plan.day) } }
+        if minutes > 15 {
+            Button("15 min kürzer") { Task { await model.resizeBlock(block, minutes: minutes - 15) } }
+        }
+        Button("15 min länger") { Task { await model.resizeBlock(block, minutes: minutes + 15) } }
+        Button("Auf anderen Tag …") { movingBlock = block }
+        if let taskID = plan.links[block.id] { Button("Aufgabe zeigen") { onShowTask(taskID) } }
+        Button("Zeitblock löschen", role: .destructive) { Task { await model.deleteBlock(block) } }
     }
 
     private func blockMenu(_ block: CalendarEvent, _ taskID: TaskID) -> BlockMenu {
@@ -209,12 +232,16 @@ struct DayView: View {
             }
             .foregroundStyle(.primary)
         case .block(let event, let taskID):
-            Menu { blockMenu(event, taskID) } label: {
-                TimelineLine(time: event.start, title: event.title,
-                             detail: CapacityText.duration(Int(event.end.timeIntervalSince(event.start) / 60)) + " · Zeitblock",
-                             color: .green)
+            let line = TimelineLine(time: event.start, title: event.title,
+                                    detail: CapacityText.duration(Int(event.end.timeIntervalSince(event.start) / 60))
+                                        + (model.canEditAsBlock(event) ? " · Zeitblock" : " · verknüpft"),
+                                    color: .green)
+            if model.canEditAsBlock(event) {
+                Menu { blockMenu(event, taskID) } label: { line }.foregroundStyle(.primary)
+            } else {
+                // Linked events of other calendars keep the event detail (series question, read-only notice).
+                Button { onOpenEvent(event) } label: { line }.foregroundStyle(.primary)
             }
-            .foregroundStyle(.primary)
         case .gap(let range):
             GapLine(text: "frei \(clock(range.lowerBound, on: plan.day))–\(clock(range.upperBound, on: plan.day))")
                 .dropDestination(for: String.self) { keys, _ in

@@ -632,6 +632,52 @@ struct PlanningModelTests {
         #expect(calendarStore.event(id: block.id)?.start == at(23, 14))
     }
 
+    @Test func planToday_taskWithFutureBlocks_movesThemToo() async throws {
+        let model = await model()
+        let task = try #require(taskList.items.first { $0.title == "Fahrrad" })
+        let block = try blocks.createBlock(for: task, start: at(20, 14), minutes: 60)
+        await model.planToday([task.id])
+        #expect(planStore.assignment(for: task.id) == today)
+        #expect(calendarStore.event(id: block.id)?.start == at(18, 14))
+    }
+
+    @Test func duplicateOfLinkedEvent_isNotCountedTwice() async throws {
+        calendarStore.storedEvents = ["work", "shared"].map { calendarID in
+            CalendarEvent(id: "fahrrad-\(calendarID)", externalID: nil, calendarID: calendarID, title: "Seminar",
+                          start: at(18, 14), end: at(18, 15), isAllDay: false, url: nil, isBusy: true, version: "1")
+        }
+        let model = await model()
+        await model.link(eventID: "fahrrad-work", to: id("Fahrrad"))
+        let day = try #require(model.days.first)
+        #expect(day.capacity.availableMinutes == 480)  // the copy is not busy time
+        #expect(day.capacity.plannedMinutes == 60)
+    }
+
+    @Test func canEditAsBlock_onlyOwnWritableBlocks() async throws {
+        var foreign = CalendarEvent(id: "f", externalID: nil, calendarID: "work", title: "Fahrrad", start: at(18, 14),
+                                    end: at(18, 15), isAllDay: false, url: nil, isBusy: true, version: "1")
+        foreign.isEditable = false
+        calendarStore.storedEvents = [foreign]
+        let model = await model()
+        let task = try #require(taskList.items.first { $0.title == "Fahrrad" })
+        let own = try blocks.createBlock(for: task, start: at(18, 16), minutes: 60)
+        await model.reload()
+        #expect(model.canEditAsBlock(own))
+        #expect(!model.canEditAsBlock(foreign))
+    }
+
+    @Test func resizeBlockStart_keepsEnd() async throws {
+        let model = await model()
+        let task = try #require(taskList.items.first { $0.title == "Fahrrad" })
+        let block = try blocks.createBlock(for: task, start: at(18, 14), minutes: 60)
+        await model.resizeBlockStart(block, toStartMinutes: 13 * 60 + 28)
+        #expect(calendarStore.event(id: block.id)?.start == at(18, 13, 30))
+        #expect(calendarStore.event(id: block.id)?.end == at(18, 15))
+        let moved = try #require(calendarStore.event(id: block.id))
+        await model.resizeBlockStart(moved, toStartMinutes: 15 * 60)  // past the end: keeps at least 15 min
+        #expect(calendarStore.event(id: block.id)?.start == at(18, 14, 45))
+    }
+
     @Test func duration_padsMinutes() {
         #expect(CapacityText.duration(125) == "2 h 05")
         #expect(CapacityText.duration(45) == "45 min")

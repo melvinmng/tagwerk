@@ -8,7 +8,8 @@ struct HourGrid: View {
     let model: PlanningModel
     let plan: DayPlan
     let onOpenEvent: (CalendarEvent) -> Void
-    let blockMenu: (CalendarEvent, TaskID) -> BlockMenu
+    /// Tapping a block opens its actions; a menu would swallow the hold-and-drag gesture.
+    let onTapBlock: (CalendarEvent) -> Void
 
     static let hourHeight: CGFloat = 60
     static let lineInset: CGFloat = 6
@@ -35,7 +36,7 @@ struct HourGrid: View {
                     let columnWidth = width / CGFloat(count)
                     GridEntry(title: item.title, range: item.range, isBlock: item.taskID != nil,
                               model: model, plan: plan, event: item.event,
-                              onOpenEvent: onOpenEvent, menu: item.event.flatMap { event in item.taskID.map { blockMenu(event, $0) } })
+                              onOpenEvent: onOpenEvent, onTapBlock: onTapBlock)
                         .frame(width: columnWidth - 2, height: height(item.range.count))
                         .offset(x: labelWidth + 4 + CGFloat(columns[index]) * columnWidth, y: y(item.range.lowerBound, shown))
                 }
@@ -61,7 +62,10 @@ struct HourGrid: View {
             Item(id: $0.id, range: range($0), title: $0.title, event: $0, taskID: nil)
         }
         result += plan.blocks.compactMap { block in
-            plan.links[block.id].map { Item(id: block.id, range: range(block), title: block.title, event: block, taskID: $0) }
+            plan.links[block.id].map { taskID in
+                Item(id: block.id, range: range(block), title: block.title, event: block,
+                     taskID: model.canEditAsBlock(block) ? taskID : nil)
+            }
         }
         if let lunch = model.timeline(for: plan).first(where: { if case .lunch = $0 { true } else { false } }),
            case .lunch(let start, let minutes) = lunch {
@@ -116,32 +120,50 @@ private struct GridEntry: View {
     let plan: DayPlan
     let event: CalendarEvent?
     let onOpenEvent: (CalendarEvent) -> Void
-    let menu: BlockMenu?
+    let onTapBlock: (CalendarEvent) -> Void
     @State private var moveOffset: CGFloat = 0
     @State private var resizeOffset: CGFloat = 0
+    @State private var topOffset: CGFloat = 0
+
+    /// Grip at the top or bottom edge: hold, then drag up or down (15-minute steps).
+    private func handle(_ color: Color, label: String, onEnd: @escaping (Int) -> Void,
+                        onChange: @escaping (CGFloat) -> Void) -> some View {
+        Capsule().fill(color).frame(width: 28, height: 5).padding(.vertical, 3)
+            .frame(maxWidth: .infinity, minHeight: 16)
+            .contentShape(Rectangle())
+            .gesture(LongPressGesture(minimumDuration: 0.2).sequenced(before: DragGesture())
+                .onChanged { value in
+                    if case .second(true, let drag?) = value { onChange(drag.translation.height) }
+                }
+                .onEnded { value in
+                    onChange(0)
+                    guard case .second(true, let drag?) = value else { return }
+                    onEnd(Int(drag.translation.height / HourGrid.hourHeight * 60))
+                })
+            .accessibilityLabel(label)
+    }
 
     var body: some View {
         let color: Color = isBlock ? .green : (event == nil ? .gray : .blue)
-        ZStack(alignment: .bottom) {
+        ZStack {
             content(color)
             if isBlock, let event {
-                Capsule().fill(color).frame(width: 28, height: 5).padding(.bottom, 3)
-                    .frame(maxWidth: .infinity, minHeight: 16, alignment: .bottom)
-                    .contentShape(Rectangle())
-                    .gesture(DragGesture(minimumDistance: 2)
-                        .onChanged { resizeOffset = $0.translation.height }
-                        .onEnded { value in
-                            let delta = Int(value.translation.height / HourGrid.hourHeight * 60)
-                            resizeOffset = 0
-                            Task { await model.resizeBlock(event, minutes: range.count + delta) }
-                        })
-                    .accessibilityLabel("Dauer ändern")
+                VStack {
+                    handle(color, label: "Beginn ändern") { delta in
+                        Task { await model.resizeBlockStart(event, toStartMinutes: range.lowerBound + delta) }
+                    } onChange: { topOffset = $0 }
+                    Spacer()
+                    handle(color, label: "Ende ändern") { delta in
+                        Task { await model.resizeBlock(event, minutes: range.count + delta) }
+                    } onChange: { resizeOffset = $0 }
+                }
             }
         }
         .frame(maxHeight: .infinity)
+        .padding(.top, topOffset)
         .padding(.bottom, -resizeOffset)
         .offset(y: moveOffset)
-        .simultaneousGesture(isBlock ? moveGesture : nil)
+        .gesture(isBlock ? moveGesture : nil)
     }
 
     @ViewBuilder
@@ -156,8 +178,8 @@ private struct GridEntry: View {
         .overlay(alignment: .leading) { Rectangle().fill(color).frame(width: 3) }
         .clipShape(RoundedRectangle(cornerRadius: 6))
 
-        if let menu {
-            Menu { menu } label: { label }.buttonStyle(.plain)
+        if isBlock, let event {
+            label.onTapGesture { onTapBlock(event) }
         } else if let event {
             Button { onOpenEvent(event) } label: { label }.buttonStyle(.plain)
         } else {
@@ -165,13 +187,16 @@ private struct GridEntry: View {
         }
     }
 
-    /// Dragging a block moves it; it starts after a few points, so a tap still opens the menu.
+    /// Hold, then drag to move a block; a plain swipe keeps scrolling the day (15-minute steps).
     private var moveGesture: some Gesture {
-        DragGesture(minimumDistance: 8)
-            .onChanged { moveOffset = $0.translation.height }
+        LongPressGesture(minimumDuration: 0.3)
+            .sequenced(before: DragGesture())
+            .onChanged { value in
+                if case .second(true, let drag?) = value { moveOffset = drag.translation.height }
+            }
             .onEnded { value in
-                guard let event else { moveOffset = 0; return }
-                let delta = Int(value.translation.height / HourGrid.hourHeight * 60)
+                guard case .second(true, let drag?) = value, let event else { moveOffset = 0; return }
+                let delta = Int(drag.translation.height / HourGrid.hourHeight * 60)
                 moveOffset = 0
                 Task { await model.moveBlock(event, toStartMinutes: range.lowerBound + delta, on: plan.day) }
             }
