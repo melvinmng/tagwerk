@@ -38,7 +38,8 @@ struct DayView: View {
                     Section("Wiederkehrend") {
                         ForEach(plan.recurring) { item in
                             Button { onEditRecurring(item, plan.day) } label: {
-                                LabeledContent("↻ \(item.title)", value: CapacityText.duration(item.minutes))
+                                LabeledContent("↻ \(item.title)", value: item.isDone ? "erledigt" : CapacityText.duration(item.minutes))
+                                    .strikethrough(item.isDone)
                             }
                             .foregroundStyle(.primary)
                         }
@@ -96,9 +97,12 @@ struct DayView: View {
         Button { editingHours = true } label: {
             VStack(alignment: .leading, spacing: 6) {
                 HStack {
-                    Text(CapacityText.summary(plan.capacity)).font(.headline)
+                    Text(plan.isPast ? "Vergangen" : CapacityText.remaining(plan.capacity)).font(.headline)
                     Spacer()
                     Image(systemName: "slider.horizontal.3").foregroundStyle(.secondary)
+                }
+                if plan.capacity.remainingMinutes != nil {
+                    Text("Ganzer Tag: " + CapacityText.summary(plan.capacity)).font(.caption).foregroundStyle(.secondary)
                 }
                 CapacityBar(capacity: plan.capacity)
                 if plan.capacity.estimatedCount > 0 {

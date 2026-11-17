@@ -81,6 +81,8 @@ final class TaskListModel {
     @ObservationIgnored private var generations: [TaskSource: Int] = [:]
     /// Called once when a source reports that its sign-in ended.
     @ObservationIgnored var onSignedOut: ((TaskSource) -> Void)?
+    /// Called after a task was completed (`true`) or reopened (`false`) through Tagwerk.
+    @ObservationIgnored var onCompletionChanged: ((TaskID, Bool) async -> Void)?
     let now: () -> Date
     let calendar: Calendar
 
@@ -196,6 +198,7 @@ final class TaskListModel {
         guard let updated = await write(edit, to: id) else { return }
         items.removeAll { $0.id == id }
         lastCompleted = updated
+        await onCompletionChanged?(id, true)
     }
 
     /// Reopens the task completed last ("Rückgängig").
@@ -206,6 +209,7 @@ final class TaskListModel {
         edit.isCompleted = .set(false)
         guard let reopened = await write(edit, to: completed.id, version: completed.version) else { return }
         replace(reopened)
+        await onCompletionChanged?(completed.id, false)
     }
 
     /// Deletes (GitHub: closes as not planned) with the displayed version, or `version` from the editor.
@@ -255,6 +259,10 @@ final class TaskListModel {
     /// Stores an item returned by the editor.
     func didSave(_ item: TaskItem) {
         nextGeneration(for: item.id.source)
+        if let previous = items.first(where: { $0.id == item.id }), previous.isCompleted != item.isCompleted,
+           let hook = onCompletionChanged {
+            Task { await hook(item.id, item.isCompleted) }
+        }
         if item.isCompleted {
             items.removeAll { $0.id == item.id }
         } else {

@@ -64,6 +64,8 @@ final class AppEnvironment {
             catalogStore: catalogStore,
             selectedProjectIDs: { settings.selectedProjectIDs.map(Set.init) }
         )
+        let planning = self.planning
+        taskList.onCompletionChanged = { id, isCompleted in await planning.didChangeCompletion(id, isCompleted: isCompleted) }
         // An ended GitHub sign-in (expired or revoked) forgets the cached issues of that account.
         taskList.onSignedOut = { source in
             if source == .github {

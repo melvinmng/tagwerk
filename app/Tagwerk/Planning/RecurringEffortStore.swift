@@ -48,6 +48,18 @@ final class RecurringEffortOverride {
     }
 }
 
+/// An occurrence completed in Tagwerk; its effort no longer reserves time on that day (design §13.3).
+@Model
+final class RecurringOccurrenceDone {
+    @Attribute(.unique) var key: String
+    var reminderID: String
+
+    init(reminderID: String, day: PlanDay) {
+        self.key = RecurringEffortOverride.key(reminderID, day)
+        self.reminderID = reminderID
+    }
+}
+
 @MainActor
 final class RecurringEffortStore {
     private let context: ModelContext
@@ -84,10 +96,31 @@ final class RecurringEffortStore {
         try? context.save()
     }
 
-    /// Minutes reserved on `day` by all recurring reminders that occur on it.
+    func markDone(reminderID: String, day: PlanDay) {
+        guard !isDone(reminderID: reminderID, day: day) else { return }
+        context.insert(RecurringOccurrenceDone(reminderID: reminderID, day: day))
+        try? context.save()
+    }
+
+    func unmarkDone(reminderID: String, day: PlanDay) {
+        let key = RecurringEffortOverride.key(reminderID, day)
+        for record in (try? context.fetch(FetchDescriptor<RecurringOccurrenceDone>(predicate: #Predicate { $0.key == key }))) ?? [] {
+            context.delete(record)
+        }
+        try? context.save()
+    }
+
+    func isDone(reminderID: String, day: PlanDay) -> Bool {
+        let key = RecurringEffortOverride.key(reminderID, day)
+        var descriptor = FetchDescriptor<RecurringOccurrenceDone>(predicate: #Predicate { $0.key == key })
+        descriptor.fetchLimit = 1
+        return ((try? context.fetchCount(descriptor)) ?? 0) > 0
+    }
+
+    /// Minutes reserved on `day` by all recurring reminders that occur on it, without completed occurrences.
     func reservedMinutes(on day: PlanDay, reminders: [ReminderRecord], calendar: Calendar) -> Int {
         reminders.reduce(0) { total, reminder in
-            guard let recurrence = reminder.recurrence,
+            guard let recurrence = reminder.recurrence, !isDone(reminderID: reminder.id, day: day),
                   !occurrences(of: recurrence, in: day...day, calendar: calendar).isEmpty else { return total }
             return total + (minutes(for: reminder.id, on: day) ?? 0)
         }

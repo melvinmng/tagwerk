@@ -21,6 +21,8 @@ struct RecurringItem: Hashable, Identifiable {
     let reminderID: String
     let title: String
     let minutes: Int
+    /// Completed in Tagwerk on this day: the effort no longer reserves time.
+    var isDone = false
 }
 
 /// One row of the day timeline, in time order.
@@ -62,6 +64,8 @@ struct DayPlan: Identifiable, Equatable {
     let isPastDue: Set<TaskID>
     /// Recurring effort reserved on this day.
     let recurring: [RecurringItem]
+    /// The day lies before today.
+    let isPast: Bool
 }
 
 /// Moving a task with future time blocks needs a decision: move the blocks along or delete them.
@@ -236,6 +240,17 @@ final class PlanningModel {
                              minutes: efforts.minutes(for: task.id.rawValue, on: day) ?? 0)
     }
 
+    /// Completing a recurring reminder in Tagwerk frees today's effort; reopening reserves it again (design §13.3).
+    func didChangeCompletion(_ id: TaskID, isCompleted: Bool) async {
+        guard id.source == .reminders, recurringReminderIDs.contains(id.rawValue) else { return }
+        if isCompleted {
+            efforts.markDone(reminderID: id.rawValue, day: today)
+        } else {
+            efforts.unmarkDone(reminderID: id.rawValue, day: today)
+        }
+        await reload()
+    }
+
     /// Planned day and future blocks of a task, for the editor's "Geplant" section.
     func plannedInfo(for id: TaskID) -> (day: PlanDay?, blocks: [CalendarEvent]) {
         (planStore.assignment(for: id), blocks.futureBlocks(for: id, after: today.startDate(in: calendar)))
@@ -325,7 +340,7 @@ final class PlanningModel {
                 estimated += 1
             }
         }
-        let input = CapacityInput(
+        var input = CapacityInput(
             hours: TagwerkCore.workHours(on: day, schedule: settings.weekSchedule, overrides: overrides, calendar: calendar),
             lunchStartMinutes: settings.lunchStartMinutes, lunchMinutes: settings.lunchDurationMinutes,
             bufferMinutes: settings.bufferMinutes,
@@ -333,17 +348,26 @@ final class PlanningModel {
             recurringMinutes: efforts.reservedMinutes(on: day, reminders: reminders, calendar: calendar),
             plannedMinutes: planned, estimatedCount: estimated
         )
+        if day == today {
+            let current = now()
+            input.nowMinutes = minutes(current, from: start)
+            input.remainingPlannedMinutes = planned - linkedEvents.reduce(0) { total, event in
+                let from = max(event.start, start), to = min(event.end, end, max(current, start))
+                return total + max(0, Int(to.timeIntervalSince(from) / 60))
+            }
+        }
         let pastDue = Set(assigned.filter { task in task.due.map { PlanDay($0) < day } ?? false }.map(\.id))
         let recurring = reminders.compactMap { reminder -> RecurringItem? in
             guard let recurrence = reminder.recurrence,
                   !occurrences(of: recurrence, in: day...day, calendar: calendar).isEmpty,
                   let minutes = efforts.minutes(for: reminder.id, on: day), minutes > 0 else { return nil }
-            return RecurringItem(reminderID: reminder.id, title: reminder.title, minutes: minutes)
+            return RecurringItem(reminderID: reminder.id, title: reminder.title, minutes: minutes,
+                                 isDone: efforts.isDone(reminderID: reminder.id, day: day))
         }
         return DayPlan(day: day, capacity: capacity(input), deadlines: deadlines.filter { $0.day == day },
                        events: dayEvents.filter { links[$0.id] == nil }, blocks: linkedEvents,
                        assigned: assigned, links: links.filter { id, _ in linkedEvents.contains { $0.id == id } },
-                       isPastDue: pastDue, recurring: recurring)
+                       isPastDue: pastDue, recurring: recurring, isPast: day < today)
     }
 
     private func minutes(_ date: Date, from dayStart: Date) -> Int {

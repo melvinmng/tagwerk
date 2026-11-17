@@ -30,12 +30,19 @@ enum CapacityText {
         return "\(duration(capacity.freeMinutes)) frei von \(duration(capacity.availableMinutes))"
     }
 
+    /// Today: "1 h 10 noch frei" or "30 min zu viel", from now on.
+    static func remaining(_ capacity: DayCapacity) -> String {
+        guard let remaining = capacity.remainingMinutes else { return summary(capacity) }
+        if capacity.isDayOff && capacity.plannedMinutes == 0 { return "kein Arbeitstag" }
+        return remaining < 0 ? "\(duration(-remaining)) zu viel" : "\(duration(remaining)) noch frei"
+    }
+
     static func duration(_ minutes: Int) -> String {
         let hours = minutes / 60, rest = minutes % 60
         switch (hours, rest) {
         case (0, _): return "\(rest) min"
         case (_, 0): return "\(hours) h"
-        default: return "\(hours) h \(rest)"
+        default: return "\(hours) h " + String(format: "%02d", rest)
         }
     }
 }

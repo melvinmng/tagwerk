@@ -276,6 +276,62 @@ struct PlanningModelTests {
         #expect(model.recurringItem(for: recurring, on: today)?.minutes == 45)
     }
 
+    @Test func dayPlan_today_hasRemaining_otherDaysNot() async {
+        let model = await model()
+        model.scope = .week
+        await model.reload()
+        #expect(model.days.first { $0.day == today }?.capacity.remainingMinutes == 420)  // 10:00–18:00 minus lunch
+        #expect(model.days.first { $0.day == today.adding(days: 1, calendar: calendar) }?.capacity.remainingMinutes == nil)
+    }
+
+    @Test func dayPlan_pastDay_isPast() async {
+        let model = await model()
+        model.scope = .week
+        await model.reload()
+        #expect(model.days.first { $0.day == PlanDay(year: 2026, month: 11, day: 16) }?.isPast == true)
+        #expect(model.days.first { $0.day == today }?.isPast == false)
+    }
+
+    @Test func remaining_countsOnlyBlockPartAfterNow() async throws {
+        let model = await model()
+        let task = try #require(taskList.items.first { $0.title == "Fahrrad" })
+        await model.createBlock(for: task, start: at(18, 9), minutes: 120)
+        #expect(model.days.first?.capacity.remainingMinutes == 360)
+    }
+
+    private func recurringTraining() {
+        accessStore.openRecords = [ReminderRecord(id: "k", title: "Training", notes: nil, due: DueDate(year: 2026, month: 11, day: 18),
+                                                  ekPriority: 0, isCompleted: false, listID: "l", lastModified: nil,
+                                                  recurrence: Recurrence(rule: .daily(interval: 1), start: today, end: nil, count: nil))]
+        accessStore.accessState = .fullAccess
+        RecurringEffortStore(context: container.mainContext).setForAll(60, reminderID: "k", from: today)
+    }
+
+    @Test func completingRecurringToday_freesItsEffort() async {
+        recurringTraining()
+        let model = await model()
+        #expect(model.days.first?.capacity.remainingMinutes == 360)
+        await model.didChangeCompletion(TaskID(source: .reminders, rawValue: "k"), isCompleted: true)
+        #expect(model.days.first?.capacity.remainingMinutes == 420)
+        #expect(model.days.first?.recurring.first?.isDone == true)
+        await model.didChangeCompletion(TaskID(source: .reminders, rawValue: "k"), isCompleted: false)
+        #expect(model.days.first?.capacity.remainingMinutes == 360)
+    }
+
+    @Test func completingNonRecurring_doesNotMarkOccurrence() async {
+        recurringTraining()
+        let model = await model()
+        await model.didChangeCompletion(id("Fahrrad"), isCompleted: true)
+        #expect(model.efforts.isDone(reminderID: "Fahrrad", day: today) == false)
+        #expect(model.days.first?.capacity.remainingMinutes == 360)
+    }
+
+    @Test func duration_padsMinutes() {
+        #expect(CapacityText.duration(125) == "2 h 05")
+        #expect(CapacityText.duration(45) == "45 min")
+        #expect(CapacityText.duration(120) == "2 h")
+    }
+
     @Test func planDay_forTodayTomorrowWeekend_matchesRescheduleDates() async {
         let model = await model()
         #expect(model.planDay(for: .today) == today)

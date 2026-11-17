@@ -10,6 +10,10 @@ public struct CapacityInput: Sendable, Hashable {
     public var recurringMinutes: Int
     public var plannedMinutes: Int
     public var estimatedCount: Int
+    /// Current time in minutes since midnight; set only for today to compute the remaining time.
+    public var nowMinutes: Int?
+    /// Load still ahead today: unblocked tasks in full and the part of time blocks after now.
+    public var remainingPlannedMinutes: Int?
 
     public init(hours: WorkHours?, lunchStartMinutes: Int, lunchMinutes: Int, bufferMinutes: Int,
                 busyIntervals: [Range<Int>], recurringMinutes: Int, plannedMinutes: Int, estimatedCount: Int) {
@@ -34,6 +38,8 @@ public struct DayCapacity: Sendable, Hashable {
     public let isDayOff: Bool
     /// Tasks counted with the default duration because they have no effort.
     public let estimatedCount: Int
+    /// Free time from now until the end of work (today only); negative when overbooked.
+    public var remainingMinutes: Int? = nil
 }
 
 /// Blocked time is the union of lunch and busy intervals (each widened by the buffer on both sides),
@@ -50,9 +56,17 @@ public func capacity(_ input: CapacityInput) -> DayCapacity {
     let work = hours.startMinutes..<hours.endMinutes
     let blocked = mergedLength(blocks.compactMap { clip($0, to: work) })
     let available = max(0, hours.minutes - blocked - input.recurringMinutes)
-    return DayCapacity(availableMinutes: available, plannedMinutes: input.plannedMinutes,
-                       freeMinutes: available - input.plannedMinutes, isOverbooked: input.plannedMinutes > available,
-                       isDayOff: false, estimatedCount: input.estimatedCount)
+    var result = DayCapacity(availableMinutes: available, plannedMinutes: input.plannedMinutes,
+                             freeMinutes: available - input.plannedMinutes, isOverbooked: input.plannedMinutes > available,
+                             isDayOff: false, estimatedCount: input.estimatedCount)
+    if let now = input.nowMinutes {
+        let start = min(max(hours.startMinutes, now), hours.endMinutes)
+        let window = start..<hours.endMinutes
+        let blockedAhead = mergedLength(blocks.compactMap { clip($0, to: window) })
+        let ahead = max(0, window.count - blockedAhead - input.recurringMinutes)
+        result.remainingMinutes = ahead - (input.remainingPlannedMinutes ?? input.plannedMinutes)
+    }
+    return result
 }
 
 /// Busy minutes of `day` from timed events that are not free/declined and not linked to a task.
