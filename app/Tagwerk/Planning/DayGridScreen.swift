@@ -110,7 +110,7 @@ struct DayGridScreen<Summary: View, Header: View>: View {
 
     // MARK: "Ohne Uhrzeit" (D1)
 
-    private var unplannedToday: [TaskItem] { plan.assigned + plan.dueToday }
+    private var unplannedToday: [TaskItem] { model.timelessTasks(for: plan) }
 
     @ViewBuilder
     private var unscheduledBar: some View {

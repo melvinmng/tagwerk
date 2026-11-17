@@ -55,6 +55,25 @@ final class EventMergeDecision {
     }
 }
 
+/// One row of the calendar diagnostics (next 7 days).
+struct CalendarDiagnostic: Identifiable, Equatable {
+    var id: String { calendarID }
+    let calendarID: String
+    let title: String
+    let kind: CalendarKind
+    /// Tagwerk reads this calendar (selected, plan or deadline calendar).
+    let isRead: Bool
+    let isDeadlineCalendar: Bool
+    let events: Int
+    let shown: Int
+    /// Identical events shown through a copy in another calendar.
+    let hiddenByMerge: Int
+    /// Placeholder events hidden by a "Zusammenfassen" decision.
+    let hiddenByPlaceholderDecision: Int
+    /// All-day events of deadline calendars, shown as deadlines.
+    let shownAsDeadline: Int
+}
+
 /// Tagwerk's own marks on calendar events: lunch per day, availability and merge decisions.
 @MainActor
 final class EventMarkStore {
@@ -136,6 +155,11 @@ final class EventMarkStore {
             context.delete(old)
         }
         context.insert(decision)
+        try? context.save()
+    }
+
+    func clearMergeDecisions() {
+        for decision in mergeDecisions() { context.delete(decision) }
         try? context.save()
     }
 

@@ -494,6 +494,20 @@ final class PlanningModel {
         return (plan.events + plan.blocks).filter { $0.isAllDay && !deadlineCalendars.contains($0.calendarID) }
     }
 
+    /// Tasks without a time that belong to this day, for the "Ohne Uhrzeit" bar (design §13.15 D1): planned for
+    /// the day, due today, recurring reminders occurring today and (today only) overdue tasks; each once.
+    func timelessTasks(for plan: DayPlan) -> [TaskItem] {
+        var result = plan.assigned + plan.dueToday
+        let blocked = Set(plan.links.values)
+        let recurring = plan.recurring.filter { !$0.isDone }.compactMap { item in
+            taskList.items.first { $0.id == TaskID(source: .reminders, rawValue: item.reminderID) }
+        }
+        result += recurring
+        if plan.day == today { result += overdue }
+        var seen = Set<TaskID>()
+        return result.filter { !blocked.contains($0.id) && seen.insert($0.id).inserted }
+    }
+
     /// Events whose time can change by dragging: writable, timed and not someone else's invitation.
     func canDrag(_ event: CalendarEvent) -> Bool {
         event.isEditable && !event.isInvitation && !event.isAllDay
@@ -570,6 +584,50 @@ final class PlanningModel {
         events.filter { $0.isBusy && !$0.isAllDay }.reduce(0) { $0 + Int($1.end.timeIntervalSince($1.start) / 60) }
     }
 
+    /// Forgets every "Zusammenfassen / Getrennt lassen" decision, including "künftig immer" rules.
+    func resetMergeDecisions() async {
+        marks.clearMergeDecisions()
+        await reload()
+    }
+
+    /// Per calendar over the next 7 days: whether Tagwerk reads it, how many events it has, how many the
+    /// day views show and why the others are hidden (settings › "Kalender-Diagnose").
+    func calendarDiagnostics() -> [CalendarDiagnostic] {
+        let start = today.startDate(in: calendar)
+        let interval = DateInterval(start: start, end: today.adding(days: 7, calendar: calendar).startDate(in: calendar))
+        let all = calendarStore.events(in: interval, calendarIDs: nil)
+        let readable = readableCalendarIDs()
+        let read = all.filter { readable?.contains($0.calendarID) ?? true }
+        let (marked, _) = markedEvents(read)
+        let markedIDs = Set(marked.map(\.id))
+        let links = resolvedLinks.mapValues(\.taskID)
+        let deadlineCalendars = Set(settings.deadlineCalendarIDs ?? [])
+        var shownIDs = Set<String>()
+        var day = today
+        while day < today.adding(days: 7, calendar: calendar) {
+            let dayStart = day.startDate(in: calendar), dayEnd = day.adding(days: 1, calendar: calendar).startDate(in: calendar)
+            let dayEvents = marked.filter { $0.end > dayStart && $0.start < dayEnd }
+            let merged = settings.mergeDuplicateEvents
+                ? mergingDuplicates(dayEvents.filter { !deadlineCalendars.contains($0.calendarID) }, links: links)
+                    + dayEvents.filter { deadlineCalendars.contains($0.calendarID) }
+                : dayEvents
+            shownIDs.formUnion(merged.filter { !($0.isAllDay && deadlineCalendars.contains($0.calendarID)) }.map(\.id))
+            day = day.adding(days: 1, calendar: calendar)
+        }
+        return calendarStore.eventCalendars().map { info in
+            let own = all.filter { $0.calendarID == info.id }
+            let isRead = readable?.contains(info.id) ?? true
+            let hiddenByPlaceholder = isRead ? own.filter { !markedIDs.contains($0.id) }.count : 0
+            let shown = isRead ? own.filter { shownIDs.contains($0.id) }.count : 0
+            let asDeadline = isRead && deadlineCalendars.contains(info.id) ? own.filter(\.isAllDay).count : 0
+            return CalendarDiagnostic(calendarID: info.id, title: info.title, kind: info.kind, isRead: isRead,
+                                      isDeadlineCalendar: deadlineCalendars.contains(info.id), events: own.count, shown: shown,
+                                      hiddenByMerge: isRead ? max(0, own.count - shown - asDeadline - hiddenByPlaceholder) : 0,
+                                      hiddenByPlaceholderDecision: hiddenByPlaceholder, shownAsDeadline: asDeadline)
+        }
+        .sorted { $0.title.localizedStandardCompare($1.title) == .orderedAscending }
+    }
+
     func decideMerge(_ suggestion: MergeSuggestion, merge: Bool, always: Bool) async {
         marks.decide(suggestion, merge: merge, always: always)
         await reload()
@@ -583,6 +641,8 @@ final class PlanningModel {
             if let free = marks.isFree(event, marks: freeMarks) { event.isBusy = !free }
             return event
         }
+        // Switching merging off ("Gleiche Termine zusammenfassen") also ignores placeholder decisions.
+        guard settings.mergeDuplicateEvents else { return (events, []) }
         let decisions = marks.mergeDecisions()
         var hidden = Set<String>()
         var open: [MergeSuggestion] = []
@@ -839,7 +899,12 @@ final class PlanningModel {
                                  isDone: efforts.isDone(reminderID: reminder.id, day: day))
         }
         // Merging only affects the display; capacity above used every event (overlaps are unified).
-        let shown = settings.mergeDuplicateEvents ? mergingDuplicates(dayEvents, links: links) : dayEvents
+        // Deadline-calendar events keep their own role (deadline, all-day hint) and are never merged.
+        let deadlineCalendars = Set(settings.deadlineCalendarIDs ?? [])
+        let shown = settings.mergeDuplicateEvents
+            ? mergingDuplicates(dayEvents.filter { !deadlineCalendars.contains($0.calendarID) }, links: links)
+                + dayEvents.filter { deadlineCalendars.contains($0.calendarID) }
+            : dayEvents
         return DayPlan(day: day, capacity: capacity(input), deadlines: deadlines.filter { $0.day == day },
                        events: shown.filter { links[$0.id] == nil }, blocks: shown.filter { links[$0.id] != nil && !$0.isAllDay },
                        assigned: assigned, dueToday: dueToday, links: links.filter { id, _ in linkedEvents.contains { $0.id == id } },

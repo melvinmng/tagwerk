@@ -804,6 +804,88 @@ struct PlanningModelTests {
         #expect(!model.canDrag(invitation))
     }
 
+    @Test func timelessTasks_includeRecurringAndOverdueToday() async throws {
+        accessStore.openRecords = [ReminderRecord(id: "k", title: "Training", notes: nil, due: DueDate(year: 2026, month: 11, day: 16),
+                                                  ekPriority: 0, isCompleted: false, listID: "l", lastModified: nil,
+                                                  recurrence: Recurrence(rule: .daily(interval: 1), start: PlanDay(year: 2026, month: 11, day: 16),
+                                                                         end: nil, count: nil))]
+        accessStore.accessState = .fullAccess
+        let reminders = FakeTaskProvider(source: .reminders,
+                                         tasks: [makeTask("k", source: .reminders, due: DueDate(year: 2026, month: 11, day: 16))])
+        await taskList.register(reminders)
+        local.tasks.append(makeTask("Vergessen", source: .local, due: DueDate(year: 2026, month: 11, day: 15)))
+        RecurringEffortStore(context: container.mainContext).setForAll(60, reminderID: "k", from: PlanDay(year: 2026, month: 11, day: 1))
+        planStore.assign(id("Fahrrad"), to: today)
+        let model = await model()
+        let titles = model.timelessTasks(for: try #require(model.days.first)).map(\.id.rawValue)
+        #expect(titles == ["Fahrrad", "k", "Vergessen"])
+    }
+
+    @Test func timelessTasks_otherDay_onlyAssigned() async throws {
+        planStore.assign(id("Fahrrad"), to: PlanDay(year: 2026, month: 11, day: 19))
+        let model = await model()
+        model.anchor = PlanDay(year: 2026, month: 11, day: 19)
+        await model.reload()
+        #expect(model.timelessTasks(for: try #require(model.days.first)).map(\.title) == ["Fahrrad"])
+    }
+
+    private func placeholderPair() -> [CalendarEvent] {
+        [CalendarEvent(id: "real", externalID: nil, calendarID: "uni", title: "Vorlesung", start: at(18, 10), end: at(18, 11),
+                       isAllDay: false, url: nil, isBusy: true, version: "1"),
+         CalendarEvent(id: "busy", externalID: nil, calendarID: "work", title: "Busy", start: at(18, 10), end: at(18, 11),
+                       isAllDay: false, url: nil, isBusy: true, version: "1")]
+    }
+
+    @Test func mergingOff_alsoIgnoresPlaceholderDecisions() async throws {
+        calendarStore.storedEvents = placeholderPair()
+        let model = await model()
+        await model.decideMerge(try #require(model.mergeSuggestions.first), merge: true, always: true)
+        #expect(try #require(model.days.first).events.count == 1)
+        settings.mergeDuplicateEvents = false
+        await model.reload()
+        #expect(try #require(model.days.first).events.count == 2)
+        #expect(model.mergeSuggestions.isEmpty)
+    }
+
+    @Test func resetMergeDecisions_showsPlaceholdersAgain() async throws {
+        calendarStore.storedEvents = placeholderPair()
+        let model = await model()
+        await model.decideMerge(try #require(model.mergeSuggestions.first), merge: true, always: true)
+        await model.resetMergeDecisions()
+        #expect(try #require(model.days.first).events.count == 2)
+        #expect(model.mergeSuggestions.count == 1)
+    }
+
+    @Test func deadlineCalendarEvents_areNeverMerged() async throws {
+        settings.deadlineCalendarIDs = ["uni"]
+        calendarStore.storedEvents = ["kurs", "uni"].map { calendarID in
+            CalendarEvent(id: "e-\(calendarID)", externalID: nil, calendarID: calendarID, title: "Seminar", start: at(18, 0),
+                          end: at(19, 0), isAllDay: true, url: nil, isBusy: true, version: "1")
+        }
+        let model = await model()
+        let day = try #require(model.days.first)
+        #expect(model.allDayEvents(for: day).map(\.calendarID) == ["kurs"])
+    }
+
+    @Test func calendarDiagnostics_countReadShownHidden() async throws {
+        calendarStore.calendars = [ListInfo(id: "uni", title: "Kurs", colorHex: nil, kind: .subscription),
+                                   ListInfo(id: "work", title: "Arbeit", colorHex: nil, kind: .calDAV),
+                                   ListInfo(id: "other", title: "Anderes", colorHex: nil, kind: .local)]
+        settings.selectedCalendarIDs = ["uni", "work"]
+        calendarStore.storedEvents = placeholderPair() + [
+            CalendarEvent(id: "x", externalID: nil, calendarID: "other", title: "Sport", start: at(18, 15), end: at(18, 16),
+                          isAllDay: false, url: nil, isBusy: true, version: "1")]
+        let model = await model()
+        await model.decideMerge(try #require(model.mergeSuggestions.first), merge: true, always: false)
+        let rows = model.calendarDiagnostics()
+        let uni = try #require(rows.first { $0.calendarID == "uni" })
+        let work = try #require(rows.first { $0.calendarID == "work" })
+        let other = try #require(rows.first { $0.calendarID == "other" })
+        #expect(uni.isRead && uni.events == 1 && uni.shown == 1)
+        #expect(work.isRead && work.events == 1 && work.shown == 0 && work.hiddenByPlaceholderDecision == 1)
+        #expect(!other.isRead && other.events == 1 && other.shown == 0)
+    }
+
     @Test func duration_padsMinutes() {
         #expect(CapacityText.duration(125) == "2 h 05")
         #expect(CapacityText.duration(45) == "45 min")
