@@ -23,7 +23,9 @@ struct TaskContextMenu: View {
             if typeSize >= .accessibility1 {
                 planButtons
             } else {
+                // The palette style fits four icons in one row (the default style allows only three).
                 ControlGroup { planButtons }
+                    .controlGroupStyle(.palette)
             }
             Button("Datum wählen …", systemImage: "calendar") { actions.planOnDate() }
         }
@@ -47,6 +49,6 @@ struct TaskContextMenu: View {
         Button("Heute", systemImage: "sun.max") { actions.plan(.today) }
         Button("Morgen", systemImage: "sunrise") { actions.plan(.tomorrow) }
         Button("Wochenende", systemImage: "sofa") { actions.plan(.weekend) }
-        Button("Nächste Woche", systemImage: "calendar.badge.plus") { actions.plan(.nextMonday) }
+        Button("Nächste Woche", systemImage: "arrow.forward.to.line") { actions.plan(.nextMonday) }
     }
 }
