@@ -221,3 +221,14 @@ struct DueTextTests {
         #expect(DueText.text(DueDate(year: 2027, month: 1, day: 3), now: now, calendar: calendar) == "03.01.2027")
     }
 }
+
+struct TagwerkCalendarTests {
+    /// The calendar must follow time zone changes without an app restart.
+    @Test func tagwerkCalendar_followsSystemTimeZoneChanges() {
+        #expect(Calendar.tagwerk.timeZone == TimeZone.autoupdatingCurrent)
+    }
+
+    @Test func tagwerkCalendar_startsWeekOnMonday() {
+        #expect(Calendar.tagwerk.firstWeekday == 2)
+    }
+}

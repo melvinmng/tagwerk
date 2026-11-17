@@ -40,11 +40,12 @@ enum SourceState: Equatable {
 }
 
 extension Calendar {
-    /// Calendar used for all date logic: Gregorian, week starting on Monday, current time zone.
+    /// Calendar used for all date logic: Gregorian, week starting on Monday. The time zone follows
+    /// system changes while the app runs, so "today" stays correct after travelling.
     static var tagwerk: Calendar {
         var calendar = Calendar(identifier: .gregorian)
         calendar.firstWeekday = 2
-        calendar.timeZone = .current
+        calendar.timeZone = .autoupdatingCurrent
         calendar.locale = Locale(identifier: "de_DE")
         return calendar
     }

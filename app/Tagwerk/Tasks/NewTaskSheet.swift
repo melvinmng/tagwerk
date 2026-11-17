@@ -85,6 +85,8 @@ struct NewTaskSheet: View {
                         Toggle("Uhrzeit", isOn: $hasTime)
                         DatePicker("Datum", selection: $dueDate,
                                    displayedComponents: hasTime ? [.date, .hourAndMinute] : [.date])
+                            .environment(\.calendar, model.calendar)
+                            .environment(\.timeZone, model.calendar.timeZone)
                     }
                     PriorityPicker(priority: $priority)
                 }

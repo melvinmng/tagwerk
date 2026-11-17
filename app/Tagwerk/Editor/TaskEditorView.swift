@@ -129,6 +129,7 @@ struct TaskEditorView: View {
             Toggle("Uhrzeit", isOn: hasTime)
             DatePicker("Datum", selection: dueDate, displayedComponents: due.hasTime ? [.date, .hourAndMinute] : [.date])
                 .environment(\.calendar, calendar)
+                .environment(\.timeZone, calendar.timeZone)
         }
     }
 
