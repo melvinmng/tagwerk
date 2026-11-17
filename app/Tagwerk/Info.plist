@@ -20,6 +20,8 @@
 	<string>1.0</string>
 	<key>CFBundleVersion</key>
 	<string>1</string>
+	<key>GitHubClientID</key>
+	<string>$(GITHUB_CLIENT_ID)</string>
 	<key>NSCalendarsFullAccessUsageDescription</key>
 	<string>Tagwerk liest deinen Kalender, um deinen Tag zu planen.</string>
 	<key>NSRemindersFullAccessUsageDescription</key>

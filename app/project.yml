@@ -18,6 +18,8 @@ packages:
     path: Packages/SecureStore
   RemindersKit:
     path: Packages/RemindersKit
+  GitHubKit:
+    path: Packages/GitHubKit
 targets:
   Tagwerk:
     type: application
@@ -27,6 +29,10 @@ targets:
       - package: TagwerkCore
       - package: SecureStore
       - package: RemindersKit
+      - package: GitHubKit
+    configFiles:
+      Debug: Config/GitHub.xcconfig
+      Release: Config/GitHub.xcconfig
     info:
       path: Tagwerk/Info.plist
       properties:
@@ -34,6 +40,7 @@ targets:
         UILaunchScreen: {}
         NSRemindersFullAccessUsageDescription: "Tagwerk liest und bearbeitet deine Erinnerungen, um sie mit deinen anderen Aufgaben zusammenzuführen."
         NSCalendarsFullAccessUsageDescription: "Tagwerk liest deinen Kalender, um deinen Tag zu planen."
+        GitHubClientID: $(GITHUB_CLIENT_ID)
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.melvinmng.tagwerk
