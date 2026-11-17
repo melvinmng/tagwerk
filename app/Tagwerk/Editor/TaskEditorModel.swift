@@ -111,6 +111,7 @@ final class TaskEditorModel {
         defer { isSaving = false }
         do {
             saved = try await provider.apply(edit, to: original.id, expectedVersion: expectedVersion)
+            refreshed = nil  // the saved item supersedes the state after the comment
             conflict = nil
             errorMessage = nil
             return true

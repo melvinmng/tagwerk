@@ -164,6 +164,34 @@ struct TaskListModelTests {
         #expect(model.items.contains { $0.title == "Fahrrad" })
     }
 
+    @Test func unregister_duringRunningLoad_staysRemoved() async {
+        let github = FakeTaskProvider(source: .github, tasks: [makeTask("#1", source: .github)])
+        let model = TaskListModel(providers: [github], now: testNow, calendar: testCalendar())
+        let gate = Gate()
+        github.gate = gate
+        let running = Task { await model.reload() }
+        await waitUntil { github.openTasksCalls == 1 }
+
+        await model.unregister(.github)
+        gate.open()
+        await running.value
+
+        #expect(model.items.isEmpty)
+        #expect(model.sourceStates[.github] == nil)
+    }
+
+    @Test func undoComplete_whileLoadAlreadyReturnedItem_noDuplicate() async {
+        let model = makeModel()
+        await model.reload()
+        let id = TaskID(source: .local, rawValue: "Fahrrad")
+        await model.complete(id)
+        // A reload that runs between completion and undo still lists the reopened task.
+        local.tasks = local.tasks.map { var task = $0; task.isCompleted = false; return task }
+        await model.reload(only: [.local])
+        await model.undoComplete()
+        #expect(model.items.filter { $0.id == id }.count == 1)
+    }
+
     @Test func complete_removesItemAfterSuccess() async {
         let model = makeModel()
         await model.reload()

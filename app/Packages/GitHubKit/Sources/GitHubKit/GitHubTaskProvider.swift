@@ -44,6 +44,8 @@ public final class GitHubTaskProvider: TaskProvider {
             login = result.login
             projects = result.projects
             remember(visible)
+            // A sign-out during the request already cleared the cache; do not write it back.
+            guard await tokens.isSignedIn else { throw TaskWriteError.signedOut }
             cache.store(visible, fetchedAt: now())
             offlineSince = nil
             offlineReason = nil

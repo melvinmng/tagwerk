@@ -160,4 +160,16 @@ struct TaskEditorModelTests {
         #expect(TaskEditorModel(item: local, provider: FakeTaskProvider(source: .local, tasks: [local])).priorityChoices
                 == [nil, .p1, .p2, .p3, .p4, .p5])
     }
+
+    @Test func save_afterComment_clearsRefreshedSoListGetsSavedItem() async {
+        var fresh = item
+        fresh.version = "after-comment"
+        let model = TaskEditorModel(item: item, provider: provider, addComment: { _, _, _ in fresh })
+        model.comment = "Notiz"
+        await model.postComment()
+        model.draft.title = "Neu"
+        #expect(await model.save())
+        #expect(model.refreshed == nil)
+        #expect(model.saved?.title == "Neu")
+    }
 }

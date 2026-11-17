@@ -160,11 +160,13 @@ final class TaskListModel {
         providers.removeAll { $0.source == provider.source }
         providers.append(provider)
         signedOutSources.remove(provider.source)
+        nextGeneration(for: provider.source)
         await reload()
     }
 
     /// Removes a source after a voluntary sign-out.
     func unregister(_ source: TaskSource) async {
+        nextGeneration(for: source)  // results of loads still running are discarded
         providers.removeAll { $0.source == source }
         signedOutSources.remove(source)
         await reload()
@@ -194,7 +196,7 @@ final class TaskListModel {
         var edit = TaskEdit()
         edit.isCompleted = .set(false)
         guard let reopened = await write(edit, to: completed.id, version: completed.version) else { return }
-        items.append(reopened)
+        replace(reopened)
     }
 
     /// Deletes (GitHub: closes as not planned) with the displayed version, or `version` from the editor.
@@ -230,7 +232,7 @@ final class TaskListModel {
     func create(_ draft: TaskDraft, in source: TaskSource) async {
         guard let provider = provider(for: source) else { return }
         do {
-            items.append(try await provider.create(draft))
+            replace(try await provider.create(draft))
             nextGeneration(for: source)
         } catch {
             lastError = Self.message(for: error)

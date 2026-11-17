@@ -118,6 +118,10 @@ struct TaskEditorView: View {
                 }
             }
             .animation(.default, value: model.conflict == nil)
+            .onDisappear {
+                // After the user's own comment, the list needs the new version however the sheet closes.
+                if let refreshed = model.refreshed { onSaved(refreshed) }
+            }
             .navigationTitle(title)
             .confirmationDialog(TaskListView.deleteQuestion(for: model.original), isPresented: $confirmsDelete,
                                 titleVisibility: .visible) {
@@ -133,10 +137,7 @@ struct TaskEditorView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Abbrechen") {
-                        if let refreshed = model.refreshed { onSaved(refreshed) }
-                        dismiss()
-                    }
+                    Button("Abbrechen") { dismiss() }
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Sichern") { Task { await finish(model.save()) } }

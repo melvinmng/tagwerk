@@ -55,9 +55,13 @@ struct TaskListView: View {
                 }
             }
             .safeAreaInset(edge: .bottom) { undoBar }
+            .animation(.spring(duration: 0.35), value: model.lastCompleted?.id)
+            .onChange(of: gitHubOfflineSince == nil) { _, online in if online { showsOfflineInfo = false } }
             .navigationTitle("Aufgaben")
             .toolbar {
-                ToolbarItem(placement: .topBarTrailing) { offlineIndicator }
+                if gitHubOfflineSince != nil {
+                    ToolbarItem(placement: .topBarTrailing) { offlineIndicator }
+                }
                 ToolbarItem(placement: .primaryAction) {
                     Button { isCreating = true } label: { Label("Neue Aufgabe", systemImage: "plus") }
                 }
@@ -172,7 +176,7 @@ struct TaskListView: View {
         if let since = gitHubOfflineSince {
             Button { showsOfflineInfo = true } label: {
                 Image(systemName: "icloud.slash")
-                    .symbolEffect(.bounce, value: since)
+                    .symbolEffect(.bounce, options: .nonRepeating, isActive: true)
             }
             .tint(.secondary)
             .accessibilityLabel("GitHub offline")
