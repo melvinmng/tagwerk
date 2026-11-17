@@ -18,6 +18,10 @@ Mit dem kostenlosen Apple-Account läuft das Provisioning-Profil nach 7 Tagen ab
 ## Einrichten
 
 ```zsh
+# UDID des iPhones ermitteln und lokal ablegen (nicht im Repo)
+xcrun devicectl list devices
+mkdir -p ~/Library/Application\ Support/Tagwerk
+echo 'DEVICE_ID=<UDID>' > ~/Library/Application\ Support/Tagwerk/config
 git clone https://github.com/melvinmng/tagwerk ~/Library/Developer/Tagwerk/src
 cp scripts/de.tagwerk.refresh.plist ~/Library/LaunchAgents/
 launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/de.tagwerk.refresh.plist

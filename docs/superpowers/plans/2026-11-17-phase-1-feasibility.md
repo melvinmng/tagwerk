@@ -101,7 +101,7 @@
 **Files:** Create `scripts/refresh-install.sh`, `scripts/de.tagwerk.refresh.plist`, `scripts/README.md`
 
 **Interfaces:**
-- Consumes: Scheme `TagwerkSpike` und Geräte-ID (Konstante `DEVICE_ID` am Skriptanfang).
+- Consumes: Scheme `TagwerkSpike` und Geräte-ID (`DEVICE_ID` aus `~/Library/Application Support/Tagwerk/config`, nicht im Repo).
 - Produces: `refresh-install.sh [--dry-run] [--force]`. Exit-Codes: 0 = installiert oder noch nicht fällig, 1 = Build-Fehler, 2 = Gerät nicht erreichbar, 3 = Signierfehler.
   - Zustand in `~/Library/Application Support/Tagwerk/last-install` als ISO-Datum.
   - Fällig ab 5 Tagen. Ab Tag 6 ohne Erfolg kommt eine Mitteilung per `osascript -e 'display notification …'`.

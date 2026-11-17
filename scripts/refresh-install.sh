@@ -11,7 +11,6 @@
 
 set -u
 
-DEVICE_ID="<DEVICE_ID>"
 SCHEME="TagwerkSpike"
 PROJECT_DIR_NAME="spike"
 BRANCH="${TAGWERK_BRANCH:-spike/feasibility}"
@@ -30,7 +29,17 @@ LOG_DIR="$HOME/Library/Logs/Tagwerk"
 LOG="$LOG_DIR/refresh.log"
 BUILD_LOG="$LOG_DIR/build.log"
 
+CONFIG_FILE="$STATE_DIR/config"
+
 mkdir -p "$STATE_DIR" "$LOG_DIR"
+
+# Device identifiers stay out of the repository; the config file defines DEVICE_ID.
+if [[ ! -f "$CONFIG_FILE" ]]; then
+  echo "Missing $CONFIG_FILE with DEVICE_ID=<UDID> (see scripts/README.md)" >&2
+  exit 64
+fi
+source "$CONFIG_FILE"
+: "${DEVICE_ID:?DEVICE_ID must be set in $CONFIG_FILE}"
 
 dry_run=0
 force=0
