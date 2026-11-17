@@ -190,6 +190,13 @@ struct PlanningModelTests {
         #expect(model.days.first?.capacity.plannedMinutes == 45)
     }
 
+    @Test func createBlock_removesTaskFromPlannedWithoutTime() async throws {
+        let model = await model()
+        let task = try #require(taskList.items.first { $0.title == "Fahrrad" })
+        await model.createBlock(for: task, start: at(18, 14), minutes: 45)
+        #expect(model.days.first?.assigned.contains { $0.id == task.id } == false)
+    }
+
     @Test func recurringItems_listEffortOfTheDay() async {
         accessStore.openRecords = [ReminderRecord(id: "k", title: "Karteikarten", notes: nil, due: DueDate(year: 2026, month: 11, day: 16),
                                                   ekPriority: 0, isCompleted: false, listID: "l", lastModified: nil,

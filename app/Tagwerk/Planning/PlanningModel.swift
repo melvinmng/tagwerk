@@ -296,7 +296,9 @@ final class PlanningModel {
         let dayEvents = events.filter { $0.end > start && $0.start < end }.sorted { $0.start < $1.start }
         let linkedEvents = dayEvents.filter { links[$0.id] != nil && !$0.isAllDay }
         let tasksWithBlocks = Set(linkedEvents.compactMap { links[$0.id] })
-        let assigned = assignments.filter { $0.value == day }.compactMap { tasksByID[$0.key] }
+        // Tasks with a time block on this day appear in the timeline only, not as "planned without time".
+        let assigned = assignments.filter { $0.value == day && !tasksWithBlocks.contains($0.key) }
+            .compactMap { tasksByID[$0.key] }
             .sorted { $0.title.localizedStandardCompare($1.title) == .orderedAscending }
 
         var planned = linkedEvents.reduce(0) { total, event in
