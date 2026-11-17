@@ -297,6 +297,67 @@ final class PlanningModel {
         return (plan.events + plan.blocks).filter { $0.isAllDay && !deadlineCalendars.contains($0.calendarID) }
     }
 
+    // MARK: Time blocks (design §13.4)
+
+    /// Moves a block to `toStartMinutes` (snapped to 15 min, kept inside the day) on `day`, keeping its length.
+    /// Moving to another day also moves the task's planned day.
+    func moveBlock(_ block: CalendarEvent, toStartMinutes: Int, on day: PlanDay) async {
+        let dayStart = day.startDate(in: calendar)
+        let length = Int(block.end.timeIntervalSince(block.start) / 60)
+        let range = clampedBlock(startMinutes: snapped(minutes: toStartMinutes), duration: length, dayLength: dayLength(day))
+        let start = dayStart.addingTimeInterval(TimeInterval(range.lowerBound * 60))
+        do {
+            _ = try calendarStore.moveBlock(id: block.id, to: start, end: start.addingTimeInterval(TimeInterval(range.count * 60)),
+                                            expectedVersion: block.version)
+            if PlanDay(date: block.start, calendar: calendar) != day, let taskID = resolvedLinks[block.id]?.taskID
+                ?? block.url.flatMap(TaskLinkURL.parse) {
+                planStore.assign(taskID, to: day)
+            }
+        } catch {
+            lastError = TaskListModel.message(for: error)
+        }
+        await reload()
+    }
+
+    /// Changes the length of a block (snapped to 15 min, at least 15 min), keeping its start.
+    func resizeBlock(_ block: CalendarEvent, minutes: Int) async {
+        let day = PlanDay(date: block.start, calendar: calendar)
+        let startMinutes = Int(block.start.timeIntervalSince(day.startDate(in: calendar)) / 60)
+        let range = clampedBlock(startMinutes: startMinutes, duration: snapped(minutes: minutes), dayLength: dayLength(day))
+        do {
+            _ = try calendarStore.moveBlock(id: block.id, to: block.start,
+                                            end: block.start.addingTimeInterval(TimeInterval(range.count * 60)),
+                                            expectedVersion: block.version)
+        } catch {
+            lastError = TaskListModel.message(for: error)
+        }
+        await reload()
+    }
+
+    /// Deletes a block; the task keeps its planned day.
+    func deleteBlock(_ block: CalendarEvent) async {
+        do {
+            try calendarStore.deleteBlock(id: block.id, expectedVersion: block.version)
+        } catch {
+            lastError = TaskListModel.message(for: error)
+        }
+        await reload()
+    }
+
+    /// Free stretches of the day for dropping tasks (today from now on), around events, blocks, lunch and buffer.
+    func gaps(for plan: DayPlan) -> [Range<Int>] {
+        guard let hours = workHours(on: plan.day) else { return [] }
+        let busy = busyIntervals(events: plan.events + plan.blocks, on: plan.day, calendar: calendar, excluding: [])
+        let lunch = settings.lunchDurationMinutes > 0
+            ? settings.lunchStartMinutes..<(settings.lunchStartMinutes + settings.lunchDurationMinutes) : nil
+        let from = plan.day == today ? minutes(now(), from: plan.day.startDate(in: calendar)) : nil
+        return freeGaps(hours: hours, busy: busy, lunch: lunch, buffer: settings.bufferMinutes, from: from)
+    }
+
+    private func dayLength(_ day: PlanDay) -> Int {
+        Int(day.adding(days: 1, calendar: calendar).startDate(in: calendar).timeIntervalSince(day.startDate(in: calendar)) / 60)
+    }
+
     // MARK: Events in all calendars (design §13.10)
 
     var writableCalendars: [ListInfo] { calendarStore.writableCalendars() }

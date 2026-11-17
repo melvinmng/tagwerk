@@ -458,6 +458,59 @@ struct PlanningModelTests {
         #expect(calendarStore.storedEvents.map(\.title) == ["Lauf", "Lauf", "Lauf"])
     }
 
+    @Test func moveBlock_changesEventAndAssignment() async throws {
+        let model = await model()
+        let task = try #require(taskList.items.first { $0.title == "Fahrrad" })
+        let block = try blocks.createBlock(for: task, start: at(18, 14), minutes: 60)
+        await model.moveBlock(block, toStartMinutes: 16 * 60 + 8, on: PlanDay(year: 2026, month: 11, day: 19))
+        #expect(calendarStore.event(id: block.id)?.start == at(19, 16, 15))
+        #expect(calendarStore.event(id: block.id)?.end == at(19, 17, 15))
+        #expect(planStore.assignment(for: task.id) == PlanDay(year: 2026, month: 11, day: 19))
+    }
+
+    @Test func moveBlock_lateStartIsClampedToTheDay() async throws {
+        let model = await model()
+        let task = try #require(taskList.items.first { $0.title == "Fahrrad" })
+        let block = try blocks.createBlock(for: task, start: at(18, 14), minutes: 60)
+        await model.moveBlock(block, toStartMinutes: 23 * 60 + 30, on: today)
+        #expect(calendarStore.event(id: block.id)?.start == at(18, 23))
+    }
+
+    @Test func resizeBlock_keepsStart() async throws {
+        let model = await model()
+        let task = try #require(taskList.items.first { $0.title == "Fahrrad" })
+        let block = try blocks.createBlock(for: task, start: at(18, 14), minutes: 60)
+        await model.resizeBlock(block, minutes: 95)
+        #expect(calendarStore.event(id: block.id)?.start == at(18, 14))
+        #expect(calendarStore.event(id: block.id)?.end == at(18, 15, 30))
+    }
+
+    @Test func deleteBlock_removesEvent_assignmentStays() async throws {
+        let model = await model()
+        let task = try #require(taskList.items.first { $0.title == "Fahrrad" })
+        let block = try blocks.createBlock(for: task, start: at(18, 14), minutes: 60)
+        await model.deleteBlock(block)
+        #expect(calendarStore.event(id: block.id) == nil)
+        #expect(planStore.assignment(for: task.id) == today)
+    }
+
+    @Test func moveBlock_conflict_setsLastError() async throws {
+        let model = await model()
+        let task = try #require(taskList.items.first { $0.title == "Fahrrad" })
+        var block = try blocks.createBlock(for: task, start: at(18, 14), minutes: 60)
+        block.version = "stale"
+        await model.moveBlock(block, toStartMinutes: 15 * 60, on: today)
+        #expect(model.lastError != nil)
+        #expect(calendarStore.event(id: block.id)?.start == at(18, 14))
+    }
+
+    @Test func gaps_today_startFromNowAndSkipBlocks() async throws {
+        let model = await model()
+        let task = try #require(taskList.items.first { $0.title == "Fahrrad" })
+        await model.createBlock(for: task, start: at(18, 14), minutes: 60)
+        #expect(model.gaps(for: try #require(model.days.first)) == [600..<720, 780..<840, 900..<1080])
+    }
+
     @Test func duration_padsMinutes() {
         #expect(CapacityText.duration(125) == "2 h 05")
         #expect(CapacityText.duration(45) == "45 min")
