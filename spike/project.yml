@@ -1,0 +1,49 @@
+name: TagwerkSpike
+options:
+  bundleIdPrefix: com.melvinmng.tagwerk
+  deploymentTarget:
+    iOS: "27.0"
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    CODE_SIGN_STYLE: Automatic
+    DEVELOPMENT_TEAM: K44K4GXH9G
+targets:
+  TagwerkSpike:
+    type: application
+    platform: iOS
+    sources: [Sources]
+    info:
+      path: Sources/Info.plist
+      properties:
+        CFBundleDisplayName: Tagwerk Spike
+        UILaunchScreen: {}
+        NSRemindersFullAccessUsageDescription: "Tagwerk liest und bearbeitet deine Erinnerungen, um sie mit Kalender und GitHub zusammenzuführen."
+        NSCalendarsFullAccessUsageDescription: "Tagwerk liest deinen Kalender, um deinen Tag zu planen."
+        NSHealthShareUsageDescription: "Tagwerk liest Schritte, Trainings und Kalorien, um Ernährung und Training anzuzeigen."
+    entitlements:
+      path: Sources/TagwerkSpike.entitlements
+      properties:
+        com.apple.developer.healthkit: true
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.melvinmng.tagwerk.spike
+        GENERATE_INFOPLIST_FILE: NO
+  TagwerkSpikeTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources: [Tests]
+    dependencies:
+      - target: TagwerkSpike
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+        PRODUCT_BUNDLE_IDENTIFIER: com.melvinmng.tagwerk.spike.tests
+schemes:
+  TagwerkSpike:
+    build:
+      targets:
+        TagwerkSpike: all
+        TagwerkSpikeTests: [test]
+    test:
+      targets: [TagwerkSpikeTests]

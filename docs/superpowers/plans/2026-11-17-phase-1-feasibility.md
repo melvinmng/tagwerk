@@ -17,6 +17,7 @@
 - Bundle-ID `com.melvinmng.tagwerk.spike`, Deployment-Target `27.0`.
 - Claude: `POST https://api.anthropic.com/v1/messages`. Header `x-api-key`, `anthropic-version: 2026-10-21` und `anthropic-beta: server-side-fallback-2026-07-01`. Body: `model: "claude-opus-5-5"`, `max_tokens: 1024`, `fallbacks: "default"`, `output_config: {effort: "low"}`, **kein** `thinking`-Feld, kein Prefill. Vor dem Lesen von `content` `stop_reason == "refusal"` prüfen.
 - GitHub: `GET https://api.github.com/repos/melvinmng/tagwerk/issues?assignee=@me&state=open&per_page=1` (der repo-bezogene Endpunkt, den das MVP nutzt; ein Fine-grained PAT mit `Issues: Read and write` auf dieses Repo) mit den Headern `Authorization: Bearer <PAT>`, `Accept: application/vnd.github+json` und `X-GitHub-Api-Version: 2022-11-28`.
+- ChatGPT (Sign in with ChatGPT, Open-Source-Self-Serve-Flow, Repo öffentlich unter MIT): Authorize `https://auth.openai.com/api/accounts/authorize`, Token `https://auth.openai.com/api/accounts/oauth/token`, Erstregistrierung mit `client_id=dynamic_agent_client`, `agent_name_hint=Tagwerk`, `ext_agent_host_id=urn:uuid:<einmalig, Schlüsselbund>`, Scope `openid profile email offline_access resource.invoke chatgpt.tokens.use.direct`, `resource=https://api.openai.com/v1`, PKCE S256, Redirect `http://127.0.0.1:1455/auth/callback`. Die ausgestellte `oaiapp_…`-ID kommt aus der Callback-Query. Responses-Aufrufe mit `store:false`, `stream:true`, `input` als Array, `instructions` statt System-Rolle, ohne `max_output_tokens`/`temperature`. Das Modell wird aus `GET /v1/models` (`visibility == "list"`) gewählt.
 - Secrets nie im Repo, nie in Logs. Nur im Schlüsselbund (`kSecClassGenericPassword`, Service `com.melvinmng.tagwerk.spike`).
 - Code-Kommentare und Log-Texte auf Englisch, UI-Texte auf Deutsch.
 - `.gitignore` ergänzen: `*.xcodeproj/`, `.build/`, `.swiftpm/`, `spike/build/`.
@@ -96,12 +97,34 @@
 - [ ] **Step 3:** In `ContentView` zwei `SecureField`s mit „Speichern“-Knopf (schreibt in `Secrets`), einen Knopf „Alle Prüfungen starten“ und eine Liste der `ProbeResult`s mit ✅/❌ und Detailtext. Dazu einen Zähler „Starts seit Installation“ in `UserDefaults` als Messwert für Review Focus 4.
 - [ ] **Step 4:** Commit `spike: add keychain, Claude and GitHub probes`.
 
+
+### Task 4b: ChatGPT-Login und Responses-Aufruf (Nachtrag 2026-11-17)
+
+**Files:** Create `spike/Sources/ChatGPT/ChatGPTAuth.swift`, `spike/Sources/ChatGPT/LoopbackServer.swift`, `spike/Sources/ChatGPT/ChatGPTSession.swift`, `spike/Sources/Probes/ChatGPTProbe.swift`, Test `spike/Tests/ChatGPTTests.swift`
+
+**Interfaces:**
+- Produces: `ChatGPTAuth.codeChallenge(verifier:) -> String`, `authorizeURL(...) -> URL`, `parseCallback(_:expectedState:isRegistration:) throws -> ChatGPTCallback`, `tokenRequest(...)`/`refreshRequest(...) -> URLRequest`
+- Produces: `ChatGPTProbe.filterModels(_:) -> [String]`, `parseStream(_:) -> StreamOutcome`, `makeResponsesRequest(...)`, `describe(status:body:)`
+- Produces: `LoopbackServer` (NWListener nur auf 127.0.0.1:1455), der den Callback mit 302 auf `tagwerkspike://auth/done` beantwortet; Login per `ASWebAuthenticationSession` (System-Safari-Sheet, App bleibt im Vordergrund)
+
+- [ ] Tests: RFC-7636-Testvektor (Anhang B), Authorize-URL-Parameter, Callback mit falschem `state` bzw. fehlender `client_id` bei Registrierung wirft, Token-Formular, Modellfilter, SSE-Parser (Deltas, `response.completed`, `response.failed`), Fehlertexte für 429 `subscription_sharing_usage_limit_exceeded` und 401 `subscription_sharing_invalid_user`.
+- [ ] Gerät: Login, Modellliste, ein Aufruf mit `text.format` json_schema (sonst Funktions-Tool, Ergebnis festhalten), ein Aufruf mit kleinem Bild, erzwungene Token-Erneuerung mit neuem Refresh-Token im Schlüsselbund.
+
+### Task 4c: Apples lokales Modell (Nachtrag 2026-11-17)
+
+**Files:** Create `spike/Sources/Probes/AppleModelProbe.swift`, Test `spike/Tests/AppleModelProbeTests.swift`
+
+- [ ] Test: Verfügbarkeitsgründe (Apple Intelligence aus, Modell nicht bereit, Gerät ungeeignet) ergeben lesbare deutsche Texte.
+- [ ] Gerät: Prüfen, ob Deutsch unterstützt wird, und eine Guided-Generation-Anfrage mit einer `@Generable`-Mahlzeitenstruktur für „2 Brötchen mit Käse“.
+
+Die Claude-Probe zeigt ohne Schlüssel „übersprungen“, nicht ❌.
+
 ### Task 5: Automatische Neuinstallation (Mac)
 
 **Files:** Create `scripts/refresh-install.sh`, `scripts/de.tagwerk.refresh.plist`, `scripts/README.md`
 
 **Interfaces:**
-- Consumes: Scheme `TagwerkSpike` und Geräte-ID (Konstante `DEVICE_ID` am Skriptanfang).
+- Consumes: Scheme `TagwerkSpike` und Geräte-ID (`DEVICE_ID` aus `~/Library/Application Support/Tagwerk/config`, nicht im Repo).
 - Produces: `refresh-install.sh [--dry-run] [--force]`. Exit-Codes: 0 = installiert oder noch nicht fällig, 1 = Build-Fehler, 2 = Gerät nicht erreichbar, 3 = Signierfehler.
   - Zustand in `~/Library/Application Support/Tagwerk/last-install` als ISO-Datum.
   - Fällig ab 5 Tagen. Ab Tag 6 ohne Erfolg kommt eine Mitteilung per `osascript -e 'display notification …'`.

@@ -84,6 +84,8 @@ Bestanden, wenn alle vier auf dem echten iPhone mit Personal Team funktionieren.
 
 ## 7. KI-Schicht
 
+> **Aktualisiert 2026-11-17:** Die KI läuft über ein austauschbares Protokoll `LLMProvider` mit drei Anbietern: (1) **ChatGPT-Abo (Pro)** über „Sign in with ChatGPT“ als Standard. Das Repo ist dafür öffentlich (MIT), um den Open-Source-Self-Serve-Flow zu nutzen. (2) **Apples lokales Modell** (Foundation Models) für einfache Aufgaben wie das Zerlegen von Mahlzeiten, kostenlos und ohne Netz. (3) **Claude-API** als Ausweichlösung, falls OpenAI die Vorschau ändert. Die Claude-Details unten gelten für Anbieter 3. Der Machbarkeitstest entscheidet, welcher Anbieter welche Aufgabe übernimmt.
+
 - **Zugriff:** Claude Messages API per HTTPS (`URLSession`, kein offizielles Swift-SDK). API-Key im Schlüsselbund, nie im Code/Repo.
 - **Modell:** `claude-opus-5-5` als Standard, `effort` je Funktion explizit (Tagesplan `medium`, Mahlzeit-Parsing `low`). Ein günstigeres Modell (z. B. Haiku 5.5 fürs Mahlzeiten-Parsing) ist deine Entscheidung – derzeit nicht gesetzt.
 - **Antwortformat:** Structured Outputs (`output_config.format`, JSON-Schema) für Tagesplan und Mahlzeitenschätzung; kein Prefill; `thinking` wird nicht gesetzt.
@@ -122,7 +124,7 @@ Nächster Schritt nach Freigabe: gerenderte Mockups der vier Screens zum Abstimm
 
 ## 9. Entschieden vs. dem Umsetzenden überlassen
 
-**Entschieden:** Weg 1 (native App), kostenloser Account zuerst, kein eigener Server, EventKit als Quelle der Wahrheit, Claude via HTTPS mit Schlüssel im Schlüsselbund, XcodeGen, SwiftData, lokale Benachrichtigungen.
+**Entschieden:** Weg 1 (native App), kostenloser Account zuerst, kein eigener Server, EventKit als Quelle der Wahrheit, KI über austauschbare Anbieter (ChatGPT-Abo zuerst, Apple lokal, Claude-API als Ausweichlösung, s. §7), XcodeGen, SwiftData, lokale Benachrichtigungen.
 
 **Vorschläge des Planers (nach Builder-Check, bitte prüfen):**
 - *Tagesplan übernehmen* speichert den Plan nur in SwiftData und zeigt ihn in „Heute“. Kalender und Reminders werden nicht verändert. Ein Kalender-Export kommt optional in Phase 4. `TaskItem` erhält ein Feld `estimatedMinutes`: Claude schätzt, du kannst korrigieren.
