@@ -196,6 +196,24 @@ final class TaskListModel {
         items.append(reopened)
     }
 
+    /// Deletes (GitHub: closes as not planned) with the displayed version, or `version` from the editor.
+    func delete(_ id: TaskID, version: String? = nil) async {
+        guard let provider = provider(for: id.source),
+              let expected = version ?? items.first(where: { $0.id == id })?.version else { return }
+        do {
+            try await provider.delete(id, expectedVersion: expected)
+            nextGeneration(for: id.source)
+            items.removeAll { $0.id == id }
+        } catch TaskWriteError.conflict {
+            lastError = "Die Aufgabe wurde inzwischen geändert. Die Liste ist jetzt aktuell."
+            await reload(only: [id.source])
+        } catch TaskWriteError.signedOut {
+            signOut(id.source)
+        } catch {
+            lastError = Self.message(for: error)
+        }
+    }
+
     func dismissUndo() {
         lastCompleted = nil
     }

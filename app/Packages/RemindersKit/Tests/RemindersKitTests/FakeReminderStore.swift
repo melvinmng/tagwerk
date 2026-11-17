@@ -48,6 +48,10 @@ final class FakeReminderStore: ReminderStore {
         return record
     }
 
+    func delete(id: String) throws {
+        guard records.removeValue(forKey: id) != nil else { throw TaskWriteError.notFound }
+    }
+
     /// Simulates a change from outside the app.
     func modifyExternally(_ id: String, _ change: (inout ReminderRecord) -> Void) {
         guard var record = records[id] else { return }

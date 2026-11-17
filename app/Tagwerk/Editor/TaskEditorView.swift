@@ -10,11 +10,14 @@ struct TaskEditorView: View {
     @Environment(\.dismiss) private var dismiss
 
     let isReadOnly: Bool
+    let onDelete: ((String) -> Void)?
     @State private var labelText = ""
+    @State private var confirmsDelete = false
 
     init(item: TaskItem, provider: any TaskProvider, calendar: Calendar, containers: [TaskContainer],
          addComment: TaskEditorModel.CommentAction? = nil, isReadOnly: Bool = false,
-         onSaved: @escaping (TaskItem) -> Void) {
+         onDelete: ((String) -> Void)? = nil, onSaved: @escaping (TaskItem) -> Void) {
+        self.onDelete = onDelete
         _model = State(initialValue: TaskEditorModel(item: item, provider: provider, addComment: addComment))
         self.calendar = calendar
         self.containers = containers
@@ -101,8 +104,21 @@ struct TaskEditorView: View {
                         Link("Auf GitHub öffnen", destination: url)
                     }
                 }
+
+                if onDelete != nil, !isReadOnly {
+                    Section {
+                        Button(TaskListView.deleteTitle(for: model.original), role: .destructive) { confirmsDelete = true }
+                    }
+                }
             }
             .navigationTitle(title)
+            .confirmationDialog(TaskListView.deleteQuestion(for: model.original), isPresented: $confirmsDelete,
+                                titleVisibility: .visible) {
+                Button(TaskListView.deleteTitle(for: model.original), role: .destructive) {
+                    onDelete?(model.original.version)
+                    dismiss()
+                }
+            }
             .onAppear { labelText = (model.draft.labels ?? []).joined(separator: ", ") }
             .onChange(of: model.original.version) { _, _ in
                 labelText = (model.draft.labels ?? []).joined(separator: ", ")

@@ -95,6 +95,26 @@ public final class GitHubTaskProvider: TaskProvider {
         }
     }
 
+    /// Issues are never deleted on GitHub: "delete" closes the issue as not planned and sets
+    /// "Done" in all its projects, after the usual version check.
+    public func delete(_ id: TaskID, expectedVersion: String?) async throws {
+        do {
+            guard let current = try await api.issue(nodeID: id.rawValue) else { throw TaskWriteError.notFound }
+            let currentItem = GitHubMapping.taskItem(current)
+            if let expectedVersion, expectedVersion != currentItem.version {
+                throw TaskWriteError.conflict(current: currentItem)
+            }
+            let writer = GitHubWriter(api: api)
+            try await writer.updateIssue(current, title: nil, body: nil, labels: nil, state: .closeNotPlanned)
+            for placement in current.placements {
+                try await writer.setField(placement, fieldName: GitHubMapping.statusField, value: .singleSelect(GitHubMapping.doneStatus))
+            }
+            records[current.issueID] = nil
+        } catch {
+            throw Self.taskError(error)
+        }
+    }
+
     /// Posts a comment. A comment changes the issue's version, so the fresh item is returned when
     /// the issue was unchanged before posting; callers adopt its version to avoid a false conflict.
     /// Returns `nil` when the issue had changed meanwhile (the comment is posted anyway).

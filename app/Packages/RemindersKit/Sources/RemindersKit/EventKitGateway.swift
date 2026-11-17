@@ -97,6 +97,11 @@ public final class EventKitGateway: ReminderStore {
         return Self.record(reminder)
     }
 
+    public func delete(id: String) throws {
+        guard let reminder = ekReminder(id: id) else { throw TaskWriteError.notFound }
+        try store.remove(reminder, commit: true)
+    }
+
     public func create(title: String, notes: String?, due: DueDate?, ekPriority: Int, listID: String?) throws -> ReminderRecord {
         let reminder = EKReminder(eventStore: store)
         reminder.title = title

@@ -11,6 +11,7 @@ struct TaskListView: View {
     @State private var editing: TaskItem?
     @State private var editingContainers: [TaskContainer] = []
     @State private var gitHubLogin: GitHubLoginModel?
+    @State private var deleting: TaskItem?
     @Environment(\.openURL) private var openURL
     @Environment(AppEnvironment.self) private var environment
 
@@ -67,7 +68,8 @@ struct TaskListView: View {
                     TaskEditorView(item: item, provider: provider, calendar: model.calendar,
                                    containers: editingContainers,
                                    addComment: commentAction(for: provider),
-                                   isReadOnly: model.sourceStates[item.id.source]?.isOffline == true) { saved in
+                                   isReadOnly: model.sourceStates[item.id.source]?.isOffline == true,
+                                   onDelete: { version in Task { await model.delete(item.id, version: version) } }) { saved in
                         model.didSave(saved)
                     }
                 }
@@ -95,6 +97,10 @@ struct TaskListView: View {
                 Button("Wochenende (Sa)") { Task { await model.reschedule(item.id, option: .weekend) } }
                 Button("Nächste Woche (Mo)") { Task { await model.reschedule(item.id, option: .nextMonday) } }
                 Button("Datum wählen …") { pickingDateFor = item }
+            }
+            .confirmationDialog(deleting.map(Self.deleteQuestion) ?? "", isPresented: isDeleting,
+                                titleVisibility: .visible, presenting: deleting) { item in
+                Button(Self.deleteTitle(for: item), role: .destructive) { Task { await model.delete(item.id) } }
             }
             .alert("Hinweis", isPresented: hasError) {
                 Button("OK") { model.clearError() }
@@ -129,6 +135,10 @@ struct TaskListView: View {
                     Label("Verschieben", systemImage: "calendar")
                 }
                 .tint(.orange)
+                Button { deleting = item } label: {
+                    Label(Self.deleteTitle(for: item), systemImage: "trash")
+                }
+                .tint(.red)
             }
         }
     }
@@ -175,6 +185,20 @@ struct TaskListView: View {
 
     private var isSigningIn: Binding<Bool> {
         Binding(get: { gitHubLogin != nil }, set: { if !$0 { gitHubLogin = nil } })
+    }
+
+    private var isDeleting: Binding<Bool> {
+        Binding(get: { deleting != nil }, set: { if !$0 { deleting = nil } })
+    }
+
+    static func deleteTitle(for item: TaskItem) -> String {
+        item.id.source == .github ? "Als nicht geplant schließen" : "Löschen"
+    }
+
+    static func deleteQuestion(for item: TaskItem) -> String {
+        item.id.source == .github
+            ? "„\(item.title)“ auf GitHub als nicht geplant schließen?"
+            : "„\(item.title)“ endgültig löschen?"
     }
 
     private var hasError: Binding<Bool> {

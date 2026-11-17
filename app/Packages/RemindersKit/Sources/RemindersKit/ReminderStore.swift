@@ -15,5 +15,6 @@ public protocol ReminderStore: AnyObject {
     /// Fresh state of one reminder (refreshed from the store), or `nil` if it no longer exists.
     func reminder(id: String) -> ReminderRecord?
     func save(_ record: ReminderRecord) throws -> ReminderRecord
+    func delete(id: String) throws
     func create(title: String, notes: String?, due: DueDate?, ekPriority: Int, listID: String?) throws -> ReminderRecord
 }

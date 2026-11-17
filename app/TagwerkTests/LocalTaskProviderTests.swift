@@ -93,6 +93,19 @@ struct LocalTaskProviderTests {
         #expect(updated.title == "A")
     }
 
+    @Test func delete_removesTask() async throws {
+        let created = try await provider.create(TaskDraft(title: "Weg damit"))
+        try await provider.delete(created.id, expectedVersion: created.version)
+        #expect(try await provider.task(id: created.id) == nil)
+    }
+
+    @Test func delete_staleVersion_throwsConflict() async throws {
+        let created = try await provider.create(TaskDraft(title: "Alt"))
+        _ = try await provider.apply(titleEdit("Neu"), to: created.id, expectedVersion: created.version)
+        await #expect(throws: TaskWriteError.self) { try await provider.delete(created.id, expectedVersion: created.version) }
+        #expect(try await provider.task(id: created.id) != nil)
+    }
+
     @Test func apply_unknownID_throwsNotFound() async {
         await #expect(throws: TaskWriteError.notFound) {
             try await provider.apply(titleEdit("x"), to: TaskID(source: .local, rawValue: UUID().uuidString), expectedVersion: nil)

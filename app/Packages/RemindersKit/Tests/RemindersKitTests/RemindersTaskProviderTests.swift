@@ -113,4 +113,25 @@ struct RemindersTaskProviderTests {
     @Test func containers_listAllReminderLists() async throws {
         #expect(try await provider().containers().map(\.id) == ["studium", "privat"])
     }
+
+    @Test func delete_matchingVersion_removesReminder() async throws {
+        let sut = provider()
+        let item = try #require(try await sut.task(id: TaskID(source: .reminders, rawValue: "a")))
+        try await sut.delete(item.id, expectedVersion: item.version)
+        #expect(store.records["a"] == nil)
+    }
+
+    @Test func delete_staleVersion_throwsConflictAndKeepsReminder() async throws {
+        let sut = provider()
+        let item = try #require(try await sut.task(id: TaskID(source: .reminders, rawValue: "a")))
+        store.modifyExternally("a") { $0.title = "Extern" }
+        await #expect(throws: TaskWriteError.self) { try await sut.delete(item.id, expectedVersion: item.version) }
+        #expect(store.records["a"] != nil)
+    }
+
+    @Test func delete_missing_throwsNotFound() async {
+        await #expect(throws: TaskWriteError.notFound) {
+            try await provider().delete(TaskID(source: .reminders, rawValue: "gone"), expectedVersion: nil)
+        }
+    }
 }

@@ -65,6 +65,19 @@ final class FakeTaskProvider: TaskProvider {
         return item
     }
 
+    private(set) var deleted: [(TaskID, String?)] = []
+
+    func delete(_ id: TaskID, expectedVersion: String?) async throws {
+        deleted.append((id, expectedVersion))
+        if let applyError { throw applyError }
+        if let conflict = conflictOnNextApply {
+            conflictOnNextApply = nil
+            replace(conflict)
+            throw TaskWriteError.conflict(current: conflict)
+        }
+        tasks.removeAll { $0.id == id }
+    }
+
     func create(_ draft: TaskDraft) async throws -> TaskItem {
         revision += 1
         let item = TaskItem(

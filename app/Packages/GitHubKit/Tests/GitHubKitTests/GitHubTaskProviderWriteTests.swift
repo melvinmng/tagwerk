@@ -71,6 +71,22 @@ struct GitHubTaskProviderWriteTests {
         #expect(result.version.hasPrefix("2026-11-17T14:00:00Z"))
     }
 
+    @Test func delete_closesAsNotPlannedAndSetsDoneEverywhere() async throws {
+        let provider = makeProvider()
+        let item = try await loadItem(provider)
+        transport.enqueueJSON("/graphql", Fixtures.issue())
+        transport.enqueueJSON("/repos/beispiel/app/issues/1", Fixtures.issuePatchOK)
+        transport.enqueueJSON("/graphql", Fixtures.mutationOK)
+        transport.enqueueJSON("/graphql", Fixtures.mutationOK)
+
+        try await provider.delete(issueID, expectedVersion: item.version)
+
+        let bodies = writeBodies()
+        #expect(bodies[1].hasPrefix("PATCH") && bodies[1].contains(#""state_reason":"not_planned""#))
+        #expect(bodies[2].contains("OPT_done") && bodies[3].contains("OPT2_done"))
+        #expect(!transport.requests.contains { $0.httpMethod == "DELETE" })
+    }
+
     @Test func reopen_setsStatusReady() async throws {
         let provider = makeProvider()
         let item = try await loadItem(provider)

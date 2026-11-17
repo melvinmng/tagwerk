@@ -40,6 +40,16 @@ public final class RemindersTaskProvider: TaskProvider {
         return map(saved, lists: lists)
     }
 
+    public func delete(_ id: TaskID, expectedVersion: String?) async throws {
+        try requireAccess()
+        guard let current = store.reminder(id: id.rawValue) else { throw TaskWriteError.notFound }
+        let currentItem = map(current, lists: listsByID())
+        if let expectedVersion, expectedVersion != currentItem.version {
+            throw TaskWriteError.conflict(current: currentItem)
+        }
+        try perform { try store.delete(id: id.rawValue) }
+    }
+
     public func create(_ draft: TaskDraft) async throws -> TaskItem {
         try requireAccess()
         let record = try perform {

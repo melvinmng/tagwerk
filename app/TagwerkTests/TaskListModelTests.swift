@@ -136,6 +136,24 @@ struct TaskListModelTests {
         #expect(!model.items.contains { $0.title == "Fahrrad" })
     }
 
+    @Test func delete_removesItemWithDisplayedVersion() async {
+        let model = makeModel()
+        await model.reload()
+        let id = TaskID(source: .local, rawValue: "Fahrrad")
+        await model.delete(id)
+        #expect(!model.items.contains { $0.id == id })
+        #expect(local.deleted.first?.1 == "1")
+    }
+
+    @Test func delete_conflict_keepsItemAndReloads() async {
+        let model = makeModel()
+        await model.reload()
+        local.conflictOnNextApply = makeTask("Fahrrad", source: .local, version: "9")
+        await model.delete(TaskID(source: .local, rawValue: "Fahrrad"))
+        #expect(model.lastError != nil)
+        #expect(model.items.contains { $0.title == "Fahrrad" })
+    }
+
     @Test func complete_removesItemAfterSuccess() async {
         let model = makeModel()
         await model.reload()

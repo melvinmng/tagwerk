@@ -4,6 +4,8 @@ import TagwerkCore
 /// Closing or reopening an issue.
 public enum IssueStateChange: Sendable, Equatable {
     case close, reopen
+    /// Closed as "not planned" – Tagwerk's "delete" for issues, which are never deleted on GitHub.
+    case closeNotPlanned
 }
 
 /// Value of a project field. Single-select values are given by option name.
@@ -150,6 +152,9 @@ struct GitHubWriter: Sendable {
             case .close?:
                 try container.encode("closed", forKey: .state)
                 try container.encode("completed", forKey: .stateReason)
+            case .closeNotPlanned?:
+                try container.encode("closed", forKey: .state)
+                try container.encode("not_planned", forKey: .stateReason)
             case .reopen?:
                 try container.encode("open", forKey: .state)
             case nil:

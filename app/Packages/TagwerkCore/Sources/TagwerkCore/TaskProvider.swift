@@ -24,6 +24,9 @@ public protocol TaskProvider: AnyObject {
     /// `nil` writes regardless ("Trotzdem sichern").
     func apply(_ edit: TaskEdit, to id: TaskID, expectedVersion: String?) async throws -> TaskItem
     func create(_ draft: TaskDraft) async throws -> TaskItem
+    /// Removes the task after a version check (`nil` skips the check). Sources that cannot delete
+    /// (GitHub) close the task instead.
+    func delete(_ id: TaskID, expectedVersion: String?) async throws
     /// Time of the cached data when the source could only be read offline; `nil` when live.
     var offlineSince: Date? { get }
 }

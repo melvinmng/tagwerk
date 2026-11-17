@@ -46,6 +46,15 @@ final class LocalTaskProvider: TaskProvider {
         return Self.item(task)
     }
 
+    func delete(_ id: TaskID, expectedVersion: String?) async throws {
+        guard let task = try record(id) else { throw TaskWriteError.notFound }
+        if let expectedVersion, expectedVersion != String(task.revision) {
+            throw TaskWriteError.conflict(current: Self.item(task))
+        }
+        context.delete(task)
+        try save()
+    }
+
     func create(_ draft: TaskDraft) async throws -> TaskItem {
         let task = LocalTask(title: draft.title)
         task.notes = draft.notes

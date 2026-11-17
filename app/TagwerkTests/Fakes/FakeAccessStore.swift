@@ -30,6 +30,7 @@ final class FakeAccessStore: ReminderStore {
     func openReminders(in listIDs: Set<String>?) async -> [ReminderRecord] { [] }
     func reminder(id: String) -> ReminderRecord? { nil }
     func save(_ record: ReminderRecord) throws -> ReminderRecord { record }
+    func delete(id: String) throws {}
     func create(title: String, notes: String?, due: DueDate?, ekPriority: Int, listID: String?) throws -> ReminderRecord {
         throw TaskWriteError.failed("not supported")
     }
