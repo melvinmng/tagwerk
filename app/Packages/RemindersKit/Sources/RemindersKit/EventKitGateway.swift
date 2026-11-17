@@ -281,19 +281,60 @@ extension EventKitGateway: CalendarStore {
         return Self.calendarEvent(event)
     }
 
-    public func moveBlock(id: String, to start: Date, end: Date, expectedVersion: String?) throws -> CalendarEvent {
-        guard let event = ekEvent(id: id) else { throw TaskWriteError.notFound }
-        try CalendarBlockRules.checkVersion(of: Self.calendarEvent(event), expected: expectedVersion)
-        event.startDate = start
-        event.endDate = end
+    public func writableCalendars() -> [ListInfo] {
+        store.calendars(for: .event).filter(\.allowsContentModifications).map(Self.listInfo)
+    }
+
+    public func createEvent(_ draft: EventDraft) throws -> CalendarEvent {
+        guard let calendar = store.calendar(withIdentifier: draft.calendarID), calendar.allowsContentModifications else {
+            throw TaskWriteError.failed("Dieser Kalender kann nicht geändert werden.")
+        }
+        let event = EKEvent(eventStore: store)
+        event.calendar = calendar
+        apply(draft, to: event)
         try store.save(event, span: .thisEvent, commit: true)
         return Self.calendarEvent(event)
     }
 
-    public func deleteBlock(id: String, expectedVersion: String?) throws {
+    public func updateEvent(id: String, with draft: EventDraft, span: EventSpan, expectedVersion: String?) throws -> CalendarEvent {
         guard let event = ekEvent(id: id) else { throw TaskWriteError.notFound }
-        try CalendarBlockRules.checkVersion(of: Self.calendarEvent(event), expected: expectedVersion)
-        try store.remove(event, span: .thisEvent, commit: true)
+        let current = Self.calendarEvent(event)
+        try CalendarBlockRules.checkEditable(current)
+        try CalendarBlockRules.checkVersion(of: current, expected: expectedVersion)
+        if draft.calendarID != current.calendarID {
+            guard let target = store.calendar(withIdentifier: draft.calendarID), target.allowsContentModifications else {
+                throw TaskWriteError.failed("Dieser Kalender kann nicht geändert werden.")
+            }
+            event.calendar = target
+        }
+        apply(draft, to: event)
+        try store.save(event, span: Self.ekSpan(span), commit: true)
+        return Self.calendarEvent(event)
+    }
+
+    public func deleteEvent(id: String, span: EventSpan, expectedVersion: String?) throws {
+        guard let event = ekEvent(id: id) else { throw TaskWriteError.notFound }
+        let current = Self.calendarEvent(event)
+        try CalendarBlockRules.checkEditable(current)
+        try CalendarBlockRules.checkVersion(of: current, expected: expectedVersion)
+        try store.remove(event, span: Self.ekSpan(span), commit: true)
+    }
+
+    private func apply(_ draft: EventDraft, to event: EKEvent) {
+        event.title = draft.title
+        event.isAllDay = draft.isAllDay
+        event.startDate = draft.start
+        event.endDate = draft.end
+        event.notes = draft.notes
+        event.location = draft.location
+        event.url = draft.url
+    }
+
+    nonisolated static func ekSpan(_ span: EventSpan) -> EKSpan {
+        switch span {
+        case .thisEvent: .thisEvent
+        case .futureEvents: .futureEvents
+        }
     }
 
     private func ekEvent(id: String) -> EKEvent? {
@@ -314,7 +355,7 @@ extension EventKitGateway: CalendarStore {
     nonisolated static func calendarEvent(_ event: EKEvent) -> CalendarEvent {
         let declined = event.attendees?.first(where: \.isCurrentUser)?.participantStatus == .declined
         let identifier = event.eventIdentifier ?? event.calendarItemIdentifier
-        return CalendarEvent(
+        var result = CalendarEvent(
             id: CalendarBlockRules.occurrenceID(eventIdentifier: identifier, occurrence: event.occurrenceDate ?? event.startDate,
                                                 isRecurring: event.hasRecurrenceRules),
             externalID: event.calendarItemExternalIdentifier,
@@ -327,6 +368,12 @@ extension EventKitGateway: CalendarStore {
             isBusy: event.availability != .free && !declined,
             version: event.lastModifiedDate.map { String($0.timeIntervalSince1970) } ?? "0"
         )
+        result.isRecurring = event.hasRecurrenceRules
+        result.isInvitation = event.hasAttendees && event.organizer?.isCurrentUser == false
+        result.isEditable = event.calendar?.allowsContentModifications ?? false
+        result.notes = event.notes
+        result.location = event.location
+        return result
     }
 }
 

@@ -391,6 +391,73 @@ struct PlanningModelTests {
         #expect(model.timeline(for: try #require(model.days.first)).filter { $0.label == "Seminar" }.count == 2)
     }
 
+    private func draft(_ event: CalendarEvent, title: String? = nil, start: Date? = nil, end: Date? = nil) -> EventDraft {
+        EventDraft(title: title ?? event.title, start: start ?? event.start, end: end ?? event.end, isAllDay: event.isAllDay,
+                   calendarID: event.calendarID, notes: nil, location: nil, url: event.url)
+    }
+
+    @Test func updateEvent_changesTitleAndTime() async throws {
+        calendarStore.storedEvents = [CalendarEvent(id: "e", externalID: nil, calendarID: "work", title: "Seminar",
+                                                    start: at(18, 14), end: at(18, 15), isAllDay: false, url: nil,
+                                                    isBusy: true, version: "1")]
+        let model = await model()
+        let event = try #require(calendarStore.event(id: "e"))
+        await model.updateEvent(event, with: draft(event, title: "Kolloquium", start: at(18, 16), end: at(18, 17)), span: .thisEvent)
+        #expect(calendarStore.event(id: "e")?.title == "Kolloquium")
+        #expect(calendarStore.event(id: "e")?.start == at(18, 16))
+        #expect(model.lastError == nil)
+    }
+
+    @Test func updateEvent_staleVersion_conflictNoChange() async throws {
+        calendarStore.storedEvents = [CalendarEvent(id: "e", externalID: nil, calendarID: "work", title: "Seminar",
+                                                    start: at(18, 14), end: at(18, 15), isAllDay: false, url: nil,
+                                                    isBusy: true, version: "1")]
+        let model = await model()
+        var stale = try #require(calendarStore.event(id: "e"))
+        stale.version = "0"
+        await model.updateEvent(stale, with: draft(stale, title: "Neu"), span: .thisEvent)
+        #expect(calendarStore.event(id: "e")?.title == "Seminar")
+        #expect(model.lastError != nil)
+    }
+
+    @Test func deleteEvent_readOnly_errorAndUnchanged() async throws {
+        var holiday = CalendarEvent(id: "h", externalID: nil, calendarID: "holidays", title: "Feiertag",
+                                    start: at(18, 0), end: at(19, 0), isAllDay: true, url: nil, isBusy: false, version: "1")
+        holiday.isEditable = false
+        calendarStore.storedEvents = [holiday]
+        let model = await model()
+        await model.deleteEvent(holiday, span: .thisEvent)
+        #expect(calendarStore.event(id: "h") != nil)
+        #expect(model.lastError != nil)
+    }
+
+    @Test func createEvent_defaultsToPlanCalendar() async throws {
+        let model = await model()
+        #expect(model.defaultEventCalendarID == "plan")
+        let created = await model.createEvent(EventDraft(title: "Lernen", start: at(18, 16), end: at(18, 17), isAllDay: false,
+                                                         calendarID: try #require(model.defaultEventCalendarID),
+                                                         notes: nil, location: nil, url: nil))
+        #expect(created?.calendarID == "plan")
+        #expect(calendarStore.storedEvents.count == 1)
+    }
+
+    @Test func updateRecurring_thisEvent_onlyOccurrence() async throws {
+        calendarStore.storedEvents = [18, 19, 20].map { day in
+            var event = CalendarEvent(id: "sport|\(Int(at(day, 18).timeIntervalSince1970))", externalID: nil, calendarID: "work",
+                                      title: "Sport", start: at(day, 18), end: at(day, 19), isAllDay: false, url: nil,
+                                      isBusy: true, version: "1")
+            event.isRecurring = true
+            return event
+        }
+        let model = await model()
+        let second = calendarStore.storedEvents[1]
+        await model.updateEvent(second, with: draft(second, start: at(19, 19), end: at(19, 20)), span: .thisEvent)
+        #expect(calendarStore.storedEvents.map(\.start) == [at(18, 18), at(19, 19), at(20, 18)])
+        let first = calendarStore.storedEvents[0]
+        await model.updateEvent(first, with: draft(first, title: "Lauf"), span: .futureEvents)
+        #expect(calendarStore.storedEvents.map(\.title) == ["Lauf", "Lauf", "Lauf"])
+    }
+
     @Test func duration_padsMinutes() {
         #expect(CapacityText.duration(125) == "2 h 05")
         #expect(CapacityText.duration(45) == "45 min")

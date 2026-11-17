@@ -297,6 +297,43 @@ final class PlanningModel {
         return (plan.events + plan.blocks).filter { $0.isAllDay && !deadlineCalendars.contains($0.calendarID) }
     }
 
+    // MARK: Events in all calendars (design §13.10)
+
+    var writableCalendars: [ListInfo] { calendarStore.writableCalendars() }
+
+    /// New events go to the plan calendar unless the user picks another one.
+    var defaultEventCalendarID: String? { calendarStore.planCalendar(id: settings.planCalendarID)?.id }
+
+    @discardableResult
+    func createEvent(_ draft: EventDraft) async -> CalendarEvent? {
+        var created: CalendarEvent?
+        do {
+            created = try calendarStore.createEvent(draft)
+        } catch {
+            lastError = TaskListModel.message(for: error)
+        }
+        await reload()
+        return created
+    }
+
+    func updateEvent(_ event: CalendarEvent, with draft: EventDraft, span: EventSpan) async {
+        do {
+            _ = try calendarStore.updateEvent(id: event.id, with: draft, span: span, expectedVersion: event.version)
+        } catch {
+            lastError = TaskListModel.message(for: error)
+        }
+        await reload()
+    }
+
+    func deleteEvent(_ event: CalendarEvent, span: EventSpan) async {
+        do {
+            try calendarStore.deleteEvent(id: event.id, span: span, expectedVersion: event.version)
+        } catch {
+            lastError = TaskListModel.message(for: error)
+        }
+        await reload()
+    }
+
     /// "Getrennt anzeigen": turns merging of identical events off (setting in "Einstellungen").
     func showDuplicatesSeparately() async {
         settings.mergeDuplicateEvents = false

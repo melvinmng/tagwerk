@@ -24,6 +24,19 @@ struct CalendarBlockTests {
         #expect(CalendarBlockRules.parseOccurrenceID("X") == ("X", nil))
     }
 
+    @Test func checkEditable_readOnlyCalendar_throws() {
+        var readOnly = event
+        readOnly.isEditable = false
+        #expect(throws: TaskWriteError.self) { try CalendarBlockRules.checkEditable(readOnly) }
+        try? CalendarBlockRules.checkEditable(event)
+    }
+
+    @Test func checkEditable_invitation_throws() {
+        var invitation = event
+        invitation.isInvitation = true
+        #expect(throws: TaskWriteError.self) { try CalendarBlockRules.checkEditable(invitation) }
+    }
+
     @Test func blockNotes_isFixedText() {
         #expect(CalendarBlockRules.blockNotes == "Geplant mit Tagwerk")
     }

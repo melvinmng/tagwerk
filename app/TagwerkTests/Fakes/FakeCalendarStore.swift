@@ -32,19 +32,55 @@ final class FakeCalendarStore: CalendarStore {
         return event
     }
 
-    func moveBlock(id: String, to start: Date, end: Date, expectedVersion: String?) throws -> CalendarEvent {
-        guard let index = storedEvents.firstIndex(where: { $0.id == id }) else { throw TaskWriteError.notFound }
-        try CalendarBlockRules.checkVersion(of: storedEvents[index], expected: expectedVersion)
-        storedEvents[index].start = start
-        storedEvents[index].end = end
+    func writableCalendars() -> [ListInfo] { calendars }
+
+    func createEvent(_ draft: EventDraft) throws -> CalendarEvent {
         counter += 1
-        storedEvents[index].version = "v\(counter)"
+        var event = CalendarEvent(id: "event-\(counter)", externalID: nil, calendarID: draft.calendarID, title: draft.title,
+                                  start: draft.start, end: draft.end, isAllDay: draft.isAllDay, url: draft.url,
+                                  isBusy: true, version: "v\(counter)")
+        event.notes = draft.notes
+        event.location = draft.location
+        storedEvents.append(event)
+        return event
+    }
+
+    /// `.futureEvents` applies the title and the time shift to every later occurrence of the same series ("<id>|<seconds>").
+    func updateEvent(id: String, with draft: EventDraft, span: EventSpan, expectedVersion: String?) throws -> CalendarEvent {
+        guard let index = storedEvents.firstIndex(where: { $0.id == id }) else { throw TaskWriteError.notFound }
+        let current = storedEvents[index]
+        try CalendarBlockRules.checkEditable(current)
+        try CalendarBlockRules.checkVersion(of: current, expected: expectedVersion)
+        let shift = draft.start.timeIntervalSince(current.start)
+        let length = draft.end.timeIntervalSince(draft.start)
+        let series = CalendarBlockRules.parseOccurrenceID(id).0
+        for position in storedEvents.indices {
+            let other = storedEvents[position]
+            let affected = position == index
+                || (span == .futureEvents && current.isRecurring
+                    && CalendarBlockRules.parseOccurrenceID(other.id).0 == series && other.start > current.start)
+            guard affected else { continue }
+            counter += 1
+            storedEvents[position].title = draft.title
+            storedEvents[position].start = other.start.addingTimeInterval(shift)
+            storedEvents[position].end = storedEvents[position].start.addingTimeInterval(length)
+            storedEvents[position].isAllDay = draft.isAllDay
+            storedEvents[position].url = draft.url
+            storedEvents[position].notes = draft.notes
+            storedEvents[position].version = "v\(counter)"
+        }
         return storedEvents[index]
     }
 
-    func deleteBlock(id: String, expectedVersion: String?) throws {
+    func deleteEvent(id: String, span: EventSpan, expectedVersion: String?) throws {
         guard let index = storedEvents.firstIndex(where: { $0.id == id }) else { throw TaskWriteError.notFound }
-        try CalendarBlockRules.checkVersion(of: storedEvents[index], expected: expectedVersion)
-        storedEvents.remove(at: index)
+        let current = storedEvents[index]
+        try CalendarBlockRules.checkEditable(current)
+        try CalendarBlockRules.checkVersion(of: current, expected: expectedVersion)
+        let series = CalendarBlockRules.parseOccurrenceID(id).0
+        storedEvents.removeAll { other in
+            other.id == id || (span == .futureEvents && current.isRecurring
+                               && CalendarBlockRules.parseOccurrenceID(other.id).0 == series && other.start > current.start)
+        }
     }
 }
