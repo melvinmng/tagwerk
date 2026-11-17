@@ -2,7 +2,7 @@ import SwiftUI
 import TagwerkCore
 
 /// "Geplant" in the task editor (mockup C4): working day, time blocks with start and length, delete and add.
-/// Recurring reminders get a separate card for Tagwerk's own values (mockup G4).
+/// The effort of recurring reminders sits with the other fields of the editor (design §13.15 R1).
 struct PlannedSection: View {
     @Binding var edit: PlannedEdit
     let calendar: Calendar
@@ -13,28 +13,6 @@ struct PlannedSection: View {
     let suggestedStart: (PlanDay) -> Date
 
     var body: some View {
-        if isRecurring {
-            Section {
-                LabeledContent("Titel, Fälligkeit, Wiederholung", value: "alle Tage")
-            } header: {
-                Text("Erinnerung")
-            } footer: {
-                Text("Änderungen oben gelten immer für die ganze Serie; Erinnerungen kennen keine Ausnahme für einen Tag.")
-            }
-            Section {
-                EstimateField(minutes: $edit.recurringMinutes)
-                Picker("Gilt für", selection: $edit.recurringForAll) {
-                    Text("Nur heute").tag(false)
-                    Text("Alle ab heute").tag(true)
-                }
-                .pickerStyle(.segmented)
-            } header: {
-                Text("In Tagwerk · Aufwand")
-            } footer: {
-                Text("Reservierte Zeit an jedem Tag der Serie. „Alle ab heute“ ändert den Aufwand für heute und alle folgenden Tage.")
-            }
-        }
-
         Section {
             Toggle("Arbeitstag", isOn: hasDay)
             if let day = edit.day {
