@@ -67,3 +67,22 @@ Geprüft auf dem iPhone mit der Spike-App, angemeldet über „Sign in with Chat
 **Folgen für Phase 2b:** Der KI-Assistent kann App-Funktionen aufrufen. Der Verlauf eines Gesprächs muss vollständig im `input` mitgeschickt werden, weil `store:false` keine serverseitige Fortsetzung erlaubt.
 
 **Login auf dem Mac:** Im Mac-Browser endete die Erstregistrierung (`client_id=dynamic_agent_client`) nach der Passkey-Anmeldung mit „Signup not complete“. Auf dem iPhone funktionierten sowohl die bestehende Sitzung als auch eine Neuanmeldung. Die Ursache wird gesondert geklärt; für die App betrifft es nur Tests auf dem Mac.
+
+## Nachtrag Phase 2b-2: Mitschnitt am iPhone (2026-11-18)
+
+Aufgenommen mit dem DEBUG-Abschnitt „ChatGPT (Debug)“ der App nach einer Erstregistrierung über `ChatGPTLogin`. Login, Wechsel in eine 2FA-App während der Anmeldung, Abbruch mit sofortiger Neuanmeldung sowie Abmelden und erneutes Anmelden funktionierten. Anonymisierte Ausschnitte liegen als Fixtures in `app/Packages/AIKit/Tests/AIKitTests/Fixtures/`.
+
+| Frage | Ergebnis |
+|---|---|
+| Modellliste | 12 Modelle, 10 mit `visibility == "list"`, erstes `gpt-6.2-sol`. Die Antwort ist rund 850 KB groß (u. a. `base_instructions` je Modell); dekodiert werden nur `slug`, `display_name`, `visibility`. |
+| Form der `tools` | Flach: `{"type":"function","name","description","parameters","strict":true}`. |
+| Funktionsaufrufe im Stream | Zwei parallele `function_call`-Items. Die Argumente sind in `response.output_item.done` (und `response.function_call_arguments.done`) vollständig; Argument-Deltas kamen nicht. Jedes Item hat `id` (`fc_…`) und `call_id` (`call_…`). |
+| Folgeaufruf | `function_call_output` bezieht sich auf `call_id`. Es genügt, die Aufrufe als `{"type":"function_call","call_id","name","arguments"}` ohne `id` und `status` zurückzuschicken (Variante B). |
+| Reasoning-Items | Keine: `reasoning_tokens` war 0, auch mit `include: ["reasoning.encrypted_content"]`. Alle drei Varianten (alle Items zurück, nur Funktionsaufrufe, mit verschlüsseltem Reasoning) endeten mit `response.completed`. Tagwerk schickt nur Nachrichten und Funktionsaufrufe zurück und ignoriert andere Item-Arten. |
+| Antworttext | `message`-Item mit `content[].type == "output_text"` und `phase: "final_answer"`; Text kommt als `response.output_text.delta`. |
+| Zeilen | `event:`- und `data:`-Zeilen; Leerzeilen fallen beim zeilenweisen Lesen weg. Ausgewertet werden nur `data:`-Zeilen. |
+| Token-Erneuerung | Erzwungene Erneuerung ok; Access- und Refresh-Token rotieren. |
+| Ungültiger Refresh-Token | HTTP 400 `{"error":"invalid_grant"}`. Die Regel „Abmelden bei OAuth-Fehlercode mit 400/401“ deckt das ab. |
+| `response.completed` | Enthält u. a. `safety_identifier` (kontobezogen) und `prompt_cache_key`; beides wird nicht gespeichert oder geloggt. |
+
+**Nicht geprüft:** die Form früherer Assistenten-Antworten im `input` eines späteren Aufrufs (mehrere Runden Chat). Tagwerk schickt sie als `{"type":"message","role":"assistant","content":[{"type":"output_text","text":…}]}`, wie es die Responses-API für eigene Ausgaben zurückgibt; das wird bei der Geräteprüfung des Assistenten bestätigt.
