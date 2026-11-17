@@ -83,7 +83,10 @@ public final class EventKitGateway: ReminderStore {
         let current = Self.record(reminder)
         if record.title != current.title { reminder.title = record.title }
         if record.notes != current.notes { reminder.notes = record.notes }
-        if record.due != current.due { reminder.dueDateComponents = Self.components(record.due) }
+        if record.due != current.due {
+            moveAlarms(of: reminder, from: current.due, to: record.due)
+            reminder.dueDateComponents = Self.components(record.due)
+        }
         if record.ekPriority != current.ekPriority { reminder.priority = record.ekPriority }
         if record.isCompleted != current.isCompleted { reminder.isCompleted = record.isCompleted }
         if record.listID != current.listID {
@@ -99,6 +102,9 @@ public final class EventKitGateway: ReminderStore {
         reminder.title = title
         reminder.notes = notes
         reminder.dueDateComponents = Self.components(due)
+        if let alarmDate = ReminderMapping.alarmDate(for: due, calendar: .current) {
+            reminder.addAlarm(EKAlarm(absoluteDate: alarmDate))
+        }
         reminder.priority = ekPriority
         guard let list = listID.flatMap({ store.calendar(withIdentifier: $0) }) ?? store.defaultCalendarForNewReminders() else {
             throw TaskWriteError.failed("Keine Erinnerungsliste gefunden")
@@ -109,6 +115,20 @@ public final class EventKitGateway: ReminderStore {
     }
 
     // MARK: Helpers
+
+    /// Moves absolute alarms that equal the old due time (see `ReminderMapping.movedAlarmDates`).
+    private func moveAlarms(of reminder: EKReminder, from oldDue: DueDate?, to newDue: DueDate?) {
+        let calendar = Calendar.current
+        let oldMoment = ReminderMapping.alarmDate(for: oldDue, calendar: calendar)
+        let newMoment = ReminderMapping.alarmDate(for: newDue, calendar: calendar)
+        guard let oldMoment, let newMoment, let alarms = reminder.alarms else { return }
+        for alarm in alarms {
+            guard let date = alarm.absoluteDate,
+                  let moved = ReminderMapping.movedAlarmDates([date], from: oldMoment, to: newMoment).first,
+                  moved != date else { continue }
+            alarm.absoluteDate = moved
+        }
+    }
 
     private func ekReminder(id: String) -> EKReminder? {
         guard let reminder = store.calendarItem(withIdentifier: id) as? EKReminder else { return nil }

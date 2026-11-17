@@ -55,4 +55,19 @@ public enum ReminderMapping {
         if case .set(let completed) = edit.isCompleted { result.isCompleted = completed }
         return result
     }
+
+    // MARK: Alarms
+
+    /// Reminders alert through alarms, not through the due date. When a timed due date moves,
+    /// absolute alarms that fired exactly at the old due moment move with it; other alarms stay.
+    public static func movedAlarmDates(_ alarms: [Date], from oldDue: Date?, to newDue: Date?) -> [Date] {
+        guard let oldDue, let newDue else { return alarms }
+        return alarms.map { $0 == oldDue ? newDue : $0 }
+    }
+
+    /// Alarm for a new reminder: at the due time, none for a date without time.
+    public static func alarmDate(for due: DueDate?, calendar: Calendar) -> Date? {
+        guard let due, due.hasTime else { return nil }
+        return due.startDate(in: calendar)
+    }
 }

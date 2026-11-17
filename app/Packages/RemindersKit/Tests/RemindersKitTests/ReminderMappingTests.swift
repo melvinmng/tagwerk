@@ -97,3 +97,31 @@ struct CalendarSelectionTests {
         #expect(CalendarSelection.defaultSelected(calendars) == ["work", "home", "ex"])
     }
 }
+
+struct ReminderAlarmTests {
+    let old = Date(timeIntervalSince1970: 1_000_000)
+    let new = Date(timeIntervalSince1970: 1_086_400)
+
+    @Test func alarmAtOldDue_movesWithDue() {
+        #expect(ReminderMapping.movedAlarmDates([old], from: old, to: new) == [new])
+    }
+
+    @Test func otherAlarms_stay() {
+        let earlier = old.addingTimeInterval(-3600)
+        #expect(ReminderMapping.movedAlarmDates([earlier, old], from: old, to: new) == [earlier, new])
+    }
+
+    @Test func dateOnlyOldOrNew_leavesAlarms() {
+        #expect(ReminderMapping.movedAlarmDates([old], from: nil, to: new) == [old])
+        #expect(ReminderMapping.movedAlarmDates([old], from: old, to: nil) == [old])
+    }
+
+    @Test func newReminderWithTime_getsAlarmAtDue() {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(identifier: "Europe/Berlin")!
+        let due = DueDate(year: 2026, month: 11, day: 20, hour: 14, minute: 30)
+        #expect(ReminderMapping.alarmDate(for: due, calendar: calendar) == due.startDate(in: calendar))
+        #expect(ReminderMapping.alarmDate(for: DueDate(year: 2026, month: 11, day: 20), calendar: calendar) == nil)
+        #expect(ReminderMapping.alarmDate(for: nil, calendar: calendar) == nil)
+    }
+}
