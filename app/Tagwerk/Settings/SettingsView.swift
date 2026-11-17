@@ -48,6 +48,10 @@ struct SettingsView: View {
 
                 GitHubSettingsSection()
 
+                #if DEBUG
+                ChatGPTCaptureSection()
+                #endif
+
                 Section {
                     Stepper("Vorlauf: \(leadTimeText(settings.leadTimeMinutes))", value: $settings.leadTimeMinutes, in: 15...2880, step: 15)
                 } header: {
