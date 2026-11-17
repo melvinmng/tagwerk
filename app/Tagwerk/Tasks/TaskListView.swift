@@ -207,8 +207,10 @@ struct TaskListView: View {
                     }
                     .buttonStyle(.borderedProminent)
                 }
+                // Popovers size to their first line; let every text wrap instead of truncating.
+                .fixedSize(horizontal: false, vertical: true)
                 .padding()
-                .frame(maxWidth: 300)
+                .frame(width: 300, alignment: .leading)
                 .presentationCompactAdaptation(.popover)
             }
         }
