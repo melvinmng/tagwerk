@@ -5,6 +5,7 @@ struct ProbeResult: Sendable, Identifiable {
     let name: String
     let ok: Bool
     let detail: String
+    var skipped: Bool = false
 
     var id: String { name }
 }
