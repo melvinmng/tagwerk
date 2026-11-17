@@ -16,6 +16,8 @@ packages:
     path: Packages/TagwerkCore
   SecureStore:
     path: Packages/SecureStore
+  RemindersKit:
+    path: Packages/RemindersKit
 targets:
   Tagwerk:
     type: application
@@ -24,6 +26,7 @@ targets:
     dependencies:
       - package: TagwerkCore
       - package: SecureStore
+      - package: RemindersKit
     info:
       path: Tagwerk/Info.plist
       properties:
