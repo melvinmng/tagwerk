@@ -48,12 +48,13 @@ struct GitHubLoginView: View {
                 UIPasteboard.general.string = code.userCode
                 openURL(code.verificationURL)
             }
-            .buttonStyle(.borderedProminent)
+            .buttonStyle(.borderedProminent)  // explicit style: several buttons share this Form row
             HStack {
                 ProgressView()
                 Text("Warte auf Bestätigung …").foregroundStyle(.secondary)
             }
             Button("Abbrechen", role: .cancel) { model.cancel() }
+                .buttonStyle(.borderless)
         }
         .padding(.vertical, 4)
     }
