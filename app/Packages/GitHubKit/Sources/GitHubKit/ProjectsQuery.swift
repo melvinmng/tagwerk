@@ -32,17 +32,22 @@ enum ProjectsQuery {
     } } } }
     """
 
-    static let projectItems = """
-    query($projectID: ID!, $cursor: String) { node(id: $projectID) { ... on ProjectV2 {
-      items(first: 100, after: $cursor) {
+    /// Open issues assigned to the viewer with their project items. Reading from the issue side keeps
+    /// the cost independent of the projects' history (closed and "Done" items are never fetched).
+    static let assignedIssues = """
+    query($cursor: String) {
+      search(query: "is:issue is:open assignee:@me archived:false", type: ISSUE, first: 50, after: $cursor) {
         pageInfo { hasNextPage endCursor }
-        nodes {
-          id updatedAt isArchived
-          \(fieldValuesSelection)
-          content { __typename ... on Issue { \(issueSelection) } }
-        }
+        nodes { ... on Issue {
+          \(issueSelection)
+          projectItems(first: 20) { nodes {
+            id updatedAt isArchived
+            project { id }
+            \(fieldValuesSelection)
+          } }
+        } }
       }
-    } } }
+    }
     """
 
     static let issueNode = """
@@ -101,6 +106,27 @@ enum ProjectsQuery {
         struct Login: Decodable { let login: String }
         struct Label: Decodable { let name: String }
         let __typename: String
+
+        enum CodingKeys: String, CodingKey {
+            case __typename, id, number, title, body, state, updatedAt, url, repository, assignees, labels
+        }
+
+        init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            // Search results of other types decode as empty objects; issue fields carry the type implicitly.
+            __typename = try container.decodeIfPresent(String.self, forKey: .__typename)
+                ?? (container.contains(.number) ? "Issue" : "Other")
+            id = try container.decodeIfPresent(String.self, forKey: .id)
+            number = try container.decodeIfPresent(Int.self, forKey: .number)
+            title = try container.decodeIfPresent(String.self, forKey: .title)
+            body = try container.decodeIfPresent(String.self, forKey: .body)
+            state = try container.decodeIfPresent(String.self, forKey: .state)
+            updatedAt = try container.decodeIfPresent(Date.self, forKey: .updatedAt)
+            url = try container.decodeIfPresent(URL.self, forKey: .url)
+            repository = try container.decodeIfPresent(Repository.self, forKey: .repository)
+            assignees = try container.decodeIfPresent(Nodes<Login>.self, forKey: .assignees)
+            labels = try container.decodeIfPresent(Nodes<Label>.self, forKey: .labels)
+        }
         let id: String?
         let number: Int?
         let title: String?
@@ -130,7 +156,7 @@ enum ProjectsQuery {
         let isArchived: Bool
         let fieldValues: Nodes<FieldValueNode>
         let content: IssueContent?
-        let project: ProjectNode?
+        let project: ProjectReference?
 
         func placement(in project: ProjectInfo) -> ProjectPlacement {
             var placement = ProjectPlacement(project: project, itemID: id, itemUpdatedAt: updatedAt,
@@ -151,6 +177,20 @@ enum ProjectsQuery {
         }
     }
 
+    /// A project as referenced from an item: the ID always, the full node when queried.
+    struct ProjectReference: Decodable {
+        let id: String
+        let node: ProjectNode?
+
+        init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            id = try container.decode(String.self, forKey: .id)
+            node = container.contains(.fields) ? try ProjectNode(from: decoder) : nil
+        }
+
+        enum CodingKeys: String, CodingKey { case id, fields }
+    }
+
     struct PageInfo: Decodable {
         let hasNextPage: Bool
         let endCursor: String?
@@ -164,12 +204,9 @@ enum ProjectsQuery {
         let viewer: Viewer
     }
 
-    struct ItemsData: Decodable {
-        struct Project: Decodable {
-            struct Items: Decodable { let pageInfo: PageInfo; let nodes: [ItemNode] }
-            let items: Items
-        }
-        let node: Project?
+    struct SearchData: Decodable {
+        struct Search: Decodable { let pageInfo: PageInfo; let nodes: [IssueData.IssueNode?] }
+        let search: Search
     }
 
     struct IssueData: Decodable {
@@ -179,6 +216,10 @@ enum ProjectsQuery {
 
             init(from decoder: Decoder) throws {
                 content = try IssueContent(from: decoder)
+                guard content.__typename == "Issue" else {
+                    projectItems = nil
+                    return
+                }
                 let container = try decoder.container(keyedBy: CodingKeys.self)
                 projectItems = try container.decodeIfPresent(Nodes<ItemNode>.self, forKey: .projectItems)
             }

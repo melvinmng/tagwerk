@@ -15,27 +15,27 @@ struct GitHubAPITests {
     }
 
     private func enqueueAllProjects() {
-        transport.enqueueJSON("/graphql", Fixtures.viewerProjects)
-        transport.enqueueJSON("/graphql", Fixtures.itemsProject1Page1)
-        transport.enqueueJSON("/graphql", Fixtures.itemsProject1Page2)
-        transport.enqueueJSON("/graphql", Fixtures.itemsProject2)
+        Fixtures.enqueueAssignedIssues(on: transport)
     }
 
     @Test func api_followsCursorAcrossPages() async throws {
         enqueueAllProjects()
         let result = try await makeAPI().openProjectIssues()
 
-        #expect(transport.requests.count == 4)
+        #expect(transport.requests.count == 3)
+        #expect(transport.requests[1].bodyString.contains("assignee:@me"))
         #expect(transport.requests[2].bodyString.contains("CURSOR_1"))
         #expect(Set(result.issues.map(\.issueID)) == ["I_1", "I_2"])
         #expect(result.login == "octo")
         #expect(result.projects.map(\.number) == [1, 2])
     }
 
-    @Test func api_skipsDraftsPullRequestsAndArchivedItems() async throws {
+    @Test func api_skipsArchivedItemsAndForeignProjects() async throws {
         enqueueAllProjects()
         let result = try await makeAPI().openProjectIssues()
         #expect(!result.issues.contains { $0.issueID == "I_3" })
+        #expect(!result.issues.contains { $0.issueID == "I_4" })
+        #expect(result.issues.first { $0.issueID == "I_1" }?.placements.map(\.itemID).sorted() == ["PVTI_a", "PVTI_c"])
         #expect(result.issues.count == 2)
     }
 

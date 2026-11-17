@@ -28,33 +28,29 @@ public struct GitHubAPI: Sendable {
         try await viewerProjects().login
     }
 
-    /// All open projects of the viewer and every issue in them, merged per issue.
+    /// The viewer's open projects and the open issues assigned to the viewer that sit in them.
+    /// Items in other owners' projects and archived items are ignored.
     public func openProjectIssues() async throws -> (login: String, projects: [ProjectInfo], issues: [GitHubIssueRecord]) {
         let (login, projects) = try await viewerProjects()
-        var contents: [String: ProjectsQuery.IssueContent] = [:]
-        var placements: [String: [ProjectPlacement]] = [:]
-        var order: [String] = []
-
-        for project in projects {
-            var cursor: String?
-            repeat {
-                let data: ProjectsQuery.ItemsData = try await query(
-                    ProjectsQuery.projectItems, variables: ItemsVariables(projectID: project.id, cursor: cursor)
-                )
-                guard let items = data.node?.items else { break }
-                for item in items.nodes where !item.isArchived {
-                    guard let content = item.content, content.__typename == "Issue", let issueID = content.id else { continue }
-                    if contents[issueID] == nil {
-                        contents[issueID] = content
-                        order.append(issueID)
+        let projectsByID = Dictionary(projects.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
+        var issues: [GitHubIssueRecord] = []
+        var cursor: String?
+        repeat {
+            let data: ProjectsQuery.SearchData = try await query(
+                ProjectsQuery.assignedIssues, variables: CursorVariables(cursor: cursor)
+            )
+            for node in data.search.nodes.compactMap({ $0 }) {
+                let placements = (node.projectItems?.nodes ?? []).compactMap { item -> ProjectPlacement? in
+                    guard !item.isArchived, let reference = item.project, let project = projectsByID[reference.id] else {
+                        return nil
                     }
-                    placements[issueID, default: []].append(item.placement(in: project))
+                    return item.placement(in: project)
                 }
-                cursor = items.pageInfo.hasNextPage ? items.pageInfo.endCursor : nil
-            } while cursor != nil
-        }
-
-        let issues = order.compactMap { id in contents[id]?.record(placements: placements[id] ?? []) }
+                guard !placements.isEmpty, let record = node.content.record(placements: placements) else { continue }
+                issues.append(record)
+            }
+            cursor = data.search.pageInfo.hasNextPage ? data.search.pageInfo.endCursor : nil
+        } while cursor != nil
         return (login, projects, issues)
     }
 
@@ -63,7 +59,7 @@ public struct GitHubAPI: Sendable {
         let data: ProjectsQuery.IssueData = try await query(ProjectsQuery.issueNode, variables: ["id": nodeID])
         guard let node = data.node else { return nil }
         let placements = (node.projectItems?.nodes ?? []).compactMap { item -> ProjectPlacement? in
-            guard !item.isArchived, let project = item.project, !project.closed else { return nil }
+            guard !item.isArchived, let project = item.project?.node, !project.closed else { return nil }
             return item.placement(in: project.info)
         }
         return node.content.record(placements: placements)
@@ -173,16 +169,14 @@ public struct GitHubAPI: Sendable {
         let errors: [Message]?
     }
 
-    private struct ItemsVariables: Encodable, Sendable {
-        let projectID: String
+    private struct CursorVariables: Encodable, Sendable {
         let cursor: String?
 
         func encode(to encoder: Encoder) throws {
             var container = encoder.container(keyedBy: CodingKeys.self)
-            try container.encode(projectID, forKey: .projectID)
             try container.encode(cursor, forKey: .cursor)
         }
 
-        enum CodingKeys: String, CodingKey { case projectID, cursor }
+        enum CodingKeys: String, CodingKey { case cursor }
     }
 }

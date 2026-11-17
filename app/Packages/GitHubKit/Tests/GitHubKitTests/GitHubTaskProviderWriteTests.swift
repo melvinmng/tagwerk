@@ -210,10 +210,7 @@ struct GitHubTaskProviderWriteTests {
     }
 
     @Test func listVersion_withRestrictedSelection_matchesFullIssueVersion() async throws {
-        transport.enqueueJSON("/graphql", Fixtures.viewerProjects)
-        transport.enqueueJSON("/graphql", Fixtures.itemsProject1Page1)
-        transport.enqueueJSON("/graphql", Fixtures.itemsProject1Page2)
-        transport.enqueueJSON("/graphql", Fixtures.itemsProject2)
+        Fixtures.enqueueAssignedIssues(on: transport)
         let provider = makeProvider(selection: ["PVT_1"])
         let shown = try #require(try await provider.openTasks().first)
 

@@ -26,10 +26,7 @@ struct GitHubTaskProviderReadTests {
     }
 
     private func enqueueAllProjects() {
-        transport.enqueueJSON("/graphql", Fixtures.viewerProjects)
-        transport.enqueueJSON("/graphql", Fixtures.itemsProject1Page1)
-        transport.enqueueJSON("/graphql", Fixtures.itemsProject1Page2)
-        transport.enqueueJSON("/graphql", Fixtures.itemsProject2)
+        Fixtures.enqueueAssignedIssues(on: transport)
     }
 
     @Test func openTasks_online_returnsVisibleIssuesAndStoresCache() async throws {
@@ -135,10 +132,7 @@ struct GitHubTaskProviderObservationTests {
     /// Settings show login and projects; they must redraw when a load fills them.
     @Test func openTasks_notifiesObserversOfLoginAndProjects() async throws {
         let transport = StubTransport()
-        transport.enqueueJSON("/graphql", Fixtures.viewerProjects)
-        transport.enqueueJSON("/graphql", Fixtures.itemsProject1Page1)
-        transport.enqueueJSON("/graphql", Fixtures.itemsProject1Page2)
-        transport.enqueueJSON("/graphql", Fixtures.itemsProject2)
+        Fixtures.enqueueAssignedIssues(on: transport)
         let credentials = GitHubCredentials(accessToken: "gho_valid", refreshToken: "ghr", accessExpiresAt: nil, refreshExpiresAt: nil)
         let client = DeviceFlowClient(clientID: "client", transport: transport, sleep: { _ in }, now: { fixedNow })
         let tokens = TokenManager(store: MemoryCredentialStore(credentials), client: client, now: { fixedNow })

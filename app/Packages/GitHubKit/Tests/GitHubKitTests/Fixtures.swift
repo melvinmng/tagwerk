@@ -26,40 +26,46 @@ enum Fixtures {
         """
     }
 
-    static let itemsProject1Page1 = """
-    {"data":{"node":{"items":{"pageInfo":{"hasNextPage":true,"endCursor":"CURSOR_1"},"nodes":[
-      {"id":"PVTI_a","updatedAt":"2026-11-17T11:00:00Z","isArchived":false,"fieldValues":{"nodes":[
-        {"name":"Ready","field":{"name":"Status"}},
-        {"name":"P3 (Medium)","field":{"name":"Priority"}},
-        {"date":"2026-11-20","field":{"name":"Due date"}},
-        {"number":1.5,"field":{"name":"Estimate (h)"}},
-        {}
-      ]},"content":\(issueContent(id: "I_1", number: 1))},
-      {"id":"PVTI_draft","updatedAt":"2026-11-17T11:00:00Z","isArchived":false,"fieldValues":{"nodes":[]},
-       "content":{"__typename":"DraftIssue"}},
-      {"id":"PVTI_pr","updatedAt":"2026-11-17T11:00:00Z","isArchived":false,"fieldValues":{"nodes":[]},
-       "content":{"__typename":"PullRequest"}}
-    ]}}}}
+    /// Search page 1: issue 1 in projects 1 and 2 (plus an archived item), issue 3 only in a project
+    /// that does not belong to the viewer.
+    static let assignedPage1 = """
+    {"data":{"search":{"pageInfo":{"hasNextPage":true,"endCursor":"CURSOR_1"},"nodes":[
+      \(issueWithItems(id: "I_1", number: 1, items: [
+        #"{"id":"PVTI_a","updatedAt":"2026-11-17T11:00:00Z","isArchived":false,"project":{"id":"PVT_1"},"fieldValues":{"nodes":[{"name":"Ready","field":{"name":"Status"}},{"name":"P3 (Medium)","field":{"name":"Priority"}},{"date":"2026-11-20","field":{"name":"Due date"}},{"number":1.5,"field":{"name":"Estimate (h)"}},{}]}}"#,
+        #"{"id":"PVTI_c","updatedAt":"2026-11-17T12:00:00Z","isArchived":false,"project":{"id":"PVT_2"},"fieldValues":{"nodes":[{"name":"Ready","field":{"name":"Status"}},{"date":"2026-11-18","field":{"name":"Due date"}},{"number":0.5,"field":{"name":"Estimate (MDs)"}}]}}"#,
+        #"{"id":"PVTI_old","updatedAt":"2026-11-01T12:00:00Z","isArchived":true,"project":{"id":"PVT_1"},"fieldValues":{"nodes":[]}}"#,
+      ])),
+      \(issueWithItems(id: "I_3", number: 3, items: [
+        #"{"id":"PVTI_f","updatedAt":"2026-11-17T12:00:00Z","isArchived":false,"project":{"id":"PVT_foreign"},"fieldValues":{"nodes":[]}}"#,
+      ])),
+      {}
+    ]}}}
     """
 
-    static let itemsProject1Page2 = """
-    {"data":{"node":{"items":{"pageInfo":{"hasNextPage":false,"endCursor":null},"nodes":[
-      {"id":"PVTI_b","updatedAt":"2026-11-17T11:00:00Z","isArchived":false,"fieldValues":{"nodes":[]},
-       "content":\(issueContent(id: "I_2", number: 2, state: "CLOSED"))},
-      {"id":"PVTI_archived","updatedAt":"2026-11-17T11:00:00Z","isArchived":true,"fieldValues":{"nodes":[]},
-       "content":\(issueContent(id: "I_3", number: 3))}
-    ]}}}}
+    /// Search page 2: issue 2 is "Done" in project 1, issue 4 has only an archived item.
+    static let assignedPage2 = """
+    {"data":{"search":{"pageInfo":{"hasNextPage":false,"endCursor":null},"nodes":[
+      \(issueWithItems(id: "I_2", number: 2, items: [
+        #"{"id":"PVTI_b","updatedAt":"2026-11-17T11:00:00Z","isArchived":false,"project":{"id":"PVT_1"},"fieldValues":{"nodes":[{"name":"Done","field":{"name":"Status"}}]}}"#,
+      ])),
+      \(issueWithItems(id: "I_4", number: 4, items: [
+        #"{"id":"PVTI_x","updatedAt":"2026-11-17T11:00:00Z","isArchived":true,"project":{"id":"PVT_1"},"fieldValues":{"nodes":[]}}"#,
+      ]))
+    ]}}}
     """
 
-    static let itemsProject2 = """
-    {"data":{"node":{"items":{"pageInfo":{"hasNextPage":false,"endCursor":null},"nodes":[
-      {"id":"PVTI_c","updatedAt":"2026-11-17T12:00:00Z","isArchived":false,"fieldValues":{"nodes":[
-        {"name":"Ready","field":{"name":"Status"}},
-        {"date":"2026-11-18","field":{"name":"Due date"}},
-        {"number":0.5,"field":{"name":"Estimate (MDs)"}}
-      ]},"content":\(issueContent(id: "I_1", number: 1))}
-    ]}}}}
-    """
+    static func issueWithItems(id: String, number: Int, items: [String]) -> String {
+        let content = issueContent(id: id, number: number)
+        return String(content.trimmingCharacters(in: .whitespacesAndNewlines).dropLast())
+            + #","projectItems":{"nodes":["# + items.joined(separator: ",") + "]}}"
+    }
+
+    /// Viewer with projects 1 and 2, then two pages of assigned issues.
+    static func enqueueAssignedIssues(on transport: StubTransport) {
+        transport.enqueueJSON("/graphql", viewerProjects)
+        transport.enqueueJSON("/graphql", assignedPage1)
+        transport.enqueueJSON("/graphql", assignedPage2)
+    }
 
     static let issueNode = """
     {"data":{"node":{"__typename":"Issue","id":"I_1","number":1,"title":"Issue 1","body":"Beschreibung","state":"OPEN",
