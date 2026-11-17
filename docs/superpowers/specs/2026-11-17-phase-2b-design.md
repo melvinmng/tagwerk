@@ -213,6 +213,17 @@ Der Nutzer hat 2b-1 auf dem iPhone geprüft. Die Gestaltung wurde mit Fable als 
 12. **KI (K1+K3, für 2b-2):** Der KI-Knopf sitzt neben der Tab-Leiste (abgesetzter Platz der Tab-Leiste; Rückfall K2 oben rechts neben ＋, falls das am Gerät nicht trägt). Ein Modell für alle KI-Funktionen, wählbar aus der Modellliste von ChatGPT (`GET /v1/models`, `visibility == "list"`), Vorgabe „Automatisch“ (§8.1).
 13. **Bereits behoben (ohne Gestaltung):** Deadline-Kalender-Termine erscheinen als Deadline statt unter „Ganztägig“, die Deadline-Karte folgt dem angezeigten Tag; neue Zeitblöcke beginnen standardmäßig zur nächsten vollen Stunde innerhalb der Arbeitszeit, nie in der Vergangenheit; „Aufwand ändern …“ und der Sprung zum Arbeitstag funktionieren auch aus dem Aufgaben-Tab; „Nächste Woche“ ist im Menü erreichbar.
 
+### 13.14 Abweichungen bei der Umsetzung (2026-11-17)
+
+- **§13.3:** EventKit setzt eine wiederholte Erinnerung beim Abhaken sofort auf das nächste Vorkommen (im Simulator geprüft). Damit gibt auch Abhaken in der Erinnerungen-App den Aufwand des Tages frei. Tagwerk merkt sich das Vorkommen zusätzlich, damit „Rückgängig“ den Aufwand wieder reserviert.
+- **D1:** Die Ablage ist ein unten eingesetztes Panel mit drei Höhen, kein System-Sheet. So lassen sich Aufgaben weiter auf die Tage dahinter ziehen.
+- **C3:** Im Stundenraster verschiebt ein Block erst nach kurzem Gedrückthalten. Griffe oben und unten ändern Beginn bzw. Ende in beide Richtungen. Antippen öffnet die Block-Aktionen als Dialog. Grund: Ohne Halten verschob normales Scrollen über einen Block diesen ungewollt.
+- **C1/C4:** Block-Aktionen gelten nur für Tagwerk-eigene Blöcke in beschreibbaren Kalendern. Andere verknüpfte Termine öffnen die Termin-Detailansicht mit Serienfrage.
+- **F1:** iOS blendet den Abschnittstitel über Symbolgruppen aus. Eine Zeile mit dem aktuellen Arbeitstag („Arbeitstag: Mi. 18. Nov.“) hält den Titel sichtbar.
+- **G1, Nutzerwunsch:** Für ausgewählte Aufgaben gibt es alle Aktionen des Einzelmenüs: Einplanen auf jeden Tag, Fälligkeit verschieben, Erledigt, Löschen. Die Reihenfolge entspricht dem Einzelmenü. Schreibende Aktionen überspringen offline nur lesbare Aufgaben.
+- **„Heute“ (Auswahl, Wischen):** Künftige Zeitblöcke wandern ohne Rückfrage mit, wie beim Einplanen auf andere Tage.
+- **Doppelte Termine:** Eine nicht verknüpfte Kopie eines verknüpften Termins zählt nicht als belegte Zeit.
+
 ## Quellen
 
 - Verifikation Function Calling: `../spikes/2026-11-17-feasibility-results.md`, Nachtrag Phase 2b.
