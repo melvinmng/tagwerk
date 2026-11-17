@@ -63,6 +63,8 @@ final class TaskListModel {
     private(set) var providers: [any TaskProvider]
     /// Sources whose sign-in ended; their state stays visible until they are registered again.
     private var signedOutSources: Set<TaskSource> = []
+    /// Load generation per source; results of older loads are discarded.
+    @ObservationIgnored private var generations: [TaskSource: Int] = [:]
     /// Called once when a source reports that its sign-in ended.
     @ObservationIgnored var onSignedOut: ((TaskSource) -> Void)?
     let now: () -> Date
@@ -89,24 +91,56 @@ final class TaskListModel {
         providers.first { $0.source == source }
     }
 
-    func reload() async {
-        var loaded: [TaskItem] = []
-        var states: [TaskSource: SourceState] = [:]
-        for provider in providers {
-            do {
-                loaded += try await provider.openTasks()
-                states[provider.source] = provider.offlineSince.map { .offline(since: $0) } ?? .loaded
-            } catch TaskWriteError.signedOut {
-                signOut(provider.source)
-            } catch TaskWriteError.accessDenied {
-                states[provider.source] = .noAccess
-            } catch {
-                states[provider.source] = .failed(Self.message(for: error))
-            }
+    /// Loads the given sources (all when `nil`) concurrently and publishes each source as soon as
+    /// it answers, so a slow source never delays the others.
+    func reload(only sources: Set<TaskSource>? = nil) async {
+        let targets = providers.filter { sources?.contains($0.source) ?? true }
+        let loads = targets.map { provider in
+            let generation = nextGeneration(for: provider.source)
+            return Task { await self.load(provider, generation: generation) }
         }
-        for source in signedOutSources { states[source] = .signedOut }
-        items = loaded
-        sourceStates = states
+        for load in loads { await load.value }
+
+        // Drop items and states of sources that are no longer registered (signed-out states stay).
+        let registered = Set(providers.map(\.source))
+        items.removeAll { !registered.contains($0.id.source) }
+        for source in sourceStates.keys where !registered.contains(source) && !signedOutSources.contains(source) {
+            sourceStates[source] = nil
+        }
+    }
+
+    private func load(_ provider: any TaskProvider, generation: Int) async {
+        let source = provider.source
+        let result: Result<[TaskItem], Error>
+        do {
+            result = .success(try await provider.openTasks())
+        } catch {
+            result = .failure(error)
+        }
+        // A newer load or a write to this source started meanwhile: this snapshot is stale.
+        guard generations[source] == generation else { return }
+
+        switch result {
+        case .success(let loaded):
+            items.removeAll { $0.id.source == source }
+            items += loaded
+            sourceStates[source] = provider.offlineSince.map { .offline(since: $0) } ?? .loaded
+        case .failure(TaskWriteError.signedOut):
+            signOut(source)
+        case .failure(TaskWriteError.accessDenied):
+            items.removeAll { $0.id.source == source }
+            sourceStates[source] = .noAccess
+        case .failure(let error):
+            items.removeAll { $0.id.source == source }
+            sourceStates[source] = .failed(Self.message(for: error))
+        }
+    }
+
+    @discardableResult
+    private func nextGeneration(for source: TaskSource) -> Int {
+        let next = (generations[source] ?? 0) + 1
+        generations[source] = next
+        return next
     }
 
     /// Adds a source (e.g. after signing in) and loads the list.
@@ -125,6 +159,7 @@ final class TaskListModel {
     }
 
     private func signOut(_ source: TaskSource) {
+        nextGeneration(for: source)
         providers.removeAll { $0.source == source }
         items.removeAll { $0.id.source == source }
         signedOutSources.insert(source)
@@ -166,6 +201,7 @@ final class TaskListModel {
         guard let provider = provider(for: source) else { return }
         do {
             items.append(try await provider.create(draft))
+            nextGeneration(for: source)
         } catch {
             lastError = Self.message(for: error)
         }
@@ -177,6 +213,7 @@ final class TaskListModel {
 
     /// Stores an item returned by the editor.
     func didSave(_ item: TaskItem) {
+        nextGeneration(for: item.id.source)
         if item.isCompleted {
             items.removeAll { $0.id == item.id }
         } else {
@@ -193,7 +230,9 @@ final class TaskListModel {
         guard let provider = provider(for: id.source),
               let expected = version ?? items.first(where: { $0.id == id })?.version else { return nil }
         do {
-            return try await provider.apply(edit, to: id, expectedVersion: expected)
+            let updated = try await provider.apply(edit, to: id, expectedVersion: expected)
+            nextGeneration(for: id.source)
+            return updated
         } catch TaskWriteError.conflict {
             lastError = "Die Aufgabe wurde inzwischen geändert. Die Liste ist jetzt aktuell."
             await reload()

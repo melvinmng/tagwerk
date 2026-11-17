@@ -94,6 +94,48 @@ struct TaskListModelTests {
         #expect(model.sourceStates[.github] == .signedOut)
     }
 
+    @Test func reload_publishesFastSourceBeforeSlowSource() async {
+        let slow = FakeTaskProvider(source: .github, tasks: [makeTask("#1", source: .github)])
+        slow.gate = Gate()
+        let model = TaskListModel(providers: [slow, local], now: testNow, calendar: testCalendar())
+        let running = Task { await model.reload() }
+
+        await waitUntil { model.items.contains { $0.title == "Fahrrad" } }
+        #expect(model.items.map(\.title) == ["Fahrrad"])
+        #expect(model.sourceStates[.local] == .loaded)
+
+        slow.gate?.open()
+        await running.value
+        #expect(Set(model.items.map(\.title)) == ["Fahrrad", "#1"])
+    }
+
+    @Test func reload_onlyReminders_leavesOtherSourcesUntouched() async {
+        let model = makeModel()
+        await model.reload()
+        let localCalls = local.openTasksCalls
+        reminders.tasks.append(makeTask("Neu aus Reminders", source: .reminders))
+
+        await model.reload(only: [.reminders])
+
+        #expect(local.openTasksCalls == localCalls)
+        #expect(Set(model.items.map(\.title)) == ["Einkaufen", "Neu aus Reminders", "Fahrrad"])
+    }
+
+    @Test func complete_duringRunningReload_staysRemoved() async {
+        let model = makeModel()
+        await model.reload()
+        let gate = Gate()
+        local.gate = gate
+        let running = Task { await model.reload(only: [.local]) }
+        await waitUntil { local.openTasksCalls == 2 }
+
+        await model.complete(TaskID(source: .local, rawValue: "Fahrrad"))
+        gate.open()
+        await running.value
+
+        #expect(!model.items.contains { $0.title == "Fahrrad" })
+    }
+
     @Test func complete_removesItemAfterSuccess() async {
         let model = makeModel()
         await model.reload()

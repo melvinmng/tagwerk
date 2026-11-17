@@ -17,6 +17,9 @@ final class FakeTaskProvider: TaskProvider {
     var conflictOnNextApply: TaskItem?
     var applyError: TaskWriteError?
     var offlineSince: Date?
+    /// When set, `openTasks` takes its snapshot first and then waits for the gate (a slow source).
+    var gate: Gate?
+    private(set) var openTasksCalls = 0
     private(set) var appliedEdits: [AppliedEdit] = []
     private var revision = 100
 
@@ -26,8 +29,11 @@ final class FakeTaskProvider: TaskProvider {
     }
 
     func openTasks() async throws -> [TaskItem] {
+        openTasksCalls += 1
         if let readError { throw readError }
-        return tasks.filter { !$0.isCompleted }
+        let snapshot = tasks.filter { !$0.isCompleted }
+        if let gate { await gate.wait() }
+        return snapshot
     }
 
     func task(id: TaskID) async throws -> TaskItem? {
@@ -100,4 +106,30 @@ func testCalendar() -> Calendar {
 /// Wednesday, 2026-11-18 10:00 in Berlin.
 func testNow() -> Date {
     testCalendar().date(from: DateComponents(year: 2026, month: 11, day: 18, hour: 10))!
+}
+
+/// Suspends callers until `open()` is called.
+@MainActor
+final class Gate {
+    private var isOpen = false
+    private var waiters: [CheckedContinuation<Void, Never>] = []
+
+    func wait() async {
+        if isOpen { return }
+        await withCheckedContinuation { waiters.append($0) }
+    }
+
+    func open() {
+        isOpen = true
+        waiters.forEach { $0.resume() }
+        waiters = []
+    }
+}
+
+/// Yields until `condition` holds (bounded), so tests can observe intermediate states.
+@MainActor
+func waitUntil(_ condition: () -> Bool) async {
+    for _ in 0..<200 where !condition() {
+        await Task.yield()
+    }
 }

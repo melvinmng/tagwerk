@@ -105,7 +105,8 @@ final class AppEnvironment {
         let changes = gateway.changes
         changeObservation = Task { [weak self] in
             for await _ in changes {
-                await self?.taskList.reload()
+                // EventKit changes concern Reminders only; GitHub and local tasks stay as they are.
+                await self?.taskList.reload(only: [.reminders])
             }
         }
     }
