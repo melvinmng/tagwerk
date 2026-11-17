@@ -42,7 +42,8 @@ final class AppEnvironment {
         let blockPlanner = BlockPlanner(store: gateway, planStore: planStore, links: EventLinkStore(context: context),
                                         settings: settings, calendar: .tagwerk)
         self.planning = PlanningModel(taskList: taskList, calendarStore: gateway, reminderStore: gateway, planStore: planStore,
-                                      efforts: RecurringEffortStore(context: context), blocks: blockPlanner, settings: settings)
+                                      efforts: RecurringEffortStore(context: context), blocks: blockPlanner, settings: settings,
+                                      marks: EventMarkStore(context: context))
 
         let clientID = Bundle.main.object(forInfoDictionaryKey: "GitHubClientID") as? String ?? ""
         // GitHub requests fail after 15 s instead of the default 60 s, so the cache appears quickly offline.

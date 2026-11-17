@@ -39,7 +39,8 @@ struct PlanningModelTests {
         await taskList.reload()
         let model = PlanningModel(taskList: taskList, calendarStore: calendarStore, reminderStore: accessStore,
                                   planStore: planStore, efforts: RecurringEffortStore(context: container.mainContext),
-                                  blocks: blocks, settings: settings, now: testNow, calendar: calendar)
+                                  blocks: blocks, settings: settings, marks: EventMarkStore(context: container.mainContext),
+                                  now: testNow, calendar: calendar)
         await model.reload()
         return model
     }
@@ -691,6 +692,84 @@ struct PlanningModelTests {
         #expect(model.suggestedBlockMinutes(for: task) == 150)  // fully blocked: the estimate again
         let noEstimate = try #require(taskList.items.first { $0.title == "Fahrrad" })
         #expect(model.suggestedBlockMinutes(for: noEstimate) == 30)  // default duration
+    }
+
+    @Test func lunchOfOneDay_changesCapacityAndTimeline() async throws {
+        let model = await model()
+        await model.setLunch(startMinutes: 13 * 60 + 7, minutes: 30, on: today)
+        let day = try #require(model.days.first)
+        #expect(model.lunch(on: today) == 780..<810)
+        #expect(day.capacity.availableMinutes == 510)
+        #expect(model.timeline(for: day).contains { $0 == .lunch(startMinutes: 780, minutes: 30) })
+        #expect(model.lunch(on: today.adding(days: 1, calendar: calendar)) == 720..<780)
+        await model.applyLunchToAllDays(from: today)
+        #expect(settings.lunchStartMinutes == 780)
+        #expect(settings.lunchDurationMinutes == 30)
+        #expect(!model.hasOwnLunch(on: today))
+    }
+
+    @Test func removeLunch_onlyThisDay() async throws {
+        let model = await model()
+        await model.removeLunch(on: today)
+        #expect(model.lunch(on: today) == nil)
+        #expect(try #require(model.days.first).capacity.availableMinutes == 540)
+        await model.resetLunch(on: today)
+        #expect(model.lunch(on: today) == 720..<780)
+    }
+
+    @Test func freeMark_releasesBusyTime() async throws {
+        calendarStore.storedEvents = [CalendarEvent(id: "e", externalID: nil, calendarID: "work", title: "Vorlesung",
+                                                    start: at(18, 10), end: at(18, 11), isAllDay: false, url: nil,
+                                                    isBusy: true, version: "1")]
+        let model = await model()
+        #expect(try #require(model.days.first).capacity.availableMinutes == 420)
+        await model.setFree([try #require(calendarStore.event(id: "e"))], free: true, series: false)
+        #expect(try #require(model.days.first).capacity.availableMinutes == 480)
+        #expect(try #require(model.days.first).events.first?.isBusy == false)
+    }
+
+    @Test func freeMark_seriesFromThisOccurrenceOn() async throws {
+        calendarStore.storedEvents = [18, 19].map { day in
+            var event = CalendarEvent(id: "kurs|\(Int(at(day, 10).timeIntervalSince1970))", externalID: nil, calendarID: "work",
+                                      title: "Kurs", start: at(day, 10), end: at(day, 11), isAllDay: false, url: nil,
+                                      isBusy: true, version: "1")
+            event.isRecurring = true
+            return event
+        }
+        let model = await model()
+        model.scope = .week
+        await model.reload()
+        let first = try #require(model.days.first { $0.day == today }?.events.first)
+        await model.setFree([first], free: true, series: true)
+        #expect(model.days.first { $0.day == today.adding(days: 1, calendar: calendar) }?.events.first?.isBusy == false)
+    }
+
+    @Test func placeholderMerge_acceptedHidesPlaceholder() async throws {
+        calendarStore.storedEvents = [
+            CalendarEvent(id: "real", externalID: nil, calendarID: "uni", title: "Vorlesung", start: at(18, 10), end: at(18, 11),
+                          isAllDay: false, url: nil, isBusy: true, version: "1"),
+            CalendarEvent(id: "busy", externalID: nil, calendarID: "work", title: "Busy", start: at(18, 10), end: at(18, 11),
+                          isAllDay: false, url: nil, isBusy: true, version: "1"),
+        ]
+        let model = await model()
+        let suggestion = try #require(model.mergeSuggestions.first)
+        #expect(suggestion.placeholderID == "busy")
+        await model.decideMerge(suggestion, merge: true, always: false)
+        #expect(model.mergeSuggestions.isEmpty)
+        #expect(try #require(model.days.first).events.map(\.id) == ["real"])
+    }
+
+    @Test func placeholderMerge_dismissedStaysSeparate() async throws {
+        calendarStore.storedEvents = [
+            CalendarEvent(id: "real", externalID: nil, calendarID: "uni", title: "Vorlesung", start: at(18, 10), end: at(18, 11),
+                          isAllDay: false, url: nil, isBusy: true, version: "1"),
+            CalendarEvent(id: "busy", externalID: nil, calendarID: "work", title: "Busy", start: at(18, 10), end: at(18, 11),
+                          isAllDay: false, url: nil, isBusy: true, version: "1"),
+        ]
+        let model = await model()
+        await model.decideMerge(try #require(model.mergeSuggestions.first), merge: false, always: true)
+        #expect(model.mergeSuggestions.isEmpty)
+        #expect(try #require(model.days.first).events.count == 2)
     }
 
     @Test func duration_padsMinutes() {

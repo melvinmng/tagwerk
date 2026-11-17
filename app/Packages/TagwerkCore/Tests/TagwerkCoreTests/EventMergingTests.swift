@@ -40,3 +40,26 @@ struct EventMergingTests {
         #expect(merged.first?.mergedCalendarIDs == ["work"])
     }
 }
+
+struct MergeSuggestionTests {
+    private let start = Date(timeIntervalSince1970: 1_800_000_000)
+
+    private func event(_ id: String, _ calendar: String, _ title: String) -> CalendarEvent {
+        CalendarEvent(id: id, externalID: nil, calendarID: calendar, title: title, start: start,
+                      end: start.addingTimeInterval(5400), isAllDay: false, url: nil, isBusy: true, version: "1")
+    }
+
+    @Test func placeholderAtSameTime_isSuggested() {
+        let suggestions = mergeSuggestions([event("real", "uni", "Vorlesung"), event("p", "work", "Busy")])
+        #expect(suggestions == [MergeSuggestion(placeholderID: "p", keptID: "real", placeholderTitle: "Busy",
+                                                placeholderCalendarID: "work")])
+    }
+
+    @Test func twoRealTitles_areNotSuggested() {
+        #expect(mergeSuggestions([event("a", "uni", "Vorlesung"), event("b", "work", "Meeting")]).isEmpty)
+    }
+
+    @Test func sameCalendar_isNotSuggested() {
+        #expect(mergeSuggestions([event("a", "work", "Vorlesung"), event("b", "work", "Busy")]).isEmpty)
+    }
+}

@@ -52,3 +52,37 @@ func informationScore(_ event: CalendarEvent) -> Int {
 /// Titles that mirrored or shared calendars use instead of the real one (design §13, merge suggestions in 2b-2).
 public let placeholderTitles: Set<String> = ["busy", "away", "free", "tentative", "beschäftigt", "abwesend", "frei",
                                              "vorläufig", "out of office", "privat"]
+
+/// A placeholder event ("Busy", "Away", …) at the same time as a real event in another calendar; Tagwerk
+/// suggests showing only the real one (design §13.15 M1, detected locally without AI).
+public struct MergeSuggestion: Sendable, Hashable, Identifiable {
+    public var id: String { placeholderID + "→" + keptID }
+    public let placeholderID: String
+    public let keptID: String
+    public let placeholderTitle: String
+    public let placeholderCalendarID: String
+
+    public init(placeholderID: String, keptID: String, placeholderTitle: String, placeholderCalendarID: String) {
+        self.placeholderID = placeholderID
+        self.keptID = keptID
+        self.placeholderTitle = placeholderTitle
+        self.placeholderCalendarID = placeholderCalendarID
+    }
+}
+
+public func isPlaceholderTitle(_ title: String) -> Bool {
+    placeholderTitles.contains(normalizedTitle(title))
+}
+
+/// Pairs each placeholder event with a real event of another calendar that has the same start, end and
+/// all-day flag; one suggestion per placeholder.
+public func mergeSuggestions(_ events: [CalendarEvent]) -> [MergeSuggestion] {
+    events.filter { isPlaceholderTitle($0.title) }.compactMap { placeholder in
+        guard let kept = events.first(where: { other in
+            other.calendarID != placeholder.calendarID && !isPlaceholderTitle(other.title)
+                && other.start == placeholder.start && other.end == placeholder.end && other.isAllDay == placeholder.isAllDay
+        }) else { return nil }
+        return MergeSuggestion(placeholderID: placeholder.id, keptID: kept.id, placeholderTitle: placeholder.title,
+                               placeholderCalendarID: placeholder.calendarID)
+    }
+}

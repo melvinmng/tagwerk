@@ -136,10 +136,14 @@ final class PlanningModel {
     private let settings: AppSettings
     let now: () -> Date
     let calendar: Calendar
+    let marks: EventMarkStore
+    /// Placeholder events of the shown days that may belong to a real event (design §13.15 M1).
+    private(set) var mergeSuggestions: [MergeSuggestion] = []
 
     init(taskList: TaskListModel, calendarStore: CalendarStore, reminderStore: ReminderStore, planStore: PlanStore,
-         efforts: RecurringEffortStore, blocks: BlockPlanner, settings: AppSettings,
+         efforts: RecurringEffortStore, blocks: BlockPlanner, settings: AppSettings, marks: EventMarkStore,
          now: @escaping () -> Date = Date.init, calendar: Calendar = .tagwerk) {
+        self.marks = marks
         self.taskList = taskList
         self.calendarStore = calendarStore
         self.reminderStore = reminderStore
@@ -179,7 +183,8 @@ final class PlanningModel {
         let recurringIDs = Set(reminders.filter { $0.recurrence != nil }.map(\.id))
         let interval = DateInterval(start: range.lowerBound.startDate(in: calendar),
                                     end: range.upperBound.adding(days: 1, calendar: calendar).startDate(in: calendar))
-        let events = calendarStore.events(in: interval, calendarIDs: readableCalendarIDs())
+        let (events, suggestions) = markedEvents(calendarStore.events(in: interval, calendarIDs: readableCalendarIDs()))
+        mergeSuggestions = suggestions
         let resolved = resolveLinks(events: events, tasks: open, manual: blocks.links.manualLinks())
         resolvedLinks = Dictionary(resolved.map { ($0.eventID, $0) }, uniquingKeysWith: { first, _ in first })
         recurringReminderIDs = recurringIDs
@@ -450,8 +455,8 @@ final class PlanningModel {
         let dayStart = plan.day.startDate(in: calendar)
         var rows: [(Int, TimelineRow)] = plan.events.filter { !$0.isAllDay }.map { (minutes($0.start, from: dayStart), .event($0)) }
         rows += plan.blocks.compactMap { block in plan.links[block.id].map { (minutes(block.start, from: dayStart), .block(block, $0)) } }
-        if !plan.capacity.isDayOff, settings.lunchDurationMinutes > 0 {
-            rows.append((settings.lunchStartMinutes, .lunch(startMinutes: settings.lunchStartMinutes, minutes: settings.lunchDurationMinutes)))
+        if !plan.capacity.isDayOff, let lunch = lunch(on: plan.day) {
+            rows.append((lunch.lowerBound, .lunch(startMinutes: lunch.lowerBound, minutes: lunch.count)))
         }
         return rows.sorted { $0.0 < $1.0 }.map(\.1)
     }
@@ -487,6 +492,87 @@ final class PlanningModel {
     func allDayEvents(for plan: DayPlan) -> [CalendarEvent] {
         let deadlineCalendars = Set(settings.deadlineCalendarIDs ?? [])
         return (plan.events + plan.blocks).filter { $0.isAllDay && !deadlineCalendars.contains($0.calendarID) }
+    }
+
+    // MARK: Lunch per day (design §13.15 L1)
+
+    /// The lunch break of a day: a day's own value, else the setting; `nil` without a break.
+    func lunch(on day: PlanDay) -> Range<Int>? {
+        let value = marks.lunch(on: day) ?? (settings.lunchStartMinutes, settings.lunchDurationMinutes)
+        return value.minutes > 0 ? value.startMinutes..<(value.startMinutes + value.minutes) : nil
+    }
+
+    /// Moves or resizes the break on this day only (snapped to 15 min, kept inside the day).
+    func setLunch(startMinutes: Int, minutes: Int, on day: PlanDay) async {
+        let range = clampedBlock(startMinutes: snapped(minutes: startMinutes), duration: snapped(minutes: minutes),
+                                 dayLength: dayLength(day))
+        marks.setLunch(startMinutes: range.lowerBound, minutes: range.count, on: day)
+        await reload()
+    }
+
+    /// No break on this day.
+    func removeLunch(on day: PlanDay) async {
+        marks.setLunch(startMinutes: settings.lunchStartMinutes, minutes: 0, on: day)
+        await reload()
+    }
+
+    /// "Widerrufen": back to the setting for this day.
+    func resetLunch(on day: PlanDay) async {
+        marks.clearLunch(on: day)
+        await reload()
+    }
+
+    /// "Für alle Tage": the day's break becomes the setting.
+    func applyLunchToAllDays(from day: PlanDay) async {
+        if let value = marks.lunch(on: day) {
+            settings.lunchStartMinutes = value.startMinutes
+            settings.lunchDurationMinutes = value.minutes
+            marks.clearLunch(on: day)
+        }
+        await reload()
+    }
+
+    /// The day has its own break that differs from the setting.
+    func hasOwnLunch(on day: PlanDay) -> Bool { marks.lunch(on: day) != nil }
+
+    // MARK: Free marks and merge suggestions (design §13.15 F1, M1)
+
+    /// Marks events as "Frei" (`free`) or "Belegt" in Tagwerk only; `series` applies to all later occurrences.
+    func setFree(_ events: [CalendarEvent], free: Bool, series: Bool) async {
+        for event in events { marks.mark(event, isFree: free, series: series && event.isRecurring) }
+        await reload()
+    }
+
+    /// Busy minutes the selection would free on its day (shown before "Auf Frei setzen").
+    func busyMinutes(of events: [CalendarEvent]) -> Int {
+        events.filter { $0.isBusy && !$0.isAllDay }.reduce(0) { $0 + Int($1.end.timeIntervalSince($1.start) / 60) }
+    }
+
+    func decideMerge(_ suggestion: MergeSuggestion, merge: Bool, always: Bool) async {
+        marks.decide(suggestion, merge: merge, always: always)
+        await reload()
+    }
+
+    /// Applies Tagwerk's free marks and accepted merges; returns the undecided merge suggestions.
+    private func markedEvents(_ raw: [CalendarEvent]) -> ([CalendarEvent], [MergeSuggestion]) {
+        let freeMarks = marks.allMarks()
+        var events = raw.map { event in
+            var event = event
+            if let free = marks.isFree(event, marks: freeMarks) { event.isBusy = !free }
+            return event
+        }
+        let decisions = marks.mergeDecisions()
+        var hidden = Set<String>()
+        var open: [MergeSuggestion] = []
+        for suggestion in TagwerkCore.mergeSuggestions(events) {
+            switch marks.decision(for: suggestion, in: decisions) {
+            case true?: hidden.insert(suggestion.placeholderID)
+            case false?: break
+            case nil: open.append(suggestion)
+            }
+        }
+        events.removeAll { hidden.contains($0.id) }
+        return (events, open)
     }
 
     // MARK: Time blocks (design §13.4)
@@ -572,8 +658,7 @@ final class PlanningModel {
     func gaps(for plan: DayPlan) -> [Range<Int>] {
         guard let hours = workHours(on: plan.day) else { return [] }
         let busy = busyIntervals(events: plan.events + plan.blocks, on: plan.day, calendar: calendar, excluding: [])
-        let lunch = settings.lunchDurationMinutes > 0
-            ? settings.lunchStartMinutes..<(settings.lunchStartMinutes + settings.lunchDurationMinutes) : nil
+        let lunch = lunch(on: plan.day)
         let from = plan.day == today ? minutes(now(), from: plan.day.startDate(in: calendar)) : nil
         return freeGaps(hours: hours, busy: busy, lunch: lunch, buffer: settings.bufferMinutes, from: from)
     }
@@ -708,7 +793,7 @@ final class PlanningModel {
         }
         var input = CapacityInput(
             hours: TagwerkCore.workHours(on: day, schedule: settings.weekSchedule, overrides: overrides, calendar: calendar),
-            lunchStartMinutes: settings.lunchStartMinutes, lunchMinutes: settings.lunchDurationMinutes,
+            lunchStartMinutes: lunch(on: day)?.lowerBound ?? 0, lunchMinutes: lunch(on: day)?.count ?? 0,
             bufferMinutes: settings.bufferMinutes,
             busyIntervals: busyIntervals(events: dayEvents, on: day, calendar: calendar,
                                          excluding: Set(links.keys).union(copiesOfLinked(dayEvents, links: links))),
