@@ -283,6 +283,12 @@ final class PlanningModel {
         return (plan.events + plan.blocks).filter { $0.isAllDay && !deadlineCalendars.contains($0.calendarID) }
     }
 
+    /// "Getrennt anzeigen": turns merging of identical events off (setting in "Einstellungen").
+    func showDuplicatesSeparately() async {
+        settings.mergeDuplicateEvents = false
+        await reload()
+    }
+
     func cancelBlockDecision() {
         pendingBlockDecision = nil
     }
@@ -364,8 +370,10 @@ final class PlanningModel {
             return RecurringItem(reminderID: reminder.id, title: reminder.title, minutes: minutes,
                                  isDone: efforts.isDone(reminderID: reminder.id, day: day))
         }
+        // Merging only affects the display; capacity above used every event (overlaps are unified).
+        let shown = settings.mergeDuplicateEvents ? mergingDuplicates(dayEvents, links: links) : dayEvents
         return DayPlan(day: day, capacity: capacity(input), deadlines: deadlines.filter { $0.day == day },
-                       events: dayEvents.filter { links[$0.id] == nil }, blocks: linkedEvents,
+                       events: shown.filter { links[$0.id] == nil }, blocks: shown.filter { links[$0.id] != nil && !$0.isAllDay },
                        assigned: assigned, links: links.filter { id, _ in linkedEvents.contains { $0.id == id } },
                        isPastDue: pastDue, recurring: recurring, isPast: day < today)
     }

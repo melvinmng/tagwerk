@@ -18,6 +18,19 @@ struct EventDetailView: View {
                     Text(timeText).foregroundStyle(.secondary)
                 }
 
+                if !event.mergedCalendarIDs.isEmpty {
+                    Section {
+                        Button("Getrennt anzeigen") {
+                            Task { await model.showDuplicatesSeparately() }
+                            dismiss()
+                        }
+                    } header: {
+                        Text("In \(event.mergedCalendarIDs.count + 1) Kalendern")
+                    } footer: {
+                        Text("Gleiche Termine aus mehreren Kalendern stehen als eine Zeile im Ablauf. Das lässt sich in den Einstellungen wieder einschalten.")
+                    }
+                }
+
                 Section("Verknüpfte Aufgabe") {
                     if let task = model.linkedTask(eventID: event.id) {
                         LabeledContent(task.title, value: originText)

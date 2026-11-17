@@ -13,6 +13,8 @@ public struct CalendarEvent: Sendable, Hashable, Identifiable {
     /// False for events marked "free" and for declined invitations.
     public var isBusy: Bool
     public var version: String
+    /// Other calendars that hold the same event (merged display, design §13.11).
+    public var mergedCalendarIDs: [String] = []
 
     public init(id: String, externalID: String?, calendarID: String, title: String, start: Date, end: Date,
                 isAllDay: Bool, url: URL?, isBusy: Bool, version: String) {

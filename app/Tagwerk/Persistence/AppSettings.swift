@@ -27,6 +27,8 @@ final class AppSettings {
     var deadlineCalendarIDs: [String]? = nil
     /// Duration counted for tasks without effort.
     var defaultTaskMinutes: Int = 30
+    /// Shows identical events from several calendars as one row (design §13.11).
+    var mergeDuplicateEvents: Bool = true
 
     var weekSchedule: WeekSchedule {
         get { weekScheduleData.flatMap { try? JSONDecoder().decode(WeekSchedule.self, from: $0) } ?? .standard }

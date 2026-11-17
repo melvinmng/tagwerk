@@ -29,7 +29,7 @@ public func resolveLinks(events: [CalendarEvent], tasks: [TaskItem], manual: [St
         if task.id.source == .github, let number = issueNumber(task) {
             issuesByNumber[number, default: []].append(task.id)
         } else if task.id.source != .github {
-            titles[normalized(task.title), default: []].append(task.id)
+            titles[normalizedTitle(task.title), default: []].append(task.id)
         }
     }
     return events.compactMap { event in
@@ -42,7 +42,7 @@ public func resolveLinks(events: [CalendarEvent], tasks: [TaskItem], manual: [St
         if let number = referencedIssueNumber(in: event.title), let matches = issuesByNumber[number], matches.count == 1 {
             return ResolvedLink(eventID: event.id, taskID: matches[0], origin: .automatic)
         }
-        if let matches = titles[normalized(event.title)], matches.count == 1 {
+        if let matches = titles[normalizedTitle(event.title)], matches.count == 1 {
             return ResolvedLink(eventID: event.id, taskID: matches[0], origin: .automatic)
         }
         return nil
@@ -59,6 +59,6 @@ private func referencedIssueNumber(in title: String) -> Int? {
     return Int(title[range].dropFirst())
 }
 
-private func normalized(_ title: String) -> String {
+func normalizedTitle(_ title: String) -> String {
     title.lowercased().split(whereSeparator: \.isWhitespace).joined(separator: " ")
 }

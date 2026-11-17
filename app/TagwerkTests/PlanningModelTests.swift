@@ -326,6 +326,21 @@ struct PlanningModelTests {
         #expect(model.days.first?.capacity.remainingMinutes == 360)
     }
 
+    @Test func duplicateEvents_showOnce_capacityUnchanged() async throws {
+        calendarStore.storedEvents = ["work", "shared"].map { calendarID in
+            CalendarEvent(id: "seminar-\(calendarID)", externalID: nil, calendarID: calendarID, title: "Seminar",
+                          start: at(18, 14), end: at(18, 15), isAllDay: false, url: nil, isBusy: true, version: "1")
+        }
+        let model = await model()
+        let day = try #require(model.days.first)
+        #expect(model.timeline(for: day).filter { $0.label == "Seminar" }.count == 1)
+        #expect(day.events.first?.mergedCalendarIDs == ["shared"])
+        #expect(day.capacity.availableMinutes == 420)
+        settings.mergeDuplicateEvents = false
+        await model.reload()
+        #expect(model.timeline(for: try #require(model.days.first)).filter { $0.label == "Seminar" }.count == 2)
+    }
+
     @Test func duration_padsMinutes() {
         #expect(CapacityText.duration(125) == "2 h 05")
         #expect(CapacityText.duration(45) == "45 min")

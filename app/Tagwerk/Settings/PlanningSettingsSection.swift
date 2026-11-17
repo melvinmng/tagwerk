@@ -24,13 +24,15 @@ struct PlanningSettingsSection: View {
             }
             Stepper("Standarddauer: \(CapacityText.duration(settings.defaultTaskMinutes))",
                     value: $settings.defaultTaskMinutes, in: 15...240, step: 15)
+            Toggle("Gleiche Termine zusammenfassen", isOn: $settings.mergeDuplicateEvents)
         } header: {
             Text("Planen")
         } footer: {
-            Text("Termine aus Deadline-Kalendern (z. B. Klausuren) gelten als wichtige Deadlines. Aufgaben ohne Aufwand zählen mit der Standarddauer.")
+            Text("Termine aus Deadline-Kalendern (z. B. Klausuren) gelten als wichtige Deadlines. Aufgaben ohne Aufwand zählen mit der Standarddauer. Gleiche Termine in mehreren Kalendern erscheinen als eine Zeile.")
         }
         .task { calendars = environment.gateway.calendarAccessState == .fullAccess ? environment.gateway.calendars() : [] }
         .onChange(of: settings.deadlineCalendarIDs) { _, _ in Task { await environment.planning.reload() } }
+        .onChange(of: settings.mergeDuplicateEvents) { _, _ in Task { await environment.planning.reload() } }
     }
 
     @ViewBuilder private var planCalendarRow: some View {

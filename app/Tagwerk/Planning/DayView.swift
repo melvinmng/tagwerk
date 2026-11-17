@@ -120,7 +120,9 @@ struct DayView: View {
         switch row {
         case .event(let event):
             Button { onOpenEvent(event) } label: {
-                TimelineLine(time: event.start, title: event.title, detail: "bis \(event.end.formatted(date: .omitted, time: .shortened))",
+                TimelineLine(time: event.start, title: event.title,
+                             detail: "bis \(event.end.formatted(date: .omitted, time: .shortened))"
+                                 + (event.mergedCalendarIDs.isEmpty ? "" : " · \(event.mergedCalendarIDs.count + 1) Kalender"),
                              color: .blue)
             }
             .foregroundStyle(.primary)
