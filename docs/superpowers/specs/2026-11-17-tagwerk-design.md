@@ -1,6 +1,6 @@
 # Tagwerk – Design
 
-Stand: 2026-11-17 · Status: **Entwurf mit eingearbeiteten Antworten, wartet auf Freigabe** · Gate: Phase 1 (Machbarkeits-Spike) muss bestehen, bevor das MVP gebaut wird.
+Stand: 2026-11-17 · Status: **freigegeben am 2026-11-17** · Gate: Phase 1 (Machbarkeits-Spike) muss bestehen, bevor das MVP gebaut wird.
 
 ## 1. Absicht und Warum
 
@@ -142,6 +142,7 @@ Nächster Schritt nach Freigabe: gerenderte Mockups der vier Screens zum Abstimm
 - **F1b GitHub-Deadlines:** Die Deadline kommt vom Fälligkeitsdatum des Meilensteins, wie vorgeschlagen und ohne Einwand. Es zählen offene Issues, die mir zugewiesen sind, in den gewählten Repos. Felder aus GitHub Projects (GraphQL) kommen höchstens später.
 - **F2 iOS:** Auf dem iPhone 16 Pro läuft iOS 27.2.1, Xcode ist 27.2. Deployment-Target: iOS 27.0.
 - **F3:** Die 99 $ kommen erst später, wenn das wöchentliche Neuinstallieren lästig wird.
+- **Automatische Neuinstallation (Weg A):** Ein `launchd`-Agent auf dem Mac baut die App alle 5 Tage neu und installiert sie per WLAN (`xcodebuild -allowProvisioningUpdates` + `devicectl`). Ist das iPhone nicht erreichbar, versucht er es stündlich erneut und meldet sich ab Tag 6. Die Alternativen bezahlter Account (später möglich) und SideStore (verworfen: inoffiziell, instabil, HealthKit ungeklärt) sind damit nachrangig. Ob WLAN-Installation und Hintergrundanmeldung zuverlässig sind, prüft Phase 1.
 - **F4 Speicherort:** Das Repo bleibt in iCloud Drive, der Ordner ist auf „Immer auf diesem Gerät behalten“ gestellt. Zusätzliche Schutzmaßnahmen:
   - Build-Ausgaben liegen außerhalb des Repos (Standard-DerivedData unter `~/Library/Developer`).
   - Das generierte `.xcodeproj` steht nicht in Git.
