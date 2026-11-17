@@ -74,15 +74,31 @@ public func isPlaceholderTitle(_ title: String) -> Bool {
     placeholderTitles.contains(normalizedTitle(title))
 }
 
-/// Pairs each placeholder event with a real event of another calendar that has the same start, end and
-/// all-day flag; one suggestion per placeholder.
-public func mergeSuggestions(_ events: [CalendarEvent]) -> [MergeSuggestion] {
-    events.filter { isPlaceholderTitle($0.title) }.compactMap { placeholder in
-        guard let kept = events.first(where: { other in
-            other.calendarID != placeholder.calendarID && !isPlaceholderTitle(other.title)
-                && other.start == placeholder.start && other.end == placeholder.end && other.isAllDay == placeholder.isAllDay
-        }) else { return nil }
-        return MergeSuggestion(placeholderID: placeholder.id, keptID: kept.id, placeholderTitle: placeholder.title,
-                               placeholderCalendarID: placeholder.calendarID)
+/// Events that may be the same: a placeholder ("Busy" …) next to a real event, or identical titles, each in
+/// another calendar with the same start, end and all-day flag. Nothing is merged without the user's answer
+/// (design §13.15 M1, user decision 2026-11-18). The copy with more information is kept; calendars in
+/// `excluding` (deadline calendars) never take part.
+public func mergeSuggestions(_ events: [CalendarEvent], excluding: Set<String> = []) -> [MergeSuggestion] {
+    let candidates = events.filter { !excluding.contains($0.calendarID) }
+    var result: [MergeSuggestion] = []
+    var hidden = Set<String>()
+    for event in candidates where !hidden.contains(event.id) {
+        let sameTime = candidates.filter { other in
+            other.id != event.id && other.calendarID != event.calendarID && !hidden.contains(other.id)
+                && other.start == event.start && other.end == event.end && other.isAllDay == event.isAllDay
+        }
+        if isPlaceholderTitle(event.title) {
+            guard let kept = sameTime.first(where: { !isPlaceholderTitle($0.title) }) else { continue }
+            hidden.insert(event.id)
+            result.append(MergeSuggestion(placeholderID: event.id, keptID: kept.id, placeholderTitle: event.title,
+                                          placeholderCalendarID: event.calendarID))
+        } else if let twin = sameTime.first(where: { normalizedTitle($0.title) == normalizedTitle(event.title) }) {
+            // Keep the copy with more information; on a tie the earlier event.
+            let (kept, other) = informationScore(twin) > informationScore(event) ? (twin, event) : (event, twin)
+            hidden.insert(other.id)
+            result.append(MergeSuggestion(placeholderID: other.id, keptID: kept.id, placeholderTitle: other.title,
+                                          placeholderCalendarID: other.calendarID))
+        }
     }
+    return result
 }

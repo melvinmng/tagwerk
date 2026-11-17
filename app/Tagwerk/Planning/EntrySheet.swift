@@ -122,13 +122,13 @@ struct EntrySheet: View {
         if !event.mergedCalendarIDs.isEmpty {
             Section {
                 Button("Getrennt anzeigen") {
-                    Task { await model.showDuplicatesSeparately() }
+                    Task { await model.showSeparately(event) }
                     dismiss()
                 }
             } header: {
                 Text("In \(event.mergedCalendarIDs.count + 1) Kalendern")
             } footer: {
-                Text("Gezeigt wird die Kopie mit den meisten Angaben.")
+                Text("Zusammengefasst auf deinen Wunsch; gezeigt wird die Kopie mit den meisten Angaben.")
             }
         }
 

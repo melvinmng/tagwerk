@@ -249,7 +249,7 @@ struct DayGridScreen<Summary: View, Header: View>: View {
         let kept = (plan.events + plan.blocks).first { $0.id == suggestion.keptID }
         let calendarName = model.calendarTitle(suggestion.placeholderCalendarID) ?? "Kalender"
         return VStack(alignment: .leading, spacing: 8) {
-            Label("Derselbe Termin?", systemImage: "sparkles").font(.subheadline.weight(.semibold))
+            Label("Derselbe Termin?", systemImage: "rectangle.on.rectangle").font(.subheadline.weight(.semibold))
             Text("„\(suggestion.placeholderTitle)“ aus „\(calendarName)“ liegt zur selben Zeit wie „\(kept?.title ?? "")“.")
                 .font(.subheadline).foregroundStyle(.secondary)
             Toggle("Künftig immer bei „\(suggestion.placeholderTitle)“ aus „\(calendarName)“",

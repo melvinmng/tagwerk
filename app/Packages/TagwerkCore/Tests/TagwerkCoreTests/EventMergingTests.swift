@@ -59,6 +59,18 @@ struct MergeSuggestionTests {
         #expect(mergeSuggestions([event("a", "uni", "Vorlesung"), event("b", "work", "Meeting")]).isEmpty)
     }
 
+    @Test func identicalTitles_areSuggested_detailedCopyKept() {
+        var detailed = event("b", "uni", "Seminar")
+        detailed.location = "Raum 2.14"
+        let suggestions = mergeSuggestions([event("a", "work", "Seminar"), detailed])
+        #expect(suggestions.map(\.placeholderID) == ["a"])
+        #expect(suggestions.first?.keptID == "b")
+    }
+
+    @Test func excludedCalendars_areNotSuggested() {
+        #expect(mergeSuggestions([event("a", "work", "Seminar"), event("b", "uni", "Seminar")], excluding: ["uni"]).isEmpty)
+    }
+
     @Test func sameCalendar_isNotSuggested() {
         #expect(mergeSuggestions([event("a", "work", "Vorlesung"), event("b", "work", "Busy")]).isEmpty)
     }

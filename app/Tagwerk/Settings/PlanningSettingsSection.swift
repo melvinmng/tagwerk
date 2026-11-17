@@ -24,13 +24,13 @@ struct PlanningSettingsSection: View {
             }
             Stepper("Standarddauer: \(CapacityText.duration(settings.defaultTaskMinutes))",
                     value: $settings.defaultTaskMinutes, in: 15...240, step: 15)
-            Toggle("Gleiche Termine zusammenfassen", isOn: $settings.mergeDuplicateEvents)
+            Toggle("Termine zusammenfassen (mit Rückfrage)", isOn: $settings.mergeDuplicateEvents)
             Button("Zusammenfassungen zurücksetzen") { Task { await environment.planning.resetMergeDecisions() } }
             NavigationLink("Kalender-Diagnose") { CalendarDiagnosticsView(model: environment.planning) }
         } header: {
             Text("Planen")
         } footer: {
-            Text("Termine aus Deadline-Kalendern (z. B. Klausuren) gelten als wichtige Deadlines. Aufgaben ohne Aufwand zählen mit der Standarddauer. Gleiche Termine in mehreren Kalendern erscheinen als eine Zeile.")
+            Text("Termine aus Deadline-Kalendern (z. B. Klausuren) gelten als wichtige Deadlines. Aufgaben ohne Aufwand zählen mit der Standarddauer. Gleiche Termine in mehreren Kalendern fasst Tagwerk erst nach deiner Zustimmung zusammen.")
         }
         .task { calendars = environment.gateway.calendarAccessState == .fullAccess ? environment.gateway.calendars() : [] }
         .onChange(of: settings.deadlineCalendarIDs) { _, _ in Task { await environment.planning.reload() } }

@@ -139,6 +139,8 @@ final class PlanningModel {
     let marks: EventMarkStore
     /// Placeholder events of the shown days that may belong to a real event (design §13.15 M1).
     private(set) var mergeSuggestions: [MergeSuggestion] = []
+    /// Kept event ID → the accepted merges whose copies it hides.
+    private var appliedMerges: [String: [MergeSuggestion]] = [:]
 
     init(taskList: TaskListModel, calendarStore: CalendarStore, reminderStore: ReminderStore, planStore: PlanStore,
          efforts: RecurringEffortStore, blocks: BlockPlanner, settings: AppSettings, marks: EventMarkStore,
@@ -600,17 +602,13 @@ final class PlanningModel {
         let read = all.filter { readable?.contains($0.calendarID) ?? true }
         let (marked, _) = markedEvents(read)
         let markedIDs = Set(marked.map(\.id))
-        let links = resolvedLinks.mapValues(\.taskID)
         let deadlineCalendars = Set(settings.deadlineCalendarIDs ?? [])
         var shownIDs = Set<String>()
         var day = today
         while day < today.adding(days: 7, calendar: calendar) {
             let dayStart = day.startDate(in: calendar), dayEnd = day.adding(days: 1, calendar: calendar).startDate(in: calendar)
             let dayEvents = marked.filter { $0.end > dayStart && $0.start < dayEnd }
-            let merged = settings.mergeDuplicateEvents
-                ? mergingDuplicates(dayEvents.filter { !deadlineCalendars.contains($0.calendarID) }, links: links)
-                    + dayEvents.filter { deadlineCalendars.contains($0.calendarID) }
-                : dayEvents
+            let merged = dayEvents
             shownIDs.formUnion(merged.filter { !($0.isAllDay && deadlineCalendars.contains($0.calendarID)) }.map(\.id))
             day = day.adding(days: 1, calendar: calendar)
         }
@@ -641,19 +639,28 @@ final class PlanningModel {
             if let free = marks.isFree(event, marks: freeMarks) { event.isBusy = !free }
             return event
         }
-        // Switching merging off ("Gleiche Termine zusammenfassen") also ignores placeholder decisions.
-        guard settings.mergeDuplicateEvents else { return (events, []) }
+        // Switching merging off ("Termine zusammenfassen") shows every event and asks nothing.
+        guard settings.mergeDuplicateEvents else { appliedMerges = [:]; return (events, []) }
         let decisions = marks.mergeDecisions()
-        var hidden = Set<String>()
+        var hidden = [String: MergeSuggestion]()
         var open: [MergeSuggestion] = []
-        for suggestion in TagwerkCore.mergeSuggestions(events) {
+        let deadlineCalendars = Set(settings.deadlineCalendarIDs ?? [])
+        for suggestion in TagwerkCore.mergeSuggestions(events, excluding: deadlineCalendars) {
             switch marks.decision(for: suggestion, in: decisions) {
-            case true?: hidden.insert(suggestion.placeholderID)
+            case true?: hidden[suggestion.placeholderID] = suggestion
             case false?: break
             case nil: open.append(suggestion)
             }
         }
-        events.removeAll { hidden.contains($0.id) }
+        // The kept event names the calendars of its hidden copies ("2 Kalender").
+        var merges: [String: [MergeSuggestion]] = [:]
+        for suggestion in hidden.values { merges[suggestion.keptID, default: []].append(suggestion) }
+        appliedMerges.merge(merges) { _, new in new }
+        events = events.filter { hidden[$0.id] == nil }.map { event in
+            var event = event
+            event.mergedCalendarIDs = (merges[event.id] ?? []).map(\.placeholderCalendarID)
+            return event
+        }
         return (events, open)
     }
 
@@ -801,9 +808,11 @@ final class PlanningModel {
         await reload()
     }
 
-    /// "Getrennt anzeigen": turns merging of identical events off (setting in "Einstellungen").
-    func showDuplicatesSeparately() async {
-        settings.mergeDuplicateEvents = false
+    /// "Getrennt anzeigen": undoes the merges into this event, so its copies appear again.
+    func showSeparately(_ event: CalendarEvent) async {
+        for suggestion in appliedMerges[event.id] ?? [] {
+            marks.decide(suggestion, merge: false, always: false)
+        }
         await reload()
     }
 
@@ -899,12 +908,8 @@ final class PlanningModel {
                                  isDone: efforts.isDone(reminderID: reminder.id, day: day))
         }
         // Merging only affects the display; capacity above used every event (overlaps are unified).
-        // Deadline-calendar events keep their own role (deadline, all-day hint) and are never merged.
-        let deadlineCalendars = Set(settings.deadlineCalendarIDs ?? [])
-        let shown = settings.mergeDuplicateEvents
-            ? mergingDuplicates(dayEvents.filter { !deadlineCalendars.contains($0.calendarID) }, links: links)
-                + dayEvents.filter { deadlineCalendars.contains($0.calendarID) }
-            : dayEvents
+        // Merged copies were removed in `markedEvents` (only after the user's answer, design §13.15 M1).
+        let shown = dayEvents
         return DayPlan(day: day, capacity: capacity(input), deadlines: deadlines.filter { $0.day == day },
                        events: shown.filter { links[$0.id] == nil }, blocks: shown.filter { links[$0.id] != nil && !$0.isAllDay },
                        assigned: assigned, dueToday: dueToday, links: links.filter { id, _ in linkedEvents.contains { $0.id == id } },

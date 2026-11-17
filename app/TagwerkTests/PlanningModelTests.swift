@@ -377,19 +377,22 @@ struct PlanningModelTests {
         #expect(model.days.first?.capacity.remainingMinutes == 360)
     }
 
-    @Test func duplicateEvents_showOnce_capacityUnchanged() async throws {
+    @Test func duplicateEvents_shownBothUntilAnswered_thenOnce() async throws {
         calendarStore.storedEvents = ["work", "shared"].map { calendarID in
             CalendarEvent(id: "seminar-\(calendarID)", externalID: nil, calendarID: calendarID, title: "Seminar",
                           start: at(18, 14), end: at(18, 15), isAllDay: false, url: nil, isBusy: true, version: "1")
         }
         let model = await model()
+        #expect(model.timeline(for: try #require(model.days.first)).filter { $0.label == "Seminar" }.count == 2)
+        let suggestion = try #require(model.mergeSuggestions.first)
+        await model.decideMerge(suggestion, merge: true, always: false)
         let day = try #require(model.days.first)
         #expect(model.timeline(for: day).filter { $0.label == "Seminar" }.count == 1)
-        #expect(day.events.first?.mergedCalendarIDs == ["shared"])
+        #expect(day.events.first?.mergedCalendarIDs.count == 1)
         #expect(day.capacity.availableMinutes == 420)
-        settings.mergeDuplicateEvents = false
-        await model.reload()
+        await model.showSeparately(try #require(day.events.first))
         #expect(model.timeline(for: try #require(model.days.first)).filter { $0.label == "Seminar" }.count == 2)
+        #expect(model.mergeSuggestions.isEmpty)  // answered with "Getrennt"
     }
 
     private func draft(_ event: CalendarEvent, title: String? = nil, start: Date? = nil, end: Date? = nil) -> EventDraft {
