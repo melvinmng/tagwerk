@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<style>
+  /* Mockup frame uses the host theme; phone screens depict the app in iOS dark mode. */
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 20px; }
+  .label { font: 600 13px var(--font-sans); color: var(--muted-foreground); margin: 0 0 8px 4px; }
+  .label b { color: var(--foreground); }
+  .phone {
+    --bg: #000; --card: #1c1c1e; --card2: #2c2c2e; --sep: #38383a; --text: #fff; --sub: #8e8e93;
+    --blue: #0a84ff; --green: #30d158; --orange: #ff9f0a; --red: #ff453a; --purple: #bf5af2; --teal: #64d2ff;
+    background: var(--bg); color: var(--text); border-radius: 34px; padding: 14px 12px 10px;
+    font: 15px -apple-system, "SF Pro Text", system-ui, sans-serif; border: 6px solid #2a2a2c;
+    min-height: 640px; display: flex; flex-direction: column;
+  }
+  .status { display: flex; justify-content: space-between; font: 600 13px system-ui; padding: 0 10px 8px; }
+  .title { font: 700 30px system-ui; padding: 2px 6px 2px; }
+  .subtitle { color: var(--sub); font-size: 14px; padding: 0 6px 10px; }
+  .row { display: flex; align-items: center; gap: 10px; }
+  .card { background: var(--card); border-radius: 12px; padding: 10px 12px; margin-bottom: 10px; }
+  .btn { background: var(--blue); color: #fff; border-radius: 12px; padding: 10px; text-align: center; font-weight: 600; margin-bottom: 10px; }
+  .btn.secondary { background: var(--card2); color: var(--blue); }
+  .banner { background: rgba(255,159,10,.15); color: var(--orange); border-radius: 12px; padding: 8px 12px; font-size: 13px; margin-bottom: 10px; }
+  .banner.red { background: rgba(255,69,58,.15); color: var(--red); }
+  .time { width: 44px; color: var(--sub); font: 13px ui-monospace, monospace; flex-shrink: 0; }
+  .block { flex: 1; border-radius: 10px; padding: 7px 10px; font-size: 13px; }
+  .block.event { background: rgba(10,132,255,.22); border-left: 4px solid var(--blue); }
+  .block.suggest { border: 1.5px dashed var(--purple); color: #e5d4f5; background: rgba(191,90,242,.08); }
+  .block .meta { color: var(--sub); font-size: 11px; margin-top: 2px; }
+  .chip { font-size: 11px; padding: 2px 7px; border-radius: 99px; background: var(--card2); color: var(--sub); white-space: nowrap; }
+  .tl { display: flex; flex-direction: column; gap: 6px; }
+  .section { color: var(--sub); font: 600 12px system-ui; text-transform: uppercase; letter-spacing: .4px; margin: 10px 6px 4px; }
+  .list { background: var(--card); border-radius: 12px; overflow: hidden; margin-bottom: 6px; }
+  .item { display: flex; align-items: flex-start; gap: 10px; padding: 9px 12px; border-bottom: 1px solid var(--sep); }
+  .item:last-child { border-bottom: 0; }
+  .circle { width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--sub); flex-shrink: 0; margin-top: 1px; }
+  .item .t { flex: 1; font-size: 14px; }
+  .item .s { color: var(--sub); font-size: 12px; margin-top: 2px; }
+  .due-red { color: var(--red); } .due-orange { color: var(--orange); }
+  .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 4px; }
+  .seg { display: flex; background: var(--card2); border-radius: 9px; padding: 2px; margin: 0 2px 8px; font-size: 12px; }
+  .seg span { flex: 1; text-align: center; padding: 5px 2px; font-size: 11px; border-radius: 7px; color: var(--sub); }
+  .seg span.on { background: #636366; color: #fff; font-weight: 600; }
+  .field { display: flex; justify-content: space-between; padding: 10px 12px; border-bottom: 1px solid var(--sep); font-size: 14px; }
+  .field:last-child { border-bottom: 0; }
+  .field .v { color: var(--sub); }
+  .tabbar { margin-top: auto; display: flex; justify-content: space-around; border-top: 1px solid var(--sep); padding-top: 8px; font-size: 10px; color: var(--sub); text-align: center; }
+  .tabbar .on { color: var(--blue); }
+  .tabbar .off { opacity: .35; }
+  .ico { font-size: 18px; display: block; }
+  .check { color: var(--green); font-weight: 700; }
+  .step { display: flex; gap: 10px; padding: 10px 12px; border-bottom: 1px solid var(--sep); }
+  .step:last-child { border-bottom: 0; }
+  .step .n { width: 22px; height: 22px; border-radius: 50%; background: var(--card2); text-align: center; font-size: 12px; line-height: 22px; flex-shrink: 0; }
+  .step .n.done { background: var(--green); color: #000; }
+  .note { color: var(--sub); font-size: 11px; padding: 4px 8px; }
+  .legend { font: 12px var(--font-sans); color: var(--muted-foreground); margin-top: 14px; line-height: 1.6; }
+</style>
+</head>
+<body>
+<div class="grid">
+
+  <!-- 1 Heute -->
+  <div>
+    <p class="label"><b>1 · Heute</b>: Termine und KI-Vorschläge</p>
+    <div class="phone">
+      <div class="status"><span>9:41</span><span>●●● 5G</span></div>
+      <div class="title">Heute</div>
+      <div class="subtitle">Dienstag, 18. November</div>
+      <div class="banner red">⚠︎ 2 Deadlines heute · 1 überfällig</div>
+      <div class="btn">✨ Tag planen</div>
+      <div class="card" style="padding:7px 12px;font-size:13px"><span class="chip">Ganztägig</span>&nbsp; Projektwoche</div>
+      <div class="tl">
+        <div class="row"><span class="time">09:00</span><div class="block event">Vorlesung Statistik<div class="meta">Kalender · bis 10:30</div></div></div>
+        <div class="row"><span class="time">10:45</span><div class="block suggest">#42 Login-Fehler beheben<div class="meta">Vorschlag · 60 min · Deadline heute · ✓ übernehmen ✕</div></div></div>
+        <div class="row"><span class="time">12:00</span><div class="block event">Mittagessen<div class="meta">Kalender</div></div></div>
+        <div class="row"><span class="time">13:00</span><div class="block suggest">Kapitel 2 gliedern<div class="meta">Vorschlag · 90 min · Erinnerungen · ✓ ✕</div></div></div>
+        <div class="row"><span class="time">15:00</span><div class="block event">Team-Meeting<div class="meta">Kalender · bis 16:00</div></div></div>
+        <div class="row"><span class="time">16:15</span><div class="block suggest">Einkaufen<div class="meta">Vorschlag · 30 min · ✓ ✕</div></div></div>
+      </div>
+      <div class="note">„Deadline #42 ist knapp – Puffer eingeplant.“ (Begründung der KI, aufklappbar)</div>
+      <div class="tabbar"><span class="on"><i class="ico">☀︎</i>Heute</span><span><i class="ico">☑︎</i>Aufgaben</span><span><i class="ico">⚙︎</i>Einstellungen</span></div>
+    </div>
+  </div>
+
+  <!-- 2 Aufgaben -->
+  <div>
+    <p class="label"><b>2 · Aufgaben</b>: alle Quellen in einer Liste</p>
+    <div class="phone">
+      <div class="status"><span>9:41</span><span>●●● 5G</span></div>
+      <div class="row" style="justify-content:space-between;padding-right:8px"><div class="title">Aufgaben</div><span style="color:var(--blue);font-size:26px">＋</span></div>
+      <div class="seg"><span class="on" style="flex:.6">Alle</span><span style="flex:1.4">Erinnerungen</span><span>GitHub</span><span>Lokal</span></div>
+      <div class="section">Überfällig</div>
+      <div class="list">
+        <div class="item"><span class="circle"></span><div class="t">Literaturliste abgeben<div class="s due-red">gestern · <span class="dot" style="background:var(--orange)"></span>Studium</div></div></div>
+      </div>
+      <div class="section">Heute</div>
+      <div class="list">
+        <div class="item"><span class="circle"></span><div class="t">#42 Login-Fehler beheben<div class="s due-orange">heute · <span class="chip">beispiel/app</span> P2</div></div></div>
+        <div class="item"><span class="circle"></span><div class="t">Kapitel 2 gliedern<div class="s due-orange">heute · <span class="dot" style="background:var(--purple)"></span>Projekt</div></div></div>
+      </div>
+      <div class="section">Diese Woche</div>
+      <div class="list">
+        <div class="item"><span class="circle"></span><div class="t">#57 Tests für Export<div class="s">Fr · <span class="chip">beispiel/app</span> P3</div></div></div>
+        <div class="item"><span class="circle"></span><div class="t">Einkaufen<div class="s">Do · <span class="dot" style="background:var(--green)"></span>Privat</div></div></div>
+      </div>
+      <div class="section">Ohne Datum</div>
+      <div class="list"><div class="item"><span class="circle"></span><div class="t">Fahrrad reparieren<div class="s"><span class="dot" style="background:var(--teal)"></span>Lokal</div></div></div></div>
+      <div class="note">Wischen nach rechts: erledigt · nach links: verschieben</div>
+      <div class="tabbar"><span><i class="ico">☀︎</i>Heute</span><span class="on"><i class="ico">☑︎</i>Aufgaben</span><span><i class="ico">⚙︎</i>Einstellungen</span></div>
+    </div>
+  </div>
+
+  <!-- 3 Bearbeiten -->
+  <div>
+    <p class="label"><b>3 · Bearbeiten</b>: GitHub-Issue mit Konfliktschutz</p>
+    <div class="phone">
+      <div class="status"><span>9:41</span><span>●●● 5G</span></div>
+      <div class="row" style="justify-content:space-between;padding:4px 6px 10px"><span style="color:var(--blue)">Abbrechen</span><b>Issue #42</b><span style="color:var(--blue);font-weight:600">Sichern</span></div>
+      <div class="banner">Dieses Issue wurde auf GitHub geändert, seit du es geöffnet hast. <u>Neu laden</u> · <u>Trotzdem sichern</u></div>
+      <div class="list">
+        <div class="field"><span>Titel</span><span class="v">Login-Fehler beheben</span></div>
+        <div class="field"><span>Repo</span><span class="v">beispiel/app</span></div>
+        <div class="field"><span>Fällig</span><span class="v">18.11.</span></div>
+        <div class="field"><span>Priorität</span><span class="v">P2 (High)</span></div>
+        <div class="field"><span>Labels</span><span class="v">bug</span></div>
+        <div class="field"><span>Geschätzt</span><span class="v">60 min</span></div>
+      </div>
+      <div class="list" style="padding:10px 12px;font-size:13px;color:var(--sub);min-height:70px">Beschreibung (Markdown) …</div>
+      <div class="list"><div class="field"><span>Kommentar hinzufügen</span><span class="v">›</span></div></div>
+      <div class="btn secondary">Issue schließen</div>
+      <div class="note">Bei Erinnerungen: Titel, Fällig, Notiz, Liste, Priorität. Lokal: Titel, Fällig, Notiz.</div>
+    </div>
+  </div>
+
+  <!-- 4 Einrichtung -->
+  <div>
+    <p class="label"><b>4 · Einrichtung</b>: beim ersten Start</p>
+    <div class="phone">
+      <div class="status"><span>9:41</span><span>●●● 5G</span></div>
+      <div class="title">Willkommen</div>
+      <div class="subtitle">In fünf Schritten bereit. Termine und Aufgaben gehen nur an OpenAI, wenn du „Tag planen“ tippst.</div>
+      <div class="list">
+        <div class="step"><span class="n done">✓</span><div>Erinnerungen<div class="s" style="color:var(--sub);font-size:12px">Vollzugriff erteilt</div></div></div>
+        <div class="step"><span class="n done">✓</span><div>Kalender<div class="s" style="color:var(--sub);font-size:12px">Vollzugriff erteilt</div></div></div>
+        <div class="step"><span class="n">3</span><div>GitHub verbinden<div class="s" style="color:var(--sub);font-size:12px">Token einfügen · Repos/Projects wählen</div></div></div>
+        <div class="step"><span class="n">4</span><div>Mit ChatGPT anmelden<div class="s" style="color:var(--sub);font-size:12px">Nutzt dein Abo · optional</div></div></div>
+        <div class="step"><span class="n">5</span><div>Benachrichtigungen<div class="s" style="color:var(--sub);font-size:12px">für GitHub- und eigene Deadlines</div></div></div>
+      </div>
+      <div class="btn">Weiter</div>
+      <div class="note">Jeder Schritt lässt sich überspringen und später in den Einstellungen nachholen.</div>
+    </div>
+  </div>
+
+  <!-- 5 Einstellungen -->
+  <div>
+    <p class="label"><b>5 · Einstellungen</b>: Planung und Quellen</p>
+    <div class="phone">
+      <div class="status"><span>9:41</span><span>●●● 5G</span></div>
+      <div class="title">Einstellungen</div>
+      <div class="section">Planung</div>
+      <div class="list">
+        <div class="field"><span>Arbeitszeit</span><span class="v">08:00–18:00</span></div>
+        <div class="field"><span>Mittagspause</span><span class="v">12:00, 45 min</span></div>
+        <div class="field"><span>Puffer zwischen Blöcken</span><span class="v">15 min</span></div>
+      </div>
+      <div class="section">Quellen</div>
+      <div class="list">
+        <div class="field"><span>Kalender</span><span class="v">4 von 7 ›</span></div>
+        <div class="field"><span>Erinnerungslisten</span><span class="v">alle ›</span></div>
+        <div class="field"><span>GitHub</span><span class="v">2 Projects ›</span></div>
+      </div>
+      <div class="section">KI</div>
+      <div class="list">
+        <div class="field"><span>ChatGPT</span><span class="v"><span class="check">●</span> angemeldet ›</span></div>
+        <div class="field"><span>Modell</span><span class="v">automatisch ›</span></div>
+      </div>
+      <div class="section">Benachrichtigungen</div>
+      <div class="list"><div class="field"><span>Vorlauf vor Deadline</span><span class="v">2 h</span></div></div>
+      <div class="tabbar"><span><i class="ico">☀︎</i>Heute</span><span><i class="ico">☑︎</i>Aufgaben</span><span class="on"><i class="ico">⚙︎</i>Einstellungen</span></div>
+    </div>
+  </div>
+
+</div>
+<p class="legend">Durchgezogen = Termin aus dem Kalender · gestrichelt lila = Vorschlag der KI (erst nach Tippen übernommen) · drei Tabs in Phase 2, „Erfassen“ kommt in Phase 3 · GitHub-Fälligkeiten sind nur Datumsangaben, ohne Uhrzeit · <b>Fällig, Priorität und Geschätzt bei GitHub-Issues gibt es nur mit Option A (GitHub Projects lesen)</b> · alle Daten sind Platzhalter · Hell- und Dunkelmodus folgen den iOS-Systemfarben.</p>
+</body>
+</html>

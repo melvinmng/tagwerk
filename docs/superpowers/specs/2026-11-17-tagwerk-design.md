@@ -2,6 +2,8 @@
 
 Stand: 2026-11-17 · Status: **freigegeben am 2026-11-17** · Gate: Phase 1 (Machbarkeits-Spike) muss bestehen, bevor das MVP gebaut wird.
 
+> Phase 2 ist im Nachtrag `2026-11-17-phase-2-design.md` genauer beschrieben. Er ersetzt hier die GitHub-Deadline-Quelle (Meilensteine → GitHub Projects) und den GitHub-Zugang (Fine-grained PAT → „Mit GitHub anmelden“).
+
 ## 1. Absicht und Warum
 
 Eine private iPhone-App, die alle offenen Aufgaben (Apple Reminders, GitHub), den Kalender sowie Ernährung und Training an einem Ort zusammenführt. Eine KI-Schicht (Claude) hilft, den Tag zu planen, Deadlines im Blick zu behalten und Mahlzeiten schnell zu erfassen. Hauptnutzung: **unterwegs am iPhone**. Nur für eine Person, kein Vertrieb.
