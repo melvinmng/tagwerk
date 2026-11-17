@@ -108,7 +108,7 @@ public final class GitHubTaskProvider: TaskProvider {
             }
             let writer = GitHubWriter(api: api)
             try await writer.updateIssue(current, title: nil, body: nil, labels: nil, state: .closeNotPlanned)
-            for placement in current.placements {
+            for placement in current.placements where placement.project.canWrite {
                 try await writer.setField(placement, fieldName: GitHubMapping.statusField, value: .singleSelect(GitHubMapping.doneStatus))
             }
             records[current.issueID] = nil
@@ -217,7 +217,8 @@ public final class GitHubTaskProvider: TaskProvider {
         if case .set(let value) = edit.labels { labels = value }
         try await writer.updateIssue(record, title: title, body: body, labels: labels, state: state)
 
-        let targets = record.placements.filter { edit.targetSubContainerIDs?.contains($0.project.id) ?? true }
+        let writable = record.placements.filter(\.project.canWrite)
+        let targets = writable.filter { edit.targetSubContainerIDs?.contains($0.project.id) ?? true }
         for placement in targets {
             if case .set(let due) = edit.due {
                 try await writer.setField(placement, fieldName: GitHubMapping.dueField, value: due.map { .date($0) })
@@ -236,7 +237,7 @@ public final class GitHubTaskProvider: TaskProvider {
 
         if let state {
             let status = state == .close ? GitHubMapping.doneStatus : GitHubMapping.reopenStatus
-            for placement in record.placements {
+            for placement in writable {
                 try await writer.setField(placement, fieldName: GitHubMapping.statusField, value: .singleSelect(status))
             }
         }

@@ -87,6 +87,31 @@ struct GitHubTaskProviderWriteTests {
         #expect(!transport.requests.contains { $0.httpMethod == "DELETE" })
     }
 
+    /// A readable project of another owner may refuse writes; Tagwerk leaves it alone.
+    @Test func complete_withReadOnlyPlacement_writesOnlyWritableProjects() async throws {
+        let provider = makeProvider()
+        transport.enqueueJSON("/graphql", Fixtures.issue(project2Writable: false))
+        let item = try #require(try await provider.task(id: issueID))
+        transport.enqueueJSON("/graphql", Fixtures.issue(project2Writable: false))
+        transport.enqueueJSON("/repos/beispiel/app/issues/1", Fixtures.issuePatchOK)
+        transport.enqueueJSON("/graphql", Fixtures.mutationOK)
+        transport.enqueueJSON("/graphql", Fixtures.issue(state: "CLOSED", status1: "Done", project2Writable: false))
+
+        _ = try await provider.apply(edit { $0.isCompleted = .set(true) }, to: issueID, expectedVersion: item.version)
+
+        let mutations = writeBodies().filter { $0.contains("updateProjectV2ItemFieldValue") }
+        #expect(mutations.count == 1)
+        #expect(mutations[0].contains("PVTI_a"))
+        #expect(!transport.requests.contains { $0.bodyString.contains("PVTI_c") && $0.bodyString.contains("mutation") })
+    }
+
+    @Test func readOnlyProject_isNotOfferedAsEditTarget() async throws {
+        let provider = makeProvider()
+        transport.enqueueJSON("/graphql", Fixtures.issue(project2Writable: false))
+        let item = try #require(try await provider.task(id: issueID))
+        #expect(item.subContainers.map(\.id) == ["PVT_1"])
+    }
+
     @Test func reopen_setsStatusReady() async throws {
         let provider = makeProvider()
         let item = try await loadItem(provider)

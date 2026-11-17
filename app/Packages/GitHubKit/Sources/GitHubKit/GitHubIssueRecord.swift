@@ -22,8 +22,12 @@ public struct ProjectInfo: Codable, Sendable, Equatable, Identifiable {
     public let fields: [ProjectField]
     /// Repositories linked to the project ("owner/name"); empty when unknown.
     public let repositories: [String]
+    /// Whether the login may change items (readable projects of other owners may be read-only).
+    public let canWrite: Bool
 
-    public init(id: String, number: Int, title: String, fields: [ProjectField], repositories: [String] = []) {
+    public init(id: String, number: Int, title: String, fields: [ProjectField], repositories: [String] = [],
+                canWrite: Bool = true) {
+        self.canWrite = canWrite
         self.id = id
         self.number = number
         self.title = title
@@ -39,6 +43,7 @@ public struct ProjectInfo: Codable, Sendable, Equatable, Identifiable {
         fields = try container.decode([ProjectField].self, forKey: .fields)
         // Caches written before repositories existed lack the key.
         repositories = try container.decodeIfPresent([String].self, forKey: .repositories) ?? []
+        canWrite = try container.decodeIfPresent(Bool.self, forKey: .canWrite) ?? true
     }
 
     public func field(named name: String) -> ProjectField? {

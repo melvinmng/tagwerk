@@ -27,7 +27,7 @@ enum ProjectsQuery {
 
     static let viewerProjects = """
     query { viewer { login projectsV2(first: 20, query: "is:open") { nodes {
-      id number title closed
+      id number title closed viewerCanUpdate
       repositories(first: 20) { nodes { nameWithOwner } }
       \(fieldsSelection)
     } } } }
@@ -43,7 +43,7 @@ enum ProjectsQuery {
           \(issueSelection)
           projectItems(first: 20) { nodes {
             id updatedAt isArchived
-            project { id number title closed \(fieldsSelection) }
+            project { id number title closed viewerCanUpdate \(fieldsSelection) }
             \(fieldValuesSelection)
           } }
         } }
@@ -56,7 +56,7 @@ enum ProjectsQuery {
       \(issueSelection)
       projectItems(first: 20) { nodes {
         id updatedAt isArchived
-        project { id number title closed \(fieldsSelection) }
+        project { id number title closed viewerCanUpdate \(fieldsSelection) }
         \(fieldValuesSelection)
       } }
     } } }
@@ -80,6 +80,7 @@ enum ProjectsQuery {
         let number: Int
         let title: String
         let closed: Bool
+        let viewerCanUpdate: Bool?
         let fields: Nodes<FieldNode>
         let repositories: Nodes<IssueContent.Repository>?
 
@@ -91,7 +92,8 @@ enum ProjectsQuery {
                     return ProjectField(id: id, name: name,
                                         options: Dictionary((node.options ?? []).map { ($0.name, $0.id) }, uniquingKeysWith: { a, _ in a }))
                 },
-                repositories: repositories?.nodes.map(\.nameWithOwner) ?? []
+                repositories: repositories?.nodes.map(\.nameWithOwner) ?? [],
+                canWrite: viewerCanUpdate ?? true
             )
         }
     }

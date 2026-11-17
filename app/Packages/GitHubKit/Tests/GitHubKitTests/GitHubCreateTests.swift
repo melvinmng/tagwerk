@@ -171,5 +171,6 @@ struct GitHubCatalogTests {
         let json = #"{"id":"PVT_1","number":1,"title":"App","fields":[]}"#
         let info = try JSONDecoder().decode(ProjectInfo.self, from: Data(json.utf8))
         #expect(info.repositories.isEmpty)
+        #expect(info.canWrite)
     }
 }

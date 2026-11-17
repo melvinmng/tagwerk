@@ -56,7 +56,8 @@ public enum GitHubMapping {
             (lhs.year, lhs.month, lhs.day, lhs.hour ?? 0, lhs.minute ?? 0) < (rhs.year, rhs.month, rhs.day, rhs.hour ?? 0, rhs.minute ?? 0)
         }
         var editable: Set<TaskField> = [.title, .notes, .labels]
-        let projects = placements.map(\.project)
+        // Only projects the login may change count for editing (readable foreign boards may be read-only).
+        let projects = placements.map(\.project).filter(\.canWrite)
         if projects.contains(where: { $0.field(named: dueField) != nil }) { editable.insert(.due) }
         if projects.contains(where: { $0.field(named: priorityField) != nil }) { editable.insert(.priority) }
         if projects.contains(where: { estimateFieldName(in: $0) != nil }) { editable.insert(.estimate) }
@@ -73,7 +74,8 @@ public enum GitHubMapping {
             url: record.url,
             version: version(record),
             editableFields: editable,
-            subContainers: placements.map { TaskContainer(id: $0.project.id, name: $0.project.title, colorHex: nil) },
+            subContainers: placements.filter(\.project.canWrite)
+                .map { TaskContainer(id: $0.project.id, name: $0.project.title, colorHex: nil) },
             labels: record.labels
         )
     }
