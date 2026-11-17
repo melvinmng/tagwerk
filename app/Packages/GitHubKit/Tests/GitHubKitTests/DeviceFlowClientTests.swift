@@ -9,7 +9,7 @@ struct DeviceFlowClientTests {
                           verificationURL: URL(string: "https://github.com/login/device")!, expiresIn: 900, interval: 5)
 
     var client: DeviceFlowClient {
-        DeviceFlowClient(clientID: "Ov23liLkF2p4Nh2ztZg0", transport: transport, sleep: recorder.sleep, now: { fixedNow })
+        DeviceFlowClient(clientID: "example-client", transport: transport, sleep: recorder.sleep, now: { fixedNow })
     }
 
     @Test func requestCode_sendsClientIDAndScope() async throws {
@@ -23,7 +23,7 @@ struct DeviceFlowClientTests {
         #expect(request.httpMethod == "POST")
         #expect(request.value(forHTTPHeaderField: "Accept") == "application/json")
         let body = request.bodyString
-        #expect(body.contains("client_id=Ov23liLkF2p4Nh2ztZg0"))
+        #expect(body.contains("client_id=example-client"))
         #expect(body.contains("scope=repo%20project%20offline_access") || body.contains("scope=repo+project+offline_access"))
         #expect(result.userCode == "ABCD-1234")
         #expect(result.expiresIn == 899)
@@ -102,7 +102,7 @@ struct DeviceFlowClientTests {
         let body = try #require(transport.requests.first).bodyString
         #expect(body.contains("grant_type=refresh_token"))
         #expect(body.contains("refresh_token=ghr_old"))
-        #expect(body.contains("client_id=Ov23liLkF2p4Nh2ztZg0"))
+        #expect(body.contains("client_id=example-client"))
         #expect(!body.contains("client_secret"))
         #expect(credentials.accessToken == "gho_new")
     }

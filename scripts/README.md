@@ -1,80 +1,67 @@
-# Automatische Neuinstallation
+# Tagwerk installieren und erneuern
 
-Mit dem kostenlosen Apple-Account läuft das Provisioning-Profil nach 7 Tagen ab. `refresh-install.sh` baut die App neu, sobald das installierte Profil weniger als 3 Tage gültig ist. Vor jedem Build löscht es das zwischengespeicherte Profil, damit Xcode ein frisches 7-Tage-Profil ausstellt. Danach installiert es die App und installiert sie per Kabel oder WLAN auf das iPhone. Die Daten in der App bleiben dabei erhalten.
+Die vollständige Einrichtung für neue Nutzer steht in der [Tagwerk-README](../README.md#tagwerk-auf-deinem-iphone-installieren). Dort findest du die Xcode-Installation, die lokale Konfiguration und die Registrierung des LaunchAgents.
 
-## Funktionsweise
+## So arbeitet die Erneuerung
 
-- Ein LaunchAgent startet das Skript stündlich und beim Anmelden. Steht keine Installation an, endet es sofort.
-- Gebaut wird aus einem eigenen Klon außerhalb von iCloud (`~/Library/Developer/Tagwerk/src`). Prozesse, die launchd startet, dürfen iCloud Drive nicht ohne Weiteres lesen, außerdem kann iCloud Dateien auslagern.
-- Das Protokoll steht in `~/Library/Logs/Tagwerk/refresh.log`, die Build-Ausgabe in `build.log`.
-- Gebaut wird der Branch `main` (`TAGWERK_BRANCH` überschreibt das).
-- Jeder Fehler (Gerät nicht erreichbar, Git, Build, Signierung, Installation) erzeugt eine Mitteilung auf dem Mac, sobald das Profil weniger als 2 Tage gültig ist.
-- Gebaut wird die App unter `app/` (Scheme `Tagwerk`, Bundle-ID `com.melvinmng.tagwerk`).
-- Zustand: `~/Library/Application Support/Tagwerk/profile-expiry.<Bundle-ID>` (Ablauf des installierten Profils, Unix-Zeit). Der Zustand gilt pro App, eine neue Bundle-ID startet deshalb als fällig.
-- Tests der Entscheidungslogik: `zsh scripts/tests/refresh-decisions.zsh`.
+- `de.tagwerk.refresh` ruft `refresh-install.sh` beim Anmelden und stündlich auf. Fehlt ein gespeichertes Ablaufdatum oder hat das Profil weniger als drei Tage Restlaufzeit, versucht das Skript die Neuinstallation.
+- Das Skript baut das Scheme `Tagwerk` aus `~/Library/Developer/Tagwerk/src`. Es aktualisiert den dortigen Branch `main` per Fast-forward von `origin`. Mit `TAGWERK_BRANCH` lässt sich der Branch für einen Skriptaufruf auswählen.
+- Team-ID, Geräte-ID, Bundle-ID und gegebenenfalls GitHub-Client-ID kommen aus `~/Library/Application Support/Tagwerk/config`. Vor dem Build entfernt das Skript zwischengespeicherte Profile für das konfigurierte Team und die konfigurierte Bundle-ID. Es liest das neue Ablaufdatum nach der Installation aus der gebauten App und legt es unter `profile-expiry.<Bundle-ID>` im selben Ordner ab.
+- Das Protokoll liegt unter `~/Library/Logs/Tagwerk/refresh.log`. In `build.log` im selben Ordner stehen die Details von Build und Installation. Bei Fehlern mit weniger als zwei Tagen Restlaufzeit versucht das Skript eine macOS-Mitteilung anzuzeigen.
 
-## Voraussetzungen
-
-- Der Mac ist wach und angemeldet, das iPhone im selben WLAN.
-- In Xcode → Window → Devices and Simulators ist beim iPhone „Connect via network“ aktiv.
-- Die Apple-ID ist in Xcode → Settings → Accounts angemeldet.
-
-## Einrichten
+## Status prüfen und manuell erneuern
 
 ```zsh
-# UDID des iPhones ermitteln und lokal ablegen (nicht im Repo)
-xcrun devicectl list devices
-mkdir -p ~/Library/Application\ Support/Tagwerk
-echo 'DEVICE_ID=<UDID>' > ~/Library/Application\ Support/Tagwerk/config
-git clone https://github.com/melvinmng/tagwerk ~/Library/Developer/Tagwerk/src
-cp scripts/de.tagwerk.refresh.plist ~/Library/LaunchAgents/
-launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/de.tagwerk.refresh.plist
+cd "$HOME/Library/Developer/Tagwerk/src"
+scripts/refresh-install.sh --dry-run
+launchctl print "gui/$(id -u)/de.tagwerk.refresh"
+tail "$HOME/Library/Logs/Tagwerk/refresh.log"
 ```
 
-## Prüfen
+`--dry-run` zeigt Ablaufdatum, Fälligkeit und Erreichbarkeit des Geräts an, ohne zu bauen oder zu installieren. `signing identity: present` zeigt ein vorhandenes Apple-Development-Zertifikat an. Ob das konfigurierte Team tatsächlich signieren kann, zeigt der Build.
+
+Sofort neu installieren, zum Beispiel nach einer Änderung der GitHub-Client-ID oder nach Ablauf des Profils:
 
 ```zsh
-~/Library/Developer/Tagwerk/src/scripts/refresh-install.sh --dry-run
-launchctl print gui/$(id -u)/de.tagwerk.refresh | grep -E "state|last exit code"
-tail ~/Library/Logs/Tagwerk/refresh.log
+"$HOME/Library/Developer/Tagwerk/src/scripts/refresh-install.sh" --force
 ```
 
-Sofort neu installieren:
+`scripts/install-dev.sh` installiert aus dem aktuellen Arbeitsverzeichnis mit derselben lokalen Konfiguration. Der Befehl aktualisiert den gespeicherten Profilablauf des LaunchAgents nicht.
+
+| Meldung | Was du prüfen kannst |
+|---|---|
+| `device: unreachable` | iPhone entsperren, per USB verbinden und den Gerätestatus in Xcode prüfen. Für WLAN Mac und iPhone in dasselbe Netz bringen und die Kopplung prüfen. |
+| `No Accounts` oder `signing failed` | In **Xcode → Settings → Accounts** die Anmeldung prüfen. Kontrolliere die Team-ID in der lokalen Konfiguration. Wenn ein Schlüsselbunddialog offen ist, bestätige den Zugriff für `codesign`. |
+| Bundle-ID ist nicht verfügbar | Bei einer Erstinstallation eine eigene ID wählen. Bei einer bestehenden Installation prüfen, ob du noch dasselbe Team und dieselbe App-ID verwendest. |
+| Das iPhone meldet das App-Limit | Ein kostenloses Personal Team kann bis zu drei Entwicklungs-Apps pro Gerät installieren. Prüfe, welche deiner anderen Entwicklungs-Apps einen Platz belegt. |
+| `build: git update failed` | Internetverbindung und `origin` im Hintergrund-Klon prüfen. Der zu bauende Branch muss sich per Fast-forward aktualisieren lassen. |
+| LaunchAgent startet nicht | `launchctl print "gui/$(id -u)/de.tagwerk.refresh"` und `/tmp/de.tagwerk.refresh.err` prüfen. Code 64 weist auf die lokale Konfiguration hin. |
+
+## Bestehende Installation übernehmen
+
+Falls deine lokale Konfiguration bisher nur `DEVICE_ID` enthält, ergänze `DEVELOPMENT_TEAM` und `TAGWERK_BUNDLE_ID` mit den Werten deiner bestehenden Installation. Wenn du bisher mit der Bundle-ID `com.melvinmng.tagwerk` signiert hast, trage diesen Wert ein, damit iOS die App beim Refresh als Update installiert. Bei einem Wechsel auf eine eigene OAuth App melde dich anschließend in Tagwerk neu bei GitHub an.
+
+`TagwerkSpike` aus Phase 1 ist eine eigene App. Eine Neuinstallation von `Tagwerk` ersetzt den Spike nicht. Entferne ihn auf dem iPhone, wenn du den Entwicklungs-App-Platz freigeben möchtest.
+
+## Hintergrundbetrieb abschalten
 
 ```zsh
-TAGWERK_FORCE=1 ~/Library/Developer/Tagwerk/src/scripts/refresh-install.sh
+launchctl bootout "gui/$(id -u)/de.tagwerk.refresh"
+rm "$HOME/Library/LaunchAgents/de.tagwerk.refresh.plist"
 ```
 
-`launchctl setenv TAGWERK_FORCE 1` mit anschließendem `kickstart` ist unzuverlässig: Ein sofortiges `launchctl unsetenv` kann die Variable entfernen, bevor der Job sie liest. Der Job beendet sich dann ohne Logeintrag, weil die Installation noch nicht fällig ist.
-
-Fragt der Schlüsselbund beim ersten Lauf nach `codesign`, auf „Immer erlauben“ klicken. Meldet `build.log` „No Accounts“, ist Xcode nicht mehr bei der Apple-ID angemeldet: Xcode → Settings → Accounts.
-
-## Umstieg vom Spike auf die App (einmalig)
-
-Seit dem Merge von Phase 2a baut der LaunchAgent die echte App statt `TagwerkSpike`.
-
-1. Nach dem Merge auf `main` installiert der nächste stündliche Lauf die App, weil für `com.melvinmng.tagwerk` noch kein Ablaufdatum gespeichert ist. Sofort geht es so:
-   ```zsh
-   TAGWERK_FORCE=1 ~/Library/Developer/Tagwerk/src/scripts/refresh-install.sh
-   ```
-2. In `refresh.log` muss `install: ok` stehen.
-3. Die Spike-App vom iPhone löschen. Das gibt einen der drei App-Plätze frei.
-4. Die alte Datei `profile-expiry` (ohne Bundle-ID) wird nicht mehr gelesen und kann gelöscht werden.
-
-Zum Entwickeln installiert `scripts/install-dev.sh` den aktuellen Stand des Arbeitsverzeichnisses, ohne den Zustand des LaunchAgents zu verändern.
-
-## Entfernen
-
-```zsh
-launchctl bootout gui/$(id -u)/de.tagwerk.refresh
-rm ~/Library/LaunchAgents/de.tagwerk.refresh.plist
-```
-
-## Exit-Codes
+## Exit-Codes des Refresh-Skripts
 
 | Code | Bedeutung |
 |---|---|
-| 0 | installiert oder noch nicht fällig |
-| 1 | Build fehlgeschlagen |
+| 0 | Installation erfolgreich, Prüfung abgeschlossen oder Neuinstallation noch nicht fällig |
+| 1 | Quellcode konnte nicht aktualisiert werden, Projektgenerierung oder Build fehlgeschlagen |
 | 2 | iPhone nicht erreichbar oder Installation fehlgeschlagen |
-| 3 | Signierung fehlgeschlagen, meist muss man sich in Xcode neu anmelden |
+| 3 | Signierung fehlgeschlagen |
+| 64 | Konfiguration oder Skriptargument ungültig |
+
+Entscheidungslogik und lokale Konfiguration testen:
+
+```zsh
+zsh scripts/tests/refresh-decisions.zsh
+```

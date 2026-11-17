@@ -2,13 +2,14 @@ import Foundation
 import Testing
 
 struct AppSmokeTests {
-    @Test func appBundleIdentifier_isTagwerk() {
-        #expect(Bundle.main.bundleIdentifier == "com.melvinmng.tagwerk")
+    @Test func appBundle_isTagwerk() {
+        #expect(Bundle.main.object(forInfoDictionaryKey: "CFBundleDisplayName") as? String == "Tagwerk")
     }
 }
 
 struct GitHubConfigTests {
-    @Test func gitHubClientID_comesFromXcconfig() {
-        #expect(Bundle.main.object(forInfoDictionaryKey: "GitHubClientID") as? String == "Ov23liLkF2p4Nh2ztZg0")
+    @Test func gitHubClientID_isResolved() throws {
+        let clientID = try #require(Bundle.main.object(forInfoDictionaryKey: "GitHubClientID") as? String)
+        #expect(clientID != "$(GITHUB_CLIENT_ID)")
     }
 }
