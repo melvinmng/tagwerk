@@ -1,13 +1,12 @@
 import SwiftUI
 
 struct RootView: View {
+    @Environment(AppEnvironment.self) private var environment
+
     var body: some View {
         TabView {
-            NavigationStack {
-                Text("Aufgaben folgen hier.")
-                    .navigationTitle("Aufgaben")
-            }
-            .tabItem { Label("Aufgaben", systemImage: "checklist") }
+            TaskListView(model: environment.taskList)
+                .tabItem { Label("Aufgaben", systemImage: "checklist") }
 
             NavigationStack {
                 Text("Einstellungen folgen hier.")
@@ -16,8 +15,4 @@ struct RootView: View {
             .tabItem { Label("Einstellungen", systemImage: "gearshape") }
         }
     }
-}
-
-#Preview {
-    RootView()
 }
