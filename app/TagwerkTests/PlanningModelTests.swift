@@ -511,6 +511,18 @@ struct PlanningModelTests {
         #expect(model.gaps(for: try #require(model.days.first)) == [600..<720, 780..<840, 900..<1080])
     }
 
+    @Test func step_day_week_month() async {
+        let model = await model()
+        model.step(1)
+        #expect(model.anchor == PlanDay(year: 2026, month: 11, day: 19))
+        model.scope = .week
+        model.step(-1)
+        #expect(model.anchor == PlanDay(year: 2026, month: 11, day: 12))
+        model.scope = .month
+        model.step(1)
+        #expect(model.anchor == PlanDay(year: 2026, month: 12, day: 12))
+    }
+
     @Test func duration_padsMinutes() {
         #expect(CapacityText.duration(125) == "2 h 05")
         #expect(CapacityText.duration(45) == "45 min")

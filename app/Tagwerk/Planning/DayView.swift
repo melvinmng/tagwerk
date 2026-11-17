@@ -14,18 +14,34 @@ struct DayView: View {
     var body: some View {
         if let plan = model.days.first {
             List {
-                DeadlineCard(deadlines: model.upcomingDeadlines, today: model.today, calendar: model.calendar)
-                    .listRowInsets(EdgeInsets())
+                DayHeader(model: model) { model.scope = .month }
+                    .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
                     .listRowBackground(Color.clear)
 
-                capacityCard(plan)
+                Section {
+                    DeadlineCard(deadlines: model.upcomingDeadlines, today: model.today, calendar: model.calendar)
+                        .listRowInsets(EdgeInsets())
+                        .listRowBackground(Color.clear)
+                }
+
+                Section { capacityCard(plan) }
 
                 if !model.allDayEvents(for: plan).isEmpty {
-                    Section("Ganztägig") {
-                        ForEach(model.allDayEvents(for: plan)) { event in
-                            Button(event.title) { onOpenEvent(event) }.foregroundStyle(.primary)
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 6) {
+                            Text("Ganztägig").font(.caption.weight(.semibold)).foregroundStyle(.secondary)
+                            ForEach(model.allDayEvents(for: plan)) { event in
+                                Button { onOpenEvent(event) } label: {
+                                    Text(event.title).font(.subheadline).lineLimit(1)
+                                        .padding(.horizontal, 10).padding(.vertical, 5)
+                                        .background(.thinMaterial, in: Capsule())
+                                }
+                                .buttonStyle(.plain)
+                            }
                         }
                     }
+                    .listRowInsets(EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16))
+                    .listRowBackground(Color.clear)
                 }
 
                 Section("Ablauf") {
@@ -54,11 +70,7 @@ struct DayView: View {
                         PlannedTaskRow(task: task, isPastDue: plan.isPastDue.contains(task.id))
                             .contentShape(Rectangle())
                             .onTapGesture { onOpenTask(task.id) }
-                            .contextMenu { TaskContextMenu(item: task, actions: menuActions(task)) }
-                            .swipeActions {
-                                Button("Zeitblock") { blockFor = task }.tint(.blue)
-                                Button("Ausplanen") { Task { await model.unassign(task.id) } }.tint(.gray)
-                            }
+                            .contextMenu { TaskContextMenu(item: task, actions: plannedActions(task)) }
                     }
                 }
 
@@ -68,7 +80,7 @@ struct DayView: View {
                             PlannedTaskRow(task: task, isPastDue: false)
                                 .contentShape(Rectangle())
                                 .onTapGesture { onOpenTask(task.id) }
-                                .contextMenu { TaskContextMenu(item: task, actions: menuActions(task)) }
+                                .contextMenu { TaskContextMenu(item: task, actions: plannedActions(task, canUnassign: false)) }
                         }
                     }
                 }
@@ -88,6 +100,12 @@ struct DayView: View {
                     }
                 }
             }
+            // Horizontal swipes change the day (mockup A1); vertical scrolling stays with the list.
+            .simultaneousGesture(DragGesture(minimumDistance: 30).onEnded { value in
+                let dx = value.translation.width, dy = value.translation.height
+                guard abs(dx) > 80, abs(dx) > 2 * abs(dy) else { return }
+                withAnimation(.snappy) { model.step(dx < 0 ? 1 : -1) }
+            })
             .sheet(isPresented: $editingHours) {
                 DayOverrideSheet(day: plan.day, calendar: model.calendar,
                                  current: model.workHours(on: plan.day)) { value in
@@ -101,6 +119,9 @@ struct DayView: View {
                     Task { await model.createBlock(for: task, start: start, minutes: minutes) }
                 }
             }
+        } else {
+            // Keeps a view in place before the first load; otherwise the parent's `.task` would never run.
+            ProgressView().frame(maxWidth: .infinity, maxHeight: .infinity)
         }
     }
 
@@ -112,8 +133,8 @@ struct DayView: View {
                     Spacer()
                     Image(systemName: "slider.horizontal.3").foregroundStyle(.secondary)
                 }
-                if plan.capacity.remainingMinutes != nil {
-                    Text("Ganzer Tag: " + CapacityText.summary(plan.capacity)).font(.caption).foregroundStyle(.secondary)
+                if plan.capacity.remainingMinutes != nil, let hours = model.workHours(on: plan.day) {
+                    Text(remainingDetail(hours, plan: plan)).font(.caption).foregroundStyle(.secondary)
                 }
                 CapacityBar(capacity: plan.capacity)
                 if plan.capacity.estimatedCount > 0 {
@@ -124,6 +145,28 @@ struct DayView: View {
         }
         .foregroundStyle(.primary)
         .accessibilityHint("Arbeitszeit an diesem Tag ändern")
+    }
+
+    /// The shared menu plus the day-only entries that replaced the swipe actions.
+    private func plannedActions(_ task: TaskItem, canUnassign: Bool = true) -> TaskMenuActions {
+        var actions = menuActions(task)
+        actions.createBlock = { blockFor = task }
+        if canUnassign { actions.unassign = { Task { await model.unassign(task.id) } } }
+        return actions
+    }
+
+    /// "ab jetzt · 13:20 bis 18:00 · ganzer Tag …", or "Arbeitszeit vorbei" after the end of work.
+    private func remainingDetail(_ hours: WorkHours, plan: DayPlan) -> String {
+        let nowMinutes = Int(model.now().timeIntervalSince(plan.day.startDate(in: model.calendar)) / 60)
+        let window = nowMinutes >= hours.endMinutes
+            ? "Arbeitszeit vorbei"
+            : "ab \(nowMinutes > hours.startMinutes ? "jetzt · " + clock(nowMinutes, on: plan.day) : clock(hours.startMinutes, on: plan.day))"
+                + " bis \(clock(hours.endMinutes, on: plan.day))"
+        return window + " · ganzer Tag " + CapacityText.summary(plan.capacity)
+    }
+
+    private func clock(_ minutes: Int, on day: PlanDay) -> String {
+        day.startDate(in: model.calendar).addingTimeInterval(TimeInterval(minutes * 60)).formatted(date: .omitted, time: .shortened)
     }
 
     @ViewBuilder

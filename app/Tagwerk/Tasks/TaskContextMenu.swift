@@ -11,6 +11,9 @@ struct TaskMenuActions {
     var delete: () -> Void
     var editEffort: (() -> Void)?
     var isWritable: Bool
+    /// Day view only: create a time block / remove the planned day (replace the former swipe actions).
+    var createBlock: (() -> Void)? = nil
+    var unassign: (() -> Void)? = nil
 }
 
 struct TaskContextMenu: View {
@@ -28,6 +31,16 @@ struct TaskContextMenu: View {
                     .controlGroupStyle(.palette)
             }
             Button("Datum wählen …", systemImage: "calendar") { actions.planOnDate() }
+        }
+        if actions.createBlock != nil || actions.unassign != nil {
+            Section {
+                if let createBlock = actions.createBlock {
+                    Button("Zeitblock …", systemImage: "calendar.day.timeline.left") { createBlock() }
+                }
+                if let unassign = actions.unassign {
+                    Button("Ausplanen", systemImage: "calendar.badge.minus") { unassign() }
+                }
+            }
         }
         if actions.isWritable {
             Menu("Fälligkeit verschieben …", systemImage: "calendar.badge.clock") {

@@ -187,6 +187,17 @@ final class PlanningModel {
 
     // MARK: Actions
 
+    /// One day, week or month forward (`1`) or back (`-1`), for arrows and swiping.
+    func step(_ direction: Int) {
+        switch scope {
+        case .day: anchor = anchor.adding(days: direction, calendar: calendar)
+        case .week: anchor = anchor.adding(days: 7 * direction, calendar: calendar)
+        case .month:
+            let moved = calendar.date(byAdding: .month, value: direction, to: anchor.startDate(in: calendar))
+            anchor = moved.map { PlanDay(date: $0, calendar: calendar) } ?? anchor
+        }
+    }
+
     /// Plans `id` for `day` (Tagwerk only). Future time blocks require a decision first.
     func assign(_ id: TaskID, to day: PlanDay) async {
         if !blocks.futureBlocks(for: id, after: now()).isEmpty {

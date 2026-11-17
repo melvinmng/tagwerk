@@ -27,7 +27,7 @@ struct PlanView: View {
             }
             .safeAreaInset(edge: .top) { header }
             .navigationTitle("Planen")
-            .navigationBarTitleDisplayMode(.inline)
+            .toolbar(.hidden, for: .navigationBar)  // the tab bar already says "Planen" (mockup A1)
             .task(id: "\(model.scope)-\(model.anchor)") { await model.reload() }
             .refreshable { await model.taskList.reload(); await model.reload() }
             .onChange(of: model.taskList.items) { _, _ in Task { await model.reload() } }
@@ -66,15 +66,18 @@ struct PlanView: View {
                 ForEach(PlanScope.allCases, id: \.self) { Text($0.title).tag($0) }
             }
             .pickerStyle(.segmented)
-            HStack {
-                Button { step(-1) } label: { Image(systemName: "chevron.left") }.accessibilityLabel("Zurück")
-                Spacer()
-                Text(title).font(.headline)
-                Spacer()
-                Button { step(1) } label: { Image(systemName: "chevron.right") }.accessibilityLabel("Weiter")
-            }
-            if model.anchor != model.today {
-                Button("Heute") { model.anchor = model.today }.font(.caption)
+            // The day view draws its own large header (mockup A1).
+            if model.scope != .day {
+                HStack {
+                    Button { step(-1) } label: { Image(systemName: "chevron.left") }.accessibilityLabel("Zurück")
+                    Spacer()
+                    Text(title).font(.headline)
+                    Spacer()
+                    Button { step(1) } label: { Image(systemName: "chevron.right") }.accessibilityLabel("Weiter")
+                }
+                if model.anchor != model.today {
+                    Button("Heute") { model.anchor = model.today }.font(.caption)
+                }
             }
         }
         .padding(.horizontal)
@@ -96,13 +99,7 @@ struct PlanView: View {
     }
 
     private func step(_ direction: Int) {
-        switch model.scope {
-        case .day: model.anchor = model.anchor.adding(days: direction, calendar: model.calendar)
-        case .week: model.anchor = model.anchor.adding(days: 7 * direction, calendar: model.calendar)
-        case .month:
-            let moved = model.calendar.date(byAdding: .month, value: direction, to: model.anchor.startDate(in: model.calendar))
-            model.anchor = moved.map { PlanDay(date: $0, calendar: model.calendar) } ?? model.anchor
-        }
+        model.step(direction)
     }
 
     private func menuActions(for item: TaskItem) -> TaskMenuActions {
