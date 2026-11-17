@@ -1,6 +1,6 @@
 # Tagwerk – Phase 2 Design (Nachtrag)
 
-Stand: 2026-11-17 · Status: **Entwurf nach Builder-Check, wartet auf Freigabe** · Baut auf: `2026-11-17-tagwerk-design.md` (Hauptdesign) und `../spikes/2026-11-17-feasibility-results.md` (Ergebnisse Phase 1)
+Stand: 2026-11-17 · Status: **freigegeben am 2026-11-17** · Baut auf: `2026-11-17-tagwerk-design.md` (Hauptdesign) und `../spikes/2026-11-17-feasibility-results.md` (Ergebnisse Phase 1)
 
 ## 1. Ziel von Phase 2
 
@@ -65,7 +65,7 @@ Felder, die ein Project nicht hat (z. B. keine Priority-Spalte), bleiben leer un
 
 **Login (Device Flow):**
 
-1. Einmalige Einrichtung durch dich: eine OAuth-App unter github.com/settings/developers anlegen und dort „Enable Device Flow“ aktivieren. Die Client-ID ist kein Geheimnis und liegt in `app/Config/GitHub.xcconfig`. Ein Client-Secret wird für den Device Flow nicht gebraucht.
+1. Einmalige Einrichtung durch dich: eine OAuth-App unter github.com/settings/developers anlegen und dort „Enable Device Flow“ aktivieren. Die Client-ID ist kein Geheimnis und liegt in `app/Config/GitHub.xcconfig`: `Ov23liLkF2p4Nh2ztZg0` (OAuth-App „Tagwerk“, Device Flow aktiviert). Ein Client-Secret wird für den Device Flow nicht gebraucht.
 2. Die App fordert einen Gerätecode mit `scope=repo project offline_access` an, zeigt den Benutzercode an und öffnet `github.com/login/device`.
 3. Die App fragt den Token im vorgegebenen Intervall ab und beachtet `slow_down`, `authorization_pending`, `expired_token` und `access_denied`.
 4. Der Token liegt im Schlüsselbund (`AfterFirstUnlockThisDeviceOnly`).
