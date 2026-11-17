@@ -22,10 +22,12 @@ Zum Vergleich hat ChatGPT dieselbe Mahlzeit sinnvoll zerlegt: 2 Brötchen (300 k
 3. **Neuinstallation per `devicectl` behält Daten:** Startzähler, Schlüsselbund-Einträge und ChatGPT-Sitzung blieben über drei Neuinstallationen erhalten.
 4. **Profil-Laufzeit:** Das Profil gilt bis 2026-11-24, also genau 7 Tage.
 
+5. **ChatGPT-Token-Erneuerung:** ok, „Token erneuert, neuer Refresh-Token gespeichert“ (der Refresh-Token rotiert wie dokumentiert).
+6. **Automatische Neuinstallation im echten launchd-Kontext:** Der LaunchAgent `de.tagwerk.refresh` lief beim Laden, baute aus dem Klon außerhalb von iCloud, signierte und installierte. Exit-Code 0, kein Schlüsselbund-Dialog, `install: ok`.
+7. **Profil-Wiederverwendung (behoben):** Xcode verwendet ein gespeichertes Profil weiter, solange es gültig ist. Ein Build an Tag 5 hätte also das alte Profil mit nur noch 2 Tagen Restlaufzeit eingebettet. Das Skript löscht deshalb Profile, die in weniger als 3 Tagen ablaufen, vor dem Build. Test mit `--renew-profile`: Das alte Profil wurde entfernt, Xcode stellte ein neues 7-Tage-Profil aus (Ausstellung 13:11 statt 12:08 UTC), Installation ok.
+
 ## Noch offen
 
-- Token-Erneuerung (Knopf „Token-Erneuerung testen“): Ergebnis steht noch aus.
-- Automatische Neuinstallation im echten launchd-Kontext (Task 5, Abnahme mit Nutzer am Mac).
 - Langzeitbeobachtung über 2 Wochen: Zuverlässigkeit der WLAN-Installation und der Apple-ID-Anmeldung im Hintergrund.
 
 ## Folgen für Phase 2
