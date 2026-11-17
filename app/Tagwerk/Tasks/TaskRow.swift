@@ -8,6 +8,8 @@ struct TaskRow: View {
     let now: Date
     let calendar: Calendar
     var isReadOnly = false
+    /// Recurring reminder: marked with ↻ (design §13.8).
+    var isRecurring = false
     let onComplete: () -> Void
 
     var body: some View {
@@ -24,6 +26,9 @@ struct TaskRow: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(displayTitle)
                 HStack(spacing: 6) {
+                    if isRecurring {
+                        Image(systemName: "arrow.trianglehead.2.clockwise").accessibilityLabel("wiederkehrend")
+                    }
                     if let due = item.due {
                         Text(DueText.text(due, now: now, calendar: calendar))
                             .foregroundStyle(dueColor)

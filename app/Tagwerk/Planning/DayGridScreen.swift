@@ -1,0 +1,418 @@
+import RemindersKit
+import SwiftUI
+import TagwerkCore
+
+/// The day in the hour grid (design §13.15): its own scroll view, the "Ohne Uhrzeit" bar to drag tasks onto a
+/// time (D1), "Frei" selection (F1), merge suggestions (M1) and the lunch bar (L1).
+struct DayGridScreen<Summary: View, Header: View>: View {
+    let model: PlanningModel
+    let plan: DayPlan
+    let onOpenTask: (TaskID) -> Void
+    let onEditRecurring: (RecurringItem, PlanDay) -> Void
+    let menuActions: (TaskItem) -> TaskMenuActions
+    @ViewBuilder let summary: () -> Summary
+    @ViewBuilder let timelineHeader: () -> Header
+    let onOpenEntry: (DayEntry) -> Void
+    let onPlanTask: (TaskItem) -> Void
+
+    @State private var isDragging = false
+    @State private var canvasFrame: CGRect = .zero
+    @State private var taskDrag: (task: TaskItem, location: CGPoint)?
+    @State private var selection: Set<String>?
+    @State private var askingSeriesFree: Bool?
+    @State private var pendingSeriesCommit: CanvasCommit?
+    @State private var lunchChanged = false
+    /// The break as just set by dragging (shown before the model has reloaded).
+    @State private var changedLunch: Range<Int>?
+    @State private var alwaysMerge: Set<String> = []
+    /// Panel "Ohne Uhrzeit" (design §13.15 D1, reworked after device feedback 2026-11-18).
+    @SceneStorage("tagwerk.dayPanelExpanded") private var panelExpanded = false
+    @State private var scrollFrame: CGRect = .zero
+    @State private var panelHeaderMinY: CGFloat = .greatestFiniteMagnitude
+    @State private var panelBodyHeight: CGFloat = 0
+    @State private var scrollPosition = ScrollPosition()
+    @State private var contentOffsetY: CGFloat = 0
+    /// -1 scrolls up, 1 down while a dragged task is near the edge of the visible grid.
+    @State private var edgeScroll = 0
+    @State private var drops = 0
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 12) {
+                summary()
+                ForEach(daySuggestions) { suggestion in mergeCard(suggestion) }
+                HStack {
+                    timelineHeader()
+                    Button(selection == nil ? "Auswählen" : "Fertig") {
+                        selection = selection == nil ? [] : nil
+                    }
+                    .font(.subheadline)
+                }
+                canvas
+                    .onGeometryChange(for: CGRect.self) { $0.frame(in: .named("screen")) } action: { canvasFrame = $0 }
+            }
+            .padding(.horizontal)
+        }
+        .scrollPosition($scrollPosition)
+        .onScrollGeometryChange(for: CGFloat.self) { $0.contentOffset.y } action: { _, offset in contentOffsetY = offset }
+        .contentMargins(.bottom, 80, for: .scrollContent)  // room for the collapsed panel
+        .onGeometryChange(for: CGRect.self) { $0.frame(in: .named("screen")) } action: { scrollFrame = $0 }
+        .scrollDisabled(isDragging || taskDrag != nil)
+        .simultaneousGesture(daySwipe)
+        .overlay(alignment: .bottom) {
+            VStack(spacing: 8) {
+                if lunchChanged { lunchBar }
+                if selection != nil { selectionBar } else { dayPanel }
+            }
+            .padding(.horizontal)
+            .padding(.bottom, 8)
+        }
+        .task(id: edgeScroll) {
+            // Scrolls the grid while a dragged task rests near its top or bottom edge.
+            guard edgeScroll != 0 else { return }
+            while !Task.isCancelled {
+                scrollPosition.scrollTo(y: max(0, contentOffsetY + CGFloat(edgeScroll * 6)))
+                try? await Task.sleep(for: .milliseconds(16))
+            }
+        }
+        .sensoryFeedback(.impact(weight: .light), trigger: taskDrag?.task.id) { _, new in new != nil }
+        .sensoryFeedback(.selection, trigger: taskPreview.map { snapped(minutes: $0.startMinutes) })
+        .sensoryFeedback(.impact(weight: .medium), trigger: drops)
+        .confirmationDialog("Dieser Termin wiederholt sich", isPresented: hasSeriesCommit, titleVisibility: .visible,
+                            presenting: pendingSeriesCommit) { commit in
+            Button("Nur diesen Termin") { write(commit, span: .thisEvent) }
+            Button("Diesen und alle folgenden") { write(commit, span: .futureEvents) }
+            Button("Abbrechen", role: .cancel) { Task { await model.reload() } }
+        }
+        // Outermost, so the grid and the bottom bar measure in the same space.
+        .coordinateSpace(.named("screen"))
+        .confirmationDialog("Darunter sind Serientermine", isPresented: hasSeriesFree, titleVisibility: .visible) {
+            Button("Nur an diesem Tag") { applyFree(series: false) }
+            Button("Auch alle künftigen Termine dieser Serien") { applyFree(series: true) }
+        }
+    }
+
+    // MARK: Canvas
+
+    private var entries: [DayEntry] {
+        var result: [DayEntry] = plan.events.filter { !$0.isAllDay }.map { .event($0, nil) }
+        result += plan.blocks.map { .event($0, plan.links[$0.id]) }
+        if !plan.capacity.isDayOff, let lunch = model.lunch(on: plan.day) {
+            result.append(.lunch(day: plan.day, range: lunch))
+        }
+        return result
+    }
+
+    private var canvas: TimelineCanvas {
+        TimelineCanvas(model: model, plan: plan, entries: entries, selectingIDs: selection, taskPreview: taskPreview,
+                       onTap: onOpenEntry, onToggleSelection: toggle, onCommit: commit, isDragging: $isDragging)
+    }
+
+    private func commit(_ change: CanvasCommit) {
+        switch change.entry {
+        case .lunch(let day, _):
+            Task { await model.setLunch(startMinutes: change.range.lowerBound, minutes: change.range.count, on: day) }
+            changedLunch = snapped(minutes: change.range.lowerBound)..<snapped(minutes: change.range.upperBound)
+            withAnimation { lunchChanged = true }
+        case .event(let event, _):
+            if event.isRecurring { pendingSeriesCommit = change } else { write(change, span: .thisEvent) }
+        }
+    }
+
+    private func write(_ change: CanvasCommit, span: EventSpan) {
+        guard case .event(let event, _) = change.entry else { return }
+        Task { await model.setTime(of: event, startMinutes: change.range.lowerBound, endMinutes: change.range.upperBound, span: span) }
+    }
+
+    private var hasSeriesCommit: Binding<Bool> {
+        Binding(get: { pendingSeriesCommit != nil }, set: { if !$0 { pendingSeriesCommit = nil } })
+    }
+
+    // MARK: Panel "Ohne Uhrzeit" (D1)
+
+    private var overdueToday: [TaskItem] { plan.day == model.today ? model.overdue : [] }
+
+    /// Planned tasks, then "Heute offen, nicht zugeordnet" and "Überfällig"; rows drag by their grip onto the grid.
+    @ViewBuilder
+    private var dayPanel: some View {
+        let planned = model.timelessTasks(for: plan)
+        if !(planned.isEmpty && plan.openToday.isEmpty && overdueToday.isEmpty) {
+            let dragging = taskDrag != nil
+            VStack(spacing: 0) {
+                panelHeader(planned)
+                    .onGeometryChange(for: CGFloat.self) { $0.frame(in: .named("screen")).minY } action: { panelHeaderMinY = $0 }
+                if panelExpanded {
+                    ScrollView {
+                        VStack(alignment: .leading, spacing: 2) {
+                            panelSection("Ohne Uhrzeit", planned, offersToday: false)
+                            panelSection("Heute offen, nicht zugeordnet", plan.openToday, offersToday: true)
+                            panelSection("Überfällig", overdueToday, offersToday: true, isOverdue: true)
+                        }
+                        .padding(.horizontal, 10)
+                        .padding(.bottom, 8)
+                    }
+                    .scrollDisabled(dragging)
+                    .frame(maxHeight: max(160, scrollFrame.height * 0.45))
+                    .fixedSize(horizontal: false, vertical: true)
+                    .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { panelBodyHeight = $0 }
+                    .opacity(dragging ? 0 : 1)
+                }
+            }
+            .background(.bar, in: RoundedRectangle(cornerRadius: 16))
+            // While dragging, the panel slides down to its header so the grid behind is free; the dragged row
+            // stays in the hierarchy so its gesture keeps running.
+            .offset(y: dragging && panelExpanded ? panelBodyHeight : 0)
+            .animation(.snappy(duration: 0.2), value: dragging)
+        }
+    }
+
+    private func panelHeader(_ planned: [TaskItem]) -> some View {
+        let minutes = planned.reduce(0) { $0 + model.suggestedBlockMinutes(for: $1) }
+        return Button {
+            withAnimation(.snappy) { panelExpanded.toggle() }
+        } label: {
+            HStack(spacing: 6) {
+                Text("Ohne Uhrzeit").font(.subheadline.weight(.semibold))
+                Text("\(planned.count) · \(CapacityText.duration(minutes))").font(.subheadline).foregroundStyle(.secondary)
+                if !plan.openToday.isEmpty {
+                    Text("+\(plan.openToday.count) offen").font(.caption).foregroundStyle(.secondary)
+                }
+                if !overdueToday.isEmpty {
+                    Text("\(overdueToday.count) überfällig").font(.caption.weight(.semibold)).foregroundStyle(.orange)
+                }
+                Spacer()
+                Image(systemName: panelExpanded ? "chevron.down" : "chevron.up").foregroundStyle(.secondary)
+            }
+            .padding(.horizontal, 14)
+            .frame(height: 52)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityHint(panelExpanded ? "Liste einklappen" : "Liste aufklappen")
+    }
+
+    @ViewBuilder
+    private func panelSection(_ title: String, _ tasks: [TaskItem], offersToday: Bool, isOverdue: Bool = false) -> some View {
+        if !tasks.isEmpty {
+            Text(title).font(.caption.weight(.semibold)).foregroundStyle(isOverdue ? .orange : .secondary)
+                .padding(.top, 8).padding(.bottom, 2)
+            ForEach(tasks) { task in panelRow(task, offersToday: offersToday, isOverdue: isOverdue) }
+        }
+    }
+
+    private func panelRow(_ task: TaskItem, offersToday: Bool, isOverdue: Bool) -> some View {
+        HStack(spacing: 8) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(task.title).font(.subheadline).lineLimit(2)
+                Text(rowDetails(task, isOverdue: isOverdue)).font(.caption).foregroundStyle(.secondary).lineLimit(1)
+            }
+            Spacer(minLength: 4)
+            if let priority = task.priority {
+                Text(priority.label).font(.caption2.weight(.semibold))
+                    .padding(.horizontal, 6).padding(.vertical, 2)
+                    .background(priority == .p1 ? Color.red.opacity(0.25) : Color.secondary.opacity(0.2), in: Capsule())
+            }
+            if offersToday {
+                Button("Heute") { Task { await model.assign(task.id, to: model.today) } }
+                    .buttonStyle(.bordered).controlSize(.small)
+            }
+            grip(task)
+        }
+        .padding(.leading, 4)
+        .opacity(taskDrag?.task.id == task.id ? 0.4 : 1)
+        .contentShape(Rectangle())
+        .onTapGesture { onPlanTask(task) }
+        .contextMenu { TaskContextMenu(item: task, actions: menuActions(task)) }
+    }
+
+    /// Effort (or reserved recurring effort) · due · ↻ · source.
+    private func rowDetails(_ task: TaskItem, isOverdue: Bool) -> String {
+        var parts: [String] = []
+        if let recurring = model.recurringItem(for: task, on: plan.day) {
+            parts.append(recurring.minutes > 0 ? "↻ \(CapacityText.duration(recurring.minutes)) reserviert" : "↻")
+        } else {
+            parts.append(CapacityText.duration(model.suggestedBlockMinutes(for: task)))
+        }
+        if let due = task.due {
+            parts.append("fällig " + DueText.text(due, now: model.now(), calendar: model.calendar))
+        } else if isOverdue, let planned = model.planStore.assignment(for: task.id) {
+            parts.append("geplant " + planned.startDate(in: model.calendar).formatted(.dateTime.weekday(.abbreviated).day().month()))
+        }
+        parts.append(task.container.name)
+        return parts.joined(separator: " · ")
+    }
+
+    /// Drags at once (no hold), so the list itself keeps scrolling; the preview starts after 8 pt.
+    private func grip(_ task: TaskItem) -> some View {
+        Image(systemName: "line.3.horizontal")
+            .foregroundStyle(.secondary)
+            .frame(width: 44, height: 44)
+            .contentShape(Rectangle())
+            .highPriorityGesture(DragGesture(minimumDistance: 0, coordinateSpace: .named("screen"))
+                .onChanged { value in
+                    if taskDrag == nil, hypot(value.translation.width, value.translation.height) < 8 { return }
+                    taskDrag = (task, value.location)
+                    edgeScroll = edgeDirection(at: value.location)
+                }
+                .onEnded { value in
+                    defer {
+                        taskDrag = nil
+                        edgeScroll = 0
+                    }
+                    guard taskDrag != nil, isDropZone(value.location) else { return }
+                    let minutes = canvasMinutes(atY: value.location.y)
+                    drops += 1
+                    Task { await model.dropTask(key: task.id.key, atMinutes: minutes, on: plan.day) }
+                })
+            .accessibilityLabel("Ins Raster ziehen")
+            .accessibilityAction(named: "Uhrzeit wählen") { onPlanTask(task) }
+    }
+
+    /// Top of the panel while dragging (it has slid down to its header).
+    private var dropLimitY: CGFloat {
+        panelHeaderMinY + (taskDrag != nil && panelExpanded ? panelBodyHeight : 0)
+    }
+
+    /// Only the visible part of the grid above the panel accepts a drop; the panel's header cancels.
+    private func isDropZone(_ point: CGPoint) -> Bool {
+        canvasFrame.contains(point) && scrollFrame.contains(point) && point.y < dropLimitY
+    }
+
+    private func edgeDirection(at point: CGPoint) -> Int {
+        if point.y > dropLimitY - 60 { return 1 }
+        if point.y < scrollFrame.minY + 60 { return -1 }
+        return 0
+    }
+
+    private func canvasMinutes(atY y: CGFloat) -> Int {
+        let base = TimelineCanvas(model: model, plan: plan, entries: entries, selectingIDs: nil, taskPreview: nil,
+                                  onTap: { _ in }, onToggleSelection: { _ in }, onCommit: { _ in }, isDragging: .constant(false))
+        return base.minutes(atY: y - canvasFrame.minY)
+    }
+
+    /// The dragged task as a to-scale block at the finger's time (only over the visible grid).
+    private var taskPreview: (title: String, startMinutes: Int, minutes: Int)? {
+        guard let taskDrag, isDropZone(taskDrag.location) else { return nil }
+        return (taskDrag.task.title, canvasMinutes(atY: taskDrag.location.y), model.suggestedBlockMinutes(for: taskDrag.task))
+    }
+
+    // MARK: "Frei" selection (F1)
+
+    private func toggle(_ event: CalendarEvent) {
+        guard var current = selection else { return }
+        if current.contains(event.id) { current.remove(event.id) } else { current.insert(event.id) }
+        selection = current
+    }
+
+    private var selectedEvents: [CalendarEvent] {
+        guard let selection else { return [] }
+        return (plan.events + plan.blocks).filter { selection.contains($0.id) }
+    }
+
+    private var selectionBar: some View {
+        let events = selectedEvents
+        return VStack(alignment: .leading, spacing: 8) {
+            Text(events.isEmpty ? "Termine antippen, um sie auszuwählen"
+                 : "\(events.count) ausgewählt · „Frei“ gibt \(CapacityText.duration(model.busyMinutes(of: events))) frei")
+                .font(.subheadline)
+            HStack {
+                Button("Alle Termine") { selection = Set(plan.events.filter { !$0.isAllDay }.map(\.id)) }
+                Spacer()
+                Button("Belegt") { askOrApplyFree(free: false) }.buttonStyle(.bordered).disabled(events.isEmpty)
+                Button("Auf Frei setzen") { askOrApplyFree(free: true) }.buttonStyle(.borderedProminent).disabled(events.isEmpty)
+            }
+        }
+        .padding(12)
+        .background(.bar, in: RoundedRectangle(cornerRadius: 16))
+    }
+
+    private func askOrApplyFree(free: Bool) {
+        if selectedEvents.contains(where: \.isRecurring) { askingSeriesFree = free } else { applyFree(series: false, free: free) }
+    }
+
+    private func applyFree(series: Bool, free: Bool? = nil) {
+        let value = free ?? askingSeriesFree ?? true
+        let events = selectedEvents
+        askingSeriesFree = nil
+        selection = nil
+        Task { await model.setFree(events, free: value, series: series) }
+    }
+
+    private var hasSeriesFree: Binding<Bool> {
+        Binding(get: { askingSeriesFree != nil }, set: { if !$0 { askingSeriesFree = nil } })
+    }
+
+    // MARK: Lunch bar (L1) and merge suggestions (M1)
+
+    private var lunchBar: some View {
+        HStack {
+            let range = changedLunch ?? model.lunch(on: plan.day)
+            Text(range.map { "Pause heute \(clock($0.lowerBound))–\(clock($0.upperBound))" } ?? "Heute keine Pause")
+                .font(.subheadline)
+            Spacer()
+            Button("Für alle Tage") {
+                Task { await model.applyLunchToAllDays(from: plan.day) }
+                withAnimation { lunchChanged = false }
+            }
+            .buttonStyle(.bordered)
+            Button("Widerrufen") {
+                Task { await model.resetLunch(on: plan.day) }
+                withAnimation { lunchChanged = false }
+            }
+            .buttonStyle(.borderedProminent)
+        }
+        .padding(10)
+        .background(.bar, in: RoundedRectangle(cornerRadius: 16))
+        .task(id: lunchChanged) {
+            guard lunchChanged else { return }
+            try? await Task.sleep(for: .seconds(8))
+            withAnimation { lunchChanged = false }
+        }
+    }
+
+    private var daySuggestions: [MergeSuggestion] {
+        let ids = Set((plan.events + plan.blocks).map(\.id))
+        return model.mergeSuggestions.filter { ids.contains($0.placeholderID) && ids.contains($0.keptID) }
+    }
+
+    private func mergeCard(_ suggestion: MergeSuggestion) -> some View {
+        let kept = (plan.events + plan.blocks).first { $0.id == suggestion.keptID }
+        let calendarName = model.calendarTitle(suggestion.placeholderCalendarID) ?? "Kalender"
+        return VStack(alignment: .leading, spacing: 8) {
+            Label("Derselbe Termin?", systemImage: "rectangle.on.rectangle").font(.subheadline.weight(.semibold))
+            Text("„\(suggestion.placeholderTitle)“ aus „\(calendarName)“ liegt zur selben Zeit wie „\(kept?.title ?? "")“.")
+                .font(.subheadline).foregroundStyle(.secondary)
+            Toggle("Künftig immer bei „\(suggestion.placeholderTitle)“ aus „\(calendarName)“",
+                   isOn: Binding(get: { alwaysMerge.contains(suggestion.id) },
+                                 set: { on in if on { alwaysMerge.insert(suggestion.id) } else { alwaysMerge.remove(suggestion.id) } }))
+                .font(.caption)
+            HStack {
+                Button("Getrennt lassen") {
+                    Task { await model.decideMerge(suggestion, merge: false, always: alwaysMerge.contains(suggestion.id)) }
+                }
+                .buttonStyle(.bordered)
+                Button("Zusammenfassen") {
+                    Task { await model.decideMerge(suggestion, merge: true, always: alwaysMerge.contains(suggestion.id)) }
+                }
+                .buttonStyle(.borderedProminent)
+            }
+        }
+        .padding(12)
+        .background(Color.purple.opacity(0.12), in: RoundedRectangle(cornerRadius: 14))
+    }
+
+    // MARK: Helpers
+
+    private var daySwipe: some Gesture {
+        DragGesture(minimumDistance: 30).onEnded { value in
+            guard !isDragging, taskDrag == nil else { return }
+            let dx = value.translation.width, dy = value.translation.height
+            guard abs(dx) > 80, abs(dx) > 2 * abs(dy) else { return }
+            withAnimation(.snappy) { model.step(dx < 0 ? 1 : -1) }
+        }
+    }
+
+    private func clock(_ minutes: Int) -> String {
+        plan.day.startDate(in: model.calendar).addingTimeInterval(TimeInterval(minutes * 60)).formatted(date: .omitted, time: .shortened)
+    }
+}

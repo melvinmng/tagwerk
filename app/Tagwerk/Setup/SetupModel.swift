@@ -4,12 +4,13 @@ import RemindersKit
 
 /// Steps of the first-launch setup. GitHub, ChatGPT and notifications are added by later plans.
 enum SetupStep: CaseIterable, Hashable {
-    case reminders, calendar, github
+    case reminders, calendar, planCalendar, github
 
     var title: String {
         switch self {
         case .reminders: "Erinnerungen"
         case .calendar: "Kalender"
+        case .planCalendar: "Plan-Kalender"
         case .github: "GitHub"
         }
     }
@@ -18,6 +19,7 @@ enum SetupStep: CaseIterable, Hashable {
         switch self {
         case .reminders: "Tagwerk zeigt deine Erinnerungen zusammen mit deinen anderen Aufgaben und kann sie bearbeiten."
         case .calendar: "Tagwerk liest deine Termine, um deinen Tag zu planen. Der Kalender wird nicht verändert."
+        case .planCalendar: "Tagwerk legt geplante Zeitblöcke als Termine in einem eigenen Kalender „Tagwerk“ an. Du siehst sie auch in der Kalender-App."
         case .github: "Tagwerk zeigt dir zugewiesene Issues aus deinen offenen GitHub Projects und kann sie bearbeiten."
         }
     }
@@ -32,10 +34,12 @@ final class SetupModel {
 
     private let store: any ReminderStore
     private let settings: AppSettings
+    private let calendarStore: (any CalendarStore)?
 
-    init(store: any ReminderStore, settings: AppSettings) {
+    init(store: any ReminderStore, settings: AppSettings, calendarStore: (any CalendarStore)? = nil) {
         self.store = store
         self.settings = settings
+        self.calendarStore = calendarStore
     }
 
     var isFinished: Bool { current == nil }
@@ -47,12 +51,22 @@ final class SetupModel {
             switch step {
             case .reminders: results[step] = try await store.requestAccess()
             case .calendar: results[step] = try await store.requestCalendarAccess()
+            case .planCalendar: results[step] = try createPlanCalendar()
             case .github: return  // interactive login, completed via markSignedIn()
             }
         } catch {
             results[step] = .denied
         }
         advance()
+    }
+
+    /// Uses an existing plan calendar or creates "Tagwerk"; needs full calendar access.
+    private func createPlanCalendar() throws -> AccessState {
+        guard store.calendarAccessState == .fullAccess, let calendarStore else { return .denied }
+        if calendarStore.planCalendar(id: settings.planCalendarID) == nil {
+            settings.planCalendarID = try calendarStore.createPlanCalendar(named: "Tagwerk").id
+        }
+        return .fullAccess
     }
 
     func skip() {

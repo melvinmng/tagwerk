@@ -39,11 +39,33 @@ GitHub-Konto: @melvinmng · bestätigt zuweisbar · geprüft 2026-11-17 · ich
 - [ ] [#36](https://github.com/melvinmng/tagwerk/issues/36) Termine lesen und Zeitblöcke schreiben {status: In review; prio: P2 (High); aufwand: 3h; epic: #2}
 - [ ] [#37](https://github.com/melvinmng/tagwerk/issues/37) Arbeitstage und Planungs-Einstellungen speichern {status: In review; prio: P2 (High); aufwand: 3h; epic: #2}
 - [ ] [#38](https://github.com/melvinmng/tagwerk/issues/38) Zeitblöcke und Verknüpfungen umsetzen {status: In review; prio: P2 (High); aufwand: 3h; epic: #2}
-- [ ] [#39](https://github.com/melvinmng/tagwerk/issues/39) Wiederkehrenden Aufwand reservieren {status: In review; prio: P2 (High); aufwand: 3h; epic: #2}
+- [ ] [#39](https://github.com/melvinmng/tagwerk/issues/39) Wiederkehrenden Aufwand reservieren {status: In review; epic: #2; prio: P2 (High); aufwand: 3h}
 - [ ] [#40](https://github.com/melvinmng/tagwerk/issues/40) Planungsmodell für Tag, Woche und Monat bauen {status: In review; prio: P2 (High); aufwand: 4h; epic: #2}
 - [ ] [#41](https://github.com/melvinmng/tagwerk/issues/41) Tab Planen mit Tag, Woche und Monat bauen {status: In review; prio: P2 (High); aufwand: 6h; epic: #2}
 - [ ] [#42](https://github.com/melvinmng/tagwerk/issues/42) Kontextmenü, Termin-Sprung und Aufwand-Sheet bauen {status: In review; prio: P2 (High); aufwand: 3h; epic: #2}
 - [ ] [#43](https://github.com/melvinmng/tagwerk/issues/43) Planen einrichten und auf dem iPhone prüfen {status: In progress; prio: P2 (High); aufwand: 4h; epic: #2}
+- [ ] [#45](https://github.com/melvinmng/tagwerk/issues/45) Tagesansicht mit großem Datum, Tageswischen und Datumsauswahl {status: In review; prio: P2 (High); aufwand: 3h; epic: #2}
+- [ ] [#46](https://github.com/melvinmng/tagwerk/issues/46) Freie Zeit ab jetzt anzeigen und erledigte Vorkommen freigeben {status: In review; prio: P2 (High); aufwand: 3h; epic: #2}
+- [ ] [#47](https://github.com/melvinmng/tagwerk/issues/47) Zeitblöcke per Menü, Lücken und umschaltbarem Stundenraster ändern {status: In review; prio: P2 (High); aufwand: 8h; epic: #2}
+- [ ] [#48](https://github.com/melvinmng/tagwerk/issues/48) Planung im Bearbeiten-Sheet ändern, inkl. „Nur heute / Alle ab heute“ {status: In review; prio: P2 (High); aufwand: 4h; epic: #2}
+- [ ] [#49](https://github.com/melvinmng/tagwerk/issues/49) Ablage „Ungeplant“ für Woche und Monat neu bauen {status: In review; prio: P2 (High); aufwand: 4h; epic: #2}
+- [ ] [#50](https://github.com/melvinmng/tagwerk/issues/50) Monat: Tag auswählen und Tagesmenü {status: In review; prio: P2 (High); aufwand: 3h; epic: #2}
+- [ ] [#51](https://github.com/melvinmng/tagwerk/issues/51) Kontextmenü mit Abschnitten „Einplanen“ und „Fälligkeit“ {status: In review; prio: P2 (High); aufwand: 2h; epic: #2}
+- [ ] [#52](https://github.com/melvinmng/tagwerk/issues/52) Aufgaben-Tab: Mehrfachauswahl, Wischen „Heute“, „Aufgabe zeigen“, ↻ {status: In review; prio: P2 (High); aufwand: 4h; epic: #2}
+- [ ] [#53](https://github.com/melvinmng/tagwerk/issues/53) Heute Fälliges automatisch, „Von früher offen“ {status: In review; prio: P2 (High); aufwand: 2h; epic: #2}
+- [ ] [#54](https://github.com/melvinmng/tagwerk/issues/54) Gleiche Termine aus mehreren Kalendern zusammenfassen {status: In review; prio: P2 (High); aufwand: 2h; epic: #2}
+- [ ] [#55](https://github.com/melvinmng/tagwerk/issues/55) Termine in allen Kalendern anlegen, ändern und löschen {status: In review; prio: P2 (High); aufwand: 6h; epic: #2}
+- [ ] [#56](https://github.com/melvinmng/tagwerk/issues/56) ChatGPT-Anmeldung und Tokens {status: Backlog; prio: P2 (High); aufwand: 6h; epic: #2}
+- [ ] [#57](https://github.com/melvinmng/tagwerk/issues/57) ChatGPT-Antworten mit Streaming und Modellliste {status: Backlog; prio: P2 (High); aufwand: 5h; epic: #2}
+- [ ] [#58](https://github.com/melvinmng/tagwerk/issues/58) Gesprächsschleife mit Aktionskarten {status: Backlog; prio: P2 (High); aufwand: 4h; epic: #2}
+- [ ] [#59](https://github.com/melvinmng/tagwerk/issues/59) KI-Planung: Eingabe und Prüfregeln {status: Backlog; prio: P2 (High); aufwand: 4h; epic: #2}
+- [ ] [#60](https://github.com/melvinmng/tagwerk/issues/60) KI in Einrichtung und Einstellungen {status: Backlog; prio: P2 (High); aufwand: 3h; epic: #2}
+- [ ] [#61](https://github.com/melvinmng/tagwerk/issues/61) Tag, Woche und Monat mit KI planen {status: Backlog; prio: P2 (High); aufwand: 6h; epic: #2}
+- [ ] [#62](https://github.com/melvinmng/tagwerk/issues/62) App-Funktionen für den Assistenten {status: Backlog; prio: P2 (High); aufwand: 5h; epic: #2}
+- [ ] [#63](https://github.com/melvinmng/tagwerk/issues/63) Assistent-Knopf und Chat {status: Backlog; prio: P2 (High); aufwand: 5h; epic: #2}
+- [ ] [#64](https://github.com/melvinmng/tagwerk/issues/64) GitHub-Lesezugriffe für den Issue-Chat {status: Backlog; prio: P2 (High); aufwand: 4h; epic: #2}
+- [ ] [#65](https://github.com/melvinmng/tagwerk/issues/65) Chat zur Aufgabe mit Repo-Inhalten {status: Backlog; prio: P2 (High); aufwand: 3h; epic: #2}
+- [ ] [#66](https://github.com/melvinmng/tagwerk/issues/66) KI-Einträge im Menü und Verknüpfungsvorschläge {status: Backlog; prio: P2 (High); aufwand: 2h; epic: #2}
 
 ## Notizen
 
@@ -52,15 +74,26 @@ GitHub-Konto: @melvinmng · bestätigt zuweisbar · geprüft 2026-11-17 · ich
 
 _Automatisch aus [Tagwerk](https://github.com/users/melvinmng/projects/17) erzeugt. Nicht von Hand bearbeiten; Aufgaben oben unter den Personen pflegen._
 
-### Backlog (2)
+### Backlog (13)
 - [#3](https://github.com/melvinmng/tagwerk/issues/3) Phase 3: Ernährung, Trinken und Training erfassen · @melvinmng · Prio P3 (Medium)
 - [#4](https://github.com/melvinmng/tagwerk/issues/4) Phase 4: Widget, Kurzbefehle und Wochenrückblick ergänzen · @melvinmng · Prio P4 (Low)
+- [#56](https://github.com/melvinmng/tagwerk/issues/56) ChatGPT-Anmeldung und Tokens · @melvinmng · Prio P2 (High) · 6h
+- [#57](https://github.com/melvinmng/tagwerk/issues/57) ChatGPT-Antworten mit Streaming und Modellliste · @melvinmng · Prio P2 (High) · 5h
+- [#58](https://github.com/melvinmng/tagwerk/issues/58) Gesprächsschleife mit Aktionskarten · @melvinmng · Prio P2 (High) · 4h
+- [#59](https://github.com/melvinmng/tagwerk/issues/59) KI-Planung: Eingabe und Prüfregeln · @melvinmng · Prio P2 (High) · 4h
+- [#60](https://github.com/melvinmng/tagwerk/issues/60) KI in Einrichtung und Einstellungen · @melvinmng · Prio P2 (High) · 3h
+- [#61](https://github.com/melvinmng/tagwerk/issues/61) Tag, Woche und Monat mit KI planen · @melvinmng · Prio P2 (High) · 6h
+- [#62](https://github.com/melvinmng/tagwerk/issues/62) App-Funktionen für den Assistenten · @melvinmng · Prio P2 (High) · 5h
+- [#63](https://github.com/melvinmng/tagwerk/issues/63) Assistent-Knopf und Chat · @melvinmng · Prio P2 (High) · 5h
+- [#64](https://github.com/melvinmng/tagwerk/issues/64) GitHub-Lesezugriffe für den Issue-Chat · @melvinmng · Prio P2 (High) · 4h
+- [#65](https://github.com/melvinmng/tagwerk/issues/65) Chat zur Aufgabe mit Repo-Inhalten · @melvinmng · Prio P2 (High) · 3h
+- [#66](https://github.com/melvinmng/tagwerk/issues/66) KI-Einträge im Menü und Verknüpfungsvorschläge · @melvinmng · Prio P2 (High) · 2h
 
 ### In Arbeit (2)
 - [#2](https://github.com/melvinmng/tagwerk/issues/2) Phase 2: Aufgaben, Kalender und KI-Tagesplan umsetzen · @melvinmng · Prio P2 (High)
 - [#43](https://github.com/melvinmng/tagwerk/issues/43) Planen einrichten und auf dem iPhone prüfen · @melvinmng · Prio P2 (High) · 4h
 
-### In Prüfung (9)
+### In Prüfung (20)
 - [#34](https://github.com/melvinmng/tagwerk/issues/34) Tage, Arbeitszeit und Kapazität berechnen · @melvinmng · Prio P2 (High) · 3h
 - [#35](https://github.com/melvinmng/tagwerk/issues/35) Wichtige Deadlines und Epics erkennen · @melvinmng · Prio P2 (High) · 3h
 - [#36](https://github.com/melvinmng/tagwerk/issues/36) Termine lesen und Zeitblöcke schreiben · @melvinmng · Prio P2 (High) · 3h
@@ -70,6 +103,17 @@ _Automatisch aus [Tagwerk](https://github.com/users/melvinmng/projects/17) erzeu
 - [#40](https://github.com/melvinmng/tagwerk/issues/40) Planungsmodell für Tag, Woche und Monat bauen · @melvinmng · Prio P2 (High) · 4h
 - [#41](https://github.com/melvinmng/tagwerk/issues/41) Tab Planen mit Tag, Woche und Monat bauen · @melvinmng · Prio P2 (High) · 6h
 - [#42](https://github.com/melvinmng/tagwerk/issues/42) Kontextmenü, Termin-Sprung und Aufwand-Sheet bauen · @melvinmng · Prio P2 (High) · 3h
+- [#45](https://github.com/melvinmng/tagwerk/issues/45) Tagesansicht mit großem Datum, Tageswischen und Datumsauswahl · @melvinmng · Prio P2 (High) · 3h
+- [#46](https://github.com/melvinmng/tagwerk/issues/46) Freie Zeit ab jetzt anzeigen und erledigte Vorkommen freigeben · @melvinmng · Prio P2 (High) · 3h
+- [#47](https://github.com/melvinmng/tagwerk/issues/47) Zeitblöcke per Menü, Lücken und umschaltbarem Stundenraster ändern · @melvinmng · Prio P2 (High) · 8h
+- [#48](https://github.com/melvinmng/tagwerk/issues/48) Planung im Bearbeiten-Sheet ändern, inkl. „Nur heute / Alle ab heute“ · @melvinmng · Prio P2 (High) · 4h
+- [#49](https://github.com/melvinmng/tagwerk/issues/49) Ablage „Ungeplant“ für Woche und Monat neu bauen · @melvinmng · Prio P2 (High) · 4h
+- [#50](https://github.com/melvinmng/tagwerk/issues/50) Monat: Tag auswählen und Tagesmenü · @melvinmng · Prio P2 (High) · 3h
+- [#51](https://github.com/melvinmng/tagwerk/issues/51) Kontextmenü mit Abschnitten „Einplanen“ und „Fälligkeit“ · @melvinmng · Prio P2 (High) · 2h
+- [#52](https://github.com/melvinmng/tagwerk/issues/52) Aufgaben-Tab: Mehrfachauswahl, Wischen „Heute“, „Aufgabe zeigen“, ↻ · @melvinmng · Prio P2 (High) · 4h
+- [#53](https://github.com/melvinmng/tagwerk/issues/53) Heute Fälliges automatisch, „Von früher offen“ · @melvinmng · Prio P2 (High) · 2h
+- [#54](https://github.com/melvinmng/tagwerk/issues/54) Gleiche Termine aus mehreren Kalendern zusammenfassen · @melvinmng · Prio P2 (High) · 2h
+- [#55](https://github.com/melvinmng/tagwerk/issues/55) Termine in allen Kalendern anlegen, ändern und löschen · @melvinmng · Prio P2 (High) · 6h
 
 ### Nicht zugeordnet (0)
 

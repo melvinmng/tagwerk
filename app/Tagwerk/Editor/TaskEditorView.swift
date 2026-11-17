@@ -11,13 +11,21 @@ struct TaskEditorView: View {
 
     let isReadOnly: Bool
     let onDelete: ((String) -> Void)?
+    let planning: PlanningModel?
+    let onShowDay: ((PlanDay) -> Void)?
+    @State private var plannedEdit: PlannedEdit?
+    @State private var askingEffortReach = false
     @State private var labelText = ""
     @State private var confirmsDelete = false
 
     init(item: TaskItem, provider: any TaskProvider, calendar: Calendar, containers: [TaskContainer],
          addComment: TaskEditorModel.CommentAction? = nil, isReadOnly: Bool = false,
-         onDelete: ((String) -> Void)? = nil, onSaved: @escaping (TaskItem) -> Void) {
+         onDelete: ((String) -> Void)? = nil, planning: PlanningModel? = nil,
+         onShowDay: ((PlanDay) -> Void)? = nil, onSaved: @escaping (TaskItem) -> Void) {
         self.onDelete = onDelete
+        self.planning = planning
+        _plannedEdit = State(initialValue: planning?.plannedEdit(for: item))
+        self.onShowDay = onShowDay
         _model = State(initialValue: TaskEditorModel(item: item, provider: provider, addComment: addComment))
         self.calendar = calendar
         self.containers = containers
@@ -82,7 +90,12 @@ struct TaskEditorView: View {
                     }
                     if model.isVisible(.due) { dueFields }
                     if model.isVisible(.priority) { PriorityPicker(priority: $model.draft.priority, choices: model.priorityChoices) }
-                    if model.isVisible(.estimate) {
+                    if isRecurring {
+                        // One effort for a recurring reminder: the value of this day (design §13.15 R1).
+                        EstimateField(minutes: recurringMinutes)
+                        Text("Aufwand je Tag der Serie" + (plannedEdit?.originalRecurringMinutes.flatMap { $0 > 0 ? ". Bisher \(CapacityText.duration($0))." : nil } ?? "."))
+                            .font(.caption).foregroundStyle(.secondary)
+                    } else if model.isVisible(.estimate) {
                         EstimateField(minutes: $model.draft.estimateMinutes)
                     }
                 }
@@ -95,6 +108,21 @@ struct TaskEditorView: View {
 
                 Section {
                     Toggle("Erledigt", isOn: $model.draft.isCompleted)
+                }
+
+                if let planning, plannedEdit != nil {
+                    PlannedSection(edit: plannedBinding, calendar: calendar,
+                                   isRecurring: planning.recurringItem(for: model.original, on: planning.today) != nil,
+                                   onShowDay: onShowDay.map { show in { day in
+                                       dismiss()
+                                       show(day)
+                                   } },
+                                   suggestedMinutes: planning.suggestedBlockMinutes(for: model.original),
+                                   suggestedStart: { day in
+                                       suggestedBlockStart(on: day, hours: planning.workHours(on: day),
+                                                           minutes: planning.suggestedBlockMinutes(for: model.original),
+                                                           now: planning.now(), calendar: calendar)
+                                   })
                 }
 
                 if model.canComment {
@@ -135,12 +163,31 @@ struct TaskEditorView: View {
                 labelText = (model.draft.labels ?? []).joined(separator: ", ")
             }
             .navigationBarTitleDisplayMode(.inline)
+            .confirmationDialog(effortQuestion, isPresented: $askingEffortReach, titleVisibility: .visible) {
+                Button("Nur am \(todayText)") {
+                    plannedEdit?.recurringForAll = false
+                    Task { await finish(model.save()) }
+                }
+                Button("Für alle ab \(todayText)") {
+                    plannedEdit?.recurringForAll = true
+                    Task { await finish(model.save()) }
+                }
+            } message: {
+                Text("Diese Aufgabe wiederholt sich. Titel, Fälligkeit und Priorität gelten für alle Tage.")
+            }
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Abbrechen") { dismiss() }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Sichern") { Task { await finish(model.save()) } }
+                    Button("Sichern") {
+                        // The reach question only comes when the effort of a recurring reminder changed (R1).
+                        if isRecurring, let edit = plannedEdit, edit.recurringMinutes != edit.originalRecurringMinutes {
+                            askingEffortReach = true
+                        } else {
+                            Task { await finish(model.save()) }
+                        }
+                    }
                         .disabled(isReadOnly || model.isSaving || model.draft.title.trimmingCharacters(in: .whitespaces).isEmpty)
                 }
             }
@@ -175,7 +222,35 @@ struct TaskEditorView: View {
     private func finish(_ success: Bool) {
         guard success else { return }
         if let saved = model.saved { onSaved(saved) }
+        if let planning, let plannedEdit, plannedEdit != planning.plannedEdit(for: model.original) {
+            let task = model.saved ?? model.original
+            Task { await planning.applyPlanning(plannedEdit, for: task) }
+        }
         dismiss()
+    }
+
+    private var isRecurring: Bool {
+        planning.map { $0.recurringItem(for: model.original, on: $0.today) != nil } ?? false
+    }
+
+    private var recurringMinutes: Binding<Int?> {
+        Binding(get: { plannedEdit?.recurringMinutes }, set: { plannedEdit?.recurringMinutes = $0 })
+    }
+
+    private var todayText: String {
+        guard let planning else { return "heute" }
+        return planning.today.startDate(in: calendar).formatted(.dateTime.weekday(.abbreviated).day().month(.abbreviated))
+    }
+
+    private var effortQuestion: String {
+        let old = plannedEdit?.originalRecurringMinutes.map(CapacityText.duration) ?? "kein Aufwand"
+        let new = plannedEdit?.recurringMinutes.map(CapacityText.duration) ?? "kein Aufwand"
+        return "Aufwand geändert: \(old) → \(new)"
+    }
+
+    private var plannedBinding: Binding<PlannedEdit> {
+        Binding(get: { plannedEdit ?? PlannedEdit(day: nil, blocks: [], originalDay: nil, originalRecurringMinutes: nil) },
+                set: { plannedEdit = $0 })
     }
 
     // MARK: Bindings for optional fields

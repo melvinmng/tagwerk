@@ -5,6 +5,10 @@ import TagwerkCore
 /// The "Aufgaben" tab (mockup 2).
 struct TaskListView: View {
     @Bindable var model: TaskListModel
+    /// Shows a planned day in the "Planen" tab (editor section "Geplant").
+    var onShowDay: ((PlanDay) -> Void)?
+    /// Opens the effort sheet of a recurring reminder.
+    var onEditRecurring: ((RecurringItem, PlanDay) -> Void)?
     @State private var isCreating = false
     @State private var reschedulingItem: TaskItem?
     @State private var pickingDateFor: TaskItem?
@@ -13,12 +17,18 @@ struct TaskListView: View {
     @State private var gitHubLogin: GitHubLoginModel?
     @State private var deleting: TaskItem?
     @State private var showsOfflineInfo = false
+    @State private var planningDateFor: TaskItem?
+    @State private var isSelecting = false
+    @State private var selection = Set<TaskID>()
+    @State private var bulkDate: BulkDateTarget?
+    @State private var confirmsBulkDelete = false
     @Environment(\.openURL) private var openURL
     @Environment(AppEnvironment.self) private var environment
 
     var body: some View {
         NavigationStack {
-            List {
+            ScrollViewReader { proxy in
+            List(selection: $selection) {
                 if model.availableFilters.count > 2 {
                     Picker("Filter", selection: $model.filter) {
                         ForEach(model.availableFilters, id: \.self) { Text($0.title).tag($0) }
@@ -60,13 +70,36 @@ struct TaskListView: View {
                     }
                 }
             }
-            .safeAreaInset(edge: .bottom) { undoBar }
+            .environment(\.editMode, .constant(isSelecting ? .active : .inactive))
+            .onChange(of: model.highlightedTaskID) { _, id in
+                guard let id else { return }
+                model.filter = .all
+                withAnimation { proxy.scrollTo(id, anchor: .center) }
+                Task {
+                    try? await Task.sleep(for: .seconds(3))
+                    withAnimation { model.clearHighlight() }
+                }
+            }
+            }
+            .safeAreaInset(edge: .bottom) { isSelecting ? AnyView(selectionBar) : AnyView(undoBar) }
             .animation(.spring(duration: 0.35), value: model.lastCompleted?.id)
             .onChange(of: gitHubOfflineSince == nil) { _, online in if online { showsOfflineInfo = false } }
             .navigationTitle("Aufgaben")
             .toolbar {
                 if gitHubOfflineSince != nil {
                     ToolbarItem(placement: .topBarTrailing) { offlineIndicator }
+                }
+                ToolbarItem(placement: .topBarLeading) {
+                    Button(isSelecting ? "Fertig" : "Auswählen") {
+                        isSelecting.toggle()
+                        selection.removeAll()
+                    }
+                }
+                if isSelecting {
+                    ToolbarItem(placement: .topBarLeading) {
+                        let all = Set(model.sections.flatMap { $0.1 }.map(\.id))
+                        Button(selection == all ? "Keine" : "Alle") { selection = selection == all ? [] : all }
+                    }
                 }
                 ToolbarItem(placement: .primaryAction) {
                     Button { isCreating = true } label: { Label("Neue Aufgabe", systemImage: "plus") }
@@ -81,7 +114,9 @@ struct TaskListView: View {
                                    containers: editingContainers,
                                    addComment: commentAction(for: provider),
                                    isReadOnly: model.sourceStates[item.id.source]?.isOffline == true,
-                                   onDelete: { version in Task { await model.delete(item.id, version: version) } }) { saved in
+                                   onDelete: { version in Task { await model.delete(item.id, version: version) } },
+                                   planning: environment.planning,
+                                   onShowDay: onShowDay) { saved in
                         model.didSave(saved)
                     }
                 }
@@ -97,6 +132,11 @@ struct TaskListView: View {
                                 }
                             }
                     }
+                }
+            }
+            .sheet(item: $planningDateFor) { item in
+                RescheduleDateSheet(item: item, calendar: model.calendar, now: model.now()) { day in
+                    Task { await environment.planning.assign(item.id, to: PlanDay(day)) }
                 }
             }
             .sheet(item: $pickingDateFor) { item in
@@ -115,18 +155,30 @@ struct TaskListView: View {
     }
 
     private func row(_ item: TaskItem, section: TaskSection) -> some View {
-        TaskRow(item: item, section: section, now: model.now(), calendar: model.calendar, isReadOnly: !isWritable(item)) {
+        TaskRow(item: item, section: section, now: model.now(), calendar: model.calendar, isReadOnly: !isWritable(item),
+                isRecurring: item.id.source == .reminders && environment.planning.recurringReminderIDs.contains(item.id.rawValue)) {
             if isWritable(item) { Task { await model.complete(item.id) } } else { showsOfflineInfo = true }
         }
+        .tag(item.id)
+        .id(item.id)
+        .listRowBackground(model.highlightedTaskID == item.id ? Color.accentColor.opacity(0.25) : nil)
         .onTapGesture {
+            guard !isSelecting else {
+                if selection.contains(item.id) { selection.remove(item.id) } else { selection.insert(item.id) }
+                return
+            }
             Task {
                 editingContainers = item.editableFields.contains(.container)
                     ? await model.containers(for: item.id.source) : []
                 editing = item
             }
         }
+        .contextMenu {
+            TaskContextMenu(item: item, actions: menuActions(for: item))
+        }
         // Dialogs hang on the row, so iOS shows them next to the affected task (above or below it).
         .confirmationDialog("Verschieben", isPresented: dialogBinding($reschedulingItem, for: item)) {
+            Button("Heute") { Task { await model.reschedule(item.id, option: .today) } }
             Button("Morgen") { Task { await model.reschedule(item.id, option: .tomorrow) } }
             Button("Wochenende (Sa)") { Task { await model.reschedule(item.id, option: .weekend) } }
             Button("Nächste Woche (Mo)") { Task { await model.reschedule(item.id, option: .nextMonday) } }
@@ -143,6 +195,10 @@ struct TaskListView: View {
                 }
                 .tint(.green)
             }
+            Button { Task { await environment.planning.planToday([item.id]) } } label: {
+                Label("Heute", systemImage: "sun.max")
+            }
+            .tint(.orange)
         }
         .swipeActions(edge: .trailing) {
             if isWritable(item) {
@@ -156,6 +212,95 @@ struct TaskListView: View {
                 .tint(.red)
             }
         }
+    }
+
+    /// Mockup G1: selected effort against the time still free today.
+    private var selectionBar: some View {
+        let minutes = environment.planning.plannedMinutes(for: Array(selection))
+        let remaining = environment.planning.days.first { $0.day == environment.planning.today }?.capacity.remainingMinutes
+        return HStack {
+            VStack(alignment: .leading, spacing: 2) {
+                Text("\(selection.count) ausgewählt · \(CapacityText.duration(minutes))").font(.subheadline.weight(.semibold))
+                if let remaining {
+                    Text("heute noch \(CapacityText.duration(max(0, remaining))) frei")
+                        .font(.caption).foregroundStyle(minutes > remaining ? .red : .secondary)
+                }
+            }
+            Spacer()
+            Menu {
+                bulkMenu
+            } label: {
+                Label("Aktionen", systemImage: "ellipsis.circle").labelStyle(.iconOnly).font(.title2)
+            }
+            // Same order as the single-task menu; iOS would otherwise reverse a menu opening upwards.
+            .menuOrder(.fixed)
+            .disabled(selection.isEmpty)
+            Button("Heute") { runBulk { ids in await environment.planning.planToday(ids) } }
+                .buttonStyle(.borderedProminent)
+                .disabled(selection.isEmpty)
+        }
+        .padding()
+        .background(.bar)
+        .sheet(item: $bulkDate) { target in
+            BulkDateSheet(title: target == .plan ? "Einplanen am" : "Fällig am", calendar: model.calendar) { date in
+                switch target {
+                case .plan: runBulk { ids in await environment.planning.plan(ids, to: PlanDay(date: date, calendar: model.calendar)) }
+                case .due: runBulk(writableOnly: true) { ids in await model.reschedule(ids, option: .date(DueDate(date: date, includeTime: false, calendar: model.calendar))) }
+                }
+            }
+        }
+        .confirmationDialog("\(selection.count) Aufgaben löschen?", isPresented: $confirmsBulkDelete, titleVisibility: .visible) {
+            Button("Löschen", role: .destructive) { runBulk(writableOnly: true) { ids in await model.delete(ids) } }
+        } message: {
+            Text("Erinnerungen und lokale Aufgaben werden gelöscht, GitHub-Issues als „nicht geplant“ geschlossen.")
+        }
+    }
+
+    /// Mockup F1 for a selection: planned day, due date, done, delete.
+    @ViewBuilder private var bulkMenu: some View {
+        Section("Einplanen · nur in Tagwerk") {
+            ControlGroup {
+                Button("Heute", systemImage: "sun.max") { runBulk { ids in await environment.planning.planToday(ids) } }
+                Button("Morgen", systemImage: "sunrise") { bulkPlan(.tomorrow) }
+            }
+            ControlGroup {
+                Button("Wochenende", systemImage: "sofa") { bulkPlan(.weekend) }
+                Button("Nächste Woche", systemImage: "arrow.forward.to.line") { bulkPlan(.nextMonday) }
+            }
+            Button("Anderer Tag …", systemImage: "calendar") { bulkDate = .plan }
+        }
+        Section("Fälligkeit · ändert die Quelle") {
+            Menu {
+                Button("Heute") { bulkDue(.today) }
+                Button("Morgen") { bulkDue(.tomorrow) }
+                Button("Wochenende (Sa)") { bulkDue(.weekend) }
+                Button("Nächste Woche (Mo)") { bulkDue(.nextMonday) }
+                Button("Datum wählen …") { bulkDate = .due }
+            } label: {
+                Label("Fälligkeit verschieben", systemImage: "calendar.badge.clock")
+            }
+        }
+        Section {
+            Button("Erledigt", systemImage: "checkmark.circle") { runBulk(writableOnly: true) { ids in await model.complete(ids) } }
+            Button("Löschen …", systemImage: "trash", role: .destructive) { confirmsBulkDelete = true }
+        }
+    }
+
+    private func bulkPlan(_ option: RescheduleOption) {
+        let day = environment.planning.planDay(for: option)
+        runBulk { ids in await environment.planning.plan(ids, to: day) }
+    }
+
+    private func bulkDue(_ option: RescheduleOption) {
+        runBulk(writableOnly: true) { ids in await model.reschedule(ids, option: option) }
+    }
+
+    /// Runs an action on the selection and leaves selection mode. Writes to the source skip offline (read-only) tasks.
+    private func runBulk(writableOnly: Bool = false, _ action: @escaping ([TaskID]) async -> Void) {
+        let ids = model.items.filter { selection.contains($0.id) && (!writableOnly || isWritable($0)) }.map(\.id)
+        selection.removeAll()
+        isSelecting = false
+        Task { await action(ids) }
     }
 
     @ViewBuilder private var undoBar: some View {
@@ -214,6 +359,23 @@ struct TaskListView: View {
                 .presentationCompactAdaptation(.popover)
             }
         }
+    }
+
+    private func menuActions(for item: TaskItem) -> TaskMenuActions {
+        TaskMenuActions(
+            plan: { option in Task { await environment.planning.plan(item.id, option: option) } },
+            planOnDate: { planningDateFor = item },
+            moveDue: { option in Task { await model.reschedule(item.id, option: option) } },
+            moveDueOnDate: { pickingDateFor = item },
+            complete: { Task { await model.complete(item.id) } },
+            delete: { deleting = item },
+            editEffort: onEditRecurring.flatMap { open in
+                let today = environment.planning.today
+                return environment.planning.recurringItem(for: item, on: today).map { recurring in { open(recurring, today) } }
+            },
+            isWritable: isWritable(item),
+            plannedText: environment.planning.plannedText(for: item.id)
+        )
     }
 
     /// Offline sources (GitHub cache) are read-only.
@@ -308,5 +470,40 @@ private struct SourceProblemRow: View {
         case .github: "GitHub"
         case .local: "lokale Aufgaben"
         }
+    }
+}
+
+enum BulkDateTarget: Identifiable {
+    case plan, due
+    var id: Self { self }
+}
+
+/// Picks one date for a selection of tasks (planned day or due date).
+struct BulkDateSheet: View {
+    let title: String
+    let calendar: Calendar
+    let onPick: (Date) -> Void
+    @Environment(\.dismiss) private var dismiss
+    @State private var date = Date.now
+
+    var body: some View {
+        NavigationStack {
+            DatePicker(title, selection: $date, displayedComponents: .date)
+                .datePickerStyle(.graphical)
+                .environment(\.calendar, calendar)
+                .padding()
+                .navigationTitle(title)
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    ToolbarItem(placement: .cancellationAction) { Button("Abbrechen") { dismiss() } }
+                    ToolbarItem(placement: .confirmationAction) {
+                        Button("Übernehmen") {
+                            onPick(date)
+                            dismiss()
+                        }
+                    }
+                }
+        }
+        .presentationDetents([.medium, .large])
     }
 }

@@ -51,6 +51,11 @@ public final class EventKitGateway: ReminderStore {
         store.calendars(for: .reminder).map(Self.listInfo)
     }
 
+    /// Drops cached calendars and items, e.g. after another `EKEventStore` created calendars.
+    public func discardCachedData() {
+        store.reset()
+    }
+
     public func calendars() -> [ListInfo] {
         store.calendars(for: .event).map(Self.listInfo)
     }
@@ -150,8 +155,29 @@ public final class EventKitGateway: ReminderStore {
             ekPriority: reminder.priority,
             isCompleted: reminder.isCompleted,
             listID: reminder.calendar?.calendarIdentifier ?? "",
-            lastModified: reminder.lastModifiedDate
+            lastModified: reminder.lastModifiedDate,
+            recurrence: recurrence(reminder)
         )
+    }
+
+    /// Maps the first EventKit rule to Tagwerk's patterns; anything more complex becomes `.unsupported`.
+    nonisolated static func recurrence(_ reminder: EKReminder) -> Recurrence? {
+        guard let rule = reminder.recurrenceRules?.first, let due = dueDate(reminder.dueDateComponents) else { return nil }
+        let interval = max(1, rule.interval)
+        let pattern: RecurrenceRule
+        switch rule.frequency {
+        case .daily where rule.daysOfTheWeek == nil:
+            pattern = .daily(interval: interval)
+        case .weekly where rule.setPositions == nil:
+            pattern = .weekly(interval: interval, weekdays: Set((rule.daysOfTheWeek ?? []).map { $0.dayOfTheWeek.rawValue }))
+        case .monthly where rule.daysOfTheWeek == nil && (rule.daysOfTheMonth?.count ?? 0) <= 1:
+            pattern = .monthly(interval: interval, day: rule.daysOfTheMonth?.first?.intValue ?? due.day)
+        default:
+            pattern = .unsupported
+        }
+        let end = rule.recurrenceEnd?.endDate.map { PlanDay(date: $0, calendar: .current) }
+        let count = rule.recurrenceEnd.flatMap { $0.occurrenceCount > 0 ? $0.occurrenceCount : nil }
+        return Recurrence(rule: pattern, start: PlanDay(due), end: end, count: count)
     }
 
     nonisolated static func dueDate(_ components: DateComponents?) -> DueDate? {
@@ -206,3 +232,171 @@ public final class EventKitGateway: ReminderStore {
         return String(format: "#%02X%02X%02X", channels[0], channels[1], channels[2])
     }
 }
+
+// MARK: - Calendar events and the plan calendar
+
+extension EventKitGateway: CalendarStore {
+    public func events(in interval: DateInterval, calendarIDs: Set<String>?) -> [CalendarEvent] {
+        var calendars: [EKCalendar]?
+        if let calendarIDs {
+            let selected = store.calendars(for: .event).filter { calendarIDs.contains($0.calendarIdentifier) }
+            if selected.isEmpty { return [] }
+            calendars = selected
+        }
+        let predicate = store.predicateForEvents(withStart: interval.start, end: interval.end, calendars: calendars)
+        return CalendarBlockRules.uniqueIDs(store.events(matching: predicate).map(Self.calendarEvent))
+    }
+
+    public func event(id: String) -> CalendarEvent? {
+        ekEvent(id: id).map(Self.calendarEvent)
+    }
+
+    public func planCalendar(id: String?) -> ListInfo? {
+        guard let id, let calendar = store.calendar(withIdentifier: id), calendar.allowsContentModifications else { return nil }
+        return Self.listInfo(calendar)
+    }
+
+    /// New calendar in iCloud when available (visible on Mac and Watch), otherwise on the device.
+    public func createPlanCalendar(named name: String) throws -> ListInfo {
+        let calendar = EKCalendar(for: .event, eventStore: store)
+        calendar.title = name
+        calendar.cgColor = CGColor(srgbRed: 0.18, green: 0.72, blue: 0.63, alpha: 1)
+        let sources = store.sources
+        guard let source = sources.first(where: { $0.sourceType == .calDAV && $0.title == "iCloud" })
+            ?? sources.first(where: { $0.sourceType == .local }) else {
+            throw TaskWriteError.failed("Keine Kalenderquelle verfügbar")
+        }
+        calendar.source = source
+        try store.saveCalendar(calendar, commit: true)
+        return Self.listInfo(calendar)
+    }
+
+    public func createBlock(_ draft: BlockDraft, in calendarID: String) throws -> CalendarEvent {
+        guard let calendar = store.calendar(withIdentifier: calendarID), calendar.allowsContentModifications else {
+            throw TaskWriteError.failed("Kein Plan-Kalender")
+        }
+        let event = EKEvent(eventStore: store)
+        event.calendar = calendar
+        event.title = draft.title
+        event.startDate = draft.start
+        event.endDate = draft.end
+        event.url = TaskLinkURL.make(draft.taskID)
+        event.notes = CalendarBlockRules.blockNotes
+        try store.save(event, span: .thisEvent, commit: true)
+        return Self.calendarEvent(event)
+    }
+
+    public func eventCalendars() -> [ListInfo] {
+        calendars()
+    }
+
+    /// The store and event for Apple's event editor ("Weitere Optionen …"); a new event when `id` is nil.
+    public func eventForSystemEditor(id: String?, calendarID: String?) -> (store: EKEventStore, event: EKEvent) {
+        if let id, let event = ekEvent(id: id) { return (store, event) }
+        let event = EKEvent(eventStore: store)
+        event.calendar = calendarID.flatMap { store.calendar(withIdentifier: $0) } ?? store.defaultCalendarForNewEvents
+        return (store, event)
+    }
+
+    public func writableCalendars() -> [ListInfo] {
+        store.calendars(for: .event).filter(\.allowsContentModifications).map(Self.listInfo)
+    }
+
+    public func createEvent(_ draft: EventDraft) throws -> CalendarEvent {
+        guard let calendar = store.calendar(withIdentifier: draft.calendarID), calendar.allowsContentModifications else {
+            throw TaskWriteError.failed("Dieser Kalender kann nicht geändert werden.")
+        }
+        let event = EKEvent(eventStore: store)
+        event.calendar = calendar
+        apply(draft, to: event)
+        try store.save(event, span: .thisEvent, commit: true)
+        return Self.calendarEvent(event)
+    }
+
+    public func updateEvent(id: String, with draft: EventDraft, span: EventSpan, expectedVersion: String?) throws -> CalendarEvent {
+        guard let event = ekEvent(id: id) else { throw TaskWriteError.notFound }
+        let current = Self.calendarEvent(event)
+        try CalendarBlockRules.checkEditable(current)
+        try CalendarBlockRules.checkVersion(of: current, expected: expectedVersion)
+        if draft.calendarID != current.calendarID {
+            guard let target = store.calendar(withIdentifier: draft.calendarID), target.allowsContentModifications else {
+                throw TaskWriteError.failed("Dieser Kalender kann nicht geändert werden.")
+            }
+            event.calendar = target
+        }
+        apply(draft, to: event)
+        try store.save(event, span: Self.ekSpan(span), commit: true)
+        return Self.calendarEvent(event)
+    }
+
+    public func deleteEvent(id: String, span: EventSpan, expectedVersion: String?) throws {
+        guard let event = ekEvent(id: id) else { throw TaskWriteError.notFound }
+        let current = Self.calendarEvent(event)
+        try CalendarBlockRules.checkEditable(current)
+        try CalendarBlockRules.checkVersion(of: current, expected: expectedVersion)
+        try store.remove(event, span: Self.ekSpan(span), commit: true)
+    }
+
+    private func apply(_ draft: EventDraft, to event: EKEvent) {
+        event.title = draft.title
+        event.isAllDay = draft.isAllDay
+        event.startDate = draft.start
+        event.endDate = draft.end
+        event.notes = draft.notes
+        event.location = draft.location
+        event.url = draft.url
+    }
+
+    nonisolated static func ekSpan(_ span: EventSpan) -> EKSpan {
+        switch span {
+        case .thisEvent: .thisEvent
+        case .futureEvents: .futureEvents
+        }
+    }
+
+    private func ekEvent(id: String) -> EKEvent? {
+        let (scopedIdentifier, occurrence) = CalendarBlockRules.parseOccurrenceID(id)
+        let (identifier, calendarID) = CalendarBlockRules.parseCalendarScope(scopedIdentifier)
+        guard let occurrence else {
+            let event = store.event(withIdentifier: identifier)
+            event?.refresh()
+            return event
+        }
+        let calendars = calendarID.flatMap { store.calendar(withIdentifier: $0) }.map { [$0] }
+        // One occurrence of a series: `occurrenceDate` keeps the original time even after the occurrence was
+        // moved on its own, so search a wide window around it.
+        let predicate = store.predicateForEvents(withStart: occurrence.addingTimeInterval(-60 * 86_400),
+                                                 end: occurrence.addingTimeInterval(60 * 86_400), calendars: calendars)
+        return store.events(matching: predicate).first {
+            $0.eventIdentifier == identifier && abs(($0.occurrenceDate ?? $0.startDate).timeIntervalSince(occurrence)) < 1
+        }
+    }
+
+    nonisolated static func calendarEvent(_ event: EKEvent) -> CalendarEvent {
+        let declined = event.attendees?.first(where: \.isCurrentUser)?.participantStatus == .declined
+        let identifier = event.eventIdentifier ?? event.calendarItemIdentifier
+        var result = CalendarEvent(
+            // Subscribed calendars and detached occurrences can share one identifier across many events, so
+            // they always get the occurrence in their ID (see `CalendarBlockRules.uniqueIDs` for the rest).
+            id: CalendarBlockRules.occurrenceID(eventIdentifier: identifier, occurrence: event.occurrenceDate ?? event.startDate,
+                                                isRecurring: event.hasRecurrenceRules || event.isDetached
+                                                    || event.calendar?.type == .subscription),
+            externalID: event.calendarItemExternalIdentifier,
+            calendarID: event.calendar?.calendarIdentifier ?? "",
+            title: event.title ?? "",
+            start: event.startDate,
+            end: event.endDate,
+            isAllDay: event.isAllDay,
+            url: event.url,
+            isBusy: event.availability != .free && !declined,
+            version: event.lastModifiedDate.map { String($0.timeIntervalSince1970) } ?? "0"
+        )
+        result.isRecurring = event.hasRecurrenceRules
+        result.isInvitation = event.hasAttendees && event.organizer?.isCurrentUser == false
+        result.isEditable = event.calendar?.allowsContentModifications ?? false
+        result.notes = event.notes
+        result.location = event.location
+        return result
+    }
+}
+

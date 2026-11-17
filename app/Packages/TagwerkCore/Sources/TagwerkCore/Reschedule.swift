@@ -2,6 +2,7 @@ import Foundation
 
 /// Targets offered when moving a task.
 public enum RescheduleOption: Sendable, Hashable {
+    case today
     case tomorrow
     /// The next Monday strictly after today (on a Monday: one week later).
     case nextMonday
@@ -16,6 +17,8 @@ public func rescheduled(_ due: DueDate?, option: RescheduleOption, now: Date, ca
     let startOfToday = calendar.startOfDay(for: now)
     let target: DueDate
     switch option {
+    case .today:
+        target = DueDate(date: startOfToday, includeTime: false, calendar: calendar)
     case .tomorrow:
         let tomorrow = calendar.date(byAdding: .day, value: 1, to: startOfToday) ?? startOfToday
         target = DueDate(date: tomorrow, includeTime: false, calendar: calendar)

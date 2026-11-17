@@ -23,6 +23,10 @@ enum ProjectsQuery {
     repository { nameWithOwner }
     assignees(first: 10) { nodes { login } }
     labels(first: 20) { nodes { name } }
+    parent { id number title labels(first: 20) { nodes { name } }
+      projectItems(first: 5) { nodes { fieldValues(first: 20) { nodes {
+        ... on ProjectV2ItemFieldDateValue { date field { ... on ProjectV2FieldCommon { name } } }
+      } } } } }
     """
 
     static let viewerProjects = """
@@ -112,8 +116,25 @@ enum ProjectsQuery {
         struct Label: Decodable { let name: String }
         let __typename: String
 
+        struct ParentNode: Decodable {
+            struct Item: Decodable { let fieldValues: Nodes<FieldValueNode> }
+            let id: String
+            let number: Int
+            let title: String
+            let labels: Nodes<Label>?
+            let projectItems: Nodes<Item>?
+
+            var parent: ParentIssue {
+                let due = (projectItems?.nodes ?? [])
+                    .flatMap(\.fieldValues.nodes)
+                    .first { $0.field?.name == GitHubMapping.dueField && $0.date != nil }
+                    .flatMap { $0.date.flatMap(ProjectsQuery.dueDate) }
+                return ParentIssue(id: id, number: number, title: title, labels: labels?.nodes.map(\.name) ?? [], due: due)
+            }
+        }
+
         enum CodingKeys: String, CodingKey {
-            case __typename, id, number, title, body, state, updatedAt, url, repository, assignees, labels
+            case __typename, id, number, title, body, state, updatedAt, url, repository, assignees, labels, parent
         }
 
         init(from decoder: Decoder) throws {
@@ -131,6 +152,7 @@ enum ProjectsQuery {
             repository = try container.decodeIfPresent(Repository.self, forKey: .repository)
             assignees = try container.decodeIfPresent(Nodes<Login>.self, forKey: .assignees)
             labels = try container.decodeIfPresent(Nodes<Label>.self, forKey: .labels)
+            parent = try container.decodeIfPresent(ParentNode.self, forKey: .parent)
         }
         let id: String?
         let number: Int?
@@ -142,6 +164,7 @@ enum ProjectsQuery {
         let repository: Repository?
         let assignees: Nodes<Login>?
         let labels: Nodes<Label>?
+        let parent: ParentNode?
 
         func record(placements: [ProjectPlacement]) -> GitHubIssueRecord? {
             guard __typename == "Issue", let id, let number, let title, let state, let updatedAt, let url,
@@ -150,7 +173,7 @@ enum ProjectsQuery {
                 issueID: id, number: number, repository: repository.nameWithOwner, title: title,
                 body: body.flatMap { $0.isEmpty ? nil : $0 }, isOpen: state == "OPEN", url: url, updatedAt: updatedAt,
                 labels: labels?.nodes.map(\.name) ?? [], assignees: assignees?.nodes.map(\.login) ?? [],
-                placements: placements
+                placements: placements, parent: parent?.parent
             )
         }
     }

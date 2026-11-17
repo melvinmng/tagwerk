@@ -10,6 +10,7 @@ final class FakeAccessStore: ReminderStore {
     var reminderAnswer: AccessState = .fullAccess
     var calendarAnswer: AccessState = .fullAccess
     var calendarInfos: [ListInfo] = []
+    var openRecords: [ReminderRecord] = []
     private(set) var reminderRequests = 0
     private(set) var calendarRequests = 0
 
@@ -27,7 +28,7 @@ final class FakeAccessStore: ReminderStore {
 
     func lists() -> [ListInfo] { [] }
     func calendars() -> [ListInfo] { calendarInfos }
-    func openReminders(in listIDs: Set<String>?) async -> [ReminderRecord] { [] }
+    func openReminders(in listIDs: Set<String>?) async -> [ReminderRecord] { openRecords }
     func reminder(id: String) -> ReminderRecord? { nil }
     func save(_ record: ReminderRecord) throws -> ReminderRecord { record }
     func delete(id: String) throws {}

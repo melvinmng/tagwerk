@@ -10,6 +10,15 @@ public struct TaskID: Sendable, Hashable, Codable {
     public let source: TaskSource
     public let rawValue: String
 
+    /// Stable string form "<source>:<rawValue>" for storage and drag & drop.
+    public var key: String { "\(source.rawValue):\(rawValue)" }
+
+    public init?(key: String) {
+        guard let separator = key.firstIndex(of: ":"),
+              let source = TaskSource(rawValue: String(key[..<separator])) else { return nil }
+        self.init(source: source, rawValue: String(key[key.index(after: separator)...]))
+    }
+
     public init(source: TaskSource, rawValue: String) {
         self.source = source
         self.rawValue = rawValue
@@ -52,13 +61,19 @@ public struct TaskItem: Identifiable, Sendable, Hashable {
     public var subContainers: [TaskContainer]
     /// Labels, for sources that have them (GitHub); `nil` otherwise.
     public var labels: [String]?
+    /// Parent issue (GitHub sub-issues), used for epic deadlines.
+    public var epic: EpicInfo?
+    /// True for GitHub issues labelled `epic`.
+    public var isEpic: Bool
 
     public init(
         id: TaskID, title: String, notes: String?, due: DueDate?, priority: Priority?,
         estimateMinutes: Int?, isCompleted: Bool, container: TaskContainer, url: URL?,
         version: String, editableFields: Set<TaskField>,
-        subContainers: [TaskContainer] = [], labels: [String]? = nil
+        subContainers: [TaskContainer] = [], labels: [String]? = nil, epic: EpicInfo? = nil, isEpic: Bool = false
     ) {
+        self.epic = epic
+        self.isEpic = isEpic
         self.id = id
         self.title = title
         self.notes = notes

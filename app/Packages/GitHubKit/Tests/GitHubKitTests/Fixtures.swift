@@ -30,7 +30,7 @@ enum Fixtures {
     /// another owner (readable) and in a closed project.
     static let assignedPage1 = """
     {"data":{"search":{"pageInfo":{"hasNextPage":true,"endCursor":"CURSOR_1"},"nodes":[
-      \(issueWithItems(id: "I_1", number: 1, items: [
+      \(issueWithItems(id: "I_1", number: 1, parent: epicParent, items: [
         #"{"id":"PVTI_a","updatedAt":"2026-11-17T11:00:00Z","isArchived":false,"project":{"id":"PVT_1"},"fieldValues":{"nodes":[{"name":"Ready","field":{"name":"Status"}},{"name":"P3 (Medium)","field":{"name":"Priority"}},{"date":"2026-11-20","field":{"name":"Due date"}},{"number":1.5,"field":{"name":"Estimate (h)"}},{}]}}"#,
         #"{"id":"PVTI_c","updatedAt":"2026-11-17T12:00:00Z","isArchived":false,"project":{"id":"PVT_2"},"fieldValues":{"nodes":[{"name":"Ready","field":{"name":"Status"}},{"date":"2026-11-18","field":{"name":"Due date"}},{"number":0.5,"field":{"name":"Estimate (MDs)"}}]}}"#,
         #"{"id":"PVTI_old","updatedAt":"2026-11-01T12:00:00Z","isArchived":true,"project":{"id":"PVT_1"},"fieldValues":{"nodes":[]}}"#,
@@ -55,9 +55,12 @@ enum Fixtures {
     ]}}}
     """
 
-    static func issueWithItems(id: String, number: Int, items: [String]) -> String {
+    static let epicParent = #"{"id":"E_1","number":10,"title":"Phase 2","labels":{"nodes":[{"name":"epic"}]},"projectItems":{"nodes":[{"project":{"id":"PVT_1"},"fieldValues":{"nodes":[{"name":"In progress","field":{"name":"Status"}},{"date":"2026-11-30","field":{"name":"Due date"}}]}}]}}"#
+
+    static func issueWithItems(id: String, number: Int, parent: String? = nil, items: [String]) -> String {
         let content = issueContent(id: id, number: number)
         return String(content.trimmingCharacters(in: .whitespacesAndNewlines).dropLast())
+            + (parent.map { #","parent":"# + $0 } ?? "")
             + #","projectItems":{"nodes":["# + items.joined(separator: ",") + "]}}"
     }
 

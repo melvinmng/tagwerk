@@ -123,6 +123,17 @@ Tagwerk lädt dir zugewiesene offene Issues aus offenen Projects, soweit sie im 
 
 Du kannst Titel, Beschreibung, Labels und Project-Felder bearbeiten, Kommentare schreiben und Issues schließen oder wieder öffnen. Neue Issues weist dir Tagwerk selbst zu und legt sie im gewählten Project mit Status **Ready** an. Beim Abhaken schließt Tagwerk zuerst das Issue und setzt anschließend den Status in den zugehörigen Projects.
 
+## Planen
+
+Der Tab **Planen** zeigt Tag, Woche oder Monat. Der **Arbeitstag** einer Aufgabe liegt nur in Tagwerk; die Fälligkeit in Erinnerungen oder GitHub ändert sich dabei nicht. Fälligkeiten verschiebst du gesondert über **Fälligkeit verschieben**.
+
+- **Tag:** Stundenraster (oder Liste) mit Terminen, Zeitblöcken und Mittagspause. Halten wählt einen Eintrag aus und zeigt Griffe für Beginn und Ende; halten und ziehen verschiebt ihn. Das Panel **Ohne Uhrzeit** unten enthält die für den Tag festgelegten Aufgaben sowie **Heute offen** und **Überfällig**; am Griff ≡ ziehst du eine Aufgabe auf eine Uhrzeit.
+- **Freie Zeit:** Arbeitszeit des Wochentags (oder abweichend für einen Tag) minus Termine mit Puffer, Mittagspause und wiederkehrendem Aufwand. Heute zählt nur die Zeit ab jetzt.
+- **Zeitblöcke** sind Termine im Plan-Kalender „Tagwerk“ mit `tagwerk://task/…` im URL-Feld. Termine mit `#<Nummer>` eines Issues oder mit dem genauen Titel einer Erinnerung werden automatisch verknüpft.
+- **Termine** aller beschreibbaren Kalender lassen sich in Tagwerk anlegen, ändern und löschen. **Frei** markiert Termine nur in Tagwerk, sie belegen dann keine Zeit.
+- **Gleiche Termine** in mehreren Kalendern fasst Tagwerk nur nach deiner Zustimmung zusammen. **Einstellungen → Planen → Kalender-Diagnose** zeigt je Kalender, welche Termine gelesen und gezeigt werden.
+- **Wichtige Deadlines:** P1-Aufgaben, GitHub-Epics (Label `epic`) und Termine aus Deadline-Kalendern.
+
 ## Entwicklung
 
 - [`app/`](app/) enthält die SwiftUI-App und ihre lokalen Swift-Pakete. XcodeGen erzeugt das Xcode-Projekt aus [`app/project.yml`](app/project.yml).

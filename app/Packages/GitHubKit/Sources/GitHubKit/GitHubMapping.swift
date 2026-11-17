@@ -10,6 +10,8 @@ public enum GitHubMapping {
     public static let estimateDaysField = "Estimate (MDs)"
     public static let doneStatus = "Done"
     public static let reopenStatus = "Ready"
+    /// Label that marks an epic (convention of t3gh).
+    public static let epicLabel = "epic"
     /// A person-day ("MD") counts as 8 hours.
     static let minutesPerDay = 8 * 60
 
@@ -76,7 +78,11 @@ public enum GitHubMapping {
             editableFields: editable,
             subContainers: placements.filter(\.project.canWrite)
                 .map { TaskContainer(id: $0.project.id, name: $0.project.title, colorHex: nil) },
-            labels: record.labels
+            labels: record.labels,
+            epic: record.parent.map {
+                EpicInfo(id: $0.id, number: $0.number, title: $0.title, due: $0.due, isEpic: $0.labels.contains(epicLabel))
+            },
+            isEpic: record.labels.contains(epicLabel)
         )
     }
 

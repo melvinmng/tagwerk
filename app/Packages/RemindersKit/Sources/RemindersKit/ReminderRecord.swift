@@ -12,9 +12,12 @@ public struct ReminderRecord: Sendable, Equatable {
     public var isCompleted: Bool
     public var listID: String
     public var lastModified: Date?
+    /// Repetition of the reminder, if any (read-only; Tagwerk never edits it).
+    public var recurrence: Recurrence?
 
     public init(id: String, title: String, notes: String?, due: DueDate?, ekPriority: Int,
-                isCompleted: Bool, listID: String, lastModified: Date?) {
+                isCompleted: Bool, listID: String, lastModified: Date?, recurrence: Recurrence? = nil) {
+        self.recurrence = recurrence
         self.id = id
         self.title = title
         self.notes = notes

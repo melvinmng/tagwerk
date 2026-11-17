@@ -1,5 +1,6 @@
 import Foundation
 import GitHubKit
+import Network
 import Observation
 import RemindersKit
 import SwiftData
@@ -13,6 +14,7 @@ final class AppEnvironment {
     let gateway: EventKitGateway
     let settings: AppSettings
     let taskList: TaskListModel
+    let planning: PlanningModel
     let gitHubTokens: TokenManager
     let gitHubLoginClient: DeviceFlowClient
     let gitHub: GitHubTaskProvider
@@ -21,19 +23,27 @@ final class AppEnvironment {
     /// Age after which the repository/project catalog is fetched again.
     static let catalogMaxAge: TimeInterval = 5 * 60
     @ObservationIgnored private var changeObservation: Task<Void, Never>?
+    @ObservationIgnored private var reconnectWatch: Task<Void, Never>?
+    @ObservationIgnored private var pathMonitor: NWPathMonitor?
 
     init(modelContainer: ModelContainer) throws {
         self.modelContainer = modelContainer
         let context = modelContainer.mainContext
         let settings = try AppSettings.current(in: context)
         let gateway = EventKitGateway()
-        let reminders = RemindersTaskProvider(store: gateway) {
+        let reminders = RemindersTaskProvider(store: gateway, estimates: SwiftDataEstimateStore(context: context)) {
             settings.selectedReminderListIDs.map(Set.init)
         }
         self.settings = settings
         self.gateway = gateway
         let taskList = TaskListModel(providers: [reminders, LocalTaskProvider(context: context)])
         self.taskList = taskList
+        let planStore = PlanStore(context: context)
+        let blockPlanner = BlockPlanner(store: gateway, planStore: planStore, links: EventLinkStore(context: context),
+                                        settings: settings, calendar: .tagwerk)
+        self.planning = PlanningModel(taskList: taskList, calendarStore: gateway, reminderStore: gateway, planStore: planStore,
+                                      efforts: RecurringEffortStore(context: context), blocks: blockPlanner, settings: settings,
+                                      marks: EventMarkStore(context: context))
 
         let clientID = Bundle.main.object(forInfoDictionaryKey: "GitHubClientID") as? String ?? ""
         // GitHub requests fail after 15 s instead of the default 60 s, so the cache appears quickly offline.
@@ -55,6 +65,8 @@ final class AppEnvironment {
             catalogStore: catalogStore,
             selectedProjectIDs: { settings.selectedProjectIDs.map(Set.init) }
         )
+        let planning = self.planning
+        taskList.onCompletionChanged = { id, isCompleted in await planning.didChangeCompletion(id, isCompleted: isCompleted) }
         // An ended GitHub sign-in (expired or revoked) forgets the cached issues of that account.
         taskList.onSignedOut = { source in
             if source == .github {
@@ -95,7 +107,7 @@ final class AppEnvironment {
     }
 
     func makeSetupModel() -> SetupModel {
-        SetupModel(store: gateway, settings: settings)
+        SetupModel(store: gateway, settings: settings, calendarStore: gateway)
     }
 
     /// Current authorization of a source that needs system permission; `nil` for sources without one.
@@ -114,6 +126,34 @@ final class AppEnvironment {
         settings.setupCompleted = false
     }
 
+    /// Keeps GitHub from staying offline: retries with growing pauses while it is offline or failing,
+    /// and at once when the network comes back.
+    func startReconnectWatch() {
+        guard reconnectWatch == nil else { return }
+        let reconnector = Reconnector(model: taskList, source: .github)
+        reconnectWatch = Task { [weak self] in
+            while !Task.isCancelled {
+                if let self, ReconnectPolicy.needsRetry(self.taskList.sourceStates[.github]) {
+                    await reconnector.runUntilOnline()
+                }
+                try? await Task.sleep(for: .seconds(15))
+            }
+        }
+        let monitor = NWPathMonitor()
+        monitor.pathUpdateHandler = { [weak self] path in
+            guard path.status == .satisfied else { return }
+            Task { @MainActor in await self?.retryGitHubIfNeeded() }
+        }
+        monitor.start(queue: DispatchQueue(label: "de.tagwerk.network"))
+        pathMonitor = monitor
+    }
+
+    /// Immediate retry, e.g. when the network returns or the app comes to the foreground.
+    func retryGitHubIfNeeded() async {
+        guard ReconnectPolicy.needsRetry(taskList.sourceStates[.github]) else { return }
+        await taskList.reload(only: [.github])
+    }
+
     /// Reloads the list whenever Reminders or Calendar report a change.
     func startObservingChanges() {
         guard changeObservation == nil else { return }
@@ -122,6 +162,7 @@ final class AppEnvironment {
             for await _ in changes {
                 // EventKit changes concern Reminders only; GitHub and local tasks stay as they are.
                 await self?.taskList.reload(only: [.reminders])
+                await self?.planning.reload()
             }
         }
     }

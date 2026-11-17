@@ -27,7 +27,7 @@ struct SetupView: View {
                         if step == .github {
                             GitHubLoginView(model: loginModel) { model.markSignedIn() }
                         } else {
-                            Button("Erlauben") { Task { await model.grant() } }
+                            Button(step == .planCalendar ? "Kalender „Tagwerk“ anlegen" : "Erlauben") { Task { await model.grant() } }
                                 .buttonStyle(.borderedProminent)
                         }
                         Button("Überspringen") {

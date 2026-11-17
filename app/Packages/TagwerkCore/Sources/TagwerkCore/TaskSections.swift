@@ -34,7 +34,7 @@ public func section(for item: TaskItem, now: Date, calendar: Calendar) -> TaskSe
 }
 
 /// Groups items into non-empty sections in display order. Within a section: earliest due first,
-/// then priority (P1 first, none last), then title.
+/// then priority (P1 first, none last), then source (Reminders, GitHub, local), then title.
 public func groupedSections(_ items: [TaskItem], now: Date, calendar: Calendar) -> [(TaskSection, [TaskItem])] {
     let bySection = Dictionary(grouping: items) { section(for: $0, now: now, calendar: calendar) }
     return TaskSection.allCases.compactMap { section in
@@ -43,12 +43,21 @@ public func groupedSections(_ items: [TaskItem], now: Date, calendar: Calendar) 
     }
 }
 
-private func isOrderedBefore(_ lhs: TaskItem, _ rhs: TaskItem, calendar: Calendar) -> Bool {
+/// The app-wide task order: earliest due first (none last), then priority (P1 first, none last), then source
+/// (Reminders, GitHub, local), then title. Used by every list of tasks.
+public func sortedTasks(_ items: [TaskItem], calendar: Calendar) -> [TaskItem] {
+    items.sorted { isOrderedBefore($0, $1, calendar: calendar) }
+}
+
+public func isOrderedBefore(_ lhs: TaskItem, _ rhs: TaskItem, calendar: Calendar) -> Bool {
     let lhsDue = lhs.due?.startDate(in: calendar) ?? .distantFuture
     let rhsDue = rhs.due?.startDate(in: calendar) ?? .distantFuture
     if lhsDue != rhsDue { return lhsDue < rhsDue }
     let lhsPriority = lhs.priority?.rawValue ?? Int.max
     let rhsPriority = rhs.priority?.rawValue ?? Int.max
     if lhsPriority != rhsPriority { return lhsPriority < rhsPriority }
+    let lhsSource = TaskSource.allCases.firstIndex(of: lhs.id.source) ?? 0
+    let rhsSource = TaskSource.allCases.firstIndex(of: rhs.id.source) ?? 0
+    if lhsSource != rhsSource { return lhsSource < rhsSource }
     return lhs.title.localizedStandardCompare(rhs.title) == .orderedAscending
 }

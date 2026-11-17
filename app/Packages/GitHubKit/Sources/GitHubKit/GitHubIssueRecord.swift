@@ -73,6 +73,23 @@ public struct ProjectPlacement: Codable, Sendable, Equatable {
     }
 }
 
+/// Parent of a sub-issue with the values Tagwerk needs for epic deadlines.
+public struct ParentIssue: Codable, Sendable, Equatable {
+    public let id: String
+    public let number: Int
+    public let title: String
+    public let labels: [String]
+    public let due: DueDate?
+
+    public init(id: String, number: Int, title: String, labels: [String], due: DueDate?) {
+        self.id = id
+        self.number = number
+        self.title = title
+        self.labels = labels
+        self.due = due
+    }
+}
+
 /// A GitHub issue with all its placements in open projects. Identity is the issue, not the item.
 public struct GitHubIssueRecord: Codable, Sendable, Equatable {
     public let issueID: String
@@ -86,9 +103,13 @@ public struct GitHubIssueRecord: Codable, Sendable, Equatable {
     public var labels: [String]
     public var assignees: [String]
     public var placements: [ProjectPlacement]
+    /// Parent issue (sub-issues); `nil` for caches written before parents were read.
+    public var parent: ParentIssue?
 
     public init(issueID: String, number: Int, repository: String, title: String, body: String?, isOpen: Bool,
-                url: URL, updatedAt: Date, labels: [String], assignees: [String], placements: [ProjectPlacement]) {
+                url: URL, updatedAt: Date, labels: [String], assignees: [String], placements: [ProjectPlacement],
+                parent: ParentIssue? = nil) {
+        self.parent = parent
         self.issueID = issueID
         self.number = number
         self.repository = repository
