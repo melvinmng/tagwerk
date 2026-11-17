@@ -1,0 +1,11 @@
+.DS_Store
+# Xcode
+build/
+DerivedData/
+*.xcuserstate
+xcuserdata/
+*.xcodeproj/project.xcworkspace/xcuserdata/
+# Secrets
+*.xcconfig.local
+Secrets.xcconfig
+.env
