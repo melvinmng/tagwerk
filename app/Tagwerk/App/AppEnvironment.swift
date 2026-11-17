@@ -104,7 +104,7 @@ final class AppEnvironment {
     }
 
     func makeSetupModel() -> SetupModel {
-        SetupModel(store: gateway, settings: settings)
+        SetupModel(store: gateway, settings: settings, calendarStore: gateway)
     }
 
     /// Current authorization of a source that needs system permission; `nil` for sources without one.

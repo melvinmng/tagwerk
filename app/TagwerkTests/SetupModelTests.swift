@@ -48,6 +48,8 @@ struct SetupModelTests {
         model.skip()
         await model.grant()
         #expect(store.calendarRequests == 1)
+        #expect(model.current == .planCalendar)
+        model.skip()
         #expect(model.current == .github)
         model.skip()
         #expect(model.isFinished)
@@ -60,6 +62,7 @@ struct SetupModelTests {
         model.skip()
         await model.grant()
         model.skip()
+        model.skip()
         #expect(settings.selectedCalendarIDs == ["holidays"])
     }
 
@@ -70,11 +73,13 @@ struct SetupModelTests {
         model.skip()
         await model.grant()
         model.skip()
+        model.skip()
         #expect(settings.selectedCalendarIDs == nil)
     }
 
     @Test func finish_marksSetupCompleted() {
         let model = SetupModel(store: store, settings: settings)
+        model.skip()
         model.skip()
         model.skip()
         #expect(!settings.setupCompleted)
@@ -87,6 +92,7 @@ struct SetupModelTests {
         let model = SetupModel(store: store, settings: settings)
         model.skip()
         model.skip()
+        model.skip()
         #expect(model.current == .github)
         model.markSignedIn()
         #expect(model.results[.github] == .fullAccess)
@@ -94,6 +100,37 @@ struct SetupModelTests {
     }
 
     @Test func steps_haveGermanTitles() {
-        #expect(SetupStep.allCases.map(\.title) == ["Erinnerungen", "Kalender", "GitHub"])
+        #expect(SetupStep.allCases.map(\.title) == ["Erinnerungen", "Kalender", "Plan-Kalender", "GitHub"])
+    }
+
+    @Test func planCalendarStep_createsTagwerkCalendar() async {
+        let calendars = FakeCalendarStore()
+        let model = SetupModel(store: store, settings: settings, calendarStore: calendars)
+        model.skip()
+        await model.grant()
+        #expect(model.current == .planCalendar)
+        await model.grant()
+        #expect(settings.planCalendarID == "new-plan")
+        #expect(calendars.calendars.contains { $0.title == "Tagwerk" })
+        #expect(model.current == .github)
+    }
+
+    @Test func planCalendarStep_skip_leavesNil() async {
+        let model = SetupModel(store: store, settings: settings, calendarStore: FakeCalendarStore())
+        model.skip()
+        model.skip()
+        model.skip()
+        #expect(settings.planCalendarID == nil)
+    }
+
+    @Test func planCalendarStep_withoutCalendarAccess_isDenied() async {
+        store.calendarAnswer = .denied
+        let calendars = FakeCalendarStore()
+        let model = SetupModel(store: store, settings: settings, calendarStore: calendars)
+        model.skip()
+        await model.grant()
+        await model.grant()
+        #expect(model.results[.planCalendar] == .denied)
+        #expect(settings.planCalendarID == nil)
     }
 }

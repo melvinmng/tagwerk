@@ -14,10 +14,7 @@ struct SettingsView: View {
         @Bindable var settings = environment.settings
         NavigationStack {
             Form {
-                Section("Arbeitszeit") {
-                    DatePicker("Beginn", selection: time($settings.workdayStartMinutes), displayedComponents: .hourAndMinute)
-                    DatePicker("Ende", selection: time($settings.workdayEndMinutes), displayedComponents: .hourAndMinute)
-                }
+                PlanningSettingsSection()
 
                 Section("Mittagspause") {
                     DatePicker("Beginn", selection: time($settings.lunchStartMinutes), displayedComponents: .hourAndMinute)

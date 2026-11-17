@@ -7,7 +7,7 @@ Status: Phase 2 in progress. Design and plans live in `docs/superpowers/`.
 ## Layout
 
 - `app/` – the iOS app (XcodeGen, `app/project.yml`; the generated `.xcodeproj` is not checked in)
-  - `app/Tagwerk/` – SwiftUI app target (task list, editor, setup, settings, SwiftData persistence)
+  - `app/Tagwerk/` – SwiftUI app target (planning, task list, editor, setup, settings, SwiftData persistence)
   - `app/Packages/TagwerkCore` – task model, sections and date logic (Foundation only)
   - `app/Packages/RemindersKit` – EventKit access with conflict-checked writes
   - `app/Packages/SecureStore` – keychain storage
@@ -36,3 +36,12 @@ Sign in under Settings → GitHub or during setup ("Mit GitHub anmelden"). Tagwe
 - Write: title, description, labels, comments, close/reopen (REST); Due date, Priority, Estimate and Status (GraphQL). "Done" closes the issue first and then sets the status in every project. New issues are assigned to you and added to the chosen project with status "Ready".
 - Before every write the issue is reloaded; if it changed meanwhile, the editor offers "Neu laden" or "Trotzdem sichern".
 - Offline, the list shows the last fetched state ("Stand: hh:mm, offline") and writing is disabled.
+
+## Planning
+
+The "Planen" tab shows a day, a week or a month. Tasks are planned for a day (stored in Tagwerk only; the due date in Reminders or GitHub is not changed) by dragging them onto a day or with the long-press menu ("Einplanen: Heute / Morgen / Wochenende / Nächste Woche").
+
+- Capacity per day = working hours of that weekday (or a different value for that date) − events (with buffer) − lunch − recurring effort. Tasks without effort count with the default duration.
+- Important deadlines: P1 tasks, GitHub epics (label `epic`, via sub-issues) and events from deadline calendars.
+- Time blocks are written as events into the plan calendar ("Tagwerk"), with `tagwerk://task/…` in the URL field. Events whose title contains `#<number>` of an assigned issue, or exactly matches a reminder, are linked automatically; links can also be set by hand.
+- Recurring reminders (e.g. daily flash cards) can carry an effort that reserves time on each occurrence, editable for one day or from a day on.
