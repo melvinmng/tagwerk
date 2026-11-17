@@ -1,0 +1,180 @@
+# Tagwerk – Phase 2b Design: Planen, Kalender und KI
+
+Stand: 2026-11-17 · Status: **Entwurf zur Freigabe** · Baut auf: `2026-11-17-tagwerk-design.md` (Hauptdesign), `2026-11-17-phase-2-design.md` (Phase 2, darin §7 und §8 für KI und Benachrichtigungen), `../spikes/2026-11-17-feasibility-results.md` (u. a. Nachtrag Function Calling). Mockups: `../mockups/2026-11-17-phase-2b-mockups.html` (Freigabe folgt).
+
+Dieser Nachtrag ersetzt für Phase 2b den bisherigen Plan „2b: KI-Tagesplan, Heute-Tab, Benachrichtigungen“ aus Phase 2 §11. Wo er dem Phase-2-Design widerspricht, gilt dieser Nachtrag.
+
+## 1. Absicht und Warum
+
+Tagwerk zeigt seit Phase 2a alle Aufgaben in einer Liste. Was fehlt, ist das eigentliche Planen: festlegen, **an welchem Tag** du was erledigst, über Tag, Woche und Monat, und dabei sehen, ob die Zeit reicht und welche **wichtigen Deadlines** näher rücken. Die KI (ChatGPT über dein Abo) soll dabei helfen, Pläne vorschlagen und überall in der App ansprechbar sein, auch zu einem einzelnen GitHub-Issue mit Kenntnis des Projekts. Zeitblöcke für Aufgaben legst du heute von Hand im Kalender an; künftig entstehen sie in Tagwerk und landen als echte Termine im Kalender.
+
+## 2. Ziele, Nicht-Ziele, Anti-Ziele
+
+**Ziele**
+- Planungsbereich mit Ansichten **Tag**, **Woche**, **Monat**, umschaltbar. Tag mit Zeitleiste und Zeitblöcken; Woche und Monat verteilen Aufgaben auf Tage, ohne Uhrzeit.
+- Pro Tag sichtbar: **freie Zeit** (Kapazität) und **wichtige Deadlines**.
+- Planen per Ziehen **und** per KI („Tag/Woche/Monat planen“), Vorschläge einzeln oder mit „Alle übernehmen“ annehmen.
+- Angenommene Zeitblöcke werden **echte Kalendertermine** in einem Kalender deiner Wahl, verknüpft mit der Aufgabe.
+- **Verknüpfung Termin ↔ Aufgabe** mit Sprung in beide Richtungen: automatisch erkannt, von Hand gesetzt oder von der KI vorgeschlagen.
+- **Wiederkehrender Aufwand** für wiederkehrende Erinnerungen (z. B. „Karteikarten“ täglich 3 h), pro Tag oder für alle anpassbar.
+- **Gedrückthalten** einer Aufgabe: Aktionen mit einem Tipp, inklusive KI.
+- **KI-Assistent** über einen schwebenden Knopf überall in der App, mit Kontext der aktuellen Ansicht und Funktionen zum Handeln.
+- **Benachrichtigungen** und **Hintergrund-Refresh** wie in Phase 2 §8.
+
+**Nicht-Ziele (2b)**
+- Tags in Erinnerungen (EventKit bietet keine Schnittstelle; vom Nutzer zurückgestellt).
+- Widget, Siri, Wochenrückblick (Phase 4); Ernährung und Training (Phase 3).
+- Projects von Organisationen ohne Freigabe der OAuth-App.
+- Eine zweite KI-Plattform neben ChatGPT als Standard. Die Claude-API bleibt Ausweichlösung nach Phase 2 §7.
+
+**Anti-Ziele (Fehlschlag trotz funktionierender Technik)**
+- Plan in Tagwerk und Kalender laufen auseinander (Daten-Drift, Hauptdesign §2).
+- Die KI ändert etwas, ohne dass du es gesehen und bestätigt hast.
+- Wichtige Deadlines gehen in der Wochen- oder Monatsansicht unter.
+- Planen dauert länger als heute von Hand im Kalender.
+
+## 3. Entscheidungen des Nutzers (2026-11-17)
+
+| Thema | Entscheidung |
+|---|---|
+| Zweck Woche/Monat | Festlegen, an welchem Tag was erledigt wird; Deadlines im Blick behalten und hervorheben. |
+| Planen | Beides verbinden: Ansicht mit Kapazität, Aufgaben per Ziehen auf Tage; „Woche/Monat planen“ lässt die KI auffüllen. Monat nur Tage, Uhrzeiten nur im Tag. |
+| Wichtige Deadlines | P1-Aufgaben, Epic-Deadlines (GitHub), Termine aus konfigurierbaren **Deadline-Kalendern** (beim Nutzer „Uni“: Klausuren, Abgaben). Stehen besonders im Fokus. |
+| Wiederkehrender Aufwand | In Tagwerk gespeichert; anpassbar für ein einzelnes Vorkommen oder alle. |
+| KI und Datenschutz | Keine Rückfrage vor jeder Übertragung an OpenAI. Einmaliger Hinweis in der Einrichtung. Ohne deine Aktion gehen keine Daten an OpenAI (keine Hintergrundplanung). |
+| KI-Vorschläge | Einzeln annehmen oder „Alle übernehmen“. |
+| KI-Assistent | Schwebender Knopf überall; kennt den Kontext; handelt über Funktionen; jede Änderung als Aktionskarte bestätigen. Function Calling über das ChatGPT-Abo ist auf dem iPhone verifiziert. |
+| Chat zum Issue | Kontext: Issue, Kommentare, Labels, Project-Felder, Nachbar-Issues in Project/Epic. Repo-Inhalte (README, Doku, Dateien, PRs) holt die KI auf Nachfrage per Funktion; die Anweisungen sagen ihr ausdrücklich, dass sie das kann. |
+| Kalender | Tagwerk **schreibt** angenommene Zeitblöcke in den Kalender (hebt das Nicht-Ziel „Schreiben in den Kalender“ aus Phase 2 §1 auf). |
+| Verknüpfung | Termin ↔ Aufgabe mit Sprung in beide Richtungen; automatisch erkannt, manuell, KI-Vorschlag. |
+| Gedrückthalten | Heute, Morgen, Wochenende, Nächste Woche, Datum wählen, Erledigt, Löschen/Schließen, „Mit KI planen“, „Über diese Aufgabe sprechen“. Gestaltung mit Fable. |
+| Ansatz | **A: Der Kalender ist die Quelle für Zeitblöcke** (siehe §4). |
+| Aufteilung | Drei Pläne: 2b-1 Kalender & Planung, 2b-2 KI, 2b-3 Benachrichtigungen & Hintergrund. |
+
+## 4. Ansätze
+
+| Ansatz | Kern | Abwägung | Entscheidung |
+|---|---|---|---|
+| **A: Kalender ist die Quelle** | Ein angenommener Zeitblock ist ein Termin im Plan-Kalender mit Verweis auf die Aufgabe. In Tagwerk liegen nur Tageszuordnungen ohne Uhrzeit, Verknüpfungen und Aufwände. | Keine doppelte Datenhaltung; Änderungen im Apple-Kalender sieht Tagwerk sofort; Verknüpfung ergibt sich aus dem Termin. Tagwerk muss mit Terminen umgehen, die außerhalb geändert oder gelöscht werden. | **Gewählt** |
+| B: Tagwerk ist die Quelle | Plan in SwiftData, Termine als Kopie im Kalender. | Volle Kontrolle, aber zwei Stände, die auseinanderlaufen (Anti-Ziel). | verworfen |
+| C: Nur Tagwerk, kein Kalender | Wie Phase-2-Design. | Widerspricht der Entscheidung „explizit in den Kalender schreiben“. | verworfen |
+
+## 5. Daten
+
+### 5.1 Was wo liegt
+
+| Daten | Ort | Hinweis |
+|---|---|---|
+| Zeitblöcke (Aufgabe zu einer Uhrzeit) | **Kalendertermin** im Plan-Kalender | Titel = Aufgabentitel (GitHub: `#<Nummer> <Titel>`), URL-Feld = `tagwerk://task/<quelle>/<id>` (Prozentkodierung der ID), Notiz enthält einen kurzen Hinweis „Geplant mit Tagwerk“. |
+| Tageszuordnung ohne Uhrzeit (Woche/Monat) | SwiftData `DayAssignment` | `taskKey` (Quelle + ID), `day` (Jahr/Monat/Tag wie `DueDate`), `order`, `createdAt`. Eine Aufgabe hat höchstens eine Tageszuordnung. |
+| Verknüpfungen Termin ↔ Aufgabe | SwiftData `EventTaskLink` | `eventKey` (`calendarItemExternalIdentifier`, bei Serien zusätzlich das Datum des Vorkommens), `taskKey`, `origin` (automatisch / manuell / KI-bestätigt). Für Tagwerk-eigene Blöcke ist das URL-Feld maßgeblich, `EventTaskLink` ist dann nicht nötig. |
+| Abgelehnte Verknüpfungsvorschläge | SwiftData `DismissedLinkSuggestion` | damit derselbe Vorschlag nicht wiederkommt |
+| Wiederkehrender Aufwand | SwiftData `RecurringEffort` | `reminderID` (Serie), `minutes`, plus `RecurringEffortOverride` (`reminderID`, `day`, `minutes`; 0 = an diesem Tag kein Aufwand). |
+| Lokale Aufwandsschätzung für Erinnerungen | SwiftData `ReminderEstimate` | aus Phase 2 §4 („KI-Schätzung, editierbar, lokal“) |
+| KI-Planvorschläge | SwiftData `PlanSuggestion` | bis zur Annahme/Ablehnung; angenommen → Termin bzw. `DayAssignment` |
+| Chatverläufe | SwiftData `ChatThread`/`ChatMessage` | lokal, löschbar; pro Aufgabe ein Verlauf, plus ein allgemeiner |
+| Einstellungen | `AppSettings` (additiv) | Plan-Kalender, Deadline-Kalender, Standard-Blockdauer |
+
+Alle neuen SwiftData-Attribute sind optional oder haben Standardwerte (Regel aus Plan 2a).
+
+### 5.2 Kalender
+
+- **Plan-Kalender:** In der Einrichtung bzw. den Einstellungen wählbar; Standard ist ein neu angelegter lokaler bzw. iCloud-Kalender „Tagwerk“ (je nachdem, welche Quelle verfügbar ist). Tagwerk schreibt nur in diesen Kalender.
+- **Deadline-Kalender:** Mehrfachauswahl in den Einstellungen, standardmäßig leer. Ganztägige und zeitgebundene Termine daraus gelten als wichtige Deadlines.
+- Vor dem Ändern oder Löschen eines Tagwerk-Termins wird er neu geladen und verglichen (Konfliktschutz wie Phase 2 §5).
+
+## 6. Regeln
+
+### 6.1 Kapazität eines Tages
+
+freie Zeit = Arbeitszeit − (Termine innerhalb der Arbeitszeit, ohne Plan-Kalender-Blöcke) − Mittagspause − Puffer je Termin − wiederkehrender Aufwand des Tages
+
+Geplante Last = Summe der Aufwände der dem Tag zugeordneten Aufgaben + Plan-Blöcke des Tages. Aufgaben ohne Aufwand zählen mit einer Standarddauer (Einstellung, Standard 30 min) und sind als „geschätzt“ markiert. Ganztägige Termine verbrauchen keine Zeit. Die Anzeige zeigt Last gegenüber freier Zeit; Überbuchung wird hervorgehoben.
+
+### 6.2 Wichtige Deadlines
+
+Eine Deadline ist wichtig, wenn mindestens eins gilt:
+1. Aufgabe mit Priorität P1 und Fälligkeit;
+2. GitHub-Epic (Issue mit Label `epic`) mit „Due date“;
+3. Termin aus einem Deadline-Kalender.
+
+Sie erscheinen in allen Ansichten hervorgehoben (Gestaltung nach Mockups), im Tag als Kopfzeile, in Woche und Monat am Tag. Die KI-Planung behandelt sie als Anker: Aufgaben, die zu einer wichtigen Deadline gehören oder vor ihr fällig sind, werden rechtzeitig davor eingeplant.
+
+### 6.3 Wiederkehrender Aufwand
+
+- Gilt für Erinnerungen mit Wiederholungsregel. Der Aufwand belegt an jedem Tag, an dem die Serie ein Vorkommen hat, Zeit, bevor anderes verplant wird.
+- Anpassen: „Nur dieser Tag“ (Override für das Datum) oder „Alle“ (Grundwert). Ein Override von 0 entfernt den Aufwand an diesem Tag.
+- Erledigst du das Vorkommen vorzeitig, bleibt die Zeit dieses Tages belegt (die Kapazitätsanzeige zeigt es als erledigt).
+
+### 6.4 Verknüpfung Termin ↔ Aufgabe
+
+Reihenfolge der Erkennung:
+1. URL-Feld `tagwerk://task/…` (Tagwerk-eigene Blöcke).
+2. Manuelle Verknüpfung (`EventTaskLink`).
+3. Automatisch: Titel enthält `#<Nummer>`, und genau ein zugewiesenes offenes Issue hat diese Nummer (bei mehreren Repos mit gleicher Nummer: kein automatischer Treffer, sondern Vorschlag). Oder: Titel stimmt nach Normalisierung (Groß/Klein, Leerzeichen) exakt mit genau einer offenen Erinnerung oder lokalen Aufgabe überein.
+4. KI-Vorschlag: im Chat oder nach dem Planen; wird erst nach Bestätigung zu einer manuellen Verknüpfung.
+
+Sprung: vom Termin (Tagesansicht, Termin-Detail in Tagwerk) zur Aufgabe und von der Aufgabe (Bearbeiten-Sheet, Gedrückthalten) zu verknüpften Terminen. Termine öffnet Tagwerk in einer eigenen Detailansicht; „Im Kalender öffnen“ führt in die Kalender-App.
+
+### 6.5 Zeitblöcke schreiben
+
+- Annahme eines Tagesplan-Vorschlags oder Ziehen einer Aufgabe auf eine Uhrzeit erzeugt einen Termin im Plan-Kalender.
+- Verschiebst du die Aufgabe danach auf einen anderen Tag, fragt Tagwerk, ob der Block mitwandert oder gelöscht wird.
+- Wird die Aufgabe erledigt, bleibt der Termin (er dokumentiert die Arbeit); erledigte Aufgaben erscheinen im Block als erledigt.
+- Löscht oder verschiebt jemand den Termin im Kalender, übernimmt Tagwerk das ohne Rückfrage.
+
+## 7. Ansichten
+
+- **Tab-Struktur:** „Planen“ (Tag/Woche/Monat, Standard: Tag = heute) · „Aufgaben“ · „Einstellungen“. Endgültig nach Mockup-Freigabe.
+- **Tag:** Kopfzeile mit ganztägigen Terminen und wichtigen Deadlines, Kapazität, Zeitleiste mit Terminen, Tagwerk-Blöcken und KI-Vorschlägen (lila gestrichelt, ✓/✕, Begründung aufklappbar, „Alle übernehmen“), Liste der dem Tag zugeordneten Aufgaben ohne Uhrzeit.
+- **Woche:** sieben Tage mit Kapazität, Deadline-Markierungen und zugeordneten Aufgaben; Ziehen zwischen Tagen und aus einer Ablage „Nicht eingeplant“; „Woche planen“.
+- **Monat:** Raster mit Last pro Tag und hervorgehobenen Deadlines; Tippen öffnet den Tag; „Monat planen“ verteilt auf Tage.
+- **Gedrückthalten** (Aufgabe in allen Listen und Ansichten): Heute, Morgen, Wochenende, Nächste Woche, Datum wählen …, Erledigt, Löschen bzw. „Als nicht geplant schließen“, „Mit KI planen“, „Über diese Aufgabe sprechen“, „Verknüpfte Termine“ (falls vorhanden).
+- **KI-Knopf:** schwebend, in allen Tabs, verdeckt weder ＋ noch Tab-Leiste noch Wischbereiche (Platzierung nach Mockup).
+
+## 8. KI
+
+### 8.1 Anbieter
+
+ChatGPTProvider mit allen Anforderungen aus Phase 2 §7 (Modellliste, `store:false`, `stream:true`, eine laufende Token-Erneuerung, Rücksprung-Server-Regeln, `nonce`-Prüfung, Fehlertexte). Anmeldung in der Einrichtung und in den Einstellungen. Ausweichlösung Claude-API nur manuell.
+
+### 8.2 Planen
+
+- Auslöser: „Tag planen“, „Woche planen“, „Monat planen“, „Mit KI planen“ (eine Aufgabe).
+- Eingabe: Zeitraum, Arbeitszeit, Pausen, Puffer, Kapazität je Tag, Termine (Titel, Zeit, ganztägig, Deadline ja/nein), wiederkehrender Aufwand, offene Aufgaben (Quelle, Titel, Fälligkeit, Priorität, Aufwand, wichtig ja/nein, bereits zugeordnet), bestehende Plan-Blöcke. Obergrenze für die Zahl der Aufgaben: dem Umsetzenden überlassen (bisher 40 für einen Tag).
+- Ausgabe per `text.format` json_schema (strict): Tag → `blocks` (taskId, start, minutes, reason); Woche/Monat → `assignments` (taskId, day, reason); jeweils `unscheduled`, `risks`, `estimates`.
+- Lokale Prüfung vor der Anzeige (ohne KI): keine Überschneidung mit Terminen oder anderen Blöcken, innerhalb der Arbeitszeit, Pausen und Puffer eingehalten, Kapazität je Tag nicht überschritten, jede taskId existiert, kein Tag nach der Fälligkeit, wenn es eine gibt. Ungültige Vorschläge landen unter „nicht eingeplant“ mit Grund.
+- Annahme einzeln oder „Alle übernehmen“: Tag → Termine im Plan-Kalender; Woche/Monat → `DayAssignment`.
+
+### 8.3 Assistent und Chat zum Issue
+
+- Ein Chat-Sheet, geöffnet über den KI-Knopf (Kontext: aktuelle Ansicht und Zeitraum) oder „Über diese Aufgabe sprechen“ (Kontext: diese Aufgabe; bei Issues zusätzlich Kommentare, Labels, Project-Felder, Nachbar-Issues in Project/Epic).
+- Funktionen (Function Calling, verifiziert): `create_task`, `update_task`, `reschedule_task`, `complete_task`, `assign_to_day`, `create_time_block`, `link_event_to_task`, `plan_period` sowie lesend `list_tasks`, `list_events`, `get_task`, und für GitHub `get_issue_comments`, `get_repository_readme`, `get_repository_file`, `search_repository`, `get_pull_request`.
+- **Lesende Funktionen** laufen ohne Rückfrage. **Ändernde Funktionen** erscheinen als Aktionskarte im Chat; erst dein Tipp führt sie aus. Das Ergebnis geht als `function_call_output` an das Modell zurück.
+- Die Anweisungen an das Modell nennen ausdrücklich, dass es bei GitHub-Issues weitere Repo-Inhalte per Funktion holen kann und wann das sinnvoll ist.
+- Der Verlauf wird bei jedem Aufruf vollständig mitgeschickt (wegen `store:false`).
+
+### 8.4 Datenschutz
+
+Einmaliger Hinweis in der Einrichtung und in den Einstellungen: Wenn du KI-Funktionen nutzt, gehen die dafür nötigen Daten (Termine, Aufgaben, bei Issues auch Repo-Inhalte) an OpenAI. Keine Rückfrage pro Aufruf. Keine KI-Aufrufe ohne deine Aktion, auch nicht im Hintergrund-Refresh.
+
+## 9. Benachrichtigungen und Hintergrund
+
+Unverändert nach Phase 2 §8 und §12.8. Zusätzlich: Benachrichtigungen für wichtige Deadlines aus Deadline-Kalendern (Vorlauf wie bei Aufgaben).
+
+## 10. Aufteilung in Pläne
+
+| Plan | Inhalt | Ergebnis auf dem iPhone |
+|---|---|---|
+| **2b-1 Kalender & Planung** | Termine lesen, Plan- und Deadline-Kalender, Kapazität, Tag/Woche/Monat, Ziehen, Tageszuordnung, Zeitblöcke schreiben, Verknüpfung (automatisch/manuell) und Sprung, wiederkehrender Aufwand, Gedrückthalten-Menü ohne KI-Einträge | Ohne KI planen |
+| **2b-2 KI** | ChatGPT-Anmeldung, Planen (Tag/Woche/Monat) mit lokaler Prüfung, Assistent-Knopf mit Funktionen, Chat zum Issue mit Repo-Funktionen, KI-Einträge im Menü, Verknüpfungsvorschläge | Mit KI planen und sprechen |
+| **2b-3 Benachrichtigungen & Hintergrund** | Phase 2 §8, Deadline-Kalender-Benachrichtigungen, `BGAppRefreshTask` | Deadline-Erinnerungen |
+
+## 11. Dem Umsetzenden überlassen
+
+Konkrete Prompts und JSON-Schemas, Funktionssignaturen im Detail, Obergrenzen für Kontextgrößen, Darstellung innerhalb der freigegebenen Mockups, Ordnerstruktur, Testaufbau, Animationen.
+
+## Quellen
+
+- Verifikation Function Calling: `../spikes/2026-11-17-feasibility-results.md`, Nachtrag Phase 2b.
+- Apple: EventKit `EKEvent.url`, `calendarItemExternalIdentifier` (Dokumentation in Xcode 27.2).
