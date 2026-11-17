@@ -56,9 +56,10 @@ struct ChatGPTCaptureSection: View {
             try await ChatGPTLogin(session: environment.chatGPT, authenticator: authenticator).signIn()
             status = "Angemeldet."
         } catch let error as ChatGPTAuthError {
-            status = error.userMessage
+            // Debug only: the exact case shows which step of the sign-in failed.
+            status = "\(error.userMessage) (\(String(reflecting: error)))"
         } catch {
-            status = "Anmeldung fehlgeschlagen: \(error.localizedDescription)"
+            status = "Anmeldung fehlgeschlagen: \(String(reflecting: error))"
         }
         await refresh()
     }
@@ -94,9 +95,10 @@ struct ChatGPTCaptureRecorder {
     func run() async -> Log {
         var log = Log()
         func write(_ line: String) { log.text += line + "\n" }
+        var summary: [String] = []
+        write("# Tagwerk ChatGPT capture \(ISO8601DateFormatter().string(from: .now))")
         do {
             let token = try await session.validAccessToken()
-            write("# Tagwerk ChatGPT capture \(ISO8601DateFormatter().string(from: .now))")
 
             var modelsRequest = URLRequest(url: base.appending(path: "models"))
             modelsRequest.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
@@ -104,38 +106,103 @@ struct ChatGPTCaptureRecorder {
             write("\n## GET /v1/models → HTTP \(modelsResponse.statusCode)")
             write(String(decoding: modelsData, as: UTF8.self))
             let model = Self.firstListedModel(modelsData) ?? "gpt-5"
+            summary.append("Modell \(model).")
 
             // Request 1: two tools, the prompt asks for both at once.
             let userMessage: [String: Any] = ["role": "user", "content": [[
                 "type": "input_text",
                 "text": "Lege die Aufgabe „Testaufgabe“ für morgen mit Priorität P2 an und verschiebe die Aufgabe local-7 auf übermorgen.",
             ]]]
-            let first = try await stream(model: model, token: token, input: [userMessage], label: "request 1: tools", write: write)
+            let first = try await stream(model: model, token: token, input: [userMessage], include: nil,
+                                         label: "request 1: tools", write: write)
+            let itemTypes = first.items.compactMap { $0["type"] as? String }.joined(separator: ", ")
+            summary.append("Antwort 1: \(first.status), Items: \(itemTypes.isEmpty ? "keine" : itemTypes).")
 
-            let outputs: [[String: Any]] = first.calls.map { call in
-                ["type": "function_call_output", "call_id": call["call_id"] ?? "", "output": #"{"ok":true}"#]
+            func outputs(for calls: [[String: Any]]) -> [[String: Any]] {
+                calls.map { ["type": "function_call_output", "call_id": $0["call_id"] ?? "", "output": #"{"ok":true}"#] }
+            }
+            // Each variant is caught on its own, so one failure does not skip the others.
+            func variant(_ name: String, _ input: [[String: Any]]) async {
+                do {
+                    let result = try await stream(model: model, token: token, input: input, include: nil,
+                                                  label: "request 2\(name)", write: write)
+                    summary.append("\(name): \(result.status).")
+                } catch {
+                    write("### error: \(String(reflecting: error))")
+                    summary.append("\(name): Fehler.")
+                }
             }
             // Variant A: every output item of request 1 is sent back verbatim (including reasoning items).
-            let variantA = try await stream(model: model, token: token, input: [userMessage] + first.items + outputs,
-                                            label: "request 2A: all items echoed", write: write)
+            await variant("A (all items echoed)", [userMessage] + first.items + outputs(for: first.calls))
             // Variant B: only the function_call items, reduced to type, call_id, name and arguments.
             let reducedCalls: [[String: Any]] = first.calls.map { call in
                 ["type": "function_call", "call_id": call["call_id"] ?? "", "name": call["name"] ?? "",
                  "arguments": call["arguments"] ?? ""]
             }
-            let variantB = try await stream(model: model, token: token, input: [userMessage] + reducedCalls + outputs,
-                                            label: "request 2B: function calls only", write: write)
-
-            let itemTypes = first.items.compactMap { $0["type"] as? String }.joined(separator: ", ")
-            log.summary = """
-            Modell \(model). Antwort 1: \(first.status), Items: \(itemTypes.isEmpty ? "keine" : itemTypes). \
-            Folgeaufruf A: \(variantA.status). Folgeaufruf B: \(variantB.status).
-            """
+            await variant("B (function calls only)", [userMessage] + reducedCalls + outputs(for: first.calls))
+            // Variant C: request 1 again with encrypted reasoning, then every item echoed.
+            do {
+                let encrypted = try await stream(model: model, token: token, input: [userMessage],
+                                                 include: ["reasoning.encrypted_content"],
+                                                 label: "request 1C: tools with encrypted reasoning", write: write)
+                await variant("C (encrypted reasoning echoed)",
+                              [userMessage] + encrypted.items + outputs(for: encrypted.calls))
+            } catch {
+                write("### error: \(String(reflecting: error))")
+                summary.append("C: Fehler.")
+            }
         } catch {
-            write("\n## error: \(error)")
-            log.summary = "Fehler: \(error)"
+            write("\n## error: \(String(reflecting: error))")
+            summary.append("Fehler: \(String(reflecting: error))")
         }
+
+        await recordRefreshChecks(write: write, summary: &summary)
+        log.summary = summary.joined(separator: " ")
         return log
+    }
+
+    /// Records how the token endpoint behaves: a forced refresh of the real session (only whether
+    /// the tokens rotated, never their values) and a refresh with a made-up refresh token, whose
+    /// error status and body decide when the app signs out.
+    private func recordRefreshChecks(write: (String) -> Void, summary: inout [String]) async {
+        let store = KeychainChatGPTCredentialStore()
+        write("\n## forced refresh")
+        do {
+            let before = try store.loadTokens()
+            let token = try await session.validAccessToken()
+            let fresh = try await session.handleUnauthorized(failedToken: token)
+            let after = try store.loadTokens()
+            let accessRotated = fresh != token
+            let refreshRotated = before?.refreshToken != after?.refreshToken
+            write("access token changed: \(accessRotated), refresh token rotated: \(refreshRotated)")
+            summary.append("Erneuerung: ok, Refresh-Token rotiert: \(refreshRotated ? "ja" : "nein").")
+        } catch {
+            write("error: \(String(reflecting: error))")
+            summary.append("Erneuerung: Fehler \(String(reflecting: error)).")
+        }
+
+        write("\n## refresh with a made-up refresh token")
+        guard let clientID = try? store.loadClientID() else {
+            write("no client id stored")
+            return
+        }
+        var request = URLRequest(url: URL(string: "https://auth.openai.com/api/accounts/oauth/token")!)
+        request.httpMethod = "POST"
+        request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
+        request.setValue("application/json", forHTTPHeaderField: "Accept")
+        let allowed = CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "-._~"))
+        let fields = [("grant_type", "refresh_token"), ("client_id", clientID),
+                      ("refresh_token", "tagwerk-invalid-refresh-token"), ("resource", "https://api.openai.com/v1")]
+        request.httpBody = Data(fields.map { "\($0.0)=\($0.1.addingPercentEncoding(withAllowedCharacters: allowed) ?? $0.1)" }
+            .joined(separator: "&").utf8)
+        do {
+            let (data, response) = try await transport.data(for: request)
+            write("HTTP \(response.statusCode)")
+            write(String(decoding: data, as: UTF8.self))
+            summary.append("Ungültiger Refresh-Token: HTTP \(response.statusCode).")
+        } catch {
+            write("error: \(String(reflecting: error))")
+        }
     }
 
     private struct StreamResult {
@@ -144,9 +211,9 @@ struct ChatGPTCaptureRecorder {
         var calls: [[String: Any]] = []
     }
 
-    private func stream(model: String, token: String, input: [[String: Any]], label: String,
+    private func stream(model: String, token: String, input: [[String: Any]], include: [String]?, label: String,
                         write: (String) -> Void) async throws -> StreamResult {
-        let body: [String: Any] = [
+        var body: [String: Any] = [
             "model": model,
             "instructions": "Du verwaltest Aufgaben in einer App. Heute ist \(Date.now.formatted(.iso8601.year().month().day())). "
                 + "Erledige Bitten über die Funktionen; rufe mehrere Funktionen parallel auf, wenn es passt.",
@@ -155,6 +222,7 @@ struct ChatGPTCaptureRecorder {
             "store": false,
             "stream": true,
         ]
+        if let include { body["include"] = include }
         var request = URLRequest(url: base.appending(path: "responses"))
         request.httpMethod = "POST"
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
