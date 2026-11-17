@@ -232,6 +232,8 @@ struct TaskListView: View {
             } label: {
                 Label("Aktionen", systemImage: "ellipsis.circle").labelStyle(.iconOnly).font(.title2)
             }
+            // Same order as the single-task menu; iOS would otherwise reverse a menu opening upwards.
+            .menuOrder(.fixed)
             .disabled(selection.isEmpty)
             Button("Heute") { runBulk { ids in await environment.planning.planToday(ids) } }
                 .buttonStyle(.borderedProminent)
