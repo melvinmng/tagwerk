@@ -12,21 +12,34 @@ struct ChatView: View {
     @State private var askingClear = false
     @State private var voice: VoiceInputModel?
     @FocusState private var composing: Bool
+    /// Sheet height; the voice mode uses half height so the calendar stays visible (SP5a).
+    @State private var detent: PresentationDetent = .large
+    @State private var explainingVoiceMode = false
 
     private var conversation: Conversation? { assistant.conversation }
 
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
-                contextChip
-                messages
-                composer
+                if voiceModeRunning {
+                    if detent == .large { messages }
+                    VoiceModePanel(assistant: assistant, contextText: contextText, showsExchange: detent != .large,
+                                   onShowHistory: { detent = .large })
+                        .background(.bar)
+                } else {
+                    contextChip
+                    messages
+                    composer
+                }
             }
+            .presentationDetents(voiceModeRunning ? [.medium, .large] : [.large], selection: $detent)
+            .presentationBackgroundInteraction(voiceModeRunning ? .enabled(upThrough: .medium) : .disabled)
             .navigationTitle("ChatGPT")
             .navigationBarTitleDisplayMode(.inline)
             .onAppear { setUpVoice() }
             .onDisappear {
                 voice?.cancel()
+                environment.voiceMode.end()
                 environment.voiceOutput.stop()
             }
             .onChange(of: draft) { _, text in if text.isEmpty { voice?.draftConsumed() } }
@@ -55,6 +68,28 @@ struct ChatView: View {
     private var canSend: Bool { conversation?.isBusy != true && environment.ai.isSignedIn }
     private var recognitionLanguage: VoiceLanguage {
         VoiceAvailability.recognitionLanguage(setting: environment.settings.voiceRecognitionLanguage)
+    }
+
+    private var voiceModeRunning: Bool { environment.voiceMode.isRunning }
+    /// The send button turns into the voice mode entry while the field is empty (SP5 Einstieg).
+    private var offersVoiceMode: Bool {
+        showsMicrophone && environment.ai.isSignedIn && draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
+    private func requestVoiceMode() {
+        if environment.settings.voiceModeExplained { startVoiceMode() } else { explainingVoiceMode = true }
+    }
+
+    private func startVoiceMode() {
+        explainingVoiceMode = false
+        environment.settings.voiceModeExplained = true
+        voice?.cancel()
+        composing = false
+        let mode = environment.voiceMode
+        mode.onMoveToDraft = { text in draft = draft.isEmpty ? text : draft + " " + text }
+        mode.onEnded = { detent = .large }
+        detent = .medium
+        mode.start()
     }
 
     private func setUpVoice() {
@@ -179,6 +214,9 @@ struct ChatView: View {
                 }
                 .buttonStyle(.borderedProminent)
             }
+            if explainingVoiceMode {
+                VoiceModeExplanation(onStart: startVoiceMode, onCancel: { explainingVoiceMode = false })
+            }
             if let voice { VoiceNoticeRow(voice: voice) }
             if let voice, voice.isRecording {
                 VoiceRecordingBar(voice: voice, canSend: canSend)
@@ -195,18 +233,26 @@ struct ChatView: View {
                                     .offset(x: 2, y: 4)
                             }
                         }
-                    Button {
-                        let text = draft
-                        let spoken = voice?.draftIsSpoken ?? false
-                        draft = ""
-                        voice?.draftConsumed()
-                        environment.voiceOutput.stop()
-                        Task { await assistant.send(text, spoken: spoken) }
-                    } label: {
-                        Image(systemName: "arrow.up.circle.fill").font(.title)
+                    if offersVoiceMode {
+                        Button(action: requestVoiceMode) {
+                            Image(systemName: "waveform.circle.fill").font(.title)
+                        }
+                        .disabled(!canSend)
+                        .accessibilityLabel("Sprechmodus starten")
+                    } else {
+                        Button {
+                            let text = draft
+                            let spoken = voice?.draftIsSpoken ?? false
+                            draft = ""
+                            voice?.draftConsumed()
+                            environment.voiceOutput.stop()
+                            Task { await assistant.send(text, spoken: spoken) }
+                        } label: {
+                            Image(systemName: "arrow.up.circle.fill").font(.title)
+                        }
+                        .disabled(draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || !canSend)
+                        .accessibilityLabel("Senden")
                     }
-                    .disabled(draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || !canSend)
-                    .accessibilityLabel("Senden")
                 }
             }
         }

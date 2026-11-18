@@ -79,6 +79,11 @@ final class AppSettings {
     var voiceRate: Double = 0.5
     /// Read action cards aloud when answers are read (SP4a).
     var voiceAnnounceActions: Bool = true
+    /// Voice mode (SP5a, Task 12): seconds of pause before sending, seconds of silence before pausing, and
+    /// whether the one-time explanation was shown.
+    var voiceModeSendDelay: Double = 2
+    var voiceModeSilenceLimit: Double = 30
+    var voiceModeExplained: Bool = false
 
     static let maximumPlanningRules = 5
 

@@ -26,10 +26,16 @@ struct RootView: View {
         TabView(selection: tabSelection) {
             Tab("Planen", systemImage: "calendar", value: 0) {
                 PlanView(model: environment.planning,
-                         onOpenTask: { id in editingTask = environment.taskList.items.first { $0.id == id } },
-                         onOpenEvent: { event in openEvent = event },
+                         onOpenTask: { id in
+                             // The calendar behind the voice mode only scrolls; no second sheet (plan stage 2, point 17).
+                             guard !environment.voiceMode.isRunning else { return }
+                             editingTask = environment.taskList.items.first { $0.id == id }
+                         },
+                         onOpenEvent: { event in if !environment.voiceMode.isRunning { openEvent = event } },
                          onShowTask: showTask,
-                         onEditRecurring: { item, day in recurringEdit = RecurringEdit(item: item, day: day) })
+                         onEditRecurring: { item, day in
+                             if !environment.voiceMode.isRunning { recurringEdit = RecurringEdit(item: item, day: day) }
+                         })
             }
 
             Tab("Aufgaben", systemImage: "checklist", value: 1) {

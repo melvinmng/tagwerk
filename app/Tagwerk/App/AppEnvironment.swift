@@ -30,6 +30,8 @@ final class AppEnvironment {
     let voiceOutput: VoiceOutputModel
     /// A fresh recognizer per conversation; the demo launch argument replaces it with a scripted one.
     let makeRecognizer: @MainActor () -> SpeechRecognizing
+    /// The voice mode of the assistant chat (SP5a).
+    let voiceMode: VoiceModeController
     /// Deadline notifications (design 2b §9); never calls an AI feature.
     let notifications: NotificationScheduler
     /// Target of a tapped notification until the app shows it.
@@ -127,7 +129,17 @@ final class AppEnvironment {
         assistant.announcesActions = { settings.voiceAnnounceActions }
         assistant.readAutomatically = { id, text, fallback in voiceOutput.speak(id: id, text: text, explicit: false, fallback: fallback) }
         let demoVoice = ProcessInfo.processInfo.arguments.contains("-TagwerkDemoVoice")
-        self.makeRecognizer = { demoVoice ? DemoSpeechRecognizer() as SpeechRecognizing : AppleSpeechRecognizer(kind: .dictation) }
+        let makeRecognizer: @MainActor () -> SpeechRecognizing = {
+            demoVoice ? DemoSpeechRecognizer() as SpeechRecognizing : AppleSpeechRecognizer(kind: .dictation)
+        }
+        self.makeRecognizer = makeRecognizer
+        self.voiceMode = VoiceModeController(
+            assistant: assistant, makeRecognizer: makeRecognizer, output: voiceOutput, tone: SystemTonePlayer(),
+            audio: SystemVoiceAudioSession.shared,
+            settings: {
+                VoiceModeController.Settings(language: VoiceAvailability.recognitionLanguage(setting: settings.voiceRecognitionLanguage),
+                                             sendDelay: settings.voiceModeSendDelay, silenceLimit: settings.voiceModeSilenceLimit)
+            })
         let gitHubProvider = self.gitHub
         assistant.reader = GitHubRepositoryReader(api: gitHubProvider.api)
         assistant.issueReference = { id in
