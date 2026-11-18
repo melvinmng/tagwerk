@@ -94,6 +94,7 @@ struct DayView: View {
     private func plannedActions(_ task: TaskItem) -> TaskMenuActions {
         var actions = menuActions(task)
         actions.createBlock = { blockFor = task }
+        actions.shownDay = model.anchor
         if model.planStore.assignment(for: task.id) != nil {
             actions.unassign = { Task { await model.unassign(task.id) } }
         }

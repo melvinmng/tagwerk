@@ -101,7 +101,7 @@ struct AIPlanBar: View {
                 .foregroundStyle(.purple)
             }
             Spacer()
-            Button("Verwerfen") { Task { await planner.dismissAll() } }
+            Button("Verwerfen") { Task { await planner.dismissAll(scope: scope) } }
                 .foregroundStyle(.secondary)
         }
         if unscheduledCount + riskCount > 0 {
@@ -126,7 +126,7 @@ struct AIPlanBar: View {
         HStack(spacing: 10) {
             if !suggestions.isEmpty {
                 Button {
-                    Task { await planner.acceptAll() }
+                    Task { await planner.acceptAll(scope: scope) }
                 } label: {
                     Label("Alle übernehmen (\(suggestions.count))", systemImage: "sparkles")
                 }

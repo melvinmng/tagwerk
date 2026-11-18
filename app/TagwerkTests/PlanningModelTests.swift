@@ -289,6 +289,19 @@ struct PlanningModelTests {
         #expect(model.overdue.map(\.title) == ["Fahrrad"])  // planned for yesterday
     }
 
+    @Test func freeAfterAccepting_doesNotCountReplacedLoadTwice() {
+        // Mockup MP2: 3 h 15 free; 4 h suggested, of which 2 h (due tomorrow) are already counted: 1 h 15 remain.
+        let suggestions = [("a", 75), ("b", 45), ("c", 30), ("d", 90)].map { key, minutes in
+            PlanSuggestion(id: UUID(), kind: .block, taskKey: key, title: key, day: tomorrow, startMinutes: 540,
+                           minutes: minutes, reason: "r")
+        }
+        let move = PlanSuggestion(id: UUID(), kind: .move, taskKey: "e", title: "e", day: tomorrow, startMinutes: nil,
+                                  minutes: nil, reason: "r")
+        let free = PlanningModel.freeAfterAccepting(free: 195, suggestions: suggestions + [move], counted: ["a": 75, "b": 45])
+        #expect(free == 75)
+        #expect(PlanningModel.freeAfterAccepting(free: 30, suggestions: suggestions, counted: [:]) == 0)
+    }
+
     @Test func assignFromPanel_usesShownDay() async throws {
         let model = await model()
         model.anchor = tomorrow

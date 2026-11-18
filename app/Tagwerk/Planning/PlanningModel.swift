@@ -979,6 +979,15 @@ final class PlanningModel {
         for move in moves.reversed() { await undo(move) }
     }
 
+    /// Free time after accepting the day's block suggestions (mockup V1, plan-tomorrow F10): a block replaces the
+    /// load its task already has on the day (assigned or due that day), so that load is not subtracted twice.
+    static func freeAfterAccepting(free: Int, suggestions: [PlanSuggestion], counted: [String: Int]) -> Int {
+        let blocks = suggestions.filter { $0.kind == .block }
+        let added = blocks.reduce(0) { $0 + ($1.minutes ?? 0) }
+        let replaced = Set(blocks.map(\.taskKey)).reduce(0) { $0 + (counted[$1] ?? 0) }
+        return max(0, free - added + replaced)
+    }
+
     func clearMoveGroupUndo() {
         lastMoveGroup = nil
     }
