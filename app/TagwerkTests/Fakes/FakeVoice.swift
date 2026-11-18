@@ -37,7 +37,10 @@ final class FakeAudioSession: VoiceAudioSession, @unchecked Sendable {
 
     func activate(_ mode: VoiceAudioMode) throws {
         if failing { throw URLError(.cannotLoadFromNetwork) }
-        lock.withLock { _modes.append(mode); _current = mode }
+        lock.withLock {
+            guard SystemVoiceAudioSession.reconfigures(requested: mode, current: _current) else { return }
+            _modes.append(mode); _current = mode
+        }
     }
 
     func deactivate(_ mode: VoiceAudioMode) {
