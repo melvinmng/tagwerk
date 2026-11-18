@@ -32,6 +32,19 @@ final class AssistantModel {
     @ObservationIgnored var announcesActions: () -> Bool = { true }
     @ObservationIgnored var readAutomatically: (_ id: String, _ text: String, _ fallback: VoiceLanguage) -> Void = { _, _, _ in }
 
+    /// How a turn ended, for the voice mode (plan voice-chat, stage 2 point 9).
+    enum TurnOutcome: Equatable {
+        /// `id` is the answer to highlight; `speech` the answer and card announcement, possibly empty.
+        case answered(id: String, speech: String, hasPendingCards: Bool)
+        /// Nothing was sent (empty text, conversation busy).
+        case rejected
+        case failed(offline: Bool)
+    }
+
+    /// Set while the voice mode runs: every turn reports here, and the voice mode reads the answer itself,
+    /// so automatic reading stays silent.
+    @ObservationIgnored var onTurnFinished: ((TurnOutcome) -> Void)?
+
     @ObservationIgnored private let responder: ResponseStreaming
     @ObservationIgnored let tools: AppTools
     @ObservationIgnored private let model: @MainActor () async throws -> String
@@ -88,7 +101,10 @@ final class AssistantModel {
 
     func send(_ text: String, spoken: Bool = false) async {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty, let conversation, !conversation.isBusy else { return }
+        guard !trimmed.isEmpty, let conversation, !conversation.isBusy else {
+            onTurnFinished?(.rejected)
+            return
+        }
         if let task, taskContext == nil {
             // GitHub is asked only now, when the user starts the conversation.
             let reference = task.id.source == .github ? issueReference(task.id) : nil
@@ -102,7 +118,41 @@ final class AssistantModel {
             spokenMarks.append(SpokenMark(index: index, text: trimmed))
         }
         persist()
-        readNewOutput(after: index, spoken: spoken, userText: trimmed)
+        if onTurnFinished != nil {
+            reportTurn(after: index, executed: false, fallback: .detect(trimmed, fallback: .german))
+        } else {
+            readNewOutput(after: index, spoken: spoken, userText: trimmed)
+        }
+    }
+
+    /// Reports the end of a voice mode turn: failure, or "Ausgeführt." (when `executed`), the new answers and the
+    /// card announcement after `index`.
+    private func reportTurn(after index: Int, executed: Bool, fallback: VoiceLanguage) {
+        guard let report = onTurnFinished, let conversation else { return }
+        if case .failed(let error) = conversation.state {
+            report(.failed(offline: error == .network))
+            return
+        }
+        let fresh = conversation.messages.filter { $0.id > index }
+        var texts: [String] = []
+        var cards: [(title: String, change: String)] = []
+        for message in fresh {
+            switch message.content {
+            case .assistant(let text): texts.append(text)
+            case .action(let call, .pending): let card = describe(call); cards.append((card.title, card.change))
+            default: break
+            }
+        }
+        let language = VoiceLanguage.detect(texts.joined(separator: " "), fallback: fallback)
+        let parts = (executed ? [ActionAnnouncement.executed(language)] : []) + texts
+        var speech = parts
+        if announcesActions(), let announcement = ActionAnnouncement.text(for: cards, language: language) {
+            speech.append(announcement)
+        }
+        let answer = fresh.last { if case .assistant = $0.content { true } else { false } }
+        report(.answered(id: answer.map { "message-\($0.id)" } ?? "message-\(index)",
+                         speech: speech.joined(separator: "\n"),
+                         hasPendingCards: !conversation.pendingActions.isEmpty))
     }
 
     func isSpoken(_ message: ChatMessage) -> Bool {
@@ -155,7 +205,13 @@ final class AssistantModel {
         let index = conversation.history.count
         await conversation.confirm(call)
         persist()
-        readAfterConfirmation(from: index, call: call)
+        if onTurnFinished != nil {
+            let executed: Bool
+            if case .done(let output) = status(of: call), ActionCardView.error(in: output) == nil { executed = true } else { executed = false }
+            reportTurn(after: index - 1, executed: executed && announcesActions(), fallback: .german)
+        } else {
+            readAfterConfirmation(from: index, call: call)
+        }
     }
 
     /// "Ausgeführt." and whatever the model says next, when answers are being read (SP4a).
@@ -184,21 +240,27 @@ final class AssistantModel {
     /// "Alle bestätigen (N)" (mockup e).
     func confirmAll() async {
         guard let conversation else { return }
+        let index = conversation.history.count
         for call in conversation.pendingActions {
             actionTimes[call.id] = now()
             await conversation.confirm(call)
         }
         persist()
+        reportTurn(after: index - 1, executed: announcesActions(), fallback: .german)
     }
 
     func decline(_ call: ToolCall) async {
+        let index = conversation?.history.count ?? 0
         await conversation?.decline(call)
         persist()
+        reportTurn(after: index - 1, executed: false, fallback: .german)
     }
 
     func retry() async {
+        let index = conversation?.history.count ?? 0
         await conversation?.retry()
         persist()
+        reportTurn(after: index - 1, executed: false, fallback: .german)
     }
 
     /// "Verlauf löschen".
