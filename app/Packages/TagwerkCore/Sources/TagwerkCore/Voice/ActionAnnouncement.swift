@@ -10,8 +10,10 @@ public enum ActionAnnouncement {
         "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve"
     ]
 
-    /// Returns the sentence announcing `cards`, or `nil` when there is nothing to announce.
-    public static func text(for cards: [(title: String, change: String)], language: VoiceLanguage) -> String? {
+    /// Returns the sentence announcing `cards`, or `nil` when there is nothing to announce. `byVoice`: the voice
+    /// mode, where the user answers by speaking (issue #120); `deletes` counts the cards that delete something.
+    public static func text(for cards: [(title: String, change: String)], language: VoiceLanguage,
+                            byVoice: Bool = false, deletes: Int = 0) -> String? {
         switch cards.count {
         case 0:
             return nil
@@ -22,18 +24,59 @@ public enum ActionAnnouncement {
                 card.change.replacingOccurrences(of: " · ", with: ", "),
                 language: language
             )
-            switch language {
-            case .german:
+            switch (language, byVoice, deletes > 0) {
+            case (.german, false, _):
                 return "Ich schlage vor: \(title), \(change). Bitte bestätige auf dem Bildschirm."
-            case .english:
+            case (.english, false, _):
                 return "I suggest: \(title), \(change). Please confirm on the screen."
+            case (.german, true, false):
+                return "Ich schlage vor: \(title), \(change). Sag ja oder nein, oder was anders sein soll."
+            case (.english, true, false):
+                return "I suggest: \(title), \(change). Say yes or no, or what should be different."
+            case (.german, true, true):
+                return "Ich schlage vor: \(title), \(change). Zum Löschen sag: Ja, löschen. Oder nein."
+            case (.english, true, true):
+                return "I suggest: \(title), \(change). To delete, say: yes, delete. Or no."
             }
         default:
             let count = numberText(cards.count, language: language)
+            if byVoice {
+                switch language {
+                case .german: return "\(capitalizedFirstLetter(count)) Änderungen warten. Sag alle bestätigen, oder tippe auf eine Karte."
+                case .english: return "\(capitalizedFirstLetter(count)) changes are waiting. Say confirm all, or tap a card."
+                }
+            }
             switch language {
             case .german: return "\(capitalizedFirstLetter(count)) Änderungen warten auf deine Bestätigung."
             case .english: return "\(capitalizedFirstLetter(count)) changes are waiting for your confirmation."
             }
+        }
+    }
+
+    /// Short answers of the voice mode to a spoken reply (issue #120).
+    public enum Prompt: Equatable, Sendable {
+        /// "Ja" with several cards open.
+        case severalCards(Int)
+        /// "Ja" for a deletion.
+        case sayDelete
+        /// "Alle bestätigen" while a deletion is among the cards.
+        case deletesNeedTap
+        /// The confirmation countdown was stopped.
+        case cancelled
+    }
+
+    public static func prompt(_ prompt: Prompt, language: VoiceLanguage) -> String {
+        switch (prompt, language) {
+        case (.severalCards(let count), .german):
+            "Es sind \(numberText(count, language: language)) Vorschläge offen. Sag alle bestätigen, oder tippe auf eine Karte."
+        case (.severalCards(let count), .english):
+            "There are \(numberText(count, language: language)) suggestions open. Say confirm all, or tap a card."
+        case (.sayDelete, .german): "Zum Löschen sag: Ja, löschen."
+        case (.sayDelete, .english): "To delete, say: yes, delete."
+        case (.deletesNeedTap, .german): "Löschungen bitte einzeln bestätigen."
+        case (.deletesNeedTap, .english): "Please confirm deletions one by one."
+        case (.cancelled, .german): "Abgebrochen."
+        case (.cancelled, .english): "Cancelled."
         }
     }
 

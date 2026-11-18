@@ -106,7 +106,7 @@ GitHub-Konto: @melvinmng · bestätigt zuweisbar · geprüft 2026-11-17 · ich
 - [ ] [#113](https://github.com/melvinmng/tagwerk/issues/113) Phase 5: Einkaufsliste und Notizen einbinden {status: Ready; prio: P3 (Medium)}
 - [ ] [#115](https://github.com/melvinmng/tagwerk/issues/115) Phase 6: Jira als Aufgabenquelle anbinden {status: Backlog; prio: P4 (Low)}
 - [x] [#118](https://github.com/melvinmng/tagwerk/issues/118) KI: Termine anlegen, ändern und löschen {status: Done; prio: P2 (High); aufwand: 4h; epic: #2}
-- [ ] [#120](https://github.com/melvinmng/tagwerk/issues/120) Sprechmodus: Vorschläge per Stimme annehmen, ablehnen und korrigieren {status: In review; prio: P2 (High); aufwand: 5h; epic: #103}
+- [x] [#120](https://github.com/melvinmng/tagwerk/issues/120) Sprechmodus: Vorschläge per Stimme annehmen, ablehnen und korrigieren {status: Done; prio: P2 (High); aufwand: 5h; epic: #103}
 
 ## Notizen
 
@@ -125,7 +125,7 @@ _Automatisch aus [Tagwerk](https://github.com/users/melvinmng/projects/17) erzeu
 - [#2](https://github.com/melvinmng/tagwerk/issues/2) Phase 2: Aufgaben, Kalender und KI-Tagesplan umsetzen · @melvinmng · Prio P2 (High)
 - [#103](https://github.com/melvinmng/tagwerk/issues/103) Mit der KI sprechen · @melvinmng · Prio P2 (High)
 
-### In Prüfung (36)
+### In Prüfung (35)
 - [#3](https://github.com/melvinmng/tagwerk/issues/3) Phase 3: Ernährung, Trinken und Training erfassen · @melvinmng · Prio P3 (Medium)
 - [#4](https://github.com/melvinmng/tagwerk/issues/4) Phase 4: Widget, Kurzbefehle und Wochenrückblick ergänzen · @melvinmng · Prio P4 (Low)
 - [#57](https://github.com/melvinmng/tagwerk/issues/57) ChatGPT-Antworten mit Streaming und Modellliste · @melvinmng · Prio P2 (High) · 5h
@@ -161,11 +161,11 @@ _Automatisch aus [Tagwerk](https://github.com/users/melvinmng/projects/17) erzeu
 - [#97](https://github.com/melvinmng/tagwerk/issues/97) Install-Skript für App und Widget-Extension · @melvinmng · Prio P2 (High) · 3h
 - [#98](https://github.com/melvinmng/tagwerk/issues/98) Wochenrückblick in Erfassen · @melvinmng · Prio P2 (High) · 5h
 - [#99](https://github.com/melvinmng/tagwerk/issues/99) Einstellungen „Siri & Kurzbefehle“, Demo-Daten und Doku Phase 4 · @melvinmng · Prio P2 (High) · 2h
-- [#120](https://github.com/melvinmng/tagwerk/issues/120) Sprechmodus: Vorschläge per Stimme annehmen, ablehnen und korrigieren · @melvinmng · Prio P2 (High) · 5h
 
 ### Nicht zugeordnet (0)
 
 ### Zuletzt erledigt (10)
+- [#120](https://github.com/melvinmng/tagwerk/issues/120) Sprechmodus: Vorschläge per Stimme annehmen, ablehnen und korrigieren · @melvinmng
 - [#80](https://github.com/melvinmng/tagwerk/issues/80) Hintergrund-Refresh für Aufgaben und Benachrichtigungen · @melvinmng
 - [#79](https://github.com/melvinmng/tagwerk/issues/79) Benachrichtigungen in Einrichtung und Einstellungen, Sprung beim Tippen · @melvinmng
 - [#78](https://github.com/melvinmng/tagwerk/issues/78) Benachrichtigungen planen und aktuell halten · @melvinmng
@@ -175,5 +175,4 @@ _Automatisch aus [Tagwerk](https://github.com/users/melvinmng/projects/17) erzeu
 - [#110](https://github.com/melvinmng/tagwerk/issues/110) Sprache: Sprechmodus · @melvinmng
 - [#109](https://github.com/melvinmng/tagwerk/issues/109) Sprache: Einstellungen und Sprache der KI-Antworten · @melvinmng
 - [#108](https://github.com/melvinmng/tagwerk/issues/108) Sprache: Mikrofon in Chat und Vorschlagsblatt · @melvinmng
-- [#107](https://github.com/melvinmng/tagwerk/issues/107) Sprache: Vorlesen · @melvinmng
 <!-- t3gh:end -->

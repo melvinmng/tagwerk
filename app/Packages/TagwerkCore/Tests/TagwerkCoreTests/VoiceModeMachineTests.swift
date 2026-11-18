@@ -4,6 +4,7 @@ import Testing
 
 struct VoiceModeMachineTests {
     private let t0 = Date(timeIntervalSince1970: 1_000_000)
+    private let card = OpenCards(ids: ["c1"], deletes: 0)
 
     private func at(_ seconds: TimeInterval) -> Date { t0.addingTimeInterval(seconds) }
 
@@ -122,7 +123,7 @@ struct VoiceModeMachineTests {
 
     @Test func answer_isSpoken_thenToneThenListening() {
         var machine = sending()
-        #expect(machine.turnFinished(.answered(speech: "Drei Termine.", hasPendingCards: false), now: at(5)) == [.speak("Drei Termine.")])
+        #expect(machine.turnFinished(.answered(speech: "Drei Termine.", cards: .none), now: at(5)) == [.speak("Drei Termine.")])
         #expect(machine.phase == .speaking)
         #expect(machine.speakingFinished(now: at(7)) == [.playTone])
         #expect(machine.phase == .tone)
@@ -132,49 +133,13 @@ struct VoiceModeMachineTests {
 
     @Test func emptyAnswer_goesStraightToTone() {
         var machine = sending()
-        #expect(machine.turnFinished(.answered(speech: "", hasPendingCards: false), now: at(5)) == [.playTone])
+        #expect(machine.turnFinished(.answered(speech: "", cards: .none), now: at(5)) == [.playTone])
     }
 
     @Test func toneTimesOut() {
         var machine = sending()
-        _ = machine.turnFinished(.answered(speech: "", hasPendingCards: false), now: at(5))
+        _ = machine.turnFinished(.answered(speech: "", cards: .none), now: at(5))
         #expect(machine.tick(now: at(5 + VoiceModeMachine.toneTimeout)) == [.startListening(.german)])
-    }
-
-    @Test func pendingCard_waitsForConfirmation_afterSpeaking() {
-        var machine = sending()
-        _ = machine.turnFinished(.answered(speech: "Ich lege die Mail auf 16 Uhr.", hasPendingCards: true), now: at(5))
-        #expect(machine.speakingFinished(now: at(7)).isEmpty)
-        #expect(machine.phase == .awaitingConfirmation)
-        #expect(machine.tick(now: at(200)).isEmpty)
-        #expect(machine.phase == .awaitingConfirmation)
-    }
-
-    @Test func pendingCard_withoutSpeech_waitsDirectly() {
-        var machine = sending()
-        #expect(machine.turnFinished(.answered(speech: "", hasPendingCards: true), now: at(5)).isEmpty)
-        #expect(machine.phase == .awaitingConfirmation)
-    }
-
-    @Test func confirmation_speaksFollowUp_thenListens() {
-        var machine = sending()
-        _ = machine.turnFinished(.answered(speech: "", hasPendingCards: true), now: at(5))
-        #expect(machine.turnFinished(.answered(speech: "Ausgeführt.", hasPendingCards: false), now: at(9)) == [.speak("Ausgeführt.")])
-        #expect(machine.speakingFinished(now: at(10)) == [.playTone])
-    }
-
-    @Test func confirmation_canBringNewCards() {
-        var machine = sending()
-        _ = machine.turnFinished(.answered(speech: "", hasPendingCards: true), now: at(5))
-        _ = machine.turnFinished(.answered(speech: "Noch eine Änderung.", hasPendingCards: true), now: at(9))
-        _ = machine.speakingFinished(now: at(10))
-        #expect(machine.phase == .awaitingConfirmation)
-    }
-
-    @Test func turnFinished_ignoredWhileListening() {
-        var machine = listening()
-        #expect(machine.turnFinished(.answered(speech: "x", hasPendingCards: false), now: at(1)).isEmpty)
-        #expect(machine.phase == .listening)
     }
 
     @Test func shortSendDelay_keepsCountdownVisible() {
@@ -183,21 +148,6 @@ struct VoiceModeMachineTests {
         _ = machine.tick(now: at(1.7))
         #expect(machine.phase == .countdown(deadline: at(2.6)))
         #expect(machine.tick(now: at(2.5)).isEmpty)
-    }
-
-    @Test func start_withOpenCards_waitsForConfirmation() {
-        var machine = VoiceModeMachine(language: .german, sendDelay: 2, silenceLimit: 30)
-        #expect(machine.start(now: t0, cardsPending: true).isEmpty)
-        #expect(machine.phase == .awaitingConfirmation)
-        #expect(machine.turnFinished(.answered(speech: "", hasPendingCards: false), now: at(5)) == [.playTone])
-    }
-
-    @Test func cardTappedWhileSpeaking_replacesTheAnswer() {
-        var machine = sending()
-        _ = machine.turnFinished(.answered(speech: "Zwei Änderungen.", hasPendingCards: true), now: at(5))
-        let effects = machine.turnFinished(.answered(speech: "Ausgeführt.", hasPendingCards: false), now: at(6))
-        #expect(effects == [.stopSpeaking, .speak("Ausgeführt.")])
-        #expect(machine.speakingFinished(now: at(7)) == [.playTone])
     }
 
     @Test func endWhilePaused_stopsAnnouncement() {
@@ -228,16 +178,9 @@ struct VoiceModeMachineTests {
 
     @Test func userInterrupt_stopsVoice_andListensWithoutTone() {
         var machine = sending()
-        _ = machine.turnFinished(.answered(speech: "Lange Antwort.", hasPendingCards: false), now: at(5))
+        _ = machine.turnFinished(.answered(speech: "Lange Antwort.", cards: .none), now: at(5))
         #expect(machine.userInterrupt(now: at(6)) == [.stopSpeaking, .startListening(.german)])
         #expect(machine.phase == .starting)
-    }
-
-    @Test func userInterrupt_withPendingCard_waits() {
-        var machine = sending()
-        _ = machine.turnFinished(.answered(speech: "Lange Antwort.", hasPendingCards: true), now: at(5))
-        #expect(machine.userInterrupt(now: at(6)) == [.stopSpeaking])
-        #expect(machine.phase == .awaitingConfirmation)
     }
 
     @Test func doNotSend_movesTextToDraftAndEnds() {
@@ -261,7 +204,7 @@ struct VoiceModeMachineTests {
 
     @Test func typeInstead_whileSpeaking_stopsAndEnds() {
         var machine = sending()
-        _ = machine.turnFinished(.answered(speech: "Antwort.", hasPendingCards: false), now: at(5))
+        _ = machine.turnFinished(.answered(speech: "Antwort.", cards: .none), now: at(5))
         #expect(machine.typeInstead() == [.stopSpeaking, .endSession])
         #expect(machine.phase == .ended)
     }
@@ -277,7 +220,7 @@ struct VoiceModeMachineTests {
 
     @Test func silence_countsFromListeningAfterAnswer() {
         var machine = sending()
-        _ = machine.turnFinished(.answered(speech: "", hasPendingCards: false), now: at(50))
+        _ = machine.turnFinished(.answered(speech: "", cards: .none), now: at(50))
         _ = machine.toneFinished(now: at(51))
         machine.recordingStarted(now: at(52))
         #expect(machine.tick(now: at(70)).isEmpty)
@@ -316,7 +259,7 @@ struct VoiceModeMachineTests {
             expected = [.endSession]
         }
         if stage == 2 {
-            _ = machine.turnFinished(.answered(speech: "Antwort.", hasPendingCards: false), now: at(5))
+            _ = machine.turnFinished(.answered(speech: "Antwort.", cards: .none), now: at(5))
             expected = [.stopSpeaking, .endSession]
         }
         #expect(machine.systemInterruption() == expected)
@@ -337,7 +280,7 @@ struct VoiceModeMachineTests {
 
     @Test func end_fromSpeaking_stopsVoice() {
         var machine = sending()
-        _ = machine.turnFinished(.answered(speech: "Antwort.", hasPendingCards: false), now: at(5))
+        _ = machine.turnFinished(.answered(speech: "Antwort.", cards: .none), now: at(5))
         #expect(machine.end() == [.stopSpeaking, .endSession])
         #expect(machine.end().isEmpty)
     }
@@ -347,5 +290,159 @@ struct VoiceModeMachineTests {
         _ = machine.start(now: t0)
         #expect(machine.tick(now: at(VoiceModeMachine.startTimeout)) == [.cancelListening, .announce(.failed)])
         #expect(machine.phase == .paused(.failed))
+    }
+
+    // MARK: Spoken replies to cards (issue #120)
+
+    /// Listening again after an answer that left `cards` open.
+    private func listeningWithCards(_ cards: OpenCards) -> VoiceModeMachine {
+        var machine = sending()
+        _ = machine.turnFinished(.answered(speech: "Vorschlag.", cards: cards), now: at(5))
+        _ = machine.speakingFinished(now: at(6))
+        _ = machine.toneFinished(now: at(6.3))
+        machine.recordingStarted(now: at(7))
+        return machine
+    }
+
+    /// Says `text` and lets the countdown run out, as the controller would.
+    private func reply(_ machine: inout VoiceModeMachine, _ text: String, at seconds: TimeInterval) -> [VoiceModeMachine.Effect] {
+        machine.heard(final: text, volatile: "", now: at(seconds))
+        _ = machine.tick(now: at(seconds + 3))
+        return machine.recognizerFinished(text: text, now: at(seconds + 3.2))
+    }
+
+    @Test func openCard_keepsListeningAfterTheAnswer() {
+        let machine = listeningWithCards(card)
+        #expect(machine.phase == .listening)
+        #expect(machine.openCards == card)
+    }
+
+    @Test func ja_confirmsAfterCountdown() {
+        var machine = listeningWithCards(card)
+        #expect(reply(&machine, "Ja.", at: 8) == [.startListening(.german)])
+        #expect(machine.tick(now: at(15)).isEmpty)
+        machine.recordingStarted(now: at(15.5))
+        #expect(machine.phase == .confirming(deadline: at(17.5)))
+        #expect(machine.tick(now: at(17.4)).isEmpty)
+        #expect(machine.tick(now: at(17.5)) == [.cancelListening, .confirm(ids: ["c1"])])
+        #expect(machine.phase == .sending)
+        #expect(machine.turnFinished(.answered(speech: "Ausgeführt.", cards: .none), now: at(14)) == [.speak("Ausgeführt.")])
+    }
+
+    @Test func speechDuringCountdown_stopsIt_andNeinThenOnlyCancels() {
+        var machine = listeningWithCards(card)
+        _ = reply(&machine, "Ja", at: 8)
+        machine.heard(final: "", volatile: "Nein", now: at(12))
+        #expect(machine.phase == .listening)
+        _ = machine.tick(now: at(15))
+        #expect(machine.recognizerFinished(text: "Nein.", now: at(15.2)) == [.prompt(.cancelled)])
+        #expect(machine.openCards == card)
+    }
+
+    @Test func correctionDuringCountdown_isSent() {
+        var machine = listeningWithCards(card)
+        _ = reply(&machine, "Ja", at: 8)
+        machine.heard(final: "Nimm den Arbeitskalender", volatile: "", now: at(12))
+        _ = machine.tick(now: at(15))
+        #expect(machine.recognizerFinished(text: "Nimm den Arbeitskalender.", now: at(15.2)) == [.send("Nimm den Arbeitskalender.")])
+    }
+
+    @Test func cancelButton_keepsCardsAndListens() {
+        var machine = listeningWithCards(card)
+        _ = reply(&machine, "Ja", at: 8)
+        #expect(machine.cancelConfirmation(now: at(12)).isEmpty)
+        #expect(machine.phase == .listening)
+        #expect(machine.tick(now: at(20)).isEmpty)
+    }
+
+    @Test func nein_declines() {
+        var machine = listeningWithCards(card)
+        #expect(reply(&machine, "Nein", at: 8) == [.decline(ids: ["c1"])])
+        #expect(machine.phase == .sending)
+    }
+
+    @Test func stopp_isNeverSent() {
+        var machine = listeningWithCards(card)
+        #expect(reply(&machine, "Stopp!", at: 8) == [.startListening(.german)])
+        var plain = listening()
+        #expect(reply(&plain, "Stopp", at: 1) == [.send("Stopp")])
+    }
+
+    @Test func correction_isSentAsMessage() {
+        var machine = listeningWithCards(card)
+        #expect(reply(&machine, "Ja, aber um 11", at: 8) == [.send("Ja, aber um 11")])
+    }
+
+    @Test func withoutCards_jaIsAMessage() {
+        var machine = listening()
+        #expect(reply(&machine, "Ja", at: 1) == [.send("Ja")])
+    }
+
+    @Test func deletion_needsJaLoeschen() {
+        let deletion = OpenCards(ids: ["d1"], deletes: 1)
+        var machine = listeningWithCards(deletion)
+        #expect(reply(&machine, "Ja", at: 8) == [.prompt(.sayDelete)])
+        #expect(machine.phase == .speaking)
+        _ = machine.speakingFinished(now: at(13))
+        _ = machine.toneFinished(now: at(13.3))
+        machine.recordingStarted(now: at(14))
+        #expect(reply(&machine, "Ja, löschen.", at: 15) == [.startListening(.german)])
+        machine.recordingStarted(now: at(18.5))
+        #expect(machine.tick(now: at(20.5)) == [.cancelListening, .confirm(ids: ["d1"])])
+    }
+
+    @Test func severalCards_needAllConfirm() {
+        let cards = OpenCards(ids: ["a", "b"], deletes: 0)
+        var machine = listeningWithCards(cards)
+        #expect(reply(&machine, "Ja", at: 8) == [.prompt(.severalCards(2))])
+        _ = machine.speakingFinished(now: at(13))
+        _ = machine.toneFinished(now: at(13.3))
+        machine.recordingStarted(now: at(14))
+        #expect(reply(&machine, "Alle bestätigen", at: 15) == [.startListening(.german)])
+        machine.recordingStarted(now: at(18.5))
+        #expect(machine.tick(now: at(20.5)) == [.cancelListening, .confirm(ids: ["a", "b"])])
+    }
+
+    @Test func confirmAll_withDeletion_needsTaps() {
+        var machine = listeningWithCards(OpenCards(ids: ["a", "d"], deletes: 1))
+        #expect(reply(&machine, "Alle bestätigen", at: 8) == [.prompt(.deletesNeedTap)])
+    }
+
+    @Test func tapWhileListening_takesTheAnswer() {
+        var machine = listeningWithCards(card)
+        machine.heard(final: "Äh", volatile: "", now: at(8))
+        let effects = machine.turnFinished(.answered(speech: "Ausgeführt.", cards: .none), now: at(9))
+        #expect(effects == [.cancelListening, .speak("Ausgeführt.")])
+        #expect(machine.openCards.isEmpty)
+    }
+
+    @Test func tapWhileSpeaking_replacesTheAnswer() {
+        var machine = sending()
+        _ = machine.turnFinished(.answered(speech: "Zwei Änderungen.", cards: card), now: at(5))
+        let effects = machine.turnFinished(.answered(speech: "Ausgeführt.", cards: .none), now: at(6))
+        #expect(effects == [.stopSpeaking, .speak("Ausgeführt.")])
+    }
+
+    @Test func confirmation_withoutMicrophone_runsNothing() {
+        var machine = listeningWithCards(card)
+        _ = reply(&machine, "Ja", at: 8)
+        #expect(machine.tick(now: at(11.2 + VoiceModeMachine.startTimeout)) == [.cancelListening, .announce(.failed)])
+        #expect(machine.phase == .paused(.failed))
+    }
+
+    @Test func cancelledFlag_endsWithTheUtterance() {
+        var machine = listeningWithCards(card)
+        _ = reply(&machine, "Ja", at: 8)
+        machine.heard(final: "", volatile: "hm", now: at(12))
+        _ = machine.tick(now: at(15))
+        #expect(machine.recognizerFinished(text: "", now: at(15.2)) == [.startListening(.german)])
+        machine.recordingStarted(now: at(16))
+        #expect(reply(&machine, "Nein", at: 17) == [.decline(ids: ["c1"])])
+    }
+
+    @Test func start_withOpenCards_listens() {
+        var machine = VoiceModeMachine(language: .german, sendDelay: 2, silenceLimit: 30)
+        #expect(machine.start(now: t0, cards: card) == [.startListening(.german)])
+        #expect(machine.openCards == card)
     }
 }

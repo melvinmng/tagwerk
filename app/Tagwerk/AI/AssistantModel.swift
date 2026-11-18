@@ -35,7 +35,7 @@ final class AssistantModel {
     /// How a turn ended, for the voice mode (plan voice-chat, stage 2 point 9).
     enum TurnOutcome: Equatable {
         /// `id` is the answer to highlight; `speech` the answer and card announcement, possibly empty.
-        case answered(id: String, speech: String, hasPendingCards: Bool)
+        case answered(id: String, speech: String, cards: OpenCards)
         /// Nothing was sent (empty text, conversation busy).
         case rejected
         case failed(offline: Bool)
@@ -151,13 +151,50 @@ final class AssistantModel {
         let language = VoiceLanguage.detect(texts.joined(separator: " "), fallback: fallback)
         let parts = (executed ? [ActionAnnouncement.executed(language)] : []) + texts
         var speech = parts
-        if announcesActions(), let announcement = ActionAnnouncement.text(for: cards, language: language) {
+        let open = openCards
+        if announcesActions(), let announcement = ActionAnnouncement.text(for: cards, language: language, byVoice: true,
+                                                                          deletes: open.deletes) {
             speech.append(announcement)
         }
         let answer = fresh.last { if case .assistant = $0.content { true } else { false } }
         report(.answered(id: answer.map { "message-\($0.id)" } ?? "message-\(index)",
                          speech: speech.joined(separator: "\n"),
-                         hasPendingCards: !conversation.pendingActions.isEmpty))
+                         cards: open))
+    }
+
+    /// The cards waiting for an answer, for the voice mode (issue #120).
+    var openCards: OpenCards {
+        let pending = conversation?.pendingActions ?? []
+        return OpenCards(ids: pending.map(\.id), deletes: pending.filter { $0.name == "delete_event" }.count)
+    }
+
+    /// Spoken "ja" after the countdown: confirms the cards the user answered to, if they are still open.
+    func confirmCards(_ ids: [String]) async {
+        guard let conversation else { onTurnFinished?(.rejected); return }
+        let calls = conversation.pendingActions.filter { ids.contains($0.id) }
+        // Exactly the cards the user answered to; deletions only one at a time ("Ja, löschen").
+        guard !calls.isEmpty, calls.count == ids.count,
+              calls.count == 1 || !calls.contains(where: { $0.name == "delete_event" }) else {
+            onTurnFinished?(.rejected)
+            return
+        }
+        if calls.count == 1 { return await confirm(calls[0]) }
+        let index = conversation.history.count
+        for call in calls {
+            actionTimes[call.id] = now()
+            await conversation.confirm(call)
+        }
+        persist()
+        reportTurn(after: index - 1, executed: allExecuted(calls) && announcesActions(), fallback: .german)
+    }
+
+    /// Spoken "nein": declines the one card the user answered to.
+    func declineCards(_ ids: [String]) async {
+        guard ids.count == 1, let call = conversation?.pendingActions.first(where: { $0.id == ids[0] }) else {
+            onTurnFinished?(.rejected)
+            return
+        }
+        await decline(call)
     }
 
     func isSpoken(_ message: ChatMessage) -> Bool {
@@ -246,12 +283,21 @@ final class AssistantModel {
     func confirmAll() async {
         guard let conversation else { return }
         let index = conversation.history.count
-        for call in conversation.pendingActions {
+        let calls = conversation.pendingActions
+        for call in calls {
             actionTimes[call.id] = now()
             await conversation.confirm(call)
         }
         persist()
-        reportTurn(after: index - 1, executed: announcesActions(), fallback: .german)
+        reportTurn(after: index - 1, executed: allExecuted(calls) && announcesActions(), fallback: .german)
+    }
+
+    /// Whether every call ran without an error, for "Ausgeführt.".
+    private func allExecuted(_ calls: [ToolCall]) -> Bool {
+        calls.allSatisfy { call in
+            if case .done(let output) = status(of: call), ActionCardView.error(in: output) == nil { return true }
+            return false
+        }
     }
 
     func decline(_ call: ToolCall) async {
@@ -286,6 +332,14 @@ final class AssistantModel {
 
     // MARK: Instructions
 
+    /// While the voice mode runs (issue #120): the user hears the answer and replies by voice.
+    static let voiceModeInstructions = """
+    Der Nutzer spricht gerade mit dir im Sprechmodus und hört deine Antworten. Vorschläge nimmt er mit „ja“ an, \
+    lehnt sie mit „nein“ ab oder sagt, was anders sein soll; das erledigt die App. Fordere ihn deshalb nie auf, \
+    auf dem Bildschirm zu bestätigen oder zu tippen, und frage nicht selbst nach einer Bestätigung. Antworte in \
+    kurzen, gut sprechbaren Sätzen ohne Aufzählungen und Tabellen.
+    """
+
     func instructions() -> String {
         let current = now()
         let today = planning.today
@@ -301,6 +355,7 @@ final class AssistantModel {
         Termine kannst du anlegen, ändern und löschen (create_event, update_event, delete_event), in jedem \
         beschreibbaren Kalender; ohne Nennung eines Kalenders im Standardkalender. Nennt der Nutzer keine Dauer, \
         dauert ein neuer Termin eine Stunde.
+        \(onTurnFinished == nil ? "" : Self.voiceModeInstructions)
         \(contextText())
         """
     }
