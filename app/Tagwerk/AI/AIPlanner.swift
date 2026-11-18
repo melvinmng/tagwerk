@@ -632,10 +632,12 @@ final class AIPlanner {
     }
 
     /// Tasks with an open block or move suggestion on another future day: a new day plan leaves them out, so they
-    /// are not suggested twice. Suggestions for today do not count (plan-tomorrow, decision 7).
+    /// are not suggested twice. Suggestions for today do not count (plan-tomorrow, decision 7), nor do the day
+    /// batches this plan replaces (same rule as `SuggestionStore.replace`).
     private func suggestedElsewhere(than day: PlanDay) -> Set<TaskID> {
         let today = planning.today
-        return Set(store.batches().flatMap(\.suggestions).filter { suggestion in
+        let kept = store.batches().filter { !($0.scope == .day && $0.days.contains(day)) }
+        return Set(kept.flatMap(\.suggestions).filter { suggestion in
             (suggestion.kind == .block || suggestion.kind == .move) && suggestion.day != day && suggestion.day > today
         }.compactMap(\.taskID))
     }
@@ -676,9 +678,10 @@ final class AIPlanner {
             excluding: excluding,
             lookaheadDays: workAhead() ? lookahead : [],
             blockedMinutes: planning.blockedMinutesByTask,
-            // Once today's working time is over, a day plan may take today's leftovers and work due today
-            // (decision 6); the re-check on accepting uses the same rule.
-            earliestWorkDay: scope == .day && planning.isTodayOver ? today.adding(days: 1, calendar: planning.calendar) : nil,
+            // Once today's working time is over, the plan of the next planning day may take today's leftovers and
+            // work due today (decision 6); the re-check on accepting uses the same rule.
+            earliestWorkDay: scope == .day && planning.isTodayOver && planning.anchor == planning.nextPlanDay
+                ? planning.nextPlanDay : nil,
             calendar: planning.calendar
         )
     }

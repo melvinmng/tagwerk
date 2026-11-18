@@ -819,6 +819,28 @@ extension AIPlannerTests {
         #expect(calendarStore.storedEvents.contains { $0.start == at(19, 9) })
     }
 
+    @Test func replanToday_keepsTasksTheReplacedPlanSuggestedToMove() async throws {
+        // The day batch a new plan replaces must not keep its own tasks out (its move points to another day).
+        let move = PlanSuggestion(id: UUID(), kind: .move, taskKey: "local:Fahrrad", title: "Fahrrad",
+                                  day: PlanDay(year: 2026, month: 11, day: 20), startMinutes: nil, minutes: nil, reason: "r",
+                                  fromDay: today)
+        store.replace(with: SuggestionBatch(id: UUID(), scope: .day, days: [today], createdAt: testNow(), suggestions: [move],
+                                            unscheduled: [], risks: [], estimates: [:]))
+        responder.enqueue(Self.dayAnswer(""))
+        let (planner, _) = await make()
+        await planner.plan(scope: .day, anchor: today)
+        #expect(lastInputText().contains("\"id\":\"local:Fahrrad\""))
+    }
+
+    @Test func planLaterDay_inTheEvening_doesNotCarryTodaysLeftovers() async throws {
+        // Decision 6: leftovers go to the next planning day (Thursday), not to Friday.
+        responder.enqueue(Self.dayAnswer(""))
+        let evening = at(18, 18, 40)
+        let (planner, _) = await make(now: { evening })
+        await planner.plan(scope: .day, anchor: PlanDay(year: 2026, month: 11, day: 20))
+        #expect(!lastInputText().contains("\"id\":\"local:Fahrrad\""))
+    }
+
     @Test func contextMenuPlanAnchor_usesShownFutureDay() {
         #expect(TaskContextMenu.aiPlanAnchor(shownDay: tomorrow, today: today) == tomorrow)
         #expect(TaskContextMenu.aiPlanAnchor(shownDay: PlanDay(year: 2026, month: 11, day: 17), today: today) == today)
