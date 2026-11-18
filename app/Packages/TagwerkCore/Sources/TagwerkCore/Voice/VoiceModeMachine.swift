@@ -114,7 +114,8 @@ public struct VoiceModeMachine: Equatable, Sendable {
     public func remaining(now: Date) -> Int {
         let deadline: Date
         switch phase {
-        case .countdown(let end), .confirming(let end): deadline = end
+        case .countdown(let end): deadline = end
+        case .confirming(let end): deadline = end == .distantFuture ? now.addingTimeInterval(Self.confirmationDelay) : end
         default: return 0
         }
         return max(0, Int(deadline.timeIntervalSince(now).rounded(.up)))
@@ -130,7 +131,12 @@ public struct VoiceModeMachine: Equatable, Sendable {
     }
 
     public mutating func recordingStarted(now: Date) {
-        if case .confirming = phase { lastChange = now; return }
+        if case .confirming = phase {
+            // The countdown starts only once the microphone listens again, so "stopp" can always be heard.
+            lastChange = now
+            phase = .confirming(deadline: now.addingTimeInterval(Self.confirmationDelay))
+            return
+        }
         guard phase == .starting else { return }
         phase = .listening
         phaseSince = now
@@ -181,6 +187,11 @@ public struct VoiceModeMachine: Equatable, Sendable {
             phaseSince = now
             return [.stopListening]
         case .confirming(let deadline):
+            if deadline == .distantFuture {
+                // The microphone did not come back: run nothing.
+                guard elapsed(now) >= Self.startTimeout else { return [] }
+                return [.cancelListening] + pause(.failed, announce: .failed)
+            }
             guard now >= deadline else { return [] }
             let ids = openCards.ids
             phase = .sending
@@ -257,6 +268,7 @@ public struct VoiceModeMachine: Equatable, Sendable {
     }
 
     private mutating func handle(_ outcome: Outcome, now: Date) -> [Effect] {
+        confirmationCancelled = false
         switch outcome {
         case .answered(let speech, let cards):
             openCards = cards
@@ -308,6 +320,7 @@ public struct VoiceModeMachine: Equatable, Sendable {
         switch phase {
         case .starting, .listening, .countdown, .confirming:
             let effects = keepText()
+            confirmationCancelled = false
             phase = .paused(.user)
             return [.cancelListening] + effects
         default:
@@ -316,6 +329,11 @@ public struct VoiceModeMachine: Equatable, Sendable {
     }
 
     /// Also stops a running announcement, so the microphone does not hear it.
+    /// The open cards changed without an answer (a failed turn, a correction that closed them).
+    public mutating func cardsChanged(_ cards: OpenCards) {
+        openCards = cards
+    }
+
     /// "Abbrechen" during the confirmation countdown: the cards stay open, listening goes on.
     public mutating func cancelConfirmation(now: Date) -> [Effect] {
         guard case .confirming = phase else { return [] }
@@ -344,6 +362,7 @@ public struct VoiceModeMachine: Equatable, Sendable {
 
     private mutating func listen(now: Date) -> [Effect] {
         clearText()
+        confirmationCancelled = false
         phase = .starting
         phaseSince = now
         return [.startListening(language)]
@@ -354,8 +373,11 @@ public struct VoiceModeMachine: Equatable, Sendable {
         let reply = VoiceReply(message)
         let cancelled = confirmationCancelled
         confirmationCancelled = false
-        if reply == .stop || (cancelled && reply == .decline) {
-            // "Stopp" is never sent; after a stopped countdown "nein" only meant that.
+        if cancelled && (reply == .stop || reply == .decline) {
+            // After a stopped countdown "nein" or "stopp" only meant that.
+            return say(.cancelled, now: now)
+        }
+        if reply == .stop && !openCards.isEmpty {
             return listen(now: now)
         }
         guard !openCards.isEmpty, reply != .other else {
@@ -374,7 +396,7 @@ public struct VoiceModeMachine: Equatable, Sendable {
             return say(.deletesNeedTap, now: now)
         case .confirm, .confirmDelete, .confirmAll:
             clearText()
-            phase = .confirming(deadline: now.addingTimeInterval(Self.confirmationDelay))
+            phase = .confirming(deadline: .distantFuture)
             phaseSince = now
             // Keep listening during the countdown, so "stopp" or a correction can stop it.
             return [.startListening(language)]

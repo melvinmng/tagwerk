@@ -105,7 +105,10 @@ final class VoiceModeController {
 
     func doNotSend() { apply(machine.doNotSend()) }
     func pause() { apply(machine.pause()) }
-    func resume() { apply(machine.resume(now: now())) }
+    func resume() {
+        machine.cardsChanged(assistant.openCards)
+        apply(machine.resume(now: now()))
+    }
     func interrupt() { apply(machine.userInterrupt(now: now())) }
     func typeInstead() { apply(machine.typeInstead()) }
     func cancelConfirmation() { apply(machine.cancelConfirmation(now: now())) }
@@ -144,8 +147,11 @@ final class VoiceModeController {
             answerID = id
             mapped = .answered(speech: speech, cards: cards)
         case .rejected:
+            machine.cardsChanged(assistant.openCards)
             mapped = .rejected
         case .failed(let offline):
+            // A correction closes the open cards before the network fails.
+            machine.cardsChanged(assistant.openCards)
             mapped = .failed(offline: offline)
         }
         apply(machine.turnFinished(mapped, now: now()))

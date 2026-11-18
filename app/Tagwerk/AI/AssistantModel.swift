@@ -170,9 +170,22 @@ final class AssistantModel {
 
     /// Spoken "ja" after the countdown: confirms the cards the user answered to, if they are still open.
     func confirmCards(_ ids: [String]) async {
-        let calls = (conversation?.pendingActions ?? []).filter { ids.contains($0.id) }
-        guard !calls.isEmpty, calls.count == ids.count else { onTurnFinished?(.rejected); return }
-        if calls.count == 1 { await confirm(calls[0]) } else { await confirmAll() }
+        guard let conversation else { onTurnFinished?(.rejected); return }
+        let calls = conversation.pendingActions.filter { ids.contains($0.id) }
+        // Exactly the cards the user answered to; deletions only one at a time ("Ja, löschen").
+        guard !calls.isEmpty, calls.count == ids.count,
+              calls.count == 1 || !calls.contains(where: { $0.name == "delete_event" }) else {
+            onTurnFinished?(.rejected)
+            return
+        }
+        if calls.count == 1 { return await confirm(calls[0]) }
+        let index = conversation.history.count
+        for call in calls {
+            actionTimes[call.id] = now()
+            await conversation.confirm(call)
+        }
+        persist()
+        reportTurn(after: index - 1, executed: allExecuted(calls) && announcesActions(), fallback: .german)
     }
 
     /// Spoken "nein": declines the one card the user answered to.
@@ -270,12 +283,21 @@ final class AssistantModel {
     func confirmAll() async {
         guard let conversation else { return }
         let index = conversation.history.count
-        for call in conversation.pendingActions {
+        let calls = conversation.pendingActions
+        for call in calls {
             actionTimes[call.id] = now()
             await conversation.confirm(call)
         }
         persist()
-        reportTurn(after: index - 1, executed: announcesActions(), fallback: .german)
+        reportTurn(after: index - 1, executed: allExecuted(calls) && announcesActions(), fallback: .german)
+    }
+
+    /// Whether every call ran without an error, for "Ausgeführt.".
+    private func allExecuted(_ calls: [ToolCall]) -> Bool {
+        calls.allSatisfy { call in
+            if case .done(let output) = status(of: call), ActionCardView.error(in: output) == nil { return true }
+            return false
+        }
     }
 
     func decline(_ call: ToolCall) async {

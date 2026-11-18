@@ -320,10 +320,11 @@ struct VoiceModeMachineTests {
     @Test func ja_confirmsAfterCountdown() {
         var machine = listeningWithCards(card)
         #expect(reply(&machine, "Ja.", at: 8) == [.startListening(.german)])
-        #expect(machine.phase == .confirming(deadline: at(11.2 + 2)))
-        machine.recordingStarted(now: at(11.5))
-        #expect(machine.tick(now: at(13.1)).isEmpty)
-        #expect(machine.tick(now: at(13.2)) == [.cancelListening, .confirm(ids: ["c1"])])
+        #expect(machine.tick(now: at(15)).isEmpty)
+        machine.recordingStarted(now: at(15.5))
+        #expect(machine.phase == .confirming(deadline: at(17.5)))
+        #expect(machine.tick(now: at(17.4)).isEmpty)
+        #expect(machine.tick(now: at(17.5)) == [.cancelListening, .confirm(ids: ["c1"])])
         #expect(machine.phase == .sending)
         #expect(machine.turnFinished(.answered(speech: "Ausgeführt.", cards: .none), now: at(14)) == [.speak("Ausgeführt.")])
     }
@@ -334,7 +335,7 @@ struct VoiceModeMachineTests {
         machine.heard(final: "", volatile: "Nein", now: at(12))
         #expect(machine.phase == .listening)
         _ = machine.tick(now: at(15))
-        #expect(machine.recognizerFinished(text: "Nein.", now: at(15.2)) == [.startListening(.german)])
+        #expect(machine.recognizerFinished(text: "Nein.", now: at(15.2)) == [.prompt(.cancelled)])
         #expect(machine.openCards == card)
     }
 
@@ -364,7 +365,7 @@ struct VoiceModeMachineTests {
         var machine = listeningWithCards(card)
         #expect(reply(&machine, "Stopp!", at: 8) == [.startListening(.german)])
         var plain = listening()
-        #expect(reply(&plain, "Stopp", at: 1) == [.startListening(.german)])
+        #expect(reply(&plain, "Stopp", at: 1) == [.send("Stopp")])
     }
 
     @Test func correction_isSentAsMessage() {
@@ -386,7 +387,8 @@ struct VoiceModeMachineTests {
         _ = machine.toneFinished(now: at(13.3))
         machine.recordingStarted(now: at(14))
         #expect(reply(&machine, "Ja, löschen.", at: 15) == [.startListening(.german)])
-        #expect(machine.tick(now: at(20.2)) == [.cancelListening, .confirm(ids: ["d1"])])
+        machine.recordingStarted(now: at(18.5))
+        #expect(machine.tick(now: at(20.5)) == [.cancelListening, .confirm(ids: ["d1"])])
     }
 
     @Test func severalCards_needAllConfirm() {
@@ -397,7 +399,8 @@ struct VoiceModeMachineTests {
         _ = machine.toneFinished(now: at(13.3))
         machine.recordingStarted(now: at(14))
         #expect(reply(&machine, "Alle bestätigen", at: 15) == [.startListening(.german)])
-        #expect(machine.tick(now: at(20.2)) == [.cancelListening, .confirm(ids: ["a", "b"])])
+        machine.recordingStarted(now: at(18.5))
+        #expect(machine.tick(now: at(20.5)) == [.cancelListening, .confirm(ids: ["a", "b"])])
     }
 
     @Test func confirmAll_withDeletion_needsTaps() {
@@ -418,6 +421,23 @@ struct VoiceModeMachineTests {
         _ = machine.turnFinished(.answered(speech: "Zwei Änderungen.", cards: card), now: at(5))
         let effects = machine.turnFinished(.answered(speech: "Ausgeführt.", cards: .none), now: at(6))
         #expect(effects == [.stopSpeaking, .speak("Ausgeführt.")])
+    }
+
+    @Test func confirmation_withoutMicrophone_runsNothing() {
+        var machine = listeningWithCards(card)
+        _ = reply(&machine, "Ja", at: 8)
+        #expect(machine.tick(now: at(11.2 + VoiceModeMachine.startTimeout)) == [.cancelListening, .announce(.failed)])
+        #expect(machine.phase == .paused(.failed))
+    }
+
+    @Test func cancelledFlag_endsWithTheUtterance() {
+        var machine = listeningWithCards(card)
+        _ = reply(&machine, "Ja", at: 8)
+        machine.heard(final: "", volatile: "hm", now: at(12))
+        _ = machine.tick(now: at(15))
+        #expect(machine.recognizerFinished(text: "", now: at(15.2)) == [.startListening(.german)])
+        machine.recordingStarted(now: at(16))
+        #expect(reply(&machine, "Nein", at: 17) == [.decline(ids: ["c1"])])
     }
 
     @Test func start_withOpenCards_listens() {
