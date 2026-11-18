@@ -14,6 +14,10 @@ final class AppSettings {
     var leadTimeMinutes: Int = 120
     /// Notifications for events of deadline calendars (design 2b §11.13), next to those for tasks.
     var deadlineCalendarNotifications: Bool = true
+    /// Notifications for tasks of each source; the Reminders app alerts only at the due moment, if at all.
+    var githubTaskNotifications: Bool = true
+    var reminderTaskNotifications: Bool = true
+    var localTaskNotifications: Bool = true
     /// `nil` means the default selection (see `CalendarSelection.defaultSelected`).
     var selectedCalendarIDs: [String]? = nil
     /// `nil` means all reminder lists.
@@ -109,5 +113,16 @@ final class AppSettings {
         context.insert(settings)
         try context.save()
         return settings
+    }
+}
+
+extension AppSettings {
+    /// Task sources whose switch for notifications is on.
+    var notifiedTaskSources: Set<TaskSource> {
+        var sources: Set<TaskSource> = []
+        if githubTaskNotifications { sources.insert(.github) }
+        if reminderTaskNotifications { sources.insert(.reminders) }
+        if localTaskNotifications { sources.insert(.local) }
+        return sources
     }
 }
