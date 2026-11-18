@@ -265,6 +265,24 @@ struct CaptureModelTests {
         #expect(model.todaySteps == nil)
     }
 
+    /// A failed read (Health is locked once the phone locks, e.g. during the reload when the app goes to the background)
+    /// keeps today's known count for the widget; "no data" still clears it.
+    @Test func todaySteps_keptWhenReadFails_clearedWithoutData() async {
+        let health = FakeHealthStore()
+        health.steps = [steps(6412)]
+        let model = make(health)
+        await model.reload()
+        health.failStepReads = true
+        await model.reload()
+        #expect(model.todaySteps == 6412)
+        #expect(model.steps == 6412)
+        health.failStepReads = false
+        health.steps = []
+        await model.reload()
+        #expect(model.todaySteps == nil)
+        #expect(model.steps == nil)
+    }
+
     @Test func todaySteps_onlyWhenStepsAsked() async {
         let health = FakeHealthStore(stepsAccess: .notAsked)
         health.steps = [steps(6412)]

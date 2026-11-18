@@ -18,6 +18,8 @@ final class FakeHealthStore: HealthStoring, @unchecked Sendable {
     private var _stepsReads: [DateInterval] = []
     var failWrites = false
     var incompleteWrites = false
+    /// Step reads throw, like HealthKit while the device is locked.
+    var failStepReads = false
     /// Runs inside a step read before it returns, e.g. to navigate while the query is still running.
     var onStepsRead: (@MainActor @Sendable (DateInterval) async -> Void)?
 
@@ -96,6 +98,7 @@ final class FakeHealthStore: HealthStoring, @unchecked Sendable {
             return _steps.filter { $0.start >= interval.start && $0.start < interval.end }
         }
         if let onStepsRead { await onStepsRead(interval) }
+        if failStepReads { throw NSError(domain: "FakeHealth", code: 2) }
         return result
     }
 }

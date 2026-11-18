@@ -134,6 +134,8 @@ final class CaptureModel {
     /// `refreshingLocalFirst: false` after `show(_:)`, which already read the store for the new day.
     func reload(refreshingLocalFirst: Bool = true) async {
         let today = self.today
+        // Kept when a step read fails; only valid while the day stays the same.
+        let shownBefore = day, stepsBefore = steps, todayStepsBefore = todaySteps
         if day > today || (day == lastToday && lastToday != today) { day = today }
         lastToday = today
         if refreshingLocalFirst { refreshLocal() }
@@ -157,9 +159,12 @@ final class CaptureModel {
         self.stepsAccess = stepsAccess
         var stepsOfDay: Int?
         if stepsAccess == .asked {
-            stepsOfDay = await dailySteps(on: requestedDay)
+            // A failed read (Health is locked while the phone is locked) keeps the last value instead of clearing it.
+            let readOfDay = await dailySteps(on: requestedDay)
+            stepsOfDay = readOfDay ?? (shownBefore == requestedDay ? stepsBefore : nil)
             // Today's count is current even when a later navigation discards the displayed day's result below.
-            let stepsOfToday = requestedDay == today ? stepsOfDay : await dailySteps(on: today)
+            let readOfToday = requestedDay == today ? readOfDay : await dailySteps(on: today)
+            let stepsOfToday = readOfToday ?? todayStepsBefore
             todayStepsValue = stepsOfToday.map { DaySteps(day: today, count: $0) }
         } else {
             todayStepsValue = nil
@@ -171,11 +176,13 @@ final class CaptureModel {
         refreshLocal(week: week)
     }
 
-    /// The step sum of one day; `nil` without statistics or on an error (never logged: health data).
-    private func dailySteps(on day: PlanDay) async -> Int? {
+    /// The step sum of one day: `.some(nil)` without statistics, `nil` when the read failed (errors are not logged:
+    /// health data).
+    private func dailySteps(on day: PlanDay) async -> Int?? {
         let interval = DateInterval(start: day.startDate(in: calendar), end: day.adding(days: 1, calendar: calendar).startDate(in: calendar))
-        let sums = (try? await health.dailySteps(in: interval, calendar: calendar)) ?? []
-        return sums.first { PlanDay(date: $0.start, calendar: calendar) == day }?.count
+        guard let sums = try? await health.dailySteps(in: interval, calendar: calendar) else { return nil }
+        let count: Int? = sums.first { PlanDay(date: $0.start, calendar: calendar) == day }?.count
+        return .some(count)
     }
 
     private func refreshLocal(week: DateInterval? = nil) {
