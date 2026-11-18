@@ -349,7 +349,7 @@ final class AssistantModel {
     func instructions() -> String {
         let current = now()
         let today = planning.today
-        let time = current.formatted(.dateTime.hour().minute())
+        let time = AIPlanner.time(planning.calendar.component(.hour, from: current) * 60 + planning.calendar.component(.minute, from: current))
         return """
         Du bist der Assistent der App Tagwerk, die Aufgaben (Erinnerungen, GitHub-Issues, lokale Aufgaben) und \
         Kalender zusammenführt und Tage plant. Antworte knapp in der Sprache der letzten Nachricht des Nutzers (Deutsch oder Englisch); \
@@ -402,6 +402,12 @@ final class AssistantModel {
 
     /// Text of an action card (mockup e): what the change is about and how it changes it. `language` is the app
     /// language on screen and the language of the answer when the card is announced (plan english-app, Task 2).
+    /// On screen (the app language) dates follow the iPhone's region, e.g. 24-hour clock in en_GB; a card announced in
+    /// another language uses that language's own formats.
+    static func formatLocale(_ language: VoiceLanguage) -> Locale {
+        language == .app ? .current : language.locale
+    }
+
     func describe(_ call: ToolCall, language: VoiceLanguage = .app) -> ActionCard {
         let args = (try? JSONSerialization.jsonObject(with: call.arguments) as? [String: Any]) ?? [:]
         func string(_ key: String) -> String? { (args[key] as? String).flatMap { $0.isEmpty ? nil : $0 } }
@@ -411,7 +417,7 @@ final class AssistantModel {
         func dayText(_ value: String?) -> String {
             guard let value, let day = AIPlanner.planDay(String(value.prefix(10))) else { return text("keine") }
             return day.startDate(in: planning.calendar)
-                .formatted(Date.FormatStyle(locale: language.locale).weekday(.abbreviated).day().month())
+                .formatted(Date.FormatStyle(locale: Self.formatLocale(language)).weekday(.abbreviated).day().month())
         }
         func duration(_ minutes: Int) -> String { CapacityText.duration(minutes) }
         switch call.name {
@@ -492,8 +498,8 @@ extension AssistantModel {
         let calendar = planning.calendar
         let existing = string("event_id").flatMap { planning.event(id: $0) }
         let seriesText = series ? " · " + text("auch alle künftigen") : ""
-        let dayStyle = Date.FormatStyle(locale: language.locale).weekday(.abbreviated).day().month()
-        let timeStyle = Date.FormatStyle(locale: language.locale).hour().minute()
+        let dayStyle = Date.FormatStyle(locale: Self.formatLocale(language)).weekday(.abbreviated).day().month()
+        let timeStyle = Date.FormatStyle(locale: Self.formatLocale(language)).hour().minute()
         func parse(_ value: String?) -> (date: Date, timed: Bool)? {
             guard let value, let day = AIPlanner.planDay(String(value.prefix(10))) else { return nil }
             var components = DateComponents(year: day.year, month: day.month, day: day.day)

@@ -43,7 +43,7 @@ Fables Reviews vom 2026-11-18 sind eingearbeitet (erste Runde „überarbeiten�
    - Phrasen über `AppShortcuts.xcstrings` mit englischen Phrasen. Jede Phrase enthält `\(.applicationName)` (im Catalog `${applicationName}`).
 7. **Info.plist:** Usage-Descriptions über `InfoPlist.xcstrings` (App und Widget). Die deutschen Texte bleiben im `project.yml` als Quelle.
 8. **Geschriebene Daten** (Titel von Zeitblöcken, Mittagspause, Plan-Kalender „Tagwerk“, Benachrichtigungen) entstehen in der App-Sprache zum Zeitpunkt des Schreibens. Bestehende Einträge werden nicht umbenannt.
-   - **Benachrichtigungen:** Die App merkt sich je Quelle die Sprache, in der zuletzt geplant wurde. Alte Anfragen bleiben, bis die Quelle geladen ist; dann werden sie in der neuen Sprache ersetzt. Nichts wird gelöscht, ohne dass Ersatz da ist (Fable 10, zweite Runde 1).
+   - **Benachrichtigungen:** Jeder Planungslauf ersetzt die Anfragen aller geladenen Quellen ohnehin in der aktuellen Sprache. Nicht geladene Quellen behalten ihre Anfragen, bis sie laden; nichts wird ohne Ersatz gelöscht (Fable 10, zweite Runde 1). Eine gespeicherte Sprache je Quelle war zunächst gebaut, wurde aber nie gelesen und ist nach dem Code-Review wieder entfernt; die Tests prüfen das Verhalten direkt.
    - **Sichtbare und gespeicherte KI-Daten** (Titel und Mengen aus `MealEstimator`, Begründungen aus `AIPlanner`) entstehen in der App-Sprache (Fable 8).
 9. **Begriffe (Glossar)** für eine einheitliche Übersetzung:
 

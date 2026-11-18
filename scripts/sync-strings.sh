@@ -54,10 +54,21 @@ sync_catalog() {
     cp "$catalog" "$target"
   fi
   local arguments=()
-  for file in "$@"; do arguments+=(--stringsdata "$file"); done
-  # A package without String(localized:) yet has nothing to sync.
-  (( ${#arguments} > 0 )) || return 0
-  xcrun xcstringstool sync "$target" "${arguments[@]}" >/dev/null
+  for file in "$@"; do
+    # Incremental builds keep .stringsdata of deleted sources; they would hide keys that are no longer used.
+    if /usr/bin/python3 -c 'import json, os, sys; sys.exit(0 if os.path.exists(json.load(open(sys.argv[1]))["source"]) else 1)' "$file"; then
+      arguments+=(--stringsdata "$file")
+    fi
+  done
+  if (( ${#arguments} == 0 )); then
+    # A catalog without any extracted text means the build output is missing, not that everything matches.
+    echo "No .stringsdata for ${catalog#$REPO_ROOT/} in $DERIVED" >&2
+    exit 2
+  fi
+  if ! xcrun xcstringstool sync "$target" "${arguments[@]}" >/dev/null; then
+    echo "xcstringstool sync failed for ${catalog#$REPO_ROOT/}" >&2
+    exit 2
+  fi
   if (( CHECK )) && ! /usr/bin/python3 "$REPO_ROOT/scripts/check-strings.py" --same "$catalog" "$target"; then
     DIFFERENT=1
   fi

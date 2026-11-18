@@ -5,7 +5,8 @@ import TagwerkCore
 /// Task source for tasks stored only in Tagwerk (SwiftData).
 @MainActor
 final class LocalTaskProvider: TaskProvider {
-    static let container = TaskContainer(id: "local", name: "Lokal", colorHex: nil)
+    /// Shown as the list name of local tasks, in the app language.
+    static var container: TaskContainer { TaskContainer(id: "local", name: String(localized: "Lokal"), colorHex: nil) }
 
     let source: TaskSource = .local
     private let context: ModelContext

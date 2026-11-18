@@ -83,6 +83,8 @@ struct NextUpView: View {
                 }
                 if let first = entries.first {
                     Text(WidgetContent.span(first)).font(.subheadline.weight(.semibold).monospacedDigit())
+                        // "10:30 AM–12:00 PM" is much wider than "10:30–12:00"; it shrinks instead of wrapping.
+                        .lineLimit(1).minimumScaleFactor(0.7)
                         .foregroundStyle(Color(hex: first.colorHex) ?? .accentColor)
                     Text(first.title).font(.headline).lineLimit(2).privacySensitive()
                 }

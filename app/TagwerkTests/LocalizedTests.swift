@@ -21,6 +21,10 @@ struct LocalizedTests {
         #expect([days(1), days(4)] == ["1 Tag", "4 Tagen"])
         #expect([applied(1), applied(2)] == ["1 Vorschlag übernommen", "2 Vorschläge übernommen"])
         #expect([fields(1), fields(2)] == ["Seit dem Öffnen wurde 1 Feld geändert.", "Seit dem Öffnen wurden 2 Felder geändert."])
+        func events(_ count: Int) -> String { String(localized: "\(count) Termine") }
+        func overlaps(_ count: Int) -> String { String(localized: "überschneidet \(count) Termine") }
+        #expect([events(1), events(2)] == ["1 Termin", "2 Termine"])
+        #expect([overlaps(1), overlaps(3)] == ["überschneidet 1 Termin", "überschneidet 3 Termine"])
     }
 
     @Test func englishLookups_useTheGlossary() {

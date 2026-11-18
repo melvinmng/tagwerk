@@ -15,7 +15,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 APP = ROOT / "app"
-PLACEHOLDER = re.compile(r"%(?:\d+\$)?(?:lld|ld|d|@|f|\.\d+f|%)")
+PLACEHOLDER = re.compile(r"%(?:\d+\$)?(?:lld|llu|ld|lu|lf|d|i|u|s|@|f|\.\d+f|%)")
 
 
 def load(path):
@@ -67,8 +67,14 @@ def check_structure(path, data, require_english, problems):
                     problems.append(f"{path.relative_to(ROOT)}: placeholders differ: {key!r} -> {value!r}")
         if require_english and not key.strip() == "":
             translated = [u for u in units if u.get("state") == "translated" and u.get("value", "").strip()]
-            if not translated:
-                problems.append(f"{path.relative_to(ROOT)}: no English value: {key!r}")
+            if not translated or len(translated) != len(units):
+                problems.append(f"{path.relative_to(ROOT)}: no complete English value: {key!r}")
+        localizations = entry.get("localizations", {})
+        english_plural = "plural" in localizations.get("en", {}).get("variations", {})
+        german_plural = "plural" in localizations.get("de", {}).get("variations", {})
+        if english_plural and not german_plural:
+            # Without German variations the German UI shows "1 Termine".
+            problems.append(f"{path.relative_to(ROOT)}: English plural without German plural: {key!r}")
 
 
 def check_info_plist(problems):
