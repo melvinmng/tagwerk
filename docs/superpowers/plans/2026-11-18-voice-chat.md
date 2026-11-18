@@ -123,6 +123,22 @@ Stufe 1 ist mit #111 gemergt und am iPhone getestet. Für den Sprechmodus fehlen
 7. **Karten.** Mit offener Karte wartet der Automat. Nach „Bestätigen“ spricht `readAfterConfirmation` „Ausgeführt.“ und folgenden Text; zugehört wird erst nach dessen Ende. Eine Bestätigung kann neue Karten bringen → wieder warten.
 8. **Blatt-Höhen nur im Sprechmodus.** Das Chat-Blatt bekommt `.medium`/`.large` und Bedienbarkeit des Kalenders nur, solange der Sprechmodus läuft; der normale Chat bleibt unverändert. Ein Tipp auf einen Termin im Kalender, während das Blatt halb offen ist, öffnet kein zweites Blatt: der Sprechmodus endet nicht, der Tipp wird ignoriert (am Gerät prüfen).
 
+### Nach Fable-Review (Stufe 2)
+
+9. **Ein Abschluss-Hook am `AssistantModel`** statt Rückgabewerten: `onTurnFinished(Outcome)` mit `.answered(texts, pendingCards)`, `.rejected`, `.failed(offline:)`. Er feuert nach `send`, `confirm`, `confirmAll`, `decline` und `retry`, erst wenn `pendingActions` leer und die Folgerunde beendet ist (oder neue Karten offen sind). Im Sprechmodus liest der Sprechmodus selbst; `readPolicy`/`readAutomatically` und `readAfterConfirmation` sind dann still.
+10. **Ausgabe: genau ein Abschluss je `speak`.** Jeder stille Ausgang (VoiceOver, Aufnahme, leer, `activate` wirft, fremdes `stop()`) ruft die Abschluss-Closure; dazu eine Frist nach Textlänge.
+11. **Fristen** für `sending` (Senden hängt) und den Ton.
+12. **`RecognitionSession`** mit genau einem Endsignal (auch nach `cancel()`) und eigener injizierter Uhr für die 3-s-Frist.
+13. **Audio:** `.playAndRecord`, Modus `.default`, `.defaultToSpeaker`, `.allowBluetoothA2DP` (kein HFP in v1, iPhone-Mikrofon). `SystemVoiceAudioSession` verschachtelt: Bei aktiver Unterhaltung stellen `activate(.recording)`/`activate(.speaking…)` nichts um und `deactivate` der Untermodi tut nichts. Test: ein später Erkennerstart nach „Beenden“ öffnet das Mikrofon nicht wieder. Routenwechsel im Sprechmodus → neu zuhören statt pausieren.
+14. **Ton und Startlücke:** Ton über `AVAudioPlayer` hinter einem Protokoll mit Abschluss und Frist. Zuhören beginnt nach dem Ton; „Hört zu“ erst, wenn die Aufnahme läuft.
+15. **Automat (Task 10) überarbeitet:**
+    - Zustände: `starting`, `listening`, `countdown(deadline)`, `finalizing`, `sending`, `speaking`, `tone`, `awaitingConfirmation`, `paused(Reason)` mit `silence`, `offline`, `failed`, `ended`.
+    - Ereignisse: `recordingStarted`, `heard(final:volatile:)`, `tick(now:)`, `doNotSend`, `typeInstead`, `pause`, `resume`, `userInterrupt` (Stimme stoppen → zuhören), `recognizerFinished(text)`, `recognizerFailed`, `turnFinished(Outcome)`, `speakingFinished`, `toneFinished`, `cardsResolved`, `systemInterruption`, `end`.
+    - Regeln: Countdown erst bei nicht-leerem Text nach Pause; neuer Text im Countdown → zurück zu `listening`. Nach Ablauf erst finalisieren, gesendet wird der **endgültige** Text (Test). Leerer Endtext → wieder zuhören. Kein Senden aus `paused` oder `ended`. Systemunterbrechung (Anruf, Hintergrund, Sperre) → `ended`.
+16. **Blatt:** Detents `.medium`/`.large` mit `selection`, nur im Sprechmodus; „Tippen“ und „Verlauf“ → `.large`. Wischen zum Schließen beendet den Sprechmodus. `isIdleTimerDisabled` während der Sitzung. `didEnterBackground` beendet.
+17. **Kalender hinter dem Blatt:** nur Scrollen und Tageswechsel. `RootView` (`openEvent`, `editingTask`, `recurringEdit`) und `openSuggestion` sperren Taps, solange der Sprechmodus läuft.
+18. **Geräte-Spike vor Task 11** (wie Task 0) auf der Prüfseite: `.playAndRecord` mit Synthesizer im Wechsel mit Aufnahme, Lautstärke und Klang, Resthall im ersten Transkript, AirPods.
+
 ## Lieferung in zwei PRs
 
 - **PR 1, Stufe 1:** Tasks 1–9 (Diktat, Vorlesen, Ansagen, Einstellungen, Zustände, Sprache der KI).
