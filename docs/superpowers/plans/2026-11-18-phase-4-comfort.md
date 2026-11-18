@@ -31,6 +31,65 @@
 
 **Nicht in diesem Plan:** siehe Spec §2 (Nicht-Ziele).
 
+## Änderungen nach dem Fable-Review (2026-11-18) – gehen den Tasks unten vor
+
+Die WidgetKit-, AppIntents- und XcodeGen-Aussagen stammen aus API-Kenntnis und sind am Gerät nicht belegt.
+
+**Korrektheit, Datenverlust**
+1. **Planteil des Snapshots:** Er kommt aus einer lesenden Methode `PlanningModel.snapshotInput(days:)` für heute bis heute + 2.
+   - Sie arbeitet nach dem Vorbild von `planInputs(in:)` mit `calendarStore.events`, `markedEvents`, `resolveLinks` und `importantDeadlines`.
+   - Sie ändert `anchor`, `scope`, `days` und `mergeSuggestions` nicht.
+   - Kein `PlanStore`, keine `openReminders`, kein Netz.
+2. **Planteil nur aus geladenen Quellen:** Den Planteil schreibt nur ein Lauf mit geladenen Aufgabenquellen. `logWater` (Siri im Hintergrund) ersetzt nur den Ernährungsteil der vorhandenen Datei über `WidgetSnapshot.replacingIntake`.
+3. **Hintergrund-Refresh:** `BackgroundRefresh` bekommt eine Closure `writeSnapshot` nach `reschedule`. Waren die Quellen nicht geladen, gilt Nr. 2.
+4. **Snapshot-Auslöser:** Sie hängen sich in die vorhandene Schleife von `startObservingChanges()` (EventKit hat nur einen Konsumenten). Aufgaben und Einstellungen laufen nach dem `Observations`-Muster aus `startNotificationUpdates()`.
+5. **Tagessumme:** Sie liegt in `CaptureModel.todayIntake` und wird in `refreshLocal()` berechnet (auch nach Löschen und Widerrufen). Die eigene Klasse `TodaySummary` entfällt.
+6. **Datum bei Siri:** `IntentServices.logWater` setzt das Datum ausdrücklich auf jetzt, nicht auf den angezeigten Tag, und frischt danach `capture` auf.
+7. **Veraltet** heißt: Der Tag von jetzt fehlt in `days`. Die 3-Tage-Regel entfällt (umgesetzt).
+8. **Deadline-Kalender-Termine** erscheinen genau einmal, als Deadline. Termine über Mitternacht haben je Tag eine eigene ID (umgesetzt).
+9. **Merker im Skript:** Beide Skripte schreiben `last-installed.<bundle>` (`install-dev.sh` schreibt `dev`). `fallback_commit` erlaubt den Rückfall nur bei `last-installed == last-good` und `last-good != HEAD`.
+10. **Rückfall-Build:** Er läuft in einem eigenen `git worktree add --detach "$BASE/fallback" <commit>` mit eigenem `xcodegen` und wird danach aufgeräumt, nie per Checkout im Quell-Klon.
+    - Ein fehlgeschlagener Rückfall lässt `EXPIRY_FILE` unverändert.
+    - Ein erfolgreicher Rückfall endet mit eigenem Exit-Code (4) und benachrichtigt immer.
+11. **Neustart nach Git-Update:** Das Skript startet sich nach dem Git-Update einmal selbst neu (`exec`, Schutz über `TAGWERK_REEXECED=1`). Sonst läuft die erste Phase-4-Installation mit dem alten Skript.
+12. **`earliest_expiry`:** Ein unlesbares Profil einer vorhandenen `.appex` wird protokolliert. Das Ablaufdatum gilt dann als unbekannt, damit es nicht zu optimistisch ausfällt.
+13. **`WidgetSnapshotWriter`:** Er legt das Verzeichnis an und setzt `isExcludedFromBackup`.
+
+**Datenschutz**
+14. **Einstellungsänderungen** schreiben den Snapshot sofort neu: `widgetShowsNutrition`, Ziele, Kalenderauswahl, Einrichtung neu.
+15. **Lesbarkeit der Datei:** Sie ist ab dem ersten Entsperren lesbar und enthält Titel und kcal. Das ist eine bewusste Abwägung, festgehalten in Spec §12. StandBy, CarPlay und iPhone-Widgets auf dem Mac kommen auf die Geräte-Checkliste.
+16. **Vorbelegung im `AppRouter`:** Sie liegt nur im Speicher. Intents spenden nichts.
+17. **`TodayOverviewIntent`:** Er liest die Datei. Sind die Quellen geladen, wird vorher neu geschrieben, sonst bleibt die Datei unverändert. Es bleibt bei `.requiresAuthentication`.
+
+**Widersprüche**
+18. **Nach Mitternacht:** Ohne Tageswerte zeigt das Widget das Layout W2b, also ohne Ernährungshälfte. `showsNutrition` entfällt im Snapshot, `intake == nil` genügt (umgesetzt).
+19. **Registrierung:** `AppDependencyManager.shared.add(dependency: services)` in `TagwerkApp.init`. `perform()` ist `@MainActor`.
+20. **`AppEnvironment.init`** bleibt frei von Netz und Schlüsselbund. Vordergrund-Intents starten die App normal, „kein zusätzlicher Abruf, keine KI“.
+21. **Health-Lesen im Rückblick** nur bei `access.wasAsked` (gleiche Eigenschaft wie in Phase 3).
+22. **Wiederkehrende Erinnerungen:** Ob EventKit erledigte Einzelvorkommen liefert, steht auf der Geräte-Checkliste.
+
+**XcodeGen, Swift 6**
+23. **Widget-Target:**
+    - Eigene `info.path` und `entitlements.path` unter `TagwerkWidget/`.
+    - `NSExtension`-Dict, Version wie die App.
+    - In der App `dependencies: - target: TagwerkWidget` (eingebettet).
+    - Generierte Plist- und Entitlement-Dateien einchecken.
+    - Das Scheme bleibt, weil die Abhängigkeit die Extension mitbaut.
+24. **`Color+Hex.swift`** gehört in beide Targets. Das Widget nutzt einen eigenen Kalender (gregorianisch, Montag) statt `Calendar.tagwerk`. Farben kommen aus `eventCalendars()`.
+25. **Provider:** ein nicht isolierter `TimelineProvider`, der synchron liest. Die Timeline hat immer mindestens Mitternacht als künftigen Eintrag.
+26. **Gehostete Tests:** Sie schreiben nie in den echten Group-Container. Der Schreiber bekommt in Tests `directory: nil` bzw. ein Temp-Verzeichnis. In `AppEnvironment` ist er injizierbar.
+
+**Reihenfolge, Umfang**
+27. **Reihenfolge:** Task 7 (Skript), 1, 4, 2, 3, 5, 6, 8, 9. Den Merge hat der Nutzer für diese Kette in einem PR angeordnet. Deshalb gibt es kein getrenntes Vorab-Merge von Task 7. Nr. 11 mildert das. Offener Punkt: die erste Installation beobachten.
+28. **Fakes:** `completedReminders` bekommt eine Standardimplementierung per Protokoll-Erweiterung, damit bestehende Fakes nicht brechen.
+
+**Tests (zusätzlich)**
+29. Snapshot: `makeSnapshot_leavesPlanningUntouched`, `makeSnapshot_sourcesNotLoaded_keepsPlanPart`.
+30. Schreiber: `writer_createsDirectory`, `writer_corruptFile_loadsNil`, `settingsChange_rewritesSnapshot`.
+31. Erfassen: `todayIntake_updatesAfterDeleteAndUndo`, `logWater_capturedOnPastDay_savesNow`.
+32. Skript: `fallback_commit` mit `last-installed`. Der Rückfall ändert weder `EXPIRY_FILE` noch den Arbeitsbaum.
+33. `test-all.sh`: Prüfen, dass `Tagwerk.app/PlugIns/TagwerkWidget.appex` existiert und `TagwerkAppGroup` in beiden Info.plists gleich ist.
+
 ## Global Constraints
 
 - Alle Constraints aus 2b-1 bis Phase 3 gelten weiter.

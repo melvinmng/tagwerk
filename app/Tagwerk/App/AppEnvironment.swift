@@ -30,6 +30,8 @@ final class AppEnvironment {
     let notifications: NotificationScheduler
     /// Target of a tapped notification until the app shows it.
     let notificationNavigator = NotificationNavigator()
+    /// Target of a `tagwerk://` link or a shortcut until the app shows it (phase 4).
+    let router = AppRouter()
     /// Delegate of the system notification center; held here because the center keeps it weakly.
     @ObservationIgnored private(set) lazy var notificationDelegate = NotificationDelegate(navigator: notificationNavigator)
     /// Meals, water and workouts (phase 3); mirrored to Health only after the user allowed it.

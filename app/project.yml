@@ -53,6 +53,9 @@ targets:
         NSCameraUsageDescription: "Tagwerk nimmt Fotos von Mahlzeiten auf, um Kalorien und Nährwerte schätzen zu lassen."
         GitHubClientID: $(GITHUB_CLIENT_ID)
         UIBackgroundModes: [fetch]
+        CFBundleURLTypes:
+          - CFBundleURLName: $(TAGWERK_BUNDLE_ID)
+            CFBundleURLSchemes: [tagwerk]
         BGTaskSchedulerPermittedIdentifiers: [tagwerk.refresh]
     settings:
       base:

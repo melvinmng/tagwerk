@@ -8,6 +8,8 @@ struct MealSheet: View {
     let model: CaptureModel
     let estimator: MealEstimator
     let existing: MealValue?
+    /// Text from Siri ("Mahlzeit erfassen"); only prefilled, never estimated without a tap.
+    var initialText: String? = nil
 
     @Environment(AppEnvironment.self) private var environment
     @Environment(\.dismiss) private var dismiss
@@ -367,6 +369,8 @@ struct MealSheet: View {
         if let existing {
             draft = MealDraft(meal: existing, estimatedAt: model.estimatedAt(meal: existing.id))
             phase = .editing
+        } else if let initialText {
+            text = initialText
         }
     }
 

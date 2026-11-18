@@ -55,6 +55,9 @@ struct RootView: View {
             if presented { editingTask = nil; openEvent = nil; recurringEdit = nil }
         }
         .onChange(of: environment.notificationNavigator.receivedCount) { _, _ in openNotificationTarget() }
+        .onChange(of: environment.router.receivedCount) { _, _ in openRouterTarget() }
+        .onChange(of: environment.settings.setupCompleted) { _, _ in openRouterTarget() }
+        .onOpenURL { url in environment.router.open(url) }
         .onChange(of: environment.taskList.loadingSources) { _, _ in openNotificationTarget() }
         .onChange(of: environment.requestedTab) { _, tab in
             guard let tab else { return }
@@ -113,6 +116,19 @@ struct RootView: View {
         case .task(let id): showTask(id)
         case .tasksTab: selectedTab = 1
         case .day(let day): showDay(day)
+        }
+    }
+
+    /// Opens the target of a `tagwerk://` link or shortcut once setup is done; links only navigate.
+    private func openRouterTarget() {
+        guard let request = environment.router.takeRequest(setupCompleted: environment.settings.setupCompleted) else { return }
+        editingTask = nil
+        openEvent = nil
+        recurringEdit = nil
+        environment.assistant.isPresented = false
+        switch request.route {
+        case .planToday: showDay(environment.planning.today)
+        case .capture, .captureMeal, .captureWorkout, .review: selectedTab = 3
         }
     }
 
