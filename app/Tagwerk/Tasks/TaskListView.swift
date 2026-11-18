@@ -71,7 +71,8 @@ struct TaskListView: View {
                 }
             }
             .environment(\.editMode, .constant(isSelecting ? .active : .inactive))
-            .onChange(of: model.highlightedTaskID) { _, id in
+            // Initial too: after a cold start the list may appear only after the task was marked.
+            .onChange(of: model.highlightedTaskID, initial: true) { _, id in
                 guard let id else { return }
                 model.filter = .all
                 withAnimation { proxy.scrollTo(id, anchor: .center) }

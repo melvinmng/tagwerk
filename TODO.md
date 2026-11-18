@@ -73,11 +73,11 @@ GitHub-Konto: @melvinmng · bestätigt zuweisbar · geprüft 2026-11-17 · ich
 - [ ] [#72](https://github.com/melvinmng/tagwerk/issues/72) KI schlägt längere Arbeitstage vor {status: In review; prio: P2 (High); aufwand: 2h; epic: #2}
 - [ ] [#73](https://github.com/melvinmng/tagwerk/issues/73) Vorschläge zeigen Priorität, Fälligkeit und Aufwand; Tipp öffnet das Vorschlagsblatt mit der Aufgabe {status: In review; prio: P2 (High); aufwand: 5h; epic: #2}
 - [ ] [#74](https://github.com/melvinmng/tagwerk/issues/74) Über Vorschläge sprechen, sie von Hand verschieben und Planungsvorgaben setzen {status: In review; prio: P2 (High); aufwand: 8h; epic: #2}
-- [ ] [#76](https://github.com/melvinmng/tagwerk/issues/76) Benachrichtigungsplan aus Aufgaben und Deadline-Terminen berechnen {status: In review; prio: P2 (High); aufwand: 2h; epic: #2}
-- [ ] [#77](https://github.com/melvinmng/tagwerk/issues/77) Gesperrten Schlüsselbund nicht als GitHub-Abmeldung werten {status: In review; prio: P2 (High); aufwand: 1h; epic: #2}
-- [ ] [#78](https://github.com/melvinmng/tagwerk/issues/78) Benachrichtigungen planen und aktuell halten {status: In review; prio: P2 (High); aufwand: 3h; epic: #2}
-- [ ] [#79](https://github.com/melvinmng/tagwerk/issues/79) Benachrichtigungen in Einrichtung und Einstellungen, Sprung beim Tippen {status: In review; prio: P2 (High); aufwand: 2h; epic: #2}
-- [ ] [#80](https://github.com/melvinmng/tagwerk/issues/80) Hintergrund-Refresh für Aufgaben und Benachrichtigungen {status: In review; prio: P2 (High); aufwand: 2h; epic: #2}
+- [x] [#76](https://github.com/melvinmng/tagwerk/issues/76) Benachrichtigungsplan aus Aufgaben und Deadline-Terminen berechnen {status: Done; prio: P2 (High); aufwand: 2h; epic: #2}
+- [x] [#77](https://github.com/melvinmng/tagwerk/issues/77) Gesperrten Schlüsselbund nicht als GitHub-Abmeldung werten {status: Done; prio: P2 (High); aufwand: 1h; epic: #2}
+- [x] [#78](https://github.com/melvinmng/tagwerk/issues/78) Benachrichtigungen planen und aktuell halten {status: Done; prio: P2 (High); aufwand: 3h; epic: #2}
+- [x] [#79](https://github.com/melvinmng/tagwerk/issues/79) Benachrichtigungen in Einrichtung und Einstellungen, Sprung beim Tippen {status: Done; prio: P2 (High); aufwand: 2h; epic: #2}
+- [x] [#80](https://github.com/melvinmng/tagwerk/issues/80) Hintergrund-Refresh für Aufgaben und Benachrichtigungen {status: Done; prio: P2 (High); aufwand: 2h; epic: #2}
 - [ ] [#82](https://github.com/melvinmng/tagwerk/issues/82) Regeln für Essen, Wasser und Training {status: In review; prio: P2 (High); aufwand: 3h; epic: #3}
 - [ ] [#83](https://github.com/melvinmng/tagwerk/issues/83) Fotos an ChatGPT senden {status: In review; prio: P2 (High); aufwand: 1h; epic: #3}
 - [ ] [#84](https://github.com/melvinmng/tagwerk/issues/84) Apple Health anbinden (HealthBridge) {status: In review; prio: P2 (High); aufwand: 3h; epic: #3}
@@ -106,7 +106,7 @@ GitHub-Konto: @melvinmng · bestätigt zuweisbar · geprüft 2026-11-17 · ich
 - [ ] [#113](https://github.com/melvinmng/tagwerk/issues/113) Phase 5: Einkaufsliste und Notizen einbinden {status: Ready; prio: P3 (Medium)}
 - [ ] [#115](https://github.com/melvinmng/tagwerk/issues/115) Phase 6: Jira als Aufgabenquelle anbinden {status: Backlog; prio: P4 (Low)}
 - [x] [#118](https://github.com/melvinmng/tagwerk/issues/118) KI: Termine anlegen, ändern und löschen {status: Done; prio: P2 (High); aufwand: 4h; epic: #2}
-- [ ] [#120](https://github.com/melvinmng/tagwerk/issues/120) Sprechmodus: Vorschläge per Stimme annehmen, ablehnen und korrigieren {status: In review; prio: P2 (High); aufwand: 5h; epic: #103}
+- [x] [#120](https://github.com/melvinmng/tagwerk/issues/120) Sprechmodus: Vorschläge per Stimme annehmen, ablehnen und korrigieren {status: Done; prio: P2 (High); aufwand: 5h; epic: #103}
 
 ## Notizen
 
@@ -125,7 +125,7 @@ _Automatisch aus [Tagwerk](https://github.com/users/melvinmng/projects/17) erzeu
 - [#2](https://github.com/melvinmng/tagwerk/issues/2) Phase 2: Aufgaben, Kalender und KI-Tagesplan umsetzen · @melvinmng · Prio P2 (High)
 - [#103](https://github.com/melvinmng/tagwerk/issues/103) Mit der KI sprechen · @melvinmng · Prio P2 (High)
 
-### In Prüfung (41)
+### In Prüfung (35)
 - [#3](https://github.com/melvinmng/tagwerk/issues/3) Phase 3: Ernährung, Trinken und Training erfassen · @melvinmng · Prio P3 (Medium)
 - [#4](https://github.com/melvinmng/tagwerk/issues/4) Phase 4: Widget, Kurzbefehle und Wochenrückblick ergänzen · @melvinmng · Prio P4 (Low)
 - [#57](https://github.com/melvinmng/tagwerk/issues/57) ChatGPT-Antworten mit Streaming und Modellliste · @melvinmng · Prio P2 (High) · 5h
@@ -144,11 +144,6 @@ _Automatisch aus [Tagwerk](https://github.com/users/melvinmng/projects/17) erzeu
 - [#72](https://github.com/melvinmng/tagwerk/issues/72) KI schlägt längere Arbeitstage vor · @melvinmng · Prio P2 (High) · 2h
 - [#73](https://github.com/melvinmng/tagwerk/issues/73) Vorschläge zeigen Priorität, Fälligkeit und Aufwand; Tipp öffnet das Vorschlagsblatt mit der Aufgabe · @melvinmng · Prio P2 (High) · 5h
 - [#74](https://github.com/melvinmng/tagwerk/issues/74) Über Vorschläge sprechen, sie von Hand verschieben und Planungsvorgaben setzen · @melvinmng · Prio P2 (High) · 8h
-- [#76](https://github.com/melvinmng/tagwerk/issues/76) Benachrichtigungsplan aus Aufgaben und Deadline-Terminen berechnen · @melvinmng · Prio P2 (High) · 2h
-- [#77](https://github.com/melvinmng/tagwerk/issues/77) Gesperrten Schlüsselbund nicht als GitHub-Abmeldung werten · @melvinmng · Prio P2 (High) · 1h
-- [#78](https://github.com/melvinmng/tagwerk/issues/78) Benachrichtigungen planen und aktuell halten · @melvinmng · Prio P2 (High) · 3h
-- [#79](https://github.com/melvinmng/tagwerk/issues/79) Benachrichtigungen in Einrichtung und Einstellungen, Sprung beim Tippen · @melvinmng · Prio P2 (High) · 2h
-- [#80](https://github.com/melvinmng/tagwerk/issues/80) Hintergrund-Refresh für Aufgaben und Benachrichtigungen · @melvinmng · Prio P2 (High) · 2h
 - [#82](https://github.com/melvinmng/tagwerk/issues/82) Regeln für Essen, Wasser und Training · @melvinmng · Prio P2 (High) · 3h
 - [#83](https://github.com/melvinmng/tagwerk/issues/83) Fotos an ChatGPT senden · @melvinmng · Prio P2 (High) · 1h
 - [#84](https://github.com/melvinmng/tagwerk/issues/84) Apple Health anbinden (HealthBridge) · @melvinmng · Prio P2 (High) · 3h
@@ -166,19 +161,18 @@ _Automatisch aus [Tagwerk](https://github.com/users/melvinmng/projects/17) erzeu
 - [#97](https://github.com/melvinmng/tagwerk/issues/97) Install-Skript für App und Widget-Extension · @melvinmng · Prio P2 (High) · 3h
 - [#98](https://github.com/melvinmng/tagwerk/issues/98) Wochenrückblick in Erfassen · @melvinmng · Prio P2 (High) · 5h
 - [#99](https://github.com/melvinmng/tagwerk/issues/99) Einstellungen „Siri & Kurzbefehle“, Demo-Daten und Doku Phase 4 · @melvinmng · Prio P2 (High) · 2h
-- [#120](https://github.com/melvinmng/tagwerk/issues/120) Sprechmodus: Vorschläge per Stimme annehmen, ablehnen und korrigieren · @melvinmng · Prio P2 (High) · 5h
 
 ### Nicht zugeordnet (0)
 
 ### Zuletzt erledigt (10)
+- [#120](https://github.com/melvinmng/tagwerk/issues/120) Sprechmodus: Vorschläge per Stimme annehmen, ablehnen und korrigieren · @melvinmng
+- [#80](https://github.com/melvinmng/tagwerk/issues/80) Hintergrund-Refresh für Aufgaben und Benachrichtigungen · @melvinmng
+- [#79](https://github.com/melvinmng/tagwerk/issues/79) Benachrichtigungen in Einrichtung und Einstellungen, Sprung beim Tippen · @melvinmng
+- [#78](https://github.com/melvinmng/tagwerk/issues/78) Benachrichtigungen planen und aktuell halten · @melvinmng
+- [#77](https://github.com/melvinmng/tagwerk/issues/77) Gesperrten Schlüsselbund nicht als GitHub-Abmeldung werten · @melvinmng
+- [#76](https://github.com/melvinmng/tagwerk/issues/76) Benachrichtigungsplan aus Aufgaben und Deadline-Terminen berechnen · @melvinmng
 - [#118](https://github.com/melvinmng/tagwerk/issues/118) KI: Termine anlegen, ändern und löschen · @melvinmng
 - [#110](https://github.com/melvinmng/tagwerk/issues/110) Sprache: Sprechmodus · @melvinmng
 - [#109](https://github.com/melvinmng/tagwerk/issues/109) Sprache: Einstellungen und Sprache der KI-Antworten · @melvinmng
 - [#108](https://github.com/melvinmng/tagwerk/issues/108) Sprache: Mikrofon in Chat und Vorschlagsblatt · @melvinmng
-- [#107](https://github.com/melvinmng/tagwerk/issues/107) Sprache: Vorlesen · @melvinmng
-- [#106](https://github.com/melvinmng/tagwerk/issues/106) Sprache: Erkennung und Aufnahme-Modell · @melvinmng
-- [#105](https://github.com/melvinmng/tagwerk/issues/105) Sprache: sprechbarer Text, Sprache erkennen, Vorlese-Regel, Ansagen · @melvinmng
-- [#104](https://github.com/melvinmng/tagwerk/issues/104) Sprache: Erkennung auf dem iPhone prüfen · @melvinmng
-- [#60](https://github.com/melvinmng/tagwerk/issues/60) KI in Einrichtung und Einstellungen · @melvinmng
-- [#56](https://github.com/melvinmng/tagwerk/issues/56) ChatGPT-Anmeldung und Tokens · @melvinmng
 <!-- t3gh:end -->
