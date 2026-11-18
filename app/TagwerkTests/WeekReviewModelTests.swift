@@ -82,3 +82,26 @@ struct WeekReviewModelTests {
         #expect(model.review?.averageProtein == 40)
     }
 }
+
+struct WeekSwipeTests {
+    @Test func swipeRight_goesBack() {
+        #expect(WeekSwipe.direction(start: CGPoint(x: 100, y: 300), translation: CGSize(width: 80, height: 10)) == .back)
+    }
+
+    @Test func swipeLeft_goesForward() {
+        #expect(WeekSwipe.direction(start: CGPoint(x: 300, y: 300), translation: CGSize(width: -80, height: -12)) == .forward)
+    }
+
+    @Test func shortSwipe_ignored() {
+        #expect(WeekSwipe.direction(start: CGPoint(x: 100, y: 300), translation: CGSize(width: 40, height: 0)) == nil)
+    }
+
+    @Test func verticalScroll_ignored() {
+        #expect(WeekSwipe.direction(start: CGPoint(x: 100, y: 300), translation: CGSize(width: 70, height: 90)) == nil)
+    }
+
+    /// The system back gesture starts at the leading edge; it must not also switch the week.
+    @Test func edgeSwipe_leftToSystemBack() {
+        #expect(WeekSwipe.direction(start: CGPoint(x: 12, y: 300), translation: CGSize(width: 120, height: 0)) == nil)
+    }
+}

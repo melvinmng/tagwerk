@@ -46,6 +46,16 @@ struct WeekReviewView: View {
         }
         .navigationTitle("Wochenrückblick")
         .navigationBarTitleDisplayMode(.inline)
+        .simultaneousGesture(
+            DragGesture(minimumDistance: 20).onEnded { value in
+                switch WeekSwipe.direction(start: value.startLocation, translation: value.translation) {
+                case .back: Task { await model.goBack() }
+                case .forward: Task { await model.goForward() }
+                case nil: break
+                }
+            }
+        )
+        .sensoryFeedback(.selection, trigger: model.weekStart)
         .task { await model.reload() }
     }
 
@@ -85,6 +95,23 @@ struct WeekReviewView: View {
             ? "\(review.workoutCount) / \(review.goals.workoutsPerWeek)"
             : String(localized: "\(review.workoutCount) Trainings")
         return "\(count) · \(String(localized: "\(review.workoutMinutes) min"))"
+    }
+}
+
+/// Maps a horizontal swipe on the review to a week change: right goes back, left goes forward.
+/// Mostly vertical drags stay list scrolling, and drags from the leading edge stay the system back gesture.
+enum WeekSwipe: Equatable {
+    case back
+    case forward
+
+    static let minimumDistance: CGFloat = 60
+    static let leadingEdgeWidth: CGFloat = 30
+
+    static func direction(start: CGPoint, translation: CGSize) -> WeekSwipe? {
+        guard start.x > leadingEdgeWidth,
+              abs(translation.width) >= minimumDistance,
+              abs(translation.width) > abs(translation.height) * 1.5 else { return nil }
+        return translation.width > 0 ? .back : .forward
     }
 }
 
