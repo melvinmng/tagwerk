@@ -151,8 +151,9 @@ final class CaptureModel {
         await reload()
     }
 
-    func goToToday() async {
-        day = today
+    /// Jumps to a chosen day; days after today show today (only back in time).
+    func go(to target: PlanDay) async {
+        day = min(target, today)
         await reload()
     }
 

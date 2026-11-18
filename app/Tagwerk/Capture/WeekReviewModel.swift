@@ -33,6 +33,7 @@ final class WeekReviewModel {
         self.weekStart = PlanDay(date: IntakeRules.weekStart(containing: now(), calendar: calendar), calendar: calendar)
     }
 
+    var today: PlanDay { PlanDay(date: now(), calendar: calendar) }
     var currentWeekStart: PlanDay { PlanDay(date: IntakeRules.weekStart(containing: now(), calendar: calendar), calendar: calendar) }
     /// Only back in time (design §9.8).
     var canGoForward: Bool { weekStart < currentWeekStart }
@@ -46,6 +47,14 @@ final class WeekReviewModel {
     func goForward() async {
         guard canGoForward else { return }
         weekStart = weekStart.adding(days: 7, calendar: calendar)
+        await reload()
+    }
+
+    /// Jumps to the week containing a chosen day; later weeks show the current week (only back in time).
+    func go(toWeekOf target: PlanDay) async {
+        let start = PlanDay(date: IntakeRules.weekStart(containing: target.startDate(in: calendar), calendar: calendar),
+                            calendar: calendar)
+        weekStart = min(start, currentWeekStart)
         await reload()
     }
 

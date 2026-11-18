@@ -137,6 +137,22 @@ struct CaptureModelTests {
         #expect(model.day == PlanDay(date: now, calendar: calendar))
     }
 
+    @Test func goTo_pastDay_showsIt() async {
+        let model = make()
+        await model.reload()
+        await model.go(to: PlanDay(year: 2026, month: 10, day: 3))
+        #expect(model.day == PlanDay(year: 2026, month: 10, day: 3))
+        #expect(model.canGoForward)
+    }
+
+    @Test func goTo_futureDay_staysToday() async {
+        let model = make()
+        await model.reload()
+        await model.goBack(days: 3)
+        await model.go(to: PlanDay(year: 2026, month: 12, day: 24))
+        #expect(model.day == PlanDay(date: now, calendar: calendar))
+    }
+
     @Test func pastDay_entriesGetThatDay() async {
         let model = make()
         await model.reload()
