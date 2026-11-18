@@ -58,7 +58,8 @@ enum DemoData {
         try? context.save()
     }
 
-    /// Tomorrow: "Pretest vorbereiten" with a 60-minute block at 14:00 and "Einkaufen" planned without time.
+    /// Tomorrow: "Pretest vorbereiten" with a 60-minute block at 14:00, a 30-minute block of the recurring
+    /// "Training" at 07:00 and "Einkaufen" planned without time.
     private static func planSamples(_ environment: AppEnvironment) async {
         let planning = environment.planning
         let tomorrow = planning.today.adding(days: 1, calendar: planning.calendar)
@@ -66,6 +67,11 @@ enum DemoData {
         if let pretest = items.first(where: { $0.title == "Pretest vorbereiten" }) {
             let start = tomorrow.startDate(in: planning.calendar).addingTimeInterval(14 * 3600)
             await planning.createBlock(for: pretest, start: start, minutes: 60)
+        }
+        // A block of the recurring "Training", to try the save question after changing its rule.
+        if let training = items.first(where: { $0.title == "Training" }) {
+            let start = tomorrow.startDate(in: planning.calendar).addingTimeInterval(7 * 3600)
+            await planning.createBlock(for: training, start: start, minutes: 30)
         }
         if let shopping = items.first(where: { $0.title == "Einkaufen" }) {
             await planning.assign(shopping.id, to: tomorrow)
