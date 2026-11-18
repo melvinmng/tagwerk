@@ -11,6 +11,6 @@ let package = Package(
     ],
     targets: [
         .target(name: "AIKit"),
-        .testTarget(name: "AIKitTests", dependencies: ["AIKit"])
+        .testTarget(name: "AIKitTests", dependencies: ["AIKit"], resources: [.copy("Fixtures")])
     ]
 )

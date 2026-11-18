@@ -90,6 +90,8 @@ final class Gate: Sendable {
         }
     }
 
+    var isOpen: Bool { state.withLock { $0.open } }
+
     func open() {
         let waiters = state.withLock { state -> [CheckedContinuation<Void, Never>] in
             state.open = true
