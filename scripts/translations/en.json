@@ -607,7 +607,6 @@
   "Kürzer": "Shorter",
   "Labels": "Labels",
   "Labels (kommagetrennt)": "Labels (comma-separated)",
-  "Language English, switch to German": "Language English, switch to German",
   "Leeren": {
     "shouldTranslate": false
   },
@@ -1127,5 +1126,6 @@
   "⚠︎ %lld Deadlines heute": {
     "one": "⚠︎ %lld deadline today",
     "other": "⚠︎ %lld deadlines today"
-  }
+  },
+  "Sprache Englisch, auf Deutsch wechseln": "Language English, switch to German"
 }

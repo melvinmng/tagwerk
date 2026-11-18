@@ -109,6 +109,11 @@ struct VoiceRecordingBar: View {
         .lineLimit(compact ? 2 : 5)
     }
 
+    /// Names the dictation language and the one a tap switches to; both texts are German source keys.
+    private var languageChipLabel: LocalizedStringKey {
+        voice.language == .german ? "Sprache Deutsch, auf Englisch wechseln" : "Sprache Englisch, auf Deutsch wechseln"
+    }
+
     private var languageChip: some View {
         Button {
             voice.switchLanguage()
@@ -118,7 +123,7 @@ struct VoiceRecordingBar: View {
                 .background(.secondary.opacity(0.2), in: Capsule())
         }
         .buttonStyle(.plain)
-        .accessibilityLabel(voice.language == .german ? "Sprache Deutsch, auf Englisch wechseln" : "Language English, switch to German")
+        .accessibilityLabel(languageChipLabel)
     }
 
     static func clock(_ seconds: TimeInterval) -> String {

@@ -34,6 +34,12 @@ struct LocalizedTests {
         #expect(english("Mittagspause") == "Lunch break")
     }
 
+    @Test func languageChipLabels_areGermanKeysWithEnglishTranslations() {
+        func english(_ key: String.LocalizationValue) -> String { Localized.string(key, in: .english, bundle: .main) }
+        #expect(english("Sprache Deutsch, auf Englisch wechseln") == "Language German, switch to English")
+        #expect(english("Sprache Englisch, auf Deutsch wechseln") == "Language English, switch to German")
+    }
+
     @Test func englishLookups_keepPlaceholdersAndTheirOrder() {
         func english(_ key: String.LocalizationValue) -> String { Localized.string(key, in: .english, bundle: .main) }
         #expect(english("Fälligkeit: \("heute") → \("morgen")") == "Due date: heute → morgen")

@@ -4761,16 +4761,6 @@
         }
       }
     },
-    "Language English, switch to German" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Language English, switch to German"
-          }
-        }
-      }
-    },
     "Laufen" : {
       "localizations" : {
         "en" : {
@@ -6481,6 +6471,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Language German, switch to English"
+          }
+        }
+      }
+    },
+    "Sprache Englisch, auf Deutsch wechseln" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Language English, switch to German"
           }
         }
       }
