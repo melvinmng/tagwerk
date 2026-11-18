@@ -20,6 +20,8 @@ final class LocalTask {
     /// Incremented on every change; serves as the task version for conflict checks.
     var revision: Int
     var createdAt: Date
+    /// When the task was ticked off (phase 4, weekly review); `nil` while open and for tasks completed before phase 4.
+    var completedAt: Date?
 
     init(id: UUID = UUID(), title: String, createdAt: Date = .now) {
         self.id = id

@@ -33,6 +33,16 @@ struct CaptureView: View {
                 Section {
                     DayNavigation(model: model)
                     DaySummary(model: model)
+                    // R3a: entry to the weekly review (a row of its own, so VoiceOver keeps the summary as one element).
+                    Button { showsReview = true } label: {
+                        HStack {
+                            Label("Wochenrückblick", systemImage: "chart.bar")
+                            Spacer()
+                            Text("Woche").foregroundStyle(.secondary)
+                            Image(systemName: "chevron.right").font(.caption.weight(.semibold)).foregroundStyle(.tertiary)
+                        }
+                    }
+                    .foregroundStyle(.primary)
                 }
                 Section {
                     quickEntry
@@ -50,6 +60,9 @@ struct CaptureView: View {
                 workoutSection
             }
             .navigationTitle("Erfassen")
+            .navigationDestination(isPresented: $showsReview) {
+                WeekReviewView(model: environment.makeWeekReviewModel())
+            }
             .assistantToolbarButton { .capture }
             .safeAreaInset(edge: .bottom) {
                 if let notice = model.undo {

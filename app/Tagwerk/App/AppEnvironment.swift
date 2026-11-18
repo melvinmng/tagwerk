@@ -295,6 +295,18 @@ final class AppEnvironment {
         }
     }
 
+    /// The weekly review (phase 4); completed reminders only from the selected lists and with full access.
+    func makeWeekReviewModel() -> WeekReviewModel {
+        let gateway = self.gateway
+        let settings = self.settings
+        let local = LocalTaskProvider(context: modelContainer.mainContext)
+        return WeekReviewModel(store: intake, health: health, settings: settings, calendar: capture.calendar,
+                               completedReminders: { interval in
+                                   await gateway.completionDates(in: interval, listIDs: settings.selectedReminderListIDs.map(Set.init))
+                               },
+                               completedLocalTasks: { interval in local.completionDates(in: interval) })
+    }
+
     // MARK: Widget snapshot (phase 4 design §4.1)
 
     /// The snapshot for today and the next two days; reads EventKit and SwiftData, never the network.
