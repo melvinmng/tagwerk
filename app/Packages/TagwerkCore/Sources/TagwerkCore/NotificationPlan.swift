@@ -61,7 +61,7 @@ public struct NotificationRules: Sendable, Hashable {
 
 /// Notifications for open tasks with a due date from the enabled sources and, if enabled, for deadline calendar
 /// events. Reminders are included on purpose: the Reminders app only alerts at the due moment, if at all. The result holds the earliest
-/// `rules.limit` notifications that fire at least `rules.minimumDelay` after `now`, ordered by fire date.
+/// `rules.limit` notifications that fire at least `rules.minimumDelay` after `now`, ordered by fire date. Texts and formats follow `locale`.
 public func notificationPlan(tasks: [TaskItem], deadlineEvents: [CalendarEvent], rules: NotificationRules,
                              now: Date, calendar: Calendar, locale: Locale = .current) -> [PlannedNotification] {
     let earliest = now.addingTimeInterval(rules.minimumDelay)
@@ -114,39 +114,43 @@ private struct NotificationTexts {
     let calendar: Calendar
     let locale: Locale
 
+    private var language: VoiceLanguage { .from(locale: locale) }
+
+    private func text(_ key: String.LocalizationValue) -> String { Localized.string(key, in: language, bundle: .module) }
+
     func title(_ raw: String) -> String {
         let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
-        return trimmed.isEmpty ? String(localized: "Ohne Titel", bundle: .module) : trimmed
+        return trimmed.isEmpty ? text("Ohne Titel") : trimmed
     }
 
     func taskBody(dueDay: PlanDay, time: Date?, fire: Date, container: String) -> String {
         let moment = moment(day: dueDay, time: time, fire: fire)
-        return String(localized: "Fällig \(moment) · \(container)", bundle: .module)
+        return text("Fällig \(moment) · \(container)")
     }
 
     func eventBody(day: PlanDay, time: Date?, fire: Date) -> String {
         if time == nil {
             let dayPart = dayText(day, fire: fire)
-            return String(localized: "Deadline \(dayPart), ganztägig", bundle: .module)
+            return text("Deadline \(dayPart), ganztägig")
         }
         let moment = moment(day: day, time: time, fire: fire)
-        return String(localized: "Deadline \(moment)", bundle: .module)
+        return text("Deadline \(moment)")
     }
 
     private func moment(day: PlanDay, time: Date?, fire: Date) -> String {
         let dayPart = dayText(day, fire: fire)
         guard let time else { return dayPart }
         let clock = DateText.time(time, calendar: calendar, locale: locale)
-        return String(localized: "\(dayPart) um \(clock)", bundle: .module)
+        return text("\(dayPart) um \(clock)")
     }
 
     private func dayText(_ day: PlanDay, fire: Date) -> String {
         let fireDay = PlanDay(date: fire, calendar: calendar)
-        if day == fireDay { return String(localized: "heute", bundle: .module) }
-        if day == fireDay.adding(days: 1, calendar: calendar) { return String(localized: "morgen", bundle: .module) }
+        if day == fireDay { return text("heute") }
+        if day == fireDay.adding(days: 1, calendar: calendar) { return text("morgen") }
         let weekday = DateText.shortWeekday(day, calendar: calendar, locale: locale)
         let date = DateText.numericDay(day, calendar: calendar, locale: locale)
-        return String(localized: "am \(weekday), \(date)", bundle: .module)
+        return text("am \(weekday), \(date)")
     }
 }
 

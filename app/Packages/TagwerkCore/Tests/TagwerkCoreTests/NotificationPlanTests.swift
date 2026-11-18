@@ -194,7 +194,7 @@ struct NotificationPlanTests {
         #expect(parts.minute == 0)
     }
 
-    @Test func timeAndDate_followTheLocale() {
+    @Test func textsAndFormats_followTheLocale() {
         var long = rules
         long.leadTimeMinutes = 48 * 60
         let item = task("Morgen", source: .local, due: DueDate(year: 2026, month: 11, day: 21, hour: 9))
@@ -203,7 +203,20 @@ struct NotificationPlanTests {
         let english = notificationPlan(tasks: [item], deadlineEvents: [], rules: long, now: now, calendar: calendar,
                                        locale: Locale(identifier: "en_US"))
         #expect(german.first?.body == "Fällig am Sa., 21.11. um 09:00 · Lokal")
-        // The words stay German until the English texts exist; the formats already follow the locale.
-        #expect(english.first?.body == "Fällig am Sat, 11/21 um 9:00\u{202F}AM · Lokal")
+        #expect(english.first?.body == "Due on Sat, 11/21 at 9:00\u{202F}AM · Lokal")
+    }
+
+    @Test func englishLocale_translatesEveryNotificationText() {
+        let english = Locale(identifier: "en_US")
+        let untitled = task(" ", source: .local, due: DueDate(year: 2026, month: 11, day: 19, hour: 12))
+        let allDay = event("A", start: instant(2026, 11, 20, 0, 0, in: calendar), allDay: true)
+        let timed = event("B", start: instant(2026, 11, 19, 12, 0, in: calendar))
+        let result = notificationPlan(tasks: [untitled], deadlineEvents: [allDay, timed], rules: rules, now: now, calendar: calendar,
+                                      locale: english)
+        let byID = Dictionary(uniqueKeysWithValues: result.map { ($0.id, $0) })
+        #expect(byID[PlannedNotification.identifier(for: untitled.id)]?.title == "Untitled")
+        #expect(byID[PlannedNotification.identifier(for: untitled.id)]?.body.hasPrefix("Due today at ") == true)
+        #expect(byID[PlannedNotification.identifier(forEvent: "A")]?.body == "Deadline tomorrow, all day")
+        #expect(byID[PlannedNotification.identifier(forEvent: "B")]?.body.hasPrefix("Deadline today at ") == true)
     }
 }

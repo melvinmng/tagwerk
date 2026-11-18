@@ -24,13 +24,17 @@ struct NotificationSchedulerTests {
 
     private func due(_ day: Int, _ hour: Int? = nil) -> DueDate { DueDate(year: 2026, month: 11, day: day, hour: hour) }
 
-    private func makeScheduler(_ list: TaskListModel) -> NotificationScheduler {
+    private func makeScheduler(_ list: TaskListModel, locale: @escaping () -> Locale = { Locale(identifier: "de_DE") })
+        -> NotificationScheduler {
         let events = self.events
         let access = calendarAccess
         return NotificationScheduler(center: center, taskList: list,
                                      deadlineEvents: { _, ids in access ? events.filter { ids.contains($0.calendarID) } : nil },
-                                     settings: settings, now: { testNow() }, calendar: calendar)
+                                     settings: settings, now: { testNow() }, calendar: calendar, locale: locale)
     }
+
+    /// The text of the last request added for `id`.
+    private func lastAdded(_ id: String) -> PlannedNotification? { center.added.last { $0.id == id } }
 
     private func loadedList(_ providers: [FakeTaskProvider]? = nil) async -> TaskListModel {
         let list = TaskListModel(providers: providers ?? [github, local, reminders])
@@ -184,6 +188,8 @@ struct NotificationSchedulerTests {
         await list.unregister(.github)
         await scheduler.removeNotifications(of: .github)
         #expect(center.pendingIDs == ["tagwerk.task.local:Lokal"])
+        #expect(settings.notificationLanguages["github"] == nil)
+        #expect(settings.notificationLanguages["local"] == .german)
     }
 
     @Test func foreignPendingRequests_untouched() async {
@@ -257,5 +263,76 @@ struct NotificationSchedulerTests {
         await scheduler.reschedule()
         await first.value
         #expect(center.pending.isEmpty)
+    }
+
+    // MARK: Language
+
+    final class LocaleBox { var locale = Locale(identifier: "de_DE") }
+
+    @Test func languageSwitch_replansLoadedSources_andKeepsUnloadedOnes() async {
+        center.seed("tagwerk.task.github:Issue", fireDate: testNow().addingTimeInterval(86_400))
+        local.tasks = [makeTask("Lokal", source: .local, due: due(20))]
+        let box = LocaleBox()
+        let scheduler = makeScheduler(await loadedList([local, reminders]), locale: { box.locale })
+
+        await scheduler.reschedule()
+        #expect(lastAdded("tagwerk.task.local:Lokal")?.body.hasPrefix("Fällig ") == true)
+        #expect(settings.notificationLanguages == ["local": .german, "reminders": .german, "events": .german])
+
+        box.locale = Locale(identifier: "en_US")
+        center.clearAdded()
+        await scheduler.reschedule()
+        // The loaded sources are replaced in English; the unloaded GitHub request stays untouched and unrecorded.
+        #expect(lastAdded("tagwerk.task.local:Lokal")?.body.hasPrefix("Due ") == true)
+        #expect(settings.notificationLanguages["local"] == .english)
+        #expect(settings.notificationLanguages["reminders"] == .english)
+        #expect(settings.notificationLanguages["github"] == nil)
+        #expect(center.pendingIDs == ["tagwerk.task.github:Issue", "tagwerk.task.local:Lokal"])
+        #expect(!center.added.contains { $0.id.hasPrefix("tagwerk.task.github:") })
+    }
+
+    @Test func languageSwitch_replansASourceOnceItLoads() async {
+        center.seed("tagwerk.task.github:Issue", fireDate: testNow().addingTimeInterval(86_400))
+        github.tasks = [makeTask("Issue", source: .github, due: due(20))]
+        local.tasks = [makeTask("Lokal", source: .local, due: due(20))]
+        let box = LocaleBox()
+        box.locale = Locale(identifier: "en_US")
+        let list = await loadedList([local])
+        let scheduler = makeScheduler(list, locale: { box.locale })
+        await scheduler.reschedule()
+        #expect(settings.notificationLanguages["github"] == nil)
+
+        // GitHub registers and loads later: its old request is replaced by one in the new language.
+        let loaded = await loadedList([github, local])
+        let later = makeScheduler(loaded, locale: { box.locale })
+        await later.reschedule()
+        #expect(lastAdded("tagwerk.task.github:Issue")?.body.hasPrefix("Due ") == true)
+        #expect(settings.notificationLanguages["github"] == .english)
+    }
+
+    @Test mutating func languageSwitch_replansDeadlineEventsOnlyWithCalendarAccess() async {
+        events = [event("Abgabe", day: 20, hour: 14)]
+        let box = LocaleBox()
+        let withAccess = makeScheduler(await loadedList([local]), locale: { box.locale })
+        await withAccess.reschedule()
+        #expect(settings.notificationLanguages["events"] == .german)
+
+        calendarAccess = false
+        box.locale = Locale(identifier: "en_US")
+        center.clearAdded()
+        let withoutAccess = makeScheduler(await loadedList([local]), locale: { box.locale })
+        await withoutAccess.reschedule()
+        #expect(center.pendingIDs.contains("tagwerk.event.Abgabe"))
+        #expect(center.added.isEmpty)
+        #expect(settings.notificationLanguages["events"] == .german)
+    }
+
+    @Test func sourceSwitchedOff_isNotRecorded() async {
+        local.tasks = [makeTask("Lokal", source: .local, due: due(20))]
+        settings.githubTaskNotifications = false
+        let scheduler = makeScheduler(await loadedList())
+        await scheduler.reschedule()
+        #expect(settings.notificationLanguages["github"] == nil)
+        #expect(settings.notificationLanguages["local"] == .german)
     }
 }

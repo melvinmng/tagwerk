@@ -39,5 +39,7 @@ final class FakeNotificationCenter: NotificationCenterClient {
         pending[id] = PendingNotification(id: id, fireDate: fireDate)
     }
 
+    func clearAdded() { added = [] }
+
     var pendingIDs: Set<String> { Set(pending.keys) }
 }

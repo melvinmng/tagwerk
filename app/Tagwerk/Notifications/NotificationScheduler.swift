@@ -22,6 +22,8 @@ final class NotificationScheduler {
     @ObservationIgnored private let settings: AppSettings
     @ObservationIgnored private let now: () -> Date
     @ObservationIgnored private let calendar: Calendar
+    /// The locale of the texts and formats; its language is what `AppSettings.notificationLanguages` records.
+    @ObservationIgnored private let locale: () -> Locale
     @ObservationIgnored private var pendingRun: Task<Void, Never>?
     /// The last queued change; runs wait for it, so an older run never re-adds what a newer one removed.
     @ObservationIgnored private var queue: Task<Void, Never>?
@@ -29,13 +31,15 @@ final class NotificationScheduler {
 
     init(center: any NotificationCenterClient, taskList: TaskListModel,
          deadlineEvents: @escaping (DateInterval, Set<String>) -> [CalendarEvent]?,
-         settings: AppSettings, now: @escaping () -> Date = Date.init, calendar: Calendar = .tagwerk) {
+         settings: AppSettings, now: @escaping () -> Date = Date.init, calendar: Calendar = .tagwerk,
+         locale: @escaping () -> Locale = { .current }) {
         self.center = center
         self.taskList = taskList
         self.deadlineEvents = deadlineEvents
         self.settings = settings
         self.now = now
         self.calendar = calendar
+        self.locale = locale
     }
 
     /// Reads the permission again, e.g. after returning from the iOS settings.
@@ -109,7 +113,9 @@ final class NotificationScheduler {
                                       taskSources: enabled,
                                       limit: max(0, Self.limit - kept.count), minimumDelay: 0)
         let tasks = taskList.items.filter { replaceable.contains($0.id.source) }
-        let wanted = notificationPlan(tasks: tasks, deadlineEvents: events ?? [], rules: rules, now: current, calendar: calendar)
+        let locale = locale()
+        let wanted = notificationPlan(tasks: tasks, deadlineEvents: events ?? [], rules: rules, now: current, calendar: calendar,
+                                      locale: locale)
         let earliestNew = current.addingTimeInterval(NotificationRules.defaultMinimumDelay)
         let pendingDates = Dictionary(ours.map { ($0.id, $0.fireDate) }, uniquingKeysWith: { first, _ in first })
         var plan: [PlannedNotification] = []
@@ -133,6 +139,17 @@ final class NotificationScheduler {
                 log.error("Adding a notification failed: \(error.localizedDescription, privacy: .public)")
             }
         }
+        recordLanguage(VoiceLanguage.from(locale: locale), replaceable: replaceable.intersection(enabled), eventsPlanned: events != nil)
+    }
+
+    /// Remembers the language the replaced sources were planned in (plan english-app, decision 8). Every loaded source
+    /// is replaced in full on each run, in the language of that run; a source that is not loaded keeps its old requests
+    /// and its old record until it loads, so a language change never deletes anything without a replacement.
+    private func recordLanguage(_ language: VoiceLanguage, replaceable: Set<TaskSource>, eventsPlanned: Bool) {
+        var languages = settings.notificationLanguages
+        for source in replaceable { languages[source.rawValue] = language }
+        if eventsPlanned { languages[AppSettings.eventsNotificationKey] = language }
+        settings.notificationLanguages = languages
     }
 
     /// Removes the notifications of a source after a voluntary sign-out (its state is gone, not `.signedOut`).
@@ -144,6 +161,7 @@ final class NotificationScheduler {
         let prefix = PlannedNotification.identifierPrefix(for: source)
         let ids = await center.pendingRequests().map(\.id).filter { $0.hasPrefix(prefix) }
         if !ids.isEmpty { await center.removePending(ids) }
+        settings.notificationLanguages[source.rawValue] = nil
     }
 
     /// Deadline events of the next days; `[]` when switched off or none selected, `nil` without calendar access.

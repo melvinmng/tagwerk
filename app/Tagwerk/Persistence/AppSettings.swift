@@ -52,6 +52,8 @@ final class AppSettings {
     var aiLongerDays: String = "forDeadlines"
     /// "Planungsvorgaben" (mockup VR1) as JSON: at most five short sentences.
     var aiPlanningRulesData: Data?
+    /// The language each notification source was last planned in (`TaskSource` raw values and "events"), as JSON.
+    var notificationLanguagesData: Data?
     /// Daily and weekly goals of the "Erfassen" tab (phase 3 design §8.5: placeholders, not a recommendation).
     var goalKilocalories: Int = 2300
     var goalWaterMilliliters: Int = 2000
@@ -94,6 +96,22 @@ final class AppSettings {
     var aiPlanningRules: [String] {
         get { aiPlanningRulesData.flatMap { try? JSONDecoder().decode([String].self, from: $0) } ?? [] }
         set { aiPlanningRulesData = try? JSONEncoder().encode(Array(newValue.prefix(Self.maximumPlanningRules))) }
+    }
+
+    /// Key of the deadline calendar events in `notificationLanguages`.
+    static let eventsNotificationKey = "events"
+
+    /// The language the notifications of each source ("github", "reminders", "local", "events") were last planned
+    /// in. A source without an entry has not been planned yet, or its requests are older than this record.
+    var notificationLanguages: [String: VoiceLanguage] {
+        get {
+            let raw = notificationLanguagesData.flatMap { try? JSONDecoder().decode([String: String].self, from: $0) } ?? [:]
+            return raw.compactMapValues(VoiceLanguage.init(rawValue:))
+        }
+        set {
+            guard newValue != notificationLanguages else { return }
+            notificationLanguagesData = try? JSONEncoder().encode(newValue.mapValues(\.rawValue))
+        }
     }
 
     var weekSchedule: WeekSchedule {
