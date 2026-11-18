@@ -61,9 +61,9 @@ struct CaptureSettingsView: View {
         .navigationBarTitleDisplayMode(.inline)
     }
 
-    private func phrase(_ text: String, _ detail: String) -> some View {
+    private func phrase(_ text: LocalizedStringResource, _ detail: LocalizedStringResource) -> some View {
         VStack(alignment: .leading, spacing: 2) {
-            Text("„\(text)“")
+            Text("„\(String(localized: text))“")
             Text(detail).font(.caption).foregroundStyle(.secondary)
         }
     }

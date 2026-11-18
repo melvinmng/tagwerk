@@ -36,7 +36,23 @@
     "Die nächsten Einträge des Tages, auf Wunsch mit Kalorien und Wasser." : {
 
     },
+    "HEUTE · %@ %lld. %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "HEUTE · %1$@ %2$lld. %3$@"
+          }
+        }
+      }
+    },
     "Heute" : {
+
+    },
+    "Heute nichts mehr geplant" : {
+
+    },
+    "Lernzettel" : {
 
     },
     "MORGEN" : {
@@ -61,6 +77,12 @@
     "Tagwerk öffnen" : {
 
     },
+    "Tagwerk öffnen, um den Plan zu laden" : {
+
+    },
+    "Vorlesung" : {
+
+    },
     "danach %@" : {
 
     },
@@ -70,6 +92,28 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "danach %1$@ %2$@"
+          }
+        }
+      }
+    },
+    "⚠︎ %lld Deadlines heute" : {
+      "localizations" : {
+        "de" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "⚠︎ %lld Deadline heute"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "⚠︎ %lld Deadlines heute"
+                }
+              }
+            }
           }
         }
       }

@@ -151,8 +151,8 @@ struct AISettingsView: View {
     /// "Denkaufwand": only the levels the chosen model offers; "Automatisch" leaves the model's default.
     private func reasoningSection(_ model: AIModel) -> some View {
         @Bindable var ai = ai
-        let automatic = model.defaultReasoning.map { "Standard: \(AIEnvironment.reasoningName($0).lowercased())" }
-            ?? "Standard des Modells"
+        let automatic = model.defaultReasoning.map { String(localized: "Standard: \(AIEnvironment.reasoningName($0).lowercased())") }
+            ?? String(localized: "Standard des Modells")
         return Section {
             Picker("Denkaufwand", selection: $ai.selectedReasoning) {
                 VStack(alignment: .leading, spacing: 2) {
@@ -174,9 +174,9 @@ struct AISettingsView: View {
     }
 
     private var listNote: String? {
-        if isLoadingModels { return ai.models.isEmpty ? "Liste wird geladen …" : "wird aktualisiert …" }
+        if isLoadingModels { return ai.models.isEmpty ? String(localized: "Liste wird geladen …") : String(localized: "wird aktualisiert …") }
         guard let fetchedAt = ai.modelsFetchedAt, !ai.models.isEmpty else { return nil }
-        return "Liste von ChatGPT · \(Self.relative(fetchedAt))"
+        return String(localized: "Liste von ChatGPT · \(Self.relative(fetchedAt))")
     }
 
     private func loadModels(force: Bool) async {
@@ -192,21 +192,22 @@ struct AISettingsView: View {
                 return
             }
             modelError = ai.models.isEmpty
-                ? "Die Modellliste konnte nicht geladen werden. \(error.userMessage)"
-                : "Die Liste konnte nicht aktualisiert werden. \(error.userMessage)"
+                ? String(localized: "Die Modellliste konnte nicht geladen werden. \(error.userMessage)")
+                : String(localized: "Die Liste konnte nicht aktualisiert werden. \(error.userMessage)")
         } catch {
-            modelError = "Die Modellliste konnte nicht geladen werden."
+            modelError = String(localized: "Die Modellliste konnte nicht geladen werden.")
         }
     }
 
     /// "heute 09:12", "gestern 09:12" or "16.11. 09:12".
     static func relative(_ date: Date, now: Date = .now, calendar: Calendar = .current) -> String {
         let time = date.formatted(date: .omitted, time: .shortened)
-        if calendar.isDate(date, inSameDayAs: now) { return "heute \(time)" }
+        if calendar.isDate(date, inSameDayAs: now) { return String(localized: "heute \(time)") }
         if let yesterday = calendar.date(byAdding: .day, value: -1, to: now), calendar.isDate(date, inSameDayAs: yesterday) {
-            return "gestern \(time)"
+            return String(localized: "gestern \(time)")
         }
-        return date.formatted(.dateTime.day().month(.twoDigits)) + " \(time)"
+        let day = date.formatted(.dateTime.day().month(.twoDigits))
+        return "\(day) \(time)"
     }
 }
 

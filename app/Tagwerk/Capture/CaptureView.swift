@@ -138,7 +138,7 @@ struct CaptureView: View {
         .padding(.vertical, 4)
     }
 
-    private func quickButton(_ title: String, symbol: String, action: @escaping () -> Void) -> some View {
+    private func quickButton(_ title: LocalizedStringKey, symbol: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             VStack(spacing: 4) {
                 Image(systemName: symbol).font(.title3)
@@ -192,8 +192,9 @@ struct CaptureView: View {
 
     private var drinkCaption: String {
         let count = model.drinks.count
-        let last = model.drinks.last.map { " · zuletzt \(CaptureText.time($0.date, calendar: model.calendar))" } ?? ""
-        return "\(count) \(count == 1 ? "Eintrag" : "Einträge")\(last)"
+        let entries = String(localized: "\(count) Einträge")
+        guard let last = model.drinks.last else { return entries }
+        return entries + " · " + String(localized: "zuletzt \(CaptureText.time(last.date, calendar: model.calendar))")
     }
 
     @ViewBuilder
@@ -303,7 +304,7 @@ private struct DaySummary: View {
         .accessibilityElement(children: .combine)
     }
 
-    private func metric(_ title: String, _ value: String, progress: Double, tint: Color) -> some View {
+    private func metric(_ title: LocalizedStringResource, _ value: String, progress: Double, tint: Color) -> some View {
         VStack(alignment: .leading, spacing: 3) {
             Text(title).font(.caption).foregroundStyle(.secondary)
             Text(value).font(.subheadline.weight(.medium)).monospacedDigit()
@@ -329,7 +330,7 @@ struct MealRow: View {
             Spacer()
             VStack(alignment: .trailing, spacing: 2) {
                 Text(IntakeFormat.kcal(meal.kcal, estimated: meal.hasEstimate)).monospacedDigit()
-                Text(meal.hasEstimate ? IntakeFormat.shortRange(min: meal.kcalMin, max: meal.kcalMax) : "eingetragen")
+                Text(meal.hasEstimate ? IntakeFormat.shortRange(min: meal.kcalMin, max: meal.kcalMax) : String(localized: "eingetragen"))
                     .font(.caption).foregroundStyle(.secondary)
             }
         }
@@ -355,7 +356,7 @@ struct WorkoutRow: View {
     }
 
     private var caption: String {
-        var parts = [CaptureText.time(workout.start, calendar: calendar), "\(workout.minutes) min"]
+        var parts = [CaptureText.time(workout.start, calendar: calendar), String(localized: "\(workout.minutes) min")]
         if let source = workout.sourceName { parts.append(source) }
         return parts.joined(separator: " · ")
     }
@@ -388,23 +389,27 @@ private struct HealthCard: View {
 // MARK: - Texts
 
 enum CaptureText {
-    private static let locale = Locale(identifier: "de_DE")
-
-    static func time(_ date: Date, calendar: Calendar) -> String {
-        let parts = calendar.dateComponents([.hour, .minute], from: date)
-        return String(format: "%02d:%02d", parts.hour ?? 0, parts.minute ?? 0)
+    static func time(_ date: Date, calendar: Calendar, locale: Locale = .current) -> String {
+        DateText.time(date, calendar: calendar, locale: locale)
     }
 
-    static func relativeDay(_ day: PlanDay, today: PlanDay, calendar: Calendar) -> String {
-        if day == today { return "Heute" }
-        if day == today.adding(days: -1, calendar: calendar) { return "Gestern" }
+    static func relativeDay(_ day: PlanDay, today: PlanDay, calendar: Calendar, locale: Locale = .current) -> String {
+        if day == today { return String(localized: "Heute") }
+        if day == today.adding(days: -1, calendar: calendar) { return String(localized: "Gestern") }
         var style = Date.FormatStyle.dateTime.weekday(.wide).locale(locale)
         style.timeZone = calendar.timeZone
         return day.startDate(in: calendar).formatted(style)
     }
 
+    /// The day inside a sentence ("zuletzt heute"): relative words in lower case, weekday names as the language writes them.
+    static func lastUsedDay(_ day: PlanDay, today: PlanDay, calendar: Calendar, locale: Locale = .current) -> String {
+        if day == today { return String(localized: "heute") }
+        if day == today.adding(days: -1, calendar: calendar) { return String(localized: "gestern") }
+        return relativeDay(day, today: today, calendar: calendar, locale: locale)
+    }
+
     /// "Mi., 18. Nov."
-    static func date(_ day: PlanDay, calendar: Calendar) -> String {
+    static func date(_ day: PlanDay, calendar: Calendar, locale: Locale = .current) -> String {
         var style = Date.FormatStyle.dateTime.weekday(.abbreviated).day().month(.abbreviated).locale(locale)
         style.timeZone = calendar.timeZone
         return day.startDate(in: calendar).formatted(style)

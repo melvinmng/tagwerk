@@ -170,7 +170,7 @@ final class CaptureModel {
     func addWater(_ milliliters: Int, at date: Date? = nil, offersUndo: Bool = true) async {
         let drink = DrinkValue(id: UUID(), date: date ?? entryDate, milliliters: milliliters)
         store.addDrink(drink)
-        if offersUndo { undo = UndoNotice(text: "\(milliliters) ml Wasser erfasst", action: .remove(drink.id)) }
+        if offersUndo { undo = UndoNotice(text: String(localized: "\(String(milliliters)) ml Wasser erfasst"), action: .remove(drink.id)) }
         await changed()
     }
 
@@ -182,7 +182,7 @@ final class CaptureModel {
     func saveMeal(_ meal: MealValue, estimatedAt: Date?, isNew: Bool) async {
         if isNew {
             store.addMeal(meal, estimatedAt: estimatedAt)
-            undo = UndoNotice(text: "\(meal.title) erfasst", action: .remove(meal.id))
+            undo = UndoNotice(text: String(localized: "\(meal.title) erfasst"), action: .remove(meal.id))
         } else {
             store.updateMeal(meal, estimatedAt: estimatedAt)
         }
@@ -200,7 +200,7 @@ final class CaptureModel {
     func saveWorkout(_ workout: WorkoutValue, isNew: Bool) async {
         if isNew {
             store.addWorkout(workout)
-            undo = UndoNotice(text: "\(workout.displayName) erfasst", action: .remove(UUID(uuidString: workout.id) ?? UUID()))
+            undo = UndoNotice(text: String(localized: "\(workout.displayName) erfasst"), action: .remove(UUID(uuidString: workout.id) ?? UUID()))
         } else {
             store.updateWorkout(workout)
         }
@@ -210,7 +210,7 @@ final class CaptureModel {
     func delete(_ id: UUID) async {
         guard let deleted = store.delete(id, healthNotBefore: now().addingTimeInterval(HealthMirror.undoWindow)) else { return }
         deletedEntries[id] = deleted
-        undo = UndoNotice(text: "Eintrag gelöscht", action: .restore(id))
+        undo = UndoNotice(text: String(localized: "Eintrag gelöscht"), action: .restore(id))
         refreshLocal()
         mirror.syncAfterUndoWindow()
     }
@@ -286,8 +286,8 @@ final class CaptureModel {
     func overlapWarning(start: Date, minutes: Int) -> String? {
         let interval = DateInterval(start: start, duration: TimeInterval(max(1, minutes) * 60))
         guard let other = IntakeRules.overlappingWorkout(interval, in: weekForeign) else { return nil }
-        let parts = calendar.dateComponents([.hour, .minute], from: other.start)
-        let time = String(format: "%02d:%02d", parts.hour ?? 0, parts.minute ?? 0)
-        return "Überschneidet sich mit „\(other.displayName)“ (\(time), \(other.sourceName ?? "Health")). Das Training würde doppelt gezählt."
+        let time = DateText.time(other.start, calendar: calendar)
+        let source = other.sourceName ?? "Health"
+        return String(localized: "Überschneidet sich mit „\(other.displayName)“ (\(time), \(source)). Das Training würde doppelt gezählt.")
     }
 }

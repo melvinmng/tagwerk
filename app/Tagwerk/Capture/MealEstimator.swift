@@ -13,12 +13,12 @@ final class MealEstimator {
 
         var message: String {
             switch self {
-            case .consentMissing: "Für Schätzungen ist deine Einwilligung nötig."
-            case .network: "Keine Verbindung. Die Schätzung braucht Internet."
-            case .signedOut: "Die Anmeldung bei ChatGPT ist abgelaufen. Melde dich unter Einstellungen › KI neu an."
-            case .usageLimit: "ChatGPT nimmt gerade keine Anfragen an. Versuch es später noch einmal oder trag die Werte selbst ein."
-            case .nothingRecognized: "Darin war kein Essen zu erkennen. Beschreib die Mahlzeit genauer oder trag die Werte selbst ein."
-            case .failed: "Die Schätzung ist fehlgeschlagen. Versuch es noch einmal oder trag die Werte selbst ein."
+            case .consentMissing: String(localized: "Für Schätzungen ist deine Einwilligung nötig.")
+            case .network: String(localized: "Keine Verbindung. Die Schätzung braucht Internet.")
+            case .signedOut: String(localized: "Die Anmeldung bei ChatGPT ist abgelaufen. Melde dich unter Einstellungen › KI neu an.")
+            case .usageLimit: String(localized: "ChatGPT nimmt gerade keine Anfragen an. Versuch es später noch einmal oder trag die Werte selbst ein.")
+            case .nothingRecognized: String(localized: "Darin war kein Essen zu erkennen. Beschreib die Mahlzeit genauer oder trag die Werte selbst ein.")
+            case .failed: String(localized: "Die Schätzung ist fehlgeschlagen. Versuch es noch einmal oder trag die Werte selbst ein.")
             }
         }
     }

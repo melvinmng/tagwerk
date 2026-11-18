@@ -137,11 +137,11 @@ struct SettingsView: View {
     private var notificationFooter: String {
         switch environment.notifications.authorization {
         case .authorized:
-            "So lange vor der Fälligkeit erinnert Tagwerk an Aufgaben und Deadline-Termine der eingeschalteten Quellen. An Aufgaben ohne Uhrzeit erinnert Tagwerk am Fälligkeitstag um 9:00. An ganztägige Deadline-Termine erinnert Tagwerk am Vortag um 18:00."
+            String(localized: "So lange vor der Fälligkeit erinnert Tagwerk an Aufgaben und Deadline-Termine der eingeschalteten Quellen. An Aufgaben ohne Uhrzeit erinnert Tagwerk am Fälligkeitstag um 9:00. An ganztägige Deadline-Termine erinnert Tagwerk am Vortag um 18:00.")
         case .notDetermined:
-            "Benachrichtigungen sind noch nicht erlaubt. Erlaube sie unten unter „Zugriff“."
+            String(localized: "Benachrichtigungen sind noch nicht erlaubt. Erlaube sie unten unter „Zugriff“.")
         case .denied:
-            "Benachrichtigungen sind in iOS ausgeschaltet. Schalte sie unten unter „Zugriff“ wieder ein."
+            String(localized: "Benachrichtigungen sind in iOS ausgeschaltet. Schalte sie unten unter „Zugriff“ wieder ein.")
         }
     }
 
@@ -174,11 +174,11 @@ struct SettingsView: View {
     private var healthFooter: String {
         switch healthAccess {
         case .partial(let kinds):
-            "Nicht nach Health geschrieben werden: \(kinds.map(\.displayName).joined(separator: ", ")). Deine Einträge bleiben in Tagwerk."
+            String(localized: "Nicht nach Health geschrieben werden: \(kinds.map(\.displayName).joined(separator: ", ")). Deine Einträge bleiben in Tagwerk.")
         case .denied:
-            "Tagwerk darf nicht nach Health schreiben. Deine Einträge bleiben in Tagwerk. Ändern kannst du das in der App „Health“ unter Profil › Apps › Tagwerk."
+            String(localized: "Tagwerk darf nicht nach Health schreiben. Deine Einträge bleiben in Tagwerk. Ändern kannst du das in der App „Health“ unter Profil › Apps › Tagwerk.")
         default:
-            "Tagwerk schreibt Mahlzeiten, Wasser und Trainings nach Health und liest Trainings. Ob das Lesen erlaubt ist, zeigt iOS nicht an: Fehlen Trainings der Apple Watch, prüfe den Zugriff in der App „Health“ unter Profil › Apps › Tagwerk."
+            String(localized: "Tagwerk schreibt Mahlzeiten, Wasser und Trainings nach Health und liest Trainings. Ob das Lesen erlaubt ist, zeigt iOS nicht an: Fehlen Trainings der Apple Watch, prüfe den Zugriff in der App „Health“ unter Profil › Apps › Tagwerk.")
         }
     }
 
@@ -192,7 +192,7 @@ struct SettingsView: View {
     }
 
     @ViewBuilder
-    private func accessRow(_ title: String, state: AccessState, settingsURL: String = UIApplication.openSettingsURLString,
+    private func accessRow(_ title: LocalizedStringKey, state: AccessState, settingsURL: String = UIApplication.openSettingsURLString,
                            request: @escaping () async -> Void) -> some View {
         HStack {
             Text(title)
@@ -220,11 +220,12 @@ struct SettingsView: View {
     private func summary(_ selection: [String]?, all: [ListInfo], fallback: Set<String>) -> String {
         guard !all.isEmpty else { return "–" }
         let count = selection.map { Set($0).intersection(all.map(\.id)).count } ?? fallback.count
-        return count == all.count ? "Alle" : "\(count) von \(all.count)"
+        return count == all.count ? String(localized: "Alle") : String(localized: "\(count) von \(all.count)")
     }
 
     private func leadTimeText(_ minutes: Int) -> String {
-        minutes % 60 == 0 ? "\(minutes / 60) h" : String(format: "%d:%02d h", minutes / 60, minutes % 60)
+        minutes % 60 == 0 ? String(localized: "\(minutes / 60) h")
+            : String(localized: "\(minutes / 60):\(String(format: "%02d", minutes % 60)) h")
     }
 
     /// Bridges "minutes since midnight" to a `Date` for time pickers.

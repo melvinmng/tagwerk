@@ -8,8 +8,12 @@ struct PlanningSettingsSection: View {
     @State private var calendars: [ListInfo] = []
     @State private var calendarError: String?
 
-    private static let weekdays: [(Int, String)] = [(2, "Montag"), (3, "Dienstag"), (4, "Mittwoch"), (5, "Donnerstag"),
-                                                    (6, "Freitag"), (7, "Samstag"), (1, "Sonntag")]
+    /// Calendar weekday numbers (1 = Sunday) with their names, in the order of the app calendar (Monday first).
+    private static var weekdays: [(Int, String)] {
+        let calendar = Calendar.tagwerk
+        let names = DateText.fullWeekdaySymbols(calendar: calendar)
+        return names.enumerated().map { index, name in ((calendar.firstWeekday - 1 + index) % 7 + 1, name) }
+    }
 
     var body: some View {
         @Bindable var settings = environment.settings

@@ -222,7 +222,7 @@ struct MealSheet: View {
                     Button { startEditing(copyOf: meal) } label: {
                         VStack(alignment: .leading, spacing: 2) {
                             Text(meal.title).lineLimit(1)
-                            Text("zuletzt \(CaptureText.relativeDay(PlanDay(date: meal.date, calendar: model.calendar), today: model.today, calendar: model.calendar).lowercasedFirst)")
+                            Text(String(localized: "zuletzt \(CaptureText.lastUsedDay(PlanDay(date: meal.date, calendar: model.calendar), today: model.today, calendar: model.calendar))"))
                                 .font(.caption).foregroundStyle(.secondary)
                         }
                     }
@@ -294,12 +294,14 @@ struct MealSheet: View {
         var lines: [String] = []
         if let estimatedAt = existing.flatMap({ model.estimatedAt(meal: $0.id) }) {
             let date = CaptureText.date(PlanDay(date: estimatedAt, calendar: model.calendar), calendar: model.calendar)
-            lines.append("Geschätzt von ChatGPT am \(date) um \(CaptureText.time(estimatedAt, calendar: model.calendar)).")
+            let time = CaptureText.time(estimatedAt, calendar: model.calendar)
+            lines.append(String(localized: "Geschätzt von ChatGPT am \(date) um \(time)."))
         } else if existing?.origin == .manual {
-            lines.append("Von dir eingetragen.")
+            lines.append(String(localized: "Von dir eingetragen."))
         }
         if let existing, model.access?.wasAsked == true {
-            lines.append(model.isInHealth(existing.id) ? "In Health gespeichert." : "Noch nicht in Health gespeichert. Tagwerk versucht es erneut.")
+            lines.append(model.isInHealth(existing.id) ? String(localized: "In Health gespeichert.")
+                : String(localized: "Noch nicht in Health gespeichert. Tagwerk versucht es erneut."))
         }
         return lines.joined(separator: " ")
     }
@@ -317,7 +319,7 @@ struct MealSheet: View {
         }
     }
 
-    private func numberRow(_ title: String, unit: String, value: Binding<Double?>) -> some View {
+    private func numberRow(_ title: LocalizedStringResource, unit: String, value: Binding<Double?>) -> some View {
         HStack {
             Text(title)
             Spacer()
@@ -338,9 +340,11 @@ struct MealSheet: View {
             if estimated, let range = IntakeFormat.rangeIfEstimated(min: meal.kcalMin, max: meal.kcalMax) {
                 Text(range).font(.subheadline).foregroundStyle(.secondary)
             }
-            Text([IntakeFormat.grams(meal.protein, estimated: estimated) + " Eiweiß",
-                  IntakeFormat.grams(meal.carbs, estimated: estimated) + " Kohlenhydrate",
-                  IntakeFormat.grams(meal.fat, estimated: estimated) + " Fett"].joined(separator: " · "))
+            let protein = IntakeFormat.grams(meal.protein, estimated: estimated)
+            let carbs = IntakeFormat.grams(meal.carbs, estimated: estimated)
+            let fat = IntakeFormat.grams(meal.fat, estimated: estimated)
+            Text([String(localized: "\(protein) Eiweiß"), String(localized: "\(carbs) Kohlenhydrate"),
+                  String(localized: "\(fat) Fett")].joined(separator: " · "))
                 .font(.subheadline).foregroundStyle(.secondary)
         } header: {
             Text(draft.origin == .estimated ? "Schätzung von ChatGPT" : "Werte")
@@ -610,7 +614,7 @@ private struct MealItemEditor: View {
         .presentationDetents([.medium, .large])
     }
 
-    private func row(_ title: String, _ unit: String, _ value: Binding<Double?>) -> some View {
+    private func row(_ title: LocalizedStringResource, _ unit: String, _ value: Binding<Double?>) -> some View {
         HStack {
             Text(title)
             Spacer()
@@ -635,18 +639,16 @@ struct DecimalField: View {
             .onAppear {
                 guard !loaded else { return }
                 loaded = true
-                text = value.map(Self.format) ?? ""
+                text = value.map { Self.format($0) } ?? ""
             }
             .onChange(of: text) { _, newText in
                 value = Double(newText.replacingOccurrences(of: ",", with: ".").trimmingCharacters(in: .whitespaces))
             }
     }
 
-    static func format(_ value: Double) -> String {
-        value.rounded() == value ? String(Int(value)) : String(format: "%.1f", value).replacingOccurrences(of: ".", with: ",")
+    /// "5" or "1,5" in German, "1.5" in English: the decimal separator follows the locale; typing accepts both.
+    static func format(_ value: Double, locale: Locale = .current) -> String {
+        value.rounded() == value ? String(Int(value))
+            : value.formatted(.number.precision(.fractionLength(1)).grouping(.never).locale(locale))
     }
-}
-
-private extension String {
-    var lowercasedFirst: String { prefix(1).lowercased() + dropFirst() }
 }

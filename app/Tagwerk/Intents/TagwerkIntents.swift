@@ -99,7 +99,7 @@ struct TodayOverviewSnippet: View {
         VStack(alignment: .leading, spacing: 6) {
             ForEach(entries) { entry in
                 HStack(spacing: 8) {
-                    Text(WidgetSnapshot.time(entry.start, calendar: .tagwerk))
+                    Text(DateText.time(entry.start, calendar: .tagwerk))
                         .font(.subheadline.monospacedDigit()).foregroundStyle(.secondary)
                     Text(entry.title).font(.subheadline).lineLimit(1)
                 }

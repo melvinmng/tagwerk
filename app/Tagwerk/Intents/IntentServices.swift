@@ -23,7 +23,9 @@ final class IntentServices {
         await capture.addWater(amount, at: .now, offersUndo: false)
         await capture.waitForHealth()
         environment.writeSnapshot()
-        return "\(amount) ml Wasser erfasst."
+        // Plain digits (no grouping), as before: "2000 ml".
+        let amountText = String(amount)
+        return String(localized: "\(amountText) ml Wasser erfasst.")
     }
 
     struct Overview {
@@ -38,7 +40,7 @@ final class IntentServices {
         }
         let calendar = environment.planning.calendar
         guard let snapshot = environment.snapshotWriter.current(), !snapshot.isStale(at: now, calendar: calendar) else {
-            return Overview(text: "Öffne Tagwerk, um den Plan zu laden.", entries: [])
+            return Overview(text: String(localized: "Öffne Tagwerk, um den Plan zu laden."), entries: [])
         }
         let upcoming = snapshot.upcoming(at: now, calendar: calendar, limit: 3)
         return Overview(text: snapshot.overviewText(at: now, calendar: calendar), entries: upcoming.isTomorrow ? [] : upcoming.entries)
