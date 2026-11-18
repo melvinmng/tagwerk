@@ -211,4 +211,44 @@ struct CaptureModelTests {
         #expect(model.repeatSuggestions(filter: "").map(\.title) == ["Müsli", "Pizza"])
         #expect(model.repeatSuggestions(filter: "piz").map(\.title) == ["Pizza"])
     }
+
+    // MARK: Phase 4: today's intake for the plan header and the widget
+
+    @Test func todayIntake_countsTodayOnly_notDisplayedDay() async {
+        let model = make()
+        await model.reload()
+        await model.addWater(500)
+        await model.goBack()
+        await model.reload()
+        await model.addWater(250)  // back-filled on yesterday
+        #expect(model.todayIntake.waterMilliliters == 500)
+        #expect(model.todayHasEntries)
+    }
+
+    @Test func todayIntake_updatesAfterDeleteAndUndo() async {
+        let model = make()
+        await model.reload()
+        await model.addWater(330)
+        let id = model.drinks[0].id
+        await model.delete(id)
+        #expect(model.todayIntake.waterMilliliters == 0)
+        #expect(model.todayHasEntries == false)
+        await model.undoLast()
+        #expect(model.todayIntake.waterMilliliters == 330)
+    }
+
+    @Test func planHeaderLine_hiddenWhenSettingOff() async {
+        let model = make()
+        await model.reload()
+        await model.addWater(500)
+        #expect(model.planHeaderLine == "0 / 2.300 kcal · 0,5 / 2,0 l")
+        settings.showsIntakeInPlan = false
+        #expect(model.planHeaderLine == nil)
+    }
+
+    @Test func planHeaderLine_hiddenWhenNoEntriesToday() async {
+        let model = make()
+        await model.reload()
+        #expect(model.planHeaderLine == nil)
+    }
 }

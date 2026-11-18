@@ -36,6 +36,15 @@ struct CaptureSettingsView: View {
                     Text("Melde dich unter Einstellungen › KI bei ChatGPT an, um Mahlzeiten schätzen zu lassen.")
                 }
             }
+
+            Section {
+                Toggle("In Planen anzeigen", isOn: $settings.showsIntakeInPlan)
+                Toggle("Ernährung im Widget zeigen", isOn: $settings.widgetShowsNutrition)
+            } header: {
+                Text("Anzeige")
+            } footer: {
+                Text("„In Planen anzeigen“ zeigt Kalorien und Wasser von heute im Kopf der Tagesansicht. Ausgeschaltet stehen Kalorien und Wasser nicht im Widget, auch nicht in der Datei, die das Widget liest. Auf dem Sperrbildschirm zeigt Tagwerk nie Ernährungswerte.")
+            }
         }
         .navigationTitle("Erfassen")
         .navigationBarTitleDisplayMode(.inline)

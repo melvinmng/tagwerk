@@ -37,6 +37,9 @@ final class CaptureModel {
     /// Own and Health workouts of the day, by start.
     private(set) var workouts: [WorkoutValue] = []
     private(set) var intake: DayIntake = .empty
+    /// Today's sums regardless of the displayed day: plan header, widget and Siri (phase 4).
+    private(set) var todayIntake: DayIntake = .empty
+    private(set) var todayHasEntries = false
     /// Workouts of the Monday-to-Sunday week of `day`.
     private(set) var weekCount = 0
     /// `nil` until the first query, so the Health card does not flash when Health is connected.
@@ -114,6 +117,27 @@ final class CaptureModel {
         workouts = weekWorkouts.filter { $0.start >= dayStart && $0.start < dayEnd }.sorted { $0.start < $1.start }
         weekCount = IntakeRules.workoutsThisWeek(weekWorkouts, now: dayStart, calendar: calendar)
         intake = IntakeRules.dayIntake(meals: meals, drinks: drinks)
+        refreshToday()
+    }
+
+    /// Recomputes today's sums; every local change passes here (add, edit, delete, undo).
+    private func refreshToday() {
+        let today = self.today
+        let todayMeals = day == today ? meals : store.meals(on: today, calendar: calendar)
+        let todayDrinks = day == today ? drinks : store.drinks(on: today, calendar: calendar)
+        todayIntake = IntakeRules.dayIntake(meals: todayMeals, drinks: todayDrinks)
+        todayHasEntries = !todayMeals.isEmpty || !todayDrinks.isEmpty
+        onTodayChanged?()
+    }
+
+    /// Called after today's sums changed; the environment rewrites the widget snapshot.
+    @ObservationIgnored var onTodayChanged: (() -> Void)?
+
+    /// "~1.240 / 2.300 kcal · 1,2 / 2,0 l" for the head of "Planen"; `nil` when switched off or nothing recorded today.
+    var planHeaderLine: String? {
+        guard settings.showsIntakeInPlan else { return nil }
+        return IntakeFormat.planHeaderLine(intake: todayIntake, goalKcal: settings.goalKilocalories,
+                                           goalWaterMilliliters: settings.goalWaterMilliliters, hasEntries: todayHasEntries)
     }
 
     func goBack(days: Int = 1) async {
