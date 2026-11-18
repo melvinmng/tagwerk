@@ -101,12 +101,10 @@ struct TaskListView: View {
                         Button(selection == all ? "Keine" : "Alle") { selection = selection == all ? [] : all }
                     }
                 }
-                ToolbarItem(placement: .primaryAction) {
-                    AssistantButton { .tasks }
-                }
-                ToolbarItem(placement: .primaryAction) {
+                ToolbarItem(placement: .topBarTrailing) {
                     Button { isCreating = true } label: { Label("Neue Aufgabe", systemImage: "plus") }
                 }
+                AssistantToolbarItems { .tasks }
             }
             .refreshable { await model.reload() }
             .task { await model.reload() }

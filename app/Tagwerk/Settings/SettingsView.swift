@@ -79,7 +79,7 @@ struct SettingsView: View {
                 }
             }
             .navigationTitle("Einstellungen")
-            .toolbar { ToolbarItem(placement: .primaryAction) { AssistantButton { .settings } } }
+            .assistantToolbarButton { .settings }
             .task {
                 loadSources()
                 await environment.ai.refreshAccount()
