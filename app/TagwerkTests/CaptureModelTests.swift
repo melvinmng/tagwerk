@@ -144,8 +144,10 @@ struct CaptureModelTests {
         await model.addWater(250)
         model.show(PlanDay(date: now, calendar: calendar).adding(days: -1, calendar: calendar))
         #expect(model.drinks.isEmpty)
-        model.show(PlanDay(year: 2026, month: 12, day: 24))
+        #expect(model.show(PlanDay(year: 2026, month: 12, day: 24)))
         #expect(model.day == PlanDay(date: now, calendar: calendar))
+        // Already on today: nothing changes, so the view can signal the limit.
+        #expect(!model.show(PlanDay(year: 2026, month: 12, day: 24)))
         #expect(model.drinks.count == 1)
     }
 

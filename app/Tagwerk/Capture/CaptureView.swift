@@ -8,6 +8,7 @@ struct CaptureView: View {
     @Environment(AppEnvironment.self) private var environment
     @State private var sheet: CaptureSheet?
     @State private var showsReview = false
+    @State private var limitBumps = 0
 
     enum CaptureSheet: Identifiable {
         case newMeal(text: String? = nil)
@@ -28,14 +29,16 @@ struct CaptureView: View {
     }
 
     // Day swipe only on the rows above the entries: entry rows keep swipe-to-delete (swipeActions).
-    private func daySwipe(_ direction: PageSwipe) { model.navigate(by: direction) }
+    private func daySwipe(_ direction: PageSwipe) {
+        if !model.navigate(by: direction) { limitBumps += 1 }
+    }
 
     var body: some View {
         NavigationStack {
             List {
                 Section {
-                    DayNavigation(model: model).pageSwipe(daySwipe)
-                    DaySummary(model: model).pageSwipe(daySwipe)
+                    DayNavigation(model: model).contentShape(Rectangle()).pageSwipe(daySwipe)
+                    DaySummary(model: model).contentShape(Rectangle()).pageSwipe(daySwipe)
                     // R3a: entry to the weekly review (a row of its own, so VoiceOver keeps the summary as one element).
                     Button { showsReview = true } label: {
                         HStack {
@@ -46,10 +49,10 @@ struct CaptureView: View {
                         }
                     }
                     .foregroundStyle(.primary)
-                    .pageSwipe(daySwipe)
+                    .contentShape(Rectangle()).pageSwipe(daySwipe)
                 }
                 Section {
-                    quickEntry.pageSwipe(daySwipe)
+                    quickEntry.contentShape(Rectangle()).pageSwipe(daySwipe)
                 } footer: {
                     if !model.hasEntries {
                         Text(model.isToday ? "Noch nichts erfasst. Tippe oben auf Essen, Trinken oder Training."
@@ -57,7 +60,7 @@ struct CaptureView: View {
                     }
                 }
                 if model.showsHealthCard {
-                    Section { HealthCard(model: model).pageSwipe(daySwipe) }
+                    Section { HealthCard(model: model).contentShape(Rectangle()).pageSwipe(daySwipe) }
                 }
                 mealSection
                 drinkSection
@@ -65,6 +68,8 @@ struct CaptureView: View {
             }
             .navigationTitle("Erfassen")
             .sensoryFeedback(.selection, trigger: model.day)
+            // Swiping forward on today: a firm tap instead of silence (there is no later day).
+            .sensoryFeedback(.impact(flexibility: .rigid, intensity: 0.7), trigger: limitBumps)
             .navigationDestination(isPresented: $showsReview) {
                 WeekReviewView(model: environment.makeWeekReviewModel())
             }
@@ -276,13 +281,17 @@ private struct DayNavigation: View {
 }
 
 extension CaptureModel {
-    /// Changes the day at once (animatable) and refreshes Health in the background.
-    func navigate(to target: PlanDay) {
-        show(target)
-        Task { await reload() }
+    /// Changes the day at once (animatable) and adds Health in the background.
+    /// Returns `false` at the limit (no day after today).
+    @discardableResult
+    func navigate(to target: PlanDay) -> Bool {
+        guard show(target) else { return false }
+        Task { await reload(refreshingLocalFirst: false) }
+        return true
     }
 
-    func navigate(by direction: PageSwipe) {
+    @discardableResult
+    func navigate(by direction: PageSwipe) -> Bool {
         navigate(to: day.adding(days: direction.step, calendar: calendar))
     }
 }

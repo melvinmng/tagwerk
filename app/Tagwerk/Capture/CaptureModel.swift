@@ -76,11 +76,12 @@ final class CaptureModel {
     // MARK: Loading
 
     /// Reloads the day; reads Health workouts only when access was asked before.
-    func reload() async {
+    /// `refreshingLocalFirst: false` after `show(_:)`, which already read the store for the new day.
+    func reload(refreshingLocalFirst: Bool = true) async {
         let today = self.today
         if day > today || (day == lastToday && lastToday != today) { day = today }
         lastToday = today
-        refreshLocal()
+        if refreshingLocalFirst { refreshLocal() }
         let requestedDay = day
         let access = await health.access()
         self.access = access
@@ -153,9 +154,14 @@ final class CaptureModel {
 
     /// Shows a day at once with the entries of the store; days after today show today.
     /// Synchronous, so a swipe or an arrow can animate the change. `reload()` adds Health afterwards.
-    func show(_ target: PlanDay) {
-        day = min(target, today)
+    /// Returns `false` when the day stays the same (forward from today), so the view can signal the limit.
+    @discardableResult
+    func show(_ target: PlanDay) -> Bool {
+        let next = min(target, today)
+        guard next != day else { return false }
+        day = next
         refreshLocal()
+        return true
     }
 
     /// Jumps to a chosen day; days after today show today (only back in time).
