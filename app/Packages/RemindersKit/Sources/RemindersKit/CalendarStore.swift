@@ -87,12 +87,16 @@ public extension CalendarStore {
 /// Pure rules shared by the EventKit implementation and tests.
 public enum CalendarBlockRules {
     /// The note of a block Tagwerk wrote, in the app language of that moment.
-    public static var blockNotes: String { String(localized: "Geplant mit Tagwerk", bundle: .module) }
+    public static var blockNotes: String { blockNotes(in: .app) }
+
+    /// The note of a block in `language`; existing blocks keep the language they were written in.
+    public static func blockNotes(in language: VoiceLanguage) -> String {
+        Localized.string("Geplant mit Tagwerk", in: language, bundle: .module)
+    }
 
     /// Whether `notes` is the note of a Tagwerk block, whatever language it was written in.
     public static func isBlockNote(_ notes: String) -> Bool {
-        notes == blockNotes
-            || [VoiceLanguage.german, .english].contains { notes == Localized.string("Geplant mit Tagwerk", in: $0, bundle: .module) }
+        VoiceLanguage.allCases.contains { notes == blockNotes(in: $0) }
     }
 
     public static func checkVersion(of event: CalendarEvent, expected: String?) throws {
