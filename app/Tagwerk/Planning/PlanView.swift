@@ -20,7 +20,7 @@ struct PlanView: View {
     private var dismissUndo: some View {
         let dismissed = environment.planner.lastDismissed
         if !dismissed.isEmpty {
-            let count = dismissed.reduce(0) { $0 + $1.suggestions.count }
+            let count = environment.planner.dismissedCount
             UndoCapsule(title: count == 1 ? "1 Vorschlag" : "\(count) Vorschläge", caption: "Verworfen",
                         symbol: "sparkles", duration: 5,
                         onUndo: { Task { await environment.planner.undoDismissAll() } },

@@ -177,7 +177,13 @@ final class AIPlanner {
     /// Accepts one suggestion after checking it against fresh data.
     func accept(_ suggestion: PlanSuggestion) async {
         await planning.reload()
+        let batches = planning.suggestionBatches
         let result = await apply([suggestion])
+        // "Widerrufen" after a single ✓ as well (mockup VL1).
+        var undo = result.undo
+        undo.batches = batches
+        undo.count = result.applied
+        lastAcceptAll = result.applied > 0 ? undo : nil
         if let failure = result.failures.values.first {
             notice = "Der Vorschlag passt nicht mehr: \(failure.reason)"
         } else if let error = result.errors.first {
@@ -237,6 +243,9 @@ final class AIPlanner {
     }
 
     func dismiss(_ suggestion: PlanSuggestion) async {
+        // "Widerrufen" after a single ✕ (mockup VL1): keep the batches as they were.
+        lastDismissed = planning.suggestionBatches.filter { $0.suggestions.contains(suggestion) }
+        dismissedCount = lastDismissed.isEmpty ? 0 : 1
         for var batch in planning.suggestionBatches where batch.suggestions.contains(suggestion) {
             batch.suggestions.removeAll { $0.id == suggestion.id }
             if suggestion.kind == .dayChange {
@@ -255,10 +264,13 @@ final class AIPlanner {
 
     /// Batches dropped by the last "Verwerfen", for "Widerrufen".
     private(set) var lastDismissed: [SuggestionBatch] = []
+    /// How many suggestions the last "Verwerfen" or ✕ dropped.
+    private(set) var dismissedCount = 0
 
     /// "Verwerfen": drops all open suggestions, notes and risks of the shown range; "Widerrufen" restores them.
     func dismissAll() async {
         lastDismissed = planning.suggestionBatches
+        dismissedCount = lastDismissed.reduce(0) { $0 + $1.suggestions.count }
         for batch in lastDismissed { store.remove(batch.id) }
         await planning.reload()
     }

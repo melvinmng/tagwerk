@@ -284,6 +284,31 @@ struct AIPlannerTests {
         #expect(Set(all) == ["local:Fahrrad", "local:Abgabe"])
     }
 
+    @Test func dismissOne_canBeUndone() async throws {
+        responder.enqueue(Self.dayAnswer(Self.block("local:Fahrrad", "14:00")))
+        let (planner, planning) = await make()
+        await planner.plan(scope: .day, anchor: today)
+        let block = try #require(planning.days.first?.suggestions.first)
+        await planner.dismiss(block)
+        #expect(planner.dismissedCount == 1)
+        #expect(planning.days.first?.suggestions.isEmpty == true)
+        await planner.undoDismissAll()
+        #expect(planning.days.first?.suggestions.map(\.id) == [block.id])
+    }
+
+    @Test func acceptOne_canBeUndone() async throws {
+        responder.enqueue(Self.dayAnswer(Self.block("local:Fahrrad", "14:00")))
+        let (planner, planning) = await make()
+        await planner.plan(scope: .day, anchor: today)
+        let block = try #require(planning.days.first?.suggestions.first)
+        await planner.accept(block)
+        #expect(calendarStore.storedEvents.count == 1)
+        #expect(planner.lastAcceptAll?.count == 1)
+        await planner.undoAcceptAll()
+        #expect(calendarStore.storedEvents.isEmpty)
+        #expect(planning.days.first?.suggestions.map(\.id) == [block.id])
+    }
+
     @Test func dismissAll_canBeUndone() async throws {
         responder.enqueue(Self.dayAnswer(Self.block("local:Fahrrad", "14:00")))
         let (planner, planning) = await make()

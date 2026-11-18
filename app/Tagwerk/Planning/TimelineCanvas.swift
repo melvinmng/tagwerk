@@ -42,6 +42,7 @@ struct TimelineCanvas: View {
 
     @Environment(AppEnvironment.self) private var environment
     @State private var openSuggestion: PlanSuggestion?
+    @State private var editingTask: TaskItem?
     @State private var selectedID: String?
     /// When the hold selected an entry; the release of that hold must not count as a tap.
     @State private var selectedAt = Date.distantPast
@@ -94,7 +95,10 @@ struct TimelineCanvas: View {
                                     acceptEnabled: !SuggestionText.isWaiting(suggestion, planning: model),
                                     onOpen: { openSuggestion = suggestion },
                                     onAccept: { Task { await environment.planner.accept(suggestion) } },
-                                    onDismiss: { Task { await environment.planner.dismiss(suggestion) } })
+                                    onDismiss: { Task { await environment.planner.dismiss(suggestion) } },
+                                    onOpenTask: model.taskList.items.first { $0.id.key == suggestion.taskKey }.map { task in
+                                        { editingTask = task }
+                                    })
                         .frame(width: width - 2, height: max(22, height(range.count)))
                         .offset(x: labelWidth + 6, y: y(range.lowerBound, shown))
                         .zIndex(0.5)
@@ -110,6 +114,7 @@ struct TimelineCanvas: View {
         .sensoryFeedback(.impact(weight: .light), trigger: selectedID) { _, new in new != nil }
         .onChange(of: plan) { _, _ in pending.removeAll() }
         .sheet(item: $openSuggestion) { suggestion in SuggestionSheet(suggestion: suggestion) }
+        .sheet(item: $editingTask) { TaskEditorSheet(task: $0) }
         .onChange(of: session != nil) { _, dragging in isDragging = dragging }
     }
 

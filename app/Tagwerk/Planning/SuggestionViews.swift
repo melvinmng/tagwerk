@@ -1,7 +1,86 @@
 import SwiftUI
 import TagwerkCore
 
-/// An AI suggestion in the hour grid (mockup W1): purple, dashed, not draggable, with ✓ / ✕.
+// MARK: Capsules (mockups VC1, VU1)
+
+extension SuggestionFacts.Urgency {
+    var color: Color {
+        switch self {
+        case .high: .red
+        case .medium: .orange
+        case .none: .secondary
+        }
+    }
+}
+
+/// "P1" next to the title: red for P1, orange for P2, neutral otherwise.
+struct PriorityMark: View {
+    let mark: SuggestionFacts.Mark
+
+    var body: some View {
+        Text(mark.text)
+            .font(.caption2.weight(.bold))
+            .padding(.horizontal, 5)
+            .padding(.vertical, 1)
+            .foregroundStyle(mark.urgency == .none ? Color.secondary : Color.white)
+            .background(mark.urgency == .none ? Color.secondary.opacity(0.2) : mark.urgency.color, in: Capsule())
+            .fixedSize()
+    }
+}
+
+/// One capsule of a suggestion: due date, effort or move target. Only capsules carry colour (mockup VU1).
+struct FactCapsule: View {
+    let text: String
+    var symbol: String?
+    var urgency: SuggestionFacts.Urgency = .none
+    var tint: Color?
+
+    var body: some View {
+        HStack(spacing: 3) {
+            if let symbol { Image(systemName: symbol).imageScale(.small) }
+            Text(text)
+        }
+        .font(.caption2.weight(urgency == .high ? .semibold : .regular))
+        .lineLimit(1)
+        .padding(.horizontal, 6)
+        .padding(.vertical, 2)
+        .foregroundStyle(tint ?? (urgency == .none ? Color.primary.opacity(0.75) : urgency.color))
+        .background((tint ?? (urgency == .none ? Color.secondary : urgency.color)).opacity(0.15), in: Capsule())
+        .fixedSize()
+    }
+}
+
+/// Due date, effort and (for moves) the target as capsules; shortens itself when the width is short
+/// (mockup VC1: "⚑ 20.11." and "von 3 h", then no effort, then only an urgent due date).
+struct SuggestionCapsules: View {
+    let facts: SuggestionFacts
+
+    var body: some View {
+        ViewThatFits(in: .horizontal) {
+            row(due: facts.due?.text, effort: facts.effort)
+            row(due: facts.dueShort, effort: facts.effortShort ?? facts.effort)
+            row(due: facts.dueShort, effort: nil)
+            row(due: facts.dueIsUrgent ? facts.dueShort : nil, effort: nil, withMove: false)
+            EmptyView()
+        }
+    }
+
+    private func row(due: String?, effort: String?, withMove: Bool = true) -> some View {
+        HStack(spacing: 4) {
+            if withMove, let target = facts.moveTarget {
+                FactCapsule(text: target.text, symbol: "arrow.uturn.right", urgency: target.urgency,
+                            tint: target.urgency == .none ? .purple : nil)
+            }
+            if let due { FactCapsule(text: due, symbol: "flag.fill", urgency: facts.due?.urgency ?? .none) }
+            if let effort { FactCapsule(text: effort) }
+        }
+    }
+}
+
+// MARK: Grid block (mockup VC1)
+
+/// An AI suggestion in the hour grid: purple, dashed, with priority, due date and effort instead of time
+/// and buttons. A tap opens the suggestion sheet, holding shows a menu (mockup VT1).
 struct SuggestionBlock: View {
     @Environment(AppEnvironment.self) private var environment
     let suggestion: PlanSuggestion
@@ -10,155 +89,191 @@ struct SuggestionBlock: View {
     let onOpen: () -> Void
     let onAccept: () -> Void
     let onDismiss: () -> Void
+    var onOpenTask: (() -> Void)?
 
     var body: some View {
-        HStack(alignment: .top, spacing: 4) {
-            VStack(alignment: .leading, spacing: 1) {
-                Label(suggestion.title, systemImage: "sparkles").font(.caption.weight(.semibold)).lineLimit(2)
-                Text(([timeText, "Vorschlag"] + [SuggestionText.due(suggestion, planning: environment.planning)].compactMap { $0 })
-                    .joined(separator: " · "))
-                    .font(.caption2).foregroundStyle(.secondary).lineLimit(1)
-            }
-            Spacer(minLength: 0)
-            SuggestionButtons(acceptEnabled: acceptEnabled, onAccept: onAccept, onDismiss: onDismiss)
+        let facts = environment.planning.facts(for: suggestion)
+        // The block's height is its duration; what does not fit is left out in a fixed order.
+        ViewThatFits(in: .vertical) {
+            content(facts, time: true, reasonLines: 2)
+            content(facts, time: true, reasonLines: 0)
+            content(facts, time: false, reasonLines: 0)
+            singleLine(facts)
         }
-        .padding(6)
+        .padding(.horizontal, 6)
+        .padding(.vertical, 3)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        .background(Color.purple.opacity(0.10), in: RoundedRectangle(cornerRadius: 7))
+        .background(Color.purple.opacity(0.12), in: RoundedRectangle(cornerRadius: 7))
         .overlay { RoundedRectangle(cornerRadius: 7).strokeBorder(Color.purple, style: StrokeStyle(lineWidth: 1, dash: [4, 3])) }
         .foregroundStyle(.purple)
-        .contentShape(Rectangle())
+        .contentShape(RoundedRectangle(cornerRadius: 7))
         .onTapGesture(perform: onOpen)
+        .contextMenu {
+            SuggestionMenu(acceptEnabled: acceptEnabled, onAccept: onAccept, onOpenTask: onOpenTask, onDismiss: onDismiss)
+        }
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("Vorschlag, \(suggestion.title), \(timeText)")
+        .accessibilityLabel(SuggestionText.accessibility(suggestion, facts: facts, time: timeText))
         .accessibilityAction(named: "Übernehmen", onAccept)
         .accessibilityAction(named: "Verwerfen", onDismiss)
     }
+
+    private func content(_ facts: SuggestionFacts, time: Bool, reasonLines: Int) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            titleLine(facts)
+            SuggestionCapsules(facts: facts)
+            if time { Text(timeText).font(.caption2).foregroundStyle(.secondary) }
+            if reasonLines > 0, !suggestion.reason.isEmpty {
+                Text("„\(suggestion.reason)“").font(.caption2).lineLimit(reasonLines)
+            }
+        }
+    }
+
+    /// 15-minute blocks: ✦ title, an urgent due date, P mark.
+    private func singleLine(_ facts: SuggestionFacts) -> some View {
+        HStack(spacing: 4) {
+            Image(systemName: "sparkles").font(.caption2)
+            Text(suggestion.title).font(.caption.weight(.semibold)).lineLimit(1)
+            Spacer(minLength: 0)
+            if facts.dueIsUrgent, let due = facts.dueShort {
+                FactCapsule(text: due, symbol: "flag.fill", urgency: facts.due?.urgency ?? .none)
+            }
+            if let priority = facts.priority { PriorityMark(mark: priority) }
+        }
+    }
+
+    private func titleLine(_ facts: SuggestionFacts) -> some View {
+        HStack(spacing: 4) {
+            Image(systemName: "sparkles").font(.caption2)
+            Text(suggestion.title).font(.caption.weight(.semibold)).lineLimit(1)
+            Spacer(minLength: 0)
+            if let priority = facts.priority { PriorityMark(mark: priority) }
+        }
+    }
 }
 
-/// ✓ and ✕ of a suggestion.
+/// Menu on holding a suggestion (mockup VT1): accept, open the task, dismiss set apart.
+struct SuggestionMenu: View {
+    var acceptEnabled = true
+    let onAccept: () -> Void
+    var onOpenTask: (() -> Void)?
+    let onDismiss: () -> Void
+
+    var body: some View {
+        Button(action: onAccept) { Label("Übernehmen", systemImage: "checkmark") }
+            .disabled(!acceptEnabled)
+        if let onOpenTask {
+            Button(action: onOpenTask) { Label("Aufgabe öffnen", systemImage: "chevron.right") }
+        }
+        Divider()
+        Button(role: .destructive, action: onDismiss) { Label("Verwerfen", systemImage: "xmark") }
+    }
+}
+
+/// ✓ and ✕ of a row, each with a 44-pt target (mockup VL1).
 struct SuggestionButtons: View {
     var acceptEnabled = true
     let onAccept: () -> Void
     let onDismiss: () -> Void
 
     var body: some View {
-        HStack(spacing: 6) {
-            Button(action: onAccept) { Image(systemName: "checkmark.circle.fill").font(.title3) }
-                .disabled(!acceptEnabled)
-                .opacity(acceptEnabled ? 1 : 0.35)
-                .accessibilityLabel("Übernehmen")
-            Button(action: onDismiss) { Image(systemName: "xmark.circle").font(.title3) }
-                .accessibilityLabel("Verwerfen")
+        HStack(spacing: 0) {
+            Button(action: onAccept) {
+                Image(systemName: "checkmark.circle.fill").font(.title2).frame(width: 44, height: 44)
+            }
+            .disabled(!acceptEnabled)
+            .opacity(acceptEnabled ? 1 : 0.35)
+            .accessibilityLabel("Übernehmen")
+            Button(action: onDismiss) {
+                Image(systemName: "xmark.circle").font(.title2).frame(width: 44, height: 44)
+            }
+            .accessibilityLabel("Verwerfen")
         }
         .buttonStyle(.plain)
         .foregroundStyle(.purple)
     }
 }
 
-/// A suggestion as a list row (mockups W3, X1, X2; AO1 longer day; "↷" move): dashed, without grip,
-/// reason on tap. A block that needs a longer day waits for it (mockup AB1).
+// MARK: Rows (mockup VL1)
+
+/// A suggestion as a list row, the same in day list, week, month, panel and result sheet: title with
+/// P mark, capsules, reason in one line; left of the divider a tap opens the sheet, right ✓ / ✕.
+/// Longer days keep their own form (mockup AO1).
 struct SuggestionRow: View {
     @Environment(AppEnvironment.self) private var environment
     let suggestion: PlanSuggestion
-    @State private var showsReason = false
+    /// Opens the suggestion in place (result sheet); without it the row presents the sheet itself.
+    var onOpen: (() -> Void)?
+    var reasonLines = 1
+    @State private var showsSheet = false
+    @State private var editing: TaskItem?
 
     var body: some View {
-        HStack(alignment: .top, spacing: 8) {
-            VStack(alignment: .leading, spacing: 2) {
-                Label(SuggestionText.title(suggestion, calendar: environment.planning.calendar), systemImage: SuggestionText.symbol(suggestion))
-                    .font(.subheadline)
-                Text(SuggestionText.detail(suggestion, planning: environment.planning)).font(.caption).foregroundStyle(.secondary)
+        let facts = environment.planning.facts(for: suggestion)
+        HStack(alignment: .center, spacing: 6) {
+            VStack(alignment: .leading, spacing: 3) {
+                header(facts)
+                if suggestion.kind == .dayChange {
+                    Text(SuggestionText.detail(suggestion, planning: environment.planning)).font(.caption).foregroundStyle(.secondary)
+                } else {
+                    SuggestionCapsules(facts: facts)
+                }
                 if isWaiting {
                     Label("braucht die längere Arbeitszeit", systemImage: "arrow.turn.down.right").font(.caption2)
                 }
-                if showsReason && !suggestion.reason.isEmpty {
-                    Text("„\(suggestion.reason)“").font(.caption).foregroundStyle(.purple)
+                if !suggestion.reason.isEmpty && suggestion.kind != .move {
+                    Text("„\(suggestion.reason)“").font(.caption).foregroundStyle(.purple).lineLimit(reasonLines)
                 }
             }
-            Spacer(minLength: 0)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .contentShape(Rectangle())
+            .onTapGesture { if let onOpen { onOpen() } else { showsSheet = true } }
+            Divider().frame(height: 36)
             SuggestionButtons(acceptEnabled: !isWaiting,
                               onAccept: { Task { await environment.planner.accept(suggestion) } },
                               onDismiss: { Task { await environment.planner.dismiss(suggestion) } })
         }
-        .padding(8)
-        .background(Color.purple.opacity(0.08), in: RoundedRectangle(cornerRadius: 8))
+        .padding(.leading, 8)
+        .padding(.vertical, 4)
+        .background(suggestion.kind == .move ? Color.clear : Color.purple.opacity(0.08), in: RoundedRectangle(cornerRadius: 8))
         .overlay { RoundedRectangle(cornerRadius: 8).strokeBorder(Color.purple, style: StrokeStyle(lineWidth: 1, dash: [4, 3])) }
-        .foregroundStyle(.purple)
-        .contentShape(Rectangle())
-        .onTapGesture { withAnimation { showsReason.toggle() } }
+        .contextMenu {
+            SuggestionMenu(acceptEnabled: !isWaiting,
+                           onAccept: { Task { await environment.planner.accept(suggestion) } },
+                           onOpenTask: task.map { task in { editing = task } },
+                           onDismiss: { Task { await environment.planner.dismiss(suggestion) } })
+        }
+        .sheet(isPresented: $showsSheet) { SuggestionSheet(suggestion: suggestion) }
+        .sheet(item: $editing) { TaskEditorSheet(task: $0) }
     }
 
+    @ViewBuilder
+    private func header(_ facts: SuggestionFacts) -> some View {
+        HStack(spacing: 4) {
+            if suggestion.kind == .move {
+                Text(suggestion.title).font(.subheadline).foregroundStyle(.primary).lineLimit(2)
+            } else {
+                Label(SuggestionText.title(suggestion, calendar: environment.planning.calendar), systemImage: SuggestionText.symbol(suggestion))
+                    .font(.subheadline).foregroundStyle(.purple).lineLimit(2)
+            }
+            Spacer(minLength: 0)
+            if let priority = facts.priority { PriorityMark(mark: priority) }
+        }
+    }
+
+    private var task: TaskItem? { environment.planning.taskList.items.first { $0.id.key == suggestion.taskKey } }
     private var isWaiting: Bool { SuggestionText.isWaiting(suggestion, planning: environment.planning) }
 }
 
-/// Sheet of one suggestion (mockup W1, opened by tapping the block): when, reason, accept or dismiss.
-struct SuggestionSheet: View {
-    @Environment(AppEnvironment.self) private var environment
-    @Environment(\.dismiss) private var dismiss
-    let suggestion: PlanSuggestion
-
-    var body: some View {
-        NavigationStack {
-            List {
-                Section {
-                    LabeledContent("Aufgabe", value: suggestion.title)
-                    LabeledContent("Wann", value: SuggestionText.when(suggestion, calendar: environment.planning.calendar))
-                }
-                if !suggestion.reason.isEmpty {
-                    Section("Begründung") {
-                        Label("„\(suggestion.reason)“", systemImage: "sparkles").foregroundStyle(.purple)
-                    }
-                }
-                Section {
-                    Button("Übernehmen") {
-                        Task { await environment.planner.accept(suggestion); dismiss() }
-                    }
-                    Button("Verwerfen", role: .destructive) {
-                        Task { await environment.planner.dismiss(suggestion); dismiss() }
-                    }
-                } footer: {
-                    Text("Erst „Übernehmen“ legt den Block im Plan-Kalender an.")
-                }
-            }
-            .navigationTitle("Vorschlag")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Schließen") { dismiss() } } }
-        }
-        .presentationDetents([.medium])
-    }
-}
-
-/// A move at the task it concerns (proposal 2026-11-18, §5): dashed, "↷ Fr 20.", ✓ / ✕.
+/// A move at the task it concerns (proposal 2026-11-18, §5): the same row, with "↷ nach Fr 20." as first capsule.
 struct MoveSuggestionRow: View {
-    @Environment(AppEnvironment.self) private var environment
     let suggestion: PlanSuggestion
-    @State private var showsReason = false
 
     var body: some View {
-        HStack(alignment: .top, spacing: 8) {
-            VStack(alignment: .leading, spacing: 2) {
-                Text(suggestion.title).font(.subheadline).lineLimit(2)
-                Label(["nach \(suggestion.day.startDate(in: environment.planning.calendar).formatted(.dateTime.weekday(.abbreviated).day()))",
-                       SuggestionText.due(suggestion, planning: environment.planning)].compactMap { $0 }.joined(separator: " · "),
-                      systemImage: "arrow.uturn.right")
-                    .font(.caption).foregroundStyle(.purple)
-                if showsReason && !suggestion.reason.isEmpty {
-                    Text("„\(suggestion.reason)“").font(.caption).foregroundStyle(.purple)
-                }
-            }
-            Spacer(minLength: 0)
-            SuggestionButtons(onAccept: { Task { await environment.planner.accept(suggestion) } },
-                              onDismiss: { Task { await environment.planner.dismiss(suggestion) } })
-        }
-        .padding(8)
-        .overlay { RoundedRectangle(cornerRadius: 8).strokeBorder(Color.purple, style: StrokeStyle(lineWidth: 1, dash: [4, 3])) }
-        .contentShape(Rectangle())
-        .onTapGesture { withAnimation { showsReason.toggle() } }
+        SuggestionRow(suggestion: suggestion)
     }
 }
 
-/// The target day's side of a move (week, §5): a dashed ghost row without buttons.
+/// The target day's side of a move (week, §5): a dashed ghost row without facts and buttons.
 struct MoveGhostRow: View {
     @Environment(AppEnvironment.self) private var environment
     let suggestion: PlanSuggestion
@@ -171,5 +286,176 @@ struct MoveGhostRow: View {
             .padding(8)
             .frame(maxWidth: .infinity, alignment: .leading)
             .overlay { RoundedRectangle(cornerRadius: 8).strokeBorder(Color.purple.opacity(0.5), style: StrokeStyle(lineWidth: 1, dash: [3, 3])) }
+    }
+}
+
+// MARK: Sheet (mockup VT1)
+
+/// The sheet of one suggestion: when, the task as a card (priority, due date, source, effort bar),
+/// the full reason and the decision. The calendar stays visible behind the half-height sheet.
+struct SuggestionSheet: View {
+    @Environment(\.dismiss) private var dismiss
+    let suggestion: PlanSuggestion
+
+    var body: some View {
+        NavigationStack {
+            SuggestionDetail(suggestion: suggestion, onDone: { dismiss() })
+                .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Schließen") { dismiss() } } }
+        }
+        .presentationDetents([.medium, .large])
+        .presentationBackgroundInteraction(.enabled(upThrough: .medium))
+    }
+}
+
+/// Content of the suggestion sheet; also a page of the result sheet (mockup VE1).
+struct SuggestionDetail: View {
+    @Environment(AppEnvironment.self) private var environment
+    let suggestion: PlanSuggestion
+    let onDone: () -> Void
+    @State private var editing: TaskItem?
+
+    private var planning: PlanningModel { environment.planning }
+    private var task: TaskItem? { planning.taskList.items.first { $0.id.key == suggestion.taskKey } }
+    private var isWaiting: Bool { SuggestionText.isWaiting(suggestion, planning: planning) }
+    private var isOpen: Bool { planning.suggestionBatches.contains { $0.suggestions.contains { $0.id == suggestion.id } } }
+
+    var body: some View {
+        let facts = planning.facts(for: suggestion)
+        List {
+            Section {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(SuggestionText.title(suggestion, calendar: planning.calendar)).font(.headline)
+                    Label(SuggestionText.sheetWhen(suggestion, calendar: planning.calendar), systemImage: SuggestionText.symbol(suggestion))
+                        .font(.subheadline).foregroundStyle(.purple)
+                }
+            }
+            if let task {
+                Section {
+                    Button { editing = task } label: { TaskCard(task: task, facts: facts) }
+                        .buttonStyle(.plain)
+                }
+            } else if suggestion.kind == .dayChange {
+                Section { Text(SuggestionText.detail(suggestion, planning: planning)).foregroundStyle(.secondary) }
+            }
+            if !suggestion.reason.isEmpty {
+                Section("Begründung") {
+                    Label("„\(suggestion.reason)“", systemImage: "sparkles").foregroundStyle(.purple)
+                }
+            }
+            Section {
+            } footer: {
+                Text(isWaiting ? "Übernimm zuerst die längere Arbeitszeit."
+                     : "Erst „Übernehmen“ legt den Block im Plan-Kalender an.")
+            }
+        }
+        .navigationTitle("Vorschlag")
+        .navigationBarTitleDisplayMode(.inline)
+        .safeAreaInset(edge: .bottom) {
+            HStack(spacing: 10) {
+                Button(role: .destructive) {
+                    Task { await environment.planner.dismiss(suggestion); onDone() }
+                } label: { Text("Verwerfen").frame(maxWidth: .infinity, minHeight: 44) }
+                    .buttonStyle(.bordered)
+                Button {
+                    Task { await environment.planner.accept(suggestion); onDone() }
+                } label: { Label("Übernehmen", systemImage: "sparkles").frame(maxWidth: .infinity, minHeight: 44) }
+                    .buttonStyle(.borderedProminent)
+                    .tint(.purple)
+                    .disabled(isWaiting)
+            }
+            .padding(.horizontal)
+            .padding(.vertical, 8)
+            .background(.bar)
+        }
+        .sheet(item: $editing) { TaskEditorSheet(task: $0) }
+        .onChange(of: isOpen) { _, open in if !open { onDone() } }
+    }
+}
+
+/// The task as a card (mockup VT1): priority, due date with distance, source, effort bar; the whole card
+/// opens the editor.
+struct TaskCard: View {
+    let task: TaskItem
+    let facts: SuggestionFacts
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 6) {
+                if let priority = facts.priority { PriorityMark(mark: priority) }
+                if let due = facts.due {
+                    FactCapsule(text: [due.text, facts.dueDistance].compactMap { $0 }.uniqued().joined(separator: " · "),
+                                symbol: "flag.fill", urgency: due.urgency)
+                }
+                Spacer(minLength: 0)
+            }
+            Text(([task.container.name] + task.subContainers.map(\.name)).joined(separator: " · "))
+                .font(.caption).foregroundStyle(.secondary)
+            if let bar = facts.bar {
+                EffortBar(bar: bar)
+            } else if let effort = facts.effort {
+                Text("Aufwand \(effort)").font(.caption).foregroundStyle(.secondary)
+            }
+            HStack {
+                Text("Aufgabe öffnen").font(.subheadline)
+                Spacer()
+                Image(systemName: "chevron.right").font(.caption).foregroundStyle(.secondary)
+            }
+            .foregroundStyle(.tint)
+        }
+        .contentShape(Rectangle())
+    }
+}
+
+/// Planned (green), this suggestion (purple) and open (grey) of the task's effort.
+struct EffortBar: View {
+    let bar: SuggestionFacts.Bar
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack {
+                Text("Aufwand \(CapacityText.duration(bar.total))").font(.caption.weight(.semibold))
+                Spacer()
+                Text("danach \(CapacityText.duration(min(bar.total, bar.planned + bar.suggested))) von \(CapacityText.duration(bar.total)) geplant")
+                    .font(.caption).foregroundStyle(.secondary)
+            }
+            GeometryReader { proxy in
+                let total = CGFloat(max(bar.total, bar.planned + bar.suggested, 1))
+                HStack(spacing: 1) {
+                    Rectangle().fill(.green).frame(width: proxy.size.width * CGFloat(bar.planned) / total)
+                    Rectangle().fill(.purple).frame(width: proxy.size.width * CGFloat(bar.suggested) / total)
+                    Rectangle().fill(Color.secondary.opacity(0.25))
+                }
+                .clipShape(Capsule())
+            }
+            .frame(height: 6)
+            Text([bar.planned > 0 ? "\(CapacityText.duration(bar.planned)) eingeplant" : nil,
+                  "+\(CapacityText.duration(bar.suggested)) dieser Vorschlag",
+                  bar.open > 0 ? "\(CapacityText.duration(bar.open)) offen" : nil].compactMap { $0 }.joined(separator: " · "))
+                .font(.caption2).foregroundStyle(.secondary)
+        }
+    }
+}
+
+/// The existing task editor as a sheet over another sheet (mockup VT1, "Aufgabe öffnen").
+struct TaskEditorSheet: View {
+    @Environment(AppEnvironment.self) private var environment
+    let task: TaskItem
+
+    var body: some View {
+        if let provider = environment.taskList.provider(for: task.id.source) {
+            TaskEditorView(item: task, provider: provider, calendar: environment.taskList.calendar, containers: [],
+                           onDelete: { version in Task { await environment.taskList.delete(task.id, version: version) } },
+                           planning: environment.planning) { saved in
+                environment.taskList.didSave(saved)
+                Task { await environment.planning.reload() }
+            }
+        }
+    }
+}
+
+private extension Array where Element: Hashable {
+    func uniqued() -> [Element] {
+        var seen = Set<Element>()
+        return filter { seen.insert($0).inserted }
     }
 }

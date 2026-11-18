@@ -185,31 +185,28 @@ struct AIPlanBar: View {
     }
 }
 
-/// Result sheet (mockup Z1): open suggestions, left-out tasks with reason and risks.
+/// Result sheet (mockups Z1, VE1): open suggestions as rows with their facts, left-out tasks with
+/// priority, due date and open effort, and risks. A suggestion opens as the next page of the sheet.
 struct PlanResultSheet: View {
     @Environment(AppEnvironment.self) private var environment
     @Environment(\.dismiss) private var dismiss
     let scope: PlanScope
+    @State private var path: [PlanSuggestion] = []
+    @State private var editing: TaskItem?
 
     private var batches: [SuggestionBatch] {
         environment.planning.suggestionBatches.filter { ($0.scope == .day) == (scope == .day) }
     }
 
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $path) {
             List {
                 let suggestions = batches.flatMap(\.suggestions)
                 if !suggestions.isEmpty {
                     Section("Vorschläge") {
                         ForEach(suggestions) { suggestion in
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(suggestion.title)
-                                Text(SuggestionText.when(suggestion, calendar: environment.planning.calendar))
-                                    .font(.caption).foregroundStyle(.secondary)
-                                if !suggestion.reason.isEmpty {
-                                    Text("„\(suggestion.reason)“").font(.caption).foregroundStyle(.purple)
-                                }
-                            }
+                            SuggestionRow(suggestion: suggestion, onOpen: { path.append(suggestion) }, reasonLines: 3)
+                                .listRowInsets(EdgeInsets(top: 4, leading: 8, bottom: 4, trailing: 8))
                         }
                     }
                 }
@@ -217,10 +214,8 @@ struct PlanResultSheet: View {
                 if !unscheduled.isEmpty {
                     Section("Nicht eingeplant") {
                         ForEach(unscheduled, id: \.taskKey) { entry in
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(entry.title)
-                                Text(entry.reason).font(.caption).foregroundStyle(.secondary)
-                            }
+                            Button { open(entry) } label: { UnscheduledRow(entry: entry) }
+                                .buttonStyle(.plain)
                         }
                     }
                 }
@@ -235,10 +230,41 @@ struct PlanResultSheet: View {
             }
             .navigationTitle("Ergebnis der Planung")
             .navigationBarTitleDisplayMode(.inline)
+            .navigationDestination(for: PlanSuggestion.self) { suggestion in
+                SuggestionDetail(suggestion: suggestion, onDone: { path.removeAll() })
+            }
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) { Button("Fertig") { dismiss() } }
             }
         }
+        .sheet(item: $editing) { TaskEditorSheet(task: $0) }
+    }
+
+    private func open(_ entry: UnscheduledTask) {
+        editing = environment.planning.taskList.items.first { $0.id.key == entry.taskKey }
+    }
+}
+
+/// A left-out task (mockup VE1): title with P mark, due date and open effort, reason; a tap opens the task.
+struct UnscheduledRow: View {
+    @Environment(AppEnvironment.self) private var environment
+    let entry: UnscheduledTask
+
+    var body: some View {
+        let facts = environment.planning.facts(for: entry)
+        HStack {
+            VStack(alignment: .leading, spacing: 3) {
+                HStack(spacing: 4) {
+                    Text(entry.title).lineLimit(2)
+                    Spacer(minLength: 0)
+                    if let priority = facts.priority { PriorityMark(mark: priority) }
+                }
+                SuggestionCapsules(facts: facts)
+                Text(entry.reason).font(.caption).foregroundStyle(.secondary)
+            }
+            Image(systemName: "chevron.right").font(.caption).foregroundStyle(.secondary)
+        }
+        .contentShape(Rectangle())
     }
 }
 
@@ -296,6 +322,27 @@ enum SuggestionText {
     static func isWaiting(_ suggestion: PlanSuggestion, planning: PlanningModel) -> Bool {
         guard let change = suggestion.dependsOn else { return false }
         return planning.suggestionBatches.contains { $0.suggestions.contains { $0.id == change } }
+    }
+
+    /// Head line of the sheet: "Vorschlag · Mi 18. Nov. · 18:00 bis 18:45", "von Mi 18. nach Fr 20.".
+    static func sheetWhen(_ suggestion: PlanSuggestion, calendar: Calendar) -> String {
+        let date = suggestion.day.startDate(in: calendar).formatted(.dateTime.weekday(.abbreviated).day().month(.abbreviated))
+        switch suggestion.kind {
+        case .move:
+            let from = suggestion.fromDay.map { "von \(SuggestionFacts.weekday($0, calendar: calendar)) \($0.day). " } ?? ""
+            return "\(from)nach \(SuggestionFacts.weekday(suggestion.day, calendar: calendar)) \(suggestion.day.day)."
+        case .dayChange:
+            guard let start = suggestion.startMinutes, let end = suggestion.endMinutes else { return "Vorschlag · \(date)" }
+            return "Vorschlag · \(date) · \(AIPlanner.time(start)) bis \(AIPlanner.time(end))"
+        case .block, .assignment:
+            guard let start = suggestion.startMinutes, let minutes = suggestion.minutes else { return "Vorschlag · \(date)" }
+            return "Vorschlag · \(date) · \(AIPlanner.time(start)) bis \(AIPlanner.time(start + minutes))"
+        }
+    }
+
+    /// VoiceOver text of a grid block.
+    static func accessibility(_ suggestion: PlanSuggestion, facts: SuggestionFacts, time: String) -> String {
+        ["Vorschlag", suggestion.title, time, facts.priority?.text, facts.due?.text, facts.effort].compactMap { $0 }.joined(separator: ", ")
     }
 
     /// "Mi 18.11. · 14:00 · 45 min" for blocks, "Do 19.11." for work days.
