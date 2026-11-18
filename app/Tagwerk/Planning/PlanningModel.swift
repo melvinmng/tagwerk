@@ -797,41 +797,44 @@ final class PlanningModel {
         await reload()
     }
 
-    /// Length for a new block: what is left of the estimate after existing blocks, else the estimate,
-    /// and the default duration for tasks without an estimate.
-    /// Duration of a new block for `task` on `day` (default: the shown day), see `blockMinutes`:
-    /// remaining estimate, capped by six hours and the day's largest free slot; default duration without estimate.
+    /// Duration of a new block for `task` on `day` (default: the shown day), see `blockMinutes`: remaining
+    /// effort (the day's recurring effort for recurring reminders, else the estimate), capped by six hours and
+    /// the day's largest free slot; default duration without effort.
     func suggestedBlockMinutes(for task: TaskItem, on day: PlanDay? = nil) -> Int {
         let target = day ?? anchor
         let slot = days.first { $0.day == target }?.planInput.map { input in
             largestFreeSlot(input, fromMinutes: target == today ? minutes(now(), from: target.startDate(in: calendar)) : nil)
         } ?? 6 * 60
-        return blockMinutes(estimate: task.estimateMinutes, alreadyBlocked: blockedMinutes(of: task.id),
+        return blockMinutes(estimate: effortMinutes(of: task, on: target), alreadyBlocked: blockedMinutes(of: task.id, on: target),
                             defaultMinutes: settings.defaultTaskMinutes, largestFreeSlot: slot)
     }
 
-    /// Minutes of the task's blocks that count as work on it: for recurring reminders only the current
-    /// period (daily: today, weekly: the last six days and today …), otherwise the last 60 days and the future.
-    func blockedMinutes(of id: TaskID) -> Int {
-        blockedMinutes(of: id, in: blocks.futureBlocks(for: id, after: sessionWindowStart(of: id)))
+    /// Minutes of the task's blocks that count as work on it for `day` (default: today): for recurring
+    /// reminders only the blocks of that day's occurrence (daily: that day, weekly: the six days before and
+    /// that day …), otherwise the last 60 days and the future.
+    func blockedMinutes(of id: TaskID, on day: PlanDay? = nil) -> Int {
+        let window = sessionWindow(of: id, on: day ?? today)
+        return blockedMinutes(in: blocks.futureBlocks(for: id, after: window.lowerBound), window: window)
     }
 
-    private func blockedMinutes(of id: TaskID, in events: [CalendarEvent]) -> Int {
-        let since = sessionWindowStart(of: id)
-        return events.filter { $0.start >= since }.reduce(0) { $0 + Int($1.end.timeIntervalSince($1.start) / 60) }
+    private func blockedMinutes(in events: [CalendarEvent], window: Range<Date>) -> Int {
+        events.filter { window.contains($0.start) }.reduce(0) { $0 + Int($1.end.timeIntervalSince($1.start) / 60) }
     }
 
-    private func sessionWindowStart(of id: TaskID) -> Date {
+    /// The period whose blocks count for `day`: the occurrence of a recurring reminder (ending with `day`),
+    /// else from 60 days before today on without end.
+    private func sessionWindow(of id: TaskID, on day: PlanDay) -> Range<Date> {
         if id.source == .reminders, let rule = recurrenceRules[id.rawValue],
-           let start = TagwerkCore.sessionWindowStart(for: rule, today: today, calendar: calendar) {
-            return start.startDate(in: calendar)
+           let start = TagwerkCore.sessionWindowStart(for: rule, today: day, calendar: calendar) {
+            return start.startDate(in: calendar)..<day.adding(days: 1, calendar: calendar).startDate(in: calendar)
         }
-        return today.adding(days: -60, calendar: calendar).startDate(in: calendar)
+        return today.adding(days: -60, calendar: calendar).startDate(in: calendar)..<Date.distantFuture
     }
 
-    /// The effort of a task: the day's recurring effort for recurring reminders, else the estimate.
-    func effortMinutes(of task: TaskItem) -> Int? {
-        if let recurring = recurringItem(for: task, on: today) { return recurring.minutes }
+    /// The effort of a task on `day` (default: today): the day's recurring effort for recurring reminders
+    /// (`nil` when none is set), else the estimate.
+    func effortMinutes(of task: TaskItem, on day: PlanDay? = nil) -> Int? {
+        if let recurring = recurringItem(for: task, on: day ?? today) { return recurring.minutes > 0 ? recurring.minutes : nil }
         return task.estimateMinutes
     }
 
@@ -840,12 +843,13 @@ final class PlanningModel {
         var progress: [TaskID: SessionProgress] = [:]
         var blocked: [TaskID: Int] = [:]
         for task in open {
+            let window = sessionWindow(of: task.id, on: today)
             if let events = all[task.id] {
-                let minutes = blockedMinutes(of: task.id, in: events)
+                let minutes = blockedMinutes(in: events, window: window)
                 if minutes > 0 { blocked[task.id] = minutes }
             }
             guard let effort = effortMinutes(of: task), effort > 0, let events = all[task.id] else { continue }
-            let blocked = blockedMinutes(of: task.id, in: events)
+            let blocked = blockedMinutes(in: events, window: window)
             if blocked > 0 { progress[task.id] = SessionProgress(blocked: blocked, estimate: effort) }
         }
         sessionProgress = progress
@@ -938,7 +942,7 @@ final class PlanningModel {
         let day = PlanDay(date: block.start, calendar: calendar)
         guard let input = days.first(where: { $0.day == day })?.planInput else { return nil }
         let dayStart = day.startDate(in: calendar)
-        let remaining = effortMinutes(of: task).map { $0 - blockedMinutes(of: task.id) } ?? 0
+        let remaining = effortMinutes(of: task, on: day).map { $0 - blockedMinutes(of: task.id, on: day) } ?? 0
         let length = remaining >= 15 ? suggestedBlockMinutes(for: task, on: day) : settings.defaultTaskMinutes
         return nextFreeSlot(input, after: minutes(block.end, from: dayStart), minutes: length,
                             fromMinutes: day == today ? minutes(now(), from: dayStart) : nil)
