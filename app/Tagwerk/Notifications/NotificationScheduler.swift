@@ -86,11 +86,13 @@ final class NotificationScheduler {
         let ours = await center.pendingRequests().filter { $0.id.hasPrefix(PlannedNotification.identifierPrefix) }
 
         // Sources that are not loaded right now keep their notifications (a background launch before
-        // GitHub is registered, a failing source, missing access). A sign-out clears them.
+        // GitHub is registered, a failing source, missing access). A sign-out or a switched-off source clears them.
+        let enabled = settings.notifiedTaskSources
         let replaceable = Set(TaskSource.allCases.filter { source in
+            guard enabled.contains(source) else { return true }
             switch taskList.sourceStates[source] {
-            case .loaded, .offline, .signedOut: true
-            default: false
+            case .loaded, .offline, .signedOut: return true
+            default: return false
             }
         })
         let events = currentDeadlineEvents(now: current)
@@ -104,6 +106,7 @@ final class NotificationScheduler {
         // unchanged, but nothing new is added that close (it could be in the past once iOS receives it).
         let rules = NotificationRules(leadTimeMinutes: settings.leadTimeMinutes,
                                       includesDeadlineCalendars: settings.deadlineCalendarNotifications,
+                                      taskSources: enabled,
                                       limit: max(0, Self.limit - kept.count), minimumDelay: 0)
         let tasks = taskList.items.filter { replaceable.contains($0.id.source) }
         let wanted = notificationPlan(tasks: tasks, deadlineEvents: events ?? [], rules: rules, now: current, calendar: calendar)

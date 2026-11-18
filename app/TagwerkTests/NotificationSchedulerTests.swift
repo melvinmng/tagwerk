@@ -53,13 +53,37 @@ struct NotificationSchedulerTests {
         #expect(scheduler.authorization == .notDetermined)
     }
 
-    @Test func schedulesGitHubAndLocal_notReminders() async {
+    @Test func schedulesAllSources_byDefault() async {
         github.tasks = [makeTask("Issue", source: .github, due: due(20))]
-        local.tasks = [makeTask("Lokal", source: .local, due: due(20, 9))]
+        local.tasks = [makeTask("Lokal", source: .local, due: due(20, 12))]
         reminders.tasks = [makeTask("Erinnerung", source: .reminders, due: due(20))]
         let scheduler = makeScheduler(await loadedList())
         await scheduler.reschedule()
-        #expect(center.pendingIDs == ["tagwerk.task.github:Issue", "tagwerk.task.local:Lokal"])
+        #expect(center.pendingIDs == ["tagwerk.task.github:Issue", "tagwerk.task.local:Lokal", "tagwerk.task.reminders:Erinnerung"])
+    }
+
+    @Test func sourceSwitchOff_removesOnlyItsNotifications() async {
+        github.tasks = [makeTask("Issue", source: .github, due: due(20))]
+        local.tasks = [makeTask("Lokal", source: .local, due: due(20, 12))]
+        reminders.tasks = [makeTask("Erinnerung", source: .reminders, due: due(20))]
+        let scheduler = makeScheduler(await loadedList())
+        await scheduler.reschedule()
+        settings.githubTaskNotifications = false
+        settings.reminderTaskNotifications = false
+        await scheduler.reschedule()
+        #expect(center.pendingIDs == ["tagwerk.task.local:Lokal"])
+        settings.localTaskNotifications = false
+        await scheduler.reschedule()
+        #expect(center.pending.isEmpty)
+    }
+
+    @Test func sourceSwitchOff_removesNotificationsAlsoWhenSourceNotLoaded() async {
+        // Switched off while GitHub is not registered yet: its pending requests go anyway.
+        center.seed("tagwerk.task.github:Issue", fireDate: testNow().addingTimeInterval(86_400))
+        settings.githubTaskNotifications = false
+        let scheduler = makeScheduler(await loadedList([local, reminders]))
+        await scheduler.reschedule()
+        #expect(center.pending.isEmpty)
     }
 
     @Test func completedTask_removesItsNotification() async {

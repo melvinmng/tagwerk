@@ -25,16 +25,35 @@ struct NotificationPlanTests {
         notificationPlan(tasks: tasks, deadlineEvents: events, rules: rules ?? self.rules, now: now, calendar: calendar)
     }
 
-    @Test func remindersAndCompletedTasks_excluded() {
+    @Test func completedAndUndatedTasks_excluded() {
         let due = DueDate(year: 2026, month: 11, day: 19, hour: 12)
         let result = plan([
-            task("Erinnerung", source: .reminders, due: due),
             task("Erledigt", source: .local, due: due, completed: true),
             task("Ohne Datum", source: .github, due: nil),
             task("Offen", source: .github, due: due),
         ])
         #expect(result.map(\.title) == ["Offen"])
         #expect(result.first?.source == .github)
+    }
+
+    @Test func allSources_includedByDefault() {
+        let due = DueDate(year: 2026, month: 11, day: 19, hour: 12)
+        let result = plan([
+            task("Erinnerung", source: .reminders, due: due, container: "Einkauf"),
+            task("Issue", source: .github, due: due),
+            task("Lokal", source: .local, due: due),
+        ])
+        #expect(Set(result.compactMap(\.source)) == [.reminders, .github, .local])
+        #expect(result.first { $0.source == .reminders }?.body == "Fällig heute um 12:00 · Einkauf")
+    }
+
+    @Test func taskSources_limitTheSources() {
+        var only = rules
+        only.taskSources = [.local]
+        let due = DueDate(year: 2026, month: 11, day: 19, hour: 12)
+        let result = plan([task("Erinnerung", source: .reminders, due: due), task("Issue", source: .github, due: due),
+                           task("Lokal", source: .local, due: due)], rules: only)
+        #expect(result.map(\.title) == ["Lokal"])
     }
 
     @Test func githubDateOnly_firesAt9OnDueDayWithoutLeadTime() {
