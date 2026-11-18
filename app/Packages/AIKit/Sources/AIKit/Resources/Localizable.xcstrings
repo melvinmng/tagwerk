@@ -1,5 +1,52 @@
 {
   "sourceLanguage" : "de",
-  "strings" : {},
+  "strings" : {
+    "Anmeldung abgebrochen." : {
+
+    },
+    "ChatGPT hat die Anmeldung abgelehnt: %@" : {
+
+    },
+    "ChatGPT hat einen Fehler gemeldet (HTTP %lld)." : {
+
+    },
+    "Das Nutzungslimit deines ChatGPT-Abos ist erreicht. Versuche es später erneut." : {
+
+    },
+    "Dein ChatGPT-Konto kann hier nicht genutzt werden. Melde dich neu an." : {
+
+    },
+    "Die Anmeldung braucht Port 1455, der gerade belegt ist. Schließe andere Apps mit ChatGPT-Anmeldung und versuche es erneut." : {
+
+    },
+    "Die Anmeldung hat zu lange gedauert. Versuche es erneut." : {
+
+    },
+    "Die Anmeldung ist fehlgeschlagen (HTTP %lld)." : {
+
+    },
+    "Die Anmeldung ist fehlgeschlagen (HTTP %lld, %@)." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Die Anmeldung ist fehlgeschlagen (HTTP %1$lld, %2$@)."
+          }
+        }
+      }
+    },
+    "Die Anmeldung ist fehlgeschlagen. Versuche es erneut." : {
+
+    },
+    "Die Antwort von ChatGPT wurde unterbrochen." : {
+
+    },
+    "Keine Verbindung zu ChatGPT." : {
+
+    },
+    "Melde dich in den Einstellungen mit ChatGPT an." : {
+
+    }
+  },
   "version" : "1.0"
 }

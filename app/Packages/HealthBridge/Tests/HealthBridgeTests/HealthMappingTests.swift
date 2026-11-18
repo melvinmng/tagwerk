@@ -63,6 +63,6 @@ struct HealthMappingTests {
         #expect(HealthMapping.access(shouldRequest: false, denied: []) == .authorized)
         #expect(HealthMapping.access(shouldRequest: false, denied: [.water, .workouts]) == .partial([.water, .workouts]))
         #expect(HealthMapping.access(shouldRequest: false, denied: Set(HealthShareKind.allCases)) == .denied)
-        #expect(HealthShareKind.water.germanName == "Wasser")
+        #expect(HealthShareKind.water.displayName == "Wasser")
     }
 }

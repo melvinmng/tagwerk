@@ -120,7 +120,7 @@ struct AIPlannerTests {
         #expect(planning.days.first?.suggestions.map(\.taskKey) == ["github:Login"])
         let unscheduled = try #require(planning.suggestionBatches.first?.unscheduled.first)
         #expect(unscheduled.taskKey == "local:Fahrrad")
-        #expect(unscheduled.reason == PlanViolation.Reason.overlapsEvent.rawValue)
+        #expect(unscheduled.reason == PlanViolation.Reason.overlapsEvent.text)
     }
 
     @Test func plan_invalidJSON_fails_withoutSuggestions() async {
@@ -196,7 +196,7 @@ struct AIPlannerTests {
         await planner.accept(suggestion)
 
         #expect(!calendarStore.storedEvents.contains { $0.calendarID == "plan" })
-        #expect(planner.notice?.contains(PlanViolation.Reason.overlapsEvent.rawValue) == true)
+        #expect(planner.notice?.contains(PlanViolation.Reason.overlapsEvent.text) == true)
         #expect(planning.days.first?.suggestions.isEmpty == true)
         #expect(planning.suggestionBatches.first?.unscheduled.map(\.taskKey) == ["local:Fahrrad"])
     }
@@ -373,7 +373,7 @@ struct AIPlannerTests {
         let change = try #require(planning.days.first?.suggestions.first { $0.kind == .dayChange })
         await planner.dismiss(change)
         #expect(planning.days.first?.suggestions.map(\.taskKey) == ["github:Login"])
-        #expect(planning.suggestionBatches.first?.unscheduled.first?.reason == PlanViolation.Reason.outsideWorkHours.rawValue)
+        #expect(planning.suggestionBatches.first?.unscheduled.first?.reason == PlanViolation.Reason.outsideWorkHours.text)
     }
 
     @Test func acceptMove_setsTheNewWorkDay() async throws {

@@ -86,33 +86,37 @@ public struct WeekReview: Sendable, Hashable {
             isCurrentWeek: (weekStart...weekStart.adding(days: 6, calendar: calendar)).contains(today))
     }
 
-    /// "KW 47 · 16.–22. Nov" or "KW 49 · 30. Nov – 6. Dez" across months (ISO week number).
-    public static func title(weekStart: PlanDay, calendar: Calendar) -> String {
+    /// "KW 47 · 16.–22. Nov" or "KW 49 · 30. Nov – 6. Dez" across months (ISO week number); the English texts
+    /// order week, month and day as the language does.
+    public static func title(weekStart: PlanDay, calendar: Calendar, locale: Locale = .current) -> String {
         var iso = Calendar(identifier: .iso8601)
         iso.timeZone = calendar.timeZone
         let start = weekStart.startDate(in: calendar)
         let endDay = weekStart.adding(days: 6, calendar: calendar)
         let week = iso.component(.weekOfYear, from: start)
         let month = DateFormatter()
-        month.locale = Locale(identifier: "de_DE")
+        month.locale = locale
         month.timeZone = calendar.timeZone
         month.dateFormat = "MMM"
         let startMonth = month.string(from: start).replacingOccurrences(of: ".", with: "")
         let endMonth = month.string(from: endDay.startDate(in: calendar)).replacingOccurrences(of: ".", with: "")
-        let range = startMonth == endMonth
-            ? "\(weekStart.day).–\(endDay.day). \(endMonth)"
-            : "\(weekStart.day). \(startMonth) – \(endDay.day). \(endMonth)"
-        return "KW \(week) · \(range)"
+        let firstDay = weekStart.day, lastDay = endDay.day
+        return startMonth == endMonth
+            ? String(localized: "KW \(week) · \(firstDay).–\(lastDay). \(endMonth)", bundle: .module)
+            : String(localized: "KW \(week) · \(firstDay). \(startMonth) – \(lastDay). \(endMonth)", bundle: .module)
     }
 }
 
 extension IntakeFormat {
     /// The line in the head of "Planen" (phase 4 design §5.7): "~1.240 / 2.300 kcal · 1,2 / 2,0 l";
     /// `nil` before the first entry of the day.
-    public static func planHeaderLine(intake: DayIntake, goalKcal: Int, goalWaterMilliliters: Int, hasEntries: Bool) -> String? {
+    public static func planHeaderLine(intake: DayIntake, goalKcal: Int, goalWaterMilliliters: Int, hasEntries: Bool,
+                                      locale: Locale = .current) -> String? {
         guard hasEntries else { return nil }
-        let water = intake.waterMilliliters == 0 ? "0" : liters(intake.waterMilliliters).replacingOccurrences(of: " l", with: "")
-        return "\(kcalNumber(intake.kcal, estimated: intake.hasEstimate)) / \(grouped(goalKcal)) kcal · "
-            + "\(water) / \(liters(goalWaterMilliliters))"
+        let energy = kcalNumber(intake.kcal, estimated: intake.hasEstimate, locale: locale)
+        let goalEnergy = grouped(goalKcal, locale: locale)
+        let water = intake.waterMilliliters == 0 ? "0" : litersNumber(intake.waterMilliliters, locale: locale)
+        let goalWater = liters(goalWaterMilliliters, locale: locale)
+        return String(localized: "\(energy) / \(goalEnergy) kcal · \(water) / \(goalWater)", bundle: .module)
     }
 }

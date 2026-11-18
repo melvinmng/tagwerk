@@ -323,7 +323,7 @@ struct MealRow: View {
         HStack(alignment: .firstTextBaseline) {
             VStack(alignment: .leading, spacing: 2) {
                 Text(meal.title).lineLimit(2)
-                Text("\(meal.kind.germanName) · \(CaptureText.time(meal.date, calendar: calendar))")
+                Text("\(meal.kind.displayName) · \(CaptureText.time(meal.date, calendar: calendar))")
                     .font(.caption).foregroundStyle(.secondary)
             }
             Spacer()

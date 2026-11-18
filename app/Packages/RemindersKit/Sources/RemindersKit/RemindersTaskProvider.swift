@@ -95,7 +95,7 @@ public final class RemindersTaskProvider: TaskProvider {
     }
 
     private func map(_ record: ReminderRecord, lists: [String: ListInfo]) -> TaskItem {
-        let list = lists[record.listID] ?? ListInfo(id: record.listID, title: "Erinnerungen", colorHex: nil, kind: .other)
+        let list = lists[record.listID] ?? ListInfo(id: record.listID, title: String(localized: "Erinnerungen", bundle: .module), colorHex: nil, kind: .other)
         var item = ReminderMapping.taskItem(record, list: list)
         if let estimates {
             item.estimateMinutes = estimates.minutes(for: record.id)

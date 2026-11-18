@@ -1,5 +1,30 @@
 {
   "sourceLanguage" : "de",
-  "strings" : {},
+  "strings" : {
+    "Der Termin wurde inzwischen geändert." : {
+
+    },
+    "Dieser Kalender kann nicht geändert werden." : {
+
+    },
+    "Dieser Termin kann in Tagwerk nicht geändert werden." : {
+
+    },
+    "Erinnerungen" : {
+
+    },
+    "Geplant mit Tagwerk" : {
+
+    },
+    "Kein Plan-Kalender" : {
+
+    },
+    "Keine Erinnerungsliste gefunden" : {
+
+    },
+    "Keine Kalenderquelle verfügbar" : {
+
+    }
+  },
   "version" : "1.0"
 }

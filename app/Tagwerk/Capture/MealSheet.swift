@@ -257,7 +257,7 @@ struct MealSheet: View {
             Section {
                 TextField("Name der Mahlzeit", text: $draft.title)
                 Picker("Mahlzeit", selection: $draft.kind) {
-                    ForEach(MealKind.allCases, id: \.self) { Text($0.germanName).tag($0) }
+                    ForEach(MealKind.allCases, id: \.self) { Text($0.displayName).tag($0) }
                 }
                 DatePicker("Zeit", selection: $draft.date, in: ...Date())
             }

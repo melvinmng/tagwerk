@@ -100,23 +100,23 @@ public enum HealthMapping {
         }
     }
 
-    /// German name of a Health workout type; common types only, otherwise "Training".
+    /// Name of a Health workout type in the app language; common types only, otherwise "Training".
     static func activityName(_ type: HKWorkoutActivityType) -> String {
-        if let activity = activity(for: type) { return activity.germanName }
+        if let activity = activity(for: type) { return activity.displayName }
         return switch type {
-        case .elliptical: "Crosstrainer"
-        case .rowing: "Rudern"
-        case .stairClimbing, .stairs: "Treppensteigen"
-        case .dance, .socialDance, .cardioDance: "Tanzen"
-        case .pilates: "Pilates"
-        case .coreTraining: "Rumpftraining"
-        case .crossTraining: "Cross-Training"
-        case .mixedCardio: "Gemischtes Cardio"
-        case .soccer: "Fußball"
-        case .tennis: "Tennis"
-        case .climbing: "Klettern"
-        case .cooldown: "Cool-down"
-        default: "Training"
+        case .elliptical: String(localized: "Crosstrainer", bundle: .module)
+        case .rowing: String(localized: "Rudern", bundle: .module)
+        case .stairClimbing, .stairs: String(localized: "Treppensteigen", bundle: .module)
+        case .dance, .socialDance, .cardioDance: String(localized: "Tanzen", bundle: .module)
+        case .pilates: String(localized: "Pilates", bundle: .module)
+        case .coreTraining: String(localized: "Rumpftraining", bundle: .module)
+        case .crossTraining: String(localized: "Cross-Training", bundle: .module)
+        case .mixedCardio: String(localized: "Gemischtes Cardio", bundle: .module)
+        case .soccer: String(localized: "Fußball", bundle: .module)
+        case .tennis: String(localized: "Tennis", bundle: .module)
+        case .climbing: String(localized: "Klettern", bundle: .module)
+        case .cooldown: String(localized: "Cool-down", bundle: .module)
+        default: String(localized: "Training", bundle: .module)
         }
     }
 

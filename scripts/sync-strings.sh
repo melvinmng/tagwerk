@@ -2,7 +2,7 @@
 # Brings the String Catalogs in line with the source code (plan english-app, Task 1).
 #
 # App and widget: the keys come from the .stringsdata files the compiler writes during a build.
-# Packages: the keys come from `xcstringstool extract` on the package sources (no .stringsdata there).
+# Packages: the keys come from the .stringsdata of the package targets in the same build.
 # Hand-maintained catalogs (InfoPlist, AppShortcuts) are not touched.
 #
 # Usage: scripts/sync-strings.sh [--check] [--derived-data PATH] [--no-build]
@@ -78,10 +78,10 @@ for package_dir in "$APP_DIR"/Packages/*(/N); do
   name="${package_dir:t}"
   catalog="$package_dir/Sources/$name/Resources/Localizable.xcstrings"
   [[ -f "$catalog" ]] || continue
-  out="$WORK/extract-$name"
-  mkdir -p "$out"
-  xcrun xcstringstool extract --modern-localizable-strings $package_dir/Sources/$name/**/*.swift --output-directory "$out" >/dev/null
-  sync_catalog "$catalog" "$out"/*.stringsdata(N)
+  # The app build compiles the packages with SWIFT_EMIT_LOC_STRINGS too; unlike `xcstringstool extract` on the
+  # sources, these .stringsdata carry the typed placeholders (%lld, %@) that the runtime lookup uses.
+  files=("$DERIVED/Build/Intermediates.noindex/$name.build"/*-iphonesimulator/$name-t.build/Objects-normal/*/*.stringsdata(N))
+  sync_catalog "$catalog" "${files[@]}"
 done
 
 if (( CHECK && DIFFERENT )); then

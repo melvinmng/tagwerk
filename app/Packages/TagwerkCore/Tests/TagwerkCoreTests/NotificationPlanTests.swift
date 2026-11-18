@@ -193,4 +193,17 @@ struct NotificationPlanTests {
         #expect(parts.hour == 9)
         #expect(parts.minute == 0)
     }
+
+    @Test func timeAndDate_followTheLocale() {
+        var long = rules
+        long.leadTimeMinutes = 48 * 60
+        let item = task("Morgen", source: .local, due: DueDate(year: 2026, month: 11, day: 21, hour: 9))
+        let german = notificationPlan(tasks: [item], deadlineEvents: [], rules: long, now: now, calendar: calendar,
+                                      locale: Locale(identifier: "de_DE"))
+        let english = notificationPlan(tasks: [item], deadlineEvents: [], rules: long, now: now, calendar: calendar,
+                                       locale: Locale(identifier: "en_US"))
+        #expect(german.first?.body == "Fällig am Sa., 21.11. um 09:00 · Lokal")
+        // The words stay German until the English texts exist; the formats already follow the locale.
+        #expect(english.first?.body == "Fällig am Sat, 11/21 um 9:00\u{202F}AM · Lokal")
+    }
 }

@@ -281,7 +281,7 @@ final class AIPlanner {
                 let dependent = batch.suggestions.filter { $0.dependsOn == suggestion.id }
                 for block in dependent where !batch.unscheduled.contains(where: { $0.taskKey == block.taskKey }) {
                     batch.unscheduled.append(UnscheduledTask(taskKey: block.taskKey, title: block.title,
-                                                             reason: PlanViolation.Reason.outsideWorkHours.rawValue))
+                                                             reason: PlanViolation.Reason.outsideWorkHours.text))
                 }
                 batch.suggestions.removeAll { $0.dependsOn == suggestion.id }
             }
@@ -363,7 +363,7 @@ final class AIPlanner {
         for change in suggestions where change.kind == .dayChange {
             guard change.day >= planning.today, let start = change.startMinutes, let end = change.endMinutes else {
                 result.failures[change.id] = UnscheduledTask(taskKey: change.taskKey, title: change.title,
-                                                             reason: PlanViolation.Reason.inThePast.rawValue)
+                                                             reason: PlanViolation.Reason.inThePast.text)
                 continue
             }
             result.undo.overrides.append((change.day, planning.planStore.override(on: change.day)))
@@ -374,7 +374,7 @@ final class AIPlanner {
         for move in suggestions where move.kind == .move {
             guard let id = move.taskID, task(for: move) != nil, move.day > planning.today else {
                 result.failures[move.id] = UnscheduledTask(taskKey: move.taskKey, title: move.title,
-                                                           reason: PlanViolation.Reason.inThePast.rawValue)
+                                                           reason: PlanViolation.Reason.inThePast.text)
                 continue
             }
             await planning.moveTask(id, to: move.day)
@@ -462,7 +462,7 @@ final class AIPlanner {
         for violation in violations {
             guard let suggestion = suggestions.first(where: { $0.taskKey == violation.taskId }) else { continue }
             invalid[suggestion.id] = UnscheduledTask(taskKey: suggestion.taskKey, title: suggestion.title,
-                                                     reason: violation.reason.rawValue)
+                                                     reason: violation.reason.text)
         }
         return (suggestions.filter { invalid[$0.id] == nil }, invalid)
     }
@@ -617,7 +617,7 @@ final class AIPlanner {
     }
 
     static func violationMessage(_ violations: [PlanViolation]) -> String {
-        let lines = violations.map { "- \($0.taskId): \($0.reason.rawValue)" }.joined(separator: "\n")
+        let lines = violations.map { "- \($0.taskId): \($0.reason.text)" }.joined(separator: "\n")
         return "Diese Vorschläge verletzen die Regeln:\n\(lines)\nKorrigiere den Plan und antworte wieder vollständig im vorgegebenen Format."
     }
 
@@ -729,7 +729,7 @@ final class AIPlanner {
             && !unscheduled.contains(where: { $0.taskKey == violation.taskId })
             && !suggestions.contains(where: { $0.taskKey == violation.taskId }) {
             unscheduled.append(UnscheduledTask(taskKey: violation.taskId, title: title(violation.taskId),
-                                               reason: violation.reason.rawValue))
+                                               reason: violation.reason.text))
         }
         return SuggestionBatch(id: UUID(), scope: scope, days: input.days.map(\.day), createdAt: planning.now(),
                                suggestions: suggestions, unscheduled: unscheduled, risks: risks,

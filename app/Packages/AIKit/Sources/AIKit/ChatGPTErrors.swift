@@ -17,12 +17,12 @@ public enum ChatGPTError: Error, Equatable, Sendable {
 
     public var userMessage: String {
         switch self {
-        case .notSignedIn: "Melde dich in den Einstellungen mit ChatGPT an."
-        case .usageLimit: "Das Nutzungslimit deines ChatGPT-Abos ist erreicht. Versuche es später erneut."
-        case .invalidUser: "Dein ChatGPT-Konto kann hier nicht genutzt werden. Melde dich neu an."
-        case .network: "Keine Verbindung zu ChatGPT."
-        case .server(let status, _): "ChatGPT hat einen Fehler gemeldet (HTTP \(status))."
-        case .incomplete: "Die Antwort von ChatGPT wurde unterbrochen."
+        case .notSignedIn: String(localized: "Melde dich in den Einstellungen mit ChatGPT an.", bundle: .module)
+        case .usageLimit: String(localized: "Das Nutzungslimit deines ChatGPT-Abos ist erreicht. Versuche es später erneut.", bundle: .module)
+        case .invalidUser: String(localized: "Dein ChatGPT-Konto kann hier nicht genutzt werden. Melde dich neu an.", bundle: .module)
+        case .network: String(localized: "Keine Verbindung zu ChatGPT.", bundle: .module)
+        case .server(let status, _): String(localized: "ChatGPT hat einen Fehler gemeldet (HTTP \(status)).", bundle: .module)
+        case .incomplete: String(localized: "Die Antwort von ChatGPT wurde unterbrochen.", bundle: .module)
         }
     }
 }
@@ -53,15 +53,17 @@ public enum ChatGPTAuthError: Error, Equatable, Sendable {
     public var userMessage: String {
         switch self {
         case .portInUse:
-            "Die Anmeldung braucht Port 1455, der gerade belegt ist. Schließe andere Apps mit ChatGPT-Anmeldung und versuche es erneut."
-        case .cancelled: "Anmeldung abgebrochen."
-        case .timedOut: "Die Anmeldung hat zu lange gedauert. Versuche es erneut."
-        case .network: "Keine Verbindung zu ChatGPT."
-        case .authorizationFailed(let message): "ChatGPT hat die Anmeldung abgelehnt: \(message)"
+            String(localized: "Die Anmeldung braucht Port 1455, der gerade belegt ist. Schließe andere Apps mit ChatGPT-Anmeldung und versuche es erneut.", bundle: .module)
+        case .cancelled: String(localized: "Anmeldung abgebrochen.", bundle: .module)
+        case .timedOut: String(localized: "Die Anmeldung hat zu lange gedauert. Versuche es erneut.", bundle: .module)
+        case .network: String(localized: "Keine Verbindung zu ChatGPT.", bundle: .module)
+        case .authorizationFailed(let message): String(localized: "ChatGPT hat die Anmeldung abgelehnt: \(message)", bundle: .module)
         case .tokenExchangeFailed(let status, let code):
-            "Die Anmeldung ist fehlgeschlagen (HTTP \(status)\(code.map { ", \($0)" } ?? ""))."
+            // The code is part of the whole sentence, so that a translation can place it freely.
+            code.map { String(localized: "Die Anmeldung ist fehlgeschlagen (HTTP \(status), \($0)).", bundle: .module) }
+                ?? String(localized: "Die Anmeldung ist fehlgeschlagen (HTTP \(status)).", bundle: .module)
         case .stateMismatch, .missingCode, .missingIssuedClientID, .clientIDMismatch, .nonceMismatch, .serverFailed:
-            "Die Anmeldung ist fehlgeschlagen. Versuche es erneut."
+            String(localized: "Die Anmeldung ist fehlgeschlagen. Versuche es erneut.", bundle: .module)
         }
     }
 }

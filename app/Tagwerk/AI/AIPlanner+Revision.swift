@@ -211,7 +211,7 @@ extension AIPlanner {
             // Blame a changed suggestion of the violating task, else the last change (capacity is order-dependent).
             let blamed = open.last { id in found.contains { $0.taskId == revised.first { $0.id == id }?.taskKey } } ?? open.last!
             let reason = found.first { $0.taskId == revised.first { $0.id == blamed }?.taskKey }?.reason ?? found[0].reason
-            rejected[blamed] = reason.rawValue
+            rejected[blamed] = reason.text
             if let index = revised.firstIndex(where: { $0.id == blamed }), let original = originals[blamed] {
                 revised[index] = original
                 revised[index].previousPosition = nil

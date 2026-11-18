@@ -1,5 +1,66 @@
 {
   "sourceLanguage" : "de",
-  "strings" : {},
+  "strings" : {
+    "Cool-down" : {
+
+    },
+    "Cross-Training" : {
+
+    },
+    "Crosstrainer" : {
+
+    },
+    "Eiweiß" : {
+
+    },
+    "Fett" : {
+
+    },
+    "Fußball" : {
+
+    },
+    "Gemischtes Cardio" : {
+
+    },
+    "Kalorien" : {
+
+    },
+    "Klettern" : {
+
+    },
+    "Kohlenhydrate" : {
+
+    },
+    "Pilates" : {
+
+    },
+    "Rudern" : {
+
+    },
+    "Rumpftraining" : {
+
+    },
+    "Tanzen" : {
+
+    },
+    "Tennis" : {
+
+    },
+    "Training" : {
+
+    },
+    "Trainings" : {
+
+    },
+    "Trainingskalorien" : {
+
+    },
+    "Treppensteigen" : {
+
+    },
+    "Wasser" : {
+
+    }
+  },
   "version" : "1.0"
 }

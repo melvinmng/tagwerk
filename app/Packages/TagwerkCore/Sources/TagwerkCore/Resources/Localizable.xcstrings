@@ -1,5 +1,349 @@
 {
   "sourceLanguage" : "de",
-  "strings" : {},
+  "strings" : {
+    "%@ / %@ kcal · %@ / %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ / %2$@ kcal · %3$@ / %4$@"
+          }
+        }
+      }
+    },
+    "%@ g" : {
+
+    },
+    "%@ kcal" : {
+
+    },
+    "%@ kcal · %@ · %lld×" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ kcal · %2$@ · %3$lld×"
+          }
+        }
+      }
+    },
+    "%@ l" : {
+
+    },
+    "%@ um %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ um %2$@"
+          }
+        }
+      }
+    },
+    "%@ über Ziel" : {
+
+    },
+    "%lld Blöcke" : {
+      "localizations" : {
+        "de" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld Block"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld Blöcke"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "%lld Deadlines" : {
+      "localizations" : {
+        "de" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld Deadline"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld Deadlines"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "%lld Termine" : {
+      "localizations" : {
+        "de" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld Termin"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld Termine"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "%lld h" : {
+
+    },
+    "%lld h %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld h %2$@"
+          }
+        }
+      }
+    },
+    "%lld min" : {
+
+    },
+    "Abendessen" : {
+
+    },
+    "Danach noch %@ zu viel." : {
+
+    },
+    "Das Datum ist ungültig." : {
+
+    },
+    "Das verlängert die Arbeitszeit nicht." : {
+
+    },
+    "Deadline %@" : {
+
+    },
+    "Deadline %@, ganztägig" : {
+
+    },
+    "Der Block liegt außerhalb der Arbeitszeit." : {
+
+    },
+    "Der Block liegt in der Mittagspause." : {
+
+    },
+    "Der Block überschneidet sich mit einem Termin oder dessen Puffer." : {
+
+    },
+    "Der Block überschneidet sich mit einem anderen Block." : {
+
+    },
+    "Der Tag ist frei." : {
+
+    },
+    "Der Tag liegt außerhalb des Zeitraums." : {
+
+    },
+    "Der Vorschlag liegt in der Vergangenheit." : {
+
+    },
+    "Der Vorschlag liegt nach der Fälligkeit." : {
+
+    },
+    "Der Vorschlag liegt nach der zugehörigen Deadline." : {
+
+    },
+    "Die Antwort passt nicht zum Zeitraum." : {
+
+    },
+    "Die Aufgabe ist an diesem Tag nicht eingeplant." : {
+
+    },
+    "Die Aufgabe ist schon einem Tag zugeordnet." : {
+
+    },
+    "Die Aufgabe wurde doppelt vorgeschlagen." : {
+
+    },
+    "Die Dauer ist ungültig." : {
+
+    },
+    "Die Kapazität des Tages ist überschritten." : {
+
+    },
+    "Die Uhrzeit ist ungültig." : {
+
+    },
+    "Die längere Arbeitszeit liegt außerhalb von 7 bis 21 Uhr oder über 12 Stunden." : {
+
+    },
+    "Die längere Arbeitszeit wird nicht gebraucht." : {
+
+    },
+    "Diese Aufgabe gibt es nicht." : {
+
+    },
+    "Diese Woche" : {
+
+    },
+    "Frühstück" : {
+
+    },
+    "Fällig %@ · %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Fällig %1$@ · %2$@"
+          }
+        }
+      }
+    },
+    "Gehen" : {
+
+    },
+    "HIIT" : {
+
+    },
+    "Heute" : {
+
+    },
+    "Heute steht nichts an." : {
+
+    },
+    "Heute: %@. Als Nächstes %@ %@." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Heute: %1$@. Als Nächstes %2$@ %3$@."
+          }
+        }
+      }
+    },
+    "Heute: %@. Davon steht nichts mehr an." : {
+
+    },
+    "Immer" : {
+
+    },
+    "KW %lld · %lld. %@ – %lld. %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "KW %1$lld · %2$lld. %3$@ – %4$lld. %5$@"
+          }
+        }
+      }
+    },
+    "KW %lld · %lld.–%lld. %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "KW %1$lld · %2$lld.–%3$lld. %4$@"
+          }
+        }
+      }
+    },
+    "Kommentare gibt es nur bei GitHub-Issues." : {
+
+    },
+    "Krafttraining" : {
+
+    },
+    "Laufen" : {
+
+    },
+    "Mittagessen" : {
+
+    },
+    "Nach gesprochenen Nachrichten" : {
+
+    },
+    "Nie" : {
+
+    },
+    "Ohne Datum" : {
+
+    },
+    "Ohne Titel" : {
+
+    },
+    "Radfahren" : {
+
+    },
+    "Schwimmen" : {
+
+    },
+    "Snack" : {
+
+    },
+    "Sonstiges" : {
+
+    },
+    "Später" : {
+
+    },
+    "Wandern" : {
+
+    },
+    "Yoga" : {
+
+    },
+    "am %@, %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "am %1$@, %2$@"
+          }
+        }
+      }
+    },
+    "heute" : {
+
+    },
+    "morgen" : {
+
+    },
+    "noch %@" : {
+
+    },
+    "wahrscheinlich zwischen %@ und %@ kcal" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "wahrscheinlich zwischen %1$@ und %2$@ kcal"
+          }
+        }
+      }
+    },
+    "×%@" : {
+
+    },
+    "Überfällig" : {
+
+    }
+  },
   "version" : "1.0"
 }

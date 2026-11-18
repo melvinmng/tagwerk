@@ -65,7 +65,7 @@ public final class GitHubTaskProvider: TaskProvider {
             let mapped = Self.taskError(error)
             if mapped == .signedOut { throw mapped }
             guard let cached = cache.load() else {
-                throw mapped == .offline ? TaskWriteError.failed("Keine Verbindung zu GitHub.") : mapped
+                throw mapped == .offline ? TaskWriteError.failed(String(localized: "Keine Verbindung zu GitHub.", bundle: .module)) : mapped
             }
             remember(cached.records)
             if projects.isEmpty { projects = Self.projects(in: cached.records) }
@@ -167,7 +167,7 @@ public final class GitHubTaskProvider: TaskProvider {
     /// every project in `draft.subContainerIDs` with the draft's field values and status "Ready".
     public func create(_ draft: TaskDraft) async throws -> TaskItem {
         guard let repository = draft.containerID, !draft.subContainerIDs.isEmpty else {
-            throw TaskWriteError.failed("Bitte Repository und mindestens ein Project wählen.")
+            throw TaskWriteError.failed(String(localized: "Bitte Repository und mindestens ein Project wählen.", bundle: .module))
         }
         do {
             let (viewer, available) = try await api.viewerProjects()
@@ -303,12 +303,12 @@ public final class GitHubTaskProvider: TaskProvider {
         switch error {
         case let error as TaskWriteError: error
         case GitHubAuthError.signedOut: .signedOut
-        case GitHubAuthError.credentialsUnreadable: .failed("Anmeldung derzeit nicht lesbar.")
+        case GitHubAuthError.credentialsUnreadable: .failed(String(localized: "Anmeldung derzeit nicht lesbar.", bundle: .module))
         case GitHubAuthError.network: .offline
-        case GitHubAuthError.server(let message): .failed("GitHub-Anmeldung: \(message)")
+        case GitHubAuthError.server(let message): .failed(String(localized: "GitHub-Anmeldung: \(message)", bundle: .module))
         case GitHubAPIError.network: .offline
         case GitHubAPIError.graphQL(let message): .failed(message)
-        case GitHubAPIError.http(let status): .failed("GitHub antwortet mit Fehler \(status).")
+        case GitHubAPIError.http(let status): .failed(String(localized: "GitHub antwortet mit Fehler \(status).", bundle: .module))
         default: .failed(error.localizedDescription)
         }
     }

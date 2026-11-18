@@ -4,12 +4,12 @@ import Foundation
 public enum MealKind: String, Sendable, Codable, CaseIterable, Hashable {
     case breakfast, lunch, dinner, snack
 
-    public var germanName: String {
+    public var displayName: String {
         switch self {
-        case .breakfast: "Frühstück"
-        case .lunch: "Mittagessen"
-        case .dinner: "Abendessen"
-        case .snack: "Snack"
+        case .breakfast: String(localized: "Frühstück", bundle: .module)
+        case .lunch: String(localized: "Mittagessen", bundle: .module)
+        case .dinner: String(localized: "Abendessen", bundle: .module)
+        case .snack: String(localized: "Snack", bundle: .module)
         }
     }
 
@@ -147,17 +147,17 @@ public struct DrinkValue: Sendable, Hashable, Identifiable {
 public enum WorkoutActivity: String, Sendable, Codable, CaseIterable, Hashable {
     case strength, running, cycling, walking, hiking, swimming, yoga, hiit, other
 
-    public var germanName: String {
+    public var displayName: String {
         switch self {
-        case .strength: "Krafttraining"
-        case .running: "Laufen"
-        case .cycling: "Radfahren"
-        case .walking: "Gehen"
-        case .hiking: "Wandern"
-        case .swimming: "Schwimmen"
-        case .yoga: "Yoga"
-        case .hiit: "HIIT"
-        case .other: "Sonstiges"
+        case .strength: String(localized: "Krafttraining", bundle: .module)
+        case .running: String(localized: "Laufen", bundle: .module)
+        case .cycling: String(localized: "Radfahren", bundle: .module)
+        case .walking: String(localized: "Gehen", bundle: .module)
+        case .hiking: String(localized: "Wandern", bundle: .module)
+        case .swimming: String(localized: "Schwimmen", bundle: .module)
+        case .yoga: String(localized: "Yoga", bundle: .module)
+        case .hiit: String(localized: "HIIT", bundle: .module)
+        case .other: String(localized: "Sonstiges", bundle: .module)
         }
     }
 
@@ -201,7 +201,7 @@ public struct WorkoutValue: Sendable, Hashable, Identifiable {
         self.customName = customName
     }
 
-    public var displayName: String { customName ?? activity.germanName }
+    public var displayName: String { customName ?? activity.displayName }
     public var end: Date { start.addingTimeInterval(TimeInterval(minutes * 60)) }
     public var interval: DateInterval { DateInterval(start: start, end: end) }
 }

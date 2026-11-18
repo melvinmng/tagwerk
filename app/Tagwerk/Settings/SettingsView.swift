@@ -174,7 +174,7 @@ struct SettingsView: View {
     private var healthFooter: String {
         switch healthAccess {
         case .partial(let kinds):
-            "Nicht nach Health geschrieben werden: \(kinds.map(\.germanName).joined(separator: ", ")). Deine Einträge bleiben in Tagwerk."
+            "Nicht nach Health geschrieben werden: \(kinds.map(\.displayName).joined(separator: ", ")). Deine Einträge bleiben in Tagwerk."
         case .denied:
             "Tagwerk darf nicht nach Health schreiben. Deine Einträge bleiben in Tagwerk. Ändern kannst du das in der App „Health“ unter Profil › Apps › Tagwerk."
         default:

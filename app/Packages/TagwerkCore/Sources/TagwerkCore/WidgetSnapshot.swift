@@ -243,7 +243,7 @@ public struct WidgetSnapshot: Sendable, Hashable, Codable {
     }
 
     /// Siri's answer to "Was steht heute an?": counts and the next entry, never nutrition.
-    public func overviewText(at date: Date, calendar: Calendar) -> String {
+    public func overviewText(at date: Date, calendar: Calendar, locale: Locale = .current) -> String {
         let today = PlanDay(date: date, calendar: calendar)
         let day = days.first { $0.day == today }
         let entries = day?.entries ?? []
@@ -251,18 +251,18 @@ public struct WidgetSnapshot: Sendable, Hashable, Codable {
         let blocks = day?.blockCount ?? entries.filter { $0.kind == .block }.count
         let deadlines = deadlineCount(at: date, calendar: calendar)
         var parts: [String] = []
-        if events > 0 { parts.append(events == 1 ? "1 Termin" : "\(events) Termine") }
-        if blocks > 0 { parts.append(blocks == 1 ? "1 Block" : "\(blocks) Blöcke") }
-        if deadlines > 0 { parts.append(deadlines == 1 ? "1 Deadline" : "\(deadlines) Deadlines") }
-        guard !parts.isEmpty else { return "Heute steht nichts an." }
-        var text = "Heute: \(parts.joined(separator: ", "))."
+        // One key per count; the catalog holds the singular ("1 Termin") as a plural variation.
+        if events > 0 { parts.append(String(localized: "\(events) Termine", bundle: .module)) }
+        if blocks > 0 { parts.append(String(localized: "\(blocks) Blöcke", bundle: .module)) }
+        if deadlines > 0 { parts.append(String(localized: "\(deadlines) Deadlines", bundle: .module)) }
+        guard !parts.isEmpty else { return String(localized: "Heute steht nichts an.", bundle: .module) }
+        let summary = parts.joined(separator: ", ")
         let next = upcoming(at: date, calendar: calendar, limit: 1)
         if let entry = next.entries.first, !next.isTomorrow {
-            text += " Als Nächstes \(Self.time(entry.start, calendar: calendar)) \(entry.title)."
-        } else {
-            text += " Davon steht nichts mehr an."
+            let time = DateText.time(entry.start, calendar: calendar, locale: locale), title = entry.title
+            return String(localized: "Heute: \(summary). Als Nächstes \(time) \(title).", bundle: .module)
         }
-        return text
+        return String(localized: "Heute: \(summary). Davon steht nichts mehr an.", bundle: .module)
     }
 
     /// "09:00" in the calendar's time zone.

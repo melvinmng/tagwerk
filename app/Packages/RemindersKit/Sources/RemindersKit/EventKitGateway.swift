@@ -135,7 +135,7 @@ public final class EventKitGateway: ReminderStore {
         }
         reminder.priority = ekPriority
         guard let list = listID.flatMap({ store.calendar(withIdentifier: $0) }) ?? store.defaultCalendarForNewReminders() else {
-            throw TaskWriteError.failed("Keine Erinnerungsliste gefunden")
+            throw TaskWriteError.failed(String(localized: "Keine Erinnerungsliste gefunden", bundle: .module))
         }
         reminder.calendar = list
         try store.save(reminder, commit: true)
@@ -282,7 +282,7 @@ extension EventKitGateway: CalendarStore {
         let sources = store.sources
         guard let source = sources.first(where: { $0.sourceType == .calDAV && $0.title == "iCloud" })
             ?? sources.first(where: { $0.sourceType == .local }) else {
-            throw TaskWriteError.failed("Keine Kalenderquelle verfügbar")
+            throw TaskWriteError.failed(String(localized: "Keine Kalenderquelle verfügbar", bundle: .module))
         }
         calendar.source = source
         try store.saveCalendar(calendar, commit: true)
@@ -291,7 +291,7 @@ extension EventKitGateway: CalendarStore {
 
     public func createBlock(_ draft: BlockDraft, in calendarID: String) throws -> CalendarEvent {
         guard let calendar = store.calendar(withIdentifier: calendarID), calendar.allowsContentModifications else {
-            throw TaskWriteError.failed("Kein Plan-Kalender")
+            throw TaskWriteError.failed(String(localized: "Kein Plan-Kalender", bundle: .module))
         }
         let event = EKEvent(eventStore: store)
         event.calendar = calendar
@@ -322,7 +322,7 @@ extension EventKitGateway: CalendarStore {
 
     public func createEvent(_ draft: EventDraft) throws -> CalendarEvent {
         guard let calendar = store.calendar(withIdentifier: draft.calendarID), calendar.allowsContentModifications else {
-            throw TaskWriteError.failed("Dieser Kalender kann nicht geändert werden.")
+            throw TaskWriteError.failed(String(localized: "Dieser Kalender kann nicht geändert werden.", bundle: .module))
         }
         let event = EKEvent(eventStore: store)
         event.calendar = calendar
@@ -338,7 +338,7 @@ extension EventKitGateway: CalendarStore {
         try CalendarBlockRules.checkVersion(of: current, expected: expectedVersion)
         if draft.calendarID != current.calendarID {
             guard let target = store.calendar(withIdentifier: draft.calendarID), target.allowsContentModifications else {
-                throw TaskWriteError.failed("Dieser Kalender kann nicht geändert werden.")
+                throw TaskWriteError.failed(String(localized: "Dieser Kalender kann nicht geändert werden.", bundle: .module))
             }
             event.calendar = target
         }

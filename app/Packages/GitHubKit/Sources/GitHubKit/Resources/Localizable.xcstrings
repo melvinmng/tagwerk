@@ -1,5 +1,21 @@
 {
   "sourceLanguage" : "de",
-  "strings" : {},
+  "strings" : {
+    "Anmeldung derzeit nicht lesbar." : {
+
+    },
+    "Bitte Repository und mindestens ein Project wählen." : {
+
+    },
+    "GitHub antwortet mit Fehler %lld." : {
+
+    },
+    "GitHub-Anmeldung: %@" : {
+
+    },
+    "Keine Verbindung zu GitHub." : {
+
+    }
+  },
   "version" : "1.0"
 }

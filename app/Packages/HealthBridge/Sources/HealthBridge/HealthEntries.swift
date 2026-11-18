@@ -98,15 +98,15 @@ public struct ForeignWorkout: Sendable, Hashable, Identifiable {
 public enum HealthShareKind: String, Sendable, CaseIterable, Hashable {
     case energy, protein, carbs, fat, water, workouts, activeEnergy
 
-    public var germanName: String {
+    public var displayName: String {
         switch self {
-        case .energy: "Kalorien"
-        case .protein: "Eiweiß"
-        case .carbs: "Kohlenhydrate"
-        case .fat: "Fett"
-        case .water: "Wasser"
-        case .workouts: "Trainings"
-        case .activeEnergy: "Trainingskalorien"
+        case .energy: String(localized: "Kalorien", bundle: .module)
+        case .protein: String(localized: "Eiweiß", bundle: .module)
+        case .carbs: String(localized: "Kohlenhydrate", bundle: .module)
+        case .fat: String(localized: "Fett", bundle: .module)
+        case .water: String(localized: "Wasser", bundle: .module)
+        case .workouts: String(localized: "Trainings", bundle: .module)
+        case .activeEnergy: String(localized: "Trainingskalorien", bundle: .module)
         }
     }
 }
