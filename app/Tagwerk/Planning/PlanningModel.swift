@@ -281,6 +281,13 @@ final class PlanningModel {
 
     // MARK: Actions
 
+    /// The day picked in the month moves one day; leaving the month shows the neighbouring month.
+    func stepSelectedDay(_ direction: Int) {
+        let next = monthSelection.adding(days: direction, calendar: calendar)
+        if next.month != anchor.month || next.year != anchor.year { anchor = next }
+        selectedDay = next
+    }
+
     /// One day, week or month forward (`1`) or back (`-1`), for arrows and swiping.
     func step(_ direction: Int) {
         switch scope {

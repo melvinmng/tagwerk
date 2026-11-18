@@ -314,6 +314,18 @@ struct PlanningModelTests {
         #expect(calendarStore.event(id: block.id)?.start == at(20, 10))
     }
 
+    @Test func stepSelectedDay_crossesIntoNextMonth() async {
+        let model = await model()
+        model.scope = .month
+        model.selectedDay = PlanDay(year: 2026, month: 11, day: 30)
+        model.stepSelectedDay(1)
+        #expect(model.monthSelection == PlanDay(year: 2026, month: 12, day: 1))
+        #expect(model.anchor.month == 12)
+        model.stepSelectedDay(-1)
+        #expect(model.monthSelection == PlanDay(year: 2026, month: 11, day: 30))
+        #expect(model.anchor.month == 11)
+    }
+
     @Test func assign_afterDue_marksPastDue() async {
         let model = await model()
         model.scope = .week
