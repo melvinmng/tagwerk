@@ -204,12 +204,20 @@ final class DeadlineMarkStore {
     }
 
     private func delete(_ record: EventDeadlineMark) {
-        let prefix = "event:" + record.eventKey
-        for link in allLinks() where link.deadlineKey == prefix || (record.isSeries && link.deadlineKey.hasPrefix(prefix + "|")) {
-            context.delete(link)
-        }
+        for link in links(ofMark: record) { context.delete(link) }
         context.delete(record)
         try? context.save()
+    }
+
+    /// Preparation links to the deadlines a mark makes (every occurrence for a series).
+    private func links(ofMark record: EventDeadlineMark) -> [DeadlineEventLink] {
+        let prefix = "event:" + record.eventKey
+        return allLinks().filter { $0.deadlineKey == prefix || (record.isSeries && $0.deadlineKey.hasPrefix(prefix + "|")) }
+    }
+
+    /// How many preparation links removing the mark of `event` would dissolve.
+    func linkCount(forMarkOf event: CalendarEvent) -> Int {
+        mark(for: event).map { links(ofMark: $0).count } ?? 0
     }
 
     /// "übernehmen": the mark moves to the suggested event.
@@ -367,8 +375,24 @@ final class DeadlineMarkStore {
 
     /// The deadline `event` prepares for; the nearest one when it belongs to several.
     func preparationTarget(for event: CalendarEvent) -> PreparationTarget? {
-        allLinks().filter { $0.covers(event) }.min { $0.until < $1.until }
-            .map { PreparationTarget(deadlineKey: $0.deadlineKey, title: $0.deadlineTitle, until: $0.until) }
+        preparationTargets(for: [event])[event.id]
+    }
+
+    /// Event ID → the deadline it prepares for, for every linked event among `events` (one fetch).
+    func preparationTargets(for events: [CalendarEvent]) -> [String: PreparationTarget] {
+        let links = allLinks()
+        guard !links.isEmpty else { return [:] }
+        var result: [String: PreparationTarget] = [:]
+        for event in events {
+            guard let nearest = links.filter({ $0.covers(event) }).min(by: { $0.until < $1.until }) else { continue }
+            result[event.id] = PreparationTarget(deadlineKey: nearest.deadlineKey, title: nearest.deadlineTitle, until: nearest.until)
+        }
+        return result
+    }
+
+    /// The link that makes `event` part of the preparation for `deadlineKey` (for "Zuordnung lösen").
+    func link(for event: CalendarEvent, deadlineKey: String) -> DeadlineEventLink? {
+        links(forDeadline: deadlineKey).first { $0.covers(event) }
     }
 
     /// Keeps title and moment of a deadline current on its links (P1 due dates and event times can change).

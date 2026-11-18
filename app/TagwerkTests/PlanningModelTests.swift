@@ -1202,4 +1202,250 @@ struct PlanningModelTests {
         #expect(info.day == PlanDay(year: 2026, month: 11, day: 19))
         #expect(info.blocks.count == 1)
     }
+
+    // MARK: Deadline marks and preparation (plan deadline-marking, Tasks 5 and 10)
+
+    private func timetableEvent(_ id: String, _ title: String, start: Date, minutes: Int = 120, calendarID: String = "timetable",
+                                externalID: String? = nil, allDay: Bool = false, recurring: Bool = false) -> CalendarEvent {
+        var event = CalendarEvent(id: id, externalID: externalID, calendarID: calendarID, title: title, start: start,
+                                  end: allDay ? start.addingTimeInterval(86_400) : start.addingTimeInterval(TimeInterval(minutes * 60)),
+                                  isAllDay: allDay, url: nil, isBusy: true, version: "1")
+        event.isEditable = calendarID != "timetable"
+        event.isRecurring = recurring
+        return event
+    }
+
+    private func useTimetable() {
+        calendarStore.calendars += [ListInfo(id: "timetable", title: "Stundenplan", colorHex: nil, kind: .subscription),
+                                    ListInfo(id: "work", title: "Privat", colorHex: nil, kind: .calDAV)]
+    }
+
+    @Test func markedTimetableEventShowsInDaysAndUpcomingDeadlines() async throws {
+        useTimetable()
+        let exam = timetableEvent("exam", "Klausur Statistik", start: at(27, 10))
+        calendarStore.storedEvents = [exam]
+        let model = await model()
+        #expect(model.upcomingDeadlines.isEmpty)
+        await model.markDeadline(exam, series: false)
+        let deadline = try #require(model.upcomingDeadlines.first)
+        #expect(deadline.kind == .markedEvent)
+        #expect(deadline.eventID == "exam")
+        #expect(deadline.calendarID == "timetable")
+        #expect(model.isDeadlineEvent(exam))
+        model.anchor = PlanDay(year: 2026, month: 11, day: 27)
+        await model.reload()
+        #expect(try #require(model.days.first).deadlines.map(\.title) == ["Klausur Statistik"])
+        #expect(model.deadlineEventIDs == ["exam"])
+    }
+
+    @Test func markedAllDayEventLeavesAllDayRow() async throws {
+        useTimetable()
+        let submission = timetableEvent("essay", "Abgabe Essay", start: at(18, 0), calendarID: "work", allDay: true)
+        calendarStore.storedEvents = [submission]
+        let model = await model()
+        #expect(model.allDayEvents(for: try #require(model.days.first)).map(\.id) == ["essay"])
+        await model.markDeadline(submission, series: false)
+        let day = try #require(model.days.first)
+        #expect(model.allDayEvents(for: day).isEmpty)
+        #expect(day.deadlines.map(\.title) == ["Abgabe Essay"])
+    }
+
+    @Test func markedTimedEventStillCountsAsBusy() async throws {
+        useTimetable()
+        let exam = timetableEvent("exam", "Klausur", start: at(18, 10))
+        calendarStore.storedEvents = [exam]
+        let model = await model()
+        await model.markDeadline(exam, series: false)
+        let day = try #require(model.days.first)
+        #expect(day.capacity.availableMinutes == 360)
+        #expect(model.timeline(for: day).map(\.label) == ["Klausur", "Mittagspause"])
+    }
+
+    @Test func markOnReadOnlyCalendarWritesNothingToTheCalendar() async throws {
+        useTimetable()
+        let exam = timetableEvent("exam", "Klausur Statistik", start: at(27, 10))
+        let lecture = timetableEvent("lecture|1", "Vorlesung", start: at(23, 8), recurring: true)
+        calendarStore.storedEvents = [exam, lecture]
+        let before = calendarStore.storedEvents
+        let model = await model()
+        await model.markDeadline(exam, series: false)
+        let deadline = try #require(model.upcomingDeadlines.first)
+        await model.linkPreparation(lecture, to: deadline, series: true)
+        await model.unmarkDeadline(exam)
+        #expect(calendarStore.storedEvents == before)
+        #expect(model.lastError == nil)
+    }
+
+    @Test func movedMarkedEventIsFollowed() async throws {
+        useTimetable()
+        calendarStore.storedEvents = [timetableEvent("exam", "Klausur Statistik", start: at(27, 10), externalID: "ext-exam")]
+        let model = await model()
+        await model.markDeadline(calendarStore.storedEvents[0], series: false)
+        calendarStore.storedEvents = [timetableEvent("exam-2", "Klausur Statistik", start: at(30, 10), externalID: "ext-exam")]
+        await model.reload()
+        #expect(model.upcomingDeadlines.map(\.eventID) == ["exam-2"])
+        #expect(model.orphanedMarks.isEmpty)
+    }
+
+    @Test func deletedMarkedEventIsReportedNotDropped() async throws {
+        useTimetable()
+        let exam = timetableEvent("exam", "Klausur Statistik", start: at(27, 10))
+        calendarStore.storedEvents = [exam]
+        let model = await model()
+        await model.markDeadline(exam, series: false)
+        calendarStore.storedEvents = []
+        await model.reload()
+        #expect(model.orphanedMarks.map(\.title) == ["Klausur Statistik"])
+        #expect(model.orphanedMarks.first?.candidate == nil)
+        #expect(model.deadlineMarks.marks().count == 1)
+        await model.removeOrphanedMark(try #require(model.orphanedMarks.first))
+        #expect(model.deadlineMarks.marks().isEmpty)
+        #expect(model.orphanedMarks.isEmpty)
+    }
+
+    @Test func retitledMarkedEventIsOfferedAsCandidate() async throws {
+        useTimetable()
+        let exam = timetableEvent("exam", "Klausur Statistik", start: at(27, 10))
+        calendarStore.storedEvents = [exam]
+        let model = await model()
+        await model.markDeadline(exam, series: false)
+        let moved = timetableEvent("exam-9", "Klausur Statistik", start: at(30, 10))
+        calendarStore.storedEvents = [moved]
+        await model.reload()
+        let orphan = try #require(model.orphanedMarks.first)
+        #expect(orphan.candidate == moved)
+        #expect(model.upcomingDeadlines.isEmpty)
+        await model.adoptCandidate(orphan)
+        #expect(model.orphanedMarks.isEmpty)
+        #expect(model.upcomingDeadlines.map(\.eventID) == ["exam-9"])
+    }
+
+    @Test func withoutCalendarAccessMarksStayUntouched() async throws {
+        useTimetable()
+        let exam = timetableEvent("exam", "Klausur Statistik", start: at(27, 10))
+        calendarStore.storedEvents = [exam]
+        let model = await model()
+        await model.markDeadline(exam, series: false)
+        calendarStore.calendars = []
+        calendarStore.storedEvents = []
+        await model.reload()
+        #expect(model.orphanedMarks.isEmpty)
+        #expect(model.deadlineMarks.marks().map(\.eventKey) == ["exam"])
+    }
+
+    @Test func markingASeriesMarksEveryOccurrence() async throws {
+        useTimetable()
+        let first = timetableEvent("course|1", "Kolloquium", start: at(19, 14), calendarID: "work", recurring: true)
+        let second = timetableEvent("course|2", "Kolloquium", start: at(26, 14), calendarID: "work", recurring: true)
+        calendarStore.storedEvents = [first, second]
+        let model = await model()
+        await model.markDeadline(first, series: true)
+        #expect(model.upcomingDeadlines.map(\.eventID) == ["course|1", "course|2"])
+        await model.unmarkDeadline(second)
+        #expect(model.upcomingDeadlines.isEmpty)
+    }
+
+    @Test func preparationSumsLinkedEventsBeforeDeadline() async throws {
+        useTimetable()
+        let exam = timetableEvent("exam", "Klausur Statistik", start: at(27, 10))
+        let group = timetableEvent("group", "Lerngruppe Statistik", start: at(19, 16), calendarID: "work")
+        let lecture1 = timetableEvent("lecture|1", "Vorlesung Statistik", start: at(23, 8, 15), minutes: 90, recurring: true)
+        let lecture2 = timetableEvent("lecture|2", "Vorlesung Statistik", start: at(30, 8, 15), minutes: 90, recurring: true)
+        let past = timetableEvent("past", "Lernblock", start: at(17, 14), calendarID: "work")
+        calendarStore.storedEvents = [exam, group, lecture1, lecture2, past]
+        let model = await model()
+        await model.markDeadline(exam, series: false)
+        let deadline = try #require(model.upcomingDeadlines.first)
+        #expect(model.preparationCandidates(for: deadline).map(\.id) == ["group", "lecture|1"])
+        await model.linkPreparation(group, to: deadline, series: false)
+        await model.linkPreparation(lecture1, to: deadline, series: true)
+        await model.linkPreparation(past, to: deadline, series: false)
+        #expect(model.preparation[deadline.preparationKey] == PreparationSummary(minutes: 210, count: 2))
+        #expect(model.preparationEvents(for: deadline).map(\.id) == ["past", "group", "lecture|1"])
+        // Preparation has no effect on capacity: the group still counts as busy on its day.
+        model.anchor = PlanDay(year: 2026, month: 11, day: 19)
+        await model.reload()
+        #expect(try #require(model.days.first).capacity.availableMinutes == 360)
+        #expect(model.preparationTarget(forEventID: "group")?.deadlineKey == "event:exam")
+        #expect(model.preparationTarget(forEventID: "group")?.title == "Klausur Statistik")
+    }
+
+    @Test func preparationCanBelongToPriorityOneTasks() async throws {
+        useTimetable()
+        local.tasks.append(TaskItem(id: id("Angebot"), title: "Angebot", notes: nil, due: DueDate(year: 2026, month: 11, day: 20),
+                                    priority: .p1, estimateMinutes: nil, isCompleted: false,
+                                    container: TaskContainer(id: "local", name: "Lokal", colorHex: nil), url: nil, version: "1",
+                                    editableFields: []))
+        let block = timetableEvent("focus", "Fokuszeit", start: at(19, 9), calendarID: "work")
+        calendarStore.storedEvents = [block]
+        let model = await model()
+        let deadline = try #require(model.upcomingDeadlines.first)
+        #expect(model.linkableDeadlines(for: block).map(\.title) == ["Angebot"])
+        await model.linkPreparation(block, to: deadline, series: false)
+        #expect(model.preparation["task:local:Angebot"] == PreparationSummary(minutes: 120, count: 1))
+    }
+
+    @Test func unmarkingWithLinksReportsTheirCount() async throws {
+        useTimetable()
+        let exam = timetableEvent("exam", "Klausur Statistik", start: at(27, 10))
+        let group = timetableEvent("group", "Lerngruppe", start: at(19, 16), calendarID: "work")
+        calendarStore.storedEvents = [exam, group]
+        let model = await model()
+        await model.markDeadline(exam, series: false)
+        await model.linkPreparation(group, to: try #require(model.upcomingDeadlines.first), series: false)
+        #expect(model.preparationLinkCount(forDeadlineEvent: exam) == 1)
+        await model.unmarkDeadline(exam)
+        #expect(model.deadlineMarks.allLinks().isEmpty)
+    }
+
+    @Test func markedEventIsNeverHiddenByMerge() async throws {
+        useTimetable()
+        let real = timetableEvent("real", "Klausur", start: at(18, 10), calendarID: "work")
+        let placeholder = timetableEvent("busy", "Busy", start: at(18, 10))
+        calendarStore.storedEvents = [real, placeholder]
+        let model = await model()
+        #expect(model.mergeSuggestions.count == 1)
+        await model.markDeadline(placeholder, series: false)
+        #expect(model.mergeSuggestions.isEmpty)
+    }
+
+    @Test func deadlineEventLinkedToTaskIsNotABlock() async throws {
+        settings.deadlineCalendarIDs = ["uni"]
+        calendarStore.storedEvents = [CalendarEvent(id: "klausur", externalID: nil, calendarID: "uni", title: "Klausur",
+                                                    start: at(18, 10), end: at(18, 12), isAllDay: false, url: nil,
+                                                    isBusy: true, version: "1")]
+        blocks.links.link(eventID: "klausur", to: id("Fahrrad"))
+        let model = await model()
+        let day = try #require(model.days.first)
+        #expect(day.blocks.isEmpty)
+        #expect(day.events.map(\.id) == ["klausur"])
+        #expect(day.capacity.availableMinutes == 360)
+        #expect(day.capacity.plannedMinutes == 0)
+        #expect(model.linkedTask(eventID: "klausur")?.title == "Fahrrad")
+    }
+
+    @Test func keywordSuggestionOffersExamsUntilAnsweredOrMarked() async throws {
+        useTimetable()
+        let exam = timetableEvent("exam", "Klausur Statistik", start: at(27, 10))
+        let essay = timetableEvent("essay", "Abgabe Essay", start: at(24, 12), calendarID: "work")
+        calendarStore.storedEvents = [exam, essay, timetableEvent("lecture", "Vorlesung", start: at(19, 8))]
+        let model = await model()
+        #expect(model.deadlineSuggestions.map(\.id) == ["essay", "exam"])
+        await model.dismissDeadlineSuggestion(essay)
+        #expect(model.deadlineSuggestions.map(\.id) == ["exam"])
+        await model.markDeadline(exam, series: false)
+        #expect(model.deadlineSuggestions.isEmpty)
+    }
+
+    @Test func markingAndUnmarkingReportsAChange() async throws {
+        useTimetable()
+        let exam = timetableEvent("exam", "Klausur", start: at(27, 10))
+        calendarStore.storedEvents = [exam]
+        let model = await model()
+        var changes = 0
+        model.onDeadlinesChanged = { changes += 1 }
+        await model.markDeadline(exam, series: false)
+        await model.unmarkDeadline(exam)
+        #expect(changes == 2)
+    }
 }

@@ -168,9 +168,28 @@ final class PlanningModel {
     /// Kept event ID → the accepted merges whose copies it hides.
     private var appliedMerges: [String: [MergeSuggestion]] = [:]
 
+    // MARK: Deadline marks state (plan deadline-marking)
+
+    /// Events marked as deadlines in Tagwerk and the calendar events that prepare for a deadline.
+    let deadlineMarks: DeadlineMarkStore
+    /// Events of the shown range that are deadlines: from a deadline calendar or marked.
+    private(set) var deadlineEventIDs: Set<String> = []
+    /// Marks whose event could not be found again; shown in the deadline card, never deleted silently.
+    private(set) var orphanedMarks: [OrphanedMark] = []
+    /// Preparation of the deadlines in `upcomingDeadlines` that have linked events (key: `preparationKey`).
+    private(set) var preparation: [String: PreparationSummary] = [:]
+    /// Upcoming events whose title looks like an exam or a submission (keyword card DL3).
+    private(set) var deadlineSuggestions: [CalendarEvent] = []
+    /// Event ID → the deadline it prepares for, for the shown range.
+    private var preparationTargets: [String: PreparationTarget] = [:]
+    /// Called after marks change, so notifications and the widget follow.
+    var onDeadlinesChanged: (() -> Void)?
+
     init(taskList: TaskListModel, calendarStore: CalendarStore, reminderStore: ReminderStore, planStore: PlanStore,
          efforts: RecurringEffortStore, blocks: BlockPlanner, settings: AppSettings, marks: EventMarkStore,
+         deadlineMarks: DeadlineMarkStore? = nil,
          suggestions: SuggestionStore? = nil, now: @escaping () -> Date = Date.init, calendar: Calendar = .tagwerk) {
+        self.deadlineMarks = deadlineMarks ?? DeadlineMarkStore(context: marks.modelContext)
         self.suggestionStore = suggestions
         self.marks = marks
         self.taskList = taskList
@@ -212,8 +231,16 @@ final class PlanningModel {
         let recurringIDs = Set(reminders.filter { $0.recurrence != nil }.map(\.id))
         let interval = DateInterval(start: range.lowerBound.startDate(in: calendar),
                                     end: range.upperBound.adding(days: 1, calendar: calendar).startDate(in: calendar))
-        let (events, suggestions) = markedEvents(calendarStore.events(in: interval, calendarIDs: readableCalendarIDs()))
+        // Marks first: follow moved events and report vanished ones before anything reads the marked IDs.
+        deadlineMarks.prune(now: now())
+        orphanedMarks = resolveDeadlineMarks()
+        let raw = calendarStore.events(in: interval, calendarIDs: readableCalendarIDs())
+        let marked = deadlineMarks.markedIDs(in: raw)
+        let (events, suggestions) = markedEvents(raw, keeping: marked)
         mergeSuggestions = suggestions
+        let deadlineIDs = deadlineIDs(in: events, marked: marked)
+        deadlineEventIDs = deadlineIDs
+        preparationTargets = deadlineMarks.preparationTargets(for: events)
         let resolved = resolveLinks(events: events, tasks: open, manual: blocks.links.manualLinks())
         resolvedLinks = Dictionary(resolved.map { ($0.eventID, $0) }, uniquingKeysWith: { first, _ in first })
         recurringReminderIDs = recurringIDs
@@ -223,7 +250,7 @@ final class PlanningModel {
         let links = resolvedLinks.mapValues(\.taskID)
         let deadlines = importantDeadlines(tasks: open, events: events,
                                            deadlineCalendarIDs: Set(settings.deadlineCalendarIDs ?? []),
-                                           in: range, calendar: calendar)
+                                           markedEventIDs: marked, in: range, calendar: calendar)
         let assignments = planStore.assignments(in: range)
         let overrides = planStore.overrides(in: range)
         let tasksByID = Dictionary(open.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
@@ -240,7 +267,8 @@ final class PlanningModel {
         while day <= range.upperBound {
             var plan = dayPlan(day, events: events, links: links, deadlines: deadlines, assignments: assignments,
                                overrides: overrides, tasksByID: tasksByID, reminders: reminders,
-                               recurringIDs: recurringIDs, open: open, allAssignments: allAssignments)
+                               recurringIDs: recurringIDs, open: open, allAssignments: allAssignments,
+                               deadlineIDs: deadlineIDs)
             plan.suggestions = suggestionsByDay[day] ?? []
             result.append(plan)
             day = day.adding(days: 1, calendar: calendar)
@@ -270,7 +298,10 @@ final class PlanningModel {
         let recurringIDs = Set(reminders.filter { $0.recurrence != nil }.map(\.id))
         let interval = DateInterval(start: range.lowerBound.startDate(in: calendar),
                                     end: range.upperBound.adding(days: 1, calendar: calendar).startDate(in: calendar))
-        let (events, _) = markedEvents(calendarStore.events(in: interval, calendarIDs: readableCalendarIDs()))
+        let raw = calendarStore.events(in: interval, calendarIDs: readableCalendarIDs())
+        let marked = deadlineMarks.markedIDs(in: raw)
+        let (events, _) = markedEvents(raw, keeping: marked)
+        let deadlineIDs = deadlineIDs(in: events, marked: marked)
         let links = Dictionary(resolveLinks(events: events, tasks: open, manual: blocks.links.manualLinks()).map { ($0.eventID, $0.taskID) },
                                uniquingKeysWith: { first, _ in first })
         let assignments = planStore.assignments(in: range)
@@ -283,7 +314,8 @@ final class PlanningModel {
         while day <= range.upperBound {
             let plan = dayPlan(day, events: events, links: links, deadlines: [], assignments: assignments,
                                overrides: overrides, tasksByID: tasksByID, reminders: reminders,
-                               recurringIDs: recurringIDs, open: open, allAssignments: allAssignments)
+                               recurringIDs: recurringIDs, open: open, allAssignments: allAssignments,
+                               deadlineIDs: deadlineIDs)
             if let input = plan.planInput { result.append(input) }
             day = day.adding(days: 1, calendar: calendar)
         }
@@ -297,10 +329,15 @@ final class PlanningModel {
         let range = first...first.adding(days: max(0, count - 1), calendar: calendar)
         let interval = DateInterval(start: range.lowerBound.startDate(in: calendar),
                                     end: range.upperBound.adding(days: 1, calendar: calendar).startDate(in: calendar))
-        let (events, _) = markedEvents(calendarStore.events(in: interval, calendarIDs: readableCalendarIDs()))
+        let raw = calendarStore.events(in: interval, calendarIDs: readableCalendarIDs())
+        let marked = deadlineMarks.markedIDs(in: raw)
+        let (events, _) = markedEvents(raw, keeping: marked)
+        let deadlineIDs = deadlineIDs(in: events, marked: marked)
+        // A deadline event linked to a task is that task's anchor, not a time block (decision 5).
         let links = Set(resolveLinks(events: events, tasks: open, manual: blocks.links.manualLinks()).map(\.eventID))
+            .subtracting(deadlineIDs)
         let deadlines = importantDeadlines(tasks: open, events: events, deadlineCalendarIDs: Set(settings.deadlineCalendarIDs ?? []),
-                                           in: range, calendar: calendar)
+                                           markedEventIDs: marked, in: range, calendar: calendar)
         let colors = Dictionary(calendarStore.eventCalendars().map { ($0.id, $0.colorHex) }, uniquingKeysWith: { first, _ in first })
         return (0..<count).map { offset in
             let day = first.adding(days: offset, calendar: calendar)
@@ -583,9 +620,12 @@ final class PlanningModel {
                           minutes: range.count)
     }
 
+    /// All-day events of the day; all-day deadline events (deadline calendars and marked) appear as deadlines instead.
     func allDayEvents(for plan: DayPlan) -> [CalendarEvent] {
         let deadlineCalendars = Set(settings.deadlineCalendarIDs ?? [])
-        return (plan.events + plan.blocks).filter { $0.isAllDay && !deadlineCalendars.contains($0.calendarID) }
+        return (plan.events + plan.blocks).filter {
+            $0.isAllDay && !deadlineCalendars.contains($0.calendarID) && !deadlineEventIDs.contains($0.id)
+        }
     }
 
     /// Tasks without a time planned for this day, for the "Ohne Uhrzeit" panel (design §13.15 D1): only what the
@@ -698,16 +738,20 @@ final class PlanningModel {
         let all = calendarStore.events(in: interval, calendarIDs: nil)
         let readable = readableCalendarIDs()
         let read = all.filter { readable?.contains($0.calendarID) ?? true }
-        let (marked, _) = markedEvents(read)
+        let deadlineMarked = deadlineMarks.markedIDs(in: read)
+        let (marked, _) = markedEvents(read, keeping: deadlineMarked)
         let markedIDs = Set(marked.map(\.id))
         let deadlineCalendars = Set(settings.deadlineCalendarIDs ?? [])
+        let isAllDayDeadline = { (event: CalendarEvent) in
+            event.isAllDay && (deadlineCalendars.contains(event.calendarID) || deadlineMarked.contains(event.id))
+        }
         var shownIDs = Set<String>()
         var day = today
         while day < today.adding(days: 7, calendar: calendar) {
             let dayStart = day.startDate(in: calendar), dayEnd = day.adding(days: 1, calendar: calendar).startDate(in: calendar)
             let dayEvents = marked.filter { $0.end > dayStart && $0.start < dayEnd }
             let merged = dayEvents
-            shownIDs.formUnion(merged.filter { !($0.isAllDay && deadlineCalendars.contains($0.calendarID)) }.map(\.id))
+            shownIDs.formUnion(merged.filter { !isAllDayDeadline($0) }.map(\.id))
             day = day.adding(days: 1, calendar: calendar)
         }
         return calendarStore.eventCalendars().map { info in
@@ -715,7 +759,7 @@ final class PlanningModel {
             let isRead = readable?.contains(info.id) ?? true
             let hiddenByPlaceholder = isRead ? own.filter { !markedIDs.contains($0.id) }.count : 0
             let shown = isRead ? own.filter { shownIDs.contains($0.id) }.count : 0
-            let asDeadline = isRead && deadlineCalendars.contains(info.id) ? own.filter(\.isAllDay).count : 0
+            let asDeadline = isRead ? own.filter(isAllDayDeadline).count : 0
             return CalendarDiagnostic(calendarID: info.id, title: info.title, kind: info.kind, isRead: isRead,
                                       isDeadlineCalendar: deadlineCalendars.contains(info.id), events: own.count, shown: shown,
                                       hiddenByMerge: isRead ? max(0, own.count - shown - asDeadline - hiddenByPlaceholder) : 0,
@@ -729,8 +773,9 @@ final class PlanningModel {
         await reload()
     }
 
-    /// Applies Tagwerk's free marks and accepted merges; returns the undecided merge suggestions.
-    private func markedEvents(_ raw: [CalendarEvent]) -> ([CalendarEvent], [MergeSuggestion]) {
+    /// Applies Tagwerk's free marks and accepted merges; returns the undecided merge suggestions. Events in
+    /// `keeping` (marked as deadlines) never take part in merging, so a deadline is never hidden.
+    private func markedEvents(_ raw: [CalendarEvent], keeping: Set<String> = []) -> ([CalendarEvent], [MergeSuggestion]) {
         let freeMarks = marks.allMarks()
         var events = raw.map { event in
             var event = event
@@ -743,7 +788,7 @@ final class PlanningModel {
         var hidden = [String: MergeSuggestion]()
         var open: [MergeSuggestion] = []
         let deadlineCalendars = Set(settings.deadlineCalendarIDs ?? [])
-        for suggestion in TagwerkCore.mergeSuggestions(events, excluding: deadlineCalendars) {
+        for suggestion in TagwerkCore.mergeSuggestions(events, excluding: deadlineCalendars, excludingEventIDs: keeping) {
             switch marks.decision(for: suggestion, in: decisions) {
             case true?: hidden[suggestion.placeholderID] = suggestion
             case false?: break
@@ -760,6 +805,135 @@ final class PlanningModel {
             return event
         }
         return (events, open)
+    }
+
+    // MARK: Deadline marks and preparation (plan deadline-marking, DL2 + DV1 + DL3)
+
+    /// From a deadline calendar or marked in Tagwerk.
+    func isDeadlineEvent(_ event: CalendarEvent) -> Bool {
+        deadlineEventIDs.contains(event.id) || isInDeadlineCalendar(event) || deadlineMarks.isMarked(event)
+    }
+
+    func isInDeadlineCalendar(_ event: CalendarEvent) -> Bool {
+        (settings.deadlineCalendarIDs ?? []).contains(event.calendarID)
+    }
+
+    func isMarkedDeadline(_ event: CalendarEvent) -> Bool { deadlineMarks.isMarked(event) }
+
+    /// Marks an event as a deadline in Tagwerk only; `series` marks every occurrence of a recurring event.
+    func markDeadline(_ event: CalendarEvent, series: Bool) async {
+        deadlineMarks.mark(event, series: series && event.isRecurring)
+        await deadlinesChanged()
+    }
+
+    /// Removes the mark of the event (or its series) and dissolves the preparation links to it.
+    func unmarkDeadline(_ event: CalendarEvent) async {
+        deadlineMarks.unmark(event)
+        await deadlinesChanged()
+    }
+
+    /// "Entfernen" on a mark whose event is gone.
+    func removeOrphanedMark(_ orphan: OrphanedMark) async {
+        deadlineMarks.unmark(key: orphan.eventKey)
+        await deadlinesChanged()
+    }
+
+    /// "übernehmen": the mark moves to the suggested event.
+    func adoptCandidate(_ orphan: OrphanedMark) async {
+        guard let candidate = orphan.candidate else { return }
+        deadlineMarks.adopt(orphan, candidate: candidate)
+        await deadlinesChanged()
+    }
+
+    /// Preparation links that removing the mark of `event` would dissolve (asked before removing).
+    func preparationLinkCount(forDeadlineEvent event: CalendarEvent) -> Int {
+        deadlineMarks.linkCount(forMarkOf: event)
+    }
+
+    private func deadlinesChanged() async {
+        await reload()
+        onDeadlinesChanged?()
+    }
+
+    /// The deadline an event is, for the event sheet ("⚑ Klausur Statistik · in 9 Tagen"); `nil` for other events.
+    func importantDeadline(for event: CalendarEvent) -> ImportantDeadline? {
+        let day = PlanDay(date: event.start, calendar: calendar)
+        return importantDeadlines(tasks: [], events: [event], deadlineCalendarIDs: Set(settings.deadlineCalendarIDs ?? []),
+                                  markedEventIDs: deadlineMarks.markedIDs(in: [event]), in: day...day, calendar: calendar).first
+    }
+
+    /// Events between now and the deadline that can be linked as preparation (the deadline event itself excluded).
+    func preparationCandidates(for deadline: ImportantDeadline) -> [CalendarEvent] {
+        let current = now(), end = deadlineMoment(deadline)
+        guard end > current else { return [] }
+        let (events, _) = markedEvents(calendarStore.events(in: DateInterval(start: current, end: end),
+                                                            calendarIDs: readableCalendarIDs()))
+        var seen = Set<String>()
+        return events.filter { $0.id != deadline.eventID && $0.end > current && $0.start < end && seen.insert($0.id).inserted }
+            .sorted { $0.start < $1.start }
+    }
+
+    /// Linked preparation events of a deadline, earlier ones included, ordered by start.
+    func preparationEvents(for deadline: ImportantDeadline) -> [CalendarEvent] {
+        let links = deadlineMarks.links(forDeadline: deadline.preparationKey)
+        guard let first = links.map(\.start).min() else { return [] }
+        let start = min(first, now()), end = deadlineMoment(deadline)
+        guard end > start else { return [] }
+        let events = calendarStore.events(in: DateInterval(start: start, end: end), calendarIDs: preparationCalendarIDs())
+        return deadlineMarks.linkedEvents(forDeadline: deadline.preparationKey, among: events)
+    }
+
+    /// Links `event` (or, with `series`, its occurrences until the deadline) as preparation; Tagwerk only.
+    func linkPreparation(_ event: CalendarEvent, to deadline: ImportantDeadline, series: Bool) async {
+        deadlineMarks.link(event, toDeadline: deadline.preparationKey, title: deadline.title, until: deadlineMoment(deadline),
+                           series: series && event.isRecurring)
+        await reload()
+    }
+
+    /// Dissolves the link that makes `event` part of the preparation for `deadline`.
+    func unlinkPreparation(_ event: CalendarEvent, from deadline: ImportantDeadline) async {
+        guard let link = deadlineMarks.link(for: event, deadlineKey: deadline.preparationKey) else { return }
+        deadlineMarks.unlink(key: link.key)
+        await reload()
+    }
+
+    /// Whether a series link (not only this occurrence) makes `event` preparation for `deadline`.
+    func isSeriesPreparation(_ event: CalendarEvent, for deadline: ImportantDeadline) -> Bool {
+        deadlineMarks.link(for: event, deadlineKey: deadline.preparationKey)?.isSeries ?? false
+    }
+
+    /// The deadline a shown event prepares for (the mark "→ Klausur Statistik · in 8 Tagen").
+    func preparationTarget(forEventID id: String) -> PreparationTarget? { preparationTargets[id] }
+
+    /// The deadline behind a preparation target, if it still lies within the next 120 days.
+    func deadline(for target: PreparationTarget) -> ImportantDeadline? {
+        let from = PlanDay(date: min(now(), target.until), calendar: calendar)
+        return deadlines(in: from...from.adding(days: 120, calendar: calendar)).first { $0.preparationKey == target.deadlineKey }
+    }
+
+    /// Deadlines after `event` (within 120 days) it can be linked to as preparation ("Zu Deadline zuordnen …").
+    func linkableDeadlines(for event: CalendarEvent) -> [ImportantDeadline] {
+        let from = PlanDay(date: max(event.start, now()), calendar: calendar)
+        return deadlines(in: from...from.adding(days: 120, calendar: calendar))
+            .filter { $0.eventID != event.id && deadlineMoment($0) > event.start }
+    }
+
+    /// All important deadlines in `range`, including events from deadline calendars and marked events.
+    private func deadlines(in range: ClosedRange<PlanDay>) -> [ImportantDeadline] {
+        let interval = DateInterval(start: range.lowerBound.startDate(in: calendar),
+                                    end: range.upperBound.adding(days: 1, calendar: calendar).startDate(in: calendar))
+        let deadlineCalendars = Set(settings.deadlineCalendarIDs ?? [])
+        let calendars = deadlineCalendars.union(deadlineMarks.marks().map(\.calendarID))
+        let events = calendars.isEmpty ? [] : calendarStore.events(in: interval, calendarIDs: calendars)
+        return importantDeadlines(tasks: taskList.items.filter { !$0.isCompleted }, events: events,
+                                  deadlineCalendarIDs: deadlineCalendars, markedEventIDs: deadlineMarks.markedIDs(in: events),
+                                  in: range, calendar: calendar)
+    }
+
+    /// "Nein" on the keyword card: this event is not suggested again.
+    func dismissDeadlineSuggestion(_ event: CalendarEvent) async {
+        deadlineMarks.dismissSuggestion(event)
+        await reload()
     }
 
     // MARK: Time blocks (design §13.4)
@@ -1144,10 +1318,13 @@ final class PlanningModel {
 
     // MARK: Private
 
-    private func dayPlan(_ day: PlanDay, events: [CalendarEvent], links: [String: TaskID], deadlines: [ImportantDeadline],
+    private func dayPlan(_ day: PlanDay, events: [CalendarEvent], links taskLinks: [String: TaskID], deadlines: [ImportantDeadline],
                          assignments: [TaskID: PlanDay], overrides: [PlanDay: DayOverride], tasksByID: [TaskID: TaskItem],
                          reminders: [ReminderRecord], recurringIDs: Set<String>, open: [TaskItem],
-                         allAssignments: [TaskID: PlanDay]) -> DayPlan {
+                         allAssignments: [TaskID: PlanDay], deadlineIDs: Set<String>) -> DayPlan {
+        // A deadline event linked to a task is the task's anchor (AI, event sheet), not work on it: it stays an event,
+        // counts as busy and is no time block (decision 5, plan deadline-marking Task 10).
+        let links = taskLinks.filter { !deadlineIDs.contains($0.key) }
         let start = day.startDate(in: calendar)
         let end = day.adding(days: 1, calendar: calendar).startDate(in: calendar)
         let dayEvents = events.filter { $0.end > start && $0.start < end }.sorted { $0.start < $1.start }
@@ -1222,7 +1399,8 @@ final class PlanningModel {
             deadlineCalendarIDs: Set(settings.deadlineCalendarIDs ?? []),
             blocks: linkedEvents.map { minutes($0.start, from: start)..<minutes($0.end, from: start) },
             recurringMinutes: max(0, recurringMinutes - reservedLoad), plannedMinutes: planned + reservedLoad,
-            bufferMinutes: settings.bufferMinutes, calendar: calendar, countedTaskMinutes: aiCounted
+            bufferMinutes: settings.bufferMinutes, calendar: calendar, countedTaskMinutes: aiCounted,
+            deadlineEventIDs: deadlineIDs
         )
         if day == today {
             let current = now()
@@ -1266,14 +1444,83 @@ final class PlanningModel {
         Int(date.timeIntervalSince(dayStart) / 60)
     }
 
-    /// Deadlines from the shown day over the next 14 days.
+    /// Deadlines from the shown day over the next 14 days: deadline calendars, marked events (also from calendars that
+    /// are not shown) and tasks. Also updates the preparation sums and the keyword suggestions (DL3) of that window.
     private func loadUpcomingDeadlines(open: [TaskItem]) -> [ImportantDeadline] {
         let range = anchor...anchor.adding(days: 13, calendar: calendar)
         let interval = DateInterval(start: range.lowerBound.startDate(in: calendar),
                                     end: range.upperBound.adding(days: 1, calendar: calendar).startDate(in: calendar))
         let deadlineCalendars = Set(settings.deadlineCalendarIDs ?? [])
-        let events = deadlineCalendars.isEmpty ? [] : calendarStore.events(in: interval, calendarIDs: deadlineCalendars)
-        return importantDeadlines(tasks: open, events: events, deadlineCalendarIDs: deadlineCalendars, in: range, calendar: calendar)
+        let readable = readableCalendarIDs()
+        let markCalendars = Set(deadlineMarks.marks().map(\.calendarID))
+        let events = calendarStore.events(in: interval, calendarIDs: readable.map { $0.union(deadlineCalendars).union(markCalendars) })
+        let marked = deadlineMarks.markedIDs(in: events)
+        let deadlines = importantDeadlines(tasks: open, events: events, deadlineCalendarIDs: deadlineCalendars,
+                                           markedEventIDs: marked, in: range, calendar: calendar)
+        let current = now()
+        deadlineSuggestions = TagwerkCore.deadlineSuggestions(
+            events: events.filter { $0.end > current && (readable?.contains($0.calendarID) ?? true) },
+            excludingEventIDs: marked.union(deadlineMarks.dismissedSuggestionIDs()), excludingCalendarIDs: deadlineCalendars)
+        preparation = preparationSummaries(for: deadlines)
+        return deadlines
+    }
+
+    /// Preparation sums of the deadlines that have linked events; keeps title and moment on their links current.
+    private func preparationSummaries(for deadlines: [ImportantDeadline]) -> [String: PreparationSummary] {
+        let links = deadlineMarks.allLinks()
+        let keys = Set(links.map(\.deadlineKey))
+        let linked = deadlines.filter { keys.contains($0.preparationKey) }
+        guard !linked.isEmpty else { return [:] }
+        for deadline in linked {
+            deadlineMarks.refreshDeadline(key: deadline.preparationKey, title: deadline.title, until: deadlineMoment(deadline))
+        }
+        let current = now()
+        let end = linked.map(deadlineMoment).max() ?? current
+        guard end > current else { return [:] }
+        let events = calendarStore.events(in: DateInterval(start: current, end: end), calendarIDs: preparationCalendarIDs())
+        var result: [String: PreparationSummary] = [:]
+        for deadline in linked {
+            let prepared = deadlineMarks.linkedEvents(forDeadline: deadline.preparationKey, among: events)
+            result[deadline.preparationKey] = preparationSummary(prepared, now: current, deadline: deadlineMoment(deadline))
+        }
+        return result
+    }
+
+    /// Calendars preparation events come from: the read calendars plus those of existing links; `nil` for all.
+    private func preparationCalendarIDs() -> Set<String>? {
+        readableCalendarIDs().map { $0.union(deadlineMarks.allLinks().map(\.calendarID)) }
+    }
+
+    /// Deadline calendar events and marked events among `events`.
+    private func deadlineIDs(in events: [CalendarEvent], marked: Set<String>) -> Set<String> {
+        let deadlineCalendars = Set(settings.deadlineCalendarIDs ?? [])
+        return marked.union(events.filter { deadlineCalendars.contains($0.calendarID) }.map(\.id))
+    }
+
+    /// Finds the marks of today and later again (±14 days around each), follows moved events and returns the marks that
+    /// are gone. Only calendars EventKit lists take part: without calendar access every mark stays as it is.
+    private func resolveDeadlineMarks() -> [OrphanedMark] {
+        let marks = deadlineMarks.marks()
+        guard !marks.isEmpty else { return [] }
+        let listed = Set(calendarStore.eventCalendars().map(\.id))
+        let calendars = Set(marks.map(\.calendarID)).intersection(listed)
+        guard !calendars.isEmpty else { return [] }
+        let todayStart = today.startDate(in: calendar)
+        let margin = TimeInterval(eventReferenceTitleWindowDays * 86_400)
+        let upcoming = marks.filter { !$0.isSeries && $0.start >= todayStart }
+        var lower = todayStart.addingTimeInterval(-margin)
+        var upper = todayStart.addingTimeInterval(60 * 86_400)
+        if let last = upcoming.map(\.start).max() { upper = max(upper, last.addingTimeInterval(margin)) }
+        if let first = upcoming.map(\.start).min() { lower = max(lower, min(todayStart, first.addingTimeInterval(-margin))) }
+        let window = DateInterval(start: lower, end: max(upper, lower))
+        let events = calendarStore.events(in: window, calendarIDs: calendars)
+        let resolution = deadlineMarks.resolve(events: events, readCalendarIDs: calendars, window: window, now: now())
+        return resolution.orphans.filter { $0.start >= todayStart }
+    }
+
+    /// The moment a deadline falls due: its time, else the end of its day.
+    func deadlineMoment(_ deadline: ImportantDeadline) -> Date {
+        deadline.time ?? deadline.day.adding(days: 1, calendar: calendar).startDate(in: calendar)
     }
 
     /// Selected calendars plus plan and deadline calendars; `nil` (all) when nothing is selected.

@@ -83,6 +83,9 @@ final class EventMarkStore {
         self.context = context
     }
 
+    /// The context the deadline marks share with these marks.
+    var modelContext: ModelContext { context }
+
     // MARK: Lunch
 
     func lunch(on day: PlanDay) -> (startMinutes: Int, minutes: Int)? {
