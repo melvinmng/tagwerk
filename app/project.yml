@@ -109,3 +109,5 @@ schemes:
         TagwerkTests: [test]
     test:
       targets: [TagwerkTests]
+      language: de
+      region: DE

@@ -17,12 +17,15 @@ stage_failed() {
 }
 
 LOG_DIR="${TMPDIR:-/tmp}/tagwerk-tests"
+# The app stage builds here, so the String Catalog check can reuse its .stringsdata.
+DERIVED="$HOME/Library/Developer/Tagwerk/DerivedData-tests"
 mkdir -p "$LOG_DIR"
 
 # Runs xcodebuild test, keeps the full log and fails when no test was executed.
 run_tests() {
   local log="$LOG_DIR/${CURRENT_STAGE// /-}.log"
-  if ! xcodebuild test "$@" > "$log" 2>&1; then
+  # German is the source language; tests expect German texts and formats (plan english-app, Task 1).
+  if ! xcodebuild test -testLanguage de -testRegion DE "$@" > "$log" 2>&1; then
     grep -E "error:|✘|failed" "$log" | tail -n 30 >&2 || true
     echo "Full log: $log" >&2
     return 1
@@ -72,7 +75,13 @@ xcodegen --quiet || stage_failed
 
 CURRENT_STAGE="app scheme Tagwerk"
 echo "==> $CURRENT_STAGE"
-run_tests -project "$SCRIPT_DIR/Tagwerk.xcodeproj" -scheme Tagwerk -destination "$DESTINATION" || stage_failed
+run_tests -project "$SCRIPT_DIR/Tagwerk.xcodeproj" -scheme Tagwerk -destination "$DESTINATION" -derivedDataPath "$DERIVED" || stage_failed
+
+CURRENT_STAGE="string catalogs"
+echo "==> $CURRENT_STAGE"
+/usr/bin/python3 "$SCRIPT_DIR/../scripts/check-strings.py" ${TAGWERK_REQUIRE_ENGLISH:+--require-english} || stage_failed
+"$SCRIPT_DIR/../scripts/sync-strings.sh" --check --no-build --derived-data "$DERIVED" || stage_failed
+echo "    catalogs match the source code"
 
 CURRENT_STAGE="done"
 echo "ALL TESTS PASSED"

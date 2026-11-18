@@ -1,0 +1,79 @@
+{
+  "sourceLanguage" : "de",
+  "strings" : {
+    "%@ %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ %2$@"
+          }
+        }
+      }
+    },
+    "%@ / %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ / %2$@"
+          }
+        }
+      }
+    },
+    "/ %@ kcal" : {
+
+    },
+    "ALS NÄCHSTES" : {
+
+    },
+    "Als Nächstes" : {
+
+    },
+    "Dein nächster Termin oder Zeitblock und was danach kommt." : {
+
+    },
+    "Die nächsten Einträge des Tages, auf Wunsch mit Kalorien und Wasser." : {
+
+    },
+    "Heute" : {
+
+    },
+    "MORGEN" : {
+
+    },
+    "Morgen %@" : {
+
+    },
+    "Morgen %@ %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Morgen %1$@ %2$@"
+          }
+        }
+      }
+    },
+    "Nichts mehr geplant" : {
+
+    },
+    "Tagwerk öffnen" : {
+
+    },
+    "danach %@" : {
+
+    },
+    "danach %@ %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "danach %1$@ %2$@"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}
