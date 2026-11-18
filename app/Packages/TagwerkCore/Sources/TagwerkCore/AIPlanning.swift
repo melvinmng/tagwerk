@@ -40,6 +40,9 @@ public struct PlanInputDay: Sendable, Hashable {
     public var recurringMinutes: Int
     /// Load already on the day: assigned tasks and blocks.
     public var plannedMinutes: Int
+    /// Part of `plannedMinutes` per task (`TaskID.key`), for tasks counted without a block (assigned,
+    /// due today). A new block or assignment for such a task replaces this load instead of adding to it.
+    public var countedTaskMinutes: [String: Int]
     /// Working time left for tasks after events with buffer, lunch and recurring effort.
     public var availableMinutes: Int
     public var events: [PlanInputEvent]
@@ -47,8 +50,9 @@ public struct PlanInputDay: Sendable, Hashable {
     /// Builds a day from calendar events; occupied time and capacity come from `busyIntervals` and `capacity`.
     public init(day: PlanDay, hours: WorkHours?, lunch: Range<Int>?, events: [CalendarEvent], linkedEventIDs: Set<String>,
                 deadlineCalendarIDs: Set<String>, blocks: [Range<Int>], recurringMinutes: Int, plannedMinutes: Int,
-                bufferMinutes: Int, calendar: Calendar) {
+                bufferMinutes: Int, calendar: Calendar, countedTaskMinutes: [String: Int] = [:]) {
         self.day = day
+        self.countedTaskMinutes = countedTaskMinutes
         self.hours = hours
         self.lunch = lunch
         self.blocks = blocks
@@ -382,10 +386,7 @@ private func validateBlocks(_ blocks: [PlanBlock], input: PlanInput,
     }
 
     // A block replaces the load its task already had on this day, so it is not counted twice.
-    let replaced = accepted.reduce(0) { sum, entry in
-        guard let task = tasks[entry.block.taskId], task.plannedDay == day.day else { return sum }
-        return sum + (task.minutes ?? input.defaultTaskMinutes)
-    }
+    let replaced = accepted.reduce(0) { $0 + (day.countedTaskMinutes[$1.block.taskId] ?? 0) }
     let base = day.plannedMinutes - replaced
     accepted.sort { $0.range.lowerBound < $1.range.lowerBound }
     while let last = accepted.last, base + accepted.reduce(0, { $0 + $1.block.minutes }) > day.availableMinutes {
@@ -424,8 +425,10 @@ private func validateAssignments(_ assignments: [PlanAssignment], input: PlanInp
         if isLate(day: planDay, endMinutes: nil, limit: task.due, input: input) { reject(.afterDue); continue }
         if isLate(day: planDay, endMinutes: nil, limit: task.anchor, input: input) { reject(.afterDeadline); continue }
         let minutes = task.minutes ?? estimates[task.id] ?? input.defaultTaskMinutes
-        if (load[planDay] ?? 0) + minutes > day.availableMinutes { reject(.overCapacity); continue }
-        load[planDay, default: 0] += minutes
+        // A task already counted on that day (due today) adds only the difference.
+        let added = minutes - (day.countedTaskMinutes[task.id] ?? 0)
+        if (load[planDay] ?? 0) + added > day.availableMinutes { reject(.overCapacity); continue }
+        load[planDay, default: 0] += added
         accepted.append(assignment)
     }
     return (accepted, violations)

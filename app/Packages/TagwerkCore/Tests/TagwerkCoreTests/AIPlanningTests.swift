@@ -20,10 +20,10 @@ struct AIPlanningTests {
 
     func planDay(_ day: PlanDay, hours: WorkHours? = WorkHours(startMinutes: 540, endMinutes: 1080),
                  lunch: Range<Int>? = 720..<780, events: [CalendarEvent] = [], blocks: [Range<Int>] = [],
-                 recurring: Int = 0, planned: Int = 0) -> PlanInputDay {
+                 recurring: Int = 0, planned: Int = 0, counted: [String: Int] = [:]) -> PlanInputDay {
         PlanInputDay(day: day, hours: hours, lunch: lunch, events: events, linkedEventIDs: [], deadlineCalendarIDs: [],
                      blocks: blocks, recurringMinutes: recurring, plannedMinutes: planned, bufferMinutes: 10,
-                     calendar: calendar)
+                     calendar: calendar, countedTaskMinutes: counted)
     }
 
     func task(_ name: String, due: DueDate? = nil, minutes: Int? = 60, plannedDay: PlanDay? = nil,
@@ -166,10 +166,34 @@ struct AIPlanningTests {
 
     @Test func validate_blockForTaskAlreadyPlannedThatDay_replacesItsLoad() {
         // The 60 planned minutes are task a itself; giving it a block must not count it twice.
-        let day = planDay(today, recurring: 360, planned: 60)
+        let day = planDay(today, recurring: 360, planned: 60, counted: ["local:a": 60])
         let result = validate(dayOutput([block("a", "14:00", 60), block("b", "16:00", 60)]),
                               input: input(days: [day], tasks: [task("a", plannedDay: today), task("b")]))
         #expect(Set(acceptedBlocks(result.accepted)) == ["local:a", "local:b"])
+    }
+
+    @Test func validate_blockForDueTodayTask_replacesItsLoad() {
+        // Due today without assignment: the day counts it already (openToday), plannedDay is nil.
+        let day = planDay(today, recurring: 360, planned: 30, counted: ["local:a": 30])
+        let result = validate(dayOutput([block("a", "14:00", 60), block("b", "16:00", 60)]),
+                              input: input(days: [day], tasks: [task("a", due: DueDate(year: 2026, month: 11, day: 18)), task("b")]))
+        #expect(Set(acceptedBlocks(result.accepted)) == ["local:a", "local:b"])
+    }
+
+    @Test func validate_blockForUncountedTask_addsFullLoad() {
+        // planned 60 belongs to another task; a and b need 120 of 120 free → b no longer fits.
+        let day = planDay(today, recurring: 360, planned: 60)
+        let result = validate(dayOutput([block("a", "14:00", 60), block("b", "16:00", 60)]),
+                              input: input(days: [day], tasks: [task("a", plannedDay: today), task("b")]))
+        #expect(acceptedBlocks(result.accepted) == ["local:a"])
+    }
+
+    @Test func validate_assignDueTodayTaskToToday_addsOnlyDifference() {
+        // Today: 120 free, 90 planned of which 60 are task a (due today) → assigning a adds 0.
+        let days = [planDay(today, recurring: 360, planned: 90, counted: ["local:a": 60]), planDay(tomorrow)]
+        let result = validate(periodOutput([assign("a", "2026-11-18")]),
+                              input: periodInput([task("a", due: DueDate(year: 2026, month: 11, day: 18))], days: days))
+        #expect(acceptedAssignments(result.accepted) == ["local:a"])
     }
 
     @Test func validate_dropsUnknownEstimatesAndUnscheduled() {
