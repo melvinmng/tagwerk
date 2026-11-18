@@ -2,13 +2,15 @@ import Foundation
 
 /// Sections of the task list.
 public enum TaskSection: CaseIterable, Sendable, Hashable {
-    case overdue, today, thisWeek, later, noDate
+    case overdue, today, tomorrow, thisWeek, nextWeek, later, noDate
 
     public var title: String {
         switch self {
         case .overdue: String(localized: "Überfällig", bundle: .module)
         case .today: String(localized: "Heute", bundle: .module)
+        case .tomorrow: String(localized: "Morgen", bundle: .module)
         case .thisWeek: String(localized: "Diese Woche", bundle: .module)
+        case .nextWeek: String(localized: "Nächste Woche", bundle: .module)
         case .later: String(localized: "Später", bundle: .module)
         case .noDate: String(localized: "Ohne Datum", bundle: .module)
         }
@@ -16,7 +18,9 @@ public enum TaskSection: CaseIterable, Sendable, Hashable {
 }
 
 /// Section of `item` relative to `now`. Dates without time compare by calendar day only;
-/// timed dates compare by instant. The week follows `calendar.firstWeekday`.
+/// timed dates compare by instant. Tomorrow comes before the week check, so on the last day of the week
+/// the first day of the next one is still "Morgen". When no day of this week is left after tomorrow,
+/// "Nächste Woche" replaces "Diese Woche". The week follows `calendar.firstWeekday`.
 public func section(for item: TaskItem, now: Date, calendar: Calendar) -> TaskSection {
     guard let due = item.due else { return .noDate }
     let today = DueDate(date: now, includeTime: false, calendar: calendar)
@@ -27,9 +31,16 @@ public func section(for item: TaskItem, now: Date, calendar: Calendar) -> TaskSe
     case .orderedSame:
         return due.hasTime && due.startDate(in: calendar) < now ? .overdue : .today
     case .orderedDescending:
-        guard let week = calendar.dateInterval(of: .weekOfYear, for: now) else { return .later }
+        let todayStart = today.startDate(in: calendar)
+        guard let tomorrowStart = calendar.date(byAdding: .day, value: 1, to: todayStart),
+              let afterTomorrowStart = calendar.date(byAdding: .day, value: 2, to: todayStart),
+              let week = calendar.dateInterval(of: .weekOfYear, for: now) else { return .later }
         let dueDay = DueDate(year: due.year, month: due.month, day: due.day).startDate(in: calendar)
-        return dueDay < week.end ? .thisWeek : .later
+        if dueDay < afterTomorrowStart, dueDay >= tomorrowStart { return .tomorrow }
+        if afterTomorrowStart < week.end { return dueDay < week.end ? .thisWeek : .later }
+        // Nothing of this week is left after tomorrow (Saturday, Sunday): show the next week instead.
+        guard let nextWeek = calendar.dateInterval(of: .weekOfYear, for: afterTomorrowStart) else { return .later }
+        return dueDay < nextWeek.end ? .nextWeek : .later
     }
 }
 
