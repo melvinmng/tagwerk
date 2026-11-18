@@ -1,3 +1,4 @@
+import AVFoundation
 import Foundation
 import Observation
 import TagwerkCore
@@ -23,14 +24,32 @@ final class VoiceOutputModel {
     @ObservationIgnored private let audio: VoiceAudioSession
     @ObservationIgnored private let preferences: () -> Preferences
     @ObservationIgnored private let isVoiceOverRunning: () -> Bool
+    @ObservationIgnored private var observers: [NSObjectProtocol] = []
 
     init(speaker: SpeechSpeaking, audio: VoiceAudioSession, preferences: @escaping () -> Preferences,
-         isVoiceOverRunning: @escaping () -> Bool = { UIAccessibility.isVoiceOverRunning }) {
+         isVoiceOverRunning: @escaping () -> Bool = { UIAccessibility.isVoiceOverRunning },
+         notifications: NotificationCenter = .default) {
         self.speaker = speaker
         self.audio = audio
         self.preferences = preferences
         self.isVoiceOverRunning = isVoiceOverRunning
         speaker.onEvent = { [weak self] event in self?.handle(event) }
+        observeInterruptions(notifications)
+    }
+
+    /// The synthesizer only pauses when the app leaves or a call starts; reading ends there instead of
+    /// leaving the sentence highlight and "Liest vor · Stopp" behind.
+    private func observeInterruptions(_ center: NotificationCenter) {
+        observers.append(center.addObserver(forName: UIApplication.didEnterBackgroundNotification, object: nil,
+                                            queue: .main) { [weak self] _ in
+            MainActor.assumeIsolated { self?.stop() }
+        })
+        observers.append(center.addObserver(forName: AVAudioSession.interruptionNotification, object: nil,
+                                            queue: .main) { [weak self] note in
+            let raw = note.userInfo?[AVAudioSessionInterruptionTypeKey] as? UInt
+            guard raw == AVAudioSession.InterruptionType.began.rawValue else { return }
+            MainActor.assumeIsolated { self?.stop() }
+        })
     }
 
     /// Reads `text`. `explicit` is a tap on "Vorlesen": it plays with the silent switch on and even while

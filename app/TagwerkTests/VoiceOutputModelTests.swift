@@ -1,4 +1,6 @@
+import AVFoundation
 import Foundation
+import UIKit
 import Testing
 import TagwerkCore
 @testable import Tagwerk
@@ -55,6 +57,34 @@ struct VoiceOutputModelTests {
         speaker.emit(.finished)
         #expect(model.speakingID == nil)
         #expect(audio.deactivations == 1)
+    }
+
+    /// The synthesizer only pauses when the app leaves or a call comes in; the highlight must not stay behind.
+    @Test(arguments: [UIApplication.didEnterBackgroundNotification, AVAudioSession.interruptionNotification])
+    func leavingOrInterruption_stopsReading(_ name: Notification.Name) {
+        let center = NotificationCenter()
+        let model = VoiceOutputModel(speaker: speaker, audio: audio,
+                                     preferences: { VoiceOutputModel.Preferences(germanVoiceID: nil, englishVoiceID: nil, rate: 0.5) },
+                                     isVoiceOverRunning: { false }, notifications: center)
+        model.speak(id: "a1", text: "Erster Satz hier. Zweiter Satz dort.", explicit: true, fallback: .german)
+        speaker.emit(.sentenceStarted(1))
+        center.post(name: name, object: nil,
+                    userInfo: [AVAudioSessionInterruptionTypeKey: AVAudioSession.InterruptionType.began.rawValue])
+        #expect(model.speakingID == nil)
+        #expect(model.sentences.isEmpty)
+        #expect(speaker.stopCount >= 1)
+        #expect(audio.deactivations == 1)
+    }
+
+    @Test func interruptionEnded_keepsNewReading() {
+        let center = NotificationCenter()
+        let model = VoiceOutputModel(speaker: speaker, audio: audio,
+                                     preferences: { VoiceOutputModel.Preferences(germanVoiceID: nil, englishVoiceID: nil, rate: 0.5) },
+                                     isVoiceOverRunning: { false }, notifications: center)
+        model.speak(id: "a1", text: "Erster Satz hier.", explicit: true, fallback: .german)
+        center.post(name: AVAudioSession.interruptionNotification, object: nil,
+                    userInfo: [AVAudioSessionInterruptionTypeKey: AVAudioSession.InterruptionType.ended.rawValue])
+        #expect(model.speakingID == "a1")
     }
 
     @Test func stop_clearsStateAndStopsSpeaker() {
