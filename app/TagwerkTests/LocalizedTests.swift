@@ -38,6 +38,18 @@ struct LocalizedTests {
         #expect(english("Mittagspause") == "Lunch break")
     }
 
+    @Test func deadlineMarking_textsInBothLanguages() {
+        func english(_ key: String.LocalizationValue) -> String { Localized.string(key, in: .english, bundle: .main) }
+        func german(_ key: String.LocalizationValue) -> String { Localized.string(key, in: .german, bundle: .main) }
+        #expect(english("Als Deadline markieren") == "Mark as deadline")
+        #expect(english("markiert") == "marked")
+        #expect(german("\(1) zugeordnete Termine werden gelöst. Im Kalender ändert sich nichts.")
+                == "1 zugeordneter Termin wird gelöst. Im Kalender ändert sich nichts.")
+        #expect(english("\(3) zugeordnete Termine werden gelöst. Im Kalender ändert sich nichts.")
+                == "3 linked events will be removed. Nothing changes in the calendar.")
+        #expect(english("Vorbereitung \("6 h 30") · \("3 events")") == "Preparation 6 h 30 · 3 events")
+    }
+
     @Test func languageChipLabels_areGermanKeysWithEnglishTranslations() {
         func english(_ key: String.LocalizationValue) -> String { Localized.string(key, in: .english, bundle: .main) }
         #expect(english("Sprache Deutsch, auf Englisch wechseln") == "Language German, switch to English")

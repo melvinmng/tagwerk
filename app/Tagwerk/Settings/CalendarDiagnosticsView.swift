@@ -6,6 +6,9 @@ import TagwerkCore
 struct CalendarDiagnosticsView: View {
     let model: PlanningModel
     @State private var rows: [CalendarDiagnostic] = []
+    #if DEBUG
+    @State private var identifiers: [PlanningModel.IdentifierSample] = []
+    #endif
 
     var body: some View {
         List {
@@ -26,11 +29,40 @@ struct CalendarDiagnosticsView: View {
             } footer: {
                 Text("Termine der nächsten 7 Tage. „Zusammengefasst“: gleicher Termin wird über die Kopie aus einem anderen Kalender gezeigt.")
             }
+            #if DEBUG
+            identifierSection
+            #endif
         }
         .navigationTitle("Kalender-Diagnose")
-        .task { rows = model.calendarDiagnostics() }
-        .refreshable { rows = model.calendarDiagnostics() }
+        .task { reloadRows() }
+        .refreshable { reloadRows() }
     }
+
+    private func reloadRows() {
+        rows = model.calendarDiagnostics()
+        #if DEBUG
+        identifiers = model.eventIdentifierSamples()
+        #endif
+    }
+
+    #if DEBUG
+    /// Debug only (plan deadline-marking, Task 1): local and server identifiers of up to five events per calendar,
+    /// to compare before and after a subscription refresh. Shown on screen only, never logged; no titles.
+    @ViewBuilder
+    private var identifierSection: some View {
+        ForEach(identifiers, id: \.calendarID) { sample in
+            Section(sample.calendarTitle) {
+                ForEach(sample.events) { event in
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(event.start.formatted(date: .abbreviated, time: .shortened)).font(.caption.weight(.semibold))
+                        Text(verbatim: "id: \(event.id)").font(.caption2.monospaced()).textSelection(.enabled)
+                        Text(verbatim: "externalID: \(event.externalID ?? "–")").font(.caption2.monospaced()).textSelection(.enabled)
+                    }
+                }
+            }
+        }
+    }
+    #endif
 
     private func details(_ row: CalendarDiagnostic) -> String {
         var parts = ["\(row.events) Termine", "\(row.shown) gezeigt"]

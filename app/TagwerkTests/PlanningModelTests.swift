@@ -1455,6 +1455,20 @@ struct PlanningModelTests {
         #expect(model.deadlineSuggestions.isEmpty)
     }
 
+    #if DEBUG
+    @Test func identifierSamplesListUpToFiveEventsPerCalendar() async throws {
+        useTimetable()
+        calendarStore.storedEvents = (0..<7).map { index in
+            timetableEvent("t\(index)", "Vorlesung", start: at(19, 8 + index), minutes: 30, externalID: "ext-\(index)")
+        }
+        let model = await model()
+        let sample = try #require(model.eventIdentifierSamples().first { $0.calendarID == "timetable" })
+        #expect(sample.calendarTitle == "Stundenplan")
+        #expect(sample.events.map(\.id) == ["t0", "t1", "t2", "t3", "t4"])
+        #expect(sample.events.first?.externalID == "ext-0")
+    }
+    #endif
+
     @Test func markingAndUnmarkingReportsAChange() async throws {
         useTimetable()
         let exam = timetableEvent("exam", "Klausur", start: at(27, 10))

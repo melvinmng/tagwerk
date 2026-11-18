@@ -768,6 +768,35 @@ final class PlanningModel {
         .sorted { $0.title.localizedStandardCompare($1.title) == .orderedAscending }
     }
 
+    #if DEBUG
+    /// Local and server identifiers of a few events of one calendar (Kalender-Diagnose, debug builds only).
+    struct IdentifierSample: Equatable {
+        struct Entry: Equatable, Identifiable {
+            let id: String
+            let externalID: String?
+            let start: Date
+        }
+
+        let calendarID: String
+        let calendarTitle: String
+        let events: [Entry]
+    }
+
+    /// Up to five events per calendar over the next 14 days, for checking whether a subscription keeps its identifiers
+    /// after a refresh (plan deadline-marking, Task 1). Titles stay out on purpose.
+    func eventIdentifierSamples(limit: Int = 5) -> [IdentifierSample] {
+        let interval = DateInterval(start: today.startDate(in: calendar),
+                                    end: today.adding(days: 14, calendar: calendar).startDate(in: calendar))
+        let events = calendarStore.events(in: interval, calendarIDs: nil)
+        return calendarStore.eventCalendars().compactMap { info in
+            let own = events.filter { $0.calendarID == info.id }.sorted { $0.start < $1.start }.prefix(limit)
+            guard !own.isEmpty else { return nil }
+            return IdentifierSample(calendarID: info.id, calendarTitle: info.title,
+                                    events: own.map { IdentifierSample.Entry(id: $0.id, externalID: $0.externalID, start: $0.start) })
+        }
+    }
+    #endif
+
     func decideMerge(_ suggestion: MergeSuggestion, merge: Bool, always: Bool) async {
         marks.decide(suggestion, merge: merge, always: always)
         await reload()
