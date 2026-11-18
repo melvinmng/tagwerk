@@ -3,9 +3,7 @@ import Observation
 import RemindersKit
 import TagwerkCore
 
-enum PlanScope: String, CaseIterable, Hashable {
-    case day, week, month
-
+extension PlanScope {
     var title: String {
         switch self {
         case .day: "Tag"

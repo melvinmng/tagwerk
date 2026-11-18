@@ -3,7 +3,8 @@ import Foundation
 // AI planning rules (design §8.2, §11.7, §11.10): what goes to the model and how its answer is
 // checked locally before anything is shown. Pure functions, no AI and no I/O.
 
-public enum PlanScope: String, Sendable, Codable {
+/// The planning view and the period an AI plan covers.
+public enum PlanScope: String, Sendable, Codable, CaseIterable, Hashable {
     case day, week, month
 }
 
