@@ -96,12 +96,12 @@ GitHub-Konto: @melvinmng · bestätigt zuweisbar · geprüft 2026-11-17 · ich
 - [ ] [#98](https://github.com/melvinmng/tagwerk/issues/98) Wochenrückblick in Erfassen {status: In review; prio: P2 (High); aufwand: 5h; epic: #4}
 - [ ] [#99](https://github.com/melvinmng/tagwerk/issues/99) Einstellungen „Siri & Kurzbefehle“, Demo-Daten und Doku Phase 4 {status: In review; prio: P2 (High); aufwand: 2h; epic: #4}
 - [ ] [#103](https://github.com/melvinmng/tagwerk/issues/103) Mit der KI sprechen {status: In progress; prio: P2 (High)}
-- [ ] [#104](https://github.com/melvinmng/tagwerk/issues/104) Sprache: Erkennung auf dem iPhone prüfen {status: In progress; prio: P2 (High); aufwand: 2h; epic: #103}
-- [ ] [#105](https://github.com/melvinmng/tagwerk/issues/105) Sprache: sprechbarer Text, Sprache erkennen, Vorlese-Regel, Ansagen {status: Ready; prio: P2 (High); aufwand: 4h; epic: #103}
-- [ ] [#106](https://github.com/melvinmng/tagwerk/issues/106) Sprache: Erkennung und Aufnahme-Modell {status: Ready; prio: P2 (High); aufwand: 6h; epic: #103}
-- [ ] [#107](https://github.com/melvinmng/tagwerk/issues/107) Sprache: Vorlesen {status: Ready; prio: P2 (High); aufwand: 4h; epic: #103}
-- [ ] [#108](https://github.com/melvinmng/tagwerk/issues/108) Sprache: Mikrofon in Chat und Vorschlagsblatt {status: Ready; prio: P2 (High); aufwand: 6h; epic: #103}
-- [ ] [#109](https://github.com/melvinmng/tagwerk/issues/109) Sprache: Einstellungen und Sprache der KI-Antworten {status: Ready; prio: P2 (High); aufwand: 3h; epic: #103}
+- [ ] [#104](https://github.com/melvinmng/tagwerk/issues/104) Sprache: Erkennung auf dem iPhone prüfen {status: In review; prio: P2 (High); aufwand: 2h; epic: #103}
+- [ ] [#105](https://github.com/melvinmng/tagwerk/issues/105) Sprache: sprechbarer Text, Sprache erkennen, Vorlese-Regel, Ansagen {status: In review; prio: P2 (High); aufwand: 4h; epic: #103}
+- [ ] [#106](https://github.com/melvinmng/tagwerk/issues/106) Sprache: Erkennung und Aufnahme-Modell {status: In review; prio: P2 (High); aufwand: 6h; epic: #103}
+- [ ] [#107](https://github.com/melvinmng/tagwerk/issues/107) Sprache: Vorlesen {status: In review; prio: P2 (High); aufwand: 4h; epic: #103}
+- [ ] [#108](https://github.com/melvinmng/tagwerk/issues/108) Sprache: Mikrofon in Chat und Vorschlagsblatt {status: In review; prio: P2 (High); aufwand: 6h; epic: #103}
+- [ ] [#109](https://github.com/melvinmng/tagwerk/issues/109) Sprache: Einstellungen und Sprache der KI-Antworten {status: In review; prio: P2 (High); aufwand: 3h; epic: #103}
 - [ ] [#110](https://github.com/melvinmng/tagwerk/issues/110) Sprache: Sprechmodus {status: Ready; prio: P2 (High); aufwand: 8h; epic: #103}
 
 ## Notizen
@@ -111,20 +111,14 @@ GitHub-Konto: @melvinmng · bestätigt zuweisbar · geprüft 2026-11-17 · ich
 
 _Automatisch aus [Tagwerk](https://github.com/users/melvinmng/projects/17) erzeugt. Nicht von Hand bearbeiten; Aufgaben oben unter den Personen pflegen._
 
-### Bereit (6)
-- [#105](https://github.com/melvinmng/tagwerk/issues/105) Sprache: sprechbarer Text, Sprache erkennen, Vorlese-Regel, Ansagen · @melvinmng · Prio P2 (High) · 4h
-- [#106](https://github.com/melvinmng/tagwerk/issues/106) Sprache: Erkennung und Aufnahme-Modell · @melvinmng · Prio P2 (High) · 6h
-- [#107](https://github.com/melvinmng/tagwerk/issues/107) Sprache: Vorlesen · @melvinmng · Prio P2 (High) · 4h
-- [#108](https://github.com/melvinmng/tagwerk/issues/108) Sprache: Mikrofon in Chat und Vorschlagsblatt · @melvinmng · Prio P2 (High) · 6h
-- [#109](https://github.com/melvinmng/tagwerk/issues/109) Sprache: Einstellungen und Sprache der KI-Antworten · @melvinmng · Prio P2 (High) · 3h
+### Bereit (1)
 - [#110](https://github.com/melvinmng/tagwerk/issues/110) Sprache: Sprechmodus · @melvinmng · Prio P2 (High) · 8h
 
-### In Arbeit (3)
+### In Arbeit (2)
 - [#2](https://github.com/melvinmng/tagwerk/issues/2) Phase 2: Aufgaben, Kalender und KI-Tagesplan umsetzen · @melvinmng · Prio P2 (High)
 - [#103](https://github.com/melvinmng/tagwerk/issues/103) Mit der KI sprechen · @melvinmng · Prio P2 (High)
-- [#104](https://github.com/melvinmng/tagwerk/issues/104) Sprache: Erkennung auf dem iPhone prüfen · @melvinmng · Prio P2 (High) · 2h
 
-### In Prüfung (40)
+### In Prüfung (46)
 - [#3](https://github.com/melvinmng/tagwerk/issues/3) Phase 3: Ernährung, Trinken und Training erfassen · @melvinmng · Prio P3 (Medium)
 - [#4](https://github.com/melvinmng/tagwerk/issues/4) Phase 4: Widget, Kurzbefehle und Wochenrückblick ergänzen · @melvinmng · Prio P4 (Low)
 - [#57](https://github.com/melvinmng/tagwerk/issues/57) ChatGPT-Antworten mit Streaming und Modellliste · @melvinmng · Prio P2 (High) · 5h
@@ -165,6 +159,12 @@ _Automatisch aus [Tagwerk](https://github.com/users/melvinmng/projects/17) erzeu
 - [#97](https://github.com/melvinmng/tagwerk/issues/97) Install-Skript für App und Widget-Extension · @melvinmng · Prio P2 (High) · 3h
 - [#98](https://github.com/melvinmng/tagwerk/issues/98) Wochenrückblick in Erfassen · @melvinmng · Prio P2 (High) · 5h
 - [#99](https://github.com/melvinmng/tagwerk/issues/99) Einstellungen „Siri & Kurzbefehle“, Demo-Daten und Doku Phase 4 · @melvinmng · Prio P2 (High) · 2h
+- [#104](https://github.com/melvinmng/tagwerk/issues/104) Sprache: Erkennung auf dem iPhone prüfen · @melvinmng · Prio P2 (High) · 2h
+- [#105](https://github.com/melvinmng/tagwerk/issues/105) Sprache: sprechbarer Text, Sprache erkennen, Vorlese-Regel, Ansagen · @melvinmng · Prio P2 (High) · 4h
+- [#106](https://github.com/melvinmng/tagwerk/issues/106) Sprache: Erkennung und Aufnahme-Modell · @melvinmng · Prio P2 (High) · 6h
+- [#107](https://github.com/melvinmng/tagwerk/issues/107) Sprache: Vorlesen · @melvinmng · Prio P2 (High) · 4h
+- [#108](https://github.com/melvinmng/tagwerk/issues/108) Sprache: Mikrofon in Chat und Vorschlagsblatt · @melvinmng · Prio P2 (High) · 6h
+- [#109](https://github.com/melvinmng/tagwerk/issues/109) Sprache: Einstellungen und Sprache der KI-Antworten · @melvinmng · Prio P2 (High) · 3h
 
 ### Nicht zugeordnet (0)
 
