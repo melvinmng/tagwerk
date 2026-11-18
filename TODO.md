@@ -71,6 +71,8 @@ GitHub-Konto: @melvinmng · bestätigt zuweisbar · geprüft 2026-11-17 · ich
 - [ ] [#70](https://github.com/melvinmng/tagwerk/issues/70) Aufgaben in der Woche zwischen Tagen ziehen {status: In review; prio: P2 (High); aufwand: 2h; epic: #2}
 - [ ] [#71](https://github.com/melvinmng/tagwerk/issues/71) Wischen in Woche und Monat {status: In review; prio: P2 (High); aufwand: 2h; epic: #2}
 - [ ] [#72](https://github.com/melvinmng/tagwerk/issues/72) KI schlägt längere Arbeitstage vor {status: In review; prio: P2 (High); aufwand: 2h; epic: #2}
+- [ ] [#73](https://github.com/melvinmng/tagwerk/issues/73) Vorschläge zeigen Priorität, Fälligkeit und Aufwand; Tipp öffnet das Vorschlagsblatt mit der Aufgabe {status: In progress; prio: P2 (High); aufwand: 5h; epic: #2}
+- [ ] [#74](https://github.com/melvinmng/tagwerk/issues/74) Über Vorschläge sprechen, sie von Hand verschieben und Planungsvorgaben setzen {status: Ready; prio: P2 (High); aufwand: 8h; epic: #2}
 
 ## Notizen
 
@@ -83,8 +85,12 @@ _Automatisch aus [Tagwerk](https://github.com/users/melvinmng/projects/17) erzeu
 - [#3](https://github.com/melvinmng/tagwerk/issues/3) Phase 3: Ernährung, Trinken und Training erfassen · @melvinmng · Prio P3 (Medium)
 - [#4](https://github.com/melvinmng/tagwerk/issues/4) Phase 4: Widget, Kurzbefehle und Wochenrückblick ergänzen · @melvinmng · Prio P4 (Low)
 
-### In Arbeit (1)
+### Bereit (1)
+- [#74](https://github.com/melvinmng/tagwerk/issues/74) Über Vorschläge sprechen, sie von Hand verschieben und Planungsvorgaben setzen · @melvinmng · Prio P2 (High) · 8h
+
+### In Arbeit (2)
 - [#2](https://github.com/melvinmng/tagwerk/issues/2) Phase 2: Aufgaben, Kalender und KI-Tagesplan umsetzen · @melvinmng · Prio P2 (High)
+- [#73](https://github.com/melvinmng/tagwerk/issues/73) Vorschläge zeigen Priorität, Fälligkeit und Aufwand; Tipp öffnet das Vorschlagsblatt mit der Aufgabe · @melvinmng · Prio P2 (High) · 5h
 
 ### In Prüfung (14)
 - [#57](https://github.com/melvinmng/tagwerk/issues/57) ChatGPT-Antworten mit Streaming und Modellliste · @melvinmng · Prio P2 (High) · 5h
