@@ -37,14 +37,24 @@ struct NotificationPlanTests {
         #expect(result.first?.source == .github)
     }
 
-    @Test func githubDateOnly_firesAt18MinusLeadTime() {
+    @Test func githubDateOnly_firesAt9OnDueDayWithoutLeadTime() {
         let result = plan([task("Issue", source: .github, due: DueDate(year: 2026, month: 11, day: 19))])
-        #expect(result.first?.fireDate == instant(2026, 11, 19, 16, 0, in: calendar))
+        #expect(result.first?.fireDate == instant(2026, 11, 19, 9, 0, in: calendar))
     }
 
-    @Test func localDateOnly_firesAt18MinusLeadTime() {
+    @Test func localDateOnly_firesAt9OnDueDayWithoutLeadTime() {
         let result = plan([task("Lokal", source: .local, due: DueDate(year: 2026, month: 11, day: 19))])
-        #expect(result.first?.fireDate == instant(2026, 11, 19, 16, 0, in: calendar))
+        #expect(result.first?.fireDate == instant(2026, 11, 19, 9, 0, in: calendar))
+    }
+
+    @Test func dateOnlyToday_afterMorning_skipped() {
+        // Due today without time; 09:00 has passed at 10:00, so there is nothing left to remind of.
+        let tasks = [task("Heute", source: .local, due: DueDate(year: 2026, month: 11, day: 18))]
+        let morning = notificationPlan(tasks: tasks, deadlineEvents: [], rules: rules, now: now, calendar: calendar)
+        let late = notificationPlan(tasks: tasks, deadlineEvents: [], rules: rules,
+                                    now: instant(2026, 11, 18, 10, 0, in: calendar), calendar: calendar)
+        #expect(morning.first?.fireDate == instant(2026, 11, 18, 9, 0, in: calendar))
+        #expect(late.isEmpty)
     }
 
     @Test func timedTask_firesAtDueMinusLeadTime() {
@@ -138,7 +148,8 @@ struct NotificationPlanTests {
         let bodies = Dictionary(uniqueKeysWithValues: result.map { ($0.title, $0.body) })
         // Fires on Thursday 19 Nov at 09:00; the task is due on Saturday.
         #expect(bodies["Morgen"] == "Fällig am Sa., 21.11. um 09:00 · Lokal")
-        #expect(bodies["Später"] == "Fällig am So., 22.11. · beispiel/webshop")
+        // Without time it fires on the due day itself, independent of the lead time.
+        #expect(bodies["Später"] == "Fällig heute · beispiel/webshop")
         #expect(bodies["Termin d"] == "Deadline am So., 22.11. um 10:00")
     }
 
@@ -155,12 +166,12 @@ struct NotificationPlanTests {
     }
 
     @Test func dstChange_keepsWallClockTime() {
-        // Summer time ends in Berlin on 25 Oct 2026; the due date on the 26th still fires at 16:00 local time.
+        // Summer time ends in Berlin on 25 Oct 2026; the due date on the 26th still fires at 09:00 local time.
         let october = instant(2026, 10, 20, 8, 0, in: calendar)
         let result = notificationPlan(tasks: [task("Herbst", source: .local, due: DueDate(year: 2026, month: 10, day: 26))],
                                       deadlineEvents: [], rules: rules, now: october, calendar: calendar)
         let parts = calendar.dateComponents([.hour, .minute], from: result.first!.fireDate)
-        #expect(parts.hour == 16)
+        #expect(parts.hour == 9)
         #expect(parts.minute == 0)
     }
 }
