@@ -90,8 +90,9 @@ final class SystemNotificationCenter: NotificationCenterClient {
         content.threadIdentifier = notification.source?.rawValue ?? "deadline"
         content.userInfo = NotificationPayload.userInfo(for: notification.target)
         // Absolute moment with its time zone, so a trip does not shift a timed deadline until the next reschedule.
+        // A fixed offset keeps the repeated hour at the end of summer time unambiguous.
         var calendar = Calendar(identifier: .gregorian)
-        calendar.timeZone = .current
+        calendar.timeZone = TimeZone(secondsFromGMT: TimeZone.current.secondsFromGMT(for: notification.fireDate)) ?? .current
         var parts = calendar.dateComponents([.year, .month, .day, .hour, .minute, .second], from: notification.fireDate)
         parts.timeZone = calendar.timeZone
         let trigger = UNCalendarNotificationTrigger(dateMatching: parts, repeats: false)

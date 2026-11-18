@@ -41,6 +41,7 @@ final class AppEnvironment {
     @ObservationIgnored private var reconnectWatch: Task<Void, Never>?
     @ObservationIgnored private var pathMonitor: NWPathMonitor?
     @ObservationIgnored private var notificationUpdates: Task<Void, Never>?
+    @ObservationIgnored private var gitHubRegistration: Task<Void, Never>?
 
     /// `notificationCenter` defaults to the system center; tests pass a fake so nothing reaches iOS.
     init(modelContainer: ModelContainer, notificationCenter: (any NotificationCenterClient)? = nil) throws {
@@ -124,9 +125,7 @@ final class AppEnvironment {
     func makeBackgroundRefresh() -> BackgroundRefresh {
         BackgroundRefresh(
             prepare: { [weak self] in
-                guard let self, await gitHubTokens.isSignedIn, taskList.provider(for: .github) == nil else { return false }
-                await taskList.register(gitHub)  // loads all sources
-                return true
+                await self?.registerGitHubIfSignedIn() ?? false  // a registration loads all sources
             },
             reload: { [weak self] in await self?.taskList.reload() },
             reschedule: { [weak self] in await self?.notifications.reschedule() })
@@ -134,10 +133,27 @@ final class AppEnvironment {
 
     /// Adds GitHub to the task list when credentials exist.
     func activateGitHubIfSignedIn() async {
-        guard await gitHubTokens.isSignedIn, taskList.provider(for: .github) == nil else { return }
-        await taskList.register(gitHub)
+        guard await registerGitHubIfSignedIn() else { return }
         // Refresh repositories and project links at every start, so creating an issue needs no wait.
         _ = await gitHub.catalog(maxAge: 0)
+    }
+
+    /// Registers GitHub once, also when start, foreground and background refresh ask at the same time.
+    /// Returns `true` only to the caller whose registration loaded the sources.
+    private func registerGitHubIfSignedIn() async -> Bool {
+        if let running = gitHubRegistration {
+            await running.value
+            return false
+        }
+        guard taskList.provider(for: .github) == nil else { return false }
+        let registration = Task { @MainActor [weak self] in
+            guard let self, await gitHubTokens.isSignedIn, taskList.provider(for: .github) == nil else { return }
+            await taskList.register(gitHub)
+        }
+        gitHubRegistration = registration
+        await registration.value
+        gitHubRegistration = nil
+        return taskList.provider(for: .github) != nil
     }
 
     /// Removes GitHub from the task list after signing out and forgets cached issues.

@@ -23,6 +23,8 @@ final class NotificationScheduler {
     @ObservationIgnored private let now: () -> Date
     @ObservationIgnored private let calendar: Calendar
     @ObservationIgnored private var pendingRun: Task<Void, Never>?
+    /// The last queued change; runs wait for it, so an older run never re-adds what a newer one removed.
+    @ObservationIgnored private var queue: Task<Void, Never>?
     @ObservationIgnored private let log = Logger(subsystem: "local.tagwerk", category: "notifications")
 
     init(center: any NotificationCenterClient, taskList: TaskListModel,
@@ -62,6 +64,22 @@ final class NotificationScheduler {
 
     /// Brings the pending requests in line with the current tasks and deadline events.
     func reschedule() async {
+        await enqueue { await $0.performReschedule() }
+    }
+
+    /// Runs `work` after every earlier queued run has finished.
+    private func enqueue(_ work: @escaping @MainActor (NotificationScheduler) async -> Void) async {
+        let previous = queue
+        let next = Task { @MainActor [weak self] in
+            await previous?.value
+            guard let self else { return }
+            await work(self)
+        }
+        queue = next
+        await next.value
+    }
+
+    private func performReschedule() async {
         await refreshAuthorization()
         guard authorization == .authorized else { return }
         let current = now()
@@ -82,13 +100,27 @@ final class NotificationScheduler {
             return !replaceable.contains { request.id.hasPrefix(PlannedNotification.identifierPrefix(for: $0)) }
         }
 
+        // Planned without the margin: a request that fires within the next minute stays when it is still wanted
+        // unchanged, but nothing new is added that close (it could be in the past once iOS receives it).
         let rules = NotificationRules(leadTimeMinutes: settings.leadTimeMinutes,
                                       includesDeadlineCalendars: settings.deadlineCalendarNotifications,
-                                      limit: max(0, Self.limit - kept.count))
+                                      limit: max(0, Self.limit - kept.count), minimumDelay: 0)
         let tasks = taskList.items.filter { replaceable.contains($0.id.source) }
-        let plan = notificationPlan(tasks: tasks, deadlineEvents: events ?? [], rules: rules, now: current, calendar: calendar)
+        let wanted = notificationPlan(tasks: tasks, deadlineEvents: events ?? [], rules: rules, now: current, calendar: calendar)
+        let earliestNew = current.addingTimeInterval(NotificationRules.defaultMinimumDelay)
+        let pendingDates = Dictionary(ours.map { ($0.id, $0.fireDate) }, uniquingKeysWith: { first, _ in first })
+        var plan: [PlannedNotification] = []
+        var keep = Set(kept.map(\.id))
+        for notification in wanted {
+            if notification.fireDate >= earliestNew {
+                plan.append(notification)
+                keep.insert(notification.id)
+            } else if let pending = pendingDates[notification.id] ?? nil,
+                      abs(pending.timeIntervalSince(notification.fireDate)) < 1 {
+                keep.insert(notification.id)
+            }
+        }
 
-        let keep = Set(kept.map(\.id)).union(plan.map(\.id))
         let stale = ours.map(\.id).filter { !keep.contains($0) }
         if !stale.isEmpty { await center.removePending(stale) }
         for notification in plan {
@@ -102,6 +134,10 @@ final class NotificationScheduler {
 
     /// Removes the notifications of a source after a voluntary sign-out (its state is gone, not `.signedOut`).
     func removeNotifications(of source: TaskSource) async {
+        await enqueue { await $0.performRemoval(of: source) }
+    }
+
+    private func performRemoval(of source: TaskSource) async {
         let prefix = PlannedNotification.identifierPrefix(for: source)
         let ids = await center.pendingRequests().map(\.id).filter { $0.hasPrefix(prefix) }
         if !ids.isEmpty { await center.removePending(ids) }

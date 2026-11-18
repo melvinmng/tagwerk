@@ -39,8 +39,11 @@ public struct NotificationRules: Sendable, Hashable {
     /// Notifications must fire at least this long after `now`; earlier ones are skipped.
     public var minimumDelay: TimeInterval
 
+    /// Margin before a new notification may fire.
+    public static let defaultMinimumDelay: TimeInterval = 60
+
     public init(leadTimeMinutes: Int, includesDeadlineCalendars: Bool, limit: Int = 50, dateOnlyHour: Int = 18,
-                minimumDelay: TimeInterval = 60) {
+                minimumDelay: TimeInterval = defaultMinimumDelay) {
         self.leadTimeMinutes = leadTimeMinutes
         self.includesDeadlineCalendars = includesDeadlineCalendars
         self.limit = limit

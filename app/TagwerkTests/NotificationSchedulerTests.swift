@@ -198,4 +198,39 @@ struct NotificationSchedulerTests {
         #expect(granted)
         #expect(center.pendingIDs == ["tagwerk.task.local:A"])
     }
+
+    @Test func pendingWithinMargin_kept() async {
+        // Due 12:00 with 2 h lead time fires at 10:00, 30 s after "now" (09:59:30), inside the 60 s margin.
+        center.seed("tagwerk.task.local:Gleich", fireDate: testNow())
+        local.tasks = [makeTask("Gleich", source: .local, due: due(18, 12))]
+        let scheduler = NotificationScheduler(center: center, taskList: await loadedList([local]),
+                                              deadlineEvents: { _, _ in [] }, settings: settings,
+                                              now: { testNow().addingTimeInterval(-30) }, calendar: calendar)
+        await scheduler.reschedule()
+        #expect(center.pendingIDs.contains("tagwerk.task.local:Gleich"))
+        #expect(center.added.isEmpty)
+    }
+
+    @Test func pendingWithinMarginButMoved_removed() async {
+        center.seed("tagwerk.task.local:Gleich", fireDate: testNow().addingTimeInterval(30))
+        local.tasks = [makeTask("Gleich", source: .local, due: due(25))]
+        let scheduler = makeScheduler(await loadedList([local]))
+        await scheduler.reschedule()
+        let expected = calendar.date(from: DateComponents(year: 2026, month: 11, day: 25, hour: 16))
+        #expect(center.pending["tagwerk.task.local:Gleich"]?.fireDate == expected)
+    }
+
+    @Test func concurrentRuns_doNotReviveRemovedNotifications() async {
+        local.tasks = [makeTask("A", source: .local, due: due(20))]
+        let list = await loadedList([local])
+        let scheduler = makeScheduler(list)
+        center.addDelay = .milliseconds(100)
+        let first = Task { await scheduler.reschedule() }
+        await Task.yield()
+        local.tasks = []
+        await list.reload()
+        await scheduler.reschedule()
+        await first.value
+        #expect(center.pending.isEmpty)
+    }
 }

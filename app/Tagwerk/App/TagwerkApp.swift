@@ -44,6 +44,8 @@ struct TagwerkApp: App {
                     switch phase {
                     case .active:
                         Task {
+                            // A start before the first unlock could not read the GitHub sign-in; try again.
+                            await environment.activateGitHubIfSignedIn()
                             await environment.retryGitHubIfNeeded()
                             // Remaining time and "today" move on while the app is in the background.
                             await environment.planning.reload()

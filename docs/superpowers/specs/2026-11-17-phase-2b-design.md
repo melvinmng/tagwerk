@@ -274,6 +274,8 @@ Regeln, die aus der Umsetzung folgen:
 - `BGTaskScheduler.submit` ist unter iOS 27 veraltet; genutzt wird `submitTaskRequest`.
 - Demo-Daten (`-TagwerkDemoData`) enthalten die Deadline „Abgabe Kurzbericht“, deren Benachrichtigung etwa 2 min nach dem Start auslöst.
 
+- **Review vor dem Merge (Fable):** Behoben: Eine ausstehende Benachrichtigung in ihrer letzten Minute wurde bei einer Neuplanung gelöscht (bleibt jetzt, wenn sie unverändert gewünscht ist); Neuplanungen und Entfernen laufen nacheinander, damit ein älterer Lauf nichts Entferntes wieder anlegt; feste UTC-Abweichung im Auslöser gegen die doppelte Stunde im Herbst; GitHub wird bei jeder Rückkehr in den Vordergrund aktiviert, falls ein Start vor dem ersten Entsperren die Anmeldung nicht lesen konnte; ein gemeinsames Gate verhindert doppelte Registrierung durch Start, Vordergrund und Hintergrund-Refresh. Offen (klein): Tippen schließt nur die Sheets der obersten Ebene, nicht die der Tabs; ein Tippziel für eine GitHub-Aufgabe ohne Anmeldung wartet bis zur nächsten Anmeldung; ob iOS beim Hintergrundstart die Szene verbindet (dann lädt der Start zusätzlich den Katalog), ist am Gerät zu prüfen.
+
 **Offen (Gerät):** Zustellung und Tippen (auch Kaltstart), Zeitpunkt des Hintergrund-Refreshs (der Simulator führt ihn nicht aus), Verhalten bei gesperrtem Gerät. Die Simulator-Prüfung in 2b-3 fiel aus, weil der Simulator von einer anderen Sitzung belegt war.
 
 ## Quellen
