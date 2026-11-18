@@ -32,6 +32,8 @@ public struct PlannedNotification: Sendable, Hashable, Identifiable {
 public struct NotificationRules: Sendable, Hashable {
     public var leadTimeMinutes: Int
     public var includesDeadlineCalendars: Bool
+    /// Task sources that get notifications; each has its own switch in the settings.
+    public var taskSources: Set<TaskSource>
     /// At most this many pending notifications (iOS keeps 64).
     public var limit: Int
     /// Hour on the due day at which a task without time reminds, without lead time (a morning heads-up).
@@ -44,10 +46,12 @@ public struct NotificationRules: Sendable, Hashable {
     /// Margin before a new notification may fire.
     public static let defaultMinimumDelay: TimeInterval = 60
 
-    public init(leadTimeMinutes: Int, includesDeadlineCalendars: Bool, limit: Int = 50, dateOnlyHour: Int = 9,
+    public init(leadTimeMinutes: Int, includesDeadlineCalendars: Bool,
+                taskSources: Set<TaskSource> = Set(TaskSource.allCases), limit: Int = 50, dateOnlyHour: Int = 9,
                 allDayEventHour: Int = 18, minimumDelay: TimeInterval = defaultMinimumDelay) {
         self.leadTimeMinutes = leadTimeMinutes
         self.includesDeadlineCalendars = includesDeadlineCalendars
+        self.taskSources = taskSources
         self.limit = limit
         self.dateOnlyHour = dateOnlyHour
         self.allDayEventHour = allDayEventHour
@@ -55,8 +59,8 @@ public struct NotificationRules: Sendable, Hashable {
     }
 }
 
-/// Notifications for open GitHub and local tasks with a due date and, if enabled, for deadline calendar events.
-/// Reminders are excluded because the Reminders app notifies by itself. The result holds the earliest
+/// Notifications for open tasks with a due date from the enabled sources and, if enabled, for deadline calendar
+/// events. Reminders are included on purpose: the Reminders app only alerts at the due moment, if at all. The result holds the earliest
 /// `rules.limit` notifications that fire at least `rules.minimumDelay` after `now`, ordered by fire date.
 public func notificationPlan(tasks: [TaskItem], deadlineEvents: [CalendarEvent], rules: NotificationRules,
                              now: Date, calendar: Calendar) -> [PlannedNotification] {
@@ -64,7 +68,7 @@ public func notificationPlan(tasks: [TaskItem], deadlineEvents: [CalendarEvent],
     let texts = NotificationTexts(calendar: calendar)
     var result: [PlannedNotification] = []
 
-    for task in tasks where !task.isCompleted && task.id.source != .reminders {
+    for task in tasks where !task.isCompleted && rules.taskSources.contains(task.id.source) {
         guard let due = task.due else { continue }
         var parts = due.dayComponents()
         parts.hour = due.hour ?? rules.dateOnlyHour

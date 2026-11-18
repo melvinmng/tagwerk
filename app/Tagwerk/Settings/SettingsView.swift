@@ -70,6 +70,9 @@ struct SettingsView: View {
 
                 Section {
                     Stepper("Vorlauf: \(leadTimeText(settings.leadTimeMinutes))", value: $settings.leadTimeMinutes, in: 15...2880, step: 15)
+                    Toggle("GitHub-Issues", isOn: $settings.githubTaskNotifications)
+                    Toggle("Erinnerungen", isOn: $settings.reminderTaskNotifications)
+                    Toggle("Lokale Aufgaben", isOn: $settings.localTaskNotifications)
                     Toggle("Deadline-Termine", isOn: $settings.deadlineCalendarNotifications)
                 } header: {
                     Text("Benachrichtigungen")
@@ -134,7 +137,7 @@ struct SettingsView: View {
     private var notificationFooter: String {
         switch environment.notifications.authorization {
         case .authorized:
-            "So lange vor der Fälligkeit erinnert Tagwerk an GitHub- und lokale Aufgaben und an Termine aus Deadline-Kalendern. An Aufgaben ohne Uhrzeit erinnert Tagwerk am Fälligkeitstag um 9:00. An ganztägige Deadline-Termine erinnert Tagwerk am Vortag um 18:00."
+            "So lange vor der Fälligkeit erinnert Tagwerk an Aufgaben und Deadline-Termine der eingeschalteten Quellen. An Aufgaben ohne Uhrzeit erinnert Tagwerk am Fälligkeitstag um 9:00. An ganztägige Deadline-Termine erinnert Tagwerk am Vortag um 18:00."
         case .notDetermined:
             "Benachrichtigungen sind noch nicht erlaubt. Erlaube sie unten unter „Zugriff“."
         case .denied:

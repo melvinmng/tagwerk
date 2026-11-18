@@ -299,6 +299,7 @@ final class AppEnvironment {
             hasher.combine(taskList.sourceStates.mapValues { String(describing: $0) })
             hasher.combine(settings.leadTimeMinutes)
             hasher.combine(settings.deadlineCalendarNotifications)
+            hasher.combine(settings.notifiedTaskSources)
             hasher.combine(settings.deadlineCalendarIDs)
             return hasher.finalize()
         }
