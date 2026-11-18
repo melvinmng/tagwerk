@@ -89,6 +89,36 @@ print -r -- '/src/Tagwerk/Settings/ProfileView.swift:3:1: error: cannot find '"'
 check "compile error naming a profile is no signing" no "$(build_log_has_signing_error "$sign_log")"
 check "missing log is no signing error"   no  "$(build_log_has_signing_error "$test_home/does-not-exist.log")"
 
+# A missing Xcode account is told apart from other signing errors.
+print -r -- 'app/Tagwerk.xcodeproj: error: No Accounts: Add a new account in Accounts settings. (in target '"'"'Tagwerk'"'"')' > "$sign_log"
+check "missing account detected"          yes "$(build_log_missing_account "$sign_log")"
+print -r -- 'error: No Account for Team "ABCDE12345". Add a new account in Accounts settings.' > "$sign_log"
+check "missing team account detected"     yes "$(build_log_missing_account "$sign_log")"
+print -r -- 'error: Signing for "TagwerkWidget" requires a development team.' > "$sign_log"
+check "other signing error is no account" no  "$(build_log_missing_account "$sign_log")"
+print -r -- '/src/Tagwerk/Settings/AccountView.swift:3:1: error: No Accounts view in scope' > "$sign_log"
+check "compile error is no account"       no  "$(build_log_missing_account "$sign_log")"
+check "missing log is no account"         no  "$(build_log_missing_account "$test_home/does-not-exist.log")"
+
+# The account notice repeats at most every 12 hours.
+check "first account notice"              yes "$(should_repeat_notice "" $now)"
+check "notice 1 hour later is quiet"      no  "$(should_repeat_notice $((now - 3600)) $now)"
+check "notice 12 hours later repeats"     yes "$(should_repeat_notice $((now - 12 * 3600)) $now)"
+check "invalid stamp repeats"             yes "$(should_repeat_notice abc $now)"
+
+# Profiles set aside before a build come back after a failure; a newer profile of the same name is kept.
+aside="$test_home/aside" profiles="$test_home/profiles"
+mkdir -p "$aside" "$profiles"
+print old-app > "$aside/app.mobileprovision"
+print old-widget > "$aside/widget.mobileprovision"
+print new-widget > "$profiles/widget.mobileprovision"
+restore_profiles "$aside" "$profiles"
+check "set-aside profile restored"        old-app "$(cat "$profiles/app.mobileprovision")"
+check "newer profile kept"                new-widget "$(cat "$profiles/widget.mobileprovision")"
+check "aside folder emptied"              0 "$(ls "$aside" | wc -l | tr -d ' ')"
+restore_profiles "$test_home/missing" "$profiles"
+check "missing aside folder is harmless"  0 "$?"
+
 echo 'DEVICE_ID=example-device' > "$CONFIG_FILE"
 check "missing team fails locally"        64 "$(zsh -c 'source "$1"; print $?' _ "${0:A:h}/../install-config.zsh" 2>/dev/null)"
 echo 'DEVELOPMENT_TEAM=ABCDE12345' >> "$CONFIG_FILE"

@@ -35,6 +35,7 @@ LOG_DIR="$HOME/Library/Logs/Tagwerk"
 LOG="$LOG_DIR/refresh.log"
 BUILD_LOG="$LOG_DIR/build.log"
 PROFILES_DIR="$HOME/Library/Developer/Xcode/UserData/Provisioning Profiles"
+PROFILES_ASIDE_DIR="$BASE/profiles-aside"
 
 # --- Decision functions (unit-tested in scripts/tests/refresh-decisions.zsh) ---
 
@@ -90,6 +91,36 @@ build_log_has_signing_error() {
   if [[ -r "$1" ]] && grep -vE '\.swift:[0-9]+:[0-9]+: error:' "$1" | grep -qE "$SIGNING_ERROR_PATTERN"; then print yes; else print no; fi
 }
 
+# build_log_missing_account <build log> -> yes|no
+# Xcode reports "No Accounts" or "No Account for Team" when the Apple ID is missing from Xcode › Settings › Accounts.
+build_log_missing_account() {
+  if [[ -r "$1" ]] && grep -vE '\.swift:[0-9]+:[0-9]+: error:' "$1" | grep -qE 'error: No Accounts?( for Team|:)'; then
+    print yes
+  else
+    print no
+  fi
+}
+
+NOTICE_REPEAT_SECONDS=$(( 12 * 3600 ))
+
+# should_repeat_notice <epoch of the last notice or empty> <now epoch> -> yes|no
+should_repeat_notice() {
+  [[ "$1" == <-> ]] || { print yes; return; }
+  (( $2 - $1 >= NOTICE_REPEAT_SECONDS )) && print yes || print no
+}
+
+# restore_profiles <aside dir> <profiles dir>: moves profiles set aside before a build back.
+# A profile of the same name that Xcode created meanwhile is newer and stays; the set-aside copy is dropped.
+restore_profiles() {
+  local aside="$1" target="$2" file
+  [[ -d "$aside" ]] || return 0
+  mkdir -p "$target"
+  for file in "$aside"/*.mobileprovision(N); do
+    if [[ -e "$target/${file:t}" ]]; then rm -f -- "$file"; else mv -f -- "$file" "$target/"; fi
+  done
+  return 0
+}
+
 [[ "${TAGWERK_SOURCE_ONLY:-0}" == "1" ]] && return 0
 
 # --- Runtime ---
@@ -100,6 +131,7 @@ source "${0:A:h}/install-config.zsh" || exit 64
 EXPIRY_FILE="$STATE_DIR/profile-expiry.$TAGWERK_BUNDLE_ID"
 LAST_GOOD_FILE="$STATE_DIR/last-good-commit.$TAGWERK_BUNDLE_ID"
 LAST_INSTALLED_FILE="$STATE_DIR/last-installed.$TAGWERK_BUNDLE_ID"
+ACCOUNT_NOTICE_FILE="$STATE_DIR/account-notice.$TAGWERK_BUNDLE_ID"
 FALLBACK_DIR="$BASE/fallback"
 FALLBACK_DERIVED="$BASE/DerivedData-fallback"
 FALLBACK_BUILD_LOG="$LOG_DIR/build-fallback.log"
@@ -143,15 +175,24 @@ signing_identity_present() {
 }
 
 # Xcode reuses a cached profile while it is valid, which would embed a profile that expires
-# soon after the install. Removing the cached profiles of the app and its extensions forces new 7-day profiles.
-remove_cached_profiles() {
+# soon after the install. Setting the cached profiles of the app and its extensions aside forces new 7-day profiles.
+# They are only set aside, not deleted: after a failed build they come back (restore_profiles), so a missing
+# Xcode account does not also take away the profiles that scripts/install-dev.sh can still sign with.
+set_aside_cached_profiles() {
   local file plist app
+  restore_profiles "$PROFILES_ASIDE_DIR" "$PROFILES_DIR"
+  mkdir -p "$PROFILES_ASIDE_DIR"
   for file in "$PROFILES_DIR"/*.mobileprovision(N); do
     plist=$(/usr/bin/security cms -D -i "$file" 2>/dev/null) || continue
     app=$(print -r -- "$plist" | /usr/bin/plutil -extract Entitlements.application-identifier raw - 2>/dev/null)
     [[ "$(is_tagwerk_profile "$app" "$DEVELOPMENT_TEAM" "$TAGWERK_BUNDLE_ID")" == "yes" ]] || continue
-    rm -f -- "$file" && log "profile: removed cached profile $(basename "$file")"
+    mv -f -- "$file" "$PROFILES_ASIDE_DIR/" && log "profile: set cached profile aside"
   done
+}
+
+discard_set_aside_profiles() {
+  [[ -n "$PROFILES_ASIDE_DIR" && -d "$PROFILES_ASIDE_DIR" ]] || return 0
+  rm -f -- "$PROFILES_ASIDE_DIR"/*.mobileprovision(N)
 }
 
 embedded_profile_expiry() {
@@ -189,10 +230,20 @@ format_epoch() {
 
 # attempt_install <source root> <derived data path> <build log>
 # Generates the project, builds, signs and installs. Returns 0 on success, 1 build/project generation failed,
-# 2 installation on the device failed, 3 signing failed. Sets attempt_message, attempt_notice and attempt_app_path.
+# 2 installation on the device failed, 3 signing failed. Sets attempt_message, attempt_notice, attempt_app_path
+# and attempt_account_missing (1 when Xcode has no account to sign with). Cached profiles set aside for the build
+# are restored after any failure and dropped after a success.
 attempt_install() {
+  local result
+  attempt_build_and_install "$@"
+  result=$?
+  if (( result == 0 )); then discard_set_aside_profiles; else restore_profiles "$PROFILES_ASIDE_DIR" "$PROFILES_DIR"; fi
+  return $result
+}
+
+attempt_build_and_install() {
   local root="$1" derived="$2" build_log="$3"
-  attempt_message="" attempt_notice="" attempt_app_path=""
+  attempt_message="" attempt_notice="" attempt_app_path="" attempt_account_missing=0
 
   if ! ( cd "$root/$PROJECT_DIR_NAME" && xcodegen -q ); then
     attempt_message="build: xcodegen failed"
@@ -200,12 +251,22 @@ attempt_install() {
     return 1
   fi
 
-  remove_cached_profiles
+  set_aside_cached_profiles
 
   if ! xcodebuild -project "$root/$PROJECT_DIR_NAME/$SCHEME.xcodeproj" -scheme "$SCHEME" \
       -destination "id=$DEVICE_ID" -derivedDataPath "$derived" \
       -allowProvisioningUpdates -allowProvisioningDeviceRegistration \
       "${BUILD_SETTINGS[@]}" build > "$build_log" 2>&1; then
+    if [[ "$(build_log_missing_account "$build_log")" == "yes" ]]; then
+      attempt_account_missing=1
+      attempt_message="build: signing failed, no account in Xcode (see $build_log)"
+      if [[ -n "$expiry" ]]; then
+        attempt_notice="Apple-ID fehlt in Xcode (Settings › Accounts). Ohne sie läuft die App am $(format_epoch "$expiry") ab."
+      else
+        attempt_notice="Apple-ID fehlt in Xcode (Settings › Accounts). Ohne sie lässt sich die App nicht verlängern."
+      fi
+      return 3
+    fi
     if [[ "$(build_log_has_signing_error "$build_log")" == "yes" ]]; then
       attempt_message="build: signing failed (see $build_log)"
       attempt_notice="Signierung fehlgeschlagen: Xcode öffnen und Apple-ID-Anmeldung prüfen."
@@ -296,6 +357,18 @@ last_installed=$(cat "$LAST_INSTALLED_FILE" 2>/dev/null || true)
 attempt_install "$SRC" "$DERIVED" "$BUILD_LOG"
 attempt_status=$?
 
+# Without an account the fallback cannot renew the profile either; it would only install older code.
+# The notice comes at once instead of only near expiry, at most every 12 hours.
+if (( attempt_account_missing == 1 )); then
+  log "$attempt_message"
+  last_notice=$(cat "$ACCOUNT_NOTICE_FILE" 2>/dev/null || true)
+  if [[ "$(should_repeat_notice "$last_notice" "$now")" == "yes" ]]; then
+    notify "$attempt_notice"
+    print -r -- "$now" > "$ACCOUNT_NOTICE_FILE"
+  fi
+  exit 3
+fi
+
 # An install the device rejects (status 2 while the device is still reachable) gets the fallback too.
 if (( attempt_status == 1 || attempt_status == 3 )) || { (( attempt_status == 2 )) && device_reachable; }; then
   log "$attempt_message"
@@ -319,6 +392,7 @@ fi
 
 compute_installed_expiry "$attempt_app_path"
 [[ -n "$computed_expiry" ]] && print -r -- "$computed_expiry" > "$EXPIRY_FILE"
+rm -f -- "$ACCOUNT_NOTICE_FILE"
 
 # Remember the installed commit; without it the fallback must stay disabled.
 if [[ -n "$head_commit" ]]; then
