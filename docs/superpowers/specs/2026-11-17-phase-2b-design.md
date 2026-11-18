@@ -279,6 +279,20 @@ Regeln, die aus der Umsetzung folgen:
 
 **Offen (Gerät):** Zustellung und Tippen (auch Kaltstart), Zeitpunkt des Hintergrund-Refreshs (der Simulator führt ihn nicht aus), Verhalten bei gesperrtem Gerät. Die Simulator-Prüfung in 2b-3 fiel aus, weil der Simulator von einer anderen Sitzung belegt war.
 
+## 14. Nachtrag: Termine als Deadline markieren, Vorbereitung (2026-11-18)
+
+Grundlage: `../plans/2026-11-18-deadline-marking.md` mit den Entscheidungen vom 18.11.2026 und `../mockups/2026-11-18-deadline-marking-mockups.html` (DL2 + DV1, dazu DL3). Ergänzt §6.2, §6.4 und §11.7; wo er abweicht, gilt dieser Nachtrag. Umgesetzt und mit Tests belegt; am Gerät ungeprüft.
+
+**Zu §6.2 (wichtige Deadlines):** Als vierte Art gilt ein Termin aus einem beliebigen gelesenen Kalender, den der Nutzer in Tagwerk als Deadline markiert hat (`DeadlineKind.markedEvent`). Die Markierung liegt nur in SwiftData (`EventDeadlineMark`); kein Kalender wird geschrieben, auch kein beschreibbarer. Bei Serienterminen fragt Tagwerk „Nur diesen Termin / Alle Termine der Serie“. Ein Termin, der im Deadline-Kalender liegt und markiert ist, erscheint einmal. Markierte Termine erscheinen wie Deadlines aus Deadline-Kalendern (Karte, Woche, Monat, Widget, KI-Kennzeichen `deadline`), mit der Textmarke „markiert“ und dem Kalendernamen; Deadline-Termine mit Uhrzeit sind im Ablauf rot und zählen weiter als belegt. Ganztägige markierte Termine verlassen die Zeile „Ganztägig“. Sie nehmen am Zusammenfassen nicht teil. Der Schalter „Deadline-Termine“ gilt für beide Arten von Termin-Benachrichtigungen.
+
+**Wiederfinden und Aufräumen:** Tagwerk sucht eine Markierung über Termin-ID, dann Server-Kennung mit Kalender und Beginn, dann eindeutige Server-Kennung (keine Serie, still übernommen), dann gleichen Titel im selben Kalender in ±14 Tagen (nur Vorschlag „übernehmen“). Ein verschwundener Termin erscheint in der Deadline-Karte als Zeile „prüfen“ mit „Termin zuordnen … / Entfernen“. Ohne Kalenderzugriff oder bei nicht gelesenem Kalender ändert sich nichts. Markierungen und Zuordnungen räumt Tagwerk 30 Tage nach ihrem Datum auf (Serien: nach dem zuletzt gesehenen Vorkommen), vorher nie still. Ob abonnierte Kalender ihre Server-Kennung bei jedem Abruf neu vergeben, ist am Gerät zu prüfen (Kalender-Diagnose, nur Debug-Build).
+
+**Vorbereitung (DV1, ergänzt §6.4):** Zu jeder wichtigen Deadline (auch P1-Aufgaben und Epics, Abweichung vom Vorschlag) lassen sich Kalendertermine als Vorbereitung zuordnen (`DeadlineEventLink`, Schlüssel `ImportantDeadline.preparationKey`), bei Serien „Nur diesen / Alle bis zur Deadline“. Die Summe der noch kommenden zugeordneten Termine steht in der Karte und im Blatt; an der Kapazität ändert das nichts. Am zugeordneten Termin steht „→ Deadline · in n Tagen“. Für Aufgaben-Deadlines öffnet „Termin zuordnen …“ ein eigenes Blatt „Vorbereitung“ (im Mockup nicht gezeigt).
+
+**Zu §11.7 (Verknüpfung als Anker):** Ein Deadline-Termin (Kalender oder markiert), der mit einer Aufgabe verknüpft ist, ist für die Aufgabe nur Anker: Er bleibt Termin, zählt als belegt und nicht als geplante Arbeit an der Aufgabe; die KI nutzt ihn als Anker.
+
+**Vorschläge nach Stichwort (DL3):** Termine der nächsten 14 Tage, deren Titel nach Prüfung oder Abgabe aussieht („Klausur“, „Prüfung“, „Abgabe“, „Frist“, „Exam“ …, ohne „Vorbereitung“, „Lerngruppe“ …), erscheinen einzeln als Karte mit „Als Deadline markieren / Nein“; lokal erkannt, ohne KI. „Nein“ gilt je Termin.
+
 ## Quellen
 
 - Verifikation Function Calling: `../spikes/2026-11-17-feasibility-results.md`, Nachtrag Phase 2b.
