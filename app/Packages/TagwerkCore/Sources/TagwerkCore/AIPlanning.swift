@@ -117,6 +117,12 @@ public struct PlanInputTask: Sendable, Hashable {
     public var plannedDay: PlanDay?
     /// The important deadline the task belongs to (epic due date or a linked deadline event).
     public var anchor: DueDate?
+    /// Effort still open (estimate minus existing blocks); `nil` without estimate.
+    public var remainingMinutes: Int?
+    /// Suggested share for one day when a large effort is spread over the days before its deadline.
+    public var sessionMinutes: Int?
+    /// The day work has to start at the latest so the effort fits before the deadline.
+    public var latestStart: PlanDay?
 
     public init(id: String, source: TaskSource, title: String, due: DueDate?, priority: Priority?, minutes: Int?,
                 important: Bool, plannedDay: PlanDay?, anchor: DueDate?) {
@@ -143,6 +149,8 @@ public struct PlanInput: Sendable, Hashable {
     public var defaultTaskMinutes: Int
     /// Day plan only: the next days, as targets for moving tasks away from a full day.
     public var laterDays: [PlanInputDay] = []
+    /// Core tasks left out because of the maximum count; the summary should mention them.
+    public var omittedCount = 0
 
     public init(scope: PlanScope, days: [PlanInputDay], tasks: [PlanInputTask], today: PlanDay, nowMinutes: Int,
                 timeZoneID: String, defaultTaskMinutes: Int) {
@@ -156,68 +164,195 @@ public struct PlanInput: Sendable, Hashable {
     }
 }
 
-/// At most this many tasks go to the model per call (§11.10).
-public let maxPlanTasks = 60
 
-/// Selects and orders the tasks for a planning call (§11.10).
-/// - Day: tasks assigned to the day, due on or before it, and important ones.
-/// - Week/month: open tasks without an assigned day; existing assignments stay untouched.
-/// - `only`: exactly these tasks, without the selection rules and the limit ("Mit KI planen" for one
-///   task, or checking open suggestions again before they are accepted).
-/// - `excluding`: tasks whose time is reserved elsewhere, such as recurring reminders (§11.9:
-///   their effort is already in `recurringMinutes`, a block would count it twice).
-/// Sorted by due date, then priority, then source; at most 60.
+/// Selection rules for planning calls (proposal 2026-11-18, §1). Starting values, tuned on the device.
+public enum PlanSelectionRules {
+    /// Due-date window from today: day 3 days, week 14, month 45.
+    public static func windowDays(_ scope: PlanScope) -> Int {
+        switch scope { case .day: 3; case .week: 14; case .month: 45 }
+    }
+
+    /// The fill-up stops once the selected effort reaches this multiple of the free time.
+    public static func budgetFactor(_ scope: PlanScope) -> Double {
+        switch scope { case .day: 2.0; case .week: 1.5; case .month: 1.25 }
+    }
+
+    public static func bounds(_ scope: PlanScope) -> (minimum: Int, maximum: Int) {
+        switch scope { case .day: (8, 25); case .week: (15, 40); case .month: (20, 60) }
+    }
+
+    public static let maximumP1 = 10
+    /// At most this much work on one task per day when a large effort is spread (user rule 2026-11-18).
+    public static let maximumDailyMinutesPerTask = 4 * 60
+    /// Week/month: assigned tasks of overbooked days that may be moved.
+    public static let maximumMovable = 10
+    public static let maximumUndatedFill = 5
+}
+
+/// Selects and orders the tasks for a planning call (proposal 2026-11-18, §1 with the user's change):
+/// - **Core** (always, limited only by the maximum): planned on the day, overdue (any age; counts as due
+///   today), due or anchored within the window, every P1 (at most 10).
+/// - **Fill-up** while the summed effort stays below the budget (factor × free time) or below the minimum
+///   count: day tasks of the next days (work ahead), due within twice the window, P2 without date, other
+///   undated tasks (at most 5).
+/// - `only`: exactly these tasks ("Mit KI planen", re-checks), without rules and limits.
+/// - `excluding`: recurring reminders (their effort is reserved elsewhere).
+/// Order: core before fill-up; overdue/today first, then P1, then target date, priority, due, source, title.
 public func makePlanInput(scope: PlanScope, days: [PlanInputDay], tasks: [TaskItem], assignments: [TaskID: PlanDay],
                           anchors: [TaskID: DueDate], today: PlanDay, nowMinutes: Int, timeZoneID: String,
-                          defaultTaskMinutes: Int, only: Set<TaskID>? = nil, excluding: Set<TaskID> = []) -> PlanInput {
+                          defaultTaskMinutes: Int, only: Set<TaskID>? = nil, excluding: Set<TaskID> = [],
+                          lookaheadDays: Set<PlanDay> = [], blockedMinutes: [TaskID: Int] = [:],
+                          calendar: Calendar = .current) -> PlanInput {
     func anchor(of task: TaskItem) -> DueDate? {
         anchors[task.id] ?? (task.epic?.isEpic == true ? task.epic?.due : nil)
     }
     func isImportant(_ task: TaskItem) -> Bool {
-        (task.priority == .p1 && task.due != nil) || (task.isEpic && task.due != nil) || anchor(of: task) != nil
+        task.priority == .p1 || (task.isEpic && task.due != nil) || anchor(of: task) != nil
+    }
+    func remaining(_ task: TaskItem) -> Int? {
+        task.estimateMinutes.map { max(0, $0 - (blockedMinutes[task.id] ?? 0)) }
+    }
+    func minutes(_ task: TaskItem) -> Int { remaining(task) ?? defaultTaskMinutes }
+    func deadline(_ task: TaskItem) -> PlanDay? {
+        [task.due.map(PlanDay.init), anchor(of: task).map(PlanDay.init)].compactMap { $0 }.min()
+    }
+    /// Large efforts are spread over the days before the deadline: at most 4 h a day, so 20 h due on the
+    /// 28th must start on the 24th at the latest, whatever the priority.
+    func latestStart(_ task: TaskItem) -> PlanDay? {
+        guard let deadline = deadline(task), let open = remaining(task), open > 0 else { return nil }
+        let daysNeeded = Int((Double(open) / Double(PlanSelectionRules.maximumDailyMinutesPerTask)).rounded(.up))
+        return deadline.adding(days: -(daysNeeded - 1), calendar: calendar)
+    }
+    /// The earliest of due date, anchor and latest start; overdue counts as today.
+    func target(_ task: TaskItem) -> PlanDay? {
+        let dates = [deadline(task), latestStart(task)].compactMap { $0 }
+        return dates.min().map { max($0, today) }
+    }
+    /// Share for today: the open effort divided by the days left until the deadline.
+    func session(_ task: TaskItem) -> Int? {
+        guard let open = remaining(task), open > PlanSelectionRules.maximumDailyMinutesPerTask / 2,
+              let deadline = deadline(task), deadline > today else { return nil }
+        let daysLeft = max(1, calendar.dateComponents([.day], from: today.startDate(in: calendar),
+                                                      to: deadline.startDate(in: calendar)).day ?? 1)
+        let share = Int((Double(open) / Double(daysLeft)).rounded(.up))
+        return min(PlanSelectionRules.maximumDailyMinutesPerTask, max(30, (share + 14) / 15 * 15))
+    }
+    func makeTask(_ task: TaskItem) -> PlanInputTask {
+        var item = PlanInputTask(id: task.id.key, source: task.id.source, title: task.title, due: task.due, priority: task.priority,
+                                 minutes: task.estimateMinutes, important: isImportant(task), plannedDay: assignments[task.id],
+                                 anchor: anchor(of: task))
+        item.remainingMinutes = remaining(task)
+        item.sessionMinutes = session(task)
+        item.latestStart = latestStart(task)
+        return item
     }
 
     let open = tasks.filter { !$0.isCompleted && !excluding.contains($0.id) }
-    let selected: [TaskItem]
     if let only {
-        selected = open.filter { only.contains($0.id) }
-    } else {
-        switch scope {
-        case .day:
+        let picked = open.filter { only.contains($0.id) }
+        return PlanInput(scope: scope, days: days, tasks: picked.map(makeTask), today: today, nowMinutes: nowMinutes,
+                         timeZoneID: timeZoneID, defaultTaskMinutes: defaultTaskMinutes)
+    }
+
+    let windowEnd = today.adding(days: PlanSelectionRules.windowDays(scope), calendar: calendar)
+    let doubleEnd = today.adding(days: 2 * PlanSelectionRules.windowDays(scope), calendar: calendar)
+    let overbooked = Set(days.filter { $0.plannedMinutes > $0.availableMinutes }.map(\.day))
+
+    var core: [TaskItem] = []
+    var p1Count = 0
+    var movable: [TaskItem] = []
+    var fill: [[TaskItem]] = [[], [], [], []]
+    for task in open {
+        let assigned = assignments[task.id]
+        let isOverdue = task.due.map { PlanDay($0) < today } ?? false
+        let targetDay = target(task)
+        if scope == .day {
             let day = days.first?.day ?? today
-            selected = open.filter { task in
-                assignments[task.id] == day || task.due.map { PlanDay($0) <= day } == true || isImportant(task)
+            // Planned for another day of the future: only as fill-up for working ahead.
+            if let assigned, assigned != day, assigned >= today {
+                if lookaheadDays.contains(assigned) { fill[0].append(task) }
+                continue
             }
-        case .week, .month:
-            selected = open.filter { assignments[$0.id] == nil }
+            if assigned == day || days.first?.countedTaskMinutes[task.id.key] != nil || isOverdue
+                || targetDay.map({ $0 <= windowEnd }) == true {
+                core.append(task); continue
+            }
+        } else {
+            if let assigned, assigned >= today {
+                if overbooked.contains(assigned) { movable.append(task) }
+                continue
+            }
+            if isOverdue || targetDay.map({ $0 <= windowEnd }) == true { core.append(task); continue }
         }
+        if task.priority == .p1 && p1Count < PlanSelectionRules.maximumP1 {
+            p1Count += 1
+            core.append(task); continue
+        }
+        if let targetDay, targetDay <= doubleEnd { fill[1].append(task); continue }
+        if targetDay == nil && task.priority == .p2 { fill[2].append(task); continue }
+        if targetDay == nil { fill[3].append(task) }
     }
 
     let sourceOrder: [TaskSource: Int] = [.github: 0, .reminders: 1, .local: 2]
-    let sorted = selected.sorted { lhs, rhs in
-        let lhsDue = lhs.due.map { ($0.year, $0.month, $0.day, $0.hour ?? 24, $0.minute ?? 0) } ?? (Int.max, 0, 0, 0, 0)
-        let rhsDue = rhs.due.map { ($0.year, $0.month, $0.day, $0.hour ?? 24, $0.minute ?? 0) } ?? (Int.max, 0, 0, 0, 0)
-        if lhsDue != rhsDue { return lhsDue < rhsDue }
-        let lhsPriority = lhs.priority?.rawValue ?? 9, rhsPriority = rhs.priority?.rawValue ?? 9
-        if lhsPriority != rhsPriority { return lhsPriority < rhsPriority }
-        let lhsSource = sourceOrder[lhs.id.source] ?? 9, rhsSource = sourceOrder[rhs.id.source] ?? 9
-        if lhsSource != rhsSource { return lhsSource < rhsSource }
-        return lhs.title.localizedStandardCompare(rhs.title) == .orderedAscending
+    func ordered(_ list: [TaskItem]) -> [TaskItem] {
+        list.sorted { lhs, rhs in
+            func bucket(_ task: TaskItem) -> Int {
+                if task.due.map({ PlanDay($0) < today }) == true { return 0 }
+                guard let day = target(task) else { return task.priority == .p1 ? 2 : 3 }
+                return day <= today ? 1 : (task.priority == .p1 ? 2 : 3)
+            }
+            if bucket(lhs) != bucket(rhs) { return bucket(lhs) < bucket(rhs) }
+            if bucket(lhs) == 0 {
+                // Overdue: priority first, then the oldest.
+                let lhsPriority = lhs.priority?.rawValue ?? 9, rhsPriority = rhs.priority?.rawValue ?? 9
+                if lhsPriority != rhsPriority { return lhsPriority < rhsPriority }
+            }
+            let lhsTarget = target(lhs) ?? PlanDay(year: 9999, month: 12, day: 31)
+            let rhsTarget = target(rhs) ?? PlanDay(year: 9999, month: 12, day: 31)
+            if lhsTarget != rhsTarget { return lhsTarget < rhsTarget }
+            let lhsPriority = lhs.priority?.rawValue ?? 9, rhsPriority = rhs.priority?.rawValue ?? 9
+            if lhsPriority != rhsPriority { return lhsPriority < rhsPriority }
+            let lhsDue = lhs.due.map(PlanDay.init) ?? PlanDay(year: 9999, month: 12, day: 31)
+            let rhsDue = rhs.due.map(PlanDay.init) ?? PlanDay(year: 9999, month: 12, day: 31)
+            if lhsDue != rhsDue { return lhsDue < rhsDue }
+            let lhsSource = sourceOrder[lhs.id.source] ?? 9, rhsSource = sourceOrder[rhs.id.source] ?? 9
+            if lhsSource != rhsSource { return lhsSource < rhsSource }
+            return lhs.title.localizedStandardCompare(rhs.title) == .orderedAscending
+        }
     }
 
-    return PlanInput(
-        scope: scope,
-        days: days,
-        tasks: sorted.prefix(only == nil ? maxPlanTasks : sorted.count).map { task in
-            PlanInputTask(id: task.id.key, source: task.id.source, title: task.title, due: task.due, priority: task.priority,
-                          minutes: task.estimateMinutes, important: isImportant(task), plannedDay: assignments[task.id],
-                          anchor: anchor(of: task))
-        },
-        today: today,
-        nowMinutes: nowMinutes,
-        timeZoneID: timeZoneID,
-        defaultTaskMinutes: defaultTaskMinutes
-    )
+    let (minimum, maximum) = PlanSelectionRules.bounds(scope)
+    let budget = Int(PlanSelectionRules.budgetFactor(scope) * Double(periodFreeMinutes(days: days, scope: scope, nowMinutes: nowMinutes, today: today)))
+    var selected = ordered(core) + ordered(Array(movable.prefix(PlanSelectionRules.maximumMovable)))
+    let omitted = max(0, selected.count - maximum)
+    selected = Array(selected.prefix(maximum))
+    var effort = selected.reduce(0) { $0 + minutes($1) }
+    fill[3] = Array(ordered(fill[3]).prefix(PlanSelectionRules.maximumUndatedFill))
+    for tier in fill {
+        for task in ordered(tier) {
+            guard selected.count < maximum, effort < budget || selected.count < minimum else { break }
+            selected.append(task)
+            effort += minutes(task)
+        }
+    }
+
+    var input = PlanInput(scope: scope, days: days, tasks: selected.map(makeTask), today: today, nowMinutes: nowMinutes,
+                          timeZoneID: timeZoneID, defaultTaskMinutes: defaultTaskMinutes)
+    input.omittedCount = omitted
+    return input
+}
+
+/// Free time of the period for the selection budget: the day's free stretches from now (minus recurring
+/// effort), or the free minutes of the working days of a week or month.
+func periodFreeMinutes(days: [PlanInputDay], scope: PlanScope, nowMinutes: Int, today: PlanDay) -> Int {
+    switch scope {
+    case .day:
+        guard let day = days.first else { return 0 }
+        let gaps = freeGaps(day, fromMinutes: day.day == today ? nowMinutes : nil).reduce(0) { $0 + $1.count }
+        return max(0, gaps - day.recurringMinutes)
+    case .week, .month:
+        return days.filter { $0.day >= today && $0.hours != nil }.reduce(0) { $0 + max(0, $1.availableMinutes - $1.plannedMinutes) }
+    }
 }
 
 // MARK: - Output

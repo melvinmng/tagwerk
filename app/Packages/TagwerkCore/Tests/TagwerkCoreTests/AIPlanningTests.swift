@@ -363,17 +363,84 @@ struct AIPlanningTests {
         return item
     }
 
-    @Test func makePlanInput_limitsToSixty_sortedByDueThenPriority() {
-        var tasks: [TaskItem] = (0..<70).map { item("t\($0)", due: DueDate(year: 2026, month: 12, day: 1 + $0 % 20)) }
-        tasks.append(item("first-p1", due: DueDate(year: 2026, month: 11, day: 20), priority: .p1))
-        tasks.append(item("first-p3", due: DueDate(year: 2026, month: 11, day: 20), priority: .p3))
-        tasks.append(item("first-none", due: DueDate(year: 2026, month: 11, day: 20)))
-        tasks.append(item("undated", priority: .p1))
-        let result = makePlanInput(scope: .week, days: [planDay(today)], tasks: tasks, assignments: [:], anchors: [:],
-                                   today: today, nowMinutes: nowMinutes, timeZoneID: "Europe/Berlin", defaultTaskMinutes: 30)
-        #expect(result.tasks.count == 60)
-        #expect(result.tasks.prefix(3).map(\.title) == ["first-p1", "first-p3", "first-none"])
-        #expect(!result.tasks.contains { $0.title == "undated" })
+    func makeInput(_ scope: PlanScope = .day, days: [PlanInputDay]? = nil, tasks: [TaskItem],
+                   assignments: [TaskID: PlanDay] = [:], lookahead: Set<PlanDay> = []) -> PlanInput {
+        makePlanInput(scope: scope, days: days ?? [planDay(today)], tasks: tasks, assignments: assignments, anchors: [:],
+                      today: today, nowMinutes: nowMinutes, timeZoneID: "Europe/Berlin", defaultTaskMinutes: 30,
+                      lookaheadDays: lookahead, calendar: calendar)
+    }
+
+    @Test func makePlanInput_day_coreFirst_overdueThenP1_thenWindow() {
+        let tasks = [
+            item("später", due: DueDate(year: 2026, month: 11, day: 20)),
+            item("p1 ohne Datum", priority: .p1),
+            item("uralt", due: DueDate(year: 2026, month: 8, day: 1)),
+            item("heute", due: DueDate(year: 2026, month: 11, day: 18), priority: .p3),
+        ]
+        let result = makeInput(tasks: tasks)
+        #expect(result.tasks.map(\.title) == ["uralt", "heute", "p1 ohne Datum", "später"])
+        #expect(result.tasks.first { $0.title == "p1 ohne Datum" }?.important == true)
+    }
+
+    @Test func makePlanInput_largeEffort_entersBeforeItsDueWindow_withDailyShare() {
+        // 20 h due on the 28th at P5: 4 h a day → work must start on the 24th; with 2 h already blocked
+        // (18 h left) still on the 24th. A day plan on the 21st (window up to 24th) includes it.
+        var big = item("Große Aufgabe", due: DueDate(year: 2026, month: 11, day: 28), priority: .p5)
+        big.estimateMinutes = 20 * 60
+        let result = makePlanInput(scope: .day, days: [planDay(today)], tasks: [big], assignments: [:], anchors: [:],
+                                   today: PlanDay(year: 2026, month: 11, day: 21), nowMinutes: nowMinutes,
+                                   timeZoneID: "Europe/Berlin", defaultTaskMinutes: 30,
+                                   blockedMinutes: [big.id: 120], calendar: calendar)
+        let task = try? #require(result.tasks.first)
+        #expect(task?.latestStart == PlanDay(year: 2026, month: 11, day: 24))
+        #expect(task?.remainingMinutes == 18 * 60)
+        // 1080 min over 7 days → 155 → rounded up to 165 min today.
+        #expect(task?.sessionMinutes == 165)
+    }
+
+    @Test func makePlanInput_largeEffort_farAway_staysOut() {
+        var big = item("Große Aufgabe", due: DueDate(year: 2026, month: 12, day: 20), priority: .p5)
+        big.estimateMinutes = 20 * 60
+        let result = makeInput(tasks: [big])
+        #expect(result.tasks.isEmpty)
+    }
+
+    @Test func makePlanInput_day_fillsOnlyUntilBudget() {
+        // Free from 10:00: 10–12 and 13–18 = 420 min → budget 840 min; minimum 8 tasks.
+        var tasks = (0..<4).map { item("kern\($0)", due: DueDate(year: 2026, month: 11, day: 19)) }
+        tasks += (0..<30).map { i in
+            var task = item("vorarbeit\(i)", due: DueDate(year: 2026, month: 11, day: 23))
+            task.estimateMinutes = 120
+            return task
+        }
+        let result = makeInput(tasks: tasks)
+        // 4 core × 30 = 120, then 120-minute tasks until 840 is reached: 6 of them (120 + 720 = 840).
+        #expect(result.tasks.filter { $0.title.hasPrefix("kern") }.count == 4)
+        #expect(result.tasks.filter { $0.title.hasPrefix("vorarbeit") }.count == 6)
+    }
+
+    @Test func makePlanInput_day_workAheadFromNextDays() {
+        let next = item("morgen geplant")
+        let result = makeInput(tasks: [next], assignments: [next.id: tomorrow], lookahead: [tomorrow])
+        #expect(result.tasks.map(\.title) == ["morgen geplant"])
+        #expect(result.tasks.first?.plannedDay == tomorrow)
+    }
+
+    @Test func makePlanInput_maximum_cutsCoreAndCountsOmitted() {
+        let tasks = (0..<30).map { item("überfällig\($0)", due: DueDate(year: 2026, month: 11, day: 1 + $0 % 17)) }
+        let result = makeInput(tasks: tasks)
+        #expect(result.tasks.count == 25)
+        #expect(result.omittedCount == 5)
+    }
+
+    @Test func makePlanInput_week_movableFromOverbookedDay() {
+        let full = item("voll")
+        let calm = item("ruhig")
+        let days = [planDay(today, recurring: 470, planned: 60), planDay(tomorrow)]
+        let result = makeInput(.week, days: days, tasks: [full, calm],
+                               assignments: [full.id: today, calm.id: tomorrow])
+        #expect(result.tasks.map(\.title) == ["voll"])
+        #expect(result.tasks.first?.plannedDay == today)
     }
 
     @Test func makePlanInput_week_excludesAssigned_andCompleted() {
