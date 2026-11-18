@@ -93,6 +93,21 @@ public final class GitHubTaskProvider: TaskProvider {
     /// Reloads the issue, compares versions and writes in a fixed order: issue fields, project fields,
     /// close/reopen, project status in all projects. The result is read again afterwards, because
     /// project workflows may change the status on their own.
+    /// Repository, number and node ID of a loaded issue, for the issue chat (design §8.3).
+    public func issueReference(for id: TaskID) -> (repository: String, number: Int, nodeID: String)? {
+        records[id.rawValue].map { ($0.repository, $0.number, $0.issueID) }
+    }
+
+    public func addComment(_ body: String, to id: TaskID) async throws {
+        guard let record = records[id.rawValue] else { throw TaskWriteError.notFound }
+        struct Comment: Encodable, Sendable { let body: String }
+        do {
+            try await api.rest("POST", "repos/\(record.repository)/issues/\(record.number)/comments", body: Comment(body: body))
+        } catch {
+            throw Self.taskError(error)
+        }
+    }
+
     public func apply(_ edit: TaskEdit, to id: TaskID, expectedVersion: String?) async throws -> TaskItem {
         do {
             guard let current = try await api.issue(nodeID: id.rawValue) else { throw TaskWriteError.notFound }
