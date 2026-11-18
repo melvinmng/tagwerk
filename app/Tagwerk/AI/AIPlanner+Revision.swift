@@ -212,6 +212,10 @@ extension AIPlanner {
             open.removeAll { $0 == blamed }
         }
         revised = dependencies(revised, inputs: inputs)
+        // A suggested longer day that no block needs any more has no effect (mockup AB1): it goes.
+        let neededBefore = Set(batch.suggestions.compactMap(\.dependsOn))
+        let neededNow = Set(revised.compactMap(\.dependsOn))
+        revised.removeAll { $0.kind == .dayChange && neededBefore.contains($0.id) && !neededNow.contains($0.id) }
         return rejected
     }
 

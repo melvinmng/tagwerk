@@ -190,6 +190,7 @@ final class AIPlanner {
     /// Accepts one suggestion after checking it against fresh data.
     func accept(_ suggestion: PlanSuggestion) async {
         await planning.reload()
+        clearDismissUndo()  // its snapshot would bring this suggestion back after it is in the calendar
         let batches = planning.suggestionBatches
         let result = await apply([suggestion])
         // "Widerrufen" after a single ✓ as well (mockup VL1).
@@ -223,6 +224,7 @@ final class AIPlanner {
         await planning.reload()
         let open = planning.suggestionBatches.flatMap(\.suggestions)
         guard !open.isEmpty else { return }
+        clearDismissUndo()
         let batches = planning.suggestionBatches
         let result = await apply(open)
         var undo = result.undo
@@ -259,8 +261,10 @@ final class AIPlanner {
         // "Widerrufen" after a single ✕ (mockup VL1): keep the batches as they were.
         lastDismissed = planning.suggestionBatches.filter { $0.suggestions.contains(suggestion) }
         dismissedCount = lastDismissed.isEmpty ? 0 : 1
+        clearAcceptUndo()
         for var batch in planning.suggestionBatches where batch.suggestions.contains(suggestion) {
             batch.suggestions.removeAll { $0.id == suggestion.id }
+            batch.revisionUndo = nil
             if suggestion.kind == .dayChange {
                 // Without the longer day the blocks that need it do not fit (mockup AB1).
                 let dependent = batch.suggestions.filter { $0.dependsOn == suggestion.id }
@@ -284,6 +288,7 @@ final class AIPlanner {
     func dismissAll() async {
         lastDismissed = planning.suggestionBatches
         dismissedCount = lastDismissed.reduce(0) { $0 + $1.suggestions.count }
+        clearAcceptUndo()
         for batch in lastDismissed { store.remove(batch.id) }
         await planning.reload()
     }
@@ -413,6 +418,7 @@ final class AIPlanner {
                 batch.unscheduled.append(entry)
             }
             batch.suggestions.removeAll { touched.contains($0.id) }
+            batch.revisionUndo = nil  // would bring accepted suggestions back
             store.update(batch)
         }
         return result
@@ -577,7 +583,10 @@ final class AIPlanner {
         store.batches()
             .filter { ($0.scope == .day) == (scope == .day) && $0.days.contains(where: days.contains) }
             .flatMap(\.suggestions)
-            .filter(\.isMovedByUser)
+            .filter { suggestion in
+                // Only while the task is still open; a finished task's suggestion goes with the old plan.
+                suggestion.isMovedByUser && planning.taskList.items.contains { $0.id.key == suggestion.taskKey && !$0.isCompleted }
+            }
     }
 
     static func violationMessage(_ violations: [PlanViolation]) -> String {

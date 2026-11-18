@@ -323,6 +323,8 @@ struct SuggestionDetail: View {
     let suggestion: PlanSuggestion
     let onDone: () -> Void
     @State private var editing: TaskItem?
+    /// While typing, the decision buttons step aside so they do not cover the input line.
+    @FocusState private var isTyping: Bool
 
     private var planning: PlanningModel { environment.planning }
     /// The suggestion as it is now: moving and answers change it while the sheet is open.
@@ -360,7 +362,7 @@ struct SuggestionDetail: View {
             if current.kind != .dayChange, live != nil {
                 SuggestionMoveSection(suggestion: current)
                 if environment.ai.isSignedIn {
-                    SuggestionConversation(suggestion: current)
+                    SuggestionConversation(suggestion: current, isFocused: $isTyping)
                 }
             }
             Section {
@@ -372,6 +374,13 @@ struct SuggestionDetail: View {
         .navigationTitle("Vorschlag")
         .navigationBarTitleDisplayMode(.inline)
         .safeAreaInset(edge: .bottom) {
+            if !isTyping { decision(current, isWaiting: isWaiting) }
+        }
+        .sheet(item: $editing) { TaskEditorSheet(task: $0) }
+        .onChange(of: live == nil) { _, gone in if gone { onDone() } }
+    }
+
+    private func decision(_ current: PlanSuggestion, isWaiting: Bool) -> some View {
             HStack(spacing: 10) {
                 Button(role: .destructive) {
                     Task { await environment.planner.dismiss(current); onDone() }
@@ -387,9 +396,6 @@ struct SuggestionDetail: View {
             .padding(.horizontal)
             .padding(.vertical, 8)
             .background(.bar)
-        }
-        .sheet(item: $editing) { TaskEditorSheet(task: $0) }
-        .onChange(of: live == nil) { _, gone in if gone { onDone() } }
     }
 }
 
@@ -486,9 +492,9 @@ struct SuggestionMoveSection: View {
 struct SuggestionConversation: View {
     @Environment(AppEnvironment.self) private var environment
     let suggestion: PlanSuggestion
+    var isFocused: FocusState<Bool>.Binding
     @State private var text = ""
     @State private var rule: String?
-    @FocusState private var isFocused: Bool
 
     static let quickReplies = ["Früher am Tag", "Anderer Tag", "Kürzer"]
 
@@ -528,9 +534,8 @@ struct SuggestionConversation: View {
                 }
             }
             HStack(spacing: 8) {
-                TextField("Zum Vorschlag etwas sagen …", text: $text, axis: .vertical)
-                    .lineLimit(1...4)
-                    .focused($isFocused)
+                TextField("Zum Vorschlag etwas sagen …", text: $text)
+                    .focused(isFocused)
                     .submitLabel(.send)
                     .onSubmit { send(text) }
                 Button {
@@ -602,7 +607,7 @@ struct SuggestionConversation: View {
         let comment = comment.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !comment.isEmpty, !isSending else { return }
         text = ""
-        isFocused = false
+        isFocused.wrappedValue = false
         Task { await planner.revise(suggestion, comment: comment) }
     }
 

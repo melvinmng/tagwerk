@@ -613,4 +613,64 @@ extension AIPlannerTests {
         #expect(batch.suggestions.first?.isMovedByUser == false)
         #expect(batch.conversation == nil)
     }
+
+    @Test func acceptAfterRevision_cannotBeUndoneIntoADuplicate() async throws {
+        let (planner, planning, fahrrad, _) = try await twoBlocks()
+        responder.enqueue(Self.revision("Später.", Self.change("s1", start: "15:00", minutes: 60)))
+        await planner.revise(fahrrad, comment: "später")
+        await planner.accept(try #require(current(planning, fahrrad.id)))
+        #expect(planning.suggestionBatches.first?.revisionUndo == nil)
+        await planner.undoRevision(of: try #require(planning.suggestionBatches.first?.id))
+        #expect(current(planning, fahrrad.id) == nil)
+    }
+
+    @Test func dismissThenAccept_undoDismissDoesNotBringTheAcceptedBack() async throws {
+        let (planner, planning, fahrrad, login) = try await twoBlocks()
+        await planner.dismiss(fahrrad)
+        await planner.accept(try #require(current(planning, login.id)))
+        await planner.undoDismissAll()
+        #expect(current(planning, login.id) == nil)
+        #expect(calendarStore.storedEvents.count == 1)
+    }
+
+    @Test func replan_dropsMovedSuggestionsOfFinishedTasks() async throws {
+        let (planner, planning, fahrrad, _) = try await twoBlocks()
+        _ = await planner.moveSuggestion(fahrrad, day: today, start: 11 * 60, minutes: 60)
+        await taskList.complete(try #require(fahrrad.taskID))
+        responder.enqueue(Self.dayAnswer(Self.block("github:Login", "15:00")))
+        await planner.plan(scope: .day, anchor: today)
+        #expect(planning.suggestionBatches.flatMap(\.suggestions).first { $0.id == fahrrad.id } == nil)
+    }
+
+    @Test func blockMovedToAnotherDay_acceptsAsWorkDayWithoutBlock() async throws {
+        let (planner, planning, fahrrad, _) = try await twoBlocks()
+        let tomorrow = today.adding(days: 1, calendar: calendar)
+        _ = await planner.moveSuggestion(fahrrad, day: tomorrow, start: nil, minutes: nil)
+        await planner.accept(try #require(current(planning, fahrrad.id)))
+        #expect(planStore.assignment(for: try #require(fahrrad.taskID)) == tomorrow)
+        #expect(calendarStore.storedEvents.isEmpty)
+    }
+
+    @Test func longerDay_isDropped_whenNoBlockNeedsItAnymore() async throws {
+        responder.enqueue(Self.extendedAnswer())
+        let (planner, planning) = await make()
+        await planner.plan(scope: .day, anchor: today)
+        let late = try #require(planning.days.first?.suggestions.first { $0.taskKey == "local:Fahrrad" })
+        #expect(late.dependsOn != nil)
+        _ = await planner.moveSuggestion(late, day: today, start: 15 * 60, minutes: 60)
+        #expect(planning.suggestionBatches.flatMap(\.suggestions).contains { $0.kind == .dayChange } == false)
+    }
+
+    @Test func revise_weekPlan_movesAnAssignmentToAnotherDayOfThePlan() async throws {
+        responder.enqueue(#"{"assignments":[{"taskId":"local:Abgabe","day":"2026-11-19","reason":"r"}],"unscheduled":[],"risks":[],"estimates":[]}"#)
+        let (planner, planning) = await make(scope: .week)
+        await planner.plan(scope: .week, anchor: today)
+        let assignment = try #require(planning.suggestionBatches.flatMap(\.suggestions).first { $0.taskKey == "local:Abgabe" })
+        responder.enqueue(Self.revision("Freitag.", Self.change("s1", "2026-11-20", start: nil, minutes: nil)))
+        await planner.revise(assignment, comment: "lieber Freitag")
+        let changed = try #require(current(planning, assignment.id))
+        #expect(changed.day == PlanDay(year: 2026, month: 11, day: 20))
+        #expect(changed.kind == .assignment)
+        #expect(changed.previousPosition?.day == PlanDay(year: 2026, month: 11, day: 19))
+    }
 }

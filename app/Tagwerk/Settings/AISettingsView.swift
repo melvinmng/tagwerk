@@ -233,8 +233,9 @@ struct PlanningRulesSection: View {
                     editingIndex = index
                     draft = rule
                 } label: {
-                    Text(rule).foregroundStyle(.primary)
+                    Text(rule)
                 }
+                .tint(.primary)
             }
             .onDelete { offsets in environment.settings.aiPlanningRules.remove(atOffsets: offsets) }
             if rules.count < AppSettings.maximumPlanningRules {
