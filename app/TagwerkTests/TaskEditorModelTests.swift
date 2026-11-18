@@ -173,3 +173,88 @@ struct TaskEditorModelTests {
         #expect(model.saved?.title == "Neu")
     }
 }
+
+@MainActor
+struct TaskEditorRecurrenceTests {
+    let due = DueDate(year: 2026, month: 11, day: 19)
+    var weekly: Recurrence { Recurrence(rule: .weekly(interval: 1, weekdays: [5]), start: PlanDay(due), end: nil, count: nil) }
+
+    private func reminder(recurrence: Recurrence?, due: DueDate?) -> TaskItem {
+        var item = makeTask("Wochenbericht", source: .reminders, due: due)
+        item.editableFields.insert(.recurrence)
+        item.recurrence = recurrence
+        return item
+    }
+
+    @Test func save_writesRecurrence() async {
+        let item = reminder(recurrence: nil, due: due)
+        let provider = FakeTaskProvider(source: .reminders, tasks: [item])
+        let model = TaskEditorModel(item: item, provider: provider)
+        model.setRecurrence(weekly, fallbackDue: PlanDay(due))
+        #expect(await model.save())
+        #expect(provider.appliedEdits.first?.edit.recurrence == .set(weekly))
+        #expect(provider.appliedEdits.first?.edit.due == .unchanged)
+    }
+
+    @Test func dueOff_clearsRecurrence() async {
+        let item = reminder(recurrence: weekly, due: due)
+        let provider = FakeTaskProvider(source: .reminders, tasks: [item])
+        let model = TaskEditorModel(item: item, provider: provider)
+        model.setHasDue(false, today: PlanDay(due))
+        #expect(model.draft.recurrence == nil)
+        #expect(model.removesRecurrenceWithDue)
+        #expect(await model.save())
+        #expect(provider.appliedEdits.first?.edit.recurrence == .set(nil))
+        #expect(provider.appliedEdits.first?.edit.due == .set(nil))
+    }
+
+    @Test func chooseRule_withoutDue_turnsDueOn() {
+        let item = reminder(recurrence: nil, due: nil)
+        let model = TaskEditorModel(item: item, provider: FakeTaskProvider(source: .reminders, tasks: [item]))
+        model.setRecurrence(weekly, fallbackDue: PlanDay(due))
+        #expect(model.draft.due == due)
+        #expect(model.draft.due?.hasTime == false)
+    }
+
+    @Test func dueChange_keepsUnsupportedRuleUnchanged() async {
+        let unsupported = Recurrence(rule: .unsupported, start: PlanDay(due), end: nil, count: nil)
+        let item = reminder(recurrence: unsupported, due: due)
+        let provider = FakeTaskProvider(source: .reminders, tasks: [item])
+        let model = TaskEditorModel(item: item, provider: provider)
+        model.draft.due = DueDate(year: 2026, month: 11, day: 26)
+        #expect(await model.save())
+        #expect(provider.appliedEdits.first?.edit.recurrence == .unchanged)
+    }
+
+    @Test func github_hidesRecurrence() {
+        let issue = makeTask("Login", source: .github)
+        let model = TaskEditorModel(item: issue, provider: FakeTaskProvider(source: .github, tasks: [issue]))
+        #expect(!model.isVisible(.recurrence))
+        #expect(model.showsRecurrenceRow == false)
+        let item = reminder(recurrence: nil, due: due)
+        #expect(TaskEditorModel(item: item, provider: FakeTaskProvider(source: .reminders, tasks: [item])).showsRecurrenceRow)
+    }
+
+    @Test func saveQuestion_noneWithoutEffortOrBlocks() {
+        #expect(TaskEditorModel.saveQuestion(effortChanged: false, blocksOffSeries: []) == nil)
+    }
+
+    @Test func saveQuestion_blocksOnly() {
+        let block = makeBlock()
+        #expect(TaskEditorModel.saveQuestion(effortChanged: false, blocksOffSeries: [block]) == .keepBlocks([block]))
+    }
+
+    /// Effort and blocks never become two dialogs: the effort question names the blocks too.
+    @Test func saveQuestion_effortAndBlocks_isOneStep() {
+        let block = makeBlock()
+        #expect(TaskEditorModel.saveQuestion(effortChanged: true, blocksOffSeries: [block]) == .effortReach(blocksOffSeries: [block]))
+        #expect(TaskEditorModel.saveQuestion(effortChanged: true, blocksOffSeries: []) == .effortReach(blocksOffSeries: []))
+    }
+
+    private func makeBlock() -> CalendarEvent {
+        let start = testCalendar().date(from: DateComponents(year: 2026, month: 11, day: 26, hour: 9))!
+        return CalendarEvent(id: "b1", externalID: nil, calendarID: "plan", title: "Block", start: start,
+                             end: start.addingTimeInterval(3600), isAllDay: false, url: nil, isBusy: true, version: "1")
+    }
+}
+

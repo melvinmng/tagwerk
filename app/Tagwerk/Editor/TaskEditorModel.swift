@@ -78,6 +78,50 @@ final class TaskEditorModel {
         original.editableFields.contains(field)
     }
 
+    // MARK: Recurrence (plan 2026-11-18, stage 1)
+
+    /// Only sources that can write a repetition (reminders) show the row; GitHub issues and, in stage 1,
+    /// local tasks show none.
+    var showsRecurrenceRow: Bool { isVisible(.recurrence) }
+
+    /// Sets the repetition from the recurrence page. A repetition needs a due date: without one, the due
+    /// date becomes `fallbackDue` (the first occurrence), without time.
+    func setRecurrence(_ recurrence: Recurrence?, fallbackDue: PlanDay) {
+        draft.recurrence = recurrence
+        if recurrence != nil, draft.due == nil {
+            draft.due = DueDate(year: fallbackDue.year, month: fallbackDue.month, day: fallbackDue.day)
+        }
+    }
+
+    /// "Fällig" on or off. Off also removes the repetition, because a repeating reminder needs a due date.
+    func setHasDue(_ isOn: Bool, today: PlanDay) {
+        if isOn {
+            if draft.due == nil { draft.due = DueDate(year: today.year, month: today.month, day: today.day) }
+        } else {
+            draft.due = nil
+            draft.recurrence = nil
+        }
+    }
+
+    /// Turning "Fällig" off removed the task's repetition (shown as a hint under the toggle).
+    var removesRecurrenceWithDue: Bool {
+        original.recurrence != nil && draft.due == nil && draft.recurrence == nil
+    }
+
+    /// What to ask before saving, as one step at most (risk table of the plan: never two dialogs).
+    enum SaveQuestion: Equatable {
+        /// The effort of a recurring reminder changed: "Nur am …" or "Für alle ab …". Blocks that end up on
+        /// days without an occurrence are named in the same dialog; they stay in the calendar.
+        case effortReach(blocksOffSeries: [CalendarEvent])
+        /// The new rule leaves planned blocks on days without an occurrence; they stay in the calendar.
+        case keepBlocks([CalendarEvent])
+    }
+
+    static func saveQuestion(effortChanged: Bool, blocksOffSeries: [CalendarEvent]) -> SaveQuestion? {
+        if effortChanged { return .effortReach(blocksOffSeries: blocksOffSeries) }
+        return blocksOffSeries.isEmpty ? nil : .keepBlocks(blocksOffSeries)
+    }
+
     /// Saves the user's changes if the source is unchanged. Returns `true` when the sheet can close.
     func save() async -> Bool {
         await write(expectedVersion: original.version)

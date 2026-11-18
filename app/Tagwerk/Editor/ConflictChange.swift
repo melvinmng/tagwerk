@@ -17,6 +17,7 @@ struct ConflictChange: Equatable, Identifiable {
         let fields: [(String, (TaskItem) -> String)] = [
             (String(localized: "Titel"), { $0.title }),
             (String(localized: "Fällig"), { $0.due.map(dueText) ?? "–" }),
+            (String(localized: "Wiederholung"), { $0.recurrence.map(recurrenceText) ?? String(localized: "Nie") }),
             (String(localized: "Priorität"), { $0.priority?.label ?? "–" }),
             (String(localized: "Geschätzt"), { EstimateHours.text(minutes: $0.estimateMinutes) }),
             (String(localized: "Liste"), { $0.container.name }),
@@ -29,6 +30,10 @@ struct ConflictChange: Equatable, Identifiable {
             guard before != after else { return nil }
             return ConflictChange(field: name, before: before, after: after, mine: mine != before ? mine : nil)
         }
+    }
+
+    private static func recurrenceText(_ recurrence: Recurrence) -> String {
+        RecurrenceText.summary(recurrence, calendar: .tagwerk)
     }
 
     private static func dueText(_ due: DueDate) -> String {
