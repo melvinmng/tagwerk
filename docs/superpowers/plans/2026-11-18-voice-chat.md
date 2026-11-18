@@ -139,6 +139,13 @@ Stufe 1 ist mit #111 gemergt und am iPhone getestet. Für den Sprechmodus fehlen
 17. **Kalender hinter dem Blatt:** nur Scrollen und Tageswechsel. `RootView` (`openEvent`, `editingTask`, `recurringEdit`) und `openSuggestion` sperren Taps, solange der Sprechmodus läuft.
 18. **Geräte-Spike vor Task 11** (wie Task 0) auf der Prüfseite: `.playAndRecord` mit Synthesizer im Wechsel mit Aufnahme, Lautstärke und Klang, Resthall im ersten Transkript, AirPods.
 
+### Ergebnis Geräte-Spike Stufe 2 (iPhone, 2026-11-18)
+
+- `.playAndRecord` bleibt nach dem Sprechen aktiv; der Synthesizer stellt die Session nicht um.
+- Lautsprecher: erster Text 2,4 s nach Start der Aufnahme. Bluetooth (A2DP-Ausgabe, iPhone-Mikrofon): 0,9 s.
+- Kein Echo: In der stillen Runde wurde nichts erkannt, mit Lautsprecher und mit Kopfhörern.
+- Stimme und Ton gut hörbar; der Nutzer fand alles passend. Weiter mit Task 11 wie geplant.
+
 ## Lieferung in zwei PRs
 
 - **PR 1, Stufe 1:** Tasks 1–9 (Diktat, Vorlesen, Ansagen, Einstellungen, Zustände, Sprache der KI).
