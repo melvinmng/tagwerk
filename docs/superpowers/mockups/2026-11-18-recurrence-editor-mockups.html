@@ -1,0 +1,620 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tagwerk · Wiederholungsplan anlegen und ändern · Mockups RK0 bis RK3</title>
+<style>
+  /* Mockup frame uses the host theme (with fallbacks); phone screens depict the app in iOS dark or light mode. */
+  :root { color-scheme: light dark; }
+  body { font: 14px var(--font-sans, system-ui, sans-serif); color: var(--foreground, CanvasText); margin: 16px; }
+  h1 { font-size: 20px; margin: 0 0 4px; }
+  h2 { font-size: 18px; margin: 38px 0 4px; padding-top: 16px; border-top: 1px solid rgba(128,128,128,.3); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .area { display: inline-grid; place-items: center; min-width: 34px; height: 34px; padding: 0 6px; border-radius: 9px; background: #0a84ff; color: #fff; font: 800 14px system-ui; flex-shrink: 0; box-sizing: border-box; }
+  .area.g { background: #30d158; color: #000; }
+  .area.n { background: #8e8e93; }
+  .lead { color: var(--muted-foreground, #777); margin: 0 0 14px; line-height: 1.5; max-width: 980px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(392px, 1fr)); gap: 22px; align-items: start; }
+  .label { font: 600 13px var(--font-sans, system-ui); color: var(--muted-foreground, #777); margin: 0 0 8px 4px; }
+  .label b { color: var(--foreground, CanvasText); }
+  .code { display: inline-block; background: rgba(128,128,128,.28); color: var(--foreground, CanvasText); border-radius: 6px; padding: 1px 8px; font: 800 13px system-ui; margin-right: 4px; }
+  .code.r { background: #30d158; color: #000; }
+  .rec { background: #30d158; color: #000; font-size: 11px; font-weight: 700; padding: 1px 7px; border-radius: 99px; margin-left: 4px; }
+  .pc { font-size: 12.5px; color: var(--muted-foreground, #777); line-height: 1.5; margin: 8px 4px 0; max-width: 390px; }
+  .pc b { color: var(--foreground, CanvasText); }
+  .box { border: 1px solid rgba(48,209,88,.5); background: rgba(48,209,88,.07); border-radius: 12px; padding: 12px 16px; margin-top: 16px; line-height: 1.55; font-size: 13px; max-width: 1100px; }
+  .box h3 { margin: 0 0 6px; font-size: 14px; }
+  .box ul, .box ol { margin: 4px 0 0; padding-left: 20px; }
+  .box li { margin-bottom: 3px; }
+  .box.neutral { border-color: rgba(128,128,128,.4); background: rgba(128,128,128,.07); }
+  .box.warn { border-color: rgba(255,159,10,.6); background: rgba(255,159,10,.08); }
+  code { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; background: rgba(128,128,128,.16); padding: 1px 4px; border-radius: 4px; }
+  .tablewrap { overflow-x: auto; }
+  table.sum { border-collapse: collapse; font-size: 13px; margin-top: 6px; }
+  table.sum td, table.sum th { padding: 5px 14px 5px 0; vertical-align: top; text-align: left; border-bottom: 1px solid rgba(128,128,128,.22); }
+  table.sum th { font-size: 12px; color: var(--muted-foreground, #777); }
+  .st { font-size: 11px; font-weight: 700; padding: 1px 7px; border-radius: 99px; white-space: nowrap; }
+  .st.doc { background: rgba(10,132,255,.22); }
+  .st.code { background: rgba(48,209,88,.3); }
+  .st.open { background: rgba(255,159,10,.3); }
+
+  .phone {
+    --bg: #000; --card: #1c1c1e; --card2: #2c2c2e; --sep: #38383a; --text: #fff; --sub: #8e8e93; --dim: #c7c7cc;
+    --blue: #0a84ff; --green: #30d158; --orange: #ff9f0a; --red: #ff453a; --purple: #bf5af2;
+    --segon: #636366; --frame: #2a2a2c;
+    background: var(--bg); color: var(--text); border-radius: 40px; padding: 14px 12px 16px;
+    font: 15px -apple-system, "SF Pro Text", system-ui, sans-serif; border: 6px solid var(--frame);
+    width: 390px; max-width: 100%; box-sizing: border-box; min-height: 300px;
+    display: flex; flex-direction: column; position: relative; overflow: hidden;
+  }
+  .phone.light {
+    --bg: #f2f2f7; --card: #fff; --card2: #e3e3e8; --sep: #d1d1d6; --text: #000; --sub: #6c6c70; --dim: #3c3c43;
+    --blue: #007aff; --green: #34c759; --orange: #ff9500; --red: #ff3b30; --purple: #af52de;
+    --segon: #fff; --frame: #c7c7cc;
+  }
+  .status { display: flex; justify-content: space-between; font: 600 13px system-ui; padding: 0 12px 10px; }
+
+  /* Sheet navigation bar: cancel, title, confirm */
+  .nb { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 8px; height: 44px; padding: 0 6px; margin-bottom: 8px; font-size: 16px; }
+  .nb span { color: var(--blue); }
+  .nb b { font-weight: 600; font-size: 16px; max-width: 170px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .nb span:last-child { text-align: right; font-weight: 600; }
+  .big { font: 700 30px/1.1 system-ui; letter-spacing: -.4px; padding: 2px 6px 10px; }
+
+  /* Grouped form */
+  .sec { color: var(--sub); font: 600 12px system-ui; text-transform: uppercase; letter-spacing: .4px; margin: 12px 14px 5px; }
+  .grp { background: var(--card); border-radius: 18px; overflow: hidden; margin-bottom: 4px; }
+  .rw { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 44px; padding: 6px 14px; border-bottom: 1px solid var(--sep); box-sizing: border-box; }
+  .rw:last-child { border-bottom: 0; }
+  .rw .v { color: var(--sub); text-align: right; min-width: 0; }
+  .rw .v.b { color: var(--blue); }
+  .rw .ch::after { content: " ›"; color: var(--sub); }
+  .rw .ck { color: var(--blue); font-weight: 700; }
+  .rw.col { flex-direction: column; align-items: stretch; gap: 8px; padding: 10px 14px; }
+  .rw small { display: block; color: var(--sub); font-size: 12px; margin-top: 1px; }
+  .ftr { color: var(--sub); font-size: 12.5px; line-height: 1.4; margin: 5px 14px 8px; }
+  .ftr b { color: var(--text); }
+  .tg { width: 46px; height: 28px; border-radius: 99px; background: var(--card2); position: relative; flex-shrink: 0; }
+  .tg::after { content: ""; position: absolute; top: 2px; left: 2px; width: 24px; height: 24px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.3); }
+  .tg.on { background: var(--green); }
+  .tg.on::after { left: 20px; }
+  .seg { display: flex; background: var(--card2); border-radius: 99px; padding: 2px; }
+  .seg span { flex: 1; text-align: center; padding: 6px 2px; font-size: 13px; border-radius: 99px; color: var(--dim); white-space: nowrap; }
+  .seg span.on { background: var(--segon); color: var(--text); font-weight: 600; box-shadow: 0 1px 3px rgba(0,0,0,.18); }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip { border-radius: 99px; padding: 6px 12px; font-size: 13px; background: var(--card2); color: var(--dim); white-space: nowrap; }
+  .chip.on { background: var(--blue); color: #fff; font-weight: 600; }
+  .wd { display: flex; justify-content: space-between; gap: 4px; }
+  .wd span { width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; font: 600 13px system-ui; background: var(--card2); color: var(--dim); }
+  .wd span.on { background: var(--blue); color: #fff; }
+  .stp { display: flex; align-items: center; gap: 8px; }
+  .stp i { font-style: normal; display: flex; background: var(--card2); border-radius: 9px; }
+  .stp i span { width: 40px; height: 32px; display: grid; place-items: center; font-size: 18px; }
+  .stp i span + span { border-left: 1px solid var(--sep); }
+  .num { font: 600 15px ui-monospace, monospace; min-width: 22px; text-align: center; }
+  .menu { background: var(--card2); border-radius: 9px; padding: 5px 10px; font-size: 14px; }
+  .menu::after { content: " ⌄"; color: var(--sub); }
+
+  /* Summary sentence and preview */
+  .sumc { background: var(--card); border-radius: 18px; padding: 12px 14px; margin-bottom: 8px; border: 1px solid rgba(10,132,255,.45); }
+  .sumc small { display: block; color: var(--sub); font: 600 11px system-ui; text-transform: uppercase; letter-spacing: .4px; margin-bottom: 3px; }
+  .sumc b { font-size: 17px; line-height: 1.25; }
+  .sumc p { margin: 4px 0 0; color: var(--sub); font-size: 12.5px; }
+  .nxt { display: flex; gap: 6px; overflow: hidden; }
+  .nxt span { flex: 1; background: var(--card2); border-radius: 10px; padding: 5px 0; text-align: center; font-size: 11px; color: var(--sub); }
+  .nxt span b { display: block; color: var(--text); font-size: 13.5px; }
+  .hint { border-radius: 14px; padding: 10px 12px; font-size: 12.5px; line-height: 1.45; background: rgba(255,159,10,.14); border: 1px solid rgba(255,159,10,.5); margin: 8px 0 4px; }
+  .hint.q { background: rgba(142,142,147,.16); border-color: rgba(142,142,147,.45); }
+  .hint b { display: block; font-size: 13.5px; margin-bottom: 2px; }
+  .miss { border: 1.5px dashed var(--red); border-radius: 12px; padding: 7px 12px; color: var(--red); font: 600 12.5px system-ui; margin: 6px 0; text-align: center; }
+
+  /* Task list stub */
+  .item { display: flex; align-items: flex-start; gap: 10px; padding: 9px 12px; border-bottom: 1px solid var(--sep); font-size: 14.5px; }
+  .item:last-child { border-bottom: 0; }
+  .item .t { flex: 1; min-width: 0; }
+  .item .s { color: var(--sub); font-size: 12px; margin-top: 2px; }
+  .item .o { width: 20px; height: 20px; border-radius: 50%; border: 1.5px solid var(--sub); flex-shrink: 0; margin-top: 1px; box-sizing: border-box; }
+  .dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--orange); margin: 0 3px 1px 0; }
+
+  /* Confirmation dialog */
+  .dim { position: absolute; inset: 0; background: rgba(0,0,0,.45); z-index: 2; }
+  .dlg { position: relative; z-index: 3; margin-top: auto; }
+  .dlg .c { background: var(--card2); border-radius: 16px; overflow: hidden; margin-bottom: 8px; }
+  .dlg .m { padding: 12px 16px; text-align: center; font-size: 12.5px; color: var(--sub); line-height: 1.45; border-bottom: 1px solid var(--sep); }
+  .dlg .m b { display: block; color: var(--text); font-size: 13.5px; margin-bottom: 3px; }
+  .dlg .a { padding: 14px; text-align: center; color: var(--blue); font-size: 17px; border-bottom: 1px solid var(--sep); }
+  .dlg .a:last-child { border-bottom: 0; }
+  .dlg .a.d { color: var(--red); }
+  .dlg .a.s { font-weight: 600; }
+</style>
+</head>
+<body>
+
+<h1>Tagwerk · Wiederholungsplan anlegen und ändern · Mockups RK0 bis RK3</h1>
+<p class="lead">Anlass: Für wiederkehrende Aufgaben soll der Wiederholungsplan in Tagwerk angelegt und geändert werden können (wie oft, an welchen Wochentagen, bis wann). Diese Datei zeigt den Ist-Zustand (<b>RK0</b>) und drei Varianten (<b>RK1 bis RK3</b>) für den Aufgaben-Editor und für „Neue Aufgabe“. Die Kürzel „RK“ sind neu. Alle Daten sind erfunden, Stichtag ist Mittwoch, 18. November 2026. Die Bilder sind statisches HTML und nicht maßstabsgetreu. <b>Nichts in dieser Datei ist gebaut oder am Gerät geprüft.</b> Aussagen über EventKit sind danach gekennzeichnet, ob sie aus dem vorhandenen Code, aus der API-Beschreibung oder aus einer ungeprüften Annahme stammen.</p>
+
+<div class="box neutral">
+  <h3>Vergleich auf einen Blick</h3>
+  <div class="tablewrap"><table class="sum">
+    <tr><th>Kürzel</th><th>Idee</th><th>Tipps für „Werktags“</th><th>Tipps für „Alle 2 Wochen am Mo und Do“</th><th>Vorschau der nächsten Termine</th><th>Aufwand und Risiko</th></tr>
+    <tr><td><span class="code">RK0</span></td><td>Ist-Zustand: Regel wird aus Erinnerungen gelesen, nirgends gezeigt, nirgends änderbar</td><td>nicht möglich</td><td>nicht möglich</td><td>nein</td><td>–</td></tr>
+    <tr><td><span class="code">RK1</span></td><td>Zeile „Wiederholen“, Liste mit Vorgaben, „Eigene …“ auf einer zweiten Seite (Muster der Erinnerungen-App)</td><td>2</td><td>etwa 7, über zwei Seiten</td><td>nein</td><td>klein bis mittel; zwei Seiten tief im Editor</td></tr>
+    <tr><td><span class="code">RK2</span></td><td>Abschnitt direkt im Formular, klappt beim Einschalten auf</td><td>2</td><td>etwa 5, ohne Seitenwechsel</td><td>nur als Satz</td><td>mittel; der Editor wird deutlich länger, „Geplant“ rutscht weit nach unten</td></tr>
+    <tr><td><span class="code r">RK3</span></td><td>Zeile „Wiederholen“ mit Klartext, eine eigene Seite mit Satz, Vorgaben, Reglern, Vorschau und Folgen</td><td>2</td><td>etwa 5, eine Seite</td><td>ja, die nächsten fünf Termine</td><td>mittel; dichteste Seite, muss auf kleinen Geräten scrollen</td></tr>
+  </table></div>
+</div>
+
+<!-- ===================================================================== -->
+<h2><span class="area n">RK0</span> Ist-Zustand: Die Regel wird gelesen, aber nicht gezeigt und nicht geschrieben</h2>
+<p class="lead">Wiederkehrend sind heute ausschließlich Erinnerungen, deren Regel in der Erinnerungen-App angelegt wurde. Tagwerk liest die erste Regel, berechnet daraus die Tage der Serie und reserviert dort den Aufwand. Im Editor gibt es nur das Aufwandsfeld der Serie. Lokale Aufgaben und GitHub-Issues können keine Wiederholung haben.</p>
+
+<div class="grid">
+  <div>
+    <p class="label"><span class="code">RK0</span> <b>Editor einer wiederkehrenden Erinnerung</b> (wie gebaut)</p>
+    <div class="phone">
+      <div class="status"><span>9:41</span><span>●●●</span></div>
+      <div class="nb"><span>Abbrechen</span><b>Wochenbericht schreiben</b><span>Sichern</span></div>
+      <div class="grp">
+        <div class="rw"><span>Wochenbericht schreiben</span></div>
+        <div class="rw"><span>Liste</span><span class="v">Arbeit ⌄</span></div>
+      </div>
+      <div class="grp" style="margin-top:10px">
+        <div class="rw"><span>Fällig</span><span class="tg on"></span></div>
+        <div class="rw"><span>Uhrzeit</span><span class="tg"></span></div>
+        <div class="rw"><span>Datum</span><span class="v b">19. Nov. 2026</span></div>
+        <div class="rw"><span>Priorität</span><span class="v">Mittel ⌄</span></div>
+        <div class="rw"><span>Aufwand<small>Aufwand je Tag der Serie. Bisher 30 min.</small></span><span class="v">30 min</span></div>
+      </div>
+      <div class="miss">Hier fehlt: Wie oft? An welchen Tagen? Bis wann?</div>
+      <div class="grp">
+        <div class="rw"><span>Erledigt</span><span class="tg"></span></div>
+      </div>
+      <div class="sec">Geplant</div>
+      <div class="grp">
+        <div class="rw"><span>Do., 19. Nov.<small>14:00 bis 15:00</small></span><span class="v ch"></span></div>
+        <div class="rw"><span>Do., 26. Nov.<small>09:00 bis 10:00</small></span><span class="v ch"></span></div>
+      </div>
+    </div>
+    <p class="pc">Dass die Aufgabe eine Serie ist, sieht man nur am Hinweis unter „Aufwand“. Der Rhythmus selbst steht nirgends (<code>TaskEditorView.swift:93–97</code>).</p>
+  </div>
+
+  <div>
+    <p class="label"><span class="code">RK0</span> <b>Aufgabenliste und „Planen“</b> (wie gebaut, hell)</p>
+    <div class="phone light">
+      <div class="status"><span>9:41</span><span>●●●</span></div>
+      <div class="big">Aufgaben</div>
+      <div class="sec">Heute</div>
+      <div class="grp">
+        <div class="item"><span class="o"></span><div class="t">Karteikarten<div class="s">↻ Heute · <span class="dot"></span>Lernen</div></div></div>
+        <div class="item"><span class="o"></span><div class="t">Angebot prüfen<div class="s">Heute · Lokal</div></div></div>
+      </div>
+      <div class="sec">Demnächst</div>
+      <div class="grp">
+        <div class="item"><span class="o"></span><div class="t">Wochenbericht schreiben<div class="s">↻ Morgen · <span class="dot"></span>Arbeit</div></div></div>
+      </div>
+      <div class="sec">In „Planen“, Tagesansicht</div>
+      <div class="grp">
+        <div class="item"><span class="o"></span><div class="t">↻ Karteikarten<div class="s">20 min reserviert</div></div><span style="color:var(--blue);font-size:13px">Heute</span></div>
+      </div>
+      <div class="miss">↻ sagt nur „wiederholt sich“, nicht wie</div>
+    </div>
+    <p class="pc">Das Zeichen ↻ kommt aus <code>TaskRow.swift:29</code>; in „Planen“ öffnet der Tipp auf den Aufwand nur das Aufwands-Sheet (<code>RecurringEffortSheet.swift</code>).</p>
+  </div>
+
+  <div>
+    <p class="label"><span class="code">RK0</span> <b>„Neue Aufgabe“</b> (wie gebaut)</p>
+    <div class="phone">
+      <div class="status"><span>9:41</span><span>●●●</span></div>
+      <div class="nb"><span>Abbrechen</span><b>Neue Aufgabe</b><span>Hinzufügen</span></div>
+      <div class="seg" style="margin-bottom:10px"><span>Lokal</span><span class="on">Erinnerung</span><span>GitHub-Issue</span></div>
+      <div class="grp">
+        <div class="rw"><span>Karteikarten</span></div>
+        <div class="rw"><span class="v" style="text-align:left">Notiz</span></div>
+      </div>
+      <div class="grp" style="margin-top:10px">
+        <div class="rw"><span>Liste</span><span class="v">Standard ⌄</span></div>
+      </div>
+      <div class="grp" style="margin-top:10px">
+        <div class="rw"><span>Fällig</span><span class="tg on"></span></div>
+        <div class="rw"><span>Uhrzeit</span><span class="tg"></span></div>
+        <div class="rw"><span>Datum</span><span class="v b">18. Nov. 2026</span></div>
+        <div class="rw"><span>Priorität</span><span class="v">Keine ⌄</span></div>
+      </div>
+      <div class="miss">Keine Wiederholung wählbar</div>
+    </div>
+    <p class="pc">Eine Serie muss heute erst hier angelegt und danach in der Erinnerungen-App mit einer Regel versehen werden (<code>NewTaskSheet.swift:107–117</code>, <code>EventKitGateway.swift:128</code>).</p>
+  </div>
+</div>
+
+<div class="box warn">
+  <h3>Was fehlt, mit Fundstelle im Code</h3>
+  <ul>
+    <li><b>Kein Schreibweg.</b> <code>ReminderRecord.recurrence</code> ist ausdrücklich „read-only; Tagwerk never edits it“ (<code>ReminderRecord.swift:15–16</code>). <code>save</code> und <code>create</code> der EventKit-Schicht kennen keine Regel (<code>EventKitGateway.swift:104–121</code> und <code>:128–144</code>).</li>
+    <li><b>Kein Feld im gemeinsamen Aufgabenmodell.</b> <code>TaskItem</code>, <code>TaskField</code>, <code>TaskDraft</code> und <code>TaskEdit</code> haben keine Wiederholung (<code>TaskItem.swift:42–44</code>, <code>:94</code>; <code>TaskEdit.swift:15–24</code>). Der Editor erfährt nur über das Planungsmodell, dass eine Serie vorliegt (<code>PlanningModel.swift:515–519</code>).</li>
+    <li><b>Das Kernmodell ist kleiner als der Wunsch.</b> <code>RecurrenceRule</code> kennt täglich, wöchentlich mit Wochentagen, monatlich an einem Tag des Monats und „unsupported“ (<code>Recurrence.swift:4–10</code>). Es fehlen jährlich und „2. Dienstag im Monat“; beides wird beim Lesen zu „unsupported“ (<code>EventKitGateway.swift:186–195</code>) und reserviert dann nur am nächsten Fälligkeitstag (<code>Recurrence.swift:26–31</code>).</li>
+    <li><b>Nur Erinnerungen können Serien sein.</b> Lokale Aufgaben haben kein Feld dafür (<code>LocalTask.swift:8–24</code>), und das Planungsmodell fragt hart nach der Quelle „reminders“ (<code>PlanningModel.swift:516</code>, <code>:523</code>, <code>:850</code>).</li>
+    <li><b>Kein Hinweis bei nicht lesbaren Regeln.</b> Der Entwurf zu Phase 2b nennt einen Hinweis für nicht unterstützte Regeln (<code>2026-11-17-phase-2b-design.md</code>, Abschnitt 9). Im App-Code wurde bei der Suche nach <code>.unsupported</code> keine Stelle gefunden, die ihn anzeigt.</li>
+  </ul>
+</div>
+
+<!-- ===================================================================== -->
+<h2><span class="area">RK1</span> Vorgabenliste mit zweiter Seite „Eigene …“ (Muster der Erinnerungen-App)</h2>
+<p class="lead">Im Editor und in „Neue Aufgabe“ steht eine Zeile „Wiederholen“. Sie öffnet eine Liste mit Vorgaben. Alles, was keine Vorgabe ist, wird auf einer zweiten Seite eingestellt. Wer die Erinnerungen-App kennt, findet sich sofort zurecht; eigene Regeln kosten dafür die meisten Tipps.</p>
+
+<div class="grid">
+  <div>
+    <p class="label"><span class="code">RK1</span> <b>Editor mit Zeile „Wiederholen“</b></p>
+    <div class="phone">
+      <div class="status"><span>9:41</span><span>●●●</span></div>
+      <div class="nb"><span>Abbrechen</span><b>Wochenbericht schreiben</b><span>Sichern</span></div>
+      <div class="grp">
+        <div class="rw"><span>Fällig</span><span class="tg on"></span></div>
+        <div class="rw"><span>Datum</span><span class="v b">19. Nov. 2026</span></div>
+        <div class="rw"><span>Wiederholen</span><span class="v ch">Wöchentlich</span></div>
+        <div class="rw"><span>Ende</span><span class="v ch">Nie</span></div>
+        <div class="rw"><span>Priorität</span><span class="v">Mittel ⌄</span></div>
+        <div class="rw"><span>Aufwand<small>Aufwand je Tag der Serie.</small></span><span class="v">30 min</span></div>
+      </div>
+    </div>
+    <p class="pc">Zwei neue Zeilen direkt unter dem Datum. „Ende“ erscheint nur, wenn eine Wiederholung gesetzt ist.</p>
+  </div>
+
+  <div>
+    <p class="label"><span class="code">RK1</span> <b>Seite „Wiederholen“</b> (Vorgaben)</p>
+    <div class="phone">
+      <div class="status"><span>9:41</span><span>●●●</span></div>
+      <div class="nb"><span>‹ Zurück</span><b>Wiederholen</b><span></span></div>
+      <div class="grp">
+        <div class="rw"><span>Nie</span></div>
+        <div class="rw"><span>Täglich</span></div>
+        <div class="rw"><span>Werktags<small>Mo bis Fr</small></span></div>
+        <div class="rw"><span>Jedes Wochenende<small>Sa und So</small></span></div>
+        <div class="rw"><span>Wöchentlich<small>jeden Donnerstag</small></span><span class="ck">✓</span></div>
+        <div class="rw"><span>Alle 2 Wochen<small>donnerstags</small></span></div>
+        <div class="rw"><span>Monatlich<small>am 19.</small></span></div>
+        <div class="rw"><span>Jährlich<small>am 19. November</small></span></div>
+      </div>
+      <div class="grp" style="margin-top:10px">
+        <div class="rw"><span>Eigene …</span><span class="v ch"></span></div>
+      </div>
+      <div class="ftr">Wochentag und Tag des Monats kommen vom Fälligkeitsdatum.</div>
+    </div>
+  </div>
+
+  <div>
+    <p class="label"><span class="code">RK1</span> <b>Seite „Eigene“</b> (hell)</p>
+    <div class="phone light">
+      <div class="status"><span>9:41</span><span>●●●</span></div>
+      <div class="nb"><span>‹ Wiederholen</span><b>Eigene</b><span></span></div>
+      <div class="grp">
+        <div class="rw"><span>Häufigkeit</span><span class="v b">Wöchentlich</span></div>
+        <div class="rw"><span>Alle</span><span class="v b">2 Wochen</span></div>
+      </div>
+      <div class="ftr"><b>Alle 2 Wochen am Mo und Do</b></div>
+      <div class="grp">
+        <div class="rw"><span>Montag</span><span class="ck">✓</span></div>
+        <div class="rw"><span>Dienstag</span></div>
+        <div class="rw"><span>Mittwoch</span></div>
+        <div class="rw"><span>Donnerstag</span><span class="ck">✓</span></div>
+        <div class="rw"><span>Freitag</span></div>
+        <div class="rw"><span>Samstag</span></div>
+        <div class="rw"><span>Sonntag</span></div>
+      </div>
+    </div>
+    <p class="pc">Bei „Monatlich“ steht hier statt der Wochentage die Wahl „Am 19.“ oder „Am 3. Donnerstag“.</p>
+  </div>
+</div>
+
+<div class="box neutral">
+  <h3>RK1 bewertet</h3>
+  <ul>
+    <li><b>Dafür:</b> bekanntes Muster, geringster Bauaufwand der drei Varianten, häufige Fälle mit zwei Tipps.</li>
+    <li><b>Dagegen:</b> eigene Regeln liegen zwei Seiten tief in einem Sheet; der Klartext steht nur klein als Fußzeile; man sieht nicht, an welchen Tagen die Serie tatsächlich fällt; für die Folgen einer Änderung (geplante Blöcke) ist kein Platz.</li>
+  </ul>
+</div>
+
+<!-- ===================================================================== -->
+<h2><span class="area">RK2</span> Abschnitt direkt im Formular</h2>
+<p class="lead">Ein Schalter „Wiederholen“ klappt die Regler im Editor und in „Neue Aufgabe“ auf. Es gibt keinen Seitenwechsel, und Fälligkeit und Rhythmus stehen untereinander. Der Preis ist die Länge des Formulars.</p>
+
+<div class="grid">
+  <div>
+    <p class="label"><span class="code">RK2</span> <b>Editor, Abschnitt aufgeklappt</b> (wöchentlich)</p>
+    <div class="phone">
+      <div class="status"><span>9:41</span><span>●●●</span></div>
+      <div class="nb"><span>Abbrechen</span><b>Wochenbericht schreiben</b><span>Sichern</span></div>
+      <div class="grp">
+        <div class="rw"><span>Fällig</span><span class="tg on"></span></div>
+        <div class="rw"><span>Datum</span><span class="v b">19. Nov. 2026</span></div>
+      </div>
+      <div class="grp" style="margin-top:10px">
+        <div class="rw"><span>Wiederholen</span><span class="tg on"></span></div>
+        <div class="rw col">
+          <div class="chips"><span class="chip">Täglich</span><span class="chip">Werktags</span><span class="chip">Wochenende</span><span class="chip">Wöchentlich</span><span class="chip on">Alle 2 Wochen</span><span class="chip">Monatlich</span><span class="chip">Jährlich</span></div>
+        </div>
+        <div class="rw"><span>Alle</span><span class="stp"><span class="num">2</span><i><span>−</span><span>＋</span></i><span class="menu">Wochen</span></span></div>
+        <div class="rw col"><div class="wd"><span class="on">Mo</span><span>Di</span><span>Mi</span><span class="on">Do</span><span>Fr</span><span>Sa</span><span>So</span></div></div>
+        <div class="rw"><span>Ende</span><span class="v">Nie ⌄</span></div>
+      </div>
+      <div class="ftr"><b>Alle 2 Wochen am Mo und Do.</b> Gilt ab Do., 19. Nov.</div>
+      <div class="grp">
+        <div class="rw"><span>Priorität</span><span class="v">Mittel ⌄</span></div>
+        <div class="rw"><span>Aufwand</span><span class="v">30 min</span></div>
+      </div>
+    </div>
+    <p class="pc">Notiz, „Erledigt“ und „Geplant“ liegen jetzt unter dem sichtbaren Bereich.</p>
+  </div>
+
+  <div>
+    <p class="label"><span class="code">RK2</span> <b>„Neue Aufgabe“, monatlich mit Ende</b> (hell)</p>
+    <div class="phone light">
+      <div class="status"><span>9:41</span><span>●●●</span></div>
+      <div class="nb"><span>Abbrechen</span><b>Neue Aufgabe</b><span>Hinzufügen</span></div>
+      <div class="seg" style="margin-bottom:10px"><span>Lokal</span><span class="on">Erinnerung</span><span>GitHub-Issue</span></div>
+      <div class="grp">
+        <div class="rw"><span>Nebenkosten ablesen</span></div>
+      </div>
+      <div class="grp" style="margin-top:10px">
+        <div class="rw"><span>Fällig</span><span class="tg on"></span></div>
+        <div class="rw"><span>Datum</span><span class="v b">18. Nov. 2026</span></div>
+      </div>
+      <div class="grp" style="margin-top:10px">
+        <div class="rw"><span>Wiederholen</span><span class="tg on"></span></div>
+        <div class="rw"><span>Alle</span><span class="stp"><span class="num">1</span><i><span>−</span><span>＋</span></i><span class="menu">Monate</span></span></div>
+        <div class="rw"><span>Am 18.</span></div>
+        <div class="rw"><span>Am 3. Mittwoch</span><span class="ck">✓</span></div>
+        <div class="rw"><span>Ende</span><span class="v">Nach 12 Mal ⌄</span></div>
+      </div>
+      <div class="ftr"><b>Jeden Monat am 3. Mittwoch, 12 Mal.</b></div>
+    </div>
+  </div>
+</div>
+
+<div class="box neutral">
+  <h3>RK2 bewertet</h3>
+  <ul>
+    <li><b>Dafür:</b> alles auf einem Bildschirm, Fälligkeit und Rhythmus im Zusammenhang, kein neuer Navigationsschritt.</li>
+    <li><b>Dagegen:</b> Der Editor hat schon Titel, Liste, Fälligkeit, Priorität, Aufwand, Notiz, „Erledigt“, „Geplant“, Kommentar und Löschen. Mit sechs weiteren Zeilen wird er für jede Serie etwa einen halben Bildschirm länger. Dieselben Regler müssten in zwei Formularen gepflegt werden, wenn sie nicht als eigener Baustein gebaut werden.</li>
+  </ul>
+</div>
+
+<!-- ===================================================================== -->
+<h2><span class="area g">RK3</span> Eine Seite „Wiederholung“ mit Satz, Vorschau und Folgen <span class="rec">Freigegeben am 18.11.2026</span></h2>
+<p class="lead">Im Formular steht eine einzige Zeile „Wiederholen“ mit der Regel im Klartext. Sie öffnet eine Seite innerhalb des vorhandenen Sheets. Oben steht der Satz, darunter Vorgaben als Chips, dann die Regler, die nächsten fünf Termine und, bei einer bestehenden Serie, was die Änderung bewirkt. Dieselbe Seite wird im Editor und in „Neue Aufgabe“ verwendet.</p>
+
+<div class="grid">
+  <div>
+    <p class="label"><span class="code r">RK3</span> <b>Editor mit Zeile „Wiederholen“</b></p>
+    <div class="phone">
+      <div class="status"><span>9:41</span><span>●●●</span></div>
+      <div class="nb"><span>Abbrechen</span><b>Wochenbericht schreiben</b><span>Sichern</span></div>
+      <div class="grp">
+        <div class="rw"><span>Wochenbericht schreiben</span></div>
+        <div class="rw"><span>Liste</span><span class="v">Arbeit ⌄</span></div>
+      </div>
+      <div class="grp" style="margin-top:10px">
+        <div class="rw"><span>Fällig</span><span class="tg on"></span></div>
+        <div class="rw"><span>Datum</span><span class="v b">19. Nov. 2026</span></div>
+        <div class="rw"><span>↻ Wiederholen<small>Alle 2 Wochen am Mo und Do</small></span><span class="v ch"></span></div>
+        <div class="rw"><span>Priorität</span><span class="v">Mittel ⌄</span></div>
+        <div class="rw"><span>Aufwand<small>Aufwand je Tag der Serie. Bisher 30 min.</small></span><span class="v">30 min</span></div>
+      </div>
+      <div class="grp" style="margin-top:10px">
+        <div class="rw"><span>Erledigt</span><span class="tg"></span></div>
+      </div>
+      <div class="sec">Geplant</div>
+      <div class="grp">
+        <div class="rw"><span>Do., 19. Nov.<small>14:00 bis 15:00</small></span><span class="v ch"></span></div>
+        <div class="rw"><span>Do., 26. Nov.<small>09:00 bis 10:00 · kein Termin der Serie mehr</small></span><span class="v ch"></span></div>
+      </div>
+    </div>
+    <p class="pc">Eine Zeile mehr als heute. Ohne Wiederholung steht dort „Nie“. Geschrieben wird erst mit „Sichern“ des Editors, zusammen mit den anderen Feldern.</p>
+  </div>
+
+  <div>
+    <p class="label"><span class="code r">RK3</span> <b>Seite „Wiederholung“, wöchentlich</b> (bestehende Serie)</p>
+    <div class="phone">
+      <div class="status"><span>9:41</span><span>●●●</span></div>
+      <div class="nb"><span>‹ Zurück</span><b>Wiederholung</b><span>Fertig</span></div>
+      <div class="sumc"><small>Regel</small><b>Alle 2 Wochen am Mo und Do</b><p>Bisher: Jede Woche am Do</p></div>
+      <div class="chips" style="margin:0 2px 10px"><span class="chip">Nie</span><span class="chip">Täglich</span><span class="chip">Werktags</span><span class="chip">Wochenende</span><span class="chip">Wöchentlich</span><span class="chip">Alle 2 Wochen</span><span class="chip">Monatlich</span><span class="chip">Jährlich</span></div>
+      <div class="grp">
+        <div class="rw col"><div class="seg"><span>Tag</span><span class="on">Woche</span><span>Monat</span><span>Jahr</span></div></div>
+        <div class="rw"><span>Alle</span><span class="stp"><span class="num">2</span><i><span>−</span><span>＋</span></i><span>Wochen</span></span></div>
+        <div class="rw col"><div class="wd"><span class="on">Mo</span><span>Di</span><span>Mi</span><span class="on">Do</span><span>Fr</span><span>Sa</span><span>So</span></div></div>
+      </div>
+      <div class="sec">Ende</div>
+      <div class="grp">
+        <div class="rw col"><div class="seg"><span class="on">Nie</span><span>Bis Datum</span><span>Nach Anzahl</span></div></div>
+      </div>
+      <div class="sec">Nächste Termine</div>
+      <div class="nxt"><span>Do<b>19.11.</b></span><span>Mo<b>30.11.</b></span><span>Do<b>3.12.</b></span><span>Mo<b>14.12.</b></span><span>Do<b>17.12.</b></span></div>
+      <div class="hint"><b>Gilt ab Do., 19. Nov.</b>Ein geplanter Block (Do., 26. Nov., 09:00) liegt dann an einem Tag ohne Termin der Serie. Er bleibt im Kalender.</div>
+    </div>
+    <p class="pc">Keine Vorgabe ist markiert, weil „Mo und Do“ von „Alle 2 Wochen“ abweicht. Die Vorschau rechnet mit derselben Funktion wie die Planung (<code>occurrences</code>, <code>Recurrence.swift:28</code>).</p>
+  </div>
+
+  <div>
+    <p class="label"><span class="code r">RK3</span> <b>Seite „Wiederholung“, monatlich mit Ende</b> (neue Aufgabe, hell)</p>
+    <div class="phone light">
+      <div class="status"><span>9:41</span><span>●●●</span></div>
+      <div class="nb"><span>‹ Neue Aufgabe</span><b>Wiederholung</b><span>Fertig</span></div>
+      <div class="sumc"><small>Regel</small><b>Jeden Monat am 3. Mittwoch, 12 Mal</b><p>Letzter Termin: Mi., 20. Okt. 2027</p></div>
+      <div class="chips" style="margin:0 2px 10px"><span class="chip">Nie</span><span class="chip">Täglich</span><span class="chip">Werktags</span><span class="chip">Wochenende</span><span class="chip">Wöchentlich</span><span class="chip">Alle 2 Wochen</span><span class="chip on">Monatlich</span><span class="chip">Jährlich</span></div>
+      <div class="grp">
+        <div class="rw col"><div class="seg"><span>Tag</span><span>Woche</span><span class="on">Monat</span><span>Jahr</span></div></div>
+        <div class="rw"><span>Alle</span><span class="stp"><span class="num">1</span><i><span>−</span><span>＋</span></i><span>Monate</span></span></div>
+        <div class="rw"><span>Am 18. des Monats</span></div>
+        <div class="rw"><span>Am 3. Mittwoch</span><span class="ck">✓</span></div>
+      </div>
+      <div class="sec">Ende</div>
+      <div class="grp">
+        <div class="rw col"><div class="seg"><span>Nie</span><span>Bis Datum</span><span class="on">Nach Anzahl</span></div></div>
+        <div class="rw"><span>Anzahl</span><span class="stp"><span class="num">12</span><i><span>−</span><span>＋</span></i><span>Mal</span></span></div>
+      </div>
+      <div class="sec">Nächste Termine</div>
+      <div class="nxt"><span>Mi<b>18.11.</b></span><span>Mi<b>16.12.</b></span><span>Mi<b>20.1.</b></span><span>Mi<b>17.2.</b></span><span>Mi<b>17.3.</b></span></div>
+      <div class="hint q"><b>Fällig am Mi., 18. Nov. 2026</b>Eine Serie braucht ein Fälligkeitsdatum. Es ist der erste Termin.</div>
+    </div>
+    <p class="pc">Die beiden Monatsoptionen werden aus dem Fälligkeitsdatum abgeleitet (18. November 2026 ist der dritte Mittwoch). „Bis Datum“ zeigt stattdessen eine Datumszeile.</p>
+  </div>
+</div>
+
+<h3 style="margin:26px 0 8px;font-size:15px">RK3 · Ändern einer bestehenden Serie und Unterschiede der Quellen</h3>
+<div class="grid">
+  <div>
+    <p class="label"><span class="code r">RK3</span> <b>Rückfrage beim Sichern</b> (nur wenn Blöcke betroffen sind)</p>
+    <div class="phone">
+      <div class="status"><span>9:41</span><span>●●●</span></div>
+      <div class="nb"><span>Abbrechen</span><b>Wochenbericht schreiben</b><span>Sichern</span></div>
+      <div class="grp">
+        <div class="rw"><span>Datum</span><span class="v b">19. Nov. 2026</span></div>
+        <div class="rw"><span>↻ Wiederholen<small>Alle 2 Wochen am Mo und Do</small></span><span class="v ch"></span></div>
+      </div>
+      <div class="dim"></div>
+      <div class="dlg" style="padding-top:150px">
+        <div class="c">
+          <div class="m"><b>Wiederholung geändert</b>Gilt ab Do., 19. Nov. Ein geplanter Block liegt künftig an einem Tag ohne Termin der Serie: Do., 26. Nov., 09:00 bis 10:00.</div>
+          <div class="a s">Sichern, Block behalten</div>
+          <div class="a d">Sichern und Block löschen</div>
+        </div>
+        <div class="c"><div class="a s">Abbrechen</div></div>
+      </div>
+    </div>
+    <p class="pc">Ohne betroffene Blöcke wird ohne Rückfrage gesichert. Ob die zweite Schaltfläche überhaupt angeboten wird, ist eine offene Frage (siehe unten, Frage 2).</p>
+  </div>
+
+  <div>
+    <p class="label"><span class="code r">RK3</span> <b>Regel aus Erinnerungen, die Tagwerk nicht darstellen kann</b></p>
+    <div class="phone">
+      <div class="status"><span>9:41</span><span>●●●</span></div>
+      <div class="nb"><span>‹ Zurück</span><b>Wiederholung</b><span>Fertig</span></div>
+      <div class="sumc" style="border-color:rgba(255,159,10,.6)"><small>Regel</small><b>Eigene Regel aus Erinnerungen</b><p>Tagwerk kann diese Regel nicht darstellen und reserviert nur am nächsten Fälligkeitstag (Do., 19. Nov.).</p></div>
+      <div class="hint"><b>Unverändert lassen oder ersetzen</b>Solange hier nichts gewählt wird, bleibt die Regel in Erinnerungen genau so, wie sie ist. Eine Auswahl ersetzt sie vollständig.</div>
+      <div class="chips" style="margin:6px 2px 10px"><span class="chip">Nie</span><span class="chip">Täglich</span><span class="chip">Werktags</span><span class="chip">Wochenende</span><span class="chip">Wöchentlich</span><span class="chip">Alle 2 Wochen</span><span class="chip">Monatlich</span><span class="chip">Jährlich</span></div>
+    </div>
+    <p class="pc">Betrifft zum Beispiel mehrere Tage des Monats oder Regeln mit mehreren Bedingungen. Tagwerk schreibt die Regel nur, wenn sie im Editor geändert wurde.</p>
+  </div>
+
+  <div>
+    <p class="label"><span class="code r">RK3</span> <b>„Neue Aufgabe“ je Quelle</b> (hell)</p>
+    <div class="phone light">
+      <div class="status"><span>9:41</span><span>●●●</span></div>
+      <div class="nb"><span>Abbrechen</span><b>Neue Aufgabe</b><span>Hinzufügen</span></div>
+      <div class="sec">Erinnerung</div>
+      <div class="grp">
+        <div class="rw"><span>Fällig</span><span class="tg on"></span></div>
+        <div class="rw"><span>↻ Wiederholen<small>Jeden Werktag (Mo bis Fr)</small></span><span class="v ch"></span></div>
+      </div>
+      <div class="ftr">Wird als Regel in Erinnerungen gespeichert und ist dort ebenfalls sichtbar.</div>
+      <div class="sec">Lokal (Stufe 2)</div>
+      <div class="grp">
+        <div class="rw"><span>Fällig</span><span class="tg on"></span></div>
+        <div class="rw"><span>↻ Wiederholen<small>Alle 3 Tage</small></span><span class="v ch"></span></div>
+      </div>
+      <div class="ftr">Nur in Tagwerk. Beim Abhaken rückt die Aufgabe auf den nächsten Termin.</div>
+      <div class="sec">GitHub-Issue</div>
+      <div class="grp">
+        <div class="rw"><span>Fällig</span><span class="tg on"></span></div>
+        <div class="rw"><span style="color:var(--sub)">Wiederholen<small>GitHub-Issues wiederholen sich nicht</small></span><span class="v">–</span></div>
+      </div>
+      <div class="ftr">Wurde vor dem Wechsel auf „GitHub-Issue“ eine Regel gewählt, wird sie nicht übernommen. Im Editor eines Issues entfällt die Zeile ganz.</div>
+    </div>
+    <p class="pc">Die drei Abschnitte stehen hier nur zum Vergleich untereinander; im Formular ist immer genau eine Quelle gewählt.</p>
+  </div>
+</div>
+
+<div class="box">
+  <h3>Warum RK3 (vorläufige Empfehlung, Freigabe offen)</h3>
+  <ol>
+    <li><b>Die Vorschau prüft die Regel dort, wo Fehler entstehen.</b> „Alle 2 Wochen am Mo und Do“ hängt davon ab, in welcher Woche die Serie beginnt. Fünf konkrete Termine zeigen das sofort. Sie stammen aus derselben Funktion, mit der „Planen“ den Aufwand reserviert, sodass Anzeige und Planung nicht auseinanderlaufen können.</li>
+    <li><b>Der Editor wächst um eine Zeile, nicht um sechs.</b> Der Editor ist bereits lang; RK2 schiebt „Geplant“ aus dem Blick.</li>
+    <li><b>Eine Seite statt zwei.</b> Vorgaben und Regler liegen zusammen; ein Chip stellt die Regler ein, die danach frei geändert werden können. RK1 braucht für dieselbe Regel einen zweiten Seitenwechsel.</li>
+    <li><b>Platz für die Folgen.</b> „Gilt ab …“, betroffene Blöcke, nicht darstellbare Regeln und der Hinweis auf das nötige Fälligkeitsdatum haben einen festen Ort.</li>
+    <li><b>Ein Baustein für beide Formulare.</b> Die Seite hängt nur an einem Regel-Wert und einem Starttag, nicht am Editor.</li>
+  </ol>
+  <p style="margin:8px 0 0"><b>Einschränkung der Empfehlung:</b> Sie beruht auf dem Vergleich der Entwürfe und dem gelesenen Code, nicht auf einem Test mit Nutzern oder am Gerät. Ob die dichte Seite auf einem kleinen iPhone ohne Scrollen bis zur Vorschau reicht, ist ungeprüft.</p>
+</div>
+
+<!-- ===================================================================== -->
+<h2><span class="area n">i</span> Verhalten, Quellen und Grenzen (gilt für RK1 bis RK3)</h2>
+
+<div class="box neutral">
+  <h3>Was beim Ändern einer bestehenden Serie passiert (Vorschlag)</h3>
+  <div class="tablewrap"><table class="sum">
+    <tr><th>Gegenstand</th><th>Verhalten</th><th>Begründung</th></tr>
+    <tr><td>Künftige Termine</td><td>Die neue Regel gilt ab dem aktuellen Fälligkeitsdatum der Erinnerung.</td><td>Eine wiederkehrende Erinnerung ist in EventKit ein einziger Eintrag, dessen Fälligkeit beim Abhaken weiterrückt (im Entwurf zu Phase 2b, §13.3, als am Simulator geprüft vermerkt). Es gibt keine einzelnen Vorkommen und deshalb keine Wahl „nur dieser / alle künftigen“ wie bei Terminen.</td></tr>
+    <tr><td>Vergangene Tage</td><td>Bleiben unberührt.</td><td>Erledigte Vorkommen merkt sich Tagwerk je Tag (<code>RecurringOccurrenceDone</code>); die Regel ändert daran nichts.</td></tr>
+    <tr><td>Fälligkeitsdatum</td><td>Passt das aktuelle Datum nicht zur neuen Regel (Beispiel: fällig am Mittwoch, neue Regel „Mo und Do“), schlägt die Seite den nächsten passenden Tag als neues Fälligkeitsdatum vor.</td><td>Sonst zeigt die Aufgabenliste einen Tag, der kein Termin der Serie ist. Wie die Erinnerungen-App mit einem solchen Datum umgeht, ist ungeprüft. Offene Frage 3.</td></tr>
+    <tr><td>Aufwand der Serie</td><td>Bleibt bestehen und gilt an den neuen Tagen.</td><td>Der Aufwand hängt an der Erinnerung und an einem „ab Tag“, nicht an der Regel (<code>RecurringEffortStore.swift:6–9</code>). Tagesabweichungen an Tagen, die keine Termine mehr sind, bleiben gespeichert und wirken nicht mehr.</td></tr>
+    <tr><td>Bereits geplante Blöcke</td><td>Bleiben im Kalender. Liegt ein künftiger Block an einem Tag ohne Termin der Serie, nennt die Rückfrage beim Sichern die betroffenen Blöcke.</td><td>Blöcke sind Kalendertermine; ein stilles Löschen oder Verschieben wäre ein Eingriff in den Kalender ohne Auftrag. Ein Block darf außerdem bewusst vor dem Termin liegen: Für die Anrechnung zählt ein Zeitfenster vor dem Vorkommen (<code>AIPlanning.swift:1048–1064</code>).</td></tr>
+    <tr><td>„Für heute“ eingeplant</td><td>Bleibt bestehen.</td><td>Die Tageszuordnung ist eine Entscheidung des Nutzers für einen Tag, unabhängig von der Regel.</td></tr>
+    <tr><td>Wiederholung entfernen („Nie“)</td><td>Die Erinnerung wird eine einmalige Aufgabe mit ihrem aktuellen Fälligkeitsdatum; der reservierte Aufwand entfällt.</td><td>Ohne Regel gibt es keine Serie mehr; das Planungsmodell erkennt Serien allein an der Regel (<code>PlanningModel.swift:212</code>).</td></tr>
+    <tr><td>„Fällig“ ausschalten</td><td>Entfernt auch die Wiederholung, mit Hinweis.</td><td>EventKit verlangt für eine wiederkehrende Erinnerung ein Fälligkeitsdatum (API-Beschreibung); auch Tagwerk liest ohne Datum keine Regel (<code>EventKitGateway.swift:183</code>).</td></tr>
+  </table></div>
+</div>
+
+<div class="box neutral">
+  <h3>Quellen im Vergleich</h3>
+  <div class="tablewrap"><table class="sum">
+    <tr><th>Quelle</th><th>Heute</th><th>Mit dieser Funktion</th><th>Was dafür nötig ist</th></tr>
+    <tr><td><b>Erinnerungen</b></td><td>Regel wird gelesen (nur die erste), nicht gezeigt, nicht geschrieben.</td><td>Anlegen, Ändern, Entfernen. Die Regel ist danach auch in der Erinnerungen-App sichtbar.</td><td>Schreibweg in der EventKit-Schicht, Regel im Aufgabenmodell, Hin- und Rückabbildung.</td></tr>
+    <tr><td><b>Lokal</b></td><td>Keine Wiederholung möglich.</td><td>Stufe 2: Regel in Tagwerk gespeichert; Abhaken rückt die Fälligkeit auf den nächsten Termin.</td><td>Neues optionales Feld, Weiterrücken beim Abhaken samt „Rückgängig“, Zählung in der Wochenrückschau, Planungsmodell von „nur Erinnerungen“ auf alle Quellen verallgemeinern. Deutlich größer als der Teil für Erinnerungen.</td></tr>
+    <tr><td><b>GitHub</b></td><td>Keine Wiederholung.</td><td>Unverändert. Zeile entfällt im Editor; in „Neue Aufgabe“ ist sie deaktiviert.</td><td>Nichts. GitHub-Issues haben kein Feld für Wiederholungen; eine nur in Tagwerk gespeicherte Regel für ein Issue wäre eine eigene Funktion und ist hier nicht vorgesehen.</td></tr>
+  </table></div>
+</div>
+
+<div class="box warn">
+  <h3>Grenzen von EventKit und des Kernmodells</h3>
+  <p style="margin:0 0 6px">Kennzeichnung: <span class="st code">Code</span> im Repository nachgelesen · <span class="st doc">API</span> laut Beschreibung der Schnittstelle, nicht am Gerät geprüft · <span class="st open">ungeprüft</span> Annahme, vor dem Bau am Gerät zu klären.</p>
+  <div class="tablewrap"><table class="sum">
+    <tr><th>Punkt</th><th>Stand</th><th>Folge für den Entwurf</th></tr>
+    <tr><td>Häufigkeiten: täglich, wöchentlich, monatlich, jährlich, jeweils mit Intervall</td><td><span class="st doc">API</span></td><td>Stündliche Regeln gibt es in der Schnittstelle nicht. Wie eine in der Erinnerungen-App stündlich angelegte Erinnerung gelesen wird, ist ungeprüft; sie bleibt „nicht darstellbar“.</td></tr>
+    <tr><td>Ende: Datum oder Anzahl, nicht beides</td><td><span class="st doc">API</span></td><td>Die Auswahl „Nie / Bis Datum / Nach Anzahl“ bildet das genau ab.</td></tr>
+    <tr><td>Wie die Erinnerungen-App ein Ende „nach Anzahl“ anzeigt und ob die Anzahl beim Abhaken mitgezählt wird</td><td><span class="st open">ungeprüft</span></td><td>Tagwerk zählt die Anzahl ab dem aktuellen Fälligkeitsdatum (<code>Recurrence.swift:28–47</code>). Rückt die Fälligkeit weiter, ohne dass die Anzahl sinkt, liefe die Serie in Tagwerk zu lang. Vor dem Bau zu prüfen; sonst „Nach Anzahl“ für Erinnerungen weglassen (offene Frage 4).</td></tr>
+    <tr><td>Wiederkehrende Erinnerung braucht ein Fälligkeitsdatum</td><td><span class="st doc">API</span> <span class="st code">Code</span></td><td>Die Seite setzt das Datum auf den ersten Termin, wenn keines gewählt ist.</td></tr>
+    <tr><td>Mehrere Regeln je Erinnerung</td><td><span class="st code">Code</span> <span class="st open">ungeprüft</span></td><td>Tagwerk liest nur die erste Regel (<code>EventKitGateway.swift:183</code>). Ob Erinnerungen mehr als eine Regel tragen können, ist ungeprüft. Beim Schreiben ersetzt Tagwerk alle Regeln durch eine, aber nur nach einer Änderung im Editor.</td></tr>
+    <tr><td>„2. Dienstag im Monat“</td><td><span class="st doc">API</span> <span class="st open">ungeprüft</span></td><td>Die Schnittstelle kennt zwei Schreibweisen (Wochentag mit Wochennummer oder Wochentag mit Position). Welche die Erinnerungen-App selbst erzeugt und korrekt anzeigt, ist ungeprüft. Tagwerk muss beide lesen und eine schreiben.</td></tr>
+    <tr><td>Monatlich am 29., 30. oder 31.</td><td><span class="st code">Code</span> <span class="st open">ungeprüft</span></td><td>Tagwerk lässt Monate ohne diesen Tag aus (<code>Recurrence.swift:57–60</code>). Ob EventKit dasselbe tut, ist ungeprüft. Die Seite zeigt deshalb einen Hinweis, wenn der Tag größer als 28 ist. „Letzter Tag des Monats“ ist nicht Teil dieses Entwurfs (offene Frage 5).</td></tr>
+    <tr><td>Jährlich</td><td><span class="st code">Code</span></td><td>Fehlt im Kernmodell und wird heute zu „nicht darstellbar“. Muss ergänzt werden, sonst kann Tagwerk die eigene Regel nach dem Sichern nicht wieder lesen.</td></tr>
+    <tr><td>Zeitzone des Enddatums</td><td><span class="st open">ungeprüft</span></td><td>Gelesen wird das Enddatum als Kalendertag in der Zeitzone des Geräts (<code>EventKitGateway.swift:196</code>). Geschrieben werden muss so, dass derselbe Tag wieder herauskommt; durch einen Hin-und-zurück-Test abzusichern.</td></tr>
+    <tr><td>Überfällige Serien</td><td><span class="st code">Code</span></td><td>Die Berechnung beginnt beim aktuellen Fälligkeitsdatum, auch wenn es in der Vergangenheit liegt. Das ist heutiges Verhalten und bleibt unverändert.</td></tr>
+  </table></div>
+</div>
+
+<div class="box neutral">
+  <h3>Klartext der Regel (Beispiele für die Zusammenfassungszeile)</h3>
+  <div class="tablewrap"><table class="sum">
+    <tr><th>Regel</th><th>Text</th></tr>
+    <tr><td>täglich</td><td>Jeden Tag</td></tr>
+    <tr><td>alle 3 Tage</td><td>Alle 3 Tage</td></tr>
+    <tr><td>wöchentlich, Mo bis Fr</td><td>Jeden Werktag (Mo bis Fr)</td></tr>
+    <tr><td>wöchentlich, Sa und So</td><td>Jedes Wochenende (Sa und So)</td></tr>
+    <tr><td>alle 2 Wochen, Mo und Do</td><td>Alle 2 Wochen am Mo und Do</td></tr>
+    <tr><td>monatlich, Tag 18</td><td>Jeden Monat am 18.</td></tr>
+    <tr><td>monatlich, 3. Mittwoch</td><td>Jeden Monat am 3. Mittwoch</td></tr>
+    <tr><td>jährlich</td><td>Jedes Jahr am 18. November</td></tr>
+    <tr><td>mit Enddatum</td><td>…, bis 31. März 2027</td></tr>
+    <tr><td>mit Anzahl</td><td>…, 12 Mal</td></tr>
+    <tr><td>nicht darstellbar</td><td>Eigene Regel aus Erinnerungen</td></tr>
+  </table></div>
+  <p style="margin:8px 0 0">Vorgaben: „Werktags“ = wöchentlich Mo bis Fr, „Wochenende“ = wöchentlich Sa und So, „Alle 2 Wochen“ = Intervall 2 am Wochentag des Fälligkeitsdatums. Ein Chip ist markiert, wenn die Regel genau der Vorgabe entspricht.</p>
+</div>
+
+<div class="box warn">
+  <h3>Offene Fragen an den Nutzer</h3>
+  <ol>
+    <li><b>Umfang:</b> Zuerst nur Erinnerungen (Stufe 1) und lokale Aufgaben danach (Stufe 2), oder beides in einem Schritt? Stufe 2 braucht zusätzlich das Weiterrücken beim Abhaken, „Rückgängig“ und die Zählung in der Wochenrückschau.</li>
+    <li><b>Geplante Blöcke:</b> Reicht der Hinweis „Block bleibt im Kalender“, oder soll „Sichern und Block löschen“ angeboten werden?</li>
+    <li><b>Fälligkeitsdatum:</b> Soll Tagwerk das Datum beim Ändern der Wochentage automatisch auf den nächsten passenden Tag setzen, es nur vorschlagen, oder nie anfassen?</li>
+    <li><b>Ende „Nach Anzahl“:</b> Wird es gebraucht? Für Erinnerungen hängt es an einem ungeprüften Verhalten von EventKit; „Nie“ und „Bis Datum“ sind unkritisch.</li>
+    <li><b>Monatsregeln:</b> Genügen „am Tag X“ und „am n-ten Wochentag“, oder werden „letzter Tag des Monats“, „letzter Freitag“ oder mehrere Tage im Monat gebraucht?</li>
+    <li><b>„Werktags“:</b> Fest Mo bis Fr, oder die Arbeitstage aus den Einstellungen von Tagwerk?</li>
+    <li><b>Nicht darstellbare Regeln:</b> Ersetzen mit Hinweis erlauben (wie gezeigt), oder nur lesend anzeigen und auf die Erinnerungen-App verweisen?</li>
+    <li><b>Aufwand beim Anlegen:</b> Soll „Neue Aufgabe“ für eine Serie gleich nach dem Aufwand je Tag fragen? Heute hat das Formular kein Aufwandsfeld.</li>
+    <li><b>Assistent:</b> Soll der Assistent Wiederholungen beim Anlegen und Ändern von Aufgaben setzen dürfen, oder bleibt das zunächst den Formularen vorbehalten?</li>
+  </ol>
+</div>
+
+</body>
+</html>

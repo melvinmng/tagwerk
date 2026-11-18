@@ -26,7 +26,9 @@ struct NewTaskSheet: View {
     @State private var catalog: GitHubCatalog?
     @State private var repository: String?
     @State private var projectIDs: Set<String> = []
+    @State private var projectsEdited = false
     @State private var gitHubError: String?
+    @State private var recurrence: Recurrence?
 
     private var gitHub: GitHubTaskProvider? { model.provider(for: .github) as? GitHubTaskProvider }
 
@@ -70,28 +72,23 @@ struct NewTaskSheet: View {
                             Text("Wählen …").tag(String?.none)
                             ForEach(catalog?.repositories ?? [], id: \.self) { Text($0).tag(Optional($0)) }
                         }
+                        ProjectSelectionRow(projects: (catalog?.projects ?? []).map { (id: $0.id, title: $0.title) },
+                                            selection: $projectIDs, edited: $projectsEdited)
                     } footer: {
-                        Text(gitHubError ?? String(localized: "Das Issue wird dir zugewiesen."))
-                    }
-                    Section("Projects") {
-                        ForEach(catalog?.projects ?? []) { project in
-                            Button {
-                                if projectIDs.contains(project.id) { projectIDs.remove(project.id) } else { projectIDs.insert(project.id) }
-                            } label: {
-                                HStack {
-                                    Text(project.title).foregroundStyle(.primary)
-                                    Spacer()
-                                    if projectIDs.contains(project.id) { Image(systemName: "checkmark").foregroundStyle(.tint) }
-                                }
-                            }
+                        if let gitHubError {
+                            Text(gitHubError)
+                        } else if repository != nil, projectIDs.isEmpty, !(catalog?.projects.isEmpty ?? true) {
+                            Text("Mindestens ein Projekt wählen. Das Issue wird dir zugewiesen.")
+                        } else {
+                            Text("Das Issue wird dir zugewiesen.")
                         }
                     }
                     .task(id: target) { await loadCatalog() }
                     .onChange(of: repository) { _, repo in
                         // Preselect the projects linked to the chosen repository.
                         guard let repo, let catalog else { return }
-                        let linked = catalog.projectIDs(linkedTo: repo)
-                        if !linked.isEmpty { projectIDs = Set(linked) }
+                        projectIDs = ProjectSelection.preselect(current: projectIDs, linked: Set(catalog.projectIDs(linkedTo: repo)),
+                                                                edited: projectsEdited)
                     }
                 }
 
@@ -113,7 +110,16 @@ struct NewTaskSheet: View {
                             .environment(\.calendar, model.calendar)
                             .environment(\.timeZone, model.calendar.timeZone)
                     }
+                    recurrenceRow
                     PriorityPicker(priority: $priority, choices: TaskEditorModel.priorityChoices(for: target))
+                } footer: {
+                    if target == .reminders, recurrence != nil {
+                        Text("Wird als Regel in Erinnerungen gespeichert und ist dort ebenfalls sichtbar.")
+                    }
+                }
+                .onChange(of: hasDue) { _, isOn in
+                    // A repeating reminder needs a due date (plan §6, rule 3).
+                    if !isOn { recurrence = nil }
                 }
             }
             .navigationTitle("Neue Aufgabe")
@@ -133,6 +139,8 @@ struct NewTaskSheet: View {
                 if !TaskEditorModel.priorityChoices(for: newTarget).contains(priority) {
                     priority = newTarget == .reminders ? .p4 : nil
                 }
+                // A rule chosen before switching to a source that cannot repeat is not taken over (mockup RK3).
+                if RecurrenceAvailability.forNewTask(newTarget) != .available { recurrence = nil }
             }
         }
     }
@@ -144,7 +152,10 @@ struct NewTaskSheet: View {
             due: hasDue ? DueDate(date: dueDate, includeTime: hasTime && target != .github, calendar: model.calendar) : nil,
             priority: priority,
             containerID: target == .reminders ? listID : target == .github ? repository : nil,
-            subContainerIDs: target == .github ? (catalog?.projects ?? []).map(\.id).filter(projectIDs.contains) : []
+            subContainerIDs: target == .github ? (catalog?.projects ?? []).map(\.id).filter(projectIDs.contains) : [],
+            recurrence: RecurrenceAvailability.draftRecurrence(
+                recurrence, target: target,
+                due: hasDue ? DueDate(date: dueDate, includeTime: false, calendar: model.calendar) : nil)
         )
         await model.create(draft, in: target)
         dismiss()
@@ -152,6 +163,42 @@ struct NewTaskSheet: View {
 }
 
 extension NewTaskSheet {
+    /// "Wiederholen": the recurrence page for reminders; local tasks (stage 2) and GitHub issues show why not.
+    @ViewBuilder private var recurrenceRow: some View {
+        let dueDay = PlanDay(date: dueDate, calendar: model.calendar)
+        switch RecurrenceAvailability.forNewTask(target) {
+        case .available:
+            NavigationLink {
+                RecurrenceEditorView(
+                    original: recurrence, start: dueDay, dueDay: hasDue ? dueDay : nil, calendar: model.calendar,
+                    onChange: { newRecurrence in
+                        recurrence = newRecurrence
+                        if newRecurrence != nil, !hasDue { hasDue = true }
+                    },
+                    onMoveDue: { day in
+                        let time = model.calendar.dateComponents([.hour, .minute], from: dueDate)
+                        dueDate = model.calendar.date(byAdding: time, to: day.startDate(in: model.calendar)) ?? dueDate
+                    }
+                )
+            } label: {
+                LabeledContent {
+                    Text(RecurrenceAvailability.draftRecurrence(recurrence, target: target, due: DueDate(year: dueDay.year, month: dueDay.month, day: dueDay.day))
+                        .map { RecurrenceText.summary($0, calendar: model.calendar) } ?? String(localized: "Nie"))
+                } label: {
+                    Label("Wiederholen", systemImage: "repeat")
+                }
+            }
+        case .unavailable(let reason):
+            LabeledContent {
+                Text(reason)
+            } label: {
+                Label("Wiederholen", systemImage: "repeat")
+            }
+            .foregroundStyle(.secondary)
+            .accessibilityHint(reason)
+        }
+    }
+
     private func label(for source: TaskSource) -> String {
         switch source {
         case .local: String(localized: "Lokal")

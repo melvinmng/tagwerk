@@ -21,6 +21,8 @@ public struct TaskEdit: Sendable, Equatable {
     public var containerID: FieldChange<String> = .unchanged
     public var isCompleted: FieldChange<Bool> = .unchanged
     public var labels: FieldChange<[String]> = .unchanged
+    /// Written only when `.set`; `.set(nil)` removes the repetition. Sources never rewrite an unchanged rule.
+    public var recurrence: FieldChange<Recurrence?> = .unchanged
     /// Sub-containers (e.g. GitHub Projects) that field changes apply to; `nil` means all.
     public var targetSubContainerIDs: Set<String>? = nil
 
@@ -29,7 +31,7 @@ public struct TaskEdit: Sendable, Equatable {
     public var isEmpty: Bool {
         title.isUnchanged && notes.isUnchanged && due.isUnchanged && priority.isUnchanged
             && estimateMinutes.isUnchanged && containerID.isUnchanged && isCompleted.isUnchanged
-            && labels.isUnchanged
+            && labels.isUnchanged && recurrence.isUnchanged
     }
 
     /// Builds an edit that sets exactly the fields in which `edited` differs from `original`.
@@ -43,6 +45,17 @@ public struct TaskEdit: Sendable, Equatable {
         if edited.container.id != original.container.id { edit.containerID = .set(edited.container.id) }
         if edited.isCompleted != original.isCompleted { edit.isCompleted = .set(edited.isCompleted) }
         if edited.labels != original.labels { edit.labels = .set(edited.labels ?? []) }
+        if !sameSeries(original.recurrence, edited.recurrence) { edit.recurrence = .set(edited.recurrence) }
         return edit
+    }
+
+    /// Compares rule, end and count but not `start`: the start follows the due date, and comparing it
+    /// would rewrite (and, for unreadable rules, destroy) a rule whenever only the due date moved.
+    private static func sameSeries(_ lhs: Recurrence?, _ rhs: Recurrence?) -> Bool {
+        switch (lhs, rhs) {
+        case (nil, nil): true
+        case let (lhs?, rhs?): lhs.rule == rhs.rule && lhs.end == rhs.end && lhs.count == rhs.count
+        default: false
+        }
     }
 }

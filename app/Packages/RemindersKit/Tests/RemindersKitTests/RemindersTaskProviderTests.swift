@@ -150,6 +150,111 @@ struct RemindersTaskProviderTests {
 }
 
 @MainActor
+struct RemindersTaskProviderRecurrenceTests {
+    let store = FakeReminderStore()
+    let due = DueDate(year: 2026, month: 11, day: 19)
+    var weekly: Recurrence { Recurrence(rule: .weekly(interval: 1, weekdays: [5]), start: PlanDay(due), end: nil, count: nil) }
+    var everySecondDay: Recurrence { Recurrence(rule: .daily(interval: 2), start: PlanDay(due), end: nil, count: 5) }
+    let itemID = TaskID(source: .reminders, rawValue: "s")
+
+    init() {
+        store.listInfos = [ListInfo(id: "privat", title: "Privat", colorHex: nil, kind: .local)]
+        store.records = [
+            "s": ReminderRecord(id: "s", title: "Serie", notes: nil, due: due, ekPriority: 0, isCompleted: false,
+                                listID: "privat", lastModified: Date(timeIntervalSince1970: 1), recurrence: weekly),
+            "plain": ReminderRecord(id: "plain", title: "Ohne Datum", notes: nil, due: nil, ekPriority: 0, isCompleted: false,
+                                    listID: "privat", lastModified: Date(timeIntervalSince1970: 1)),
+        ]
+    }
+
+    private var provider: RemindersTaskProvider { RemindersTaskProvider(store: store, selectedListIDs: { nil }) }
+
+    private func edit(_ change: (inout TaskEdit) -> Void) -> TaskEdit {
+        var edit = TaskEdit()
+        change(&edit)
+        return edit
+    }
+
+    @Test func apply_titleOnly_passesUnchangedRecurrence() async throws {
+        _ = try await provider.apply(edit { $0.title = .set("Neu") }, to: itemID, expectedVersion: nil)
+        #expect(store.recurrenceChanges == [.unchanged])
+        #expect(store.records["s"]?.recurrence == weekly)
+    }
+
+    @Test func apply_recurrence_replacesRule() async throws {
+        let saved = try await provider.apply(edit { $0.recurrence = .set(everySecondDay) }, to: itemID, expectedVersion: nil)
+        #expect(store.recurrenceChanges == [.set(everySecondDay)])
+        #expect(saved.recurrence == everySecondDay)
+    }
+
+    @Test func apply_removingRecurrence_setsNil() async throws {
+        let saved = try await provider.apply(edit { $0.recurrence = .set(nil) }, to: itemID, expectedVersion: nil)
+        #expect(store.recurrenceChanges == [.set(nil)])
+        #expect(saved.recurrence == nil)
+    }
+
+    @Test func apply_recurrenceWithoutDue_fails() async {
+        let plain = TaskID(source: .reminders, rawValue: "plain")
+        await #expect(throws: TaskWriteError.self) {
+            try await provider.apply(edit { $0.recurrence = .set(everySecondDay) }, to: plain, expectedVersion: nil)
+        }
+        await #expect(throws: TaskWriteError.self) {
+            try await provider.apply(edit {
+                $0.recurrence = .set(everySecondDay)
+                $0.due = .set(nil)
+            }, to: itemID, expectedVersion: nil)
+        }
+        #expect(store.saveCount == 0)
+    }
+
+    @Test func apply_invalidRecurrence_fails() async {
+        let invalid = Recurrence(rule: .daily(interval: 0), start: PlanDay(due), end: nil, count: nil)
+        await #expect(throws: TaskWriteError.self) {
+            try await provider.apply(edit { $0.recurrence = .set(invalid) }, to: itemID, expectedVersion: nil)
+        }
+        #expect(store.saveCount == 0)
+    }
+
+    @Test func apply_clearingDue_clearsRecurrence() async throws {
+        let saved = try await provider.apply(edit { $0.due = .set(nil) }, to: itemID, expectedVersion: nil)
+        #expect(store.recurrenceChanges == [.set(nil)])
+        #expect(saved.recurrence == nil)
+    }
+
+    /// Plan §6 rule 1: a rule Tagwerk cannot express survives a due-date change untouched.
+    @Test func apply_unsupportedRule_dueChangeOnly_passesUnchanged() async throws {
+        store.records["s"]?.recurrence = Recurrence(rule: .unsupported, start: PlanDay(due), end: nil, count: nil)
+        _ = try await provider.apply(edit { $0.due = .set(DueDate(year: 2026, month: 11, day: 26)) }, to: itemID, expectedVersion: nil)
+        #expect(store.recurrenceChanges == [.unchanged])
+        #expect(store.records["s"]?.recurrence?.rule == .unsupported)
+    }
+
+    /// `.unsupported` is never written: setting it leaves the reminder's rules alone.
+    @Test func apply_setUnsupported_leavesRulesUntouched() async throws {
+        let unsupported = Recurrence(rule: .unsupported, start: PlanDay(due), end: nil, count: nil)
+        _ = try await provider.apply(edit {
+            $0.recurrence = .set(unsupported)
+            $0.title = .set("Neu")
+        }, to: itemID, expectedVersion: nil)
+        #expect(store.recurrenceChanges == [.unchanged])
+        #expect(store.records["s"]?.recurrence == weekly)
+    }
+
+    @Test func create_withRecurrence() async throws {
+        let created = try await provider.create(TaskDraft(title: "Neu", due: due, recurrence: weekly))
+        #expect(store.createdRecurrences == [weekly])
+        #expect(created.recurrence == weekly)
+    }
+
+    @Test func create_recurrenceWithoutDue_fails() async {
+        await #expect(throws: TaskWriteError.self) {
+            try await provider.create(TaskDraft(title: "Neu", recurrence: weekly))
+        }
+        #expect(store.createdRecurrences.isEmpty)
+    }
+}
+
+@MainActor
 final class MemoryEstimateStore: EstimateStore {
     private var values: [String: Int] = [:]
     func minutes(for reminderID: String) -> Int? { values[reminderID] }
