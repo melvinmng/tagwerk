@@ -19,7 +19,7 @@ public struct PlanInputEvent: Sendable, Hashable {
     public var allDay: Bool
     /// Counts as occupied time (not free, not declined, not linked to a task).
     public var busy: Bool
-    /// From a deadline calendar.
+    /// From a deadline calendar or marked as a deadline.
     public var deadline: Bool
     /// Linked to a task: it counts as that task's planned load.
     public var linkedToTask: Bool
@@ -50,7 +50,8 @@ public struct PlanInputDay: Sendable, Hashable {
     /// Builds a day from calendar events; occupied time and capacity come from `busyIntervals` and `capacity`.
     public init(day: PlanDay, hours: WorkHours?, lunch: Range<Int>?, events: [CalendarEvent], linkedEventIDs: Set<String>,
                 deadlineCalendarIDs: Set<String>, blocks: [Range<Int>], recurringMinutes: Int, plannedMinutes: Int,
-                bufferMinutes: Int, calendar: Calendar, countedTaskMinutes: [String: Int] = [:]) {
+                bufferMinutes: Int, calendar: Calendar, countedTaskMinutes: [String: Int] = [:],
+                deadlineEventIDs: Set<String> = []) {
         self.day = day
         self.countedTaskMinutes = countedTaskMinutes
         self.hours = hours
@@ -81,7 +82,7 @@ public struct PlanInputDay: Sendable, Hashable {
                     end: event.isAllDay ? nil : min(dayLength, Int(event.end.timeIntervalSince(dayStart) / 60)),
                     allDay: event.isAllDay,
                     busy: event.isBusy && !event.isAllDay && !linked,
-                    deadline: deadlineCalendarIDs.contains(event.calendarID),
+                    deadline: deadlineCalendarIDs.contains(event.calendarID) || deadlineEventIDs.contains(event.id),
                     linkedToTask: linked
                 )
             }

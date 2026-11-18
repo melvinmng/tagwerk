@@ -153,6 +153,19 @@ struct WidgetSnapshotTests {
         #expect(snapshot.days[0].deadlineCount == 1)
     }
 
+    @Test func markedEventCountsAndShowsAsDeadlineRow() {
+        let exam = event("Klausur Statistik", 10, 12)
+        let tutorial = event("Tutorium", 14, 15)
+        let deadlines = importantDeadlines(tasks: [], events: [exam, tutorial], deadlineCalendarIDs: [], markedEventIDs: [exam.id],
+                                           in: today...today, calendar: calendar)
+        let snapshot = WidgetSnapshot.make(
+            createdAt: .now,
+            days: [SnapshotDayInput(day: today, events: [exam, tutorial], blocks: [], deadlines: deadlines, colorHex: { _ in nil })],
+            todayIntake: nil, showsNutrition: true, calendar: calendar)
+        #expect(snapshot.days[0].entries.map(\.kind) == [.deadline, .event])
+        #expect(snapshot.days[0].deadlineCount == 1)
+    }
+
     @Test func builder_eventAcrossMidnight_uniqueIDsPerDay() {
         let night = CalendarEvent(id: "night", externalID: nil, calendarID: "cal", title: "Nachtschicht",
                                   start: instant(2026, 11, 18, 22, 0, in: calendar), end: instant(2026, 11, 19, 6, 0, in: calendar),

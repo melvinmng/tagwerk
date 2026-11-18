@@ -80,4 +80,67 @@ struct ImportantDeadlineTests {
         let items = [task("Später", priority: .p1, due: DueDate(year: 2026, month: 12, day: 5))]
         #expect(importantDeadlines(tasks: items, events: [], deadlineCalendarIDs: [], in: range, calendar: calendar).isEmpty)
     }
+
+    // MARK: Marked events (plan deadline-marking, Task 3)
+
+    private func timetable(_ id: String, _ title: String, start: Date, end: Date, allDay: Bool = false,
+                           calendarID: String = "timetable") -> CalendarEvent {
+        CalendarEvent(id: id, externalID: nil, calendarID: calendarID, title: title, start: start, end: end,
+                      isAllDay: allDay, url: nil, isBusy: true, version: "1")
+    }
+
+    @Test func markedEventBecomesDeadline() {
+        let exam = timetable("exam", "Klausur Statistik", start: instant(2026, 11, 27, 10, 0), end: instant(2026, 11, 27, 12, 0))
+        let allDay = timetable("day", "Abgabe Essay", start: instant(2026, 11, 24), end: instant(2026, 11, 25), allDay: true)
+        let result = importantDeadlines(tasks: [], events: [exam, allDay], deadlineCalendarIDs: [], markedEventIDs: ["exam", "day"],
+                                        in: range, calendar: calendar)
+        #expect(result.map(\.title) == ["Abgabe Essay", "Klausur Statistik"])
+        #expect(result.allSatisfy { $0.kind == .markedEvent })
+        #expect(result[1].eventID == "exam")
+        #expect(result[1].time == exam.start)
+        #expect(result[1].calendarID == "timetable")
+        #expect(result[0].time == nil)
+    }
+
+    @Test func markedEventInDeadlineCalendarAppearsOnce() {
+        let exam = timetable("exam", "Klausur", start: instant(2026, 11, 27, 10, 0), end: instant(2026, 11, 27, 12, 0), calendarID: "uni")
+        let result = importantDeadlines(tasks: [], events: [exam, exam], deadlineCalendarIDs: ["uni"], markedEventIDs: ["exam"],
+                                        in: range, calendar: calendar)
+        #expect(result.count == 1)
+        #expect(result.first?.kind == .deadlineCalendar)
+    }
+
+    @Test func markedOccurrenceOfSeriesMarksOnlyThatOccurrence() {
+        let first = timetable("series|1", "Vorlesung", start: instant(2026, 11, 23, 8, 15), end: instant(2026, 11, 23, 9, 45))
+        let second = timetable("series|2", "Vorlesung", start: instant(2026, 11, 30, 8, 15), end: instant(2026, 11, 30, 9, 45))
+        let result = importantDeadlines(tasks: [], events: [first, second], deadlineCalendarIDs: [], markedEventIDs: ["series|2"],
+                                        in: range, calendar: calendar)
+        #expect(result.map(\.eventID) == ["series|2"])
+    }
+
+    @Test func unmarkedEventsStayOrdinary() {
+        let lecture = timetable("lecture", "Vorlesung", start: instant(2026, 11, 23, 8, 15), end: instant(2026, 11, 23, 9, 45))
+        #expect(importantDeadlines(tasks: [], events: [lecture], deadlineCalendarIDs: [], markedEventIDs: ["other"],
+                                   in: range, calendar: calendar).isEmpty)
+    }
+
+    @Test func preparationKeyIsStableForEpicsAndEvents() {
+        let epic = EpicInfo(id: "E_1", number: 1, title: "Phase 2", due: DueDate(year: 2026, month: 11, day: 25), isEpic: true)
+        let fromParent = importantDeadlines(tasks: [task("Sub", priority: .p3, due: nil, epic: epic)], events: [],
+                                            deadlineCalendarIDs: [], in: range, calendar: calendar)
+        let assigned = TaskItem(id: TaskID(source: .github, rawValue: "E_1"), title: "Phase 2", notes: nil,
+                                due: DueDate(year: 2026, month: 11, day: 25), priority: .p2, estimateMinutes: nil,
+                                isCompleted: false, container: TaskContainer(id: "r", name: "r", colorHex: nil), url: nil,
+                                version: "1", editableFields: [], isEpic: true)
+        let fromTask = importantDeadlines(tasks: [assigned], events: [], deadlineCalendarIDs: [], in: range, calendar: calendar)
+        #expect(fromParent.first?.preparationKey == "epic:E_1")
+        #expect(fromTask.first?.preparationKey == "epic:E_1")
+        let p1 = importantDeadlines(tasks: [task("Angebot", priority: .p1, due: DueDate(year: 2026, month: 11, day: 19))], events: [],
+                                    deadlineCalendarIDs: [], in: range, calendar: calendar)
+        #expect(p1.first?.preparationKey == "task:github:Angebot")
+        let exam = timetable("exam", "Klausur", start: instant(2026, 11, 27, 10, 0), end: instant(2026, 11, 27, 12, 0))
+        let marked = importantDeadlines(tasks: [], events: [exam], deadlineCalendarIDs: [], markedEventIDs: ["exam"],
+                                        in: range, calendar: calendar)
+        #expect(marked.first?.preparationKey == "event:exam")
+    }
 }

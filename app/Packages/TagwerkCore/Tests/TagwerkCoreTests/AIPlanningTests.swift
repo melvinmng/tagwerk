@@ -528,6 +528,15 @@ struct AIPlanningTests {
         #expect(result.tasks.first?.important == true)
     }
 
+    @Test func markedEventIsFlaggedAsDeadline() {
+        let day = PlanInputDay(day: today, hours: WorkHours(startMinutes: 540, endMinutes: 1080), lunch: nil,
+                               events: [event("Klausur", 10, to: 12), event("Vorlesung", 14, to: 15)],
+                               linkedEventIDs: [], deadlineCalendarIDs: [], blocks: [], recurringMinutes: 0,
+                               plannedMinutes: 0, bufferMinutes: 0, calendar: calendar, deadlineEventIDs: ["Klausur"])
+        #expect(day.events.map(\.deadline) == [true, false])
+        #expect(day.events[0].busy)
+    }
+
     @Test func planInputDay_linkedEventCountsNotAsBusy() {
         let day = PlanInputDay(day: today, hours: WorkHours(startMinutes: 540, endMinutes: 1080), lunch: nil,
                                events: [event("Linked", 14, to: 15), event("Other", 16, to: 17)],

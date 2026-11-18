@@ -77,9 +77,10 @@ public func isPlaceholderTitle(_ title: String) -> Bool {
 /// Events that may be the same: a placeholder ("Busy" …) next to a real event, or identical titles, each in
 /// another calendar with the same start, end and all-day flag. Nothing is merged without the user's answer
 /// (design §13.15 M1, user decision 2026-11-18). The copy with more information is kept; calendars in
-/// `excluding` (deadline calendars) never take part.
-public func mergeSuggestions(_ events: [CalendarEvent], excluding: Set<String> = []) -> [MergeSuggestion] {
-    let candidates = events.filter { !excluding.contains($0.calendarID) }
+/// `excluding` (deadline calendars) and the events in `excludingEventIDs` (marked as deadlines) never take part.
+public func mergeSuggestions(_ events: [CalendarEvent], excluding: Set<String> = [],
+                             excludingEventIDs: Set<String> = []) -> [MergeSuggestion] {
+    let candidates = events.filter { !excluding.contains($0.calendarID) && !excludingEventIDs.contains($0.id) }
     var result: [MergeSuggestion] = []
     var hidden = Set<String>()
     for event in candidates where !hidden.contains(event.id) {
