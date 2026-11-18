@@ -172,6 +172,16 @@
         }
       }
     },
+    "%@ frei": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ free"
+          }
+        }
+      }
+    },
     "%@ frei von %@": {
       "localizations": {
         "de": {
@@ -204,6 +214,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Log %@ now"
+          }
+        }
+      }
+    },
+    "%@ keine Pause": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No break on %@"
           }
         }
       }
@@ -244,6 +264,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "%@ open"
+          }
+        }
+      }
+    },
+    "%@ planen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plan %@"
           }
         }
       }
@@ -1187,6 +1217,26 @@
         }
       }
     },
+    "%lld von heute": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld from today"
+          }
+        }
+      }
+    },
+    "%lld von heute übrig": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld left from today"
+          }
+        }
+      }
+    },
     "%lld · %@": {
       "localizations": {
         "de": {
@@ -1638,12 +1688,32 @@
         }
       }
     },
+    "Alle auf morgen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All to tomorrow"
+          }
+        }
+      }
+    },
     "Alle bestätigen (%lld)": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Confirm all (%lld)"
+          }
+        }
+      }
+    },
+    "Alle einplanen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Schedule all"
           }
         }
       }
@@ -1734,6 +1804,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "On day %lld of the month"
+          }
+        }
+      }
+    },
+    "An diesem Tag fällig, nicht zugeordnet": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Due this day, not assigned"
           }
         }
       }
@@ -3247,6 +3327,16 @@
         }
       }
     },
+    "Diese Woche": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This week"
+          }
+        }
+      }
+    },
     "Diese Woche · KW %lld": {
       "localizations": {
         "en": {
@@ -3416,6 +3506,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Invitation: the person who invited you sets the time and title."
+          }
+        }
+      }
+    },
+    "Einplanen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Schedule"
           }
         }
       }
@@ -5891,6 +5991,46 @@
         }
       }
     },
+    "Morgen fällig, nicht zugeordnet": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Due tomorrow, not assigned"
+          }
+        }
+      }
+    },
+    "Morgen keine Pause": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No break tomorrow"
+          }
+        }
+      }
+    },
+    "Morgen planen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plan tomorrow"
+          }
+        }
+      }
+    },
+    "Morgen planen mit %lld von heute": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plan tomorrow with %lld from today"
+          }
+        }
+      }
+    },
     "Nach Anzahl": {
       "localizations": {
         "en": {
@@ -6353,12 +6493,32 @@
         }
       }
     },
+    "Nutze „Einplanen“ unten oder im Menü einer Aufgabe.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use “Schedule” below or in a task’s menu."
+          }
+        }
+      }
+    },
     "Nutze „Heute“ unten oder „Einplanen“ im Menü einer Aufgabe.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Use “Today” below or “Schedule” in a task’s menu."
+          }
+        }
+      }
+    },
+    "Nutze „Morgen“ unten oder „Einplanen“ im Menü einer Aufgabe.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use “Tomorrow” below or “Schedule” in a task’s menu."
           }
         }
       }
@@ -6503,6 +6663,22 @@
         }
       }
     },
+    "Pause %@ %@–%@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Pause %1$@ %2$@–%3$@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Break %1$@ %2$@–%3$@"
+          }
+        }
+      }
+    },
     "Pause heute %@–%@": {
       "localizations": {
         "de": {
@@ -6515,6 +6691,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Break today %1$@–%2$@"
+          }
+        }
+      }
+    },
+    "Pause morgen %@–%@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Pause morgen %1$@–%2$@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Break tomorrow %1$@–%2$@"
           }
         }
       }
@@ -8127,6 +8319,16 @@
         }
       }
     },
+    "Von heute übrig": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Left from today"
+          }
+        }
+      }
+    },
     "Vor %lld Tagen": {
       "localizations": {
         "de": {
@@ -8730,6 +8932,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Plan week"
+          }
+        }
+      }
+    },
+    "Woche wählen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose week"
           }
         }
       }
@@ -10280,6 +10492,16 @@
         }
       }
     },
+    "„Einplanen“ legt die Aufgabe für diesen Tag fest; dann lässt sie sich ins Raster ziehen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“Schedule” sets the task for this day; then you can drag it onto the grid."
+          }
+        }
+      }
+    },
     "„Frei“ gilt nur in Tagwerk: Der Termin bleibt im Kalender, zählt aber nicht zur belegten Zeit.": {
       "localizations": {
         "en": {
@@ -10306,6 +10528,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "“Show in Plan” shows today’s calories, water and steps under the date in the “Plan” tab as soon as you’ve logged something. If “Show nutrition in widget” is off, the values and steps aren’t in the widget. They never appear on the Lock Screen."
+          }
+        }
+      }
+    },
+    "„Morgen“ legt die Aufgabe für morgen fest; dann lässt sie sich ins Raster ziehen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“Tomorrow” sets the task for tomorrow; then you can drag it onto the grid."
           }
         }
       }

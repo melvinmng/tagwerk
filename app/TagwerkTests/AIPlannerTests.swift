@@ -38,12 +38,13 @@ struct AIPlannerTests {
         store = SuggestionStore(context: container.mainContext)
     }
 
-    private func make(scope: PlanScope = .day, reminderStore: FakeAccessStore = FakeAccessStore()) async -> (AIPlanner, PlanningModel) {
+    private func make(scope: PlanScope = .day, reminderStore: FakeAccessStore = FakeAccessStore(),
+                      now: @escaping () -> Date = testNow) async -> (AIPlanner, PlanningModel) {
         await taskList.reload()
         let planning = PlanningModel(taskList: taskList, calendarStore: calendarStore, reminderStore: reminderStore,
                                      planStore: planStore, efforts: RecurringEffortStore(context: container.mainContext),
                                      blocks: blocks, settings: settings, marks: EventMarkStore(context: container.mainContext),
-                                     suggestions: store, now: testNow, calendar: calendar)
+                                     suggestions: store, now: now, calendar: calendar)
         planning.scope = scope
         await planning.reload()
         let planner = AIPlanner(responder: responder, model: { "gpt-test" }, planning: planning, store: store)
@@ -733,5 +734,166 @@ extension AIPlannerTests {
         await planner.plan(scope: .day, anchor: today)
         #expect(planner.lastDismissed.isEmpty)
         #expect(planning.suggestionBatches.count == 1)
+    }
+
+    // MARK: Planning tomorrow (plan-tomorrow, step 5)
+
+    private var tomorrow: PlanDay { PlanDay(year: 2026, month: 11, day: 19) }
+
+    /// The JSON the model got in the last planning call.
+    private func lastInputText() -> String {
+        guard case .user(let text)? = responder.calls.last?.input.first else { return "" }
+        return text
+    }
+
+    @Test func planTomorrow_usesRecurringEffortOfPlannedDay() async throws {
+        let reminderStore = FakeAccessStore()
+        reminderStore.accessState = .fullAccess
+        reminderStore.openRecords = [ReminderRecord(id: "k", title: "Training", notes: nil, due: DueDate(year: 2026, month: 11, day: 19),
+                                                    ekPriority: 0, isCompleted: false, listID: "l", lastModified: nil,
+                                                    recurrence: Recurrence(rule: .daily(interval: 1), start: today, end: nil, count: nil))]
+        await taskList.register(FakeTaskProvider(source: .reminders,
+                                                 tasks: [makeTask("k", source: .reminders, due: DueDate(year: 2026, month: 11, day: 19))]))
+        let efforts = RecurringEffortStore(context: container.mainContext)
+        efforts.setForAll(30, reminderID: "k", from: today)
+        efforts.setForDay(90, reminderID: "k", day: tomorrow)
+        let (planner, planning) = await make(reminderStore: reminderStore)
+        planning.anchor = tomorrow
+        await planning.reload()
+
+        let input = planner.makeInput(scope: .day, only: nil)
+
+        #expect(input.tasks.first { $0.id == "reminders:k" }?.minutes == 90)
+    }
+
+    @Test func planTomorrow_keepsTodaysBatch() async throws {
+        responder.enqueue(Self.dayAnswer(Self.block("local:Fahrrad", "14:00")))
+        responder.enqueue(Self.dayAnswer(Self.block("local:Abgabe", "09:00")))
+        let (planner, _) = await make()
+        await planner.plan(scope: .day, anchor: today)
+        await planner.plan(scope: .day, anchor: tomorrow)
+
+        let days = Set(store.batches().flatMap(\.suggestions).map(\.day))
+        #expect(days == [today, tomorrow])
+    }
+
+    @Test func planTomorrow_includesTasksWithOpenSuggestionForToday() async throws {
+        // Decision 7: an open suggestion for today does not keep a task out of tomorrow's plan.
+        responder.enqueue(Self.dayAnswer(Self.block("local:Abgabe", "14:00")))
+        responder.enqueue(Self.dayAnswer(""))
+        let (planner, _) = await make()
+        await planner.plan(scope: .day, anchor: today)
+        await planner.plan(scope: .day, anchor: tomorrow)
+        #expect(lastInputText().contains("\"id\":\"local:Abgabe\""))
+    }
+
+    @Test func planToday_excludesTasksWithOpenSuggestionForAnotherFutureDay() async throws {
+        responder.enqueue(Self.dayAnswer(Self.block("local:Abgabe", "09:00")))
+        responder.enqueue(Self.dayAnswer(""))
+        let (planner, _) = await make()
+        await planner.plan(scope: .day, anchor: tomorrow)
+        await planner.plan(scope: .day, anchor: today)
+        #expect(!lastInputText().contains("\"id\":\"local:Abgabe\""))
+        #expect(lastInputText().contains("\"id\":\"local:Fahrrad\""))
+    }
+
+    @Test func planTomorrow_carriesTodaysLeftovers_onlyWhenTodayIsOver() async throws {
+        // 10:00: Fahrrad is due today and can still be done today.
+        responder.enqueue(Self.dayAnswer(""))
+        let (morningPlanner, _) = await make()
+        await morningPlanner.plan(scope: .day, anchor: tomorrow)
+        #expect(!lastInputText().contains("\"id\":\"local:Fahrrad\""))
+
+        // 18:40: today's work time is over; Fahrrad goes along and its block tomorrow is valid.
+        responder.enqueue(Self.dayAnswer(Self.block("local:Fahrrad", "09:00")))
+        let evening = at(18, 18, 40)
+        let (planner, planning) = await make(now: { evening })
+        await planner.plan(scope: .day, anchor: tomorrow)
+        #expect(lastInputText().contains("\"id\":\"local:Fahrrad\""))
+        let suggestion = try #require(planning.days.first?.suggestions.first { $0.taskKey == "local:Fahrrad" })
+        #expect(responder.calls.count == 2)  // no retry: nothing was rejected
+
+        await planner.accept(suggestion)
+
+        #expect(planner.notice == nil)
+        #expect(calendarStore.storedEvents.contains { $0.start == at(19, 9) })
+    }
+
+    @Test func replanToday_keepsTasksTheReplacedPlanSuggestedToMove() async throws {
+        // The day batch a new plan replaces must not keep its own tasks out (its move points to another day).
+        let move = PlanSuggestion(id: UUID(), kind: .move, taskKey: "local:Fahrrad", title: "Fahrrad",
+                                  day: PlanDay(year: 2026, month: 11, day: 20), startMinutes: nil, minutes: nil, reason: "r",
+                                  fromDay: today)
+        store.replace(with: SuggestionBatch(id: UUID(), scope: .day, days: [today], createdAt: testNow(), suggestions: [move],
+                                            unscheduled: [], risks: [], estimates: [:]))
+        responder.enqueue(Self.dayAnswer(""))
+        let (planner, _) = await make()
+        await planner.plan(scope: .day, anchor: today)
+        #expect(lastInputText().contains("\"id\":\"local:Fahrrad\""))
+    }
+
+    @Test func planLaterDay_inTheEvening_doesNotCarryTodaysLeftovers() async throws {
+        // Decision 6: leftovers go to the next planning day (Thursday), not to Friday.
+        responder.enqueue(Self.dayAnswer(""))
+        let evening = at(18, 18, 40)
+        let (planner, _) = await make(now: { evening })
+        await planner.plan(scope: .day, anchor: PlanDay(year: 2026, month: 11, day: 20))
+        #expect(!lastInputText().contains("\"id\":\"local:Fahrrad\""))
+    }
+
+    @Test func contextMenuPlanAnchor_usesShownFutureDay() {
+        #expect(TaskContextMenu.aiPlanAnchor(shownDay: tomorrow, today: today) == tomorrow)
+        #expect(TaskContextMenu.aiPlanAnchor(shownDay: PlanDay(year: 2026, month: 11, day: 17), today: today) == today)
+        #expect(TaskContextMenu.aiPlanAnchor(shownDay: nil, today: today) == today)
+    }
+
+    @Test func instructions_dayPlan_explainPlannedDay() {
+        let text = AIPlanner.instructions(.day, language: .app)
+        #expect(text.contains("days[0]"))
+    }
+
+    // MARK: Side findings (plan-tomorrow, step 6)
+
+    /// A day batch with a block for Fahrrad today and a week batch with a work day for Abgabe on Thursday.
+    private func dayAndWeekBatches() {
+        let block = PlanSuggestion(id: UUID(), kind: .block, taskKey: "local:Fahrrad", title: "Fahrrad", day: today,
+                                   startMinutes: 14 * 60, minutes: 60, reason: "r")
+        let assignment = PlanSuggestion(id: UUID(), kind: .assignment, taskKey: "local:Abgabe", title: "Abgabe", day: tomorrow,
+                                        startMinutes: nil, minutes: nil, reason: "r")
+        store.replace(with: SuggestionBatch(id: UUID(), scope: .week, days: (16...22).map { PlanDay(year: 2026, month: 11, day: $0) },
+                                            createdAt: testNow(), suggestions: [assignment], unscheduled: [], risks: [], estimates: [:]))
+        store.replace(with: SuggestionBatch(id: UUID(), scope: .day, days: [today], createdAt: testNow(), suggestions: [block],
+                                            unscheduled: [], risks: [], estimates: [:]))
+    }
+
+    private var weekSuggestions: [PlanSuggestion] {
+        store.batches().filter { $0.scope == .week }.flatMap(\.suggestions)
+    }
+
+    @Test func acceptAll_dayScope_leavesWeekBatchUntouched() async throws {
+        dayAndWeekBatches()
+        let (planner, _) = await make()
+
+        await planner.acceptAll(scope: .day)
+
+        #expect(calendarStore.storedEvents.contains { $0.start == at(18, 14) })
+        #expect(planStore.assignment(for: TaskID(source: .local, rawValue: "Abgabe")) == nil)
+        #expect(weekSuggestions.map(\.taskKey) == ["local:Abgabe"])
+
+        await planner.undoAcceptAll()
+
+        #expect(weekSuggestions.map(\.taskKey) == ["local:Abgabe"])
+        #expect(store.batches().filter { $0.scope == .day }.flatMap(\.suggestions).map(\.taskKey) == ["local:Fahrrad"])
+    }
+
+    @Test func dismissAll_dayScope_leavesWeekBatchUntouched() async throws {
+        dayAndWeekBatches()
+        let (planner, _) = await make()
+
+        await planner.dismissAll(scope: .day)
+
+        #expect(weekSuggestions.map(\.taskKey) == ["local:Abgabe"])
+        #expect(store.batches().filter { $0.scope == .day }.isEmpty)
+        #expect(planner.dismissedCount == 1)
     }
 }

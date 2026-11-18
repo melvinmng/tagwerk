@@ -47,6 +47,8 @@ struct TimelineCanvas: View {
     /// When the hold selected an entry; the release of that hold must not count as a tap.
     @State private var selectedAt = Date.distantPast
     @State private var session: Session?
+    /// The hold-and-drag on an entry (UIKit recognizer, SR1 path B).
+    @State private var hold = HoldMoveState()
     @State private var pending: [String: Range<Int>] = [:]
 
     private enum Mode { case move, start, end }
@@ -125,7 +127,8 @@ struct TimelineCanvas: View {
         .onChange(of: plan) { _, _ in pending.removeAll() }
         .sheet(item: $openSuggestion) { suggestion in SuggestionSheet(suggestion: suggestion) }
         .sheet(item: $editingTask) { TaskEditorSheet(task: $0) }
-        .onChange(of: session != nil) { _, dragging in isDragging = dragging }
+        // Scrolling stops as soon as an entry is held, not only once it moves (SR1).
+        .onChange(of: hold.blocksScroll || session != nil) { _, dragging in isDragging = dragging }
     }
 
     /// Visible hours: working time widened to every entry, with an hour of margin.
@@ -199,7 +202,7 @@ struct TimelineCanvas: View {
             .opacity(selectingIDs != nil && !style.isSelectable ? 0.45 : 1)
             .contentShape(Rectangle())
             .onTapGesture { tap(entry) }
-            .gesture(selectingIDs == nil && style.canMove ? moveGesture(entry) : nil)
+            .gesture(HoldToMoveRecognizer(isEnabled: selectingIDs == nil && style.canMove) { handleHold($0, entry: entry) })
             .accessibilityElement(children: .combine)
             .accessibilityAddTraits(.isButton)
             .accessibilityHint(style.canMove ? "Halten, dann ziehen zum Verschieben" : "")
@@ -226,25 +229,27 @@ struct TimelineCanvas: View {
         onTap(entry)
     }
 
-    /// Hold 0.3 s to select (grips appear); keep holding and move to drag.
-    private func moveGesture(_ entry: DayEntry) -> some Gesture {
-        LongPressGesture(minimumDuration: 0.3)
-            .sequenced(before: DragGesture(minimumDistance: 0, coordinateSpace: .named("canvas")))
-            .onChanged { value in
-                switch value {
-                case .second(true, nil):
-                    if selectedID != entry.id { selectedAt = .now }
-                    selectedID = entry.id
-                case .second(true, let drag?):
-                    selectedID = entry.id
-                    if session == nil {
-                        session = Session(id: entry.id, mode: .move, original: displayRange(entry), delta: 0)
-                    }
-                    session?.delta = drag.translation.height
-                default: break
-                }
+    /// Hold 0.3 s to select (grips appear) and block scrolling; keep holding and move to drag (SR1, path B).
+    private func handleHold(_ event: HoldToMoveRecognizer.Event, entry: DayEntry) {
+        switch event {
+        case .began(let y):
+            hold.begin(atY: y)
+            // The release of this hold must not count as a tap.
+            if selectedID != entry.id { selectedAt = .now }
+            selectedID = entry.id
+        case .changed(let y):
+            hold.move(toY: y)
+            if session == nil {
+                session = Session(id: entry.id, mode: .move, original: displayRange(entry), delta: 0)
             }
-            .onEnded { _ in finishSession(entry) }
+            session?.delta = hold.delta
+        case .ended:
+            hold.end()
+            finishSession(entry)
+        case .cancelled:
+            hold.end()
+            if session?.id == entry.id { session = nil }
+        }
     }
 
     private func grip(_ entry: DayEntry, mode: Mode, color: Color, alignment: Alignment, label: String) -> some View {

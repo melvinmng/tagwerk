@@ -171,11 +171,175 @@ struct PlanningModelTests {
         #expect(try #require(model.days.first).openToday.isEmpty)
     }
 
-    @Test func dueToday_onlyOnToday() async throws {
-        let model = await model()
-        model.anchor = PlanDay(year: 2026, month: 11, day: 19)
+    // MARK: Planning tomorrow (plan-tomorrow, step 2)
+
+    private let tomorrow = PlanDay(year: 2026, month: 11, day: 19)
+
+    /// A model whose clock reads `now` (default: Wednesday 10:00); `clock` lets a test move the time.
+    private func model(at hour: Int, _ minute: Int = 0, day: Int = 18) async -> PlanningModel {
+        let now = at(day, hour, minute)
+        await taskList.reload()
+        let model = PlanningModel(taskList: taskList, calendarStore: calendarStore, reminderStore: accessStore,
+                                  planStore: planStore, efforts: RecurringEffortStore(context: container.mainContext),
+                                  blocks: blocks, settings: settings, marks: EventMarkStore(context: container.mainContext),
+                                  now: { now }, calendar: calendar)
         await model.reload()
-        #expect(try #require(model.days.first).openToday.isEmpty)  // "Abgabe" is due on the 19th, but that is not today
+        return model
+    }
+
+    @Test func futureDay_listsTasksDueThatDay_andCountsTheirLoad() async throws {
+        let model = await model()
+        model.anchor = tomorrow
+        await model.reload()
+        let day = try #require(model.days.first)
+        #expect(day.openToday.map(\.title) == ["Abgabe"])  // due on the 19th, no estimate: 30 min
+        #expect(day.capacity.plannedMinutes == 30)
+    }
+
+    @Test func futureDay_dueTaskAssignedToAnotherFutureDay_notListedTwice() async throws {
+        planStore.assign(id("Abgabe"), to: PlanDay(year: 2026, month: 11, day: 20))
+        let model = await model()
+        model.scope = .week
+        await model.reload()
+        let thursday = try #require(model.days.first { $0.day == tomorrow })
+        let friday = try #require(model.days.first { $0.day == PlanDay(year: 2026, month: 11, day: 20) })
+        #expect(thursday.openToday.isEmpty)
+        #expect(thursday.capacity.plannedMinutes == 0)
+        #expect(friday.assigned.map(\.title) == ["Abgabe"])
+        #expect(friday.capacity.plannedMinutes == 30)
+    }
+
+    @Test func futureDay_dueTaskAssignedToToday_countsOnlyToday() async throws {
+        planStore.assign(id("Abgabe"), to: today)
+        let model = await model()
+        model.scope = .week
+        await model.reload()
+        #expect(try #require(model.days.first { $0.day == tomorrow }).openToday.isEmpty)
+        #expect(try #require(model.days.first { $0.day == today }).capacity.plannedMinutes == 30)
+    }
+
+    @Test func week_countsTasksDueOnFutureDaysAsLoad() async throws {
+        // Decision 11: due on the day counts as load in week and month too.
+        let model = await model()
+        model.scope = .week
+        await model.reload()
+        #expect(try #require(model.days.first { $0.day == tomorrow }).capacity.plannedMinutes == 30)
+    }
+
+    @Test func isTodayOver_afterWorkEnd_andOnDayOff() async {
+        #expect(await model().isTodayOver == false)  // Wednesday 10:00
+        #expect(await model(at: 18, 0).isTodayOver == true)  // work ends at 18:00
+        #expect(await model(at: 10, 0, day: 21).isTodayOver == true)  // Saturday
+        planStore.setOverride(.hours(WorkHours(startMinutes: 540, endMinutes: 1200)), on: today)
+        #expect(await model(at: 18, 40).isTodayOver == false)  // longer day until 20:00
+    }
+
+    @Test func leftFromToday_onlyWhenTodayIsOver_withoutFutureBlocks() async throws {
+        local.tasks.append(makeTask("Heute fällig", source: .local, due: DueDate(year: 2026, month: 11, day: 18)))
+        local.tasks.append(makeTask("Später", source: .local, due: DueDate(year: 2026, month: 11, day: 18)))
+        local.tasks.append(makeTask("Mit Block", source: .local))
+        planStore.assign(id("Fahrrad"), to: today)
+        planStore.assign(id("Später"), to: PlanDay(year: 2026, month: 11, day: 20))
+        await taskList.reload()
+        let task = try #require(taskList.items.first { $0.title == "Mit Block" })
+        _ = try blocks.createBlock(for: task, start: at(19, 9), minutes: 60)
+        planStore.assign(id("Mit Block"), to: today)
+
+        #expect(await model().leftFromToday.isEmpty)  // 10:00: today still has work time
+        let evening = await model(at: 18, 40)
+        #expect(Set(evening.leftFromToday.map(\.title)) == ["Fahrrad", "Heute fällig"])
+    }
+
+    @Test func nextPlanDay_skipsDaysOff_withinFiveDays() async {
+        #expect(await model(at: 18, 40).nextPlanDay == tomorrow)
+        // Friday evening: Saturday and Sunday are off.
+        #expect(await model(at: 18, 40, day: 20).nextPlanDay == PlanDay(year: 2026, month: 11, day: 23))
+        for offset in 1...5 { planStore.setOverride(.off, on: today.adding(days: offset, calendar: calendar)) }
+        #expect(await model(at: 18, 40).nextPlanDay == nil)
+    }
+
+    @Test func eveningEntry_onlyOnTodayAfterWorkEnd_withFreeTimeAndLeftovers() async throws {
+        planStore.assign(id("Fahrrad"), to: today)
+        #expect(await model().eveningEntry == nil)
+        let model = await model(at: 18, 40)
+        let entry = try #require(model.eveningEntry)
+        #expect(entry.day == tomorrow)
+        #expect(entry.freeMinutes == 450)  // 480 minus "Abgabe" due tomorrow (30 min)
+        #expect(entry.leftCount == 1)
+        model.anchor = tomorrow
+        await model.reload()
+        #expect(model.eveningEntry == nil)
+    }
+
+    @Test func midnight_reloadUsesTheNewToday() async throws {
+        planStore.assign(id("Fahrrad"), to: today)
+        var now = at(18, 23, 50)
+        await taskList.reload()
+        let model = PlanningModel(taskList: taskList, calendarStore: calendarStore, reminderStore: accessStore,
+                                  planStore: planStore, efforts: RecurringEffortStore(context: container.mainContext),
+                                  blocks: blocks, settings: settings, marks: EventMarkStore(context: container.mainContext),
+                                  now: { now }, calendar: calendar)
+        model.anchor = tomorrow
+        await model.reload()
+        #expect(model.leftFromToday.map(\.title) == ["Fahrrad"])
+        now = at(19, 0, 10)
+        await model.reload()
+        #expect(model.today == tomorrow)
+        #expect(model.leftFromToday.isEmpty)  // a new day with work time ahead
+        #expect(model.overdue.map(\.title) == ["Fahrrad"])  // planned for yesterday
+    }
+
+    @Test func freeAfterAccepting_doesNotCountReplacedLoadTwice() {
+        // Mockup MP2: 3 h 15 free; 4 h suggested, of which 2 h (due tomorrow) are already counted: 1 h 15 remain.
+        let suggestions = [("a", 75), ("b", 45), ("c", 30), ("d", 90)].map { key, minutes in
+            PlanSuggestion(id: UUID(), kind: .block, taskKey: key, title: key, day: tomorrow, startMinutes: 540,
+                           minutes: minutes, reason: "r")
+        }
+        let move = PlanSuggestion(id: UUID(), kind: .move, taskKey: "e", title: "e", day: tomorrow, startMinutes: nil,
+                                  minutes: nil, reason: "r")
+        let free = PlanningModel.freeAfterAccepting(free: 195, suggestions: suggestions + [move], counted: ["a": 75, "b": 45])
+        #expect(free == 75)
+        #expect(PlanningModel.freeAfterAccepting(free: 30, suggestions: suggestions, counted: [:]) == 0)
+    }
+
+    @Test func overdue_shownTodayAndTomorrow_notLater() async {
+        let model = await model()
+        #expect(model.showsOverdue(on: today))
+        #expect(model.showsOverdue(on: tomorrow))
+        #expect(!model.showsOverdue(on: PlanDay(year: 2026, month: 11, day: 20)))
+        #expect(!model.showsOverdue(on: PlanDay(year: 2026, month: 11, day: 17)))
+    }
+
+    @Test func leftovers_onlyOnNextPlanDay_onceTodayIsOver() async {
+        planStore.assign(id("Fahrrad"), to: today)
+        #expect(await model().leftovers(on: tomorrow).isEmpty)
+        let evening = await model(at: 18, 40)
+        #expect(evening.leftovers(on: tomorrow).map(\.title) == ["Fahrrad"])
+        #expect(evening.leftovers(on: PlanDay(year: 2026, month: 11, day: 20)).isEmpty)
+        #expect(evening.leftovers(on: today).isEmpty)
+    }
+
+    @Test func assignFromPanel_usesShownDay() async throws {
+        let model = await model()
+        model.anchor = tomorrow
+        await model.reload()
+        await model.commitToShownDay(id("Abgabe"))
+        #expect(planStore.assignment(for: id("Abgabe")) == tomorrow)
+    }
+
+    @Test func moveTasks_movesAll_andUndoRestoresEach() async throws {
+        planStore.assign(id("Fahrrad"), to: today)
+        planStore.assign(id("Login", .github), to: today)
+        let model = await model(at: 18, 40)
+        await model.moveTasks([id("Fahrrad"), id("Login", .github)], to: tomorrow)
+        #expect(planStore.assignment(for: id("Fahrrad")) == tomorrow)
+        #expect(planStore.assignment(for: id("Login", .github)) == tomorrow)
+        #expect(model.lastMoveGroup?.count == 2)
+        #expect(model.lastMove == nil)
+        await model.undoMoveGroup()
+        #expect(planStore.assignment(for: id("Fahrrad")) == today)
+        #expect(planStore.assignment(for: id("Login", .github)) == today)
+        #expect(model.lastMoveGroup == nil)
     }
 
     @Test func overdue_includesPastDueWithoutAssignment_notCounted() async throws {

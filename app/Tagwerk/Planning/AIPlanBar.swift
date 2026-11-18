@@ -101,7 +101,7 @@ struct AIPlanBar: View {
                 .foregroundStyle(.purple)
             }
             Spacer()
-            Button("Verwerfen") { Task { await planner.dismissAll() } }
+            Button("Verwerfen") { Task { await planner.dismissAll(scope: scope) } }
                 .foregroundStyle(.secondary)
         }
         if unscheduledCount + riskCount > 0 {
@@ -126,7 +126,7 @@ struct AIPlanBar: View {
         HStack(spacing: 10) {
             if !suggestions.isEmpty {
                 Button {
-                    Task { await planner.acceptAll() }
+                    Task { await planner.acceptAll(scope: scope) }
                 } label: {
                     Label("Alle übernehmen (\(suggestions.count))", systemImage: "sparkles")
                 }
@@ -142,7 +142,10 @@ struct AIPlanBar: View {
                 Button {
                     start()
                 } label: {
-                    Label(Self.planTitle(scope), systemImage: "sparkles")
+                    Label(DayPanelText.planTitle(scope: scope, day: planning.anchor, today: planning.today,
+                                                 leftCount: planning.leftovers(on: planning.anchor).count,
+                                                 calendar: planning.calendar),
+                          systemImage: "sparkles")
                 }
                 .buttonStyle(.bordered)
                 .tint(.purple)
