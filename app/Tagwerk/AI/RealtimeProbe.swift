@@ -45,6 +45,9 @@ enum RealtimeProbe {
             case "response.output_audio_transcript.done":
                 result.transcript = event["transcript"] as? String ?? ""
             case "response.done":
+                let response = event["response"] as? [String: Any]
+                let status = response?["status"] as? String ?? "?"
+                if status != "completed" { result.error = "response \(status): " + detail(response?["status_details"]) }
                 return true
             default: break
             }
@@ -64,7 +67,7 @@ enum RealtimeProbe {
                 result.transcript = event["transcript"] as? String ?? ""
                 return true
             case "conversation.item.input_audio_transcription.failed":
-                result.error = "transcription failed"
+                result.error = "transcription failed: " + detail(event["error"])
                 return true
             default: return false
             }
@@ -88,6 +91,13 @@ enum RealtimeProbe {
     }
 
     // MARK: Private
+
+    /// A short, readable form of an error or status detail object.
+    private static func detail(_ value: Any?) -> String {
+        guard let value, !(value is NSNull) else { return "-" }
+        guard let data = try? JSONSerialization.data(withJSONObject: value, options: [.sortedKeys]) else { return "\(value)" }
+        return String(String(decoding: data, as: UTF8.self).prefix(300))
+    }
 
     private static func json(_ object: [String: Any]) -> Data {
         (try? JSONSerialization.data(withJSONObject: object, options: [.sortedKeys])) ?? Data()
