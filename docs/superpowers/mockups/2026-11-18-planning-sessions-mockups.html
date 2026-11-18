@@ -1,0 +1,611 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tagwerk · Phase 2b-2 · Sitzungen planen · Mockups RZ, DU, ZV, WT, FS</title>
+<style>
+  /* Mockup frame uses the host theme (with fallbacks); phone screens depict the app in iOS dark mode. */
+  :root { color-scheme: light dark; }
+  body { font: 14px var(--font-sans, system-ui, sans-serif); color: var(--foreground, CanvasText); margin: 16px; }
+  h1 { font-size: 20px; margin: 0 0 4px; }
+  h2 { font-size: 18px; margin: 38px 0 4px; padding-top: 16px; border-top: 1px solid rgba(128,128,128,.3); display: flex; align-items: center; gap: 10px; }
+  .area { display: inline-grid; place-items: center; width: 34px; height: 34px; border-radius: 9px; background: #0a84ff; color: #fff; font: 800 15px system-ui; flex-shrink: 0; }
+  .lead { color: var(--muted-foreground, #777); margin: 0 0 14px; line-height: 1.5; max-width: 980px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(392px, 1fr)); gap: 22px; align-items: start; }
+  .label { font: 600 13px var(--font-sans, system-ui); color: var(--muted-foreground, #777); margin: 0 0 8px 4px; }
+  .label b { color: var(--foreground, CanvasText); }
+  .code { display: inline-block; background: rgba(128,128,128,.28); color: var(--foreground, CanvasText); border-radius: 6px; padding: 1px 8px; font: 800 13px system-ui; margin-right: 4px; }
+  .code.r { background: #30d158; color: #000; }
+  .rec { background: #30d158; color: #000; font-size: 11px; font-weight: 700; padding: 1px 7px; border-radius: 99px; margin-left: 4px; }
+  .pc { font-size: 12.5px; color: var(--muted-foreground, #777); line-height: 1.5; margin: 8px 4px 0; max-width: 390px; }
+  .pc b { color: var(--foreground, CanvasText); }
+  .box { border: 1px solid rgba(48,209,88,.5); background: rgba(48,209,88,.07); border-radius: 12px; padding: 12px 16px; margin-top: 16px; line-height: 1.55; font-size: 13px; max-width: 1100px; }
+  .box h3 { margin: 0 0 6px; font-size: 14px; }
+  .box ul, .box ol { margin: 4px 0 0; padding-left: 20px; }
+  .box.neutral { border-color: rgba(128,128,128,.4); background: rgba(128,128,128,.07); }
+  .box.warn { border-color: rgba(255,159,10,.6); background: rgba(255,159,10,.08); }
+  code { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; background: rgba(128,128,128,.16); padding: 1px 4px; border-radius: 4px; }
+  table.sum { border-collapse: collapse; font-size: 13px; margin-top: 6px; }
+  table.sum td, table.sum th { padding: 5px 14px 5px 0; vertical-align: top; text-align: left; border-bottom: 1px solid rgba(128,128,128,.22); }
+  table.sum th { font-size: 12px; color: var(--muted-foreground, #777); }
+
+  .phone {
+    --bg: #000; --card: #1c1c1e; --card2: #2c2c2e; --sep: #38383a; --text: #fff; --sub: #8e8e93;
+    --blue: #0a84ff; --green: #30d158; --orange: #ff9f0a; --red: #ff453a; --purple: #bf5af2; --teal: #64d2ff; --mint: #7cf0c3;
+    background: var(--bg); color: var(--text); border-radius: 40px; padding: 14px 12px 12px;
+    font: 15px -apple-system, "SF Pro Text", system-ui, sans-serif; border: 6px solid #2a2a2c;
+    width: 390px; max-width: 100%; box-sizing: border-box; min-height: 760px;
+    display: flex; flex-direction: column; position: relative; overflow: hidden;
+  }
+  .status { display: flex; justify-content: space-between; font: 600 13px system-ui; padding: 0 12px 10px; }
+  .chip { font-size: 11px; padding: 2px 7px; border-radius: 99px; background: var(--card2); color: #c7c7cc; white-space: nowrap; }
+  .chip.warn { background: rgba(255,159,10,.2); color: #ffc266; }
+  .chip.gr { background: rgba(48,209,88,.2); color: #9ff0b4; }
+  .chip.p1 { background: rgba(255,69,58,.25); color: #ffb3ad; }
+  .section { color: var(--sub); font: 600 12px system-ui; text-transform: uppercase; letter-spacing: .4px; margin: 10px 8px 4px; display: flex; justify-content: space-between; }
+  .section span { text-transform: none; letter-spacing: 0; font-weight: 500; }
+  .list { background: var(--card); border-radius: 18px; overflow: hidden; margin-bottom: 6px; }
+  .item { display: flex; align-items: flex-start; gap: 10px; padding: 9px 12px; border-bottom: 1px solid var(--sep); }
+  .item:last-child { border-bottom: 0; }
+  .item .t { flex: 1; font-size: 14px; min-width: 0; }
+  .item .s { color: var(--sub); font-size: 12px; margin-top: 2px; }
+  .seg { display: flex; background: var(--card2); border-radius: 99px; padding: 2px; margin: 0 2px 8px; }
+  .seg span { flex: 1; text-align: center; padding: 6px 2px; font-size: 13px; border-radius: 99px; color: #c7c7cc; }
+  .seg span.on { background: #636366; color: #fff; font-weight: 600; }
+  .field { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 10px 12px; border-bottom: 1px solid var(--sep); font-size: 14px; }
+  .field:last-child { border-bottom: 0; }
+  .field .v { color: var(--sub); text-align: right; }
+  .field .l { color: var(--blue); }
+  .field .d { color: var(--red); }
+  .field.dis .l { color: #636366; }
+  .note { color: var(--sub); font-size: 11.5px; padding: 4px 8px; line-height: 1.4; }
+  .spacer { flex: 1; }
+  .sm { border-radius: 99px; padding: 5px 11px; font-weight: 600; font-size: 12.5px; white-space: nowrap; align-self: center; }
+  .sm.no { background: #48484a; color: #d1d1d6; }
+  .glass { background: rgba(72,72,78,.62); backdrop-filter: blur(18px) saturate(1.6); -webkit-backdrop-filter: blur(18px) saturate(1.6);
+    border: 1px solid rgba(255,255,255,.16); box-shadow: inset 0 1px 0 rgba(255,255,255,.18), 0 8px 24px rgba(0,0,0,.55); }
+  .tb { margin: auto auto 0; width: 80%; display: flex; border-radius: 99px; padding: 5px; font-size: 10px; color: #d1d1d6; text-align: center; box-sizing: border-box; }
+  .tb span { flex: 1; padding: 4px 0 3px; border-radius: 99px; }
+  .tb .on { color: var(--blue); background: rgba(0,0,0,.5); font-weight: 600; }
+  .tbgap { margin-top: 8px; }
+  .ico { font-size: 17px; display: block; font-style: normal; line-height: 20px; }
+  .topbar { display: flex; align-items: center; gap: 8px; padding: 0 2px 10px; }
+  .topbar .seg { flex: 1; margin: 0; }
+  .rbtn { width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; font-size: 20px; flex-shrink: 0; color: #fff; }
+  .hdr { display: flex; align-items: flex-end; justify-content: space-between; gap: 8px; padding: 4px 6px 10px; }
+  .kick { font: 600 12px system-ui; color: var(--blue); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 2px; }
+  .bigdate { font: 700 26px/1.15 system-ui; letter-spacing: -.3px; }
+  .bigdate .car { font-size: 15px; color: var(--sub); vertical-align: 4px; }
+  .stepper { display: flex; border-radius: 99px; flex-shrink: 0; }
+  .stepper span { width: 38px; height: 34px; display: grid; place-items: center; color: #fff; font-size: 18px; }
+  .stepper span + span { border-left: 1px solid rgba(255,255,255,.14); }
+  .abl { display: flex; justify-content: space-between; align-items: center; color: var(--sub); font: 600 12px system-ui; text-transform: uppercase; letter-spacing: .4px; margin: 4px 8px 12px; }
+  .abl span { text-transform: none; letter-spacing: 0; color: var(--blue); font-size: 13px; }
+
+  /* Hour grid, 48 pt per hour */
+  .hg { position: relative; margin: 2px 0 6px 44px; border-left: 1px solid var(--sep); }
+  .hg .hl { position: absolute; left: -44px; right: 0; border-top: 1px solid #2c2c2e; font: 11px ui-monospace, monospace; color: var(--sub); padding-left: 2px; height: 0; }
+  .hg .hl span { position: relative; top: -8px; background: var(--bg); padding-right: 4px; }
+  .hg .ev { position: absolute; left: 4px; right: 4px; border-radius: 9px; padding: 4px 8px; font-size: 12.5px; box-sizing: border-box; overflow: hidden; }
+  .hg .ev small { color: #c7c7cc; font-size: 11px; display: block; }
+  .hg .ev.e { background: rgba(10,132,255,.24); border-left: 4px solid var(--blue); }
+  .hg .ev.p { background: rgba(48,209,88,.22); border-left: 4px solid var(--green); }
+  .hg .ev.sel { box-shadow: 0 10px 26px rgba(0,0,0,.7), 0 0 0 2px currentColor; z-index: 3; overflow: visible; }
+  .hg .ev.sel.p { color: var(--green); background: rgba(48,209,88,.36); }
+  .hg .ev.sel > span, .hg .ev.sel > small { color: #fff; }
+  .hg .ev.sel > small { opacity: .8; }
+  .hg .ev.ghost { background: rgba(48,209,88,.3); border: 1.5px dashed var(--green); z-index: 3; box-shadow: 0 10px 26px rgba(0,0,0,.7); }
+  .hg .ev.ghost small b { color: #fff; font-weight: 700; }
+  .hg .ev.ghost small .cut { color: #ffc266; font-weight: 700; }
+  .knob { position: absolute; width: 12px; height: 12px; border-radius: 50%; background: #fff; border: 2.5px solid currentColor; box-sizing: border-box; z-index: 4; }
+  .knob.t { top: -7px; right: 14px; } .knob.bt { bottom: -7px; left: 14px; }
+  .tlab { position: absolute; left: -44px; width: 40px; font: 700 11px ui-monospace, monospace; color: #fff; background: var(--red); border-radius: 5px; text-align: center; padding: 1px 0; z-index: 5; margin-top: -8px; }
+  .snap { position: absolute; left: 0; right: 0; border-top: 1.5px solid var(--red); z-index: 2; }
+  .fbub { position: absolute; z-index: 6; font: 700 11.5px system-ui; border-radius: 99px; padding: 3px 9px; background: #fff; color: #000; box-shadow: 0 4px 14px rgba(0,0,0,.6); white-space: nowrap; }
+
+  /* Day panel above the grid (D1 as built: header line, sections, rows with grip) */
+  .panel { margin: 6px -4px 0; border-radius: 16px; background: rgba(44,44,46,.94); border: 1px solid rgba(255,255,255,.09); box-shadow: 0 -8px 24px rgba(0,0,0,.6); }
+  .ph { display: flex; align-items: center; gap: 6px; height: 46px; padding: 0 12px; font-size: 13.5px; white-space: nowrap; overflow: hidden; }
+  .ph b { font-weight: 600; }
+  .ph .c { color: var(--sub); }
+  .ph .o { font-size: 12px; color: var(--sub); }
+  .ph .od { font-size: 12px; font-weight: 600; color: var(--orange); }
+  .ph .rz { font-size: 12px; font-weight: 600; color: #9ff0b4; }
+  .ph .chev { margin-left: auto; color: var(--sub); font-size: 13px; }
+  .pb { padding: 0 10px 8px; }
+  .psec { font: 600 12px system-ui; color: var(--sub); padding: 8px 4px 2px; display: flex; justify-content: space-between; }
+  .psec span { font-weight: 500; }
+  .psec.od { color: var(--orange); }
+  .prow { display: flex; align-items: center; gap: 8px; padding: 6px 4px; border-bottom: 1px solid var(--sep); }
+  .prow:last-child { border-bottom: 0; }
+  .prow .t { flex: 1; min-width: 0; font-size: 14px; }
+  .prow .s { color: var(--sub); font-size: 12px; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .prow .rest { font: 600 12px system-ui; color: #9ff0b4; background: rgba(48,209,88,.2); border-radius: 99px; padding: 2px 8px; white-space: nowrap; }
+  .prow .rest.w { color: #ffc266; background: rgba(255,159,10,.2); }
+  .prow .gr { color: #8e8e93; font-size: 17px; padding: 0 2px; }
+  .mp { height: 4px; border-radius: 99px; background: #3a3a3c; overflow: hidden; margin-top: 5px; width: 150px; }
+  .mp i { display: block; height: 100%; background: var(--green); }
+  .mp.w i { background: var(--orange); }
+  .fadeout { height: 22px; margin-top: -22px; position: relative; background: linear-gradient(rgba(44,44,46,0), rgba(44,44,46,.96)); border-radius: 0 0 16px 16px; }
+
+  /* Capacity bar and week rows */
+  .bar { display: flex; height: 10px; border-radius: 99px; overflow: hidden; background: #3a3a3c; margin: 7px 0 6px; gap: 1.5px; position: relative; }
+  .bar i { display: block; height: 100%; }
+  .k-pl { background: var(--green); } .k-fr { background: #3a3a3c; } .k-ov { background: var(--red); }
+  .k-pa { background: repeating-linear-gradient(135deg, #232326 0 4px, #323236 4px 8px); }
+  .k-nw { background: repeating-linear-gradient(135deg, var(--mint) 0 3px, #2f6b55 3px 6px); }
+  .day { background: var(--card); border-radius: 16px; padding: 8px 10px; margin-bottom: 5px; position: relative; }
+  .day.today { box-shadow: inset 0 0 0 1.5px var(--blue); }
+  .day.drop { box-shadow: inset 0 0 0 2px var(--mint); background: rgba(124,240,195,.1); }
+  .day.past { opacity: .5; }
+  .day .hd { display: flex; align-items: center; gap: 8px; }
+  .day .hd b { width: 50px; font-size: 13.5px; flex-shrink: 0; }
+  .day .hd .bar { flex: 1; margin: 0; height: 8px; }
+  .day .hd .n { font: 12px system-ui; font-variant-numeric: tabular-nums; color: #c7c7cc; white-space: nowrap; min-width: 92px; text-align: right; }
+  .day .hd .n.nw { color: var(--mint); font-weight: 700; }
+  .tk { display: flex; align-items: center; gap: 6px; font-size: 13px; padding: 5px 0 0 2px; }
+  .tk .grip { color: #636366; font-size: 13px; letter-spacing: -2px; }
+  .tk .nm { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .tk .d { color: var(--sub); font-size: 11.5px; white-space: nowrap; }
+  .tk.dlrow { color: #ffb3ad; font-weight: 600; }
+  .tk.hole { border: 1.5px dashed #48484a; border-radius: 9px; margin-top: 5px; padding: 4px 6px; color: #636366; }
+  .tk.hole .d { color: #636366; }
+  .tk.lift { position: absolute; left: 26px; right: -4px; top: 26px; z-index: 5; background: #3a3a3c; border-radius: 12px; padding: 8px 10px; box-shadow: 0 14px 30px rgba(0,0,0,.8); transform: rotate(-1.2deg); }
+  .tk.new { background: rgba(124,240,195,.1); border-radius: 9px; margin: 5px -4px 0; padding: 4px 6px; }
+  .drawer { margin: 6px -6px 0; border-radius: 24px; padding: 6px 10px 8px; background: #1c1c1e; border: 1px solid rgba(255,255,255,.1); box-shadow: 0 -8px 24px rgba(0,0,0,.6); }
+  .grab { width: 36px; height: 5px; border-radius: 99px; background: #636366; margin: 0 auto 8px; }
+  .drawer .dh { display: flex; justify-content: space-between; align-items: center; font-weight: 600; padding: 0 4px 6px; }
+  .drawer .dh span { color: var(--sub); font-weight: 500; font-size: 12.5px; }
+
+  /* Sheets, dialogs, toast */
+  .under { opacity: .35; padding: 0 6px 10px; }
+  .sheetp { background: #1c1c1e; margin: 0 -12px -12px; border-radius: 30px 30px 0 0; padding: 8px 12px 14px; flex: 1; display: flex; flex-direction: column; box-shadow: 0 -8px 30px rgba(0,0,0,.6); }
+  .sheetp .list { background: var(--card2); }
+  .sheetp .list .item, .sheetp .list .field { border-color: #48484a; }
+  .ehead { display: flex; gap: 10px; padding: 2px 6px 10px; }
+  .ehead i { width: 5px; border-radius: 3px; flex-shrink: 0; }
+  .ehead b { font-size: 18px; display: block; }
+  .ehead small { color: #c7c7cc; font-size: 13px; display: block; margin: 2px 0 5px; }
+  .est { display: flex; align-items: center; background: #3a3a3c; border-radius: 99px; height: 32px; }
+  .est .pm { width: 36px; text-align: center; font-size: 20px; color: var(--blue); line-height: 32px; }
+  .est .val { min-width: 56px; text-align: center; font: 600 14px system-ui; font-variant-numeric: tabular-nums; border-left: 1px solid #545458; border-right: 1px solid #545458; line-height: 22px; padding: 0 6px; }
+  .mseg { display: flex; background: #3a3a3c; border-radius: 9px; padding: 2px; }
+  .mseg span { padding: 4px 12px; font-size: 13px; border-radius: 7px; color: #c7c7cc; }
+  .mseg span.on { background: #636366; color: #fff; font-weight: 600; }
+  .dimov { position: absolute; inset: 0; background: rgba(0,0,0,.5); z-index: 6; }
+  .asheet { position: absolute; left: 10px; right: 10px; bottom: 14px; display: flex; flex-direction: column; gap: 8px; z-index: 7; }
+  .asheet .grp { border-radius: 18px; overflow: hidden; background: rgba(58,58,60,.97); }
+  .asheet .m { padding: 12px 16px; text-align: center; font-size: 12px; color: #c7c7cc; border-bottom: 1px solid #545458; line-height: 1.4; }
+  .asheet .m b { display: block; color: #fff; font-size: 13px; margin-bottom: 2px; }
+  .asheet .act { padding: 13px; text-align: center; color: var(--blue); font-size: 16px; border-bottom: 1px solid #545458; }
+  .asheet .act small { display: block; color: #aeaeb2; font-size: 11.5px; margin-top: 2px; }
+  .asheet .act:last-child { border-bottom: 0; } .asheet .act.c { font-weight: 600; }
+  .toast { border-radius: 99px; padding: 7px 8px 7px 14px; display: flex; align-items: center; gap: 6px; margin: 6px 2px; font-size: 12.5px; }
+  .toast .tx { flex: 1; min-width: 0; line-height: 1.25; }
+  .toast .tx small { display: block; color: #c7c7cc; font-size: 11.5px; }
+  .toast .un { background: rgba(10,132,255,.28); border-radius: 99px; padding: 6px 11px; font-weight: 600; white-space: nowrap; }
+  .anno { font: 600 10.5px system-ui; color: #ffd60a; margin: 6px 6px 3px; }
+</style>
+</head>
+<body>
+
+<h1>Tagwerk · Phase 2b-2 · Sitzungen planen · Mockups RZ, DU, ZV, WT, FS</h1>
+<p class="lead">Eine Aufgabe in mehreren kurzen Sitzungen abarbeiten: Restzeit im Panel, „Duplizieren“ im Blatt, Dauer-Angabe an der Ziehvorschau, Ziehen zwischen Tagen in der Woche. Die Kürzel sind zweibuchstabig, weil A bis Z in den vorhandenen Mockup-Dateien vergeben sind (zuletzt V bis Z in der parallel entstehenden Datei zur KI-Planung). Empfehlungen tragen ein grünes Kürzel; Freigabe bitte als Liste der Kürzel. Alle Daten sind erfunden, Stichtag ist Mittwoch, 18. November 2026, „jetzt“ ist 13:20 Uhr, Arbeitszeit 9:00 bis 18:00. Die Bilder sind statisches HTML; Bewegung und Haptik sind beschrieben, nicht gezeigt. Nichts davon ist am Gerät geprüft.</p>
+
+<div class="box neutral">
+  <h3>Empfehlungen auf einen Blick</h3>
+  <table class="sum">
+    <tr><th>Bereich</th><th>Empfehlung</th><th>Kern</th></tr>
+    <tr><td><b>RZ</b> Restzeit im Panel</td><td><span class="code r">RZ1</span></td><td>Abschnitt „Noch einzuplanen“ ganz oben. Zeile: „1 h von 3 h · heute 14:00“, rechts grün „noch 2 h“. Kopfzeile erhält „Rest 3 h 15“. Bei Rest 0 verschwindet die Zeile.</td></tr>
+    <tr><td><b>DU</b> Duplizieren</td><td><span class="code r">DU1</span></td><td>Erste Zeile der Aktionen im Blatt, rechts steht das Ziel („16:30 · 1 h 30“). Danach schließt das Blatt, der neue Block ist ausgewählt, eine Leiste bietet „Widerrufen“. Ohne freien Platz: gesperrt mit Grund.</td></tr>
+    <tr><td><b>ZV</b> Ziehvorschau</td><td><span class="code r">ZV1</span></td><td>Zweite Zeile des Vorschau-Blocks: „16:30 bis 17:45 · Rest 1 h 15“; gekürzt: „1 h 30 von 2 h Rest“ in Orange.</td></tr>
+    <tr><td><b>WT</b> Woche: Tag wechseln</td><td><span class="code r">WT1</span></td><td>Aufgabenzeilen sind ziehbar. Der Zieltag zeigt beim Schweben die freie Zeit nach dem Ablegen. Keine Rückfrage; Leiste nennt mitgenommene Blöcke und bietet „Widerrufen“.</td></tr>
+    <tr><td><b>FS</b> Fortschritt</td><td><span class="code r">FS1</span></td><td>„1 h von 3 h eingeplant“ ersetzt die bloße Schätzung dort, wo sie schon steht (Blatt, Wochenzeile, Aufgabenliste). Kapazitätskarte unverändert.</td></tr>
+  </table>
+</div>
+
+<div class="box neutral">
+  <h3>Gesetzt (Nutzer), hier nicht zur Wahl</h3>
+  <ul>
+    <li><b>Dauer beim Ziehen ins Raster:</b> ohne Schätzung die Standarddauer (30 min); mit Schätzung der Rest (Schätzung minus Minuten in den Blöcken der Aufgabe); ist der Rest länger als 6 h oder länger als der größte freie Platz des Tages, gilt der größte freie Platz.</li>
+    <li><b>„Duplizieren“</b> im Blatt eines Zeitblocks: Kopie im nächsten freien Platz desselben Tages nach dem Original, Dauer nach derselben Regel.</li>
+    <li><b>Eigener Abschnitt ganz oben im Panel</b> für Aufgaben, deren Blöcke weniger Zeit haben als die Schätzung; ziehbar, Standarddauer ist der Rest.</li>
+    <li><b>Woche:</b> Ziehen von Tag zu Tag setzt den Arbeitstag, nicht die Fälligkeit; künftige Blöcke wandern mit.</li>
+  </ul>
+</div>
+
+<!-- ============================== RZ ============================== -->
+<h2><span class="area">RZ</span> Abschnitt für Aufgaben mit Restzeit</h2>
+<p class="lead">Heute hat das Panel drei Abschnitte („Ohne Uhrzeit“, „Heute offen, nicht zugeordnet“, „Überfällig“) und die Kopfzeile „Ohne Uhrzeit 0 · 0 min  +3 offen  1 überfällig“. Sobald eine Aufgabe einen Zeitblock hat, verschwindet sie aus dem Panel, auch wenn der Block nur einen Teil der Schätzung abdeckt. Beispiel: „Bericht gliedern“, 3 h geschätzt, ein Block heute 14:00 bis 15:00; „Pretest vorbereiten“, 2 h geschätzt, ein Block gestern mit 45 min.</p>
+<div class="grid">
+  <div>
+    <p class="label"><span class="code r">RZ1</span><b>„Noch einzuplanen“, Rest rechts als Zahl</b> <span class="rec">Empfehlung</span></p>
+    <div class="phone">
+      <div class="status"><span>13:20</span><span>●●● 5G</span></div>
+      <div class="topbar"><div class="seg"><span class="on">Tag</span><span>Woche</span><span>Monat</span></div><span class="rbtn glass">＋</span></div>
+      <div class="hdr"><div><div class="kick">Heute · KW 47</div><div class="bigdate">Mittwoch, 18. Nov. <span class="car">⌄</span></div></div><div class="stepper glass"><span>‹</span><span>›</span></div></div>
+      <div class="abl">Ablauf<span>☰ Auswählen</span></div>
+      <div class="hg" style="height:150px">
+        <div class="hl" style="top:0"><span>13:00</span></div><div class="hl" style="top:48px"><span>14:00</span></div><div class="hl" style="top:96px"><span>15:00</span></div><div class="hl" style="top:144px"><span>16:00</span></div>
+        <div class="ev p" style="top:49px;height:46px">Bericht gliedern<small>14:00 bis 15:00 · Zeitblock</small></div>
+        <div class="ev e" style="top:121px;height:29px">Team-Runde</div>
+      </div>
+      <div class="spacer"></div>
+      <div class="panel">
+        <div class="ph"><b>Ohne Uhrzeit</b><span class="c">1 · 30 min</span><span class="rz">Rest 3 h 15</span><span class="o">+3</span><span class="od">1 überfällig</span><span class="chev">⌄</span></div>
+        <div class="pb">
+          <div class="psec">Noch einzuplanen <span>2 · Rest 3 h 15</span></div>
+          <div class="prow"><div class="t">Bericht gliedern<div class="s">1 h von 3 h · heute 14:00</div></div><span class="chip">P2</span><span class="rest">noch 2 h</span><span class="gr">≡</span></div>
+          <div class="prow"><div class="t">Pretest vorbereiten<div class="s">45 min von 2 h · Di 16:00</div></div><span class="chip p1">P1</span><span class="rest">noch 1 h 15</span><span class="gr">≡</span></div>
+          <div class="psec">Ohne Uhrzeit</div>
+          <div class="prow"><div class="t">Mail an Lerngruppe<div class="s">30 min</div></div><span class="gr">≡</span></div>
+          <div class="psec">Heute offen, nicht zugeordnet</div>
+          <div class="prow"><div class="t">Literatur sichten<div class="s">1 h · heute fällig</div></div><span class="sm no">Heute</span><span class="gr">≡</span></div>
+          <div class="prow"><div class="t">Angebot nachfassen<div class="s">ohne Aufwand · heute fällig</div></div><span class="sm no">Heute</span><span class="gr">≡</span></div>
+        </div>
+        <div class="fadeout"></div>
+      </div>
+      <div class="tb glass tbgap"><span class="on"><i class="ico">▦</i>Planen</span><span><i class="ico">☑︎</i>Aufgaben</span><span><i class="ico">⚙︎</i>Einstellungen</span></div>
+    </div>
+    <p class="pc"><b>Pro:</b> Der Titel nennt, was zu tun ist, und wertet nicht. Die Zahl, die beim Ziehen zur Blocklänge wird („noch 2 h“), steht dort, wo der Daumen den Griff fasst; die Herleitung („1 h von 3 h“) und der nächste Block stehen in der Unterzeile, die jede Panelzeile schon hat. Grün ist die Farbe der Zeitblöcke, Orange bleibt „Überfällig“ vorbehalten. <b>Contra:</b> „Noch einzuplanen“ trifft sprachlich auch auf „Ohne Uhrzeit“ zu; die Abgrenzung leistet erst die Unterzeile. Die Zeile ist rechts mit Priorität, Rest und Griff dicht besetzt; die Unterzeile muss deshalb kurz bleiben (ohne das Wort „eingeplant“, ohne Fälligkeit).</p>
+  </div>
+
+  <div>
+    <p class="label"><span class="code r">RZ1</span><b>Kopfzeile eingeklappt, drei Zustände</b> <span class="rec">Empfehlung</span></p>
+    <div class="phone" style="min-height:430px">
+      <div class="status"><span>13:20</span><span>●●● 5G</span></div>
+      <div class="anno">Mit Restzeit, nichts ohne Uhrzeit: die Angabe „· 0 min“ entfällt</div>
+      <div class="panel" style="margin-top:0"><div class="ph"><b>Ohne Uhrzeit</b><span class="c">0</span><span class="rz">Rest 3 h 15</span><span class="o">+3 offen</span><span class="od">1 überfällig</span><span class="chev">⌃</span></div></div>
+      <div class="anno" style="margin-top:14px">Mit Restzeit und Aufgaben ohne Uhrzeit: „+3 offen“ wird zu „+3“</div>
+      <div class="panel" style="margin-top:0"><div class="ph"><b>Ohne Uhrzeit</b><span class="c">1 · 30 min</span><span class="rz">Rest 3 h 15</span><span class="o">+3</span><span class="od">1 überfällig</span><span class="chev">⌃</span></div></div>
+      <div class="anno" style="margin-top:14px">Ohne Restzeit: unverändert wie heute</div>
+      <div class="panel" style="margin-top:0"><div class="ph"><b>Ohne Uhrzeit</b><span class="c">0 · 0 min</span><span class="o">+3 offen</span><span class="od">1 überfällig</span><span class="chev">⌃</span></div></div>
+      <div class="anno" style="margin-top:14px">Nur Restzeit, sonst nichts: das Panel erscheint trotzdem</div>
+      <div class="panel" style="margin-top:0"><div class="ph"><b>Ohne Uhrzeit</b><span class="c">0</span><span class="rz">Rest 3 h 15</span><span class="chev">⌃</span></div></div>
+      <div class="spacer"></div>
+    </div>
+    <p class="pc"><b>Begründung:</b> Die heutige Zeile füllt bei 390 pt schon etwa drei Viertel der Breite; eine vierte Angabe passt nur, wenn eine andere kürzer wird. Gekürzt wird in fester Reihenfolge: erst „· 0 min“ bei leerem Abschnitt, dann „offen“ (die Zahl mit Plus bleibt). <b>Technik:</b> <code>ViewThatFits(in: .horizontal)</code> mit drei Fassungen der Zeile statt eigener Breitenrechnung. Gezeigt wird die Summe der Reste, nicht die Zahl der Aufgaben, weil sie mit „4 h noch frei“ der Kapazitätskarte vergleichbar ist. <b>Unsicher:</b> Ob alle Fassungen bei großer Schrift passen, ist nicht geprüft; letzte Stufe wäre der Wegfall von „+3“.</p>
+  </div>
+
+  <div>
+    <p class="label"><span class="code">RZ2</span><b>„Zu wenig Zeit eingeplant“, Balken je Zeile</b></p>
+    <div class="phone" style="min-height:430px">
+      <div class="status"><span>13:20</span><span>●●● 5G</span></div>
+      <div class="spacer"></div>
+      <div class="panel">
+        <div class="ph"><b>Ohne Uhrzeit</b><span class="c">1 · 30 min</span><span class="od">2 zu knapp</span><span class="o">+3</span><span class="od">1 überfällig</span><span class="chev">⌄</span></div>
+        <div class="pb">
+          <div class="psec od">Zu wenig Zeit eingeplant</div>
+          <div class="prow"><div class="t">Bericht gliedern<div class="mp w"><i style="width:33%"></i></div><div class="s">1 h von 3 h · noch 2 h</div></div><span class="chip">P2</span><span class="gr">≡</span></div>
+          <div class="prow"><div class="t">Pretest vorbereiten<div class="mp w"><i style="width:37%"></i></div><div class="s">45 min von 2 h · noch 1 h 15</div></div><span class="chip p1">P1</span><span class="gr">≡</span></div>
+          <div class="psec">Ohne Uhrzeit</div>
+          <div class="prow"><div class="t">Mail an Lerngruppe<div class="s">30 min</div></div><span class="gr">≡</span></div>
+        </div>
+      </div>
+      <div class="tb glass tbgap"><span class="on"><i class="ico">▦</i>Planen</span><span><i class="ico">☑︎</i>Aufgaben</span><span><i class="ico">⚙︎</i>Einstellungen</span></div>
+    </div>
+    <p class="pc"><b>Pro:</b> Der Balken zeigt das Verhältnis ohne Lesen; der Titel grenzt eindeutig von „Ohne Uhrzeit“ ab. <b>Contra:</b> Der Titel ist eine Mahnung, obwohl mehrere kurze Sitzungen der gewollte Normalfall sind. Orange steht schon für „Überfällig“; zwei orange Angaben in der Kopfzeile sind nicht mehr unterscheidbar. Die Zeilen werden etwa 9 pt höher, in einer Liste mit höchstens 45 % der Höhe ist das eine Zeile weniger.</p>
+  </div>
+</div>
+
+<div class="box">
+  <h3>Regeln zu RZ1</h3>
+  <ul>
+    <li><b>Wer im Abschnitt steht:</b> offene Aufgaben mit Schätzung und mindestens einem Zeitblock, deren Blöcke zusammen kürzer sind als die Schätzung. Aufgaben ohne Schätzung stehen nie dort (kein Rest berechenbar); Aufgaben ohne Block bleiben wie bisher in „Ohne Uhrzeit“ bzw. „Heute offen“. Eine Aufgabe steht in genau einem Abschnitt; „Noch einzuplanen“ hat Vorrang.</li>
+    <li><b>An welchen Tagen (Empfehlung):</b> heute und an jedem künftigen Tag dieselbe Liste, gerechnet über alle Blöcke der Aufgabe, nicht nur die des gezeigten Tages. Grund: Wer am Donnerstag eine zweite Sitzung anlegen will, muss die Aufgabe am Donnerstag greifen können. Die Unterzeile nennt den nächsten, sonst den letzten vorhandenen Block („heute 14:00“, „Di 16:00“). An vergangenen Tagen entfällt der Abschnitt.</li>
+    <li><b>Verworfen (RZ3, Text):</b> nur an Tagen, an denen die Aufgabe einen Block hat oder zugeordnet ist. Kürzere Liste, aber der Rest ließe sich an anderen Tagen nur über „Duplizieren“ und „Auf anderen Tag …“ unterbringen.</li>
+    <li><b>Rest 0:</b> Nach dem Ablegen zählt „noch …“ herunter; bei 0 verschwindet die Zeile mit der üblichen Listenanimation, der Abschnitt mit seiner letzten Zeile, die Angabe „Rest“ aus der Kopfzeile. Wird ein Block gekürzt oder gelöscht, erscheint die Zeile wieder. Ist mehr eingeplant als geschätzt, zeigt das Panel nichts.</li>
+    <li><b>„Heute“-Knopf:</b> entfällt in diesem Abschnitt; die Aufgabe ist über ihren Block bereits verortet.</li>
+    <li><b>Sortierung:</b> wie alle Aufgabenlisten nach Fälligkeit, Priorität, Herkunft.</li>
+  </ul>
+</div>
+
+<!-- ============================== DU ============================== -->
+<h2><span class="area">DU</span> „Duplizieren“ im Blatt eines Zeitblocks</h2>
+<p class="lead">Das Blatt U1 hat für Zeitblöcke heute die Aktionen „Auf anderen Tag …“, „Bearbeiten …“ und „Zeitblock löschen“. Im Beispiel sind heute nach dem Block 15:00 bis 15:30 (30 min) und 16:30 bis 18:00 (1 h 30) frei; der Rest von „Bericht gliedern“ beträgt 2 h, der größte freie Platz 1 h 30. Angenommene Lesart der Regel: Die Kopie ist 1 h 30 lang und liegt im ersten Platz nach dem Original, in den sie passt (siehe offene Frage 2).</p>
+<div class="grid">
+  <div>
+    <p class="label"><span class="code r">DU1</span><b>Erste Aktion, Ziel steht rechts</b> <span class="rec">Empfehlung</span></p>
+    <div class="phone">
+      <div class="status"><span>13:20</span><span>●●● 5G</span></div>
+      <div class="under"><div class="bigdate">Mittwoch, 18. Nov.</div></div>
+      <div class="sheetp">
+        <div class="grab"></div>
+        <div class="ehead"><i style="background:var(--green)"></i><div><b>Bericht gliedern</b><small>Mi. 18. Nov. · 14:00 bis 15:00</small><span class="chip gr">Zeitblock</span> <span class="chip">Kalender „Tagwerk“</span></div></div>
+        <div class="list">
+          <div class="field"><span>Beginn</span><div class="est"><span class="pm">−</span><span class="val">14:00</span><span class="pm">＋</span></div></div>
+          <div class="field"><span>Dauer</span><div class="est"><span class="pm">−</span><span class="val">1 h</span><span class="pm">＋</span></div></div>
+          <div class="field"><span>Zählt als</span><div class="mseg"><span class="on">Belegt</span><span>Frei</span></div></div>
+        </div>
+        <div class="section">Aufgabe</div>
+        <div class="list">
+          <div class="field"><span>Bericht gliedern</span><span class="v">P2 · 1 h von 3 h eingeplant</span></div>
+          <div class="field"><span class="l">Aufgabe zeigen</span><span class="l">Erledigt ✓</span></div>
+        </div>
+        <div class="list">
+          <div class="field"><span class="l">Duplizieren</span><span class="v">16:30 · 1 h 30</span></div>
+          <div class="field"><span class="l">Auf anderen Tag …</span></div>
+          <div class="field"><span class="l">Bearbeiten …</span></div>
+          <div class="field"><span class="d">Zeitblock löschen</span></div>
+        </div>
+      </div>
+    </div>
+    <p class="pc"><b>Pro:</b> „Duplizieren“ steht bei den Aktionen, die den Block betreffen, und vor „Auf anderen Tag …“, weil es die häufigere von beiden wird. Rechts steht vor dem Tippen, wohin und wie lang die Kopie wird; das ersetzt eine Rückfrage. Die Aufgabenzeile nennt den Stand, aus dem sich die Dauer ergibt (FS1). <b>Contra:</b> vier statt drei Aktionen; bei mittlerer Blatthöhe rutscht „Zeitblock löschen“ unter den Rand. Der Wert rechts sieht aus wie eine Einstellung, ist aber nicht änderbar.</p>
+  </div>
+
+  <div>
+    <p class="label"><span class="code r">DU1</span><b>Danach: Blatt zu, Kopie ausgewählt</b> <span class="rec">Empfehlung</span></p>
+    <div class="phone">
+      <div class="status"><span>13:20</span><span>●●● 5G</span></div>
+      <div class="topbar"><div class="seg"><span class="on">Tag</span><span>Woche</span><span>Monat</span></div><span class="rbtn glass">＋</span></div>
+      <div class="hdr"><div><div class="kick">Heute · KW 47</div><div class="bigdate">Mittwoch, 18. Nov. <span class="car">⌄</span></div></div><div class="stepper glass"><span>‹</span><span>›</span></div></div>
+      <div class="abl">Ablauf<span>☰ Auswählen</span></div>
+      <div class="hg" style="height:290px">
+        <div class="hl" style="top:0"><span>13:00</span></div><div class="hl" style="top:48px"><span>14:00</span></div><div class="hl" style="top:96px"><span>15:00</span></div><div class="hl" style="top:144px"><span>16:00</span></div><div class="hl" style="top:192px"><span>17:00</span></div><div class="hl" style="top:240px"><span>18:00</span></div><div class="hl" style="top:288px"><span>19:00</span></div>
+        <div class="ev p" style="top:49px;height:46px">Bericht gliedern<small>14:00 bis 15:00 · Zeitblock</small></div>
+        <div class="ev e" style="top:121px;height:46px">Team-Runde<small>15:30 bis 16:30</small></div>
+        <div class="ev p sel" style="top:169px;height:70px"><span>Bericht gliedern</span><small>16:30 bis 18:00 · Zeitblock</small><i class="knob t"></i><i class="knob bt"></i></div>
+      </div>
+      <div class="spacer"></div>
+      <div class="toast glass"><span class="tx">Dupliziert · 16:30 bis 18:00<small>Bericht gliedern: noch 30 min einzuplanen</small></span><span class="un">Widerrufen</span></div>
+      <div class="panel"><div class="ph"><b>Ohne Uhrzeit</b><span class="c">1 · 30 min</span><span class="rz">Rest 1 h 45</span><span class="o">+3</span><span class="od">1 überfällig</span><span class="chev">⌃</span></div></div>
+      <div class="tb glass tbgap"><span class="on"><i class="ico">▦</i>Planen</span><span><i class="ico">☑︎</i>Aufgaben</span><span><i class="ico">⚙︎</i>Einstellungen</span></div>
+    </div>
+    <p class="pc"><b>Begründung:</b> Die Kopie entsteht an einer Stelle, die Tagwerk gewählt hat; der Nutzer muss sie sehen und ohne weiteren Schritt verschieben oder kürzen können. Deshalb schließt das Blatt, das Raster scrollt zur Kopie, und sie steht im Auswahlzustand aus G1 (Griffe sichtbar, Tipp daneben beendet ihn). Die Leiste nennt die Zeit und den verbleibenden Rest und bietet „Widerrufen“ (löscht die Kopie). <b>Contra:</b> Wer zwei Kopien nacheinander will, öffnet das Blatt erneut.</p>
+  </div>
+
+  <div>
+    <p class="label"><span class="code r">DU1</span><b>Kein freier Platz: gesperrt mit Grund</b> <span class="rec">Empfehlung</span></p>
+    <div class="phone" style="min-height:330px">
+      <div class="status"><span>17:40</span><span>●●● 5G</span></div>
+      <div class="sheetp" style="margin-top:6px">
+        <div class="grab"></div>
+        <div class="section" style="margin-top:0">Aufgabe</div>
+        <div class="list">
+          <div class="field"><span>Bericht gliedern</span><span class="v">P2 · 1 h von 3 h eingeplant</span></div>
+          <div class="field"><span class="l">Aufgabe zeigen</span><span class="l">Erledigt ✓</span></div>
+        </div>
+        <div class="list">
+          <div class="field dis"><span class="l">Duplizieren</span><span class="v">heute kein freier Platz mehr</span></div>
+          <div class="field"><span class="l">Auf anderen Tag …</span></div>
+          <div class="field"><span class="l">Bearbeiten …</span></div>
+          <div class="field"><span class="d">Zeitblock löschen</span></div>
+        </div>
+      </div>
+    </div>
+    <p class="pc"><b>Begründung:</b> U1 legt fest, dass gesperrte Zeilen sichtbar bleiben und den Grund nennen. Der Grund steht an der Stelle des Ziels, die Zeile ändert also nur ihren Wert. „Frei“ heißt: innerhalb der Arbeitszeit, nach dem Ende des Originals, heute zusätzlich nach „jetzt“, mindestens 15 min. An einem vergangenen Tag lautet der Grund „Tag ist vorbei“. Der Ausweg steht eine Zeile darunter („Auf anderen Tag …“ verschiebt allerdings das Original, siehe offene Frage 4).</p>
+  </div>
+
+  <div>
+    <p class="label"><span class="code">DU2</span><b>Zeile „Weitere Sitzung“ im Abschnitt „Aufgabe“, Blatt bleibt offen</b> (Textvariante)</p>
+    <div class="box neutral" style="margin-top:0">
+      <ul>
+        <li>Statt bei den Aktionen steht unter der Aufgabenzeile „Weitere Sitzung · noch 2 h“. Nach dem Tippen wechselt das Blatt auf die Kopie (Kopf zeigt 16:30 bis 18:00), Beginn und Dauer sind sofort mit ±15 min änderbar.</li>
+        <li><b>Pro:</b> Die Aktion steht bei der Aufgabe, zu der sie inhaltlich gehört; Feinkorrektur ohne Ziehen; mehrere Sitzungen hintereinander ohne erneutes Öffnen.</li>
+        <li><b>Contra:</b> Das Blatt verdeckt das Raster, die Lage der Kopie zwischen den anderen Terminen ist nicht sichtbar. Der Wechsel des Blattinhalts auf einen anderen Eintrag ist leicht zu übersehen; danach wirkt „Zeitblock löschen“ auf die Kopie statt auf das Original. Das Wort weicht von der Vorgabe „Duplizieren“ ab.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ============================== ZV ============================== -->
+<h2><span class="area">ZV</span> Dauer-Angabe an der Ziehvorschau</h2>
+<p class="lead">Die Vorschau aus D1 zeigt heute Titel und „17:15 bis 18:00 · 45 min“. Mit Restzeit ist die Blocklänge nicht mehr die Schätzung; die Vorschau muss sagen, warum der Block so lang ist, besonders wenn er auf den größten freien Platz gekürzt wurde. Die Länge steht beim Abheben fest und ändert sich während des Ziehens nicht.</p>
+<div class="grid">
+  <div>
+    <p class="label"><span class="code r">ZV1</span><b>Rest passt: „· Rest 1 h 15“ in der Zeitzeile</b> <span class="rec">Empfehlung</span></p>
+    <div class="phone" style="min-height:560px">
+      <div class="status"><span>13:20</span><span>●●● 5G</span></div>
+      <div class="abl" style="margin-top:6px">Ablauf<span>☰ Auswählen</span></div>
+      <div class="hg" style="height:290px">
+        <div class="hl" style="top:0"><span>13:00</span></div><div class="hl" style="top:48px"><span>14:00</span></div><div class="hl" style="top:96px"><span>15:00</span></div><div class="hl" style="top:144px"><span>16:00</span></div><div class="hl" style="top:192px"><span>17:00</span></div><div class="hl" style="top:240px"><span>18:00</span></div><div class="hl" style="top:288px"><span>19:00</span></div>
+        <div class="ev p" style="top:49px;height:46px">Bericht gliedern<small>14:00 bis 15:00 · Zeitblock</small></div>
+        <div class="ev e" style="top:121px;height:46px">Team-Runde<small>15:30 bis 16:30</small></div>
+        <div class="snap" style="top:168px"></div><div class="tlab" style="top:168px">16:30</div>
+        <div class="ev ghost" style="top:171px;height:58px">Pretest vorbereiten<small>16:30 bis 17:45 · <b>Rest 1 h 15</b></small></div>
+      </div>
+      <div class="spacer"></div>
+      <div class="panel"><div class="ph"><b>Ohne Uhrzeit</b><span class="c">1 · 30 min</span><span class="rz">Rest 3 h 15</span><span class="o">+3</span><span class="od">1 überfällig</span><span class="chev">⌃</span></div></div>
+      <div class="anno">Panel ist beim Ziehen auf die Kopfzeile geglitten (D1, unverändert)</div>
+    </div>
+    <p class="pc"><b>Pro:</b> keine neue Fläche; die Angabe steht dort, wo heute die Minuten stehen. Das Wort „Rest“ unterscheidet den Fall von einer vollen Schätzung („· 2 h“) und von der Standarddauer („· 30 min“). <b>Contra:</b> Bei Blöcken von 15 bis 30 min ist nur eine Zeile sichtbar; dann steht die Zeitzeile statt des Titels im Block.</p>
+  </div>
+
+  <div>
+    <p class="label"><span class="code r">ZV1</span><b>Rest passt nicht: gekürzt, in Orange</b> <span class="rec">Empfehlung</span></p>
+    <div class="phone" style="min-height:560px">
+      <div class="status"><span>13:20</span><span>●●● 5G</span></div>
+      <div class="abl" style="margin-top:6px">Ablauf<span>☰ Auswählen</span></div>
+      <div class="hg" style="height:290px">
+        <div class="hl" style="top:0"><span>13:00</span></div><div class="hl" style="top:48px"><span>14:00</span></div><div class="hl" style="top:96px"><span>15:00</span></div><div class="hl" style="top:144px"><span>16:00</span></div><div class="hl" style="top:192px"><span>17:00</span></div><div class="hl" style="top:240px"><span>18:00</span></div><div class="hl" style="top:288px"><span>19:00</span></div>
+        <div class="ev p" style="top:49px;height:46px">Bericht gliedern<small>14:00 bis 15:00 · Zeitblock</small></div>
+        <div class="ev e" style="top:121px;height:46px">Team-Runde<small>15:30 bis 16:30</small></div>
+        <div class="snap" style="top:168px"></div><div class="tlab" style="top:168px">16:30</div>
+        <div class="ev ghost" style="top:171px;height:70px">Bericht gliedern<small>16:30 bis 18:00 · <span class="cut">1 h 30 von 2 h Rest</span></small></div>
+      </div>
+      <div class="spacer"></div>
+      <div class="toast glass"><span class="tx">Zeitblock 16:30 bis 18:00 angelegt<small>Bericht gliedern: noch 30 min einzuplanen</small></span><span class="un">Widerrufen</span></div>
+      <div class="anno">Leiste erscheint nach dem Loslassen; hier zusammen mit der Vorschau gezeigt</div>
+    </div>
+    <p class="pc"><b>Begründung:</b> Die Kürzung ist eine Entscheidung von Tagwerk und muss vor dem Loslassen lesbar sein, sonst wirkt der Block wie ein Fehler. „1 h 30 von 2 h Rest“ nennt beide Zahlen; Orange markiert die Abweichung, ohne das Ablegen zu sperren. Nach dem Loslassen sagt die Leiste, was übrig bleibt; die Zeile bleibt mit „noch 30 min“ im Panel. Dieselbe Schreibweise gilt für die 6-Stunden-Grenze.</p>
+  </div>
+
+  <div>
+    <p class="label"><span class="code">ZV2</span><b>Eigene Marke am Finger</b></p>
+    <div class="phone" style="min-height:330px">
+      <div class="status"><span>13:20</span><span>●●● 5G</span></div>
+      <div class="hg" style="height:200px;margin-top:10px">
+        <div class="hl" style="top:0"><span>15:00</span></div><div class="hl" style="top:48px"><span>16:00</span></div><div class="hl" style="top:96px"><span>17:00</span></div><div class="hl" style="top:144px"><span>18:00</span></div><div class="hl" style="top:192px"><span>19:00</span></div>
+        <div class="ev e" style="top:25px;height:46px">Team-Runde<small>15:30 bis 16:30</small></div>
+        <div class="snap" style="top:72px"></div><div class="tlab" style="top:72px">16:30</div>
+        <div class="ev ghost" style="top:75px;height:58px">Pretest vorbereiten<small>16:30 bis 17:45</small></div>
+        <div class="fbub" style="top:50px;right:18px">noch 1 h 15</div>
+      </div>
+      <div class="spacer"></div>
+    </div>
+    <p class="pc"><b>Pro:</b> auch bei sehr kurzen Blöcken lesbar, weil die Marke außerhalb des Blocks liegt. <b>Contra:</b> ein zusätzliches schwebendes Element neben Ziellinie, Uhrzeit-Marke und Block; es verdeckt den Eintrag darüber, und der Finger verdeckt es je nach Griffhaltung selbst. Die Angabe „von 2 h Rest“ für den gekürzten Fall passt nicht in die Marke.</p>
+  </div>
+</div>
+
+<!-- ============================== WT ============================== -->
+<h2><span class="area">WT</span> Woche: Aufgabe auf einen anderen Tag ziehen</h2>
+<p class="lead">Stand im Code (<code>WeekView.swift</code>): je Tag ein Abschnitt mit Wochentag, Kapazitätsangabe und Balken, darunter die zugeordneten Aufgaben und die Deadlines; unten die Ablage „Ungeplant“. Die Tagesabschnitte sind Ablageziele (<code>.dropDestination</code>), und die Aufgabenzeilen sind bereits <code>.draggable</code>; eine Rückmeldung gibt es aber nur an leeren Tagen („Hier ablegen“), und hat die Aufgabe geplante Blöcke, fragt ein Dialog „Zeitblöcke mitverschieben?“ mit „Mitverschieben / Blöcke löschen / Abbrechen“. Die Bilder nutzen die Kartenform aus dem freigegebenen Mockup D1 (Feedback-Runde 2); Zeitblöcke und Kalendertermine sind in der Woche keine eigenen Zeilen.</p>
+<div class="grid">
+  <div>
+    <p class="label"><span class="code r">WT1</span><b>Schweben: Zieltag zeigt das Ergebnis</b> <span class="rec">Empfehlung</span></p>
+    <div class="phone">
+      <div class="status"><span>13:20</span><span>●●● 5G</span></div>
+      <div class="topbar"><div class="seg"><span>Tag</span><span class="on">Woche</span><span>Monat</span></div><span class="rbtn glass">＋</span></div>
+      <div class="hdr"><div><div class="kick">Diese Woche · KW 47</div><div class="bigdate">16.–22. November</div></div><div class="stepper glass"><span>‹</span><span>›</span></div></div>
+      <div class="day past"><div class="hd"><b>Mo 16.</b><div class="bar"><i class="k-pa" style="flex:1"></i></div><span class="n">vergangen</span></div></div>
+      <div class="day past"><div class="hd"><b>Di 17.</b><div class="bar"><i class="k-pa" style="flex:1"></i></div><span class="n">vergangen</span></div></div>
+      <div class="day today"><div class="hd"><b>Mi 18.</b><div class="bar"><i class="k-pa" style="flex:260"></i><i class="k-pl" style="flex:90"></i><i class="k-fr" style="flex:190"></i></div><span class="n">3 h 10 noch frei</span></div>
+        <div class="tk"><span class="grip">⋮⋮</span><span class="nm">Bericht gliedern</span><span class="d">▦ 14:00 · 1 h von 3 h</span></div>
+        <div class="tk"><span class="grip">⋮⋮</span><span class="nm">Mail an Lerngruppe</span><span class="d">30 min</span></div></div>
+      <div class="day drop"><div class="hd"><b>Do 19.</b><div class="bar"><i class="k-pl" style="flex:5"></i><i class="k-nw" style="flex:4"></i><i class="k-fr" style="flex:1"></i></div><span class="n nw">danach 30 min frei</span></div>
+        <div class="tk"><span class="grip">⋮⋮</span><span class="nm">Pretest vorbereiten</span><span class="d">▦ 16:00 · 45 min von 2 h</span></div>
+        <div class="tk lift"><span class="grip">⋮⋮</span><span class="nm">Kapitel 2 gliedern</span><span class="d">▦ 10:00 · 2 h</span></div>
+        <div class="tk" style="visibility:hidden"><span class="nm">Platz</span></div></div>
+      <div class="day"><div class="hd"><b>Fr 20.</b><div class="bar"><i class="k-pl" style="flex:3"></i><i class="k-fr" style="flex:2"></i></div><span class="n">2 h frei</span></div>
+        <div class="tk hole"><span class="nm">Kapitel 2 gliedern</span><span class="d">▦ 10:00 · 2 h</span></div></div>
+      <div class="day"><div class="hd"><b>Sa 21.</b><span class="n" style="flex:1;text-align:left;opacity:.6">kein Arbeitstag</span></div>
+        <div class="tk dlrow"><span>⚑</span><span class="nm">Klausur Statistik · 10:00</span><span class="d" style="color:#ff8a82">Deadline</span></div></div>
+      <div class="spacer"></div>
+      <div class="drawer"><div class="grab"></div><div class="dh">Ungeplant<span>9 diese Woche fällig · 4 überfällig &nbsp;⌃</span></div></div>
+    </div>
+    <p class="pc"><b>Abheben:</b> Halten hebt die Zeile mit Schatten ab, am Ursprung bleibt ein gestrichelter Platzhalter; die Tab-Leiste weicht, am oberen und unteren Rand scrollt die Liste. <b>Schweben:</b> Der Zieltag erhält den Rahmen aus D1, sein Balken zeigt den Zuwachs schraffiert, und die Zahl rechts wechselt von „2 h 30 frei“ auf „danach 30 min frei“ bzw. rot „danach 1 h zu viel“. Das beantwortet die Frage, die den Tageswechsel auslöst (passt es dort?), bevor losgelassen wird. Vergangene Tage und der eigene Tag nehmen nichts an. <b>Contra:</b> Die Vorschau der Zahl braucht je Tag eine Kapazitätsrechnung während des Ziehens; mit Systemmitteln (<code>isTargeted</code>) ist sie nur je Abschnitt, nicht je Position bekannt, was hier genügt.</p>
+  </div>
+
+  <div>
+    <p class="label"><span class="code r">WT1</span><b>Ablegen: keine Rückfrage, Leiste mit „Widerrufen“</b> <span class="rec">Empfehlung</span></p>
+    <div class="phone">
+      <div class="status"><span>13:20</span><span>●●● 5G</span></div>
+      <div class="topbar"><div class="seg"><span>Tag</span><span class="on">Woche</span><span>Monat</span></div><span class="rbtn glass">＋</span></div>
+      <div class="hdr"><div><div class="kick">Diese Woche · KW 47</div><div class="bigdate">16.–22. November</div></div><div class="stepper glass"><span>‹</span><span>›</span></div></div>
+      <div class="day past"><div class="hd"><b>Mo 16.</b><div class="bar"><i class="k-pa" style="flex:1"></i></div><span class="n">vergangen</span></div></div>
+      <div class="day past"><div class="hd"><b>Di 17.</b><div class="bar"><i class="k-pa" style="flex:1"></i></div><span class="n">vergangen</span></div></div>
+      <div class="day today"><div class="hd"><b>Mi 18.</b><div class="bar"><i class="k-pa" style="flex:260"></i><i class="k-pl" style="flex:90"></i><i class="k-fr" style="flex:190"></i></div><span class="n">3 h 10 noch frei</span></div>
+        <div class="tk"><span class="grip">⋮⋮</span><span class="nm">Bericht gliedern</span><span class="d">▦ 14:00 · 1 h von 3 h</span></div>
+        <div class="tk"><span class="grip">⋮⋮</span><span class="nm">Mail an Lerngruppe</span><span class="d">30 min</span></div></div>
+      <div class="day"><div class="hd"><b>Do 19.</b><div class="bar"><i class="k-pl" style="flex:9"></i><i class="k-fr" style="flex:1"></i></div><span class="n">30 min frei</span></div>
+        <div class="tk"><span class="grip">⋮⋮</span><span class="nm">Pretest vorbereiten</span><span class="d">▦ 16:00 · 45 min von 2 h</span></div>
+        <div class="tk new"><span class="grip">⋮⋮</span><span class="nm">Kapitel 2 gliedern</span><span class="d">▦ 10:00 · 2 h</span></div></div>
+      <div class="day"><div class="hd"><b>Fr 20.</b><div class="bar"><i class="k-pl" style="flex:1"></i><i class="k-fr" style="flex:4"></i></div><span class="n">4 h frei</span></div></div>
+      <div class="day"><div class="hd"><b>Sa 21.</b><span class="n" style="flex:1;text-align:left;opacity:.6">kein Arbeitstag</span></div>
+        <div class="tk dlrow"><span>⚑</span><span class="nm">Klausur Statistik · 10:00</span><span class="d" style="color:#ff8a82">Deadline</span></div></div>
+      <div class="spacer"></div>
+      <div class="toast glass"><span class="tx">Auf Do 19. verschoben<small>1 Zeitblock mitgenommen · 10:00 bis 12:00</small></span><span class="un">Widerrufen</span></div>
+      <div class="drawer"><div class="grab"></div><div class="dh">Ungeplant<span>9 diese Woche fällig · 4 überfällig &nbsp;⌃</span></div></div>
+    </div>
+    <p class="pc"><b>Begründung:</b> Dass künftige Blöcke mitwandern, ist entschieden; eine Frage, deren Antwort feststeht, unterbricht nur. Die Leiste sagt, was mit den Blöcken geschah, und „Widerrufen“ stellt Tag und Blöcke wieder her. Die abgelegte Zeile ist kurz hinterlegt. <b>Blockzeit am Zieltag:</b> dieselbe Uhrzeit, wenn sie frei ist; sonst der nächste freie Platz, und die Leiste nennt die neue Zeit („1 Zeitblock auf 13:00 gelegt“); ohne Platz bleibt die Aufgabe am Zieltag ohne Uhrzeit, und die Leiste sagt „1 Zeitblock entfernt, kein Platz“. <b>Contra:</b> „Blöcke löschen“ ist beim Ziehen nicht mehr wählbar; wer das will, löscht den Block danach im Blatt.</p>
+  </div>
+
+  <div>
+    <p class="label"><span class="code">WT2</span><b>Dialog wie heute beibehalten</b></p>
+    <div class="phone" style="min-height:430px">
+      <div class="status"><span>13:20</span><span>●●● 5G</span></div>
+      <div class="day"><div class="hd"><b>Do 19.</b><div class="bar"><i class="k-pl" style="flex:5"></i><i class="k-fr" style="flex:5"></i></div><span class="n">2 h 30 frei</span></div>
+        <div class="tk"><span class="grip">⋮⋮</span><span class="nm">Pretest vorbereiten</span><span class="d">▦ 16:00 · 45 min von 2 h</span></div></div>
+      <div class="day"><div class="hd"><b>Fr 20.</b><div class="bar"><i class="k-pl" style="flex:3"></i><i class="k-fr" style="flex:2"></i></div><span class="n">2 h frei</span></div>
+        <div class="tk"><span class="grip">⋮⋮</span><span class="nm">Kapitel 2 gliedern</span><span class="d">▦ 10:00 · 2 h</span></div></div>
+      <div class="dimov"></div>
+      <div class="asheet">
+        <div class="grp">
+          <div class="m"><b>Zeitblöcke mitverschieben?</b>Für diese Aufgabe gibt es geplante Zeitblöcke im Kalender.</div>
+          <div class="act">Mitverschieben</div>
+          <div class="act" style="color:var(--red)">Blöcke löschen</div>
+        </div>
+        <div class="grp"><div class="act c">Abbrechen</div></div>
+      </div>
+    </div>
+    <p class="pc"><b>Pro:</b> kein neuer Code, „Blöcke löschen“ bleibt ein Tipp entfernt. <b>Contra:</b> widerspricht der Vorgabe „künftige Blöcke wandern mit“; jeder Tageswechsel einer Aufgabe mit Block kostet einen zusätzlichen Tipp, und die Aufgabe springt bis zur Antwort optisch zurück. Für den Schalter „Zeitblöcke mitverschieben“ im Editor („Geplant“) ändert WT1 nichts.</p>
+  </div>
+</div>
+
+<div class="box">
+  <h3>Regeln zu WT1</h3>
+  <ul>
+    <li><b>Ziehbar:</b> Zeilen zugeordneter Aufgaben und, wie bisher, Einträge der Ablage „Ungeplant“. Nicht ziehbar: Deadlines und Aufgaben an vergangenen Tagen (liegen gebliebene stehen heute unter „Überfällig“).</li>
+    <li><b>Zeitblöcke</b> sind in der Woche keine eigenen Zeilen und werden nicht einzeln gezogen; ein einzelner Block wechselt den Tag weiter über „Auf anderen Tag …“ im Blatt.</li>
+    <li><b>Welche Blöcke mitwandern (Annahme, offene Frage 4):</b> nur die noch nicht begonnenen Blöcke des Tages, von dem gezogen wird. Blöcke an anderen Tagen bleiben; sonst würde eine über mehrere Tage verteilte Aufgabe beim Tageswechsel ihre übrigen Sitzungen verlieren oder verschieben.</li>
+    <li><b>Technik:</b> Der vorhandene Weg <code>model.assign(_:to:)</code> bleibt; für das Ziehen ruft er <code>resolveBlocks(move: true)</code> ohne Dialog. Die Vorschau am Zieltag braucht während des Ziehens die Aufgabe selbst, also einen eigenen Ziehzustand im Modell; der Schlüssel aus <code>.draggable</code> steht erst beim Ablegen bereit.</li>
+  </ul>
+</div>
+
+<!-- ============================== FS ============================== -->
+<h2><span class="area">FS</span> Fortschritt außerhalb des Panels</h2>
+<p class="lead">Frage: Soll die Kapazitätskarte oder eine Aufgabenzeile an anderer Stelle „1 h von 3 h eingeplant“ zeigen? Die Kapazitätskarte beantwortet „Wie viel Zeit hat der Tag noch?“ und hat bereits drei Zeilen; eine Angabe je Aufgabe gehört dort nicht hin.</p>
+<div class="grid">
+  <div>
+    <p class="label"><span class="code r">FS1</span><b>Ersetzt die Schätzung, wo sie schon steht</b> <span class="rec">Empfehlung</span></p>
+    <div class="phone" style="min-height:400px">
+      <div class="status"><span>13:20</span><span>●●● 5G</span></div>
+      <div class="anno">Aufgabenliste (Tab „Aufgaben“)</div>
+      <div class="list">
+        <div class="item"><div class="t">Bericht gliedern<div class="s">fällig Fr · 1 h von 3 h eingeplant</div></div><span class="chip">P2</span></div>
+        <div class="item"><div class="t">Kapitel 2 gliedern<div class="s">fällig Mo · 2 h eingeplant</div></div><span class="chip">P2</span></div>
+        <div class="item"><div class="t">Literatur sichten<div class="s">heute fällig · 1 h</div></div></div>
+      </div>
+      <div class="anno" style="margin-top:12px">Wochenzeile</div>
+      <div class="day"><div class="hd"><b>Mi 18.</b><div class="bar"><i class="k-pa" style="flex:260"></i><i class="k-pl" style="flex:90"></i><i class="k-fr" style="flex:190"></i></div><span class="n">3 h 10 noch frei</span></div>
+        <div class="tk"><span class="grip">⋮⋮</span><span class="nm">Bericht gliedern</span><span class="d">▦ 14:00 · 1 h von 3 h</span></div></div>
+      <div class="anno" style="margin-top:12px">Blatt U1, Abschnitt „Aufgabe“</div>
+      <div class="list"><div class="field"><span>Bericht gliedern</span><span class="v">P2 · 1 h von 3 h eingeplant</span></div></div>
+      <div class="spacer"></div>
+    </div>
+    <p class="pc"><b>Pro:</b> keine neue Zeile und kein neues Element; die Angabe erscheint nur bei Aufgaben mit Block und sagt dann mehr als „3 h“. Voll eingeplante Aufgaben zeigen „2 h eingeplant“, Aufgaben ohne Block wie bisher die Schätzung. <b>Contra:</b> In der Aufgabenliste steht dieselbe Stelle je nach Zustand für drei Schreibweisen; im Blatt wird die rechte Spalte lang und bricht bei langen Titeln um.</p>
+  </div>
+  <div>
+    <p class="label"><span class="code">FS2</span><b>Zusätzliche Zeile in der Kapazitätskarte</b> (Textvariante, nicht empfohlen)</p>
+    <div class="box neutral" style="margin-top:0">
+      <ul>
+        <li>Unter dem Balken stünde „2 Aufgaben nicht voll eingeplant · Rest 3 h 15“, neben dem heutigen Hinweis „1 Aufgabe(n) ohne Aufwand mit Standarddauer gerechnet“.</li>
+        <li><b>Pro:</b> ganz oben sichtbar, ohne das Panel aufzuklappen.</li>
+        <li><b>Contra:</b> Die Kopfzeile des Panels zeigt mit RZ1 dieselbe Zahl und ist immer sichtbar. Die Karte bekäme eine vierte Zeile, und „Rest 3 h 15“ neben „4 h noch frei“ legt nahe, beides gehöre zum selben Tag; der Rest darf aber auf andere Tage verteilt werden.</li>
+      </ul>
+    </div>
+    <div class="box neutral">
+      <h3>Nicht vorgeschlagen</h3>
+      <ul>
+        <li>Fortschrittsbalken oder Ring je Aufgabenzeile: zusätzliche Grafik in jeder Liste für eine Angabe, die als Text in sechs Wörtern steht.</li>
+        <li>Angabe am Block im Raster („1 von 3 h“): Der Block zeigt seine eigene Zeit; die Summe der Aufgabe steht im Blatt eine Geste entfernt.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ============================== § ============================== -->
+<h2><span class="area" style="background:#636366">§</span> Folgen für das Design-Dokument und offene Fragen</h2>
+<div class="box warn">
+  <h3>Änderungen an <code>2026-11-17-phase-2b-design.md</code>, falls die Empfehlungen freigegeben werden</h3>
+  <ul>
+    <li><b>§13.15 Nr. 4 (D1) · RZ, ZV:</b> vierter Abschnitt „Noch einzuplanen“ über „Ohne Uhrzeit“; Kopfzeile mit „Rest“ und Kürzungsreihenfolge; Dauerregel für die Vorschau (Standarddauer, Rest, größter freier Platz) und ihre Beschriftung.</li>
+    <li><b>§13.15 Nr. 5 (U1) · DU, FS:</b> Aktion „Duplizieren“ mit Zielangabe und gesperrtem Zustand; Aufgabenzeile nennt „x von y eingeplant“.</li>
+    <li><b>§7 Woche, §13.5 · WT:</b> Aufgabenzeilen ziehbar, Vorschau der freien Zeit am Zieltag, Leiste statt Dialog; der Dialog „Zeitblöcke mitverschieben?“ entfällt für das Ziehen.</li>
+    <li><b>§6 Kapazität:</b> je nach Antwort auf Frage 5 festlegen, ob Restzeit die Auslastung eines Tages erhöht.</li>
+  </ul>
+</div>
+<div class="box neutral">
+  <h3>Offene Fragen (6)</h3>
+  <ol>
+    <li><b>RZ, Tage:</b> Soll „Noch einzuplanen“ heute und an jedem künftigen Tag dieselbe Liste zeigen (Empfehlung), oder nur an Tagen, an denen die Aufgabe zugeordnet ist oder einen Block hat (RZ3)?</li>
+    <li><b>DU, „nächster freier Platz“:</b> Ist der erste freie Platz nach dem Original gemeint, auch wenn er kürzer ist als die Dauer (im Beispiel 15:00, 30 min), oder der erste, in den die Dauer passt (angenommen: 16:30, 1 h 30)? Die zweite Lesart erzeugt weniger Kleinstblöcke, die erste ist leichter vorherzusagen.</li>
+    <li><b>DU, ZV, Dauerregel:</b> Welche Dauer gilt beim Duplizieren, wenn der Rest 0 ist (angenommen: Dauer des Originals)? Und ist bei einem Rest über 6 h wirklich der größte freie Platz gemeint, auch wenn dieser länger als 6 h ist? Angenommen ist: nie länger als der Rest.</li>
+    <li><b>WT, mehrere Sitzungen:</b> Wandern beim Tageswechsel nur die Blöcke des Ausgangstags mit (angenommen) oder alle künftigen Blöcke der Aufgabe um denselben Abstand? Und soll ein Tag, an dem nur ein Block, aber nicht der Arbeitstag der Aufgabe liegt, die Aufgabe in der Woche ebenfalls zeigen?</li>
+    <li><b>Kapazität:</b> Zählt der Rest einer Aufgabe zur Auslastung ihres Arbeitstags (wie bisher die volle Schätzung ohne Block), oder zählen nur noch die Blöcke? Davon hängt ab, ob „4 h noch frei“ und „Rest 3 h 15“ zusammenpassen.</li>
+    <li><b>Vergangene Blöcke:</b> Zählt ein Block, der in der Vergangenheit liegt, als eingeplante Zeit, auch wenn in ihm nicht gearbeitet wurde? Die Mockups rechnen alle Blöcke mit; Tagwerk kennt keine Ist-Zeiten.</li>
+  </ol>
+</div>
+<div class="box neutral">
+  <h3>Was diese Mockups nicht zeigen</h3>
+  <ul>
+    <li>Bewegung, Haptik und Scrollverhalten; sie sind nur beschrieben. Ob die Kopfzeile des Panels in allen Fassungen passt, ist an den Bildern abgeschätzt, nicht am Gerät gemessen.</li>
+    <li>Helles Erscheinungsbild, große Dynamic-Type-Stufen und VoiceOver. Für VoiceOver braucht die Woche eine Ersatzaktion („Auf Donnerstag verschieben“), weil Halten und Ziehen dort nicht trägt.</li>
+    <li>Die Zeilenliste der Tagesansicht und die Monatsansicht mit den neuen Zuständen sowie Fehlerzustände beim Schreiben in den Kalender.</li>
+    <li>Die Wochenbilder folgen der Kartenform aus dem Mockup D1 der Feedback-Runde 2; der Code nutzt Listenabschnitte, die Aussagen gelten für beide Formen.</li>
+  </ul>
+</div>
+
+</body>
+</html>
