@@ -60,11 +60,11 @@ GitHub-Konto: @melvinmng · bestätigt zuweisbar · geprüft 2026-11-17 · ich
 - [ ] [#58](https://github.com/melvinmng/tagwerk/issues/58) Gesprächsschleife mit Aktionskarten {status: In review; prio: P2 (High); aufwand: 4h; epic: #2}
 - [ ] [#59](https://github.com/melvinmng/tagwerk/issues/59) KI-Planung: Eingabe und Prüfregeln {status: In review; prio: P2 (High); aufwand: 4h; epic: #2}
 - [x] [#60](https://github.com/melvinmng/tagwerk/issues/60) KI in Einrichtung und Einstellungen {status: Done; prio: P2 (High); aufwand: 3h; epic: #2}
-- [ ] [#61](https://github.com/melvinmng/tagwerk/issues/61) Tag, Woche und Monat mit KI planen {status: In review; prio: P2 (High); aufwand: 6h; epic: #2}
+- [ ] [#61](https://github.com/melvinmng/tagwerk/issues/61) Tag, Woche und Monat mit KI planen {status: In progress; prio: P2 (High); aufwand: 6h; epic: #2}
 - [ ] [#62](https://github.com/melvinmng/tagwerk/issues/62) App-Funktionen für den Assistenten {status: In review; prio: P2 (High); aufwand: 5h; epic: #2}
-- [ ] [#63](https://github.com/melvinmng/tagwerk/issues/63) Assistent-Knopf und Chat {status: Backlog; prio: P2 (High); aufwand: 5h; epic: #2}
+- [ ] [#63](https://github.com/melvinmng/tagwerk/issues/63) Assistent-Knopf und Chat {status: In review; prio: P2 (High); aufwand: 5h; epic: #2}
 - [ ] [#64](https://github.com/melvinmng/tagwerk/issues/64) GitHub-Lesezugriffe für den Issue-Chat {status: In review; prio: P2 (High); aufwand: 4h; epic: #2}
-- [ ] [#65](https://github.com/melvinmng/tagwerk/issues/65) Chat zur Aufgabe mit Repo-Inhalten {status: In progress; prio: P2 (High); aufwand: 3h; epic: #2}
+- [ ] [#65](https://github.com/melvinmng/tagwerk/issues/65) Chat zur Aufgabe mit Repo-Inhalten {status: In review; prio: P2 (High); aufwand: 3h; epic: #2}
 - [ ] [#66](https://github.com/melvinmng/tagwerk/issues/66) KI-Einträge im Menü und Verknüpfungsvorschläge {status: Backlog; prio: P2 (High); aufwand: 2h; epic: #2}
 - [ ] [#68](https://github.com/melvinmng/tagwerk/issues/68) Dauer beim Einplanen aus der Schätzung {status: In review; prio: P2 (High); aufwand: 2h; epic: #2}
 - [ ] [#69](https://github.com/melvinmng/tagwerk/issues/69) Blöcke duplizieren und Abschnitt „Zu wenig Zeit eingeplant“ {status: In review; prio: P2 (High); aufwand: 3h; epic: #2}
@@ -79,23 +79,23 @@ GitHub-Konto: @melvinmng · bestätigt zuweisbar · geprüft 2026-11-17 · ich
 
 _Automatisch aus [Tagwerk](https://github.com/users/melvinmng/projects/17) erzeugt. Nicht von Hand bearbeiten; Aufgaben oben unter den Personen pflegen._
 
-### Backlog (4)
+### Backlog (3)
 - [#3](https://github.com/melvinmng/tagwerk/issues/3) Phase 3: Ernährung, Trinken und Training erfassen · @melvinmng · Prio P3 (Medium)
 - [#4](https://github.com/melvinmng/tagwerk/issues/4) Phase 4: Widget, Kurzbefehle und Wochenrückblick ergänzen · @melvinmng · Prio P4 (Low)
-- [#63](https://github.com/melvinmng/tagwerk/issues/63) Assistent-Knopf und Chat · @melvinmng · Prio P2 (High) · 5h
 - [#66](https://github.com/melvinmng/tagwerk/issues/66) KI-Einträge im Menü und Verknüpfungsvorschläge · @melvinmng · Prio P2 (High) · 2h
 
 ### In Arbeit (2)
 - [#2](https://github.com/melvinmng/tagwerk/issues/2) Phase 2: Aufgaben, Kalender und KI-Tagesplan umsetzen · @melvinmng · Prio P2 (High)
-- [#65](https://github.com/melvinmng/tagwerk/issues/65) Chat zur Aufgabe mit Repo-Inhalten · @melvinmng · Prio P2 (High) · 3h
+- [#61](https://github.com/melvinmng/tagwerk/issues/61) Tag, Woche und Monat mit KI planen · @melvinmng · Prio P2 (High) · 6h
 
-### In Prüfung (11)
+### In Prüfung (12)
 - [#57](https://github.com/melvinmng/tagwerk/issues/57) ChatGPT-Antworten mit Streaming und Modellliste · @melvinmng · Prio P2 (High) · 5h
 - [#58](https://github.com/melvinmng/tagwerk/issues/58) Gesprächsschleife mit Aktionskarten · @melvinmng · Prio P2 (High) · 4h
 - [#59](https://github.com/melvinmng/tagwerk/issues/59) KI-Planung: Eingabe und Prüfregeln · @melvinmng · Prio P2 (High) · 4h
-- [#61](https://github.com/melvinmng/tagwerk/issues/61) Tag, Woche und Monat mit KI planen · @melvinmng · Prio P2 (High) · 6h
 - [#62](https://github.com/melvinmng/tagwerk/issues/62) App-Funktionen für den Assistenten · @melvinmng · Prio P2 (High) · 5h
+- [#63](https://github.com/melvinmng/tagwerk/issues/63) Assistent-Knopf und Chat · @melvinmng · Prio P2 (High) · 5h
 - [#64](https://github.com/melvinmng/tagwerk/issues/64) GitHub-Lesezugriffe für den Issue-Chat · @melvinmng · Prio P2 (High) · 4h
+- [#65](https://github.com/melvinmng/tagwerk/issues/65) Chat zur Aufgabe mit Repo-Inhalten · @melvinmng · Prio P2 (High) · 3h
 - [#68](https://github.com/melvinmng/tagwerk/issues/68) Dauer beim Einplanen aus der Schätzung · @melvinmng · Prio P2 (High) · 2h
 - [#69](https://github.com/melvinmng/tagwerk/issues/69) Blöcke duplizieren und Abschnitt „Zu wenig Zeit eingeplant“ · @melvinmng · Prio P2 (High) · 3h
 - [#70](https://github.com/melvinmng/tagwerk/issues/70) Aufgaben in der Woche zwischen Tagen ziehen · @melvinmng · Prio P2 (High) · 2h
