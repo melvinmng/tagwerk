@@ -23,7 +23,7 @@ enum DemoData {
                 return
             }
             try wipe(store)
-            let ids = try seed(store)
+            let ids = try seed(store, leadTimeMinutes: environment.settings.leadTimeMinutes)
             environment.gateway.discardCachedData()
             let settings = environment.settings
             settings.setupCompleted = true
@@ -68,7 +68,7 @@ enum DemoData {
         let deadlineCalendar: String
     }
 
-    private static func seed(_ store: EKEventStore) throws -> SeededIDs {
+    private static func seed(_ store: EKEventStore, leadTimeMinutes: Int) throws -> SeededIDs {
         let calendar = Calendar.tagwerk
         let today = calendar.startOfDay(for: Date())
         func at(_ dayOffset: Int, _ hour: Int, _ minute: Int = 0) -> Date {
@@ -114,6 +114,10 @@ enum DemoData {
         try event("Klausur Statistik", uni, at(3, 10), at(3, 12))
         try event("Abgabe Hausarbeit", uni, at(40, 0), at(41, 0), allDay: true)
         try event("Teamtreffen", work, at(1, 9, 30), at(1, 11))
+        // A deadline whose notification fires about two minutes after the start (checks banner and tap).
+        let soon = Date().addingTimeInterval(TimeInterval((leadTimeMinutes + 3) * 60))
+        let soonStart = calendar.date(bySetting: .second, value: 0, of: soon) ?? soon
+        try event("Abgabe Kurzbericht", uni, soonStart, soonStart.addingTimeInterval(30 * 60))
         let sport = EKEvent(eventStore: store)
         sport.calendar = work
         sport.title = "Sport"

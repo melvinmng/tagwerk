@@ -254,6 +254,28 @@ Umgesetzt nach `../plans/2026-11-18-phase-2b2-ai.md`. Abweichungen vom Plan und 
 - **Offen:** Vorschläge direkt im Raster ziehen (VM1, Gestenkonflikt mit dem Halten-Menü), Auto-Scroll zum ersten Vorschlag, „Widerrufen“ an Aktionskarten im Chat.
 - **Review vor dem Merge (Fable):** Behoben: keine Modellliste mehr beim Öffnen der KI-Einstellungen (§8.4), Code-Suche ohne Qualifier (bleibt im Repo des Issues), Aktionskarten zeigen Notizen und Kommentare vollständig, „Abbrechen“ verwirft Teilantworten zuverlässig, „Verlauf löschen“ nicht während einer Antwort, kein doppeltes Übernehmen, neue Planung verwirft alte „Widerrufen“-Stände, Zeit- und Datumswerte der KI werden auf Gültigkeit geprüft. Offen (klein): „Widerrufen“ nach übernommenem Arbeitstag setzt mitverschobene Blöcke nicht zurück; schlägt das Speichern rotierter Tokens im Schlüsselbund fehl, droht beim nächsten Start eine Abmeldung.
 
+### 13.17 Benachrichtigungen und Hintergrund in 2b-3 (2026-11-18)
+
+Umgesetzt nach `../plans/2026-11-18-phase-2b3-notifications.md`. Mockup `../mockups/2026-11-18-phase-2b3-notifications-mockups.html`, N1a + N2a + N3a. **Status: vorläufig nach Fable-Empfehlung, Freigabe des Nutzers offen** (der Nutzer war nicht erreichbar).
+
+Vorläufige Entscheidungen, wo §9, §11.13 und Phase 2 §8 nichts festlegen:
+- **Datum ohne Uhrzeit** gilt bei GitHub- **und** lokalen Aufgaben als 18:00; der Text nennt dann keine Uhrzeit („Fällig heute · <Container>“).
+- **Vorlauf schon verstrichen:** keine Benachrichtigung. Geplant wird nur, was mindestens 60 s nach jetzt auslöst; sonst würde jede Neuplanung sofort erneut auslösen. Folge: Eine Aufgabe, die früher fällig ist als der Vorlauf, erinnert nie.
+- **Ganztägige Deadline-Termine:** am Vortag 18:00 ohne Vorlauf; mehrtägige zählen ab dem ersten Tag; als „frei“ markierte zählen mit. Termine werden 60 Tage im Voraus gelesen.
+- **Texte:** Titel = Aufgaben- bzw. Termintitel (auf dem Sperrbildschirm sichtbar, iOS-Einstellung „Vorschauen“ entscheidet), Text „Fällig heute um 14:30 · Lokal“, „Deadline morgen, ganztägig“, sonst „am Fr., 20.11.“.
+- **Schalter „Deadline-Termine“** (Standard an) statt „Deadline-Kalender“, weil so schon die Kalenderauswahl heißt. Kein Hauptschalter; die iOS-Berechtigung ist der Hauptschalter. Zugriffszeile „Benachrichtigungen“ unter „Zugriff“; Einrichtungsschritt 6 „Benachrichtigungen“.
+- **Tippen:** Aufgabe → Tab „Aufgaben“, Filter wenn nötig auf „Alle“, Aufgabe markiert; Termin → Tagesansicht des Termintags. Im Vordergrund erscheint ein Banner.
+- **Hintergrund-Refresh** frühestens 2 h nach dem letzten Lauf bzw. dem Wechsel in den Hintergrund; Kennung `tagwerk.refresh` (fest, unabhängig von der Bundle-ID). Laden höchstens etwa 20 s, danach wird aus dem vorhandenen Stand geplant.
+
+Regeln, die aus der Umsetzung folgen:
+- Quellen, die gerade nicht geladen sind (Start im Hintergrund vor der GitHub-Anmeldung, Fehler, kein Zugriff), behalten ihre Benachrichtigungen; Abmelden entfernt sie. Ohne Kalenderzugriff bleiben Termin-Benachrichtigungen stehen. Die Grenze 50 zählt behaltene mit.
+- **Schlüsselbund:** Ein Lesefehler (Gerät gesperrt, Prewarming vor dem ersten Entsperren) ist keine Abmeldung mehr. GitHub zeigt dann den Cache mit „Anmeldung derzeit nicht lesbar.“ (`GitHubAuthError.credentialsUnreadable`). Vorher hätte er GitHub abgemeldet und den Cache geleert.
+- Der Hintergrund-Lauf bekommt nur Lade- und Planschritte; KI wird dort strukturell nicht erreicht (§8.4). Ein Test mit `FakeAITransport` über die ganze `AppEnvironment` fehlt, weil sie Schlüsselbund und EventKit des Test-Hosts nutzt; abweichend vom Plan.
+- `BGTaskScheduler.submit` ist unter iOS 27 veraltet; genutzt wird `submitTaskRequest`.
+- Demo-Daten (`-TagwerkDemoData`) enthalten die Deadline „Abgabe Kurzbericht“, deren Benachrichtigung etwa 2 min nach dem Start auslöst.
+
+**Offen (Gerät):** Zustellung und Tippen (auch Kaltstart), Zeitpunkt des Hintergrund-Refreshs (der Simulator führt ihn nicht aus), Verhalten bei gesperrtem Gerät. Die Simulator-Prüfung in 2b-3 fiel aus, weil der Simulator von einer anderen Sitzung belegt war.
+
 ## Quellen
 
 - Verifikation Function Calling: `../spikes/2026-11-17-feasibility-results.md`, Nachtrag Phase 2b.
