@@ -807,6 +807,76 @@ final class PlanningModel {
         toSchedule = sortedTasks(open.filter { progress[$0.id].map { $0.remaining >= 15 } ?? false }, calendar: calendar)
     }
 
+    // MARK: Moving tasks between days (mockup WT1)
+
+    /// The last move between days, for "Widerrufen".
+    struct DayMove: Equatable {
+        let taskID: TaskID
+        let previousDay: PlanDay?
+        /// Moved blocks with their former start.
+        let blocks: [(id: String, start: Date)]
+        var movedBlocks: Int { blocks.count }
+
+        static func == (lhs: DayMove, rhs: DayMove) -> Bool {
+            lhs.taskID == rhs.taskID && lhs.previousDay == rhs.previousDay && lhs.blocks.map(\.id) == rhs.blocks.map(\.id)
+        }
+    }
+
+    private(set) var lastMove: DayMove?
+
+    /// Sets the work day by dragging (user rule 2026-11-18): only the blocks on the former day that still lie
+    /// ahead move along, at the same time, or into the next free stretch of the new day if that time is taken.
+    func moveTask(_ id: TaskID, to day: PlanDay) async {
+        let previous = planStore.assignment(for: id)
+        var moved: [(id: String, start: Date)] = []
+        if let previous, previous != day {
+            let now = now()
+            let origin = previous.startDate(in: calendar)
+            let originEnd = previous.adding(days: 1, calendar: calendar).startDate(in: calendar)
+            let target = days.first { $0.day == day }?.planInput
+            var taken: [Range<Int>] = []
+            for block in blocks.futureBlocks(for: id, after: max(now, origin)) where block.start < originEnd {
+                let length = Int(block.end.timeIntervalSince(block.start) / 60)
+                let startMinutes = minutes(block.start, from: origin)
+                var slot = startMinutes..<(startMinutes + length)
+                if var input = target {
+                    input.blocks += taken
+                    let free = freeGaps(input, fromMinutes: day == today ? minutes(now, from: day.startDate(in: calendar)) : nil)
+                    if !free.contains(where: { $0.contains(slot.lowerBound) && $0.upperBound >= slot.upperBound }),
+                       let next = nextFreeSlot(input, after: input.hours?.startMinutes ?? 0, minutes: length, fromMinutes: nil),
+                       next.count >= length {
+                        slot = next
+                    }
+                }
+                do {
+                    try blocks.moveBlock(block, to: day.startDate(in: calendar).addingTimeInterval(TimeInterval(slot.lowerBound * 60)))
+                    moved.append((block.id, block.start))
+                    taken.append(slot)
+                } catch {
+                    lastError = TaskListModel.message(for: error)
+                }
+            }
+        }
+        planStore.assign(id, to: day)
+        lastMove = DayMove(taskID: id, previousDay: previous, blocks: moved)
+        await reload()
+    }
+
+    func undoMove() async {
+        guard let move = lastMove else { return }
+        lastMove = nil
+        for (id, start) in move.blocks {
+            guard let block = calendarStore.event(id: id) else { continue }
+            try? blocks.moveBlock(block, to: start)
+        }
+        if let previous = move.previousDay { planStore.assign(move.taskID, to: previous) } else { planStore.unassign(move.taskID) }
+        await reload()
+    }
+
+    func clearMoveUndo() {
+        lastMove = nil
+    }
+
     // MARK: Duplicating blocks (mockup DU1)
 
     /// Where "Duplizieren" puts a copy (minutes of the block's day): the next free stretch after the

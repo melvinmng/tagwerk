@@ -272,6 +272,48 @@ struct PlanningModelTests {
         #expect(model.duplicateTarget(for: original) == 885..<930)
     }
 
+    @Test func moveTask_takesOnlyBlocksOfTheOriginDay() async throws {
+        addTask("Lesen", estimate: 180)
+        await taskList.reload()
+        let lesen = try #require(taskList.items.first { $0.title == "Lesen" })
+        let onOrigin = try blocks.createBlock(for: lesen, start: at(19, 9), minutes: 60)
+        let elsewhere = try blocks.createBlock(for: lesen, start: at(20, 9), minutes: 60)
+        planStore.assign(lesen.id, to: PlanDay(year: 2026, month: 11, day: 19))
+        let model = await model()
+        model.scope = .week
+        await model.reload()
+
+        await model.moveTask(lesen.id, to: PlanDay(year: 2026, month: 11, day: 23))
+
+        #expect(planStore.assignment(for: lesen.id) == PlanDay(year: 2026, month: 11, day: 23))
+        #expect(calendarStore.event(id: onOrigin.id)?.start == at(23, 9))
+        #expect(calendarStore.event(id: elsewhere.id)?.start == at(20, 9))
+        #expect(model.lastMove?.movedBlocks == 1)
+        #expect(model.pendingBlockDecision == nil)
+
+        await model.undoMove()
+        #expect(planStore.assignment(for: lesen.id) == PlanDay(year: 2026, month: 11, day: 19))
+        #expect(calendarStore.event(id: onOrigin.id)?.start == at(19, 9))
+    }
+
+    @Test func moveTask_occupiedTime_usesNextFreeSlot() async throws {
+        addTask("Lesen", estimate: 60)
+        await taskList.reload()
+        let lesen = try #require(taskList.items.first { $0.title == "Lesen" })
+        let block = try blocks.createBlock(for: lesen, start: at(19, 9), minutes: 60)
+        planStore.assign(lesen.id, to: PlanDay(year: 2026, month: 11, day: 19))
+        calendarStore.storedEvents.append(CalendarEvent(id: "busy", externalID: nil, calendarID: "work", title: "Termin",
+                                                        start: at(20, 9), end: at(20, 10), isAllDay: false, url: nil,
+                                                        isBusy: true, version: "1"))
+        let model = await model()
+        model.scope = .week
+        await model.reload()
+
+        await model.moveTask(lesen.id, to: PlanDay(year: 2026, month: 11, day: 20))
+
+        #expect(calendarStore.event(id: block.id)?.start == at(20, 10))
+    }
+
     @Test func assign_afterDue_marksPastDue() async {
         let model = await model()
         model.scope = .week

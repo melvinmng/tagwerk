@@ -40,6 +40,22 @@ struct PlanView: View {
         }
     }
 
+    /// After dragging a task to another day (mockup WT1): which blocks came along, with "Rückgängig".
+    @ViewBuilder
+    private var moveUndo: some View {
+        if let move = model.lastMove, let task = model.taskList.items.first(where: { $0.id == move.taskID }) {
+            let caption = switch move.movedBlocks {
+            case 0: "Verschoben"
+            case 1: "Verschoben · 1 Zeitblock mitgenommen"
+            default: "Verschoben · \(move.movedBlocks) Zeitblöcke mitgenommen"
+            }
+            UndoCapsule(title: task.title, caption: caption, symbol: "arrow.left.arrow.right.circle.fill", duration: 5,
+                        onUndo: { Task { await model.undoMove() } },
+                        onExpire: { if model.lastMove == move { model.clearMoveUndo() } })
+                .padding(.bottom, 60)
+        }
+    }
+
     var body: some View {
         NavigationStack {
             Group {
@@ -57,6 +73,7 @@ struct PlanView: View {
             .safeAreaInset(edge: .top) { header }
             .overlay(alignment: .bottom) { dismissUndo }
             .overlay(alignment: .bottom) { duplicateUndo }
+            .overlay(alignment: .bottom) { moveUndo }
             .navigationTitle("Planen")
             .toolbar(.hidden, for: .navigationBar)  // the tab bar already says "Planen" (mockup A1)
             .task(id: "\(model.scope)-\(model.anchor)") { await model.reload() }
