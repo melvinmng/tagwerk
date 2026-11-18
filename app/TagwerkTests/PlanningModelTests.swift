@@ -728,9 +728,19 @@ struct PlanningModelTests {
         _ = try blocks.createBlock(for: task, start: at(19, 9), minutes: 60)
         #expect(model.suggestedBlockMinutes(for: task) == 90)
         _ = try blocks.createBlock(for: task, start: at(19, 14), minutes: 120)
-        #expect(model.suggestedBlockMinutes(for: task) == 150)  // fully blocked: the estimate again
+        #expect(model.suggestedBlockMinutes(for: task) == 30)  // fully blocked: the default duration
         let noEstimate = try #require(taskList.items.first { $0.title == "Fahrrad" })
         #expect(model.suggestedBlockMinutes(for: noEstimate) == 30)  // default duration
+    }
+
+    @Test func suggestedBlockMinutes_longEstimate_cappedByLargestFreeSlotFromNow() async throws {
+        local.tasks.append(TaskItem(id: id("Thesis"), title: "Thesis", notes: nil, due: nil, priority: nil, estimateMinutes: 600,
+                                    isCompleted: false, container: TaskContainer(id: "local", name: "Lokal", colorHex: nil),
+                                    url: nil, version: "1", editableFields: []))
+        let model = await model()
+        let task = try #require(taskList.items.first { $0.title == "Thesis" })
+        // Today from 10:00: 10–12 and 13–18 are free (lunch 12–13) → largest slot 300 min.
+        #expect(model.suggestedBlockMinutes(for: task, on: today) == 300)
     }
 
     @Test func lunchOfOneDay_changesCapacityAndTimeline() async throws {

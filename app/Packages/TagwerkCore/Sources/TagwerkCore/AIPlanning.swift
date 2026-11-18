@@ -587,3 +587,37 @@ public enum AIPlanSchemas {
         return data(object(properties))
     }
 }
+
+// MARK: - Block duration
+
+/// Longest free stretch of the day in minutes: working hours minus busy events (with buffer), lunch
+/// and existing blocks; with `fromMinutes` (today) only the part from then on.
+public func largestFreeSlot(_ day: PlanInputDay, fromMinutes: Int?) -> Int {
+    guard let hours = day.hours, hours.minutes > 0 else { return 0 }
+    let start = max(hours.startMinutes, fromMinutes ?? hours.startMinutes)
+    guard start < hours.endMinutes else { return 0 }
+    var taken = day.busy.map { ($0.lowerBound - day.bufferMinutes)..<($0.upperBound + day.bufferMinutes) } + day.blocks
+    if let lunch = day.lunch { taken.append(lunch) }
+    var cursor = start
+    var largest = 0
+    for range in taken.sorted(by: { $0.lowerBound < $1.lowerBound }) {
+        if range.lowerBound > cursor { largest = max(largest, min(range.lowerBound, hours.endMinutes) - cursor) }
+        cursor = max(cursor, range.upperBound)
+        if cursor >= hours.endMinutes { break }
+    }
+    if cursor < hours.endMinutes { largest = max(largest, hours.endMinutes - cursor) }
+    return largest
+}
+
+/// Duration of a new block for a task (user rule 2026-11-18): without estimate the default duration;
+/// with estimate the time still open (estimate minus existing blocks). If that is longer than six hours
+/// or than the largest free slot of the day, the largest free slot (at most six hours) is used.
+public func blockMinutes(estimate: Int?, alreadyBlocked: Int, defaultMinutes: Int, largestFreeSlot: Int) -> Int {
+    let maxSession = 6 * 60
+    guard let estimate else { return defaultMinutes }
+    let remaining = estimate - alreadyBlocked
+    guard remaining >= 15 else { return defaultMinutes }
+    guard remaining > maxSession || remaining > largestFreeSlot else { return remaining }
+    let slot = min(largestFreeSlot, maxSession)
+    return slot >= 15 ? slot : min(remaining, maxSession)
+}
