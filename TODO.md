@@ -110,6 +110,13 @@ GitHub-Konto: @melvinmng · bestätigt zuweisbar · geprüft 2026-11-17 · ich
 - [x] [#124](https://github.com/melvinmng/tagwerk/issues/124) App auf Englisch (Sprache folgt dem iPhone) {status: Done; prio: P3 (Medium); aufwand: 8h}
 - [ ] [#134](https://github.com/melvinmng/tagwerk/issues/134) Tage und Wochen in „Planen“ und „Erfassen“ als mitziehbare Seiten blättern (Finger zieht den Nachbartag mit) {status: Backlog; prio: P4 (Low)}
 - [ ] [#136](https://github.com/melvinmng/tagwerk/issues/136) GitHub-Issues beim Anlegen an andere Teilnehmer des gewählten Projects vergeben (Teilnehmer je Project abrufen) {status: Backlog; prio: P4 (Low)}
+- [ ] [#140](https://github.com/melvinmng/tagwerk/issues/140) Phase 7: Routinen und Gewohnheiten einbinden {status: Backlog; prio: P3 (Medium)}
+- [ ] [#141](https://github.com/melvinmng/tagwerk/issues/141) Gewohnheiten täglich abhaken und Quoten zeigen {status: Backlog; prio: P3 (Medium); aufwand: 16h; epic: #140}
+- [ ] [#142](https://github.com/melvinmng/tagwerk/issues/142) Tagesabschluss mit Schlaf-Checkliste und Erinnerungen {status: Backlog; prio: P3 (Medium); aufwand: 8h; epic: #140}
+- [ ] [#143](https://github.com/melvinmng/tagwerk/issues/143) Gedanken-Notiz in Aufgaben und Planänderungen umwandeln {status: Backlog; prio: P3 (Medium); aufwand: 8h; epic: #140}
+- [ ] [#144](https://github.com/melvinmng/tagwerk/issues/144) Wochenreflexion im Wochenrückblick ergänzen {status: Backlog; prio: P3 (Medium); aufwand: 4h; epic: #140}
+- [ ] [#145](https://github.com/melvinmng/tagwerk/issues/145) Tagesstart mit Dankbarkeit und Tagesfokus {status: Backlog; prio: P3 (Medium); aufwand: 6h; epic: #140}
+- [ ] [#146](https://github.com/melvinmng/tagwerk/issues/146) Leitfragen zur Reflexion als optionale Vorlage {status: Backlog; prio: P3 (Medium); aufwand: 3h; epic: #140}
 
 ## Notizen
 
@@ -118,10 +125,17 @@ GitHub-Konto: @melvinmng · bestätigt zuweisbar · geprüft 2026-11-17 · ich
 
 _Automatisch aus [Tagwerk](https://github.com/users/melvinmng/projects/17) erzeugt. Nicht von Hand bearbeiten; Aufgaben oben unter den Personen pflegen._
 
-### Backlog (3)
+### Backlog (10)
 - [#115](https://github.com/melvinmng/tagwerk/issues/115) Phase 6: Jira als Aufgabenquelle anbinden · @melvinmng · Prio P4 (Low)
 - [#134](https://github.com/melvinmng/tagwerk/issues/134) Tage und Wochen in „Planen“ und „Erfassen“ als mitziehbare Seiten blättern (Finger zieht den Nachbartag mit) · @melvinmng · Prio P4 (Low)
 - [#136](https://github.com/melvinmng/tagwerk/issues/136) GitHub-Issues beim Anlegen an andere Teilnehmer des gewählten Projects vergeben (Teilnehmer je Project abrufen) · @melvinmng · Prio P4 (Low)
+- [#140](https://github.com/melvinmng/tagwerk/issues/140) Phase 7: Routinen und Gewohnheiten einbinden · @melvinmng · Prio P3 (Medium)
+- [#141](https://github.com/melvinmng/tagwerk/issues/141) Gewohnheiten täglich abhaken und Quoten zeigen · @melvinmng · Prio P3 (Medium) · 16h
+- [#142](https://github.com/melvinmng/tagwerk/issues/142) Tagesabschluss mit Schlaf-Checkliste und Erinnerungen · @melvinmng · Prio P3 (Medium) · 8h
+- [#143](https://github.com/melvinmng/tagwerk/issues/143) Gedanken-Notiz in Aufgaben und Planänderungen umwandeln · @melvinmng · Prio P3 (Medium) · 8h
+- [#144](https://github.com/melvinmng/tagwerk/issues/144) Wochenreflexion im Wochenrückblick ergänzen · @melvinmng · Prio P3 (Medium) · 4h
+- [#145](https://github.com/melvinmng/tagwerk/issues/145) Tagesstart mit Dankbarkeit und Tagesfokus · @melvinmng · Prio P3 (Medium) · 6h
+- [#146](https://github.com/melvinmng/tagwerk/issues/146) Leitfragen zur Reflexion als optionale Vorlage · @melvinmng · Prio P3 (Medium) · 3h
 
 ### Bereit (1)
 - [#113](https://github.com/melvinmng/tagwerk/issues/113) Phase 5: Einkaufsliste und Notizen einbinden · @melvinmng · Prio P3 (Medium)
