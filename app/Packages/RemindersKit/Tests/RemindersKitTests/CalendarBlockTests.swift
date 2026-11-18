@@ -70,4 +70,16 @@ struct CalendarBlockTests {
     @Test func blockNotes_isFixedText() {
         #expect(CalendarBlockRules.blockNotes == "Geplant mit Tagwerk")
     }
+
+    @Test func blockNotes_followTheRequestedLanguage() {
+        #expect(CalendarBlockRules.blockNotes(in: .german) == "Geplant mit Tagwerk")
+        #expect(CalendarBlockRules.blockNotes(in: .english) == "Planned with Tagwerk")
+    }
+
+    @Test func isBlockNote_acceptsEveryLanguageButNoOtherText() {
+        #expect(CalendarBlockRules.isBlockNote("Geplant mit Tagwerk"))
+        #expect(CalendarBlockRules.isBlockNote("Planned with Tagwerk"))
+        #expect(!CalendarBlockRules.isBlockNote("Planned with Tagwerk, call Anna"))
+        #expect(!CalendarBlockRules.isBlockNote(""))
+    }
 }

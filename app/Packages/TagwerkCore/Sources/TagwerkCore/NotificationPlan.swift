@@ -61,11 +61,11 @@ public struct NotificationRules: Sendable, Hashable {
 
 /// Notifications for open tasks with a due date from the enabled sources and, if enabled, for deadline calendar
 /// events. Reminders are included on purpose: the Reminders app only alerts at the due moment, if at all. The result holds the earliest
-/// `rules.limit` notifications that fire at least `rules.minimumDelay` after `now`, ordered by fire date.
+/// `rules.limit` notifications that fire at least `rules.minimumDelay` after `now`, ordered by fire date. Texts and formats follow `locale`.
 public func notificationPlan(tasks: [TaskItem], deadlineEvents: [CalendarEvent], rules: NotificationRules,
-                             now: Date, calendar: Calendar) -> [PlannedNotification] {
+                             now: Date, calendar: Calendar, locale: Locale = .current) -> [PlannedNotification] {
     let earliest = now.addingTimeInterval(rules.minimumDelay)
-    let texts = NotificationTexts(calendar: calendar)
+    let texts = NotificationTexts(calendar: calendar, locale: locale)
     var result: [PlannedNotification] = []
 
     for task in tasks where !task.isCompleted && rules.taskSources.contains(task.id.source) {
@@ -109,37 +109,48 @@ public func notificationPlan(tasks: [TaskItem], deadlineEvents: [CalendarEvent],
     return Array(result.sorted { ($0.fireDate, $0.id) < ($1.fireDate, $1.id) }.prefix(rules.limit))
 }
 
-/// German notification texts, relative to the day the notification fires.
+/// Notification texts, relative to the day the notification fires, in the language of `locale`.
 private struct NotificationTexts {
     let calendar: Calendar
-    private static let weekdays = ["So.", "Mo.", "Di.", "Mi.", "Do.", "Fr.", "Sa."]
+    let locale: Locale
+
+    private var language: VoiceLanguage { .from(locale: locale) }
+
+    private func text(_ key: String.LocalizationValue) -> String { Localized.string(key, in: language, bundle: .module) }
 
     func title(_ raw: String) -> String {
         let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
-        return trimmed.isEmpty ? "Ohne Titel" : trimmed
+        return trimmed.isEmpty ? text("Ohne Titel") : trimmed
     }
 
     func taskBody(dueDay: PlanDay, time: Date?, fire: Date, container: String) -> String {
-        "Fällig \(moment(day: dueDay, time: time, fire: fire)) · \(container)"
+        let moment = moment(day: dueDay, time: time, fire: fire)
+        return text("Fällig \(moment) · \(container)")
     }
 
     func eventBody(day: PlanDay, time: Date?, fire: Date) -> String {
-        time == nil ? "Deadline \(dayText(day, fire: fire)), ganztägig" : "Deadline \(moment(day: day, time: time, fire: fire))"
+        if time == nil {
+            let dayPart = dayText(day, fire: fire)
+            return text("Deadline \(dayPart), ganztägig")
+        }
+        let moment = moment(day: day, time: time, fire: fire)
+        return text("Deadline \(moment)")
     }
 
     private func moment(day: PlanDay, time: Date?, fire: Date) -> String {
         let dayPart = dayText(day, fire: fire)
         guard let time else { return dayPart }
-        let parts = calendar.dateComponents([.hour, .minute], from: time)
-        return "\(dayPart) um " + String(format: "%02d:%02d", parts.hour ?? 0, parts.minute ?? 0)
+        let clock = DateText.time(time, calendar: calendar, locale: locale)
+        return text("\(dayPart) um \(clock)")
     }
 
     private func dayText(_ day: PlanDay, fire: Date) -> String {
         let fireDay = PlanDay(date: fire, calendar: calendar)
-        if day == fireDay { return "heute" }
-        if day == fireDay.adding(days: 1, calendar: calendar) { return "morgen" }
-        let weekday = Self.weekdays[(day.weekday(in: calendar) - 1) % 7]
-        return String(format: "am %@, %02d.%02d.", weekday, day.day, day.month)
+        if day == fireDay { return text("heute") }
+        if day == fireDay.adding(days: 1, calendar: calendar) { return text("morgen") }
+        let weekday = DateText.shortWeekday(day, calendar: calendar, locale: locale)
+        let date = DateText.numericDay(day, calendar: calendar, locale: locale)
+        return text("am \(weekday), \(date)")
     }
 }
 

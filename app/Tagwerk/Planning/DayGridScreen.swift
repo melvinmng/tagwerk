@@ -207,7 +207,7 @@ struct DayGridScreen<Summary: View, Header: View>: View {
     }
 
     @ViewBuilder
-    private func panelSection(_ title: String, _ tasks: [TaskItem], offersToday: Bool, isOverdue: Bool = false) -> some View {
+    private func panelSection(_ title: LocalizedStringResource, _ tasks: [TaskItem], offersToday: Bool, isOverdue: Bool = false) -> some View {
         if !tasks.isEmpty {
             Text(title).font(.caption.weight(.semibold)).foregroundStyle(isOverdue ? .orange : .secondary)
                 .padding(.top, 8).padding(.bottom, 2)
@@ -262,16 +262,16 @@ struct DayGridScreen<Summary: View, Header: View>: View {
         var parts: [String] = []
         if let progress = model.sessionProgress[task.id] {
             // Mockup FS1: what is planned against the effort.
-            parts.append("\(CapacityText.duration(progress.blocked)) von \(CapacityText.duration(progress.estimate)) eingeplant")
+            parts.append(String(localized: "\(CapacityText.duration(progress.blocked)) von \(CapacityText.duration(progress.estimate)) eingeplant"))
         } else if let recurring = model.recurringItem(for: task, on: plan.day) {
-            parts.append(recurring.minutes > 0 ? "↻ \(CapacityText.duration(recurring.minutes)) reserviert" : "↻")
+            parts.append(recurring.minutes > 0 ? String(localized: "↻ \(CapacityText.duration(recurring.minutes)) reserviert") : "↻")
         } else {
             parts.append(CapacityText.duration(model.suggestedBlockMinutes(for: task)))
         }
         if let due = task.due {
-            parts.append("fällig " + DueText.text(due, now: model.now(), calendar: model.calendar))
+            parts.append(String(localized: "fällig \(DueText.text(due, now: model.now(), calendar: model.calendar))"))
         } else if isOverdue, let planned = model.planStore.assignment(for: task.id) {
-            parts.append("geplant " + planned.startDate(in: model.calendar).formatted(.dateTime.weekday(.abbreviated).day().month()))
+            parts.append(String(localized: "geplant \(planned.startDate(in: model.calendar).formatted(.dateTime.weekday(.abbreviated).day().month()))"))
         }
         parts.append(task.container.name)
         return parts.joined(separator: " · ")
@@ -331,7 +331,7 @@ struct DayGridScreen<Summary: View, Header: View>: View {
         let task = taskDrag.task
         let minutes = model.suggestedBlockMinutes(for: task, on: plan.day)
         // Mockup ZV1: the preview names the time still open.
-        let title = model.sessionProgress[task.id].map { "\(task.title) · Rest \(CapacityText.duration($0.remaining))" } ?? task.title
+        let title = model.sessionProgress[task.id].map { String(localized: "\(task.title) · Rest \(CapacityText.duration($0.remaining))") } ?? task.title
         return (title, canvasMinutes(atY: taskDrag.location.y), minutes)
     }
 

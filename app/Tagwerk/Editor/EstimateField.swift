@@ -10,7 +10,7 @@ struct EstimateField: View {
         VStack(alignment: .leading, spacing: 10) {
             LabeledContent("Geschätzt") {
                 HStack(spacing: 2) {
-                    stepButton("minus", direction: -1, label: "Weniger")
+                    stepButton("minus", direction: -1, label: String(localized: "Weniger"))
                         .disabled(input.minutes == nil)
                     TextField("–", text: Binding(get: { input.text }, set: { input.typed($0) }))
                         .keyboardType(.decimalPad)
@@ -19,7 +19,7 @@ struct EstimateField: View {
                         .frame(minWidth: 44, maxWidth: 64)
                         .accessibilityLabel("Geschätzter Aufwand in Stunden")
                     Text("h").foregroundStyle(.secondary)
-                    stepButton("plus", direction: 1, label: "Mehr")
+                    stepButton("plus", direction: 1, label: String(localized: "Mehr"))
                 }
                 .padding(.horizontal, 4)
                 .background(.quaternary, in: Capsule())
@@ -27,10 +27,10 @@ struct EstimateField: View {
 
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 8) {
-                    quickButton(title: "Kein", spoken: "Kein Aufwand", value: nil)
+                    quickButton(title: String(localized: "Kein"), spoken: String(localized: "Kein Aufwand"), value: nil)
                     ForEach(EstimateHours.quickValues, id: \.self) { hours in
                         quickButton(title: EstimateHours.text(minutes: Int(hours * 60)),
-                                    spoken: hours == 1 ? "1 Stunde" : "\(EstimateHours.number(Int(hours * 60))) Stunden",
+                                    spoken: spokenHours(hours),
                                     value: Int(hours * 60))
                     }
                 }
@@ -65,6 +65,11 @@ struct EstimateField: View {
         .buttonStyle(.borderless)  // inside a Form row, default buttons all fire together
         .buttonRepeatBehavior(.enabled)
         .accessibilityLabel(label)
+    }
+
+    /// "1 Stunde", "0,5 Stunden": the plural variants of the count are in the catalog.
+    private func spokenHours(_ hours: Double) -> String {
+        hours == 1 ? String(localized: "1 Stunde") : String(localized: "\(EstimateHours.number(Int(hours * 60))) Stunden")
     }
 
     private func quickButton(title: String, spoken: String, value: Int?) -> some View {

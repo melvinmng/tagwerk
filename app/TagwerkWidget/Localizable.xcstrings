@@ -1,0 +1,276 @@
+{
+  "sourceLanguage" : "de",
+  "strings" : {
+    "%@ %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ %2$@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ %2$@"
+          }
+        }
+      }
+    },
+    "%@ / %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ / %2$@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ / %2$@"
+          }
+        }
+      }
+    },
+    "/ %@ kcal" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "/ %@ kcal"
+          }
+        }
+      }
+    },
+    "ALS NÄCHSTES" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "UP NEXT"
+          }
+        }
+      }
+    },
+    "Als Nächstes" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Up next"
+          }
+        }
+      }
+    },
+    "Dein nächster Termin oder Zeitblock und was danach kommt." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your next event or time block and what comes after."
+          }
+        }
+      }
+    },
+    "Die nächsten Einträge des Tages, auf Wunsch mit Kalorien und Wasser." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The next entries of the day, with calories and water if you like."
+          }
+        }
+      }
+    },
+    "HEUTE · %@ %lld. %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "HEUTE · %1$@ %2$lld. %3$@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TODAY · %1$@ %3$@ %2$lld"
+          }
+        }
+      }
+    },
+    "Heute" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Today"
+          }
+        }
+      }
+    },
+    "Heute nichts mehr geplant" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nothing more planned today"
+          }
+        }
+      }
+    },
+    "Lernzettel" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Study notes"
+          }
+        }
+      }
+    },
+    "MORGEN" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TOMORROW"
+          }
+        }
+      }
+    },
+    "Morgen %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tomorrow %@"
+          }
+        }
+      }
+    },
+    "Morgen %@ %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Morgen %1$@ %2$@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tomorrow %1$@ %2$@"
+          }
+        }
+      }
+    },
+    "Nichts mehr geplant" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nothing more planned"
+          }
+        }
+      }
+    },
+    "Tagwerk öffnen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Tagwerk"
+          }
+        }
+      }
+    },
+    "Tagwerk öffnen, um den Plan zu laden" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Tagwerk to load the plan"
+          }
+        }
+      }
+    },
+    "Vorlesung" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lecture"
+          }
+        }
+      }
+    },
+    "danach %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "then %@"
+          }
+        }
+      }
+    },
+    "danach %@ %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "danach %1$@ %2$@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "then %1$@ %2$@"
+          }
+        }
+      }
+    },
+    "⚠︎ %lld Deadlines heute" : {
+      "localizations" : {
+        "de" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "⚠︎ %lld Deadline heute"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "⚠︎ %lld Deadlines heute"
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "⚠︎ %lld deadline today"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "⚠︎ %lld deadlines today"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

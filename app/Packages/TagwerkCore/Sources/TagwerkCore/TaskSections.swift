@@ -6,11 +6,11 @@ public enum TaskSection: CaseIterable, Sendable, Hashable {
 
     public var title: String {
         switch self {
-        case .overdue: "Überfällig"
-        case .today: "Heute"
-        case .thisWeek: "Diese Woche"
-        case .later: "Später"
-        case .noDate: "Ohne Datum"
+        case .overdue: String(localized: "Überfällig", bundle: .module)
+        case .today: String(localized: "Heute", bundle: .module)
+        case .thisWeek: String(localized: "Diese Woche", bundle: .module)
+        case .later: String(localized: "Später", bundle: .module)
+        case .noDate: String(localized: "Ohne Datum", bundle: .module)
         }
     }
 }

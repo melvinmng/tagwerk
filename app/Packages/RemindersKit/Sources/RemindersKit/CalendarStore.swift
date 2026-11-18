@@ -86,17 +86,28 @@ public extension CalendarStore {
 
 /// Pure rules shared by the EventKit implementation and tests.
 public enum CalendarBlockRules {
-    public static let blockNotes = "Geplant mit Tagwerk"
+    /// The note of a block Tagwerk wrote, in the app language of that moment.
+    public static var blockNotes: String { blockNotes(in: .app) }
+
+    /// The note of a block in `language`; existing blocks keep the language they were written in.
+    public static func blockNotes(in language: VoiceLanguage) -> String {
+        Localized.string("Geplant mit Tagwerk", in: language, bundle: .module)
+    }
+
+    /// Whether `notes` is the note of a Tagwerk block, whatever language it was written in.
+    public static func isBlockNote(_ notes: String) -> Bool {
+        VoiceLanguage.allCases.contains { notes == blockNotes(in: $0) }
+    }
 
     public static func checkVersion(of event: CalendarEvent, expected: String?) throws {
         if let expected, expected != event.version {
-            throw TaskWriteError.failed("Der Termin wurde inzwischen geändert.")
+            throw TaskWriteError.failed(String(localized: "Der Termin wurde inzwischen geändert.", bundle: .module))
         }
     }
 
     public static func checkEditable(_ event: CalendarEvent) throws {
         if !event.isEditable || event.isInvitation {
-            throw TaskWriteError.failed("Dieser Termin kann in Tagwerk nicht geändert werden.")
+            throw TaskWriteError.failed(String(localized: "Dieser Termin kann in Tagwerk nicht geändert werden.", bundle: .module))
         }
     }
 

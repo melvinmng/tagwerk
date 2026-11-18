@@ -33,7 +33,7 @@ struct WidgetContent {
         intake = snapshot.intake(at: entry.date, calendar: calendar)
     }
 
-    static func time(_ date: Date) -> String { WidgetSnapshot.time(date, calendar: .widget) }
+    static func time(_ date: Date) -> String { DateText.time(date, calendar: .widget) }
 
     /// "10:30–12:00"; deadlines only "18:00".
     static func span(_ entry: SnapshotEntry) -> String {
@@ -43,13 +43,12 @@ struct WidgetContent {
     static func deadlineFooter(_ count: Int) -> String? {
         switch count {
         case 0: nil
-        case 1: "⚠︎ 1 Deadline heute"
-        default: "⚠︎ \(count) Deadlines heute"
+        default: String(localized: "⚠︎ \(count) Deadlines heute")
         }
     }
 
-    static let staleText = "Tagwerk öffnen, um den Plan zu laden"
-    static let nothingLeftText = "Heute nichts mehr geplant"
+    static var staleText: String { String(localized: "Tagwerk öffnen, um den Plan zu laden") }
+    static var nothingLeftText: String { String(localized: "Heute nichts mehr geplant") }
 }
 
 /// Small, rectangular and inline "Als Nächstes".
@@ -84,6 +83,8 @@ struct NextUpView: View {
                 }
                 if let first = entries.first {
                     Text(WidgetContent.span(first)).font(.subheadline.weight(.semibold).monospacedDigit())
+                        // "10:30 AM–12:00 PM" is much wider than "10:30–12:00"; it shrinks instead of wrapping.
+                        .lineLimit(1).minimumScaleFactor(0.7)
                         .foregroundStyle(Color(hex: first.colorHex) ?? .accentColor)
                     Text(first.title).font(.headline).lineLimit(2).privacySensitive()
                 }
@@ -205,13 +206,14 @@ struct TodayView: View {
     private var headerText: String {
         let parts = Calendar.widget.dateComponents([.day], from: entry.date)
         let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "de_DE")
+        formatter.locale = .current
         formatter.timeZone = .current
         formatter.dateFormat = "EEE"
         let weekday = formatter.string(from: entry.date).replacingOccurrences(of: ".", with: "")
         formatter.dateFormat = "MMM"
         let month = formatter.string(from: entry.date).replacingOccurrences(of: ".", with: "")
-        return "HEUTE · \(weekday) \(parts.day ?? 1). \(month)"
+        let day = parts.day ?? 1
+        return String(localized: "HEUTE · \(weekday) \(day). \(month)")
     }
 
     private func nutrition(_ intake: SnapshotIntake) -> some View {
@@ -232,6 +234,6 @@ struct TodayView: View {
     }
 
     private func water(_ milliliters: Int) -> String {
-        milliliters == 0 ? "0" : IntakeFormat.liters(milliliters).replacingOccurrences(of: " l", with: "")
+        milliliters == 0 ? "0" : IntakeFormat.litersNumber(milliliters)
     }
 }

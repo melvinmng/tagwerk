@@ -2,6 +2,7 @@ import AIKit
 import Foundation
 import ImageIO
 import Testing
+import TagwerkCore
 import UIKit
 @testable import Tagwerk
 
@@ -31,9 +32,9 @@ struct MealEstimatorTests {
     final class Counter { var value = 0 }
 
     func make(_ responder: any ResponseStreaming, consent: Bool = true, counter: Counter = Counter(),
-              timeout: Duration = .seconds(30)) -> MealEstimator {
+              timeout: Duration = .seconds(30), language: VoiceLanguage = .german) -> MealEstimator {
         MealEstimator(responder: responder, model: { counter.value += 1; return "gpt-test" }, hasConsent: { consent },
-                      timeout: timeout)
+                      timeout: timeout, language: { language })
     }
 
     @Test func noConsent_sendsNothing_andDoesNotLoadModels() async {
@@ -58,8 +59,23 @@ struct MealEstimatorTests {
         let call = try #require(responder.calls.first)
         #expect(call.input == [.user("2 Brötchen mit Käse")])
         #expect(call.schema == "meal_estimate")
-        #expect(responder.instructions[0] == MealEstimator.instructions)
-        #expect(responder.instructions[1] == MealEstimator.instructions)
+        #expect(responder.instructions[0] == MealEstimator.instructions(language: .german))
+        #expect(responder.instructions[1] == MealEstimator.instructions(language: .german))
+    }
+
+    @Test func instructions_requestTitleAndAmountsInTheAppLanguage() async throws {
+        responder.enqueue(Self.answer)
+        responder.enqueue(Self.answer)
+        _ = try await make(responder, language: .german).estimate(text: "Apfel", jpeg: nil)
+        _ = try await make(responder, language: .english).estimate(text: "apple", jpeg: nil)
+        let german = responder.instructions[0]
+        let english = responder.instructions[1]
+        #expect(german.contains("Mengenangabe auf Deutsch"))
+        #expect(german.contains("kurzer deutscher Name"))
+        #expect(english.contains("Mengenangabe auf Englisch (English)"))
+        #expect(english.contains("kurzer englischer Name"))
+        #expect(!english.contains("auf Deutsch"))
+        #expect(!english.contains("deutscher Name"))
     }
 
     @Test func image_sendsUserImage() async throws {

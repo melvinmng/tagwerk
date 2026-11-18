@@ -8,9 +8,9 @@
 GitHub-Konto: @melvinmng · bestätigt zuweisbar · geprüft 2026-11-17 · ich
 
 - [x] [#1](https://github.com/melvinmng/tagwerk/issues/1) Phase 1: Machbarkeit auf dem iPhone nachweisen {status: Done; prio: P1 (Very High)}
-- [ ] [#2](https://github.com/melvinmng/tagwerk/issues/2) Phase 2: Aufgaben, Kalender und KI-Tagesplan umsetzen {status: In progress; prio: P2 (High)}
-- [ ] [#3](https://github.com/melvinmng/tagwerk/issues/3) Phase 3: Ernährung, Trinken und Training erfassen {status: In review; prio: P3 (Medium)}
-- [ ] [#4](https://github.com/melvinmng/tagwerk/issues/4) Phase 4: Widget, Kurzbefehle und Wochenrückblick ergänzen {status: In review; prio: P4 (Low)}
+- [x] [#2](https://github.com/melvinmng/tagwerk/issues/2) Phase 2: Aufgaben, Kalender und KI-Tagesplan umsetzen {status: Done; prio: P2 (High)}
+- [x] [#3](https://github.com/melvinmng/tagwerk/issues/3) Phase 3: Ernährung, Trinken und Training erfassen {status: Done; prio: P3 (Medium)}
+- [x] [#4](https://github.com/melvinmng/tagwerk/issues/4) Phase 4: Widget, Kurzbefehle und Wochenrückblick ergänzen {status: Done; prio: P4 (Low)}
 - [x] [#5](https://github.com/melvinmng/tagwerk/issues/5) Test-App mit XcodeGen anlegen und signieren {status: Done; prio: P1 (Very High); aufwand: 1h; epic: #1}
 - [x] [#6](https://github.com/melvinmng/tagwerk/issues/6) Reminders- und Kalenderzugriff prüfen {status: Done; prio: P1 (Very High); aufwand: 1h; epic: #1}
 - [x] [#7](https://github.com/melvinmng/tagwerk/issues/7) HealthKit-Lesezugriff prüfen {status: Done; prio: P1 (Very High); aufwand: 1h; epic: #1}
@@ -56,46 +56,46 @@ GitHub-Konto: @melvinmng · bestätigt zuweisbar · geprüft 2026-11-17 · ich
 - [x] [#54](https://github.com/melvinmng/tagwerk/issues/54) Gleiche Termine aus mehreren Kalendern zusammenfassen {status: Done; prio: P2 (High); aufwand: 2h; epic: #2}
 - [x] [#55](https://github.com/melvinmng/tagwerk/issues/55) Termine in allen Kalendern anlegen, ändern und löschen {status: Done; prio: P2 (High); aufwand: 6h; epic: #2}
 - [x] [#56](https://github.com/melvinmng/tagwerk/issues/56) ChatGPT-Anmeldung und Tokens {status: Done; prio: P2 (High); aufwand: 6h; epic: #2}
-- [ ] [#57](https://github.com/melvinmng/tagwerk/issues/57) ChatGPT-Antworten mit Streaming und Modellliste {status: In review; prio: P2 (High); aufwand: 5h; epic: #2}
-- [ ] [#58](https://github.com/melvinmng/tagwerk/issues/58) Gesprächsschleife mit Aktionskarten {status: In review; prio: P2 (High); aufwand: 4h; epic: #2}
-- [ ] [#59](https://github.com/melvinmng/tagwerk/issues/59) KI-Planung: Eingabe und Prüfregeln {status: In review; prio: P2 (High); aufwand: 4h; epic: #2}
+- [x] [#57](https://github.com/melvinmng/tagwerk/issues/57) ChatGPT-Antworten mit Streaming und Modellliste {status: Done; prio: P2 (High); aufwand: 5h; epic: #2}
+- [x] [#58](https://github.com/melvinmng/tagwerk/issues/58) Gesprächsschleife mit Aktionskarten {status: Done; prio: P2 (High); aufwand: 4h; epic: #2}
+- [x] [#59](https://github.com/melvinmng/tagwerk/issues/59) KI-Planung: Eingabe und Prüfregeln {status: Done; prio: P2 (High); aufwand: 4h; epic: #2}
 - [x] [#60](https://github.com/melvinmng/tagwerk/issues/60) KI in Einrichtung und Einstellungen {status: Done; prio: P2 (High); aufwand: 3h; epic: #2}
-- [ ] [#61](https://github.com/melvinmng/tagwerk/issues/61) Tag, Woche und Monat mit KI planen {status: In review; prio: P2 (High); aufwand: 6h; epic: #2}
-- [ ] [#62](https://github.com/melvinmng/tagwerk/issues/62) App-Funktionen für den Assistenten {status: In review; prio: P2 (High); aufwand: 5h; epic: #2}
-- [ ] [#63](https://github.com/melvinmng/tagwerk/issues/63) Assistent-Knopf und Chat {status: In review; prio: P2 (High); aufwand: 5h; epic: #2}
-- [ ] [#64](https://github.com/melvinmng/tagwerk/issues/64) GitHub-Lesezugriffe für den Issue-Chat {status: In review; prio: P2 (High); aufwand: 4h; epic: #2}
-- [ ] [#65](https://github.com/melvinmng/tagwerk/issues/65) Chat zur Aufgabe mit Repo-Inhalten {status: In review; prio: P2 (High); aufwand: 3h; epic: #2}
-- [ ] [#66](https://github.com/melvinmng/tagwerk/issues/66) KI-Einträge im Menü und Verknüpfungsvorschläge {status: In review; prio: P2 (High); aufwand: 2h; epic: #2}
-- [ ] [#68](https://github.com/melvinmng/tagwerk/issues/68) Dauer beim Einplanen aus der Schätzung {status: In review; prio: P2 (High); aufwand: 2h; epic: #2}
-- [ ] [#69](https://github.com/melvinmng/tagwerk/issues/69) Blöcke duplizieren und Abschnitt „Zu wenig Zeit eingeplant“ {status: In review; prio: P2 (High); aufwand: 3h; epic: #2}
-- [ ] [#70](https://github.com/melvinmng/tagwerk/issues/70) Aufgaben in der Woche zwischen Tagen ziehen {status: In review; prio: P2 (High); aufwand: 2h; epic: #2}
-- [ ] [#71](https://github.com/melvinmng/tagwerk/issues/71) Wischen in Woche und Monat {status: In review; prio: P2 (High); aufwand: 2h; epic: #2}
-- [ ] [#72](https://github.com/melvinmng/tagwerk/issues/72) KI schlägt längere Arbeitstage vor {status: In review; prio: P2 (High); aufwand: 2h; epic: #2}
-- [ ] [#73](https://github.com/melvinmng/tagwerk/issues/73) Vorschläge zeigen Priorität, Fälligkeit und Aufwand; Tipp öffnet das Vorschlagsblatt mit der Aufgabe {status: In review; prio: P2 (High); aufwand: 5h; epic: #2}
-- [ ] [#74](https://github.com/melvinmng/tagwerk/issues/74) Über Vorschläge sprechen, sie von Hand verschieben und Planungsvorgaben setzen {status: In review; prio: P2 (High); aufwand: 8h; epic: #2}
+- [x] [#61](https://github.com/melvinmng/tagwerk/issues/61) Tag, Woche und Monat mit KI planen {status: Done; prio: P2 (High); aufwand: 6h; epic: #2}
+- [x] [#62](https://github.com/melvinmng/tagwerk/issues/62) App-Funktionen für den Assistenten {status: Done; prio: P2 (High); aufwand: 5h; epic: #2}
+- [x] [#63](https://github.com/melvinmng/tagwerk/issues/63) Assistent-Knopf und Chat {status: Done; prio: P2 (High); aufwand: 5h; epic: #2}
+- [x] [#64](https://github.com/melvinmng/tagwerk/issues/64) GitHub-Lesezugriffe für den Issue-Chat {status: Done; prio: P2 (High); aufwand: 4h; epic: #2}
+- [x] [#65](https://github.com/melvinmng/tagwerk/issues/65) Chat zur Aufgabe mit Repo-Inhalten {status: Done; prio: P2 (High); aufwand: 3h; epic: #2}
+- [x] [#66](https://github.com/melvinmng/tagwerk/issues/66) KI-Einträge im Menü und Verknüpfungsvorschläge {status: Done; prio: P2 (High); aufwand: 2h; epic: #2}
+- [x] [#68](https://github.com/melvinmng/tagwerk/issues/68) Dauer beim Einplanen aus der Schätzung {status: Done; prio: P2 (High); aufwand: 2h; epic: #2}
+- [x] [#69](https://github.com/melvinmng/tagwerk/issues/69) Blöcke duplizieren und Abschnitt „Zu wenig Zeit eingeplant“ {status: Done; prio: P2 (High); aufwand: 3h; epic: #2}
+- [x] [#70](https://github.com/melvinmng/tagwerk/issues/70) Aufgaben in der Woche zwischen Tagen ziehen {status: Done; prio: P2 (High); aufwand: 2h; epic: #2}
+- [x] [#71](https://github.com/melvinmng/tagwerk/issues/71) Wischen in Woche und Monat {status: Done; prio: P2 (High); aufwand: 2h; epic: #2}
+- [x] [#72](https://github.com/melvinmng/tagwerk/issues/72) KI schlägt längere Arbeitstage vor {status: Done; prio: P2 (High); aufwand: 2h; epic: #2}
+- [x] [#73](https://github.com/melvinmng/tagwerk/issues/73) Vorschläge zeigen Priorität, Fälligkeit und Aufwand; Tipp öffnet das Vorschlagsblatt mit der Aufgabe {status: Done; prio: P2 (High); aufwand: 5h; epic: #2}
+- [x] [#74](https://github.com/melvinmng/tagwerk/issues/74) Über Vorschläge sprechen, sie von Hand verschieben und Planungsvorgaben setzen {status: Done; prio: P2 (High); aufwand: 8h; epic: #2}
 - [x] [#76](https://github.com/melvinmng/tagwerk/issues/76) Benachrichtigungsplan aus Aufgaben und Deadline-Terminen berechnen {status: Done; prio: P2 (High); aufwand: 2h; epic: #2}
 - [x] [#77](https://github.com/melvinmng/tagwerk/issues/77) Gesperrten Schlüsselbund nicht als GitHub-Abmeldung werten {status: Done; prio: P2 (High); aufwand: 1h; epic: #2}
 - [x] [#78](https://github.com/melvinmng/tagwerk/issues/78) Benachrichtigungen planen und aktuell halten {status: Done; prio: P2 (High); aufwand: 3h; epic: #2}
 - [x] [#79](https://github.com/melvinmng/tagwerk/issues/79) Benachrichtigungen in Einrichtung und Einstellungen, Sprung beim Tippen {status: Done; prio: P2 (High); aufwand: 2h; epic: #2}
 - [x] [#80](https://github.com/melvinmng/tagwerk/issues/80) Hintergrund-Refresh für Aufgaben und Benachrichtigungen {status: Done; prio: P2 (High); aufwand: 2h; epic: #2}
-- [ ] [#82](https://github.com/melvinmng/tagwerk/issues/82) Regeln für Essen, Wasser und Training {status: In review; prio: P2 (High); aufwand: 3h; epic: #3}
-- [ ] [#83](https://github.com/melvinmng/tagwerk/issues/83) Fotos an ChatGPT senden {status: In review; prio: P2 (High); aufwand: 1h; epic: #3}
-- [ ] [#84](https://github.com/melvinmng/tagwerk/issues/84) Apple Health anbinden (HealthBridge) {status: In review; prio: P2 (High); aufwand: 3h; epic: #3}
-- [ ] [#85](https://github.com/melvinmng/tagwerk/issues/85) Einträge speichern und nach Health spiegeln {status: In review; prio: P2 (High); aufwand: 3h; epic: #3}
-- [ ] [#86](https://github.com/melvinmng/tagwerk/issues/86) Mahlzeiten mit ChatGPT schätzen {status: In review; prio: P2 (High); aufwand: 2h; epic: #3}
-- [ ] [#87](https://github.com/melvinmng/tagwerk/issues/87) Zustand des Tabs Erfassen {status: In review; prio: P2 (High); aufwand: 2h; epic: #3}
-- [ ] [#88](https://github.com/melvinmng/tagwerk/issues/88) Tab Erfassen mit Essen, Trinken und Training {status: In review; prio: P2 (High); aufwand: 4h; epic: #3}
-- [ ] [#89](https://github.com/melvinmng/tagwerk/issues/89) Einstellungen und Demo-Daten für Erfassen {status: In review; prio: P2 (High); aufwand: 2h; epic: #3}
-- [ ] [#91](https://github.com/melvinmng/tagwerk/issues/91) Widget-Snapshot, Deeplink-Routen und Rückblick-Regeln {status: In review; prio: P2 (High); aufwand: 4h; epic: #4}
-- [ ] [#92](https://github.com/melvinmng/tagwerk/issues/92) Kalorien- und Wasser-Zeile im Kopf von Planen {status: In review; prio: P2 (High); aufwand: 2h; epic: #4}
-- [ ] [#93](https://github.com/melvinmng/tagwerk/issues/93) Widget-Snapshot schreiben und aktualisieren {status: In review; prio: P2 (High); aufwand: 3h; epic: #4}
-- [ ] [#94](https://github.com/melvinmng/tagwerk/issues/94) Deeplinks tagwerk:// für Planen, Erfassen und Rückblick {status: In review; prio: P2 (High); aufwand: 2h; epic: #4}
-- [ ] [#95](https://github.com/melvinmng/tagwerk/issues/95) Siri-Kurzbefehle für Wasser, Mahlzeit, Training und Tagesüberblick {status: In review; prio: P2 (High); aufwand: 4h; epic: #4}
-- [ ] [#96](https://github.com/melvinmng/tagwerk/issues/96) Widgets „Als Nächstes“ und „Heute“ {status: In review; prio: P2 (High); aufwand: 4h; epic: #4}
-- [ ] [#97](https://github.com/melvinmng/tagwerk/issues/97) Install-Skript für App und Widget-Extension {status: In review; prio: P2 (High); aufwand: 3h; epic: #4}
-- [ ] [#98](https://github.com/melvinmng/tagwerk/issues/98) Wochenrückblick in Erfassen {status: In review; prio: P2 (High); aufwand: 5h; epic: #4}
-- [ ] [#99](https://github.com/melvinmng/tagwerk/issues/99) Einstellungen „Siri & Kurzbefehle“, Demo-Daten und Doku Phase 4 {status: In review; prio: P2 (High); aufwand: 2h; epic: #4}
-- [ ] [#103](https://github.com/melvinmng/tagwerk/issues/103) Mit der KI sprechen {status: In progress; prio: P2 (High)}
+- [x] [#82](https://github.com/melvinmng/tagwerk/issues/82) Regeln für Essen, Wasser und Training {status: Done; prio: P2 (High); aufwand: 3h; epic: #3}
+- [x] [#83](https://github.com/melvinmng/tagwerk/issues/83) Fotos an ChatGPT senden {status: Done; prio: P2 (High); aufwand: 1h; epic: #3}
+- [x] [#84](https://github.com/melvinmng/tagwerk/issues/84) Apple Health anbinden (HealthBridge) {status: Done; prio: P2 (High); aufwand: 3h; epic: #3}
+- [x] [#85](https://github.com/melvinmng/tagwerk/issues/85) Einträge speichern und nach Health spiegeln {status: Done; prio: P2 (High); aufwand: 3h; epic: #3}
+- [x] [#86](https://github.com/melvinmng/tagwerk/issues/86) Mahlzeiten mit ChatGPT schätzen {status: Done; prio: P2 (High); aufwand: 2h; epic: #3}
+- [x] [#87](https://github.com/melvinmng/tagwerk/issues/87) Zustand des Tabs Erfassen {status: Done; prio: P2 (High); aufwand: 2h; epic: #3}
+- [x] [#88](https://github.com/melvinmng/tagwerk/issues/88) Tab Erfassen mit Essen, Trinken und Training {status: Done; prio: P2 (High); aufwand: 4h; epic: #3}
+- [x] [#89](https://github.com/melvinmng/tagwerk/issues/89) Einstellungen und Demo-Daten für Erfassen {status: Done; prio: P2 (High); aufwand: 2h; epic: #3}
+- [x] [#91](https://github.com/melvinmng/tagwerk/issues/91) Widget-Snapshot, Deeplink-Routen und Rückblick-Regeln {status: Done; prio: P2 (High); aufwand: 4h; epic: #4}
+- [x] [#92](https://github.com/melvinmng/tagwerk/issues/92) Kalorien- und Wasser-Zeile im Kopf von Planen {status: Done; prio: P2 (High); aufwand: 2h; epic: #4}
+- [x] [#93](https://github.com/melvinmng/tagwerk/issues/93) Widget-Snapshot schreiben und aktualisieren {status: Done; prio: P2 (High); aufwand: 3h; epic: #4}
+- [x] [#94](https://github.com/melvinmng/tagwerk/issues/94) Deeplinks tagwerk:// für Planen, Erfassen und Rückblick {status: Done; prio: P2 (High); aufwand: 2h; epic: #4}
+- [x] [#95](https://github.com/melvinmng/tagwerk/issues/95) Siri-Kurzbefehle für Wasser, Mahlzeit, Training und Tagesüberblick {status: Done; prio: P2 (High); aufwand: 4h; epic: #4}
+- [x] [#96](https://github.com/melvinmng/tagwerk/issues/96) Widgets „Als Nächstes“ und „Heute“ {status: Done; prio: P2 (High); aufwand: 4h; epic: #4}
+- [x] [#97](https://github.com/melvinmng/tagwerk/issues/97) Install-Skript für App und Widget-Extension {status: Done; prio: P2 (High); aufwand: 3h; epic: #4}
+- [x] [#98](https://github.com/melvinmng/tagwerk/issues/98) Wochenrückblick in Erfassen {status: Done; prio: P2 (High); aufwand: 5h; epic: #4}
+- [x] [#99](https://github.com/melvinmng/tagwerk/issues/99) Einstellungen „Siri & Kurzbefehle“, Demo-Daten und Doku Phase 4 {status: Done; prio: P2 (High); aufwand: 2h; epic: #4}
+- [x] [#103](https://github.com/melvinmng/tagwerk/issues/103) Mit der KI sprechen {status: Done; prio: P2 (High)}
 - [x] [#104](https://github.com/melvinmng/tagwerk/issues/104) Sprache: Erkennung auf dem iPhone prüfen {status: Done; prio: P2 (High); aufwand: 2h; epic: #103}
 - [x] [#105](https://github.com/melvinmng/tagwerk/issues/105) Sprache: sprechbarer Text, Sprache erkennen, Vorlese-Regel, Ansagen {status: Done; prio: P2 (High); aufwand: 4h; epic: #103}
 - [x] [#106](https://github.com/melvinmng/tagwerk/issues/106) Sprache: Erkennung und Aufnahme-Modell {status: Done; prio: P2 (High); aufwand: 6h; epic: #103}
@@ -107,6 +107,7 @@ GitHub-Konto: @melvinmng · bestätigt zuweisbar · geprüft 2026-11-17 · ich
 - [ ] [#115](https://github.com/melvinmng/tagwerk/issues/115) Phase 6: Jira als Aufgabenquelle anbinden {status: Backlog; prio: P4 (Low)}
 - [x] [#118](https://github.com/melvinmng/tagwerk/issues/118) KI: Termine anlegen, ändern und löschen {status: Done; prio: P2 (High); aufwand: 4h; epic: #2}
 - [x] [#120](https://github.com/melvinmng/tagwerk/issues/120) Sprechmodus: Vorschläge per Stimme annehmen, ablehnen und korrigieren {status: Done; prio: P2 (High); aufwand: 5h; epic: #103}
+- [ ] [#124](https://github.com/melvinmng/tagwerk/issues/124) App auf Englisch (Sprache folgt dem iPhone) {status: In review; prio: P3 (Medium); aufwand: 8h}
 
 ## Notizen
 
@@ -121,58 +122,20 @@ _Automatisch aus [Tagwerk](https://github.com/users/melvinmng/projects/17) erzeu
 ### Bereit (1)
 - [#113](https://github.com/melvinmng/tagwerk/issues/113) Phase 5: Einkaufsliste und Notizen einbinden · @melvinmng · Prio P3 (Medium)
 
-### In Arbeit (2)
-- [#2](https://github.com/melvinmng/tagwerk/issues/2) Phase 2: Aufgaben, Kalender und KI-Tagesplan umsetzen · @melvinmng · Prio P2 (High)
-- [#103](https://github.com/melvinmng/tagwerk/issues/103) Mit der KI sprechen · @melvinmng · Prio P2 (High)
-
-### In Prüfung (35)
-- [#3](https://github.com/melvinmng/tagwerk/issues/3) Phase 3: Ernährung, Trinken und Training erfassen · @melvinmng · Prio P3 (Medium)
-- [#4](https://github.com/melvinmng/tagwerk/issues/4) Phase 4: Widget, Kurzbefehle und Wochenrückblick ergänzen · @melvinmng · Prio P4 (Low)
-- [#57](https://github.com/melvinmng/tagwerk/issues/57) ChatGPT-Antworten mit Streaming und Modellliste · @melvinmng · Prio P2 (High) · 5h
-- [#58](https://github.com/melvinmng/tagwerk/issues/58) Gesprächsschleife mit Aktionskarten · @melvinmng · Prio P2 (High) · 4h
-- [#59](https://github.com/melvinmng/tagwerk/issues/59) KI-Planung: Eingabe und Prüfregeln · @melvinmng · Prio P2 (High) · 4h
-- [#61](https://github.com/melvinmng/tagwerk/issues/61) Tag, Woche und Monat mit KI planen · @melvinmng · Prio P2 (High) · 6h
-- [#62](https://github.com/melvinmng/tagwerk/issues/62) App-Funktionen für den Assistenten · @melvinmng · Prio P2 (High) · 5h
-- [#63](https://github.com/melvinmng/tagwerk/issues/63) Assistent-Knopf und Chat · @melvinmng · Prio P2 (High) · 5h
-- [#64](https://github.com/melvinmng/tagwerk/issues/64) GitHub-Lesezugriffe für den Issue-Chat · @melvinmng · Prio P2 (High) · 4h
-- [#65](https://github.com/melvinmng/tagwerk/issues/65) Chat zur Aufgabe mit Repo-Inhalten · @melvinmng · Prio P2 (High) · 3h
-- [#66](https://github.com/melvinmng/tagwerk/issues/66) KI-Einträge im Menü und Verknüpfungsvorschläge · @melvinmng · Prio P2 (High) · 2h
-- [#68](https://github.com/melvinmng/tagwerk/issues/68) Dauer beim Einplanen aus der Schätzung · @melvinmng · Prio P2 (High) · 2h
-- [#69](https://github.com/melvinmng/tagwerk/issues/69) Blöcke duplizieren und Abschnitt „Zu wenig Zeit eingeplant“ · @melvinmng · Prio P2 (High) · 3h
-- [#70](https://github.com/melvinmng/tagwerk/issues/70) Aufgaben in der Woche zwischen Tagen ziehen · @melvinmng · Prio P2 (High) · 2h
-- [#71](https://github.com/melvinmng/tagwerk/issues/71) Wischen in Woche und Monat · @melvinmng · Prio P2 (High) · 2h
-- [#72](https://github.com/melvinmng/tagwerk/issues/72) KI schlägt längere Arbeitstage vor · @melvinmng · Prio P2 (High) · 2h
-- [#73](https://github.com/melvinmng/tagwerk/issues/73) Vorschläge zeigen Priorität, Fälligkeit und Aufwand; Tipp öffnet das Vorschlagsblatt mit der Aufgabe · @melvinmng · Prio P2 (High) · 5h
-- [#74](https://github.com/melvinmng/tagwerk/issues/74) Über Vorschläge sprechen, sie von Hand verschieben und Planungsvorgaben setzen · @melvinmng · Prio P2 (High) · 8h
-- [#82](https://github.com/melvinmng/tagwerk/issues/82) Regeln für Essen, Wasser und Training · @melvinmng · Prio P2 (High) · 3h
-- [#83](https://github.com/melvinmng/tagwerk/issues/83) Fotos an ChatGPT senden · @melvinmng · Prio P2 (High) · 1h
-- [#84](https://github.com/melvinmng/tagwerk/issues/84) Apple Health anbinden (HealthBridge) · @melvinmng · Prio P2 (High) · 3h
-- [#85](https://github.com/melvinmng/tagwerk/issues/85) Einträge speichern und nach Health spiegeln · @melvinmng · Prio P2 (High) · 3h
-- [#86](https://github.com/melvinmng/tagwerk/issues/86) Mahlzeiten mit ChatGPT schätzen · @melvinmng · Prio P2 (High) · 2h
-- [#87](https://github.com/melvinmng/tagwerk/issues/87) Zustand des Tabs Erfassen · @melvinmng · Prio P2 (High) · 2h
-- [#88](https://github.com/melvinmng/tagwerk/issues/88) Tab Erfassen mit Essen, Trinken und Training · @melvinmng · Prio P2 (High) · 4h
-- [#89](https://github.com/melvinmng/tagwerk/issues/89) Einstellungen und Demo-Daten für Erfassen · @melvinmng · Prio P2 (High) · 2h
-- [#91](https://github.com/melvinmng/tagwerk/issues/91) Widget-Snapshot, Deeplink-Routen und Rückblick-Regeln · @melvinmng · Prio P2 (High) · 4h
-- [#92](https://github.com/melvinmng/tagwerk/issues/92) Kalorien- und Wasser-Zeile im Kopf von Planen · @melvinmng · Prio P2 (High) · 2h
-- [#93](https://github.com/melvinmng/tagwerk/issues/93) Widget-Snapshot schreiben und aktualisieren · @melvinmng · Prio P2 (High) · 3h
-- [#94](https://github.com/melvinmng/tagwerk/issues/94) Deeplinks tagwerk:// für Planen, Erfassen und Rückblick · @melvinmng · Prio P2 (High) · 2h
-- [#95](https://github.com/melvinmng/tagwerk/issues/95) Siri-Kurzbefehle für Wasser, Mahlzeit, Training und Tagesüberblick · @melvinmng · Prio P2 (High) · 4h
-- [#96](https://github.com/melvinmng/tagwerk/issues/96) Widgets „Als Nächstes“ und „Heute“ · @melvinmng · Prio P2 (High) · 4h
-- [#97](https://github.com/melvinmng/tagwerk/issues/97) Install-Skript für App und Widget-Extension · @melvinmng · Prio P2 (High) · 3h
-- [#98](https://github.com/melvinmng/tagwerk/issues/98) Wochenrückblick in Erfassen · @melvinmng · Prio P2 (High) · 5h
-- [#99](https://github.com/melvinmng/tagwerk/issues/99) Einstellungen „Siri & Kurzbefehle“, Demo-Daten und Doku Phase 4 · @melvinmng · Prio P2 (High) · 2h
+### In Prüfung (1)
+- [#124](https://github.com/melvinmng/tagwerk/issues/124) App auf Englisch (Sprache folgt dem iPhone) · @melvinmng · Prio P3 (Medium) · 8h
 
 ### Nicht zugeordnet (0)
 
 ### Zuletzt erledigt (10)
-- [#120](https://github.com/melvinmng/tagwerk/issues/120) Sprechmodus: Vorschläge per Stimme annehmen, ablehnen und korrigieren · @melvinmng
-- [#80](https://github.com/melvinmng/tagwerk/issues/80) Hintergrund-Refresh für Aufgaben und Benachrichtigungen · @melvinmng
-- [#79](https://github.com/melvinmng/tagwerk/issues/79) Benachrichtigungen in Einrichtung und Einstellungen, Sprung beim Tippen · @melvinmng
-- [#78](https://github.com/melvinmng/tagwerk/issues/78) Benachrichtigungen planen und aktuell halten · @melvinmng
-- [#77](https://github.com/melvinmng/tagwerk/issues/77) Gesperrten Schlüsselbund nicht als GitHub-Abmeldung werten · @melvinmng
-- [#76](https://github.com/melvinmng/tagwerk/issues/76) Benachrichtigungsplan aus Aufgaben und Deadline-Terminen berechnen · @melvinmng
-- [#118](https://github.com/melvinmng/tagwerk/issues/118) KI: Termine anlegen, ändern und löschen · @melvinmng
-- [#110](https://github.com/melvinmng/tagwerk/issues/110) Sprache: Sprechmodus · @melvinmng
-- [#109](https://github.com/melvinmng/tagwerk/issues/109) Sprache: Einstellungen und Sprache der KI-Antworten · @melvinmng
-- [#108](https://github.com/melvinmng/tagwerk/issues/108) Sprache: Mikrofon in Chat und Vorschlagsblatt · @melvinmng
+- [#2](https://github.com/melvinmng/tagwerk/issues/2) Phase 2: Aufgaben, Kalender und KI-Tagesplan umsetzen · @melvinmng
+- [#4](https://github.com/melvinmng/tagwerk/issues/4) Phase 4: Widget, Kurzbefehle und Wochenrückblick ergänzen · @melvinmng
+- [#3](https://github.com/melvinmng/tagwerk/issues/3) Phase 3: Ernährung, Trinken und Training erfassen · @melvinmng
+- [#99](https://github.com/melvinmng/tagwerk/issues/99) Einstellungen „Siri & Kurzbefehle“, Demo-Daten und Doku Phase 4 · @melvinmng
+- [#98](https://github.com/melvinmng/tagwerk/issues/98) Wochenrückblick in Erfassen · @melvinmng
+- [#97](https://github.com/melvinmng/tagwerk/issues/97) Install-Skript für App und Widget-Extension · @melvinmng
+- [#96](https://github.com/melvinmng/tagwerk/issues/96) Widgets „Als Nächstes“ und „Heute“ · @melvinmng
+- [#95](https://github.com/melvinmng/tagwerk/issues/95) Siri-Kurzbefehle für Wasser, Mahlzeit, Training und Tagesüberblick · @melvinmng
+- [#94](https://github.com/melvinmng/tagwerk/issues/94) Deeplinks tagwerk:// für Planen, Erfassen und Rückblick · @melvinmng
+- [#93](https://github.com/melvinmng/tagwerk/issues/93) Widget-Snapshot schreiben und aktualisieren · @melvinmng
 <!-- t3gh:end -->

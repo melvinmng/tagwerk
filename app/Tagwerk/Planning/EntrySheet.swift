@@ -55,8 +55,9 @@ struct EntrySheet: View {
 
     private var navigationTitle: String {
         switch current {
-        case .lunch: "Mittagspause"
-        case .event(let event, let taskID): taskID != nil && model.canEditAsBlock(event) ? "Zeitblock" : "Termin"
+        case .lunch: String(localized: "Mittagspause")
+        case .event(let event, let taskID):
+            taskID != nil && model.canEditAsBlock(event) ? String(localized: "Zeitblock") : String(localized: "Termin")
         }
     }
 
@@ -73,7 +74,7 @@ struct EntrySheet: View {
             }
             if event.isRecurring { Label("Wiederholt sich", systemImage: "arrow.trianglehead.2.clockwise").foregroundStyle(.secondary) }
             if let location = event.location, !location.isEmpty { LabeledContent("Ort", value: location) }
-            if let notes = event.notes, !notes.isEmpty, notes != CalendarBlockRules.blockNotes {
+            if let notes = event.notes, !notes.isEmpty, !CalendarBlockRules.isBlockNote(notes) {
                 Text(notes).font(.subheadline).foregroundStyle(.secondary)
             }
         }
@@ -206,8 +207,8 @@ struct EntrySheet: View {
     }
 
     private func lockReason(_ event: CalendarEvent) -> String? {
-        if event.isInvitation { return "Einladung: Zeit und Titel legt die einladende Person fest." }
-        if !event.isEditable { return "Abonnierter oder schreibgeschützter Kalender: Zeit und Titel sind hier nicht änderbar." }
+        if event.isInvitation { return String(localized: "Einladung: Zeit und Titel legt die einladende Person fest.") }
+        if !event.isEditable { return String(localized: "Abonnierter oder schreibgeschützter Kalender: Zeit und Titel sind hier nicht änderbar.") }
         return nil
     }
 
@@ -267,7 +268,7 @@ struct EntrySheet: View {
     }
 
     private func timeText(_ event: CalendarEvent) -> String {
-        if event.isAllDay { return event.start.formatted(date: .complete, time: .omitted) + " · ganztägig" }
+        if event.isAllDay { return String(localized: "\(event.start.formatted(date: .complete, time: .omitted)) · ganztägig") }
         return event.start.formatted(date: .complete, time: .shortened) + " – " + event.end.formatted(date: .omitted, time: .shortened)
     }
 
@@ -278,19 +279,19 @@ struct EntrySheet: View {
             Button {
                 Task { await model.duplicateBlock(event); dismiss() }
             } label: {
-                LabeledContent("Duplizieren", value: "\(AIPlanner.time(target.lowerBound)) · \(CapacityText.duration(target.count))")
+                LabeledContent("Duplizieren", value: "\(DateText.time(minutes: target.lowerBound, calendar: model.calendar)) · \(CapacityText.duration(target.count))")
             }
         } else {
-            LabeledContent("Duplizieren", value: "kein freier Platz mehr")
+            LabeledContent("Duplizieren", value: String(localized: "kein freier Platz mehr"))
                 .foregroundStyle(.secondary)
         }
     }
 
     private func originText(_ event: CalendarEvent) -> String {
         switch model.linkOrigin(eventID: event.id) {
-        case .url?: "Tagwerk-Block"
-        case .manual?: "manuell verknüpft"
-        case .automatic?: "automatisch erkannt"
+        case .url?: String(localized: "Tagwerk-Block")
+        case .manual?: String(localized: "manuell verknüpft")
+        case .automatic?: String(localized: "automatisch erkannt")
         case nil: ""
         }
     }

@@ -6,9 +6,9 @@ import TagwerkCore
 extension PlanScope {
     var title: String {
         switch self {
-        case .day: "Tag"
-        case .week: "Woche"
-        case .month: "Monat"
+        case .day: String(localized: "Tag")
+        case .week: String(localized: "Woche")
+        case .month: String(localized: "Monat")
         }
     }
 }
@@ -42,8 +42,8 @@ enum TimelineRow: Identifiable, Equatable {
     var label: String {
         switch self {
         case .event(let event), .block(let event, _): event.title
-        case .lunch: "Mittagspause"
-        case .gap: "frei"
+        case .lunch: String(localized: "Mittagspause")
+        case .gap: String(localized: "frei")
         }
     }
 }
@@ -445,8 +445,8 @@ final class PlanningModel {
 
     /// Current planned day for the menu row (mockup F1).
     func plannedText(for id: TaskID) -> String {
-        guard let day = planStore.assignment(for: id) else { return "noch nicht eingeplant" }
-        return "Arbeitstag: " + day.startDate(in: calendar).formatted(.dateTime.weekday(.abbreviated).day().month())
+        guard let day = planStore.assignment(for: id) else { return String(localized: "noch nicht eingeplant") }
+        return String(localized: "Arbeitstag: \(day.startDate(in: calendar).formatted(.dateTime.weekday(.abbreviated).day().month()))")
     }
 
     /// Block menu and dragging only for Tagwerk's own blocks in a writable calendar; other linked events
@@ -1026,13 +1026,29 @@ final class PlanningModel {
 
     /// "überschneidet …" when a planned event overlaps others on its day, else "passt in die freie Zeit".
     func fitText(start: Date, end: Date, excluding eventID: String?) -> String {
+        switch overlap(start: start, end: end, excluding: eventID) {
+        case .none: String(localized: "passt in die freie Zeit")
+        case .one(let title): String(localized: "überschneidet „\(title)“")
+        case .several(let count): String(localized: "überschneidet \(count) Termine")
+        }
+    }
+
+    enum Overlap: Equatable {
+        case none
+        case one(String)
+        case several(Int)
+    }
+
+    /// Timed events that overlap the given time, for "passt in die freie Zeit" or "überschneidet …".
+    func overlap(start: Date, end: Date, excluding eventID: String?) -> Overlap {
         let interval = DateInterval(start: start, end: max(start, end))
         let overlapping = calendarStore.events(in: interval, calendarIDs: nil)
             .filter { !$0.isAllDay && $0.id != eventID && $0.start < end && $0.end > start }
-        if let first = overlapping.first {
-            return overlapping.count == 1 ? "überschneidet „\(first.title)“" : "überschneidet \(overlapping.count) Termine"
+        switch overlapping.count {
+        case 0: return .none
+        case 1: return .one(overlapping[0].title)
+        default: return .several(overlapping.count)
         }
-        return "passt in die freie Zeit"
     }
 
     /// New events go to the plan calendar unless the user picks another one.

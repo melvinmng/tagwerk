@@ -1,0 +1,876 @@
+{
+  "sourceLanguage" : "de",
+  "strings" : {
+    "%@ / %@ kcal · %@ / %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ / %2$@ kcal · %3$@ / %4$@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ / %2$@ kcal · %3$@ / %4$@"
+          }
+        }
+      }
+    },
+    "%@ g" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ g"
+          }
+        }
+      }
+    },
+    "%@ kcal" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ kcal"
+          }
+        }
+      }
+    },
+    "%@ kcal · %@ · %lld×" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ kcal · %2$@ · %3$lld×"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ kcal · %2$@ · %3$lld×"
+          }
+        }
+      }
+    },
+    "%@ l" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ L"
+          }
+        }
+      }
+    },
+    "%@ um %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ um %2$@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ at %2$@"
+          }
+        }
+      }
+    },
+    "%@ über Ziel" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ over goal"
+          }
+        }
+      }
+    },
+    "%lld Blöcke" : {
+      "localizations" : {
+        "de" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld Block"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld Blöcke"
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld block"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld blocks"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "%lld Deadlines" : {
+      "localizations" : {
+        "de" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld Deadline"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld Deadlines"
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld deadline"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld deadlines"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "%lld Termine" : {
+      "localizations" : {
+        "de" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld Termin"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld Termine"
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld event"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld events"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "%lld h" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld h"
+          }
+        }
+      }
+    },
+    "%lld h %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld h %2$@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld h %2$@"
+          }
+        }
+      }
+    },
+    "%lld min" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld min"
+          }
+        }
+      }
+    },
+    "Abendessen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dinner"
+          }
+        }
+      }
+    },
+    "Danach noch %@ zu viel." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Still %@ over afterward."
+          }
+        }
+      }
+    },
+    "Das Datum ist ungültig." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The date is invalid."
+          }
+        }
+      }
+    },
+    "Das verlängert die Arbeitszeit nicht." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "That doesn’t extend the working hours."
+          }
+        }
+      }
+    },
+    "Deadline %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deadline %@"
+          }
+        }
+      }
+    },
+    "Deadline %@, ganztägig" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deadline %@, all day"
+          }
+        }
+      }
+    },
+    "Der Block liegt außerhalb der Arbeitszeit." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The block is outside working hours."
+          }
+        }
+      }
+    },
+    "Der Block liegt in der Mittagspause." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The block falls in the lunch break."
+          }
+        }
+      }
+    },
+    "Der Block überschneidet sich mit einem Termin oder dessen Puffer." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The block overlaps with an event or its buffer."
+          }
+        }
+      }
+    },
+    "Der Block überschneidet sich mit einem anderen Block." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The block overlaps with another block."
+          }
+        }
+      }
+    },
+    "Der Tag ist frei." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The day is free."
+          }
+        }
+      }
+    },
+    "Der Tag liegt außerhalb des Zeitraums." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The day is outside the period."
+          }
+        }
+      }
+    },
+    "Der Vorschlag liegt in der Vergangenheit." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The suggestion is in the past."
+          }
+        }
+      }
+    },
+    "Der Vorschlag liegt nach der Fälligkeit." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The suggestion is after the due date."
+          }
+        }
+      }
+    },
+    "Der Vorschlag liegt nach der zugehörigen Deadline." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The suggestion is after the related deadline."
+          }
+        }
+      }
+    },
+    "Die Antwort passt nicht zum Zeitraum." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The response doesn’t match the period."
+          }
+        }
+      }
+    },
+    "Die Aufgabe ist an diesem Tag nicht eingeplant." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The task isn’t scheduled on this day."
+          }
+        }
+      }
+    },
+    "Die Aufgabe ist schon einem Tag zugeordnet." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The task is already assigned to a day."
+          }
+        }
+      }
+    },
+    "Die Aufgabe wurde doppelt vorgeschlagen." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The task was suggested twice."
+          }
+        }
+      }
+    },
+    "Die Dauer ist ungültig." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The duration is invalid."
+          }
+        }
+      }
+    },
+    "Die Kapazität des Tages ist überschritten." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The day’s capacity is exceeded."
+          }
+        }
+      }
+    },
+    "Die Uhrzeit ist ungültig." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The time is invalid."
+          }
+        }
+      }
+    },
+    "Die längere Arbeitszeit liegt außerhalb von 7 bis 21 Uhr oder über 12 Stunden." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The longer working time is outside 7 AM to 9 PM or exceeds 12 hours."
+          }
+        }
+      }
+    },
+    "Die längere Arbeitszeit wird nicht gebraucht." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The longer working time isn’t needed."
+          }
+        }
+      }
+    },
+    "Diese Aufgabe gibt es nicht." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "That task doesn’t exist."
+          }
+        }
+      }
+    },
+    "Diese Woche" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This week"
+          }
+        }
+      }
+    },
+    "Frühstück" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Breakfast"
+          }
+        }
+      }
+    },
+    "Fällig %@ · %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Fällig %1$@ · %2$@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Due %1$@ · %2$@"
+          }
+        }
+      }
+    },
+    "Gehen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Walking"
+          }
+        }
+      }
+    },
+    "HIIT" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "HIIT"
+          }
+        }
+      }
+    },
+    "Heute" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Today"
+          }
+        }
+      }
+    },
+    "Heute steht nichts an." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nothing on today."
+          }
+        }
+      }
+    },
+    "Heute: %@. Als Nächstes %@ %@." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Heute: %1$@. Als Nächstes %2$@ %3$@."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Today: %1$@. Next up: %2$@ %3$@."
+          }
+        }
+      }
+    },
+    "Heute: %@. Davon steht nichts mehr an." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Today: %@. Nothing more coming up."
+          }
+        }
+      }
+    },
+    "Immer" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Always"
+          }
+        }
+      }
+    },
+    "KW %lld · %lld. %@ – %lld. %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "KW %1$lld · %2$lld. %3$@ – %4$lld. %5$@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Week %1$lld · %3$@ %2$lld – %5$@ %4$lld"
+          }
+        }
+      }
+    },
+    "KW %lld · %lld.–%lld. %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "KW %1$lld · %2$lld.–%3$lld. %4$@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Week %1$lld · %4$@ %2$lld–%3$lld"
+          }
+        }
+      }
+    },
+    "Kommentare gibt es nur bei GitHub-Issues." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Comments are only available for GitHub issues."
+          }
+        }
+      }
+    },
+    "Krafttraining" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Strength training"
+          }
+        }
+      }
+    },
+    "Laufen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Running"
+          }
+        }
+      }
+    },
+    "Mittagessen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lunch"
+          }
+        }
+      }
+    },
+    "Nach gesprochenen Nachrichten" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "After spoken messages"
+          }
+        }
+      }
+    },
+    "Nie" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Never"
+          }
+        }
+      }
+    },
+    "Ohne Datum" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No date"
+          }
+        }
+      }
+    },
+    "Ohne Titel" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Untitled"
+          }
+        }
+      }
+    },
+    "Radfahren" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cycling"
+          }
+        }
+      }
+    },
+    "Schwimmen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Swimming"
+          }
+        }
+      }
+    },
+    "Snack" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Snack"
+          }
+        }
+      }
+    },
+    "Sonstiges" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Other"
+          }
+        }
+      }
+    },
+    "Später" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Later"
+          }
+        }
+      }
+    },
+    "Wandern" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hiking"
+          }
+        }
+      }
+    },
+    "Yoga" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yoga"
+          }
+        }
+      }
+    },
+    "am %@, %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "am %1$@, %2$@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "on %1$@, %2$@"
+          }
+        }
+      }
+    },
+    "heute" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "today"
+          }
+        }
+      }
+    },
+    "morgen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "tomorrow"
+          }
+        }
+      }
+    },
+    "noch %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ left"
+          }
+        }
+      }
+    },
+    "wahrscheinlich zwischen %@ und %@ kcal" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "wahrscheinlich zwischen %1$@ und %2$@ kcal"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "probably between %1$@ and %2$@ kcal"
+          }
+        }
+      }
+    },
+    "×%@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "×%@"
+          }
+        }
+      }
+    },
+    "Überfällig" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Overdue"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

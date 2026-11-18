@@ -43,7 +43,7 @@ struct TaskEditorView: View {
                         onReload: {
                             Task {
                                 await model.reloadFromSource()
-                                AccessibilityNotification.Announcement("Stand von \(sourceName) geladen").post()
+                                AccessibilityNotification.Announcement(String(localized: "Stand von \(sourceName) geladen")).post()
                             }
                         },
                         onSaveAnyway: { Task { await finish(model.saveAnyway()) } }
@@ -93,7 +93,7 @@ struct TaskEditorView: View {
                     if isRecurring {
                         // One effort for a recurring reminder: the value of this day (design §13.15 R1).
                         EstimateField(minutes: recurringMinutes)
-                        Text("Aufwand je Tag der Serie" + (plannedEdit?.originalRecurringMinutes.flatMap { $0 > 0 ? ". Bisher \(CapacityText.duration($0))." : nil } ?? "."))
+                        Text(recurringEffortHint)
                             .font(.caption).foregroundStyle(.secondary)
                     } else if model.isVisible(.estimate) {
                         EstimateField(minutes: $model.draft.estimateMinutes)
@@ -207,14 +207,14 @@ struct TaskEditorView: View {
     private var sourceName: String {
         switch model.original.id.source {
         case .github: "GitHub"
-        case .reminders: "Erinnerungen"
-        case .local: "diesem Gerät"
+        case .reminders: String(localized: "Erinnerungen")
+        case .local: String(localized: "diesem Gerät")
         }
     }
 
     private var title: String {
         if model.original.id.source == .github, let number = model.original.url?.lastPathComponent, Int(number) != nil {
-            return "Issue #\(number)"
+            return String(localized: "Issue #\(number)")
         }
         return model.original.title
     }
@@ -237,15 +237,22 @@ struct TaskEditorView: View {
         Binding(get: { plannedEdit?.recurringMinutes }, set: { plannedEdit?.recurringMinutes = $0 })
     }
 
+    private var recurringEffortHint: String {
+        if let previous = plannedEdit?.originalRecurringMinutes, previous > 0 {
+            return String(localized: "Aufwand je Tag der Serie. Bisher \(CapacityText.duration(previous)).")
+        }
+        return String(localized: "Aufwand je Tag der Serie.")
+    }
+
     private var todayText: String {
-        guard let planning else { return "heute" }
+        guard let planning else { return String(localized: "heute") }
         return planning.today.startDate(in: calendar).formatted(.dateTime.weekday(.abbreviated).day().month(.abbreviated))
     }
 
     private var effortQuestion: String {
-        let old = plannedEdit?.originalRecurringMinutes.map(CapacityText.duration) ?? "kein Aufwand"
-        let new = plannedEdit?.recurringMinutes.map(CapacityText.duration) ?? "kein Aufwand"
-        return "Aufwand geändert: \(old) → \(new)"
+        let old = plannedEdit?.originalRecurringMinutes.map(CapacityText.duration) ?? String(localized: "kein Aufwand")
+        let new = plannedEdit?.recurringMinutes.map(CapacityText.duration) ?? String(localized: "kein Aufwand")
+        return String(localized: "Aufwand geändert: \(old) → \(new)")
     }
 
     private var plannedBinding: Binding<PlannedEdit> {

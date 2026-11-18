@@ -13,8 +13,9 @@ struct SnapshotTimelineEntry: TimelineEntry {
 extension Calendar {
     static var widget: Calendar {
         var calendar = Calendar(identifier: .gregorian)
+        calendar.locale = .current
         calendar.firstWeekday = 2
-        calendar.locale = Locale(identifier: "de_DE")
+        calendar.minimumDaysInFirstWeek = 4
         calendar.timeZone = .current
         return calendar
     }
@@ -60,9 +61,9 @@ extension WidgetSnapshot {
         let entries = [
             SnapshotEntry(id: "1", title: "Issue #12 Login", start: start, end: start.addingTimeInterval(5400), kind: .block,
                           colorHex: nil, isAllDay: false),
-            SnapshotEntry(id: "2", title: "Lernzettel", start: start.addingTimeInterval(9000), end: start.addingTimeInterval(12600),
+            SnapshotEntry(id: "2", title: String(localized: "Lernzettel"), start: start.addingTimeInterval(9000), end: start.addingTimeInterval(12600),
                           kind: .block, colorHex: nil, isAllDay: false),
-            SnapshotEntry(id: "3", title: "Vorlesung", start: start.addingTimeInterval(16200), end: start.addingTimeInterval(21600),
+            SnapshotEntry(id: "3", title: String(localized: "Vorlesung"), start: start.addingTimeInterval(16200), end: start.addingTimeInterval(21600),
                           kind: .event, colorHex: "#34C759", isAllDay: false),
         ]
         let intake = SnapshotIntake(kcal: 1240, hasEstimate: true, goalKcal: 2300, waterMilliliters: 1200, goalWaterMilliliters: 2000)

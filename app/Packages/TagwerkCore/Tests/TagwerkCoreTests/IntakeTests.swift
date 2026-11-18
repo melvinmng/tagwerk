@@ -38,7 +38,7 @@ struct IntakeTests {
         #expect(kind(17, 30) == .dinner)
         #expect(kind(21, 29) == .dinner)
         #expect(kind(22, 0) == .snack)
-        #expect(MealKind.lunch.germanName == "Mittagessen")
+        #expect(MealKind.lunch.displayName == "Mittagessen")
     }
 
     // MARK: Sums
@@ -213,5 +213,15 @@ struct IntakeTests {
         #expect(IntakeFormat.liters(2000) == "2,0 l")
         #expect(IntakeFormat.liters(250) == "0,25 l")
         #expect(IntakeFormat.goalSummary(kcal: 2300, waterMilliliters: 2000, workoutsPerWeek: 3) == "2.300 kcal · 2,0 l · 3×")
+    }
+
+    @Test func format_numbersFollowTheLocale() {
+        let english = Locale(identifier: "en_US")
+        #expect(IntakeFormat.grouped(2300, locale: english) == "2,300")
+        #expect(IntakeFormat.kcalNumber(1312, estimated: true, locale: english) == "~1,310")
+        #expect(IntakeFormat.liters(1200, locale: english) == "1.2 l")
+        #expect(IntakeFormat.liters(250, locale: english) == "0.25 l")
+        #expect(IntakeFormat.factor(1.5, locale: english) == "×1.5")
+        #expect(IntakeFormat.shortRange(min: 1212, max: 1548, locale: english) == "1,210–1,550")
     }
 }

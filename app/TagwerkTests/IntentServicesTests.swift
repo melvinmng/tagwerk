@@ -23,7 +23,7 @@ struct IntentServicesTests {
         environment.snapshotWriter.write(WidgetSnapshot(createdAt: .now, days: [SnapshotDay(day: today, entries: [], deadlineCount: 0,
                                                                                             intake: nil)]))
         let reply = await services.logWater(milliliters: 330)
-        #expect(reply == "330 ml Wasser erfasst.")
+        #expect(String(localized: reply) == "330 ml Wasser erfasst.")
         #expect(environment.capture.todayIntake.waterMilliliters == 330)
         #expect(environment.snapshotWriter.current()?.days.first?.intake?.waterMilliliters == 330)
         _ = await services.logWater(milliliters: 250)
@@ -39,9 +39,9 @@ struct IntentServicesTests {
 
     @Test func logWater_clampsAmount_defaultsTo250() async throws {
         let (services, environment) = try make()
-        #expect(await services.logWater(milliliters: nil) == "250 ml Wasser erfasst.")
-        #expect(await services.logWater(milliliters: 9000) == "2000 ml Wasser erfasst.")
-        #expect(await services.logWater(milliliters: 10) == "50 ml Wasser erfasst.")
+        #expect(String(localized: await services.logWater(milliliters: nil)) == "250 ml Wasser erfasst.")
+        #expect(String(localized: await services.logWater(milliliters: 9000)) == "2000 ml Wasser erfasst.")
+        #expect(String(localized: await services.logWater(milliliters: 10)) == "50 ml Wasser erfasst.")
         #expect(environment.capture.todayIntake.waterMilliliters == 2300)
     }
 

@@ -120,7 +120,7 @@ struct AIPlannerTests {
         #expect(planning.days.first?.suggestions.map(\.taskKey) == ["github:Login"])
         let unscheduled = try #require(planning.suggestionBatches.first?.unscheduled.first)
         #expect(unscheduled.taskKey == "local:Fahrrad")
-        #expect(unscheduled.reason == PlanViolation.Reason.overlapsEvent.rawValue)
+        #expect(unscheduled.reason == PlanViolation.Reason.overlapsEvent.text)
     }
 
     @Test func plan_invalidJSON_fails_withoutSuggestions() async {
@@ -196,7 +196,7 @@ struct AIPlannerTests {
         await planner.accept(suggestion)
 
         #expect(!calendarStore.storedEvents.contains { $0.calendarID == "plan" })
-        #expect(planner.notice?.contains(PlanViolation.Reason.overlapsEvent.rawValue) == true)
+        #expect(planner.notice?.contains(PlanViolation.Reason.overlapsEvent.text) == true)
         #expect(planning.days.first?.suggestions.isEmpty == true)
         #expect(planning.suggestionBatches.first?.unscheduled.map(\.taskKey) == ["local:Fahrrad"])
     }
@@ -373,7 +373,7 @@ struct AIPlannerTests {
         let change = try #require(planning.days.first?.suggestions.first { $0.kind == .dayChange })
         await planner.dismiss(change)
         #expect(planning.days.first?.suggestions.map(\.taskKey) == ["github:Login"])
-        #expect(planning.suggestionBatches.first?.unscheduled.first?.reason == PlanViolation.Reason.outsideWorkHours.rawValue)
+        #expect(planning.suggestionBatches.first?.unscheduled.first?.reason == PlanViolation.Reason.outsideWorkHours.text)
     }
 
     @Test func acceptMove_setsTheNewWorkDay() async throws {
@@ -593,6 +593,39 @@ extension AIPlannerTests {
         #expect(text.contains("\"aiStart\":\"16:00\""))
         #expect(responder.instructions.last?.contains("Mails nicht nach 18 Uhr einplanen.") == true)
         #expect(responder.instructions.first?.contains("Mails nicht nach 18 Uhr einplanen.") == false)
+    }
+
+    // MARK: Language
+
+    @Test func planDay_asksForReasonsInTheAppLanguage() async throws {
+        responder.enqueue(Self.dayAnswer(Self.block("local:Fahrrad", "14:00")))
+        responder.enqueue(Self.dayAnswer(Self.block("local:Fahrrad", "14:00")))
+        let (planner, _) = await make()
+        await planner.plan(scope: .day, anchor: today)
+        planner.language = { .english }
+        await planner.plan(scope: .day, anchor: today)
+        let german = try #require(responder.instructions.first)
+        let english = try #require(responder.instructions.last)
+        #expect(german.contains("auf Deutsch"))
+        #expect(!german.contains("Englisch"))
+        #expect(english.contains("auf Englisch (English)"))
+        #expect(!english.contains("auf Deutsch"))
+    }
+
+    @Test func revise_repliesInTheCommentLanguage_orTheAppLanguage() async throws {
+        let (planner, _, fahrrad, _) = try await twoBlocks()
+        responder.enqueue(Self.revision("Gut so.", ""))
+        responder.enqueue(Self.revision("Fine.", ""))
+        await planner.revise(fahrrad, comment: "früher")
+        planner.language = { .english }
+        await planner.revise(fahrrad, comment: "earlier")
+        let german = try #require(responder.instructions.dropLast().last)
+        let english = try #require(responder.instructions.last)
+        #expect(german.contains("in der Sprache des Kommentars"))
+        #expect(german.contains("sonst auf Deutsch"))
+        #expect(english.contains("in der Sprache des Kommentars"))
+        #expect(english.contains("sonst auf Englisch (English)"))
+        #expect(!english.contains("auf Deutsch"))
     }
 
     @Test func replan_keepsSuggestionsTheUserMoved() async throws {

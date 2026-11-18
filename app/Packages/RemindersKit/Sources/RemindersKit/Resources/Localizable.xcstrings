@@ -1,0 +1,86 @@
+{
+  "sourceLanguage" : "de",
+  "strings" : {
+    "Der Termin wurde inzwischen geändert." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The event has been changed in the meantime."
+          }
+        }
+      }
+    },
+    "Dieser Kalender kann nicht geändert werden." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This calendar can’t be edited."
+          }
+        }
+      }
+    },
+    "Dieser Termin kann in Tagwerk nicht geändert werden." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This event can’t be edited in Tagwerk."
+          }
+        }
+      }
+    },
+    "Erinnerungen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reminders"
+          }
+        }
+      }
+    },
+    "Geplant mit Tagwerk" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Planned with Tagwerk"
+          }
+        }
+      }
+    },
+    "Kein Plan-Kalender" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No plan calendar"
+          }
+        }
+      }
+    },
+    "Keine Erinnerungsliste gefunden" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No reminders list found"
+          }
+        }
+      }
+    },
+    "Keine Kalenderquelle verfügbar" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No calendar source available"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

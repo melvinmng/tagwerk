@@ -1,0 +1,22 @@
+{
+  "sourceLanguage": "de",
+  "strings": {
+    "CFBundleDisplayName": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tagwerk"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tagwerk"
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

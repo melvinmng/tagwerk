@@ -45,6 +45,6 @@ struct GitHubSettingsSection: View {
         guard !all.isEmpty else { return "–" }
         let selected = environment.settings.selectedProjectIDs.map(Set.init) ?? environment.gitHub.defaultSelectedProjectIDs
         let count = selected.intersection(all.map(\.id)).count
-        return "\(count) von \(all.count)"
+        return String(localized: "\(count) von \(all.count)")
     }
 }

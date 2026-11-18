@@ -14,8 +14,8 @@ struct ConflictBanner: View {
             Label {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Auf \(sourceName) geändert").font(.headline)
-                    Text(changes.isEmpty ? "Seit dem Öffnen wurde die Aufgabe geändert."
-                                         : "Seit dem Öffnen \(changes.count == 1 ? "wurde 1 Feld" : "wurden \(changes.count) Felder") geändert.")
+                    Text(changes.isEmpty ? String(localized: "Seit dem Öffnen wurde die Aufgabe geändert.")
+                                         : String(localized: "Seit dem Öffnen wurden \(changes.count) Felder geändert."))
                         .font(.subheadline).foregroundStyle(.secondary)
                 }
             } icon: {
@@ -67,10 +67,9 @@ struct ConflictBanner: View {
     }
 
     private var footer: String {
-        let ownEdits = "„Neu laden“ verwirft deine Änderungen. "
         let overlap = changes.contains { $0.mine != nil }
-        return ownEdits + (overlap
-            ? "„Trotzdem sichern“ schreibt deine Werte und überschreibt dabei die markierten Felder auf \(sourceName)."
-            : "„Trotzdem sichern“ schreibt nur deine Änderungen und überschreibt nichts auf \(sourceName).")
+        return overlap
+            ? String(localized: "„Neu laden“ verwirft deine Änderungen. „Trotzdem sichern“ schreibt deine Werte und überschreibt dabei die markierten Felder auf \(sourceName).")
+            : String(localized: "„Neu laden“ verwirft deine Änderungen. „Trotzdem sichern“ schreibt nur deine Änderungen und überschreibt nichts auf \(sourceName).")
     }
 }

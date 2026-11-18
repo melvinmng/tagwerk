@@ -524,28 +524,37 @@ public enum PlanOutput: Sendable, Hashable {
 
 /// A suggestion that failed a local check.
 public struct PlanViolation: Sendable, Hashable {
-    public enum Reason: String, Sendable, Hashable {
-        case unknownTask = "Diese Aufgabe gibt es nicht."
-        case duplicate = "Die Aufgabe wurde doppelt vorgeschlagen."
-        case invalidMinutes = "Die Dauer ist ungültig."
-        case invalidTime = "Die Uhrzeit ist ungültig."
-        case invalidDay = "Das Datum ist ungültig."
-        case outsidePeriod = "Der Tag liegt außerhalb des Zeitraums."
-        case inThePast = "Der Vorschlag liegt in der Vergangenheit."
-        case dayOff = "Der Tag ist frei."
-        case outsideWorkHours = "Der Block liegt außerhalb der Arbeitszeit."
-        case overlapsLunch = "Der Block liegt in der Mittagspause."
-        case overlapsEvent = "Der Block überschneidet sich mit einem Termin oder dessen Puffer."
-        case overlapsBlock = "Der Block überschneidet sich mit einem anderen Block."
-        case afterDue = "Der Vorschlag liegt nach der Fälligkeit."
-        case afterDeadline = "Der Vorschlag liegt nach der zugehörigen Deadline."
-        case alreadyAssigned = "Die Aufgabe ist schon einem Tag zugeordnet."
-        case overCapacity = "Die Kapazität des Tages ist überschritten."
-        case wrongScope = "Die Antwort passt nicht zum Zeitraum."
-        case invalidDayChange = "Die längere Arbeitszeit liegt außerhalb von 7 bis 21 Uhr oder über 12 Stunden."
-        case notAnExtension = "Das verlängert die Arbeitszeit nicht."
-        case notPlannedThatDay = "Die Aufgabe ist an diesem Tag nicht eingeplant."
-        case noEffect = "Die längere Arbeitszeit wird nicht gebraucht."
+    public enum Reason: Sendable, Hashable {
+        case unknownTask, duplicate, invalidMinutes, invalidTime, invalidDay, outsidePeriod, inThePast, dayOff
+        case outsideWorkHours, overlapsLunch, overlapsEvent, overlapsBlock, afterDue, afterDeadline
+        case alreadyAssigned, overCapacity, wrongScope, invalidDayChange, notAnExtension, notPlannedThatDay, noEffect
+
+        /// The rule that was broken, in the app language (shown on the screen and sent back to the model).
+        public var text: String {
+            switch self {
+            case .unknownTask: String(localized: "Diese Aufgabe gibt es nicht.", bundle: .module)
+            case .duplicate: String(localized: "Die Aufgabe wurde doppelt vorgeschlagen.", bundle: .module)
+            case .invalidMinutes: String(localized: "Die Dauer ist ungültig.", bundle: .module)
+            case .invalidTime: String(localized: "Die Uhrzeit ist ungültig.", bundle: .module)
+            case .invalidDay: String(localized: "Das Datum ist ungültig.", bundle: .module)
+            case .outsidePeriod: String(localized: "Der Tag liegt außerhalb des Zeitraums.", bundle: .module)
+            case .inThePast: String(localized: "Der Vorschlag liegt in der Vergangenheit.", bundle: .module)
+            case .dayOff: String(localized: "Der Tag ist frei.", bundle: .module)
+            case .outsideWorkHours: String(localized: "Der Block liegt außerhalb der Arbeitszeit.", bundle: .module)
+            case .overlapsLunch: String(localized: "Der Block liegt in der Mittagspause.", bundle: .module)
+            case .overlapsEvent: String(localized: "Der Block überschneidet sich mit einem Termin oder dessen Puffer.", bundle: .module)
+            case .overlapsBlock: String(localized: "Der Block überschneidet sich mit einem anderen Block.", bundle: .module)
+            case .afterDue: String(localized: "Der Vorschlag liegt nach der Fälligkeit.", bundle: .module)
+            case .afterDeadline: String(localized: "Der Vorschlag liegt nach der zugehörigen Deadline.", bundle: .module)
+            case .alreadyAssigned: String(localized: "Die Aufgabe ist schon einem Tag zugeordnet.", bundle: .module)
+            case .overCapacity: String(localized: "Die Kapazität des Tages ist überschritten.", bundle: .module)
+            case .wrongScope: String(localized: "Die Antwort passt nicht zum Zeitraum.", bundle: .module)
+            case .invalidDayChange: String(localized: "Die längere Arbeitszeit liegt außerhalb von 7 bis 21 Uhr oder über 12 Stunden.", bundle: .module)
+            case .notAnExtension: String(localized: "Das verlängert die Arbeitszeit nicht.", bundle: .module)
+            case .notPlannedThatDay: String(localized: "Die Aufgabe ist an diesem Tag nicht eingeplant.", bundle: .module)
+            case .noEffect: String(localized: "Die längere Arbeitszeit wird nicht gebraucht.", bundle: .module)
+            }
+        }
     }
 
     public var taskId: String
@@ -591,7 +600,7 @@ public func validate(_ output: PlanOutput, input: PlanInput) -> (accepted: PlanO
             }
         }
         var risks = plan.risks
-        if overbookedAfter > 0 { risks.append("Danach noch \(durationText(overbookedAfter)) zu viel.") }
+        if overbookedAfter > 0 { risks.append(String(localized: "Danach noch \(durationText(overbookedAfter)) zu viel.", bundle: .module)) }
         return (.day(DayPlanOutput(blocks: acceptedBlocks, unscheduled: knownUnscheduled(plan.unscheduled, tasks),
                                    risks: risks, estimates: estimates, summary: plan.summary,
                                    moves: stage.moves, dayChanges: dayChanges)), violations + blockViolations)
@@ -760,8 +769,9 @@ private func validateBlocks(_ blocks: [PlanBlock], input: PlanInput,
 /// "1 h 20", "50 min".
 func durationText(_ minutes: Int) -> String {
     let hours = minutes / 60, rest = minutes % 60
-    if hours == 0 { return "\(rest) min" }
-    return rest == 0 ? "\(hours) h" : "\(hours) h \(String(format: "%02d", rest))"
+    if hours == 0 { return String(localized: "\(rest) min", bundle: .module) }
+    return rest == 0 ? String(localized: "\(hours) h", bundle: .module)
+        : String(localized: "\(hours) h \(String(format: "%02d", rest))", bundle: .module)
 }
 
 /// `estimates` are the model's own estimates; they count for tasks without effort, because they are

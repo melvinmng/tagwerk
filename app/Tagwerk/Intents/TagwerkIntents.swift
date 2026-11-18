@@ -29,7 +29,7 @@ struct LogWaterIntent: AppIntent {
     @MainActor
     func perform() async throws -> some IntentResult & ProvidesDialog {
         let reply = await services.logWater(milliliters: milliliters)
-        return .result(dialog: IntentDialog(stringLiteral: reply))
+        return .result(dialog: IntentDialog(reply))
     }
 }
 
@@ -99,7 +99,7 @@ struct TodayOverviewSnippet: View {
         VStack(alignment: .leading, spacing: 6) {
             ForEach(entries) { entry in
                 HStack(spacing: 8) {
-                    Text(WidgetSnapshot.time(entry.start, calendar: .tagwerk))
+                    Text(DateText.time(entry.start, calendar: .tagwerk))
                         .font(.subheadline.monospacedDigit()).foregroundStyle(.secondary)
                     Text(entry.title).font(.subheadline).lineLimit(1)
                 }

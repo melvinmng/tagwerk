@@ -206,10 +206,10 @@ struct TimelineCanvas: View {
 
             if isSelected && style.canMove {
                 VStack {
-                    grip(entry, mode: .start, color: style.color, alignment: .trailing, label: "Beginn ändern")
+                    grip(entry, mode: .start, color: style.color, alignment: .trailing, label: String(localized: "Beginn ändern"))
                         .offset(y: -8)
                     Spacer()
-                    grip(entry, mode: .end, color: style.color, alignment: .leading, label: "Ende ändern")
+                    grip(entry, mode: .end, color: style.color, alignment: .leading, label: String(localized: "Ende ändern"))
                         .offset(y: 8)
                 }
             }
@@ -323,6 +323,8 @@ struct TimelineCanvas: View {
     private func snapIndicator(minutes: Int, shown: Range<Int>, width: CGFloat) -> some View {
         HStack(spacing: 4) {
             Text(clock(minutes)).font(.caption2.weight(.bold).monospacedDigit()).foregroundStyle(.red)
+                // "10:00 AM" in English is wider than "10:00"; it shrinks instead of wrapping.
+                .lineLimit(1).minimumScaleFactor(0.6)
                 .frame(width: labelWidth, alignment: .leading)
             Rectangle().fill(.red).frame(height: 1.5)
         }
@@ -357,8 +359,9 @@ struct TimelineCanvas: View {
         VStack(spacing: 0) {
             ForEach(Array(stride(from: shown.lowerBound, to: shown.upperBound, by: 60)), id: \.self) { minutes in
                 HStack(alignment: .top, spacing: 6) {
-                    Text(String(format: "%02d:00", minutes / 60))
+                    Text(DateText.time(minutes: minutes / 60 * 60, calendar: model.calendar))
                         .font(.caption2.monospacedDigit()).foregroundStyle(.secondary)
+                        .lineLimit(1).minimumScaleFactor(0.6)
                         .frame(width: labelWidth, alignment: .leading)
                     Rectangle().fill(.quaternary).frame(height: 0.5).padding(.top, Self.lineInset)
                 }
@@ -399,7 +402,7 @@ struct EntryStyle {
     init(entry: DayEntry, model: PlanningModel) {
         switch entry {
         case .lunch:
-            title = "Mittagspause"; color = .gray; isFree = false; canMove = true; isSelectable = false; suffix = ""
+            title = String(localized: "Mittagspause"); color = .gray; isFree = false; canMove = true; isSelectable = false; suffix = ""
         case .event(let event, let taskID):
             title = event.title
             isFree = !event.isBusy
@@ -408,10 +411,10 @@ struct EntryStyle {
             isSelectable = !isBlock
             color = isBlock ? .green : (taskID != nil ? .teal : .blue)
             var parts: [String] = []
-            if isFree { parts.append("Frei") }
-            if !event.isEditable { parts.append("🔒") } else if event.isInvitation { parts.append("Einladung") }
+            if isFree { parts.append(String(localized: "Frei")) }
+            if !event.isEditable { parts.append("🔒") } else if event.isInvitation { parts.append(String(localized: "Einladung")) }
             if event.isRecurring { parts.append("↻") }
-            if !event.mergedCalendarIDs.isEmpty { parts.append("\(event.mergedCalendarIDs.count + 1) Kalender") }
+            if !event.mergedCalendarIDs.isEmpty { parts.append(String(localized: "\(event.mergedCalendarIDs.count + 1) Kalender")) }
             suffix = parts.isEmpty ? "" : " · " + parts.joined(separator: " · ")
         }
     }

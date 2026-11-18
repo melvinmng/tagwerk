@@ -34,7 +34,7 @@ final class AppTools: ToolHandler {
 
     func run(_ call: ToolCall) async -> String {
         guard let arguments = try? JSONSerialization.jsonObject(with: call.arguments) as? [String: Any] else {
-            return Self.error("Die Argumente sind kein gültiges JSON.")
+            return Self.error(String(localized: "Die Argumente sind kein gültiges JSON."))
         }
         do {
             return try await dispatch(call.name, Arguments(arguments))
@@ -85,7 +85,7 @@ final class AppTools: ToolHandler {
             if minutes <= 0 {
                 await planning.removeLunch(on: day)
             } else {
-                guard let start = args.string("start").flatMap(AIPlanner.minutes) else { throw ToolError("Die Uhrzeit fehlt.") }
+                guard let start = args.string("start").flatMap(AIPlanner.minutes) else { throw ToolError(String(localized: "Die Uhrzeit fehlt.")) }
                 await planning.setLunch(startMinutes: start, minutes: minutes, on: day)
             }
             return Self.json(["ok": true])
@@ -93,11 +93,11 @@ final class AppTools: ToolHandler {
         case "plan_period": return try await planPeriod(args)
         case "add_comment":
             let task = try task(args.require("id"))
-            guard let provider = taskList.provider(for: task.id.source) else { throw ToolError("Die Quelle ist nicht verfügbar.") }
+            guard let provider = taskList.provider(for: task.id.source) else { throw ToolError(String(localized: "Die Quelle ist nicht verfügbar.")) }
             try await provider.addComment(try args.require("body"), to: task.id)
             return Self.json(["ok": true])
         default:
-            throw ToolError("Unbekannte Funktion \(name).")
+            throw ToolError(String(localized: "Unbekannte Funktion \(name)."))
         }
     }
 
@@ -126,7 +126,7 @@ final class AppTools: ToolHandler {
     }
 
     private func listEvents(from: PlanDay, to: PlanDay) throws -> String {
-        guard from <= to else { throw ToolError("Der Zeitraum ist ungültig.") }
+        guard from <= to else { throw ToolError(String(localized: "Der Zeitraum ist ungültig.")) }
         let calendar = planning.calendar
         let interval = DateInterval(start: from.startDate(in: calendar), end: to.adding(days: 1, calendar: calendar).startDate(in: calendar))
         let list = events(interval).sorted { $0.start < $1.start }.prefix(100).map { event -> [String: Any] in
@@ -196,8 +196,8 @@ final class AppTools: ToolHandler {
     }
 
     private func editableEvent(_ id: String) throws -> CalendarEvent {
-        guard let event = planning.event(id: id) else { throw ToolError("Diesen Termin gibt es nicht mehr.") }
-        guard event.isEditable, !event.isInvitation else { throw ToolError("Dieser Termin lässt sich nicht ändern.") }
+        guard let event = planning.event(id: id) else { throw ToolError(String(localized: "Diesen Termin gibt es nicht mehr.")) }
+        guard event.isEditable, !event.isInvitation else { throw ToolError(String(localized: "Dieser Termin lässt sich nicht ändern.")) }
         return event
     }
 
@@ -205,12 +205,12 @@ final class AppTools: ToolHandler {
     private func writableCalendar(_ id: String?) throws -> String {
         guard let id else {
             guard let fallback = planning.defaultEventCalendarID ?? planning.writableCalendars.first?.id else {
-                throw ToolError("Es gibt keinen beschreibbaren Kalender.")
+                throw ToolError(String(localized: "Es gibt keinen beschreibbaren Kalender."))
             }
             return fallback
         }
         guard planning.writableCalendars.contains(where: { $0.id == id }) else {
-            throw ToolError("In diesen Kalender kann Tagwerk nicht schreiben.")
+            throw ToolError(String(localized: "In diesen Kalender kann Tagwerk nicht schreiben."))
         }
         return id
     }
@@ -218,21 +218,21 @@ final class AppTools: ToolHandler {
     /// "YYYY-MM-DDTHH:mm", or "YYYY-MM-DD" for all-day events; an all-day end day counts inclusively.
     private func moment(_ text: String, allDay: Bool, end: Bool) throws -> Date {
         let parts = text.split(separator: "T")
-        guard let day = parts.first.flatMap({ AIPlanner.planDay(String($0)) }) else { throw ToolError("Das Datum \(text) ist ungültig.") }
+        guard let day = parts.first.flatMap({ AIPlanner.planDay(String($0)) }) else { throw ToolError(String(localized: "Das Datum \(text) ist ungültig.")) }
         let calendar = planning.calendar
         if allDay { return (end ? day.adding(days: 1, calendar: calendar) : day).startDate(in: calendar) }
         guard parts.count == 2, let minutes = AIPlanner.minutes(String(parts[1])) else {
-            throw ToolError("Die Uhrzeit fehlt bei \(text).")
+            throw ToolError(String(localized: "Die Uhrzeit fehlt bei \(text)."))
         }
         var components = DateComponents(year: day.year, month: day.month, day: day.day)
         components.hour = minutes / 60
         components.minute = minutes % 60
-        guard let date = calendar.date(from: components) else { throw ToolError("Die Uhrzeit ist ungültig.") }
+        guard let date = calendar.date(from: components) else { throw ToolError(String(localized: "Die Uhrzeit ist ungültig.")) }
         return date
     }
 
     private static func checkOrder(_ draft: EventDraft) throws {
-        guard draft.end > draft.start else { throw ToolError("Das Ende liegt nicht nach dem Beginn.") }
+        guard draft.end > draft.start else { throw ToolError(String(localized: "Das Ende liegt nicht nach dem Beginn.")) }
     }
 
     private func createTask(_ args: Arguments) async throws -> String {
@@ -244,7 +244,7 @@ final class AppTools: ToolHandler {
         let available = Set(TaskSource.allCases.filter { taskList.provider(for: $0) != nil })
         let source = args.string("source").flatMap(TaskSource.init(rawValue:))
             ?? (available.contains(.reminders) ? .reminders : .local)
-        guard available.contains(source) else { throw ToolError("Diese Quelle ist nicht verfügbar.") }
+        guard available.contains(source) else { throw ToolError(String(localized: "Diese Quelle ist nicht verfügbar.")) }
         let created = try await taskList.createReturning(draft, in: source)
         return Self.json(["ok": true, "id": created.id.key, "task": Self.summary(created)])
     }
@@ -257,7 +257,7 @@ final class AppTools: ToolHandler {
         if let priority = args.string("priority") { edit.priority = .set(Self.priority(priority)) }
         if let minutes = args.int("minutes") { edit.estimateMinutes = .set(minutes) }
         if args.string("due") != nil { edit.due = .set(try args.due("due")) }
-        guard !edit.isEmpty else { throw ToolError("Es gibt nichts zu ändern.") }
+        guard !edit.isEmpty else { throw ToolError(String(localized: "Es gibt nichts zu ändern.")) }
         let updated = try await taskList.applyReturning(edit, to: task.id)
         return Self.json(["ok": true, "task": Self.summary(updated)])
     }
@@ -266,12 +266,12 @@ final class AppTools: ToolHandler {
         let task = try task(args.require("id"))
         let day = try args.day("day")
         guard let start = args.string("start").flatMap(AIPlanner.minutes), let minutes = args.int("minutes"), minutes > 0 else {
-            throw ToolError("Beginn oder Dauer fehlen.")
+            throw ToolError(String(localized: "Beginn oder Dauer fehlen."))
         }
         var components = DateComponents(year: day.year, month: day.month, day: day.day)
         components.hour = start / 60
         components.minute = start % 60
-        guard let date = planning.calendar.date(from: components) else { throw ToolError("Die Uhrzeit ist ungültig.") }
+        guard let date = planning.calendar.date(from: components) else { throw ToolError(String(localized: "Die Uhrzeit ist ungültig.")) }
         try planning.blocks.createBlock(for: task, start: date, minutes: minutes)
         await planning.reload()
         return Self.json(["ok": true, "task": task.title, "day": AIPlanner.dayString(day), "start": AIPlanner.time(start)])
@@ -283,7 +283,7 @@ final class AppTools: ToolHandler {
             planning.planStore.setOverride(.off, on: day)
         } else {
             guard let start = args.string("start").flatMap(AIPlanner.minutes), let end = args.string("end").flatMap(AIPlanner.minutes),
-                  start < end else { throw ToolError("Beginn und Ende sind ungültig.") }
+                  start < end else { throw ToolError(String(localized: "Beginn und Ende sind ungültig.")) }
             planning.planStore.setOverride(.hours(WorkHours(startMinutes: start, endMinutes: end)), on: day)
         }
         await planning.reload()
@@ -292,18 +292,18 @@ final class AppTools: ToolHandler {
 
     private func markEventsFree(_ args: Arguments) async throws -> String {
         let ids = Set(args.strings("event_ids"))
-        guard !ids.isEmpty else { throw ToolError("Keine Termine angegeben.") }
+        guard !ids.isEmpty else { throw ToolError(String(localized: "Keine Termine angegeben.")) }
         let now = planning.now()
         let window = DateInterval(start: now.addingTimeInterval(-60 * 86_400), duration: 400 * 86_400)
         let matches = events(window).filter { ids.contains($0.id) }
-        guard !matches.isEmpty else { throw ToolError("Diese Termine gibt es nicht.") }
+        guard !matches.isEmpty else { throw ToolError(String(localized: "Diese Termine gibt es nicht.")) }
         await planning.setFree(matches, free: args.bool("free") ?? true, series: args.bool("series") ?? false)
         return Self.json(["ok": true, "count": matches.count])
     }
 
     private func planPeriod(_ args: Arguments) async throws -> String {
-        guard let planner else { throw ToolError("Planen ist gerade nicht verfügbar.") }
-        guard let scope = args.string("scope").flatMap(PlanScope.init(rawValue:)) else { throw ToolError("Der Zeitraum fehlt.") }
+        guard let planner else { throw ToolError(String(localized: "Planen ist gerade nicht verfügbar.")) }
+        guard let scope = args.string("scope").flatMap(PlanScope.init(rawValue:)) else { throw ToolError(String(localized: "Der Zeitraum fehlt.")) }
         let day = (try? args.day("day")) ?? planning.today
         await planner.plan(scope: scope, anchor: day)
         if case .failed(let message) = planner.state { throw ToolError(message) }
@@ -321,7 +321,7 @@ final class AppTools: ToolHandler {
     // MARK: Helpers
 
     private func task(_ id: String) throws -> TaskItem {
-        guard let task = taskList.items.first(where: { $0.id.key == id }) else { throw ToolError("Diese Aufgabe gibt es nicht.") }
+        guard let task = taskList.items.first(where: { $0.id.key == id }) else { throw ToolError(String(localized: "Diese Aufgabe gibt es nicht.")) }
         return task
     }
 
@@ -377,7 +377,7 @@ final class AppTools: ToolHandler {
         }
 
         func require(_ key: String) throws -> String {
-            guard let value = string(key) else { throw ToolError("Das Argument \(key) fehlt.") }
+            guard let value = string(key) else { throw ToolError(String(localized: "Das Argument \(key) fehlt.")) }
             return value
         }
 
@@ -387,7 +387,7 @@ final class AppTools: ToolHandler {
         func priority(_ key: String) -> Priority? { string(key).flatMap(AppTools.priority) }
 
         func day(_ key: String) throws -> PlanDay {
-            guard let day = string(key).flatMap(AIPlanner.planDay) else { throw ToolError("Das Datum \(key) ist ungültig.") }
+            guard let day = string(key).flatMap(AIPlanner.planDay) else { throw ToolError(String(localized: "Das Datum \(key) ist ungültig.")) }
             return day
         }
 
@@ -395,7 +395,7 @@ final class AppTools: ToolHandler {
         func due(_ key: String) throws -> DueDate? {
             guard let text = string(key) else { return nil }
             let parts = text.split(separator: "T")
-            guard let day = AIPlanner.planDay(String(parts[0])) else { throw ToolError("Das Datum \(key) ist ungültig.") }
+            guard let day = AIPlanner.planDay(String(parts[0])) else { throw ToolError(String(localized: "Das Datum \(key) ist ungültig.")) }
             if parts.count == 2, let minutes = AIPlanner.minutes(String(parts[1])) {
                 return DueDate(year: day.year, month: day.month, day: day.day, hour: minutes / 60, minute: minutes % 60)
             }

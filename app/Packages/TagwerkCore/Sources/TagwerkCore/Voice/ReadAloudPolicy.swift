@@ -15,9 +15,9 @@ public enum ReadAloudPolicy: String, CaseIterable, Sendable {
 
     public var title: String {
         switch self {
-        case .never: "Nie"
-        case .afterSpoken: "Nach gesprochenen Nachrichten"
-        case .always: "Immer"
+        case .never: String(localized: "Nie", bundle: .module)
+        case .afterSpoken: String(localized: "Nach gesprochenen Nachrichten", bundle: .module)
+        case .always: String(localized: "Immer", bundle: .module)
         }
     }
 }

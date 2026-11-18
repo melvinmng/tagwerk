@@ -410,13 +410,13 @@ struct TaskListView: View {
     }
 
     static func deleteTitle(for item: TaskItem) -> String {
-        item.id.source == .github ? "Als nicht geplant schließen" : "Löschen"
+        item.id.source == .github ? String(localized: "Als nicht geplant schließen") : String(localized: "Löschen")
     }
 
     static func deleteQuestion(for item: TaskItem) -> String {
         item.id.source == .github
-            ? "„\(item.title)“ auf GitHub als nicht geplant schließen?"
-            : "„\(item.title)“ endgültig löschen?"
+            ? String(localized: "„\(item.title)“ auf GitHub als nicht geplant schließen?")
+            : String(localized: "„\(item.title)“ endgültig löschen?")
     }
 
     private var hasError: Binding<Bool> {
@@ -468,9 +468,9 @@ private struct SourceProblemRow: View {
 
     private var name: String {
         switch source {
-        case .reminders: "Erinnerungen"
+        case .reminders: String(localized: "Erinnerungen")
         case .github: "GitHub"
-        case .local: "lokale Aufgaben"
+        case .local: String(localized: "lokale Aufgaben")
         }
     }
 }
@@ -482,7 +482,7 @@ enum BulkDateTarget: Identifiable {
 
 /// Picks one date for a selection of tasks (planned day or due date).
 struct BulkDateSheet: View {
-    let title: String
+    let title: LocalizedStringKey
     let calendar: Calendar
     let onPick: (Date) -> Void
     @Environment(\.dismiss) private var dismiss

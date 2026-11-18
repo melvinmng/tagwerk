@@ -21,7 +21,7 @@ struct PlanView: View {
         let dismissed = environment.planner.lastDismissed
         if !dismissed.isEmpty {
             let count = environment.planner.dismissedCount
-            UndoCapsule(title: count == 1 ? "1 Vorschlag" : "\(count) Vorschläge", caption: "Verworfen",
+            UndoCapsule(title: String(localized: "\(count) Vorschläge"), caption: "Verworfen",
                         symbol: "sparkles", duration: 5,
                         onUndo: { Task { await environment.planner.undoDismissAll() } },
                         onExpire: { environment.planner.clearDismissUndo() })
@@ -44,9 +44,8 @@ struct PlanView: View {
     @ViewBuilder
     private var moveUndo: some View {
         if let move = model.lastMove, let task = model.taskList.items.first(where: { $0.id == move.taskID }) {
-            let caption = switch move.movedBlocks {
+            let caption: LocalizedStringResource = switch move.movedBlocks {
             case 0: "Verschoben"
-            case 1: "Verschoben · 1 Zeitblock mitgenommen"
             default: "Verschoben · \(move.movedBlocks) Zeitblöcke mitgenommen"
             }
             UndoCapsule(title: task.title, caption: caption, symbol: "arrow.left.arrow.right.circle.fill", duration: 5,
@@ -60,7 +59,7 @@ struct PlanView: View {
     @ViewBuilder
     private var acceptAllUndo: some View {
         if let undo = environment.planner.lastAcceptAll {
-            UndoCapsule(title: undo.count == 1 ? "1 Vorschlag" : "\(undo.count) Vorschläge", caption: "Übernommen",
+            UndoCapsule(title: String(localized: "\(undo.count) Vorschläge"), caption: "Übernommen",
                         symbol: "sparkles", duration: 6,
                         onUndo: { Task { await environment.planner.undoAcceptAll() } },
                         onExpire: { environment.planner.clearAcceptUndo() })

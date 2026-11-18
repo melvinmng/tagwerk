@@ -8,10 +8,10 @@ enum TaskFilter: CaseIterable, Hashable {
 
     var title: String {
         switch self {
-        case .all: "Alle"
-        case .reminders: "Erinnerungen"
+        case .all: String(localized: "Alle")
+        case .reminders: String(localized: "Erinnerungen")
         case .github: "GitHub"
-        case .local: "Lokal"
+        case .local: String(localized: "Lokal")
         }
     }
 
@@ -53,11 +53,16 @@ enum SourceState: Equatable {
 extension Calendar {
     /// Calendar used for all date logic: Gregorian, week starting on Monday. The time zone follows
     /// system changes while the app runs, so "today" stays correct after travelling.
-    static var tagwerk: Calendar {
+    static var tagwerk: Calendar { tagwerk(locale: .current) }
+
+    /// The locale only names things (weekdays, months); the week rules stay Monday first and ISO 8601 numbering
+    /// (week 1 holds the first Thursday), because the locale would otherwise change "KW" around New Year (en_US: 1 day).
+    static func tagwerk(locale: Locale) -> Calendar {
         var calendar = Calendar(identifier: .gregorian)
+        calendar.locale = locale
         calendar.firstWeekday = 2
+        calendar.minimumDaysInFirstWeek = 4
         calendar.timeZone = .autoupdatingCurrent
-        calendar.locale = Locale(identifier: "de_DE")
         return calendar
     }
 }
@@ -234,7 +239,7 @@ final class TaskListModel {
             nextGeneration(for: id.source)
             items.removeAll { $0.id == id }
         } catch TaskWriteError.conflict {
-            lastError = "Die Aufgabe wurde inzwischen geändert. Die Liste ist jetzt aktuell."
+            lastError = String(localized: "Die Aufgabe wurde inzwischen geändert. Die Liste ist jetzt aktuell.")
             await reload(only: [id.source])
         } catch TaskWriteError.signedOut {
             signOut(id.source)
@@ -361,7 +366,7 @@ final class TaskListModel {
             nextGeneration(for: id.source)
             return updated
         } catch TaskWriteError.conflict {
-            lastError = "Die Aufgabe wurde inzwischen geändert. Die Liste ist jetzt aktuell."
+            lastError = String(localized: "Die Aufgabe wurde inzwischen geändert. Die Liste ist jetzt aktuell.")
             await reload()
         } catch TaskWriteError.signedOut {
             signOut(id.source)
@@ -382,11 +387,11 @@ final class TaskListModel {
     static func message(for error: Error) -> String {
         switch error {
         case TaskWriteError.failed(let message): message
-        case TaskWriteError.accessDenied: "Kein Zugriff auf diese Quelle."
-        case TaskWriteError.signedOut: "Die Anmeldung ist abgelaufen. Bitte melde dich neu an."
-        case TaskWriteError.notFound: "Die Aufgabe existiert nicht mehr."
-        case TaskWriteError.offline: "Offline: Änderungen an GitHub sind gerade nicht möglich."
-        case TaskWriteError.conflict: "Die Aufgabe wurde inzwischen geändert."
+        case TaskWriteError.accessDenied: String(localized: "Kein Zugriff auf diese Quelle.")
+        case TaskWriteError.signedOut: String(localized: "Die Anmeldung ist abgelaufen. Bitte melde dich neu an.")
+        case TaskWriteError.notFound: String(localized: "Die Aufgabe existiert nicht mehr.")
+        case TaskWriteError.offline: String(localized: "Offline: Änderungen an GitHub sind gerade nicht möglich.")
+        case TaskWriteError.conflict: String(localized: "Die Aufgabe wurde inzwischen geändert.")
         default: error.localizedDescription
         }
     }

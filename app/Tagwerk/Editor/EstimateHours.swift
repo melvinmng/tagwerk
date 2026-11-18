@@ -6,14 +6,14 @@ enum EstimateHours {
     static let quickValues: [Double] = [0.25, 0.5, 1, 2, 4]
 
     /// "0,75 h", "1 h", "1,5 h"; "–" without effort.
-    static func text(minutes: Int?) -> String {
+    static func text(minutes: Int?, locale: Locale = .current) -> String {
         guard let minutes else { return "–" }
-        return "\(number(minutes)) h"
+        return String(localized: "\(number(minutes, locale: locale)) h")
     }
 
-    /// Hours as a number without unit, German decimal comma.
-    static func number(_ minutes: Int) -> String {
-        (Double(minutes) / 60).formatted(.number.precision(.fractionLength(0...2)).locale(Locale(identifier: "de_DE")))
+    /// Hours as a number without unit, with the decimal separator of the locale (comma in German).
+    static func number(_ minutes: Int, locale: Locale = .current) -> String {
+        (Double(minutes) / 60).formatted(.number.precision(.fractionLength(0...2)).locale(locale))
     }
 
     /// Rounds typed hours to the nearest quarter hour, at least 0,25 h; 0 or nothing means no effort.
@@ -37,7 +37,7 @@ struct EstimateInput: Equatable {
 
     init(minutes: Int?) {
         self.minutes = minutes
-        self.text = minutes.map(EstimateHours.number) ?? ""
+        self.text = minutes.map { EstimateHours.number($0) } ?? ""
     }
 
     /// Typed text: empty or 0 means no effort, an unreadable entry keeps the last value.
@@ -67,6 +67,6 @@ struct EstimateInput: Equatable {
     }
 
     private mutating func syncText() {
-        text = minutes.map(EstimateHours.number) ?? ""
+        text = minutes.map { EstimateHours.number($0) } ?? ""
     }
 }

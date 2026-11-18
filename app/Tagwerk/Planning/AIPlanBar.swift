@@ -42,7 +42,7 @@ struct AIPlanBar: View {
         } else if planner.isPlanning {
             HStack(spacing: 8) {
                 ProgressView()
-                Text("ChatGPT plant \(Self.periodName(scope)) …").foregroundStyle(.secondary)
+                Text(Self.progressText(scope)).foregroundStyle(.secondary)
                 Spacer()
                 Button("Abbrechen") { planner.cancel() }
             }
@@ -142,7 +142,7 @@ struct AIPlanBar: View {
                 Button {
                     start()
                 } label: {
-                    Label("\(Self.actionName(scope)) planen", systemImage: "sparkles")
+                    Label(Self.planTitle(scope), systemImage: "sparkles")
                 }
                 .buttonStyle(.bordered)
                 .tint(.purple)
@@ -157,30 +157,39 @@ struct AIPlanBar: View {
 
     private var suggestionText: String {
         let minutes = suggestions.compactMap(\.minutes).reduce(0, +)
-        let count = suggestions.count == 1 ? "1 Vorschlag" : "\(suggestions.count) Vorschläge"
+        let count = String(localized: "\(suggestions.count) Vorschläge")
         return minutes > 0 ? "\(count) · \(CapacityText.duration(minutes))" : count
     }
 
     private var leftOutText: String {
         var parts: [String] = []
-        if unscheduledCount > 0 { parts.append("\(unscheduledCount) nicht eingeplant") }
-        if riskCount > 0 { parts.append(riskCount == 1 ? "1 Risiko" : "\(riskCount) Risiken") }
+        if unscheduledCount > 0 { parts.append(String(localized: "\(unscheduledCount) nicht eingeplant")) }
+        if riskCount > 0 { parts.append(String(localized: "\(riskCount) Risiken")) }
         return parts.joined(separator: " · ")
     }
 
     static func actionName(_ scope: PlanScope) -> String {
         switch scope {
-        case .day: "Tag"
-        case .week: "Woche"
-        case .month: "Monat"
+        case .day: String(localized: "Tag")
+        case .week: String(localized: "Woche")
+        case .month: String(localized: "Monat")
         }
     }
 
-    static func periodName(_ scope: PlanScope) -> String {
+    /// The button that starts planning: a whole sentence per scope, so that translations can inflect it.
+    static func planTitle(_ scope: PlanScope) -> String {
         switch scope {
-        case .day: "den Tag"
-        case .week: "die Woche"
-        case .month: "den Monat"
+        case .day: String(localized: "Tag planen")
+        case .week: String(localized: "Woche planen")
+        case .month: String(localized: "Monat planen")
+        }
+    }
+
+    static func progressText(_ scope: PlanScope) -> String {
+        switch scope {
+        case .day: String(localized: "ChatGPT plant den Tag …")
+        case .week: String(localized: "ChatGPT plant die Woche …")
+        case .month: String(localized: "ChatGPT plant den Monat …")
         }
     }
 }
@@ -292,16 +301,16 @@ enum SuggestionText {
     static func detail(_ suggestion: PlanSuggestion, planning: PlanningModel) -> String {
         switch suggestion.kind {
         case .dayChange:
-            guard let start = suggestion.startMinutes, let end = suggestion.endMinutes else { return "Vorschlag" }
+            guard let start = suggestion.startMinutes, let end = suggestion.endMinutes else { return String(localized: "Vorschlag") }
             let current = planning.workHours(on: suggestion.day)?.minutes ?? 0
             let added = (end - start) - current
-            return current == 0 ? "Vorschlag · freier Tag · \(CapacityText.duration(end - start))"
-                : "Vorschlag · +\(CapacityText.duration(max(0, added))) · nur an diesem Tag"
+            return current == 0 ? String(localized: "Vorschlag · freier Tag · \(CapacityText.duration(end - start))")
+                : String(localized: "Vorschlag · +\(CapacityText.duration(max(0, added))) · nur an diesem Tag")
         case .move:
-            return ["Vorschlag · verschieben", due(suggestion, planning: planning)].compactMap { $0 }.joined(separator: " · ")
+            return [String(localized: "Vorschlag · verschieben"), due(suggestion, planning: planning)].compactMap { $0 }.joined(separator: " · ")
         case .block, .assignment:
-            var parts = ["Vorschlag"]
-            if let start = suggestion.startMinutes { parts.append(AIPlanner.time(start)) }
+            var parts = [String(localized: "Vorschlag")]
+            if let start = suggestion.startMinutes { parts.append(DateText.time(minutes: start, calendar: planning.calendar)) }
             if let minutes = suggestion.minutes { parts.append(CapacityText.duration(minutes)) }
             if let due = due(suggestion, planning: planning) { parts.append(due) }
             return parts.joined(separator: " · ")
@@ -314,7 +323,7 @@ enum SuggestionText {
         guard let due = planning.taskList.items.first(where: { $0.id.key == suggestion.taskKey })?.due else { return nil }
         let day = PlanDay(due)
         let text = day.startDate(in: planning.calendar).formatted(.dateTime.day().month(.twoDigits))
-        return day < planning.today ? "überfällig seit \(text)" : "fällig \(text)"
+        return day < planning.today ? String(localized: "überfällig seit \(text)") : String(localized: "fällig \(text)")
     }
 
     /// A block whose longer day is still open (mockup AB1).
@@ -329,27 +338,37 @@ enum SuggestionText {
         let date = suggestion.day.startDate(in: calendar).formatted(.dateTime.weekday(.abbreviated).day().month(.abbreviated))
         switch suggestion.kind {
         case .move:
-            let from = suggestion.fromDay.map { "von \(SuggestionFacts.weekday($0, calendar: calendar)) \($0.day). " } ?? ""
-            return "\(from)nach \(SuggestionFacts.weekday(suggestion.day, calendar: calendar)) \(suggestion.day.day)."
+            let to = SuggestionFacts.weekdayDay(suggestion.day, calendar: calendar)
+            guard let from = suggestion.fromDay else { return String(localized: "nach \(to)") }
+            let origin = SuggestionFacts.weekdayDay(from, calendar: calendar)
+            return String(localized: "von \(origin) nach \(to)")
         case .dayChange:
-            guard let start = suggestion.startMinutes, let end = suggestion.endMinutes else { return "Vorschlag · \(date)" }
-            return "Vorschlag · \(date) · \(AIPlanner.time(start)) bis \(AIPlanner.time(end))"
+            guard let start = suggestion.startMinutes, let end = suggestion.endMinutes else {
+                return String(localized: "Vorschlag · \(date)")
+            }
+            let from = DateText.time(minutes: start, calendar: calendar), to = DateText.time(minutes: end, calendar: calendar)
+            return String(localized: "Vorschlag · \(date) · \(from) bis \(to)")
         case .block, .assignment:
-            guard let start = suggestion.startMinutes, let minutes = suggestion.minutes else { return "Vorschlag · \(date)" }
-            return "Vorschlag · \(date) · \(AIPlanner.time(start)) bis \(AIPlanner.time(start + minutes))"
+            guard let start = suggestion.startMinutes, let minutes = suggestion.minutes else {
+                return String(localized: "Vorschlag · \(date)")
+            }
+            let from = DateText.time(minutes: start, calendar: calendar)
+            let to = DateText.time(minutes: start + minutes, calendar: calendar)
+            return String(localized: "Vorschlag · \(date) · \(from) bis \(to)")
         }
     }
 
     /// VoiceOver text of a grid block.
     static func accessibility(_ suggestion: PlanSuggestion, facts: SuggestionFacts, time: String) -> String {
-        ["Vorschlag", suggestion.title, time, facts.priority?.text, facts.due?.text, facts.effort].compactMap { $0 }.joined(separator: ", ")
+        [String(localized: "Vorschlag"), suggestion.title, time, facts.priority?.text, facts.due?.text, facts.effort]
+            .compactMap { $0 }.joined(separator: ", ")
     }
 
     /// "Mi 18.11. · 14:00 · 45 min" for blocks, "Do 19.11." for work days.
     static func when(_ suggestion: PlanSuggestion, calendar: Calendar) -> String {
         let date = suggestion.day.startDate(in: calendar)
         var parts = [date.formatted(.dateTime.weekday(.abbreviated).day().month(.twoDigits))]
-        if let start = suggestion.startMinutes { parts.append(AIPlanner.time(start)) }
+        if let start = suggestion.startMinutes { parts.append(DateText.time(minutes: start, calendar: calendar)) }
         if let minutes = suggestion.minutes { parts.append(CapacityText.duration(minutes)) }
         return parts.joined(separator: " · ")
     }

@@ -22,6 +22,9 @@ final class NotificationScheduler {
     @ObservationIgnored private let settings: AppSettings
     @ObservationIgnored private let now: () -> Date
     @ObservationIgnored private let calendar: Calendar
+    /// The locale of the texts and formats. Every run replaces the requests of all loaded sources, so a language
+    /// change reaches them on the next run; sources that are not loaded keep their requests until they load.
+    @ObservationIgnored private let locale: () -> Locale
     @ObservationIgnored private var pendingRun: Task<Void, Never>?
     /// The last queued change; runs wait for it, so an older run never re-adds what a newer one removed.
     @ObservationIgnored private var queue: Task<Void, Never>?
@@ -29,13 +32,15 @@ final class NotificationScheduler {
 
     init(center: any NotificationCenterClient, taskList: TaskListModel,
          deadlineEvents: @escaping (DateInterval, Set<String>) -> [CalendarEvent]?,
-         settings: AppSettings, now: @escaping () -> Date = Date.init, calendar: Calendar = .tagwerk) {
+         settings: AppSettings, now: @escaping () -> Date = Date.init, calendar: Calendar = .tagwerk,
+         locale: @escaping () -> Locale = { .current }) {
         self.center = center
         self.taskList = taskList
         self.deadlineEvents = deadlineEvents
         self.settings = settings
         self.now = now
         self.calendar = calendar
+        self.locale = locale
     }
 
     /// Reads the permission again, e.g. after returning from the iOS settings.
@@ -109,7 +114,9 @@ final class NotificationScheduler {
                                       taskSources: enabled,
                                       limit: max(0, Self.limit - kept.count), minimumDelay: 0)
         let tasks = taskList.items.filter { replaceable.contains($0.id.source) }
-        let wanted = notificationPlan(tasks: tasks, deadlineEvents: events ?? [], rules: rules, now: current, calendar: calendar)
+        let locale = locale()
+        let wanted = notificationPlan(tasks: tasks, deadlineEvents: events ?? [], rules: rules, now: current, calendar: calendar,
+                                      locale: locale)
         let earliestNew = current.addingTimeInterval(NotificationRules.defaultMinimumDelay)
         let pendingDates = Dictionary(ours.map { ($0.id, $0.fireDate) }, uniquingKeysWith: { first, _ in first })
         var plan: [PlannedNotification] = []

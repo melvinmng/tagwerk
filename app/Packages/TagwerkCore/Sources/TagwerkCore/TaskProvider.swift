@@ -39,7 +39,7 @@ public protocol TaskProvider: AnyObject {
 
 extension TaskProvider {
     public func addComment(_ body: String, to id: TaskID) async throws {
-        throw TaskWriteError.failed("Kommentare gibt es nur bei GitHub-Issues.")
+        throw TaskWriteError.failed(String(localized: "Kommentare gibt es nur bei GitHub-Issues.", bundle: .module))
     }
 
     public var offlineSince: Date? { nil }

@@ -420,9 +420,9 @@ struct SuggestionStateLabel: View {
     static func difference(_ old: SuggestionPosition, _ new: SuggestionPosition, calendar: Calendar) -> String {
         var parts: [String] = []
         if old.day != new.day || old.kind != new.kind {
-            parts.append("\(SuggestionFacts.weekday(old.day, calendar: calendar)) \(old.day.day).")
+            parts.append(SuggestionFacts.weekdayDay(old.day, calendar: calendar))
         }
-        if let start = old.startMinutes, start != new.startMinutes || !parts.isEmpty { parts.append(AIPlanner.time(start)) }
+        if let start = old.startMinutes, start != new.startMinutes || !parts.isEmpty { parts.append(DateText.time(minutes: start, calendar: calendar)) }
         if let minutes = old.minutes, minutes != new.minutes { parts.append(CapacityText.duration(minutes)) }
         return parts.isEmpty ? AIPlanner.positionText(old, calendar: calendar) : parts.joined(separator: " · ")
     }
@@ -500,7 +500,7 @@ struct SuggestionConversation: View {
     @State private var rule: String?
     @State private var voice: VoiceInputModel?
 
-    static let quickReplies = ["Früher am Tag", "Anderer Tag", "Kürzer"]
+    static var quickReplies: [String] { [String(localized: "Früher am Tag"), String(localized: "Anderer Tag"), String(localized: "Kürzer")] }
 
     private var planner: AIPlanner { environment.planner }
     private var batch: SuggestionBatch? {
@@ -592,7 +592,7 @@ struct SuggestionConversation: View {
     private func answer(_ message: SuggestionMessage, isLast: Bool) -> some View {
         VStack(alignment: .leading, spacing: 6) {
             let changes = message.changes ?? []
-            Label(changes.isEmpty ? "Nichts geändert" : (changes.count == 1 ? "1 Vorschlag geändert" : "\(changes.count) Vorschläge geändert"),
+            Label(changes.isEmpty ? "Nichts geändert" : "\(changes.count) Vorschläge geändert",
                   systemImage: "sparkles")
                 .font(.subheadline.weight(.semibold)).foregroundStyle(.purple)
             ForEach(changes, id: \.self) { Text($0).font(.caption) }
@@ -701,9 +701,9 @@ struct EffortBar: View {
                 .clipShape(Capsule())
             }
             .frame(height: 6)
-            Text([bar.planned > 0 ? "\(CapacityText.duration(bar.planned)) eingeplant" : nil,
-                  "+\(CapacityText.duration(bar.suggested)) dieser Vorschlag",
-                  bar.open > 0 ? "\(CapacityText.duration(bar.open)) offen" : nil].compactMap { $0 }.joined(separator: " · "))
+            Text([bar.planned > 0 ? String(localized: "\(CapacityText.duration(bar.planned)) eingeplant") : nil,
+                  String(localized: "+\(CapacityText.duration(bar.suggested)) dieser Vorschlag"),
+                  bar.open > 0 ? String(localized: "\(CapacityText.duration(bar.open)) offen") : nil].compactMap { $0 }.joined(separator: " · "))
                 .font(.caption2).foregroundStyle(.secondary)
         }
     }

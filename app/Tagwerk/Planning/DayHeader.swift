@@ -73,11 +73,19 @@ struct DayHeader: View {
     private var isCurrent: Bool { model.range.contains(model.today) && (model.scope != .month || model.anchor.month == model.today.month) }
 
     private var previousLabel: String {
-        switch model.scope { case .day: "Vorheriger Tag"; case .week: "Vorherige Woche"; case .month: "Vorheriger Monat" }
+        switch model.scope {
+        case .day: String(localized: "Vorheriger Tag")
+        case .week: String(localized: "Vorherige Woche")
+        case .month: String(localized: "Vorheriger Monat")
+        }
     }
 
     private var nextLabel: String {
-        switch model.scope { case .day: "Nächster Tag"; case .week: "Nächste Woche"; case .month: "Nächster Monat" }
+        switch model.scope {
+        case .day: String(localized: "Nächster Tag")
+        case .week: String(localized: "Nächste Woche")
+        case .month: String(localized: "Nächster Monat")
+        }
     }
 
     private var title: String {
@@ -86,11 +94,10 @@ struct DayHeader: View {
         case .day:
             return start.formatted(.dateTime.weekday(.wide).day().month(.abbreviated))
         case .week:
+            // The interval style orders day and month as the language does: "16.–22. Nov." / "Nov 16 – 22".
             let range = model.range
             let first = range.lowerBound.startDate(in: model.calendar), last = range.upperBound.startDate(in: model.calendar)
-            return range.lowerBound.month == range.upperBound.month
-                ? "\(range.lowerBound.day).–\(last.formatted(.dateTime.day().month(.abbreviated)))"
-                : "\(first.formatted(.dateTime.day().month(.abbreviated))) – \(last.formatted(.dateTime.day().month(.abbreviated)))"
+            return (first..<last).formatted(.interval.day().month(.abbreviated))
         case .month:
             return start.formatted(.dateTime.month(.wide))
         }
@@ -102,9 +109,10 @@ struct DayHeader: View {
         switch model.scope {
         case .day: return dayCaption
         case .week:
-            return ((isCurrent ? "Diese Woche · " : "") + "KW \(week)").uppercased()
+            return (isCurrent ? String(localized: "Diese Woche · KW \(week)") : String(localized: "KW \(week)")).uppercased()
         case .month:
-            return ((isCurrent ? "Dieser Monat · " : "") + "\(model.anchor.year)").uppercased()
+            let year = String(model.anchor.year)
+            return (isCurrent ? String(localized: "Dieser Monat · \(year)") : year).uppercased()
         }
     }
 
@@ -113,14 +121,14 @@ struct DayHeader: View {
         let distance = model.calendar.dateComponents([.day], from: model.today.startDate(in: model.calendar),
                                                      to: model.anchor.startDate(in: model.calendar)).day ?? 0
         let relative: String = switch distance {
-        case 0: "Heute"
-        case 1: "Morgen"
-        case -1: "Gestern"
-        case let days where days > 1: "In \(days) Tagen"
-        default: "Vor \(-distance) Tagen"
+        case 0: String(localized: "Heute")
+        case 1: String(localized: "Morgen")
+        case -1: String(localized: "Gestern")
+        case let days where days > 1: String(localized: "In \(days) Tagen")
+        default: String(localized: "Vor \(-distance) Tagen")
         }
         let week = model.calendar.component(.weekOfYear, from: model.anchor.startDate(in: model.calendar))
-        return "\(relative) · KW \(week)".uppercased()
+        return "\(relative) · \(String(localized: "KW \(week)"))".uppercased()
     }
 }
 

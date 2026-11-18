@@ -23,7 +23,7 @@ struct WorkoutSheet: View {
                 Section {
                     Picker("Art", selection: $activity) {
                         ForEach(WorkoutActivity.allCases, id: \.self) { activity in
-                            Label(activity.germanName, systemImage: activity.symbolName).tag(activity)
+                            Label(activity.displayName, systemImage: activity.symbolName).tag(activity)
                         }
                     }
                     .pickerStyle(.menu)

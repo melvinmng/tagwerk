@@ -1,0 +1,96 @@
+{
+  "sourceLanguage": "de",
+  "strings": {
+    "${activity} in ${applicationName} erfassen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Log ${activity} in ${applicationName}"
+          }
+        }
+      }
+    },
+    "Essen in ${applicationName} erfassen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Log food in ${applicationName}"
+          }
+        }
+      }
+    },
+    "Mahlzeit in ${applicationName} erfassen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Log a meal in ${applicationName}"
+          }
+        }
+      }
+    },
+    "Mein Tag in ${applicationName}": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "My day in ${applicationName}"
+          }
+        }
+      }
+    },
+    "Training in ${applicationName} erfassen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Log a workout in ${applicationName}"
+          }
+        }
+      }
+    },
+    "Trinken in ${applicationName} erfassen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Log a drink in ${applicationName}"
+          }
+        }
+      }
+    },
+    "Was steht heute in ${applicationName} an": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What's on today in ${applicationName}"
+          }
+        }
+      }
+    },
+    "Wasser in ${applicationName} erfassen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Log water in ${applicationName}"
+          }
+        }
+      }
+    },
+    "Wasser mit ${applicationName} erfassen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Log water with ${applicationName}"
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

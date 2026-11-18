@@ -38,7 +38,7 @@ struct WeekReviewView: View {
                     } header: { header("Eiweiß", review) }
                 }
                 Section {
-                    Text(review.completedTasks == 1 ? "1 Aufgabe" : "\(review.completedTasks) Aufgaben")
+                    Text("\(review.completedTasks) Aufgaben")
                 } header: { header("Erledigt", review) } footer: {
                     Text("Erinnerungen und lokale Aufgaben, ohne GitHub")
                 }
@@ -49,7 +49,7 @@ struct WeekReviewView: View {
         .task { await model.reload() }
     }
 
-    private func header(_ title: String, _ review: WeekReview) -> some View {
+    private func header(_ title: LocalizedStringResource, _ review: WeekReview) -> some View {
         HStack {
             Text(title)
             Spacer()
@@ -57,7 +57,7 @@ struct WeekReviewView: View {
         }
     }
 
-    private func dayCount(_ count: Int) -> String { count == 1 ? "1 Tag" : "\(count) Tagen" }
+    private func dayCount(_ count: Int) -> String { String(localized: "\(count) Tagen") }
 
     @ViewBuilder
     private func caloriesSection(_ review: WeekReview) -> some View {
@@ -74,17 +74,17 @@ struct WeekReviewView: View {
     }
 
     private func waterText(_ review: WeekReview) -> String {
-        guard let average = review.averageWaterMilliliters else { return "Kein Wasser erfasst" }
+        guard let average = review.averageWaterMilliliters else { return String(localized: "Kein Wasser erfasst") }
         let days = review.days.filter { !$0.isFuture }.count
-        return "Ziel an \(review.waterGoalDays) von \(days) Tagen · Ø \(IntakeFormat.liters(average))"
+        return String(localized: "Ziel an \(review.waterGoalDays) von \(days) Tagen · Ø \(IntakeFormat.liters(average))")
     }
 
     private func trainingText(_ review: WeekReview) -> String {
-        guard review.workoutCount > 0 else { return "Kein Training" }
+        guard review.workoutCount > 0 else { return String(localized: "Kein Training") }
         let count = review.goals.workoutsPerWeek > 0
             ? "\(review.workoutCount) / \(review.goals.workoutsPerWeek)"
-            : (review.workoutCount == 1 ? "1 Training" : "\(review.workoutCount) Trainings")
-        return "\(count) · \(review.workoutMinutes) min"
+            : String(localized: "\(review.workoutCount) Trainings")
+        return "\(count) · \(String(localized: "\(review.workoutMinutes) min"))"
     }
 }
 
@@ -92,8 +92,8 @@ struct WeekReviewView: View {
 private struct CalorieBars: View {
     let review: WeekReview
     let calendar: Calendar
-    private static let weekdays = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"]
-    private static let longWeekdays = ["Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag", "Sonntag"]
+    private var weekdays: [String] { DateText.shortStandaloneWeekdaySymbols(calendar: calendar) }
+    private var longWeekdays: [String] { DateText.fullWeekdaySymbols(calendar: calendar) }
 
     var body: some View {
         let goal = Double(max(1, review.goals.kcal))
@@ -110,7 +110,7 @@ private struct CalorieBars: View {
                     ForEach(Array(review.days.enumerated()), id: \.offset) { index, day in
                         VStack(spacing: 4) {
                             bar(day, height: barArea, top: top, goal: goal)
-                            Text(Self.weekdays[index]).font(.caption2).foregroundStyle(.secondary)
+                            Text(weekdays[index]).font(.caption2).foregroundStyle(.secondary)
                         }
                         .frame(maxWidth: .infinity)
                         .accessibilityElement(children: .ignore)
@@ -137,8 +137,10 @@ private struct CalorieBars: View {
     }
 
     private func label(_ day: WeekReview.Day, index: Int) -> String {
-        let name = Self.longWeekdays[index]
-        guard let kcal = day.kcal else { return day.isFuture ? name : "\(name), keine Mahlzeit erfasst" }
-        return "\(name), \(day.hasEstimate ? "etwa " : "")\(IntakeFormat.grouped(IntakeFormat.roundedKcal(kcal))) Kilokalorien"
+        let name = longWeekdays[index]
+        guard let kcal = day.kcal else { return day.isFuture ? name : String(localized: "\(name), keine Mahlzeit erfasst") }
+        let amount = IntakeFormat.grouped(IntakeFormat.roundedKcal(kcal))
+        return day.hasEstimate ? String(localized: "\(name), etwa \(amount) Kilokalorien")
+            : String(localized: "\(name), \(amount) Kilokalorien")
     }
 }

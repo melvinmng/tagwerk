@@ -1,0 +1,56 @@
+{
+  "sourceLanguage" : "de",
+  "strings" : {
+    "Anmeldung derzeit nicht lesbar." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sign-in can’t be read right now."
+          }
+        }
+      }
+    },
+    "Bitte Repository und mindestens ein Project wählen." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose a repository and at least one project."
+          }
+        }
+      }
+    },
+    "GitHub antwortet mit Fehler %lld." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "GitHub responded with error %lld."
+          }
+        }
+      }
+    },
+    "GitHub-Anmeldung: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "GitHub sign-in: %@"
+          }
+        }
+      }
+    },
+    "Keine Verbindung zu GitHub." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No connection to GitHub."
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

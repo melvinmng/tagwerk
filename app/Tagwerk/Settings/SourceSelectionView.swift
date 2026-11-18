@@ -3,7 +3,7 @@ import SwiftUI
 
 /// Multiple choice of calendars or reminder lists. `nil` selection means "use the default".
 struct SourceSelectionView: View {
-    let title: String
+    let title: LocalizedStringKey
     let items: [ListInfo]
     let defaultSelection: Set<String>
     @Binding var selection: [String]?

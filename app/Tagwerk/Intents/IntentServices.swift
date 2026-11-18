@@ -16,14 +16,16 @@ final class IntentServices {
 
     /// Records water now (not on the day the tab shows), mirrors it to Health and updates the widget.
     /// The reply names no daily total: Siri may speak it on a locked device.
-    func logWater(milliliters: Int?) async -> String {
+    func logWater(milliliters: Int?) async -> LocalizedStringResource {
         let amount = min(max(milliliters ?? Self.defaultWaterMilliliters, Self.waterRange.lowerBound), Self.waterRange.upperBound)
         let capture = environment.capture
         await capture.reload()
         await capture.addWater(amount, at: .now, offersUndo: false)
         await capture.waitForHealth()
         environment.writeSnapshot()
-        return "\(amount) ml Wasser erfasst."
+        // Plain digits (no grouping), as before: "2000 ml".
+        let amountText = String(amount)
+        return "\(amountText) ml Wasser erfasst."
     }
 
     struct Overview {
@@ -38,7 +40,7 @@ final class IntentServices {
         }
         let calendar = environment.planning.calendar
         guard let snapshot = environment.snapshotWriter.current(), !snapshot.isStale(at: now, calendar: calendar) else {
-            return Overview(text: "Öffne Tagwerk, um den Plan zu laden.", entries: [])
+            return Overview(text: String(localized: "Öffne Tagwerk, um den Plan zu laden."), entries: [])
         }
         let upcoming = snapshot.upcoming(at: now, calendar: calendar, limit: 3)
         return Overview(text: snapshot.overviewText(at: now, calendar: calendar), entries: upcoming.isTomorrow ? [] : upcoming.entries)

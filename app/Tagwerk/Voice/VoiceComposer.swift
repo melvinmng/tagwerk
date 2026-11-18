@@ -109,6 +109,11 @@ struct VoiceRecordingBar: View {
         .lineLimit(compact ? 2 : 5)
     }
 
+    /// Names the dictation language and the one a tap switches to; both texts are German source keys.
+    private var languageChipLabel: LocalizedStringKey {
+        voice.language == .german ? "Sprache Deutsch, auf Englisch wechseln" : "Sprache Englisch, auf Deutsch wechseln"
+    }
+
     private var languageChip: some View {
         Button {
             voice.switchLanguage()
@@ -118,7 +123,7 @@ struct VoiceRecordingBar: View {
                 .background(.secondary.opacity(0.2), in: Capsule())
         }
         .buttonStyle(.plain)
-        .accessibilityLabel(voice.language == .german ? "Sprache Deutsch, auf Englisch wechseln" : "Language English, switch to German")
+        .accessibilityLabel(languageChipLabel)
     }
 
     static func clock(_ seconds: TimeInterval) -> String {
@@ -181,12 +186,12 @@ struct VoiceNoticeRow: View {
 
     static func text(_ notice: DictationMachine.Notice) -> String {
         switch notice {
-        case .nothingHeard: "Nichts verstanden. Es kam kein Text an. Sprich näher am iPhone oder tippe."
-        case .interrupted: "Aufnahme unterbrochen. Der Text bis dahin steht im Feld."
-        case .unsupported: "Spracherkennung ist auf diesem iPhone nicht verfügbar. Tippen geht weiter."
-        case .permissionDenied: "Mikrofon nicht erlaubt. Tippen geht weiter."
-        case .assetUnavailable: "Sprachpaket fehlt. Es lädt, sobald du online bist."
-        case .failed: "Die Aufnahme ist fehlgeschlagen. Tippen geht weiter."
+        case .nothingHeard: String(localized: "Nichts verstanden. Es kam kein Text an. Sprich näher am iPhone oder tippe.")
+        case .interrupted: String(localized: "Aufnahme unterbrochen. Der Text bis dahin steht im Feld.")
+        case .unsupported: String(localized: "Spracherkennung ist auf diesem iPhone nicht verfügbar. Tippen geht weiter.")
+        case .permissionDenied: String(localized: "Mikrofon nicht erlaubt. Tippen geht weiter.")
+        case .assetUnavailable: String(localized: "Sprachpaket fehlt. Es lädt, sobald du online bist.")
+        case .failed: String(localized: "Die Aufnahme ist fehlgeschlagen. Tippen geht weiter.")
         }
     }
 
