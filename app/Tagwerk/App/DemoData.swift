@@ -196,6 +196,19 @@ enum DemoData {
         }
         try reminder("Training", due: 0, recurrence: EKRecurrenceRule(recurrenceWith: .daily, interval: 1, end: nil))
         try reminder("Karteikarten", due: 0, recurrence: EKRecurrenceRule(recurrenceWith: .daily, interval: 1, end: nil))
+        // The rules added with the recurrence editor: the n-th weekday of the month and yearly.
+        // Days 29 to 31 are a fifth weekday, which Tagwerk does not offer; the day of the month is used then.
+        let monthlyDue = at(2, 0)
+        let dayOfMonth = calendar.component(.day, from: monthlyDue)
+        let weekdayOfMonth = dayOfMonth <= 28
+            ? [EKRecurrenceDayOfWeek(EKWeekday(rawValue: calendar.component(.weekday, from: monthlyDue)) ?? .monday,
+                                     weekNumber: (dayOfMonth - 1) / 7 + 1)]
+            : nil
+        try reminder("Nebenkosten ablesen", due: 2, recurrence: EKRecurrenceRule(
+            recurrenceWith: .monthly, interval: 1, daysOfTheWeek: weekdayOfMonth,
+            daysOfTheMonth: weekdayOfMonth == nil ? [NSNumber(value: dayOfMonth)] : nil, monthsOfTheYear: nil,
+            weeksOfTheYear: nil, daysOfTheYear: nil, setPositions: nil, end: EKRecurrenceEnd(occurrenceCount: 12)))
+        try reminder("Versicherung prüfen", due: 5, recurrence: EKRecurrenceRule(recurrenceWith: .yearly, interval: 1, end: nil))
         try reminder("Pretest vorbereiten", due: 1, priority: 1)
         try reminder("Bericht überarbeiten", due: -2, priority: 5)
         try reminder("Literatur sichten", due: 0)

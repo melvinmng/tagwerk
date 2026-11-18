@@ -245,3 +245,26 @@ final class RecurrenceEditorModel {
         return PlanDay(date: date, calendar: calendar)
     }
 }
+
+/// Whether a source can repeat in stage 1 of the plan (reminders only).
+enum RecurrenceAvailability: Equatable {
+    case available
+    case unavailable(reason: String)
+
+    /// The row in "Neue Aufgabe": reminders can repeat; local tasks (stage 2) and GitHub issues cannot.
+    static func forNewTask(_ source: TaskSource) -> RecurrenceAvailability {
+        switch source {
+        case .reminders: .available
+        case .local: .unavailable(reason: String(localized: "Nur für Erinnerungen"))
+        case .github: .unavailable(reason: String(localized: "GitHub-Issues wiederholen sich nicht"))
+        }
+    }
+
+    /// The repetition of a new task: only for reminders with a due date, starting at that date. A rule chosen
+    /// before switching to another source is dropped.
+    static func draftRecurrence(_ recurrence: Recurrence?, target: TaskSource, due: DueDate?) -> Recurrence? {
+        guard forNewTask(target) == .available, var recurrence, let due else { return nil }
+        recurrence.start = PlanDay(due)
+        return recurrence
+    }
+}

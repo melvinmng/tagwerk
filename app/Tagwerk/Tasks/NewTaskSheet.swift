@@ -27,6 +27,7 @@ struct NewTaskSheet: View {
     @State private var repository: String?
     @State private var projectIDs: Set<String> = []
     @State private var gitHubError: String?
+    @State private var recurrence: Recurrence?
 
     private var gitHub: GitHubTaskProvider? { model.provider(for: .github) as? GitHubTaskProvider }
 
@@ -113,7 +114,16 @@ struct NewTaskSheet: View {
                             .environment(\.calendar, model.calendar)
                             .environment(\.timeZone, model.calendar.timeZone)
                     }
+                    recurrenceRow
                     PriorityPicker(priority: $priority, choices: TaskEditorModel.priorityChoices(for: target))
+                } footer: {
+                    if target == .reminders, recurrence != nil {
+                        Text("Wird als Regel in Erinnerungen gespeichert und ist dort ebenfalls sichtbar.")
+                    }
+                }
+                .onChange(of: hasDue) { _, isOn in
+                    // A repeating reminder needs a due date (plan §6, rule 3).
+                    if !isOn { recurrence = nil }
                 }
             }
             .navigationTitle("Neue Aufgabe")
@@ -144,7 +154,10 @@ struct NewTaskSheet: View {
             due: hasDue ? DueDate(date: dueDate, includeTime: hasTime && target != .github, calendar: model.calendar) : nil,
             priority: priority,
             containerID: target == .reminders ? listID : target == .github ? repository : nil,
-            subContainerIDs: target == .github ? (catalog?.projects ?? []).map(\.id).filter(projectIDs.contains) : []
+            subContainerIDs: target == .github ? (catalog?.projects ?? []).map(\.id).filter(projectIDs.contains) : [],
+            recurrence: RecurrenceAvailability.draftRecurrence(
+                recurrence, target: target,
+                due: hasDue ? DueDate(date: dueDate, includeTime: false, calendar: model.calendar) : nil)
         )
         await model.create(draft, in: target)
         dismiss()
@@ -152,6 +165,41 @@ struct NewTaskSheet: View {
 }
 
 extension NewTaskSheet {
+    /// "Wiederholen": the recurrence page for reminders; local tasks (stage 2) and GitHub issues show why not.
+    @ViewBuilder private var recurrenceRow: some View {
+        let dueDay = PlanDay(date: dueDate, calendar: model.calendar)
+        switch RecurrenceAvailability.forNewTask(target) {
+        case .available:
+            NavigationLink {
+                RecurrenceEditorView(
+                    original: recurrence, start: dueDay, dueDay: hasDue ? dueDay : nil, calendar: model.calendar,
+                    onChange: { newRecurrence in
+                        recurrence = newRecurrence
+                        if newRecurrence != nil, !hasDue { hasDue = true }
+                    },
+                    onMoveDue: { day in
+                        let time = model.calendar.dateComponents([.hour, .minute], from: dueDate)
+                        dueDate = model.calendar.date(byAdding: time, to: day.startDate(in: model.calendar)) ?? dueDate
+                    }
+                )
+            } label: {
+                LabeledContent {
+                    Text(recurrence.map { RecurrenceText.summary($0, calendar: model.calendar) } ?? String(localized: "Nie"))
+                } label: {
+                    Label("Wiederholen", systemImage: "repeat")
+                }
+            }
+        case .unavailable(let reason):
+            LabeledContent {
+                Text(reason)
+            } label: {
+                Label("Wiederholen", systemImage: "repeat")
+            }
+            .foregroundStyle(.secondary)
+            .accessibilityHint(reason)
+        }
+    }
+
     private func label(for source: TaskSource) -> String {
         switch source {
         case .local: String(localized: "Lokal")

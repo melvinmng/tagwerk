@@ -60,6 +60,23 @@ struct LocalizedTests {
         #expect([fields(1), fields(2)] == ["1 field has changed since you opened it.", "2 fields have changed since you opened it."])
     }
 
+    /// Recurrence page (plan 2026-11-18): interval labels read "Jede Woche" for one, and the English texts exist.
+    @Test func recurrenceKeys_pluralAndEnglish() {
+        func weeks(_ count: Int) -> String { String(localized: "Alle \(count) Wochen") }
+        func days(_ count: Int) -> String { String(localized: "Alle \(count) Tage") }
+        #expect([weeks(1), weeks(2)] == ["Jede Woche", "Alle 2 Wochen"])
+        #expect([days(1), days(3)] == ["Jeden Tag", "Alle 3 Tage"])
+        func english(_ key: String.LocalizationValue) -> String { Localized.string(key, in: .english, bundle: .main) }
+        #expect(english("Alle \(1) Monate") == "Every month")
+        #expect(english("Alle \(2) Jahre") == "Every 2 years")
+        #expect(english("Anzahl: \(12) Mal") == "Occurs 12 times")
+        #expect(english("Wiederholen") == "Repeat")
+        #expect(english("Nur für Erinnerungen") == "Reminders only")
+        #expect(english("Am \("3rd") \("Wednesday")") == "On the 3rd Wednesday")
+        #expect(english("Gilt ab \("Thu, Nov 19"). Geplante Blöcke an Tagen ohne Termin der Serie bleiben im Kalender: \("Thu, Nov 26")")
+                == "Applies from Thu, Nov 19. Planned blocks on days without an occurrence stay in your calendar: Thu, Nov 26")
+    }
+
     @Test func appLanguage_followsTheTestLanguage() {
         #expect(VoiceLanguage.app == .german)
     }

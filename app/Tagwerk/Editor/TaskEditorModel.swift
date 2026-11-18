@@ -108,6 +108,15 @@ final class TaskEditorModel {
         original.recurrence != nil && draft.due == nil && draft.recurrence == nil
     }
 
+    /// The new rule when this edit sets one (not when it removes the rule), starting at the draft's due date;
+    /// planned blocks are checked against it before saving.
+    var changedRecurrence: Recurrence? {
+        guard case .set(var recurrence?) = TaskEdit.diff(from: original, to: draft).recurrence,
+              let due = draft.due else { return nil }
+        recurrence.start = PlanDay(due)
+        return recurrence
+    }
+
     /// What to ask before saving, as one step at most (risk table of the plan: never two dialogs).
     enum SaveQuestion: Equatable {
         /// The effort of a recurring reminder changed: "Nur am …" or "Für alle ab …". Blocks that end up on

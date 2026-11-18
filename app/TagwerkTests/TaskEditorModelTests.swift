@@ -235,6 +235,21 @@ struct TaskEditorRecurrenceTests {
         #expect(TaskEditorModel(item: item, provider: FakeTaskProvider(source: .reminders, tasks: [item])).showsRecurrenceRow)
     }
 
+    /// The rule to check against planned blocks: only a changed, non-empty rule, starting at the draft's due date.
+    @Test func changedRecurrence_followsDraftDue() {
+        let item = reminder(recurrence: weekly, due: due)
+        let model = TaskEditorModel(item: item, provider: FakeTaskProvider(source: .reminders, tasks: [item]))
+        #expect(model.changedRecurrence == nil)
+        model.draft.due = DueDate(year: 2026, month: 11, day: 23)
+        #expect(model.changedRecurrence == nil)
+        let mondays = Recurrence(rule: .weekly(interval: 1, weekdays: [2]), start: PlanDay(due), end: nil, count: nil)
+        model.setRecurrence(mondays, fallbackDue: PlanDay(due))
+        #expect(model.changedRecurrence?.rule == mondays.rule)
+        #expect(model.changedRecurrence?.start == PlanDay(year: 2026, month: 11, day: 23))
+        model.setRecurrence(nil, fallbackDue: PlanDay(due))
+        #expect(model.changedRecurrence == nil)
+    }
+
     @Test func saveQuestion_noneWithoutEffortOrBlocks() {
         #expect(TaskEditorModel.saveQuestion(effortChanged: false, blocksOffSeries: []) == nil)
     }

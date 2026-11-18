@@ -166,3 +166,27 @@ struct RecurrenceEditorModelTests {
         #expect(sut.summary == "Jeden Werktag (Mo bis Fr)")
     }
 }
+
+struct RecurrenceAvailabilityTests {
+    let due = DueDate(year: 2026, month: 11, day: 19, hour: 9, minute: 0)
+    var weekly: Recurrence {
+        Recurrence(rule: .weekly(interval: 1, weekdays: [5]), start: PlanDay(year: 2026, month: 11, day: 18), end: nil, count: nil)
+    }
+
+    @Test func newTask_onlyRemindersRepeatInStageOne() {
+        #expect(RecurrenceAvailability.forNewTask(.reminders) == .available)
+        #expect(RecurrenceAvailability.forNewTask(.local) == .unavailable(reason: "Nur für Erinnerungen"))
+        #expect(RecurrenceAvailability.forNewTask(.github) == .unavailable(reason: "GitHub-Issues wiederholen sich nicht"))
+    }
+
+    @Test func draftRecurrence_startsAtDueDate() {
+        #expect(RecurrenceAvailability.draftRecurrence(weekly, target: .reminders, due: due)?.start == PlanDay(year: 2026, month: 11, day: 19))
+    }
+
+    /// A rule chosen before switching to another source is not taken over.
+    @Test func draftRecurrence_droppedForOtherSourcesOrWithoutDue() {
+        #expect(RecurrenceAvailability.draftRecurrence(weekly, target: .github, due: due) == nil)
+        #expect(RecurrenceAvailability.draftRecurrence(weekly, target: .local, due: due) == nil)
+        #expect(RecurrenceAvailability.draftRecurrence(weekly, target: .reminders, due: nil) == nil)
+    }
+}
