@@ -325,6 +325,7 @@ struct SuggestionDetail: View {
     @State private var editing: TaskItem?
     /// While typing, the decision buttons step aside so they do not cover the input line.
     @FocusState private var isTyping: Bool
+    @State private var isRecordingVoice = false
 
     private var planning: PlanningModel { environment.planning }
     /// The suggestion as it is now: moving and answers change it while the sheet is open.
@@ -362,7 +363,7 @@ struct SuggestionDetail: View {
             if current.kind != .dayChange, live != nil {
                 SuggestionMoveSection(suggestion: current)
                 if environment.ai.isSignedIn {
-                    SuggestionConversation(suggestion: current, isFocused: $isTyping)
+                    SuggestionConversation(suggestion: current, isFocused: $isTyping, isRecording: $isRecordingVoice)
                 }
             }
             Section {
@@ -374,7 +375,7 @@ struct SuggestionDetail: View {
         .navigationTitle("Vorschlag")
         .navigationBarTitleDisplayMode(.inline)
         .safeAreaInset(edge: .bottom) {
-            if !isTyping { decision(current, isWaiting: isWaiting) }
+            if !isTyping && !isRecordingVoice { decision(current, isWaiting: isWaiting) }
         }
         .sheet(item: $editing) { TaskEditorSheet(task: $0) }
         .onChange(of: live == nil) { _, gone in if gone { onDone() } }
@@ -493,8 +494,11 @@ struct SuggestionConversation: View {
     @Environment(AppEnvironment.self) private var environment
     let suggestion: PlanSuggestion
     var isFocused: FocusState<Bool>.Binding
+    /// Recording hides the decision bar like typing does (mockup SP6b).
+    var isRecording: Binding<Bool> = .constant(false)
     @State private var text = ""
     @State private var rule: String?
+    @State private var voice: VoiceInputModel?
 
     static let quickReplies = ["Früher am Tag", "Anderer Tag", "Kürzer"]
 
@@ -523,36 +527,55 @@ struct SuggestionConversation: View {
             } else if let error = planner.revisionError {
                 Label(error, systemImage: "exclamationmark.triangle").font(.caption).foregroundStyle(.orange)
             }
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 8) {
-                    ForEach(Self.quickReplies, id: \.self) { reply in
-                        Button(reply) { send(reply) }
-                            .buttonStyle(.bordered)
-                            .tint(.purple)
-                            .disabled(isSending)
+            if let voice { VoiceNoticeRow(voice: voice) }
+            if let voice, voice.isRecording {
+                VoiceRecordingBar(voice: voice, compact: true, canSend: !isSending, tint: .purple)
+            } else {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 8) {
+                        ForEach(Self.quickReplies, id: \.self) { reply in
+                            Button(reply) { send(reply) }
+                                .buttonStyle(.bordered)
+                                .tint(.purple)
+                                .disabled(isSending)
+                        }
                     }
                 }
-            }
-            HStack(spacing: 8) {
-                TextField("Zum Vorschlag etwas sagen …", text: $text)
-                    .focused(isFocused)
-                    .submitLabel(.send)
-                    .onSubmit { send(text) }
-                Button {
-                    send(text)
-                } label: {
-                    Image(systemName: "arrow.up.circle.fill").font(.title2)
+                HStack(spacing: 8) {
+                    TextField("Zum Vorschlag etwas sagen …", text: $text)
+                        .focused(isFocused)
+                        .submitLabel(.send)
+                        .onSubmit { send(text) }
+                    if environment.settings.voiceInputEnabled, let voice {
+                        VoiceMicrophoneButton(voice: voice, isEnabled: environment.ai.isSignedIn,
+                                              language: VoiceAvailability.recognitionLanguage(setting: environment.settings.voiceRecognitionLanguage))
+                    }
+                    Button {
+                        send(text)
+                    } label: {
+                        Image(systemName: "arrow.up.circle.fill").font(.title2)
+                    }
+                    .buttonStyle(.plain)
+                    .foregroundStyle(.purple)
+                    .disabled(isSending || text.trimmingCharacters(in: .whitespaces).isEmpty)
+                    .accessibilityLabel("Senden")
                 }
-                .buttonStyle(.plain)
-                .foregroundStyle(.purple)
-                .disabled(isSending || text.trimmingCharacters(in: .whitespaces).isEmpty)
-                .accessibilityLabel("Senden")
             }
         } header: {
             Label("Mit ChatGPT besprechen", systemImage: "sparkles")
         } footer: {
             Text("Senden gibt diesen Vorschlag, die übrigen der Planung, deine Änderungen, deine Vorgaben und die Termine dieser Tage an ChatGPT.")
         }
+        .onAppear {
+            guard voice == nil else { return }
+            let model = VoiceInputFactory.make(environment)
+            model.readDraft = { text }
+            model.writeDraft = { text = $0 }
+            model.onSend = { comment in send(comment) }
+            voice = model
+        }
+        .onDisappear { voice?.cancel() }
+        .onChange(of: voice?.isRecording ?? false) { _, recording in isRecording.wrappedValue = recording }
         .alert("Als Vorgabe merken", isPresented: Binding(get: { rule != nil }, set: { if !$0 { rule = nil } })) {
             TextField("Vorgabe", text: Binding(get: { rule ?? "" }, set: { rule = $0 }))
             Button("Merken") { remember() }

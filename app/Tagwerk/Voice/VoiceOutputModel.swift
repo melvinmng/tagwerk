@@ -48,7 +48,8 @@ final class VoiceOutputModel {
             return
         }
         let preferences = preferences()
-        let voiceID = language == .german ? preferences.germanVoiceID : preferences.englishVoiceID
+        let voiceID = speaker.resolvedVoiceID(language == .german ? preferences.germanVoiceID : preferences.englishVoiceID,
+                                              language: language)
         speakingID = id
         sentences = parts
         currentSentence = 0

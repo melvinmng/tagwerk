@@ -3,6 +3,7 @@ import Foundation
 import Speech
 import Synchronization
 import TagwerkCore
+import UIKit
 
 /// Which Apple transcriber turns speech into text.
 enum TranscriberKind: String, CaseIterable, Sendable {
@@ -90,6 +91,7 @@ final class AppleSpeechRecognizer: SpeechRecognizing, @unchecked Sendable {
         let input: AsyncStream<AnalyzerInput>.Continuation
         let events: AsyncStream<RecognitionEvent>.Continuation
         var resultsTask: Task<Void, Never>?
+        var observers: [NSObjectProtocol] = []
         let lock = NSLock()
         var lastLevel = Date.distantPast
 
@@ -151,6 +153,7 @@ final class AppleSpeechRecognizer: SpeechRecognizing, @unchecked Sendable {
             Self.installTap(on: session)
             try session.engine.start()
             state.withLock { $0 = session }
+            observeInterruptions(of: session)
         } catch {
             continuation.yield(.failed(.engine(String(describing: error).prefix(160).description)))
             continuation.finish()
@@ -159,7 +162,30 @@ final class AppleSpeechRecognizer: SpeechRecognizing, @unchecked Sendable {
     }
 
     func stop() async {
+        await end(reporting: .finished)
+    }
+
+    /// A call, Siri, a route change or the app going to the background ends the recording; the text so far stays.
+    private func observeInterruptions(of session: Session) {
+        let center = NotificationCenter.default
+        let names: [Notification.Name] = [AVAudioSession.interruptionNotification, .AVAudioEngineConfigurationChange,
+                                          UIApplication.didEnterBackgroundNotification]
+        session.observers = names.map { name in
+            center.addObserver(forName: name, object: name == .AVAudioEngineConfigurationChange ? session.engine : nil,
+                               queue: nil) { [weak self] notification in
+                // Only the start of an interruption ends the recording, not its end.
+                if name == AVAudioSession.interruptionNotification,
+                   (notification.userInfo?[AVAudioSessionInterruptionTypeKey] as? UInt) != AVAudioSession.InterruptionType.began.rawValue {
+                    return
+                }
+                Task { await self?.end(reporting: .failed(.interrupted)) }
+            }
+        }
+    }
+
+    private func end(reporting final: RecognitionEvent) async {
         guard let session = state.withLock({ current -> Session? in defer { current = nil }; return current }) else { return }
+        session.observers.forEach(NotificationCenter.default.removeObserver)
         session.engine.inputNode.removeTap(onBus: 0)
         session.engine.stop()
         let rest = session.lock.withLock { (try? session.converter.flush()) ?? [] }
@@ -168,12 +194,13 @@ final class AppleSpeechRecognizer: SpeechRecognizing, @unchecked Sendable {
         try? await session.analyzer.finalizeAndFinishThroughEndOfInput()
         await session.resultsTask?.value
         audio.deactivate()
-        session.events.yield(.finished)
+        session.events.yield(final)
         session.events.finish()
     }
 
     func cancel() async {
         guard let session = state.withLock({ current -> Session? in defer { current = nil }; return current }) else { return }
+        session.observers.forEach(NotificationCenter.default.removeObserver)
         session.engine.inputNode.removeTap(onBus: 0)
         session.engine.stop()
         session.input.finish()

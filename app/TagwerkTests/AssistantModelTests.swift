@@ -43,6 +43,71 @@ struct AssistantModelTests {
         return (model, planning, store)
     }
 
+    // MARK: Voice
+
+    @Test func sendSpoken_marksMessageAndPersists() async throws {
+        responder.enqueue("Hallo zurück.")
+        let (model, _, store) = await make()
+        model.open(context: .settings)
+        await model.send("Hallo", spoken: true)
+        let message = try #require(model.conversation?.messages.first)
+        #expect(model.isSpoken(message))
+        #expect(store.spokenMarks(for: ChatStore.assistantKey) == [SpokenMark(index: 0, text: "Hallo")])
+        let (reopened, _, _) = await make()
+        reopened.open(context: .settings)
+        #expect(reopened.isSpoken(try #require(reopened.conversation?.messages.first)))
+    }
+
+    @Test func autoRead_followsPolicy() async throws {
+        let (model, _, _) = await make()
+        var read: [String] = []
+        model.readAutomatically = { _, text, _ in read.append(text) }
+        model.open(context: .settings)
+        responder.enqueue("Erste Antwort für dich.")
+        await model.send("Hallo")
+        #expect(read.isEmpty)
+        model.readPolicy = { .afterSpoken }
+        responder.enqueue("Zweite Antwort für dich.")
+        await model.send("Getippt")
+        #expect(read.isEmpty)
+        responder.enqueue("Dritte Antwort für dich.")
+        await model.send("Gesprochen", spoken: true)
+        #expect(read == ["Dritte Antwort für dich."])
+        model.readPolicy = { .always }
+        model.isPresented = false
+        responder.enqueue("Vierte Antwort.")
+        await model.send("Zu", spoken: true)
+        #expect(read.count == 1)
+    }
+
+    @Test func newActionCard_isAnnounced_andConfirmationSaysDone() async throws {
+        responder.enqueueEvents([.textDelta("Ich hake das ab."),
+                                 .functionCall(callID: "c1", name: "complete_task", arguments: #"{"id":"local:Fahrrad"}"#),
+                                 .completed(usage: nil)])
+        responder.enqueue("Erledigt, viel Spaß.")
+        let (model, _, _) = await make()
+        var read: [String] = []
+        model.readAutomatically = { _, text, _ in read.append(text) }
+        model.readPolicy = { .always }
+        model.open(context: .tasks)
+        await model.send("Fahrrad ist fertig", spoken: true)
+        #expect(read.first?.contains("Ich hake das ab.") == true)
+        #expect(read.first?.contains("Bitte bestätige auf dem Bildschirm.") == true)
+        let call = try #require(model.conversation?.pendingActions.first)
+        await model.confirm(call)
+        #expect(read.last?.hasPrefix("Ausgeführt.") == true)
+        #expect(read.last?.contains("Erledigt, viel Spaß.") == true)
+    }
+
+    @Test func clear_dropsSpokenMarks() async throws {
+        responder.enqueue("Hallo zurück.")
+        let (model, _, _) = await make()
+        model.open(context: .settings)
+        await model.send("Hallo", spoken: true)
+        model.clear()
+        #expect(model.spokenMarks.isEmpty)
+    }
+
     @Test func open_restoresHistory_withoutCalls() async throws {
         let (_, _, store) = await make()
         store.save([.user("Hallo"), .assistant("Hi")], actionTimes: [:], for: ChatStore.assistantKey, now: testNow())

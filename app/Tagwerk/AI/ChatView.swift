@@ -10,6 +10,7 @@ struct ChatView: View {
     let assistant: AssistantModel
     @State private var draft = ""
     @State private var askingClear = false
+    @State private var voice: VoiceInputModel?
     @FocusState private var composing: Bool
 
     private var conversation: Conversation? { assistant.conversation }
@@ -23,6 +24,12 @@ struct ChatView: View {
             }
             .navigationTitle("ChatGPT")
             .navigationBarTitleDisplayMode(.inline)
+            .onAppear { setUpVoice() }
+            .onDisappear {
+                voice?.cancel()
+                environment.voiceOutput.stop()
+            }
+            .onChange(of: draft) { _, text in if text.isEmpty { voice?.draftConsumed() } }
             .toolbar {
                 ToolbarItem(placement: .principal) {
                     Label("ChatGPT", systemImage: "sparkles").labelStyle(.titleAndIcon).font(.headline)
@@ -40,6 +47,26 @@ struct ChatView: View {
                 Button("Verlauf löschen", role: .destructive) { assistant.clear() }
             }
         }
+    }
+
+    // MARK: Voice
+
+    private var showsMicrophone: Bool { environment.settings.voiceInputEnabled }
+    private var canSend: Bool { conversation?.isBusy != true && environment.ai.isSignedIn }
+    private var recognitionLanguage: VoiceLanguage {
+        VoiceAvailability.recognitionLanguage(setting: environment.settings.voiceRecognitionLanguage)
+    }
+
+    private func setUpVoice() {
+        guard voice == nil else { return }
+        let model = VoiceInputFactory.make(environment)
+        model.readDraft = { draft }
+        model.writeDraft = { draft = $0 }
+        model.onSend = { text in
+            environment.voiceOutput.stop()
+            Task { await assistant.send(text, spoken: true) }
+        }
+        voice = model
     }
 
     // MARK: Parts
@@ -120,12 +147,21 @@ struct ChatView: View {
     private func row(_ message: ChatMessage) -> some View {
         switch message.content {
         case .user(let text):
-            Text(text)
-                .padding(.horizontal, 12).padding(.vertical, 8)
-                .background(Color.accentColor.opacity(0.25), in: RoundedRectangle(cornerRadius: 16))
-                .frame(maxWidth: .infinity, alignment: .trailing)
+            VStack(alignment: .trailing, spacing: 2) {
+                Text(text)
+                    .padding(.horizontal, 12).padding(.vertical, 8)
+                    .background(Color.accentColor.opacity(0.25), in: RoundedRectangle(cornerRadius: 16))
+                if assistant.isSpoken(message) {
+                    Label("gesprochen", systemImage: "mic.fill").font(.caption2).foregroundStyle(.secondary)
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .trailing)
         case .assistant(let text):
-            Text(text).frame(maxWidth: .infinity, alignment: .leading).textSelection(.enabled)
+            VStack(alignment: .leading, spacing: 6) {
+                SpokenAnswerText(id: "message-\(message.id)", text: text).textSelection(.enabled)
+                ReadAloudButton(id: "message-\(message.id)", text: text)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
         case .action(let call, let status):
             ActionCardView(card: assistant.describe(call), status: status, time: assistant.actionTimes[call.id],
                            onConfirm: { Task { await assistant.confirm(call) } },
@@ -143,22 +179,35 @@ struct ChatView: View {
                 }
                 .buttonStyle(.borderedProminent)
             }
-            HStack(alignment: .bottom, spacing: 8) {
-                TextField("Nachricht …", text: $draft, axis: .vertical)
-                    .lineLimit(1...5)
-                    .focused($composing)
-                    .padding(.horizontal, 12).padding(.vertical, 8)
-                    .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 18))
-                Button {
-                    let text = draft
-                    draft = ""
-                    Task { await assistant.send(text) }
-                } label: {
-                    Image(systemName: "arrow.up.circle.fill").font(.title)
+            if let voice { VoiceNoticeRow(voice: voice) }
+            if let voice, voice.isRecording {
+                VoiceRecordingBar(voice: voice, canSend: canSend)
+            } else {
+                HStack(alignment: .bottom, spacing: 8) {
+                    TextField("Nachricht …", text: $draft, axis: .vertical)
+                        .lineLimit(1...5)
+                        .focused($composing)
+                        .padding(.leading, 12).padding(.trailing, showsMicrophone ? 36 : 12).padding(.vertical, 8)
+                        .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 18))
+                        .overlay(alignment: .bottomTrailing) {
+                            if showsMicrophone, let voice {
+                                VoiceMicrophoneButton(voice: voice, isEnabled: environment.ai.isSignedIn, language: recognitionLanguage)
+                                    .offset(x: 2, y: 4)
+                            }
+                        }
+                    Button {
+                        let text = draft
+                        let spoken = voice?.draftIsSpoken ?? false
+                        draft = ""
+                        voice?.draftConsumed()
+                        environment.voiceOutput.stop()
+                        Task { await assistant.send(text, spoken: spoken) }
+                    } label: {
+                        Image(systemName: "arrow.up.circle.fill").font(.title)
+                    }
+                    .disabled(draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || !canSend)
+                    .accessibilityLabel("Senden")
                 }
-                .disabled(draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || conversation?.isBusy == true
-                          || !environment.ai.isSignedIn)
-                .accessibilityLabel("Senden")
             }
         }
         .padding(.horizontal)

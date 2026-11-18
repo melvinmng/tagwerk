@@ -122,8 +122,12 @@ final class AppEnvironment {
             VoiceOutputModel.Preferences(germanVoiceID: settings.voiceGermanVoiceID, englishVoiceID: settings.voiceEnglishVoiceID,
                                          rate: settings.voiceRate)
         })
+        let voiceOutput = self.voiceOutput
+        assistant.readPolicy = { ReadAloudPolicy(rawValue: settings.voiceReadAloud) ?? .never }
+        assistant.announcesActions = { settings.voiceAnnounceActions }
+        assistant.readAutomatically = { id, text, fallback in voiceOutput.speak(id: id, text: text, explicit: false, fallback: fallback) }
         let demoVoice = ProcessInfo.processInfo.arguments.contains("-TagwerkDemoVoice")
-        self.makeRecognizer = { demoVoice ? DemoSpeechRecognizer() : AppleSpeechRecognizer(kind: .dictation) }
+        self.makeRecognizer = { demoVoice ? DemoSpeechRecognizer() as SpeechRecognizing : AppleSpeechRecognizer(kind: .dictation) }
         let gitHubProvider = self.gitHub
         assistant.reader = GitHubRepositoryReader(api: gitHubProvider.api)
         assistant.issueReference = { id in
