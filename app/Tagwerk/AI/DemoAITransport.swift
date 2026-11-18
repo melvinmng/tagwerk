@@ -26,6 +26,11 @@ final class DemoAITransport: AIHTTPTransport {
     }
 
     func lines(for request: URLRequest) async throws -> (AsyncThrowingStream<String, Error>, HTTPURLResponse) {
+        // Checked before the plan answer, whose parser expects a JSON plan as the first input text.
+        if let meal = Self.mealAnswer(for: request) {
+            return Self.stream([Self.event(["type": "response.output_text.delta", "delta": meal]),
+                                Self.event(["type": "response.completed", "response": [:]])], request: request)
+        }
         if let plan = Self.planAnswer(for: request) {
             return Self.stream([Self.event(["type": "response.output_text.delta", "delta": plan]),
                                 Self.event(["type": "response.completed", "response": [:]])], request: request)
@@ -80,6 +85,20 @@ final class DemoAITransport: AIHTTPTransport {
 
     /// A schema-valid plan for the tasks and days in the request. The first answer contains one block
     /// at 03:00 that the local check rejects; the follow-up leaves it out, so it ends up as "nicht eingeplant".
+    /// A fixed estimate for any meal ("2 Brötchen mit Käse" from the feasibility test); empty input finds nothing.
+    static func mealAnswer(for request: URLRequest) -> String? {
+        guard let body = request.httpBody,
+              let json = try? JSONSerialization.jsonObject(with: body) as? [String: Any],
+              let format = (json["text"] as? [String: Any])?["format"] as? [String: Any],
+              format["name"] as? String == "meal_estimate" else { return nil }
+        let content = ((json["input"] as? [[String: Any]])?.first?["content"] as? [[String: Any]]) ?? []
+        let text = content.compactMap { $0["text"] as? String }.joined().lowercased()
+        if text.contains("tisch") {
+            return #"{"title":"","items":[]}"#
+        }
+        return #"{"title":"Brötchen mit Käse","items":[{"name":"Brötchen","amount":"2 Stück","kcal_min":250,"kcal":300,"kcal_max":350,"protein_g":10,"carbs_g":56,"fat_g":2},{"name":"Käse","amount":"2 Scheiben","kcal_min":150,"kcal":180,"kcal_max":220,"protein_g":12,"carbs_g":0,"fat_g":14}]}"#
+    }
+
     private static func planAnswer(for request: URLRequest) -> String? {
         guard let body = request.httpBody,
               let json = try? JSONSerialization.jsonObject(with: body) as? [String: Any],

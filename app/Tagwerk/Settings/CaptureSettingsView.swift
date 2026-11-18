@@ -1,0 +1,43 @@
+import SwiftUI
+import TagwerkCore
+
+/// Einstellungen › Erfassen (mockup E6a): goals and the meal-estimate consent.
+struct CaptureSettingsView: View {
+    @Environment(AppEnvironment.self) private var environment
+
+    var body: some View {
+        @Bindable var settings = environment.settings
+        Form {
+            Section {
+                Stepper("Kalorien: \(IntakeFormat.grouped(settings.goalKilocalories)) kcal", value: $settings.goalKilocalories,
+                        in: 1000...6000, step: 50)
+                Stepper("Wasser: \(IntakeFormat.liters(settings.goalWaterMilliliters))", value: $settings.goalWaterMilliliters,
+                        in: 500...6000, step: 250)
+                Stepper("Trainings pro Woche: \(settings.goalWorkoutsPerWeek)", value: $settings.goalWorkoutsPerWeek, in: 0...14)
+                Toggle("Eiweiß-Ziel", isOn: $settings.proteinGoalEnabled)
+                if settings.proteinGoalEnabled {
+                    Stepper("Eiweiß: \(settings.goalProteinGrams) g", value: $settings.goalProteinGrams, in: 20...400, step: 5)
+                }
+            } header: {
+                Text("Ziele")
+            } footer: {
+                Text("Die Vorgaben sind Platzhalter, keine Empfehlung. Trag deine eigenen Ziele ein. Als Training zählt jede Einheit ab 10 min, aus Tagwerk oder aus Health.")
+            }
+
+            Section {
+                Toggle("Mahlzeiten von ChatGPT schätzen", isOn: $settings.mealEstimationConsent)
+                    .disabled(!environment.ai.isSignedIn)
+            } header: {
+                Text("Schätzung")
+            } footer: {
+                if environment.ai.isSignedIn {
+                    Text("Zum Schätzen sendet Tagwerk nur Text und Foto der jeweiligen Mahlzeit an ChatGPT (OpenAI), und nur, wenn du auf „Schätzen“ tippst. Daten aus Health, Ziele und frühere Einträge werden nie gesendet. Ausgeschaltet trägst du Werte selbst ein.")
+                } else {
+                    Text("Melde dich unter Einstellungen › KI bei ChatGPT an, um Mahlzeiten schätzen zu lassen.")
+                }
+            }
+        }
+        .navigationTitle("Erfassen")
+        .navigationBarTitleDisplayMode(.inline)
+    }
+}

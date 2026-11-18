@@ -1,3 +1,4 @@
+import HealthBridge
 import RemindersKit
 import SwiftUI
 import TagwerkCore
@@ -9,6 +10,7 @@ struct SettingsView: View {
     @State private var calendars: [ListInfo] = []
     @State private var reminderLists: [ListInfo] = []
     @State private var accessRevision = 0
+    @State private var healthAccess: HealthAccess = .notDetermined
 
     var body: some View {
         @Bindable var settings = environment.settings
@@ -57,6 +59,16 @@ struct SettingsView: View {
                 }
 
                 Section {
+                    NavigationLink {
+                        CaptureSettingsView()
+                    } label: {
+                        LabeledContent("Erfassen", value: IntakeFormat.goalSummary(
+                            kcal: settings.goalKilocalories, waterMilliliters: settings.goalWaterMilliliters,
+                            workoutsPerWeek: settings.goalWorkoutsPerWeek))
+                    }
+                }
+
+                Section {
                     Stepper("Vorlauf: \(leadTimeText(settings.leadTimeMinutes))", value: $settings.leadTimeMinutes, in: 15...2880, step: 15)
                     Toggle("Deadline-Termine", isOn: $settings.deadlineCalendarNotifications)
                 } header: {
@@ -65,7 +77,7 @@ struct SettingsView: View {
                     Text(notificationFooter)
                 }
 
-                Section("Zugriff") {
+                Section {
                     accessRow("Erinnerungen", state: environment.gateway.accessState) {
                         _ = try? await environment.gateway.requestAccess()
                     }
@@ -76,6 +88,11 @@ struct SettingsView: View {
                               settingsURL: UIApplication.openNotificationSettingsURLString) {
                         await environment.notifications.requestAuthorization()
                     }
+                    healthRow
+                } header: {
+                    Text("Zugriff")
+                } footer: {
+                    Text(healthFooter)
                 }
                 .id(accessRevision)
 
@@ -89,6 +106,7 @@ struct SettingsView: View {
                 loadSources()
                 await environment.ai.refreshAccount()
                 await environment.notifications.refreshAuthorization()
+                healthAccess = await environment.health.access()
             }
             .onChange(of: settings.selectedReminderListIDs) { _, _ in
                 Task { await environment.taskList.reload() }
@@ -122,6 +140,47 @@ struct SettingsView: View {
         case .denied:
             "Benachrichtigungen sind in iOS ausgeschaltet. Schalte sie unten unter „Zugriff“ wieder ein."
         }
+    }
+
+    /// The "Health" access row; only write access is visible (iOS hides denied reading).
+    @ViewBuilder
+    private var healthRow: some View {
+        HStack {
+            Text("Health")
+            Spacer()
+            switch healthAccess {
+            case .unavailable:
+                Text("nicht verfügbar").foregroundStyle(.secondary)
+            case .notDetermined:
+                Button("Verbinden") {
+                    Task {
+                        await environment.capture.connectHealth()
+                        healthAccess = await environment.health.access()
+                    }
+                }
+            case .authorized:
+                Text("verbunden").foregroundStyle(.secondary)
+            case .partial:
+                Button("teilweise · Health öffnen") { openHealth() }
+            case .denied:
+                Button("Health öffnen") { openHealth() }
+            }
+        }
+    }
+
+    private var healthFooter: String {
+        switch healthAccess {
+        case .partial(let kinds):
+            "Nicht nach Health geschrieben werden: \(kinds.map(\.germanName).joined(separator: ", ")). Deine Einträge bleiben in Tagwerk."
+        case .denied:
+            "Tagwerk darf nicht nach Health schreiben. Deine Einträge bleiben in Tagwerk. Ändern kannst du das in der App „Health“ unter Profil › Apps › Tagwerk."
+        default:
+            "Tagwerk schreibt Mahlzeiten, Wasser und Trainings nach Health und liest Trainings. Ob das Lesen erlaubt ist, zeigt iOS nicht an: Fehlen Trainings der Apple Watch, prüfe den Zugriff in der App „Health“ unter Profil › Apps › Tagwerk."
+        }
+    }
+
+    private func openHealth() {
+        if let url = URL(string: "x-apple-health://") { openURL(url) }
     }
 
     private func loadSources() {
