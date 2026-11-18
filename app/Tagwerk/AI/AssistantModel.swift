@@ -124,7 +124,7 @@ final class AssistantModel {
         }
         persist()
         if onTurnFinished != nil {
-            reportTurn(after: index, executed: false, fallback: .detect(trimmed, fallback: .german))
+            reportTurn(after: index, executed: false, fallback: .detect(trimmed, fallback: .app))
         } else {
             readNewOutput(after: index, spoken: spoken, userText: trimmed)
         }
@@ -140,15 +140,16 @@ final class AssistantModel {
         }
         let fresh = conversation.messages.filter { $0.id > index }
         var texts: [String] = []
-        var cards: [(title: String, change: String)] = []
+        var calls: [ToolCall] = []
         for message in fresh {
             switch message.content {
             case .assistant(let text): texts.append(text)
-            case .action(let call, .pending): let card = describe(call); cards.append((card.title, card.change))
+            case .action(let call, .pending): calls.append(call)
             default: break
             }
         }
         let language = VoiceLanguage.detect(texts.joined(separator: " "), fallback: fallback)
+        let cards = calls.map { describe($0, language: language) }.map { (title: $0.title, change: $0.change) }
         let parts = (executed ? [ActionAnnouncement.executed(language)] : []) + texts
         var speech = parts
         let open = openCards
@@ -185,7 +186,7 @@ final class AssistantModel {
             await conversation.confirm(call)
         }
         persist()
-        reportTurn(after: index - 1, executed: allExecuted(calls) && announcesActions(), fallback: .german)
+        reportTurn(after: index - 1, executed: allExecuted(calls) && announcesActions(), fallback: .app)
     }
 
     /// Spoken "nein": declines the one card the user answered to.
@@ -209,16 +210,18 @@ final class AssistantModel {
               readPolicy().readsAutomatically(lastUserMessageWasSpoken: spoken, conversationVisible: isPresented) else { return }
         let fresh = conversation.messages.filter { $0.id > index }
         var texts: [String] = []
-        var cards: [(title: String, change: String)] = []
+        var calls: [ToolCall] = []
         for message in fresh {
             switch message.content {
             case .assistant(let text): texts.append(text)
-            case .action(let call, .pending): let card = describe(call); cards.append((card.title, card.change))
+            case .action(let call, .pending): calls.append(call)
             default: break
             }
         }
         let language = VoiceLanguage.detect(texts.joined(separator: " ").isEmpty ? userText : texts.joined(separator: " "),
-                                            fallback: .detect(userText, fallback: .german))
+                                            fallback: .detect(userText, fallback: .app))
+        // Cards are announced in the language of the answer, not mixed with the app language.
+        let cards = calls.map { describe($0, language: language) }.map { (title: $0.title, change: $0.change) }
         if announcesActions(), let announcement = ActionAnnouncement.text(for: cards, language: language) {
             texts.append(announcement)
         }
@@ -250,7 +253,7 @@ final class AssistantModel {
         if onTurnFinished != nil {
             let executed: Bool
             if case .done(let output) = status(of: call), ActionCardView.error(in: output) == nil { executed = true } else { executed = false }
-            reportTurn(after: index - 1, executed: executed && announcesActions(), fallback: .german)
+            reportTurn(after: index - 1, executed: executed && announcesActions(), fallback: .app)
         } else {
             readAfterConfirmation(from: index, call: call)
         }
@@ -269,7 +272,7 @@ final class AssistantModel {
             if case .assistant(let text) = message.content { return text }
             return nil
         }
-        let language = VoiceLanguage.detect(texts.joined(separator: " "), fallback: .german)
+        let language = VoiceLanguage.detect(texts.joined(separator: " "), fallback: .app)
         var parts = [String]()
         if announcesActions(), case .done(let output) = status(of: call), ActionCardView.error(in: output) == nil {
             parts.append(ActionAnnouncement.executed(language))
@@ -289,7 +292,7 @@ final class AssistantModel {
             await conversation.confirm(call)
         }
         persist()
-        reportTurn(after: index - 1, executed: allExecuted(calls) && announcesActions(), fallback: .german)
+        reportTurn(after: index - 1, executed: allExecuted(calls) && announcesActions(), fallback: .app)
     }
 
     /// Whether every call ran without an error, for "Ausgeführt.".
@@ -304,14 +307,14 @@ final class AssistantModel {
         let index = conversation?.history.count ?? 0
         await conversation?.decline(call)
         persist()
-        reportTurn(after: index - 1, executed: false, fallback: .german)
+        reportTurn(after: index - 1, executed: false, fallback: .app)
     }
 
     func retry() async {
         let index = conversation?.history.count ?? 0
         await conversation?.retry()
         persist()
-        reportTurn(after: index - 1, executed: false, fallback: .german)
+        reportTurn(after: index - 1, executed: false, fallback: .app)
     }
 
     /// "Verlauf löschen".
@@ -393,68 +396,84 @@ final class AssistantModel {
         let change: String
     }
 
-    /// Text of an action card (mockup e): what the change is about and how it changes it.
-    func describe(_ call: ToolCall) -> ActionCard {
+    /// Text of an action card (mockup e): what the change is about and how it changes it. `language` is the app
+    /// language on screen and the language of the answer when the card is announced (plan english-app, Task 2).
+    func describe(_ call: ToolCall, language: VoiceLanguage = .app) -> ActionCard {
         let args = (try? JSONSerialization.jsonObject(with: call.arguments) as? [String: Any]) ?? [:]
         func string(_ key: String) -> String? { (args[key] as? String).flatMap { $0.isEmpty ? nil : $0 } }
+        func text(_ key: String.LocalizationValue) -> String { Localized.string(key, in: language, bundle: .main) }
         let task = string("id").flatMap { id in planning.taskList.items.first { $0.id.key == id } }
-        let title = task?.title ?? string("title") ?? "Änderung"
-        func dayText(_ text: String?) -> String {
-            guard let text, let day = AIPlanner.planDay(String(text.prefix(10))) else { return "keine" }
-            return day.startDate(in: planning.calendar).formatted(.dateTime.weekday(.abbreviated).day().month())
+        let title = task?.title ?? string("title") ?? text("Änderung")
+        func dayText(_ value: String?) -> String {
+            guard let value, let day = AIPlanner.planDay(String(value.prefix(10))) else { return text("keine") }
+            return day.startDate(in: planning.calendar)
+                .formatted(Date.FormatStyle(locale: language.locale).weekday(.abbreviated).day().month())
         }
+        func duration(_ minutes: Int) -> String { CapacityText.duration(minutes) }
         switch call.name {
         case "create_task":
-            var parts = ["Neue Aufgabe"]
-            if let source = string("source") { parts.append(source == "github" ? "als GitHub-Issue" : source) }
-            if let due = string("due") { parts.append("fällig \(dayText(due))") }
+            var parts = [text("Neue Aufgabe")]
+            if let source = string("source") { parts.append(source == "github" ? text("als GitHub-Issue") : source) }
+            if let due = string("due") { parts.append(text("fällig \(dayText(due))")) }
             if let priority = string("priority") { parts.append(priority) }
             // Everything that is written is shown in full before the user confirms.
-            let notes = string("notes").map { "\nNotizen: „\($0)“" } ?? ""
+            let notes = string("notes").map { "\n" + text("Notizen: „\($0)“") } ?? ""
             return ActionCard(title: title, change: parts.joined(separator: " · ") + notes)
         case "update_task":
             var changes: [String] = []
-            if let newTitle = string("title") { changes.append("Titel → \(newTitle)") }
-            if let due = string("due") { changes.append("Fälligkeit: \(dayText(task?.due.map { AppTools.dueString($0) })) → \(dayText(due))") }
-            if let priority = string("priority") { changes.append("Priorität: \(task?.priority?.label ?? "–") → \(priority)") }
-            if let minutes = args["minutes"] as? Int { changes.append("Aufwand → \(CapacityText.duration(minutes))") }
-            if let notes = string("notes") { changes.append("Notizen → „\(notes)“") }
-            return ActionCard(title: title, change: changes.isEmpty ? "Ändern" : changes.joined(separator: " · "))
+            if let newTitle = string("title") { changes.append(text("Titel → \(newTitle)")) }
+            if let due = string("due") {
+                changes.append(text("Fälligkeit: \(dayText(task?.due.map { AppTools.dueString($0) })) → \(dayText(due))"))
+            }
+            if let priority = string("priority") { changes.append(text("Priorität: \(task?.priority?.label ?? "–") → \(priority)")) }
+            if let minutes = args["minutes"] as? Int { changes.append(text("Aufwand → \(duration(minutes))")) }
+            if let notes = string("notes") { changes.append(text("Notizen → „\(notes)“")) }
+            return ActionCard(title: title, change: changes.isEmpty ? text("Ändern") : changes.joined(separator: " · "))
         case "reschedule_task":
-            return ActionCard(title: title, change: "Fälligkeit: \(dayText(task?.due.map { AppTools.dueString($0) })) → \(dayText(string("due")))")
+            return ActionCard(title: title,
+                              change: text("Fälligkeit: \(dayText(task?.due.map { AppTools.dueString($0) })) → \(dayText(string("due")))"))
         case "complete_task":
-            return ActionCard(title: title, change: "Als erledigt markieren")
+            return ActionCard(title: title, change: text("Als erledigt markieren"))
         case "assign_to_day":
             let current = task.flatMap { planning.planStore.assignment(for: $0.id) }.map(AIPlanner.dayString)
-            return ActionCard(title: title, change: "Verschieben: \(dayText(current)) → \(dayText(string("day")))")
+            return ActionCard(title: title, change: text("Verschieben: \(dayText(current)) → \(dayText(string("day")))"))
         case "create_time_block":
-            let minutes = (args["minutes"] as? Int).map { " · " + CapacityText.duration($0) } ?? ""
-            return ActionCard(title: title, change: "Zeitblock \(dayText(string("day"))) · \(string("start") ?? "")\(minutes)")
+            let start = string("start") ?? ""
+            if let minutes = args["minutes"] as? Int {
+                return ActionCard(title: title, change: text("Zeitblock \(dayText(string("day"))) · \(start) · \(duration(minutes))"))
+            }
+            return ActionCard(title: title, change: text("Zeitblock \(dayText(string("day"))) · \(start)"))
         case "link_event_to_task":
-            let linked = string("task_id").flatMap { id in planning.taskList.items.first { $0.id.key == id }?.title } ?? "Aufgabe"
-            return ActionCard(title: linked, change: "Termin mit dieser Aufgabe verknüpfen")
+            let linked = string("task_id").flatMap { id in planning.taskList.items.first { $0.id.key == id }?.title } ?? text("Aufgabe")
+            return ActionCard(title: linked, change: text("Termin mit dieser Aufgabe verknüpfen"))
         case "set_day_hours":
             let day = string("day")
-            if args["off"] as? Bool == true { return ActionCard(title: "Arbeitszeit", change: "\(dayText(day)): frei") }
+            if args["off"] as? Bool == true { return ActionCard(title: text("Arbeitszeit"), change: text("\(dayText(day)): frei")) }
             let current = day.flatMap { AIPlanner.planDay($0) }.flatMap { planning.workHours(on: $0) }
-                .map { "\(AIPlanner.time($0.startMinutes))–\(AIPlanner.time($0.endMinutes))" } ?? "frei"
-            return ActionCard(title: "Arbeitszeit \(dayText(day))", change: "\(current) → \(string("start") ?? "")–\(string("end") ?? "")")
+                .map { "\(AIPlanner.time($0.startMinutes))–\(AIPlanner.time($0.endMinutes))" } ?? text("frei")
+            return ActionCard(title: text("Arbeitszeit \(dayText(day))"), change: "\(current) → \(string("start") ?? "")–\(string("end") ?? "")")
         case "set_lunch":
             let minutes = args["minutes"] as? Int ?? 0
-            return ActionCard(title: "Mittagspause \(dayText(string("day")))",
-                              change: minutes > 0 ? "\(string("start") ?? "") · \(CapacityText.duration(minutes))" : "Keine Pause")
+            return ActionCard(title: text("Mittagspause \(dayText(string("day")))"),
+                              change: minutes > 0 ? "\(string("start") ?? "") · \(duration(minutes))" : text("Keine Pause"))
         case "mark_events_free":
             let count = (args["event_ids"] as? [String])?.count ?? 0
             let free = args["free"] as? Bool ?? true
-            let series = args["series"] as? Bool == true ? " · auch alle künftigen" : ""
-            return ActionCard(title: count == 1 ? "1 Termin" : "\(count) Termine", change: (free ? "Auf Frei setzen" : "Auf Belegt setzen") + series)
+            let change = free ? text("Auf Frei setzen") : text("Auf Belegt setzen")
+            let series = args["series"] as? Bool == true ? " · " + text("auch alle künftigen") : ""
+            return ActionCard(title: text("\(count) Termine"), change: change + series)
         case "plan_period":
             let scope = string("scope").flatMap(PlanScope.init(rawValue:)) ?? .day
-            return ActionCard(title: "\(AIPlanBar.actionName(scope)) planen", change: "Vorschläge in der Planen-Ansicht anlegen")
+            let action = switch scope {
+            case .day: text("Tag planen")
+            case .week: text("Woche planen")
+            case .month: text("Monat planen")
+            }
+            return ActionCard(title: action, change: text("Vorschläge in der Planen-Ansicht anlegen"))
         case "add_comment":
-            return ActionCard(title: title, change: "Kommentar: „\(string("body") ?? "")“")
+            return ActionCard(title: title, change: text("Kommentar: „\(string("body") ?? "")“"))
         case "create_event", "update_event", "delete_event":
-            return describeEvent(call.name, series: args["series"] as? Bool == true, string: string)
+            return describeEvent(call.name, series: args["series"] as? Bool == true, language: language, string: string)
         default:
             return ActionCard(title: title, change: call.name)
         }
@@ -463,65 +482,76 @@ final class AssistantModel {
 
 extension AssistantModel {
     /// Cards for calendar events (issue #118): what is written, in which calendar, and whether it fits.
-    fileprivate func describeEvent(_ name: String, series: Bool, string: (String) -> String?) -> ActionCard {
+    fileprivate func describeEvent(_ name: String, series: Bool, language: VoiceLanguage,
+                                   string: (String) -> String?) -> ActionCard {
+        func text(_ key: String.LocalizationValue) -> String { Localized.string(key, in: language, bundle: .main) }
         let calendar = planning.calendar
         let existing = string("event_id").flatMap { planning.event(id: $0) }
-        let seriesText = series ? " · auch alle künftigen" : ""
-        func parse(_ text: String?) -> (date: Date, timed: Bool)? {
-            guard let text, let day = AIPlanner.planDay(String(text.prefix(10))) else { return nil }
+        let seriesText = series ? " · " + text("auch alle künftigen") : ""
+        let dayStyle = Date.FormatStyle(locale: language.locale).weekday(.abbreviated).day().month()
+        let timeStyle = Date.FormatStyle(locale: language.locale).hour().minute()
+        func parse(_ value: String?) -> (date: Date, timed: Bool)? {
+            guard let value, let day = AIPlanner.planDay(String(value.prefix(10))) else { return nil }
             var components = DateComponents(year: day.year, month: day.month, day: day.day)
-            let timed = text.count > 10
-            if timed, let minutes = AIPlanner.minutes(String(text.dropFirst(11))) {
+            let timed = value.count > 10
+            if timed, let minutes = AIPlanner.minutes(String(value.dropFirst(11))) {
                 components.hour = minutes / 60
                 components.minute = minutes % 60
             }
             return calendar.date(from: components).map { ($0, timed) }
         }
         func when(start: Date, end: Date, allDay: Bool) -> String {
-            let day = start.formatted(.dateTime.weekday(.abbreviated).day().month())
+            let day = start.formatted(dayStyle)
             if allDay {
                 let last = calendar.date(byAdding: .day, value: -1, to: end) ?? end
-                return calendar.isDate(start, inSameDayAs: last)
-                    ? "\(day) · ganztägig" : "\(day) bis \(last.formatted(.dateTime.weekday(.abbreviated).day().month())) · ganztägig"
+                if calendar.isDate(start, inSameDayAs: last) { return text("\(day) · ganztägig") }
+                return text("\(day) bis \(last.formatted(dayStyle)) · ganztägig")
             }
-            return "\(day) · \(start.formatted(.dateTime.hour().minute())) bis \(end.formatted(.dateTime.hour().minute()))"
+            return text("\(day) · \(start.formatted(timeStyle)) bis \(end.formatted(timeStyle))")
         }
         func calendarName(_ id: String?) -> String {
             let id = id ?? planning.defaultEventCalendarID ?? ""
-            return planning.calendarTitle(id).map { "Kalender \($0)" } ?? "Kalender"
+            return planning.calendarTitle(id).map { text("Kalender \($0)") } ?? text("Kalender")
+        }
+        func fit(_ start: Date, _ end: Date, excluding id: String?) -> String {
+            switch planning.overlap(start: start, end: end, excluding: id) {
+            case .none: text("passt in die freie Zeit")
+            case .one(let title): text("überschneidet „\(title)“")
+            case .several(let count): text("überschneidet \(count) Termine")
+            }
         }
         switch name {
         case "create_event":
             guard let start = parse(string("start")), let endValue = parse(string("end")) else {
-                return ActionCard(title: string("title") ?? "Termin", change: "Termin anlegen")
+                return ActionCard(title: string("title") ?? text("Termin"), change: text("Termin anlegen"))
             }
             let allDay = !start.timed
             let end = allDay ? (calendar.date(byAdding: .day, value: 1, to: endValue.date) ?? endValue.date) : endValue.date
-            var parts = ["Termin anlegen", when(start: start.date, end: end, allDay: allDay), calendarName(string("calendar_id"))]
-            if !allDay { parts.append(planning.fitText(start: start.date, end: end, excluding: nil)) }
+            var parts = [text("Termin anlegen"), when(start: start.date, end: end, allDay: allDay), calendarName(string("calendar_id"))]
+            if !allDay { parts.append(fit(start.date, end, excluding: nil)) }
             if let location = string("location") { parts.append(location) }
-            let notes = string("notes").map { "\nNotizen: „\($0)“" } ?? ""
-            return ActionCard(title: string("title") ?? "Termin", change: parts.joined(separator: " · ") + notes)
+            let notes = string("notes").map { "\n" + text("Notizen: „\($0)“") } ?? ""
+            return ActionCard(title: string("title") ?? text("Termin"), change: parts.joined(separator: " · ") + notes)
         case "update_event":
-            guard let existing else { return ActionCard(title: "Termin", change: "Termin ändern") }
+            guard let existing else { return ActionCard(title: text("Termin"), change: text("Termin ändern")) }
             var changes: [String] = []
-            if let title = string("title") { changes.append("Titel → \(title)") }
+            if let title = string("title") { changes.append(text("Titel → \(title)")) }
             if string("start") != nil || string("end") != nil {
                 let length = existing.end.timeIntervalSince(existing.start)
                 let start = parse(string("start"))?.date ?? existing.start
                 var end = parse(string("end"))?.date ?? start.addingTimeInterval(length)
                 if existing.isAllDay, string("end") != nil { end = calendar.date(byAdding: .day, value: 1, to: end) ?? end }
                 changes.append("\(when(start: existing.start, end: existing.end, allDay: existing.isAllDay)) → \(when(start: start, end: end, allDay: existing.isAllDay))")
-                if !existing.isAllDay { changes.append(planning.fitText(start: start, end: end, excluding: existing.id)) }
+                if !existing.isAllDay { changes.append(fit(start, end, excluding: existing.id)) }
             }
             if let id = string("calendar_id") { changes.append("\(calendarName(existing.calendarID)) → \(calendarName(id))") }
-            if let location = string("location") { changes.append("Ort → \(location)") }
-            if let notes = string("notes") { changes.append("Notizen → „\(notes)“") }
-            return ActionCard(title: existing.title, change: (["Termin ändern"] + changes).joined(separator: " · ") + seriesText)
+            if let location = string("location") { changes.append(text("Ort → \(location)")) }
+            if let notes = string("notes") { changes.append(text("Notizen → „\(notes)“")) }
+            return ActionCard(title: existing.title, change: ([text("Termin ändern")] + changes).joined(separator: " · ") + seriesText)
         default:
-            guard let existing else { return ActionCard(title: "Termin", change: "Termin löschen") }
+            guard let existing else { return ActionCard(title: text("Termin"), change: text("Termin löschen")) }
             return ActionCard(title: existing.title,
-                              change: "Termin löschen · \(when(start: existing.start, end: existing.end, allDay: existing.isAllDay))" + seriesText)
+                              change: text("Termin löschen · \(when(start: existing.start, end: existing.end, allDay: existing.isAllDay))") + seriesText)
         }
     }
 }

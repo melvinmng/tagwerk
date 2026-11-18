@@ -23,6 +23,16 @@
     "%@ 15 Minuten später oder länger" : {
 
     },
+    "%@ bis %@ · ganztägig" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ bis %2$@ · ganztägig"
+          }
+        }
+      }
+    },
     "%@ jetzt erfassen" : {
 
     },
@@ -62,6 +72,16 @@
         }
       }
     },
+    "%@ · %@ bis %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ · %2$@ bis %3$@"
+          }
+        }
+      }
+    },
     "%@ · %@ · %@" : {
       "localizations" : {
         "de" : {
@@ -71,6 +91,9 @@
           }
         }
       }
+    },
+    "%@ · ganztägig" : {
+
     },
     "%@: %@" : {
       "localizations" : {
@@ -83,6 +106,9 @@
       }
     },
     "%@: Anmeldung abgelaufen" : {
+
+    },
+    "%@: frei" : {
 
     },
     "%lld" : {
@@ -108,6 +134,9 @@
 
     },
     "%lld Milliliter Wasser erfassen" : {
+
+    },
+    "%lld Termine" : {
 
     },
     "%lld Vorschläge geändert" : {
@@ -249,6 +278,9 @@
     "Als Vorgabe merken" : {
 
     },
+    "Als erledigt markieren" : {
+
+    },
     "An diesem Tag ist nichts erfasst." : {
 
     },
@@ -285,6 +317,9 @@
     "Arbeitszeit" : {
 
     },
+    "Arbeitszeit %@" : {
+
+    },
     "Arbeitszeit an diesem Tag" : {
 
     },
@@ -307,6 +342,9 @@
 
     },
     "Auf %@ geändert" : {
+
+    },
+    "Auf Belegt setzen" : {
 
     },
     "Auf Frei setzen" : {
@@ -364,6 +402,9 @@
 
     },
     "Aufwand ändern …" : {
+
+    },
+    "Aufwand → %@" : {
 
     },
     "Ausplanen" : {
@@ -669,6 +710,16 @@
     "Fälligkeit · ändert die Quelle" : {
 
     },
+    "Fälligkeit: %@ → %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Fälligkeit: %1$@ → %2$@"
+          }
+        }
+      }
+    },
     "Für Schätzungen aus Text oder Foto melde dich unter Einstellungen › KI bei ChatGPT an." : {
 
     },
@@ -810,6 +861,9 @@
     "Kalender" : {
 
     },
+    "Kalender %@" : {
+
+    },
     "Kalender „Tagwerk“ anlegen" : {
 
     },
@@ -840,6 +894,9 @@
     "Keine Mahlzeiten erfasst" : {
 
     },
+    "Keine Pause" : {
+
+    },
     "Keine Regeln" : {
 
     },
@@ -859,6 +916,9 @@
 
     },
     "Kommentar schreiben" : {
+
+    },
+    "Kommentar: „%@“" : {
 
     },
     "Konflikt" : {
@@ -1009,6 +1069,9 @@
     "Mittagspause" : {
 
     },
+    "Mittagspause %@" : {
+
+    },
     "Mitverschieben" : {
 
     },
@@ -1016,6 +1079,9 @@
 
     },
     "Modelle werden geladen …" : {
+
+    },
+    "Monat planen" : {
 
     },
     "Monatsansicht ›" : {
@@ -1093,6 +1159,12 @@
     "Notiz" : {
 
     },
+    "Notizen → „%@“" : {
+
+    },
+    "Notizen: „%@“" : {
+
+    },
     "Nur Kalorien sind nötig. Leere Felder werden nicht nach Health geschrieben." : {
 
     },
@@ -1150,6 +1222,9 @@
     "Ort" : {
 
     },
+    "Ort → %@" : {
+
+    },
     "Pause" : {
 
     },
@@ -1203,6 +1278,16 @@
     },
     "Priorität" : {
 
+    },
+    "Priorität: %@ → %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Priorität: %1$@ → %2$@"
+          }
+        }
+      }
     },
     "Probe hören" : {
 
@@ -1369,6 +1454,9 @@
     "Tag" : {
 
     },
+    "Tag planen" : {
+
+    },
     "Tag öffnen" : {
 
     },
@@ -1399,10 +1487,25 @@
     "Tempo" : {
 
     },
+    "Termin" : {
+
+    },
+    "Termin anlegen" : {
+
+    },
     "Termin bearbeiten" : {
 
     },
     "Termin löschen" : {
+
+    },
+    "Termin löschen · %@" : {
+
+    },
+    "Termin mit dieser Aufgabe verknüpfen" : {
+
+    },
+    "Termin ändern" : {
 
     },
     "Termine antippen, um sie auszuwählen" : {
@@ -1421,6 +1524,9 @@
 
     },
     "Titel" : {
+
+    },
+    "Titel → %@" : {
 
     },
     "Training" : {
@@ -1483,6 +1589,16 @@
     "Verschieben" : {
 
     },
+    "Verschieben: %@ → %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Verschieben: %1$@ → %2$@"
+          }
+        }
+      }
+    },
     "Verwerfen" : {
 
     },
@@ -1529,6 +1645,9 @@
 
     },
     "Vorschläge" : {
+
+    },
+    "Vorschläge in der Planen-Ansicht anlegen" : {
 
     },
     "Vorschläge: %lld Blöcke, %lld Tage, %lld verschieben, %lld länger, %lld P1 ergänzt" : {
@@ -1607,6 +1726,9 @@
     "Woche" : {
 
     },
+    "Woche planen" : {
+
+    },
     "Wochenende" : {
 
     },
@@ -1630,6 +1752,26 @@
     },
     "Zeitblock" : {
 
+    },
+    "Zeitblock %@ · %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Zeitblock %1$@ · %2$@"
+          }
+        }
+      }
+    },
+    "Zeitblock %@ · %@ · %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Zeitblock %1$@ · %2$@ · %3$@"
+          }
+        }
+      }
     },
     "Zeitblock hinzufügen" : {
 
@@ -1691,7 +1833,13 @@
     "Zählt als" : {
 
     },
+    "als GitHub-Issue" : {
+
+    },
     "angemeldet" : {
+
+    },
+    "auch alle künftigen" : {
 
     },
     "bisher" : {
@@ -1714,6 +1862,9 @@
       }
     },
     "erlaubt" : {
+
+    },
+    "frei" : {
 
     },
     "fällig %@" : {
@@ -1740,6 +1891,9 @@
     "kcal" : {
 
     },
+    "keine" : {
+
+    },
     "nach Fälligkeit" : {
 
     },
@@ -1753,6 +1907,9 @@
 
     },
     "noch %@" : {
+
+    },
+    "passt in die freie Zeit" : {
 
     },
     "teilweise · Health öffnen" : {
@@ -1795,7 +1952,13 @@
     "Ältere Nachrichten werden nicht mehr mitgeschickt." : {
 
     },
+    "Ändern" : {
+
+    },
     "Ändern in" : {
+
+    },
+    "Änderung" : {
 
     },
     "Änderungen ansagen" : {
@@ -1849,6 +2012,12 @@
 
     },
     "Überspringen" : {
+
+    },
+    "überschneidet %lld Termine" : {
+
+    },
+    "überschneidet „%@“" : {
 
     },
     "–" : {
