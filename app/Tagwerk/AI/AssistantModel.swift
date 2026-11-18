@@ -332,6 +332,14 @@ final class AssistantModel {
 
     // MARK: Instructions
 
+    /// While the voice mode runs (issue #120): the user hears the answer and replies by voice.
+    static let voiceModeInstructions = """
+    Der Nutzer spricht gerade mit dir im Sprechmodus und hört deine Antworten. Vorschläge nimmt er mit „ja“ an, \
+    lehnt sie mit „nein“ ab oder sagt, was anders sein soll; das erledigt die App. Fordere ihn deshalb nie auf, \
+    auf dem Bildschirm zu bestätigen oder zu tippen, und frage nicht selbst nach einer Bestätigung. Antworte in \
+    kurzen, gut sprechbaren Sätzen ohne Aufzählungen und Tabellen.
+    """
+
     func instructions() -> String {
         let current = now()
         let today = planning.today
@@ -347,6 +355,7 @@ final class AssistantModel {
         Termine kannst du anlegen, ändern und löschen (create_event, update_event, delete_event), in jedem \
         beschreibbaren Kalender; ohne Nennung eines Kalenders im Standardkalender. Nennt der Nutzer keine Dauer, \
         dauert ein neuer Termin eine Stunde.
+        \(onTurnFinished == nil ? "" : Self.voiceModeInstructions)
         \(contextText())
         """
     }
