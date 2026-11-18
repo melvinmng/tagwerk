@@ -69,6 +69,7 @@ Bestanden, wenn alle vier auf dem echten iPhone mit Personal Team funktionieren.
 **Phase 2 – MVP (Aufgaben, Kalender, KI-Tagesplan, Deadlines)**
 **Phase 3 – Ernährung & Training**
 **Phase 4 – Komfort** (Widget, Siri-Kurzbefehle/App Intents, Wochenrückblick)
+**Phase 5 – Einkaufsliste und Notizen** (Nachtrag 2026-11-18, Epic #113; Einkaufsliste über Apple Erinnerungen, Quelle der Notizen offen, da Apple Notizen keine Schnittstelle für andere Apps hat)
 
 ## 6. Architektur
 
