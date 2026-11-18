@@ -1,0 +1,283 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tagwerk · Datumsnavigation in „Erfassen“ und im Wochenrückblick · Mockups EK0 bis EK2</title>
+<style>
+  /* Mockup frame uses the host theme (with fallbacks); phone screens depict the app in iOS dark or light mode. */
+  :root { color-scheme: light dark; }
+  body { font: 14px var(--font-sans, system-ui, sans-serif); color: var(--foreground, CanvasText); margin: 16px; }
+  h1 { font-size: 20px; margin: 0 0 4px; }
+  h2 { font-size: 18px; margin: 38px 0 4px; padding-top: 16px; border-top: 1px solid rgba(128,128,128,.3); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .area { display: inline-grid; place-items: center; min-width: 34px; height: 34px; padding: 0 6px; border-radius: 9px; background: #0a84ff; color: #fff; font: 800 14px system-ui; flex-shrink: 0; box-sizing: border-box; }
+  .area.g { background: #30d158; color: #000; }
+  .area.n { background: #8e8e93; }
+  .lead { color: var(--muted-foreground, #777); margin: 0 0 14px; line-height: 1.5; max-width: 980px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(392px, 1fr)); gap: 22px; align-items: start; }
+  .label { font: 600 13px var(--font-sans, system-ui); color: var(--muted-foreground, #777); margin: 0 0 8px 4px; }
+  .label b { color: var(--foreground, CanvasText); }
+  .code { display: inline-block; background: rgba(128,128,128,.28); color: var(--foreground, CanvasText); border-radius: 6px; padding: 1px 8px; font: 800 13px system-ui; margin-right: 4px; }
+  .code.r { background: #30d158; color: #000; }
+  .rec { background: #30d158; color: #000; font-size: 11px; font-weight: 700; padding: 1px 7px; border-radius: 99px; margin-left: 4px; }
+  .same { background: rgba(128,128,128,.28); font-size: 11px; font-weight: 700; padding: 1px 7px; border-radius: 99px; margin-left: 4px; }
+  .pc { font-size: 12.5px; color: var(--muted-foreground, #777); line-height: 1.5; margin: 8px 4px 0; max-width: 390px; }
+  .pc b { color: var(--foreground, CanvasText); }
+  .box { border: 1px solid rgba(48,209,88,.5); background: rgba(48,209,88,.07); border-radius: 12px; padding: 12px 16px; margin-top: 16px; line-height: 1.55; font-size: 13px; max-width: 1100px; }
+  .box h3 { margin: 0 0 6px; font-size: 14px; }
+  .box ul, .box ol { margin: 4px 0 0; padding-left: 20px; }
+  .box li { margin-bottom: 3px; }
+  .box.neutral { border-color: rgba(128,128,128,.4); background: rgba(128,128,128,.07); }
+  .box.warn { border-color: rgba(255,159,10,.6); background: rgba(255,159,10,.08); }
+  code { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; background: rgba(128,128,128,.16); padding: 1px 4px; border-radius: 4px; }
+  .tablewrap { overflow-x: auto; }
+  table.sum { border-collapse: collapse; font-size: 13px; margin-top: 6px; }
+  table.sum td, table.sum th { padding: 5px 14px 5px 0; vertical-align: top; text-align: left; border-bottom: 1px solid rgba(128,128,128,.22); }
+  table.sum th { font-size: 12px; color: var(--muted-foreground, #777); }
+
+  .phone {
+    --bg: #000; --card: #1c1c1e; --card2: #2c2c2e; --sep: #38383a; --text: #fff; --sub: #8e8e93; --dim: #c7c7cc;
+    --blue: #0a84ff; --green: #30d158; --orange: #ff9f0a; --red: #ff453a; --purple: #bf5af2;
+    --segon: #636366; --frame: #2a2a2c; --barbg: rgba(44,44,46,.55);
+    --glass: rgba(72,72,78,.62); --glassline: rgba(255,255,255,.16); --glassshadow: inset 0 1px 0 rgba(255,255,255,.18), 0 8px 24px rgba(0,0,0,.55);
+    background: var(--bg); color: var(--text); border-radius: 40px; padding: 14px 12px 12px;
+    font: 15px -apple-system, "SF Pro Text", system-ui, sans-serif; border: 6px solid var(--frame);
+    width: 390px; max-width: 100%; box-sizing: border-box; height: 760px;
+    display: flex; flex-direction: column; position: relative; overflow: hidden;
+  }
+  .phone.light {
+    --bg: #f2f2f7; --card: #fff; --card2: #e3e3e8; --sep: #d1d1d6; --text: #000; --sub: #6c6c70; --dim: #3c3c43;
+    --blue: #007aff; --green: #34c759; --orange: #ff9500; --red: #ff3b30; --purple: #af52de;
+    --segon: #fff; --frame: #c7c7cc; --barbg: rgba(255,255,255,.6);
+    --glass: rgba(255,255,255,.78); --glassline: rgba(0,0,0,.06); --glassshadow: inset 0 1px 0 rgba(255,255,255,.9), 0 4px 14px rgba(0,0,0,.14);
+  }
+  /* Cropped frame: only the head of the screen matters. */
+  .phone.crop { height: 372px; border-bottom-left-radius: 0; border-bottom-right-radius: 0; border-bottom: 0; }
+  .phone.crop::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 70px; background: linear-gradient(transparent, var(--bg)); z-index: 4; pointer-events: none; }
+  .phone.small { width: 366px; }
+  .status { display: flex; justify-content: space-between; font: 600 13px system-ui; padding: 0 12px 10px; flex-shrink: 0; }
+  .glass { background: var(--glass); backdrop-filter: blur(18px) saturate(1.6); -webkit-backdrop-filter: blur(18px) saturate(1.6);
+    border: 1px solid var(--glassline); box-shadow: var(--glassshadow); }
+  .scr { flex: 1; min-height: 0; overflow: hidden; display: flex; flex-direction: column; }
+  .scr > * { flex-shrink: 0; }
+
+  /* System navigation bar row (44 pt) */
+  .nav { display: flex; align-items: center; justify-content: space-between; gap: 8px; height: 44px; padding: 0 2px; margin-bottom: 6px; flex-shrink: 0; }
+  .nav .r { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+  .nav .seg { flex: 1; margin: 0; min-width: 0; }
+  .gb { width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; font-size: 21px; flex-shrink: 0; color: var(--text); box-sizing: border-box; }
+  .gb.ai { background: rgba(175,82,222,.86); color: #fff; border-color: rgba(255,255,255,.22); font-size: 18px; }
+  .pill { border-radius: 99px; padding: 0 14px; height: 44px; display: grid; place-items: center; font-size: 15px; box-sizing: border-box; white-space: nowrap; }
+  .big { font: 700 30px/1.1 system-ui; letter-spacing: -.4px; padding: 2px 6px 10px; }
+
+  /* Segmented control */
+  .seg { display: flex; background: var(--card2); border-radius: 99px; padding: 2px; }
+  .seg span { flex: 1; text-align: center; padding: 6px 2px; font-size: 13px; border-radius: 99px; color: var(--dim); white-space: nowrap; }
+  .seg span.on { background: var(--segon); color: var(--text); font-weight: 600; box-shadow: 0 1px 3px rgba(0,0,0,.18); }
+  .seg.tall span { padding: 9px 2px; }
+
+  /* As built today: own head row on bar material, small bordered buttons */
+  .ownbar { display: flex; align-items: center; gap: 8px; padding: 4px 6px 6px; margin: 0 -12px 6px; padding-left: 18px; padding-right: 13px; background: var(--barbg); flex-shrink: 0; }
+  .ownbar .seg { flex: 1; }
+  .bb { width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; font-size: 19px; background: var(--card2); color: var(--blue); flex-shrink: 0; }
+  .bb.s { width: 30px; height: 30px; font-size: 16px; }
+
+  /* Date head inside the content (DayHeader as built) */
+  .hdr { padding: 2px 6px 10px; }
+  .hdr .top { display: flex; justify-content: space-between; align-items: baseline; }
+  .kick { font: 600 12px system-ui; color: var(--blue); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 2px; }
+  .kick.q { color: var(--sub); }
+  .lnk { color: var(--blue); font: 600 12px system-ui; }
+  .hdr .row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .bigdate { font: 700 26px/1.15 system-ui; letter-spacing: -.3px; white-space: nowrap; }
+  .car { font-size: .72em; color: var(--sub); vertical-align: .25em; margin-left: 2px; }
+  .mini { display: flex; gap: 4px; }
+  .stepper { display: flex; border-radius: 99px; flex-shrink: 0; height: 44px; box-sizing: border-box; }
+  .stepper span { width: 44px; display: grid; place-items: center; font-size: 19px; }
+  .stepper span + span { border-left: 1px solid var(--glassline); }
+
+  /* New: date as the title of the bar, with a quiet second line */
+  .ttl { min-width: 0; padding-left: 6px; line-height: 1.15; }
+  .ttl b { display: block; font: 700 19px system-ui; letter-spacing: -.2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .ttl small { display: block; font: 600 11px system-ui; text-transform: uppercase; letter-spacing: .4px; color: var(--sub); }
+  .ttl small.now { color: var(--blue); }
+  .row2 { display: flex; align-items: center; gap: 8px; padding: 0 2px; margin-bottom: 10px; flex-shrink: 0; }
+  .row2 .seg { flex: 1; min-width: 0; }
+  .today { color: var(--blue); font: 600 14px system-ui; height: 44px; padding: 0 12px; }
+
+  /* Content stubs */
+  .cap { background: var(--card); border-radius: 16px; padding: 9px 12px; margin: 0 0 8px; font-size: 13px; }
+  .cap b { font-size: 15px; display: block; }
+  .cap i { display: block; height: 5px; border-radius: 99px; background: var(--red); margin: 6px 0 2px; }
+  .cap small { color: var(--sub); font-size: 11.5px; }
+  .intake { font-size: 13px; color: var(--sub); padding: 0 6px 8px; }
+  .intake em { font-style: normal; color: var(--orange); }
+  .abl { display: flex; justify-content: space-between; align-items: center; color: var(--sub); font: 600 12px system-ui; text-transform: uppercase; letter-spacing: .4px; margin: 4px 8px 12px; }
+  .abl span { text-transform: none; letter-spacing: 0; color: var(--blue); font-size: 13px; }
+  .hg { position: relative; margin: 2px 0 6px 44px; border-left: 1px solid var(--sep); height: 400px; }
+  .hg .hl { position: absolute; left: -44px; right: 0; border-top: 1px solid var(--sep); font: 11px ui-monospace, monospace; color: var(--sub); padding-left: 2px; height: 0; }
+  .hg .hl span { position: relative; top: -8px; background: var(--bg); padding-right: 4px; }
+  .hg .ev { position: absolute; left: 4px; right: 4px; border-radius: 9px; padding: 4px 8px; font-size: 12.5px; box-sizing: border-box; overflow: hidden; }
+  .hg .ev small { color: var(--sub); font-size: 11px; display: block; }
+  .hg .ev.e { background: rgba(10,132,255,.22); border-left: 4px solid var(--blue); }
+  .hg .ev.p { background: rgba(48,209,88,.2); border-left: 4px solid var(--green); }
+  .section { color: var(--sub); font: 600 12px system-ui; text-transform: uppercase; letter-spacing: .4px; margin: 10px 8px 4px; }
+  .list { background: var(--card); border-radius: 18px; overflow: hidden; margin-bottom: 6px; }
+  .item { display: flex; align-items: flex-start; gap: 10px; padding: 9px 12px; border-bottom: 1px solid var(--sep); font-size: 14px; }
+  .item:last-child { border-bottom: 0; }
+  .item .t { flex: 1; min-width: 0; }
+  .item .s { color: var(--sub); font-size: 12px; margin-top: 2px; }
+  .item .ck { width: 18px; height: 18px; border-radius: 50%; border: 1.5px solid var(--sub); flex-shrink: 0; margin-top: 1px; box-sizing: border-box; }
+  .daynav { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; font-weight: 600; text-align: center; }
+  .daynav > span { color: var(--blue); font-size: 18px; min-width: 28px; }
+  .daynav > span.off { color: var(--sub); opacity: .5; }
+  .daynav b small { display: block; font: 400 11.5px system-ui; color: var(--sub); }
+  .wk { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-bottom: 8px; }
+  .wk div { background: var(--card); border-radius: 10px; padding: 6px 0 22px; text-align: center; font-size: 11px; color: var(--sub); }
+  .wk div b { display: block; color: var(--text); font-size: 14px; }
+  .wk div.on b { color: var(--blue); }
+  .tb { margin: 8px auto 0; width: 96%; display: flex; border-radius: 99px; padding: 5px; font-size: 10px; color: var(--dim); text-align: center; box-sizing: border-box; flex-shrink: 0; position: relative; z-index: 3; }
+  .tb span { flex: 1; padding: 4px 0 3px; border-radius: 99px; }
+  .tb .on { color: var(--blue); background: rgba(128,128,128,.22); font-weight: 600; }
+  .ico { font-size: 17px; display: block; font-style: normal; line-height: 20px; }
+
+  /* Annotations */
+  .zone { position: absolute; border: 1.5px dashed #ffd60a; border-radius: 12px; z-index: 6; pointer-events: none; box-sizing: border-box; }
+  .zone.bad { border-color: #ff453a; }
+  .zl { position: absolute; z-index: 7; font: 700 10px system-ui; color: #ffd60a; background: rgba(0,0,0,.82); border-radius: 5px; padding: 2px 6px; white-space: nowrap; }
+  .zl.bad { color: #ff8a82; }
+
+  /* Additions for this file */
+  .sub3 { font-size: 14px; margin: 22px 0 10px 4px; }
+  .back { width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; font-size: 22px; flex-shrink: 0; box-sizing: border-box; }
+  .nav.inl { position: relative; }
+  .nav.inl .mid { position: absolute; left: 0; right: 0; text-align: center; font: 600 16px system-ui; pointer-events: none; }
+  /* Navigation row inside the first list card */
+  .dn { display: flex; align-items: center; gap: 8px; padding: 6px 8px 6px 6px; border-bottom: 1px solid var(--sep); }
+  .dn .ttl { flex: 1; }
+  .dn .ttl b { font-size: 20px; }
+  .tdy { color: var(--blue); font: 600 14px system-ui; height: 44px; display: grid; place-items: center; padding: 0 4px; white-space: nowrap; flex-shrink: 0; }
+  .stepper span.off { opacity: .3; }
+  /* Centred variants (as built, and EK2) */
+  .dc { display: flex; align-items: center; gap: 6px; padding: 6px 8px; border-bottom: 1px solid var(--sep); text-align: center; }
+  .dc .mid { flex: 1; min-width: 0; font-weight: 600; line-height: 1.2; }
+  .dc .mid small { display: block; font: 400 11.5px system-ui; color: var(--sub); }
+  .dc .a { color: var(--blue); font-size: 18px; width: 32px; height: 32px; display: grid; place-items: center; flex-shrink: 0; }
+  .dc .a.off { color: var(--sub); opacity: .45; }
+  .dc .cap1 { color: var(--blue); font: 600 12px system-ui; flex-shrink: 0; }
+  .dc .gb { width: 44px; height: 44px; font-size: 19px; }
+  .dc .gb.off { opacity: .35; }
+  /* Weekly review stub */
+  .bars { display: flex; align-items: flex-end; gap: 8px; height: 86px; padding: 12px 12px 4px; position: relative; }
+  .bars i { flex: 1; background: var(--orange); border-radius: 4px 4px 0 0; opacity: .85; }
+  .bars::after { content: ""; position: absolute; left: 12px; right: 12px; top: 34px; border-top: 1.5px dashed var(--sub); }
+  .barl { display: flex; gap: 8px; padding: 2px 12px 8px; font-size: 10.5px; color: var(--sub); text-align: center; }
+  .barl span { flex: 1; }
+</style>
+</head>
+<body>
+
+<h1>Tagwerk · Datumsnavigation in „Erfassen“ und im Wochenrückblick an PK2 angleichen · Mockups EK0 bis EK2</h1>
+<p class="lead">Der Kopf von „Planen“ ist nach PK2 umgebaut (<code>app/Tagwerk/Planning/PlanHeader.swift</code>). Diese Datei zeigt, wie die Tagesnavigation in „Erfassen“ und die Wochennavigation im Wochenrückblick dessen <b>Bausteine</b> übernehmen können, ohne PK2 eins zu eins zu kopieren: Der große Titel „Erfassen“, der KI-Button in der Leiste und die Lage der Navigation als erste Zeile der Liste bleiben. <b>EK0</b> ist der Ist-Zustand neben „Planen“, <b>EK1</b> die empfohlene Angleichung, <b>EK2</b> eine sparsamere Alternative. Die Kürzel „EK“ sind neu. Alle Daten sind erfunden, Stichtag ist Mittwoch, 18. November 2026, 13:20 Uhr (KW 47). Die Bilder sind statisches HTML, nicht maßstabsgetreu, und zeigen nur den oberen Teil des Bildschirms. Geräte mit 375 pt Breite werden nicht unterstützt und sind nicht gezeichnet. <b>Nichts in dieser Datei ist am Gerät oder im Simulator geprüft</b>; der Ist-Zustand stammt aus dem Quelltext, Breitenangaben sind Rechnungen.</p>
+
+<div class="box neutral">
+  <h3>Vergleich auf einen Blick</h3>
+  <div class="tablewrap"><table class="sum">
+    <tr><th>Kürzel</th><th>Titel</th><th>Pfeile</th><th>„Heute“</th><th>Gleich wie PK2</th><th>Aufwand und Risiko</th></tr>
+    <tr><td><span class="code">EK0</span></td><td>mittig</td><td>außen links und rechts, Rahmen 32 pt (Erfassen) bzw. ohne Rahmen (Rückblick)</td><td>Erfassen: klein vor dem rechten Pfeil; Rückblick: nur im Kalender</td><td>nein</td><td>–</td></tr>
+    <tr><td><span class="code r">EK1</span></td><td>links, Kennzeile darüber</td><td>eine Glas-Kapsel rechts, je 44 pt</td><td>links neben der Kapsel, Stil wie PK2, in beiden Ansichten</td><td>Leserichtung, Kapsel, „Heute“, Kennzeile</td><td>klein bis mittel; Breite der Zeile mit langem Wochentitel nur gerechnet</td></tr>
+    <tr><td><span class="code">EK2</span></td><td>mittig (wie heute)</td><td>außen, zwei Glas-Kreise je 44 pt</td><td>vor dem rechten Pfeil, Stil wie PK2, in beiden Ansichten</td><td>nur Trefferflächen und „Heute“</td><td>klein; Titel springt, wenn „Heute“ erscheint</td></tr>
+  </table></div>
+</div>
+<h2><span class="area n">EK0</span> Ist-Zustand · „Erfassen“ und Wochenrückblick neben „Planen“ (PK2, gebaut)</h2>
+<p class="lead">„Planen“ liest sich von links nach rechts: Titel links, Bedienung rechts, Pfeile als eine Kapsel. „Erfassen“ und der Wochenrückblick sind symmetrisch gebaut: Pfeile außen, Titel mittig.</p>
+<div class="grid">
+<div><p class="label"><span class="code">PK2</span><b>Planen · Tag · heute</b> <span class="same">Vergleich</span></p><div class="phone crop"><div class="status"><span>13:20</span><span>●●● 5G</span></div><div class="nav"><div class="ttl"><small class="now">Heute · KW 47</small><b>Mittwoch, 18. Nov. <span class="car">▾</span></b></div><div class="r"><span class="gb glass">＋</span><span class="gb glass ai">✦</span></div></div><div class="row2"><div class="seg tall"><span class="on">Tag</span><span>Woche</span><span>Monat</span></div><div class="stepper glass"><span>‹</span><span>›</span></div></div><div class="scr"><div class="intake"><em>●</em> 1 240 kcal · 1,5 l Wasser ›</div><div class="cap"><b>1 h 20 zu viel</b><i></i><small>ab 13:20 bis 18:00 · 1 Aufgabe ohne Aufwand mit Standarddauer gerechnet</small></div><div class="abl">Ablauf<span>☰ Auswählen</span></div><div class="hg"><div class="hl" style="top:0"><span>13:00</span></div><div class="hl" style="top:48px"><span>14:00</span></div><div class="hl" style="top:96px"><span>15:00</span></div><div class="hl" style="top:144px"><span>16:00</span></div><div class="hl" style="top:192px"><span>17:00</span></div><div class="hl" style="top:240px"><span>18:00</span></div><div class="hl" style="top:288px"><span>19:00</span></div><div class="hl" style="top:336px"><span>20:00</span></div><div class="ev e" style="top:24px;height:46px">Abstimmung Quartalsplan<small>13:30 – 14:30</small></div><div class="ev p" style="top:96px;height:70px">Angebot überarbeiten<small>15:00 – 16:30 · Zeitblock</small></div><div class="ev e" style="top:216px;height:46px">Zahnarzt<small>17:30 – 18:30</small></div></div></div></div><p class="pc">Leiste: Kennzeile und Datumstitel links (▾ öffnet den Kalender), ＋ und ✦ rechts. Bedienzeile: Umschalter, „Heute“ nur bei anderem Zeitraum, Pfeile als Glas-Kapsel mit je 44 × 44 pt (<code>PlanHeader.swift:100–135</code>).</p></div>
+<div><p class="label"><span class="code">EK0</span><b>Erfassen · heute</b> </p><div class="phone crop"><div class="status"><span>13:20</span><span>●●● 5G</span></div><div class="nav"><span></span><div class="r"><span class="gb glass ai">✦</span></div></div><div class="big">Erfassen</div><div class="scr"><div class="list"><div class="dc"><span class="a">‹</span><div class="mid">Heute <span class="car">▾</span><small>Mi., 18. Nov.</small></div><span class="a off">›</span></div><div class="item"><div class="t">1 240 von 2 300 kcal<div class="s">Wasser 1,5 von 2,5 l · Eiweiß 62 g</div></div></div><div class="item"><div class="t">Wochenrückblick</div><div class="s">Woche ›</div></div></div><div class="section">Mahlzeiten</div><div class="list"><div class="item"><div class="t">Haferflocken mit Beeren<div class="s">07:40 · 420 kcal</div></div></div><div class="item"><div class="t">Linsensuppe<div class="s">12:30 · 560 kcal</div></div></div></div></div></div><p class="pc">Erste Listenzeile: Pfeile außen mit 32-pt-Rahmen (<code>CaptureView.swift:251</code>, <code>281</code>), Titel mittig mit Datum darunter. Der rechte Pfeil ist heute gesperrt, weil es nur zurück geht.</p></div><div><p class="label"><span class="code">EK0</span><b>Erfassen · Montag (vor 2 Tagen)</b> </p><div class="phone crop"><div class="status"><span>13:20</span><span>●●● 5G</span></div><div class="nav"><span></span><div class="r"><span class="gb glass ai">✦</span></div></div><div class="big">Erfassen</div><div class="scr"><div class="list"><div class="dc"><span class="a">‹</span><div class="mid">Montag <span class="car">▾</span><small>Mo., 16. Nov.</small></div><span class="cap1">Heute</span><span class="a">›</span></div><div class="item"><div class="t">2 180 von 2 300 kcal<div class="s">Wasser 2,25 von 2,5 l · Eiweiß 104 g</div></div></div><div class="item"><div class="t">Wochenrückblick</div><div class="s">Woche ›</div></div></div><div class="section">Mahlzeiten</div><div class="list"><div class="item"><div class="t">Haferflocken mit Beeren<div class="s">07:40 · 420 kcal</div></div></div><div class="item"><div class="t">Linsensuppe<div class="s">12:30 · 560 kcal</div></div></div></div></div></div><p class="pc">„Heute“ erscheint als kleine Schrift (<code>.caption</code>) direkt vor dem rechten Pfeil (<code>CaptureView.swift:274–277</code>); der mittige Titel rückt dabei nach links.</p></div><div><p class="label"><span class="code">EK0</span><b>Wochenrückblick · laufende Woche</b> </p><div class="phone crop"><div class="status"><span>13:20</span><span>●●● 5G</span></div><div class="nav inl"><span class="back glass">‹</span><span class="mid">Wochenrückblick</span><span></span></div><div class="scr"><div class="list"><div class="dc"><span class="a">‹</span><div class="mid">KW 47 · 16.–22. Nov <span class="car">▾</span></div><span class="a off">›</span></div></div><div class="section" style="display:flex;justify-content:space-between"><span>Kalorien</span><span>bisher</span></div><div class="list"><div class="bars"><i style="height:62%"></i><i style="height:48%"></i><i style="height:30%"></i><i style="height:0%"></i><i style="height:0%"></i><i style="height:0%"></i><i style="height:0%"></i></div><div class="barl"><span>Mo</span><span>Di</span><span>Mi</span><span>Do</span><span>Fr</span><span>Sa</span><span>So</span></div></div><div class="section">Wasser</div><div class="list"><div class="item"><div class="t">Ø 1,9 l / 2,5 l an 3 Tagen</div></div></div></div></div><p class="pc">Pfeile ohne eigenen Rahmen (<code>WeekReviewView.swift:14</code>, <code>33</code>), also noch kleiner als in „Erfassen“. Titel „KW 47 · 16.–22. Nov ▾“ mittig.</p></div><div><p class="label"><span class="code">EK0</span><b>Wochenrückblick · KW 46</b> </p><div class="phone crop"><div class="status"><span>13:20</span><span>●●● 5G</span></div><div class="nav inl"><span class="back glass">‹</span><span class="mid">Wochenrückblick</span><span></span></div><div class="scr"><div class="list"><div class="dc"><span class="a">‹</span><div class="mid">KW 46 · 9.–15. Nov <span class="car">▾</span></div><span class="a">›</span></div></div><div class="section" style="display:flex;justify-content:space-between"><span>Kalorien</span><span></span></div><div class="list"><div class="bars"><i style="height:58%"></i><i style="height:66%"></i><i style="height:44%"></i><i style="height:71%"></i><i style="height:52%"></i><i style="height:80%"></i><i style="height:49%"></i></div><div class="barl"><span>Mo</span><span>Di</span><span>Mi</span><span>Do</span><span>Fr</span><span>Sa</span><span>So</span></div></div><div class="section">Wasser</div><div class="list"><div class="item"><div class="t">Ø 1,9 l / 2,5 l an 7 Tagen</div></div></div></div></div><p class="pc">Kein direkter Weg zurück: „Diese Woche“ gibt es nur im Kalender (<code>WeekReviewView.swift:26–27</code>).</p></div>
+</div>
+
+<div class="box warn">
+  <h3>Befund · Unterschiede zu PK2 (aus dem Quelltext)</h3>
+  <ol>
+    <li><b>Trefferflächen.</b> „Erfassen“: Symbolrahmen 32 pt. Wochenrückblick: Symbol ohne Rahmen. PK2: 44 × 44 pt je Pfeil.</li>
+    <li><b>Form und Lage der Pfeile.</b> Zwei einzelne, randlose Symbole außen statt einer Glas-Kapsel rechts.</li>
+    <li><b>„Heute“.</b> „Erfassen“: <code>.caption</code>, halbfett. PK2: <code>.subheadline</code>, halbfett, mindestens 44 pt hoch (<code>PlanHeader.swift:111–114</code>). Wochenrückblick: fehlt in der Zeile.</li>
+    <li><b>Titel.</b> Mittig statt links; „Erfassen“ stellt das Wort groß und das Datum klein darunter, PK2 die Kennzeile klein darüber und das Datum groß. Der Wochenrückblick nennt die Kalenderwoche im Titel, PK2 in der Kennzeile.</li>
+    <li><b>Zwei Kalender-Bausteine, zwei Wisch-Erkenner.</b> Siehe „Code-Punkte“ am Ende.</li>
+  </ol>
+</div>
+<h2><span class="area g">EK1</span> Titel links · Kapsel rechts · „Heute“ wie in PK2 <span class="rec">Freigegeben am 18.11.2026</span></h2>
+<p class="lead">Die Navigation bleibt die erste Zeile der Liste und scrollt mit. Sie übernimmt von PK2 die Leserichtung (Titel links, Bedienung rechts), die Kennzeile über dem Titel, „Heute“ in gleicher Schrift und an gleicher Stelle (links neben den Pfeilen, nur bei anderem Zeitraum) und die Pfeile als eine Glas-Kapsel mit je 44 × 44 pt. Der gesperrte rechte Pfeil bleibt in der Kapsel und wird abgeblendet, damit nichts springt.</p>
+<h3 class="sub3">Dunkel</h3>
+<div class="grid">
+<div><p class="label"><span class="code r">EK1</span><b>Erfassen · heute</b> </p><div class="phone crop"><div class="status"><span>13:20</span><span>●●● 5G</span></div><div class="nav"><span></span><div class="r"><span class="gb glass ai">✦</span></div></div><div class="big">Erfassen</div><div class="scr"><div class="list"><div class="dn"><div class="ttl"><small class="now">Mi., 18. Nov. · KW 47</small><b>Heute <span class="car">▾</span></b></div><div class="stepper glass"><span>‹</span><span class="off">›</span></div></div><div class="item"><div class="t">1 240 von 2 300 kcal<div class="s">Wasser 1,5 von 2,5 l · Eiweiß 62 g</div></div></div><div class="item"><div class="t">Wochenrückblick</div><div class="s">Woche ›</div></div></div><div class="section">Mahlzeiten</div><div class="list"><div class="item"><div class="t">Haferflocken mit Beeren<div class="s">07:40 · 420 kcal</div></div></div><div class="item"><div class="t">Linsensuppe<div class="s">12:30 · 560 kcal</div></div></div></div></div></div><p class="pc">Titel „Heute ▾“, darüber die Kennzeile mit Datum und Kalenderwoche in Blau (laufender Tag). Kein „Heute“-Knopf; rechter Pfeil abgeblendet.</p></div><div><p class="label"><span class="code r">EK1</span><b>Erfassen · Montag (vor 2 Tagen)</b> </p><div class="phone crop"><div class="status"><span>13:20</span><span>●●● 5G</span></div><div class="nav"><span></span><div class="r"><span class="gb glass ai">✦</span></div></div><div class="big">Erfassen</div><div class="scr"><div class="list"><div class="dn"><div class="ttl"><small class="">Mo., 16. Nov. · KW 47</small><b>Montag <span class="car">▾</span></b></div><span class="tdy">Heute</span><div class="stepper glass"><span>‹</span><span>›</span></div></div><div class="item"><div class="t">2 180 von 2 300 kcal<div class="s">Wasser 2,25 von 2,5 l · Eiweiß 104 g</div></div></div><div class="item"><div class="t">Wochenrückblick</div><div class="s">Woche ›</div></div></div><div class="section">Mahlzeiten</div><div class="list"><div class="item"><div class="t">Haferflocken mit Beeren<div class="s">07:40 · 420 kcal</div></div></div><div class="item"><div class="t">Linsensuppe<div class="s">12:30 · 560 kcal</div></div></div></div></div></div><p class="pc">Kennzeile grau, „Heute“ erscheint neben der Kapsel. Der Titel bleibt stehen, weil er links verankert ist.</p></div><div><p class="label"><span class="code r">EK1</span><b>Wochenrückblick · laufende Woche</b> </p><div class="phone crop"><div class="status"><span>13:20</span><span>●●● 5G</span></div><div class="nav inl"><span class="back glass">‹</span><span class="mid">Wochenrückblick</span><span></span></div><div class="scr"><div class="list"><div class="dn"><div class="ttl"><small class="now">Diese Woche · KW 47</small><b>16.–22. Nov. <span class="car">▾</span></b></div><div class="stepper glass"><span>‹</span><span class="off">›</span></div></div></div><div class="section" style="display:flex;justify-content:space-between"><span>Kalorien</span><span>bisher</span></div><div class="list"><div class="bars"><i style="height:62%"></i><i style="height:48%"></i><i style="height:30%"></i><i style="height:0%"></i><i style="height:0%"></i><i style="height:0%"></i><i style="height:0%"></i></div><div class="barl"><span>Mo</span><span>Di</span><span>Mi</span><span>Do</span><span>Fr</span><span>Sa</span><span>So</span></div></div><div class="section">Wasser</div><div class="list"><div class="item"><div class="t">Ø 1,9 l / 2,5 l an 3 Tagen</div></div></div></div></div><p class="pc">Titel wie die Woche in „Planen“ („16.–22. Nov. ▾“), Kalenderwoche in der Kennzeile. Die Leiste mit Zurück-Knopf und Titel „Wochenrückblick“ bleibt.</p></div><div><p class="label"><span class="code r">EK1</span><b>Wochenrückblick · KW 46</b> </p><div class="phone crop"><div class="status"><span>13:20</span><span>●●● 5G</span></div><div class="nav inl"><span class="back glass">‹</span><span class="mid">Wochenrückblick</span><span></span></div><div class="scr"><div class="list"><div class="dn"><div class="ttl"><small class="">KW 46</small><b>9.–15. Nov. <span class="car">▾</span></b></div><span class="tdy">Heute</span><div class="stepper glass"><span>‹</span><span>›</span></div></div></div><div class="section" style="display:flex;justify-content:space-between"><span>Kalorien</span><span></span></div><div class="list"><div class="bars"><i style="height:58%"></i><i style="height:66%"></i><i style="height:44%"></i><i style="height:71%"></i><i style="height:52%"></i><i style="height:80%"></i><i style="height:49%"></i></div><div class="barl"><span>Mo</span><span>Di</span><span>Mi</span><span>Do</span><span>Fr</span><span>Sa</span><span>So</span></div></div><div class="section">Wasser</div><div class="list"><div class="item"><div class="t">Ø 1,9 l / 2,5 l an 7 Tagen</div></div></div></div></div><p class="pc">Neu: „Heute“ springt zur laufenden Woche, wie in der Wochenansicht von „Planen“. Im Kalender heißt der Knopf weiter „Diese Woche“.</p></div>
+</div>
+<h3 class="sub3">Hell</h3>
+<div class="grid">
+<div><p class="label"><span class="code r">EK1</span><b>Erfassen · heute · hell</b> </p><div class="phone crop light"><div class="status"><span>13:20</span><span>●●● 5G</span></div><div class="nav"><span></span><div class="r"><span class="gb glass ai">✦</span></div></div><div class="big">Erfassen</div><div class="scr"><div class="list"><div class="dn"><div class="ttl"><small class="now">Mi., 18. Nov. · KW 47</small><b>Heute <span class="car">▾</span></b></div><div class="stepper glass"><span>‹</span><span class="off">›</span></div></div><div class="item"><div class="t">1 240 von 2 300 kcal<div class="s">Wasser 1,5 von 2,5 l · Eiweiß 62 g</div></div></div><div class="item"><div class="t">Wochenrückblick</div><div class="s">Woche ›</div></div></div><div class="section">Mahlzeiten</div><div class="list"><div class="item"><div class="t">Haferflocken mit Beeren<div class="s">07:40 · 420 kcal</div></div></div><div class="item"><div class="t">Linsensuppe<div class="s">12:30 · 560 kcal</div></div></div></div></div></div><p class="pc"></p></div><div><p class="label"><span class="code r">EK1</span><b>Erfassen · Montag (vor 2 Tagen) · hell</b> </p><div class="phone crop light"><div class="status"><span>13:20</span><span>●●● 5G</span></div><div class="nav"><span></span><div class="r"><span class="gb glass ai">✦</span></div></div><div class="big">Erfassen</div><div class="scr"><div class="list"><div class="dn"><div class="ttl"><small class="">Mo., 16. Nov. · KW 47</small><b>Montag <span class="car">▾</span></b></div><span class="tdy">Heute</span><div class="stepper glass"><span>‹</span><span>›</span></div></div><div class="item"><div class="t">2 180 von 2 300 kcal<div class="s">Wasser 2,25 von 2,5 l · Eiweiß 104 g</div></div></div><div class="item"><div class="t">Wochenrückblick</div><div class="s">Woche ›</div></div></div><div class="section">Mahlzeiten</div><div class="list"><div class="item"><div class="t">Haferflocken mit Beeren<div class="s">07:40 · 420 kcal</div></div></div><div class="item"><div class="t">Linsensuppe<div class="s">12:30 · 560 kcal</div></div></div></div></div></div><p class="pc"></p></div><div><p class="label"><span class="code r">EK1</span><b>Wochenrückblick · laufende Woche · hell</b> </p><div class="phone crop light"><div class="status"><span>13:20</span><span>●●● 5G</span></div><div class="nav inl"><span class="back glass">‹</span><span class="mid">Wochenrückblick</span><span></span></div><div class="scr"><div class="list"><div class="dn"><div class="ttl"><small class="now">Diese Woche · KW 47</small><b>16.–22. Nov. <span class="car">▾</span></b></div><div class="stepper glass"><span>‹</span><span class="off">›</span></div></div></div><div class="section" style="display:flex;justify-content:space-between"><span>Kalorien</span><span>bisher</span></div><div class="list"><div class="bars"><i style="height:62%"></i><i style="height:48%"></i><i style="height:30%"></i><i style="height:0%"></i><i style="height:0%"></i><i style="height:0%"></i><i style="height:0%"></i></div><div class="barl"><span>Mo</span><span>Di</span><span>Mi</span><span>Do</span><span>Fr</span><span>Sa</span><span>So</span></div></div><div class="section">Wasser</div><div class="list"><div class="item"><div class="t">Ø 1,9 l / 2,5 l an 3 Tagen</div></div></div></div></div><p class="pc"></p></div><div><p class="label"><span class="code r">EK1</span><b>Wochenrückblick · KW 46 · hell</b> </p><div class="phone crop light"><div class="status"><span>13:20</span><span>●●● 5G</span></div><div class="nav inl"><span class="back glass">‹</span><span class="mid">Wochenrückblick</span><span></span></div><div class="scr"><div class="list"><div class="dn"><div class="ttl"><small class="">KW 46</small><b>9.–15. Nov. <span class="car">▾</span></b></div><span class="tdy">Heute</span><div class="stepper glass"><span>‹</span><span>›</span></div></div></div><div class="section" style="display:flex;justify-content:space-between"><span>Kalorien</span><span></span></div><div class="list"><div class="bars"><i style="height:58%"></i><i style="height:66%"></i><i style="height:44%"></i><i style="height:71%"></i><i style="height:52%"></i><i style="height:80%"></i><i style="height:49%"></i></div><div class="barl"><span>Mo</span><span>Di</span><span>Mi</span><span>Do</span><span>Fr</span><span>Sa</span><span>So</span></div></div><div class="section">Wasser</div><div class="list"><div class="item"><div class="t">Ø 1,9 l / 2,5 l an 7 Tagen</div></div></div></div></div><p class="pc"></p></div>
+</div>
+
+<div class="box">
+  <h3>Freigegeben am 18.11.2026: EK1 · Titel nach links</h3>
+  <ul>
+    <li><b>Der Titel muss nach links, sobald die Pfeile rechts als Kapsel stehen.</b> Kapsel (88 pt) und „Heute“ (rund 50 pt) belegen rechts rund 150 pt. Ein in der Zeile zentrierter Titel stieße bei rund 340 pt Zeilenbreite an „Heute“ oder säße sichtbar außermittig (Rechnung, nicht gemessen). Die Entscheidung „Kapsel rechts“ zieht „Titel links“ also nach sich.</li>
+    <li><b>Dafür:</b> dieselbe Leserichtung wie „Planen“; der Titel springt nicht, wenn „Heute“ erscheint; Kalenderwoche in beiden Ansichten an derselben Stelle; der Wochenrückblick bekommt erstmals einen direkten Weg zurück.</li>
+    <li><b>Dagegen:</b> Umgewöhnung; der Zurück-Pfeil liegt nicht mehr am linken Rand (für die linke Hand weiter weg); eine links beginnende Zeile sieht in einer Listenkarte eher wie eine gewöhnliche Zeile aus als die heutige symmetrische Kopfzeile.</li>
+    <li><b>Bewusst nicht übernommen:</b> das Datum als Titel der Leiste. Der große Titel „Erfassen“ und die Lage des KI-Buttons bleiben wie in „Aufgaben“ und „Einstellungen“.</li>
+    <li><b>Wortlaut in „Erfassen“:</b> Der Titel bleibt das kurze Wort („Heute“, „Gestern“, „Montag“), das Datum wandert mit der Kalenderwoche in die Kennzeile. Der PK2-Wortlaut („Mittwoch, 18. Nov.“ als Titel) wäre in dieser Zeile mit „Heute“ und Kapsel bei langen Wochentagen zu breit (Rechnung: rund 215 pt für „Donnerstag, 24. Sept. ▾“ bei rund 190 pt Platz).</li>
+    <li><b>Offenes Risiko:</b> Im Wochenrückblick wird ein Titel über die Monatsgrenze („26. Okt. – 1. Nov. ▾“) neben „Heute“ und Kapsel knapp; vorgesehen ist dieselbe Verkleinerung wie in PK2 (bis 0,8). Ob das reicht, ist am Gerät zu prüfen.</li>
+    <li><b>Einordnung:</b> Das sind Entwurfsgründe und Rechnungen. Dass EK1 sich besser bedient als EK0 oder EK2, ist nicht belegt.</li>
+  </ul>
+</div>
+<h2><span class="area">EK2</span> Alternative · Titel bleibt mittig, nur Trefferflächen und „Heute“ angleichen</h2>
+<p class="lead">Die Anordnung bleibt, wie sie ist. Die Pfeile werden zu zwei Glas-Kreisen mit je 44 pt außen, „Heute“ bekommt Schrift und Höhe von PK2 und kommt auch in den Wochenrückblick. Wortlaut und Titel bleiben unverändert.</p>
+<h3 class="sub3">Dunkel</h3>
+<div class="grid">
+<div><p class="label"><span class="code">EK2</span><b>Erfassen · heute</b> </p><div class="phone crop"><div class="status"><span>13:20</span><span>●●● 5G</span></div><div class="nav"><span></span><div class="r"><span class="gb glass ai">✦</span></div></div><div class="big">Erfassen</div><div class="scr"><div class="list"><div class="dc"><span class="gb glass">‹</span><div class="mid">Heute <span class="car">▾</span><small>Mi., 18. Nov.</small></div><span class="gb glass off">›</span></div><div class="item"><div class="t">1 240 von 2 300 kcal<div class="s">Wasser 1,5 von 2,5 l · Eiweiß 62 g</div></div></div><div class="item"><div class="t">Wochenrückblick</div><div class="s">Woche ›</div></div></div><div class="section">Mahlzeiten</div><div class="list"><div class="item"><div class="t">Haferflocken mit Beeren<div class="s">07:40 · 420 kcal</div></div></div><div class="item"><div class="t">Linsensuppe<div class="s">12:30 · 560 kcal</div></div></div></div></div></div><p class="pc"><b>Pro:</b> keine Umgewöhnung, symmetrisch, Zurück-Pfeil bleibt am linken Rand. Kleinster Umbau.</p></div><div><p class="label"><span class="code">EK2</span><b>Erfassen · Montag (vor 2 Tagen)</b> </p><div class="phone crop"><div class="status"><span>13:20</span><span>●●● 5G</span></div><div class="nav"><span></span><div class="r"><span class="gb glass ai">✦</span></div></div><div class="big">Erfassen</div><div class="scr"><div class="list"><div class="dc"><span class="gb glass">‹</span><div class="mid">Montag <span class="car">▾</span><small>Mo., 16. Nov.</small></div><span class="tdy">Heute</span><span class="gb glass">›</span></div><div class="item"><div class="t">2 180 von 2 300 kcal<div class="s">Wasser 2,25 von 2,5 l · Eiweiß 104 g</div></div></div><div class="item"><div class="t">Wochenrückblick</div><div class="s">Woche ›</div></div></div><div class="section">Mahlzeiten</div><div class="list"><div class="item"><div class="t">Haferflocken mit Beeren<div class="s">07:40 · 420 kcal</div></div></div><div class="item"><div class="t">Linsensuppe<div class="s">12:30 · 560 kcal</div></div></div></div></div></div><p class="pc"><b>Contra:</b> Der Titel rückt nach links, sobald „Heute“ erscheint (wie heute schon). Lage der Pfeile und Leserichtung weichen weiter von „Planen“ ab.</p></div><div><p class="label"><span class="code">EK2</span><b>Wochenrückblick · laufende Woche</b> </p><div class="phone crop"><div class="status"><span>13:20</span><span>●●● 5G</span></div><div class="nav inl"><span class="back glass">‹</span><span class="mid">Wochenrückblick</span><span></span></div><div class="scr"><div class="list"><div class="dc"><span class="gb glass">‹</span><div class="mid">KW 47 · 16.–22. Nov <span class="car">▾</span></div><span class="gb glass off">›</span></div></div><div class="section" style="display:flex;justify-content:space-between"><span>Kalorien</span><span>bisher</span></div><div class="list"><div class="bars"><i style="height:62%"></i><i style="height:48%"></i><i style="height:30%"></i><i style="height:0%"></i><i style="height:0%"></i><i style="height:0%"></i><i style="height:0%"></i></div><div class="barl"><span>Mo</span><span>Di</span><span>Mi</span><span>Do</span><span>Fr</span><span>Sa</span><span>So</span></div></div><div class="section">Wasser</div><div class="list"><div class="item"><div class="t">Ø 1,9 l / 2,5 l an 3 Tagen</div></div></div></div></div><p class="pc">Der Titel behält die Kalenderwoche („KW 47 · 16.–22. Nov ▾“); die Schreibweise unterscheidet sich weiter von der Woche in „Planen“.</p></div><div><p class="label"><span class="code">EK2</span><b>Wochenrückblick · KW 46</b> </p><div class="phone crop"><div class="status"><span>13:20</span><span>●●● 5G</span></div><div class="nav inl"><span class="back glass">‹</span><span class="mid">Wochenrückblick</span><span></span></div><div class="scr"><div class="list"><div class="dc"><span class="gb glass">‹</span><div class="mid">KW 46 · 9.–15. Nov <span class="car">▾</span></div><span class="tdy">Heute</span><span class="gb glass">›</span></div></div><div class="section" style="display:flex;justify-content:space-between"><span>Kalorien</span><span></span></div><div class="list"><div class="bars"><i style="height:58%"></i><i style="height:66%"></i><i style="height:44%"></i><i style="height:71%"></i><i style="height:52%"></i><i style="height:80%"></i><i style="height:49%"></i></div><div class="barl"><span>Mo</span><span>Di</span><span>Mi</span><span>Do</span><span>Fr</span><span>Sa</span><span>So</span></div></div><div class="section">Wasser</div><div class="list"><div class="item"><div class="t">Ø 1,9 l / 2,5 l an 7 Tagen</div></div></div></div></div><p class="pc">„Heute“ neu auch hier. Mit zwei Kreisen, „Heute“ und dem langen Titel ist die Zeile die engste dieser Datei.</p></div>
+</div>
+<h3 class="sub3">Hell (Auswahl)</h3>
+<div class="grid">
+<div><p class="label"><span class="code">EK2</span><b>Erfassen · Montag (vor 2 Tagen) · hell</b> </p><div class="phone crop light"><div class="status"><span>13:20</span><span>●●● 5G</span></div><div class="nav"><span></span><div class="r"><span class="gb glass ai">✦</span></div></div><div class="big">Erfassen</div><div class="scr"><div class="list"><div class="dc"><span class="gb glass">‹</span><div class="mid">Montag <span class="car">▾</span><small>Mo., 16. Nov.</small></div><span class="tdy">Heute</span><span class="gb glass">›</span></div><div class="item"><div class="t">2 180 von 2 300 kcal<div class="s">Wasser 2,25 von 2,5 l · Eiweiß 104 g</div></div></div><div class="item"><div class="t">Wochenrückblick</div><div class="s">Woche ›</div></div></div><div class="section">Mahlzeiten</div><div class="list"><div class="item"><div class="t">Haferflocken mit Beeren<div class="s">07:40 · 420 kcal</div></div></div><div class="item"><div class="t">Linsensuppe<div class="s">12:30 · 560 kcal</div></div></div></div></div></div><p class="pc"></p></div><div><p class="label"><span class="code">EK2</span><b>Wochenrückblick · KW 46 · hell</b> </p><div class="phone crop light"><div class="status"><span>13:20</span><span>●●● 5G</span></div><div class="nav inl"><span class="back glass">‹</span><span class="mid">Wochenrückblick</span><span></span></div><div class="scr"><div class="list"><div class="dc"><span class="gb glass">‹</span><div class="mid">KW 46 · 9.–15. Nov <span class="car">▾</span></div><span class="tdy">Heute</span><span class="gb glass">›</span></div></div><div class="section" style="display:flex;justify-content:space-between"><span>Kalorien</span><span></span></div><div class="list"><div class="bars"><i style="height:58%"></i><i style="height:66%"></i><i style="height:44%"></i><i style="height:71%"></i><i style="height:52%"></i><i style="height:80%"></i><i style="height:49%"></i></div><div class="barl"><span>Mo</span><span>Di</span><span>Mi</span><span>Do</span><span>Fr</span><span>Sa</span><span>So</span></div></div><div class="section">Wasser</div><div class="list"><div class="item"><div class="t">Ø 1,9 l / 2,5 l an 7 Tagen</div></div></div></div></div><p class="pc"></p></div>
+</div>
+
+<div class="box neutral">
+  <h3>Nicht als Variante gezeichnet</h3>
+  <ul>
+    <li><b>PK2 eins zu eins</b> (Datum als Titel der Leiste, feste Bedienzeile): verdrängt den großen Titel „Erfassen“, und die Bedienzeile hätte ohne Umschalter nur „Heute“ und zwei Pfeile.</li>
+    <li><b>Feste Navigationszeile unter der Leiste</b> (bleibt beim Scrollen stehen): Zusammenspiel mit dem einklappenden großen Titel ist ungeprüft, und die Zeile wäre nicht mehr Teil der Karte mit der Tagessumme.</li>
+  </ul>
+</div>
+
+<div class="box neutral">
+  <h3>Für beide Varianten</h3>
+  <ul>
+    <li><b>Wischen bleibt unverändert:</b> in „Erfassen“ auf den Zeilen über den Einträgen, im Wochenrückblick auf der ganzen Liste.</li>
+    <li><b>VoiceOver:</b> Bezeichnungen bleiben („Vorheriger Tag“, „Nächste Woche“, Hinweis „Datum wählen“ bzw. „Woche wählen“). In EK1 werden Kennzeile und Titel wie in PK2 zu einem Element zusammengefasst.</li>
+    <li><b>Große Schrift:</b> „Heute“ und die Pfeile bekommen wie in PK2 die vergrößerte Ansicht beim Halten; reicht die Breite nicht, entfällt zuerst „Heute“ (im Kalender weiter vorhanden).</li>
+    <li><b>Gesperrter Vorwärts-Pfeil:</b> bleibt sichtbar und abgeblendet; VoiceOver meldet ihn als nicht verfügbar.</li>
+  </ul>
+</div>
+
+<div class="box neutral">
+  <h3>Code-Punkte ohne sichtbare Änderung · Einschätzung</h3>
+  <ul>
+    <li><b>(a) Kalender-Bausteine zusammenlegen: ja, als eigener kleiner Umbau.</b> <code>DatePickerPopover</code> (<code>PlanHeader.swift:160–192</code>) und <code>DateJumpPopover</code> (<code>DateJumpPopover.swift:6–33</code>) haben denselben Aufbau (grafischer Kalender, Knopf unten links, gleiche Maße). Sie unterscheiden sich in drei Punkten: Der erste hängt am <code>PlanningModel</code>, der zweite arbeitet mit Werten und einer Rückgabe; der zweite begrenzt die Auswahl auf „bis heute“; der erste hat rechts „Monatsansicht ›“. Der wertbasierte Baustein ist die bessere Grundlage. Nötig sind eine wählbare Obergrenze und eine wählbare zweite Aktion. Risiko gering; das Verhalten in „Planen“ (Schließen nach Auswahl, Sprung in die Monatsansicht) muss gleich bleiben. Unabhängig von EK1 oder EK2.</li>
+    <li><b>(b) Wisch-Erkenner vereinheitlichen: die Entscheidungslogik ja, die Schwellen nicht ungeprüft.</b> <code>PageSwipe</code> (<code>PageSwipe.swift:5–18</code>) hat eine reine, prüfbare Funktion mit 60 pt, Verhältnis 1,5 und Ausschluss des linken Rands (30 pt) für die Zurück-Geste. In „Planen“ steht die Regel 80 pt und Verhältnis 2 dreimal im Code (<code>HorizontalSwipe.swift:5–11</code>, <code>DayView.swift:164–170</code>, <code>DayGridScreen.swift:445–452</code>). Sinnvoll ist eine gemeinsame Funktion mit zwei benannten Einstellungen; das beseitigt die Dreifachkopie und macht die Regel in „Planen“ prüfbar. Die strengeren Werte in „Planen“ sollten zunächst bleiben: Dort liegen Stundenraster und Ziehen von Blöcken und Aufgaben unter der Geste. <b>Annahme:</b> Die Werte sind deshalb strenger. Belegt ist nur, dass der Erkenner im Raster während eines Ziehens aussetzt (<code>DayGridScreen.swift:447</code>). Eine Angleichung der Schwellen gehört an das Gerät, nicht in einen reinen Code-Umbau. Den Randausschluss braucht „Planen“ derzeit nicht, weil der Tab auf oberster Ebene keine Zurück-Geste hat. Risiko mittel (Gesten im Raster); geringere Dringlichkeit als (a).</li>
+  </ul>
+</div>
+
+<div class="box warn">
+  <h3>Offene Fragen</h3>
+  <ol>
+    <li><b>Titel links (EK1) oder mittig (EK2)?</b> Mit Kapsel rechts geht nur links.</li>
+    <li><b>Wortlaut in „Erfassen“ (EK1):</b> kurzes Wort als Titel und Datum mit Kalenderwoche in der Kennzeile (gezeichnet), oder der Wortlaut von „Planen“ mit dem Risiko zu langer Titel?</li>
+    <li><b>Wochenrückblick:</b> Soll der Knopf in der Zeile „Heute“ heißen (wie in der Wochenansicht von „Planen“, kurz) oder „Diese Woche“ (genauer, rund doppelt so breit)?</li>
+    <li><b>Wochenrückblick, Titel (EK1):</b> Darf „KW 47“ aus dem Titel in die Kennzeile wandern, sodass der Titel wie die Woche in „Planen“ lautet?</li>
+    <li><b>Gesperrter Vorwärts-Pfeil:</b> abgeblendet in der Kapsel lassen (gezeichnet) oder ausblenden?</li>
+    <li><b>Code-Punkte (a) und (b):</b> zusammen mit dieser Angleichung, davor oder getrennt danach? Empfohlen: (a) davor oder zusammen, (b) getrennt.</li>
+    <li><b>Wisch-Schwellen:</b> Fühlt sich das Wischen in „Planen“ (80 pt) gegenüber „Erfassen“ (60 pt) merklich schwerer an? Nur dann lohnt eine Angleichung der Werte.</li>
+  </ol>
+</div>
+
+</body>
+</html>

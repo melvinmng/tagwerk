@@ -58,7 +58,7 @@ struct DayGridScreen<Summary: View, Header: View>: View {
         .contentMargins(.bottom, 80, for: .scrollContent)  // room for the collapsed panel
         .onGeometryChange(for: CGRect.self) { $0.frame(in: .named("screen")) } action: { scrollFrame = $0 }
         .scrollDisabled(isDragging || taskDrag != nil)
-        .simultaneousGesture(daySwipe)
+        .simultaneousGesture(pageSwipeGesture { model.step($0.step) })
         .overlay(alignment: .bottom) {
             VStack(spacing: 8) {
                 if lunchChanged { lunchBar }
@@ -441,15 +441,6 @@ struct DayGridScreen<Summary: View, Header: View>: View {
     }
 
     // MARK: Helpers
-
-    private var daySwipe: some Gesture {
-        DragGesture(minimumDistance: 30).onEnded { value in
-            guard !isDragging, taskDrag == nil else { return }
-            let dx = value.translation.width, dy = value.translation.height
-            guard abs(dx) > 80, abs(dx) > 2 * abs(dy) else { return }
-            withAnimation(.snappy) { model.step(dx < 0 ? 1 : -1) }
-        }
-    }
 
     private func clock(_ minutes: Int) -> String {
         plan.day.startDate(in: model.calendar).addingTimeInterval(TimeInterval(minutes * 60)).formatted(date: .omitted, time: .shortened)

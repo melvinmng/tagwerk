@@ -108,6 +108,7 @@ GitHub-Konto: @melvinmng · bestätigt zuweisbar · geprüft 2026-11-17 · ich
 - [x] [#118](https://github.com/melvinmng/tagwerk/issues/118) KI: Termine anlegen, ändern und löschen {status: Done; prio: P2 (High); aufwand: 4h; epic: #2}
 - [x] [#120](https://github.com/melvinmng/tagwerk/issues/120) Sprechmodus: Vorschläge per Stimme annehmen, ablehnen und korrigieren {status: Done; prio: P2 (High); aufwand: 5h; epic: #103}
 - [x] [#124](https://github.com/melvinmng/tagwerk/issues/124) App auf Englisch (Sprache folgt dem iPhone) {status: Done; prio: P3 (Medium); aufwand: 8h}
+- [ ] [#134](https://github.com/melvinmng/tagwerk/issues/134) Tage und Wochen in „Planen“ und „Erfassen“ als mitziehbare Seiten blättern (Finger zieht den Nachbartag mit) {status: Backlog; prio: P4 (Low)}
 
 ## Notizen
 
@@ -116,8 +117,9 @@ GitHub-Konto: @melvinmng · bestätigt zuweisbar · geprüft 2026-11-17 · ich
 
 _Automatisch aus [Tagwerk](https://github.com/users/melvinmng/projects/17) erzeugt. Nicht von Hand bearbeiten; Aufgaben oben unter den Personen pflegen._
 
-### Backlog (1)
+### Backlog (2)
 - [#115](https://github.com/melvinmng/tagwerk/issues/115) Phase 6: Jira als Aufgabenquelle anbinden · @melvinmng · Prio P4 (Low)
+- [#134](https://github.com/melvinmng/tagwerk/issues/134) Tage und Wochen in „Planen“ und „Erfassen“ als mitziehbare Seiten blättern (Finger zieht den Nachbartag mit) · @melvinmng · Prio P4 (Low)
 
 ### Bereit (1)
 - [#113](https://github.com/melvinmng/tagwerk/issues/113) Phase 5: Einkaufsliste und Notizen einbinden · @melvinmng · Prio P3 (Medium)

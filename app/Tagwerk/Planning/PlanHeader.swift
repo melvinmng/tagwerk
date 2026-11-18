@@ -70,16 +70,7 @@ struct PlanTitleButton: View {
                                              range: model.range, calendar: model.calendar)
         let title = PlanHeaderText.title(scope: model.scope, anchor: model.anchor, range: model.range, calendar: model.calendar)
         Button { picking = true } label: {
-            VStack(alignment: .leading, spacing: 0) {
-                Text(caption)
-                    .font(.caption2.weight(.semibold))
-                    .foregroundStyle(current ? Color.accentColor : .secondary)
-                HStack(alignment: .firstTextBaseline, spacing: 4) {
-                    Text(title).font(.title3.bold()).lineLimit(1).minimumScaleFactor(0.8)
-                    Image(systemName: "chevron.down").font(.caption.weight(.semibold)).foregroundStyle(.secondary)
-                }
-            }
-            .fixedSize()
+            PageTitleLabel(caption: caption, title: title, isCurrent: current).fixedSize()
         }
         .buttonStyle(.plain)
         .accessibilityElement(children: .ignore)
@@ -88,10 +79,12 @@ struct PlanTitleButton: View {
         .accessibilityHint("Datum wählen")
         .accessibilityAddTraits(.isHeader)
         .popover(isPresented: $picking) {
-            DatePickerPopover(model: model, onShowMonth: model.scope == .month ? nil : {
+            DateJumpPopover(selected: model.anchor, today: model.today, calendar: model.calendar, todayTitle: "Heute",
+                            secondaryTitle: model.scope == .month ? nil : "Monatsansicht ›",
+                            onSecondary: { picking = false; model.scope = .month }) { day in
+                model.anchor = day
                 picking = false
-                model.scope = .month
-            }, onDone: { picking = false })
+            }
         }
     }
 }
@@ -107,30 +100,12 @@ struct PlanControlRow: View {
                 ForEach(PlanScope.allCases, id: \.self) { Text($0.title).tag($0) }
             }
             .pickerStyle(.segmented)
-            if !current {
-                Button("Heute") { model.anchor = model.today }
-                    .font(.subheadline.weight(.semibold))
-                    .frame(minHeight: 44)
-                    .accessibilityShowsLargeContentViewer()
-            }
-            HStack(spacing: 0) {
-                arrow(-1, symbol: "chevron.left")
-                arrow(1, symbol: "chevron.right")
-            }
-            .glassEffect(.regular.interactive(), in: .capsule)
+            if !current { PageTodayButton { model.anchor = model.today } }
+            PageArrowCapsule(backLabel: PlanHeaderText.stepLabel(scope: model.scope, direction: -1),
+                             forwardLabel: PlanHeaderText.stepLabel(scope: model.scope, direction: 1)) { model.step($0.step) }
         }
         .padding(.horizontal)
         .padding(.bottom, 6)
-    }
-
-    private func arrow(_ direction: Int, symbol: String) -> some View {
-        Button { model.step(direction) } label: {
-            Image(systemName: symbol).font(.body.weight(.semibold)).frame(width: 44, height: 44)
-        }
-        .buttonStyle(.plain)
-        .contentShape(Rectangle())
-        .accessibilityLabel(PlanHeaderText.stepLabel(scope: model.scope, direction: direction))
-        .accessibilityShowsLargeContentViewer()
     }
 }
 
@@ -153,40 +128,5 @@ struct PlanIntakeLine: View {
             .buttonStyle(.plain)
             .accessibilityHint("Öffnet Erfassen")
         }
-    }
-}
-
-/// Month calendar to jump to a day (mockup A1, date tapped).
-struct DatePickerPopover: View {
-    @Bindable var model: PlanningModel
-    let onShowMonth: (() -> Void)?
-    let onDone: () -> Void
-
-    var body: some View {
-        VStack(spacing: 8) {
-            DatePicker("Datum", selection: date, displayedComponents: .date)
-                .datePickerStyle(.graphical)
-                .environment(\.calendar, model.calendar)
-            HStack {
-                Button("Heute") {
-                    model.anchor = model.today
-                    onDone()
-                }
-                Spacer()
-                if let onShowMonth { Button("Monatsansicht ›", action: onShowMonth) }
-            }
-            .padding(.horizontal, 8)
-        }
-        .padding(12)
-        .frame(minWidth: 320)
-        .presentationCompactAdaptation(.popover)
-    }
-
-    private var date: Binding<Date> {
-        Binding(get: { model.anchor.startDate(in: model.calendar) },
-                set: { newValue in
-                    model.anchor = PlanDay(date: newValue, calendar: model.calendar)
-                    onDone()
-                })
     }
 }

@@ -137,6 +137,20 @@ struct CaptureModelTests {
         #expect(model.day == PlanDay(date: now, calendar: calendar))
     }
 
+    /// Swipes and arrows change the day synchronously, so the change can be animated; entries follow at once.
+    @Test func show_isSynchronous_andClamped() async {
+        let model = make()
+        await model.reload()
+        await model.addWater(250)
+        model.show(PlanDay(date: now, calendar: calendar).adding(days: -1, calendar: calendar))
+        #expect(model.drinks.isEmpty)
+        #expect(model.show(PlanDay(year: 2026, month: 12, day: 24)))
+        #expect(model.day == PlanDay(date: now, calendar: calendar))
+        // Already on today: nothing changes, so the view can signal the limit.
+        #expect(!model.show(PlanDay(year: 2026, month: 12, day: 24)))
+        #expect(model.drinks.count == 1)
+    }
+
     @Test func goTo_pastDay_showsIt() async {
         let model = make()
         await model.reload()
