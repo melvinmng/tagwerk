@@ -4,6 +4,7 @@
 #
 # Usage: scripts/install-dev.sh
 # Exit codes: 0 installed, 1 build failed, 2 install failed, 64 configuration missing
+# On success it sets last-installed.<bundle> to "dev", which disables the refresh fallback until the next refresh install.
 
 set -euo pipefail
 
@@ -12,12 +13,13 @@ export DEVELOPER_DIR="/Applications/Xcode.app/Contents/Developer"
 REPO_ROOT="${0:A:h:h}"
 DERIVED="$HOME/Library/Developer/Tagwerk/DerivedData-dev"
 LOG_DIR="$HOME/Library/Logs/Tagwerk"
+STATE_DIR="$HOME/Library/Application Support/Tagwerk"
 BUILD_LOG="$LOG_DIR/install-dev-build.log"
 INSTALL_LOG="$LOG_DIR/install-dev-install.log"
 
 source "$REPO_ROOT/scripts/install-config.zsh" || exit 64
 
-mkdir -p "$LOG_DIR"
+mkdir -p "$LOG_DIR" "$STATE_DIR"
 
 # Removes the device identifier from any text passed through the pipe.
 redact_device_id() {
@@ -46,4 +48,6 @@ if ! xcrun devicectl device install app --device "$DEVICE_ID" "$APP_PATH" 2>&1 |
   tail -n 10 "$INSTALL_LOG" >&2
   exit 2
 fi
+# The working tree is installed, so the installed commit is unknown to the refresh fallback.
+print -r -- dev > "$STATE_DIR/last-installed.$TAGWERK_BUNDLE_ID"
 echo "Install OK: Tagwerk is on the device."
