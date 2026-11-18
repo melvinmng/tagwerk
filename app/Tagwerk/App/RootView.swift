@@ -49,6 +49,11 @@ struct RootView: View {
             // The chat is its own sheet over the tabs; other sheets close first.
             if presented { editingTask = nil; openEvent = nil; recurringEdit = nil }
         }
+        .onChange(of: environment.requestedTab) { _, tab in
+            guard let tab else { return }
+            selectedTab = tab
+            environment.requestedTab = nil
+        }
         .onAppear {
             environment.assistant.tools.onPlanned = {
                 environment.assistant.isPresented = false

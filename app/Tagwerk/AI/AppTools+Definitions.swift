@@ -63,7 +63,7 @@ extension AppTools {
             tool("create_time_block", "Creates a time block for a task in the plan calendar. Needs confirmation.", [
                 "id": taskID, "day": day, "start": string("HH:mm"), "minutes": integer(),
             ]),
-            tool("link_event_to_task", "Links a calendar event to a task. Needs confirmation.",
+            tool("link_event_to_task", "Links a calendar event to a task; use it also to suggest a link you noticed (same title, an issue number in the event). Needs confirmation.",
                  ["event_id": string(), "task_id": taskID]),
             tool("set_day_hours", "Sets the working hours of one day, or marks it off. Needs confirmation.", [
                 "day": day, "start": string("HH:mm", nullable: true), "end": string("HH:mm", nullable: true), "off": boolean,

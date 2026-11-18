@@ -25,6 +25,8 @@ final class AppEnvironment {
     let planner: AIPlanner
     /// The assistant chat (design §8.3); sends only what the user writes.
     let assistant: AssistantModel
+    /// A tab another view asks to show (e.g. "Mit KI planen" from the task list jumps to "Planen").
+    var requestedTab: Int?
     private let gitHubCache: SwiftDataGitHubCache
     private let gitHubCatalogStore: SwiftDataGitHubCatalogStore
     /// Age after which the repository/project catalog is fetched again.

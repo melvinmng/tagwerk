@@ -179,3 +179,36 @@ struct AppToolsTests {
         #expect(result["error"] as? String == "Kommentare gibt es nur bei GitHub-Issues.")
     }
 }
+
+@MainActor
+struct LinkSuggestionTests {
+    @Test func suggestLink_isWriteKind_andLinksOnConfirm() async throws {
+        let container = try ModelContainerFactory.make(inMemory: true)
+        let settings = try AppSettings.current(in: container.mainContext)
+        let calendarStore = FakeCalendarStore()
+        calendarStore.storedEvents = [CalendarEvent(id: "e1", externalID: nil, calendarID: "work", title: "Login fixen",
+                                                    start: testNow(), end: testNow().addingTimeInterval(3600), isAllDay: false,
+                                                    url: nil, isBusy: true, version: "1")]
+        let local = FakeTaskProvider(source: .local, tasks: [makeTask("Login", source: .local)])
+        let taskList = TaskListModel(providers: [local], now: testNow, calendar: testCalendar())
+        await taskList.reload()
+        let planStore = PlanStore(context: container.mainContext)
+        let links = EventLinkStore(context: container.mainContext)
+        let blocks = BlockPlanner(store: calendarStore, planStore: planStore, links: links, settings: settings, calendar: testCalendar())
+        let planning = PlanningModel(taskList: taskList, calendarStore: calendarStore, reminderStore: FakeAccessStore(),
+                                     planStore: planStore, efforts: RecurringEffortStore(context: container.mainContext),
+                                     blocks: blocks, settings: settings, marks: EventMarkStore(context: container.mainContext),
+                                     now: testNow, calendar: testCalendar())
+        let tools = AppTools(taskList: taskList, planning: planning, planner: nil, events: { _ in calendarStore.storedEvents })
+        #expect(tools.kind(of: "link_event_to_task") == .write)
+        // Before confirmation nothing is linked; running the call is what the confirmation does.
+        #expect(links.manualLinks().isEmpty)
+        _ = await tools.run(ToolCall(id: "c", name: "link_event_to_task", arguments: Data(#"{"event_id":"e1","task_id":"local:Login"}"#.utf8)))
+        #expect(links.manualLinks()["e1"] == TaskID(source: .local, rawValue: "Login"))
+    }
+
+    @Test func contextMenu_hasAIEntries_onlyWhenSignedIn() {
+        #expect(TaskContextMenu.showsAIEntries(isSignedIn: true))
+        #expect(!TaskContextMenu.showsAIEntries(isSignedIn: false))
+    }
+}
