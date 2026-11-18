@@ -518,6 +518,21 @@ final class PlanningModel {
                              minutes: efforts.minutes(for: task.id.rawValue, on: day) ?? 0)
     }
 
+    /// Future blocks of `task` that would lie on a day without an occurrence under `recurrence`: the day is in
+    /// no session window (`sessionWindowStart`) of any occurrence. A block shortly before an occurrence counts
+    /// as work on it and is not listed. Empty for rules Tagwerk cannot read. Blocks are never changed here
+    /// (decision 2026-11-18: they stay in the calendar; the save question names them).
+    func blocksOffSeries(for task: TaskItem, recurrence: Recurrence) -> [CalendarEvent] {
+        if case .unsupported = recurrence.rule { return [] }
+        return blocks.futureBlocks(for: task.id, after: now()).filter { block in
+            let day = PlanDay(date: block.start, calendar: calendar)
+            // Windows grow with the occurrence, so the first occurrence on or after the day decides.
+            guard let next = nextOccurrence(of: recurrence, onOrAfter: day, calendar: calendar),
+                  let windowStart = sessionWindowStart(for: recurrence.rule, today: next, calendar: calendar) else { return true }
+            return day < windowStart
+        }
+    }
+
     /// Completing a recurring reminder in Tagwerk frees today's effort; reopening reserves it again (design §13.3).
     func didChangeCompletion(_ id: TaskID, isCompleted: Bool) async {
         guard id.source == .reminders, recurringReminderIDs.contains(id.rawValue) else { return }
