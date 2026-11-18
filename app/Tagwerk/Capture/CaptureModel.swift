@@ -1,0 +1,243 @@
+import Foundation
+import HealthBridge
+import Observation
+import TagwerkCore
+
+/// State of the "Erfassen" tab (mockup E1a): one day with totals against the goals, own entries and Health workouts.
+///
+/// Health is only read after the user was asked once; permission is requested only from `connectHealth()`.
+@MainActor
+@Observable
+final class CaptureModel {
+    /// A short confirmation with "Widerrufen".
+    struct UndoNotice: Equatable, Identifiable {
+        enum Action: Equatable {
+            case remove(UUID)
+            case restore(UUID)
+        }
+
+        let id = UUID()
+        let text: String
+        let action: Action
+
+        static func == (lhs: UndoNotice, rhs: UndoNotice) -> Bool { lhs.id == rhs.id }
+    }
+
+    let settings: AppSettings
+    let calendar: Calendar
+    private let store: IntakeStore
+    private let mirror: HealthMirror
+    private let health: any HealthStoring
+    @ObservationIgnored private let now: () -> Date
+    @ObservationIgnored private var deletedEntries: [UUID: IntakeStore.Deleted] = [:]
+
+    var day: PlanDay
+    private(set) var meals: [MealValue] = []
+    private(set) var drinks: [DrinkValue] = []
+    /// Own and Health workouts of the day, by start.
+    private(set) var workouts: [WorkoutValue] = []
+    private(set) var intake: DayIntake = .empty
+    /// Workouts of the Monday-to-Sunday week of `day`.
+    private(set) var weekCount = 0
+    private(set) var access: HealthAccess = .notDetermined
+    private(set) var undo: UndoNotice?
+    @ObservationIgnored private var weekForeign: [WorkoutValue] = []
+
+    init(store: IntakeStore, mirror: HealthMirror, health: any HealthStoring, settings: AppSettings,
+         calendar: Calendar = .tagwerk, now: @escaping () -> Date = Date.init) {
+        self.store = store
+        self.mirror = mirror
+        self.health = health
+        self.settings = settings
+        self.calendar = calendar
+        self.now = now
+        self.day = PlanDay(date: now(), calendar: calendar)
+    }
+
+    var today: PlanDay { PlanDay(date: now(), calendar: calendar) }
+    var isToday: Bool { day == today }
+    var canGoForward: Bool { day < today }
+    var showsHealthCard: Bool { access == .notDetermined && !settings.healthCardDismissed }
+    var hasEntries: Bool { !meals.isEmpty || !drinks.isEmpty || !workouts.isEmpty }
+
+    // MARK: Loading
+
+    /// Reloads the day; reads Health workouts only when access was asked before.
+    func reload() async {
+        if day > today { day = today }
+        access = await health.access()
+        let weekStart = IntakeRules.weekStart(containing: day.startDate(in: calendar), calendar: calendar)
+        let weekEnd = PlanDay(date: weekStart, calendar: calendar).adding(days: 7, calendar: calendar).startDate(in: calendar)
+        let week = DateInterval(start: weekStart, end: weekEnd)
+        if access.wasAsked {
+            let foreign = (try? await health.foreignWorkouts(in: week)) ?? []
+            weekForeign = foreign.map { workout in
+                WorkoutValue(id: workout.id.uuidString, activity: workout.activity ?? .other, start: workout.start,
+                             minutes: max(0, Int(workout.end.timeIntervalSince(workout.start) / 60)),
+                             kilocalories: workout.kilocalories, sourceName: workout.sourceName, isOwn: false,
+                             customName: workout.activity == nil ? workout.activityName : nil)
+            }
+        } else {
+            weekForeign = []
+        }
+        refreshLocal(week: week)
+    }
+
+    private func refreshLocal(week: DateInterval? = nil) {
+        let dayStart = day.startDate(in: calendar)
+        let dayEnd = day.adding(days: 1, calendar: calendar).startDate(in: calendar)
+        let weekInterval = week ?? {
+            let start = IntakeRules.weekStart(containing: dayStart, calendar: calendar)
+            return DateInterval(start: start, end: PlanDay(date: start, calendar: calendar).adding(days: 7, calendar: calendar)
+                .startDate(in: calendar))
+        }()
+        meals = store.meals(on: day, calendar: calendar)
+        drinks = store.drinks(on: day, calendar: calendar)
+        let weekWorkouts = store.workouts(in: weekInterval) + weekForeign
+        workouts = weekWorkouts.filter { $0.start >= dayStart && $0.start < dayEnd }.sorted { $0.start < $1.start }
+        weekCount = IntakeRules.workoutsThisWeek(weekWorkouts, now: dayStart, calendar: calendar)
+        intake = IntakeRules.dayIntake(meals: meals, drinks: drinks)
+    }
+
+    func goBack(days: Int = 1) async {
+        day = day.adding(days: -days, calendar: calendar)
+        await reload()
+    }
+
+    func goForward() async {
+        guard canGoForward else { return }
+        day = day.adding(days: 1, calendar: calendar)
+        await reload()
+    }
+
+    func goToToday() async {
+        day = today
+        await reload()
+    }
+
+    /// Time of a new entry: now today, the same clock time on an earlier day (back-filling).
+    var entryDate: Date {
+        let current = now()
+        guard !isToday else { return current }
+        let offset = current.timeIntervalSince(PlanDay(date: current, calendar: calendar).startDate(in: calendar))
+        return day.startDate(in: calendar).addingTimeInterval(offset)
+    }
+
+    // MARK: Entries
+
+    func addWater(_ milliliters: Int, at date: Date? = nil) async {
+        let drink = DrinkValue(id: UUID(), date: date ?? entryDate, milliliters: milliliters)
+        store.addDrink(drink)
+        undo = UndoNotice(text: "\(milliliters) ml Wasser erfasst", action: .remove(drink.id))
+        await changed()
+    }
+
+    func updateDrink(_ drink: DrinkValue) async {
+        store.updateDrink(drink)
+        await changed()
+    }
+
+    func saveMeal(_ meal: MealValue, estimatedAt: Date?, isNew: Bool) async {
+        if isNew {
+            store.addMeal(meal, estimatedAt: estimatedAt)
+            undo = UndoNotice(text: "\(meal.title) erfasst", action: .remove(meal.id))
+        } else {
+            store.updateMeal(meal, estimatedAt: estimatedAt)
+        }
+        await changed()
+    }
+
+    /// "＋" in "Zuletzt und häufig": the same values now, slot by time.
+    func repeatMeal(_ meal: MealValue) async {
+        let date = entryDate
+        let copy = MealValue(id: UUID(), date: date, kind: MealKind.forTime(date, calendar: calendar), title: meal.title,
+                             items: meal.items, origin: meal.origin)
+        await saveMeal(copy, estimatedAt: nil, isNew: true)
+    }
+
+    func saveWorkout(_ workout: WorkoutValue, isNew: Bool) async {
+        if isNew {
+            store.addWorkout(workout)
+            undo = UndoNotice(text: "\(workout.displayName) erfasst", action: .remove(UUID(uuidString: workout.id) ?? UUID()))
+        } else {
+            store.updateWorkout(workout)
+        }
+        await changed()
+    }
+
+    func delete(_ id: UUID) async {
+        guard let deleted = store.delete(id, healthNotBefore: now().addingTimeInterval(HealthMirror.undoWindow)) else { return }
+        deletedEntries[id] = deleted
+        undo = UndoNotice(text: "Eintrag gelöscht", action: .restore(id))
+        refreshLocal()
+        mirror.syncAfterUndoWindow()
+    }
+
+    func undoLast() async {
+        guard let notice = undo else { return }
+        undo = nil
+        switch notice.action {
+        case .remove(let id):
+            store.delete(id, healthNotBefore: now())
+            refreshLocal()
+            await mirror.sync()
+        case .restore(let id):
+            guard let deleted = deletedEntries.removeValue(forKey: id) else { return }
+            store.restore(deleted)
+            await changed()
+        }
+    }
+
+    func clearUndo(_ notice: UndoNotice) {
+        if undo == notice { undo = nil }
+    }
+
+    private func changed() async {
+        refreshLocal()
+        await mirror.sync()
+    }
+
+    func estimatedAt(meal id: UUID) -> Date? { store.estimatedAt(meal: id) }
+    func isInHealth(_ id: UUID) -> Bool { store.healthSynced(id) }
+
+    // MARK: Health
+
+    func connectHealth() async {
+        try? await health.requestAuthorization()
+        await reload()
+        await mirror.sync()
+    }
+
+    func dismissHealthCard() {
+        settings.healthCardDismissed = true
+    }
+
+    /// Catch-up after returning to the foreground.
+    func syncPending() async {
+        await mirror.sync()
+    }
+
+    // MARK: Helpers for the sheets
+
+    func repeatSuggestions(filter: String) -> [MealValue] {
+        let current = now()
+        let since = calendar.date(byAdding: .day, value: -IntakeRules.repeatWindowDays, to: current) ?? current
+        return IntakeRules.repeatSuggestions(meals: store.meals(since: since), hidden: [], filter: filter, now: current,
+                                             calendar: calendar)
+    }
+
+    /// Defaults of a new workout: the last one's type and duration, otherwise strength training for 45 min.
+    var workoutDefaults: (activity: WorkoutActivity, minutes: Int) {
+        guard let latest = store.latestWorkout() else { return (.strength, 45) }
+        return (latest.activity, latest.minutes)
+    }
+
+    /// Warning when a typed workout overlaps a Health workout of the day.
+    func overlapWarning(start: Date, minutes: Int) -> String? {
+        let interval = DateInterval(start: start, duration: TimeInterval(max(1, minutes) * 60))
+        guard let other = IntakeRules.overlappingWorkout(interval, in: weekForeign) else { return nil }
+        let parts = calendar.dateComponents([.hour, .minute], from: other.start)
+        let time = String(format: "%02d:%02d", parts.hour ?? 0, parts.minute ?? 0)
+        return "Überschneidet sich mit „\(other.displayName)“ (\(time), \(other.sourceName ?? "Health")). Das Training würde doppelt gezählt."
+    }
+}

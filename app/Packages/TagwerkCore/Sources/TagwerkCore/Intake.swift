@@ -164,9 +164,11 @@ public struct WorkoutValue: Sendable, Hashable, Identifiable {
     /// Name of the Health source ("Apple Watch"); `nil` for own entries.
     public var sourceName: String?
     public var isOwn: Bool
+    /// Name of a Health workout type without a Tagwerk activity ("Rudern"); `nil` uses the activity name.
+    public var customName: String?
 
     public init(id: String, activity: WorkoutActivity, start: Date, minutes: Int, kilocalories: Double?,
-                sourceName: String?, isOwn: Bool) {
+                sourceName: String?, isOwn: Bool, customName: String? = nil) {
         self.id = id
         self.activity = activity
         self.start = start
@@ -174,8 +176,10 @@ public struct WorkoutValue: Sendable, Hashable, Identifiable {
         self.kilocalories = kilocalories
         self.sourceName = sourceName
         self.isOwn = isOwn
+        self.customName = customName
     }
 
+    public var displayName: String { customName ?? activity.germanName }
     public var end: Date { start.addingTimeInterval(TimeInterval(minutes * 60)) }
     public var interval: DateInterval { DateInterval(start: start, end: end) }
 }
