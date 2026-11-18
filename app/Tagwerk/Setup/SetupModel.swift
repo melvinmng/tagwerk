@@ -2,9 +2,9 @@ import Foundation
 import Observation
 import RemindersKit
 
-/// Steps of the first-launch setup. Notifications are added by a later plan.
+/// Steps of the first-launch setup.
 enum SetupStep: CaseIterable, Hashable {
-    case reminders, calendar, planCalendar, github, chatGPT
+    case reminders, calendar, planCalendar, github, chatGPT, notifications
 
     var title: String {
         switch self {
@@ -13,6 +13,7 @@ enum SetupStep: CaseIterable, Hashable {
         case .planCalendar: "Plan-Kalender"
         case .github: "GitHub"
         case .chatGPT: "ChatGPT"
+        case .notifications: "Benachrichtigungen"
         }
     }
 
@@ -23,6 +24,7 @@ enum SetupStep: CaseIterable, Hashable {
         case .planCalendar: "Tagwerk legt geplante Zeitblöcke als Termine in einem eigenen Kalender „Tagwerk“ an. Du siehst sie auch in der Kalender-App."
         case .github: "Tagwerk zeigt dir zugewiesene Issues aus deinen offenen GitHub Projects und kann sie bearbeiten."
         case .chatGPT: "Mit deinem ChatGPT-Konto kann Tagwerk Tag, Woche und Monat für dich planen, und der Assistent kann Aufgaben für dich ändern."
+        case .notifications: "Tagwerk erinnert dich vor der Fälligkeit an GitHub- und lokale Aufgaben und an Termine aus deinen Deadline-Kalendern. Erinnerungen aus der App „Erinnerungen“ melden sich weiterhin selbst."
         }
     }
 
@@ -42,14 +44,19 @@ final class SetupModel {
     private let store: any ReminderStore
     private let settings: AppSettings
     private let calendarStore: (any CalendarStore)?
+    /// Asks iOS for notification permission; `true` when granted.
+    private let requestNotifications: () async -> Bool
 
     init(store: any ReminderStore, settings: AppSettings, calendarStore: (any CalendarStore)? = nil,
-         isChatGPTSignedIn: Bool = false) {
+         isChatGPTSignedIn: Bool = false, notificationsAllowed: Bool = false,
+         requestNotifications: @escaping () async -> Bool = { false }) {
         self.store = store
         self.settings = settings
         self.calendarStore = calendarStore
-        // After "Einrichtung erneut starten" an existing ChatGPT sign-in counts as done.
+        self.requestNotifications = requestNotifications
+        // After "Einrichtung erneut starten" an existing ChatGPT sign-in or permission counts as done.
         if isChatGPTSignedIn { results[.chatGPT] = .fullAccess }
+        if notificationsAllowed { results[.notifications] = .fullAccess }
     }
 
     var isFinished: Bool { current == nil }
@@ -62,6 +69,7 @@ final class SetupModel {
             case .reminders: results[step] = try await store.requestAccess()
             case .calendar: results[step] = try await store.requestCalendarAccess()
             case .planCalendar: results[step] = try createPlanCalendar()
+            case .notifications: results[step] = await requestNotifications() ? .fullAccess : .denied
             case .github, .chatGPT: return  // interactive login, completed via markSignedIn()
             }
         } catch {
@@ -101,8 +109,8 @@ final class SetupModel {
         guard let step = current, let index = SetupStep.allCases.firstIndex(of: step) else { return }
         let next = SetupStep.allCases.index(after: index)
         current = next < SetupStep.allCases.endIndex ? SetupStep.allCases[next] : nil
-        // A ChatGPT step that is already signed in needs no action.
-        if current == .chatGPT, results[.chatGPT] == .fullAccess {
+        // A ChatGPT step that is already signed in, or a permission already given, needs no action.
+        if let next = current, next == .chatGPT || next == .notifications, results[next] == .fullAccess {
             advance()
             return
         }

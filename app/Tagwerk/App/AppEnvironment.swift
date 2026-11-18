@@ -27,6 +27,10 @@ final class AppEnvironment {
     let assistant: AssistantModel
     /// Deadline notifications (design 2b §9); never calls an AI feature.
     let notifications: NotificationScheduler
+    /// Target of a tapped notification until the app shows it.
+    let notificationNavigator = NotificationNavigator()
+    /// Delegate of the system notification center; held here because the center keeps it weakly.
+    @ObservationIgnored private(set) lazy var notificationDelegate = NotificationDelegate(navigator: notificationNavigator)
     /// A tab another view asks to show (e.g. "Mit KI planen" from the task list jumps to "Planen").
     var requestedTab: Int?
     private let gitHubCache: SwiftDataGitHubCache
@@ -148,7 +152,10 @@ final class AppEnvironment {
     }
 
     func makeSetupModel() -> SetupModel {
-        SetupModel(store: gateway, settings: settings, calendarStore: gateway, isChatGPTSignedIn: ai.isSignedIn)
+        let notifications = self.notifications
+        return SetupModel(store: gateway, settings: settings, calendarStore: gateway, isChatGPTSignedIn: ai.isSignedIn,
+                          notificationsAllowed: notifications.authorization == .authorized,
+                          requestNotifications: { await notifications.requestAuthorization() })
     }
 
     /// Current authorization of a source that needs system permission; `nil` for sources without one.

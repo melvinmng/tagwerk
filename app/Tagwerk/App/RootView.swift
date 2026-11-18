@@ -49,6 +49,8 @@ struct RootView: View {
             // The chat is its own sheet over the tabs; other sheets close first.
             if presented { editingTask = nil; openEvent = nil; recurringEdit = nil }
         }
+        .onChange(of: environment.notificationNavigator.receivedCount) { _, _ in openNotificationTarget() }
+        .onChange(of: environment.taskList.loadingSources) { _, _ in openNotificationTarget() }
         .onChange(of: environment.requestedTab) { _, tab in
             guard let tab else { return }
             selectedTab = tab
@@ -91,6 +93,21 @@ struct RootView: View {
         Task { @MainActor in
             try? await Task.sleep(for: .milliseconds(350))  // let a sheet close and the tab appear first
             environment.taskList.highlight(id)
+        }
+    }
+
+    /// Opens the task or day of a tapped notification once the task list can show it.
+    private func openNotificationTarget() {
+        guard environment.settings.setupCompleted,
+              let route = environment.notificationNavigator.takeRoute(taskList: environment.taskList) else { return }
+        editingTask = nil
+        openEvent = nil
+        recurringEdit = nil
+        environment.assistant.isPresented = false
+        switch route {
+        case .task(let id): showTask(id)
+        case .tasksTab: selectedTab = 1
+        case .day(let day): showDay(day)
         }
     }
 

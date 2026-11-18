@@ -1,5 +1,6 @@
 import SwiftData
 import SwiftUI
+import UserNotifications
 
 @main
 struct TagwerkApp: App {
@@ -9,7 +10,10 @@ struct TagwerkApp: App {
     init() {
         do {
             let container = try ModelContainerFactory.make(inMemory: false)
-            _environment = State(initialValue: try AppEnvironment(modelContainer: container))
+            let environment = try AppEnvironment(modelContainer: container)
+            _environment = State(initialValue: environment)
+            // Set before launch ends, so a tap that launched the app is not lost.
+            UNUserNotificationCenter.current().delegate = environment.notificationDelegate
         } catch {
             // A broken store makes the app unusable; fail loudly instead of losing data silently.
             fatalError("Failed to open the SwiftData store: \(error)")
