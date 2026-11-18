@@ -29,7 +29,7 @@ struct LogWaterIntent: AppIntent {
     @MainActor
     func perform() async throws -> some IntentResult & ProvidesDialog {
         let reply = await services.logWater(milliliters: milliliters)
-        return .result(dialog: IntentDialog(stringLiteral: reply))
+        return .result(dialog: IntentDialog(reply))
     }
 }
 

@@ -338,6 +338,19 @@ struct TagwerkCalendarTests {
         #expect(Calendar.tagwerk.timeZone == TimeZone.autoupdatingCurrent)
     }
 
+    @Test func tagwerkCalendar_keepsMondayAndIsoWeeksInEveryLocale() {
+        for identifier in ["de_DE", "en_US", "en_GB"] {
+            let calendar = Calendar.tagwerk(locale: Locale(identifier: identifier))
+            #expect(calendar.firstWeekday == 2)
+            #expect(calendar.minimumDaysInFirstWeek == 4)
+            // 2027-01-01 is a Friday: still week 53 of 2026 in ISO numbering, also for en_US.
+            var utc = calendar
+            utc.timeZone = TimeZone(identifier: "UTC")!
+            let date = utc.date(from: DateComponents(year: 2027, month: 1, day: 1, hour: 12))!
+            #expect(utc.component(.weekOfYear, from: date) == 53)
+        }
+    }
+
     @Test func tagwerkCalendar_followsTheCurrentLocale() {
         #expect(Calendar.tagwerk.locale?.identifier == Locale.current.identifier)
     }

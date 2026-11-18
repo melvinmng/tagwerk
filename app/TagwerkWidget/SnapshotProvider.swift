@@ -13,8 +13,9 @@ struct SnapshotTimelineEntry: TimelineEntry {
 extension Calendar {
     static var widget: Calendar {
         var calendar = Calendar(identifier: .gregorian)
-        calendar.firstWeekday = 2
         calendar.locale = .current
+        calendar.firstWeekday = 2
+        calendar.minimumDaysInFirstWeek = 4
         calendar.timeZone = .current
         return calendar
     }

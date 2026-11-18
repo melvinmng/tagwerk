@@ -16,7 +16,7 @@ final class IntentServices {
 
     /// Records water now (not on the day the tab shows), mirrors it to Health and updates the widget.
     /// The reply names no daily total: Siri may speak it on a locked device.
-    func logWater(milliliters: Int?) async -> String {
+    func logWater(milliliters: Int?) async -> LocalizedStringResource {
         let amount = min(max(milliliters ?? Self.defaultWaterMilliliters, Self.waterRange.lowerBound), Self.waterRange.upperBound)
         let capture = environment.capture
         await capture.reload()
@@ -25,7 +25,7 @@ final class IntentServices {
         environment.writeSnapshot()
         // Plain digits (no grouping), as before: "2000 ml".
         let amountText = String(amount)
-        return String(localized: "\(amountText) ml Wasser erfasst.")
+        return "\(amountText) ml Wasser erfasst."
     }
 
     struct Overview {

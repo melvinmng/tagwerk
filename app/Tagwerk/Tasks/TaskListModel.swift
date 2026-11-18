@@ -53,11 +53,16 @@ enum SourceState: Equatable {
 extension Calendar {
     /// Calendar used for all date logic: Gregorian, week starting on Monday. The time zone follows
     /// system changes while the app runs, so "today" stays correct after travelling.
-    static var tagwerk: Calendar {
+    static var tagwerk: Calendar { tagwerk(locale: .current) }
+
+    /// The locale only names things (weekdays, months); the week rules stay Monday first and ISO 8601 numbering
+    /// (week 1 holds the first Thursday), because the locale would otherwise change "KW" around New Year (en_US: 1 day).
+    static func tagwerk(locale: Locale) -> Calendar {
         var calendar = Calendar(identifier: .gregorian)
+        calendar.locale = locale
         calendar.firstWeekday = 2
+        calendar.minimumDaysInFirstWeek = 4
         calendar.timeZone = .autoupdatingCurrent
-        calendar.locale = .current
         return calendar
     }
 }
