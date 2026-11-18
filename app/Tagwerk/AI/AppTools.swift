@@ -1,5 +1,6 @@
 import AIKit
 import Foundation
+import RemindersKit
 import TagwerkCore
 
 /// The app functions the assistant may call (design §8.3, §11.11).
@@ -9,7 +10,7 @@ import TagwerkCore
 /// so the model learns about failures and can react.
 @MainActor
 final class AppTools: ToolHandler {
-    static let readTools: Set<String> = ["list_tasks", "list_events", "get_task"]
+    static let readTools: Set<String> = ["list_tasks", "list_events", "list_calendars", "get_task"]
     static let maxListedTasks = 60
 
     private let taskList: TaskListModel
@@ -51,6 +52,10 @@ final class AppTools: ToolHandler {
         case "list_tasks": return listTasks(filter: args.string("filter") ?? "all")
         case "get_task": return Self.json(["task": Self.detail(try task(args.require("id")))])
         case "list_events": return try listEvents(from: args.day("from"), to: args.day("to"))
+        case "list_calendars": return listCalendars()
+        case "create_event": return try await createEvent(args)
+        case "update_event": return try await updateEvent(args)
+        case "delete_event": return try await deleteEvent(args)
         case "create_task": return try await createTask(args)
         case "update_task": return try await updateTask(args)
         case "reschedule_task":
@@ -125,7 +130,11 @@ final class AppTools: ToolHandler {
         let calendar = planning.calendar
         let interval = DateInterval(start: from.startDate(in: calendar), end: to.adding(days: 1, calendar: calendar).startDate(in: calendar))
         let list = events(interval).sorted { $0.start < $1.start }.prefix(100).map { event -> [String: Any] in
-            var item: [String: Any] = ["id": event.id, "title": event.title, "allDay": event.isAllDay, "busy": event.isBusy]
+            var item: [String: Any] = ["id": event.id, "title": event.title, "allDay": event.isAllDay, "busy": event.isBusy,
+                                       "calendarId": event.calendarID, "editable": event.isEditable && !event.isInvitation,
+                                       "recurring": event.isRecurring]
+            if let name = planning.calendarTitle(event.calendarID) { item["calendar"] = name }
+            if let location = event.location, !location.isEmpty { item["location"] = location }
             item["start"] = event.start.formatted(.iso8601.year().month().day().time(includingFractionalSeconds: false))
             item["end"] = event.end.formatted(.iso8601.year().month().day().time(includingFractionalSeconds: false))
             if let task = planning.linkedTask(eventID: event.id) { item["linkedTask"] = task.id.key }
@@ -134,7 +143,97 @@ final class AppTools: ToolHandler {
         return Self.json(["events": Array(list)])
     }
 
+    private func listCalendars() -> String {
+        let writable = Set(planning.writableCalendars.map(\.id))
+        let list = planning.eventCalendars.map { calendar -> [String: Any] in
+            ["id": calendar.id, "title": calendar.title, "writable": writable.contains(calendar.id),
+             "default": calendar.id == planning.defaultEventCalendarID]
+        }
+        return Self.json(["calendars": list])
+    }
+
     // MARK: Write
+
+    private func createEvent(_ args: Arguments) async throws -> String {
+        let title = try args.require("title")
+        let allDay = args.bool("all_day") ?? false
+        let start = try moment(args.require("start"), allDay: allDay, end: false)
+        let end = try moment(args.require("end"), allDay: allDay, end: true)
+        let calendarID = try writableCalendar(args.string("calendar_id"))
+        let draft = EventDraft(title: title, start: start, end: end, isAllDay: allDay, calendarID: calendarID,
+                               notes: args.string("notes"), location: args.string("location"), url: nil)
+        try Self.checkOrder(draft)
+        let event = try await planning.createEventReportingErrors(draft)
+        return Self.json(["ok": true, "id": event.id, "title": event.title])
+    }
+
+    private func updateEvent(_ args: Arguments) async throws -> String {
+        let event = try editableEvent(args.require("event_id"))
+        var draft = EventDraft(event)
+        if let title = args.string("title") { draft.title = title }
+        let allDay = args.bool("all_day") ?? event.isAllDay
+        draft.isAllDay = allDay
+        let length = event.end.timeIntervalSince(event.start)
+        if let start = args.string("start") {
+            draft.start = try moment(start, allDay: allDay, end: false)
+            draft.end = draft.start.addingTimeInterval(length)
+        }
+        if let end = args.string("end") { draft.end = try moment(end, allDay: allDay, end: true) }
+        if let calendarID = args.string("calendar_id") { draft.calendarID = try writableCalendar(calendarID) }
+        if let location = args.string("location") { draft.location = location }
+        if let notes = args.string("notes") { draft.notes = notes }
+        try Self.checkOrder(draft)
+        let span: EventSpan = args.bool("series") == true ? .futureEvents : .thisEvent
+        let updated = try await planning.updateEventReportingErrors(event, with: draft, span: span)
+        return Self.json(["ok": true, "id": updated.id, "title": updated.title])
+    }
+
+    private func deleteEvent(_ args: Arguments) async throws -> String {
+        let event = try editableEvent(args.require("event_id"))
+        let span: EventSpan = args.bool("series") == true ? .futureEvents : .thisEvent
+        try await planning.deleteEventReportingErrors(event, span: span)
+        return Self.json(["ok": true, "title": event.title])
+    }
+
+    private func editableEvent(_ id: String) throws -> CalendarEvent {
+        guard let event = planning.event(id: id) else { throw ToolError("Diesen Termin gibt es nicht mehr.") }
+        guard event.isEditable, !event.isInvitation else { throw ToolError("Dieser Termin lässt sich nicht ändern.") }
+        return event
+    }
+
+    /// The given writable calendar, or the default one (plan calendar) when `id` is nil.
+    private func writableCalendar(_ id: String?) throws -> String {
+        guard let id else {
+            guard let fallback = planning.defaultEventCalendarID ?? planning.writableCalendars.first?.id else {
+                throw ToolError("Es gibt keinen beschreibbaren Kalender.")
+            }
+            return fallback
+        }
+        guard planning.writableCalendars.contains(where: { $0.id == id }) else {
+            throw ToolError("In diesen Kalender kann Tagwerk nicht schreiben.")
+        }
+        return id
+    }
+
+    /// "YYYY-MM-DDTHH:mm", or "YYYY-MM-DD" for all-day events; an all-day end day counts inclusively.
+    private func moment(_ text: String, allDay: Bool, end: Bool) throws -> Date {
+        let parts = text.split(separator: "T")
+        guard let day = parts.first.flatMap({ AIPlanner.planDay(String($0)) }) else { throw ToolError("Das Datum \(text) ist ungültig.") }
+        let calendar = planning.calendar
+        if allDay { return (end ? day.adding(days: 1, calendar: calendar) : day).startDate(in: calendar) }
+        guard parts.count == 2, let minutes = AIPlanner.minutes(String(parts[1])) else {
+            throw ToolError("Die Uhrzeit fehlt bei \(text).")
+        }
+        var components = DateComponents(year: day.year, month: day.month, day: day.day)
+        components.hour = minutes / 60
+        components.minute = minutes % 60
+        guard let date = calendar.date(from: components) else { throw ToolError("Die Uhrzeit ist ungültig.") }
+        return date
+    }
+
+    private static func checkOrder(_ draft: EventDraft) throws {
+        guard draft.end > draft.start else { throw ToolError("Das Ende liegt nicht nach dem Beginn.") }
+    }
 
     private func createTask(_ args: Arguments) async throws -> String {
         var draft = TaskDraft(title: try args.require("title"))

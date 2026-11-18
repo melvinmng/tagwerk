@@ -183,6 +183,18 @@ struct AssistantModelTests {
         #expect(turns.last == .failed(offline: false))
     }
 
+    @Test func eventCards_showWhenCalendarAndFit() async throws {
+        let (model, _, _) = await make()
+        let create = model.describe(ToolCall(id: "c1", name: "create_event", arguments: Data(#"{"title":"Zahnarzt","start":"2026-11-19T10:00","end":"2026-11-19T11:00","all_day":false,"calendar_id":null,"location":null,"notes":null}"#.utf8)))
+        #expect(create.title == "Zahnarzt")
+        #expect(create.change.hasPrefix("Termin anlegen · "))
+        #expect(create.change.contains("Kalender Tagwerk"))
+        #expect(create.change.contains("passt in die freie Zeit"))
+        let allDay = model.describe(ToolCall(id: "c2", name: "create_event", arguments: Data(#"{"title":"Urlaub","start":"2026-11-23","end":"2026-11-27","all_day":true,"calendar_id":null,"location":null,"notes":null}"#.utf8)))
+        #expect(allDay.change.contains("ganztägig"))
+        #expect(allDay.change.contains(" bis "))
+    }
+
     @Test func clear_dropsSpokenMarks() async throws {
         responder.enqueue("Hallo zurück.")
         let (model, _, _) = await make()

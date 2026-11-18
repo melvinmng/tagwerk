@@ -395,8 +395,75 @@ final class AssistantModel {
             return ActionCard(title: "\(AIPlanBar.actionName(scope)) planen", change: "Vorschläge in der Planen-Ansicht anlegen")
         case "add_comment":
             return ActionCard(title: title, change: "Kommentar: „\(string("body") ?? "")“")
+        case "create_event", "update_event", "delete_event":
+            return describeEvent(call.name, series: args["series"] as? Bool == true, string: string)
         default:
             return ActionCard(title: title, change: call.name)
+        }
+    }
+}
+
+extension AssistantModel {
+    /// Cards for calendar events (issue #118): what is written, in which calendar, and whether it fits.
+    fileprivate func describeEvent(_ name: String, series: Bool, string: (String) -> String?) -> ActionCard {
+        let calendar = planning.calendar
+        let existing = string("event_id").flatMap { planning.event(id: $0) }
+        let seriesText = series ? " · auch alle künftigen" : ""
+        func parse(_ text: String?) -> (date: Date, timed: Bool)? {
+            guard let text, let day = AIPlanner.planDay(String(text.prefix(10))) else { return nil }
+            var components = DateComponents(year: day.year, month: day.month, day: day.day)
+            let timed = text.count > 10
+            if timed, let minutes = AIPlanner.minutes(String(text.dropFirst(11))) {
+                components.hour = minutes / 60
+                components.minute = minutes % 60
+            }
+            return calendar.date(from: components).map { ($0, timed) }
+        }
+        func when(start: Date, end: Date, allDay: Bool) -> String {
+            let day = start.formatted(.dateTime.weekday(.abbreviated).day().month())
+            if allDay {
+                let last = calendar.date(byAdding: .day, value: -1, to: end) ?? end
+                return calendar.isDate(start, inSameDayAs: last)
+                    ? "\(day) · ganztägig" : "\(day) bis \(last.formatted(.dateTime.weekday(.abbreviated).day().month())) · ganztägig"
+            }
+            return "\(day) · \(start.formatted(.dateTime.hour().minute())) bis \(end.formatted(.dateTime.hour().minute()))"
+        }
+        func calendarName(_ id: String?) -> String {
+            let id = id ?? planning.defaultEventCalendarID ?? ""
+            return planning.calendarTitle(id).map { "Kalender \($0)" } ?? "Kalender"
+        }
+        switch name {
+        case "create_event":
+            guard let start = parse(string("start")), let endValue = parse(string("end")) else {
+                return ActionCard(title: string("title") ?? "Termin", change: "Termin anlegen")
+            }
+            let allDay = !start.timed
+            let end = allDay ? (calendar.date(byAdding: .day, value: 1, to: endValue.date) ?? endValue.date) : endValue.date
+            var parts = ["Termin anlegen", when(start: start.date, end: end, allDay: allDay), calendarName(string("calendar_id"))]
+            if !allDay { parts.append(planning.fitText(start: start.date, end: end, excluding: nil)) }
+            if let location = string("location") { parts.append(location) }
+            let notes = string("notes").map { "\nNotizen: „\($0)“" } ?? ""
+            return ActionCard(title: string("title") ?? "Termin", change: parts.joined(separator: " · ") + notes)
+        case "update_event":
+            guard let existing else { return ActionCard(title: "Termin", change: "Termin ändern") }
+            var changes: [String] = []
+            if let title = string("title") { changes.append("Titel → \(title)") }
+            if string("start") != nil || string("end") != nil {
+                let length = existing.end.timeIntervalSince(existing.start)
+                let start = parse(string("start"))?.date ?? existing.start
+                var end = parse(string("end"))?.date ?? start.addingTimeInterval(length)
+                if existing.isAllDay, string("end") != nil { end = calendar.date(byAdding: .day, value: 1, to: end) ?? end }
+                changes.append("\(when(start: existing.start, end: existing.end, allDay: existing.isAllDay)) → \(when(start: start, end: end, allDay: existing.isAllDay))")
+                if !existing.isAllDay { changes.append(planning.fitText(start: start, end: end, excluding: existing.id)) }
+            }
+            if let id = string("calendar_id") { changes.append("\(calendarName(existing.calendarID)) → \(calendarName(id))") }
+            if let location = string("location") { changes.append("Ort → \(location)") }
+            if let notes = string("notes") { changes.append("Notizen → „\(notes)“") }
+            return ActionCard(title: existing.title, change: (["Termin ändern"] + changes).joined(separator: " · ") + seriesText)
+        default:
+            guard let existing else { return ActionCard(title: "Termin", change: "Termin löschen") }
+            return ActionCard(title: existing.title,
+                              change: "Termin löschen · \(when(start: existing.start, end: existing.end, allDay: existing.isAllDay))" + seriesText)
         }
     }
 }
