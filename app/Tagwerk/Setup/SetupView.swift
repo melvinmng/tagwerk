@@ -63,6 +63,10 @@ struct SetupView: View {
             .navigationTitle("Willkommen")
         }
         .interactiveDismissDisabled()
+        .task {
+            // The keychain is read after the setup appeared; an existing sign-in marks step 5 as done.
+            if await chatGPTSignIn.isSignedIn() { model.noteChatGPTSignedIn() }
+        }
         .onChange(of: model.isFinished) { _, finished in
             if finished { Task { await onFinish() } }
         }

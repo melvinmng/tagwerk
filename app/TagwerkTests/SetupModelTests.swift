@@ -125,6 +125,14 @@ struct SetupModelTests {
         #expect(model.isFinished)
     }
 
+    @Test func chatGPTSignInKnownLater_whileOnStep_finishes() async {
+        let model = SetupModel(store: store, settings: settings)
+        for _ in 0..<4 { model.skip() }
+        model.noteChatGPTSignedIn()
+        #expect(model.results[.chatGPT] == .fullAccess)
+        #expect(model.isFinished)
+    }
+
     @Test func steps_haveGermanTitles() {
         #expect(SetupStep.allCases.map(\.title) == ["Erinnerungen", "Kalender", "Plan-Kalender", "GitHub", "ChatGPT"])
     }

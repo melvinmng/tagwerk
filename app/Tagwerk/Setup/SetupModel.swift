@@ -84,6 +84,12 @@ final class SetupModel {
         advance()
     }
 
+    /// Records an existing ChatGPT sign-in that became known after the setup started.
+    func noteChatGPTSignedIn() {
+        results[.chatGPT] = .fullAccess
+        if current == .chatGPT { advance() }
+    }
+
     /// Completes a login step (GitHub, ChatGPT) after a successful sign-in.
     func markSignedIn() {
         guard let step = current, step == .github || step == .chatGPT else { return }

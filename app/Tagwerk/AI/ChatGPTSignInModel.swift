@@ -38,6 +38,12 @@ final class ChatGPTSignInModel {
         self.ai = ai
     }
 
+    /// Reads the sign-in state from the keychain; sends nothing.
+    func isSignedIn() async -> Bool {
+        await ai.refreshAccount()
+        return ai.isSignedIn
+    }
+
     /// Returns true after a successful sign-in.
     @discardableResult
     func signIn() async -> Bool {
