@@ -21,6 +21,8 @@ final class AppEnvironment {
     let gitHub: GitHubTaskProvider
     /// ChatGPT session, client and model choice. Creating it sends nothing (§8.4).
     let ai: AIEnvironment
+    /// "Tag/Woche/Monat planen" with ChatGPT; calls only on the user's tap.
+    let planner: AIPlanner
     private let gitHubCache: SwiftDataGitHubCache
     private let gitHubCatalogStore: SwiftDataGitHubCatalogStore
     /// Age after which the repository/project catalog is fetched again.
@@ -42,11 +44,12 @@ final class AppEnvironment {
         let taskList = TaskListModel(providers: [reminders, LocalTaskProvider(context: context)])
         self.taskList = taskList
         let planStore = PlanStore(context: context)
+        let suggestionStore = SuggestionStore(context: context)
         let blockPlanner = BlockPlanner(store: gateway, planStore: planStore, links: EventLinkStore(context: context),
                                         settings: settings, calendar: .tagwerk)
         self.planning = PlanningModel(taskList: taskList, calendarStore: gateway, reminderStore: gateway, planStore: planStore,
                                       efforts: RecurringEffortStore(context: context), blocks: blockPlanner, settings: settings,
-                                      marks: EventMarkStore(context: context))
+                                      marks: EventMarkStore(context: context), suggestions: suggestionStore)
 
         let clientID = Bundle.main.object(forInfoDictionaryKey: "GitHubClientID") as? String ?? ""
         // GitHub requests fail after 15 s instead of the default 60 s, so the cache appears quickly offline.
@@ -68,7 +71,13 @@ final class AppEnvironment {
             catalogStore: catalogStore,
             selectedProjectIDs: { settings.selectedProjectIDs.map(Set.init) }
         )
-        self.ai = AIEnvironment.make(settings: settings)
+        let ai = AIEnvironment.make(settings: settings)
+        self.ai = ai
+        self.planner = AIPlanner(responder: ai.client, model: { try await ai.selectedModel() }, planning: planning,
+                                 store: suggestionStore, consumeModelFallback: {
+                                     defer { ai.modelFallbackNotice = false }
+                                     return ai.modelFallbackNotice
+                                 })
         let planning = self.planning
         taskList.onCompletionChanged = { id, isCompleted in await planning.didChangeCompletion(id, isCompleted: isCompleted) }
         // An ended GitHub sign-in (expired or revoked) forgets the cached issues of that account.

@@ -340,7 +340,7 @@ struct AIPlanningTests {
         let a = item("a"), b = item("b")
         let result = makePlanInput(scope: .week, days: [planDay(today)], tasks: [a, b], assignments: [:], anchors: [:],
                                    today: today, nowMinutes: nowMinutes, timeZoneID: "Europe/Berlin",
-                                   defaultTaskMinutes: 30, focusTask: b.id)
+                                   defaultTaskMinutes: 30, only: [b.id])
         #expect(result.tasks.map(\.title) == ["b"])
     }
 

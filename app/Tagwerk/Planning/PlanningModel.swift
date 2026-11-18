@@ -71,6 +71,8 @@ struct DayPlan: Identifiable, Equatable {
     let recurring: [RecurringItem]
     /// The day as the AI planner sees it, built from the same numbers as `capacity` (design §8.2).
     var planInput: PlanInputDay? = nil
+    /// Open AI suggestions for this day (purple, dashed; mockup a).
+    var suggestions: [PlanSuggestion] = []
     /// The day lies before today.
     let isPast: Bool
 }
@@ -138,6 +140,11 @@ final class PlanningModel {
     let now: () -> Date
     let calendar: Calendar
     let marks: EventMarkStore
+    let suggestionStore: SuggestionStore?
+    /// Open AI suggestion batches that touch the shown range.
+    private(set) var suggestionBatches: [SuggestionBatch] = []
+    /// Duration counted for tasks without effort.
+    var defaultTaskMinutes: Int { settings.defaultTaskMinutes }
     /// Placeholder events of the shown days that may belong to a real event (design §13.15 M1).
     private(set) var mergeSuggestions: [MergeSuggestion] = []
     /// Kept event ID → the accepted merges whose copies it hides.
@@ -145,7 +152,8 @@ final class PlanningModel {
 
     init(taskList: TaskListModel, calendarStore: CalendarStore, reminderStore: ReminderStore, planStore: PlanStore,
          efforts: RecurringEffortStore, blocks: BlockPlanner, settings: AppSettings, marks: EventMarkStore,
-         now: @escaping () -> Date = Date.init, calendar: Calendar = .tagwerk) {
+         suggestions: SuggestionStore? = nil, now: @escaping () -> Date = Date.init, calendar: Calendar = .tagwerk) {
+        self.suggestionStore = suggestions
         self.marks = marks
         self.taskList = taskList
         self.calendarStore = calendarStore
@@ -201,12 +209,16 @@ final class PlanningModel {
         let everything = PlanDay(year: 1, month: 1, day: 1)...PlanDay(year: 9999, month: 12, day: 31)
         let allAssignments = planStore.assignments(in: everything)
 
+        suggestionBatches = suggestionStore?.batches(in: range) ?? []
+        let suggestionsByDay = Dictionary(grouping: suggestionBatches.flatMap(\.suggestions), by: \.day)
         var result: [DayPlan] = []
         var day = range.lowerBound
         while day <= range.upperBound {
-            result.append(dayPlan(day, events: events, links: links, deadlines: deadlines, assignments: assignments,
-                                  overrides: overrides, tasksByID: tasksByID, reminders: reminders,
-                                  recurringIDs: recurringIDs, open: open, allAssignments: allAssignments))
+            var plan = dayPlan(day, events: events, links: links, deadlines: deadlines, assignments: assignments,
+                               overrides: overrides, tasksByID: tasksByID, reminders: reminders,
+                               recurringIDs: recurringIDs, open: open, allAssignments: allAssignments)
+            plan.suggestions = suggestionsByDay[day] ?? []
+            result.append(plan)
             day = day.adding(days: 1, calendar: calendar)
         }
         days = result

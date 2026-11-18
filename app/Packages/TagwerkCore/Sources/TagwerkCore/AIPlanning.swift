@@ -146,13 +146,14 @@ public let maxPlanTasks = 60
 /// Selects and orders the tasks for a planning call (§11.10).
 /// - Day: tasks assigned to the day, due on or before it, and important ones.
 /// - Week/month: open tasks without an assigned day; existing assignments stay untouched.
-/// - `focusTask`: "Mit KI planen" for a single task.
+/// - `only`: exactly these tasks, without the selection rules and the limit ("Mit KI planen" for one
+///   task, or checking open suggestions again before they are accepted).
 /// - `excluding`: tasks whose time is reserved elsewhere, such as recurring reminders (§11.9:
 ///   their effort is already in `recurringMinutes`, a block would count it twice).
 /// Sorted by due date, then priority, then source; at most 60.
 public func makePlanInput(scope: PlanScope, days: [PlanInputDay], tasks: [TaskItem], assignments: [TaskID: PlanDay],
                           anchors: [TaskID: DueDate], today: PlanDay, nowMinutes: Int, timeZoneID: String,
-                          defaultTaskMinutes: Int, focusTask: TaskID? = nil, excluding: Set<TaskID> = []) -> PlanInput {
+                          defaultTaskMinutes: Int, only: Set<TaskID>? = nil, excluding: Set<TaskID> = []) -> PlanInput {
     func anchor(of task: TaskItem) -> DueDate? {
         anchors[task.id] ?? (task.epic?.isEpic == true ? task.epic?.due : nil)
     }
@@ -162,8 +163,8 @@ public func makePlanInput(scope: PlanScope, days: [PlanInputDay], tasks: [TaskIt
 
     let open = tasks.filter { !$0.isCompleted && !excluding.contains($0.id) }
     let selected: [TaskItem]
-    if let focusTask {
-        selected = open.filter { $0.id == focusTask }
+    if let only {
+        selected = open.filter { only.contains($0.id) }
     } else {
         switch scope {
         case .day:
@@ -191,7 +192,7 @@ public func makePlanInput(scope: PlanScope, days: [PlanInputDay], tasks: [TaskIt
     return PlanInput(
         scope: scope,
         days: days,
-        tasks: sorted.prefix(maxPlanTasks).map { task in
+        tasks: sorted.prefix(only == nil ? maxPlanTasks : sorted.count).map { task in
             PlanInputTask(id: task.id.key, source: task.id.source, title: task.title, due: task.due, priority: task.priority,
                           minutes: task.estimateMinutes, important: isImportant(task), plannedDay: assignments[task.id],
                           anchor: anchor(of: task))
