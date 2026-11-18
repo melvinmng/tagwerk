@@ -28,9 +28,29 @@ public enum DateText {
                 .day(.twoDigits).month(.twoDigits))
     }
 
+    /// Day, month and year of the locale: "21.11.2027" in German, "11/21/2027" in US English.
+    public static func numericDate(_ day: PlanDay, calendar: Calendar, locale: Locale = .current) -> String {
+        day.startDate(in: calendar)
+            .formatted(Date.FormatStyle(locale: locale, calendar: calendar, timeZone: calendar.timeZone)
+                .day(.twoDigits).month(.twoDigits).year())
+    }
+
     /// The abbreviated weekday names, starting with the calendar's first weekday ("Mo." … "So." for Monday).
     public static func shortWeekdaySymbols(calendar: Calendar, locale: Locale = .current) -> [String] {
-        let symbols = localized(calendar, locale).shortWeekdaySymbols
+        rotated(localized(calendar, locale).shortWeekdaySymbols, calendar)
+    }
+
+    /// "Mo", "Di" … without a dot, for column heads (German); "Mon", "Tue" in English.
+    public static func shortStandaloneWeekdaySymbols(calendar: Calendar, locale: Locale = .current) -> [String] {
+        rotated(localized(calendar, locale).shortStandaloneWeekdaySymbols, calendar)
+    }
+
+    /// "Montag" … "Sonntag" in the language of the locale, starting with the calendar's first weekday.
+    public static func fullWeekdaySymbols(calendar: Calendar, locale: Locale = .current) -> [String] {
+        rotated(localized(calendar, locale).standaloneWeekdaySymbols, calendar)
+    }
+
+    private static func rotated(_ symbols: [String], _ calendar: Calendar) -> [String] {
         let first = calendar.firstWeekday - 1
         return Array(symbols[first...] + symbols[..<first])
     }

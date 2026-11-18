@@ -14,7 +14,7 @@ struct TaskMenuActions {
     /// Day view only: create a time block / remove the planned day (replace the former swipe actions).
     var createBlock: (() -> Void)? = nil
     /// "Arbeitstag: Mi. 18. Nov." or "noch nicht eingeplant".
-    var plannedText = "noch nicht eingeplant"
+    var plannedText = String(localized: "noch nicht eingeplant")
     var unassign: (() -> Void)? = nil
 }
 
@@ -101,13 +101,13 @@ struct TaskContextMenu: View {
     private var sourceName: String {
         switch item.id.source {
         case .github: "GitHub"
-        case .reminders: "Erinnerung"
+        case .reminders: String(localized: "Erinnerung")
         case .local: "Tagwerk"
         }
     }
 
     private var dueText: String {
-        guard let due = item.due else { return "keine Fälligkeit" }
-        return "jetzt " + DueText.text(due, now: .now, calendar: .tagwerk)
+        guard let due = item.due else { return String(localized: "keine Fälligkeit") }
+        return String(localized: "jetzt \(DueText.text(due, now: .now, calendar: .tagwerk))")
     }
 }

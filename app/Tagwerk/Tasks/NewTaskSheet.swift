@@ -71,7 +71,7 @@ struct NewTaskSheet: View {
                             ForEach(catalog?.repositories ?? [], id: \.self) { Text($0).tag(Optional($0)) }
                         }
                     } footer: {
-                        Text(gitHubError ?? "Das Issue wird dir zugewiesen.")
+                        Text(gitHubError ?? String(localized: "Das Issue wird dir zugewiesen."))
                     }
                     Section("Projects") {
                         ForEach(catalog?.projects ?? []) { project in
@@ -154,16 +154,16 @@ struct NewTaskSheet: View {
 extension NewTaskSheet {
     private func label(for source: TaskSource) -> String {
         switch source {
-        case .local: "Lokal"
-        case .reminders: "Erinnerung"
-        case .github: "GitHub-Issue"
+        case .local: String(localized: "Lokal")
+        case .reminders: String(localized: "Erinnerung")
+        case .github: String(localized: "GitHub-Issue")
         }
     }
 
     private func loadCatalog() async {
         guard let gitHub else { return }
         catalog = await gitHub.catalog(maxAge: AppEnvironment.catalogMaxAge)
-        if catalog == nil { gitHubError = "Repositories konnten nicht geladen werden." }
+        if catalog == nil { gitHubError = String(localized: "Repositories konnten nicht geladen werden.") }
     }
 }
 

@@ -36,7 +36,7 @@ final class BlockPlanner {
     @discardableResult
     func createBlock(for task: TaskItem, start: Date, minutes: Int) throws -> CalendarEvent {
         guard let calendarID = store.planCalendar(id: settings.planCalendarID)?.id else {
-            throw TaskWriteError.failed("Kein Plan-Kalender")
+            throw TaskWriteError.failed(String(localized: "Kein Plan-Kalender"))
         }
         let end = start.addingTimeInterval(TimeInterval(minutes * 60))
         let block = try store.createBlock(BlockDraft(title: Self.blockTitle(for: task), start: start, end: end, taskID: task.id),

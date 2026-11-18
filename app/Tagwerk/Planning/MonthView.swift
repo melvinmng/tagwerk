@@ -24,7 +24,7 @@ struct MonthView: View {
                 .padding(.horizontal)
                 .padding(.bottom, 8)
             LazyVGrid(columns: columns, spacing: 4) {
-                ForEach(["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"], id: \.self) { Text($0).font(.caption2).foregroundStyle(.secondary) }
+                ForEach(DateText.shortStandaloneWeekdaySymbols(calendar: model.calendar), id: \.self) { Text($0).font(.caption2).foregroundStyle(.secondary) }
                 ForEach(model.days) { plan in
                     // First tap selects the day (mockup E1); a second tap opens it in "Tag".
                     Button {
@@ -117,7 +117,7 @@ struct MonthView: View {
         .opacity(inMonth ? 1 : 0.45)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(plan.day.startDate(in: model.calendar).formatted(date: .complete, time: .omitted))
-        .accessibilityValue((hasDeadline ? "Deadline, " : "") + CapacityText.summary(plan.capacity))
+        .accessibilityValue(hasDeadline ? String(localized: "Deadline, \(CapacityText.summary(plan.capacity))") : CapacityText.summary(plan.capacity))
     }
 }
 
@@ -145,7 +145,7 @@ private struct MonthDayDetail: View {
                 .sorted { $0.start < $1.start }) { event in
                 Button { onOpenEvent(event) } label: {
                     HStack(alignment: .firstTextBaseline) {
-                        Text(event.isAllDay ? "ganztägig" : event.start.formatted(date: .omitted, time: .shortened))
+                        Text(event.isAllDay ? String(localized: "ganztägig") : event.start.formatted(date: .omitted, time: .shortened))
                             .font(.caption.monospacedDigit()).foregroundStyle(.secondary).frame(width: 64, alignment: .leading)
                         Text(event.title).lineLimit(1)
                     }

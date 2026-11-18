@@ -51,9 +51,10 @@ struct RecurringEffortSheet: View {
 
     private var effectText: String {
         let date = day.startDate(in: model.calendar).formatted(.dateTime.weekday(.wide).day().month(.wide))
-        let new = minutes.map(CapacityText.duration) ?? "kein Aufwand"
+        let new = minutes.map(CapacityText.duration) ?? String(localized: "kein Aufwand")
+        let old = CapacityText.duration(item.minutes)
         return forAll
-            ? "Ab \(date): \(new) statt \(CapacityText.duration(item.minutes)). Frühere Tage behalten ihren Wert."
-            : "Nur am \(date): \(new) statt \(CapacityText.duration(item.minutes))."
+            ? String(localized: "Ab \(date): \(new) statt \(old). Frühere Tage behalten ihren Wert.")
+            : String(localized: "Nur am \(date): \(new) statt \(old).")
     }
 }

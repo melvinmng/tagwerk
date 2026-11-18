@@ -42,12 +42,13 @@ struct SuggestionFacts: Equatable {
         case .move:
             self.effort = total.map(CapacityText.duration)
             let late = task?.due.map { PlanDay(year: $0.year, month: $0.month, day: $0.day) < suggestion.day } ?? false
-            moveTarget = Mark(text: "nach \(Self.weekday(suggestion.day, calendar: calendar)) \(suggestion.day.day).", urgency: late ? .high : .none)
+            let target = Self.weekdayDay(suggestion.day, calendar: calendar)
+            moveTarget = Mark(text: String(localized: "nach \(target)"), urgency: late ? .high : .none)
         case .block, .assignment, .dayChange:
             let minutes = suggestion.minutes
             if let total, let minutes {
-                self.effort = "\(CapacityText.duration(minutes)) von \(CapacityText.duration(total))"
-                effortShort = "von \(CapacityText.duration(total))"
+                self.effort = String(localized: "\(CapacityText.duration(minutes)) von \(CapacityText.duration(total))")
+                effortShort = String(localized: "von \(CapacityText.duration(total))")
                 bar = Bar(total: total, planned: blocked, suggested: minutes)
             } else if let total {
                 self.effort = CapacityText.duration(total)
@@ -60,7 +61,7 @@ struct SuggestionFacts: Equatable {
     init(unscheduled: UnscheduledTask, task: TaskItem?, effort: Int?, blocked: Int, today: PlanDay, now: Date, calendar: Calendar) {
         self.init(task: task, today: today, now: now, calendar: calendar)
         if let effort, effort > 0 {
-            self.effort = "\(CapacityText.duration(max(0, effort - blocked))) offen"
+            self.effort = String(localized: "\(CapacityText.duration(max(0, effort - blocked))) offen")
         }
     }
 
@@ -72,30 +73,35 @@ struct SuggestionFacts: Equatable {
         guard let due = task?.due else { return }
         let day = PlanDay(year: due.year, month: due.month, day: due.day)
         let date = day.startDate(in: calendar)
-        let short = String(format: "%02d.%02d.", due.day, due.month)
+        let short = DateText.numericDay(day, calendar: calendar)
         let offset = calendar.dateComponents([.day], from: today.startDate(in: calendar), to: date).day ?? 0
         switch offset {
         case ..<0:
-            self.due = Mark(text: "überfällig seit \(short)", urgency: .high)
-            dueShort = "seit \(short)"
-            dueDistance = offset == -1 ? "seit gestern" : "seit \(-offset) Tagen"
+            self.due = Mark(text: String(localized: "überfällig seit \(short)"), urgency: .high)
+            dueShort = String(localized: "seit \(short)")
+            dueDistance = offset == -1 ? String(localized: "seit gestern") : String(localized: "seit \(-offset) Tagen")
         case 0:
             self.due = Mark(text: DueText.text(due, now: now, calendar: calendar), urgency: .medium)
-            dueShort = "heute"
-            dueDistance = "heute"
+            dueShort = String(localized: "heute")
+            dueDistance = String(localized: "heute")
         case 1:
-            self.due = Mark(text: "morgen", urgency: .none)
-            dueShort = "morgen"
-            dueDistance = "morgen"
+            self.due = Mark(text: String(localized: "morgen"), urgency: .none)
+            dueShort = String(localized: "morgen")
+            dueDistance = String(localized: "morgen")
         default:
-            self.due = Mark(text: "fällig \(Self.weekday(day, calendar: calendar)) \(short)", urgency: .none)
+            self.due = Mark(text: String(localized: "fällig \(Self.weekday(day, calendar: calendar)) \(short)"), urgency: .none)
             dueShort = short
-            dueDistance = "in \(offset) Tagen"
+            dueDistance = String(localized: "in \(offset) Tagen")
         }
     }
 }
 
 extension SuggestionFacts {
+    /// "Mo 23.": weekday and day of the month, in the order of the language.
+    static func weekdayDay(_ day: PlanDay, calendar: Calendar) -> String {
+        String(localized: "\(weekday(day, calendar: calendar)) \(day.day).")
+    }
+
     /// "Mo", "Fr": the short weekday without a dot.
     static func weekday(_ day: PlanDay, calendar: Calendar) -> String {
         day.startDate(in: calendar).formatted(.dateTime.weekday(.abbreviated).locale(calendar.locale ?? .current))

@@ -37,18 +37,18 @@ struct DeadlineCard: View {
         let time = deadline.time.map { ", " + $0.formatted(date: .omitted, time: .shortened) } ?? ""
         switch deadline.kind {
         case .priorityOne: return "P1" + time
-        case .epic: return "Epic" + time
-        case .deadlineCalendar: return "Kalender" + time
+        case .epic: return String(localized: "Epic") + time
+        case .deadlineCalendar: return String(localized: "Kalender") + time
         }
     }
 
     private func relative(_ day: PlanDay) -> String {
         let days = calendar.dateComponents([.day], from: today.startDate(in: calendar), to: day.startDate(in: calendar)).day ?? 0
         switch days {
-        case ..<0: return "überfällig"
-        case 0: return "heute"
-        case 1: return "morgen"
-        default: return "in \(days) Tagen"
+        case ..<0: return String(localized: "überfällig")
+        case 0: return String(localized: "heute")
+        case 1: return String(localized: "morgen")
+        default: return String(localized: "in \(days) Tagen")
         }
     }
 }

@@ -6,9 +6,9 @@ import TagwerkCore
 extension PlanScope {
     var title: String {
         switch self {
-        case .day: "Tag"
-        case .week: "Woche"
-        case .month: "Monat"
+        case .day: String(localized: "Tag")
+        case .week: String(localized: "Woche")
+        case .month: String(localized: "Monat")
         }
     }
 }
@@ -42,8 +42,8 @@ enum TimelineRow: Identifiable, Equatable {
     var label: String {
         switch self {
         case .event(let event), .block(let event, _): event.title
-        case .lunch: "Mittagspause"
-        case .gap: "frei"
+        case .lunch: String(localized: "Mittagspause")
+        case .gap: String(localized: "frei")
         }
     }
 }
@@ -445,8 +445,8 @@ final class PlanningModel {
 
     /// Current planned day for the menu row (mockup F1).
     func plannedText(for id: TaskID) -> String {
-        guard let day = planStore.assignment(for: id) else { return "noch nicht eingeplant" }
-        return "Arbeitstag: " + day.startDate(in: calendar).formatted(.dateTime.weekday(.abbreviated).day().month())
+        guard let day = planStore.assignment(for: id) else { return String(localized: "noch nicht eingeplant") }
+        return String(localized: "Arbeitstag: \(day.startDate(in: calendar).formatted(.dateTime.weekday(.abbreviated).day().month()))")
     }
 
     /// Block menu and dragging only for Tagwerk's own blocks in a writable calendar; other linked events

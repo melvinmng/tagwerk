@@ -11,6 +11,21 @@ struct EstimateHoursTests {
         #expect(EstimateHours.text(minutes: nil) == "–")
     }
 
+    @Test func number_followsTheLocale_andTypingAcceptsBothSeparators() {
+        let english = Locale(identifier: "en_US")
+        #expect(EstimateHours.number(90, locale: english) == "1.5")
+        #expect(EstimateHours.number(45, locale: english) == "0.75")
+        #expect(DecimalField.format(1.5, locale: english) == "1.5")
+        #expect(DecimalField.format(1.5, locale: Locale(identifier: "de_DE")) == "1,5")
+        #expect(DecimalField.format(5) == "5")
+        var comma = EstimateInput(minutes: nil)
+        comma.typed("1,5")
+        var point = EstimateInput(minutes: nil)
+        point.typed("1.5")
+        #expect(comma.minutes == 90)
+        #expect(point.minutes == 90)
+    }
+
     @Test func minutes_roundToQuarterHourAndClamp() {
         #expect(EstimateHours.minutes(fromHours: 0.75) == 45)
         #expect(EstimateHours.minutes(fromHours: 0.8) == 45)

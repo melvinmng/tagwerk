@@ -133,29 +133,26 @@ struct DayView: View {
         switch row {
         case .event(let event):
             Button { sheetEntry = .event(event, nil) } label: {
-                TimelineLine(time: event.start, title: event.title,
-                             detail: "bis \(event.end.formatted(date: .omitted, time: .shortened))"
-                                 + (event.isBusy ? "" : " · Frei")
-                                 + (event.mergedCalendarIDs.isEmpty ? "" : " · \(event.mergedCalendarIDs.count + 1) Kalender"),
+                TimelineLine(time: event.start, title: event.title, detail: eventDetail(event),
                              color: event.isBusy ? .blue : .gray)
             }
             .foregroundStyle(.primary)
         case .block(let event, let taskID):
             Button { sheetEntry = .event(event, taskID) } label: {
                 TimelineLine(time: event.start, title: event.title,
-                             detail: CapacityText.duration(Int(event.end.timeIntervalSince(event.start) / 60))
-                                 + (model.canEditAsBlock(event) ? " · Zeitblock" : " · verknüpft"),
+                             detail: CapacityText.duration(Int(event.end.timeIntervalSince(event.start) / 60)) + " · "
+                                 + (model.canEditAsBlock(event) ? String(localized: "Zeitblock") : String(localized: "verknüpft")),
                              color: .green)
             }
             .foregroundStyle(.primary)
         case .lunch(let start, let minutes):
             Button { sheetEntry = .lunch(day: plan.day, range: start..<(start + minutes)) } label: {
                 TimelineLine(time: plan.day.startDate(in: model.calendar).addingTimeInterval(TimeInterval(start * 60)),
-                             title: "Mittagspause", detail: CapacityText.duration(minutes), color: .gray)
+                             title: String(localized: "Mittagspause"), detail: CapacityText.duration(minutes), color: .gray)
             }
             .foregroundStyle(.primary)
         case .gap(let range):
-            GapLine(text: "frei \(clock(range.lowerBound, on: plan.day))–\(clock(range.upperBound, on: plan.day))")
+            GapLine(text: String(localized: "frei \(clock(range.lowerBound, on: plan.day))–\(clock(range.upperBound, on: plan.day))"))
                 .dropDestination(for: String.self) { keys, _ in
                     guard let key = keys.first else { return false }
                     Task { await model.dropTask(key: key, atMinutes: range.lowerBound, on: plan.day) }
@@ -170,6 +167,13 @@ struct DayView: View {
             guard abs(dx) > 80, abs(dx) > 2 * abs(dy) else { return }
             withAnimation(.snappy) { model.step(dx < 0 ? 1 : -1) }
         }
+    }
+
+    private func eventDetail(_ event: CalendarEvent) -> String {
+        var parts = [String(localized: "bis \(event.end.formatted(date: .omitted, time: .shortened))")]
+        if !event.isBusy { parts.append(String(localized: "Frei")) }
+        if !event.mergedCalendarIDs.isEmpty { parts.append(String(localized: "\(event.mergedCalendarIDs.count + 1) Kalender")) }
+        return parts.joined(separator: " · ")
     }
 
     private func clock(_ minutes: Int, on day: PlanDay) -> String {
@@ -202,7 +206,7 @@ struct CapacityCard: View {
         Button(action: onEdit) {
             VStack(alignment: .leading, spacing: 6) {
                 HStack {
-                    Text(plan.isPast ? "Vergangen" : CapacityText.remaining(plan.capacity)).font(.headline)
+                    Text(plan.isPast ? String(localized: "Vergangen") : CapacityText.remaining(plan.capacity)).font(.headline)
                     Spacer()
                     Image(systemName: "slider.horizontal.3").foregroundStyle(.secondary)
                 }
@@ -215,9 +219,9 @@ struct CapacityCard: View {
                         .font(.caption).foregroundStyle(.secondary)
                 }
                 if suggestedMinutes > 0 {
-                    Label("\(CapacityText.duration(suggestedMinutes)) vorgeschlagen · nach dem Übernehmen "
-                          + "\(CapacityText.duration(max(0, (plan.capacity.remainingMinutes ?? plan.capacity.freeMinutes) - suggestedMinutes))) frei",
-                          systemImage: "sparkles")
+                    let suggested = CapacityText.duration(suggestedMinutes)
+                    let freeAfter = CapacityText.duration(max(0, (plan.capacity.remainingMinutes ?? plan.capacity.freeMinutes) - suggestedMinutes))
+                    Label(String(localized: "\(suggested) vorgeschlagen · nach dem Übernehmen \(freeAfter) frei"), systemImage: "sparkles")
                         .font(.caption).foregroundStyle(.purple)
                 }
             }
@@ -230,11 +234,13 @@ struct CapacityCard: View {
     /// "ab jetzt · 13:20 bis 18:00 · ganzer Tag …", or "Arbeitszeit vorbei" after the end of work.
     private func remainingDetail(_ hours: WorkHours) -> String {
         let nowMinutes = Int(model.now().timeIntervalSince(plan.day.startDate(in: model.calendar)) / 60)
-        let window = nowMinutes >= hours.endMinutes
-            ? "Arbeitszeit vorbei"
-            : "ab \(nowMinutes > hours.startMinutes ? "jetzt · " + clock(nowMinutes) : clock(hours.startMinutes))"
-                + " bis \(clock(hours.endMinutes))"
-        return window + " · ganzer Tag " + CapacityText.summary(plan.capacity)
+        let summary = CapacityText.summary(plan.capacity)
+        let end = clock(hours.endMinutes)
+        if nowMinutes >= hours.endMinutes { return String(localized: "Arbeitszeit vorbei · ganzer Tag \(summary)") }
+        if nowMinutes > hours.startMinutes {
+            return String(localized: "ab jetzt · \(clock(nowMinutes)) bis \(end) · ganzer Tag \(summary)")
+        }
+        return String(localized: "ab \(clock(hours.startMinutes)) bis \(end) · ganzer Tag \(summary)")
     }
 
     private func clock(_ minutes: Int) -> String {
@@ -328,7 +334,7 @@ private struct GapLine: View {
             Image(systemName: "plus.circle").font(.caption).foregroundStyle(.tertiary)
         }
         .frame(minHeight: 24)
-        .accessibilityLabel(text + ", Aufgabe hier ablegen")
+        .accessibilityLabel(String(localized: "\(text), Aufgabe hier ablegen"))
     }
 }
 

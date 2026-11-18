@@ -30,6 +30,19 @@ struct DateTextTests {
         #expect(DateText.numericDay(saturday, calendar: calendar, locale: english) == "11/21")
     }
 
+    @Test func numericDate_followsTheLocale() {
+        let day = PlanDay(year: 2027, month: 3, day: 5)
+        #expect(DateText.numericDate(day, calendar: calendar, locale: german) == "05.03.2027")
+        #expect(DateText.numericDate(day, calendar: calendar, locale: english) == "03/05/2027")
+    }
+
+    @Test func standaloneWeekdaySymbols_haveNoDot() {
+        #expect(DateText.shortStandaloneWeekdaySymbols(calendar: calendar, locale: german) == ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"])
+        #expect(DateText.fullWeekdaySymbols(calendar: calendar, locale: german)
+            == ["Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag", "Sonntag"])
+        #expect(DateText.fullWeekdaySymbols(calendar: calendar, locale: english).first == "Monday")
+    }
+
     @Test func weekdaySymbols_startOnTheFirstWeekday() {
         #expect(DateText.shortWeekdaySymbols(calendar: calendar, locale: german) == ["Mo.", "Di.", "Mi.", "Do.", "Fr.", "Sa.", "So."])
         #expect(DateText.shortWeekdaySymbols(calendar: calendar, locale: english) == ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"])

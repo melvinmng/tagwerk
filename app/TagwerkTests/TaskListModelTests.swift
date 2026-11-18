@@ -318,10 +318,28 @@ struct DueTextTests {
     }
 }
 
+struct DueTextFormatTests {
+    let calendar = testCalendar()
+    let now = testNow()
+    let english = Locale(identifier: "en_US")
+
+    @Test func text_numbersFollowTheLocale() {
+        // The words stay German until the English texts exist; day order and clock follow the locale.
+        #expect(DueText.text(DueDate(year: 2026, month: 11, day: 27), now: now, calendar: calendar, locale: english) == "11/27")
+        #expect(DueText.text(DueDate(year: 2027, month: 1, day: 3), now: now, calendar: calendar, locale: english) == "01/03/2027")
+        #expect(DueText.text(DueDate(year: 2026, month: 11, day: 18, hour: 14, minute: 5), now: now, calendar: calendar, locale: english)
+            == "heute, 2:05\u{202F}PM")
+    }
+}
+
 struct TagwerkCalendarTests {
     /// The calendar must follow time zone changes without an app restart.
     @Test func tagwerkCalendar_followsSystemTimeZoneChanges() {
         #expect(Calendar.tagwerk.timeZone == TimeZone.autoupdatingCurrent)
+    }
+
+    @Test func tagwerkCalendar_followsTheCurrentLocale() {
+        #expect(Calendar.tagwerk.locale?.identifier == Locale.current.identifier)
     }
 
     @Test func tagwerkCalendar_startsWeekOnMonday() {
