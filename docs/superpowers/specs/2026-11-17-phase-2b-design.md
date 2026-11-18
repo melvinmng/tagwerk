@@ -256,9 +256,9 @@ Umgesetzt nach `../plans/2026-11-18-phase-2b2-ai.md`. Abweichungen vom Plan und 
 
 ### 13.17 Benachrichtigungen und Hintergrund in 2b-3 (2026-11-18)
 
-Umgesetzt nach `../plans/2026-11-18-phase-2b3-notifications.md`. Mockup `../mockups/2026-11-18-phase-2b3-notifications-mockups.html`, N1a + N2a + N3a. **Status: vorläufig nach Fable-Empfehlung, Freigabe des Nutzers offen** (der Nutzer war nicht erreichbar).
+Umgesetzt nach `../plans/2026-11-18-phase-2b3-notifications.md`. Mockup `../mockups/2026-11-18-phase-2b3-notifications-mockups.html`, N1a + N2a + N3a. **Status: vom Nutzer freigegeben (2026-11-18)**, mit einer Änderung: Aufgaben ohne Uhrzeit erinnern um 09:00 am Fälligkeitstag statt 18:00 minus Vorlauf. Ganztägige Deadline-Termine bleiben am Vortag um 18:00.
 
-Vorläufige Entscheidungen, wo §9, §11.13 und Phase 2 §8 nichts festlegen:
+Entscheidungen, wo §9, §11.13 und Phase 2 §8 nichts festlegen:
 - **Datum ohne Uhrzeit** (GitHub- **und** lokale Aufgaben): Erinnerung am Fälligkeitstag um 09:00, ohne Vorlauf; der Text nennt keine Uhrzeit („Fällig heute · <Container>“). **Vom Nutzer entschieden (2026-11-18)**, ersetzt die vorläufige Regel „gilt als 18:00, minus Vorlauf“. Folge: Wer eine solche Aufgabe nach 09:00 für heute anlegt, bekommt keine Erinnerung mehr.
 - **Vorlauf schon verstrichen:** keine Benachrichtigung. Geplant wird nur, was mindestens 60 s nach jetzt auslöst; sonst würde jede Neuplanung sofort erneut auslösen. Folge: Eine Aufgabe, die früher fällig ist als der Vorlauf, erinnert nie.
 - **Ganztägige Deadline-Termine:** am Vortag 18:00 ohne Vorlauf; mehrtägige zählen ab dem ersten Tag; als „frei“ markierte zählen mit. Termine werden 60 Tage im Voraus gelesen.
