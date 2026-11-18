@@ -101,16 +101,16 @@ final class AIEnvironment {
         return effort
     }
 
-    /// German name of an effort level.
+    /// Name of an effort level in the app language.
     static func reasoningName(_ level: String) -> String {
         switch level {
-        case "minimal": "Minimal"
-        case "low": "Niedrig"
-        case "medium": "Mittel"
-        case "high": "Hoch"
-        case "xhigh": "Sehr hoch"
-        case "max": "Maximal"
-        case "ultra": "Ultra"
+        case "minimal": String(localized: "Minimal")
+        case "low": String(localized: "Niedrig")
+        case "medium": String(localized: "Mittel")
+        case "high": String(localized: "Hoch")
+        case "xhigh": String(localized: "Sehr hoch")
+        case "max": String(localized: "Maximal")
+        case "ultra": String(localized: "Ultra")
         default: level
         }
     }

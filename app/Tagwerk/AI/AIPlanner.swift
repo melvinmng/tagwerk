@@ -17,9 +17,9 @@ final class AIPlanner {
         case failed(String)
     }
 
-    static let invalidAnswerMessage = "Die Antwort von ChatGPT ließ sich nicht lesen. Versuche es erneut."
-    static let nothingToPlanMessage = "Keine offenen Aufgaben zum Planen."
-    static let modelFallbackMessage = "Das gewählte Modell gibt es nicht mehr. Tagwerk plant mit „Automatisch“."
+    static var invalidAnswerMessage: String { String(localized: "Die Antwort von ChatGPT ließ sich nicht lesen. Versuche es erneut.") }
+    static var nothingToPlanMessage: String { String(localized: "Keine offenen Aufgaben zum Planen.") }
+    static var modelFallbackMessage: String { String(localized: "Das gewählte Modell gibt es nicht mehr. Tagwerk plant mit „Automatisch“.") }
 
     private(set) var state: State = .idle
     /// A one-line note after planning or accepting; the view clears it when shown.
@@ -130,7 +130,7 @@ final class AIPlanner {
         }
     }
 
-    static let addedLocallyReason = "Von Tagwerk ergänzt: P1, passt in diese freie Lücke."
+    static var addedLocallyReason: String { String(localized: "Von Tagwerk ergänzt: P1, passt in diese freie Lücke.") }
 
     /// Proposal §3: a P1 that fits into a free stretch gets a block even if the model left it out.
     private func ensureFittingP1(_ output: PlanOutput, input: PlanInput) -> PlanOutput {
@@ -206,7 +206,7 @@ final class AIPlanner {
         undo.count = result.applied
         lastAcceptAll = result.applied > 0 ? undo : nil
         if let failure = result.failures.values.first {
-            notice = "Der Vorschlag passt nicht mehr: \(failure.reason)"
+            notice = String(localized: "Der Vorschlag passt nicht mehr: \(failure.reason)")
         } else if let error = result.errors.first {
             notice = error
         }
@@ -243,7 +243,7 @@ final class AIPlanner {
         undo.count = result.applied
         lastAcceptAll = result.applied > 0 ? undo : nil
         let failed = result.failures.count + result.errors.count
-        notice = failed == 0 ? nil : "\(Self.count(result.applied, "Vorschlag", "Vorschläge")) übernommen, \(failed) \(failed == 1 ? "passt" : "passen") nicht mehr."
+        notice = failed == 0 ? nil : Self.partialAcceptNotice(applied: result.applied, failed: failed)
         if let error = result.errors.first, result.applied == 0 { notice = error }
         await planning.reload()
     }
@@ -351,7 +351,7 @@ final class AIPlanner {
         var undo = AcceptUndo()
     }
 
-    static let needsLongerDayMessage = "Übernimm zuerst die längere Arbeitszeit."
+    static var needsLongerDayMessage: String { String(localized: "Übernimm zuerst die längere Arbeitszeit.") }
 
     /// Validates `suggestions` against fresh data, applies the valid ones and updates the batches.
     private func apply(_ suggestions: [PlanSuggestion]) async -> ApplyResult {
@@ -473,13 +473,13 @@ final class AIPlanner {
 
     private func applyBlock(_ suggestion: PlanSuggestion) -> Result<CalendarEvent, ApplyError> {
         guard let task = task(for: suggestion), let startMinutes = suggestion.startMinutes, let minutes = suggestion.minutes else {
-            return .failure(ApplyError(message: "Die Aufgabe gibt es nicht mehr."))
+            return .failure(ApplyError(message: String(localized: "Die Aufgabe gibt es nicht mehr.")))
         }
         // Built from calendar fields, so days with a clock change keep the suggested time.
         var components = DateComponents(year: suggestion.day.year, month: suggestion.day.month, day: suggestion.day.day)
         components.hour = startMinutes / 60
         components.minute = startMinutes % 60
-        guard let start = planning.calendar.date(from: components) else { return .failure(ApplyError(message: "Die Uhrzeit ist ungültig.")) }
+        guard let start = planning.calendar.date(from: components) else { return .failure(ApplyError(message: String(localized: "Die Uhrzeit ist ungültig."))) }
         do {
             return .success(try planning.blocks.createBlock(for: task, start: start, minutes: minutes))
         } catch {
@@ -489,7 +489,7 @@ final class AIPlanner {
 
     /// Sets the work day; future blocks move along, as when planning by hand (accepting is the user's decision).
     private func applyAssignment(_ suggestion: PlanSuggestion) -> String? {
-        guard let id = suggestion.taskID else { return "Die Aufgabe gibt es nicht mehr." }
+        guard let id = suggestion.taskID else { return String(localized: "Die Aufgabe gibt es nicht mehr.") }
         do {
             try planning.blocks.moveFutureBlocks(of: id, to: suggestion.day, after: planning.now())
         } catch {
@@ -746,7 +746,8 @@ final class AIPlanner {
     /// "Mi bis 20:00 arbeiten · +2 h" or, on a day off, "Sa arbeiten · 14:00 bis 17:00" (mockups AO1, FT1).
     static func dayChangeTitle(day: PlanDay, start: Int, end: Int, calendar: Calendar) -> String {
         let weekday = day.startDate(in: calendar).formatted(.dateTime.weekday(.abbreviated))
-        return "\(weekday) \(time(start)) bis \(time(end)) arbeiten"
+        let from = DateText.time(minutes: start, calendar: calendar), to = DateText.time(minutes: end, calendar: calendar)
+        return String(localized: "\(weekday) \(from) bis \(to) arbeiten")
     }
 
     nonisolated static func minutes(_ time: String) -> Int? {
@@ -771,7 +772,10 @@ final class AIPlanner {
         return PlanDay(year: parts[0], month: parts[1], day: parts[2])
     }
 
-    private static func count(_ value: Int, _ singular: String, _ plural: String) -> String {
-        "\(value) \(value == 1 ? singular : plural)"
+    /// "3 Vorschläge übernommen, 1 passt nicht mehr.": one sentence per case, so that translations can inflect it.
+    private static func partialAcceptNotice(applied: Int, failed: Int) -> String {
+        let accepted = String(localized: "\(applied) Vorschläge übernommen")
+        let rest = failed == 1 ? String(localized: "1 passt nicht mehr") : String(localized: "\(failed) passen nicht mehr")
+        return "\(accepted), \(rest)."
     }
 }

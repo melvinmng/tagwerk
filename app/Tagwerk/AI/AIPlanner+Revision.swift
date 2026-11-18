@@ -9,7 +9,7 @@ import TagwerkCore
 /// was already in the past or over capacity does not block others. Moving by hand calls nothing (§8.4); a
 /// conversation call happens only on "Senden" or a quick reply.
 extension AIPlanner {
-    static let suggestionGoneMessage = "Den Vorschlag gibt es nicht mehr."
+    static var suggestionGoneMessage: String { String(localized: "Den Vorschlag gibt es nicht mehr.") }
 
     // MARK: Moving by hand
 
@@ -125,7 +125,7 @@ extension AIPlanner {
             guard let id = refs[change.ref], let index = revised.firstIndex(where: { $0.id == id }) else { continue }
             let current = revised[index]
             if current.isMovedByUser && id != suggestion.id {
-                rejected.append("\(current.title): hast du selbst verschoben, bleibt.")
+                rejected.append(String(localized: "\(current.title): hast du selbst verschoben, bleibt."))
                 continue
             }
             guard let day = Self.planDay(change.day) else { continue }
@@ -136,18 +136,19 @@ extension AIPlanner {
                 revised[index].previousPosition = current.position
                 changed.append(id)
             case .failure(let error):
-                rejected.append("\(current.title): \(error.message)")
+                rejected.append(String(localized: "\(current.title): \(error.message)"))
             }
         }
         let violations = await newViolations(in: batch, revised: &revised, changed: changed)
         for id in changed {
             guard let reason = violations[id], let title = batch.suggestions.first(where: { $0.id == id })?.title else { continue }
-            rejected.append("\(title): \(reason)")
+            rejected.append(String(localized: "\(title): \(reason)"))
         }
         let applied = revised.filter { changed.contains($0.id) && violations[$0.id] == nil }
         let lines = applied.compactMap { new -> String? in
             guard let old = new.previousPosition else { return nil }
-            return "\(new.title) \(Self.positionText(old, calendar: planning.calendar)) → \(Self.positionText(new.position, calendar: planning.calendar))"
+            let from = Self.positionText(old, calendar: planning.calendar), to = Self.positionText(new.position, calendar: planning.calendar)
+            return String(localized: "\(new.title) \(from) → \(to)")
         }
         if !applied.isEmpty { batch.revisionUndo = batch.suggestions }
         batch.suggestions = revised
@@ -171,27 +172,27 @@ extension AIPlanner {
     private func position(for suggestion: PlanSuggestion, in batch: SuggestionBatch, day: PlanDay, start: Int?,
                           minutes: Int?) -> Result<SuggestionPosition, PositionError> {
         guard suggestion.kind != .dayChange else {
-            return .failure(PositionError(message: "Die Arbeitszeit änderst du im Vorschlag selbst."))
+            return .failure(PositionError(message: String(localized: "Die Arbeitszeit änderst du im Vorschlag selbst.")))
         }
-        guard day >= planning.today else { return .failure(PositionError(message: "Der Tag liegt in der Vergangenheit.")) }
+        guard day >= planning.today else { return .failure(PositionError(message: String(localized: "Der Tag liegt in der Vergangenheit."))) }
         if batch.scope == .day, let planDay = batch.days.first {
             if day == planDay {
                 let earlier = suggestion.kind == .block ? suggestion : nil
                 guard let start = start ?? earlier?.startMinutes ?? suggestion.aiPosition?.startMinutes,
                       let length = minutes ?? earlier?.minutes ?? suggestion.aiPosition?.minutes else {
-                    return .failure(PositionError(message: "Der Beginn fehlt."))
+                    return .failure(PositionError(message: String(localized: "Der Beginn fehlt.")))
                 }
                 guard length >= 15, start >= 0, start + length <= 24 * 60 else {
-                    return .failure(PositionError(message: "Die Zeit ist ungültig."))
+                    return .failure(PositionError(message: String(localized: "Die Zeit ist ungültig.")))
                 }
                 return .success(SuggestionPosition(kind: .block, day: day, startMinutes: start, minutes: length))
             }
             guard day > planning.today, day > planDay else {
-                return .failure(PositionError(message: "Nur auf einen späteren Tag verschiebbar."))
+                return .failure(PositionError(message: String(localized: "Nur auf einen späteren Tag verschiebbar.")))
             }
             return .success(SuggestionPosition(kind: .move, day: day, startMinutes: nil, minutes: nil))
         }
-        guard batch.days.contains(day) else { return .failure(PositionError(message: "Nur Tage dieser Planung."))}
+        guard batch.days.contains(day) else { return .failure(PositionError(message: String(localized: "Nur Tage dieser Planung.")))}
         return .success(SuggestionPosition(kind: suggestion.kind == .move ? .move : .assignment, day: day,
                                            startMinutes: nil, minutes: nil))
     }
@@ -375,9 +376,9 @@ extension AIPlanner {
 
     /// "14:00", "Do 19." or "Do 19. 14:00" for the change card.
     static func positionText(_ position: SuggestionPosition, calendar: Calendar) -> String {
-        let day = "\(SuggestionFacts.weekday(position.day, calendar: calendar)) \(position.day.day)."
+        let day = SuggestionFacts.weekdayDay(position.day, calendar: calendar)
         switch position.kind {
-        case .block: return position.startMinutes.map(time) ?? day
+        case .block: return position.startMinutes.map { DateText.time(minutes: $0, calendar: calendar) } ?? day
         case .move, .assignment, .dayChange: return day
         }
     }

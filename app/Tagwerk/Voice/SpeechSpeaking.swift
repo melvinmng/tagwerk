@@ -12,8 +12,8 @@ struct SpokenVoice: Identifiable, Equatable, Sendable {
 
     var qualityLabel: String? {
         switch quality {
-        case 3: "Premium"
-        case 2: "Erweitert"
+        case 3: String(localized: "Premium")
+        case 2: String(localized: "Erweitert")
         default: nil
         }
     }

@@ -8,29 +8,29 @@ enum SetupStep: CaseIterable, Hashable {
 
     var title: String {
         switch self {
-        case .reminders: "Erinnerungen"
-        case .calendar: "Kalender"
-        case .planCalendar: "Plan-Kalender"
+        case .reminders: String(localized: "Erinnerungen")
+        case .calendar: String(localized: "Kalender")
+        case .planCalendar: String(localized: "Plan-Kalender")
         case .github: "GitHub"
         case .chatGPT: "ChatGPT"
-        case .notifications: "Benachrichtigungen"
+        case .notifications: String(localized: "Benachrichtigungen")
         }
     }
 
     var explanation: String {
         switch self {
-        case .reminders: "Tagwerk zeigt deine Erinnerungen zusammen mit deinen anderen Aufgaben und kann sie bearbeiten."
-        case .calendar: "Tagwerk liest deine Termine, um deinen Tag zu planen. Der Kalender wird nicht verändert."
-        case .planCalendar: "Tagwerk legt geplante Zeitblöcke als Termine in einem eigenen Kalender „Tagwerk“ an. Du siehst sie auch in der Kalender-App."
-        case .github: "Tagwerk zeigt dir zugewiesene Issues aus deinen offenen GitHub Projects und kann sie bearbeiten."
-        case .chatGPT: "Mit deinem ChatGPT-Konto kann Tagwerk Tag, Woche und Monat für dich planen, und der Assistent kann Aufgaben für dich ändern."
-        case .notifications: "Tagwerk erinnert dich vor der Fälligkeit an GitHub- und lokale Aufgaben und an Termine aus deinen Deadline-Kalendern. Erinnerungen aus der App „Erinnerungen“ melden sich weiterhin selbst."
+        case .reminders: String(localized: "Tagwerk zeigt deine Erinnerungen zusammen mit deinen anderen Aufgaben und kann sie bearbeiten.")
+        case .calendar: String(localized: "Tagwerk liest deine Termine, um deinen Tag zu planen. Der Kalender wird nicht verändert.")
+        case .planCalendar: String(localized: "Tagwerk legt geplante Zeitblöcke als Termine in einem eigenen Kalender „Tagwerk“ an. Du siehst sie auch in der Kalender-App.")
+        case .github: String(localized: "Tagwerk zeigt dir zugewiesene Issues aus deinen offenen GitHub Projects und kann sie bearbeiten.")
+        case .chatGPT: String(localized: "Mit deinem ChatGPT-Konto kann Tagwerk Tag, Woche und Monat für dich planen, und der Assistent kann Aufgaben für dich ändern.")
+        case .notifications: String(localized: "Tagwerk erinnert dich vor der Fälligkeit an GitHub- und lokale Aufgaben und an Termine aus deinen Deadline-Kalendern. Erinnerungen aus der App „Erinnerungen“ melden sich weiterhin selbst.")
         }
     }
 
     /// Shown next to a step that was skipped or refused.
     var notDoneLabel: String {
-        self == .chatGPT ? "nicht angemeldet" : "nicht erlaubt"
+        self == .chatGPT ? String(localized: "nicht angemeldet") : String(localized: "nicht erlaubt")
     }
 }
 

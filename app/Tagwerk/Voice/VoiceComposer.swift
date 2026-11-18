@@ -181,12 +181,12 @@ struct VoiceNoticeRow: View {
 
     static func text(_ notice: DictationMachine.Notice) -> String {
         switch notice {
-        case .nothingHeard: "Nichts verstanden. Es kam kein Text an. Sprich näher am iPhone oder tippe."
-        case .interrupted: "Aufnahme unterbrochen. Der Text bis dahin steht im Feld."
-        case .unsupported: "Spracherkennung ist auf diesem iPhone nicht verfügbar. Tippen geht weiter."
-        case .permissionDenied: "Mikrofon nicht erlaubt. Tippen geht weiter."
-        case .assetUnavailable: "Sprachpaket fehlt. Es lädt, sobald du online bist."
-        case .failed: "Die Aufnahme ist fehlgeschlagen. Tippen geht weiter."
+        case .nothingHeard: String(localized: "Nichts verstanden. Es kam kein Text an. Sprich näher am iPhone oder tippe.")
+        case .interrupted: String(localized: "Aufnahme unterbrochen. Der Text bis dahin steht im Feld.")
+        case .unsupported: String(localized: "Spracherkennung ist auf diesem iPhone nicht verfügbar. Tippen geht weiter.")
+        case .permissionDenied: String(localized: "Mikrofon nicht erlaubt. Tippen geht weiter.")
+        case .assetUnavailable: String(localized: "Sprachpaket fehlt. Es lädt, sobald du online bist.")
+        case .failed: String(localized: "Die Aufnahme ist fehlgeschlagen. Tippen geht weiter.")
         }
     }
 

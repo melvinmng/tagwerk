@@ -9,10 +9,10 @@ enum LanguagePackState: Equatable {
 
     var label: String {
         switch self {
-        case .installed: "Geladen · auf dem iPhone"
-        case .available: "Wird beim ersten Sprechen geladen"
-        case .downloading: "Wird geladen …"
-        case .unsupported: "Nicht unterstützt"
+        case .installed: String(localized: "Geladen · auf dem iPhone")
+        case .available: String(localized: "Wird beim ersten Sprechen geladen")
+        case .downloading: String(localized: "Wird geladen …")
+        case .unsupported: String(localized: "Nicht unterstützt")
         }
     }
 }
@@ -36,7 +36,8 @@ enum VoiceAvailability {
     /// "Mikrofon an, Vorlesen nie" for the row in "KI".
     static func summary(inputEnabled: Bool, readAloud: String) -> String {
         let policy = ReadAloudPolicy(rawValue: readAloud) ?? .never
-        return "Mikrofon \(inputEnabled ? "an" : "aus"), Vorlesen \(policy.title.lowercased())"
+        let readAloud = policy.title.lowercased()
+        return inputEnabled ? String(localized: "Mikrofon an, Vorlesen \(readAloud)") : String(localized: "Mikrofon aus, Vorlesen \(readAloud)")
     }
 }
 

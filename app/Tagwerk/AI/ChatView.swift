@@ -120,15 +120,15 @@ struct ChatView: View {
         switch assistant.context {
         case .planning(let scope, _):
             let days = environment.planning.days
-            guard let first = days.first?.day, let last = days.last?.day else { return "Planen" }
+            guard let first = days.first?.day, let last = days.last?.day else { return String(localized: "Planen") }
             let format = Date.FormatStyle.dateTime.day().month(.abbreviated)
             let range = first == last ? first.startDate(in: environment.planning.calendar).formatted(format)
                 : "\(first.startDate(in: environment.planning.calendar).formatted(format))–\(last.startDate(in: environment.planning.calendar).formatted(format))"
-            return "Kontext: \(AIPlanBar.actionName(scope)) \(range)"
-        case .tasks: return "Kontext: Aufgaben"
-        case .settings: return "Kontext: allgemein"
-        case .capture: return "Kontext: Erfassen"
-        case .task: return "Kontext: \(assistant.task?.title ?? "Aufgabe")"
+            return String(localized: "Kontext: \(AIPlanBar.actionName(scope)) \(range)")
+        case .tasks: return String(localized: "Kontext: Aufgaben")
+        case .settings: return String(localized: "Kontext: allgemein")
+        case .capture: return String(localized: "Kontext: Erfassen")
+        case .task: return assistant.task.map { String(localized: "Kontext: \($0.title)") } ?? String(localized: "Kontext: Aufgabe")
         }
     }
 
@@ -308,7 +308,7 @@ struct ActionCardView: View {
             if Self.error(in: output) != nil {
                 Text("Nicht ausgeführt").font(.caption).foregroundStyle(.orange)
             } else {
-                Text("✓ Ausgeführt" + (time.map { " · " + $0.formatted(date: .omitted, time: .shortened) } ?? ""))
+                Text(time.map { String(localized: "✓ Ausgeführt · \($0.formatted(date: .omitted, time: .shortened))") } ?? String(localized: "✓ Ausgeführt"))
                     .font(.caption).foregroundStyle(.green)
             }
         case .declined:

@@ -7,8 +7,12 @@ struct AIStatusMessage: Equatable {
     let text: String
     let isWarning: Bool
 
-    static let privacyNotice = "Wenn du KI-Funktionen nutzt, gehen die dafür nötigen Daten (Termine, Aufgaben, bei Issues auch Repo-Inhalte) an OpenAI."
-    static let expired = AIStatusMessage(text: "Die Anmeldung ist abgelaufen. Melde dich erneut an.", isWarning: true)
+    static var privacyNotice: String {
+        String(localized: "Wenn du KI-Funktionen nutzt, gehen die dafür nötigen Daten (Termine, Aufgaben, bei Issues auch Repo-Inhalte) an OpenAI.")
+    }
+    static var expired: AIStatusMessage {
+        AIStatusMessage(text: String(localized: "Die Anmeldung ist abgelaufen. Melde dich erneut an."), isWarning: true)
+    }
 
     /// Message for a failed sign-in; a cancellation is the user's own choice and not a warning.
     static func signInFailure(_ error: Error) -> AIStatusMessage {
@@ -20,7 +24,7 @@ struct AIStatusMessage: Equatable {
         case let error as ChatGPTError:
             AIStatusMessage(text: error.userMessage, isWarning: true)
         default:
-            AIStatusMessage(text: "Die Anmeldung ist fehlgeschlagen. Versuche es erneut.", isWarning: true)
+            AIStatusMessage(text: String(localized: "Die Anmeldung ist fehlgeschlagen. Versuche es erneut."), isWarning: true)
         }
     }
 }

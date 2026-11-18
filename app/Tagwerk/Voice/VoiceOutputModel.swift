@@ -75,7 +75,7 @@ final class VoiceOutputModel {
         if !explicit && isVoiceOverRunning() { completion?(.notSpoken); return }
         // A running recording keeps the microphone; reading waits for the user (plan voice-chat, review 3).
         if audio.isRecording {
-            if explicit { notice = "Erst die Aufnahme beenden" }
+            if explicit { notice = String(localized: "Erst die Aufnahme beenden") }
             completion?(.notSpoken)
             return
         }
@@ -86,7 +86,7 @@ final class VoiceOutputModel {
         do {
             try audio.activate(mode)
         } catch {
-            notice = "Vorlesen nicht möglich"
+            notice = String(localized: "Vorlesen nicht möglich")
             completion?(.notSpoken)
             return
         }

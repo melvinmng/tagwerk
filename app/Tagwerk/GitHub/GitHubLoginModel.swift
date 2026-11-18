@@ -76,10 +76,10 @@ final class GitHubLoginModel {
 
     static func message(for error: Error) -> String {
         switch error {
-        case GitHubAuthError.expired: "Der Code ist abgelaufen. Bitte neu starten."
-        case GitHubAuthError.denied: "Die Anmeldung wurde auf GitHub abgelehnt."
-        case GitHubAuthError.network: "Keine Verbindung zu GitHub."
-        default: "Anmeldung fehlgeschlagen: \(error.localizedDescription)"
+        case GitHubAuthError.expired: String(localized: "Der Code ist abgelaufen. Bitte neu starten.")
+        case GitHubAuthError.denied: String(localized: "Die Anmeldung wurde auf GitHub abgelehnt.")
+        case GitHubAuthError.network: String(localized: "Keine Verbindung zu GitHub.")
+        default: String(localized: "Anmeldung fehlgeschlagen: \(error.localizedDescription)")
         }
     }
 }

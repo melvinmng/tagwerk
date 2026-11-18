@@ -50,10 +50,11 @@ struct VoiceModePanel: View {
     private var statusLine: some View {
         switch mode.phase {
         case .starting:
-            status("Startet …", symbol: "mic", tint: .secondary)
+            status(String(localized: "Startet …"), symbol: "mic", tint: .secondary)
         case .listening:
             VStack(alignment: .leading, spacing: 6) {
-                status(mode.machine.openCards.isEmpty ? "Hört zu … · auf dem iPhone" : "Hört zu … · sag ja, nein oder was anders sein soll",
+                status(mode.machine.openCards.isEmpty ? String(localized: "Hört zu … · auf dem iPhone")
+                                                       : String(localized: "Hört zu … · sag ja, nein oder was anders sein soll"),
                        symbol: "waveform", tint: .red)
                 heardText
                 LevelMeter(level: mode.level)
@@ -79,11 +80,11 @@ struct VoiceModePanel: View {
                 }
             }
         case .sending:
-            status("Sendet an ChatGPT …", symbol: "arrow.up.circle", tint: .secondary)
+            status(String(localized: "Sendet an ChatGPT …"), symbol: "arrow.up.circle", tint: .secondary)
         case .speaking:
-            status("ChatGPT spricht … · Mikrofon aus", symbol: "speaker.wave.2", tint: .accentColor)
+            status(String(localized: "ChatGPT spricht … · Mikrofon aus"), symbol: "speaker.wave.2", tint: .accentColor)
         case .tone:
-            status("Gleich hört Tagwerk wieder zu", symbol: "bell", tint: .secondary)
+            status(String(localized: "Gleich hört Tagwerk wieder zu"), symbol: "bell", tint: .secondary)
         case .confirming:
             TimelineView(.periodic(from: .now, by: 0.25)) { _ in
                 HStack {
@@ -102,7 +103,7 @@ struct VoiceModePanel: View {
 
     private var heardText: some View {
         let text = mode.machine.text
-        return Text(text.isEmpty ? "Sprich jetzt." : text)
+        return Text(text.isEmpty ? String(localized: "Sprich jetzt.") : text)
             .font(.title3)
             .foregroundStyle(text.isEmpty ? .secondary : .primary)
             .lineLimit(4)
@@ -176,10 +177,10 @@ struct VoiceModePanel: View {
 
     static func text(_ reason: VoiceModeMachine.PauseReason) -> String {
         switch reason {
-        case .user: "Pausiert"
-        case .silence: "Pausiert, nichts gehört"
-        case .offline: "Keine Verbindung · pausiert"
-        case .failed: "Das hat nicht geklappt · pausiert"
+        case .user: String(localized: "Pausiert")
+        case .silence: String(localized: "Pausiert, nichts gehört")
+        case .offline: String(localized: "Keine Verbindung · pausiert")
+        case .failed: String(localized: "Das hat nicht geklappt · pausiert")
         }
     }
 }
