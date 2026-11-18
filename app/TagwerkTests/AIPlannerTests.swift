@@ -273,6 +273,26 @@ struct AIPlannerTests {
         #expect(planning.suggestionBatches.isEmpty)
     }
 
+    @Test func planWeek_keepsOpenDaySuggestions() async throws {
+        responder.enqueue(Self.dayAnswer(Self.block("local:Fahrrad", "14:00")))
+        responder.enqueue(#"{"assignments":[{"taskId":"local:Abgabe","day":"2026-11-19","reason":"r"}],"unscheduled":[],"risks":[],"estimates":[]}"#)
+        let (planner, planning) = await make()
+        await planner.plan(scope: .day, anchor: today)
+        await planner.plan(scope: .week, anchor: today)
+        let all = planning.suggestionBatches.flatMap(\.suggestions).map(\.taskKey)
+        #expect(Set(all) == ["local:Fahrrad", "local:Abgabe"])
+    }
+
+    @Test func dismissAll_canBeUndone() async throws {
+        responder.enqueue(Self.dayAnswer(Self.block("local:Fahrrad", "14:00")))
+        let (planner, planning) = await make()
+        await planner.plan(scope: .day, anchor: today)
+        await planner.dismissAll()
+        #expect(planning.suggestionBatches.isEmpty)
+        await planner.undoDismissAll()
+        #expect(planning.days.first?.suggestions.map(\.taskKey) == ["local:Fahrrad"])
+    }
+
     @Test func suggestions_surviveNewPlanningModel() async throws {
         responder.enqueue(Self.dayAnswer(Self.block("local:Fahrrad", "14:00")))
         let (planner, _) = await make()

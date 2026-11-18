@@ -78,7 +78,10 @@ final class AIPlanner {
             store.replace(with: makeBatch(scope: scope, input: input, output: accepted, violations: violations))
             await planning.reload()
             state = .idle
+        } catch is CancellationError {
+            state = .idle
         } catch let error as ChatGPTError {
+            guard !Task.isCancelled else { state = .idle; return }
             state = .failed(error.userMessage)
         } catch is DecodingError {
             state = .failed(Self.invalidAnswerMessage)
@@ -127,10 +130,44 @@ final class AIPlanner {
         await planning.reload()
     }
 
-    /// "Verwerfen": drops all open suggestions, notes and risks of the shown range.
+    /// Batches dropped by the last "Verwerfen", for "Widerrufen".
+    private(set) var lastDismissed: [SuggestionBatch] = []
+
+    /// "Verwerfen": drops all open suggestions, notes and risks of the shown range; "Widerrufen" restores them.
     func dismissAll() async {
-        for batch in planning.suggestionBatches { store.remove(batch.id) }
+        lastDismissed = planning.suggestionBatches
+        for batch in lastDismissed { store.remove(batch.id) }
         await planning.reload()
+    }
+
+    func undoDismissAll() async {
+        for batch in lastDismissed { store.update(batch) }
+        lastDismissed = []
+        await planning.reload()
+    }
+
+    func clearDismissUndo() {
+        lastDismissed = []
+    }
+
+    // MARK: Running in the background
+
+    @ObservationIgnored private var running: Task<Void, Never>?
+
+    /// Starts planning without blocking the view; the result arrives even if the user switches views.
+    func start(scope: PlanScope, anchor: PlanDay, taskID: TaskID? = nil) {
+        guard !isPlanning, running == nil else { return }
+        running = Task { [weak self] in
+            await self?.plan(scope: scope, anchor: anchor, taskID: taskID)
+            self?.running = nil
+        }
+    }
+
+    /// "Abbrechen" while ChatGPT is still answering; nothing is stored.
+    func cancel() {
+        running?.cancel()
+        running = nil
+        if isPlanning { state = .idle }
     }
 
     // MARK: Applying

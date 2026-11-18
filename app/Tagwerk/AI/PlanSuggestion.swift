@@ -82,11 +82,13 @@ final class SuggestionStore {
         batches().flatMap(\.suggestions).filter { $0.day == day }
     }
 
-    /// Stores `batch` and drops older batches whose days overlap it.
+    /// Stores `batch` and drops older batches of the same kind (day plan vs. week/month plan) whose days
+    /// overlap it; planning the week keeps open day suggestions.
     func replace(with batch: SuggestionBatch) {
         let days = Set(batch.days)
         for record in records() {
             guard let old = try? JSONDecoder().decode(SuggestionBatch.self, from: record.payload),
+                  (old.scope == .day) == (batch.scope == .day),
                   old.days.contains(where: days.contains) else { continue }
             context.delete(record)
         }
