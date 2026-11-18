@@ -103,7 +103,7 @@ struct TimelineCanvas: View {
                     let range = Self.range(of: suggestion)
                     SuggestionBlock(suggestion: suggestion, timeText: timeText(range),
                                     acceptEnabled: !SuggestionText.isWaiting(suggestion, planning: model),
-                                    onOpen: { openSuggestion = suggestion },
+                                    onOpen: { if !environment.voiceMode.isRunning { openSuggestion = suggestion } },
                                     onAccept: { Task { await environment.planner.accept(suggestion) } },
                                     onDismiss: { Task { await environment.planner.dismiss(suggestion) } },
                                     onOpenTask: model.taskList.items.first { $0.id.key == suggestion.taskKey }.map { task in

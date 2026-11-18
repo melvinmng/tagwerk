@@ -10,11 +10,14 @@ enum VoiceAudioMode: Equatable, Sendable {
     case speakingExplicit
     /// Automatic reading: silent with the switch on, mixes with other audio.
     case speakingAutomatic
+    /// Voice mode: one session for the whole conversation, recording and speaking take turns inside it.
+    case conversation
 }
 
 /// The single owner of `AVAudioSession` for recording and reading aloud.
 /// Recording wins: reading aloud never takes the session from a running recording, and a mode only ends
-/// the session it activated itself.
+/// the session it activated itself. While the voice mode holds `.conversation`, recording and speaking
+/// neither reconfigure nor end the session.
 protocol VoiceAudioSession: AnyObject, Sendable {
     var currentMode: VoiceAudioMode? { get }
     func activate(_ mode: VoiceAudioMode) throws
@@ -33,8 +36,14 @@ final class SystemVoiceAudioSession: VoiceAudioSession, @unchecked Sendable {
     var currentMode: VoiceAudioMode? { mode.withLock { $0 } }
 
     func activate(_ mode: VoiceAudioMode) throws {
+        guard Self.reconfigures(requested: mode, current: currentMode) else { return }
         try configure(mode)
         self.mode.withLock { $0 = mode }
+    }
+
+    /// Inside a conversation the other modes use the session as it is.
+    static func reconfigures(requested: VoiceAudioMode, current: VoiceAudioMode?) -> Bool {
+        current != .conversation || requested == .conversation
     }
 
     func deactivate(_ mode: VoiceAudioMode) {
@@ -55,6 +64,9 @@ final class SystemVoiceAudioSession: VoiceAudioSession, @unchecked Sendable {
             try session.setCategory(.playback, mode: .spokenAudio, options: [.duckOthers])
         case .speakingAutomatic:
             try session.setCategory(.ambient, mode: .spokenAudio, options: [.mixWithOthers])
+        case .conversation:
+            // No echo cancellation: the microphone is off while Tagwerk speaks (plan voice-chat, stage 2).
+            try session.setCategory(.playAndRecord, mode: .default, options: [.defaultToSpeaker, .allowBluetoothA2DP])
         }
         try session.setActive(true)
     }

@@ -40,7 +40,7 @@ enum VoiceAvailability {
     }
 }
 
-/// Einstellungen › KI › Sprache (mockup SP7a). The voice mode section follows with stage 2.
+/// Einstellungen › KI › Sprache (mockup SP7a), with the voice mode section (Task 12).
 struct VoiceSettingsView: View {
     @Environment(AppEnvironment.self) private var environment
     @State private var microphone = AVAudioApplication.shared.recordPermission
@@ -95,6 +95,19 @@ struct VoiceSettingsView: View {
                 Text("Vorlesen")
             } footer: {
                 Text("Vorgelesen wird mit den Stimmen dieses iPhones. Bessere Stimmen lädst du unter iOS-Einstellungen › Bedienungshilfen › Gesprochene Inhalte › Stimmen. Bei stummem iPhone liest Tagwerk nur vor, wenn du „Vorlesen“ antippst.")
+            }
+
+            Section {
+                Picker("Senden nach Pause", selection: $settings.voiceModeSendDelay) {
+                    ForEach([1.0, 2.0, 3.0], id: \.self) { Text("\(Int($0)) s").tag($0) }
+                }
+                Picker("Pausiert nach Stille", selection: $settings.voiceModeSilenceLimit) {
+                    ForEach([15.0, 30.0, 60.0], id: \.self) { Text("\(Int($0)) s").tag($0) }
+                }
+            } header: {
+                Text("Sprechmodus")
+            } footer: {
+                Text("Im Chat startet der Knopf rechts neben dem leeren Feld den Sprechmodus. Tagwerk sendet nach der Pause, liest die Antwort vor und hört danach wieder zu. Änderungen führt es erst aus, wenn du sie bestätigst. „Änderungen ansagen“ gilt auch hier.")
             }
         }
         .navigationTitle("Sprache")

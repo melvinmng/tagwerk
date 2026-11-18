@@ -250,6 +250,7 @@ struct VoiceDiagnosticsView: View {
 
     var body: some View {
         List {
+            ConversationSpikeSection()
             RecognitionSpikeSection()
             Section {
                 Button {

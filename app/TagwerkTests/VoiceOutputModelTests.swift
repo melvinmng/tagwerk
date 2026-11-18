@@ -131,4 +131,71 @@ struct VoiceOutputModelTests {
         #expect(model.notice == "Erst die Aufnahme beenden")
         #expect(audio.currentMode == .recording)
     }
+
+    // MARK: Completion (voice mode, plan stage 2 point 10)
+
+    @Test func completion_firesOnceWhenFinished() {
+        let model = makeModel()
+        var ends: [VoiceOutputModel.Ending] = []
+        model.speak(id: "a1", text: "Erster Satz.", explicit: true, fallback: .german) { ends.append($0) }
+        speaker.emit(.finished)
+        speaker.emit(.finished)
+        model.stop()
+        #expect(ends == [.finished])
+    }
+
+    @Test func completion_firesOnStopAndInterruption() {
+        let model = makeModel()
+        var ends: [VoiceOutputModel.Ending] = []
+        model.speak(id: "a1", text: "Erster Satz.", explicit: true, fallback: .german) { ends.append($0) }
+        model.stop()
+        model.speak(id: "a2", text: "Zweiter Satz.", explicit: true, fallback: .german) { ends.append($0) }
+        speaker.emit(.interrupted)
+        #expect(ends == [.stopped, .stopped])
+    }
+
+    @Test func completion_firesWhenReplacedByAnotherReading() {
+        let model = makeModel()
+        var ends: [VoiceOutputModel.Ending] = []
+        model.speak(id: "a1", text: "Erster Satz.", explicit: true, fallback: .german) { ends.append($0) }
+        model.speak(id: "a2", text: "Zweiter Satz.", explicit: true, fallback: .german)
+        #expect(ends == [.stopped])
+    }
+
+    @Test func completion_firesOnEverySilentReturn() throws {
+        var ends: [VoiceOutputModel.Ending] = []
+        makeModel(voiceOver: true).speak(id: "a", text: "Satz.", explicit: false, fallback: .german) { ends.append($0) }
+        makeModel().speak(id: "b", text: "✦ ", explicit: true, fallback: .german) { ends.append($0) }
+        audio.failing = true
+        makeModel().speak(id: "c", text: "Satz.", explicit: true, fallback: .german) { ends.append($0) }
+        audio.failing = false
+        try audio.activate(.recording)
+        makeModel().speak(id: "d", text: "Satz.", explicit: true, fallback: .german) { ends.append($0) }
+        #expect(ends == [.notSpoken, .notSpoken, .notSpoken, .notSpoken])
+    }
+
+    @Test func conversation_speaksInsideTheSessionWithoutEndingIt() throws {
+        try audio.activate(.conversation)
+        let model = makeModel()
+        model.speak(id: "a1", text: "Antwort.", explicit: true, fallback: .german)
+        speaker.emit(.finished)
+        #expect(speaker.spoken.count == 1)
+        #expect(audio.currentMode == .conversation)
+        #expect(audio.deactivations == 0)
+    }
+
+    @Test func missingFinish_isGivenUpAfterTimeLimit() async {
+        var wake: (() -> Void)?
+        let model = VoiceOutputModel(speaker: speaker, audio: audio,
+                                     preferences: { VoiceOutputModel.Preferences(germanVoiceID: nil, englishVoiceID: nil, rate: 0.5) },
+                                     isVoiceOverRunning: { false },
+                                     sleep: { _ in await withCheckedContinuation { continuation in wake = { continuation.resume() } } })
+        var ends: [VoiceOutputModel.Ending] = []
+        model.speak(id: "a1", text: "Erster Satz.", explicit: true, fallback: .german) { ends.append($0) }
+        for _ in 0..<10 { await Task.yield() }
+        wake?()
+        for _ in 0..<10 { await Task.yield() }
+        #expect(ends == [.stopped])
+        #expect(model.speakingID == nil)
+    }
 }

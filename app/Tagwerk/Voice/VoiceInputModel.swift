@@ -18,25 +18,23 @@ final class VoiceInputModel {
     /// Called when a recording starts, e.g. to stop reading aloud.
     @ObservationIgnored var onRecordingStarts: () -> Void = {}
 
-    @ObservationIgnored private let makeRecognizer: () -> SpeechRecognizing
+    @ObservationIgnored private let session: RecognitionSession
     @ObservationIgnored private let isExplained: () -> Bool
     @ObservationIgnored private let markExplained: () -> Void
     @ObservationIgnored private let now: () -> Date
     @ObservationIgnored private let sleep: (Duration) async -> Void
-    @ObservationIgnored private var recognizer: SpeechRecognizing?
-    @ObservationIgnored private var listening: Task<Void, Never>?
     @ObservationIgnored private var ticking: Task<Void, Never>?
-    @ObservationIgnored private var stoppingSince: Date?
 
     init(language: VoiceLanguage, makeRecognizer: @escaping () -> SpeechRecognizing, isExplained: @escaping () -> Bool,
          markExplained: @escaping () -> Void, now: @escaping () -> Date = Date.init,
          sleep: @escaping (Duration) async -> Void = { try? await Task.sleep(for: $0) }) {
         machine = DictationMachine(language: language)
-        self.makeRecognizer = makeRecognizer
+        session = RecognitionSession(makeRecognizer: makeRecognizer, now: now)
         self.isExplained = isExplained
         self.markExplained = markExplained
         self.now = now
         self.sleep = sleep
+        session.onEvent = { [weak self] event in self?.handle(event) }
     }
 
     var phase: DictationMachine.Phase { machine.phase }
@@ -67,17 +65,9 @@ final class VoiceInputModel {
     /// Checks the time limits; runs about four times a second while recording, stopping or showing a notice.
     /// A recognizer that does not finish within three seconds after a stop is given up on.
     func tick() {
-        if case .stopping = machine.phase, let stoppingSince, now().timeIntervalSince(stoppingSince) >= Self.stopTimeout {
-            let recognizer = recognizer
-            stopListening(cancel: false)
-            Task { await recognizer?.cancel() }
-            apply(machine.recognizerFinished(now: now()))
-            return
-        }
+        session.tick()
         apply(machine.tick(now: now()))
     }
-
-    static let stopTimeout: TimeInterval = 3
 
     // MARK: Effects
 
@@ -88,19 +78,14 @@ final class VoiceInputModel {
                 break
             case .markExplained:
                 markExplained()
-            case .start(let language):
-                start(language)
-            case .restart(let language):
-                // The old recording must be gone before the new one takes the microphone (review 4).
-                let old = recognizer
-                stopListening(cancel: false)
-                start(language, after: old)
+            case .start(let language), .restart(let language):
+                onRecordingStarts()
+                session.start(language)
             case .stop:
-                stoppingSince = now()
-                let recognizer = recognizer
-                Task { await recognizer?.stop() }
+                session.stop()
             case .cancel:
-                stopListening(cancel: true)
+                session.cancel()
+                level = 0
             case .fill(let text):
                 writeDraft(text)
                 draftIsSpoken = !text.isEmpty
@@ -115,56 +100,25 @@ final class VoiceInputModel {
         updateTicking()
     }
 
-    private func start(_ language: VoiceLanguage, after previous: SpeechRecognizing? = nil) {
-        onRecordingStarts()
-        let recognizer = makeRecognizer()
-        self.recognizer = recognizer
-        listening = Task { [weak self] in
-            await previous?.cancel()
-            let events = await recognizer.start(language: language)
-            guard let self, !Task.isCancelled else {
-                // Cancelled while starting: make sure the microphone is released (review 1).
-                await recognizer.cancel()
-                return
-            }
-            if case .preparing = self.machine.phase { self.machine.recordingStarted(now: self.now()) }
-            self.updateTicking()
-            for await event in events {
-                guard !Task.isCancelled else { return }
-                self.handle(event)
-            }
-        }
-    }
-
-    private func handle(_ event: RecognitionEvent) {
+    private func handle(_ event: RecognitionSession.Event) {
         switch event {
+        case .started:
+            if case .preparing = machine.phase { machine.recordingStarted(now: now()) }
+            updateTicking()
         case .text(let final, let volatile):
             machine.received(final: final, volatile: volatile, now: now())
         case .level(let value):
             level = value
         case .finished:
             level = 0
-            recognizer = nil
             apply(machine.recognizerFinished(now: now()))
         case .failed(let failure):
             level = 0
-            recognizer = nil
             apply(machine.recognizerFailed(Self.notice(for: failure), now: now()))
         }
     }
 
-    private func stopListening(cancel: Bool) {
-        listening?.cancel()
-        listening = nil
-        level = 0
-        if cancel, let recognizer {
-            Task { await recognizer.cancel() }
-        }
-        recognizer = nil
-    }
-
     private func updateTicking() {
-        if case .stopping = machine.phase {} else { stoppingSince = nil }
         let active: Bool = switch machine.phase {
         case .recording, .stopping, .notice: true
         default: false

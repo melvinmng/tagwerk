@@ -186,6 +186,11 @@ final class AppleSpeechRecognizer: SpeechRecognizing, @unchecked Sendable {
         } catch {
             return give(up: .failed(.engine(String(describing: error).prefix(160).description)))
         }
+        // Stopped while the analyzer was starting: never open the microphone (stage 2 review 8).
+        if aborted {
+            await teardown(session, cancelAnalysis: true)
+            return give(up: .finished)
+        }
         do {
             try audio.activate(.recording)
             Self.installTap(on: session)

@@ -99,6 +99,90 @@ struct AssistantModelTests {
         #expect(read.last?.contains("Erledigt, viel Spaß.") == true)
     }
 
+    // MARK: Voice mode turns (plan voice-chat, stage 2 point 9)
+
+    @Test func voiceTurn_reportsAnswer_andSilencesAutoRead() async throws {
+        responder.enqueue("Heute sind drei Termine.")
+        let (model, _, _) = await make()
+        var read: [String] = []
+        var turns: [AssistantModel.TurnOutcome] = []
+        model.readAutomatically = { _, text, _ in read.append(text) }
+        model.readPolicy = { .always }
+        model.open(context: .settings)
+        model.onTurnFinished = { turns.append($0) }
+        await model.send("Was steht an?", spoken: true)
+        #expect(read.isEmpty)
+        let turn = try #require(turns.first)
+        guard case .answered(let id, let speech, let pending) = turn else { Issue.record("\(turn)"); return }
+        #expect(speech == "Heute sind drei Termine.")
+        #expect(!pending)
+        #expect(id == "message-1")
+    }
+
+    @Test func voiceTurn_cardIsAnnounced_confirmationContinues() async throws {
+        responder.enqueueEvents([.textDelta("Ich hake das ab."),
+                                 .functionCall(callID: "c1", name: "complete_task", arguments: #"{"id":"local:Fahrrad"}"#),
+                                 .completed(usage: nil)])
+        responder.enqueue("Erledigt, viel Spaß.")
+        let (model, _, _) = await make()
+        var turns: [AssistantModel.TurnOutcome] = []
+        model.open(context: .tasks)
+        model.onTurnFinished = { turns.append($0) }
+        await model.send("Fahrrad ist fertig", spoken: true)
+        guard case .answered(_, let speech, let pending) = turns.first else { Issue.record("no turn"); return }
+        #expect(speech.contains("Ich hake das ab."))
+        #expect(speech.contains("Bitte bestätige auf dem Bildschirm."))
+        #expect(pending)
+        let call = try #require(model.conversation?.pendingActions.first)
+        await model.confirm(call)
+        guard case .answered(_, let next, let stillPending) = turns.last else { Issue.record("no turn"); return }
+        #expect(next.hasPrefix("Ausgeführt."))
+        #expect(next.contains("Erledigt, viel Spaß."))
+        #expect(!stillPending)
+        #expect(turns.count == 2)
+    }
+
+    @Test func voiceTurn_declineReportsFollowUp() async throws {
+        responder.enqueueEvents([.functionCall(callID: "c1", name: "complete_task", arguments: #"{"id":"local:Fahrrad"}"#),
+                                 .completed(usage: nil)])
+        responder.enqueue("Gut, ich lasse es offen.")
+        let (model, _, _) = await make()
+        var turns: [AssistantModel.TurnOutcome] = []
+        model.open(context: .tasks)
+        model.onTurnFinished = { turns.append($0) }
+        await model.send("Fahrrad ist fertig", spoken: true)
+        let call = try #require(model.conversation?.pendingActions.first)
+        await model.decline(call)
+        guard case .answered(_, let speech, let pending) = turns.last else { Issue.record("no turn"); return }
+        #expect(speech == "Gut, ich lasse es offen.")
+        #expect(!pending)
+    }
+
+    @Test func voiceTurn_keepsTheConversationOpen() async throws {
+        let (model, _, _) = await make()
+        model.open(context: .settings)
+        let before = model.conversation
+        model.onTurnFinished = { _ in }
+        model.open(context: .tasks)
+        #expect(model.conversation === before)
+        #expect(model.context == .settings)
+    }
+
+    @Test func voiceTurn_offlineAndRejected() async throws {
+        responder.enqueueFailure(.network)
+        let (model, _, _) = await make()
+        var turns: [AssistantModel.TurnOutcome] = []
+        model.open(context: .settings)
+        model.onTurnFinished = { turns.append($0) }
+        await model.send("Hallo", spoken: true)
+        #expect(turns == [.failed(offline: true)])
+        await model.send("   ", spoken: true)
+        #expect(turns.last == .rejected)
+        responder.enqueueFailure(.server(500, nil))
+        await model.retry()
+        #expect(turns.last == .failed(offline: false))
+    }
+
     @Test func clear_dropsSpokenMarks() async throws {
         responder.enqueue("Hallo zurück.")
         let (model, _, _) = await make()
