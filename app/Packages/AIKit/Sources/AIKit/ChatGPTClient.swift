@@ -145,6 +145,47 @@ public final class ChatGPTClient: Sendable {
         return try JSONSerialization.data(withJSONObject: body, options: [.sortedKeys])
     }
 
+    // MARK: Plain requests
+
+    static let tokenHosts: Set<String> = ["api.openai.com", "chatgpt.com"]
+
+    /// Status code and body of a plain request.
+    public struct Reply: Sendable {
+        public let status: Int
+        public let body: Data
+    }
+
+    /// Posts `body` to `url` with the plan token. Any status is returned; only a 401 triggers one refresh.
+    /// Used by the voice endpoints and their diagnostics.
+    public func post(_ url: URL, body: Data, contentType: String) async throws -> Reply {
+        // The plan token goes only to OpenAI's own hosts.
+        guard url.scheme == "https", let host = url.host(), Self.tokenHosts.contains(host) else { throw ChatGPTError.server(0, "host_not_allowed") }
+        let accountID = await session.accountID
+        return try await withAuthorization { token -> Attempt<Reply> in
+            var request = URLRequest(url: url)
+            request.httpMethod = "POST"
+            request.httpBody = body
+            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+            request.setValue(contentType, forHTTPHeaderField: "Content-Type")
+            if let accountID { request.setValue(accountID, forHTTPHeaderField: "ChatGPT-Account-Id") }
+            let (data, response) = try await self.send { try await self.transport.data(for: request) }
+            return response.statusCode == 401 ? .failure(status: 401, body: data) : .success(Reply(status: response.statusCode, body: data))
+        }
+    }
+
+    /// A `multipart/form-data` body with text fields and one file part named `file`.
+    public static func multipart(fields: [(String, String)], file: Data, fileName: String, mimeType: String,
+                                 boundary: String = UUID().uuidString) -> (body: Data, contentType: String) {
+        var body = Data()
+        for (name, value) in fields {
+            body.append(Data("--\(boundary)\r\nContent-Disposition: form-data; name=\"\(name)\"\r\n\r\n\(value)\r\n".utf8))
+        }
+        body.append(Data("--\(boundary)\r\nContent-Disposition: form-data; name=\"file\"; filename=\"\(fileName)\"\r\nContent-Type: \(mimeType)\r\n\r\n".utf8))
+        body.append(file)
+        body.append(Data("\r\n--\(boundary)--\r\n".utf8))
+        return (body, "multipart/form-data; boundary=\(boundary)")
+    }
+
     // MARK: Private
 
     /// Outcome of one authorized attempt: the value, or the status and JSON error body.

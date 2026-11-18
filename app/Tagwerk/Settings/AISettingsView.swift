@@ -131,7 +131,14 @@ struct AISettingsView: View {
                 Text("Bei Fristen und P1").tag(AIPlanner.LongerDays.forDeadlines.rawValue)
                 Text("Nur im Notfall").tag(AIPlanner.LongerDays.emergencyOnly.rawValue)
             }
+            NavigationLink { VoiceSettingsView() } label: {
+                LabeledContent("Sprache", value: VoiceAvailability.summary(inputEnabled: environment.settings.voiceInputEnabled,
+                                                                            readAloud: environment.settings.voiceReadAloud))
+            }
             NavigationLink("Diagnose") { PlanningDiagnosticsView() }
+            if ai.isSignedIn {
+                NavigationLink("Sprachdienste prüfen") { VoiceDiagnosticsView(client: ai.client) }
+            }
         } header: {
             Text("Planen mit KI")
         } footer: {

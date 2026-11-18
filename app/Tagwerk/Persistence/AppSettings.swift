@@ -64,6 +64,22 @@ final class AppSettings {
     /// Phase 4: calories and water in the "Heute" widget; off keeps the values out of the shared snapshot file.
     var widgetShowsNutrition: Bool = true
 
+    /// Voice: microphone in conversations (plan voice-chat, SP7a).
+    var voiceInputEnabled: Bool = true
+    /// The one-time explanation before the first recording (SP8a) was confirmed.
+    var voiceExplained: Bool = false
+    /// "auto" follows the iPhone language; otherwise a `VoiceLanguage` raw value.
+    var voiceRecognitionLanguage: String = "auto"
+    /// `ReadAloudPolicy` raw value; "never" by default (SP3).
+    var voiceReadAloud: String = "never"
+    /// Chosen system voices per language; nil picks the best installed voice.
+    var voiceGermanVoiceID: String? = nil
+    var voiceEnglishVoiceID: String? = nil
+    /// `AVSpeechUtterance.rate`, 0...1.
+    var voiceRate: Double = 0.5
+    /// Read action cards aloud when answers are read (SP4a).
+    var voiceAnnounceActions: Bool = true
+
     static let maximumPlanningRules = 5
 
     var aiPlanningRules: [String] {
