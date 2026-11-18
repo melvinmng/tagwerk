@@ -130,13 +130,20 @@ struct DayGridScreen<Summary: View, Header: View>: View {
 
     // MARK: Panel "Ohne Uhrzeit" (D1)
 
-    private var overdueToday: [TaskItem] { plan.day == model.today ? model.overdue : [] }
+    /// Tasks with blocks but less time than their effort (mockup RZ1), shown today and on future days.
+    private var toSchedule: [TaskItem] { plan.day >= model.today ? model.toSchedule : [] }
+    private var toScheduleIDs: Set<TaskID> { Set(toSchedule.map(\.id)) }
+    private var overdueToday: [TaskItem] {
+        plan.day == model.today ? model.overdue.filter { !toScheduleIDs.contains($0.id) } : []
+    }
+    private var openToday: [TaskItem] { plan.openToday.filter { !toScheduleIDs.contains($0.id) } }
 
-    /// Planned tasks, then "Heute offen, nicht zugeordnet" and "Überfällig"; rows drag by their grip onto the grid.
+    /// "Noch einzuplanen", planned tasks, "Heute offen, nicht zugeordnet" and "Überfällig"; rows drag by their
+    /// grip onto the grid.
     @ViewBuilder
     private var dayPanel: some View {
-        let planned = model.timelessTasks(for: plan)
-        if !(planned.isEmpty && plan.openToday.isEmpty && overdueToday.isEmpty) {
+        let planned = model.timelessTasks(for: plan).filter { !toScheduleIDs.contains($0.id) }
+        if !(planned.isEmpty && openToday.isEmpty && overdueToday.isEmpty && toSchedule.isEmpty) {
             let dragging = taskDrag != nil
             VStack(spacing: 0) {
                 panelHeader(planned)
@@ -144,8 +151,9 @@ struct DayGridScreen<Summary: View, Header: View>: View {
                 if panelExpanded {
                     ScrollView {
                         VStack(alignment: .leading, spacing: 2) {
+                            panelSection("Noch einzuplanen", toSchedule, offersToday: false)
                             panelSection("Ohne Uhrzeit", planned, offersToday: false)
-                            panelSection("Heute offen, nicht zugeordnet", plan.openToday, offersToday: true)
+                            panelSection("Heute offen, nicht zugeordnet", openToday, offersToday: true)
                             panelSection("Überfällig", overdueToday, offersToday: true, isOverdue: true)
                         }
                         .padding(.horizontal, 10)
@@ -172,10 +180,15 @@ struct DayGridScreen<Summary: View, Header: View>: View {
             withAnimation(.snappy) { panelExpanded.toggle() }
         } label: {
             HStack(spacing: 6) {
+                if !toSchedule.isEmpty {
+                    let rest = toSchedule.compactMap { model.sessionProgress[$0.id]?.remaining }.reduce(0, +)
+                    Text("Rest \(CapacityText.duration(rest))").font(.subheadline.weight(.semibold)).foregroundStyle(.green)
+                }
                 Text("Ohne Uhrzeit").font(.subheadline.weight(.semibold))
-                Text("\(planned.count) · \(CapacityText.duration(minutes))").font(.subheadline).foregroundStyle(.secondary)
-                if !plan.openToday.isEmpty {
-                    Text("+\(plan.openToday.count) offen").font(.caption).foregroundStyle(.secondary)
+                Text(toSchedule.isEmpty ? "\(planned.count) · \(CapacityText.duration(minutes))" : "\(planned.count)")
+                    .font(.subheadline).foregroundStyle(.secondary)
+                if !openToday.isEmpty {
+                    Text(toSchedule.isEmpty ? "+\(openToday.count) offen" : "+\(openToday.count)").font(.caption).foregroundStyle(.secondary)
                 }
                 if !overdueToday.isEmpty {
                     Text("\(overdueToday.count) überfällig").font(.caption.weight(.semibold)).foregroundStyle(.orange)
@@ -207,6 +220,9 @@ struct DayGridScreen<Summary: View, Header: View>: View {
                 Text(rowDetails(task, isOverdue: isOverdue)).font(.caption).foregroundStyle(.secondary).lineLimit(1)
             }
             Spacer(minLength: 4)
+            if let progress = model.sessionProgress[task.id], toScheduleIDs.contains(task.id) {
+                Text("noch \(CapacityText.duration(progress.remaining))").font(.caption.weight(.semibold)).foregroundStyle(.green)
+            }
             if let priority = task.priority {
                 Text(priority.label).font(.caption2.weight(.semibold))
                     .padding(.horizontal, 6).padding(.vertical, 2)
@@ -228,7 +244,10 @@ struct DayGridScreen<Summary: View, Header: View>: View {
     /// Effort (or reserved recurring effort) · due · ↻ · source.
     private func rowDetails(_ task: TaskItem, isOverdue: Bool) -> String {
         var parts: [String] = []
-        if let recurring = model.recurringItem(for: task, on: plan.day) {
+        if let progress = model.sessionProgress[task.id] {
+            // Mockup FS1: what is planned against the effort.
+            parts.append("\(CapacityText.duration(progress.blocked)) von \(CapacityText.duration(progress.estimate)) eingeplant")
+        } else if let recurring = model.recurringItem(for: task, on: plan.day) {
             parts.append(recurring.minutes > 0 ? "↻ \(CapacityText.duration(recurring.minutes)) reserviert" : "↻")
         } else {
             parts.append(CapacityText.duration(model.suggestedBlockMinutes(for: task)))
@@ -293,7 +312,11 @@ struct DayGridScreen<Summary: View, Header: View>: View {
     /// The dragged task as a to-scale block at the finger's time (only over the visible grid).
     private var taskPreview: (title: String, startMinutes: Int, minutes: Int)? {
         guard let taskDrag, isDropZone(taskDrag.location) else { return nil }
-        return (taskDrag.task.title, canvasMinutes(atY: taskDrag.location.y), model.suggestedBlockMinutes(for: taskDrag.task))
+        let task = taskDrag.task
+        let minutes = model.suggestedBlockMinutes(for: task, on: plan.day)
+        // Mockup ZV1: the preview names the time still open.
+        let title = model.sessionProgress[task.id].map { "\(task.title) · Rest \(CapacityText.duration($0.remaining))" } ?? task.title
+        return (title, canvasMinutes(atY: taskDrag.location.y), minutes)
     }
 
     // MARK: "Frei" selection (F1)

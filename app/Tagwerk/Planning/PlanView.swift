@@ -29,6 +29,17 @@ struct PlanView: View {
         }
     }
 
+    /// "Dupliziert" with "Rückgängig" after duplicating a block (mockup DU1).
+    @ViewBuilder
+    private var duplicateUndo: some View {
+        if let copy = model.lastDuplicate {
+            UndoCapsule(title: copy.title, caption: "Dupliziert", symbol: "plus.square.on.square", duration: 5,
+                        onUndo: { Task { await model.undoDuplicate() } },
+                        onExpire: { if model.lastDuplicate?.id == copy.id { model.clearDuplicateUndo() } })
+                .padding(.bottom, 60)
+        }
+    }
+
     var body: some View {
         NavigationStack {
             Group {
@@ -45,6 +56,7 @@ struct PlanView: View {
             }
             .safeAreaInset(edge: .top) { header }
             .overlay(alignment: .bottom) { dismissUndo }
+            .overlay(alignment: .bottom) { duplicateUndo }
             .navigationTitle("Planen")
             .toolbar(.hidden, for: .navigationBar)  // the tab bar already says "Planen" (mockup A1)
             .task(id: "\(model.scope)-\(model.anchor)") { await model.reload() }

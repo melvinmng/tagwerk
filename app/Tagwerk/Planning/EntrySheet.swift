@@ -106,6 +106,11 @@ struct EntrySheet: View {
         Section("Aufgabe") {
             if let task = model.linkedTask(eventID: event.id) {
                 LabeledContent(task.title, value: originText(event))
+                if let progress = model.sessionProgress[task.id] {
+                    // Mockup FS1: planned time against the effort.
+                    Text("\(CapacityText.duration(progress.blocked)) von \(CapacityText.duration(progress.estimate)) eingeplant")
+                        .font(.footnote).foregroundStyle(progress.remaining > 0 ? .orange : .secondary)
+                }
                 Button("Aufgabe zeigen") {
                     dismiss()
                     onShowTask(task.id)
@@ -133,6 +138,7 @@ struct EntrySheet: View {
         }
 
         Section {
+            if isBlock && model.linkedTask(eventID: event.id) != nil { duplicateRow(event) }
             if isBlock { Button("Auf anderen Tag …") { movingDay = true } }
             if event.isEditable && !event.isInvitation {
                 Button("Bearbeiten …") { editing = true }
@@ -263,6 +269,21 @@ struct EntrySheet: View {
     private func timeText(_ event: CalendarEvent) -> String {
         if event.isAllDay { return event.start.formatted(date: .complete, time: .omitted) + " · ganztägig" }
         return event.start.formatted(date: .complete, time: .shortened) + " – " + event.end.formatted(date: .omitted, time: .shortened)
+    }
+
+    /// "Duplizieren" with its target (mockup DU1); disabled with a reason when the day has no free stretch.
+    @ViewBuilder
+    private func duplicateRow(_ event: CalendarEvent) -> some View {
+        if let target = model.duplicateTarget(for: event) {
+            Button {
+                Task { await model.duplicateBlock(event); dismiss() }
+            } label: {
+                LabeledContent("Duplizieren", value: "\(AIPlanner.time(target.lowerBound)) · \(CapacityText.duration(target.count))")
+            }
+        } else {
+            LabeledContent("Duplizieren", value: "kein freier Platz mehr")
+                .foregroundStyle(.secondary)
+        }
     }
 
     private func originText(_ event: CalendarEvent) -> String {
