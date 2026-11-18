@@ -1,4 +1,5 @@
 import Foundation
+import HealthBridge
 import SwiftData
 import Testing
 import TagwerkCore
@@ -84,6 +85,39 @@ struct WidgetSnapshotEnvironmentTests {
         await environment.capture.addWater(500, at: .now)
         await environment.capture.waitForHealth()
         #expect(environment.makeSnapshot().days.allSatisfy { $0.intake == nil })
+    }
+
+    private func environment(health: FakeHealthStore) throws -> AppEnvironment {
+        let container = try ModelContainerFactory.make(inMemory: true)
+        let writer = WidgetSnapshotWriter(directory: directory, reload: {})
+        let environment = try AppEnvironment(modelContainer: container, notificationCenter: FakeNotificationCenter(),
+                                             health: health, snapshotWriter: writer)
+        environment.settings.setupCompleted = true
+        return environment
+    }
+
+    /// Decision 5 of the steps plan: today's steps in the widget, only with the nutrition switch.
+    @Test func makeSnapshot_carriesTodaysSteps_onlyWithNutritionSetting() async throws {
+        let health = FakeHealthStore()
+        let environment = try environment(health: health)
+        let calendar = environment.capture.calendar
+        health.steps = [DailySteps(start: calendar.startOfDay(for: .now), count: 6412)]
+        environment.settings.goalStepsPerDay = 9000
+        await environment.capture.reload()
+        let intake = try #require(environment.makeSnapshot().days[0].intake)
+        #expect(intake.steps == 6412)
+        #expect(intake.goalSteps == 9000)
+        environment.settings.widgetShowsNutrition = false
+        #expect(environment.makeSnapshot().days.allSatisfy { $0.intake == nil })
+    }
+
+    @Test func makeSnapshot_noStepsWithoutStepPermission() async throws {
+        let health = FakeHealthStore(stepsAccess: .notAsked)
+        let environment = try environment(health: health)
+        health.steps = [DailySteps(start: environment.capture.calendar.startOfDay(for: .now), count: 6412)]
+        await environment.capture.reload()
+        #expect(environment.makeSnapshot().days[0].intake?.steps == nil)
+        #expect(health.stepsReads.isEmpty)
     }
 
     @Test func makeSnapshot_leavesPlanningUntouched() throws {

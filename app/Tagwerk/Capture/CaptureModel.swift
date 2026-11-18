@@ -3,9 +3,12 @@ import HealthBridge
 import Observation
 import TagwerkCore
 
-/// State of the "Erfassen" tab (mockup E1a): one day with totals against the goals, own entries and Health workouts.
+/// State of the "Erfassen" tab (mockup E1a, ST1): one day with totals against the goals, own entries, Health workouts
+/// and steps.
 ///
-/// Health is only read after the user was asked once; permission is requested only from `connectHealth()`.
+/// Health is only read after the user was asked once; permission is requested only from `connectHealth()` and
+/// `allowSteps()`. Steps stay in memory: no SwiftData, no log; only today's count reaches the plan header and,
+/// with the nutrition switch, the widget.
 @MainActor
 @Observable
 final class CaptureModel {
@@ -40,12 +43,24 @@ final class CaptureModel {
     /// Today's sums regardless of the displayed day: plan header, widget and Siri (phase 4).
     private(set) var todayIntake: DayIntake = .empty
     private(set) var todayHasEntries = false
-    /// Workouts of the Monday-to-Sunday week of `day`.
-    private(set) var weekCount = 0
+    /// Training time of the displayed day and of its Monday-to-Sunday week; every workout counts, short ones too.
+    private(set) var dayMinutes = 0
+    private(set) var weekMinutes = 0
     /// `nil` until the first query, so the Health card does not flash when Health is connected.
     private(set) var access: HealthAccess?
+    /// Step permission, asked separately from `access`; `nil` until the first query.
+    private(set) var stepsAccess: StepsAccess?
+    /// Steps of the displayed day; `nil` without a value, while loading or without permission (shown as "–", never 0).
+    private(set) var steps: Int?
+    /// Today's steps with their day, so a value from before midnight is never shown as today's.
+    private var todayStepsValue: DaySteps?
     private(set) var undo: UndoNotice?
     @ObservationIgnored private var weekForeign: [WorkoutValue] = []
+
+    struct DaySteps: Equatable {
+        var day: PlanDay
+        var count: Int
+    }
     /// "Today" at the last reload: a view that showed today follows to the new day after midnight.
     @ObservationIgnored private var lastToday: PlanDay
     @ObservationIgnored private var pendingSync: Task<Void, Never>?
@@ -73,9 +88,49 @@ final class CaptureModel {
     var showsHealthCard: Bool { access == .notDetermined && !settings.healthCardDismissed }
     var hasEntries: Bool { !meals.isEmpty || !drinks.isEmpty || !workouts.isEmpty }
 
+    /// Today's steps for the plan header and the widget, whatever day the tab shows.
+    var todaySteps: Int? {
+        guard let todayStepsValue, todayStepsValue.day == today else { return nil }
+        return todayStepsValue.count
+    }
+
+    /// The steps tile of the summary: hidden without Health, a button before the step sheet was shown, else the value.
+    enum StepsTile: Equatable {
+        case hidden
+        case allow
+        case value(Int?)
+    }
+
+    var stepsTile: StepsTile {
+        switch stepsAccess {
+        case .unavailable: .hidden
+        case .notAsked: .allow
+        case .asked, nil: .value(steps)
+        }
+    }
+
+    enum SummaryTile: Hashable {
+        case water, protein, steps, training
+    }
+
+    /// Tiles of the summary (ST1): water and protein in the first row, steps and the weekly training in the second.
+    /// When each row would hold a single tile, they share one row.
+    static func summaryRows(protein: Bool, steps: Bool, training: Bool) -> [[SummaryTile]] {
+        let first: [SummaryTile] = protein ? [.water, .protein] : [.water]
+        let second: [SummaryTile] = (steps ? [.steps] : []) + (training ? [.training] : [])
+        if second.isEmpty { return [first] }
+        if first.count == 1 && second.count == 1 { return [first + second] }
+        return [first, second]
+    }
+
+    var summaryRows: [[SummaryTile]] {
+        Self.summaryRows(protein: settings.proteinGoalEnabled, steps: stepsTile != .hidden,
+                         training: settings.goalWorkoutMinutesPerWeek > 0)
+    }
+
     // MARK: Loading
 
-    /// Reloads the day; reads Health workouts only when access was asked before.
+    /// Reloads the day; reads Health workouts only when access was asked before, and steps only after the step sheet.
     /// `refreshingLocalFirst: false` after `show(_:)`, which already read the store for the new day.
     func reload(refreshingLocalFirst: Bool = true) async {
         let today = self.today
@@ -98,10 +153,29 @@ final class CaptureModel {
                              customName: workout.activity == nil ? workout.activityName : nil)
             }
         }
+        let stepsAccess = await health.stepsAccess()
+        self.stepsAccess = stepsAccess
+        var stepsOfDay: Int?
+        if stepsAccess == .asked {
+            stepsOfDay = await dailySteps(on: requestedDay)
+            // Today's count is current even when a later navigation discards the displayed day's result below.
+            let stepsOfToday = requestedDay == today ? stepsOfDay : await dailySteps(on: today)
+            todayStepsValue = stepsOfToday.map { DaySteps(day: today, count: $0) }
+        } else {
+            todayStepsValue = nil
+        }
         // A later navigation already moved on; its own reload applies its week.
         guard day == requestedDay else { return }
         weekForeign = foreignOfWeek
+        steps = stepsOfDay
         refreshLocal(week: week)
+    }
+
+    /// The step sum of one day; `nil` without statistics or on an error (never logged: health data).
+    private func dailySteps(on day: PlanDay) async -> Int? {
+        let interval = DateInterval(start: day.startDate(in: calendar), end: day.adding(days: 1, calendar: calendar).startDate(in: calendar))
+        let sums = (try? await health.dailySteps(in: interval, calendar: calendar)) ?? []
+        return sums.first { PlanDay(date: $0.start, calendar: calendar) == day }?.count
     }
 
     private func refreshLocal(week: DateInterval? = nil) {
@@ -116,7 +190,8 @@ final class CaptureModel {
         drinks = store.drinks(on: day, calendar: calendar)
         let weekWorkouts = store.workouts(in: weekInterval) + weekForeign.filter { weekInterval.contains($0.start) }
         workouts = weekWorkouts.filter { $0.start >= dayStart && $0.start < dayEnd }.sorted { $0.start < $1.start }
-        weekCount = IntakeRules.workoutsThisWeek(weekWorkouts, now: dayStart, calendar: calendar)
+        dayMinutes = IntakeRules.workoutMinutes(weekWorkouts, in: DateInterval(start: dayStart, end: dayEnd))
+        weekMinutes = IntakeRules.workoutMinutes(weekWorkouts, in: weekInterval)
         intake = IntakeRules.dayIntake(meals: meals, drinks: drinks)
         refreshToday()
     }
@@ -134,11 +209,13 @@ final class CaptureModel {
     /// Called after today's sums changed; the environment rewrites the widget snapshot.
     @ObservationIgnored var onTodayChanged: (() -> Void)?
 
-    /// "~1.240 / 2.300 kcal · 1,2 / 2,0 l" for the head of "Planen"; `nil` when switched off or nothing recorded today.
+    /// "~1.240 / 2.300 kcal · 1,2 / 2,0 l · 6.412 Schritte" for the head of "Planen"; `nil` when switched off or nothing
+    /// recorded today. Steps appear only when known for today.
     var planHeaderLine: String? {
         guard settings.showsIntakeInPlan else { return nil }
         return IntakeFormat.planHeaderLine(intake: todayIntake, goalKcal: settings.goalKilocalories,
-                                           goalWaterMilliliters: settings.goalWaterMilliliters, hasEntries: todayHasEntries)
+                                           goalWaterMilliliters: settings.goalWaterMilliliters, hasEntries: todayHasEntries,
+                                           steps: todaySteps)
     }
 
     func goBack(days: Int = 1) async {
@@ -160,6 +237,8 @@ final class CaptureModel {
         let next = min(target, today)
         guard next != day else { return false }
         day = next
+        // Steps of another day arrive with the reload; today's count is already known.
+        steps = next == today ? todaySteps : nil
         refreshLocal()
         return true
     }
@@ -270,6 +349,21 @@ final class CaptureModel {
         try? await health.requestAuthorization()
         await reload()
         await mirror.sync()
+    }
+
+    /// "In Health erlauben" in the steps tile: before Health was ever connected, the full sheet (one sheet for
+    /// everything); afterwards a sheet for steps only, which leaves the existing access untouched.
+    func allowSteps() async {
+        if access?.wasAsked == true {
+            await connectSteps()
+        } else {
+            await connectHealth()
+        }
+    }
+
+    func connectSteps() async {
+        try? await health.requestStepsAuthorization()
+        await reload()
     }
 
     func dismissHealthCard() {

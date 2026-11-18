@@ -102,7 +102,7 @@ struct CaptureModelTests {
         #expect(model.meals.map(\.id) == [lunch.id])
     }
 
-    @Test func foreignWorkouts_merged_weekCountIncludesThem() async {
+    @Test func weekMinutes_includeOwnAndForeignWorkouts() async {
         let health = FakeHealthStore()
         health.foreign = [ForeignWorkout(id: UUID(), activityName: "Rudern", activity: nil, start: now.addingTimeInterval(-5 * 3600),
                                          end: now.addingTimeInterval(-4 * 3600), kilocalories: 300, sourceName: "Apple Watch")]
@@ -112,7 +112,178 @@ struct CaptureModelTests {
                                              minutes: 45, kilocalories: nil, sourceName: nil, isOwn: true), isNew: true)
         #expect(model.workouts.map(\.displayName) == ["Rudern", "Krafttraining"])
         #expect(model.workouts.first?.isOwn == false)
-        #expect(model.weekCount == 2)
+        #expect(model.weekMinutes == 105)
+    }
+
+    @Test func dayMinutes_followDisplayedDay() async {
+        let health = FakeHealthStore()
+        health.foreign = [ForeignWorkout(id: UUID(), activityName: "Laufen", activity: .running,
+                                         start: now.addingTimeInterval(-5 * 3600 - 35 * 60), end: now.addingTimeInterval(-5 * 3600 - 3 * 60),
+                                         kilocalories: 310, sourceName: "Apple Watch")]
+        let monday = now.addingTimeInterval(-2 * 86_400)
+        store.addWorkout(WorkoutValue(id: UUID().uuidString, activity: .strength, start: monday, minutes: 50, kilocalories: nil,
+                                      sourceName: nil, isOwn: true))
+        store.addWorkout(WorkoutValue(id: UUID().uuidString, activity: .strength, start: now.addingTimeInterval(-25 * 60),
+                                      minutes: 45, kilocalories: nil, sourceName: nil, isOwn: true))
+        // A short session counts too, so the list and its sum agree.
+        store.addWorkout(WorkoutValue(id: UUID().uuidString, activity: .yoga, start: now.addingTimeInterval(-2 * 3600),
+                                      minutes: 5, kilocalories: nil, sourceName: nil, isOwn: true))
+        let model = make(health)
+        await model.reload()
+        #expect(model.dayMinutes == 82)
+        #expect(model.weekMinutes == 132)
+        await model.goBack(days: 2)
+        #expect(model.dayMinutes == 50)
+        #expect(model.weekMinutes == 132)
+    }
+
+    // MARK: Steps
+
+    private func steps(_ count: Int, daysAgo: Int = 0) -> DailySteps {
+        DailySteps(start: PlanDay(date: now, calendar: calendar).adding(days: -daysAgo, calendar: calendar).startDate(in: calendar),
+                   count: count)
+    }
+
+    @Test func steps_loadedForDisplayedDay_whenStepsAccessAsked() async {
+        let health = FakeHealthStore()
+        health.steps = [steps(6412), steps(8240, daysAgo: 1)]
+        let model = make(health)
+        await model.reload()
+        #expect(model.stepsAccess == .asked)
+        #expect(model.steps == 6412)
+        await model.goBack()
+        #expect(model.steps == 8240)
+        await model.goBack()
+        // No statistics for that day: no value, never 0.
+        #expect(model.steps == nil)
+    }
+
+    @Test func steps_notRead_whenStepsNotAsked() async {
+        let health = FakeHealthStore(stepsAccess: .notAsked)
+        health.steps = [steps(6412)]
+        let model = make(health)
+        await model.reload()
+        #expect(health.stepsReads.isEmpty)
+        #expect(health.stepsAuthorizationRequests == 0)
+        #expect(model.steps == nil)
+        #expect(model.stepsTile == .allow)
+    }
+
+    @Test func steps_staleResultOfEarlierDay_isDiscarded() async {
+        let health = FakeHealthStore()
+        health.steps = [steps(6412), steps(8240, daysAgo: 1)]
+        let model = make(health)
+        await model.reload()
+        let yesterday = model.day.adding(days: -1, calendar: calendar)
+        let today = model.day
+        model.show(yesterday)
+        #expect(model.steps == nil)
+        // While yesterday's query runs, the user swipes back to today.
+        let once = Once()
+        health.onStepsRead = { _ in
+            if once.fire() { model.show(today) }
+        }
+        await model.reload(refreshingLocalFirst: false)
+        #expect(model.day == today)
+        #expect(model.steps == 6412)
+    }
+
+    final class Once: @unchecked Sendable {
+        private var fired = false
+        func fire() -> Bool {
+            defer { fired = true }
+            return !fired
+        }
+    }
+
+    @Test func connectSteps_requestsOnlySteps_andReloads() async {
+        let health = FakeHealthStore(stepsAccess: .notAsked)
+        health.steps = [steps(6412)]
+        let model = make(health)
+        await model.reload()
+        await model.allowSteps()
+        #expect(health.stepsAuthorizationRequests == 1)
+        #expect(health.authorizationRequests == 0)
+        #expect(model.stepsAccess == .asked)
+        #expect(model.steps == 6412)
+        #expect(model.stepsTile == .value(6412))
+    }
+
+    /// A new user taps "In Health erlauben" before connecting Health: one sheet for everything, not a steps-only one.
+    @Test func allowSteps_whileHealthNotAsked_connectsHealth() async {
+        let health = FakeHealthStore(access: .notDetermined, stepsAccess: .notAsked)
+        health.steps = [steps(6412)]
+        let model = make(health)
+        await model.reload()
+        await model.allowSteps()
+        #expect(health.authorizationRequests == 1)
+        #expect(health.stepsAuthorizationRequests == 0)
+        #expect(model.access == .authorized)
+        #expect(model.steps == 6412)
+    }
+
+    @Test func coreAccess_unchanged_whenStepsNotAsked() async {
+        let health = FakeHealthStore(access: .authorized, stepsAccess: .notAsked)
+        let model = make(health)
+        await model.reload()
+        await model.addWater(250)
+        #expect(model.access == .authorized)
+        #expect(!model.showsHealthCard)
+        #expect(health.foreignReads.count >= 1)
+        #expect(health.drinks.count == 1)
+    }
+
+    @Test func stepsTile_hiddenWithoutHealth_dashBeforeFirstQuery() async {
+        let health = FakeHealthStore(access: .unavailable, stepsAccess: .unavailable)
+        let model = make(health)
+        #expect(model.stepsTile == .value(nil))
+        await model.reload()
+        #expect(model.stepsTile == .hidden)
+        #expect(health.stepsReads.isEmpty)
+    }
+
+    @Test func todaySteps_keptWhileShowingPastDay_forHeaderAndWidget() async {
+        let health = FakeHealthStore()
+        health.steps = [steps(6412), steps(8240, daysAgo: 1)]
+        let model = make(health)
+        await model.reload()
+        await model.addWater(500)
+        await model.goBack()
+        #expect(model.steps == 8240)
+        #expect(model.todaySteps == 6412)
+        #expect(model.planHeaderLine == "0 / 2.300 kcal · 0,5 / 2,0 l · 6.412 Schritte")
+    }
+
+    @Test func todaySteps_dropAfterMidnight() async {
+        let health = FakeHealthStore()
+        health.steps = [steps(6412)]
+        let model = make(health)
+        await model.reload()
+        #expect(model.todaySteps == 6412)
+        clock.now = clock.now.addingTimeInterval(86_400)
+        // Before the next reload, yesterday's count is never shown as today's.
+        #expect(model.todaySteps == nil)
+    }
+
+    @Test func todaySteps_onlyWhenStepsAsked() async {
+        let health = FakeHealthStore(stepsAccess: .notAsked)
+        health.steps = [steps(6412)]
+        let model = make(health)
+        await model.reload()
+        #expect(model.todaySteps == nil)
+    }
+
+    // MARK: Summary layout
+
+    @Test func summaryRows_layout() {
+        typealias Tile = CaptureModel.SummaryTile
+        #expect(CaptureModel.summaryRows(protein: true, steps: true, training: true) == [[.water, .protein], [.steps, .training]])
+        #expect(CaptureModel.summaryRows(protein: false, steps: true, training: true) == [[.water], [.steps, .training]])
+        #expect(CaptureModel.summaryRows(protein: false, steps: false, training: true) == [[.water, .training]])
+        #expect(CaptureModel.summaryRows(protein: false, steps: true, training: false) == [[.water, .steps]])
+        #expect(CaptureModel.summaryRows(protein: true, steps: true, training: false) == [[.water, .protein], [.steps]])
+        #expect(CaptureModel.summaryRows(protein: true, steps: false, training: false) == [[.water, .protein]])
+        #expect(CaptureModel.summaryRows(protein: false, steps: false, training: false) == [[.water]])
     }
 
     @Test func pastDay_readsThatWeek() async {

@@ -66,7 +66,8 @@ extension WidgetSnapshot {
             SnapshotEntry(id: "3", title: String(localized: "Vorlesung"), start: start.addingTimeInterval(16200), end: start.addingTimeInterval(21600),
                           kind: .event, colorHex: "#34C759", isAllDay: false),
         ]
-        let intake = SnapshotIntake(kcal: 1240, hasEstimate: true, goalKcal: 2300, waterMilliliters: 1200, goalWaterMilliliters: 2000)
+        let intake = SnapshotIntake(kcal: 1240, hasEstimate: true, goalKcal: 2300, waterMilliliters: 1200, goalWaterMilliliters: 2000,
+                                    steps: 6412, goalSteps: 8000)
         return WidgetSnapshot(createdAt: now, days: [
             SnapshotDay(day: PlanDay(date: now, calendar: calendar), entries: entries, deadlineCount: 1, intake: intake),
         ])
