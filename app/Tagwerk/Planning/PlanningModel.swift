@@ -229,7 +229,10 @@ final class PlanningModel {
         let allAssignments = planStore.assignments(in: everything)
 
         suggestionBatches = suggestionStore?.batches(in: range) ?? []
-        let suggestionsByDay = Dictionary(grouping: suggestionBatches.flatMap(\.suggestions), by: \.day)
+        // A move shows on the day the task leaves, where the user decides about it.
+        let suggestionsByDay = Dictionary(grouping: suggestionBatches.flatMap(\.suggestions)) { suggestion in
+            suggestion.kind == .move ? (suggestion.fromDay ?? suggestion.day) : suggestion.day
+        }
         var result: [DayPlan] = []
         var day = range.lowerBound
         while day <= range.upperBound {
@@ -255,6 +258,34 @@ final class PlanningModel {
             if let due { return due < today }
             return allAssignments[task.id].map { $0 < today } ?? false
         }, calendar: calendar)
+    }
+
+    /// The AI view of days outside the shown range (e.g. the next week as targets for moving tasks away
+    /// from a full day). Computed like `reload()` without changing what is shown.
+    func planInputs(in range: ClosedRange<PlanDay>) async -> [PlanInputDay] {
+        let open = taskList.items.filter { !$0.isCompleted }
+        let reminders = reminderStore.accessState == .fullAccess ? await reminderStore.openReminders(in: nil) : []
+        let recurringIDs = Set(reminders.filter { $0.recurrence != nil }.map(\.id))
+        let interval = DateInterval(start: range.lowerBound.startDate(in: calendar),
+                                    end: range.upperBound.adding(days: 1, calendar: calendar).startDate(in: calendar))
+        let (events, _) = markedEvents(calendarStore.events(in: interval, calendarIDs: readableCalendarIDs()))
+        let links = Dictionary(resolveLinks(events: events, tasks: open, manual: blocks.links.manualLinks()).map { ($0.eventID, $0.taskID) },
+                               uniquingKeysWith: { first, _ in first })
+        let assignments = planStore.assignments(in: range)
+        let overrides = planStore.overrides(in: range)
+        let tasksByID = Dictionary(open.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
+        let everything = PlanDay(year: 1, month: 1, day: 1)...PlanDay(year: 9999, month: 12, day: 31)
+        let allAssignments = planStore.assignments(in: everything)
+        var result: [PlanInputDay] = []
+        var day = range.lowerBound
+        while day <= range.upperBound {
+            let plan = dayPlan(day, events: events, links: links, deadlines: [], assignments: assignments,
+                               overrides: overrides, tasksByID: tasksByID, reminders: reminders,
+                               recurringIDs: recurringIDs, open: open, allAssignments: allAssignments)
+            if let input = plan.planInput { result.append(input) }
+            day = day.adding(days: 1, calendar: calendar)
+        }
+        return result
     }
 
     /// Day picked in the month grid (mockup E1); see `monthSelection`.
@@ -872,6 +903,11 @@ final class PlanningModel {
     func undoMove() async {
         guard let move = lastMove else { return }
         lastMove = nil
+        await undo(move)
+    }
+
+    /// Takes a move back: blocks to their former start, the task to its former day.
+    func undo(_ move: DayMove) async {
         for (id, start) in move.blocks {
             guard let block = calendarStore.event(id: id) else { continue }
             try? blocks.moveBlock(block, to: start)

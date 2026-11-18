@@ -293,6 +293,72 @@ struct AIPlannerTests {
         #expect(planning.days.first?.suggestions.map(\.taskKey) == ["local:Fahrrad"])
     }
 
+    static func extendedAnswer() -> String {
+        #"{"blocks":[{"taskId":"local:Fahrrad","start":"18:00","minutes":60,"reason":"abends"},{"taskId":"github:Login","start":"14:00","minutes":60,"reason":"r"}],"unscheduled":[],"risks":[],"estimates":[],"summary":"Heute ist es eng.","moves":[],"dayChanges":[{"day":"2026-11-18","start":"09:00","end":"20:00","reason":"Sonst wird Fahrrad nicht fertig."}]}"#
+    }
+
+    @Test func planDay_dayChange_becomesSuggestion_withDependentBlock() async throws {
+        responder.enqueue(Self.extendedAnswer())
+        let (planner, planning) = await make()
+        await planner.plan(scope: .day, anchor: today)
+        let suggestions = try #require(planning.days.first?.suggestions)
+        let change = try #require(suggestions.first { $0.kind == .dayChange })
+        #expect(change.startMinutes == 540)
+        #expect(change.endMinutes == 1200)
+        #expect(suggestions.first { $0.taskKey == "local:Fahrrad" }?.dependsOn == change.id)
+        #expect(suggestions.first { $0.taskKey == "github:Login" }?.dependsOn == nil)
+        #expect(planning.suggestionBatches.first?.summary == "Heute ist es eng.")
+    }
+
+    @Test func planDay_inputContainsLaterDays() async throws {
+        responder.enqueue(Self.dayAnswer(""))
+        let (planner, _) = await make()
+        await planner.plan(scope: .day, anchor: today)
+        guard case .user(let text) = try #require(responder.calls.first?.input.first) else { return }
+        #expect(text.contains("\"laterDays\""))
+        #expect(text.contains("2026-11-25"))
+    }
+
+    @Test func dependentBlock_waitsForDayChange_thenAcceptAllAppliesBoth() async throws {
+        responder.enqueue(Self.extendedAnswer())
+        let (planner, planning) = await make()
+        await planner.plan(scope: .day, anchor: today)
+        let block = try #require(planning.days.first?.suggestions.first { $0.taskKey == "local:Fahrrad" })
+        await planner.accept(block)
+        #expect(planner.notice == AIPlanner.needsLongerDayMessage)
+        #expect(calendarStore.storedEvents.isEmpty)
+
+        await planner.acceptAll()
+        #expect(planStore.override(on: today) == .hours(WorkHours(startMinutes: 540, endMinutes: 1200)))
+        #expect(calendarStore.storedEvents.map(\.start).sorted() == [at(18, 14), at(18, 18)])
+
+        await planner.undoAcceptAll()
+        #expect(planStore.override(on: today) == nil)
+        #expect(calendarStore.storedEvents.isEmpty)
+        #expect(planning.days.first?.suggestions.count == 3)
+    }
+
+    @Test func dismissDayChange_movesDependentBlocksToUnscheduled() async throws {
+        responder.enqueue(Self.extendedAnswer())
+        let (planner, planning) = await make()
+        await planner.plan(scope: .day, anchor: today)
+        let change = try #require(planning.days.first?.suggestions.first { $0.kind == .dayChange })
+        await planner.dismiss(change)
+        #expect(planning.days.first?.suggestions.map(\.taskKey) == ["github:Login"])
+        #expect(planning.suggestionBatches.first?.unscheduled.first?.reason == PlanViolation.Reason.outsideWorkHours.rawValue)
+    }
+
+    @Test func acceptMove_setsTheNewWorkDay() async throws {
+        planStore.assign(TaskID(source: .local, rawValue: "Fahrrad"), to: today)
+        responder.enqueue(#"{"blocks":[],"unscheduled":[],"risks":[],"estimates":[],"summary":"Zu voll.","moves":[{"taskId":"local:Fahrrad","day":"2026-11-19","reason":"kann warten"}],"dayChanges":[]}"#)
+        let (planner, planning) = await make()
+        await planner.plan(scope: .day, anchor: today)
+        let move = try #require(planning.days.first?.suggestions.first { $0.kind == .move })
+        #expect(move.fromDay == today)
+        await planner.accept(move)
+        #expect(planStore.assignment(for: TaskID(source: .local, rawValue: "Fahrrad")) == PlanDay(year: 2026, month: 11, day: 19))
+    }
+
     @Test func suggestions_surviveNewPlanningModel() async throws {
         responder.enqueue(Self.dayAnswer(Self.block("local:Fahrrad", "14:00")))
         let (planner, _) = await make()

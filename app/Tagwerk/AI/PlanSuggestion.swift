@@ -4,7 +4,7 @@ import TagwerkCore
 
 /// One AI suggestion that waits for the user's answer: a time block (day plan) or a work day (week/month).
 struct PlanSuggestion: Codable, Hashable, Identifiable {
-    enum Kind: String, Codable { case block, assignment }
+    enum Kind: String, Codable { case block, assignment, move, dayChange }
 
     var id: UUID
     var kind: Kind
@@ -15,6 +15,12 @@ struct PlanSuggestion: Codable, Hashable, Identifiable {
     var startMinutes: Int?
     var minutes: Int?
     var reason: String
+    /// Day changes: the new end of work (minutes since midnight); `startMinutes` is the new start.
+    var endMinutes: Int?
+    /// Moves: the day the task leaves.
+    var fromDay: PlanDay?
+    /// Blocks in time that only a longer day provides: the day-change suggestion they need (mockup AB1).
+    var dependsOn: UUID?
 
     var taskID: TaskID? { TaskID(key: taskKey) }
 }
@@ -37,6 +43,8 @@ struct SuggestionBatch: Codable, Hashable, Identifiable {
     var risks: [String]
     /// The model's effort estimates (`TaskID.key` → minutes), stored locally only on acceptance.
     var estimates: [String: Int]
+    /// The model's assessment of the period (one or two sentences).
+    var summary: String?
 
     var isEmpty: Bool { suggestions.isEmpty && unscheduled.isEmpty && risks.isEmpty }
 }

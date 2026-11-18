@@ -56,7 +56,11 @@ final class AIPlanner {
             planning.anchor = anchor
         }
         await planning.reload()
-        let input = makeInput(scope: scope, only: taskID.map { [$0] })
+        var input = makeInput(scope: scope, only: taskID.map { [$0] })
+        if scope == .day {
+            // Targets for moving tasks away from a full day.
+            input.laterDays = await planning.planInputs(in: anchor.adding(days: 1, calendar: planning.calendar)...anchor.adding(days: 7, calendar: planning.calendar))
+        }
         guard !input.tasks.isEmpty, !input.days.isEmpty else {
             notice = Self.nothingToPlanMessage
             return
@@ -102,7 +106,7 @@ final class AIPlanner {
     func accept(_ suggestion: PlanSuggestion) async {
         await planning.reload()
         let result = await apply([suggestion])
-        if let failure = result.failures.first {
+        if let failure = result.failures.values.first {
             notice = "Der Vorschlag passt nicht mehr: \(failure.reason)"
         } else if let error = result.errors.first {
             notice = error
@@ -110,21 +114,68 @@ final class AIPlanner {
         await planning.reload()
     }
 
-    /// Accepts every open suggestion of the shown range; failed ones stay or move to "Nicht eingeplant".
+    /// What "Alle übernehmen" did, for "Widerrufen".
+    struct AcceptUndo {
+        var batches: [SuggestionBatch] = []
+        var createdBlocks: [CalendarEvent] = []
+        var assignments: [(TaskID, PlanDay?)] = []
+        var overrides: [(PlanDay, DayOverride?)] = []
+        var moves: [PlanningModel.DayMove] = []
+        var count = 0
+    }
+
+    private(set) var lastAcceptAll: AcceptUndo?
+
+    /// Accepts every open suggestion of the shown range: longer days first, then moves, then blocks and work days
+    /// (mockup AB1). Failed ones stay or move to "Nicht eingeplant".
     func acceptAll() async {
         await planning.reload()
         let open = planning.suggestionBatches.flatMap(\.suggestions)
         guard !open.isEmpty else { return }
+        let batches = planning.suggestionBatches
         let result = await apply(open)
+        var undo = result.undo
+        undo.batches = batches
+        undo.count = result.applied
+        lastAcceptAll = result.applied > 0 ? undo : nil
         let failed = result.failures.count + result.errors.count
         notice = failed == 0 ? nil : "\(Self.count(result.applied, "Vorschlag", "Vorschläge")) übernommen, \(failed) \(failed == 1 ? "passt" : "passen") nicht mehr."
         if let error = result.errors.first, result.applied == 0 { notice = error }
         await planning.reload()
     }
 
+    /// "Widerrufen" after "Alle übernehmen": removes the new blocks, restores days, hours and moves and
+    /// brings the suggestions back.
+    func undoAcceptAll() async {
+        guard let undo = lastAcceptAll else { return }
+        lastAcceptAll = nil
+        for block in undo.createdBlocks { await planning.deleteBlock(block) }
+        for move in undo.moves.reversed() { await planning.undo(move) }
+        for (id, previous) in undo.assignments {
+            if let previous { planning.planStore.assign(id, to: previous) } else { planning.planStore.unassign(id) }
+        }
+        for (day, previous) in undo.overrides { planning.planStore.setOverride(previous, on: day) }
+        for batch in planning.suggestionBatches { store.remove(batch.id) }
+        for batch in undo.batches { store.update(batch) }
+        await planning.reload()
+    }
+
+    func clearAcceptUndo() {
+        lastAcceptAll = nil
+    }
+
     func dismiss(_ suggestion: PlanSuggestion) async {
         for var batch in planning.suggestionBatches where batch.suggestions.contains(suggestion) {
             batch.suggestions.removeAll { $0.id == suggestion.id }
+            if suggestion.kind == .dayChange {
+                // Without the longer day the blocks that need it do not fit (mockup AB1).
+                let dependent = batch.suggestions.filter { $0.dependsOn == suggestion.id }
+                for block in dependent where !batch.unscheduled.contains(where: { $0.taskKey == block.taskKey }) {
+                    batch.unscheduled.append(UnscheduledTask(taskKey: block.taskKey, title: block.title,
+                                                             reason: PlanViolation.Reason.outsideWorkHours.rawValue))
+                }
+                batch.suggestions.removeAll { $0.dependsOn == suggestion.id }
+            }
             store.update(batch)
         }
         await planning.reload()
@@ -174,44 +225,89 @@ final class AIPlanner {
 
     private struct ApplyResult {
         var applied = 0
-        var failures: [UnscheduledTask] = []
+        var failures: [UUID: UnscheduledTask] = [:]
         var errors: [String] = []
+        var undo = AcceptUndo()
     }
 
-    /// Validates `suggestions` together against fresh data, applies the valid ones and updates the batches.
+    static let needsLongerDayMessage = "Übernimm zuerst die längere Arbeitszeit."
+
+    /// Validates `suggestions` against fresh data, applies the valid ones and updates the batches.
     private func apply(_ suggestions: [PlanSuggestion]) async -> ApplyResult {
         var result = ApplyResult()
         var resolved: Set<UUID> = []
-        var failed: [UUID: UnscheduledTask] = [:]
+        let pendingChanges = Set(planning.suggestionBatches.flatMap(\.suggestions).filter { $0.kind == .dayChange }.map(\.id))
 
-        for (day, daySuggestions) in Dictionary(grouping: suggestions, by: \.day) {
-            let byKind = Dictionary(grouping: daySuggestions, by: \.kind)
-            if let dayBlocks = byKind[.block] {
+        // 1. Longer days and moves change the ground the other suggestions are checked on.
+        for change in suggestions where change.kind == .dayChange {
+            guard change.day >= planning.today, let start = change.startMinutes, let end = change.endMinutes else {
+                result.failures[change.id] = UnscheduledTask(taskKey: change.taskKey, title: change.title,
+                                                             reason: PlanViolation.Reason.inThePast.rawValue)
+                continue
+            }
+            result.undo.overrides.append((change.day, planning.planStore.override(on: change.day)))
+            planning.planStore.setOverride(.hours(WorkHours(startMinutes: start, endMinutes: end)), on: change.day)
+            resolved.insert(change.id)
+            result.applied += 1
+        }
+        for move in suggestions where move.kind == .move {
+            guard let id = move.taskID, task(for: move) != nil, move.day > planning.today else {
+                result.failures[move.id] = UnscheduledTask(taskKey: move.taskKey, title: move.title,
+                                                           reason: PlanViolation.Reason.inThePast.rawValue)
+                continue
+            }
+            await planning.moveTask(id, to: move.day)
+            if let done = planning.lastMove { result.undo.moves.append(done) }
+            planning.clearMoveUndo()
+            resolved.insert(move.id)
+            result.applied += 1
+        }
+        if !resolved.isEmpty { await planning.reload() }
+
+        // 2. Blocks and work days, checked per day against the fresh data.
+        let rest = suggestions.filter { $0.kind == .block || $0.kind == .assignment }
+        for (day, daySuggestions) in Dictionary(grouping: rest, by: \.day) {
+            var dayBlocks: [PlanSuggestion] = []
+            for block in daySuggestions where block.kind == .block {
+                if let change = block.dependsOn, pendingChanges.contains(change), !resolved.contains(change) {
+                    result.errors.append(Self.needsLongerDayMessage)
+                } else {
+                    dayBlocks.append(block)
+                }
+            }
+            if !dayBlocks.isEmpty {
                 let (valid, invalid) = recheck(dayBlocks, scope: .day, day: day)
-                failed.merge(invalid) { first, _ in first }
+                result.failures.merge(invalid) { first, _ in first }
                 for suggestion in valid {
-                    if let error = applyBlock(suggestion) { result.errors.append(error) } else {
+                    switch applyBlock(suggestion) {
+                    case .success(let event):
+                        result.undo.createdBlocks.append(event)
                         resolved.insert(suggestion.id)
                         result.applied += 1
+                    case .failure(let error):
+                        result.errors.append(error.message)
                     }
                 }
             }
-            if let assignments = byKind[.assignment] {
+            let assignments = daySuggestions.filter { $0.kind == .assignment }
+            if !assignments.isEmpty {
                 let (valid, invalid) = recheck(assignments, scope: .week, day: day)
-                failed.merge(invalid) { first, _ in first }
+                result.failures.merge(invalid) { first, _ in first }
                 for suggestion in valid {
+                    let previous = suggestion.taskID.flatMap { planning.planStore.assignment(for: $0) }
                     if let error = applyAssignment(suggestion) { result.errors.append(error) } else {
+                        if let id = suggestion.taskID { result.undo.assignments.append((id, previous)) }
                         resolved.insert(suggestion.id)
                         result.applied += 1
                     }
                 }
             }
         }
-        result.failures = Array(failed.values)
         await saveEstimates(for: suggestions.filter { resolved.contains($0.id) })
 
         // Accepted ones leave the batch; failed ones move to "Nicht eingeplant" with their reason.
         // Suggestions that hit a write error (e.g. no plan calendar) stay for another try.
+        let failed = result.failures
         for var batch in planning.suggestionBatches {
             let touched = Set(batch.suggestions.map(\.id)).filter { resolved.contains($0) || failed[$0] != nil }
             guard !touched.isEmpty else { continue }
@@ -249,20 +345,23 @@ final class AIPlanner {
         return (suggestions.filter { invalid[$0.id] == nil }, invalid)
     }
 
-    private func applyBlock(_ suggestion: PlanSuggestion) -> String? {
+    struct ApplyError: Error {
+        let message: String
+    }
+
+    private func applyBlock(_ suggestion: PlanSuggestion) -> Result<CalendarEvent, ApplyError> {
         guard let task = task(for: suggestion), let startMinutes = suggestion.startMinutes, let minutes = suggestion.minutes else {
-            return "Die Aufgabe gibt es nicht mehr."
+            return .failure(ApplyError(message: "Die Aufgabe gibt es nicht mehr."))
         }
         // Built from calendar fields, so days with a clock change keep the suggested time.
         var components = DateComponents(year: suggestion.day.year, month: suggestion.day.month, day: suggestion.day.day)
         components.hour = startMinutes / 60
         components.minute = startMinutes % 60
-        guard let start = planning.calendar.date(from: components) else { return "Die Uhrzeit ist ungültig." }
+        guard let start = planning.calendar.date(from: components) else { return .failure(ApplyError(message: "Die Uhrzeit ist ungültig.")) }
         do {
-            try planning.blocks.createBlock(for: task, start: start, minutes: minutes)
-            return nil
+            return .success(try planning.blocks.createBlock(for: task, start: start, minutes: minutes))
         } catch {
-            return TaskListModel.message(for: error)
+            return .failure(ApplyError(message: TaskListModel.message(for: error)))
         }
     }
 
@@ -321,6 +420,13 @@ final class AIPlanner {
         überschreiten. Wichtige Aufgaben (important) und solche mit naher Fälligkeit zuerst. Termine mit \
         busy=false belegen keine Zeit. Aufgaben ohne minutes schätzt du und nennst die Schätzung in estimates. \
         Was nicht passt, steht in unscheduled mit Grund; drohende Probleme in risks. taskId ist immer die id der Aufgabe.
+        summary: immer eine Einschätzung in ein bis zwei Sätzen, auch wenn nichts mehr passt (was ist wichtig, was kann warten).
+        Ist der Zeitraum zu voll, schlage Auswege vor statt nur unscheduled: moves verschiebt Aufgaben, die schon für einen \
+        Tag eingeplant sind (plannedDay oder dort mitgezählt), auf einen späteren Tag mit freier Zeit (auch aus laterDays); \
+        dayChanges verlängert einzelne Arbeitstage (neuer Beginn und neues Ende). Verlängern nur, wenn wichtige Aufgaben \
+        sonst ihre Frist verpassen, innerhalb von workdayLimits: frühestens earliestStart, spätestens latestEnd, normal \
+        höchstens normalMaximumHours Stunden; bis emergencyMaximumHours oder an einem freien Tag nur im Notfall, und dann \
+        sagt der Grund das ausdrücklich. Blöcke dürfen in die verlängerte Zeit fallen.
         """
         switch scope {
         case .day:
@@ -401,6 +507,34 @@ final class AIPlanner {
             risks = plan.risks
             estimates = plan.estimates
         }
+        let (summary, moves, dayChanges): (String, [PlanMove], [PlanDayChange]) = switch output {
+        case .day(let plan): (plan.summary, plan.moves, plan.dayChanges)
+        case .period(let plan): (plan.summary, plan.moves, plan.dayChanges)
+        }
+        // Longer days (issue #72): blocks in the added time depend on them (mockup AB1).
+        for change in dayChanges {
+            guard let day = Self.planDay(change.day), let start = Self.minutes(change.start), let end = Self.minutes(change.end) else { continue }
+            let suggestion = PlanSuggestion(id: UUID(), kind: .dayChange, taskKey: "day:\(change.day)",
+                                            title: Self.dayChangeTitle(day: day, start: start, end: end, calendar: planning.calendar),
+                                            day: day, startMinutes: start, minutes: nil, reason: change.reason, endMinutes: end)
+            let original = input.days.first { $0.day == day }?.hours
+            for index in suggestions.indices where suggestions[index].kind == .block && suggestions[index].day == day {
+                guard let blockStart = suggestions[index].startMinutes else { continue }
+                let blockEnd = blockStart + (suggestions[index].minutes ?? 0)
+                if original.map({ blockStart < $0.startMinutes || blockEnd > $0.endMinutes }) ?? true {
+                    suggestions[index].dependsOn = suggestion.id
+                }
+            }
+            suggestions.insert(suggestion, at: 0)
+        }
+        // Moves away from a full day ("↷").
+        let planned = Dictionary(input.tasks.map { ($0.id, $0.plannedDay) }, uniquingKeysWith: { first, _ in first })
+        for move in moves {
+            guard let day = Self.planDay(move.day) else { continue }
+            suggestions.append(PlanSuggestion(id: UUID(), kind: .move, taskKey: move.taskId, title: title(move.taskId), day: day,
+                                              startMinutes: nil, minutes: nil, reason: move.reason,
+                                              fromDay: (planned[move.taskId] ?? nil) ?? input.days.first?.day))
+        }
         for violation in violations where titles[violation.taskId] != nil
             && !unscheduled.contains(where: { $0.taskKey == violation.taskId })
             && !suggestions.contains(where: { $0.taskKey == violation.taskId }) {
@@ -409,7 +543,8 @@ final class AIPlanner {
         }
         return SuggestionBatch(id: UUID(), scope: scope, days: input.days.map(\.day), createdAt: planning.now(),
                                suggestions: suggestions, unscheduled: unscheduled, risks: risks,
-                               estimates: Dictionary(estimates.map { ($0.taskId, $0.minutes) }, uniquingKeysWith: { first, _ in first }))
+                               estimates: Dictionary(estimates.map { ($0.taskId, $0.minutes) }, uniquingKeysWith: { first, _ in first }),
+                               summary: summary.isEmpty ? nil : summary)
     }
 
     private func task(for suggestion: PlanSuggestion) -> TaskItem? {
@@ -417,6 +552,12 @@ final class AIPlanner {
     }
 
     // MARK: Formats
+
+    /// "Mi bis 20:00 arbeiten · +2 h" or, on a day off, "Sa arbeiten · 14:00 bis 17:00" (mockups AO1, FT1).
+    static func dayChangeTitle(day: PlanDay, start: Int, end: Int, calendar: Calendar) -> String {
+        let weekday = day.startDate(in: calendar).formatted(.dateTime.weekday(.abbreviated))
+        return "\(weekday) \(time(start)) bis \(time(end)) arbeiten"
+    }
 
     nonisolated static func minutes(_ time: String) -> Int? {
         let parts = time.split(separator: ":")
