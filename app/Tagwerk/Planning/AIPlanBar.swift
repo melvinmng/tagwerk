@@ -11,7 +11,10 @@ struct AIPlanBar: View {
 
     private var planner: AIPlanner { environment.planner }
     private var planning: PlanningModel { environment.planning }
-    private var batches: [SuggestionBatch] { planning.suggestionBatches }
+    /// Only the results of this kind of plan: the day shows the day plan, week and month the period plan.
+    private var batches: [SuggestionBatch] {
+        planning.suggestionBatches.filter { ($0.scope == .day) == (scope == .day) }
+    }
     private var suggestions: [PlanSuggestion] { batches.flatMap(\.suggestions) }
     private var unscheduledCount: Int { batches.reduce(0) { $0 + $1.unscheduled.count } }
     private var riskCount: Int { batches.reduce(0) { $0 + $1.risks.count } }
@@ -25,7 +28,7 @@ struct AIPlanBar: View {
                 content
             }
             .font(.subheadline)
-            .sheet(isPresented: $showsResult) { PlanResultSheet() }
+            .sheet(isPresented: $showsResult) { PlanResultSheet(scope: scope) }
         }
     }
 
@@ -186,8 +189,11 @@ struct AIPlanBar: View {
 struct PlanResultSheet: View {
     @Environment(AppEnvironment.self) private var environment
     @Environment(\.dismiss) private var dismiss
+    let scope: PlanScope
 
-    private var batches: [SuggestionBatch] { environment.planning.suggestionBatches }
+    private var batches: [SuggestionBatch] {
+        environment.planning.suggestionBatches.filter { ($0.scope == .day) == (scope == .day) }
+    }
 
     var body: some View {
         NavigationStack {
@@ -266,13 +272,23 @@ enum SuggestionText {
             return current == 0 ? "Vorschlag · freier Tag · \(CapacityText.duration(end - start))"
                 : "Vorschlag · +\(CapacityText.duration(max(0, added))) · nur an diesem Tag"
         case .move:
-            return "Vorschlag · verschieben"
+            return ["Vorschlag · verschieben", due(suggestion, planning: planning)].compactMap { $0 }.joined(separator: " · ")
         case .block, .assignment:
             var parts = ["Vorschlag"]
             if let start = suggestion.startMinutes { parts.append(AIPlanner.time(start)) }
             if let minutes = suggestion.minutes { parts.append(CapacityText.duration(minutes)) }
+            if let due = due(suggestion, planning: planning) { parts.append(due) }
             return parts.joined(separator: " · ")
         }
+    }
+
+    /// "fällig 20.11." / "überfällig seit 15.11." for the suggestion's task, if it has a due date.
+    @MainActor
+    static func due(_ suggestion: PlanSuggestion, planning: PlanningModel) -> String? {
+        guard let due = planning.taskList.items.first(where: { $0.id.key == suggestion.taskKey })?.due else { return nil }
+        let day = PlanDay(due)
+        let text = day.startDate(in: planning.calendar).formatted(.dateTime.day().month(.twoDigits))
+        return day < planning.today ? "überfällig seit \(text)" : "fällig \(text)"
     }
 
     /// A block whose longer day is still open (mockup AB1).

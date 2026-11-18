@@ -3,6 +3,7 @@ import TagwerkCore
 
 /// An AI suggestion in the hour grid (mockup W1): purple, dashed, not draggable, with ✓ / ✕.
 struct SuggestionBlock: View {
+    @Environment(AppEnvironment.self) private var environment
     let suggestion: PlanSuggestion
     let timeText: String
     var acceptEnabled = true
@@ -14,7 +15,9 @@ struct SuggestionBlock: View {
         HStack(alignment: .top, spacing: 4) {
             VStack(alignment: .leading, spacing: 1) {
                 Label(suggestion.title, systemImage: "sparkles").font(.caption.weight(.semibold)).lineLimit(2)
-                Text(timeText + " · Vorschlag").font(.caption2).foregroundStyle(.secondary).lineLimit(1)
+                Text(([timeText, "Vorschlag"] + [SuggestionText.due(suggestion, planning: environment.planning)].compactMap { $0 })
+                    .joined(separator: " · "))
+                    .font(.caption2).foregroundStyle(.secondary).lineLimit(1)
             }
             Spacer(minLength: 0)
             SuggestionButtons(acceptEnabled: acceptEnabled, onAccept: onAccept, onDismiss: onDismiss)
@@ -136,7 +139,8 @@ struct MoveSuggestionRow: View {
         HStack(alignment: .top, spacing: 8) {
             VStack(alignment: .leading, spacing: 2) {
                 Text(suggestion.title).font(.subheadline).lineLimit(2)
-                Label("nach \(suggestion.day.startDate(in: environment.planning.calendar).formatted(.dateTime.weekday(.abbreviated).day()))",
+                Label(["nach \(suggestion.day.startDate(in: environment.planning.calendar).formatted(.dateTime.weekday(.abbreviated).day()))",
+                       SuggestionText.due(suggestion, planning: environment.planning)].compactMap { $0 }.joined(separator: " · "),
                       systemImage: "arrow.uturn.right")
                     .font(.caption).foregroundStyle(.purple)
                 if showsReason && !suggestion.reason.isEmpty {

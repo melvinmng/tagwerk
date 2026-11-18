@@ -551,13 +551,20 @@ final class AIPlanner {
         let everything = PlanDay(year: 1, month: 1, day: 1)...PlanDay(year: 9999, month: 12, day: 31)
         let now = planning.now()
         let dayStart = today.startDate(in: planning.calendar)
+        // Recurring reminders take part with their effort of the day (their time is reserved for them).
+        let tasks = planning.taskList.items.map { task -> TaskItem in
+            guard let recurring = planning.recurringItem(for: task, on: planning.today) else { return task }
+            var copy = task
+            copy.estimateMinutes = recurring.minutes
+            return copy
+        }
         return makePlanInput(
-            scope: scope, days: days, tasks: planning.taskList.items,
+            scope: scope, days: days, tasks: tasks,
             assignments: planning.planStore.assignments(in: everything), anchors: deadlineAnchors(),
             today: today, nowMinutes: Int(now.timeIntervalSince(dayStart) / 60),
             timeZoneID: planning.calendar.timeZone.identifier, defaultTaskMinutes: planning.defaultTaskMinutes,
             only: only,
-            excluding: Set(planning.recurringReminderIDs.map { TaskID(source: .reminders, rawValue: $0) }),
+            excluding: [],
             lookaheadDays: workAhead() ? lookahead : [],
             blockedMinutes: planning.blockedMinutesByTask,
             calendar: planning.calendar

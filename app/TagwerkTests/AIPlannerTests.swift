@@ -38,9 +38,9 @@ struct AIPlannerTests {
         store = SuggestionStore(context: container.mainContext)
     }
 
-    private func make(scope: PlanScope = .day) async -> (AIPlanner, PlanningModel) {
+    private func make(scope: PlanScope = .day, reminderStore: FakeAccessStore = FakeAccessStore()) async -> (AIPlanner, PlanningModel) {
         await taskList.reload()
-        let planning = PlanningModel(taskList: taskList, calendarStore: calendarStore, reminderStore: FakeAccessStore(),
+        let planning = PlanningModel(taskList: taskList, calendarStore: calendarStore, reminderStore: reminderStore,
                                      planStore: planStore, efforts: RecurringEffortStore(context: container.mainContext),
                                      blocks: blocks, settings: settings, marks: EventMarkStore(context: container.mainContext),
                                      suggestions: store, now: testNow, calendar: calendar)
@@ -374,6 +374,26 @@ struct AIPlannerTests {
         #expect(added.reason == AIPlanner.addedLocallyReason)
         #expect(added.minutes == 15)
         #expect(added.startMinutes == 600)
+    }
+
+    @Test func overdueRecurringP1_isPlannedWithItsEffort() async throws {
+        let access = FakeAccessStore()
+        access.openRecords = [ReminderRecord(id: "blumen", title: "Blumen gießen", notes: nil, due: DueDate(year: 2026, month: 11, day: 15),
+                                             ekPriority: 1, isCompleted: false, listID: "l", lastModified: nil,
+                                             recurrence: Recurrence(rule: .daily(interval: 3), start: PlanDay(year: 2026, month: 11, day: 15),
+                                                                    end: nil, count: nil))]
+        access.accessState = .fullAccess
+        var reminder = makeTask("blumen", source: .reminders, due: DueDate(year: 2026, month: 11, day: 15))
+        reminder.priority = .p1
+        await taskList.register(FakeTaskProvider(source: .reminders, tasks: [reminder]))
+        RecurringEffortStore(context: container.mainContext).setForAll(15, reminderID: "blumen", from: PlanDay(year: 2026, month: 11, day: 15))
+        responder.enqueue(Self.dayAnswer(""))
+        let (planner, planning) = await make(reminderStore: access)
+        await planner.plan(scope: .day, anchor: today)
+        guard case .user(let text) = try #require(responder.calls.first?.input.first) else { return }
+        #expect(text.contains("\"id\":\"reminders:blumen\""))
+        let block = try #require(planning.days.first?.suggestions.first { $0.taskKey == "reminders:blumen" })
+        #expect(block.minutes == 15)
     }
 
     @Test func longerDaysNever_dropsDayChanges() async throws {

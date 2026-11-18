@@ -64,6 +64,12 @@ struct BlockDurationTests {
         #expect(nextFreeSlot(input, after: 1075, minutes: 30, fromMinutes: nil) == nil)
     }
 
+    @Test func freeGaps_keepBufferAroundBlocks() {
+        var input = planDay(blocks: [840..<900], lunch: nil)
+        input.bufferMinutes = 10
+        #expect(freeGaps(input, fromMinutes: nil) == [540..<830, 910..<1080])
+    }
+
     @Test func largestFreeSlot_dayOff_isZero() {
         var input = planDay()
         input.hours = nil

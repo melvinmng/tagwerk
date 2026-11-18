@@ -714,7 +714,8 @@ private func validateBlocks(_ blocks: [PlanBlock], input: PlanInput,
         }
         if let lunch = day.lunch, lunch.overlaps(range) { reject(.overlapsLunch); continue }
         if busy.contains(where: { $0.overlaps(range) }) { reject(.overlapsEvent); continue }
-        if day.blocks.contains(where: { $0.overlaps(range) }) || accepted.contains(where: { $0.range.overlaps(range) }) {
+        let bufferedBlocks = day.blocks.map { ($0.lowerBound - day.bufferMinutes)..<($0.upperBound + day.bufferMinutes) }
+        if bufferedBlocks.contains(where: { $0.overlaps(range) }) || accepted.contains(where: { $0.range.overlaps(range) }) {
             reject(.overlapsBlock); continue
         }
         if isLate(day: day.day, endMinutes: range.upperBound, limit: task.due, input: input) { reject(.afterDue); continue }
@@ -991,7 +992,8 @@ public func freeGaps(_ day: PlanInputDay, fromMinutes: Int?) -> [Range<Int>] {
     guard let hours = day.hours, hours.minutes > 0 else { return [] }
     let start = max(hours.startMinutes, fromMinutes ?? hours.startMinutes)
     guard start < hours.endMinutes else { return [] }
-    var taken = day.busy.map { ($0.lowerBound - day.bufferMinutes)..<($0.upperBound + day.bufferMinutes) } + day.blocks
+    // The buffer keeps distance to busy events and to existing time blocks alike (setting "Puffer").
+    var taken = (day.busy + day.blocks).map { ($0.lowerBound - day.bufferMinutes)..<($0.upperBound + day.bufferMinutes) }
     if let lunch = day.lunch { taken.append(lunch) }
     var gaps: [Range<Int>] = []
     var cursor = start

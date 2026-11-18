@@ -262,14 +262,17 @@ struct PlanningModelTests {
         #expect(calendarStore.storedEvents.map(\.id) == [block.id])
     }
 
-    @Test func duplicateBlock_fullyPlanned_keepsOriginalDuration() async throws {
-        addTask("Kurz", estimate: 45)
+    @Test func duplicateBlock_fullyPlanned_usesDefaultDuration_andBuffer() async throws {
+        settings.bufferMinutes = 10
+        settings.defaultTaskMinutes = 30
+        addTask("Kurz", estimate: 60)
         await taskList.reload()
         let task = try #require(taskList.items.first { $0.title == "Kurz" })
-        let block = try blocks.createBlock(for: task, start: at(18, 14), minutes: 45)
+        let block = try blocks.createBlock(for: task, start: at(18, 14), minutes: 60)
         let model = await model()
         let original = try #require(calendarStore.event(id: block.id))
-        #expect(model.duplicateTarget(for: original) == 885..<930)
+        // Estimate used up by the first block → 30 min; 10 min distance to the original (ends 15:00).
+        #expect(model.duplicateTarget(for: original) == 910..<940)
     }
 
     @Test func moveTask_takesOnlyBlocksOfTheOriginDay() async throws {
@@ -324,6 +327,24 @@ struct PlanningModelTests {
         model.stepSelectedDay(-1)
         #expect(model.monthSelection == PlanDay(year: 2026, month: 11, day: 30))
         #expect(model.anchor.month == 11)
+    }
+
+    @Test func recurringReminderWithBlock_countsItsTimeOnce() async throws {
+        accessStore.openRecords = [ReminderRecord(id: "k", title: "Training", notes: nil, due: DueDate(year: 2026, month: 11, day: 18),
+                                                  ekPriority: 0, isCompleted: false, listID: "l", lastModified: nil,
+                                                  recurrence: Recurrence(rule: .daily(interval: 1), start: PlanDay(year: 2026, month: 11, day: 10),
+                                                                         end: nil, count: nil))]
+        accessStore.accessState = .fullAccess
+        let reminders = FakeTaskProvider(source: .reminders, tasks: [makeTask("k", source: .reminders, due: DueDate(year: 2026, month: 11, day: 18))])
+        await taskList.register(reminders)
+        RecurringEffortStore(context: container.mainContext).setForAll(120, reminderID: "k", from: PlanDay(year: 2026, month: 11, day: 10))
+        let task = try #require(taskList.items.first { $0.id.source == .reminders })
+        _ = try blocks.createBlock(for: task, start: at(18, 14), minutes: 120)
+        let model = await model()
+        let day = try #require(model.days.first)
+        // 480 working minutes; the 120 reserved are covered by the block, which counts as planned.
+        #expect(day.capacity.availableMinutes == 480)
+        #expect(day.capacity.plannedMinutes == 120)
     }
 
     @Test func assign_afterDue_marksPastDue() async {

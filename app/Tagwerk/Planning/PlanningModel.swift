@@ -931,15 +931,15 @@ final class PlanningModel {
     // MARK: Duplicating blocks (mockup DU1)
 
     /// Where "Duplizieren" puts a copy (minutes of the block's day): the next free stretch after the
-    /// original; the duration is the time still open, or the original duration when nothing is open.
+    /// original (with the buffer); the duration is the time still open, or the default duration when the
+    /// estimate is already planned (user rule 2026-11-18).
     func duplicateTarget(for block: CalendarEvent) -> Range<Int>? {
         guard let task = linkedTask(eventID: block.id) else { return nil }
         let day = PlanDay(date: block.start, calendar: calendar)
         guard let input = days.first(where: { $0.day == day })?.planInput else { return nil }
         let dayStart = day.startDate(in: calendar)
-        let original = Int(block.end.timeIntervalSince(block.start) / 60)
         let remaining = effortMinutes(of: task).map { $0 - blockedMinutes(of: task.id) } ?? 0
-        let length = remaining >= 15 ? suggestedBlockMinutes(for: task, on: day) : original
+        let length = remaining >= 15 ? suggestedBlockMinutes(for: task, on: day) : settings.defaultTaskMinutes
         return nextFreeSlot(input, after: minutes(block.end, from: dayStart), minutes: length,
                             fromMinutes: day == today ? minutes(now(), from: dayStart) : nil)
     }
@@ -1116,7 +1116,20 @@ final class PlanningModel {
         }
         let hours = TagwerkCore.workHours(on: day, schedule: settings.weekSchedule, overrides: overrides, calendar: calendar)
         let linkedIDs = Set(links.keys).union(copiesOfLinked(dayEvents, links: links))
-        let recurringMinutes = efforts.reservedMinutes(on: day, reminders: reminders, calendar: calendar)
+        // A block for a recurring reminder is that reminder's work: its reserved effort counts only for the
+        // part the blocks of the day do not cover (otherwise the time would count twice).
+        var blockMinutesByTask: [TaskID: Int] = [:]
+        for event in linkedEvents {
+            guard let id = links[event.id] else { continue }
+            let from = max(event.start, start), to = min(event.end, end)
+            blockMinutesByTask[id, default: 0] += max(0, Int(to.timeIntervalSince(from) / 60))
+        }
+        let coveredRecurring = reminders.reduce(0) { total, reminder in
+            guard reminder.recurrence != nil, let blocked = blockMinutesByTask[TaskID(source: .reminders, rawValue: reminder.id)],
+                  let reserved = efforts.minutes(for: reminder.id, on: day) else { return total }
+            return total + min(reserved, blocked)
+        }
+        let recurringMinutes = max(0, efforts.reservedMinutes(on: day, reminders: reminders, calendar: calendar) - coveredRecurring)
         var input = CapacityInput(
             hours: hours,
             lunchStartMinutes: lunch(on: day)?.lowerBound ?? 0, lunchMinutes: lunch(on: day)?.count ?? 0,
@@ -1125,12 +1138,25 @@ final class PlanningModel {
             recurringMinutes: recurringMinutes,
             plannedMinutes: planned, estimatedCount: estimated
         )
+        // For the AI, the reserved effort of recurring reminders is the load of those tasks: a block for one
+        // of them replaces its reservation instead of adding to it.
+        var aiCounted = counted
+        var reservedLoad = 0
+        for reminder in reminders where reminder.recurrence != nil {
+            let key = TaskID(source: .reminders, rawValue: reminder.id)
+            guard let reserved = efforts.minutes(for: reminder.id, on: day), reserved > 0,
+                  !occurrences(of: reminder.recurrence!, in: day...day, calendar: calendar).isEmpty else { continue }
+            let open = max(0, reserved - (blockMinutesByTask[key] ?? 0))
+            guard open > 0 else { continue }
+            aiCounted[key.key, default: 0] += open
+            reservedLoad += open
+        }
         let planInput = PlanInputDay(
             day: day, hours: hours, lunch: lunch(on: day), events: dayEvents, linkedEventIDs: linkedIDs,
             deadlineCalendarIDs: Set(settings.deadlineCalendarIDs ?? []),
             blocks: linkedEvents.map { minutes($0.start, from: start)..<minutes($0.end, from: start) },
-            recurringMinutes: recurringMinutes, plannedMinutes: planned, bufferMinutes: settings.bufferMinutes,
-            calendar: calendar, countedTaskMinutes: counted
+            recurringMinutes: max(0, recurringMinutes - reservedLoad), plannedMinutes: planned + reservedLoad,
+            bufferMinutes: settings.bufferMinutes, calendar: calendar, countedTaskMinutes: aiCounted
         )
         if day == today {
             let current = now()
