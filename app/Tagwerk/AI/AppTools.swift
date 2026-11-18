@@ -1,0 +1,303 @@
+import AIKit
+import Foundation
+import TagwerkCore
+
+/// The app functions the assistant may call (design §8.3, §11.11).
+///
+/// Read functions answer at once; write functions run only after the user confirmed the action card
+/// (the `Conversation` takes care of that). Every answer is compact JSON: `{"ok":true,…}` or `{"error":"…"}`,
+/// so the model learns about failures and can react.
+@MainActor
+final class AppTools: ToolHandler {
+    static let readTools: Set<String> = ["list_tasks", "list_events", "get_task"]
+    static let maxListedTasks = 60
+
+    private let taskList: TaskListModel
+    private let planning: PlanningModel
+    private let planner: AIPlanner?
+    private let events: (DateInterval) -> [CalendarEvent]
+
+    init(taskList: TaskListModel, planning: PlanningModel, planner: AIPlanner?,
+         events: @escaping (DateInterval) -> [CalendarEvent]) {
+        self.taskList = taskList
+        self.planning = planning
+        self.planner = planner
+        self.events = events
+    }
+
+    var definitions: [ToolDefinition] { Self.allDefinitions }
+
+    func kind(of name: String) -> ToolKind { Self.readTools.contains(name) ? .read : .write }
+
+    func run(_ call: ToolCall) async -> String {
+        guard let arguments = try? JSONSerialization.jsonObject(with: call.arguments) as? [String: Any] else {
+            return Self.error("Die Argumente sind kein gültiges JSON.")
+        }
+        do {
+            return try await dispatch(call.name, Arguments(arguments))
+        } catch let error as ToolError {
+            return Self.error(error.message)
+        } catch {
+            return Self.error(TaskListModel.message(for: error))
+        }
+    }
+
+    // MARK: Dispatch
+
+    private func dispatch(_ name: String, _ args: Arguments) async throws -> String {
+        switch name {
+        case "list_tasks": return listTasks(filter: args.string("filter") ?? "all")
+        case "get_task": return Self.json(["task": Self.detail(try task(args.require("id")))])
+        case "list_events": return try listEvents(from: args.day("from"), to: args.day("to"))
+        case "create_task": return try await createTask(args)
+        case "update_task": return try await updateTask(args)
+        case "reschedule_task":
+            let task = try task(args.require("id"))
+            let updated = try await taskList.rescheduleReturning(task.id, to: try args.due("due"))
+            return Self.json(["ok": true, "task": Self.summary(updated)])
+        case "complete_task":
+            let task = try task(args.require("id"))
+            _ = try await taskList.completeReturning(task.id)
+            return Self.json(["ok": true, "completed": task.title])
+        case "assign_to_day":
+            let task = try task(args.require("id"))
+            let day = try args.day("day")
+            try planning.blocks.moveFutureBlocks(of: task.id, to: day, after: planning.now())
+            planning.planStore.assign(task.id, to: day)
+            await planning.reload()
+            return Self.json(["ok": true, "task": task.title, "day": AIPlanner.dayString(day)])
+        case "create_time_block": return try await createBlock(args)
+        case "link_event_to_task":
+            let task = try task(args.require("task_id"))
+            await planning.link(eventID: try args.require("event_id"), to: task.id)
+            return Self.json(["ok": true])
+        case "set_day_hours": return try await setDayHours(args)
+        case "set_lunch":
+            let day = try args.day("day")
+            let minutes = args.int("minutes") ?? 0
+            if minutes <= 0 {
+                await planning.removeLunch(on: day)
+            } else {
+                guard let start = args.string("start").flatMap(AIPlanner.minutes) else { throw ToolError("Die Uhrzeit fehlt.") }
+                await planning.setLunch(startMinutes: start, minutes: minutes, on: day)
+            }
+            return Self.json(["ok": true])
+        case "mark_events_free": return try await markEventsFree(args)
+        case "plan_period": return try await planPeriod(args)
+        case "add_comment":
+            let task = try task(args.require("id"))
+            guard let provider = taskList.provider(for: task.id.source) else { throw ToolError("Die Quelle ist nicht verfügbar.") }
+            try await provider.addComment(try args.require("body"), to: task.id)
+            return Self.json(["ok": true])
+        default:
+            throw ToolError("Unbekannte Funktion \(name).")
+        }
+    }
+
+    // MARK: Read
+
+    private func listTasks(filter: String) -> String {
+        let today = planning.today
+        let assignments = planning.planStore.assignments(in: PlanDay(year: 1, month: 1, day: 1)...PlanDay(year: 9999, month: 12, day: 31))
+        let open = taskList.items.filter { !$0.isCompleted }
+        let filtered = open.filter { task in
+            let due = task.due.map(PlanDay.init)
+            switch filter {
+            case "today": return due == today || assignments[task.id] == today
+            case "overdue": return due.map { $0 < today } ?? false
+            case "upcoming": return due.map { $0 > today } ?? false
+            case "unplanned": return assignments[task.id] == nil
+            default: return true
+            }
+        }
+        let tasks = sortedTasks(filtered, calendar: planning.calendar).prefix(Self.maxListedTasks).map { task -> [String: Any] in
+            var summary = Self.summary(task)
+            if let day = assignments[task.id] { summary["plannedDay"] = AIPlanner.dayString(day) }
+            return summary
+        }
+        return Self.json(["tasks": Array(tasks), "count": filtered.count])
+    }
+
+    private func listEvents(from: PlanDay, to: PlanDay) throws -> String {
+        guard from <= to else { throw ToolError("Der Zeitraum ist ungültig.") }
+        let calendar = planning.calendar
+        let interval = DateInterval(start: from.startDate(in: calendar), end: to.adding(days: 1, calendar: calendar).startDate(in: calendar))
+        let list = events(interval).sorted { $0.start < $1.start }.prefix(100).map { event -> [String: Any] in
+            var item: [String: Any] = ["id": event.id, "title": event.title, "allDay": event.isAllDay, "busy": event.isBusy]
+            item["start"] = event.start.formatted(.iso8601.year().month().day().time(includingFractionalSeconds: false))
+            item["end"] = event.end.formatted(.iso8601.year().month().day().time(includingFractionalSeconds: false))
+            if let task = planning.linkedTask(eventID: event.id) { item["linkedTask"] = task.id.key }
+            return item
+        }
+        return Self.json(["events": Array(list)])
+    }
+
+    // MARK: Write
+
+    private func createTask(_ args: Arguments) async throws -> String {
+        var draft = TaskDraft(title: try args.require("title"))
+        draft.due = try args.due("due")
+        draft.priority = args.priority("priority")
+        draft.estimateMinutes = args.int("minutes")
+        draft.notes = args.string("notes")
+        let available = Set(TaskSource.allCases.filter { taskList.provider(for: $0) != nil })
+        let source = args.string("source").flatMap(TaskSource.init(rawValue:))
+            ?? (available.contains(.reminders) ? .reminders : .local)
+        guard available.contains(source) else { throw ToolError("Diese Quelle ist nicht verfügbar.") }
+        let created = try await taskList.createReturning(draft, in: source)
+        return Self.json(["ok": true, "id": created.id.key, "task": Self.summary(created)])
+    }
+
+    private func updateTask(_ args: Arguments) async throws -> String {
+        let task = try task(args.require("id"))
+        var edit = TaskEdit()
+        if let title = args.string("title") { edit.title = .set(title) }
+        if let notes = args.string("notes") { edit.notes = .set(notes) }
+        if let priority = args.string("priority") { edit.priority = .set(Self.priority(priority)) }
+        if let minutes = args.int("minutes") { edit.estimateMinutes = .set(minutes) }
+        if args.string("due") != nil { edit.due = .set(try args.due("due")) }
+        guard !edit.isEmpty else { throw ToolError("Es gibt nichts zu ändern.") }
+        let updated = try await taskList.applyReturning(edit, to: task.id)
+        return Self.json(["ok": true, "task": Self.summary(updated)])
+    }
+
+    private func createBlock(_ args: Arguments) async throws -> String {
+        let task = try task(args.require("id"))
+        let day = try args.day("day")
+        guard let start = args.string("start").flatMap(AIPlanner.minutes), let minutes = args.int("minutes"), minutes > 0 else {
+            throw ToolError("Beginn oder Dauer fehlen.")
+        }
+        var components = DateComponents(year: day.year, month: day.month, day: day.day)
+        components.hour = start / 60
+        components.minute = start % 60
+        guard let date = planning.calendar.date(from: components) else { throw ToolError("Die Uhrzeit ist ungültig.") }
+        try planning.blocks.createBlock(for: task, start: date, minutes: minutes)
+        await planning.reload()
+        return Self.json(["ok": true, "task": task.title, "day": AIPlanner.dayString(day), "start": AIPlanner.time(start)])
+    }
+
+    private func setDayHours(_ args: Arguments) async throws -> String {
+        let day = try args.day("day")
+        if args.bool("off") == true {
+            planning.planStore.setOverride(.off, on: day)
+        } else {
+            guard let start = args.string("start").flatMap(AIPlanner.minutes), let end = args.string("end").flatMap(AIPlanner.minutes),
+                  start < end else { throw ToolError("Beginn und Ende sind ungültig.") }
+            planning.planStore.setOverride(.hours(WorkHours(startMinutes: start, endMinutes: end)), on: day)
+        }
+        await planning.reload()
+        return Self.json(["ok": true])
+    }
+
+    private func markEventsFree(_ args: Arguments) async throws -> String {
+        let ids = Set(args.strings("event_ids"))
+        guard !ids.isEmpty else { throw ToolError("Keine Termine angegeben.") }
+        let now = planning.now()
+        let window = DateInterval(start: now.addingTimeInterval(-60 * 86_400), duration: 400 * 86_400)
+        let matches = events(window).filter { ids.contains($0.id) }
+        guard !matches.isEmpty else { throw ToolError("Diese Termine gibt es nicht.") }
+        await planning.setFree(matches, free: args.bool("free") ?? true, series: args.bool("series") ?? false)
+        return Self.json(["ok": true, "count": matches.count])
+    }
+
+    private func planPeriod(_ args: Arguments) async throws -> String {
+        guard let planner else { throw ToolError("Planen ist gerade nicht verfügbar.") }
+        guard let scope = args.string("scope").flatMap(PlanScope.init(rawValue:)) else { throw ToolError("Der Zeitraum fehlt.") }
+        let day = (try? args.day("day")) ?? planning.today
+        await planner.plan(scope: scope, anchor: day)
+        if case .failed(let message) = planner.state { throw ToolError(message) }
+        if let notice = planner.notice, notice == AIPlanner.nothingToPlanMessage { throw ToolError(notice) }
+        let batches = planning.suggestionBatches
+        return Self.json([
+            "ok": true,
+            "suggestions": batches.reduce(0) { $0 + $1.suggestions.count },
+            "unscheduled": batches.reduce(0) { $0 + $1.unscheduled.count },
+            "message": "Die Vorschläge stehen in der Planen-Ansicht und warten dort auf Bestätigung.",
+        ])
+    }
+
+    // MARK: Helpers
+
+    private func task(_ id: String) throws -> TaskItem {
+        guard let task = taskList.items.first(where: { $0.id.key == id }) else { throw ToolError("Diese Aufgabe gibt es nicht.") }
+        return task
+    }
+
+    static func summary(_ task: TaskItem) -> [String: Any] {
+        var item: [String: Any] = ["id": task.id.key, "title": task.title, "source": task.id.source.rawValue]
+        if let due = task.due { item["due"] = dueString(due) }
+        if let priority = task.priority { item["priority"] = priority.label }
+        if let minutes = task.estimateMinutes { item["minutes"] = minutes }
+        return item
+    }
+
+    static func detail(_ task: TaskItem) -> [String: Any] {
+        var item = summary(task)
+        item["container"] = task.container.name
+        if let notes = task.notes, !notes.isEmpty { item["notes"] = notes }
+        if let labels = task.labels, !labels.isEmpty { item["labels"] = labels }
+        if let url = task.url { item["url"] = url.absoluteString }
+        if let epic = task.epic { item["epic"] = "#\(epic.number) \(epic.title)" }
+        return item
+    }
+
+    static func dueString(_ due: DueDate) -> String {
+        let day = AIPlanner.dayString(PlanDay(due))
+        guard let hour = due.hour else { return day }
+        return day + "T" + AIPlanner.time(hour * 60 + (due.minute ?? 0))
+    }
+
+    nonisolated static func priority(_ label: String) -> Priority? {
+        guard label.count == 2, label.first == "P", let value = Int(label.dropFirst()) else { return nil }
+        return Priority(rawValue: value)
+    }
+
+    static func json(_ object: [String: Any]) -> String {
+        guard let data = try? JSONSerialization.data(withJSONObject: object, options: [.sortedKeys]) else { return "{}" }
+        return String(decoding: data, as: UTF8.self)
+    }
+
+    static func error(_ message: String) -> String { json(["error": message]) }
+
+    struct ToolError: Error {
+        let message: String
+        init(_ message: String) { self.message = message }
+    }
+
+    /// Typed access to the decoded arguments; JSON `null` counts as missing.
+    struct Arguments {
+        let values: [String: Any]
+        init(_ values: [String: Any]) { self.values = values }
+
+        func string(_ key: String) -> String? {
+            guard let value = values[key] as? String, !value.isEmpty else { return nil }
+            return value
+        }
+
+        func require(_ key: String) throws -> String {
+            guard let value = string(key) else { throw ToolError("Das Argument \(key) fehlt.") }
+            return value
+        }
+
+        func int(_ key: String) -> Int? { (values[key] as? NSNumber)?.intValue }
+        func bool(_ key: String) -> Bool? { values[key] as? Bool }
+        func strings(_ key: String) -> [String] { values[key] as? [String] ?? [] }
+        func priority(_ key: String) -> Priority? { string(key).flatMap(AppTools.priority) }
+
+        func day(_ key: String) throws -> PlanDay {
+            guard let day = string(key).flatMap(AIPlanner.planDay) else { throw ToolError("Das Datum \(key) ist ungültig.") }
+            return day
+        }
+
+        /// "YYYY-MM-DD" or "YYYY-MM-DDTHH:mm"; missing means no due date.
+        func due(_ key: String) throws -> DueDate? {
+            guard let text = string(key) else { return nil }
+            let parts = text.split(separator: "T")
+            guard let day = AIPlanner.planDay(String(parts[0])) else { throw ToolError("Das Datum \(key) ist ungültig.") }
+            if parts.count == 2, let minutes = AIPlanner.minutes(String(parts[1])) {
+                return DueDate(year: day.year, month: day.month, day: day.day, hour: minutes / 60, minute: minutes % 60)
+            }
+            return DueDate(year: day.year, month: day.month, day: day.day)
+        }
+    }
+}

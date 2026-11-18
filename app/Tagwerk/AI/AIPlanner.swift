@@ -381,17 +381,17 @@ final class AIPlanner {
 
     // MARK: Formats
 
-    static func minutes(_ time: String) -> Int? {
+    nonisolated static func minutes(_ time: String) -> Int? {
         let parts = time.split(separator: ":")
         guard parts.count == 2, let hour = Int(parts[0]), let minute = Int(parts[1]) else { return nil }
         return hour * 60 + minute
     }
 
-    static func time(_ minutes: Int) -> String { String(format: "%02d:%02d", minutes / 60, minutes % 60) }
+    nonisolated static func time(_ minutes: Int) -> String { String(format: "%02d:%02d", minutes / 60, minutes % 60) }
 
-    static func dayString(_ day: PlanDay) -> String { String(format: "%04d-%02d-%02d", day.year, day.month, day.day) }
+    nonisolated static func dayString(_ day: PlanDay) -> String { String(format: "%04d-%02d-%02d", day.year, day.month, day.day) }
 
-    static func planDay(_ text: String) -> PlanDay? {
+    nonisolated static func planDay(_ text: String) -> PlanDay? {
         let parts = text.split(separator: "-").compactMap { Int($0) }
         guard parts.count == 3 else { return nil }
         return PlanDay(year: parts[0], month: parts[1], day: parts[2])

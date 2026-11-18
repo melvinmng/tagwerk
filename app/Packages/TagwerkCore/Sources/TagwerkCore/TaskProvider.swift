@@ -33,9 +33,15 @@ public protocol TaskProvider: AnyObject {
     var offlineReason: String? { get }
     /// Last known tasks, shown at once while `openTasks` is still running (e.g. GitHub at app start).
     var cachedTasks: [TaskItem] { get }
+    /// Adds a comment; only sources with comments (GitHub) support it.
+    func addComment(_ body: String, to id: TaskID) async throws
 }
 
 extension TaskProvider {
+    public func addComment(_ body: String, to id: TaskID) async throws {
+        throw TaskWriteError.failed("Kommentare gibt es nur bei GitHub-Issues.")
+    }
+
     public var offlineSince: Date? { nil }
     public var offlineReason: String? { nil }
     public var cachedTasks: [TaskItem] { [] }
