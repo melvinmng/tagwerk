@@ -42,9 +42,11 @@ public struct MealItem: Sendable, Hashable, Codable {
     public var protein: Double
     public var carbs: Double
     public var fat: Double
+    /// `true` while the values come from the AI; typing over them makes the item exact (shown without "~").
+    public var isEstimated: Bool
 
     public init(name: String, amount: String, factor: Double = 1, kcalMin: Double, kcal: Double, kcalMax: Double,
-                protein: Double, carbs: Double, fat: Double) {
+                protein: Double, carbs: Double, fat: Double, isEstimated: Bool = false) {
         self.name = name
         self.amount = amount
         self.factor = factor
@@ -54,6 +56,13 @@ public struct MealItem: Sendable, Hashable, Codable {
         self.protein = protein
         self.carbs = carbs
         self.fat = fat
+        self.isEstimated = isEstimated
+    }
+
+    /// The item with typed values: exact, so min, value and max are equal.
+    public func overridden(kcal: Double, protein: Double, carbs: Double, fat: Double) -> MealItem {
+        MealItem(name: name, amount: amount, factor: factor, kcalMin: kcal, kcal: kcal, kcalMax: kcal,
+                 protein: protein, carbs: carbs, fat: fat, isEstimated: false)
     }
 
     public var totalKcal: Double { kcal * factor }
@@ -92,7 +101,8 @@ public struct MealValue: Sendable, Hashable, Identifiable {
     public var protein: Double { items.reduce(0) { $0 + $1.totalProtein } }
     public var carbs: Double { items.reduce(0) { $0 + $1.totalCarbs } }
     public var fat: Double { items.reduce(0) { $0 + $1.totalFat } }
-    public var isEstimated: Bool { origin == .estimated }
+    /// Any item still carries AI values; totals are then shown with "~".
+    public var hasEstimate: Bool { items.contains(where: \.isEstimated) }
 }
 
 /// One water entry.
@@ -214,7 +224,7 @@ public enum IntakeRules {
                   carbs: meals.reduce(0) { $0 + $1.carbs },
                   fat: meals.reduce(0) { $0 + $1.fat },
                   waterMilliliters: drinks.reduce(0) { $0 + $1.milliliters },
-                  hasEstimate: meals.contains { $0.isEstimated })
+                  hasEstimate: meals.contains { $0.hasEstimate })
     }
 
     /// Start of the Monday-to-Sunday week containing `date`, regardless of the calendar's first weekday.
@@ -291,7 +301,6 @@ public struct MealEstimateOutput: Sendable, Hashable, Decodable {
 
     public var title: String
     public var items: [Item]
-    public var note: String
 
     /// Items above this value are treated as nonsense and dropped.
     public static let maximumItemKcal: Double = 5000
@@ -311,7 +320,8 @@ public struct MealEstimateOutput: Sendable, Hashable, Decodable {
             return MealItem(name: item.name.trimmingCharacters(in: .whitespacesAndNewlines),
                             amount: item.amount.trimmingCharacters(in: .whitespacesAndNewlines),
                             kcalMin: min(values[0], values[2], kcal), kcal: kcal, kcalMax: max(values[0], values[2], kcal),
-                            protein: max(0, item.proteinG), carbs: max(0, item.carbsG), fat: max(0, item.fatG))
+                            protein: max(0, item.proteinG), carbs: max(0, item.carbsG), fat: max(0, item.fatG),
+                            isEstimated: true)
         }
         guard !cleaned.isEmpty else { return nil }
         let trimmedTitle = title.trimmingCharacters(in: .whitespacesAndNewlines)

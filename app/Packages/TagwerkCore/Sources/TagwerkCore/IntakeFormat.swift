@@ -28,6 +28,11 @@ public enum IntakeFormat {
         "wahrscheinlich zwischen \(grouped(roundedKcal(min))) und \(grouped(roundedKcal(max))) kcal"
     }
 
+    /// The range sentence, or `nil` for exact values (min equals max after rounding).
+    public static func rangeIfEstimated(min: Double, max: Double) -> String? {
+        roundedKcal(min) == roundedKcal(max) ? nil : range(min: min, max: max)
+    }
+
     /// "410–550" for lists.
     public static func shortRange(min: Double, max: Double) -> String {
         "\(grouped(roundedKcal(min)))–\(grouped(roundedKcal(max)))"

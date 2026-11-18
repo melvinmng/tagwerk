@@ -10,7 +10,7 @@ struct IntakeTests {
     private func item(_ name: String, _ kcal: Double, min: Double? = nil, max: Double? = nil, protein: Double = 0,
                       factor: Double = 1) -> MealItem {
         MealItem(name: name, amount: "1 Portion", factor: factor, kcalMin: min ?? kcal, kcal: kcal, kcalMax: max ?? kcal,
-                 protein: protein, carbs: 0, fat: 0)
+                 protein: protein, carbs: 0, fat: 0, isEstimated: true)
     }
 
     private func meal(_ title: String, at date: Date, items: [MealItem], origin: MealOrigin = .estimated) -> MealValue {
@@ -65,8 +65,20 @@ struct IntakeTests {
         #expect(intake.hasEstimate)
     }
 
+    @Test func overriddenItem_losesTilde_sumKeepsTildeWhileAnyEstimated() {
+        let overridden = item("Brötchen", 300, min: 250, max: 350).overridden(kcal: 320, protein: 9, carbs: 50, fat: 3)
+        #expect(!overridden.isEstimated)
+        #expect(overridden.kcalMin == 320 && overridden.kcalMax == 320)
+        let mixed = meal("Brötchen", at: now, items: [overridden, item("Käse", 180, min: 150, max: 220)])
+        #expect(mixed.hasEstimate)
+        let manualOnly = meal("Brötchen", at: now, items: [overridden])
+        #expect(!manualOnly.hasEstimate)
+        #expect(!IntakeRules.dayIntake(meals: [manualOnly], drinks: []).hasEstimate)
+    }
+
     @Test func dayIntake_manualOnly_hasNoEstimate() {
-        let intake = IntakeRules.dayIntake(meals: [meal("Apfel", at: now, items: [item("Apfel", 80)], origin: .manual)], drinks: [])
+        let manual = MealItem(name: "Apfel", amount: "", kcalMin: 80, kcal: 80, kcalMax: 80, protein: 0, carbs: 0, fat: 0)
+        let intake = IntakeRules.dayIntake(meals: [meal("Apfel", at: now, items: [manual], origin: .manual)], drinks: [])
         #expect(!intake.hasEstimate)
         #expect(intake.kcal == 80)
     }
@@ -123,7 +135,7 @@ struct IntakeTests {
 
     @Test func estimate_decode_normalizes() throws {
         let json = """
-        {"title":"Brötchen mit Käse","note":"","items":[
+        {"title":"Brötchen mit Käse","items":[
           {"name":"Brötchen","amount":"2 Stück","kcal_min":350,"kcal":300,"kcal_max":280,"protein_g":10,"carbs_g":56,"fat_g":2},
           {"name":"Käse","amount":"2 Scheiben","kcal_min":-5,"kcal":180,"kcal_max":220,"protein_g":-1,"carbs_g":0,"fat_g":14},
           {"name":"Unsinn","amount":"","kcal_min":6000,"kcal":7000,"kcal_max":8000,"protein_g":0,"carbs_g":0,"fat_g":0}
@@ -134,19 +146,20 @@ struct IntakeTests {
         #expect(estimate.items.count == 2)
         let roll = estimate.items[0]
         #expect(roll.kcalMin == 280 && roll.kcal == 300 && roll.kcalMax == 350)
+        #expect(roll.isEstimated)
         let cheese = estimate.items[1]
         #expect(cheese.kcalMin == 0 && cheese.protein == 0)
     }
 
     @Test func estimate_tooManyItems_cut() throws {
         let items = (0..<25).map { #"{"name":"P\#($0)","amount":"","kcal_min":1,"kcal":2,"kcal_max":3,"protein_g":0,"carbs_g":0,"fat_g":0}"# }
-        let json = #"{"title":"Buffet","note":"","items":[\#(items.joined(separator: ","))]}"#
+        let json = #"{"title":"Buffet","items":[\#(items.joined(separator: ","))]}"#
         let estimate = try #require(try MealEstimateOutput.decode(Data(json.utf8)).normalized())
         #expect(estimate.items.count == 20)
     }
 
     @Test func estimate_emptyItems_isNothingRecognized() throws {
-        let json = #"{"title":"","note":"Kein Essen","items":[]}"#
+        let json = #"{"title":"","items":[]}"#
         #expect(try MealEstimateOutput.decode(Data(json.utf8)).normalized() == nil)
     }
 
@@ -157,10 +170,13 @@ struct IntakeTests {
         #expect(IntakeFormat.kcal(1238, estimated: true) == "~1.240 kcal")
         #expect(IntakeFormat.range(min: 412, max: 548) == "wahrscheinlich zwischen 410 und 550 kcal")
         #expect(IntakeFormat.shortRange(min: 412, max: 548) == "410–550")
+        #expect(IntakeFormat.rangeIfEstimated(min: 300, max: 300) == nil)
+        #expect(IntakeFormat.rangeIfEstimated(min: 412, max: 548) == "wahrscheinlich zwischen 410 und 550 kcal")
     }
 
     @Test func format_manual_noTilde() {
         #expect(IntakeFormat.kcal(80, estimated: false) == "80 kcal")
+        #expect(IntakeFormat.kcal(95, estimated: false) == "95 kcal")
         #expect(IntakeFormat.grams(21.6, estimated: true) == "~22 g")
         #expect(IntakeFormat.grams(5, estimated: false) == "5 g")
     }

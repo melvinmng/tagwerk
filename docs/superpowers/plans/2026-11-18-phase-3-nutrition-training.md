@@ -16,6 +16,48 @@
 
 **Nicht in diesem Plan:** Fortschritt/Wochenrückblick, Zeile im Kopf von „Planen“, Widget, Siri/Assistent-Erfassen (Phase 4); Getränkearten; Nahrungsdaten anderer Apps; Apples lokales Modell.
 
+## Änderungen nach dem Fable-Review (2026-11-18) – gehen den Tasks unten vor
+
+HealthKit-Aussagen aus API-Kenntnis, am Gerät unbelegt (Nr. 30).
+
+**Korrektheit, Datenverlust**
+1. Nährwert sinkt beim Bearbeiten auf 0 → dessen Sample per Kennung löschen (`save(meal)` löscht Nährwerte ≤ 0).
+2. Gemeinsamer Metadatenschlüssel `TagwerkEntryID = <UUID>` an allen Samples; Löschen je Typ mit diesem Prädikat; 0 gelöschte Objekte bzw. `errorNoData` = Erfolg.
+3. Trainingsenergie bekommt `TagwerkEntryID` und `tagwerk.workout.<UUID>.energy` und wird beim Löschen/Bearbeiten ausdrücklich entfernt.
+4. `save(workout)` löscht immer zuerst per `TagwerkEntryID`, dann neu anlegen; `nil` aus `finishWorkout()` = Fehler; verweigerte Aktive Energie → Workout ohne Energie.
+5. `HealthMirror` arbeitet seriell (eine zusammenfassende Arbeitskette); Test `concurrentSync_writesOnce`.
+6. Löschen immer über `PendingHealthDeletion`; Health-Löschung erst nach dem 4-s-Widerrufen-Fenster; `restore` entfernt den Warteschlangeneintrag; vor Ausführung prüfen, dass lokal nichts mit der ID existiert. Tests `restore_dropsPendingDeletion`, `deletion_survivesRestart`.
+7. Abgelehnte Typen vor Schreiben/Löschen per `authorizationStatus(for:)` still überspringen; Eintrag bleibt `healthSynced = false`. Test `deniedType_skippedWithoutError`.
+8. „Nicht gefragt“ über `statusForAuthorizationRequest` (`.shouldRequest`); Health-Karte nur bei `.shouldRequest` und nicht weggeklickt.
+9. Eigene Samples primär über die Quelle (Bundle-ID) filtern, `TagwerkEntry` zusätzlich; reine Funktion `isOwn(metadata:sourceBundleID:ownBundleID:)`.
+10. `HealthKitStore`: `final class … Sendable` mit `let store`, HealthKit-Objekte nur funktionslokal; über `HealthStoring` nur eigene `Sendable`-Wertetypen; ggf. `@preconcurrency import HealthKit`.
+
+**Datenschutz, Anti-Ziele**
+11. Nur **ein** Flag `mealEstimationConsent` (Standard aus); der Schalter in den Einstellungen bindet daran, Einschalten = Zustimmung. `mealEstimationEnabled` und `.disabled` entfallen.
+12. Einwilligungsprüfung **vor** `AIEnvironment.selectedModel()` (kann `GET /models` auslösen); Test zählt alle Transportanfragen.
+13. Feste Anweisung ohne Planungsvorgaben, Ziele, Uhrzeit, Verlauf; `input.count == 1`; keine Diagnose-/Log-Einträge mit Inhalten; Health-Fehler nur als Code.
+14. `MealItem.isEstimated`; Überschreiben setzt `false` und min = mittel = max; `hasEstimate`/`TagwerkEstimated` aus „irgendein Posten geschätzt“.
+15. Auf 10 kcal runden nur geschätzte Werte; bei min = max keine Spanne.
+16. Verkleinerung mit `format.scale = 1`, nie hochskalieren; Test prüft Pixelgröße und fehlendes GPS; `estimate(text:jpeg: Data?)`.
+17. `HKMetadataKeyWasUserEntered = true` bei manuellen Einträgen und Trainings; keine Titel/Postennamen nach Health.
+
+**Widersprüche**
+18. Stepper bleibt Faktor (×0,5–×3, Anzeige „×1,5“); Abweichung vom Mockup (Stückzahl) in Spec §11.
+19. Keine eigene Ablehnungserkennung: leere Postenliste → „nichts erkannt“; leerer/undekodierbarer Text → allgemeiner Fehler; Vermerk §11.
+20. `MealEstimator` bricht nach 30 s ab (injizierbar), abbrechbar; Teilantworten nie verwenden.
+21. `reload()` liest fremde Trainings für die Woche des angezeigten Tages; Wochenzähler bezieht sich darauf. Test `pastDay_readsThatWeek`.
+22. `ForeignWorkout.activityName` aus Tabelle häufiger `HKWorkoutActivityType`, Rückfall „Training“; kcal über `statistics(for: activeEnergyBurned)`.
+23. Trainingsziel 0 blendet den Zähler aus; Schätz-Schalter ohne Anmeldung ausgegraut; zwei Leertexte; `note` aus dem Schema streichen.
+
+**Reihenfolge, Umfang**
+24. `HealthBridge` hängt von `TagwerkCore` ab und nutzt `WorkoutActivity`.
+25. `DemoHealthStore` (`#if DEBUG && targetEnvironment(simulator)`) in `TagwerkApp.init` bei Demo-Daten injiziert; `health:`-Verdrahtung am Anfang von Task 7.
+26. Gestrichen: Persistenz/UI für „Nicht mehr vorschlagen“ (Regel-Parameter `hidden` bleibt), Detailansicht für Health-Trainings; „Health öffnen“ = `x-apple-health://`.
+27. Kamera zuletzt als eigener Commit; bei Zeitnot entfällt sie (dann ohne `NSCameraUsageDescription`, Vermerk §11).
+28. Task 7 in 7a (Übersicht, Wasser), 7b (Training), 7c (Essen) teilen, je mit grünem `test-all.sh` und Commit.
+29. Tests: kein `requestAuthorization`/Lesen ohne Tippen (Zähler im Fake); `repeatMeal` kopiert Werte samt Posten-Flags; Demo-Transport erkennt `meal_estimate` vor der Planantwort.
+30. Geräte-Checkliste in Spec §11: Ersetzung per Sync-Version, erneutes Sichern einer gelöschten Kennung, Energie-Sample nach Workout-Löschung, `HKWorkoutBuilder` ohne Gerät (Schwimmen), Signierung mit HealthKit-Entitlement.
+
 ## Global Constraints
 
 - Alle Global Constraints aus 2b-1 bis 2b-3 gelten weiter (u. a. §8.4: kein KI-Aufruf ohne Nutzeraktion; Hintergrund-Refresh ruft weder KI noch Erfassen auf).
