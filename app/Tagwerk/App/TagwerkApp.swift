@@ -1,3 +1,4 @@
+import HealthBridge
 import SwiftData
 import SwiftUI
 import UserNotifications
@@ -10,7 +11,11 @@ struct TagwerkApp: App {
     init() {
         do {
             let container = try ModelContainerFactory.make(inMemory: false)
-            let environment = try AppEnvironment(modelContainer: container)
+            var health: (any HealthStoring)?
+            #if DEBUG && targetEnvironment(simulator)
+            if DemoData.isRequested { health = DemoHealthStore() }
+            #endif
+            let environment = try AppEnvironment(modelContainer: container, health: health)
             _environment = State(initialValue: environment)
             // Set before launch ends, so a tap that launched the app is not lost.
             UNUserNotificationCenter.current().delegate = environment.notificationDelegate
@@ -51,12 +56,18 @@ struct TagwerkApp: App {
                             await environment.planning.reload()
                             // The permission may have changed in the iOS settings; the time zone may have changed.
                             await environment.notifications.reschedule()
+                            // Health entries that could not be written or deleted earlier.
+                            await environment.capture.reload()  // follows to the new day after midnight
+                            await environment.capture.syncPending()
                         }
                     case .background:
                         // Directly, not debounced: the app may be suspended before a delayed run starts.
                         Task {
                             await environment.makeBackgroundRefresh().submitNext()
                             await environment.notifications.reschedule()
+                            // Health entries that could not be written or deleted earlier.
+                            await environment.capture.reload()  // follows to the new day after midnight
+                            await environment.capture.syncPending()
                         }
                     default:
                         break

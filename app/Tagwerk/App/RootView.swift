@@ -37,6 +37,11 @@ struct RootView: View {
                              onEditRecurring: { item, day in recurringEdit = RecurringEdit(item: item, day: day) })
             }
 
+            // Value 3 keeps the existing tab values (0 Planen, 1 Aufgaben, 2 Einstellungen) stable.
+            Tab("Erfassen", systemImage: "plus.circle", value: 3) {
+                CaptureView(model: environment.capture)
+            }
+
             Tab("Einstellungen", systemImage: "gearshape", value: 2) {
                 SettingsView()
             }

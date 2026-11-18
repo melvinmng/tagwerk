@@ -9,7 +9,7 @@ GitHub-Konto: @melvinmng · bestätigt zuweisbar · geprüft 2026-11-17 · ich
 
 - [x] [#1](https://github.com/melvinmng/tagwerk/issues/1) Phase 1: Machbarkeit auf dem iPhone nachweisen {status: Done; prio: P1 (Very High)}
 - [ ] [#2](https://github.com/melvinmng/tagwerk/issues/2) Phase 2: Aufgaben, Kalender und KI-Tagesplan umsetzen {status: In progress; prio: P2 (High)}
-- [ ] [#3](https://github.com/melvinmng/tagwerk/issues/3) Phase 3: Ernährung, Trinken und Training erfassen {status: Backlog; prio: P3 (Medium)}
+- [ ] [#3](https://github.com/melvinmng/tagwerk/issues/3) Phase 3: Ernährung, Trinken und Training erfassen {status: In progress; prio: P3 (Medium)}
 - [ ] [#4](https://github.com/melvinmng/tagwerk/issues/4) Phase 4: Widget, Kurzbefehle und Wochenrückblick ergänzen {status: Backlog; prio: P4 (Low)}
 - [x] [#5](https://github.com/melvinmng/tagwerk/issues/5) Test-App mit XcodeGen anlegen und signieren {status: Done; prio: P1 (Very High); aufwand: 1h; epic: #1}
 - [x] [#6](https://github.com/melvinmng/tagwerk/issues/6) Reminders- und Kalenderzugriff prüfen {status: Done; prio: P1 (Very High); aufwand: 1h; epic: #1}
@@ -78,6 +78,14 @@ GitHub-Konto: @melvinmng · bestätigt zuweisbar · geprüft 2026-11-17 · ich
 - [ ] [#78](https://github.com/melvinmng/tagwerk/issues/78) Benachrichtigungen planen und aktuell halten {status: In review; prio: P2 (High); aufwand: 3h; epic: #2}
 - [ ] [#79](https://github.com/melvinmng/tagwerk/issues/79) Benachrichtigungen in Einrichtung und Einstellungen, Sprung beim Tippen {status: In review; prio: P2 (High); aufwand: 2h; epic: #2}
 - [ ] [#80](https://github.com/melvinmng/tagwerk/issues/80) Hintergrund-Refresh für Aufgaben und Benachrichtigungen {status: In review; prio: P2 (High); aufwand: 2h; epic: #2}
+- [ ] [#82](https://github.com/melvinmng/tagwerk/issues/82) Regeln für Essen, Wasser und Training {status: In review; prio: P2 (High); aufwand: 3h; epic: #3}
+- [ ] [#83](https://github.com/melvinmng/tagwerk/issues/83) Fotos an ChatGPT senden {status: In review; prio: P2 (High); aufwand: 1h; epic: #3}
+- [ ] [#84](https://github.com/melvinmng/tagwerk/issues/84) Apple Health anbinden (HealthBridge) {status: In review; prio: P2 (High); aufwand: 3h; epic: #3}
+- [ ] [#85](https://github.com/melvinmng/tagwerk/issues/85) Einträge speichern und nach Health spiegeln {status: In review; prio: P2 (High); aufwand: 3h; epic: #3}
+- [ ] [#86](https://github.com/melvinmng/tagwerk/issues/86) Mahlzeiten mit ChatGPT schätzen {status: In review; prio: P2 (High); aufwand: 2h; epic: #3}
+- [ ] [#87](https://github.com/melvinmng/tagwerk/issues/87) Zustand des Tabs Erfassen {status: In review; prio: P2 (High); aufwand: 2h; epic: #3}
+- [ ] [#88](https://github.com/melvinmng/tagwerk/issues/88) Tab Erfassen mit Essen, Trinken und Training {status: In review; prio: P2 (High); aufwand: 4h; epic: #3}
+- [ ] [#89](https://github.com/melvinmng/tagwerk/issues/89) Einstellungen und Demo-Daten für Erfassen {status: In review; prio: P2 (High); aufwand: 2h; epic: #3}
 
 ## Notizen
 
@@ -86,14 +94,14 @@ GitHub-Konto: @melvinmng · bestätigt zuweisbar · geprüft 2026-11-17 · ich
 
 _Automatisch aus [Tagwerk](https://github.com/users/melvinmng/projects/17) erzeugt. Nicht von Hand bearbeiten; Aufgaben oben unter den Personen pflegen._
 
-### Backlog (2)
-- [#3](https://github.com/melvinmng/tagwerk/issues/3) Phase 3: Ernährung, Trinken und Training erfassen · @melvinmng · Prio P3 (Medium)
+### Backlog (1)
 - [#4](https://github.com/melvinmng/tagwerk/issues/4) Phase 4: Widget, Kurzbefehle und Wochenrückblick ergänzen · @melvinmng · Prio P4 (Low)
 
-### In Arbeit (1)
+### In Arbeit (2)
 - [#2](https://github.com/melvinmng/tagwerk/issues/2) Phase 2: Aufgaben, Kalender und KI-Tagesplan umsetzen · @melvinmng · Prio P2 (High)
+- [#3](https://github.com/melvinmng/tagwerk/issues/3) Phase 3: Ernährung, Trinken und Training erfassen · @melvinmng · Prio P3 (Medium)
 
-### In Prüfung (21)
+### In Prüfung (29)
 - [#57](https://github.com/melvinmng/tagwerk/issues/57) ChatGPT-Antworten mit Streaming und Modellliste · @melvinmng · Prio P2 (High) · 5h
 - [#58](https://github.com/melvinmng/tagwerk/issues/58) Gesprächsschleife mit Aktionskarten · @melvinmng · Prio P2 (High) · 4h
 - [#59](https://github.com/melvinmng/tagwerk/issues/59) KI-Planung: Eingabe und Prüfregeln · @melvinmng · Prio P2 (High) · 4h
@@ -115,6 +123,14 @@ _Automatisch aus [Tagwerk](https://github.com/users/melvinmng/projects/17) erzeu
 - [#78](https://github.com/melvinmng/tagwerk/issues/78) Benachrichtigungen planen und aktuell halten · @melvinmng · Prio P2 (High) · 3h
 - [#79](https://github.com/melvinmng/tagwerk/issues/79) Benachrichtigungen in Einrichtung und Einstellungen, Sprung beim Tippen · @melvinmng · Prio P2 (High) · 2h
 - [#80](https://github.com/melvinmng/tagwerk/issues/80) Hintergrund-Refresh für Aufgaben und Benachrichtigungen · @melvinmng · Prio P2 (High) · 2h
+- [#82](https://github.com/melvinmng/tagwerk/issues/82) Regeln für Essen, Wasser und Training · @melvinmng · Prio P2 (High) · 3h
+- [#83](https://github.com/melvinmng/tagwerk/issues/83) Fotos an ChatGPT senden · @melvinmng · Prio P2 (High) · 1h
+- [#84](https://github.com/melvinmng/tagwerk/issues/84) Apple Health anbinden (HealthBridge) · @melvinmng · Prio P2 (High) · 3h
+- [#85](https://github.com/melvinmng/tagwerk/issues/85) Einträge speichern und nach Health spiegeln · @melvinmng · Prio P2 (High) · 3h
+- [#86](https://github.com/melvinmng/tagwerk/issues/86) Mahlzeiten mit ChatGPT schätzen · @melvinmng · Prio P2 (High) · 2h
+- [#87](https://github.com/melvinmng/tagwerk/issues/87) Zustand des Tabs Erfassen · @melvinmng · Prio P2 (High) · 2h
+- [#88](https://github.com/melvinmng/tagwerk/issues/88) Tab Erfassen mit Essen, Trinken und Training · @melvinmng · Prio P2 (High) · 4h
+- [#89](https://github.com/melvinmng/tagwerk/issues/89) Einstellungen und Demo-Daten für Erfassen · @melvinmng · Prio P2 (High) · 2h
 
 ### Nicht zugeordnet (0)
 

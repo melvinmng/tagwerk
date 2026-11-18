@@ -65,6 +65,7 @@ struct ChatView: View {
             return "Kontext: \(AIPlanBar.actionName(scope)) \(range)"
         case .tasks: return "Kontext: Aufgaben"
         case .settings: return "Kontext: allgemein"
+        case .capture: return "Kontext: Erfassen"
         case .task: return "Kontext: \(assistant.task?.title ?? "Aufgabe")"
         }
     }

@@ -169,7 +169,7 @@ public final class Conversation {
         var result: [ChatMessage] = []
         for (index, item) in history.enumerated() {
             switch item {
-            case .user(let text):
+            case .user(let text), .userImage(let text, _):
                 result.append(ChatMessage(id: index, content: .user(text)))
             case .assistant(let text):
                 result.append(ChatMessage(id: index, content: .assistant(text)))

@@ -47,6 +47,9 @@ public final class AIRequestOptions: Sendable {
 /// (device capture of 2026-11-18).
 public enum InputItem: Sendable, Equatable, Codable {
     case user(String)
+    /// A user message with a photo (JPEG), sent as `input_image` with a data URL (format verified in the spike).
+    /// Callers must not persist it: images stay out of stored chat histories.
+    case userImage(text: String, jpeg: Data)
     case assistant(String)
     case functionCall(callID: String, name: String, arguments: String)
     case functionOutput(callID: String, output: String)
@@ -56,6 +59,8 @@ public enum InputItem: Sendable, Equatable, Codable {
         switch self {
         case .user(let text):
             ["role": "user", "content": [["type": "input_text", "text": text]]]
+        case .userImage(let text, let jpeg):
+            ["role": "user", "content": Self.imageContent(text: text, jpeg: jpeg)]
         case .assistant(let text):
             ["type": "message", "role": "assistant", "content": [["type": "output_text", "text": text]]]
         case .functionCall(let callID, let name, let arguments):
@@ -63,6 +68,15 @@ public enum InputItem: Sendable, Equatable, Codable {
         case .functionOutput(let callID, let output):
             ["type": "function_call_output", "call_id": callID, "output": output]
         }
+    }
+
+    private static func imageContent(text: String, jpeg: Data) -> [[String: Any]] {
+        var content: [[String: Any]] = []
+        if !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            content.append(["type": "input_text", "text": text])
+        }
+        content.append(["type": "input_image", "image_url": "data:image/jpeg;base64,\(jpeg.base64EncodedString())"])
+        return content
     }
 }
 
