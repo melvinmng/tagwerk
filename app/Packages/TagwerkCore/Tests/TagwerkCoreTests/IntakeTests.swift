@@ -76,6 +76,15 @@ struct IntakeTests {
         #expect(!IntakeRules.dayIntake(meals: [manualOnly], drinks: []).hasEstimate)
     }
 
+    @Test func item_decodesWithoutID_andKeepsIDOnOverride() throws {
+        let json = #"{"name":"Apfel","amount":"","factor":1,"kcalMin":80,"kcal":80,"kcalMax":80,"protein":0,"carbs":20,"fat":0}"#
+        let decoded = try JSONDecoder().decode(MealItem.self, from: Data(json.utf8))
+        #expect(decoded.name == "Apfel" && !decoded.isEstimated)
+        #expect(decoded.overridden(kcal: 90, protein: 0, carbs: 0, fat: 0).id == decoded.id)
+        let roundTrip = try JSONDecoder().decode(MealItem.self, from: JSONEncoder().encode(decoded))
+        #expect(roundTrip == decoded)
+    }
+
     @Test func dayIntake_manualOnly_hasNoEstimate() {
         let manual = MealItem(name: "Apfel", amount: "", kcalMin: 80, kcal: 80, kcalMax: 80, protein: 0, carbs: 0, fat: 0)
         let intake = IntakeRules.dayIntake(meals: [meal("Apfel", at: now, items: [manual], origin: .manual)], drinks: [])
@@ -193,6 +202,10 @@ struct IntakeTests {
         #expect(IntakeFormat.remaining(goal: 2300, intake: intake) == .init(text: "noch 990", isOver: false))
         intake.kcal = 2420
         #expect(IntakeFormat.remaining(goal: 2300, intake: intake) == .init(text: "120 über Ziel", isOver: true))
+        intake.kcal = 2315
+        #expect(IntakeFormat.remaining(goal: 2300, intake: intake) == .init(text: "15 über Ziel", isOver: true))
+        intake.hasEstimate = true
+        #expect(IntakeFormat.remaining(goal: 2300, intake: intake) == .init(text: "~20 über Ziel", isOver: true))
     }
 
     @Test func format_liters_andSummary() {

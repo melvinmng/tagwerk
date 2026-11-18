@@ -60,7 +60,8 @@ public enum IntakeFormat {
     public static func remaining(goal: Int, intake: DayIntake) -> Remaining {
         let difference = Double(goal) - intake.kcal
         if difference < 0 {
-            return Remaining(text: "\(grouped(roundedKcal(-difference))) über Ziel", isOver: true)
+            let over = intake.hasEstimate ? roundedKcal(-difference) : Int((-difference).rounded())
+            return Remaining(text: "\(intake.hasEstimate ? "~" : "")\(grouped(over)) über Ziel", isOver: true)
         }
         let value = intake.hasEstimate ? roundedKcal(difference) : Int(difference.rounded())
         return Remaining(text: "noch \(intake.hasEstimate ? "~" : "")\(grouped(value))", isOver: false)

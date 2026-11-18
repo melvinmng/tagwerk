@@ -1,5 +1,6 @@
 import Foundation
 import SwiftData
+import HealthBridge
 import TagwerkCore
 
 // Entries of the "Erfassen" tab. Tagwerk is the source of truth; Health holds mirrored copies (phase 3 design §3).
@@ -94,9 +95,12 @@ final class WorkoutRecord {
 final class PendingHealthDeletion {
     @Attribute(.unique) var entryID: UUID
     var notBefore: Date
+    /// `HealthEntryKind` raw value; limits the deletion to the types of the entry.
+    var kindRaw: String = "meal"
 
-    init(entryID: UUID, notBefore: Date) {
+    init(entryID: UUID, notBefore: Date, kind: HealthEntryKind) {
         self.entryID = entryID
         self.notBefore = notBefore
+        self.kindRaw = kind.rawValue
     }
 }

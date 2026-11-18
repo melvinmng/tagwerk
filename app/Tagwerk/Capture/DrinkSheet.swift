@@ -16,10 +16,10 @@ struct DrinkSheet: View {
                     Stepper("Andere Menge: \(amount) ml", value: $amount, in: 50...2000, step: 50)
                     DatePicker("Zeit", selection: $time, displayedComponents: .hourAndMinute)
                     Button("Hinzufügen") {
-                        Task {
-                            await model.addWater(amount, at: dateOnDay(time))
-                            dismiss()
-                        }
+                        let amount = amount
+                        let date = dateOnDay(time)
+                        Task { await model.addWater(amount, at: date) }
+                        dismiss()
                     }
                 } footer: {
                     Text("Die Knöpfe im Tab erfassen sofort. Getränke mit Kalorien trägst du unter „Essen“ ein.")
@@ -54,6 +54,16 @@ struct DrinkSheet: View {
                 ToolbarItem(placement: .confirmationAction) { Button("Fertig") { dismiss() } }
             }
             .onAppear { time = model.entryDate }
+            .safeAreaInset(edge: .bottom) {
+                // Deleting here must be undoable here; the tab's capsule is hidden behind this sheet.
+                if let notice = model.undo, case .restore = notice.action {
+                    UndoCapsule(title: notice.text, caption: "Gelöscht", symbol: "trash.circle.fill",
+                                duration: HealthMirror.undoWindow,
+                                onUndo: { Task { await model.undoLast() } },
+                                onExpire: { model.clearUndo(notice) })
+                        .id(notice.id)
+                }
+            }
             .sheet(item: $editing) { drink in
                 DrinkEditSheet(drink: drink) { updated in Task { await model.updateDrink(updated) } }
             }

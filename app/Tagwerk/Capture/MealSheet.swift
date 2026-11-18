@@ -26,6 +26,7 @@ struct MealSheet: View {
     @State private var draft = MealDraft()
     @State private var editingItem: EditedItem?
     @State private var prepared = false
+    @State private var saving = false
     @FocusState private var textFocused: Bool
 
     private var isSignedIn: Bool { environment.ai.isSignedIn }
@@ -50,12 +51,15 @@ struct MealSheet: View {
                 if phase == .editing {
                     ToolbarItem(placement: .confirmationAction) {
                         Button("Sichern") {
-                            Task {
-                                await save()
-                                dismiss()
-                            }
+                            guard !saving else { return }
+                            saving = true
+                            let meal = draft.value
+                            let estimatedAt = draft.estimatedAt
+                            let isNew = existing == nil
+                            Task { await model.saveMeal(meal, estimatedAt: estimatedAt, isNew: isNew) }
+                            dismiss()
                         }
-                        .disabled(!draft.canSave)
+                        .disabled(!draft.canSave || saving)
                     }
                 }
             }
@@ -78,7 +82,11 @@ struct MealSheet: View {
             }
             .sheet(item: $editingItem) { edited in
                 MealItemEditor(item: edited.item) { updated in
-                    if let index = edited.index { draft.items[index] = updated } else { draft.items.append(updated) }
+                    if let index = draft.items.firstIndex(where: { $0.id == updated.id }) {
+                        draft.items[index] = updated
+                    } else {
+                        draft.items.append(updated)
+                    }
                 }
             }
             .onChange(of: pickerItem) { _, item in
@@ -224,7 +232,7 @@ struct MealSheet: View {
                 Picker("Mahlzeit", selection: $draft.kind) {
                     ForEach(MealKind.allCases, id: \.self) { Text($0.germanName).tag($0) }
                 }
-                DatePicker("Zeit", selection: $draft.date)
+                DatePicker("Zeit", selection: $draft.date, in: ...Date())
             }
 
             if draft.isManualSingle {
@@ -263,7 +271,7 @@ struct MealSheet: View {
         } else if existing?.origin == .manual {
             lines.append("Von dir eingetragen.")
         }
-        if let existing, model.access.wasAsked {
+        if let existing, model.access?.wasAsked == true {
             lines.append(model.isInHealth(existing.id) ? "In Health gespeichert." : "Noch nicht in Health gespeichert. Tagwerk versucht es erneut.")
         }
         return lines.joined(separator: " ")
@@ -286,10 +294,7 @@ struct MealSheet: View {
         HStack {
             Text(title)
             Spacer()
-            TextField("–", value: value, format: .number.precision(.fractionLength(0...1)))
-                .keyboardType(.decimalPad)
-                .multilineTextAlignment(.trailing)
-                .frame(maxWidth: 100)
+            DecimalField(value: value)
             Text(unit).foregroundStyle(.secondary).frame(width: 34, alignment: .leading)
         }
     }
@@ -317,9 +322,9 @@ struct MealSheet: View {
 
     private var itemsSection: some View {
         Section {
-            ForEach(Array(draft.items.enumerated()), id: \.offset) { index, item in
+            ForEach($draft.items) { $item in
                 VStack(alignment: .leading, spacing: 6) {
-                    Button { editingItem = EditedItem(index: index, item: item) } label: {
+                    Button { editingItem = EditedItem(item: item) } label: {
                         HStack(alignment: .firstTextBaseline) {
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(item.name)
@@ -332,16 +337,19 @@ struct MealSheet: View {
                         }
                     }
                     .tint(.primary)
-                    Stepper(value: $draft.items[index].factor, in: MealItem.factorRange, step: MealItem.factorStep) {
+                    Stepper(value: $item.factor, in: MealItem.factorRange, step: MealItem.factorStep) {
                         Text("Menge \(IntakeFormat.factor(item.factor))").font(.subheadline).foregroundStyle(.secondary)
                     }
                 }
                 .swipeActions {
-                    Button(role: .destructive) { draft.items.remove(at: index) } label: { Label("Entfernen", systemImage: "trash") }
+                    let id = item.id
+                    Button(role: .destructive) { draft.items.removeAll { $0.id == id } } label: {
+                        Label("Entfernen", systemImage: "trash")
+                    }
                 }
             }
             Button("Posten hinzufügen", systemImage: "plus") {
-                editingItem = EditedItem(index: nil, item: MealItem(name: "", amount: "", kcalMin: 0, kcal: 0, kcalMax: 0,
+                editingItem = EditedItem(item: MealItem(name: "", amount: "", kcalMin: 0, kcal: 0, kcalMax: 0,
                                                                     protein: 0, carbs: 0, fat: 0))
             }
         } header: {
@@ -389,20 +397,22 @@ struct MealSheet: View {
                 draft = MealDraft(title: estimate.title, kind: MealKind.forTime(date, calendar: model.calendar), date: date,
                                   items: estimate.items, origin: .estimated, estimatedAt: Date())
                 phase = .editing
-            } catch is CancellationError {
-                phase = .input
-            } catch let failure as MealEstimator.Failure {
-                if failure == .consentMissing {
-                    showsConsent = true
-                } else {
-                    errorText = failure.message
-                }
-                phase = .input
             } catch {
-                errorText = MealEstimator.Failure.failed.message
-                phase = .input
+                // "Stopp" or closing the sheet: the user already moved on; change nothing.
+                guard !Task.isCancelled, !(error is CancellationError) else { return }
+                handle(error)
             }
         }
+    }
+
+    private func handle(_ error: Error) {
+        let failure = error as? MealEstimator.Failure ?? .failed
+        if failure == .consentMissing {
+            showsConsent = true
+        } else {
+            errorText = failure.message
+        }
+        phase = .input
     }
 
     private func startManual() {
@@ -421,9 +431,6 @@ struct MealSheet: View {
         phase = .editing
     }
 
-    private func save() async {
-        await model.saveMeal(draft.value, estimatedAt: draft.estimatedAt, isNew: existing == nil)
-    }
 }
 
 // MARK: - Draft
@@ -469,14 +476,22 @@ struct MealDraft {
         !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && value.kcal > 0
     }
 
+    /// The shown value includes the quantity factor, so what is shown is what gets saved.
     private func manualValue(_ keyPath: KeyPath<MealItem, Double>) -> Double? {
-        guard let value = items.first?[keyPath: keyPath], value > 0 else { return nil }
-        return value
+        guard let item = items.first else { return nil }
+        let value = item[keyPath: keyPath] * item.factor
+        return value > 0 ? value : nil
     }
 
     private mutating func setManual(_ value: Double?, _ apply: (inout MealItem, Double) -> Void) {
         if items.isEmpty {
             items = [MealItem(name: title, amount: "", kcalMin: 0, kcal: 0, kcalMax: 0, protein: 0, carbs: 0, fat: 0)]
+        }
+        if items[0].factor != 1 {
+            let factor = items[0].factor
+            items[0] = items[0].overridden(kcal: items[0].kcal * factor, protein: items[0].protein * factor,
+                                           carbs: items[0].carbs * factor, fat: items[0].fat * factor)
+            items[0].factor = 1
         }
         apply(&items[0], max(0, value ?? 0))
     }
@@ -500,8 +515,7 @@ struct MealDraft {
 }
 
 struct EditedItem: Identifiable {
-    let id = UUID()
-    let index: Int?
+    var id: UUID { item.id }
     let item: MealItem
 }
 
@@ -571,12 +585,36 @@ private struct MealItemEditor: View {
         HStack {
             Text(title)
             Spacer()
-            TextField("–", value: value, format: .number.precision(.fractionLength(0...1)))
-                .keyboardType(.decimalPad)
-                .multilineTextAlignment(.trailing)
-                .frame(maxWidth: 100)
+            DecimalField(value: value)
             Text(unit).foregroundStyle(.secondary).frame(width: 34, alignment: .leading)
         }
+    }
+}
+
+/// A number field that updates its value on every keystroke (a `value:` text field only commits on return,
+/// and the decimal pad has none). Accepts comma or point.
+struct DecimalField: View {
+    @Binding var value: Double?
+    @State private var text = ""
+    @State private var loaded = false
+
+    var body: some View {
+        TextField("–", text: $text)
+            .keyboardType(.decimalPad)
+            .multilineTextAlignment(.trailing)
+            .frame(maxWidth: 100)
+            .onAppear {
+                guard !loaded else { return }
+                loaded = true
+                text = value.map(Self.format) ?? ""
+            }
+            .onChange(of: text) { _, newText in
+                value = Double(newText.replacingOccurrences(of: ",", with: ".").trimmingCharacters(in: .whitespaces))
+            }
+    }
+
+    static func format(_ value: Double) -> String {
+        value.rounded() == value ? String(Int(value)) : String(format: "%.1f", value).replacingOccurrences(of: ".", with: ",")
     }
 }
 

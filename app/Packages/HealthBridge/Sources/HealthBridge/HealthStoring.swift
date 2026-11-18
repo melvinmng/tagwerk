@@ -11,8 +11,9 @@ public protocol HealthStoring: Sendable {
     func save(_ meal: HealthMeal) async throws -> Bool
     func save(_ drink: HealthDrink) async throws -> Bool
     func save(_ workout: HealthWorkout) async throws -> Bool
-    /// Removes every sample of the entry (all types).
-    func deleteEntry(id: UUID) async throws -> Bool
+    /// Removes every sample of the entry, in the types of its kind. Types Tagwerk may not write count as done,
+    /// because nothing of the entry can be stored there.
+    func deleteEntry(id: UUID, kind: HealthEntryKind) async throws -> Bool
     /// Workouts of other sources in `interval`; Tagwerk's own are filtered out. Empty when reading is not allowed.
     func foreignWorkouts(in interval: DateInterval) async throws -> [ForeignWorkout]
 }

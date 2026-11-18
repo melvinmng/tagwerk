@@ -39,10 +39,11 @@ final class HealthMirror {
                 needsAnotherRun = false
                 await runOnce()
             } while needsAnotherRun
+            // Cleared inside the chain, so a request after the last loop check starts a new chain.
+            running = nil
         }
         running = chain
         await chain.value
-        running = nil
     }
 
     /// A run after the undo window, for deletions that are waiting.
@@ -57,7 +58,12 @@ final class HealthMirror {
 
     private func runOnce() async {
         let access = await health.access()
-        guard access.wasAsked, access != .denied else { return }
+        guard access.wasAsked else {
+            // Nothing ever reached Health before the user was asked, so queued deletions have nothing to remove.
+            for (id, _) in store.dueDeletionEntries(now: now()) where !store.exists(id) { store.removeDeletion(id) }
+            return
+        }
+        guard access != .denied else { return }
         for unsynced in store.unsyncedEntries() {
             do {
                 let complete: Bool = switch unsynced.entry.healthValue(version: unsynced.version) {
@@ -70,14 +76,14 @@ final class HealthMirror {
                 log(error, while: "save")
             }
         }
-        for id in store.dueDeletions(now: now()) {
+        for (id, kind) in store.dueDeletionEntries(now: now()) {
             // The entry came back ("Widerrufen") after the deletion was queued.
             guard !store.exists(id) else {
                 store.removeDeletion(id)
                 continue
             }
             do {
-                if try await health.deleteEntry(id: id) { store.removeDeletion(id) }
+                if try await health.deleteEntry(id: id, kind: kind) { store.removeDeletion(id) }
             } catch {
                 log(error, while: "delete")
             }

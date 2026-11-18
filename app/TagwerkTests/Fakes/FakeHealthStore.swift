@@ -51,7 +51,7 @@ final class FakeHealthStore: HealthStoring, @unchecked Sendable {
     func save(_ meal: HealthMeal) async throws -> Bool { try await write { _meals.append(meal) } }
     func save(_ drink: HealthDrink) async throws -> Bool { try await write { _drinks.append(drink) } }
     func save(_ workout: HealthWorkout) async throws -> Bool { try await write { _workouts.append(workout) } }
-    func deleteEntry(id: UUID) async throws -> Bool { try await write { _deleted.append(id) } }
+    func deleteEntry(id: UUID, kind: HealthEntryKind) async throws -> Bool { try await write { _deleted.append(id) } }
 
     func foreignWorkouts(in interval: DateInterval) async throws -> [ForeignWorkout] {
         lock.withLock {

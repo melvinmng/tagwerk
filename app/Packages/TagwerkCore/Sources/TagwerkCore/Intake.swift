@@ -32,7 +32,9 @@ public enum MealOrigin: String, Sendable, Codable, Hashable {
 }
 
 /// One part of a meal. Values are per portion; `factor` scales them (quantity stepper).
-public struct MealItem: Sendable, Hashable, Codable {
+public struct MealItem: Sendable, Hashable, Codable, Identifiable {
+    /// Stable identity for lists; items stored before it existed get a new one when decoded.
+    public var id: UUID
     public var name: String
     public var amount: String
     public var factor: Double
@@ -46,7 +48,8 @@ public struct MealItem: Sendable, Hashable, Codable {
     public var isEstimated: Bool
 
     public init(name: String, amount: String, factor: Double = 1, kcalMin: Double, kcal: Double, kcalMax: Double,
-                protein: Double, carbs: Double, fat: Double, isEstimated: Bool = false) {
+                protein: Double, carbs: Double, fat: Double, isEstimated: Bool = false, id: UUID = UUID()) {
+        self.id = id
         self.name = name
         self.amount = amount
         self.factor = factor
@@ -62,7 +65,26 @@ public struct MealItem: Sendable, Hashable, Codable {
     /// The item with typed values: exact, so min, value and max are equal.
     public func overridden(kcal: Double, protein: Double, carbs: Double, fat: Double) -> MealItem {
         MealItem(name: name, amount: amount, factor: factor, kcalMin: kcal, kcal: kcal, kcalMax: kcal,
-                 protein: protein, carbs: carbs, fat: fat, isEstimated: false)
+                 protein: protein, carbs: carbs, fat: fat, isEstimated: false, id: id)
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case id, name, amount, factor, kcalMin, kcal, kcalMax, protein, carbs, fat, isEstimated
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decodeIfPresent(UUID.self, forKey: .id) ?? UUID()
+        name = try container.decode(String.self, forKey: .name)
+        amount = try container.decode(String.self, forKey: .amount)
+        factor = try container.decodeIfPresent(Double.self, forKey: .factor) ?? 1
+        kcalMin = try container.decode(Double.self, forKey: .kcalMin)
+        kcal = try container.decode(Double.self, forKey: .kcal)
+        kcalMax = try container.decode(Double.self, forKey: .kcalMax)
+        protein = try container.decode(Double.self, forKey: .protein)
+        carbs = try container.decode(Double.self, forKey: .carbs)
+        fat = try container.decode(Double.self, forKey: .fat)
+        isEstimated = try container.decodeIfPresent(Bool.self, forKey: .isEstimated) ?? false
     }
 
     public var totalKcal: Double { kcal * factor }

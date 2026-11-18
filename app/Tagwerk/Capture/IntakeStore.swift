@@ -138,21 +138,25 @@ final class IntakeStore {
     @discardableResult
     func delete(_ id: UUID, healthNotBefore notBefore: Date) -> Deleted? {
         var deleted: Deleted?
+        var kind = HealthEntryKind.meal
         if let record = mealRecord(id) {
             deleted = Deleted(entry: .meal(record.value), estimatedAt: record.estimatedAt, version: record.healthVersion)
             context.delete(record)
         } else if let record = drinkRecord(id) {
             deleted = Deleted(entry: .drink(record.value), estimatedAt: nil, version: record.healthVersion)
+            kind = .drink
             context.delete(record)
         } else if let record = workoutRecord(id) {
             deleted = Deleted(entry: .workout(record.value), estimatedAt: nil, version: record.healthVersion)
+            kind = .workout
             context.delete(record)
         }
         guard deleted != nil else { return nil }
         if let pending = pendingDeletion(id) {
             pending.notBefore = notBefore
+            pending.kindRaw = kind.rawValue
         } else {
-            context.insert(PendingHealthDeletion(entryID: id, notBefore: notBefore))
+            context.insert(PendingHealthDeletion(entryID: id, notBefore: notBefore, kind: kind))
         }
         save()
         return deleted
@@ -196,8 +200,12 @@ final class IntakeStore {
 
     /// Queued deletions whose undo window is over.
     func dueDeletions(now: Date) -> [UUID] {
+        dueDeletionEntries(now: now).map(\.id)
+    }
+
+    func dueDeletionEntries(now: Date) -> [(id: UUID, kind: HealthEntryKind)] {
         let descriptor = FetchDescriptor<PendingHealthDeletion>(predicate: #Predicate { $0.notBefore <= now })
-        return ((try? context.fetch(descriptor)) ?? []).map(\.entryID)
+        return ((try? context.fetch(descriptor)) ?? []).map { ($0.entryID, HealthEntryKind(rawValue: $0.kindRaw) ?? .meal) }
     }
 
     func removeDeletion(_ id: UUID) {

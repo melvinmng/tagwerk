@@ -11,6 +11,8 @@ struct WorkoutSheet: View {
     @State private var start = Date()
     @State private var kilocaloriesText = ""
     @State private var prepared = false
+    @State private var workoutID = UUID().uuidString
+    @State private var saving = false
 
     var body: some View {
         NavigationStack {
@@ -23,7 +25,7 @@ struct WorkoutSheet: View {
                     }
                     .pickerStyle(.menu)
                     Stepper("Dauer: \(minutes) min", value: $minutes, in: 5...300, step: 5)
-                    DatePicker("Beginn", selection: $start)
+                    DatePicker("Beginn", selection: $start, in: ...Date())
                     HStack {
                         Text("Kalorien (optional)")
                         Spacer()
@@ -60,11 +62,14 @@ struct WorkoutSheet: View {
                 ToolbarItem(placement: .cancellationAction) { Button("Abbrechen") { dismiss() } }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Sichern") {
-                        Task {
-                            await save()
-                            dismiss()
-                        }
+                        guard !saving else { return }
+                        saving = true
+                        let workout = makeWorkout()
+                        let isNew = existing == nil
+                        Task { await model.saveWorkout(workout, isNew: isNew) }
+                        dismiss()
                     }
+                    .disabled(saving)
                 }
             }
             .onAppear(perform: prepare)
@@ -75,6 +80,7 @@ struct WorkoutSheet: View {
         guard !prepared else { return }
         prepared = true
         if let existing {
+            workoutID = existing.id
             activity = existing.activity
             minutes = existing.minutes
             start = existing.start
@@ -87,10 +93,10 @@ struct WorkoutSheet: View {
         }
     }
 
-    private func save() async {
+    /// The ID is fixed per sheet, so a second tap can never create a second workout.
+    private func makeWorkout() -> WorkoutValue {
         let kilocalories = Double(kilocaloriesText.trimmingCharacters(in: .whitespaces)).flatMap { $0 > 0 ? $0 : nil }
-        let workout = WorkoutValue(id: existing?.id ?? UUID().uuidString, activity: activity, start: start, minutes: minutes,
-                                   kilocalories: kilocalories, sourceName: nil, isOwn: true)
-        await model.saveWorkout(workout, isNew: existing == nil)
+        return WorkoutValue(id: workoutID, activity: activity, start: start, minutes: minutes,
+                            kilocalories: kilocalories, sourceName: nil, isOwn: true)
     }
 }

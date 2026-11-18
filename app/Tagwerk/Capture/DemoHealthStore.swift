@@ -14,7 +14,7 @@ final class DemoHealthStore: HealthStoring, @unchecked Sendable {
     func save(_ meal: HealthMeal) async throws -> Bool { true }
     func save(_ drink: HealthDrink) async throws -> Bool { true }
     func save(_ workout: HealthWorkout) async throws -> Bool { true }
-    func deleteEntry(id: UUID) async throws -> Bool { true }
+    func deleteEntry(id: UUID, kind: HealthEntryKind) async throws -> Bool { true }
 
     func foreignWorkouts(in interval: DateInterval) async throws -> [ForeignWorkout] {
         let start = Calendar.tagwerk.startOfDay(for: .now).addingTimeInterval(7 * 3600 + 5 * 60)

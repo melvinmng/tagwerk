@@ -195,3 +195,35 @@ struct HealthMirrorTests {
         #expect(health.drinks.map(\.version) == [2])
     }
 }
+
+@MainActor
+struct HealthMirrorQueueTests {
+    @Test func notAsked_dropsQueuedDeletions() async throws {
+        let container = try ModelContainerFactory.make(inMemory: true)
+        let store = IntakeStore(context: container.mainContext)
+        let now = Date(timeIntervalSince1970: 1_800_000_000)
+        let drink = DrinkValue(id: UUID(), date: now, milliliters: 250)
+        store.addDrink(drink)
+        store.delete(drink.id, healthNotBefore: now)
+        let health = FakeHealthStore(access: .notDetermined)
+        await HealthMirror(store: store, health: health, now: { now }).sync()
+        #expect(store.dueDeletions(now: now).isEmpty)
+        #expect(health.deleted.isEmpty)
+    }
+
+    @Test func deletion_passesEntryKind() async throws {
+        let container = try ModelContainerFactory.make(inMemory: true)
+        let store = IntakeStore(context: container.mainContext)
+        let now = Date(timeIntervalSince1970: 1_800_000_000)
+        let drink = DrinkValue(id: UUID(), date: now, milliliters: 250)
+        store.addDrink(drink)
+        store.delete(drink.id, healthNotBefore: now)
+        #expect(store.dueDeletionEntries(now: now).first?.kind == .drink)
+    }
+
+    @Test func entryKinds_coverTheirTypesOnly() {
+        #expect(HealthEntryKind.drink.shareKinds == [.water])
+        #expect(HealthEntryKind.workout.shareKinds == [.workouts, .activeEnergy])
+        #expect(HealthEntryKind.meal.shareKinds.count == 4)
+    }
+}

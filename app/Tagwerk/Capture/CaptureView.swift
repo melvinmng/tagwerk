@@ -61,7 +61,11 @@ struct CaptureView: View {
                         .id(notice.id)
                 }
             }
-            .task { await model.reload() }
+            .task {
+                await model.reload()
+                // Catch up on entries that could not reach Health before (design §4.2).
+                await model.syncPending()
+            }
             .refreshable { await model.reload() }
             .sheet(item: $sheet) { sheet in
                 switch sheet {

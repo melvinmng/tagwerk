@@ -39,19 +39,29 @@ final class CaptureModel {
     private(set) var intake: DayIntake = .empty
     /// Workouts of the Monday-to-Sunday week of `day`.
     private(set) var weekCount = 0
-    private(set) var access: HealthAccess = .notDetermined
+    /// `nil` until the first query, so the Health card does not flash when Health is connected.
+    private(set) var access: HealthAccess?
     private(set) var undo: UndoNotice?
     @ObservationIgnored private var weekForeign: [WorkoutValue] = []
+    /// "Today" at the last reload: a view that showed today follows to the new day after midnight.
+    @ObservationIgnored private var lastToday: PlanDay
+    @ObservationIgnored private var pendingSync: Task<Void, Never>?
+
+    /// Tests wait for each Health run, so no run outlives the test's store.
+    @ObservationIgnored private let waitsForHealth: Bool
 
     init(store: IntakeStore, mirror: HealthMirror, health: any HealthStoring, settings: AppSettings,
-         calendar: Calendar = .tagwerk, now: @escaping () -> Date = Date.init) {
+         calendar: Calendar = .tagwerk, now: @escaping () -> Date = Date.init, waitsForHealth: Bool = false) {
+        self.waitsForHealth = waitsForHealth
         self.store = store
         self.mirror = mirror
         self.health = health
         self.settings = settings
         self.calendar = calendar
         self.now = now
-        self.day = PlanDay(date: now(), calendar: calendar)
+        let today = PlanDay(date: now(), calendar: calendar)
+        self.day = today
+        self.lastToday = today
     }
 
     var today: PlanDay { PlanDay(date: now(), calendar: calendar) }
@@ -64,22 +74,29 @@ final class CaptureModel {
 
     /// Reloads the day; reads Health workouts only when access was asked before.
     func reload() async {
-        if day > today { day = today }
-        access = await health.access()
+        let today = self.today
+        if day > today || (day == lastToday && lastToday != today) { day = today }
+        lastToday = today
+        refreshLocal()
+        let requestedDay = day
+        let access = await health.access()
+        self.access = access
         let weekStart = IntakeRules.weekStart(containing: day.startDate(in: calendar), calendar: calendar)
         let weekEnd = PlanDay(date: weekStart, calendar: calendar).adding(days: 7, calendar: calendar).startDate(in: calendar)
         let week = DateInterval(start: weekStart, end: weekEnd)
+        var foreignOfWeek: [WorkoutValue] = []
         if access.wasAsked {
             let foreign = (try? await health.foreignWorkouts(in: week)) ?? []
-            weekForeign = foreign.map { workout in
+            foreignOfWeek = foreign.map { workout in
                 WorkoutValue(id: workout.id.uuidString, activity: workout.activity ?? .other, start: workout.start,
                              minutes: max(0, Int(workout.end.timeIntervalSince(workout.start) / 60)),
                              kilocalories: workout.kilocalories, sourceName: workout.sourceName, isOwn: false,
                              customName: workout.activity == nil ? workout.activityName : nil)
             }
-        } else {
-            weekForeign = []
         }
+        // A later navigation already moved on; its own reload applies its week.
+        guard day == requestedDay else { return }
+        weekForeign = foreignOfWeek
         refreshLocal(week: week)
     }
 
@@ -93,7 +110,7 @@ final class CaptureModel {
         }()
         meals = store.meals(on: day, calendar: calendar)
         drinks = store.drinks(on: day, calendar: calendar)
-        let weekWorkouts = store.workouts(in: weekInterval) + weekForeign
+        let weekWorkouts = store.workouts(in: weekInterval) + weekForeign.filter { weekInterval.contains($0.start) }
         workouts = weekWorkouts.filter { $0.start >= dayStart && $0.start < dayEnd }.sorted { $0.start < $1.start }
         weekCount = IntakeRules.workoutsThisWeek(weekWorkouts, now: dayStart, calendar: calendar)
         intake = IntakeRules.dayIntake(meals: meals, drinks: drinks)
@@ -179,8 +196,7 @@ final class CaptureModel {
         switch notice.action {
         case .remove(let id):
             store.delete(id, healthNotBefore: now())
-            refreshLocal()
-            await mirror.sync()
+            await changed()
         case .restore(let id):
             guard let deleted = deletedEntries.removeValue(forKey: id) else { return }
             store.restore(deleted)
@@ -192,9 +208,18 @@ final class CaptureModel {
         if undo == notice { undo = nil }
     }
 
+    /// Shows the change at once; the Health mirror runs afterwards and never holds up a sheet.
     private func changed() async {
         refreshLocal()
-        await mirror.sync()
+        let mirror = self.mirror
+        let run = Task { await mirror.sync() }
+        pendingSync = run
+        if waitsForHealth { await run.value }
+    }
+
+    /// Waits for the Health run started by the last change (tests, catch-up).
+    func waitForHealth() async {
+        await pendingSync?.value
     }
 
     func estimatedAt(meal id: UUID) -> Date? { store.estimatedAt(meal: id) }

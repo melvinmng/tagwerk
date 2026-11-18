@@ -12,20 +12,48 @@ struct CaptureModelTests {
     let settings: AppSettings
     let calendar = Calendar.tagwerk
     /// Wednesday, 18 Nov 2026, 12:40.
-    let now: Date
+    var now: Date { clock.now }
+    let clock = Clock()
+
+    final class Clock { var now = Date() }
 
     init() throws {
         container = try ModelContainerFactory.make(inMemory: true)
         store = IntakeStore(context: container.mainContext)
         settings = try AppSettings.current(in: container.mainContext)
-        now = PlanDay(year: 2026, month: 11, day: 18).startDate(in: .tagwerk).addingTimeInterval(12 * 3600 + 40 * 60)
+        clock.now = PlanDay(year: 2026, month: 11, day: 18).startDate(in: .tagwerk).addingTimeInterval(12 * 3600 + 40 * 60)
     }
 
     func make(_ health: FakeHealthStore = FakeHealthStore()) -> CaptureModel {
-        let instant = now
-        let mirror = HealthMirror(store: store, health: health, now: { instant })
+        let clock = self.clock
+        let mirror = HealthMirror(store: store, health: health, now: { clock.now })
         return CaptureModel(store: store, mirror: mirror, health: health, settings: settings, calendar: calendar,
-                            now: { instant })
+                            now: { clock.now }, waitsForHealth: true)
+    }
+
+    @Test func newDay_whileShowingToday_followsToday() async {
+        let model = make()
+        await model.reload()
+        clock.now = clock.now.addingTimeInterval(86_400)
+        await model.reload()
+        #expect(model.day == PlanDay(date: clock.now, calendar: calendar))
+        await model.addWater(250)
+        #expect(model.drinks.first?.date == clock.now)
+    }
+
+    @Test func newDay_whileShowingPastDay_staysThere() async {
+        let model = make()
+        await model.reload()
+        await model.goBack(days: 2)
+        let shown = model.day
+        clock.now = clock.now.addingTimeInterval(86_400)
+        await model.reload()
+        #expect(model.day == shown)
+    }
+
+    @Test func healthCard_hiddenBeforeFirstQuery() {
+        let model = make(FakeHealthStore(access: .notDetermined))
+        #expect(!model.showsHealthCard)
     }
 
     func meal(_ title: String, at date: Date) -> MealValue {

@@ -54,18 +54,14 @@ public final class HealthKitStore: HealthStoring, Sendable {
 
     public func save(_ meal: HealthMeal) async throws -> Bool {
         let plan = HealthMapping.nutrientPlan(for: meal)
-        var complete = true
         for nutrient in plan.removals {
             guard mayWrite(nutrient.shareKind) else { continue }
             let identifier = HealthMapping.syncIdentifier(.meal, id: meal.id, part: nutrient.rawValue)
             try await delete(type: HKQuantityType(nutrient.identifier), key: HKMetadataKeySyncIdentifier, value: identifier)
         }
+        // A denied nutrient is skipped for good; the meal still counts as mirrored, so it is not rewritten on every run.
         var samples: [HKObject] = []
-        for (nutrient, value) in plan.writes {
-            guard mayWrite(nutrient.shareKind) else {
-                complete = false
-                continue
-            }
+        for (nutrient, value) in plan.writes where mayWrite(nutrient.shareKind) {
             let identifier = HealthMapping.syncIdentifier(.meal, id: meal.id, part: nutrient.rawValue)
             let metadata = HealthMapping.metadata(syncIdentifier: identifier, entryID: meal.id, version: meal.version,
                                                   estimated: meal.estimated, userEntered: !meal.estimated)
@@ -73,8 +69,9 @@ public final class HealthKitStore: HealthStoring, Sendable {
                                             quantity: HKQuantity(unit: nutrient.unit, doubleValue: value),
                                             start: meal.date, end: meal.date, metadata: metadata))
         }
+        guard !samples.isEmpty || plan.writes.isEmpty else { return false }
         if !samples.isEmpty { try await store.save(samples) }
-        return complete
+        return true
     }
 
     public func save(_ drink: HealthDrink) async throws -> Bool {
@@ -92,46 +89,37 @@ public final class HealthKitStore: HealthStoring, Sendable {
     /// Workouts cannot be replaced by sync version reliably, so the old one (and its energy sample) is removed first.
     public func save(_ workout: HealthWorkout) async throws -> Bool {
         guard mayWrite(.workouts) else { return false }
-        _ = try await deleteEntry(id: workout.id)
+        _ = try await deleteEntry(id: workout.id, kind: .workout)
         let configuration = HKWorkoutConfiguration()
         configuration.activityType = HealthMapping.activityType(workout.activity)
         if workout.activity == .swimming { configuration.swimmingLocationType = .unknown }
         let builder = HKWorkoutBuilder(healthStore: store, configuration: configuration, device: .local())
         try await builder.beginCollection(at: workout.start)
-        var complete = true
-        if let kilocalories = workout.kilocalories, kilocalories > 0 {
-            if mayWrite(.activeEnergy) {
+        // Denied calories are left out; the workout itself counts as mirrored and is not rebuilt on every run.
+        if let kilocalories = workout.kilocalories, kilocalories > 0, mayWrite(.activeEnergy) {
                 let identifier = HealthMapping.syncIdentifier(.workout, id: workout.id, part: "energy")
                 let metadata = HealthMapping.metadata(syncIdentifier: identifier, entryID: workout.id, version: workout.version,
                                                       estimated: false, userEntered: true)
                 let energy = HKQuantitySample(type: HKQuantityType(.activeEnergyBurned),
                                               quantity: HKQuantity(unit: .kilocalorie(), doubleValue: kilocalories),
                                               start: workout.start, end: workout.end, metadata: metadata)
-                try await builder.addSamples([energy])
-            } else {
-                complete = false
-            }
+            try await builder.addSamples([energy])
         }
         let identifier = HealthMapping.syncIdentifier(.workout, id: workout.id)
         try await builder.addMetadata(HealthMapping.metadata(syncIdentifier: identifier, entryID: workout.id,
                                                              version: workout.version, estimated: false, userEntered: true))
         try await builder.endCollection(at: workout.end)
         guard try await builder.finishWorkout() != nil else { throw HealthBridgeError.workoutNotSaved }
-        return complete
+        return true
     }
 
     // MARK: Deleting
 
-    public func deleteEntry(id: UUID) async throws -> Bool {
-        var complete = true
-        for kind in HealthShareKind.allCases {
-            guard mayWrite(kind) else {
-                complete = false
-                continue
-            }
-            try await delete(type: Self.type(of: kind), key: HealthMapping.entryIDKey, value: id.uuidString)
+    public func deleteEntry(id: UUID, kind: HealthEntryKind) async throws -> Bool {
+        for shareKind in kind.shareKinds where mayWrite(shareKind) {
+            try await delete(type: Self.type(of: shareKind), key: HealthMapping.entryIDKey, value: id.uuidString)
         }
-        return complete
+        return true
     }
 
     private func delete(type: HKSampleType, key: String, value: String) async throws {

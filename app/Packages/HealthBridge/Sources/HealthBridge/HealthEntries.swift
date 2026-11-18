@@ -4,6 +4,15 @@ import TagwerkCore
 /// Kind of a Tagwerk entry mirrored to Health; part of every sync identifier.
 public enum HealthEntryKind: String, Sendable {
     case meal, drink, workout
+
+    /// The Health types an entry of this kind can have samples in.
+    public var shareKinds: [HealthShareKind] {
+        switch self {
+        case .meal: [.energy, .protein, .carbs, .fat]
+        case .drink: [.water]
+        case .workout: [.workouts, .activeEnergy]
+        }
+    }
 }
 
 /// A meal as written to Health: numbers only, never titles or item names.

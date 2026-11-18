@@ -57,6 +57,7 @@ struct TagwerkApp: App {
                             // The permission may have changed in the iOS settings; the time zone may have changed.
                             await environment.notifications.reschedule()
                             // Health entries that could not be written or deleted earlier.
+                            await environment.capture.reload()  // follows to the new day after midnight
                             await environment.capture.syncPending()
                         }
                     case .background:
@@ -65,6 +66,7 @@ struct TagwerkApp: App {
                             await environment.makeBackgroundRefresh().submitNext()
                             await environment.notifications.reschedule()
                             // Health entries that could not be written or deleted earlier.
+                            await environment.capture.reload()  // follows to the new day after midnight
                             await environment.capture.syncPending()
                         }
                     default:
