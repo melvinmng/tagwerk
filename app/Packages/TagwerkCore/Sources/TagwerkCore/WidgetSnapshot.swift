@@ -25,20 +25,28 @@ public struct SnapshotEntry: Sendable, Hashable, Codable, Identifiable {
     }
 }
 
-/// Today's calories and water, only present while the user allows nutrition in the widget.
+/// Today's calories, water and steps, only present while the user allows nutrition in the widget.
+/// The widget shows them on the home screen only, never in the lock-screen families.
 public struct SnapshotIntake: Sendable, Hashable, Codable {
     public var kcal: Double
     public var hasEstimate: Bool
     public var goalKcal: Int
     public var waterMilliliters: Int
     public var goalWaterMilliliters: Int
+    /// Today's steps from Health; `nil` without a value or permission. Optional, so files written before it still decode.
+    public var steps: Int?
+    /// 0 means no step goal; `nil` in files written before steps existed.
+    public var goalSteps: Int?
 
-    public init(kcal: Double, hasEstimate: Bool, goalKcal: Int, waterMilliliters: Int, goalWaterMilliliters: Int) {
+    public init(kcal: Double, hasEstimate: Bool, goalKcal: Int, waterMilliliters: Int, goalWaterMilliliters: Int,
+                steps: Int? = nil, goalSteps: Int? = nil) {
         self.kcal = kcal
         self.hasEstimate = hasEstimate
         self.goalKcal = goalKcal
         self.waterMilliliters = waterMilliliters
         self.goalWaterMilliliters = goalWaterMilliliters
+        self.steps = steps
+        self.goalSteps = goalSteps
     }
 }
 

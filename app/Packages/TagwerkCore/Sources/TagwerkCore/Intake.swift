@@ -236,7 +236,7 @@ public struct DayIntake: Sendable, Hashable {
 
 /// Pure rules of the "Erfassen" tab (phase 3 design §5).
 public enum IntakeRules {
-    /// Workouts shorter than this do not count for the weekly goal.
+    /// Workouts shorter than this do not count as a workout in the weekly review's count; minutes always count.
     public static let minimumWorkoutMinutes = 10
     /// Meals older than this are not offered for repeating.
     public static let repeatWindowDays = 30
@@ -260,11 +260,10 @@ public enum IntakeRules {
         return day.adding(days: -daysSinceMonday, calendar: calendar).startDate(in: calendar)
     }
 
-    /// Workouts of at least 10 minutes in the current Monday-to-Sunday week, own and from Health.
-    public static func workoutsThisWeek(_ workouts: [WorkoutValue], now: Date, calendar: Calendar) -> Int {
-        let start = weekStart(containing: now, calendar: calendar)
-        let end = PlanDay(date: start, calendar: calendar).adding(days: 7, calendar: calendar).startDate(in: calendar)
-        return workouts.filter { $0.minutes >= minimumWorkoutMinutes && $0.start >= start && $0.start < end }.count
+    /// Training time of all workouts starting in `interval` (end exclusive), own and from Health, short ones included,
+    /// so the day's list and its sum agree.
+    public static func workoutMinutes(_ workouts: [WorkoutValue], in interval: DateInterval) -> Int {
+        workouts.filter { $0.start >= interval.start && $0.start < interval.end }.reduce(0) { $0 + $1.minutes }
     }
 
     /// The first Health workout that overlaps `interval`; touching end and start do not overlap.

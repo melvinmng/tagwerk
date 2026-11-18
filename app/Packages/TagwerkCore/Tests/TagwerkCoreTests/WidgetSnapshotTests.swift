@@ -86,6 +86,27 @@ struct WidgetSnapshotTests {
         #expect(snapshot.days.allSatisfy { $0.intake == nil })
     }
 
+    @Test func builder_withoutNutrition_hasNoSteps() {
+        let withSteps = SnapshotIntake(kcal: 0, hasEstimate: false, goalKcal: 2300, waterMilliliters: 0, goalWaterMilliliters: 2000,
+                                       steps: 6412, goalSteps: 8000)
+        #expect(make(intake: withSteps).days[0].intake?.steps == 6412)
+        #expect(make(intake: withSteps, showsNutrition: false).days.allSatisfy { $0.intake == nil })
+    }
+
+    @Test func snapshot_fileWithoutSteps_stillDecodes() throws {
+        // A file written before steps existed: same schema version, no step fields.
+        let json = """
+        {"createdAt":1795000000,"days":[{"day":{"day":18,"month":11,"year":2026},"deadlineCount":0,"entries":[],
+        "intake":{"goalKcal":2300,"goalWaterMilliliters":2000,"hasEstimate":true,"kcal":1240,"waterMilliliters":1200}}],
+        "schemaVersion":1}
+        """
+        let snapshot = try #require(WidgetSnapshot.decode(Data(json.utf8)))
+        let intake = try #require(snapshot.days.first?.intake)
+        #expect(intake.kcal == 1240)
+        #expect(intake.steps == nil)
+        #expect(intake.goalSteps == nil)
+    }
+
     @Test func builder_intakeOnlyToday() {
         let snapshot = make(intake: intake())
         #expect(snapshot.days[0].intake != nil)
