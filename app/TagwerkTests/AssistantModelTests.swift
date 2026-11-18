@@ -195,6 +195,13 @@ struct AssistantModelTests {
         #expect(allDay.change.contains(" bis "))
     }
 
+    @Test func instructions_mentionEventFunctions() async throws {
+        let (model, _, _) = await make()
+        let text = model.instructions()
+        #expect(text.contains("create_event"))
+        #expect(text.contains("eine Stunde"))
+    }
+
     @Test func clear_dropsSpokenMarks() async throws {
         responder.enqueue("Hallo zurück.")
         let (model, _, _) = await make()

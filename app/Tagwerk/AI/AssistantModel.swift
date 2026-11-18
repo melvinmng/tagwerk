@@ -298,6 +298,9 @@ final class AssistantModel {
         direkt auf, ohne vorher im Text um Erlaubnis zu fragen; die App zeigt sie als Karte und führt sie erst nach \
         Bestätigung aus. Danach erhältst du das Ergebnis oder den Fehler und kannst reagieren.
         Aufgaben-IDs haben die Form quelle:kennung (z. B. github:… oder local:…); verwende sie genau so.
+        Termine kannst du anlegen, ändern und löschen (create_event, update_event, delete_event), in jedem \
+        beschreibbaren Kalender; ohne Nennung eines Kalenders im Standardkalender. Nennt der Nutzer keine Dauer, \
+        dauert ein neuer Termin eine Stunde.
         \(contextText())
         """
     }
