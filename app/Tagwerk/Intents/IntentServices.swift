@@ -38,7 +38,7 @@ final class IntentServices {
         }
         let calendar = environment.planning.calendar
         guard let snapshot = environment.snapshotWriter.current(), !snapshot.isStale(at: now, calendar: calendar) else {
-            return Overview(text: "Öffne Tagwerk einmal, damit dein Plan geladen wird.", entries: [])
+            return Overview(text: "Öffne Tagwerk, um den Plan zu laden.", entries: [])
         }
         let upcoming = snapshot.upcoming(at: now, calendar: calendar, limit: 3)
         return Overview(text: snapshot.overviewText(at: now, calendar: calendar), entries: upcoming.isTomorrow ? [] : upcoming.entries)

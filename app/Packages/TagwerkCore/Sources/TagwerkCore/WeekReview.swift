@@ -86,7 +86,7 @@ public struct WeekReview: Sendable, Hashable {
             isCurrentWeek: (weekStart...weekStart.adding(days: 6, calendar: calendar)).contains(today))
     }
 
-    /// "KW 47 · 16.–22. Nov." or "KW 49 · 30. Nov. – 6. Dez." across months (ISO week number).
+    /// "KW 47 · 16.–22. Nov" or "KW 49 · 30. Nov – 6. Dez" across months (ISO week number).
     public static func title(weekStart: PlanDay, calendar: Calendar) -> String {
         var iso = Calendar(identifier: .iso8601)
         iso.timeZone = calendar.timeZone
@@ -97,8 +97,8 @@ public struct WeekReview: Sendable, Hashable {
         month.locale = Locale(identifier: "de_DE")
         month.timeZone = calendar.timeZone
         month.dateFormat = "MMM"
-        let startMonth = month.string(from: start)
-        let endMonth = month.string(from: endDay.startDate(in: calendar))
+        let startMonth = month.string(from: start).replacingOccurrences(of: ".", with: "")
+        let endMonth = month.string(from: endDay.startDate(in: calendar)).replacingOccurrences(of: ".", with: "")
         let range = startMonth == endMonth
             ? "\(weekStart.day).–\(endDay.day). \(endMonth)"
             : "\(weekStart.day). \(startMonth) – \(endDay.day). \(endMonth)"
@@ -111,7 +111,7 @@ extension IntakeFormat {
     /// `nil` before the first entry of the day.
     public static func planHeaderLine(intake: DayIntake, goalKcal: Int, goalWaterMilliliters: Int, hasEntries: Bool) -> String? {
         guard hasEntries else { return nil }
-        let water = liters(intake.waterMilliliters).replacingOccurrences(of: " l", with: "")
+        let water = intake.waterMilliliters == 0 ? "0" : liters(intake.waterMilliliters).replacingOccurrences(of: " l", with: "")
         return "\(kcalNumber(intake.kcal, estimated: intake.hasEstimate)) / \(grouped(goalKcal)) kcal · "
             + "\(water) / \(liters(goalWaterMilliliters))"
     }

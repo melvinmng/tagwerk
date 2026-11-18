@@ -47,6 +47,8 @@
 	<string>Tagwerk speichert deine Mahlzeiten, dein Wasser und deine Trainings in Health.</string>
 	<key>NSRemindersFullAccessUsageDescription</key>
 	<string>Tagwerk liest und bearbeitet deine Erinnerungen, um sie mit deinen anderen Aufgaben zusammenzuführen.</string>
+	<key>TagwerkAppGroup</key>
+	<string>group.$(TAGWERK_BUNDLE_ID)</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>fetch</string>

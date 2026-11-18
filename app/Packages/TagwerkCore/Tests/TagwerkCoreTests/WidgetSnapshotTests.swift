@@ -190,9 +190,15 @@ struct WidgetSnapshotTests {
         #expect(!text.contains("kcal"))
     }
 
+    @Test func overviewText_nothingLeftToday() {
+        let snapshot = make(today: [event("Vorlesung", 9, 10)])
+        #expect(snapshot.overviewText(at: instant(2026, 11, 18, 20, 0, in: calendar), calendar: calendar)
+            == "Heute: 1 Termin. Davon steht nichts mehr an.")
+    }
+
     @Test func overviewText_emptyDay() {
         let snapshot = make()
         #expect(snapshot.overviewText(at: instant(2026, 11, 18, 9, 0, in: calendar), calendar: calendar)
-            == "Heute steht nichts im Plan.")
+            == "Heute steht nichts an.")
     }
 }

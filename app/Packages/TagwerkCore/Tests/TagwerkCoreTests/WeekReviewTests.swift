@@ -87,9 +87,9 @@ struct WeekReviewTests {
     }
 
     @Test func review_weekTitle() {
-        #expect(WeekReview.title(weekStart: monday, calendar: calendar) == "KW 47 · 16.–22. Nov.")
+        #expect(WeekReview.title(weekStart: monday, calendar: calendar) == "KW 47 · 16.–22. Nov")
         let crossing = PlanDay(year: 2026, month: 11, day: 30)
-        #expect(WeekReview.title(weekStart: crossing, calendar: calendar) == "KW 49 · 30. Nov. – 6. Dez.")
+        #expect(WeekReview.title(weekStart: crossing, calendar: calendar) == "KW 49 · 30. Nov – 6. Dez")
     }
 
     @Test func planHeaderLine_estimatedTilde() {
@@ -103,7 +103,7 @@ struct WeekReviewTests {
         let intake = DayIntake(kcal: 1243, kcalMin: 1243, kcalMax: 1243, protein: 0, carbs: 0, fat: 0, waterMilliliters: 0,
                                hasEstimate: false)
         #expect(IntakeFormat.planHeaderLine(intake: intake, goalKcal: 2300, goalWaterMilliliters: 2000, hasEntries: true)
-            == "1.243 / 2.300 kcal · 0,0 / 2,0 l")
+            == "1.243 / 2.300 kcal · 0 / 2,0 l")
     }
 
     @Test func planHeaderLine_nilWhenNoEntries() {

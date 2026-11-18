@@ -18,10 +18,10 @@ enum WorkoutActivityOption: String, AppEnum {
 /// "Wasser erfassen": runs in the background and records water now.
 struct LogWaterIntent: AppIntent {
     static let title: LocalizedStringResource = "Wasser erfassen"
-    static let description = IntentDescription("Erfasst Wasser in Tagwerk, ohne die App zu öffnen.")
+    static let description = IntentDescription("Trägt Wasser in Tagwerk ein, ohne die App zu öffnen.")
     static let supportedModes: IntentModes = .background
 
-    @Parameter(title: "Menge (ml)", default: 250, inclusiveRange: (50, 2000))
+    @Parameter(title: "Menge", default: 250, inclusiveRange: (50, 2000))
     var milliliters: Int
 
     @Dependency private var services: IntentServices
@@ -36,10 +36,10 @@ struct LogWaterIntent: AppIntent {
 /// "Mahlzeit erfassen": opens the meal sheet; estimating needs a tap there (main design §7).
 struct LogMealIntent: AppIntent {
     static let title: LocalizedStringResource = "Mahlzeit erfassen"
-    static let description = IntentDescription("Öffnet in Tagwerk das Blatt für eine Mahlzeit. Geschätzt wird erst, wenn du dort tippst.")
+    static let description = IntentDescription("Öffnet das Blatt „Essen“ in Tagwerk.")
     static let supportedModes: IntentModes = .foreground(.immediate)
 
-    @Parameter(title: "Mahlzeit")
+    @Parameter(title: "Beschreibung")
     var text: String?
 
     @Dependency private var services: IntentServices
@@ -54,13 +54,13 @@ struct LogMealIntent: AppIntent {
 /// "Training erfassen": opens the workout sheet prefilled.
 struct LogWorkoutIntent: AppIntent {
     static let title: LocalizedStringResource = "Training erfassen"
-    static let description = IntentDescription("Öffnet in Tagwerk das Blatt für ein Training.")
+    static let description = IntentDescription("Öffnet das Blatt „Training“ in Tagwerk.")
     static let supportedModes: IntentModes = .foreground(.immediate)
 
-    @Parameter(title: "Trainingsart")
+    @Parameter(title: "Art")
     var activity: WorkoutActivityOption?
 
-    @Parameter(title: "Dauer (min)", inclusiveRange: (1, 600))
+    @Parameter(title: "Dauer", inclusiveRange: (1, 600))
     var minutes: Int?
 
     @Dependency private var services: IntentServices
@@ -75,7 +75,7 @@ struct LogWorkoutIntent: AppIntent {
 /// "Was steht heute an?": events, blocks and deadlines from the widget snapshot, never nutrition.
 struct TodayOverviewIntent: AppIntent {
     static let title: LocalizedStringResource = "Was steht heute an?"
-    static let description = IntentDescription("Nennt Termine, Blöcke und Deadlines von heute aus Tagwerk.")
+    static let description = IntentDescription("Nennt Termine, Blöcke und Deadlines von heute.")
     static let supportedModes: IntentModes = .background
     /// Titles are read aloud; the device has to be unlocked.
     static let authenticationPolicy: IntentAuthenticationPolicy = .requiresAuthentication

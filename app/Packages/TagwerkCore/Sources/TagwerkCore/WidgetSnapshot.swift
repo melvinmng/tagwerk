@@ -243,11 +243,13 @@ public struct WidgetSnapshot: Sendable, Hashable, Codable {
         if events > 0 { parts.append(events == 1 ? "1 Termin" : "\(events) Termine") }
         if blocks > 0 { parts.append(blocks == 1 ? "1 Block" : "\(blocks) Blöcke") }
         if deadlines > 0 { parts.append(deadlines == 1 ? "1 Deadline" : "\(deadlines) Deadlines") }
-        guard !parts.isEmpty else { return "Heute steht nichts im Plan." }
+        guard !parts.isEmpty else { return "Heute steht nichts an." }
         var text = "Heute: \(parts.joined(separator: ", "))."
         let next = upcoming(at: date, calendar: calendar, limit: 1)
         if let entry = next.entries.first, !next.isTomorrow {
             text += " Als Nächstes \(Self.time(entry.start, calendar: calendar)) \(entry.title)."
+        } else {
+            text += " Davon steht nichts mehr an."
         }
         return text
     }

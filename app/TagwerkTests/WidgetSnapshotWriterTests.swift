@@ -139,3 +139,24 @@ struct WidgetSnapshotEnvironmentTests {
         #expect(counter.writes == 1)
     }
 }
+
+struct WidgetConfigTests {
+    @Test func appGroup_isInInfoPlist_andDerivedFromTheBundleID() throws {
+        let group = try #require(Bundle.main.object(forInfoDictionaryKey: WidgetSnapshot.appGroupInfoKey) as? String)
+        let bundleID = try #require(Bundle.main.bundleIdentifier)
+        #expect(group == "group.\(bundleID)")
+    }
+
+    @Test func widgetExtension_isEmbedded_withTheSameGroup() throws {
+        let plugIns = try #require(Bundle.main.builtInPlugInsURL)
+        let widget = try #require(Bundle(url: plugIns.appending(path: "TagwerkWidget.appex")))
+        #expect(widget.bundleIdentifier == "\(Bundle.main.bundleIdentifier ?? "").widget")
+        #expect(widget.object(forInfoDictionaryKey: WidgetSnapshot.appGroupInfoKey) as? String
+            == Bundle.main.object(forInfoDictionaryKey: WidgetSnapshot.appGroupInfoKey) as? String)
+    }
+
+    @Test func urlScheme_tagwerk_isRegistered() {
+        let types = Bundle.main.object(forInfoDictionaryKey: "CFBundleURLTypes") as? [[String: Any]] ?? []
+        #expect(types.contains { ($0["CFBundleURLSchemes"] as? [String])?.contains("tagwerk") == true })
+    }
+}

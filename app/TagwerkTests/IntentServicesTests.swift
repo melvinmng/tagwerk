@@ -74,7 +74,7 @@ struct IntentServicesTests {
     @Test func todayOverview_staleSnapshot_asksToOpenApp() throws {
         let (services, _) = try make()
         let overview = services.todayOverview(now: .now)
-        #expect(overview.text == "Öffne Tagwerk einmal, damit dein Plan geladen wird.")
+        #expect(overview.text == "Öffne Tagwerk, um den Plan zu laden.")
         #expect(overview.entries.isEmpty)
     }
 
