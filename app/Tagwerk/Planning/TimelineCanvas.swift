@@ -323,6 +323,8 @@ struct TimelineCanvas: View {
     private func snapIndicator(minutes: Int, shown: Range<Int>, width: CGFloat) -> some View {
         HStack(spacing: 4) {
             Text(clock(minutes)).font(.caption2.weight(.bold).monospacedDigit()).foregroundStyle(.red)
+                // "10:00 AM" in English is wider than "10:00"; it shrinks instead of wrapping.
+                .lineLimit(1).minimumScaleFactor(0.6)
                 .frame(width: labelWidth, alignment: .leading)
             Rectangle().fill(.red).frame(height: 1.5)
         }
@@ -359,6 +361,7 @@ struct TimelineCanvas: View {
                 HStack(alignment: .top, spacing: 6) {
                     Text(DateText.time(minutes: minutes / 60 * 60, calendar: model.calendar))
                         .font(.caption2.monospacedDigit()).foregroundStyle(.secondary)
+                        .lineLimit(1).minimumScaleFactor(0.6)
                         .frame(width: labelWidth, alignment: .leading)
                     Rectangle().fill(.quaternary).frame(height: 0.5).padding(.top, Self.lineInset)
                 }
