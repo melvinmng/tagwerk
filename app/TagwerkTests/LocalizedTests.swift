@@ -23,6 +23,33 @@ struct LocalizedTests {
         #expect([fields(1), fields(2)] == ["Seit dem Öffnen wurde 1 Feld geändert.", "Seit dem Öffnen wurden 2 Felder geändert."])
     }
 
+    @Test func englishLookups_useTheGlossary() {
+        func english(_ key: String.LocalizationValue) -> String { Localized.string(key, in: .english, bundle: .main) }
+        #expect(english("Neue Aufgabe") == "New task")
+        #expect(english("Einstellungen") == "Settings")
+        #expect(english("Zeitblock") == "Time block")
+        #expect(english("Wochenrückblick") == "Weekly review")
+        #expect(english("Überfällig") == "Overdue")
+        #expect(english("Fällig am") == "Due on")
+        #expect(english("Mittagspause") == "Lunch break")
+    }
+
+    @Test func englishLookups_keepPlaceholdersAndTheirOrder() {
+        func english(_ key: String.LocalizationValue) -> String { Localized.string(key, in: .english, bundle: .main) }
+        #expect(english("Fälligkeit: \("heute") → \("morgen")") == "Due date: heute → morgen")
+        #expect(english("\(3) von \(5)") == "3 of 5")
+    }
+
+    @Test func pluralKeys_englishSingularAndPlural() {
+        func english(_ key: String.LocalizationValue) -> String { Localized.string(key, in: .english, bundle: .main) }
+        func suggestions(_ count: Int) -> String { english("\(count) Vorschläge") }
+        func days(_ count: Int) -> String { english("\(count) Tagen") }
+        func fields(_ count: Int) -> String { english("Seit dem Öffnen wurden \(count) Felder geändert.") }
+        #expect([suggestions(1), suggestions(3)] == ["1 suggestion", "3 suggestions"])
+        #expect([days(1), days(4)] == ["1 day", "4 days"])
+        #expect([fields(1), fields(2)] == ["1 field has changed since you opened it.", "2 fields have changed since you opened it."])
+    }
+
     @Test func appLanguage_followsTheTestLanguage() {
         #expect(VoiceLanguage.app == .german)
     }
