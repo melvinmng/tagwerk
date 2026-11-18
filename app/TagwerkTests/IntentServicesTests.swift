@@ -28,6 +28,7 @@ struct IntentServicesTests {
         #expect(environment.snapshotWriter.current()?.days.first?.intake?.waterMilliliters == 330)
         _ = await services.logWater(milliliters: 250)
         #expect(environment.capture.todayIntake.waterMilliliters == 580)
+        #expect(environment.capture.undo == nil)  // no "Widerrufen" bar from Siri
     }
 
     @Test func logWater_withoutFileAndSources_writesNoPlan() async throws {

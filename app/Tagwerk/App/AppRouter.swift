@@ -4,6 +4,8 @@ import TagwerkCore
 
 /// What the "Erfassen" tab opens after a link or shortcut. Held only in memory, never stored or logged.
 enum CapturePrefill: Equatable {
+    /// Only show today (widget or plan header link): their values are today's.
+    case today
     case meal(text: String?)
     case workout(activity: WorkoutActivity?, minutes: Int?)
     case review
@@ -38,7 +40,8 @@ final class AppRouter {
         case .captureMeal: .meal(text: nil)
         case .captureWorkout: .workout(activity: nil, minutes: nil)
         case .review: .review
-        case .planToday, .capture: nil
+        case .capture: .today
+        case .planToday: nil
         }
         pending = Request(route: route, prefill: prefill ?? defaultPrefill)
         receivedCount += 1

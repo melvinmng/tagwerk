@@ -18,10 +18,10 @@ struct CaptureView: View {
 
         var id: String {
             switch self {
-            case .newMeal: "newMeal"
+            case .newMeal(let text): "newMeal-\(text ?? "")"
             case .meal(let meal): "meal-\(meal.id)"
             case .drinks: "drinks"
-            case .newWorkout: "newWorkout"
+            case .newWorkout(let activity, let minutes): "newWorkout-\(activity?.rawValue ?? "")-\(minutes ?? 0)"
             case .workout(let workout): "workout-\(workout.id)"
             }
         }
@@ -100,13 +100,16 @@ struct CaptureView: View {
     /// A link or shortcut asked for a sheet: entries from Siri belong to now, so the tab returns to today first.
     private func applyPrefill() {
         guard let prefill = environment.router.takeCapturePrefill() else { return }
-        Task {
-            if prefill != .review { await model.goToToday() }
-            switch prefill {
-            case .meal(let text): sheet = .newMeal(text: text)
-            case .workout(let activity, let minutes): sheet = .newWorkout(activity: activity, minutes: minutes)
-            case .review: showsReview = true
-            }
+        if prefill != .review, !model.isToday {
+            // The day switches at once; the sheet does not wait for the Health query of the reload.
+            model.day = model.today
+            Task { await model.reload() }
+        }
+        switch prefill {
+        case .today: break
+        case .meal(let text): sheet = .newMeal(text: text)
+        case .workout(let activity, let minutes): sheet = .newWorkout(activity: activity, minutes: minutes)
+        case .review: showsReview = true
         }
     }
 

@@ -166,10 +166,11 @@ final class CaptureModel {
 
     // MARK: Entries
 
-    func addWater(_ milliliters: Int, at date: Date? = nil) async {
+    /// `offersUndo: false` for Siri: a "Widerrufen" bar hours later, on the next opening, would only confuse.
+    func addWater(_ milliliters: Int, at date: Date? = nil, offersUndo: Bool = true) async {
         let drink = DrinkValue(id: UUID(), date: date ?? entryDate, milliliters: milliliters)
         store.addDrink(drink)
-        undo = UndoNotice(text: "\(milliliters) ml Wasser erfasst", action: .remove(drink.id))
+        if offersUndo { undo = UndoNotice(text: "\(milliliters) ml Wasser erfasst", action: .remove(drink.id)) }
         await changed()
     }
 

@@ -28,6 +28,13 @@ struct AppRouterTests {
         #expect(router.takeCapturePrefill() == .workout(activity: nil, minutes: nil))
     }
 
+    @Test func router_captureLink_showsToday() {
+        let router = AppRouter()
+        router.open(URL(string: "tagwerk://capture")!)
+        _ = router.takeRequest(setupCompleted: true)
+        #expect(router.takeCapturePrefill() == .today)
+    }
+
     @Test func router_unknownURL_ignored() {
         let router = AppRouter()
         #expect(router.open(URL(string: "tagwerk://capture/water?ml=250")!) == false)

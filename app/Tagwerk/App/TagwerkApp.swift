@@ -70,13 +70,15 @@ struct TagwerkApp: App {
                         }
                     case .background:
                         // Directly, not debounced: the app may be suspended before a delayed run starts.
+                        // The snapshot reads the store directly, so it is written first, before any await.
+                        environment.writeSnapshot()
                         Task {
                             await environment.makeBackgroundRefresh().submitNext()
                             await environment.notifications.reschedule()
                             // Health entries that could not be written or deleted earlier.
                             await environment.capture.reload()  // follows to the new day after midnight
                             await environment.capture.syncPending()
-                            // Directly as well: the debounced write may not run before suspension.
+                            // Again after the reload, in case Health catch-up or the new day changed something.
                             environment.writeSnapshot()
                         }
                     default:

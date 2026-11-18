@@ -52,11 +52,20 @@ struct WidgetSnapshotTests {
         events.append(event("Feiertag", 0, 0, allDay: true))
         let snapshot = make(today: events)
         let entries = snapshot.days[0].entries
-        #expect(entries.count == WidgetSnapshot.maximumEntriesPerDay)
+        #expect(entries.count == WidgetSnapshot.maximumEntriesPerDay + 1)
+        #expect(snapshot.days[0].eventCount == 15)
         #expect(entries.first?.title == "Feiertag")
         #expect(entries.first?.isAllDay == true)
         let timed = entries.dropFirst().map(\.start)
         #expect(timed == timed.sorted())
+    }
+
+    @Test func builder_allDayEntries_doNotPushOutTimedOnes() {
+        let allDay = (0..<5).map { event("Ganztägig \($0)", 0, 0, allDay: true) }
+        let timed = (0..<12).map { event("T\($0)", 8 + $0, 9 + $0) }
+        let entries = make(today: allDay + timed).days[0].entries
+        #expect(entries.filter(\.isAllDay).count == WidgetSnapshot.maximumAllDayEntriesPerDay)
+        #expect(entries.filter { !$0.isAllDay }.count == 12)
     }
 
     @Test func builder_marksBlocks_andCountsDeadlines() {
@@ -157,9 +166,17 @@ struct WidgetSnapshotTests {
         let updated = snapshot.replacingIntake(intake(kcal: 500), on: today, createdAt: instant(2026, 11, 18, 9, 0, in: calendar))
         #expect(updated.days[0].entries == snapshot.days[0].entries)
         #expect(updated.days[0].intake?.kcal == 500)
-        let fresh = WidgetSnapshot(createdAt: .now, days: [])
-            .replacingIntake(intake(), on: today, createdAt: .now)
-        #expect(fresh.days.map(\.day) == [today])
+        let later = updated.replacingIntake(intake(kcal: 1), on: today.adding(days: 1, calendar: calendar), createdAt: .now)
+        #expect(later.days[0].intake == nil)
+        #expect(later.days[1].intake?.kcal == 1)
+    }
+
+    @Test func replacingIntake_missingDay_staysStale() {
+        let snapshot = make(today: [event("Vorlesung", 9, 10)], intake: intake())
+        let thursday = today.adding(days: 3, calendar: calendar)
+        let updated = snapshot.replacingIntake(intake(), on: thursday, createdAt: .now)
+        #expect(updated.isStale(at: thursday.startDate(in: calendar).addingTimeInterval(3600), calendar: calendar))
+        #expect(updated.days.allSatisfy { $0.intake == nil })
     }
 
     @Test func todayIntake_afterMidnight_isNil() {

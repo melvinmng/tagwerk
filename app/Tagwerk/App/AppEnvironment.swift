@@ -268,6 +268,8 @@ final class AppEnvironment {
                 await self?.planning.reload()
                 // Deadline calendar events may have changed; this is the only consumer of `changes`.
                 self?.notifications.scheduleSoon()
+                // Today's events may have changed while "Planen" shows another period.
+                self?.scheduleSnapshot()
             }
         }
     }
@@ -313,13 +315,16 @@ final class AppEnvironment {
     func makeSnapshot(now: Date = .now) -> WidgetSnapshot {
         let today = PlanDay(date: now, calendar: planning.calendar)
         return WidgetSnapshot.make(createdAt: now, days: planning.snapshotInput(from: today, days: 3),
-                                   todayIntake: snapshotIntake, showsNutrition: settings.widgetShowsNutrition,
+                                   todayIntake: snapshotIntake(on: today), showsNutrition: settings.widgetShowsNutrition,
                                    calendar: planning.calendar)
     }
 
-    private var snapshotIntake: SnapshotIntake? {
+    /// The day's sums straight from the store: correct after midnight and on a background launch without a reload.
+    private func snapshotIntake(on day: PlanDay) -> SnapshotIntake? {
         guard settings.widgetShowsNutrition else { return nil }
-        let intake = capture.todayIntake
+        let calendar = capture.calendar
+        let intake = IntakeRules.dayIntake(meals: self.intake.meals(on: day, calendar: calendar),
+                                           drinks: self.intake.drinks(on: day, calendar: calendar))
         return SnapshotIntake(kcal: intake.kcal, hasEstimate: intake.hasEstimate, goalKcal: settings.goalKilocalories,
                               waterMilliliters: intake.waterMilliliters, goalWaterMilliliters: settings.goalWaterMilliliters)
     }
@@ -331,11 +336,11 @@ final class AppEnvironment {
             snapshotWriter.write(WidgetSnapshot(createdAt: now, days: []))
             return
         }
-        if !taskList.sourceStates.isEmpty {
+        if taskList.allSourcesSettled {
             snapshotWriter.write(makeSnapshot(now: now))
         } else if let existing = snapshotWriter.current() {
-            let intake = settings.widgetShowsNutrition ? snapshotIntake : nil
-            snapshotWriter.write(existing.replacingIntake(intake, on: PlanDay(date: now, calendar: planning.calendar), createdAt: now))
+            let today = PlanDay(date: now, calendar: planning.calendar)
+            snapshotWriter.write(existing.replacingIntake(snapshotIntake(on: today), on: today, createdAt: now))
         }
     }
 

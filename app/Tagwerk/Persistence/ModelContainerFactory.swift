@@ -10,6 +10,13 @@ enum ModelContainerFactory {
                                      MealRecord.self, DrinkRecord.self, WorkoutRecord.self, PendingHealthDeletion.self])
 
     static func make(inMemory: Bool) throws -> ModelContainer {
-        try ModelContainer(for: schema, configurations: ModelConfiguration(isStoredInMemoryOnly: inMemory))
+        try ModelContainer(for: schema, configurations: inMemory ? ModelConfiguration(isStoredInMemoryOnly: true)
+                                                                 : persistentConfiguration())
+    }
+
+    /// The store at its place before phase 4. `groupContainer: .none` is required: with the App Group entitlement the
+    /// default (`.automatic`) would open a new, empty store in the group container and the old data would seem lost.
+    static func persistentConfiguration() -> ModelConfiguration {
+        ModelConfiguration(schema: schema, isStoredInMemoryOnly: false, groupContainer: .none)
     }
 }

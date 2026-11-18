@@ -58,6 +58,8 @@ struct RootView: View {
         .onChange(of: environment.router.receivedCount) { _, _ in openRouterTarget() }
         .onChange(of: environment.settings.setupCompleted) { _, _ in openRouterTarget() }
         .onOpenURL { url in environment.router.open(url) }
+        // An intent may set the route before the first render; then `onChange` never fires.
+        .onAppear { openRouterTarget() }
         .onChange(of: environment.taskList.loadingSources) { _, _ in openNotificationTarget() }
         .onChange(of: environment.requestedTab) { _, tab in
             guard let tab else { return }

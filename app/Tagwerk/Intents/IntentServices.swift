@@ -20,7 +20,7 @@ final class IntentServices {
         let amount = min(max(milliliters ?? Self.defaultWaterMilliliters, Self.waterRange.lowerBound), Self.waterRange.upperBound)
         let capture = environment.capture
         await capture.reload()
-        await capture.addWater(amount, at: .now)
+        await capture.addWater(amount, at: .now, offersUndo: false)
         await capture.waitForHealth()
         environment.writeSnapshot()
         return "\(amount) ml Wasser erfasst."
@@ -33,7 +33,7 @@ final class IntentServices {
 
     /// "Was steht heute an?" from the snapshot: counts and the next entries, never nutrition.
     func todayOverview(now: Date = .now) -> Overview {
-        if environment.settings.setupCompleted, !environment.taskList.sourceStates.isEmpty {
+        if environment.settings.setupCompleted, environment.taskList.allSourcesSettled {
             environment.writeSnapshot(now: now)
         }
         let calendar = environment.planning.calendar

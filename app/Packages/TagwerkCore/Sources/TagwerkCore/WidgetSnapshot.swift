@@ -47,12 +47,18 @@ public struct SnapshotDay: Sendable, Hashable, Codable {
     public var entries: [SnapshotEntry]
     public var deadlineCount: Int
     public var intake: SnapshotIntake?
+    /// Counts before the entry limit, for Siri's overview; `nil` falls back to counting `entries`.
+    public var eventCount: Int?
+    public var blockCount: Int?
 
-    public init(day: PlanDay, entries: [SnapshotEntry], deadlineCount: Int, intake: SnapshotIntake?) {
+    public init(day: PlanDay, entries: [SnapshotEntry], deadlineCount: Int, intake: SnapshotIntake?,
+                eventCount: Int? = nil, blockCount: Int? = nil) {
         self.day = day
         self.entries = entries
         self.deadlineCount = deadlineCount
         self.intake = intake
+        self.eventCount = eventCount
+        self.blockCount = blockCount
     }
 }
 
@@ -79,7 +85,9 @@ public struct SnapshotDayInput: Sendable {
 /// The widget never reads SwiftData, EventKit, Health or the network; this file is its only source.
 public struct WidgetSnapshot: Sendable, Hashable, Codable {
     public static let currentSchemaVersion = 1
+    /// Timed entries per day; all-day entries are limited separately, so they never push late events out.
     public static let maximumEntriesPerDay = 12
+    public static let maximumAllDayEntriesPerDay = 3
     public static let maximumTimelineEntries = 30
     public static let fileName = "widget-snapshot.json"
     /// Info.plist key of both targets holding the App Group identifier.
@@ -101,24 +109,26 @@ public struct WidgetSnapshot: Sendable, Hashable, Codable {
     public static func make(createdAt: Date, days inputs: [SnapshotDayInput], todayIntake: SnapshotIntake?,
                             showsNutrition: Bool, calendar: Calendar) -> WidgetSnapshot {
         let days = inputs.enumerated().map { index, input in
-            SnapshotDay(day: input.day, entries: entries(of: input, calendar: calendar),
-                        deadlineCount: input.deadlines.count,
-                        intake: index == 0 && showsNutrition ? todayIntake : nil)
+            let all = entries(of: input, calendar: calendar)
+            let allDay = all.filter(\.isAllDay).prefix(maximumAllDayEntriesPerDay)
+            let timed = all.filter { !$0.isAllDay }.prefix(maximumEntriesPerDay)
+            return SnapshotDay(day: input.day, entries: Array(allDay) + Array(timed), deadlineCount: input.deadlines.count,
+                               intake: index == 0 && showsNutrition ? todayIntake : nil,
+                               eventCount: all.filter { $0.kind == .event }.count,
+                               blockCount: all.filter { $0.kind == .block }.count)
         }
         return WidgetSnapshot(createdAt: createdAt, days: days)
     }
 
     /// The same plan with new intake for `day`; used where the plan sources are not loaded (Siri in the background),
-    /// so the plan part of an existing file is kept instead of being replaced by an empty one.
+    /// so the plan part of an existing file is kept instead of being replaced by an empty one. Older days lose their
+    /// intake. A file without `day` stays stale: adding an empty day would claim "nothing planned".
     public func replacingIntake(_ intake: SnapshotIntake?, on day: PlanDay, createdAt: Date) -> WidgetSnapshot {
         var copy = self
+        for index in copy.days.indices where copy.days[index].day != day { copy.days[index].intake = nil }
+        guard let index = copy.days.firstIndex(where: { $0.day == day }) else { return copy }
         copy.createdAt = createdAt
-        if let index = copy.days.firstIndex(where: { $0.day == day }) {
-            copy.days[index].intake = intake
-        } else {
-            copy.days.insert(SnapshotDay(day: day, entries: [], deadlineCount: 0, intake: intake), at: 0)
-            copy.days.sort { $0.day < $1.day }
-        }
+        copy.days[index].intake = intake
         return copy
     }
 
@@ -147,7 +157,7 @@ public struct WidgetSnapshot: Sendable, Hashable, Codable {
             if lhs.start != rhs.start { return lhs.start < rhs.start }
             return lhs.title < rhs.title
         }
-        return Array(result.prefix(maximumEntriesPerDay))
+        return result
     }
 
     // MARK: Encoding
@@ -235,9 +245,10 @@ public struct WidgetSnapshot: Sendable, Hashable, Codable {
     /// Siri's answer to "Was steht heute an?": counts and the next entry, never nutrition.
     public func overviewText(at date: Date, calendar: Calendar) -> String {
         let today = PlanDay(date: date, calendar: calendar)
-        let entries = days.first { $0.day == today }?.entries ?? []
-        let events = entries.filter { $0.kind == .event }.count
-        let blocks = entries.filter { $0.kind == .block }.count
+        let day = days.first { $0.day == today }
+        let entries = day?.entries ?? []
+        let events = day?.eventCount ?? entries.filter { $0.kind == .event }.count
+        let blocks = day?.blockCount ?? entries.filter { $0.kind == .block }.count
         let deadlines = deadlineCount(at: date, calendar: calendar)
         var parts: [String] = []
         if events > 0 { parts.append(events == 1 ? "1 Termin" : "\(events) Termine") }

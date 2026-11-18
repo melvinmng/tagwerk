@@ -113,6 +113,19 @@ struct WidgetSnapshotEnvironmentTests {
         #expect(written.days[0].intake?.waterMilliliters == 250)
     }
 
+    @Test func writeSnapshot_readsTodayFromTheStore_notYesterdayOrAStaleModel() throws {
+        let environment = try environment()
+        let calendar = environment.planning.calendar
+        let today = PlanDay(date: .now, calendar: calendar)
+        environment.snapshotWriter.write(WidgetSnapshot(createdAt: .now,
+                                                        days: [SnapshotDay(day: today, entries: [], deadlineCount: 0, intake: nil)]))
+        // No capture reload: a background launch or a night with the app left open.
+        environment.intake.addDrink(DrinkValue(id: UUID(), date: .now, milliliters: 400))
+        environment.intake.addDrink(DrinkValue(id: UUID(), date: .now.addingTimeInterval(-86_400), milliliters: 900))
+        environment.writeSnapshot()
+        #expect(environment.snapshotWriter.current()?.days[0].intake?.waterMilliliters == 400)
+    }
+
     @Test func writeSnapshot_beforeSetup_writesEmptyPlan() throws {
         let environment = try environment()
         environment.settings.setupCompleted = false

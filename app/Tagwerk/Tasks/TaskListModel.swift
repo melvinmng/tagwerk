@@ -105,6 +105,17 @@ final class TaskListModel {
         return groupedSections(visible, now: now(), calendar: calendar)
     }
 
+    /// Every registered source finished loading with its data (live or cached); the widget plan may be rewritten.
+    var allSourcesSettled: Bool {
+        guard loadingSources.isEmpty, !providers.isEmpty else { return false }
+        return providers.allSatisfy { provider in
+            switch sourceStates[provider.source] {
+            case .loaded?, .offline?: true
+            default: false
+            }
+        }
+    }
+
     func provider(for source: TaskSource) -> (any TaskProvider)? {
         providers.first { $0.source == source }
     }
