@@ -39,6 +39,8 @@ public enum GitHubAuthError: Error, Equatable, Sendable {
     case denied
     /// No usable credentials; the user has to sign in again.
     case signedOut
+    /// The stored credentials cannot be read right now (device locked); this is not a sign-out.
+    case credentialsUnreadable
     case network(String)
     case server(String)
 }

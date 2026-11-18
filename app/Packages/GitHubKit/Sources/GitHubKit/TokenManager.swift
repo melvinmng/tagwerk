@@ -21,8 +21,15 @@ public actor TokenManager {
         self.now = now
     }
 
+    /// For the UI only; an unreadable store counts as not signed in here. Use `hasCredentials()` for decisions.
     public var isSignedIn: Bool {
         get async { (try? current()) != nil }
+    }
+
+    /// Whether credentials exist. Throws `credentialsUnreadable` when the store cannot be read right now,
+    /// so callers never mistake a locked keychain for a sign-out.
+    public func hasCredentials() async throws -> Bool {
+        try current() != nil
     }
 
     /// A token that is valid for at least five more minutes, refreshing it if needed.
@@ -62,7 +69,11 @@ public actor TokenManager {
 
     private func current() throws -> GitHubCredentials? {
         if !didLoad {
-            credentials = try store.load()
+            do {
+                credentials = try store.load()
+            } catch {
+                throw GitHubAuthError.credentialsUnreadable
+            }
             didLoad = true
         }
         return credentials
