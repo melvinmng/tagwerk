@@ -100,8 +100,9 @@ public final class EventKitGateway: ReminderStore {
         return Self.record(reminder)
     }
 
-    /// Writes only the fields of `record` that differ from the freshly loaded reminder.
-    public func save(_ record: ReminderRecord) throws -> ReminderRecord {
+    /// Writes only the fields of `record` that differ from the freshly loaded reminder, and the repetition
+    /// only when `recurrence` is `.set`.
+    public func save(_ record: ReminderRecord, recurrence: FieldChange<Recurrence?>) throws -> ReminderRecord {
         guard let reminder = ekReminder(id: record.id) else { throw TaskWriteError.notFound }
         let current = Self.record(reminder)
         if record.title != current.title { reminder.title = record.title }
@@ -116,6 +117,8 @@ public final class EventKitGateway: ReminderStore {
             guard let list = store.calendar(withIdentifier: record.listID) else { throw TaskWriteError.notFound }
             reminder.calendar = list
         }
+        // After the due date, so a new rule is checked against the due date that will be saved.
+        if case .set(let newRecurrence) = recurrence { try replaceRecurrence(of: reminder, with: newRecurrence) }
         try store.save(reminder, commit: true)
         return Self.record(reminder)
     }
@@ -125,7 +128,8 @@ public final class EventKitGateway: ReminderStore {
         try store.remove(reminder, commit: true)
     }
 
-    public func create(title: String, notes: String?, due: DueDate?, ekPriority: Int, listID: String?) throws -> ReminderRecord {
+    public func create(title: String, notes: String?, due: DueDate?, ekPriority: Int, listID: String?,
+                       recurrence: Recurrence?) throws -> ReminderRecord {
         let reminder = EKReminder(eventStore: store)
         reminder.title = title
         reminder.notes = notes
@@ -138,11 +142,27 @@ public final class EventKitGateway: ReminderStore {
             throw TaskWriteError.failed(String(localized: "Keine Erinnerungsliste gefunden", bundle: .module))
         }
         reminder.calendar = list
+        if recurrence != nil { try replaceRecurrence(of: reminder, with: recurrence) }
         try store.save(reminder, commit: true)
         return Self.record(reminder)
     }
 
     // MARK: Helpers
+
+    /// Replaces all rules of the reminder by the one for `recurrence`; `nil` removes them all.
+    /// Unverified assumption (plan §3, item 7): a reminder may carry several rules, so every one is removed.
+    private func replaceRecurrence(of reminder: EKReminder, with recurrence: Recurrence?) throws {
+        var newRule: EKRecurrenceRule?
+        if let recurrence {
+            guard reminder.dueDateComponents != nil else { throw ReminderMapping.recurrenceNeedsDue }
+            guard let rule = RecurrenceMapping.ekRule(for: recurrence, calendar: .current) else {
+                throw ReminderMapping.invalidRecurrence
+            }
+            newRule = rule
+        }
+        for existing in reminder.recurrenceRules ?? [] { reminder.removeRecurrenceRule(existing) }
+        if let newRule { reminder.addRecurrenceRule(newRule) }
+    }
 
     /// Moves absolute alarms that equal the old due time (see `ReminderMapping.movedAlarmDates`).
     private func moveAlarms(of reminder: EKReminder, from oldDue: DueDate?, to newDue: DueDate?) {
@@ -178,24 +198,10 @@ public final class EventKitGateway: ReminderStore {
         )
     }
 
-    /// Maps the first EventKit rule to Tagwerk's patterns; anything more complex becomes `.unsupported`.
+    /// Maps the first EventKit rule (see `RecurrenceMapping`); Tagwerk reads only one rule per reminder.
     nonisolated static func recurrence(_ reminder: EKReminder) -> Recurrence? {
         guard let rule = reminder.recurrenceRules?.first, let due = dueDate(reminder.dueDateComponents) else { return nil }
-        let interval = max(1, rule.interval)
-        let pattern: RecurrenceRule
-        switch rule.frequency {
-        case .daily where rule.daysOfTheWeek == nil:
-            pattern = .daily(interval: interval)
-        case .weekly where rule.setPositions == nil:
-            pattern = .weekly(interval: interval, weekdays: Set((rule.daysOfTheWeek ?? []).map { $0.dayOfTheWeek.rawValue }))
-        case .monthly where rule.daysOfTheWeek == nil && (rule.daysOfTheMonth?.count ?? 0) <= 1:
-            pattern = .monthly(interval: interval, day: rule.daysOfTheMonth?.first?.intValue ?? due.day)
-        default:
-            pattern = .unsupported
-        }
-        let end = rule.recurrenceEnd?.endDate.map { PlanDay(date: $0, calendar: .current) }
-        let count = rule.recurrenceEnd.flatMap { $0.occurrenceCount > 0 ? $0.occurrenceCount : nil }
-        return Recurrence(rule: pattern, start: PlanDay(due), end: end, count: count)
+        return RecurrenceMapping.recurrence(from: rule, due: due, calendar: .current)
     }
 
     nonisolated static func dueDate(_ components: DateComponents?) -> DueDate? {

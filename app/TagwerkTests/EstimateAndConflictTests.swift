@@ -63,6 +63,18 @@ struct ConflictChangesTests {
         #expect(changes[1].before == "–" && changes[1].after == "P3" && changes[1].mine == "P1")
     }
 
+    @Test func conflict_listsRecurrence() {
+        var original = makeTask("Serie", source: .reminders, due: DueDate(year: 2026, month: 11, day: 19), version: "1")
+        original.recurrence = Recurrence(rule: .weekly(interval: 1, weekdays: [5]), start: PlanDay(year: 2026, month: 11, day: 19),
+                                         end: nil, count: nil)
+        var current = original
+        current.recurrence = nil
+        current.version = "2"
+        let changes = ConflictChange.changes(original: original, draft: original, current: current)
+        #expect(changes.map(\.field) == ["Wiederholung"])
+        #expect(changes[0].before == "Jede Woche am Do" && changes[0].after == "Nie" && changes[0].mine == nil)
+    }
+
     @Test func changes_noSourceChange_isEmpty() {
         var draft = original
         draft.title = "Neu"

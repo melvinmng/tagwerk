@@ -58,7 +58,8 @@ enum DemoData {
         try? context.save()
     }
 
-    /// Tomorrow: "Pretest vorbereiten" with a 60-minute block at 14:00 and "Einkaufen" planned without time.
+    /// Tomorrow: "Pretest vorbereiten" with a 60-minute block at 14:00, a 30-minute block of the recurring
+    /// "Training" at 07:00 and "Einkaufen" planned without time.
     private static func planSamples(_ environment: AppEnvironment) async {
         let planning = environment.planning
         let tomorrow = planning.today.adding(days: 1, calendar: planning.calendar)
@@ -66,6 +67,11 @@ enum DemoData {
         if let pretest = items.first(where: { $0.title == "Pretest vorbereiten" }) {
             let start = tomorrow.startDate(in: planning.calendar).addingTimeInterval(14 * 3600)
             await planning.createBlock(for: pretest, start: start, minutes: 60)
+        }
+        // A block of the recurring "Training", to try the save question after changing its rule.
+        if let training = items.first(where: { $0.title == "Training" }) {
+            let start = tomorrow.startDate(in: planning.calendar).addingTimeInterval(7 * 3600)
+            await planning.createBlock(for: training, start: start, minutes: 30)
         }
         if let shopping = items.first(where: { $0.title == "Einkaufen" }) {
             await planning.assign(shopping.id, to: tomorrow)
@@ -196,6 +202,19 @@ enum DemoData {
         }
         try reminder("Training", due: 0, recurrence: EKRecurrenceRule(recurrenceWith: .daily, interval: 1, end: nil))
         try reminder("Karteikarten", due: 0, recurrence: EKRecurrenceRule(recurrenceWith: .daily, interval: 1, end: nil))
+        // The rules added with the recurrence editor: the n-th weekday of the month and yearly.
+        // Days 29 to 31 are a fifth weekday, which Tagwerk does not offer; the day of the month is used then.
+        let monthlyDue = at(2, 0)
+        let dayOfMonth = calendar.component(.day, from: monthlyDue)
+        let weekdayOfMonth = dayOfMonth <= 28
+            ? [EKRecurrenceDayOfWeek(EKWeekday(rawValue: calendar.component(.weekday, from: monthlyDue)) ?? .monday,
+                                     weekNumber: (dayOfMonth - 1) / 7 + 1)]
+            : nil
+        try reminder("Nebenkosten ablesen", due: 2, recurrence: EKRecurrenceRule(
+            recurrenceWith: .monthly, interval: 1, daysOfTheWeek: weekdayOfMonth,
+            daysOfTheMonth: weekdayOfMonth == nil ? [NSNumber(value: dayOfMonth)] : nil, monthsOfTheYear: nil,
+            weeksOfTheYear: nil, daysOfTheYear: nil, setPositions: nil, end: EKRecurrenceEnd(occurrenceCount: 12)))
+        try reminder("Versicherung prüfen", due: 5, recurrence: EKRecurrenceRule(recurrenceWith: .yearly, interval: 1, end: nil))
         try reminder("Pretest vorbereiten", due: 1, priority: 1)
         try reminder("Bericht überarbeiten", due: -2, priority: 5)
         try reminder("Literatur sichten", due: 0)

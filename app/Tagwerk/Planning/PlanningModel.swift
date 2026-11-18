@@ -157,6 +157,8 @@ final class PlanningModel {
     private(set) var blockedMinutesByTask: [TaskID: Int] = [:]
     /// Repetition rules of recurring reminders (reminder ID → rule), for their session window.
     private var recurrenceRules: [String: RecurrenceRule] = [:]
+    /// Full recurrences of open reminders, to compare a changed rule with the current one.
+    private var recurrences: [String: Recurrence] = [:]
     /// The block created by the last "Duplizieren", for "Widerrufen".
     private(set) var lastDuplicate: CalendarEvent?
     /// Open AI suggestion batches that touch the shown range.
@@ -219,6 +221,8 @@ final class PlanningModel {
         recurringReminderIDs = recurringIDs
         recurrenceRules = Dictionary(reminders.compactMap { record in record.recurrence.map { (record.id, $0.rule) } },
                                      uniquingKeysWith: { first, _ in first })
+        recurrences = Dictionary(reminders.compactMap { record in record.recurrence.map { (record.id, $0) } },
+                                 uniquingKeysWith: { first, _ in first })
         updateSessions(open: open)
         let links = resolvedLinks.mapValues(\.taskID)
         let deadlines = importantDeadlines(tasks: open, events: events,
@@ -517,6 +521,22 @@ final class PlanningModel {
         guard task.id.source == .reminders, recurringReminderIDs.contains(task.id.rawValue) else { return nil }
         return RecurringItem(reminderID: task.id.rawValue, title: task.title,
                              minutes: efforts.minutes(for: task.id.rawValue, on: day) ?? 0)
+    }
+
+    /// Future blocks of `task` whose occurrence disappears under `recurrence`. A block prepares the occurrence of
+    /// the current rule on or after its day (a Tuesday block for Thursday's occurrence); it is listed when the new
+    /// rule has no occurrence on that day. Without a current rule the block's own day counts. Empty for rules
+    /// Tagwerk cannot read. Blocks are never changed here (decision 2026-11-18: they stay in the calendar; the
+    /// save question names them).
+    func blocksOffSeries(for task: TaskItem, recurrence: Recurrence) -> [CalendarEvent] {
+        if case .unsupported = recurrence.rule { return [] }
+        let current = task.recurrence ?? (task.id.source == .reminders ? recurrences[task.id.rawValue] : nil)
+        return blocks.futureBlocks(for: task.id, after: now()).filter { block in
+            let day = PlanDay(date: block.start, calendar: calendar)
+            let served: PlanDay = if let current, case .unsupported = current.rule { day }
+                else { current.flatMap { nextOccurrence(of: $0, onOrAfter: day, calendar: calendar) } ?? day }
+            return nextOccurrence(of: recurrence, onOrAfter: served, calendar: calendar) != served
+        }
     }
 
     /// Completing a recurring reminder in Tagwerk frees today's effort; reopening reserves it again (design §13.3).

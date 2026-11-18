@@ -49,8 +49,11 @@ public final class RemindersTaskProvider: TaskProvider {
         if case .set(let minutes) = edit.estimateMinutes { estimates?.setMinutes(minutes, for: current.id) }
         var reminderEdit = edit
         reminderEdit.estimateMinutes = .unchanged
+        reminderEdit.recurrence = try ReminderMapping.recurrenceChange(for: edit, current: current)
         guard !reminderEdit.isEmpty else { return map(current, lists: lists) }
-        let saved = try perform { try store.save(ReminderMapping.applying(reminderEdit, to: current)) }
+        let saved = try perform {
+            try store.save(ReminderMapping.applying(reminderEdit, to: current), recurrence: reminderEdit.recurrence)
+        }
         return map(saved, lists: lists)
     }
 
@@ -66,10 +69,12 @@ public final class RemindersTaskProvider: TaskProvider {
 
     public func create(_ draft: TaskDraft) async throws -> TaskItem {
         try requireAccess()
+        try ReminderMapping.validateNew(recurrence: draft.recurrence, due: draft.due)
         let record = try perform {
             try store.create(
                 title: draft.title, notes: draft.notes, due: draft.due,
-                ekPriority: ReminderMapping.ekPriority(from: draft.priority), listID: draft.containerID
+                ekPriority: ReminderMapping.ekPriority(from: draft.priority), listID: draft.containerID,
+                recurrence: draft.recurrence
             )
         }
         if let minutes = draft.estimateMinutes { estimates?.setMinutes(minutes, for: record.id) }
