@@ -40,6 +40,10 @@ final class AppSettings {
     var aiModelsFetchedAt: Date? = nil
     /// Reasoning effort for all AI calls; `nil` means the model's own default ("Automatisch").
     var aiReasoningEffort: String? = nil
+    /// "Vorarbeiten, wenn Luft ist": AI plans may pull in tasks of the next days.
+    var aiWorkAhead: Bool = true
+    /// "Längere Tage vorschlagen": `AIPlanner.LongerDays` raw value.
+    var aiLongerDays: String = "forDeadlines"
 
     var weekSchedule: WeekSchedule {
         get { weekScheduleData.flatMap { try? JSONDecoder().decode(WeekSchedule.self, from: $0) } ?? .standard }

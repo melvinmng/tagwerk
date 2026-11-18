@@ -153,6 +153,8 @@ final class PlanningModel {
     private(set) var sessionProgress: [TaskID: SessionProgress] = [:]
     /// Tasks whose blocks hold less time than their effort ("Noch einzuplanen", mockup RZ1).
     private(set) var toSchedule: [TaskItem] = []
+    /// Minutes already in blocks per task (session window), for the AI's remaining effort.
+    private(set) var blockedMinutesByTask: [TaskID: Int] = [:]
     /// Repetition rules of recurring reminders (reminder ID → rule), for their session window.
     private var recurrenceRules: [String: RecurrenceRule] = [:]
     /// The block created by the last "Duplizieren", for "Widerrufen".
@@ -836,12 +838,18 @@ final class PlanningModel {
     private func updateSessions(open: [TaskItem]) {
         let all = blocks.blocksByTask(after: today.adding(days: -60, calendar: calendar).startDate(in: calendar))
         var progress: [TaskID: SessionProgress] = [:]
+        var blocked: [TaskID: Int] = [:]
         for task in open {
+            if let events = all[task.id] {
+                let minutes = blockedMinutes(of: task.id, in: events)
+                if minutes > 0 { blocked[task.id] = minutes }
+            }
             guard let effort = effortMinutes(of: task), effort > 0, let events = all[task.id] else { continue }
             let blocked = blockedMinutes(of: task.id, in: events)
             if blocked > 0 { progress[task.id] = SessionProgress(blocked: blocked, estimate: effort) }
         }
         sessionProgress = progress
+        blockedMinutesByTask = blocked
         toSchedule = sortedTasks(open.filter { progress[$0.id].map { $0.remaining >= 15 } ?? false }, calendar: calendar)
     }
 

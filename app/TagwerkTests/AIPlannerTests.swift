@@ -97,7 +97,8 @@ struct AIPlannerTests {
         }
         #expect(text.contains("\"id\":\"local:Fahrrad\""))
         #expect(text.contains("\"id\":\"github:Login\""))
-        #expect(!text.contains("Abgabe"))
+        // Due on the 20th: inside the three-day window (proposal 2026-11-18).
+        #expect(text.contains("\"id\":\"local:Abgabe\""))
     }
 
     @Test func planDay_violations_retriedOnce_thenUnscheduled() async throws {
@@ -316,7 +317,9 @@ struct AIPlannerTests {
         await planner.plan(scope: .day, anchor: today)
         guard case .user(let text) = try #require(responder.calls.first?.input.first) else { return }
         #expect(text.contains("\"laterDays\""))
-        #expect(text.contains("2026-11-25"))
+        // The next two working days only (Thu 19th, Fri 20th).
+        #expect(text.contains("2026-11-20"))
+        #expect(!text.contains("2026-11-23"))
     }
 
     @Test func dependentBlock_waitsForDayChange_thenAcceptAllAppliesBoth() async throws {
@@ -357,6 +360,28 @@ struct AIPlannerTests {
         #expect(move.fromDay == today)
         await planner.accept(move)
         #expect(planStore.assignment(for: TaskID(source: .local, rawValue: "Fahrrad")) == PlanDay(year: 2026, month: 11, day: 19))
+    }
+
+    @Test func fittingP1_isAddedLocally_whenTheModelLeavesItOut() async throws {
+        local.tasks.append(TaskItem(id: TaskID(source: .local, rawValue: "Wichtig"), title: "Wichtig", notes: nil, due: nil,
+                                    priority: .p1, estimateMinutes: 15, isCompleted: false,
+                                    container: TaskContainer(id: "local", name: "Lokal", colorHex: nil), url: nil, version: "1",
+                                    editableFields: []))
+        responder.enqueue(Self.dayAnswer(""))
+        let (planner, planning) = await make()
+        await planner.plan(scope: .day, anchor: today)
+        let added = try #require(planning.days.first?.suggestions.first { $0.taskKey == "local:Wichtig" })
+        #expect(added.reason == AIPlanner.addedLocallyReason)
+        #expect(added.minutes == 15)
+        #expect(added.startMinutes == 600)
+    }
+
+    @Test func longerDaysNever_dropsDayChanges() async throws {
+        responder.enqueue(Self.extendedAnswer())
+        let (planner, planning) = await make()
+        planner.longerDays = { .never }
+        await planner.plan(scope: .day, anchor: today)
+        #expect(!(planning.days.first?.suggestions.contains { $0.kind == .dayChange } ?? true))
     }
 
     @Test func suggestions_surviveNewPlanningModel() async throws {

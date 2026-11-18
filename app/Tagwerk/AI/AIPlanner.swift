@@ -28,6 +28,14 @@ final class AIPlanner {
     @ObservationIgnored private let responder: ResponseStreaming
     @ObservationIgnored private let model: @MainActor () async throws -> String
     @ObservationIgnored private let consumeModelFallback: @MainActor () -> Bool
+    /// "Vorarbeiten, wenn Luft ist" (setting, default on).
+    @ObservationIgnored var workAhead: @MainActor () -> Bool = { true }
+    /// "Längere Tage vorschlagen": never, for deadlines and P1 (default), only in an emergency.
+    @ObservationIgnored var longerDays: @MainActor () -> LongerDays = { .forDeadlines }
+
+    enum LongerDays: String, CaseIterable {
+        case never, forDeadlines, emergencyOnly
+    }
     @ObservationIgnored private let planning: PlanningModel
     @ObservationIgnored private let store: SuggestionStore
     /// The last planning request, for "Erneut versuchen".
@@ -56,22 +64,28 @@ final class AIPlanner {
             planning.anchor = anchor
         }
         await planning.reload()
-        var input = makeInput(scope: scope, only: taskID.map { [$0] })
+        // Day plan: the next two working days (within five calendar days) as move targets and for working ahead.
+        var targets: [PlanInputDay] = []
         if scope == .day {
-            // Targets for moving tasks away from a full day.
-            input.laterDays = await planning.planInputs(in: anchor.adding(days: 1, calendar: planning.calendar)...anchor.adding(days: 7, calendar: planning.calendar))
+            let calendar = planning.calendar
+            let candidates = await planning.planInputs(in: anchor.adding(days: 1, calendar: calendar)...anchor.adding(days: 5, calendar: calendar))
+            targets = Array(candidates.filter { $0.hours.map { $0.minutes > 0 } ?? false }.prefix(2))
         }
+        var input = makeInput(scope: scope, only: taskID.map { [$0] }, lookahead: Set(targets.map(\.day)))
+        input.laterDays = targets
         guard !input.tasks.isEmpty, !input.days.isEmpty else {
             notice = Self.nothingToPlanMessage
             return
         }
         state = .planning
+        let started = Date()
         do {
             let model = try await model()
             if consumeModelFallback() { notice = Self.modelFallbackMessage }
             let inputText = String(decoding: try input.modelJSON(), as: UTF8.self)
             let firstText = try await answer(model: model, scope: scope, input: [.user(inputText)])
             var (accepted, violations) = validate(try decode(firstText, scope: scope), input: input)
+            let firstViolations = violations
             if !violations.isEmpty {
                 // One follow-up with the violations; what still fails goes to "Nicht eingeplant".
                 let retryText = try await answer(model: model, scope: scope, input: [
@@ -79,6 +93,12 @@ final class AIPlanner {
                 ])
                 (accepted, violations) = validate(try decode(retryText, scope: scope), input: input)
             }
+            let beforeP1 = Self.blockCount(accepted)
+            accepted = ensureFittingP1(accepted, input: input)
+            if longerDays() == .never { accepted = Self.withoutDayChanges(accepted) }
+            log(scope: scope, input: input, inputText: inputText, model: model, started: started,
+                retried: !firstViolations.isEmpty, output: accepted, addedP1: Self.blockCount(accepted) - beforeP1,
+                violations: firstViolations + violations)
             store.replace(with: makeBatch(scope: scope, input: input, output: accepted, violations: violations))
             await planning.reload()
             state = .idle
@@ -91,6 +111,58 @@ final class AIPlanner {
             state = .failed(Self.invalidAnswerMessage)
         } catch {
             state = .failed(Self.invalidAnswerMessage)
+        }
+    }
+
+    static let addedLocallyReason = "Von Tagwerk ergänzt: P1, passt in diese freie Lücke."
+
+    /// Proposal §3: a P1 that fits into a free stretch gets a block even if the model left it out.
+    private func ensureFittingP1(_ output: PlanOutput, input: PlanInput) -> PlanOutput {
+        guard case .day(var plan) = output, var day = input.days.first else { return output }
+        let handled = Set(plan.blocks.map(\.taskId) + plan.moves.map(\.taskId))
+        day.blocks += plan.blocks.compactMap { block in Self.minutes(block.start).map { $0..<($0 + block.minutes) } }
+        let from = day.day == input.today ? input.nowMinutes : nil
+        for task in input.tasks where task.priority == .p1 && !handled.contains(task.id) {
+            let length = max(15, min(task.sessionMinutes ?? .max, task.remainingMinutes ?? input.defaultTaskMinutes))
+            guard let slot = nextFreeSlot(day, after: day.hours?.startMinutes ?? 0, minutes: length, fromMinutes: from),
+                  slot.count >= length else { continue }
+            plan.blocks.append(PlanBlock(taskId: task.id, start: Self.time(slot.lowerBound), minutes: length,
+                                         reason: Self.addedLocallyReason))
+            day.blocks.append(slot.lowerBound..<(slot.lowerBound + length))
+        }
+        return .day(plan)
+    }
+
+    private static func blockCount(_ output: PlanOutput) -> Int {
+        if case .day(let plan) = output { return plan.blocks.count }
+        return 0
+    }
+
+    /// Numbers only (proposal §6): no titles, no IDs.
+    private func log(scope: PlanScope, input: PlanInput, inputText: String, model: String, started: Date, retried: Bool,
+                     output: PlanOutput, addedP1: Int, violations: [PlanViolation]) {
+        let (blocks, assignments, moves, changes): (Int, Int, Int, Int) = switch output {
+        case .day(let plan): (plan.blocks.count, 0, plan.moves.count, plan.dayChanges.count)
+        case .period(let plan): (0, plan.assignments.count, plan.moves.count, plan.dayChanges.count)
+        }
+        let reasons = Dictionary(grouping: violations, by: { String(describing: $0.reason) }).mapValues(\.count)
+        let overbooked = input.days.reduce(0) { $0 + max(0, $1.plannedMinutes - $1.availableMinutes) }
+        let free = input.days.reduce(0) { $0 + max(0, $1.availableMinutes - $1.plannedMinutes) }
+        PlanningDiagnostics.shared.append(PlanningRunLog(
+            date: started, scope: scope.rawValue, tasksSent: input.tasks.count, omitted: input.omittedCount,
+            freeMinutes: free, inputCharacters: inputText.count, model: model, seconds: Date().timeIntervalSince(started),
+            retried: retried, blocks: blocks, assignments: assignments, moves: moves, dayChanges: changes,
+            addedP1: addedP1, violations: reasons, overbookedBefore: overbooked))
+    }
+
+    private static func withoutDayChanges(_ output: PlanOutput) -> PlanOutput {
+        switch output {
+        case .day(var plan):
+            plan.dayChanges = []
+            return .day(plan)
+        case .period(var plan):
+            plan.dayChanges = []
+            return .period(plan)
         }
     }
 
@@ -399,7 +471,7 @@ final class AIPlanner {
         let schema = scope == .day ? (name: "day_plan", schema: AIPlanSchemas.dayPlanSchema)
                                    : (name: "period_plan", schema: AIPlanSchemas.periodPlanSchema)
         var text = ""
-        for try await event in responder.respond(model: model, instructions: Self.instructions(scope), input: input,
+        for try await event in responder.respond(model: model, instructions: Self.instructions(scope, longerDays: longerDays()), input: input,
                                                   tools: [], jsonSchema: schema) {
             if case .textDelta(let delta) = event { text += delta }
         }
@@ -410,29 +482,53 @@ final class AIPlanner {
         try PlanOutput.decode(Data(text.utf8), scope: scope)
     }
 
-    static func instructions(_ scope: PlanScope) -> String {
+    static func instructions(_ scope: PlanScope, longerDays: LongerDays = .forDeadlines) -> String {
+        let longer: String = switch longerDays {
+        case .never: "(b) Schlage keine längeren Tage vor (dayChanges bleibt leer)."
+        case .forDeadlines: """
+            (b) Passen danach Aufgaben mit P1 oder mit Fälligkeit, Deadline oder latestStart bis übermorgen nicht, \
+            schlage einen längeren Tag vor (dayChanges, neuer Beginn und neues Ende in Schritten von 30 Minuten) bis \
+            normalMaximumHours Stunden Arbeitszeit. (c) Bis emergencyMaximumHours Stunden oder an einem freien Tag nur, \
+            wenn eine Frist innerhalb von 24 Stunden sonst reißt; dann sagt der Grund das ausdrücklich.
+            """
+        case .emergencyOnly: """
+            (b) Längere Tage (dayChanges) nur, wenn eine Frist innerhalb von 24 Stunden sonst reißt, bis \
+            emergencyMaximumHours Stunden; der Grund sagt das ausdrücklich.
+            """
+        }
         let common = """
-        Du planst die Arbeit einer Person in der App Tagwerk. Die Eingabe ist JSON mit Tagen (Arbeitszeit, \
-        Mittagspause, Puffer, Termine, freie Minuten) und offenen Aufgaben. Antworte nur im vorgegebenen Format, \
-        Begründungen kurz und auf Deutsch.
-        Regeln: nichts in die Vergangenheit, nichts an freien Tagen (dayOff), nichts nach der Fälligkeit (due) \
-        oder nach der zugehörigen Deadline (deadline) einer Aufgabe; die freien Minuten eines Tages nicht \
-        überschreiten. Wichtige Aufgaben (important) und solche mit naher Fälligkeit zuerst. Termine mit \
-        busy=false belegen keine Zeit. Aufgaben ohne minutes schätzt du und nennst die Schätzung in estimates. \
-        Was nicht passt, steht in unscheduled mit Grund; drohende Probleme in risks. taskId ist immer die id der Aufgabe.
-        summary: immer eine Einschätzung in ein bis zwei Sätzen, auch wenn nichts mehr passt (was ist wichtig, was kann warten).
-        Ist der Zeitraum zu voll, schlage Auswege vor statt nur unscheduled: moves verschiebt Aufgaben, die schon für einen \
-        Tag eingeplant sind (plannedDay oder dort mitgezählt), auf einen späteren Tag mit freier Zeit (auch aus laterDays); \
-        dayChanges verlängert einzelne Arbeitstage (neuer Beginn und neues Ende). Verlängern nur, wenn wichtige Aufgaben \
-        sonst ihre Frist verpassen, innerhalb von workdayLimits: frühestens earliestStart, spätestens latestEnd, normal \
-        höchstens normalMaximumHours Stunden; bis emergencyMaximumHours oder an einem freien Tag nur im Notfall, und dann \
-        sagt der Grund das ausdrücklich. Blöcke dürfen in die verlängerte Zeit fallen.
+        Du planst die Arbeit einer Person in der App Tagwerk. Antworte nur im vorgegebenen Format, Begründungen \
+        kurz und auf Deutsch. taskId ist immer die id der Aufgabe. Die Aufgaben stehen in der Reihenfolge ihrer \
+        Wichtigkeit (überfällig, heute, P1, nach Termin).
+        Regeln, in dieser Reihenfolge:
+        1. Ist eine Aufgabe überfällig oder bis übermorgen fällig, geht sie vor; sonst P1 vor P2 vor allem anderen.
+        2. Große Aufwände werden verteilt: remainingMinutes ist der offene Aufwand, latestStart der späteste Tag, \
+        an dem die Arbeit beginnen muss, sessionMinutes der Anteil für einen Tag. Plane für solche Aufgaben einen \
+        Block von sessionMinutes, sobald latestStart erreicht oder überschritten ist, auch bei niedriger Priorität.
+        3. Ein Block je Aufgabe und Tag, Dauer = remainingMinutes (oder sessionMinutes, oder deine Schätzung in \
+        estimates), mindestens 15 Minuten.
+        4. Ist es zu voll, in dieser Reihenfolge: (a) Aufgaben mit P3 oder ohne Priorität, die erst nach dem Zieltag \
+        fällig sind, auf einen Zieltag mit freier Zeit verschieben (moves); nie P1 oder Wichtiges. \(longer) \
+        (d) Der Rest steht mit konkretem Grund in unscheduled.
+        5. summary: immer ein bis zwei Sätze – was zählt, was wartet, ob vorgearbeitet wird; nenne omittedCount, \
+        wenn es größer als 0 ist.
         """
         switch scope {
         case .day:
-            return common + "\nPlane Zeitblöcke für den Tag: Start (HH:mm) und Dauer, innerhalb der Arbeitszeit, ohne Überschneidung mit belegten Terminen samt Puffer, der Mittagspause oder bestehenden Blöcken (existingBlocks)."
+            return common + """
+
+            Tagesplan: Nutze nur freeSlots des Tages; rechne keine eigenen Lücken. Zuerst Blöcke für Aufgaben, die \
+            schon auf dem Tag liegen (plannedDay), dann die übrigen in Listenreihenfolge. Jeder P1, der in eine freie \
+            Lücke passt, bekommt einen Block; passt keiner, steht er mit Grund in unscheduled. Ist Luft, ziehe \
+            Aufgaben der nächsten Tage vor und sage das. laterDays sind nur Ziele für moves.
+            """
         case .week, .month:
-            return common + "\nOrdne Aufgaben Arbeitstagen zu (day im Format YYYY-MM-DD), nur Tagen aus der Eingabe. Aufgaben mit plannedDay sind schon zugeordnet; ändere sie nicht."
+            return common + """
+
+            Wochen- und Monatsplan: Ordne Aufgaben ohne plannedDay Arbeitstagen zu (assignments, day im Format \
+            YYYY-MM-DD, nur Tage aus days, freeMinutes beachten). Aufgaben mit plannedDay liegen auf überbuchten \
+            Tagen; sie darfst du nur per moves auf andere Tage verschieben.
+            """
         }
     }
 
@@ -443,7 +539,7 @@ final class AIPlanner {
 
     // MARK: Input and batches
 
-    private func makeInput(scope: PlanScope, only: Set<TaskID>?) -> PlanInput {
+    private func makeInput(scope: PlanScope, only: Set<TaskID>?, lookahead: Set<PlanDay> = []) -> PlanInput {
         let today = planning.today
         let days = planning.days.compactMap(\.planInput).filter { day in
             switch scope {
@@ -461,7 +557,10 @@ final class AIPlanner {
             today: today, nowMinutes: Int(now.timeIntervalSince(dayStart) / 60),
             timeZoneID: planning.calendar.timeZone.identifier, defaultTaskMinutes: planning.defaultTaskMinutes,
             only: only,
-            excluding: Set(planning.recurringReminderIDs.map { TaskID(source: .reminders, rawValue: $0) })
+            excluding: Set(planning.recurringReminderIDs.map { TaskID(source: .reminders, rawValue: $0) }),
+            lookaheadDays: workAhead() ? lookahead : [],
+            blockedMinutes: planning.blockedMinutesByTask,
+            calendar: planning.calendar
         )
     }
 

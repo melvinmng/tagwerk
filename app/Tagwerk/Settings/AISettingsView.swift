@@ -16,6 +16,7 @@ struct AISettingsView: View {
             accountSection
             if ai.isSignedIn { modelSection }
             if ai.isSignedIn, let model = ai.currentModel, !model.reasoningLevels.isEmpty { reasoningSection(model) }
+            if ai.isSignedIn { planningSection }
             Section {
                 NavigationLink("Datenschutzhinweis") { AIPrivacyView() }
             }
@@ -115,6 +116,25 @@ struct AISettingsView: View {
             }
         } footer: {
             Text("Gilt für Planen und Assistent. Ist das gewählte Modell nicht mehr verfügbar, wechselt Tagwerk auf „Automatisch“ und sagt es beim nächsten Aufruf.")
+        }
+    }
+
+    // MARK: Planning (proposal 2026-11-18, §6)
+
+    private var planningSection: some View {
+        @Bindable var settings = environment.settings
+        return Section {
+            Toggle("Vorarbeiten, wenn Luft ist", isOn: $settings.aiWorkAhead)
+            Picker("Längere Tage vorschlagen", selection: $settings.aiLongerDays) {
+                Text("Nie").tag(AIPlanner.LongerDays.never.rawValue)
+                Text("Bei Fristen und P1").tag(AIPlanner.LongerDays.forDeadlines.rawValue)
+                Text("Nur im Notfall").tag(AIPlanner.LongerDays.emergencyOnly.rawValue)
+            }
+            NavigationLink("Diagnose") { PlanningDiagnosticsView() }
+        } header: {
+            Text("Planen mit KI")
+        } footer: {
+            Text("Längere Tage erscheinen immer nur als Vorschlag; erst dein ✓ ändert die Arbeitszeit des Tages.")
         }
     }
 
