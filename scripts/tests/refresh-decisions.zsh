@@ -85,6 +85,8 @@ print -r -- 'error: Provisioning profile "iOS Team Provisioning Profile: org.exa
 check "app provisioning error detected"   yes "$(build_log_has_signing_error "$sign_log")"
 print -r -- '/src/TagwerkWidget/Widget.swift:12:5: error: cannot find type '"'"'Foo'"'"' in scope' > "$sign_log"
 check "widget compile error is no signing" no "$(build_log_has_signing_error "$sign_log")"
+print -r -- '/src/Tagwerk/Settings/ProfileView.swift:3:1: error: cannot find '"'"'ProfileView'"'"' in scope' > "$sign_log"
+check "compile error naming a profile is no signing" no "$(build_log_has_signing_error "$sign_log")"
 check "missing log is no signing error"   no  "$(build_log_has_signing_error "$test_home/does-not-exist.log")"
 
 echo 'DEVICE_ID=example-device' > "$CONFIG_FILE"

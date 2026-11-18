@@ -85,8 +85,9 @@ fallback_commit() {
 SIGNING_ERROR_PATTERN='error: .*([Pp]rovisioning|[Pp]rofile|[Ss]igning|[Cc]ertificate|[Ee]ntitlement|application-groups|App Group|TagwerkWidget.*(sign|profile|group))|Command CodeSign failed'
 
 # build_log_has_signing_error <build log> -> yes|no
+# Compiler errors ("<file>.swift:<line>:<col>: error: ...") never count, even when they name a profile or a group.
 build_log_has_signing_error() {
-  if [[ -r "$1" ]] && grep -qE "$SIGNING_ERROR_PATTERN" "$1"; then print yes; else print no; fi
+  if [[ -r "$1" ]] && grep -vE '\.swift:[0-9]+:[0-9]+: error:' "$1" | grep -qE "$SIGNING_ERROR_PATTERN"; then print yes; else print no; fi
 }
 
 [[ "${TAGWERK_SOURCE_ONLY:-0}" == "1" ]] && return 0
@@ -161,9 +162,11 @@ embedded_profile_expiry() {
 
 # compute_installed_expiry <app bundle>: sets computed_expiry to the earliest expiry of the app profile and all
 # PlugIns/*.appex profiles, or to empty if any of them is unreadable (unknown).
+# An unreadable profile is logged and notified, and the earliest readable expiry is kept: storing nothing would make
+# every hourly run due and reinstall the app each hour.
 compute_installed_expiry() {
   local app_path="$1" value appex
-  local -a values
+  local -a values readable
   value=$(embedded_profile_expiry "$app_path") || value=""
   values=("$value")
   for appex in "$app_path"/PlugIns/*.appex(N/); do
@@ -171,6 +174,13 @@ compute_installed_expiry() {
     values+=("$value")
   done
   computed_expiry=$(earliest_expiry "${values[@]}")
+  if [[ -z "$computed_expiry" ]]; then
+    readable=(${values:#})
+    if (( ${#readable} > 0 )); then
+      computed_expiry=$(earliest_expiry "${readable[@]}")
+      notify "Ablaufdatum eines Profils ist unbekannt; Tagwerk nimmt das der App. Details im Log."
+    fi
+  fi
 }
 
 format_epoch() {
@@ -286,12 +296,15 @@ last_installed=$(cat "$LAST_INSTALLED_FILE" 2>/dev/null || true)
 attempt_install "$SRC" "$DERIVED" "$BUILD_LOG"
 attempt_status=$?
 
-if (( attempt_status == 1 || attempt_status == 3 )); then
+# An install the device rejects (status 2 while the device is still reachable) gets the fallback too.
+if (( attempt_status == 1 || attempt_status == 3 )) || { (( attempt_status == 2 )) && device_reachable; }; then
   log "$attempt_message"
   fallback_target=$(fallback_commit "$last_good" "$last_installed" "$head_commit")
   if [[ "$fallback_target" =~ '^[0-9a-f]{7,64}$' ]]; then
     log "fallback: new state ${head_commit[1,12]} failed, reinstalling last good commit ${fallback_target[1,12]}"
-    trap 'exit 1' INT TERM HUP
+    trap 'exit 130' INT
+    trap 'exit 143' TERM
+    trap 'exit 129' HUP
     trap cleanup_fallback_worktree EXIT
     if run_fallback "$fallback_target"; then
       log "fallback: done"

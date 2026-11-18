@@ -300,3 +300,26 @@ Umgesetzt nach `../plans/2026-11-18-phase-4-comfort.md` inkl. der Änderungen na
 - **Rückblick**
   - Ob EventKit erledigte Vorkommen wiederkehrender Erinnerungen liefert.
   - Dauer der Abfrage bei vielen Listen.
+
+**Review vor dem Merge (Fable, 2026-11-18)**
+
+*Behoben*
+- **Kritisch:** Der SwiftData-Store bleibt am alten Ort (`groupContainer: .none`). Mit dem App-Group-Entitlement hätte SwiftData sonst einen neuen, leeren Store im Group-Container geöffnet; das war im Simulator belegt. Ein Test sichert den Ort.
+- **Tageswerte im Snapshot:** Sie kommen direkt aus dem Store für den Tag von „jetzt“, nicht aus dem Erfassen-Modell. Damit stimmen sie nach Mitternacht und beim Hintergrundstart.
+- **`replacingIntake`:** Ein fehlender Tag macht einen veralteten Snapshot nicht mehr „frisch“, und ältere Tage verlieren ihre Werte.
+- **Planteil:** Er wird nur geschrieben, wenn alle Quellen fertig geladen sind (`allSourcesSettled`).
+- **Kaltstart:** Der Router wird auch beim ersten Erscheinen ausgewertet.
+- **Schreiben im Hintergrund:** Der Snapshot wird vor allen anderen Schritten geschrieben.
+- **EventKit-Änderungen** lösen ein Schreiben aus.
+- **„Erfassen“-Link:** Er springt auf heute. Das Blatt öffnet sofort, ohne auf Health zu warten. Eine neue Vorbelegung ersetzt ein offenes Blatt.
+- **Kürzung:** Ganztägige Einträge verdrängen keine zeitgebundenen mehr. Die Zähler für Siri werden vor dem Kürzen gespeichert.
+- **Siri-Wasser** hinterlässt keine „Widerrufen“-Leiste.
+- **Skript:**
+  - Compilerfehler zählen nicht als Signierfehler.
+  - Ein unlesbares Extension-Profil führt nicht zur stündlichen Neuinstallation; es wird gemeldet.
+  - Ein Rückfall erfolgt auch, wenn das Gerät die Installation ablehnt.
+  - Signale führen zu Exit 129, 130 und 143.
+
+*Offen*
+- **Erste Phase-4-Installation:** Für sie gibt es keinen gemerkten Commit, also keinen Rückfall. Siehe Liste für den Nutzer.
+- **Prüfung der eingebetteten Extension:** Sie läuft nur im Simulator-Build (gehosteter Test), nicht für den Geräte-Build in `test-all.sh`.
