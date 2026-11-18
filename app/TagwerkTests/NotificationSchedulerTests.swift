@@ -81,12 +81,13 @@ struct NotificationSchedulerTests {
         local.tasks = [makeTask("A", source: .local, due: due(25))]
         await list.reload()
         await scheduler.reschedule()
-        let expected = calendar.date(from: DateComponents(year: 2026, month: 11, day: 25, hour: 16))
+        let expected = calendar.date(from: DateComponents(year: 2026, month: 11, day: 25, hour: 9))
         #expect(center.pending["tagwerk.task.local:A"]?.fireDate == expected)
     }
 
     @Test func leadTimeChanged_reschedulesAll() async {
-        local.tasks = [makeTask("A", source: .local, due: due(20))]
+        // A task with time: tasks without time remind at 09:00 regardless of the lead time.
+        local.tasks = [makeTask("A", source: .local, due: due(20, 18))]
         let scheduler = makeScheduler(await loadedList())
         await scheduler.reschedule()
         settings.leadTimeMinutes = 60
@@ -216,7 +217,7 @@ struct NotificationSchedulerTests {
         local.tasks = [makeTask("Gleich", source: .local, due: due(25))]
         let scheduler = makeScheduler(await loadedList([local]))
         await scheduler.reschedule()
-        let expected = calendar.date(from: DateComponents(year: 2026, month: 11, day: 25, hour: 16))
+        let expected = calendar.date(from: DateComponents(year: 2026, month: 11, day: 25, hour: 9))
         #expect(center.pending["tagwerk.task.local:Gleich"]?.fireDate == expected)
     }
 

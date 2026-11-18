@@ -34,20 +34,23 @@ public struct NotificationRules: Sendable, Hashable {
     public var includesDeadlineCalendars: Bool
     /// At most this many pending notifications (iOS keeps 64).
     public var limit: Int
-    /// Hour at which a due date without time counts as due.
+    /// Hour on the due day at which a task without time reminds, without lead time (a morning heads-up).
     public var dateOnlyHour: Int
+    /// Hour on the evening before at which an all-day deadline event reminds.
+    public var allDayEventHour: Int
     /// Notifications must fire at least this long after `now`; earlier ones are skipped.
     public var minimumDelay: TimeInterval
 
     /// Margin before a new notification may fire.
     public static let defaultMinimumDelay: TimeInterval = 60
 
-    public init(leadTimeMinutes: Int, includesDeadlineCalendars: Bool, limit: Int = 50, dateOnlyHour: Int = 18,
-                minimumDelay: TimeInterval = defaultMinimumDelay) {
+    public init(leadTimeMinutes: Int, includesDeadlineCalendars: Bool, limit: Int = 50, dateOnlyHour: Int = 9,
+                allDayEventHour: Int = 18, minimumDelay: TimeInterval = defaultMinimumDelay) {
         self.leadTimeMinutes = leadTimeMinutes
         self.includesDeadlineCalendars = includesDeadlineCalendars
         self.limit = limit
         self.dateOnlyHour = dateOnlyHour
+        self.allDayEventHour = allDayEventHour
         self.minimumDelay = minimumDelay
     }
 }
@@ -66,8 +69,9 @@ public func notificationPlan(tasks: [TaskItem], deadlineEvents: [CalendarEvent],
         var parts = due.dayComponents()
         parts.hour = due.hour ?? rules.dateOnlyHour
         parts.minute = due.minute ?? 0
+        // A due date without time reminds on the morning of the due day; the lead time applies to timed ones only.
         guard let dueMoment = calendar.date(from: parts),
-              let fire = calendar.date(byAdding: .minute, value: -rules.leadTimeMinutes, to: dueMoment),
+              let fire = due.hasTime ? calendar.date(byAdding: .minute, value: -rules.leadTimeMinutes, to: dueMoment) : dueMoment,
               fire >= earliest else { continue }
         let time = due.hasTime ? dueMoment : nil
         result.append(PlannedNotification(
@@ -84,7 +88,7 @@ public func notificationPlan(tasks: [TaskItem], deadlineEvents: [CalendarEvent],
             if event.isAllDay {
                 // All-day deadlines remind on the evening before, without lead time (design 2b §11.13).
                 var parts = day.adding(days: -1, calendar: calendar).startDate(in: calendar).components(in: calendar)
-                parts.hour = rules.dateOnlyHour
+                parts.hour = rules.allDayEventHour
                 parts.minute = 0
                 fire = calendar.date(from: parts)
             } else {

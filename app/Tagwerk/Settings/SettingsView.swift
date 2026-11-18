@@ -134,7 +134,7 @@ struct SettingsView: View {
     private var notificationFooter: String {
         switch environment.notifications.authorization {
         case .authorized:
-            "So lange vor der Fälligkeit erinnert Tagwerk an GitHub- und lokale Aufgaben und an Termine aus Deadline-Kalendern. Ein Datum ohne Uhrzeit gilt als 18:00. An ganztägige Deadline-Termine erinnert Tagwerk am Vortag um 18:00."
+            "So lange vor der Fälligkeit erinnert Tagwerk an GitHub- und lokale Aufgaben und an Termine aus Deadline-Kalendern. An Aufgaben ohne Uhrzeit erinnert Tagwerk am Fälligkeitstag um 9:00. An ganztägige Deadline-Termine erinnert Tagwerk am Vortag um 18:00."
         case .notDetermined:
             "Benachrichtigungen sind noch nicht erlaubt. Erlaube sie unten unter „Zugriff“."
         case .denied:
