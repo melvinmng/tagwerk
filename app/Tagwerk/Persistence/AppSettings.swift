@@ -33,6 +33,11 @@ final class AppSettings {
     var dayTimelineStyle: String = "list"
     /// The day opens in the row list instead of the hour grid (grid is the default, design §13.15 S1).
     var prefersTimelineList: Bool = false
+    /// ChatGPT model for all AI features; `nil` means "Automatisch" (the first model of the list).
+    var aiModelSlug: String? = nil
+    /// Last model list from ChatGPT (JSON of `[AIModel]`), kept to avoid loading it on every call.
+    var aiModelsData: Data? = nil
+    var aiModelsFetchedAt: Date? = nil
 
     var weekSchedule: WeekSchedule {
         get { weekScheduleData.flatMap { try? JSONDecoder().decode(WeekSchedule.self, from: $0) } ?? .standard }

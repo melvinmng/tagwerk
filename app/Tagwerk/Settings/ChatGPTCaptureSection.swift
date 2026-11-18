@@ -26,7 +26,7 @@ struct ChatGPTCaptureSection: View {
                 }
                 Button("Abmelden", role: .destructive) {
                     Task {
-                        try? await environment.chatGPT.signOut()
+                        try? await environment.ai.session.signOut()
                         await refresh()
                     }
                 }
@@ -45,15 +45,15 @@ struct ChatGPTCaptureSection: View {
     }
 
     private func refresh() async {
-        isSignedIn = await environment.chatGPT.isSignedIn
-        email = await environment.chatGPT.accountEmail
+        isSignedIn = await environment.ai.session.isSignedIn
+        email = await environment.ai.session.accountEmail
     }
 
     private func signIn() async {
         isBusy = true
         defer { isBusy = false }
         do {
-            try await ChatGPTLogin(session: environment.chatGPT, authenticator: authenticator).signIn()
+            try await ChatGPTLogin(session: environment.ai.session, authenticator: authenticator).signIn()
             status = "Angemeldet."
         } catch let error as ChatGPTAuthError {
             // Debug only: the exact case shows which step of the sign-in failed.
@@ -68,7 +68,7 @@ struct ChatGPTCaptureSection: View {
         isBusy = true
         defer { isBusy = false }
         status = "Mitschnitt läuft …"
-        let recorder = ChatGPTCaptureRecorder(session: environment.chatGPT)
+        let recorder = ChatGPTCaptureRecorder(session: environment.ai.session)
         let log = await recorder.run()
         do {
             let url = URL.documentsDirectory.appending(path: "chatgpt-capture.txt")

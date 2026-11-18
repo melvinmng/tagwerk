@@ -19,8 +19,8 @@ final class AppEnvironment {
     let gitHubTokens: TokenManager
     let gitHubLoginClient: DeviceFlowClient
     let gitHub: GitHubTaskProvider
-    /// The ChatGPT session. Creating it sends nothing; every AI call starts with a user action (§8.4).
-    let chatGPT: ChatGPTSessionStore
+    /// ChatGPT session, client and model choice. Creating it sends nothing (§8.4).
+    let ai: AIEnvironment
     private let gitHubCache: SwiftDataGitHubCache
     private let gitHubCatalogStore: SwiftDataGitHubCatalogStore
     /// Age after which the repository/project catalog is fetched again.
@@ -68,7 +68,7 @@ final class AppEnvironment {
             catalogStore: catalogStore,
             selectedProjectIDs: { settings.selectedProjectIDs.map(Set.init) }
         )
-        self.chatGPT = ChatGPTSessionStore(store: KeychainChatGPTCredentialStore(), transport: URLSessionAITransport())
+        self.ai = AIEnvironment.make(settings: settings)
         let planning = self.planning
         taskList.onCompletionChanged = { id, isCompleted in await planning.didChangeCompletion(id, isCompleted: isCompleted) }
         // An ended GitHub sign-in (expired or revoked) forgets the cached issues of that account.
