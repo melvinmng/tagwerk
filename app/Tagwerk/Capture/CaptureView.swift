@@ -28,15 +28,14 @@ struct CaptureView: View {
     }
 
     // Day swipe only on the rows above the entries: entry rows keep swipe-to-delete (swipeActions).
-    private func daySwipeBack() async { await model.goBack() }
-    private func daySwipeForward() async { await model.goForward() }
+    private func daySwipe(_ direction: PageSwipe) { model.navigate(by: direction) }
 
     var body: some View {
         NavigationStack {
             List {
                 Section {
-                    DayNavigation(model: model).pageSwipe(back: daySwipeBack, forward: daySwipeForward)
-                    DaySummary(model: model).pageSwipe(back: daySwipeBack, forward: daySwipeForward)
+                    DayNavigation(model: model).pageSwipe(daySwipe)
+                    DaySummary(model: model).pageSwipe(daySwipe)
                     // R3a: entry to the weekly review (a row of its own, so VoiceOver keeps the summary as one element).
                     Button { showsReview = true } label: {
                         HStack {
@@ -47,10 +46,10 @@ struct CaptureView: View {
                         }
                     }
                     .foregroundStyle(.primary)
-                    .pageSwipe(back: daySwipeBack, forward: daySwipeForward)
+                    .pageSwipe(daySwipe)
                 }
                 Section {
-                    quickEntry.pageSwipe(back: daySwipeBack, forward: daySwipeForward)
+                    quickEntry.pageSwipe(daySwipe)
                 } footer: {
                     if !model.hasEntries {
                         Text(model.isToday ? "Noch nichts erfasst. Tippe oben auf Essen, Trinken oder Training."
@@ -58,7 +57,7 @@ struct CaptureView: View {
                     }
                 }
                 if model.showsHealthCard {
-                    Section { HealthCard(model: model).pageSwipe(back: daySwipeBack, forward: daySwipeForward) }
+                    Section { HealthCard(model: model).pageSwipe(daySwipe) }
                 }
                 mealSection
                 drinkSection
@@ -243,47 +242,48 @@ private struct DayNavigation: View {
     let model: CaptureModel
     @State private var picking = false
 
+    /// "MI., 18. NOV. · KW 47" above the short title "Heute" / "Gestern" / "Montag" (mockup EK1).
+    private var caption: String {
+        let week = model.calendar.component(.weekOfYear, from: model.day.startDate(in: model.calendar))
+        return "\(CaptureText.date(model.day, calendar: model.calendar)) · \(String(localized: "KW \(week)"))".uppercased()
+    }
+
     var body: some View {
-        HStack {
-            Button {
-                Task { await model.goBack() }
-            } label: {
-                Image(systemName: "chevron.left").frame(width: 32, height: 32)
-            }
-            .accessibilityLabel("Vorheriger Tag")
-            Spacer()
+        let title = CaptureText.relativeDay(model.day, today: model.today, calendar: model.calendar)
+        HStack(spacing: 8) {
             Button { picking = true } label: {
-                VStack(spacing: 0) {
-                    HStack(alignment: .firstTextBaseline, spacing: 4) {
-                        Text(CaptureText.relativeDay(model.day, today: model.today, calendar: model.calendar)).font(.headline)
-                        Image(systemName: "chevron.down").font(.caption.weight(.semibold)).foregroundStyle(.secondary)
-                    }
-                    Text(CaptureText.date(model.day, calendar: model.calendar)).font(.caption).foregroundStyle(.secondary)
-                }
+                PageTitleLabel(caption: caption, title: title, isCurrent: model.isToday)
             }
-            .tint(.primary)
+            .buttonStyle(.plain)
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(title)
+            .accessibilityValue(CaptureText.date(model.day, calendar: model.calendar))
             .accessibilityHint("Datum wählen")
+            .accessibilityAddTraits(.isHeader)
             .popover(isPresented: $picking) {
-                DateJumpPopover(selected: model.day, today: model.today, calendar: model.calendar, todayTitle: "Heute") { day in
+                DateJumpPopover(selected: model.day, today: model.today, latest: model.today, calendar: model.calendar,
+                                todayTitle: "Heute") { day in
                     picking = false
-                    Task { await model.go(to: day) }
+                    model.navigate(to: day)
                 }
             }
-            Spacer()
-            // Like the head of "Planen": a direct way back to today while another day is shown.
-            if !model.isToday {
-                Button("Heute") { Task { await model.go(to: model.today) } }
-                    .font(.caption.weight(.semibold))
-            }
-            Button {
-                Task { await model.goForward() }
-            } label: {
-                Image(systemName: "chevron.right").frame(width: 32, height: 32)
-            }
-            .disabled(!model.canGoForward)
-            .accessibilityLabel("Nächster Tag")
+            Spacer(minLength: 8)
+            if !model.isToday { PageTodayButton { model.navigate(to: model.today) } }
+            PageArrowCapsule(backLabel: String(localized: "Vorheriger Tag"), forwardLabel: String(localized: "Nächster Tag"),
+                             canGoForward: model.canGoForward) { model.navigate(by: $0) }
         }
-        .buttonStyle(.borderless)
+    }
+}
+
+extension CaptureModel {
+    /// Changes the day at once (animatable) and refreshes Health in the background.
+    func navigate(to target: PlanDay) {
+        show(target)
+        Task { await reload() }
+    }
+
+    func navigate(by direction: PageSwipe) {
+        navigate(to: day.adding(days: direction.step, calendar: calendar))
     }
 }
 

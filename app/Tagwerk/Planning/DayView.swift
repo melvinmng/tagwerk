@@ -125,7 +125,7 @@ struct DayView: View {
             TaskSections(model: model, plan: plan, onOpenTask: onOpenTask, onEditRecurring: onEditRecurring,
                          menuActions: plannedActions)
         }
-        .simultaneousGesture(daySwipe)
+        .simultaneousGesture(pageSwipeGesture { model.step($0.step) })
     }
 
     @ViewBuilder
@@ -158,14 +158,6 @@ struct DayView: View {
                     Task { await model.dropTask(key: key, atMinutes: range.lowerBound, on: plan.day) }
                     return true
                 }
-        }
-    }
-
-    private var daySwipe: some Gesture {
-        DragGesture(minimumDistance: 30).onEnded { value in
-            let dx = value.translation.width, dy = value.translation.height
-            guard abs(dx) > 80, abs(dx) > 2 * abs(dy) else { return }
-            withAnimation(.snappy) { model.step(dx < 0 ? 1 : -1) }
         }
     }
 

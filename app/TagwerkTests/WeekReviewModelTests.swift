@@ -102,23 +102,27 @@ struct WeekReviewModelTests {
 
 struct PageSwipeTests {
     @Test func swipeRight_goesBack() {
-        #expect(PageSwipe.direction(start: CGPoint(x: 100, y: 300), translation: CGSize(width: 80, height: 10)) == .back)
+        #expect(PageSwipe.direction(start: CGPoint(x: 100, y: 300), translation: CGSize(width: 90, height: 10)) == .back)
     }
 
     @Test func swipeLeft_goesForward() {
-        #expect(PageSwipe.direction(start: CGPoint(x: 300, y: 300), translation: CGSize(width: -80, height: -12)) == .forward)
+        #expect(PageSwipe.direction(start: CGPoint(x: 300, y: 300), translation: CGSize(width: -90, height: -12)) == .forward)
     }
 
+    /// Same thresholds as the swipe in "Planen": at least 80 pt sideways.
     @Test func shortSwipe_ignored() {
-        #expect(PageSwipe.direction(start: CGPoint(x: 100, y: 300), translation: CGSize(width: 40, height: 0)) == nil)
+        #expect(PageSwipe.direction(start: CGPoint(x: 100, y: 300), translation: CGSize(width: 70, height: 0)) == nil)
     }
 
-    @Test func verticalScroll_ignored() {
-        #expect(PageSwipe.direction(start: CGPoint(x: 100, y: 300), translation: CGSize(width: 70, height: 90)) == nil)
+    /// Twice as far sideways as up or down, so list scrolling wins otherwise.
+    @Test func diagonalDrag_ignored() {
+        #expect(PageSwipe.direction(start: CGPoint(x: 100, y: 300), translation: CGSize(width: 100, height: 60)) == nil)
     }
 
-    /// The system back gesture starts at the leading edge; it must not also switch the week.
-    @Test func edgeSwipe_leftToSystemBack() {
-        #expect(PageSwipe.direction(start: CGPoint(x: 12, y: 300), translation: CGSize(width: 120, height: 0)) == nil)
+    /// In pushed screens the system back gesture starts at the leading edge; it must not also switch the page.
+    @Test func edgeSwipe_onlyIgnoredWhenRequested() {
+        let start = CGPoint(x: 12, y: 300), translation = CGSize(width: 120, height: 0)
+        #expect(PageSwipe.direction(start: start, translation: translation, excludesLeadingEdge: true) == nil)
+        #expect(PageSwipe.direction(start: start, translation: translation, excludesLeadingEdge: false) == .back)
     }
 }

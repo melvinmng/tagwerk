@@ -38,7 +38,7 @@ struct MonthView: View {
             }
             .padding(.horizontal)
             .contentShape(Rectangle())
-            .simultaneousGesture(horizontalSwipe { model.step($0) })  // swiping over the calendar changes the month
+            .simultaneousGesture(pageSwipeGesture { model.step($0.step) })  // swiping over the calendar changes the month
 
             if let plan = model.days.first(where: { $0.day == model.monthSelection }) {
                 MonthDayDetail(model: model, plan: plan, onOpenDay: { onSelectDay(plan.day) },
@@ -46,7 +46,7 @@ struct MonthView: View {
                     .padding(.horizontal)
                     .padding(.top, 12)
                     .contentShape(Rectangle())
-                    .simultaneousGesture(horizontalSwipe { model.stepSelectedDay($0) })  // over the day: the day
+                    .simultaneousGesture(pageSwipeGesture { model.stepSelectedDay($0.step) })  // over the day: the day
             }
 
             let deadlines = model.days.flatMap(\.deadlines)

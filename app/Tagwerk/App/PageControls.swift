@@ -1,0 +1,62 @@
+import SwiftUI
+import TagwerkCore
+
+/// Back and forward arrows as one glass capsule with 44-pt targets (mockups PK2, EK1).
+struct PageArrowCapsule: View {
+    let backLabel: String
+    let forwardLabel: String
+    var canGoForward = true
+    let onStep: (PageSwipe) -> Void
+
+    var body: some View {
+        HStack(spacing: 0) {
+            arrow(.back, symbol: "chevron.left", label: backLabel)
+            arrow(.forward, symbol: "chevron.right", label: forwardLabel)
+                .disabled(!canGoForward)
+        }
+        .glassEffect(.regular.interactive(), in: .capsule)
+    }
+
+    private func arrow(_ direction: PageSwipe, symbol: String, label: String) -> some View {
+        Button { withAnimation(.snappy) { onStep(direction) } } label: {
+            Image(systemName: symbol).font(.body.weight(.semibold)).frame(width: 44, height: 44)
+        }
+        .buttonStyle(.borderless)
+        .contentShape(Rectangle())
+        .accessibilityLabel(label)
+        .accessibilityShowsLargeContentViewer()
+    }
+}
+
+/// "Heute" next to the arrows while another period is shown (mockups PK2, EK1).
+struct PageTodayButton: View {
+    let action: () -> Void
+
+    var body: some View {
+        Button("Heute") { withAnimation(.snappy) { action() } }
+            .buttonStyle(.borderless)
+            .font(.subheadline.weight(.semibold))
+            .frame(minHeight: 44)
+            .accessibilityShowsLargeContentViewer()
+    }
+}
+
+/// Caption above a title with ▾ (mockups PK2, EK1): one VoiceOver element that opens the month calendar.
+struct PageTitleLabel: View {
+    let caption: String
+    let title: String
+    let isCurrent: Bool
+    var titleFont: Font = .title3.bold()
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Text(caption)
+                .font(.caption2.weight(.semibold))
+                .foregroundStyle(isCurrent ? Color.accentColor : .secondary)
+            HStack(alignment: .firstTextBaseline, spacing: 4) {
+                Text(title).font(titleFont).lineLimit(1).minimumScaleFactor(0.8)
+                Image(systemName: "chevron.down").font(.caption.weight(.semibold)).foregroundStyle(.secondary)
+            }
+        }
+    }
+}

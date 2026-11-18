@@ -10,31 +10,7 @@ struct WeekReviewView: View {
     var body: some View {
         List {
             Section {
-                HStack {
-                    Button { Task { await model.goBack() } } label: { Image(systemName: "chevron.left") }
-                        .accessibilityLabel("Vorherige Woche")
-                    Spacer()
-                    Button { picking = true } label: {
-                        HStack(alignment: .firstTextBaseline, spacing: 4) {
-                            Text(model.title).font(.headline).monospacedDigit()
-                            Image(systemName: "chevron.down").font(.caption.weight(.semibold)).foregroundStyle(.secondary)
-                        }
-                    }
-                    .tint(.primary)
-                    .accessibilityHint("Woche wählen")
-                    .popover(isPresented: $picking) {
-                        DateJumpPopover(selected: model.weekStart, today: model.today, calendar: model.calendar,
-                                        todayTitle: "Diese Woche") { day in
-                            picking = false
-                            Task { await model.go(toWeekOf: day) }
-                        }
-                    }
-                    Spacer()
-                    Button { Task { await model.goForward() } } label: { Image(systemName: "chevron.right") }
-                        .disabled(!model.canGoForward)
-                        .accessibilityLabel("Nächste Woche")
-                }
-                .buttonStyle(.borderless)
+                header
             }
             if let review = model.review {
                 if review.isEmpty {
@@ -61,9 +37,45 @@ struct WeekReviewView: View {
         }
         .navigationTitle("Wochenrückblick")
         .navigationBarTitleDisplayMode(.inline)
-        .pageSwipe(back: { await model.goBack() }, forward: { await model.goForward() })
+        .pageSwipe(excludesLeadingEdge: true) { direction in
+            Task { direction == .back ? await model.goBack() : await model.goForward() }
+        }
+        .animation(.snappy, value: model.review)
         .sensoryFeedback(.selection, trigger: model.weekStart)
         .task { await model.reload() }
+    }
+
+    /// Mockup EK1: caption "DIESE WOCHE · KW 47" above the week "16.–22. Nov." with ▾, then "Heute" and the arrows.
+    private var header: some View {
+        let range = model.weekStart...model.weekStart.adding(days: 6, calendar: model.calendar)
+        let current = !model.canGoForward
+        let caption = PlanHeaderText.caption(scope: .week, anchor: model.weekStart, today: model.today, range: range,
+                                             calendar: model.calendar)
+        let title = PlanHeaderText.title(scope: .week, anchor: model.weekStart, range: range, calendar: model.calendar)
+        return HStack(spacing: 8) {
+            Button { picking = true } label: {
+                PageTitleLabel(caption: caption, title: title, isCurrent: current)
+            }
+            .buttonStyle(.plain)
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(title)
+            .accessibilityValue(caption.capitalized)
+            .accessibilityHint("Woche wählen")
+            .accessibilityAddTraits(.isHeader)
+            .popover(isPresented: $picking) {
+                DateJumpPopover(selected: model.weekStart, today: model.today, latest: model.today, calendar: model.calendar,
+                                todayTitle: "Diese Woche") { day in
+                    picking = false
+                    Task { await model.go(toWeekOf: day) }
+                }
+            }
+            Spacer(minLength: 8)
+            if !current { PageTodayButton { Task { await model.go(toWeekOf: model.today) } } }
+            PageArrowCapsule(backLabel: String(localized: "Vorherige Woche"), forwardLabel: String(localized: "Nächste Woche"),
+                             canGoForward: model.canGoForward) { direction in
+                Task { direction == .back ? await model.goBack() : await model.goForward() }
+            }
+        }
     }
 
     private func header(_ title: LocalizedStringResource, _ review: WeekReview) -> some View {

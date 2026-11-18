@@ -151,6 +151,13 @@ final class CaptureModel {
         await reload()
     }
 
+    /// Shows a day at once with the entries of the store; days after today show today.
+    /// Synchronous, so a swipe or an arrow can animate the change. `reload()` adds Health afterwards.
+    func show(_ target: PlanDay) {
+        day = min(target, today)
+        refreshLocal()
+    }
+
     /// Jumps to a chosen day; days after today show today (only back in time).
     func go(to target: PlanDay) async {
         day = min(target, today)
