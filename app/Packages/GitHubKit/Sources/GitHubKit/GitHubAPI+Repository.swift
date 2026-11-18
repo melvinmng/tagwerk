@@ -32,6 +32,12 @@ public struct IssueNeighbours: Sendable, Equatable, Codable {
     public let labels: [String]
     public let epic: IssueSummary?
     public let siblings: [IssueSummary]
+
+    public init(labels: [String], epic: IssueSummary?, siblings: [IssueSummary]) {
+        self.labels = labels
+        self.epic = epic
+        self.siblings = siblings
+    }
 }
 
 /// A file or the entries of a directory.
@@ -52,6 +58,20 @@ public struct PullRequestSummary: Sendable, Equatable, Codable {
     public let additions: Int
     public let deletions: Int
     public let url: String
+
+    public init(number: Int, title: String, state: String, merged: Bool, author: String, body: String,
+                changedFiles: Int, additions: Int, deletions: Int, url: String) {
+        self.number = number
+        self.title = title
+        self.state = state
+        self.merged = merged
+        self.author = author
+        self.body = body
+        self.changedFiles = changedFiles
+        self.additions = additions
+        self.deletions = deletions
+        self.url = url
+    }
 }
 
 /// Read-only access to repository contents for the issue chat (design §8.3). Every call names the

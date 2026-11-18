@@ -1,5 +1,6 @@
 import AIKit
 import Foundation
+import GitHubKit
 import Observation
 import TagwerkCore
 
@@ -12,6 +13,8 @@ final class AssistantModel {
         case planning(scope: PlanScope, anchor: PlanDay)
         case tasks
         case settings
+        /// "Über diese Aufgabe sprechen": its own chat per task (design §8.3).
+        case task(TaskID)
     }
 
     private(set) var conversation: Conversation?
@@ -26,7 +29,13 @@ final class AssistantModel {
     @ObservationIgnored private let store: ChatStore
     @ObservationIgnored private let planning: PlanningModel
     @ObservationIgnored private let now: () -> Date
-    @ObservationIgnored private let key = ChatStore.assistantKey
+    @ObservationIgnored private var key = ChatStore.assistantKey
+    /// GitHub access and issue lookup for chats about one task.
+    @ObservationIgnored var reader: RepositoryReading?
+    @ObservationIgnored var issueReference: (TaskID) -> IssueReference? = { _ in nil }
+    /// The task a task chat is about and its loaded context (comments, neighbours …).
+    private(set) var task: TaskItem?
+    @ObservationIgnored private var taskContext: String?
 
     init(responder: ResponseStreaming, tools: AppTools, model: @escaping @MainActor () async throws -> String, store: ChatStore,
          planning: PlanningModel, now: @escaping () -> Date = Date.init) {
@@ -41,18 +50,40 @@ final class AssistantModel {
     /// Opens the chat for the current view; restores the stored conversation without sending anything.
     func open(context: Context) {
         self.context = context
-        if conversation == nil {
-            actionTimes = store.actionTimes(for: key)
-            conversation = Conversation(responder: responder, tools: tools, model: model,
-                                        instructions: { [weak self] in self?.instructions() ?? "" },
-                                        history: store.history(for: key))
-        }
+        switchThread(to: ChatStore.assistantKey, tools: tools)
+        task = nil
         isPresented = true
+    }
+
+    /// "Über diese Aufgabe sprechen": the task's own chat, with the repository functions for GitHub issues.
+    func open(task: TaskItem) {
+        context = .task(task.id)
+        let reference = task.id.source == .github ? issueReference(task.id) : nil
+        let handler = TaskChatTools(base: tools, reader: reader ?? NoRepositoryReader(), reference: reader == nil ? nil : reference)
+        if self.task?.id != task.id { taskContext = nil }
+        self.task = task
+        switchThread(to: "task:\(task.id.key)", tools: handler)
+        isPresented = true
+    }
+
+    private func switchThread(to newKey: String, tools handler: ToolHandler) {
+        guard conversation == nil || key != newKey else { return }
+        if conversation != nil { persist() }
+        key = newKey
+        actionTimes = store.actionTimes(for: newKey)
+        conversation = Conversation(responder: responder, tools: handler, model: model,
+                                    instructions: { [weak self] in self?.instructions() ?? "" },
+                                    history: store.history(for: newKey))
     }
 
     func send(_ text: String) async {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty, let conversation else { return }
+        if let task, taskContext == nil {
+            // GitHub is asked only now, when the user starts the conversation.
+            let reference = task.id.source == .github ? issueReference(task.id) : nil
+            taskContext = await IssueContext.load(task: task, reference: reference, reader: reference == nil ? nil : reader)
+        }
         await conversation.send(trimmed)
         persist()
     }
@@ -88,6 +119,7 @@ final class AssistantModel {
     func clear() {
         conversation?.clear()
         actionTimes = [:]
+        taskContext = nil
         store.delete(key)
     }
 
@@ -116,6 +148,8 @@ final class AssistantModel {
 
     private func contextText() -> String {
         switch context {
+        case .task:
+            return taskContext ?? task.map { "Das Gespräch betrifft die Aufgabe „\($0.title)“ (id \($0.id.key))." } ?? ""
         case .settings:
             return "Ansicht: Einstellungen (kein besonderer Kontext)."
         case .tasks:
@@ -203,4 +237,16 @@ final class AssistantModel {
             return ActionCard(title: title, change: call.name)
         }
     }
+}
+
+/// Placeholder when GitHub is not connected; the repository functions are not offered then.
+@MainActor
+final class NoRepositoryReader: RepositoryReading {
+    private struct Unavailable: Error {}
+    func issueComments(repository: String, number: Int) async throws -> [IssueComment] { throw Unavailable() }
+    func issueNeighbours(nodeID: String, selfNumber: Int) async throws -> IssueNeighbours { throw Unavailable() }
+    func readme(repository: String) async throws -> String { throw Unavailable() }
+    func file(repository: String, path: String) async throws -> RepositoryContent { throw Unavailable() }
+    func searchCode(repository: String, query: String) async throws -> [String] { throw Unavailable() }
+    func pullRequest(repository: String, number: Int) async throws -> PullRequestSummary { throw Unavailable() }
 }

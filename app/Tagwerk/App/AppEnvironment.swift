@@ -84,6 +84,11 @@ final class AppEnvironment {
                              events: { interval in gateway.events(in: interval, calendarIDs: nil) })
         self.assistant = AssistantModel(responder: ai.client, tools: tools, model: { try await ai.selectedModel() },
                                         store: ChatStore(context: context), planning: planning)
+        let gitHubProvider = self.gitHub
+        assistant.reader = GitHubRepositoryReader(api: gitHubProvider.api)
+        assistant.issueReference = { id in
+            gitHubProvider.issueReference(for: id).map { IssueReference(repository: $0.repository, number: $0.number, nodeID: $0.nodeID) }
+        }
         let planning = self.planning
         taskList.onCompletionChanged = { id, isCompleted in await planning.didChangeCompletion(id, isCompleted: isCompleted) }
         // An ended GitHub sign-in (expired or revoked) forgets the cached issues of that account.

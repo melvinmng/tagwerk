@@ -12,7 +12,7 @@ public final class GitHubTaskProvider: TaskProvider {
     public private(set) var projects: [ProjectInfo] = []
     public private(set) var login: String?
 
-    @ObservationIgnored let api: GitHubAPI
+    @ObservationIgnored public let api: GitHubAPI
     @ObservationIgnored let tokens: TokenManager
     @ObservationIgnored private let cache: GitHubCache
     @ObservationIgnored private let catalogStore: GitHubCatalogStore?
