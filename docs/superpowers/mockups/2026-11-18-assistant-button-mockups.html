@@ -1,0 +1,633 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tagwerk · Assistent-Knopf · einheitlicher Platz · Mockups AK1 bis AK4</title>
+<style>
+  /* Mockup frame uses the host theme (with fallbacks); phone screens depict the app in iOS dark mode. */
+  :root { color-scheme: light dark; }
+  body { font: 14px var(--font-sans, system-ui, sans-serif); color: var(--foreground, CanvasText); margin: 16px; }
+  h1 { font-size: 20px; margin: 0 0 4px; }
+  h2 { font-size: 18px; margin: 38px 0 4px; padding-top: 16px; border-top: 1px solid rgba(128,128,128,.3); display: flex; align-items: center; gap: 10px; }
+  .area { display: inline-grid; place-items: center; min-width: 34px; height: 34px; padding: 0 6px; border-radius: 9px; background: #0a84ff; color: #fff; font: 800 14px system-ui; flex-shrink: 0; box-sizing: border-box; }
+  .area.g { background: #30d158; color: #000; }
+  .lead { color: var(--muted-foreground, #777); margin: 0 0 14px; line-height: 1.5; max-width: 980px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(392px, 1fr)); gap: 22px; align-items: start; }
+  .label { font: 600 13px var(--font-sans, system-ui); color: var(--muted-foreground, #777); margin: 0 0 8px 4px; }
+  .label b { color: var(--foreground, CanvasText); }
+  .code { display: inline-block; background: rgba(128,128,128,.28); color: var(--foreground, CanvasText); border-radius: 6px; padding: 1px 8px; font: 800 13px system-ui; margin-right: 4px; }
+  .code.r { background: #30d158; color: #000; }
+  .rec { background: #30d158; color: #000; font-size: 11px; font-weight: 700; padding: 1px 7px; border-radius: 99px; margin-left: 4px; }
+  .pc { font-size: 12.5px; color: var(--muted-foreground, #777); line-height: 1.5; margin: 8px 4px 0; max-width: 390px; }
+  .pc b { color: var(--foreground, CanvasText); }
+  .box { border: 1px solid rgba(48,209,88,.5); background: rgba(48,209,88,.07); border-radius: 12px; padding: 12px 16px; margin-top: 16px; line-height: 1.55; font-size: 13px; max-width: 1100px; }
+  .box h3 { margin: 0 0 6px; font-size: 14px; }
+  .box ul, .box ol { margin: 4px 0 0; padding-left: 20px; }
+  .box.neutral { border-color: rgba(128,128,128,.4); background: rgba(128,128,128,.07); }
+  .box.warn { border-color: rgba(255,159,10,.6); background: rgba(255,159,10,.08); }
+  code { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; background: rgba(128,128,128,.16); padding: 1px 4px; border-radius: 4px; }
+  table.sum { border-collapse: collapse; font-size: 13px; margin-top: 6px; }
+  table.sum td, table.sum th { padding: 5px 14px 5px 0; vertical-align: top; text-align: left; border-bottom: 1px solid rgba(128,128,128,.22); }
+  table.sum th { font-size: 12px; color: var(--muted-foreground, #777); }
+
+  .phone {
+    --bg: #000; --card: #1c1c1e; --card2: #2c2c2e; --sep: #38383a; --text: #fff; --sub: #8e8e93;
+    --blue: #0a84ff; --green: #30d158; --orange: #ff9f0a; --red: #ff453a; --purple: #bf5af2; --teal: #64d2ff; --mint: #7cf0c3;
+    background: var(--bg); color: var(--text); border-radius: 40px; padding: 14px 12px 12px;
+    font: 15px -apple-system, "SF Pro Text", system-ui, sans-serif; border: 6px solid #2a2a2c;
+    width: 390px; max-width: 100%; box-sizing: border-box; height: 760px;
+    display: flex; flex-direction: column; position: relative; overflow: hidden;
+  }
+  .status { display: flex; justify-content: space-between; font: 600 13px system-ui; padding: 0 12px 10px; }
+  .chip { font-size: 11px; padding: 2px 7px; border-radius: 99px; background: var(--card2); color: #c7c7cc; white-space: nowrap; }
+  .chip.p1 { background: rgba(255,69,58,.25); color: #ffb3ad; }
+  .section { color: var(--sub); font: 600 12px system-ui; text-transform: uppercase; letter-spacing: .4px; margin: 10px 8px 4px; display: flex; justify-content: space-between; }
+  .list { background: var(--card); border-radius: 18px; overflow: hidden; margin-bottom: 6px; }
+  .item { display: flex; align-items: flex-start; gap: 10px; padding: 9px 12px; border-bottom: 1px solid var(--sep); }
+  .item:last-child { border-bottom: 0; }
+  .item .t { flex: 1; font-size: 14px; min-width: 0; }
+  .item .s { color: var(--sub); font-size: 12px; margin-top: 2px; }
+  .item .ck { width: 18px; height: 18px; border-radius: 50%; border: 1.5px solid #636366; flex-shrink: 0; margin-top: 1px; box-sizing: border-box; }
+  .seg { display: flex; background: var(--card2); border-radius: 99px; padding: 2px; margin: 0 2px 8px; }
+  .seg span { flex: 1; text-align: center; padding: 6px 2px; font-size: 13px; border-radius: 99px; color: #c7c7cc; }
+  .seg span.on { background: #636366; color: #fff; font-weight: 600; }
+  .field { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 10px 12px; border-bottom: 1px solid var(--sep); font-size: 14px; }
+  .field:last-child { border-bottom: 0; }
+  .field .v { color: var(--sub); text-align: right; }
+  .field .l { color: var(--blue); }
+  .sw { width: 44px; height: 26px; border-radius: 99px; background: var(--green); position: relative; flex-shrink: 0; }
+  .sw::after { content: ""; position: absolute; right: 2px; top: 2px; width: 22px; height: 22px; border-radius: 50%; background: #fff; }
+  .glass { background: rgba(72,72,78,.62); backdrop-filter: blur(18px) saturate(1.6); -webkit-backdrop-filter: blur(18px) saturate(1.6);
+    border: 1px solid rgba(255,255,255,.16); box-shadow: inset 0 1px 0 rgba(255,255,255,.18), 0 8px 24px rgba(0,0,0,.55); }
+  .tb { margin: 8px auto 0; width: 80%; display: flex; border-radius: 99px; padding: 5px; font-size: 10px; color: #d1d1d6; text-align: center; box-sizing: border-box; flex-shrink: 0; position: relative; z-index: 3; }
+  .tb span { flex: 1; padding: 4px 0 3px; border-radius: 99px; }
+  .tb .on { color: var(--blue); background: rgba(0,0,0,.5); font-weight: 600; }
+  .tb.four { width: 96%; }
+  .tb .aitab { color: #e2a8ff; }
+  .ico { font-size: 17px; display: block; font-style: normal; line-height: 20px; }
+  .topbar { display: flex; align-items: center; gap: 8px; padding: 0 2px 10px; flex-shrink: 0; }
+  .topbar .seg { flex: 1; margin: 0; }
+  .rbtn { width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; font-size: 20px; flex-shrink: 0; color: #fff; box-sizing: border-box; }
+  .rbtn.b44 { width: 44px; height: 44px; }
+  .hdr { display: flex; align-items: flex-end; justify-content: space-between; gap: 8px; padding: 4px 6px 10px; }
+  .kick { font: 600 12px system-ui; color: var(--blue); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 2px; }
+  .bigdate { font: 700 26px/1.15 system-ui; letter-spacing: -.3px; }
+  .bigdate .car { font-size: 15px; color: var(--sub); vertical-align: 4px; }
+  .stepper { display: flex; border-radius: 99px; flex-shrink: 0; }
+  .stepper span { width: 38px; height: 34px; display: grid; place-items: center; color: #fff; font-size: 18px; }
+  .stepper span + span { border-left: 1px solid rgba(255,255,255,.14); }
+  .abl { display: flex; justify-content: space-between; align-items: center; color: var(--sub); font: 600 12px system-ui; text-transform: uppercase; letter-spacing: .4px; margin: 4px 8px 12px; }
+  .abl span { text-transform: none; letter-spacing: 0; color: var(--blue); font-size: 13px; }
+
+  /* Hour grid, 48 pt per hour */
+  .hg { position: relative; margin: 2px 0 6px 44px; border-left: 1px solid var(--sep); height: 400px; }
+  .hg .hl { position: absolute; left: -44px; right: 0; border-top: 1px solid #2c2c2e; font: 11px ui-monospace, monospace; color: var(--sub); padding-left: 2px; height: 0; }
+  .hg .hl span { position: relative; top: -8px; background: var(--bg); padding-right: 4px; }
+  .hg .ev { position: absolute; left: 4px; right: 4px; border-radius: 9px; padding: 4px 8px; font-size: 12.5px; box-sizing: border-box; overflow: hidden; }
+  .hg .ev small { color: #c7c7cc; font-size: 11px; display: block; }
+  .hg .ev.e { background: rgba(10,132,255,.24); border-left: 4px solid var(--blue); }
+  .hg .ev.p { background: rgba(48,209,88,.22); border-left: 4px solid var(--green); }
+
+  /* Day panel "Ohne Uhrzeit" (D1 as built) */
+  .panel { margin: 6px -4px 0; border-radius: 16px; background: rgba(44,44,46,.94); border: 1px solid rgba(255,255,255,.09); box-shadow: 0 -8px 24px rgba(0,0,0,.6); flex-shrink: 0; position: relative; z-index: 2; }
+  .ph { display: flex; align-items: center; gap: 6px; height: 46px; padding: 0 12px; font-size: 13.5px; white-space: nowrap; overflow: hidden; }
+  .ph b { font-weight: 600; }
+  .ph .c { color: var(--sub); }
+  .ph .o { font-size: 12px; color: var(--sub); }
+  .ph .chev { margin-left: auto; color: var(--sub); font-size: 13px; }
+  .pb { padding: 0 10px 8px; }
+  .psec { font: 600 12px system-ui; color: var(--sub); padding: 8px 4px 2px; }
+  .prow { display: flex; align-items: center; gap: 8px; padding: 6px 4px; border-bottom: 1px solid var(--sep); }
+  .prow:last-child { border-bottom: 0; }
+  .prow .t { flex: 1; min-width: 0; font-size: 14px; }
+  .prow .s { color: var(--sub); font-size: 12px; margin-top: 1px; }
+  .prow .rest { font: 600 12px system-ui; color: #9ff0b4; background: rgba(48,209,88,.2); border-radius: 99px; padding: 2px 8px; white-space: nowrap; }
+  .prow .gr { color: #8e8e93; font-size: 17px; padding: 0 2px; }
+  .toast { border-radius: 99px; padding: 7px 8px 7px 14px; display: flex; align-items: center; gap: 6px; margin: 6px 2px 0; font-size: 12.5px; flex-shrink: 0; position: relative; z-index: 2; }
+  .toast .tx { flex: 1; min-width: 0; line-height: 1.25; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .toast .tx small { display: block; color: #c7c7cc; font-size: 11.5px; }
+  .toast .un { background: rgba(10,132,255,.28); border-radius: 99px; padding: 6px 11px; font-weight: 600; white-space: nowrap; }
+  .zone { display: flex; align-items: flex-end; justify-content: flex-end; position: absolute; border: 1.5px dashed #ffd60a; border-radius: 10px; color: #ffd60a; font: 600 10px system-ui; padding: 2px 5px; z-index: 6; pointer-events: none; box-sizing: border-box; }
+  .zone.bad { border-color: #ff453a; color: #ff8a82; }
+
+  /* Additions for this file */
+  .scr { flex: 1; min-height: 0; overflow: hidden; display: flex; flex-direction: column; }
+  .scr > * { flex-shrink: 0; }
+  .zl { position: absolute; z-index: 7; font: 700 10px system-ui; color: #ff8a82; background: rgba(0,0,0,.78); border-radius: 5px; padding: 1px 5px; white-space: nowrap; }
+  .zl.y { color: #ffd60a; }
+  .nav { display: flex; align-items: center; justify-content: space-between; height: 44px; padding: 0 2px 6px; flex-shrink: 0; }
+  .nav .r { display: flex; align-items: center; gap: 8px; }
+  .pill { border-radius: 99px; padding: 0 14px; height: 40px; display: grid; place-items: center; font-size: 15px; }
+  .grp { display: flex; align-items: center; border-radius: 99px; padding: 4px; gap: 6px; height: 44px; box-sizing: border-box; }
+  .grp span { width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; font-size: 20px; }
+  .ai { background: rgba(191,90,242,.34) !important; color: #ecc4ff !important; border-color: rgba(191,90,242,.55) !important; font-size: 18px !important; }
+  .big { font: 700 30px/1.1 system-ui; letter-spacing: -.4px; padding: 2px 6px 10px; }
+  .cap { background: var(--card); border-radius: 16px; padding: 9px 12px; margin: 0 0 8px; font-size: 13px; }
+  .cap b { font-size: 15px; display: block; }
+  .cap i { display: block; height: 5px; border-radius: 99px; background: var(--red); margin: 6px 0 2px; }
+  .cap small { color: var(--sub); font-size: 11.5px; }
+  .fab { position: absolute; right: 14px; bottom: 71px; width: 48px; height: 48px; border-radius: 50%; display: grid; place-items: center; z-index: 5; box-sizing: border-box; }
+  .fab.ghost { background: none !important; border: 1.5px dashed rgba(191,90,242,.7) !important; box-shadow: none; opacity: .8; }
+  .acc { margin: 8px 4px 0; height: 46px; border-radius: 99px; display: flex; align-items: center; gap: 10px; padding: 0 14px 0 6px; font-size: 14px; flex-shrink: 0; position: relative; z-index: 3; box-sizing: border-box; }
+  .acc .dot { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; flex-shrink: 0; }
+  .acc .tx { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .acc .tx small { color: #c7c7cc; font-size: 12px; margin-left: 4px; }
+  .acc .go { color: var(--sub); font-size: 13px; }
+  .row3 { margin: 26px 0 0; }
+  .row3 > h3 { font-size: 14px; margin: 0 0 10px 4px; }
+</style>
+</head>
+<body>
+
+<h1>Tagwerk · Assistent-Knopf · ein Platz für alle drei Tabs · Mockups AK1 bis AK4</h1>
+<p class="lead">Der Knopf ✦ öffnet das ChatGPT-Blatt mit dem Kontext des aktuellen Bildschirms. Er sitzt heute in jedem Tab anders. Diese Datei zeigt vier baubare Plätze, jeweils für „Planen“ (Tag), „Aufgaben“ und „Einstellungen“. Die Kürzel <b>AK1 bis AK4</b> sind neu; „AK“ kommt in keiner Datei unter <code>docs/superpowers/mockups/</code> vor. Die Empfehlung trägt ein grünes Kürzel. Alle Daten sind erfunden, Stichtag ist Mittwoch, 18. November 2026, 13:20 Uhr. Die Bilder sind statisches HTML im dunklen Erscheinungsbild. Maße sind aus den beiden Screenshots abgeschätzt (920 px Breite, angenommen 402 pt). Am Gerät geprüft ist nur der Befund zur Suchrolle; alles andere in dieser Datei ist ungeprüft.</p>
+
+<div class="box neutral">
+  <h3>Vergleich auf einen Blick</h3>
+  <table class="sum">
+    <tr><th>Kürzel</th><th>Platz</th><th>Gleich in allen Tabs</th><th>Kollision unten</th><th>Daumen</th><th>Aufwand und Risiko</th></tr>
+    <tr><td><span class="code r">AK2</span></td><td>Oben rechts außen, eigener Glas-Kreis, nie in der ＋-Kapsel</td><td>ja, wenn „Planen“ die System-Leiste bekommt; sonst rund 5 pt Abweichung</td><td>keine</td><td>schlecht (obere Ecke)</td><td>klein; ein Punkt ungeprüft (Segmente in der Leiste)</td></tr>
+    <tr><td><span class="code">AK1</span></td><td>Schwebender Glas-Knopf unten rechts über der Tab-Leiste</td><td>ja, ein Baustein an einer Stelle</td><td>vier Stellen müssen ausweichen</td><td>gut</td><td>mittel; Zusammenspiel mit Panel, Kapseln, Auswahlmodus</td></tr>
+    <tr><td><span class="code">AK3</span></td><td>Schmale Assistent-Leiste über der Tab-Leiste</td><td>ja, vom System gesetzt</td><td>keine Überdeckung, aber rund 54 pt Höhe dauerhaft</td><td>sehr gut</td><td>klein; Sicherheitsabstand des Inhalts ungeprüft</td></tr>
+    <tr><td><span class="code">AK4</span></td><td>Vierter Eintrag in der Tab-Leiste</td><td>ja</td><td>keine</td><td>sehr gut</td><td>klein; bricht die Entscheidung „kein vierter Tab“ und die Bedeutung eines Tabs</td></tr>
+  </table>
+</div>
+
+<div class="box neutral">
+  <h3>Ausgangslage und was feststeht</h3>
+  <ul>
+    <li><b>Freigegeben war e-A / K1:</b> abgesetzter runder Knopf rechts neben der Tab-Leiste über <code>Tab(role: .search)</code>. Auf iOS 27 setzt das System den Such-Tab nicht ab, sondern als vierten Eintrag in die Kapsel (im Simulator geprüft). Das widerspricht „kein vierter Tab“.</li>
+    <li><b>Ein eigener Knopf neben der Kapsel passt nicht:</b> links und rechts der zentrierten Tab-Leiste bleiben je rund 45 pt. Ein Ziel von 44 pt hätte dort keinen Abstand zum Rand und zur Kapsel; die Lage der System-Leiste lässt sich nicht verschieben.</li>
+    <li><b>Gebaut ist der Rückfall K2</b> („oben rechts neben ＋“), aber dreimal verschieden, siehe „Ist“.</li>
+    <li><b>Unten liegen bereits:</b> im Tag das Panel „Ohne Uhrzeit“ (volle Breite, 8 pt über der Tab-Leiste, Pfeil am rechten Rand), darüber die Rückgängig-Kapseln von „Planen“ (60 pt Abstand nach unten); in „Aufgaben“ die Rückgängig-Kapsel und im Auswahlmodus die Aktionsleiste direkt über der Tab-Leiste; in Woche und Monat die Ablage „Ungeplant“.</li>
+    <li><b>Der Assistent hat weitere Einstiege,</b> die bleiben: „Mit KI planen“ im Kontextmenü einer Aufgabe und die KI-Zeile in der Kapazitätskarte des Tages. Der Knopf ist der allgemeine Einstieg, nicht der einzige.</li>
+  </ul>
+</div>
+<h2><span class="area">Ist</span> Stand heute · dreimal anders</h2><p class="lead">Nachgezeichnet nach den beiden Screenshots und dem Code (<code>AssistantButton</code> in <code>PlanView</code>, <code>TaskListView</code>, <code>SettingsView</code>). Gelb gestrichelt: der Knopf.</p><div class="grid"><div><p class="label"><b>Planen</b> · eigener Kreis rechts von ＋</p><div class="phone"><div class="status"><span>13:20</span><span>●●● 5G</span></div><div class="topbar"><div class="seg"><span class="on">Tag</span><span>Woche</span><span>Monat</span></div><span class="rbtn glass">＋</span><span class="rbtn glass ai">✦</span></div>
+<div class="scr">
+  <div class="hdr"><div><div class="kick">Heute · KW 47</div><div class="bigdate">Mittwoch, 18. Nov. <span class="car">⌄</span></div></div><div class="stepper glass"><span>‹</span><span>›</span></div></div>
+  <div class="cap"><b>1 h 20 zu viel</b><i></i><small>ab 13:20 bis 18:00 · 1 Aufgabe ohne Aufwand mit Standarddauer gerechnet</small></div>
+  <div class="abl">Ablauf<span>☰ Auswählen</span></div>
+  <div class="hg">
+    <div class="hl" style="top:0"><span>13:00</span></div>
+    <div class="hl" style="top:48px"><span>14:00</span></div>
+    <div class="hl" style="top:96px"><span>15:00</span></div>
+    <div class="hl" style="top:144px"><span>16:00</span></div>
+    <div class="hl" style="top:192px"><span>17:00</span></div>
+    <div class="hl" style="top:240px"><span>18:00</span></div>
+    <div class="hl" style="top:288px"><span>19:00</span></div>
+    <div class="hl" style="top:336px"><span>20:00</span></div>
+    <div class="ev e" style="top:2px;height:44px">Sprechstunde<small>13:00–14:00</small></div>
+    <div class="ev p" style="top:50px;height:68px">Pretest: Selbsttest Technik<small>14:00–15:30</small></div>
+    <div class="ev e" style="top:146px;height:44px">Lerngruppe<small>16:00–17:00</small></div>
+    <div class="ev p" style="top:194px;height:44px">Kapitel 2 gliedern<small>17:00–18:00</small></div>
+    <div class="ev e" style="top:290px;height:68px">Sport<small>19:00–20:30</small></div>
+  </div>
+</div>
+<div class="panel"><div class="ph"><b>Ohne Uhrzeit</b><span class="c">2 · 45 min</span><span class="o">+4 offen</span><span class="chev">⌃</span></div></div><div class="tb glass"><span class="on"><i class="ico">▦</i>Planen</span><span><i class="ico">☑︎</i>Aufgaben</span><span><i class="ico">⚙︎</i>Einstellungen</span></div><div class="zone" style="top:36px;right:8px;width:44px;height:44px"></div></div><p class="pc">Eigene Kopfzeile ohne Navigationsleiste. ✦ steht <b>rechts</b> von ＋, als einzelner lila Kreis (<code>.bordered</code>, <code>.circle</code>), sichtbar rund 36 pt groß und damit unter 44 pt.</p></div><div><p class="label"><b>Aufgaben</b> · mit ＋ in einer Kapsel</p><div class="phone"><div class="status"><span>13:20</span><span>●●● 5G</span></div><div class="nav"><span class="pill glass">Auswählen</span><span class="r"><span class="grp glass"><span class="ai">✦</span><span>＋</span></span></span></div>
+<div class="scr">
+  <div class="big">Aufgaben</div>
+  <div class="seg"><span class="on">Alle</span><span>Erinnerungen</span><span>GitHub</span><span>Lokal</span></div>
+  <div class="section">Überfällig</div>
+  <div class="list">
+    <div class="item"><span class="ck"></span><div class="t">Blumen gießen<div class="s">↻ 15.11. · To Do</div></div><span class="chip p1">P1</span></div>
+    <div class="item"><span class="ck"></span><div class="t">Pretest: Selbsttest Technik und Zeitplan<div class="s">15.11. · GitHub</div></div><span class="chip">P2</span></div>
+  </div>
+  <div class="section">Heute</div>
+  <div class="list">
+    <div class="item"><span class="ck"></span><div class="t">An Projekten weiterarbeiten<div class="s">↻ heute · To Do</div></div><span class="chip">P2</span></div>
+    <div class="item"><span class="ck"></span><div class="t">Karteikarten und Lernzettel<div class="s">↻ heute · To Do</div></div><span class="chip">P2</span></div>
+    <div class="item"><span class="ck"></span><div class="t">Übungen machen<div class="s">↻ heute · To Do</div></div><span class="chip">P2</span></div>
+    <div class="item"><span class="ck"></span><div class="t">Vorlesung nacharbeiten<div class="s">↻ heute · To Do</div></div><span class="chip">P2</span></div>
+    <div class="item"><span class="ck"></span><div class="t">Mail an Lerngruppe<div class="s">heute · Lokal</div></div><span class="chip">P3</span></div>
+    <div class="item"><span class="ck"></span><div class="t">Literatur nachtragen<div class="s">heute · Lokal</div></div><span class="chip">P3</span></div>
+    <div class="item"><span class="ck"></span><div class="t">Folien durchsehen<div class="s">heute · Lokal</div></div><span class="chip">P3</span></div>
+  </div>
+</div>
+<div class="tb glass"><span><i class="ico">▦</i>Planen</span><span class="on"><i class="ico">☑︎</i>Aufgaben</span><span><i class="ico">⚙︎</i>Einstellungen</span></div><div class="zone" style="top:38px;right:54px;width:44px;height:44px"></div></div><p class="pc">Zwei <code>ToolbarItem(placement: .primaryAction)</code> hintereinander: Das System fasst sie in eine gemeinsame Glas-Kapsel. ✦ steht <b>links</b> von ＋. Reihenfolge und Form weichen von „Planen“ ab.</p></div><div><p class="label"><b>Einstellungen</b> · allein in der Leiste</p><div class="phone"><div class="status"><span>13:20</span><span>●●● 5G</span></div><div class="nav"><span></span><span class="r"><span class="rbtn glass ai b44">✦</span></span></div>
+<div class="scr">
+  <div class="big">Einstellungen</div>
+  <div class="section">ChatGPT</div>
+  <div class="list">
+    <div class="field"><span>Konto</span><span class="v">verbunden ›</span></div>
+    <div class="field"><span>Modell</span><span class="v">Automatisch ›</span></div>
+    <div class="field"><span>KI-Planung</span><span class="sw"></span></div>
+  </div>
+  <div class="section">Quellen</div>
+  <div class="list">
+    <div class="field"><span>Erinnerungen</span><span class="sw"></span></div>
+    <div class="field"><span>GitHub</span><span class="sw"></span></div>
+    <div class="field"><span>Lokale Aufgaben</span><span class="sw"></span></div>
+  </div>
+  <div class="section">Benachrichtigungen</div>
+  <div class="list">
+    <div class="field"><span>Vorlauf: 1 h</span><span class="v">－ ｜ ＋</span></div>
+    <div class="field"><span>Am Morgen zusammenfassen</span><span class="sw"></span></div>
+  </div>
+  <div class="section">Zugriff</div>
+  <div class="list">
+    <div class="field"><span>Erinnerungen</span><span class="v">erlaubt</span></div>
+    <div class="field"><span>Kalender</span><span class="v">erlaubt</span></div>
+    <div class="field"><span>Mitteilungen</span><span class="sw"></span></div>
+  </div>
+  <div class="list"><div class="field"><span class="l">Einrichtung erneut starten</span></div></div>
+</div>
+<div class="tb glass"><span><i class="ico">▦</i>Planen</span><span><i class="ico">☑︎</i>Aufgaben</span><span class="on"><i class="ico">⚙︎</i>Einstellungen</span></div><div class="zone" style="top:38px;right:10px;width:44px;height:44px"></div></div><p class="pc">Einzelner Leisten-Knopf ganz rechts. Dritte Lage: Hier steht ✦ dort, wo in „Aufgaben“ ＋ steht.</p></div></div><div class="box warn">
+  <h3>Was genau uneinheitlich ist</h3>
+  <ul>
+    <li><b>Reihenfolge:</b> „Planen“ ＋ ✦, „Aufgaben“ ✦ ＋. An derselben Stelle des Bildschirms liegt je nach Tab eine andere Aktion; das lädt zu Fehlgriffen ein.</li>
+    <li><b>Form:</b> einmal einzelner Kreis, einmal Teil einer Kapsel, einmal einzelner Leisten-Knopf.</li>
+    <li><b>Größe:</b> In „Planen“ ist der Kreis sichtbar kleiner als 44 pt. Ob die Trefferfläche größer ist als der sichtbare Kreis, ist nicht gemessen.</li>
+  </ul>
+</div><h2><span class="area g">AK2</span> Oben rechts außen · eigener Glas-Kreis, nie in der ＋-Kapsel <span class="rec">Empfehlung</span></h2><p class="lead">Eine Regel für alle Tabs: ✦ ist immer der äußerste Knopf rechts oben, immer ein eigener, lila getönter Glas-Kreis mit 44 pt, immer mit Abstand zu ＋. ＋ steht links daneben oder fehlt (Einstellungen).</p><div class="grid"><div><p class="label"><span class="code r">AK2</span><b>Planen (Tag)</b> <span class="rec">Empfehlung</span></p><div class="phone"><div class="status"><span>13:20</span><span>●●● 5G</span></div><div class="topbar"><div class="seg"><span class="on">Tag</span><span>Woche</span><span>Monat</span></div><span class="rbtn glass b44">＋</span><span class="rbtn glass ai b44">✦</span></div>
+<div class="scr">
+  <div class="hdr"><div><div class="kick">Heute · KW 47</div><div class="bigdate">Mittwoch, 18. Nov. <span class="car">⌄</span></div></div><div class="stepper glass"><span>‹</span><span>›</span></div></div>
+  <div class="cap"><b>1 h 20 zu viel</b><i></i><small>ab 13:20 bis 18:00 · 1 Aufgabe ohne Aufwand mit Standarddauer gerechnet</small></div>
+  <div class="abl">Ablauf<span>☰ Auswählen</span></div>
+  <div class="hg">
+    <div class="hl" style="top:0"><span>13:00</span></div>
+    <div class="hl" style="top:48px"><span>14:00</span></div>
+    <div class="hl" style="top:96px"><span>15:00</span></div>
+    <div class="hl" style="top:144px"><span>16:00</span></div>
+    <div class="hl" style="top:192px"><span>17:00</span></div>
+    <div class="hl" style="top:240px"><span>18:00</span></div>
+    <div class="hl" style="top:288px"><span>19:00</span></div>
+    <div class="hl" style="top:336px"><span>20:00</span></div>
+    <div class="ev e" style="top:2px;height:44px">Sprechstunde<small>13:00–14:00</small></div>
+    <div class="ev p" style="top:50px;height:68px">Pretest: Selbsttest Technik<small>14:00–15:30</small></div>
+    <div class="ev e" style="top:146px;height:44px">Lerngruppe<small>16:00–17:00</small></div>
+    <div class="ev p" style="top:194px;height:44px">Kapitel 2 gliedern<small>17:00–18:00</small></div>
+    <div class="ev e" style="top:290px;height:68px">Sport<small>19:00–20:30</small></div>
+  </div>
+</div>
+<div class="panel"><div class="ph"><b>Ohne Uhrzeit</b><span class="c">2 · 45 min</span><span class="o">+4 offen</span><span class="chev">⌃</span></div></div><div class="tb glass"><span class="on"><i class="ico">▦</i>Planen</span><span><i class="ico">☑︎</i>Aufgaben</span><span><i class="ico">⚙︎</i>Einstellungen</span></div><div class="zone" style="top:36px;right:8px;width:48px;height:48px"></div><div class="zl y" style="top:87px;right:8px">44 pt · außen</div></div><p class="pc"><b>Pro:</b> Reihenfolge wie bisher in „Planen“, nur größer. Unten ändert sich nichts. <b>Contra:</b> Zwei Knöpfe mit 44 pt lassen dem Umschalter Tag / Woche / Monat rund 16 pt weniger Breite als heute; die drei Wörter passen weiterhin.</p></div><div><p class="label"><span class="code r">AK2</span><b>Aufgaben</b></p><div class="phone"><div class="status"><span>13:20</span><span>●●● 5G</span></div><div class="nav"><span class="pill glass">Auswählen</span><span class="r"><span class="rbtn glass b44">＋</span><span class="rbtn glass ai b44">✦</span></span></div>
+<div class="scr">
+  <div class="big">Aufgaben</div>
+  <div class="seg"><span class="on">Alle</span><span>Erinnerungen</span><span>GitHub</span><span>Lokal</span></div>
+  <div class="section">Überfällig</div>
+  <div class="list">
+    <div class="item"><span class="ck"></span><div class="t">Blumen gießen<div class="s">↻ 15.11. · To Do</div></div><span class="chip p1">P1</span></div>
+    <div class="item"><span class="ck"></span><div class="t">Pretest: Selbsttest Technik und Zeitplan<div class="s">15.11. · GitHub</div></div><span class="chip">P2</span></div>
+  </div>
+  <div class="section">Heute</div>
+  <div class="list">
+    <div class="item"><span class="ck"></span><div class="t">An Projekten weiterarbeiten<div class="s">↻ heute · To Do</div></div><span class="chip">P2</span></div>
+    <div class="item"><span class="ck"></span><div class="t">Karteikarten und Lernzettel<div class="s">↻ heute · To Do</div></div><span class="chip">P2</span></div>
+    <div class="item"><span class="ck"></span><div class="t">Übungen machen<div class="s">↻ heute · To Do</div></div><span class="chip">P2</span></div>
+    <div class="item"><span class="ck"></span><div class="t">Vorlesung nacharbeiten<div class="s">↻ heute · To Do</div></div><span class="chip">P2</span></div>
+    <div class="item"><span class="ck"></span><div class="t">Mail an Lerngruppe<div class="s">heute · Lokal</div></div><span class="chip">P3</span></div>
+    <div class="item"><span class="ck"></span><div class="t">Literatur nachtragen<div class="s">heute · Lokal</div></div><span class="chip">P3</span></div>
+    <div class="item"><span class="ck"></span><div class="t">Folien durchsehen<div class="s">heute · Lokal</div></div><span class="chip">P3</span></div>
+  </div>
+</div>
+<div class="tb glass"><span><i class="ico">▦</i>Planen</span><span class="on"><i class="ico">☑︎</i>Aufgaben</span><span><i class="ico">⚙︎</i>Einstellungen</span></div><div class="zone" style="top:36px;right:8px;width:48px;height:48px"></div><div class="zl y" style="top:87px;right:8px">44 pt · außen</div></div><p class="pc"><b>Pro:</b> ✦ wandert nach außen und löst sich aus der Kapsel; dieselbe Stelle wie in den anderen Tabs. <b>Contra:</b> ＋ rückt gegenüber heute um eine Knopfbreite nach links; das ist einmal umzulernen. Die Offline-Anzeige kommt bei GitHub-Ausfall als dritter Knopf links dazu.</p></div><div><p class="label"><span class="code r">AK2</span><b>Einstellungen</b></p><div class="phone"><div class="status"><span>13:20</span><span>●●● 5G</span></div><div class="nav"><span></span><span class="r"><span class="rbtn glass ai b44">✦</span></span></div>
+<div class="scr">
+  <div class="big">Einstellungen</div>
+  <div class="section">ChatGPT</div>
+  <div class="list">
+    <div class="field"><span>Konto</span><span class="v">verbunden ›</span></div>
+    <div class="field"><span>Modell</span><span class="v">Automatisch ›</span></div>
+    <div class="field"><span>KI-Planung</span><span class="sw"></span></div>
+  </div>
+  <div class="section">Quellen</div>
+  <div class="list">
+    <div class="field"><span>Erinnerungen</span><span class="sw"></span></div>
+    <div class="field"><span>GitHub</span><span class="sw"></span></div>
+    <div class="field"><span>Lokale Aufgaben</span><span class="sw"></span></div>
+  </div>
+  <div class="section">Benachrichtigungen</div>
+  <div class="list">
+    <div class="field"><span>Vorlauf: 1 h</span><span class="v">－ ｜ ＋</span></div>
+    <div class="field"><span>Am Morgen zusammenfassen</span><span class="sw"></span></div>
+  </div>
+  <div class="section">Zugriff</div>
+  <div class="list">
+    <div class="field"><span>Erinnerungen</span><span class="v">erlaubt</span></div>
+    <div class="field"><span>Kalender</span><span class="v">erlaubt</span></div>
+    <div class="field"><span>Mitteilungen</span><span class="sw"></span></div>
+  </div>
+  <div class="list"><div class="field"><span class="l">Einrichtung erneut starten</span></div></div>
+</div>
+<div class="tb glass"><span><i class="ico">▦</i>Planen</span><span><i class="ico">☑︎</i>Aufgaben</span><span class="on"><i class="ico">⚙︎</i>Einstellungen</span></div><div class="zone" style="top:36px;right:8px;width:48px;height:48px"></div><div class="zl y" style="top:87px;right:8px">44 pt · außen</div></div><p class="pc"><b>Pro:</b> bleibt, wo er ist; nur Form und Tönung werden angeglichen. <b>Contra:</b> keins gegenüber heute.</p></div></div><div class="box neutral">
+  <h3>AK2 · Prüfung</h3>
+  <ul>
+    <li><b>Kollision unten:</b> keine. Panel „Ohne Uhrzeit“, Rückgängig-Kapseln, Aktionsleiste und Ablage „Ungeplant“ bleiben unberührt.</li>
+    <li><b>Kollision oben:</b> In „Planen“ teilt sich ✦ die Zeile mit dem Umschalter und ＋. In „Aufgaben“ stehen im Auswahlmodus links „Fertig“ und „Alle“, rechts ＋ und ✦; das passt in die Leiste, ist aber voll.</li>
+    <li><b>Bedienbarkeit:</b> 44 pt sichtbar und als Trefferfläche. <code>accessibilityLabel("Assistent")</code> und der Hinweis „Öffnet ChatGPT mit dem Kontext dieses Bildschirms“ sind im Baustein schon gesetzt. Leisten-Knöpfe zeigen bei großen Schriftstufen von sich aus die vergrößerte Ansicht beim Halten.</li>
+    <li><b>Daumen:</b> der schwächste Platz der vier. Die obere rechte Ecke ist einhändig nicht bequem erreichbar. Abmilderung, die schon gebaut ist: „Mit KI planen“ im Kontextmenü jeder Aufgabe und die KI-Zeile in der Kapazitätskarte liegen in Reichweite.</li>
+    <li><b>SwiftUI, „Aufgaben“:</b> beide Knöpfe mit <code>ToolbarItem(placement: .topBarTrailing)</code>, dazwischen <code>ToolbarSpacer(.fixed, placement: .topBarTrailing)</code> (iOS 26). Der Abstandshalter trennt die gemeinsame Glas-Fläche in zwei. ✦ steht als letztes Element und damit außen.</li>
+    <li><b>SwiftUI, „Planen“, zwei Wege:</b> (a) Navigationsleiste einblenden, <code>.toolbar(.hidden, for: .navigationBar)</code> entfernen, Umschalter in <code>ToolbarItem(placement: .principal)</code>, rechts dieselbe Folge wie in „Aufgaben“. Dann setzt das System ✦ in allen Tabs an dieselbe Stelle. <b>Ungeprüft:</b> ob ein <code>Picker</code> im Stil <code>.segmented</code> in der Leistenmitte neben zwei Knöpfen genug Breite bekommt. (b) Eigene Kopfzeile behalten, beide Knöpfe mit <code>.buttonStyle(.glass)</code>, Rahmen 44 pt, ✦ außen. Sicher baubar, aber die Lage weicht nach den Screenshots um rund 5 pt waagerecht und 4 pt senkrecht von der System-Leiste ab.</li>
+    <li><b>Tönung:</b> <code>.buttonStyle(.glassProminent)</code> mit <code>.tint(.purple)</code> in allen drei Tabs, damit ✦ nie wie ein zweites ＋ aussieht.</li>
+  </ul>
+</div><h2><span class="area">AK1</span> Schwebender Glas-Knopf unten rechts über der Tab-Leiste</h2><p class="lead">Ein runder Glas-Knopf mit 48 pt, 16 pt vom rechten Rand, 8 pt über der Tab-Leiste. Oben bleibt nur ＋. Der Knopf liegt in jedem Tab an derselben Stelle, weil er einmal als gemeinsamer Baustein gesetzt wird. Rot gestrichelt: Stellen, an denen anderes ausweichen muss.</p><div class="grid"><div><p class="label"><span class="code">AK1</span><b>Planen (Tag)</b> · Panel eingeklappt</p><div class="phone"><div class="status"><span>13:20</span><span>●●● 5G</span></div><div class="topbar"><div class="seg"><span class="on">Tag</span><span>Woche</span><span>Monat</span></div><span class="rbtn glass">＋</span></div>
+<div class="scr">
+  <div class="hdr"><div><div class="kick">Heute · KW 47</div><div class="bigdate">Mittwoch, 18. Nov. <span class="car">⌄</span></div></div><div class="stepper glass"><span>‹</span><span>›</span></div></div>
+  <div class="cap"><b>1 h 20 zu viel</b><i></i><small>ab 13:20 bis 18:00 · 1 Aufgabe ohne Aufwand mit Standarddauer gerechnet</small></div>
+  <div class="abl">Ablauf<span>☰ Auswählen</span></div>
+  <div class="hg">
+    <div class="hl" style="top:0"><span>13:00</span></div>
+    <div class="hl" style="top:48px"><span>14:00</span></div>
+    <div class="hl" style="top:96px"><span>15:00</span></div>
+    <div class="hl" style="top:144px"><span>16:00</span></div>
+    <div class="hl" style="top:192px"><span>17:00</span></div>
+    <div class="hl" style="top:240px"><span>18:00</span></div>
+    <div class="hl" style="top:288px"><span>19:00</span></div>
+    <div class="hl" style="top:336px"><span>20:00</span></div>
+    <div class="ev e" style="top:2px;height:44px">Sprechstunde<small>13:00–14:00</small></div>
+    <div class="ev p" style="top:50px;height:68px">Pretest: Selbsttest Technik<small>14:00–15:30</small></div>
+    <div class="ev e" style="top:146px;height:44px">Lerngruppe<small>16:00–17:00</small></div>
+    <div class="ev p" style="top:194px;height:44px">Kapitel 2 gliedern<small>17:00–18:00</small></div>
+    <div class="ev e" style="top:290px;height:68px">Sport<small>19:00–20:30</small></div>
+  </div>
+</div>
+<div class="panel" style="margin-right:54px"><div class="ph"><b>Ohne Uhrzeit</b><span class="c">2 · 45 min</span><span class="o">+4 offen</span><span class="chev">⌃</span></div></div><div class="tb glass"><span class="on"><i class="ico">▦</i>Planen</span><span><i class="ico">☑︎</i>Aufgaben</span><span><i class="ico">⚙︎</i>Einstellungen</span></div><span class="fab glass ai">✦</span><div class="zone bad" style="right:8px;bottom:66px;width:60px;height:58px"></div><div class="zl" style="right:8px;bottom:128px">Panel weicht aus</div></div><p class="pc"><b>Pro:</b> Daumenzone; oben wird es ruhiger. <b>Contra:</b> Das Panel „Ohne Uhrzeit“ muss rechts 56 pt abgeben, sonst liegt ✦ auf seinem Pfeil. Die Kopfzeile wird enger; „+4 offen“ fällt bei längeren Angaben zuerst weg.</p></div><div><p class="label"><span class="code">AK1</span><b>Aufgaben</b></p><div class="phone"><div class="status"><span>13:20</span><span>●●● 5G</span></div><div class="nav"><span class="pill glass">Auswählen</span><span class="r"><span class="rbtn glass b44">＋</span></span></div>
+<div class="scr">
+  <div class="big">Aufgaben</div>
+  <div class="seg"><span class="on">Alle</span><span>Erinnerungen</span><span>GitHub</span><span>Lokal</span></div>
+  <div class="section">Überfällig</div>
+  <div class="list">
+    <div class="item"><span class="ck"></span><div class="t">Blumen gießen<div class="s">↻ 15.11. · To Do</div></div><span class="chip p1">P1</span></div>
+    <div class="item"><span class="ck"></span><div class="t">Pretest: Selbsttest Technik und Zeitplan<div class="s">15.11. · GitHub</div></div><span class="chip">P2</span></div>
+  </div>
+  <div class="section">Heute</div>
+  <div class="list">
+    <div class="item"><span class="ck"></span><div class="t">An Projekten weiterarbeiten<div class="s">↻ heute · To Do</div></div><span class="chip">P2</span></div>
+    <div class="item"><span class="ck"></span><div class="t">Karteikarten und Lernzettel<div class="s">↻ heute · To Do</div></div><span class="chip">P2</span></div>
+    <div class="item"><span class="ck"></span><div class="t">Übungen machen<div class="s">↻ heute · To Do</div></div><span class="chip">P2</span></div>
+    <div class="item"><span class="ck"></span><div class="t">Vorlesung nacharbeiten<div class="s">↻ heute · To Do</div></div><span class="chip">P2</span></div>
+    <div class="item"><span class="ck"></span><div class="t">Mail an Lerngruppe<div class="s">heute · Lokal</div></div><span class="chip">P3</span></div>
+    <div class="item"><span class="ck"></span><div class="t">Literatur nachtragen<div class="s">heute · Lokal</div></div><span class="chip">P3</span></div>
+    <div class="item"><span class="ck"></span><div class="t">Folien durchsehen<div class="s">heute · Lokal</div></div><span class="chip">P3</span></div>
+  </div>
+</div>
+<div class="tb glass"><span><i class="ico">▦</i>Planen</span><span class="on"><i class="ico">☑︎</i>Aufgaben</span><span><i class="ico">⚙︎</i>Einstellungen</span></div><span class="fab glass ai">✦</span><div class="zone bad" style="right:8px;bottom:66px;width:60px;height:58px"></div><div class="zl" style="right:8px;bottom:128px">deckt P-Marke</div></div><p class="pc"><b>Pro:</b> gleiche Stelle wie im Tag. <b>Contra:</b> Der Knopf liegt über dem rechten Rand der Liste, genau dort, wo die Prioritätsmarken stehen. Die Liste braucht unten zusätzlichen Rand, damit die letzte Zeile freikommt.</p></div><div><p class="label"><span class="code">AK1</span><b>Einstellungen</b></p><div class="phone"><div class="status"><span>13:20</span><span>●●● 5G</span></div><div class="nav"><span></span><span class="r"></span></div>
+<div class="scr">
+  <div class="big">Einstellungen</div>
+  <div class="section">ChatGPT</div>
+  <div class="list">
+    <div class="field"><span>Konto</span><span class="v">verbunden ›</span></div>
+    <div class="field"><span>Modell</span><span class="v">Automatisch ›</span></div>
+    <div class="field"><span>KI-Planung</span><span class="sw"></span></div>
+  </div>
+  <div class="section">Quellen</div>
+  <div class="list">
+    <div class="field"><span>Erinnerungen</span><span class="sw"></span></div>
+    <div class="field"><span>GitHub</span><span class="sw"></span></div>
+    <div class="field"><span>Lokale Aufgaben</span><span class="sw"></span></div>
+  </div>
+  <div class="section">Benachrichtigungen</div>
+  <div class="list">
+    <div class="field"><span>Vorlauf: 1 h</span><span class="v">－ ｜ ＋</span></div>
+    <div class="field"><span>Am Morgen zusammenfassen</span><span class="sw"></span></div>
+  </div>
+  <div class="section">Zugriff</div>
+  <div class="list">
+    <div class="field"><span>Erinnerungen</span><span class="v">erlaubt</span></div>
+    <div class="field"><span>Kalender</span><span class="v">erlaubt</span></div>
+    <div class="field"><span>Mitteilungen</span><span class="sw"></span></div>
+  </div>
+  <div class="list"><div class="field"><span class="l">Einrichtung erneut starten</span></div></div>
+</div>
+<div class="tb glass"><span><i class="ico">▦</i>Planen</span><span><i class="ico">☑︎</i>Aufgaben</span><span class="on"><i class="ico">⚙︎</i>Einstellungen</span></div><span class="fab glass ai">✦</span><div class="zone bad" style="right:8px;bottom:66px;width:60px;height:58px"></div><div class="zl" style="right:8px;bottom:128px">deckt Schalter</div></div><p class="pc"><b>Pro:</b> gleiche Stelle. <b>Contra:</b> In einem Formular stehen Schalter und Werte am rechten Rand. Beim Scrollen liegt immer wieder einer unter dem Knopf; ein Fehlgriff öffnet den Chat statt den Schalter zu stellen.</p></div><div><p class="label"><span class="code">AK1</span><b>Sonderfall: Panel aufgeklappt</b></p><div class="phone"><div class="status"><span>13:20</span><span>●●● 5G</span></div><div class="topbar"><div class="seg"><span class="on">Tag</span><span>Woche</span><span>Monat</span></div><span class="rbtn glass">＋</span></div>
+<div class="scr">
+  <div class="hdr"><div><div class="kick">Heute · KW 47</div><div class="bigdate">Mittwoch, 18. Nov. <span class="car">⌄</span></div></div><div class="stepper glass"><span>‹</span><span>›</span></div></div>
+  <div class="cap"><b>1 h 20 zu viel</b><i></i><small>ab 13:20 bis 18:00 · 1 Aufgabe ohne Aufwand mit Standarddauer gerechnet</small></div>
+  <div class="abl">Ablauf<span>☰ Auswählen</span></div>
+  <div class="hg">
+    <div class="hl" style="top:0"><span>13:00</span></div>
+    <div class="hl" style="top:48px"><span>14:00</span></div>
+    <div class="hl" style="top:96px"><span>15:00</span></div>
+    <div class="hl" style="top:144px"><span>16:00</span></div>
+    <div class="hl" style="top:192px"><span>17:00</span></div>
+    <div class="hl" style="top:240px"><span>18:00</span></div>
+    <div class="hl" style="top:288px"><span>19:00</span></div>
+    <div class="hl" style="top:336px"><span>20:00</span></div>
+    <div class="ev e" style="top:2px;height:44px">Sprechstunde<small>13:00–14:00</small></div>
+    <div class="ev p" style="top:50px;height:68px">Pretest: Selbsttest Technik<small>14:00–15:30</small></div>
+    <div class="ev e" style="top:146px;height:44px">Lerngruppe<small>16:00–17:00</small></div>
+    <div class="ev p" style="top:194px;height:44px">Kapitel 2 gliedern<small>17:00–18:00</small></div>
+    <div class="ev e" style="top:290px;height:68px">Sport<small>19:00–20:30</small></div>
+  </div>
+</div>
+<div class="panel"><div class="ph"><b>Ohne Uhrzeit</b><span class="c">2 · 45 min</span><span class="o">+4 offen</span><span class="chev">⌄</span></div><div class="pb"><div class="psec">Ohne Uhrzeit</div><div class="prow"><div class="t">Mail an Lerngruppe<div class="s">30 min</div></div><span class="rest">noch 30 min</span><span class="gr">≡</span></div><div class="prow"><div class="t">Literatur nachtragen<div class="s">15 min</div></div><span class="rest">noch 15 min</span><span class="gr">≡</span></div><div class="psec">Heute offen, nicht zugeordnet</div><div class="prow"><div class="t">Folien durchsehen<div class="s">heute fällig</div></div><span class="gr">≡</span></div><div class="prow"><div class="t">Karteikarten Kapitel 3<div class="s">heute fällig</div></div><span class="gr">≡</span></div></div></div><div class="tb glass"><span class="on"><i class="ico">▦</i>Planen</span><span><i class="ico">☑︎</i>Aufgaben</span><span><i class="ico">⚙︎</i>Einstellungen</span></div><span class="fab glass ai ghost">✦</span><div class="zone bad" style="right:8px;bottom:66px;width:60px;height:58px"></div><div class="zl" style="right:8px;bottom:128px">Knopf aus</div></div><p class="pc">Aufgeklappt reicht das Panel bis zur Tab-Leiste; ✦ läge auf Restzeit und Ziehgriff der untersten Zeile. Vorgesehen: Der Knopf blendet aus, solange das Panel offen ist oder gezogen wird. Damit ist er im Tag nicht durchgehend da.</p></div><div><p class="label"><span class="code">AK1</span><b>Sonderfall: Rückgängig in „Aufgaben“</b></p><div class="phone"><div class="status"><span>13:20</span><span>●●● 5G</span></div><div class="nav"><span class="pill glass">Auswählen</span><span class="r"><span class="rbtn glass b44">＋</span></span></div>
+<div class="scr">
+  <div class="big">Aufgaben</div>
+  <div class="seg"><span class="on">Alle</span><span>Erinnerungen</span><span>GitHub</span><span>Lokal</span></div>
+  <div class="section">Überfällig</div>
+  <div class="list">
+    <div class="item"><span class="ck"></span><div class="t">Blumen gießen<div class="s">↻ 15.11. · To Do</div></div><span class="chip p1">P1</span></div>
+    <div class="item"><span class="ck"></span><div class="t">Pretest: Selbsttest Technik und Zeitplan<div class="s">15.11. · GitHub</div></div><span class="chip">P2</span></div>
+  </div>
+  <div class="section">Heute</div>
+  <div class="list">
+    <div class="item"><span class="ck"></span><div class="t">An Projekten weiterarbeiten<div class="s">↻ heute · To Do</div></div><span class="chip">P2</span></div>
+    <div class="item"><span class="ck"></span><div class="t">Karteikarten und Lernzettel<div class="s">↻ heute · To Do</div></div><span class="chip">P2</span></div>
+    <div class="item"><span class="ck"></span><div class="t">Übungen machen<div class="s">↻ heute · To Do</div></div><span class="chip">P2</span></div>
+    <div class="item"><span class="ck"></span><div class="t">Vorlesung nacharbeiten<div class="s">↻ heute · To Do</div></div><span class="chip">P2</span></div>
+    <div class="item"><span class="ck"></span><div class="t">Mail an Lerngruppe<div class="s">heute · Lokal</div></div><span class="chip">P3</span></div>
+    <div class="item"><span class="ck"></span><div class="t">Literatur nachtragen<div class="s">heute · Lokal</div></div><span class="chip">P3</span></div>
+    <div class="item"><span class="ck"></span><div class="t">Folien durchsehen<div class="s">heute · Lokal</div></div><span class="chip">P3</span></div>
+  </div>
+</div>
+<div class="toast glass" style="margin-right:58px"><span class="tx">Blumen gießen<small>Erledigt</small></span><span class="un">Rückgängig</span></div><div class="tb glass"><span><i class="ico">▦</i>Planen</span><span class="on"><i class="ico">☑︎</i>Aufgaben</span><span><i class="ico">⚙︎</i>Einstellungen</span></div><span class="fab glass ai">✦</span><div class="zone bad" style="right:8px;bottom:66px;width:60px;height:58px"></div><div class="zl" style="right:8px;bottom:128px">Kapsel kürzer</div></div><p class="pc">Die Rückgängig-Kapsel sitzt direkt über der Tab-Leiste. Sie wird rechts um 56 pt gekürzt; lange Titel werden früher abgeschnitten. Im Auswahlmodus ersetzt die Aktionsleiste den Knopf.</p></div></div><div class="box neutral">
+  <h3>AK1 · Prüfung</h3>
+  <ul>
+    <li><b>Kollision unten, vier Stellen:</b> (1) Panel „Ohne Uhrzeit“ eingeklappt: rechts kürzen. (2) Panel aufgeklappt und beim Ziehen: Knopf ausblenden. (3) Rückgängig-Kapsel und Aktionsleiste in „Aufgaben“: kürzen oder Knopf ausblenden. (4) Ablage „Ungeplant“ in Woche und Monat: wie (1). Die Rückgängig-Kapseln in „Planen“ liegen 60 pt höher und bleiben frei.</li>
+    <li><b>Überdeckung von Inhalt:</b> Der Knopf schwebt über dem rechten Rand, an dem Prioritätsmarken, Schalter und im Tag Termine liegen. Listen und Formular brauchen rund 64 pt Rand unten (<code>.contentMargins(.bottom, 64, for: .scrollContent)</code>); verdeckt wird beim Scrollen trotzdem.</li>
+    <li><b>Bedienbarkeit:</b> 48 pt, über dem Minimum. <code>accessibilityLabel("Assistent")</code> wie bisher. Für große Schriftstufen zusätzlich <code>.accessibilityShowsLargeContentViewer</code>, weil ein frei gesetzter Knopf das nicht von sich aus mitbringt. Die Reihenfolge für VoiceOver ist festzulegen (<code>.accessibilitySortPriority</code>), sonst liegt der Knopf hinter dem gesamten Inhalt. Der Kontrast des Zeichens hängt vom Inhalt darunter ab; die lila Tönung muss das tragen.</li>
+    <li><b>Daumen:</b> gut für Rechtshänder, unten rechts; für die linke Hand quer über den Bildschirm.</li>
+    <li><b>SwiftUI:</b> ein <code>ViewModifier</code> an der Wurzel jedes Tab-Inhalts mit <code>.overlay(alignment: .bottomTrailing)</code>; der Inhalt eines Tabs endet über der Tab-Leiste, der Knopf liegt also von selbst darüber. Darstellung mit <code>.glassEffect(.regular.tint(.purple).interactive(), in: .circle)</code>. Sichtbarkeit über einen gemeinsamen Zustand, den Panel und Auswahlmodus setzen.</li>
+    <li><b>Ehrliche Einordnung:</b> der einzige Platz, der „gleiche Stelle“ und „Daumen“ verbindet, aber mit dem meisten Abstimmungsaufwand und einem Knopf, der in zwei Zuständen verschwindet.</li>
+  </ul>
+</div><h2><span class="area">AK3</span> Schmale Assistent-Leiste über der Tab-Leiste</h2><p class="lead">Die vom System vorgesehene Zusatzleiste (<code>.tabViewBottomAccessory</code>, seit iOS 26) als ganze Schaltfläche: Zeichen, Wort „Assistent fragen“ und der Kontext, den der Chat mitbekommt. In der Feedback-Runde 2 abgelehnt, weil sie mit Ablage und Rückgängig-Kapsel um den Platz konkurriert. Hier neu bewertet.</p><div class="grid"><div><p class="label"><span class="code">AK3</span><b>Planen (Tag)</b></p><div class="phone"><div class="status"><span>13:20</span><span>●●● 5G</span></div><div class="topbar"><div class="seg"><span class="on">Tag</span><span>Woche</span><span>Monat</span></div><span class="rbtn glass">＋</span></div>
+<div class="scr">
+  <div class="hdr"><div><div class="kick">Heute · KW 47</div><div class="bigdate">Mittwoch, 18. Nov. <span class="car">⌄</span></div></div><div class="stepper glass"><span>‹</span><span>›</span></div></div>
+  <div class="cap"><b>1 h 20 zu viel</b><i></i><small>ab 13:20 bis 18:00 · 1 Aufgabe ohne Aufwand mit Standarddauer gerechnet</small></div>
+  <div class="abl">Ablauf<span>☰ Auswählen</span></div>
+  <div class="hg">
+    <div class="hl" style="top:0"><span>13:00</span></div>
+    <div class="hl" style="top:48px"><span>14:00</span></div>
+    <div class="hl" style="top:96px"><span>15:00</span></div>
+    <div class="hl" style="top:144px"><span>16:00</span></div>
+    <div class="hl" style="top:192px"><span>17:00</span></div>
+    <div class="hl" style="top:240px"><span>18:00</span></div>
+    <div class="hl" style="top:288px"><span>19:00</span></div>
+    <div class="hl" style="top:336px"><span>20:00</span></div>
+    <div class="ev e" style="top:2px;height:44px">Sprechstunde<small>13:00–14:00</small></div>
+    <div class="ev p" style="top:50px;height:68px">Pretest: Selbsttest Technik<small>14:00–15:30</small></div>
+    <div class="ev e" style="top:146px;height:44px">Lerngruppe<small>16:00–17:00</small></div>
+    <div class="ev p" style="top:194px;height:44px">Kapitel 2 gliedern<small>17:00–18:00</small></div>
+    <div class="ev e" style="top:290px;height:68px">Sport<small>19:00–20:30</small></div>
+  </div>
+</div>
+<div class="panel"><div class="ph"><b>Ohne Uhrzeit</b><span class="c">2 · 45 min</span><span class="o">+4 offen</span><span class="chev">⌃</span></div></div><div class="acc glass"><span class="dot ai">✦</span><span class="tx">Assistent fragen<small>· Mittwoch, 18. Nov.</small></span><span class="go">›</span></div><div class="tb glass"><span class="on"><i class="ico">▦</i>Planen</span><span><i class="ico">☑︎</i>Aufgaben</span><span><i class="ico">⚙︎</i>Einstellungen</span></div><div class="zone bad" style="left:6px;right:6px;bottom:8px;height:170px"></div><div class="zl" style="right:10px;bottom:181px">drei Schichten · rund 170 pt</div></div><p class="pc"><b>Pro:</b> nichts überdeckt etwas; die Leiste nennt den Kontext beim Namen. <b>Contra:</b> Panel, Leiste und Tab-Leiste stapeln sich zu rund 170 pt. Das Stundenraster verliert dauerhaft rund 54 pt, etwas mehr als eine Stunde bei 48 pt je Stunde.</p></div><div><p class="label"><span class="code">AK3</span><b>Aufgaben</b> · mit Rückgängig-Kapsel</p><div class="phone"><div class="status"><span>13:20</span><span>●●● 5G</span></div><div class="nav"><span class="pill glass">Auswählen</span><span class="r"><span class="rbtn glass b44">＋</span></span></div>
+<div class="scr">
+  <div class="big">Aufgaben</div>
+  <div class="seg"><span class="on">Alle</span><span>Erinnerungen</span><span>GitHub</span><span>Lokal</span></div>
+  <div class="section">Überfällig</div>
+  <div class="list">
+    <div class="item"><span class="ck"></span><div class="t">Blumen gießen<div class="s">↻ 15.11. · To Do</div></div><span class="chip p1">P1</span></div>
+    <div class="item"><span class="ck"></span><div class="t">Pretest: Selbsttest Technik und Zeitplan<div class="s">15.11. · GitHub</div></div><span class="chip">P2</span></div>
+  </div>
+  <div class="section">Heute</div>
+  <div class="list">
+    <div class="item"><span class="ck"></span><div class="t">An Projekten weiterarbeiten<div class="s">↻ heute · To Do</div></div><span class="chip">P2</span></div>
+    <div class="item"><span class="ck"></span><div class="t">Karteikarten und Lernzettel<div class="s">↻ heute · To Do</div></div><span class="chip">P2</span></div>
+    <div class="item"><span class="ck"></span><div class="t">Übungen machen<div class="s">↻ heute · To Do</div></div><span class="chip">P2</span></div>
+    <div class="item"><span class="ck"></span><div class="t">Vorlesung nacharbeiten<div class="s">↻ heute · To Do</div></div><span class="chip">P2</span></div>
+    <div class="item"><span class="ck"></span><div class="t">Mail an Lerngruppe<div class="s">heute · Lokal</div></div><span class="chip">P3</span></div>
+    <div class="item"><span class="ck"></span><div class="t">Literatur nachtragen<div class="s">heute · Lokal</div></div><span class="chip">P3</span></div>
+    <div class="item"><span class="ck"></span><div class="t">Folien durchsehen<div class="s">heute · Lokal</div></div><span class="chip">P3</span></div>
+  </div>
+</div>
+<div class="toast glass"><span class="tx">Blumen gießen<small>Erledigt</small></span><span class="un">Rückgängig</span></div><div class="acc glass"><span class="dot ai">✦</span><span class="tx">Assistent fragen<small>· alle Aufgaben</small></span><span class="go">›</span></div><div class="tb glass"><span><i class="ico">▦</i>Planen</span><span class="on"><i class="ico">☑︎</i>Aufgaben</span><span><i class="ico">⚙︎</i>Einstellungen</span></div></div><p class="pc"><b>Pro:</b> größtes Ziel, beschriftet, für beide Hände gleich gut. <b>Contra:</b> Mit Rückgängig-Kapsel liegen auch hier drei Schichten übereinander; im Auswahlmodus käme die Aktionsleiste dazu, wenn die Leiste dann nicht ausgeblendet wird.</p></div><div><p class="label"><span class="code">AK3</span><b>Einstellungen</b></p><div class="phone"><div class="status"><span>13:20</span><span>●●● 5G</span></div><div class="nav"><span></span><span class="r"></span></div>
+<div class="scr">
+  <div class="big">Einstellungen</div>
+  <div class="section">ChatGPT</div>
+  <div class="list">
+    <div class="field"><span>Konto</span><span class="v">verbunden ›</span></div>
+    <div class="field"><span>Modell</span><span class="v">Automatisch ›</span></div>
+    <div class="field"><span>KI-Planung</span><span class="sw"></span></div>
+  </div>
+  <div class="section">Quellen</div>
+  <div class="list">
+    <div class="field"><span>Erinnerungen</span><span class="sw"></span></div>
+    <div class="field"><span>GitHub</span><span class="sw"></span></div>
+    <div class="field"><span>Lokale Aufgaben</span><span class="sw"></span></div>
+  </div>
+  <div class="section">Benachrichtigungen</div>
+  <div class="list">
+    <div class="field"><span>Vorlauf: 1 h</span><span class="v">－ ｜ ＋</span></div>
+    <div class="field"><span>Am Morgen zusammenfassen</span><span class="sw"></span></div>
+  </div>
+  <div class="section">Zugriff</div>
+  <div class="list">
+    <div class="field"><span>Erinnerungen</span><span class="v">erlaubt</span></div>
+    <div class="field"><span>Kalender</span><span class="v">erlaubt</span></div>
+    <div class="field"><span>Mitteilungen</span><span class="sw"></span></div>
+  </div>
+  <div class="list"><div class="field"><span class="l">Einrichtung erneut starten</span></div></div>
+</div>
+<div class="acc glass"><span class="dot ai">✦</span><span class="tx">Assistent fragen<small>· Einstellungen</small></span><span class="go">›</span></div><div class="tb glass"><span><i class="ico">▦</i>Planen</span><span><i class="ico">☑︎</i>Aufgaben</span><span class="on"><i class="ico">⚙︎</i>Einstellungen</span></div></div><p class="pc"><b>Pro:</b> gleiche Stelle, keine Überdeckung. <b>Contra:</b> In den Einstellungen wird der Assistent am seltensten gebraucht; die Leiste belegt dort den meisten Platz für den geringsten Nutzen.</p></div></div><div class="box neutral">
+  <h3>AK3 · Prüfung</h3>
+  <ul>
+    <li><b>Kollision unten:</b> keine Überdeckung, aber dauerhafter Höhenverlust von rund 54 pt (Leiste 46 pt plus Abstand) in jedem Tab. Der frühere Einwand trifft weiter zu, nur genauer gefasst: Es ist keine Kollision, sondern eine dritte ständige Schicht in der Ansicht, die am meisten Höhe braucht.</li>
+    <li><b>Ungeprüft:</b> ob Elemente, die im Tab-Inhalt unten sitzen (Panel als <code>.overlay(alignment: .bottom)</code>, Rückgängig-Kapsel als <code>.safeAreaInset(edge: .bottom)</code>), von selbst über die Zusatzleiste rücken. Trägt der Sicherheitsabstand die Leiste nicht mit, lägen sie dahinter.</li>
+    <li><b>Bedienbarkeit:</b> 46 pt hoch, fast volle Breite; das größte Ziel der vier. Sichtbarer Text, daher ohne Zusatz verständlich und mit Dynamic Type skalierbar; <code>accessibilityLabel("Assistent")</code> mit dem Kontext als Wert.</li>
+    <li><b>Daumen:</b> der beste Platz der vier, für beide Hände.</li>
+    <li><b>SwiftUI:</b> <code>.tabViewBottomAccessory { … }</code> am <code>TabView</code> in <code>RootView</code>; der Inhalt liest den aktiven Tab und baut daraus Kontext und Beschriftung. Mit <code>.tabBarMinimizeBehavior(.onScrollDown)</code> würde die Leiste beim Scrollen neben die verkleinerte Tab-Leiste rücken (<code>tabViewBottomAccessoryPlacement</code> wird <code>.inline</code>); das spart Höhe, verschiebt den Knopf aber beim Scrollen und ist im Tag mit eigenem Scrollbereich und Ziehen nicht erprobt.</li>
+    <li><b>Ehrliche Einordnung:</b> der sauberste und am leichtesten zu treffende Platz, bezahlt mit Höhe genau dort, wo Tagwerk sie für das Raster braucht. Sinnvoll nur, wenn der Assistent der häufigste Einstieg der App werden soll.</li>
+  </ul>
+</div><h2><span class="area">AK4</span> Vierter Eintrag in der Tab-Leiste</h2><p class="lead">Das Verhalten von iOS 27 annehmen: „Assistent“ steht als vierter Eintrag in der Kapsel. Antippen wechselt nicht den Tab, sondern öffnet das Chat-Blatt über dem aktuellen Tab.</p><div class="grid"><div><p class="label"><span class="code">AK4</span><b>Planen (Tag)</b></p><div class="phone"><div class="status"><span>13:20</span><span>●●● 5G</span></div><div class="topbar"><div class="seg"><span class="on">Tag</span><span>Woche</span><span>Monat</span></div><span class="rbtn glass">＋</span></div>
+<div class="scr">
+  <div class="hdr"><div><div class="kick">Heute · KW 47</div><div class="bigdate">Mittwoch, 18. Nov. <span class="car">⌄</span></div></div><div class="stepper glass"><span>‹</span><span>›</span></div></div>
+  <div class="cap"><b>1 h 20 zu viel</b><i></i><small>ab 13:20 bis 18:00 · 1 Aufgabe ohne Aufwand mit Standarddauer gerechnet</small></div>
+  <div class="abl">Ablauf<span>☰ Auswählen</span></div>
+  <div class="hg">
+    <div class="hl" style="top:0"><span>13:00</span></div>
+    <div class="hl" style="top:48px"><span>14:00</span></div>
+    <div class="hl" style="top:96px"><span>15:00</span></div>
+    <div class="hl" style="top:144px"><span>16:00</span></div>
+    <div class="hl" style="top:192px"><span>17:00</span></div>
+    <div class="hl" style="top:240px"><span>18:00</span></div>
+    <div class="hl" style="top:288px"><span>19:00</span></div>
+    <div class="hl" style="top:336px"><span>20:00</span></div>
+    <div class="ev e" style="top:2px;height:44px">Sprechstunde<small>13:00–14:00</small></div>
+    <div class="ev p" style="top:50px;height:68px">Pretest: Selbsttest Technik<small>14:00–15:30</small></div>
+    <div class="ev e" style="top:146px;height:44px">Lerngruppe<small>16:00–17:00</small></div>
+    <div class="ev p" style="top:194px;height:44px">Kapitel 2 gliedern<small>17:00–18:00</small></div>
+    <div class="ev e" style="top:290px;height:68px">Sport<small>19:00–20:30</small></div>
+  </div>
+</div>
+<div class="panel"><div class="ph"><b>Ohne Uhrzeit</b><span class="c">2 · 45 min</span><span class="o">+4 offen</span><span class="chev">⌃</span></div></div><div class="tb glass four"><span class="on"><i class="ico">▦</i>Planen</span><span><i class="ico">☑︎</i>Aufgaben</span><span><i class="ico">⚙︎</i>Einstellungen</span><span class="aitab"><i class="ico">✦</i>Assistent</span></div></div><p class="pc"><b>Pro:</b> keine neue Schicht, nichts weicht aus, Daumenzone. <b>Contra:</b> Die Kapsel wird breiter; „Einstellungen“ ist das längste Wort und wird bei vier Einträgen zuerst eng.</p></div><div><p class="label"><span class="code">AK4</span><b>Aufgaben</b></p><div class="phone"><div class="status"><span>13:20</span><span>●●● 5G</span></div><div class="nav"><span class="pill glass">Auswählen</span><span class="r"><span class="rbtn glass b44">＋</span></span></div>
+<div class="scr">
+  <div class="big">Aufgaben</div>
+  <div class="seg"><span class="on">Alle</span><span>Erinnerungen</span><span>GitHub</span><span>Lokal</span></div>
+  <div class="section">Überfällig</div>
+  <div class="list">
+    <div class="item"><span class="ck"></span><div class="t">Blumen gießen<div class="s">↻ 15.11. · To Do</div></div><span class="chip p1">P1</span></div>
+    <div class="item"><span class="ck"></span><div class="t">Pretest: Selbsttest Technik und Zeitplan<div class="s">15.11. · GitHub</div></div><span class="chip">P2</span></div>
+  </div>
+  <div class="section">Heute</div>
+  <div class="list">
+    <div class="item"><span class="ck"></span><div class="t">An Projekten weiterarbeiten<div class="s">↻ heute · To Do</div></div><span class="chip">P2</span></div>
+    <div class="item"><span class="ck"></span><div class="t">Karteikarten und Lernzettel<div class="s">↻ heute · To Do</div></div><span class="chip">P2</span></div>
+    <div class="item"><span class="ck"></span><div class="t">Übungen machen<div class="s">↻ heute · To Do</div></div><span class="chip">P2</span></div>
+    <div class="item"><span class="ck"></span><div class="t">Vorlesung nacharbeiten<div class="s">↻ heute · To Do</div></div><span class="chip">P2</span></div>
+    <div class="item"><span class="ck"></span><div class="t">Mail an Lerngruppe<div class="s">heute · Lokal</div></div><span class="chip">P3</span></div>
+    <div class="item"><span class="ck"></span><div class="t">Literatur nachtragen<div class="s">heute · Lokal</div></div><span class="chip">P3</span></div>
+    <div class="item"><span class="ck"></span><div class="t">Folien durchsehen<div class="s">heute · Lokal</div></div><span class="chip">P3</span></div>
+  </div>
+</div>
+<div class="tb glass four"><span><i class="ico">▦</i>Planen</span><span class="on"><i class="ico">☑︎</i>Aufgaben</span><span><i class="ico">⚙︎</i>Einstellungen</span><span class="aitab"><i class="ico">✦</i>Assistent</span></div></div><p class="pc"><b>Pro:</b> vollständig mit Systemmitteln, in jedem Tab identisch. <b>Contra:</b> Ein Tab, der kein Tab ist. Wer „Assistent“ antippt, erwartet einen Bereich und bekommt ein Blatt; die Auswahl springt zurück.</p></div><div><p class="label"><span class="code">AK4</span><b>Einstellungen</b></p><div class="phone"><div class="status"><span>13:20</span><span>●●● 5G</span></div><div class="nav"><span></span><span class="r"></span></div>
+<div class="scr">
+  <div class="big">Einstellungen</div>
+  <div class="section">ChatGPT</div>
+  <div class="list">
+    <div class="field"><span>Konto</span><span class="v">verbunden ›</span></div>
+    <div class="field"><span>Modell</span><span class="v">Automatisch ›</span></div>
+    <div class="field"><span>KI-Planung</span><span class="sw"></span></div>
+  </div>
+  <div class="section">Quellen</div>
+  <div class="list">
+    <div class="field"><span>Erinnerungen</span><span class="sw"></span></div>
+    <div class="field"><span>GitHub</span><span class="sw"></span></div>
+    <div class="field"><span>Lokale Aufgaben</span><span class="sw"></span></div>
+  </div>
+  <div class="section">Benachrichtigungen</div>
+  <div class="list">
+    <div class="field"><span>Vorlauf: 1 h</span><span class="v">－ ｜ ＋</span></div>
+    <div class="field"><span>Am Morgen zusammenfassen</span><span class="sw"></span></div>
+  </div>
+  <div class="section">Zugriff</div>
+  <div class="list">
+    <div class="field"><span>Erinnerungen</span><span class="v">erlaubt</span></div>
+    <div class="field"><span>Kalender</span><span class="v">erlaubt</span></div>
+    <div class="field"><span>Mitteilungen</span><span class="sw"></span></div>
+  </div>
+  <div class="list"><div class="field"><span class="l">Einrichtung erneut starten</span></div></div>
+</div>
+<div class="tb glass four"><span><i class="ico">▦</i>Planen</span><span><i class="ico">☑︎</i>Aufgaben</span><span class="on"><i class="ico">⚙︎</i>Einstellungen</span><span class="aitab"><i class="ico">✦</i>Assistent</span></div></div><p class="pc"><b>Pro:</b> gleiche Stelle. <b>Contra:</b> widerspricht der verbindlichen Entscheidung „kein vierter Tab für den Assistenten“ aus Phase 2b.</p></div></div><div class="box neutral">
+  <h3>AK4 · Prüfung</h3>
+  <ul>
+    <li><b>Kollision unten:</b> keine.</li>
+    <li><b>Bedienbarkeit:</b> Trefferfläche vom System, beschriftet. VoiceOver sagt voraussichtlich „Assistent, Tab, 4 von 4“ (nicht am Gerät gehört); das Antippen öffnet aber ein Blatt und wählt keinen Tab. Diese Abweichung zwischen Ansage und Wirkung ist der eigentliche Mangel und lässt sich nur mit einem Hinweis abmildern.</li>
+    <li><b>Daumen:</b> sehr gut.</li>
+    <li><b>SwiftUI:</b> <code>Tab("Assistent", systemImage: "sparkles", value: 3, role: .search)</code> oder ein gewöhnlicher vierter <code>Tab</code>; die Auswahl wird in der Bindung abgefangen: bei Wert 3 das Blatt öffnen und die Auswahl nicht übernehmen. <b>Ungeprüft:</b> ob die Kapsel beim Abfangen kurz den vierten Eintrag hervorhebt.</li>
+    <li><b>Variante, nicht gezeichnet:</b> Der Assistent wird ein echter Tab mit eigenem Verlauf. Das wäre regelgerecht, gibt aber „über dem aktuellen Bildschirm, mit dessen Kontext“ auf; der Kontext wäre nur noch der zuletzt besuchte Tab. Das ist eine andere Produktentscheidung als die hier gestellte.</li>
+    <li><b>Ehrliche Einordnung:</b> der billigste Weg zu Gleichheit und Erreichbarkeit, aber nur, wenn die Entscheidung „kein vierter Tab“ ausdrücklich aufgehoben wird.</li>
+  </ul>
+</div><div class="box">
+  <h3>Empfehlung: AK2</h3>
+  <ul>
+    <li><b>Begründung:</b> Beanstandet ist die Uneinheitlichkeit. AK2 beseitigt alle drei festgestellten Unterschiede (Reihenfolge, Form, Größe) mit einer Regel und ohne ein einziges Element am unteren Rand zu berühren. Dort liegen im Tag bereits Panel und Kapseln; jede weitere Schicht oder Überdeckung kostet Raster oder erzeugt Sonderfälle (AK1: vier Ausweichstellen und zwei Zustände ohne Knopf; AK3: rund 54 pt Höhe dauerhaft).</li>
+    <li><b>Der Preis:</b> Die obere rechte Ecke ist einhändig schlecht erreichbar. Das ist hinnehmbar, solange der Knopf der allgemeine Einstieg bleibt und die häufigen Wege („Mit KI planen“ an der Aufgabe, KI-Zeile der Kapazitätskarte) in Reichweite liegen. Diese Abwägung ist eine Annahme über die Nutzung, kein Messwert.</li>
+    <li><b>Bauweg:</b> zuerst Weg (a) prüfen (Navigationsleiste in „Planen“ mit Umschalter in der Mitte). Trägt die Breite nicht, Weg (b) mit eigener Kopfzeile und angeglichenen Maßen. In „Aufgaben“ den Abstandshalter zwischen ＋ und ✦ setzen, in allen Tabs dieselbe Tönung.</li>
+    <li><b>Zweite Wahl:</b> AK1, falls die Lage oben selbst das Ärgernis ist. Dann mit den genannten Ausweichregeln und der Vorgabe, dass der Knopf bei offenem Panel und im Auswahlmodus ausblendet.</li>
+    <li><b>Nicht empfohlen:</b> AK3 wegen der Höhe im Tag; AK4, solange „kein vierter Tab“ gilt.</li>
+  </ul>
+</div>
+<div class="box neutral">
+  <h3>Offene Fragen (6)</h3>
+  <ol>
+    <li><b>Was stört:</b> nur, dass der Knopf in jedem Tab anders sitzt und aussieht (dann AK2), oder auch, dass er oben liegt (dann AK1 oder AK3)?</li>
+    <li><b>AK2, „Planen“:</b> Darf die Kopfzeile zur System-Navigationsleiste werden (Weg a, gleiche Lage garantiert, Breite des Umschalters ungeprüft), oder soll die eigene Kopfzeile bleiben (Weg b, rund 5 pt Abweichung)?</li>
+    <li><b>Reihenfolge:</b> ✦ außen und ＋ innen, wie hier angenommen? Das verschiebt ＋ in „Aufgaben“ um eine Knopfbreite nach links. Die Umkehrung (＋ außen) hielte ＋ in „Aufgaben“ fest, ließe ✦ in den Einstellungen aber ohne festen Bezug.</li>
+    <li><b>Farbe:</b> lila wie gebaut, oder Mint in der Akzentfarbe des App-Icons wie in e-A und K1 freigegeben? Die Mockups zeigen den gebauten Stand.</li>
+    <li><b>Auswahlmodus in „Aufgaben“:</b> Soll ✦ dort sichtbar bleiben oder ausblenden, wie in K1 für die Aktionsleiste vorgesehen?</li>
+    <li><b>Blätter und Detailansichten:</b> e-A sah dasselbe Zeichen in der unteren Werkzeugleiste von Blättern vor. Im Code steht der Knopf nur in den drei Tabs. Soll das nachgezogen werden, und gilt dort dann ebenfalls „oben rechts außen“?</li>
+  </ol>
+</div>
+<div class="box neutral">
+  <h3>Was diese Mockups nicht zeigen</h3>
+  <ul>
+    <li>Helles Erscheinungsbild, große Dynamic-Type-Stufen, Querformat und echtes Liquid Glass; die Glasflächen sind mit CSS angenähert.</li>
+    <li>Woche und Monat in „Planen“; die Aussagen zum Panel gelten dort sinngemäß für die Ablage „Ungeplant“.</li>
+    <li>Bewegung: Ein- und Ausblenden des Knopfs (AK1), Verhalten der Zusatzleiste beim Scrollen (AK3), Rücksprung der Auswahl (AK4).</li>
+    <li>Messwerte vom Gerät. Alle Punktangaben sind aus Screenshots und Code abgeleitet; als ungeprüft markierte Punkte brauchen einen kurzen Versuch im Simulator, bevor gebaut wird.</li>
+  </ul>
+</div>
+
+</body>
+</html>
