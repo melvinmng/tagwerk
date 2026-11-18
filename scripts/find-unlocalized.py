@@ -30,11 +30,27 @@ EXCLUDED = [
 def main(arguments):
     summary = "--summary" in arguments
     roots = [a for a in arguments if not a.startswith("--")] or ["Tagwerk", "TagwerkWidget", "Packages"]
-    sources = [p for r in roots for p in (APP / r).rglob("*.swift") if "/Tests/" not in str(p)]
+    sources = [p for r in roots for p in (APP / r).rglob("*.swift")
+               if "/Tests/" not in str(p) and "/.build/" not in str(p)]
     sources = [p for p in sources if not any(str(p).endswith(e) for e in EXCLUDED)]
-    known = {}
+    # A key only counts when it is in the catalog of the target the source file belongs to.
+    catalogs = {}
     for catalog in APP.rglob("*.xcstrings"):
-        known.update(json.load(open(catalog, encoding="utf-8"))["strings"])
+        if "/.build/" in str(catalog) or catalog.name != "Localizable.xcstrings":
+            continue
+        strings = set(json.load(open(catalog, encoding="utf-8"))["strings"])
+        # The extractor reports interpolations as %arg; catalogs write them as %@, %lld, %1$@ …
+        catalogs[catalog.parent] = strings | {re.sub(r"%(\d+\$)?(@|lld|d|f|lf|ld|u)", "%arg", key) for key in strings}
+
+    def known_for(source):
+        path = Path(source)
+        for folder in path.parents:
+            if folder in catalogs:
+                return catalogs[folder]
+            if folder.name == "Sources" and (folder / path.relative_to(folder).parts[0] / "Resources") in catalogs:
+                return catalogs[folder / path.relative_to(folder).parts[0] / "Resources"]
+        return set()
+
     with tempfile.TemporaryDirectory() as out:
         env = dict(os.environ, DEVELOPER_DIR="/Applications/Xcode.app/Contents/Developer")
         subprocess.run(["xcrun", "xcstringstool", "extract", "--all-potential-swift-keys", *map(str, sources),
@@ -44,9 +60,12 @@ def main(arguments):
             data = json.load(open(path, encoding="utf-8"))
             for entry in data["tables"].get("__PotentialKeys", []):
                 key = entry["key"]
-                if key in known or not re.search(r"[a-zäöüß]{3,}", key):
+                if key in known_for(data["source"]) or not re.search(r"[a-zäöüß]{3,}", key):
                     continue
                 if re.fullmatch(r"[A-Za-z_][A-Za-z0-9_.:\-/]*", key):
+                    continue
+                # Protocol text, queries, ids and format fragments are not UI text.
+                if re.search(r"[{}$]|://|HTTP/|^[%\w.#:|/-]*[:|/#=][%\w.#:|/=-]*$|^%arg(\W%arg)*$", key):
                     continue
                 source = os.path.relpath(data["source"], APP)
                 hits.setdefault(source, []).append((entry["location"]["startingLine"], key))
