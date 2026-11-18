@@ -239,6 +239,20 @@ Freigegeben aus `../mockups/2026-11-18-phase-2b-feedback-round3-mockups.html`: *
 8. **Zusammenfassen (M1):** Automatisch nur bei gleichem Titel, Beginn und Ende. Gezeigt wird die Kopie nach Rangfolge: verknüpft, dann Zahl der gefüllten Felder, dann beschreibbar, dann Reihenfolge. Gleiche Zeit mit Platzhaltertitel („Busy“, „Away“, „Free“, „Tentative“ …) auf der einen Seite erkennt Tagwerk **lokal ohne KI** und zeigt eine Vorschlagskarte „Zusammenfassen / Getrennt lassen“, optional „künftig immer“ (Nutzer; §8.4 bleibt unverändert). Die KI hilft nur, wenn der Nutzer den Assistenten fragt.
    **Geändert am 2026-11-18 (Nutzer):** Tagwerk blendet nie ungefragt aus. Auch Termine mit gleichem Titel, Beginn und Ende in verschiedenen Kalendern bekommen nur eine Vorschlagskarte; erst „Zusammenfassen“ (optional „künftig immer“) zeigt eine Zeile. Deadline-Kalender nehmen nicht teil. Der Schalter „Termine zusammenfassen (mit Rückfrage)“ schaltet Vorschläge und angewandte Entscheidungen ab; „Zusammenfassungen zurücksetzen“ löscht alle Entscheidungen; „Getrennt anzeigen“ im Blatt hebt sie für einen Termin auf. Einstellungen › „Kalender-Diagnose“ zeigt je Kalender gelesene, gezeigte und ausgeblendete Termine der nächsten 7 Tage.
 
+### 13.16 Abweichungen und Ergänzungen in 2b-2 (KI, 2026-11-18)
+
+Umgesetzt nach `../plans/2026-11-18-phase-2b2-ai.md`. Abweichungen vom Plan und von §8, §11.12:
+
+- **AIKit:** Die Anmeldung ist ein Aufruf `ChatGPTLogin.signIn()` (statt `start`/`finish`); der Transport liefert Zeilen (`lines(for:)`) statt Bytes. AIKit hängt nicht von `SecureStore` ab, die App liefert den Schlüsselbund-Speicher über das Protokoll `ChatGPTCredentialStore`. Die Gesprächsschleife arbeitet gegen das Protokoll `ResponseStreaming`.
+- **Planen:** `PlanInput` enthält vorberechnete Tage (freie Lücken, Puffer, Termine, Last). Verstöße sind ein Enum `PlanViolation.Reason`, die Schemas liegen in `AIPlanSchemas`; `PlanScope` lebt in `TagwerkCore`. Auswahl „Kern + Auffüllung“, Verteilung großer Aufwände, längere Tage und Verschiebungen nach `2026-11-18-ai-planning-context-proposal.md` §8.
+- **Chatverlauf:** ein `ChatThreadRecord` mit JSON je Gesprächskontext statt einzelner `ChatMessageRecord`.
+- **Verknüpfungsvorschläge:** über die Funktion `link_event_to_task` mit Aktionskarte statt eigenem `suggest_link`.
+- **KI-Knopf (§11.12):** K1 trug auf iOS 27 nicht (Suchrolle der Tab-Leiste ohne eigenen Knopf). Umgesetzt ist AK2: ✦ in jedem Tab oben rechts außen als eigener Kreis, nie in der ＋-Kapsel (`../mockups/2026-11-18-assistant-button-mockups.html`).
+- **Schätzungen:** Schätzungen der KI werden beim Übernehmen nur für lokale Aufgaben und Erinnerungen gespeichert, nicht für GitHub-Issues (das wäre ein Project-Feld der Quelle).
+- **Vorschläge (Nutzer, Fable, `../mockups/2026-11-18-suggestion-details-mockups.html`, VC1 + VT1 + VL1 + VE1 + VU1 + VK1 + VM1 + VA1 + VR1):** Vorschläge zeigen Priorität, Fälligkeit und Aufwand; ein Tipp öffnet überall dasselbe Vorschlagsblatt mit Aufgabenkarte; ✓/✕ sind im Raster durch ein Halten-Menü ersetzt, in Zeilen bleiben sie mit „Widerrufen“. Im Blatt lassen sich Tag, Beginn und Dauer von Hand ändern (bleibt Vorschlag, „von dir verschoben“, bei „Neu planen“ festgehalten) und Vorschläge mit ChatGPT besprechen; die Antwort ändert nur genannte Vorschläge an Ort und Stelle, lokal geprüft, mit „Rückgängig“. Planungsvorgaben (höchstens fünf Sätze) gehen als Text in jede Planung, ohne lokale Prüfung (VR1; VR2 erst bei Bedarf).
+- **Dauer beim Einplanen:** Länge eines neuen Blocks = verbleibender Aufwand (bei wiederkehrenden Erinnerungen der Aufwand des Tages, nur Blöcke desselben Vorkommens zählen), sonst Standarddauer; Duplizieren nutzt dieselbe Regel und hält den Puffer ein.
+- **Offen:** Vorschläge direkt im Raster ziehen (VM1, Gestenkonflikt mit dem Halten-Menü), Auto-Scroll zum ersten Vorschlag, „Widerrufen“ an Aktionskarten im Chat.
+
 ## Quellen
 
 - Verifikation Function Calling: `../spikes/2026-11-17-feasibility-results.md`, Nachtrag Phase 2b.
