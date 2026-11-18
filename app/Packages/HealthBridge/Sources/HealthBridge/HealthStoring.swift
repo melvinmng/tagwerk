@@ -16,4 +16,12 @@ public protocol HealthStoring: Sendable {
     func deleteEntry(id: UUID, kind: HealthEntryKind) async throws -> Bool
     /// Workouts of other sources in `interval`; Tagwerk's own are filtered out. Empty when reading is not allowed.
     func foreignWorkouts(in interval: DateInterval) async throws -> [ForeignWorkout]
+
+    /// Whether the step sheet was shown; independent of `access()`, which never looks at the step type.
+    func stepsAccess() async -> StepsAccess
+    /// Shows the system sheet for steps only. Call only after a user tap.
+    func requestStepsAuthorization() async throws
+    /// Day sums of steps for the days of `interval`, by `calendar`; days without data are missing.
+    /// Empty when reading is not allowed (iOS reports that as "no data").
+    func dailySteps(in interval: DateInterval, calendar: Calendar) async throws -> [DailySteps]
 }

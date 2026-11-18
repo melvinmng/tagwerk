@@ -86,10 +86,43 @@ public enum IntakeFormat {
         return formatter.string(from: NSNumber(value: Double(milliliters) / 1000)) ?? "0"
     }
 
-    /// Value of the settings row "Erfassen": "2.300 kcal · 2,0 l · 3×".
-    public static func goalSummary(kcal: Int, waterMilliliters: Int, workoutsPerWeek: Int, locale: Locale = .current) -> String {
+    /// Value of the settings row "Erfassen": "2.300 kcal · 2,0 l · 2 h 30 min"; without the training part when its goal is 0.
+    public static func goalSummary(kcal: Int, waterMilliliters: Int, workoutMinutesPerWeek: Int, locale: Locale = .current) -> String {
         let energy = grouped(kcal, locale: locale), water = liters(waterMilliliters, locale: locale)
-        return String(localized: "\(energy) kcal · \(water) · \(workoutsPerWeek)×", bundle: .module)
+        guard workoutMinutesPerWeek > 0 else { return String(localized: "\(energy) kcal · \(water)", bundle: .module) }
+        let training = duration(minutes: workoutMinutesPerWeek)
+        return String(localized: "\(energy) kcal · \(water) · \(training)", bundle: .module)
+    }
+
+    /// Training time (decision 6 of the steps plan): "45 min" below an hour, "1 h 17 min" and "2 h" from 60 minutes on.
+    public static func duration(minutes: Int) -> String {
+        let hours = minutes / 60, rest = minutes % 60
+        if hours == 0 { return String(localized: "\(minutes) min", bundle: .module) }
+        if rest == 0 { return String(localized: "\(hours) h", bundle: .module) }
+        return String(localized: "\(hours) h \(rest) min", bundle: .module)
+    }
+
+    /// "2 h 7 min / 2 h 30 min": both sides in the same format, also against a goal.
+    public static func duration(minutes: Int, goal: Int) -> String {
+        "\(duration(minutes: minutes)) / \(duration(minutes: goal))"
+    }
+
+    /// "2 Stunden und 7 Minuten" for VoiceOver; the units are written out by the system formatter.
+    public static func spokenDuration(minutes: Int, locale: Locale = .current) -> String {
+        Duration.seconds(minutes * 60).formatted(.units(allowed: [.hours, .minutes], width: .wide).locale(locale))
+    }
+
+    /// Step count with the locale's digit grouping: "6.412".
+    public static func steps(_ count: Int, locale: Locale = .current) -> String {
+        grouped(count, locale: locale)
+    }
+
+    /// Value of the steps tile: "6.412 / 8.000", only the count without a goal, "–" without data (never 0,
+    /// because iOS does not tell a denied read from a day without steps).
+    public static func stepsValue(_ count: Int?, goal: Int, locale: Locale = .current) -> String {
+        guard let count else { return "–" }
+        guard goal > 0 else { return steps(count, locale: locale) }
+        return "\(steps(count, locale: locale)) / \(grouped(goal, locale: locale))"
     }
 
     /// Digit grouping of the locale: 2300 → "2.300" (German), "2,300" (English).

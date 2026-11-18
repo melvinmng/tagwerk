@@ -442,6 +442,22 @@
         }
       }
     },
+    "%@, %@ Schritte": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@, %2$@ Schritte"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@, %2$@ steps"
+          }
+        }
+      }
+    },
     "%@, %@ bis %@": {
       "localizations": {
         "en": {
@@ -484,6 +500,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "%@, no meal logged"
+          }
+        }
+      }
+    },
+    "%@, keine Schritte": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@, no steps"
           }
         }
       }
@@ -904,46 +930,6 @@
                 "stringUnit": {
                   "state": "translated",
                   "value": "%lld events"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "%lld Trainings": {
-      "localizations": {
-        "de": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld Training"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld Trainings"
-                }
-              }
-            }
-          }
-        },
-        "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld workout"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld workouts"
                 }
               }
             }
@@ -3281,12 +3267,12 @@
         }
       }
     },
-    "Die Vorgaben sind Platzhalter, keine Empfehlung. Trag deine eigenen Ziele ein. Als Training zählt jede Einheit ab 10 min, aus Tagwerk oder aus Health.": {
+    "Die Vorgaben sind Platzhalter, keine Empfehlung. Trag deine eigenen Ziele ein. Zur Trainingszeit zählen Trainings aus Tagwerk und aus Health. Schritte liest Tagwerk aus Health; 0 blendet ein Ziel aus.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "The defaults are placeholders, not a recommendation. Enter your own goals. Any session of 10 min or more counts as a workout, from Tagwerk or from Health."
+            "value": "The defaults are placeholders, not a recommendation. Enter your own goals. Workouts from Tagwerk and from Health count toward training time. Tagwerk reads steps from Health; 0 hides a goal."
           }
         }
       }
@@ -4764,6 +4750,16 @@
         }
       }
     },
+    "In Health erlauben %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Allow in Health %@"
+          }
+        }
+      }
+    },
     "In Health gespeichert.": {
       "localizations": {
         "en": {
@@ -4983,16 +4979,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "No plan calendar"
-          }
-        }
-      }
-    },
-    "Kein Training": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "No workouts"
           }
         }
       }
@@ -7039,6 +7025,56 @@
         }
       }
     },
+    "Schritte": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Steps"
+          }
+        }
+      }
+    },
+    "Schritte erlauben": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Allow steps"
+          }
+        }
+      }
+    },
+    "Schritte in Health erlauben": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Allow steps in Health"
+          }
+        }
+      }
+    },
+    "Schritte kommen aus Health (iPhone und Apple Watch, von Health zusammengeführt).": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Steps come from Health (iPhone and Apple Watch, merged by Health)."
+          }
+        }
+      }
+    },
+    "Schritte pro Tag: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Steps per day: %@"
+          }
+        }
+      }
+    },
     "Schwimmen": {
       "localizations": {
         "en": {
@@ -7671,22 +7707,22 @@
         }
       }
     },
-    "Tagwerk schreibt Mahlzeiten, Wasser und Trainings nach Health und liest Trainings. Ob das Lesen erlaubt ist, zeigt iOS nicht an: Fehlen Trainings der Apple Watch, prüfe den Zugriff in der App „Health“ unter Profil › Apps › Tagwerk.": {
+    "Tagwerk schreibt Mahlzeiten, Wasser und Trainings nach Health und liest Trainings und Schritte. Ob das Lesen erlaubt ist, zeigt iOS nicht an: Fehlen Trainings der Apple Watch oder steht bei den Schritten nur „–“, prüfe den Zugriff in der App „Health“ unter Profil › Apps › Tagwerk.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tagwerk writes meals, water and workouts to Health and reads workouts. iOS doesn’t show whether reading is allowed: if workouts from your Apple Watch are missing, check access in the Health app under Profile › Apps › Tagwerk."
+            "value": "Tagwerk writes meals, water and workouts to Health and reads workouts and steps. iOS doesn’t show whether reading is allowed: if workouts from your Apple Watch are missing or steps only show “–”, check access in the Health app under Profile › Apps › Tagwerk."
           }
         }
       }
     },
-    "Tagwerk speichert Mahlzeiten, Wasser und Trainings zusätzlich in Health und zeigt Trainings der Apple Watch und anderer Apps. Deine Einträge bleiben auch ohne Health in Tagwerk.": {
+    "Tagwerk speichert Mahlzeiten, Wasser und Trainings zusätzlich in Health und zeigt deine Schritte sowie Trainings der Apple Watch und anderer Apps. Deine Einträge bleiben auch ohne Health in Tagwerk.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tagwerk also saves meals, water and workouts to Health and shows workouts from Apple Watch and other apps. Your entries stay in Tagwerk even without Health."
+            "value": "Tagwerk also saves meals, water and workouts to Health and shows your steps and workouts from Apple Watch and other apps. Your entries stay in Tagwerk even without Health."
           }
         }
       }
@@ -7897,6 +7933,16 @@
         }
       }
     },
+    "Training diese Woche": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Training this week"
+          }
+        }
+      }
+    },
     "Training erfassen": {
       "localizations": {
         "en": {
@@ -7927,22 +7973,32 @@
         }
       }
     },
+    "Training pro Woche: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Training per week: %@"
+          }
+        }
+      }
+    },
+    "Training · Woche": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Training · week"
+          }
+        }
+      }
+    },
     "Trainings aus Health änderst oder löschst du in der App „Fitness“ oder „Health“.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Change or delete workouts from Health in the Fitness or Health app."
-          }
-        }
-      }
-    },
-    "Trainings pro Woche: %lld": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Workouts per week: %lld"
           }
         }
       }
@@ -9300,6 +9356,16 @@
         }
       }
     },
+    "aus": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "off"
+          }
+        }
+      }
+    },
     "automatisch erkannt": {
       "localizations": {
         "en": {
@@ -9668,6 +9734,16 @@
         }
       }
     },
+    "keine Daten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "no data"
+          }
+        }
+      }
+    },
     "keine Fälligkeit": {
       "localizations": {
         "en": {
@@ -9787,6 +9863,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "not scheduled yet"
+          }
+        }
+      }
+    },
+    "ohne Ziel": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "no goal"
           }
         }
       }
@@ -10436,12 +10522,12 @@
         }
       }
     },
-    "„In Planen anzeigen“ zeigt Kalorien und Wasser von heute unter dem Datum im Tab „Planen“, sobald du etwas erfasst hast. Ist „Ernährung im Widget zeigen“ aus, stehen die Werte nicht im Widget. Auf dem Sperrbildschirm erscheinen sie nie.": {
+    "„In Planen anzeigen“ zeigt Kalorien, Wasser und Schritte von heute unter dem Datum im Tab „Planen“, sobald du etwas erfasst hast. Ist „Ernährung im Widget zeigen“ aus, stehen die Werte und die Schritte nicht im Widget. Auf dem Sperrbildschirm erscheinen sie nie.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "“Show in Plan” shows today’s calories and water under the date in the “Plan” tab as soon as you’ve logged something. If “Show nutrition in widget” is off, the values aren’t in the widget. They never appear on the Lock Screen."
+            "value": "“Show in Plan” shows today’s calories, water and steps under the date in the “Plan” tab as soon as you’ve logged something. If “Show nutrition in widget” is off, the values and steps aren’t in the widget. They never appear on the Lock Screen."
           }
         }
       }

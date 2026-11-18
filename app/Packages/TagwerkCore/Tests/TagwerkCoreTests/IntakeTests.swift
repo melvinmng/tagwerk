@@ -94,19 +94,27 @@ struct IntakeTests {
 
     // MARK: Workouts
 
-    @Test func weekCount_mondayToSunday_minimum10Minutes() {
+    @Test func workoutMinutes_sumsAllWorkoutsOfInterval_includingShortOnes() {
         let monday = instant(2026, 11, 16, 7, 0, in: calendar)
-        let sunday = instant(2026, 11, 22, 20, 0, in: calendar)
-        let nextMonday = instant(2026, 11, 23, 7, 0, in: calendar)
-        let lastSunday = instant(2026, 11, 15, 20, 0, in: calendar)
+        let week = DateInterval(start: monday.addingTimeInterval(-7 * 3600), duration: 7 * 86_400)
         let workouts = [
-            workout(start: monday, minutes: 30),
-            workout(start: sunday, minutes: 10, own: false),
-            workout(start: now, minutes: 9),
-            workout(start: nextMonday, minutes: 60),
-            workout(start: lastSunday, minutes: 60),
+            workout(start: monday, minutes: 50),
+            workout(start: now, minutes: 32, own: false),
+            workout(start: now.addingTimeInterval(3600), minutes: 5),
         ]
-        #expect(IntakeRules.workoutsThisWeek(workouts, now: now, calendar: calendar) == 2)
+        #expect(IntakeRules.workoutMinutes(workouts, in: week) == 87)
+    }
+
+    @Test func workoutMinutes_excludesWorkoutsOutsideInterval_endExclusive() {
+        let dayStart = instant(2026, 11, 18, 0, 0, in: calendar)
+        let dayEnd = instant(2026, 11, 19, 0, 0, in: calendar)
+        let day = DateInterval(start: dayStart, end: dayEnd)
+        let workouts = [
+            workout(start: dayStart, minutes: 20),
+            workout(start: dayEnd, minutes: 60),
+            workout(start: dayStart.addingTimeInterval(-60), minutes: 30),
+        ]
+        #expect(IntakeRules.workoutMinutes(workouts, in: day) == 20)
     }
 
     @Test func overlap_detected_adjacentNot() {
@@ -212,7 +220,46 @@ struct IntakeTests {
         #expect(IntakeFormat.liters(1200) == "1,2 l")
         #expect(IntakeFormat.liters(2000) == "2,0 l")
         #expect(IntakeFormat.liters(250) == "0,25 l")
-        #expect(IntakeFormat.goalSummary(kcal: 2300, waterMilliliters: 2000, workoutsPerWeek: 3) == "2.300 kcal · 2,0 l · 3×")
+    }
+
+    @Test func goalSummary_showsMinutes_andOmitsTrainingWhenGoalIsZero() {
+        #expect(IntakeFormat.goalSummary(kcal: 2300, waterMilliliters: 2000, workoutMinutesPerWeek: 150)
+            == "2.300 kcal · 2,0 l · 2 h 30 min")
+        #expect(IntakeFormat.goalSummary(kcal: 2300, waterMilliliters: 2000, workoutMinutesPerWeek: 45)
+            == "2.300 kcal · 2,0 l · 45 min")
+        #expect(IntakeFormat.goalSummary(kcal: 2300, waterMilliliters: 2000, workoutMinutesPerWeek: 0) == "2.300 kcal · 2,0 l")
+    }
+
+    @Test func duration_below60_showsMinutes_from60_showsHoursAndMinutes() {
+        #expect(IntakeFormat.duration(minutes: 0) == "0 min")
+        #expect(IntakeFormat.duration(minutes: 45) == "45 min")
+        #expect(IntakeFormat.duration(minutes: 60) == "1 h")
+        #expect(IntakeFormat.duration(minutes: 77) == "1 h 17 min")
+        #expect(IntakeFormat.duration(minutes: 120) == "2 h")
+        #expect(IntakeFormat.duration(minutes: 1185) == "19 h 45 min")
+    }
+
+    @Test func durationAgainstGoal_usesTheSameFormatOnBothSides() {
+        #expect(IntakeFormat.duration(minutes: 127, goal: 150) == "2 h 7 min / 2 h 30 min")
+        #expect(IntakeFormat.duration(minutes: 45, goal: 60) == "45 min / 1 h")
+    }
+
+    @Test func spokenDuration_writesUnitsOut() {
+        #expect(IntakeFormat.spokenDuration(minutes: 127) == "2 Stunden und 7 Minuten")
+        #expect(IntakeFormat.spokenDuration(minutes: 45) == "45 Minuten")
+        #expect(IntakeFormat.spokenDuration(minutes: 45, locale: Locale(identifier: "en_US")) == "45 minutes")
+    }
+
+    @Test func steps_groupsDigitsByLocale() {
+        #expect(IntakeFormat.steps(6412) == "6.412")
+        #expect(IntakeFormat.steps(6412, locale: Locale(identifier: "en_US")) == "6,412")
+    }
+
+    @Test func stepsValue_againstGoal_withoutGoal_andWithoutData() {
+        #expect(IntakeFormat.stepsValue(6412, goal: 8000) == "6.412 / 8.000")
+        #expect(IntakeFormat.stepsValue(6412, goal: 0) == "6.412")
+        #expect(IntakeFormat.stepsValue(nil, goal: 8000) == "–")
+        #expect(IntakeFormat.stepsValue(0, goal: 8000) == "0 / 8.000")
     }
 
     @Test func format_numbersFollowTheLocale() {

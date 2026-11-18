@@ -229,6 +229,24 @@ struct TodayView: View {
                     .font(.caption.monospacedDigit())
                 ProgressView(value: min(1, Double(intake.waterMilliliters) / Double(max(1, intake.goalWaterMilliliters)))).tint(.cyan)
             }
+            // Steps only on the home screen (this view); the lock-screen families never show intake values.
+            if let steps = intake.steps {
+                let goal = intake.goalSteps ?? 0
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(goal > 0 ? "\(IntakeFormat.steps(steps)) / \(IntakeFormat.grouped(goal))"
+                                  : String(localized: "\(IntakeFormat.steps(steps)) Schritte"))
+                        .font(.caption.monospacedDigit())
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.8)
+                    if goal > 0 {
+                        ProgressView(value: min(1, Double(steps) / Double(goal))).tint(.indigo)
+                    }
+                }
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel("Schritte")
+                .accessibilityValue(goal > 0 ? String(localized: "\(IntakeFormat.steps(steps)) von \(IntakeFormat.grouped(goal))")
+                                             : IntakeFormat.steps(steps))
+            }
         }
         .privacySensitive()
     }

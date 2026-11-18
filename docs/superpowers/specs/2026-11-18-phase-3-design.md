@@ -134,6 +134,18 @@ Umgesetzt nach `../plans/2026-11-18-phase-3-nutrition-training.md` inkl. der Än
 
 **Geräte-Checkliste (offen):** Signierung mit HealthKit-Entitlement über `scripts/refresh-install.sh`; Ersetzung per Sync-Version; erneutes Sichern einer gelöschten Kennung; Verbleib des Energie-Samples nach dem Löschen eines Trainings; `HKWorkoutBuilder` ohne Gerät (auch Schwimmen); Trainings der Apple Watch werden gelesen und eigene nicht doppelt gezählt; Kamera; echte ChatGPT-Schätzung mit Text und Foto (Dauer, Güte); Ziel von „Health öffnen“.
 
+## 12. Nachtrag: Schritte und Trainingszeit (2026-11-18)
+
+Umgesetzt nach `../plans/2026-11-18-steps-training-time.md` (ST1) mit den freigegebenen Entscheidungen am Ende des Plans; sie gehen §4.2 und §8 vor, wo sie abweichen.
+
+- **Schritte als Lesetyp:** `HKQuantityType(.stepCount)`, Tagessummen über eine Statistikabfrage (`.cumulativeSum`, Intervall ein Tag); Health führt iPhone und Apple Watch zusammen. Der Schritt-Typ hat einen eigenen Status (`stepsAccess()`) und eine eigene Anfrage (`requestStepsAuthorization()`). `access()` fragt weiter nur Trainings ab (`HealthKitStore.coreReadTypes`), damit bestehende Nutzer nicht wieder als „nicht gefragt“ gelten; ein Test sichert das. Die Health-Karte fragt bei Neuverbindung beide Gruppen in einem Blatt an.
+- **Anfrage nur nach Tippen:** „In Health erlauben“ in der Kachel „Schritte“ (vor der ersten Health-Verbindung das gemeinsame Blatt, danach nur Schritte) oder „Schritte erlauben“ in Einstellungen › Zugriff.
+- **Ohne Daten „–“, nie 0:** iOS unterscheidet eine abgelehnte Leseerlaubnis nicht von „keine Schritte“.
+- **Trainingszeit statt Anzahl:** Ziel `goalWorkoutMinutesPerWeek` (Platzhalter 150 min, 0 blendet aus) statt `goalWorkoutsPerWeek`; das alte Attribut bleibt im Schema. Einmalige Übernahme (`workoutGoalMigrated`): War das alte Ziel 0, wird das Minutenziel 0. Zur Trainingszeit zählen alle Trainings, auch unter 10 min; die 10-min-Schwelle gilt nur noch für die Zahl der Trainings im Wochenrückblick.
+- **Schrittziel:** `goalStepsPerDay` (Platzhalter 8.000, 0 = ohne Ziel).
+- **Schreibweise:** Ab 60 min überall „x h y min“, auch gegen das Ziel („2 h 7 min / 2 h 30 min“), in Liste, Abschnittskopf, Kachel, Wochenrückblick, Einstellungen und Trainingsblatt.
+- **Datenschutz:** Schritte werden nur gelesen und angezeigt, nicht in SwiftData gespeichert, nicht geloggt und nie an den Assistenten oder die Mahlzeitenschätzung gegeben. Zu Widget und Kopf von „Planen“ siehe Phase-4-Design §13.
+
 ## Quellen
 
 - Apple: HealthKit `HKMetadataKeySyncIdentifier`, `HKMetadataKeySyncVersion`, `HKWorkoutBuilder` (Dokumentation in Xcode 27.2).

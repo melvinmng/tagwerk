@@ -3,13 +3,15 @@ import HealthBridge
 import Observation
 import TagwerkCore
 
-/// State of the weekly review (phase 4 design §5.6, mockup R1a). Reads Health only when access was asked before,
-/// and nothing here reaches an AI feature or the network.
+/// State of the weekly review (phase 4 design §5.6, mockup R1a, ST1). Reads Health workouts only when access was asked
+/// before and steps only after the step sheet; nothing here reaches an AI feature or the network.
 @MainActor
 @Observable
 final class WeekReviewModel {
     private(set) var weekStart: PlanDay
     private(set) var review: WeekReview?
+    /// The "Schritte" section appears only after the step sheet was shown.
+    private(set) var showsSteps = false
 
     private let store: IntakeStore
     private let health: any HealthStoring
@@ -74,13 +76,21 @@ final class WeekReviewModel {
                              kilocalories: workout.kilocalories, sourceName: workout.sourceName, isOwn: false)
             }
         }
+        let stepsAsked = await health.stepsAccess() == .asked
+        var steps: [PlanDay: Int] = [:]
+        if stepsAsked {
+            let sums = (try? await health.dailySteps(in: interval, calendar: calendar)) ?? []
+            for sum in sums { steps[PlanDay(date: sum.start, calendar: calendar)] = sum.count }
+        }
         let completed = await completedReminders(interval) + completedLocalTasks(interval)
         // A later navigation already moved on.
         guard weekStart == requested else { return }
         let goals = WeekReview.Goals(kcal: settings.goalKilocalories, waterMilliliters: settings.goalWaterMilliliters,
-                                     workoutsPerWeek: settings.goalWorkoutsPerWeek,
+                                     workoutMinutesPerWeek: settings.goalWorkoutMinutesPerWeek,
+                                     stepsPerDay: settings.goalStepsPerDay,
                                      proteinGrams: settings.proteinGoalEnabled ? settings.goalProteinGrams : nil)
+        showsSteps = stepsAsked
         review = WeekReview.make(weekStart: requested, now: now(), meals: meals, drinks: drinks, workouts: workouts,
-                                 completedDates: completed, goals: goals, calendar: calendar)
+                                 steps: steps, completedDates: completed, goals: goals, calendar: calendar)
     }
 }

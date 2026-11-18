@@ -27,7 +27,7 @@ struct WorkoutSheet: View {
                         }
                     }
                     .pickerStyle(.menu)
-                    Stepper("Dauer: \(minutes) min", value: $minutes, in: 5...300, step: 5)
+                    Stepper("Dauer: \(IntakeFormat.duration(minutes: minutes))", value: $minutes, in: 5...300, step: 5)
                     DatePicker("Beginn", selection: $start, in: ...Date())
                     HStack {
                         Text("Kalorien (optional)")

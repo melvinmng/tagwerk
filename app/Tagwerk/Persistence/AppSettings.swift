@@ -55,8 +55,15 @@ final class AppSettings {
     /// Daily and weekly goals of the "Erfassen" tab (phase 3 design §8.5: placeholders, not a recommendation).
     var goalKilocalories: Int = 2300
     var goalWaterMilliliters: Int = 2000
-    /// 0 hides the weekly counter.
+    /// Former weekly goal as a number of workouts; no longer shown, kept in the schema (attributes are never removed)
+    /// and read once by `migrateWorkoutGoalIfNeeded()`.
     var goalWorkoutsPerWeek: Int = 3
+    /// Weekly training time goal in minutes; 0 hides the tile. A placeholder like the other goals, not a recommendation.
+    var goalWorkoutMinutesPerWeek: Int = 150
+    /// Daily step goal; 0 shows the steps without a goal.
+    var goalStepsPerDay: Int = 8000
+    /// The one-time takeover of the old workout goal ran.
+    var workoutGoalMigrated: Bool = false
     var proteinGoalEnabled: Bool = false
     var goalProteinGrams: Int = 120
     /// The one-time consent for meal estimates (main design §7). The settings switch binds to it; off means typing values.
@@ -117,6 +124,14 @@ final class AppSettings {
 }
 
 extension AppSettings {
+    /// One-time takeover when the workout goal moved from a count to minutes: a switched-off goal (0) stays off;
+    /// any other count keeps the minute default. Runs once, also on a fresh install, so it never touches a later choice.
+    func migrateWorkoutGoalIfNeeded() {
+        guard !workoutGoalMigrated else { return }
+        if goalWorkoutsPerWeek == 0 { goalWorkoutMinutesPerWeek = 0 }
+        workoutGoalMigrated = true
+    }
+
     /// Task sources whose switch for notifications is on.
     var notifiedTaskSources: Set<TaskSource> {
         var sources: Set<TaskSource> = []

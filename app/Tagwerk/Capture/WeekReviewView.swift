@@ -1,8 +1,8 @@
 import SwiftUI
 import TagwerkCore
 
-/// The weekly review (mockup R1a, R2a; provisional): calories per day with a goal line, water, training,
-/// protein with an active goal and completed tasks.
+/// The weekly review (mockup R1a, R2a, ST1; provisional): calories per day with a goal line, water, training time,
+/// steps per day with a goal line, protein with an active goal and completed tasks.
 struct WeekReviewView: View {
     @State var model: WeekReviewModel
     @State private var picking = false
@@ -21,8 +21,12 @@ struct WeekReviewView: View {
                     Text(waterText(review))
                 } header: { header("Wasser", review) }
                 Section {
-                    Text(trainingText(review))
+                    Text(IntakeFormat.weekTraining(minutes: review.workoutMinutes, count: review.workoutCount,
+                                                   goal: review.goals.workoutMinutesPerWeek))
                 } header: { header("Training", review) }
+                if model.showsSteps {
+                    stepsSection(review)
+                }
                 if let protein = review.averageProtein, let goal = review.goals.proteinGrams {
                     Section {
                         Text("Ø \(review.hasEstimate ? "~" : "")\(Int(protein.rounded())) g / \(goal) g an \(dayCount(review.daysWithMeals))")
@@ -96,10 +100,41 @@ struct WeekReviewView: View {
             } else if let average = review.averageKcal {
                 Text("Ø \(IntakeFormat.kcalNumber(average, estimated: review.hasEstimate)) kcal an \(dayCount(review.daysWithMeals))")
             }
-            CalorieBars(review: review, calendar: model.calendar)
+            let goal = Double(max(1, review.goals.kcal))
+            GoalBars(days: review.days, values: review.days.map(\.kcal), goal: goal, calendar: model.calendar,
+                     color: { $0 > goal ? .orange : .green },
+                     label: { day, name in
+                         guard let kcal = day.kcal else {
+                             return day.isFuture ? name : String(localized: "\(name), keine Mahlzeit erfasst")
+                         }
+                         let amount = IntakeFormat.grouped(IntakeFormat.roundedKcal(kcal))
+                         return day.hasEstimate ? String(localized: "\(name), etwa \(amount) Kilokalorien")
+                             : String(localized: "\(name), \(amount) Kilokalorien")
+                     })
                 .frame(height: 140)
                 .padding(.vertical, 4)
         } header: { header("Kalorien", review) }
+    }
+
+    /// ST1: mean and goal days, seven bars with a goal line; days without a value are dashed, never 0.
+    private func stepsSection(_ review: WeekReview) -> some View {
+        Section {
+            Text(IntakeFormat.weekSteps(average: review.averageSteps, goalDays: review.stepGoalDays,
+                                        elapsedDays: review.days.filter { !$0.isFuture }.count, goal: review.goals.stepsPerDay))
+            GoalBars(days: review.days, values: review.days.map { $0.steps.map(Double.init) },
+                     goal: Double(review.goals.stepsPerDay), calendar: model.calendar,
+                     color: { _ in .indigo },
+                     label: { day, name in
+                         guard let steps = day.steps else {
+                             return day.isFuture ? name : String(localized: "\(name), keine Schritte")
+                         }
+                         return String(localized: "\(name), \(IntakeFormat.steps(steps)) Schritte")
+                     })
+                .frame(height: 100)
+                .padding(.vertical, 4)
+        } header: { header("Schritte", review) } footer: {
+            Text("Schritte kommen aus Health (iPhone und Apple Watch, von Health zusammengeführt).")
+        }
     }
 
     private func waterText(_ review: WeekReview) -> String {
@@ -107,43 +142,43 @@ struct WeekReviewView: View {
         let days = review.days.filter { !$0.isFuture }.count
         return String(localized: "Ziel an \(review.waterGoalDays) von \(days) Tagen · Ø \(IntakeFormat.liters(average))")
     }
-
-    private func trainingText(_ review: WeekReview) -> String {
-        guard review.workoutCount > 0 else { return String(localized: "Kein Training") }
-        let count = review.goals.workoutsPerWeek > 0
-            ? "\(review.workoutCount) / \(review.goals.workoutsPerWeek)"
-            : String(localized: "\(review.workoutCount) Trainings")
-        return "\(count) · \(String(localized: "\(review.workoutMinutes) min"))"
-    }
 }
 
-/// Seven bars with a goal line; days without meals are dashed placeholders, never 0 (R2a).
-private struct CalorieBars: View {
-    let review: WeekReview
+/// Seven bars with a goal line (R2a, ST1): one per weekday; days without a value are dashed placeholders, never 0,
+/// later days stay empty. A goal of 0 draws no line.
+private struct GoalBars: View {
+    let days: [WeekReview.Day]
+    let values: [Double?]
+    let goal: Double
     let calendar: Calendar
+    let color: (Double) -> Color
+    /// VoiceOver text of a day, given the full weekday name.
+    let label: (WeekReview.Day, String) -> String
     private var weekdays: [String] { DateText.shortStandaloneWeekdaySymbols(calendar: calendar) }
     private var longWeekdays: [String] { DateText.fullWeekdaySymbols(calendar: calendar) }
 
     var body: some View {
-        let goal = Double(max(1, review.goals.kcal))
-        let top = max(goal * 1.2, review.days.compactMap(\.kcal).max() ?? 0)
+        let highest = values.compactMap { $0 }.max() ?? 0
+        let top = max(goal * 1.2, highest * (goal > 0 ? 1 : 1.1), 1)
         GeometryReader { geometry in
             let barArea = geometry.size.height - 18
             ZStack(alignment: .bottomLeading) {
-                Rectangle()
-                    .fill(Color.secondary.opacity(0.6))
-                    .frame(height: 1)
-                    .offset(y: -18 - barArea * goal / top)
-                    .accessibilityHidden(true)
+                if goal > 0 {
+                    Rectangle()
+                        .fill(Color.secondary.opacity(0.6))
+                        .frame(height: 1)
+                        .offset(y: -18 - barArea * goal / top)
+                        .accessibilityHidden(true)
+                }
                 HStack(alignment: .bottom, spacing: 8) {
-                    ForEach(Array(review.days.enumerated()), id: \.offset) { index, day in
+                    ForEach(Array(days.enumerated()), id: \.offset) { index, day in
                         VStack(spacing: 4) {
-                            bar(day, height: barArea, top: top, goal: goal)
+                            bar(values[index], isFuture: day.isFuture, height: barArea, top: top)
                             Text(weekdays[index]).font(.caption2).foregroundStyle(.secondary)
                         }
                         .frame(maxWidth: .infinity)
                         .accessibilityElement(children: .ignore)
-                        .accessibilityLabel(label(day, index: index))
+                        .accessibilityLabel(label(day, longWeekdays[index]))
                     }
                 }
             }
@@ -151,25 +186,17 @@ private struct CalorieBars: View {
     }
 
     @ViewBuilder
-    private func bar(_ day: WeekReview.Day, height: CGFloat, top: Double, goal: Double) -> some View {
-        if let kcal = day.kcal {
+    private func bar(_ value: Double?, isFuture: Bool, height: CGFloat, top: Double) -> some View {
+        if let value {
             RoundedRectangle(cornerRadius: 4)
-                .fill(kcal > goal ? Color.orange : Color.green)
-                .frame(height: max(3, height * kcal / top))
-        } else if day.isFuture {
+                .fill(color(value))
+                .frame(height: max(3, height * value / top))
+        } else if isFuture {
             Color.clear.frame(height: 3)
         } else {
             RoundedRectangle(cornerRadius: 4)
                 .strokeBorder(Color.secondary.opacity(0.5), style: StrokeStyle(lineWidth: 1, dash: [3, 3]))
                 .frame(height: 24)
         }
-    }
-
-    private func label(_ day: WeekReview.Day, index: Int) -> String {
-        let name = longWeekdays[index]
-        guard let kcal = day.kcal else { return day.isFuture ? name : String(localized: "\(name), keine Mahlzeit erfasst") }
-        let amount = IntakeFormat.grouped(IntakeFormat.roundedKcal(kcal))
-        return day.hasEstimate ? String(localized: "\(name), etwa \(amount) Kilokalorien")
-            : String(localized: "\(name), \(amount) Kilokalorien")
     }
 }

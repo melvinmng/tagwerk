@@ -323,3 +323,12 @@ Umgesetzt nach `../plans/2026-11-18-phase-4-comfort.md` inkl. der Änderungen na
 *Offen*
 - **Erste Phase-4-Installation:** Für sie gibt es keinen gemerkten Commit, also keinen Rückfall. Siehe Liste für den Nutzer.
 - **Prüfung der eingebetteten Extension:** Sie läuft nur im Simulator-Build (gehosteter Test), nicht für den Geräte-Build in `test-all.sh`.
+
+## 13. Nachtrag: Schritte im Widget und im Kopf von „Planen“ (2026-11-18)
+
+Entscheidung 5 des Plans `../plans/2026-11-18-steps-training-time.md` erweitert §2 (Anti-Ziele) und Entscheidung 14: Neben Kalorien und Wasser zeigen Widget und Kopf von „Planen“ jetzt die Schritte von heute.
+
+- **Widget:** `SnapshotIntake` trägt `steps` und `goalSteps` als optionale Felder; ältere Snapshot-Dateien lesen sich weiter, `schemaVersion` bleibt 1. Die Schritte stehen nur in der Ernährungsspalte des mittleren Widgets „Heute“ (Home-Bildschirm, `privacySensitive`), nie in den Sperrbildschirm-Varianten. Ist „Ernährung im Widget zeigen“ aus, fehlen sie schon im Snapshot, wie Kalorien und Wasser.
+- **Quelle:** der letzte Health-Abruf des Erfassen-Modells, nur solange er zum heutigen Tag gehört (nach Mitternacht kein Wert von gestern). Ohne Schritt-Erlaubnis kein Wert.
+- **Kopf von „Planen“:** „~1.240 / 2.300 kcal · 1,2 / 2,0 l · 6.412 Schritte“, nur mit „In Planen anzeigen“. Die Zeile erscheint weiter erst mit dem ersten Eintrag des Tages; Schritte allein öffnen sie nicht (Annahme der Umsetzung, nicht freigegeben).
+- **Siri:** unverändert, nennt nie Ernährung oder Schritte.
