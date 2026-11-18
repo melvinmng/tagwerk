@@ -281,6 +281,80 @@ struct AIPlanningTests {
         #expect(result.violations.map(\.reason) == [PlanViolation.Reason.wrongScope])
     }
 
+    // MARK: Longer days and moves
+
+    @Test func dayChange_extendsHours_andMakesRoomForLateBlock() {
+        let day = planDay(today, recurring: 360, planned: 60)  // 120 free, 60 planned → 60 left
+        let output = PlanOutput.day(DayPlanOutput(
+            blocks: [block("a", "18:00", 90)], unscheduled: [], risks: [], estimates: [], summary: "Voll",
+            dayChanges: [PlanDayChange(day: "2026-11-18", start: "09:00", end: "20:00", reason: "Frist")]))
+        let result = validate(output, input: input(days: [day], tasks: [task("a")]))
+        guard case .day(let plan) = result.accepted else { Issue.record("day plan expected"); return }
+        #expect(plan.dayChanges.map(\.end) == ["20:00"])
+        #expect(plan.blocks.map(\.taskId) == ["local:a"])
+        #expect(plan.summary == "Voll")
+        #expect(result.violations.isEmpty)
+    }
+
+    @Test func dayChange_outsideLimits_rejected() {
+        let output = PlanOutput.day(DayPlanOutput(blocks: [], unscheduled: [], risks: [], estimates: [], dayChanges: [
+            PlanDayChange(day: "2026-11-18", start: "06:00", end: "18:00", reason: "r"),
+            PlanDayChange(day: "2026-11-18", start: "08:00", end: "21:30", reason: "r"),
+        ]))
+        let result = validate(output, input: input(tasks: [task("a")]))
+        #expect(result.violations.map(\.reason) == [PlanViolation.Reason.invalidDayChange, PlanViolation.Reason.invalidDayChange])
+    }
+
+    @Test func dayChange_twelveHours_allowed_shorterHours_rejected() {
+        let output = PlanOutput.day(DayPlanOutput(blocks: [], unscheduled: [], risks: [], estimates: [], dayChanges: [
+            PlanDayChange(day: "2026-11-18", start: "10:00", end: "17:00", reason: "r"),
+            PlanDayChange(day: "2026-11-18", start: "08:00", end: "20:00", reason: "Notfall"),
+        ]))
+        let result = validate(output, input: input(tasks: [task("a")]))
+        guard case .day(let plan) = result.accepted else { return }
+        #expect(plan.dayChanges.map(\.start) == ["08:00"])
+        #expect(result.violations.map(\.reason) == [PlanViolation.Reason.notAnExtension])
+    }
+
+    @Test func move_toLaterDay_relievesToday() {
+        // Today: 120 free, 120 planned (task a 60 + b 60) → nothing fits; moving a frees 60.
+        var dayInput = input(days: [planDay(today, recurring: 360, planned: 120, counted: ["local:a": 60, "local:b": 60])],
+                             tasks: [task("a", plannedDay: today), task("b", plannedDay: today), task("c")])
+        dayInput.laterDays = [planDay(tomorrow)]
+        let output = PlanOutput.day(DayPlanOutput(blocks: [block("c", "16:00", 60)], unscheduled: [], risks: [], estimates: [],
+                                                  moves: [PlanMove(taskId: "local:a", day: "2026-11-19", reason: "kann warten")]))
+        let result = validate(output, input: dayInput)
+        guard case .day(let plan) = result.accepted else { return }
+        #expect(plan.moves.map(\.taskId) == ["local:a"])
+        #expect(plan.blocks.map(\.taskId) == ["local:c"])
+    }
+
+    @Test func move_rejectedWhenNotPlannedOrTargetFull() {
+        var dayInput = input(days: [planDay(today)], tasks: [task("a"), task("b", plannedDay: today)])
+        dayInput.laterDays = [planDay(tomorrow, recurring: 480)]
+        let output = PlanOutput.day(DayPlanOutput(blocks: [], unscheduled: [], risks: [], estimates: [], moves: [
+            PlanMove(taskId: "local:a", day: "2026-11-19", reason: "r"),
+            PlanMove(taskId: "local:b", day: "2026-11-19", reason: "r"),
+        ]))
+        let result = validate(output, input: dayInput)
+        #expect(result.violations.map(\.reason) == [PlanViolation.Reason.notPlannedThatDay, PlanViolation.Reason.overCapacity])
+    }
+
+    @Test func modelJSON_containsLaterDaysAndLimits() throws {
+        var dayInput = input(tasks: [task("a")])
+        dayInput.laterDays = [planDay(tomorrow)]
+        let json = try #require(try JSONSerialization.jsonObject(with: dayInput.modelJSON()) as? [String: Any])
+        #expect((json["laterDays"] as? [[String: Any]])?.first?["day"] as? String == "2026-11-19")
+        let limits = try #require(json["workdayLimits"] as? [String: Any])
+        #expect(limits["latestEnd"] as? String == "21:00")
+        #expect(limits["emergencyMaximumHours"] as? Int == 12)
+    }
+
+    @Test func decode_oldAnswerWithoutNewFields_stillWorks() throws {
+        let data = Data(#"{"blocks":[],"unscheduled":[],"risks":[],"estimates":[]}"#.utf8)
+        #expect(try PlanOutput.decode(data, scope: .day) == .day(DayPlanOutput(blocks: [], unscheduled: [], risks: [], estimates: [])))
+    }
+
     // MARK: Input
 
     func item(_ name: String, due: DueDate? = nil, priority: Priority? = nil, completed: Bool = false) -> TaskItem {

@@ -88,6 +88,20 @@ public struct PlanInputDay: Sendable, Hashable {
     }
 }
 
+extension PlanInputDay {
+    /// The same day with other working hours; capacity is computed again.
+    func withHours(_ hours: WorkHours) -> PlanInputDay {
+        var day = self
+        day.hours = hours
+        day.availableMinutes = capacity(CapacityInput(
+            hours: hours, lunchStartMinutes: lunch?.lowerBound ?? 0, lunchMinutes: lunch?.count ?? 0,
+            bufferMinutes: bufferMinutes, busyIntervals: busy, recurringMinutes: recurringMinutes,
+            plannedMinutes: plannedMinutes, estimatedCount: 0
+        )).availableMinutes
+        return day
+    }
+}
+
 /// An open task offered to the model.
 public struct PlanInputTask: Sendable, Hashable {
     /// `TaskID.key`.
@@ -127,6 +141,8 @@ public struct PlanInput: Sendable, Hashable {
     public var timeZoneID: String
     /// Load of a task without effort (design §6.1).
     public var defaultTaskMinutes: Int
+    /// Day plan only: the next days, as targets for moving tasks away from a full day.
+    public var laterDays: [PlanInputDay] = []
 
     public init(scope: PlanScope, days: [PlanInputDay], tasks: [PlanInputTask], today: PlanDay, nowMinutes: Int,
                 timeZoneID: String, defaultTaskMinutes: Int) {
@@ -254,17 +270,75 @@ public struct PlanEstimate: Sendable, Hashable, Codable {
     }
 }
 
+/// Moves a task that is planned for one day to a later day ("↷ … verschieben").
+public struct PlanMove: Sendable, Hashable, Codable {
+    public var taskId: String
+    /// "YYYY-MM-DD".
+    public var day: String
+    public var reason: String
+
+    public init(taskId: String, day: String, reason: String) {
+        self.taskId = taskId
+        self.day = day
+        self.reason = reason
+    }
+}
+
+/// Longer working hours for one day, or work on a day off (issue #72).
+public struct PlanDayChange: Sendable, Hashable, Codable {
+    /// "YYYY-MM-DD".
+    public var day: String
+    /// "HH:mm".
+    public var start: String
+    public var end: String
+    public var reason: String
+
+    public init(day: String, start: String, end: String, reason: String) {
+        self.day = day
+        self.start = start
+        self.end = end
+        self.reason = reason
+    }
+}
+
+/// Bounds for longer days (user rule 2026-11-18): 07:00–21:00, normally at most 10 h, in an emergency 12 h.
+public enum WorkdayLimits {
+    public static let earliest = 7 * 60
+    public static let latest = 21 * 60
+    public static let normalMaximum = 10 * 60
+    public static let emergencyMaximum = 12 * 60
+}
+
 public struct DayPlanOutput: Sendable, Hashable, Codable {
     public var blocks: [PlanBlock]
     public var unscheduled: [PlanUnscheduled]
     public var risks: [String]
     public var estimates: [PlanEstimate]
+    /// One or two sentences on the period as a whole.
+    public var summary: String
+    public var moves: [PlanMove]
+    public var dayChanges: [PlanDayChange]
 
-    public init(blocks: [PlanBlock], unscheduled: [PlanUnscheduled], risks: [String], estimates: [PlanEstimate]) {
+    public init(blocks: [PlanBlock], unscheduled: [PlanUnscheduled], risks: [String], estimates: [PlanEstimate],
+                summary: String = "", moves: [PlanMove] = [], dayChanges: [PlanDayChange] = []) {
         self.blocks = blocks
         self.unscheduled = unscheduled
         self.risks = risks
         self.estimates = estimates
+        self.summary = summary
+        self.moves = moves
+        self.dayChanges = dayChanges
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        blocks = try container.decode([PlanBlock].self, forKey: .blocks)
+        unscheduled = try container.decodeIfPresent([PlanUnscheduled].self, forKey: .unscheduled) ?? []
+        risks = try container.decodeIfPresent([String].self, forKey: .risks) ?? []
+        estimates = try container.decodeIfPresent([PlanEstimate].self, forKey: .estimates) ?? []
+        summary = try container.decodeIfPresent(String.self, forKey: .summary) ?? ""
+        moves = try container.decodeIfPresent([PlanMove].self, forKey: .moves) ?? []
+        dayChanges = try container.decodeIfPresent([PlanDayChange].self, forKey: .dayChanges) ?? []
     }
 }
 
@@ -273,12 +347,30 @@ public struct PeriodPlanOutput: Sendable, Hashable, Codable {
     public var unscheduled: [PlanUnscheduled]
     public var risks: [String]
     public var estimates: [PlanEstimate]
+    public var summary: String
+    public var moves: [PlanMove]
+    public var dayChanges: [PlanDayChange]
 
-    public init(assignments: [PlanAssignment], unscheduled: [PlanUnscheduled], risks: [String], estimates: [PlanEstimate]) {
+    public init(assignments: [PlanAssignment], unscheduled: [PlanUnscheduled], risks: [String], estimates: [PlanEstimate],
+                summary: String = "", moves: [PlanMove] = [], dayChanges: [PlanDayChange] = []) {
         self.assignments = assignments
         self.unscheduled = unscheduled
         self.risks = risks
         self.estimates = estimates
+        self.summary = summary
+        self.moves = moves
+        self.dayChanges = dayChanges
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        assignments = try container.decode([PlanAssignment].self, forKey: .assignments)
+        unscheduled = try container.decodeIfPresent([PlanUnscheduled].self, forKey: .unscheduled) ?? []
+        risks = try container.decodeIfPresent([String].self, forKey: .risks) ?? []
+        estimates = try container.decodeIfPresent([PlanEstimate].self, forKey: .estimates) ?? []
+        summary = try container.decodeIfPresent(String.self, forKey: .summary) ?? ""
+        moves = try container.decodeIfPresent([PlanMove].self, forKey: .moves) ?? []
+        dayChanges = try container.decodeIfPresent([PlanDayChange].self, forKey: .dayChanges) ?? []
     }
 }
 
@@ -315,6 +407,9 @@ public struct PlanViolation: Sendable, Hashable {
         case alreadyAssigned = "Die Aufgabe ist schon einem Tag zugeordnet."
         case overCapacity = "Die Kapazität des Tages ist überschritten."
         case wrongScope = "Die Antwort passt nicht zum Zeitraum."
+        case invalidDayChange = "Die längere Arbeitszeit liegt außerhalb von 7 bis 21 Uhr oder über 12 Stunden."
+        case notAnExtension = "Das verlängert die Arbeitszeit nicht."
+        case notPlannedThatDay = "Die Aufgabe ist an diesem Tag nicht eingeplant."
     }
 
     public var taskId: String
@@ -334,16 +429,31 @@ public func validate(_ output: PlanOutput, input: PlanInput) -> (accepted: PlanO
     let tasks = Dictionary(input.tasks.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
     switch (output, input.scope) {
     case (.day(let plan), .day):
-        let (blocks, violations) = validateBlocks(plan.blocks, input: input, tasks: tasks)
-        return (.day(DayPlanOutput(blocks: blocks, unscheduled: knownUnscheduled(plan.unscheduled, tasks),
-                                   risks: plan.risks, estimates: knownEstimates(plan.estimates, tasks))), violations)
+        let estimates = knownEstimates(plan.estimates, tasks)
+        let stage = validateChanges(dayChanges: plan.dayChanges, moves: plan.moves, input: input, tasks: tasks,
+                                    estimates: estimateMap(estimates))
+        let effectiveTasks = Dictionary(stage.input.tasks.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
+        let movedIDs = Set(stage.moves.map(\.taskId))
+        var violations = stage.violations
+        var blocks = plan.blocks
+        for block in blocks where movedIDs.contains(block.taskId) {
+            violations.append(PlanViolation(taskId: block.taskId, reason: .duplicate))
+        }
+        blocks.removeAll { movedIDs.contains($0.taskId) }
+        let (acceptedBlocks, blockViolations) = validateBlocks(blocks, input: stage.input, tasks: effectiveTasks)
+        return (.day(DayPlanOutput(blocks: acceptedBlocks, unscheduled: knownUnscheduled(plan.unscheduled, tasks),
+                                   risks: plan.risks, estimates: estimates, summary: plan.summary,
+                                   moves: stage.moves, dayChanges: stage.dayChanges)), violations + blockViolations)
     case (.period(let plan), .week), (.period(let plan), .month):
         let estimates = knownEstimates(plan.estimates, tasks)
-        let (assignments, violations) = validateAssignments(
-            plan.assignments, input: input, tasks: tasks,
-            estimates: Dictionary(estimates.map { ($0.taskId, $0.minutes) }, uniquingKeysWith: { first, _ in first }))
+        let stage = validateChanges(dayChanges: plan.dayChanges, moves: plan.moves, input: input, tasks: tasks,
+                                    estimates: estimateMap(estimates))
+        let effectiveTasks = Dictionary(stage.input.tasks.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
+        let (assignments, violations) = validateAssignments(plan.assignments, input: stage.input, tasks: effectiveTasks,
+                                                            estimates: estimateMap(estimates))
         return (.period(PeriodPlanOutput(assignments: assignments, unscheduled: knownUnscheduled(plan.unscheduled, tasks),
-                                         risks: plan.risks, estimates: estimates)), violations)
+                                         risks: plan.risks, estimates: estimates, summary: plan.summary,
+                                         moves: stage.moves, dayChanges: stage.dayChanges)), stage.violations + violations)
     case (.day(let plan), _):
         return (.period(PeriodPlanOutput(assignments: [], unscheduled: [], risks: [], estimates: [])),
                 plan.blocks.map { PlanViolation(taskId: $0.taskId, reason: .wrongScope) })
@@ -351,6 +461,81 @@ public func validate(_ output: PlanOutput, input: PlanInput) -> (accepted: PlanO
         return (.day(DayPlanOutput(blocks: [], unscheduled: [], risks: [], estimates: [])),
                 plan.assignments.map { PlanViolation(taskId: $0.taskId, reason: .wrongScope) })
     }
+}
+
+private func estimateMap(_ estimates: [PlanEstimate]) -> [String: Int] {
+    Dictionary(estimates.map { ($0.taskId, $0.minutes) }, uniquingKeysWith: { first, _ in first })
+}
+
+/// First stage: longer days and moves. Valid ones change the input that blocks and assignments are then
+/// checked against (longer hours and more capacity; the origin day loses the moved task's load).
+private func validateChanges(dayChanges: [PlanDayChange], moves: [PlanMove], input: PlanInput, tasks: [String: PlanInputTask],
+                             estimates: [String: Int])
+    -> (input: PlanInput, dayChanges: [PlanDayChange], moves: [PlanMove], violations: [PlanViolation]) {
+    var effective = input
+    var violations: [PlanViolation] = []
+    var acceptedChanges: [PlanDayChange] = []
+    var changedDays = Set<PlanDay>()
+
+    for change in dayChanges {
+        let key = "day:\(change.day)"
+        guard let day = planDay(from: change.day), let index = effective.days.firstIndex(where: { $0.day == day }) else {
+            violations.append(PlanViolation(taskId: key, reason: .outsidePeriod)); continue
+        }
+        guard day >= input.today, !changedDays.contains(day) else {
+            violations.append(PlanViolation(taskId: key, reason: day < input.today ? .inThePast : .duplicate)); continue
+        }
+        guard let start = minutes(fromTime: change.start), let end = minutes(fromTime: change.end), start < end,
+              start >= WorkdayLimits.earliest, end <= WorkdayLimits.latest,
+              end - start <= WorkdayLimits.emergencyMaximum else {
+            violations.append(PlanViolation(taskId: key, reason: .invalidDayChange)); continue
+        }
+        let current = effective.days[index].hours
+        if let current, current.minutes > 0 {
+            guard start <= current.startMinutes, end >= current.endMinutes,
+                  start < current.startMinutes || end > current.endMinutes else {
+                violations.append(PlanViolation(taskId: key, reason: .notAnExtension)); continue
+            }
+        }
+        effective.days[index] = effective.days[index].withHours(WorkHours(startMinutes: start, endMinutes: end))
+        changedDays.insert(day)
+        acceptedChanges.append(change)
+    }
+
+    let targets = Dictionary((effective.days + effective.laterDays).map { ($0.day, $0) }, uniquingKeysWith: { first, _ in first })
+    var extraLoad: [PlanDay: Int] = [:]
+    var acceptedMoves: [PlanMove] = []
+    var moved = Set<String>()
+    for move in moves {
+        func reject(_ reason: PlanViolation.Reason) { violations.append(PlanViolation(taskId: move.taskId, reason: reason)) }
+        guard !moved.contains(move.taskId) else { reject(.duplicate); continue }
+        guard let task = tasks[move.taskId] else { reject(.unknownTask); continue }
+        // The task must currently weigh on one of the planned days.
+        guard let originIndex = effective.days.firstIndex(where: { day in
+            task.plannedDay == day.day || day.countedTaskMinutes[task.id] != nil
+        }) else { reject(.notPlannedThatDay); continue }
+        guard let target = planDay(from: move.day) else { reject(.invalidDay); continue }
+        guard let targetDay = targets[target] else { reject(.outsidePeriod); continue }
+        guard target > input.today, target != effective.days[originIndex].day else { reject(.inThePast); continue }
+        guard let hours = targetDay.hours, hours.minutes > 0 else { reject(.dayOff); continue }
+        let taskMinutes = task.minutes ?? estimates[task.id] ?? effective.days[originIndex].countedTaskMinutes[task.id]
+            ?? input.defaultTaskMinutes
+        let freeOnTarget = targetDay.availableMinutes - targetDay.plannedMinutes - (extraLoad[target] ?? 0)
+        guard taskMinutes <= freeOnTarget else { reject(.overCapacity); continue }
+        // The origin day is relieved; the target day carries the task from now on.
+        let counted = effective.days[originIndex].countedTaskMinutes.removeValue(forKey: task.id) ?? 0
+        effective.days[originIndex].plannedMinutes -= counted
+        if let index = effective.days.firstIndex(where: { $0.day == target }) {
+            effective.days[index].plannedMinutes += taskMinutes
+            effective.days[index].countedTaskMinutes[task.id] = taskMinutes
+        } else {
+            extraLoad[target, default: 0] += taskMinutes
+        }
+        if let taskIndex = effective.tasks.firstIndex(where: { $0.id == task.id }) { effective.tasks[taskIndex].plannedDay = target }
+        moved.insert(move.taskId)
+        acceptedMoves.append(move)
+    }
+    return (effective, acceptedChanges, acceptedMoves, violations)
 }
 
 private func validateBlocks(_ blocks: [PlanBlock], input: PlanInput,
@@ -507,28 +692,36 @@ extension PlanInput {
             let id: String; let source: String; let title: String; let due: String?; let priority: String?
             let minutes: Int?; let important: Bool; let plannedDay: String?; let deadline: String?
         }
+        struct Limits: Encodable {
+            let earliestStart: String; let latestEnd: String; let normalMaximumHours: Int; let emergencyMaximumHours: Int
+        }
         struct Body: Encodable {
             let scope: String; let now: String; let timeZone: String; let defaultTaskMinutes: Int
-            let days: [Day]; let tasks: [Task]
+            let days: [Day]; let laterDays: [Day]; let workdayLimits: Limits; let tasks: [Task]
+        }
+        func encodeDay(_ day: PlanInputDay) -> Day {
+            Day(day: dayString(day.day), dayOff: day.hours == nil,
+                workStart: day.hours.map { timeString($0.startMinutes) }, workEnd: day.hours.map { timeString($0.endMinutes) },
+                lunch: day.lunch.map { Span(start: timeString($0.lowerBound), end: timeString($0.upperBound)) },
+                bufferMinutes: day.bufferMinutes, recurringMinutes: day.recurringMinutes,
+                availableMinutes: day.availableMinutes, plannedMinutes: day.plannedMinutes,
+                freeMinutes: day.availableMinutes - day.plannedMinutes,
+                events: day.events.map { event in
+                    Event(title: event.title, start: event.start.map(timeString), end: event.end.map(timeString),
+                          allDay: event.allDay, busy: event.busy, deadline: event.deadline, linkedToTask: event.linkedToTask)
+                },
+                existingBlocks: day.blocks.map { Span(start: timeString($0.lowerBound), end: timeString($0.upperBound)) })
         }
         let body = Body(
             scope: scope.rawValue,
             now: dayString(today) + "T" + timeString(nowMinutes),
             timeZone: timeZoneID,
             defaultTaskMinutes: defaultTaskMinutes,
-            days: days.map { day in
-                Day(day: dayString(day.day), dayOff: day.hours == nil,
-                    workStart: day.hours.map { timeString($0.startMinutes) }, workEnd: day.hours.map { timeString($0.endMinutes) },
-                    lunch: day.lunch.map { Span(start: timeString($0.lowerBound), end: timeString($0.upperBound)) },
-                    bufferMinutes: day.bufferMinutes, recurringMinutes: day.recurringMinutes,
-                    availableMinutes: day.availableMinutes, plannedMinutes: day.plannedMinutes,
-                    freeMinutes: day.availableMinutes - day.plannedMinutes,
-                    events: day.events.map { event in
-                        Event(title: event.title, start: event.start.map(timeString), end: event.end.map(timeString),
-                              allDay: event.allDay, busy: event.busy, deadline: event.deadline, linkedToTask: event.linkedToTask)
-                    },
-                    existingBlocks: day.blocks.map { Span(start: timeString($0.lowerBound), end: timeString($0.upperBound)) })
-            },
+            days: days.map(encodeDay),
+            laterDays: laterDays.map(encodeDay),
+            workdayLimits: Limits(earliestStart: timeString(WorkdayLimits.earliest), latestEnd: timeString(WorkdayLimits.latest),
+                                  normalMaximumHours: WorkdayLimits.normalMaximum / 60,
+                                  emergencyMaximumHours: WorkdayLimits.emergencyMaximum / 60),
             tasks: tasks.map { task in
                 Task(id: task.id, source: task.source.rawValue, title: task.title, due: task.due.map(dueString),
                      priority: task.priority?.label, minutes: task.minutes, important: task.important,
@@ -559,6 +752,16 @@ public enum AIPlanSchemas {
             "unscheduled": array(object(["taskId": string, "reason": string])),
             "risks": array(string),
             "estimates": array(object(["taskId": string, "minutes": integer])),
+            "summary": ["type": "string", "description": "One or two sentences on the period"],
+            "moves": array(object([
+                "taskId": string, "day": ["type": "string", "description": "YYYY-MM-DD"], "reason": string,
+            ])),
+            "dayChanges": array(object([
+                "day": ["type": "string", "description": "YYYY-MM-DD"],
+                "start": ["type": "string", "description": "HH:mm"],
+                "end": ["type": "string", "description": "HH:mm"],
+                "reason": string,
+            ])),
         ]
     }
 
