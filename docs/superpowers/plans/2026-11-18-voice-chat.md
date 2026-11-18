@@ -45,13 +45,13 @@ Die App verbindet das in `VoiceInputModel` (Aufnahme), `VoiceOutputModel` (Vorle
    - Das Vorlesen erkennt die Sprache der Antwort und nimmt die Stimme dieser Sprache.
 4. **Sprache der KI:** Die KI antwortet in der Sprache, in der der Nutzer gerade schreibt oder spricht.
 5. **App-Oberfläche auf Englisch:** eigener PR, nicht in diesem Plan.
-6. **Mitlaufender Text:** wie SP1a. Die Antwort „ohne Live-Text“ bezog sich auf die ChatGPT-Erkennung, die nur am Ende liefert; Apple erkennt live. **Vorläufig, Bestätigung offen.**
+6. **Mitlaufender Text:** wie SP1a. Die Antwort „ohne Live-Text“ bezog sich auf die ChatGPT-Erkennung, die nur am Ende liefert; Apple erkennt live. **Am iPhone bestätigt (2026-11-18).**
 7. **Offene Fragen der Mockups, vorläufig nach Empfehlung entschieden:**
    - Gesprochene Nachrichten tragen im Verlauf ein kleines Mikrofon.
    - Automatisches Vorlesen schweigt bei stummem Gerät; der Knopf „Vorlesen“ spricht immer.
    - Im Vorschlagsblatt nur Diktat, kein Vorlesen.
    - Der Sprechmodus läuft nicht im Hintergrund.
-8. **Abweichung vom Mockup:** Das Feld „Was hast du gegessen?“ im Mahlzeiten-Blatt bekommt das kompakte Mikrofon wie das Vorschlagsblatt (SP6b). Es ist eine Eingabe an die KI, kein reines Textfeld. **Vorläufig.**
+8. **Abweichung vom Mockup:** Das Feld „Was hast du gegessen?“ im Mahlzeiten-Blatt bekommt das kompakte Mikrofon wie das Vorschlagsblatt (SP6b). Es ist eine Eingabe an die KI, kein reines Textfeld. **Vom Nutzer bestätigt, eigener PR #112.**
 
 ## Änderungen nach dem Fable-Review (2026-11-18) – gehen den Tasks unten vor
 
@@ -98,7 +98,7 @@ Die App verbindet das in `VoiceInputModel` (Aufnahme), `VoiceOutputModel` (Vorle
 14. **`SpokenText` schlank:** Markdown, Emoji/✦, Prioritäten und Zeitspannen-Striche. Die Uhrzeit-Umrechnung „16:00 → 4 PM“ entfällt, bis am Gerät gehört ist, was die Stimme selbst macht.
 15. **`voiceAnnounceActions`** gehört in Stufe 1 in den Abschnitt „Vorlesen“ („Änderungen ansagen“).
 16. **Pegel** auf etwa 10 Hz gedrosselt.
-17. **Mahlzeiten-Blatt** (Entscheidung 8) erst nach Bestätigung durch den Nutzer; nicht in PR 1.
+17. **Mahlzeiten-Blatt** (Entscheidung 8) erst nach Bestätigung durch den Nutzer; nicht in PR 1. Bestätigt, umgesetzt in #112.
 
 ## Ergebnis Task 0 (iPhone, 2026-11-18)
 
@@ -106,6 +106,22 @@ Die App verbindet das in `VoiceInputModel` (Aufnahme), `VoiceOutputModel` (Vorle
 - Mikrofon erlaubt; die Abfrage „Spracherkennung“ wurde **nie gestellt** und die Erkennung lief trotzdem. Sie entfällt, kein `NSSpeechRecognitionUsageDescription`.
 - Erster Text nach 1,8 s (inklusive Start der Engine).
 - Der Nutzer fand **Diktat** (`DictationTranscriber`) minimal besser → Standard.
+
+## Stufe 2: Entwurf vor Task 10 (2026-11-18)
+
+Stufe 1 ist mit #111 gemergt und am iPhone getestet. Für den Sprechmodus fehlen im Plan diese Punkte; sie gehen Tasks 10–12 vor.
+
+1. **Vorlese-Regel umgehen.** Im Sprechmodus wird jede Antwort gesprochen, unabhängig von „Antworten vorlesen“ (Vorgabe „Nie“). `AssistantModel` bekommt dafür keinen Policy-Trick, sondern eine eigene Ausgabe: Der Sprechmodus sendet über `send(_:spoken:)` und liest die neuen Nachrichten selbst; das automatische Vorlesen ist in dieser Zeit abgeschaltet.
+2. **Hörbar bei Stummschalter.** Der Sprechmodus ist ausdrücklich gestartet und spricht wie „Vorlesen“ immer, nicht über `.ambient`.
+3. **Eine Audio-Session für die ganze Sitzung.** Neuer Modus `VoiceAudioMode.conversation` (`.playAndRecord`, `.voiceChat` oder `.default`, `.defaultToSpeaker`, `.allowBluetoothHFP`). Während er aktiv ist, aktivieren und deaktivieren Erkenner und Vorlesen die Session nicht selbst (`VoiceAudioSession.activate` gibt bei aktiver Unterhaltung „schon da“ zurück, `deactivate` eines Untermodus tut nichts). Erst „Beenden“ deaktiviert mit `.notifyOthersOnDeactivation`.
+4. **Abschluss-Signale.** Jeder Schritt meldet sein Ende ausdrücklich, damit der Automat nie in `sending` oder `speaking` hängen bleibt:
+   - `send` liefert ein Ergebnis: `.answered(texts, pendingCards)`, `.rejected` (Gespräch beschäftigt, leer), `.failed(offline:)`.
+   - Die Ausgabe meldet `.finished` / `.interrupted` nach außen (Abschluss-Closure je `speak`), auch wenn es nichts zu lesen gibt.
+   - Je Fall ein Test.
+5. **Erkenner-Lebenszyklus nicht doppelt.** Start-Abbruch, Abbruch des alten Erkenners vor dem Neustart und die 3-s-Stopp-Frist kommen aus `VoiceInputModel` in eine kleine wiederverwendbare `RecognitionSession` (mit den bestehenden Tests); Diktat und Sprechmodus nutzen sie.
+6. **Echo-Reihenfolge.** Erkenner vollständig beendet → sprechen → letzter Satz fertig → Ton fertig → zuhören. Nie während des Tons zuhören.
+7. **Karten.** Mit offener Karte wartet der Automat. Nach „Bestätigen“ spricht `readAfterConfirmation` „Ausgeführt.“ und folgenden Text; zugehört wird erst nach dessen Ende. Eine Bestätigung kann neue Karten bringen → wieder warten.
+8. **Blatt-Höhen nur im Sprechmodus.** Das Chat-Blatt bekommt `.medium`/`.large` und Bedienbarkeit des Kalenders nur, solange der Sprechmodus läuft; der normale Chat bleibt unverändert. Ein Tipp auf einen Termin im Kalender, während das Blatt halb offen ist, öffnet kein zweites Blatt: der Sprechmodus endet nicht, der Tipp wird ignoriert (am Gerät prüfen).
 
 ## Lieferung in zwei PRs
 
