@@ -71,6 +71,23 @@ struct WeekReviewModelTests {
         #expect(calls.reminderIntervals.last?.start == PlanDay(year: 2026, month: 11, day: 9).startDate(in: calendar))
     }
 
+    @Test func review_goToDay_showsItsWeek() async {
+        let model = make(FakeHealthStore())
+        await model.reload()
+        // Thursday 22 Oct 2026 belongs to the week starting Monday 19 Oct.
+        await model.go(toWeekOf: PlanDay(year: 2026, month: 10, day: 22))
+        #expect(model.weekStart == PlanDay(year: 2026, month: 10, day: 19))
+        #expect(model.review?.weekStart == PlanDay(year: 2026, month: 10, day: 19))
+    }
+
+    @Test func review_goToFutureDay_staysCurrentWeek() async {
+        let model = make(FakeHealthStore())
+        await model.reload()
+        await model.goBack()
+        await model.go(toWeekOf: PlanDay(year: 2026, month: 12, day: 2))
+        #expect(model.weekStart == PlanDay(year: 2026, month: 11, day: 16))
+    }
+
     @Test func proteinOnlyWithGoal() async {
         let item = MealItem(name: "x", amount: "1", kcalMin: 500, kcal: 500, kcalMax: 500, protein: 40, carbs: 0, fat: 0, isEstimated: false)
         store.addMeal(MealValue(id: UUID(), date: now, kind: .lunch, title: "x", items: [item], origin: .manual), estimatedAt: nil)

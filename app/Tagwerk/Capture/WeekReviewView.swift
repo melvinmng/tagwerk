@@ -5,6 +5,7 @@ import TagwerkCore
 /// protein with an active goal and completed tasks.
 struct WeekReviewView: View {
     @State var model: WeekReviewModel
+    @State private var picking = false
 
     var body: some View {
         List {
@@ -13,7 +14,21 @@ struct WeekReviewView: View {
                     Button { Task { await model.goBack() } } label: { Image(systemName: "chevron.left") }
                         .accessibilityLabel("Vorherige Woche")
                     Spacer()
-                    Text(model.title).font(.headline).monospacedDigit()
+                    Button { picking = true } label: {
+                        HStack(alignment: .firstTextBaseline, spacing: 4) {
+                            Text(model.title).font(.headline).monospacedDigit()
+                            Image(systemName: "chevron.down").font(.caption.weight(.semibold)).foregroundStyle(.secondary)
+                        }
+                    }
+                    .tint(.primary)
+                    .accessibilityHint("Woche wählen")
+                    .popover(isPresented: $picking) {
+                        DateJumpPopover(selected: model.weekStart, today: model.today, calendar: model.calendar,
+                                        todayTitle: "Diese Woche") { day in
+                            picking = false
+                            Task { await model.go(toWeekOf: day) }
+                        }
+                    }
                     Spacer()
                     Button { Task { await model.goForward() } } label: { Image(systemName: "chevron.right") }
                         .disabled(!model.canGoForward)

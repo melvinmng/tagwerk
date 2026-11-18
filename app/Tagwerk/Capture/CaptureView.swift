@@ -241,6 +241,7 @@ struct CaptureView: View {
 
 private struct DayNavigation: View {
     let model: CaptureModel
+    @State private var picking = false
 
     var body: some View {
         HStack {
@@ -251,16 +252,23 @@ private struct DayNavigation: View {
             }
             .accessibilityLabel("Vorheriger Tag")
             Spacer()
-            Button {
-                Task { await model.goToToday() }
-            } label: {
+            Button { picking = true } label: {
                 VStack(spacing: 0) {
-                    Text(CaptureText.relativeDay(model.day, today: model.today, calendar: model.calendar)).font(.headline)
+                    HStack(alignment: .firstTextBaseline, spacing: 4) {
+                        Text(CaptureText.relativeDay(model.day, today: model.today, calendar: model.calendar)).font(.headline)
+                        Image(systemName: "chevron.down").font(.caption.weight(.semibold)).foregroundStyle(.secondary)
+                    }
                     Text(CaptureText.date(model.day, calendar: model.calendar)).font(.caption).foregroundStyle(.secondary)
                 }
             }
             .tint(.primary)
-            .disabled(model.isToday)
+            .accessibilityHint("Datum wählen")
+            .popover(isPresented: $picking) {
+                DateJumpPopover(selected: model.day, today: model.today, calendar: model.calendar, todayTitle: "Heute") { day in
+                    picking = false
+                    Task { await model.go(to: day) }
+                }
+            }
             Spacer()
             Button {
                 Task { await model.goForward() }
