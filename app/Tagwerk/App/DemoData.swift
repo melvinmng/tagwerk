@@ -37,10 +37,25 @@ enum DemoData {
             await environment.planning.reload()
             try seedIntake(environment)
             await environment.capture.reload()
+            seedCompletedTasks(environment)
+            // Phase 4: the widget reads the demo plan right away.
+            environment.writeSnapshot()
             print("DemoData: sample data created")
         } catch {
             print("DemoData: seeding failed: \(error)")
         }
+    }
+
+    /// Two local tasks completed earlier this week, so the weekly review shows "Erledigt".
+    private static func seedCompletedTasks(_ environment: AppEnvironment) {
+        let context = environment.modelContainer.mainContext
+        for (title, daysAgo) in [("Bibliotheksbuch zurückgeben", 1), ("Rechnung ablegen", 2)] {
+            let task = LocalTask(title: title)
+            task.isCompleted = true
+            task.completedAt = Date.now.addingTimeInterval(TimeInterval(-daysAgo * 86_400))
+            context.insert(task)
+        }
+        try? context.save()
     }
 
     /// Tomorrow: "Pretest vorbereiten" with a 60-minute block at 14:00 and "Einkaufen" planned without time.

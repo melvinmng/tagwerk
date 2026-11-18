@@ -43,10 +43,28 @@ struct CaptureSettingsView: View {
             } header: {
                 Text("Anzeige")
             } footer: {
-                Text("„In Planen anzeigen“ zeigt Kalorien und Wasser von heute im Kopf der Tagesansicht. Ausgeschaltet stehen Kalorien und Wasser nicht im Widget, auch nicht in der Datei, die das Widget liest. Auf dem Sperrbildschirm zeigt Tagwerk nie Ernährungswerte.")
+                Text("„In Planen anzeigen“ zeigt Kalorien und Wasser von heute unter dem Datum im Tab „Planen“, sobald du etwas erfasst hast. Ist „Ernährung im Widget zeigen“ aus, stehen die Werte nicht im Widget. Auf dem Sperrbildschirm erscheinen sie nie.")
+            }
+
+            Section {
+                phrase("Wasser in Tagwerk erfassen", "Trägt 250 ml ein, ohne Tagwerk zu öffnen")
+                phrase("Mahlzeit in Tagwerk erfassen", "Öffnet das Blatt „Essen“")
+                phrase("Training in Tagwerk erfassen", "Öffnet das Blatt „Training“")
+                phrase("Was steht heute in Tagwerk an?", "Nennt Termine, Blöcke und Deadlines von heute")
+            } header: {
+                Text("Siri & Kurzbefehle")
+            } footer: {
+                Text("Sag einen der Sätze zu Siri oder füge ihn in der App „Kurzbefehle“ hinzu. „Wasser erfassen“ lässt sich dort auch auf die Aktionstaste oder den Home-Bildschirm legen.")
             }
         }
         .navigationTitle("Erfassen")
         .navigationBarTitleDisplayMode(.inline)
+    }
+
+    private func phrase(_ text: String, _ detail: String) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text("„\(text)“")
+            Text(detail).font(.caption).foregroundStyle(.secondary)
+        }
     }
 }

@@ -240,3 +240,63 @@ SnapshotIntake {
 ## 11. Dem Umsetzenden überlassen
 
 Ordnerstruktur, Testaufbau, Farbgebung im Rahmen des Mockups, Wortlaut der Phrasen-Varianten.
+
+## 12. Abweichungen und Ergänzungen bei der Umsetzung (2026-11-18)
+
+Umgesetzt nach `../plans/2026-11-18-phase-4-comfort.md` inkl. der Änderungen nach dem Fable-Review. Diese gehen §4–§9 vor, wo sie abweichen.
+
+**Snapshot**
+- **Veraltet:** Ein Snapshot gilt als veraltet, wenn der heutige Tag nicht in `days` steht. Die 3-Tage-Regel aus §5.4 entfällt: Ein Snapshot von Montag würde am Donnerstag sonst fälschlich „nichts geplant“ zeigen.
+- **Kein `showsNutrition` im Snapshot:** `intake == nil` genügt. Nach Mitternacht und ohne Tageswerte zeigt „Heute“ das Layout W2b, also ohne Ernährungshälfte.
+- **Deadline-Kalender-Termine** erscheinen genau einmal, als Deadline. Termine über Mitternacht haben je Tag eine eigene ID.
+- **Planteil:** Ihn schreibt nur ein Lauf mit geladenen Aufgabenquellen, über `PlanningModel.snapshotInput`. Das ist ein reiner EventKit-Lesezugriff: Anker und Ansicht bleiben unverändert, es gibt keinen Netzabruf.
+- **Siri im Hintergrund:** „Wasser erfassen“ ersetzt nur die Tageswerte einer vorhandenen Datei. Gibt es noch keine Datei, wird keine geschrieben, damit das Widget nicht fälschlich „nichts geplant“ zeigt.
+- **Auslöser:** Geschrieben wird
+  - entprellt nach Änderungen an Plan, Aufgaben, Tageswerten und den relevanten Einstellungen (Nährwerte im Widget, Ziele, Kalender, Einrichtung),
+  - direkt beim Wechsel in den Hintergrund,
+  - am Ende des Hintergrund-Refreshs.
+- **Abwägung:** Die Datei ist ab dem ersten Entsperren lesbar und enthält Titel und kcal, sonst könnte das Widget bei gesperrtem Gerät nicht rendern. Sie ist von der Datensicherung ausgenommen.
+
+**Kopfzeile, Rückblick, Siri**
+- **Kopfzeile in „Planen“:** Die Tagessumme kommt aus `CaptureModel.todayIntake`. Sie wird bei jeder lokalen Änderung neu berechnet, auch beim Löschen und Widerrufen. Eine eigene Klasse `TodaySummary` gibt es nicht. Tippen öffnet „Erfassen“ über den Router.
+- **Einstieg in den Rückblick (R3a):** eine eigene Zeile „Wochenrückblick · Woche ›“ unter der Tagesübersicht. Der Trainingszähler selbst ist nicht tippbar, damit VoiceOver die Übersicht weiter als ein Element liest.
+- **Erledigte Aufgaben:**
+  - Erinnerungen über `completionDates` (EventKit, gewählte Listen, nur mit Vollzugriff; es verlassen nur Datumswerte die Abfrage).
+  - Lokale Aufgaben über `LocalTask.completedAt`.
+- **Siri-Texte nach dem Mockup:**
+  - „Heute steht nichts an.“
+  - „… Davon steht nichts mehr an.“
+  - „Öffne Tagwerk, um den Plan zu laden.“
+  - Parameter „Menge“, „Beschreibung“, „Art“, „Dauer“.
+  - Eine Menge außerhalb von 50–2.000 ml wird begrenzt, nicht abgelehnt: Das System prüft den Bereich schon beim Parameter.
+- **Registrierung:** `AppDependencyManager.shared.add(dependency:)` in `TagwerkApp.init`. Intents und App teilen den einen `ModelContainer`.
+
+**Widget und Skript**
+- **Widget:** `Color+Hex.swift` liegt in beiden Targets. Das Widget nutzt einen eigenen Kalender (gregorianisch, Montag). Die Gruppen-ID kommt aus dem Info.plist-Schlüssel `TagwerkAppGroup`, ein Test prüft, dass sie zur Bundle-ID passt und in der Extension gleich ist.
+- **Skript `refresh-install.sh`:**
+  - räumt die Profile von App und Extension (`is_tagwerk_profile`, schützt vor Präfix-Täuschung);
+  - nimmt das früheste Ablaufdatum, ein unlesbares Extension-Profil gilt als „unbekannt“;
+  - startet sich nach dem Git-Update einmal mit der neuen Version neu;
+  - merkt sich `last-good-commit` und `last-installed` (`install-dev.sh` schreibt `dev`);
+  - baut bei Build- oder Signierfehler den letzten guten Commit in einem eigenen Git-Worktree (Exit 4, Mitteilung immer).
+- **Merge-Gate:** Fables Merge-Gate (erst nach bestandener Geräte-Installation) ist nicht umgesetzt, weil der Nutzer den Merge angeordnet hat.
+- **Erste Installation:** Für sie gibt es noch keinen gemerkten Commit, also keinen Rückfall. Sie muss beobachtet werden, siehe Geräte-Checkliste.
+
+**Geräte-Checkliste (offen)**
+- **Signierung und Installation**
+  - Signierung mit App Group und Extension über `refresh-install.sh` bzw. `install-dev.sh`.
+  - Ersetzung von `$(TAGWERK_BUNDLE_ID)` in den Entitlements.
+  - Zahl der App-IDs im kostenlosen Account.
+  - Rückfall bei Signierfehler.
+- **Widget-Darstellung**
+  - In der Galerie, hell, dunkel, getönt und transparent.
+  - `.privacySensitive()` auf Sperrbildschirm, Always-On, StandBy, CarPlay und auf dem Mac (iPhone-Widgets).
+  - Tageswechsel ohne App-Start.
+  - Kaltstart über das Widget.
+- **Siri**
+  - Erkennt die deutschen Phrasen.
+  - „Wasser erfassen“ bei gesperrtem Gerät (Health-Nachholen danach).
+  - „Was steht heute an?“ verlangt Entsperren.
+- **Rückblick**
+  - Ob EventKit erledigte Vorkommen wiederkehrender Erinnerungen liefert.
+  - Dauer der Abfrage bei vielen Listen.
