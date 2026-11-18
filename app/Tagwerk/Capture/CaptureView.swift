@@ -27,12 +27,16 @@ struct CaptureView: View {
         }
     }
 
+    // Day swipe only on the rows above the entries: entry rows keep swipe-to-delete (swipeActions).
+    private func daySwipeBack() async { await model.goBack() }
+    private func daySwipeForward() async { await model.goForward() }
+
     var body: some View {
         NavigationStack {
             List {
                 Section {
-                    DayNavigation(model: model)
-                    DaySummary(model: model)
+                    DayNavigation(model: model).pageSwipe(back: daySwipeBack, forward: daySwipeForward)
+                    DaySummary(model: model).pageSwipe(back: daySwipeBack, forward: daySwipeForward)
                     // R3a: entry to the weekly review (a row of its own, so VoiceOver keeps the summary as one element).
                     Button { showsReview = true } label: {
                         HStack {
@@ -43,9 +47,10 @@ struct CaptureView: View {
                         }
                     }
                     .foregroundStyle(.primary)
+                    .pageSwipe(back: daySwipeBack, forward: daySwipeForward)
                 }
                 Section {
-                    quickEntry
+                    quickEntry.pageSwipe(back: daySwipeBack, forward: daySwipeForward)
                 } footer: {
                     if !model.hasEntries {
                         Text(model.isToday ? "Noch nichts erfasst. Tippe oben auf Essen, Trinken oder Training."
@@ -53,13 +58,14 @@ struct CaptureView: View {
                     }
                 }
                 if model.showsHealthCard {
-                    Section { HealthCard(model: model) }
+                    Section { HealthCard(model: model).pageSwipe(back: daySwipeBack, forward: daySwipeForward) }
                 }
                 mealSection
                 drinkSection
                 workoutSection
             }
             .navigationTitle("Erfassen")
+            .sensoryFeedback(.selection, trigger: model.day)
             .navigationDestination(isPresented: $showsReview) {
                 WeekReviewView(model: environment.makeWeekReviewModel())
             }
