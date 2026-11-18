@@ -178,24 +178,10 @@ public final class EventKitGateway: ReminderStore {
         )
     }
 
-    /// Maps the first EventKit rule to Tagwerk's patterns; anything more complex becomes `.unsupported`.
+    /// Maps the first EventKit rule (see `RecurrenceMapping`); Tagwerk reads only one rule per reminder.
     nonisolated static func recurrence(_ reminder: EKReminder) -> Recurrence? {
         guard let rule = reminder.recurrenceRules?.first, let due = dueDate(reminder.dueDateComponents) else { return nil }
-        let interval = max(1, rule.interval)
-        let pattern: RecurrenceRule
-        switch rule.frequency {
-        case .daily where rule.daysOfTheWeek == nil:
-            pattern = .daily(interval: interval)
-        case .weekly where rule.setPositions == nil:
-            pattern = .weekly(interval: interval, weekdays: Set((rule.daysOfTheWeek ?? []).map { $0.dayOfTheWeek.rawValue }))
-        case .monthly where rule.daysOfTheWeek == nil && (rule.daysOfTheMonth?.count ?? 0) <= 1:
-            pattern = .monthly(interval: interval, day: rule.daysOfTheMonth?.first?.intValue ?? due.day)
-        default:
-            pattern = .unsupported
-        }
-        let end = rule.recurrenceEnd?.endDate.map { PlanDay(date: $0, calendar: .current) }
-        let count = rule.recurrenceEnd.flatMap { $0.occurrenceCount > 0 ? $0.occurrenceCount : nil }
-        return Recurrence(rule: pattern, start: PlanDay(due), end: end, count: count)
+        return RecurrenceMapping.recurrence(from: rule, due: due, calendar: .current)
     }
 
     nonisolated static func dueDate(_ components: DateComponents?) -> DueDate? {
