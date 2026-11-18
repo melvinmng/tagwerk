@@ -17,6 +17,16 @@
         }
       }
     },
+    "%@ Schritte" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ steps"
+          }
+        }
+      }
+    },
     "%@ g" : {
       "localizations" : {
         "en" : {
@@ -37,18 +47,34 @@
         }
       }
     },
-    "%@ kcal · %@ · %lld×" : {
+    "%@ kcal · %@" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "%1$@ kcal · %2$@ · %3$lld×"
+            "value" : "%1$@ kcal · %2$@"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%1$@ kcal · %2$@ · %3$lld×"
+            "value" : "%1$@ kcal · %2$@"
+          }
+        }
+      }
+    },
+    "%@ kcal · %@ · %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ kcal · %2$@ · %3$@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ kcal · %2$@ · %3$@"
           }
         }
       }
@@ -271,6 +297,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$lld h %2$@"
+          }
+        }
+      }
+    },
+    "%lld h %lld min" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld h %2$lld min"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld h %2$lld min"
           }
         }
       }
@@ -679,6 +721,26 @@
         }
       }
     },
+    "Kein Training" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No workouts"
+          }
+        }
+      }
+    },
+    "Keine Schritte aus Health" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No steps from Health"
+          }
+        }
+      }
+    },
     "Kommentare gibt es nur bei GitHub-Issues." : {
       "localizations" : {
         "en" : {
@@ -849,6 +911,22 @@
         }
       }
     },
+    "Ziel an %lld von %lld Tagen" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Ziel an %1$lld von %2$lld Tagen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Goal met on %1$lld of %2$lld days"
+          }
+        }
+      }
+    },
     "am %@, %@" : {
       "localizations" : {
         "de" : {
@@ -917,6 +995,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "×%@"
+          }
+        }
+      }
+    },
+    "Ø %@ pro Tag" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Avg. %@ per day"
           }
         }
       }
