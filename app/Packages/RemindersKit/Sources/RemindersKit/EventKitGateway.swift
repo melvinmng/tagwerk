@@ -100,8 +100,9 @@ public final class EventKitGateway: ReminderStore {
         return Self.record(reminder)
     }
 
-    /// Writes only the fields of `record` that differ from the freshly loaded reminder.
-    public func save(_ record: ReminderRecord) throws -> ReminderRecord {
+    /// Writes only the fields of `record` that differ from the freshly loaded reminder, and the repetition
+    /// only when `recurrence` is `.set`.
+    public func save(_ record: ReminderRecord, recurrence: FieldChange<Recurrence?>) throws -> ReminderRecord {
         guard let reminder = ekReminder(id: record.id) else { throw TaskWriteError.notFound }
         let current = Self.record(reminder)
         if record.title != current.title { reminder.title = record.title }
@@ -116,6 +117,8 @@ public final class EventKitGateway: ReminderStore {
             guard let list = store.calendar(withIdentifier: record.listID) else { throw TaskWriteError.notFound }
             reminder.calendar = list
         }
+        // After the due date, so a new rule is checked against the due date that will be saved.
+        if case .set(let newRecurrence) = recurrence { try replaceRecurrence(of: reminder, with: newRecurrence) }
         try store.save(reminder, commit: true)
         return Self.record(reminder)
     }
@@ -125,7 +128,8 @@ public final class EventKitGateway: ReminderStore {
         try store.remove(reminder, commit: true)
     }
 
-    public func create(title: String, notes: String?, due: DueDate?, ekPriority: Int, listID: String?) throws -> ReminderRecord {
+    public func create(title: String, notes: String?, due: DueDate?, ekPriority: Int, listID: String?,
+                       recurrence: Recurrence?) throws -> ReminderRecord {
         let reminder = EKReminder(eventStore: store)
         reminder.title = title
         reminder.notes = notes
@@ -138,11 +142,27 @@ public final class EventKitGateway: ReminderStore {
             throw TaskWriteError.failed(String(localized: "Keine Erinnerungsliste gefunden", bundle: .module))
         }
         reminder.calendar = list
+        if recurrence != nil { try replaceRecurrence(of: reminder, with: recurrence) }
         try store.save(reminder, commit: true)
         return Self.record(reminder)
     }
 
     // MARK: Helpers
+
+    /// Replaces all rules of the reminder by the one for `recurrence`; `nil` removes them all.
+    /// Unverified assumption (plan §3, item 7): a reminder may carry several rules, so every one is removed.
+    private func replaceRecurrence(of reminder: EKReminder, with recurrence: Recurrence?) throws {
+        var newRule: EKRecurrenceRule?
+        if let recurrence {
+            guard reminder.dueDateComponents != nil else { throw ReminderMapping.recurrenceNeedsDue }
+            guard let rule = RecurrenceMapping.ekRule(for: recurrence, calendar: .current) else {
+                throw ReminderMapping.invalidRecurrence
+            }
+            newRule = rule
+        }
+        for existing in reminder.recurrenceRules ?? [] { reminder.removeRecurrenceRule(existing) }
+        if let newRule { reminder.addRecurrenceRule(newRule) }
+    }
 
     /// Moves absolute alarms that equal the old due time (see `ReminderMapping.movedAlarmDates`).
     private func moveAlarms(of reminder: EKReminder, from oldDue: DueDate?, to newDue: DueDate?) {

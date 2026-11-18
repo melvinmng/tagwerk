@@ -41,7 +41,7 @@ struct ReminderMappingTests {
         #expect(item.priority == .p4)
         #expect(item.container == TaskContainer(id: "studium", name: "Studium", colorHex: "#FF9500"))
         #expect(item.version == "42.0")
-        #expect(item.editableFields == [.title, .notes, .due, .priority, .container])
+        #expect(item.editableFields == [.title, .notes, .due, .priority, .container, .recurrence])
     }
 
     @Test func taskItem_withoutLastModified_hasVersionZero() {
@@ -88,6 +88,38 @@ struct ReminderMappingTests {
         #expect(result.ekPriority == 1)
         #expect(result.listID == "privat")
         #expect(result.isCompleted)
+    }
+
+    // MARK: Recurrence
+
+    private var weekly: Recurrence {
+        Recurrence(rule: .weekly(interval: 1, weekdays: [6]), start: PlanDay(year: 2026, month: 11, day: 20), end: nil, count: nil)
+    }
+
+    private func recordWithRule() -> ReminderRecord {
+        ReminderRecord(id: "r1", title: "Serie", notes: nil, due: DueDate(year: 2026, month: 11, day: 20), ekPriority: 0,
+                       isCompleted: false, listID: "studium", lastModified: nil, recurrence: weekly)
+    }
+
+    @Test func applying_setsRecurrence() {
+        var edit = TaskEdit()
+        let daily = Recurrence(rule: .daily(interval: 2), start: weekly.start, end: nil, count: 4)
+        edit.recurrence = .set(daily)
+        #expect(ReminderMapping.applying(edit, to: recordWithRule()).recurrence == daily)
+        edit.recurrence = .set(nil)
+        #expect(ReminderMapping.applying(edit, to: recordWithRule()).recurrence == nil)
+    }
+
+    @Test func applying_keepsRecurrenceWhenUnchanged() {
+        var edit = TaskEdit()
+        edit.title = .set("Neu")
+        #expect(ReminderMapping.applying(edit, to: recordWithRule()).recurrence == weekly)
+    }
+
+    @Test func taskItem_carriesRecurrenceAndField() {
+        let item = ReminderMapping.taskItem(recordWithRule(), list: list)
+        #expect(item.recurrence == weekly)
+        #expect(item.editableFields.contains(.recurrence))
     }
 }
 

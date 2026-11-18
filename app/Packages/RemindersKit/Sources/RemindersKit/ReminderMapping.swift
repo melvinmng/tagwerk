@@ -36,7 +36,8 @@ public enum ReminderMapping {
             container: TaskContainer(id: list.id, name: list.title, colorHex: list.colorHex),
             url: nil,
             version: record.lastModified.map { String($0.timeIntervalSince1970) } ?? "0",
-            editableFields: [.title, .notes, .due, .priority, .container]
+            editableFields: [.title, .notes, .due, .priority, .container, .recurrence],
+            recurrence: record.recurrence
         )
     }
 
@@ -50,7 +51,46 @@ public enum ReminderMapping {
         if case .set(let priority) = edit.priority { result.ekPriority = ekPriority(from: priority) }
         if case .set(let listID) = edit.containerID { result.listID = listID }
         if case .set(let completed) = edit.isCompleted { result.isCompleted = completed }
+        if case .set(let recurrence) = edit.recurrence { result.recurrence = recurrence }
         return result
+    }
+
+    // MARK: Recurrence
+
+    /// The repetition change to send to the store for `edit` on `current`:
+    /// - `.unsupported` is never written; setting it leaves the rules as they are.
+    /// - A repetition needs a due date (EventKit requires one, and Tagwerk reads rules only with one):
+    ///   setting a rule without a resulting due date fails, clearing the due date removes the rule.
+    /// - Invalid values fail instead of being written.
+    public static func recurrenceChange(for edit: TaskEdit, current: ReminderRecord) throws -> FieldChange<Recurrence?> {
+        let resultingDue: DueDate? = if case .set(let due) = edit.due { due } else { current.due }
+        let clearsDue = resultingDue == nil && current.recurrence != nil
+        switch edit.recurrence {
+        case .unchanged:
+            return clearsDue ? .set(nil) : .unchanged
+        case .set(nil):
+            return .set(nil)
+        case .set(let recurrence?):
+            if case .unsupported = recurrence.rule { return clearsDue ? .set(nil) : .unchanged }
+            guard resultingDue != nil else { throw recurrenceNeedsDue }
+            guard recurrence.isValid else { throw invalidRecurrence }
+            return .set(recurrence)
+        }
+    }
+
+    /// Checks the repetition of a new reminder (same rules as `recurrenceChange`).
+    public static func validateNew(recurrence: Recurrence?, due: DueDate?) throws {
+        guard let recurrence else { return }
+        guard due != nil else { throw recurrenceNeedsDue }
+        guard recurrence.isValid else { throw invalidRecurrence }
+    }
+
+    static var recurrenceNeedsDue: TaskWriteError {
+        .failed(String(localized: "Eine Wiederholung braucht ein Fälligkeitsdatum.", bundle: .module))
+    }
+
+    static var invalidRecurrence: TaskWriteError {
+        .failed(String(localized: "Diese Wiederholung kann nicht gespeichert werden.", bundle: .module))
     }
 
     // MARK: Alarms
