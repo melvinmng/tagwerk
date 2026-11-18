@@ -26,6 +26,7 @@ struct NewTaskSheet: View {
     @State private var catalog: GitHubCatalog?
     @State private var repository: String?
     @State private var projectIDs: Set<String> = []
+    @State private var projectsEdited = false
     @State private var gitHubError: String?
     @State private var recurrence: Recurrence?
 
@@ -71,28 +72,23 @@ struct NewTaskSheet: View {
                             Text("Wählen …").tag(String?.none)
                             ForEach(catalog?.repositories ?? [], id: \.self) { Text($0).tag(Optional($0)) }
                         }
+                        ProjectSelectionRow(projects: (catalog?.projects ?? []).map { (id: $0.id, title: $0.title) },
+                                            selection: $projectIDs, edited: $projectsEdited)
                     } footer: {
-                        Text(gitHubError ?? String(localized: "Das Issue wird dir zugewiesen."))
-                    }
-                    Section("Projects") {
-                        ForEach(catalog?.projects ?? []) { project in
-                            Button {
-                                if projectIDs.contains(project.id) { projectIDs.remove(project.id) } else { projectIDs.insert(project.id) }
-                            } label: {
-                                HStack {
-                                    Text(project.title).foregroundStyle(.primary)
-                                    Spacer()
-                                    if projectIDs.contains(project.id) { Image(systemName: "checkmark").foregroundStyle(.tint) }
-                                }
-                            }
+                        if let gitHubError {
+                            Text(gitHubError)
+                        } else if repository != nil, projectIDs.isEmpty, !(catalog?.projects.isEmpty ?? true) {
+                            Text("Mindestens ein Projekt wählen. Das Issue wird dir zugewiesen.")
+                        } else {
+                            Text("Das Issue wird dir zugewiesen.")
                         }
                     }
                     .task(id: target) { await loadCatalog() }
                     .onChange(of: repository) { _, repo in
                         // Preselect the projects linked to the chosen repository.
                         guard let repo, let catalog else { return }
-                        let linked = catalog.projectIDs(linkedTo: repo)
-                        if !linked.isEmpty { projectIDs = Set(linked) }
+                        projectIDs = ProjectSelection.preselect(current: projectIDs, linked: Set(catalog.projectIDs(linkedTo: repo)),
+                                                                edited: projectsEdited)
                     }
                 }
 
