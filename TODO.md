@@ -107,7 +107,7 @@ GitHub-Konto: @melvinmng · bestätigt zuweisbar · geprüft 2026-11-17 · ich
 - [ ] [#115](https://github.com/melvinmng/tagwerk/issues/115) Phase 6: Jira als Aufgabenquelle anbinden {status: Backlog; prio: P4 (Low)}
 - [x] [#118](https://github.com/melvinmng/tagwerk/issues/118) KI: Termine anlegen, ändern und löschen {status: Done; prio: P2 (High); aufwand: 4h; epic: #2}
 - [x] [#120](https://github.com/melvinmng/tagwerk/issues/120) Sprechmodus: Vorschläge per Stimme annehmen, ablehnen und korrigieren {status: Done; prio: P2 (High); aufwand: 5h; epic: #103}
-- [ ] [#124](https://github.com/melvinmng/tagwerk/issues/124) App auf Englisch (Sprache folgt dem iPhone) {status: In review; prio: P3 (Medium); aufwand: 8h}
+- [x] [#124](https://github.com/melvinmng/tagwerk/issues/124) App auf Englisch (Sprache folgt dem iPhone) {status: Done; prio: P3 (Medium); aufwand: 8h}
 
 ## Notizen
 
@@ -122,12 +122,10 @@ _Automatisch aus [Tagwerk](https://github.com/users/melvinmng/projects/17) erzeu
 ### Bereit (1)
 - [#113](https://github.com/melvinmng/tagwerk/issues/113) Phase 5: Einkaufsliste und Notizen einbinden · @melvinmng · Prio P3 (Medium)
 
-### In Prüfung (1)
-- [#124](https://github.com/melvinmng/tagwerk/issues/124) App auf Englisch (Sprache folgt dem iPhone) · @melvinmng · Prio P3 (Medium) · 8h
-
 ### Nicht zugeordnet (0)
 
 ### Zuletzt erledigt (10)
+- [#124](https://github.com/melvinmng/tagwerk/issues/124) App auf Englisch (Sprache folgt dem iPhone) · @melvinmng
 - [#2](https://github.com/melvinmng/tagwerk/issues/2) Phase 2: Aufgaben, Kalender und KI-Tagesplan umsetzen · @melvinmng
 - [#4](https://github.com/melvinmng/tagwerk/issues/4) Phase 4: Widget, Kurzbefehle und Wochenrückblick ergänzen · @melvinmng
 - [#3](https://github.com/melvinmng/tagwerk/issues/3) Phase 3: Ernährung, Trinken und Training erfassen · @melvinmng
@@ -137,5 +135,4 @@ _Automatisch aus [Tagwerk](https://github.com/users/melvinmng/projects/17) erzeu
 - [#96](https://github.com/melvinmng/tagwerk/issues/96) Widgets „Als Nächstes“ und „Heute“ · @melvinmng
 - [#95](https://github.com/melvinmng/tagwerk/issues/95) Siri-Kurzbefehle für Wasser, Mahlzeit, Training und Tagesüberblick · @melvinmng
 - [#94](https://github.com/melvinmng/tagwerk/issues/94) Deeplinks tagwerk:// für Planen, Erfassen und Rückblick · @melvinmng
-- [#93](https://github.com/melvinmng/tagwerk/issues/93) Widget-Snapshot schreiben und aktualisieren · @melvinmng
 <!-- t3gh:end -->
