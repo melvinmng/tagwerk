@@ -8,6 +8,7 @@ struct UnplannedDrawer: View {
     let model: PlanningModel
     @State private var height: Height = .collapsed
     @State private var search = ""
+    @FocusState private var isSearching: Bool
     @GestureState private var dragOffset: CGFloat = 0
 
     enum Height: CaseIterable {
@@ -36,6 +37,10 @@ struct UnplannedDrawer: View {
             .clipShape(UnevenRoundedRectangle(topLeadingRadius: 18, topTrailingRadius: 18))
             .offset(y: min(full - Height.collapsed.points, max(0, full - height.points + dragOffset)))
             .animation(.interactiveSpring(response: 0.32, dampingFraction: 0.86), value: height)
+            // The keyboard covers the lower part of the list instead of pushing the drawer (and its search
+            // field) off the top of the screen; searching opens the drawer fully.
+            .ignoresSafeArea(.keyboard, edges: .bottom)
+            .onChange(of: isSearching) { _, searching in if searching { height = .large } }
         }
     }
 
@@ -73,6 +78,8 @@ struct UnplannedDrawer: View {
         let sections = model.unplannedSections(search: search)
         return VStack(spacing: 0) {
             TextField("Ungeplante suchen", text: $search)
+                .focused($isSearching)
+                .submitLabel(.search)
                 .textFieldStyle(.roundedBorder)
                 .padding(.horizontal)
                 .padding(.bottom, 6)

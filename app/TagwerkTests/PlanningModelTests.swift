@@ -118,6 +118,16 @@ struct PlanningModelTests {
         #expect(model.days.first { $0.day == today }?.capacity.availableMinutes == 420)
     }
 
+    @Test func unplanned_includesLeftoversFromPastDays() async {
+        planStore.assign(id("Fahrrad"), to: PlanDay(year: 2026, month: 11, day: 16))
+        planStore.assign(id("Abgabe"), to: today)
+        let model = await model()
+        model.scope = .week
+        await model.reload()
+        #expect(Set(model.unplanned.map(\.title)) == ["Fahrrad", "Login"])
+        #expect(model.unplannedSections(search: "Fahr").other.map(\.title) == ["Fahrrad"])
+    }
+
     @Test func unplanned_excludesAssignedAndCompleted() async {
         planStore.assign(id("Fahrrad"), to: today)
         let model = await model()

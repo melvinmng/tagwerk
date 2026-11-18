@@ -223,7 +223,8 @@ final class PlanningModel {
         }
         days = result
 
-        unplanned = open.filter { allAssignments[$0.id] == nil }
+        // Left over from a past day ("liegen geblieben") counts as unplanned again, also in week and month.
+        unplanned = open.filter { task in allAssignments[task.id].map { $0 < self.today } ?? true }
         upcomingDeadlines = loadUpcomingDeadlines(open: open)
         let today = self.today
         // Overdue: due before today, or planned for an earlier day and not due today or later ("liegen geblieben").

@@ -58,6 +58,7 @@ struct WeekView: View {
         }
         .safeAreaInset(edge: .bottom) { Color.clear.frame(height: model.unplanned.isEmpty ? 0 : 56) }
         .overlay(alignment: .bottom) { UnplannedDrawer(model: model) }
+        .ignoresSafeArea(.keyboard, edges: .bottom)
     }
 }
 
