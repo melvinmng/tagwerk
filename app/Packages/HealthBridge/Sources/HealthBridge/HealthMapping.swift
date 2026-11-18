@@ -133,4 +133,14 @@ public enum HealthMapping {
         if denied.count == HealthShareKind.allCases.count { return .denied }
         return .partial(HealthShareKind.allCases.filter(denied.contains))
     }
+
+    /// Steps count as asked once iOS would no longer show the sheet; an unknown status does not bring the button back.
+    static func stepsAccess(_ status: HKAuthorizationRequestStatus) -> StepsAccess {
+        status == .shouldRequest ? .notAsked : .asked
+    }
+
+    /// Day sums rounded to whole steps; days without statistics are dropped (no value, not 0).
+    static func dailySteps(_ sums: [(start: Date, count: Double?)]) -> [DailySteps] {
+        sums.compactMap { sum in sum.count.map { DailySteps(start: sum.start, count: Int($0.rounded())) } }
+    }
 }

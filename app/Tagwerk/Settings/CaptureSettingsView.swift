@@ -1,7 +1,7 @@
 import SwiftUI
 import TagwerkCore
 
-/// Einstellungen › Erfassen (mockup E6a): goals and the meal-estimate consent.
+/// Einstellungen › Erfassen (mockup E6a, ST1): goals and the meal-estimate consent.
 struct CaptureSettingsView: View {
     @Environment(AppEnvironment.self) private var environment
 
@@ -13,7 +13,10 @@ struct CaptureSettingsView: View {
                         in: 1000...6000, step: 50)
                 Stepper("Wasser: \(IntakeFormat.liters(settings.goalWaterMilliliters))", value: $settings.goalWaterMilliliters,
                         in: 500...6000, step: 250)
-                Stepper("Trainings pro Woche: \(settings.goalWorkoutsPerWeek)", value: $settings.goalWorkoutsPerWeek, in: 0...14)
+                Stepper("Training pro Woche: \(workoutGoalText(settings.goalWorkoutMinutesPerWeek))",
+                        value: $settings.goalWorkoutMinutesPerWeek, in: 0...1200, step: 15)
+                Stepper("Schritte pro Tag: \(stepGoalText(settings.goalStepsPerDay))", value: $settings.goalStepsPerDay,
+                        in: 0...30000, step: 500)
                 Toggle("Eiweiß-Ziel", isOn: $settings.proteinGoalEnabled)
                 if settings.proteinGoalEnabled {
                     Stepper("Eiweiß: \(settings.goalProteinGrams) g", value: $settings.goalProteinGrams, in: 20...400, step: 5)
@@ -21,7 +24,7 @@ struct CaptureSettingsView: View {
             } header: {
                 Text("Ziele")
             } footer: {
-                Text("Die Vorgaben sind Platzhalter, keine Empfehlung. Trag deine eigenen Ziele ein. Als Training zählt jede Einheit ab 10 min, aus Tagwerk oder aus Health.")
+                Text("Die Vorgaben sind Platzhalter, keine Empfehlung. Trag deine eigenen Ziele ein. Zur Trainingszeit zählen Trainings aus Tagwerk und aus Health. Schritte liest Tagwerk aus Health; 0 blendet ein Ziel aus.")
             }
 
             Section {
@@ -43,7 +46,7 @@ struct CaptureSettingsView: View {
             } header: {
                 Text("Anzeige")
             } footer: {
-                Text("„In Planen anzeigen“ zeigt Kalorien und Wasser von heute unter dem Datum im Tab „Planen“, sobald du etwas erfasst hast. Ist „Ernährung im Widget zeigen“ aus, stehen die Werte nicht im Widget. Auf dem Sperrbildschirm erscheinen sie nie.")
+                Text("„In Planen anzeigen“ zeigt Kalorien, Wasser und Schritte von heute unter dem Datum im Tab „Planen“, sobald du etwas erfasst hast. Ist „Ernährung im Widget zeigen“ aus, stehen die Werte und die Schritte nicht im Widget. Auf dem Sperrbildschirm erscheinen sie nie.")
             }
 
             Section {
@@ -59,6 +62,16 @@ struct CaptureSettingsView: View {
         }
         .navigationTitle("Erfassen")
         .navigationBarTitleDisplayMode(.inline)
+    }
+
+    /// "2 h 30 min"; "aus" when the goal is off.
+    private func workoutGoalText(_ minutes: Int) -> String {
+        minutes > 0 ? IntakeFormat.duration(minutes: minutes) : String(localized: "aus")
+    }
+
+    /// "8.000"; "ohne Ziel" at 0.
+    private func stepGoalText(_ steps: Int) -> String {
+        steps > 0 ? IntakeFormat.grouped(steps) : String(localized: "ohne Ziel")
     }
 
     private func phrase(_ text: LocalizedStringResource, _ detail: LocalizedStringResource) -> some View {

@@ -48,6 +48,38 @@ struct WeekReviewModelTests {
         #expect(withHealth.review?.workoutCount == 1)
     }
 
+    @Test func steps_readOnlyWhenAsked() async {
+        let monday = PlanDay(year: 2026, month: 11, day: 16)
+        let notAsked = FakeHealthStore(stepsAccess: .notAsked)
+        notAsked.steps = [DailySteps(start: monday.startDate(in: calendar), count: 9000)]
+        let model = make(notAsked)
+        await model.reload()
+        #expect(notAsked.stepsReads.isEmpty)
+        #expect(notAsked.stepsAuthorizationRequests == 0)
+        #expect(model.review?.daysWithSteps == 0)
+        #expect(model.showsSteps == false)
+
+        let asked = FakeHealthStore(access: .notDetermined, stepsAccess: .asked)
+        asked.steps = [DailySteps(start: monday.startDate(in: calendar), count: 9000),
+                       DailySteps(start: monday.adding(days: 1, calendar: calendar).startDate(in: calendar), count: 5000)]
+        let withSteps = make(asked)
+        await withSteps.reload()
+        #expect(asked.stepsReads.count == 1)
+        #expect(asked.stepsReads.first?.start == monday.startDate(in: calendar))
+        #expect(withSteps.review?.days.prefix(3).map(\.steps) == [9000, 5000, nil])
+        #expect(withSteps.review?.stepGoalDays == 1)
+        #expect(withSteps.showsSteps)
+    }
+
+    @Test func review_usesMinuteGoalFromSettings() async {
+        settings.goalWorkoutMinutesPerWeek = 90
+        settings.goalStepsPerDay = 10_000
+        let model = make(FakeHealthStore())
+        await model.reload()
+        #expect(model.review?.goals.workoutMinutesPerWeek == 90)
+        #expect(model.review?.goals.stepsPerDay == 10_000)
+    }
+
     @Test func review_countsIntakeAndCompletions() async {
         store.addDrink(DrinkValue(id: UUID(), date: now, milliliters: 2000))
         let model = make(FakeHealthStore(), reminders: [now.addingTimeInterval(-86_400)], local: [now, now.addingTimeInterval(-30 * 86_400)])

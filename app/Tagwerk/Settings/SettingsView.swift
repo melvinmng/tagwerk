@@ -11,6 +11,7 @@ struct SettingsView: View {
     @State private var reminderLists: [ListInfo] = []
     @State private var accessRevision = 0
     @State private var healthAccess: HealthAccess = .notDetermined
+    @State private var stepsAccess: StepsAccess = .asked
 
     var body: some View {
         @Bindable var settings = environment.settings
@@ -64,7 +65,7 @@ struct SettingsView: View {
                     } label: {
                         LabeledContent("Erfassen", value: IntakeFormat.goalSummary(
                             kcal: settings.goalKilocalories, waterMilliliters: settings.goalWaterMilliliters,
-                            workoutsPerWeek: settings.goalWorkoutsPerWeek))
+                            workoutMinutesPerWeek: settings.goalWorkoutMinutesPerWeek))
                     }
                 }
 
@@ -92,6 +93,7 @@ struct SettingsView: View {
                         await environment.notifications.requestAuthorization()
                     }
                     healthRow
+                    stepsRow
                 } header: {
                     Text("Zugriff")
                 } footer: {
@@ -110,6 +112,7 @@ struct SettingsView: View {
                 await environment.ai.refreshAccount()
                 await environment.notifications.refreshAuthorization()
                 healthAccess = await environment.health.access()
+                stepsAccess = await environment.health.stepsAccess()
             }
             .onChange(of: settings.selectedReminderListIDs) { _, _ in
                 Task { await environment.taskList.reload() }
@@ -159,6 +162,7 @@ struct SettingsView: View {
                     Task {
                         await environment.capture.connectHealth()
                         healthAccess = await environment.health.access()
+                        stepsAccess = await environment.health.stepsAccess()
                     }
                 }
             case .authorized:
@@ -171,6 +175,24 @@ struct SettingsView: View {
         }
     }
 
+    /// "Schritte" while the step sheet was never shown; it asks for steps only and leaves the other Health access alone.
+    /// Before Health is connected at all, the "Verbinden" button above asks for everything in one sheet.
+    @ViewBuilder
+    private var stepsRow: some View {
+        if stepsAccess == .notAsked, healthAccess.wasAsked {
+            HStack {
+                Text("Schritte")
+                Spacer()
+                Button("Schritte erlauben") {
+                    Task {
+                        await environment.capture.connectSteps()
+                        stepsAccess = await environment.health.stepsAccess()
+                    }
+                }
+            }
+        }
+    }
+
     private var healthFooter: String {
         switch healthAccess {
         case .partial(let kinds):
@@ -178,7 +200,7 @@ struct SettingsView: View {
         case .denied:
             String(localized: "Tagwerk darf nicht nach Health schreiben. Deine Einträge bleiben in Tagwerk. Ändern kannst du das in der App „Health“ unter Profil › Apps › Tagwerk.")
         default:
-            String(localized: "Tagwerk schreibt Mahlzeiten, Wasser und Trainings nach Health und liest Trainings. Ob das Lesen erlaubt ist, zeigt iOS nicht an: Fehlen Trainings der Apple Watch, prüfe den Zugriff in der App „Health“ unter Profil › Apps › Tagwerk.")
+            String(localized: "Tagwerk schreibt Mahlzeiten, Wasser und Trainings nach Health und liest Trainings und Schritte. Ob das Lesen erlaubt ist, zeigt iOS nicht an: Fehlen Trainings der Apple Watch oder steht bei den Schritten nur „–“, prüfe den Zugriff in der App „Health“ unter Profil › Apps › Tagwerk.")
         }
     }
 

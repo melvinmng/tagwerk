@@ -224,7 +224,13 @@ struct CaptureView: View {
                     }
                 }
             } header: {
-                Text("Training")
+                // The day's training time, like the calories in the head of "Essen" (ST1).
+                HStack {
+                    Text("Training")
+                    Spacer()
+                    Text(IntakeFormat.duration(minutes: model.dayMinutes))
+                        .accessibilityLabel(IntakeFormat.spokenDuration(minutes: model.dayMinutes))
+                }
             } footer: {
                 if model.workouts.contains(where: { !$0.isOwn }) {
                     Text("Trainings aus Health änderst oder löschst du in der App „Fitness“ oder „Health“.")
@@ -315,31 +321,93 @@ private struct DaySummary: View {
                 ProgressView(value: min(1, intake.kcal / Double(max(1, settings.goalKilocalories))))
                     .tint(remaining.isOver ? .orange : .green)
             }
-            HStack(spacing: 16) {
-                metric("Wasser", "\(IntakeFormat.liters(intake.waterMilliliters)) / \(IntakeFormat.liters(settings.goalWaterMilliliters))",
-                       progress: Double(intake.waterMilliliters) / Double(max(1, settings.goalWaterMilliliters)), tint: .cyan)
-                if settings.proteinGoalEnabled {
-                    metric("Eiweiß", "\(IntakeFormat.grams(intake.protein, estimated: intake.hasEstimate)) / \(settings.goalProteinGrams) g"
-                        .replacingOccurrences(of: " g /", with: " /"),
-                           progress: intake.protein / Double(max(1, settings.goalProteinGrams)), tint: .pink)
-                }
-                if settings.goalWorkoutsPerWeek > 0 {
-                    metric("Training", "\(model.weekCount) / \(settings.goalWorkoutsPerWeek)",
-                           progress: Double(model.weekCount) / Double(settings.goalWorkoutsPerWeek), tint: .mint)
+            .accessibilityElement(children: .combine)
+            // ST1: water and protein, then steps and the weekly training; single tiles share one row.
+            ForEach(Array(model.summaryRows.enumerated()), id: \.offset) { _, row in
+                HStack(alignment: .top, spacing: 16) {
+                    ForEach(row, id: \.self) { tile($0) }
                 }
             }
         }
         .padding(.vertical, 4)
-        .accessibilityElement(children: .combine)
+        // Each tile is its own element, so the "In Health erlauben" button stays reachable.
+        .accessibilityElement(children: .contain)
     }
 
-    private func metric(_ title: LocalizedStringResource, _ value: String, progress: Double, tint: Color) -> some View {
-        VStack(alignment: .leading, spacing: 3) {
+    @ViewBuilder
+    private func tile(_ tile: CaptureModel.SummaryTile) -> some View {
+        let settings = model.settings
+        let intake = model.intake
+        switch tile {
+        case .water:
+            metric("Wasser", "\(IntakeFormat.liters(intake.waterMilliliters)) / \(IntakeFormat.liters(settings.goalWaterMilliliters))",
+                   progress: Double(intake.waterMilliliters) / Double(max(1, settings.goalWaterMilliliters)), tint: .cyan)
+        case .protein:
+            metric("Eiweiß", "\(IntakeFormat.grams(intake.protein, estimated: intake.hasEstimate)) / \(settings.goalProteinGrams) g"
+                .replacingOccurrences(of: " g /", with: " /"),
+                   progress: intake.protein / Double(max(1, settings.goalProteinGrams)), tint: .pink)
+        case .steps:
+            stepsTile
+        case .training:
+            let goal = settings.goalWorkoutMinutesPerWeek
+            metric("Training · Woche", IntakeFormat.duration(minutes: model.weekMinutes, goal: goal),
+                   progress: Double(model.weekMinutes) / Double(max(1, goal)), tint: .mint,
+                   spokenLabel: String(localized: "Training diese Woche"),
+                   spokenValue: String(localized: "\(IntakeFormat.spokenDuration(minutes: model.weekMinutes)) von \(IntakeFormat.spokenDuration(minutes: goal))"))
+        }
+    }
+
+    @ViewBuilder
+    private var stepsTile: some View {
+        let goal = model.settings.goalStepsPerDay
+        switch model.stepsTile {
+        case .hidden:
+            EmptyView()
+        case .allow:
+            VStack(alignment: .leading, spacing: 3) {
+                Text("Schritte").font(.caption).foregroundStyle(.secondary).accessibilityHidden(true)
+                Button { Task { await model.allowSteps() } } label: {
+                    Text("In Health erlauben \(Image(systemName: "chevron.right"))")
+                        .font(.subheadline.weight(.medium))
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.75)
+                }
+                // Borderless: only the button reacts, not the whole summary row.
+                .buttonStyle(.borderless)
+                .accessibilityLabel("Schritte in Health erlauben")
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+        case .value(let count):
+            let spoken = count.map { count in
+                goal > 0 ? String(localized: "\(IntakeFormat.steps(count)) von \(IntakeFormat.grouped(goal))") : IntakeFormat.steps(count)
+            } ?? String(localized: "keine Daten")
+            metric("Schritte", IntakeFormat.stepsValue(count, goal: goal),
+                   progress: goal > 0 ? Double(count ?? 0) / Double(goal) : nil, tint: .indigo,
+                   spokenLabel: String(localized: "Schritte"), spokenValue: spoken)
+        }
+    }
+
+    /// One tile: caption, value and an optional bar. `spokenLabel`/`spokenValue` replace the combined reading.
+    @ViewBuilder
+    private func metric(_ title: LocalizedStringResource, _ value: String, progress: Double?, tint: Color,
+                        spokenLabel: String? = nil, spokenValue: String? = nil) -> some View {
+        let tile = VStack(alignment: .leading, spacing: 3) {
             Text(title).font(.caption).foregroundStyle(.secondary)
             Text(value).font(.subheadline.weight(.medium)).monospacedDigit()
-            ProgressView(value: min(1, max(0, progress))).tint(tint)
+                .lineLimit(1)
+                .minimumScaleFactor(0.75)
+            if let progress {
+                ProgressView(value: min(1, max(0, progress))).tint(tint)
+            }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+        if let spokenLabel, let spokenValue {
+            tile.accessibilityElement(children: .ignore)
+                .accessibilityLabel(spokenLabel)
+                .accessibilityValue(spokenValue)
+        } else {
+            tile.accessibilityElement(children: .combine)
+        }
     }
 }
 
@@ -385,7 +453,7 @@ struct WorkoutRow: View {
     }
 
     private var caption: String {
-        var parts = [CaptureText.time(workout.start, calendar: calendar), String(localized: "\(workout.minutes) min")]
+        var parts = [CaptureText.time(workout.start, calendar: calendar), IntakeFormat.duration(minutes: workout.minutes)]
         if let source = workout.sourceName { parts.append(source) }
         return parts.joined(separator: " · ")
     }
@@ -401,7 +469,7 @@ private struct HealthCard: View {
             Label("Mit Apple Health verbinden", systemImage: "heart.fill")
                 .font(.headline)
                 .foregroundStyle(.pink)
-            Text("Tagwerk speichert Mahlzeiten, Wasser und Trainings zusätzlich in Health und zeigt Trainings der Apple Watch und anderer Apps. Deine Einträge bleiben auch ohne Health in Tagwerk.")
+            Text("Tagwerk speichert Mahlzeiten, Wasser und Trainings zusätzlich in Health und zeigt deine Schritte sowie Trainings der Apple Watch und anderer Apps. Deine Einträge bleiben auch ohne Health in Tagwerk.")
                 .font(.subheadline)
             HStack {
                 Button("Verbinden") { Task { await model.connectHealth() } }

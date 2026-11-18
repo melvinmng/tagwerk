@@ -65,4 +65,29 @@ struct HealthMappingTests {
         #expect(HealthMapping.access(shouldRequest: false, denied: Set(HealthShareKind.allCases)) == .denied)
         #expect(HealthShareKind.water.displayName == "Wasser")
     }
+
+    @Test func stepsAccess_shouldRequest_isNotAsked_otherwiseAsked() {
+        #expect(HealthMapping.stepsAccess(.shouldRequest) == .notAsked)
+        #expect(HealthMapping.stepsAccess(.unnecessary) == .asked)
+        #expect(HealthMapping.stepsAccess(.unknown) == .asked)
+    }
+
+    /// The access of existing users must not fall back to "not asked" because a new read type appeared:
+    /// the step type is asked for separately and never part of the core status query.
+    @Test func access_ignoresStepType() {
+        let stepType = HKQuantityType(.stepCount)
+        #expect(!HealthKitStore.coreReadTypes.contains(stepType))
+        #expect(HealthKitStore.coreReadTypes == [HKObjectType.workoutType()])
+        #expect(HealthKitStore.stepReadTypes == [stepType])
+        // The combined request of the Health card asks for both groups at once.
+        #expect(HealthKitStore.connectReadTypes == HealthKitStore.coreReadTypes.union(HealthKitStore.stepReadTypes))
+    }
+
+    @Test func dailySteps_roundsSumsToInt_dropsDaysWithoutStatistics() {
+        let monday = Date(timeIntervalSince1970: 1_795_100_000)
+        let tuesday = monday.addingTimeInterval(86_400)
+        let wednesday = tuesday.addingTimeInterval(86_400)
+        let result = HealthMapping.dailySteps([(monday, 8239.6), (tuesday, nil), (wednesday, 0)])
+        #expect(result == [DailySteps(start: monday, count: 8240), DailySteps(start: wednesday, count: 0)])
+    }
 }
