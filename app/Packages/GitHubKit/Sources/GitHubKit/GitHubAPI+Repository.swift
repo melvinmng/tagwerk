@@ -118,10 +118,15 @@ extension GitHubAPI {
         }
         let limit = min(max(limit, 1), 20)
         let data = try await rest("GET", "search/code", query: [
-            URLQueryItem(name: "q", value: "\(query) repo:\(try Self.checked(repository))"),
+            URLQueryItem(name: "q", value: "\(Self.searchTerms(query)) repo:\(try Self.checked(repository))"),
             URLQueryItem(name: "per_page", value: String(limit)),
         ])
         return try Self.decode(Result.self, data).items.prefix(limit).map(\.path)
+    }
+
+    /// The query without qualifiers ("repo:", "org:", "user:" …), so a search never leaves the given repository.
+    static func searchTerms(_ query: String) -> String {
+        query.split(whereSeparator: \.isWhitespace).filter { !$0.contains(":") }.joined(separator: " ")
     }
 
     public func pullRequest(repository: String, number: Int) async throws -> PullRequestSummary {

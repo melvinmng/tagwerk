@@ -31,6 +31,7 @@ struct ChatView: View {
                 ToolbarItem(placement: .topBarLeading) {
                     Menu {
                         Button("Verlauf löschen", role: .destructive) { askingClear = true }
+                            .disabled(assistant.conversation?.isBusy == true)
                     } label: { Image(systemName: "ellipsis.circle") }
                         .accessibilityLabel("Mehr")
                 }

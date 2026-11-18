@@ -149,7 +149,9 @@ public final class Conversation {
         await runRound()
     }
 
+    /// Clears the history; not while an answer or an action is running (it would land in the cleared history).
     public func clear() {
+        guard !isBusy else { return }
         history = []
         pendingActions = []
         streamingText = ""

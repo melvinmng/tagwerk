@@ -57,6 +57,14 @@ struct GitHubRepoReadTests {
         #expect(query.first { $0.name == "per_page" }?.value == "10")
     }
 
+    @Test func searchRepository_dropsQualifiersThatLeaveTheRepository() async throws {
+        transport.enqueueJSON("/search/code", #"{"total_count":0,"items":[]}"#)
+        _ = try await makeAPI().searchCode(repository: "beispiel/app", query: "token repo:other/private org:acme user:x Login", limit: 5)
+        let url = try #require(transport.requests.first?.url)
+        let query = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems ?? []
+        #expect(query.first { $0.name == "q" }?.value == "token Login repo:beispiel/app")
+    }
+
     @Test func issueComments_decodes() async throws {
         transport.enqueueJSON("/repos/beispiel/app/issues/42/comments",
                               #"[{"user":{"login":"anna"},"body":"Sieht gut aus.","created_at":"2026-11-17T09:00:00Z"}]"#)

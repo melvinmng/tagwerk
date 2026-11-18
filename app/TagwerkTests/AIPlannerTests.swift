@@ -673,4 +673,32 @@ extension AIPlannerTests {
         #expect(changed.kind == .assignment)
         #expect(changed.previousPosition?.day == PlanDay(year: 2026, month: 11, day: 19))
     }
+
+    @Test func timeAndDayParsing_rejectsValuesOutOfRange() {
+        #expect(AIPlanner.minutes("09:30") == 570)
+        #expect(AIPlanner.minutes("24:00") == 1440)
+        #expect(AIPlanner.minutes("99:00") == nil)
+        #expect(AIPlanner.minutes("10:75") == nil)
+        #expect(AIPlanner.planDay("2026-11-18") == PlanDay(year: 2026, month: 11, day: 18))
+        #expect(AIPlanner.planDay("2026-13-45") == nil)
+        #expect(AIPlanner.planDay("2026-02-30") == nil)
+    }
+
+    @Test func plan_cutStreamWithoutCompletion_isNotStored() async throws {
+        responder.enqueueEvents([.textDelta(Self.dayAnswer(Self.block("local:Fahrrad", "14:00")))])
+        let (planner, planning) = await make()
+        await planner.plan(scope: .day, anchor: today)
+        #expect(planning.suggestionBatches.isEmpty)
+        #expect(planner.state != .idle)
+    }
+
+    @Test func newPlan_dropsUndoOfEarlierActions() async throws {
+        let (planner, planning, fahrrad, _) = try await twoBlocks()
+        await planner.dismiss(fahrrad)
+        #expect(planner.dismissedCount == 1)
+        responder.enqueue(Self.dayAnswer(Self.block("local:Fahrrad", "14:00")))
+        await planner.plan(scope: .day, anchor: today)
+        #expect(planner.lastDismissed.isEmpty)
+        #expect(planning.suggestionBatches.count == 1)
+    }
 }

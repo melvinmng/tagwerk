@@ -30,7 +30,7 @@ struct AISettingsView: View {
         .task {
             if signIn == nil { signIn = ChatGPTSignInModel(ai: ai) }
             await ai.refreshAccount()
-            if ai.isSignedIn { await loadModels(force: false) }
+            // No call on opening (§8.4): the cached list shows, "Liste aktualisieren" loads a new one.
         }
     }
 

@@ -70,10 +70,17 @@ extension AIPlanner {
             let instructions = Self.instructions(batch.scope, longerDays: longerDays()) + Self.preferenceText(preferences())
                 + "\n" + Self.revisionInstructions
             var text = ""
+            var completed = false
             for try await event in responder.respond(model: model, instructions: instructions, input: [.user(request)], tools: [],
                                                       jsonSchema: (name: "suggestion_revision", schema: Self.revisionSchema)) {
-                if case .textDelta(let delta) = event { text += delta }
+                switch event {
+                case .textDelta(let delta): text += delta
+                case .completed: completed = true
+                case .functionCall: break
+                }
             }
+            try Task.checkCancellation()
+            guard completed else { throw ChatGPTError.incomplete }
             let answer = try JSONDecoder().decode(RevisionAnswer.self, from: Data(text.utf8))
             await apply(answer, to: batch, about: suggestion, comment: comment, refs: refs)
         } catch is CancellationError {

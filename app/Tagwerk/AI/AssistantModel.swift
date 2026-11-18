@@ -117,6 +117,7 @@ final class AssistantModel {
 
     /// "Verlauf löschen".
     func clear() {
+        guard conversation?.isBusy != true else { return }
         conversation?.clear()
         actionTimes = [:]
         taskContext = nil
@@ -189,16 +190,19 @@ final class AssistantModel {
         switch call.name {
         case "create_task":
             var parts = ["Neue Aufgabe"]
+            if let source = string("source") { parts.append(source == "github" ? "als GitHub-Issue" : source) }
             if let due = string("due") { parts.append("fällig \(dayText(due))") }
             if let priority = string("priority") { parts.append(priority) }
-            return ActionCard(title: title, change: parts.joined(separator: " · "))
+            // Everything that is written is shown in full before the user confirms.
+            let notes = string("notes").map { "\nNotizen: „\($0)“" } ?? ""
+            return ActionCard(title: title, change: parts.joined(separator: " · ") + notes)
         case "update_task":
             var changes: [String] = []
             if let newTitle = string("title") { changes.append("Titel → \(newTitle)") }
             if let due = string("due") { changes.append("Fälligkeit: \(dayText(task?.due.map { AppTools.dueString($0) })) → \(dayText(due))") }
             if let priority = string("priority") { changes.append("Priorität: \(task?.priority?.label ?? "–") → \(priority)") }
             if let minutes = args["minutes"] as? Int { changes.append("Aufwand → \(CapacityText.duration(minutes))") }
-            if string("notes") != nil { changes.append("Notizen ändern") }
+            if let notes = string("notes") { changes.append("Notizen → „\(notes)“") }
             return ActionCard(title: title, change: changes.isEmpty ? "Ändern" : changes.joined(separator: " · "))
         case "reschedule_task":
             return ActionCard(title: title, change: "Fälligkeit: \(dayText(task?.due.map { AppTools.dueString($0) })) → \(dayText(string("due")))")
@@ -232,7 +236,7 @@ final class AssistantModel {
             let scope = string("scope").flatMap(PlanScope.init(rawValue:)) ?? .day
             return ActionCard(title: "\(AIPlanBar.actionName(scope)) planen", change: "Vorschläge in der Planen-Ansicht anlegen")
         case "add_comment":
-            return ActionCard(title: title, change: "Kommentar: „\(String((string("body") ?? "").prefix(120)))“")
+            return ActionCard(title: title, change: "Kommentar: „\(string("body") ?? "")“")
         default:
             return ActionCard(title: title, change: call.name)
         }

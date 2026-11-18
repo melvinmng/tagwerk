@@ -66,6 +66,9 @@ final class AIPlanner {
         guard !isPlanning else { return }
         lastRequest = (scope, anchor, taskID)
         notice = nil
+        // An undo from before would bring old suggestions back next to the new ones.
+        clearDismissUndo()
+        clearAcceptUndo()
         if planning.scope != scope || planning.anchor != anchor {
             planning.scope = scope
             planning.anchor = anchor
@@ -189,6 +192,10 @@ final class AIPlanner {
 
     /// Accepts one suggestion after checking it against fresh data.
     func accept(_ suggestion: PlanSuggestion) async {
+        // A double tap must not run twice (the second run would fail and drop the first one's undo).
+        guard !isAccepting else { return }
+        isAccepting = true
+        defer { isAccepting = false }
         await planning.reload()
         clearDismissUndo()  // its snapshot would bring this suggestion back after it is in the calendar
         let batches = planning.suggestionBatches
@@ -217,10 +224,14 @@ final class AIPlanner {
     }
 
     private(set) var lastAcceptAll: AcceptUndo?
+    @ObservationIgnored private var isAccepting = false
 
     /// Accepts every open suggestion of the shown range: longer days first, then moves, then blocks and work days
     /// (mockup AB1). Failed ones stay or move to "Nicht eingeplant".
     func acceptAll() async {
+        guard !isAccepting else { return }
+        isAccepting = true
+        defer { isAccepting = false }
         await planning.reload()
         let open = planning.suggestionBatches.flatMap(\.suggestions)
         guard !open.isEmpty else { return }
@@ -306,13 +317,20 @@ final class AIPlanner {
     // MARK: Running in the background
 
     @ObservationIgnored private var running: Task<Void, Never>?
+    @ObservationIgnored private var runningID: UUID?
 
     /// Starts planning without blocking the view; the result arrives even if the user switches views.
     func start(scope: PlanScope, anchor: PlanDay, taskID: TaskID? = nil) {
         guard !isPlanning, running == nil else { return }
+        let id = UUID()
+        runningID = id
         running = Task { [weak self] in
             await self?.plan(scope: scope, anchor: anchor, taskID: taskID)
-            self?.running = nil
+            // A cancelled run must not clear a newer one.
+            if self?.runningID == id {
+                self?.running = nil
+                self?.runningID = nil
+            }
         }
     }
 
@@ -320,6 +338,7 @@ final class AIPlanner {
     func cancel() {
         running?.cancel()
         running = nil
+        runningID = nil
         if isPlanning { state = .idle }
     }
 
@@ -502,11 +521,19 @@ final class AIPlanner {
         let schema = scope == .day ? (name: "day_plan", schema: AIPlanSchemas.dayPlanSchema)
                                    : (name: "period_plan", schema: AIPlanSchemas.periodPlanSchema)
         var text = ""
+        var completed = false
         let instructions = Self.instructions(scope, longerDays: longerDays()) + Self.preferenceText(preferences())
         for try await event in responder.respond(model: model, instructions: instructions, input: input,
                                                   tools: [], jsonSchema: schema) {
-            if case .textDelta(let delta) = event { text += delta }
+            switch event {
+            case .textDelta(let delta): text += delta
+            case .completed: completed = true
+            case .functionCall: break
+            }
         }
+        // "Abbrechen" ends the stream early: a partial answer is never used.
+        try Task.checkCancellation()
+        guard completed else { throw ChatGPTError.incomplete }
         return text
     }
 
@@ -724,7 +751,8 @@ final class AIPlanner {
 
     nonisolated static func minutes(_ time: String) -> Int? {
         let parts = time.split(separator: ":")
-        guard parts.count == 2, let hour = Int(parts[0]), let minute = Int(parts[1]) else { return nil }
+        guard parts.count == 2, let hour = Int(parts[0]), let minute = Int(parts[1]),
+              (0...24).contains(hour), (0...59).contains(minute), hour * 60 + minute <= 24 * 60 else { return nil }
         return hour * 60 + minute
     }
 
@@ -735,6 +763,11 @@ final class AIPlanner {
     nonisolated static func planDay(_ text: String) -> PlanDay? {
         let parts = text.split(separator: "-").compactMap { Int($0) }
         guard parts.count == 3 else { return nil }
+        // Only real calendar days ("2026-02-30" is none).
+        var gregorian = Calendar(identifier: .gregorian)
+        gregorian.timeZone = TimeZone(identifier: "UTC") ?? .current
+        let components = DateComponents(year: parts[0], month: parts[1], day: parts[2])
+        guard (1...12).contains(parts[1]), (1...31).contains(parts[2]), components.isValidDate(in: gregorian) else { return nil }
         return PlanDay(year: parts[0], month: parts[1], day: parts[2])
     }
 
