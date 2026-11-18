@@ -104,7 +104,12 @@ struct SuggestionBlock: View {
         .padding(.vertical, 3)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .background(Color.purple.opacity(0.12), in: RoundedRectangle(cornerRadius: 7))
-        .overlay { RoundedRectangle(cornerRadius: 7).strokeBorder(Color.purple, style: StrokeStyle(lineWidth: 1, dash: [4, 3])) }
+        // Changed by an answer: solid outline (mockup VA1); otherwise dashed like every suggestion.
+        .overlay {
+            RoundedRectangle(cornerRadius: 7)
+                .strokeBorder(Color.purple, style: StrokeStyle(lineWidth: suggestion.previousPosition == nil ? 1 : 1.5,
+                                                               dash: suggestion.previousPosition == nil ? [4, 3] : []))
+        }
         .foregroundStyle(.purple)
         .contentShape(RoundedRectangle(cornerRadius: 7))
         .onTapGesture(perform: onOpen)
@@ -131,7 +136,7 @@ struct SuggestionBlock: View {
     /// 15-minute blocks: ✦ title, an urgent due date, P mark.
     private func singleLine(_ facts: SuggestionFacts) -> some View {
         HStack(spacing: 4) {
-            Image(systemName: "sparkles").font(.caption2)
+            Image(systemName: suggestion.isMovedByUser ? "pencil" : "sparkles").font(.caption2)
             Text(suggestion.title).font(.caption.weight(.semibold)).lineLimit(1)
             Spacer(minLength: 0)
             if facts.dueIsUrgent, let due = facts.dueShort {
@@ -143,9 +148,12 @@ struct SuggestionBlock: View {
 
     private func titleLine(_ facts: SuggestionFacts) -> some View {
         HStack(spacing: 4) {
-            Image(systemName: "sparkles").font(.caption2)
+            Image(systemName: suggestion.isMovedByUser ? "pencil" : "sparkles").font(.caption2)
             Text(suggestion.title).font(.caption.weight(.semibold)).lineLimit(1)
             Spacer(minLength: 0)
+            if suggestion.previousPosition != nil {
+                Text("geändert").font(.caption2.weight(.semibold))
+            }
             if let priority = facts.priority { PriorityMark(mark: priority) }
         }
     }
@@ -220,6 +228,7 @@ struct SuggestionRow: View {
                 if isWaiting {
                     Label("braucht die längere Arbeitszeit", systemImage: "arrow.turn.down.right").font(.caption2)
                 }
+                SuggestionStateLabel(suggestion: suggestion)
                 if !suggestion.reason.isEmpty && suggestion.kind != .move {
                     Text("„\(suggestion.reason)“").font(.caption).foregroundStyle(.purple).lineLimit(reasonLines)
                 }
@@ -302,12 +311,13 @@ struct SuggestionSheet: View {
             SuggestionDetail(suggestion: suggestion, onDone: { dismiss() })
                 .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Schließen") { dismiss() } } }
         }
-        .presentationDetents([.medium, .large])
+        .presentationDetents([.fraction(0.3), .medium, .large])
         .presentationBackgroundInteraction(.enabled(upThrough: .medium))
     }
 }
 
-/// Content of the suggestion sheet; also a page of the result sheet (mockup VE1).
+/// Content of the suggestion sheet; also a page of the result sheet (mockup VE1). Below the task: moving by
+/// hand (mockup VM1) and the conversation about the planning (mockups VK1, VA1).
 struct SuggestionDetail: View {
     @Environment(AppEnvironment.self) private var environment
     let suggestion: PlanSuggestion
@@ -315,18 +325,23 @@ struct SuggestionDetail: View {
     @State private var editing: TaskItem?
 
     private var planning: PlanningModel { environment.planning }
+    /// The suggestion as it is now: moving and answers change it while the sheet is open.
+    private var live: PlanSuggestion? {
+        planning.suggestionBatches.lazy.flatMap(\.suggestions).first { $0.id == suggestion.id }
+    }
     private var task: TaskItem? { planning.taskList.items.first { $0.id.key == suggestion.taskKey } }
-    private var isWaiting: Bool { SuggestionText.isWaiting(suggestion, planning: planning) }
-    private var isOpen: Bool { planning.suggestionBatches.contains { $0.suggestions.contains { $0.id == suggestion.id } } }
 
     var body: some View {
-        let facts = planning.facts(for: suggestion)
+        let current = live ?? suggestion
+        let facts = planning.facts(for: current)
+        let isWaiting = SuggestionText.isWaiting(current, planning: planning)
         List {
             Section {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(SuggestionText.title(suggestion, calendar: planning.calendar)).font(.headline)
-                    Label(SuggestionText.sheetWhen(suggestion, calendar: planning.calendar), systemImage: SuggestionText.symbol(suggestion))
+                    Text(SuggestionText.title(current, calendar: planning.calendar)).font(.headline)
+                    Label(SuggestionText.sheetWhen(current, calendar: planning.calendar), systemImage: SuggestionText.symbol(current))
                         .font(.subheadline).foregroundStyle(.purple)
+                    SuggestionStateLabel(suggestion: current)
                 }
             }
             if let task {
@@ -334,12 +349,18 @@ struct SuggestionDetail: View {
                     Button { editing = task } label: { TaskCard(task: task, facts: facts) }
                         .buttonStyle(.plain)
                 }
-            } else if suggestion.kind == .dayChange {
-                Section { Text(SuggestionText.detail(suggestion, planning: planning)).foregroundStyle(.secondary) }
+            } else if current.kind == .dayChange {
+                Section { Text(SuggestionText.detail(current, planning: planning)).foregroundStyle(.secondary) }
             }
-            if !suggestion.reason.isEmpty {
+            if !current.reason.isEmpty {
                 Section("Begründung") {
-                    Label("„\(suggestion.reason)“", systemImage: "sparkles").foregroundStyle(.purple)
+                    Label("„\(current.reason)“", systemImage: "sparkles").foregroundStyle(.purple)
+                }
+            }
+            if current.kind != .dayChange, live != nil {
+                SuggestionMoveSection(suggestion: current)
+                if environment.ai.isSignedIn {
+                    SuggestionConversation(suggestion: current)
                 }
             }
             Section {
@@ -353,11 +374,11 @@ struct SuggestionDetail: View {
         .safeAreaInset(edge: .bottom) {
             HStack(spacing: 10) {
                 Button(role: .destructive) {
-                    Task { await environment.planner.dismiss(suggestion); onDone() }
+                    Task { await environment.planner.dismiss(current); onDone() }
                 } label: { Text("Verwerfen").frame(maxWidth: .infinity, minHeight: 44) }
                     .buttonStyle(.bordered)
                 Button {
-                    Task { await environment.planner.accept(suggestion); onDone() }
+                    Task { await environment.planner.accept(current); onDone() }
                 } label: { Label("Übernehmen", systemImage: "sparkles").frame(maxWidth: .infinity, minHeight: 44) }
                     .buttonStyle(.borderedProminent)
                     .tint(.purple)
@@ -368,7 +389,228 @@ struct SuggestionDetail: View {
             .background(.bar)
         }
         .sheet(item: $editing) { TaskEditorSheet(task: $0) }
-        .onChange(of: isOpen) { _, open in if !open { onDone() } }
+        .onChange(of: live == nil) { _, gone in if gone { onDone() } }
+    }
+}
+
+/// "✎ von dir verschoben · war 14:00" or "geändert · war 18:00" (mockups VM1, VA1).
+struct SuggestionStateLabel: View {
+    @Environment(AppEnvironment.self) private var environment
+    let suggestion: PlanSuggestion
+
+    var body: some View {
+        let calendar = environment.planning.calendar
+        if let ai = suggestion.aiPosition {
+            Label("von dir verschoben · KI: \(Self.difference(ai, suggestion.position, calendar: calendar))", systemImage: "pencil")
+                .font(.caption).foregroundStyle(.secondary)
+        } else if let previous = suggestion.previousPosition {
+            Label("geändert · war \(Self.difference(previous, suggestion.position, calendar: calendar))", systemImage: "arrow.triangle.2.circlepath")
+                .font(.caption).foregroundStyle(.purple)
+        }
+    }
+
+    /// The earlier position as far as it differs: "09:00", "30 min" or "Mi 18. 09:00 · 30 min".
+    static func difference(_ old: SuggestionPosition, _ new: SuggestionPosition, calendar: Calendar) -> String {
+        var parts: [String] = []
+        if old.day != new.day || old.kind != new.kind {
+            parts.append("\(SuggestionFacts.weekday(old.day, calendar: calendar)) \(old.day.day).")
+        }
+        if let start = old.startMinutes, start != new.startMinutes || !parts.isEmpty { parts.append(AIPlanner.time(start)) }
+        if let minutes = old.minutes, minutes != new.minutes { parts.append(CapacityText.duration(minutes)) }
+        return parts.isEmpty ? AIPlanner.positionText(old, calendar: calendar) : parts.joined(separator: " · ")
+    }
+}
+
+/// Day, start and duration of a suggestion, changeable by hand; it stays a suggestion (mockup VM1).
+struct SuggestionMoveSection: View {
+    @Environment(AppEnvironment.self) private var environment
+    let suggestion: PlanSuggestion
+    @State private var error: String?
+
+    private var calendar: Calendar { environment.planning.calendar }
+
+    var body: some View {
+        Section {
+            DatePicker("Tag", selection: dayBinding, in: environment.planning.today.startDate(in: calendar)..., displayedComponents: .date)
+            if suggestion.kind == .block, let start = suggestion.startMinutes, let minutes = suggestion.minutes {
+                DatePicker("Beginn", selection: startBinding(start), displayedComponents: .hourAndMinute)
+                Stepper(value: durationBinding(minutes), in: 15...(6 * 60), step: 15) {
+                    LabeledContent("Dauer", value: CapacityText.duration(minutes))
+                }
+            }
+            if let ai = suggestion.aiPosition {
+                Button {
+                    Task { await environment.planner.resetSuggestion(suggestion) }
+                } label: {
+                    Label("Zurück zum Vorschlag der KI (\(AIPlanner.positionText(ai, calendar: calendar)))", systemImage: "arrow.uturn.backward")
+                }
+            }
+            if let error {
+                Label(error, systemImage: "exclamationmark.triangle").font(.caption).foregroundStyle(.orange)
+            }
+        } header: {
+            Text("Von Hand ändern")
+        } footer: {
+            Text(suggestion.kind == .block || suggestion.kind == .move
+                 ? "Ein anderer Tag macht aus dem Block eine Verschiebung. Es bleibt ein Vorschlag, bis du ihn übernimmst."
+                 : "Es bleibt ein Vorschlag, bis du ihn übernimmst.")
+        }
+    }
+
+    private var dayBinding: Binding<Date> {
+        Binding(get: { suggestion.day.startDate(in: calendar) }, set: { date in
+            move(day: PlanDay(date: date, calendar: calendar), start: nil, minutes: nil)
+        })
+    }
+
+    private func startBinding(_ start: Int) -> Binding<Date> {
+        let dayStart = suggestion.day.startDate(in: calendar)
+        return Binding(get: { dayStart.addingTimeInterval(TimeInterval(start * 60)) }, set: { date in
+            let parts = calendar.dateComponents([.hour, .minute], from: date)
+            let minutes = (parts.hour ?? 0) * 60 + (parts.minute ?? 0)
+            move(day: suggestion.day, start: minutes / 5 * 5, minutes: suggestion.minutes)
+        })
+    }
+
+    private func durationBinding(_ minutes: Int) -> Binding<Int> {
+        Binding(get: { minutes }, set: { move(day: suggestion.day, start: suggestion.startMinutes, minutes: $0) })
+    }
+
+    private func move(day: PlanDay, start: Int?, minutes: Int?) {
+        Task { error = await environment.planner.moveSuggestion(suggestion, day: day, start: start, minutes: minutes) }
+    }
+}
+
+/// Talking about the suggestion (mockups VK1, VA1): the exchange of this planning, the change card of the
+/// last answer with "Rückgängig" and "Als Vorgabe merken", quick replies and the input line.
+struct SuggestionConversation: View {
+    @Environment(AppEnvironment.self) private var environment
+    let suggestion: PlanSuggestion
+    @State private var text = ""
+    @State private var rule: String?
+    @FocusState private var isFocused: Bool
+
+    static let quickReplies = ["Früher am Tag", "Anderer Tag", "Kürzer"]
+
+    private var planner: AIPlanner { environment.planner }
+    private var batch: SuggestionBatch? {
+        environment.planning.suggestionBatches.first { $0.suggestions.contains { $0.id == suggestion.id } }
+    }
+    private var isSending: Bool { planner.revisingID == suggestion.id }
+
+    var body: some View {
+        Section {
+            ForEach(batch?.conversation ?? []) { message in
+                if message.role == .user {
+                    Text(message.text)
+                        .frame(maxWidth: .infinity, alignment: .trailing)
+                        .foregroundStyle(.secondary)
+                } else {
+                    answer(message, isLast: message.id == batch?.conversation?.last?.id)
+                }
+            }
+            if isSending {
+                HStack(spacing: 8) {
+                    ProgressView()
+                    Text("ChatGPT antwortet …").foregroundStyle(.secondary)
+                }
+            } else if let error = planner.revisionError {
+                Label(error, systemImage: "exclamationmark.triangle").font(.caption).foregroundStyle(.orange)
+            }
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 8) {
+                    ForEach(Self.quickReplies, id: \.self) { reply in
+                        Button(reply) { send(reply) }
+                            .buttonStyle(.bordered)
+                            .tint(.purple)
+                            .disabled(isSending)
+                    }
+                }
+            }
+            HStack(spacing: 8) {
+                TextField("Zum Vorschlag etwas sagen …", text: $text, axis: .vertical)
+                    .lineLimit(1...4)
+                    .focused($isFocused)
+                    .submitLabel(.send)
+                    .onSubmit { send(text) }
+                Button {
+                    send(text)
+                } label: {
+                    Image(systemName: "arrow.up.circle.fill").font(.title2)
+                }
+                .buttonStyle(.plain)
+                .foregroundStyle(.purple)
+                .disabled(isSending || text.trimmingCharacters(in: .whitespaces).isEmpty)
+                .accessibilityLabel("Senden")
+            }
+        } header: {
+            Label("Mit ChatGPT besprechen", systemImage: "sparkles")
+        } footer: {
+            Text("Senden gibt diesen Vorschlag, die übrigen der Planung, deine Änderungen, deine Vorgaben und die Termine dieser Tage an ChatGPT.")
+        }
+        .alert("Als Vorgabe merken", isPresented: Binding(get: { rule != nil }, set: { if !$0 { rule = nil } })) {
+            TextField("Vorgabe", text: Binding(get: { rule ?? "" }, set: { rule = $0 }))
+            Button("Merken") { remember() }
+            Button("Abbrechen", role: .cancel) { rule = nil }
+        } message: {
+            Text("Nenne, woran die KI die Aufgaben erkennt, z. B. „Aufgaben aus der Liste Studium nicht nach 18 Uhr“. Vorgaben gelten ohne Gewähr.")
+        }
+    }
+
+    @ViewBuilder
+    private func answer(_ message: SuggestionMessage, isLast: Bool) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            let changes = message.changes ?? []
+            Label(changes.isEmpty ? "Nichts geändert" : (changes.count == 1 ? "1 Vorschlag geändert" : "\(changes.count) Vorschläge geändert"),
+                  systemImage: "sparkles")
+                .font(.subheadline.weight(.semibold)).foregroundStyle(.purple)
+            ForEach(changes, id: \.self) { Text($0).font(.caption) }
+            ForEach(message.rejected ?? [], id: \.self) { line in
+                Label(line, systemImage: "exclamationmark.triangle").font(.caption).foregroundStyle(.orange)
+            }
+            if !message.text.isEmpty {
+                Text("„\(message.text)“").font(.caption).foregroundStyle(.purple)
+            }
+            if isLast {
+                HStack(spacing: 12) {
+                    if batch?.revisionUndo != nil && !changes.isEmpty {
+                        Button("Rückgängig") {
+                            guard let id = batch?.id else { return }
+                            Task { await planner.undoRevision(of: id) }
+                        }
+                    }
+                    if environment.settings.aiPlanningRules.count < AppSettings.maximumPlanningRules {
+                        Button {
+                            rule = lastComment
+                        } label: {
+                            Label("Als Vorgabe merken", systemImage: "plus")
+                        }
+                    }
+                }
+                .buttonStyle(.borderless)
+                .font(.caption)
+            }
+        }
+        .padding(.vertical, 2)
+    }
+
+    private var lastComment: String {
+        batch?.conversation?.last { $0.role == .user }?.text ?? ""
+    }
+
+    private func send(_ comment: String) {
+        let comment = comment.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !comment.isEmpty, !isSending else { return }
+        text = ""
+        isFocused = false
+        Task { await planner.revise(suggestion, comment: comment) }
+    }
+
+    private func remember() {
+        let sentence = (rule ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        rule = nil
+        guard !sentence.isEmpty else { return }
+        environment.settings.aiPlanningRules.append(sentence)
     }
 }
 

@@ -32,6 +32,7 @@ extension AIPlanner {
         let rejected = await newViolations(in: batch, revised: &revised, changed: [original.id])
         if let reason = rejected[original.id] { return reason }
         batch.suggestions = revised
+        batch.revisionUndo = nil  // "Rückgängig" of an answer would also undo this move
         save(batch)
         await planning.reload()
         return nil

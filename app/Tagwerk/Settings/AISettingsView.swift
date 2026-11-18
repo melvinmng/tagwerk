@@ -17,6 +17,7 @@ struct AISettingsView: View {
             if ai.isSignedIn { modelSection }
             if ai.isSignedIn, let model = ai.currentModel, !model.reasoningLevels.isEmpty { reasoningSection(model) }
             if ai.isSignedIn { planningSection }
+            if ai.isSignedIn { PlanningRulesSection() }
             Section {
                 NavigationLink("Datenschutzhinweis") { AIPrivacyView() }
             }
@@ -214,5 +215,60 @@ struct AIPrivacyView: View {
         }
         .navigationTitle("Datenschutzhinweis")
         .navigationBarTitleDisplayMode(.inline)
+    }
+}
+
+/// "Planungsvorgaben" (mockup VR1): at most five short sentences that go as text into every planning and
+/// conversation. Tagwerk does not check whether the result keeps them.
+struct PlanningRulesSection: View {
+    @Environment(AppEnvironment.self) private var environment
+    @State private var draft: String?
+    @State private var editingIndex: Int?
+
+    var body: some View {
+        let rules = environment.settings.aiPlanningRules
+        Section {
+            ForEach(Array(rules.enumerated()), id: \.offset) { index, rule in
+                Button {
+                    editingIndex = index
+                    draft = rule
+                } label: {
+                    Text(rule).foregroundStyle(.primary)
+                }
+            }
+            .onDelete { offsets in environment.settings.aiPlanningRules.remove(atOffsets: offsets) }
+            if rules.count < AppSettings.maximumPlanningRules {
+                Button {
+                    editingIndex = nil
+                    draft = ""
+                } label: {
+                    Label("Vorgabe hinzufügen", systemImage: "plus")
+                }
+            }
+        } header: {
+            Text("Planungsvorgaben · \(rules.count) von \(AppSettings.maximumPlanningRules)")
+        } footer: {
+            Text("Vorgaben gehen bei jeder Planung als Text an ChatGPT. Tagwerk prüft nicht, ob das Ergebnis sie einhält. Feste Zeiten für alles gehören in die Arbeitszeit.")
+        }
+        .alert(editingIndex == nil ? "Neue Vorgabe" : "Vorgabe", isPresented: Binding(get: { draft != nil }, set: { if !$0 { draft = nil } })) {
+            TextField("z. B. Mails nicht nach 18 Uhr einplanen", text: Binding(get: { draft ?? "" }, set: { draft = $0 }))
+            Button("Sichern") { save() }
+            Button("Abbrechen", role: .cancel) { draft = nil }
+        } message: {
+            Text("Nenne, woran die KI die Aufgaben erkennt, z. B. eine Liste oder ein Repo.")
+        }
+    }
+
+    private func save() {
+        let sentence = (draft ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        draft = nil
+        guard !sentence.isEmpty else { return }
+        var rules = environment.settings.aiPlanningRules
+        if let index = editingIndex, rules.indices.contains(index) {
+            rules[index] = sentence
+        } else {
+            rules.append(sentence)
+        }
+        environment.settings.aiPlanningRules = rules
     }
 }

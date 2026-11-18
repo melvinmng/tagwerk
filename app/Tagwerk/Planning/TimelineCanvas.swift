@@ -89,6 +89,16 @@ struct TimelineCanvas: View {
                         .offset(x: labelWidth + 6, y: y(range.lowerBound, shown))
                         .allowsHitTesting(false)
                 }
+                // Mockup VA1: where a changed suggestion was, faded, until the next change.
+                ForEach(changedFrom, id: \.id) { suggestion in
+                    if let start = suggestion.previousPosition?.startMinutes, let minutes = suggestion.previousPosition?.minutes {
+                        RoundedRectangle(cornerRadius: 7)
+                            .strokeBorder(Color.purple.opacity(0.35), style: StrokeStyle(lineWidth: 1, dash: [2, 3]))
+                            .frame(width: width - 2, height: max(22, height(minutes)))
+                            .offset(x: labelWidth + 6, y: y(start, shown))
+                            .allowsHitTesting(false)
+                    }
+                }
                 ForEach(blockSuggestions) { suggestion in
                     let range = Self.range(of: suggestion)
                     SuggestionBlock(suggestion: suggestion, timeText: timeText(range),
@@ -130,6 +140,12 @@ struct TimelineCanvas: View {
     /// Open AI time-block suggestions of the day (mockup W1).
     private var blockSuggestions: [PlanSuggestion] {
         plan.suggestions.filter { $0.kind == .block && $0.startMinutes != nil }
+    }
+
+    /// Suggestions an answer moved within this day: their old place is drawn faded.
+    private var changedFrom: [PlanSuggestion] {
+        blockSuggestions.filter { $0.previousPosition?.kind == .block && $0.previousPosition?.day == plan.day
+            && $0.previousPosition?.startMinutes != $0.startMinutes }
     }
 
     /// Time a pending longer day would add, outside today's working hours.

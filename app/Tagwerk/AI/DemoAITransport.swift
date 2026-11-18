@@ -88,6 +88,7 @@ final class DemoAITransport: AIHTTPTransport {
               let input = json["input"] as? [[String: Any]],
               let first = (input.first?["content"] as? [[String: Any]])?.first?["text"] as? String,
               let plan = try? JSONSerialization.jsonObject(with: Data(first.utf8)) as? [String: Any] else { return nil }
+        if name == "suggestion_revision" { return revisionAnswer(plan) }
         let isRetry = input.count > 1
         let tasks = (plan["tasks"] as? [[String: Any]] ?? []).compactMap { $0["id"] as? String }
         let days = (plan["days"] as? [[String: Any]] ?? []).filter { $0["dayOff"] as? Bool == false }
@@ -115,6 +116,21 @@ final class DemoAITransport: AIHTTPTransport {
             }
             answer["assignments"] = assignments
         }
+        return (try? JSONSerialization.data(withJSONObject: answer)).map { String(decoding: $0, as: UTF8.self) }
+    }
+
+    /// A conversation answer: the commented block moves one hour earlier (a move stays where it is).
+    private static func revisionAnswer(_ request: [String: Any]) -> String? {
+        let about = request["about"] as? String ?? ""
+        let suggestions = request["suggestions"] as? [[String: Any]] ?? []
+        var changes: [[String: Any]] = []
+        if let target = suggestions.first(where: { $0["ref"] as? String == about }), let day = target["day"] as? String {
+            if let start = (target["start"] as? String).flatMap(AIPlanner.minutes) {
+                changes.append(["ref": about, "day": day, "start": AIPlanner.time(max(0, start - 60)),
+                                "minutes": target["minutes"] as? Int ?? 30])
+            }
+        }
+        let answer: [String: Any] = ["reply": "Demo: Ich habe den Vorschlag eine Stunde früher gelegt.", "changes": changes]
         return (try? JSONSerialization.data(withJSONObject: answer)).map { String(decoding: $0, as: UTF8.self) }
     }
 }
