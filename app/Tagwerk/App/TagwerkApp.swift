@@ -34,14 +34,23 @@ struct TagwerkApp: App {
                     }
                     await environment.activateGitHubIfSignedIn()
                     environment.startReconnectWatch()
+                    environment.startNotificationUpdates()
                 }
                 .onChange(of: scenePhase) { _, phase in
-                    if phase == .active {
+                    switch phase {
+                    case .active:
                         Task {
                             await environment.retryGitHubIfNeeded()
                             // Remaining time and "today" move on while the app is in the background.
                             await environment.planning.reload()
+                            // The permission may have changed in the iOS settings; the time zone may have changed.
+                            await environment.notifications.reschedule()
                         }
+                    case .background:
+                        // Directly, not debounced: the app may be suspended before a delayed run starts.
+                        Task { await environment.notifications.reschedule() }
+                    default:
+                        break
                     }
                 }
         }

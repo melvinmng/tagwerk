@@ -12,6 +12,8 @@ final class AppSettings {
     var lunchDurationMinutes: Int = 60
     var bufferMinutes: Int = 10
     var leadTimeMinutes: Int = 120
+    /// Notifications for events of deadline calendars (design 2b §11.13), next to those for tasks.
+    var deadlineCalendarNotifications: Bool = true
     /// `nil` means the default selection (see `CalendarSelection.defaultSelected`).
     var selectedCalendarIDs: [String]? = nil
     /// `nil` means all reminder lists.
