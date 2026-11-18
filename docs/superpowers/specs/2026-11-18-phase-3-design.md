@@ -115,6 +115,24 @@ Fotos werden nicht gespeichert (E3).
 
 Prompt-Wortlaut, Schema-Details, Ordnerstruktur, Testaufbau, Animationen, Darstellung innerhalb des Mockups.
 
+## 11. Abweichungen und Ergänzungen bei der Umsetzung (2026-11-18)
+
+Umgesetzt nach `../plans/2026-11-18-phase-3-nutrition-training.md` inkl. der Änderungen nach dem Fable-Review (gehen §4–§8 vor, wo sie abweichen).
+
+- **Einwilligung:** nur ein Flag `mealEstimationConsent` (Standard aus). Der Schalter unter Einstellungen › Erfassen bindet daran; Einschalten gilt als Zustimmung. Ohne ChatGPT-Anmeldung ist er ausgegraut. Ein separates `mealEstimationEnabled` (§4.1) entfällt.
+- **„~“ je Posten:** `MealItem.isEstimated`; ein überschriebener oder von Hand hinzugefügter Posten ist genau (min = mittel = max, ohne „~“). „~“ der Summe und `TagwerkEstimated` in Health folgen aus „irgendein Posten geschätzt“. Auf 10 kcal gerundet werden nur geschätzte Werte.
+- **Mengen-Stepper** bleibt ein Faktor ×0,5–×3 („Menge ×1,5“), nicht die Stückzahl aus dem Mockup.
+- **Ablehnung durch ChatGPT** wird nicht eigens erkannt: leere Postenliste → „Darin war kein Essen zu erkennen …“, sonst der allgemeine Fehlertext. Zeitlimit 30 s.
+- **„Zuletzt und häufig“** zeigt „zuletzt <Tag>“ ohne Anzahl („12×“); „Nicht mehr vorschlagen“ ist nicht gebaut (Regel-Parameter vorhanden).
+- **Health:** gemeinsamer Metadatenschlüssel `TagwerkEntryID` für das Löschen aller Samples eines Eintrags; Nährwerte ≤ 0 werden beim Bearbeiten in Health gelöscht; Trainings werden immer gelöscht und neu angelegt; abgelehnte Typen werden übersprungen, der Eintrag bleibt zum Nachholen markiert. Health-Löschungen laufen erst nach dem 4-s-Widerrufen-Fenster über eine Warteschlange (`PendingHealthDeletion`). Die Spiegelung läuft seriell. Gelesen werden fremde Trainings der Woche des angezeigten Tages (nicht „8 Tage“). Kein Titel, kein Postenname geht nach Health; manuelle Werte tragen `HKMetadataKeyWasUserEntered`.
+- **Health-Karte** erscheint nur, solange iOS die Anfrage noch zeigen würde (`statusForAuthorizationRequest` = `.shouldRequest`) und sie nicht weggeklickt wurde. „Health öffnen“ öffnet `x-apple-health://`.
+- **Assistent:** neuer Kontext „Erfassen“; er erhält ausdrücklich keine Ernährungs- oder Trainingsdaten.
+- **Tab „Erfassen“** hat den Wert 3 und steht vor „Einstellungen“.
+- **Demo:** `-TagwerkDemoData` setzt einen Demo-Health-Store (verbunden, ein Lauf der „Apple Watch“ um 07:05) und Beispielmahlzeiten; `-TagwerkDemoAI` beantwortet `meal_estimate` mit „Brötchen mit Käse“ (Eingabe mit „Tisch“ → nichts erkannt).
+- **Simulator-Prüfung fiel aus:** Der Simulator war wieder von der Sitzung des 2b-2-Threads belegt (`DEVICE_IN_USE`). Die Oberfläche ist nur gebaut und über Modelltests geprüft, nicht angesehen.
+
+**Geräte-Checkliste (offen):** Signierung mit HealthKit-Entitlement über `scripts/refresh-install.sh`; Ersetzung per Sync-Version; erneutes Sichern einer gelöschten Kennung; Verbleib des Energie-Samples nach dem Löschen eines Trainings; `HKWorkoutBuilder` ohne Gerät (auch Schwimmen); Trainings der Apple Watch werden gelesen und eigene nicht doppelt gezählt; Kamera; echte ChatGPT-Schätzung mit Text und Foto (Dauer, Güte); Ziel von „Health öffnen“.
+
 ## Quellen
 
 - Apple: HealthKit `HKMetadataKeySyncIdentifier`, `HKMetadataKeySyncVersion`, `HKWorkoutBuilder` (Dokumentation in Xcode 27.2).
