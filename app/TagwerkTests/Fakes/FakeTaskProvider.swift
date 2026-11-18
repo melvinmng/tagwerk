@@ -62,6 +62,7 @@ final class FakeTaskProvider: TaskProvider {
         if case .set(let priority) = edit.priority { item.priority = priority }
         if case .set(let minutes) = edit.estimateMinutes { item.estimateMinutes = minutes }
         if case .set(let completed) = edit.isCompleted { item.isCompleted = completed }
+        if case .set(let recurrence) = edit.recurrence { item.recurrence = recurrence }
         revision += 1
         item.version = String(revision)
         replace(item)
@@ -87,7 +88,8 @@ final class FakeTaskProvider: TaskProvider {
             id: TaskID(source: source, rawValue: "new-\(revision)"), title: draft.title, notes: draft.notes,
             due: draft.due, priority: draft.priority, estimateMinutes: draft.estimateMinutes, isCompleted: false,
             container: TaskContainer(id: draft.containerID ?? "default", name: "Standard", colorHex: nil),
-            url: nil, version: String(revision), editableFields: [.title, .notes, .due, .priority]
+            url: nil, version: String(revision), editableFields: [.title, .notes, .due, .priority],
+            recurrence: draft.recurrence
         )
         tasks.append(item)
         return item

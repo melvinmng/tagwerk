@@ -15,9 +15,12 @@ public protocol ReminderStore: AnyObject {
     func openReminders(in listIDs: Set<String>?) async -> [ReminderRecord]
     /// Fresh state of one reminder (refreshed from the store), or `nil` if it no longer exists.
     func reminder(id: String) -> ReminderRecord?
-    func save(_ record: ReminderRecord) throws -> ReminderRecord
+    /// Writes the changed fields of `record`. The repetition is written only when `recurrence` is `.set`;
+    /// `record.recurrence` is ignored, because its start follows the due date (plan §6, rule 1).
+    func save(_ record: ReminderRecord, recurrence: FieldChange<Recurrence?>) throws -> ReminderRecord
     func delete(id: String) throws
-    func create(title: String, notes: String?, due: DueDate?, ekPriority: Int, listID: String?) throws -> ReminderRecord
+    func create(title: String, notes: String?, due: DueDate?, ekPriority: Int, listID: String?,
+                recurrence: Recurrence?) throws -> ReminderRecord
     /// Completion dates of reminders completed within `interval` in the given lists; `nil` means all lists.
     func completionDates(in interval: DateInterval, listIDs: Set<String>?) async -> [Date]
 }

@@ -30,9 +30,10 @@ final class FakeAccessStore: ReminderStore {
     func calendars() -> [ListInfo] { calendarInfos }
     func openReminders(in listIDs: Set<String>?) async -> [ReminderRecord] { openRecords }
     func reminder(id: String) -> ReminderRecord? { nil }
-    func save(_ record: ReminderRecord) throws -> ReminderRecord { record }
+    func save(_ record: ReminderRecord, recurrence: FieldChange<Recurrence?>) throws -> ReminderRecord { record }
     func delete(id: String) throws {}
-    func create(title: String, notes: String?, due: DueDate?, ekPriority: Int, listID: String?) throws -> ReminderRecord {
+    func create(title: String, notes: String?, due: DueDate?, ekPriority: Int, listID: String?,
+                recurrence: Recurrence?) throws -> ReminderRecord {
         throw TaskWriteError.failed("not supported")
     }
 }

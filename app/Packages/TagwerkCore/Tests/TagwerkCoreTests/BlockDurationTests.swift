@@ -99,6 +99,20 @@ struct SessionWindowTests {
             == PlanDay(year: 2026, month: 10, day: 19))
     }
 
+    @Test func monthlyWeekday_countsSinceSameDayLastMonth() {
+        #expect(sessionWindowStart(for: .monthlyWeekday(interval: 1, ordinal: 3, weekday: 4), today: today, calendar: calendar)
+            == PlanDay(year: 2026, month: 10, day: 19))
+        #expect(sessionWindowStart(for: .monthlyWeekday(interval: 2, ordinal: 3, weekday: 4), today: today, calendar: calendar)
+            == PlanDay(year: 2026, month: 9, day: 19))
+    }
+
+    @Test func yearly_countsSinceDayAfterSameDateLastYear() {
+        #expect(sessionWindowStart(for: .yearly(interval: 1), today: today, calendar: calendar)
+            == PlanDay(year: 2025, month: 11, day: 19))
+        #expect(sessionWindowStart(for: .yearly(interval: 2), today: today, calendar: calendar)
+            == PlanDay(year: 2024, month: 11, day: 19))
+    }
+
     @Test func unsupported_hasNoWindow() {
         #expect(sessionWindowStart(for: .unsupported, today: today, calendar: calendar) == nil)
     }
