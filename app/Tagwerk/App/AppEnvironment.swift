@@ -1,6 +1,7 @@
 import AIKit
 import Foundation
 import GitHubKit
+import HealthBridge
 import Network
 import Observation
 import RemindersKit
@@ -31,6 +32,13 @@ final class AppEnvironment {
     let notificationNavigator = NotificationNavigator()
     /// Delegate of the system notification center; held here because the center keeps it weakly.
     @ObservationIgnored private(set) lazy var notificationDelegate = NotificationDelegate(navigator: notificationNavigator)
+    /// Meals, water and workouts (phase 3); mirrored to Health only after the user allowed it.
+    let intake: IntakeStore
+    let health: any HealthStoring
+    let healthMirror: HealthMirror
+    let capture: CaptureModel
+    /// Meal estimates with ChatGPT; only after consent and a tap (main design §7).
+    let mealEstimator: MealEstimator
     /// A tab another view asks to show (e.g. "Mit KI planen" from the task list jumps to "Planen").
     var requestedTab: Int?
     private let gitHubCache: SwiftDataGitHubCache
@@ -43,8 +51,9 @@ final class AppEnvironment {
     @ObservationIgnored private var notificationUpdates: Task<Void, Never>?
     @ObservationIgnored private var gitHubRegistration: Task<Void, Never>?
 
-    /// `notificationCenter` defaults to the system center; tests pass a fake so nothing reaches iOS.
-    init(modelContainer: ModelContainer, notificationCenter: (any NotificationCenterClient)? = nil) throws {
+    /// `notificationCenter` defaults to the system center and `health` to HealthKit; tests and demo data pass fakes.
+    init(modelContainer: ModelContainer, notificationCenter: (any NotificationCenterClient)? = nil,
+         health: (any HealthStoring)? = nil) throws {
         self.modelContainer = modelContainer
         let context = modelContainer.mainContext
         let settings = try AppSettings.current(in: context)
@@ -109,6 +118,15 @@ final class AppEnvironment {
                 gateway.calendarAccessState == .fullAccess ? gateway.events(in: interval, calendarIDs: ids) : nil
             },
             settings: settings)
+        let healthStore = health ?? HealthKitStore()
+        let intake = IntakeStore(context: context)
+        let mirror = HealthMirror(store: intake, health: healthStore)
+        self.health = healthStore
+        self.intake = intake
+        self.healthMirror = mirror
+        self.capture = CaptureModel(store: intake, mirror: mirror, health: healthStore, settings: settings)
+        self.mealEstimator = MealEstimator(responder: ai.client, model: { try await ai.selectedModel() },
+                                           hasConsent: { settings.mealEstimationConsent })
         let planning = self.planning
         taskList.onCompletionChanged = { id, isCompleted in await planning.didChangeCompletion(id, isCompleted: isCompleted) }
         // An ended GitHub sign-in (expired or revoked) forgets the cached issues of that account.

@@ -177,6 +177,10 @@ struct IntakeTests {
     @Test func format_manual_noTilde() {
         #expect(IntakeFormat.kcal(80, estimated: false) == "80 kcal")
         #expect(IntakeFormat.kcal(95, estimated: false) == "95 kcal")
+        #expect(IntakeFormat.kcalNumber(1312, estimated: true) == "~1.310")
+        #expect(IntakeFormat.kcalNumber(95, estimated: false) == "95")
+        #expect(IntakeFormat.factor(1.5) == "×1,5")
+        #expect(IntakeFormat.factor(2) == "×2")
         #expect(IntakeFormat.grams(21.6, estimated: true) == "~22 g")
         #expect(IntakeFormat.grams(5, estimated: false) == "5 g")
     }

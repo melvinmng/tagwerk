@@ -13,6 +13,7 @@ final class AssistantModel {
         case planning(scope: PlanScope, anchor: PlanDay)
         case tasks
         case settings
+        case capture
         /// "Über diese Aufgabe sprechen": its own chat per task (design §8.3).
         case task(TaskID)
     }
@@ -153,6 +154,9 @@ final class AssistantModel {
             return taskContext ?? task.map { "Das Gespräch betrifft die Aufgabe „\($0.title)“ (id \($0.id.key))." } ?? ""
         case .settings:
             return "Ansicht: Einstellungen (kein besonderer Kontext)."
+        case .capture:
+            // Meals, water and workouts never go to the assistant (main design §7).
+            return "Ansicht: Erfassen (Essen, Trinken, Training). Diese Daten stehen dir nicht zur Verfügung."
         case .tasks:
             let open = planning.taskList.items.filter { !$0.isCompleted }.count
             return "Ansicht: Aufgaben (\(open) offene Aufgaben; Einzelheiten über list_tasks)."

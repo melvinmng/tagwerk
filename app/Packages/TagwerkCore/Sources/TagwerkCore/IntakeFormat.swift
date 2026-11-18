@@ -19,8 +19,21 @@ public enum IntakeFormat {
 
     /// "~520 kcal" for estimates, "80 kcal" for typed values.
     public static func kcal(_ value: Double, estimated: Bool) -> String {
+        "\(kcalNumber(value, estimated: estimated)) kcal"
+    }
+
+    /// "~1.310" or "95", without the unit.
+    public static func kcalNumber(_ value: Double, estimated: Bool) -> String {
         let number = estimated ? roundedKcal(value) : Int(value.rounded())
-        return "\(estimated ? "~" : "")\(grouped(number)) kcal"
+        return "\(estimated ? "~" : "")\(grouped(number))"
+    }
+
+    /// Quantity factor of an item: "×1,5", "×2".
+    public static func factor(_ value: Double) -> String {
+        let formatter = NumberFormatter()
+        formatter.locale = Locale(identifier: "de_DE")
+        formatter.maximumFractionDigits = 1
+        return "×\(formatter.string(from: NSNumber(value: value)) ?? "1")"
     }
 
     /// "wahrscheinlich zwischen 410 und 550 kcal".
