@@ -290,6 +290,17 @@ struct AppToolsTests {
         #expect(event["location"] as? String == "Praxis")
         #expect(event["editable"] as? Bool == true)
         #expect(event["recurring"] as? Bool == false)
+        #expect(event["deadline"] == nil)
+    }
+
+    @Test func listEventsNamesDeadline() async throws {
+        let (tools, planning) = await make()
+        _ = await run(tools, "create_event", #"{"title":"Klausur Statistik","start":"2026-11-19T10:00","end":"2026-11-19T12:00","all_day":false,"calendar_id":null,"location":null,"notes":null}"#)
+        let exam = try #require(calendarStore.storedEvents.first { $0.title == "Klausur Statistik" })
+        await planning.markDeadline(exam, series: false)
+        let result = await run(tools, "list_events", #"{"from":"2026-11-19","to":"2026-11-19"}"#)
+        let event = try #require((result["events"] as? [[String: Any]])?.first)
+        #expect(event["deadline"] as? Bool == true)
     }
 }
 

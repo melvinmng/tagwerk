@@ -37,7 +37,7 @@ extension AppTools {
             tool("list_tasks", "Lists open tasks with id, title, source, due, priority, effort and planned day.",
                  ["filter": enumeration(["all", "today", "overdue", "upcoming", "unplanned"])]),
             tool("get_task", "Returns one task with notes, labels, container and link.", ["id": taskID]),
-            tool("list_events", "Lists calendar events between two days (inclusive) with id, calendar, whether it is editable and recurring.",
+            tool("list_events", "Lists calendar events between two days (inclusive) with id, calendar, whether it is editable and recurring, and whether it is a deadline.",
                  ["from": day, "to": day]),
             tool("list_calendars", "Lists the event calendars with id, title, whether they are writable and which one is the default for new events.", [:]),
             tool("create_event", "Creates a calendar event. Without calendar_id it goes to the default (plan) calendar; use another writable calendar only when the user names it. Timed: YYYY-MM-DDTHH:mm; all day: YYYY-MM-DD with inclusive end day. Needs confirmation.", [

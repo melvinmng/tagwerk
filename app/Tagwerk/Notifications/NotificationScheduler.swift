@@ -3,6 +3,15 @@ import Observation
 import os
 import TagwerkCore
 
+/// Events marked as deadlines in Tagwerk (plan deadline-marking): the calendars to read and which of the read
+/// events are marked.
+struct MarkedDeadlineSource {
+    var calendarIDs: @MainActor () -> Set<String>
+    var markedIDs: @MainActor ([CalendarEvent]) -> Set<String>
+
+    static var none: MarkedDeadlineSource { MarkedDeadlineSource(calendarIDs: { [] }, markedIDs: { _ in [] }) }
+}
+
 /// Keeps the pending deadline notifications in line with tasks, deadline calendars and settings
 /// (design 2b §9, Phase 2 §8). Never calls any AI feature (§8.4).
 @MainActor
@@ -19,6 +28,7 @@ final class NotificationScheduler {
     @ObservationIgnored private let taskList: TaskListModel
     /// Events of the given deadline calendars in the interval; `nil` without calendar access.
     @ObservationIgnored private let deadlineEvents: (DateInterval, Set<String>) -> [CalendarEvent]?
+    @ObservationIgnored private let markedDeadlines: MarkedDeadlineSource
     @ObservationIgnored private let settings: AppSettings
     @ObservationIgnored private let now: () -> Date
     @ObservationIgnored private let calendar: Calendar
@@ -32,11 +42,13 @@ final class NotificationScheduler {
 
     init(center: any NotificationCenterClient, taskList: TaskListModel,
          deadlineEvents: @escaping (DateInterval, Set<String>) -> [CalendarEvent]?,
+         markedDeadlines: MarkedDeadlineSource = .none,
          settings: AppSettings, now: @escaping () -> Date = Date.init, calendar: Calendar = .tagwerk,
          locale: @escaping () -> Locale = { .current }) {
         self.center = center
         self.taskList = taskList
         self.deadlineEvents = deadlineEvents
+        self.markedDeadlines = markedDeadlines
         self.settings = settings
         self.now = now
         self.calendar = calendar
@@ -153,11 +165,16 @@ final class NotificationScheduler {
         if !ids.isEmpty { await center.removePending(ids) }
     }
 
-    /// Deadline events of the next days; `[]` when switched off or none selected, `nil` without calendar access.
+    /// Deadline events of the next days (deadline calendars and marked events, one switch for both); `[]` when
+    /// switched off or there are none, `nil` without calendar access.
     private func currentDeadlineEvents(now: Date) -> [CalendarEvent]? {
-        let ids = Set(settings.deadlineCalendarIDs ?? [])
-        guard settings.deadlineCalendarNotifications, !ids.isEmpty else { return [] }
+        guard settings.deadlineCalendarNotifications else { return [] }
+        let deadlineCalendars = Set(settings.deadlineCalendarIDs ?? [])
+        let ids = deadlineCalendars.union(markedDeadlines.calendarIDs())
+        guard !ids.isEmpty else { return [] }
         let end = calendar.date(byAdding: .day, value: Self.eventHorizonDays, to: now) ?? now
-        return deadlineEvents(DateInterval(start: now, end: end), ids)
+        guard let events = deadlineEvents(DateInterval(start: now, end: end), ids) else { return nil }
+        let marked = markedDeadlines.markedIDs(events)
+        return events.filter { deadlineCalendars.contains($0.calendarID) || marked.contains($0.id) }
     }
 }

@@ -129,7 +129,9 @@ final class AppTools: ToolHandler {
         guard from <= to else { throw ToolError(String(localized: "Der Zeitraum ist ungültig.")) }
         let calendar = planning.calendar
         let interval = DateInterval(start: from.startDate(in: calendar), end: to.adding(days: 1, calendar: calendar).startDate(in: calendar))
-        let list = events(interval).sorted { $0.start < $1.start }.prefix(100).map { event -> [String: Any] in
+        let found = events(interval)
+        let deadlineIDs = planning.deadlineEventIDs(among: found)
+        let list = found.sorted { $0.start < $1.start }.prefix(100).map { event -> [String: Any] in
             var item: [String: Any] = ["id": event.id, "title": event.title, "allDay": event.isAllDay, "busy": event.isBusy,
                                        "calendarId": event.calendarID, "editable": event.isEditable && !event.isInvitation,
                                        "recurring": event.isRecurring]
@@ -138,6 +140,7 @@ final class AppTools: ToolHandler {
             item["start"] = event.start.formatted(.iso8601.year().month().day().time(includingFractionalSeconds: false))
             item["end"] = event.end.formatted(.iso8601.year().month().day().time(includingFractionalSeconds: false))
             if let task = planning.linkedTask(eventID: event.id) { item["linkedTask"] = task.id.key }
+            if deadlineIDs.contains(event.id) { item["deadline"] = true }
             return item
         }
         return Self.json(["events": Array(list)])

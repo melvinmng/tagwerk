@@ -145,11 +145,14 @@ final class AppEnvironment {
         assistant.issueReference = { id in
             gitHubProvider.issueReference(for: id).map { IssueReference(repository: $0.repository, number: $0.number, nodeID: $0.nodeID) }
         }
+        let deadlineMarks = self.planning.deadlineMarks
         self.notifications = NotificationScheduler(
             center: notificationCenter ?? SystemNotificationCenter(), taskList: taskList,
             deadlineEvents: { interval, ids in
                 gateway.calendarAccessState == .fullAccess ? gateway.events(in: interval, calendarIDs: ids) : nil
             },
+            markedDeadlines: MarkedDeadlineSource(calendarIDs: { Set(deadlineMarks.marks().map(\.calendarID)) },
+                                                  markedIDs: { deadlineMarks.markedIDs(in: $0) }),
             settings: settings)
         let healthStore = health ?? HealthKitStore()
         let intake = IntakeStore(context: context)
@@ -304,6 +307,11 @@ final class AppEnvironment {
     /// The first value arrives at once and schedules after the start.
     func startNotificationUpdates() {
         guard notificationUpdates == nil else { return }
+        // Marking or unmarking a deadline event changes the notifications and the widget's deadline rows.
+        planning.onDeadlinesChanged = { [weak self] in
+            self?.notifications.scheduleSoon()
+            self?.scheduleSnapshot()
+        }
         let changes = Observations { @MainActor [weak self] () -> Int in
             guard let self else { return 0 }
             var hasher = Hasher()

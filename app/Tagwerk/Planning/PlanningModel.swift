@@ -814,6 +814,11 @@ final class PlanningModel {
         deadlineEventIDs.contains(event.id) || isInDeadlineCalendar(event) || deadlineMarks.isMarked(event)
     }
 
+    /// The deadline events (deadline calendars and marked) among `events`.
+    func deadlineEventIDs(among events: [CalendarEvent]) -> Set<String> {
+        deadlineIDs(in: events, marked: deadlineMarks.markedIDs(in: events))
+    }
+
     func isInDeadlineCalendar(_ event: CalendarEvent) -> Bool {
         (settings.deadlineCalendarIDs ?? []).contains(event.calendarID)
     }
