@@ -1,3 +1,4 @@
+import AIKit
 import Foundation
 import Testing
 @testable import Tagwerk
@@ -27,11 +28,29 @@ struct VoiceDiagnosticsTests {
         #expect(check.detail == "HTTP 429 – insufficient_quota: No credits.")
     }
 
+    @Test func unauthorizedAfterRefresh_isUnavailableWithStatus() {
+        let check = VoiceDiagnostics.check(VoiceDiagnostics.speech, error: .server(401, "missing_scope"))
+        #expect(check.outcome == .unavailable)
+        #expect(check.detail == "HTTP 401 – missing_scope (Anmeldung hat keinen Zugriff)")
+    }
+
     @Test func wav_hasHeaderAndPayload() {
         let data = VoiceDiagnostics.wav(samples: [1, -1], sampleRate: 16000)
         #expect(data.count == 48)
         #expect(String(decoding: data.prefix(4), as: UTF8.self) == "RIFF")
         #expect(String(decoding: data[8..<12], as: UTF8.self) == "WAVE")
         #expect(data[24..<28].withUnsafeBytes { $0.loadUnaligned(as: UInt32.self).littleEndian } == 16000)
+    }
+
+    @Test func realtimeSecret_readsValue() {
+        #expect(RealtimeProbe.secret(from: Data(#"{"value":"ek_1","expires_at":1}"#.utf8)) == "ek_1")
+        #expect(RealtimeProbe.secret(from: Data(#"{"client_secret":{"value":"ek_2"}}"#.utf8)) == "ek_2")
+        #expect(RealtimeProbe.secret(from: Data("{}".utf8)) == nil)
+    }
+
+    @Test func resample_doublesSamplesFrom12kTo24k() {
+        let data = RealtimeProbe.resample([0, 100], from: 12_000)
+        let samples = data.withUnsafeBytes { Array($0.bindMemory(to: Int16.self)) }
+        #expect(samples == [0, 50, 100, 100])
     }
 }

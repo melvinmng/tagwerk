@@ -59,6 +59,17 @@ enum VoiceDiagnostics {
                           detail: "HTTP \(status)" + (reason.isEmpty ? "" : " – \(reason)"))
     }
 
+    /// A thrown client error; a 401 that survived the token refresh means the login lacks access.
+    static func check(_ probe: Probe, error: ChatGPTError) -> VoiceCheck {
+        switch error {
+        case .server(let status, let code):
+            return VoiceCheck(id: probe.id, title: probe.title, outcome: .unavailable,
+                              detail: "HTTP \(status)" + (code.map { " – \($0)" } ?? "") + (status == 401 ? " (Anmeldung hat keinen Zugriff)" : ""))
+        default:
+            return VoiceCheck(id: probe.id, title: probe.title, outcome: .failed, detail: error.userMessage)
+        }
+    }
+
     static func speechBody() -> Data {
         let body: [String: Any] = ["model": "gpt-4o-mini-tts", "voice": "marin", "response_format": "mp3",
                                    "input": "Ich habe das Blumengießen auf morgen um neun Uhr verschoben."]
@@ -94,7 +105,8 @@ enum VoiceDiagnostics {
 final class SpeechSampleRecorder {
     private let synthesizer = AVSpeechSynthesizer()
 
-    func germanSample() async -> Data? {
+    /// The sample sentence as PCM16 mono samples and their sample rate.
+    func germanSample() async -> (samples: [Int16], rate: Int)? {
         let utterance = AVSpeechUtterance(string: VoiceDiagnostics.sampleSentence)
         utterance.voice = AVSpeechSynthesisVoice(language: "de-DE")
         return await withCheckedContinuation { continuation in
@@ -105,7 +117,7 @@ final class SpeechSampleRecorder {
                 guard !finished else { return }
                 guard let pcm = buffer as? AVAudioPCMBuffer, pcm.frameLength > 0 else {
                     finished = true
-                    continuation.resume(returning: samples.isEmpty ? nil : VoiceDiagnostics.wav(samples: samples, sampleRate: rate))
+                    continuation.resume(returning: samples.isEmpty ? nil : (samples, rate))
                     return
                 }
                 rate = Int(pcm.format.sampleRate)
@@ -124,32 +136,41 @@ final class SpeechSampleRecorder {
 final class VoiceDiagnosticsModel {
     private(set) var checks: [VoiceCheck] = []
     private(set) var isRunning = false
-    private(set) var speechAudio: Data?
+    /// Playable audio per check.
+    private(set) var audio: [String: Data] = [:]
     private var player: AVAudioPlayer?
     private let recorder = SpeechSampleRecorder()
+
+    static let realtimeSpeech = VoiceDiagnostics.Probe(id: "realtime-speech", title: "Realtime Vorlesen (marin)",
+                                                       url: VoiceDiagnostics.clientSecrets.url)
+    static let realtimeTranscription = VoiceDiagnostics.Probe(id: "realtime-transcription", title: "Realtime Spracherkennung",
+                                                              url: VoiceDiagnostics.clientSecrets.url)
 
     func run(client: ChatGPTClient) async {
         guard !isRunning else { return }
         isRunning = true
         defer { isRunning = false }
         checks = []
-        speechAudio = nil
+        audio = [:]
 
         let sample = await recorder.germanSample()
+        let wav = sample.map { VoiceDiagnostics.wav(samples: $0.samples, sampleRate: $0.rate) }
         if let sample {
-            let form = ChatGPTClient.multipart(fields: [("model", "gpt-4o-mini-transcribe")], file: sample,
+            await realtimeTranscription(client: client, pcm: RealtimeProbe.resample(sample.samples, from: sample.rate))
+        }
+        await realtimeSpeech(client: client)
+        if let wav {
+            let form = ChatGPTClient.multipart(fields: [("model", "gpt-4o-mini-transcribe")], file: wav,
                                                fileName: "audio.wav", mimeType: "audio/wav")
             await probe(VoiceDiagnostics.transcriptions, client: client, body: form.body, contentType: form.contentType)
         }
         await probe(VoiceDiagnostics.speech, client: client, body: VoiceDiagnostics.speechBody(), contentType: "application/json") { data in
-            self.speechAudio = data
+            self.audio[VoiceDiagnostics.speech.id] = data
         }
         await probe(VoiceDiagnostics.realtimeCalls, client: client, body: VoiceDiagnostics.realtimeBody(sdp: "v=0"),
                     contentType: "application/json")
-        await probe(VoiceDiagnostics.clientSecrets, client: client, body: VoiceDiagnostics.clientSecretBody(),
-                    contentType: "application/json")
-        if let sample {
-            let form = ChatGPTClient.multipart(fields: [], file: sample, fileName: "audio.wav", mimeType: "audio/wav")
+        if let wav {
+            let form = ChatGPTClient.multipart(fields: [], file: wav, fileName: "audio.wav", mimeType: "audio/wav")
             await probe(VoiceDiagnostics.chatGPTTranscribe, client: client, body: form.body, contentType: form.contentType)
         } else {
             checks.append(VoiceCheck(id: "sample", title: "Testaufnahme", outcome: .failed,
@@ -157,11 +178,55 @@ final class VoiceDiagnosticsModel {
         }
     }
 
-    func playSpeech() {
-        guard let speechAudio else { return }
+    func play(_ id: String) {
+        guard let data = audio[id] else { return }
         try? AVAudioSession.sharedInstance().setCategory(.playback)
-        player = try? AVAudioPlayer(data: speechAudio)
+        player = try? AVAudioPlayer(data: data)
         player?.play()
+    }
+
+    private func realtimeSpeech(client: ChatGPTClient) async {
+        let probe = Self.realtimeSpeech
+        guard let secret = await secret(for: probe, client: client, body: RealtimeProbe.speechSessionBody(voice: "marin")) else { return }
+        let result = await RealtimeProbe.speak("Ich habe das Blumengießen auf morgen um neun Uhr verschoben.", secret: secret)
+        if result.audio.isEmpty {
+            checks.append(VoiceCheck(id: probe.id, title: probe.title, outcome: .unavailable,
+                                     detail: "Sitzung ok, kein Audio – \(result.error ?? "?") [\(result.events.joined(separator: ", "))]"))
+            return
+        }
+        let samples = result.audio.withUnsafeBytes { Array($0.bindMemory(to: Int16.self)) }
+        audio[probe.id] = VoiceDiagnostics.wav(samples: samples, sampleRate: RealtimeProbe.sampleRate)
+        let seconds = Double(samples.count) / Double(RealtimeProbe.sampleRate)
+        checks.append(VoiceCheck(id: probe.id, title: probe.title, outcome: .available,
+                                 detail: String(format: "%.1f s Audio. Gesprochen: „%@“", seconds, result.transcript)))
+    }
+
+    private func realtimeTranscription(client: ChatGPTClient, pcm: Data) async {
+        let probe = Self.realtimeTranscription
+        guard let secret = await secret(for: probe, client: client, body: RealtimeProbe.transcriptionSessionBody()) else { return }
+        let result = await RealtimeProbe.transcribe(pcm, secret: secret)
+        if result.transcript.isEmpty {
+            checks.append(VoiceCheck(id: probe.id, title: probe.title, outcome: .unavailable,
+                                     detail: "Sitzung ok, kein Text – \(result.error ?? "?") [\(result.events.joined(separator: ", "))]"))
+        } else {
+            checks.append(VoiceCheck(id: probe.id, title: probe.title, outcome: .available, detail: "Erkannt: „\(result.transcript)“"))
+        }
+    }
+
+    /// A client secret for a Realtime session, or nil after recording why it failed.
+    private func secret(for probe: VoiceDiagnostics.Probe, client: ChatGPTClient, body: Data) async -> String? {
+        do {
+            let reply = try await client.post(probe.url, body: body, contentType: "application/json")
+            if (200..<300).contains(reply.status), let secret = RealtimeProbe.secret(from: reply.body) { return secret }
+            var check = VoiceDiagnostics.check(probe, status: reply.status, body: reply.body)
+            check.detail = "Sitzung: " + check.detail
+            checks.append(check)
+        } catch let error as ChatGPTError {
+            checks.append(VoiceDiagnostics.check(probe, error: error))
+        } catch {
+            checks.append(VoiceCheck(id: probe.id, title: probe.title, outcome: .failed, detail: error.localizedDescription))
+        }
+        return nil
     }
 
     private func probe(_ probe: VoiceDiagnostics.Probe, client: ChatGPTClient, body: Data, contentType: String,
@@ -171,6 +236,8 @@ final class VoiceDiagnosticsModel {
             let check = VoiceDiagnostics.check(probe, status: reply.status, body: reply.body)
             if check.outcome == .available, (200..<300).contains(reply.status) { onAudio?(reply.body) }
             checks.append(check)
+        } catch let error as ChatGPTError {
+            checks.append(VoiceDiagnostics.check(probe, error: error))
         } catch {
             checks.append(VoiceCheck(id: probe.id, title: probe.title, outcome: .failed, detail: error.localizedDescription))
         }
@@ -204,8 +271,8 @@ struct VoiceDiagnosticsView: View {
                             Label(check.title, systemImage: icon(check.outcome))
                                 .foregroundStyle(color(check.outcome))
                             Text(check.detail).font(.footnote).foregroundStyle(.secondary).textSelection(.enabled)
-                            if check.id == VoiceDiagnostics.speech.id, model.speechAudio != nil {
-                                Button("Abspielen", systemImage: "play.fill") { model.playSpeech() }
+                            if model.audio[check.id] != nil {
+                                Button("Abspielen", systemImage: "play.fill") { model.play(check.id) }
                                     .buttonStyle(.bordered)
                             }
                         }
