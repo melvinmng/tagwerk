@@ -590,22 +590,38 @@ public enum AIPlanSchemas {
 
 // MARK: - Block duration
 
-/// Longest free stretch of the day in minutes: working hours minus busy events (with buffer), lunch
-/// and existing blocks; with `fromMinutes` (today) only the part from then on.
-public func largestFreeSlot(_ day: PlanInputDay, fromMinutes: Int?) -> Int {
-    guard let hours = day.hours, hours.minutes > 0 else { return 0 }
+/// Free stretches of the day in minutes: working hours minus busy events (with buffer), lunch and
+/// existing blocks; with `fromMinutes` (today) only from then on.
+public func freeGaps(_ day: PlanInputDay, fromMinutes: Int?) -> [Range<Int>] {
+    guard let hours = day.hours, hours.minutes > 0 else { return [] }
     let start = max(hours.startMinutes, fromMinutes ?? hours.startMinutes)
-    guard start < hours.endMinutes else { return 0 }
+    guard start < hours.endMinutes else { return [] }
     var taken = day.busy.map { ($0.lowerBound - day.bufferMinutes)..<($0.upperBound + day.bufferMinutes) } + day.blocks
     if let lunch = day.lunch { taken.append(lunch) }
+    var gaps: [Range<Int>] = []
     var cursor = start
-    var largest = 0
     for range in taken.sorted(by: { $0.lowerBound < $1.lowerBound }) {
-        if range.lowerBound > cursor { largest = max(largest, min(range.lowerBound, hours.endMinutes) - cursor) }
+        if range.lowerBound > cursor { gaps.append(cursor..<min(range.lowerBound, hours.endMinutes)) }
         cursor = max(cursor, range.upperBound)
         if cursor >= hours.endMinutes { break }
     }
-    if cursor < hours.endMinutes { largest = max(largest, hours.endMinutes - cursor) }
+    if cursor < hours.endMinutes { gaps.append(cursor..<hours.endMinutes) }
+    return gaps.filter { !$0.isEmpty }
+}
+
+/// Longest free stretch of the day in minutes (see `freeGaps`).
+public func largestFreeSlot(_ day: PlanInputDay, fromMinutes: Int?) -> Int {
+    freeGaps(day, fromMinutes: fromMinutes).map(\.count).max() ?? 0
+}
+
+/// Where a copy of a block goes ("Duplizieren"): the first free stretch from `after` on that holds
+/// `minutes`; otherwise the largest one from then on, shortened (at least 15 minutes). `nil` if none.
+public func nextFreeSlot(_ day: PlanInputDay, after: Int, minutes: Int, fromMinutes: Int?) -> Range<Int>? {
+    let gaps = freeGaps(day, fromMinutes: max(after, fromMinutes ?? after))
+    if let fitting = gaps.first(where: { $0.count >= minutes }) {
+        return fitting.lowerBound..<(fitting.lowerBound + minutes)
+    }
+    guard let largest = gaps.max(by: { $0.count < $1.count }), largest.count >= 15 else { return nil }
     return largest
 }
 
@@ -620,4 +636,22 @@ public func blockMinutes(estimate: Int?, alreadyBlocked: Int, defaultMinutes: In
     guard remaining > maxSession || remaining > largestFreeSlot else { return remaining }
     let slot = min(largestFreeSlot, maxSession)
     return slot >= 15 ? slot : min(remaining, maxSession)
+}
+
+/// First day whose blocks count as work on the current occurrence of a recurring task (user rule
+/// 2026-11-18): daily only today, every n days the last n days, weekly the last six days and today,
+/// monthly since the same day of the previous month. `nil` for rules Tagwerk cannot read.
+public func sessionWindowStart(for rule: RecurrenceRule, today: PlanDay, calendar: Calendar) -> PlanDay? {
+    switch rule {
+    case .daily(let interval):
+        return today.adding(days: -(max(1, interval) - 1), calendar: calendar)
+    case .weekly(let interval, _):
+        return today.adding(days: -(7 * max(1, interval) - 1), calendar: calendar)
+    case .monthly(let interval, _):
+        let start = today.startDate(in: calendar)
+        let back = calendar.date(byAdding: .month, value: -max(1, interval), to: start) ?? start
+        return PlanDay(date: back, calendar: calendar).adding(days: 1, calendar: calendar)
+    case .unsupported:
+        return nil
+    }
 }

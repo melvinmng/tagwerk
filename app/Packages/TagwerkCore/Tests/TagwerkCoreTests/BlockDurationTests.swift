@@ -51,9 +51,49 @@ struct BlockDurationTests {
         #expect(largestFreeSlot(input, fromMinutes: 960) == 120)
     }
 
+    @Test func nextFreeSlot_firstFittingAfterOriginal() {
+        // free 10–12, 13–14, 14:30–18; after 10:30, 90 min → 14:30 (10:30–12 has 90 too: first fit wins).
+        let input = planDay(busy: [event(9, 10)], blocks: [840..<870])
+        #expect(nextFreeSlot(input, after: 630, minutes: 90, fromMinutes: nil) == 630..<720)
+        #expect(nextFreeSlot(input, after: 660, minutes: 90, fromMinutes: nil) == 870..<960)
+    }
+
+    @Test func nextFreeSlot_noFit_usesLargestShortened() {
+        let input = planDay(busy: [event(9, 10)], blocks: [840..<870])
+        #expect(nextFreeSlot(input, after: 870, minutes: 300, fromMinutes: nil) == 870..<1080)
+        #expect(nextFreeSlot(input, after: 1075, minutes: 30, fromMinutes: nil) == nil)
+    }
+
     @Test func largestFreeSlot_dayOff_isZero() {
         var input = planDay()
         input.hours = nil
         #expect(largestFreeSlot(input, fromMinutes: nil) == 0)
+    }
+}
+
+struct SessionWindowTests {
+    let calendar = makeCalendar()
+    let today = PlanDay(year: 2026, month: 11, day: 18)
+
+    @Test func daily_countsOnlyToday() {
+        #expect(sessionWindowStart(for: .daily(interval: 1), today: today, calendar: calendar) == today)
+    }
+
+    @Test func everyThreeDays_countsThreeDays() {
+        #expect(sessionWindowStart(for: .daily(interval: 3), today: today, calendar: calendar) == PlanDay(year: 2026, month: 11, day: 16))
+    }
+
+    @Test func weekly_countsLastSixDaysAndToday() {
+        #expect(sessionWindowStart(for: .weekly(interval: 1, weekdays: [4]), today: today, calendar: calendar)
+            == PlanDay(year: 2026, month: 11, day: 12))
+    }
+
+    @Test func monthly_countsSinceSameDayLastMonth() {
+        #expect(sessionWindowStart(for: .monthly(interval: 1, day: 18), today: today, calendar: calendar)
+            == PlanDay(year: 2026, month: 10, day: 19))
+    }
+
+    @Test func unsupported_hasNoWindow() {
+        #expect(sessionWindowStart(for: .unsupported, today: today, calendar: calendar) == nil)
     }
 }
