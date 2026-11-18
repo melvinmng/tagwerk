@@ -1068,6 +1068,29 @@ final class PlanningModel {
         await reload()
     }
 
+    // MARK: Events for the assistant (issue #118): errors go back to the model instead of `lastError`.
+
+    var eventCalendars: [ListInfo] { calendarStore.eventCalendars() }
+
+    func event(id: String) -> CalendarEvent? { calendarStore.event(id: id) }
+
+    func createEventReportingErrors(_ draft: EventDraft) async throws -> CalendarEvent {
+        let created = try calendarStore.createEvent(draft)
+        await reload()
+        return created
+    }
+
+    func updateEventReportingErrors(_ event: CalendarEvent, with draft: EventDraft, span: EventSpan) async throws -> CalendarEvent {
+        let updated = try calendarStore.updateEvent(id: event.id, with: draft, span: span, expectedVersion: event.version)
+        await reload()
+        return updated
+    }
+
+    func deleteEventReportingErrors(_ event: CalendarEvent, span: EventSpan) async throws {
+        try calendarStore.deleteEvent(id: event.id, span: span, expectedVersion: event.version)
+        await reload()
+    }
+
     /// "Getrennt anzeigen": undoes the merges into this event, so its copies appear again.
     func showSeparately(_ event: CalendarEvent) async {
         for suggestion in appliedMerges[event.id] ?? [] {

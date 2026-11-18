@@ -69,6 +69,8 @@ final class FakeCalendarStore: CalendarStore {
             storedEvents[position].isAllDay = draft.isAllDay
             storedEvents[position].url = draft.url
             storedEvents[position].notes = draft.notes
+            storedEvents[position].location = draft.location
+            storedEvents[position].calendarID = draft.calendarID
             storedEvents[position].version = "v\(counter)"
         }
         return storedEvents[index]

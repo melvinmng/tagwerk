@@ -66,7 +66,8 @@ struct AppToolsTests {
         #expect(tools.kind(of: "list_tasks") == .read)
         #expect(tools.kind(of: "get_task") == .read)
         #expect(tools.kind(of: "list_events") == .read)
-        for name in ["create_task", "update_task", "reschedule_task", "complete_task", "assign_to_day", "create_time_block",
+        #expect(tools.kind(of: "list_calendars") == .read)
+        for name in ["create_event", "update_event", "delete_event", "create_task", "update_task", "reschedule_task", "complete_task", "assign_to_day", "create_time_block",
                      "link_event_to_task", "set_day_hours", "set_lunch", "mark_events_free", "plan_period", "add_comment"] {
             #expect(tools.kind(of: name) == .write, "\(name)")
         }
@@ -178,6 +179,118 @@ struct AppToolsTests {
         let result = await run(tools, "add_comment", #"{"id":"local:Fahrrad","body":"Hallo"}"#)
         #expect(result["error"] as? String == "Kommentare gibt es nur bei GitHub-Issues.")
     }
+
+    // MARK: Events (issue #118)
+
+    private func date(_ day: Int, _ hour: Int, _ minute: Int = 0) -> Date {
+        calendar.date(from: DateComponents(year: 2026, month: 11, day: day, hour: hour, minute: minute))!
+    }
+
+    private func addWorkCalendar() {
+        calendarStore.calendars.append(ListInfo(id: "work", title: "Arbeit", colorHex: nil, kind: .calDAV))
+    }
+
+    @Test func createEvent_goesToPlanCalendarByDefault() async throws {
+        let (tools, _) = await make()
+        let result = await run(tools, "create_event", #"{"title":"Zahnarzt","start":"2026-11-19T10:00","end":"2026-11-19T11:00","all_day":false,"calendar_id":null,"location":"Praxis","notes":null}"#)
+        #expect(result["ok"] as? Bool == true, "\(result)")
+        let event = try #require(calendarStore.storedEvents.first)
+        #expect(event.calendarID == "plan")
+        #expect(event.title == "Zahnarzt")
+        #expect(event.start == date(19, 10))
+        #expect(event.end == date(19, 11))
+        #expect(event.location == "Praxis")
+        #expect(result["id"] as? String == event.id)
+    }
+
+    @Test func createEvent_inNamedCalendar_andRefusesUnknown() async throws {
+        addWorkCalendar()
+        let (tools, _) = await make()
+        let result = await run(tools, "create_event", #"{"title":"Review","start":"2026-11-19T14:00","end":"2026-11-19T15:00","all_day":false,"calendar_id":"work","location":null,"notes":null}"#)
+        #expect(result["ok"] as? Bool == true)
+        #expect(calendarStore.storedEvents.first?.calendarID == "work")
+        let unknown = await run(tools, "create_event", #"{"title":"X","start":"2026-11-19T14:00","end":"2026-11-19T15:00","all_day":false,"calendar_id":"birthdays","location":null,"notes":null}"#)
+        #expect(unknown["error"] != nil)
+        #expect(calendarStore.storedEvents.count == 1)
+    }
+
+    @Test func createEvent_allDay_spansInclusiveDays() async throws {
+        let (tools, _) = await make()
+        let result = await run(tools, "create_event", #"{"title":"Urlaub","start":"2026-11-23","end":"2026-11-27","all_day":true,"calendar_id":null,"location":null,"notes":null}"#)
+        #expect(result["ok"] as? Bool == true, "\(result)")
+        let event = try #require(calendarStore.storedEvents.first)
+        #expect(event.isAllDay)
+        #expect(event.start == date(23, 0))
+        #expect(event.end == date(28, 0))
+    }
+
+    @Test func createEvent_refusesEndBeforeStart() async throws {
+        let (tools, _) = await make()
+        let result = await run(tools, "create_event", #"{"title":"X","start":"2026-11-19T11:00","end":"2026-11-19T10:00","all_day":false,"calendar_id":null,"location":null,"notes":null}"#)
+        #expect(result["error"] != nil)
+        #expect(calendarStore.storedEvents.isEmpty)
+    }
+
+    @Test func updateEvent_changesGivenFieldsOnly() async throws {
+        addWorkCalendar()
+        let (tools, _) = await make()
+        _ = await run(tools, "create_event", #"{"title":"Zahnarzt","start":"2026-11-19T10:00","end":"2026-11-19T11:00","all_day":false,"calendar_id":null,"location":"Praxis","notes":"Karte"}"#)
+        let id = try #require(calendarStore.storedEvents.first?.id)
+        let result = await run(tools, "update_event", #"{"event_id":"\#(id)","title":null,"start":"2026-11-19T15:00","end":"2026-11-19T16:30","all_day":null,"calendar_id":"work","location":null,"notes":null,"series":false}"#)
+        #expect(result["ok"] as? Bool == true, "\(result)")
+        let event = try #require(calendarStore.storedEvents.first)
+        #expect(event.title == "Zahnarzt")
+        #expect(event.start == date(19, 15))
+        #expect(event.end == date(19, 16, 30))
+        #expect(event.location == "Praxis")
+        #expect(event.notes == "Karte")
+        #expect(event.calendarID == "work")
+    }
+
+    @Test func updateEvent_startOnly_keepsDuration() async throws {
+        let (tools, _) = await make()
+        _ = await run(tools, "create_event", #"{"title":"Zahnarzt","start":"2026-11-19T10:00","end":"2026-11-19T11:00","all_day":false,"calendar_id":null,"location":null,"notes":null}"#)
+        let id = try #require(calendarStore.storedEvents.first?.id)
+        _ = await run(tools, "update_event", #"{"event_id":"\#(id)","title":"Zahnarzt Kontrolle","start":"2026-11-20T08:30","end":null,"all_day":null,"calendar_id":null,"location":null,"notes":null,"series":false}"#)
+        let event = try #require(calendarStore.storedEvents.first)
+        #expect(event.title == "Zahnarzt Kontrolle")
+        #expect(event.start == date(20, 8, 30))
+        #expect(event.end == date(20, 9, 30))
+    }
+
+    @Test func deleteEvent_removesIt_andReportsMissing() async throws {
+        let (tools, _) = await make()
+        _ = await run(tools, "create_event", #"{"title":"Zahnarzt","start":"2026-11-19T10:00","end":"2026-11-19T11:00","all_day":false,"calendar_id":null,"location":null,"notes":null}"#)
+        let id = try #require(calendarStore.storedEvents.first?.id)
+        let result = await run(tools, "delete_event", #"{"event_id":"\#(id)","series":false}"#)
+        #expect(result["ok"] as? Bool == true)
+        #expect(calendarStore.storedEvents.isEmpty)
+        let again = await run(tools, "delete_event", #"{"event_id":"\#(id)","series":false}"#)
+        #expect(again["error"] != nil)
+    }
+
+    @Test func listCalendars_marksPlanAndWritable() async throws {
+        addWorkCalendar()
+        let (tools, _) = await make()
+        let result = await run(tools, "list_calendars", "{}")
+        let calendars = try #require(result["calendars"] as? [[String: Any]])
+        #expect(calendars.map { $0["id"] as? String } == ["plan", "work"])
+        #expect(calendars.first?["default"] as? Bool == true)
+        #expect(calendars.last?["default"] as? Bool == false)
+        #expect(calendars.allSatisfy { $0["writable"] as? Bool == true })
+    }
+
+    @Test func listEvents_showsCalendarAndEditability() async throws {
+        let (tools, _) = await make()
+        _ = await run(tools, "create_event", #"{"title":"Zahnarzt","start":"2026-11-19T10:00","end":"2026-11-19T11:00","all_day":false,"calendar_id":null,"location":"Praxis","notes":null}"#)
+        let result = await run(tools, "list_events", #"{"from":"2026-11-19","to":"2026-11-19"}"#)
+        let event = try #require((result["events"] as? [[String: Any]])?.first)
+        #expect(event["calendar"] as? String == "Tagwerk")
+        #expect(event["calendarId"] as? String == "plan")
+        #expect(event["location"] as? String == "Praxis")
+        #expect(event["editable"] as? Bool == true)
+        #expect(event["recurring"] as? Bool == false)
+    }
 }
 
 @MainActor
@@ -211,4 +324,5 @@ struct LinkSuggestionTests {
         #expect(TaskContextMenu.showsAIEntries(isSignedIn: true))
         #expect(!TaskContextMenu.showsAIEntries(isSignedIn: false))
     }
+
 }
