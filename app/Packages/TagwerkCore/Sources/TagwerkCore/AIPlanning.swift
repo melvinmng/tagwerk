@@ -811,57 +811,72 @@ private func dueString(_ due: DueDate) -> String {
 // MARK: - Model JSON
 
 extension PlanInput {
-    /// The input as compact JSON for the model, with readable dates and times.
+    /// The input as compact JSON for the model (proposal 2026-11-18, §2): only what the model needs; free
+    /// stretches are computed here so the model does not have to.
     public func modelJSON() throws -> Data {
         struct Span: Encodable { let start: String; let end: String }
-        struct Event: Encodable {
-            let title: String; let start: String?; let end: String?; let allDay: Bool
-            let busy: Bool; let deadline: Bool; let linkedToTask: Bool
-        }
+        struct Event: Encodable { let title: String; let start: String; let end: String }
         struct Day: Encodable {
-            let day: String; let dayOff: Bool; let workStart: String?; let workEnd: String?; let lunch: Span?
-            let bufferMinutes: Int; let recurringMinutes: Int; let availableMinutes: Int; let plannedMinutes: Int
-            let freeMinutes: Int; let events: [Event]; let existingBlocks: [Span]
+            let day: String; let dayOff: Bool; let workStart: String?; let workEnd: String?
+            let freeSlots: [Span]?; let freeMinutes: Int; let overbookedBy: Int?
+            let busyEvents: [Event]?; let deadlines: [String]?
         }
         struct Task: Encodable {
             let id: String; let source: String; let title: String; let due: String?; let priority: String?
-            let minutes: Int?; let important: Bool; let plannedDay: String?; let deadline: String?
+            let minutes: Int?; let remainingMinutes: Int?; let sessionMinutes: Int?; let latestStart: String?
+            let important: Bool; let plannedDay: String?; let deadline: String?
         }
         struct Limits: Encodable {
             let earliestStart: String; let latestEnd: String; let normalMaximumHours: Int; let emergencyMaximumHours: Int
         }
         struct Body: Encodable {
             let scope: String; let now: String; let timeZone: String; let defaultTaskMinutes: Int
-            let days: [Day]; let laterDays: [Day]; let workdayLimits: Limits; let tasks: [Task]
+            let days: [Day]; let laterDays: [Day]; let workdayLimits: Limits; let tasks: [Task]; let omittedCount: Int
         }
-        func encodeDay(_ day: PlanInputDay) -> Day {
-            Day(day: dayString(day.day), dayOff: day.hours == nil,
-                workStart: day.hours.map { timeString($0.startMinutes) }, workEnd: day.hours.map { timeString($0.endMinutes) },
-                lunch: day.lunch.map { Span(start: timeString($0.lowerBound), end: timeString($0.upperBound)) },
-                bufferMinutes: day.bufferMinutes, recurringMinutes: day.recurringMinutes,
-                availableMinutes: day.availableMinutes, plannedMinutes: day.plannedMinutes,
-                freeMinutes: day.availableMinutes - day.plannedMinutes,
-                events: day.events.map { event in
-                    Event(title: event.title, start: event.start.map(timeString), end: event.end.map(timeString),
-                          allDay: event.allDay, busy: event.busy, deadline: event.deadline, linkedToTask: event.linkedToTask)
-                },
-                existingBlocks: day.blocks.map { Span(start: timeString($0.lowerBound), end: timeString($0.upperBound)) })
+        let isDayPlan = scope == .day
+        func free(_ day: PlanInputDay) -> Int { max(0, day.availableMinutes - day.plannedMinutes) }
+        func deadlines(_ day: PlanInputDay) -> [String]? {
+            let titles = day.events.filter(\.deadline).map(\.title)
+            return titles.isEmpty ? nil : titles
+        }
+        /// The day being planned: hours, free stretches from now, busy events, overbooking.
+        func planningDay(_ day: PlanInputDay) -> Day {
+            let gaps = freeGaps(day, fromMinutes: day.day == today ? nowMinutes : nil)
+            let busy = day.events.filter { $0.busy }.compactMap { event -> Event? in
+                guard let start = event.start, let end = event.end else { return nil }
+                return Event(title: event.title, start: timeString(start), end: timeString(end))
+            }
+            return Day(day: dayString(day.day), dayOff: day.hours == nil,
+                       workStart: day.hours.map { timeString($0.startMinutes) }, workEnd: day.hours.map { timeString($0.endMinutes) },
+                       freeSlots: gaps.map { Span(start: timeString($0.lowerBound), end: timeString($0.upperBound)) },
+                       freeMinutes: max(0, gaps.reduce(0) { $0 + $1.count } - day.recurringMinutes),
+                       overbookedBy: day.plannedMinutes > day.availableMinutes ? day.plannedMinutes - day.availableMinutes : nil,
+                       busyEvents: busy.isEmpty ? nil : busy, deadlines: deadlines(day))
+        }
+        /// Days of a week or month, and move targets: free time only.
+        func summaryDay(_ day: PlanInputDay, withDeadlines: Bool) -> Day {
+            Day(day: dayString(day.day), dayOff: day.hours == nil, workStart: nil, workEnd: nil, freeSlots: nil,
+                freeMinutes: day.hours == nil ? 0 : free(day),
+                overbookedBy: day.plannedMinutes > day.availableMinutes && day.hours != nil ? day.plannedMinutes - day.availableMinutes : nil,
+                busyEvents: nil, deadlines: withDeadlines ? deadlines(day) : nil)
         }
         let body = Body(
             scope: scope.rawValue,
             now: dayString(today) + "T" + timeString(nowMinutes),
             timeZone: timeZoneID,
             defaultTaskMinutes: defaultTaskMinutes,
-            days: days.map(encodeDay),
-            laterDays: laterDays.map(encodeDay),
+            days: days.map { isDayPlan ? planningDay($0) : summaryDay($0, withDeadlines: true) },
+            laterDays: laterDays.map { summaryDay($0, withDeadlines: false) },
             workdayLimits: Limits(earliestStart: timeString(WorkdayLimits.earliest), latestEnd: timeString(WorkdayLimits.latest),
                                   normalMaximumHours: WorkdayLimits.normalMaximum / 60,
                                   emergencyMaximumHours: WorkdayLimits.emergencyMaximum / 60),
             tasks: tasks.map { task in
                 Task(id: task.id, source: task.source.rawValue, title: task.title, due: task.due.map(dueString),
-                     priority: task.priority?.label, minutes: task.minutes, important: task.important,
-                     plannedDay: task.plannedDay.map(dayString), deadline: task.anchor.map(dueString))
-            }
+                     priority: task.priority?.label, minutes: task.minutes, remainingMinutes: task.remainingMinutes,
+                     sessionMinutes: task.sessionMinutes, latestStart: task.latestStart.map(dayString),
+                     important: task.important, plannedDay: task.plannedDay.map(dayString), deadline: task.anchor.map(dueString))
+            },
+            omittedCount: omittedCount
         )
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.sortedKeys]

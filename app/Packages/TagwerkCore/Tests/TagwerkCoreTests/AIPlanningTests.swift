@@ -345,6 +345,7 @@ struct AIPlanningTests {
         dayInput.laterDays = [planDay(tomorrow)]
         let json = try #require(try JSONSerialization.jsonObject(with: dayInput.modelJSON()) as? [String: Any])
         #expect((json["laterDays"] as? [[String: Any]])?.first?["day"] as? String == "2026-11-19")
+        #expect((json["laterDays"] as? [[String: Any]])?.first?["freeSlots"] == nil)
         let limits = try #require(json["workdayLimits"] as? [String: Any])
         #expect(limits["latestEnd"] as? String == "21:00")
         #expect(limits["emergencyMaximumHours"] as? Int == 12)
@@ -503,22 +504,21 @@ struct AIPlanningTests {
         #expect(day.availableMinutes == 480)
     }
 
-    @Test func modelJSON_usesReadableStrings() throws {
-        let day = planDay(today, events: [event("Meeting", 14, to: 15, calendarID: "deadlines")])
-        var withDeadline = day
-        withDeadline.events[0].deadline = true
+    @Test func modelJSON_dayPlan_hasFreeSlotsFromNow_andBusyEventsOnly() throws {
+        var day = planDay(today, events: [event("Meeting", 14, to: 15), event("Fokus", 16, to: 17, busy: false)])
+        day.events[0].deadline = true
         let json = try #require(try JSONSerialization.jsonObject(
-            with: input(days: [withDeadline], tasks: [task("a", due: DueDate(year: 2026, month: 11, day: 20))]).modelJSON()
+            with: input(days: [day], tasks: [task("a", due: DueDate(year: 2026, month: 11, day: 20))]).modelJSON()
         ) as? [String: Any])
         #expect(json["now"] as? String == "2026-11-18T10:00")
-        #expect(json["timeZone"] as? String == "Europe/Berlin")
         let firstDay = try #require((json["days"] as? [[String: Any]])?.first)
-        #expect(firstDay["day"] as? String == "2026-11-18")
         #expect(firstDay["workStart"] as? String == "09:00")
-        #expect(firstDay["workEnd"] as? String == "18:00")
-        let events = try #require(firstDay["events"] as? [[String: Any]])
-        #expect(events.first?["start"] as? String == "14:00")
-        #expect(events.first?["deadline"] as? Bool == true)
+        // From 10:00, lunch 12–13, meeting 14–15 with 10 min buffer.
+        let slots = try #require(firstDay["freeSlots"] as? [[String: String]])
+        #expect(slots.map { $0["start"] ?? "" } == ["10:00", "13:00", "15:10"])
+        #expect((firstDay["busyEvents"] as? [[String: Any]])?.map { $0["title"] as? String } == ["Meeting"])
+        #expect(firstDay["deadlines"] as? [String] == ["Meeting"])
+        #expect(firstDay["bufferMinutes"] == nil)
         let firstTask = try #require((json["tasks"] as? [[String: Any]])?.first)
         #expect(firstTask["due"] as? String == "2026-11-20")
         #expect(firstTask["id"] as? String == "local:a")
