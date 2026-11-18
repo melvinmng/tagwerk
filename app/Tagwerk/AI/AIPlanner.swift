@@ -81,8 +81,10 @@ final class AIPlanner {
         // Suggestions the user moved by hand stay where they are (mockup VM1): their tasks are not planned
         // again, and their time is taken.
         let pinned = pinnedSuggestions(replacedBy: scope, days: Set(planning.days.map(\.day)))
+        // "Mit KI planen" names its task explicitly; only a whole day plan leaves such tasks out.
+        let elsewhere = scope == .day && taskID == nil ? suggestedElsewhere(than: anchor) : []
         var input = makeInput(scope: scope, only: taskID.map { [$0] }, lookahead: Set(targets.map(\.day)),
-                              excluding: Set(pinned.compactMap(\.taskID)))
+                              excluding: Set(pinned.compactMap(\.taskID)).union(elsewhere))
         input.laterDays = targets
         for suggestion in pinned where suggestion.kind == .block {
             guard let start = suggestion.startMinutes, let minutes = suggestion.minutes,
@@ -228,16 +230,24 @@ final class AIPlanner {
     private(set) var lastAcceptAll: AcceptUndo?
     @ObservationIgnored private var isAccepting = false
 
-    /// Accepts every open suggestion of the shown range: longer days first, then moves, then blocks and work days
-    /// (mockup AB1). Failed ones stay or move to "Nicht eingeplant".
-    func acceptAll() async {
+    /// The open batches of the shown range; with `scope` only that kind of plan (day plan vs. week and month plan),
+    /// so the day bar does not act on a week plan that touches the day (plan-tomorrow, F9).
+    private func openBatches(_ scope: PlanScope?) -> [SuggestionBatch] {
+        guard let scope else { return planning.suggestionBatches }
+        return planning.suggestionBatches.filter { ($0.scope == .day) == (scope == .day) }
+    }
+
+    /// Accepts every open suggestion of the shown range (of `scope`'s kind of plan, if given): longer days first,
+    /// then moves, then blocks and work days (mockup AB1). Failed ones stay or move to "Nicht eingeplant".
+    func acceptAll(scope: PlanScope? = nil) async {
         guard !isAccepting else { return }
         isAccepting = true
         defer { isAccepting = false }
         await planning.reload()
-        let open = planning.suggestionBatches.flatMap(\.suggestions)
+        let open = openBatches(scope).flatMap(\.suggestions)
         guard !open.isEmpty else { return }
         clearDismissUndo()
+        // The snapshot holds every batch of the range: "Widerrufen" restores all of them as they were.
         let batches = planning.suggestionBatches
         let result = await apply(open)
         var undo = result.undo
@@ -297,9 +307,10 @@ final class AIPlanner {
     /// How many suggestions the last "Verwerfen" or ✕ dropped.
     private(set) var dismissedCount = 0
 
-    /// "Verwerfen": drops all open suggestions, notes and risks of the shown range; "Widerrufen" restores them.
-    func dismissAll() async {
-        lastDismissed = planning.suggestionBatches
+    /// "Verwerfen": drops all open suggestions, notes and risks of the shown range (of `scope`'s kind of plan, if
+    /// given); "Widerrufen" restores them.
+    func dismissAll(scope: PlanScope? = nil) async {
+        lastDismissed = openBatches(scope)
         dismissedCount = lastDismissed.reduce(0) { $0 + $1.suggestions.count }
         clearAcceptUndo()
         for batch in lastDismissed { store.remove(batch.id) }
@@ -578,7 +589,9 @@ final class AIPlanner {
         case .day:
             return common + """
 
-            Tagesplan: Nutze nur freeSlots des Tages; rechne keine eigenen Lücken. Zuerst Blöcke für Aufgaben, die \
+            Tagesplan: Der geplante Tag ist days[0]; er kann nach dem Tag in now liegen (dann gelten seine ganzen \
+            freeSlots, und Aufgaben mit plannedDay vor days[0] sind liegen geblieben). \
+            Nutze nur freeSlots des Tages; rechne keine eigenen Lücken. Zuerst Blöcke für Aufgaben, die \
             schon auf dem Tag liegen (plannedDay), dann die übrigen in Listenreihenfolge. Jeder P1, der in eine freie \
             Lücke passt, bekommt einen Block; passt keiner, steht er mit Grund in unscheduled. Ist Luft, ziehe \
             Aufgaben der nächsten Tage vor und sage das. laterDays sind nur Ziele für moves.
@@ -618,6 +631,17 @@ final class AIPlanner {
             }
     }
 
+    /// Tasks with an open block or move suggestion on another future day: a new day plan leaves them out, so they
+    /// are not suggested twice. Suggestions for today do not count (plan-tomorrow, decision 7), nor do the day
+    /// batches this plan replaces (same rule as `SuggestionStore.replace`).
+    private func suggestedElsewhere(than day: PlanDay) -> Set<TaskID> {
+        let today = planning.today
+        let kept = store.batches().filter { !($0.scope == .day && $0.days.contains(day)) }
+        return Set(kept.flatMap(\.suggestions).filter { suggestion in
+            (suggestion.kind == .block || suggestion.kind == .move) && suggestion.day != day && suggestion.day > today
+        }.compactMap(\.taskID))
+    }
+
     static func violationMessage(_ violations: [PlanViolation]) -> String {
         let lines = violations.map { "- \($0.taskId): \($0.reason.text)" }.joined(separator: "\n")
         return "Diese Vorschläge verletzen die Regeln:\n\(lines)\nKorrigiere den Plan und antworte wieder vollständig im vorgegebenen Format."
@@ -637,9 +661,10 @@ final class AIPlanner {
         let everything = PlanDay(year: 1, month: 1, day: 1)...PlanDay(year: 9999, month: 12, day: 31)
         let now = planning.now()
         let dayStart = today.startDate(in: planning.calendar)
-        // Recurring reminders take part with their effort of the day (their time is reserved for them).
+        // Recurring reminders take part with their effort of the planned day (their time is reserved for them).
+        let effortDay = scope == .day ? max(today, planning.anchor) : today
         let tasks = planning.taskList.items.map { task -> TaskItem in
-            guard let recurring = planning.recurringItem(for: task, on: planning.today) else { return task }
+            guard let recurring = planning.recurringItem(for: task, on: effortDay) else { return task }
             var copy = task
             copy.estimateMinutes = recurring.minutes
             return copy
@@ -653,6 +678,10 @@ final class AIPlanner {
             excluding: excluding,
             lookaheadDays: workAhead() ? lookahead : [],
             blockedMinutes: planning.blockedMinutesByTask,
+            // Once today's working time is over, the plan of the next planning day may take today's leftovers and
+            // work due today (decision 6); the re-check on accepting uses the same rule.
+            earliestWorkDay: scope == .day && planning.isTodayOver && planning.anchor == planning.nextPlanDay
+                ? planning.nextPlanDay : nil,
             calendar: planning.calendar
         )
     }

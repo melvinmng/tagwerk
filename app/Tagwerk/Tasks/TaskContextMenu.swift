@@ -16,6 +16,8 @@ struct TaskMenuActions {
     /// "Arbeitstag: Mi. 18. Nov." or "noch nicht eingeplant".
     var plannedText = String(localized: "noch nicht eingeplant")
     var unassign: (() -> Void)? = nil
+    /// Day view only: the shown day, which "Mit KI planen" plans when it is today or later.
+    var shownDay: PlanDay? = nil
 }
 
 struct TaskContextMenu: View {
@@ -26,6 +28,13 @@ struct TaskContextMenu: View {
 
     /// The AI entries appear only with a ChatGPT sign-in (mockup d: order dates, AI, done, destructive).
     static func showsAIEntries(isSignedIn: Bool) -> Bool { isSignedIn }
+
+    /// The day "Mit KI planen" plans: the day the Planen day view shows, if it is today or later, else today
+    /// (plan-tomorrow, F8). Menus outside the day view pass no day.
+    static func aiPlanAnchor(shownDay: PlanDay?, today: PlanDay) -> PlanDay {
+        guard let shownDay, shownDay >= today else { return today }
+        return shownDay
+    }
 
     var body: some View {
         // Mockup F1: the planned day lives in Tagwerk only; the due date changes the source.
@@ -71,10 +80,11 @@ struct TaskContextMenu: View {
             Section {
                 Button("Mit KI planen", systemImage: "sparkles") {
                     let planning = environment.planning
+                    let day = Self.aiPlanAnchor(shownDay: actions.shownDay, today: planning.today)
                     environment.requestedTab = 0
                     planning.scope = .day
-                    planning.anchor = planning.today
-                    environment.planner.start(scope: .day, anchor: planning.today, taskID: item.id)
+                    planning.anchor = day
+                    environment.planner.start(scope: .day, anchor: day, taskID: item.id)
                 }
                 Button("Über diese Aufgabe sprechen", systemImage: "bubble.left.and.text.bubble.right") {
                     environment.assistant.open(task: item)

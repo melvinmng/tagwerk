@@ -172,6 +172,16 @@
         }
       }
     },
+    "%@ frei": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ free"
+          }
+        }
+      }
+    },
     "%@ frei von %@": {
       "localizations": {
         "de": {
@@ -204,6 +214,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Log %@ now"
+          }
+        }
+      }
+    },
+    "%@ keine Pause": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No break on %@"
           }
         }
       }
@@ -244,6 +264,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "%@ open"
+          }
+        }
+      }
+    },
+    "%@ planen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plan %@"
           }
         }
       }
@@ -454,6 +484,22 @@
         }
       }
     },
+    "%@, %@ Schritte": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@, %2$@ Schritte"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@, %2$@ steps"
+          }
+        }
+      }
+    },
     "%@, %@ bis %@": {
       "localizations": {
         "en": {
@@ -496,6 +542,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "%@, no meal logged"
+          }
+        }
+      }
+    },
+    "%@, keine Schritte": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@, no steps"
           }
         }
       }
@@ -923,46 +979,6 @@
         }
       }
     },
-    "%lld Trainings": {
-      "localizations": {
-        "de": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld Training"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld Trainings"
-                }
-              }
-            }
-          }
-        },
-        "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld workout"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld workouts"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "%lld Vorschläge": {
       "localizations": {
         "de": {
@@ -1239,6 +1255,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "%1$lld of %2$lld"
+          }
+        }
+      }
+    },
+    "%lld von heute": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld from today"
+          }
+        }
+      }
+    },
+    "%lld von heute übrig": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld left from today"
           }
         }
       }
@@ -1744,6 +1780,16 @@
         }
       }
     },
+    "Alle auf morgen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All to tomorrow"
+          }
+        }
+      }
+    },
     "Alle bestätigen (%lld)": {
       "localizations": {
         "en": {
@@ -1760,6 +1806,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "All until the deadline"
+          }
+        }
+      }
+    },
+    "Alle einplanen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Schedule all"
           }
         }
       }
@@ -1860,6 +1916,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "On day %lld of the month"
+          }
+        }
+      }
+    },
+    "An diesem Tag fällig, nicht zugeordnet": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Due this day, not assigned"
           }
         }
       }
@@ -3389,12 +3455,12 @@
         }
       }
     },
-    "Die Vorgaben sind Platzhalter, keine Empfehlung. Trag deine eigenen Ziele ein. Als Training zählt jede Einheit ab 10 min, aus Tagwerk oder aus Health.": {
+    "Die Vorgaben sind Platzhalter, keine Empfehlung. Trag deine eigenen Ziele ein. Zur Trainingszeit zählen Trainings aus Tagwerk und aus Health. Schritte liest Tagwerk aus Health; 0 blendet ein Ziel aus.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "The defaults are placeholders, not a recommendation. Enter your own goals. Any session of 10 min or more counts as a workout, from Tagwerk or from Health."
+            "value": "The defaults are placeholders, not a recommendation. Enter your own goals. Workouts from Tagwerk and from Health count toward training time. Tagwerk reads steps from Health; 0 hides a goal."
           }
         }
       }
@@ -3445,6 +3511,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "These events don’t exist."
+          }
+        }
+      }
+    },
+    "Diese Woche": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This week"
           }
         }
       }
@@ -3618,6 +3694,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Invitation: the person who invited you sets the time and title."
+          }
+        }
+      }
+    },
+    "Einplanen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Schedule"
           }
         }
       }
@@ -4872,6 +4958,16 @@
         }
       }
     },
+    "In Health erlauben %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Allow in Health %@"
+          }
+        }
+      }
+    },
     "In Health gespeichert.": {
       "localizations": {
         "en": {
@@ -5091,16 +5187,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "No plan calendar"
-          }
-        }
-      }
-    },
-    "Kein Training": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "No workouts"
           }
         }
       }
@@ -6173,6 +6259,46 @@
         }
       }
     },
+    "Morgen fällig, nicht zugeordnet": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Due tomorrow, not assigned"
+          }
+        }
+      }
+    },
+    "Morgen keine Pause": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No break tomorrow"
+          }
+        }
+      }
+    },
+    "Morgen planen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plan tomorrow"
+          }
+        }
+      }
+    },
+    "Morgen planen mit %lld von heute": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plan tomorrow with %lld from today"
+          }
+        }
+      }
+    },
     "Nach Anzahl": {
       "localizations": {
         "en": {
@@ -6645,12 +6771,32 @@
         }
       }
     },
+    "Nutze „Einplanen“ unten oder im Menü einer Aufgabe.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use “Schedule” below or in a task’s menu."
+          }
+        }
+      }
+    },
     "Nutze „Heute“ unten oder „Einplanen“ im Menü einer Aufgabe.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Use “Today” below or “Schedule” in a task’s menu."
+          }
+        }
+      }
+    },
+    "Nutze „Morgen“ unten oder „Einplanen“ im Menü einer Aufgabe.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use “Tomorrow” below or “Schedule” in a task’s menu."
           }
         }
       }
@@ -6795,6 +6941,22 @@
         }
       }
     },
+    "Pause %@ %@–%@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Pause %1$@ %2$@–%3$@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Break %1$@ %2$@–%3$@"
+          }
+        }
+      }
+    },
     "Pause heute %@–%@": {
       "localizations": {
         "de": {
@@ -6807,6 +6969,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Break today %1$@–%2$@"
+          }
+        }
+      }
+    },
+    "Pause morgen %@–%@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Pause morgen %1$@–%2$@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Break tomorrow %1$@–%2$@"
           }
         }
       }
@@ -7121,6 +7299,56 @@
           "stringUnit": {
             "state": "translated",
             "value": "Close"
+          }
+        }
+      }
+    },
+    "Schritte": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Steps"
+          }
+        }
+      }
+    },
+    "Schritte erlauben": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Allow steps"
+          }
+        }
+      }
+    },
+    "Schritte in Health erlauben": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Allow steps in Health"
+          }
+        }
+      }
+    },
+    "Schritte kommen aus Health (iPhone und Apple Watch, von Health zusammengeführt).": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Steps come from Health (iPhone and Apple Watch, merged by Health)."
+          }
+        }
+      }
+    },
+    "Schritte pro Tag: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Steps per day: %@"
           }
         }
       }
@@ -7767,22 +7995,22 @@
         }
       }
     },
-    "Tagwerk schreibt Mahlzeiten, Wasser und Trainings nach Health und liest Trainings. Ob das Lesen erlaubt ist, zeigt iOS nicht an: Fehlen Trainings der Apple Watch, prüfe den Zugriff in der App „Health“ unter Profil › Apps › Tagwerk.": {
+    "Tagwerk schreibt Mahlzeiten, Wasser und Trainings nach Health und liest Trainings und Schritte. Ob das Lesen erlaubt ist, zeigt iOS nicht an: Fehlen Trainings der Apple Watch oder steht bei den Schritten nur „–“, prüfe den Zugriff in der App „Health“ unter Profil › Apps › Tagwerk.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tagwerk writes meals, water and workouts to Health and reads workouts. iOS doesn’t show whether reading is allowed: if workouts from your Apple Watch are missing, check access in the Health app under Profile › Apps › Tagwerk."
+            "value": "Tagwerk writes meals, water and workouts to Health and reads workouts and steps. iOS doesn’t show whether reading is allowed: if workouts from your Apple Watch are missing or steps only show “–”, check access in the Health app under Profile › Apps › Tagwerk."
           }
         }
       }
     },
-    "Tagwerk speichert Mahlzeiten, Wasser und Trainings zusätzlich in Health und zeigt Trainings der Apple Watch und anderer Apps. Deine Einträge bleiben auch ohne Health in Tagwerk.": {
+    "Tagwerk speichert Mahlzeiten, Wasser und Trainings zusätzlich in Health und zeigt deine Schritte sowie Trainings der Apple Watch und anderer Apps. Deine Einträge bleiben auch ohne Health in Tagwerk.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tagwerk also saves meals, water and workouts to Health and shows workouts from Apple Watch and other apps. Your entries stay in Tagwerk even without Health."
+            "value": "Tagwerk also saves meals, water and workouts to Health and shows your steps and workouts from Apple Watch and other apps. Your entries stay in Tagwerk even without Health."
           }
         }
       }
@@ -8023,6 +8251,16 @@
         }
       }
     },
+    "Training diese Woche": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Training this week"
+          }
+        }
+      }
+    },
     "Training erfassen": {
       "localizations": {
         "en": {
@@ -8053,22 +8291,32 @@
         }
       }
     },
+    "Training pro Woche: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Training per week: %@"
+          }
+        }
+      }
+    },
+    "Training · Woche": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Training · week"
+          }
+        }
+      }
+    },
     "Trainings aus Health änderst oder löschst du in der App „Fitness“ oder „Health“.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Change or delete workouts from Health in the Fitness or Health app."
-          }
-        }
-      }
-    },
-    "Trainings pro Woche: %lld": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Workouts per week: %lld"
           }
         }
       }
@@ -8385,6 +8633,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Entered by you."
+          }
+        }
+      }
+    },
+    "Von heute übrig": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Left from today"
           }
         }
       }
@@ -9032,6 +9290,16 @@
         }
       }
     },
+    "Woche wählen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose week"
+          }
+        }
+      }
+    },
     "Wochenende": {
       "localizations": {
         "en": {
@@ -9472,6 +9740,16 @@
         }
       }
     },
+    "aus": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "off"
+          }
+        }
+      }
+    },
     "automatisch erkannt": {
       "localizations": {
         "en": {
@@ -9840,6 +10118,16 @@
         }
       }
     },
+    "keine Daten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "no data"
+          }
+        }
+      }
+    },
     "keine Fälligkeit": {
       "localizations": {
         "en": {
@@ -9969,6 +10257,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "not scheduled yet"
+          }
+        }
+      }
+    },
+    "ohne Ziel": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "no goal"
           }
         }
       }
@@ -10618,6 +10916,16 @@
         }
       }
     },
+    "„Einplanen“ legt die Aufgabe für diesen Tag fest; dann lässt sie sich ins Raster ziehen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“Schedule” sets the task for this day; then you can drag it onto the grid."
+          }
+        }
+      }
+    },
     "„Frei“ gilt nur in Tagwerk: Der Termin bleibt im Kalender, zählt aber nicht zur belegten Zeit.": {
       "localizations": {
         "en": {
@@ -10638,12 +10946,22 @@
         }
       }
     },
-    "„In Planen anzeigen“ zeigt Kalorien und Wasser von heute unter dem Datum im Tab „Planen“, sobald du etwas erfasst hast. Ist „Ernährung im Widget zeigen“ aus, stehen die Werte nicht im Widget. Auf dem Sperrbildschirm erscheinen sie nie.": {
+    "„In Planen anzeigen“ zeigt Kalorien, Wasser und Schritte von heute unter dem Datum im Tab „Planen“, sobald du etwas erfasst hast. Ist „Ernährung im Widget zeigen“ aus, stehen die Werte und die Schritte nicht im Widget. Auf dem Sperrbildschirm erscheinen sie nie.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "“Show in Plan” shows today’s calories and water under the date in the “Plan” tab as soon as you’ve logged something. If “Show nutrition in widget” is off, the values aren’t in the widget. They never appear on the Lock Screen."
+            "value": "“Show in Plan” shows today’s calories, water and steps under the date in the “Plan” tab as soon as you’ve logged something. If “Show nutrition in widget” is off, the values and steps aren’t in the widget. They never appear on the Lock Screen."
+          }
+        }
+      }
+    },
+    "„Morgen“ legt die Aufgabe für morgen fest; dann lässt sie sich ins Raster ziehen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“Tomorrow” sets the task for tomorrow; then you can drag it onto the grid."
           }
         }
       }

@@ -292,6 +292,7 @@ final class PlanningModel {
             if let due { return due < today }
             return allAssignments[task.id].map { $0 < today } ?? false
         }, calendar: calendar)
+        await updateEvening(open: open, allAssignments: allAssignments, recurringIDs: recurringIDs)
     }
 
     /// The AI view of days outside the shown range (e.g. the next week as targets for moving tasks away
@@ -1194,6 +1195,101 @@ final class PlanningModel {
         await reload()
     }
 
+    // MARK: Planning tomorrow (plan-tomorrow, MP2)
+
+    /// The evening entry "☾ Morgen planen" on today's capacity card.
+    struct EveningEntry: Equatable {
+        let day: PlanDay
+        let freeMinutes: Int
+        let leftCount: Int
+    }
+
+    /// Today has no working time left: a day off, or the clock has reached the end of today's work.
+    private(set) var isTodayOver = false
+    /// Once today is over: open tasks planned for today or due today (without a later day) and without a
+    /// future time block ("Von heute übrig"). Recurring reminders are left out; their next occurrence follows.
+    private(set) var leftFromToday: [TaskItem] = []
+    /// The next working day within five days after today (decision 5).
+    private(set) var nextPlanDay: PlanDay?
+    /// Today's evening line, only while today is shown and over and a working day follows.
+    private(set) var eveningEntry: EveningEntry?
+    /// The last "Alle auf morgen", for one "Widerrufen".
+    private(set) var lastMoveGroup: [DayMove]?
+
+    /// "Überfällig" appears today and tomorrow, not on later days (decision 3).
+    func showsOverdue(on day: PlanDay) -> Bool {
+        day >= today && day <= today.adding(days: 1, calendar: calendar)
+    }
+
+    /// "Von heute übrig" belongs to the next planning day only (decisions 2 and 5): tomorrow, or the next working
+    /// day when tomorrow is off.
+    func leftovers(on day: PlanDay) -> [TaskItem] {
+        isTodayOver && day == nextPlanDay ? leftFromToday : []
+    }
+
+    /// The row button of the panel ("Heute", "Morgen", "Einplanen"): commits the task to the shown day.
+    func commitToShownDay(_ id: TaskID) async {
+        await assign(id, to: anchor)
+    }
+
+    /// "Alle auf morgen": moves every task like `moveTask` (blocks go along) with one undo for all.
+    func moveTasks(_ ids: [TaskID], to day: PlanDay) async {
+        var moves: [DayMove] = []
+        for id in ids {
+            await moveTask(id, to: day)
+            if let move = lastMove { moves.append(move) }
+        }
+        lastMove = nil
+        lastMoveGroup = moves.isEmpty ? nil : moves
+    }
+
+    func undoMoveGroup() async {
+        guard let moves = lastMoveGroup else { return }
+        lastMoveGroup = nil
+        for move in moves.reversed() { await undo(move) }
+    }
+
+    /// Free time after accepting the day's block suggestions (mockup V1, plan-tomorrow F10): a block replaces the
+    /// load its task already has on the day (assigned or due that day), so that load is not subtracted twice.
+    static func freeAfterAccepting(free: Int, suggestions: [PlanSuggestion], counted: [String: Int]) -> Int {
+        let blocks = suggestions.filter { $0.kind == .block }
+        let added = blocks.reduce(0) { $0 + ($1.minutes ?? 0) }
+        let replaced = Set(blocks.map(\.taskKey)).reduce(0) { $0 + (counted[$1] ?? 0) }
+        return max(0, free - added + replaced)
+    }
+
+    func clearMoveGroupUndo() {
+        lastMoveGroup = nil
+    }
+
+    /// Recomputes the evening state from the real today; independent of the shown range.
+    private func updateEvening(open: [TaskItem], allAssignments: [TaskID: PlanDay], recurringIDs: Set<String>) async {
+        let today = self.today
+        let current = now()
+        let nowMinutes = minutes(current, from: today.startDate(in: calendar))
+        if let hours = workHours(on: today), hours.minutes > 0 {
+            isTodayOver = nowMinutes >= hours.endMinutes
+        } else {
+            isTodayOver = true
+        }
+        nextPlanDay = (1...5).lazy.map { today.adding(days: $0, calendar: self.calendar) }
+            .first { (self.workHours(on: $0)?.minutes ?? 0) > 0 }
+        leftFromToday = isTodayOver ? sortedTasks(open.filter { task in
+            if task.id.source == .reminders, recurringIDs.contains(task.id.rawValue) { return false }
+            let planned = allAssignments[task.id]
+            let dueToday = task.due.map { PlanDay($0) == today } ?? false
+            guard planned == today || (dueToday && (planned.map { $0 <= today } ?? true)) else { return false }
+            return blocks.futureBlocks(for: task.id, after: current).isEmpty
+        }, calendar: calendar) : []
+        if scope == .day, anchor == today, isTodayOver, let next = nextPlanDay,
+           let input = await planInputs(in: next...next).first {
+            eveningEntry = EveningEntry(day: next, freeMinutes: max(0, input.availableMinutes - input.plannedMinutes),
+                                        leftCount: leftFromToday.count)
+        } else {
+            eveningEntry = nil
+        }
+    }
+
     func undoMove() async {
         guard let move = lastMove else { return }
         lastMove = nil
@@ -1420,11 +1516,13 @@ final class PlanningModel {
             .compactMap { tasksByID[$0.key] }
         let assignedSorted = sortedTasks(assigned, calendar: calendar)
 
-        let openToday = day == today
+        // Due on this day (today or later) and not committed to a day from today on; an assignment before
+        // today is stale and does not count (plan-tomorrow, F1, decision 11).
+        let openToday = day >= today
             ? sortedTasks(open.filter { task in
                 allAssignments[task.id] != day && !tasksWithBlocks.contains(task.id)
                     && task.due.map { PlanDay($0) == day } == true
-                    && (allAssignments[task.id].map { $0 < day } ?? true)
+                    && (allAssignments[task.id].map { $0 < today } ?? true)
             }, calendar: calendar)
             : []
 

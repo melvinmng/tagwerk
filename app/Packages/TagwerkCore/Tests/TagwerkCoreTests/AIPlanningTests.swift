@@ -595,4 +595,101 @@ struct AIPlanningTests {
         let data = Data(#"{"assignments":[{"taskId":"local:a","day":"2026-11-19","reason":"r"}],"unscheduled":[],"risks":[],"estimates":[]}"#.utf8)
         #expect(try PlanOutput.decode(data, scope: .month) == periodOutput([assign("a", "2026-11-19")]))
     }
+
+    // MARK: Planning a future day (plan 2026-11-18 plan-tomorrow, step 1)
+
+    /// A day plan for `tomorrow` with no free time, so only core tasks are selected beyond eight fillers.
+    func tomorrowInput(_ tasks: [TaskItem], assignments: [TaskID: PlanDay] = [:], earliestWorkDay: PlanDay? = nil,
+                       blocked: [TaskID: Int] = [:]) -> PlanInput {
+        makePlanInput(scope: .day, days: [planDay(tomorrow, recurring: 480)], tasks: tasks, assignments: assignments,
+                      anchors: [:], today: today, nowMinutes: nowMinutes, timeZoneID: "Europe/Berlin",
+                      defaultTaskMinutes: 30, blockedMinutes: blocked, earliestWorkDay: earliestWorkDay, calendar: calendar)
+    }
+
+    /// Eight overdue tasks: they fill the minimum count, so the fill-up adds nothing more.
+    var overdueFillers: [TaskItem] {
+        (0..<8).map { item("alt\($0)", due: DueDate(year: 2026, month: 11, day: 10)) }
+    }
+
+    @Test func dayPlanForTomorrow_usesWindowFromPlannedDay() {
+        // Window of three days from the 19th reaches the 22nd; counted from today it would end on the 21st.
+        let dueSunday = item("Sonntag", due: DueDate(year: 2026, month: 11, day: 22))
+        let result = tomorrowInput(overdueFillers + [dueSunday])
+        #expect(result.tasks.map(\.title).contains("Sonntag"))
+    }
+
+    @Test func dayPlanForTomorrow_sessionShareCountsDaysFromPlannedDay() {
+        // 10 h due on the 23rd: four days from the 19th give 150 min a day (five days from today would give 120).
+        var big = item("Groß", due: DueDate(year: 2026, month: 11, day: 23))
+        big.estimateMinutes = 600
+        let result = tomorrowInput([big])
+        #expect(result.tasks.first?.sessionMinutes == 150)
+    }
+
+    @Test func dayPlanForTomorrow_ordersTasksDueThatDayBeforeP1() {
+        let p1 = item("Wichtig", priority: .p1)
+        let dueTomorrow = item("Morgen fällig", due: DueDate(year: 2026, month: 11, day: 19))
+        let result = tomorrowInput([p1, dueTomorrow])
+        #expect(result.tasks.map(\.title) == ["Morgen fällig", "Wichtig"])
+    }
+
+    @Test func dayPlanForTomorrow_skipsTasksAssignedToToday_whileTodayHasWorkTime() {
+        let plannedToday = item("Heute geplant")
+        let result = tomorrowInput([plannedToday], assignments: [plannedToday.id: today])
+        #expect(result.tasks.isEmpty)
+        #expect(result.earliestWorkDay == today)
+    }
+
+    @Test func dayPlanForTomorrow_skipsTasksDueToday_whileTodayHasWorkTime() {
+        // Due today and still doable today: a block tomorrow would lie after the due date.
+        let dueToday = item("Heute fällig", due: DueDate(year: 2026, month: 11, day: 18))
+        #expect(tomorrowInput([dueToday]).tasks.isEmpty)
+    }
+
+    @Test func dayPlanForTomorrow_includesTodaysLeftovers_whenTodayIsOver() {
+        let plannedToday = item("Heute geplant")
+        let dueToday = item("Heute fällig", due: DueDate(year: 2026, month: 11, day: 18))
+        let result = tomorrowInput(overdueFillers + [plannedToday, dueToday], assignments: [plannedToday.id: today],
+                                   earliestWorkDay: tomorrow)
+        #expect(result.earliestWorkDay == tomorrow)
+        #expect(Set(result.tasks.map(\.title)).isSuperset(of: ["Heute geplant", "Heute fällig"]))
+        #expect(result.tasks.first { $0.title == "Heute geplant" }?.plannedDay == today)
+    }
+
+    @Test func dayPlanForToday_unchangedByEarliestWorkDayDefault() {
+        let dueToday = item("Heute fällig", due: DueDate(year: 2026, month: 11, day: 18))
+        let result = makeInput(tasks: [dueToday])
+        #expect(result.tasks.map(\.title) == ["Heute fällig"])
+        #expect(result.earliestWorkDay == today)
+    }
+
+    @Test func validate_blockTomorrowForTaskDueToday_rejectedWhileTodayHasWorkTime() {
+        let dueToday = DueDate(year: 2026, month: 11, day: 18)
+        let result = validate(dayOutput([block("a", "09:00")]),
+                              input: input(days: [planDay(tomorrow)], tasks: [task("a", due: dueToday)]))
+        #expect(result.violations.map(\.reason) == [PlanViolation.Reason.afterDue])
+    }
+
+    @Test func validate_blockTomorrowForTaskDueToday_acceptedWhenTodayIsOver() {
+        let dueToday = DueDate(year: 2026, month: 11, day: 18, hour: 17, minute: 0)
+        var planInput = input(days: [planDay(tomorrow)], tasks: [task("a", due: dueToday, anchor: dueToday)])
+        planInput.earliestWorkDay = tomorrow
+        let result = validate(dayOutput([block("a", "09:00")]), input: planInput)
+        #expect(acceptedBlocks(result.accepted) == ["local:a"])
+        #expect(result.violations.isEmpty)
+    }
+
+    @Test func validate_blockTomorrowForTaskDueTomorrow_stillRejectedAfterItsTime_whenTodayIsOver() {
+        let dueTomorrow = DueDate(year: 2026, month: 11, day: 19, hour: 10, minute: 0)
+        var planInput = input(days: [planDay(tomorrow)], tasks: [task("a", due: dueTomorrow)])
+        planInput.earliestWorkDay = tomorrow
+        let result = validate(dayOutput([block("a", "14:00")]), input: planInput)
+        #expect(result.violations.map(\.reason) == [PlanViolation.Reason.afterDue])
+    }
+
+    @Test func validate_blockTomorrowBeforeCurrentClockTime_accepted() {
+        // Now is 10:00 today; 09:00 tomorrow is not in the past.
+        let result = validate(dayOutput([block("a", "09:00")]), input: input(days: [planDay(tomorrow)], tasks: [task("a")]))
+        #expect(acceptedBlocks(result.accepted) == ["local:a"])
+    }
 }

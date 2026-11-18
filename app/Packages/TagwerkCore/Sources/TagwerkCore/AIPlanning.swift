@@ -152,6 +152,9 @@ public struct PlanInput: Sendable, Hashable {
     public var laterDays: [PlanInputDay] = []
     /// Core tasks left out because of the maximum count; the summary should mention them.
     public var omittedCount = 0
+    /// The first day work can still happen on: today, or the day after once today's working time is over
+    /// (plan-tomorrow, decision 6). Limits before it are no longer enforced, like those of overdue tasks.
+    public var earliestWorkDay: PlanDay
 
     public init(scope: PlanScope, days: [PlanInputDay], tasks: [PlanInputTask], today: PlanDay, nowMinutes: Int,
                 timeZoneID: String, defaultTaskMinutes: Int) {
@@ -162,6 +165,7 @@ public struct PlanInput: Sendable, Hashable {
         self.nowMinutes = nowMinutes
         self.timeZoneID = timeZoneID
         self.defaultTaskMinutes = defaultTaskMinutes
+        self.earliestWorkDay = today
     }
 }
 
@@ -203,7 +207,11 @@ public func makePlanInput(scope: PlanScope, days: [PlanInputDay], tasks: [TaskIt
                           anchors: [TaskID: DueDate], today: PlanDay, nowMinutes: Int, timeZoneID: String,
                           defaultTaskMinutes: Int, only: Set<TaskID>? = nil, excluding: Set<TaskID> = [],
                           lookaheadDays: Set<PlanDay> = [], blockedMinutes: [TaskID: Int] = [:],
-                          calendar: Calendar = .current) -> PlanInput {
+                          earliestWorkDay: PlanDay? = nil, calendar: Calendar = .current) -> PlanInput {
+    // A day plan counts window, daily share and order from the planned day (plan-tomorrow, F5); "overdue"
+    // stays measured against the real today. `earliest` moves past today only once today's work time is over.
+    let reference = scope == .day ? max(today, days.first?.day ?? today) : today
+    let earliest = max(today, earliestWorkDay ?? today)
     func anchor(of task: TaskItem) -> DueDate? {
         anchors[task.id] ?? (task.epic?.isEpic == true ? task.epic?.due : nil)
     }
@@ -224,16 +232,16 @@ public func makePlanInput(scope: PlanScope, days: [PlanInputDay], tasks: [TaskIt
         let daysNeeded = Int((Double(open) / Double(PlanSelectionRules.maximumDailyMinutesPerTask)).rounded(.up))
         return deadline.adding(days: -(daysNeeded - 1), calendar: calendar)
     }
-    /// The earliest of due date, anchor and latest start; overdue counts as today.
+    /// The earliest of due date, anchor and latest start; overdue counts as the reference day.
     func target(_ task: TaskItem) -> PlanDay? {
         let dates = [deadline(task), latestStart(task)].compactMap { $0 }
-        return dates.min().map { max($0, today) }
+        return dates.min().map { max($0, reference) }
     }
-    /// Share for today: the open effort divided by the days left until the deadline.
+    /// Share for the reference day: the open effort divided by the days left until the deadline.
     func session(_ task: TaskItem) -> Int? {
         guard let open = remaining(task), open > PlanSelectionRules.maximumDailyMinutesPerTask / 2,
-              let deadline = deadline(task), deadline > today else { return nil }
-        let daysLeft = max(1, calendar.dateComponents([.day], from: today.startDate(in: calendar),
+              let deadline = deadline(task), deadline > reference else { return nil }
+        let daysLeft = max(1, calendar.dateComponents([.day], from: reference.startDate(in: calendar),
                                                       to: deadline.startDate(in: calendar)).day ?? 1)
         let share = Int((Double(open) / Double(daysLeft)).rounded(.up))
         return min(PlanSelectionRules.maximumDailyMinutesPerTask, max(30, (share + 14) / 15 * 15))
@@ -251,12 +259,14 @@ public func makePlanInput(scope: PlanScope, days: [PlanInputDay], tasks: [TaskIt
     let open = tasks.filter { !$0.isCompleted && !excluding.contains($0.id) }
     if let only {
         let picked = open.filter { only.contains($0.id) }
-        return PlanInput(scope: scope, days: days, tasks: picked.map(makeTask), today: today, nowMinutes: nowMinutes,
-                         timeZoneID: timeZoneID, defaultTaskMinutes: defaultTaskMinutes)
+        var input = PlanInput(scope: scope, days: days, tasks: picked.map(makeTask), today: today, nowMinutes: nowMinutes,
+                              timeZoneID: timeZoneID, defaultTaskMinutes: defaultTaskMinutes)
+        input.earliestWorkDay = earliest
+        return input
     }
 
-    let windowEnd = today.adding(days: PlanSelectionRules.windowDays(scope), calendar: calendar)
-    let doubleEnd = today.adding(days: 2 * PlanSelectionRules.windowDays(scope), calendar: calendar)
+    let windowEnd = reference.adding(days: PlanSelectionRules.windowDays(scope), calendar: calendar)
+    let doubleEnd = reference.adding(days: 2 * PlanSelectionRules.windowDays(scope), calendar: calendar)
     let overbooked = Set(days.filter { $0.plannedMinutes > $0.availableMinutes }.map(\.day))
 
     var core: [TaskItem] = []
@@ -269,12 +279,16 @@ public func makePlanInput(scope: PlanScope, days: [PlanInputDay], tasks: [TaskIt
         let targetDay = target(task)
         if scope == .day {
             let day = days.first?.day ?? today
-            // Planned for another day of the future: only as fill-up for working ahead.
-            if let assigned, assigned != day, assigned >= today {
+            // Planned for another day that can still be worked on: only as fill-up for working ahead.
+            if let assigned, assigned != day, assigned >= earliest {
                 if lookaheadDays.contains(assigned) { fill[0].append(task) }
                 continue
             }
-            if assigned == day || days.first?.countedTaskMinutes[task.id.key] != nil || isOverdue
+            // Planned for a day whose work time is over (today after work end): left over, like overdue work.
+            let isLeftOver = assigned.map { $0 >= today && $0 < earliest } ?? false
+            // A limit before the planned day that can still be met on an earlier day: the task belongs there.
+            if assigned != day, let limit = deadline(task), limit >= earliest, limit < day { continue }
+            if assigned == day || days.first?.countedTaskMinutes[task.id.key] != nil || isOverdue || isLeftOver
                 || targetDay.map({ $0 <= windowEnd }) == true {
                 core.append(task); continue
             }
@@ -300,7 +314,7 @@ public func makePlanInput(scope: PlanScope, days: [PlanInputDay], tasks: [TaskIt
             func bucket(_ task: TaskItem) -> Int {
                 if task.due.map({ PlanDay($0) < today }) == true { return 0 }
                 guard let day = target(task) else { return task.priority == .p1 ? 2 : 3 }
-                return day <= today ? 1 : (task.priority == .p1 ? 2 : 3)
+                return day <= reference ? 1 : (task.priority == .p1 ? 2 : 3)
             }
             if bucket(lhs) != bucket(rhs) { return bucket(lhs) < bucket(rhs) }
             if bucket(lhs) == 0 {
@@ -340,6 +354,7 @@ public func makePlanInput(scope: PlanScope, days: [PlanInputDay], tasks: [TaskIt
     var input = PlanInput(scope: scope, days: days, tasks: selected.map(makeTask), today: today, nowMinutes: nowMinutes,
                           timeZoneID: timeZoneID, defaultTaskMinutes: defaultTaskMinutes)
     input.omittedCount = omitted
+    input.earliestWorkDay = earliest
     return input
 }
 
@@ -810,13 +825,13 @@ private func validateAssignments(_ assignments: [PlanAssignment], input: PlanInp
 }
 
 /// True when planning on `day` (ending at `endMinutes`, if known) is later than `limit`.
-/// A limit that already lies before now cannot be met any more and is not enforced:
-/// overdue work may still be planned at the earliest possible time.
+/// A limit that already lies before now, or before the earliest work day (today after work end), cannot be met
+/// any more and is not enforced: such work may still be planned at the earliest possible time.
 private func isLate(day: PlanDay, endMinutes: Int?, limit: DueDate?, input: PlanInput) -> Bool {
     guard let limit else { return false }
     let limitDay = PlanDay(limit)
     let limitMinutes = limit.hour.map { $0 * 60 + (limit.minute ?? 0) }
-    if limitDay < input.today { return false }
+    if limitDay < max(input.today, input.earliestWorkDay) { return false }
     if limitDay == input.today, let limitMinutes, limitMinutes <= input.nowMinutes { return false }
     if day > limitDay { return true }
     if day == limitDay, let limitMinutes, let endMinutes { return endMinutes > limitMinutes }

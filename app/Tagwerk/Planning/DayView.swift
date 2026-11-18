@@ -105,6 +105,7 @@ struct DayView: View {
     private func plannedActions(_ task: TaskItem) -> TaskMenuActions {
         var actions = menuActions(task)
         actions.createBlock = { blockFor = task }
+        actions.shownDay = model.anchor
         if model.planStore.assignment(for: task.id) != nil {
             actions.unassign = { Task { await model.unassign(task.id) } }
         }
@@ -213,9 +214,36 @@ struct CapacityCard: View {
                 Divider()
                 AIPlanBar(scope: .day)
             }
+            if plan.day == model.today, let entry = model.eveningEntry {
+                Divider()
+                eveningLine(entry)
+            }
         }
         .padding(12)
         .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 14))
+    }
+
+    /// "☾ Morgen planen · Do. 19. Nov. · 3 h 15 frei · 2 von heute übrig" (MP2): a tap only shows that day;
+    /// nothing is sent.
+    private func eveningLine(_ entry: PlanningModel.EveningEntry) -> some View {
+        Button {
+            model.anchor = entry.day
+        } label: {
+            HStack(spacing: 10) {
+                Image(systemName: "moon.stars").foregroundStyle(Color.accentColor)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(DayPanelText.eveningTitle(day: entry.day, today: model.today, calendar: model.calendar))
+                        .font(.subheadline.weight(.semibold))
+                    Text(DayPanelText.eveningDetail(day: entry.day, freeMinutes: entry.freeMinutes, leftCount: entry.leftCount,
+                                                    calendar: model.calendar))
+                        .font(.caption).foregroundStyle(.secondary)
+                }
+                Spacer()
+                Image(systemName: "chevron.right").font(.caption).foregroundStyle(.secondary)
+            }
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
     }
 
     /// Suggested minutes of the day, counted apart until accepted (mockup V1).
@@ -239,7 +267,9 @@ struct CapacityCard: View {
                 }
                 if suggestedMinutes > 0 {
                     let suggested = CapacityText.duration(suggestedMinutes)
-                    let freeAfter = CapacityText.duration(max(0, (plan.capacity.remainingMinutes ?? plan.capacity.freeMinutes) - suggestedMinutes))
+                    let freeAfter = CapacityText.duration(PlanningModel.freeAfterAccepting(
+                        free: plan.capacity.remainingMinutes ?? plan.capacity.freeMinutes, suggestions: plan.suggestions,
+                        counted: plan.planInput?.countedTaskMinutes ?? [:]))
                     Label(String(localized: "\(suggested) vorgeschlagen · nach dem Übernehmen \(freeAfter) frei"), systemImage: "sparkles")
                         .font(.caption).foregroundStyle(.purple)
                 }
@@ -278,24 +308,42 @@ struct TaskSections: View {
     let menuActions: (TaskItem) -> TaskMenuActions
 
     var body: some View {
+        let today = model.today
         if showsPlanned {
             Section("Geplant ohne Uhrzeit") {
                 if plan.assigned.isEmpty {
-                    Text("Nutze „Heute“ unten oder „Einplanen“ im Menü einer Aufgabe.").font(.subheadline).foregroundStyle(.secondary)
+                    Text(DayPanelText.emptyPlannedHint(day: plan.day, today: today, calendar: model.calendar))
+                        .font(.subheadline).foregroundStyle(.secondary)
                 }
                 ForEach(plan.assigned) { task in taskRow(task, isPastDue: plan.isPastDue.contains(task.id)) }
+            }
+        }
+        let leftovers = model.leftovers(on: plan.day)
+        if !leftovers.isEmpty {
+            Section {
+                ForEach(leftovers) { task in commitRow(task, moves: true) }
+            } header: {
+                HStack {
+                    Text("Von heute übrig")
+                    Spacer()
+                    Button(DayPanelText.moveAllTitle(day: plan.day, today: today, calendar: model.calendar)) {
+                        let day = plan.day
+                        Task { await model.moveTasks(leftovers.map(\.id), to: day) }
+                    }
+                    .textCase(nil)
+                }
             }
         }
         if !plan.openToday.isEmpty {
             Section {
                 ForEach(plan.openToday) { task in commitRow(task) }
             } header: {
-                Text("Heute offen, nicht zugeordnet")
+                Text(DayPanelText.dueSectionTitle(day: plan.day, today: today, calendar: model.calendar))
             } footer: {
-                Text("„Heute“ legt die Aufgabe für heute fest; dann lässt sie sich ins Raster ziehen.")
+                Text(DayPanelText.commitFooter(day: plan.day, today: today, calendar: model.calendar))
             }
         }
-        if plan.day == model.today, !model.overdue.isEmpty {
+        if model.showsOverdue(on: plan.day), !model.overdue.isEmpty {
             Section("Überfällig") {
                 ForEach(model.overdue) { task in commitRow(task, overdue: true) }
             }
@@ -309,8 +357,9 @@ struct TaskSections: View {
             .contextMenu { TaskContextMenu(item: task, actions: menuActions(task)) }
     }
 
-    /// A task that is not yet committed to today, with its effort for recurring reminders and "Heute".
-    private func commitRow(_ task: TaskItem, overdue: Bool = false) -> some View {
+    /// A task that is not yet committed to the shown day, with its effort for recurring reminders and the commit
+    /// button ("Heute", "Morgen", "Einplanen"); leftovers from today move with their blocks (`moves`).
+    private func commitRow(_ task: TaskItem, overdue: Bool = false, moves: Bool = false) -> some View {
         let recurring = model.recurringItem(for: task, on: plan.day)
         return HStack {
             VStack(alignment: .leading, spacing: 2) {
@@ -331,8 +380,13 @@ struct TaskSections: View {
                 .font(.caption).foregroundStyle(.secondary)
             }
             Spacer()
-            Button("Heute") { Task { await model.assign(task.id, to: model.today) } }
-                .buttonStyle(.bordered)
+            Button(DayPanelText.commitTitle(day: plan.day, today: model.today, calendar: model.calendar)) {
+                let day = plan.day
+                Task {
+                    if moves { await model.moveTask(task.id, to: day) } else { await model.commitToShownDay(task.id) }
+                }
+            }
+            .buttonStyle(.bordered)
         }
         .contentShape(Rectangle())
         .onTapGesture { onOpenTask(task.id) }

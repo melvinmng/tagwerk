@@ -3,14 +3,31 @@ import Foundation
 import HealthBridge
 import TagwerkCore
 
-/// Health for `-TagwerkDemoData` in the simulator: connected, with one Apple Watch run this morning.
-/// Writes are kept in memory only.
+/// Health for `-TagwerkDemoData` in the simulator: connected, with one Apple Watch run this morning and steps for today
+/// and the two days before. Writes are kept in memory only.
 final class DemoHealthStore: HealthStoring, @unchecked Sendable {
     private let lock = NSLock()
     private var connected = true
+    private var stepsAsked = true
 
     func access() async -> HealthAccess { lock.withLock { connected ? .authorized : .notDetermined } }
-    func requestAuthorization() async throws { lock.withLock { connected = true } }
+    func requestAuthorization() async throws {
+        lock.withLock {
+            connected = true
+            stepsAsked = true
+        }
+    }
+    func stepsAccess() async -> StepsAccess { lock.withLock { stepsAsked ? .asked : .notAsked } }
+    func requestStepsAuthorization() async throws { lock.withLock { stepsAsked = true } }
+
+    func dailySteps(in interval: DateInterval, calendar: Calendar) async throws -> [DailySteps] {
+        let today = calendar.startOfDay(for: .now)
+        let demo = [(0, 6412), (-1, 8240), (-2, 5750)].compactMap { offset, count -> DailySteps? in
+            guard let start = calendar.date(byAdding: .day, value: offset, to: today) else { return nil }
+            return DailySteps(start: start, count: count)
+        }
+        return demo.filter { interval.contains($0.start) && $0.start < interval.end }
+    }
     func save(_ meal: HealthMeal) async throws -> Bool { true }
     func save(_ drink: HealthDrink) async throws -> Bool { true }
     func save(_ workout: HealthWorkout) async throws -> Bool { true }

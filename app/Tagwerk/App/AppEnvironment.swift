@@ -70,6 +70,7 @@ final class AppEnvironment {
         self.snapshotWriter = snapshotWriter ?? WidgetSnapshotWriter(directory: nil, reload: {})
         let context = modelContainer.mainContext
         let settings = try AppSettings.current(in: context)
+        settings.migrateWorkoutGoalIfNeeded()
         let gateway = EventKitGateway()
         let reminders = RemindersTaskProvider(store: gateway, estimates: SwiftDataEstimateStore(context: context)) {
             settings.selectedReminderListIDs.map(Set.init)
@@ -355,13 +356,17 @@ final class AppEnvironment {
     }
 
     /// The day's sums straight from the store: correct after midnight and on a background launch without a reload.
+    /// Steps come from the last Health read of the capture model and only while they belong to today; like calories
+    /// and water they stay out of the file when the nutrition switch is off.
     private func snapshotIntake(on day: PlanDay) -> SnapshotIntake? {
         guard settings.widgetShowsNutrition else { return nil }
         let calendar = capture.calendar
         let intake = IntakeRules.dayIntake(meals: self.intake.meals(on: day, calendar: calendar),
                                            drinks: self.intake.drinks(on: day, calendar: calendar))
+        let steps = day == capture.today ? capture.todaySteps : nil
         return SnapshotIntake(kcal: intake.kcal, hasEstimate: intake.hasEstimate, goalKcal: settings.goalKilocalories,
-                              waterMilliliters: intake.waterMilliliters, goalWaterMilliliters: settings.goalWaterMilliliters)
+                              waterMilliliters: intake.waterMilliliters, goalWaterMilliliters: settings.goalWaterMilliliters,
+                              steps: steps, goalSteps: settings.goalStepsPerDay)
     }
 
     /// Writes the snapshot. The plan part is only written from loaded task sources; otherwise (Siri in the
@@ -415,6 +420,8 @@ final class AppEnvironment {
             hasher.combine(settings.planCalendarID)
             hasher.combine(settings.deadlineCalendarIDs)
             hasher.combine(capture.todayIntake)
+            hasher.combine(capture.todaySteps)
+            hasher.combine(settings.goalStepsPerDay)
             return hasher.finalize()
         }
         snapshotUpdates = Task { [weak self] in
