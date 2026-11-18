@@ -28,7 +28,7 @@ struct CaptureView: View {
         }
     }
 
-    // Day swipe only on the rows above the entries: entry rows keep swipe-to-delete (swipeActions).
+    // Day swipe over the whole list, like "Planen"; entries are deleted from their context menu instead of swipe actions.
     private func daySwipe(_ direction: PageSwipe) {
         if !model.navigate(by: direction) { limitBumps += 1 }
     }
@@ -37,8 +37,8 @@ struct CaptureView: View {
         NavigationStack {
             List {
                 Section {
-                    DayNavigation(model: model).contentShape(Rectangle()).pageSwipe(daySwipe)
-                    DaySummary(model: model).contentShape(Rectangle()).pageSwipe(daySwipe)
+                    DayNavigation(model: model)
+                    DaySummary(model: model)
                     // R3a: entry to the weekly review (a row of its own, so VoiceOver keeps the summary as one element).
                     Button { showsReview = true } label: {
                         HStack {
@@ -49,10 +49,10 @@ struct CaptureView: View {
                         }
                     }
                     .foregroundStyle(.primary)
-                    .contentShape(Rectangle()).pageSwipe(daySwipe)
+                    
                 }
                 Section {
-                    quickEntry.contentShape(Rectangle()).pageSwipe(daySwipe)
+                    quickEntry
                 } footer: {
                     if !model.hasEntries {
                         Text(model.isToday ? "Noch nichts erfasst. Tippe oben auf Essen, Trinken oder Training."
@@ -60,12 +60,13 @@ struct CaptureView: View {
                     }
                 }
                 if model.showsHealthCard {
-                    Section { HealthCard(model: model).contentShape(Rectangle()).pageSwipe(daySwipe) }
+                    Section { HealthCard(model: model) }
                 }
                 mealSection
                 drinkSection
                 workoutSection
             }
+            .pageSwipe(daySwipe)
             .navigationTitle("Erfassen")
             .sensoryFeedback(.selection, trigger: model.day)
             // Swiping forward on today: a firm tap instead of silence (there is no later day).
@@ -168,7 +169,7 @@ struct CaptureView: View {
                 ForEach(model.meals) { meal in
                     Button { sheet = .meal(meal) } label: { MealRow(meal: meal, calendar: model.calendar) }
                         .tint(.primary)
-                        .swipeActions { deleteButton(meal.id) }
+                        .contextMenu { deleteButton(meal.id) }
                 }
             } header: {
                 HStack {
@@ -215,7 +216,7 @@ struct CaptureView: View {
                     if workout.isOwn {
                         Button { sheet = .workout(workout) } label: { WorkoutRow(workout: workout, calendar: model.calendar) }
                             .tint(.primary)
-                            .swipeActions {
+                            .contextMenu {
                                 if let id = UUID(uuidString: workout.id) { deleteButton(id) }
                             }
                     } else {
