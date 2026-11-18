@@ -1,0 +1,11 @@
+{
+  "sourceLanguage" : "de",
+  "strings" : {
+    "Planen" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Plan" } }
+      }
+    }
+  },
+  "version" : "1.0"
+}

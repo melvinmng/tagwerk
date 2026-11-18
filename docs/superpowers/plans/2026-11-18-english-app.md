@@ -14,7 +14,7 @@
 
 ## Entscheidungen
 
-Fables Review vom 2026-11-18 (Urteil „überarbeiten“) ist eingearbeitet; die Nummern verweisen darauf.
+Fables Reviews vom 2026-11-18 sind eingearbeitet (erste Runde „überarbeiten“, zweite Runde „passt“ mit Präzisierungen); die Nummern verweisen darauf.
 
 1. **String Catalogs, Deutsch bleibt Quellsprache.**
    - Je Ziel ein `Localizable.xcstrings`: App, Widget, und je Paket mit Nutzertexten (TagwerkCore, AIKit, RemindersKit, GitHubKit, HealthBridge) als Paket-Ressource mit `defaultLocalization: "de"` und `Bundle.module`.
@@ -40,12 +40,11 @@ Fables Review vom 2026-11-18 (Urteil „überarbeiten“) ist eingearbeitet; die
    - Die `fallback: .german` in `AssistantModel` werden `VoiceLanguage.app`.
 6. **Siri/Kurzbefehle:**
    - Titel und Parameter über den App-Catalog (`LocalizedStringResource`).
-   - Phrasen über `AppShortcuts.xcstrings` mit englischen Phrasen. Jede Phrase enthält `\(.applicationName)`.
+   - Phrasen über `AppShortcuts.xcstrings` mit englischen Phrasen. Jede Phrase enthält `\(.applicationName)` (im Catalog `${applicationName}`).
 7. **Info.plist:** Usage-Descriptions über `InfoPlist.xcstrings` (App und Widget). Die deutschen Texte bleiben im `project.yml` als Quelle.
 8. **Geschriebene Daten** (Titel von Zeitblöcken, Mittagspause, Plan-Kalender „Tagwerk“, Benachrichtigungen) entstehen in der App-Sprache zum Zeitpunkt des Schreibens. Bestehende Einträge werden nicht umbenannt.
-   - **Benachrichtigungen:** Die App merkt sich die Sprache, in der zuletzt geplant wurde. Weicht sie beim Start ab, werden alle Benachrichtigungen neu geplant, auch die nicht geladener Quellen (`kept`) (Fable 10).
+   - **Benachrichtigungen:** Die App merkt sich je Quelle die Sprache, in der zuletzt geplant wurde. Alte Anfragen bleiben, bis die Quelle geladen ist; dann werden sie in der neuen Sprache ersetzt. Nichts wird gelöscht, ohne dass Ersatz da ist (Fable 10, zweite Runde 1).
    - **Sichtbare und gespeicherte KI-Daten** (Titel und Mengen aus `MealEstimator`, Begründungen aus `AIPlanner`) entstehen in der App-Sprache (Fable 8).
-10. **Ausgenommen von der Übersetzung:** Diagnose- und Spike-Seiten (`VoiceDiagnostics`, `RecognitionSpikeView`, `ConversationSpikeView`, `PlanningDiagnostics`) bleiben deutsch. Sie sind Entwickler-Werkzeuge; der Catalog markiert ihre Texte mit `shouldTranslate: false`.
 9. **Begriffe (Glossar)** für eine einheitliche Übersetzung:
 
    | Deutsch | Englisch |
@@ -71,6 +70,8 @@ Fables Review vom 2026-11-18 (Urteil „überarbeiten“) ist eingearbeitet; die
 
    Die Anrede bleibt informell: „du“ wird zu „you“.
 
+10. **Ausgenommen von der Übersetzung:** Diagnose- und Spike-Seiten (`VoiceDiagnostics`, `RecognitionSpikeView`, `ConversationSpikeView`, `PlanningDiagnostics`) bleiben deutsch. Sie sind Entwickler-Werkzeuge; der Catalog markiert ihre Texte mit `shouldTranslate: false`.
+
 ## Tasks
 
 ### Task 0: Spike (zuerst, Fable 1, 3, 12)
@@ -79,7 +80,14 @@ Klärt am Gerüst mit einem einzigen Text je Ziel:
 - XcodeGen: `en` in `knownRegions`, Kataloge als Ressource der App und des Widgets, Pakete mit `resources: [.process("Resources")]` und `defaultLocalization: "de"`.
 - Englischer Stichprobentest mit injizierter Sprache: `String(localized: LocalizedStringResource(key, locale: Locale(identifier: "en"), bundle: …))` oder über das `en.lproj`-Bundle; das Ergebnis legt die Testhilfe `localized(_:in:)` fest.
 
-Ergebnis kommt in diesen Plan, bevor Task 1 beginnt.
+**Ergebnis (2026-11-18, Simulator):**
+- **Catalog im App-Ziel:** XcodeGen nimmt `en` in `knownRegions` auf. Das App-Bundle enthält `en.lproj`.
+- **`.stringsdata`:**
+  - Der Build schreibt sie je Quelldatei für App und Widget, mit Tabelle `Localizable` (z. B. `Verlauf löschen?`, `Kontext: %@`).
+  - Für Paket-Quellen entstehen keine. Pakete laufen deshalb über `xcstringstool extract --modern-localizable-strings` auf ihre Quellen, danach `sync`.
+- **Laufzeit-Lookup:** `String(localized: LocalizedStringResource(key, locale: Locale(identifier: "en"), bundle: .main))` liefert die englische Fassung, unabhängig von der App-Sprache. Mit `de` kommt der Schlüssel zurück.
+- **Testsprache:** `xcodebuild test -testLanguage de|en` steuert `String(localized:)`, `Bundle.preferredLocalizations` und `Locale.current` wie erwartet.
+- **Fundliste:** `xcstringstool extract --all-potential-swift-keys` liefert alle Literale, die Schlüssel sein könnten (Tabelle `__PotentialKeys`). Das ersetzt die grep-Regel aus Task 3 (Fable, zweite Runde, 6).
 
 ### Task 1: Gerüst, Testsprache, Sync-Skript, Prüfung der Abdeckung
 - **Kataloge anlegen:**
@@ -89,7 +97,8 @@ Ergebnis kommt in diesen Plan, bevor Task 1 beginnt.
 - **Testsprache für alle Stufen** (Fable 4): `run_tests` in `test-all.sh` bekommt `-testLanguage de -testRegion DE`. Das XcodeGen-App-Schema bekommt zusätzlich `language: de`, `region: DE`.
 - **`scripts/sync-strings.sh`:**
   - Baut einmal mit `SWIFT_EMIT_LOC_STRINGS=YES` und synchronisiert jeden Catalog mit den `.stringsdata` seines Ziels.
-  - `--check`: synchronisiert auf eine Kopie und scheitert, wenn sie vom eingecheckten Catalog abweicht. So bleiben keine nie extrahierten Texte unsichtbar (Fable 2).
+  - `--check`: synchronisiert auf eine Kopie und scheitert, wenn sie vom eingecheckten Catalog abweicht. Das findet extrahierte, aber im Catalog fehlende Texte. Nie umgestellte `String`-Literale findet es nicht; dafür bleiben Fundliste und Screenshots (zweite Runde, 5).
+  - Von Hand gepflegte Kataloge (`InfoPlist.xcstrings`, `AppShortcuts.xcstrings`) synchronisiert das Skript nicht (zweite Runde, 3).
 - **`scripts/check-strings.py`** (Host-Skript, nicht im Simulator), aufgerufen von `test-all.sh` als eigene Stufe:
   - Jeder Schlüssel mit `shouldTranslate != false` hat einen englischen Wert im Zustand `translated`.
   - Platzhalter in beiden Sprachen gleich.
@@ -97,9 +106,12 @@ Ergebnis kommt in diesen Plan, bevor Task 1 beginnt.
   - `InfoPlist.xcstrings` hat Plist-Schlüssel und eine eigene Regel: jeder Usage-Key braucht de und en.
   - `AppShortcuts.xcstrings`: Jede Phrase enthält `${applicationName}`.
 - Danach läuft `sync-strings.sh --check` als Stufe in `test-all.sh`.
+- `check-strings.py` prüft bis Task 5 nur die Struktur: Platzhalter, `${applicationName}`, deutsche Usage-Texte gleich `project.yml`. Erst ab Task 5 verlangt es für jeden Schlüssel einen englischen Wert, damit `test-all.sh` dazwischen grün bleibt (zweite Runde, 4 und 7).
 
 ### Task 2: Sprachparameter und `VoiceLanguage.app` (Fable 3, 7, 11)
 - `VoiceLanguage.app` aus `Locale.current`.
+- **`localized(_:in:bundle:)` in TagwerkCore** ist Produktivcode (zweite Runde, 2): holt Catalog-Texte in einer bestimmten Sprache über `LocalizedStringResource(…, locale:, bundle:)`.
+- `describe` formatiert Datum und Zahl mit der Locale dieser Sprache.
 - `AssistantModel.describe(_:language:)`, Ansagen mit Kartentext in der Sprache der Antwort.
 - Pakete: Locale-Parameter statt fester `de_DE`.
 - **Tests:** deutsch und englisch, englisch über die Testhilfe aus Task 0.
@@ -140,8 +152,8 @@ Ergebnis kommt in diesen Plan, bevor Task 1 beginnt.
   - `MealEstimator`: Titel und Mengen in App-Sprache.
   - Chat ohne Nutzernachricht: App-Sprache.
 - **Geschriebene Daten:** Titel geschriebener Einträge in App-Sprache.
-- **Benachrichtigungen:** neu planen bei Sprachwechsel.
-- **Tests:** Anweisungen enthalten die Sprache; ein Sprachwechsel plant neu.
+- **Benachrichtigungen:** bei Sprachwechsel je Quelle neu planen, sobald sie geladen ist.
+- **Tests:** Anweisungen enthalten die Sprache; ein Sprachwechsel plant geladene Quellen neu und lässt nicht geladene unverändert.
 
 ### Task 7: Prüfung
 - `test-all.sh` (inkl. Sync-Check und Catalog-Prüfung).
@@ -152,7 +164,7 @@ Ergebnis kommt in diesen Plan, bevor Task 1 beginnt.
 Reihenfolge: 0 → 1 → 2 → 3 → 4 → 5 → 6 → 7.
 
 ## Risiken
-- **Vergessene `String`-Texte bleiben deutsch.** Abhilfe: die grep-Liste aus Task 2 und eine Durchsicht der englischen Screenshots.
+- **Vergessene `String`-Texte bleiben deutsch.** Abhilfe: die Fundliste aus Task 3 und eine Durchsicht der englischen Screenshots.
 - **Englische Texte sind oft kürzer, Plural ist anders.** Abhilfe: Varianten im Catalog.
 - **Catalog-Sync ohne IDE:** wird in Task 0 geklärt.
 - **Tests mit deutschen Erwartungen** (32 Testdateien) brechen ohne feste Testsprache. Deshalb steht `-testLanguage de` in Task 1 vor jeder Übersetzung.
