@@ -2,28 +2,84 @@
   "sourceLanguage" : "de",
   "strings" : {
     "Anmeldung abgebrochen." : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sign-in canceled."
+          }
+        }
+      }
     },
     "ChatGPT hat die Anmeldung abgelehnt: %@" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ChatGPT rejected the sign-in: %@"
+          }
+        }
+      }
     },
     "ChatGPT hat einen Fehler gemeldet (HTTP %lld)." : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ChatGPT reported an error (HTTP %lld)."
+          }
+        }
+      }
     },
     "Das Nutzungslimit deines ChatGPT-Abos ist erreicht. Versuche es später erneut." : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You’ve reached the usage limit of your ChatGPT plan. Try again later."
+          }
+        }
+      }
     },
     "Dein ChatGPT-Konto kann hier nicht genutzt werden. Melde dich neu an." : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your ChatGPT account can’t be used here. Sign in again."
+          }
+        }
+      }
     },
     "Die Anmeldung braucht Port 1455, der gerade belegt ist. Schließe andere Apps mit ChatGPT-Anmeldung und versuche es erneut." : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Signing in needs port 1455, which is currently in use. Close other apps that use ChatGPT sign-in and try again."
+          }
+        }
+      }
     },
     "Die Anmeldung hat zu lange gedauert. Versuche es erneut." : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Signing in took too long. Try again."
+          }
+        }
+      }
     },
     "Die Anmeldung ist fehlgeschlagen (HTTP %lld)." : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sign-in failed (HTTP %lld)."
+          }
+        }
+      }
     },
     "Die Anmeldung ist fehlgeschlagen (HTTP %lld, %@)." : {
       "localizations" : {
@@ -32,20 +88,54 @@
             "state" : "new",
             "value" : "Die Anmeldung ist fehlgeschlagen (HTTP %1$lld, %2$@)."
           }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sign-in failed (HTTP %1$lld, %2$@)."
+          }
         }
       }
     },
     "Die Anmeldung ist fehlgeschlagen. Versuche es erneut." : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sign-in failed. Try again."
+          }
+        }
+      }
     },
     "Die Antwort von ChatGPT wurde unterbrochen." : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The response from ChatGPT was interrupted."
+          }
+        }
+      }
     },
     "Keine Verbindung zu ChatGPT." : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No connection to ChatGPT."
+          }
+        }
+      }
     },
     "Melde dich in den Einstellungen mit ChatGPT an." : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sign in with ChatGPT in Settings."
+          }
+        }
+      }
     }
   },
   "version" : "1.0"

@@ -2,64 +2,204 @@
   "sourceLanguage" : "de",
   "strings" : {
     "Cool-down" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cooldown"
+          }
+        }
+      }
     },
     "Cross-Training" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cross training"
+          }
+        }
+      }
     },
     "Crosstrainer" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elliptical"
+          }
+        }
+      }
     },
     "Eiweiß" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Protein"
+          }
+        }
+      }
     },
     "Fett" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fat"
+          }
+        }
+      }
     },
     "Fußball" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Soccer"
+          }
+        }
+      }
     },
     "Gemischtes Cardio" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mixed cardio"
+          }
+        }
+      }
     },
     "Kalorien" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Calories"
+          }
+        }
+      }
     },
     "Klettern" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Climbing"
+          }
+        }
+      }
     },
     "Kohlenhydrate" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Carbs"
+          }
+        }
+      }
     },
     "Pilates" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pilates"
+          }
+        }
+      }
     },
     "Rudern" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rowing"
+          }
+        }
+      }
     },
     "Rumpftraining" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Core training"
+          }
+        }
+      }
     },
     "Tanzen" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dancing"
+          }
+        }
+      }
     },
     "Tennis" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tennis"
+          }
+        }
+      }
     },
     "Training" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Workout"
+          }
+        }
+      }
     },
     "Trainings" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Workouts"
+          }
+        }
+      }
     },
     "Trainingskalorien" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Workout calories"
+          }
+        }
+      }
     },
     "Treppensteigen" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stair climbing"
+          }
+        }
+      }
     },
     "Wasser" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Water"
+          }
+        }
+      }
     }
   },
   "version" : "1.0"
