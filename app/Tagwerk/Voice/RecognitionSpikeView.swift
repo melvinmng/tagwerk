@@ -1,5 +1,6 @@
 import AVFoundation
 import Speech
+import TagwerkCore
 import SwiftUI
 
 /// Device check for on-device recognition: availability, language packs, permissions and a test

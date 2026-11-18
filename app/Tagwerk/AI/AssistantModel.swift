@@ -22,7 +22,15 @@ final class AssistantModel {
     private(set) var context: Context = .settings
     /// When each action (call ID) was carried out, for "✓ Ausgeführt · 09:38".
     private(set) var actionTimes: [String: Date] = [:]
+    /// User messages that came from a recording (mockup SP2: small microphone in the history).
+    private(set) var spokenMarks: [SpokenMark] = []
     var isPresented = false
+
+    /// Voice hooks (plan voice-chat): when to read new answers automatically, whether to announce action
+    /// cards, and the reader itself. Only the view layer sets them.
+    @ObservationIgnored var readPolicy: () -> ReadAloudPolicy = { .never }
+    @ObservationIgnored var announcesActions: () -> Bool = { true }
+    @ObservationIgnored var readAutomatically: (_ id: String, _ text: String, _ fallback: VoiceLanguage) -> Void = { _, _, _ in }
 
     @ObservationIgnored private let responder: ResponseStreaming
     @ObservationIgnored let tools: AppTools
@@ -72,28 +80,97 @@ final class AssistantModel {
         if conversation != nil { persist() }
         key = newKey
         actionTimes = store.actionTimes(for: newKey)
+        spokenMarks = store.spokenMarks(for: newKey)
         conversation = Conversation(responder: responder, tools: handler, model: model,
                                     instructions: { [weak self] in self?.instructions() ?? "" },
                                     history: store.history(for: newKey))
     }
 
-    func send(_ text: String) async {
+    func send(_ text: String, spoken: Bool = false) async {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty, let conversation else { return }
+        guard !trimmed.isEmpty, let conversation, !conversation.isBusy else { return }
         if let task, taskContext == nil {
             // GitHub is asked only now, when the user starts the conversation.
             let reference = task.id.source == .github ? issueReference(task.id) : nil
             taskContext = await IssueContext.load(task: task, reference: reference, reader: reference == nil ? nil : reader)
         }
+        let index = conversation.history.count
         await conversation.send(trimmed)
+        if spoken {
+            spokenMarks.append(SpokenMark(index: index, text: trimmed))
+        }
         persist()
+        readNewOutput(after: index, spoken: spoken, userText: trimmed)
+    }
+
+    func isSpoken(_ message: ChatMessage) -> Bool {
+        guard case .user(let text) = message.content else { return false }
+        return spokenMarks.contains { $0.matches(index: message.id, text: text) }
+    }
+
+    /// Reads what arrived after `index` when the policy says so: the answer text, then one sentence for new
+    /// action cards (mockup SP4a). Cards are only announced, never confirmed by voice.
+    private func readNewOutput(after index: Int, spoken: Bool, userText: String) {
+        guard let conversation,
+              readPolicy().readsAutomatically(lastUserMessageWasSpoken: spoken, conversationVisible: isPresented) else { return }
+        let fresh = conversation.messages.filter { $0.id > index }
+        var texts: [String] = []
+        var cards: [(title: String, change: String)] = []
+        for message in fresh {
+            switch message.content {
+            case .assistant(let text): texts.append(text)
+            case .action(let call, .pending): let card = describe(call); cards.append((card.title, card.change))
+            default: break
+            }
+        }
+        let language = VoiceLanguage.detect(texts.joined(separator: " ").isEmpty ? userText : texts.joined(separator: " "),
+                                            fallback: .detect(userText, fallback: .german))
+        if announcesActions(), let announcement = ActionAnnouncement.text(for: cards, language: language) {
+            texts.append(announcement)
+        }
+        guard !texts.isEmpty, let last = fresh.last else { return }
+        readAutomatically("message-\(last.id)", texts.joined(separator: "\n"), language)
+    }
+
+    private func status(of call: ToolCall) -> ChatMessage.ActionStatus? {
+        for message in conversation?.messages ?? [] {
+            if case .action(let other, let status) = message.content, other.id == call.id { return status }
+        }
+        return nil
+    }
+
+    /// Whether the last user message was spoken; confirmations continue reading in that case.
+    private var lastUserMessageWasSpoken: Bool {
+        guard let last = conversation?.messages.last(where: { if case .user = $0.content { true } else { false } }) else { return false }
+        return isSpoken(last)
     }
 
     func confirm(_ call: ToolCall) async {
         guard let conversation else { return }
         actionTimes[call.id] = now()
+        let index = conversation.history.count
         await conversation.confirm(call)
         persist()
+        readAfterConfirmation(from: index, call: call)
+    }
+
+    /// "Ausgeführt." and whatever the model says next, when answers are being read (SP4a).
+    private func readAfterConfirmation(from index: Int, call: ToolCall) {
+        let spoken = lastUserMessageWasSpoken
+        guard let conversation, readPolicy().readsAutomatically(lastUserMessageWasSpoken: spoken, conversationVisible: isPresented)
+        else { return }
+        let texts = conversation.messages.filter { $0.id >= index }.compactMap { message -> String? in
+            if case .assistant(let text) = message.content { return text }
+            return nil
+        }
+        let language = VoiceLanguage.detect(texts.joined(separator: " "), fallback: .german)
+        var parts = [String]()
+        if announcesActions(), case .done(let output) = status(of: call), ActionCardView.error(in: output) == nil {
+            parts.append(ActionAnnouncement.executed(language))
+        }
+        parts += texts
+        guard !parts.isEmpty else { return }
+        readAutomatically("confirm-\(call.id)", parts.joined(separator: "\n"), language)
     }
 
     /// "Alle bestätigen (N)" (mockup e).
@@ -121,6 +198,7 @@ final class AssistantModel {
         guard conversation?.isBusy != true else { return }
         conversation?.clear()
         actionTimes = [:]
+        spokenMarks = []
         taskContext = nil
         store.delete(key)
     }
@@ -128,6 +206,7 @@ final class AssistantModel {
     private func persist() {
         guard let conversation else { return }
         store.save(conversation.history, actionTimes: actionTimes, for: key, now: now())
+        store.saveSpokenMarks(spokenMarks, for: key)
     }
 
     // MARK: Instructions
@@ -138,7 +217,7 @@ final class AssistantModel {
         let time = current.formatted(.dateTime.hour().minute())
         return """
         Du bist der Assistent der App Tagwerk, die Aufgaben (Erinnerungen, GitHub-Issues, lokale Aufgaben) und \
-        Kalender zusammenführt und Tage plant. Antworte knapp auf Deutsch.
+        Kalender zusammenführt und Tage plant. Antworte knapp in der Sprache der letzten Nachricht des Nutzers (Deutsch oder Englisch).
         Heute ist \(AIPlanner.dayString(today)), es ist \(time) Uhr (Zeitzone \(planning.calendar.timeZone.identifier)).
         Nutze die Funktionen: lesende darfst du jederzeit aufrufen, um nachzusehen. Ändernde Funktionen rufst du \
         direkt auf, ohne vorher im Text um Erlaubnis zu fragen; die App zeigt sie als Karte und führt sie erst nach \

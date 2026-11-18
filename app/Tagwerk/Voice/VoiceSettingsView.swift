@@ -1,0 +1,140 @@
+import AVFoundation
+import Speech
+import SwiftUI
+import TagwerkCore
+
+/// State of one language pack on this iPhone.
+enum LanguagePackState: Equatable {
+    case installed, available, downloading, unsupported
+
+    var label: String {
+        switch self {
+        case .installed: "Geladen · auf dem iPhone"
+        case .available: "Wird beim ersten Sprechen geladen"
+        case .downloading: "Wird geladen …"
+        case .unsupported: "Nicht unterstützt"
+        }
+    }
+}
+
+enum VoiceAvailability {
+    static func packState(_ language: VoiceLanguage) async -> LanguagePackState {
+        guard let module = await AppleSpeechRecognizer.module(.dictation, language: language) else { return .unsupported }
+        switch await AssetInventory.status(forModules: [module]) {
+        case .installed: return .installed
+        case .downloading: return .downloading
+        case .supported: return .available
+        default: return .unsupported
+        }
+    }
+
+    /// The language used for recognition: the setting, or the iPhone language when it says "auto".
+    static func recognitionLanguage(setting: String, locale: Locale = .current) -> VoiceLanguage {
+        VoiceLanguage(rawValue: setting) ?? .from(locale: locale)
+    }
+
+    /// "Mikrofon an, Vorlesen nie" for the row in "KI".
+    static func summary(inputEnabled: Bool, readAloud: String) -> String {
+        let policy = ReadAloudPolicy(rawValue: readAloud) ?? .never
+        return "Mikrofon \(inputEnabled ? "an" : "aus"), Vorlesen \(policy.title.lowercased())"
+    }
+}
+
+/// Einstellungen › KI › Sprache (mockup SP7a). The voice mode section follows with stage 2.
+struct VoiceSettingsView: View {
+    @Environment(AppEnvironment.self) private var environment
+    @State private var microphone = AVAudioApplication.shared.recordPermission
+    @State private var packs: [VoiceLanguage: LanguagePackState] = [:]
+    @State private var voices: [VoiceLanguage: [SpokenVoice]] = [:]
+
+    var body: some View {
+        @Bindable var settings = environment.settings
+        Form {
+            Section {
+                Toggle("Mikrofon in Gesprächen", isOn: $settings.voiceInputEnabled)
+                microphoneRow
+                ForEach(VoiceLanguage.allCases, id: \.self) { language in
+                    LabeledContent("Sprachpaket \(Self.name(language))", value: packs[language]?.label ?? "…")
+                }
+                Picker("Erkennung in", selection: $settings.voiceRecognitionLanguage) {
+                    Text("Automatisch").tag("auto")
+                    ForEach(VoiceLanguage.allCases, id: \.self) { Text(Self.name($0)).tag($0.rawValue) }
+                }
+            } header: {
+                Text("Spracheingabe")
+            } footer: {
+                Text("Tagwerk wandelt Sprache auf dem iPhone in Text um. Der Ton verlässt das Gerät nicht. An ChatGPT geht nur der Text, den du sendest.")
+            }
+
+            Section {
+                Picker("Antworten vorlesen", selection: $settings.voiceReadAloud) {
+                    ForEach(ReadAloudPolicy.allCases, id: \.self) { Text($0.title).tag($0.rawValue) }
+                }
+                Toggle("Änderungen ansagen", isOn: $settings.voiceAnnounceActions)
+                voicePicker(.german, selection: $settings.voiceGermanVoiceID)
+                voicePicker(.english, selection: $settings.voiceEnglishVoiceID)
+                VStack(alignment: .leading) {
+                    Text("Tempo")
+                    Slider(value: $settings.voiceRate, in: 0.3...0.65) {
+                        Text("Tempo")
+                    } minimumValueLabel: {
+                        Image(systemName: "tortoise")
+                    } maximumValueLabel: {
+                        Image(systemName: "hare")
+                    }
+                }
+                Button("Probe hören") {
+                    let german = VoiceAvailability.recognitionLanguage(setting: settings.voiceRecognitionLanguage) == .german
+                    environment.voiceOutput.speak(
+                        id: "sample",
+                        text: german ? "So klingt Tagwerk, wenn es dir eine Antwort vorliest."
+                            : "This is how Tagwerk sounds when it reads an answer to you.",
+                        explicit: true, fallback: german ? .german : .english)
+                }
+            } header: {
+                Text("Vorlesen")
+            } footer: {
+                Text("Vorgelesen wird mit den Stimmen dieses iPhones. Bessere Stimmen lädst du unter iOS-Einstellungen › Bedienungshilfen › Gesprochene Inhalte › Stimmen. Bei stummem iPhone liest Tagwerk nur vor, wenn du „Vorlesen“ antippst.")
+            }
+        }
+        .navigationTitle("Sprache")
+        .task { await refresh() }
+        .onDisappear { environment.voiceOutput.stop() }
+    }
+
+    @ViewBuilder
+    private var microphoneRow: some View {
+        switch microphone {
+        case .granted:
+            LabeledContent("Mikrofon", value: "Erlaubt")
+        case .denied:
+            Button {
+                if let url = URL(string: UIApplication.openSettingsURLString) { UIApplication.shared.open(url) }
+            } label: {
+                LabeledContent("Mikrofon", value: "Nicht erlaubt · Einstellungen öffnen")
+            }
+        default:
+            LabeledContent("Mikrofon", value: "Wird beim ersten Sprechen gefragt")
+        }
+    }
+
+    private func voicePicker(_ language: VoiceLanguage, selection: Binding<String?>) -> some View {
+        Picker("Stimme \(Self.name(language))", selection: selection) {
+            Text("Automatisch").tag(String?.none)
+            ForEach(voices[language] ?? []) { voice in
+                Text(voice.qualityLabel.map { "\(voice.name) (\($0))" } ?? voice.name).tag(Optional(voice.id))
+            }
+        }
+    }
+
+    private func refresh() async {
+        microphone = AVAudioApplication.shared.recordPermission
+        let speaker = SystemSpeaker()
+        for language in VoiceLanguage.allCases {
+            packs[language] = await VoiceAvailability.packState(language)
+            voices[language] = speaker.voices(for: language)
+        }
+    }
+
+    static func name(_ language: VoiceLanguage) -> String { language == .german ? "Deutsch" : "English" }
+}

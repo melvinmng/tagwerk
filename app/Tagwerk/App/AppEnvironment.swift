@@ -26,6 +26,10 @@ final class AppEnvironment {
     let planner: AIPlanner
     /// The assistant chat (design §8.3); sends only what the user writes.
     let assistant: AssistantModel
+    /// Reads answers aloud (plan voice-chat).
+    let voiceOutput: VoiceOutputModel
+    /// A fresh recognizer per conversation; the demo launch argument replaces it with a scripted one.
+    let makeRecognizer: @MainActor () -> SpeechRecognizing
     /// Deadline notifications (design 2b §9); never calls an AI feature.
     let notifications: NotificationScheduler
     /// Target of a tapped notification until the app shows it.
@@ -114,6 +118,12 @@ final class AppEnvironment {
                              events: { interval in gateway.events(in: interval, calendarIDs: nil) })
         self.assistant = AssistantModel(responder: ai.client, tools: tools, model: { try await ai.selectedModel() },
                                         store: ChatStore(context: context), planning: planning)
+        self.voiceOutput = VoiceOutputModel(speaker: SystemSpeaker(), audio: SystemVoiceAudioSession.shared, preferences: {
+            VoiceOutputModel.Preferences(germanVoiceID: settings.voiceGermanVoiceID, englishVoiceID: settings.voiceEnglishVoiceID,
+                                         rate: settings.voiceRate)
+        })
+        let demoVoice = ProcessInfo.processInfo.arguments.contains("-TagwerkDemoVoice")
+        self.makeRecognizer = { demoVoice ? DemoSpeechRecognizer() : AppleSpeechRecognizer(kind: .dictation) }
         let gitHubProvider = self.gitHub
         assistant.reader = GitHubRepositoryReader(api: gitHubProvider.api)
         assistant.issueReference = { id in

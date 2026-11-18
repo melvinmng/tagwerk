@@ -333,7 +333,7 @@ extension AIPlanner {
 
     static let revisionInstructions = """
     Jetzt besprichst du die offenen Vorschläge einer Planung. Die Person kommentiert den Vorschlag about. \
-    Antworte im Format suggestion_revision: reply (ein bis zwei Sätze auf Deutsch, was du geändert hast und warum) \
+    Antworte im Format suggestion_revision: reply (ein bis zwei Sätze in der Sprache des Kommentars, Deutsch oder Englisch, was du geändert hast und warum) \
     und changes (nur die Vorschläge, die sich ändern, mit ref, day, start, minutes). Ändere nur, was der Kommentar \
     verlangt; andere Vorschläge nur, wenn es dafür nötig ist (zum Beispiel ein Tausch). Vorschläge mit status \
     movedByUser hat die Person selbst gesetzt (aiStart war deine Zeit): lass sie unverändert, außer about verweist \

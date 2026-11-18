@@ -10,6 +10,8 @@ final class ChatThreadRecord {
     var historyData: Data = Data()
     /// JSON of `[String: Date]`: when each action (call ID) was carried out.
     var actionTimesData: Data = Data()
+    /// JSON of `[SpokenMark]`: the user messages that came from a recording (plan voice-chat).
+    var spokenData: Data = Data()
     var updatedAt: Date = Date.distantPast
 
     init(key: String) {
@@ -50,6 +52,17 @@ final class ChatStore {
         try? context.save()
     }
 
+    func spokenMarks(for key: String) -> [SpokenMark] {
+        guard let record = record(key) else { return [] }
+        return (try? JSONDecoder().decode([SpokenMark].self, from: record.spokenData)) ?? []
+    }
+
+    func saveSpokenMarks(_ marks: [SpokenMark], for key: String) {
+        guard let record = record(key) else { return }
+        record.spokenData = (try? JSONEncoder().encode(marks)) ?? Data()
+        try? context.save()
+    }
+
     func delete(_ key: String) {
         if let record = record(key) { context.delete(record) }
         try? context.save()
@@ -60,4 +73,18 @@ final class ChatStore {
         descriptor.fetchLimit = 1
         return try? context.fetch(descriptor).first
     }
+}
+
+/// A spoken user message: its position in the history and the start of its text, so a mark never sticks to
+/// another message after the history changed.
+struct SpokenMark: Codable, Equatable, Sendable {
+    let index: Int
+    let prefix: String
+
+    init(index: Int, text: String) {
+        self.index = index
+        prefix = String(text.prefix(40))
+    }
+
+    func matches(index: Int, text: String) -> Bool { self.index == index && prefix == String(text.prefix(40)) }
 }

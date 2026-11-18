@@ -2,15 +2,7 @@ import AVFoundation
 import Foundation
 import Speech
 import Synchronization
-
-/// German or English: the two languages Tagwerk recognizes and reads aloud.
-enum VoiceLanguage: String, CaseIterable, Sendable {
-    case german = "de-DE"
-    case english = "en-US"
-
-    var locale: Locale { Locale(identifier: rawValue) }
-    var shortName: String { self == .german ? "DE" : "EN" }
-}
+import TagwerkCore
 
 /// Which Apple transcriber turns speech into text.
 enum TranscriberKind: String, CaseIterable, Sendable {
@@ -88,6 +80,7 @@ enum AudioLevel {
 /// `SpeechAnalyzer` fed from the microphone through `AVAudioEngine`.
 final class AppleSpeechRecognizer: SpeechRecognizing, @unchecked Sendable {
     let kind: TranscriberKind
+    private let audio: VoiceAudioSession
     private let state = Mutex(Session?.none)
 
     private final class Session: @unchecked Sendable {
@@ -109,8 +102,9 @@ final class AppleSpeechRecognizer: SpeechRecognizing, @unchecked Sendable {
         }
     }
 
-    init(kind: TranscriberKind = .dictation) {
+    init(kind: TranscriberKind = .dictation, audio: VoiceAudioSession = SystemVoiceAudioSession.shared) {
         self.kind = kind
+        self.audio = audio
     }
 
     /// The module for `language`, or nil when the device does not support it.
@@ -151,8 +145,7 @@ final class AppleSpeechRecognizer: SpeechRecognizing, @unchecked Sendable {
             let (inputs, inputContinuation) = AsyncStream<AnalyzerInput>.makeStream()
             let analyzer = SpeechAnalyzer(modules: [module])
             let session = Session(analyzer: analyzer, converter: converter, input: inputContinuation, events: continuation)
-            try AVAudioSession.sharedInstance().setCategory(.record, mode: .measurement)
-            try AVAudioSession.sharedInstance().setActive(true)
+            try audio.activate(.recording)
             try await analyzer.start(inputSequence: inputs)
             session.resultsTask = Task { await Self.readResults(of: module, into: continuation) }
             Self.installTap(on: session)
@@ -174,7 +167,7 @@ final class AppleSpeechRecognizer: SpeechRecognizing, @unchecked Sendable {
         session.input.finish()
         try? await session.analyzer.finalizeAndFinishThroughEndOfInput()
         await session.resultsTask?.value
-        try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
+        audio.deactivate()
         session.events.yield(.finished)
         session.events.finish()
     }
@@ -186,7 +179,7 @@ final class AppleSpeechRecognizer: SpeechRecognizing, @unchecked Sendable {
         session.input.finish()
         await session.analyzer.cancelAndFinishNow()
         session.resultsTask?.cancel()
-        try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
+        audio.deactivate()
         session.events.finish()
     }
 
