@@ -5,7 +5,8 @@ import Foundation
 ///
 /// Like `DictationMachine` it owns no timers, recognizer or speaker. The caller reports events with the
 /// current time and executes the returned `Effect`s. The microphone is off while the answer is spoken, and
-/// nothing is sent from `paused` or `ended`.
+/// nothing is sent from `paused` or `ended`. Open action cards keep listening (issue #120): a whole-sentence
+/// "ja" confirms after a two-second countdown, "nein" declines, anything else is sent as a correction.
 public struct VoiceModeMachine: Equatable, Sendable {
     public enum Phase: Equatable, Sendable {
         case idle
@@ -20,8 +21,8 @@ public struct VoiceModeMachine: Equatable, Sendable {
         case speaking
         /// The short tone after an answer; listening starts when it has played.
         case tone
-        /// An action card waits for a tap; listening is paused until the cards are resolved.
-        case awaitingConfirmation
+        /// "Ja" was heard: the cards are confirmed at `deadline` unless the user speaks or cancels.
+        case confirming(deadline: Date)
         case paused(PauseReason)
         case ended
     }
@@ -36,7 +37,7 @@ public struct VoiceModeMachine: Equatable, Sendable {
     /// How a turn with ChatGPT ended (a sent message, a confirmed or declined card, a retry).
     public enum Outcome: Equatable, Sendable {
         /// `speech` is the text to read (answer and card announcement), possibly empty.
-        case answered(speech: String, hasPendingCards: Bool)
+        case answered(speech: String, cards: OpenCards)
         /// Nothing was sent, e.g. the conversation was busy.
         case rejected
         case failed(offline: Bool)
@@ -59,6 +60,11 @@ public struct VoiceModeMachine: Equatable, Sendable {
         case stopSpeaking
         case playTone
         case announce(Announcement)
+        /// Speak a short answer to a spoken reply, then play the tone and listen again.
+        case prompt(ActionAnnouncement.Prompt)
+        /// Confirm or decline these cards (still the ones the user answered to).
+        case confirm(ids: [String])
+        case decline(ids: [String])
         /// Put the text into the message field of the normal chat.
         case moveToDraft(String)
         /// Leave the voice mode: release the audio session and show the normal chat.
@@ -73,6 +79,8 @@ public struct VoiceModeMachine: Equatable, Sendable {
     public static let startTimeout: TimeInterval = 10
     public static let sendTimeout: TimeInterval = 90
     public static let toneTimeout: TimeInterval = 2
+    /// Time between a spoken "ja" and running the action.
+    public static let confirmationDelay: TimeInterval = 2
 
     public private(set) var phase: Phase = .idle
     public private(set) var language: VoiceLanguage
@@ -83,8 +91,10 @@ public struct VoiceModeMachine: Equatable, Sendable {
 
     private var lastChange: Date?
     private var phaseSince: Date?
-    /// Action cards are open after the current answer has been spoken.
-    private var cardsPending = false
+    /// Action cards waiting for an answer.
+    public private(set) var openCards = OpenCards.none
+    /// The countdown of a "ja" was just stopped; a following "nein" or "stopp" only means that.
+    private var confirmationCancelled = false
 
     public init(language: VoiceLanguage, sendDelay: TimeInterval, silenceLimit: TimeInterval) {
         self.language = language
@@ -102,25 +112,25 @@ public struct VoiceModeMachine: Equatable, Sendable {
 
     /// Whole seconds left in the countdown, rounded up.
     public func remaining(now: Date) -> Int {
-        guard case .countdown(let deadline) = phase else { return 0 }
+        let deadline: Date
+        switch phase {
+        case .countdown(let end), .confirming(let end): deadline = end
+        default: return 0
+        }
         return max(0, Int(deadline.timeIntervalSince(now).rounded(.up)))
     }
 
     // MARK: Start and listening
 
-    /// Starts listening, or waits first when action cards are already open (they would otherwise be closed
-    /// as declined by the next message).
-    public mutating func start(now: Date, cardsPending: Bool = false) -> [Effect] {
+    /// Starts listening; `cards` are action cards that are already open.
+    public mutating func start(now: Date, cards: OpenCards = .none) -> [Effect] {
         guard phase == .idle else { return [] }
-        guard !cardsPending else {
-            phase = .awaitingConfirmation
-            phaseSince = now
-            return []
-        }
+        openCards = cards
         return listen(now: now)
     }
 
     public mutating func recordingStarted(now: Date) {
+        if case .confirming = phase { lastChange = now; return }
         guard phase == .starting else { return }
         phase = .listening
         phaseSince = now
@@ -128,6 +138,13 @@ public struct VoiceModeMachine: Equatable, Sendable {
     }
 
     public mutating func heard(final: String, volatile: String, now: Date) {
+        if case .confirming = phase {
+            // Any speech during the countdown stops it and counts as a new utterance.
+            guard !(final + volatile).trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
+            phase = .listening
+            phaseSince = now
+            confirmationCancelled = true
+        }
         switch phase {
         case .listening, .countdown:
             if final != finalText || volatile != volatileText {
@@ -163,6 +180,12 @@ public struct VoiceModeMachine: Equatable, Sendable {
             phase = .finalizing
             phaseSince = now
             return [.stopListening]
+        case .confirming(let deadline):
+            guard now >= deadline else { return [] }
+            let ids = openCards.ids
+            phase = .sending
+            phaseSince = now
+            return [.cancelListening, .confirm(ids: ids)]
         case .sending:
             guard elapsed(now) >= Self.sendTimeout else { return [] }
             return pause(.failed, announce: .failed)
@@ -182,10 +205,7 @@ public struct VoiceModeMachine: Equatable, Sendable {
         case .finalizing:
             let message = final.trimmingCharacters(in: .whitespacesAndNewlines)
             guard !message.isEmpty else { return listen(now: now) }
-            phase = .sending
-            phaseSince = now
-            clearText()
-            return [.send(message)]
+            return answer(message, now: now)
         case .listening, .countdown, .starting:
             // The recognizer ended without being asked; keep the text for the field, send nothing.
             finalText = final
@@ -198,7 +218,7 @@ public struct VoiceModeMachine: Equatable, Sendable {
 
     public mutating func recognizerFailed() -> [Effect] {
         switch phase {
-        case .starting, .listening, .countdown, .finalizing:
+        case .starting, .listening, .countdown, .finalizing, .confirming:
             return keepText() + pause(.failed, announce: .failed)
         default:
             return []
@@ -222,20 +242,24 @@ public struct VoiceModeMachine: Equatable, Sendable {
 
     public mutating func turnFinished(_ outcome: Outcome, now: Date) -> [Effect] {
         switch phase {
-        case .sending, .awaitingConfirmation:
+        case .sending, .tone, .paused:
             return handle(outcome, now: now)
         case .speaking:
             // A card was tapped while the answer was read: its result replaces the rest of the answer.
             return [.stopSpeaking] + handle(outcome, now: now)
-        default:
+        case .starting, .listening, .countdown, .finalizing, .confirming:
+            // A card was tapped while listening: the microphone goes off for the answer.
+            clearText()
+            return [.cancelListening] + handle(outcome, now: now)
+        case .idle, .ended:
             return []
         }
     }
 
     private mutating func handle(_ outcome: Outcome, now: Date) -> [Effect] {
         switch outcome {
-        case .answered(let speech, let hasPendingCards):
-            cardsPending = hasPendingCards
+        case .answered(let speech, let cards):
+            openCards = cards
             if !speech.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                 phase = .speaking
                 phaseSince = now
@@ -264,10 +288,6 @@ public struct VoiceModeMachine: Equatable, Sendable {
     /// "Unterbrechen": stops the voice and listens right away, without the tone.
     public mutating func userInterrupt(now: Date) -> [Effect] {
         guard phase == .speaking else { return [] }
-        if cardsPending {
-            phase = .awaitingConfirmation
-            return [.stopSpeaking]
-        }
         return [.stopSpeaking] + listen(now: now)
     }
 
@@ -286,7 +306,7 @@ public struct VoiceModeMachine: Equatable, Sendable {
     /// "Pause": stops listening; text heard so far goes into the field.
     public mutating func pause() -> [Effect] {
         switch phase {
-        case .starting, .listening, .countdown:
+        case .starting, .listening, .countdown, .confirming:
             let effects = keepText()
             phase = .paused(.user)
             return [.cancelListening] + effects
@@ -296,6 +316,16 @@ public struct VoiceModeMachine: Equatable, Sendable {
     }
 
     /// Also stops a running announcement, so the microphone does not hear it.
+    /// "Abbrechen" during the confirmation countdown: the cards stay open, listening goes on.
+    public mutating func cancelConfirmation(now: Date) -> [Effect] {
+        guard case .confirming = phase else { return [] }
+        phase = .listening
+        phaseSince = now
+        lastChange = now
+        confirmationCancelled = false
+        return []
+    }
+
     public mutating func resume(now: Date) -> [Effect] {
         guard case .paused = phase else { return [] }
         return [.stopSpeaking] + listen(now: now)
@@ -314,18 +344,58 @@ public struct VoiceModeMachine: Equatable, Sendable {
 
     private mutating func listen(now: Date) -> [Effect] {
         clearText()
-        cardsPending = false
         phase = .starting
         phaseSince = now
         return [.startListening(language)]
     }
 
-    private mutating func afterSpeaking(now: Date) -> [Effect] {
-        if cardsPending {
-            phase = .awaitingConfirmation
-            phaseSince = now
-            return []
+    /// The final text of an utterance: an answer to open cards, or a message to send.
+    private mutating func answer(_ message: String, now: Date) -> [Effect] {
+        let reply = VoiceReply(message)
+        let cancelled = confirmationCancelled
+        confirmationCancelled = false
+        if reply == .stop || (cancelled && reply == .decline) {
+            // "Stopp" is never sent; after a stopped countdown "nein" only meant that.
+            return listen(now: now)
         }
+        guard !openCards.isEmpty, reply != .other else {
+            phase = .sending
+            phaseSince = now
+            clearText()
+            return [.send(message)]
+        }
+        let cards = openCards
+        switch reply {
+        case .confirm where cards.count > 1, .confirmDelete where cards.count > 1, .decline where cards.count > 1:
+            return say(.severalCards(cards.count), now: now)
+        case .confirm where cards.deletes > 0:
+            return say(.sayDelete, now: now)
+        case .confirmAll where cards.deletes > 0:
+            return say(.deletesNeedTap, now: now)
+        case .confirm, .confirmDelete, .confirmAll:
+            clearText()
+            phase = .confirming(deadline: now.addingTimeInterval(Self.confirmationDelay))
+            phaseSince = now
+            // Keep listening during the countdown, so "stopp" or a correction can stop it.
+            return [.startListening(language)]
+        case .decline:
+            clearText()
+            phase = .sending
+            phaseSince = now
+            return [.decline(ids: cards.ids)]
+        case .stop, .other:
+            return listen(now: now)
+        }
+    }
+
+    private mutating func say(_ prompt: ActionAnnouncement.Prompt, now: Date) -> [Effect] {
+        clearText()
+        phase = .speaking
+        phaseSince = now
+        return [.prompt(prompt)]
+    }
+
+    private mutating func afterSpeaking(now: Date) -> [Effect] {
         phase = .tone
         phaseSince = now
         return [.playTone]
@@ -342,12 +412,12 @@ public struct VoiceModeMachine: Equatable, Sendable {
         switch phase {
         case .idle, .ended:
             return []
-        case .starting, .listening, .countdown, .finalizing:
+        case .starting, .listening, .countdown, .finalizing, .confirming:
             effects = [.cancelListening] + keepText()
         case .speaking, .paused:
             // `.paused` may still be announcing why.
             effects = [.stopSpeaking]
-        case .sending, .tone, .awaitingConfirmation:
+        case .sending, .tone:
             effects = []
         }
         phase = .ended

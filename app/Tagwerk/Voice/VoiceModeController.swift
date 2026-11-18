@@ -8,14 +8,14 @@ import UIKit
 @MainActor
 protocol VoiceModeAssistant: AnyObject {
     var onTurnFinished: ((AssistantModel.TurnOutcome) -> Void)? { get set }
-    /// Action cards wait for a tap.
-    var hasPendingActions: Bool { get }
+    /// Action cards waiting for an answer.
+    var openCards: OpenCards { get }
     func send(_ text: String, spoken: Bool) async
+    func confirmCards(_ ids: [String]) async
+    func declineCards(_ ids: [String]) async
 }
 
-extension AssistantModel: VoiceModeAssistant {
-    var hasPendingActions: Bool { conversation?.pendingActions.isEmpty == false }
-}
+extension AssistantModel: VoiceModeAssistant {}
 
 /// Runs the voice mode (mockup SP5a): wires `VoiceModeMachine` to the recognizer, the assistant, the reader
 /// and the tone inside one `.conversation` audio session. It is started by the user; a message goes out only
@@ -100,7 +100,7 @@ final class VoiceModeController {
             apply(machine.recognizerFailed())
             return
         }
-        apply(machine.start(now: now(), cardsPending: assistant.hasPendingActions))
+        apply(machine.start(now: now(), cards: assistant.openCards))
     }
 
     func doNotSend() { apply(machine.doNotSend()) }
@@ -108,6 +108,7 @@ final class VoiceModeController {
     func resume() { apply(machine.resume(now: now())) }
     func interrupt() { apply(machine.userInterrupt(now: now())) }
     func typeInstead() { apply(machine.typeInstead()) }
+    func cancelConfirmation() { apply(machine.cancelConfirmation(now: now())) }
     func end() { apply(machine.end()) }
 
     func tick() {
@@ -139,9 +140,9 @@ final class VoiceModeController {
     private func turnFinished(_ outcome: AssistantModel.TurnOutcome) {
         let mapped: VoiceModeMachine.Outcome
         switch outcome {
-        case .answered(let id, let speech, let hasPendingCards):
+        case .answered(let id, let speech, let cards):
             answerID = id
-            mapped = .answered(speech: speech, hasPendingCards: hasPendingCards)
+            mapped = .answered(speech: speech, cards: cards)
         case .rejected:
             mapped = .rejected
         case .failed(let offline):
@@ -164,6 +165,18 @@ final class VoiceModeController {
                 level = 0
             case .send(let text):
                 sending = Task { [assistant] in await assistant.send(text, spoken: true) }
+            case .prompt(let prompt):
+                speech += 1
+                let current = speech
+                output.speak(id: "voice-mode-notice", text: ActionAnnouncement.prompt(prompt, language: machine.language),
+                             explicit: true, fallback: machine.language) { [weak self] _ in
+                    guard let self, current == self.speech else { return }
+                    self.apply(self.machine.speakingFinished(now: self.now()))
+                }
+            case .confirm(let ids):
+                sending = Task { [assistant] in await assistant.confirmCards(ids) }
+            case .decline(let ids):
+                sending = Task { [assistant] in await assistant.declineCards(ids) }
             case .speak(let text):
                 speech += 1
                 let current = speech

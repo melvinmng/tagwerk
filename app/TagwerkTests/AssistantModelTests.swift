@@ -113,9 +113,9 @@ struct AssistantModelTests {
         await model.send("Was steht an?", spoken: true)
         #expect(read.isEmpty)
         let turn = try #require(turns.first)
-        guard case .answered(let id, let speech, let pending) = turn else { Issue.record("\(turn)"); return }
+        guard case .answered(let id, let speech, let cards) = turn else { Issue.record("\(turn)"); return }
         #expect(speech == "Heute sind drei Termine.")
-        #expect(!pending)
+        #expect(cards.isEmpty)
         #expect(id == "message-1")
     }
 
@@ -129,16 +129,16 @@ struct AssistantModelTests {
         model.open(context: .tasks)
         model.onTurnFinished = { turns.append($0) }
         await model.send("Fahrrad ist fertig", spoken: true)
-        guard case .answered(_, let speech, let pending) = turns.first else { Issue.record("no turn"); return }
+        guard case .answered(_, let speech, let cards) = turns.first else { Issue.record("no turn"); return }
         #expect(speech.contains("Ich hake das ab."))
-        #expect(speech.contains("Bitte bestätige auf dem Bildschirm."))
-        #expect(pending)
+        #expect(speech.contains("Sag ja oder nein, oder was anders sein soll."))
+        #expect(cards == OpenCards(ids: ["c1"], deletes: 0))
         let call = try #require(model.conversation?.pendingActions.first)
         await model.confirm(call)
-        guard case .answered(_, let next, let stillPending) = turns.last else { Issue.record("no turn"); return }
+        guard case .answered(_, let next, let stillOpen) = turns.last else { Issue.record("no turn"); return }
         #expect(next.hasPrefix("Ausgeführt."))
         #expect(next.contains("Erledigt, viel Spaß."))
-        #expect(!stillPending)
+        #expect(stillOpen.isEmpty)
         #expect(turns.count == 2)
     }
 
@@ -153,9 +153,9 @@ struct AssistantModelTests {
         await model.send("Fahrrad ist fertig", spoken: true)
         let call = try #require(model.conversation?.pendingActions.first)
         await model.decline(call)
-        guard case .answered(_, let speech, let pending) = turns.last else { Issue.record("no turn"); return }
+        guard case .answered(_, let speech, let cards) = turns.last else { Issue.record("no turn"); return }
         #expect(speech == "Gut, ich lasse es offen.")
-        #expect(!pending)
+        #expect(cards.isEmpty)
     }
 
     @Test func voiceTurn_keepsTheConversationOpen() async throws {
@@ -166,6 +166,24 @@ struct AssistantModelTests {
         model.open(context: .tasks)
         #expect(model.conversation === before)
         #expect(model.context == .settings)
+    }
+
+    @Test func voiceTurn_spokenConfirmation_checksTheCards() async throws {
+        responder.enqueueEvents([.functionCall(callID: "c1", name: "complete_task", arguments: #"{"id":"local:Fahrrad"}"#),
+                                 .completed(usage: nil)])
+        responder.enqueue("Erledigt.")
+        let (model, _, _) = await make()
+        var turns: [AssistantModel.TurnOutcome] = []
+        model.open(context: .tasks)
+        model.onTurnFinished = { turns.append($0) }
+        await model.send("Fahrrad ist fertig", spoken: true)
+        await model.confirmCards(["other"])
+        #expect(turns.last == .rejected)
+        #expect(model.openCards.ids == ["c1"])
+        await model.confirmCards(["c1"])
+        #expect(model.openCards.isEmpty)
+        guard case .answered(_, let speech, _) = turns.last else { Issue.record("no turn"); return }
+        #expect(speech.hasPrefix("Ausgeführt."))
     }
 
     @Test func voiceTurn_offlineAndRejected() async throws {

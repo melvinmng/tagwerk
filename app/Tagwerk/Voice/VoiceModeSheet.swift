@@ -53,7 +53,8 @@ struct VoiceModePanel: View {
             status("Startet …", symbol: "mic", tint: .secondary)
         case .listening:
             VStack(alignment: .leading, spacing: 6) {
-                status("Hört zu … · auf dem iPhone", symbol: "waveform", tint: .red)
+                status(mode.machine.openCards.isEmpty ? "Hört zu … · auf dem iPhone" : "Hört zu … · sag ja, nein oder was anders sein soll",
+                       symbol: "waveform", tint: .red)
                 heardText
                 LevelMeter(level: mode.level)
             }
@@ -83,8 +84,15 @@ struct VoiceModePanel: View {
             status("ChatGPT spricht … · Mikrofon aus", symbol: "speaker.wave.2", tint: .accentColor)
         case .tone:
             status("Gleich hört Tagwerk wieder zu", symbol: "bell", tint: .secondary)
-        case .awaitingConfirmation:
-            status("Wartet auf deine Bestätigung · Zuhören pausiert", symbol: "pause.circle", tint: .purple)
+        case .confirming:
+            TimelineView(.periodic(from: .now, by: 0.25)) { _ in
+                HStack {
+                    Label("Wird in \(mode.remaining()) s ausgeführt", systemImage: "checkmark.circle")
+                        .font(.subheadline.weight(.semibold)).foregroundStyle(.purple)
+                    Spacer()
+                    Button("Abbrechen") { mode.cancelConfirmation() }.buttonStyle(.borderedProminent)
+                }
+            }
         case .paused(let reason):
             status(Self.text(reason), symbol: "pause.circle", tint: .orange)
         case .idle, .ended:

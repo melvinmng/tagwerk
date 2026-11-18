@@ -35,7 +35,7 @@ final class AssistantModel {
     /// How a turn ended, for the voice mode (plan voice-chat, stage 2 point 9).
     enum TurnOutcome: Equatable {
         /// `id` is the answer to highlight; `speech` the answer and card announcement, possibly empty.
-        case answered(id: String, speech: String, hasPendingCards: Bool)
+        case answered(id: String, speech: String, cards: OpenCards)
         /// Nothing was sent (empty text, conversation busy).
         case rejected
         case failed(offline: Bool)
@@ -151,13 +151,37 @@ final class AssistantModel {
         let language = VoiceLanguage.detect(texts.joined(separator: " "), fallback: fallback)
         let parts = (executed ? [ActionAnnouncement.executed(language)] : []) + texts
         var speech = parts
-        if announcesActions(), let announcement = ActionAnnouncement.text(for: cards, language: language) {
+        let open = openCards
+        if announcesActions(), let announcement = ActionAnnouncement.text(for: cards, language: language, byVoice: true,
+                                                                          deletes: open.deletes) {
             speech.append(announcement)
         }
         let answer = fresh.last { if case .assistant = $0.content { true } else { false } }
         report(.answered(id: answer.map { "message-\($0.id)" } ?? "message-\(index)",
                          speech: speech.joined(separator: "\n"),
-                         hasPendingCards: !conversation.pendingActions.isEmpty))
+                         cards: open))
+    }
+
+    /// The cards waiting for an answer, for the voice mode (issue #120).
+    var openCards: OpenCards {
+        let pending = conversation?.pendingActions ?? []
+        return OpenCards(ids: pending.map(\.id), deletes: pending.filter { $0.name == "delete_event" }.count)
+    }
+
+    /// Spoken "ja" after the countdown: confirms the cards the user answered to, if they are still open.
+    func confirmCards(_ ids: [String]) async {
+        let calls = (conversation?.pendingActions ?? []).filter { ids.contains($0.id) }
+        guard !calls.isEmpty, calls.count == ids.count else { onTurnFinished?(.rejected); return }
+        if calls.count == 1 { await confirm(calls[0]) } else { await confirmAll() }
+    }
+
+    /// Spoken "nein": declines the one card the user answered to.
+    func declineCards(_ ids: [String]) async {
+        guard ids.count == 1, let call = conversation?.pendingActions.first(where: { $0.id == ids[0] }) else {
+            onTurnFinished?(.rejected)
+            return
+        }
+        await decline(call)
     }
 
     func isSpoken(_ message: ChatMessage) -> Bool {

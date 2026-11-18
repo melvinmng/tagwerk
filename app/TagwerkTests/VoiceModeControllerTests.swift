@@ -8,13 +8,29 @@ import UIKit
 @MainActor
 final class FakeVoiceAssistant: VoiceModeAssistant {
     var onTurnFinished: ((AssistantModel.TurnOutcome) -> Void)?
-    var hasPendingActions = false
+    var openCards = OpenCards.none
     var sent: [String] = []
+    var confirmed: [[String]] = []
+    var declined: [[String]] = []
     /// Outcomes reported for the next sends, in order.
     var replies: [AssistantModel.TurnOutcome] = []
 
     func send(_ text: String, spoken: Bool) async {
         sent.append(text)
+        reply()
+    }
+
+    func confirmCards(_ ids: [String]) async {
+        confirmed.append(ids)
+        reply()
+    }
+
+    func declineCards(_ ids: [String]) async {
+        declined.append(ids)
+        reply()
+    }
+
+    private func reply() {
         guard !replies.isEmpty else { return }
         onTurnFinished?(replies.removeFirst())
     }
@@ -79,7 +95,7 @@ final class VoiceModeHarness {
 struct VoiceModeControllerTests {
     @Test func loop_listenSendSpeakListen() async {
         let harness = VoiceModeHarness()
-        harness.assistant.replies = [.answered(id: "message-1", speech: "Drei Termine heute.", hasPendingCards: false)]
+        harness.assistant.replies = [.answered(id: "message-1", speech: "Drei Termine heute.", cards: .none)]
         await harness.startListening()
         #expect(harness.audio.currentMode == .conversation)
         #expect(harness.controller.phase == .listening)
@@ -99,16 +115,39 @@ struct VoiceModeControllerTests {
         #expect(harness.audio.currentMode == .conversation)
     }
 
-    @Test func pendingCard_pausesListening_untilConfirmed() async {
+    @Test func openCard_keepsListening_andJaConfirmsAfterCountdown() async {
         let harness = VoiceModeHarness()
-        harness.assistant.replies = [.answered(id: "message-1", speech: "Ich lege die Mail auf 16 Uhr.", hasPendingCards: true)]
+        let card = OpenCards(ids: ["c1"], deletes: 0)
+        harness.assistant.replies = [.answered(id: "message-1", speech: "Ich lege die Mail auf 16 Uhr.", cards: card),
+                                     .answered(id: "message-3", speech: "Ausgeführt.", cards: .none)]
         await harness.startListening()
         await harness.say("Leg die Mail auf 16 Uhr")
         harness.speaker.emit(.finished)
-        #expect(harness.controller.phase == .awaitingConfirmation)
-        #expect(harness.recognizer.started.count == 1)
-        harness.assistant.onTurnFinished?(.answered(id: "message-3", speech: "Ausgeführt.", hasPendingCards: false))
+        harness.tone.finish()
+        await harness.settle()
+        #expect(harness.controller.phase == .listening)
+        await harness.say("Ja")
+        guard case .confirming = harness.controller.phase else { Issue.record("\(harness.controller.phase)"); return }
+        #expect(harness.assistant.confirmed.isEmpty)
+        harness.clock += 2
+        harness.controller.tick()
+        await harness.settle()
+        #expect(harness.assistant.confirmed == [["c1"]])
         #expect(harness.controller.phase == .speaking)
+    }
+
+    @Test func openCard_neinDeclines_andCorrectionIsSent() async {
+        let harness = VoiceModeHarness()
+        let card = OpenCards(ids: ["c1"], deletes: 0)
+        harness.assistant.replies = [.answered(id: "message-1", speech: "Vorschlag.", cards: card)]
+        await harness.startListening()
+        await harness.say("Leg einen Termin an")
+        harness.speaker.emit(.finished)
+        harness.tone.finish()
+        await harness.settle()
+        await harness.say("Nimm den Arbeitskalender")
+        #expect(harness.assistant.sent.last == "Nimm den Arbeitskalender")
+        #expect(harness.assistant.declined.isEmpty)
     }
 
     @Test func doNotSend_movesTextToDraft() async {
@@ -153,7 +192,7 @@ struct VoiceModeControllerTests {
 
     @Test func interrupt_stopsVoiceAndListens() async {
         let harness = VoiceModeHarness()
-        harness.assistant.replies = [.answered(id: "message-1", speech: "Eine lange Antwort.", hasPendingCards: false)]
+        harness.assistant.replies = [.answered(id: "message-1", speech: "Eine lange Antwort.", cards: .none)]
         await harness.startListening()
         await harness.say("Erzähl")
         harness.controller.interrupt()
@@ -179,10 +218,10 @@ struct VoiceModeControllerTests {
 
     @Test func cardTappedWhileSpeaking_doesNotSkipToTone() async {
         let harness = VoiceModeHarness()
-        harness.assistant.replies = [.answered(id: "message-1", speech: "Zwei Änderungen.", hasPendingCards: true)]
+        harness.assistant.replies = [.answered(id: "message-1", speech: "Zwei Änderungen.", cards: OpenCards(ids: ["a", "b"], deletes: 0))]
         await harness.startListening()
         await harness.say("Plan meinen Tag")
-        harness.assistant.onTurnFinished?(.answered(id: "message-3", speech: "Ausgeführt.", hasPendingCards: false))
+        harness.assistant.onTurnFinished?(.answered(id: "message-3", speech: "Ausgeführt.", cards: .none))
         #expect(harness.controller.phase == .speaking)
         #expect(harness.tone.plays == 0)
         #expect(harness.output.speakingID == "message-3")
@@ -190,12 +229,12 @@ struct VoiceModeControllerTests {
         #expect(harness.controller.phase == .tone)
     }
 
-    @Test func start_withOpenCards_waits() async {
+    @Test func start_withOpenCards_listens() async {
         let harness = VoiceModeHarness()
-        harness.assistant.hasPendingActions = true
+        harness.assistant.openCards = OpenCards(ids: ["c1"], deletes: 0)
         await harness.startListening()
-        #expect(harness.controller.phase == .awaitingConfirmation)
-        #expect(harness.recognizer.started.isEmpty)
+        #expect(harness.controller.phase == .listening)
+        #expect(harness.controller.machine.openCards.count == 1)
     }
 
     @Test func end_stopsAnnouncement() async {
