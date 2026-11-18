@@ -1,0 +1,364 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tagwerk · Phase 2b-3 · Benachrichtigungen · Mockups N1–N3</title>
+<style>
+  /* Mockup frame uses the host theme (with fallbacks); phone screens depict the app in iOS dark mode. */
+  :root { color-scheme: light dark; }
+  body { font: 14px var(--font-sans, system-ui, sans-serif); color: var(--foreground, CanvasText); margin: 16px; }
+  h1 { font-size: 20px; margin: 0 0 4px; }
+  h2 { font-size: 18px; margin: 38px 0 4px; padding-top: 16px; border-top: 1px solid rgba(128,128,128,.3); display: flex; align-items: center; gap: 10px; }
+  .area { display: inline-grid; place-items: center; min-width: 34px; height: 34px; padding: 0 4px; border-radius: 9px; background: #0a84ff; color: #fff; font: 800 16px system-ui; flex-shrink: 0; box-sizing: border-box; }
+  .lead { color: var(--muted-foreground, #777); margin: 0 0 14px; line-height: 1.5; max-width: 980px; }
+  .status-line { display: inline-block; border: 1px solid rgba(255,159,10,.6); background: rgba(255,159,10,.1); border-radius: 8px; padding: 5px 11px; font-weight: 700; margin: 6px 0 12px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(392px, 1fr)); gap: 22px; align-items: start; }
+  .label { font: 600 13px var(--font-sans, system-ui); color: var(--muted-foreground, #777); margin: 0 0 8px 4px; }
+  .label b { color: var(--foreground, CanvasText); }
+  .code { display: inline-block; background: rgba(128,128,128,.28); color: var(--foreground, CanvasText); border-radius: 6px; padding: 1px 8px; font: 800 13px system-ui; margin-right: 4px; }
+  .code.r { background: #30d158; color: #000; }
+  .rec { background: #30d158; color: #000; font-size: 11px; font-weight: 700; padding: 1px 7px; border-radius: 99px; margin-left: 4px; }
+  .pc { font-size: 12.5px; color: var(--muted-foreground, #777); line-height: 1.5; margin: 8px 4px 0; max-width: 390px; }
+  .pc b { color: var(--foreground, CanvasText); }
+  .box { border: 1px solid rgba(48,209,88,.5); background: rgba(48,209,88,.07); border-radius: 12px; padding: 12px 16px; margin-top: 16px; line-height: 1.55; font-size: 13px; max-width: 1100px; }
+  .box h3 { margin: 0 0 6px; font-size: 14px; }
+  .box ul, .box ol { margin: 4px 0 0; padding-left: 20px; }
+  .box.neutral { border-color: rgba(128,128,128,.4); background: rgba(128,128,128,.07); }
+  code { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; background: rgba(128,128,128,.16); padding: 1px 4px; border-radius: 4px; }
+  .tablewrap { overflow-x: auto; }
+  table.sum { border-collapse: collapse; font-size: 13px; margin-top: 6px; }
+  table.sum td, table.sum th { padding: 5px 14px 5px 0; vertical-align: top; text-align: left; border-bottom: 1px solid rgba(128,128,128,.22); }
+  table.sum th { font-size: 12px; color: var(--muted-foreground, #777); }
+
+  .phone {
+    --bg: #000; --card: #1c1c1e; --card2: #2c2c2e; --sep: #38383a; --text: #fff; --sub: #8e8e93;
+    --blue: #0a84ff; --green: #30d158; --orange: #ff9f0a; --red: #ff453a;
+    background: var(--bg); color: var(--text); border-radius: 40px; padding: 14px 12px 12px;
+    font: 15px -apple-system, "SF Pro Text", system-ui, sans-serif; border: 6px solid #2a2a2c;
+    width: 390px; max-width: 100%; box-sizing: border-box; min-height: 700px;
+    display: flex; flex-direction: column; position: relative; overflow: hidden;
+  }
+  .phone.short { min-height: 0; }
+  .status { display: flex; justify-content: space-between; font: 600 13px system-ui; padding: 0 12px 10px; }
+  .title { font: 700 26px system-ui; padding: 0 6px 8px; }
+  .nav { display: flex; justify-content: center; padding: 2px 6px 8px; font-weight: 600; }
+  .section { color: var(--sub); font: 600 12px system-ui; text-transform: uppercase; letter-spacing: .4px; margin: 10px 8px 4px; }
+  .list { background: var(--card); border-radius: 18px; overflow: hidden; margin-bottom: 6px; }
+  .list.new { box-shadow: 0 0 0 1.5px #ffd60a; }
+  .item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-bottom: 1px solid var(--sep); font-size: 14px; }
+  .item:last-child { border-bottom: 0; }
+  .item .t { flex: 1; min-width: 0; }
+  .item .st { color: var(--sub); font-size: 12px; }
+  .field { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 10px 12px; border-bottom: 1px solid var(--sep); font-size: 14px; }
+  .field:last-child { border-bottom: 0; }
+  .field .v { color: var(--sub); text-align: right; }
+  .field .l { color: var(--blue); }
+  .field.hl { background: rgba(255,214,10,.08); }
+  .pick { background: #3a3a3c; border-radius: 8px; padding: 4px 9px; font-size: 13.5px; color: #fff; white-space: nowrap; }
+  .tog { width: 40px; height: 24px; border-radius: 99px; background: #48484a; position: relative; flex-shrink: 0; }
+  .tog::after { content: ""; position: absolute; top: 2px; left: 2px; width: 20px; height: 20px; border-radius: 50%; background: #fff; }
+  .tog.on { background: var(--green); } .tog.on::after { left: 18px; }
+  .note { color: var(--sub); font-size: 11.5px; padding: 4px 8px; line-height: 1.4; }
+  .note.warn { color: #ffc266; }
+  .spacer { flex: 1; }
+  .anno { font: 600 10.5px system-ui; color: #ffd60a; margin: 6px 6px 3px; }
+  .stepn { width: 24px; height: 24px; border-radius: 50%; background: rgba(142,142,147,.24); display: grid; place-items: center; font: 12px system-ui; flex-shrink: 0; }
+  .stepn.ok { background: var(--green); color: #000; font-weight: 700; }
+  .stepn.cur { box-shadow: 0 0 0 1.5px var(--blue); }
+  .ptxt { padding: 11px 12px; font-size: 14px; line-height: 1.45; border-bottom: 1px solid var(--sep); }
+  .ptxt:last-child { border-bottom: 0; }
+  .pbtn { display: inline-block; background: var(--blue); color: #fff; border-radius: 99px; padding: 7px 14px; font-weight: 600; font-size: 14px; }
+
+  /* System permission alert (text comes from iOS) */
+  .dim { position: absolute; inset: 0; background: rgba(0,0,0,.55); z-index: 2; }
+  .alert { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 272px; max-width: 86%; z-index: 3; background: rgba(44,44,46,.97); border-radius: 26px; padding: 18px 16px 12px; text-align: center; box-shadow: 0 16px 40px rgba(0,0,0,.7); box-sizing: border-box; }
+  .alert b { display: block; font-size: 16px; line-height: 1.3; margin-bottom: 6px; }
+  .alert p { margin: 0 0 14px; font-size: 13px; line-height: 1.4; color: #d1d1d6; }
+  .alert .ab { display: flex; gap: 8px; }
+  .alert .ab span { flex: 1; border-radius: 99px; padding: 9px 4px; font-size: 14px; font-weight: 600; background: #48484a; }
+  .alert .ab span.p { background: var(--blue); }
+
+  /* Lock screen */
+  .phone.lock { background: linear-gradient(165deg, #1b2a4e 0%, #2d1f4a 45%, #0d1420 100%); }
+  .lsdate { text-align: center; font: 600 17px system-ui; color: rgba(255,255,255,.85); margin-top: 16px; }
+  .lsclock { text-align: center; font: 700 78px/1 system-ui; letter-spacing: -2px; color: rgba(255,255,255,.92); margin: 2px 0 22px; }
+  .ncap { font: 600 10.5px system-ui; color: #ffd60a; margin: 8px 8px 3px; }
+  .notif { display: flex; gap: 10px; align-items: flex-start; border-radius: 22px; padding: 11px 12px; background: rgba(60,60,68,.6); border: 1px solid rgba(255,255,255,.14); box-shadow: inset 0 1px 0 rgba(255,255,255,.14); }
+  .appicon { width: 38px; height: 38px; border-radius: 9px; background: linear-gradient(145deg, #0a84ff, #30d158); display: grid; place-items: center; font: 800 20px system-ui; color: #fff; flex-shrink: 0; }
+  .notif .tx { flex: 1; min-width: 0; }
+  .notif .hd { display: flex; gap: 8px; align-items: baseline; }
+  .notif .hd b { flex: 1; min-width: 0; font-size: 14.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .notif .hd small { color: rgba(255,255,255,.6); font-size: 12px; white-space: nowrap; }
+  .notif .bd { font-size: 14px; line-height: 1.3; color: rgba(255,255,255,.92); overflow-wrap: anywhere; }
+  .lsfoot { display: flex; justify-content: space-between; padding: 14px 26px 6px; margin-top: auto; }
+  .lsfoot span { width: 44px; height: 44px; border-radius: 50%; background: rgba(60,60,68,.6); display: grid; place-items: center; font-size: 18px; }
+</style>
+</head>
+<body>
+
+<h1>Tagwerk · Phase 2b-3 · Benachrichtigungen · Mockups N1–N3</h1>
+<div class="status-line">Status: vorläufig nach Fable-Empfehlung, Freigabe des Nutzers offen (2026-11-18)</div>
+<p class="lead">Drei Stellen sind zu gestalten: der neue Einrichtungsschritt (N1), der Abschnitt „Benachrichtigungen“ samt Zugriffszeile in den Einstellungen (N2) und die Benachrichtigung selbst auf dem Sperrbildschirm (N3). Je Stelle stehen zwei Varianten; die Empfehlung trägt ein grünes Kürzel. Neue oder geänderte Stellen sind gelb umrandet oder gelb beschriftet. Freigabe bitte als Liste der Kürzel, zum Beispiel „N1a, N2a, N3a“. Alle Titel, Repositories und Kalendernamen sind erfunden. Die Bilder zeigen das dunkle Erscheinungsbild; Abstände und Systemtexte von iOS sind angenähert.</p>
+
+<!-- ============================== N1 ============================== -->
+<h2><span class="area">N1</span> Einrichtung · Schritt 6 „Benachrichtigungen“</h2>
+<p class="lead">Der Schritt folgt auf „ChatGPT“ und hält sich an das Muster der übrigen Schritte: Titel, Erklärung, Hauptknopf „Erlauben“, „Überspringen“ und die Fußnote „Du kannst das später in den Einstellungen ändern.“. „Erlauben“ öffnet die Systemfrage von iOS; danach endet die Einrichtung. Wird übersprungen oder abgelehnt, steht in der Schrittliste rechts „nicht erlaubt“.</p>
+<div class="grid">
+  <div>
+    <p class="label"><span class="code r">N1a</span><b>Nur Text, wie die anderen Schritte</b> <span class="rec">Empfehlung</span></p>
+    <div class="phone">
+      <div class="status"><span>13:20</span><span>●●● 5G</span></div>
+      <div class="title">Willkommen</div>
+      <div class="list">
+        <div class="item"><span class="stepn ok">✓</span><div class="t">Erinnerungen</div></div>
+        <div class="item"><span class="stepn ok">✓</span><div class="t">Kalender</div></div>
+        <div class="item"><span class="stepn ok">✓</span><div class="t">Plan-Kalender</div></div>
+        <div class="item"><span class="stepn ok">✓</span><div class="t">GitHub</div></div>
+        <div class="item"><span class="stepn">5</span><div class="t">ChatGPT</div><span class="st">nicht angemeldet</span></div>
+        <div class="item"><span class="stepn cur">6</span><div class="t">Benachrichtigungen</div></div>
+      </div>
+      <div class="section">Benachrichtigungen</div>
+      <div class="list new">
+        <div class="ptxt">Tagwerk erinnert dich vor der Fälligkeit an GitHub- und lokale Aufgaben und an Termine aus deinen Deadline-Kalendern. Erinnerungen aus der App „Erinnerungen“ melden sich weiterhin selbst.</div>
+        <div class="field"><span class="pbtn">Erlauben</span></div>
+        <div class="field"><span class="l">Überspringen</span></div>
+      </div>
+      <div class="note">Du kannst das später in den Einstellungen ändern.</div>
+      <div class="spacer"></div>
+    </div>
+    <p class="pc"><b>Pro:</b> gleiche Form wie die Schritte 1–3, also kein neuer Baustein in <code>SetupView</code>; der zweite Satz beugt der Erwartung vor, Tagwerk erinnere auch an Erinnerungen. <b>Contra:</b> Wie eine Benachrichtigung aussieht und wann sie kommt, erfährt man erst später.</p>
+  </div>
+  <div>
+    <p class="label"><span class="code">N1b</span><b>Mit Beispiel und Hinweis auf den Vorlauf</b></p>
+    <div class="phone">
+      <div class="status"><span>13:20</span><span>●●● 5G</span></div>
+      <div class="title">Willkommen</div>
+      <div class="list">
+        <div class="item"><span class="stepn ok">✓</span><div class="t">Erinnerungen</div></div>
+        <div class="item"><span class="stepn ok">✓</span><div class="t">Kalender</div></div>
+        <div class="item"><span class="stepn ok">✓</span><div class="t">Plan-Kalender</div></div>
+        <div class="item"><span class="stepn ok">✓</span><div class="t">GitHub</div></div>
+        <div class="item"><span class="stepn">5</span><div class="t">ChatGPT</div><span class="st">nicht angemeldet</span></div>
+        <div class="item"><span class="stepn cur">6</span><div class="t">Benachrichtigungen</div></div>
+      </div>
+      <div class="section">Benachrichtigungen</div>
+      <div class="list new">
+        <div class="ptxt">Tagwerk erinnert dich 2 h vor der Fälligkeit an GitHub- und lokale Aufgaben und an Termine aus deinen Deadline-Kalendern.</div>
+        <div class="ptxt" style="background:#000;padding:10px">
+          <div class="notif"><span class="appicon">T</span><div class="tx"><div class="hd"><b>Angebot überarbeiten</b><small>jetzt</small></div><div class="bd">Fällig heute um 14:30 · Lokal</div></div></div>
+        </div>
+        <div class="field"><span class="pbtn">Erlauben</span></div>
+        <div class="field"><span class="l">Überspringen</span></div>
+      </div>
+      <div class="note">Du kannst das später in den Einstellungen ändern.</div>
+      <div class="spacer"></div>
+    </div>
+    <p class="pc"><b>Pro:</b> zeigt vor der Systemfrage, was man erlaubt. <b>Contra:</b> ein eigener Baustein nur für diesen Schritt; die Liste wird auf kleinen Geräten länger als der Bildschirm; „2 h“ muss dem eingestellten Vorlauf folgen.</p>
+  </div>
+  <div>
+    <p class="label"><span class="code r">N1a</span><b>Nach „Erlauben“: Systemfrage von iOS, danach fertig</b></p>
+    <div class="phone short">
+      <div class="status"><span>13:20</span><span>●●● 5G</span></div>
+      <div class="title">Willkommen</div>
+      <div class="list">
+        <div class="item"><span class="stepn">5</span><div class="t">ChatGPT</div><span class="st">nicht angemeldet</span></div>
+        <div class="item"><span class="stepn cur">6</span><div class="t">Benachrichtigungen</div></div>
+      </div>
+      <div class="section">Benachrichtigungen</div>
+      <div class="list">
+        <div class="ptxt">Tagwerk erinnert dich vor der Fälligkeit an GitHub- und lokale Aufgaben und an Termine aus deinen Deadline-Kalendern. Erinnerungen aus der App „Erinnerungen“ melden sich weiterhin selbst.</div>
+        <div class="field"><span class="pbtn">Erlauben</span></div>
+        <div class="field"><span class="l">Überspringen</span></div>
+      </div>
+      <div style="height:120px"></div>
+      <div class="dim"></div>
+      <div class="alert">
+        <b>„Tagwerk“ möchte dir Mitteilungen senden</b>
+        <p>Mitteilungen können Hinweise, Töne und Kennzeichensymbole sein. Diese können in den Einstellungen konfiguriert werden.</p>
+        <div class="ab"><span>Nicht erlauben</span><span class="p">Erlauben</span></div>
+      </div>
+    </div>
+    <p class="pc">Der Text der Frage stammt von iOS und lässt sich nicht ändern (Wortlaut hier angenähert). Tagwerk fragt nur Hinweis und Ton an, kein Kennzeichensymbol. Beide Antworten schließen die Einrichtung ab; bei „Nicht erlauben“ steht in der Schrittliste „nicht erlaubt“. Wurde früher schon abgelehnt, erscheint keine Frage mehr; der Schritt endet dann sofort mit „nicht erlaubt“.</p>
+  </div>
+</div>
+
+<!-- ============================== N2 ============================== -->
+<h2><span class="area">N2</span> Einstellungen · „Benachrichtigungen“ und Zeile unter „Zugriff“</h2>
+<p class="lead">Der Abschnitt hat heute nur den Vorlauf-Stepper mit der Fußnote „So lange vor der Fälligkeit erinnert Tagwerk an GitHub- und lokale Aufgaben.“. Neu sind der Schalter für Termine aus Deadline-Kalendern (Standard an) und eine Fußnote, die beide Regeln nennt. Unter „Zugriff“ kommt eine dritte Zeile hinzu; sie verhält sich wie „Erinnerungen“ und „Kalender“. Einen eigenen Hauptschalter gibt es nicht: die Berechtigung von iOS schaltet alles ein oder aus.</p>
+<div class="grid">
+  <div>
+    <p class="label"><span class="code r">N2a</span><b>Schalter „Deadline-Termine“, eine Fußnote mit allen Regeln</b> <span class="rec">Empfehlung</span></p>
+    <div class="phone">
+      <div class="status"><span>13:20</span><span>●●● 5G</span></div>
+      <div class="nav">Einstellungen</div>
+      <div class="list"><div class="field"><span>KI</span><span class="v">Automatisch ›</span></div></div>
+      <div class="section">Benachrichtigungen</div>
+      <div class="list new">
+        <div class="field"><span>Vorlauf: 2 h</span><span class="pick">−&nbsp;&nbsp;|&nbsp;&nbsp;+</span></div>
+        <div class="field hl"><span>Deadline-Termine</span><span class="tog on"></span></div>
+      </div>
+      <div class="note">So lange vor der Fälligkeit erinnert Tagwerk an GitHub- und lokale Aufgaben und an Termine aus Deadline-Kalendern. Ein Datum ohne Uhrzeit gilt als 18:00. An ganztägige Deadline-Termine erinnert Tagwerk am Vortag um 18:00.</div>
+      <div class="section">Zugriff</div>
+      <div class="list">
+        <div class="field"><span>Erinnerungen</span><span class="v">erlaubt</span></div>
+        <div class="field"><span>Kalender</span><span class="v">erlaubt</span></div>
+        <div class="field hl"><span>Benachrichtigungen</span><span class="v">erlaubt</span></div>
+      </div>
+      <div class="list" style="margin-top:14px"><div class="field"><span class="l">Einrichtung erneut starten</span></div></div>
+      <div class="spacer"></div>
+    </div>
+    <p class="pc"><b>Pro:</b> „Deadline-Termine“ lässt sich nicht mit der Zeile „Deadline-Kalender“ im Abschnitt „Planen“ verwechseln, die die Kalender auswählt; die Fußnote nennt die zwei Regeln, die sonst niemand errät (18:00 und Vortag). <b>Contra:</b> drei Sätze Fußnote; der Schalter heißt anders als im Entwurf (§11.13 spricht von „Deadline-Kalender“).</p>
+  </div>
+  <div>
+    <p class="label"><span class="code">N2b</span><b>Schalter „Deadline-Kalender“, kurze Fußnote</b></p>
+    <div class="phone">
+      <div class="status"><span>13:20</span><span>●●● 5G</span></div>
+      <div class="nav">Einstellungen</div>
+      <div class="list"><div class="field"><span>KI</span><span class="v">Automatisch ›</span></div></div>
+      <div class="section">Benachrichtigungen</div>
+      <div class="list new">
+        <div class="field"><span>Vorlauf: 2 h</span><span class="pick">−&nbsp;&nbsp;|&nbsp;&nbsp;+</span></div>
+        <div class="field hl"><span>Deadline-Kalender</span><span class="tog on"></span></div>
+      </div>
+      <div class="note">So lange vor der Fälligkeit erinnert Tagwerk an GitHub- und lokale Aufgaben und an Termine aus Deadline-Kalendern.</div>
+      <div class="section">Zugriff</div>
+      <div class="list">
+        <div class="field"><span>Erinnerungen</span><span class="v">erlaubt</span></div>
+        <div class="field"><span>Kalender</span><span class="v">erlaubt</span></div>
+        <div class="field hl"><span>Benachrichtigungen</span><span class="v">erlaubt</span></div>
+      </div>
+      <div class="list" style="margin-top:14px"><div class="field"><span class="l">Einrichtung erneut starten</span></div></div>
+      <div class="spacer"></div>
+    </div>
+    <p class="pc"><b>Pro:</b> kürzer; Name wie im Entwurf. <b>Contra:</b> zwei Zeilen „Deadline-Kalender“ auf derselben Seite mit verschiedener Wirkung (Auswahl oben, Schalter hier); dass ein Datum ohne Uhrzeit um 16:00 erinnert und ganztägige Termine am Vorabend, bleibt ungesagt.</p>
+  </div>
+  <div>
+    <p class="label"><span class="code r">N2a</span><b>Zustände der Zeile „Benachrichtigungen“</b></p>
+    <div class="phone short">
+      <div class="anno">noch nicht gefragt (Einrichtung übersprungen)</div>
+      <div class="section">Benachrichtigungen</div>
+      <div class="list">
+        <div class="field"><span>Vorlauf: 2 h</span><span class="pick">−&nbsp;&nbsp;|&nbsp;&nbsp;+</span></div>
+        <div class="field"><span>Deadline-Termine</span><span class="tog on"></span></div>
+      </div>
+      <div class="note warn">Benachrichtigungen sind noch nicht erlaubt. Erlaube sie unten unter „Zugriff“.</div>
+      <div class="section">Zugriff</div>
+      <div class="list">
+        <div class="field"><span>Erinnerungen</span><span class="v">erlaubt</span></div>
+        <div class="field"><span>Kalender</span><span class="v">erlaubt</span></div>
+        <div class="field hl"><span>Benachrichtigungen</span><span class="l">Erlauben</span></div>
+      </div>
+      <div class="anno" style="margin-top:14px">abgelehnt oder in iOS ausgeschaltet</div>
+      <div class="section">Benachrichtigungen</div>
+      <div class="list">
+        <div class="field"><span>Vorlauf: 2 h</span><span class="pick">−&nbsp;&nbsp;|&nbsp;&nbsp;+</span></div>
+        <div class="field"><span>Deadline-Termine</span><span class="tog on"></span></div>
+      </div>
+      <div class="note warn">Benachrichtigungen sind in iOS ausgeschaltet. Schalte sie unten unter „Zugriff“ wieder ein.</div>
+      <div class="section">Zugriff</div>
+      <div class="list">
+        <div class="field"><span>Erinnerungen</span><span class="v">erlaubt</span></div>
+        <div class="field"><span>Kalender</span><span class="v">erlaubt</span></div>
+        <div class="field hl"><span>Benachrichtigungen</span><span class="l">Einstellungen öffnen</span></div>
+      </div>
+    </div>
+    <p class="pc">Ohne Berechtigung ersetzt ein Hinweis die Fußnote, damit niemand einen Vorlauf einstellt, der nichts bewirkt. „Erlauben“ öffnet die Systemfrage; „Einstellungen öffnen“ führt direkt auf die Mitteilungsseite von Tagwerk in iOS (<code>UIApplication.openNotificationSettingsURLString</code>). Bei der Rückkehr in die App wird die Zeile neu gelesen und neu geplant. Stepper und Schalter bleiben bedienbar.</p>
+  </div>
+</div>
+
+<!-- ============================== N3 ============================== -->
+<h2><span class="area">N3</span> Die Benachrichtigung auf dem Sperrbildschirm</h2>
+<p class="lead">Vier Fälle bei einem Vorlauf von 2 h, alle am Mittwoch, 18. November: eine Aufgabe mit Uhrzeit (fällig 14:30, ausgelöst 12:30), eine GitHub-Aufgabe ohne Uhrzeit (gilt als 18:00, ausgelöst 16:00), ein Deadline-Termin mit Uhrzeit (Beginn 10:00, ausgelöst 08:00) und ein ganztägiger Deadline-Termin am Donnerstag (ausgelöst am Vortag um 18:00, ohne Vorlauf). Der Tag im Text bezieht sich auf den Moment der Auslösung. Die gelben Zeilen gehören zum Mockup, nicht zum Bildschirm.</p>
+<div class="grid">
+  <div>
+    <p class="label"><span class="code r">N3a</span><b>Titel = Aufgabe oder Termin, Text = wann und wo</b> <span class="rec">Empfehlung</span></p>
+    <div class="phone lock">
+      <div class="status"><span>18:00</span><span>●●● 5G</span></div>
+      <div class="lsdate">Mittwoch, 18. November</div>
+      <div class="lsclock">18:00</div>
+      <div class="ncap">ganztägiger Deadline-Termin morgen · ausgelöst 18:00</div>
+      <div class="notif"><span class="appicon">T</span><div class="tx"><div class="hd"><b>Abgabe Seminararbeit</b><small>jetzt</small></div><div class="bd">Deadline morgen, ganztägig</div></div></div>
+      <div class="ncap">GitHub-Aufgabe ohne Uhrzeit · ausgelöst 16:00</div>
+      <div class="notif"><span class="appicon">T</span><div class="tx"><div class="hd"><b>Anmeldefehler nach Ablauf der Sitzung beheben</b><small>vor 2 Std.</small></div><div class="bd">Fällig heute · beispiel/webshop</div></div></div>
+      <div class="ncap">Aufgabe mit Uhrzeit · ausgelöst 12:30</div>
+      <div class="notif"><span class="appicon">T</span><div class="tx"><div class="hd"><b>Angebot überarbeiten</b><small>vor 5 Std.</small></div><div class="bd">Fällig heute um 14:30 · Lokal</div></div></div>
+      <div class="ncap">Deadline-Termin mit Uhrzeit · ausgelöst 08:00</div>
+      <div class="notif"><span class="appicon">T</span><div class="tx"><div class="hd"><b>Klausur Statistik</b><small>vor 10 Std.</small></div><div class="bd">Deadline heute um 10:00</div></div></div>
+      <div class="lsfoot"><span>🔦</span><span>📷</span></div>
+    </div>
+    <p class="pc"><b>Pro:</b> wie bei Kalender und Erinnerungen von iOS steht oben, worum es geht; im Stapel unterscheidet man die Einträge am Titel. Bei einem Datum ohne Uhrzeit steht nur „heute“: Die 18:00 sind eine Annahme von Tagwerk, keine Angabe der Aufgabe. <b>Contra:</b> iOS kürzt lange Titel in der Titelzeile (zweite Karte); vollständig steht der Titel erst in der App.</p>
+  </div>
+  <div>
+    <p class="label"><span class="code">N3b</span><b>Titel = wann, Text = Aufgabe; 18:00 ausgeschrieben</b></p>
+    <div class="phone lock">
+      <div class="status"><span>18:00</span><span>●●● 5G</span></div>
+      <div class="lsdate">Mittwoch, 18. November</div>
+      <div class="lsclock">18:00</div>
+      <div class="ncap">ganztägiger Deadline-Termin morgen · ausgelöst 18:00</div>
+      <div class="notif"><span class="appicon">T</span><div class="tx"><div class="hd"><b>Deadline morgen, ganztägig</b><small>jetzt</small></div><div class="bd">Abgabe Seminararbeit</div></div></div>
+      <div class="ncap">GitHub-Aufgabe ohne Uhrzeit · ausgelöst 16:00</div>
+      <div class="notif"><span class="appicon">T</span><div class="tx"><div class="hd"><b>Fällig heute um 18:00</b><small>vor 2 Std.</small></div><div class="bd">Anmeldefehler nach Ablauf der Sitzung beheben · beispiel/webshop</div></div></div>
+      <div class="ncap">Aufgabe mit Uhrzeit · ausgelöst 12:30</div>
+      <div class="notif"><span class="appicon">T</span><div class="tx"><div class="hd"><b>Fällig heute um 14:30</b><small>vor 5 Std.</small></div><div class="bd">Angebot überarbeiten · Lokal</div></div></div>
+      <div class="ncap">Deadline-Termin mit Uhrzeit · ausgelöst 08:00</div>
+      <div class="notif"><span class="appicon">T</span><div class="tx"><div class="hd"><b>Deadline heute um 10:00</b><small>vor 10 Std.</small></div><div class="bd">Klausur Statistik</div></div></div>
+      <div class="lsfoot"><span>🔦</span><span>📷</span></div>
+    </div>
+    <p class="pc"><b>Pro:</b> lange Titel stehen im Text und werden über mehrere Zeilen gezeigt. <b>Contra:</b> im Stapel beginnen alle Einträge mit „Fällig heute …“; „um 18:00“ behauptet eine Uhrzeit, die in GitHub nicht steht; weicht vom Muster der iOS-Apps ab.</p>
+  </div>
+</div>
+
+<div class="box neutral">
+  <h3>Textregeln zu N3a (für die Umsetzung)</h3>
+  <div class="tablewrap">
+  <table class="sum">
+    <tr><th>Fall</th><th>Auslösung</th><th>Titel</th><th>Text</th></tr>
+    <tr><td>Aufgabe mit Uhrzeit</td><td>Fälligkeit − Vorlauf</td><td>Aufgabentitel</td><td>„Fällig heute um 14:30 · Lokal“</td></tr>
+    <tr><td>Aufgabe ohne Uhrzeit (GitHub oder lokal)</td><td>18:00 − Vorlauf</td><td>Aufgabentitel</td><td>„Fällig heute · beispiel/webshop“</td></tr>
+    <tr><td>Deadline-Termin mit Uhrzeit</td><td>Beginn − Vorlauf</td><td>Termintitel</td><td>„Deadline heute um 10:00“</td></tr>
+    <tr><td>Deadline-Termin ganztägig</td><td>Vortag 18:00</td><td>Termintitel</td><td>„Deadline morgen, ganztägig“</td></tr>
+  </table>
+  </div>
+  <ul style="margin-top:10px">
+    <li><b>Tag im Text</b>, bezogen auf den Tag der Auslösung: gleicher Tag „heute“, Folgetag „morgen“, sonst „am Fr., 20.11.“ (Wochentag kurz, Tag und Monat). Beispiele bei längerem Vorlauf: „Fällig morgen um 09:00 · Lokal“, „Fällig am Fr., 20.11. · beispiel/webshop“, „Deadline am Fr., 20.11. um 10:00“.</li>
+    <li><b>Hinter „ · “</b> steht bei Aufgaben der Container: der Repository-Name bei GitHub, „Lokal“ bei lokalen Aufgaben. Bei Terminen steht nichts dahinter.</li>
+    <li><b>Leerer Titel:</b> „Ohne Titel“.</li>
+    <li><b>Ton und Stufe:</b> Standardton, normale Stufe (kein „Zeitkritisch“). Benachrichtigungen einer Quelle bilden einen Stapel (GitHub, Lokal, Deadline-Termine).</li>
+    <li><b>App im Vordergrund:</b> dieselbe Benachrichtigung als Banner am oberen Rand, mit Ton.</li>
+    <li><b>Tippen:</b> Aufgabe → Tab „Aufgaben“, Aufgabe ins Bild gerollt und markiert. Termin → Tab „Planen“, Tagesansicht des Termintags.</li>
+  </ul>
+</div>
+
+<!-- ============================== Abschluss ============================== -->
+<h2><span class="area" style="background:#636366">§</span> Empfehlung und offene Fragen</h2>
+<div class="box neutral">
+  <h3>Was diese Mockups nicht zeigen</h3>
+  <ul>
+    <li>Helles Erscheinungsbild, Querformat und die größten Dynamic-Type-Stufen. Aussagen dazu sind Entwurfsannahmen.</li>
+    <li>Den genauen Wortlaut und das Aussehen der Systemfrage sowie die Kürzung langer Titel durch iOS. Beides ist am Gerät zu prüfen.</li>
+    <li>Die Mitteilungszentrale, die Zusammenfassung von Stapeln und die Einstellung „Vorschauen zeigen“ von iOS. Steht sie auf „Wenn entsperrt“, zeigt der gesperrte Bildschirm nur „Mitteilung“ statt Titel und Text.</li>
+  </ul>
+</div>
+<div class="box">
+  <h3>Empfehlung: N1a + N2a + N3a (vorläufig, Freigabe offen)</h3>
+  <div class="tablewrap">
+  <table class="sum">
+    <tr><th>Punkt</th><th>Empfehlung</th><th>Kern</th></tr>
+    <tr><td><b>N1</b> Einrichtung</td><td><span class="code r">N1a</span></td><td>Schritt 6 „Benachrichtigungen“ mit einem Erklärtext, „Erlauben“, „Überspringen“ und der bestehenden Fußnote; rechts in der Schrittliste „nicht erlaubt“, wenn übersprungen oder abgelehnt.</td></tr>
+    <tr><td><b>N2</b> Einstellungen</td><td><span class="code r">N2a</span></td><td>Vorlauf-Stepper, Schalter „Deadline-Termine“ (Standard an), Fußnote mit beiden Regeln; ohne Berechtigung ein Hinweis statt der Fußnote; Zeile „Benachrichtigungen“ unter „Zugriff“ mit „erlaubt“, „Erlauben“ oder „Einstellungen öffnen“.</td></tr>
+    <tr><td><b>N3</b> Benachrichtigung</td><td><span class="code r">N3a</span></td><td>Titel ist der Aufgaben- oder Termintitel; der Text nennt Tag, Uhrzeit (nur wenn die Aufgabe eine hat) und bei Aufgaben den Container.</td></tr>
+  </table>
+  </div>
+  <h3 style="margin-top:12px">Offene Fragen an den Nutzer</h3>
+  <ol>
+    <li><b>N2:</b> Darf der Schalter „Deadline-Termine“ heißen, obwohl §11.13 von einem Schalter für „Deadline-Kalender“ spricht? Grund: Die Zeile „Deadline-Kalender“ gibt es auf derselben Seite schon für die Auswahl der Kalender.</li>
+    <li><b>N3:</b> Soll bei einem Datum ohne Uhrzeit „Fällig heute“ stehen (Vorschlag) oder „Fällig heute um 18:00“?</li>
+    <li><b>N3:</b> Sind Titel auf dem gesperrten Bildschirm in Ordnung? Wer das nicht möchte, stellt in iOS unter Mitteilungen › Tagwerk „Vorschauen zeigen: Wenn entsperrt“ ein; eine eigene Einstellung in Tagwerk ist nicht vorgesehen.</li>
+    <li><b>Vorlauf schon verstrichen:</b> Legt man eine Aufgabe an, die in weniger als dem Vorlauf fällig ist, kommt keine Benachrichtigung mehr. Ist das recht, oder soll Tagwerk in diesem Fall zur Fälligkeit selbst erinnern?</li>
+    <li><b>N1:</b> Reicht der Text in N1a, oder soll das Beispiel aus N1b dazu?</li>
+  </ol>
+</div>
+
+</body>
+</html>
