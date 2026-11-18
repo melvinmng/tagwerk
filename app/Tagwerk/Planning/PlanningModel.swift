@@ -957,6 +957,17 @@ final class PlanningModel {
     /// The last "Alle auf morgen", for one "Widerrufen".
     private(set) var lastMoveGroup: [DayMove]?
 
+    /// "Überfällig" appears today and tomorrow, not on later days (decision 3).
+    func showsOverdue(on day: PlanDay) -> Bool {
+        day >= today && day <= today.adding(days: 1, calendar: calendar)
+    }
+
+    /// "Von heute übrig" belongs to the next planning day only (decisions 2 and 5): tomorrow, or the next working
+    /// day when tomorrow is off.
+    func leftovers(on day: PlanDay) -> [TaskItem] {
+        isTodayOver && day == nextPlanDay ? leftFromToday : []
+    }
+
     /// The row button of the panel ("Heute", "Morgen", "Einplanen"): commits the task to the shown day.
     func commitToShownDay(_ id: TaskID) async {
         await assign(id, to: anchor)

@@ -55,6 +55,18 @@ struct PlanView: View {
         }
     }
 
+    /// After "Alle auf morgen" (plan-tomorrow, MP2): one "Rückgängig" for every moved task.
+    @ViewBuilder
+    private var moveGroupUndo: some View {
+        if let moves = model.lastMoveGroup {
+            UndoCapsule(title: String(localized: "\(moves.count) Aufgaben"), caption: "Verschoben",
+                        symbol: "arrow.left.arrow.right.circle.fill", duration: 5,
+                        onUndo: { Task { await model.undoMoveGroup() } },
+                        onExpire: { if model.lastMoveGroup == moves { model.clearMoveGroupUndo() } })
+                .padding(.bottom, 60)
+        }
+    }
+
     /// After "Alle übernehmen": one "Rückgängig" for blocks, days, hours and moves (mockup AW1).
     @ViewBuilder
     private var acceptAllUndo: some View {
@@ -85,6 +97,7 @@ struct PlanView: View {
             .overlay(alignment: .bottom) { dismissUndo }
             .overlay(alignment: .bottom) { duplicateUndo }
             .overlay(alignment: .bottom) { moveUndo }
+            .overlay(alignment: .bottom) { moveGroupUndo }
             .overlay(alignment: .bottom) { acceptAllUndo }
             .navigationTitle("Planen")
             .toolbarTitleDisplayMode(.inline)

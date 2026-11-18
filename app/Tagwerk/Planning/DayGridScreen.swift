@@ -133,17 +133,21 @@ struct DayGridScreen<Summary: View, Header: View>: View {
     /// Tasks with blocks but less time than their effort (mockup RZ1), shown today and on future days.
     private var toSchedule: [TaskItem] { plan.day >= model.today ? model.toSchedule : [] }
     private var toScheduleIDs: Set<TaskID> { Set(toSchedule.map(\.id)) }
+    /// Today and tomorrow only (plan-tomorrow, decision 3).
     private var overdueToday: [TaskItem] {
-        plan.day == model.today ? model.overdue.filter { !toScheduleIDs.contains($0.id) } : []
+        model.showsOverdue(on: plan.day) ? model.overdue.filter { !toScheduleIDs.contains($0.id) } : []
     }
     private var openToday: [TaskItem] { plan.openToday.filter { !toScheduleIDs.contains($0.id) } }
+    /// "Von heute übrig" on the next planning day once today is over (MP2).
+    private var leftovers: [TaskItem] { model.leftovers(on: plan.day).filter { !toScheduleIDs.contains($0.id) } }
+    private var commitTitle: String { DayPanelText.commitTitle(day: plan.day, today: model.today, calendar: model.calendar) }
 
-    /// "Noch einzuplanen", planned tasks, "Heute offen, nicht zugeordnet" and "Überfällig"; rows drag by their
-    /// grip onto the grid.
+    /// "Noch einzuplanen", planned tasks, "Von heute übrig", tasks due on the day and "Überfällig"; rows drag by
+    /// their grip onto the grid.
     @ViewBuilder
     private var dayPanel: some View {
         let planned = model.timelessTasks(for: plan).filter { !toScheduleIDs.contains($0.id) }
-        if !(planned.isEmpty && openToday.isEmpty && overdueToday.isEmpty && toSchedule.isEmpty) {
+        if !(planned.isEmpty && openToday.isEmpty && overdueToday.isEmpty && toSchedule.isEmpty && leftovers.isEmpty) {
             let dragging = taskDrag != nil
             VStack(spacing: 0) {
                 panelHeader(planned)
@@ -151,10 +155,12 @@ struct DayGridScreen<Summary: View, Header: View>: View {
                 if panelExpanded {
                     ScrollView {
                         VStack(alignment: .leading, spacing: 2) {
-                            panelSection("Noch einzuplanen", toSchedule, offersToday: false)
-                            panelSection("Ohne Uhrzeit", planned, offersToday: false)
-                            panelSection("Heute offen, nicht zugeordnet", openToday, offersToday: true)
-                            panelSection("Überfällig", overdueToday, offersToday: true, isOverdue: true)
+                            panelSection(String(localized: "Noch einzuplanen"), toSchedule, commit: nil)
+                            panelSection(String(localized: "Ohne Uhrzeit"), planned, commit: nil)
+                            leftoverSection
+                            panelSection(DayPanelText.dueSectionTitle(day: plan.day, today: model.today, calendar: model.calendar),
+                                         openToday, commit: .assign)
+                            panelSection(String(localized: "Überfällig"), overdueToday, commit: .assign, isOverdue: true)
                         }
                         .padding(.horizontal, 10)
                         .padding(.bottom, 8)
@@ -192,6 +198,9 @@ struct DayGridScreen<Summary: View, Header: View>: View {
                 if !openToday.isEmpty {
                     Text(toSchedule.isEmpty ? "+\(openToday.count) offen" : "+\(openToday.count)").font(.caption).foregroundStyle(.secondary)
                 }
+                if !leftovers.isEmpty {
+                    Text("\(leftovers.count) von heute").font(.caption.weight(.semibold)).foregroundStyle(Color.accentColor)
+                }
                 if !overdueToday.isEmpty {
                     Text("\(overdueToday.count) überfällig").font(.caption.weight(.semibold)).foregroundStyle(.orange)
                 }
@@ -206,12 +215,34 @@ struct DayGridScreen<Summary: View, Header: View>: View {
         .accessibilityHint(panelExpanded ? "Liste einklappen" : "Liste aufklappen")
     }
 
+    /// What the row button does: commit the task to the shown day, or move it there with its blocks (leftovers).
+    private enum Commit { case assign, move }
+
     @ViewBuilder
-    private func panelSection(_ title: LocalizedStringResource, _ tasks: [TaskItem], offersToday: Bool, isOverdue: Bool = false) -> some View {
+    private func panelSection(_ title: String, _ tasks: [TaskItem], commit: Commit?, isOverdue: Bool = false) -> some View {
         if !tasks.isEmpty {
             Text(title).font(.caption.weight(.semibold)).foregroundStyle(isOverdue ? .orange : .secondary)
                 .padding(.top, 8).padding(.bottom, 2)
-            ForEach(tasks) { task in panelRow(task, offersToday: offersToday, isOverdue: isOverdue) }
+            ForEach(tasks) { task in panelRow(task, commit: commit, isOverdue: isOverdue) }
+        }
+    }
+
+    /// "Von heute übrig" with "Alle auf morgen"; moving keeps blocks and offers "Widerrufen" (MP2).
+    @ViewBuilder
+    private var leftoverSection: some View {
+        let tasks = leftovers
+        if !tasks.isEmpty {
+            HStack {
+                Text("Von heute übrig").font(.caption.weight(.semibold)).foregroundStyle(Color.accentColor)
+                Spacer()
+                Button(DayPanelText.moveAllTitle(day: plan.day, today: model.today, calendar: model.calendar)) {
+                    let day = plan.day
+                    Task { await model.moveTasks(tasks.map(\.id), to: day) }
+                }
+                .font(.caption.weight(.semibold))
+            }
+            .padding(.top, 8).padding(.bottom, 2)
+            ForEach(tasks) { task in panelRow(task, commit: .move, isOverdue: false) }
         }
     }
 
@@ -221,15 +252,15 @@ struct DayGridScreen<Summary: View, Header: View>: View {
     }
 
     @ViewBuilder
-    private func panelRow(_ task: TaskItem, offersToday: Bool, isOverdue: Bool) -> some View {
+    private func panelRow(_ task: TaskItem, commit: Commit?, isOverdue: Bool) -> some View {
         if let move = moveSuggestions[task.id.key] {
             MoveSuggestionRow(suggestion: move)
         } else {
-            plainPanelRow(task, offersToday: offersToday, isOverdue: isOverdue)
+            plainPanelRow(task, commit: commit, isOverdue: isOverdue)
         }
     }
 
-    private func plainPanelRow(_ task: TaskItem, offersToday: Bool, isOverdue: Bool) -> some View {
+    private func plainPanelRow(_ task: TaskItem, commit: Commit?, isOverdue: Bool) -> some View {
         HStack(spacing: 8) {
             VStack(alignment: .leading, spacing: 2) {
                 Text(task.title).font(.subheadline).lineLimit(2)
@@ -244,9 +275,17 @@ struct DayGridScreen<Summary: View, Header: View>: View {
                     .padding(.horizontal, 6).padding(.vertical, 2)
                     .background(priority == .p1 ? Color.red.opacity(0.25) : Color.secondary.opacity(0.2), in: Capsule())
             }
-            if offersToday {
-                Button("Heute") { Task { await model.assign(task.id, to: model.today) } }
-                    .buttonStyle(.bordered).controlSize(.small)
+            if let commit {
+                Button(commitTitle) {
+                    let day = plan.day
+                    Task {
+                        switch commit {
+                        case .assign: await model.commitToShownDay(task.id)
+                        case .move: await model.moveTask(task.id, to: day)
+                        }
+                    }
+                }
+                .buttonStyle(.bordered).controlSize(.small)
             }
             grip(task)
         }
@@ -386,7 +425,7 @@ struct DayGridScreen<Summary: View, Header: View>: View {
     private var lunchBar: some View {
         HStack {
             let range = changedLunch ?? model.lunch(on: plan.day)
-            Text(range.map { "Pause heute \(clock($0.lowerBound))–\(clock($0.upperBound))" } ?? "Heute keine Pause")
+            Text(DayPanelText.lunchLine(range, day: plan.day, today: model.today, calendar: model.calendar))
                 .font(.subheadline)
             Spacer()
             Button("Für alle Tage") {
@@ -438,11 +477,5 @@ struct DayGridScreen<Summary: View, Header: View>: View {
         }
         .padding(12)
         .background(Color.purple.opacity(0.12), in: RoundedRectangle(cornerRadius: 14))
-    }
-
-    // MARK: Helpers
-
-    private func clock(_ minutes: Int) -> String {
-        plan.day.startDate(in: model.calendar).addingTimeInterval(TimeInterval(minutes * 60)).formatted(date: .omitted, time: .shortened)
     }
 }

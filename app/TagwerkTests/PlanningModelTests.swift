@@ -302,6 +302,23 @@ struct PlanningModelTests {
         #expect(PlanningModel.freeAfterAccepting(free: 30, suggestions: suggestions, counted: [:]) == 0)
     }
 
+    @Test func overdue_shownTodayAndTomorrow_notLater() async {
+        let model = await model()
+        #expect(model.showsOverdue(on: today))
+        #expect(model.showsOverdue(on: tomorrow))
+        #expect(!model.showsOverdue(on: PlanDay(year: 2026, month: 11, day: 20)))
+        #expect(!model.showsOverdue(on: PlanDay(year: 2026, month: 11, day: 17)))
+    }
+
+    @Test func leftovers_onlyOnNextPlanDay_onceTodayIsOver() async {
+        planStore.assign(id("Fahrrad"), to: today)
+        #expect(await model().leftovers(on: tomorrow).isEmpty)
+        let evening = await model(at: 18, 40)
+        #expect(evening.leftovers(on: tomorrow).map(\.title) == ["Fahrrad"])
+        #expect(evening.leftovers(on: PlanDay(year: 2026, month: 11, day: 20)).isEmpty)
+        #expect(evening.leftovers(on: today).isEmpty)
+    }
+
     @Test func assignFromPanel_usesShownDay() async throws {
         let model = await model()
         model.anchor = tomorrow

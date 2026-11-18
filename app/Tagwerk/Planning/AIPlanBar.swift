@@ -142,7 +142,10 @@ struct AIPlanBar: View {
                 Button {
                     start()
                 } label: {
-                    Label(Self.planTitle(scope), systemImage: "sparkles")
+                    Label(DayPanelText.planTitle(scope: scope, day: planning.anchor, today: planning.today,
+                                                 leftCount: planning.leftovers(on: planning.anchor).count,
+                                                 calendar: planning.calendar),
+                          systemImage: "sparkles")
                 }
                 .buttonStyle(.bordered)
                 .tint(.purple)
