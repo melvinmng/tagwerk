@@ -14,24 +14,38 @@
 
 ## Entscheidungen
 
+Fables Review vom 2026-11-18 (Urteil „überarbeiten“) ist eingearbeitet; die Nummern verweisen darauf.
+
 1. **String Catalogs, Deutsch bleibt Quellsprache.**
    - Je Ziel ein `Localizable.xcstrings`: App, Widget, und je Paket mit Nutzertexten (TagwerkCore, AIKit, RemindersKit, GitHubKit, HealthBridge) als Paket-Ressource mit `defaultLocalization: "de"` und `Bundle.module`.
-   - Schlüssel ist der deutsche Text. SwiftUI-Literale (`Text("…")`, `Button("…")`, `Label("…", systemImage:)`, `Toggle`, `Picker`, `Section`-Header, `.navigationTitle`) sind schon `LocalizedStringKey` und brauchen keine Codeänderung.
+   - Schlüssel ist der deutsche Text. Reine SwiftUI-Literale (`Text("…")`, `Button("…")`, `Label("…", systemImage:)`, `Toggle`, `Picker`, `Section`-Header, `.navigationTitle`) sind schon `LocalizedStringKey`.
+   - **Codeänderungen sind trotzdem nötig** (Fable 6):
+     - `Text(variable)` mit `String` (138 Stellen).
+     - `String`-Parameter von Hilfs-Views (`SourceSelectionView(title:)`, `quickButton(title:)`, `Row`, `ActionCard`) werden `LocalizedStringResource`.
+     - 84 Interpolationen, darunter aus Fragmenten gebaute Sätze (`"\(actionName(scope)) planen"`, `"zuletzt \(…)"`, `germanName`), werden ganze Sätze je Fall.
+     - Handgebaute Plural-Zweige (`WidgetSnapshot.overviewText`, `WeekReviewView`) werden Catalog-Plurale.
 2. **Texte als `String`** (Rückgabewerte, Fehlermeldungen, Modelltexte, Benachrichtigungen) werden zu `String(localized: "…", bundle: …, comment: …)`. Bei Interpolation ersetzt Xcode die Werte durch Platzhalter; Plural über die Catalog-Varianten statt eigener `count == 1`-Zweige, wo es solche gibt.
-3. **Sprache = Sprache der App** (`Bundle.main.preferredLocalizations.first`), nicht `Locale.current`.
-   - Feste `de_DE`-Formate werden zu `Locale.autoupdatingCurrent`, mit der App-Sprache als Sprachteil.
-   - Wo Tests ein festes Format brauchen, wird die Locale injiziert.
+3. **Sprache und Formate über `Locale.current`.** Das trägt die App-Sprache schon (Fable 11).
+   - Feste `de_DE`-Formate werden zu `Locale.current`.
+   - In Paketen wird die Locale injiziert (Parameter mit Vorgabe `.current`), nicht aus `Bundle.main` gelesen.
+   - Für die KI und das Vorlesen gibt es `VoiceLanguage.app` (die App-Sprache als de/en, Vorgabe de).
 4. **Was deutsch bleibt:**
    - Anweisungen an ChatGPT und Funktionsbeschreibungen: modellseitig, nicht sichtbar. Ausnahme: Die Antwortsprache wird gesetzt.
      - Planen (`AIPlanner`): Begründungen in der App-Sprache.
      - Chat: Sprache der letzten Nachricht wie bisher; ohne Nachricht die App-Sprache.
    - Fehlertexte der App-Funktionen an das Modell (`{"error":…}`) gehen an das Modell. Die Karten zeigen sie aber an (`ActionCardView.error`), deshalb werden sie lokalisiert.
-5. **Sprach-Ansagen** (`ActionAnnouncement`, `SpokenText`, Sprechmodus): richten sich schon nach der gesprochenen Sprache und bleiben so.
+5. **Sprach-Ansagen** (`ActionAnnouncement`, `SpokenText`, Sprechmodus) richten sich nach der gesprochenen Sprache. Damit keine gemischten Sätze entstehen, bekommt `AssistantModel.describe` einen Sprachparameter (Fable 7):
+   - Karten auf dem Bildschirm: App-Sprache.
+   - Ansage: Sprache der Antwort.
+   - Die `fallback: .german` in `AssistantModel` werden `VoiceLanguage.app`.
 6. **Siri/Kurzbefehle:**
    - Titel und Parameter über den App-Catalog (`LocalizedStringResource`).
    - Phrasen über `AppShortcuts.xcstrings` mit englischen Phrasen. Jede Phrase enthält `\(.applicationName)`.
 7. **Info.plist:** Usage-Descriptions über `InfoPlist.xcstrings` (App und Widget). Die deutschen Texte bleiben im `project.yml` als Quelle.
 8. **Geschriebene Daten** (Titel von Zeitblöcken, Mittagspause, Plan-Kalender „Tagwerk“, Benachrichtigungen) entstehen in der App-Sprache zum Zeitpunkt des Schreibens. Bestehende Einträge werden nicht umbenannt.
+   - **Benachrichtigungen:** Die App merkt sich die Sprache, in der zuletzt geplant wurde. Weicht sie beim Start ab, werden alle Benachrichtigungen neu geplant, auch die nicht geladener Quellen (`kept`) (Fable 10).
+   - **Sichtbare und gespeicherte KI-Daten** (Titel und Mengen aus `MealEstimator`, Begründungen aus `AIPlanner`) entstehen in der App-Sprache (Fable 8).
+10. **Ausgenommen von der Übersetzung:** Diagnose- und Spike-Seiten (`VoiceDiagnostics`, `RecognitionSpikeView`, `ConversationSpikeView`, `PlanningDiagnostics`) bleiben deutsch. Sie sind Entwickler-Werkzeuge; der Catalog markiert ihre Texte mit `shouldTranslate: false`.
 9. **Begriffe (Glossar)** für eine einheitliche Übersetzung:
 
    | Deutsch | Englisch |
@@ -59,61 +73,86 @@
 
 ## Tasks
 
-### Task 1: Gerüst und Tests
+### Task 0: Spike (zuerst, Fable 1, 3, 12)
+Klärt am Gerüst mit einem einzigen Text je Ziel:
+- `xcrun xcstringstool sync <catalog> --stringsdata <…>` aus den `.stringsdata` eines `xcodebuild`-Laufs. `xcstringstool` ist in Xcode 27.2 vorhanden (geprüft); `-exportLocalizations` bleibt Rückfall.
+- XcodeGen: `en` in `knownRegions`, Kataloge als Ressource der App und des Widgets, Pakete mit `resources: [.process("Resources")]` und `defaultLocalization: "de"`.
+- Englischer Stichprobentest mit injizierter Sprache: `String(localized: LocalizedStringResource(key, locale: Locale(identifier: "en"), bundle: …))` oder über das `en.lproj`-Bundle; das Ergebnis legt die Testhilfe `localized(_:in:)` fest.
+
+Ergebnis kommt in diesen Plan, bevor Task 1 beginnt.
+
+### Task 1: Gerüst, Testsprache, Sync-Skript, Prüfung der Abdeckung
 - **Kataloge anlegen:**
   - App: `Localizable.xcstrings`, `InfoPlist.xcstrings`, `AppShortcuts.xcstrings`.
   - Widget: `Localizable.xcstrings`, `InfoPlist.xcstrings`.
-  - Pakete: `Resources/Localizable.xcstrings`, `defaultLocalization: "de"`.
-- **Build-Einstellungen:**
-  - `project.yml`: Bekannte Regionen de und en. `SWIFT_EMIT_LOC_STRINGS: YES` und `LOCALIZATION_PREFERS_STRING_CATALOGS: YES`, damit der Build die Schlüssel in den Catalog schreibt.
-- **Test-Schema:**
-  - Tests laufen fest mit `language: de` und `region: DE`, damit bestehende deutsche Erwartungen gelten.
-  - Neue englische Tests setzen die Locale ausdrücklich.
-- **Test `LocalizationCoverageTests`:**
-  - Liest alle `.xcstrings` und prüft: jeder Schlüssel hat einen englischen Wert, kein englischer Wert ist leer oder gleich dem deutschen Schlüssel.
-  - Ausnahmen: Eigennamen und Zeichenfolgen ohne Buchstaben, in einer Allowlist.
-  - Prüft außerdem, dass Platzhalter (`%@`, `%lld`) in beiden Sprachen übereinstimmen.
+  - Pakete mit Nutzertexten: `Resources/Localizable.xcstrings`.
+- **Testsprache für alle Stufen** (Fable 4): `run_tests` in `test-all.sh` bekommt `-testLanguage de -testRegion DE`. Das XcodeGen-App-Schema bekommt zusätzlich `language: de`, `region: DE`.
+- **`scripts/sync-strings.sh`:**
+  - Baut einmal mit `SWIFT_EMIT_LOC_STRINGS=YES` und synchronisiert jeden Catalog mit den `.stringsdata` seines Ziels.
+  - `--check`: synchronisiert auf eine Kopie und scheitert, wenn sie vom eingecheckten Catalog abweicht. So bleiben keine nie extrahierten Texte unsichtbar (Fable 2).
+- **`scripts/check-strings.py`** (Host-Skript, nicht im Simulator), aufgerufen von `test-all.sh` als eigene Stufe:
+  - Jeder Schlüssel mit `shouldTranslate != false` hat einen englischen Wert im Zustand `translated`.
+  - Platzhalter in beiden Sprachen gleich.
+  - Englisch ≠ Deutsch nur prüfen, nachdem die Platzhalter entfernt sind, und nur für Texte mit Buchstaben. Gleich lautende Wörter („Yoga“, „HIIT“, „Deadline“) werden im Catalog als `translated` mit gleichem Wert geführt, nicht über eine Allowlist.
+  - `InfoPlist.xcstrings` hat Plist-Schlüssel und eine eigene Regel: jeder Usage-Key braucht de und en.
+  - `AppShortcuts.xcstrings`: Jede Phrase enthält `${applicationName}`.
+- Danach läuft `sync-strings.sh --check` als Stufe in `test-all.sh`.
 
-### Task 2: Texte als `String` umstellen
-- Fundstellen per `grep` auf deutsche Literale außerhalb von SwiftUI-Initialisierern; Liste im PR.
-- Umstellen auf `String(localized:)` mit `comment`, in Paketen mit `bundle: .module`.
+### Task 2: Sprachparameter und `VoiceLanguage.app` (Fable 3, 7, 11)
+- `VoiceLanguage.app` aus `Locale.current`.
+- `AssistantModel.describe(_:language:)`, Ansagen mit Kartentext in der Sprache der Antwort.
+- Pakete: Locale-Parameter statt fester `de_DE`.
+- **Tests:** deutsch und englisch, englisch über die Testhilfe aus Task 0.
+
+### Task 3: Texte als `String` und Hilfs-Views umstellen (mit Fable 6)
+- `String(localized:comment:)` (in Paketen `bundle: .module`).
+- `LocalizedStringResource`-Parameter in Hilfs-Views. `Text(variable)` geht über `Text(LocalizedStringResource)` oder bleibt bewusst unübersetzt (Nutzerdaten wie Aufgabentitel).
+- Fragment-Sätze werden ganze Sätze, Plural-Zweige werden Catalog-Plurale.
+- **Fundliste:**
+  - grep auf deutsche Literale, nicht nur mit Umlaut: alle `"…"` mit einem Großbuchstaben am Wortanfang außerhalb von Bezeichnern.
+  - Plus `sync-strings.sh`: was im Catalog fehlt, fällt in den englischen Screenshots auf.
 - Betroffen u. a.:
-  - `userMessage` in AIKit.
-  - `TaskListModel.message`.
-  - Notice-Texte (`VoiceNoticeRow.text`), Labels (`LanguagePackState.label`, Picker-Titel), `CapacityText`.
-  - Karten-Texte (`AssistantModel.describe`), `ActionCardView`-Fehler.
-  - Benachrichtigungen.
-  - Widget-Texte.
-  - Fehler der App-Funktionen.
-- **Tests:** Für jede umgestellte Datei läuft der bestehende Test weiter, weil das Testschema deutsch ist. Dazu je Bereich ein englischer Stichprobentest mit `Locale(identifier: "en")`, der eine übersetzte Zeichenfolge erwartet.
+  - `userMessage` in AIKit, `TaskListModel.message`.
+  - `VoiceNoticeRow.text`, `LanguagePackState.label`, `CapacityText`.
+  - `AssistantModel.describe`, `ActionCardView`-Fehler, Fehler der App-Funktionen.
+  - Benachrichtigungen, Widget-Texte, `SnapshotProvider`-Platzhalter.
+  - Intents: `IntentDialog` aus `LocalizedStringResource` statt `stringLiteral` (Fable 9).
+  - `DemoData` vergleicht `title == "Einkaufen"` (Fable 13).
 
-### Task 3: Formate
-- `de_DE` ersetzen, Datums- und Zahlenformate über `.formatted` mit App-Locale.
-- `EstimateHours` und `IntakeFormat`: Dezimaltrennzeichen nach Locale. Eingabe-Parsing nimmt Komma und Punkt an.
+### Task 4: Formate (mit Fable 5)
+- `de_DE` ersetzen.
+- **Handgebaute Formate:**
+  - Wochentags-Arrays (`NotificationTexts`, `WeekReviewView`, `MonthView`, `PlanningSettingsSection`) werden zu `Calendar.shortWeekdaySymbols`/`.formatted`.
+  - „heute/morgen“ und `%02d.%02d.` (`DueText`, `SuggestionFacts`, `CaptureText`, `DayHeader`) werden lokalisierte Texte und Datumsformate.
+  - „Uhr“/„um“ werden lokalisierte Sätze.
+- `EstimateHours`/`IntakeFormat`: Dezimaltrennzeichen nach Locale, Eingabe nimmt Komma und Punkt an (`MealSheet`).
 - **Tests:** deutsche und englische Formate.
 
-### Task 4: Übersetzen
-- Build schreibt alle Schlüssel in die Kataloge.
-- Englische Werte nach dem Glossar eintragen, per Skript in die JSON-Kataloge, mit Durchsicht.
-- Plural- und Gerätevarianten, wo nötig.
-- `LocalizationCoverageTests` muss grün sein.
+### Task 5: Übersetzen
+- `sync-strings.sh`, dann englische Werte nach Glossar per Skript in die Kataloge, mit Durchsicht.
+- Plurale.
+- `AppShortcuts.xcstrings` von Hand: Schlüssel exakt mit `${applicationName}`/`${activity}`, englische `caseDisplayRepresentations` für den Parameter (Fable 9).
+- **Abnahme:** `check-strings.py` grün, keine Warnungen des App-Intents-Prozessors.
 
-### Task 5: Antwortsprache der KI und geschriebene Daten
-- `AIPlanner`: Antwortsprache = App-Sprache.
-- `AssistantModel.instructions`: ohne Nutzernachricht in der App-Sprache antworten.
-- Titel geschriebener Einträge in der App-Sprache.
-- **Tests:** Anweisungen enthalten die Sprache.
+### Task 6: KI-Sprache und geschriebene Daten (mit Fable 8, 10)
+- **KI:**
+  - `AIPlanner`: „auf Deutsch“ wird App-Sprache.
+  - `MealEstimator`: Titel und Mengen in App-Sprache.
+  - Chat ohne Nutzernachricht: App-Sprache.
+- **Geschriebene Daten:** Titel geschriebener Einträge in App-Sprache.
+- **Benachrichtigungen:** neu planen bei Sprachwechsel.
+- **Tests:** Anweisungen enthalten die Sprache; ein Sprachwechsel plant neu.
 
-### Task 6: Prüfung
-- `test-all.sh`.
-- Simulator in Englisch (Launch-Argumente `-AppleLanguages (en) -AppleLocale en_US`) über die Geräte-Tools:
-  - Screenshots aller Tabs, der Einstellungen, des Chats und des Sprechmodus-Blatts.
-  - Abgeschnittene Texte prüfen.
-- Simulator in Deutsch: Stichprobe, dass sich nichts geändert hat.
-- Danach Fable-Review des Diffs, iPhone-Installation, PR.
+### Task 7: Prüfung
+- `test-all.sh` (inkl. Sync-Check und Catalog-Prüfung).
+- **Simulator Englisch** (`-AppleLanguages (en) -AppleLocale en_US`) über die Geräte-Tools: Screenshots aller Tabs, Einstellungen, Chat, Sprechmodus-Blatt, Widget, Benachrichtigungstext.
+- **Simulator Deutsch:** Stichprobe.
+- Danach Fable-Review des Diffs, iPhone, PR.
+
+Reihenfolge: 0 → 1 → 2 → 3 → 4 → 5 → 6 → 7.
 
 ## Risiken
 - **Vergessene `String`-Texte bleiben deutsch.** Abhilfe: die grep-Liste aus Task 2 und eine Durchsicht der englischen Screenshots.
 - **Englische Texte sind oft kürzer, Plural ist anders.** Abhilfe: Varianten im Catalog.
-- **`xcodebuild` und Catalog-Sync:** Schreibt der Build ohne Xcode-IDE die Schlüssel nicht, werden sie mit `xcodebuild -exportLocalizations` gesammelt (am Anfang von Task 4 prüfen).
-- **Tests mit deutschen Erwartungen** brechen ohne festes Testschema. Deshalb kommt die Sprache des Schemas in Task 1 zuerst.
+- **Catalog-Sync ohne IDE:** wird in Task 0 geklärt.
+- **Tests mit deutschen Erwartungen** (32 Testdateien) brechen ohne feste Testsprache. Deshalb steht `-testLanguage de` in Task 1 vor jeder Übersetzung.
