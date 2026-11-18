@@ -46,15 +46,16 @@ public final class GitHubTaskProvider: TaskProvider {
     }
 
     public func openTasks() async throws -> [TaskItem] {
-        guard await tokens.isSignedIn else { throw TaskWriteError.signedOut }
         do {
+            // An unreadable keychain throws here and shows the cache below; only missing credentials sign out.
+            guard try await tokens.hasCredentials() else { throw TaskWriteError.signedOut }
             let result = try await api.openProjectIssues()
             let visible = result.issues.filter { GitHubMapping.isVisible($0, login: result.login) }
             login = result.login
             projects = result.projects
             remember(visible)
             // A sign-out during the request already cleared the cache; do not write it back.
-            guard await tokens.isSignedIn else { throw TaskWriteError.signedOut }
+            guard try await tokens.hasCredentials() else { throw TaskWriteError.signedOut }
             cache.store(visible, fetchedAt: now())
             offlineSince = nil
             offlineReason = nil
@@ -302,6 +303,7 @@ public final class GitHubTaskProvider: TaskProvider {
         switch error {
         case let error as TaskWriteError: error
         case GitHubAuthError.signedOut: .signedOut
+        case GitHubAuthError.credentialsUnreadable: .failed("Anmeldung derzeit nicht lesbar.")
         case GitHubAuthError.network: .offline
         case GitHubAuthError.server(let message): .failed("GitHub-Anmeldung: \(message)")
         case GitHubAPIError.network: .offline

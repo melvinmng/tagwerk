@@ -58,10 +58,11 @@ struct SettingsView: View {
 
                 Section {
                     Stepper("Vorlauf: \(leadTimeText(settings.leadTimeMinutes))", value: $settings.leadTimeMinutes, in: 15...2880, step: 15)
+                    Toggle("Deadline-Termine", isOn: $settings.deadlineCalendarNotifications)
                 } header: {
                     Text("Benachrichtigungen")
                 } footer: {
-                    Text("So lange vor der Fälligkeit erinnert Tagwerk an GitHub- und lokale Aufgaben.")
+                    Text(notificationFooter)
                 }
 
                 Section("Zugriff") {
@@ -70,6 +71,10 @@ struct SettingsView: View {
                     }
                     accessRow("Kalender", state: environment.gateway.calendarAccessState) {
                         _ = try? await environment.gateway.requestCalendarAccess()
+                    }
+                    accessRow("Benachrichtigungen", state: notificationAccess,
+                              settingsURL: UIApplication.openNotificationSettingsURLString) {
+                        await environment.notifications.requestAuthorization()
                     }
                 }
                 .id(accessRevision)
@@ -83,6 +88,7 @@ struct SettingsView: View {
             .task {
                 loadSources()
                 await environment.ai.refreshAccount()
+                await environment.notifications.refreshAuthorization()
             }
             .onChange(of: settings.selectedReminderListIDs) { _, _ in
                 Task { await environment.taskList.reload() }
@@ -98,13 +104,34 @@ struct SettingsView: View {
         return ai.models.first { $0.slug == slug }?.displayName ?? slug
     }
 
+    /// Notification permission in the terms of the other access rows.
+    private var notificationAccess: AccessState {
+        switch environment.notifications.authorization {
+        case .authorized: .fullAccess
+        case .notDetermined: .notDetermined
+        case .denied: .denied
+        }
+    }
+
+    private var notificationFooter: String {
+        switch environment.notifications.authorization {
+        case .authorized:
+            "So lange vor der Fälligkeit erinnert Tagwerk an GitHub- und lokale Aufgaben und an Termine aus Deadline-Kalendern. Ein Datum ohne Uhrzeit gilt als 18:00. An ganztägige Deadline-Termine erinnert Tagwerk am Vortag um 18:00."
+        case .notDetermined:
+            "Benachrichtigungen sind noch nicht erlaubt. Erlaube sie unten unter „Zugriff“."
+        case .denied:
+            "Benachrichtigungen sind in iOS ausgeschaltet. Schalte sie unten unter „Zugriff“ wieder ein."
+        }
+    }
+
     private func loadSources() {
         calendars = environment.gateway.calendarAccessState == .fullAccess ? environment.gateway.calendars() : []
         reminderLists = environment.gateway.accessState == .fullAccess ? environment.gateway.lists() : []
     }
 
     @ViewBuilder
-    private func accessRow(_ title: String, state: AccessState, request: @escaping () async -> Void) -> some View {
+    private func accessRow(_ title: String, state: AccessState, settingsURL: String = UIApplication.openSettingsURLString,
+                           request: @escaping () async -> Void) -> some View {
         HStack {
             Text(title)
             Spacer()
@@ -122,7 +149,7 @@ struct SettingsView: View {
                 }
             default:
                 Button("Einstellungen öffnen") {
-                    if let url = URL(string: UIApplication.openSettingsURLString) { openURL(url) }
+                    if let url = URL(string: settingsURL) { openURL(url) }
                 }
             }
         }

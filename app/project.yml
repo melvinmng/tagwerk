@@ -42,6 +42,8 @@ targets:
         NSRemindersFullAccessUsageDescription: "Tagwerk liest und bearbeitet deine Erinnerungen, um sie mit deinen anderen Aufgaben zusammenzuführen."
         NSCalendarsFullAccessUsageDescription: "Tagwerk liest deinen Kalender, um deinen Tag zu planen."
         GitHubClientID: $(GITHUB_CLIENT_ID)
+        UIBackgroundModes: [fetch]
+        BGTaskSchedulerPermittedIdentifiers: [tagwerk.refresh]
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: $(TAGWERK_BUNDLE_ID)

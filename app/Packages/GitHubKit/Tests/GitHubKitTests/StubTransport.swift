@@ -93,3 +93,28 @@ extension URLRequest {
 }
 
 let fixedNow = Date(timeIntervalSince1970: 1_800_000_000)
+
+/// Credential store whose reads fail while "locked", like the keychain before the first unlock.
+final class LockableCredentialStore: CredentialStore {
+    struct Locked: Error {}
+    private let stored: Mutex<GitHubCredentials?>
+    private let locked = Mutex(true)
+    private let deletes = Mutex(0)
+
+    init(_ credentials: GitHubCredentials?) {
+        stored = Mutex(credentials)
+    }
+
+    var deleteCount: Int { deletes.withLock { $0 } }
+    func unlock() { locked.withLock { $0 = false } }
+
+    func load() throws -> GitHubCredentials? {
+        if locked.withLock({ $0 }) { throw Locked() }
+        return stored.withLock { $0 }
+    }
+    func save(_ credentials: GitHubCredentials) throws { stored.withLock { $0 = credentials } }
+    func delete() throws {
+        deletes.withLock { $0 += 1 }
+        stored.withLock { $0 = nil }
+    }
+}

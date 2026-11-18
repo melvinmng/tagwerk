@@ -1,5 +1,6 @@
 import SwiftData
 import SwiftUI
+import UserNotifications
 
 @main
 struct TagwerkApp: App {
@@ -9,7 +10,10 @@ struct TagwerkApp: App {
     init() {
         do {
             let container = try ModelContainerFactory.make(inMemory: false)
-            _environment = State(initialValue: try AppEnvironment(modelContainer: container))
+            let environment = try AppEnvironment(modelContainer: container)
+            _environment = State(initialValue: environment)
+            // Set before launch ends, so a tap that launched the app is not lost.
+            UNUserNotificationCenter.current().delegate = environment.notificationDelegate
         } catch {
             // A broken store makes the app unusable; fail loudly instead of losing data silently.
             fatalError("Failed to open the SwiftData store: \(error)")
@@ -34,17 +38,34 @@ struct TagwerkApp: App {
                     }
                     await environment.activateGitHubIfSignedIn()
                     environment.startReconnectWatch()
+                    environment.startNotificationUpdates()
                 }
                 .onChange(of: scenePhase) { _, phase in
-                    if phase == .active {
+                    switch phase {
+                    case .active:
                         Task {
+                            // A start before the first unlock could not read the GitHub sign-in; try again.
+                            await environment.activateGitHubIfSignedIn()
                             await environment.retryGitHubIfNeeded()
                             // Remaining time and "today" move on while the app is in the background.
                             await environment.planning.reload()
+                            // The permission may have changed in the iOS settings; the time zone may have changed.
+                            await environment.notifications.reschedule()
                         }
+                    case .background:
+                        // Directly, not debounced: the app may be suspended before a delayed run starts.
+                        Task {
+                            await environment.makeBackgroundRefresh().submitNext()
+                            await environment.notifications.reschedule()
+                        }
+                    default:
+                        break
                     }
                 }
         }
         .modelContainer(environment.modelContainer)
+        .backgroundTask(.appRefresh(BackgroundRefresh.identifier)) { [environment] in
+            await environment.makeBackgroundRefresh().run()
+        }
     }
 }

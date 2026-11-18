@@ -54,6 +54,8 @@ struct SetupModelTests {
         model.skip()
         #expect(model.current == .chatGPT)
         model.skip()
+        #expect(model.current == .notifications)
+        model.skip()
         #expect(model.isFinished)
         #expect(settings.selectedCalendarIDs == ["work"])
     }
@@ -81,7 +83,7 @@ struct SetupModelTests {
 
     @Test func finish_marksSetupCompleted() {
         let model = SetupModel(store: store, settings: settings)
-        for _ in 0..<4 { model.skip() }
+        for _ in 0..<5 { model.skip() }
         #expect(!settings.setupCompleted)
         model.skip()
         #expect(model.isFinished)
@@ -99,20 +101,21 @@ struct SetupModelTests {
         #expect(model.current == .chatGPT)
     }
 
-    @Test func chatGPTStep_markSignedIn_recordsAndFinishes() async {
+    @Test func chatGPTStep_markSignedIn_recordsAndAdvancesToNotifications() async {
         let model = SetupModel(store: store, settings: settings)
         for _ in 0..<4 { model.skip() }
         #expect(model.current == .chatGPT)
         model.markSignedIn()
         #expect(model.results[.chatGPT] == .fullAccess)
-        #expect(model.isFinished)
-        #expect(settings.setupCompleted)
+        #expect(model.current == .notifications)
+        #expect(!settings.setupCompleted)
     }
 
     @Test func chatGPTStep_skip_isMarkedNotSignedIn() async {
         let model = SetupModel(store: store, settings: settings)
         for _ in 0..<5 { model.skip() }
         #expect(model.results[.chatGPT] == .denied)
+        model.skip()
         #expect(SetupStep.chatGPT.notDoneLabel == "nicht angemeldet")
         #expect(SetupStep.reminders.notDoneLabel == "nicht erlaubt")
         #expect(model.isFinished)
@@ -122,7 +125,7 @@ struct SetupModelTests {
         let model = SetupModel(store: store, settings: settings, isChatGPTSignedIn: true)
         for _ in 0..<4 { model.skip() }
         #expect(model.results[.chatGPT] == .fullAccess)
-        #expect(model.isFinished)
+        #expect(model.current == .notifications)
     }
 
     @Test func chatGPTSignInKnownLater_whileOnStep_finishes() async {
@@ -130,11 +133,12 @@ struct SetupModelTests {
         for _ in 0..<4 { model.skip() }
         model.noteChatGPTSignedIn()
         #expect(model.results[.chatGPT] == .fullAccess)
-        #expect(model.isFinished)
+        #expect(model.current == .notifications)
     }
 
     @Test func steps_haveGermanTitles() {
-        #expect(SetupStep.allCases.map(\.title) == ["Erinnerungen", "Kalender", "Plan-Kalender", "GitHub", "ChatGPT"])
+        #expect(SetupStep.allCases.map(\.title) == ["Erinnerungen", "Kalender", "Plan-Kalender", "GitHub", "ChatGPT",
+                                                    "Benachrichtigungen"])
     }
 
     @Test func planCalendarStep_createsTagwerkCalendar() async {
@@ -166,5 +170,47 @@ struct SetupModelTests {
         await model.grant()
         #expect(model.results[.planCalendar] == .denied)
         #expect(settings.planCalendarID == nil)
+    }
+
+    @Test func notificationsStep_grant_requestsAuthorizationAndFinishes() async {
+        var requests = 0
+        let model = SetupModel(store: store, settings: settings, requestNotifications: {
+            requests += 1
+            return true
+        })
+        for _ in 0..<5 { model.skip() }
+        #expect(model.current == .notifications)
+        await model.grant()
+        #expect(requests == 1)
+        #expect(model.results[.notifications] == .fullAccess)
+        #expect(model.isFinished)
+        #expect(settings.setupCompleted)
+    }
+
+    @Test func notificationsStep_refused_recordsDenied() async {
+        let model = SetupModel(store: store, settings: settings, requestNotifications: { false })
+        for _ in 0..<5 { model.skip() }
+        await model.grant()
+        #expect(model.results[.notifications] == .denied)
+        #expect(SetupStep.notifications.notDoneLabel == "nicht erlaubt")
+        #expect(model.isFinished)
+    }
+
+    @Test func notificationsStep_skip_finishesWithoutRequest() async {
+        var requests = 0
+        let model = SetupModel(store: store, settings: settings, requestNotifications: {
+            requests += 1
+            return true
+        })
+        for _ in 0..<6 { model.skip() }
+        #expect(requests == 0)
+        #expect(model.isFinished)
+    }
+
+    @Test func notificationsStep_alreadyAllowed_isDoneAndSkipped() async {
+        let model = SetupModel(store: store, settings: settings, notificationsAllowed: true)
+        for _ in 0..<5 { model.skip() }
+        #expect(model.results[.notifications] == .fullAccess)
+        #expect(model.isFinished)
     }
 }

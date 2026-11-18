@@ -25,6 +25,12 @@ final class AppEnvironment {
     let planner: AIPlanner
     /// The assistant chat (design §8.3); sends only what the user writes.
     let assistant: AssistantModel
+    /// Deadline notifications (design 2b §9); never calls an AI feature.
+    let notifications: NotificationScheduler
+    /// Target of a tapped notification until the app shows it.
+    let notificationNavigator = NotificationNavigator()
+    /// Delegate of the system notification center; held here because the center keeps it weakly.
+    @ObservationIgnored private(set) lazy var notificationDelegate = NotificationDelegate(navigator: notificationNavigator)
     /// A tab another view asks to show (e.g. "Mit KI planen" from the task list jumps to "Planen").
     var requestedTab: Int?
     private let gitHubCache: SwiftDataGitHubCache
@@ -34,8 +40,11 @@ final class AppEnvironment {
     @ObservationIgnored private var changeObservation: Task<Void, Never>?
     @ObservationIgnored private var reconnectWatch: Task<Void, Never>?
     @ObservationIgnored private var pathMonitor: NWPathMonitor?
+    @ObservationIgnored private var notificationUpdates: Task<Void, Never>?
+    @ObservationIgnored private var gitHubRegistration: Task<Void, Never>?
 
-    init(modelContainer: ModelContainer) throws {
+    /// `notificationCenter` defaults to the system center; tests pass a fake so nothing reaches iOS.
+    init(modelContainer: ModelContainer, notificationCenter: (any NotificationCenterClient)? = nil) throws {
         self.modelContainer = modelContainer
         let context = modelContainer.mainContext
         let settings = try AppSettings.current(in: context)
@@ -94,6 +103,12 @@ final class AppEnvironment {
         assistant.issueReference = { id in
             gitHubProvider.issueReference(for: id).map { IssueReference(repository: $0.repository, number: $0.number, nodeID: $0.nodeID) }
         }
+        self.notifications = NotificationScheduler(
+            center: notificationCenter ?? SystemNotificationCenter(), taskList: taskList,
+            deadlineEvents: { interval, ids in
+                gateway.calendarAccessState == .fullAccess ? gateway.events(in: interval, calendarIDs: ids) : nil
+            },
+            settings: settings)
         let planning = self.planning
         taskList.onCompletionChanged = { id, isCompleted in await planning.didChangeCompletion(id, isCompleted: isCompleted) }
         // An ended GitHub sign-in (expired or revoked) forgets the cached issues of that account.
@@ -105,12 +120,40 @@ final class AppEnvironment {
         }
     }
 
+    /// The background refresh: GitHub is registered without the catalog, every source loads once, then the
+    /// notifications are rescheduled. Nothing here reaches an AI feature (§8.4).
+    func makeBackgroundRefresh() -> BackgroundRefresh {
+        BackgroundRefresh(
+            prepare: { [weak self] in
+                await self?.registerGitHubIfSignedIn() ?? false  // a registration loads all sources
+            },
+            reload: { [weak self] in await self?.taskList.reload() },
+            reschedule: { [weak self] in await self?.notifications.reschedule() })
+    }
+
     /// Adds GitHub to the task list when credentials exist.
     func activateGitHubIfSignedIn() async {
-        guard await gitHubTokens.isSignedIn, taskList.provider(for: .github) == nil else { return }
-        await taskList.register(gitHub)
+        guard await registerGitHubIfSignedIn() else { return }
         // Refresh repositories and project links at every start, so creating an issue needs no wait.
         _ = await gitHub.catalog(maxAge: 0)
+    }
+
+    /// Registers GitHub once, also when start, foreground and background refresh ask at the same time.
+    /// Returns `true` only to the caller whose registration loaded the sources.
+    private func registerGitHubIfSignedIn() async -> Bool {
+        if let running = gitHubRegistration {
+            await running.value
+            return false
+        }
+        guard taskList.provider(for: .github) == nil else { return false }
+        let registration = Task { @MainActor [weak self] in
+            guard let self, await gitHubTokens.isSignedIn, taskList.provider(for: .github) == nil else { return }
+            await taskList.register(gitHub)
+        }
+        gitHubRegistration = registration
+        await registration.value
+        gitHubRegistration = nil
+        return taskList.provider(for: .github) != nil
     }
 
     /// Removes GitHub from the task list after signing out and forgets cached issues.
@@ -119,6 +162,8 @@ final class AppEnvironment {
         gitHubCatalogStore.clear()
         settings.selectedProjectIDs = nil
         await taskList.unregister(.github)
+        // After a voluntary sign-out GitHub has no state, so the scheduler would keep its notifications.
+        await notifications.removeNotifications(of: .github)
     }
 
     var isGitHubActive: Bool { taskList.provider(for: .github) != nil }
@@ -136,7 +181,10 @@ final class AppEnvironment {
     }
 
     func makeSetupModel() -> SetupModel {
-        SetupModel(store: gateway, settings: settings, calendarStore: gateway, isChatGPTSignedIn: ai.isSignedIn)
+        let notifications = self.notifications
+        return SetupModel(store: gateway, settings: settings, calendarStore: gateway, isChatGPTSignedIn: ai.isSignedIn,
+                          notificationsAllowed: notifications.authorization == .authorized,
+                          requestNotifications: { await notifications.requestAuthorization() })
     }
 
     /// Current authorization of a source that needs system permission; `nil` for sources without one.
@@ -192,6 +240,31 @@ final class AppEnvironment {
                 // EventKit changes concern Reminders only; GitHub and local tasks stay as they are.
                 await self?.taskList.reload(only: [.reminders])
                 await self?.planning.reload()
+                // Deadline calendar events may have changed; this is the only consumer of `changes`.
+                self?.notifications.scheduleSoon()
+            }
+        }
+    }
+
+    /// Reschedules notifications whenever tasks, source states or notification settings change.
+    /// The first value arrives at once and schedules after the start.
+    func startNotificationUpdates() {
+        guard notificationUpdates == nil else { return }
+        let changes = Observations { @MainActor [weak self] () -> Int in
+            guard let self else { return 0 }
+            var hasher = Hasher()
+            hasher.combine(taskList.items)
+            hasher.combine(taskList.sourceStates.mapValues { String(describing: $0) })
+            hasher.combine(settings.leadTimeMinutes)
+            hasher.combine(settings.deadlineCalendarNotifications)
+            hasher.combine(settings.deadlineCalendarIDs)
+            return hasher.finalize()
+        }
+        notificationUpdates = Task { [weak self] in
+            var last: Int?
+            for await value in changes where value != last {
+                last = value
+                self?.notifications.scheduleSoon()
             }
         }
     }
