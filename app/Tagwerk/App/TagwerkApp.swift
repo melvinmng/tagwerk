@@ -1,3 +1,4 @@
+import AppIntents
 import HealthBridge
 import SwiftData
 import SwiftUI
@@ -20,6 +21,9 @@ struct TagwerkApp: App {
             let environment = try AppEnvironment(modelContainer: container, health: health,
                                                  snapshotWriter: isTestHost ? nil : .live())
             _environment = State(initialValue: environment)
+            // App Intents run in this process and share the one model container (phase 4 design §8).
+            let services = IntentServices(environment: environment)
+            AppDependencyManager.shared.add(dependency: services)
             // Set before launch ends, so a tap that launched the app is not lost.
             UNUserNotificationCenter.current().delegate = environment.notificationDelegate
         } catch {
