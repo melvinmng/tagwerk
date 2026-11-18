@@ -21,8 +21,49 @@ struct PlanSuggestion: Codable, Hashable, Identifiable {
     var fromDay: PlanDay?
     /// Blocks in time that only a longer day provides: the day-change suggestion they need (mockup AB1).
     var dependsOn: UUID?
+    /// Where the AI had put it, set when the user moves it by hand (mockup VM1); such a suggestion is pinned:
+    /// the AI leaves it where it is unless the user talks about it.
+    var aiPosition: SuggestionPosition?
+    /// Where it was before the AI changed it in a conversation (mockup VA1, "geändert").
+    var previousPosition: SuggestionPosition?
 
     var taskID: TaskID? { TaskID(key: taskKey) }
+    var isMovedByUser: Bool { aiPosition != nil }
+    var position: SuggestionPosition {
+        SuggestionPosition(kind: kind, day: day, startMinutes: startMinutes, minutes: minutes)
+    }
+
+    /// Puts the suggestion at `position`; a block moved to another day of a day plan is a move (`fromDay`).
+    mutating func place(at position: SuggestionPosition, fromDay origin: PlanDay?) {
+        kind = position.kind
+        day = position.day
+        startMinutes = position.startMinutes
+        minutes = position.minutes
+        fromDay = position.kind == .move ? origin : nil
+    }
+}
+
+/// Kind, day and time of a suggestion: what moving by hand or a conversation changes.
+struct SuggestionPosition: Codable, Hashable {
+    var kind: PlanSuggestion.Kind
+    var day: PlanDay
+    var startMinutes: Int?
+    var minutes: Int?
+}
+
+/// One message of the conversation about a planning (mockup VK1). The answer lists what changed.
+struct SuggestionMessage: Codable, Hashable, Identifiable {
+    enum Role: String, Codable { case user, assistant }
+
+    var id = UUID()
+    var role: Role
+    var text: String
+    /// The suggestion the user commented on.
+    var suggestionID: UUID?
+    /// "Mail an Prüfungsamt 18:00 → 16:00", answers only.
+    var changes: [String]?
+    /// Changes Tagwerk did not take, with the reason, answers only.
+    var rejected: [String]?
 }
 
 /// A task the AI (or the local check) left out, with the reason shown under "Nicht eingeplant".
@@ -45,6 +86,10 @@ struct SuggestionBatch: Codable, Hashable, Identifiable {
     var estimates: [String: Int]
     /// The model's assessment of the period (one or two sentences).
     var summary: String?
+    /// The conversation about this planning (mockup VK1).
+    var conversation: [SuggestionMessage]?
+    /// The suggestions before the last answer of the conversation, for "Rückgängig".
+    var revisionUndo: [PlanSuggestion]?
 
     var isEmpty: Bool { suggestions.isEmpty && unscheduled.isEmpty && risks.isEmpty }
 }

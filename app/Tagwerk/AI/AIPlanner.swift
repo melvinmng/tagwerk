@@ -25,19 +25,26 @@ final class AIPlanner {
     /// A one-line note after planning or accepting; the view clears it when shown.
     var notice: String?
 
-    @ObservationIgnored private let responder: ResponseStreaming
-    @ObservationIgnored private let model: @MainActor () async throws -> String
+    @ObservationIgnored let responder: ResponseStreaming
+    @ObservationIgnored let model: @MainActor () async throws -> String
     @ObservationIgnored private let consumeModelFallback: @MainActor () -> Bool
     /// "Vorarbeiten, wenn Luft ist" (setting, default on).
     @ObservationIgnored var workAhead: @MainActor () -> Bool = { true }
     /// "Längere Tage vorschlagen": never, for deadlines and P1 (default), only in an emergency.
     @ObservationIgnored var longerDays: @MainActor () -> LongerDays = { .forDeadlines }
+    /// "Planungsvorgaben" (mockup VR1): short sentences sent with every planning and conversation.
+    @ObservationIgnored var preferences: @MainActor () -> [String] = { [] }
+
+    /// The suggestion a conversation answer is awaited for (mockup VK1).
+    var revisingID: UUID?
+    /// Why the last conversation call failed.
+    var revisionError: String?
 
     enum LongerDays: String, CaseIterable {
         case never, forDeadlines, emergencyOnly
     }
-    @ObservationIgnored private let planning: PlanningModel
-    @ObservationIgnored private let store: SuggestionStore
+    @ObservationIgnored let planning: PlanningModel
+    @ObservationIgnored let store: SuggestionStore
     /// The last planning request, for "Erneut versuchen".
     @ObservationIgnored private var lastRequest: (scope: PlanScope, anchor: PlanDay, taskID: TaskID?)?
 
@@ -65,14 +72,18 @@ final class AIPlanner {
         }
         await planning.reload()
         // Day plan: the next two working days (within five calendar days) as move targets and for working ahead.
-        var targets: [PlanInputDay] = []
-        if scope == .day {
-            let calendar = planning.calendar
-            let candidates = await planning.planInputs(in: anchor.adding(days: 1, calendar: calendar)...anchor.adding(days: 5, calendar: calendar))
-            targets = Array(candidates.filter { $0.hours.map { $0.minutes > 0 } ?? false }.prefix(2))
-        }
-        var input = makeInput(scope: scope, only: taskID.map { [$0] }, lookahead: Set(targets.map(\.day)))
+        let targets = scope == .day ? await laterDays(after: anchor) : []
+        // Suggestions the user moved by hand stay where they are (mockup VM1): their tasks are not planned
+        // again, and their time is taken.
+        let pinned = pinnedSuggestions(replacedBy: scope, days: Set(planning.days.map(\.day)))
+        var input = makeInput(scope: scope, only: taskID.map { [$0] }, lookahead: Set(targets.map(\.day)),
+                              excluding: Set(pinned.compactMap(\.taskID)))
         input.laterDays = targets
+        for suggestion in pinned where suggestion.kind == .block {
+            guard let start = suggestion.startMinutes, let minutes = suggestion.minutes,
+                  let index = input.days.firstIndex(where: { $0.day == suggestion.day }) else { continue }
+            input.days[index].blocks.append(start..<(start + minutes))
+        }
         guard !input.tasks.isEmpty, !input.days.isEmpty else {
             notice = Self.nothingToPlanMessage
             return
@@ -99,7 +110,9 @@ final class AIPlanner {
             log(scope: scope, input: input, inputText: inputText, model: model, started: started,
                 retried: !firstViolations.isEmpty, output: accepted, addedP1: Self.blockCount(accepted) - beforeP1,
                 violations: firstViolations + violations)
-            store.replace(with: makeBatch(scope: scope, input: input, output: accepted, violations: violations))
+            var batch = makeBatch(scope: scope, input: input, output: accepted, violations: violations)
+            batch.suggestions += pinned.map { var kept = $0; kept.dependsOn = nil; kept.previousPosition = nil; return kept }
+            store.replace(with: batch)
             await planning.reload()
             state = .idle
         } catch is CancellationError {
@@ -483,7 +496,8 @@ final class AIPlanner {
         let schema = scope == .day ? (name: "day_plan", schema: AIPlanSchemas.dayPlanSchema)
                                    : (name: "period_plan", schema: AIPlanSchemas.periodPlanSchema)
         var text = ""
-        for try await event in responder.respond(model: model, instructions: Self.instructions(scope, longerDays: longerDays()), input: input,
+        let instructions = Self.instructions(scope, longerDays: longerDays()) + Self.preferenceText(preferences())
+        for try await event in responder.respond(model: model, instructions: instructions, input: input,
                                                   tools: [], jsonSchema: schema) {
             if case .textDelta(let delta) = event { text += delta }
         }
@@ -544,6 +558,28 @@ final class AIPlanner {
         }
     }
 
+    /// The user's standing preferences as a paragraph of the instructions; empty without any.
+    static func preferenceText(_ preferences: [String]) -> String {
+        let lines = preferences.map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty }
+        guard !lines.isEmpty else { return "" }
+        return "\nVorgaben der Person, beachte sie:\n" + lines.map { "- \($0)" }.joined(separator: "\n")
+    }
+
+    /// The next two working days within five calendar days: move targets of a day plan.
+    func laterDays(after anchor: PlanDay) async -> [PlanInputDay] {
+        let calendar = planning.calendar
+        let candidates = await planning.planInputs(in: anchor.adding(days: 1, calendar: calendar)...anchor.adding(days: 5, calendar: calendar))
+        return Array(candidates.filter { $0.hours.map { $0.minutes > 0 } ?? false }.prefix(2))
+    }
+
+    /// Open suggestions the user moved by hand in the batches a new plan of `scope` over `days` replaces.
+    private func pinnedSuggestions(replacedBy scope: PlanScope, days: Set<PlanDay>) -> [PlanSuggestion] {
+        store.batches()
+            .filter { ($0.scope == .day) == (scope == .day) && $0.days.contains(where: days.contains) }
+            .flatMap(\.suggestions)
+            .filter(\.isMovedByUser)
+    }
+
     static func violationMessage(_ violations: [PlanViolation]) -> String {
         let lines = violations.map { "- \($0.taskId): \($0.reason.rawValue)" }.joined(separator: "\n")
         return "Diese Vorschläge verletzen die Regeln:\n\(lines)\nKorrigiere den Plan und antworte wieder vollständig im vorgegebenen Format."
@@ -551,7 +587,7 @@ final class AIPlanner {
 
     // MARK: Input and batches
 
-    private func makeInput(scope: PlanScope, only: Set<TaskID>?, lookahead: Set<PlanDay> = []) -> PlanInput {
+    func makeInput(scope: PlanScope, only: Set<TaskID>?, lookahead: Set<PlanDay> = [], excluding: Set<TaskID> = []) -> PlanInput {
         let today = planning.today
         let days = planning.days.compactMap(\.planInput).filter { day in
             switch scope {
@@ -576,7 +612,7 @@ final class AIPlanner {
             today: today, nowMinutes: Int(now.timeIntervalSince(dayStart) / 60),
             timeZoneID: planning.calendar.timeZone.identifier, defaultTaskMinutes: planning.defaultTaskMinutes,
             only: only,
-            excluding: [],
+            excluding: excluding,
             lookaheadDays: workAhead() ? lookahead : [],
             blockedMinutes: planning.blockedMinutesByTask,
             calendar: planning.calendar

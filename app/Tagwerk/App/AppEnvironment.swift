@@ -84,6 +84,7 @@ final class AppEnvironment {
                                  })
         planner.workAhead = { settings.aiWorkAhead }
         planner.longerDays = { AIPlanner.LongerDays(rawValue: settings.aiLongerDays) ?? .forDeadlines }
+        planner.preferences = { settings.aiPlanningRules }
         let tools = AppTools(taskList: taskList, planning: planning, planner: planner,
                              events: { interval in gateway.events(in: interval, calendarIDs: nil) })
         self.assistant = AssistantModel(responder: ai.client, tools: tools, model: { try await ai.selectedModel() },

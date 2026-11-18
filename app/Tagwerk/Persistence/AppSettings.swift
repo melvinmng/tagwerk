@@ -44,6 +44,15 @@ final class AppSettings {
     var aiWorkAhead: Bool = true
     /// "Längere Tage vorschlagen": `AIPlanner.LongerDays` raw value.
     var aiLongerDays: String = "forDeadlines"
+    /// "Planungsvorgaben" (mockup VR1) as JSON: at most five short sentences.
+    var aiPlanningRulesData: Data?
+
+    static let maximumPlanningRules = 5
+
+    var aiPlanningRules: [String] {
+        get { aiPlanningRulesData.flatMap { try? JSONDecoder().decode([String].self, from: $0) } ?? [] }
+        set { aiPlanningRulesData = try? JSONEncoder().encode(Array(newValue.prefix(Self.maximumPlanningRules))) }
+    }
 
     var weekSchedule: WeekSchedule {
         get { weekScheduleData.flatMap { try? JSONDecoder().decode(WeekSchedule.self, from: $0) } ?? .standard }

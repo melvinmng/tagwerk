@@ -454,3 +454,163 @@ struct AIPlannerTests {
         #expect(responder.calls.isEmpty)
     }
 }
+
+// MARK: Moving by hand and talking about suggestions (mockups VM1, VK1, VA1, VR1)
+
+extension AIPlannerTests {
+    private func twoBlocks() async throws -> (AIPlanner, PlanningModel, PlanSuggestion, PlanSuggestion) {
+        responder.enqueue(Self.dayAnswer(Self.block("local:Fahrrad", "14:00") + "," + Self.block("github:Login", "16:00")))
+        let (planner, planning) = await make()
+        await planner.plan(scope: .day, anchor: today)
+        let all = try #require(planning.days.first?.suggestions)
+        let fahrrad = try #require(all.first { $0.taskKey == "local:Fahrrad" })
+        let login = try #require(all.first { $0.taskKey == "github:Login" })
+        return (planner, planning, fahrrad, login)
+    }
+
+    private func current(_ planning: PlanningModel, _ id: UUID) -> PlanSuggestion? {
+        planning.suggestionBatches.flatMap(\.suggestions).first { $0.id == id }
+    }
+
+    static func revision(_ reply: String, _ changes: String) -> String {
+        #"{"reply":"\#(reply)","changes":[\#(changes)]}"#
+    }
+
+    static func change(_ ref: String, _ day: String = "2026-11-18", start: String?, minutes: Int?) -> String {
+        let start = start.map { "\"\($0)\"" } ?? "null"
+        let minutes = minutes.map(String.init) ?? "null"
+        return #"{"ref":"\#(ref)","day":"\#(day)","start":\#(start),"minutes":\#(minutes)}"#
+    }
+
+    @Test func moveByHand_staysSuggestion_andRemembersTheAIPosition() async throws {
+        let (planner, planning, fahrrad, _) = try await twoBlocks()
+        let error = await planner.moveSuggestion(fahrrad, day: today, start: 11 * 60, minutes: 30)
+        #expect(error == nil)
+        let moved = try #require(current(planning, fahrrad.id))
+        #expect(moved.startMinutes == 11 * 60)
+        #expect(moved.minutes == 30)
+        #expect(moved.aiPosition == SuggestionPosition(kind: .block, day: today, startMinutes: 14 * 60, minutes: 60))
+        #expect(moved.isMovedByUser)
+        #expect(calendarStore.storedEvents.isEmpty)
+        #expect(responder.calls.count == 1)  // moving by hand calls nothing (§8.4)
+    }
+
+    @Test func moveByHand_ontoAnEvent_isRefused() async throws {
+        calendarStore.storedEvents = [event("Meeting", 18, 11, 12)]
+        let (planner, planning, fahrrad, _) = try await twoBlocks()
+        let error = await planner.moveSuggestion(fahrrad, day: today, start: 11 * 60, minutes: 60)
+        #expect(error != nil)
+        #expect(current(planning, fahrrad.id)?.startMinutes == 14 * 60)
+        #expect(current(planning, fahrrad.id)?.isMovedByUser == false)
+    }
+
+    @Test func moveByHand_canBeReset_andAcceptUsesTheNewPlace() async throws {
+        let (planner, planning, fahrrad, login) = try await twoBlocks()
+        _ = await planner.moveSuggestion(fahrrad, day: today, start: 11 * 60, minutes: 60)
+        await planner.resetSuggestion(try #require(current(planning, fahrrad.id)))
+        #expect(current(planning, fahrrad.id)?.startMinutes == 14 * 60)
+        #expect(current(planning, fahrrad.id)?.isMovedByUser == false)
+
+        _ = await planner.moveSuggestion(login, day: today, start: 15 * 60, minutes: 60)
+        await planner.acceptAll()
+        #expect(calendarStore.storedEvents.map(\.start).sorted() == [at(18, 14), at(18, 15)])
+    }
+
+    @Test func moveByHand_toAnotherDay_becomesAMove() async throws {
+        let (planner, planning, fahrrad, _) = try await twoBlocks()
+        let tomorrow = today.adding(days: 1, calendar: calendar)
+        let error = await planner.moveSuggestion(fahrrad, day: tomorrow, start: nil, minutes: nil)
+        #expect(error == nil)
+        let moved = try #require(current(planning, fahrrad.id))
+        #expect(moved.kind == .move)
+        #expect(moved.day == tomorrow)
+        #expect(moved.fromDay == today)
+        #expect(moved.isMovedByUser)
+    }
+
+    @Test func revise_changesOnlyReferencedSuggestions_inPlace() async throws {
+        let (planner, planning, fahrrad, login) = try await twoBlocks()
+        responder.enqueue(Self.revision("Getauscht.", Self.change("s1", start: "16:00", minutes: 60) + "," + Self.change("s2", start: "14:00", minutes: 60)))
+        await planner.revise(fahrrad, comment: "Fahrrad später")
+        #expect(responder.calls.last?.schema == "suggestion_revision")
+        let newFahrrad = try #require(current(planning, fahrrad.id))
+        let newLogin = try #require(current(planning, login.id))
+        #expect(newFahrrad.startMinutes == 16 * 60)
+        #expect(newLogin.startMinutes == 14 * 60)
+        #expect(newFahrrad.previousPosition?.startMinutes == 14 * 60)
+        let conversation = try #require(planning.suggestionBatches.first?.conversation)
+        #expect(conversation.map(\.role) == [.user, .assistant])
+        #expect(conversation.last?.text == "Getauscht.")
+        #expect(conversation.last?.changes?.count == 2)
+        #expect(planner.revisionError == nil)
+    }
+
+    @Test func revise_neverMovesWhatTheUserMoved_exceptTheCommentedOne() async throws {
+        let (planner, planning, fahrrad, login) = try await twoBlocks()
+        _ = await planner.moveSuggestion(login, day: today, start: 15 * 60 + 30, minutes: 60)
+        responder.enqueue(Self.revision("Verschoben.", Self.change("s2", start: "11:00", minutes: 60) + "," + Self.change("s1", start: "11:00", minutes: 60)))
+        await planner.revise(fahrrad, comment: "früher")
+        #expect(current(planning, login.id)?.startMinutes == 15 * 60 + 30)
+        #expect(current(planning, fahrrad.id)?.startMinutes == 11 * 60)
+        #expect(planning.suggestionBatches.first?.conversation?.last?.rejected?.isEmpty == false)
+    }
+
+    @Test func revise_rejectsAChangeThatDoesNotFit() async throws {
+        calendarStore.storedEvents = [event("Meeting", 18, 11, 12)]
+        let (planner, planning, fahrrad, _) = try await twoBlocks()
+        responder.enqueue(Self.revision("Früher.", Self.change("s1", start: "11:00", minutes: 60)))
+        await planner.revise(fahrrad, comment: "früher")
+        #expect(current(planning, fahrrad.id)?.startMinutes == 14 * 60)
+        let answer = try #require(planning.suggestionBatches.first?.conversation?.last)
+        #expect(answer.changes?.isEmpty == true)
+        #expect(answer.rejected?.first?.contains("Fahrrad") == true)
+    }
+
+    @Test func revise_canBeUndone() async throws {
+        let (planner, planning, fahrrad, login) = try await twoBlocks()
+        let before = planning.suggestionBatches.first?.suggestions
+        responder.enqueue(Self.revision("Getauscht.", Self.change("s1", start: "16:00", minutes: 60) + "," + Self.change("s2", start: "14:00", minutes: 60)))
+        await planner.revise(fahrrad, comment: "tauschen")
+        let batch = try #require(planning.suggestionBatches.first)
+        await planner.undoRevision(of: batch.id)
+        #expect(planning.suggestionBatches.first?.suggestions == before)
+        #expect(current(planning, login.id)?.startMinutes == 16 * 60)
+    }
+
+    @Test func revise_sendsComment_userMoves_statusAndPreferences() async throws {
+        let (planner, _, fahrrad, login) = try await twoBlocks()
+        planner.preferences = { ["Mails nicht nach 18 Uhr einplanen."] }
+        _ = await planner.moveSuggestion(login, day: today, start: 15 * 60 + 30, minutes: 60)
+        responder.enqueue(Self.revision("Gut so.", ""))
+        await planner.revise(fahrrad, comment: "Nach 18 Uhr keine Mails")
+        guard case .user(let text) = try #require(responder.calls.last?.input.last) else {
+            Issue.record("expected the request as a user message")
+            return
+        }
+        #expect(text.contains("Nach 18 Uhr keine Mails"))
+        #expect(text.contains("\"about\":\"s1\""))
+        #expect(text.contains("\"status\":\"movedByUser\""))
+        #expect(text.contains("\"aiStart\":\"16:00\""))
+        #expect(responder.instructions.last?.contains("Mails nicht nach 18 Uhr einplanen.") == true)
+        #expect(responder.instructions.first?.contains("Mails nicht nach 18 Uhr einplanen.") == false)
+    }
+
+    @Test func replan_keepsSuggestionsTheUserMoved() async throws {
+        let (planner, planning, fahrrad, _) = try await twoBlocks()
+        _ = await planner.moveSuggestion(fahrrad, day: today, start: 11 * 60, minutes: 60)
+        responder.enqueue(Self.dayAnswer(Self.block("github:Login", "15:00")))
+        await planner.plan(scope: .day, anchor: today)
+        guard case .user(let text) = try #require(responder.calls.last?.input.first) else { return }
+        #expect(!text.contains("\"id\":\"local:Fahrrad\""))
+        let all = planning.suggestionBatches.flatMap(\.suggestions)
+        #expect(all.first { $0.id == fahrrad.id }?.startMinutes == 11 * 60)
+        #expect(all.contains { $0.taskKey == "github:Login" && $0.startMinutes == 15 * 60 })
+    }
+
+    @Test func oldStoredBatch_stillDecodes() throws {
+        let json = #"{"id":"6F9619FF-8B86-D011-B42D-00C04FC964FF","scope":"day","days":[{"year":2026,"month":11,"day":18}],"createdAt":0,"suggestions":[{"id":"7F9619FF-8B86-D011-B42D-00C04FC964FF","kind":"block","taskKey":"local:Fahrrad","title":"Fahrrad","day":{"year":2026,"month":11,"day":18},"startMinutes":840,"minutes":60,"reason":"r"}],"unscheduled":[],"risks":[],"estimates":{}}"#
+        let batch = try JSONDecoder().decode(SuggestionBatch.self, from: Data(json.utf8))
+        #expect(batch.suggestions.first?.isMovedByUser == false)
+        #expect(batch.conversation == nil)
+    }
+}

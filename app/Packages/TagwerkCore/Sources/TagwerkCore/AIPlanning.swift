@@ -90,7 +90,7 @@ public struct PlanInputDay: Sendable, Hashable {
 
 extension PlanInputDay {
     /// The same day with other working hours; capacity is computed again.
-    func withHours(_ hours: WorkHours) -> PlanInputDay {
+    public func withHours(_ hours: WorkHours) -> PlanInputDay {
         var day = self
         day.hours = hours
         day.availableMinutes = capacity(CapacityInput(
