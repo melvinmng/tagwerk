@@ -7,6 +7,7 @@ enum ModelContainerFactory {
                                      RecurringEffortValue.self, RecurringEffortOverride.self, RecurringOccurrenceDone.self,
                                      DayLunchRecord.self, EventAvailabilityMark.self, EventMergeDecision.self,
                                      PlanSuggestionRecord.self, ChatThreadRecord.self,
+                                     EventDeadlineMark.self, DeadlineEventLink.self, DeadlineSuggestionDismissal.self,
                                      MealRecord.self, DrinkRecord.self, WorkoutRecord.self, PendingHealthDeletion.self])
 
     static func make(inMemory: Bool) throws -> ModelContainer {

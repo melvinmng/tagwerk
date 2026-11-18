@@ -317,4 +317,67 @@ struct NotificationSchedulerTests {
         #expect(center.added.isEmpty)
     }
 
+    // MARK: Marked deadline events (plan deadline-marking, Task 8)
+
+    final class MarkBox { var ids: Set<String> = [] }
+
+    private func timetableEvent(_ id: String, day: Int, hour: Int, calendarID: String = "timetable") -> CalendarEvent {
+        let start = calendar.date(from: DateComponents(year: 2026, month: 11, day: day, hour: hour))!
+        return CalendarEvent(id: id, externalID: nil, calendarID: calendarID, title: "Klausur Statistik", start: start,
+                             end: start.addingTimeInterval(7200), isAllDay: false, url: nil, isBusy: true, version: "1")
+    }
+
+    private func makeMarkedScheduler(_ list: TaskListModel, marks: MarkBox) -> NotificationScheduler {
+        let events = self.events
+        return NotificationScheduler(
+            center: center, taskList: list,
+            deadlineEvents: { _, ids in events.filter { ids.contains($0.calendarID) } },
+            markedDeadlines: MarkedDeadlineSource(calendarIDs: { ["timetable"] },
+                                                  markedIDs: { events in Set(events.map(\.id)).intersection(marks.ids) }),
+            settings: settings, now: { testNow() }, calendar: calendar, locale: { Locale(identifier: "de_DE") })
+    }
+
+    @Test mutating func markedEventGetsNotificationWithoutAnyDeadlineCalendar() async {
+        settings.deadlineCalendarIDs = nil
+        events = [timetableEvent("exam", day: 20, hour: 10), timetableEvent("lecture", day: 20, hour: 14)]
+        let marks = MarkBox()
+        marks.ids = ["exam"]
+        let scheduler = makeMarkedScheduler(await loadedList([local]), marks: marks)
+        await scheduler.reschedule()
+        #expect(center.pendingIDs == ["tagwerk.event.exam"])
+        #expect(lastAdded("tagwerk.event.exam")?.title == "Klausur Statistik")
+    }
+
+    @Test mutating func switchOffRemovesMarkedEventNotifications() async {
+        events = [timetableEvent("exam", day: 20, hour: 10)]
+        let marks = MarkBox()
+        marks.ids = ["exam"]
+        let scheduler = makeMarkedScheduler(await loadedList([local]), marks: marks)
+        await scheduler.reschedule()
+        #expect(center.pendingIDs == ["tagwerk.event.exam"])
+        settings.deadlineCalendarNotifications = false
+        await scheduler.reschedule()
+        #expect(center.pending.isEmpty)
+    }
+
+    @Test mutating func unmarkRemovesPendingNotification() async {
+        events = [timetableEvent("exam", day: 20, hour: 10)]
+        let marks = MarkBox()
+        marks.ids = ["exam"]
+        let scheduler = makeMarkedScheduler(await loadedList([local]), marks: marks)
+        await scheduler.reschedule()
+        marks.ids = []
+        await scheduler.reschedule()
+        #expect(center.pending.isEmpty)
+    }
+
+    @Test mutating func eventInDeadlineCalendarAndMarkedNotifiesOnce() async {
+        events = [timetableEvent("exam", day: 20, hour: 10, calendarID: "deadlines")]
+        let marks = MarkBox()
+        marks.ids = ["exam"]
+        let scheduler = makeMarkedScheduler(await loadedList([local]), marks: marks)
+        await scheduler.reschedule()
+        #expect(center.pendingIDs == ["tagwerk.event.exam"])
+        #expect(center.added.filter { $0.id == "tagwerk.event.exam" }.count == 1)
+    }
 }

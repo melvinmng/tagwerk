@@ -19,7 +19,8 @@ public struct EpicInfo: Sendable, Hashable, Codable {
 }
 
 public enum DeadlineKind: Sendable, Hashable {
-    case priorityOne, epic, deadlineCalendar
+    /// `markedEvent`: an event from any calendar the user marked as a deadline in Tagwerk (plan deadline-marking).
+    case priorityOne, epic, deadlineCalendar, markedEvent
 }
 
 /// A deadline that stands out in day, week and month (design §6.2).
@@ -32,11 +33,40 @@ public struct ImportantDeadline: Sendable, Hashable, Identifiable {
     public let kind: DeadlineKind
     public let taskID: TaskID?
     public let eventID: String?
+    /// Calendar of an event deadline (for its name in the deadline card).
+    public var calendarID: String? = nil
+
+    public init(id: String, title: String, day: PlanDay, time: Date?, kind: DeadlineKind, taskID: TaskID?, eventID: String?,
+                calendarID: String? = nil) {
+        self.id = id
+        self.title = title
+        self.day = day
+        self.time = time
+        self.kind = kind
+        self.taskID = taskID
+        self.eventID = eventID
+        self.calendarID = calendarID
+    }
+
+    /// The key preparation events are linked under (DV1): "event:<event ID>", "task:<task key>" for P1 tasks and
+    /// "epic:<issue ID>" for epics, the same whether the epic is assigned or only the parent of an assigned issue.
+    public var preparationKey: String {
+        if let eventID { return "event:\(eventID)" }
+        if kind == .epic {
+            return "epic:" + (taskID?.rawValue ?? String(id.dropFirst(id.hasPrefix("epic:") ? 5 : 0)))
+        }
+        return id
+    }
+
+    /// An event deadline (deadline calendar or marked).
+    public var isEvent: Bool { eventID != nil }
 }
 
 /// P1 tasks with a due date, epics with a due date (assigned or as parent of an assigned issue,
-/// counted once) and events from deadline calendars, within `range`, ordered by day and time.
+/// counted once), events from deadline calendars and events marked as deadlines (`markedEventIDs`, occurrence IDs),
+/// within `range`, ordered by day and time. An event in a deadline calendar that is also marked appears once.
 public func importantDeadlines(tasks: [TaskItem], events: [CalendarEvent], deadlineCalendarIDs: Set<String>,
+                               markedEventIDs: Set<String> = [],
                                in range: ClosedRange<PlanDay>, calendar: Calendar) -> [ImportantDeadline] {
     var result: [ImportantDeadline] = []
     var seenEpics = Set<String>()
@@ -60,11 +90,20 @@ public func importantDeadlines(tasks: [TaskItem], events: [CalendarEvent], deadl
                                         time: due.hasTime ? due.startDate(in: calendar) : nil,
                                         kind: .epic, taskID: nil, eventID: nil))
     }
-    for event in events where deadlineCalendarIDs.contains(event.calendarID) {
+    var seenEvents = Set<String>()
+    for event in events where seenEvents.insert(event.id).inserted {
+        let kind: DeadlineKind
+        if deadlineCalendarIDs.contains(event.calendarID) {
+            kind = .deadlineCalendar
+        } else if markedEventIDs.contains(event.id) {
+            kind = .markedEvent
+        } else {
+            continue
+        }
         result.append(ImportantDeadline(id: "event:\(event.id)", title: event.title,
                                         day: PlanDay(date: event.start, calendar: calendar),
                                         time: event.isAllDay ? nil : event.start,
-                                        kind: .deadlineCalendar, taskID: nil, eventID: event.id))
+                                        kind: kind, taskID: nil, eventID: event.id, calendarID: event.calendarID))
     }
     return result
         .filter { range.contains($0.day) }

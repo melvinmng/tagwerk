@@ -68,6 +68,23 @@ struct AIPlannerTests {
         #"{"taskId":"\#(key)","start":"\#(start)","minutes":\#(minutes),"reason":"passt"}"#
     }
 
+    // MARK: Marked deadlines (plan deadline-marking, Task 9)
+
+    @Test func taskLinkedToMarkedDeadlineGetsAnchor() async throws {
+        calendarStore.calendars.append(ListInfo(id: "timetable", title: "Stundenplan", colorHex: nil, kind: .subscription))
+        let exam = CalendarEvent(id: "exam", externalID: nil, calendarID: "timetable", title: "Klausur Statistik",
+                                 start: at(18, 15), end: at(18, 17), isAllDay: false, url: nil, isBusy: true, version: "1")
+        calendarStore.storedEvents = [exam]
+        blocks.links.link(eventID: "exam", to: TaskID(source: .local, rawValue: "Abgabe"))
+        let (planner, planning) = await make()
+        #expect(planner.makeInput(scope: .day, only: nil).tasks.first { $0.id == "local:Abgabe" }?.anchor == nil)
+        await planning.markDeadline(exam, series: false)
+        let input = planner.makeInput(scope: .day, only: nil)
+        let task = try #require(input.tasks.first { $0.id == "local:Abgabe" })
+        #expect(task.anchor == DueDate(date: exam.start, includeTime: true, calendar: calendar))
+        #expect(input.days.first?.events.first { $0.title == "Klausur Statistik" }?.deadline == true)
+    }
+
     // MARK: Planning
 
     @Test func planDay_validBlocks_becomeSuggestions() async throws {

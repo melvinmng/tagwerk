@@ -6,6 +6,7 @@ struct WeekView: View {
     @Bindable var model: PlanningModel
     let onOpenTask: (TaskID) -> Void
     let menuActions: (TaskItem) -> TaskMenuActions
+    let deadlineActions: DeadlineActions
     @State private var targetedDay: PlanDay?
 
     private func incomingMoves(to day: PlanDay) -> [PlanSuggestion] {
@@ -52,7 +53,8 @@ struct WeekView: View {
                         }
                     }
                     ForEach(plan.deadlines) { deadline in
-                        Label(deadline.title, systemImage: "flag.fill").foregroundStyle(.red).font(.subheadline)
+                        DeadlineLine(deadline: deadline)
+                            .deadlineInteractions(deadline, model: model, actions: deadlineActions)
                     }
                     if plan.assigned.isEmpty && plan.deadlines.isEmpty && plan.suggestions.isEmpty {
                         Text(targetedDay == plan.day ? "Hier ablegen" : "–").foregroundStyle(.secondary).font(.caption)
@@ -88,3 +90,17 @@ struct WeekView: View {
     }
 }
 
+/// A deadline in the week and the month: flag, title and the mark "markiert" (DL2).
+struct DeadlineLine: View {
+    let deadline: ImportantDeadline
+
+    var body: some View {
+        HStack(spacing: 6) {
+            Label(deadline.title, systemImage: deadline.kind == .epic ? "diamond.fill" : "flag.fill")
+                .foregroundStyle(.red).font(.subheadline)
+            if deadline.kind == .markedEvent { DeadlineBadge(text: String(localized: "markiert")) }
+            Spacer(minLength: 0)
+        }
+        .accessibilityElement(children: .combine)
+    }
+}

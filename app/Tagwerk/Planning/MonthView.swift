@@ -7,6 +7,7 @@ struct MonthView: View {
     let onSelectDay: (PlanDay) -> Void
     let onOpenEvent: (CalendarEvent) -> Void
     let onOpenTask: (TaskID) -> Void
+    let deadlineActions: DeadlineActions
     @State private var newEventDay: PlanDay?
     @State private var hoursDay: PlanDay?
     @State private var planningDay: PlanDay?
@@ -42,7 +43,7 @@ struct MonthView: View {
 
             if let plan = model.days.first(where: { $0.day == model.monthSelection }) {
                 MonthDayDetail(model: model, plan: plan, onOpenDay: { onSelectDay(plan.day) },
-                               onOpenEvent: onOpenEvent, onOpenTask: onOpenTask)
+                               onOpenEvent: onOpenEvent, onOpenTask: onOpenTask, deadlineActions: deadlineActions)
                     .padding(.horizontal)
                     .padding(.top, 12)
                     .contentShape(Rectangle())
@@ -57,9 +58,9 @@ struct MonthView: View {
                         HStack {
                             Text(deadline.day.startDate(in: model.calendar).formatted(.dateTime.day().month()))
                                 .font(.caption.monospacedDigit()).frame(width: 52, alignment: .leading)
-                            Label(deadline.title, systemImage: deadline.kind == .epic ? "diamond.fill" : "flag.fill")
-                                .foregroundStyle(.red)
+                            DeadlineLine(deadline: deadline)
                         }
+                        .deadlineInteractions(deadline, model: model, actions: deadlineActions)
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -125,6 +126,7 @@ private struct MonthDayDetail: View {
     let onOpenDay: () -> Void
     let onOpenEvent: (CalendarEvent) -> Void
     let onOpenTask: (TaskID) -> Void
+    let deadlineActions: DeadlineActions
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -135,7 +137,8 @@ private struct MonthDayDetail: View {
                 Text(CapacityText.summary(plan.capacity)).font(.caption).foregroundStyle(.secondary)
             }
             ForEach(plan.deadlines) { deadline in
-                Label(deadline.title, systemImage: "flag.fill").foregroundStyle(.red).font(.subheadline)
+                DeadlineLine(deadline: deadline)
+                    .deadlineInteractions(deadline, model: model, actions: deadlineActions)
             }
             // All-day events of deadline calendars already appear as deadlines above.
             ForEach((model.allDayEvents(for: plan) + (plan.events + plan.blocks).filter { !$0.isAllDay })

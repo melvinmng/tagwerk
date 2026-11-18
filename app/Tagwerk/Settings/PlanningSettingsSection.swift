@@ -35,7 +35,7 @@ struct PlanningSettingsSection: View {
         } header: {
             Text("Planen")
         } footer: {
-            Text("Termine aus Deadline-Kalendern (z. B. Klausuren) gelten als wichtige Deadlines. Aufgaben ohne Aufwand zählen mit der Standarddauer. Gleiche Termine in mehreren Kalendern fasst Tagwerk erst nach deiner Zustimmung zusammen.")
+            Text("Termine aus Deadline-Kalendern (z. B. Klausuren) gelten als wichtige Deadlines. Einzelne Termine aus anderen Kalendern lassen sich im Termin-Blatt als Deadline markieren; die Markierung liegt nur in Tagwerk auf diesem Gerät, der Kalender bleibt unverändert. Aufgaben ohne Aufwand zählen mit der Standarddauer. Gleiche Termine in mehreren Kalendern fasst Tagwerk erst nach deiner Zustimmung zusammen.")
         }
         .task { calendars = environment.gateway.calendarAccessState == .fullAccess ? environment.gateway.calendars() : [] }
         .onChange(of: settings.deadlineCalendarIDs) { _, _ in Task { await environment.planning.reload() } }

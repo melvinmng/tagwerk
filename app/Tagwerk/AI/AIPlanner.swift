@@ -686,10 +686,10 @@ final class AIPlanner {
         )
     }
 
-    /// Deadline-calendar events linked to a task are that task's anchor (§11.7).
+    /// Deadline events (deadline calendars and marked events) linked to a task are that task's anchor (§11.7).
     private func deadlineAnchors() -> [TaskID: DueDate] {
         var anchors: [TaskID: DueDate] = [:]
-        for deadline in planning.days.flatMap(\.deadlines) where deadline.kind == .deadlineCalendar {
+        for deadline in planning.days.flatMap(\.deadlines) where deadline.kind == .deadlineCalendar || deadline.kind == .markedEvent {
             guard let eventID = deadline.eventID, let task = planning.linkedTask(eventID: eventID) else { continue }
             let due = deadline.time.map { DueDate(date: $0, includeTime: true, calendar: planning.calendar) }
                 ?? DueDate(year: deadline.day.year, month: deadline.day.month, day: deadline.day.day)

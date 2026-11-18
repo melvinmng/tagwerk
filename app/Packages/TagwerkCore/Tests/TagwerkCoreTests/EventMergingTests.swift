@@ -11,6 +11,14 @@ struct EventMergingTests {
                       isBusy: true, version: "1")
     }
 
+    @Test func markedEventIsNeverHiddenAsPlaceholderOrTwin() {
+        let placeholder = event("p", "work", title: "Busy")
+        #expect(mergeSuggestions([event("real", "uni", title: "Klausur"), placeholder], excludingEventIDs: ["p"]).isEmpty)
+        let twins = [event("a", "work", title: "Klausur"), event("b", "uni", title: "Klausur")]
+        #expect(mergeSuggestions(twins, excludingEventIDs: ["b"]).isEmpty)
+        #expect(mergeSuggestions(twins).count == 1)
+    }
+
     @Test func sameTitleAndTime_inTwoCalendars_becomesOne() {
         let merged = mergingDuplicates([event("a", "work"), event("b", "shared", title: " seminar ")], links: [:])
         #expect(merged.map(\.id) == ["a"])

@@ -409,18 +409,25 @@ struct EntryStyle {
         case .lunch:
             title = String(localized: "Mittagspause"); color = .gray; isFree = false; canMove = true; isSelectable = false; suffix = ""
         case .event(let event, let taskID):
-            title = event.title
+            var title = event.title
             isFree = !event.isBusy
             canMove = model.canDrag(event)
             let isBlock = taskID != nil && model.canEditAsBlock(event)
             isSelectable = !isBlock
-            color = isBlock ? .green : (taskID != nil ? .teal : .blue)
+            // Deadline events (deadline calendars and marked) are red in the timeline, with a text mark (DL2).
+            let isDeadline = model.deadlineEventIDs.contains(event.id)
+            if isDeadline { title = "⚑ " + event.title }
+            color = isDeadline ? .red : (isBlock ? .green : (taskID != nil ? .teal : .blue))
             var parts: [String] = []
+            let text = DeadlineText(calendar: model.calendar)
+            if isDeadline { parts.append(text.timelineMark(isMarked: !model.isInDeadlineCalendar(event))) }
+            if let target = model.preparationTarget(forEventID: event.id) { parts.append(text.preparationMark(target, today: model.today)) }
             if isFree { parts.append(String(localized: "Frei")) }
             if !event.isEditable { parts.append("🔒") } else if event.isInvitation { parts.append(String(localized: "Einladung")) }
             if event.isRecurring { parts.append("↻") }
             if !event.mergedCalendarIDs.isEmpty { parts.append(String(localized: "\(event.mergedCalendarIDs.count + 1) Kalender")) }
             suffix = parts.isEmpty ? "" : " · " + parts.joined(separator: " · ")
+            self.title = title
         }
     }
 }

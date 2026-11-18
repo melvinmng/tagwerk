@@ -10,7 +10,12 @@ struct DayView: View {
     let onOpenEvent: (CalendarEvent) -> Void
     let onEditRecurring: (RecurringItem, PlanDay) -> Void
     let menuActions: (TaskItem) -> TaskMenuActions
+    let deadlineActions: DeadlineActions
     @State private var editingHours = false
+    /// Event menu (list mode, all-day row): series question, deadline picker and removal with links (DL2).
+    @State private var markingSeries: CalendarEvent?
+    @State private var linkingToDeadline: CalendarEvent?
+    @State private var unmarking: CalendarEvent?
     @State private var blockFor: TaskItem?
     @State private var sheetEntry: DayEntry?
     @State private var showsGrid = true
@@ -33,6 +38,10 @@ struct DayView: View {
         }
         .onAppear { showsGrid = model.showsHourGrid }
         .sheet(item: $sheetEntry) { entry in EntrySheet(entry: entry, model: model, onShowTask: onShowTask) }
+        .sheet(item: $linkingToDeadline) { event in DeadlinePickerSheet(event: event, model: model) }
+        .seriesMarkQuestion(isPresented: Binding(get: { markingSeries != nil }, set: { if !$0 { markingSeries = nil } }),
+                            event: markingSeries, model: model)
+        .unmarkConfirmation(event: $unmarking, model: model)
         .sheet(isPresented: $editingHours) {
             if let plan = model.days.first {
                 DayOverrideSheet(day: plan.day, calendar: model.calendar, current: model.workHours(on: plan.day)) { value in
@@ -57,7 +66,8 @@ struct DayView: View {
     @ViewBuilder
     private func summary(_ plan: DayPlan) -> some View {
         PlanIntakeLine(model: model)
-        DeadlineCard(deadlines: model.upcomingDeadlines, today: model.today, calendar: model.calendar)
+        DeadlineCard(model: model, actions: deadlineActions)
+        DeadlineSuggestionCard(model: model)
         CapacityCard(model: model, plan: plan) { editingHours = true }
         if !model.allDayEvents(for: plan).isEmpty {
             ScrollView(.horizontal, showsIndicators: false) {
@@ -70,6 +80,7 @@ struct DayView: View {
                                 .background(.thinMaterial, in: Capsule())
                         }
                         .buttonStyle(.plain)
+                        .contextMenu { eventMenu(event, taskID: plan.links[event.id]) }
                     }
                 }
             }
@@ -133,11 +144,13 @@ struct DayView: View {
     private func timelineRow(_ row: TimelineRow, plan: DayPlan) -> some View {
         switch row {
         case .event(let event):
+            let isDeadline = model.deadlineEventIDs.contains(event.id)
             Button { sheetEntry = .event(event, nil) } label: {
-                TimelineLine(time: event.start, title: event.title, detail: eventDetail(event),
-                             color: event.isBusy ? .blue : .gray)
+                TimelineLine(time: event.start, title: (isDeadline ? "⚑ " : "") + event.title, detail: eventDetail(event),
+                             color: isDeadline ? .red : (event.isBusy ? .blue : .gray))
             }
             .foregroundStyle(.primary)
+            .contextMenu { eventMenu(event, taskID: nil) }
         case .block(let event, let taskID):
             Button { sheetEntry = .event(event, taskID) } label: {
                 TimelineLine(time: event.start, title: event.title,
@@ -162,10 +175,24 @@ struct DayView: View {
         }
     }
 
+    /// The event menu of list mode and the all-day row (DL2).
+    private func eventMenu(_ event: CalendarEvent, taskID: TaskID?) -> some View {
+        EventDeadlineMenu(event: event, model: model, onOpen: { sheetEntry = .event(event, taskID) },
+                          onMarkSeries: { markingSeries = event }, onLinkToDeadline: { linkingToDeadline = event },
+                          onConfirmUnmark: { unmarking = event })
+    }
+
     private func eventDetail(_ event: CalendarEvent) -> String {
         var parts = [String(localized: "bis \(event.end.formatted(date: .omitted, time: .shortened))")]
         if !event.isBusy { parts.append(String(localized: "Frei")) }
         if !event.mergedCalendarIDs.isEmpty { parts.append(String(localized: "\(event.mergedCalendarIDs.count + 1) Kalender")) }
+        let text = DeadlineText(calendar: model.calendar)
+        if model.deadlineEventIDs.contains(event.id) {
+            parts.append(text.timelineMark(isMarked: !model.isInDeadlineCalendar(event)))
+        }
+        if let target = model.preparationTarget(forEventID: event.id) {
+            parts.append(text.preparationMark(target, today: model.today))
+        }
         return parts.joined(separator: " · ")
     }
 

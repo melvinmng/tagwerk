@@ -426,6 +426,48 @@
         }
       }
     },
+    "%@ · nicht mehr am %@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@ · nicht mehr am %2$@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ · no longer on %2$@"
+          }
+        }
+      }
+    },
+    "%@ · nicht mehr im Kalender (zuletzt %@)": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@ · nicht mehr im Kalender (zuletzt %2$@)"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ · no longer in the calendar (last %2$@)"
+          }
+        }
+      }
+    },
+    "%@ übernehmen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use %@"
+          }
+        }
+      }
+    },
     "%@, %@ Kilokalorien": {
       "localizations": {
         "de": {
@@ -1237,6 +1279,46 @@
         }
       }
     },
+    "%lld zugeordnete Termine werden gelöst. Im Kalender ändert sich nichts.": {
+      "localizations": {
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld zugeordneter Termin wird gelöst. Im Kalender ändert sich nichts."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld zugeordnete Termine werden gelöst. Im Kalender ändert sich nichts."
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld linked event will be removed. Nothing changes in the calendar."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld linked events will be removed. Nothing changes in the calendar."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "%lld · %@": {
       "localizations": {
         "de": {
@@ -1678,6 +1760,16 @@
         }
       }
     },
+    "Alle Termine der Serie": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All events in the series"
+          }
+        }
+      }
+    },
     "Alle ab diesem Tag": {
       "localizations": {
         "en": {
@@ -1708,6 +1800,16 @@
         }
       }
     },
+    "Alle bis zur Deadline": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All until the deadline"
+          }
+        }
+      }
+    },
     "Alle einplanen": {
       "localizations": {
         "en": {
@@ -1734,6 +1836,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Accept all (%lld)"
+          }
+        }
+      }
+    },
+    "Als Deadline markieren": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mark as deadline"
           }
         }
       }
@@ -2564,6 +2676,22 @@
         }
       }
     },
+    "Bis zur Deadline · %@ – %@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Bis zur Deadline · %1$@ – %2$@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Until the deadline · %1$@ – %2$@"
+          }
+        }
+      }
+    },
     "Bisher: %@": {
       "localizations": {
         "en": {
@@ -2854,12 +2982,62 @@
         }
       }
     },
+    "Deadline": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deadline"
+          }
+        }
+      }
+    },
+    "Deadline wählen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose deadline"
+          }
+        }
+      }
+    },
+    "Deadline zeigen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show deadline"
+          }
+        }
+      }
+    },
+    "Deadline · aus Kalender %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deadline · from calendar %@"
+          }
+        }
+      }
+    },
     "Deadline, %@": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Deadline, %@"
+          }
+        }
+      }
+    },
+    "Deadline, markiert": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deadline, marked"
           }
         }
       }
@@ -3233,6 +3411,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "The estimate failed. Try again or enter the values yourself."
+          }
+        }
+      }
+    },
+    "Die Termine bleiben in ihren Kalendern und zählen wie bisher als belegte Zeit.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The events stay in their calendars and still count as busy time."
           }
         }
       }
@@ -4400,6 +4588,16 @@
         }
       }
     },
+    "Gilt nur in Tagwerk. Der Kalender „%@“ bleibt unverändert.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Applies in Tagwerk only. The calendar “%@” stays unchanged."
+          }
+        }
+      }
+    },
     "GitHub": {
       "localizations": {
         "en": {
@@ -4656,6 +4854,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "In the chat, the button to the right of the empty field starts voice mode. Tagwerk sends after the pause, reads the answer aloud and then listens again. It only carries out changes once you confirm them. “Announce changes” applies here too."
+          }
+        }
+      }
+    },
+    "Im Kalender ändert sich nichts.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing changes in the calendar."
           }
         }
       }
@@ -5033,6 +5241,16 @@
         }
       }
     },
+    "Keine Deadline nach diesem Termin": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No deadline after this event"
+          }
+        }
+      }
+    },
     "Keine Einträge": {
       "localizations": {
         "en": {
@@ -5099,6 +5317,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "No events specified."
+          }
+        }
+      }
+    },
+    "Keine Termine bis zur Deadline": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No events before the deadline"
           }
         }
       }
@@ -5518,6 +5746,16 @@
         }
       }
     },
+    "Lösen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove"
+          }
+        }
+      }
+    },
     "Mahlzeit": {
       "localizations": {
         "en": {
@@ -5584,6 +5822,36 @@
           "stringUnit": {
             "state": "translated",
             "value": "Marks the task as open again"
+          }
+        }
+      }
+    },
+    "Markierung entfernen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove mark"
+          }
+        }
+      }
+    },
+    "Markierung entfernen?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove mark?"
+          }
+        }
+      }
+    },
+    "Markierung für alle Termine der Serie entfernen?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove the mark from all events in the series?"
           }
         }
       }
@@ -6067,6 +6335,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Meal name"
+          }
+        }
+      }
+    },
+    "Nein": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No"
           }
         }
       }
@@ -7288,6 +7566,16 @@
         }
       }
     },
+    "Sieht nach einer Prüfung aus": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Looks like an exam"
+          }
+        }
+      }
+    },
     "Siri & Kurzbefehle": {
       "localizations": {
         "en": {
@@ -7298,12 +7586,12 @@
         }
       }
     },
-    "So lange vor der Fälligkeit erinnert Tagwerk an Aufgaben und Deadline-Termine der eingeschalteten Quellen. An Aufgaben ohne Uhrzeit erinnert Tagwerk am Fälligkeitstag um 9:00. An ganztägige Deadline-Termine erinnert Tagwerk am Vortag um 18:00.": {
+    "So lange vor der Fälligkeit erinnert Tagwerk an Aufgaben und Deadline-Termine der eingeschalteten Quellen. Deadline-Termine sind Termine aus Deadline-Kalendern und als Deadline markierte Termine. An Aufgaben ohne Uhrzeit erinnert Tagwerk am Fälligkeitstag um 9:00. An ganztägige Deadline-Termine erinnert Tagwerk am Vortag um 18:00.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "This is how long before the due date Tagwerk reminds you of tasks and deadline events from the sources that are turned on. For tasks without a time, Tagwerk reminds you at 9:00 AM on the due date. For all-day deadline events, Tagwerk reminds you the day before at 6:00 PM."
+            "value": "This is how long before the due date Tagwerk reminds you of tasks and deadline events from the sources that are turned on. Deadline events are events from deadline calendars and events marked as deadlines. For tasks without a time, Tagwerk reminds you at 9:00 AM on the due date. For all-day deadline events, Tagwerk reminds you the day before at 6:00 PM."
           }
         }
       }
@@ -7850,6 +8138,36 @@
         }
       }
     },
+    "Termin suchen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Find event"
+          }
+        }
+      }
+    },
+    "Termin wählen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose event"
+          }
+        }
+      }
+    },
+    "Termin zuordnen …": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add event …"
+          }
+        }
+      }
+    },
     "Termin ändern": {
       "localizations": {
         "en": {
@@ -7870,12 +8188,12 @@
         }
       }
     },
-    "Termine aus Deadline-Kalendern (z. B. Klausuren) gelten als wichtige Deadlines. Aufgaben ohne Aufwand zählen mit der Standarddauer. Gleiche Termine in mehreren Kalendern fasst Tagwerk erst nach deiner Zustimmung zusammen.": {
+    "Termine aus Deadline-Kalendern (z. B. Klausuren) gelten als wichtige Deadlines. Einzelne Termine aus anderen Kalendern lassen sich im Termin-Blatt als Deadline markieren; die Markierung liegt nur in Tagwerk auf diesem Gerät, der Kalender bleibt unverändert. Aufgaben ohne Aufwand zählen mit der Standarddauer. Gleiche Termine in mehreren Kalendern fasst Tagwerk erst nach deiner Zustimmung zusammen.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Events from deadline calendars (e.g. exams) count as important deadlines. Tasks without effort count at the default duration. Tagwerk only merges identical events in multiple calendars after you agree."
+            "value": "Events from deadline calendars (e.g. exams) count as important deadlines. Single events from other calendars can be marked as deadlines in the event sheet; the mark is kept in Tagwerk on this device only, the calendar stays unchanged. Tasks without effort count at the default duration. Tagwerk only merges identical events in multiple calendars after you agree."
           }
         }
       }
@@ -8375,6 +8693,42 @@
           "stringUnit": {
             "state": "translated",
             "value": "Work ahead when there’s room"
+          }
+        }
+      }
+    },
+    "Vorbereitung": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preparation"
+          }
+        }
+      }
+    },
+    "Vorbereitung %@ · %@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Vorbereitung %1$@ · %2$@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preparation %1$@ · %2$@"
+          }
+        }
+      }
+    },
+    "Vorbereitung · %@ geplant": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preparation · %@ planned"
           }
         }
       }
@@ -9154,6 +9508,16 @@
         }
       }
     },
+    "Zu Deadline zuordnen …": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add to deadline …"
+          }
+        }
+      }
+    },
     "Zu den KI-Einstellungen": {
       "localizations": {
         "en": {
@@ -9224,12 +9588,32 @@
         }
       }
     },
+    "Zum Tag springen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Go to day"
+          }
+        }
+      }
+    },
     "Zum Vorschlag etwas sagen …": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Say something about the suggestion …"
+          }
+        }
+      }
+    },
+    "Zuordnung lösen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove from preparation"
           }
         }
       }
@@ -9774,6 +10158,16 @@
         }
       }
     },
+    "markiert": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "marked"
+          }
+        }
+      }
+    },
     "morgen": {
       "localizations": {
         "en": {
@@ -9883,6 +10277,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "fits into the free time"
+          }
+        }
+      }
+    },
+    "prüfen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "check"
           }
         }
       }
@@ -10158,6 +10562,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Open Tagwerk to load the plan."
+          }
+        }
+      }
+    },
+    "Öffnen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open"
           }
         }
       }
@@ -10468,6 +10882,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Delete “%@” permanently?"
+          }
+        }
+      }
+    },
+    "„%@“ wiederholt sich": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%@” repeats"
           }
         }
       }

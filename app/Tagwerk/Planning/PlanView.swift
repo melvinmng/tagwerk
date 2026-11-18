@@ -12,6 +12,7 @@ struct PlanView: View {
     @State private var planningDateFor: TaskItem?
     @State private var dueDateFor: TaskItem?
     @State private var creatingEvent = false
+    @State private var preparingDeadline: ImportantDeadline?
 
     @Environment(AppEnvironment.self) private var environment
 
@@ -84,13 +85,13 @@ struct PlanView: View {
             Group {
                 switch model.scope {
                 case .day: DayView(model: model, onOpenTask: onOpenTask, onShowTask: onShowTask, onOpenEvent: onOpenEvent,
-                                   onEditRecurring: onEditRecurring, menuActions: menuActions)
-                case .week: WeekView(model: model, onOpenTask: onOpenTask, menuActions: menuActions)
+                                   onEditRecurring: onEditRecurring, menuActions: menuActions, deadlineActions: deadlineActions)
+                case .week: WeekView(model: model, onOpenTask: onOpenTask, menuActions: menuActions, deadlineActions: deadlineActions)
                 case .month:
                     MonthView(model: model, onSelectDay: { day in
                         model.anchor = day
                         model.scope = .day
-                    }, onOpenEvent: onOpenEvent, onOpenTask: onOpenTask)
+                    }, onOpenEvent: onOpenEvent, onOpenTask: onOpenTask, deadlineActions: deadlineActions)
                 }
             }
             .safeAreaBar(edge: .top) { PlanControlRow(model: model) }
@@ -138,10 +139,23 @@ struct PlanView: View {
                 }
             }
             .sheet(isPresented: $creatingEvent) { EventEditSheet(model: model, existing: nil, day: model.anchor) }
+            .sheet(item: $preparingDeadline) { deadline in
+                PreparationSheet(deadline: deadline, model: model)
+            }
             .alert("Hinweis", isPresented: hasError) {
                 Button("OK") { model.clearError() }
             } message: { Text(model.lastError ?? "") }
         }
+    }
+
+    /// Deadline rows in day, week and month (DL2): open, jump to the day, preparation.
+    private var deadlineActions: DeadlineActions {
+        DeadlineActions(openEvent: onOpenEvent, openTask: onOpenTask,
+                        showDay: { day in
+                            model.anchor = day
+                            model.scope = .day
+                        },
+                        prepare: { preparingDeadline = $0 })
     }
 
     private func menuActions(for item: TaskItem) -> TaskMenuActions {
