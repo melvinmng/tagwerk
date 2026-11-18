@@ -29,6 +29,7 @@ struct MealSheet: View {
     @State private var editingItem: EditedItem?
     @State private var prepared = false
     @State private var saving = false
+    @State private var voice: VoiceInputModel?
     @FocusState private var textFocused: Bool
 
     private var isSignedIn: Bool { environment.ai.isSignedIn }
@@ -108,20 +109,30 @@ struct MealSheet: View {
     private var inputForm: some View {
         Form {
             Section {
-                HStack(alignment: .top) {
-                    TextField(photo == nil ? "Was hast du gegessen?" : "Hinweis, z. B. „halbe Portion“", text: $text, axis: .vertical)
-                        .focused($textFocused)
-                        .lineLimit(1...4)
-                        .disabled(phase == .estimating)
-                    if isSignedIn {
-                        if UIImagePickerController.isSourceTypeAvailable(.camera) {
-                            Button { showsCamera = true } label: { Image(systemName: "camera") }
-                                .buttonStyle(.borderless)
-                                .accessibilityLabel("Foto aufnehmen")
+                if let voice { VoiceNoticeRow(voice: voice) }
+                if let voice, voice.isRecording {
+                    // ↑ estimates right away when signed in; a tap on the text only fills the field.
+                    VoiceRecordingBar(voice: voice, compact: true, canSend: isSignedIn)
+                } else {
+                    HStack(alignment: .top) {
+                        TextField(photo == nil ? "Was hast du gegessen?" : "Hinweis, z. B. „halbe Portion“", text: $text, axis: .vertical)
+                            .focused($textFocused)
+                            .lineLimit(1...4)
+                            .disabled(phase == .estimating)
+                        if environment.settings.voiceInputEnabled, let voice, phase != .estimating {
+                            VoiceMicrophoneButton(voice: voice, isEnabled: true,
+                                                  language: VoiceAvailability.recognitionLanguage(setting: environment.settings.voiceRecognitionLanguage))
                         }
-                        PhotosPicker(selection: $pickerItem, matching: .images) { Image(systemName: "photo") }
-                            .buttonStyle(.borderless)
-                            .accessibilityLabel("Foto auswählen")
+                        if isSignedIn {
+                            if UIImagePickerController.isSourceTypeAvailable(.camera) {
+                                Button { showsCamera = true } label: { Image(systemName: "camera") }
+                                    .buttonStyle(.borderless)
+                                    .accessibilityLabel("Foto aufnehmen")
+                            }
+                            PhotosPicker(selection: $pickerItem, matching: .images) { Image(systemName: "photo") }
+                                .buttonStyle(.borderless)
+                                .accessibilityLabel("Foto auswählen")
+                        }
                     }
                 }
                 if let photo {
@@ -177,7 +188,21 @@ struct MealSheet: View {
 
             repeatSection
         }
-        .onAppear { textFocused = existing == nil }
+        .onAppear {
+            textFocused = existing == nil
+            if voice == nil {
+                let model = VoiceInputFactory.make(environment)
+                model.readDraft = { text }
+                model.writeDraft = { text = $0 }
+                model.onSend = { spoken in
+                    text = spoken
+                    // Estimating sends the text to ChatGPT; it only follows the tap on ↑ (§8.4).
+                    if isSignedIn { requestEstimate() }
+                }
+                voice = model
+            }
+        }
+        .onDisappear { voice?.cancel() }
     }
 
     private var hasInput: Bool {
