@@ -10,10 +10,22 @@ struct WeekView: View {
 
     var body: some View {
         List {
-            DayHeader(model: model) { model.scope = .month }
-                .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
-                .listRowBackground(Color.clear)
-            AIPlanBar(scope: .week)
+            Section {
+                DayHeader(model: model) { model.scope = .month }
+                    .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
+                    .listRowBackground(Color.clear)
+                    .listRowSeparator(.hidden)
+            }
+            // The AI bar as its own card under the header (mockup V1), like in the month.
+            Section {
+                AIPlanBar(scope: .week)
+                    .padding(12)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 14))
+                    .listRowInsets(EdgeInsets())
+                    .listRowBackground(Color.clear)
+                    .listRowSeparator(.hidden)
+            }
             ForEach(model.days) { plan in
                 Section {
                     ForEach(plan.suggestions) { suggestion in

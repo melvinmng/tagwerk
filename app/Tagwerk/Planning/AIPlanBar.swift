@@ -68,12 +68,16 @@ struct AIPlanBar: View {
     @ViewBuilder
     private var summary: some View {
         HStack {
-            Label {
-                Text(suggestionText)
-            } icon: {
-                Image(systemName: "sparkles")
+            if suggestions.isEmpty {
+                Label("Keine Vorschläge", systemImage: "sparkles").foregroundStyle(.secondary)
+            } else {
+                Label {
+                    Text(suggestionText)
+                } icon: {
+                    Image(systemName: "sparkles")
+                }
+                .foregroundStyle(.purple)
             }
-            .foregroundStyle(.purple)
             Spacer()
             Button("Verwerfen") { Task { await planner.dismissAll() } }
                 .foregroundStyle(.secondary)
