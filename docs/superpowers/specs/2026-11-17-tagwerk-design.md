@@ -70,6 +70,7 @@ Bestanden, wenn alle vier auf dem echten iPhone mit Personal Team funktionieren.
 **Phase 3 – Ernährung & Training**
 **Phase 4 – Komfort** (Widget, Siri-Kurzbefehle/App Intents, Wochenrückblick)
 **Phase 5 – Einkaufsliste und Notizen** (Nachtrag 2026-11-18, Epic #113; Einkaufsliste über Apple Erinnerungen, Quelle der Notizen offen, da Apple Notizen keine Schnittstelle für andere Apps hat)
+**Phase 6 – Jira** (Nachtrag 2026-11-18, Epic #115, Backlog; Jira als weitere Aufgabenquelle neben Erinnerungen und GitHub)
 
 ## 6. Architektur
 
