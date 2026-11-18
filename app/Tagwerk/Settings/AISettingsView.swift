@@ -132,6 +132,9 @@ struct AISettingsView: View {
                 Text("Nur im Notfall").tag(AIPlanner.LongerDays.emergencyOnly.rawValue)
             }
             NavigationLink("Diagnose") { PlanningDiagnosticsView() }
+            if ai.isSignedIn {
+                NavigationLink("Sprachdienste prüfen") { VoiceDiagnosticsView(client: ai.client) }
+            }
         } header: {
             Text("Planen mit KI")
         } footer: {

@@ -38,6 +38,9 @@ public actor ChatGPTSessionStore {
         (try? current())?.idToken.flatMap(ChatGPTAuth.idTokenClaims)?.email
     }
 
+    /// The ChatGPT account the tokens belong to; some ChatGPT endpoints expect it as a header.
+    var accountID: String? { (try? current())?.accountID }
+
     /// A token that is valid for at least five more minutes, refreshing it if needed.
     public func validAccessToken() async throws -> String {
         guard let tokens = try current() else { throw ChatGPTError.notSignedIn }
