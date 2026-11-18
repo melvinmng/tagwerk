@@ -1,0 +1,612 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tagwerk · Mit der KI sprechen · Mockups SP1 bis SP8</title>
+<style>
+  /* Mockup frame uses the host theme (with fallbacks); phone screens depict the app in iOS dark mode. */
+  :root { color-scheme: light dark; }
+  body { font: 14px var(--font-sans, system-ui, sans-serif); color: var(--foreground, CanvasText); margin: 16px; }
+  h1 { font-size: 20px; margin: 0 0 4px; }
+  h2 { font-size: 18px; margin: 38px 0 4px; padding-top: 16px; border-top: 1px solid rgba(128,128,128,.3); display: flex; align-items: center; gap: 10px; }
+  .area { display: inline-grid; place-items: center; width: 34px; height: 34px; border-radius: 9px; background: #0a84ff; color: #fff; font: 800 19px system-ui; flex-shrink: 0; }
+  .lead { color: var(--muted-foreground, #777); margin: 0 0 14px; line-height: 1.5; max-width: 980px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(392px, 1fr)); gap: 22px; align-items: start; }
+  .label { font: 600 13px var(--font-sans, system-ui); color: var(--muted-foreground, #777); margin: 0 0 8px 4px; }
+  .label b { color: var(--foreground, CanvasText); }
+  .code { display: inline-block; background: rgba(128,128,128,.28); color: var(--foreground, CanvasText); border-radius: 6px; padding: 1px 8px; font: 800 13px system-ui; margin-right: 4px; }
+  .code.r { background: #30d158; color: #000; }
+  .rec { background: #30d158; color: #000; font-size: 11px; font-weight: 700; padding: 1px 7px; border-radius: 99px; margin-left: 4px; }
+  .pc { font-size: 12.5px; color: var(--muted-foreground, #777); line-height: 1.5; margin: 8px 4px 0; max-width: 390px; }
+  .pc b { color: var(--foreground, CanvasText); }
+  .box { border: 1px solid rgba(48,209,88,.5); background: rgba(48,209,88,.07); border-radius: 12px; padding: 12px 16px; margin-top: 16px; line-height: 1.55; font-size: 13px; max-width: 1100px; }
+  .box h3 { margin: 0 0 6px; font-size: 14px; }
+  .box ul { margin: 4px 0 0; padding-left: 18px; }
+  .box.neutral { border-color: rgba(128,128,128,.4); background: rgba(128,128,128,.07); }
+  .box.warn { border-color: rgba(255,159,10,.6); background: rgba(255,159,10,.08); }
+  code { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; background: rgba(128,128,128,.16); padding: 1px 4px; border-radius: 4px; }
+  table.sum { border-collapse: collapse; font-size: 13px; margin-top: 6px; }
+  table.sum td, table.sum th { padding: 5px 14px 5px 0; vertical-align: top; text-align: left; border-bottom: 1px solid rgba(128,128,128,.22); }
+  table.sum th { font-size: 12px; color: var(--muted-foreground, #777); }
+
+  .phone {
+    --bg: #000; --card: #1c1c1e; --card2: #2c2c2e; --sep: #38383a; --text: #fff; --sub: #8e8e93;
+    --blue: #0a84ff; --green: #30d158; --orange: #ff9f0a; --red: #ff453a; --purple: #bf5af2; --teal: #64d2ff; --mint: #7cf0c3;
+    background: var(--bg); color: var(--text); border-radius: 40px; padding: 14px 12px 12px;
+    font: 15px -apple-system, "SF Pro Text", system-ui, sans-serif; border: 6px solid #2a2a2c;
+    width: 390px; max-width: 100%; box-sizing: border-box; min-height: 760px;
+    display: flex; flex-direction: column; position: relative; overflow: hidden;
+  }
+  .status { display: flex; justify-content: space-between; font: 600 13px system-ui; padding: 0 12px 10px; }
+  .title { font: 700 26px system-ui; padding: 0 6px; }
+  .row { display: flex; align-items: center; gap: 8px; }
+  .nav { display: flex; justify-content: space-between; align-items: center; padding: 2px 6px 8px; }
+  .nav .a { color: var(--blue); } .nav .a.b { font-weight: 600; }
+  .nav .c { font-weight: 600; }
+  .chip { font-size: 11px; padding: 2px 7px; border-radius: 99px; background: var(--card2); color: #c7c7cc; white-space: nowrap; }
+  .chip.p1 { background: rgba(255,69,58,.22); color: #ff8a82; font-weight: 700; }
+  .chip.ai { background: rgba(191,90,242,.2); color: #dcb0f7; }
+  .chip.auto { background: rgba(10,132,255,.2); color: #8cc4ff; }
+  .chip.warn { background: rgba(255,159,10,.2); color: #ffc266; }
+  .chip.on { background: var(--blue); color: #fff; font-weight: 600; }
+  .section { color: var(--sub); font: 600 12px system-ui; text-transform: uppercase; letter-spacing: .4px; margin: 10px 8px 4px; display: flex; justify-content: space-between; }
+  .section span { text-transform: none; letter-spacing: 0; font-weight: 500; }
+  .list { background: var(--card); border-radius: 18px; overflow: hidden; margin-bottom: 6px; }
+  .item { display: flex; align-items: flex-start; gap: 10px; padding: 9px 12px; border-bottom: 1px solid var(--sep); }
+  .item:last-child { border-bottom: 0; }
+  .item.hl { background: rgba(10,132,255,.22); box-shadow: inset 0 0 0 1.5px var(--blue); }
+  .circle { width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--sub); flex-shrink: 0; margin-top: 1px; box-sizing: border-box; }
+  .circle.sel { background: var(--blue); border-color: var(--blue); color: #fff; font: 700 11px/14px system-ui; text-align: center; }
+  .item .t { flex: 1; font-size: 14px; min-width: 0; }
+  .item .s { color: var(--sub); font-size: 12px; margin-top: 2px; }
+  .due-red { color: var(--red); } .due-orange { color: var(--orange); }
+  .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 4px; }
+  .seg { display: flex; background: var(--card2); border-radius: 99px; padding: 2px; margin: 0 2px 8px; }
+  .seg span { flex: 1; text-align: center; padding: 6px 2px; font-size: 13px; border-radius: 99px; color: #c7c7cc; }
+  .seg span.on { background: #636366; color: #fff; font-weight: 600; }
+  .field { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 10px 12px; border-bottom: 1px solid var(--sep); font-size: 14px; }
+  .field:last-child { border-bottom: 0; }
+  .field .v { color: var(--sub); text-align: right; }
+  .field .l { color: var(--blue); }
+  .field.dis { opacity: .45; }
+  .pick { background: #3a3a3c; border-radius: 8px; padding: 4px 9px; font-size: 13.5px; color: #fff; white-space: nowrap; }
+  .pick.b { color: var(--blue); }
+  .tog { width: 40px; height: 24px; border-radius: 99px; background: #48484a; position: relative; flex-shrink: 0; }
+  .tog::after { content: ""; position: absolute; top: 2px; left: 2px; width: 20px; height: 20px; border-radius: 50%; background: #fff; }
+  .tog.on { background: var(--green); } .tog.on::after { left: 18px; }
+  .note { color: var(--sub); font-size: 11.5px; padding: 4px 8px; line-height: 1.4; }
+  .spacer { flex: 1; }
+  .b { flex: 1; text-align: center; border-radius: 99px; padding: 9px 6px; font-weight: 600; font-size: 14px; }
+  .b.plain { background: var(--card2); color: var(--blue); }
+  .b.prom { background: var(--blue); color: #fff; }
+  .b.aib { background: rgba(191,90,242,.24); color: #e9cdfb; }
+  .b.red { background: rgba(255,69,58,.18); color: #ff8a82; }
+  .btns { display: flex; gap: 8px; }
+  .sm { border-radius: 99px; padding: 5px 11px; font-weight: 600; font-size: 12.5px; white-space: nowrap; align-self: center; }
+  .sm.ok { background: var(--blue); color: #fff; } .sm.no { background: #48484a; color: #d1d1d6; }
+  .lnk { color: var(--blue); font-weight: 600; white-space: nowrap; }
+
+  /* Liquid Glass approximation */
+  .glass { background: rgba(72,72,78,.62); backdrop-filter: blur(18px) saturate(1.6); -webkit-backdrop-filter: blur(18px) saturate(1.6);
+    border: 1px solid rgba(255,255,255,.16); box-shadow: inset 0 1px 0 rgba(255,255,255,.18), 0 8px 24px rgba(0,0,0,.55); }
+
+  /* Tab bar as on the device screenshots: centred capsule, selected tab as a dark pill */
+  .tb { margin: auto auto 0; width: 80%; display: flex; border-radius: 99px; padding: 5px; font-size: 10px; color: #d1d1d6; text-align: center; box-sizing: border-box; }
+  .tb span { flex: 1; padding: 4px 0 3px; border-radius: 99px; }
+  .tb .on { color: var(--blue); background: rgba(0,0,0,.5); font-weight: 600; }
+  .ico { font-size: 17px; display: block; font-style: normal; line-height: 20px; }
+  .tbrow { display: flex; gap: 8px; align-items: center; margin-top: auto; padding-top: 8px; }
+  .tbrow .tb { flex: 1; width: auto; margin: 0; }
+  .aibtn { width: 52px; height: 52px; border-radius: 50%; display: grid; place-items: center; font-size: 22px; color: var(--mint); flex-shrink: 0; }
+  .tbgap { margin-top: 8px; }
+
+  /* New day header */
+  .topbar { display: flex; align-items: center; gap: 8px; padding: 0 2px 10px; }
+  .topbar .seg { flex: 1; margin: 0; }
+  .rbtn { width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; font-size: 20px; flex-shrink: 0; color: #fff; }
+  .rbtn.ai { color: var(--mint); font-size: 17px; }
+
+  .anno { font: 600 10.5px system-ui; color: #ffd60a; margin: 6px 6px 3px; }
+  .area { width: auto; min-width: 34px; padding: 0 6px; font: 800 14px system-ui; box-sizing: border-box; }
+  .tg { display: inline; font: 700 10.5px system-ui; padding: 1px 6px; border-radius: 6px; margin-right: 3px; -webkit-box-decoration-break: clone; box-decoration-break: clone; }
+  .tg code { font-size: 10.5px; background: none; padding: 0; }
+  .tg.v { background: rgba(48,209,88,.25); color: #1f9d44; } .tg.g { background: rgba(10,132,255,.22); color: #2f7fe0; } .tg.a { background: rgba(255,159,10,.25); color: #c77700; }
+  .phone.crop { min-height: 470px; }
+  .ic { display: inline-block; vertical-align: -3px; flex-shrink: 0; }
+
+  /* Calendar behind a sheet */
+  .calv { padding: 0 6px; }
+  .under { opacity: .35; }
+  .hg { position: relative; margin: 14px 0 6px 44px; border-left: 1px solid var(--sep); clip-path: inset(-10px -4px 0 -46px); }
+  .hg .hl { position: absolute; left: -44px; right: 0; border-top: 1px solid #2c2c2e; font: 11px ui-monospace, monospace; color: var(--sub); padding-left: 2px; height: 0; }
+  .hg .hl span { position: relative; top: -8px; background: var(--bg); padding-right: 4px; }
+  .hg .ev { position: absolute; left: 4px; right: 4px; border-radius: 9px; padding: 4px 8px; font-size: 12.5px; box-sizing: border-box; overflow: hidden; }
+  .hg .ev small { color: #c7c7cc; font-size: 11px; display: block; }
+  .hg .ev.e { background: rgba(10,132,255,.24); border-left: 4px solid var(--blue); }
+  .hg .ev.p { background: rgba(48,209,88,.22); border-left: 4px solid var(--green); }
+  .hg .ev.ai { background: rgba(191,90,242,.14); border: 1.5px dashed var(--purple); color: #e9cdfb; }
+  .hg .ev.nw { box-shadow: 0 0 0 2px rgba(48,209,88,.5); }
+
+  /* Sheets */
+  .sheetp { background: #1c1c1e; margin: 0 -12px -12px; border-radius: 30px 30px 0 0; padding: 8px 12px 14px; flex: 1; display: flex; flex-direction: column; box-shadow: 0 -8px 30px rgba(0,0,0,.6); position: relative; z-index: 6; min-height: 0; }
+  .sheetp.full { margin-top: 2px; }
+  .grab { width: 36px; height: 5px; border-radius: 99px; background: #636366; margin: 0 auto 8px; }
+  .cnav { display: flex; justify-content: space-between; align-items: center; padding: 0 2px 6px; }
+  .cnav b { font-size: 16px; } .cnav b i { color: var(--mint); font-style: normal; }
+  .cnav .cb { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; color: #fff; font-weight: 800; letter-spacing: 1px; }
+  .cnav .cf { border-radius: 99px; padding: 7px 13px; font-size: 14px; color: var(--blue); font-weight: 600; }
+  .cchip { align-self: center; background: rgba(120,120,128,.24); color: #c7c7cc; border-radius: 99px; font-size: 11.5px; padding: 5px 11px; margin: 0 0 10px; display: flex; gap: 5px; align-items: center; }
+  .thr { display: flex; flex-direction: column; gap: 9px; margin-bottom: 8px; padding: 0 4px; }
+  .um { align-self: flex-end; max-width: 82%; background: rgba(10,132,255,.25); border-radius: 16px; padding: 8px 12px; font-size: 14px; line-height: 1.35; }
+  .um .via { display: block; font-size: 10.5px; color: #9fc9ff; margin-top: 3px; }
+  .am { align-self: stretch; font-size: 14px; line-height: 1.4; color: #f2f2f7; }
+  .am.dimmed { color: #8e8e93; }
+  .am mark { background: rgba(124,240,195,.22); color: #fff; border-radius: 4px; padding: 0 1px; }
+  .spk { display: inline-flex; align-items: center; gap: 5px; margin-top: 5px; color: var(--sub); font-size: 11.5px; border-radius: 99px; padding: 3px 9px 3px 7px; background: rgba(120,120,128,.2); }
+  .spk.on { color: #06281c; background: var(--mint); font-weight: 700; }
+  .acd { align-self: stretch; background: rgba(120,120,128,.2); border: 1px dashed var(--purple); border-radius: 14px; padding: 10px 12px; font-size: 13px; }
+  .acd .h { color: #dcb0f7; font-size: 11.5px; margin-bottom: 4px; }
+  .acd b { display: block; font-size: 14px; }
+  .acd .c { color: var(--sub); margin-top: 2px; }
+  .acd .bt { display: flex; justify-content: space-between; margin-top: 9px; }
+  .acd .bt span { border-radius: 99px; padding: 7px 14px; font-weight: 600; font-size: 13.5px; }
+  .acd .bt .n { background: rgba(120,120,128,.3); color: var(--blue); } .acd .bt .y { background: var(--blue); color: #fff; }
+  .acd.done { border: 0; } .acd.done .h { color: var(--green); }
+  .acd .vo { margin-top: 8px; padding-top: 7px; border-top: 1px solid rgba(191,90,242,.3); font-size: 11.5px; color: #c7c7cc; line-height: 1.4; }
+  .acd .heard { margin-top: 8px; border-radius: 10px; background: rgba(255,159,10,.16); color: #ffd08a; font-size: 12px; padding: 6px 9px; line-height: 1.4; }
+  .erow { display: flex; justify-content: space-between; gap: 8px; align-items: center; font-size: 13px; color: var(--orange); }
+  .erow span:last-child { color: var(--blue); white-space: nowrap; }
+
+  /* Composer of the chat as built today, plus the microphone */
+  .cmp { display: flex; align-items: flex-end; gap: 8px; margin: 0 -12px -14px; padding: 8px 14px 14px; background: rgba(44,44,46,.9); border-top: 1px solid #38383a; }
+  .fld { flex: 1; min-width: 0; display: flex; align-items: flex-end; gap: 6px; background: rgba(120,120,128,.24); border-radius: 18px; padding: 7px 8px 7px 12px; font-size: 14.5px; line-height: 1.35; min-height: 22px; }
+  .fld .tx { flex: 1; min-width: 0; } .fld .ph { flex: 1; color: var(--sub); }
+  .fld .tx u { text-decoration: none; color: #8e8e93; }
+  .caret { display: inline-block; width: 2px; height: 16px; background: var(--blue); vertical-align: -3px; margin-left: 1px; }
+  .micb { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; color: #d1d1d6; flex-shrink: 0; margin: -2px 0; }
+  .micb.rec { background: var(--red); color: #fff; }
+  .micb.off { color: #636366; }
+  .micb.hold { background: var(--red); color: #fff; box-shadow: 0 0 0 9px rgba(255,69,58,.25), 0 0 0 20px rgba(255,69,58,.12); }
+  .snd2 { width: 34px; height: 34px; border-radius: 50%; background: var(--blue); color: #fff; display: grid; place-items: center; font: 800 18px system-ui; flex-shrink: 0; }
+  .snd2.off { background: #3a3a3c; color: #636366; }
+  .snd2.vm { background: var(--mint); color: #06281c; }
+  .snd2.pu { background: var(--purple); }
+
+  /* Recording bar that replaces the input line while listening */
+  .recb { flex: 1; min-width: 0; border-radius: 20px; background: rgba(120,120,128,.24); box-shadow: inset 0 0 0 1.5px rgba(255,69,58,.7); padding: 9px 10px 8px 12px; }
+  .recb .top { display: flex; justify-content: space-between; align-items: center; font: 600 11.5px system-ui; color: #ff8a82; margin-bottom: 5px; }
+  .recb .top span:last-child { color: var(--sub); font-variant-numeric: tabular-nums; }
+  .recb .live { font-size: 14.5px; line-height: 1.35; margin-bottom: 7px; } .recb .live u { text-decoration: none; color: #8e8e93; }
+  .recb .ctl { display: flex; align-items: center; gap: 8px; }
+  .rc { height: 32px; border-radius: 99px; display: inline-flex; align-items: center; justify-content: center; gap: 5px; padding: 0 12px; font: 600 12.5px system-ui; flex-shrink: 0; }
+  .rc.x { background: rgba(120,120,128,.36); color: #fff; } .rc.s { background: rgba(120,120,128,.36); color: #fff; } .rc.go { background: var(--blue); color: #fff; }
+  .rc.cd { background: rgba(255,159,10,.25); color: #ffc266; }
+  .wv { flex: 1; display: flex; align-items: center; gap: 2.5px; height: 26px; min-width: 0; overflow: hidden; }
+  .wv i { width: 3px; border-radius: 2px; background: #ff8a82; flex-shrink: 0; }
+  .wv.m i { background: var(--mint); } .wv.q i { background: #636366; }
+  .hint { text-align: center; font-size: 11.5px; color: var(--sub); padding: 0 8px 7px; line-height: 1.4; }
+  .slide { display: flex; justify-content: space-between; align-items: center; flex: 1; min-width: 0; padding: 0 4px 6px; font-size: 13px; color: var(--sub); }
+  .slide b { color: #ff8a82; font-variant-numeric: tabular-nums; }
+
+  /* Read-aloud bar and toggle */
+  .rbar { display: flex; align-items: center; gap: 9px; border-radius: 99px; padding: 6px 8px 6px 12px; margin: 0 0 8px; font-size: 12.5px; }
+  .rbar .tx { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .rbar .k { width: 30px; height: 30px; border-radius: 50%; background: rgba(120,120,128,.4); display: grid; place-items: center; font-size: 12px; flex-shrink: 0; }
+  .hbtn { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; color: #fff; }
+  .hbtn.on { background: var(--mint); color: #06281c; }
+
+  /* Voice mode */
+  .vmo { display: flex; flex-direction: column; flex: 1; min-height: 0; }
+  .vmh { display: flex; justify-content: space-between; align-items: center; padding: 0 4px 8px; }
+  .vmh b { font-size: 16px; } .vmh small { display: block; color: var(--sub); font-size: 11.5px; font-weight: 400; }
+  .vmh .end { border-radius: 99px; padding: 7px 13px; background: rgba(255,69,58,.2); color: #ff8a82; font-weight: 600; font-size: 13.5px; }
+  .vst { display: flex; align-items: center; gap: 10px; border-radius: 18px; background: var(--card2); padding: 10px 12px; margin-bottom: 8px; }
+  .vst .orb { width: 38px; height: 38px; border-radius: 50%; flex-shrink: 0; display: grid; place-items: center; color: #06281c; background: radial-gradient(circle at 35% 30%, #c9f7e6, var(--mint) 55%, #2fb98a); }
+  .vst .orb.l { box-shadow: 0 0 0 5px rgba(124,240,195,.2), 0 0 0 11px rgba(124,240,195,.09); }
+  .vst .orb.s { background: radial-gradient(circle at 35% 30%, #f0d9ff, var(--purple) 60%, #7b2fb0); color: #fff; }
+  .vst .orb.w { background: #48484a; color: #c7c7cc; }
+  .vst .st { flex: 1; min-width: 0; } .vst .st b { font-size: 14px; display: block; } .vst .st small { color: var(--sub); font-size: 11.5px; }
+  .vln { font-size: 13.5px; line-height: 1.4; padding: 0 6px 6px; }
+  .vln small { display: block; font: 600 10.5px system-ui; color: var(--sub); text-transform: uppercase; letter-spacing: .4px; }
+  .vln.me { color: #cfe5ff; } .vln u { text-decoration: none; color: #8e8e93; }
+  .vcd { display: flex; align-items: center; gap: 8px; border-radius: 99px; background: rgba(255,159,10,.16); color: #ffc266; padding: 5px 6px 5px 12px; font-size: 12.5px; margin: 0 2px 8px; }
+  .vcd span:first-child { flex: 1; } .vcd .no { background: rgba(120,120,128,.4); color: #fff; border-radius: 99px; padding: 5px 11px; font-weight: 600; }
+  .vctl { display: flex; gap: 8px; margin-top: auto; }
+  .vctl span { flex: 1; text-align: center; border-radius: 99px; padding: 9px 4px; background: var(--card2); font-weight: 600; font-size: 13px; color: #fff; }
+  .vctl span.pr { background: var(--mint); color: #06281c; }
+  .bigorb { width: 170px; height: 170px; border-radius: 50%; margin: 60px auto 26px; background: radial-gradient(circle at 35% 30%, #c9f7e6, var(--mint) 50%, #1f8f6a); box-shadow: 0 0 0 18px rgba(124,240,195,.12), 0 0 0 44px rgba(124,240,195,.06); }
+  .fullv { flex: 1; display: flex; flex-direction: column; text-align: center; padding: 0 10px; }
+  .fullv h4 { margin: 0 0 6px; font-size: 20px; } .fullv p { margin: 0; color: #c7c7cc; font-size: 14px; line-height: 1.4; }
+  .fullv .rnd { display: flex; justify-content: center; gap: 28px; margin: auto 0 22px; }
+  .fullv .rnd span { width: 60px; height: 60px; border-radius: 50%; background: var(--card2); display: grid; place-items: center; font-size: 20px; }
+  .fullv .rnd span.x { background: var(--red); }
+  .vcap { display: flex; align-items: center; gap: 9px; border-radius: 99px; height: 50px; padding: 0 8px 0 7px; margin: 6px 2px 0; font-size: 13px; }
+  .vcap .orb { width: 36px; height: 36px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #c9f7e6, var(--mint) 55%, #2fb98a); flex-shrink: 0; }
+  .vcap .tx { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .vcap .x { width: 34px; height: 34px; border-radius: 50%; background: rgba(255,69,58,.3); color: #ff8a82; display: grid; place-items: center; font-weight: 700; flex-shrink: 0; }
+
+  /* Suggestion sheet (compact conversation) */
+  .ehead { display: flex; gap: 10px; padding: 2px 6px 8px; }
+  .ehead i { width: 5px; border-radius: 3px; flex-shrink: 0; background: var(--purple); }
+  .ehead b { font-size: 16px; display: block; } .ehead small { color: #c7c7cc; font-size: 13px; display: block; margin: 2px 0 5px; }
+  .banner { border-radius: 14px; padding: 9px 12px; font-size: 12.5px; line-height: 1.4; margin-bottom: 8px; }
+  .banner b { display: block; font-size: 13px; margin-bottom: 1px; }
+  .banner.ai { background: rgba(191,90,242,.12); border: 1px solid rgba(191,90,242,.45); color: #ecd9fb; }
+  .banner.wn { background: rgba(255,159,10,.14); border: 1px solid rgba(255,159,10,.45); color: #ffd9a3; }
+  .banner.nt { background: rgba(120,120,128,.2); color: #d1d1d6; }
+  .banner .go { color: var(--blue); font-weight: 600; display: inline-block; margin-top: 4px; }
+  .pbar { height: 5px; border-radius: 99px; background: #48484a; overflow: hidden; margin-top: 7px; } .pbar i { display: block; height: 100%; background: var(--blue); }
+  .qch { display: flex; gap: 6px; overflow: hidden; margin-bottom: 7px; }
+  .qch span { border: 1px solid rgba(191,90,242,.5); color: #e9cdfb; border-radius: 99px; padding: 4px 10px; font-size: 12px; white-space: nowrap; }
+  .comp { display: flex; align-items: center; gap: 8px; background: #3a3a3c; border-radius: 99px; padding: 5px 5px 5px 13px; font-size: 13.5px; color: var(--sub); margin-bottom: 6px; }
+  .comp > span:first-child { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .comp.lv { box-shadow: inset 0 0 0 1.5px rgba(255,69,58,.7); color: #fff; }
+  .comp .snd { width: 30px; height: 30px; border-radius: 50%; background: var(--purple); color: #fff; display: grid; place-items: center; font-weight: 700; flex-shrink: 0; }
+  .comp .snd.q { background: rgba(120,120,128,.5); }
+  .b.aip { background: var(--purple); color: #fff; }
+  .chgc { background: rgba(191,90,242,.12); border: 1px solid rgba(191,90,242,.45); border-radius: 14px; padding: 8px 11px; font-size: 12.5px; color: #ecd9fb; line-height: 1.45; margin-bottom: 8px; }
+  .chgc b { display: block; font-size: 13px; margin-bottom: 2px; color: #fff; }
+  .chgc .ln { display: flex; justify-content: space-between; gap: 8px; } .chgc .ln span:last-child { color: #fff; white-space: nowrap; }
+  .chgc .ft { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-top: 6px; padding-top: 6px; border-top: 1px solid rgba(191,90,242,.3); }
+  .chgc .ft .u { color: var(--blue); font-weight: 600; white-space: nowrap; }
+  .sld { flex: 1; height: 4px; border-radius: 99px; background: #48484a; position: relative; margin: 0 8px; }
+  .sld::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 55%; background: var(--blue); border-radius: 99px; }
+  .sld::after { content: ""; position: absolute; left: 55%; top: -10px; width: 24px; height: 24px; margin-left: -12px; border-radius: 50%; background: #fff; }
+  .field .v.okv { color: var(--green); }
+  .flow { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: 12.5px; margin-top: 6px; }
+  .flow span { border: 1px solid rgba(128,128,128,.45); border-radius: 99px; padding: 2px 10px; }
+  .flow i { font-style: normal; opacity: .6; }
+
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+<symbol id="i-mic" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="12" rx="3" fill="currentColor"/><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v3M8.5 21h7" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></symbol>
+<symbol id="i-micoff" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="12" rx="3" fill="currentColor"/><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v3M8.5 21h7" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/><path d="M4 3l16 18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></symbol>
+<symbol id="i-spk" viewBox="0 0 24 24"><path d="M3.5 9.5h3.2L11.5 5v14l-4.8-4.5H3.5z" fill="currentColor"/><path d="M15 9a4.2 4.2 0 0 1 0 6M17.6 6.2a8 8 0 0 1 0 11.6" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></symbol>
+<symbol id="i-wave" viewBox="0 0 24 24"><path d="M4 10v4M8 6.5v11M12 3.5v17M16 7v10M20 10v4" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></symbol>
+<symbol id="i-scope" viewBox="0 0 24 24"><circle cx="12" cy="12" r="6.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 2.5v5M12 16.5v5M2.5 12h5M16.5 12h5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+</defs></svg>
+<h1>Tagwerk · Mit der KI sprechen · Mockups SP1 bis SP8</h1>
+<p class="lead">Anlass: „Wenn möglich möchte ich im KI-Chat und in allen Konversationen mit der KI sprechen können.“ Heute gibt es drei Gespräche: den Assistenten-Chat (<code>ChatView</code>, über ✦ oben rechts, Kontexte Planen, Aufgaben, Einstellungen), denselben Chat zu einer Aufgabe oder einem Issue und das Gespräch im Vorschlagsblatt (<code>SuggestionConversation</code>). Alle drei haben nur eine Textzeile. Das Diktier-Mikrofon der iOS-Tastatur funktioniert dort schon, liegt aber in der Tastatur und liest keine Antwort vor. Diese Seite zeigt Entwürfe; gebaut wird erst nach Freigabe.</p>
+
+<div class="box neutral" style="margin-bottom:8px">
+  <h3>Kurzfassung</h3>
+  <ul>
+    <li><b>SP1a:</b> ein Mikrofon in jeder Eingabezeile; Tippen startet, die Zeile wird zur Aufnahmeleiste mit mitlaufendem Text.</li>
+    <li><b>SP2a:</b> gesendet wird nur per Tipp auf ↑ (direkt aus der Aufnahme oder nach dem Korrigieren im Feld). Senden nach einer Sprechpause gibt es nur im Sprechmodus, mit sichtbarem Countdown.</li>
+    <li><b>SP3a:</b> an jeder Antwort ein Knopf „Vorlesen“; automatisches Vorlesen ist eine Einstellung und ab Werk aus.</li>
+    <li><b>SP4a:</b> Aktionskarten werden angesagt, bestätigt werden sie weiter nur per Tipp.</li>
+    <li><b>SP5a:</b> ein Sprechmodus (zuhören → senden → Antwort sprechen → zuhören) als halbhohes Blatt über dem Kalender, zweite Ausbaustufe.</li>
+    <li><b>SP6 bis SP8:</b> dasselbe Mikrofon im Chat, im Aufgaben-Chat und (kompakt) im Vorschlagsblatt; eine Seite „Sprache“ unter Einstellungen › KI; Zustände für Berechtigung, Sprachpaket, fehlendes Netz und Fehler.</li>
+  </ul>
+</div>
+
+<div class="box neutral" style="margin-bottom:8px">
+  <h3>Technische Grundlage und wie sicher sie ist</h3>
+  <ul>
+    <li><span class="tg g">gegeben</span> <b>Sprache zu Text auf dem Gerät</b> mit Apples <code>SpeechAnalyzer</code> / <code>SpeechTranscriber</code>: Deutsch wird unterstützt, läuft ohne Netz, das Sprachpaket lädt das System. Aus der Vorrecherche übernommen, für dieses Mockup nicht erneut geprüft.</li>
+    <li><span class="tg g">gegeben</span> <b>Vorlesen auf dem Gerät</b> mit <code>AVSpeechSynthesizer</code>. Der Text läuft über den vorhandenen ChatGPT-Weg (Responses). <b>Ton verlässt das iPhone nicht</b>; an ChatGPT geht derselbe Text wie beim Tippen.</li>
+    <li><span class="tg g">gegeben</span> Nötig sind zwei Berechtigungen: Mikrofon und Spracherkennung.</li>
+    <li><span class="tg g">gegeben</span> <b>Nicht jetzt:</b> die Echtzeit-Stimme von OpenAI über das ChatGPT-Abo. Die Endpunkte sind nicht dokumentiert; vorher wäre ein Mitschnitt am Gerät nötig. Spätere Option, falls die Systemstimme nicht genügt.</li>
+    <li><span class="tg v">geprüft am Code</span> Aufbau der drei Gespräche, ihre Texte, die Höhen des Vorschlagsblatts (30 %, halb, ganz; Kalender bis zur halben Höhe bedienbar), Aktionskarten mit „Verwerfen“ / „Bestätigen“, Fehlerzeile mit „Erneut versuchen“. Der Chat ist heute ein Blatt in voller Höhe.</li>
+    <li><span class="tg a">Annahme</span> Alles zu Erkennungsgüte, Verzögerung, Pausenlängen, Stimmqualität, Größe und Ladezeit des Sprachpakets, Verhalten bei Anrufen und mit Kopfhörern. Nichts davon ist am Gerät gemessen.</li>
+  </ul>
+  <div class="flow"><span>Mikrofon</span><i>→</i><span>Text auf dem iPhone</span><i>→</i><span>du sendest</span><i>→</i><span>Text an ChatGPT</span><i>→</i><span>Antwort als Text</span><i>→</i><span>Stimme auf dem iPhone</span></div>
+</div>
+
+<!-- ============================== SP1 ============================== -->
+<h2><span class="area">SP1</span> Aufnehmen · Mikrofon in der Eingabezeile, Tippen oder Halten</h2>
+<p class="lead">Die Eingabezeile des Chats ist heute ein Feld „Nachricht …“ und ein Senden-Knopf, der bei leerem Feld grau ist. Gesucht: wo das Mikrofon sitzt, wie die Aufnahme beginnt und endet, und was man währenddessen sieht.</p>
+<div class="grid">
+  <div>
+    <p class="label"><span class="code r">SP1a</span><b>Ruhezustand · Mikrofon im Feld, rechts</b> <span class="rec">Empfehlung</span></p>
+    <div class="phone "><div class="status"><span>08:42</span><span>●●● 5G</span></div><div class="sheetp full"><div class="grab"></div><div class="cnav"><span class="cb glass">···</span><b><i>✦</i> ChatGPT</b><span style="display:flex;gap:6px;align-items:center"><span class="cf glass">Fertig</span></span></div><div class="cchip"><svg class="ic" width="12" height="12"><use href="#i-scope"/></svg> Kontext: Tag planen 18. Nov.</div><div class="thr"><div class="um">Was steht heute an?</div><div class="am ">Heute sind drei Termine und zwei offene Aufgaben eingetragen. Der Vormittag ist bis 11:30 belegt.</div></div><div class="spacer"></div><div class="cmp"><div class="fld"><span class="ph">Nachricht …</span><span class="micb"><svg class="ic" width="18" height="18"><use href="#i-mic"/></svg></span></div><span class="snd2 off">↑</span></div></div></div>
+    <p class="pc">Das Mikrofon sitzt im Feld am rechten Rand, dort, wo es auch Nachrichten-Apps zeigen. Der Senden-Knopf bleibt an seinem Platz und grau, solange das Feld leer ist. Sobald man tippt, bleibt das Mikrofon stehen; ein Tipp darauf hängt Gesprochenes an den vorhandenen Text an. <b>Pro:</b> ein neuer Knopf, kein neuer Bildschirm, die Zeile wird nicht breiter. <b>Contra:</b> im Feld ist die Trefferfläche mit etwa 30 pt kleiner als die üblichen 44 pt; sie muss unsichtbar vergrößert werden <span class="tg a">Annahme</span>.</p>
+  </div>
+  <div>
+    <p class="label"><span class="code r">SP1a</span><b>Aufnahme läuft · Text läuft mit, drei Knöpfe</b> <span class="rec">Empfehlung</span></p>
+    <div class="phone "><div class="status"><span>08:42</span><span>●●● 5G</span></div><div class="sheetp full"><div class="grab"></div><div class="cnav"><span class="cb glass">···</span><b><i>✦</i> ChatGPT</b><span style="display:flex;gap:6px;align-items:center"><span class="cf glass">Fertig</span></span></div><div class="cchip"><svg class="ic" width="12" height="12"><use href="#i-scope"/></svg> Kontext: Tag planen 18. Nov.</div><div class="thr"><div class="um">Was steht heute an?</div><div class="am ">Heute sind drei Termine und zwei offene Aufgaben eingetragen. Der Vormittag ist bis 11:30 belegt.</div></div><div class="spacer"></div><div class="hint">Nichts wird gesendet, bevor du ↑ tippst.</div><div class="cmp"><div class="recb"><div class="top"><span>● Hört zu · Umwandlung auf dem iPhone</span><span>0:04</span></div><div class="live">Leg die Mail ans Prüfungsamt <u>auf sechzehn</u></div><div class="ctl"><span class="rc x">✕</span><div class="wv "><i style="height:4px"></i><i style="height:7px"></i><i style="height:12px"></i><i style="height:18px"></i><i style="height:9px"></i><i style="height:5px"></i><i style="height:14px"></i><i style="height:22px"></i><i style="height:16px"></i><i style="height:8px"></i><i style="height:4px"></i><i style="height:6px"></i><i style="height:13px"></i><i style="height:19px"></i><i style="height:24px"></i><i style="height:15px"></i><i style="height:7px"></i><i style="height:4px"></i><i style="height:9px"></i><i style="height:17px"></i><i style="height:11px"></i><i style="height:5px"></i><i style="height:4px"></i><i style="height:8px"></i><i style="height:14px"></i><i style="height:6px"></i><i style="height:4px"></i></div><span class="rc s">■ Fertig</span><span class="rc go">↑</span></div></div></div></div></div>
+    <p class="pc">Ein Tipp aufs Mikrofon macht aus der Zeile eine Aufnahmeleiste: roter Rand, Laufzeit, Pegel. Der Text erscheint, während man spricht; noch unsichere Wörter sind grau und können sich ändern <span class="tg a">Annahme: vorläufige und endgültige Ergebnisse kommen getrennt</span>. <b>✕</b> verwirft die Aufnahme, <b>■ Fertig</b> beendet sie und legt den Text zum Korrigieren ins Feld, <b>↑</b> beendet und sendet in einem Tipp. Schließt man das Blatt, wird die Aufnahme verworfen. <b>Pro:</b> beide Hände frei, lange Sätze möglich, Abbruch jederzeit sichtbar. <b>Contra:</b> drei Knöpfe in einer Leiste; ohne ↑ in der Leiste wären es immer zwei Tipps mehr.</p>
+  </div>
+  <div>
+    <p class="label"><span class="code">SP1b</span><b>Halten zum Sprechen, Loslassen sendet</b></p>
+    <div class="phone "><div class="status"><span>08:42</span><span>●●● 5G</span></div><div class="sheetp full"><div class="grab"></div><div class="cnav"><span class="cb glass">···</span><b><i>✦</i> ChatGPT</b><span style="display:flex;gap:6px;align-items:center"><span class="cf glass">Fertig</span></span></div><div class="cchip"><svg class="ic" width="12" height="12"><use href="#i-scope"/></svg> Kontext: Tag planen 18. Nov.</div><div class="thr"><div class="um">Was steht heute an?</div><div class="am ">Heute sind drei Termine und zwei offene Aufgaben eingetragen. Der Vormittag ist bis 11:30 belegt.</div><div class="am dimmed">Leg die Mail ans Prüfungsamt auf sechzehn …</div></div><div class="spacer"></div><div class="cmp"><div class="slide"><span>‹ Wegziehen zum Abbrechen</span><b>0:04</b></div><span class="micb hold" style="width:44px;height:44px;margin:0 4px 4px 0"><svg class="ic" width="22" height="22"><use href="#i-mic"/></svg></span></div></div></div>
+    <p class="pc">Wie eine Sprachnachricht: Finger auf dem Mikrofon halten, sprechen, loslassen. Wegziehen bricht ab. <b>Pro:</b> eine einzige Geste, kein versehentlich offenes Mikrofon. <b>Contra:</b> Loslassen sendet sofort, auch einen falsch erkannten Satz; zum Prüfen bleibt keine Zeit. Der Finger verdeckt den mitlaufenden Text, langes Halten ist unbequem, und ein Abrutschen sendet. Für VoiceOver und für Leute, die nicht lange drücken können, braucht es ohnehin den Weg per Tipp. Passt schlecht zu einem Gespräch, in dem man beim Sprechen auf den Kalender zeigt.</p>
+  </div>
+</div>
+<div class="box">
+  <h3>Empfehlung SP1: SP1a (Tippen)</h3>
+  <ul>
+    <li><b>Ein Knopf, zwei Zustände:</b> Mikrofon im Feld; die Aufnahmeleiste ersetzt die Zeile, solange aufgenommen wird. Dieselbe Leiste in allen drei Gesprächen (SP6).</li>
+    <li><b>Text landet im vorhandenen Feld.</b> Technisch ist die Sprache damit nur ein zweiter Weg, das Feld zu füllen; Senden, Verlauf und Aktionskarten bleiben, wie sie sind <span class="tg v">geprüft am Code: <code>assistant.send(text)</code> nimmt Text</span>.</li>
+    <li><b>Halten (SP1b)</b> nicht zusätzlich anbieten: Zwei Gesten auf einem Knopf führen zu Fehlauslösungen, und Loslassen-sendet widerspricht SP2a.</li>
+    <li><b>Ende der Aufnahme ohne Zutun:</b> nach 60 Sekunden oder nach 8 Sekunden Stille stoppt die Aufnahme und legt den Text ins Feld, ohne zu senden <span class="tg a">Annahme: Werte</span>.</li>
+  </ul>
+</div>
+
+<!-- ============================== SP2 ============================== -->
+<h2><span class="area">SP2</span> Senden · per Tipp oder von selbst nach einer Pause</h2>
+<p class="lead">Regel der App: Die KI wird nur aufgerufen, wenn man es selbst auslöst. Eine gesprochene Nachricht ist eine ausdrückliche Handlung. Offen ist, ob schon das Einschalten des Mikrofons als Auslöser zählt oder erst der Tipp auf ↑. Der Unterschied ist, ob man den erkannten Text gesehen hat, bevor er das Gerät verlässt.</p>
+<div class="grid">
+  <div>
+    <p class="label"><span class="code r">SP2a</span><b>Nach „Fertig“ · Text steht im Feld, ↑ sendet</b> <span class="rec">Empfehlung</span></p>
+    <div class="phone "><div class="status"><span>08:42</span><span>●●● 5G</span></div><div class="sheetp full"><div class="grab"></div><div class="cnav"><span class="cb glass">···</span><b><i>✦</i> ChatGPT</b><span style="display:flex;gap:6px;align-items:center"><span class="cf glass">Fertig</span></span></div><div class="cchip"><svg class="ic" width="12" height="12"><use href="#i-scope"/></svg> Kontext: Tag planen 18. Nov.</div><div class="thr"><div class="um">Was steht heute an?</div><div class="am ">Heute sind drei Termine und zwei offene Aufgaben eingetragen. Der Vormittag ist bis 11:30 belegt.</div></div><div class="spacer"></div><div class="cmp"><div class="fld"><span class="tx">Leg die Mail ans Prüfungsamt auf 16 Uhr.<span class="caret"></span></span><span class="micb"><svg class="ic" width="18" height="18"><use href="#i-mic"/></svg></span></div><span class="snd2">↑</span></div></div></div>
+    <p class="pc">Der erkannte Text steht im Feld wie getippt. Man kann ihn ändern, löschen oder weitersprechen und sendet mit ↑. Wer nicht prüfen will, tippt schon in der Aufnahmeleiste ↑ (SP1a). <b>Pro:</b> Nichts geht hinaus, was man nicht gesehen und ausgelöst hat; erkannte Namen („Prüfungsamt“, Repo-Namen) lassen sich korrigieren. <b>Contra:</b> ein Tipp mehr als beim reinen Sprechen; freihändig geht es so nicht.</p>
+  </div>
+  <div>
+    <p class="label"><span class="code">SP2b</span><b>Sendet nach 2 Sekunden Pause, mit Countdown</b></p>
+    <div class="phone "><div class="status"><span>08:42</span><span>●●● 5G</span></div><div class="sheetp full"><div class="grab"></div><div class="cnav"><span class="cb glass">···</span><b><i>✦</i> ChatGPT</b><span style="display:flex;gap:6px;align-items:center"><span class="cf glass">Fertig</span></span></div><div class="cchip"><svg class="ic" width="12" height="12"><use href="#i-scope"/></svg> Kontext: Tag planen 18. Nov.</div><div class="thr"><div class="um">Was steht heute an?</div><div class="am ">Heute sind drei Termine und zwei offene Aufgaben eingetragen. Der Vormittag ist bis 11:30 belegt.</div></div><div class="spacer"></div><div class="cmp"><div class="recb"><div class="top"><span>● Hört zu · Umwandlung auf dem iPhone</span><span>0:06</span></div><div class="live">Leg die Mail ans Prüfungsamt auf 16 Uhr. <u></u></div><div class="ctl"><span class="rc x">✕</span><div class="wv q"><i style="height:4px"></i><i style="height:4px"></i><i style="height:5px"></i><i style="height:4px"></i><i style="height:4px"></i><i style="height:6px"></i><i style="height:4px"></i><i style="height:4px"></i><i style="height:5px"></i><i style="height:4px"></i><i style="height:4px"></i><i style="height:4px"></i><i style="height:5px"></i><i style="height:4px"></i><i style="height:4px"></i><i style="height:4px"></i><i style="height:6px"></i><i style="height:4px"></i><i style="height:4px"></i><i style="height:4px"></i><i style="height:5px"></i><i style="height:4px"></i><i style="height:4px"></i></div><span class="rc cd">Sendet in 2 s · Nicht senden</span></div></div></div></div></div>
+    <p class="pc">Nach einer Sprechpause läuft ein sichtbarer Countdown; „Nicht senden“ hält ihn an und legt den Text ins Feld. <b>Pro:</b> kein Tipp nötig. <b>Contra:</b> Eine Denkpause mitten im Satz schickt die halbe Bitte ab. Spricht jemand im Raum weiter, läuft dessen Text mit und geht ebenfalls hinaus. Ein Erkennungsfehler wird erst sichtbar, wenn die KI schon antwortet. Der Schaden ist begrenzt, weil der Chat Änderungen nur als Aktionskarte vorschlägt; im Vorschlagsblatt aber ändert jede gesendete Nachricht die Vorschläge sofort <span class="tg v">geprüft am Code: <code>planner.revise</code> ohne Karte, mit „Rückgängig“</span>.</p>
+  </div>
+  <div>
+    <p class="label"><span class="code">SP2c</span><b>„Fertig“ sendet sofort, kein Zwischenschritt</b></p>
+    <div class="phone "><div class="status"><span>08:42</span><span>●●● 5G</span></div><div class="sheetp full"><div class="grab"></div><div class="cnav"><span class="cb glass">···</span><b><i>✦</i> ChatGPT</b><span style="display:flex;gap:6px;align-items:center"><span class="cf glass">Fertig</span></span></div><div class="cchip"><svg class="ic" width="12" height="12"><use href="#i-scope"/></svg> Kontext: Tag planen 18. Nov.</div><div class="thr"><div class="um">Was steht heute an?</div><div class="am ">Heute sind drei Termine und zwei offene Aufgaben eingetragen. Der Vormittag ist bis 11:30 belegt.</div><div class="um">Leg die Mail ans Prüfungsamt auf 16 Uhr.<span class="via"><svg class="ic" width="10" height="10"><use href="#i-mic"/></svg> gesprochen</span></div><div class="am dimmed">ChatGPT antwortet …</div></div><div class="spacer"></div><div class="cmp"><div class="fld"><span class="ph">Nachricht …</span><span class="micb"><svg class="ic" width="18" height="18"><use href="#i-mic"/></svg></span></div><span class="snd2 off">↑</span></div></div></div>
+    <p class="pc">Die Aufnahmeleiste hat nur ✕ und ↑; ein Stopp ist immer ein Senden. <b>Pro:</b> zwei Knöpfe statt drei, die schnellste Bedienung per Tipp. <b>Contra:</b> Korrigieren geht nur, indem man abbricht und neu spricht; bei einem falsch erkannten Wort am Ende ist das der ganze Satz. Entspricht sonst SP2a, weil ein Tipp das Senden auslöst.</p>
+  </div>
+</div>
+<div class="box">
+  <h3>Empfehlung SP2: SP2a, Senden nach Pause nur im Sprechmodus</h3>
+  <ul>
+    <li><b>Abwägung:</b> Das Mikrofon einzuschalten heißt „ich will etwas sagen“, nicht „schick ab, was du verstehst“. Solange nicht gemessen ist, wie gut die Erkennung bei Namen und in lauter Umgebung ist, sollte der Tipp auf ↑ der Auslöser bleiben. Das hält die Regel aus den Einstellungen wörtlich ein.</li>
+    <li><b>Keine Bremse für Eilige:</b> ↑ in der Aufnahmeleiste sendet direkt; das sind zwei Tipps für eine gesprochene Nachricht (Mikrofon, ↑).</li>
+    <li><b>SP2b bleibt dem Sprechmodus vorbehalten (SP5):</b> Dort wird er ausdrücklich gestartet, ist sichtbar als Zustand und hat den Countdown. Im Vorschlagsblatt gibt es kein Senden nach Pause.</li>
+    <li><b>Gesprochenes kennzeichnen:</b> Im Verlauf trägt eine gesprochene Nachricht ein kleines Mikrofon (siehe SP2c). Das hilft, Erkennungsfehler später einzuordnen; ob das gewünscht ist, ist offen.</li>
+  </ul>
+</div>
+
+<!-- ============================== SP3 ============================== -->
+<h2><span class="area">SP3</span> Vorlesen · wann die Antwort gesprochen wird</h2>
+<p class="lead">Antworten sind heute Fließtext ohne Blase, linksbündig. Vorgelesen wird mit einer Stimme des iPhones. Zu klären: ob das auf Wunsch je Antwort geschieht, immer, oder nur im Sprechmodus.</p>
+<div class="grid">
+  <div>
+    <p class="label"><span class="code r">SP3a</span><b>Knopf „Vorlesen“ an jeder Antwort</b> <span class="rec">Empfehlung</span></p>
+    <div class="phone "><div class="status"><span>08:42</span><span>●●● 5G</span></div><div class="sheetp full"><div class="grab"></div><div class="cnav"><span class="cb glass">···</span><b><i>✦</i> ChatGPT</b><span style="display:flex;gap:6px;align-items:center"><span class="cf glass">Fertig</span></span></div><div class="cchip"><svg class="ic" width="12" height="12"><use href="#i-scope"/></svg> Kontext: Tag planen 18. Nov.</div><div class="thr"><div class="um">Was steht heute nach der Team-Runde noch an?<span class="via"><svg class="ic" width="10" height="10"><use href="#i-mic"/></svg> gesprochen</span></div><div class="am ">Nach der Team-Runde sind zwei Aufgaben offen: „Nebenkosten prüfen“ mit 45 Minuten und die Mail ans Prüfungsamt, die heute fällig ist.<br><span class="spk"><svg class="ic" width="13" height="13"><use href="#i-spk"/></svg> Vorlesen</span></div></div><div class="spacer"></div><div class="cmp"><div class="fld"><span class="ph">Nachricht …</span><span class="micb"><svg class="ic" width="18" height="18"><use href="#i-mic"/></svg></span></div><span class="snd2 off">↑</span></div></div></div>
+    <p class="pc">Unter jeder Antwort steht eine kleine Kapsel mit Lautsprecher. Ein Tipp liest diese eine Antwort vor. <b>Pro:</b> Das iPhone spricht nie ungefragt, auch nicht im Büro oder in der Bahn. Funktioniert auch für ältere Antworten im Verlauf. <b>Contra:</b> ein Tipp je Antwort; für ein echtes Gespräch zu umständlich (dafür SP5).</p>
+  </div>
+  <div>
+    <p class="label"><span class="code">SP3a</span><b>Während des Vorlesens · Satz markiert, Stopp überall</b></p>
+    <div class="phone "><div class="status"><span>08:42</span><span>●●● 5G</span></div><div class="sheetp full"><div class="grab"></div><div class="cnav"><span class="cb glass">···</span><b><i>✦</i> ChatGPT</b><span style="display:flex;gap:6px;align-items:center"><span class="cf glass">Fertig</span></span></div><div class="cchip"><svg class="ic" width="12" height="12"><use href="#i-scope"/></svg> Kontext: Tag planen 18. Nov.</div><div class="thr"><div class="um">Was steht heute nach der Team-Runde noch an?<span class="via"><svg class="ic" width="10" height="10"><use href="#i-mic"/></svg> gesprochen</span></div><div class="am ">Nach der Team-Runde sind zwei Aufgaben offen: <mark>„Nebenkosten prüfen“ mit 45 Minuten</mark> und die Mail ans Prüfungsamt, die heute fällig ist.<br><span class="spk on"><svg class="ic" width="13" height="13"><use href="#i-spk"/></svg> Liest vor · Stopp</span></div></div><div class="spacer"></div><div class="cmp"><div class="fld"><span class="ph">Nachricht …</span><span class="micb"><svg class="ic" width="18" height="18"><use href="#i-mic"/></svg></span></div><span class="snd2 off">↑</span></div></div></div>
+    <p class="pc">Die Kapsel wird zu „Liest vor · Stopp“, der gerade gesprochene Satz ist hinterlegt <span class="tg a">Annahme: die Sprachausgabe meldet die Textstelle</span>. Stopp bei: Tipp auf die Kapsel, Tipp aufs Mikrofon, Senden einer neuen Nachricht, Schließen des Blatts. Zeichen wie ✦, „P2“ oder „16:00“ müssen vor dem Sprechen in Wörter übersetzt werden („Priorität zwei“, „sechzehn Uhr“) <span class="tg a">Annahme: eigener Schritt nötig</span>. Aktionskarten werden hier nicht mitgelesen (SP4).</p>
+  </div>
+  <div>
+    <p class="label"><span class="code">SP3b</span><b>Schalter „Antworten vorlesen“ im Kopf des Chats</b></p>
+    <div class="phone "><div class="status"><span>08:42</span><span>●●● 5G</span></div><div class="sheetp full"><div class="grab"></div><div class="cnav"><span class="cb glass">···</span><b><i>✦</i> ChatGPT</b><span style="display:flex;gap:6px;align-items:center"><span class="hbtn on"><svg class="ic" width="17" height="17"><use href="#i-spk"/></svg></span><span class="cf glass">Fertig</span></span></div><div class="cchip"><svg class="ic" width="12" height="12"><use href="#i-scope"/></svg> Kontext: Tag planen 18. Nov.</div><div class="thr"><div class="um">Was steht heute nach der Team-Runde noch an?</div><div class="am ">Nach der Team-Runde sind zwei Aufgaben offen: „Nebenkosten prüfen“ mit 45 Minuten und die Mail ans Prüfungsamt, die heute fällig ist.</div></div><div class="spacer"></div><div class="rbar glass"><span style="color:var(--mint)"><svg class="ic" width="15" height="15"><use href="#i-spk"/></svg></span><span class="tx">Liest vor: „Nach der Team-Runde sind zwei …“</span><span class="k">❚❚</span><span class="k">✕</span></div><div class="cmp"><div class="fld"><span class="ph">Nachricht …</span><span class="micb"><svg class="ic" width="18" height="18"><use href="#i-mic"/></svg></span></div><span class="snd2 off">↑</span></div></div></div>
+    <p class="pc">Ein Lautsprecher-Knopf neben „Fertig“ schaltet das Vorlesen für alle Antworten ein; eine Leiste über der Eingabe zeigt, was läuft. <b>Pro:</b> einmal einschalten, dann liest jede Antwort. <b>Contra:</b> Bleibt der Schalter an, spricht das iPhone beim nächsten Öffnen in einer stillen Umgebung los. Die Antwort wird gestreamt; vorgelesen werden kann erst satzweise, was Pausen hörbar macht <span class="tg a">Annahme</span>. Ein dritter Knopf im Kopf des Blatts neben „···“ und „Fertig“.</p>
+  </div>
+  <div>
+    <p class="label"><span class="code">SP3c</span><b>Vorlesen nur im Sprechmodus</b></p>
+    <div class="box neutral" style="margin-top:0;max-width:390px">Textvariante, nicht gezeichnet. Der normale Chat bleibt stumm; gesprochen wird nur in SP5. <b>Pro:</b> am wenigsten Oberfläche. <b>Contra:</b> Wer eine lange Antwort nur einmal hören will (Hände nicht frei), muss den Sprechmodus starten, der dann auch zuhört und sendet.</div>
+  </div>
+</div>
+<div class="box">
+  <h3>Empfehlung SP3: SP3a, dazu eine Einstellung statt eines Schalters im Chat</h3>
+  <ul>
+    <li><b>Standard:</b> Knopf je Antwort, nichts spricht von selbst.</li>
+    <li><b>Einstellung „Antworten vorlesen“</b> (SP7) mit drei Stufen: „Nie“ (Vorgabe), „Nach gesprochenen Nachrichten“, „Immer“. Die mittlere Stufe folgt der Regel „gesprochen gefragt, gesprochen geantwortet“ und ist die naheliegende Wahl für alle, die ohne Sprechmodus sprechen wollen.</li>
+    <li><b>Im Sprechmodus</b> wird immer vorgelesen; das ist sein Zweck.</li>
+    <li><b>Stummschalter und Lautstärke:</b> Ob das Vorlesen den Stummschalter achten soll, ist eine Produktfrage; technisch geht beides <span class="tg a">Annahme</span>. Vorschlag: Der Knopf „Vorlesen“ spricht immer (ausdrücklicher Tipp), automatisches Vorlesen schweigt bei stummem Gerät.</li>
+    <li><b>Stimmqualität:</b> Die mitgelieferten Stimmen klingen deutlich künstlicher als die von ChatGPT. Bessere Stimmen lädt man in den iOS-Einstellungen nach <span class="tg a">Annahme, nicht geprüft</span>. Das ist der wahrscheinlichste Grund, später die Echtzeit-Stimme von OpenAI zu prüfen.</li>
+  </ul>
+</div>
+
+<!-- ============================== SP4 ============================== -->
+<h2><span class="area">SP4</span> Aktionskarten · ansagen ja, bestätigen per Stimme?</h2>
+<p class="lead">Änderungen (Zeitblock anlegen, Aufgabe ändern, Kommentar an ein Issue) führt Tagwerk erst nach „Bestätigen“ auf der Karte aus. Mit Stimme stellt sich die Frage, ob ein gesprochenes „Ja“ diesen Tipp ersetzen darf.</p>
+<div class="grid">
+  <div>
+    <p class="label"><span class="code r">SP4a</span><b>Karte wird angesagt, bestätigt wird per Tipp</b> <span class="rec">Empfehlung</span></p>
+    <div class="phone "><div class="status"><span>08:42</span><span>●●● 5G</span></div><div class="sheetp full"><div class="grab"></div><div class="cnav"><span class="cb glass">···</span><b><i>✦</i> ChatGPT</b><span style="display:flex;gap:6px;align-items:center"><span class="cf glass">Fertig</span></span></div><div class="cchip"><svg class="ic" width="12" height="12"><use href="#i-scope"/></svg> Kontext: Tag planen 18. Nov.</div><div class="thr"><div class="um">Leg die Mail ans Prüfungsamt auf 16 Uhr.<span class="via"><svg class="ic" width="10" height="10"><use href="#i-mic"/></svg> gesprochen</span></div><div class="am ">Ich lege dafür einen Zeitblock an.</div><div class="acd"><div class="h">Vorgeschlagene Änderung · noch nicht ausgeführt</div><b>Zeitblock anlegen</b><div class="c">Mail an Prüfungsamt · Mi 18. Nov. · 16:00 bis 16:30</div><div class="bt"><span class="n">Verwerfen</span><span class="y">Bestätigen</span></div><div class="vo"><svg class="ic" width="12" height="12"><use href="#i-spk"/></svg> Angesagt: „Ich schlage vor, einen Zeitblock für die Mail ans Prüfungsamt anzulegen, heute 16 Uhr bis 16 Uhr 30. Bitte bestätige auf dem Bildschirm.“</div></div></div><div class="spacer"></div><div class="cmp"><div class="fld"><span class="ph">Nachricht …</span><span class="micb"><svg class="ic" width="18" height="18"><use href="#i-mic"/></svg></span></div><span class="snd2 off">↑</span></div></div></div>
+    <p class="pc">Die Karte bleibt, wie sie ist. Wird vorgelesen, sagt die Stimme, was die Karte tun würde, und bittet um den Tipp. Nach dem Tipp folgt „Ausgeführt“ als kurzer Satz. <b>Pro:</b> Die Schreibgrenze bleibt, wo sie heute ist; kein Erkennungsfehler und keine fremde Stimme kann etwas auslösen. <b>Contra:</b> Der Sprechmodus ist an dieser Stelle nicht freihändig; man muss hinsehen und tippen.</p>
+  </div>
+  <div>
+    <p class="label"><span class="code">SP4b</span><b>Gesprochenes „Bestätigen“ mit Rückfrage und Frist</b></p>
+    <div class="phone "><div class="status"><span>08:42</span><span>●●● 5G</span></div><div class="sheetp full"><div class="grab"></div><div class="cnav"><span class="cb glass">···</span><b><i>✦</i> ChatGPT</b><span style="display:flex;gap:6px;align-items:center"><span class="cf glass">Fertig</span></span></div><div class="cchip"><svg class="ic" width="12" height="12"><use href="#i-scope"/></svg> Kontext: Tag planen 18. Nov.</div><div class="thr"><div class="um">Leg die Mail ans Prüfungsamt auf 16 Uhr.<span class="via"><svg class="ic" width="10" height="10"><use href="#i-mic"/></svg> gesprochen</span></div><div class="am ">Ich lege dafür einen Zeitblock an.</div><div class="acd"><div class="h">Vorgeschlagene Änderung · noch nicht ausgeführt</div><b>Zeitblock anlegen</b><div class="c">Mail an Prüfungsamt · Mi 18. Nov. · 16:00 bis 16:30</div><div class="bt"><span class="n">Verwerfen</span><span class="y">Bestätigen</span></div><div class="heard"><b>Sag „Bestätigen“ oder „Verwerfen“.</b><br>Verstanden: „Bestätigen“ · wird in 3 s ausgeführt · <u>Abbrechen</u></div></div></div><div class="spacer"></div><div class="cmp"><div class="fld"><span class="ph">Nachricht …</span><span class="micb"><svg class="ic" width="18" height="18"><use href="#i-mic"/></svg></span></div><span class="snd2 off">↑</span></div></div></div>
+    <p class="pc">Nach der Ansage hört Tagwerk nur auf zwei Wörter; das Erkannte wird angezeigt und nach 3 Sekunden ausgeführt, wenn niemand abbricht. <b>Pro:</b> wirklich freihändig. <b>Contra, gewichtig:</b> (1) „Ja“ fällt in Gesprächen ständig; selbst „Bestätigen“ kann aus dem Raum, aus einem Video oder aus der eigenen Sprachausgabe kommen. (2) Die Erkennung prüft nicht, wer spricht. (3) Manche Karten schreiben nach außen (Kommentar an ein GitHub-Issue) und lassen sich nicht zurücknehmen. (4) Bei mehreren Karten ist unklar, welche gemeint ist. (5) Die Frist schützt nur, wenn man gerade hinsieht, was der Freihändigkeit widerspricht.</p>
+  </div>
+  <div>
+    <p class="label"><span class="code">SP4c</span><b>Stimme nur für Karten, die sich zurücknehmen lassen</b></p>
+    <div class="box neutral" style="margin-top:0;max-width:390px">Textvariante, nicht gezeichnet. Gesprochenes „Bestätigen“ gilt nur für Änderungen im eigenen Plan-Kalender, die „Widerrufen“ können; alles, was nach außen schreibt oder löscht, verlangt den Tipp. <b>Pro:</b> begrenzt den Schaden auf Rücknehmbares. <b>Contra:</b> zwei Regeln für dieselbe Karte; verlangt eine verlässliche Einteilung aller Werkzeuge in „rücknehmbar“ und „nicht rücknehmbar“, die es heute nicht gibt <span class="tg a">Annahme: nicht am Code geprüft</span>.</div>
+  </div>
+</div>
+<div class="box">
+  <h3>Empfehlung SP4: SP4a</h3>
+  <ul>
+    <li><b>Der Tipp bleibt die einzige Bestätigung.</b> Die Karte ist die Stelle, an der die App Schreibrechte ausübt; eine Spracherkennung ohne Sprecherprüfung ist dafür ein zu schwacher Schlüssel.</li>
+    <li><b>Ansage in einem Satz:</b> Was, womit, wann, und der Hinweis auf den Bildschirm. Bei mehreren Karten: „Drei Änderungen warten auf deine Bestätigung.“</li>
+    <li><b>Im Sprechmodus pausiert das Zuhören,</b> solange eine Karte offen ist (SP5a, drittes Bild). So kann ein nachgeschobenes „Ja, genau“ nicht als neue Nachricht hinausgehen.</li>
+    <li><b>Gesprochenes „Verwerfen“</b> wäre gefahrlos, weil es nichts schreibt. Es allein anzubieten wäre aber uneinheitlich; nicht empfohlen.</li>
+    <li><b>SP4c</b> ist der Weg, falls der Sprechmodus später ganz ohne Hände auskommen soll. Dann als eigener Schritt mit eigener Prüfung.</li>
+  </ul>
+</div>
+
+<!-- ============================== SP5 ============================== -->
+<h2><span class="area">SP5</span> Sprechmodus · zuhören, senden, antworten, wieder zuhören</h2>
+<p class="lead">Ein Gespräch ohne Tippen: Tagwerk hört zu, sendet nach einer Pause, liest die Antwort vor und hört wieder zu. Der Sprechmodus wird ausdrücklich gestartet; solange er läuft, gilt jede Äußerung als gesendet (SP2b mit Countdown). Zu klären: wie er aussieht, ob der Kalender sichtbar bleibt und wie er endet.</p>
+<div class="grid">
+  <div>
+    <p class="label"><span class="code">SP5</span><b>Einstieg · Knopf an der Stelle von „Senden“</b></p>
+    <div class="phone crop"><div class="status"><span>08:42</span><span>●●● 5G</span></div><div class="sheetp full"><div class="grab"></div><div class="cnav"><span class="cb glass">···</span><b><i>✦</i> ChatGPT</b><span style="display:flex;gap:6px;align-items:center"><span class="cf glass">Fertig</span></span></div><div class="cchip"><svg class="ic" width="12" height="12"><use href="#i-scope"/></svg> Kontext: Tag planen 18. Nov.</div><div class="thr"><div class="um">Was steht heute an?</div><div class="am ">Heute sind drei Termine und zwei offene Aufgaben eingetragen. Der Vormittag ist bis 11:30 belegt.</div></div><div class="spacer"></div><div class="hint">Leeres Feld: der Senden-Knopf wird zum Einstieg in den Sprechmodus.</div><div class="cmp"><div class="fld"><span class="ph">Nachricht …</span><span class="micb"><svg class="ic" width="18" height="18"><use href="#i-mic"/></svg></span></div><span class="snd2 vm"><svg class="ic" width="18" height="18"><use href="#i-wave"/></svg></span></div></div></div>
+    <p class="pc">Bei leerem Feld steht rechts statt des grauen ↑ ein Knopf mit Pegel-Symbol; sobald Text im Feld steht, wird er wieder zu ↑. So braucht der Sprechmodus keinen eigenen Platz. Der erste Start zeigt einmal, was der Modus tut („Tagwerk sendet, was du sagst, nach einer kurzen Pause an ChatGPT“). <b>Contra:</b> Zwei ähnliche Symbole nebeneinander (Mikrofon, Pegel); die Unterscheidung muss sich erst einprägen <span class="tg a">Annahme</span>. Alternative: Eintrag „Sprechmodus“ im Menü „···“.</p>
+  </div>
+  <div>
+    <p class="label"><span class="code r">SP5a</span><b>Halbhohes Blatt über dem Kalender · hört zu</b> <span class="rec">Empfehlung</span></p>
+    <div class="phone "><div class="status"><span>08:42</span><span>●●● 5G</span></div><div class="calv"><div class="topbar"><div class="seg"><span class="on">Tag</span><span>Woche</span><span>Monat</span></div><span class="rbtn glass">＋</span><span class="rbtn glass ai">✦</span></div><div class="anno">Kalender bleibt hell und bedienbar · Blatt auf halber Höhe</div><div class="hg" style="height:194px"><div class="hl" style="top:0px"><span>15:00</span></div><div class="hl" style="top:64px"><span>16:00</span></div><div class="hl" style="top:128px"><span>17:00</span></div><div class="hl" style="top:192px"><span>18:00</span></div><div class="ev e" style="top:1px;height:62px;">Team-Runde<small>15:00 bis 16:00</small></div><div class="ev p" style="top:129px;height:46px;">Nebenkosten prüfen<small>17:00 bis 17:45</small></div></div></div><div class="sheetp"><div class="grab"></div><div class="vmo"><div class="vmh"><b><span style="color:var(--mint)">✦</span> Sprechmodus<small>Kontext: Tag planen 18. Nov.</small></b><span class="end">Beenden</span></div><div class="vst"><span class="orb l"><svg class="ic" width="18" height="18"><use href="#i-mic"/></svg></span><div class="st"><b>Hört zu …</b><small>Umwandlung auf dem iPhone</small></div><div style="flex:0 0 74px" class="wv m"><i style="height:4px"></i><i style="height:7px"></i><i style="height:12px"></i><i style="height:18px"></i><i style="height:9px"></i><i style="height:5px"></i><i style="height:14px"></i><i style="height:22px"></i><i style="height:16px"></i><i style="height:8px"></i><i style="height:4px"></i><i style="height:6px"></i><i style="height:13px"></i><i style="height:19px"></i></div></div><div class="vln me"><small>Du</small>Leg die Mail ans Prüfungsamt <u>auf sechzehn Uhr</u></div><div class="vcd"><span>Sendet nach 2 s Pause</span><span class="no">Nicht senden</span></div><div class="vctl"><span>❚❚ Pause</span><span>Tippen</span><span>Verlauf</span></div></div></div></div>
+    <p class="pc">Der Sprechmodus zieht das Chat-Blatt auf halbe Höhe und lässt den Kalender darüber hell und bedienbar, wie beim Vorschlagsblatt <span class="tg v">geprüft am Code</span>. Zu sehen sind Zustand, der letzte Wortwechsel und drei Knöpfe. Nach einer Pause läuft der Countdown; „Nicht senden“ hält an. „Verlauf“ zieht das Blatt auf volle Höhe und zeigt den ganzen Chat. <b>Pro:</b> Man sieht, worüber man spricht, und sieht Änderungen im Kalender ankommen. Gleiche Bauart wie das Vorschlagsblatt. <b>Contra:</b> Der Chat muss dafür Höhenstufen bekommen; heute ist er ein Blatt in voller Höhe.</p>
+  </div>
+  <div>
+    <p class="label"><span class="code r">SP5a</span><b>Antwort wird gesprochen</b> <span class="rec">Empfehlung</span></p>
+    <div class="phone "><div class="status"><span>08:42</span><span>●●● 5G</span></div><div class="calv"><div class="topbar"><div class="seg"><span class="on">Tag</span><span>Woche</span><span>Monat</span></div><span class="rbtn glass">＋</span><span class="rbtn glass ai">✦</span></div><div class="anno">Antwort wird gesprochen · Mikrofon ist währenddessen aus</div><div class="hg" style="height:194px"><div class="hl" style="top:0px"><span>15:00</span></div><div class="hl" style="top:64px"><span>16:00</span></div><div class="hl" style="top:128px"><span>17:00</span></div><div class="hl" style="top:192px"><span>18:00</span></div><div class="ev e" style="top:1px;height:62px;">Team-Runde<small>15:00 bis 16:00</small></div><div class="ev p" style="top:129px;height:46px;">Nebenkosten prüfen<small>17:00 bis 17:45</small></div></div></div><div class="sheetp"><div class="grab"></div><div class="vmo"><div class="vmh"><b><span style="color:var(--mint)">✦</span> Sprechmodus<small>Kontext: Tag planen 18. Nov.</small></b><span class="end">Beenden</span></div><div class="vst"><span class="orb s"><svg class="ic" width="18" height="18"><use href="#i-spk"/></svg></span><div class="st"><b>ChatGPT spricht …</b><small>Tippen unterbricht</small></div><div style="flex:0 0 74px" class="wv m"><i style="height:5px"></i><i style="height:14px"></i><i style="height:22px"></i><i style="height:16px"></i><i style="height:8px"></i><i style="height:4px"></i><i style="height:6px"></i><i style="height:13px"></i><i style="height:19px"></i><i style="height:24px"></i><i style="height:15px"></i><i style="height:7px"></i><i style="height:4px"></i><i style="height:9px"></i></div></div><div class="vln me"><small>Du</small>Was steht heute nach der Team-Runde noch an?</div><div class="vln"><small>ChatGPT</small>Nach der Team-Runde sind zwei Aufgaben offen: „Nebenkosten prüfen“ mit 45 Minuten und die Mail ans Prüfungsamt, die heute fällig ist.</div><div class="vctl"><span class="pr">Unterbrechen</span><span>Tippen</span><span>Verlauf</span></div></div></div></div>
+    <p class="pc">Während die Stimme spricht, ist das Mikrofon aus, damit Tagwerk sich nicht selbst zuhört. „Unterbrechen“ stoppt die Stimme und schaltet sofort wieder auf Zuhören. Unterbrechen durch Hineinsprechen wäre natürlicher, verlangt aber eine Echo-Unterdrückung, die am Gerät erst geprüft werden muss <span class="tg a">Annahme: nicht in der ersten Fassung</span>. Nach dem letzten Satz ertönt ein kurzer Ton, dann hört Tagwerk wieder zu.</p>
+  </div>
+  <div>
+    <p class="label"><span class="code r">SP5a</span><b>Aktionskarte im Sprechmodus</b> <span class="rec">Empfehlung</span></p>
+    <div class="phone "><div class="status"><span>08:42</span><span>●●● 5G</span></div><div class="calv"><div class="topbar"><div class="seg"><span class="on">Tag</span><span>Woche</span><span>Monat</span></div><span class="rbtn glass">＋</span><span class="rbtn glass ai">✦</span></div><div class="anno">Karte wartet · Zuhören pausiert, bis getippt ist</div><div class="hg" style="height:194px"><div class="hl" style="top:0px"><span>15:00</span></div><div class="hl" style="top:64px"><span>16:00</span></div><div class="hl" style="top:128px"><span>17:00</span></div><div class="hl" style="top:192px"><span>18:00</span></div><div class="ev e" style="top:1px;height:62px;">Team-Runde<small>15:00 bis 16:00</small></div><div class="ev ai" style="top:65px;height:30px;">✦ Mail an Prüfungsamt · 16:00 bis 16:30</div><div class="ev p" style="top:129px;height:46px;">Nebenkosten prüfen<small>17:00 bis 17:45</small></div></div></div><div class="sheetp"><div class="grab"></div><div class="vmo"><div class="vmh"><b><span style="color:var(--mint)">✦</span> Sprechmodus<small>Kontext: Tag planen 18. Nov.</small></b><span class="end">Beenden</span></div><div class="vst"><span class="orb w">❚❚</span><div class="st"><b>Wartet auf deine Bestätigung</b><small>Zuhören pausiert</small></div></div><div class="acd" style="margin-bottom:8px"><div class="h">Vorgeschlagene Änderung · noch nicht ausgeführt</div><b>Zeitblock anlegen</b><div class="c">Mail an Prüfungsamt · Mi 18. Nov. · 16:00 bis 16:30</div><div class="bt"><span class="n">Verwerfen</span><span class="y">Bestätigen</span></div></div><div class="vctl"><span>Tippen</span><span>Verlauf</span></div></div></div></div>
+    <p class="pc">Schlägt die KI eine Änderung vor, sagt die Stimme sie an (SP4a), die Karte erscheint im Blatt, und das Zuhören pausiert. Nach „Bestätigen“ oder „Verwerfen“ geht das Gespräch weiter. Ob der Kalender die wartende Änderung gestrichelt vorab zeigt (wie hier), ist ein Zusatz und nicht Teil der heutigen Karten <span class="tg a">Annahme</span>.</p>
+  </div>
+  <div>
+    <p class="label"><span class="code">SP5b</span><b>Ganzer Bildschirm mit Kugel</b></p>
+    <div class="phone "><div class="status"><span>08:42</span><span>●●● 5G</span></div><div class="nav" style="padding-top:4px"><span class="a">⌄ Verlauf</span><span class="c">Sprechmodus</span><span class="a" style="color:var(--red)">Beenden</span></div><div class="fullv"><div class="bigorb"></div><h4>Hört zu …</h4><p>„Leg die Mail ans Prüfungsamt auf sechzehn Uhr“</p><div class="rnd"><span>❚❚</span><span style="font-size:15px;font-weight:700">Aa</span><span class="x">✕</span></div></div></div>
+    <p class="pc">Wie der Sprachmodus von ChatGPT: eine große Fläche, die auf die Stimme reagiert, darunter drei runde Knöpfe. <b>Pro:</b> vertraut, ruhig, aus der Entfernung gut zu erkennen. <b>Contra:</b> Der Kalender ist verdeckt, gerade dann, wenn man über ihn spricht. Aktionskarten brauchen einen eigenen Platz, und die Karte verlangt ohnehin den Blick aufs Gerät. Viel Fläche für wenig Inhalt.</p>
+  </div>
+  <div>
+    <p class="label"><span class="code">SP5c</span><b>Kapsel über der Tab-Leiste, kein Blatt</b></p>
+    <div class="phone "><div class="status"><span>08:42</span><span>●●● 5G</span></div><div class="calv"><div class="topbar"><div class="seg"><span class="on">Tag</span><span>Woche</span><span>Monat</span></div><span class="rbtn glass">＋</span><span class="rbtn glass ai">✦</span></div><div class="anno">Kalender ganz sichtbar · Kapsel über der Tab-Leiste</div><div class="hg" style="height:430px"><div class="hl" style="top:0px"><span>15:00</span></div><div class="hl" style="top:64px"><span>16:00</span></div><div class="hl" style="top:128px"><span>17:00</span></div><div class="hl" style="top:192px"><span>18:00</span></div><div class="hl" style="top:256px"><span>19:00</span></div><div class="hl" style="top:320px"><span>20:00</span></div><div class="hl" style="top:384px"><span>21:00</span></div><div class="ev e" style="top:1px;height:62px;">Team-Runde<small>15:00 bis 16:00</small></div><div class="ev p" style="top:129px;height:46px;">Nebenkosten prüfen<small>17:00 bis 17:45</small></div></div></div><div class="spacer"></div><div class="vcap glass"><span class="orb"></span><span class="tx">Hört zu · „Leg die Mail ans Prüfungsamt …“</span><span class="x">✕</span></div><div class="tb glass tbgap"><span class="on"><i class="ico">▦</i>Planen</span><span><i class="ico">☑︎</i>Aufgaben</span><span><i class="ico">⚙︎</i>Einstellungen</span></div></div>
+    <p class="pc">Der Sprechmodus läuft als schmale Kapsel weiter, während man frei durch die App geht. <b>Pro:</b> Der Kalender bleibt ganz sichtbar; man kann den Tab wechseln. <b>Contra:</b> Die Antwort ist nur zu hören, eine Aktionskarte hat keinen Platz und müsste ein Blatt öffnen. Wechselt man den Tab, ist unklar, ob der Kontext mitwechselt. Über der Tab-Leiste liegen im Tag bereits Panel und Kapseln (siehe Mockup zum Assistenten-Knopf).</p>
+  </div>
+</div>
+<div class="box">
+  <h3>Empfehlung SP5: SP5a, als zweite Ausbaustufe</h3>
+  <ul>
+    <li><b>Aussehen:</b> das Chat-Blatt auf halber Höhe, Kalender darüber bedienbar; „Verlauf“ zeigt den ganzen Chat. Kein eigener Bildschirm, derselbe Verlauf wie beim Tippen.</li>
+    <li><b>Ablauf:</b> zuhören → 2 s Pause → Countdown → senden → Antwort sprechen → Ton → zuhören. Bei offener Aktionskarte pausiert die Schleife.</li>
+    <li><b>Ende:</b> „Beenden“, Schließen des Blatts, „Tippen“ (wechselt in den normalen Chat), 30 Sekunden Stille (dann „Pausiert · Tippen zum Weitersprechen“), ein Anruf, Sperren des Geräts oder Wechsel in eine andere App <span class="tg a">Annahme: Werte; kein Betrieb im Hintergrund</span>.</li>
+    <li><b>Datenschutz:</b> Der Start des Sprechmodus ist die ausdrückliche Handlung für alle Nachrichten dieser Sitzung. Deshalb endet er eher zu früh als zu spät, zeigt jederzeit, dass er zuhört, und sendet nie aus dem Hintergrund. Das iOS-Mikrofonzeichen in der Statusleiste leuchtet währenddessen.</li>
+    <li><b>Reihenfolge:</b> Zuerst SP1 bis SP4 und SP6 bis SP8 (Diktat und Vorlesen). Der Sprechmodus setzt beides voraus und braucht zusätzlich die Pausenerkennung, das Wechseln der Tonrichtung und die Höhenstufen des Chats. Seine Güte hängt an Messwerten, die es erst nach Stufe 1 gibt.</li>
+    <li><b>Nicht im Vorschlagsblatt:</b> Dort ändert jede Nachricht die Vorschläge sofort; ein Senden nach Pause wäre dort zu riskant (SP6).</li>
+  </ul>
+</div>
+
+<!-- ============================== SP6 ============================== -->
+<h2><span class="area">SP6</span> Orte · Assistent, Aufgaben-Chat, Vorschlagsblatt</h2>
+<p class="lead">Der Assistenten-Chat ist in SP1 bis SP5 gezeichnet. Der Chat zu einer Aufgabe oder einem Issue ist dieselbe Ansicht mit anderem Kontext. Das Gespräch im Vorschlagsblatt ist enger: drei Kurzantworten, eine einzeilige Eingabe, als Antwort eine Änderungskarte.</p>
+<div class="grid">
+  <div>
+    <p class="label"><span class="code r">SP6a</span><b>Chat zu einer Aufgabe oder einem Issue</b> <span class="rec">Empfehlung</span></p>
+    <div class="phone "><div class="status"><span>08:42</span><span>●●● 5G</span></div><div class="sheetp full"><div class="grab"></div><div class="cnav"><span class="cb glass">···</span><b><i>✦</i> ChatGPT</b><span style="display:flex;gap:6px;align-items:center"><span class="cf glass">Fertig</span></span></div><div class="cchip"><svg class="ic" width="12" height="12"><use href="#i-scope"/></svg> Kontext: Sprachausgabe testen</div><div class="thr"><div class="um">Fass mir den Stand dieses Issues zusammen.<span class="via"><svg class="ic" width="10" height="10"><use href="#i-mic"/></svg> gesprochen</span></div><div class="am ">Das Issue ist offen und dir zugewiesen. Der letzte Kommentar von gestern bittet um einen Test auf dem Gerät. Ein Zeitblock ist dafür noch nicht geplant.<br><span class="spk"><svg class="ic" width="13" height="13"><use href="#i-spk"/></svg> Vorlesen</span></div><div class="um">Schreib als Kommentar, dass ich morgen teste.<span class="via"><svg class="ic" width="10" height="10"><use href="#i-mic"/></svg> gesprochen</span></div><div class="acd"><div class="h">Vorgeschlagene Änderung · noch nicht ausgeführt</div><b>Kommentar an das Issue senden</b><div class="c">„Ich teste das morgen auf dem Gerät.“</div><div class="bt"><span class="n">Verwerfen</span><span class="y">Bestätigen</span></div></div></div><div class="spacer"></div><div class="cmp"><div class="fld"><span class="ph">Nachricht …</span><span class="micb"><svg class="ic" width="18" height="18"><use href="#i-mic"/></svg></span></div><span class="snd2 off">↑</span></div></div></div>
+    <p class="pc">Gleiche Ansicht, gleiches Mikrofon, gleiche Kapsel „Vorlesen“. Der Kontext steht wie heute in der Kapsel oben. Das Beispiel zeigt, warum SP4a gilt: Ein Kommentar an ein Issue geht nach außen. Diktierte Titel und Namen von Repos sind fehleranfällig <span class="tg a">Annahme</span>; der Text der Karte zeigt, was wirklich geschrieben würde.</p>
+  </div>
+  <div>
+    <p class="label"><span class="code r">SP6b</span><b>Vorschlagsblatt · Mikrofon neben „Senden“</b> <span class="rec">Empfehlung</span></p>
+    <div class="phone "><div class="status"><span>08:42</span><span>●●● 5G</span></div><div class="calv"><div class="topbar"><div class="seg"><span class="on">Tag</span><span>Woche</span><span>Monat</span></div><span class="rbtn glass">＋</span><span class="rbtn glass ai">✦</span></div><div class="anno">Vorschlagsblatt auf halber Höhe · Mikrofon in der einzeiligen Eingabe</div><div class="hg" style="height:258px"><div class="hl" style="top:0px"><span>15:00</span></div><div class="hl" style="top:64px"><span>16:00</span></div><div class="hl" style="top:128px"><span>17:00</span></div><div class="hl" style="top:192px"><span>18:00</span></div><div class="hl" style="top:256px"><span>19:00</span></div><div class="ev e" style="top:1px;height:62px;">Team-Runde<small>15:00 bis 16:00</small></div><div class="ev ai" style="top:65px;height:46px;">✦ Nebenkosten prüfen<small>P4 · fällig 30.11. · 45 min</small></div><div class="ev ai" style="top:193px;height:30px;box-shadow:0 0 0 2px var(--purple);">✦ Mail an Prüfungsamt · P2 · heute</div></div></div><div class="sheetp"><div class="grab"></div><div class="ehead"><i></i><div><b>Mail an Prüfungsamt</b><small>✦ Vorschlag · Mi 18. Nov. · 18:00 bis 18:30</small><span class="chip warn">P2</span> <span class="chip warn">⚑ heute</span> <span class="chip">30 min</span></div></div><div class="banner ai"><b>Begründung</b>✦ „Die längere Aufgabe zuerst; die Mail passt in den Rest vor Arbeitsende.“</div><div class="qch"><span>Früher am Tag</span><span>Anderer Tag</span><span>Kürzer</span></div><div class="comp"><span>Zum Vorschlag etwas sagen …</span><span class="micb"><svg class="ic" width="17" height="17"><use href="#i-mic"/></svg></span><span class="snd q">↑</span></div><div class="note">Senden gibt diesen Vorschlag, die übrigen der Planung, deine Änderungen, deine Vorgaben und die Termine dieser Tage an ChatGPT.</div><div class="spacer"></div><div class="btns"><div class="b plain" style="flex:.7">Verwerfen</div><div class="b aip">✦ Übernehmen</div></div></div></div>
+    <p class="pc">Die einzeilige Eingabe bekommt dasselbe Mikrofon. Kurzantworten und der Hinweis, was gesendet wird, bleiben unverändert <span class="tg v">geprüft am Code: Texte und Aufbau</span>. Der Kalender darüber bleibt bedienbar; man kann beim Sprechen auf einen Block sehen. Kein Sprechmodus, kein automatisches Vorlesen.</p>
+  </div>
+  <div>
+    <p class="label"><span class="code r">SP6b</span><b>Vorschlagsblatt · Aufnahme in einer Zeile</b> <span class="rec">Empfehlung</span></p>
+    <div class="phone "><div class="status"><span>08:42</span><span>●●● 5G</span></div><div class="calv"><div class="topbar"><div class="seg"><span class="on">Tag</span><span>Woche</span><span>Monat</span></div><span class="rbtn glass">＋</span><span class="rbtn glass ai">✦</span></div><div class="anno">Aufnahme läuft · die Zeile selbst zeigt den Text</div><div class="hg" style="height:258px"><div class="hl" style="top:0px"><span>15:00</span></div><div class="hl" style="top:64px"><span>16:00</span></div><div class="hl" style="top:128px"><span>17:00</span></div><div class="hl" style="top:192px"><span>18:00</span></div><div class="hl" style="top:256px"><span>19:00</span></div><div class="ev e" style="top:1px;height:62px;">Team-Runde<small>15:00 bis 16:00</small></div><div class="ev ai" style="top:65px;height:46px;">✦ Nebenkosten prüfen<small>P4 · fällig 30.11. · 45 min</small></div><div class="ev ai" style="top:193px;height:30px;box-shadow:0 0 0 2px var(--purple);">✦ Mail an Prüfungsamt · P2 · heute</div></div></div><div class="sheetp"><div class="grab"></div><div class="ehead"><i></i><div><b>Mail an Prüfungsamt</b><small>✦ Vorschlag · Mi 18. Nov. · 18:00 bis 18:30</small><span class="chip warn">P2</span> <span class="chip warn">⚑ heute</span> <span class="chip">30 min</span></div></div><div class="banner ai"><b>Begründung</b>✦ „Die längere Aufgabe zuerst; die Mail passt in den Rest vor Arbeitsende.“</div><div class="comp lv"><span>Nach 18 Uhr kann ich keine <u style="text-decoration:none;color:#8e8e93">Mails mehr</u></span><span class="rc x" style="height:30px;padding:0 10px">✕</span><span class="snd">↑</span></div><div style="padding:0 10px 4px"><div class="wv "><i style="height:4px"></i><i style="height:7px"></i><i style="height:12px"></i><i style="height:18px"></i><i style="height:9px"></i><i style="height:5px"></i><i style="height:14px"></i><i style="height:22px"></i><i style="height:16px"></i><i style="height:8px"></i><i style="height:4px"></i><i style="height:6px"></i><i style="height:13px"></i><i style="height:19px"></i><i style="height:24px"></i><i style="height:15px"></i><i style="height:7px"></i><i style="height:4px"></i><i style="height:9px"></i><i style="height:17px"></i><i style="height:11px"></i><i style="height:5px"></i><i style="height:4px"></i><i style="height:8px"></i><i style="height:14px"></i><i style="height:6px"></i><i style="height:4px"></i></div></div><div class="note">Senden gibt diesen Vorschlag, die übrigen der Planung, deine Änderungen, deine Vorgaben und die Termine dieser Tage an ChatGPT.</div><div class="spacer"></div></div></div>
+    <p class="pc">Kompakte Form der Aufnahmeleiste: Der Text läuft in der Zeile mit, darunter der Pegel; ✕ verwirft, ↑ sendet. Die Kurzantworten und die Knöpfe „Verwerfen“ / „Übernehmen“ weichen währenddessen, wie heute beim Tippen <span class="tg v">geprüft am Code: Knöpfe weichen bei Fokus</span>. „■ Fertig“ entfällt hier aus Platzgründen; ein Tipp in die Zeile beendet die Aufnahme und lässt den Text zum Ändern stehen. Wichtig: ↑ ändert die Vorschläge sofort (mit „Rückgängig“), deshalb hier nie ein Senden nach Pause.</p>
+  </div>
+</div>
+<div class="box">
+  <h3>Empfehlung SP6: ein Baustein, zwei Größen</h3>
+  <ul>
+    <li><b>Assistent und Aufgaben-Chat:</b> volle Aufnahmeleiste (SP1a), Kapsel „Vorlesen“ (SP3a), Sprechmodus (SP5a, Stufe 2).</li>
+    <li><b>Vorschlagsblatt:</b> nur Diktat in kompakter Form (SP6b). Die Antwort ist eine Änderungskarte und kein Fließtext; vorlesen ließe sich der eine Satz der Begründung („Getauscht, die Mail liegt jetzt vor 18 Uhr“). Ob das gewünscht ist, ist offen.</li>
+    <li><b>Nicht angemeldet:</b> Wo heute „Senden“ gesperrt ist, ist auch das Mikrofon gesperrt (SP8).</li>
+    <li><b>Andere Textfelder</b> (Aufgabentitel, Notizen, Planungsvorgaben) sind keine Gespräche und bleiben beim Diktat der Tastatur.</li>
+  </ul>
+</div>
+
+<!-- ============================== SP7 ============================== -->
+<h2><span class="area">SP7</span> Einstellungen · Sprache unter „KI“</h2>
+<p class="lead">Die Einstellungen der KI haben heute unter anderem die Abschnitte Konto, Modell, Denkaufwand, Planen mit KI und Planungsvorgaben. Die Sprache bekommt dort eine eigene Unterseite.</p>
+<div class="grid">
+  <div>
+    <p class="label"><span class="code r">SP7a</span><b>Unterseite „Sprache“ mit drei Abschnitten</b> <span class="rec">Empfehlung</span></p>
+    <div class="phone "><div class="status"><span>08:42</span><span>●●● 5G</span></div><div class="nav"><span class="a">‹ KI</span><span class="c">Sprache</span><span style="width:40px"></span></div><div class="section">Spracheingabe</div><div class="list"><div class="field"><span>Mikrofon in Gesprächen</span><span class="tog on"></span></div><div class="field"><span>Mikrofon</span><span class="v okv">Erlaubt</span></div><div class="field"><span>Spracherkennung</span><span class="v okv">Erlaubt</span></div><div class="field"><span>Sprachpaket Deutsch</span><span class="v">Geladen · auf dem iPhone</span></div></div><div class="note">Tagwerk wandelt Sprache auf dem iPhone in Text um. Der Ton verlässt das Gerät nicht. An ChatGPT geht nur der Text, den du sendest.</div><div class="section">Vorlesen</div><div class="list"><div class="field"><span>Antworten vorlesen</span><span class="pick">Nie ⌄</span></div><div class="field"><span>Stimme</span><span class="v">Anna ›</span></div><div class="field"><span>Tempo</span><span class="sld"></span></div><div class="field"><span class="l">Probe hören</span></div></div><div class="note">Vorgelesen wird mit den Stimmen dieses iPhones. Bei stummem Gerät liest Tagwerk nur vor, wenn du „Vorlesen“ antippst.</div><div class="section">Sprechmodus</div><div class="list"><div class="field"><span>Senden nach Pause</span><span class="pick">2 s ⌄</span></div><div class="field"><span>Endet nach Stille</span><span class="pick">30 s ⌄</span></div><div class="field"><span>Änderungen ansagen</span><span class="tog on"></span></div></div><div class="note">Im Sprechmodus sendet Tagwerk, was du sagst, nach einer kurzen Pause. Änderungen bestätigst du immer per Tipp.</div></div>
+    <p class="pc"><b>Spracheingabe:</b> ein Hauptschalter und der Stand der beiden Berechtigungen und des Sprachpakets; „Nicht erlaubt“ führt per Tipp in die iOS-Einstellungen. <b>Vorlesen:</b> „Nie“ / „Nach gesprochenen Nachrichten“ / „Immer“, Stimme, Tempo, Probe. <b>Sprechmodus:</b> Pausenlänge, Ende nach Stille, Ansage von Aktionskarten. Der Abschnitt „Sprechmodus“ erscheint erst mit Stufe 2. Welche Stimmen es gibt und wie sie heißen, liefert das System <span class="tg a">Annahme: „Anna“ ist ein Platzhalter</span>.</p>
+  </div>
+  <div>
+    <p class="label"><span class="code">SP7b</span><b>Zeilen im vorhandenen Bildschirm „KI“, ohne Unterseite</b></p>
+    <div class="box neutral" style="margin-top:0;max-width:390px">Textvariante, nicht gezeichnet. Ein Abschnitt „Sprache“ mit vier Zeilen (Mikrofon, Antworten vorlesen, Stimme, Tempo) zwischen „Denkaufwand“ und „Planen mit KI“. <b>Pro:</b> ein Tipp weniger. <b>Contra:</b> Der Bildschirm „KI“ ist mit mindestens fünf Abschnitten schon lang; der Stand von Berechtigungen und Sprachpaket und die Werte des Sprechmodus hätten keinen Platz.</div>
+    <p class="pc"><b>Empfehlung SP7: SP7a.</b> In „KI“ steht dafür eine Zeile „Sprache · Mikrofon an, Vorlesen nie ›“.</p>
+  </div>
+</div>
+
+<!-- ============================== SP8 ============================== -->
+<h2><span class="area">SP8</span> Zustände · Berechtigung, Sprachpaket, kein Netz, Fehler</h2>
+<p class="lead">Grundsatz wie im Chat heute: Fehler sind Zeilen an Ort und Stelle, keine Dialoge. Tippen funktioniert in jedem dieser Zustände weiter. Alle sechs Bilder zeigen den unteren Teil des Chats.</p>
+<div class="grid">
+  <div>
+    <p class="label"><span class="code r">SP8a</span><b>Erster Tipp aufs Mikrofon · Erklärung vor der iOS-Abfrage</b> <span class="rec">Empfehlung</span></p>
+    <div class="phone crop"><div class="status"><span>08:42</span><span>●●● 5G</span></div><div class="sheetp full"><div class="grab"></div><div class="cnav"><span class="cb glass">···</span><b><i>✦</i> ChatGPT</b><span style="display:flex;gap:6px;align-items:center"><span class="cf glass">Fertig</span></span></div><div class="cchip"><svg class="ic" width="12" height="12"><use href="#i-scope"/></svg> Kontext: Aufgaben</div><div class="thr"></div><div class="spacer"></div><div class="banner nt"><b>Mit Tagwerk sprechen</b>Tagwerk wandelt deine Sprache auf dem iPhone in Text um. Der Ton verlässt das Gerät nicht. Gesendet wird erst, wenn du ↑ tippst.<br>Dafür fragt iOS gleich nach Mikrofon und Spracherkennung.<div class="btns" style="margin-top:9px"><div class="b plain">Nicht jetzt</div><div class="b prom">Weiter</div></div></div><div class="cmp"><div class="fld"><span class="ph">Nachricht …</span><span class="micb"><svg class="ic" width="18" height="18"><use href="#i-mic"/></svg></span></div><span class="snd2 off">↑</span></div></div></div>
+    <p class="pc">Vor den beiden Systemabfragen steht einmal, was mit dem Ton geschieht. Erst „Weiter“ löst die Abfragen aus; „Nicht jetzt“ lässt alles, wie es ist. iOS fragt jede Berechtigung nur einmal; deshalb lohnt die Erklärung davor. Die Texte der Systemabfragen stehen in der App-Beschreibung und müssen dasselbe sagen.</p>
+  </div>
+  <div>
+    <p class="label"><span class="code r">SP8b</span><b>Berechtigung abgelehnt</b> <span class="rec">Empfehlung</span></p>
+    <div class="phone crop"><div class="status"><span>08:42</span><span>●●● 5G</span></div><div class="sheetp full"><div class="grab"></div><div class="cnav"><span class="cb glass">···</span><b><i>✦</i> ChatGPT</b><span style="display:flex;gap:6px;align-items:center"><span class="cf glass">Fertig</span></span></div><div class="cchip"><svg class="ic" width="12" height="12"><use href="#i-scope"/></svg> Kontext: Aufgaben</div><div class="thr"></div><div class="spacer"></div><div class="banner wn"><b>Mikrofon nicht erlaubt</b>Zum Sprechen braucht Tagwerk Mikrofon und Spracherkennung. Tippen geht weiter.<br><span class="go">Einstellungen öffnen</span></div><div class="cmp"><div class="fld"><span class="ph">Nachricht …</span><span class="micb off"><svg class="ic" width="18" height="18"><use href="#i-micoff"/></svg></span></div><span class="snd2 off">↑</span></div></div></div>
+    <p class="pc">Das Mikrofon ist durchgestrichen. Ein Tipp darauf zeigt die Zeile mit dem Weg in die iOS-Einstellungen; ohne Tipp bleibt nur das durchgestrichene Symbol. Dieselbe Zeile, wenn nur eine der beiden Berechtigungen fehlt, mit deren Namen. Bei gesperrter Spracherkennung durch Bildschirmzeit lautet der Text „durch Einschränkungen gesperrt“ <span class="tg a">Annahme</span>.</p>
+  </div>
+  <div>
+    <p class="label"><span class="code r">SP8c</span><b>Sprachpaket wird geladen</b> <span class="rec">Empfehlung</span></p>
+    <div class="phone crop"><div class="status"><span>08:42</span><span>●●● 5G</span></div><div class="sheetp full"><div class="grab"></div><div class="cnav"><span class="cb glass">···</span><b><i>✦</i> ChatGPT</b><span style="display:flex;gap:6px;align-items:center"><span class="cf glass">Fertig</span></span></div><div class="cchip"><svg class="ic" width="12" height="12"><use href="#i-scope"/></svg> Kontext: Aufgaben</div><div class="thr"></div><div class="spacer"></div><div class="banner nt"><b>Sprachpaket Deutsch wird geladen …</b>Einmalig, danach ohne Netz nutzbar. Du kannst so lange tippen.<div class="pbar"><i style="width:40%"></i></div></div><div class="cmp"><div class="fld"><span class="ph">Nachricht …</span><span class="micb off"><svg class="ic" width="18" height="18"><use href="#i-micoff"/></svg></span></div><span class="snd2 off">↑</span></div></div></div>
+    <p class="pc">Beim ersten Mal lädt iOS das Sprachpaket. Die Zeile zeigt den Fortschritt; das Mikrofon wird aktiv, sobald das Paket da ist, ohne dass man neu tippen muss. Ohne Netz beim ersten Mal: „Sprachpaket fehlt · lädt, sobald du online bist“. Größe und Ladezeit sind nicht gemessen <span class="tg a">Annahme</span>. Unterstützt das Gerät die Erkennung nicht, erscheint kein Mikrofon; ein Hinweis steht in den Einstellungen.</p>
+  </div>
+  <div>
+    <p class="label"><span class="code r">SP8d</span><b>Kein Netz · Erkennen geht, Senden nicht</b> <span class="rec">Empfehlung</span></p>
+    <div class="phone crop"><div class="status"><span>08:42</span><span>●●● 5G</span></div><div class="sheetp full"><div class="grab"></div><div class="cnav"><span class="cb glass">···</span><b><i>✦</i> ChatGPT</b><span style="display:flex;gap:6px;align-items:center"><span class="cf glass">Fertig</span></span></div><div class="cchip"><svg class="ic" width="12" height="12"><use href="#i-scope"/></svg> Kontext: Aufgaben</div><div class="thr"><div class="um">Leg die Mail ans Prüfungsamt auf 16 Uhr.<span class="via"><svg class="ic" width="10" height="10"><use href="#i-mic"/></svg> gesprochen</span></div><div class="erow"><span>⚠︎ Keine Verbindung zu ChatGPT.</span><span>Erneut versuchen</span></div></div><div class="spacer"></div><div class="cmp"><div class="fld"><span class="ph">Nachricht …</span><span class="micb"><svg class="ic" width="18" height="18"><use href="#i-mic"/></svg></span></div><span class="snd2 off">↑</span></div></div></div>
+    <p class="pc">Die Umwandlung in Text läuft ohne Netz weiter; der Aufruf der KI nicht. Es gilt die vorhandene Fehlerzeile mit „Erneut versuchen“ <span class="tg v">geprüft am Code</span>; die gesprochene Nachricht bleibt im Verlauf und muss nicht neu gesprochen werden. Im Sprechmodus sagt die Stimme „Keine Verbindung“ und der Modus pausiert. Vorlesen vorhandener Antworten geht ohne Netz.</p>
+  </div>
+  <div>
+    <p class="label"><span class="code r">SP8e</span><b>Nichts verstanden oder Aufnahme unterbrochen</b> <span class="rec">Empfehlung</span></p>
+    <div class="phone crop"><div class="status"><span>08:42</span><span>●●● 5G</span></div><div class="sheetp full"><div class="grab"></div><div class="cnav"><span class="cb glass">···</span><b><i>✦</i> ChatGPT</b><span style="display:flex;gap:6px;align-items:center"><span class="cf glass">Fertig</span></span></div><div class="cchip"><svg class="ic" width="12" height="12"><use href="#i-scope"/></svg> Kontext: Aufgaben</div><div class="thr"></div><div class="spacer"></div><div class="banner nt"><b>Nichts verstanden</b>Es kam kein Text an. Sprich näher am iPhone oder tippe.</div><div class="cmp"><div class="fld"><span class="ph">Nachricht …</span><span class="micb"><svg class="ic" width="18" height="18"><use href="#i-mic"/></svg></span></div><span class="snd2 off">↑</span></div></div></div>
+    <p class="pc">Bleibt die Aufnahme leer, erscheint eine Zeile, die nach einigen Sekunden verschwindet; gesendet wird nichts. Dieselbe Form für: Aufnahme durch einen Anruf oder eine andere App unterbrochen („Aufnahme unterbrochen · der Text bis dahin steht im Feld“), Erkennung abgebrochen, Sprachausgabe nicht möglich („Vorlesen nicht möglich“). Kein Dialog, kein Ton.</p>
+  </div>
+  <div>
+    <p class="label"><span class="code r">SP8f</span><b>Nicht angemeldet oder KI antwortet gerade</b> <span class="rec">Empfehlung</span></p>
+    <div class="phone crop"><div class="status"><span>08:42</span><span>●●● 5G</span></div><div class="sheetp full"><div class="grab"></div><div class="cnav"><span class="cb glass">···</span><b><i>✦</i> ChatGPT</b><span style="display:flex;gap:6px;align-items:center"><span class="cf glass">Fertig</span></span></div><div class="cchip"><svg class="ic" width="12" height="12"><use href="#i-scope"/></svg> Kontext: Aufgaben</div><div class="thr"><div class="am dimmed">Melde dich in Einstellungen › KI mit ChatGPT an, um den Assistenten zu nutzen.</div></div><div class="spacer"></div><div class="cmp"><div class="fld"><span class="ph">Nachricht …</span><span class="micb off"><svg class="ic" width="18" height="18"><use href="#i-micoff"/></svg></span></div><span class="snd2 off">↑</span></div></div></div>
+    <p class="pc">Ohne Anmeldung ist „Senden“ heute gesperrt <span class="tg v">geprüft am Code</span>; das Mikrofon ist es dann ebenfalls, damit niemand in ein Feld spricht, das nicht senden kann. Während die KI antwortet, bleibt das Mikrofon bedienbar: Man kann die nächste Nachricht schon einsprechen, senden lässt sie sich erst danach.</p>
+  </div>
+</div>
+
+<h2><span class="area" style="background:#636366">§</span> Empfehlung, Folgen und offene Fragen</h2>
+<div class="box">
+  <h3>Empfehlung: SP1a + SP2a + SP3a + SP4a + SP5a (Stufe 2) + SP6a/b + SP7a + SP8a–f</h3>
+  <table class="sum">
+    <tr><th>Code</th><th>Was</th><th>Warum</th></tr>
+    <tr><td><b>SP1a</b></td><td>Mikrofon im Feld, Tippen startet, Aufnahmeleiste mit mitlaufendem Text</td><td>ein Knopf, kein neuer Bildschirm; Halten sendet beim Loslassen ungeprüft</td></tr>
+    <tr><td><b>SP2a</b></td><td>Senden nur per Tipp auf ↑, aus der Aufnahme oder aus dem Feld</td><td>hält die Regel „nur auf ausdrückliche Handlung“ wörtlich ein; Erkennungsfehler bleiben korrigierbar</td></tr>
+    <tr><td><b>SP3a</b></td><td>Kapsel „Vorlesen“ je Antwort; automatisches Vorlesen als Einstellung, Vorgabe „Nie“</td><td>das iPhone spricht nie ungefragt</td></tr>
+    <tr><td><b>SP4a</b></td><td>Aktionskarten werden angesagt, bestätigt nur per Tipp</td><td>Spracherkennung prüft nicht, wer spricht; manche Karten schreiben nach außen</td></tr>
+    <tr><td><b>SP5a</b></td><td>Sprechmodus als halbhohes Blatt über dem Kalender, Senden nach Pause mit Countdown</td><td>Kalender bleibt sichtbar, gleiche Bauart wie das Vorschlagsblatt; zweite Stufe</td></tr>
+    <tr><td><b>SP6a/b</b></td><td>derselbe Baustein im Chat und Aufgaben-Chat; kompakt und nur als Diktat im Vorschlagsblatt</td><td>dort ändert Senden die Vorschläge sofort</td></tr>
+    <tr><td><b>SP7a</b></td><td>Unterseite „Sprache“ unter Einstellungen › KI</td><td>Platz für Berechtigungen, Sprachpaket, Stimme, Tempo</td></tr>
+    <tr><td><b>SP8</b></td><td>Zustände als Zeilen an Ort und Stelle, Tippen geht immer</td><td>wie die vorhandene Fehlerzeile des Chats</td></tr>
+  </table>
+  <ul style="margin-top:10px">
+    <li><b>Stufe 1 (Diktat und Vorlesen):</b> SP1a, SP2a, SP3a, SP4a, SP6, SP7a ohne den Abschnitt „Sprechmodus“, SP8. Erfüllt den Wunsch „in allen Konversationen sprechen können“ bereits.</li>
+    <li><b>Stufe 2 (Sprechmodus):</b> SP5a, nachdem Stufe 1 am Gerät gezeigt hat, wie gut Erkennung und Stimme sind.</li>
+    <li><b>Verworfen:</b> SP1b (Halten), SP2b außerhalb des Sprechmodus, SP2c (Stopp sendet immer), SP3b (Schalter im Chat-Kopf), SP3c, SP4b und SP4c (gesprochene Bestätigung), SP5b (ganzer Bildschirm), SP5c (Kapsel), SP7b.</li>
+    <li><b>Später möglich:</b> Echtzeit-Stimme von OpenAI über das Abo, falls die Systemstimme nicht genügt. Vorher Mitschnitt am Gerät; sie würde Ton an OpenAI senden und damit die Zusage „Ton verlässt das iPhone nicht“ ändern.</li>
+  </ul>
+</div>
+<div class="box warn">
+  <h3>Folgen, falls die Empfehlung gilt</h3>
+  <ul>
+    <li><b>Datenschutzhinweis:</b> Der Text in Einstellungen › KI braucht einen Satz zur Sprache (Umwandlung auf dem Gerät, kein Ton an ChatGPT) und, mit Stufe 2, zum Sprechmodus (Senden nach Pause innerhalb einer gestarteten Sitzung). Die Regel selbst bleibt.</li>
+    <li><b>Berechtigungen:</b> zwei neue Systemabfragen (Mikrofon, Spracherkennung) samt Begründungstexten.</li>
+    <li><b>Chat-Blatt:</b> bekommt für den Sprechmodus Höhenstufen und lässt den Kalender bis zur halben Höhe bedienbar. Heute schließt das Öffnen des Chats andere Blätter <span class="tg v">geprüft am Code: <code>RootView</code></span>; das bleibt.</li>
+    <li><b>Code, betroffen</b> <span class="tg a">Annahme, erst der Plan zeigt es</span>: <code>ChatView</code> (Eingabezeile, Antwortzeile), <code>SuggestionConversation</code> (Eingabezeile), <code>AISettingsView</code> (Zeile und Unterseite), <code>AppSettings</code> (fünf bis sieben Werte); neu ein Baustein für Aufnahme und Umwandlung, einer fürs Vorlesen und eine gemeinsame Ansicht der Aufnahmeleiste.</li>
+    <li><b>Text fürs Vorlesen:</b> Antworten enthalten Zeichen, Uhrzeiten und Kürzel; sie brauchen vor dem Sprechen eine Übersetzung in Wörter. Aufwand nicht geschätzt.</li>
+  </ul>
+</div>
+<div class="box neutral">
+  <h3>Offene Fragen (11)</h3>
+  <ol>
+    <li><b>SP1:</b> Ist Tippen zum Starten (SP1a) richtig, oder möchtest du Halten wie bei Sprachnachrichten (SP1b)?</li>
+    <li><b>SP2:</b> Reicht im normalen Chat „sprechen, dann ↑ tippen“ (SP2a)? Oder soll auch dort nach einer Pause von selbst gesendet werden (SP2b), obwohl dann ungeprüfter Text hinausgehen kann?</li>
+    <li><b>SP3:</b> Welche Vorgabe für „Antworten vorlesen“: „Nie“ (empfohlen), „Nach gesprochenen Nachrichten“ oder „Immer“? Und soll automatisches Vorlesen bei stummem Gerät schweigen?</li>
+    <li><b>SP4:</b> Bleibt die Bestätigung von Änderungen beim Tipp (SP4a)? Oder ist dir Freihändigkeit so wichtig, dass ein gesprochenes „Bestätigen“ für rücknehmbare Änderungen geprüft werden soll (SP4c)?</li>
+    <li><b>SP5:</b> Soll der Sprechmodus in die erste Lieferung, oder genügt zuerst Diktat und Vorlesen (Stufe 1), mit dem Sprechmodus als zweitem Schritt?</li>
+    <li><b>SP5:</b> Halbhohes Blatt über dem Kalender (SP5a) oder ganzer Bildschirm wie bei ChatGPT (SP5b)? Und passt der Einstieg über den Knopf an der Stelle von „Senden“?</li>
+    <li><b>SP5:</b> Soll der Sprechmodus weiterlaufen, wenn das iPhone gesperrt ist oder eine andere App vorn liegt (zum Beispiel beim Gehen mit Kopfhörern)? Empfohlen ist nein; ja hieße ein Mikrofon, das im Hintergrund zuhört und sendet.</li>
+    <li><b>SP6:</b> Im Vorschlagsblatt nur Diktat (empfohlen), oder soll dort auch die Begründung der Änderung vorgelesen werden?</li>
+    <li><b>SP3:</b> Genügt dir die Systemstimme für den Anfang? Wenn die Stimmqualität der eigentliche Wunsch ist („wie ChatGPT sprechen“), sollte der Mitschnitt für die Echtzeit-Stimme vorgezogen werden, bevor Stufe 1 gebaut wird.</li>
+    <li><b>Sprache:</b> Nur Deutsch, oder soll die Erkennung auch Englisch können (englische Issue-Titel, Repo-Namen)? Gemischte Sätze sind für jede Erkennung schwierig.</li>
+    <li><b>SP2:</b> Sollen gesprochene Nachrichten im Verlauf mit einem kleinen Mikrofon gekennzeichnet sein?</li>
+  </ol>
+</div>
+<div class="box neutral">
+  <h3>Was diese Mockups nicht zeigen und nicht belegen</h3>
+  <ul>
+    <li><b>Keine Messung:</b> Erkennungsgüte für Deutsch, Namen und Fachwörter, Verzögerung bis zum ersten Wort, Größe und Ladezeit des Sprachpakets, Stimmqualität, Akkuverbrauch. Alle Zeitwerte (2 s Pause, 8 s und 30 s Stille, 60 s Höchstdauer, 3 s Frist) sind Vorschläge.</li>
+    <li><b>Nicht geprüft:</b> ob alle unterstützten iPhones die Erkennung auf dem Gerät können; wie sich Aufnahme und Sprachausgabe mit Anrufen, Musik, Kopfhörern, CarPlay und dem Diktat der Tastatur vertragen; ob Hineinsprechen während der Sprachausgabe ohne Echo möglich ist.</li>
+    <li><b>Nicht gezeichnet:</b> helles Erscheinungsbild, Querformat, große Schriftstufen, die Tastatur über dem Blatt, die Auswahl der Stimme, der einmalige Hinweis beim ersten Start des Sprechmodus, mehrere wartende Aktionskarten im Sprechmodus.</li>
+    <li><b>VoiceOver:</b> Vorlesen durch Tagwerk und VoiceOver dürfen nicht gleichzeitig sprechen; die Regel dazu fehlt noch. Alle neuen Knöpfe brauchen Beschriftungen („Sprechen“, „Aufnahme beenden“, „Vorlesen“).</li>
+    <li><b>Maße:</b> aus den Abständen der vorhandenen Mockups abgeleitet, nicht am Gerät geprüft. Die Symbole sind Näherungen der Systemsymbole.</li>
+  </ul>
+</div>
+
+</body>
+</html>
