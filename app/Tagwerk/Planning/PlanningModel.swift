@@ -141,6 +141,22 @@ final class PlanningModel {
     let calendar: Calendar
     let marks: EventMarkStore
     let suggestionStore: SuggestionStore?
+
+    /// Minutes in blocks against the effort of a task (user rule 2026-11-18).
+    struct SessionProgress: Equatable {
+        let blocked: Int
+        let estimate: Int
+        var remaining: Int { max(0, estimate - blocked) }
+    }
+
+    /// Progress of every open task with an effort that already has blocks.
+    private(set) var sessionProgress: [TaskID: SessionProgress] = [:]
+    /// Tasks whose blocks hold less time than their effort ("Noch einzuplanen", mockup RZ1).
+    private(set) var toSchedule: [TaskItem] = []
+    /// Repetition rules of recurring reminders (reminder ID → rule), for their session window.
+    private var recurrenceRules: [String: RecurrenceRule] = [:]
+    /// The block created by the last "Duplizieren", for "Widerrufen".
+    private(set) var lastDuplicate: CalendarEvent?
     /// Open AI suggestion batches that touch the shown range.
     private(set) var suggestionBatches: [SuggestionBatch] = []
     /// Duration counted for tasks without effort.
@@ -199,6 +215,9 @@ final class PlanningModel {
         let resolved = resolveLinks(events: events, tasks: open, manual: blocks.links.manualLinks())
         resolvedLinks = Dictionary(resolved.map { ($0.eventID, $0) }, uniquingKeysWith: { first, _ in first })
         recurringReminderIDs = recurringIDs
+        recurrenceRules = Dictionary(reminders.compactMap { record in record.recurrence.map { (record.id, $0.rule) } },
+                                     uniquingKeysWith: { first, _ in first })
+        updateSessions(open: open)
         let links = resolvedLinks.mapValues(\.taskID)
         let deadlines = importantDeadlines(tasks: open, events: events,
                                            deadlineCalendarIDs: Set(settings.deadlineCalendarIDs ?? []),
@@ -751,10 +770,79 @@ final class PlanningModel {
                             defaultMinutes: settings.defaultTaskMinutes, largestFreeSlot: slot)
     }
 
-    /// Minutes of all blocks of a task (the last 60 days and the future).
+    /// Minutes of the task's blocks that count as work on it: for recurring reminders only the current
+    /// period (daily: today, weekly: the last six days and today …), otherwise the last 60 days and the future.
     func blockedMinutes(of id: TaskID) -> Int {
-        let since = today.adding(days: -60, calendar: calendar).startDate(in: calendar)
-        return blocks.futureBlocks(for: id, after: since).reduce(0) { $0 + Int($1.end.timeIntervalSince($1.start) / 60) }
+        blockedMinutes(of: id, in: blocks.futureBlocks(for: id, after: sessionWindowStart(of: id)))
+    }
+
+    private func blockedMinutes(of id: TaskID, in events: [CalendarEvent]) -> Int {
+        let since = sessionWindowStart(of: id)
+        return events.filter { $0.start >= since }.reduce(0) { $0 + Int($1.end.timeIntervalSince($1.start) / 60) }
+    }
+
+    private func sessionWindowStart(of id: TaskID) -> Date {
+        if id.source == .reminders, let rule = recurrenceRules[id.rawValue],
+           let start = TagwerkCore.sessionWindowStart(for: rule, today: today, calendar: calendar) {
+            return start.startDate(in: calendar)
+        }
+        return today.adding(days: -60, calendar: calendar).startDate(in: calendar)
+    }
+
+    /// The effort of a task: the day's recurring effort for recurring reminders, else the estimate.
+    func effortMinutes(of task: TaskItem) -> Int? {
+        if let recurring = recurringItem(for: task, on: today) { return recurring.minutes }
+        return task.estimateMinutes
+    }
+
+    private func updateSessions(open: [TaskItem]) {
+        let all = blocks.blocksByTask(after: today.adding(days: -60, calendar: calendar).startDate(in: calendar))
+        var progress: [TaskID: SessionProgress] = [:]
+        for task in open {
+            guard let effort = effortMinutes(of: task), effort > 0, let events = all[task.id] else { continue }
+            let blocked = blockedMinutes(of: task.id, in: events)
+            if blocked > 0 { progress[task.id] = SessionProgress(blocked: blocked, estimate: effort) }
+        }
+        sessionProgress = progress
+        toSchedule = sortedTasks(open.filter { progress[$0.id].map { $0.remaining >= 15 } ?? false }, calendar: calendar)
+    }
+
+    // MARK: Duplicating blocks (mockup DU1)
+
+    /// Where "Duplizieren" puts a copy (minutes of the block's day): the next free stretch after the
+    /// original; the duration is the time still open, or the original duration when nothing is open.
+    func duplicateTarget(for block: CalendarEvent) -> Range<Int>? {
+        guard let task = linkedTask(eventID: block.id) else { return nil }
+        let day = PlanDay(date: block.start, calendar: calendar)
+        guard let input = days.first(where: { $0.day == day })?.planInput else { return nil }
+        let dayStart = day.startDate(in: calendar)
+        let original = Int(block.end.timeIntervalSince(block.start) / 60)
+        let remaining = effortMinutes(of: task).map { $0 - blockedMinutes(of: task.id) } ?? 0
+        let length = remaining >= 15 ? suggestedBlockMinutes(for: task, on: day) : original
+        return nextFreeSlot(input, after: minutes(block.end, from: dayStart), minutes: length,
+                            fromMinutes: day == today ? minutes(now(), from: dayStart) : nil)
+    }
+
+    func duplicateBlock(_ block: CalendarEvent) async {
+        guard let task = linkedTask(eventID: block.id), let target = duplicateTarget(for: block) else { return }
+        let dayStart = PlanDay(date: block.start, calendar: calendar).startDate(in: calendar)
+        do {
+            lastDuplicate = try blocks.createBlock(for: task, start: dayStart.addingTimeInterval(TimeInterval(target.lowerBound * 60)),
+                                                   minutes: target.count)
+        } catch {
+            lastError = TaskListModel.message(for: error)
+        }
+        await reload()
+    }
+
+    func undoDuplicate() async {
+        guard let copy = lastDuplicate else { return }
+        lastDuplicate = nil
+        await deleteBlock(copy)
+    }
+
+    func clearDuplicateUndo() {
+        lastDuplicate = nil
     }
 
     /// Deletes a block; the task keeps its planned day.

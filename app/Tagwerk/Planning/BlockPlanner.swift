@@ -53,6 +53,14 @@ final class BlockPlanner {
             .sorted { $0.start < $1.start }
     }
 
+    /// All blocks in the plan calendar from `date` on, grouped by their task.
+    func blocksByTask(after date: Date) -> [TaskID: [CalendarEvent]] {
+        guard let calendarID = settings.planCalendarID else { return [:] }
+        let events = store.events(in: DateInterval(start: date, duration: Self.lookahead), calendarIDs: [calendarID])
+        return Dictionary(grouping: events.compactMap { event in event.url.flatMap(TaskLinkURL.parse).map { ($0, event) } },
+                          by: \.0).mapValues { $0.map(\.1) }
+    }
+
     func moveBlock(_ block: CalendarEvent, to start: Date) throws {
         let duration = block.end.timeIntervalSince(block.start)
         _ = try store.moveBlock(id: block.id, to: start, end: start.addingTimeInterval(duration), expectedVersion: block.version)
