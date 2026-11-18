@@ -36,6 +36,18 @@ public struct ImportantDeadline: Sendable, Hashable, Identifiable {
     /// Calendar of an event deadline (for its name in the deadline card).
     public var calendarID: String? = nil
 
+    public init(id: String, title: String, day: PlanDay, time: Date?, kind: DeadlineKind, taskID: TaskID?, eventID: String?,
+                calendarID: String? = nil) {
+        self.id = id
+        self.title = title
+        self.day = day
+        self.time = time
+        self.kind = kind
+        self.taskID = taskID
+        self.eventID = eventID
+        self.calendarID = calendarID
+    }
+
     /// The key preparation events are linked under (DV1): "event:<event ID>", "task:<task key>" for P1 tasks and
     /// "epic:<issue ID>" for epics, the same whether the epic is assigned or only the parent of an assigned issue.
     public var preparationKey: String {

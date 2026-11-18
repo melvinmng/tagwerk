@@ -850,6 +850,21 @@ final class PlanningModel {
         await deadlinesChanged()
     }
 
+    /// Events within 14 days around a vanished mark's date, to carry the mark from now on ("Termin zuordnen …").
+    func reassignCandidates(for orphan: OrphanedMark) -> [CalendarEvent] {
+        let margin = TimeInterval(eventReferenceTitleWindowDays * 86_400)
+        let interval = DateInterval(start: max(now(), orphan.start.addingTimeInterval(-margin)),
+                                    end: max(now(), orphan.start.addingTimeInterval(margin)))
+        let calendars = readableCalendarIDs().map { $0.union([orphan.calendarID]) }
+        return calendarStore.events(in: interval, calendarIDs: calendars).sorted { $0.start < $1.start }
+    }
+
+    /// Moves a vanished mark to an event the user picked.
+    func reassignMark(_ orphan: OrphanedMark, to event: CalendarEvent) async {
+        deadlineMarks.adopt(orphan, candidate: event)
+        await deadlinesChanged()
+    }
+
     /// Preparation links that removing the mark of `event` would dissolve (asked before removing).
     func preparationLinkCount(forDeadlineEvent event: CalendarEvent) -> Int {
         deadlineMarks.linkCount(forMarkOf: event)

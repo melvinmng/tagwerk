@@ -1,55 +1,28 @@
 import SwiftUI
 import TagwerkCore
 
-/// Important deadlines of the coming days (mockup a); hidden when there are none.
+/// Important deadlines of the coming days (mockup a, DL2): rows open the deadline, holding offers its menu; marks
+/// whose event vanished appear as rows to check. Hidden when there is nothing to show.
 struct DeadlineCard: View {
-    let deadlines: [ImportantDeadline]
-    let today: PlanDay
-    let calendar: Calendar
+    let model: PlanningModel
+    let actions: DeadlineActions
 
     var body: some View {
-        if !deadlines.isEmpty {
+        let deadlines = model.upcomingDeadlines
+        let orphans = model.orphanedMarks
+        if !deadlines.isEmpty || !orphans.isEmpty {
             VStack(alignment: .leading, spacing: 8) {
                 Label("Deadlines", systemImage: "flag.fill")
                     .font(.caption.weight(.bold))
                     .foregroundStyle(.red)
                 ForEach(deadlines) { deadline in
-                    HStack(alignment: .firstTextBaseline) {
-                        Image(systemName: deadline.kind == .epic ? "diamond.fill" : "flag.fill")
-                            .foregroundStyle(.red)
-                            .font(.caption)
-                        VStack(alignment: .leading, spacing: 1) {
-                            Text(deadline.title).font(.subheadline.weight(.semibold))
-                            Text(kindText(deadline)).font(.caption).foregroundStyle(.secondary)
-                        }
-                        Spacer()
-                        Text(relative(deadline.day)).font(.caption.weight(.semibold)).foregroundStyle(.red)
-                    }
-                    .accessibilityElement(children: .combine)
+                    DeadlineRowLabel(deadline: deadline, model: model)
+                        .deadlineInteractions(deadline, model: model, actions: actions)
                 }
+                ForEach(orphans) { orphan in OrphanedMarkRow(orphan: orphan, model: model) }
             }
             .padding(12)
             .background(Color.red.opacity(0.12), in: RoundedRectangle(cornerRadius: 14))
-        }
-    }
-
-    private func kindText(_ deadline: ImportantDeadline) -> String {
-        let time = deadline.time.map { ", " + $0.formatted(date: .omitted, time: .shortened) } ?? ""
-        switch deadline.kind {
-        case .priorityOne: return "P1" + time
-        case .epic: return String(localized: "Epic") + time
-        case .deadlineCalendar: return String(localized: "Kalender") + time
-        case .markedEvent: return String(localized: "markiert") + time
-        }
-    }
-
-    private func relative(_ day: PlanDay) -> String {
-        let days = calendar.dateComponents([.day], from: today.startDate(in: calendar), to: day.startDate(in: calendar)).day ?? 0
-        switch days {
-        case ..<0: return String(localized: "überfällig")
-        case 0: return String(localized: "heute")
-        case 1: return String(localized: "morgen")
-        default: return String(localized: "in \(days) Tagen")
         }
     }
 }

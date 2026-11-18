@@ -306,7 +306,8 @@ final class DeadlineMarkStore {
         record.start = event.start
         record.title = event.title
         record.isAllDay = event.isAllDay
-        if let externalID = event.externalID { record.externalID = externalID }
+        record.calendarID = event.calendarID
+        record.externalID = event.externalID ?? record.externalID
         for link in allLinks() where link.deadlineKey == "event:" + record.eventKey {
             link.until = event.start
             link.deadlineTitle = event.title

@@ -1320,6 +1320,24 @@ struct PlanningModelTests {
         #expect(model.upcomingDeadlines.map(\.eventID) == ["exam-9"])
     }
 
+    @Test func missingMarkCanBeReassignedToAnotherEvent() async throws {
+        useTimetable()
+        let exam = timetableEvent("exam", "Klausur Statistik", start: at(27, 10))
+        calendarStore.storedEvents = [exam]
+        let model = await model()
+        await model.markDeadline(exam, series: false)
+        let replacement = timetableEvent("retake", "Nachklausur", start: at(28, 9))
+        let far = timetableEvent("far", "Seminar", start: at(30, 9, 0).addingTimeInterval(40 * 86_400))
+        calendarStore.storedEvents = [replacement, far]
+        await model.reload()
+        let orphan = try #require(model.orphanedMarks.first)
+        #expect(orphan.candidate == nil)
+        #expect(model.reassignCandidates(for: orphan).map(\.id) == ["retake"])
+        await model.reassignMark(orphan, to: replacement)
+        #expect(model.orphanedMarks.isEmpty)
+        #expect(model.upcomingDeadlines.map(\.eventID) == ["retake"])
+    }
+
     @Test func withoutCalendarAccessMarksStayUntouched() async throws {
         useTimetable()
         let exam = timetableEvent("exam", "Klausur Statistik", start: at(27, 10))

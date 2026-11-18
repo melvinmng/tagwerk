@@ -14,6 +14,9 @@ struct EntrySheet: View {
     @State private var movingDay = false
     @State private var askingDelete = false
     @State private var pendingSeriesChange: SeriesChange?
+    /// Deadline marking (DL2): series question and removal with preparation links.
+    @State private var askingMarkSeries = false
+    @State private var confirmingUnmark: CalendarEvent?
 
     /// A change of a series occurrence waiting for "Nur diesen / alle folgenden".
     private enum SeriesChange: Identifiable {
@@ -66,9 +69,11 @@ struct EntrySheet: View {
     @ViewBuilder
     private func eventContent(_ event: CalendarEvent, taskID: TaskID?) -> some View {
         let isBlock = taskID != nil && model.canEditAsBlock(event)
+        let deadline = model.importantDeadline(for: event)
         Section {
-            Text(event.title).font(.headline)
-            Text(timeText(event)).foregroundStyle(.secondary)
+            Text((deadline != nil ? "⚑ " : "") + event.title).font(.headline)
+            Text(timeText(event) + (deadline.map { " · " + DeadlineText(calendar: model.calendar).relative($0.day, today: model.today) } ?? ""))
+                .foregroundStyle(.secondary)
             if let calendar = model.calendarTitle(event.calendarID) {
                 LabeledContent("Kalender", value: calendar + (event.isEditable ? "" : " 🔒"))
             }
@@ -102,6 +107,13 @@ struct EntrySheet: View {
             .pickerStyle(.segmented)
         } footer: {
             Text("„Frei“ gilt nur in Tagwerk: Der Termin bleibt im Kalender, zählt aber nicht zur belegten Zeit.")
+        }
+
+        deadlineSection(event)
+        if let deadline {
+            PreparationSection(deadline: deadline, model: model) { _ in }
+        } else {
+            preparationTargetSection(event)
         }
 
         Section("Aufgabe") {
@@ -166,6 +178,64 @@ struct EntrySheet: View {
                             presenting: pendingSeriesChange) { change in
             Button("Nur diesen Termin") { apply(change, to: event, series: false) }
             Button("Diesen und alle folgenden") { apply(change, to: event, series: true) }
+        }
+    }
+
+    // MARK: Deadline (DL2, DV1)
+
+    /// "Als Deadline markieren" (Tagwerk only); for deadline calendar events only a note.
+    @ViewBuilder
+    private func deadlineSection(_ event: CalendarEvent) -> some View {
+        let calendarName = model.calendarTitle(event.calendarID) ?? String(localized: "Kalender")
+        Section {
+            if model.isInDeadlineCalendar(event) {
+                Label(String(localized: "Deadline · aus Kalender \(calendarName)"), systemImage: "flag.fill").foregroundStyle(.red)
+            } else {
+                Toggle("Als Deadline markieren", isOn: Binding(get: { model.isMarkedDeadline(event) }, set: { mark in
+                    setMarked(event, mark)
+                }))
+                .tint(.red)
+            }
+        } header: {
+            Text("Deadline")
+        } footer: {
+            if !model.isInDeadlineCalendar(event) {
+                Text("Gilt nur in Tagwerk. Der Kalender „\(calendarName)“ bleibt unverändert.")
+            }
+        }
+        .seriesMarkQuestion(isPresented: $askingMarkSeries, event: event, model: model)
+        .unmarkConfirmation(event: $confirmingUnmark, model: model)
+    }
+
+    private func setMarked(_ event: CalendarEvent, _ mark: Bool) {
+        if mark {
+            if event.isRecurring { askingMarkSeries = true } else { Task { await model.markDeadline(event, series: false) } }
+        } else if model.preparationLinkCount(forDeadlineEvent: event) > 0 {
+            confirmingUnmark = event
+        } else {
+            Task { await model.unmarkDeadline(event) }
+        }
+    }
+
+    /// For an ordinary event: the deadline it prepares for, or "Zu Deadline zuordnen …".
+    @ViewBuilder
+    private func preparationTargetSection(_ event: CalendarEvent) -> some View {
+        Section("Vorbereitung") {
+            if let target = model.preparationTarget(forEventID: event.id) ?? model.deadlineMarks.preparationTarget(for: event) {
+                let text = DeadlineText(calendar: model.calendar)
+                Label(text.preparationMark(target, today: model.today), systemImage: "link")
+                if let deadline = model.deadline(for: target) {
+                    NavigationLink("Deadline zeigen") {
+                        Form { PreparationSection(deadline: deadline, model: model) { _ in } }
+                            .navigationTitle(deadline.title)
+                    }
+                    Button("Zuordnung lösen", role: .destructive) {
+                        Task { await model.unlinkPreparation(event, from: deadline) }
+                    }
+                }
+            } else {
+                NavigationLink("Zu Deadline zuordnen …") { DeadlinePicker(event: event, model: model) {} }
+            }
         }
     }
 
