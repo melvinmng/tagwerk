@@ -30,7 +30,14 @@ public final class HealthKitStore: HealthStoring, Sendable {
     }
 
     private static var shareTypes: Set<HKSampleType> { Set(HealthShareKind.allCases.map(type(of:))) }
-    private static var readTypes: Set<HKObjectType> { [HKObjectType.workoutType()] }
+    /// Read types of `access()`. The step type must never join them: a new type makes the status "should request"
+    /// again, which would stop mirroring and hide Watch workouts for every existing user until they agree again.
+    static var coreReadTypes: Set<HKObjectType> { [HKObjectType.workoutType()] }
+    private static var stepType: HKQuantityType { HKQuantityType(.stepCount) }
+    /// Steps have their own status (`stepsAccess()`) and their own request.
+    static var stepReadTypes: Set<HKObjectType> { [stepType] }
+    /// The Health card asks for everything in one sheet.
+    static var connectReadTypes: Set<HKObjectType> { coreReadTypes.union(stepReadTypes) }
 
     private func mayWrite(_ kind: HealthShareKind) -> Bool {
         store.authorizationStatus(for: Self.type(of: kind)) == .sharingAuthorized
@@ -40,14 +47,25 @@ public final class HealthKitStore: HealthStoring, Sendable {
 
     public func access() async -> HealthAccess {
         guard Self.isAvailable else { return .unavailable }
-        let status = (try? await store.statusForAuthorizationRequest(toShare: Self.shareTypes, read: Self.readTypes)) ?? .unknown
+        let status = (try? await store.statusForAuthorizationRequest(toShare: Self.shareTypes, read: Self.coreReadTypes)) ?? .unknown
         let denied = Set(HealthShareKind.allCases.filter { !mayWrite($0) })
         return HealthMapping.access(shouldRequest: status != .unnecessary, denied: denied)
     }
 
     public func requestAuthorization() async throws {
         guard Self.isAvailable else { return }
-        try await store.requestAuthorization(toShare: Self.shareTypes, read: Self.readTypes)
+        try await store.requestAuthorization(toShare: Self.shareTypes, read: Self.connectReadTypes)
+    }
+
+    public func stepsAccess() async -> StepsAccess {
+        guard Self.isAvailable else { return .unavailable }
+        let status = (try? await store.statusForAuthorizationRequest(toShare: [], read: Self.stepReadTypes)) ?? .unknown
+        return HealthMapping.stepsAccess(status)
+    }
+
+    public func requestStepsAuthorization() async throws {
+        guard Self.isAvailable else { return }
+        try await store.requestAuthorization(toShare: [], read: Self.stepReadTypes)
     }
 
     // MARK: Writing
@@ -156,6 +174,31 @@ public final class HealthKitStore: HealthStoring, Sendable {
                                   kilocalories: workout.statistics(for: energyType)?.sumQuantity()?.doubleValue(for: .kilocalorie()),
                                   sourceName: source.name)
         }
+    }
+}
+
+extension HealthKitStore {
+    /// Day sums from a statistics collection: Health merges overlapping sources (iPhone, Apple Watch) by its source
+    /// order, so Tagwerk never adds up single samples. Steps typed in the Health app count as Health counts them.
+    public func dailySteps(in interval: DateInterval, calendar: Calendar) async throws -> [DailySteps] {
+        guard Self.isAvailable else { return [] }
+        let predicate = HKSamplePredicate.quantitySample(
+            type: HKQuantityType(.stepCount),
+            predicate: HKQuery.predicateForSamples(withStart: interval.start, end: interval.end))
+        let descriptor = HKStatisticsCollectionQueryDescriptor(predicate: predicate, options: .cumulativeSum,
+                                                               anchorDate: calendar.startOfDay(for: interval.start),
+                                                               intervalComponents: DateComponents(day: 1))
+        let collection: HKStatisticsCollection
+        do {
+            collection = try await descriptor.result(for: store)
+        } catch let error as HKError where error.code == .errorNoData || error.code == .errorAuthorizationNotDetermined {
+            return []
+        }
+        var sums: [(start: Date, count: Double?)] = []
+        collection.enumerateStatistics(from: interval.start, to: interval.end) { statistics, _ in
+            sums.append((statistics.startDate, statistics.sumQuantity()?.doubleValue(for: .count())))
+        }
+        return HealthMapping.dailySteps(sums)
     }
 }
 

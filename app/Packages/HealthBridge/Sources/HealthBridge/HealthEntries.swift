@@ -111,6 +111,26 @@ public enum HealthShareKind: String, Sendable, CaseIterable, Hashable {
     }
 }
 
+/// Read permission for steps, asked for separately from the other Health types, so existing users keep their access
+/// state when steps arrive. iOS never tells whether reading was allowed; `asked` only means the sheet was shown.
+public enum StepsAccess: Sendable, Hashable {
+    case unavailable
+    case notAsked
+    case asked
+}
+
+/// The step sum of one day as Health reports it (iPhone and Apple Watch merged by Health's source order).
+public struct DailySteps: Sendable, Hashable {
+    /// Start of the day in the calendar of the query.
+    public var start: Date
+    public var count: Int
+
+    public init(start: Date, count: Int) {
+        self.start = start
+        self.count = count
+    }
+}
+
 /// What the "Health" access row shows. Only write access is visible; iOS hides whether reading was denied.
 public enum HealthAccess: Sendable, Hashable {
     case unavailable
