@@ -55,11 +55,11 @@ GitHub-Konto: @melvinmng · bestätigt zuweisbar · geprüft 2026-11-17 · ich
 - [x] [#53](https://github.com/melvinmng/tagwerk/issues/53) Heute Fälliges automatisch, „Von früher offen“ {status: Done; prio: P2 (High); aufwand: 2h; epic: #2}
 - [x] [#54](https://github.com/melvinmng/tagwerk/issues/54) Gleiche Termine aus mehreren Kalendern zusammenfassen {status: Done; prio: P2 (High); aufwand: 2h; epic: #2}
 - [x] [#55](https://github.com/melvinmng/tagwerk/issues/55) Termine in allen Kalendern anlegen, ändern und löschen {status: Done; prio: P2 (High); aufwand: 6h; epic: #2}
-- [ ] [#56](https://github.com/melvinmng/tagwerk/issues/56) ChatGPT-Anmeldung und Tokens {status: In review; prio: P2 (High); aufwand: 6h; epic: #2}
+- [x] [#56](https://github.com/melvinmng/tagwerk/issues/56) ChatGPT-Anmeldung und Tokens {status: Done; prio: P2 (High); aufwand: 6h; epic: #2}
 - [ ] [#57](https://github.com/melvinmng/tagwerk/issues/57) ChatGPT-Antworten mit Streaming und Modellliste {status: In review; prio: P2 (High); aufwand: 5h; epic: #2}
 - [ ] [#58](https://github.com/melvinmng/tagwerk/issues/58) Gesprächsschleife mit Aktionskarten {status: In review; prio: P2 (High); aufwand: 4h; epic: #2}
 - [ ] [#59](https://github.com/melvinmng/tagwerk/issues/59) KI-Planung: Eingabe und Prüfregeln {status: In review; prio: P2 (High); aufwand: 4h; epic: #2}
-- [ ] [#60](https://github.com/melvinmng/tagwerk/issues/60) KI in Einrichtung und Einstellungen {status: In review; prio: P2 (High); aufwand: 3h; epic: #2}
+- [x] [#60](https://github.com/melvinmng/tagwerk/issues/60) KI in Einrichtung und Einstellungen {status: Done; prio: P2 (High); aufwand: 3h; epic: #2}
 - [ ] [#61](https://github.com/melvinmng/tagwerk/issues/61) Tag, Woche und Monat mit KI planen {status: Backlog; prio: P2 (High); aufwand: 6h; epic: #2}
 - [ ] [#62](https://github.com/melvinmng/tagwerk/issues/62) App-Funktionen für den Assistenten {status: Backlog; prio: P2 (High); aufwand: 5h; epic: #2}
 - [ ] [#63](https://github.com/melvinmng/tagwerk/issues/63) Assistent-Knopf und Chat {status: Backlog; prio: P2 (High); aufwand: 5h; epic: #2}
@@ -87,16 +87,16 @@ _Automatisch aus [Tagwerk](https://github.com/users/melvinmng/projects/17) erzeu
 ### In Arbeit (1)
 - [#2](https://github.com/melvinmng/tagwerk/issues/2) Phase 2: Aufgaben, Kalender und KI-Tagesplan umsetzen · @melvinmng · Prio P2 (High)
 
-### In Prüfung (5)
-- [#56](https://github.com/melvinmng/tagwerk/issues/56) ChatGPT-Anmeldung und Tokens · @melvinmng · Prio P2 (High) · 6h
+### In Prüfung (3)
 - [#57](https://github.com/melvinmng/tagwerk/issues/57) ChatGPT-Antworten mit Streaming und Modellliste · @melvinmng · Prio P2 (High) · 5h
 - [#58](https://github.com/melvinmng/tagwerk/issues/58) Gesprächsschleife mit Aktionskarten · @melvinmng · Prio P2 (High) · 4h
 - [#59](https://github.com/melvinmng/tagwerk/issues/59) KI-Planung: Eingabe und Prüfregeln · @melvinmng · Prio P2 (High) · 4h
-- [#60](https://github.com/melvinmng/tagwerk/issues/60) KI in Einrichtung und Einstellungen · @melvinmng · Prio P2 (High) · 3h
 
 ### Nicht zugeordnet (0)
 
 ### Zuletzt erledigt (10)
+- [#60](https://github.com/melvinmng/tagwerk/issues/60) KI in Einrichtung und Einstellungen · @melvinmng
+- [#56](https://github.com/melvinmng/tagwerk/issues/56) ChatGPT-Anmeldung und Tokens · @melvinmng
 - [#55](https://github.com/melvinmng/tagwerk/issues/55) Termine in allen Kalendern anlegen, ändern und löschen · @melvinmng
 - [#54](https://github.com/melvinmng/tagwerk/issues/54) Gleiche Termine aus mehreren Kalendern zusammenfassen · @melvinmng
 - [#53](https://github.com/melvinmng/tagwerk/issues/53) Heute Fälliges automatisch, „Von früher offen“ · @melvinmng
@@ -105,6 +105,4 @@ _Automatisch aus [Tagwerk](https://github.com/users/melvinmng/projects/17) erzeu
 - [#50](https://github.com/melvinmng/tagwerk/issues/50) Monat: Tag auswählen und Tagesmenü · @melvinmng
 - [#49](https://github.com/melvinmng/tagwerk/issues/49) Ablage „Ungeplant“ für Woche und Monat neu bauen · @melvinmng
 - [#48](https://github.com/melvinmng/tagwerk/issues/48) Planung im Bearbeiten-Sheet ändern, inkl. „Nur heute / Alle ab heute“ · @melvinmng
-- [#47](https://github.com/melvinmng/tagwerk/issues/47) Zeitblöcke per Menü, Lücken und umschaltbarem Stundenraster ändern · @melvinmng
-- [#46](https://github.com/melvinmng/tagwerk/issues/46) Freie Zeit ab jetzt anzeigen und erledigte Vorkommen freigeben · @melvinmng
 <!-- t3gh:end -->
