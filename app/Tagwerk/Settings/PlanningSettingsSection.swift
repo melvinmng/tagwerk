@@ -85,7 +85,7 @@ struct PlanningSettingsSection: View {
 
     private var deadlineSummary: String {
         let count = environment.settings.deadlineCalendarIDs?.count ?? 0
-        return count == 0 ? "Keine" : "\(count)"
+        return count == 0 ? String(localized: "Keine") : "\(count)"
     }
 }
 

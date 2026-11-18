@@ -1676,6 +1676,9 @@
     "Kürzer" : {
 
     },
+    "Labels" : {
+
+    },
     "Labels (kommagetrennt)" : {
 
     },
@@ -2963,6 +2966,9 @@
     "in %lld Tagen" : {
 
     },
+    "ja" : {
+
+    },
     "jetzt %@" : {
 
     },
@@ -2997,6 +3003,9 @@
 
     },
     "nach Fälligkeit" : {
+
+    },
+    "nein" : {
 
     },
     "nicht angemeldet" : {

@@ -150,5 +150,5 @@ struct VoiceSettingsView: View {
         }
     }
 
-    static func name(_ language: VoiceLanguage) -> String { language == .german ? "Deutsch" : "English" }
+    static func name(_ language: VoiceLanguage) -> String { language == .german ? String(localized: "Deutsch") : String(localized: "English") }
 }

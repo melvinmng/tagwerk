@@ -15,14 +15,14 @@ struct ConflictChange: Equatable, Identifiable {
 
     static func changes(original: TaskItem, draft: TaskItem, current: TaskItem) -> [ConflictChange] {
         let fields: [(String, (TaskItem) -> String)] = [
-            ("Titel", { $0.title }),
-            ("Fällig", { $0.due.map(dueText) ?? "–" }),
-            ("Priorität", { $0.priority?.label ?? "–" }),
-            ("Geschätzt", { EstimateHours.text(minutes: $0.estimateMinutes) }),
-            ("Liste", { $0.container.name }),
-            ("Labels", { ($0.labels ?? []).joined(separator: ", ").ifEmpty("–") }),
-            ("Notiz", { ($0.notes ?? "").ifEmpty("–") }),
-            ("Erledigt", { $0.isCompleted ? "ja" : "nein" }),
+            (String(localized: "Titel"), { $0.title }),
+            (String(localized: "Fällig"), { $0.due.map(dueText) ?? "–" }),
+            (String(localized: "Priorität"), { $0.priority?.label ?? "–" }),
+            (String(localized: "Geschätzt"), { EstimateHours.text(minutes: $0.estimateMinutes) }),
+            (String(localized: "Liste"), { $0.container.name }),
+            (String(localized: "Labels"), { ($0.labels ?? []).joined(separator: ", ").ifEmpty("–") }),
+            (String(localized: "Notiz"), { ($0.notes ?? "").ifEmpty("–") }),
+            (String(localized: "Erledigt"), { $0.isCompleted ? String(localized: "ja") : String(localized: "nein") }),
         ]
         return fields.compactMap { name, value in
             let before = value(original), after = value(current), mine = value(draft)
@@ -32,9 +32,9 @@ struct ConflictChange: Equatable, Identifiable {
     }
 
     private static func dueText(_ due: DueDate) -> String {
-        let day = String(format: "%02d.%02d.%04d", due.day, due.month, due.year)
+        let day = DateText.numericDate(PlanDay(year: due.year, month: due.month, day: due.day), calendar: .tagwerk)
         guard let hour = due.hour else { return day }
-        return day + String(format: ", %02d:%02d", hour, due.minute ?? 0)
+        return day + ", " + DateText.time(minutes: hour * 60 + (due.minute ?? 0), calendar: .tagwerk)
     }
 }
 

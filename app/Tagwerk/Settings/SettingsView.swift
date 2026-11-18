@@ -120,8 +120,8 @@ struct SettingsView: View {
     /// Right side of the "KI" row, from stored state only; opening the settings loads nothing (§8.4).
     private var aiSummary: String {
         let ai = environment.ai
-        guard ai.isSignedIn else { return "nicht angemeldet" }
-        guard let slug = ai.selectedModelSlug else { return "Automatisch" }
+        guard ai.isSignedIn else { return String(localized: "nicht angemeldet") }
+        guard let slug = ai.selectedModelSlug else { return String(localized: "Automatisch") }
         return ai.models.first { $0.slug == slug }?.displayName ?? slug
     }
 
