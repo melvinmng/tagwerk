@@ -15,7 +15,10 @@ struct TagwerkApp: App {
             #if DEBUG && targetEnvironment(simulator)
             if DemoData.isRequested { health = DemoHealthStore() }
             #endif
-            let environment = try AppEnvironment(modelContainer: container, health: health)
+            // Hosted unit tests never write into the real App Group container.
+            let isTestHost = ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
+            let environment = try AppEnvironment(modelContainer: container, health: health,
+                                                 snapshotWriter: isTestHost ? nil : .live())
             _environment = State(initialValue: environment)
             // Set before launch ends, so a tap that launched the app is not lost.
             UNUserNotificationCenter.current().delegate = environment.notificationDelegate
@@ -44,6 +47,7 @@ struct TagwerkApp: App {
                     await environment.activateGitHubIfSignedIn()
                     environment.startReconnectWatch()
                     environment.startNotificationUpdates()
+                    environment.startSnapshotUpdates()
                 }
                 .onChange(of: scenePhase) { _, phase in
                     switch phase {
@@ -68,6 +72,8 @@ struct TagwerkApp: App {
                             // Health entries that could not be written or deleted earlier.
                             await environment.capture.reload()  // follows to the new day after midnight
                             await environment.capture.syncPending()
+                            // Directly as well: the debounced write may not run before suspension.
+                            environment.writeSnapshot()
                         }
                     default:
                         break

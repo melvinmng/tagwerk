@@ -41,6 +41,8 @@ final class AppEnvironment {
     let capture: CaptureModel
     /// Meal estimates with ChatGPT; only after consent and a tap (main design §7).
     let mealEstimator: MealEstimator
+    /// Writes the snapshot file the widget reads (phase 4); `directory == nil` in tests and unsigned builds.
+    let snapshotWriter: WidgetSnapshotWriter
     /// A tab another view asks to show (e.g. "Mit KI planen" from the task list jumps to "Planen").
     var requestedTab: Int?
     private let gitHubCache: SwiftDataGitHubCache
@@ -52,11 +54,14 @@ final class AppEnvironment {
     @ObservationIgnored private var pathMonitor: NWPathMonitor?
     @ObservationIgnored private var notificationUpdates: Task<Void, Never>?
     @ObservationIgnored private var gitHubRegistration: Task<Void, Never>?
+    @ObservationIgnored private var snapshotUpdates: Task<Void, Never>?
+    @ObservationIgnored private var pendingSnapshot: Task<Void, Never>?
 
     /// `notificationCenter` defaults to the system center and `health` to HealthKit; tests and demo data pass fakes.
     init(modelContainer: ModelContainer, notificationCenter: (any NotificationCenterClient)? = nil,
-         health: (any HealthStoring)? = nil) throws {
+         health: (any HealthStoring)? = nil, snapshotWriter: WidgetSnapshotWriter? = nil) throws {
         self.modelContainer = modelContainer
+        self.snapshotWriter = snapshotWriter ?? WidgetSnapshotWriter(directory: nil, reload: {})
         let context = modelContainer.mainContext
         let settings = try AppSettings.current(in: context)
         let gateway = EventKitGateway()
@@ -148,7 +153,8 @@ final class AppEnvironment {
                 await self?.registerGitHubIfSignedIn() ?? false  // a registration loads all sources
             },
             reload: { [weak self] in await self?.taskList.reload() },
-            reschedule: { [weak self] in await self?.notifications.reschedule() })
+            reschedule: { [weak self] in await self?.notifications.reschedule() },
+            writeSnapshot: { [weak self] in self?.writeSnapshot() })
     }
 
     /// Adds GitHub to the task list when credentials exist.
@@ -285,6 +291,85 @@ final class AppEnvironment {
             for await value in changes where value != last {
                 last = value
                 self?.notifications.scheduleSoon()
+            }
+        }
+    }
+
+    // MARK: Widget snapshot (phase 4 design §4.1)
+
+    /// The snapshot for today and the next two days; reads EventKit and SwiftData, never the network.
+    func makeSnapshot(now: Date = .now) -> WidgetSnapshot {
+        let today = PlanDay(date: now, calendar: planning.calendar)
+        return WidgetSnapshot.make(createdAt: now, days: planning.snapshotInput(from: today, days: 3),
+                                   todayIntake: snapshotIntake, showsNutrition: settings.widgetShowsNutrition,
+                                   calendar: planning.calendar)
+    }
+
+    private var snapshotIntake: SnapshotIntake? {
+        guard settings.widgetShowsNutrition else { return nil }
+        let intake = capture.todayIntake
+        return SnapshotIntake(kcal: intake.kcal, hasEstimate: intake.hasEstimate, goalKcal: settings.goalKilocalories,
+                              waterMilliliters: intake.waterMilliliters, goalWaterMilliliters: settings.goalWaterMilliliters)
+    }
+
+    /// Writes the snapshot. The plan part is only written from loaded task sources; otherwise (Siri in the
+    /// background, a refresh that ran out of time) only today's intake of the existing file is replaced.
+    func writeSnapshot(now: Date = .now) {
+        guard settings.setupCompleted else {
+            snapshotWriter.write(WidgetSnapshot(createdAt: now, days: []))
+            return
+        }
+        if !taskList.sourceStates.isEmpty {
+            snapshotWriter.write(makeSnapshot(now: now))
+        } else if let existing = snapshotWriter.current() {
+            let intake = settings.widgetShowsNutrition ? snapshotIntake : nil
+            snapshotWriter.write(existing.replacingIntake(intake, on: PlanDay(date: now, calendar: planning.calendar), createdAt: now))
+        }
+    }
+
+    /// Writes the snapshot one second after the last change (several changes arrive together).
+    func scheduleSnapshot() {
+        pendingSnapshot?.cancel()
+        pendingSnapshot = Task { [weak self] in
+            try? await Task.sleep(for: .seconds(1))
+            guard !Task.isCancelled else { return }
+            self?.writeSnapshot()
+        }
+    }
+
+    /// Rewrites the snapshot whenever the plan, tasks, today's intake or the widget-relevant settings change.
+    func startSnapshotUpdates() {
+        guard snapshotUpdates == nil else { return }
+        capture.onTodayChanged = { [weak self] in self?.scheduleSnapshot() }
+        let changes = Observations { @MainActor [weak self] () -> Int in
+            guard let self else { return 0 }
+            var hasher = Hasher()
+            for day in planning.days {
+                for event in day.events + day.blocks {
+                    hasher.combine(event.id)
+                    hasher.combine(event.title)
+                    hasher.combine(event.start)
+                    hasher.combine(event.end)
+                }
+                hasher.combine(day.deadlines)
+            }
+            hasher.combine(taskList.items)
+            hasher.combine(taskList.sourceStates.mapValues { String(describing: $0) })
+            hasher.combine(settings.setupCompleted)
+            hasher.combine(settings.widgetShowsNutrition)
+            hasher.combine(settings.goalKilocalories)
+            hasher.combine(settings.goalWaterMilliliters)
+            hasher.combine(settings.selectedCalendarIDs)
+            hasher.combine(settings.planCalendarID)
+            hasher.combine(settings.deadlineCalendarIDs)
+            hasher.combine(capture.todayIntake)
+            return hasher.finalize()
+        }
+        snapshotUpdates = Task { [weak self] in
+            var last: Int?
+            for await value in changes where value != last {
+                last = value
+                self?.scheduleSnapshot()
             }
         }
     }

@@ -290,6 +290,29 @@ final class PlanningModel {
         return result
     }
 
+    /// Events, time blocks and deadlines of `count` days from `first` for the widget snapshot (phase 4).
+    /// Read-only: anchor, scope, `days` and the merge suggestions stay as they are; EventKit only, no network.
+    func snapshotInput(from first: PlanDay, days count: Int) -> [SnapshotDayInput] {
+        let open = taskList.items.filter { !$0.isCompleted }
+        let range = first...first.adding(days: max(0, count - 1), calendar: calendar)
+        let interval = DateInterval(start: range.lowerBound.startDate(in: calendar),
+                                    end: range.upperBound.adding(days: 1, calendar: calendar).startDate(in: calendar))
+        let (events, _) = markedEvents(calendarStore.events(in: interval, calendarIDs: readableCalendarIDs()))
+        let links = Set(resolveLinks(events: events, tasks: open, manual: blocks.links.manualLinks()).map(\.eventID))
+        let deadlines = importantDeadlines(tasks: open, events: events, deadlineCalendarIDs: Set(settings.deadlineCalendarIDs ?? []),
+                                           in: range, calendar: calendar)
+        let colors = Dictionary(calendarStore.eventCalendars().map { ($0.id, $0.colorHex) }, uniquingKeysWith: { first, _ in first })
+        return (0..<count).map { offset in
+            let day = first.adding(days: offset, calendar: calendar)
+            let start = day.startDate(in: calendar)
+            let end = day.adding(days: 1, calendar: calendar).startDate(in: calendar)
+            let dayEvents = events.filter { $0.end > start && $0.start < end }
+            let isBlock = { (event: CalendarEvent) in links.contains(event.id) && !event.isAllDay }
+            return SnapshotDayInput(day: day, events: dayEvents.filter { !isBlock($0) }, blocks: dayEvents.filter(isBlock),
+                                    deadlines: deadlines.filter { $0.day == day }, colorHex: { colors[$0] ?? nil })
+        }
+    }
+
     /// Day picked in the month grid (mockup E1); see `monthSelection`.
     var selectedDay: PlanDay?
 
