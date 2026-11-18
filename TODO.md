@@ -73,6 +73,11 @@ GitHub-Konto: @melvinmng · bestätigt zuweisbar · geprüft 2026-11-17 · ich
 - [ ] [#72](https://github.com/melvinmng/tagwerk/issues/72) KI schlägt längere Arbeitstage vor {status: In review; prio: P2 (High); aufwand: 2h; epic: #2}
 - [ ] [#73](https://github.com/melvinmng/tagwerk/issues/73) Vorschläge zeigen Priorität, Fälligkeit und Aufwand; Tipp öffnet das Vorschlagsblatt mit der Aufgabe {status: In review; prio: P2 (High); aufwand: 5h; epic: #2}
 - [ ] [#74](https://github.com/melvinmng/tagwerk/issues/74) Über Vorschläge sprechen, sie von Hand verschieben und Planungsvorgaben setzen {status: In review; prio: P2 (High); aufwand: 8h; epic: #2}
+- [ ] [#76](https://github.com/melvinmng/tagwerk/issues/76) Benachrichtigungsplan aus Aufgaben und Deadline-Terminen berechnen {status: In review; prio: P2 (High); aufwand: 2h; epic: #2}
+- [ ] [#77](https://github.com/melvinmng/tagwerk/issues/77) Gesperrten Schlüsselbund nicht als GitHub-Abmeldung werten {status: In review; prio: P2 (High); aufwand: 1h; epic: #2}
+- [ ] [#78](https://github.com/melvinmng/tagwerk/issues/78) Benachrichtigungen planen und aktuell halten {status: In review; prio: P2 (High); aufwand: 3h; epic: #2}
+- [ ] [#79](https://github.com/melvinmng/tagwerk/issues/79) Benachrichtigungen in Einrichtung und Einstellungen, Sprung beim Tippen {status: In review; prio: P2 (High); aufwand: 2h; epic: #2}
+- [ ] [#80](https://github.com/melvinmng/tagwerk/issues/80) Hintergrund-Refresh für Aufgaben und Benachrichtigungen {status: In review; prio: P2 (High); aufwand: 2h; epic: #2}
 
 ## Notizen
 
@@ -88,7 +93,7 @@ _Automatisch aus [Tagwerk](https://github.com/users/melvinmng/projects/17) erzeu
 ### In Arbeit (1)
 - [#2](https://github.com/melvinmng/tagwerk/issues/2) Phase 2: Aufgaben, Kalender und KI-Tagesplan umsetzen · @melvinmng · Prio P2 (High)
 
-### In Prüfung (16)
+### In Prüfung (21)
 - [#57](https://github.com/melvinmng/tagwerk/issues/57) ChatGPT-Antworten mit Streaming und Modellliste · @melvinmng · Prio P2 (High) · 5h
 - [#58](https://github.com/melvinmng/tagwerk/issues/58) Gesprächsschleife mit Aktionskarten · @melvinmng · Prio P2 (High) · 4h
 - [#59](https://github.com/melvinmng/tagwerk/issues/59) KI-Planung: Eingabe und Prüfregeln · @melvinmng · Prio P2 (High) · 4h
@@ -105,6 +110,11 @@ _Automatisch aus [Tagwerk](https://github.com/users/melvinmng/projects/17) erzeu
 - [#72](https://github.com/melvinmng/tagwerk/issues/72) KI schlägt längere Arbeitstage vor · @melvinmng · Prio P2 (High) · 2h
 - [#73](https://github.com/melvinmng/tagwerk/issues/73) Vorschläge zeigen Priorität, Fälligkeit und Aufwand; Tipp öffnet das Vorschlagsblatt mit der Aufgabe · @melvinmng · Prio P2 (High) · 5h
 - [#74](https://github.com/melvinmng/tagwerk/issues/74) Über Vorschläge sprechen, sie von Hand verschieben und Planungsvorgaben setzen · @melvinmng · Prio P2 (High) · 8h
+- [#76](https://github.com/melvinmng/tagwerk/issues/76) Benachrichtigungsplan aus Aufgaben und Deadline-Terminen berechnen · @melvinmng · Prio P2 (High) · 2h
+- [#77](https://github.com/melvinmng/tagwerk/issues/77) Gesperrten Schlüsselbund nicht als GitHub-Abmeldung werten · @melvinmng · Prio P2 (High) · 1h
+- [#78](https://github.com/melvinmng/tagwerk/issues/78) Benachrichtigungen planen und aktuell halten · @melvinmng · Prio P2 (High) · 3h
+- [#79](https://github.com/melvinmng/tagwerk/issues/79) Benachrichtigungen in Einrichtung und Einstellungen, Sprung beim Tippen · @melvinmng · Prio P2 (High) · 2h
+- [#80](https://github.com/melvinmng/tagwerk/issues/80) Hintergrund-Refresh für Aufgaben und Benachrichtigungen · @melvinmng · Prio P2 (High) · 2h
 
 ### Nicht zugeordnet (0)
 
