@@ -147,6 +147,8 @@ public final class ChatGPTClient: Sendable {
 
     // MARK: Plain requests
 
+    static let tokenHosts: Set<String> = ["api.openai.com", "chatgpt.com"]
+
     /// Status code and body of a plain request.
     public struct Reply: Sendable {
         public let status: Int
@@ -156,6 +158,8 @@ public final class ChatGPTClient: Sendable {
     /// Posts `body` to `url` with the plan token. Any status is returned; only a 401 triggers one refresh.
     /// Used by the voice endpoints and their diagnostics.
     public func post(_ url: URL, body: Data, contentType: String) async throws -> Reply {
+        // The plan token goes only to OpenAI's own hosts.
+        guard url.scheme == "https", let host = url.host(), Self.tokenHosts.contains(host) else { throw ChatGPTError.server(0, "host_not_allowed") }
         let accountID = await session.accountID
         return try await withAuthorization { token -> Attempt<Reply> in
             var request = URLRequest(url: url)

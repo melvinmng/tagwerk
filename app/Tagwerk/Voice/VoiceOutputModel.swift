@@ -17,6 +17,7 @@ final class VoiceOutputModel {
     private(set) var currentSentence = 0
     private(set) var sentences: [String] = []
     private(set) var notice: String?
+    @ObservationIgnored private var activeMode: VoiceAudioMode?
 
     @ObservationIgnored private let speaker: SpeechSpeaking
     @ObservationIgnored private let audio: VoiceAudioSession
@@ -38,11 +39,17 @@ final class VoiceOutputModel {
         stop()
         notice = nil
         if !explicit && isVoiceOverRunning() { return }
+        // A running recording keeps the microphone; reading waits for the user (plan voice-chat, review 3).
+        if audio.isRecording {
+            if explicit { notice = "Erst die Aufnahme beenden" }
+            return
+        }
         let language = VoiceLanguage.detect(text, fallback: fallback)
         let parts = SpokenText.sentences(SpokenText.prepare(text, language: language))
         guard !parts.isEmpty else { return }
+        let mode: VoiceAudioMode = explicit ? .speakingExplicit : .speakingAutomatic
         do {
-            try audio.activate(explicit ? .speakingExplicit : .speakingAutomatic)
+            try audio.activate(mode)
         } catch {
             notice = "Vorlesen nicht möglich"
             return
@@ -50,6 +57,7 @@ final class VoiceOutputModel {
         let preferences = preferences()
         let voiceID = speaker.resolvedVoiceID(language == .german ? preferences.germanVoiceID : preferences.englishVoiceID,
                                               language: language)
+        activeMode = mode
         speakingID = id
         sentences = parts
         currentSentence = 0
@@ -71,7 +79,7 @@ final class VoiceOutputModel {
     private func handle(_ event: SpeakerEvent) {
         switch event {
         case .sentenceStarted(let index): currentSentence = index
-        case .finished: finish()
+        case .finished, .interrupted: finish()
         }
     }
 
@@ -79,6 +87,7 @@ final class VoiceOutputModel {
         speakingID = nil
         sentences = []
         currentSentence = 0
-        audio.deactivate()
+        if let activeMode { audio.deactivate(activeMode) }
+        activeMode = nil
     }
 }

@@ -36,6 +36,13 @@ struct ChatGPTClientRawTests {
         #expect(transport.requests(to: "/v1/audio/speech").last?.value(forHTTPHeaderField: "Authorization") == "Bearer at_new")
     }
 
+    @Test func post_refusesOtherHosts() async {
+        await #expect(throws: ChatGPTError.server(0, "host_not_allowed")) {
+            _ = try await makeClient().post(URL(string: "https://example.com/upload")!, body: Data(), contentType: "application/json")
+        }
+        #expect(transport.requests.isEmpty)
+    }
+
     @Test func multipart_buildsFileAndFields() {
         let form = ChatGPTClient.multipart(fields: [("model", "m1")], file: Data([1, 2]), fileName: "audio.wav",
                                            mimeType: "audio/wav", boundary: "B")

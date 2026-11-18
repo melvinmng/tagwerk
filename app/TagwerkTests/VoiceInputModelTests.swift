@@ -165,3 +165,23 @@ struct VoiceInputModelTests {
         #expect(!harness.model.draftIsSpoken)
     }
 }
+
+@MainActor
+struct VoiceInputModelStopTests {
+    @Test func stuckStop_givesUpAfterThreeSeconds() async {
+        let harness = VoiceInputModelHarness()
+        harness.model.tapMicrophone()
+        await harness.settle()
+        harness.recognizer.send(.text(final: "Hallo", volatile: ""))
+        await harness.settle()
+        harness.recognizer.ignoresStop = true
+        harness.model.finish()
+        await harness.settle()
+        #expect(harness.model.isRecording)
+        harness.clock += 4
+        harness.model.tick()
+        await harness.settle()
+        #expect(harness.model.phase == .idle)
+        #expect(harness.draft == "Hallo")
+    }
+}

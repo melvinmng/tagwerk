@@ -26,6 +26,7 @@ final class VoiceInputModel {
     @ObservationIgnored private var recognizer: SpeechRecognizing?
     @ObservationIgnored private var listening: Task<Void, Never>?
     @ObservationIgnored private var ticking: Task<Void, Never>?
+    @ObservationIgnored private var stoppingSince: Date?
 
     init(language: VoiceLanguage, makeRecognizer: @escaping () -> SpeechRecognizing, isExplained: @escaping () -> Bool,
          markExplained: @escaping () -> Void, now: @escaping () -> Date = Date.init,
@@ -63,8 +64,20 @@ final class VoiceInputModel {
     /// The field was sent or cleared by hand: the next text is typed until a new recording fills it.
     func draftConsumed() { draftIsSpoken = false }
 
-    /// Checks the time limits; runs about four times a second while recording or showing a notice.
-    func tick() { apply(machine.tick(now: now())) }
+    /// Checks the time limits; runs about four times a second while recording, stopping or showing a notice.
+    /// A recognizer that does not finish within three seconds after a stop is given up on.
+    func tick() {
+        if case .stopping = machine.phase, let stoppingSince, now().timeIntervalSince(stoppingSince) >= Self.stopTimeout {
+            let recognizer = recognizer
+            stopListening(cancel: false)
+            Task { await recognizer?.cancel() }
+            apply(machine.recognizerFinished(now: now()))
+            return
+        }
+        apply(machine.tick(now: now()))
+    }
+
+    static let stopTimeout: TimeInterval = 3
 
     // MARK: Effects
 
@@ -78,9 +91,12 @@ final class VoiceInputModel {
             case .start(let language):
                 start(language)
             case .restart(let language):
-                stopListening(cancel: true)
-                start(language)
+                // The old recording must be gone before the new one takes the microphone (review 4).
+                let old = recognizer
+                stopListening(cancel: false)
+                start(language, after: old)
             case .stop:
+                stoppingSince = now()
                 let recognizer = recognizer
                 Task { await recognizer?.stop() }
             case .cancel:
@@ -99,13 +115,18 @@ final class VoiceInputModel {
         updateTicking()
     }
 
-    private func start(_ language: VoiceLanguage) {
+    private func start(_ language: VoiceLanguage, after previous: SpeechRecognizing? = nil) {
         onRecordingStarts()
         let recognizer = makeRecognizer()
         self.recognizer = recognizer
         listening = Task { [weak self] in
+            await previous?.cancel()
             let events = await recognizer.start(language: language)
-            guard let self, !Task.isCancelled else { return }
+            guard let self, !Task.isCancelled else {
+                // Cancelled while starting: make sure the microphone is released (review 1).
+                await recognizer.cancel()
+                return
+            }
             if case .preparing = self.machine.phase { self.machine.recordingStarted(now: self.now()) }
             self.updateTicking()
             for await event in events {
@@ -143,8 +164,9 @@ final class VoiceInputModel {
     }
 
     private func updateTicking() {
+        if case .stopping = machine.phase {} else { stoppingSince = nil }
         let active: Bool = switch machine.phase {
-        case .recording, .notice: true
+        case .recording, .stopping, .notice: true
         default: false
         }
         if active, ticking == nil {

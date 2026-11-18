@@ -567,13 +567,16 @@ struct SuggestionConversation: View {
             Text("Senden gibt diesen Vorschlag, die übrigen der Planung, deine Änderungen, deine Vorgaben und die Termine dieser Tage an ChatGPT.")
         }
         .onAppear {
-            guard voice == nil else { return }
-            let model = VoiceInputFactory.make(environment)
-            model.readDraft = { text }
-            model.writeDraft = { text = $0 }
-            model.onSend = { comment in send(comment) }
-            voice = model
+            if voice == nil {
+                let model = VoiceInputFactory.make(environment)
+                model.readDraft = { text }
+                model.writeDraft = { text = $0 }
+                voice = model
+            }
+            voice?.onSend = { comment in send(comment) }
         }
+        // `send` uses this view's suggestion; keep the closure on the current one after moves and revisions.
+        .onChange(of: suggestion) { _, _ in voice?.onSend = { comment in send(comment) } }
         .onDisappear { voice?.cancel() }
         .onChange(of: voice?.isRecording ?? false) { _, recording in isRecording.wrappedValue = recording }
         .alert("Als Vorgabe merken", isPresented: Binding(get: { rule != nil }, set: { if !$0 { rule = nil } })) {

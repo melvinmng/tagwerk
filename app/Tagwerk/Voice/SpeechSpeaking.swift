@@ -22,6 +22,8 @@ struct SpokenVoice: Identifiable, Equatable, Sendable {
 enum SpeakerEvent: Equatable, Sendable {
     case sentenceStarted(Int)
     case finished
+    /// Ended by the system (a call, another app), not by `stop()`.
+    case interrupted
 }
 
 /// Text to speech. Speaks a list of sentences, one utterance each, and reports which one is playing.
@@ -57,7 +59,6 @@ final class SystemSpeaker: NSObject, SpeechSpeaking, AVSpeechSynthesizerDelegate
 
     func speak(_ sentences: [String], language: VoiceLanguage, voiceID: String?, rate: Float) {
         stop()
-        utterances = [:]
         lastIndex = sentences.count - 1
         let voice = resolvedVoiceID(voiceID, language: language).flatMap(AVSpeechSynthesisVoice.init(identifier:))
             ?? AVSpeechSynthesisVoice(language: language.rawValue)
@@ -71,6 +72,8 @@ final class SystemSpeaker: NSObject, SpeechSpeaking, AVSpeechSynthesizerDelegate
     }
 
     func stop() {
+        // Forget the utterances first, so the cancel callback of our own stop reports nothing.
+        utterances = [:]
         if synthesizer.isSpeaking { synthesizer.stopSpeaking(at: .immediate) }
     }
 
@@ -100,6 +103,15 @@ final class SystemSpeaker: NSObject, SpeechSpeaking, AVSpeechSynthesizerDelegate
         let id = ObjectIdentifier(utterance)
         MainActor.assumeIsolated {
             if utterances[id] == lastIndex { onEvent?(.finished) }
+        }
+    }
+
+    nonisolated func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didCancel utterance: AVSpeechUtterance) {
+        let id = ObjectIdentifier(utterance)
+        MainActor.assumeIsolated {
+            guard utterances[id] != nil else { return }
+            utterances = [:]
+            onEvent?(.interrupted)
         }
     }
 }

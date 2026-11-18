@@ -351,6 +351,14 @@ struct DictationMachineTests {
         #expect(machine.recognizerFinished(now: at(5)) == [.fill("Hallo Welt wie Next")])
     }
 
+    @Test func cancelAfterSwitch_restoresTheOriginalDraft() {
+        var machine = recordingMachine(draft: "Hallo")
+        machine.received(final: "Welt", volatile: "", now: at(1))
+        _ = machine.switchLanguage(now: at(2))
+        machine.recordingStarted(now: at(3))
+        #expect(machine.cancel() == [.cancel, .restoreDraft("Hallo")])
+    }
+
     @Test func switchLanguage_togglesBackToGerman() {
         var machine = recordingMachine(language: .english)
         #expect(machine.switchLanguage(now: at(1)) == [.restart(.german)])

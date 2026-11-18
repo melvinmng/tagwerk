@@ -28,17 +28,25 @@ final class FakeAudioSession: VoiceAudioSession, @unchecked Sendable {
     private let lock = NSLock()
     private var _modes: [VoiceAudioMode] = []
     private var _deactivations = 0
+    private var _current: VoiceAudioMode?
     var failing = false
 
     var modes: [VoiceAudioMode] { lock.withLock { _modes } }
     var deactivations: Int { lock.withLock { _deactivations } }
+    var currentMode: VoiceAudioMode? { lock.withLock { _current } }
 
     func activate(_ mode: VoiceAudioMode) throws {
         if failing { throw URLError(.cannotLoadFromNetwork) }
-        lock.withLock { _modes.append(mode) }
+        lock.withLock { _modes.append(mode); _current = mode }
     }
 
-    func deactivate() { lock.withLock { _deactivations += 1 } }
+    func deactivate(_ mode: VoiceAudioMode) {
+        lock.withLock {
+            guard _current == mode else { return }
+            _current = nil
+            _deactivations += 1
+        }
+    }
 }
 
 /// Recognizer whose events the test sends by hand.
@@ -50,6 +58,8 @@ final class FakeSpeechRecognizer: SpeechRecognizing, @unchecked Sendable {
     private var _cancels = 0
     /// Text the recognizer finalises when stopped.
     var finalOnStop: String?
+    /// Simulates a recognizer that never answers a stop.
+    var ignoresStop = false
 
     var started: [VoiceLanguage] { lock.withLock { _started } }
     var stops: Int { lock.withLock { _stops } }
@@ -75,6 +85,7 @@ final class FakeSpeechRecognizer: SpeechRecognizing, @unchecked Sendable {
             _stops += 1
             return self.continuation
         }
+        if ignoresStop { return }
         if let finalOnStop { continuation?.yield(.text(final: finalOnStop, volatile: "")) }
         continuation?.yield(.finished)
         continuation?.finish()

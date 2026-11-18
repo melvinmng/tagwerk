@@ -94,8 +94,10 @@ final class AssistantModel {
             let reference = task.id.source == .github ? issueReference(task.id) : nil
             taskContext = await IssueContext.load(task: task, reference: reference, reader: reference == nil ? nil : reader)
         }
-        let index = conversation.history.count
+        let start = conversation.history.count
         await conversation.send(trimmed)
+        // `send` may first close open calls; the user message is the first `.user` item from `start` on.
+        let index = conversation.history.indices.dropFirst(start).first { conversation.history[$0] == .user(trimmed) } ?? start
         if spoken {
             spokenMarks.append(SpokenMark(index: index, text: trimmed))
         }
@@ -128,8 +130,10 @@ final class AssistantModel {
         if announcesActions(), let announcement = ActionAnnouncement.text(for: cards, language: language) {
             texts.append(announcement)
         }
-        guard !texts.isEmpty, let last = fresh.last else { return }
-        readAutomatically("message-\(last.id)", texts.joined(separator: "\n"), language)
+        guard !texts.isEmpty else { return }
+        // The id of the last answer, so its "Vorlesen" capsule shows "Liest vor · Stopp" (review 5).
+        let answer = fresh.last { if case .assistant = $0.content { true } else { false } }
+        readAutomatically(answer.map { "message-\($0.id)" } ?? "message-\(index)", texts.joined(separator: "\n"), language)
     }
 
     private func status(of call: ToolCall) -> ChatMessage.ActionStatus? {
@@ -159,7 +163,11 @@ final class AssistantModel {
         let spoken = lastUserMessageWasSpoken
         guard let conversation, readPolicy().readsAutomatically(lastUserMessageWasSpoken: spoken, conversationVisible: isPresented)
         else { return }
-        let texts = conversation.messages.filter { $0.id >= index }.compactMap { message -> String? in
+        let answers = conversation.messages.filter { message in
+            guard message.id >= index, case .assistant = message.content else { return false }
+            return true
+        }
+        let texts = answers.compactMap { message -> String? in
             if case .assistant(let text) = message.content { return text }
             return nil
         }
@@ -170,7 +178,7 @@ final class AssistantModel {
         }
         parts += texts
         guard !parts.isEmpty else { return }
-        readAutomatically("confirm-\(call.id)", parts.joined(separator: "\n"), language)
+        readAutomatically(answers.last.map { "message-\($0.id)" } ?? "confirm-\(call.id)", parts.joined(separator: "\n"), language)
     }
 
     /// "Alle bestätigen (N)" (mockup e).

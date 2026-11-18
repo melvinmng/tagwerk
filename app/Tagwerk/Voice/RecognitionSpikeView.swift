@@ -73,6 +73,10 @@ final class RecognitionSpikeModel {
         await refresh()
     }
 
+    func cancel() async {
+        await recognizer?.cancel()
+    }
+
     private static func describe(_ status: AssetInventory.Status) -> String {
         switch status {
         case .unsupported: "nicht unterstützt"
@@ -143,5 +147,6 @@ struct RecognitionSpikeSection: View {
             Text("Erkennt Sprache auf dem iPhone, ohne Ton zu senden. Lädt beim ersten Mal das Sprachpaket.")
         }
         .task { await model.refresh() }
+        .onDisappear { Task { await model.cancel() } }
     }
 }

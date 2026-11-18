@@ -89,4 +89,16 @@ struct VoiceOutputModelTests {
         #expect(speaker.spoken.isEmpty)
         #expect(model.speakingID == nil)
     }
+
+    @Test func recording_blocksReading_explicitShowsNotice() throws {
+        try audio.activate(.recording)
+        let model = makeModel()
+        model.speak(id: "a1", text: "Heute sind drei Termine.", explicit: false, fallback: .german)
+        #expect(speaker.spoken.isEmpty)
+        #expect(model.notice == nil)
+        model.speak(id: "a1", text: "Heute sind drei Termine.", explicit: true, fallback: .german)
+        #expect(speaker.spoken.isEmpty)
+        #expect(model.notice == "Erst die Aufnahme beenden")
+        #expect(audio.currentMode == .recording)
+    }
 }

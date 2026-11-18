@@ -79,10 +79,21 @@ enum AudioLevel {
 }
 
 /// `SpeechAnalyzer` fed from the microphone through `AVAudioEngine`.
+///
+/// One recording at a time. `stop()` or `cancel()` may arrive while `start()` is still preparing (language
+/// pack, permission, analyzer); `start()` checks after every suspension and cleans up instead of starting.
 final class AppleSpeechRecognizer: SpeechRecognizing, @unchecked Sendable {
     let kind: TranscriberKind
     private let audio: VoiceAudioSession
-    private let state = Mutex(Session?.none)
+
+    private enum Phase {
+        case idle
+        /// Preparing; `abort` is set by a `stop()` (`.finished`) or `cancel()` (nil) that arrived meanwhile.
+        case starting(continuation: AsyncStream<RecognitionEvent>.Continuation, abort: RecognitionEvent??)
+        case running(Session)
+    }
+
+    private let phase = Mutex(Phase.idle)
 
     private final class Session: @unchecked Sendable {
         let engine = AVAudioEngine()
@@ -92,6 +103,7 @@ final class AppleSpeechRecognizer: SpeechRecognizing, @unchecked Sendable {
         let events: AsyncStream<RecognitionEvent>.Continuation
         var resultsTask: Task<Void, Never>?
         var observers: [NSObjectProtocol] = []
+        var tapInstalled = false
         let lock = NSLock()
         var lastLevel = Date.distantPast
 
@@ -124,11 +136,32 @@ final class AppleSpeechRecognizer: SpeechRecognizing, @unchecked Sendable {
     }
 
     func start(language: VoiceLanguage) async -> AsyncStream<RecognitionEvent> {
-        let (events, continuation) = AsyncStream<RecognitionEvent>.makeStream()
         await cancel()
-        guard let module = await Self.module(kind, language: language) else {
-            continuation.yield(.failed(.unsupported)); continuation.finish(); return events
+        let (events, continuation) = AsyncStream<RecognitionEvent>.makeStream()
+        phase.withLock { $0 = .starting(continuation: continuation, abort: nil) }
+        /// Ends the start with `event` (a failure) unless a stop or cancel arrived; those decide the last event.
+        func give(up event: RecognitionEvent) -> AsyncStream<RecognitionEvent> {
+            let abort = phase.withLock { phase -> RecognitionEvent?? in
+                defer { phase = .idle }
+                if case .starting(_, let abort) = phase { return abort }
+                return nil
+            }
+            switch abort {
+            case .some(.some(let final)): continuation.yield(final)
+            case .some(.none): break
+            case .none: continuation.yield(event)
+            }
+            continuation.finish()
+            return events
         }
+        var aborted: Bool {
+            phase.withLock { phase in
+                if case .starting(_, let abort) = phase { return abort != nil }
+                return true
+            }
+        }
+
+        guard let module = await Self.module(kind, language: language) else { return give(up: .failed(.unsupported)) }
         do {
             if await AssetInventory.status(forModules: [module]) != .installed {
                 try await AssetInventory.reserve(locale: language.locale)
@@ -137,77 +170,130 @@ final class AppleSpeechRecognizer: SpeechRecognizing, @unchecked Sendable {
                 }
             }
         } catch {
-            continuation.yield(.failed(.assetUnavailable)); continuation.finish(); return events
+            return give(up: .failed(.assetUnavailable))
         }
-        guard await AVAudioApplication.requestRecordPermission() else {
-            continuation.yield(.failed(.microphoneDenied)); continuation.finish(); return events
-        }
+        if aborted { return give(up: .finished) }
+        guard await AVAudioApplication.requestRecordPermission() else { return give(up: .failed(.microphoneDenied)) }
+        if aborted { return give(up: .finished) }
+
+        let session: Session
         do {
             let converter = try await AnalyzerInputConverter.converter(compatibleWith: [module])
             let (inputs, inputContinuation) = AsyncStream<AnalyzerInput>.makeStream()
             let analyzer = SpeechAnalyzer(modules: [module])
-            let session = Session(analyzer: analyzer, converter: converter, input: inputContinuation, events: continuation)
-            try audio.activate(.recording)
+            session = Session(analyzer: analyzer, converter: converter, input: inputContinuation, events: continuation)
             try await analyzer.start(inputSequence: inputs)
-            session.resultsTask = Task { await Self.readResults(of: module, into: continuation) }
-            Self.installTap(on: session)
-            try session.engine.start()
-            state.withLock { $0 = session }
-            observeInterruptions(of: session)
         } catch {
-            continuation.yield(.failed(.engine(String(describing: error).prefix(160).description)))
-            continuation.finish()
+            return give(up: .failed(.engine(String(describing: error).prefix(160).description)))
+        }
+        do {
+            try audio.activate(.recording)
+            Self.installTap(on: session)
+            session.tapInstalled = true
+            try session.engine.start()
+        } catch {
+            await teardown(session, cancelAnalysis: true)
+            return give(up: .failed(.engine(String(describing: error).prefix(160).description)))
+        }
+        observeInterruptions(of: session)
+        session.resultsTask = Task { [weak self] in
+            if let failure = await Self.readResults(of: module, into: continuation) {
+                await self?.end(reporting: failure)
+            }
+        }
+        // Publish the session; a stop or cancel that arrived during the last steps is carried out now.
+        let abort = phase.withLock { phase -> RecognitionEvent?? in
+            defer { phase = .running(session) }
+            if case .starting(_, let abort) = phase { return abort }
+            return nil
+        }
+        if let abort {
+            if let final = abort { await end(reporting: final) } else { await cancel() }
         }
         return events
     }
 
     func stop() async {
+        if markAbort(.some(.finished)) { return }
         await end(reporting: .finished)
+    }
+
+    func cancel() async {
+        if markAbort(.some(nil)) { return }
+        guard let session = takeSession() else { return }
+        await teardown(session, cancelAnalysis: true)
+        session.events.finish()
+    }
+
+    /// While starting, records the stop or cancel for `start()` to carry out. Returns true when it did.
+    private func markAbort(_ abort: RecognitionEvent??) -> Bool {
+        phase.withLock { phase in
+            guard case .starting(let continuation, let existing) = phase else { return false }
+            if existing == nil { phase = .starting(continuation: continuation, abort: abort) }
+            return true
+        }
+    }
+
+    private func takeSession() -> Session? {
+        phase.withLock { phase -> Session? in
+            guard case .running(let session) = phase else { return nil }
+            phase = .idle
+            return session
+        }
+    }
+
+    /// Finalizes what was heard and closes the stream with `final` (`.finished` or a failure).
+    private func end(reporting final: RecognitionEvent) async {
+        guard let session = takeSession() else { return }
+        stopAudio(session)
+        let rest = session.lock.withLock { (try? session.converter.flush()) ?? [] }
+        for input in rest { session.input.yield(input) }
+        session.input.finish()
+        try? await session.analyzer.finalizeAndFinishThroughEndOfInput()
+        if final == .finished { await session.resultsTask?.value } else { session.resultsTask?.cancel() }
+        audio.deactivate(.recording)
+        session.events.yield(final)
+        session.events.finish()
+    }
+
+    private func teardown(_ session: Session, cancelAnalysis: Bool) async {
+        stopAudio(session)
+        session.input.finish()
+        if cancelAnalysis { await session.analyzer.cancelAndFinishNow() }
+        session.resultsTask?.cancel()
+        audio.deactivate(.recording)
+    }
+
+    private func stopAudio(_ session: Session) {
+        session.observers.forEach(NotificationCenter.default.removeObserver)
+        session.observers = []
+        if session.tapInstalled {
+            session.engine.inputNode.removeTap(onBus: 0)
+            session.tapInstalled = false
+        }
+        session.engine.stop()
     }
 
     /// A call, Siri, a route change or the app going to the background ends the recording; the text so far stays.
     private func observeInterruptions(of session: Session) {
         let center = NotificationCenter.default
-        let names: [Notification.Name] = [AVAudioSession.interruptionNotification, .AVAudioEngineConfigurationChange,
-                                          UIApplication.didEnterBackgroundNotification]
+        let names: [Notification.Name] = [AVAudioSession.interruptionNotification, AVAudioSession.routeChangeNotification,
+                                          .AVAudioEngineConfigurationChange, UIApplication.didEnterBackgroundNotification]
         session.observers = names.map { name in
             center.addObserver(forName: name, object: name == .AVAudioEngineConfigurationChange ? session.engine : nil,
                                queue: nil) { [weak self] notification in
-                // Only the start of an interruption ends the recording, not its end.
                 if name == AVAudioSession.interruptionNotification,
                    (notification.userInfo?[AVAudioSessionInterruptionTypeKey] as? UInt) != AVAudioSession.InterruptionType.began.rawValue {
+                    return
+                }
+                // Only a lost input (headset unplugged) ends the recording, not a new device appearing.
+                if name == AVAudioSession.routeChangeNotification,
+                   (notification.userInfo?[AVAudioSessionRouteChangeReasonKey] as? UInt) != AVAudioSession.RouteChangeReason.oldDeviceUnavailable.rawValue {
                     return
                 }
                 Task { await self?.end(reporting: .failed(.interrupted)) }
             }
         }
-    }
-
-    private func end(reporting final: RecognitionEvent) async {
-        guard let session = state.withLock({ current -> Session? in defer { current = nil }; return current }) else { return }
-        session.observers.forEach(NotificationCenter.default.removeObserver)
-        session.engine.inputNode.removeTap(onBus: 0)
-        session.engine.stop()
-        let rest = session.lock.withLock { (try? session.converter.flush()) ?? [] }
-        for input in rest { session.input.yield(input) }
-        session.input.finish()
-        try? await session.analyzer.finalizeAndFinishThroughEndOfInput()
-        await session.resultsTask?.value
-        audio.deactivate()
-        session.events.yield(final)
-        session.events.finish()
-    }
-
-    func cancel() async {
-        guard let session = state.withLock({ current -> Session? in defer { current = nil }; return current }) else { return }
-        session.observers.forEach(NotificationCenter.default.removeObserver)
-        session.engine.inputNode.removeTap(onBus: 0)
-        session.engine.stop()
-        session.input.finish()
-        await session.analyzer.cancelAndFinishNow()
-        session.resultsTask?.cancel()
-        audio.deactivate()
-        session.events.finish()
     }
 
     /// The tap runs on the audio thread; it must not touch the main actor.
@@ -229,7 +315,9 @@ final class AppleSpeechRecognizer: SpeechRecognizing, @unchecked Sendable {
         }
     }
 
-    private static func readResults(of module: any SpeechModule, into continuation: AsyncStream<RecognitionEvent>.Continuation) async {
+    /// Streams results until the analyzer ends; returns a failure when reading broke off.
+    private static func readResults(of module: any SpeechModule,
+                                    into continuation: AsyncStream<RecognitionEvent>.Continuation) async -> RecognitionEvent? {
         var accumulator = TranscriptAccumulator()
         do {
             if let transcriber = module as? SpeechTranscriber {
@@ -243,8 +331,11 @@ final class AppleSpeechRecognizer: SpeechRecognizing, @unchecked Sendable {
                     continuation.yield(accumulator.event)
                 }
             }
+            return nil
+        } catch is CancellationError {
+            return nil
         } catch {
-            continuation.yield(.failed(.engine(String(describing: error).prefix(160).description)))
+            return .failed(.engine(String(describing: error).prefix(160).description))
         }
     }
 }

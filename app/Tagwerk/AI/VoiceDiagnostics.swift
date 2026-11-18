@@ -180,7 +180,7 @@ final class VoiceDiagnosticsModel {
 
     func play(_ id: String) {
         guard let data = audio[id] else { return }
-        try? AVAudioSession.sharedInstance().setCategory(.playback)
+        try? SystemVoiceAudioSession.shared.activate(.speakingExplicit)
         player = try? AVAudioPlayer(data: data)
         player?.play()
     }
@@ -263,7 +263,7 @@ struct VoiceDiagnosticsView: View {
                 }
                 .disabled(model.isRunning)
             } footer: {
-                Text("Sendet einen gesprochenen Testsatz und einen kurzen Text an OpenAI und ChatGPT, um zu sehen, welche Sprachdienste dein Abo freigibt. Es werden nur Statuscodes angezeigt.")
+                Text("Sendet einen gesprochenen Testsatz und einen kurzen Text an OpenAI und ChatGPT, um zu sehen, welche Sprachdienste dein Abo freigibt. Angezeigt werden Status, erkannter Text und Fehlermeldungen, nie die Anmeldung.")
             }
             if !model.checks.isEmpty {
                 Section("Ergebnis") {

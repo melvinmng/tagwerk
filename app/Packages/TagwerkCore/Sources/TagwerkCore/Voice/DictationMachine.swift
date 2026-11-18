@@ -63,6 +63,8 @@ public struct DictationMachine: Equatable, Sendable {
     public private(set) var draftBefore: String = ""
     public private(set) var finalText: String = ""
     public private(set) var volatileText: String = ""
+    /// Field text before the first recording; ✕ restores it even after a language switch.
+    private var originalDraft: String = ""
 
     private var startedAt: Date?
     private var lastChange: Date?
@@ -180,7 +182,7 @@ public struct DictationMachine: Equatable, Sendable {
         switch phase {
         case .preparing, .recording, .stopping:
             phase = .idle
-            return [.cancel, .restoreDraft(draftBefore)]
+            return [.cancel, .restoreDraft(originalDraft)]
         case .explaining, .notice:
             phase = .idle
             noticeAt = nil
@@ -239,6 +241,7 @@ public struct DictationMachine: Equatable, Sendable {
 
     private mutating func begin(draft: String) -> [Effect] {
         draftBefore = draft
+        originalDraft = draft
         finalText = ""
         volatileText = ""
         startedAt = nil
