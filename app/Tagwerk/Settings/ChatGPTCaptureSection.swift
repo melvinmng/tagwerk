@@ -8,60 +8,24 @@ import SwiftUI
 /// lines only, never headers or tokens.
 struct ChatGPTCaptureSection: View {
     @Environment(AppEnvironment.self) private var environment
-    @State private var isSignedIn = false
-    @State private var email: String?
     @State private var status: String?
     @State private var isBusy = false
     @State private var captureFile: URL?
-    @State private var authenticator = SystemWebAuthenticator()
 
     var body: some View {
         Section {
-            if isSignedIn {
-                LabeledContent("ChatGPT", value: email ?? "angemeldet")
-                Button("Funktionsaufruf mitschneiden") { Task { await capture() } }
-                    .disabled(isBusy)
-                if let captureFile {
-                    ShareLink("Mitschnitt teilen", item: captureFile)
-                }
-                Button("Abmelden", role: .destructive) {
-                    Task {
-                        try? await environment.ai.session.signOut()
-                        await refresh()
-                    }
-                }
-            } else {
-                Button("Mit ChatGPT anmelden") { Task { await signIn() } }
-                    .disabled(isBusy)
+            Button("Funktionsaufruf mitschneiden") { Task { await capture() } }
+                .disabled(isBusy)
+            if let captureFile {
+                ShareLink("Mitschnitt teilen", item: captureFile)
             }
             if isBusy { ProgressView() }
             if let status { Text(status).font(.footnote).foregroundStyle(.secondary) }
         } header: {
-            Text("ChatGPT (Debug)")
+            Text("Debug")
         } footer: {
             Text("Nur für die Entwicklung: Der Mitschnitt schickt eine Testanfrage ohne persönliche Daten an OpenAI.")
         }
-        .task { await refresh() }
-    }
-
-    private func refresh() async {
-        isSignedIn = await environment.ai.session.isSignedIn
-        email = await environment.ai.session.accountEmail
-    }
-
-    private func signIn() async {
-        isBusy = true
-        defer { isBusy = false }
-        do {
-            try await ChatGPTLogin(session: environment.ai.session, authenticator: authenticator).signIn()
-            status = "Angemeldet."
-        } catch let error as ChatGPTAuthError {
-            // Debug only: the exact case shows which step of the sign-in failed.
-            status = "\(error.userMessage) (\(String(reflecting: error)))"
-        } catch {
-            status = "Anmeldung fehlgeschlagen: \(String(reflecting: error))"
-        }
-        await refresh()
     }
 
     private func capture() async {

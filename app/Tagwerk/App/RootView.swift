@@ -51,7 +51,8 @@ struct RootView: View {
             RecurringEffortSheet(item: edit.item, day: edit.day, model: environment.planning)
         }
         .fullScreenCover(isPresented: showsSetup) {
-            SetupView(model: environment.makeSetupModel(), loginModel: environment.makeGitHubLoginModel()) {
+            SetupView(model: environment.makeSetupModel(), loginModel: environment.makeGitHubLoginModel(),
+                      chatGPTSignIn: ChatGPTSignInModel(ai: environment.ai)) {
                 await environment.taskList.reload()
             }
         }

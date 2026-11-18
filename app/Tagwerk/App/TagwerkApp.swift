@@ -24,6 +24,8 @@ struct TagwerkApp: App {
                     #if DEBUG && targetEnvironment(simulator)
                     await DemoData.seedIfRequested(environment)
                     #endif
+                    // Reads the keychain only; nothing is sent to OpenAI at start (§8.4).
+                    await environment.ai.refreshAccount()
                     environment.startObservingChanges()
                     // The "Planen" tab is shown first; it needs the tasks without waiting for the task tab.
                     if environment.settings.setupCompleted {

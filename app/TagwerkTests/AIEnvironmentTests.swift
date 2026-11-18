@@ -135,3 +135,27 @@ final class MutableClock: @unchecked Sendable {
         set { lock.withLock { value = newValue } }
     }
 }
+
+struct AIStatusMessageTests {
+    @Test func cancelled_isGreyNotWarning() {
+        #expect(AIStatusMessage.signInFailure(ChatGPTAuthError.cancelled) == AIStatusMessage(text: "Anmeldung abgebrochen.", isWarning: false))
+    }
+
+    @Test func portInUse_isWarningWithUserMessage() {
+        let message = AIStatusMessage.signInFailure(ChatGPTAuthError.portInUse)
+        #expect(message.isWarning)
+        #expect(message.text.hasPrefix("Die Anmeldung braucht Port 1455"))
+    }
+
+    @Test func relativeListDate_todayYesterdayOlder() {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(identifier: "Europe/Berlin")!
+        let now = calendar.date(from: DateComponents(year: 2026, month: 11, day: 18, hour: 12))!
+        let today = calendar.date(from: DateComponents(year: 2026, month: 11, day: 18, hour: 9, minute: 12))!
+        let yesterday = calendar.date(byAdding: .day, value: -1, to: today)!
+        let older = calendar.date(byAdding: .day, value: -3, to: today)!
+        #expect(AISettingsView.relative(today, now: now, calendar: calendar).hasPrefix("heute "))
+        #expect(AISettingsView.relative(yesterday, now: now, calendar: calendar).hasPrefix("gestern "))
+        #expect(!AISettingsView.relative(older, now: now, calendar: calendar).hasPrefix("heute"))
+    }
+}

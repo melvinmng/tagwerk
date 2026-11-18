@@ -48,9 +48,13 @@ struct SettingsView: View {
 
                 GitHubSettingsSection()
 
-                #if DEBUG
-                ChatGPTCaptureSection()
-                #endif
+                Section {
+                    NavigationLink {
+                        AISettingsView()
+                    } label: {
+                        LabeledContent("KI", value: aiSummary)
+                    }
+                }
 
                 Section {
                     Stepper("Vorlauf: \(leadTimeText(settings.leadTimeMinutes))", value: $settings.leadTimeMinutes, in: 15...2880, step: 15)
@@ -75,11 +79,22 @@ struct SettingsView: View {
                 }
             }
             .navigationTitle("Einstellungen")
-            .task { loadSources() }
+            .task {
+                loadSources()
+                await environment.ai.refreshAccount()
+            }
             .onChange(of: settings.selectedReminderListIDs) { _, _ in
                 Task { await environment.taskList.reload() }
             }
         }
+    }
+
+    /// Right side of the "KI" row, from stored state only; opening the settings loads nothing (§8.4).
+    private var aiSummary: String {
+        let ai = environment.ai
+        guard ai.isSignedIn else { return "nicht angemeldet" }
+        guard let slug = ai.selectedModelSlug else { return "Automatisch" }
+        return ai.models.first { $0.slug == slug }?.displayName ?? slug
     }
 
     private func loadSources() {

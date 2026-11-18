@@ -2,9 +2,9 @@ import Foundation
 import Observation
 import RemindersKit
 
-/// Steps of the first-launch setup. GitHub, ChatGPT and notifications are added by later plans.
+/// Steps of the first-launch setup. Notifications are added by a later plan.
 enum SetupStep: CaseIterable, Hashable {
-    case reminders, calendar, planCalendar, github
+    case reminders, calendar, planCalendar, github, chatGPT
 
     var title: String {
         switch self {
@@ -12,6 +12,7 @@ enum SetupStep: CaseIterable, Hashable {
         case .calendar: "Kalender"
         case .planCalendar: "Plan-Kalender"
         case .github: "GitHub"
+        case .chatGPT: "ChatGPT"
         }
     }
 
@@ -21,7 +22,13 @@ enum SetupStep: CaseIterable, Hashable {
         case .calendar: "Tagwerk liest deine Termine, um deinen Tag zu planen. Der Kalender wird nicht verändert."
         case .planCalendar: "Tagwerk legt geplante Zeitblöcke als Termine in einem eigenen Kalender „Tagwerk“ an. Du siehst sie auch in der Kalender-App."
         case .github: "Tagwerk zeigt dir zugewiesene Issues aus deinen offenen GitHub Projects und kann sie bearbeiten."
+        case .chatGPT: "Mit deinem ChatGPT-Konto kann Tagwerk Tag, Woche und Monat für dich planen, und der Assistent kann Aufgaben für dich ändern."
         }
+    }
+
+    /// Shown next to a step that was skipped or refused.
+    var notDoneLabel: String {
+        self == .chatGPT ? "nicht angemeldet" : "nicht erlaubt"
     }
 }
 
@@ -36,10 +43,13 @@ final class SetupModel {
     private let settings: AppSettings
     private let calendarStore: (any CalendarStore)?
 
-    init(store: any ReminderStore, settings: AppSettings, calendarStore: (any CalendarStore)? = nil) {
+    init(store: any ReminderStore, settings: AppSettings, calendarStore: (any CalendarStore)? = nil,
+         isChatGPTSignedIn: Bool = false) {
         self.store = store
         self.settings = settings
         self.calendarStore = calendarStore
+        // After "Einrichtung erneut starten" an existing ChatGPT sign-in counts as done.
+        if isChatGPTSignedIn { results[.chatGPT] = .fullAccess }
     }
 
     var isFinished: Bool { current == nil }
@@ -52,7 +62,7 @@ final class SetupModel {
             case .reminders: results[step] = try await store.requestAccess()
             case .calendar: results[step] = try await store.requestCalendarAccess()
             case .planCalendar: results[step] = try createPlanCalendar()
-            case .github: return  // interactive login, completed via markSignedIn()
+            case .github, .chatGPT: return  // interactive login, completed via markSignedIn()
             }
         } catch {
             results[step] = .denied
@@ -70,13 +80,14 @@ final class SetupModel {
     }
 
     func skip() {
+        if current == .chatGPT { results[.chatGPT] = .denied }
         advance()
     }
 
-    /// Completes the GitHub step after a successful login.
+    /// Completes a login step (GitHub, ChatGPT) after a successful sign-in.
     func markSignedIn() {
-        guard current == .github else { return }
-        results[.github] = .fullAccess
+        guard let step = current, step == .github || step == .chatGPT else { return }
+        results[step] = .fullAccess
         advance()
     }
 
@@ -84,6 +95,11 @@ final class SetupModel {
         guard let step = current, let index = SetupStep.allCases.firstIndex(of: step) else { return }
         let next = SetupStep.allCases.index(after: index)
         current = next < SetupStep.allCases.endIndex ? SetupStep.allCases[next] : nil
+        // A ChatGPT step that is already signed in needs no action.
+        if current == .chatGPT, results[.chatGPT] == .fullAccess {
+            advance()
+            return
+        }
         if current == nil { finish() }
     }
 

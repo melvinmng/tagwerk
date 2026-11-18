@@ -111,7 +111,7 @@ final class AppEnvironment {
     }
 
     func makeSetupModel() -> SetupModel {
-        SetupModel(store: gateway, settings: settings, calendarStore: gateway)
+        SetupModel(store: gateway, settings: settings, calendarStore: gateway, isChatGPTSignedIn: ai.isSignedIn)
     }
 
     /// Current authorization of a source that needs system permission; `nil` for sources without one.
