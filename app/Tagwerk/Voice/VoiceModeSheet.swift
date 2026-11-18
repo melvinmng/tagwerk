@@ -68,7 +68,16 @@ struct VoiceModePanel: View {
                     }
                 }
             }
-        case .finalizing, .sending:
+        case .finalizing:
+            VStack(alignment: .leading, spacing: 6) {
+                heardText
+                HStack {
+                    Label("Sendet …", systemImage: "arrow.up.circle").font(.subheadline).foregroundStyle(.secondary)
+                    Spacer()
+                    Button("Nicht senden") { mode.doNotSend() }.buttonStyle(.borderedProminent)
+                }
+            }
+        case .sending:
             status("Sendet an ChatGPT …", symbol: "arrow.up.circle", tint: .secondary)
         case .speaking:
             status("ChatGPT spricht … · Mikrofon aus", symbol: "speaker.wave.2", tint: .accentColor)

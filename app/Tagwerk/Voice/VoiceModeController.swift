@@ -8,10 +8,14 @@ import UIKit
 @MainActor
 protocol VoiceModeAssistant: AnyObject {
     var onTurnFinished: ((AssistantModel.TurnOutcome) -> Void)? { get set }
+    /// Action cards wait for a tap.
+    var hasPendingActions: Bool { get }
     func send(_ text: String, spoken: Bool) async
 }
 
-extension AssistantModel: VoiceModeAssistant {}
+extension AssistantModel: VoiceModeAssistant {
+    var hasPendingActions: Bool { conversation?.pendingActions.isEmpty == false }
+}
 
 /// Runs the voice mode (mockup SP5a): wires `VoiceModeMachine` to the recognizer, the assistant, the reader
 /// and the tone inside one `.conversation` audio session. It is started by the user; a message goes out only
@@ -46,6 +50,9 @@ final class VoiceModeController {
     @ObservationIgnored private let notifications: NotificationCenter
     @ObservationIgnored private var observers: [NSObjectProtocol] = []
     @ObservationIgnored private var ticking: Task<Void, Never>?
+    @ObservationIgnored private var sending: Task<Void, Never>?
+    /// Completions of an older reading (replaced or stopped) are ignored.
+    @ObservationIgnored private var speech = 0
 
     init(assistant: VoiceModeAssistant, makeRecognizer: @escaping () -> SpeechRecognizing, output: VoiceOutputModel,
          tone: ToneSounding, audio: VoiceAudioSession, settings: @escaping () -> Settings,
@@ -93,7 +100,7 @@ final class VoiceModeController {
             apply(machine.recognizerFailed())
             return
         }
-        apply(machine.start(now: now()))
+        apply(machine.start(now: now(), cardsPending: assistant.hasPendingActions))
     }
 
     func doNotSend() { apply(machine.doNotSend()) }
@@ -156,13 +163,16 @@ final class VoiceModeController {
                 session.cancel()
                 level = 0
             case .send(let text):
-                Task { await assistant.send(text, spoken: true) }
+                sending = Task { [assistant] in await assistant.send(text, spoken: true) }
             case .speak(let text):
+                speech += 1
+                let current = speech
                 output.speak(id: answerID ?? "voice-mode", text: text, explicit: true, fallback: machine.language) { [weak self] _ in
-                    guard let self else { return }
+                    guard let self, current == self.speech else { return }
                     self.apply(self.machine.speakingFinished(now: self.now()))
                 }
             case .stopSpeaking:
+                speech += 1
                 output.stop()
             case .playTone:
                 tone.play { [weak self] in
@@ -170,6 +180,7 @@ final class VoiceModeController {
                     self.apply(self.machine.toneFinished(now: self.now()))
                 }
             case .announce(let announcement):
+                speech += 1
                 output.speak(id: "voice-mode-notice", text: Self.text(announcement, language: machine.language),
                              explicit: true, fallback: machine.language)
             case .moveToDraft(let text):
@@ -183,6 +194,10 @@ final class VoiceModeController {
 
     private func finishSession() {
         session.cancel()
+        sending?.cancel()
+        sending = nil
+        speech += 1
+        output.stop()
         tone.stop()
         level = 0
         answerID = nil
@@ -233,7 +248,7 @@ final class VoiceModeController {
     }
 
     private func systemInterruption() { apply(machine.systemInterruption()) }
-    private func routeChanged() { apply(machine.routeChanged()) }
+    private func routeChanged() { apply(machine.routeChanged(now: now())) }
 
     static func text(_ announcement: VoiceModeMachine.Announcement, language: VoiceLanguage) -> String {
         switch (announcement, language) {

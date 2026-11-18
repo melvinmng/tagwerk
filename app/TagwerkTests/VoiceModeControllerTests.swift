@@ -8,6 +8,7 @@ import UIKit
 @MainActor
 final class FakeVoiceAssistant: VoiceModeAssistant {
     var onTurnFinished: ((AssistantModel.TurnOutcome) -> Void)?
+    var hasPendingActions = false
     var sent: [String] = []
     /// Outcomes reported for the next sends, in order.
     var replies: [AssistantModel.TurnOutcome] = []
@@ -174,6 +175,37 @@ struct VoiceModeControllerTests {
         #expect(harness.assistant.sent.isEmpty)
         #expect(harness.controller.phase == .ended)
         #expect(!harness.controller.isRunning)
+    }
+
+    @Test func cardTappedWhileSpeaking_doesNotSkipToTone() async {
+        let harness = VoiceModeHarness()
+        harness.assistant.replies = [.answered(id: "message-1", speech: "Zwei Änderungen.", hasPendingCards: true)]
+        await harness.startListening()
+        await harness.say("Plan meinen Tag")
+        harness.assistant.onTurnFinished?(.answered(id: "message-3", speech: "Ausgeführt.", hasPendingCards: false))
+        #expect(harness.controller.phase == .speaking)
+        #expect(harness.tone.plays == 0)
+        #expect(harness.output.speakingID == "message-3")
+        harness.speaker.emit(.finished)
+        #expect(harness.controller.phase == .tone)
+    }
+
+    @Test func start_withOpenCards_waits() async {
+        let harness = VoiceModeHarness()
+        harness.assistant.hasPendingActions = true
+        await harness.startListening()
+        #expect(harness.controller.phase == .awaitingConfirmation)
+        #expect(harness.recognizer.started.isEmpty)
+    }
+
+    @Test func end_stopsAnnouncement() async {
+        let harness = VoiceModeHarness()
+        harness.assistant.replies = [.failed(offline: false)]
+        await harness.startListening()
+        await harness.say("Hallo")
+        #expect(harness.output.speakingID != nil)
+        harness.controller.end()
+        #expect(harness.output.speakingID == nil)
     }
 
     @Test func audioFailure_pausesWithoutListening() async {

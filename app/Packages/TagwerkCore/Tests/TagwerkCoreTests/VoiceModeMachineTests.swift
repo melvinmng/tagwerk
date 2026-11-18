@@ -177,6 +177,35 @@ struct VoiceModeMachineTests {
         #expect(machine.phase == .listening)
     }
 
+    @Test func shortSendDelay_keepsCountdownVisible() {
+        var machine = listening(sendDelay: 1)
+        machine.heard(final: "Hallo", volatile: "", now: at(1))
+        _ = machine.tick(now: at(1.7))
+        #expect(machine.phase == .countdown(deadline: at(2.6)))
+        #expect(machine.tick(now: at(2.5)).isEmpty)
+    }
+
+    @Test func start_withOpenCards_waitsForConfirmation() {
+        var machine = VoiceModeMachine(language: .german, sendDelay: 2, silenceLimit: 30)
+        #expect(machine.start(now: t0, cardsPending: true).isEmpty)
+        #expect(machine.phase == .awaitingConfirmation)
+        #expect(machine.turnFinished(.answered(speech: "", hasPendingCards: false), now: at(5)) == [.playTone])
+    }
+
+    @Test func cardTappedWhileSpeaking_replacesTheAnswer() {
+        var machine = sending()
+        _ = machine.turnFinished(.answered(speech: "Zwei Änderungen.", hasPendingCards: true), now: at(5))
+        let effects = machine.turnFinished(.answered(speech: "Ausgeführt.", hasPendingCards: false), now: at(6))
+        #expect(effects == [.stopSpeaking, .speak("Ausgeführt.")])
+        #expect(machine.speakingFinished(now: at(7)) == [.playTone])
+    }
+
+    @Test func endWhilePaused_stopsAnnouncement() {
+        var machine = sending()
+        _ = machine.turnFinished(.failed(offline: true), now: at(5))
+        #expect(machine.end() == [.stopSpeaking, .endSession])
+    }
+
     @Test func offline_pausesAndAnnounces() {
         var machine = sending()
         #expect(machine.turnFinished(.failed(offline: true), now: at(5)) == [.announce(.offline)])
@@ -225,7 +254,7 @@ struct VoiceModeMachineTests {
         machine.heard(final: "Halb", volatile: "", now: at(1))
         #expect(machine.pause() == [.cancelListening, .moveToDraft("Halb")])
         #expect(machine.phase == .paused(.user))
-        #expect(machine.resume(now: at(5)) == [.startListening(.german)])
+        #expect(machine.resume(now: at(5)) == [.stopSpeaking, .startListening(.german)])
         #expect(machine.phase == .starting)
         #expect(machine.text == "")
     }
@@ -272,9 +301,10 @@ struct VoiceModeMachineTests {
     @Test func routeChange_restartsListening() {
         var machine = listening()
         machine.heard(final: "Halb", volatile: "", now: at(1))
-        #expect(machine.routeChanged() == [.cancelListening, .startListening(.german)])
+        #expect(machine.routeChanged(now: at(2)) == [.cancelListening, .moveToDraft("Halb"), .startListening(.german)])
         #expect(machine.phase == .starting)
         #expect(machine.text == "")
+        #expect(machine.tick(now: at(2 + VoiceModeMachine.startTimeout)) == [.cancelListening, .announce(.failed)])
     }
 
     @Test(arguments: [0, 1, 2])

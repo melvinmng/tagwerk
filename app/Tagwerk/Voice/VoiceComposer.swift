@@ -206,9 +206,14 @@ struct ReadAloudButton: View {
     let text: String
 
     var body: some View {
+        // The voice mode reads on its own; a second reading would be heard by its microphone (stage 2 review 2).
+        if !environment.voiceMode.isRunning { button }
+    }
+
+    private var button: some View {
         let output = environment.voiceOutput
         let playing = output.speakingID == id
-        Button {
+        return Button {
             output.toggle(id: id, text: text, fallback: .german)
         } label: {
             Label(playing ? "Liest vor · Stopp" : "Vorlesen", systemImage: playing ? "stop.fill" : "speaker.wave.2")

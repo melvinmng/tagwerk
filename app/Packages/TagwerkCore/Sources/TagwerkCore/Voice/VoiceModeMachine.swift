@@ -67,6 +67,8 @@ public struct VoiceModeMachine: Equatable, Sendable {
 
     /// Time without text change before the countdown becomes visible, in seconds.
     public static let countdownVisibleAfter: TimeInterval = 0.6
+    /// The countdown stays visible at least this long, so "Nicht senden" can be reached.
+    public static let minimumCountdown: TimeInterval = 1
     /// Limits for steps that report their end asynchronously, in seconds.
     public static let startTimeout: TimeInterval = 10
     public static let sendTimeout: TimeInterval = 90
@@ -106,8 +108,15 @@ public struct VoiceModeMachine: Equatable, Sendable {
 
     // MARK: Start and listening
 
-    public mutating func start(now: Date) -> [Effect] {
+    /// Starts listening, or waits first when action cards are already open (they would otherwise be closed
+    /// as declined by the next message).
+    public mutating func start(now: Date, cardsPending: Bool = false) -> [Effect] {
         guard phase == .idle else { return [] }
+        guard !cardsPending else {
+            phase = .awaitingConfirmation
+            phaseSince = now
+            return []
+        }
         return listen(now: now)
     }
 
@@ -146,7 +155,8 @@ public struct VoiceModeMachine: Equatable, Sendable {
                 return [.cancelListening] + pause(.silence, announce: nil)
             }
             guard now.timeIntervalSince(lastChange) >= Self.countdownVisibleAfter else { return [] }
-            phase = .countdown(deadline: lastChange.addingTimeInterval(sendDelay))
+            let earliest = Self.countdownVisibleAfter + Self.minimumCountdown
+            phase = .countdown(deadline: lastChange.addingTimeInterval(max(sendDelay, earliest)))
             return tick(now: now)
         case .countdown(let deadline):
             guard now >= deadline else { return [] }
@@ -196,13 +206,13 @@ public struct VoiceModeMachine: Equatable, Sendable {
     }
 
     /// Headphones plugged in or out: start a fresh recording on the new route.
-    public mutating func routeChanged() -> [Effect] {
+    public mutating func routeChanged(now: Date) -> [Effect] {
         switch phase {
         case .starting, .listening, .countdown:
-            clearText()
+            let kept = keepText()
             phase = .starting
-            phaseSince = nil
-            return [.cancelListening, .startListening(language)]
+            phaseSince = now
+            return [.cancelListening] + kept + [.startListening(language)]
         default:
             return []
         }
@@ -211,7 +221,18 @@ public struct VoiceModeMachine: Equatable, Sendable {
     // MARK: Answer
 
     public mutating func turnFinished(_ outcome: Outcome, now: Date) -> [Effect] {
-        guard phase == .sending || phase == .awaitingConfirmation else { return [] }
+        switch phase {
+        case .sending, .awaitingConfirmation:
+            return handle(outcome, now: now)
+        case .speaking:
+            // A card was tapped while the answer was read: its result replaces the rest of the answer.
+            return [.stopSpeaking] + handle(outcome, now: now)
+        default:
+            return []
+        }
+    }
+
+    private mutating func handle(_ outcome: Outcome, now: Date) -> [Effect] {
         switch outcome {
         case .answered(let speech, let hasPendingCards):
             cardsPending = hasPendingCards
@@ -274,9 +295,10 @@ public struct VoiceModeMachine: Equatable, Sendable {
         }
     }
 
+    /// Also stops a running announcement, so the microphone does not hear it.
     public mutating func resume(now: Date) -> [Effect] {
         guard case .paused = phase else { return [] }
-        return listen(now: now)
+        return [.stopSpeaking] + listen(now: now)
     }
 
     /// "Tippen": leave the voice mode for the keyboard.
@@ -322,9 +344,10 @@ public struct VoiceModeMachine: Equatable, Sendable {
             return []
         case .starting, .listening, .countdown, .finalizing:
             effects = [.cancelListening] + keepText()
-        case .speaking:
+        case .speaking, .paused:
+            // `.paused` may still be announcing why.
             effects = [.stopSpeaking]
-        case .sending, .tone, .awaitingConfirmation, .paused:
+        case .sending, .tone, .awaitingConfirmation:
             effects = []
         }
         phase = .ended

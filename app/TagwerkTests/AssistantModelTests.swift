@@ -108,8 +108,8 @@ struct AssistantModelTests {
         var turns: [AssistantModel.TurnOutcome] = []
         model.readAutomatically = { _, text, _ in read.append(text) }
         model.readPolicy = { .always }
-        model.onTurnFinished = { turns.append($0) }
         model.open(context: .settings)
+        model.onTurnFinished = { turns.append($0) }
         await model.send("Was steht an?", spoken: true)
         #expect(read.isEmpty)
         let turn = try #require(turns.first)
@@ -126,8 +126,8 @@ struct AssistantModelTests {
         responder.enqueue("Erledigt, viel Spaß.")
         let (model, _, _) = await make()
         var turns: [AssistantModel.TurnOutcome] = []
-        model.onTurnFinished = { turns.append($0) }
         model.open(context: .tasks)
+        model.onTurnFinished = { turns.append($0) }
         await model.send("Fahrrad ist fertig", spoken: true)
         guard case .answered(_, let speech, let pending) = turns.first else { Issue.record("no turn"); return }
         #expect(speech.contains("Ich hake das ab."))
@@ -148,8 +148,8 @@ struct AssistantModelTests {
         responder.enqueue("Gut, ich lasse es offen.")
         let (model, _, _) = await make()
         var turns: [AssistantModel.TurnOutcome] = []
-        model.onTurnFinished = { turns.append($0) }
         model.open(context: .tasks)
+        model.onTurnFinished = { turns.append($0) }
         await model.send("Fahrrad ist fertig", spoken: true)
         let call = try #require(model.conversation?.pendingActions.first)
         await model.decline(call)
@@ -158,12 +158,22 @@ struct AssistantModelTests {
         #expect(!pending)
     }
 
+    @Test func voiceTurn_keepsTheConversationOpen() async throws {
+        let (model, _, _) = await make()
+        model.open(context: .settings)
+        let before = model.conversation
+        model.onTurnFinished = { _ in }
+        model.open(context: .tasks)
+        #expect(model.conversation === before)
+        #expect(model.context == .settings)
+    }
+
     @Test func voiceTurn_offlineAndRejected() async throws {
         responder.enqueueFailure(.network)
         let (model, _, _) = await make()
         var turns: [AssistantModel.TurnOutcome] = []
-        model.onTurnFinished = { turns.append($0) }
         model.open(context: .settings)
+        model.onTurnFinished = { turns.append($0) }
         await model.send("Hallo", spoken: true)
         #expect(turns == [.failed(offline: true)])
         await model.send("   ", spoken: true)

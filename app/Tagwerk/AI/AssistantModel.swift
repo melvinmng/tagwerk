@@ -71,6 +71,8 @@ final class AssistantModel {
 
     /// Opens the chat for the current view; restores the stored conversation without sending anything.
     func open(context: Context) {
+        // The voice mode keeps its conversation until it ends (stage 2 review 4).
+        guard onTurnFinished == nil else { isPresented = true; return }
         self.context = context
         switchThread(to: ChatStore.assistantKey, tools: tools)
         task = nil
@@ -79,6 +81,7 @@ final class AssistantModel {
 
     /// "Über diese Aufgabe sprechen": the task's own chat, with the repository functions for GitHub issues.
     func open(task: TaskItem) {
+        guard onTurnFinished == nil else { isPresented = true; return }
         context = .task(task.id)
         let reference = task.id.source == .github ? issueReference(task.id) : nil
         let handler = TaskChatTools(base: tools, reader: reader ?? NoRepositoryReader(), reference: reader == nil ? nil : reference)
@@ -109,6 +112,8 @@ final class AssistantModel {
             // GitHub is asked only now, when the user starts the conversation.
             let reference = task.id.source == .github ? issueReference(task.id) : nil
             taskContext = await IssueContext.load(task: task, reference: reference, reader: reference == nil ? nil : reader)
+            // The voice mode ended while GitHub was asked: send nothing.
+            if Task.isCancelled { return }
         }
         let start = conversation.history.count
         await conversation.send(trimmed)
