@@ -6,7 +6,8 @@ enum ModelContainerFactory {
                                      DayAssignment.self, DayOverrideRecord.self, ReminderEstimateRecord.self, EventTaskLink.self,
                                      RecurringEffortValue.self, RecurringEffortOverride.self, RecurringOccurrenceDone.self,
                                      DayLunchRecord.self, EventAvailabilityMark.self, EventMergeDecision.self,
-                                     PlanSuggestionRecord.self, ChatThreadRecord.self])
+                                     PlanSuggestionRecord.self, ChatThreadRecord.self,
+                                     MealRecord.self, DrinkRecord.self, WorkoutRecord.self, PendingHealthDeletion.self])
 
     static func make(inMemory: Bool) throws -> ModelContainer {
         try ModelContainer(for: schema, configurations: ModelConfiguration(isStoredInMemoryOnly: inMemory))

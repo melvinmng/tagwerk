@@ -48,6 +48,17 @@ final class AppSettings {
     var aiLongerDays: String = "forDeadlines"
     /// "Planungsvorgaben" (mockup VR1) as JSON: at most five short sentences.
     var aiPlanningRulesData: Data?
+    /// Daily and weekly goals of the "Erfassen" tab (phase 3 design §8.5: placeholders, not a recommendation).
+    var goalKilocalories: Int = 2300
+    var goalWaterMilliliters: Int = 2000
+    /// 0 hides the weekly counter.
+    var goalWorkoutsPerWeek: Int = 3
+    var proteinGoalEnabled: Bool = false
+    var goalProteinGrams: Int = 120
+    /// The one-time consent for meal estimates (main design §7). The settings switch binds to it; off means typing values.
+    var mealEstimationConsent: Bool = false
+    /// The Health card in the tab was dismissed with "Nicht jetzt".
+    var healthCardDismissed: Bool = false
 
     static let maximumPlanningRules = 5
 
