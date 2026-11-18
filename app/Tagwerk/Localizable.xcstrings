@@ -7,6 +7,36 @@
     "%@\n\nDie Anmeldung öffnet eine Seite von ChatGPT und kehrt danach von selbst zu Tagwerk zurück. Planen mit KI und der Assistent brauchen sie; alles andere läuft ohne." : {
 
     },
+    "%@ %@ bis %@ arbeiten" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ %2$@ bis %3$@ arbeiten"
+          }
+        }
+      }
+    },
+    "%@ %@ → %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ %2$@ → %3$@"
+          }
+        }
+      }
+    },
+    "%@ %lld." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ %2$lld."
+          }
+        }
+      }
+    },
     "%@ / %@ kcal" : {
       "localizations" : {
         "de" : {
@@ -23,6 +53,18 @@
     "%@ 15 Minuten später oder länger" : {
 
     },
+    "%@ Eiweiß" : {
+
+    },
+    "%@ Fett" : {
+
+    },
+    "%@ Kohlenhydrate" : {
+
+    },
+    "%@ Stunden" : {
+
+    },
     "%@ bis %@ · ganztägig" : {
       "localizations" : {
         "de" : {
@@ -33,10 +75,38 @@
         }
       }
     },
+    "%@ eingeplant" : {
+
+    },
+    "%@ erfasst" : {
+
+    },
+    "%@ frei von %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ frei von %2$@"
+          }
+        }
+      }
+    },
+    "%@ h" : {
+
+    },
     "%@ jetzt erfassen" : {
 
     },
-    "%@ planen" : {
+    "%@ ml Wasser erfasst" : {
+
+    },
+    "%@ ml Wasser erfasst." : {
+
+    },
+    "%@ noch frei" : {
+
+    },
+    "%@ offen" : {
 
     },
     "%@ reserviert" : {
@@ -52,6 +122,16 @@
         }
       }
     },
+    "%@ von %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ von %2$@"
+          }
+        }
+      }
+    },
     "%@ von %@ eingeplant" : {
       "localizations" : {
         "de" : {
@@ -61,6 +141,19 @@
           }
         }
       }
+    },
+    "%@ vorgeschlagen · nach dem Übernehmen %@ frei" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ vorgeschlagen · nach dem Übernehmen %2$@ frei"
+          }
+        }
+      }
+    },
+    "%@ zu viel" : {
+
     },
     "%@ · %@" : {
       "localizations" : {
@@ -92,7 +185,43 @@
         }
       }
     },
+    "%@ · Rest %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ · Rest %2$@"
+          }
+        }
+      }
+    },
     "%@ · ganztägig" : {
+
+    },
+    "%@, %@ Kilokalorien" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@, %2$@ Kilokalorien"
+          }
+        }
+      }
+    },
+    "%@, Aufgabe hier ablegen" : {
+
+    },
+    "%@, etwa %@ Kilokalorien" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@, etwa %2$@ Kilokalorien"
+          }
+        }
+      }
+    },
+    "%@, keine Mahlzeit erfasst" : {
 
     },
     "%@: %@" : {
@@ -105,10 +234,23 @@
         }
       }
     },
+    "%@: %@. Rückgängig verfügbar." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@: %2$@. Rückgängig verfügbar."
+          }
+        }
+      }
+    },
     "%@: Anmeldung abgelaufen" : {
 
     },
     "%@: frei" : {
+
+    },
+    "%@: hast du selbst verschoben, bleibt." : {
 
     },
     "%lld" : {
@@ -118,7 +260,26 @@
 
     },
     "%lld Aufgaben" : {
-
+      "localizations" : {
+        "de" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld Aufgabe"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld Aufgaben"
+                }
+              }
+            }
+          }
+        }
+      }
     },
     "%lld Aufgaben gesendet, %lld gekürzt · %lld min frei · %lld Zeichen" : {
       "localizations" : {
@@ -133,14 +294,168 @@
     "%lld Aufgaben löschen?" : {
 
     },
+    "%lld Einträge" : {
+      "localizations" : {
+        "de" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld Eintrag"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld Einträge"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "%lld Kalender" : {
+
+    },
     "%lld Milliliter Wasser erfassen" : {
 
+    },
+    "%lld Risiken" : {
+      "localizations" : {
+        "de" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld Risiko"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld Risiken"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "%lld Tagen" : {
+      "localizations" : {
+        "de" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld Tag"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld Tagen"
+                }
+              }
+            }
+          }
+        }
+      }
     },
     "%lld Termine" : {
 
     },
+    "%lld Trainings" : {
+      "localizations" : {
+        "de" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld Training"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld Trainings"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "%lld Vorschläge" : {
+      "localizations" : {
+        "de" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld Vorschlag"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld Vorschläge"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "%lld Vorschläge geändert" : {
-
+      "localizations" : {
+        "de" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld Vorschlag geändert"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld Vorschläge geändert"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "%lld Vorschläge übernommen" : {
+      "localizations" : {
+        "de" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld Vorschlag übernommen"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld Vorschläge übernommen"
+                }
+              }
+            }
+          }
+        }
+      }
     },
     "%lld ausgewählt · %@" : {
       "localizations" : {
@@ -165,10 +480,32 @@
     "%lld fällig in diesem Zeitraum" : {
 
     },
+    "%lld h" : {
+
+    },
+    "%lld h %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld h %2$@"
+          }
+        }
+      }
+    },
     "%lld kcal" : {
 
     },
+    "%lld min" : {
+
+    },
     "%lld ml" : {
+
+    },
+    "%lld nicht eingeplant" : {
+
+    },
+    "%lld passen nicht mehr" : {
 
     },
     "%lld s" : {
@@ -180,6 +517,16 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "%1$lld verschieben · %2$@ entlastet"
+          }
+        }
+      }
+    },
+    "%lld von %lld" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld von %2$lld"
           }
         }
       }
@@ -197,6 +544,16 @@
     "%lld überfällig" : {
 
     },
+    "%lld:%@ h" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld:%2$@ h"
+          }
+        }
+      }
+    },
     "**Gesendet wird** nur der Text und das Foto dieser Mahlzeit. Fotos gehen verkleinert und ohne Ortsangabe raus." : {
 
     },
@@ -209,17 +566,30 @@
     "+ %lld ml" : {
 
     },
+    "+%@ dieser Vorschlag" : {
+
+    },
     "+%lld" : {
 
     },
     "+%lld offen" : {
 
     },
-    "1 Aufgabe" : {
+    "1 Stunde" : {
 
     },
-    "1 Vorschlag geändert" : {
+    "1 passt nicht mehr" : {
 
+    },
+    "Ab %@: %@ statt %@. Frühere Tage behalten ihren Wert." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Ab %1$@: %2$@ statt %3$@. Frühere Tage behalten ihren Wert."
+          }
+        }
+      }
     },
     "Abbrechen" : {
 
@@ -237,6 +607,9 @@
 
     },
     "Abonnierte Kalender, Feiertage und Geburtstage sind schreibgeschützt und fehlen hier." : {
+
+    },
+    "Abonnierter oder schreibgeschützter Kalender: Zeit und Titel sind hier nicht änderbar." : {
 
     },
     "Abspielen" : {
@@ -281,10 +654,16 @@
     "Als erledigt markieren" : {
 
     },
+    "Als nicht geplant schließen" : {
+
+    },
     "An diesem Tag ist nichts erfasst." : {
 
     },
     "Andere Menge: %lld ml" : {
+
+    },
+    "Anderer Tag" : {
 
     },
     "Anderer Tag …" : {
@@ -297,6 +676,9 @@
 
     },
     "Anlegen als" : {
+
+    },
+    "Anmeldung fehlgeschlagen: %@" : {
 
     },
     "Anmeldung läuft …" : {
@@ -312,6 +694,9 @@
 
     },
     "Arbeitstag" : {
+
+    },
+    "Arbeitstag: %@" : {
 
     },
     "Arbeitszeit" : {
@@ -330,6 +715,9 @@
 
     },
     "Arbeitszeit je Wochentag" : {
+
+    },
+    "Arbeitszeit vorbei · ganzer Tag %@" : {
 
     },
     "Art" : {
@@ -392,6 +780,9 @@
     "Aufnahme beenden" : {
 
     },
+    "Aufnahme unterbrochen. Der Text bis dahin steht im Feld." : {
+
+    },
     "Aufnahme verwerfen" : {
 
     },
@@ -399,6 +790,22 @@
 
     },
     "Aufwand %@" : {
+
+    },
+    "Aufwand geändert: %@ → %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Aufwand geändert: %1$@ → %2$@"
+          }
+        }
+      }
+    },
+    "Aufwand je Tag der Serie." : {
+
+    },
+    "Aufwand je Tag der Serie. Bisher %@." : {
 
     },
     "Aufwand ändern …" : {
@@ -425,6 +832,15 @@
     "Beginn" : {
 
     },
+    "Beginn oder Dauer fehlen." : {
+
+    },
+    "Beginn und Ende sind ungültig." : {
+
+    },
+    "Beginn ändern" : {
+
+    },
     "Begründung" : {
 
     },
@@ -435,6 +851,12 @@
 
     },
     "Benachrichtigungen" : {
+
+    },
+    "Benachrichtigungen sind in iOS ausgeschaltet. Schalte sie unten unter „Zugriff“ wieder ein." : {
+
+    },
+    "Benachrichtigungen sind noch nicht erlaubt. Erlaube sie unten unter „Zugriff“." : {
 
     },
     "Beschreibung" : {
@@ -455,7 +877,19 @@
     "ChatGPT antwortet …" : {
 
     },
-    "ChatGPT plant %@ …" : {
+    "ChatGPT nimmt gerade keine Anfragen an. Versuch es später noch einmal oder trag die Werte selbst ein." : {
+
+    },
+    "ChatGPT plant den Monat …" : {
+
+    },
+    "ChatGPT plant den Tag …" : {
+
+    },
+    "ChatGPT plant die Woche …" : {
+
+    },
+    "ChatGPT spricht … · Mikrofon aus" : {
 
     },
     "Code kopieren und GitHub öffnen" : {
@@ -467,10 +901,31 @@
     "Dafür fragt iOS gleich nach dem Mikrofon." : {
 
     },
+    "Darin war kein Essen zu erkennen. Beschreib die Mahlzeit genauer oder trag die Werte selbst ein." : {
+
+    },
     "Darunter sind Serientermine" : {
 
     },
+    "Das Argument %@ fehlt." : {
+
+    },
+    "Das Datum %@ ist ungültig." : {
+
+    },
+    "Das Ende liegt nicht nach dem Beginn." : {
+
+    },
     "Das Foto wird verkleinert und ohne Ortsangabe gesendet und nicht in Tagwerk gespeichert." : {
+
+    },
+    "Das Issue wird dir zugewiesen." : {
+
+    },
+    "Das gewählte Modell gibt es nicht mehr. Tagwerk plant mit „Automatisch“." : {
+
+    },
+    "Das hat nicht geklappt · pausiert" : {
 
     },
     "Datenschutzhinweis" : {
@@ -494,6 +949,9 @@
     "Dauer: %lld min" : {
 
     },
+    "Deadline, %@" : {
+
+    },
     "Deadline-Kalender" : {
 
     },
@@ -506,16 +964,37 @@
     "Debug" : {
 
     },
+    "Den Vorschlag gibt es nicht mehr." : {
+
+    },
     "Denkaufwand" : {
 
     },
     "Der Assistent hat zu viele Schritte gebraucht und angehalten. Formuliere die Bitte genauer." : {
 
     },
+    "Der Beginn fehlt." : {
+
+    },
     "Der Beginn ist so vorbelegt, dass das Training jetzt endet. Tagwerk schätzt keinen Verbrauch; ein leeres Feld bleibt leer." : {
 
     },
+    "Der Code ist abgelaufen. Bitte neu starten." : {
+
+    },
+    "Der Tag liegt in der Vergangenheit." : {
+
+    },
     "Der Ton wird auf dem iPhone in Text umgewandelt. Änderungen führt Tagwerk erst aus, wenn du sie bestätigst." : {
+
+    },
+    "Der Vorschlag passt nicht mehr: %@" : {
+
+    },
+    "Der Zeitraum fehlt." : {
+
+    },
+    "Der Zeitraum ist ungültig." : {
 
     },
     "Derselbe Termin?" : {
@@ -527,22 +1006,109 @@
     "Diagnose" : {
 
     },
+    "Die Anmeldung bei ChatGPT ist abgelaufen. Melde dich unter Einstellungen › KI neu an." : {
+
+    },
     "Die Anmeldung erneuert sich automatisch. Ohne Nutzung läuft sie nach etwa 6 Monaten ab. Vollständig widerrufen: github.com → Settings → Applications → Authorized OAuth Apps." : {
+
+    },
+    "Die Anmeldung ist abgelaufen. Bitte melde dich neu an." : {
+
+    },
+    "Die Anmeldung ist abgelaufen. Melde dich erneut an." : {
+
+    },
+    "Die Anmeldung ist fehlgeschlagen. Versuche es erneut." : {
+
+    },
+    "Die Anmeldung wurde auf GitHub abgelehnt." : {
+
+    },
+    "Die Antwort von ChatGPT ließ sich nicht lesen. Versuche es erneut." : {
+
+    },
+    "Die Arbeitszeit änderst du im Vorschlag selbst." : {
+
+    },
+    "Die Argumente sind kein gültiges JSON." : {
+
+    },
+    "Die Aufgabe existiert nicht mehr." : {
+
+    },
+    "Die Aufgabe gibt es nicht mehr." : {
+
+    },
+    "Die Aufgabe wurde inzwischen geändert." : {
+
+    },
+    "Die Aufgabe wurde inzwischen geändert. Die Liste ist jetzt aktuell." : {
+
+    },
+    "Die Aufnahme ist fehlgeschlagen. Tippen geht weiter." : {
 
     },
     "Die Knöpfe im Tab erfassen sofort. Getränke mit Kalorien trägst du unter „Essen“ ein." : {
 
     },
+    "Die Liste konnte nicht aktualisiert werden. %@" : {
+
+    },
+    "Die Modellliste konnte nicht geladen werden." : {
+
+    },
+    "Die Modellliste konnte nicht geladen werden. %@" : {
+
+    },
+    "Die Quelle ist nicht verfügbar." : {
+
+    },
+    "Die Schätzung ist fehlgeschlagen. Versuch es noch einmal oder trag die Werte selbst ein." : {
+
+    },
+    "Die Uhrzeit fehlt bei %@." : {
+
+    },
+    "Die Uhrzeit fehlt." : {
+
+    },
+    "Die Uhrzeit ist ungültig." : {
+
+    },
     "Die Vorgaben sind Platzhalter, keine Empfehlung. Trag deine eigenen Ziele ein. Als Training zählt jede Einheit ab 10 min, aus Tagwerk oder aus Health." : {
 
     },
+    "Die Zeit ist ungültig." : {
+
+    },
+    "Diese Aufgabe gibt es nicht." : {
+
+    },
     "Diese Aufgabe wiederholt sich. Titel, Fälligkeit und Priorität gelten für alle Tage." : {
+
+    },
+    "Diese Quelle ist nicht verfügbar." : {
+
+    },
+    "Diese Termine gibt es nicht." : {
+
+    },
+    "Diese Woche · KW %lld" : {
+
+    },
+    "Diesen Termin gibt es nicht mehr." : {
 
     },
     "Diesen und alle folgenden" : {
 
     },
     "Diesen und alle folgenden löschen" : {
+
+    },
+    "Dieser Monat · %@" : {
+
+    },
+    "Dieser Termin lässt sich nicht ändern." : {
 
     },
     "Dieser Termin wiederholt sich" : {
@@ -566,7 +1132,19 @@
     "Duplizieren" : {
 
     },
+    "Dupliziert" : {
+
+    },
     "Ein anderer Tag macht aus dem Block eine Verschiebung. Es bleibt ein Vorschlag, bis du ihn übernimmst." : {
+
+    },
+    "Einladung" : {
+
+    },
+    "Einladung: Zeit und Titel legt die einladende Person fest." : {
+
+    },
+    "Einplanen am" : {
 
     },
     "Einplanen · nur in Tagwerk" : {
@@ -581,7 +1159,13 @@
     "Einstellungen öffnen" : {
 
     },
+    "Eintrag gelöscht" : {
+
+    },
     "Einverstanden und schätzen" : {
+
+    },
+    "Eiweiß" : {
 
     },
     "Eiweiß-Ziel" : {
@@ -593,6 +1177,9 @@
     "Ende" : {
 
     },
+    "Ende ändern" : {
+
+    },
     "English" : {
 
     },
@@ -602,13 +1189,22 @@
     "Entstehen über „Künftig immer“ auf einer Vorschlagskarte. Nach dem Löschen fragt Tagwerk wieder." : {
 
     },
+    "Epic" : {
+
+    },
     "Erfassen" : {
+
+    },
+    "Erfasst" : {
 
     },
     "Ergebnis" : {
 
     },
     "Ergebnis der Planung" : {
+
+    },
+    "Erinnerung" : {
 
     },
     "Erinnerungen" : {
@@ -659,16 +1255,31 @@
     "Ernährung im Widget zeigen" : {
 
     },
+    "Erst die Aufnahme beenden" : {
+
+    },
     "Erst „Übernehmen“ legt den Block im Plan-Kalender an." : {
 
     },
+    "Erweitert" : {
+
+    },
     "Es bleibt ein Vorschlag, bis du ihn übernimmst." : {
+
+    },
+    "Es gibt keinen beschreibbaren Kalender." : {
+
+    },
+    "Es gibt nichts zu ändern." : {
 
     },
     "Essen" : {
 
     },
     "Fertig" : {
+
+    },
+    "Fett" : {
 
     },
     "Filter" : {
@@ -692,10 +1303,16 @@
     "Freier Tag" : {
 
     },
+    "Früher am Tag" : {
+
+    },
     "Funktionsaufruf mitschneiden" : {
 
     },
     "Fällig" : {
+
+    },
+    "Fällig am" : {
 
     },
     "Fällig in diesem Zeitraum" : {
@@ -723,6 +1340,9 @@
     "Für Schätzungen aus Text oder Foto melde dich unter Einstellungen › KI bei ChatGPT an." : {
 
     },
+    "Für Schätzungen ist deine Einwilligung nötig." : {
+
+    },
     "Für alle Tage" : {
 
     },
@@ -741,6 +1361,12 @@
     "Gehen" : {
 
     },
+    "Geladen · auf dem iPhone" : {
+
+    },
+    "Gelöscht" : {
+
+    },
     "Geplant" : {
 
     },
@@ -753,7 +1379,20 @@
     "Geschätzt" : {
 
     },
+    "Geschätzt von ChatGPT am %@ um %@." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Geschätzt von ChatGPT am %1$@ um %2$@."
+          }
+        }
+      }
+    },
     "Geschätzter Aufwand in Stunden" : {
+
+    },
+    "Gestern" : {
 
     },
     "Getrennt anzeigen" : {
@@ -789,7 +1428,13 @@
     "GitHub-Aufgaben sind nur lesbar, bis GitHub wieder antwortet." : {
 
     },
+    "GitHub-Issue" : {
+
+    },
     "GitHub-Issues" : {
+
+    },
+    "Gleich hört Tagwerk wieder zu" : {
 
     },
     "HIIT" : {
@@ -828,7 +1473,16 @@
     "Hinzufügen" : {
 
     },
+    "Hoch" : {
+
+    },
     "Hört zu · auf dem iPhone" : {
+
+    },
+    "Hört zu … · auf dem iPhone" : {
+
+    },
+    "Hört zu … · sag ja, nein oder was anders sein soll" : {
 
     },
     "Im Chat startet der Knopf rechts neben dem leeren Feld den Sprechmodus. Tagwerk sendet nach der Pause, liest die Antwort vor und hört danach wieder zu. Änderungen führt es erst aus, wenn du sie bestätigst. „Änderungen ansagen“ gilt auch hier." : {
@@ -840,6 +1494,12 @@
     "In %lld Kalendern" : {
 
     },
+    "In %lld Tagen" : {
+
+    },
+    "In Health gespeichert." : {
+
+    },
     "In Kalender" : {
 
     },
@@ -849,13 +1509,22 @@
     "In Planen anzeigen" : {
 
     },
+    "In diesen Kalender kann Tagwerk nicht schreiben." : {
+
+    },
     "In dieser Woche wurde nichts erfasst." : {
 
     },
     "Ins Raster ziehen" : {
 
     },
+    "Issue #%@" : {
+
+    },
     "KI" : {
+
+    },
+    "KW %lld" : {
 
     },
     "Kalender" : {
@@ -870,6 +1539,9 @@
     "Kalender-Diagnose" : {
 
     },
+    "Kalorien" : {
+
+    },
     "Kalorien (optional)" : {
 
     },
@@ -879,7 +1551,25 @@
     "Kategorie nach dem Sprechen: %@" : {
 
     },
+    "Kein" : {
+
+    },
+    "Kein Aufwand" : {
+
+    },
+    "Kein Plan-Kalender" : {
+
+    },
+    "Kein Training" : {
+
+    },
+    "Kein Wasser erfasst" : {
+
+    },
     "Kein Zugriff auf %@" : {
+
+    },
+    "Kein Zugriff auf diese Quelle." : {
 
     },
     "Keine" : {
@@ -903,13 +1593,31 @@
     "Keine Termine" : {
 
     },
+    "Keine Termine angegeben." : {
+
+    },
+    "Keine Verbindung zu GitHub." : {
+
+    },
+    "Keine Verbindung · pausiert" : {
+
+    },
+    "Keine Verbindung. Die Schätzung braucht Internet." : {
+
+    },
     "Keine Vorschläge" : {
+
+    },
+    "Keine offenen Aufgaben zum Planen." : {
 
     },
     "Keine zugewiesenen Issues in offenen Projects" : {
 
     },
     "Keiner" : {
+
+    },
+    "Kohlenhydrate" : {
 
     },
     "Kommentar" : {
@@ -927,6 +1635,28 @@
     "Kontext: %@" : {
 
     },
+    "Kontext: %@ %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Kontext: %1$@ %2$@"
+          }
+        }
+      }
+    },
+    "Kontext: Aufgabe" : {
+
+    },
+    "Kontext: Aufgaben" : {
+
+    },
+    "Kontext: Erfassen" : {
+
+    },
+    "Kontext: allgemein" : {
+
+    },
     "Konto" : {
 
     },
@@ -942,6 +1672,9 @@
           }
         }
       }
+    },
+    "Kürzer" : {
+
     },
     "Labels (kommagetrennt)" : {
 
@@ -970,6 +1703,15 @@
     "Liste einklappen" : {
 
     },
+    "Liste von ChatGPT · %@" : {
+
+    },
+    "Liste wird geladen …" : {
+
+    },
+    "Lokal" : {
+
+    },
     "Lokale Aufgaben" : {
 
     },
@@ -994,6 +1736,9 @@
     "Mahlzeit erfassen" : {
 
     },
+    "Mahlzeit in Tagwerk erfassen" : {
+
+    },
     "Mahlzeit löschen" : {
 
     },
@@ -1004,6 +1749,9 @@
 
     },
     "Markiert die Aufgabe wieder als offen" : {
+
+    },
+    "Maximal" : {
 
     },
     "Mehr" : {
@@ -1036,7 +1784,19 @@
     "Mikrofon" : {
 
     },
+    "Mikrofon an, Vorlesen %@" : {
+
+    },
+    "Mikrofon aus, Vorlesen %@" : {
+
+    },
     "Mikrofon in Gesprächen" : {
+
+    },
+    "Mikrofon nicht erlaubt. Tippen geht weiter." : {
+
+    },
+    "Minimal" : {
 
     },
     "Mit Apple Health verbinden" : {
@@ -1063,6 +1823,9 @@
     "Mit Tagwerk sprechen" : {
 
     },
+    "Mit deinem ChatGPT-Konto kann Tagwerk Tag, Woche und Monat für dich planen, und der Assistent kann Aufgaben für dich ändern." : {
+
+    },
     "Mitschnitt teilen" : {
 
     },
@@ -1072,6 +1835,9 @@
     "Mittagspause %@" : {
 
     },
+    "Mittel" : {
+
+    },
     "Mitverschieben" : {
 
     },
@@ -1079,6 +1845,9 @@
 
     },
     "Modelle werden geladen …" : {
+
+    },
+    "Monat" : {
 
     },
     "Monat planen" : {
@@ -1103,6 +1872,9 @@
 
     },
     "Nenne, woran die KI die Aufgaben erkennt, z. B. „Aufgaben aus der Liste Studium nicht nach 18 Uhr“. Vorgaben gelten ohne Gewähr." : {
+
+    },
+    "Nennt Termine, Blöcke und Deadlines von heute" : {
 
     },
     "Nennt Termine, Blöcke und Deadlines von heute." : {
@@ -1138,7 +1910,13 @@
     "Nicht jetzt" : {
 
     },
+    "Nicht nach Health geschrieben werden: %@. Deine Einträge bleiben in Tagwerk." : {
+
+    },
     "Nicht senden" : {
+
+    },
+    "Nicht unterstützt" : {
 
     },
     "Nichts geplant" : {
@@ -1147,10 +1925,22 @@
     "Nichts geändert" : {
 
     },
+    "Nichts verstanden. Es kam kein Text an. Sprich näher am iPhone oder tippe." : {
+
+    },
     "Nie" : {
 
     },
+    "Niedrig" : {
+
+    },
+    "Noch einzuplanen" : {
+
+    },
     "Noch keine Planung protokolliert." : {
+
+    },
+    "Noch nicht in Health gespeichert. Tagwerk versucht es erneut." : {
 
     },
     "Noch nichts erfasst. Tippe oben auf Essen, Trinken oder Training." : {
@@ -1168,13 +1958,29 @@
     "Nur Kalorien sind nötig. Leere Felder werden nicht nach Health geschrieben." : {
 
     },
+    "Nur Tage dieser Planung." : {
+
+    },
     "Nur am %@" : {
 
+    },
+    "Nur am %@: %@ statt %@." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Nur am %1$@: %2$@ statt %3$@."
+          }
+        }
+      }
     },
     "Nur an diesem Tag" : {
 
     },
     "Nur an diesem Tag geändert" : {
+
+    },
+    "Nur auf einen späteren Tag verschiebbar." : {
 
     },
     "Nur diesen Termin" : {
@@ -1204,10 +2010,16 @@
     "Nächste Woche (Mo)" : {
 
     },
+    "Nächster Monat" : {
+
+    },
     "Nächster Tag" : {
 
     },
     "OK" : {
+
+    },
+    "Offline: Änderungen an GitHub sind gerade nicht möglich." : {
 
     },
     "Offline: Änderungen sind gerade nicht möglich." : {
@@ -1238,7 +2050,13 @@
         }
       }
     },
+    "Pausiert" : {
+
+    },
     "Pausiert nach Stille" : {
+
+    },
+    "Pausiert, nichts gehört" : {
 
     },
     "Plan-Kalender" : {
@@ -1257,6 +2075,9 @@
         }
       }
     },
+    "Planen ist gerade nicht verfügbar." : {
+
+    },
     "Planen mit KI" : {
 
     },
@@ -1274,6 +2095,9 @@
 
     },
     "Posten hinzufügen" : {
+
+    },
+    "Premium" : {
 
     },
     "Priorität" : {
@@ -1311,6 +2135,9 @@
 
     },
     "Repo" : {
+
+    },
+    "Repositories konnten nicht geladen werden." : {
 
     },
     "Repository" : {
@@ -1355,11 +2182,33 @@
     "Schätzung, keine Messung. Passe Mengen und Werte an, bevor du sicherst. Tippe auf einen Posten, um seine Werte zu ändern; wische, um ihn zu entfernen." : {
 
     },
-    "Seit dem Öffnen %@ geändert." : {
+    "Sehr hoch" : {
 
     },
     "Seit dem Öffnen wurde die Aufgabe geändert." : {
 
+    },
+    "Seit dem Öffnen wurden %lld Felder geändert." : {
+      "localizations" : {
+        "de" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Seit dem Öffnen wurde %lld Feld geändert."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Seit dem Öffnen wurden %lld Felder geändert."
+                }
+              }
+            }
+          }
+        }
+      }
     },
     "Senden" : {
 
@@ -1368,6 +2217,9 @@
 
     },
     "Senden nach Pause" : {
+
+    },
+    "Sendet an ChatGPT …" : {
 
     },
     "Sendet einen gesprochenen Testsatz und einen kurzen Text an OpenAI und ChatGPT, um zu sehen, welche Sprachdienste dein Abo freigibt. Angezeigt werden Status, erkannter Text und Fehlermeldungen, nie die Anmeldung." : {
@@ -1383,6 +2235,9 @@
 
     },
     "Siri & Kurzbefehle" : {
+
+    },
+    "So lange vor der Fälligkeit erinnert Tagwerk an Aufgaben und Deadline-Termine der eingeschalteten Quellen. An Aufgaben ohne Uhrzeit erinnert Tagwerk am Fälligkeitstag um 9:00. An ganztägige Deadline-Termine erinnert Tagwerk am Vortag um 18:00." : {
 
     },
     "Sonstiges" : {
@@ -1403,7 +2258,13 @@
     "Spracheingabe" : {
 
     },
+    "Spracherkennung ist auf diesem iPhone nicht verfügbar. Tippen geht weiter." : {
+
+    },
     "Sprachpaket %@" : {
+
+    },
+    "Sprachpaket fehlt. Es lädt, sobald du online bist." : {
 
     },
     "Sprechen" : {
@@ -1427,7 +2288,13 @@
     "Sprich jetzt, nichts wird gesendet, bevor du ↑ tippst." : {
 
     },
+    "Sprich jetzt." : {
+
+    },
     "Stand %@" : {
+
+    },
+    "Stand von %@ geladen" : {
 
     },
     "Standard" : {
@@ -1436,13 +2303,22 @@
     "Standard aus den Einstellungen" : {
 
     },
+    "Standard des Modells" : {
+
+    },
     "Standard wiederherstellen" : {
+
+    },
+    "Standard: %@" : {
 
     },
     "Standarddauer: %@" : {
 
     },
     "Starten" : {
+
+    },
+    "Startet …" : {
 
     },
     "Stimme %@" : {
@@ -1463,13 +2339,28 @@
     "Tag öffnen ›" : {
 
     },
+    "Tagwerk darf nicht nach Health schreiben. Deine Einträge bleiben in Tagwerk. Ändern kannst du das in der App „Health“ unter Profil › Apps › Tagwerk." : {
+
+    },
+    "Tagwerk erinnert dich vor der Fälligkeit an GitHub- und lokale Aufgaben und an Termine aus deinen Deadline-Kalendern. Erinnerungen aus der App „Erinnerungen“ melden sich weiterhin selbst." : {
+
+    },
     "Tagwerk hört zu und sendet, was du sagst, nach einer kurzen Pause an ChatGPT. Bis dahin kannst du „Nicht senden“ tippen. Die Antwort wird vorgelesen, danach hört Tagwerk wieder zu." : {
+
+    },
+    "Tagwerk legt geplante Zeitblöcke als Termine in einem eigenen Kalender „Tagwerk“ an. Du siehst sie auch in der Kalender-App." : {
+
+    },
+    "Tagwerk liest deine Termine, um deinen Tag zu planen. Der Kalender wird nicht verändert." : {
 
     },
     "Tagwerk nimmt das Standardmodell deines Abos" : {
 
     },
     "Tagwerk ruft die KI nur auf, wenn du sie selbst startest, zum Beispiel mit „Tag planen“ oder einer Nachricht an den Assistenten. Im Hintergrund geschieht das nie, und Tagwerk fragt nicht bei jedem Aufruf erneut nach." : {
+
+    },
+    "Tagwerk schreibt Mahlzeiten, Wasser und Trainings nach Health und liest Trainings. Ob das Lesen erlaubt ist, zeigt iOS nicht an: Fehlen Trainings der Apple Watch, prüfe den Zugriff in der App „Health“ unter Profil › Apps › Tagwerk." : {
 
     },
     "Tagwerk speichert Mahlzeiten, Wasser und Trainings zusätzlich in Health und zeigt Trainings der Apple Watch und anderer Apps. Deine Einträge bleiben auch ohne Health in Tagwerk." : {
@@ -1482,6 +2373,15 @@
 
     },
     "Tagwerk wandelt deine Sprache auf dem iPhone in Text um. Der Ton verlässt das Gerät nicht. Gesendet wird erst, wenn du ↑ tippst." : {
+
+    },
+    "Tagwerk zeigt deine Erinnerungen zusammen mit deinen anderen Aufgaben und kann sie bearbeiten." : {
+
+    },
+    "Tagwerk zeigt dir zugewiesene Issues aus deinen offenen GitHub Projects und kann sie bearbeiten." : {
+
+    },
+    "Tagwerk-Block" : {
 
     },
     "Tempo" : {
@@ -1535,6 +2435,9 @@
     "Training erfassen" : {
 
     },
+    "Training in Tagwerk erfassen" : {
+
+    },
     "Training löschen" : {
 
     },
@@ -1553,6 +2456,9 @@
     "Trotzdem sichern" : {
 
     },
+    "Trägt 250 ml ein, ohne Tagwerk zu öffnen" : {
+
+    },
     "Trägt Wasser in Tagwerk ein, ohne die App zu öffnen." : {
 
     },
@@ -1560,6 +2466,12 @@
 
     },
     "Uhrzeit wählen" : {
+
+    },
+    "Ultra" : {
+
+    },
+    "Unbekannte Funktion %@." : {
 
     },
     "Ungeplant" : {
@@ -1572,6 +2484,9 @@
 
     },
     "Verbinden" : {
+
+    },
+    "Vergangen" : {
 
     },
     "Verknüpfung lösen" : {
@@ -1599,6 +2514,31 @@
         }
       }
     },
+    "Verschoben" : {
+
+    },
+    "Verschoben · %lld Zeitblöcke mitgenommen" : {
+      "localizations" : {
+        "de" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Verschoben · %lld Zeitblock mitgenommen"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Verschoben · %lld Zeitblöcke mitgenommen"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "Verwerfen" : {
 
     },
@@ -1606,6 +2546,15 @@
 
     },
     "Von Hand ändern" : {
+
+    },
+    "Von Tagwerk ergänzt: P1, passt in diese freie Lücke." : {
+
+    },
+    "Von dir eingetragen." : {
+
+    },
+    "Vor %lld Tagen" : {
 
     },
     "Vorarbeiten, wenn Luft ist" : {
@@ -1629,6 +2578,9 @@
     "Vorherige Woche" : {
 
     },
+    "Vorheriger Monat" : {
+
+    },
     "Vorheriger Tag" : {
 
     },
@@ -1638,10 +2590,35 @@
     "Vorlesen" : {
 
     },
+    "Vorlesen nicht möglich" : {
+
+    },
     "Vorlesen stoppen" : {
 
     },
     "Vorschlag" : {
+
+    },
+    "Vorschlag · %@" : {
+
+    },
+    "Vorschlag · %@ · %@ bis %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Vorschlag · %1$@ · %2$@ bis %3$@"
+          }
+        }
+      }
+    },
+    "Vorschlag · +%@ · nur an diesem Tag" : {
+
+    },
+    "Vorschlag · freier Tag · %@" : {
+
+    },
+    "Vorschlag · verschieben" : {
 
     },
     "Vorschläge" : {
@@ -1672,10 +2649,16 @@
     "Was steht heute an?" : {
 
     },
+    "Was steht heute in Tagwerk an?" : {
+
+    },
     "Wasser" : {
 
     },
     "Wasser erfassen" : {
+
+    },
+    "Wasser in Tagwerk erfassen" : {
 
     },
     "Wasser · %@" : {
@@ -1691,6 +2674,12 @@
 
     },
     "Weitere Optionen …" : {
+
+    },
+    "Weniger" : {
+
+    },
+    "Wenn du KI-Funktionen nutzt, gehen die dafür nötigen Daten (Termine, Aufgaben, bei Issues auch Repo-Inhalte) an OpenAI." : {
 
     },
     "Werte" : {
@@ -1715,6 +2704,12 @@
 
     },
     "Wird ausgeführt …" : {
+
+    },
+    "Wird beim ersten Sprechen geladen" : {
+
+    },
+    "Wird geladen …" : {
 
     },
     "Wird in %lld s ausgeführt" : {
@@ -1788,6 +2783,16 @@
     "Zeitblöcke mitverschieben?" : {
 
     },
+    "Ziel an %lld von %lld Tagen · Ø %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Ziel an %1$lld von %2$lld Tagen · Ø %3$@"
+          }
+        }
+      }
+    },
     "Ziele" : {
 
     },
@@ -1833,6 +2838,26 @@
     "Zählt als" : {
 
     },
+    "ab %@ bis %@ · ganzer Tag %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "ab %1$@ bis %2$@ · ganzer Tag %3$@"
+          }
+        }
+      }
+    },
+    "ab jetzt · %@ bis %@ · ganzer Tag %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "ab jetzt · %1$@ bis %2$@ · ganzer Tag %3$@"
+          }
+        }
+      }
+    },
     "als GitHub-Issue" : {
 
     },
@@ -1840,6 +2865,12 @@
 
     },
     "auch alle künftigen" : {
+
+    },
+    "automatisch erkannt" : {
+
+    },
+    "bis %@" : {
 
     },
     "bisher" : {
@@ -1861,19 +2892,54 @@
         }
       }
     },
+    "diesem Gerät" : {
+
+    },
+    "eingetragen" : {
+
+    },
     "erlaubt" : {
 
     },
     "frei" : {
 
     },
+    "frei %@–%@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "frei %1$@–%2$@"
+          }
+        }
+      }
+    },
     "fällig %@" : {
+
+    },
+    "fällig %@ %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "fällig %1$@ %2$@"
+          }
+        }
+      }
+    },
+    "ganztägig" : {
 
     },
     "geplant %@" : {
 
     },
     "gesprochen" : {
+
+    },
+    "gestern" : {
+
+    },
+    "gestern %@" : {
 
     },
     "geändert" : {
@@ -1885,13 +2951,49 @@
     "h" : {
 
     },
+    "heute" : {
+
+    },
+    "heute %@" : {
+
+    },
     "heute noch %@ frei" : {
+
+    },
+    "in %lld Tagen" : {
+
+    },
+    "jetzt %@" : {
 
     },
     "kcal" : {
 
     },
+    "kein Arbeitstag" : {
+
+    },
+    "kein Aufwand" : {
+
+    },
+    "kein freier Platz mehr" : {
+
+    },
     "keine" : {
+
+    },
+    "keine Fälligkeit" : {
+
+    },
+    "lokale Aufgaben" : {
+
+    },
+    "manuell verknüpft" : {
+
+    },
+    "morgen" : {
+
+    },
+    "nach %@" : {
 
     },
     "nach Fälligkeit" : {
@@ -1903,13 +3005,28 @@
     "nicht ausgewählt" : {
 
     },
+    "nicht erlaubt" : {
+
+    },
     "nicht verfügbar" : {
 
     },
     "noch %@" : {
 
     },
+    "noch nicht eingeplant" : {
+
+    },
     "passt in die freie Zeit" : {
+
+    },
+    "seit %@" : {
+
+    },
+    "seit %lld Tagen" : {
+
+    },
+    "seit gestern" : {
 
     },
     "teilweise · Health öffnen" : {
@@ -1917,6 +3034,22 @@
     },
     "verbunden" : {
 
+    },
+    "verknüpft" : {
+
+    },
+    "von %@" : {
+
+    },
+    "von %@ nach %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "von %1$@ nach %2$@"
+          }
+        }
+      }
     },
     "von %@ · %@" : {
       "localizations" : {
@@ -1932,6 +3065,9 @@
 
     },
     "wiederkehrend" : {
+
+    },
+    "wird aktualisiert …" : {
 
     },
     "wird gelesen" : {
@@ -1967,13 +3103,22 @@
     "Änderungen gelten nur für diesen Tag." : {
 
     },
+    "Öffne Tagwerk, um den Plan zu laden." : {
+
+    },
     "Öffnet ChatGPT mit dem Kontext dieses Bildschirms" : {
 
     },
     "Öffnet Erfassen" : {
 
     },
+    "Öffnet das Blatt „Essen“" : {
+
+    },
     "Öffnet das Blatt „Essen“ in Tagwerk." : {
+
+    },
+    "Öffnet das Blatt „Training“" : {
 
     },
     "Öffnet das Blatt „Training“ in Tagwerk." : {
@@ -2011,7 +3156,26 @@
     "Übernimm zuerst die längere Arbeitszeit." : {
 
     },
+    "Übernommen" : {
+
+    },
+    "Überschneidet sich mit „%@“ (%@, %@). Das Training würde doppelt gezählt." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Überschneidet sich mit „%1$@“ (%2$@, %3$@). Das Training würde doppelt gezählt."
+          }
+        }
+      }
+    },
     "Überspringen" : {
+
+    },
+    "überfällig" : {
+
+    },
+    "überfällig seit %@" : {
 
     },
     "überschneidet %lld Termine" : {
@@ -2024,6 +3188,9 @@
 
     },
     "„%@“" : {
+
+    },
+    "„%@“ auf GitHub als nicht geplant schließen?" : {
 
     },
     "„%@“ aus „%@“" : {
@@ -2046,6 +3213,9 @@
         }
       }
     },
+    "„%@“ endgültig löschen?" : {
+
+    },
     "„Abmelden“ löscht die Anmeldung bei ChatGPT von diesem iPhone. Danach sind die KI-Funktionen aus, bis du dich wieder anmeldest." : {
 
     },
@@ -2061,7 +3231,22 @@
     "„In Planen anzeigen“ zeigt Kalorien und Wasser von heute unter dem Datum im Tab „Planen“, sobald du etwas erfasst hast. Ist „Ernährung im Widget zeigen“ aus, stehen die Werte nicht im Widget. Auf dem Sperrbildschirm erscheinen sie nie." : {
 
     },
+    "„Neu laden“ verwirft deine Änderungen. „Trotzdem sichern“ schreibt deine Werte und überschreibt dabei die markierten Felder auf %@." : {
+
+    },
+    "„Neu laden“ verwirft deine Änderungen. „Trotzdem sichern“ schreibt nur deine Änderungen und überschreibt nichts auf %@." : {
+
+    },
     "„＋“ erfasst die Mahlzeit sofort für jetzt. Tippe auf die Zeile, um sie vorher anzupassen." : {
+
+    },
+    "↻ %@ reserviert" : {
+
+    },
+    "✓ Ausgeführt" : {
+
+    },
+    "✓ Ausgeführt · %@" : {
 
     }
   },
