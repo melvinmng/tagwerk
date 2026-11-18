@@ -39,6 +39,7 @@ struct DeadlineCard: View {
         case .priorityOne: return "P1" + time
         case .epic: return String(localized: "Epic") + time
         case .deadlineCalendar: return String(localized: "Kalender") + time
+        case .markedEvent: return String(localized: "markiert") + time
         }
     }
 
