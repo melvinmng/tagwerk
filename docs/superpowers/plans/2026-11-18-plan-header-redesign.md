@@ -1,6 +1,6 @@
 # Kopf von „Planen“ überarbeiten (PK2) – Implementation Plan
 
-> **Status:** Entwurf. Die Variante PK2 ist eine **Empfehlung (vorläufig, Freigabe offen)**. Vor Task 1 müssen die offenen Fragen am Ende des Mockups beantwortet sein, mindestens Frage 2 (System-Leiste in „Planen“) und Frage 3 (Titel links oder mittig).
+> **Status:** Umgesetzt und am Gerät abgenommen (PR #131, 18.11.2026). PK2 ist freigegeben; Titel links, rund 19 pt, „Heute“ in der Bedienzeile, ＋ bleibt „Neuer Termin“. Geräte mit 375 pt Breite werden nicht unterstützt. „Erfassen“ bleibt vorerst unverändert (Angleichen der Einzelteile später).
 
 **Goal:** Der KI-Button (✦, „Assistent“) und ＋ sitzen in „Planen“ mit denselben Leisten-Bausteinen wie in „Aufgaben“ und „Erfassen“. Der Kopf von „Planen“ besteht aus zwei festen Zeilen:
 
