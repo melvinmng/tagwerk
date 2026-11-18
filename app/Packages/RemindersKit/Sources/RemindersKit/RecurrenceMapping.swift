@@ -46,6 +46,10 @@ public enum RecurrenceMapping {
         let positions = (rule.setPositions ?? []).map(\.intValue)
         let yearParts = (rule.weeksOfTheYear ?? []).count + (rule.daysOfTheYear ?? []).count
         let pattern: RecurrenceRule
+        // Hourly rules of the Reminders app have no public frequency and would otherwise read as daily.
+        if isSubDaily(ruleText: rule.description) {
+            return Recurrence(rule: .unsupported, start: PlanDay(due), end: nil, count: nil)
+        }
         switch rule.frequency {
         case .daily where weekdays.isEmpty:
             pattern = .daily(interval: interval)
@@ -75,6 +79,12 @@ public enum RecurrenceMapping {
         let end = rule.recurrenceEnd?.endDate.map { PlanDay(date: $0, calendar: calendar) }
         let count = rule.recurrenceEnd.flatMap { $0.occurrenceCount > 0 ? $0.occurrenceCount : nil }
         return Recurrence(rule: pattern, start: PlanDay(due), end: end, count: count)
+    }
+
+    /// Unverified assumption: EventKit describes a rule with its RRULE text ("FREQ=HOURLY"), also for frequencies
+    /// that `EKRecurrenceFrequency` cannot express.
+    static func isSubDaily(ruleText: String) -> Bool {
+        ["FREQ=HOURLY", "FREQ=MINUTELY", "FREQ=SECONDLY"].contains { ruleText.contains($0) }
     }
 
     /// Unverified assumption (plan §3, item 6): the end is written as the last second of the end day in the

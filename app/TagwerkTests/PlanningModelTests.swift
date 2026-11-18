@@ -302,31 +302,38 @@ struct PlanningModelTests {
         #expect(model.recurringItem(for: task, on: today) == nil)
     }
 
-    @Test func blocksOffSeries_findsBlockOutsideWindows() async throws {
-        let task = try await addSeries(.daily(interval: 1), start: today)
-        let early = try blocks.createBlock(for: task, start: at(20, 9), minutes: 60)
-        let inWindow = try blocks.createBlock(for: task, start: at(25, 9), minutes: 60)
+    /// A block prepares the occurrence of the current rule on or after its day; it is off the series when the
+    /// new rule no longer has that occurrence (device test: the old window rule almost never asked).
+    @Test func blocksOffSeries_flagsBlockWhoseOccurrenceDisappears() async throws {
+        // Weekly on Thursday from 19 November; Thursday 26 November is the occurrence.
+        let task = try await addSeries(.weekly(interval: 1, weekdays: [5]), start: PlanDay(year: 2026, month: 11, day: 19))
+        let onThursday = try blocks.createBlock(for: task, start: at(26, 9), minutes: 60)
         let model = await model()
-        // Weekly on Monday from 30 November: the window of the first occurrence starts on 24 November.
-        let moved = Recurrence(rule: .weekly(interval: 1, weekdays: [2]), start: PlanDay(year: 2026, month: 11, day: 30),
-                               end: nil, count: nil)
-        #expect(model.blocksOffSeries(for: task, recurrence: moved).map(\.id) == [early.id])
-        // Ending on 22 November leaves the block of the 25th without an occurrence.
-        let ending = Recurrence(rule: .daily(interval: 1), start: today, end: PlanDay(year: 2026, month: 11, day: 22), count: nil)
-        #expect(model.blocksOffSeries(for: task, recurrence: ending).map(\.id) == [inWindow.id])
-        let counted = Recurrence(rule: .daily(interval: 1), start: today, end: nil, count: 2)
-        #expect(Set(model.blocksOffSeries(for: task, recurrence: counted).map(\.id)) == [early.id, inWindow.id])
+        // Mockup example: every 2 weeks on Monday and Thursday from 30 November no longer has 26 November.
+        let changed = Recurrence(rule: .weekly(interval: 2, weekdays: [2, 5]), start: PlanDay(year: 2026, month: 11, day: 30),
+                                 end: nil, count: nil)
+        #expect(model.blocksOffSeries(for: task, recurrence: changed).map(\.id) == [onThursday.id])
     }
 
-    @Test func blocksOffSeries_keepsBlockBeforeOccurrence() async throws {
-        let task = try await addSeries(.daily(interval: 1), start: today)
+    @Test func blocksOffSeries_keepsBlockPreparingAnOccurrenceThatStays() async throws {
+        let task = try await addSeries(.weekly(interval: 1, weekdays: [5]), start: PlanDay(year: 2026, month: 11, day: 19))
+        // Tuesday's block is work on Thursday 26 November, which the new rule keeps.
         _ = try blocks.createBlock(for: task, start: at(24, 9), minutes: 60)
         let model = await model()
-        // Thursdays from 26 November: Tuesday's block is work on Thursday's occurrence.
-        let thursdays = Recurrence(rule: .weekly(interval: 1, weekdays: [5]), start: PlanDay(year: 2026, month: 11, day: 26),
-                                   end: nil, count: nil)
-        #expect(model.blocksOffSeries(for: task, recurrence: thursdays).isEmpty)
+        let withMonday = Recurrence(rule: .weekly(interval: 1, weekdays: [2, 5]), start: PlanDay(year: 2026, month: 11, day: 19),
+                                    end: nil, count: nil)
+        #expect(model.blocksOffSeries(for: task, recurrence: withMonday).isEmpty)
         #expect(model.blocksOffSeries(for: task, recurrence: Recurrence(rule: .unsupported, start: today, end: nil, count: nil)).isEmpty)
+    }
+
+    @Test func blocksOffSeries_flagsBlockAfterNewEnd() async throws {
+        let task = try await addSeries(.daily(interval: 1), start: today)
+        let before = try blocks.createBlock(for: task, start: at(20, 9), minutes: 60)
+        let after = try blocks.createBlock(for: task, start: at(25, 9), minutes: 60)
+        let model = await model()
+        let ending = Recurrence(rule: .daily(interval: 1), start: today, end: PlanDay(year: 2026, month: 11, day: 22), count: nil)
+        #expect(model.blocksOffSeries(for: task, recurrence: ending).map(\.id) == [after.id])
+        _ = before
     }
 
     @Test func dropTask_recurringReminder_usesRecurringEffort() async throws {

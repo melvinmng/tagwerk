@@ -141,6 +141,13 @@ struct RecurrenceMappingTests {
         let invalid = Recurrence(rule: .daily(interval: 0), start: start, end: nil, count: nil)
         #expect(RecurrenceMapping.ekRule(for: invalid, calendar: calendar) == nil)
     }
+    /// Device test: an hourly rule from the Reminders app was shown as daily. EventKit has no hourly frequency in its
+    /// public API, so the rule's RRULE text decides.
+    @Test func subDailyRuleText_isDetected() {
+        #expect(RecurrenceMapping.isSubDaily(ruleText: "EKRecurrenceRule <0x1> RRULE FREQ=HOURLY;INTERVAL=1"))
+        #expect(RecurrenceMapping.isSubDaily(ruleText: "RRULE FREQ=MINUTELY;INTERVAL=30"))
+        #expect(!RecurrenceMapping.isSubDaily(ruleText: "EKRecurrenceRule <0x1> RRULE FREQ=DAILY;INTERVAL=1"))
+    }
 }
 
 func makeBerlinCalendar(_ identifier: String = "Europe/Berlin") -> Calendar {
@@ -148,4 +155,5 @@ func makeBerlinCalendar(_ identifier: String = "Europe/Berlin") -> Calendar {
     calendar.firstWeekday = 2
     calendar.timeZone = TimeZone(identifier: identifier)!
     return calendar
+
 }

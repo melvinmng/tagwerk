@@ -157,6 +157,8 @@ final class PlanningModel {
     private(set) var blockedMinutesByTask: [TaskID: Int] = [:]
     /// Repetition rules of recurring reminders (reminder ID → rule), for their session window.
     private var recurrenceRules: [String: RecurrenceRule] = [:]
+    /// Full recurrences of open reminders, to compare a changed rule with the current one.
+    private var recurrences: [String: Recurrence] = [:]
     /// The block created by the last "Duplizieren", for "Widerrufen".
     private(set) var lastDuplicate: CalendarEvent?
     /// Open AI suggestion batches that touch the shown range.
@@ -219,6 +221,8 @@ final class PlanningModel {
         recurringReminderIDs = recurringIDs
         recurrenceRules = Dictionary(reminders.compactMap { record in record.recurrence.map { (record.id, $0.rule) } },
                                      uniquingKeysWith: { first, _ in first })
+        recurrences = Dictionary(reminders.compactMap { record in record.recurrence.map { (record.id, $0) } },
+                                 uniquingKeysWith: { first, _ in first })
         updateSessions(open: open)
         let links = resolvedLinks.mapValues(\.taskID)
         let deadlines = importantDeadlines(tasks: open, events: events,
@@ -518,18 +522,19 @@ final class PlanningModel {
                              minutes: efforts.minutes(for: task.id.rawValue, on: day) ?? 0)
     }
 
-    /// Future blocks of `task` that would lie on a day without an occurrence under `recurrence`: the day is in
-    /// no session window (`sessionWindowStart`) of any occurrence. A block shortly before an occurrence counts
-    /// as work on it and is not listed. Empty for rules Tagwerk cannot read. Blocks are never changed here
-    /// (decision 2026-11-18: they stay in the calendar; the save question names them).
+    /// Future blocks of `task` whose occurrence disappears under `recurrence`. A block prepares the occurrence of
+    /// the current rule on or after its day (a Tuesday block for Thursday's occurrence); it is listed when the new
+    /// rule has no occurrence on that day. Without a current rule the block's own day counts. Empty for rules
+    /// Tagwerk cannot read. Blocks are never changed here (decision 2026-11-18: they stay in the calendar; the
+    /// save question names them).
     func blocksOffSeries(for task: TaskItem, recurrence: Recurrence) -> [CalendarEvent] {
         if case .unsupported = recurrence.rule { return [] }
+        let current = task.recurrence ?? (task.id.source == .reminders ? recurrences[task.id.rawValue] : nil)
         return blocks.futureBlocks(for: task.id, after: now()).filter { block in
             let day = PlanDay(date: block.start, calendar: calendar)
-            // Windows grow with the occurrence, so the first occurrence on or after the day decides.
-            guard let next = nextOccurrence(of: recurrence, onOrAfter: day, calendar: calendar),
-                  let windowStart = sessionWindowStart(for: recurrence.rule, today: next, calendar: calendar) else { return true }
-            return day < windowStart
+            let served: PlanDay = if let current, case .unsupported = current.rule { day }
+                else { current.flatMap { nextOccurrence(of: $0, onOrAfter: day, calendar: calendar) } ?? day }
+            return nextOccurrence(of: recurrence, onOrAfter: served, calendar: calendar) != served
         }
     }
 
