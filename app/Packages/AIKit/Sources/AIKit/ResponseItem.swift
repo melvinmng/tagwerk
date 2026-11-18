@@ -1,14 +1,42 @@
 import Foundation
+import Synchronization
 
 /// A model the user can pick, from `GET /v1/models` (`visibility == "list"` only).
 public struct AIModel: Sendable, Hashable, Codable, Identifiable {
     public var slug: String
     public var displayName: String
+    /// Reasoning efforts the model accepts ("low" … "ultra"), in server order.
+    public var reasoningLevels: [String]
+    /// The effort the server uses when none is sent.
+    public var defaultReasoning: String?
     public var id: String { slug }
 
-    public init(slug: String, displayName: String) {
+    public init(slug: String, displayName: String, reasoningLevels: [String] = [], defaultReasoning: String? = nil) {
         self.slug = slug
         self.displayName = displayName
+        self.reasoningLevels = reasoningLevels
+        self.defaultReasoning = defaultReasoning
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        slug = try container.decode(String.self, forKey: .slug)
+        displayName = try container.decode(String.self, forKey: .displayName)
+        reasoningLevels = try container.decodeIfPresent([String].self, forKey: .reasoningLevels) ?? []
+        defaultReasoning = try container.decodeIfPresent(String.self, forKey: .defaultReasoning)
+    }
+}
+
+/// Settings sent with every call; changed by the app (model page), read when a request is built.
+public final class AIRequestOptions: Sendable {
+    private let effort = Mutex<String?>(nil)
+
+    public init() {}
+
+    /// `reasoning.effort`; `nil` leaves the model's default.
+    public var reasoningEffort: String? {
+        get { effort.withLock { $0 } }
+        set { effort.withLock { $0 = newValue } }
     }
 }
 

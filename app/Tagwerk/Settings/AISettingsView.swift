@@ -15,6 +15,7 @@ struct AISettingsView: View {
         Form {
             accountSection
             if ai.isSignedIn { modelSection }
+            if ai.isSignedIn, let model = ai.currentModel, !model.reasoningLevels.isEmpty { reasoningSection(model) }
             Section {
                 NavigationLink("Datenschutzhinweis") { AIPrivacyView() }
             }
@@ -114,6 +115,33 @@ struct AISettingsView: View {
             }
         } footer: {
             Text("Gilt für Planen und Assistent. Ist das gewählte Modell nicht mehr verfügbar, wechselt Tagwerk auf „Automatisch“ und sagt es beim nächsten Aufruf.")
+        }
+    }
+
+    // MARK: Reasoning
+
+    /// "Denkaufwand": only the levels the chosen model offers; "Automatisch" leaves the model's default.
+    private func reasoningSection(_ model: AIModel) -> some View {
+        @Bindable var ai = ai
+        let automatic = model.defaultReasoning.map { "Standard: \(AIEnvironment.reasoningName($0).lowercased())" }
+            ?? "Standard des Modells"
+        return Section {
+            Picker("Denkaufwand", selection: $ai.selectedReasoning) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Automatisch")
+                    Text(automatic).font(.footnote).foregroundStyle(.secondary)
+                }
+                .tag(String?.none)
+                ForEach(model.reasoningLevels, id: \.self) { level in
+                    Text(AIEnvironment.reasoningName(level)).tag(String?.some(level))
+                }
+            }
+            .pickerStyle(.inline)
+            .labelsHidden()
+        } header: {
+            Text("Denkaufwand")
+        } footer: {
+            Text("Gilt für Planen und Assistent. Höher denkt länger und gründlicher, braucht aber mehr Zeit und Kontingent.")
         }
     }
 

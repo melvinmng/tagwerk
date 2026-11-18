@@ -38,6 +38,8 @@ final class AppSettings {
     /// Last model list from ChatGPT (JSON of `[AIModel]`), kept to avoid loading it on every call.
     var aiModelsData: Data? = nil
     var aiModelsFetchedAt: Date? = nil
+    /// Reasoning effort for all AI calls; `nil` means the model's own default ("Automatisch").
+    var aiReasoningEffort: String? = nil
 
     var weekSchedule: WeekSchedule {
         get { weekScheduleData.flatMap { try? JSONDecoder().decode(WeekSchedule.self, from: $0) } ?? .standard }

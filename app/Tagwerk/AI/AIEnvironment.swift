@@ -44,7 +44,8 @@ final class AIEnvironment {
     /// The model list, from the cache while it is younger than a day unless `force` is set.
     @discardableResult
     func loadModels(force: Bool = false) async throws -> [AIModel] {
-        if !force, !models.isEmpty, let fetchedAt = modelsFetchedAt,
+        // Lists stored before reasoning levels were read count as outdated.
+        if !force, !models.isEmpty, models.contains(where: { !$0.reasoningLevels.isEmpty }), let fetchedAt = modelsFetchedAt,
            now().timeIntervalSince(fetchedAt) < Self.modelListMaxAge {
             return models
         }
@@ -66,13 +67,52 @@ final class AIEnvironment {
             // A stale list is better than no call at all.
             list = models
         }
+        var chosen = list.first
         if let slug = settings.aiModelSlug {
-            if list.contains(where: { $0.slug == slug }) { return slug }
-            settings.aiModelSlug = nil
-            modelFallbackNotice = true
+            if let match = list.first(where: { $0.slug == slug }) {
+                chosen = match
+            } else {
+                settings.aiModelSlug = nil
+                modelFallbackNotice = true
+            }
         }
-        guard let first = list.first else { throw ChatGPTError.server(200, "no_models") }
-        return first.slug
+        guard let model = chosen else { throw ChatGPTError.server(200, "no_models") }
+        client.options.reasoningEffort = effectiveReasoning(for: model)
+        return model.slug
+    }
+
+    /// The model the settings point to ("Automatisch": the first of the list), from the stored list.
+    var currentModel: AIModel? {
+        models.first { $0.slug == settings.aiModelSlug } ?? models.first
+    }
+
+    var selectedReasoning: String? {
+        get { settings.aiReasoningEffort }
+        set { settings.aiReasoningEffort = newValue }
+    }
+
+    /// The chosen effort if the model supports it; otherwise "Automatisch" (and the setting falls back).
+    func effectiveReasoning(for model: AIModel) -> String? {
+        guard let effort = settings.aiReasoningEffort else { return nil }
+        guard model.reasoningLevels.contains(effort) else {
+            settings.aiReasoningEffort = nil
+            return nil
+        }
+        return effort
+    }
+
+    /// German name of an effort level.
+    static func reasoningName(_ level: String) -> String {
+        switch level {
+        case "minimal": "Minimal"
+        case "low": "Niedrig"
+        case "medium": "Mittel"
+        case "high": "Hoch"
+        case "xhigh": "Sehr hoch"
+        case "max": "Maximal"
+        case "ultra": "Ultra"
+        default: level
+        }
     }
 
     var selectedModelSlug: String? {
@@ -89,6 +129,7 @@ final class AIEnvironment {
     func signOut() async {
         try? await session.signOut()
         settings.aiModelSlug = nil
+        settings.aiReasoningEffort = nil
         settings.aiModelsData = nil
         settings.aiModelsFetchedAt = nil
         models = []

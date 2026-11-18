@@ -14,7 +14,7 @@ struct AIEnvironmentTests {
     init() throws {
         container = try ModelContainerFactory.make(inMemory: true)
     }
-    static let modelsBody = #"{"models":[{"slug":"gpt-a","display_name":"GPT-A","visibility":"list"},{"slug":"gpt-b","display_name":"GPT-B","visibility":"list"}]}"#
+    static let modelsBody = #"{"models":[{"slug":"gpt-a","display_name":"GPT-A","visibility":"list","default_reasoning_level":"low","supported_reasoning_levels":[{"effort":"low"},{"effort":"high"}]},{"slug":"gpt-b","display_name":"GPT-B","visibility":"list","supported_reasoning_levels":[{"effort":"medium"}]}]}"#
 
     func make(signedIn: Bool = true, slug: String? = nil, clock: @escaping @Sendable () -> Date) throws
         -> (AIEnvironment, AppSettings, InMemoryChatGPTCredentialStore) {
@@ -104,6 +104,24 @@ struct AIEnvironmentTests {
         #expect(second.models.map(\.slug) == ["gpt-a", "gpt-b"])
         _ = try await second.selectedModel()
         #expect(transport.requests.count == 1)
+    }
+
+    @Test func reasoning_supportedEffort_isSent() async throws {
+        transport.enqueue("/v1/models", Self.modelsBody)
+        let (environment, settings, _) = try make()
+        settings.aiReasoningEffort = "high"
+        _ = try await environment.selectedModel()
+        #expect(environment.client.options.reasoningEffort == "high")
+        #expect(environment.currentModel?.defaultReasoning == "low")
+    }
+
+    @Test func reasoning_unsupportedByModel_fallsBackToAutomatic() async throws {
+        transport.enqueue("/v1/models", Self.modelsBody)
+        let (environment, settings, _) = try make(slug: "gpt-b")
+        settings.aiReasoningEffort = "high"
+        _ = try await environment.selectedModel()
+        #expect(environment.client.options.reasoningEffort == nil)
+        #expect(settings.aiReasoningEffort == nil)
     }
 
     @Test func signOut_clearsTokensAndModel() async throws {

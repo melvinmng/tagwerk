@@ -13,7 +13,7 @@ final class DemoAITransport: AIHTTPTransport {
     }
 
     static let modelsBody = """
-    {"models":[{"slug":"demo-sol","display_name":"Demo Sol","visibility":"list"},\
+    {"models":[{"slug":"demo-sol","display_name":"Demo Sol","visibility":"list","default_reasoning_level":"low","supported_reasoning_levels":[{"effort":"low"},{"effort":"medium"},{"effort":"high"},{"effort":"xhigh"}]},\
     {"slug":"demo-terra","display_name":"Demo Terra","visibility":"list"},\
     {"slug":"demo-luna","display_name":"Demo Luna","visibility":"list"}]}
     """

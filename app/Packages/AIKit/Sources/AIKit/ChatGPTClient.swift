@@ -10,11 +10,14 @@ public final class ChatGPTClient: Sendable {
     private let session: ChatGPTSessionStore
     private let transport: AIHTTPTransport
     private let baseURL: URL
+    public let options: AIRequestOptions
 
-    public init(session: ChatGPTSessionStore, transport: AIHTTPTransport, baseURL: URL = ChatGPTClient.defaultBaseURL) {
+    public init(session: ChatGPTSessionStore, transport: AIHTTPTransport, baseURL: URL = ChatGPTClient.defaultBaseURL,
+                options: AIRequestOptions = AIRequestOptions()) {
         self.session = session
         self.transport = transport
         self.baseURL = baseURL
+        self.options = options
     }
 
     // MARK: Models
@@ -33,16 +36,32 @@ public final class ChatGPTClient: Sendable {
     }
 
     static func listedModels(_ data: Data) -> [AIModel] {
+        struct Level: Decodable {
+            let effort: String?
+            init(from decoder: Decoder) throws {
+                // Levels arrive as objects with "effort" or as plain strings.
+                if let text = try? decoder.singleValueContainer().decode(String.self) {
+                    effort = text
+                } else {
+                    effort = try? decoder.container(keyedBy: CodingKeys.self).decodeIfPresent(String.self, forKey: .effort)
+                }
+            }
+            enum CodingKeys: String, CodingKey { case effort }
+        }
         struct Entry: Decodable {
             let slug: String
             let display_name: String?
             let visibility: String?
+            let supported_reasoning_levels: [Level]?
+            let default_reasoning_level: String?
         }
         struct Body: Decodable { let models: [Entry] }
         guard let body = try? JSONDecoder().decode(Body.self, from: data) else { return [] }
         return body.models
             .filter { $0.visibility == "list" }
-            .map { AIModel(slug: $0.slug, displayName: $0.display_name ?? $0.slug) }
+            .map { AIModel(slug: $0.slug, displayName: $0.display_name ?? $0.slug,
+                           reasoningLevels: ($0.supported_reasoning_levels ?? []).compactMap(\.effort),
+                           defaultReasoning: $0.default_reasoning_level) }
     }
 
     // MARK: Responses
@@ -52,7 +71,8 @@ public final class ChatGPTClient: Sendable {
                         jsonSchema: (name: String, schema: Data)?) -> AsyncThrowingStream<StreamEvent, Error> {
         let body: Data
         do {
-            body = try Self.requestBody(model: model, instructions: instructions, input: input, tools: tools, jsonSchema: jsonSchema)
+            body = try Self.requestBody(model: model, instructions: instructions, input: input, tools: tools, jsonSchema: jsonSchema,
+                                        reasoningEffort: options.reasoningEffort)
         } catch {
             return AsyncThrowingStream { $0.finish(throwing: error) }
         }
@@ -102,7 +122,7 @@ public final class ChatGPTClient: Sendable {
 
     /// The JSON body of a Responses call.
     static func requestBody(model: String, instructions: String, input: [InputItem], tools: [ToolDefinition],
-                            jsonSchema: (name: String, schema: Data)?) throws -> Data {
+                            jsonSchema: (name: String, schema: Data)?, reasoningEffort: String? = nil) throws -> Data {
         var body: [String: Any] = [
             "model": model,
             "instructions": instructions,
@@ -110,6 +130,7 @@ public final class ChatGPTClient: Sendable {
             "store": false,
             "stream": true,
         ]
+        if let reasoningEffort { body["reasoning"] = ["effort": reasoningEffort] }
         if !tools.isEmpty {
             body["tools"] = try tools.map { try $0.requestJSON() }
         }

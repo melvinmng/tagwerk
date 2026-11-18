@@ -279,6 +279,22 @@ struct ChatGPTClientTests {
         #expect(request.value(forHTTPHeaderField: "Authorization") == "Bearer at_valid")
     }
 
+    @Test func models_readReasoningLevels() async throws {
+        transport.enqueueJSON("/v1/models", #"{"models":[{"slug":"gpt-a","display_name":"A","visibility":"list","default_reasoning_level":"low","supported_reasoning_levels":[{"effort":"low","description":"x"},{"effort":"high"}]}]}"#)
+        let model = try #require(try await makeClient().models().first)
+        #expect(model.reasoningLevels == ["low", "high"])
+        #expect(model.defaultReasoning == "low")
+    }
+
+    @Test func request_reasoningEffort_isSentOnlyWhenSet() throws {
+        let plain = try JSONSerialization.jsonObject(with: ChatGPTClient.requestBody(
+            model: "m", instructions: "i", input: [.user("p")], tools: [], jsonSchema: nil)) as? [String: Any]
+        #expect(plain?["reasoning"] == nil)
+        let set = try JSONSerialization.jsonObject(with: ChatGPTClient.requestBody(
+            model: "m", instructions: "i", input: [.user("p")], tools: [], jsonSchema: nil, reasoningEffort: "high")) as? [String: Any]
+        #expect((set?["reasoning"] as? [String: Any])?["effort"] as? String == "high")
+    }
+
     @Test func models_missingDisplayName_usesSlug() async throws {
         transport.enqueueJSON("/v1/models", #"{"models":[{"slug":"gpt-x","visibility":"list"}]}"#)
         #expect(try await makeClient().models() == [AIModel(slug: "gpt-x", displayName: "gpt-x")])
