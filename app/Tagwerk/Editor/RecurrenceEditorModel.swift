@@ -100,11 +100,16 @@ final class RecurrenceEditorModel {
         return TagwerkCore.nextOccurrences(of: recurrence, onOrAfter: start, limit: limit, calendar: calendar)
     }
 
-    /// The last occurrence of a series with a count.
+    /// The last occurrence of a series with a count, searched within 20 years so the page stays responsive;
+    /// `nil` when the series runs longer.
     var lastOccurrence: PlanDay? {
         guard let recurrence, let count = recurrence.count, !isUnsupportedOriginal || isChanged else { return nil }
-        return TagwerkCore.nextOccurrences(of: recurrence, onOrAfter: start, limit: count, calendar: calendar).last
+        let found = TagwerkCore.nextOccurrences(of: recurrence, onOrAfter: start, limit: count,
+                                                withinDays: Self.lastOccurrenceSearchDays, calendar: calendar)
+        return found.count == count ? found.last : nil
     }
+
+    private static let lastOccurrenceSearchDays = 20 * 366
 
     /// The next matching day when the due date is no occurrence of the new rule (decision 2026-11-18:
     /// suggest, do not move automatically).

@@ -117,6 +117,28 @@ struct RecurrenceTests {
         #expect(nextOccurrence(of: counted, onOrAfter: day(2026, 11, 20), calendar: calendar) == nil)
     }
 
+    @Test func nextOccurrences_matchOccurrences() {
+        let recurrence = Recurrence(rule: .weekly(interval: 2, weekdays: [2, 5]), start: day(2026, 11, 19), end: nil, count: 7)
+        let all = occurrences(of: recurrence, in: day(2026, 11, 1)...day(2027, 6, 30), calendar: calendar)
+        #expect(nextOccurrences(of: recurrence, onOrAfter: day(2026, 11, 1), limit: 20, calendar: calendar) == all)
+        #expect(nextOccurrences(of: recurrence, onOrAfter: day(2026, 12, 1), limit: 2, calendar: calendar)
+                == [day(2026, 12, 3), day(2026, 12, 14)])
+    }
+
+    /// Every April has no 31st: the search stops instead of running forever.
+    @Test func nextOccurrences_stopsForRuleThatNeverMatches() {
+        let never = Recurrence(rule: .monthly(interval: 12, day: 31), start: day(2026, 4, 30), end: nil, count: nil)
+        #expect(nextOccurrences(of: never, onOrAfter: day(2026, 4, 30), limit: 3, calendar: calendar).isEmpty)
+    }
+
+    /// A search budget keeps long series cheap (e.g. "Letzter Termin" of a yearly series with a high count).
+    @Test func nextOccurrences_respectsSearchBudget() {
+        let yearly = Recurrence(rule: .yearly(interval: 1), start: day(2026, 11, 18), end: nil, count: 500)
+        let found = nextOccurrences(of: yearly, onOrAfter: day(2026, 11, 18), limit: 500, withinDays: 3660, calendar: calendar)
+        #expect(found.count == 11)
+        #expect(found.last == day(2036, 11, 18))
+    }
+
     @Test func isValid_rejectsEndAndCount() {
         let start = day(2026, 11, 18)
         #expect(Recurrence(rule: .daily(interval: 1), start: start, end: day(2026, 12, 1), count: nil).isValid)

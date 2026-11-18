@@ -80,22 +80,42 @@ public func nextOccurrence(of recurrence: Recurrence, onOrAfter day: PlanDay, ca
     nextOccurrences(of: recurrence, onOrAfter: day, limit: 1, calendar: calendar).first
 }
 
-/// Up to `limit` days on or after `day` on which the series occurs.
-public func nextOccurrences(of recurrence: Recurrence, onOrAfter day: PlanDay, limit: Int, calendar: Calendar) -> [PlanDay] {
+/// Up to `limit` days on or after `day` on which the series occurs, in one pass over the days from the start
+/// of the series (the same matching and counting as `occurrences`). The search stops when no occurrence
+/// follows within the largest possible gap of the rule, or after `withinDays` days from `day` when given.
+public func nextOccurrences(of recurrence: Recurrence, onOrAfter day: PlanDay, limit: Int, withinDays: Int? = nil,
+                            calendar: Calendar) -> [PlanDay] {
     guard limit > 0 else { return [] }
     if case .unsupported = recurrence.rule {
         return recurrence.start >= day ? [recurrence.start] : []
     }
-    // Every window of this length holds at least one occurrence while the series continues.
     let horizon = searchHorizonDays(for: recurrence.rule)
-    var from = max(day, recurrence.start)
+    let startWeek = weekStart(of: recurrence.start, calendar: calendar)
+    let first = max(day, recurrence.start)
     var result: [PlanDay] = []
+    var produced = 0
+    var daysWithoutHit = 0
+    var daysSearched = 0
+    var current = recurrence.start
     while result.count < limit {
-        if let end = recurrence.end, from > end { break }
-        let found = occurrences(of: recurrence, in: from...from.adding(days: horizon, calendar: calendar), calendar: calendar)
-        guard let last = found.last else { break }
-        result += found.prefix(limit - result.count)
-        from = last.adding(days: 1, calendar: calendar)
+        if let end = recurrence.end, current > end { break }
+        let isCandidate = current >= first
+        if matches(current, recurrence: recurrence, startWeek: startWeek, calendar: calendar) {
+            produced += 1
+            if let count = recurrence.count, produced > count { break }
+            if isCandidate {
+                result.append(current)
+                daysWithoutHit = 0
+            }
+        } else if isCandidate {
+            daysWithoutHit += 1
+            if daysWithoutHit > horizon { break }
+        }
+        if isCandidate {
+            daysSearched += 1
+            if let withinDays, daysSearched > withinDays { break }
+        }
+        current = current.adding(days: 1, calendar: calendar)
     }
     return result
 }

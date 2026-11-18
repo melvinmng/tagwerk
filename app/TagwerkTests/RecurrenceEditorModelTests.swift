@@ -98,6 +98,17 @@ struct RecurrenceEditorModelTests {
         #expect(sut.recurrence?.end == nil && sut.recurrence?.count == nil)
     }
 
+    /// "Letzter Termin" is computed within 20 years; a longer series shows none instead of blocking the page.
+    @Test func lastOccurrence_onlyWithinTwentyYears() {
+        let sut = model()
+        sut.apply(preset: .yearly)
+        sut.setEndKind(.count)
+        sut.setCount(20)
+        #expect(sut.lastOccurrence == PlanDay(year: 2045, month: 11, day: 18))
+        sut.setCount(999)
+        #expect(sut.lastOccurrence == nil)
+    }
+
     @Test func endDate_notBeforeStart() {
         let sut = model()
         sut.apply(preset: .daily)

@@ -331,6 +331,7 @@ struct TaskEditorView: View {
         due.month = day.month
         due.day = day.day
         model.draft.due = due
+        model.draft.recurrence?.start = day
     }
 
     private var effortQuestion: String {
@@ -371,6 +372,8 @@ struct TaskEditorView: View {
             set: { date in
                 let includeTime = model.draft.due?.hasTime ?? false
                 model.draft.due = DueDate(date: date, includeTime: includeTime, calendar: calendar)
+                // The series starts at the due date (shown in the summary, e.g. "Jedes Jahr am …").
+                model.draft.recurrence?.start = PlanDay(date: date, calendar: calendar)
             }
         )
     }

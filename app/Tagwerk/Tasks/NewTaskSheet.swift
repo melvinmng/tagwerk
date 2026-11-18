@@ -143,6 +143,8 @@ struct NewTaskSheet: View {
                 if !TaskEditorModel.priorityChoices(for: newTarget).contains(priority) {
                     priority = newTarget == .reminders ? .p4 : nil
                 }
+                // A rule chosen before switching to a source that cannot repeat is not taken over (mockup RK3).
+                if RecurrenceAvailability.forNewTask(newTarget) != .available { recurrence = nil }
             }
         }
     }
@@ -184,7 +186,8 @@ extension NewTaskSheet {
                 )
             } label: {
                 LabeledContent {
-                    Text(recurrence.map { RecurrenceText.summary($0, calendar: model.calendar) } ?? String(localized: "Nie"))
+                    Text(RecurrenceAvailability.draftRecurrence(recurrence, target: target, due: DueDate(year: dueDay.year, month: dueDay.month, day: dueDay.day))
+                        .map { RecurrenceText.summary($0, calendar: model.calendar) } ?? String(localized: "Nie"))
                 } label: {
                     Label("Wiederholen", systemImage: "repeat")
                 }
