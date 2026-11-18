@@ -3,9 +3,7 @@ import Observation
 import RemindersKit
 import TagwerkCore
 
-enum PlanScope: String, CaseIterable, Hashable {
-    case day, week, month
-
+extension PlanScope {
     var title: String {
         switch self {
         case .day: "Tag"
@@ -71,6 +69,10 @@ struct DayPlan: Identifiable, Equatable {
     let isPastDue: Set<TaskID>
     /// Recurring effort reserved on this day.
     let recurring: [RecurringItem]
+    /// The day as the AI planner sees it, built from the same numbers as `capacity` (design §8.2).
+    var planInput: PlanInputDay? = nil
+    /// Open AI suggestions for this day (purple, dashed; mockup a).
+    var suggestions: [PlanSuggestion] = []
     /// The day lies before today.
     let isPast: Bool
 }
@@ -138,6 +140,29 @@ final class PlanningModel {
     let now: () -> Date
     let calendar: Calendar
     let marks: EventMarkStore
+    let suggestionStore: SuggestionStore?
+
+    /// Minutes in blocks against the effort of a task (user rule 2026-11-18).
+    struct SessionProgress: Equatable {
+        let blocked: Int
+        let estimate: Int
+        var remaining: Int { max(0, estimate - blocked) }
+    }
+
+    /// Progress of every open task with an effort that already has blocks.
+    private(set) var sessionProgress: [TaskID: SessionProgress] = [:]
+    /// Tasks whose blocks hold less time than their effort ("Noch einzuplanen", mockup RZ1).
+    private(set) var toSchedule: [TaskItem] = []
+    /// Minutes already in blocks per task (session window), for the AI's remaining effort.
+    private(set) var blockedMinutesByTask: [TaskID: Int] = [:]
+    /// Repetition rules of recurring reminders (reminder ID → rule), for their session window.
+    private var recurrenceRules: [String: RecurrenceRule] = [:]
+    /// The block created by the last "Duplizieren", for "Widerrufen".
+    private(set) var lastDuplicate: CalendarEvent?
+    /// Open AI suggestion batches that touch the shown range.
+    private(set) var suggestionBatches: [SuggestionBatch] = []
+    /// Duration counted for tasks without effort.
+    var defaultTaskMinutes: Int { settings.defaultTaskMinutes }
     /// Placeholder events of the shown days that may belong to a real event (design §13.15 M1).
     private(set) var mergeSuggestions: [MergeSuggestion] = []
     /// Kept event ID → the accepted merges whose copies it hides.
@@ -145,7 +170,8 @@ final class PlanningModel {
 
     init(taskList: TaskListModel, calendarStore: CalendarStore, reminderStore: ReminderStore, planStore: PlanStore,
          efforts: RecurringEffortStore, blocks: BlockPlanner, settings: AppSettings, marks: EventMarkStore,
-         now: @escaping () -> Date = Date.init, calendar: Calendar = .tagwerk) {
+         suggestions: SuggestionStore? = nil, now: @escaping () -> Date = Date.init, calendar: Calendar = .tagwerk) {
+        self.suggestionStore = suggestions
         self.marks = marks
         self.taskList = taskList
         self.calendarStore = calendarStore
@@ -191,6 +217,9 @@ final class PlanningModel {
         let resolved = resolveLinks(events: events, tasks: open, manual: blocks.links.manualLinks())
         resolvedLinks = Dictionary(resolved.map { ($0.eventID, $0) }, uniquingKeysWith: { first, _ in first })
         recurringReminderIDs = recurringIDs
+        recurrenceRules = Dictionary(reminders.compactMap { record in record.recurrence.map { (record.id, $0.rule) } },
+                                     uniquingKeysWith: { first, _ in first })
+        updateSessions(open: open)
         let links = resolvedLinks.mapValues(\.taskID)
         let deadlines = importantDeadlines(tasks: open, events: events,
                                            deadlineCalendarIDs: Set(settings.deadlineCalendarIDs ?? []),
@@ -201,17 +230,25 @@ final class PlanningModel {
         let everything = PlanDay(year: 1, month: 1, day: 1)...PlanDay(year: 9999, month: 12, day: 31)
         let allAssignments = planStore.assignments(in: everything)
 
+        suggestionBatches = suggestionStore?.batches(in: range) ?? []
+        // A move shows on the day the task leaves, where the user decides about it.
+        let suggestionsByDay = Dictionary(grouping: suggestionBatches.flatMap(\.suggestions)) { suggestion in
+            suggestion.kind == .move ? (suggestion.fromDay ?? suggestion.day) : suggestion.day
+        }
         var result: [DayPlan] = []
         var day = range.lowerBound
         while day <= range.upperBound {
-            result.append(dayPlan(day, events: events, links: links, deadlines: deadlines, assignments: assignments,
-                                  overrides: overrides, tasksByID: tasksByID, reminders: reminders,
-                                  recurringIDs: recurringIDs, open: open, allAssignments: allAssignments))
+            var plan = dayPlan(day, events: events, links: links, deadlines: deadlines, assignments: assignments,
+                               overrides: overrides, tasksByID: tasksByID, reminders: reminders,
+                               recurringIDs: recurringIDs, open: open, allAssignments: allAssignments)
+            plan.suggestions = suggestionsByDay[day] ?? []
+            result.append(plan)
             day = day.adding(days: 1, calendar: calendar)
         }
         days = result
 
-        unplanned = open.filter { allAssignments[$0.id] == nil }
+        // Left over from a past day ("liegen geblieben") counts as unplanned again, also in week and month.
+        unplanned = open.filter { task in allAssignments[task.id].map { $0 < self.today } ?? true }
         upcomingDeadlines = loadUpcomingDeadlines(open: open)
         let today = self.today
         // Overdue: due before today, or planned for an earlier day and not due today or later ("liegen geblieben").
@@ -223,6 +260,34 @@ final class PlanningModel {
             if let due { return due < today }
             return allAssignments[task.id].map { $0 < today } ?? false
         }, calendar: calendar)
+    }
+
+    /// The AI view of days outside the shown range (e.g. the next week as targets for moving tasks away
+    /// from a full day). Computed like `reload()` without changing what is shown.
+    func planInputs(in range: ClosedRange<PlanDay>) async -> [PlanInputDay] {
+        let open = taskList.items.filter { !$0.isCompleted }
+        let reminders = reminderStore.accessState == .fullAccess ? await reminderStore.openReminders(in: nil) : []
+        let recurringIDs = Set(reminders.filter { $0.recurrence != nil }.map(\.id))
+        let interval = DateInterval(start: range.lowerBound.startDate(in: calendar),
+                                    end: range.upperBound.adding(days: 1, calendar: calendar).startDate(in: calendar))
+        let (events, _) = markedEvents(calendarStore.events(in: interval, calendarIDs: readableCalendarIDs()))
+        let links = Dictionary(resolveLinks(events: events, tasks: open, manual: blocks.links.manualLinks()).map { ($0.eventID, $0.taskID) },
+                               uniquingKeysWith: { first, _ in first })
+        let assignments = planStore.assignments(in: range)
+        let overrides = planStore.overrides(in: range)
+        let tasksByID = Dictionary(open.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
+        let everything = PlanDay(year: 1, month: 1, day: 1)...PlanDay(year: 9999, month: 12, day: 31)
+        let allAssignments = planStore.assignments(in: everything)
+        var result: [PlanInputDay] = []
+        var day = range.lowerBound
+        while day <= range.upperBound {
+            let plan = dayPlan(day, events: events, links: links, deadlines: [], assignments: assignments,
+                               overrides: overrides, tasksByID: tasksByID, reminders: reminders,
+                               recurringIDs: recurringIDs, open: open, allAssignments: allAssignments)
+            if let input = plan.planInput { result.append(input) }
+            day = day.adding(days: 1, calendar: calendar)
+        }
+        return result
     }
 
     /// Day picked in the month grid (mockup E1); see `monthSelection`.
@@ -248,6 +313,13 @@ final class PlanningModel {
     }
 
     // MARK: Actions
+
+    /// The day picked in the month moves one day; leaving the month shows the neighbouring month.
+    func stepSelectedDay(_ direction: Int) {
+        let next = monthSelection.adding(days: direction, calendar: calendar)
+        if next.month != anchor.month || next.year != anchor.year { anchor = next }
+        selectedDay = next
+    }
 
     /// One day, week or month forward (`1`) or back (`-1`), for arrows and swiping.
     func step(_ direction: Int) {
@@ -482,7 +554,7 @@ final class PlanningModel {
     /// Dropping a task on a free stretch or the hour grid creates a block there (effort or 60 min).
     func dropTask(key: String, atMinutes startMinutes: Int, on day: PlanDay) async {
         guard let id = TaskID(key: key), let task = taskList.items.first(where: { $0.id == id }) else { return }
-        let length = suggestedBlockMinutes(for: task)
+        let length = suggestedBlockMinutes(for: task, on: day)
         let range = clampedBlock(startMinutes: snapped(minutes: startMinutes), duration: length, dayLength: dayLength(day))
         await createBlock(for: task, start: day.startDate(in: calendar).addingTimeInterval(TimeInterval(range.lowerBound * 60)),
                           minutes: range.count)
@@ -725,15 +797,177 @@ final class PlanningModel {
         await reload()
     }
 
-    /// Length for a new block: what is left of the estimate after existing blocks, else the estimate,
-    /// and the default duration for tasks without an estimate.
-    func suggestedBlockMinutes(for task: TaskItem) -> Int {
-        guard let estimate = task.estimateMinutes else { return settings.defaultTaskMinutes }
-        let since = today.adding(days: -60, calendar: calendar).startDate(in: calendar)
-        let blocked = blocks.futureBlocks(for: task.id, after: since)
-            .reduce(0) { $0 + Int($1.end.timeIntervalSince($1.start) / 60) }
-        let remaining = estimate - blocked
-        return remaining >= 15 ? remaining : estimate
+    /// Duration of a new block for `task` on `day` (default: the shown day), see `blockMinutes`: remaining
+    /// effort (the day's recurring effort for recurring reminders, else the estimate), capped by six hours and
+    /// the day's largest free slot; default duration without effort.
+    func suggestedBlockMinutes(for task: TaskItem, on day: PlanDay? = nil) -> Int {
+        let target = day ?? anchor
+        let slot = days.first { $0.day == target }?.planInput.map { input in
+            largestFreeSlot(input, fromMinutes: target == today ? minutes(now(), from: target.startDate(in: calendar)) : nil)
+        } ?? 6 * 60
+        return blockMinutes(estimate: effortMinutes(of: task, on: target), alreadyBlocked: blockedMinutes(of: task.id, on: target),
+                            defaultMinutes: settings.defaultTaskMinutes, largestFreeSlot: slot)
+    }
+
+    /// Minutes of the task's blocks that count as work on it for `day` (default: today): for recurring
+    /// reminders only the blocks of that day's occurrence (daily: that day, weekly: the six days before and
+    /// that day …), otherwise the last 60 days and the future.
+    func blockedMinutes(of id: TaskID, on day: PlanDay? = nil) -> Int {
+        let window = sessionWindow(of: id, on: day ?? today)
+        return blockedMinutes(in: blocks.futureBlocks(for: id, after: window.lowerBound), window: window)
+    }
+
+    private func blockedMinutes(in events: [CalendarEvent], window: Range<Date>) -> Int {
+        events.filter { window.contains($0.start) }.reduce(0) { $0 + Int($1.end.timeIntervalSince($1.start) / 60) }
+    }
+
+    /// The period whose blocks count for `day`: the occurrence of a recurring reminder (ending with `day`),
+    /// else from 60 days before today on without end.
+    private func sessionWindow(of id: TaskID, on day: PlanDay) -> Range<Date> {
+        if id.source == .reminders, let rule = recurrenceRules[id.rawValue],
+           let start = TagwerkCore.sessionWindowStart(for: rule, today: day, calendar: calendar) {
+            return start.startDate(in: calendar)..<day.adding(days: 1, calendar: calendar).startDate(in: calendar)
+        }
+        return today.adding(days: -60, calendar: calendar).startDate(in: calendar)..<Date.distantFuture
+    }
+
+    /// The effort of a task on `day` (default: today): the day's recurring effort for recurring reminders
+    /// (`nil` when none is set), else the estimate.
+    func effortMinutes(of task: TaskItem, on day: PlanDay? = nil) -> Int? {
+        if let recurring = recurringItem(for: task, on: day ?? today) { return recurring.minutes > 0 ? recurring.minutes : nil }
+        return task.estimateMinutes
+    }
+
+    private func updateSessions(open: [TaskItem]) {
+        let all = blocks.blocksByTask(after: today.adding(days: -60, calendar: calendar).startDate(in: calendar))
+        var progress: [TaskID: SessionProgress] = [:]
+        var blocked: [TaskID: Int] = [:]
+        for task in open {
+            let window = sessionWindow(of: task.id, on: today)
+            if let events = all[task.id] {
+                let minutes = blockedMinutes(in: events, window: window)
+                if minutes > 0 { blocked[task.id] = minutes }
+            }
+            guard let effort = effortMinutes(of: task), effort > 0, let events = all[task.id] else { continue }
+            let blocked = blockedMinutes(in: events, window: window)
+            if blocked > 0 { progress[task.id] = SessionProgress(blocked: blocked, estimate: effort) }
+        }
+        sessionProgress = progress
+        blockedMinutesByTask = blocked
+        toSchedule = sortedTasks(open.filter { progress[$0.id].map { $0.remaining >= 15 } ?? false }, calendar: calendar)
+    }
+
+    // MARK: Moving tasks between days (mockup WT1)
+
+    /// The last move between days, for "Widerrufen".
+    struct DayMove: Equatable {
+        let taskID: TaskID
+        let previousDay: PlanDay?
+        /// Moved blocks with their former start.
+        let blocks: [(id: String, start: Date)]
+        var movedBlocks: Int { blocks.count }
+
+        static func == (lhs: DayMove, rhs: DayMove) -> Bool {
+            lhs.taskID == rhs.taskID && lhs.previousDay == rhs.previousDay && lhs.blocks.map(\.id) == rhs.blocks.map(\.id)
+        }
+    }
+
+    private(set) var lastMove: DayMove?
+
+    /// Sets the work day by dragging (user rule 2026-11-18): only the blocks on the former day that still lie
+    /// ahead move along, at the same time, or into the next free stretch of the new day if that time is taken.
+    func moveTask(_ id: TaskID, to day: PlanDay) async {
+        let previous = planStore.assignment(for: id)
+        var moved: [(id: String, start: Date)] = []
+        if let previous, previous != day {
+            let now = now()
+            let origin = previous.startDate(in: calendar)
+            let originEnd = previous.adding(days: 1, calendar: calendar).startDate(in: calendar)
+            let target = days.first { $0.day == day }?.planInput
+            var taken: [Range<Int>] = []
+            for block in blocks.futureBlocks(for: id, after: max(now, origin)) where block.start < originEnd {
+                let length = Int(block.end.timeIntervalSince(block.start) / 60)
+                let startMinutes = minutes(block.start, from: origin)
+                var slot = startMinutes..<(startMinutes + length)
+                if var input = target {
+                    input.blocks += taken
+                    let free = freeGaps(input, fromMinutes: day == today ? minutes(now, from: day.startDate(in: calendar)) : nil)
+                    if !free.contains(where: { $0.contains(slot.lowerBound) && $0.upperBound >= slot.upperBound }),
+                       let next = nextFreeSlot(input, after: input.hours?.startMinutes ?? 0, minutes: length, fromMinutes: nil),
+                       next.count >= length {
+                        slot = next
+                    }
+                }
+                do {
+                    try blocks.moveBlock(block, to: day.startDate(in: calendar).addingTimeInterval(TimeInterval(slot.lowerBound * 60)))
+                    moved.append((block.id, block.start))
+                    taken.append(slot)
+                } catch {
+                    lastError = TaskListModel.message(for: error)
+                }
+            }
+        }
+        planStore.assign(id, to: day)
+        lastMove = DayMove(taskID: id, previousDay: previous, blocks: moved)
+        await reload()
+    }
+
+    func undoMove() async {
+        guard let move = lastMove else { return }
+        lastMove = nil
+        await undo(move)
+    }
+
+    /// Takes a move back: blocks to their former start, the task to its former day.
+    func undo(_ move: DayMove) async {
+        for (id, start) in move.blocks {
+            guard let block = calendarStore.event(id: id) else { continue }
+            try? blocks.moveBlock(block, to: start)
+        }
+        if let previous = move.previousDay { planStore.assign(move.taskID, to: previous) } else { planStore.unassign(move.taskID) }
+        await reload()
+    }
+
+    func clearMoveUndo() {
+        lastMove = nil
+    }
+
+    // MARK: Duplicating blocks (mockup DU1)
+
+    /// Where "Duplizieren" puts a copy (minutes of the block's day): the next free stretch after the
+    /// original (with the buffer); the duration is the time still open, or the default duration when the
+    /// estimate is already planned (user rule 2026-11-18).
+    func duplicateTarget(for block: CalendarEvent) -> Range<Int>? {
+        guard let task = linkedTask(eventID: block.id) else { return nil }
+        let day = PlanDay(date: block.start, calendar: calendar)
+        guard let input = days.first(where: { $0.day == day })?.planInput else { return nil }
+        let dayStart = day.startDate(in: calendar)
+        let remaining = effortMinutes(of: task, on: day).map { $0 - blockedMinutes(of: task.id, on: day) } ?? 0
+        let length = remaining >= 15 ? suggestedBlockMinutes(for: task, on: day) : settings.defaultTaskMinutes
+        return nextFreeSlot(input, after: minutes(block.end, from: dayStart), minutes: length,
+                            fromMinutes: day == today ? minutes(now(), from: dayStart) : nil)
+    }
+
+    func duplicateBlock(_ block: CalendarEvent) async {
+        guard let task = linkedTask(eventID: block.id), let target = duplicateTarget(for: block) else { return }
+        let dayStart = PlanDay(date: block.start, calendar: calendar).startDate(in: calendar)
+        do {
+            lastDuplicate = try blocks.createBlock(for: task, start: dayStart.addingTimeInterval(TimeInterval(target.lowerBound * 60)),
+                                                   minutes: target.count)
+        } catch {
+            lastError = TaskListModel.message(for: error)
+        }
+        await reload()
+    }
+
+    func undoDuplicate() async {
+        guard let copy = lastDuplicate else { return }
+        lastDuplicate = nil
+        await deleteBlock(copy)
+    }
+
+    func clearDuplicateUndo() {
+        lastDuplicate = nil
     }
 
     /// Deletes a block; the task keeps its planned day.
@@ -875,24 +1109,58 @@ final class PlanningModel {
             return total + max(0, Int(to.timeIntervalSince(from) / 60))
         }
         var estimated = 0
+        var counted: [String: Int] = [:]
         for task in assignedSorted + openToday where !tasksWithBlocks.contains(task.id) {
             // Recurring reminders count once, through their recurring effort.
             if task.id.source == .reminders, recurringIDs.contains(task.id.rawValue) { continue }
-            if let minutes = task.estimateMinutes {
-                planned += minutes
-            } else {
-                planned += settings.defaultTaskMinutes
-                estimated += 1
-            }
+            let minutes = task.estimateMinutes ?? settings.defaultTaskMinutes
+            if task.estimateMinutes == nil { estimated += 1 }
+            planned += minutes
+            counted[task.id.key, default: 0] += minutes
         }
+        let hours = TagwerkCore.workHours(on: day, schedule: settings.weekSchedule, overrides: overrides, calendar: calendar)
+        let linkedIDs = Set(links.keys).union(copiesOfLinked(dayEvents, links: links))
+        // A block for a recurring reminder is that reminder's work: its reserved effort counts only for the
+        // part the blocks of the day do not cover (otherwise the time would count twice).
+        var blockMinutesByTask: [TaskID: Int] = [:]
+        for event in linkedEvents {
+            guard let id = links[event.id] else { continue }
+            let from = max(event.start, start), to = min(event.end, end)
+            blockMinutesByTask[id, default: 0] += max(0, Int(to.timeIntervalSince(from) / 60))
+        }
+        let coveredRecurring = reminders.reduce(0) { total, reminder in
+            guard reminder.recurrence != nil, let blocked = blockMinutesByTask[TaskID(source: .reminders, rawValue: reminder.id)],
+                  let reserved = efforts.minutes(for: reminder.id, on: day) else { return total }
+            return total + min(reserved, blocked)
+        }
+        let recurringMinutes = max(0, efforts.reservedMinutes(on: day, reminders: reminders, calendar: calendar) - coveredRecurring)
         var input = CapacityInput(
-            hours: TagwerkCore.workHours(on: day, schedule: settings.weekSchedule, overrides: overrides, calendar: calendar),
+            hours: hours,
             lunchStartMinutes: lunch(on: day)?.lowerBound ?? 0, lunchMinutes: lunch(on: day)?.count ?? 0,
             bufferMinutes: settings.bufferMinutes,
-            busyIntervals: busyIntervals(events: dayEvents, on: day, calendar: calendar,
-                                         excluding: Set(links.keys).union(copiesOfLinked(dayEvents, links: links))),
-            recurringMinutes: efforts.reservedMinutes(on: day, reminders: reminders, calendar: calendar),
+            busyIntervals: busyIntervals(events: dayEvents, on: day, calendar: calendar, excluding: linkedIDs),
+            recurringMinutes: recurringMinutes,
             plannedMinutes: planned, estimatedCount: estimated
+        )
+        // For the AI, the reserved effort of recurring reminders is the load of those tasks: a block for one
+        // of them replaces its reservation instead of adding to it.
+        var aiCounted = counted
+        var reservedLoad = 0
+        for reminder in reminders where reminder.recurrence != nil {
+            let key = TaskID(source: .reminders, rawValue: reminder.id)
+            guard let reserved = efforts.minutes(for: reminder.id, on: day), reserved > 0,
+                  !occurrences(of: reminder.recurrence!, in: day...day, calendar: calendar).isEmpty else { continue }
+            let open = max(0, reserved - (blockMinutesByTask[key] ?? 0))
+            guard open > 0 else { continue }
+            aiCounted[key.key, default: 0] += open
+            reservedLoad += open
+        }
+        let planInput = PlanInputDay(
+            day: day, hours: hours, lunch: lunch(on: day), events: dayEvents, linkedEventIDs: linkedIDs,
+            deadlineCalendarIDs: Set(settings.deadlineCalendarIDs ?? []),
+            blocks: linkedEvents.map { minutes($0.start, from: start)..<minutes($0.end, from: start) },
+            recurringMinutes: max(0, recurringMinutes - reservedLoad), plannedMinutes: planned + reservedLoad,
+            bufferMinutes: settings.bufferMinutes, calendar: calendar, countedTaskMinutes: aiCounted
         )
         if day == today {
             let current = now()
@@ -916,7 +1184,7 @@ final class PlanningModel {
         return DayPlan(day: day, capacity: capacity(input), deadlines: deadlines.filter { $0.day == day },
                        events: shown.filter { links[$0.id] == nil }, blocks: shown.filter { links[$0.id] != nil && !$0.isAllDay },
                        assigned: assignedSorted, openToday: openToday, links: links.filter { id, _ in linkedEvents.contains { $0.id == id } },
-                       isPastDue: pastDue, recurring: recurring, isPast: day < today)
+                       isPastDue: pastDue, recurring: recurring, planInput: planInput, isPast: day < today)
     }
 
     /// Unlinked copies (same title and time in another calendar) of linked events: their time is already

@@ -13,6 +13,61 @@ struct PlanView: View {
     @State private var dueDateFor: TaskItem?
     @State private var creatingEvent = false
 
+    @Environment(AppEnvironment.self) private var environment
+
+    /// "Vorschläge verworfen" with "Rückgängig" after "Verwerfen".
+    @ViewBuilder
+    private var dismissUndo: some View {
+        let dismissed = environment.planner.lastDismissed
+        if !dismissed.isEmpty {
+            let count = environment.planner.dismissedCount
+            UndoCapsule(title: count == 1 ? "1 Vorschlag" : "\(count) Vorschläge", caption: "Verworfen",
+                        symbol: "sparkles", duration: 5,
+                        onUndo: { Task { await environment.planner.undoDismissAll() } },
+                        onExpire: { environment.planner.clearDismissUndo() })
+                .padding(.bottom, 60)
+        }
+    }
+
+    /// "Dupliziert" with "Rückgängig" after duplicating a block (mockup DU1).
+    @ViewBuilder
+    private var duplicateUndo: some View {
+        if let copy = model.lastDuplicate {
+            UndoCapsule(title: copy.title, caption: "Dupliziert", symbol: "plus.square.on.square", duration: 5,
+                        onUndo: { Task { await model.undoDuplicate() } },
+                        onExpire: { if model.lastDuplicate?.id == copy.id { model.clearDuplicateUndo() } })
+                .padding(.bottom, 60)
+        }
+    }
+
+    /// After dragging a task to another day (mockup WT1): which blocks came along, with "Rückgängig".
+    @ViewBuilder
+    private var moveUndo: some View {
+        if let move = model.lastMove, let task = model.taskList.items.first(where: { $0.id == move.taskID }) {
+            let caption = switch move.movedBlocks {
+            case 0: "Verschoben"
+            case 1: "Verschoben · 1 Zeitblock mitgenommen"
+            default: "Verschoben · \(move.movedBlocks) Zeitblöcke mitgenommen"
+            }
+            UndoCapsule(title: task.title, caption: caption, symbol: "arrow.left.arrow.right.circle.fill", duration: 5,
+                        onUndo: { Task { await model.undoMove() } },
+                        onExpire: { if model.lastMove == move { model.clearMoveUndo() } })
+                .padding(.bottom, 60)
+        }
+    }
+
+    /// After "Alle übernehmen": one "Rückgängig" for blocks, days, hours and moves (mockup AW1).
+    @ViewBuilder
+    private var acceptAllUndo: some View {
+        if let undo = environment.planner.lastAcceptAll {
+            UndoCapsule(title: undo.count == 1 ? "1 Vorschlag" : "\(undo.count) Vorschläge", caption: "Übernommen",
+                        symbol: "sparkles", duration: 6,
+                        onUndo: { Task { await environment.planner.undoAcceptAll() } },
+                        onExpire: { environment.planner.clearAcceptUndo() })
+                .padding(.bottom, 60)
+        }
+    }
+
     var body: some View {
         NavigationStack {
             Group {
@@ -28,6 +83,10 @@ struct PlanView: View {
                 }
             }
             .safeAreaInset(edge: .top) { header }
+            .overlay(alignment: .bottom) { dismissUndo }
+            .overlay(alignment: .bottom) { duplicateUndo }
+            .overlay(alignment: .bottom) { moveUndo }
+            .overlay(alignment: .bottom) { acceptAllUndo }
             .navigationTitle("Planen")
             .toolbar(.hidden, for: .navigationBar)  // the tab bar already says "Planen" (mockup A1)
             .task(id: "\(model.scope)-\(model.anchor)") { await model.reload() }
@@ -74,6 +133,7 @@ struct PlanView: View {
                     .buttonStyle(.bordered)
                     .buttonBorderShape(.circle)
                     .accessibilityLabel("Neuer Termin")
+                AssistantButton { .planning(scope: model.scope, anchor: model.anchor) }
             }
         }
         .padding(.horizontal)

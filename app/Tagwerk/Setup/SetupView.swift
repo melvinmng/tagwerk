@@ -4,11 +4,14 @@ import SwiftUI
 struct SetupView: View {
     @State private var model: SetupModel
     @State private var loginModel: GitHubLoginModel
+    @State private var chatGPTSignIn: ChatGPTSignInModel
     let onFinish: () async -> Void
 
-    init(model: SetupModel, loginModel: GitHubLoginModel, onFinish: @escaping () async -> Void) {
+    init(model: SetupModel, loginModel: GitHubLoginModel, chatGPTSignIn: ChatGPTSignInModel,
+         onFinish: @escaping () async -> Void) {
         _model = State(initialValue: model)
         _loginModel = State(initialValue: loginModel)
+        _chatGPTSignIn = State(initialValue: chatGPTSignIn)
         self.onFinish = onFinish
     }
 
@@ -26,6 +29,21 @@ struct SetupView: View {
                         Text(step.explanation)
                         if step == .github {
                             GitHubLoginView(model: loginModel) { model.markSignedIn() }
+                        } else if step == .chatGPT {
+                            // Mockup T1: the privacy notice sits above the button, where the decision is made.
+                            Text(AIStatusMessage.privacyNotice)
+                            if let message = chatGPTSignIn.message { AIStatusRow(message: message) }
+                            if chatGPTSignIn.isSigningIn {
+                                HStack(spacing: 8) {
+                                    ProgressView()
+                                    Text("Anmeldung läuft …").foregroundStyle(.secondary)
+                                }
+                            } else {
+                                Button("Mit ChatGPT anmelden") {
+                                    Task { if await chatGPTSignIn.signIn() { model.markSignedIn() } }
+                                }
+                                .buttonStyle(.borderedProminent)
+                            }
                         } else {
                             Button(step == .planCalendar ? "Kalender „Tagwerk“ anlegen" : "Erlauben") { Task { await model.grant() } }
                                 .buttonStyle(.borderedProminent)
@@ -41,15 +59,14 @@ struct SetupView: View {
                     }
                 }
 
-                Section {
-                    Text("Termine und Aufgabentitel gehen nur an OpenAI, wenn du „Tag planen“ tippst.")
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
-                }
             }
             .navigationTitle("Willkommen")
         }
         .interactiveDismissDisabled()
+        .task {
+            // The keychain is read after the setup appeared; an existing sign-in marks step 5 as done.
+            if await chatGPTSignIn.isSignedIn() { model.noteChatGPTSignedIn() }
+        }
         .onChange(of: model.isFinished) { _, finished in
             if finished { Task { await onFinish() } }
         }
@@ -69,7 +86,7 @@ struct SetupView: View {
             Text(step.title)
             Spacer()
             if let result = model.results[step], result != .fullAccess {
-                Text("nicht erlaubt").font(.caption).foregroundStyle(.secondary)
+                Text(step.notDoneLabel).font(.caption).foregroundStyle(.secondary)
             }
         }
     }

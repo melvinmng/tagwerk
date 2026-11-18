@@ -1,3 +1,4 @@
+import AIKit
 import Foundation
 import GitHubKit
 import Network
@@ -18,6 +19,14 @@ final class AppEnvironment {
     let gitHubTokens: TokenManager
     let gitHubLoginClient: DeviceFlowClient
     let gitHub: GitHubTaskProvider
+    /// ChatGPT session, client and model choice. Creating it sends nothing (§8.4).
+    let ai: AIEnvironment
+    /// "Tag/Woche/Monat planen" with ChatGPT; calls only on the user's tap.
+    let planner: AIPlanner
+    /// The assistant chat (design §8.3); sends only what the user writes.
+    let assistant: AssistantModel
+    /// A tab another view asks to show (e.g. "Mit KI planen" from the task list jumps to "Planen").
+    var requestedTab: Int?
     private let gitHubCache: SwiftDataGitHubCache
     private let gitHubCatalogStore: SwiftDataGitHubCatalogStore
     /// Age after which the repository/project catalog is fetched again.
@@ -39,11 +48,12 @@ final class AppEnvironment {
         let taskList = TaskListModel(providers: [reminders, LocalTaskProvider(context: context)])
         self.taskList = taskList
         let planStore = PlanStore(context: context)
+        let suggestionStore = SuggestionStore(context: context)
         let blockPlanner = BlockPlanner(store: gateway, planStore: planStore, links: EventLinkStore(context: context),
                                         settings: settings, calendar: .tagwerk)
         self.planning = PlanningModel(taskList: taskList, calendarStore: gateway, reminderStore: gateway, planStore: planStore,
                                       efforts: RecurringEffortStore(context: context), blocks: blockPlanner, settings: settings,
-                                      marks: EventMarkStore(context: context))
+                                      marks: EventMarkStore(context: context), suggestions: suggestionStore)
 
         let clientID = Bundle.main.object(forInfoDictionaryKey: "GitHubClientID") as? String ?? ""
         // GitHub requests fail after 15 s instead of the default 60 s, so the cache appears quickly offline.
@@ -65,6 +75,25 @@ final class AppEnvironment {
             catalogStore: catalogStore,
             selectedProjectIDs: { settings.selectedProjectIDs.map(Set.init) }
         )
+        let ai = AIEnvironment.make(settings: settings)
+        self.ai = ai
+        self.planner = AIPlanner(responder: ai.client, model: { try await ai.selectedModel() }, planning: planning,
+                                 store: suggestionStore, consumeModelFallback: {
+                                     defer { ai.modelFallbackNotice = false }
+                                     return ai.modelFallbackNotice
+                                 })
+        planner.workAhead = { settings.aiWorkAhead }
+        planner.longerDays = { AIPlanner.LongerDays(rawValue: settings.aiLongerDays) ?? .forDeadlines }
+        planner.preferences = { settings.aiPlanningRules }
+        let tools = AppTools(taskList: taskList, planning: planning, planner: planner,
+                             events: { interval in gateway.events(in: interval, calendarIDs: nil) })
+        self.assistant = AssistantModel(responder: ai.client, tools: tools, model: { try await ai.selectedModel() },
+                                        store: ChatStore(context: context), planning: planning)
+        let gitHubProvider = self.gitHub
+        assistant.reader = GitHubRepositoryReader(api: gitHubProvider.api)
+        assistant.issueReference = { id in
+            gitHubProvider.issueReference(for: id).map { IssueReference(repository: $0.repository, number: $0.number, nodeID: $0.nodeID) }
+        }
         let planning = self.planning
         taskList.onCompletionChanged = { id, isCompleted in await planning.didChangeCompletion(id, isCompleted: isCompleted) }
         // An ended GitHub sign-in (expired or revoked) forgets the cached issues of that account.
@@ -107,7 +136,7 @@ final class AppEnvironment {
     }
 
     func makeSetupModel() -> SetupModel {
-        SetupModel(store: gateway, settings: settings, calendarStore: gateway)
+        SetupModel(store: gateway, settings: settings, calendarStore: gateway, isChatGPTSignedIn: ai.isSignedIn)
     }
 
     /// Current authorization of a source that needs system permission; `nil` for sources without one.

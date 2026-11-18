@@ -1,0 +1,821 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tagwerk · Phase 2b-2 · KI verlängert Arbeitstage · Mockups AO, AB, AR, FT, AW</title>
+<style>
+  /* Mockup frame uses the host theme (with fallbacks); phone screens depict the app in iOS dark mode. */
+  :root { color-scheme: light dark; }
+  body { font: 14px var(--font-sans, system-ui, sans-serif); color: var(--foreground, CanvasText); margin: 16px; }
+  h1 { font-size: 20px; margin: 0 0 4px; }
+  h2 { font-size: 18px; margin: 38px 0 4px; padding-top: 16px; border-top: 1px solid rgba(128,128,128,.3); display: flex; align-items: center; gap: 10px; }
+  .area { display: inline-grid; place-items: center; width: 34px; height: 34px; border-radius: 9px; background: #0a84ff; color: #fff; font: 800 19px system-ui; flex-shrink: 0; }
+  .lead { color: var(--muted-foreground, #777); margin: 0 0 14px; line-height: 1.5; max-width: 980px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(392px, 1fr)); gap: 22px; align-items: start; }
+  .label { font: 600 13px var(--font-sans, system-ui); color: var(--muted-foreground, #777); margin: 0 0 8px 4px; }
+  .label b { color: var(--foreground, CanvasText); }
+  .code { display: inline-block; background: rgba(128,128,128,.28); color: var(--foreground, CanvasText); border-radius: 6px; padding: 1px 8px; font: 800 13px system-ui; margin-right: 4px; }
+  .code.r { background: #30d158; color: #000; }
+  .rec { background: #30d158; color: #000; font-size: 11px; font-weight: 700; padding: 1px 7px; border-radius: 99px; margin-left: 4px; }
+  .pc { font-size: 12.5px; color: var(--muted-foreground, #777); line-height: 1.5; margin: 8px 4px 0; max-width: 390px; }
+  .pc b { color: var(--foreground, CanvasText); }
+  .box { border: 1px solid rgba(48,209,88,.5); background: rgba(48,209,88,.07); border-radius: 12px; padding: 12px 16px; margin-top: 16px; line-height: 1.55; font-size: 13px; max-width: 1100px; }
+  .box h3 { margin: 0 0 6px; font-size: 14px; }
+  .box ul { margin: 4px 0 0; padding-left: 18px; }
+  .box.neutral { border-color: rgba(128,128,128,.4); background: rgba(128,128,128,.07); }
+  .box.warn { border-color: rgba(255,159,10,.6); background: rgba(255,159,10,.08); }
+  code { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; background: rgba(128,128,128,.16); padding: 1px 4px; border-radius: 4px; }
+  table.sum { border-collapse: collapse; font-size: 13px; margin-top: 6px; }
+  table.sum td, table.sum th { padding: 5px 14px 5px 0; vertical-align: top; text-align: left; border-bottom: 1px solid rgba(128,128,128,.22); }
+  table.sum th { font-size: 12px; color: var(--muted-foreground, #777); }
+
+  .phone {
+    --bg: #000; --card: #1c1c1e; --card2: #2c2c2e; --sep: #38383a; --text: #fff; --sub: #8e8e93;
+    --blue: #0a84ff; --green: #30d158; --orange: #ff9f0a; --red: #ff453a; --purple: #bf5af2; --teal: #64d2ff; --mint: #7cf0c3;
+    background: var(--bg); color: var(--text); border-radius: 40px; padding: 14px 12px 12px;
+    font: 15px -apple-system, "SF Pro Text", system-ui, sans-serif; border: 6px solid #2a2a2c;
+    width: 390px; max-width: 100%; box-sizing: border-box; min-height: 760px;
+    display: flex; flex-direction: column; position: relative; overflow: hidden;
+  }
+  .status { display: flex; justify-content: space-between; font: 600 13px system-ui; padding: 0 12px 10px; }
+  .title { font: 700 26px system-ui; padding: 0 6px; }
+  .row { display: flex; align-items: center; gap: 8px; }
+  .nav { display: flex; justify-content: space-between; align-items: center; padding: 2px 6px 8px; }
+  .nav .a { color: var(--blue); } .nav .a.b { font-weight: 600; }
+  .nav .c { font-weight: 600; }
+  .chip { font-size: 11px; padding: 2px 7px; border-radius: 99px; background: var(--card2); color: #c7c7cc; white-space: nowrap; }
+  .chip.p1 { background: rgba(255,69,58,.22); color: #ff8a82; font-weight: 700; }
+  .chip.ai { background: rgba(191,90,242,.2); color: #dcb0f7; }
+  .chip.auto { background: rgba(10,132,255,.2); color: #8cc4ff; }
+  .chip.warn { background: rgba(255,159,10,.2); color: #ffc266; }
+  .chip.on { background: var(--blue); color: #fff; font-weight: 600; }
+  .section { color: var(--sub); font: 600 12px system-ui; text-transform: uppercase; letter-spacing: .4px; margin: 10px 8px 4px; display: flex; justify-content: space-between; }
+  .section span { text-transform: none; letter-spacing: 0; font-weight: 500; }
+  .list { background: var(--card); border-radius: 18px; overflow: hidden; margin-bottom: 6px; }
+  .item { display: flex; align-items: flex-start; gap: 10px; padding: 9px 12px; border-bottom: 1px solid var(--sep); }
+  .item:last-child { border-bottom: 0; }
+  .item.hl { background: rgba(10,132,255,.22); box-shadow: inset 0 0 0 1.5px var(--blue); }
+  .circle { width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--sub); flex-shrink: 0; margin-top: 1px; box-sizing: border-box; }
+  .circle.sel { background: var(--blue); border-color: var(--blue); color: #fff; font: 700 11px/14px system-ui; text-align: center; }
+  .item .t { flex: 1; font-size: 14px; min-width: 0; }
+  .item .s { color: var(--sub); font-size: 12px; margin-top: 2px; }
+  .due-red { color: var(--red); } .due-orange { color: var(--orange); }
+  .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 4px; }
+  .seg { display: flex; background: var(--card2); border-radius: 99px; padding: 2px; margin: 0 2px 8px; }
+  .seg span { flex: 1; text-align: center; padding: 6px 2px; font-size: 13px; border-radius: 99px; color: #c7c7cc; }
+  .seg span.on { background: #636366; color: #fff; font-weight: 600; }
+  .field { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 10px 12px; border-bottom: 1px solid var(--sep); font-size: 14px; }
+  .field:last-child { border-bottom: 0; }
+  .field .v { color: var(--sub); text-align: right; }
+  .field .l { color: var(--blue); }
+  .field.dis { opacity: .45; }
+  .pick { background: #3a3a3c; border-radius: 8px; padding: 4px 9px; font-size: 13.5px; color: #fff; white-space: nowrap; }
+  .pick.b { color: var(--blue); }
+  .tog { width: 40px; height: 24px; border-radius: 99px; background: #48484a; position: relative; flex-shrink: 0; }
+  .tog::after { content: ""; position: absolute; top: 2px; left: 2px; width: 20px; height: 20px; border-radius: 50%; background: #fff; }
+  .tog.on { background: var(--green); } .tog.on::after { left: 18px; }
+  .note { color: var(--sub); font-size: 11.5px; padding: 4px 8px; line-height: 1.4; }
+  .spacer { flex: 1; }
+  .b { flex: 1; text-align: center; border-radius: 99px; padding: 9px 6px; font-weight: 600; font-size: 14px; }
+  .b.plain { background: var(--card2); color: var(--blue); }
+  .b.prom { background: var(--blue); color: #fff; }
+  .b.aib { background: rgba(191,90,242,.24); color: #e9cdfb; }
+  .b.red { background: rgba(255,69,58,.18); color: #ff8a82; }
+  .btns { display: flex; gap: 8px; }
+  .sm { border-radius: 99px; padding: 5px 11px; font-weight: 600; font-size: 12.5px; white-space: nowrap; align-self: center; }
+  .sm.ok { background: var(--blue); color: #fff; } .sm.no { background: #48484a; color: #d1d1d6; }
+  .lnk { color: var(--blue); font-weight: 600; white-space: nowrap; }
+
+  /* Liquid Glass approximation */
+  .glass { background: rgba(72,72,78,.62); backdrop-filter: blur(18px) saturate(1.6); -webkit-backdrop-filter: blur(18px) saturate(1.6);
+    border: 1px solid rgba(255,255,255,.16); box-shadow: inset 0 1px 0 rgba(255,255,255,.18), 0 8px 24px rgba(0,0,0,.55); }
+
+  /* Tab bar as on the device screenshots: centred capsule, selected tab as a dark pill */
+  .tb { margin: auto auto 0; width: 80%; display: flex; border-radius: 99px; padding: 5px; font-size: 10px; color: #d1d1d6; text-align: center; box-sizing: border-box; }
+  .tb span { flex: 1; padding: 4px 0 3px; border-radius: 99px; }
+  .tb .on { color: var(--blue); background: rgba(0,0,0,.5); font-weight: 600; }
+  .ico { font-size: 17px; display: block; font-style: normal; line-height: 20px; }
+  .tbrow { display: flex; gap: 8px; align-items: center; margin-top: auto; padding-top: 8px; }
+  .tbrow .tb { flex: 1; width: auto; margin: 0; }
+  .aibtn { width: 52px; height: 52px; border-radius: 50%; display: grid; place-items: center; font-size: 22px; color: var(--mint); flex-shrink: 0; }
+  .tbgap { margin-top: 8px; }
+
+  /* New day header */
+  .topbar { display: flex; align-items: center; gap: 8px; padding: 0 2px 10px; }
+  .topbar .seg { flex: 1; margin: 0; }
+  .rbtn { width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; font-size: 20px; flex-shrink: 0; color: #fff; }
+  .rbtn.ai { color: var(--mint); font-size: 17px; }
+  .hdr { display: flex; align-items: flex-end; justify-content: space-between; gap: 8px; padding: 4px 6px 12px; }
+  .kick { font: 600 12px system-ui; color: var(--blue); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 2px; }
+  .bigdate { font: 700 28px/1.15 system-ui; letter-spacing: -.3px; }
+  .bigdate .car { font-size: 15px; color: var(--sub); vertical-align: 4px; }
+  .stepper { display: flex; border-radius: 99px; flex-shrink: 0; }
+  .stepper span { width: 38px; height: 34px; display: grid; place-items: center; color: #fff; font-size: 18px; }
+  .stepper span + span { border-left: 1px solid rgba(255,255,255,.14); }
+  .wk { display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; padding: 0 2px 10px; }
+  .wk small { display: block; color: var(--sub); font: 600 10.5px system-ui; margin-bottom: 4px; }
+  .wk b { display: inline-grid; place-items: center; width: 32px; height: 32px; border-radius: 50%; font: 600 15px system-ui; }
+  .wk .on b { background: var(--blue); }
+  .wk .dld b { box-shadow: inset 0 0 0 1.5px var(--red); color: #ff8a82; }
+  .wk .off b { color: #6e6e73; }
+  .wk i { display: block; width: 20px; height: 3px; border-radius: 99px; background: #3a3a3c; margin: 4px auto 0; overflow: hidden; }
+  .wk i u { display: block; height: 100%; background: var(--green); }
+  .wk i u.ov { background: var(--red); }
+  .pop { position: absolute; left: 14px; right: 14px; top: 154px; border-radius: 24px; padding: 12px 12px 10px; z-index: 5; background: rgba(44,44,46,.97); box-shadow: 0 16px 40px rgba(0,0,0,.75); border: 1px solid rgba(255,255,255,.12); }
+  .pop .ph { display: flex; justify-content: space-between; align-items: center; padding: 2px 6px 8px; font-weight: 600; }
+  .pop .ph span { color: var(--blue); }
+  .mcal { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; text-align: center; font-size: 15px; }
+  .mcal small { color: var(--sub); font: 600 10.5px system-ui; padding-bottom: 4px; }
+  .mcal span { height: 34px; display: grid; place-items: center; border-radius: 50%; position: relative; }
+  .mcal .o { color: #48484a; }
+  .mcal .td { background: var(--blue); font-weight: 700; }
+  .mcal .fl::after { content: ""; position: absolute; bottom: 2px; width: 5px; height: 5px; border-radius: 50%; background: var(--red); }
+  .dimall { position: absolute; inset: 0; background: rgba(0,0,0,.45); z-index: 4; }
+  .pills { display: flex; gap: 6px; flex-wrap: wrap; padding: 0 4px 8px; }
+  .pill { font-size: 12px; padding: 4px 9px; border-radius: 99px; background: var(--card); color: #d1d1d6; white-space: nowrap; }
+
+  /* Deadlines */
+  .dl { background: rgba(255,69,58,.14); border: 1px solid rgba(255,69,58,.5); border-radius: 18px; padding: 8px 12px; margin-bottom: 8px; }
+  .dl .h { color: #ff8a82; font: 700 12px system-ui; text-transform: uppercase; letter-spacing: .4px; margin-bottom: 2px; }
+  .dl .r { display: flex; gap: 8px; align-items: baseline; padding: 5px 0; border-top: 1px solid rgba(255,69,58,.25); font-size: 13.5px; }
+  .dl .r:first-of-type { border-top: 0; }
+  .dl .r .g { width: 16px; color: var(--red); text-align: center; flex-shrink: 0; }
+  .dl .r .n { flex: 1; min-width: 0; }
+  .dl .r .n small { display: block; color: #c7c7cc; font-size: 11.5px; }
+  .dl .r .w { color: #ff8a82; font-weight: 600; font-size: 12px; white-space: nowrap; }
+  .flag { color: var(--red); font-weight: 700; }
+
+  /* Capacity */
+  .cap { background: var(--card); border-radius: 18px; padding: 10px 12px; margin-bottom: 8px; }
+  .cap .top { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+  .cap .top b { font-size: 17px; }
+  .cap .top b.neg { color: #ff8a82; }
+  .cap .top span { color: var(--sub); font-size: 12px; white-space: nowrap; }
+  .cap .sub { color: #c7c7cc; font-size: 12px; margin-top: 1px; }
+  .cap .sub2 { color: var(--sub); font-size: 11.5px; margin-top: 5px; }
+  .cap .sub2.w { color: #ffc266; }
+  .bar { display: flex; height: 10px; border-radius: 99px; overflow: hidden; background: #3a3a3c; margin: 7px 0 6px; gap: 1.5px; position: relative; }
+  .bar i { display: block; height: 100%; }
+  .k-ev { background: var(--blue); } .k-br { background: #8e8e93; } .k-re { background: var(--teal); }
+  .k-bu { background: repeating-linear-gradient(135deg, #8e8e93 0 3px, #48484a 3px 6px); }
+  .k-pl { background: var(--green); } .k-fr { background: #3a3a3c; } .k-ov { background: var(--red); }
+  .k-pa { background: repeating-linear-gradient(135deg, #232326 0 4px, #323236 4px 8px); }
+  .k-du { background: repeating-linear-gradient(135deg, var(--orange) 0 3px, #6b4a10 3px 6px); }
+  .cap .lg { display: flex; flex-wrap: wrap; gap: 3px 10px; font-size: 11px; color: #c7c7cc; }
+  .cap .lg i { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 4px; }
+  .cap .act { display: flex; gap: 8px; margin-top: 9px; }
+  .tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+  .tile { background: var(--card); border-radius: 18px; padding: 10px 12px; }
+  .tile small { display: block; color: var(--sub); font-size: 11.5px; }
+  .tile b { font-size: 19px; display: block; margin: 1px 0; }
+  .strip { position: relative; margin: 8px 0 2px; }
+  .strip .bar { height: 16px; border-radius: 6px; margin: 0; }
+  .strip .past { position: absolute; left: 0; top: 0; bottom: 0; background: rgba(0,0,0,.62); border-radius: 6px 0 0 6px; }
+  .strip .now { position: absolute; top: -4px; bottom: -4px; width: 2px; background: var(--red); border-radius: 2px; }
+  .strip .now::before { content: "13:20"; position: absolute; top: -15px; left: -14px; font: 600 10px system-ui; color: #ff8a82; }
+  .axis { display: flex; justify-content: space-between; font: 10px ui-monospace, monospace; color: var(--sub); }
+  .anno { font: 600 10.5px system-ui; color: #ffd60a; margin: 6px 6px 3px; }
+
+  /* Timeline */
+  .tl { display: flex; flex-direction: column; gap: 5px; }
+  .time { width: 40px; color: var(--sub); font: 12px ui-monospace, monospace; flex-shrink: 0; align-self: flex-start; padding-top: 7px; }
+  .block { flex: 1; min-width: 0; border-radius: 12px; padding: 7px 10px; font-size: 13.5px; }
+  .block .meta { color: #c7c7cc; font-size: 11.5px; margin-top: 2px; }
+  .block.event { background: rgba(10,132,255,.22); border-left: 4px solid var(--blue); }
+  .block.planned { background: rgba(48,209,88,.18); border-left: 4px solid var(--green); }
+  .block.planned.act { box-shadow: 0 0 0 2px var(--green); }
+  .block.recur { background: rgba(100,210,255,.14); border-left: 4px solid var(--teal); }
+  .block.quiet { background: repeating-linear-gradient(135deg, #1c1c1e 0 6px, #232326 6px 12px); color: var(--sub); padding: 5px 10px; font-size: 12.5px; }
+  .block.free { border: 1.5px dashed #48484a; color: var(--sub); font-size: 12.5px; padding: 5px 10px; }
+  .block.free.drop { border-color: var(--mint); color: var(--mint); background: rgba(124,240,195,.1); }
+  .block.free.no { opacity: .45; }
+  .block.gone { border: 1.5px dashed #48484a; background: none; color: #636366; }
+  .past-row { opacity: .45; }
+  .lift { position: absolute; left: 66px; right: 30px; border-radius: 12px; padding: 9px 12px; font-size: 13.5px; transform: rotate(-2deg); z-index: 3; }
+  .lift small { display: block; color: #c7c7cc; font-size: 11.5px; }
+  .cals { display: inline-flex; vertical-align: -1px; margin-right: 4px; }
+  .cals .dot { margin-right: -3px; box-shadow: 0 0 0 1.5px #16324f; }
+
+  /* Hour grid (variant) */
+  .hg { position: relative; height: 290px; margin: 2px 0 6px 44px; border-left: 1px solid var(--sep); }
+  .hg .hl { position: absolute; left: -44px; right: 0; border-top: 1px solid #2c2c2e; font: 11px ui-monospace, monospace; color: var(--sub); padding-left: 2px; height: 0; }
+  .hg .hl span { position: relative; top: -8px; background: var(--bg); padding-right: 4px; }
+  .hg .ev { position: absolute; left: 4px; right: 4px; border-radius: 9px; padding: 4px 8px; font-size: 12.5px; box-sizing: border-box; overflow: hidden; }
+  .hg .ev small { color: #c7c7cc; font-size: 11px; display: block; }
+  .hg .ev.e { background: rgba(10,132,255,.24); border-left: 4px solid var(--blue); }
+  .hg .ev.q { background: repeating-linear-gradient(135deg, #1c1c1e 0 6px, #232326 6px 12px); color: var(--sub); }
+  .hg .ev.p { background: rgba(48,209,88,.3); border-left: 4px solid var(--green); box-shadow: 0 8px 22px rgba(0,0,0,.6), 0 0 0 1.5px var(--green); z-index: 2; }
+  .hg .ev.o { border: 1.5px dashed #48484a; color: #636366; }
+  .hg .grab { position: absolute; left: 50%; width: 30px; height: 5px; margin-left: -15px; border-radius: 99px; background: #fff; z-index: 3; }
+
+  /* Week rows */
+  .day { background: var(--card); border-radius: 16px; padding: 8px 10px; margin-bottom: 5px; }
+  .day.today { box-shadow: inset 0 0 0 1.5px var(--blue); }
+  .day.drop { box-shadow: inset 0 0 0 2px var(--mint); background: rgba(124,240,195,.1); }
+  .day.past { opacity: .5; }
+  .day .hd { display: flex; align-items: center; gap: 8px; }
+  .day .hd b { width: 50px; font-size: 13.5px; flex-shrink: 0; }
+  .day .hd .bar { flex: 1; margin: 0; height: 8px; }
+  .day .hd .n { font: 12px system-ui; font-variant-numeric: tabular-nums; color: #c7c7cc; white-space: nowrap; min-width: 92px; text-align: right; }
+  .day .hd .n.over { color: #ff8a82; font-weight: 700; }
+  .tk { display: flex; align-items: center; gap: 6px; font-size: 13px; padding: 5px 0 0 2px; }
+  .tk .grip { color: #636366; font-size: 13px; letter-spacing: -2px; }
+  .tk .nm { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .tk .d { color: var(--sub); font-size: 11.5px; white-space: nowrap; }
+  .tk.dlrow { color: #ffb3ad; font-weight: 600; }
+  .ghost { border: 1.5px dashed var(--mint); border-radius: 9px; padding: 5px 8px; margin-top: 5px; color: var(--mint); font-size: 12.5px; }
+
+  /* Drawer for unplanned tasks */
+  .drawer { margin: 6px -6px 0; border-radius: 24px; padding: 6px 10px 8px; background: #1c1c1e; border: 1px solid rgba(255,255,255,.1); box-shadow: 0 -8px 24px rgba(0,0,0,.6); }
+  .drawer .grab, .grab { width: 36px; height: 5px; border-radius: 99px; background: #636366; margin: 0 auto 8px; }
+  .drawer .dh { display: flex; justify-content: space-between; align-items: center; font-weight: 600; padding: 0 4px 6px; }
+  .drawer .dh span { color: var(--sub); font-weight: 500; font-size: 12.5px; }
+  .drawer .list { background: var(--card2); margin-top: 6px; }
+  .drawer .list .item { border-color: #48484a; padding: 8px 10px; }
+  .search { background: #3a3a3c; border-radius: 10px; padding: 7px 10px; color: var(--sub); font-size: 13.5px; margin: 0 2px 8px; }
+  .fch { display: flex; gap: 6px; overflow: hidden; padding: 0 2px; }
+  .grip2 { color: #636366; letter-spacing: -2px; align-self: center; }
+  .plusb { width: 26px; height: 26px; border-radius: 50%; background: rgba(10,132,255,.24); color: var(--blue); display: grid; place-items: center; font-weight: 700; flex-shrink: 0; align-self: center; }
+  .daych { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+  .daych div { background: var(--card2); border-radius: 12px; text-align: center; padding: 6px 0; font-size: 11px; color: #c7c7cc; }
+  .daych div b { display: block; font-size: 14px; color: #fff; }
+  .daych div.t { box-shadow: inset 0 0 0 1.5px var(--blue); }
+  .daych div.off { opacity: .4; }
+
+  /* Month */
+  .mgrid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; margin-bottom: 8px; }
+  .mgrid .wd { text-align: center; color: var(--sub); font: 600 10.5px system-ui; padding-bottom: 2px; }
+  .mc2 { border-radius: 10px; background: var(--card); height: 38px; padding: 3px 3px 0; text-align: center; font: 600 13px system-ui; position: relative; box-sizing: border-box; }
+  .mc2.out { background: none; color: #48484a; }
+  .mc2.past { color: #6e6e73; }
+  .mc2.today { box-shadow: inset 0 0 0 1.5px var(--blue); color: var(--blue); }
+  .mc2.sel { background: #fff; color: #000; }
+  .mc2.dl2 { background: rgba(255,69,58,.3); box-shadow: inset 0 0 0 1.5px var(--red); color: #fff; }
+  .mc2 .ld { position: absolute; left: 6px; right: 6px; bottom: 5px; height: 4px; border-radius: 99px; background: #3a3a3c; overflow: hidden; }
+  .mc2.sel .ld { background: #c7c7cc; }
+  .mc2 .ld i { display: block; height: 100%; background: var(--green); }
+  .mc2 .ld i.hi { background: var(--orange); } .mc2 .ld i.ov { background: var(--red); }
+  .agh { display: flex; justify-content: space-between; align-items: baseline; padding: 4px 6px 6px; }
+  .agh b { font-size: 16px; }
+  .agh small { display: block; color: var(--sub); font-size: 12px; font-weight: 400; }
+
+  /* Context menu */
+  .blurbg { position: absolute; inset: 0; padding: 60px 12px; filter: blur(5px); opacity: .32; }
+  .fg { position: relative; z-index: 1; display: flex; flex-direction: column; flex: 1; }
+  .preview { background: var(--card); border-radius: 18px; padding: 11px 12px; margin: 6px 2px 8px; box-shadow: 0 10px 30px rgba(0,0,0,.6); }
+  .menu { border-radius: 18px; overflow: hidden; margin: 0 2px; width: 276px; background: rgba(58,58,62,.92); }
+  .menu.abs { position: absolute; z-index: 6; }
+  .menu .mi { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; font-size: 15px; border-bottom: 1px solid rgba(255,255,255,.1); min-height: 22px; gap: 8px; }
+  .menu .mi:last-child { border-bottom: 0; }
+  .menu .mi i { font-style: normal; color: #d1d1d6; font-size: 15px; }
+  .menu .mi small { display: block; color: #aeaeb2; font-size: 11.5px; margin-top: 1px; }
+  .menu .mi.ai { color: #e9cdfb; opacity: .55; } .menu .mi.ai i { color: var(--purple); }
+  .menu .mi.de { color: var(--red); } .menu .mi.de i { color: var(--red); }
+  .menu .gap { height: 7px; background: rgba(0,0,0,.35); }
+  .menu .mh { padding: 8px 14px 5px; font: 600 11.5px system-ui; color: #aeaeb2; }
+  .cg { display: grid; grid-template-columns: repeat(4, 1fr); border-bottom: 1px solid rgba(255,255,255,.1); }
+  .cg.c2 { grid-template-columns: repeat(2, 1fr); } .cg.c3 { grid-template-columns: repeat(3, 1fr); }
+  .cg div { text-align: center; padding: 9px 2px 8px; font-size: 11.5px; border-right: 1px solid rgba(255,255,255,.1); line-height: 1.25; }
+  .cg div:last-child { border-right: 0; }
+  .cg div.chk { background: rgba(10,132,255,.25); }
+  .cg.txt div { font-size: 14px; padding: 11px 2px; }
+  .cal { display: block; width: 26px; height: 24px; margin: 0 auto 4px; border-radius: 6px; border: 1.5px solid #d1d1d6; border-top-width: 5px; font: 700 11px/17px system-ui; box-sizing: content-box; }
+
+  /* Sheets */
+  .under { opacity: .35; padding: 0 6px 10px; }
+  .sheetp { background: #1c1c1e; margin: 0 -12px -12px; border-radius: 30px 30px 0 0; padding: 8px 12px 14px; flex: 1; display: flex; flex-direction: column; box-shadow: 0 -8px 30px rgba(0,0,0,.6); }
+  .sheetp .list { background: var(--card2); }
+  .sheetp .list .item, .sheetp .list .field { border-color: #48484a; }
+  .shead { display: flex; justify-content: space-between; align-items: center; padding: 0 4px 10px; }
+  .shead b { font-size: 16px; }
+  .shead .gb { border-radius: 99px; padding: 6px 12px; font-size: 14px; }
+  .banner { border-radius: 14px; padding: 9px 12px; font-size: 12.5px; line-height: 1.4; margin-bottom: 8px; }
+  .banner b { display: block; font-size: 13px; margin-bottom: 1px; }
+  .banner.lock { background: rgba(142,142,147,.2); color: #d1d1d6; }
+  .banner.inv { background: rgba(10,132,255,.16); color: #cfe5ff; }
+  .banner.ok { background: rgba(48,209,88,.14); color: #b9f2c8; }
+  .banner.tw { background: rgba(124,240,195,.1); border: 1px solid rgba(124,240,195,.35); color: #c9f7e6; }
+  .dimov { position: absolute; inset: 0; background: rgba(0,0,0,.5); z-index: 2; }
+  .asheet { position: absolute; left: 10px; right: 10px; bottom: 14px; display: flex; flex-direction: column; gap: 8px; z-index: 3; }
+  .asheet .grp { border-radius: 18px; overflow: hidden; background: rgba(58,58,60,.97); }
+  .asheet .m { padding: 12px 16px; text-align: center; font-size: 12px; color: #c7c7cc; border-bottom: 1px solid #545458; line-height: 1.4; }
+  .asheet .m b { display: block; color: #fff; font-size: 13px; margin-bottom: 2px; }
+  .asheet .act { padding: 14px; text-align: center; color: var(--blue); font-size: 16px; border-bottom: 1px solid #545458; }
+  .asheet .act small { display: block; color: #aeaeb2; font-size: 11.5px; margin-top: 2px; }
+  .asheet .act:last-child { border-bottom: 0; } .asheet .act.c { font-weight: 600; } .asheet .act.d { color: var(--red); }
+  .est { display: flex; align-items: center; background: #3a3a3c; border-radius: 99px; height: 34px; }
+  .est .pm { width: 40px; text-align: center; font-size: 21px; color: var(--blue); line-height: 34px; }
+  .est .val { min-width: 58px; text-align: center; font: 600 14.5px system-ui; font-variant-numeric: tabular-nums; border-left: 1px solid #545458; border-right: 1px solid #545458; line-height: 22px; padding: 0 6px; }
+  .radio { width: 20px; height: 20px; border-radius: 50%; border: 2px solid #636366; flex-shrink: 0; box-sizing: border-box; }
+  .radio.on { border: 6px solid var(--blue); background: #fff; }
+
+  /* Selection bar, toast, annotation zones */
+  .selbar { display: flex; gap: 6px; align-items: center; border-radius: 99px; padding: 6px; margin-top: 8px; }
+  .selbar .b { padding: 10px 6px; font-size: 13.5px; }
+  .selinfo { font-size: 12px; color: #ffc266; text-align: center; padding: 6px 4px 0; }
+  .toast { border-radius: 99px; padding: 7px 8px 7px 12px; display: flex; align-items: center; gap: 8px; margin: 0 2px 6px; font-size: 13px; }
+  .toast .tx { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .toast .un { background: rgba(10,132,255,.28); border-radius: 99px; padding: 6px 12px; font-weight: 600; white-space: nowrap; }
+  .zone { display: flex; align-items: flex-end; justify-content: flex-end; position: absolute; border: 1.5px dashed #ffd60a; border-radius: 10px; color: #ffd60a; font: 600 10px system-ui; padding: 2px 5px; z-index: 4; pointer-events: none; box-sizing: border-box; }
+  .swipe { display: flex; justify-content: space-between; align-items: center; color: #ffd60a; font: 600 11px system-ui; border: 1.5px dashed #ffd60a; border-radius: 10px; padding: 4px 8px; margin: 6px 2px; }
+  .swact { display: flex; margin-bottom: 0; }
+  .swact .ac { width: 74px; display: grid; place-items: center; font: 600 12px system-ui; color: #fff; }
+
+  /* Additions for the AI settings mockups */
+  .stepn { width: 24px; height: 24px; border-radius: 50%; background: rgba(142,142,147,.24); display: grid; place-items: center; font: 12px system-ui; flex-shrink: 0; }
+  .stepn.ok { background: var(--green); color: #000; font-weight: 700; }
+  .stepn.cur { box-shadow: 0 0 0 1.5px var(--blue); }
+  .spin { width: 16px; height: 16px; border-radius: 50%; border: 2px solid #48484a; border-top-color: #c7c7cc; box-sizing: border-box; flex-shrink: 0; margin-top: 1px; }
+  .wico { color: var(--orange); width: 18px; text-align: center; flex-shrink: 0; }
+  .ptxt { padding: 11px 12px; font-size: 14px; line-height: 1.45; border-bottom: 1px solid var(--sep); }
+  .ptxt:last-child { border-bottom: 0; }
+  .pbtn { display: inline-block; background: var(--blue); color: #fff; border-radius: 99px; padding: 7px 14px; font-weight: 600; font-size: 14px; }
+  .pbtn.dis { opacity: .45; }
+  .webph { flex: 1; border: 1.5px dashed #48484a; border-radius: 16px; display: grid; place-items: center; text-align: center; color: var(--sub); font-size: 13px; line-height: 1.5; padding: 16px; margin-top: 4px; }
+  .urlbar { background: #3a3a3c; border-radius: 10px; padding: 5px 12px; font-size: 13px; color: #d1d1d6; }
+  .okb { background: #636366; color: #fff; font-size: 11px; font-weight: 700; padding: 1px 7px; border-radius: 99px; margin-left: 4px; }
+
+  /* ---- Rules taken over from feedback round 3 ---- */
+  .box ul, .box ol { margin: 4px 0 0; padding-left: 20px; }
+  pre { font: 12px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; background: rgba(128,128,128,.14); padding: 10px 12px; border-radius: 10px; overflow-x: auto; margin: 8px 0 0; }
+  /* State diagram for area S */
+  .flow { display: flex; flex-wrap: wrap; align-items: stretch; gap: 6px; margin-top: 8px; }
+  .st { border: 1.5px solid rgba(128,128,128,.5); border-radius: 12px; padding: 8px 10px; width: 150px; font-size: 12px; line-height: 1.4; box-sizing: border-box; }
+  .st b { display: block; font-size: 13px; margin-bottom: 2px; }
+  .st.act { border-color: #30d158; background: rgba(48,209,88,.1); }
+  .st.err { border-color: #ff453a; background: rgba(255,69,58,.08); }
+  .st.ask { border-color: #0a84ff; background: rgba(10,132,255,.08); }
+  .ar { align-self: center; font: 600 11px system-ui; color: var(--muted-foreground, #777); text-align: center; width: 74px; line-height: 1.25; }
+  .ar::after { content: "→"; display: block; font-size: 18px; }
+  .chip.gr { background: rgba(48,209,88,.2); color: #9ff0b4; }
+  .field .d { color: var(--red); }
+  .hdr { display: flex; align-items: flex-end; justify-content: space-between; gap: 8px; padding: 4px 6px 10px; }
+  .bigdate { font: 700 26px/1.15 system-ui; letter-spacing: -.3px; }
+  .cap { background: var(--card); border-radius: 18px; padding: 9px 12px; margin-bottom: 8px; }
+  .cap .top b { font-size: 16px; }
+  .cap .top span.up { color: #9ff0b4; font-weight: 600; }
+  .abl { display: flex; justify-content: space-between; align-items: center; color: var(--sub); font: 600 12px system-ui; text-transform: uppercase; letter-spacing: .4px; margin: 4px 8px 12px; }
+  .abl span { text-transform: none; letter-spacing: 0; color: var(--blue); font-size: 13px; }
+  /* Hour grid, 48 pt per hour */
+  .hg { position: relative; margin: 2px 0 6px 44px; border-left: 1px solid var(--sep); }
+  .hg .ev.p { background: rgba(48,209,88,.22); border-left: 4px solid var(--green); }
+  .hg .ev.q { background: repeating-linear-gradient(135deg, #1c1c1e 0 6px, #2a2a2d 6px 12px); color: #c7c7cc; border-left: 4px solid #636366; }
+  .hg .ev.f { background: rgba(142,142,147,.1); border: 1px dashed #636366; border-left: 4px solid #636366; color: var(--sub); }
+  .hg .ev.f small { color: #6e6e73; }
+  .hg .ev.o { border: 1.5px dashed #48484a; color: #636366; background: none; }
+  .hg .ev.ai { background: rgba(191,90,242,.14); border: 1.5px dashed var(--purple); color: #e9cdfb; }
+  .hg .ev.sel { box-shadow: 0 10px 26px rgba(0,0,0,.7), 0 0 0 2px currentColor; z-index: 3; overflow: visible; }
+  .hg .ev.sel.p { color: var(--green); background: rgba(48,209,88,.36); }
+  .hg .ev.sel.e { color: var(--blue); background: rgba(10,132,255,.4); }
+  .hg .ev.sel.q { color: #aeaeb2; }
+  .hg .ev.sel > span, .hg .ev.sel > small { color: #fff; }
+  .hg .ev.sel > small { opacity: .8; }
+  .hg .ev.ghost { background: rgba(48,209,88,.3); border: 1.5px dashed var(--green); z-index: 3; box-shadow: 0 10px 26px rgba(0,0,0,.7); }
+  .knob { position: absolute; width: 12px; height: 12px; border-radius: 50%; background: #fff; border: 2.5px solid currentColor; box-sizing: border-box; z-index: 4; }
+  .knob.t { top: -7px; right: 14px; } .knob.bt { bottom: -7px; left: 14px; }
+  .tlab { position: absolute; left: -44px; width: 40px; font: 700 11px ui-monospace, monospace; color: #fff; background: var(--red); border-radius: 5px; text-align: center; padding: 1px 0; z-index: 5; margin-top: -8px; }
+  .snap { position: absolute; left: 0; right: 0; border-top: 1.5px solid var(--red); z-index: 2; }
+  .ck { position: absolute; right: 8px; top: 6px; width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--sub); box-sizing: border-box; background: rgba(0,0,0,.4); }
+  .ck.on { background: var(--blue); border-color: var(--blue); color: #fff; font: 700 11px/14px system-ui; text-align: center; }
+  .lockb { float: right; font-size: 10px; opacity: .8; }
+  /* Tray and drawer */
+  .tray { margin: 6px -6px 0; border-radius: 24px; padding: 6px 10px 10px; background: #1c1c1e; border: 1px solid rgba(255,255,255,.1); box-shadow: 0 -8px 24px rgba(0,0,0,.6); }
+  .grab { width: 36px; height: 5px; border-radius: 99px; background: #636366; margin: 0 auto 8px; }
+  .tray .dh { display: flex; justify-content: space-between; align-items: center; font-weight: 600; padding: 0 4px 8px; }
+  .tray .dh span { color: var(--sub); font-weight: 500; font-size: 12.5px; }
+  .tchips { display: flex; gap: 6px; overflow: hidden; }
+  .tchip { background: var(--card2); border-radius: 12px; padding: 6px 10px; font-size: 12.5px; white-space: nowrap; }
+  .tchip small { display: block; color: var(--sub); font-size: 11px; }
+  .tchip.gone { opacity: .3; border: 1px dashed #636366; background: none; }
+  /* Sheets, dialogs, toast */
+  .ehead { display: flex; gap: 10px; padding: 2px 6px 10px; }
+  .ehead i { width: 5px; border-radius: 3px; flex-shrink: 0; }
+  .ehead b { font-size: 18px; display: block; }
+  .ehead small { color: #c7c7cc; font-size: 13px; display: block; margin: 2px 0 5px; }
+  .banner.ai { background: rgba(191,90,242,.12); border: 1px solid rgba(191,90,242,.45); color: #ecd9fb; }
+  .dimov { position: absolute; inset: 0; background: rgba(0,0,0,.5); z-index: 6; }
+  .asheet { position: absolute; left: 10px; right: 10px; bottom: 14px; display: flex; flex-direction: column; gap: 8px; z-index: 7; }
+  .asheet .act { padding: 13px; text-align: center; color: var(--blue); font-size: 16px; border-bottom: 1px solid #545458; }
+  .asheet .act:last-child { border-bottom: 0; } .asheet .act.c { font-weight: 600; }
+  .est { display: flex; align-items: center; background: #3a3a3c; border-radius: 99px; height: 32px; }
+  .est .pm { width: 36px; text-align: center; font-size: 20px; color: var(--blue); line-height: 32px; }
+  .est .val { min-width: 56px; text-align: center; font: 600 14px system-ui; font-variant-numeric: tabular-nums; border-left: 1px solid #545458; border-right: 1px solid #545458; line-height: 22px; padding: 0 6px; }
+  .mseg { display: flex; background: #3a3a3c; border-radius: 9px; padding: 2px; }
+  .mseg span { padding: 4px 12px; font-size: 13px; border-radius: 7px; color: #c7c7cc; }
+  .mseg span.on { background: #636366; color: #fff; font-weight: 600; }
+  .selbar { display: flex; gap: 6px; align-items: center; border-radius: 26px; padding: 6px; margin-top: 8px; }
+  .selinfo { font-size: 12px; color: #9ff0b4; text-align: center; padding: 6px 4px 0; }
+  .toast { border-radius: 99px; padding: 7px 8px 7px 14px; display: flex; align-items: center; gap: 6px; margin: 6px 2px; font-size: 12.5px; }
+  .toast .tx { flex: 1; min-width: 0; line-height: 1.25; }
+  .toast .un { background: rgba(10,132,255,.28); border-radius: 99px; padding: 6px 11px; font-weight: 600; white-space: nowrap; }
+  .toast .un.q { background: #48484a; }
+
+  /* ---- Additions for the AI planning mockups (V, W, X, Y, Z) ---- */
+  .stp { display: flex; gap: 6px; }
+  .stp .rbtn { width: 34px; height: 34px; font-size: 17px; color: var(--blue); }
+  .gear { width: 18px; height: 14px; flex-shrink: 0; align-self: center; opacity: .75;
+    background: linear-gradient(#8e8e93, #8e8e93) 0 1px / 100% 1.5px no-repeat, linear-gradient(#8e8e93, #8e8e93) 0 6px / 100% 1.5px no-repeat, linear-gradient(#8e8e93, #8e8e93) 0 11px / 100% 1.5px no-repeat; position: relative; }
+  .gear::before, .gear::after { content: ""; position: absolute; width: 5px; height: 5px; border-radius: 50%; background: var(--card); border: 1.5px solid #8e8e93; box-sizing: border-box; }
+  .gear::before { left: 3px; top: -1px; } .gear::after { right: 3px; top: 4px; }
+  .cap .top { align-items: center; }
+  .cap .bar { height: 6px; }
+  .k-su { background: repeating-linear-gradient(135deg, var(--purple) 0 3px, #5a2c75 3px 6px); }
+  .cap .sub2.ai { color: #dcb0f7; }
+  .alld { display: flex; gap: 6px; align-items: center; margin: 0 4px 8px; font: 600 12px system-ui; color: var(--sub); }
+  .alld .pill { font-weight: 400; font-size: 13px; padding: 5px 11px; }
+  .abl2 { display: flex; justify-content: space-between; align-items: baseline; margin: 4px 6px 10px; font: 700 17px system-ui; }
+  .abl2 span { color: var(--blue); font: 400 14px system-ui; }
+  .ou { background: var(--card); border-radius: 16px; padding: 10px 12px; display: flex; gap: 7px; align-items: baseline; font-size: 12.5px; margin: 0 0 10px; box-shadow: 0 6px 16px rgba(0,0,0,.5); position: relative; z-index: 2; }
+  .ou b { font-size: 14px; } .ou .g { color: var(--sub); } .ou .o { color: var(--orange); font-weight: 600; } .ou .ai { color: #dcb0f7; font-weight: 600; } .ou .c { margin-left: auto; color: var(--sub); }
+  .cut { height: 46px; margin-top: -46px; background: linear-gradient(transparent, #000); position: relative; z-index: 5; }
+
+  /* Plan bar: one component for day (inside the capacity card), week and month (own card) */
+  .pb { border-top: 1px solid var(--sep); margin-top: 9px; padding-top: 8px; }
+  .pb.solo { border-top: 0; margin: 0 0 8px; padding: 9px 12px; background: var(--card); border-radius: 18px; }
+  .pbl { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; font-size: 12.5px; line-height: 1.35; padding: 1px 0 3px; }
+  .pbl .ai { color: #e9cdfb; font-weight: 600; } .pbl .x { color: var(--sub); white-space: nowrap; } .pbl .w { color: #ffc266; }
+  .pbl .l { color: var(--blue); font-weight: 600; white-space: nowrap; } .pbl .q { color: #c7c7cc; } .pbl .ok { color: #9ff0b4; } .pbl .g { color: var(--sub); }
+  .pb .act { display: flex; gap: 8px; margin-top: 6px; }
+  .pb .b { padding: 8px 6px; font-size: 13.5px; }
+  .b.aib { background: rgba(191,90,242,.24); color: #e9cdfb; }
+  .b.aip { background: var(--purple); color: #fff; }
+  .b.dis { opacity: .4; }
+  .yn { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; flex-shrink: 0; }
+  .yn.y { background: var(--purple); color: #fff; } .yn.n { background: var(--card2); color: #c7c7cc; }
+
+  /* Hour grid at the real scale of the app (64 pt per hour) */
+  .hg.h64 .ev.ai { display: flex; align-items: center; gap: 5px; padding: 2px 5px 2px 8px; overflow: visible; }
+  .hg.h64 .ev.ai .ait { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .hg.h64 .ev.ai .yn { width: 26px; height: 26px; font-size: 12px; }
+  .hg.h64 .ev.ai.open { display: block; padding: 5px 8px; background: #2a1936; z-index: 4; box-shadow: 0 10px 26px rgba(0,0,0,.7); }
+  .hg.h64 .ev.ai.open .rs { padding: 4px 0 6px; white-space: normal; }
+  .sheetp { position: relative; z-index: 6; }
+  .rs { font-size: 11.5px; color: #dcb0f7; padding: 3px 4px 2px 8px; line-height: 1.35; }
+
+  /* Row list (day as list), week rows, month cells */
+  .block.suggest { border: 1.5px dashed var(--purple); color: #eedcfb; background: rgba(191,90,242,.1); display: flex; align-items: center; gap: 6px; padding-right: 6px; }
+  .block.suggest > div:first-child { flex: 1; min-width: 0; }
+  .tk.sug { color: #eedcfb; border: 1.5px dashed var(--purple); border-radius: 9px; padding: 3px 4px 3px 8px; margin-top: 5px; background: rgba(191,90,242,.1); }
+  .tk.sug .yn { width: 28px; height: 28px; font-size: 13px; }
+  .sugw { border: 1.5px dashed var(--purple); border-radius: 9px; margin-top: 5px; background: rgba(191,90,242,.1); }
+  .sugw .tk.sug { border: 0; background: none; margin: 0; }
+  .sugw .rs { padding: 0 8px 6px; }
+  .mc2 .ld { display: flex; }
+  .mc2 .ld i.su { background: repeating-linear-gradient(135deg, var(--purple) 0 2px, #5a2c75 2px 4px); }
+  .mc2 .sg { position: absolute; top: 2px; right: 4px; font: 700 8.5px system-ui; color: var(--purple); }
+  .mc2.sel .sg { color: #8a2fc0; }
+  .item.sug { background: rgba(191,90,242,.1); box-shadow: inset 0 0 0 1.5px rgba(191,90,242,.55); border-radius: 12px; }
+  .item.sug .yn { width: 28px; height: 28px; font-size: 13px; align-self: center; }
+  .item .s.r { color: #dcb0f7; } .item .s.w { color: #ffc266; }
+
+  /* ---- Additions for the AI day-extension mockups (AO, AB, AR, FT, AW) ---- */
+  .area { font: 800 15px system-ui; }
+  .toast .tx small { display: block; color: #c7c7cc; font-size: 11.5px; }
+  /* Extension suggestion: one row, used in the plan bar, in day cards, in lists and in the result sheet */
+  .ext { display: flex; align-items: center; gap: 8px; border: 1.5px dashed var(--purple); border-radius: 12px; background: rgba(191,90,242,.1); padding: 6px 6px 6px 9px; margin: 3px 0 6px; color: #eedcfb; font-size: 13px; }
+  .ext .xi { font-size: 16px; color: var(--purple); flex-shrink: 0; align-self: flex-start; padding-top: 1px; }
+  .ext .xt { flex: 1; min-width: 0; line-height: 1.3; }
+  .ext .xt b { font-weight: 600; }
+  .ext .xt .rs { padding: 2px 0 0; }
+  .ext .xt .dp { font-size: 11.5px; color: var(--sub); padding-top: 1px; }
+  .ext .yn { width: 30px; height: 30px; font-size: 13px; }
+  .ext.kept { border: 1px solid rgba(191,90,242,.45); background: rgba(191,90,242,.08); }
+  .ext .lnk { font-size: 12.5px; }
+  .yn.off { opacity: .32; }
+  .pbn { font-size: 11.5px; color: var(--sub); padding: 5px 2px 0; line-height: 1.35; }
+  /* Group: extension plus the suggestions that need it */
+  .xgrp { border: 1.5px dashed var(--purple); border-radius: 11px; margin-top: 5px; background: rgba(191,90,242,.1); }
+  .xgrp .ext { border: 0; background: none; margin: 0; padding: 5px 5px 4px 8px; }
+  .xgrp .tk.sug { border: 0; background: none; margin: 0; border-top: 1px dashed rgba(191,90,242,.4); border-radius: 0; padding: 3px 5px 3px 8px; }
+  .xgrp .tk.sug .arr { color: var(--purple); font-size: 12px; width: 14px; text-align: center; flex-shrink: 0; }
+  .sheetp .xgrp { margin: 0 0 6px; }
+  .chip.dep { background: none; box-shadow: inset 0 0 0 1px rgba(191,90,242,.6); color: #dcb0f7; }
+  /* Capacity bar: marker for the regular end of work, suggested and unused part of the extension */
+  .k-mk { width: 2px; flex: none; background: #fff; }
+  .k-xt { background: repeating-linear-gradient(135deg, rgba(191,90,242,.5) 0 2px, #2c2c2e 2px 6px); }
+  /* Hour grid: suggested extra working time */
+  .hg .xband { position: absolute; left: 0; right: 0; box-sizing: border-box; background: repeating-linear-gradient(135deg, rgba(191,90,242,.2) 0 6px, rgba(191,90,242,.06) 6px 12px); border-top: 1.5px dashed var(--purple); border-bottom: 1.5px dashed var(--purple); }
+  .hg .xhead { position: absolute; left: 4px; right: 4px; height: 28px; box-sizing: border-box; display: flex; align-items: center; gap: 5px; padding: 0 3px 0 9px; font-size: 12px; font-weight: 600; color: #eedcfb; border-radius: 99px; background: #2a1936; border: 1.5px dashed var(--purple); z-index: 3; }
+  .hg .xband ~ .ev.ai { background: #2a1936; }
+  .hg .xhead span.t { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .hg .xhead .yn { width: 22px; height: 22px; font-size: 11px; }
+  .hg .xline { position: absolute; left: 0; right: 0; border-top: 1.5px dashed var(--purple); z-index: 2; }
+  .hg .xline span { position: absolute; right: 4px; top: 4px; font: 600 10.5px system-ui; color: #dcb0f7; background: var(--bg); padding: 0 4px; }
+  .hg .wend { position: absolute; left: 0; right: 0; border-top: 1px solid #636366; z-index: 1; }
+  .hg .wend span { position: absolute; right: 4px; top: -15px; font: 600 10px system-ui; color: var(--sub); background: var(--bg); padding: 0 4px; }
+  .row.dep .block { margin-left: 14px; }
+  .mc2 .xg { position: absolute; top: 2px; left: 4px; font: 700 8.5px system-ui; color: var(--purple); }
+  .mc2.sel .xg { color: #8a2fc0; }
+  .mc2 .ld i.xt { background: repeating-linear-gradient(135deg, rgba(191,90,242,.6) 0 2px, #2c2c2e 2px 4px); }
+</style>
+</head>
+<body>
+
+<h1>Tagwerk · Phase 2b-2 · KI schlägt längere Arbeitstage vor (#72) · Mockups AO, AB, AR, FT, AW</h1>
+<p class="lead">Passen wichtige Aufgaben sonst nicht vor ihre Frist, darf die KI beim Planen vorschlagen, einzelne Tage zu verlängern: späteres Ende, früherer Beginn oder Arbeit an einem freien Tag. Der Vorschlag trägt einen Grund und die zusätzliche Zeit; erst ✓ speichert die Arbeitszeit, und zwar nur für dieses Datum. Die Bilder bauen auf den freigegebenen Mockups V1, W1, W3, X1, X2, Y, Z1 und Z3 auf und ändern daran nichts. Je Bereich steht die Empfehlung mit grünem Kürzel; Freigabe bitte als Liste der Kürzel. Die Kürzel AO, AB, AR, FT und AW kommen in keiner Datei unter <code>docs/superpowers/mockups/</code> vor (geprüft per Suche; A bis Z sowie AX, DU, FS, RZ, WT, ZV sind vergeben). Alle Daten sind erfunden; Stichtag ist Mittwoch, 18. November 2026, Arbeitszeit Mo bis Fr 9:00 bis 18:00. Tag, Woche und Monat zeigen je einen eigenen Stand, die Zahlen der drei Ansichten gehören nicht zusammen. Die Bilder sind statisches HTML; nichts davon ist am Gerät geprüft.</p>
+
+<div class="box neutral">
+  <h3>Empfehlungen auf einen Blick</h3>
+  <table class="sum">
+    <tr><th>Bereich</th><th>Empfehlung</th><th>Kern</th></tr>
+    <tr><td><b>AO</b> Ort und Wortlaut</td><td><span class="code r">AO1</span></td><td>Eine gestrichelte Zeile „◷ Mi bis 20:00 arbeiten · +2 h“ mit Grund und ✓ / ✕: im Tag in der Leiste der Kapazitätskarte, in Woche und Monat am betroffenen Tag. Die Leiste dort nennt nur die Zahl.</td></tr>
+    <tr><td><b>AB</b> Abhängigkeit</td><td><span class="code r">AB1</span></td><td>Abhängige Vorschläge stehen als Gruppe unter der Verlängerung, ihr ✓ ist abgeblendet, bis sie übernommen ist. ✕ an der Verlängerung schiebt sie nach „Nicht eingeplant“. „Alle übernehmen“ nimmt die Verlängerung zuerst und sagt das.</td></tr>
+    <tr><td><b>AR</b> Raster</td><td><span class="code r">AR1</span></td><td>Schraffierte violette Fläche über die zusätzliche Zeit, mit einer Kapsel samt ✓ / ✕ auf der Linie des bisherigen Arbeitsendes.</td></tr>
+    <tr><td><b>FT</b> Freier Tag</td><td><span class="code r">FT1</span></td><td>Dasselbe Muster, Wortlaut mit Zeitfenster („Sa arbeiten · 14:00 bis 17:00 · +3 h“). Keine eigene Rückfrage.</td></tr>
+    <tr><td><b>AW</b> Zurücknehmen</td><td><span class="code r">AW1</span></td><td>Kapsel „Widerrufen“ direkt nach ✓; danach das vorhandene Blatt „Arbeitszeit an diesem Tag“ mit „Auf Wochenplan zurücksetzen“. Kleine Marke „bis 20:00 · nur heute“ in der Karte.</td></tr>
+  </table>
+</div>
+
+<!-- ============================== AO ============================== -->
+<h2><span class="area">AO</span> Ort und Wortlaut des Vorschlags · Tag, Woche, Monat</h2>
+<p class="lead">Punkt 1. Gesucht ist ein Platz, an dem die Verlängerung als Entscheidung über einen bestimmten Tag erkennbar ist, und ein Satz, der ohne Erklärung sagt, was sich ändert und um wie viel. Die Planen-Leiste (V1) und die Vorschlagszeilen (X1, X2) sind freigegeben; die Varianten unterscheiden sich darin, ob die Verlängerung in der Leiste oder am Tag steht.</p>
+<div class="grid">
+  <div>
+    <p class="label"><span class="code r">AO1</span><b>Tag · Zeile in der Leiste der Kapazitätskarte</b> <span class="rec">Empfehlung</span></p>
+    <div class="phone"><div class="status"><span>08:42</span><span>●●● 5G</span></div><div class="topbar"><div class="seg"><span class="on">Tag</span><span>Woche</span><span>Monat</span></div><span class="rbtn glass">＋</span></div><div class="hdr"><div><div class="kick">Heute · KW 47</div><div class="bigdate">Mittwoch, 18. Nov. <span class="car">⌄</span></div></div><div class="stp"><span class="rbtn glass">‹</span><span class="rbtn glass">›</span></div></div><div class="dl">
+        <div class="h">⚑ Deadlines</div>
+        <div class="r"><span class="g">⚑</span><span class="n">Anmeldung Abschlussarbeit<small>Kalender</small></span><span class="w">heute</span></div>
+        <div class="r"><span class="g">⚑</span><span class="n">Pretest vorbereiten<small>P1</small></span><span class="w">morgen</span></div>
+        <div class="r"><span class="g">⚑</span><span class="n">#42 Export überarbeiten<small>GitHub · Epic · P1</small></span><span class="w">Fr 20.</span></div>
+      </div><div class="cap"><div class="top"><b>4 h noch frei</b><i class="gear"></i></div><div class="sub">ab 9:00 bis 18:00 · ganzer Tag 4 h frei von 4 h 30</div><div class="bar"><i class="k-pl" style="flex:30"></i><i class="k-su" style="flex:195"></i><i class="k-fr" style="flex:45"></i><i class="k-mk"></i><i class="k-su" style="flex:105"></i><i class="k-xt" style="flex:15"></i></div><div class="sub2 ai">✦ 5 h vorgeschlagen · mit Verlängerung danach 1 h frei</div><div class="pb"><div class="pbl"><span class="ai">✦ 5 Vorschläge · 5 h</span><span class="x">Verwerfen</span></div><div class="ext "><span class="xi">◷</span><div class="xt"><b>Heute bis 20:00 arbeiten</b> <span class="chip ai">+2 h</span><div class="rs">✦ „Sonst wird #42 vor Freitag nicht fertig.“</div><div class="dp">2 Vorschläge brauchen diese Zeit</div></div><span class="yn y">✓</span><span class="yn n">✕</span></div><div class="pbl"><span class="w">⚠︎ 1 nicht eingeplant · 1 Risiko ›</span></div><div class="act"><div class="b aib">✦ Alle übernehmen (5)</div><div class="b plain" style="flex:.6">Neu planen</div></div><div class="pbn">Übernimmt auch die Verlängerung bis 20:00.</div></div></div><div class="alld">Ganztägig <span class="pill">Projektwoche</span><span class="pill">Buß- und Bettag</span></div><div class="abl2">Ablauf<span>☰&nbsp; Auswählen</span></div><div class="ou"><b>Ohne Uhrzeit</b><span class="g">0 · 0 min</span><span class="g">+3 offen</span><span class="o">1 überfällig</span><span class="c">⌃</span></div><div class="hg h64" style="height:150px;clip-path:inset(-10px -4px 0 -46px);"><div class="hl" style="top:0px"><span>08:00</span></div><div class="hl" style="top:64px"><span>09:00</span></div><div class="hl" style="top:128px"><span>10:00</span></div><div class="hl" style="top:192px"><span>11:00</span></div><div class="ev e" style="top:129px;height:94px;">Seminar<small>10:00 bis 11:30</small></div><div class="ev q" style="top:257px;height:62px;">Mittagspause<small>12:00 bis 13:00</small></div><div class="ev e" style="top:449px;height:62px;">Team-Runde<small>15:00 bis 16:00</small></div><div class="ev p" style="top:529px;height:30px;">Angebot nachfassen · Zeitblock</div><div class="ev ai" style="top:65px;height:46px;"><div class="ait">✦ Literatur sichten<small>09:00 bis 09:45</small></div><span class="yn y">✓</span><span class="yn n">✕</span></div><div class="ev ai" style="top:337px;height:94px;"><div class="ait">✦ Pretest vorbereiten<small>13:15 bis 14:45 · 1 h 30 · P1</small></div><span class="yn y">✓</span><span class="yn n">✕</span></div><div class="ev ai" style="top:561px;height:62px;"><div class="ait">✦ Folien fürs Seminar<small>16:45 bis 17:45 · 1 h</small></div><span class="yn y">✓</span><span class="yn n">✕</span></div></div><div class="cut"></div><div class="spacer"></div><div class="tb glass tbgap"><span class="on"><i class="ico">▦</i>Planen</span><span><i class="ico">☑︎</i>Aufgaben</span><span><i class="ico">⚙︎</i>Einstellungen</span></div></div>
+    <p class="pc"><b>Platz:</b> zweite Zeile der Planen-Leiste (V1), direkt unter „✦ 5 Vorschläge“. Die Karte beantwortet schon heute „wann arbeite ich“ (Symbol rechts öffnet „Arbeitszeit an diesem Tag“); die Verlängerung ist eine Änderung genau dieser Angabe. <b>Lesart:</b> Uhr-Symbol, „Heute bis 20:00 arbeiten“, Kapsel „+2 h“, Grund als „✦ „…““, darunter, wie viele Vorschläge davon abhängen, rechts ✓ / ✕. <b>Balken:</b> weißer Strich am bisherigen Arbeitsende, dahinter der vorgeschlagene Teil schraffiert; die Überschrift bleibt „4 h noch frei“. <b>Contra:</b> Die Karte wächst um weitere rund 70 pt; das Raster beginnt auf dem gezeigten Gerät erst nach etwa 690 pt.</p>
+  </div>
+  <div>
+    <p class="label"><span class="code r">AO1</span><b>Woche · Zeile im betroffenen Tag, Leiste nennt nur die Zahl</b> <span class="rec">Empfehlung</span></p>
+    <div class="phone"><div class="status"><span>08:44</span><span>●●● 5G</span></div><div class="topbar"><div class="seg"><span>Tag</span><span class="on">Woche</span><span>Monat</span></div><span class="rbtn glass">＋</span></div><div class="hdr"><div><div class="kick">Diese Woche · KW 47</div><div class="bigdate">16.–22. November</div></div><div class="stp"><span class="rbtn glass">‹</span><span class="rbtn glass">›</span></div></div><div class="pb solo"><div class="pbl"><span class="ai">✦ 6 Vorschläge · 11 h 30</span><span class="x">Verwerfen</span></div><div class="pbl"><span class="q" style="color:#dcb0f7">◷ 2 Verlängerungen · Mi +2 h, Sa +3 h</span></div><div class="pbl"><span class="w">⚠︎ 1 nicht eingeplant · 1 Risiko ›</span></div><div class="act"><div class="b aib">✦ Alle übernehmen (6)</div><div class="b plain" style="flex:.6">Neu planen</div></div><div class="pbn">Übernimmt auch die 2 Verlängerungen (Mi, Sa).</div></div><div class="day past"><div class="hd"><b>Mo 16.</b><div class="bar"><i class="k-pa" style="flex:1"></i></div><span class="n">vergangen</span></div></div>
+      <div class="day past"><div class="hd"><b>Di 17.</b><div class="bar"><i class="k-pa" style="flex:1"></i></div><span class="n">vergangen</span></div></div>
+      <div class="day today"><div class="hd"><b>Mi 18.</b><div class="bar"><i class="k-pl" style="flex:150"></i><i class="k-su" style="flex:90"></i><i class="k-mk"></i><i class="k-su" style="flex:120"></i></div><span class="n">1 h 30 noch frei</span></div><div class="tk"><span class="grip">⋮⋮</span><span class="nm">Kapitel 2 gliedern</span><span class="d">2 h</span></div><div class="tk"><span class="grip">⋮⋮</span><span class="nm">Angebot nachfassen</span><span class="d">▦ 16:15 · 30 min</span></div><div class="tk sug"><span class="nm">✦ Pretest vorbereiten</span><span class="chip p1">P1</span><span class="d">1 h 30</span><span class="yn y">✓</span><span class="yn n">✕</span></div><div class="xgrp"><div class="ext "><span class="xi">◷</span><div class="xt"><b>Mi bis 20:00 arbeiten</b> <span class="chip ai">+2 h</span><div class="rs">✦ „Sonst wird #42 vor Freitag nicht fertig.“</div></div><span class="yn y">✓</span><span class="yn n">✕</span></div><div class="tk sug"><span class="arr">↳</span><span class="nm">✦ #57 Export-Fehler beheben</span><span class="d">1 h</span><span class="yn y off">✓</span><span class="yn n">✕</span></div><div class="tk sug"><span class="arr">↳</span><span class="nm">✦ #58 Tests ergänzen</span><span class="d">1 h</span><span class="yn y off">✓</span><span class="yn n">✕</span></div></div></div>
+      <div class="day "><div class="hd"><b>Do 19.</b><div class="bar"><i class="k-pl" style="flex:90"></i><i class="k-su" style="flex:180"></i><i class="k-fr" style="flex:30"></i></div><span class="n">3 h 30 frei</span></div><div class="tk"><span class="grip">⋮⋮</span><span class="nm">Interviewleitfaden</span><span class="d">1 h 30</span></div><div class="tk sug"><span class="nm">✦ Übungsblatt 5</span><span class="d">3 h</span><span class="yn y">✓</span><span class="yn n">✕</span></div></div>
+      <div class="day "><div class="hd"><b>Fr 20.</b><div class="bar"><i class="k-su" style="flex:120"></i><i class="k-fr" style="flex:180"></i></div><span class="n">5 h frei</span></div><div class="tk dlrow"><span>⚑</span><span class="nm">#42 Export überarbeiten</span><span class="d" style="color:#ff8a82">Deadline</span></div><div class="tk sug"><span class="nm">✦ Klausur-Wiederholung</span><span class="d">2 h</span><span class="yn y">✓</span><span class="yn n">✕</span></div></div>
+      <div class="day "><div class="hd"><b>Sa 21.</b><span class="n" style="flex:1;text-align:left">kein Arbeitstag</span></div><div class="tk dlrow"><span>⚑</span><span class="nm">Klausur Statistik · 10:00</span><span class="d" style="color:#ff8a82">Deadline</span></div><div class="xgrp"><div class="ext "><span class="xi">◷</span><div class="xt"><b>Sa arbeiten · 14:00 bis 17:00</b> <span class="chip ai">+3 h</span><div class="rs">✦ „Sonst wird die Seminararbeit bis Sonntag nicht fertig.“</div></div><span class="yn y">✓</span><span class="yn n">✕</span></div><div class="tk sug"><span class="arr">↳</span><span class="nm">✦ Seminararbeit Korrektur lesen</span><span class="d">3 h</span><span class="yn y off">✓</span><span class="yn n">✕</span></div></div></div>
+      <div class="day " style="opacity:.6"><div class="hd"><b>So 22.</b><span class="n" style="flex:1;text-align:left">kein Arbeitstag</span></div><div class="tk dlrow"><span>⚑</span><span class="nm">Seminararbeit abgeben</span><span class="d" style="color:#ff8a82">Deadline</span></div></div>
+      <div class="spacer"></div><div class="drawer"><div class="grab"></div><div class="dh">Ungeplant<span>9 fällig in diesem Zeitraum &nbsp;⌃</span></div></div><div class="tb glass tbgap"><span class="on"><i class="ico">▦</i>Planen</span><span><i class="ico">☑︎</i>Aufgaben</span><span><i class="ico">⚙︎</i>Einstellungen</span></div></div>
+    <p class="pc">Die Leiste fasst zusammen („◷ 2 Verlängerungen · Mi +2 h, Sa +3 h“); angenommen wird am Tag selbst. Dort steht die Verlängerung als Kopf einer gestrichelten Gruppe, darunter mit „↳“ die Vorschläge, die die zusätzliche Zeit brauchen (Abschnitt AB). <b>Balken:</b> wie im Tag, Strich am regulären Ende. <b>Pro:</b> Grund, Zusatzzeit und Folgen stehen an dem Tag, den sie betreffen. <b>Contra:</b> Die Wochenliste wird um bis zu 60 pt je Verlängerung länger; hier ist sie in voller Länge gezeigt, am Gerät scrollt sie.</p>
+  </div>
+  <div>
+    <p class="label"><span class="code r">AO1</span><b>Monat · Marke ◷ in der Zelle, Gruppe in der Tagesliste</b> <span class="rec">Empfehlung</span></p>
+    <div class="phone"><div class="status"><span>08:44</span><span>●●● 5G</span></div><div class="topbar"><div class="seg"><span>Tag</span><span>Woche</span><span class="on">Monat</span></div><span class="rbtn glass">＋</span></div><div class="hdr" style="padding-bottom:8px"><div><div class="bigdate">November 2026</div></div><div class="stp"><span class="rbtn glass">‹</span><span class="rbtn glass">›</span></div></div><div class="pb solo"><div class="pbl"><span class="ai">✦ 9 Vorschläge an 7 Tagen</span><span class="x">Verwerfen</span></div><div class="pbl"><span class="q" style="color:#dcb0f7">◷ 2 Verlängerungen · Mi 18. +2 h, Sa 28. +3 h</span></div><div class="pbl"><span class="w">⚠︎ 3 nicht eingeplant · 1 Risiko ›</span></div><div class="act"><div class="b aib">✦ Alle übernehmen (9)</div><div class="b plain" style="flex:.6">Neu planen</div></div><div class="pbn">Übernimmt auch die 2 Verlängerungen (Mi 18., Sa 28.).</div></div><div class="mgrid"><div class="wd">Mo</div><div class="wd">Di</div><div class="wd">Mi</div><div class="wd">Do</div><div class="wd">Fr</div><div class="wd">Sa</div><div class="wd">So</div><div class="mc2 out">26</div><div class="mc2 out">27</div><div class="mc2 out">28</div><div class="mc2 out">29</div><div class="mc2 out">30</div><div class="mc2 out">31</div><div class="mc2 past">1</div><div class="mc2 past">2</div><div class="mc2 past">3</div><div class="mc2 past">4</div><div class="mc2 past">5</div><div class="mc2 past">6</div><div class="mc2 past">7</div><div class="mc2 past">8</div><div class="mc2 past">9</div><div class="mc2 past">10</div><div class="mc2 past">11</div><div class="mc2 past">12</div><div class="mc2 past">13</div><div class="mc2 past">14</div><div class="mc2 past">15</div><div class="mc2 past">16</div><div class="mc2 past">17</div><div class="mc2 today">18<span class="sg">✦3</span><span class="xg">◷</span><div class="ld"><i class="" style="width:40%"></i><i class="su" style="width:30%"></i><i class="xt" style="width:30%"></i></div></div><div class="mc2 ">19<span class="sg">✦</span><div class="ld"><i class="" style="width:30%"></i><i class="su" style="width:60%"></i></div></div><div class="mc2 dl2">20<span class="sg">✦</span><div class="ld"><i class="su" style="width:40%"></i></div></div><div class="mc2 dl2">21</div><div class="mc2 ">22</div><div class="mc2 ">23<span class="sg">✦</span><div class="ld"><i class="" style="width:20%"></i><i class="su" style="width:30%"></i></div></div><div class="mc2 ">24<span class="sg">✦2</span><div class="ld"><i class="su" style="width:60%"></i></div></div><div class="mc2 dl2">25<div class="ld"><i class="" style="width:40%"></i></div></div><div class="mc2 ">26<span class="sg">✦</span><div class="ld"><i class="hi" style="width:70%"></i><i class="su" style="width:20%"></i></div></div><div class="mc2 ">27<span class="sg">✦</span><div class="ld"><i class="su" style="width:40%"></i></div></div><div class="mc2 sel">28<span class="sg">✦</span><span class="xg">◷</span><div class="ld"><i class="xt" style="width:100%"></i></div></div><div class="mc2 ">29</div><div class="mc2 dl2">30<div class="ld"><i class="" style="width:25%"></i></div></div><div class="mc2 out">1</div><div class="mc2 out">2</div><div class="mc2 out">3</div><div class="mc2 out">4</div><div class="mc2 out">5</div><div class="mc2 out">6</div></div><div class="agh"><b>Samstag, 28. Nov.<small>kein Arbeitstag</small></b><span class="lnk">Tag öffnen ›</span></div><div class="xgrp" style="margin-top:0"><div class="ext "><span class="xi">◷</span><div class="xt"><b>Sa 28. arbeiten · 9:00 bis 12:00</b> <span class="chip ai">+3 h</span><div class="rs">✦ „Sonst reicht die Zeit für die Abgabe am Montag nicht.“</div></div><span class="yn y">✓</span><span class="yn n">✕</span></div><div class="tk sug"><span class="arr">↳</span><span class="nm">✦ Projektbericht fertigstellen</span><span class="d">3 h</span><span class="yn y off">✓</span><span class="yn n">✕</span></div></div><div class="spacer"></div><div class="drawer"><div class="grab"></div><div class="dh">Ungeplant<span>12 fällig in diesem Zeitraum &nbsp;⌃</span></div></div><div class="tb glass tbgap"><span class="on"><i class="ico">▦</i>Planen</span><span><i class="ico">☑︎</i>Aufgaben</span><span><i class="ico">⚙︎</i>Einstellungen</span></div></div>
+    <p class="pc"><b>Zelle:</b> ◷ oben links (✦ bleibt oben rechts), der verlängerte Anteil erscheint als schraffiertes Balkenende; am freien Tag (28.) besteht der Balken nur aus diesem Anteil. <b>Tagesliste:</b> dieselbe Gruppe wie in der Woche. <b>Contra:</b> Zwei Marken von 8,5 pt in einer 38 pt hohen Zelle sind die Grenze des Lesbaren; bei großer Schrift entfallen beide, dann zeigen nur Balken und Leiste die Verlängerung. In roten Deadline-Zellen ist Violett schwach zu erkennen (nicht gezeigt, nicht geprüft).</p>
+  </div>
+  <div>
+    <p class="label"><span class="code">AO2</span><b>Woche · alle Verlängerungen gesammelt in der Leiste</b></p>
+    <div class="phone"><div class="status"><span>08:44</span><span>●●● 5G</span></div><div class="topbar"><div class="seg"><span>Tag</span><span class="on">Woche</span><span>Monat</span></div><span class="rbtn glass">＋</span></div><div class="hdr"><div><div class="kick">Diese Woche · KW 47</div><div class="bigdate">16.–22. November</div></div><div class="stp"><span class="rbtn glass">‹</span><span class="rbtn glass">›</span></div></div><div class="pb solo"><div class="pbl"><span class="ai">✦ 6 Vorschläge · 11 h 30</span><span class="x">Verwerfen</span></div><div class="ext "><span class="xi">◷</span><div class="xt"><b>Mi bis 20:00 arbeiten</b> <span class="chip ai">+2 h</span><div class="rs">✦ „Sonst wird #42 vor Freitag nicht fertig.“</div></div><span class="yn y">✓</span><span class="yn n">✕</span></div><div class="ext "><span class="xi">◷</span><div class="xt"><b>Sa arbeiten · 14:00 bis 17:00</b> <span class="chip ai">+3 h</span><div class="rs">✦ „Sonst wird die Seminararbeit bis Sonntag nicht fertig.“</div></div><span class="yn y">✓</span><span class="yn n">✕</span></div><div class="pbl"><span class="w">⚠︎ 1 nicht eingeplant · 1 Risiko ›</span></div><div class="act"><div class="b aib">✦ Alle übernehmen (6)</div><div class="b plain" style="flex:.6">Neu planen</div></div></div><div class="day past"><div class="hd"><b>Mo 16.</b><div class="bar"><i class="k-pa" style="flex:1"></i></div><span class="n">vergangen</span></div></div>
+      <div class="day past"><div class="hd"><b>Di 17.</b><div class="bar"><i class="k-pa" style="flex:1"></i></div><span class="n">vergangen</span></div></div>
+      <div class="day today"><div class="hd"><b>Mi 18.</b><div class="bar"><i class="k-pl" style="flex:150"></i><i class="k-su" style="flex:90"></i><i class="k-mk"></i><i class="k-su" style="flex:120"></i></div><span class="n">1 h 30 noch frei</span></div><div class="tk"><span class="grip">⋮⋮</span><span class="nm">Kapitel 2 gliedern</span><span class="d">2 h</span></div><div class="tk"><span class="grip">⋮⋮</span><span class="nm">Angebot nachfassen</span><span class="d">▦ 16:15 · 30 min</span></div><div class="tk sug"><span class="nm">✦ Pretest vorbereiten</span><span class="chip p1">P1</span><span class="d">1 h 30</span><span class="yn y">✓</span><span class="yn n">✕</span></div><div class="tk sug"><span class="nm">✦ #57 Export-Fehler beheben</span><span class="chip dep">◷ +2 h</span><span class="d">1 h</span><span class="yn y off">✓</span><span class="yn n">✕</span></div><div class="tk sug"><span class="nm">✦ #58 Tests ergänzen</span><span class="chip dep">◷ +2 h</span><span class="d">1 h</span><span class="yn y off">✓</span><span class="yn n">✕</span></div></div>
+      <div class="day "><div class="hd"><b>Do 19.</b><div class="bar"><i class="k-pl" style="flex:90"></i><i class="k-su" style="flex:180"></i><i class="k-fr" style="flex:30"></i></div><span class="n">3 h 30 frei</span></div><div class="tk"><span class="grip">⋮⋮</span><span class="nm">Interviewleitfaden</span><span class="d">1 h 30</span></div><div class="tk sug"><span class="nm">✦ Übungsblatt 5</span><span class="d">3 h</span><span class="yn y">✓</span><span class="yn n">✕</span></div></div>
+      <div class="day "><div class="hd"><b>Fr 20.</b><div class="bar"><i class="k-su" style="flex:120"></i><i class="k-fr" style="flex:180"></i></div><span class="n">5 h frei</span></div><div class="tk dlrow"><span>⚑</span><span class="nm">#42 Export überarbeiten</span><span class="d" style="color:#ff8a82">Deadline</span></div><div class="tk sug"><span class="nm">✦ Klausur-Wiederholung</span><span class="d">2 h</span><span class="yn y">✓</span><span class="yn n">✕</span></div></div>
+      <div class="day "><div class="hd"><b>Sa 21.</b><span class="n" style="flex:1;text-align:left">kein Arbeitstag</span></div><div class="tk dlrow"><span>⚑</span><span class="nm">Klausur Statistik · 10:00</span><span class="d" style="color:#ff8a82">Deadline</span></div><div class="tk sug"><span class="nm">✦ Seminararbeit Korrektur lesen</span><span class="chip dep">◷ +3 h</span><span class="d">3 h</span><span class="yn y off">✓</span><span class="yn n">✕</span></div></div>
+      <div class="day " style="opacity:.6"><div class="hd"><b>So 22.</b><span class="n" style="flex:1;text-align:left">kein Arbeitstag</span></div><div class="tk dlrow"><span>⚑</span><span class="nm">Seminararbeit abgeben</span><span class="d" style="color:#ff8a82">Deadline</span></div></div>
+      <div class="spacer"></div><div class="drawer"><div class="grab"></div><div class="dh">Ungeplant<span>9 fällig in diesem Zeitraum &nbsp;⌃</span></div></div><div class="tb glass tbgap"><span class="on"><i class="ico">▦</i>Planen</span><span><i class="ico">☑︎</i>Aufgaben</span><span><i class="ico">⚙︎</i>Einstellungen</span></div></div>
+    <p class="pc"><b>Pro:</b> ein Ort für alle Verlängerungen, gleich in Tag, Woche und Monat; die Tage bleiben kürzer. <b>Contra:</b> Die Zeile steht getrennt von dem Tag und den Vorschlägen, die sie betrifft; die Abhängigkeit braucht dann eine Marke je Zeile („◷ +2 h“). Bei drei Verlängerungen im Monat ist die Leiste rund 300 pt hoch und schiebt das Raster aus dem Bild. ✓ in der Leiste verändert einen Tag, der möglicherweise nicht sichtbar ist.</p>
+  </div>
+  <div>
+    <p class="label"><span class="code">AO3</span><b>Nur im Ergebnisblatt (Z1)</b> (Textvariante)</p>
+    <div class="box neutral" style="margin-top:0">
+      <ul>
+        <li>Die Leiste zeigt nur „◷ 1 Verlängerung ›“; Grund, ✓ und ✕ stehen im Ergebnisblatt unter einer Gruppe „Arbeitszeit“.</li>
+        <li><b>Pro:</b> keine zusätzliche Höhe über dem Raster.</li>
+        <li><b>Contra:</b> Im Raster lägen gestrichelte Blöcke nach 18:00, ohne dass die Ansicht sagt, warum. Die Entscheidung mit der größten Folge (länger arbeiten) wäre die am tiefsten versteckte.</li>
+      </ul>
+    </div>
+    <div class="box neutral">
+      <h3>Wortlaut (für alle Varianten)</h3>
+      <table class="sum">
+        <tr><th>Fall</th><th>Tagesansicht</th><th>Woche, Monat, Blatt</th></tr>
+        <tr><td>späteres Ende</td><td>Heute bis 20:00 arbeiten · +2 h</td><td>Mi bis 20:00 arbeiten · +2 h</td></tr>
+        <tr><td>früherer Beginn</td><td>Heute ab 7:30 arbeiten · +1 h 30</td><td>Do ab 7:30 arbeiten · +1 h 30</td></tr>
+        <tr><td>beides</td><td>Heute 7:30 bis 19:00 arbeiten · +2 h 30</td><td>Do 7:30 bis 19:00 arbeiten · +2 h 30</td></tr>
+        <tr><td>freier Tag</td><td>Heute arbeiten · 14:00 bis 17:00 · +3 h</td><td>Sa arbeiten · 14:00 bis 17:00 · +3 h</td></tr>
+      </table>
+      <ul>
+        <li>An anderen Tagen als heute entfällt in der Tagesansicht das Wort „Heute“ („Bis 20:00 arbeiten“); im Monat steht der Tag mit Datum („Sa 28.“).</li>
+        <li>„+2 h“ rechnet Tagwerk aus bisheriger und vorgeschlagener Arbeitszeit, es übernimmt die Zahl nicht vom Modell. Gemeint ist die zusätzliche Arbeitszeit, nicht die zusätzliche Kapazität nach Pause und Puffer (Frage 3).</li>
+      </ul>
+    </div>
+  </div>
+</div>
+<div class="box">
+  <h3>Empfehlung AO: AO1</h3>
+  <ul>
+    <li><b>Eine Zeile, vier Orte.</b> Die Verlängerung ist immer dieselbe gestrichelte Zeile: im Tag in der Leiste der Kapazitätskarte, in der Woche im Tag, im Monat in der Tagesliste, im Ergebnisblatt unter „Arbeitszeit“. Im Raster des Tages kommt die Fläche aus Abschnitt AR dazu.</li>
+    <li><b>Tag in der Karte, Woche und Monat am Tag.</b> Das wirkt uneinheitlich, folgt aber derselben Regel: Die Zeile steht dort, wo die Arbeitszeit des betroffenen Tages steht. Im Tag ist das die Kapazitätskarte, in Woche und Monat der Tag selbst; die Leiste gilt dort für den ganzen Zeitraum.</li>
+    <li><b>Kapazität:</b> Die große Zahl („4 h noch frei“) ändert sich erst nach ✓, wie bei den übrigen Vorschlägen (V1). Bis dahin zeigen Balken und Textzeile, was die Verlängerung brächte.</li>
+    <li><b>Keine Verlängerung ohne Anlass.</b> Die lokale Prüfung zeigt eine Verlängerung nur, wenn mindestens ein Vorschlag sie braucht und zu einer wichtigen Aufgabe gehört (P1 mit Fälligkeit, Sub-Issue eines Epics, verknüpfter Deadline-Termin). Sonst wird sie verworfen, bevor sie erscheint. Werden alle abhängigen Vorschläge mit ✕ entfernt, verschwindet auch die Verlängerung.</li>
+    <li><b>Schwäche:</b> Die Höhe über dem Raster wächst weiter (offene Frage 7 der KI-Planungs-Mockups). Das einmalige Scrollen zum ersten Vorschlag hilft hier nicht, weil die Zeile oberhalb des Rasters liegt; siehe AR1 für den zweiten Ort im Raster.</li>
+    <li><b>SwiftUI:</b> eine <code>ExtensionSuggestionRow</code> für alle Orte; Symbol <code>clock</code> (ob es ein passendes Symbol mit Plus-Marke gibt, ist nicht geprüft). VoiceOver liest einen Satz: „Vorschlag: heute bis 20 Uhr arbeiten, 2 Stunden mehr. Sonst wird Nummer 42 vor Freitag nicht fertig.“ „Übernehmen“ und „Verwerfen“ als <code>accessibilityAction</code>.</li>
+  </ul>
+</div>
+
+<!-- ============================== AB ============================== -->
+<h2><span class="area">AB</span> Abhängigkeit · Vorschläge, die die zusätzliche Zeit brauchen</h2>
+<p class="lead">Punkt 2. Blöcke in der zusätzlichen Zeit und Zuordnungen über der bisherigen Kapazität sind nur gültig, wenn die Verlängerung gilt. Zu entscheiden ist, wie man das sieht, was ✓ an einem solchen Vorschlag tut, was nach ✕ an der Verlängerung geschieht und was „Alle übernehmen“ bedeutet.</p>
+<div class="grid">
+  <div>
+    <p class="label"><span class="code r">AB1</span><b>Gruppe: erst die Verlängerung, dann die Blöcke (Listenansicht)</b> <span class="rec">Empfehlung</span></p>
+    <div class="phone"><div class="status"><span>08:42</span><span>●●● 5G</span></div><div class="topbar"><div class="seg"><span class="on">Tag</span><span>Woche</span><span>Monat</span></div><span class="rbtn glass">＋</span></div><div class="anno">nach unten gescrollt · Tag als Liste (▦ wechselt zurück zum Raster)</div><div class="abl2">Ablauf<span>▦&nbsp; Auswählen</span></div><div class="tl">
+        <div class="row"><span class="time">15:00</span><div class="block event">Team-Runde<div class="meta">bis 16:00</div></div></div>
+        <div class="row"><span class="time">16:15</span><div class="block planned">Angebot nachfassen<div class="meta">Zeitblock · 30 min</div></div></div>
+        <div class="row"><span class="time">16:45</span><div class="block suggest"><div>✦ Folien fürs Seminar<div class="meta">Vorschlag · 1 h · Erinnerungen</div><div class="meta" style="color:#dcb0f7">✦ „Vor dem Seminar am Donnerstag.“</div></div><span class="yn y">✓</span><span class="yn n">✕</span></div></div>
+        <div class="row"><span class="time">17:45</span><div class="block free">Frei · 15 min</div></div>
+        <div class="row"><span class="time">18:00</span><div class="block suggest"><div><span style="color:var(--purple)">◷</span> Heute bis 20:00 arbeiten <span class="chip ai">+2 h</span><div class="meta">Vorschlag · Arbeitszeit, nur dieser Tag</div><div class="meta" style="color:#dcb0f7">✦ „Sonst wird #42 vor Freitag nicht fertig.“</div></div><span class="yn y">✓</span><span class="yn n">✕</span></div></div>
+        <div class="row dep"><span class="time">18:15</span><div class="block suggest"><div>✦ #57 Export-Fehler beheben<div class="meta">Vorschlag · 1 h · GitHub · braucht die Verlängerung</div></div><span class="yn y off">✓</span><span class="yn n">✕</span></div></div>
+        <div class="row dep"><span class="time">19:15</span><div class="block suggest"><div>✦ #58 Tests ergänzen<div class="meta">Vorschlag · 45 min · GitHub · braucht die Verlängerung</div></div><span class="yn y off">✓</span><span class="yn n">✕</span></div></div>
+      </div><div class="spacer"></div><div class="tb glass tbgap"><span class="on"><i class="ico">▦</i>Planen</span><span><i class="ico">☑︎</i>Aufgaben</span><span><i class="ico">⚙︎</i>Einstellungen</span></div></div>
+    <p class="pc">Abhängige Vorschläge stehen eingerückt direkt unter der Verlängerung und tragen „braucht die Verlängerung“. Ihr ✓ ist abgeblendet, bis die Verlängerung übernommen ist; ✕ bleibt möglich. <b>Pro:</b> Jeder Tipp tut genau eine Sache; länger zu arbeiten wird nie nebenbei entschieden. <b>Contra:</b> Zwei Tipps bis zum ersten Block nach 18:00 (oder einer über „Alle übernehmen“). Ein abgeblendetes ✓ erklärt sich nicht selbst; die Erklärung steht in der Meta-Zeile und im Blatt (nächstes Bild).</p>
+  </div>
+  <div>
+    <p class="label"><span class="code r">AB1</span><b>Blatt eines abhängigen Blocks: ein Knopf für beides, ausgeschrieben</b> <span class="rec">Empfehlung</span></p>
+    <div class="phone"><div class="status"><span>08:43</span><span>●●● 5G</span></div><div class="under"><div class="topbar"><div class="seg"><span class="on">Tag</span><span>Woche</span><span>Monat</span></div><span class="rbtn glass">＋</span></div><div class="abl2">Ablauf<span>☰&nbsp; Auswählen</span></div><div class="hg h64" style="height:120px;clip-path:inset(-10px -4px 0 -46px);"><div class="hl" style="top:0px"><span>17:00</span></div><div class="hl" style="top:64px"><span>18:00</span></div><div class="hl" style="top:128px"><span>19:00</span></div><div class="ev ai" style="top:-15px;height:62px;"><div class="ait">✦ Folien fürs Seminar</div><span class="yn y">✓</span><span class="yn n">✕</span></div><div class="xband" style="top:64px;height:128px"></div><div class="ev ai" style="top:81px;height:62px;"><div class="ait">✦ #57 Export-Fehler beheben<small>18:15 bis 19:15</small></div><span class="yn y off">✓</span><span class="yn n">✕</span></div></div></div><div class="sheetp"><div class="grab"></div><div class="ehead"><i style="background:var(--purple)"></i><div><b>#57 Export-Fehler beheben</b><small>Vorschlag · Mittwoch, 18. Nov. · 18:15 bis 19:15</small><span class="chip ai">✦ ChatGPT</span> <span class="chip">Sub-Issue von #42</span></div></div><div class="banner ai"><b>Begründung</b>✦ „Blockiert #58; beide müssen vor Freitag fertig sein.“</div><div class="banner ai"><b>◷ Braucht die Verlängerung</b>Der Block liegt nach 18:00. Er lässt sich erst übernehmen, wenn heute bis 20:00 gearbeitet wird (+2 h).</div><div class="list"><div class="field dis"><span>Beginn</span><span class="v">18:15</span></div><div class="field dis"><span>Dauer</span><span class="v">1 h</span></div><div class="field"><span>Aufgabe</span><span class="v">GitHub · fällig Fr 20. Nov. ›</span></div></div><div class="spacer"></div><div class="btns"><div class="b plain" style="flex:.55">Verwerfen</div><div class="b aip">◷ Verlängern und übernehmen</div></div></div></div>
+    <p class="pc">Antippen öffnet das Blatt aus W1. Ein zweiter Hinweis nennt die Abhängigkeit; die Hauptschaltfläche heißt hier „◷ Verlängern und übernehmen“ und speichert erst die Arbeitszeit, dann den Block. Das ist der einzige Ort, an dem ein Tipp beides tut, und der einzige, an dem die Beschriftung dafür Platz hat. <b>Contra:</b> ein Sonderfall im Blatt, also ein Zustand mehr zu bauen und zu testen.</p>
+  </div>
+  <div>
+    <p class="label"><span class="code r">AB1</span><b>Ergebnisblatt: Gruppe „Arbeitszeit“ über den Vorschlägen</b> <span class="rec">Empfehlung</span></p>
+    <div class="phone"><div class="status"><span>08:43</span><span>●●● 5G</span></div><div class="under"><div class="topbar"><div class="seg"><span class="on">Tag</span><span>Woche</span><span>Monat</span></div><span class="rbtn glass">＋</span></div><div class="cap"><div class="top"><b>4 h noch frei</b><i class="gear"></i></div><div class="sub">ab 9:00 bis 18:00 · ganzer Tag 4 h frei von 4 h 30</div><div class="bar"><i class="k-pl" style="flex:30"></i><i class="k-su" style="flex:195"></i><i class="k-fr" style="flex:45"></i><i class="k-mk"></i><i class="k-su" style="flex:105"></i><i class="k-xt" style="flex:15"></i></div></div></div><div class="sheetp"><div class="grab"></div><div class="shead"><b>Planung · Mi 18. Nov.</b><span class="gb glass" style="color:var(--blue);font-weight:600">Fertig</span></div><div class="section">Arbeitszeit <span>1 · +2 h</span></div><div class="xgrp"><div class="ext "><span class="xi">◷</span><div class="xt"><b>Heute bis 20:00 arbeiten</b> <span class="chip ai">+2 h</span><div class="rs">✦ „Sonst wird #42 vor Freitag nicht fertig.“</div></div><span class="yn y">✓</span><span class="yn n">✕</span></div><div class="tk sug"><span class="arr">↳</span><span class="nm">✦ #57 Export-Fehler beheben</span><span class="d">18:15 · 1 h</span><span class="yn y off">✓</span><span class="yn n">✕</span></div><div class="tk sug"><span class="arr">↳</span><span class="nm">✦ #58 Tests ergänzen</span><span class="d">19:15 · 45 min</span><span class="yn y off">✓</span><span class="yn n">✕</span></div></div><div class="section">Vorschläge <span>3 · 3 h 15</span></div><div class="list"><div class="item"><span class="time" style="padding-top:1px">09:00</span><div class="t">✦ Literatur sichten <div class="s">45 min</div><div class="s r">✦ „Leichter Einstieg vor dem Seminar.“</div></div><span class="yn y" style="width:28px;height:28px;font-size:13px;align-self:center">✓</span><span class="yn n" style="width:28px;height:28px;font-size:13px;align-self:center;background:#48484a">✕</span></div><div class="item"><span class="time" style="padding-top:1px">13:15</span><div class="t">✦ Pretest vorbereiten <span class="chip p1">P1</span><div class="s">1 h 30</div><div class="s r">✦ „Morgen fällig und P1.“</div></div><span class="yn y" style="width:28px;height:28px;font-size:13px;align-self:center">✓</span><span class="yn n" style="width:28px;height:28px;font-size:13px;align-self:center;background:#48484a">✕</span></div><div class="item"><span class="time" style="padding-top:1px">16:45</span><div class="t">✦ Folien fürs Seminar <div class="s">1 h</div><div class="s r">✦ „Vor dem Seminar am Donnerstag.“</div></div><span class="yn y" style="width:28px;height:28px;font-size:13px;align-self:center">✓</span><span class="yn n" style="width:28px;height:28px;font-size:13px;align-self:center;background:#48484a">✕</span></div></div><div class="section">Nicht eingeplant <span>1</span></div><div class="list"><div class="item"><div class="t">Übungsblatt 5<div class="s w">Die Kapazität des Tages ist überschritten.</div></div></div></div><div class="section">Risiken <span>1</span></div><div class="list"><div class="item"><span style="color:var(--orange)">⚠︎</span><div class="t">#42 wird vor Freitag knapp</div></div></div><div class="spacer"></div><div class="btns" style="margin-top:8px"><div class="b plain" style="flex:.7">Verwerfen</div><div class="b aip">✦ Alle übernehmen (5)</div></div><div class="pbn">Übernimmt auch die Verlängerung bis 20:00.</div></div></div>
+    <p class="pc">Das Blatt aus Z1 bekommt eine erste Gruppe „Arbeitszeit“ mit der Verlängerung und den Vorschlägen, die an ihr hängen; die übrigen stehen wie bisher darunter. In Woche und Monat ist das der Ort, der alle Verlängerungen auf einmal zeigt. <b>„Alle übernehmen (5)“</b> zählt die fünf Blöcke, nicht die Verlängerung; die Zeile darunter sagt, dass sie mit übernommen wird. Reihenfolge: erst Verlängerungen, dann Blöcke.</p>
+  </div>
+  <div>
+    <p class="label"><span class="code r">AB1</span><b>Nach ✕ an der Verlängerung</b> <span class="rec">Empfehlung</span></p>
+    <div class="phone"><div class="status"><span>08:45</span><span>●●● 5G</span></div><div class="topbar"><div class="seg"><span class="on">Tag</span><span>Woche</span><span>Monat</span></div><span class="rbtn glass">＋</span></div><div class="hdr"><div><div class="kick">Heute · KW 47</div><div class="bigdate">Mittwoch, 18. Nov. <span class="car">⌄</span></div></div><div class="stp"><span class="rbtn glass">‹</span><span class="rbtn glass">›</span></div></div><div class="dl">
+        <div class="h">⚑ Deadlines</div>
+        <div class="r"><span class="g">⚑</span><span class="n">Anmeldung Abschlussarbeit<small>Kalender</small></span><span class="w">heute</span></div>
+        <div class="r"><span class="g">⚑</span><span class="n">Pretest vorbereiten<small>P1</small></span><span class="w">morgen</span></div>
+        <div class="r"><span class="g">⚑</span><span class="n">#42 Export überarbeiten<small>GitHub · Epic · P1</small></span><span class="w">Fr 20.</span></div>
+      </div><div class="cap"><div class="top"><b>4 h noch frei</b><i class="gear"></i></div><div class="sub">ab 9:00 bis 18:00 · ganzer Tag 4 h frei von 4 h 30</div><div class="bar"><i class="k-pl" style="flex:30"></i><i class="k-su" style="flex:195"></i><i class="k-fr" style="flex:45"></i></div><div class="sub2 ai">✦ 3 h 15 vorgeschlagen · nach dem Übernehmen 45 min frei</div><div class="pb"><div class="pbl"><span class="ai">✦ 3 Vorschläge · 3 h 15</span><span class="x">Verwerfen</span></div><div class="pbl"><span class="w">⚠︎ 3 nicht eingeplant · 1 Risiko ›</span></div><div class="act"><div class="b aib">✦ Alle übernehmen (3)</div><div class="b plain" style="flex:.6">Neu planen</div></div></div></div><div class="alld">Ganztägig <span class="pill">Projektwoche</span><span class="pill">Buß- und Bettag</span></div><div class="abl2">Ablauf<span>☰&nbsp; Auswählen</span></div><div class="ou"><b>Ohne Uhrzeit</b><span class="g">0 · 0 min</span><span class="g">+3 offen</span><span class="o">1 überfällig</span><span class="c">⌃</span></div><div class="hg h64" style="height:150px;clip-path:inset(-10px -4px 0 -46px);"><div class="hl" style="top:0px"><span>08:00</span></div><div class="hl" style="top:64px"><span>09:00</span></div><div class="hl" style="top:128px"><span>10:00</span></div><div class="hl" style="top:192px"><span>11:00</span></div><div class="ev e" style="top:129px;height:94px;">Seminar<small>10:00 bis 11:30</small></div><div class="ev q" style="top:257px;height:62px;">Mittagspause<small>12:00 bis 13:00</small></div><div class="ev e" style="top:449px;height:62px;">Team-Runde<small>15:00 bis 16:00</small></div><div class="ev p" style="top:529px;height:30px;">Angebot nachfassen · Zeitblock</div><div class="ev ai" style="top:65px;height:46px;"><div class="ait">✦ Literatur sichten<small>09:00 bis 09:45</small></div><span class="yn y">✓</span><span class="yn n">✕</span></div><div class="ev ai" style="top:337px;height:94px;"><div class="ait">✦ Pretest vorbereiten<small>13:15 bis 14:45 · 1 h 30 · P1</small></div><span class="yn y">✓</span><span class="yn n">✕</span></div><div class="ev ai" style="top:561px;height:62px;"><div class="ait">✦ Folien fürs Seminar<small>16:45 bis 17:45 · 1 h</small></div><span class="yn y">✓</span><span class="yn n">✕</span></div></div><div class="cut"></div><div class="spacer"></div><div class="toast glass"><span class="tx">Verlängerung verworfen<small>2 Vorschläge jetzt „nicht eingeplant“</small></span><span class="un">Widerrufen</span></div><div class="tb glass tbgap"><span class="on"><i class="ico">▦</i>Planen</span><span><i class="ico">☑︎</i>Aufgaben</span><span><i class="ico">⚙︎</i>Einstellungen</span></div></div>
+    <p class="pc">Die Verlängerung verschwindet, ihre zwei Blöcke wandern nach „Nicht eingeplant“ (jetzt 3) mit dem vorhandenen Grund „Der Block liegt außerhalb der Arbeitszeit.“; in Woche und Monat lautet er „Die Kapazität des Tages ist überschritten.“. Balken und Leiste zeigen nur noch die drei übrigen Vorschläge. Die Kapsel bietet rund sechs Sekunden „Widerrufen“ und stellt Verlängerung und Blöcke wieder her. <b>Contra:</b> Danach führt nur „Neu planen“ zurück; ein eigenes „Doch verlängern“ gibt es nicht.</p>
+  </div>
+  <div>
+    <p class="label"><span class="code">AB2</span><b>✓ am Block nimmt die Verlängerung mit</b></p>
+    <div class="phone"><div class="status"><span>08:46</span><span>●●● 5G</span></div><div class="topbar"><div class="seg"><span class="on">Tag</span><span>Woche</span><span>Monat</span></div><span class="rbtn glass">＋</span></div><div class="anno">nach ✓ am Block „#57“ · 15 bis 21 Uhr</div><div class="abl2">Ablauf<span>☰&nbsp; Auswählen</span></div><div class="hg h64" style="height:386px;"><div class="hl" style="top:0px"><span>15:00</span></div><div class="hl" style="top:64px"><span>16:00</span></div><div class="hl" style="top:128px"><span>17:00</span></div><div class="hl" style="top:192px"><span>18:00</span></div><div class="hl" style="top:256px"><span>19:00</span></div><div class="hl" style="top:320px"><span>20:00</span></div><div class="hl" style="top:384px"><span>21:00</span></div><div class="ev e" style="top:1px;height:62px;">Team-Runde<small>15:00 bis 16:00</small></div><div class="ev p" style="top:81px;height:30px;">Angebot nachfassen · Zeitblock</div><div class="ev ai" style="top:113px;height:62px;"><div class="ait">✦ Folien fürs Seminar<small>16:45 bis 17:45 · 1 h</small></div><span class="yn y">✓</span><span class="yn n">✕</span></div><div class="ev p" style="top:209px;height:62px;">#57 Export-Fehler beheben<small>18:15 bis 19:15 · Zeitblock</small></div><div class="ev ai" style="top:273px;height:46px;"><div class="ait">✦ #58 Tests ergänzen<small>19:15 bis 20:00 · 45 min</small></div><span class="yn y">✓</span><span class="yn n">✕</span></div></div><div class="spacer"></div><div class="toast glass"><span class="tx">Heute bis 20:00 verlängert<small>Block „#57“ übernommen</small></span><span class="un">Widerrufen</span></div><div class="tb glass tbgap"><span class="on"><i class="ico">▦</i>Planen</span><span><i class="ico">☑︎</i>Aufgaben</span><span><i class="ico">⚙︎</i>Einstellungen</span></div></div>
+    <p class="pc">Jeder abhängige Block hat ein normales ✓. Der Tipp speichert die Arbeitszeit bis 20:00 und den Block; eine Kapsel meldet es und bietet „Widerrufen“. <b>Pro:</b> ein Tipp, kein abgeblendetes Element. <b>Contra:</b> ✓ bedeutet an diesen Blöcken etwas anderes als an allen anderen, ohne dass die Schaltfläche es sagt; die Arbeitszeit ändert sich als Nebenwirkung und ist nach sechs Sekunden nur noch über das Blatt der Arbeitszeit zurückzunehmen. Das widerspricht der Entscheidung zu #72, dass erst die Bestätigung der Verlängerung die Arbeitszeit speichert.</p>
+  </div>
+</div>
+<div class="box">
+  <h3>Empfehlung AB: AB1</h3>
+  <ul>
+    <li><b>Was „abhängig“ heißt:</b> Ein Vorschlag hängt an einer Verlängerung, wenn er die lokale Prüfung mit der bisherigen Arbeitszeit nicht besteht, mit der vorgeschlagenen aber schon. Im Tag ist das jeder Block, der ganz oder teilweise in der zusätzlichen Zeit liegt; in Woche und Monat sind es die Zuordnungen, die in der Reihenfolge der Antwort nicht mehr in die bisherige Kapazität passen. Das wird bei jeder Änderung neu berechnet und nicht vom Modell übernommen.</li>
+    <li><b>✓ an der Verlängerung</b> speichert nur die Arbeitszeit (<code>DayOverride</code> für dieses Datum). Die abhängigen Vorschläge bleiben offen und werden zu gewöhnlichen Vorschlägen mit ✓ / ✕.</li>
+    <li><b>✕ an der Verlängerung</b> verschiebt die abhängigen Vorschläge nach „Nicht eingeplant“ mit den vorhandenen Texten aus <code>PlanViolation.Reason</code>. Kein neuer Grundtext nötig. Die Kapsel „Widerrufen“ nutzt die vorhandene <code>UndoCapsule</code>.</li>
+    <li><b>✕ an einem abhängigen Vorschlag</b> entfernt nur ihn. Ist er der letzte, entfällt die Verlängerung ohne Rückfrage (sie hätte keinen Anlass mehr).</li>
+    <li><b>„Alle übernehmen“</b> übernimmt zuerst alle offenen Verlängerungen, dann alle Vorschläge. Die Zahl in Klammern zählt wie bisher nur Blöcke und Zuordnungen; eine graue Zeile unter den Schaltflächen nennt die Verlängerungen. Schlägt das Speichern einer Verlängerung fehl, wandern ihre Vorschläge nach „Nicht eingeplant“, und die Meldung aus Z3 nennt es.</li>
+    <li><b>„Verwerfen“</b> (alles) verwirft Verlängerungen wie jeden anderen Vorschlag; „Neu planen“ ersetzt sie.</li>
+    <li><b>Nicht belegt:</b> dass ein abgeblendetes ✓ am Gerät als „noch nicht möglich“ und nicht als Fehler gelesen wird. Das ist eine Annahme aus der üblichen iOS-Darstellung gesperrter Schaltflächen, kein Testergebnis.</li>
+  </ul>
+</div>
+
+<!-- ============================== AR ============================== -->
+<h2><span class="area">AR</span> Stundenraster · die zusätzliche Zeit vor der Annahme</h2>
+<p class="lead">Punkt 3. Das Raster ist maßstäblich und die Standardansicht des Tages (§13.15 S1). Die zusätzliche Zeit liegt am Rand des Tages, also weit unter der Kapazitätskarte. Gezeigt ist der Ausschnitt 15 bis 21 Uhr bei 64 pt je Stunde.</p>
+<div class="grid">
+  <div>
+    <p class="label"><span class="code r">AR1</span><b>Schraffierte violette Fläche mit Kopf am bisherigen Arbeitsende</b> <span class="rec">Empfehlung</span></p>
+    <div class="phone"><div class="status"><span>08:42</span><span>●●● 5G</span></div><div class="topbar"><div class="seg"><span class="on">Tag</span><span>Woche</span><span>Monat</span></div><span class="rbtn glass">＋</span></div><div class="anno">nach unten gescrollt · 15 bis 21 Uhr</div><div class="abl2">Ablauf<span>☰&nbsp; Auswählen</span></div><div class="hg h64" style="height:386px;"><div class="hl" style="top:0px"><span>15:00</span></div><div class="hl" style="top:64px"><span>16:00</span></div><div class="hl" style="top:128px"><span>17:00</span></div><div class="hl" style="top:192px"><span>18:00</span></div><div class="hl" style="top:256px"><span>19:00</span></div><div class="hl" style="top:320px"><span>20:00</span></div><div class="hl" style="top:384px"><span>21:00</span></div><div class="ev e" style="top:1px;height:62px;">Team-Runde<small>15:00 bis 16:00</small></div><div class="ev p" style="top:81px;height:30px;">Angebot nachfassen · Zeitblock</div><div class="ev ai" style="top:113px;height:62px;"><div class="ait">✦ Folien fürs Seminar<small>16:45 bis 17:45 · 1 h</small></div><span class="yn y">✓</span><span class="yn n">✕</span></div><div class="xband" style="top:192px;height:128px"></div><div class="xhead" style="top:178px"><span style="color:var(--purple)">◷</span><span class="t">Bis 20:00 arbeiten · +2 h</span><span class="yn y">✓</span><span class="yn n">✕</span></div><div class="ev ai" style="top:209px;height:62px;"><div class="ait">✦ #57 Export-Fehler beheben<small>18:15 bis 19:15 · 1 h</small></div><span class="yn y off">✓</span><span class="yn n">✕</span></div><div class="ev ai" style="top:273px;height:46px;"><div class="ait">✦ #58 Tests ergänzen<small>19:15 bis 20:00 · 45 min</small></div><span class="yn y off">✓</span><span class="yn n">✕</span></div></div><div class="spacer"></div><div class="tb glass tbgap"><span class="on"><i class="ico">▦</i>Planen</span><span><i class="ico">☑︎</i>Aufgaben</span><span><i class="ico">⚙︎</i>Einstellungen</span></div></div>
+    <p class="pc">Von 18:00 bis 20:00 liegt eine schraffierte Fläche hinter den Einträgen, oben und unten gestrichelt begrenzt. Auf der 18:00-Linie sitzt eine Kapsel „◷ Bis 20:00 arbeiten · +2 h“ mit ✓ / ✕; sie ist dieselbe Entscheidung wie die Zeile in der Kapazitätskarte, nur dort, wo man beim Prüfen der Blöcke gerade ist. Die abhängigen Blöcke liegen sichtbar in der Fläche, ihr ✓ ist abgeblendet. <b>Pro:</b> Die Abhängigkeit ist Lage, kein Zusatzzeichen. <b>Contra:</b> Die Kapsel ist 28 pt hoch und überdeckt je 14 pt vor und nach 18:00; beginnt ein Block genau um 18:00, verdeckt sie seinen oberen Rand. Zwei Orte für dieselbe Entscheidung müssen synchron bleiben.</p>
+  </div>
+  <div>
+    <p class="label"><span class="code">AR2</span><b>Nur Linien: bisheriges und neues Arbeitsende</b></p>
+    <div class="phone"><div class="status"><span>08:42</span><span>●●● 5G</span></div><div class="topbar"><div class="seg"><span class="on">Tag</span><span>Woche</span><span>Monat</span></div><span class="rbtn glass">＋</span></div><div class="anno">nach unten gescrollt · 15 bis 21 Uhr</div><div class="abl2">Ablauf<span>☰&nbsp; Auswählen</span></div><div class="hg h64" style="height:386px;"><div class="hl" style="top:0px"><span>15:00</span></div><div class="hl" style="top:64px"><span>16:00</span></div><div class="hl" style="top:128px"><span>17:00</span></div><div class="hl" style="top:192px"><span>18:00</span></div><div class="hl" style="top:256px"><span>19:00</span></div><div class="hl" style="top:320px"><span>20:00</span></div><div class="hl" style="top:384px"><span>21:00</span></div><div class="ev e" style="top:1px;height:62px;">Team-Runde<small>15:00 bis 16:00</small></div><div class="ev p" style="top:81px;height:30px;">Angebot nachfassen · Zeitblock</div><div class="ev ai" style="top:113px;height:62px;"><div class="ait">✦ Folien fürs Seminar<small>16:45 bis 17:45 · 1 h</small></div><span class="yn y">✓</span><span class="yn n">✕</span></div><div class="wend" style="top:192px"><span>Arbeitsende 18:00</span></div><div class="xline" style="top:320px"><span>✦ neues Ende 20:00</span></div><div class="ev ai" style="top:209px;height:62px;"><div class="ait">✦ #57 Export-Fehler beheben<small>18:15 bis 19:15 · 1 h</small></div><span class="yn y off">✓</span><span class="yn n">✕</span></div><div class="ev ai" style="top:273px;height:46px;"><div class="ait">✦ #58 Tests ergänzen<small>19:15 bis 20:00 · 45 min</small></div><span class="yn y off">✓</span><span class="yn n">✕</span></div></div><div class="spacer"></div><div class="tb glass tbgap"><span class="on"><i class="ico">▦</i>Planen</span><span><i class="ico">☑︎</i>Aufgaben</span><span><i class="ico">⚙︎</i>Einstellungen</span></div></div>
+    <p class="pc">Eine graue Linie markiert das bisherige Ende, eine gestrichelte violette das vorgeschlagene. Keine Fläche, kein ✓ / ✕ im Raster; entschieden wird in der Kapazitätskarte. <b>Pro:</b> weniger Violett, keine Kapsel über den Einträgen. <b>Contra:</b> Die Blöcke nach 18:00 sehen aus wie gewöhnliche Vorschläge mit defektem ✓. Wer im Raster nach unten gescrollt hat, muss zum Entscheiden rund 700 pt zurück nach oben. Die graue Linie „Arbeitsende“ gibt es heute nicht; sie wäre ein neues Dauer-Element des Rasters.</p>
+  </div>
+  <div>
+    <div class="box neutral" style="margin-top:26px">
+      <h3>Regeln für das Raster</h3>
+      <ul>
+        <li><b>Sichtbarer Bereich:</b> <code>TimelineCanvas.shownRange</code> weitet das Raster schon heute auf alle Vorschläge plus eine Stunde Rand. Die Fläche liegt deshalb immer im Bild; bei einer Verlängerung ohne Uhrzeit-Blöcke (aus Woche oder Monat) muss der Bereich zusätzlich um die vorgeschlagene Arbeitszeit erweitert werden.</li>
+        <li><b>Früherer Beginn:</b> dieselbe Fläche vor dem bisherigen Beginn, die Kapsel sitzt auf der Linie des bisherigen Beginns („◷ Ab 7:30 arbeiten · +1 h 30“).</li>
+        <li><b>Fläche ist kein Eintrag:</b> nicht ziehbar, nicht auswählbar, nimmt nicht am Spaltenlayout teil. Antippen der Fläche tut nichts; nur die Kapsel reagiert.</li>
+        <li><b>Ziehen in die Fläche:</b> Ein eigener Block lässt sich vor der Annahme dorthin ziehen wie heute an jede Stelle außerhalb der Arbeitszeit (mit Überbuchungsanzeige). Er macht die Verlängerung nicht zur Tatsache.</li>
+        <li><b>Nach ✓:</b> Die Fläche verschwindet, das Raster sieht aus wie an jedem Tag mit Arbeitszeit bis 20:00. Nach ✕ verschwinden Fläche und abhängige Blöcke.</li>
+        <li><b>Listenansicht:</b> Die Verlängerung ist eine Zeile zur Uhrzeit des bisherigen Endes (Bild AB1), eine Fläche gibt es dort nicht.</li>
+        <li><b>Barrierefreiheit:</b> Die Kapsel ist ein Element mit zwei Aktionen; die Fläche selbst ist für VoiceOver unsichtbar. Schraffur plus gestrichelter Rand, damit die Fläche nicht nur über die Farbe erkennbar ist.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+<div class="box">
+  <h3>Empfehlung AR: AR1</h3>
+  <ul>
+    <li><b>Die zusätzliche Zeit ist eine Fläche, kein Block.</b> Violett gestrichelt bleibt die Sprache für „vorgeschlagen, noch nicht gültig“; schraffiert unterscheidet die Fläche von den Blöcken, die in ihr liegen.</li>
+    <li><b>✓ / ✕ auch im Raster.</b> Die Kapazitätskarte liegt rund 700 pt über dem Tagesende. Ohne Kapsel im Raster müsste man die Blöcke unten prüfen und oben entscheiden.</li>
+    <li><b>Aus dem Code gelesen, nicht am Gerät geprüft:</b> Das Raster zeichnet heute keine Markierung für Zeiten außerhalb der Arbeitszeit. Die Fläche ist deshalb das einzige Element dieser Art und braucht eine eigene Ebene unter den Einträgen.</li>
+    <li><b>SwiftUI:</b> Fläche als <code>Rectangle</code> mit Schraffur-<code>ShapeStyle</code> in der Hintergrundebene des Rasters; Kapsel als Überlagerung an der y-Position des bisherigen Endes, <code>zIndex</code> über den Einträgen.</li>
+  </ul>
+</div>
+
+<!-- ============================== FT ============================== -->
+<h2><span class="area">FT</span> Freier Tag · Arbeit an einem Samstag</h2>
+<p class="lead">Punkt 4. Freie Tage haben Kapazität 0, und die KI plant dort nichts ein (§11.2). Eine Verlängerung an einem freien Tag macht aus „frei“ ein Zeitfenster. Die Frage ist, ob dafür dasselbe Muster genügt oder ob der Schritt eine eigene Hürde verdient.</p>
+<div class="grid">
+  <div>
+    <p class="label"><span class="code r">FT1</span><b>Gleiches Muster: „Heute arbeiten · 14:00 bis 17:00“</b> <span class="rec">Empfehlung</span></p>
+    <div class="phone"><div class="status"><span>08:44</span><span>●●● 5G</span></div><div class="topbar"><div class="seg"><span class="on">Tag</span><span>Woche</span><span>Monat</span></div><span class="rbtn glass">＋</span></div><div class="hdr"><div><div class="kick">Samstag · KW 47</div><div class="bigdate">Samstag, 21. Nov. <span class="car">⌄</span></div></div><div class="stp"><span class="rbtn glass">‹</span><span class="rbtn glass">›</span></div></div><div class="dl"><div class="h">⚑ Deadlines</div><div class="r"><span class="g">⚑</span><span class="n">Klausur Statistik<small>Kalender, 10:00</small></span><span class="w">an diesem Tag</span></div><div class="r"><span class="g">⚑</span><span class="n">Seminararbeit abgeben<small>P1</small></span><span class="w">So 22.</span></div></div><div class="cap"><div class="top"><b>kein Arbeitstag</b><i class="gear"></i></div><div class="bar"><i class="k-xt" style="flex:1"></i></div><div class="sub2 ai">✦ 3 h vorgeschlagen · nur mit „Heute arbeiten“</div><div class="pb"><div class="pbl"><span class="ai">✦ 1 Vorschlag · 3 h</span><span class="x">Verwerfen</span></div><div class="ext "><span class="xi">◷</span><div class="xt"><b>Heute arbeiten · 14:00 bis 17:00</b> <span class="chip ai">+3 h</span><div class="rs">✦ „Sonst wird die Seminararbeit bis Sonntag nicht fertig.“</div><div class="dp">1 Vorschlag braucht diese Zeit</div></div><span class="yn y">✓</span><span class="yn n">✕</span></div><div class="act"><div class="b aib">✦ Alle übernehmen (1)</div></div><div class="pbn">Übernimmt auch „Heute arbeiten“. Der Tag bleibt im Wochenplan frei.</div></div></div><div class="abl2">Ablauf<span>☰&nbsp; Auswählen</span></div><div class="ou"><b>Ohne Uhrzeit</b><span class="g">0 · 0 min</span><span class="ai">✦ 1 Vorschlag</span><span class="c">⌃</span></div><div class="hg h64" style="height:290px;clip-path:inset(-10px -4px 0 -46px);"><div class="hl" style="top:0px"><span>13:00</span></div><div class="hl" style="top:64px"><span>14:00</span></div><div class="hl" style="top:128px"><span>15:00</span></div><div class="hl" style="top:192px"><span>16:00</span></div><div class="hl" style="top:256px"><span>17:00</span></div><div class="hl" style="top:320px"><span>18:00</span></div><div class="xband" style="top:64px;height:192px"></div><div class="xhead" style="top:50px"><span style="color:var(--purple)">◷</span><span class="t">Heute arbeiten · 14:00 bis 17:00</span><span class="yn y">✓</span><span class="yn n">✕</span></div></div><div class="cut"></div><div class="spacer"></div><div class="tb glass tbgap"><span class="on"><i class="ico">▦</i>Planen</span><span><i class="ico">☑︎</i>Aufgaben</span><span><i class="ico">⚙︎</i>Einstellungen</span></div></div>
+    <p class="pc">Der freie Samstag, wie er nach „Woche planen“ in der Tagesansicht aussieht. Karte: „kein Arbeitstag“ bleibt stehen, darunter dieselbe Zeile wie bei einer Verlängerung, nur mit Zeitfenster statt Ende. Raster: dieselbe Fläche über das ganze Fenster. Die Wochenzuordnung hat keine Uhrzeit und steht im Panel „Ohne Uhrzeit“. <b>Pro:</b> nichts Neues zu lernen. <b>Contra:</b> Einen freien Tag aufzugeben wiegt schwerer als zwei Stunden länger; über „Alle übernehmen“ geschieht beides mit demselben Tipp. „✦ Tag planen“ gibt es an freien Tagen nicht (V1); die Zeile kann hier also nur aus einer Wochen- oder Monatsplanung stammen.</p>
+  </div>
+  <div>
+    <p class="label"><span class="code">FT2</span><b>Gleiche Zeile, aber Rückfrage und nicht in „Alle übernehmen“</b></p>
+    <div class="phone"><div class="status"><span>08:44</span><span>●●● 5G</span></div><div class="topbar"><div class="seg"><span>Tag</span><span class="on">Woche</span><span>Monat</span></div><span class="rbtn glass">＋</span></div><div class="hdr"><div><div class="kick">Diese Woche · KW 47</div><div class="bigdate">16.–22. November</div></div><div class="stp"><span class="rbtn glass">‹</span><span class="rbtn glass">›</span></div></div><div class="pb solo"><div class="pbl"><span class="ai">✦ 6 Vorschläge · 11 h 30</span><span class="x">Verwerfen</span></div><div class="pbl"><span class="q" style="color:#dcb0f7">◷ 2 Verlängerungen · Mi +2 h, Sa +3 h</span></div><div class="act"><div class="b aib">✦ Alle übernehmen (5)</div><div class="b plain" style="flex:.6">Neu planen</div></div><div class="pbn">Übernimmt die Verlängerung am Mi. Sa bleibt offen: freier Tag, einzeln bestätigen.</div></div><div class="day "><div class="hd"><b>Fr 20.</b><div class="bar"><i class="k-su" style="flex:120"></i><i class="k-fr" style="flex:180"></i></div><span class="n">5 h frei</span></div><div class="tk sug"><span class="nm">✦ Klausur-Wiederholung</span><span class="d">2 h</span><span class="yn y">✓</span><span class="yn n">✕</span></div></div>
+      <div class="day "><div class="hd"><b>Sa 21.</b><span class="n" style="flex:1;text-align:left">kein Arbeitstag</span></div><div class="xgrp"><div class="ext "><span class="xi">◷</span><div class="xt"><b>Sa arbeiten · 14:00 bis 17:00</b> <span class="chip ai">+3 h</span><div class="rs">✦ „Sonst wird die Seminararbeit bis Sonntag nicht fertig.“</div></div><span class="yn y">✓</span><span class="yn n">✕</span></div><div class="tk sug"><span class="arr">↳</span><span class="nm">✦ Seminararbeit Korrektur lesen</span><span class="d">3 h</span><span class="yn y off">✓</span><span class="yn n">✕</span></div></div></div>
+      <div class="spacer"></div><div class="tb glass tbgap"><span class="on"><i class="ico">▦</i>Planen</span><span><i class="ico">☑︎</i>Aufgaben</span><span><i class="ico">⚙︎</i>Einstellungen</span></div><div class="dimov"></div><div class="asheet"><div class="grp"><div class="m"><b>Samstag ist ein freier Tag</b>Am 21. November von 14:00 bis 17:00 arbeiten? Das gilt nur für diesen Samstag.</div><div class="act c">An diesem Tag arbeiten</div></div><div class="grp"><div class="act c">Abbrechen</div></div></div></div>
+    <p class="pc">✓ an einem freien Tag öffnet eine Rückfrage. „Alle übernehmen“ lässt freie Tage aus und sagt das in der Hinweiszeile; ihre Vorschläge bleiben offen. <b>Pro:</b> Ein freier Tag fällt nie durch einen Sammel-Tipp. <b>Contra:</b> ✓ ist bereits die Bestätigung, die Rückfrage fragt dasselbe zweimal. „Alle übernehmen“ übernimmt dann nicht mehr alles; die Zahl in Klammern (5 statt 6) und der Rest müssen erklärt werden. Zwei Regeln für ein Element.</p>
+  </div>
+</div>
+<div class="box">
+  <h3>Empfehlung FT: FT1</h3>
+  <ul>
+    <li><b>Ein freier Tag ist die Verlängerung von 0 auf ein Zeitfenster.</b> Zeile, Gruppe, Fläche im Raster, Marke ◷ im Monat und Abhängigkeit gelten unverändert (Bilder AO1 Woche und Monat zeigen Sa 21. und Sa 28.).</li>
+    <li><b>Wortlaut nennt das Fenster</b> statt nur das Ende („Sa arbeiten · 14:00 bis 17:00 · +3 h“), weil es an einem freien Tag keinen Beginn gibt, auf den sich „bis“ beziehen könnte.</li>
+    <li><b>Gespeichert</b> wird ein <code>DayOverride</code> mit Beginn und Ende nur für dieses Datum. Der Wochenplan (Sa frei) bleibt unverändert; „Auf Wochenplan zurücksetzen“ macht den Tag wieder frei.</li>
+    <li><b>Mittagspause am freien Tag:</b> Liegt das Fenster über der eingestellten Pause, gilt die Pause wie an jedem Arbeitstag; „+3 h“ wäre dann mehr als der Zugewinn an Kapazität (Frage 3). Das Beispiel umgeht das mit einem Fenster am Nachmittag.</li>
+    <li><b>Schwäche von FT1</b> ist benannt: der Sammel-Tipp. Sie wird durch die Hinweiszeile unter den Schaltflächen gemildert, nicht beseitigt. Ob das reicht, ist offen (Frage 2).</li>
+  </ul>
+</div>
+
+<!-- ============================== AW ============================== -->
+<h2><span class="area">AW</span> Zurücknehmen · nach dem Übernehmen</h2>
+<p class="lead">Punkt 5. Nach ✓ ist die Verlängerung eine gespeicherte Abweichung des Tages. Sie lässt sich schon heute im Blatt „Arbeitszeit an diesem Tag“ zurücksetzen. Zu klären ist, ob das genügt und was unmittelbar nach dem Tipp geschieht.</p>
+<div class="grid">
+  <div>
+    <p class="label"><span class="code r">AW1</span><b>Kapsel „Widerrufen“ direkt nach ✓, Marke in der Karte</b> <span class="rec">Empfehlung</span></p>
+    <div class="phone"><div class="status"><span>08:46</span><span>●●● 5G</span></div><div class="topbar"><div class="seg"><span class="on">Tag</span><span>Woche</span><span>Monat</span></div><span class="rbtn glass">＋</span></div><div class="hdr"><div><div class="kick">Heute · KW 47</div><div class="bigdate">Mittwoch, 18. Nov. <span class="car">⌄</span></div></div><div class="stp"><span class="rbtn glass">‹</span><span class="rbtn glass">›</span></div></div><div class="dl">
+        <div class="h">⚑ Deadlines</div>
+        <div class="r"><span class="g">⚑</span><span class="n">Anmeldung Abschlussarbeit<small>Kalender</small></span><span class="w">heute</span></div>
+        <div class="r"><span class="g">⚑</span><span class="n">Pretest vorbereiten<small>P1</small></span><span class="w">morgen</span></div>
+        <div class="r"><span class="g">⚑</span><span class="n">#42 Export überarbeiten<small>GitHub · Epic · P1</small></span><span class="w">Fr 20.</span></div>
+      </div><div class="cap"><div class="top"><b>6 h noch frei</b><span class="chip ai" style="margin:0 auto 0 8px">bis 20:00 · nur heute</span><i class="gear"></i></div><div class="sub">ab 9:00 bis 20:00 · ganzer Tag 6 h frei von 6 h 30</div><div class="bar"><i class="k-pl" style="flex:30"></i><i class="k-su" style="flex:300"></i><i class="k-fr" style="flex:60"></i></div><div class="sub2 ai">✦ 5 h vorgeschlagen · nach dem Übernehmen 1 h frei</div><div class="pb"><div class="pbl"><span class="ai">✦ 5 Vorschläge · 5 h</span><span class="x">Verwerfen</span></div><div class="pbl"><span class="w">⚠︎ 1 nicht eingeplant · 1 Risiko ›</span></div><div class="act"><div class="b aib">✦ Alle übernehmen (5)</div><div class="b plain" style="flex:.6">Neu planen</div></div></div></div><div class="alld">Ganztägig <span class="pill">Projektwoche</span><span class="pill">Buß- und Bettag</span></div><div class="abl2">Ablauf<span>☰&nbsp; Auswählen</span></div><div class="ou"><b>Ohne Uhrzeit</b><span class="g">0 · 0 min</span><span class="g">+3 offen</span><span class="o">1 überfällig</span><span class="c">⌃</span></div><div class="hg h64" style="height:150px;clip-path:inset(-10px -4px 0 -46px);"><div class="hl" style="top:0px"><span>08:00</span></div><div class="hl" style="top:64px"><span>09:00</span></div><div class="hl" style="top:128px"><span>10:00</span></div><div class="hl" style="top:192px"><span>11:00</span></div><div class="ev e" style="top:129px;height:94px;">Seminar<small>10:00 bis 11:30</small></div><div class="ev q" style="top:257px;height:62px;">Mittagspause<small>12:00 bis 13:00</small></div><div class="ev e" style="top:449px;height:62px;">Team-Runde<small>15:00 bis 16:00</small></div><div class="ev p" style="top:529px;height:30px;">Angebot nachfassen · Zeitblock</div><div class="ev ai" style="top:65px;height:46px;"><div class="ait">✦ Literatur sichten<small>09:00 bis 09:45</small></div><span class="yn y">✓</span><span class="yn n">✕</span></div><div class="ev ai" style="top:337px;height:94px;"><div class="ait">✦ Pretest vorbereiten<small>13:15 bis 14:45 · 1 h 30 · P1</small></div><span class="yn y">✓</span><span class="yn n">✕</span></div><div class="ev ai" style="top:561px;height:62px;"><div class="ait">✦ Folien fürs Seminar<small>16:45 bis 17:45 · 1 h</small></div><span class="yn y">✓</span><span class="yn n">✕</span></div></div><div class="cut"></div><div class="spacer"></div><div class="toast glass"><span class="tx">Heute bis 20:00 verlängert<small>Arbeitszeit · gilt nur für diesen Tag</small></span><span class="un">Widerrufen</span></div><div class="tb glass tbgap"><span class="on"><i class="ico">▦</i>Planen</span><span><i class="ico">☑︎</i>Aufgaben</span><span><i class="ico">⚙︎</i>Einstellungen</span></div></div>
+    <p class="pc">Nach ✓ zeigt die Karte die neue Arbeitszeit, die Überschrift springt auf „6 h noch frei“, und die Zeile der Verlängerung ist weg. Eine Kapsel bietet rund sechs Sekunden „Widerrufen“: Das löscht die Abweichung des Tages und stellt die Verlängerung als offenen Vorschlag wieder her. Dauerhaft bleibt nur die kleine Marke „bis 20:00 · nur heute“ neben der Überschrift (Wortlaut wie bei der Pause, L1). <b>Contra:</b> Die Marke ist neu; heute zeigt die Karte eine abweichende Arbeitszeit nur über die Uhrzeiten in der zweiten Zeile.</p>
+  </div>
+  <div>
+    <p class="label"><span class="code r">AW1</span><b>Später: das vorhandene Blatt „Arbeitszeit an diesem Tag“</b> <span class="rec">Empfehlung</span></p>
+    <div class="phone"><div class="status"><span>14:10</span><span>●●● 5G</span></div><div class="under"><div class="topbar"><div class="seg"><span class="on">Tag</span><span>Woche</span><span>Monat</span></div><span class="rbtn glass">＋</span></div><div class="hdr"><div><div class="kick">Heute · KW 47</div><div class="bigdate">Mittwoch, 18. Nov. <span class="car">⌄</span></div></div><div class="stp"><span class="rbtn glass">‹</span><span class="rbtn glass">›</span></div></div><div class="cap"><div class="top"><b>3 h 45 noch frei</b><span class="chip ai" style="margin:0 auto 0 8px">bis 20:00 · nur heute</span><i class="gear"></i></div><div class="sub">ab jetzt · 14:10 bis 20:00 · ganzer Tag 1 h frei von 6 h 30</div><div class="bar"><i class="k-pl" style="flex:330"></i><i class="k-fr" style="flex:60"></i></div></div></div><div class="sheetp"><div class="grab"></div><div class="shead"><span class="gb glass" style="color:var(--blue);padding:5px 9px;font-size:13px">Abbrechen</span><b style="font-size:14px;white-space:nowrap">Arbeitszeit an diesem Tag</b><span class="gb glass" style="color:var(--blue);font-weight:600;padding:5px 9px;font-size:13px">Sichern</span></div><div class="list"><div class="field"><span>Freier Tag</span><span class="tog"></span></div><div class="field"><span>Beginn</span><span class="pick">09:00</span></div><div class="field"><span>Ende</span><span class="pick">20:00</span></div></div><div class="note" style="color:#dcb0f7">✦ Ende 20:00 aus einem übernommenen Vorschlag. Im Wochenplan gilt für Mittwoch 9:00 bis 18:00.</div><div class="list" style="margin-top:8px"><div class="field"><span class="l">Auf Wochenplan zurücksetzen</span></div></div><div class="note">Zeitblöcke nach 18:00 bleiben im Kalender. Sie liegen dann außerhalb der Arbeitszeit und zählen als „zu viel“.</div><div class="spacer"></div></div></div>
+    <p class="pc">Ein Tipp auf die Karte öffnet das vorhandene Blatt (<code>DayOverrideSheet</code>). „Auf Wochenplan zurücksetzen“ ist dort schon vorhanden und nimmt die Verlängerung zurück; Beginn und Ende lassen sich auch anders setzen. Neu sind nur die zwei grauen Hinweiszeilen. <b>Pro:</b> kein zweiter Weg, keine neue Ansicht. <b>Contra:</b> Wer die Marke nicht kennt, findet den Weg nicht ohne Weiteres. <b>Annahme, nicht geprüft:</b> dass bereits übernommene Blöcke nach 18:00 beim Zurücksetzen bestehen bleiben und als Überbuchung zählen, so wie nach jeder manuellen Änderung der Arbeitszeit.</p>
+  </div>
+  <div>
+    <p class="label"><span class="code">AW2</span><b>Dauerhafte Zeile „verlängert · Zurücksetzen“ in der Karte</b></p>
+    <div class="phone"><div class="status"><span>14:10</span><span>●●● 5G</span></div><div class="topbar"><div class="seg"><span class="on">Tag</span><span>Woche</span><span>Monat</span></div><span class="rbtn glass">＋</span></div><div class="hdr"><div><div class="kick">Heute · KW 47</div><div class="bigdate">Mittwoch, 18. Nov. <span class="car">⌄</span></div></div><div class="stp"><span class="rbtn glass">‹</span><span class="rbtn glass">›</span></div></div><div class="dl">
+        <div class="h">⚑ Deadlines</div>
+        <div class="r"><span class="g">⚑</span><span class="n">Anmeldung Abschlussarbeit<small>Kalender</small></span><span class="w">heute</span></div>
+        <div class="r"><span class="g">⚑</span><span class="n">Pretest vorbereiten<small>P1</small></span><span class="w">morgen</span></div>
+        <div class="r"><span class="g">⚑</span><span class="n">#42 Export überarbeiten<small>GitHub · Epic · P1</small></span><span class="w">Fr 20.</span></div>
+      </div><div class="cap"><div class="top"><b>3 h 45 noch frei</b><i class="gear"></i></div><div class="sub">ab jetzt · 14:10 bis 20:00 · ganzer Tag 1 h frei von 6 h 30</div><div class="bar"><i class="k-pl" style="flex:330"></i><i class="k-fr" style="flex:60"></i></div><div class="pb"><div class="ext kept"><span class="xi">◷</span><div class="xt"><b>Heute bis 20:00 verlängert</b> <span class="chip ai">+2 h</span></div><span class="lnk">Zurücksetzen</span></div><div class="act"><div class="b aib">✦ Neu planen</div></div></div></div><div class="alld">Ganztägig <span class="pill">Projektwoche</span><span class="pill">Buß- und Bettag</span></div><div class="abl2">Ablauf<span>☰&nbsp; Auswählen</span></div><div class="ou"><b>Ohne Uhrzeit</b><span class="g">0 · 0 min</span><span class="g">+3 offen</span><span class="o">1 überfällig</span><span class="c">⌃</span></div><div class="hg h64" style="height:150px;clip-path:inset(-10px -4px 0 -46px);"><div class="hl" style="top:0px"><span>08:00</span></div><div class="hl" style="top:64px"><span>09:00</span></div><div class="hl" style="top:128px"><span>10:00</span></div><div class="hl" style="top:192px"><span>11:00</span></div><div class="ev e" style="top:129px;height:94px;">Seminar<small>10:00 bis 11:30</small></div><div class="ev q" style="top:257px;height:62px;">Mittagspause<small>12:00 bis 13:00</small></div><div class="ev e" style="top:449px;height:62px;">Team-Runde<small>15:00 bis 16:00</small></div><div class="ev p" style="top:529px;height:30px;">Angebot nachfassen · Zeitblock</div><div class="ev p" style="top:65px;height:46px;">Literatur sichten<small>09:00 bis 09:45 · Zeitblock</small></div></div><div class="cut"></div><div class="spacer"></div><div class="tb glass tbgap"><span class="on"><i class="ico">▦</i>Planen</span><span><i class="ico">☑︎</i>Aufgaben</span><span><i class="ico">⚙︎</i>Einstellungen</span></div></div>
+    <p class="pc">Die übernommene Verlängerung bleibt als durchgezogen umrandete Zeile in der Karte stehen, bis der Tag vorbei ist, mit „Zurücksetzen“ als Textschaltfläche. <b>Pro:</b> jederzeit sichtbar und mit einem Tipp zurückzunehmen. <b>Contra:</b> rund 46 pt Höhe den ganzen Tag für eine Entscheidung, die getroffen ist; doppelt zum Blatt der Arbeitszeit; eine von Hand gesetzte Abweichung bekäme diese Zeile nicht, obwohl sie dasselbe bewirkt.</p>
+  </div>
+</div>
+<div class="box">
+  <h3>Empfehlung AW: AW1</h3>
+  <ul>
+    <li><b>Zwei Stufen:</b> sofort die Kapsel (ein Tipp, stellt den Vorschlag wieder her), danach das vorhandene Blatt (setzt den Tag auf den Wochenplan). Nach Ablauf der Kapsel ist die Verlängerung eine gewöhnliche Abweichung des Tages; woher sie stammt, steht nur noch im Hinweis des Blatts.</li>
+    <li><b>Kapsel nach „Alle übernehmen“:</b> Die Meldung aus Z3 nennt die Verlängerung mit („5 Vorschläge übernommen · heute bis 20:00“). „Widerrufen“ für die gesamte Sammelaktion ist hier nicht vorgesehen; zurückgenommen wird die Arbeitszeit über das Blatt, die Blöcke einzeln. Das ist eine Lücke gegenüber dem einzelnen ✓ (Frage 5).</li>
+    <li><b>Vorhandene Abweichung:</b> Hat der Tag schon eine eigene Arbeitszeit, bezieht sich die Verlängerung auf diese. ✓ ändert nur Beginn und Ende; eine abweichende Pause des Tages (L1) bleibt. Ändert der Nutzer die Arbeitszeit, während die Verlängerung offen ist, wird sie neu geprüft und entfällt, wenn sie nichts mehr verlängert.</li>
+    <li><b>Herkunft speichern:</b> Der Hinweis „aus einem übernommenen Vorschlag“ braucht ein Kennzeichen an der Abweichung. Ohne das Kennzeichen entfällt nur die violette Hinweiszeile; der Rest von AW1 funktioniert unverändert.</li>
+    <li><b>Technik:</b> <code>UndoCapsule</code> und <code>DayOverrideSheet</code> sind vorhanden; die Marke ist eine Kapsel in der Kopfzeile der Kapazitätskarte.</li>
+  </ul>
+</div>
+
+<!-- ============================== § ============================== -->
+<h2><span class="area" style="background:#636366">§</span> Empfehlung, Folgen für das Design-Dokument und offene Fragen</h2>
+<div class="box">
+  <h3>Empfehlung: AO1 + AB1 + AR1 + FT1 + AW1</h3>
+  <ul>
+    <li><b>Bildsprache unverändert:</b> violett gestrichelt, ✓ / ✕, Grund als „✦ „…““. Neu sind genau drei Dinge: die Zeile mit Uhr-Symbol, die Gruppe mit „↳“ und die schraffierte Fläche im Raster.</li>
+    <li><b>Ein Grundsatz trägt alle fünf Entscheidungen:</b> Länger zu arbeiten wird nie nebenbei entschieden. Deshalb ist ✓ an abhängigen Blöcken gesperrt (AB1), deshalb sagt „Alle übernehmen“ in einer eigenen Zeile, dass es Verlängerungen einschließt, und deshalb gibt es nach ✓ eine Kapsel zum Widerrufen (AW1).</li>
+    <li><b>Verworfen:</b> AO2 (alles in der Leiste), AO3 (nur im Ergebnisblatt), AB2 (✓ am Block nimmt die Verlängerung mit), AR2 (nur Linien), FT2 (Rückfrage am freien Tag), AW2 (dauerhafte Zeile).</li>
+    <li><b>Was die Empfehlung nicht belegt:</b> Sie folgt aus den freigegebenen Mockups, dem Wortlaut von #72 und der Lektüre des Codes. Ob die Zeile in der ohnehin hohen Kapazitätskarte wahrgenommen wird und ob das abgeblendete ✓ verstanden wird, zeigt erst das Gerät.</li>
+  </ul>
+</div>
+<div class="box warn">
+  <h3>Änderungen an <code>2026-11-17-phase-2b-design.md</code>, falls die Empfehlungen freigegeben werden</h3>
+  <ul>
+    <li><b>§8.2 Ausgabe:</b> Die Antwort bekommt ein Feld für Verlängerungen (Tag, neuer Beginn und/oder neues Ende, Grund). Die zusätzliche Zeit rechnet Tagwerk selbst.</li>
+    <li><b>§8.2 Lokale Prüfung:</b> zwei Durchgänge. Erst mit der bisherigen Arbeitszeit; was an einem Tag mit Verlängerung nur an Arbeitszeit, freiem Tag oder Kapazität scheitert, wird mit der vorgeschlagenen Arbeitszeit erneut geprüft und gilt dann als abhängig. Eine Verlängerung ohne wichtigen abhängigen Vorschlag, in der Vergangenheit, außerhalb des Zeitraums oder ohne Zugewinn wird nicht gezeigt.</li>
+    <li><b>§8.2 Annahme:</b> ✓ an der Verlängerung schreibt einen <code>DayOverride</code> für das Datum; „Alle übernehmen“ nimmt Verlängerungen vor Blöcken und Zuordnungen; ✕ verschiebt abhängige Vorschläge nach „Nicht eingeplant“.</li>
+    <li><b>§11.2:</b> <code>DayOverride</code> kann außer von Hand und über <code>set_day_hours</code> auch durch einen angenommenen Planungsvorschlag entstehen; optional ein Kennzeichen für die Herkunft (AW1). Freie Tage: „Die KI plant dort nichts ein“ gilt weiter, solange keine Verlängerung angenommen ist.</li>
+    <li><b>§6.1, V1:</b> Kapazitätskarte mit Strich am bisherigen Arbeitsende und Marke „… · nur heute“ bei abweichender Arbeitszeit.</li>
+    <li><b>§13.15 Nr. 3:</b> Das Raster bekommt eine Hintergrundebene für vorgeschlagene Arbeitszeit (AR1).</li>
+    <li><b>§8.4:</b> unverändert. Kein Bild löst einen KI-Aufruf ohne Tipp aus; die Arbeitszeit ändert sich nur durch ✓, „Verlängern und übernehmen“ oder „Alle übernehmen“.</li>
+  </ul>
+</div>
+<div class="box neutral">
+  <h3>Offene Fragen (7)</h3>
+  <ol>
+    <li><b>AB:</b> Soll „Alle übernehmen“ Verlängerungen einschließen (gezeigt, mit Hinweiszeile), oder nur übernehmen, was ohne Verlängerung passt, und die Verlängerungen samt ihren Vorschlägen offen lassen?</li>
+    <li><b>FT:</b> Reicht für freie Tage dasselbe Muster (FT1), oder sollen sie von „Alle übernehmen“ ausgenommen sein (FT2 ohne Rückfrage wäre ein Mittelweg)?</li>
+    <li><b>AO:</b> Bedeutet „+2 h“ die zusätzliche Arbeitszeit (gezeigt) oder den Zugewinn an Kapazität nach Pause und Puffer? Beides stimmt nur überein, wenn in der zusätzlichen Zeit weder Pause noch Termine liegen.</li>
+    <li><b>Grenzen:</b> Wie weit darf die KI gehen? Vorschlag zur Diskussion: nicht vor 6:00 und nicht nach 22:00, höchstens +3 h je Tag, höchstens ein freier Tag je Woche. Feste Werte oder Einstellung? Dazu fehlt jede Vorgabe; die Zahlen sind eine Setzung, keine Ableitung.</li>
+    <li><b>AW:</b> Braucht „Alle übernehmen“ ein eigenes „Widerrufen“ für die enthaltenen Verlängerungen, oder genügt das Blatt der Arbeitszeit?</li>
+    <li><b>Abschalten:</b> Soll es in den Einstellungen einen Schalter „KI darf längere Tage vorschlagen“ geben? Ohne ihn erscheinen Verlängerungen immer dann, wenn das Modell sie für nötig hält.</li>
+    <li><b>AB:</b> Was geschieht mit einem Block, der nur teilweise in der zusätzlichen Zeit liegt (17:30 bis 18:30)? Gezeigt ist die einfache Regel: Er gilt als abhängig. Die Alternative wäre, ihn lokal auf 18:00 zu kürzen; das veränderte aber einen Vorschlag, ohne dass das Modell es weiß.</li>
+  </ol>
+</div>
+<div class="box neutral">
+  <h3>Was diese Mockups nicht zeigen</h3>
+  <ul>
+    <li>Früheren Beginn im Raster (Fläche vor 9:00), eine Verlängerung an einem Tag mit vorhandener Abweichung und mehrere Verlängerungen im Ergebnisblatt von Woche und Monat; die Regeln dazu stehen als Text.</li>
+    <li>Bewegung (Fläche verschwindet, Blöcke werden frei, Kapsel), Haptik, helles Erscheinungsbild, große Dynamic-Type-Stufen und VoiceOver.</li>
+    <li>Die Aktionskarte von <code>set_day_hours</code> im Chat (§8.3); sie bleibt unberührt und ist ein zweiter, unabhängiger Weg zur selben Abweichung.</li>
+    <li>Wie zuverlässig das Modell Verlängerungen nur für wichtige Aufgaben vorschlägt. Die lokale Prüfung fängt Verlängerungen ohne wichtigen abhängigen Vorschlag ab; ob das Modell sie sinnvoll dosiert, ist eine Frage der Anweisung und nicht Gegenstand dieser Bilder.</li>
+    <li>Aussagen zu <code>TimelineCanvas.shownRange</code>, <code>PlanViolation.Reason</code>, <code>DayOverrideSheet</code> und <code>UndoCapsule</code> stammen aus der Lektüre des Codes; nichts davon ist am Gerät geprüft. Höhenangaben in pt sind aus den Mockup-Maßen geschätzt.</li>
+  </ul>
+</div>
+
+</body>
+</html>

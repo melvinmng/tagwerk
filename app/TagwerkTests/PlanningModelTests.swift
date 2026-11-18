@@ -90,12 +90,42 @@ struct PlanningModelTests {
         #expect(day?.links["e"] == id("Fahrrad"))
     }
 
+    @Test func planInput_matchesCapacity() async {
+        settings.bufferMinutes = 10
+        planStore.assign(id("Fahrrad"), to: today)
+        calendarStore.storedEvents = [
+            CalendarEvent(id: "busy", externalID: nil, calendarID: "work", title: "Vorlesung",
+                          start: at(18, 10), end: at(18, 11), isAllDay: false, url: nil, isBusy: true, version: "1"),
+            CalendarEvent(id: "linked", externalID: nil, calendarID: "work", title: "Login",
+                          start: at(18, 14), end: at(18, 15), isAllDay: false, url: nil, isBusy: true, version: "1"),
+        ]
+        blocks.links.link(eventID: "linked", to: id("Login", .github))
+        let model = await model()
+        let day = try? #require(model.days.first { $0.day == today })
+        let input = try? #require(day?.planInput)
+        #expect(input?.availableMinutes == day?.capacity.availableMinutes)
+        #expect(input?.plannedMinutes == day?.capacity.plannedMinutes)
+        #expect(input?.busy == [600..<660])
+        #expect(input?.blocks == [840..<900])
+        #expect(input?.countedTaskMinutes == ["local:Fahrrad": 30])
+    }
+
     @Test func capacity_unlinkedEventIsBusy() async {
         calendarStore.storedEvents = [CalendarEvent(id: "e", externalID: nil, calendarID: "work", title: "Vorlesung",
                                                     start: at(18, 10), end: at(18, 11), isAllDay: false, url: nil,
                                                     isBusy: true, version: "1")]
         let model = await model()
         #expect(model.days.first { $0.day == today }?.capacity.availableMinutes == 420)
+    }
+
+    @Test func unplanned_includesLeftoversFromPastDays() async {
+        planStore.assign(id("Fahrrad"), to: PlanDay(year: 2026, month: 11, day: 16))
+        planStore.assign(id("Abgabe"), to: today)
+        let model = await model()
+        model.scope = .week
+        await model.reload()
+        #expect(Set(model.unplanned.map(\.title)) == ["Fahrrad", "Login"])
+        #expect(model.unplannedSections(search: "Fahr").other.map(\.title) == ["Fahrrad"])
     }
 
     @Test func unplanned_excludesAssignedAndCompleted() async {
@@ -174,6 +204,215 @@ struct PlanningModelTests {
         let day = try #require(model.days.first)
         #expect(day.openToday.map(\.id.rawValue) == ["k"])
         #expect(day.capacity.plannedMinutes == 0)
+    }
+
+    private func addTask(_ title: String, estimate: Int?) {
+        local.tasks.append(TaskItem(id: id(title), title: title, notes: nil, due: nil, priority: nil, estimateMinutes: estimate,
+                                    isCompleted: false, container: TaskContainer(id: "local", name: "Lokal", colorHex: nil),
+                                    url: nil, version: "1", editableFields: []))
+    }
+
+    @Test func toSchedule_listsTasksWithBlocksBelowEstimate() async throws {
+        addTask("Lesen", estimate: 180)
+        addTask("Fertig", estimate: 60)
+        await taskList.reload()
+        let lesen = try #require(taskList.items.first { $0.title == "Lesen" })
+        let fertig = try #require(taskList.items.first { $0.title == "Fertig" })
+        _ = try blocks.createBlock(for: lesen, start: at(17, 9), minutes: 60)
+        _ = try blocks.createBlock(for: fertig, start: at(18, 14), minutes: 60)
+        let model = await model()
+        #expect(model.toSchedule.map(\.title) == ["Lesen"])
+        #expect(model.sessionProgress[lesen.id] == PlanningModel.SessionProgress(blocked: 60, estimate: 180))
+        #expect(model.sessionProgress[lesen.id]?.remaining == 120)
+    }
+
+    @Test func recurringTask_countsOnlyBlocksOfTheCurrentPeriod() async throws {
+        accessStore.openRecords = [ReminderRecord(id: "k", title: "Training", notes: nil, due: DueDate(year: 2026, month: 11, day: 18),
+                                                  ekPriority: 0, isCompleted: false, listID: "l", lastModified: nil,
+                                                  recurrence: Recurrence(rule: .daily(interval: 1), start: PlanDay(year: 2026, month: 11, day: 10),
+                                                                         end: nil, count: nil))]
+        accessStore.accessState = .fullAccess
+        let reminders = FakeTaskProvider(source: .reminders, tasks: [makeTask("k", source: .reminders, due: DueDate(year: 2026, month: 11, day: 18))])
+        await taskList.register(reminders)
+        RecurringEffortStore(context: container.mainContext).setForAll(60, reminderID: "k", from: PlanDay(year: 2026, month: 11, day: 10))
+        let task = try #require(taskList.items.first { $0.id.source == .reminders })
+        _ = try blocks.createBlock(for: task, start: at(17, 9), minutes: 60)
+        var model = await model()
+        #expect(model.toSchedule.isEmpty)  // yesterday's session belongs to yesterday's occurrence
+        _ = try blocks.createBlock(for: task, start: at(18, 15), minutes: 30)
+        model = await self.model()
+        #expect(model.toSchedule.map(\.id) == [task.id])
+        #expect(model.sessionProgress[task.id]?.remaining == 30)
+    }
+
+    /// A daily recurring reminder "Blumen" (due today) with the given recurring effort; returns the task.
+    private func addDailyReminder(effort: Int?) async throws -> TaskItem {
+        accessStore.openRecords = [ReminderRecord(id: "b", title: "Blumen", notes: nil, due: DueDate(year: 2026, month: 11, day: 18),
+                                                  ekPriority: 0, isCompleted: false, listID: "l", lastModified: nil,
+                                                  recurrence: Recurrence(rule: .daily(interval: 1), start: PlanDay(year: 2026, month: 11, day: 10),
+                                                                         end: nil, count: nil))]
+        accessStore.accessState = .fullAccess
+        let reminders = FakeTaskProvider(source: .reminders, tasks: [makeTask("b", source: .reminders, due: DueDate(year: 2026, month: 11, day: 18))])
+        await taskList.register(reminders)
+        if let effort {
+            RecurringEffortStore(context: container.mainContext).setForAll(effort, reminderID: "b", from: PlanDay(year: 2026, month: 11, day: 10))
+        }
+        return try #require(taskList.items.first { $0.id.source == .reminders })
+    }
+
+    @Test func dropTask_recurringReminder_usesRecurringEffort() async throws {
+        let task = try await addDailyReminder(effort: 15)
+        #expect(task.estimateMinutes == nil)
+        let model = await model()
+        await model.dropTask(key: task.id.key, atMinutes: 13 * 60, on: today)
+        let block = try #require(calendarStore.storedEvents.first)
+        #expect(block.start == at(18, 13))
+        #expect(block.end == at(18, 13, 15))
+    }
+
+    @Test func suggestedBlockMinutes_recurringReminder_usesEffortOfTheDay() async throws {
+        let task = try await addDailyReminder(effort: 15)
+        let tomorrow = today.adding(days: 1, calendar: calendar)
+        RecurringEffortStore(context: container.mainContext).setForDay(45, reminderID: "b", day: tomorrow)
+        let model = await model()
+        #expect(model.suggestedBlockMinutes(for: task, on: today) == 15)
+        #expect(model.suggestedBlockMinutes(for: task, on: tomorrow) == 45)
+    }
+
+    @Test func suggestedBlockMinutes_recurring_ignoresBlocksOfOtherOccurrences() async throws {
+        let task = try await addDailyReminder(effort: 15)
+        let tomorrow = today.adding(days: 1, calendar: calendar)
+        _ = try blocks.createBlock(for: task, start: at(17, 9), minutes: 15)
+        _ = try blocks.createBlock(for: task, start: at(19, 9), minutes: 15)
+        let model = await model()
+        #expect(model.suggestedBlockMinutes(for: task, on: today) == 15)  // yesterday and tomorrow are other occurrences
+        _ = try blocks.createBlock(for: task, start: at(18, 9), minutes: 15)
+        let reloaded = await self.model()
+        #expect(reloaded.suggestedBlockMinutes(for: task, on: today.adding(days: 2, calendar: calendar)) == 15)
+        #expect(reloaded.suggestedBlockMinutes(for: task, on: tomorrow) == 30)  // tomorrow's occurrence is planned: default
+    }
+
+    @Test func suggestedBlockMinutes_recurring_subtractsBlocksOfTheSameOccurrence() async throws {
+        let task = try await addDailyReminder(effort: 60)
+        _ = try blocks.createBlock(for: task, start: at(18, 9), minutes: 30)
+        let model = await model()
+        #expect(model.suggestedBlockMinutes(for: task, on: today) == 30)
+    }
+
+    @Test func suggestedBlockMinutes_recurringWithoutEffort_usesDefault() async throws {
+        let task = try await addDailyReminder(effort: nil)
+        let model = await model()
+        #expect(model.suggestedBlockMinutes(for: task, on: today) == 30)
+    }
+
+    @Test func duplicateBlock_recurring_usesRemainingRecurringEffort() async throws {
+        let task = try await addDailyReminder(effort: 60)
+        let block = try blocks.createBlock(for: task, start: at(18, 14), minutes: 30)
+        let model = await model()
+        let original = try #require(calendarStore.event(id: block.id))
+        #expect(model.duplicateTarget(for: original)?.count == 30)
+    }
+
+    @Test func duplicateBlock_goesToNextFreeSlotWithRemainingTime() async throws {
+        addTask("Lesen", estimate: 180)
+        await taskList.reload()
+        let lesen = try #require(taskList.items.first { $0.title == "Lesen" })
+        let block = try blocks.createBlock(for: lesen, start: at(18, 14), minutes: 60)
+        let model = await model()
+        let original = try #require(calendarStore.event(id: block.id))
+        #expect(model.duplicateTarget(for: original) == 900..<1020)
+        await model.duplicateBlock(original)
+        let copies = calendarStore.storedEvents.filter { $0.id != block.id }
+        #expect(copies.map(\.start) == [at(18, 15)])
+        #expect(copies.first?.end == at(18, 17))
+        #expect(model.lastDuplicate != nil)
+        await model.undoDuplicate()
+        #expect(calendarStore.storedEvents.map(\.id) == [block.id])
+    }
+
+    @Test func duplicateBlock_fullyPlanned_usesDefaultDuration_andBuffer() async throws {
+        settings.bufferMinutes = 10
+        settings.defaultTaskMinutes = 30
+        addTask("Kurz", estimate: 60)
+        await taskList.reload()
+        let task = try #require(taskList.items.first { $0.title == "Kurz" })
+        let block = try blocks.createBlock(for: task, start: at(18, 14), minutes: 60)
+        let model = await model()
+        let original = try #require(calendarStore.event(id: block.id))
+        // Estimate used up by the first block → 30 min; 10 min distance to the original (ends 15:00).
+        #expect(model.duplicateTarget(for: original) == 910..<940)
+    }
+
+    @Test func moveTask_takesOnlyBlocksOfTheOriginDay() async throws {
+        addTask("Lesen", estimate: 180)
+        await taskList.reload()
+        let lesen = try #require(taskList.items.first { $0.title == "Lesen" })
+        let onOrigin = try blocks.createBlock(for: lesen, start: at(19, 9), minutes: 60)
+        let elsewhere = try blocks.createBlock(for: lesen, start: at(20, 9), minutes: 60)
+        planStore.assign(lesen.id, to: PlanDay(year: 2026, month: 11, day: 19))
+        let model = await model()
+        model.scope = .week
+        await model.reload()
+
+        await model.moveTask(lesen.id, to: PlanDay(year: 2026, month: 11, day: 23))
+
+        #expect(planStore.assignment(for: lesen.id) == PlanDay(year: 2026, month: 11, day: 23))
+        #expect(calendarStore.event(id: onOrigin.id)?.start == at(23, 9))
+        #expect(calendarStore.event(id: elsewhere.id)?.start == at(20, 9))
+        #expect(model.lastMove?.movedBlocks == 1)
+        #expect(model.pendingBlockDecision == nil)
+
+        await model.undoMove()
+        #expect(planStore.assignment(for: lesen.id) == PlanDay(year: 2026, month: 11, day: 19))
+        #expect(calendarStore.event(id: onOrigin.id)?.start == at(19, 9))
+    }
+
+    @Test func moveTask_occupiedTime_usesNextFreeSlot() async throws {
+        addTask("Lesen", estimate: 60)
+        await taskList.reload()
+        let lesen = try #require(taskList.items.first { $0.title == "Lesen" })
+        let block = try blocks.createBlock(for: lesen, start: at(19, 9), minutes: 60)
+        planStore.assign(lesen.id, to: PlanDay(year: 2026, month: 11, day: 19))
+        calendarStore.storedEvents.append(CalendarEvent(id: "busy", externalID: nil, calendarID: "work", title: "Termin",
+                                                        start: at(20, 9), end: at(20, 10), isAllDay: false, url: nil,
+                                                        isBusy: true, version: "1"))
+        let model = await model()
+        model.scope = .week
+        await model.reload()
+
+        await model.moveTask(lesen.id, to: PlanDay(year: 2026, month: 11, day: 20))
+
+        #expect(calendarStore.event(id: block.id)?.start == at(20, 10))
+    }
+
+    @Test func stepSelectedDay_crossesIntoNextMonth() async {
+        let model = await model()
+        model.scope = .month
+        model.selectedDay = PlanDay(year: 2026, month: 11, day: 30)
+        model.stepSelectedDay(1)
+        #expect(model.monthSelection == PlanDay(year: 2026, month: 12, day: 1))
+        #expect(model.anchor.month == 12)
+        model.stepSelectedDay(-1)
+        #expect(model.monthSelection == PlanDay(year: 2026, month: 11, day: 30))
+        #expect(model.anchor.month == 11)
+    }
+
+    @Test func recurringReminderWithBlock_countsItsTimeOnce() async throws {
+        accessStore.openRecords = [ReminderRecord(id: "k", title: "Training", notes: nil, due: DueDate(year: 2026, month: 11, day: 18),
+                                                  ekPriority: 0, isCompleted: false, listID: "l", lastModified: nil,
+                                                  recurrence: Recurrence(rule: .daily(interval: 1), start: PlanDay(year: 2026, month: 11, day: 10),
+                                                                         end: nil, count: nil))]
+        accessStore.accessState = .fullAccess
+        let reminders = FakeTaskProvider(source: .reminders, tasks: [makeTask("k", source: .reminders, due: DueDate(year: 2026, month: 11, day: 18))])
+        await taskList.register(reminders)
+        RecurringEffortStore(context: container.mainContext).setForAll(120, reminderID: "k", from: PlanDay(year: 2026, month: 11, day: 10))
+        let task = try #require(taskList.items.first { $0.id.source == .reminders })
+        _ = try blocks.createBlock(for: task, start: at(18, 14), minutes: 120)
+        let model = await model()
+        let day = try #require(model.days.first)
+        // 480 working minutes; the 120 reserved are covered by the block, which counts as planned.
+        #expect(day.capacity.availableMinutes == 480)
+        #expect(day.capacity.plannedMinutes == 120)
     }
 
     @Test func assign_afterDue_marksPastDue() async {
@@ -708,9 +947,19 @@ struct PlanningModelTests {
         _ = try blocks.createBlock(for: task, start: at(19, 9), minutes: 60)
         #expect(model.suggestedBlockMinutes(for: task) == 90)
         _ = try blocks.createBlock(for: task, start: at(19, 14), minutes: 120)
-        #expect(model.suggestedBlockMinutes(for: task) == 150)  // fully blocked: the estimate again
+        #expect(model.suggestedBlockMinutes(for: task) == 30)  // fully blocked: the default duration
         let noEstimate = try #require(taskList.items.first { $0.title == "Fahrrad" })
         #expect(model.suggestedBlockMinutes(for: noEstimate) == 30)  // default duration
+    }
+
+    @Test func suggestedBlockMinutes_longEstimate_cappedByLargestFreeSlotFromNow() async throws {
+        local.tasks.append(TaskItem(id: id("Thesis"), title: "Thesis", notes: nil, due: nil, priority: nil, estimateMinutes: 600,
+                                    isCompleted: false, container: TaskContainer(id: "local", name: "Lokal", colorHex: nil),
+                                    url: nil, version: "1", editableFields: []))
+        let model = await model()
+        let task = try #require(taskList.items.first { $0.title == "Thesis" })
+        // Today from 10:00: 10–12 and 13–18 are free (lunch 12–13) → largest slot 300 min.
+        #expect(model.suggestedBlockMinutes(for: task, on: today) == 300)
     }
 
     @Test func lunchOfOneDay_changesCapacityAndTimeline() async throws {

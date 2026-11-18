@@ -52,6 +52,8 @@ struct SetupModelTests {
         model.skip()
         #expect(model.current == .github)
         model.skip()
+        #expect(model.current == .chatGPT)
+        model.skip()
         #expect(model.isFinished)
         #expect(settings.selectedCalendarIDs == ["work"])
     }
@@ -79,9 +81,7 @@ struct SetupModelTests {
 
     @Test func finish_marksSetupCompleted() {
         let model = SetupModel(store: store, settings: settings)
-        model.skip()
-        model.skip()
-        model.skip()
+        for _ in 0..<4 { model.skip() }
         #expect(!settings.setupCompleted)
         model.skip()
         #expect(model.isFinished)
@@ -96,11 +96,45 @@ struct SetupModelTests {
         #expect(model.current == .github)
         model.markSignedIn()
         #expect(model.results[.github] == .fullAccess)
+        #expect(model.current == .chatGPT)
+    }
+
+    @Test func chatGPTStep_markSignedIn_recordsAndFinishes() async {
+        let model = SetupModel(store: store, settings: settings)
+        for _ in 0..<4 { model.skip() }
+        #expect(model.current == .chatGPT)
+        model.markSignedIn()
+        #expect(model.results[.chatGPT] == .fullAccess)
+        #expect(model.isFinished)
+        #expect(settings.setupCompleted)
+    }
+
+    @Test func chatGPTStep_skip_isMarkedNotSignedIn() async {
+        let model = SetupModel(store: store, settings: settings)
+        for _ in 0..<5 { model.skip() }
+        #expect(model.results[.chatGPT] == .denied)
+        #expect(SetupStep.chatGPT.notDoneLabel == "nicht angemeldet")
+        #expect(SetupStep.reminders.notDoneLabel == "nicht erlaubt")
+        #expect(model.isFinished)
+    }
+
+    @Test func chatGPTStep_alreadySignedIn_isDoneAndSkipped() async {
+        let model = SetupModel(store: store, settings: settings, isChatGPTSignedIn: true)
+        for _ in 0..<4 { model.skip() }
+        #expect(model.results[.chatGPT] == .fullAccess)
+        #expect(model.isFinished)
+    }
+
+    @Test func chatGPTSignInKnownLater_whileOnStep_finishes() async {
+        let model = SetupModel(store: store, settings: settings)
+        for _ in 0..<4 { model.skip() }
+        model.noteChatGPTSignedIn()
+        #expect(model.results[.chatGPT] == .fullAccess)
         #expect(model.isFinished)
     }
 
     @Test func steps_haveGermanTitles() {
-        #expect(SetupStep.allCases.map(\.title) == ["Erinnerungen", "Kalender", "Plan-Kalender", "GitHub"])
+        #expect(SetupStep.allCases.map(\.title) == ["Erinnerungen", "Kalender", "Plan-Kalender", "GitHub", "ChatGPT"])
     }
 
     @Test func planCalendarStep_createsTagwerkCalendar() async {

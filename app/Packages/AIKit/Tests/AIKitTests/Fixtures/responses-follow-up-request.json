@@ -1,0 +1,104 @@
+{
+  "input": [
+    {
+      "content": [
+        {
+          "text": "Lege die Aufgabe „Testaufgabe“ für morgen mit Priorität P2 an und verschiebe die Aufgabe local-7 auf übermorgen.",
+          "type": "input_text"
+        }
+      ],
+      "role": "user"
+    },
+    {
+      "arguments": "{\"due\": \"2026-11-18\", \"priority\": \"P2\", \"title\": \"Testaufgabe\"}",
+      "call_id": "call_fixture1",
+      "name": "create_task",
+      "type": "function_call"
+    },
+    {
+      "arguments": "{\"due\": \"2026-11-19\", \"task_id\": \"local-7\"}",
+      "call_id": "call_fixture2",
+      "name": "reschedule_task",
+      "type": "function_call"
+    },
+    {
+      "call_id": "call_fixture1",
+      "output": "{\"ok\":true}",
+      "type": "function_call_output"
+    },
+    {
+      "call_id": "call_fixture2",
+      "output": "{\"ok\":true}",
+      "type": "function_call_output"
+    }
+  ],
+  "instructions": "Du verwaltest Aufgaben in einer App. Heute ist 2026-11-17. Erledige Bitten über die Funktionen; rufe mehrere Funktionen parallel auf, wenn es passt.",
+  "model": "gpt-6.2-sol",
+  "store": false,
+  "stream": true,
+  "tools": [
+    {
+      "description": "Creates a local task.",
+      "name": "create_task",
+      "parameters": {
+        "additionalProperties": false,
+        "properties": {
+          "due": {
+            "description": "YYYY-MM-DD",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "priority": {
+            "enum": [
+              "P1",
+              "P2",
+              "P3",
+              "P4",
+              null
+            ],
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "title": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "title",
+          "due",
+          "priority"
+        ],
+        "type": "object"
+      },
+      "strict": true,
+      "type": "function"
+    },
+    {
+      "description": "Moves the due date of an existing task.",
+      "name": "reschedule_task",
+      "parameters": {
+        "additionalProperties": false,
+        "properties": {
+          "due": {
+            "description": "YYYY-MM-DD",
+            "type": "string"
+          },
+          "task_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "task_id",
+          "due"
+        ],
+        "type": "object"
+      },
+      "strict": true,
+      "type": "function"
+    }
+  ]
+}

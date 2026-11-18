@@ -7,6 +7,8 @@ public enum GitHubAPIError: Error, Equatable, Sendable {
     case http(Int)
     case graphQL(String)
     case decoding(String)
+    /// A repository name that is not "owner/name", or a path that leaves the repository.
+    case invalidRepository
 }
 
 /// Authenticated access to the GitHub GraphQL and REST APIs.

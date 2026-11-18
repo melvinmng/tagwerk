@@ -34,6 +34,27 @@ struct GitHubTaskProviderWriteTests {
         return edit
     }
 
+    @Test func addComment_postsToIssueOfTheTask() async throws {
+        let provider = makeProvider()
+        _ = try await loadItem(provider)
+        transport.enqueueJSON("/repos/beispiel/app/issues/1/comments", status: 201, #"{"id":1}"#)
+        try await provider.addComment("Erledigt bis Freitag.", to: issueID)
+        let request = try #require(transport.requests.last)
+        #expect(request.httpMethod == "POST")
+        #expect(request.url?.path == "/repos/beispiel/app/issues/1/comments")
+        #expect(request.bodyString == #"{"body":"Erledigt bis Freitag."}"#)
+    }
+
+    @Test func issueReference_namesRepositoryAndNumber() async throws {
+        let provider = makeProvider()
+        _ = try await loadItem(provider)
+        let reference = try #require(provider.issueReference(for: issueID))
+        #expect(reference.repository == "beispiel/app")
+        #expect(reference.number == 1)
+        #expect(reference.nodeID == "I_1")
+        #expect(provider.issueReference(for: TaskID(source: .github, rawValue: "I_unknown")) == nil)
+    }
+
     @Test func complete_closesIssueBeforeSettingDoneInAllProjects() async throws {
         let provider = makeProvider()
         let item = try await loadItem(provider)

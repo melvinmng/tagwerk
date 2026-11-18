@@ -299,6 +299,49 @@ final class TaskListModel {
     }
 
     /// Writes with the version of the displayed item. A conflict never overwrites: the list reloads instead.
+    // MARK: Writes with results (assistant functions)
+
+    /// Applies `edit` to the displayed version and throws instead of showing an error.
+    @discardableResult
+    func applyReturning(_ edit: TaskEdit, to id: TaskID) async throws -> TaskItem {
+        guard let provider = provider(for: id.source) else { throw TaskWriteError.accessDenied }
+        guard let item = items.first(where: { $0.id == id }) else { throw TaskWriteError.notFound }
+        do {
+            let updated = try await provider.apply(edit, to: id, expectedVersion: item.version)
+            nextGeneration(for: id.source)
+            if updated.isCompleted {
+                items.removeAll { $0.id == id }
+                if !item.isCompleted { await onCompletionChanged?(id, true) }
+            } else {
+                replace(updated)
+            }
+            return updated
+        } catch TaskWriteError.conflict(let current) {
+            await reload(only: [id.source])
+            throw TaskWriteError.conflict(current: current)
+        }
+    }
+
+    func createReturning(_ draft: TaskDraft, in source: TaskSource) async throws -> TaskItem {
+        guard let provider = provider(for: source) else { throw TaskWriteError.accessDenied }
+        let created = try await provider.create(draft)
+        replace(created)
+        nextGeneration(for: source)
+        return created
+    }
+
+    func completeReturning(_ id: TaskID) async throws -> TaskItem {
+        var edit = TaskEdit()
+        edit.isCompleted = .set(true)
+        return try await applyReturning(edit, to: id)
+    }
+
+    func rescheduleReturning(_ id: TaskID, to due: DueDate?) async throws -> TaskItem {
+        var edit = TaskEdit()
+        edit.due = .set(due)
+        return try await applyReturning(edit, to: id)
+    }
+
     private func write(_ edit: TaskEdit, to id: TaskID, version: String? = nil) async -> TaskItem? {
         guard let provider = provider(for: id.source),
               let expected = version ?? items.first(where: { $0.id == id })?.version else { return nil }

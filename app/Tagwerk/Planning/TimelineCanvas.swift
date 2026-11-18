@@ -40,6 +40,9 @@ struct TimelineCanvas: View {
     static let lineInset: CGFloat = 8
     private let labelWidth: CGFloat = 44
 
+    @Environment(AppEnvironment.self) private var environment
+    @State private var openSuggestion: PlanSuggestion?
+    @State private var editingTask: TaskItem?
     @State private var selectedID: String?
     /// When the hold selected an entry; the release of that hold must not count as a tap.
     @State private var selectedAt = Date.distantPast
@@ -77,6 +80,39 @@ struct TimelineCanvas: View {
                         .offset(x: labelWidth + 6 + CGFloat(columns[index]) * columnWidth, y: y(range.lowerBound, shown))
                         .zIndex(session?.id == entry.id ? 2 : (selectedID == entry.id ? 1 : 0))
                 }
+                // Mockup AR1: the added time of a suggested longer day, hatched purple.
+                ForEach(extensionRanges, id: \.lowerBound) { range in
+                    Rectangle()
+                        .fill(Color.purple.opacity(0.10))
+                        .overlay { Rectangle().strokeBorder(Color.purple.opacity(0.5), style: StrokeStyle(lineWidth: 1, dash: [3, 3])) }
+                        .frame(width: width, height: height(range.count))
+                        .offset(x: labelWidth + 6, y: y(range.lowerBound, shown))
+                        .allowsHitTesting(false)
+                }
+                // Mockup VA1: where a changed suggestion was, faded, until the next change.
+                ForEach(changedFrom, id: \.id) { suggestion in
+                    if let start = suggestion.previousPosition?.startMinutes, let minutes = suggestion.previousPosition?.minutes {
+                        RoundedRectangle(cornerRadius: 7)
+                            .strokeBorder(Color.purple.opacity(0.35), style: StrokeStyle(lineWidth: 1, dash: [2, 3]))
+                            .frame(width: width - 2, height: max(22, height(minutes)))
+                            .offset(x: labelWidth + 6, y: y(start, shown))
+                            .allowsHitTesting(false)
+                    }
+                }
+                ForEach(blockSuggestions) { suggestion in
+                    let range = Self.range(of: suggestion)
+                    SuggestionBlock(suggestion: suggestion, timeText: timeText(range),
+                                    acceptEnabled: !SuggestionText.isWaiting(suggestion, planning: model),
+                                    onOpen: { openSuggestion = suggestion },
+                                    onAccept: { Task { await environment.planner.accept(suggestion) } },
+                                    onDismiss: { Task { await environment.planner.dismiss(suggestion) } },
+                                    onOpenTask: model.taskList.items.first { $0.id.key == suggestion.taskKey }.map { task in
+                                        { editingTask = task }
+                                    })
+                        .frame(width: width - 2, height: max(22, height(range.count)))
+                        .offset(x: labelWidth + 6, y: y(range.lowerBound, shown))
+                        .zIndex(0.5)
+                }
                 if let preview = taskPreview {
                     previewBlock(preview, shown: shown, width: width)
                 }
@@ -87,16 +123,45 @@ struct TimelineCanvas: View {
         .sensoryFeedback(.selection, trigger: snapLine)
         .sensoryFeedback(.impact(weight: .light), trigger: selectedID) { _, new in new != nil }
         .onChange(of: plan) { _, _ in pending.removeAll() }
+        .sheet(item: $openSuggestion) { suggestion in SuggestionSheet(suggestion: suggestion) }
+        .sheet(item: $editingTask) { TaskEditorSheet(task: $0) }
         .onChange(of: session != nil) { _, dragging in isDragging = dragging }
     }
 
     /// Visible hours: working time widened to every entry, with an hour of margin.
     var shownRange: Range<Int> {
         let hours = model.workHours(on: plan.day) ?? WorkHours(startMinutes: 540, endMinutes: 1080)
-        let ranges = entries.map(baseRange)
+        let ranges = entries.map(baseRange) + blockSuggestions.map(Self.range) + extensionRanges
         let lower = min(hours.startMinutes, ranges.map(\.lowerBound).min() ?? hours.startMinutes)
         let upper = max(hours.endMinutes, ranges.map(\.upperBound).max() ?? hours.endMinutes)
         return max(0, (lower / 60 - 1) * 60)..<min(1440, ((upper + 59) / 60 + 1) * 60)
+    }
+
+    /// Open AI time-block suggestions of the day (mockup W1).
+    private var blockSuggestions: [PlanSuggestion] {
+        plan.suggestions.filter { $0.kind == .block && $0.startMinutes != nil }
+    }
+
+    /// Suggestions an answer moved within this day: their old place is drawn faded.
+    private var changedFrom: [PlanSuggestion] {
+        blockSuggestions.filter { $0.previousPosition?.kind == .block && $0.previousPosition?.day == plan.day
+            && $0.previousPosition?.startMinutes != $0.startMinutes }
+    }
+
+    /// Time a pending longer day would add, outside today's working hours.
+    private var extensionRanges: [Range<Int>] {
+        guard let change = plan.suggestions.first(where: { $0.kind == .dayChange }),
+              let start = change.startMinutes, let end = change.endMinutes else { return [] }
+        guard let hours = model.workHours(on: plan.day), hours.minutes > 0 else { return [start..<end] }
+        var ranges: [Range<Int>] = []
+        if start < hours.startMinutes { ranges.append(start..<hours.startMinutes) }
+        if end > hours.endMinutes { ranges.append(hours.endMinutes..<end) }
+        return ranges
+    }
+
+    static func range(of suggestion: PlanSuggestion) -> Range<Int> {
+        let start = suggestion.startMinutes ?? 0
+        return start..<(start + max(15, suggestion.minutes ?? 15))
     }
 
     /// Minutes for a y position in the canvas (used for drops from the "Ohne Uhrzeit" bar).

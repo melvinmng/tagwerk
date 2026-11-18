@@ -18,6 +18,11 @@ struct MonthView: View {
             DayHeader(model: model) {}
                 .padding(.horizontal)
                 .padding(.bottom, 8)
+            AIPlanBar(scope: .month)
+                .padding(12)
+                .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 14))
+                .padding(.horizontal)
+                .padding(.bottom, 8)
             LazyVGrid(columns: columns, spacing: 4) {
                 ForEach(["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"], id: \.self) { Text($0).font(.caption2).foregroundStyle(.secondary) }
                 ForEach(model.days) { plan in
@@ -35,12 +40,16 @@ struct MonthView: View {
                 }
             }
             .padding(.horizontal)
+            .contentShape(Rectangle())
+            .simultaneousGesture(horizontalSwipe { model.step($0) })  // swiping over the calendar changes the month
 
             if let plan = model.days.first(where: { $0.day == model.monthSelection }) {
                 MonthDayDetail(model: model, plan: plan, onOpenDay: { onSelectDay(plan.day) },
                                onOpenEvent: onOpenEvent, onOpenTask: onOpenTask)
                     .padding(.horizontal)
                     .padding(.top, 12)
+                    .contentShape(Rectangle())
+                    .simultaneousGesture(horizontalSwipe { model.stepSelectedDay($0) })  // over the day: the day
             }
 
             let deadlines = model.days.flatMap(\.deadlines)
@@ -62,6 +71,7 @@ struct MonthView: View {
         }
         .safeAreaInset(edge: .bottom) { Color.clear.frame(height: model.unplanned.isEmpty ? 0 : 56) }
         .overlay(alignment: .bottom) { UnplannedDrawer(model: model) }
+        .ignoresSafeArea(.keyboard, edges: .bottom)
         .sheet(item: $newEventDay) { day in EventEditSheet(model: model, existing: nil, day: day) }
         .sheet(item: $hoursDay) { day in
             DayOverrideSheet(day: day, calendar: model.calendar, current: model.workHours(on: day)) { value in
@@ -88,6 +98,17 @@ struct MonthView: View {
                 .font(.callout.weight(plan.day == model.today ? .bold : .regular))
                 .foregroundStyle(hasDeadline ? .white : (inMonth ? .primary : .secondary))
             CapacityBar(capacity: plan.capacity).frame(width: 28)
+                .overlay(alignment: .topTrailing) {
+                    // Open AI suggestions on this day (mockup X2).
+                    if plan.suggestions.contains(where: { $0.kind == .dayChange }) {
+                        // Mockup AO1: a longer day is suggested here.
+                        Image(systemName: "clock.badge").font(.system(size: 8)).foregroundStyle(.purple).offset(x: 10, y: -10)
+                    } else if plan.suggestions.contains(where: { $0.kind == .move }) {
+                        Image(systemName: "arrow.uturn.right").font(.system(size: 8)).foregroundStyle(.purple).offset(x: 10, y: -10)
+                    } else if !plan.suggestions.isEmpty {
+                        Image(systemName: "sparkles").font(.system(size: 8)).foregroundStyle(.purple).offset(x: 10, y: -10)
+                    }
+                }
         }
         .frame(maxWidth: .infinity, minHeight: 48)
         .background(hasDeadline ? Color.red.opacity(0.85) : Color.clear, in: RoundedRectangle(cornerRadius: 8))
@@ -135,7 +156,9 @@ private struct MonthDayDetail: View {
                 Button { onOpenTask(task.id) } label: { Label(task.title, systemImage: "circle").lineLimit(1) }
                     .buttonStyle(.plain)
             }
-            if plan.events.isEmpty && plan.blocks.isEmpty && plan.assigned.isEmpty && plan.deadlines.isEmpty {
+            ForEach(plan.suggestions) { suggestion in SuggestionRow(suggestion: suggestion) }
+            if plan.events.isEmpty && plan.blocks.isEmpty && plan.assigned.isEmpty && plan.deadlines.isEmpty
+                && plan.suggestions.isEmpty {
                 Text("Nichts geplant").font(.subheadline).foregroundStyle(.secondary)
             }
             Button("Tag öffnen ›", action: onOpenDay).font(.subheadline.weight(.semibold))

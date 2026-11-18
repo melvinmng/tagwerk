@@ -21,6 +21,8 @@ packages:
     path: Packages/RemindersKit
   GitHubKit:
     path: Packages/GitHubKit
+  AIKit:
+    path: Packages/AIKit
 targets:
   Tagwerk:
     type: application
@@ -31,6 +33,7 @@ targets:
       - package: SecureStore
       - package: RemindersKit
       - package: GitHubKit
+      - package: AIKit
     info:
       path: Tagwerk/Info.plist
       properties:

@@ -1,7 +1,7 @@
 import SwiftUI
 import TagwerkCore
 
-/// Actions of the long-press menu (mockup d-A). AI entries follow in plan 2b-2.
+/// Actions of the long-press menu (mockup d-A); the AI entries come from the environment (plan 2b-2, Task 8c).
 struct TaskMenuActions {
     var plan: (RescheduleOption) -> Void
     var planOnDate: () -> Void
@@ -22,6 +22,10 @@ struct TaskContextMenu: View {
     let item: TaskItem
     let actions: TaskMenuActions
     @Environment(\.dynamicTypeSize) private var typeSize
+    @Environment(AppEnvironment.self) private var environment
+
+    /// The AI entries appear only with a ChatGPT sign-in (mockup d: order dates, AI, done, destructive).
+    static func showsAIEntries(isSignedIn: Bool) -> Bool { isSignedIn }
 
     var body: some View {
         // Mockup F1: the planned day lives in Tagwerk only; the due date changes the source.
@@ -60,6 +64,20 @@ struct TaskContextMenu: View {
                 }
                 if let editEffort = actions.editEffort {
                     Button("Aufwand ändern …", systemImage: "arrow.trianglehead.2.clockwise") { editEffort() }
+                }
+            }
+        }
+        if Self.showsAIEntries(isSignedIn: environment.ai.isSignedIn) {
+            Section {
+                Button("Mit KI planen", systemImage: "sparkles") {
+                    let planning = environment.planning
+                    environment.requestedTab = 0
+                    planning.scope = .day
+                    planning.anchor = planning.today
+                    environment.planner.start(scope: .day, anchor: planning.today, taskID: item.id)
+                }
+                Button("Über diese Aufgabe sprechen", systemImage: "bubble.left.and.text.bubble.right") {
+                    environment.assistant.open(task: item)
                 }
             }
         }
