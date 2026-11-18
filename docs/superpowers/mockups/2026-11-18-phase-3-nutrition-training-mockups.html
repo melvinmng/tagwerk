@@ -1,0 +1,794 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tagwerk · Phase 3 · Ernährung &amp; Training · Mockups E1–E8</title>
+<style>
+  /* Mockup frame uses the host theme (with fallbacks); phone screens depict the app in iOS dark mode. */
+  :root { color-scheme: light dark; }
+  body { font: 14px var(--font-sans, system-ui, sans-serif); color: var(--foreground, CanvasText); margin: 16px; }
+  h1 { font-size: 20px; margin: 0 0 4px; }
+  h2 { font-size: 18px; margin: 38px 0 4px; padding-top: 16px; border-top: 1px solid rgba(128,128,128,.3); display: flex; align-items: center; gap: 10px; }
+  .area { display: inline-grid; place-items: center; min-width: 34px; height: 34px; padding: 0 4px; border-radius: 9px; background: #0a84ff; color: #fff; font: 800 16px system-ui; flex-shrink: 0; box-sizing: border-box; }
+  .lead { color: var(--muted-foreground, #777); margin: 0 0 14px; line-height: 1.5; max-width: 980px; }
+  .status-line { display: inline-block; border: 1px solid rgba(255,159,10,.6); background: rgba(255,159,10,.1); border-radius: 8px; padding: 5px 11px; font-weight: 700; margin: 6px 0 12px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(392px, 1fr)); gap: 22px; align-items: start; }
+  .label { font: 600 13px var(--font-sans, system-ui); color: var(--muted-foreground, #777); margin: 0 0 8px 4px; }
+  .label b { color: var(--foreground, CanvasText); }
+  .code { display: inline-block; background: rgba(128,128,128,.28); color: var(--foreground, CanvasText); border-radius: 6px; padding: 1px 8px; font: 800 13px system-ui; margin-right: 4px; }
+  .code.r { background: #30d158; color: #000; }
+  .rec { background: #30d158; color: #000; font-size: 11px; font-weight: 700; padding: 1px 7px; border-radius: 99px; margin-left: 4px; }
+  .pc { font-size: 12.5px; color: var(--muted-foreground, #777); line-height: 1.5; margin: 8px 4px 0; max-width: 390px; }
+  .pc b { color: var(--foreground, CanvasText); }
+  .box { border: 1px solid rgba(48,209,88,.5); background: rgba(48,209,88,.07); border-radius: 12px; padding: 12px 16px; margin-top: 16px; line-height: 1.55; font-size: 13px; max-width: 1100px; }
+  .box h3 { margin: 0 0 6px; font-size: 14px; }
+  .box ul, .box ol { margin: 4px 0 0; padding-left: 20px; }
+  .box.neutral { border-color: rgba(128,128,128,.4); background: rgba(128,128,128,.07); }
+  code { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; background: rgba(128,128,128,.16); padding: 1px 4px; border-radius: 4px; }
+  .tablewrap { overflow-x: auto; }
+  table.sum { border-collapse: collapse; font-size: 13px; margin-top: 6px; }
+  table.sum td, table.sum th { padding: 5px 14px 5px 0; vertical-align: top; text-align: left; border-bottom: 1px solid rgba(128,128,128,.22); }
+  table.sum th { font-size: 12px; color: var(--muted-foreground, #777); }
+
+  .phone {
+    --bg: #000; --card: #1c1c1e; --card2: #2c2c2e; --sep: #38383a; --text: #fff; --sub: #8e8e93;
+    --blue: #0a84ff; --green: #30d158; --orange: #ff9f0a; --red: #ff453a; --cyan: #64d2ff;
+    background: var(--bg); color: var(--text); border-radius: 40px; padding: 14px 12px 12px;
+    font: 15px -apple-system, "SF Pro Text", system-ui, sans-serif; border: 6px solid #2a2a2c;
+    width: 390px; max-width: 100%; box-sizing: border-box; min-height: 700px;
+    display: flex; flex-direction: column; position: relative; overflow: hidden;
+  }
+  .phone.short { min-height: 0; }
+  .status { display: flex; justify-content: space-between; font: 600 13px system-ui; padding: 0 12px 10px; }
+  .title { font: 700 26px system-ui; padding: 0 6px 8px; display: flex; justify-content: space-between; align-items: center; }
+  .title small { font: 400 18px system-ui; color: var(--blue); }
+  .nav { display: flex; justify-content: center; padding: 2px 6px 8px; font-weight: 600; }
+  .nav.sheet { justify-content: space-between; }
+  .nav.sheet span:first-child, .nav.sheet span:last-child { color: var(--blue); font-weight: 400; min-width: 76px; }
+  .nav.sheet span:last-child { text-align: right; font-weight: 600; }
+  .nav.sheet span.off { color: #48484a; }
+  .section { color: var(--sub); font: 600 12px system-ui; text-transform: uppercase; letter-spacing: .4px; margin: 10px 8px 4px; display: flex; justify-content: space-between; }
+  .section span { text-transform: none; letter-spacing: 0; font-weight: 400; }
+  .list { background: var(--card); border-radius: 18px; overflow: hidden; margin-bottom: 6px; }
+  .list.new { box-shadow: 0 0 0 1.5px #ffd60a; }
+  .item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-bottom: 1px solid var(--sep); font-size: 14px; }
+  .item:last-child { border-bottom: 0; }
+  .item .t { flex: 1; min-width: 0; }
+  .item .st { color: var(--sub); font-size: 12px; }
+  .item .r { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .item .r small { display: block; color: var(--sub); font-size: 11.5px; }
+  .ic { width: 28px; height: 28px; border-radius: 8px; display: grid; place-items: center; font-size: 15px; flex-shrink: 0; background: var(--card2); }
+  .field { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 10px 12px; border-bottom: 1px solid var(--sep); font-size: 14px; }
+  .field:last-child { border-bottom: 0; }
+  .field .v { color: var(--sub); text-align: right; }
+  .field .l { color: var(--blue); }
+  .field .d { color: var(--red); }
+  .field.hl { background: rgba(255,214,10,.08); }
+  .pick { background: #3a3a3c; border-radius: 8px; padding: 4px 9px; font-size: 13.5px; color: #fff; white-space: nowrap; }
+  .tog { width: 40px; height: 24px; border-radius: 99px; background: #48484a; position: relative; flex-shrink: 0; }
+  .tog::after { content: ""; position: absolute; top: 2px; left: 2px; width: 20px; height: 20px; border-radius: 50%; background: #fff; }
+  .tog.on { background: var(--green); } .tog.on::after { left: 18px; }
+  .note { color: var(--sub); font-size: 11.5px; padding: 4px 8px; line-height: 1.4; }
+  .note.warn { color: #ffc266; }
+  .spacer { flex: 1; }
+  .anno { font: 600 10.5px system-ui; color: #ffd60a; margin: 6px 6px 3px; }
+  .ptxt { padding: 11px 12px; font-size: 14px; line-height: 1.45; border-bottom: 1px solid var(--sep); }
+  .ptxt:last-child { border-bottom: 0; }
+  .pbtn { display: inline-block; background: var(--blue); color: #fff; border-radius: 99px; padding: 7px 14px; font-weight: 600; font-size: 14px; }
+  .pbtn.wide { display: block; text-align: center; padding: 12px; font-size: 16px; border-radius: 14px; margin: 8px 0 4px; }
+  .pbtn.off { background: #2c2c2e; color: #636366; }
+  .pbtn.sec { background: var(--card2); color: var(--blue); }
+
+  /* Day header and progress */
+  .daynav { display: flex; justify-content: space-between; align-items: center; padding: 0 8px 8px; font-weight: 600; }
+  .daynav span { color: var(--blue); font-size: 18px; min-width: 28px; }
+  .daynav span.off { color: #48484a; text-align: right; }
+  .daynav b small { display: block; text-align: center; font: 400 11.5px system-ui; color: var(--sub); }
+  .head { background: var(--card); border-radius: 18px; padding: 12px; margin-bottom: 6px; }
+  .big { font: 700 24px system-ui; font-variant-numeric: tabular-nums; }
+  .big small { font: 400 14px system-ui; color: var(--sub); }
+  .bar { height: 8px; border-radius: 99px; background: var(--card2); overflow: hidden; margin: 6px 0 2px; }
+  .bar i { display: block; height: 100%; border-radius: 99px; background: var(--orange); }
+  .bar.w i { background: var(--cyan); } .bar.p i { background: var(--green); }
+  .hrow { display: flex; gap: 12px; margin-top: 10px; }
+  .hrow > div { flex: 1; min-width: 0; font-size: 12px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .hrow small { color: var(--sub); }
+  .dots { display: flex; gap: 5px; margin: 7px 0 3px; }
+  .dots i { width: 14px; height: 8px; border-radius: 99px; background: var(--card2); }
+  .dots i.on { background: var(--green); }
+  .rings { display: flex; justify-content: space-around; padding: 4px 0; text-align: center; font-size: 12px; color: var(--sub); }
+  .ring { width: 78px; height: 78px; border-radius: 50%; display: grid; place-items: center; margin: 0 auto 5px; }
+  .ring b { width: 60px; height: 60px; border-radius: 50%; background: var(--card); display: grid; place-items: center; font: 700 13px system-ui; color: #fff; }
+
+  /* Quick capture */
+  .quick { display: flex; gap: 8px; margin: 6px 0; }
+  .quick span { flex: 1; background: var(--card); border-radius: 16px; padding: 11px 4px; text-align: center; font-weight: 600; font-size: 14px; }
+  .quick span i { display: block; font-style: normal; font-size: 20px; margin-bottom: 2px; }
+  .quick.sm span { padding: 9px 4px; font-size: 13.5px; color: var(--cyan); }
+  .chips { display: flex; flex-wrap: wrap; gap: 7px; padding: 10px 12px; }
+  .chip { background: var(--card2); border-radius: 99px; padding: 6px 12px; font-size: 13.5px; }
+  .chip.on { background: var(--blue); font-weight: 600; }
+  .input { background: var(--card); border-radius: 14px; padding: 11px 12px; display: flex; gap: 10px; align-items: center; font-size: 15px; margin-bottom: 6px; }
+  .input .t { flex: 1; } .input .ph { flex: 1; color: #636366; }
+  .input .b { color: var(--blue); font-size: 18px; }
+  .thumb { width: 44px; height: 44px; border-radius: 10px; background: linear-gradient(135deg, #7a5a2c, #c9a35a 55%, #e6d39a); flex-shrink: 0; }
+  .toast { position: absolute; left: 14px; right: 14px; bottom: 74px; background: rgba(58,58,60,.97); border-radius: 16px; padding: 11px 14px; display: flex; justify-content: space-between; gap: 10px; font-size: 14px; box-shadow: 0 8px 24px rgba(0,0,0,.6); z-index: 2; }
+  .toast span:last-child { color: var(--blue); font-weight: 600; }
+  .tabbar { display: flex; justify-content: space-around; background: rgba(44,44,46,.92); border-radius: 99px; padding: 7px 6px; margin-top: 8px; font-size: 10.5px; color: var(--sub); text-align: center; }
+  .tabbar span i { display: block; font-style: normal; font-size: 17px; line-height: 1.2; }
+  .tabbar span.on { color: var(--blue); font-weight: 600; }
+  .sumrow { display: flex; justify-content: space-between; align-items: baseline; padding: 11px 12px 4px; }
+  .sumrow b { font: 700 22px system-ui; font-variant-numeric: tabular-nums; }
+  .range { padding: 0 12px 10px; color: var(--sub); font-size: 12.5px; border-bottom: 1px solid var(--sep); }
+  .macros { display: flex; padding: 9px 12px; font-size: 13px; gap: 6px; border-bottom: 1px solid var(--sep); }
+  .macros:last-child { border-bottom: 0; }
+  .macros span { flex: 1; } .macros small { display: block; color: var(--sub); font-size: 11.5px; }
+  .numf { background: var(--card2); border-radius: 8px; padding: 4px 8px; font-variant-numeric: tabular-nums; min-width: 44px; text-align: right; display: inline-block; }
+
+  /* System permission alert / dimmed sheet */
+  .dim { position: absolute; inset: 0; background: rgba(0,0,0,.55); z-index: 2; }
+  .bsheet { position: absolute; left: 0; right: 0; bottom: 0; z-index: 3; background: #1c1c1e; border-radius: 30px 30px 34px 34px; padding: 10px 16px 18px; box-shadow: 0 -10px 40px rgba(0,0,0,.6); }
+  .bsheet .grab { width: 36px; height: 5px; border-radius: 99px; background: #48484a; margin: 0 auto 12px; }
+  .bsheet h4 { font: 700 20px system-ui; margin: 0 0 8px; }
+  .bsheet p { margin: 0 0 10px; font-size: 14px; line-height: 1.45; color: #d1d1d6; }
+  .bsheet ul { margin: 0 0 10px; padding: 0; list-style: none; font-size: 14px; line-height: 1.4; }
+  .bsheet li { display: flex; gap: 9px; padding: 5px 0; }
+  .bsheet li i { font-style: normal; width: 20px; text-align: center; flex-shrink: 0; }
+  .bsheet .foot { color: var(--sub); font-size: 11.5px; text-align: center; margin: 8px 0 0; }
+  .bsheet .skip { text-align: center; color: var(--blue); padding: 8px 0 0; font-size: 15px; }
+  .alert { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 280px; max-width: 88%; z-index: 3; background: rgba(44,44,46,.97); border-radius: 26px; padding: 18px 16px 12px; text-align: center; box-shadow: 0 16px 40px rgba(0,0,0,.7); box-sizing: border-box; }
+  .alert b { display: block; font-size: 16px; line-height: 1.3; margin-bottom: 6px; }
+  .alert p { margin: 0 0 14px; font-size: 13px; line-height: 1.4; color: #d1d1d6; }
+  .alert .ab { display: flex; gap: 8px; }
+  .alert .ab span { flex: 1; border-radius: 99px; padding: 9px 4px; font-size: 14px; font-weight: 600; background: #48484a; }
+  .alert .ab span.p { background: var(--blue); }
+</style>
+</head>
+<body>
+
+<h1>Tagwerk · Phase 3 · Ernährung &amp; Training · Mockups E1–E8</h1>
+<div class="status-line">Status: vorläufig nach Fable-Empfehlung, Freigabe des Nutzers offen (2026-11-18)</div>
+<p class="lead">Phase 3 bringt den vierten Tab „Erfassen“ zwischen „Aufgaben“ und „Einstellungen“. Zu gestalten sind: die Übersicht des Tages (E1), das Erfassen einer Mahlzeit mit Schätzung durch ChatGPT (E2), die einmalige Einwilligung (E3), Trinken (E4), Training (E5), die Einstellungen mit Zielen und Health-Zugriff (E6), das Wiederholen früherer Mahlzeiten (E7) und das Bearbeiten und Löschen (E8). Je Stelle stehen zwei Varianten; die Empfehlung trägt ein grünes Kürzel. Freigabe bitte als Liste der Kürzel, zum Beispiel „E1a, E2a, E3a, …“. Alle Mahlzeiten, Mengen und Trainings sind erfunden. Die Bilder zeigen das dunkle Erscheinungsbild; Abstände und Systemtexte von iOS sind angenähert. Nicht Teil von Phase 3 und hier nicht entworfen: Fortschritt und Wochenrückblick, Erfassen per Assistent oder Siri (beides Phase 4).</p>
+
+<div class="box neutral">
+  <h3>Durchgehende Regeln für geschätzte Werte</h3>
+  <ul>
+    <li><b>„~“ vor jeder geschätzten Zahl.</b> Ein Wert, den du selbst eingetippt oder überschrieben hast, steht ohne „~“. Eine Tagessumme trägt „~“, sobald ein geschätzter Eintrag darin steckt.</li>
+    <li><b>Spanne nur bei Kalorien</b> („410–550 kcal“), in der Vorschau und im Eintrag. Eiweiß, Kohlenhydrate und Fett tragen nur „~“, damit die Vorschau lesbar bleibt.</li>
+    <li><b>Apple Health kennt keine Spanne.</b> Dort landet nur der mittlere Wert, mit dem Vermerk „geschätzt“ in den Metadaten. Dass Health die Zahl genau aussehen lässt, kann Tagwerk nicht ändern.</li>
+  </ul>
+</div>
+
+<!-- ============================== E1 ============================== -->
+<h2><span class="area">E1</span> Tab „Erfassen“ · Übersicht des Tages</h2>
+<p class="lead">Von oben nach unten: Tag (mit Pfeilen zum Nachtragen), Stand gegen die Ziele, Schnellerfassung, Einträge des Tages. Wasser wird mit einem Tipp erfasst, ohne dass sich ein Blatt öffnet. Das Symbol oben rechts ist der bestehende Assistenten-Knopf.</p>
+<div class="grid">
+  <div>
+    <p class="label"><span class="code r">E1a</span><b>Balken, Liste nach Art gruppiert, Wasser in einer Zeile</b> <span class="rec">Empfehlung</span></p>
+    <div class="phone">
+      <div class="status"><span>13:20</span><span>●●● 5G</span></div>
+      <div class="title">Erfassen <small>✦</small></div>
+      <div class="daynav"><span>‹</span><b>Heute<small>Mi., 18. Nov.</small></b><span class="off">›</span></div>
+      <div class="head">
+        <div class="big">~1.310 <small>/ 2.300 kcal · noch ~990</small></div>
+        <div class="bar"><i style="width:57%"></i></div>
+        <div class="hrow">
+          <div>💧 1,25 <small>/ 2,0 l</small><div class="bar w"><i style="width:62%"></i></div></div>
+          <div>Eiweiß ~61 <small>/ 120 g</small><div class="bar p"><i style="width:51%"></i></div></div>
+          <div>Training 2 <small>/ 3</small><div class="dots"><i class="on"></i><i class="on"></i><i></i></div></div>
+        </div>
+      </div>
+      <div class="quick"><span><i>🍽</i>Essen</span><span><i>💧</i>Trinken</span><span><i>🏃</i>Training</span></div>
+      <div class="quick sm"><span>+ 250 ml</span><span>+ 330 ml</span><span>+ 500 ml</span></div>
+      <div class="section">Essen <span>~1.310 kcal</span></div>
+      <div class="list">
+        <div class="item"><div class="t">2 Brötchen mit Käse<div class="st">Frühstück · 07:40</div></div><div class="r">~480 kcal<small>410–550</small></div></div>
+        <div class="item"><div class="t">Proteinriegel<div class="st">Snack · 10:45</div></div><div class="r">210 kcal<small>eingetragen</small></div></div>
+        <div class="item"><div class="t">Linsencurry mit Reis<div class="st">Mittagessen · 12:35</div></div><div class="r">~620 kcal<small>500–760</small></div></div>
+      </div>
+      <div class="section">Trinken</div>
+      <div class="list"><div class="item"><div class="t">Wasser<div class="st">4 Einträge · zuletzt 12:50</div></div><div class="r">1,25 l ›</div></div></div>
+      <div class="section">Training</div>
+      <div class="list"><div class="item"><div class="t">Laufen<div class="st">07:05 · 32 min · Apple Watch</div></div><div class="r">310 kcal</div></div></div>
+      <div class="tabbar"><span><i>▦</i>Planen</span><span><i>☑</i>Aufgaben</span><span class="on"><i>⊕</i>Erfassen</span><span><i>⚙</i>Einstellungen</span></div>
+    </div>
+    <p class="pc"><b>Pro:</b> die Hauptzahl (Kalorien) ist groß, der Rest klein; vier Wasser-Tipps füllen die Liste nicht, weil „Trinken“ eine Zeile bleibt (Tippen zeigt die einzelnen Einträge); der Balken bleibt beim Überschreiten orange und zeigt „120 über Ziel“ statt Rot, weil das Ziel ein Richtwert ist. <b>Contra:</b> die Reihenfolge des Tages über die Arten hinweg ist nicht ablesbar; „Eiweiß“ erscheint nur, wenn ein Ziel gesetzt ist, sonst rücken zwei Spalten auf.</p>
+  </div>
+  <div>
+    <p class="label"><span class="code">E1b</span><b>Ringe, eine zeitlich sortierte Liste</b></p>
+    <div class="phone">
+      <div class="status"><span>13:20</span><span>●●● 5G</span></div>
+      <div class="title">Erfassen <small>✦</small></div>
+      <div class="daynav"><span>‹</span><b>Heute<small>Mi., 18. Nov.</small></b><span class="off">›</span></div>
+      <div class="head">
+        <div class="rings">
+          <div><div class="ring" style="background:conic-gradient(#ff9f0a 57%, #2c2c2e 0)"><b>~1.310</b></div>von 2.300 kcal</div>
+          <div><div class="ring" style="background:conic-gradient(#64d2ff 62%, #2c2c2e 0)"><b>1,25 l</b></div>von 2,0 l</div>
+          <div><div class="ring" style="background:conic-gradient(#30d158 67%, #2c2c2e 0)"><b>2 / 3</b></div>Trainings</div>
+        </div>
+      </div>
+      <div class="quick"><span><i>🍽</i>Essen</span><span><i>💧</i>Trinken</span><span><i>🏃</i>Training</span></div>
+      <div class="section">Heute</div>
+      <div class="list">
+        <div class="item"><span class="ic">💧</span><div class="t">Wasser<div class="st">12:50</div></div><div class="r">250 ml</div></div>
+        <div class="item"><span class="ic">🍽</span><div class="t">Linsencurry mit Reis<div class="st">12:35 · Mittagessen</div></div><div class="r">~620 kcal</div></div>
+        <div class="item"><span class="ic">💧</span><div class="t">Wasser<div class="st">11:30</div></div><div class="r">250 ml</div></div>
+        <div class="item"><span class="ic">🍽</span><div class="t">Proteinriegel<div class="st">10:45 · Snack</div></div><div class="r">210 kcal</div></div>
+        <div class="item"><span class="ic">💧</span><div class="t">Wasser<div class="st">09:10</div></div><div class="r">500 ml</div></div>
+        <div class="item"><span class="ic">🍽</span><div class="t">2 Brötchen mit Käse<div class="st">07:40 · Frühstück</div></div><div class="r">~480 kcal</div></div>
+        <div class="item"><span class="ic">🏃</span><div class="t">Laufen<div class="st">07:05 · 32 min · Apple Watch</div></div><div class="r">310 kcal</div></div>
+      </div>
+      <div class="spacer"></div>
+      <div class="tabbar"><span><i>▦</i>Planen</span><span><i>☑</i>Aufgaben</span><span class="on"><i>⊕</i>Erfassen</span><span><i>⚙</i>Einstellungen</span></div>
+    </div>
+    <p class="pc"><b>Pro:</b> zeigt den Tagesverlauf; Ringe sind aus Fitness bekannt. <b>Contra:</b> Wasser nimmt bei acht Gläsern die halbe Liste ein; Wasser braucht zwei Tipps (Knopf, dann Menge); für Spanne und Eiweiß ist in den Ringen kein Platz; Ringe sind ein eigener Baustein, die Balken sind <code>ProgressView</code>.</p>
+  </div>
+  <div>
+    <p class="label"><span class="code r">E1a</span><b>Leerer Tag, Health noch nicht verbunden, nach einem Wasser-Tipp</b></p>
+    <div class="phone">
+      <div class="status"><span>08:05</span><span>●●● 5G</span></div>
+      <div class="title">Erfassen <small>✦</small></div>
+      <div class="daynav"><span>‹</span><b>Heute<small>Do., 19. Nov.</small></b><span class="off">›</span></div>
+      <div class="head">
+        <div class="big">0 <small>/ 2.300 kcal</small></div>
+        <div class="bar"><i style="width:0"></i></div>
+        <div class="hrow">
+          <div>💧 0,25 <small>/ 2,0 l</small><div class="bar w"><i style="width:12%"></i></div></div>
+          <div>Training 2 <small>/ 3</small><div class="dots"><i class="on"></i><i class="on"></i><i></i></div></div>
+        </div>
+      </div>
+      <div class="quick"><span><i>🍽</i>Essen</span><span><i>💧</i>Trinken</span><span><i>🏃</i>Training</span></div>
+      <div class="quick sm"><span>+ 250 ml</span><span>+ 330 ml</span><span>+ 500 ml</span></div>
+      <div class="anno">einmalige Karte, solange Health nicht angefragt wurde</div>
+      <div class="list new">
+        <div class="ptxt"><b>Mit Apple Health verbinden</b><br><span style="color:#d1d1d6">Tagwerk speichert Mahlzeiten, Wasser und Trainings zusätzlich in Health und zeigt Trainings der Apple Watch und anderer Apps. Deine Einträge bleiben auch ohne Health in Tagwerk.</span></div>
+        <div class="field"><span class="pbtn">Verbinden</span><span class="l">Nicht jetzt</span></div>
+      </div>
+      <div class="section">Trinken</div>
+      <div class="list"><div class="item"><div class="t">Wasser<div class="st">1 Eintrag · 08:05</div></div><div class="r">0,25 l ›</div></div></div>
+      <div class="note" style="text-align:center;padding:14px 8px">Noch kein Essen und kein Training erfasst.</div>
+      <div class="spacer"></div>
+      <div class="toast"><span>250 ml Wasser erfasst</span><span>Widerrufen</span></div>
+      <div class="tabbar"><span><i>▦</i>Planen</span><span><i>☑</i>Aufgaben</span><span class="on"><i>⊕</i>Erfassen</span><span><i>⚙</i>Einstellungen</span></div>
+    </div>
+    <p class="pc">Ohne Eiweiß-Ziel entfällt die mittlere Spalte. Die Health-Karte erscheint einmal; „Nicht jetzt“ blendet sie dauerhaft aus, danach bleibt die Zeile „Health“ unter Einstellungen › Zugriff. Der Hinweis „Widerrufen“ steht 4 s und nimmt den letzten Eintrag zurück (auch in Health). Ist gar nichts erfasst, steht statt der Abschnitte: „Noch nichts erfasst. Tippe oben auf Essen, Trinken oder Training.“</p>
+  </div>
+</div>
+
+<!-- ============================== E2 ============================== -->
+<h2><span class="area">E2</span> Essen erfassen · Eingabe, Schätzung, Vorschau</h2>
+<p class="lead">„Essen“ öffnet ein Blatt mit dem Textfeld im Fokus, darunter frühere Mahlzeiten (E7). „Schätzen“ sendet Text und, falls vorhanden, das Foto an ChatGPT und zeigt eine Vorschau, die sich vor dem Sichern ändern lässt. Der Mahlzeitentyp wird aus der Uhrzeit vorbelegt und lässt sich antippen. Ein Foto wird nach dem Sichern verworfen (nicht gespeichert).</p>
+<div class="grid">
+  <div>
+    <p class="label"><span class="code r">E2a</span><b>Schritt 1: Eingabe</b></p>
+    <div class="phone">
+      <div class="status"><span>07:40</span><span>●●● 5G</span></div>
+      <div class="nav sheet"><span>Abbrechen</span><span>Essen</span><span class="off">Sichern</span></div>
+      <div class="input"><span class="t">2 Brötchen mit Käse▏</span><span class="b">📷</span><span class="b">🖼</span></div>
+      <div class="pbtn wide">Schätzen</div>
+      <div class="note" style="text-align:center"><span style="color:#0a84ff">Ohne Schätzung eintragen</span></div>
+      <div class="section">Zuletzt und häufig</div>
+      <div class="list">
+        <div class="item"><div class="t">Haferflocken mit Banane<div class="st">12× · zuletzt gestern</div></div><div class="r">~410 kcal</div><span class="pbtn sec">＋</span></div>
+        <div class="item"><div class="t">Proteinriegel<div class="st">7× · zuletzt Mo.</div></div><div class="r">210 kcal</div><span class="pbtn sec">＋</span></div>
+        <div class="item"><div class="t">Linsencurry mit Reis<div class="st">3× · zuletzt Di.</div></div><div class="r">~620 kcal</div><span class="pbtn sec">＋</span></div>
+        <div class="item"><div class="t">Cappuccino<div class="st">2× · zuletzt So.</div></div><div class="r">~90 kcal</div><span class="pbtn sec">＋</span></div>
+      </div>
+      <div class="note">„＋“ erfasst die Mahlzeit sofort für jetzt. Tippe auf die Zeile, um sie vorher anzupassen.</div>
+      <div class="spacer"></div>
+    </div>
+    <p class="pc">📷 öffnet die Kamera, 🖼 die Fotoauswahl von iOS (<code>PhotosPicker</code>, braucht keine Berechtigung). Mit Foto ist der Text freiwillig („Schätzen“ ist aktiv, sobald Text oder Foto da ist). Beim Tippen filtert die Liste nach dem Text. „Ohne Schätzung eintragen“ führt zur manuellen Form (rechts außen).</p>
+  </div>
+  <div>
+    <p class="label"><span class="code r">E2a</span><b>Schritt 2: Vorschau mit Posten und Spanne</b> <span class="rec">Empfehlung</span></p>
+    <div class="phone">
+      <div class="status"><span>07:40</span><span>●●● 5G</span></div>
+      <div class="nav sheet"><span>Abbrechen</span><span>Essen</span><span>Sichern</span></div>
+      <div class="list">
+        <div class="field"><span>2 Brötchen mit Käse</span><span class="v">✎</span></div>
+        <div class="field"><span>Mahlzeit</span><span class="pick">Frühstück ⌄</span></div>
+        <div class="field"><span>Zeit</span><span class="pick">Heute 07:40</span></div>
+      </div>
+      <div class="section">Schätzung von ChatGPT</div>
+      <div class="list new">
+        <div class="sumrow"><span>Gesamt</span><b>~480 kcal</b></div>
+        <div class="range">wahrscheinlich zwischen 410 und 550 kcal</div>
+        <div class="macros"><span>~22 g<small>Eiweiß</small></span><span>~56 g<small>Kohlenhydrate</small></span><span>~18 g<small>Fett</small></span></div>
+      </div>
+      <div class="section">Posten</div>
+      <div class="list">
+        <div class="item"><div class="t">Brötchen<div class="st">2 Stück · je ~60 g</div></div><span class="pick">−&nbsp;&nbsp;2&nbsp;&nbsp;+</span><div class="r">~300 kcal</div></div>
+        <div class="item"><div class="t">Käse<div class="st">2 Scheiben · je ~25 g</div></div><span class="pick">−&nbsp;&nbsp;2&nbsp;&nbsp;+</span><div class="r">~180 kcal</div></div>
+        <div class="field"><span class="l">Posten hinzufügen</span></div>
+      </div>
+      <div class="note">Schätzung, keine Messung. Passe Mengen und Werte an, bevor du sicherst. Tippe auf einen Posten, um seine Werte zu ändern; wische, um ihn zu entfernen.</div>
+      <div class="field" style="border:0;justify-content:center"><span class="l">Neu schätzen</span></div>
+      <div class="spacer"></div>
+    </div>
+    <p class="pc"><b>Pro:</b> der Machbarkeitstest zeigt, dass gerade die Zerlegung die Schätzung brauchbar macht (2 Brötchen 300 kcal + 2 Scheiben Käse 180 kcal); ein falscher Posten ist mit dem Stepper schneller korrigiert als eine neue Schätzung; die Spanne nennt Zahlen statt eines Prozentwerts, den man umrechnen müsste. <b>Contra:</b> mehr Bildschirm als E2b; Modell und Schema müssen je Posten Menge, Einheit, kcal, kcal-Untergrenze, kcal-Obergrenze und Makros liefern. Die Spanne stammt vom Modell und ist nicht kalibriert: sie ist ein Hinweis, kein Vertrauensbereich.</p>
+  </div>
+  <div>
+    <p class="label"><span class="code">E2b</span><b>Vorschau nur mit Summe und ± %</b></p>
+    <div class="phone">
+      <div class="status"><span>07:40</span><span>●●● 5G</span></div>
+      <div class="nav sheet"><span>Abbrechen</span><span>Essen</span><span>Sichern</span></div>
+      <div class="list">
+        <div class="field"><span>2 Brötchen mit Käse</span><span class="v">✎</span></div>
+        <div class="field"><span>Mahlzeit</span><span class="pick">Frühstück ⌄</span></div>
+        <div class="field"><span>Zeit</span><span class="pick">Heute 07:40</span></div>
+      </div>
+      <div class="section">Schätzung von ChatGPT</div>
+      <div class="list new">
+        <div class="field"><span>Kalorien</span><span><span class="numf">~480</span> kcal <span style="color:#8e8e93">± 15 %</span></span></div>
+        <div class="field"><span>Eiweiß</span><span><span class="numf">~22</span> g</span></div>
+        <div class="field"><span>Kohlenhydrate</span><span><span class="numf">~56</span> g</span></div>
+        <div class="field"><span>Fett</span><span><span class="numf">~18</span> g</span></div>
+      </div>
+      <div class="note">Schätzung, keine Messung. Passe die Werte an, bevor du sicherst.</div>
+      <div class="field" style="border:0;justify-content:center"><span class="l">Neu schätzen</span></div>
+      <div class="spacer"></div>
+    </div>
+    <p class="pc"><b>Pro:</b> entspricht der Skizze im Hauptdesign („~520 kcal (±20 %)“); kleineres Schema; passt ohne Rollen auf den Bildschirm. <b>Contra:</b> ob das Modell „2 Brötchen“ oder eines gezählt hat, sieht man nicht; korrigieren heißt kopfrechnen; „± 15 %“ wirkt genauer, als die Schätzung ist.</p>
+  </div>
+  <div>
+    <p class="label"><span class="code r">E2a</span><b>Zustände: läuft, Fehler, mit Foto</b></p>
+    <div class="phone short">
+      <div class="anno">Schätzung läuft (Eingabe bleibt sichtbar, abbrechbar)</div>
+      <div class="input"><span class="t">2 Brötchen mit Käse</span></div>
+      <div class="pbtn wide off">◌ Schätze …</div>
+      <div class="anno" style="margin-top:14px">Fehler: kein Netz</div>
+      <div class="input"><span class="t">2 Brötchen mit Käse</span><span class="b">📷</span><span class="b">🖼</span></div>
+      <div class="list">
+        <div class="ptxt" style="color:#ffc266">Keine Verbindung. Die Schätzung braucht Internet.</div>
+        <div class="field"><span class="l">Erneut versuchen</span></div>
+        <div class="field"><span class="l">Ohne Schätzung eintragen</span></div>
+      </div>
+      <div class="anno" style="margin-top:14px">mit Foto, Text als Hinweis freiwillig</div>
+      <div class="input"><span class="thumb"></span><span class="ph">Hinweis, z. B. „halbe Portion“</span><span class="b">✕</span></div>
+      <div class="pbtn wide">Schätzen</div>
+      <div class="note">Das Foto wird verkleinert und ohne Ortsangabe gesendet und nicht in Tagwerk gespeichert.</div>
+    </div>
+    <p class="pc">Bei jedem Fehler bleiben Text und Foto stehen. Fehlertexte stehen in der Tabelle am Ende. Das Foto wird vor dem Senden auf höchstens 1.024 px (lange Kante) neu kodiert; dabei entfallen Aufnahmeort und Kameradaten.</p>
+  </div>
+  <div>
+    <p class="label"><span class="code r">E2a</span><b>Ohne ChatGPT-Anmeldung oder „Ohne Schätzung eintragen“</b></p>
+    <div class="phone short">
+      <div class="status"><span>10:45</span><span>●●● 5G</span></div>
+      <div class="nav sheet"><span>Abbrechen</span><span>Essen</span><span>Sichern</span></div>
+      <div class="list">
+        <div class="field"><span>Proteinriegel</span><span class="v">✎</span></div>
+        <div class="field"><span>Mahlzeit</span><span class="pick">Snack ⌄</span></div>
+        <div class="field"><span>Zeit</span><span class="pick">Heute 10:45</span></div>
+      </div>
+      <div class="section">Werte</div>
+      <div class="list">
+        <div class="field"><span>Kalorien</span><span><span class="numf">210</span> kcal</span></div>
+        <div class="field"><span>Eiweiß</span><span><span class="numf">15</span> g</span></div>
+        <div class="field"><span>Kohlenhydrate</span><span><span class="numf">–</span> g</span></div>
+        <div class="field"><span>Fett</span><span><span class="numf">–</span> g</span></div>
+      </div>
+      <div class="note">Nur Kalorien sind nötig. Leere Felder werden nicht nach Health geschrieben.</div>
+      <div class="anno" style="margin-top:10px">nur ohne Anmeldung: Zeile unter dem Eingabefeld statt „Schätzen“</div>
+      <div class="list"><div class="ptxt" style="color:#d1d1d6">Für Schätzungen aus Text oder Foto melde dich unter Einstellungen › KI bei ChatGPT an.</div><div class="field"><span class="l">Zu den KI-Einstellungen</span></div></div>
+    </div>
+    <p class="pc">Ohne Anmeldung öffnet „Essen“ dieselbe Eingabe mit „Zuletzt und häufig“; statt „Schätzen“ steht „Weiter“ und führt zu dieser Form. Selbst eingetragene Werte tragen kein „~“ und keine Spanne.</p>
+  </div>
+</div>
+
+<!-- ============================== E3 ============================== -->
+<h2><span class="area">E3</span> Einwilligung vor der ersten Schätzung</h2>
+<p class="lead">Beim ersten Tipp auf „Schätzen“ erscheint der Hinweis einmal. Nach „Einverstanden“ läuft die Schätzung sofort weiter. Widerrufen lässt sich das unter Einstellungen › Erfassen (E6). Ohne Einwilligung bleibt die manuelle Eingabe.</p>
+<div class="grid">
+  <div>
+    <p class="label"><span class="code r">E3a</span><b>Blatt von unten mit drei Punkten</b> <span class="rec">Empfehlung</span></p>
+    <div class="phone">
+      <div class="status"><span>07:40</span><span>●●● 5G</span></div>
+      <div class="nav sheet"><span>Abbrechen</span><span>Essen</span><span class="off">Sichern</span></div>
+      <div class="input"><span class="t">2 Brötchen mit Käse</span><span class="b">📷</span><span class="b">🖼</span></div>
+      <div class="pbtn wide">Schätzen</div>
+      <div class="spacer"></div>
+      <div class="dim"></div>
+      <div class="bsheet">
+        <div class="grab"></div>
+        <h4>Mahlzeiten von ChatGPT schätzen lassen</h4>
+        <p>Zum Schätzen sendet Tagwerk deine Beschreibung und, wenn du eines aufnimmst, das Foto der Mahlzeit an ChatGPT (OpenAI), über das Konto, mit dem du angemeldet bist.</p>
+        <ul>
+          <li><i>↗</i><span><b>Gesendet wird</b> nur der Text und das Foto dieser Mahlzeit. Fotos gehen verkleinert und ohne Ortsangabe raus.</span></li>
+          <li><i>⦸</i><span><b>Nicht gesendet werden</b> Daten aus Health, deine Ziele und frühere Einträge.</span></li>
+          <li><i>☝︎</i><span><b>Nur auf dein Tippen:</b> Ohne „Schätzen“ verlässt nichts das iPhone.</span></li>
+        </ul>
+        <p style="font-size:12.5px;color:#8e8e93">Wie OpenAI die gesendeten Daten behandelt, richtet sich nach den Einstellungen deines ChatGPT-Kontos.</p>
+        <div class="pbtn wide">Einverstanden und schätzen</div>
+        <div class="skip">Nicht jetzt</div>
+        <div class="foot">Du kannst das in den Einstellungen unter „Erfassen“ widerrufen.</div>
+      </div>
+    </div>
+    <p class="pc"><b>Pro:</b> genug Platz, um „gesendet“ und „nicht gesendet“ getrennt zu nennen (Hauptdesign §7); der Knopf sagt, was als Nächstes passiert; „Nicht jetzt“ fragt beim nächsten „Schätzen“ erneut. <b>Contra:</b> ein eigenes Blatt für einen einmaligen Moment. Der Satz zu OpenAI verspricht bewusst nichts über Speicherung dort: das liegt nicht in der Hand der App.</p>
+  </div>
+  <div>
+    <p class="label"><span class="code">E3b</span><b>Systemhinweis (Alert)</b></p>
+    <div class="phone">
+      <div class="status"><span>07:40</span><span>●●● 5G</span></div>
+      <div class="nav sheet"><span>Abbrechen</span><span>Essen</span><span class="off">Sichern</span></div>
+      <div class="input"><span class="t">2 Brötchen mit Käse</span><span class="b">📷</span><span class="b">🖼</span></div>
+      <div class="pbtn wide">Schätzen</div>
+      <div class="spacer"></div>
+      <div class="dim"></div>
+      <div class="alert">
+        <b>Mahlzeit an ChatGPT senden?</b>
+        <p>Zum Schätzen sendet Tagwerk Text und Foto der Mahlzeit an ChatGPT (OpenAI). Daten aus Health, Ziele und frühere Einträge werden nicht gesendet.</p>
+        <div class="ab"><span>Nicht jetzt</span><span class="p">Einverstanden</span></div>
+      </div>
+    </div>
+    <p class="pc"><b>Pro:</b> ein Baustein von iOS, eine Zeile Code. <b>Contra:</b> Alerts werden weggetippt, ohne gelesen zu werden; kein Platz für den Hinweis auf den Widerruf und auf die Kontoeinstellungen bei OpenAI.</p>
+  </div>
+</div>
+
+<!-- ============================== E4 ============================== -->
+<h2><span class="area">E4</span> Trinken</h2>
+<p class="lead">Zum Wasserziel zählt in Phase 3 nur Wasser. Getränke mit Kalorien (Saft, Cappuccino) erfasst man als Essen; sie zählen dort zu den Kalorien, nicht zum Wasser.</p>
+<div class="grid">
+  <div>
+    <p class="label"><span class="code r">E4a</span><b>Ein Tipp im Tab; Blatt nur für andere Mengen</b> <span class="rec">Empfehlung</span></p>
+    <div class="phone">
+      <div class="status"><span>13:20</span><span>●●● 5G</span></div>
+      <div class="nav sheet"><span>Abbrechen</span><span>Trinken</span><span>Sichern</span></div>
+      <div class="section">Wasser</div>
+      <div class="quick sm"><span>250 ml</span><span>330 ml</span><span>500 ml</span></div>
+      <div class="list">
+        <div class="field"><span>Andere Menge</span><span><span class="numf">750</span> ml</span></div>
+        <div class="field"><span>Zeit</span><span class="pick">Heute 13:20</span></div>
+      </div>
+      <div class="note">Die Knöpfe erfassen sofort. Getränke mit Kalorien trägst du unter „Essen“ ein.</div>
+      <div class="section">Heute <span>1,25 l von 2,0 l</span></div>
+      <div class="list">
+        <div class="item"><div class="t">12:50</div><div class="r">250 ml</div></div>
+        <div class="item"><div class="t">11:30</div><div class="r">250 ml</div></div>
+        <div class="item"><div class="t">09:10</div><div class="r">500 ml</div></div>
+        <div class="item"><div class="t">07:45</div><div class="r">250 ml</div></div>
+      </div>
+      <div class="note">Wische einen Eintrag nach links, um ihn zu löschen.</div>
+      <div class="spacer"></div>
+    </div>
+    <p class="pc">Der schnelle Weg sind die drei Knöpfe direkt im Tab (E1a): ein Tipp, kein Blatt, „Widerrufen“ für 4 s. Dieses Blatt öffnet sich über „Trinken“ oder die Zeile „Wasser“ und dient für andere Mengen, zum Nachtragen einer Uhrzeit und zum Löschen. <b>Pro:</b> ein Tipp für den häufigsten Eintrag des Tages. <b>Contra:</b> Tee und Kaffee ohne Zucker zählt nur, wer sie als Wasser antippt; eine Regel dafür gibt die App nicht vor.</p>
+  </div>
+  <div>
+    <p class="label"><span class="code">E4b</span><b>Blatt mit Getränkearten</b></p>
+    <div class="phone">
+      <div class="status"><span>13:20</span><span>●●● 5G</span></div>
+      <div class="nav sheet"><span>Abbrechen</span><span>Trinken</span><span>Sichern</span></div>
+      <div class="section">Getränk</div>
+      <div class="list"><div class="chips"><span class="chip on">Wasser</span><span class="chip">Tee</span><span class="chip">Kaffee</span><span class="chip">Saft</span><span class="chip">Limonade</span><span class="chip">Milch</span></div></div>
+      <div class="section">Menge</div>
+      <div class="quick sm"><span>250 ml</span><span>330 ml</span><span>500 ml</span></div>
+      <div class="list">
+        <div class="field"><span>Andere Menge</span><span><span class="numf">–</span> ml</span></div>
+        <div class="field"><span>Zählt zum Wasserziel</span><span class="tog on"></span></div>
+        <div class="field"><span>Zeit</span><span class="pick">Heute 13:20</span></div>
+      </div>
+      <div class="note">Saft, Limonade und Milch brauchen zusätzlich Kalorien.</div>
+      <div class="spacer"></div>
+    </div>
+    <p class="pc"><b>Pro:</b> bildet ab, was getrunken wurde. <b>Contra:</b> mindestens drei Tipps je Glas; die Arten brauchen Kalorienwerte und eine Regel, wie viel Wasser in Kaffee oder Saft zählt, also ein eigenes kleines Nährwertmodell; Health kennt für „Wasser“ nur eine Menge.</p>
+  </div>
+</div>
+
+<!-- ============================== E5 ============================== -->
+<h2><span class="area">E5</span> Training erfassen</h2>
+<p class="lead">Trainings der Apple Watch und anderer Apps liest Tagwerk aus Health und zeigt sie mit Quelle; sie lassen sich in Tagwerk nicht ändern. Von Hand erfasst wird nur, was keine Uhr aufgezeichnet hat. Der Wochenzähler zählt beide, Montag bis Sonntag, ab 10 min Dauer.</p>
+<div class="grid">
+  <div>
+    <p class="label"><span class="code r">E5a</span><b>Formular wie die übrigen Editoren</b> <span class="rec">Empfehlung</span></p>
+    <div class="phone">
+      <div class="status"><span>19:10</span><span>●●● 5G</span></div>
+      <div class="nav sheet"><span>Abbrechen</span><span>Training</span><span>Sichern</span></div>
+      <div class="list">
+        <div class="field"><span>Art</span><span class="pick">Krafttraining ⌄</span></div>
+        <div class="field"><span>Dauer: 45 min</span><span class="pick">−&nbsp;&nbsp;|&nbsp;&nbsp;+</span></div>
+        <div class="field"><span>Beginn</span><span class="pick">Heute 18:25</span></div>
+        <div class="field"><span>Kalorien (optional)</span><span><span class="numf">–</span> kcal</span></div>
+      </div>
+      <div class="note">Der Beginn ist so vorbelegt, dass das Training jetzt endet. Tagwerk schätzt keinen Verbrauch; ein leeres Feld bleibt leer.</div>
+      <div class="note warn">Überschneidet sich mit „Laufen“ (07:05, Apple Watch)? Dann würde das Training doppelt gezählt.</div>
+      <div class="section">Diese Woche <span>2 von 3</span></div>
+      <div class="list">
+        <div class="item"><div class="t">Laufen<div class="st">Mi. 07:05 · 32 min · Apple Watch</div></div><div class="r">310 kcal</div></div>
+        <div class="item"><div class="t">Krafttraining<div class="st">Mo. 18:30 · 50 min · Tagwerk</div></div><div class="r">–</div></div>
+      </div>
+      <div class="spacer"></div>
+    </div>
+    <p class="pc"><b>Pro:</b> ein <code>Form</code> wie im Aufgaben-Editor; „Art“ und „Dauer“ sind mit dem zuletzt gesicherten Training vorbelegt, das Wiederholen braucht dann nur „Sichern“. Die gelbe Warnung erscheint nur, wenn sich der Zeitraum tatsächlich mit einem Health-Training überschneidet (im Bild zur Anschauung gezeigt, hier träfe sie nicht zu). <b>Contra:</b> die Art zu wechseln braucht zwei Tipps (Menü öffnen, wählen).<br>Arten: Krafttraining, Laufen, Radfahren, Gehen, Wandern, Schwimmen, Yoga, HIIT, Sonstiges.</p>
+  </div>
+  <div>
+    <p class="label"><span class="code">E5b</span><b>Art als Kacheln, Dauer als Knöpfe</b></p>
+    <div class="phone">
+      <div class="status"><span>19:10</span><span>●●● 5G</span></div>
+      <div class="nav sheet"><span>Abbrechen</span><span>Training</span><span>Sichern</span></div>
+      <div class="section">Art</div>
+      <div class="list"><div class="chips"><span class="chip on">Krafttraining</span><span class="chip">Laufen</span><span class="chip">Radfahren</span><span class="chip">Gehen</span><span class="chip">Wandern</span><span class="chip">Schwimmen</span><span class="chip">Yoga</span><span class="chip">HIIT</span><span class="chip">Sonstiges</span></div></div>
+      <div class="section">Dauer</div>
+      <div class="list"><div class="chips"><span class="chip">20 min</span><span class="chip">30 min</span><span class="chip on">45 min</span><span class="chip">60 min</span><span class="chip">90 min</span><span class="chip">Andere …</span></div></div>
+      <div class="list">
+        <div class="field"><span>Beginn</span><span class="pick">Heute 18:25</span></div>
+        <div class="field"><span>Kalorien (optional)</span><span><span class="numf">–</span> kcal</span></div>
+      </div>
+      <div class="spacer"></div>
+    </div>
+    <p class="pc"><b>Pro:</b> jede Art und jede übliche Dauer mit einem Tipp. <b>Contra:</b> ein eigener Kachel-Baustein; bei großer Schrift brechen die Kacheln über viele Zeilen um; der Nutzen ist klein, wenn die Vorbelegung meistens stimmt.</p>
+  </div>
+</div>
+
+<!-- ============================== E6 ============================== -->
+<h2><span class="area">E6</span> Einstellungen · Ziele und Health-Zugriff</h2>
+<p class="lead">Die Einstellungsseite ist schon lang. Empfohlen ist eine Zeile „Erfassen“, die wie „KI“ auf eine Unterseite führt, und eine vierte Zeile „Health“ unter „Zugriff“. Einen eigenen Schalter „In Health speichern“ gibt es in der Empfehlung nicht: wie bei den Benachrichtigungen entscheidet die Berechtigung von iOS.</p>
+<div class="grid">
+  <div>
+    <p class="label"><span class="code r">E6a</span><b>Hauptseite: Zeile „Erfassen“ und Zeile „Health“</b> <span class="rec">Empfehlung</span></p>
+    <div class="phone">
+      <div class="status"><span>13:20</span><span>●●● 5G</span></div>
+      <div class="nav">Einstellungen</div>
+      <div class="list"><div class="field"><span>KI</span><span class="v">Automatisch ›</span></div></div>
+      <div class="list new"><div class="field hl"><span>Erfassen</span><span class="v">2.300 kcal · 2,0 l · 3× ›</span></div></div>
+      <div class="section">Benachrichtigungen</div>
+      <div class="list">
+        <div class="field"><span>Vorlauf: 2 h</span><span class="pick">−&nbsp;&nbsp;|&nbsp;&nbsp;+</span></div>
+        <div class="field"><span>Deadline-Termine</span><span class="tog on"></span></div>
+      </div>
+      <div class="section">Zugriff</div>
+      <div class="list">
+        <div class="field"><span>Erinnerungen</span><span class="v">erlaubt</span></div>
+        <div class="field"><span>Kalender</span><span class="v">erlaubt</span></div>
+        <div class="field"><span>Benachrichtigungen</span><span class="v">erlaubt</span></div>
+        <div class="field hl"><span>Health</span><span class="v">verbunden</span></div>
+      </div>
+      <div class="note">Tagwerk schreibt Mahlzeiten, Wasser und Trainings nach Health und liest Trainings. Ob das Lesen erlaubt ist, zeigt iOS nicht an: Fehlen Trainings der Apple Watch, prüfe den Zugriff in der App „Health“ unter Profil › Apps › Tagwerk.</div>
+      <div class="list" style="margin-top:10px"><div class="field"><span class="l">Einrichtung erneut starten</span></div></div>
+      <div class="spacer"></div>
+      <div class="tabbar"><span><i>▦</i>Planen</span><span><i>☑</i>Aufgaben</span><span><i>⊕</i>Erfassen</span><span class="on"><i>⚙</i>Einstellungen</span></div>
+    </div>
+    <p class="pc"><b>Pro:</b> eine Zeile mehr auf der Hauptseite statt eines ganzen Abschnitts; „Health“ steht dort, wo die anderen Berechtigungen stehen. <b>Contra:</b> Ziele liegen einen Tipp tiefer.</p>
+  </div>
+  <div>
+    <p class="label"><span class="code r">E6a</span><b>Unterseite „Erfassen“</b></p>
+    <div class="phone">
+      <div class="status"><span>13:20</span><span>●●● 5G</span></div>
+      <div class="nav sheet"><span>‹ Einstellungen</span><span>Erfassen</span><span></span></div>
+      <div class="section">Ziele</div>
+      <div class="list new">
+        <div class="field"><span>Kalorien: 2.300 kcal</span><span class="pick">−&nbsp;&nbsp;|&nbsp;&nbsp;+</span></div>
+        <div class="field"><span>Wasser: 2,0 l</span><span class="pick">−&nbsp;&nbsp;|&nbsp;&nbsp;+</span></div>
+        <div class="field"><span>Trainings pro Woche: 3</span><span class="pick">−&nbsp;&nbsp;|&nbsp;&nbsp;+</span></div>
+        <div class="field"><span>Eiweiß-Ziel</span><span class="tog on"></span></div>
+        <div class="field"><span>Eiweiß: 120 g</span><span class="pick">−&nbsp;&nbsp;|&nbsp;&nbsp;+</span></div>
+      </div>
+      <div class="note">Die Vorgaben sind Platzhalter, keine Empfehlung. Trag deine eigenen Ziele ein. Als Training zählt jede Einheit ab 10 min, aus Tagwerk oder aus Health.</div>
+      <div class="section">Schätzung</div>
+      <div class="list new">
+        <div class="field"><span>Mahlzeiten von ChatGPT schätzen</span><span class="tog on"></span></div>
+      </div>
+      <div class="note">Zum Schätzen sendet Tagwerk nur Text und Foto der jeweiligen Mahlzeit an ChatGPT (OpenAI), und nur, wenn du auf „Schätzen“ tippst. Daten aus Health, Ziele und frühere Einträge werden nie gesendet. Ausgeschaltet trägst du Werte selbst ein.</div>
+      <div class="spacer"></div>
+    </div>
+    <p class="pc">Schritte: Kalorien 50 kcal (1.200–5.000), Wasser 0,25 l (0,5–5,0), Trainings 1 (0–14; 0 blendet den Zähler aus), Eiweiß 5 g (40–300). Der Schalter „Mahlzeiten von ChatGPT schätzen“ ist die Einwilligung aus E3: aus bis zur ersten Zustimmung, hier jederzeit widerrufbar. Ohne ChatGPT-Anmeldung ist er ausgegraut mit der Fußnote „Melde dich unter Einstellungen › KI bei ChatGPT an, um Mahlzeiten schätzen zu lassen.“</p>
+  </div>
+  <div>
+    <p class="label"><span class="code">E6b</span><b>Abschnitt „Ziele“ auf der Hauptseite, Schalter „In Health speichern“</b></p>
+    <div class="phone">
+      <div class="status"><span>13:20</span><span>●●● 5G</span></div>
+      <div class="nav">Einstellungen</div>
+      <div class="list"><div class="field"><span>KI</span><span class="v">Automatisch ›</span></div></div>
+      <div class="section">Ziele</div>
+      <div class="list new">
+        <div class="field"><span>Kalorien: 2.300 kcal</span><span class="pick">−&nbsp;&nbsp;|&nbsp;&nbsp;+</span></div>
+        <div class="field"><span>Wasser: 2,0 l</span><span class="pick">−&nbsp;&nbsp;|&nbsp;&nbsp;+</span></div>
+        <div class="field"><span>Trainings pro Woche: 3</span><span class="pick">−&nbsp;&nbsp;|&nbsp;&nbsp;+</span></div>
+      </div>
+      <div class="section">Erfassen</div>
+      <div class="list new">
+        <div class="field"><span>Mahlzeiten von ChatGPT schätzen</span><span class="tog on"></span></div>
+        <div class="field"><span>In Health speichern</span><span class="tog on"></span></div>
+      </div>
+      <div class="section">Zugriff</div>
+      <div class="list">
+        <div class="field"><span>Erinnerungen</span><span class="v">erlaubt</span></div>
+        <div class="field"><span>Kalender</span><span class="v">erlaubt</span></div>
+        <div class="field"><span>Benachrichtigungen</span><span class="v">erlaubt</span></div>
+        <div class="field hl"><span>Health</span><span class="v">verbunden</span></div>
+      </div>
+      <div class="spacer"></div>
+      <div class="tabbar"><span><i>▦</i>Planen</span><span><i>☑</i>Aufgaben</span><span><i>⊕</i>Erfassen</span><span class="on"><i>⚙</i>Einstellungen</span></div>
+    </div>
+    <p class="pc"><b>Pro:</b> alles auf einer Seite; das Spiegeln lässt sich abschalten, ohne die App „Health“ zu öffnen. <b>Contra:</b> zwei Abschnitte mehr auf einer Seite, die schon rollt; zwei Stellen (Schalter und Berechtigung), die beide „an“ sein müssen, und die Frage, was mit schon gespiegelten Einträgen passiert, wenn man den Schalter ausschaltet.</p>
+  </div>
+  <div>
+    <p class="label"><span class="code r">E6a</span><b>Zustände der Zeile „Health“ und die Systemseite</b></p>
+    <div class="phone short">
+      <div class="anno">noch nicht angefragt</div>
+      <div class="list"><div class="field hl"><span>Health</span><span class="l">Verbinden</span></div></div>
+      <div class="anno" style="margin-top:10px">Schreiben für alle Arten erlaubt</div>
+      <div class="list"><div class="field hl"><span>Health</span><span class="v">verbunden</span></div></div>
+      <div class="anno" style="margin-top:10px">Schreiben nur für einen Teil erlaubt</div>
+      <div class="list"><div class="field hl"><span>Health</span><span class="l">teilweise · Health öffnen</span></div></div>
+      <div class="note warn">Nicht nach Health geschrieben werden: Wasser, Trainings. Deine Einträge bleiben in Tagwerk.</div>
+      <div class="anno" style="margin-top:10px">Schreiben für alle Arten abgelehnt</div>
+      <div class="list"><div class="field hl"><span>Health</span><span class="l">Health öffnen</span></div></div>
+      <div class="note warn">Tagwerk darf nicht nach Health schreiben. Deine Einträge bleiben in Tagwerk. Ändern kannst du das in der App „Health“ unter Profil › Apps › Tagwerk.</div>
+      <div class="anno" style="margin-top:10px">Health auf dem Gerät nicht verfügbar</div>
+      <div class="list"><div class="field"><span>Health</span><span class="v">nicht verfügbar</span></div></div>
+    </div>
+    <p class="pc">„Verbinden“ öffnet die Berechtigungsseite von iOS (ein ganzer Bildschirm mit Schaltern je Datenart, Aussehen von iOS vorgegeben). Angefragt wird: schreiben Nahrungsenergie, Eiweiß, Kohlenhydrate, Fett, Wasser, Trainings, Aktive Energie (für die Kalorien eines Trainings); lesen Trainings. Den Zustand leitet die App allein aus den Schreibrechten ab, weil HealthKit Leserechte nicht verrät. Ob „Health öffnen“ direkt auf die richtige Seite führt, ist am Gerät zu prüfen; sonst nennt die Fußnote den Weg.</p>
+  </div>
+</div>
+
+<!-- ============================== E7 ============================== -->
+<h2><span class="area">E7</span> Wiederholen · „Zuletzt und häufig“</h2>
+<p class="lead">Das Ziel „eine Mahlzeit in höchstens etwa 10 s“ ist mit Tippen und einer Antwort von ChatGPT kaum zu halten. Der schnelle Weg ist deshalb, eine schon erfasste Mahlzeit erneut zu sichern, ohne KI und ohne Netz.</p>
+<div class="grid">
+  <div>
+    <p class="label"><span class="code r">E7a</span><b>Liste im Blatt „Essen“, „＋“ sichert sofort</b> <span class="rec">Empfehlung</span></p>
+    <div class="phone">
+      <div class="status"><span>07:40</span><span>●●● 5G</span></div>
+      <div class="nav sheet"><span>Abbrechen</span><span>Essen</span><span class="off">Sichern</span></div>
+      <div class="input"><span class="t">haf▏</span><span class="b">📷</span><span class="b">🖼</span></div>
+      <div class="pbtn wide">Schätzen</div>
+      <div class="section">Zuletzt und häufig</div>
+      <div class="list new">
+        <div class="item"><div class="t">Haferflocken mit Banane<div class="st">12× · zuletzt gestern</div></div><div class="r">~410 kcal</div><span class="pbtn sec">＋</span></div>
+        <div class="item"><div class="t">Haferdrink, 1 Glas<div class="st">2× · zuletzt Fr.</div></div><div class="r">95 kcal</div><span class="pbtn sec">＋</span></div>
+      </div>
+      <div class="note">„＋“ erfasst die Mahlzeit sofort für jetzt. Tippe auf die Zeile, um sie vorher anzupassen.</div>
+      <div class="spacer"></div>
+      <div class="toast" style="bottom:20px"><span>Haferflocken mit Banane erfasst</span><span>Widerrufen</span></div>
+    </div>
+    <p class="pc">Drei Tipps: Tab, „Essen“, „＋“. Reihenfolge: zuerst nach Häufigkeit in den letzten 30 Tagen, bei Gleichstand die neuere; höchstens 8 Zeilen, beim Tippen gefiltert. Gleich gilt, was denselben Titel hat (Groß- und Kleinschreibung egal); übernommen werden die Werte des letzten Eintrags samt Spanne. Wischen nach links: „Nicht mehr vorschlagen“. <b>Pro:</b> keine Favoritenverwaltung; die Liste entsteht von selbst. <b>Contra:</b> in den ersten Tagen ist sie leer; zwei Schreibweisen derselben Mahlzeit stehen doppelt.</p>
+  </div>
+  <div>
+    <p class="label"><span class="code">E7b</span><b>Favoriten-Kacheln im Tab, mit Stern gepflegt</b></p>
+    <div class="phone">
+      <div class="status"><span>13:20</span><span>●●● 5G</span></div>
+      <div class="title">Erfassen <small>✦</small></div>
+      <div class="head">
+        <div class="big">~1.310 <small>/ 2.300 kcal</small></div>
+        <div class="bar"><i style="width:57%"></i></div>
+      </div>
+      <div class="quick"><span><i>🍽</i>Essen</span><span><i>💧</i>Trinken</span><span><i>🏃</i>Training</span></div>
+      <div class="section">Favoriten</div>
+      <div class="list new"><div class="chips"><span class="chip">★ Haferflocken mit Banane</span><span class="chip">★ Proteinriegel</span><span class="chip">★ Cappuccino</span><span class="chip">★ Linsencurry mit Reis</span></div></div>
+      <div class="note">Favoriten legst du im Eintrag mit dem Stern fest.</div>
+      <div class="spacer"></div>
+      <div class="tabbar"><span><i>▦</i>Planen</span><span><i>☑</i>Aufgaben</span><span class="on"><i>⊕</i>Erfassen</span><span><i>⚙</i>Einstellungen</span></div>
+    </div>
+    <p class="pc"><b>Pro:</b> zwei Tipps statt drei; nur, was man bewusst gewählt hat. <b>Contra:</b> Pflegeaufwand; die Kacheln schieben die Liste des Tages nach unten; ohne Pflege bleibt der Bereich leer, und der schnelle Weg fehlt genau dann.</p>
+  </div>
+</div>
+
+<!-- ============================== E8 ============================== -->
+<h2><span class="area">E8</span> Eintrag bearbeiten und löschen</h2>
+<p class="lead">Tippen auf einen Eintrag öffnet dieselbe Form wie die Vorschau. Wischen nach links löscht ohne Rückfrage, mit „Widerrufen“ für 4 s. Jede Änderung und jedes Löschen wird nach Health gespiegelt; scheitert das, bleibt die Änderung in Tagwerk bestehen und wird beim nächsten Öffnen der App nachgeholt.</p>
+<div class="grid">
+  <div>
+    <p class="label"><span class="code r">E8a</span><b>Mahlzeit bearbeiten</b> <span class="rec">Empfehlung</span></p>
+    <div class="phone">
+      <div class="status"><span>13:20</span><span>●●● 5G</span></div>
+      <div class="nav sheet"><span>Abbrechen</span><span>Mahlzeit</span><span>Sichern</span></div>
+      <div class="list">
+        <div class="field"><span>Linsencurry mit Reis</span><span class="v">✎</span></div>
+        <div class="field"><span>Mahlzeit</span><span class="pick">Mittagessen ⌄</span></div>
+        <div class="field"><span>Zeit</span><span class="pick">Heute 12:35</span></div>
+      </div>
+      <div class="list">
+        <div class="sumrow"><span>Gesamt</span><b>~620 kcal</b></div>
+        <div class="range">wahrscheinlich zwischen 500 und 760 kcal</div>
+        <div class="macros"><span>~24 g<small>Eiweiß</small></span><span>~92 g<small>Kohlenhydrate</small></span><span>~16 g<small>Fett</small></span></div>
+      </div>
+      <div class="section">Posten</div>
+      <div class="list">
+        <div class="item"><div class="t">Linsencurry<div class="st">1 Portion · ~300 g</div></div><span class="pick">−&nbsp;&nbsp;1&nbsp;&nbsp;+</span><div class="r">~360 kcal</div></div>
+        <div class="item"><div class="t">Reis, gekocht<div class="st">1 Portion · ~200 g</div></div><span class="pick">−&nbsp;&nbsp;1&nbsp;&nbsp;+</span><div class="r">~260 kcal</div></div>
+        <div class="field"><span class="l">Posten hinzufügen</span></div>
+      </div>
+      <div class="list" style="margin-top:8px"><div class="field"><span class="d">Mahlzeit löschen</span></div></div>
+      <div class="note">Geschätzt von ChatGPT am 18.11. um 12:35. In Health gespeichert.</div>
+      <div class="spacer"></div>
+    </div>
+    <p class="pc">Die letzte Zeile nennt die Herkunft („Geschätzt von ChatGPT …“ oder „Von dir eingetragen“) und den Stand der Spiegelung: „In Health gespeichert.“, „Noch nicht in Health gespeichert. Tagwerk versucht es erneut.“ oder nichts, wenn Health nicht verbunden ist. Trainings aus Health öffnen eine Ansicht ohne „Sichern“ und ohne Löschen, mit der Fußnote „Aus Health (Apple Watch). Ändern oder löschen kannst du dieses Training in der App „Fitness“ oder „Health“.“</p>
+  </div>
+</div>
+
+<!-- ============================== Texte ============================== -->
+<h2><span class="area" style="background:#636366">T</span> Texte für die Umsetzung</h2>
+<div class="box neutral">
+  <h3>Fehler beim Schätzen (Eingabe bleibt stehen; darunter immer „Erneut versuchen“ und „Ohne Schätzung eintragen“)</h3>
+  <div class="tablewrap">
+  <table class="sum">
+    <tr><th>Fall</th><th>Text</th></tr>
+    <tr><td>Kein Netz</td><td>„Keine Verbindung. Die Schätzung braucht Internet.“</td></tr>
+    <tr><td>Zeitüberschreitung (30 s) oder Serverfehler</td><td>„Die Schätzung ist fehlgeschlagen. Versuch es noch einmal oder trag die Werte selbst ein.“</td></tr>
+    <tr><td>Kein Essen erkannt (leere Postenliste)</td><td>„Darin war kein Essen zu erkennen. Beschreib die Mahlzeit genauer oder trag die Werte selbst ein.“</td></tr>
+    <tr><td>Anmeldung abgelaufen</td><td>„Die Anmeldung bei ChatGPT ist abgelaufen. Melde dich unter Einstellungen › KI neu an.“ (statt „Erneut versuchen“: „Zu den KI-Einstellungen“)</td></tr>
+    <tr><td>Kontingent erschöpft</td><td>„ChatGPT nimmt gerade keine Anfragen an. Versuch es später noch einmal oder trag die Werte selbst ein.“</td></tr>
+    <tr><td>Ablehnung durch das Modell</td><td>„ChatGPT hat diese Anfrage abgelehnt. Trag die Werte selbst ein.“ (ohne „Erneut versuchen“)</td></tr>
+    <tr><td>Kamera nicht erlaubt</td><td>„Tagwerk darf die Kamera nicht benutzen. Wähle ein Foto aus der Mediathek oder erlaube die Kamera in den Einstellungen.“ (Knopf „Einstellungen öffnen“)</td></tr>
+  </table>
+  </div>
+  <h3 style="margin-top:12px">Leerzustände, Hinweise, Fußnoten</h3>
+  <div class="tablewrap">
+  <table class="sum">
+    <tr><th>Stelle</th><th>Text</th></tr>
+    <tr><td>Tag ganz leer</td><td>„Noch nichts erfasst. Tippe oben auf Essen, Trinken oder Training.“</td></tr>
+    <tr><td>Vergangener Tag leer</td><td>„An diesem Tag ist nichts erfasst.“</td></tr>
+    <tr><td>„Zuletzt und häufig“ leer</td><td>„Hier erscheinen Mahlzeiten, die du schon einmal erfasst hast.“</td></tr>
+    <tr><td>Fußnote unter der Liste „Zuletzt und häufig“</td><td>„„＋“ erfasst die Mahlzeit sofort für jetzt. Tippe auf die Zeile, um sie vorher anzupassen.“</td></tr>
+    <tr><td>Fußnote Vorschau</td><td>„Schätzung, keine Messung. Passe Mengen und Werte an, bevor du sicherst. Tippe auf einen Posten, um seine Werte zu ändern; wische, um ihn zu entfernen.“</td></tr>
+    <tr><td>Spanne</td><td>„wahrscheinlich zwischen 410 und 550 kcal“; in Listen kurz „410–550“</td></tr>
+    <tr><td>Fußnote Foto</td><td>„Das Foto wird verkleinert und ohne Ortsangabe gesendet und nicht in Tagwerk gespeichert.“</td></tr>
+    <tr><td>Kamera-Begründung (<code>NSCameraUsageDescription</code>)</td><td>„Tagwerk nimmt Fotos von Mahlzeiten auf, um Kalorien und Nährwerte schätzen zu lassen.“</td></tr>
+    <tr><td>Health-Begründungen (<code>NSHealthShareUsageDescription</code> / <code>NSHealthUpdateUsageDescription</code>)</td><td>„Tagwerk zeigt deine Trainings aus Health im Tab „Erfassen“.“ / „Tagwerk speichert deine Mahlzeiten, dein Wasser und deine Trainings in Health.“</td></tr>
+    <tr><td>Hinweise nach dem Erfassen</td><td>„250 ml Wasser erfasst“, „Haferflocken mit Banane erfasst“, „Krafttraining erfasst“, „Eintrag gelöscht“; Knopf jeweils „Widerrufen“</td></tr>
+    <tr><td>Über dem Ziel</td><td>„120 über Ziel“ (statt „noch ~990“), Balken bleibt orange</td></tr>
+    <tr><td>Warnung Überschneidung (Training)</td><td>„Überschneidet sich mit „Laufen“ (07:05, Apple Watch). Das Training würde doppelt gezählt.“</td></tr>
+    <tr><td>Abschnitt „Training“ ohne Health</td><td>keine Meldung; leere Health-Daten sind kein Fehler</td></tr>
+  </table>
+  </div>
+  <h3 style="margin-top:12px">Mahlzeitentyp nach Uhrzeit (vorbelegt, änderbar)</h3>
+  <div class="tablewrap">
+  <table class="sum">
+    <tr><th>Uhrzeit</th><th>Typ</th></tr>
+    <tr><td>05:00–10:29</td><td>Frühstück</td></tr>
+    <tr><td>11:30–14:29</td><td>Mittagessen</td></tr>
+    <tr><td>17:30–21:29</td><td>Abendessen</td></tr>
+    <tr><td>sonst</td><td>Snack</td></tr>
+  </table>
+  </div>
+</div>
+
+<!-- ============================== Abschluss ============================== -->
+<h2><span class="area" style="background:#636366">§</span> Empfehlung und offene Fragen</h2>
+<div class="box neutral">
+  <h3>Was diese Mockups nicht zeigen oder nicht belegen</h3>
+  <ul>
+    <li>Helles Erscheinungsbild, Querformat und die größten Dynamic-Type-Stufen. Aussagen dazu sind Entwurfsannahmen.</li>
+    <li>Die Berechtigungsseite von Health und die Systemfrage der Kamera (Aussehen und Wortlaut von iOS).</li>
+    <li><b>Die 10 s sind nicht gemessen.</b> Für „＋“ und Wasser sind sie plausibel (zwei bis drei Tipps). Für Text plus Schätzung ist mit deutlich mehr zu rechnen; die Antwortzeit von ChatGPT für eine Mahlzeit wurde im Machbarkeitstest nicht festgehalten. Am Gerät messen.</li>
+    <li><b>Die Güte der Spanne ist nicht geprüft.</b> Der Machbarkeitstest belegt eine sinnvolle Zerlegung für eine Mahlzeit aus Text, nicht die Treffsicherheit über viele Mahlzeiten und nicht die Qualität von Foto-Schätzungen (dort wurde nur geprüft, dass Bild-Eingabe technisch geht).</li>
+    <li>Fortschritt, Wochenrückblick, Erfassen per Assistent oder Siri (Phase 4).</li>
+  </ul>
+</div>
+<div class="box">
+  <h3>Empfehlung: E1a + E2a + E3a + E4a + E5a + E6a + E7a + E8a (vorläufig, Freigabe offen)</h3>
+  <div class="tablewrap">
+  <table class="sum">
+    <tr><th>Punkt</th><th>Empfehlung</th><th>Kern</th></tr>
+    <tr><td><b>E1</b> Übersicht</td><td><span class="code r">E1a</span></td><td>Tag mit Pfeilen (nur zurück und bis heute), Kalorien groß mit Balken, darunter Wasser, Eiweiß (nur mit Ziel) und Wochenzähler; drei Knöpfe und drei Wasser-Knöpfe; Liste nach Essen, Trinken, Training, Wasser als eine Zeile.</td></tr>
+    <tr><td><b>E2</b> Essen</td><td><span class="code r">E2a</span></td><td>Textfeld mit Kamera und Fotoauswahl, „Schätzen“, Vorschau mit Posten (Menge per Stepper), Summe mit „~“ und Spanne in kcal, Makros mit „~“; Mahlzeitentyp nach Uhrzeit; Foto wird nicht gespeichert; bei Fehler oder ohne Anmeldung manuelle Form.</td></tr>
+    <tr><td><b>E3</b> Einwilligung</td><td><span class="code r">E3a</span></td><td>Einmaliges Blatt vor der ersten Schätzung mit „gesendet / nicht gesendet / nur auf Tippen“; Widerruf über den Schalter in Einstellungen › Erfassen.</td></tr>
+    <tr><td><b>E4</b> Trinken</td><td><span class="code r">E4a</span></td><td>250, 330, 500 ml mit einem Tipp im Tab; Blatt für andere Mengen und zum Löschen; nur Wasser, keine Getränkearten.</td></tr>
+    <tr><td><b>E5</b> Training</td><td><span class="code r">E5a</span></td><td>Formular mit Art, Dauer, Beginn, Kalorien (optional), vorbelegt mit dem letzten Training; Health-Trainings mit Quelle und nicht änderbar; Wochenzähler Mo–So ab 10 min, eigene und fremde.</td></tr>
+    <tr><td><b>E6</b> Einstellungen</td><td><span class="code r">E6a</span></td><td>Zeile „Erfassen“ mit Unterseite (Ziele, Schalter „Mahlzeiten von ChatGPT schätzen“); Zeile „Health“ unter „Zugriff“; kein Schalter „In Health speichern“; kein Einrichtungsschritt; einmalige Karte im Tab.</td></tr>
+    <tr><td><b>E7</b> Wiederholen</td><td><span class="code r">E7a</span></td><td>„Zuletzt und häufig“ im Blatt „Essen“; „＋“ sichert sofort mit „Widerrufen“; keine Favoritenverwaltung.</td></tr>
+    <tr><td><b>E8</b> Bearbeiten</td><td><span class="code r">E8a</span></td><td>Tippen öffnet die Form der Vorschau; Wischen löscht mit „Widerrufen“; Änderungen und Löschen werden nach Health gespiegelt und bei Fehlschlag nachgeholt.</td></tr>
+  </table>
+  </div>
+  <h3 style="margin-top:12px">Weitere vorläufige Festlegungen ohne eigenes Bild</h3>
+  <ul>
+    <li><b>Standardziele:</b> 2.300 kcal (Zahl aus der Skizze im Hauptdesign), 2,0 l Wasser, 3 Trainings pro Woche, Eiweiß-Ziel aus (eingeschaltet 120 g). Platzhalter, keine Ernährungsempfehlung.</li>
+    <li><b>Fremde Nahrungsdaten aus Health</b> zählen in Phase 3 nicht mit. Tagwerk liest aus Health nur Trainings.</li>
+    <li><b>Kalorien- und Wasserzeile im Kopf von „Planen“:</b> nicht in Phase 3, zusammen mit Fortschritt und Widget in Phase 4 neu bewerten.</li>
+    <li><b>Nachtragen nach dem Verbinden:</b> Wird Health später verbunden, schreibt Tagwerk alle bisherigen Einträge nach.</li>
+  </ul>
+  <h3 style="margin-top:12px">Offene Fragen an den Nutzer</h3>
+  <ol>
+    <li><b>E2:</b> Spanne in kcal (Vorschlag) oder „± 15 %“ wie in der Skizze des Hauptdesigns?</li>
+    <li><b>E2:</b> Soll das Foto wirklich verworfen werden? Ohne Foto lässt sich eine Schätzung später nicht mehr nachvollziehen; mit Foto wächst der Speicher und es liegen Bilder in der App.</li>
+    <li><b>E4:</b> Reicht „nur Wasser“, oder brauchst du Kaffee und Tee als eigene Art?</li>
+    <li><b>E5:</b> Zählt jedes Training ab 10 min (Vorschlag), oder höchstens eines pro Tag?</li>
+    <li><b>E6:</b> Passen die Standardziele? Soll das Eiweiß-Ziel von Anfang an an sein?</li>
+    <li><b>E6:</b> Reicht die Zeile „Health“ unter „Zugriff“ als einziger Regler (Vorschlag), oder willst du den Schalter „In Health speichern“ aus E6b?</li>
+    <li><b>Health:</b> Benutzt du eine andere App, die Mahlzeiten nach Health schreibt? Nur dann lohnt es, fremde Nahrungsdaten mitzuzählen.</li>
+    <li><b>Planen:</b> Soll die Zeile „🔥 … kcal · 💧 … l“ doch schon in Phase 3 in den Kopf von „Planen“?</li>
+  </ol>
+</div>
+
+</body>
+</html>
