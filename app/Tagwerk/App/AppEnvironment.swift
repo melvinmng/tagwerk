@@ -23,6 +23,8 @@ final class AppEnvironment {
     let ai: AIEnvironment
     /// "Tag/Woche/Monat planen" with ChatGPT; calls only on the user's tap.
     let planner: AIPlanner
+    /// The assistant chat (design §8.3); sends only what the user writes.
+    let assistant: AssistantModel
     private let gitHubCache: SwiftDataGitHubCache
     private let gitHubCatalogStore: SwiftDataGitHubCatalogStore
     /// Age after which the repository/project catalog is fetched again.
@@ -78,6 +80,10 @@ final class AppEnvironment {
                                      defer { ai.modelFallbackNotice = false }
                                      return ai.modelFallbackNotice
                                  })
+        let tools = AppTools(taskList: taskList, planning: planning, planner: planner,
+                             events: { interval in gateway.events(in: interval, calendarIDs: nil) })
+        self.assistant = AssistantModel(responder: ai.client, tools: tools, model: { try await ai.selectedModel() },
+                                        store: ChatStore(context: context), planning: planning)
         let planning = self.planning
         taskList.onCompletionChanged = { id, isCompleted in await planning.didChangeCompletion(id, isCompleted: isCompleted) }
         // An ended GitHub sign-in (expired or revoked) forgets the cached issues of that account.

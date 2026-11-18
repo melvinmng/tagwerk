@@ -8,6 +8,14 @@ struct RootView: View {
     @State private var openEvent: CalendarEvent?
     @State private var recurringEdit: RecurringEdit?
 
+    /// K1 (the separate place of the tab bar) did not hold on iOS 27: the search tab sits inside the bar.
+    /// The fallback K2 puts the button top right in every tab (`AssistantButton`).
+    private var tabSelection: Binding<Int> { $selectedTab }
+
+    private var assistantPresented: Binding<Bool> {
+        Binding(get: { environment.assistant.isPresented }, set: { environment.assistant.isPresented = $0 })
+    }
+
     struct RecurringEdit: Identifiable {
         var id: String { item.reminderID + "\(day)" }
         let item: RecurringItem
@@ -15,23 +23,37 @@ struct RootView: View {
     }
 
     var body: some View {
-        TabView(selection: $selectedTab) {
-            PlanView(model: environment.planning,
-                     onOpenTask: { id in editingTask = environment.taskList.items.first { $0.id == id } },
-                     onOpenEvent: { event in openEvent = event },
-                     onShowTask: showTask,
-                     onEditRecurring: { item, day in recurringEdit = RecurringEdit(item: item, day: day) })
-                .tabItem { Label("Planen", systemImage: "calendar") }
-                .tag(0)
-
-            TaskListView(model: environment.taskList, onShowDay: showDay,
+        TabView(selection: tabSelection) {
+            Tab("Planen", systemImage: "calendar", value: 0) {
+                PlanView(model: environment.planning,
+                         onOpenTask: { id in editingTask = environment.taskList.items.first { $0.id == id } },
+                         onOpenEvent: { event in openEvent = event },
+                         onShowTask: showTask,
                          onEditRecurring: { item, day in recurringEdit = RecurringEdit(item: item, day: day) })
-                .tabItem { Label("Aufgaben", systemImage: "checklist") }
-                .tag(1)
+            }
 
-            SettingsView()
-                .tabItem { Label("Einstellungen", systemImage: "gearshape") }
-                .tag(2)
+            Tab("Aufgaben", systemImage: "checklist", value: 1) {
+                TaskListView(model: environment.taskList, onShowDay: showDay,
+                             onEditRecurring: { item, day in recurringEdit = RecurringEdit(item: item, day: day) })
+            }
+
+            Tab("Einstellungen", systemImage: "gearshape", value: 2) {
+                SettingsView()
+            }
+
+        }
+        .sheet(isPresented: assistantPresented) {
+            ChatView(assistant: environment.assistant)
+        }
+        .onChange(of: environment.assistant.isPresented) { _, presented in
+            // The chat is its own sheet over the tabs; other sheets close first.
+            if presented { editingTask = nil; openEvent = nil; recurringEdit = nil }
+        }
+        .onAppear {
+            environment.assistant.tools.onPlanned = {
+                environment.assistant.isPresented = false
+                selectedTab = 0
+            }
         }
         .sheet(item: $editingTask) { task in
             if let provider = environment.taskList.provider(for: task.id.source) {

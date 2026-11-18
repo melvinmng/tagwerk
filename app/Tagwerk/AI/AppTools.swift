@@ -16,6 +16,8 @@ final class AppTools: ToolHandler {
     private let planning: PlanningModel
     private let planner: AIPlanner?
     private let events: (DateInterval) -> [CalendarEvent]
+    /// After "plan_period": the chat closes and "Planen" shows the suggestions (review item 11).
+    var onPlanned: (() -> Void)?
 
     init(taskList: TaskListModel, planning: PlanningModel, planner: AIPlanner?,
          events: @escaping (DateInterval) -> [CalendarEvent]) {
@@ -208,6 +210,7 @@ final class AppTools: ToolHandler {
         if case .failed(let message) = planner.state { throw ToolError(message) }
         if let notice = planner.notice, notice == AIPlanner.nothingToPlanMessage { throw ToolError(notice) }
         let batches = planning.suggestionBatches
+        onPlanned?()
         return Self.json([
             "ok": true,
             "suggestions": batches.reduce(0) { $0 + $1.suggestions.count },

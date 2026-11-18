@@ -133,6 +133,7 @@ struct PlanView: View {
                     .buttonStyle(.bordered)
                     .buttonBorderShape(.circle)
                     .accessibilityLabel("Neuer Termin")
+                AssistantButton { .planning(scope: model.scope, anchor: model.anchor) }
             }
         }
         .padding(.horizontal)

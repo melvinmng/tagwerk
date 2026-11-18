@@ -102,6 +102,9 @@ struct TaskListView: View {
                     }
                 }
                 ToolbarItem(placement: .primaryAction) {
+                    AssistantButton { .tasks }
+                }
+                ToolbarItem(placement: .primaryAction) {
                     Button { isCreating = true } label: { Label("Neue Aufgabe", systemImage: "plus") }
                 }
             }

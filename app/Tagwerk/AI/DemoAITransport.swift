@@ -30,6 +30,9 @@ final class DemoAITransport: AIHTTPTransport {
             return Self.stream([Self.event(["type": "response.output_text.delta", "delta": plan]),
                                 Self.event(["type": "response.completed", "response": [:]])], request: request)
         }
+        if let chat = Self.chatAnswer(for: request) {
+            return Self.stream(chat, request: request)
+        }
         let lines = [
             #"data: {"type":"response.output_text.delta","delta":"Das ist eine Demo-Antwort."}"#,
             #"data: {"type":"response.completed","response":{"usage":{"total_tokens":1}}}"#,
@@ -57,6 +60,22 @@ final class DemoAITransport: AIHTTPTransport {
                 continuation.finish()
             }
         }, HTTPURLResponse(url: request.url!, statusCode: 200, httpVersion: nil, headerFields: nil)!)
+    }
+
+    /// Assistant demo: a user message gets a short answer and a "create_task" call; a function result gets "Erledigt."
+    private static func chatAnswer(for request: URLRequest) -> [String]? {
+        guard let body = request.httpBody,
+              let json = try? JSONSerialization.jsonObject(with: body) as? [String: Any],
+              json["tools"] != nil, let last = (json["input"] as? [[String: Any]])?.last else { return nil }
+        if last["type"] as? String == "function_call_output" {
+            return [event(["type": "response.output_text.delta", "delta": "Erledigt. Die Demo-Aufgabe steht jetzt in deiner Liste."]),
+                    event(["type": "response.completed", "response": [:]])]
+        }
+        let arguments = #"{"title":"Demo-Aufgabe","due":null,"priority":"P3","minutes":30,"notes":null,"source":"local"}"#
+        return [event(["type": "response.output_text.delta", "delta": "Ich schlage vor, dafür eine Aufgabe anzulegen."]),
+                event(["type": "response.output_item.done", "item": ["type": "function_call", "call_id": "demo-\(UUID().uuidString)",
+                                                                    "name": "create_task", "arguments": arguments]]),
+                event(["type": "response.completed", "response": [:]])]
     }
 
     /// A schema-valid plan for the tasks and days in the request. The first answer contains one block
