@@ -13,8 +13,13 @@ struct WeekView: View {
             DayHeader(model: model) { model.scope = .month }
                 .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
                 .listRowBackground(Color.clear)
+            AIPlanBar(scope: .week)
             ForEach(model.days) { plan in
                 Section {
+                    ForEach(plan.suggestions) { suggestion in
+                        SuggestionRow(suggestion: suggestion)
+                            .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
+                    }
                     ForEach(plan.assigned) { task in
                         PlannedTaskRow(task: task, isPastDue: plan.isPastDue.contains(task.id))
                             .contentShape(Rectangle())
@@ -24,7 +29,7 @@ struct WeekView: View {
                     ForEach(plan.deadlines) { deadline in
                         Label(deadline.title, systemImage: "flag.fill").foregroundStyle(.red).font(.subheadline)
                     }
-                    if plan.assigned.isEmpty && plan.deadlines.isEmpty {
+                    if plan.assigned.isEmpty && plan.deadlines.isEmpty && plan.suggestions.isEmpty {
                         Text(targetedDay == plan.day ? "Hier ablegen" : "–").foregroundStyle(.secondary).font(.caption)
                     }
                 } header: {

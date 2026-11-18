@@ -114,6 +114,11 @@ struct DayView: View {
                 let rows = model.timelineWithGaps(for: plan)
                 if rows.isEmpty { Text("Keine Termine").foregroundStyle(.secondary) }
                 ForEach(rows) { row in timelineRow(row, plan: plan) }
+                // Open AI suggestions in list mode (mockup W3).
+                ForEach(plan.suggestions.sorted { ($0.startMinutes ?? 0) < ($1.startMinutes ?? 0) }) { suggestion in
+                    SuggestionRow(suggestion: suggestion)
+                        .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
+                }
             } header: {
                 timelineHeader.textCase(nil)
             }
@@ -179,6 +184,21 @@ struct CapacityCard: View {
     let onEdit: () -> Void
 
     var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            details
+            if !plan.isPast && !plan.capacity.isDayOff {
+                Divider()
+                AIPlanBar(scope: .day)
+            }
+        }
+        .padding(12)
+        .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 14))
+    }
+
+    /// Suggested minutes of the day, counted apart until accepted (mockup V1).
+    private var suggestedMinutes: Int { plan.suggestions.compactMap(\.minutes).reduce(0, +) }
+
+    private var details: some View {
         Button(action: onEdit) {
             VStack(alignment: .leading, spacing: 6) {
                 HStack {
@@ -194,9 +214,14 @@ struct CapacityCard: View {
                     Text("\(plan.capacity.estimatedCount) Aufgabe(n) ohne Aufwand mit Standarddauer gerechnet")
                         .font(.caption).foregroundStyle(.secondary)
                 }
+                if suggestedMinutes > 0 {
+                    Label("\(CapacityText.duration(suggestedMinutes)) vorgeschlagen · nach dem Übernehmen "
+                          + "\(CapacityText.duration(max(0, (plan.capacity.remainingMinutes ?? plan.capacity.freeMinutes) - suggestedMinutes))) frei",
+                          systemImage: "sparkles")
+                        .font(.caption).foregroundStyle(.purple)
+                }
             }
-            .padding(12)
-            .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 14))
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .accessibilityHint("Arbeitszeit an diesem Tag ändern")

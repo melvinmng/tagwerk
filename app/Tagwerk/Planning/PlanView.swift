@@ -13,6 +13,22 @@ struct PlanView: View {
     @State private var dueDateFor: TaskItem?
     @State private var creatingEvent = false
 
+    @Environment(AppEnvironment.self) private var environment
+
+    /// "Vorschläge verworfen" with "Rückgängig" after "Verwerfen".
+    @ViewBuilder
+    private var dismissUndo: some View {
+        let dismissed = environment.planner.lastDismissed
+        if !dismissed.isEmpty {
+            let count = dismissed.reduce(0) { $0 + $1.suggestions.count }
+            UndoCapsule(title: count == 1 ? "1 Vorschlag" : "\(count) Vorschläge", caption: "Verworfen",
+                        symbol: "sparkles", duration: 5,
+                        onUndo: { Task { await environment.planner.undoDismissAll() } },
+                        onExpire: { environment.planner.clearDismissUndo() })
+                .padding(.bottom, 60)
+        }
+    }
+
     var body: some View {
         NavigationStack {
             Group {
@@ -28,6 +44,7 @@ struct PlanView: View {
                 }
             }
             .safeAreaInset(edge: .top) { header }
+            .overlay(alignment: .bottom) { dismissUndo }
             .navigationTitle("Planen")
             .toolbar(.hidden, for: .navigationBar)  // the tab bar already says "Planen" (mockup A1)
             .task(id: "\(model.scope)-\(model.anchor)") { await model.reload() }

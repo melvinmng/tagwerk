@@ -4,6 +4,8 @@ import SwiftUI
 /// button whose ring shows the remaining time.
 struct UndoCapsule: View {
     let title: String
+    var caption = "Erledigt"
+    var symbol = "checkmark.circle.fill"
     let duration: TimeInterval
     let onUndo: () -> Void
     let onExpire: () -> Void
@@ -24,7 +26,7 @@ struct UndoCapsule: View {
         .padding(.horizontal)
         .padding(.bottom, 4)
         .onAppear {
-            AccessibilityNotification.Announcement("Erledigt: \(title). Rückgängig verfügbar.").post()
+            AccessibilityNotification.Announcement("\(caption): \(title). Rückgängig verfügbar.").post()
             if !reduceMotion {
                 withAnimation(.linear(duration: duration)) { remaining = 0 }
             }
@@ -39,12 +41,12 @@ struct UndoCapsule: View {
 
     private var label: some View {
         HStack(spacing: 10) {
-            Image(systemName: "checkmark.circle.fill")
+            Image(systemName: symbol)
                 .font(.title2)
                 .symbolRenderingMode(.palette)
                 .foregroundStyle(.black, .green)
             VStack(alignment: .leading, spacing: 1) {
-                Text("Erledigt").font(.caption).foregroundStyle(.secondary)
+                Text(caption).font(.caption).foregroundStyle(.secondary)
                 Text(title).font(.subheadline.weight(.semibold)).lineLimit(2)
             }
         }

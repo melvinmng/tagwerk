@@ -40,6 +40,8 @@ struct TimelineCanvas: View {
     static let lineInset: CGFloat = 8
     private let labelWidth: CGFloat = 44
 
+    @Environment(AppEnvironment.self) private var environment
+    @State private var openSuggestion: PlanSuggestion?
     @State private var selectedID: String?
     /// When the hold selected an entry; the release of that hold must not count as a tap.
     @State private var selectedAt = Date.distantPast
@@ -77,6 +79,16 @@ struct TimelineCanvas: View {
                         .offset(x: labelWidth + 6 + CGFloat(columns[index]) * columnWidth, y: y(range.lowerBound, shown))
                         .zIndex(session?.id == entry.id ? 2 : (selectedID == entry.id ? 1 : 0))
                 }
+                ForEach(blockSuggestions) { suggestion in
+                    let range = Self.range(of: suggestion)
+                    SuggestionBlock(suggestion: suggestion, timeText: timeText(range),
+                                    onOpen: { openSuggestion = suggestion },
+                                    onAccept: { Task { await environment.planner.accept(suggestion) } },
+                                    onDismiss: { Task { await environment.planner.dismiss(suggestion) } })
+                        .frame(width: width - 2, height: max(22, height(range.count)))
+                        .offset(x: labelWidth + 6, y: y(range.lowerBound, shown))
+                        .zIndex(0.5)
+                }
                 if let preview = taskPreview {
                     previewBlock(preview, shown: shown, width: width)
                 }
@@ -87,16 +99,27 @@ struct TimelineCanvas: View {
         .sensoryFeedback(.selection, trigger: snapLine)
         .sensoryFeedback(.impact(weight: .light), trigger: selectedID) { _, new in new != nil }
         .onChange(of: plan) { _, _ in pending.removeAll() }
+        .sheet(item: $openSuggestion) { suggestion in SuggestionSheet(suggestion: suggestion) }
         .onChange(of: session != nil) { _, dragging in isDragging = dragging }
     }
 
     /// Visible hours: working time widened to every entry, with an hour of margin.
     var shownRange: Range<Int> {
         let hours = model.workHours(on: plan.day) ?? WorkHours(startMinutes: 540, endMinutes: 1080)
-        let ranges = entries.map(baseRange)
+        let ranges = entries.map(baseRange) + blockSuggestions.map(Self.range)
         let lower = min(hours.startMinutes, ranges.map(\.lowerBound).min() ?? hours.startMinutes)
         let upper = max(hours.endMinutes, ranges.map(\.upperBound).max() ?? hours.endMinutes)
         return max(0, (lower / 60 - 1) * 60)..<min(1440, ((upper + 59) / 60 + 1) * 60)
+    }
+
+    /// Open AI time-block suggestions of the day (mockup W1).
+    private var blockSuggestions: [PlanSuggestion] {
+        plan.suggestions.filter { $0.kind == .block && $0.startMinutes != nil }
+    }
+
+    static func range(of suggestion: PlanSuggestion) -> Range<Int> {
+        let start = suggestion.startMinutes ?? 0
+        return start..<(start + max(15, suggestion.minutes ?? 15))
     }
 
     /// Minutes for a y position in the canvas (used for drops from the "Ohne Uhrzeit" bar).
