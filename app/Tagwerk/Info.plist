@@ -45,6 +45,8 @@
 	<string>Tagwerk zeigt deine Trainings aus Health im Tab „Erfassen“.</string>
 	<key>NSHealthUpdateUsageDescription</key>
 	<string>Tagwerk speichert deine Mahlzeiten, dein Wasser und deine Trainings in Health.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Tagwerk wandelt deine Sprache auf dem iPhone in Text um. Der Ton verlässt das Gerät nicht.</string>
 	<key>NSRemindersFullAccessUsageDescription</key>
 	<string>Tagwerk liest und bearbeitet deine Erinnerungen, um sie mit deinen anderen Aufgaben zusammenzuführen.</string>
 	<key>TagwerkAppGroup</key>

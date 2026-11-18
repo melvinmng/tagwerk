@@ -250,6 +250,7 @@ struct VoiceDiagnosticsView: View {
 
     var body: some View {
         List {
+            RecognitionSpikeSection()
             Section {
                 Button {
                     Task { await model.run(client: client) }
