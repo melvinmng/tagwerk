@@ -1,0 +1,52 @@
+import Foundation
+import Testing
+import TagwerkCore
+@testable import Tagwerk
+
+/// Reference: Wednesday, 18 Nov 2026 (KW 47); the week runs Mon 16 – Sun 22.
+struct PlanHeaderTextTests {
+    let calendar = Calendar.tagwerk
+    let today = PlanDay(year: 2026, month: 11, day: 18)
+    let week = PlanDay(year: 2026, month: 11, day: 16)...PlanDay(year: 2026, month: 11, day: 22)
+
+    private func caption(_ scope: PlanScope, _ anchor: PlanDay, range: ClosedRange<PlanDay>? = nil) -> String {
+        PlanHeaderText.caption(scope: scope, anchor: anchor, today: today, range: range ?? anchor...anchor, calendar: calendar)
+    }
+
+    @Test func dayCaption_relativeDays() {
+        #expect(caption(.day, today) == "HEUTE · KW 47")
+        #expect(caption(.day, PlanDay(year: 2026, month: 11, day: 19)) == "MORGEN · KW 47")
+        #expect(caption(.day, PlanDay(year: 2026, month: 11, day: 17)) == "GESTERN · KW 47")
+        #expect(caption(.day, PlanDay(year: 2026, month: 11, day: 21)) == "IN 3 TAGEN · KW 47")
+        #expect(caption(.day, PlanDay(year: 2026, month: 11, day: 15)) == "VOR 3 TAGEN · KW 46")
+    }
+
+    @Test func weekCaption_currentAndOther() {
+        #expect(caption(.week, today, range: week) == "DIESE WOCHE · KW 47")
+        let next = PlanDay(year: 2026, month: 11, day: 23)...PlanDay(year: 2026, month: 11, day: 29)
+        #expect(caption(.week, PlanDay(year: 2026, month: 11, day: 25), range: next) == "KW 48")
+    }
+
+    @Test func monthCaption_currentAndOther() {
+        let november = PlanDay(year: 2026, month: 10, day: 26)...PlanDay(year: 2026, month: 12, day: 6)
+        #expect(caption(.month, PlanDay(year: 2026, month: 11, day: 1), range: november) == "DIESER MONAT · 2026")
+        #expect(caption(.month, PlanDay(year: 2025, month: 11, day: 1)) == "2025")
+    }
+
+    @Test func isCurrent_perScope() {
+        #expect(PlanHeaderText.isCurrent(scope: .day, anchor: today, today: today, range: today...today))
+        #expect(!PlanHeaderText.isCurrent(scope: .day, anchor: PlanDay(year: 2026, month: 11, day: 19), today: today,
+                                          range: PlanDay(year: 2026, month: 11, day: 19)...PlanDay(year: 2026, month: 11, day: 19)))
+        #expect(PlanHeaderText.isCurrent(scope: .week, anchor: today, today: today, range: week))
+        // The December grid shows the last days of November, but December is not the current month.
+        let decemberGrid = PlanDay(year: 2026, month: 11, day: 30)...PlanDay(year: 2027, month: 1, day: 3)
+        #expect(!PlanHeaderText.isCurrent(scope: .month, anchor: PlanDay(year: 2026, month: 12, day: 1), today: PlanDay(year: 2026, month: 11, day: 30),
+                                          range: decemberGrid))
+    }
+
+    @Test func stepLabels() {
+        #expect(PlanHeaderText.stepLabel(scope: .day, direction: -1) == "Vorheriger Tag")
+        #expect(PlanHeaderText.stepLabel(scope: .week, direction: 1) == "Nächste Woche")
+        #expect(PlanHeaderText.stepLabel(scope: .month, direction: -1) == "Vorheriger Monat")
+    }
+}

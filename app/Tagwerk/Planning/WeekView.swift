@@ -14,12 +14,6 @@ struct WeekView: View {
 
     var body: some View {
         List {
-            Section {
-                DayHeader(model: model) { model.scope = .month }
-                    .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
-                    .listRowBackground(Color.clear)
-                    .listRowSeparator(.hidden)
-            }
             // The AI bar as its own card under the header (mockup V1), like in the month.
             Section {
                 AIPlanBar(scope: .week)

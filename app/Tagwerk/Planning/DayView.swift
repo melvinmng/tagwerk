@@ -56,7 +56,7 @@ struct DayView: View {
     /// Header, deadlines, capacity and all-day events (above the timeline in both modes).
     @ViewBuilder
     private func summary(_ plan: DayPlan) -> some View {
-        DayHeader(model: model) { model.scope = .month }
+        PlanIntakeLine(model: model)
         DeadlineCard(deadlines: model.upcomingDeadlines, today: model.today, calendar: model.calendar)
         CapacityCard(model: model, plan: plan) { editingHours = true }
         if !model.allDayEvents(for: plan).isEmpty {
