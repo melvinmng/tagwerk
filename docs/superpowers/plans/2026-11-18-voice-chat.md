@@ -100,6 +100,13 @@ Die App verbindet das in `VoiceInputModel` (Aufnahme), `VoiceOutputModel` (Vorle
 16. **Pegel** auf etwa 10 Hz gedrosselt.
 17. **Mahlzeiten-Blatt** (Entscheidung 8) erst nach Bestätigung durch den Nutzer; nicht in PR 1.
 
+## Ergebnis Task 0 (iPhone, 2026-11-18)
+
+- `SpeechTranscriber` verfügbar; Sprachpakete Deutsch und Englisch für beide Erkenner geladen (reserviert: de_DE, en_US, maximal 5).
+- Mikrofon erlaubt; die Abfrage „Spracherkennung“ wurde **nie gestellt** und die Erkennung lief trotzdem. Sie entfällt, kein `NSSpeechRecognitionUsageDescription`.
+- Erster Text nach 1,8 s (inklusive Start der Engine).
+- Der Nutzer fand **Diktat** (`DictationTranscriber`) minimal besser → Standard.
+
 ## Lieferung in zwei PRs
 
 - **PR 1, Stufe 1:** Tasks 1–9 (Diktat, Vorlesen, Ansagen, Einstellungen, Zustände, Sprache der KI).
