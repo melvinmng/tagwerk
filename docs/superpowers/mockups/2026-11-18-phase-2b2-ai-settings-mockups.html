@@ -1,0 +1,760 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tagwerk · Phase 2b-2 · KI-Einstellungen · Mockups N–T</title>
+<style>
+  /* Mockup frame uses the host theme (with fallbacks); phone screens depict the app in iOS dark mode. */
+  :root { color-scheme: light dark; }
+  body { font: 14px var(--font-sans, system-ui, sans-serif); color: var(--foreground, CanvasText); margin: 16px; }
+  h1 { font-size: 20px; margin: 0 0 4px; }
+  h2 { font-size: 18px; margin: 38px 0 4px; padding-top: 16px; border-top: 1px solid rgba(128,128,128,.3); display: flex; align-items: center; gap: 10px; }
+  .area { display: inline-grid; place-items: center; width: 34px; height: 34px; border-radius: 9px; background: #0a84ff; color: #fff; font: 800 19px system-ui; flex-shrink: 0; }
+  .lead { color: var(--muted-foreground, #777); margin: 0 0 14px; line-height: 1.5; max-width: 980px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(392px, 1fr)); gap: 22px; align-items: start; }
+  .label { font: 600 13px var(--font-sans, system-ui); color: var(--muted-foreground, #777); margin: 0 0 8px 4px; }
+  .label b { color: var(--foreground, CanvasText); }
+  .code { display: inline-block; background: rgba(128,128,128,.28); color: var(--foreground, CanvasText); border-radius: 6px; padding: 1px 8px; font: 800 13px system-ui; margin-right: 4px; }
+  .code.r { background: #30d158; color: #000; }
+  .rec { background: #30d158; color: #000; font-size: 11px; font-weight: 700; padding: 1px 7px; border-radius: 99px; margin-left: 4px; }
+  .pc { font-size: 12.5px; color: var(--muted-foreground, #777); line-height: 1.5; margin: 8px 4px 0; max-width: 390px; }
+  .pc b { color: var(--foreground, CanvasText); }
+  .box { border: 1px solid rgba(48,209,88,.5); background: rgba(48,209,88,.07); border-radius: 12px; padding: 12px 16px; margin-top: 16px; line-height: 1.55; font-size: 13px; max-width: 1100px; }
+  .box h3 { margin: 0 0 6px; font-size: 14px; }
+  .box ul { margin: 4px 0 0; padding-left: 18px; }
+  .box.neutral { border-color: rgba(128,128,128,.4); background: rgba(128,128,128,.07); }
+  .box.warn { border-color: rgba(255,159,10,.6); background: rgba(255,159,10,.08); }
+  code { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; background: rgba(128,128,128,.16); padding: 1px 4px; border-radius: 4px; }
+  table.sum { border-collapse: collapse; font-size: 13px; margin-top: 6px; }
+  table.sum td, table.sum th { padding: 5px 14px 5px 0; vertical-align: top; text-align: left; border-bottom: 1px solid rgba(128,128,128,.22); }
+  table.sum th { font-size: 12px; color: var(--muted-foreground, #777); }
+
+  .phone {
+    --bg: #000; --card: #1c1c1e; --card2: #2c2c2e; --sep: #38383a; --text: #fff; --sub: #8e8e93;
+    --blue: #0a84ff; --green: #30d158; --orange: #ff9f0a; --red: #ff453a; --purple: #bf5af2; --teal: #64d2ff; --mint: #7cf0c3;
+    background: var(--bg); color: var(--text); border-radius: 40px; padding: 14px 12px 12px;
+    font: 15px -apple-system, "SF Pro Text", system-ui, sans-serif; border: 6px solid #2a2a2c;
+    width: 390px; max-width: 100%; box-sizing: border-box; min-height: 760px;
+    display: flex; flex-direction: column; position: relative; overflow: hidden;
+  }
+  .status { display: flex; justify-content: space-between; font: 600 13px system-ui; padding: 0 12px 10px; }
+  .title { font: 700 26px system-ui; padding: 0 6px; }
+  .row { display: flex; align-items: center; gap: 8px; }
+  .nav { display: flex; justify-content: space-between; align-items: center; padding: 2px 6px 8px; }
+  .nav .a { color: var(--blue); } .nav .a.b { font-weight: 600; }
+  .nav .c { font-weight: 600; }
+  .chip { font-size: 11px; padding: 2px 7px; border-radius: 99px; background: var(--card2); color: #c7c7cc; white-space: nowrap; }
+  .chip.p1 { background: rgba(255,69,58,.22); color: #ff8a82; font-weight: 700; }
+  .chip.ai { background: rgba(191,90,242,.2); color: #dcb0f7; }
+  .chip.auto { background: rgba(10,132,255,.2); color: #8cc4ff; }
+  .chip.warn { background: rgba(255,159,10,.2); color: #ffc266; }
+  .chip.on { background: var(--blue); color: #fff; font-weight: 600; }
+  .section { color: var(--sub); font: 600 12px system-ui; text-transform: uppercase; letter-spacing: .4px; margin: 10px 8px 4px; display: flex; justify-content: space-between; }
+  .section span { text-transform: none; letter-spacing: 0; font-weight: 500; }
+  .list { background: var(--card); border-radius: 18px; overflow: hidden; margin-bottom: 6px; }
+  .item { display: flex; align-items: flex-start; gap: 10px; padding: 9px 12px; border-bottom: 1px solid var(--sep); }
+  .item:last-child { border-bottom: 0; }
+  .item.hl { background: rgba(10,132,255,.22); box-shadow: inset 0 0 0 1.5px var(--blue); }
+  .circle { width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--sub); flex-shrink: 0; margin-top: 1px; box-sizing: border-box; }
+  .circle.sel { background: var(--blue); border-color: var(--blue); color: #fff; font: 700 11px/14px system-ui; text-align: center; }
+  .item .t { flex: 1; font-size: 14px; min-width: 0; }
+  .item .s { color: var(--sub); font-size: 12px; margin-top: 2px; }
+  .due-red { color: var(--red); } .due-orange { color: var(--orange); }
+  .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 4px; }
+  .seg { display: flex; background: var(--card2); border-radius: 99px; padding: 2px; margin: 0 2px 8px; }
+  .seg span { flex: 1; text-align: center; padding: 6px 2px; font-size: 13px; border-radius: 99px; color: #c7c7cc; }
+  .seg span.on { background: #636366; color: #fff; font-weight: 600; }
+  .field { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 10px 12px; border-bottom: 1px solid var(--sep); font-size: 14px; }
+  .field:last-child { border-bottom: 0; }
+  .field .v { color: var(--sub); text-align: right; }
+  .field .l { color: var(--blue); }
+  .field.dis { opacity: .45; }
+  .pick { background: #3a3a3c; border-radius: 8px; padding: 4px 9px; font-size: 13.5px; color: #fff; white-space: nowrap; }
+  .pick.b { color: var(--blue); }
+  .tog { width: 40px; height: 24px; border-radius: 99px; background: #48484a; position: relative; flex-shrink: 0; }
+  .tog::after { content: ""; position: absolute; top: 2px; left: 2px; width: 20px; height: 20px; border-radius: 50%; background: #fff; }
+  .tog.on { background: var(--green); } .tog.on::after { left: 18px; }
+  .note { color: var(--sub); font-size: 11.5px; padding: 4px 8px; line-height: 1.4; }
+  .spacer { flex: 1; }
+  .b { flex: 1; text-align: center; border-radius: 99px; padding: 9px 6px; font-weight: 600; font-size: 14px; }
+  .b.plain { background: var(--card2); color: var(--blue); }
+  .b.prom { background: var(--blue); color: #fff; }
+  .b.aib { background: rgba(191,90,242,.24); color: #e9cdfb; }
+  .b.red { background: rgba(255,69,58,.18); color: #ff8a82; }
+  .btns { display: flex; gap: 8px; }
+  .sm { border-radius: 99px; padding: 5px 11px; font-weight: 600; font-size: 12.5px; white-space: nowrap; align-self: center; }
+  .sm.ok { background: var(--blue); color: #fff; } .sm.no { background: #48484a; color: #d1d1d6; }
+  .lnk { color: var(--blue); font-weight: 600; white-space: nowrap; }
+
+  /* Liquid Glass approximation */
+  .glass { background: rgba(72,72,78,.62); backdrop-filter: blur(18px) saturate(1.6); -webkit-backdrop-filter: blur(18px) saturate(1.6);
+    border: 1px solid rgba(255,255,255,.16); box-shadow: inset 0 1px 0 rgba(255,255,255,.18), 0 8px 24px rgba(0,0,0,.55); }
+
+  /* Tab bar as on the device screenshots: centred capsule, selected tab as a dark pill */
+  .tb { margin: auto auto 0; width: 80%; display: flex; border-radius: 99px; padding: 5px; font-size: 10px; color: #d1d1d6; text-align: center; box-sizing: border-box; }
+  .tb span { flex: 1; padding: 4px 0 3px; border-radius: 99px; }
+  .tb .on { color: var(--blue); background: rgba(0,0,0,.5); font-weight: 600; }
+  .ico { font-size: 17px; display: block; font-style: normal; line-height: 20px; }
+  .tbrow { display: flex; gap: 8px; align-items: center; margin-top: auto; padding-top: 8px; }
+  .tbrow .tb { flex: 1; width: auto; margin: 0; }
+  .aibtn { width: 52px; height: 52px; border-radius: 50%; display: grid; place-items: center; font-size: 22px; color: var(--mint); flex-shrink: 0; }
+  .tbgap { margin-top: 8px; }
+
+  /* New day header */
+  .topbar { display: flex; align-items: center; gap: 8px; padding: 0 2px 10px; }
+  .topbar .seg { flex: 1; margin: 0; }
+  .rbtn { width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; font-size: 20px; flex-shrink: 0; color: #fff; }
+  .rbtn.ai { color: var(--mint); font-size: 17px; }
+  .hdr { display: flex; align-items: flex-end; justify-content: space-between; gap: 8px; padding: 4px 6px 12px; }
+  .kick { font: 600 12px system-ui; color: var(--blue); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 2px; }
+  .bigdate { font: 700 28px/1.15 system-ui; letter-spacing: -.3px; }
+  .bigdate .car { font-size: 15px; color: var(--sub); vertical-align: 4px; }
+  .stepper { display: flex; border-radius: 99px; flex-shrink: 0; }
+  .stepper span { width: 38px; height: 34px; display: grid; place-items: center; color: #fff; font-size: 18px; }
+  .stepper span + span { border-left: 1px solid rgba(255,255,255,.14); }
+  .wk { display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; padding: 0 2px 10px; }
+  .wk small { display: block; color: var(--sub); font: 600 10.5px system-ui; margin-bottom: 4px; }
+  .wk b { display: inline-grid; place-items: center; width: 32px; height: 32px; border-radius: 50%; font: 600 15px system-ui; }
+  .wk .on b { background: var(--blue); }
+  .wk .dld b { box-shadow: inset 0 0 0 1.5px var(--red); color: #ff8a82; }
+  .wk .off b { color: #6e6e73; }
+  .wk i { display: block; width: 20px; height: 3px; border-radius: 99px; background: #3a3a3c; margin: 4px auto 0; overflow: hidden; }
+  .wk i u { display: block; height: 100%; background: var(--green); }
+  .wk i u.ov { background: var(--red); }
+  .pop { position: absolute; left: 14px; right: 14px; top: 154px; border-radius: 24px; padding: 12px 12px 10px; z-index: 5; background: rgba(44,44,46,.97); box-shadow: 0 16px 40px rgba(0,0,0,.75); border: 1px solid rgba(255,255,255,.12); }
+  .pop .ph { display: flex; justify-content: space-between; align-items: center; padding: 2px 6px 8px; font-weight: 600; }
+  .pop .ph span { color: var(--blue); }
+  .mcal { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; text-align: center; font-size: 15px; }
+  .mcal small { color: var(--sub); font: 600 10.5px system-ui; padding-bottom: 4px; }
+  .mcal span { height: 34px; display: grid; place-items: center; border-radius: 50%; position: relative; }
+  .mcal .o { color: #48484a; }
+  .mcal .td { background: var(--blue); font-weight: 700; }
+  .mcal .fl::after { content: ""; position: absolute; bottom: 2px; width: 5px; height: 5px; border-radius: 50%; background: var(--red); }
+  .dimall { position: absolute; inset: 0; background: rgba(0,0,0,.45); z-index: 4; }
+  .pills { display: flex; gap: 6px; flex-wrap: wrap; padding: 0 4px 8px; }
+  .pill { font-size: 12px; padding: 4px 9px; border-radius: 99px; background: var(--card); color: #d1d1d6; white-space: nowrap; }
+
+  /* Deadlines */
+  .dl { background: rgba(255,69,58,.14); border: 1px solid rgba(255,69,58,.5); border-radius: 18px; padding: 8px 12px; margin-bottom: 8px; }
+  .dl .h { color: #ff8a82; font: 700 12px system-ui; text-transform: uppercase; letter-spacing: .4px; margin-bottom: 2px; }
+  .dl .r { display: flex; gap: 8px; align-items: baseline; padding: 5px 0; border-top: 1px solid rgba(255,69,58,.25); font-size: 13.5px; }
+  .dl .r:first-of-type { border-top: 0; }
+  .dl .r .g { width: 16px; color: var(--red); text-align: center; flex-shrink: 0; }
+  .dl .r .n { flex: 1; min-width: 0; }
+  .dl .r .n small { display: block; color: #c7c7cc; font-size: 11.5px; }
+  .dl .r .w { color: #ff8a82; font-weight: 600; font-size: 12px; white-space: nowrap; }
+  .flag { color: var(--red); font-weight: 700; }
+
+  /* Capacity */
+  .cap { background: var(--card); border-radius: 18px; padding: 10px 12px; margin-bottom: 8px; }
+  .cap .top { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+  .cap .top b { font-size: 17px; }
+  .cap .top b.neg { color: #ff8a82; }
+  .cap .top span { color: var(--sub); font-size: 12px; white-space: nowrap; }
+  .cap .sub { color: #c7c7cc; font-size: 12px; margin-top: 1px; }
+  .cap .sub2 { color: var(--sub); font-size: 11.5px; margin-top: 5px; }
+  .cap .sub2.w { color: #ffc266; }
+  .bar { display: flex; height: 10px; border-radius: 99px; overflow: hidden; background: #3a3a3c; margin: 7px 0 6px; gap: 1.5px; position: relative; }
+  .bar i { display: block; height: 100%; }
+  .k-ev { background: var(--blue); } .k-br { background: #8e8e93; } .k-re { background: var(--teal); }
+  .k-bu { background: repeating-linear-gradient(135deg, #8e8e93 0 3px, #48484a 3px 6px); }
+  .k-pl { background: var(--green); } .k-fr { background: #3a3a3c; } .k-ov { background: var(--red); }
+  .k-pa { background: repeating-linear-gradient(135deg, #232326 0 4px, #323236 4px 8px); }
+  .k-du { background: repeating-linear-gradient(135deg, var(--orange) 0 3px, #6b4a10 3px 6px); }
+  .cap .lg { display: flex; flex-wrap: wrap; gap: 3px 10px; font-size: 11px; color: #c7c7cc; }
+  .cap .lg i { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 4px; }
+  .cap .act { display: flex; gap: 8px; margin-top: 9px; }
+  .tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+  .tile { background: var(--card); border-radius: 18px; padding: 10px 12px; }
+  .tile small { display: block; color: var(--sub); font-size: 11.5px; }
+  .tile b { font-size: 19px; display: block; margin: 1px 0; }
+  .strip { position: relative; margin: 8px 0 2px; }
+  .strip .bar { height: 16px; border-radius: 6px; margin: 0; }
+  .strip .past { position: absolute; left: 0; top: 0; bottom: 0; background: rgba(0,0,0,.62); border-radius: 6px 0 0 6px; }
+  .strip .now { position: absolute; top: -4px; bottom: -4px; width: 2px; background: var(--red); border-radius: 2px; }
+  .strip .now::before { content: "13:20"; position: absolute; top: -15px; left: -14px; font: 600 10px system-ui; color: #ff8a82; }
+  .axis { display: flex; justify-content: space-between; font: 10px ui-monospace, monospace; color: var(--sub); }
+  .anno { font: 600 10.5px system-ui; color: #ffd60a; margin: 6px 6px 3px; }
+
+  /* Timeline */
+  .tl { display: flex; flex-direction: column; gap: 5px; }
+  .time { width: 40px; color: var(--sub); font: 12px ui-monospace, monospace; flex-shrink: 0; align-self: flex-start; padding-top: 7px; }
+  .block { flex: 1; min-width: 0; border-radius: 12px; padding: 7px 10px; font-size: 13.5px; }
+  .block .meta { color: #c7c7cc; font-size: 11.5px; margin-top: 2px; }
+  .block.event { background: rgba(10,132,255,.22); border-left: 4px solid var(--blue); }
+  .block.planned { background: rgba(48,209,88,.18); border-left: 4px solid var(--green); }
+  .block.planned.act { box-shadow: 0 0 0 2px var(--green); }
+  .block.recur { background: rgba(100,210,255,.14); border-left: 4px solid var(--teal); }
+  .block.quiet { background: repeating-linear-gradient(135deg, #1c1c1e 0 6px, #232326 6px 12px); color: var(--sub); padding: 5px 10px; font-size: 12.5px; }
+  .block.free { border: 1.5px dashed #48484a; color: var(--sub); font-size: 12.5px; padding: 5px 10px; }
+  .block.free.drop { border-color: var(--mint); color: var(--mint); background: rgba(124,240,195,.1); }
+  .block.free.no { opacity: .45; }
+  .block.gone { border: 1.5px dashed #48484a; background: none; color: #636366; }
+  .past-row { opacity: .45; }
+  .lift { position: absolute; left: 66px; right: 30px; border-radius: 12px; padding: 9px 12px; font-size: 13.5px; transform: rotate(-2deg); z-index: 3; }
+  .lift small { display: block; color: #c7c7cc; font-size: 11.5px; }
+  .cals { display: inline-flex; vertical-align: -1px; margin-right: 4px; }
+  .cals .dot { margin-right: -3px; box-shadow: 0 0 0 1.5px #16324f; }
+
+  /* Hour grid (variant) */
+  .hg { position: relative; height: 290px; margin: 2px 0 6px 44px; border-left: 1px solid var(--sep); }
+  .hg .hl { position: absolute; left: -44px; right: 0; border-top: 1px solid #2c2c2e; font: 11px ui-monospace, monospace; color: var(--sub); padding-left: 2px; height: 0; }
+  .hg .hl span { position: relative; top: -8px; background: var(--bg); padding-right: 4px; }
+  .hg .ev { position: absolute; left: 4px; right: 4px; border-radius: 9px; padding: 4px 8px; font-size: 12.5px; box-sizing: border-box; overflow: hidden; }
+  .hg .ev small { color: #c7c7cc; font-size: 11px; display: block; }
+  .hg .ev.e { background: rgba(10,132,255,.24); border-left: 4px solid var(--blue); }
+  .hg .ev.q { background: repeating-linear-gradient(135deg, #1c1c1e 0 6px, #232326 6px 12px); color: var(--sub); }
+  .hg .ev.p { background: rgba(48,209,88,.3); border-left: 4px solid var(--green); box-shadow: 0 8px 22px rgba(0,0,0,.6), 0 0 0 1.5px var(--green); z-index: 2; }
+  .hg .ev.o { border: 1.5px dashed #48484a; color: #636366; }
+  .hg .grab { position: absolute; left: 50%; width: 30px; height: 5px; margin-left: -15px; border-radius: 99px; background: #fff; z-index: 3; }
+
+  /* Week rows */
+  .day { background: var(--card); border-radius: 16px; padding: 8px 10px; margin-bottom: 5px; }
+  .day.today { box-shadow: inset 0 0 0 1.5px var(--blue); }
+  .day.drop { box-shadow: inset 0 0 0 2px var(--mint); background: rgba(124,240,195,.1); }
+  .day.past { opacity: .5; }
+  .day .hd { display: flex; align-items: center; gap: 8px; }
+  .day .hd b { width: 50px; font-size: 13.5px; flex-shrink: 0; }
+  .day .hd .bar { flex: 1; margin: 0; height: 8px; }
+  .day .hd .n { font: 12px system-ui; font-variant-numeric: tabular-nums; color: #c7c7cc; white-space: nowrap; min-width: 92px; text-align: right; }
+  .day .hd .n.over { color: #ff8a82; font-weight: 700; }
+  .tk { display: flex; align-items: center; gap: 6px; font-size: 13px; padding: 5px 0 0 2px; }
+  .tk .grip { color: #636366; font-size: 13px; letter-spacing: -2px; }
+  .tk .nm { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .tk .d { color: var(--sub); font-size: 11.5px; white-space: nowrap; }
+  .tk.dlrow { color: #ffb3ad; font-weight: 600; }
+  .ghost { border: 1.5px dashed var(--mint); border-radius: 9px; padding: 5px 8px; margin-top: 5px; color: var(--mint); font-size: 12.5px; }
+
+  /* Drawer for unplanned tasks */
+  .drawer { margin: 6px -6px 0; border-radius: 24px; padding: 6px 10px 8px; background: #1c1c1e; border: 1px solid rgba(255,255,255,.1); box-shadow: 0 -8px 24px rgba(0,0,0,.6); }
+  .drawer .grab, .grab { width: 36px; height: 5px; border-radius: 99px; background: #636366; margin: 0 auto 8px; }
+  .drawer .dh { display: flex; justify-content: space-between; align-items: center; font-weight: 600; padding: 0 4px 6px; }
+  .drawer .dh span { color: var(--sub); font-weight: 500; font-size: 12.5px; }
+  .drawer .list { background: var(--card2); margin-top: 6px; }
+  .drawer .list .item { border-color: #48484a; padding: 8px 10px; }
+  .search { background: #3a3a3c; border-radius: 10px; padding: 7px 10px; color: var(--sub); font-size: 13.5px; margin: 0 2px 8px; }
+  .fch { display: flex; gap: 6px; overflow: hidden; padding: 0 2px; }
+  .grip2 { color: #636366; letter-spacing: -2px; align-self: center; }
+  .plusb { width: 26px; height: 26px; border-radius: 50%; background: rgba(10,132,255,.24); color: var(--blue); display: grid; place-items: center; font-weight: 700; flex-shrink: 0; align-self: center; }
+  .daych { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+  .daych div { background: var(--card2); border-radius: 12px; text-align: center; padding: 6px 0; font-size: 11px; color: #c7c7cc; }
+  .daych div b { display: block; font-size: 14px; color: #fff; }
+  .daych div.t { box-shadow: inset 0 0 0 1.5px var(--blue); }
+  .daych div.off { opacity: .4; }
+
+  /* Month */
+  .mgrid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; margin-bottom: 8px; }
+  .mgrid .wd { text-align: center; color: var(--sub); font: 600 10.5px system-ui; padding-bottom: 2px; }
+  .mc2 { border-radius: 10px; background: var(--card); height: 38px; padding: 3px 3px 0; text-align: center; font: 600 13px system-ui; position: relative; box-sizing: border-box; }
+  .mc2.out { background: none; color: #48484a; }
+  .mc2.past { color: #6e6e73; }
+  .mc2.today { box-shadow: inset 0 0 0 1.5px var(--blue); color: var(--blue); }
+  .mc2.sel { background: #fff; color: #000; }
+  .mc2.dl2 { background: rgba(255,69,58,.3); box-shadow: inset 0 0 0 1.5px var(--red); color: #fff; }
+  .mc2 .ld { position: absolute; left: 6px; right: 6px; bottom: 5px; height: 4px; border-radius: 99px; background: #3a3a3c; overflow: hidden; }
+  .mc2.sel .ld { background: #c7c7cc; }
+  .mc2 .ld i { display: block; height: 100%; background: var(--green); }
+  .mc2 .ld i.hi { background: var(--orange); } .mc2 .ld i.ov { background: var(--red); }
+  .agh { display: flex; justify-content: space-between; align-items: baseline; padding: 4px 6px 6px; }
+  .agh b { font-size: 16px; }
+  .agh small { display: block; color: var(--sub); font-size: 12px; font-weight: 400; }
+
+  /* Context menu */
+  .blurbg { position: absolute; inset: 0; padding: 60px 12px; filter: blur(5px); opacity: .32; }
+  .fg { position: relative; z-index: 1; display: flex; flex-direction: column; flex: 1; }
+  .preview { background: var(--card); border-radius: 18px; padding: 11px 12px; margin: 6px 2px 8px; box-shadow: 0 10px 30px rgba(0,0,0,.6); }
+  .menu { border-radius: 18px; overflow: hidden; margin: 0 2px; width: 276px; background: rgba(58,58,62,.92); }
+  .menu.abs { position: absolute; z-index: 6; }
+  .menu .mi { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; font-size: 15px; border-bottom: 1px solid rgba(255,255,255,.1); min-height: 22px; gap: 8px; }
+  .menu .mi:last-child { border-bottom: 0; }
+  .menu .mi i { font-style: normal; color: #d1d1d6; font-size: 15px; }
+  .menu .mi small { display: block; color: #aeaeb2; font-size: 11.5px; margin-top: 1px; }
+  .menu .mi.ai { color: #e9cdfb; opacity: .55; } .menu .mi.ai i { color: var(--purple); }
+  .menu .mi.de { color: var(--red); } .menu .mi.de i { color: var(--red); }
+  .menu .gap { height: 7px; background: rgba(0,0,0,.35); }
+  .menu .mh { padding: 8px 14px 5px; font: 600 11.5px system-ui; color: #aeaeb2; }
+  .cg { display: grid; grid-template-columns: repeat(4, 1fr); border-bottom: 1px solid rgba(255,255,255,.1); }
+  .cg.c2 { grid-template-columns: repeat(2, 1fr); } .cg.c3 { grid-template-columns: repeat(3, 1fr); }
+  .cg div { text-align: center; padding: 9px 2px 8px; font-size: 11.5px; border-right: 1px solid rgba(255,255,255,.1); line-height: 1.25; }
+  .cg div:last-child { border-right: 0; }
+  .cg div.chk { background: rgba(10,132,255,.25); }
+  .cg.txt div { font-size: 14px; padding: 11px 2px; }
+  .cal { display: block; width: 26px; height: 24px; margin: 0 auto 4px; border-radius: 6px; border: 1.5px solid #d1d1d6; border-top-width: 5px; font: 700 11px/17px system-ui; box-sizing: content-box; }
+
+  /* Sheets */
+  .under { opacity: .35; padding: 0 6px 10px; }
+  .sheetp { background: #1c1c1e; margin: 0 -12px -12px; border-radius: 30px 30px 0 0; padding: 8px 12px 14px; flex: 1; display: flex; flex-direction: column; box-shadow: 0 -8px 30px rgba(0,0,0,.6); }
+  .sheetp .list { background: var(--card2); }
+  .sheetp .list .item, .sheetp .list .field { border-color: #48484a; }
+  .shead { display: flex; justify-content: space-between; align-items: center; padding: 0 4px 10px; }
+  .shead b { font-size: 16px; }
+  .shead .gb { border-radius: 99px; padding: 6px 12px; font-size: 14px; }
+  .banner { border-radius: 14px; padding: 9px 12px; font-size: 12.5px; line-height: 1.4; margin-bottom: 8px; }
+  .banner b { display: block; font-size: 13px; margin-bottom: 1px; }
+  .banner.lock { background: rgba(142,142,147,.2); color: #d1d1d6; }
+  .banner.inv { background: rgba(10,132,255,.16); color: #cfe5ff; }
+  .banner.ok { background: rgba(48,209,88,.14); color: #b9f2c8; }
+  .banner.tw { background: rgba(124,240,195,.1); border: 1px solid rgba(124,240,195,.35); color: #c9f7e6; }
+  .dimov { position: absolute; inset: 0; background: rgba(0,0,0,.5); z-index: 2; }
+  .asheet { position: absolute; left: 10px; right: 10px; bottom: 14px; display: flex; flex-direction: column; gap: 8px; z-index: 3; }
+  .asheet .grp { border-radius: 18px; overflow: hidden; background: rgba(58,58,60,.97); }
+  .asheet .m { padding: 12px 16px; text-align: center; font-size: 12px; color: #c7c7cc; border-bottom: 1px solid #545458; line-height: 1.4; }
+  .asheet .m b { display: block; color: #fff; font-size: 13px; margin-bottom: 2px; }
+  .asheet .act { padding: 14px; text-align: center; color: var(--blue); font-size: 16px; border-bottom: 1px solid #545458; }
+  .asheet .act small { display: block; color: #aeaeb2; font-size: 11.5px; margin-top: 2px; }
+  .asheet .act:last-child { border-bottom: 0; } .asheet .act.c { font-weight: 600; } .asheet .act.d { color: var(--red); }
+  .est { display: flex; align-items: center; background: #3a3a3c; border-radius: 99px; height: 34px; }
+  .est .pm { width: 40px; text-align: center; font-size: 21px; color: var(--blue); line-height: 34px; }
+  .est .val { min-width: 58px; text-align: center; font: 600 14.5px system-ui; font-variant-numeric: tabular-nums; border-left: 1px solid #545458; border-right: 1px solid #545458; line-height: 22px; padding: 0 6px; }
+  .radio { width: 20px; height: 20px; border-radius: 50%; border: 2px solid #636366; flex-shrink: 0; box-sizing: border-box; }
+  .radio.on { border: 6px solid var(--blue); background: #fff; }
+
+  /* Selection bar, toast, annotation zones */
+  .selbar { display: flex; gap: 6px; align-items: center; border-radius: 99px; padding: 6px; margin-top: 8px; }
+  .selbar .b { padding: 10px 6px; font-size: 13.5px; }
+  .selinfo { font-size: 12px; color: #ffc266; text-align: center; padding: 6px 4px 0; }
+  .toast { border-radius: 99px; padding: 7px 8px 7px 12px; display: flex; align-items: center; gap: 8px; margin: 0 2px 6px; font-size: 13px; }
+  .toast .tx { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .toast .un { background: rgba(10,132,255,.28); border-radius: 99px; padding: 6px 12px; font-weight: 600; white-space: nowrap; }
+  .zone { display: flex; align-items: flex-end; justify-content: flex-end; position: absolute; border: 1.5px dashed #ffd60a; border-radius: 10px; color: #ffd60a; font: 600 10px system-ui; padding: 2px 5px; z-index: 4; pointer-events: none; box-sizing: border-box; }
+  .swipe { display: flex; justify-content: space-between; align-items: center; color: #ffd60a; font: 600 11px system-ui; border: 1.5px dashed #ffd60a; border-radius: 10px; padding: 4px 8px; margin: 6px 2px; }
+  .swact { display: flex; margin-bottom: 0; }
+  .swact .ac { width: 74px; display: grid; place-items: center; font: 600 12px system-ui; color: #fff; }
+
+  /* Additions for the AI settings mockups */
+  .stepn { width: 24px; height: 24px; border-radius: 50%; background: rgba(142,142,147,.24); display: grid; place-items: center; font: 12px system-ui; flex-shrink: 0; }
+  .stepn.ok { background: var(--green); color: #000; font-weight: 700; }
+  .stepn.cur { box-shadow: 0 0 0 1.5px var(--blue); }
+  .spin { width: 16px; height: 16px; border-radius: 50%; border: 2px solid #48484a; border-top-color: #c7c7cc; box-sizing: border-box; flex-shrink: 0; margin-top: 1px; }
+  .wico { color: var(--orange); width: 18px; text-align: center; flex-shrink: 0; }
+  .ptxt { padding: 11px 12px; font-size: 14px; line-height: 1.45; border-bottom: 1px solid var(--sep); }
+  .ptxt:last-child { border-bottom: 0; }
+  .pbtn { display: inline-block; background: var(--blue); color: #fff; border-radius: 99px; padding: 7px 14px; font-weight: 600; font-size: 14px; }
+  .pbtn.dis { opacity: .45; }
+  .webph { flex: 1; border: 1.5px dashed #48484a; border-radius: 16px; display: grid; place-items: center; text-align: center; color: var(--sub); font-size: 13px; line-height: 1.5; padding: 16px; margin-top: 4px; }
+  .urlbar { background: #3a3a3c; border-radius: 10px; padding: 5px 12px; font-size: 13px; color: #d1d1d6; }
+  .okb { background: #636366; color: #fff; font-size: 11px; font-weight: 700; padding: 1px 7px; border-radius: 99px; margin-left: 4px; }
+</style>
+</head>
+<body>
+
+<h1>Tagwerk · Phase 2b-2 · KI-Einstellungen · Mockups N–T</h1>
+<p class="lead">Ergänzung zum freigegebenen Mockup K3 („Einstellungen › KI“, angemeldet). Offen waren fünf Stellen: der Einstieg in der Einstellungsliste (N), die Seite im abgemeldeten Zustand (O), die Zustände während und nach der Anmeldung (P), der Datenschutzhinweis (Q) und der neue Einrichtungsschritt (T). Die Buchstaben setzen die bisherigen Runden fort; A–M, R, S und U sind dort vergeben. Wo es eine echte Wahl gibt, stehen zwei Varianten; die Empfehlung trägt ein grünes Kürzel. Freigabe bitte als Liste der Kürzel, zum Beispiel „N1, O1, P1–P4, Q1, T1“. Alle Daten sind erfunden (Konto „m.muster@example.com“), Modellnamen sind Platzhalter. Die Bildschirme zeigen den Dunkelmodus; Symbole sind Platzhalter für SF Symbols. Gelbe Zeilen und gelb gestrichelte Flächen sind Anmerkungen und nicht Teil der Oberfläche.</p>
+
+<!-- ============================== K3 reference ============================== -->
+<h2><span class="area" style="background:#636366">K</span> Zum Vergleich · K3, freigegeben</h2>
+<p class="lead">Unverändert aus der Feedback-Runde übernommen. Alle neuen Bildschirme unten benutzen dieselben Abschnitte („Konto“, „Modell“, Zeile „Datenschutzhinweis“) in derselben Reihenfolge, damit sich die Seite zwischen den Zuständen nicht umbaut.</p>
+<div class="grid">
+  <div>
+    <p class="label"><span class="code">K3</span><b>Modellauswahl: ein Modell, Vorgabe „Automatisch“</b> <span class="okb">freigegeben</span></p>
+    <div class="phone">
+      <div class="status"><span>13:20</span><span>●●● 5G</span></div>
+      <div class="nav"><span class="a">‹ Einstellungen</span><span class="c">KI</span><span></span></div>
+      <div class="section">Konto</div>
+      <div class="list">
+        <div class="field"><span>ChatGPT</span><span class="v" style="color:var(--green)">angemeldet</span></div>
+        <div class="field"><span style="color:var(--red)">Abmelden</span></div>
+      </div>
+      <div class="section">Modell <span>Liste von ChatGPT · heute 09:12</span></div>
+      <div class="list">
+        <div class="item"><span class="radio on"></span><div class="t">Automatisch<div class="s">Tagwerk nimmt das Standardmodell deines Abos</div></div></div>
+        <div class="item"><span class="radio"></span><div class="t">Modell A<div class="s">Kennung vom Dienst · Platzhalter</div></div></div>
+        <div class="item"><span class="radio"></span><div class="t">Modell B<div class="s">Kennung vom Dienst · Platzhalter</div></div></div>
+        <div class="item"><span class="radio"></span><div class="t">Modell C<div class="s">Kennung vom Dienst · Platzhalter</div></div></div>
+        <div class="field"><span class="l">Liste aktualisieren</span></div>
+      </div>
+      <div class="note">Gilt für Planen und Assistent. Ist das gewählte Modell nicht mehr verfügbar, wechselt Tagwerk auf „Automatisch“ und sagt es beim nächsten Aufruf.</div>
+      <div class="list"><div class="field"><span>Datenschutzhinweis</span><span class="v">›</span></div></div>
+      <div class="spacer"></div>
+      <div class="tb glass"><span><i class="ico">▦</i>Planen</span><span><i class="ico">☑︎</i>Aufgaben</span><span class="on"><i class="ico">⚙︎</i>Einstellungen</span></div>
+    </div>
+    <p class="pc">Festgelegt und hier nicht neu entworfen: Abschnitte, Texte, Auswahl mit „Automatisch“, „Liste aktualisieren“, Fußnote, Zeile „Datenschutzhinweis“. Einziger Ergänzungsvorschlag: die E-Mail-Adresse in der Zeile „ChatGPT“, siehe P3 und offene Frage 1.</p>
+  </div>
+</div>
+
+<!-- ============================== N ============================== -->
+<h2><span class="area">N</span> Einstieg in der Einstellungsliste</h2>
+<p class="lead">Die Liste hat heute acht Abschnitte: Planen, Mittagspause, Puffer, Quellen, GitHub, Benachrichtigungen, Zugriff, „Einrichtung erneut starten“. GitHub zeigt Anmeldung und Projektwahl direkt in der Liste. Für KI ist mit K3 eine eigene Seite freigegeben; zu entscheiden ist, wo ihre Zeile steht und was sie rechts zeigt. Randbedingung: Beim Öffnen des Tabs „Einstellungen“ wird nichts geladen; die Zeile zeigt nur lokal Gemerktes.</p>
+<div class="grid">
+  <div>
+    <p class="label"><span class="code r">N1</span><b>Eine Zeile „KI“ nach GitHub, Wert rechts</b> <span class="rec">Empfehlung</span></p>
+    <div class="phone">
+      <div class="status"><span>13:20</span><span>●●● 5G</span></div>
+      <div class="nav"><span></span><span class="c">Einstellungen</span><span></span></div>
+      <div class="list"><div class="field"><span>Puffer: 10 min</span><span class="pick">−&nbsp;&nbsp;|&nbsp;&nbsp;+</span></div></div>
+      <div class="note">Abstand zwischen Terminen und eingeplanten Aufgaben.</div>
+      <div class="section">Quellen</div>
+      <div class="list">
+        <div class="field"><span>Kalender</span><span class="v">3 von 5 ›</span></div>
+        <div class="field"><span>Erinnerungslisten</span><span class="v">Alle ›</span></div>
+      </div>
+      <div class="section">GitHub</div>
+      <div class="list">
+        <div class="field"><span>Angemeldet als</span><span class="v">mmuster</span></div>
+        <div class="field"><span>Projects</span><span class="v">2 von 3 ›</span></div>
+        <div class="field"><span style="color:var(--red)">Abmelden</span></div>
+      </div>
+      <div class="note">Die Anmeldung erneuert sich automatisch. Ohne Nutzung läuft sie nach etwa 6 Monaten ab. …</div>
+      <div class="anno">neu · eigener Abschnitt ohne Überschrift</div>
+      <div class="list" style="box-shadow:0 0 0 1.5px #ffd60a"><div class="field"><span>KI</span><span class="v">Automatisch ›</span></div></div>
+      <div class="section">Benachrichtigungen</div>
+      <div class="list"><div class="field"><span>Vorlauf: 1 h</span><span class="pick">−&nbsp;&nbsp;|&nbsp;&nbsp;+</span></div></div>
+      <div class="note">So lange vor der Fälligkeit erinnert Tagwerk an GitHub- und lokale Aufgaben.</div>
+      <div class="spacer"></div>
+      <div class="tb glass"><span><i class="ico">▦</i>Planen</span><span><i class="ico">☑︎</i>Aufgaben</span><span class="on"><i class="ico">⚙︎</i>Einstellungen</span></div>
+    </div>
+    <p class="pc"><b>Pro:</b> passt zu K3 (Zurück-Titel „‹ Einstellungen“, Seitentitel „KI“); die Hauptliste wächst um genau eine Zeile; der Zustand ist ohne Öffnen lesbar; nichts muss geladen werden. Der Platz nach GitHub hält die beiden Konten beieinander. <b>Contra:</b> Anmelden kostet einen Tipp mehr als bei GitHub; zwei Konten werden unterschiedlich dargestellt (GitHub in der Liste, KI auf eigener Seite).</p>
+  </div>
+  <div>
+    <p class="label"><span class="code r">N1</span><b>Was die Zeile rechts zeigt</b> (drei Zustände)</p>
+    <div class="phone" style="min-height:0">
+      <div class="anno">abgemeldet, auch nach abgelaufener Anmeldung</div>
+      <div class="list"><div class="field"><span>KI</span><span class="v">nicht angemeldet ›</span></div></div>
+      <div class="anno">angemeldet, Vorgabe</div>
+      <div class="list"><div class="field"><span>KI</span><span class="v">Automatisch ›</span></div></div>
+      <div class="anno">angemeldet, Modell gewählt (Anzeigename aus der gemerkten Liste)</div>
+      <div class="list"><div class="field"><span>KI</span><span class="v">Modell B ›</span></div></div>
+    </div>
+    <p class="pc">Der Wert kommt aus den gespeicherten Einstellungen und der gemerkten Liste, nie aus einem Abruf. Folge: Ist das gewählte Modell inzwischen entfallen, steht hier bis zum nächsten Öffnen der KI-Seite oder bis zum nächsten KI-Aufruf noch der alte Name. Das ist hinnehmbar, weil K3 den Wechsel auf „Automatisch“ beim nächsten Aufruf ohnehin meldet. Kein Punkt, kein Symbol, keine Farbe: „nicht angemeldet“ ist ein gewöhnlicher Zustand, kein Fehler.</p>
+  </div>
+  <div>
+    <p class="label"><span class="code">N2</span><b>Abschnitt „KI“ direkt in der Liste</b> (wie GitHub)</p>
+    <div class="phone">
+      <div class="status"><span>13:20</span><span>●●● 5G</span></div>
+      <div class="nav"><span></span><span class="c">Einstellungen</span><span></span></div>
+      <div class="section">GitHub</div>
+      <div class="list">
+        <div class="field"><span>Angemeldet als</span><span class="v">mmuster</span></div>
+        <div class="field"><span>Projects</span><span class="v">2 von 3 ›</span></div>
+        <div class="field"><span style="color:var(--red)">Abmelden</span></div>
+      </div>
+      <div class="note">Die Anmeldung erneuert sich automatisch. Ohne Nutzung läuft sie nach etwa 6 Monaten ab. …</div>
+      <div class="section">KI</div>
+      <div class="list">
+        <div class="field"><span>Angemeldet als</span><span class="v">m.muster@example.com</span></div>
+        <div class="field"><span>Modell</span><span class="v">Automatisch ›</span></div>
+        <div class="field"><span>Datenschutzhinweis</span><span class="v">›</span></div>
+        <div class="field"><span style="color:var(--red)">Abmelden</span></div>
+      </div>
+      <div class="note">Gilt für Planen und Assistent.</div>
+      <div class="section">Benachrichtigungen</div>
+      <div class="list"><div class="field"><span>Vorlauf: 1 h</span><span class="pick">−&nbsp;&nbsp;|&nbsp;&nbsp;+</span></div></div>
+      <div class="spacer"></div>
+      <div class="tb glass"><span><i class="ico">▦</i>Planen</span><span><i class="ico">☑︎</i>Aufgaben</span><span class="on"><i class="ico">⚙︎</i>Einstellungen</span></div>
+    </div>
+    <p class="pc"><b>Pro:</b> gleiche Form wie GitHub; Anmelden und Abmelden ohne Seitenwechsel. <b>Contra:</b> weicht von K3 ab, denn die freigegebene Auswahl mit Listenstand, „Liste aktualisieren“ und Fußnote wandert trotzdem auf eine Unterseite, es gäbe also Abschnitt und Seite; die ohnehin lange Hauptliste wächst um vier Zeilen; zwei rote „Abmelden“ stehen dicht untereinander; Fehlerzeilen der Anmeldung landen mitten in der Hauptliste.</p>
+  </div>
+</div>
+
+<!-- ============================== O ============================== -->
+<h2><span class="area">O</span> „Einstellungen › KI“, abgemeldet</h2>
+<p class="lead">Zu klären: wie man sich anmeldet, was anstelle der Modellliste steht und wo der Pflichthinweis sitzt. Die Anmeldung geht nur auf diesem iPhone: Tagwerk öffnet eine Safari-Seite von ChatGPT und bekommt die Antwort lokal zurück. Einen Gerätecode wie bei GitHub gibt es nicht, deshalb genügt ein einzelner Knopf.</p>
+<div class="grid">
+  <div>
+    <p class="label"><span class="code r">O1</span><b>Nur „Konto“, Hinweis als Fußnote, kein Modell-Abschnitt</b> <span class="rec">Empfehlung</span></p>
+    <div class="phone">
+      <div class="status"><span>13:20</span><span>●●● 5G</span></div>
+      <div class="nav"><span class="a">‹ Einstellungen</span><span class="c">KI</span><span></span></div>
+      <div class="section">Konto</div>
+      <div class="list">
+        <div class="field"><span>ChatGPT</span><span class="v">nicht angemeldet</span></div>
+        <div class="field"><span class="l">Mit ChatGPT anmelden</span></div>
+      </div>
+      <div class="note">Wenn du KI-Funktionen nutzt, gehen die dafür nötigen Daten (Termine, Aufgaben, bei Issues auch Repo-Inhalte) an OpenAI.</div>
+      <div class="note">Die Anmeldung öffnet eine Seite von ChatGPT und kehrt danach von selbst zu Tagwerk zurück. Planen mit KI und der Assistent brauchen sie; alles andere läuft ohne.</div>
+      <div class="list" style="margin-top:8px"><div class="field"><span>Datenschutzhinweis</span><span class="v">›</span></div></div>
+      <div class="spacer"></div>
+      <div class="tb glass"><span><i class="ico">▦</i>Planen</span><span><i class="ico">☑︎</i>Aufgaben</span><span class="on"><i class="ico">⚙︎</i>Einstellungen</span></div>
+    </div>
+    <p class="pc"><b>Pro:</b> zeigt nur, was bedienbar ist; der Pflichtsatz steht unmittelbar unter dem Knopf, also an der Stelle der Entscheidung, auch wenn der Einrichtungsschritt übersprungen wurde; „Konto“ und „Datenschutzhinweis“ stehen an derselben Stelle wie in K3. <b>Contra:</b> Nach der Anmeldung erscheint der Abschnitt „Modell“ neu, die Seite wächst also einmal sichtbar; dass es eine Modellwahl gibt, sieht man vorher nicht.</p>
+  </div>
+  <div>
+    <p class="label"><span class="code">O2</span><b>Abschnitt „Modell“ bleibt stehen, gesperrt</b></p>
+    <div class="phone">
+      <div class="status"><span>13:20</span><span>●●● 5G</span></div>
+      <div class="nav"><span class="a">‹ Einstellungen</span><span class="c">KI</span><span></span></div>
+      <div class="section">Konto</div>
+      <div class="list">
+        <div class="field"><span>ChatGPT</span><span class="v">nicht angemeldet</span></div>
+        <div class="field"><span class="l">Mit ChatGPT anmelden</span></div>
+      </div>
+      <div class="note">Wenn du KI-Funktionen nutzt, gehen die dafür nötigen Daten (Termine, Aufgaben, bei Issues auch Repo-Inhalte) an OpenAI.</div>
+      <div class="section">Modell</div>
+      <div class="list">
+        <div class="item" style="opacity:.45"><span class="radio on"></span><div class="t">Automatisch<div class="s">Tagwerk nimmt das Standardmodell deines Abos</div></div></div>
+      </div>
+      <div class="note">Die Liste der Modelle lädt Tagwerk nach der Anmeldung.</div>
+      <div class="list" style="margin-top:8px"><div class="field"><span>Datenschutzhinweis</span><span class="v">›</span></div></div>
+      <div class="spacer"></div>
+      <div class="tb glass"><span><i class="ico">▦</i>Planen</span><span><i class="ico">☑︎</i>Aufgaben</span><span class="on"><i class="ico">⚙︎</i>Einstellungen</span></div>
+    </div>
+    <p class="pc"><b>Pro:</b> Seitenaufbau bleibt in allen Zuständen gleich; die Vorgabe „Automatisch“ ist schon vor der Anmeldung zu sehen. <b>Contra:</b> ein Abschnitt, in dem nichts bedienbar ist; „Standardmodell deines Abos“ spricht von einem Konto, das noch nicht verbunden ist; mehr Text auf einer Seite, die man im Normalfall genau einmal sieht.</p>
+  </div>
+</div>
+
+<!-- ============================== P ============================== -->
+<h2><span class="area">P</span> Zustände während und nach der Anmeldung</h2>
+<p class="lead">Keine Varianten, sondern vier Zustände derselben Seite. Grundsatz aus K3: Ladezustand und Fehler sind Zeilen in der Liste, keine Dialoge. Die Fehlertexte sind die vorhandenen aus <code>ChatGPTAuthError.userMessage</code>; die Texte zur Modellliste sind neu und Vorschläge.</p>
+<div class="grid">
+  <div>
+    <p class="label"><span class="code r">P1</span><b>Anmeldeseite ist offen</b> <span class="rec">Empfehlung</span></p>
+    <div class="phone">
+      <div class="status"><span>13:20</span><span>●●● 5G</span></div>
+      <div class="under">
+        <div class="nav"><span class="a">‹ Einstellungen</span><span class="c">KI</span><span></span></div>
+        <div class="section">Konto</div>
+        <div class="list">
+          <div class="field"><span>ChatGPT</span><span class="v">nicht angemeldet</span></div>
+          <div class="item"><span class="spin"></span><div class="t" style="color:var(--sub)">Anmeldung läuft …</div></div>
+        </div>
+      </div>
+      <div class="sheetp">
+        <div class="grab"></div>
+        <div class="shead"><span class="lnk" style="font-weight:400">Abbrechen</span><span class="urlbar">auth.openai.com</span><span class="lnk" style="font-weight:400">↻</span></div>
+        <div class="webph">Anmeldeseite von ChatGPT<br>Inhalt und Aussehen kommen von OpenAI,<br>nicht von Tagwerk.</div>
+        <div class="anno" style="margin-top:10px">Systemblatt (ASWebAuthenticationSession); schließt sich nach der Anmeldung von selbst</div>
+      </div>
+    </div>
+    <p class="pc">Darunter ersetzt die Zeile „Anmeldung läuft …“ den Knopf, damit ein zweiter Tipp keine zweite Anmeldung startet. „Abbrechen“ im Blatt führt zu P2. Tagwerk sieht weder Passwort noch Eingaben. <b>Am Gerät zu prüfen:</b> ob iOS vor dem Blatt die Systemfrage „„Tagwerk“ möchte „openai.com“ zum Anmelden verwenden“ zeigt; das hängt davon ab, ob die Sitzung mit oder ohne gemeinsame Safari-Daten geöffnet wird.</p>
+  </div>
+  <div>
+    <p class="label"><span class="code r">P2</span><b>Anmeldung fehlgeschlagen oder abgebrochen</b> <span class="rec">Empfehlung</span></p>
+    <div class="phone">
+      <div class="status"><span>13:20</span><span>●●● 5G</span></div>
+      <div class="nav"><span class="a">‹ Einstellungen</span><span class="c">KI</span><span></span></div>
+      <div class="section">Konto</div>
+      <div class="list">
+        <div class="field"><span>ChatGPT</span><span class="v">nicht angemeldet</span></div>
+        <div class="item"><span class="wico">⚠︎</span><div class="t">Die Anmeldung braucht Port 1455, der gerade belegt ist. Schließe andere Apps mit ChatGPT-Anmeldung und versuche es erneut.</div></div>
+        <div class="field"><span class="l">Mit ChatGPT anmelden</span></div>
+      </div>
+      <div class="note">Wenn du KI-Funktionen nutzt, gehen die dafür nötigen Daten (Termine, Aufgaben, bei Issues auch Repo-Inhalte) an OpenAI.</div>
+      <div class="anno">dieselbe Stelle, andere Fälle</div>
+      <div class="list"><div class="item"><div class="t" style="color:var(--sub)">Anmeldung abgebrochen.</div></div></div>
+      <div class="list"><div class="item"><span class="wico">⚠︎</span><div class="t">Keine Verbindung zu ChatGPT.</div></div></div>
+      <div class="list"><div class="item"><span class="wico">⚠︎</span><div class="t">Die Anmeldung ist abgelaufen. Melde dich erneut an.</div></div></div>
+      <div class="list" style="margin-top:8px"><div class="field"><span>Datenschutzhinweis</span><span class="v">›</span></div></div>
+      <div class="spacer"></div>
+      <div class="tb glass"><span><i class="ico">▦</i>Planen</span><span><i class="ico">☑︎</i>Aufgaben</span><span class="on"><i class="ico">⚙︎</i>Einstellungen</span></div>
+    </div>
+    <p class="pc">Die Meldung steht zwischen Zustand und Knopf, der Knopf bleibt für den nächsten Versuch stehen. Sie verschwindet beim nächsten Versuch und beim Verlassen der Seite. „Anmeldung abgebrochen.“ ist kein Fehler, sondern die eigene Entscheidung, deshalb grau und ohne Warnzeichen. „Die Anmeldung ist abgelaufen. …“ ist ein neuer Text für den Fall, dass ChatGPT die gespeicherte Anmeldung nicht mehr annimmt; er sollte auch dann hier stehen, wenn der Ablauf bei einem KI-Aufruf bemerkt wurde.</p>
+  </div>
+  <div>
+    <p class="label"><span class="code r">P3</span><b>Angemeldet, Modellliste lädt zum ersten Mal</b> <span class="rec">Empfehlung</span></p>
+    <div class="phone">
+      <div class="status"><span>13:20</span><span>●●● 5G</span></div>
+      <div class="nav"><span class="a">‹ Einstellungen</span><span class="c">KI</span><span></span></div>
+      <div class="section">Konto</div>
+      <div class="anno" style="margin-top:0">Ergänzung zu K3: E-Mail aus dem ID-Token als Unterzeile</div>
+      <div class="list">
+        <div class="item" style="align-items:center"><div class="t">ChatGPT<div class="s">m.muster@example.com</div></div><span style="color:var(--green);font-size:14px">angemeldet</span></div>
+        <div class="field"><span style="color:var(--red)">Abmelden</span></div>
+      </div>
+      <div class="section">Modell <span>Liste wird geladen …</span></div>
+      <div class="list">
+        <div class="item"><span class="radio on"></span><div class="t">Automatisch<div class="s">Tagwerk nimmt das Standardmodell deines Abos</div></div></div>
+        <div class="item"><span class="spin"></span><div class="t" style="color:var(--sub)">Modelle werden geladen …</div></div>
+        <div class="field dis"><span class="l">Liste aktualisieren</span></div>
+      </div>
+      <div class="note">Gilt für Planen und Assistent. Ist das gewählte Modell nicht mehr verfügbar, wechselt Tagwerk auf „Automatisch“ und sagt es beim nächsten Aufruf.</div>
+      <div class="list"><div class="field"><span>Datenschutzhinweis</span><span class="v">›</span></div></div>
+      <div class="spacer"></div>
+      <div class="tb glass"><span><i class="ico">▦</i>Planen</span><span><i class="ico">☑︎</i>Aufgaben</span><span class="on"><i class="ico">⚙︎</i>Einstellungen</span></div>
+    </div>
+    <p class="pc">Direkt nach der Anmeldung: Der Abschnitt „Modell“ erscheint sofort mit „Automatisch“ als gültiger Auswahl; nur die übrigen Zeilen fehlen noch. Kein Erfolgsdialog, der Wechsel auf „angemeldet“ ist die Bestätigung. Gibt es schon eine gemerkte Liste (späteres Öffnen, „Liste aktualisieren“), bleibt sie stehen und bedienbar; nur die Kopfnotiz wechselt auf „wird aktualisiert …“. Geladen wird beim Öffnen dieser Seite, höchstens einmal am Tag.</p>
+  </div>
+  <div>
+    <p class="label"><span class="code r">P4</span><b>Modellliste nicht ladbar</b> (gemerkte Liste vorhanden) <span class="rec">Empfehlung</span></p>
+    <div class="phone">
+      <div class="status"><span>13:20</span><span>●●● 5G</span></div>
+      <div class="nav"><span class="a">‹ Einstellungen</span><span class="c">KI</span><span></span></div>
+      <div class="section">Konto</div>
+      <div class="list">
+        <div class="item" style="align-items:center"><div class="t">ChatGPT<div class="s">m.muster@example.com</div></div><span style="color:var(--green);font-size:14px">angemeldet</span></div>
+        <div class="field"><span style="color:var(--red)">Abmelden</span></div>
+      </div>
+      <div class="section">Modell <span>Liste von ChatGPT · gestern 09:12</span></div>
+      <div class="list">
+        <div class="item"><span class="radio"></span><div class="t">Automatisch<div class="s">Tagwerk nimmt das Standardmodell deines Abos</div></div></div>
+        <div class="item"><span class="radio"></span><div class="t">Modell A<div class="s">Kennung vom Dienst · Platzhalter</div></div></div>
+        <div class="item"><span class="radio on"></span><div class="t">Modell B<div class="s">Kennung vom Dienst · Platzhalter</div></div></div>
+        <div class="item"><span class="radio"></span><div class="t">Modell C<div class="s">Kennung vom Dienst · Platzhalter</div></div></div>
+        <div class="item"><span class="wico">⚠︎</span><div class="t">Die Liste konnte nicht aktualisiert werden.<div class="s">Keine Verbindung zu ChatGPT.</div></div></div>
+        <div class="field"><span class="l">Liste aktualisieren</span></div>
+      </div>
+      <div class="note">Gilt für Planen und Assistent. Ist das gewählte Modell nicht mehr verfügbar, wechselt Tagwerk auf „Automatisch“ und sagt es beim nächsten Aufruf.</div>
+      <div class="list"><div class="field"><span>Datenschutzhinweis</span><span class="v">›</span></div></div>
+      <div class="spacer"></div>
+      <div class="tb glass"><span><i class="ico">▦</i>Planen</span><span><i class="ico">☑︎</i>Aufgaben</span><span class="on"><i class="ico">⚙︎</i>Einstellungen</span></div>
+    </div>
+    <p class="pc">Die alte Liste bleibt wählbar, die Kopfnotiz nennt ihr ehrliches Alter, die Fehlerzeile steht direkt über „Liste aktualisieren“. Ohne gemerkte Liste (erster Abruf scheitert) steht dort nur „Automatisch“, darunter die Zeile „Die Modellliste konnte nicht geladen werden.“ mit dem Grund, und die Kopfnotiz entfällt. Kein automatischer zweiter Versuch; der nächste Abruf kommt mit „Liste aktualisieren“ oder beim nächsten Öffnen.</p>
+  </div>
+</div>
+
+<!-- ============================== Q ============================== -->
+<h2><span class="area">Q</span> Datenschutzhinweis</h2>
+<p class="lead">Design §8.4: einmaliger Hinweis in der Einrichtung und in den Einstellungen, keine Rückfrage pro Aufruf, keine KI-Aufrufe ohne eigene Aktion, auch nicht bei der Aktualisierung im Hintergrund. Der erste Satz ist wörtlich vorgegeben. Die beiden Zusätze beschreiben nur, was §8.4 festlegt und was „Abmelden“ im Code tut (gespeicherte Anmeldung löschen). Über Speicherung oder Verwendung der Daten bei OpenAI sagt der Text nichts, weil Tagwerk darüber nichts zusichern kann.</p>
+<div class="grid">
+  <div>
+    <p class="label"><span class="code r">Q1</span><b>Eigene Seite hinter „Datenschutzhinweis ›“</b> <span class="rec">Empfehlung</span></p>
+    <div class="phone">
+      <div class="status"><span>13:20</span><span>●●● 5G</span></div>
+      <div class="nav"><span class="a">‹ KI</span><span class="c">Datenschutzhinweis</span><span></span></div>
+      <div class="list" style="margin-top:6px">
+        <div class="ptxt">Wenn du KI-Funktionen nutzt, gehen die dafür nötigen Daten (Termine, Aufgaben, bei Issues auch Repo-Inhalte) an OpenAI.</div>
+      </div>
+      <div class="list" style="margin-top:8px">
+        <div class="ptxt">Tagwerk ruft die KI nur auf, wenn du sie selbst startest, zum Beispiel mit „Tag planen“ oder einer Nachricht an den Assistenten. Im Hintergrund geschieht das nie, und Tagwerk fragt nicht bei jedem Aufruf erneut nach.</div>
+        <div class="ptxt">„Abmelden“ löscht die Anmeldung bei ChatGPT von diesem iPhone. Danach sind die KI-Funktionen aus, bis du dich wieder anmeldest.</div>
+      </div>
+      <div class="spacer"></div>
+      <div class="tb glass"><span><i class="ico">▦</i>Planen</span><span><i class="ico">☑︎</i>Aufgaben</span><span class="on"><i class="ico">⚙︎</i>Einstellungen</span></div>
+    </div>
+    <p class="pc"><b>Pro:</b> entspricht der freigegebenen Zeile in K3; reiner Text in normaler Lesegröße statt Fußnotengrau; die KI-Seite bleibt kurz. Zusammen mit dem Pflichtsatz unter dem Anmeldeknopf (O1) und im Einrichtungsschritt (T1) ist der Hinweis an beiden geforderten Orten vorhanden. <b>Contra:</b> eine Seite mit drei Sätzen; wer angemeldet ist, sieht den Satz nur noch nach einem Tipp.</p>
+  </div>
+  <div>
+    <p class="label"><span class="code">Q2</span><b>Keine eigene Seite, Text als Fußnote der KI-Seite</b></p>
+    <div class="phone">
+      <div class="status"><span>13:20</span><span>●●● 5G</span></div>
+      <div class="nav"><span class="a">‹ Einstellungen</span><span class="c">KI</span><span></span></div>
+      <div class="section">Konto</div>
+      <div class="list">
+        <div class="field"><span>ChatGPT</span><span class="v" style="color:var(--green)">angemeldet</span></div>
+        <div class="field"><span style="color:var(--red)">Abmelden</span></div>
+      </div>
+      <div class="section">Modell <span>Liste von ChatGPT · heute 09:12</span></div>
+      <div class="list">
+        <div class="item"><span class="radio on"></span><div class="t">Automatisch<div class="s">Tagwerk nimmt das Standardmodell deines Abos</div></div></div>
+        <div class="item"><span class="radio"></span><div class="t">Modell A<div class="s">Kennung vom Dienst · Platzhalter</div></div></div>
+        <div class="item"><span class="radio"></span><div class="t">Modell B<div class="s">Kennung vom Dienst · Platzhalter</div></div></div>
+        <div class="item"><span class="radio"></span><div class="t">Modell C<div class="s">Kennung vom Dienst · Platzhalter</div></div></div>
+        <div class="field"><span class="l">Liste aktualisieren</span></div>
+      </div>
+      <div class="note">Gilt für Planen und Assistent. Ist das gewählte Modell nicht mehr verfügbar, wechselt Tagwerk auf „Automatisch“ und sagt es beim nächsten Aufruf.</div>
+      <div class="section">Datenschutz</div>
+      <div class="note">Wenn du KI-Funktionen nutzt, gehen die dafür nötigen Daten (Termine, Aufgaben, bei Issues auch Repo-Inhalte) an OpenAI. Tagwerk ruft die KI nur auf, wenn du sie selbst startest, nie im Hintergrund. „Abmelden“ löscht die Anmeldung von diesem iPhone.</div>
+      <div class="spacer"></div>
+      <div class="tb glass"><span><i class="ico">▦</i>Planen</span><span><i class="ico">☑︎</i>Aufgaben</span><span class="on"><i class="ico">⚙︎</i>Einstellungen</span></div>
+    </div>
+    <p class="pc"><b>Pro:</b> immer sichtbar, eine Seite weniger. <b>Contra:</b> ändert das freigegebene K3 (Zeile entfällt); zwei graue Fußnotenblöcke untereinander, bei längerer Modellliste liegt der Hinweis unter dem sichtbaren Bereich; ein Abschnitt, der nur aus Fußnote besteht, ist in einer <code>Form</code> unüblich.</p>
+  </div>
+</div>
+
+<!-- ============================== T ============================== -->
+<h2><span class="area">T</span> Einrichtung · Schritt 5 „ChatGPT“</h2>
+<p class="lead">Die Einrichtung zeigt eine nummerierte Liste, darunter den aktuellen Schritt mit Erklärung, Hauptknopf, „Überspringen“ und der Fußnote „Du kannst das später in den Einstellungen ändern.“. Ganz unten steht heute dauerhaft „Termine und Aufgabentitel gehen nur an OpenAI, wenn du „Tag planen“ tippst.“. Dieser Satz entfällt; an seine Stelle tritt der Pflichtsatz. Zu entscheiden ist, ob er im Schritt 5 steht oder weiter unter der ganzen Einrichtung.</p>
+<div class="grid">
+  <div>
+    <p class="label"><span class="code r">T1</span><b>Pflichtsatz im Schritt 5, über dem Knopf</b> <span class="rec">Empfehlung</span></p>
+    <div class="phone">
+      <div class="status"><span>13:20</span><span>●●● 5G</span></div>
+      <div class="title" style="padding-bottom:8px">Willkommen</div>
+      <div class="list">
+        <div class="item" style="align-items:center"><span class="stepn ok">✓</span><div class="t">Erinnerungen</div></div>
+        <div class="item" style="align-items:center"><span class="stepn ok">✓</span><div class="t">Kalender</div></div>
+        <div class="item" style="align-items:center"><span class="stepn ok">✓</span><div class="t">Plan-Kalender</div></div>
+        <div class="item" style="align-items:center"><span class="stepn ok">✓</span><div class="t">GitHub</div></div>
+        <div class="item" style="align-items:center"><span class="stepn cur">5</span><div class="t">ChatGPT</div></div>
+      </div>
+      <div class="section">ChatGPT</div>
+      <div class="list">
+        <div class="ptxt">Mit deinem ChatGPT-Konto kann Tagwerk Tag, Woche und Monat für dich planen, und der Assistent kann Aufgaben für dich ändern.</div>
+        <div class="ptxt">Wenn du KI-Funktionen nutzt, gehen die dafür nötigen Daten (Termine, Aufgaben, bei Issues auch Repo-Inhalte) an OpenAI.</div>
+        <div class="field"><span class="pbtn">Mit ChatGPT anmelden</span></div>
+        <div class="field"><span class="l">Überspringen</span></div>
+      </div>
+      <div class="note">Du kannst das später in den Einstellungen ändern.</div>
+      <div class="spacer"></div>
+      <div class="anno">Die bisherige Dauerzeile zu OpenAI am Seitenende entfällt.</div>
+    </div>
+    <p class="pc"><b>Pro:</b> Der Hinweis steht dort, wo man über die Anmeldung entscheidet, in Lesegröße und vor dem Knopf; bei den Schritten 1–4, die nichts mit OpenAI zu tun haben, steht nichts Fremdes. Auch wer überspringt, hat ihn gesehen. <b>Contra:</b> Er ist erst im letzten Schritt sichtbar; der Schritt hat zwei Textzeilen statt einer.</p>
+  </div>
+  <div>
+    <p class="label"><span class="code">T2</span><b>Pflichtsatz bleibt Fußzeile der ganzen Einrichtung</b></p>
+    <div class="phone">
+      <div class="status"><span>13:20</span><span>●●● 5G</span></div>
+      <div class="title" style="padding-bottom:8px">Willkommen</div>
+      <div class="list">
+        <div class="item" style="align-items:center"><span class="stepn ok">✓</span><div class="t">Erinnerungen</div></div>
+        <div class="item" style="align-items:center"><span class="stepn ok">✓</span><div class="t">Kalender</div></div>
+        <div class="item" style="align-items:center"><span class="stepn ok">✓</span><div class="t">Plan-Kalender</div></div>
+        <div class="item" style="align-items:center"><span class="stepn ok">✓</span><div class="t">GitHub</div></div>
+        <div class="item" style="align-items:center"><span class="stepn cur">5</span><div class="t">ChatGPT</div></div>
+      </div>
+      <div class="section">ChatGPT</div>
+      <div class="list">
+        <div class="ptxt">Mit deinem ChatGPT-Konto kann Tagwerk Tag, Woche und Monat für dich planen, und der Assistent kann Aufgaben für dich ändern.</div>
+        <div class="field"><span class="pbtn">Mit ChatGPT anmelden</span></div>
+        <div class="field"><span class="l">Überspringen</span></div>
+      </div>
+      <div class="note">Du kannst das später in den Einstellungen ändern.</div>
+      <div class="list" style="margin-top:10px"><div class="ptxt" style="font-size:12.5px;color:var(--sub)">Wenn du KI-Funktionen nutzt, gehen die dafür nötigen Daten (Termine, Aufgaben, bei Issues auch Repo-Inhalte) an OpenAI.</div></div>
+      <div class="spacer"></div>
+    </div>
+    <p class="pc"><b>Pro:</b> kleinste Änderung (ein Text wird getauscht); der Hinweis ist ab dem ersten Schritt zu sehen. <b>Contra:</b> Unter „Erinnerungen“ oder „Kalender“ wirkt ein Satz über OpenAI zusammenhanglos und kann als „Erinnerungen gehen an OpenAI“ gelesen werden; im Schritt 5 steht er klein und grau unter dem Knopf statt davor; auf kleinen Geräten oder mit großer Schrift liegt er unter dem sichtbaren Bereich.</p>
+  </div>
+  <div>
+    <p class="label"><span class="code r">T1</span><b>Anmeldung im Schritt: läuft, Fehler, fertig</b></p>
+    <div class="phone" style="min-height:0">
+      <div class="anno">während die Anmeldeseite offen ist (Blatt wie P1)</div>
+      <div class="list">
+        <div class="item"><span class="spin"></span><div class="t" style="color:var(--sub)">Anmeldung läuft …</div></div>
+        <div class="field"><span class="l">Überspringen</span></div>
+      </div>
+      <div class="anno">nach einem Fehler (Zeile wie P2, Knopf bleibt)</div>
+      <div class="list">
+        <div class="item"><span class="wico">⚠︎</span><div class="t">Die Anmeldung hat zu lange gedauert. Versuche es erneut.</div></div>
+        <div class="field"><span class="pbtn">Mit ChatGPT anmelden</span></div>
+        <div class="field"><span class="l">Überspringen</span></div>
+      </div>
+      <div class="anno">Schrittliste nach „Überspringen“</div>
+      <div class="list">
+        <div class="item" style="align-items:center"><span class="stepn ok">✓</span><div class="t">GitHub</div></div>
+        <div class="item" style="align-items:center"><span class="stepn">5</span><div class="t">ChatGPT</div><span style="color:var(--sub);font-size:12px">nicht angemeldet</span></div>
+      </div>
+    </div>
+    <p class="pc">Nach erfolgreicher Anmeldung bekommt Schritt 5 den grünen Haken, und die Einrichtung endet wie bisher nach dem letzten Schritt. Eine Modellwahl gibt es hier nicht; es gilt „Automatisch“, die Liste wird erst auf der KI-Seite oder beim ersten KI-Aufruf geladen. <b>Hinweis zum Bestand:</b> Übersprungene Schritte tragen heute rechts „nicht erlaubt“. Für ChatGPT (und genau genommen auch für GitHub) wäre „nicht angemeldet“ richtig. Bei „Einrichtung erneut starten“ mit bestehender Anmeldung zeigt Schritt 5 sofort den Haken.</p>
+  </div>
+</div>
+
+<!-- ============================== Abschluss ============================== -->
+<h2><span class="area" style="background:#636366">§</span> Empfehlung und offene Fragen</h2>
+<div class="box neutral">
+  <h3>Was diese Mockups nicht zeigen</h3>
+  <ul>
+    <li>Helles Erscheinungsbild, Querformat und die größten Dynamic-Type-Stufen. Aussagen dazu sind Entwurfsannahmen.</li>
+    <li>Den Inhalt der Anmeldeseite (kommt von OpenAI) und die mögliche Systemfrage von iOS davor (P1, am Gerät zu prüfen).</li>
+    <li>Meldungen an den Aufrufstellen („Tag planen“, Assistent), wenn man dort abgemeldet ist oder das Modell entfallen ist. Sie gehören zu den Mockups des KI-Knopfs, nicht zu den Einstellungen.</li>
+    <li>Die Debug-Sektion „ChatGPT (Debug)“; sie bleibt ein Entwicklungswerkzeug und ist nicht Teil dieses Entwurfs.</li>
+  </ul>
+</div>
+<div class="box">
+  <h3>Empfehlung: N1 + O1 + P1–P4 + Q1 + T1</h3>
+  <table class="sum">
+    <tr><th>Punkt</th><th>Empfehlung</th><th>Kern</th></tr>
+    <tr><td><b>N</b> Einstieg</td><td><span class="code r">N1</span></td><td>Eine Zeile „KI“ in eigenem Abschnitt direkt nach GitHub, führt auf die Seite aus K3. Rechts: „nicht angemeldet“, „Automatisch“ oder der Anzeigename des gewählten Modells, immer aus lokal Gemerktem.</td></tr>
+    <tr><td><b>O</b> Abgemeldet</td><td><span class="code r">O1</span></td><td>Nur Abschnitt „Konto“ mit „Mit ChatGPT anmelden“; Pflichtsatz als Fußnote direkt darunter; kein Modell-Abschnitt; Zeile „Datenschutzhinweis ›“ an ihrem Platz aus K3.</td></tr>
+    <tr><td><b>P</b> Zustände</td><td><span class="code r">P1</span><span class="code r">P2</span><span class="code r">P3</span><span class="code r">P4</span></td><td>Während der Anmeldung Zeile „Anmeldung läuft …“ statt Knopf; Fehler als Zeile über dem Knopf, Abbruch grau; Modellliste lädt als Zeile unter „Automatisch“; bei Ladefehler bleibt die gemerkte Liste mit ihrem Alter stehen.</td></tr>
+    <tr><td><b>Q</b> Datenschutz</td><td><span class="code r">Q1</span></td><td>Eigene Seite mit dem Pflichtsatz und zwei Zusätzen (nur auf eigene Aktion und nie im Hintergrund; „Abmelden“ löscht die Anmeldung vom Gerät).</td></tr>
+    <tr><td><b>T</b> Einrichtung</td><td><span class="code r">T1</span></td><td>Schritt 5 „ChatGPT“ mit Erklärung, Pflichtsatz, „Mit ChatGPT anmelden“ und „Überspringen“; die bisherige Dauerzeile am Seitenende entfällt.</td></tr>
+  </table>
+  <ul style="margin-top:10px">
+    <li><b>Gemeinsame Linie:</b> Der Pflichtsatz steht überall dort, wo man sich anmeldet (O1, T1), und vollständig hinter „Datenschutzhinweis ›“ (Q1). Damit ist §8.4 („in der Einrichtung und in den Einstellungen“) erfüllt, ohne dass er dauerhaft als Fußzeile mitläuft.</li>
+    <li><b>Kein Abruf außerhalb der KI-Seite:</b> N1 und T1 kommen ohne Netz aus. Die Modellliste lädt nur P3/P4, also beim Öffnen der KI-Seite (höchstens einmal täglich) oder über „Liste aktualisieren“.</li>
+    <li><b>SwiftUI:</b> N1 als <code>NavigationLink</code> mit <code>LabeledContent("KI", value:)</code> in einer eigenen <code>Section</code>; die KI-Seite als <code>Form</code> mit bedingter <code>Section("Modell")</code>; Lade- und Fehlerzeilen als gewöhnliche Zeilen (<code>ProgressView</code> bzw. <code>Label</code>); Q1 als <code>Form</code> mit reinen <code>Text</code>-Zeilen; T1 als fünfter Fall von <code>SetupStep</code> mit eigenem Inhalt wie beim GitHub-Schritt.</li>
+    <li><b>Neue Texte, die freizugeben sind:</b> „Anmeldung läuft …“, „Die Anmeldung ist abgelaufen. Melde dich erneut an.“, „Modelle werden geladen …“, „Die Liste konnte nicht aktualisiert werden.“, „Die Modellliste konnte nicht geladen werden.“, die zwei Zusätze in Q1, die Erklärung in T1 und die zweite Fußnote in O1.</li>
+  </ul>
+  <h3 style="margin-top:12px">Offene Fragen</h3>
+  <ol style="margin:4px 0 0;padding-left:20px">
+    <li><b>K3/P3:</b> Soll die E-Mail-Adresse des Kontos als Unterzeile unter „ChatGPT“ stehen (Vorschlag), oder bleibt es bei „angemeldet“ wie in K3? Ohne Adresse im ID-Token bleibt die Unterzeile leer.</li>
+    <li><b>O:</b> Reicht O1 ohne Modell-Abschnitt, oder soll die Seite wie in O2 schon vor der Anmeldung ihre volle Form zeigen?</li>
+    <li><b>P2:</b> Soll „Anmeldung abgebrochen.“ überhaupt erscheinen? Vorschlag: ja, grau; der Verzicht darauf wäre ebenso vertretbar, weil der Abbruch die eigene Handlung ist.</li>
+    <li><b>Q1:</b> Sind die beiden Zusatzsätze so recht, oder soll die Seite nur den Pflichtsatz tragen? Der Satz „Im Hintergrund geschieht das nie“ ist eine Zusage, an der sich künftige Funktionen messen lassen müssen.</li>
+    <li><b>T1:</b> Stimmt die Erklärung „Tag, Woche und Monat planen, Assistent ändert Aufgaben“ mit dem Umfang von 2b-2 überein, oder soll sie allgemeiner bleiben („für die KI-Funktionen von Tagwerk“)?</li>
+    <li><b>T:</b> Soll „nicht erlaubt“ bei übersprungenen Anmeldeschritten in „nicht angemeldet“ geändert werden (betrifft auch den bestehenden GitHub-Schritt)?</li>
+  </ol>
+</div>
+
+</body>
+</html>
