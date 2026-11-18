@@ -119,6 +119,19 @@ final class AppEnvironment {
         }
     }
 
+    /// The background refresh: GitHub is registered without the catalog, every source loads once, then the
+    /// notifications are rescheduled. Nothing here reaches an AI feature (§8.4).
+    func makeBackgroundRefresh() -> BackgroundRefresh {
+        BackgroundRefresh(
+            prepare: { [weak self] in
+                guard let self, await gitHubTokens.isSignedIn, taskList.provider(for: .github) == nil else { return false }
+                await taskList.register(gitHub)  // loads all sources
+                return true
+            },
+            reload: { [weak self] in await self?.taskList.reload() },
+            reschedule: { [weak self] in await self?.notifications.reschedule() })
+    }
+
     /// Adds GitHub to the task list when credentials exist.
     func activateGitHubIfSignedIn() async {
         guard await gitHubTokens.isSignedIn, taskList.provider(for: .github) == nil else { return }

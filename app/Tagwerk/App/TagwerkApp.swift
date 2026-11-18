@@ -52,12 +52,18 @@ struct TagwerkApp: App {
                         }
                     case .background:
                         // Directly, not debounced: the app may be suspended before a delayed run starts.
-                        Task { await environment.notifications.reschedule() }
+                        Task {
+                            await environment.makeBackgroundRefresh().submitNext()
+                            await environment.notifications.reschedule()
+                        }
                     default:
                         break
                     }
                 }
         }
         .modelContainer(environment.modelContainer)
+        .backgroundTask(.appRefresh(BackgroundRefresh.identifier)) { [environment] in
+            await environment.makeBackgroundRefresh().run()
+        }
     }
 }
