@@ -56,6 +56,18 @@ struct PlanView: View {
         }
     }
 
+    /// After "Alle übernehmen": one "Rückgängig" for blocks, days, hours and moves (mockup AW1).
+    @ViewBuilder
+    private var acceptAllUndo: some View {
+        if let undo = environment.planner.lastAcceptAll {
+            UndoCapsule(title: undo.count == 1 ? "1 Vorschlag" : "\(undo.count) Vorschläge", caption: "Übernommen",
+                        symbol: "sparkles", duration: 6,
+                        onUndo: { Task { await environment.planner.undoAcceptAll() } },
+                        onExpire: { environment.planner.clearAcceptUndo() })
+                .padding(.bottom, 60)
+        }
+    }
+
     var body: some View {
         NavigationStack {
             Group {
@@ -74,6 +86,7 @@ struct PlanView: View {
             .overlay(alignment: .bottom) { dismissUndo }
             .overlay(alignment: .bottom) { duplicateUndo }
             .overlay(alignment: .bottom) { moveUndo }
+            .overlay(alignment: .bottom) { acceptAllUndo }
             .navigationTitle("Planen")
             .toolbar(.hidden, for: .navigationBar)  // the tab bar already says "Planen" (mockup A1)
             .task(id: "\(model.scope)-\(model.anchor)") { await model.reload() }

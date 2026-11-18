@@ -79,9 +79,19 @@ struct TimelineCanvas: View {
                         .offset(x: labelWidth + 6 + CGFloat(columns[index]) * columnWidth, y: y(range.lowerBound, shown))
                         .zIndex(session?.id == entry.id ? 2 : (selectedID == entry.id ? 1 : 0))
                 }
+                // Mockup AR1: the added time of a suggested longer day, hatched purple.
+                ForEach(extensionRanges, id: \.lowerBound) { range in
+                    Rectangle()
+                        .fill(Color.purple.opacity(0.10))
+                        .overlay { Rectangle().strokeBorder(Color.purple.opacity(0.5), style: StrokeStyle(lineWidth: 1, dash: [3, 3])) }
+                        .frame(width: width, height: height(range.count))
+                        .offset(x: labelWidth + 6, y: y(range.lowerBound, shown))
+                        .allowsHitTesting(false)
+                }
                 ForEach(blockSuggestions) { suggestion in
                     let range = Self.range(of: suggestion)
                     SuggestionBlock(suggestion: suggestion, timeText: timeText(range),
+                                    acceptEnabled: !SuggestionText.isWaiting(suggestion, planning: model),
                                     onOpen: { openSuggestion = suggestion },
                                     onAccept: { Task { await environment.planner.accept(suggestion) } },
                                     onDismiss: { Task { await environment.planner.dismiss(suggestion) } })
@@ -106,7 +116,7 @@ struct TimelineCanvas: View {
     /// Visible hours: working time widened to every entry, with an hour of margin.
     var shownRange: Range<Int> {
         let hours = model.workHours(on: plan.day) ?? WorkHours(startMinutes: 540, endMinutes: 1080)
-        let ranges = entries.map(baseRange) + blockSuggestions.map(Self.range)
+        let ranges = entries.map(baseRange) + blockSuggestions.map(Self.range) + extensionRanges
         let lower = min(hours.startMinutes, ranges.map(\.lowerBound).min() ?? hours.startMinutes)
         let upper = max(hours.endMinutes, ranges.map(\.upperBound).max() ?? hours.endMinutes)
         return max(0, (lower / 60 - 1) * 60)..<min(1440, ((upper + 59) / 60 + 1) * 60)
@@ -115,6 +125,17 @@ struct TimelineCanvas: View {
     /// Open AI time-block suggestions of the day (mockup W1).
     private var blockSuggestions: [PlanSuggestion] {
         plan.suggestions.filter { $0.kind == .block && $0.startMinutes != nil }
+    }
+
+    /// Time a pending longer day would add, outside today's working hours.
+    private var extensionRanges: [Range<Int>] {
+        guard let change = plan.suggestions.first(where: { $0.kind == .dayChange }),
+              let start = change.startMinutes, let end = change.endMinutes else { return [] }
+        guard let hours = model.workHours(on: plan.day), hours.minutes > 0 else { return [start..<end] }
+        var ranges: [Range<Int>] = []
+        if start < hours.startMinutes { ranges.append(start..<hours.startMinutes) }
+        if end > hours.endMinutes { ranges.append(hours.endMinutes..<end) }
+        return ranges
     }
 
     static func range(of suggestion: PlanSuggestion) -> Range<Int> {

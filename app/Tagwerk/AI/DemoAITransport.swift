@@ -74,13 +74,20 @@ final class DemoAITransport: AIHTTPTransport {
         let days = (plan["days"] as? [[String: Any]] ?? []).filter { $0["dayOff"] as? Bool == false }
         var answer: [String: Any] = ["unscheduled": [], "risks": ["Demo: Die Woche ist knapp."],
                                      "estimates": tasks.prefix(3).map { ["taskId": $0, "minutes": 45] }]
+        answer["summary"] = "Demo: Der Zeitraum ist knapp, eine Aufgabe passt nur mit längerer Arbeitszeit."
+        answer["moves"] = []
+        answer["dayChanges"] = []
         if name == "day_plan" {
-            let starts = ["16:00", "17:00", "03:00"]
+            let starts = ["16:30", "18:15", "03:00"]
             var blocks: [[String: Any]] = []
             for (index, task) in tasks.prefix(3).enumerated() where !(isRetry && index == 2) {
                 blocks.append(["taskId": task, "start": starts[index], "minutes": 45, "reason": "Demo-Vorschlag"])
             }
             answer["blocks"] = blocks
+            if let today = days.first?["day"] as? String {
+                answer["dayChanges"] = [["day": today, "start": days.first?["workStart"] as? String ?? "09:00", "end": "19:30",
+                                         "reason": "Demo: Sonst wird die zweite Aufgabe heute nicht fertig."]]
+            }
         } else {
             var assignments: [[String: Any]] = []
             for (index, task) in tasks.prefix(4).enumerated() where !days.isEmpty && !(isRetry && index == 3) {

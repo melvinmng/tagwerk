@@ -115,7 +115,7 @@ struct DayView: View {
                 if rows.isEmpty { Text("Keine Termine").foregroundStyle(.secondary) }
                 ForEach(rows) { row in timelineRow(row, plan: plan) }
                 // Open AI suggestions in list mode (mockup W3).
-                ForEach(plan.suggestions.sorted { ($0.startMinutes ?? 0) < ($1.startMinutes ?? 0) }) { suggestion in
+                ForEach(plan.suggestions.filter { $0.kind == .block }.sorted { ($0.startMinutes ?? 0) < ($1.startMinutes ?? 0) }) { suggestion in
                     SuggestionRow(suggestion: suggestion)
                         .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
                 }

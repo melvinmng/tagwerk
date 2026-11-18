@@ -67,6 +67,15 @@ struct AIPlanBar: View {
     /// "✦ 2 Vorschläge · 1 h 45   Verwerfen" and the orange line for left-out tasks and risks.
     @ViewBuilder
     private var summary: some View {
+        if let text = batches.compactMap(\.summary).last {
+            Label(text, systemImage: "sparkles").font(.subheadline).foregroundStyle(.primary)
+        }
+        // In the day, longer hours and moves are rows of the bar (mockup AO1); the grid shows the blocks.
+        if scope == .day {
+            ForEach(suggestions.filter { $0.kind == .dayChange || $0.kind == .move }) { suggestion in
+                SuggestionRow(suggestion: suggestion)
+            }
+        }
         HStack {
             if suggestions.isEmpty {
                 Label("Keine Vorschläge", systemImage: "sparkles").foregroundStyle(.secondary)
@@ -98,6 +107,9 @@ struct AIPlanBar: View {
 
     @ViewBuilder
     private func actions(retry: Bool) -> some View {
+        if suggestions.contains(where: { $0.kind == .dayChange }) {
+            Text("„Alle übernehmen“ übernimmt zuerst die längere Arbeitszeit.").font(.caption).foregroundStyle(.secondary)
+        }
         HStack(spacing: 10) {
             if !suggestions.isEmpty {
                 Button {
@@ -216,6 +228,50 @@ struct PlanResultSheet: View {
 
 /// Short texts for suggestions.
 enum SuggestionText {
+    static func symbol(_ suggestion: PlanSuggestion) -> String {
+        switch suggestion.kind {
+        case .dayChange: "clock.badge"
+        case .move: "arrow.uturn.right"
+        case .block, .assignment: "sparkles"
+        }
+    }
+
+    /// "Mi 09:00 bis 20:00 arbeiten", "Blumen gießen → Do 19." or the task title.
+    static func title(_ suggestion: PlanSuggestion, calendar: Calendar) -> String {
+        switch suggestion.kind {
+        case .move:
+            "\(suggestion.title) → \(suggestion.day.startDate(in: calendar).formatted(.dateTime.weekday(.abbreviated).day()))"
+        case .dayChange, .block, .assignment:
+            suggestion.title
+        }
+    }
+
+    @MainActor
+    static func detail(_ suggestion: PlanSuggestion, planning: PlanningModel) -> String {
+        switch suggestion.kind {
+        case .dayChange:
+            guard let start = suggestion.startMinutes, let end = suggestion.endMinutes else { return "Vorschlag" }
+            let current = planning.workHours(on: suggestion.day)?.minutes ?? 0
+            let added = (end - start) - current
+            return current == 0 ? "Vorschlag · freier Tag · \(CapacityText.duration(end - start))"
+                : "Vorschlag · +\(CapacityText.duration(max(0, added))) · nur an diesem Tag"
+        case .move:
+            return "Vorschlag · verschieben"
+        case .block, .assignment:
+            var parts = ["Vorschlag"]
+            if let start = suggestion.startMinutes { parts.append(AIPlanner.time(start)) }
+            if let minutes = suggestion.minutes { parts.append(CapacityText.duration(minutes)) }
+            return parts.joined(separator: " · ")
+        }
+    }
+
+    /// A block whose longer day is still open (mockup AB1).
+    @MainActor
+    static func isWaiting(_ suggestion: PlanSuggestion, planning: PlanningModel) -> Bool {
+        guard let change = suggestion.dependsOn else { return false }
+        return planning.suggestionBatches.contains { $0.suggestions.contains { $0.id == change } }
+    }
+
     /// "Mi 18.11. · 14:00 · 45 min" for blocks, "Do 19.11." for work days.
     static func when(_ suggestion: PlanSuggestion, calendar: Calendar) -> String {
         let date = suggestion.day.startDate(in: calendar)

@@ -5,6 +5,7 @@ import TagwerkCore
 struct SuggestionBlock: View {
     let suggestion: PlanSuggestion
     let timeText: String
+    var acceptEnabled = true
     let onOpen: () -> Void
     let onAccept: () -> Void
     let onDismiss: () -> Void
@@ -16,7 +17,7 @@ struct SuggestionBlock: View {
                 Text(timeText + " · Vorschlag").font(.caption2).foregroundStyle(.secondary).lineLimit(1)
             }
             Spacer(minLength: 0)
-            SuggestionButtons(onAccept: onAccept, onDismiss: onDismiss)
+            SuggestionButtons(acceptEnabled: acceptEnabled, onAccept: onAccept, onDismiss: onDismiss)
         }
         .padding(6)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
@@ -34,12 +35,15 @@ struct SuggestionBlock: View {
 
 /// ✓ and ✕ of a suggestion.
 struct SuggestionButtons: View {
+    var acceptEnabled = true
     let onAccept: () -> Void
     let onDismiss: () -> Void
 
     var body: some View {
         HStack(spacing: 6) {
             Button(action: onAccept) { Image(systemName: "checkmark.circle.fill").font(.title3) }
+                .disabled(!acceptEnabled)
+                .opacity(acceptEnabled ? 1 : 0.35)
                 .accessibilityLabel("Übernehmen")
             Button(action: onDismiss) { Image(systemName: "xmark.circle").font(.title3) }
                 .accessibilityLabel("Verwerfen")
@@ -49,7 +53,8 @@ struct SuggestionButtons: View {
     }
 }
 
-/// A suggestion as a list row (mockups W3, X1, X2): dashed, without grip, reason on tap.
+/// A suggestion as a list row (mockups W3, X1, X2; AO1 longer day; "↷" move): dashed, without grip,
+/// reason on tap. A block that needs a longer day waits for it (mockup AB1).
 struct SuggestionRow: View {
     @Environment(AppEnvironment.self) private var environment
     let suggestion: PlanSuggestion
@@ -58,14 +63,19 @@ struct SuggestionRow: View {
     var body: some View {
         HStack(alignment: .top, spacing: 8) {
             VStack(alignment: .leading, spacing: 2) {
-                Label(suggestion.title, systemImage: "sparkles").font(.subheadline)
-                Text(detail).font(.caption).foregroundStyle(.secondary)
+                Label(SuggestionText.title(suggestion, calendar: environment.planning.calendar), systemImage: SuggestionText.symbol(suggestion))
+                    .font(.subheadline)
+                Text(SuggestionText.detail(suggestion, planning: environment.planning)).font(.caption).foregroundStyle(.secondary)
+                if isWaiting {
+                    Label("braucht die längere Arbeitszeit", systemImage: "arrow.turn.down.right").font(.caption2)
+                }
                 if showsReason && !suggestion.reason.isEmpty {
                     Text("„\(suggestion.reason)“").font(.caption).foregroundStyle(.purple)
                 }
             }
             Spacer(minLength: 0)
-            SuggestionButtons(onAccept: { Task { await environment.planner.accept(suggestion) } },
+            SuggestionButtons(acceptEnabled: !isWaiting,
+                              onAccept: { Task { await environment.planner.accept(suggestion) } },
                               onDismiss: { Task { await environment.planner.dismiss(suggestion) } })
         }
         .padding(8)
@@ -76,12 +86,7 @@ struct SuggestionRow: View {
         .onTapGesture { withAnimation { showsReason.toggle() } }
     }
 
-    private var detail: String {
-        var parts = ["Vorschlag"]
-        if let start = suggestion.startMinutes { parts.append(AIPlanner.time(start)) }
-        if let minutes = suggestion.minutes { parts.append(CapacityText.duration(minutes)) }
-        return parts.joined(separator: " · ")
-    }
+    private var isWaiting: Bool { SuggestionText.isWaiting(suggestion, planning: environment.planning) }
 }
 
 /// Sheet of one suggestion (mockup W1, opened by tapping the block): when, reason, accept or dismiss.
