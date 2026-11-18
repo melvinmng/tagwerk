@@ -1,3 +1,4 @@
+import Foundation
 import TagwerkCore
 
 /// Access to reminders. `EventKitGateway` is the real implementation; tests use a fake.
@@ -17,4 +18,11 @@ public protocol ReminderStore: AnyObject {
     func save(_ record: ReminderRecord) throws -> ReminderRecord
     func delete(id: String) throws
     func create(title: String, notes: String?, due: DueDate?, ekPriority: Int, listID: String?) throws -> ReminderRecord
+    /// Completion dates of reminders completed within `interval` in the given lists; `nil` means all lists.
+    func completionDates(in interval: DateInterval, listIDs: Set<String>?) async -> [Date]
+}
+
+extension ReminderStore {
+    /// Stores without completed reminders (fakes) report none.
+    public func completionDates(in interval: DateInterval, listIDs: Set<String>?) async -> [Date] { [] }
 }

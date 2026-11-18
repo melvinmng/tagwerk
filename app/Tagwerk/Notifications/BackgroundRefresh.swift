@@ -15,6 +15,8 @@ final class BackgroundRefresh {
     private let prepare: () async -> Bool
     private let reload: () async -> Void
     private let reschedule: () async -> Void
+    /// Rewrites the widget snapshot after loading (phase 4); keeps the plan part when sources did not load in time.
+    private let writeSnapshot: () -> Void
     private let submit: (Date) async throws -> Void
     private let now: () -> Date
     /// iOS grants about 30 s; loading gets part of it, scheduling uses whatever has arrived by then.
@@ -22,11 +24,13 @@ final class BackgroundRefresh {
     private let log = Logger(subsystem: "local.tagwerk", category: "background")
 
     init(prepare: @escaping () async -> Bool, reload: @escaping () async -> Void, reschedule: @escaping () async -> Void,
+         writeSnapshot: @escaping () -> Void = {},
          submit: @escaping (Date) async throws -> Void = BackgroundRefresh.submitToSystem, now: @escaping () -> Date = Date.init,
          loadBudget: Duration = .seconds(20)) {
         self.prepare = prepare
         self.reload = reload
         self.reschedule = reschedule
+        self.writeSnapshot = writeSnapshot
         self.submit = submit
         self.now = now
         self.loadBudget = loadBudget
@@ -41,6 +45,7 @@ final class BackgroundRefresh {
             if await !prepare() { await reload() }
         }
         await reschedule()
+        writeSnapshot()
     }
 
     /// Asks iOS for the next run; failures (e.g. in the simulator) are only logged.

@@ -40,10 +40,23 @@ final class LocalTaskProvider: TaskProvider {
         if case .set(let due) = edit.due { task.due = due }
         if case .set(let priority) = edit.priority { task.priority = priority }
         if case .set(let minutes) = edit.estimateMinutes { task.estimateMinutes = minutes }
-        if case .set(let completed) = edit.isCompleted { task.isCompleted = completed }
+        if case .set(let completed) = edit.isCompleted {
+            if completed != task.isCompleted { task.completedAt = completed ? .now : nil }
+            task.isCompleted = completed
+        }
         task.revision += 1
         try save()
         return Self.item(task)
+    }
+
+    /// Completion moments of local tasks within `interval`, for the weekly review.
+    func completionDates(in interval: DateInterval) -> [Date] {
+        let start = interval.start
+        let end = interval.end
+        let descriptor = FetchDescriptor<LocalTask>(predicate: #Predicate { task in
+            task.isCompleted && task.completedAt != nil
+        })
+        return ((try? context.fetch(descriptor)) ?? []).compactMap(\.completedAt).filter { $0 >= start && $0 < end }
     }
 
     func delete(_ id: TaskID, expectedVersion: String?) async throws {

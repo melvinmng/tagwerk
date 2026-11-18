@@ -37,10 +37,12 @@ targets:
       - package: GitHubKit
       - package: AIKit
       - package: HealthBridge
+      - target: TagwerkWidget
     entitlements:
       path: Tagwerk/Tagwerk.entitlements
       properties:
         com.apple.developer.healthkit: true
+        com.apple.security.application-groups: [group.$(TAGWERK_BUNDLE_ID)]
     info:
       path: Tagwerk/Info.plist
       properties:
@@ -53,12 +55,39 @@ targets:
         NSCameraUsageDescription: "Tagwerk nimmt Fotos von Mahlzeiten auf, um Kalorien und Nährwerte schätzen zu lassen."
         GitHubClientID: $(GITHUB_CLIENT_ID)
         UIBackgroundModes: [fetch]
+        CFBundleURLTypes:
+          - CFBundleURLName: $(TAGWERK_BUNDLE_ID)
+            CFBundleURLSchemes: [tagwerk]
         BGTaskSchedulerPermittedIdentifiers: [tagwerk.refresh]
+        TagwerkAppGroup: group.$(TAGWERK_BUNDLE_ID)
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: $(TAGWERK_BUNDLE_ID)
         GENERATE_INFOPLIST_FILE: NO
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+  TagwerkWidget:
+    type: app-extension
+    platform: iOS
+    sources:
+      - TagwerkWidget
+      - path: Tagwerk/App/Color+Hex.swift
+    dependencies:
+      - package: TagwerkCore
+    entitlements:
+      path: TagwerkWidget/TagwerkWidget.entitlements
+      properties:
+        com.apple.security.application-groups: [group.$(TAGWERK_BUNDLE_ID)]
+    info:
+      path: TagwerkWidget/Info.plist
+      properties:
+        CFBundleDisplayName: Tagwerk
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+        TagwerkAppGroup: group.$(TAGWERK_BUNDLE_ID)
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: $(TAGWERK_BUNDLE_ID).widget
+        GENERATE_INFOPLIST_FILE: NO
   TagwerkTests:
     type: bundle.unit-test
     platform: iOS

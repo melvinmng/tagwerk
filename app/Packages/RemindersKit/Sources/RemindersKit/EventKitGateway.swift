@@ -77,6 +77,24 @@ public final class EventKitGateway: ReminderStore {
         }
     }
 
+    public func completionDates(in interval: DateInterval, listIDs: Set<String>?) async -> [Date] {
+        guard accessState == .fullAccess else { return [] }
+        var calendars: [EKCalendar]?
+        if let listIDs {
+            let selected = store.calendars(for: .reminder).filter { listIDs.contains($0.calendarIdentifier) }
+            if selected.isEmpty { return [] }
+            calendars = selected
+        }
+        let predicate = store.predicateForCompletedReminders(withCompletionDateStarting: interval.start, ending: interval.end,
+                                                             calendars: calendars)
+        return await withCheckedContinuation { continuation in
+            store.fetchReminders(matching: predicate) { reminders in
+                // Only dates leave the callback; titles are not needed for counting.
+                continuation.resume(returning: (reminders ?? []).compactMap(\.completionDate))
+            }
+        }
+    }
+
     public func reminder(id: String) -> ReminderRecord? {
         guard let reminder = ekReminder(id: id) else { return nil }
         return Self.record(reminder)

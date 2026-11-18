@@ -6,6 +6,7 @@ struct DayHeader: View {
     @Bindable var model: PlanningModel
     let onShowMonth: () -> Void
     @State private var picking = false
+    @Environment(AppEnvironment.self) private var environment
 
     var body: some View {
         VStack(alignment: .leading, spacing: 2) {
@@ -46,7 +47,26 @@ struct DayHeader: View {
                 .buttonBorderShape(.circle)
                 .controlSize(.small)
             }
+            if let line = intakeLine {
+                Button { environment.router.open(.capture) } label: {
+                    HStack(spacing: 4) {
+                        Image(systemName: "flame.fill").foregroundStyle(.orange)
+                        Text(line).monospacedDigit()
+                        Image(systemName: "chevron.right").font(.caption2.weight(.semibold))
+                    }
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+                }
+                .buttonStyle(.plain)
+                .accessibilityHint("Öffnet Erfassen")
+            }
         }
+    }
+
+    /// Phase 4 (mockup P1a): only in today's day view, from the first entry of the day.
+    private var intakeLine: String? {
+        guard model.scope == .day, model.anchor == model.today else { return nil }
+        return environment.capture.planHeaderLine
     }
 
     /// The shown period contains today.

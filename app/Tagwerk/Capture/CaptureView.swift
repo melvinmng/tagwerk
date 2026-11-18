@@ -7,20 +7,21 @@ struct CaptureView: View {
     @Bindable var model: CaptureModel
     @Environment(AppEnvironment.self) private var environment
     @State private var sheet: CaptureSheet?
+    @State private var showsReview = false
 
     enum CaptureSheet: Identifiable {
-        case newMeal
+        case newMeal(text: String? = nil)
         case meal(MealValue)
         case drinks
-        case newWorkout
+        case newWorkout(activity: WorkoutActivity? = nil, minutes: Int? = nil)
         case workout(WorkoutValue)
 
         var id: String {
             switch self {
-            case .newMeal: "newMeal"
+            case .newMeal(let text): "newMeal-\(text ?? "")"
             case .meal(let meal): "meal-\(meal.id)"
             case .drinks: "drinks"
-            case .newWorkout: "newWorkout"
+            case .newWorkout(let activity, let minutes): "newWorkout-\(activity?.rawValue ?? "")-\(minutes ?? 0)"
             case .workout(let workout): "workout-\(workout.id)"
             }
         }
@@ -32,6 +33,16 @@ struct CaptureView: View {
                 Section {
                     DayNavigation(model: model)
                     DaySummary(model: model)
+                    // R3a: entry to the weekly review (a row of its own, so VoiceOver keeps the summary as one element).
+                    Button { showsReview = true } label: {
+                        HStack {
+                            Label("Wochenrückblick", systemImage: "chart.bar")
+                            Spacer()
+                            Text("Woche").foregroundStyle(.secondary)
+                            Image(systemName: "chevron.right").font(.caption.weight(.semibold)).foregroundStyle(.tertiary)
+                        }
+                    }
+                    .foregroundStyle(.primary)
                 }
                 Section {
                     quickEntry
@@ -49,6 +60,9 @@ struct CaptureView: View {
                 workoutSection
             }
             .navigationTitle("Erfassen")
+            .navigationDestination(isPresented: $showsReview) {
+                WeekReviewView(model: environment.makeWeekReviewModel())
+            }
             .assistantToolbarButton { .capture }
             .safeAreaInset(edge: .bottom) {
                 if let notice = model.undo {
@@ -67,15 +81,35 @@ struct CaptureView: View {
                 await model.syncPending()
             }
             .refreshable { await model.reload() }
+            .onAppear(perform: applyPrefill)
+            .onChange(of: environment.router.capturePrefill) { _, _ in applyPrefill() }
             .sheet(item: $sheet) { sheet in
                 switch sheet {
-                case .newMeal: MealSheet(model: model, estimator: environment.mealEstimator, existing: nil)
+                case .newMeal(let text):
+                    MealSheet(model: model, estimator: environment.mealEstimator, existing: nil, initialText: text)
                 case .meal(let meal): MealSheet(model: model, estimator: environment.mealEstimator, existing: meal)
                 case .drinks: DrinkSheet(model: model)
-                case .newWorkout: WorkoutSheet(model: model, existing: nil)
+                case .newWorkout(let activity, let minutes):
+                    WorkoutSheet(model: model, existing: nil, initialActivity: activity, initialMinutes: minutes)
                 case .workout(let workout): WorkoutSheet(model: model, existing: workout)
                 }
             }
+        }
+    }
+
+    /// A link or shortcut asked for a sheet: entries from Siri belong to now, so the tab returns to today first.
+    private func applyPrefill() {
+        guard let prefill = environment.router.takeCapturePrefill() else { return }
+        if prefill != .review, !model.isToday {
+            // The day switches at once; the sheet does not wait for the Health query of the reload.
+            model.day = model.today
+            Task { await model.reload() }
+        }
+        switch prefill {
+        case .today: break
+        case .meal(let text): sheet = .newMeal(text: text)
+        case .workout(let activity, let minutes): sheet = .newWorkout(activity: activity, minutes: minutes)
+        case .review: showsReview = true
         }
     }
 
@@ -84,9 +118,9 @@ struct CaptureView: View {
     private var quickEntry: some View {
         VStack(spacing: 10) {
             HStack(spacing: 8) {
-                quickButton("Essen", symbol: "fork.knife") { sheet = .newMeal }
+                quickButton("Essen", symbol: "fork.knife") { sheet = .newMeal() }
                 quickButton("Trinken", symbol: "drop.fill") { sheet = .drinks }
-                quickButton("Training", symbol: "figure.run") { sheet = .newWorkout }
+                quickButton("Training", symbol: "figure.run") { sheet = .newWorkout() }
             }
             HStack(spacing: 8) {
                 ForEach(DrinkValue.quickAmounts, id: \.self) { amount in

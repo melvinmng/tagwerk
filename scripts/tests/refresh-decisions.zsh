@@ -24,6 +24,38 @@ check "3 days left does not warn"         no  "$(should_warn $((now + 3 * day)) 
 check "1 day left warns"                  yes "$(should_warn $((now + day)) $now)"
 check "no state warns"                    yes "$(should_warn "" $now)"
 
+# Cached profiles of the app and its widget extension are recognised exactly, not by prefix.
+team=ABCDE12345
+bundle=org.example.tagwerk
+check "app profile matches"               yes "$(is_tagwerk_profile "$team.$bundle" $team $bundle)"
+check "widget profile matches"            yes "$(is_tagwerk_profile "$team.$bundle.widget" $team $bundle)"
+check "other suffix matches"              yes "$(is_tagwerk_profile "$team.$bundle.other" $team $bundle)"
+check "foreign bundle does not match"     no  "$(is_tagwerk_profile "$team.org.example.other" $team $bundle)"
+check "prefix lookalike does not match"   no  "$(is_tagwerk_profile "$team.${bundle}x" $team $bundle)"
+check "prefix lookalike widget no match"  no  "$(is_tagwerk_profile "$team.${bundle}x.widget" $team $bundle)"
+check "other team does not match"         no  "$(is_tagwerk_profile "ZZZZZ99999.$bundle" $team $bundle)"
+check "other team widget does not match"  no  "$(is_tagwerk_profile "ZZZZZ99999.$bundle.widget" $team $bundle)"
+check "empty identifier does not match"   no  "$(is_tagwerk_profile "" $team $bundle)"
+check "team only does not match"          no  "$(is_tagwerk_profile "$team" $team $bundle)"
+check "trailing dot only does not match"  no  "$(is_tagwerk_profile "$team.$bundle." $team $bundle)"
+check "dot in bundle is literal"          no  "$(is_tagwerk_profile "$team.orgXexample.tagwerk" $team $bundle)"
+
+# The earliest expiry of app and extension profiles decides; unknown input stays unknown.
+check "earliest of three"                 100 "$(earliest_expiry 300 100 200)"
+check "single value"                      500 "$(earliest_expiry 500)"
+check "empty argument means unknown"      ""  "$(earliest_expiry 300 "" 200)"
+check "only empty argument is unknown"    ""  "$(earliest_expiry "")"
+check "no arguments is unknown"           ""  "$(earliest_expiry)"
+check "non-numeric argument is unknown"   ""  "$(earliest_expiry 300 abc)"
+
+# The fallback only targets a commit that is known to be installed and differs from the current state.
+check "fallback to last good commit"      abc123 "$(fallback_commit abc123 abc123 def456)"
+check "no fallback without last good"     ""  "$(fallback_commit "" "" def456)"
+check "no fallback when dev build is on"  ""  "$(fallback_commit abc123 dev def456)"
+check "no fallback when marker missing"   ""  "$(fallback_commit abc123 "" def456)"
+check "no fallback when installed differs" "" "$(fallback_commit abc123 xyz789 def456)"
+check "no fallback when head is last good" "" "$(fallback_commit abc123 abc123 abc123)"
+
 # The refresh still targets the real app.
 check "builds the Tagwerk scheme"         Tagwerk "$SCHEME"
 check "builds from app/"                  app "$PROJECT_DIR_NAME"
@@ -42,6 +74,20 @@ source "${0:A:h}/../install-config.zsh" || exit 1
 check "uses the local signing team"       DEVELOPMENT_TEAM=ABCDE12345 "${BUILD_SETTINGS[1]}"
 check "uses the local bundle ID"          TAGWERK_BUNDLE_ID=org.example.tagwerk "${BUILD_SETTINGS[2]}"
 check "uses the local GitHub client ID"   GITHUB_CLIENT_ID=example-client "${BUILD_SETTINGS[3]}"
+
+# Signing errors of the widget extension count as signing failures, compile errors do not.
+sign_log="$test_home/build.log"
+print -r -- 'error: Signing for "TagwerkWidget" requires a development team.' > "$sign_log"
+check "extension signing error detected"  yes "$(build_log_has_signing_error "$sign_log")"
+print -r -- 'error: Provisioning profile "x" doesn'"'"'t match the entitlements file'"'"'s value for the com.apple.security.application-groups entitlement.' > "$sign_log"
+check "application-groups error detected" yes "$(build_log_has_signing_error "$sign_log")"
+print -r -- 'error: Provisioning profile "iOS Team Provisioning Profile: org.example.tagwerk" is not available.' > "$sign_log"
+check "app provisioning error detected"   yes "$(build_log_has_signing_error "$sign_log")"
+print -r -- '/src/TagwerkWidget/Widget.swift:12:5: error: cannot find type '"'"'Foo'"'"' in scope' > "$sign_log"
+check "widget compile error is no signing" no "$(build_log_has_signing_error "$sign_log")"
+print -r -- '/src/Tagwerk/Settings/ProfileView.swift:3:1: error: cannot find '"'"'ProfileView'"'"' in scope' > "$sign_log"
+check "compile error naming a profile is no signing" no "$(build_log_has_signing_error "$sign_log")"
+check "missing log is no signing error"   no  "$(build_log_has_signing_error "$test_home/does-not-exist.log")"
 
 echo 'DEVICE_ID=example-device' > "$CONFIG_FILE"
 check "missing team fails locally"        64 "$(zsh -c 'source "$1"; print $?' _ "${0:A:h}/../install-config.zsh" 2>/dev/null)"

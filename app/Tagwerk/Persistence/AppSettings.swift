@@ -59,6 +59,10 @@ final class AppSettings {
     var mealEstimationConsent: Bool = false
     /// The Health card in the tab was dismissed with "Nicht jetzt".
     var healthCardDismissed: Bool = false
+    /// Phase 4: the calories/water line in the head of "Planen" (today's day view, from the first entry).
+    var showsIntakeInPlan: Bool = true
+    /// Phase 4: calories and water in the "Heute" widget; off keeps the values out of the shared snapshot file.
+    var widgetShowsNutrition: Bool = true
 
     static let maximumPlanningRules = 5
 

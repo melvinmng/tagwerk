@@ -137,3 +137,27 @@ struct AppSettingsTests {
         #expect(settings.setupCompleted == false)
     }
 }
+
+@MainActor
+struct LocalTaskCompletionTests {
+    let container: ModelContainer
+    let provider: LocalTaskProvider
+
+    init() throws {
+        container = try ModelContainerFactory.make(inMemory: true)
+        provider = LocalTaskProvider(context: container.mainContext)
+    }
+
+    @Test func localTask_complete_setsCompletedAt_reopenClears() async throws {
+        let created = try await provider.create(TaskDraft(title: "Abgabe vorbereiten"))
+        var complete = TaskEdit()
+        complete.isCompleted = .set(true)
+        let done = try await provider.apply(complete, to: created.id, expectedVersion: nil)
+        let week = DateInterval(start: .now.addingTimeInterval(-3600), duration: 7200)
+        #expect(provider.completionDates(in: week).count == 1)
+        var reopen = TaskEdit()
+        reopen.isCompleted = .set(false)
+        _ = try await provider.apply(reopen, to: done.id, expectedVersion: nil)
+        #expect(provider.completionDates(in: week).isEmpty)
+    }
+}

@@ -5,6 +5,9 @@ import TagwerkCore
 struct WorkoutSheet: View {
     let model: CaptureModel
     let existing: WorkoutValue?
+    /// Values from Siri ("Training erfassen"); the user still confirms with "Sichern".
+    var initialActivity: WorkoutActivity? = nil
+    var initialMinutes: Int? = nil
     @Environment(\.dismiss) private var dismiss
     @State private var activity: WorkoutActivity = .strength
     @State private var minutes = 45
@@ -87,9 +90,9 @@ struct WorkoutSheet: View {
             kilocaloriesText = existing.kilocalories.map { String(Int($0.rounded())) } ?? ""
         } else {
             let defaults = model.workoutDefaults
-            activity = defaults.activity
-            minutes = defaults.minutes
-            start = model.entryDate.addingTimeInterval(TimeInterval(-defaults.minutes * 60))
+            activity = initialActivity ?? defaults.activity
+            minutes = initialMinutes ?? defaults.minutes
+            start = model.entryDate.addingTimeInterval(TimeInterval(-minutes * 60))
         }
     }
 

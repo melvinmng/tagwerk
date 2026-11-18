@@ -9,6 +9,15 @@ Die vollständige Einrichtung für neue Nutzer steht in der [Tagwerk-README](../
 - Team-ID, Geräte-ID, Bundle-ID und gegebenenfalls GitHub-Client-ID kommen aus `~/Library/Application Support/Tagwerk/config`. Vor dem Build entfernt das Skript zwischengespeicherte Profile für das konfigurierte Team und die konfigurierte Bundle-ID. Es liest das neue Ablaufdatum nach der Installation aus der gebauten App und legt es unter `profile-expiry.<Bundle-ID>` im selben Ordner ab.
 - Das Protokoll liegt unter `~/Library/Logs/Tagwerk/refresh.log`. In `build.log` im selben Ordner stehen die Details von Build und Installation. Bei Fehlern mit weniger als zwei Tagen Restlaufzeit versucht das Skript eine macOS-Mitteilung anzuzeigen.
 
+## Widget-Extension, Merker und Rückfall
+
+- Die App enthält die Widget-Extension `TagwerkWidget` mit der Bundle-ID `<Bundle-ID>.widget` (eingebettet unter `PlugIns/TagwerkWidget.appex`) und eine App Group. Das kostenlose Konto stellt dafür ein eigenes Profil aus; es läuft ebenfalls nach sieben Tagen ab. Vor dem Build entfernt das Skript die zwischengespeicherten Profile von App und Extension (Team-ID plus exakt die Bundle-ID oder `<Bundle-ID>.<Suffix>`; ähnlich beginnende fremde Bundle-IDs bleiben unberührt).
+- `profile-expiry.<Bundle-ID>` enthält das früheste Ablaufdatum aus App-Profil und allen Extension-Profilen der installierten App. Lässt sich ein vorhandenes Extension-Profil nicht lesen, schreibt das Skript einen Logeintrag und speichert kein neues Ablaufdatum, damit der Wert nicht zu optimistisch ausfällt.
+- Fehler bei der Signierung der Extension (zum Beispiel zur App Group) gelten wie App-Fehler als Signierfehler (Exit-Code 3).
+- Nach jeder erfolgreichen Installation schreibt das Skript den installierten Commit nach `last-good-commit.<Bundle-ID>` und `last-installed.<Bundle-ID>`. `scripts/install-dev.sh` setzt `last-installed.<Bundle-ID>` auf `dev`, weil der Stand des Arbeitsverzeichnisses unbekannt ist.
+- Scheitern Build oder Signierung des neuen Stands, baut das Skript einmal den Commit aus `last-good-commit`, aber nur wenn `last-installed` diesem Commit entspricht und er vom aktuellen Stand abweicht. Der Build läuft in einem eigenen `git worktree` unter `~/Library/Developer/Tagwerk/fallback` mit eigenem DerivedData-Ordner und eigenem Log (`build-fallback.log`); der Arbeitsbaum von `src` bleibt unverändert und der Worktree wird danach entfernt. Bei Erfolg aktualisiert das Skript das Ablaufdatum aus dem installierten Rückfall-Build, meldet es immer per Mitteilung und im Log und endet mit Exit-Code 4. Scheitert auch der Rückfall, bleibt das Ablaufdatum unverändert und das Skript meldet den ursprünglichen Fehler (Exit-Code 1 oder 3). Fehler bei Git-Update und Geräteinstallation lösen keinen Rückfall aus.
+- Nach dem Git-Update startet sich das Skript einmal mit der frisch geholten Version neu (`TAGWERK_REEXECED=1` verhindert eine Schleife), damit Änderungen am Skript sofort gelten. Ist die neue Version nicht ausführbar oder syntaktisch fehlerhaft, läuft die bisherige weiter.
+
 ## Status prüfen und manuell erneuern
 
 ```zsh
@@ -57,7 +66,8 @@ rm "$HOME/Library/LaunchAgents/de.tagwerk.refresh.plist"
 | 0 | Installation erfolgreich, Prüfung abgeschlossen oder Neuinstallation noch nicht fällig |
 | 1 | Quellcode konnte nicht aktualisiert werden, Projektgenerierung oder Build fehlgeschlagen |
 | 2 | iPhone nicht erreichbar oder Installation fehlgeschlagen |
-| 3 | Signierung fehlgeschlagen |
+| 3 | Signierung fehlgeschlagen (auch bei der Widget-Extension) |
+| 4 | Der neue Stand ließ sich nicht bauen oder signieren; der letzte funktionierende Stand wurde stattdessen neu installiert |
 | 64 | Konfiguration oder Skriptargument ungültig |
 
 Entscheidungslogik und lokale Konfiguration testen:
