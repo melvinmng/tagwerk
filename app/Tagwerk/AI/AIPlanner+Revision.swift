@@ -67,8 +67,8 @@ extension AIPlanner {
         do {
             let model = try await model()
             let request = try await revisionRequest(batch: batch, about: suggestion, comment: comment, refs: refs)
-            let instructions = Self.instructions(batch.scope, longerDays: longerDays()) + Self.preferenceText(preferences())
-                + "\n" + Self.revisionInstructions
+            let instructions = Self.instructions(batch.scope, longerDays: longerDays(), language: language()) + Self.preferenceText(preferences())
+                + "\n" + Self.revisionInstructions(language: language())
             var text = ""
             var completed = false
             for try await event in responder.respond(model: model, instructions: instructions, input: [.user(request)], tools: [],
@@ -332,17 +332,19 @@ extension AIPlanner {
         return String(decoding: data, as: UTF8.self)
     }
 
-    static let revisionInstructions = """
-    Jetzt besprichst du die offenen Vorschläge einer Planung. Die Person kommentiert den Vorschlag about. \
-    Antworte im Format suggestion_revision: reply (ein bis zwei Sätze in der Sprache des Kommentars, Deutsch oder Englisch, was du geändert hast und warum) \
-    und changes (nur die Vorschläge, die sich ändern, mit ref, day, start, minutes). Ändere nur, was der Kommentar \
-    verlangt; andere Vorschläge nur, wenn es dafür nötig ist (zum Beispiel ein Tausch). Vorschläge mit status \
-    movedByUser hat die Person selbst gesetzt (aiStart war deine Zeit): lass sie unverändert, außer about verweist \
-    auf sie. Nutze nur freeSlots und Tage aus allowedDays. Im Tagesplan haben Blöcke start (HH:MM) und minutes; \
-    ein Block auf einem anderen Tag aus laterDays wird zur Verschiebung, dann sind start und minutes null. In Wochen- \
-    und Monatsplänen sind start und minutes immer null. Längere Arbeitstage (dayChanges) änderst du hier nicht. \
-    Keine neuen Vorschläge, keine gestrichenen. Passt nichts, lass changes leer und sag es in reply.
-    """
+    static func revisionInstructions(language: VoiceLanguage) -> String {
+        """
+        Jetzt besprichst du die offenen Vorschläge einer Planung. Die Person kommentiert den Vorschlag about. \
+        Antworte im Format suggestion_revision: reply (ein bis zwei Sätze in der Sprache des Kommentars, sonst auf \(language.promptName), was du geändert hast und warum) \
+        und changes (nur die Vorschläge, die sich ändern, mit ref, day, start, minutes). Ändere nur, was der Kommentar \
+        verlangt; andere Vorschläge nur, wenn es dafür nötig ist (zum Beispiel ein Tausch). Vorschläge mit status \
+        movedByUser hat die Person selbst gesetzt (aiStart war deine Zeit): lass sie unverändert, außer about verweist \
+        auf sie. Nutze nur freeSlots und Tage aus allowedDays. Im Tagesplan haben Blöcke start (HH:MM) und minutes; \
+        ein Block auf einem anderen Tag aus laterDays wird zur Verschiebung, dann sind start und minutes null. In Wochen- \
+        und Monatsplänen sind start und minutes immer null. Längere Arbeitstage (dayChanges) änderst du hier nicht. \
+        Keine neuen Vorschläge, keine gestrichenen. Passt nichts, lass changes leer und sag es in reply.
+        """
+    }
 
     static var revisionSchema: Data {
         let change: [String: Any] = [

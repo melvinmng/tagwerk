@@ -595,6 +595,39 @@ extension AIPlannerTests {
         #expect(responder.instructions.first?.contains("Mails nicht nach 18 Uhr einplanen.") == false)
     }
 
+    // MARK: Language
+
+    @Test func planDay_asksForReasonsInTheAppLanguage() async throws {
+        responder.enqueue(Self.dayAnswer(Self.block("local:Fahrrad", "14:00")))
+        responder.enqueue(Self.dayAnswer(Self.block("local:Fahrrad", "14:00")))
+        let (planner, _) = await make()
+        await planner.plan(scope: .day, anchor: today)
+        planner.language = { .english }
+        await planner.plan(scope: .day, anchor: today)
+        let german = try #require(responder.instructions.first)
+        let english = try #require(responder.instructions.last)
+        #expect(german.contains("auf Deutsch"))
+        #expect(!german.contains("Englisch"))
+        #expect(english.contains("auf Englisch (English)"))
+        #expect(!english.contains("auf Deutsch"))
+    }
+
+    @Test func revise_repliesInTheCommentLanguage_orTheAppLanguage() async throws {
+        let (planner, _, fahrrad, _) = try await twoBlocks()
+        responder.enqueue(Self.revision("Gut so.", ""))
+        responder.enqueue(Self.revision("Fine.", ""))
+        await planner.revise(fahrrad, comment: "früher")
+        planner.language = { .english }
+        await planner.revise(fahrrad, comment: "earlier")
+        let german = try #require(responder.instructions.dropLast().last)
+        let english = try #require(responder.instructions.last)
+        #expect(german.contains("in der Sprache des Kommentars"))
+        #expect(german.contains("sonst auf Deutsch"))
+        #expect(english.contains("in der Sprache des Kommentars"))
+        #expect(english.contains("sonst auf Englisch (English)"))
+        #expect(!english.contains("auf Deutsch"))
+    }
+
     @Test func replan_keepsSuggestionsTheUserMoved() async throws {
         let (planner, planning, fahrrad, _) = try await twoBlocks()
         _ = await planner.moveSuggestion(fahrrad, day: today, start: 11 * 60, minutes: 60)

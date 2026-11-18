@@ -34,6 +34,8 @@ final class AIPlanner {
     @ObservationIgnored var longerDays: @MainActor () -> LongerDays = { .forDeadlines }
     /// "Planungsvorgaben" (mockup VR1): short sentences sent with every planning and conversation.
     @ObservationIgnored var preferences: @MainActor () -> [String] = { [] }
+    /// The language of the reasons the model writes; they are shown and stored (plan english-app, decision 8).
+    @ObservationIgnored var language: @MainActor () -> VoiceLanguage = { .app }
 
     /// The suggestion a conversation answer is awaited for (mockup VK1).
     var revisingID: UUID?
@@ -522,7 +524,7 @@ final class AIPlanner {
                                    : (name: "period_plan", schema: AIPlanSchemas.periodPlanSchema)
         var text = ""
         var completed = false
-        let instructions = Self.instructions(scope, longerDays: longerDays()) + Self.preferenceText(preferences())
+        let instructions = Self.instructions(scope, longerDays: longerDays(), language: language()) + Self.preferenceText(preferences())
         for try await event in responder.respond(model: model, instructions: instructions, input: input,
                                                   tools: [], jsonSchema: schema) {
             switch event {
@@ -541,7 +543,7 @@ final class AIPlanner {
         try PlanOutput.decode(Data(text.utf8), scope: scope)
     }
 
-    static func instructions(_ scope: PlanScope, longerDays: LongerDays = .forDeadlines) -> String {
+    static func instructions(_ scope: PlanScope, longerDays: LongerDays = .forDeadlines, language: VoiceLanguage) -> String {
         let longer: String = switch longerDays {
         case .never: "(b) Schlage keine längeren Tage vor (dayChanges bleibt leer)."
         case .forDeadlines: """
@@ -557,7 +559,7 @@ final class AIPlanner {
         }
         let common = """
         Du planst die Arbeit einer Person in der App Tagwerk. Antworte nur im vorgegebenen Format, Begründungen \
-        kurz und auf Deutsch. taskId ist immer die id der Aufgabe. Die Aufgaben stehen in der Reihenfolge ihrer \
+        kurz und auf \(language.promptName). taskId ist immer die id der Aufgabe. Die Aufgaben stehen in der Reihenfolge ihrer \
         Wichtigkeit (überfällig, heute, P1, nach Termin).
         Regeln, in dieser Reihenfolge:
         1. Ist eine Aufgabe überfällig oder bis übermorgen fällig, geht sie vor; sonst P1 vor P2 vor allem anderen.

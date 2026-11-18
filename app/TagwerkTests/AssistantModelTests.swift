@@ -24,7 +24,7 @@ struct AssistantModelTests {
         taskList = TaskListModel(providers: [local], now: testNow, calendar: calendar)
     }
 
-    private func make() async -> (AssistantModel, PlanningModel, ChatStore) {
+    private func make(language: VoiceLanguage = .german) async -> (AssistantModel, PlanningModel, ChatStore) {
         await taskList.reload()
         let planStore = PlanStore(context: container.mainContext)
         let blocks = BlockPlanner(store: calendarStore, planStore: planStore, links: EventLinkStore(context: container.mainContext),
@@ -40,6 +40,7 @@ struct AssistantModelTests {
         let store = ChatStore(context: container.mainContext)
         let model = AssistantModel(responder: responder, tools: tools, model: { "gpt-test" }, store: store,
                                    planning: planning, now: testNow)
+        model.language = { language }
         return (model, planning, store)
     }
 
@@ -221,6 +222,18 @@ struct AssistantModelTests {
         let text = model.instructions()
         #expect(text.contains("Sprechmodus"))
         #expect(text.contains("nie auf"))
+    }
+
+    @Test func instructions_answerInTheAppLanguage_whenTheUserLanguageIsUnclear() async throws {
+        let (german, _, _) = await make(language: .german)
+        let (english, _, _) = await make(language: .english)
+        let germanText = german.instructions()
+        let englishText = english.instructions()
+        #expect(germanText.contains("in der Sprache der letzten Nachricht des Nutzers"))
+        #expect(englishText.contains("in der Sprache der letzten Nachricht des Nutzers"))
+        #expect(germanText.contains("noch keine Nachricht oder ist die Sprache unklar, antworte auf Deutsch"))
+        #expect(englishText.contains("noch keine Nachricht oder ist die Sprache unklar, antworte auf Englisch (English)"))
+        #expect(!englishText.contains("antworte auf Deutsch"))
     }
 
     @Test func instructions_mentionEventFunctions() async throws {

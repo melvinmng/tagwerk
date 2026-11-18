@@ -343,13 +343,17 @@ final class AssistantModel {
     kurzen, gut sprechbaren Sätzen ohne Aufzählungen und Tabellen.
     """
 
+    /// The language to answer in without a user message or when the message language is unclear.
+    @ObservationIgnored var language: () -> VoiceLanguage = { .app }
+
     func instructions() -> String {
         let current = now()
         let today = planning.today
         let time = current.formatted(.dateTime.hour().minute())
         return """
         Du bist der Assistent der App Tagwerk, die Aufgaben (Erinnerungen, GitHub-Issues, lokale Aufgaben) und \
-        Kalender zusammenführt und Tage plant. Antworte knapp in der Sprache der letzten Nachricht des Nutzers (Deutsch oder Englisch).
+        Kalender zusammenführt und Tage plant. Antworte knapp in der Sprache der letzten Nachricht des Nutzers (Deutsch oder Englisch); \
+        gibt es noch keine Nachricht oder ist die Sprache unklar, antworte auf \(language().promptName).
         Heute ist \(AIPlanner.dayString(today)), es ist \(time) Uhr (Zeitzone \(planning.calendar.timeZone.identifier)).
         Nutze die Funktionen: lesende darfst du jederzeit aufrufen, um nachzusehen. Ändernde Funktionen rufst du \
         direkt auf, ohne vorher im Text um Erlaubnis zu fragen; die App zeigt sie als Karte und führt sie erst nach \

@@ -27,13 +27,17 @@ final class MealEstimator {
     private let model: @MainActor () async throws -> String
     private let hasConsent: @MainActor () -> Bool
     private let timeout: Duration
+    /// The language of the meal title and amounts; both are shown and stored (plan english-app, decision 8).
+    private let language: @MainActor () -> VoiceLanguage
 
     init(responder: any ResponseStreaming, model: @escaping @MainActor () async throws -> String,
-         hasConsent: @escaping @MainActor () -> Bool, timeout: Duration = .seconds(30)) {
+         hasConsent: @escaping @MainActor () -> Bool, timeout: Duration = .seconds(30),
+         language: @escaping @MainActor () -> VoiceLanguage = { .app }) {
         self.responder = responder
         self.model = model
         self.hasConsent = hasConsent
         self.timeout = timeout
+        self.language = language
     }
 
     func estimate(text: String, jpeg: Data?) async throws -> NormalizedMealEstimate {
@@ -42,9 +46,10 @@ final class MealEstimator {
         let answer: String
         do {
             let slug = try await model()
+            let instructions = Self.instructions(language: language())
             let input: InputItem = jpeg.map { .userImage(text: text, jpeg: $0) } ?? .user(text)
             answer = try await withTimeout { [responder] in
-                try await Self.collect(responder.respond(model: slug, instructions: Self.instructions, input: [input],
+                try await Self.collect(responder.respond(model: slug, instructions: instructions, input: [input],
                                                          tools: [], jsonSchema: (name: "meal_estimate", schema: Self.schema)))
             }
         } catch is CancellationError {
@@ -103,17 +108,18 @@ final class MealEstimator {
 
     // MARK: Prompt
 
-    static let instructions = """
-    Du schätzt Kalorien und Makronährstoffe einer Mahlzeit für eine Ernährungs-App. Die Eingabe ist eine kurze \
-    deutsche Beschreibung und/oder ein Foto der Mahlzeit.
-    - Zerlege die Mahlzeit in ihre Bestandteile (Posten) mit einer üblichen Mengenangabe auf Deutsch, z. B. „2 Stück“, \
-    „1 Teller (300 g)“.
-    - Gib je Posten kcal als wahrscheinlichsten Wert sowie eine ehrliche Spanne (kcal_min, kcal_max) und Eiweiß, \
-    Kohlenhydrate und Fett in Gramm an. Die Spanne soll die typische Unsicherheit einer Schätzung abbilden.
-    - Mengenangaben in der Beschreibung haben Vorrang vor dem Foto.
-    - title: kurzer deutscher Name der Mahlzeit (höchstens 40 Zeichen).
-    - Ist kein Essen oder Getränk zu erkennen, gib eine leere Liste items zurück. Erfinde nichts.
-    """
+    static func instructions(language: VoiceLanguage) -> String {
+        """
+        Du schätzt Kalorien und Makronährstoffe einer Mahlzeit für eine Ernährungs-App. Die Eingabe ist eine kurze \
+        Beschreibung (Deutsch oder Englisch) und/oder ein Foto der Mahlzeit.
+        - Zerlege die Mahlzeit in ihre Bestandteile (Posten) mit einer üblichen Mengenangabe auf \(language.promptName), z. B. \(language == .german ? "„2 Stück“, „1 Teller (300 g)“" : "„2 pieces“, „1 plate (300 g)“").
+        - Gib je Posten kcal als wahrscheinlichsten Wert sowie eine ehrliche Spanne (kcal_min, kcal_max) und Eiweiß, \
+        Kohlenhydrate und Fett in Gramm an. Die Spanne soll die typische Unsicherheit einer Schätzung abbilden.
+        - Mengenangaben in der Beschreibung haben Vorrang vor dem Foto.
+        - title: kurzer \(language.promptAdjective) Name der Mahlzeit (höchstens 40 Zeichen).
+        - Ist kein Essen oder Getränk zu erkennen, gib eine leere Liste items zurück. Erfinde nichts.
+        """
+    }
 
     static let schema = Data("""
     {
