@@ -72,8 +72,18 @@ struct AIPlanBar: View {
         }
         // In the day, longer hours and moves are rows of the bar (mockup AO1); the grid shows the blocks.
         if scope == .day {
-            ForEach(suggestions.filter { $0.kind == .dayChange || $0.kind == .move }) { suggestion in
+            ForEach(suggestions.filter { $0.kind == .dayChange }) { suggestion in
                 SuggestionRow(suggestion: suggestion)
+            }
+            let moves = suggestions.filter { $0.kind == .move }
+            if !moves.isEmpty {
+                // The moves themselves sit at their task rows in the panel (proposal §5).
+                let relieved = moves.compactMap { move in
+                    planning.taskList.items.first { $0.id.key == move.taskKey }
+                        .map { $0.estimateMinutes ?? planning.defaultTaskMinutes }
+                }.reduce(0, +)
+                Label("\(moves.count) verschieben · \(CapacityText.duration(relieved)) entlastet", systemImage: "arrow.uturn.right")
+                    .foregroundStyle(.purple)
             }
         }
         HStack {

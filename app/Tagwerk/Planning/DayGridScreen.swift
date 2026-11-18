@@ -167,6 +167,8 @@ struct DayGridScreen<Summary: View, Header: View>: View {
                 }
             }
             .background(.bar, in: RoundedRectangle(cornerRadius: 16))
+            // Moves sit at their task rows, so the panel opens when there are any (proposal §5).
+            .onChange(of: moveSuggestions.count) { _, count in if count > 0 { panelExpanded = true } }
             // While dragging, the panel slides down to its header so the grid behind is free; the dragged row
             // stays in the hierarchy so its gesture keeps running.
             .offset(y: dragging && panelExpanded ? panelBodyHeight : 0)
@@ -213,7 +215,21 @@ struct DayGridScreen<Summary: View, Header: View>: View {
         }
     }
 
+    /// Pending moves of this day by task key (proposal §5).
+    private var moveSuggestions: [String: PlanSuggestion] {
+        Dictionary(plan.suggestions.filter { $0.kind == .move }.map { ($0.taskKey, $0) }, uniquingKeysWith: { first, _ in first })
+    }
+
+    @ViewBuilder
     private func panelRow(_ task: TaskItem, offersToday: Bool, isOverdue: Bool) -> some View {
+        if let move = moveSuggestions[task.id.key] {
+            MoveSuggestionRow(suggestion: move)
+        } else {
+            plainPanelRow(task, offersToday: offersToday, isOverdue: isOverdue)
+        }
+    }
+
+    private func plainPanelRow(_ task: TaskItem, offersToday: Bool, isOverdue: Bool) -> some View {
         HStack(spacing: 8) {
             VStack(alignment: .leading, spacing: 2) {
                 Text(task.title).font(.subheadline).lineLimit(2)

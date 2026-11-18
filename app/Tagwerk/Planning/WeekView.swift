@@ -8,6 +8,10 @@ struct WeekView: View {
     let menuActions: (TaskItem) -> TaskMenuActions
     @State private var targetedDay: PlanDay?
 
+    private func incomingMoves(to day: PlanDay) -> [PlanSuggestion] {
+        model.suggestionBatches.flatMap(\.suggestions).filter { $0.kind == .move && $0.day == day && $0.fromDay != day }
+    }
+
     var body: some View {
         List {
             Section {
@@ -28,16 +32,30 @@ struct WeekView: View {
             }
             ForEach(model.days) { plan in
                 Section {
-                    ForEach(plan.suggestions) { suggestion in
+                    ForEach(plan.suggestions.filter { $0.kind != .move }) { suggestion in
                         SuggestionRow(suggestion: suggestion)
                             .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
                     }
+                    // The target side of moves from other days (proposal §5).
+                    ForEach(incomingMoves(to: plan.day)) { suggestion in
+                        MoveGhostRow(suggestion: suggestion)
+                            .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
+                    }
+                    ForEach(plan.suggestions.filter { $0.kind == .move && !plan.assigned.map(\.id.key).contains($0.taskKey) }) { move in
+                        MoveSuggestionRow(suggestion: move)
+                            .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
+                    }
                     ForEach(plan.assigned) { task in
+                        if let move = plan.suggestions.first(where: { $0.kind == .move && $0.taskKey == task.id.key }) {
+                            MoveSuggestionRow(suggestion: move)
+                                .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
+                        } else {
                         PlannedTaskRow(task: task, isPastDue: plan.isPastDue.contains(task.id))
                             .contentShape(Rectangle())
                             .draggable(task.id.key)  // mockup WT1: drag to another day
                             .onTapGesture { onOpenTask(task.id) }
                             .contextMenu { TaskContextMenu(item: task, actions: menuActions(task)) }
+                        }
                     }
                     ForEach(plan.deadlines) { deadline in
                         Label(deadline.title, systemImage: "flag.fill").foregroundStyle(.red).font(.subheadline)

@@ -103,6 +103,8 @@ struct MonthView: View {
                     if plan.suggestions.contains(where: { $0.kind == .dayChange }) {
                         // Mockup AO1: a longer day is suggested here.
                         Image(systemName: "clock.badge").font(.system(size: 8)).foregroundStyle(.purple).offset(x: 10, y: -10)
+                    } else if plan.suggestions.contains(where: { $0.kind == .move }) {
+                        Image(systemName: "arrow.uturn.right").font(.system(size: 8)).foregroundStyle(.purple).offset(x: 10, y: -10)
                     } else if !plan.suggestions.isEmpty {
                         Image(systemName: "sparkles").font(.system(size: 8)).foregroundStyle(.purple).offset(x: 10, y: -10)
                     }

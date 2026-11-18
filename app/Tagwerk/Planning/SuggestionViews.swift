@@ -125,3 +125,47 @@ struct SuggestionSheet: View {
         .presentationDetents([.medium])
     }
 }
+
+/// A move at the task it concerns (proposal 2026-11-18, §5): dashed, "↷ Fr 20.", ✓ / ✕.
+struct MoveSuggestionRow: View {
+    @Environment(AppEnvironment.self) private var environment
+    let suggestion: PlanSuggestion
+    @State private var showsReason = false
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 8) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(suggestion.title).font(.subheadline).lineLimit(2)
+                Label("nach \(suggestion.day.startDate(in: environment.planning.calendar).formatted(.dateTime.weekday(.abbreviated).day()))",
+                      systemImage: "arrow.uturn.right")
+                    .font(.caption).foregroundStyle(.purple)
+                if showsReason && !suggestion.reason.isEmpty {
+                    Text("„\(suggestion.reason)“").font(.caption).foregroundStyle(.purple)
+                }
+            }
+            Spacer(minLength: 0)
+            SuggestionButtons(onAccept: { Task { await environment.planner.accept(suggestion) } },
+                              onDismiss: { Task { await environment.planner.dismiss(suggestion) } })
+        }
+        .padding(8)
+        .overlay { RoundedRectangle(cornerRadius: 8).strokeBorder(Color.purple, style: StrokeStyle(lineWidth: 1, dash: [4, 3])) }
+        .contentShape(Rectangle())
+        .onTapGesture { withAnimation { showsReason.toggle() } }
+    }
+}
+
+/// The target day's side of a move (week, §5): a dashed ghost row without buttons.
+struct MoveGhostRow: View {
+    @Environment(AppEnvironment.self) private var environment
+    let suggestion: PlanSuggestion
+
+    var body: some View {
+        let from = suggestion.fromDay.map { $0.startDate(in: environment.planning.calendar).formatted(.dateTime.weekday(.abbreviated).day()) } ?? ""
+        Label("von \(from) · \(suggestion.title)", systemImage: "arrow.uturn.right")
+            .font(.subheadline)
+            .foregroundStyle(.purple.opacity(0.7))
+            .padding(8)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .overlay { RoundedRectangle(cornerRadius: 8).strokeBorder(Color.purple.opacity(0.5), style: StrokeStyle(lineWidth: 1, dash: [3, 3])) }
+    }
+}
