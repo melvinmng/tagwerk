@@ -90,6 +90,26 @@ struct PlanningModelTests {
         #expect(day?.links["e"] == id("Fahrrad"))
     }
 
+    @Test func planInput_matchesCapacity() async {
+        settings.bufferMinutes = 10
+        planStore.assign(id("Fahrrad"), to: today)
+        calendarStore.storedEvents = [
+            CalendarEvent(id: "busy", externalID: nil, calendarID: "work", title: "Vorlesung",
+                          start: at(18, 10), end: at(18, 11), isAllDay: false, url: nil, isBusy: true, version: "1"),
+            CalendarEvent(id: "linked", externalID: nil, calendarID: "work", title: "Login",
+                          start: at(18, 14), end: at(18, 15), isAllDay: false, url: nil, isBusy: true, version: "1"),
+        ]
+        blocks.links.link(eventID: "linked", to: id("Login", .github))
+        let model = await model()
+        let day = try? #require(model.days.first { $0.day == today })
+        let input = try? #require(day?.planInput)
+        #expect(input?.availableMinutes == day?.capacity.availableMinutes)
+        #expect(input?.plannedMinutes == day?.capacity.plannedMinutes)
+        #expect(input?.busy == [600..<660])
+        #expect(input?.blocks == [840..<900])
+        #expect(input?.countedTaskMinutes == ["local:Fahrrad": 30])
+    }
+
     @Test func capacity_unlinkedEventIsBusy() async {
         calendarStore.storedEvents = [CalendarEvent(id: "e", externalID: nil, calendarID: "work", title: "Vorlesung",
                                                     start: at(18, 10), end: at(18, 11), isAllDay: false, url: nil,

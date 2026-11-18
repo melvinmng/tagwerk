@@ -69,6 +69,8 @@ struct DayPlan: Identifiable, Equatable {
     let isPastDue: Set<TaskID>
     /// Recurring effort reserved on this day.
     let recurring: [RecurringItem]
+    /// The day as the AI planner sees it, built from the same numbers as `capacity` (design §8.2).
+    var planInput: PlanInputDay? = nil
     /// The day lies before today.
     let isPast: Bool
 }
@@ -873,24 +875,32 @@ final class PlanningModel {
             return total + max(0, Int(to.timeIntervalSince(from) / 60))
         }
         var estimated = 0
+        var counted: [String: Int] = [:]
         for task in assignedSorted + openToday where !tasksWithBlocks.contains(task.id) {
             // Recurring reminders count once, through their recurring effort.
             if task.id.source == .reminders, recurringIDs.contains(task.id.rawValue) { continue }
-            if let minutes = task.estimateMinutes {
-                planned += minutes
-            } else {
-                planned += settings.defaultTaskMinutes
-                estimated += 1
-            }
+            let minutes = task.estimateMinutes ?? settings.defaultTaskMinutes
+            if task.estimateMinutes == nil { estimated += 1 }
+            planned += minutes
+            counted[task.id.key, default: 0] += minutes
         }
+        let hours = TagwerkCore.workHours(on: day, schedule: settings.weekSchedule, overrides: overrides, calendar: calendar)
+        let linkedIDs = Set(links.keys).union(copiesOfLinked(dayEvents, links: links))
+        let recurringMinutes = efforts.reservedMinutes(on: day, reminders: reminders, calendar: calendar)
         var input = CapacityInput(
-            hours: TagwerkCore.workHours(on: day, schedule: settings.weekSchedule, overrides: overrides, calendar: calendar),
+            hours: hours,
             lunchStartMinutes: lunch(on: day)?.lowerBound ?? 0, lunchMinutes: lunch(on: day)?.count ?? 0,
             bufferMinutes: settings.bufferMinutes,
-            busyIntervals: busyIntervals(events: dayEvents, on: day, calendar: calendar,
-                                         excluding: Set(links.keys).union(copiesOfLinked(dayEvents, links: links))),
-            recurringMinutes: efforts.reservedMinutes(on: day, reminders: reminders, calendar: calendar),
+            busyIntervals: busyIntervals(events: dayEvents, on: day, calendar: calendar, excluding: linkedIDs),
+            recurringMinutes: recurringMinutes,
             plannedMinutes: planned, estimatedCount: estimated
+        )
+        let planInput = PlanInputDay(
+            day: day, hours: hours, lunch: lunch(on: day), events: dayEvents, linkedEventIDs: linkedIDs,
+            deadlineCalendarIDs: Set(settings.deadlineCalendarIDs ?? []),
+            blocks: linkedEvents.map { minutes($0.start, from: start)..<minutes($0.end, from: start) },
+            recurringMinutes: recurringMinutes, plannedMinutes: planned, bufferMinutes: settings.bufferMinutes,
+            calendar: calendar, countedTaskMinutes: counted
         )
         if day == today {
             let current = now()
@@ -914,7 +924,7 @@ final class PlanningModel {
         return DayPlan(day: day, capacity: capacity(input), deadlines: deadlines.filter { $0.day == day },
                        events: shown.filter { links[$0.id] == nil }, blocks: shown.filter { links[$0.id] != nil && !$0.isAllDay },
                        assigned: assignedSorted, openToday: openToday, links: links.filter { id, _ in linkedEvents.contains { $0.id == id } },
-                       isPastDue: pastDue, recurring: recurring, isPast: day < today)
+                       isPastDue: pastDue, recurring: recurring, planInput: planInput, isPast: day < today)
     }
 
     /// Unlinked copies (same title and time in another calendar) of linked events: their time is already
