@@ -270,6 +270,11 @@ private struct DayNavigation: View {
                 }
             }
             Spacer()
+            // Like the head of "Planen": a direct way back to today while another day is shown.
+            if !model.isToday {
+                Button("Heute") { Task { await model.go(to: model.today) } }
+                    .font(.caption.weight(.semibold))
+            }
             Button {
                 Task { await model.goForward() }
             } label: {
