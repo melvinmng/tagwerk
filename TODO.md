@@ -56,7 +56,7 @@ GitHub-Konto: @melvinmng · bestätigt zuweisbar · geprüft 2026-11-17 · ich
 - [x] [#54](https://github.com/melvinmng/tagwerk/issues/54) Gleiche Termine aus mehreren Kalendern zusammenfassen {status: Done; prio: P2 (High); aufwand: 2h; epic: #2}
 - [x] [#55](https://github.com/melvinmng/tagwerk/issues/55) Termine in allen Kalendern anlegen, ändern und löschen {status: Done; prio: P2 (High); aufwand: 6h; epic: #2}
 - [ ] [#56](https://github.com/melvinmng/tagwerk/issues/56) ChatGPT-Anmeldung und Tokens {status: In review; prio: P2 (High); aufwand: 6h; epic: #2}
-- [ ] [#57](https://github.com/melvinmng/tagwerk/issues/57) ChatGPT-Antworten mit Streaming und Modellliste {status: Backlog; prio: P2 (High); aufwand: 5h; epic: #2}
+- [ ] [#57](https://github.com/melvinmng/tagwerk/issues/57) ChatGPT-Antworten mit Streaming und Modellliste {status: In review; prio: P2 (High); aufwand: 5h; epic: #2}
 - [ ] [#58](https://github.com/melvinmng/tagwerk/issues/58) Gesprächsschleife mit Aktionskarten {status: Backlog; prio: P2 (High); aufwand: 4h; epic: #2}
 - [ ] [#59](https://github.com/melvinmng/tagwerk/issues/59) KI-Planung: Eingabe und Prüfregeln {status: Backlog; prio: P2 (High); aufwand: 4h; epic: #2}
 - [ ] [#60](https://github.com/melvinmng/tagwerk/issues/60) KI in Einrichtung und Einstellungen {status: Backlog; prio: P2 (High); aufwand: 3h; epic: #2}
@@ -74,10 +74,9 @@ GitHub-Konto: @melvinmng · bestätigt zuweisbar · geprüft 2026-11-17 · ich
 
 _Automatisch aus [Tagwerk](https://github.com/users/melvinmng/projects/17) erzeugt. Nicht von Hand bearbeiten; Aufgaben oben unter den Personen pflegen._
 
-### Backlog (12)
+### Backlog (11)
 - [#3](https://github.com/melvinmng/tagwerk/issues/3) Phase 3: Ernährung, Trinken und Training erfassen · @melvinmng · Prio P3 (Medium)
 - [#4](https://github.com/melvinmng/tagwerk/issues/4) Phase 4: Widget, Kurzbefehle und Wochenrückblick ergänzen · @melvinmng · Prio P4 (Low)
-- [#57](https://github.com/melvinmng/tagwerk/issues/57) ChatGPT-Antworten mit Streaming und Modellliste · @melvinmng · Prio P2 (High) · 5h
 - [#58](https://github.com/melvinmng/tagwerk/issues/58) Gesprächsschleife mit Aktionskarten · @melvinmng · Prio P2 (High) · 4h
 - [#59](https://github.com/melvinmng/tagwerk/issues/59) KI-Planung: Eingabe und Prüfregeln · @melvinmng · Prio P2 (High) · 4h
 - [#60](https://github.com/melvinmng/tagwerk/issues/60) KI in Einrichtung und Einstellungen · @melvinmng · Prio P2 (High) · 3h
@@ -91,8 +90,9 @@ _Automatisch aus [Tagwerk](https://github.com/users/melvinmng/projects/17) erzeu
 ### In Arbeit (1)
 - [#2](https://github.com/melvinmng/tagwerk/issues/2) Phase 2: Aufgaben, Kalender und KI-Tagesplan umsetzen · @melvinmng · Prio P2 (High)
 
-### In Prüfung (1)
+### In Prüfung (2)
 - [#56](https://github.com/melvinmng/tagwerk/issues/56) ChatGPT-Anmeldung und Tokens · @melvinmng · Prio P2 (High) · 6h
+- [#57](https://github.com/melvinmng/tagwerk/issues/57) ChatGPT-Antworten mit Streaming und Modellliste · @melvinmng · Prio P2 (High) · 5h
 
 ### Nicht zugeordnet (0)
 
