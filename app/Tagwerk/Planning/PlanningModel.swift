@@ -894,6 +894,22 @@ final class PlanningModel {
         await deadlinesChanged()
     }
 
+    /// Shows the day of `event` in "Tag" (a tap on a preparation row).
+    func showDay(of event: CalendarEvent) {
+        anchor = PlanDay(date: event.start, calendar: calendar)
+        scope = .day
+    }
+
+    /// The event is a deadline through a mark on its whole series.
+    func isSeriesMark(_ event: CalendarEvent) -> Bool {
+        deadlineMarks.mark(for: event)?.isSeries ?? false
+    }
+
+    /// Removing the mark asks first when it dissolves preparation links or covers a whole series (never silently).
+    func needsUnmarkConfirmation(_ event: CalendarEvent) -> Bool {
+        isSeriesMark(event) || preparationLinkCount(forDeadlineEvent: event) > 0
+    }
+
     /// Preparation links that removing the mark of `event` would dissolve (asked before removing).
     func preparationLinkCount(forDeadlineEvent event: CalendarEvent) -> Int {
         deadlineMarks.linkCount(forMarkOf: event)
@@ -915,8 +931,8 @@ final class PlanningModel {
     func preparationCandidates(for deadline: ImportantDeadline) -> [CalendarEvent] {
         let current = now(), end = deadlineMoment(deadline)
         guard end > current else { return [] }
-        let (events, _) = markedEvents(calendarStore.events(in: DateInterval(start: current, end: end),
-                                                            calendarIDs: readableCalendarIDs()))
+        // Read-only (called from view bodies): no merge pass, which would write `appliedMerges`.
+        let events = calendarStore.events(in: DateInterval(start: current, end: end), calendarIDs: readableCalendarIDs())
         var seen = Set<String>()
         return events.filter { $0.id != deadline.eventID && $0.end > current && $0.start < end && seen.insert($0.id).inserted }
             .sorted { $0.start < $1.start }
@@ -1507,9 +1523,15 @@ final class PlanningModel {
         let deadlines = importantDeadlines(tasks: open, events: events, deadlineCalendarIDs: deadlineCalendars,
                                            markedEventIDs: marked, in: range, calendar: calendar)
         let current = now()
+        // Time blocks and events linked to a task carry task titles ("Abgabe …"); they are work, not deadlines.
+        let linked = Set(resolveLinks(events: events, tasks: open, manual: blocks.links.manualLinks()).map(\.eventID))
+        let suggestionCandidates = events.filter { event in
+            event.end > current && (readable?.contains(event.calendarID) ?? true)
+                && event.url.flatMap(TaskLinkURL.parse) == nil && !linked.contains(event.id)
+        }
         deadlineSuggestions = TagwerkCore.deadlineSuggestions(
-            events: events.filter { $0.end > current && (readable?.contains($0.calendarID) ?? true) },
-            excludingEventIDs: marked.union(deadlineMarks.dismissedSuggestionIDs()), excludingCalendarIDs: deadlineCalendars)
+            events: suggestionCandidates, excludingEventIDs: marked.union(deadlineMarks.dismissedSuggestionIDs()),
+            excludingCalendarIDs: deadlineCalendars.union(settings.planCalendarID.map { [$0] } ?? []))
         preparation = preparationSummaries(for: deadlines)
         return deadlines
     }

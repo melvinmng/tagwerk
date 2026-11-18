@@ -94,7 +94,7 @@ public func preparationSummary(_ events: [CalendarEvent], now: Date, deadline: D
 let deadlineKeywordStems = ["klausur", "prüfung", "abgabe", "abgabefrist", "frist", "deadline", "exam", "examination",
                             "submission"]
 /// Stems that point to preparation rather than the deadline itself ("Klausurvorbereitung", "Lerngruppe").
-let deadlinePreparationStems = ["vorbereitung", "lernen", "lerngruppe", "lernblock", "tutorium", "einsicht", "übung",
+let deadlinePreparationStems = ["vorbereit", "lernen", "lerngruppe", "lernblock", "tutorium", "einsicht", "übung",
                                 "preparation", "prep", "study", "review", "tutorial"]
 
 /// A title that looks like an exam or a submission (detected locally, without AI).

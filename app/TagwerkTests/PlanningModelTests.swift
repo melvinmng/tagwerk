@@ -1469,6 +1469,30 @@ struct PlanningModelTests {
     }
     #endif
 
+    @Test func keywordSuggestionSkipsTimeBlocksAndLinkedEvents() async throws {
+        useTimetable()
+        _ = try blocks.createBlock(for: makeTask("Abgabe Hausarbeit", source: .local), start: at(19, 9), minutes: 60)
+        let linked = timetableEvent("linked", "Abgabe Bericht", start: at(20, 9), calendarID: "work")
+        let prep = timetableEvent("prep", "Abgabe vorbereiten", start: at(21, 9), calendarID: "work")
+        calendarStore.storedEvents += [linked, prep]
+        blocks.links.link(eventID: "linked", to: id("Fahrrad"))
+        let model = await model()
+        #expect(model.deadlineSuggestions.isEmpty)
+    }
+
+    @Test func removingASeriesMarkAlwaysAsks() async throws {
+        useTimetable()
+        let first = timetableEvent("course|1", "Kolloquium", start: at(19, 14), calendarID: "work", recurring: true)
+        let single = timetableEvent("exam", "Klausur", start: at(27, 10))
+        calendarStore.storedEvents = [first, single]
+        let model = await model()
+        await model.markDeadline(first, series: true)
+        await model.markDeadline(single, series: false)
+        #expect(model.needsUnmarkConfirmation(first))
+        #expect(model.isSeriesMark(first))
+        #expect(!model.needsUnmarkConfirmation(single))
+    }
+
     @Test func markingAndUnmarkingReportsAChange() async throws {
         useTimetable()
         let exam = timetableEvent("exam", "Klausur", start: at(27, 10))

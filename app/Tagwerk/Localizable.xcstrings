@@ -4402,6 +4402,16 @@
         }
       }
     },
+    "Im Kalender ändert sich nichts.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing changes in the calendar."
+          }
+        }
+      }
+    },
     "Im Kalender öffnen": {
       "localizations": {
         "en": {
@@ -5336,6 +5346,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Remove mark?"
+          }
+        }
+      }
+    },
+    "Markierung für alle Termine der Serie entfernen?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove the mark from all events in the series?"
           }
         }
       }

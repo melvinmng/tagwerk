@@ -110,6 +110,7 @@ struct EventReferenceTests {
         #expect(!looksLikeDeadline("Klausurvorbereitung Statistik"))
         #expect(!looksLikeDeadline("Lerngruppe Prüfung"))
         #expect(!looksLikeDeadline("Exam preparation"))
+        #expect(!looksLikeDeadline("Abgabe vorbereiten"))
     }
 
     @Test func suggestionsSkipMarkedDismissedAndDeadlineCalendarEvents() {

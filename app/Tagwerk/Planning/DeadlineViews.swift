@@ -44,7 +44,7 @@ struct DeadlineInteractions: ViewModifier {
 
     private func unmark() {
         guard let id = deadline.eventID, let event = model.event(id: id) else { return }
-        if model.preparationLinkCount(forDeadlineEvent: event) > 0 {
+        if model.needsUnmarkConfirmation(event) {
             confirmingUnmark = event
         } else {
             Task { await model.unmarkDeadline(event) }
@@ -57,16 +57,23 @@ extension View {
         modifier(DeadlineInteractions(deadline: deadline, model: model, actions: actions))
     }
 
-    /// "Markierung entfernen?" with the number of preparation links that are dissolved.
+    /// "Markierung entfernen?" naming a whole series and the number of preparation links that are dissolved.
     func unmarkConfirmation(event: Binding<CalendarEvent?>, model: PlanningModel, onDone: @escaping () -> Void = {}) -> some View {
-        confirmationDialog("Markierung entfernen?", isPresented: Binding(get: { event.wrappedValue != nil },
-                                                                          set: { if !$0 { event.wrappedValue = nil } }),
-                           titleVisibility: .visible, presenting: event.wrappedValue) { target in
+        let title = event.wrappedValue.map { model.isSeriesMark($0) } == true
+            ? String(localized: "Markierung für alle Termine der Serie entfernen?") : String(localized: "Markierung entfernen?")
+        return confirmationDialog(title, isPresented: Binding(get: { event.wrappedValue != nil },
+                                                              set: { if !$0 { event.wrappedValue = nil } }),
+                                  titleVisibility: .visible, presenting: event.wrappedValue) { target in
             Button("Markierung entfernen", role: .destructive) {
                 Task { await model.unmarkDeadline(target); onDone() }
             }
         } message: { target in
-            Text("\(model.preparationLinkCount(forDeadlineEvent: target)) zugeordnete Termine werden gelöst. Im Kalender ändert sich nichts.")
+            let count = model.preparationLinkCount(forDeadlineEvent: target)
+            if count > 0 {
+                Text("\(count) zugeordnete Termine werden gelöst. Im Kalender ändert sich nichts.")
+            } else {
+                Text("Im Kalender ändert sich nichts.")
+            }
         }
     }
 }
@@ -263,17 +270,18 @@ struct EventPickRow: View {
 // MARK: Preparation (DV1)
 
 /// "Vorbereitung · 6 h 30 geplant": the linked events of a deadline, "Termin zuordnen …" and swipe to unlink.
+/// A tap on a row jumps to the event's day (`onSelect`).
 struct PreparationSection: View {
     let deadline: ImportantDeadline
     let model: PlanningModel
-    let onOpenEvent: (CalendarEvent) -> Void
+    let onSelect: (CalendarEvent) -> Void
 
     var body: some View {
         let events = model.preparationEvents(for: deadline)
         let summary = preparationSummary(events, now: model.now(), deadline: model.deadlineMoment(deadline))
         Section {
             ForEach(events) { event in
-                Button { onOpenEvent(event) } label: {
+                Button { onSelect(event) } label: {
                     EventPickRow(event: event, model: model)
                         .opacity(event.end <= model.now() ? 0.5 : 1)
                 }
@@ -301,7 +309,6 @@ struct PreparationSection: View {
 struct PreparationSheet: View {
     let deadline: ImportantDeadline
     let model: PlanningModel
-    let onOpenEvent: (CalendarEvent) -> Void
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
@@ -311,8 +318,8 @@ struct PreparationSheet: View {
                     DeadlineRowLabel(deadline: deadline, model: model)
                 }
                 PreparationSection(deadline: deadline, model: model) { event in
+                    model.showDay(of: event)
                     dismiss()
-                    onOpenEvent(event)
                 }
             }
             .navigationTitle("Vorbereitung")
@@ -446,15 +453,15 @@ struct EventDeadlineMenu: View {
     let onOpen: () -> Void
     let onMarkSeries: () -> Void
     let onLinkToDeadline: () -> Void
-    let onUnmarkWithLinks: () -> Void
+    let onConfirmUnmark: () -> Void
 
     var body: some View {
         Button("Öffnen", systemImage: "chevron.right", action: onOpen)
         if !model.isInDeadlineCalendar(event) {
             if model.isMarkedDeadline(event) {
                 Button("Markierung entfernen", systemImage: "flag.slash", role: .destructive) {
-                    if model.preparationLinkCount(forDeadlineEvent: event) > 0 {
-                        onUnmarkWithLinks()
+                    if model.needsUnmarkConfirmation(event) {
+                        onConfirmUnmark()
                     } else {
                         Task { await model.unmarkDeadline(event) }
                     }

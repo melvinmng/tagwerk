@@ -127,7 +127,7 @@ struct PlanView: View {
             }
             .sheet(isPresented: $creatingEvent) { EventEditSheet(model: model, existing: nil, day: model.anchor) }
             .sheet(item: $preparingDeadline) { deadline in
-                PreparationSheet(deadline: deadline, model: model, onOpenEvent: onOpenEvent)
+                PreparationSheet(deadline: deadline, model: model)
             }
             .alert("Hinweis", isPresented: hasError) {
                 Button("OK") { model.clearError() }

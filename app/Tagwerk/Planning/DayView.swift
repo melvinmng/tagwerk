@@ -178,7 +178,7 @@ struct DayView: View {
     private func eventMenu(_ event: CalendarEvent, taskID: TaskID?) -> some View {
         EventDeadlineMenu(event: event, model: model, onOpen: { sheetEntry = .event(event, taskID) },
                           onMarkSeries: { markingSeries = event }, onLinkToDeadline: { linkingToDeadline = event },
-                          onUnmarkWithLinks: { unmarking = event })
+                          onConfirmUnmark: { unmarking = event })
     }
 
     private func eventDetail(_ event: CalendarEvent) -> String {

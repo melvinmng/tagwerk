@@ -111,7 +111,10 @@ struct EntrySheet: View {
 
         deadlineSection(event)
         if let deadline {
-            PreparationSection(deadline: deadline, model: model) { _ in }
+            PreparationSection(deadline: deadline, model: model) { event in
+                model.showDay(of: event)
+                dismiss()
+            }
         } else {
             preparationTargetSection(event)
         }
@@ -210,7 +213,7 @@ struct EntrySheet: View {
     private func setMarked(_ event: CalendarEvent, _ mark: Bool) {
         if mark {
             if event.isRecurring { askingMarkSeries = true } else { Task { await model.markDeadline(event, series: false) } }
-        } else if model.preparationLinkCount(forDeadlineEvent: event) > 0 {
+        } else if model.needsUnmarkConfirmation(event) {
             confirmingUnmark = event
         } else {
             Task { await model.unmarkDeadline(event) }
@@ -226,7 +229,12 @@ struct EntrySheet: View {
                 Label(text.preparationMark(target, today: model.today), systemImage: "link")
                 if let deadline = model.deadline(for: target) {
                     NavigationLink("Deadline zeigen") {
-                        Form { PreparationSection(deadline: deadline, model: model) { _ in } }
+                        Form {
+                            PreparationSection(deadline: deadline, model: model) { event in
+                                model.showDay(of: event)
+                                dismiss()
+                            }
+                        }
                             .navigationTitle(deadline.title)
                     }
                     Button("Zuordnung lösen", role: .destructive) {
