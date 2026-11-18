@@ -240,6 +240,17 @@ struct AIPlanningTests {
         #expect(result.violations == [PlanViolation(taskId: "local:b", reason: PlanViolation.Reason.overCapacity)])
     }
 
+    @Test func validate_assignmentUsesModelEstimate_forCapacity() {
+        // 120 min free tomorrow; without effort each task would count 30 min, the model says 90.
+        let days = [planDay(today), planDay(tomorrow, recurring: 360)]
+        let output = PlanOutput.period(PeriodPlanOutput(
+            assignments: [assign("a", "2026-11-19"), assign("b", "2026-11-19")], unscheduled: [], risks: [],
+            estimates: [PlanEstimate(taskId: "local:a", minutes: 90), PlanEstimate(taskId: "local:b", minutes: 90)]))
+        let result = validate(output, input: periodInput([task("a", minutes: nil), task("b", minutes: nil)], days: days))
+        #expect(acceptedAssignments(result.accepted) == ["local:a"])
+        #expect(result.violations == [PlanViolation(taskId: "local:b", reason: PlanViolation.Reason.overCapacity)])
+    }
+
     @Test func validate_wrongShapeForScope_rejectsAll() {
         let result = validate(periodOutput([assign("a", "2026-11-18")]), input: input(tasks: [task("a")]))
         #expect(acceptedAssignments(result.accepted).isEmpty)

@@ -330,9 +330,12 @@ public func validate(_ output: PlanOutput, input: PlanInput) -> (accepted: PlanO
         return (.day(DayPlanOutput(blocks: blocks, unscheduled: knownUnscheduled(plan.unscheduled, tasks),
                                    risks: plan.risks, estimates: knownEstimates(plan.estimates, tasks))), violations)
     case (.period(let plan), .week), (.period(let plan), .month):
-        let (assignments, violations) = validateAssignments(plan.assignments, input: input, tasks: tasks)
+        let estimates = knownEstimates(plan.estimates, tasks)
+        let (assignments, violations) = validateAssignments(
+            plan.assignments, input: input, tasks: tasks,
+            estimates: Dictionary(estimates.map { ($0.taskId, $0.minutes) }, uniquingKeysWith: { first, _ in first }))
         return (.period(PeriodPlanOutput(assignments: assignments, unscheduled: knownUnscheduled(plan.unscheduled, tasks),
-                                         risks: plan.risks, estimates: knownEstimates(plan.estimates, tasks))), violations)
+                                         risks: plan.risks, estimates: estimates)), violations)
     case (.day(let plan), _):
         return (.period(PeriodPlanOutput(assignments: [], unscheduled: [], risks: [], estimates: [])),
                 plan.blocks.map { PlanViolation(taskId: $0.taskId, reason: .wrongScope) })
@@ -393,8 +396,10 @@ private func validateBlocks(_ blocks: [PlanBlock], input: PlanInput,
     return (ordered, violations)
 }
 
-private func validateAssignments(_ assignments: [PlanAssignment], input: PlanInput,
-                                 tasks: [String: PlanInputTask]) -> ([PlanAssignment], [PlanViolation]) {
+/// `estimates` are the model's own estimates; they count for tasks without effort, because they are
+/// stored when the suggestion is accepted.
+private func validateAssignments(_ assignments: [PlanAssignment], input: PlanInput, tasks: [String: PlanInputTask],
+                                 estimates: [String: Int]) -> ([PlanAssignment], [PlanViolation]) {
     let days = Dictionary(input.days.map { ($0.day, $0) }, uniquingKeysWith: { first, _ in first })
     var violations: [PlanViolation] = []
     var seen = Set<String>()
@@ -415,7 +420,7 @@ private func validateAssignments(_ assignments: [PlanAssignment], input: PlanInp
         if task.plannedDay != nil { reject(.alreadyAssigned); continue }
         if isLate(day: planDay, endMinutes: nil, limit: task.due, input: input) { reject(.afterDue); continue }
         if isLate(day: planDay, endMinutes: nil, limit: task.anchor, input: input) { reject(.afterDeadline); continue }
-        let minutes = task.minutes ?? input.defaultTaskMinutes
+        let minutes = task.minutes ?? estimates[task.id] ?? input.defaultTaskMinutes
         if (load[planDay] ?? 0) + minutes > day.availableMinutes { reject(.overCapacity); continue }
         load[planDay, default: 0] += minutes
         accepted.append(assignment)

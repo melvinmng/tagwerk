@@ -114,7 +114,11 @@ public final class Conversation {
 
     // MARK: Actions
 
+    /// True while an answer streams or an action runs; sending is not possible then.
+    public var isBusy: Bool { state == .streaming || state == .runningAction }
+
     public func send(_ text: String) async {
+        guard !isBusy else { return }
         closeOpenCalls(output: Self.declinedOutput)
         history.append(.user(text))
         rounds = 0
@@ -242,6 +246,8 @@ public final class Conversation {
     }
 
     private func continueIfResolved() async {
+        // A confirmed action may still be running; it continues the conversation when it ends.
+        guard runningCallID == nil else { return }
         if pendingActions.isEmpty {
             await runRound()
         } else {

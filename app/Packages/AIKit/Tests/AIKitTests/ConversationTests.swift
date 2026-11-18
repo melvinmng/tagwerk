@@ -326,6 +326,39 @@ struct ConversationTests {
         #expect(output.hasSuffix(Conversation.clippedNotice))
     }
 
+    @Test func send_whileStreaming_isIgnored() async {
+        let gate = Gate()
+        let slow = SlowResponder(gate: gate)
+        let conversation = Conversation(responder: slow, tools: handler, model: { "gpt-test" },
+                                        instructions: { "" }, history: [])
+        let first = Task { await conversation.send("Eins") }
+        while conversation.state != .streaming { await Task.yield() }
+        await conversation.send("Zwei")
+        gate.open()
+        await first.value
+        #expect(conversation.history == [.user("Eins"), .assistant("ok")])
+        #expect(slow.callCount == 1)
+    }
+
+    @Test func decline_whileAnotherActionRuns_keepsRunningState() async throws {
+        responder.enqueue(.events([call("w1", "create_task"), call("w2", "create_task"), .completed(usage: nil)]))
+        let gate = Gate()
+        let slowHandler = GatedToolHandler(gate: gate)
+        let conversation = Conversation(responder: responder, tools: slowHandler, model: { "gpt-test" },
+                                        instructions: { "" }, history: [])
+        await conversation.send("Beides")
+        let first = conversation.pendingActions[0], second = conversation.pendingActions[1]
+        let confirming = Task { await conversation.confirm(first) }
+        while conversation.state != .runningAction { await Task.yield() }
+        await conversation.decline(second)
+        #expect(conversation.state == .runningAction)
+        #expect(responder.inputs.count == 1)
+        gate.open()
+        await confirming.value
+        #expect(responder.inputs.count == 2)
+        #expect(Conversation.openCallIDs(in: conversation.history).isEmpty)
+    }
+
     @Test func clear_resetsEverything() async {
         responder.enqueue(.events([call("c1", "create_task"), .completed(usage: nil)]))
         let conversation = makeConversation()
@@ -334,5 +367,41 @@ struct ConversationTests {
         #expect(conversation.history.isEmpty)
         #expect(conversation.pendingActions.isEmpty)
         #expect(conversation.state == .idle)
+    }
+}
+
+/// Streams "ok" once the gate opens and counts its calls.
+final class SlowResponder: ResponseStreaming {
+    let gate: Gate
+    private let calls = Mutex(0)
+    var callCount: Int { calls.withLock { $0 } }
+
+    init(gate: Gate) { self.gate = gate }
+
+    func respond(model: String, instructions: String, input: [InputItem], tools: [ToolDefinition],
+                 jsonSchema: (name: String, schema: Data)?) -> AsyncThrowingStream<StreamEvent, Error> {
+        calls.withLock { $0 += 1 }
+        let gate = self.gate
+        return AsyncThrowingStream { continuation in
+            Task {
+                await gate.wait()
+                continuation.yield(.textDelta("ok"))
+                continuation.yield(.completed(usage: nil))
+                continuation.finish()
+            }
+        }
+    }
+}
+
+/// A write tool that finishes only when the gate opens.
+@MainActor
+final class GatedToolHandler: ToolHandler {
+    let gate: Gate
+    init(gate: Gate) { self.gate = gate }
+    var definitions: [ToolDefinition] { [] }
+    func kind(of name: String) -> ToolKind { .write }
+    func run(_ call: ToolCall) async -> String {
+        await gate.wait()
+        return #"{"ok":true}"#
     }
 }
