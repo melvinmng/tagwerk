@@ -68,3 +68,60 @@ struct TaskEditLabelsTests {
         #expect(TaskDraft(title: "x").subContainerIDs.isEmpty)
     }
 }
+
+struct TaskEditRecurrenceTests {
+    let nov19 = PlanDay(year: 2026, month: 11, day: 19)
+    let weeklyThursday = RecurrenceRule.weekly(interval: 1, weekdays: [5])
+
+    private func item(_ recurrence: Recurrence?) -> TaskItem {
+        var item = makeItem("Serie", due: DueDate(year: 2026, month: 11, day: 19), source: .reminders)
+        item.recurrence = recurrence
+        return item
+    }
+
+    @Test func defaults_noRecurrence() {
+        #expect(makeItem("A").recurrence == nil)
+        #expect(TaskDraft(title: "x").recurrence == nil)
+        #expect(TaskEdit().recurrence.isUnchanged)
+    }
+
+    @Test func diff_setsRecurrence() {
+        let original = item(nil)
+        let edited = item(Recurrence(rule: weeklyThursday, start: nov19, end: nil, count: nil))
+        #expect(TaskEdit.diff(from: original, to: edited).recurrence == .set(edited.recurrence))
+
+        let longer = item(Recurrence(rule: weeklyThursday, start: nov19, end: nil, count: 5))
+        #expect(TaskEdit.diff(from: edited, to: longer).recurrence == .set(longer.recurrence))
+        let until = item(Recurrence(rule: weeklyThursday, start: nov19, end: PlanDay(year: 2027, month: 1, day: 1), count: nil))
+        #expect(TaskEdit.diff(from: edited, to: until).recurrence == .set(until.recurrence))
+    }
+
+    @Test func diff_ignoresStartShift() {
+        let original = item(Recurrence(rule: weeklyThursday, start: nov19, end: nil, count: nil))
+        var edited = original
+        edited.due = DueDate(year: 2026, month: 11, day: 26)
+        edited.recurrence?.start = PlanDay(year: 2026, month: 11, day: 26)
+        let edit = TaskEdit.diff(from: original, to: edited)
+        #expect(edit.recurrence.isUnchanged)
+        #expect(!edit.due.isUnchanged)
+    }
+
+    /// A rule Tagwerk cannot express must never be written just because the due date moved.
+    @Test func diff_unsupportedRuleWithShiftedStart_staysUnchanged() {
+        let original = item(Recurrence(rule: .unsupported, start: nov19, end: nil, count: nil))
+        var edited = original
+        edited.recurrence?.start = PlanDay(year: 2026, month: 11, day: 20)
+        #expect(TaskEdit.diff(from: original, to: edited).recurrence.isUnchanged)
+    }
+
+    @Test func diff_clearsRecurrence() {
+        let original = item(Recurrence(rule: weeklyThursday, start: nov19, end: nil, count: nil))
+        #expect(TaskEdit.diff(from: original, to: item(nil)).recurrence == .set(nil))
+    }
+
+    @Test func isEmpty_falseWithRecurrence() {
+        var edit = TaskEdit()
+        edit.recurrence = .set(nil)
+        #expect(!edit.isEmpty)
+    }
+}

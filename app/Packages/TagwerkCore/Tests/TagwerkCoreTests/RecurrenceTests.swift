@@ -52,4 +52,119 @@ struct RecurrenceTests {
         #expect(occurrences(of: recurrence, in: nov16...PlanDay(year: 2026, month: 11, day: 30), calendar: calendar) == days([19]))
         #expect(occurrences(of: recurrence, in: nov16...PlanDay(year: 2026, month: 11, day: 18), calendar: calendar).isEmpty)
     }
+
+    // MARK: n-th weekday of the month
+
+    private func day(_ year: Int, _ month: Int, _ day: Int) -> PlanDay { PlanDay(year: year, month: month, day: day) }
+
+    @Test func monthlyWeekday_thirdWednesday() {
+        let recurrence = Recurrence(rule: .monthlyWeekday(interval: 1, ordinal: 3, weekday: 4), start: day(2026, 11, 18),
+                                    end: nil, count: nil)
+        #expect(occurrences(of: recurrence, in: day(2026, 11, 1)...day(2027, 1, 31), calendar: calendar)
+                == [day(2026, 11, 18), day(2026, 12, 16), day(2027, 1, 20)])
+    }
+
+    @Test func monthlyWeekday_everySecondMonth() {
+        let recurrence = Recurrence(rule: .monthlyWeekday(interval: 2, ordinal: 1, weekday: 2), start: day(2026, 11, 2),
+                                    end: nil, count: nil)
+        #expect(occurrences(of: recurrence, in: day(2026, 11, 1)...day(2027, 3, 31), calendar: calendar)
+                == [day(2026, 11, 2), day(2027, 1, 4), day(2027, 3, 1)])
+    }
+
+    @Test func monthlyWeekday_endsAfterCount() {
+        let recurrence = Recurrence(rule: .monthlyWeekday(interval: 1, ordinal: 3, weekday: 4), start: day(2026, 11, 18),
+                                    end: nil, count: 2)
+        #expect(occurrences(of: recurrence, in: day(2026, 11, 1)...day(2027, 6, 30), calendar: calendar)
+                == [day(2026, 11, 18), day(2026, 12, 16)])
+    }
+
+    // MARK: Yearly
+
+    @Test func yearly_sameDay() {
+        let recurrence = Recurrence(rule: .yearly(interval: 1), start: day(2026, 11, 18), end: nil, count: nil)
+        #expect(occurrences(of: recurrence, in: day(2026, 11, 1)...day(2028, 12, 31), calendar: calendar)
+                == [day(2026, 11, 18), day(2027, 11, 18), day(2028, 11, 18)])
+    }
+
+    @Test func yearly_everySecondYear() {
+        let recurrence = Recurrence(rule: .yearly(interval: 2), start: day(2026, 11, 18), end: nil, count: nil)
+        #expect(occurrences(of: recurrence, in: day(2026, 11, 1)...day(2030, 12, 31), calendar: calendar)
+                == [day(2026, 11, 18), day(2028, 11, 18), day(2030, 11, 18)])
+    }
+
+    @Test func yearly_leapDaySkipsOtherYears() {
+        let recurrence = Recurrence(rule: .yearly(interval: 1), start: day(2028, 2, 29), end: nil, count: nil)
+        #expect(occurrences(of: recurrence, in: day(2028, 1, 1)...day(2032, 12, 31), calendar: calendar)
+                == [day(2028, 2, 29), day(2032, 2, 29)])
+    }
+
+    // MARK: Next occurrence
+
+    @Test func nextOccurrence_onOrAfter() {
+        let weekly = Recurrence(rule: .weekly(interval: 2, weekdays: [2, 5]), start: day(2026, 11, 19), end: nil, count: nil)
+        #expect(nextOccurrence(of: weekly, onOrAfter: day(2026, 11, 18), calendar: calendar) == day(2026, 11, 19))
+        #expect(nextOccurrence(of: weekly, onOrAfter: day(2026, 11, 20), calendar: calendar) == day(2026, 11, 30))
+        #expect(nextOccurrence(of: weekly, onOrAfter: day(2026, 11, 30), calendar: calendar) == day(2026, 11, 30))
+        let leap = Recurrence(rule: .yearly(interval: 1), start: day(2028, 2, 29), end: nil, count: nil)
+        #expect(nextOccurrence(of: leap, onOrAfter: day(2028, 3, 1), calendar: calendar) == day(2032, 2, 29))
+    }
+
+    @Test func nextOccurrence_noneAfterEnd() {
+        let ending = Recurrence(rule: .daily(interval: 1), start: day(2026, 11, 18), end: day(2026, 11, 20), count: nil)
+        #expect(nextOccurrence(of: ending, onOrAfter: day(2026, 11, 21), calendar: calendar) == nil)
+        let counted = Recurrence(rule: .daily(interval: 1), start: day(2026, 11, 18), end: nil, count: 2)
+        #expect(nextOccurrence(of: counted, onOrAfter: day(2026, 11, 19), calendar: calendar) == day(2026, 11, 19))
+        #expect(nextOccurrence(of: counted, onOrAfter: day(2026, 11, 20), calendar: calendar) == nil)
+    }
+
+    @Test func nextOccurrences_matchOccurrences() {
+        let recurrence = Recurrence(rule: .weekly(interval: 2, weekdays: [2, 5]), start: day(2026, 11, 19), end: nil, count: 7)
+        let all = occurrences(of: recurrence, in: day(2026, 11, 1)...day(2027, 6, 30), calendar: calendar)
+        #expect(nextOccurrences(of: recurrence, onOrAfter: day(2026, 11, 1), limit: 20, calendar: calendar) == all)
+        #expect(nextOccurrences(of: recurrence, onOrAfter: day(2026, 12, 1), limit: 2, calendar: calendar)
+                == [day(2026, 12, 3), day(2026, 12, 14)])
+    }
+
+    /// Every April has no 31st: the search stops instead of running forever.
+    @Test func nextOccurrences_stopsForRuleThatNeverMatches() {
+        let never = Recurrence(rule: .monthly(interval: 12, day: 31), start: day(2026, 4, 30), end: nil, count: nil)
+        #expect(nextOccurrences(of: never, onOrAfter: day(2026, 4, 30), limit: 3, calendar: calendar).isEmpty)
+    }
+
+    /// A search budget keeps long series cheap (e.g. "Letzter Termin" of a yearly series with a high count).
+    @Test func nextOccurrences_respectsSearchBudget() {
+        let yearly = Recurrence(rule: .yearly(interval: 1), start: day(2026, 11, 18), end: nil, count: 500)
+        let found = nextOccurrences(of: yearly, onOrAfter: day(2026, 11, 18), limit: 500, withinDays: 3660, calendar: calendar)
+        #expect(found.count == 11)
+        #expect(found.last == day(2036, 11, 18))
+    }
+
+    @Test func isValid_rejectsEndAndCount() {
+        let start = day(2026, 11, 18)
+        #expect(Recurrence(rule: .daily(interval: 1), start: start, end: day(2026, 12, 1), count: nil).isValid)
+        #expect(Recurrence(rule: .daily(interval: 1), start: start, end: nil, count: 3).isValid)
+        #expect(!Recurrence(rule: .daily(interval: 1), start: start, end: day(2026, 12, 1), count: 3).isValid)
+    }
+
+    @Test func isValid_checksValueRanges() {
+        let start = day(2026, 11, 18)
+        func valid(_ rule: RecurrenceRule, end: PlanDay? = nil, count: Int? = nil) -> Bool {
+            Recurrence(rule: rule, start: start, end: end, count: count).isValid
+        }
+        #expect(!valid(.daily(interval: 0)))
+        #expect(!valid(.weekly(interval: 1, weekdays: [0])))
+        #expect(!valid(.weekly(interval: 1, weekdays: [8])))
+        #expect(valid(.weekly(interval: 1, weekdays: [1, 7])))
+        #expect(!valid(.monthly(interval: 1, day: 0)))
+        #expect(!valid(.monthly(interval: 1, day: 32)))
+        #expect(valid(.monthly(interval: 1, day: 31)))
+        #expect(!valid(.monthlyWeekday(interval: 1, ordinal: 5, weekday: 4)))
+        #expect(!valid(.monthlyWeekday(interval: 1, ordinal: 1, weekday: 0)))
+        #expect(valid(.yearly(interval: 3)))
+        #expect(!valid(.daily(interval: 1), count: 0))
+        #expect(!valid(.daily(interval: 1), end: day(2026, 11, 17)))
+        #expect(valid(.daily(interval: 1), end: start))
+        // An unreadable rule is never valid for writing.
+        #expect(!valid(.unsupported))
+    }
 }

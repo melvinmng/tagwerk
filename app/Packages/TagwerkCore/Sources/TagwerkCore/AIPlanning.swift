@@ -1047,16 +1047,21 @@ public func blockMinutes(estimate: Int?, alreadyBlocked: Int, defaultMinutes: In
 
 /// First day whose blocks count as work on the current occurrence of a recurring task (user rule
 /// 2026-11-18): daily only today, every n days the last n days, weekly the last six days and today,
-/// monthly since the same day of the previous month. `nil` for rules Tagwerk cannot read.
+/// monthly (also the n-th weekday) since the same day of the previous month, yearly since the same date of the
+/// previous year. `nil` for rules Tagwerk cannot read.
 public func sessionWindowStart(for rule: RecurrenceRule, today: PlanDay, calendar: Calendar) -> PlanDay? {
     switch rule {
     case .daily(let interval):
         return today.adding(days: -(max(1, interval) - 1), calendar: calendar)
     case .weekly(let interval, _):
         return today.adding(days: -(7 * max(1, interval) - 1), calendar: calendar)
-    case .monthly(let interval, _):
+    case .monthly(let interval, _), .monthlyWeekday(let interval, _, _):
         let start = today.startDate(in: calendar)
         let back = calendar.date(byAdding: .month, value: -max(1, interval), to: start) ?? start
+        return PlanDay(date: back, calendar: calendar).adding(days: 1, calendar: calendar)
+    case .yearly(let interval):
+        let start = today.startDate(in: calendar)
+        let back = calendar.date(byAdding: .year, value: -max(1, interval), to: start) ?? start
         return PlanDay(date: back, calendar: calendar).adding(days: 1, calendar: calendar)
     case .unsupported:
         return nil

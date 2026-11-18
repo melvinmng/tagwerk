@@ -412,6 +412,16 @@
         }
       }
     },
+    "%@, %@ bis %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@, %2$@ to %3$@"
+          }
+        }
+      }
+    },
     "%@, Aufgabe hier ablegen": {
       "localizations": {
         "en": {
@@ -737,6 +747,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Log %lld milliliters of water"
+          }
+        }
+      }
+    },
+    "%lld Projekte": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld projects"
           }
         }
       }
@@ -1432,6 +1452,176 @@
         }
       }
     },
+    "Alle %lld Jahre": {
+      "localizations": {
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Jedes Jahr"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Alle %lld Jahre"
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Every year"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Every %lld years"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Alle %lld Monate": {
+      "localizations": {
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Jeden Monat"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Alle %lld Monate"
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Every month"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Every %lld months"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Alle %lld Tage": {
+      "localizations": {
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Jeden Tag"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Alle %lld Tage"
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Every day"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Every %lld days"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Alle %lld Wochen": {
+      "localizations": {
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Jede Woche"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Alle %lld Wochen"
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Every week"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Every %lld weeks"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Alle 2 Wochen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Every 2 weeks"
+          }
+        }
+      }
+    },
     "Alle Projects": {
       "localizations": {
         "en": {
@@ -1542,6 +1732,26 @@
         }
       }
     },
+    "Am %@ %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "On the %1$@ %2$@"
+          }
+        }
+      }
+    },
+    "Am %lld. des Monats": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "On day %lld of the month"
+          }
+        }
+      }
+    },
     "An diesem Tag ist nichts erfasst.": {
       "localizations": {
         "en": {
@@ -1648,6 +1858,46 @@
           "stringUnit": {
             "state": "translated",
             "value": "Read answers aloud"
+          }
+        }
+      }
+    },
+    "Anzahl: %lld Mal": {
+      "localizations": {
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Anzahl: %lld Mal"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Anzahl: %lld Mal"
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Occurs once"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Occurs %lld times"
+                }
+              }
+            }
           }
         }
       }
@@ -2228,6 +2478,36 @@
         }
       }
     },
+    "Bis": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Until"
+          }
+        }
+      }
+    },
+    "Bis Datum": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "On date"
+          }
+        }
+      }
+    },
+    "Bisher: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Previously: %@"
+          }
+        }
+      }
+    },
     "Blöcke löschen": {
       "localizations": {
         "en": {
@@ -2394,6 +2674,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "The photo is downsized, sent without location data and not saved in Tagwerk."
+          }
+        }
+      }
+    },
+    "Das Fälligkeitsdatum ist kein Termin dieser Regel.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The due date isn’t an occurrence of this rule."
           }
         }
       }
@@ -3104,6 +3394,16 @@
         }
       }
     },
+    "Eigene Regel aus Erinnerungen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Custom rule from Reminders"
+          }
+        }
+      }
+    },
     "Ein anderer Tag macht aus dem Block eine Verschiebung. Es bleibt ein Vorschlag, bis du ihn übernimmst.": {
       "localizations": {
         "en": {
@@ -3662,12 +3962,32 @@
         }
       }
     },
+    "Fällig am %@. Eine Serie braucht ein Fälligkeitsdatum. Es ist der erste Termin.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Due on %@. A repeating task needs a due date; it is the first occurrence."
+          }
+        }
+      }
+    },
     "Fällig in diesem Zeitraum": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Due in this period"
+          }
+        }
+      }
+    },
+    "Fälligkeit auf %@ setzen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Set due date to %@"
           }
         }
       }
@@ -3838,6 +4158,16 @@
         }
       }
     },
+    "Geplante Blöcke an Tagen ohne Termin der Serie bleiben im Kalender: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Planned blocks on days without an occurrence stay in your calendar: %@"
+          }
+        }
+      }
+    },
     "Gesamt": {
       "localizations": {
         "en": {
@@ -3920,6 +4250,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Enter this code on GitHub:"
+          }
+        }
+      }
+    },
+    "Gilt ab %@.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Applies from %@."
+          }
+        }
+      }
+    },
+    "Gilt ab %@. Geplante Blöcke an Tagen ohne Termin der Serie bleiben im Kalender: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Applies from %1$@. Planned blocks on days without an occurrence stay in your calendar: %2$@"
           }
         }
       }
@@ -4020,6 +4370,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "GitHub issues"
+          }
+        }
+      }
+    },
+    "GitHub-Issues wiederholen sich nicht": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "GitHub issues don’t repeat"
           }
         }
       }
@@ -4160,6 +4520,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "High"
+          }
+        }
+      }
+    },
+    "Häufigkeit": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Frequency"
           }
         }
       }
@@ -4374,6 +4744,26 @@
         }
       }
     },
+    "Jahr": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Year"
+          }
+        }
+      }
+    },
+    "Jährlich": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yearly"
+          }
+        }
+      }
+    },
     "KI": {
       "localizations": {
         "en": {
@@ -4583,6 +4973,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "No break"
+          }
+        }
+      }
+    },
+    "Keine Projekte": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No projects"
           }
         }
       }
@@ -4882,6 +5282,16 @@
     "Leeren": {
       "shouldTranslate": false
     },
+    "Letzter Termin: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Last occurrence: %@"
+          }
+        }
+      }
+    },
     "Liest vor · Stopp": {
       "localizations": {
         "en": {
@@ -5112,6 +5522,26 @@
         }
       }
     },
+    "Mehrere möglich": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Multiple allowed"
+          }
+        }
+      }
+    },
+    "Mehrfachauswahl": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Multiple selection"
+          }
+        }
+      }
+    },
     "Melde dich in Einstellungen › KI mit ChatGPT an, um den Assistenten zu nutzen.": {
       "localizations": {
         "en": {
@@ -5238,6 +5668,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Microphone not allowed. You can keep typing."
+          }
+        }
+      }
+    },
+    "Mindestens ein Projekt wählen. Das Issue wird dir zugewiesen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose at least one project. The issue will be assigned to you."
           }
         }
       }
@@ -5425,6 +5865,26 @@
         }
       }
     },
+    "Monate ohne den %lld. werden übersprungen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Months without day %lld are skipped."
+          }
+        }
+      }
+    },
+    "Monatlich": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Monthly"
+          }
+        }
+      }
+    },
     "Monatsansicht ›": {
       "localizations": {
         "en": {
@@ -5441,6 +5901,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tomorrow"
+          }
+        }
+      }
+    },
+    "Nach Anzahl": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "After count"
           }
         }
       }
@@ -5864,6 +6334,16 @@
         }
       }
     },
+    "Nur für Erinnerungen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reminders only"
+          }
+        }
+      }
+    },
     "Nur für die Entwicklung: Der Mitschnitt schickt eine Testanfrage ohne persönliche Daten an OpenAI.": {
       "shouldTranslate": false
     },
@@ -5893,6 +6373,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Use “Today” below or “Schedule” in a task’s menu."
+          }
+        }
+      }
+    },
+    "Nächste Termine": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Next occurrences"
           }
         }
       }
@@ -5963,6 +6453,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Offline: Changes aren’t possible right now."
+          }
+        }
+      }
+    },
+    "Ohne Fälligkeit entfällt die Wiederholung.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Without a due date, the repeat is removed."
           }
         }
       }
@@ -6208,6 +6708,16 @@
         }
       }
     },
+    "Projekte": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Projects"
+          }
+        }
+      }
+    },
     "Prüfe …": {
       "shouldTranslate": false
     },
@@ -6237,6 +6747,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Cycling"
+          }
+        }
+      }
+    },
+    "Regel": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rule"
           }
         }
       }
@@ -6516,6 +7036,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Save"
+          }
+        }
+      }
+    },
+    "Sichern, Block behalten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save, keep block"
+          }
+        }
+      }
+    },
+    "Sichern, Blöcke behalten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save, keep blocks"
           }
         }
       }
@@ -6889,6 +7429,16 @@
         }
       }
     },
+    "Tagwerk kann diese Regel nicht darstellen und reserviert nur am nächsten Fälligkeitstag. Solange hier nichts gewählt wird, bleibt die Regel in Erinnerungen genau so, wie sie ist. Eine Auswahl ersetzt sie vollständig.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tagwerk can’t show this rule and reserves effort only on the next due date. As long as you don’t choose anything here, the rule stays exactly as it is in Reminders. Any choice replaces it completely."
+          }
+        }
+      }
+    },
     "Tagwerk legt geplante Zeitblöcke als Termine in einem eigenen Kalender „Tagwerk“ an. Du siehst sie auch in der Kalender-App.": {
       "localizations": {
         "en": {
@@ -7251,6 +7801,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Logs water in Tagwerk without opening the app."
+          }
+        }
+      }
+    },
+    "Täglich": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Daily"
           }
         }
       }
@@ -7928,6 +8488,16 @@
         }
       }
     },
+    "Werktags": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Weekdays"
+          }
+        }
+      }
+    },
     "Werte": {
       "localizations": {
         "en": {
@@ -7968,12 +8538,42 @@
         }
       }
     },
+    "Wiederholen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Repeat"
+          }
+        }
+      }
+    },
     "Wiederholt sich": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Repeats"
+          }
+        }
+      }
+    },
+    "Wiederholung": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Repeat"
+          }
+        }
+      }
+    },
+    "Wiederholung geändert": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Repeat changed"
           }
         }
       }
@@ -7994,6 +8594,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Welcome"
+          }
+        }
+      }
+    },
+    "Wird als Regel in Erinnerungen gespeichert und ist dort ebenfalls sichtbar.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved as a rule in Reminders and visible there too."
           }
         }
       }
@@ -8098,12 +8708,32 @@
         }
       }
     },
+    "Wochentag und Tag des Monats kommen vom Fälligkeitsdatum.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Weekday and day of the month come from the due date."
+          }
+        }
+      }
+    },
     "Wählen …": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Choose …"
+          }
+        }
+      }
+    },
+    "Wöchentlich": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Weekly"
           }
         }
       }

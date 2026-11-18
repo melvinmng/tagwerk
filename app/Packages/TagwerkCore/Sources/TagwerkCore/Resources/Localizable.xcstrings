@@ -169,6 +169,46 @@
         }
       }
     },
+    "%lld Mal" : {
+      "localizations" : {
+        "de" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld Mal"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld Mal"
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "once"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld times"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "%lld Termine" : {
       "localizations" : {
         "de" : {
@@ -251,6 +291,56 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Dinner"
+          }
+        }
+      }
+    },
+    "Alle %lld Jahre am %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Every %1$lld years on %2$@"
+          }
+        }
+      }
+    },
+    "Alle %lld Monate am %@ %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Every %1$lld months on the %2$@ %3$@"
+          }
+        }
+      }
+    },
+    "Alle %lld Monate am %lld." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Every %1$lld months on day %2$lld"
+          }
+        }
+      }
+    },
+    "Alle %lld Tage" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Every %lld days"
+          }
+        }
+      }
+    },
+    "Alle %lld Wochen am %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Every %1$lld weeks on %2$@"
           }
         }
       }
@@ -505,6 +595,16 @@
         }
       }
     },
+    "Eigene Regel aus Erinnerungen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Custom rule from Reminders"
+          }
+        }
+      }
+    },
     "Frühstück" : {
       "localizations" : {
         "en" : {
@@ -603,6 +703,76 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Always"
+          }
+        }
+      }
+    },
+    "Jede Woche am %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Every week on %@"
+          }
+        }
+      }
+    },
+    "Jeden Monat am %@ %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Every month on the %1$@ %2$@"
+          }
+        }
+      }
+    },
+    "Jeden Monat am %lld." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Every month on day %lld"
+          }
+        }
+      }
+    },
+    "Jeden Tag" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Every day"
+          }
+        }
+      }
+    },
+    "Jeden Werktag (Mo bis Fr)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Every weekday (Mon to Fri)"
+          }
+        }
+      }
+    },
+    "Jedes Jahr am %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Every year on %@"
+          }
+        }
+      }
+    },
+    "Jedes Wochenende (Sa und So)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Every weekend (Sat and Sun)"
           }
         }
       }
@@ -821,6 +991,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "on %1$@, %2$@"
+          }
+        }
+      }
+    },
+    "bis %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "until %@"
           }
         }
       }

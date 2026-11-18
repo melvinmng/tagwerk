@@ -14,7 +14,7 @@ struct TaskEditorView: View {
     let planning: PlanningModel?
     let onShowDay: ((PlanDay) -> Void)?
     @State private var plannedEdit: PlannedEdit?
-    @State private var askingEffortReach = false
+    @State private var saveQuestion: TaskEditorModel.SaveQuestion?
     @State private var labelText = ""
     @State private var confirmsDelete = false
 
@@ -89,6 +89,11 @@ struct TaskEditorView: View {
                         }
                     }
                     if model.isVisible(.due) { dueFields }
+                    if model.showsRecurrenceRow { recurrenceRow }
+                    if model.removesRecurrenceWithDue {
+                        Text("Ohne Fälligkeit entfällt die Wiederholung.")
+                            .font(.caption).foregroundStyle(.secondary)
+                    }
                     if model.isVisible(.priority) { PriorityPicker(priority: $model.draft.priority, choices: model.priorityChoices) }
                     if isRecurring {
                         // One effort for a recurring reminder: the value of this day (design §13.15 R1).
@@ -163,17 +168,35 @@ struct TaskEditorView: View {
                 labelText = (model.draft.labels ?? []).joined(separator: ", ")
             }
             .navigationBarTitleDisplayMode(.inline)
-            .confirmationDialog(effortQuestion, isPresented: $askingEffortReach, titleVisibility: .visible) {
-                Button("Nur am \(todayText)") {
-                    plannedEdit?.recurringForAll = false
-                    Task { await finish(model.save()) }
+            // One dialog for everything asked before saving (effort reach and blocks off the series).
+            .confirmationDialog(saveQuestionTitle, isPresented: askingSaveQuestion, titleVisibility: .visible,
+                                presenting: saveQuestion) { question in
+                switch question {
+                case .effortReach:
+                    Button("Nur am \(todayText)") {
+                        plannedEdit?.recurringForAll = false
+                        Task { await finish(model.save()) }
+                    }
+                    Button("Für alle ab \(todayText)") {
+                        plannedEdit?.recurringForAll = true
+                        Task { await finish(model.save()) }
+                    }
+                case .keepBlocks(let blocks):
+                    if blocks.count == 1 {
+                        Button("Sichern, Block behalten") { Task { await finish(model.save()) } }
+                    } else {
+                        Button("Sichern, Blöcke behalten") { Task { await finish(model.save()) } }
+                    }
                 }
-                Button("Für alle ab \(todayText)") {
-                    plannedEdit?.recurringForAll = true
-                    Task { await finish(model.save()) }
+                Button("Abbrechen", role: .cancel) {}
+            } message: { question in
+                switch question {
+                case .effortReach(let blocks):
+                    Text(String(localized: "Diese Aufgabe wiederholt sich. Titel, Fälligkeit und Priorität gelten für alle Tage.")
+                         + (blocks.isEmpty ? "" : " " + blocksNotice(blocks)))
+                case .keepBlocks(let blocks):
+                    Text(blocksNotice(blocks))
                 }
-            } message: {
-                Text("Diese Aufgabe wiederholt sich. Titel, Fälligkeit und Priorität gelten für alle Tage.")
             }
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -181,9 +204,14 @@ struct TaskEditorView: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Sichern") {
-                        // The reach question only comes when the effort of a recurring reminder changed (R1).
-                        if isRecurring, let edit = plannedEdit, edit.recurringMinutes != edit.originalRecurringMinutes {
-                            askingEffortReach = true
+                        // The reach question only comes when the effort of a recurring reminder changed (R1);
+                        // a changed rule that leaves planned blocks off the series names them in the same step.
+                        let effortChanged = isRecurring && plannedEdit.map { $0.recurringMinutes != $0.originalRecurringMinutes } == true
+                        let offSeries = model.changedRecurrence.map { recurrence in
+                            planning?.blocksOffSeries(for: model.original, recurrence: recurrence) ?? []
+                        } ?? []
+                        if let question = TaskEditorModel.saveQuestion(effortChanged: effortChanged, blocksOffSeries: offSeries) {
+                            saveQuestion = question
                         } else {
                             Task { await finish(model.save()) }
                         }
@@ -249,6 +277,63 @@ struct TaskEditorView: View {
         return planning.today.startDate(in: calendar).formatted(.dateTime.weekday(.abbreviated).day().month(.abbreviated))
     }
 
+    private var askingSaveQuestion: Binding<Bool> {
+        Binding(get: { saveQuestion != nil }, set: { if !$0 { saveQuestion = nil } })
+    }
+
+    private var saveQuestionTitle: String {
+        switch saveQuestion {
+        case .keepBlocks: String(localized: "Wiederholung geändert")
+        case .effortReach, nil: effortQuestion
+        }
+    }
+
+    /// "Gilt ab …. Geplante Blöcke … bleiben im Kalender: …" (decision 2026-11-18: blocks stay).
+    private func blocksNotice(_ blocks: [CalendarEvent]) -> String {
+        let start = model.changedRecurrence?.start ?? model.draft.due.map(PlanDay.init) ?? PlanDay(date: .now, calendar: calendar)
+        return String(localized: "Gilt ab \(longDay(start)). Geplante Blöcke an Tagen ohne Termin der Serie bleiben im Kalender: \(BlockListText.text(blocks, calendar: calendar))")
+    }
+
+    private func longDay(_ day: PlanDay) -> String {
+        day.startDate(in: calendar).formatted(
+            Date.FormatStyle(calendar: calendar, timeZone: calendar.timeZone).weekday(.abbreviated).day().month(.abbreviated))
+    }
+
+    // MARK: Recurrence
+
+    private var draftDueDay: PlanDay? { model.draft.due.map(PlanDay.init) }
+
+    private var recurrenceRow: some View {
+        let today = PlanDay(date: .now, calendar: calendar)
+        return NavigationLink {
+            RecurrenceEditorView(
+                original: model.draft.recurrence, previous: model.original.recurrence, start: draftDueDay ?? today,
+                dueDay: draftDueDay, calendar: calendar,
+                blocksOffSeries: planning.map { planning in
+                    { recurrence in planning.blocksOffSeries(for: model.original, recurrence: recurrence) }
+                },
+                onChange: { model.setRecurrence($0, fallbackDue: draftDueDay ?? today) },
+                onMoveDue: moveDue
+            )
+        } label: {
+            LabeledContent {
+                Text(model.draft.recurrence.map { RecurrenceText.summary($0, calendar: calendar) } ?? String(localized: "Nie"))
+            } label: {
+                Label("Wiederholen", systemImage: "repeat")
+            }
+        }
+    }
+
+    /// Takes the suggested day as due date and keeps the time.
+    private func moveDue(_ day: PlanDay) {
+        var due = model.draft.due ?? DueDate(year: day.year, month: day.month, day: day.day)
+        due.year = day.year
+        due.month = day.month
+        due.day = day.day
+        model.draft.due = due
+        model.draft.recurrence?.start = day
+    }
+
     private var effortQuestion: String {
         let old = plannedEdit?.originalRecurringMinutes.map(CapacityText.duration) ?? String(localized: "kein Aufwand")
         let new = plannedEdit?.recurringMinutes.map(CapacityText.duration) ?? String(localized: "kein Aufwand")
@@ -265,7 +350,7 @@ struct TaskEditorView: View {
     private var hasDue: Binding<Bool> {
         Binding(
             get: { model.draft.due != nil },
-            set: { model.draft.due = $0 ? DueDate(date: .now, includeTime: false, calendar: calendar) : nil }
+            set: { model.setHasDue($0, today: PlanDay(date: .now, calendar: calendar)) }
         )
     }
 
@@ -287,6 +372,8 @@ struct TaskEditorView: View {
             set: { date in
                 let includeTime = model.draft.due?.hasTime ?? false
                 model.draft.due = DueDate(date: date, includeTime: includeTime, calendar: calendar)
+                // The series starts at the due date (shown in the summary, e.g. "Jedes Jahr am …").
+                model.draft.recurrence?.start = PlanDay(date: date, calendar: calendar)
             }
         )
     }

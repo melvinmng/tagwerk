@@ -11,6 +11,16 @@
         }
       }
     },
+    "Diese Wiederholung kann nicht gespeichert werden." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This repeat rule can’t be saved."
+          }
+        }
+      }
+    },
     "Dieser Kalender kann nicht geändert werden." : {
       "localizations" : {
         "en" : {
@@ -27,6 +37,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "This event can’t be edited in Tagwerk."
+          }
+        }
+      }
+    },
+    "Eine Wiederholung braucht ein Fälligkeitsdatum." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A repeating reminder needs a due date."
           }
         }
       }
