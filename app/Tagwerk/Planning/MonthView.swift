@@ -15,9 +15,6 @@ struct MonthView: View {
 
     var body: some View {
         ScrollView {
-            DayHeader(model: model) {}
-                .padding(.horizontal)
-                .padding(.bottom, 8)
             AIPlanBar(scope: .month)
                 .padding(12)
                 .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 14))

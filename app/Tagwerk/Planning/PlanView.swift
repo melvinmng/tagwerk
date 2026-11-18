@@ -81,13 +81,23 @@ struct PlanView: View {
                     }, onOpenEvent: onOpenEvent, onOpenTask: onOpenTask)
                 }
             }
-            .safeAreaInset(edge: .top) { header }
+            .safeAreaBar(edge: .top) { PlanControlRow(model: model) }
             .overlay(alignment: .bottom) { dismissUndo }
             .overlay(alignment: .bottom) { duplicateUndo }
             .overlay(alignment: .bottom) { moveUndo }
             .overlay(alignment: .bottom) { acceptAllUndo }
             .navigationTitle("Planen")
-            .toolbar(.hidden, for: .navigationBar)  // the tab bar already says "Planen" (mockup A1)
+            .toolbarTitleDisplayMode(.inline)
+            // The date title replaces the bar title; the tab bar already says "Planen" (mockup PK2).
+            .toolbar(removing: .title)
+            .toolbar {
+                ToolbarItem(placement: .topBarLeading) { PlanTitleButton(model: model) }
+                    .sharedBackgroundVisibility(.hidden)
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button { creatingEvent = true } label: { Label("Neuer Termin", systemImage: "plus") }
+                }
+                AssistantToolbarItems { .planning(scope: model.scope, anchor: model.anchor) }
+            }
             .task(id: "\(model.scope)-\(model.anchor)") { await model.reload() }
             .refreshable { await model.taskList.reload(); await model.reload() }
             .onChange(of: model.taskList.items) { _, _ in Task { await model.reload() } }
@@ -119,25 +129,6 @@ struct PlanView: View {
                 Button("OK") { model.clearError() }
             } message: { Text(model.lastError ?? "") }
         }
-    }
-
-    private var header: some View {
-        VStack(spacing: 8) {
-            HStack {
-                Picker("Ansicht", selection: $model.scope) {
-                    ForEach(PlanScope.allCases, id: \.self) { Text($0.title).tag($0) }
-                }
-                .pickerStyle(.segmented)
-                Button { creatingEvent = true } label: { Image(systemName: "plus").frame(width: 22, height: 22) }
-                    .buttonStyle(.bordered)
-                    .buttonBorderShape(.circle)
-                    .accessibilityLabel("Neuer Termin")
-                AssistantButton { .planning(scope: model.scope, anchor: model.anchor) }
-            }
-        }
-        .padding(.horizontal)
-        .padding(.bottom, 6)
-        .background(.bar)
     }
 
     private func menuActions(for item: TaskItem) -> TaskMenuActions {
