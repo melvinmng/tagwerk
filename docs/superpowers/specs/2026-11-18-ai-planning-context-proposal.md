@@ -123,3 +123,9 @@ Tag · Panel „Ohne Uhrzeit“            Woche
 3. **P1 ohne nahe Frist:** immer Kandidat für heute und Grund für einen längeren Tag bis 10 h? Empfehlung: ja für beides; 12 h und freie Tage bleiben an eine Frist gebunden.
 4. **Darf Tagwerk einen passenden P1 selbst einplanen, wenn die KI es zweimal nicht tut?** Empfehlung: ja, gekennzeichnet.
 5. **Alte überfällige Aufgaben (über 14 Tage, P3/ohne) aus dem KI-Kontext nehmen und nur zählen?** Empfehlung: ja, mit Hinweis „37 ältere überfällige – aufräumen“ in der Zusammenfassung.
+
+## 8. Entscheidungen des Nutzers (2026-11-18)
+
+- Vorschlag freigegeben, mit einer Änderung: **Überfällige gehen immer in den Kern**, unabhängig von Alter und Priorität. Sie zählen als heute fällig und stehen vorne (Priorität, dann Alter). Übersteigt der Kern die Höchstzahl, wird vom Ende gekürzt und die Zahl als `omittedCount` mitgeschickt; die Einschätzung nennt sie.
+- Fragen 1–3 wie empfohlen: Woche = gezeigte Kalenderwoche ab heute; Zieltage = die nächsten 2 Arbeitstage (höchstens 5 Kalendertage); P1 ohne nahe Frist ist immer Kandidat und darf einen längeren Tag bis 10 h begründen.
+- Frage 4 (lokale P1-Ergänzung): umgesetzt wie empfohlen, gekennzeichnet; Frage 5 entfällt durch die Änderung oben.
