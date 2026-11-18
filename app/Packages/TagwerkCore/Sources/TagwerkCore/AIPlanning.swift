@@ -545,6 +545,7 @@ public struct PlanViolation: Sendable, Hashable {
         case invalidDayChange = "Die längere Arbeitszeit liegt außerhalb von 7 bis 21 Uhr oder über 12 Stunden."
         case notAnExtension = "Das verlängert die Arbeitszeit nicht."
         case notPlannedThatDay = "Die Aufgabe ist an diesem Tag nicht eingeplant."
+        case noEffect = "Die längere Arbeitszeit wird nicht gebraucht."
     }
 
     public var taskId: String
@@ -575,10 +576,25 @@ public func validate(_ output: PlanOutput, input: PlanInput) -> (accepted: PlanO
             violations.append(PlanViolation(taskId: block.taskId, reason: .duplicate))
         }
         blocks.removeAll { movedIDs.contains($0.taskId) }
-        let (acceptedBlocks, blockViolations) = validateBlocks(blocks, input: stage.input, tasks: effectiveTasks)
+        let (acceptedBlocks, blockViolations, overbookedAfter) = validateBlocks(blocks, input: stage.input, tasks: effectiveTasks)
+        // A longer day needs an effect: a block in the added time or an overbooked day (proposal §3).
+        var dayChanges = stage.dayChanges
+        if let original = input.days.first {
+            let overbooked = original.plannedMinutes > original.availableMinutes
+            let blockOutside = acceptedBlocks.contains { block in
+                guard let start = minutes(fromTime: block.start), let hours = original.hours else { return true }
+                return start < hours.startMinutes || start + block.minutes > hours.endMinutes
+            }
+            if !overbooked && !blockOutside {
+                violations += dayChanges.map { PlanViolation(taskId: "day:\($0.day)", reason: .noEffect) }
+                dayChanges = []
+            }
+        }
+        var risks = plan.risks
+        if overbookedAfter > 0 { risks.append("Danach noch \(durationText(overbookedAfter)) zu viel.") }
         return (.day(DayPlanOutput(blocks: acceptedBlocks, unscheduled: knownUnscheduled(plan.unscheduled, tasks),
-                                   risks: plan.risks, estimates: estimates, summary: plan.summary,
-                                   moves: stage.moves, dayChanges: stage.dayChanges)), violations + blockViolations)
+                                   risks: risks, estimates: estimates, summary: plan.summary,
+                                   moves: stage.moves, dayChanges: dayChanges)), violations + blockViolations)
     case (.period(let plan), .week), (.period(let plan), .month):
         let estimates = knownEstimates(plan.estimates, tasks)
         let stage = validateChanges(dayChanges: plan.dayChanges, moves: plan.moves, input: input, tasks: tasks,
@@ -674,10 +690,10 @@ private func validateChanges(dayChanges: [PlanDayChange], moves: [PlanMove], inp
 }
 
 private func validateBlocks(_ blocks: [PlanBlock], input: PlanInput,
-                            tasks: [String: PlanInputTask]) -> ([PlanBlock], [PlanViolation]) {
+                            tasks: [String: PlanInputTask]) -> ([PlanBlock], [PlanViolation], Int) {
     var violations: [PlanViolation] = []
     guard let day = input.days.first else {
-        return ([], blocks.map { PlanViolation(taskId: $0.taskId, reason: .outsidePeriod) })
+        return ([], blocks.map { PlanViolation(taskId: $0.taskId, reason: .outsidePeriod) }, 0)
     }
     let busy = day.busy.map { ($0.lowerBound - day.bufferMinutes)..<($0.upperBound + day.bufferMinutes) }
     var seen = Set<String>()
@@ -706,19 +722,45 @@ private func validateBlocks(_ blocks: [PlanBlock], input: PlanInput,
         accepted.append((block, range))
     }
 
-    // A block replaces the load its task already had on this day, so it is not counted twice.
-    let replaced = accepted.reduce(0) { $0 + (day.countedTaskMinutes[$1.block.taskId] ?? 0) }
-    let base = day.plannedMinutes - replaced
+    // Time is hard (proposal 2026-11-18, §3): the new blocks must fit into the free stretches minus the
+    // recurring effort of the day.
     accepted.sort { $0.range.lowerBound < $1.range.lowerBound }
-    while let last = accepted.last, base + accepted.reduce(0, { $0 + $1.block.minutes }) > day.availableMinutes {
+    let freeTime = freeGaps(day, fromMinutes: day.day == input.today ? input.nowMinutes : nil).reduce(0) { $0 + $1.count }
+        - day.recurringMinutes
+    while let last = accepted.last, accepted.reduce(0, { $0 + $1.block.minutes }) > freeTime {
         accepted.removeLast()
         violations.append(PlanViolation(taskId: last.block.taskId, reason: .overCapacity))
+    }
+
+    // Load is soft: a block that fits in time is kept for tasks already counted on the day, P1, important
+    // or due by the day after tomorrow. Other new tasks must not raise the overbooking.
+    let soon = input.today.adding(days: 2, calendar: Calendar(identifier: .gregorian))
+    func privileged(_ taskId: String) -> Bool {
+        guard let task = tasks[taskId] else { return false }
+        return day.countedTaskMinutes[taskId] != nil || task.priority == .p1 || task.important
+            || task.due.map { PlanDay($0) <= soon } == true
+    }
+    // A block replaces the load its task already had on this day, so it is not counted twice.
+    func loadAfter() -> Int {
+        let replaced = accepted.reduce(0) { $0 + (day.countedTaskMinutes[$1.block.taskId] ?? 0) }
+        return day.plannedMinutes - replaced + accepted.reduce(0) { $0 + $1.block.minutes }
+    }
+    while loadAfter() > day.availableMinutes, let index = accepted.lastIndex(where: { !privileged($0.block.taskId) }) {
+        violations.append(PlanViolation(taskId: accepted[index].block.taskId, reason: .overCapacity))
+        accepted.remove(at: index)
     }
     let kept = Set(accepted.map(\.block.taskId))
     // Keep the model's order for the accepted blocks.
     var emitted = Set<String>()
     let ordered = blocks.filter { kept.contains($0.taskId) && emitted.insert($0.taskId).inserted }
-    return (ordered, violations)
+    return (ordered, violations, max(0, loadAfter() - day.availableMinutes))
+}
+
+/// "1 h 20", "50 min".
+func durationText(_ minutes: Int) -> String {
+    let hours = minutes / 60, rest = minutes % 60
+    if hours == 0 { return "\(rest) min" }
+    return rest == 0 ? "\(hours) h" : "\(hours) h \(String(format: "%02d", rest))"
 }
 
 /// `estimates` are the model's own estimates; they count for tasks without effort, because they are

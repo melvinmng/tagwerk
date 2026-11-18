@@ -166,7 +166,8 @@ struct AIPlanningTests {
 
     @Test func validate_blockForTaskAlreadyPlannedThatDay_replacesItsLoad() {
         // The 60 planned minutes are task a itself; giving it a block must not count it twice.
-        let day = planDay(today, recurring: 360, planned: 60, counted: ["local:a": 60])
+        // Available 180, planned 120 (task a 60 + other 60); without replacing a's load, b would not fit.
+        let day = planDay(today, recurring: 300, planned: 120, counted: ["local:a": 60])
         let result = validate(dayOutput([block("a", "14:00", 60), block("b", "16:00", 60)]),
                               input: input(days: [day], tasks: [task("a", plannedDay: today), task("b")]))
         #expect(Set(acceptedBlocks(result.accepted)) == ["local:a", "local:b"])
@@ -174,7 +175,7 @@ struct AIPlanningTests {
 
     @Test func validate_blockForDueTodayTask_replacesItsLoad() {
         // Due today without assignment: the day counts it already (openToday), plannedDay is nil.
-        let day = planDay(today, recurring: 360, planned: 30, counted: ["local:a": 30])
+        let day = planDay(today, recurring: 300, planned: 90, counted: ["local:a": 30])
         let result = validate(dayOutput([block("a", "14:00", 60), block("b", "16:00", 60)]),
                               input: input(days: [day], tasks: [task("a", due: DueDate(year: 2026, month: 11, day: 18)), task("b")]))
         #expect(Set(acceptedBlocks(result.accepted)) == ["local:a", "local:b"])
@@ -194,6 +195,37 @@ struct AIPlanningTests {
         let result = validate(periodOutput([assign("a", "2026-11-18")]),
                               input: periodInput([task("a", due: DueDate(year: 2026, month: 11, day: 18))], days: days))
         #expect(acceptedAssignments(result.accepted) == ["local:a"])
+    }
+
+    @Test func validate_overbookedDay_keepsP1BlockThatFitsInTime_andReportsRisk() {
+        // Load 160 min on 120 available (overbooked by 40) – but 14:00 is free in time.
+        let day = planDay(today, recurring: 360, planned: 160)
+        var p1 = task("wichtig", minutes: 15)
+        p1.priority = .p1
+        let result = validate(dayOutput([block("wichtig", "14:00", 15), block("nebensache", "15:00", 30)]),
+                              input: input(days: [day], tasks: [p1, task("nebensache", minutes: 30)]))
+        #expect(acceptedBlocks(result.accepted) == ["local:wichtig"])
+        #expect(result.violations == [PlanViolation(taskId: "local:nebensache", reason: PlanViolation.Reason.overCapacity)])
+        guard case .day(let plan) = result.accepted else { return }
+        #expect(plan.risks.last == "Danach noch 55 min zu viel.")
+    }
+
+    @Test func validate_blocksBeyondFreeTime_rejected() {
+        // From 10:00: 10–12 and 13–18 free = 420 min; recurring 360 leaves 60.
+        let day = planDay(today, recurring: 360)
+        var a = task("a"); a.priority = .p1
+        var b = task("b"); b.priority = .p1
+        let result = validate(dayOutput([block("a", "14:00", 60), block("b", "16:00", 60)]), input: input(days: [day], tasks: [a, b]))
+        #expect(acceptedBlocks(result.accepted) == ["local:a"])
+    }
+
+    @Test func dayChange_withoutEffect_isDropped() {
+        let output = PlanOutput.day(DayPlanOutput(blocks: [block("a", "14:00")], unscheduled: [], risks: [], estimates: [],
+                                                  dayChanges: [PlanDayChange(day: "2026-11-18", start: "09:00", end: "20:00", reason: "r")]))
+        let result = validate(output, input: input(tasks: [task("a")]))
+        guard case .day(let plan) = result.accepted else { return }
+        #expect(plan.dayChanges.isEmpty)
+        #expect(result.violations.map(\.reason) == [PlanViolation.Reason.noEffect])
     }
 
     @Test func validate_dropsUnknownEstimatesAndUnscheduled() {
@@ -310,7 +342,8 @@ struct AIPlanningTests {
             PlanDayChange(day: "2026-11-18", start: "10:00", end: "17:00", reason: "r"),
             PlanDayChange(day: "2026-11-18", start: "08:00", end: "20:00", reason: "Notfall"),
         ]))
-        let result = validate(output, input: input(tasks: [task("a")]))
+        // The day is overbooked, so a longer day has an effect.
+        let result = validate(output, input: input(days: [planDay(today, recurring: 360, planned: 200)], tasks: [task("a")]))
         guard case .day(let plan) = result.accepted else { return }
         #expect(plan.dayChanges.map(\.start) == ["08:00"])
         #expect(result.violations.map(\.reason) == [PlanViolation.Reason.notAnExtension])
