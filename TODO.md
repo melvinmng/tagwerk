@@ -105,7 +105,8 @@ GitHub-Konto: @melvinmng · bestätigt zuweisbar · geprüft 2026-11-17 · ich
 - [x] [#110](https://github.com/melvinmng/tagwerk/issues/110) Sprache: Sprechmodus {status: Done; prio: P2 (High); aufwand: 8h; epic: #103}
 - [ ] [#113](https://github.com/melvinmng/tagwerk/issues/113) Phase 5: Einkaufsliste und Notizen einbinden {status: Ready; prio: P3 (Medium)}
 - [ ] [#115](https://github.com/melvinmng/tagwerk/issues/115) Phase 6: Jira als Aufgabenquelle anbinden {status: Backlog; prio: P4 (Low)}
-- [ ] [#118](https://github.com/melvinmng/tagwerk/issues/118) KI: Termine anlegen, ändern und löschen {status: In review; prio: P2 (High); aufwand: 4h; epic: #2}
+- [x] [#118](https://github.com/melvinmng/tagwerk/issues/118) KI: Termine anlegen, ändern und löschen {status: Done; prio: P2 (High); aufwand: 4h; epic: #2}
+- [ ] [#120](https://github.com/melvinmng/tagwerk/issues/120) Sprechmodus: Vorschläge per Stimme annehmen, ablehnen und korrigieren {status: In review; prio: P2 (High); aufwand: 5h; epic: #103}
 
 ## Notizen
 
@@ -165,11 +166,12 @@ _Automatisch aus [Tagwerk](https://github.com/users/melvinmng/projects/17) erzeu
 - [#97](https://github.com/melvinmng/tagwerk/issues/97) Install-Skript für App und Widget-Extension · @melvinmng · Prio P2 (High) · 3h
 - [#98](https://github.com/melvinmng/tagwerk/issues/98) Wochenrückblick in Erfassen · @melvinmng · Prio P2 (High) · 5h
 - [#99](https://github.com/melvinmng/tagwerk/issues/99) Einstellungen „Siri & Kurzbefehle“, Demo-Daten und Doku Phase 4 · @melvinmng · Prio P2 (High) · 2h
-- [#118](https://github.com/melvinmng/tagwerk/issues/118) KI: Termine anlegen, ändern und löschen · @melvinmng · Prio P2 (High) · 4h
+- [#120](https://github.com/melvinmng/tagwerk/issues/120) Sprechmodus: Vorschläge per Stimme annehmen, ablehnen und korrigieren · @melvinmng · Prio P2 (High) · 5h
 
 ### Nicht zugeordnet (0)
 
 ### Zuletzt erledigt (10)
+- [#118](https://github.com/melvinmng/tagwerk/issues/118) KI: Termine anlegen, ändern und löschen · @melvinmng
 - [#110](https://github.com/melvinmng/tagwerk/issues/110) Sprache: Sprechmodus · @melvinmng
 - [#109](https://github.com/melvinmng/tagwerk/issues/109) Sprache: Einstellungen und Sprache der KI-Antworten · @melvinmng
 - [#108](https://github.com/melvinmng/tagwerk/issues/108) Sprache: Mikrofon in Chat und Vorschlagsblatt · @melvinmng
@@ -179,5 +181,4 @@ _Automatisch aus [Tagwerk](https://github.com/users/melvinmng/projects/17) erzeu
 - [#104](https://github.com/melvinmng/tagwerk/issues/104) Sprache: Erkennung auf dem iPhone prüfen · @melvinmng
 - [#60](https://github.com/melvinmng/tagwerk/issues/60) KI in Einrichtung und Einstellungen · @melvinmng
 - [#56](https://github.com/melvinmng/tagwerk/issues/56) ChatGPT-Anmeldung und Tokens · @melvinmng
-- [#55](https://github.com/melvinmng/tagwerk/issues/55) Termine in allen Kalendern anlegen, ändern und löschen · @melvinmng
 <!-- t3gh:end -->
