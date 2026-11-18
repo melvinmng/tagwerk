@@ -60,7 +60,11 @@ struct RootView: View {
         .onOpenURL { url in environment.router.open(url) }
         // An intent may set the route before the first render; then `onChange` never fires.
         .onAppear { openRouterTarget() }
+        // A tap on a cold start arrives before the tasks are there. Local tasks load within one update, so the
+        // loading set may never visibly change; the items and states do.
         .onChange(of: environment.taskList.loadingSources) { _, _ in openNotificationTarget() }
+        .onChange(of: environment.taskList.items) { _, _ in openNotificationTarget() }
+        .onChange(of: environment.taskList.sourceStates.mapValues { String(describing: $0) }) { _, _ in openNotificationTarget() }
         .onChange(of: environment.requestedTab) { _, tab in
             guard let tab else { return }
             selectedTab = tab
