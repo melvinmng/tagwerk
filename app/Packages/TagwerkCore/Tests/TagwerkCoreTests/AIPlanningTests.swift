@@ -303,6 +303,15 @@ struct AIPlanningTests {
         #expect(result.tasks.first { $0.title == "assigned" }?.id == "local:assigned")
     }
 
+    @Test func makePlanInput_excludesRecurringReminders() {
+        let recurring = item("recurring", due: DueDate(year: 2026, month: 11, day: 18))
+        let normal = item("normal", due: DueDate(year: 2026, month: 11, day: 18))
+        let result = makePlanInput(scope: .day, days: [planDay(today)], tasks: [recurring, normal], assignments: [:],
+                                   anchors: [:], today: today, nowMinutes: nowMinutes, timeZoneID: "Europe/Berlin",
+                                   defaultTaskMinutes: 30, excluding: [recurring.id])
+        #expect(result.tasks.map(\.title) == ["normal"])
+    }
+
     @Test func makePlanInput_focusTask_onlyThatTask() {
         let a = item("a"), b = item("b")
         let result = makePlanInput(scope: .week, days: [planDay(today)], tasks: [a, b], assignments: [:], anchors: [:],

@@ -142,10 +142,12 @@ public let maxPlanTasks = 60
 /// - Day: tasks assigned to the day, due on or before it, and important ones.
 /// - Week/month: open tasks without an assigned day; existing assignments stay untouched.
 /// - `focusTask`: "Mit KI planen" for a single task.
+/// - `excluding`: tasks whose time is reserved elsewhere, such as recurring reminders (§11.9:
+///   their effort is already in `recurringMinutes`, a block would count it twice).
 /// Sorted by due date, then priority, then source; at most 60.
 public func makePlanInput(scope: PlanScope, days: [PlanInputDay], tasks: [TaskItem], assignments: [TaskID: PlanDay],
                           anchors: [TaskID: DueDate], today: PlanDay, nowMinutes: Int, timeZoneID: String,
-                          defaultTaskMinutes: Int, focusTask: TaskID? = nil) -> PlanInput {
+                          defaultTaskMinutes: Int, focusTask: TaskID? = nil, excluding: Set<TaskID> = []) -> PlanInput {
     func anchor(of task: TaskItem) -> DueDate? {
         anchors[task.id] ?? (task.epic?.isEpic == true ? task.epic?.due : nil)
     }
@@ -153,7 +155,7 @@ public func makePlanInput(scope: PlanScope, days: [PlanInputDay], tasks: [TaskIt
         (task.priority == .p1 && task.due != nil) || (task.isEpic && task.due != nil) || anchor(of: task) != nil
     }
 
-    let open = tasks.filter { !$0.isCompleted }
+    let open = tasks.filter { !$0.isCompleted && !excluding.contains($0.id) }
     let selected: [TaskItem]
     if let focusTask {
         selected = open.filter { $0.id == focusTask }
