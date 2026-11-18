@@ -6,6 +6,10 @@ public enum RecurrenceRule: Sendable, Hashable, Codable {
     /// Weekdays 1 = Sunday … 7 = Saturday; empty means the start's weekday.
     case weekly(interval: Int, weekdays: Set<Int>)
     case monthly(interval: Int, day: Int)
+    /// The `ordinal`-th `weekday` of the month; ordinal 1...4, weekday 1 = Sunday … 7 = Saturday.
+    case monthlyWeekday(interval: Int, ordinal: Int, weekday: Int)
+    /// Month and day come from the start of the series; February 29 occurs in leap years only.
+    case yearly(interval: Int)
     case unsupported
 }
 
@@ -20,6 +24,30 @@ public struct Recurrence: Sendable, Hashable, Codable {
         self.start = start
         self.end = end
         self.count = count
+    }
+
+    /// Whether the series can be written to a source: positive interval, weekdays in 1...7, day of the month
+    /// in 1...31, ordinal in 1...4, count of at least one, end not before the start, and not end and count
+    /// together. `.unsupported` is never valid because Tagwerk cannot express it.
+    public var isValid: Bool {
+        if end != nil && count != nil { return false }
+        if let count, count < 1 { return false }
+        if let end, end < start { return false }
+        let weekdayRange = 1...7
+        switch rule {
+        case .daily(let interval):
+            return interval >= 1
+        case .weekly(let interval, let weekdays):
+            return interval >= 1 && weekdays.allSatisfy(weekdayRange.contains)
+        case .monthly(let interval, let day):
+            return interval >= 1 && (1...31).contains(day)
+        case .monthlyWeekday(let interval, let ordinal, let weekday):
+            return interval >= 1 && (1...4).contains(ordinal) && weekdayRange.contains(weekday)
+        case .yearly(let interval):
+            return interval >= 1
+        case .unsupported:
+            return false
+        }
     }
 }
 
@@ -46,6 +74,44 @@ public func occurrences(of recurrence: Recurrence, in range: ClosedRange<PlanDay
     return result
 }
 
+/// The first day on or after `day` on which the series occurs, or `nil` when it has ended.
+/// Uses `occurrences`, so preview, due-date suggestion and planning agree.
+public func nextOccurrence(of recurrence: Recurrence, onOrAfter day: PlanDay, calendar: Calendar) -> PlanDay? {
+    nextOccurrences(of: recurrence, onOrAfter: day, limit: 1, calendar: calendar).first
+}
+
+/// Up to `limit` days on or after `day` on which the series occurs.
+public func nextOccurrences(of recurrence: Recurrence, onOrAfter day: PlanDay, limit: Int, calendar: Calendar) -> [PlanDay] {
+    guard limit > 0 else { return [] }
+    if case .unsupported = recurrence.rule {
+        return recurrence.start >= day ? [recurrence.start] : []
+    }
+    // Every window of this length holds at least one occurrence while the series continues.
+    let horizon = searchHorizonDays(for: recurrence.rule)
+    var from = max(day, recurrence.start)
+    var result: [PlanDay] = []
+    while result.count < limit {
+        if let end = recurrence.end, from > end { break }
+        let found = occurrences(of: recurrence, in: from...from.adding(days: horizon, calendar: calendar), calendar: calendar)
+        guard let last = found.last else { break }
+        result += found.prefix(limit - result.count)
+        from = last.adding(days: 1, calendar: calendar)
+    }
+    return result
+}
+
+/// Upper bound for the gap between two occurrences: months without day 31 (at most a year apart for any
+/// interval cycle) and February 29 (at most eight years apart, because of century years).
+private func searchHorizonDays(for rule: RecurrenceRule) -> Int {
+    switch rule {
+    case .daily(let interval): max(1, interval)
+    case .weekly(let interval, _): 7 * max(1, interval) + 7
+    case .monthly(let interval, _), .monthlyWeekday(let interval, _, _): 372 * max(1, interval)
+    case .yearly(let interval): 8 * 366 * max(1, interval)
+    case .unsupported: 0
+    }
+}
+
 private func matches(_ day: PlanDay, recurrence: Recurrence, startWeek: Date, calendar: Calendar) -> Bool {
     switch recurrence.rule {
     case .daily(let interval):
@@ -59,6 +125,13 @@ private func matches(_ day: PlanDay, recurrence: Recurrence, startWeek: Date, ca
         guard day.day == dayOfMonth else { return false }
         let months = (day.year - recurrence.start.year) * 12 + (day.month - recurrence.start.month)
         return months % max(1, interval) == 0
+    case .monthlyWeekday(let interval, let ordinal, let weekday):
+        guard day.weekday(in: calendar) == weekday, (day.day - 1) / 7 + 1 == ordinal else { return false }
+        let months = (day.year - recurrence.start.year) * 12 + (day.month - recurrence.start.month)
+        return months % max(1, interval) == 0
+    case .yearly(let interval):
+        guard day.month == recurrence.start.month, day.day == recurrence.start.day else { return false }
+        return (day.year - recurrence.start.year) % max(1, interval) == 0
     case .unsupported:
         return false
     }
