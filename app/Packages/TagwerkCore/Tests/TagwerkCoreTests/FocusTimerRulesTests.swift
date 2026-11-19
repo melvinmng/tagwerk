@@ -106,4 +106,36 @@ struct FocusTimerRulesTests {
         edited.workMinutes = 3
         #expect(edited.clamped.workMinutes == 5)
     }
+
+    // MARK: Work intervals
+
+    private func minutes(_ intervals: [DateInterval]) -> [[Double]] {
+        intervals.map { [$0.start.timeIntervalSince(start) / 60, $0.end.timeIntervalSince(start) / 60] }
+    }
+
+    @Test func workIntervals_skipBreaksAndStopAtTheEnd() {
+        let pomodoro = state(rounds: 2, endedAt: at(40))
+        // 25 work, 5 break, 25 work, but the session ended after 10 minutes of the second round.
+        #expect(minutes(FocusTimerRules.workIntervals(of: pomodoro)) == [[0, 25], [30, 40]])
+    }
+
+    @Test func workIntervals_splitAtPausesAndAddUpToTheFocusedTime() {
+        // A pause of 10 minutes inside the first work phase moves its end from minute 25 to 35.
+        let paused = state(pomodoro: false, pauses: [DateInterval(start: at(10), end: at(20))], endedAt: at(60))
+        let intervals = FocusTimerRules.workIntervals(of: paused)
+        #expect(minutes(intervals) == [[0, 10], [20, 35]])
+        #expect(Int(intervals.reduce(0) { $0 + $1.duration }) == FocusTimerRules.snapshot(of: paused, at: at(60)).focusedSeconds)
+    }
+
+    @Test func workIntervals_runningSessionEndsAtTheGivenMoment() {
+        let running = state(pomodoro: false, pausedSince: at(12))
+        #expect(minutes(FocusTimerRules.workIntervals(of: running, at: at(18))) == [[0, 12]])
+        #expect(minutes(FocusTimerRules.workIntervals(of: state(pomodoro: false), at: at(7))) == [[0, 7]])
+    }
+
+    @Test func workIntervals_skippedBreakStartsTheNextRoundEarlier() {
+        let skipped = state(rounds: 2, skips: [at(27)], endedAt: at(60))
+        // Break skipped after 2 minutes: the second work phase runs 27-52.
+        #expect(minutes(FocusTimerRules.workIntervals(of: skipped)) == [[0, 25], [27, 52]])
+    }
 }

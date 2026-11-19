@@ -5,9 +5,10 @@ import TagwerkCore
 
 /// Measures the actual effort when a task is completed and cuts a time block that ended early (plan P3, #162).
 ///
-/// The rules are in `EffortRules`. This class reads the blocks and the focus time, writes the cut through
-/// `CalendarStore.moveBlock` (with the version check) and stores the sample. Only blocks of the plan calendar that carry a
-/// task link are read, so Tagwerk never touches an appointment of the user.
+/// The rules are in `EffortRules`: the time blocks of the task decide, focus time only adds what lies outside them.
+/// This class reads the blocks and the focus intervals, writes the cut through
+/// `CalendarStore.moveBlock` (with the version check) and stores the sample. Only Tagwerk's own blocks (the task link in
+/// the event's URL) are read and cut, so Tagwerk never touches an appointment of the user.
 @MainActor
 final class EffortTracker {
     /// How far back the blocks of a task are searched, and how far ahead (a block that starts after midnight).
@@ -39,10 +40,11 @@ final class EffortTracker {
         let previous = store.latestSample(for: key)?.completedAt
         let window = DateInterval(start: completedAt.addingTimeInterval(-Self.lookBack), end: completedAt.addingTimeInterval(Self.lookAhead))
         let events = blocks.blocks(for: item.id, in: window)
-        let focusedSeconds = store.sessions(for: key, since: previous).reduce(0) { $0 + $1.focusedSeconds }
+        // The work phases of the timer sessions; only the part outside the task's blocks adds to the blocks' time.
+        let focus = store.sessions(for: key, since: previous).flatMap { FocusTimerRules.workIntervals(of: $0.state) }
         let outcome = EffortRules.outcome(completedAt: completedAt,
                                           blocks: events.map { EffortBlock(id: $0.id, start: $0.start, end: $0.end) },
-                                          focusedSeconds: focusedSeconds, since: previous)
+                                          focus: focus, since: previous)
         var trimmed: (eventID: String, oldEnd: Date, newEnd: Date)?
         if let trim = outcome.trim, let block = events.first(where: { $0.id == trim.blockID }) {
             if let updated = cut(block, to: trim.newEnd) { trimmed = (updated.id, trim.oldEnd, updated.end) }

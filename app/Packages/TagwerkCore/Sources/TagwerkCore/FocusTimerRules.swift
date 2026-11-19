@@ -124,6 +124,28 @@ public enum FocusTimerRules {
             completedRounds: completed, finishedAt: nil)
     }
 
+    /// The stretches of wall-clock time in which the timer counted focus: the work phases up to `date` (or the end of the
+    /// session), without breaks and pauses, in order. Their lengths add up to `snapshot(of:at:).focusedSeconds`.
+    public static func workIntervals(of state: FocusTimerState, at date: Date = .distantFuture) -> [DateInterval] {
+        let moment = state.endedAt.map { min($0, date) } ?? date
+        let pauses = effectivePauses(state)
+        let active = activeSeconds(of: state, pauses: pauses, until: moment)
+        var result: [DateInterval] = []
+        for segment in timeline(for: state, pauses: pauses) where segment.phase.isWork {
+            let end = min(segment.end, active)
+            guard end > segment.start else { continue }
+            var cursor = wallDate(forActive: segment.start, state: state, pauses: pauses)
+            let stop = wallDate(forActive: end, state: state, pauses: pauses)
+            // Cut the stretch at every pause inside it.
+            for pause in pauses where pause.end > cursor && pause.start < stop {
+                if pause.start > cursor { result.append(DateInterval(start: cursor, end: pause.start)) }
+                cursor = max(cursor, pause.end)
+            }
+            if stop > cursor { result.append(DateInterval(start: cursor, end: stop)) }
+        }
+        return result
+    }
+
     // MARK: Timeline
 
     /// The phases in order, with skipped breaks cut at the skip. Skips that do not fall into a break are ignored.

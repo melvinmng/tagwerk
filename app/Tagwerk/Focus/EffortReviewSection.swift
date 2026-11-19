@@ -2,7 +2,7 @@ import SwiftUI
 import TagwerkCore
 
 /// "Schätzung und Ist" in the weekly review: how long tasks took against their estimate, per source and per label, from
-/// the last eight weeks up to the shown week. Measured with the focus timer and time blocks; stays on the iPhone.
+/// the last eight weeks up to the shown week. Measured from time blocks plus focus time outside them; stays on the iPhone.
 struct EffortReviewSection: View {
     @Environment(AppEnvironment.self) private var environment
     let model: WeekReviewModel
@@ -28,7 +28,7 @@ struct EffortReviewSection: View {
         } header: {
             Text("Schätzung und Ist")
         } footer: {
-            Text("Gemessen über Fokus-Timer und Zeitblöcke, letzte 8 Wochen.")
+            Text("Gemessen über Zeitblöcke; Fokus-Timer zählt nur außerhalb der Blöcke, letzte 8 Wochen.")
         }
     }
 

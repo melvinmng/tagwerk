@@ -134,15 +134,45 @@ struct EffortTrackerTests {
         #expect(Set(samples.map(\.actualMinutes)) == [30, 60])
     }
 
-    @Test func focusSession_isUsedInsteadOfBlocks() async throws {
-        let item = task()
-        try addBlock(item, from: (9, 0), to: (10, 0))
-        var state = FocusTimerState(start: at(18, 11, 0), settings: FocusTimerSettings(isPomodoro: false))
-        state.endedAt = at(18, 11, 25)
+    private func addSession(_ item: TaskItem, from start: Date, to end: Date, pauses: [DateInterval] = []) {
+        var state = FocusTimerState(start: start, settings: FocusTimerSettings(isPomodoro: false), pauses: pauses)
+        state.endedAt = end
         let session = FocusSessionRecord(taskKey: item.id.key, blockEventID: nil, title: item.title, state: state)
         session.outcome = .completed
-        session.focusedSeconds = 25 * 60
+        session.focusedSeconds = FocusTimerRules.snapshot(of: state, at: end).focusedSeconds
         focusStore.insert(session)
+    }
+
+    @Test func focusInsideTheBlock_isNotCountedTwice() async throws {
+        let item = task()
+        try addBlock(item, from: (9, 0), to: (10, 0))
+        addSession(item, from: at(18, 9, 5), to: at(18, 9, 30))
+        await tracker().didComplete(item, at: at(18, 12, 0))
+        #expect(samples.first?.actualMinutes == 60)
+        #expect(samples.first?.methodRaw == EffortMethod.blocks.rawValue)
+    }
+
+    @Test func focusOutsideTheBlock_isAddedToTheBlock() async throws {
+        let item = task()
+        try addBlock(item, from: (9, 0), to: (10, 0))
+        addSession(item, from: at(18, 11, 0), to: at(18, 11, 25))
+        await tracker().didComplete(item, at: at(18, 12, 0))
+        #expect(samples.first?.actualMinutes == 85)
+        #expect(samples.first?.methodRaw == EffortMethod.blocksAndFocus.rawValue)
+    }
+
+    @Test func focusWithPause_countsTheWorkedTimeOutsideTheBlock() async throws {
+        let item = task()
+        try addBlock(item, from: (9, 0), to: (10, 0))
+        // 25 minutes of work from 11:00 with a pause of 10 minutes at 11:10: the work ends at 11:35.
+        addSession(item, from: at(18, 11, 0), to: at(18, 11, 35), pauses: [DateInterval(start: at(18, 11, 10), end: at(18, 11, 20))])
+        await tracker().didComplete(item, at: at(18, 12, 0))
+        #expect(samples.first?.actualMinutes == 85)
+    }
+
+    @Test func withoutBlock_focusSessionIsTheEffort() async throws {
+        let item = task()
+        addSession(item, from: at(18, 11, 0), to: at(18, 11, 25))
         await tracker().didComplete(item, at: at(18, 12, 0))
         #expect(samples.first?.actualMinutes == 25)
         #expect(samples.first?.methodRaw == EffortMethod.focus.rawValue)

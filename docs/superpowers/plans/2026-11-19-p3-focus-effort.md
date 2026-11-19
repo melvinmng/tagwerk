@@ -10,7 +10,7 @@
   - Live Activity auf dem Sperrbildschirm und in der Dynamic Island, am Ende „Erledigt / Weiter / Verschieben“.
   - Eine eigene Sammlung als Belohnung.
   - App-Sperre nur, wenn der Spike sie mit dem Personal Team erlaubt.
-- **#162:** Tagwerk misst den Ist-Aufwand aus Fokus-Zeiten, Zeitblöcken und dem Zeitpunkt des Abhakens.
+- **#162:** Tagwerk misst den Ist-Aufwand aus Zeitblöcken, Fokus-Zeit außerhalb der Blöcke und dem Zeitpunkt des Abhakens (Blöcke haben Vorrang, Stand F4).
   - Ein Block, der zu früh endet, wird gekürzt.
   - Der Wochenrückblick zeigt Schätzung gegen Ist je Quelle und Label.
   - Die KI-Planung bekommt einen erwarteten Aufwand je Aufgabe.
@@ -74,7 +74,7 @@ Wer einen dieser Eingriffe größer machen muss, hält an und beschreibt es im B
 4. **Spät oder ohne Block abgehakt:**
    - Ein Block 9–10 Uhr, um 17:00 abgehakt: Erwartet sind 60 min und keine Änderung am Block.
    - Ohne Block und ohne Fokus-Zeit: Es entsteht keine Stichprobe.
-   - Mit Fokus-Zeit zählt nur die Fokus-Zeit, Blöcke dann nicht zusätzlich.
+   - Die Blöcke haben Vorrang: Fokus-Zeit innerhalb eines Blocks der Aufgabe zählt nicht doppelt, nur Fokus-Zeit außerhalb der Blöcke kommt dazu (Stand F4). Ohne Block zählt die Fokus-Zeit allein.
    - Tests in `EffortRulesTests`.
 5. **App-Sperre bleibt hängen:** Ist sie nach einem Absturz noch aktiv, hebt der nächste Start sie auf, wenn keine Sitzung läuft. Test: `FocusShieldPolicyTests.launchWithoutSession_clearsTheShield` (nur wenn Task 0 positiv ist).
 
@@ -154,20 +154,24 @@ Eingaben:
 - `focusedSeconds` aus Fokus-Sitzungen dieser Aufgabe seit dem letzten Abhaken.
 - `estimateMinutes`.
 
-Ausgabe `EffortOutcome`: `actualMinutes: Int?`, `method: .focus | .blocks | .partialBlock`, `trim: BlockTrim?` (Block-ID, neues Ende, altes Ende).
+Ausgabe `EffortOutcome`: `actualMinutes: Int?`, `method: .focus | .blocks | .partialBlock | .blocksAndFocus`, `trim: BlockTrim?` (Block-ID, neues Ende, altes Ende).
 
 Regeln:
-1. Gibt es Fokus-Zeit (≥ 1 min), zählt nur sie (`.focus`). Läuft dabei gerade ein Block, wird er zusätzlich gekürzt (Regel 2b).
-2. Liegt `completedAt` in einem Block:
-   - a) Ist-Aufwand = vergangene Blöcke vollständig + `completedAt − start` des laufenden Blocks (`.partialBlock`).
-   - b) Der laufende Block endet neu bei `completedAt`, auf 5 min abgerundet. Sind seit Blockstart weniger als 5 min vergangen, gibt es keine Kürzung (der Block bleibt) und einen Hinweis im Ergebnis (`trim == nil`, `tooShortToTrim == true`).
-3. `completedAt` liegt nach allen Blöcken, egal wie lange: Die Summe der Blöcke zählt, keine Änderung (`.blocks`). Blöcke nach `completedAt` zählen nicht und bleiben unverändert. Deren Löschung ist nicht Teil von #162 und wird im Bericht als offene Frage genannt.
-4. Kein Block, keine Fokus-Zeit: `actualMinutes == nil`, es entsteht keine Stichprobe.
-5. Wiederkehrende Aufgaben: nur Blöcke und Fokus-Zeit seit dem vorigen Abhaken desselben Vorkommens.
+1. Blöcke haben Vorrang (Stand F4, Wunsch des Product Owners: Der Fokus-Timer wird nur in Sonderfällen genutzt, Blöcke geben genauere Zeiten). Blockzeit = vergangene Blöcke vollständig + `completedAt − start` des laufenden Blocks (überlappende Blöcke zählen einmal).
+2. Fokus-Zeit zählt nur, soweit sie **außerhalb** der Blöcke der Aufgabe liegt. Dafür liefert `FocusTimerRules.workIntervals(of:)` je Sitzung die Arbeitsphasen als Zeitintervalle (ohne Pausen und Pomodoro-Pausen, bis zum Sitzungsende). Teilüberlappung: nur der Teil außerhalb. Fokus-Zeit nach `completedAt` zählt nicht. Unter 60 s außerhalb der Blöcke ist keine Messung.
+   - Ohne Block zählt die Fokus-Zeit allein (`.focus`).
+   - Nur Blockzeit: `.blocks` (alle Blöcke beendet) oder `.partialBlock` (laufender Block). Blockzeit plus Fokus-Zeit außerhalb: `.blocksAndFocus`.
+   - Es sind keine neuen gespeicherten Felder nötig: `FocusSessionRecord` hält Start, Pausen, Überspringen, Einstellungen und Ende, daraus entstehen die Intervalle. Das Backup-Format bleibt unverändert; auch alte Sitzungen liefern Intervalle.
+3. Liegt `completedAt` in einem Block, endet der laufende Block neu bei `completedAt`, **auf die nächste volle 5 min aufgerundet** (nie verlängern). Sind seit Blockstart weniger als 5 min vergangen, gibt es keine Kürzung (der Block bleibt) und einen Hinweis im Ergebnis (`trim == nil`, `tooShortToTrim == true`). Der laufende Block wird unter allen Blöcken gesucht, auch wenn ein früherer Messwert (Aufgabe außerhalb von Tagwerk wieder geöffnet) später beginnt als der Block (Fehler F4: er blendete den Block aus).
+   - Gekürzt werden nur Tagwerks eigene Blöcke (Verknüpfung `tagwerk://` im URL-Feld des Termins), in jedem Kalender, nicht nur im Plan-Kalender der Einstellung. Termine, die die Nutzerin selbst anlegte und nur per Titel oder von Hand mit der Aufgabe verknüpfte (Ereignis-Aufgaben-Verknüpfung), sind ihre eigenen Termine und werden nie verändert. Ihre Zeit zählt für den Ist-Aufwand nicht als Block (nur Tagwerk-Blöcke werden gelesen).
+   - Schlägt das Schreiben fehl, weil sich nur die Version geändert hat (Sync), wird einmal gegen den aktuellen Termin wiederholt, solange Start und Ende gleich geblieben sind. Hat jemand den Block verändert, bleibt er wie er ist. Jeder Fehlschlag steht im Log (Kategorie `effort`).
+4. `completedAt` liegt nach allen Blöcken, egal wie lange: Die Summe der Blöcke zählt, keine Änderung. Blöcke nach `completedAt` zählen nicht und bleiben unverändert. Deren Löschung ist nicht Teil von #162 und wird im Bericht als offene Frage genannt.
+5. Kein Block, keine Fokus-Zeit: `actualMinutes == nil`, es entsteht keine Stichprobe.
+6. Wiederkehrende Aufgaben: nur Blöcke und Fokus-Zeit seit dem vorigen Abhaken desselben Vorkommens.
 
 - [ ] Tests:
-  - `focusTime_winsOverBlocks`
-  - `completionInsideBlock_trimsToCompletionRoundedDown`
+  - `blocksDecide_focusInsideABlockIsNotCountedTwice`, `focusPartlyInsideABlock_countsOnlyTheOutsidePart`, `focusOutsideTheBlocks_isAddedToTheBlocks`, `withoutBlocks_theFocusTimeAloneIsTheEffort`, `pausesInsideTheFocus_…`, `overlappingBlocks_countOnce`, `runningBlock_isCutEvenWhenAnOlderMeasurementStartsInsideIt`
+  - `completionInsideBlock_trimsToCompletionRoundedUp`
   - `completionInsideBlock_withinFiveMinutes_doesNotTrim`
   - `completionAfterBlockEnd_countsTheFullBlock`
   - `completionHoursLater_countsTheFullBlockAndChangesNothing`
@@ -291,7 +295,8 @@ Regeln:
   - `trimConflict_keepsTheBlockButRecordsTheSample`
   - `completionWithoutBlockOrFocus_recordsNothing`
   - `bulkComplete_recordsEachTask`
-  - `focusSession_isUsedInsteadOfBlocks`
+  - `focusInsideTheBlock_isNotCountedTwice`, `focusOutsideTheBlock_isAddedToTheBlock`, `focusWithPause_…`, `withoutBlock_focusSessionIsTheEffort`
+  - `EffortCompletionPathTests`: Abhaken aus Liste (alle Quellen), Sammelaktion, Editor, GitHub-Status Done (Liste und Editor), Fokus-Timer, Messwert-Altlast, Versions-Wiederholung, Block in anderem Kalender, verknüpfter Nutzer-Termin bleibt unverändert
 - [ ] Commit `feat: measure actual effort when a task is completed`.
 
 ## Task 10: Wochenrückblick „Schätzung und Ist“
