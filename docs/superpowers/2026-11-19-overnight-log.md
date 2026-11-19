@@ -176,7 +176,7 @@ Jede Entscheidung nennt die Wahl und das Risiko, falls sie falsch ist.
 - Task 12: Die Demo-Daten wurden nicht erweitert; die vorhandenen Demo-Termine und -Aufgaben liefern schon Treffer (am iPhone-17-Simulator gesehen). Die Spec-Nachträge stehen am Ende des Specs.
 - Roter Lauf: Bei den App-Tasks bestand er aus dem Übersetzungsfehler fehlender Typen (Paket-Tests Task 5 wurden separat rot gesehen), nicht aus einem eigenen Lauf vor der Umsetzung; Task 8 und 9 wurden zusätzlich während der Umsetzung rot (Namenskonflikt, Katalogabruf im Test) und korrigiert.
 - `app/test-all.sh` lief vor jedem Commit, der die App berührt (Tasks 3 bis 11).
-- Abschlussreview: Selbstreview des Autors, kein unabhängiger Reviewer (keine Subagenten erlaubt).
+- Abschlussreview: Selbstreview des Autors, kein unabhängiger Reviewer (keine Subagenten erlaubt). Gegen die fünf Review-Focus-Punkte des Plans geprüft, jeweils mit gelaufenem Test: (1) `finishEvening_afterMidnight_writesTheDayTheSheetWasOpenedFor`, (2) `failedHealthRead_keepsLastFactsOfTheSameDay` und `backgroundSnapshot_withoutHealthFacts_neverLowersTheCounter`, (3) `vanishedTask_isDoneOnlyAfterItsSourceSettled`, (4) `close_flushesThePendingSave`, `whitespaceOnly_deletesTheNote`, `dictation_insertsAtTheCursor`, (5) `lateAnswerAfterReset_isDiscarded`. Der Selbstreview fand zwei Fehler, beide behoben: Habit-Zeilen konnten nach Aktivwerden oder Siri einen anderen Tag zeigen als „Erfassen“ (`checkHabit_keepsTheDayShownInCapture`, rot→grün), und die Blätter der Gewohnheiten hingen an der Section statt an einer Ansicht.
 
 ### (c) Offene manuelle Prüfungen am Gerät
 
@@ -208,7 +208,7 @@ Jede Entscheidung nennt die Wahl und das Risiko, falls sie falsch ist.
 Plan: `plans/2026-11-19-phase-7-routines.md` · Spec: `specs/2026-11-19-phase-7-routines-design.md` (§9.2: KI-Kontext sind die offenen Aufgaben und Termine der nächsten 7 Tage) · Branch `feat/search-issues-planning`, aufgesetzt auf dem Stand von #136, Phase 5 und Suche.
 Umgesetzt sind die Tasks 4–16 (Gewohnheiten, Tagesabschluss, Tagesstart, Fokus, Gedanken-Notiz mit Vorschlägen, Wochenreflexion, Leitfragen). Die Spikes (Tasks 1–3), die optionale Tageslicht-Quelle (Task 17) und die Geräte-Schritte von Task 18 sind offen.
 
-Commits (in Reihenfolge): `907b40d` Datentypen und `HabitRules` · `5c29fcf` `HabitsModel`, Zähler in „Planen“ · `3e5f5e9` Abschnitt, Liste und Blatt „Gewohnheit“ · `e55e719` Kurzbefehl, Snapshot, Widget · `dbbf9da` Tageseintrag, Checkliste, Einstellungen › Routinen · `5c89f0d` Blatt „Tagesabschluss“, Routen, Abendzeile · `3eb3129` wiederholende Mitteilungen · `9ecff95` Blatt „Tagesstart“, Morgen-Erinnerung · `0f504ed` Fokus, Routine-Karte, Stern · `5078322` Gedanken-Notiz · `ada7f38` Vorschläge aus der Notiz · `e6afae0` Wochenreflexion · `0642ff0` Leitfragen · `26f82ad` Korrektur nach der Sichtprüfung (Karte umbrechen, „0/0“ vermeiden).
+Commits (in Reihenfolge): `907b40d` Datentypen und `HabitRules` · `5c29fcf` `HabitsModel`, Zähler in „Planen“ · `3e5f5e9` Abschnitt, Liste und Blatt „Gewohnheit“ · `e55e719` Kurzbefehl, Snapshot, Widget · `dbbf9da` Tageseintrag, Checkliste, Einstellungen › Routinen · `5c89f0d` Blatt „Tagesabschluss“, Routen, Abendzeile · `3eb3129` wiederholende Mitteilungen · `9ecff95` Blatt „Tagesstart“, Morgen-Erinnerung · `0f504ed` Fokus, Routine-Karte, Stern · `5078322` Gedanken-Notiz · `ada7f38` Vorschläge aus der Notiz · `e6afae0` Wochenreflexion · `0642ff0` Leitfragen · `26f82ad` Korrektur nach der Sichtprüfung (Karte umbrechen, „0/0“ vermeiden) · `16501c4` Korrektur aus dem Selbstreview (Tag der Gewohnheiten, Blätter, Kalender des KI-Kontexts).
 
 **Schnittstellen für spätere Arbeit:** `AppRoute.routineStart`/`.routineEvening`, `SnapshotDay.habits`, `NoteRecord.derivedActionCount`, `ActionCardDescriber` (von `AssistantModel.describe` und `NoteSuggestionModel` genutzt), `PlanningModel.focusTaskIDs` und `taskIDsWithBlocks(on:)`, `NoteStore.saveThought`/`addDerivedAction`.
 
@@ -217,7 +217,7 @@ Commits (in Reihenfolge): `907b40d` Datentypen und `HabitRules` · `5c29fcf` `Ha
 Jede Entscheidung nennt die Wahl und das Risiko, falls sie falsch ist.
 
 1. **Spikes, Tageslicht und Geräteschritte nicht ausgeführt.** Die Quelle „Zeit bei Tageslicht“ (Task 17) ist nicht gebaut: Sie ändert Health-Lesetypen und `InfoPlist`; die Freigabe lässt sich ohne Gerät nicht prüfen. `HabitSource.daylight` liegt im Datentyp und in den Regeln, erscheint aber nie in der Auswahl. Risiko: keines für den Bestand; die Quelle fehlt bis zum Spike.
-2. **Benachrichtigungstexte der Notizliste (Hinweis des Auftrags):** Der Fußtext der Notizenliste lautet jetzt „Notizen liegen nur auf diesem iPhone. An ChatGPT geht eine Gedanken-Notiz nur, wenn du bei ihr auf ‚Vorschläge holen‘ tippst.“ Der alte Katalogschlüssel („… nicht an ChatGPT gesendet“) ist gelöscht. Eine Suche in App und Katalogen ergab keinen weiteren Text, der behauptet, Notizen gingen nie an ChatGPT.
+2. **Fußtext der Notizenliste (Hinweis des Auftrags):** Der Fußtext der Notizenliste lautet jetzt „Notizen liegen nur auf diesem iPhone. An ChatGPT geht eine Gedanken-Notiz nur, wenn du bei ihr auf ‚Vorschläge holen‘ tippst.“ Der alte Katalogschlüssel („… nicht an ChatGPT gesendet“) ist gelöscht. Eine Suche in App und Katalogen ergab keinen weiteren Text, der behauptet, Notizen gingen nie an ChatGPT.
 3. **Tagesrückblick „Aufgaben erledigt e von n“:** e zählt Erledigungen aus Erinnerungen und lokalen Aufgaben (die Leser des Wochenrückblicks), n = e + offene Aufgaben des Tages; GitHub-Issues zählen nur als offen. Fußtext im Blatt: „Erledigt: Erinnerungen und lokale Aufgaben, ohne GitHub.“ Risiko: Die Zahl ist für GitHub-Nutzer zu niedrig.
 4. **Zähler im Snapshot bleibt hoch, wenn Health nicht lesbar ist (Review Focus 2).** Ohne aktuelle Health-Werte (Kaltstart, Hintergrund, fehlgeschlagene Abfrage) behält der Snapshot den zuletzt geschriebenen Zähler desselben Tages, wenn er höher ist und `total` gleich bleibt (`snapshotHabits(existing:now:)`). Risiko: Ein bewusst zurückgenommenes Handhäkchen senkt den Wert im Widget erst nach dem nächsten Health-Lauf; ein Siri-Häkchen bei Health-Gewohnheiten ohne Health-Lesung kann im Widget bis zum nächsten App-Start fehlen.
 5. **Wöchentliches Ziel zählt künftige Tage der laufenden Woche mit** (`isCountable` ohne „nicht in der Zukunft“). Sonst wäre das Ziel am Montag `round(3·1/7) = 1` und nach einem Häkchen erreicht. Risiko: bei Pausen mitten in der Woche rundet das Ziel anteilig wie im Spec.
@@ -265,14 +265,14 @@ Jede Entscheidung nennt die Wahl und das Risiko, falls sie falsch ist.
 - Die Quelle `daylight` ist nur Datentyp und Regel; ohne Spike gibt es keine Auswahl und keine Freigabe.
 - Bei Health-Gewohnheiten ohne aktuelle Health-Lesung kann der Zähler im Snapshot kurz zu hoch oder zu niedrig stehen (Entscheidung 4).
 - Die Tagesstart-Karte zeigt die Zahlen erst nach dem Laden der Aufgaben; die Karte kann „0 Aufgaben“ nennen, das Blatt danach „1 Aufgabe“.
-- `HabitsSection` hängt die Blätter an die Section; bei mehreren Zeilen gilt ein einzelnes `item`, das Anlegen und Öffnen wurde im Simulator einmal geprüft, nicht alle Wege.
 - Vorschläge aus der Notiz erzeugen keine GitHub-Issues (Entscheidung 10); Karten kennen keine Rückfrage zur Zuweisung.
 - Die Gedanken-Notiz im Assistenten, Aktionen in Mitteilungen, antippbares Widget und feste Wochentage bleiben Nicht-Ziele des Specs.
+- Der KI-Kontext der Vorschläge liest Termine aus den in „Planen“ lesbaren Kalendern (`planning.readableCalendarIDs()`), wie die Suche; abgewählte Kalender gehen nicht an ChatGPT. Der Assistent (`list_events`) liest weiterhin alle Kalender (unverändert).
 - Abschlussreview: Selbstreview des Autors.
 
 ### (e) Testergebnis
 
-`app/test-all.sh`, letzter Lauf nach dem letzten Code-Commit (`26f82ad`), alle Stufen grün einschließlich „string catalogs“ (`check-strings.py --require-english` und `sync-strings.sh --check`):
+`app/test-all.sh`, letzter Lauf nach dem letzten Code-Commit (`16501c4`), alle Stufen grün einschließlich „string catalogs“ (`check-strings.py --require-english` und `sync-strings.sh --check`):
 
-- AIKit 98, GitHubKit 137, HealthBridge 11, RemindersKit 87, TagwerkCore 621 (vorher 571), App 1107 (vorher 965) Tests bestanden.
+- AIKit 98, GitHubKit 137, HealthBridge 11, RemindersKit 87, TagwerkCore 621 (vorher 571), App 1108 (vorher 965) Tests bestanden.
 - Letzte Zeile: `ALL TESTS PASSED`

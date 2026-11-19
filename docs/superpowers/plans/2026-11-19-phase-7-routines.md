@@ -1063,7 +1063,7 @@ func dailyDaylight(in interval: DateInterval, calendar: Calendar) async throws -
 
 ### Task 18: Geräte-Checkliste und Abschluss · #140
 
-- [ ] **Step 1:** `app/test-all.sh` → „ALL TESTS PASSED“ (einschließlich `check-strings.py --require-english` und `sync-strings.sh --check`).
+- [x] **Step 1:** `app/test-all.sh` → „ALL TESTS PASSED“ (einschließlich `check-strings.py --require-english` und `sync-strings.sh --check`).
 - [ ] **Step 2:** Geräte-Checkliste aus Design §15.2, Ergebnis je Punkt im Epic #140: wiederholende Auslöser bei Zeitumstellung und Zeitzonenwechsel; Siri erkennt die deutsche Phrase mit Gewohnheitsnamen; Abhaken bei gesperrtem Gerät; fünf Routine-Mitteilungen bei vollen 50 Deadline-Plätzen; Höhe der Routine-Karte auf dem kleinsten Gerät.
 - [ ] **Step 3:** Drüberinstallieren über einen Stand vor Phase 7: Der Store öffnet, vorhandene Daten sind da, das Widget liest eine alte Snapshot-Datei.
 - [ ] **Step 4: Commit** nur, falls Step 1–3 Korrekturen brauchten: `git commit -m "fix: address findings of the routines device checklist"`
