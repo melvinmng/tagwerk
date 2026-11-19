@@ -96,6 +96,44 @@ final class FocusMarkRecord {
     var value: FocusMark { FocusMark(taskKey: taskKey, title: title, order: order, doneAt: doneAt) }
 }
 
+/// The reflection of one week (design §5.3), keyed by the Monday as "YYYY-MM-DD". Never sent anywhere.
+@Model
+final class WeekReflectionRecord {
+    @Attribute(.unique) var weekKey: String = ""
+    var wentWell: String = ""
+    var burdens: String = ""
+    var plannedAppointments: Bool = false
+    var plannedHabits: Bool = false
+    var plannedTasks: Bool = false
+    var updatedAt: Date = Date.now
+
+    init(weekStart: PlanDay, updatedAt: Date) {
+        self.weekKey = weekStart.dayKey
+        self.updatedAt = updatedAt
+    }
+
+    var value: WeekReflection {
+        WeekReflection(wentWell: wentWell, burdens: burdens, plannedAppointments: plannedAppointments,
+                       plannedHabits: plannedHabits, plannedTasks: plannedTasks)
+    }
+
+    func apply(_ value: WeekReflection) {
+        wentWell = value.wentWell
+        burdens = value.burdens
+        plannedAppointments = value.plannedAppointments
+        plannedHabits = value.plannedHabits
+        plannedTasks = value.plannedTasks
+    }
+}
+
+struct WeekReflection: Equatable {
+    var wentWell = ""
+    var burdens = ""
+    var plannedAppointments = false
+    var plannedHabits = false
+    var plannedTasks = false
+}
+
 struct FocusMark: Equatable, Identifiable {
     var id: String { taskKey }
     var taskKey: String
@@ -188,6 +226,30 @@ final class RoutineStore {
     static func normalizedOffset(_ minutes: Int) -> Int {
         let clamped = min(RoutineSchedule.offsetRange.upperBound, max(RoutineSchedule.offsetRange.lowerBound, minutes))
         return Int((Double(clamped) / Double(RoutineSchedule.offsetStep)).rounded()) * RoutineSchedule.offsetStep
+    }
+
+    // MARK: Week reflection
+
+    /// Empty without a record; reading never inserts.
+    func reflection(weekStart: PlanDay) -> WeekReflection {
+        _ = revision
+        return reflectionRecord(weekStart)?.value ?? WeekReflection()
+    }
+
+    /// An empty reflection of a week without a record is not stored.
+    func saveReflection(_ value: WeekReflection, weekStart: PlanDay, at date: Date) {
+        let existing = reflectionRecord(weekStart)
+        if existing == nil, value == WeekReflection() { return }
+        let record = existing ?? { let new = WeekReflectionRecord(weekStart: weekStart, updatedAt: date); context.insert(new); return new }()
+        guard existing == nil || record.value != value else { return }
+        record.apply(value)
+        record.updatedAt = date
+        save()
+    }
+
+    private func reflectionRecord(_ weekStart: PlanDay) -> WeekReflectionRecord? {
+        let key = weekStart.dayKey
+        return try? context.fetch(FetchDescriptor<WeekReflectionRecord>(predicate: #Predicate { $0.weekKey == key })).first
     }
 
     // MARK: Focus

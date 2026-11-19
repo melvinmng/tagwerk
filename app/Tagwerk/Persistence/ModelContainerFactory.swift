@@ -11,7 +11,8 @@ enum ModelContainerFactory {
                                      MealRecord.self, DrinkRecord.self, WorkoutRecord.self, PendingHealthDeletion.self,
                                      ShoppingCategory.self, ShoppingAssignment.self, NoteRecord.self,
                                      HabitRecord.self, HabitCheckRecord.self,
-                                     RoutineDayRecord.self, EveningChecklistItemRecord.self, FocusMarkRecord.self])
+                                     RoutineDayRecord.self, EveningChecklistItemRecord.self, FocusMarkRecord.self,
+                                     WeekReflectionRecord.self])
 
     static func make(inMemory: Bool) throws -> ModelContainer {
         try ModelContainer(for: schema, configurations: inMemory ? ModelConfiguration(isStoredInMemoryOnly: true)

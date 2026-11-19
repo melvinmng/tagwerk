@@ -982,7 +982,7 @@ extension RoutineStore {
 //                  func saveReflection(); func planNextWeek()   (planning.scope = .week, anchor = weekStart + 7, requestedTab = 0)
 ```
 
-- [ ] **Step 1: Tests schreiben (rot).**
+- [x] **Step 1: Tests schreiben (rot).**
 
 ```swift
 // HabitRulesTests
@@ -997,10 +997,10 @@ extension RoutineStore {
 @Test func planNextWeek_showsTheWeekViewOfTheFollowingWeek()
 ```
 
-- [ ] **Step 2:** `CORE HabitRulesTests`, `APP WeekReflectionTests`, `APP WeekReviewModelTests` → rot.
-- [ ] **Step 3: Umsetzen.** Drei Abschnitte am Ende von `WeekReviewView`, auch in einer sonst leeren Woche: „Gewohnheiten“ (je Zeile „3 von 4“, laufende Woche mit „bisher“, Balken), „Reflexion“ (zwei mehrzeilige Felder „Was lief gut?“, „Belastet mich etwas?“), „Neue Woche planen“ (drei Häkchen und „Woche planen ›“). Gespeichert wird entprellt und beim Verlassen. `makeWeekReviewModel()` übergibt `HabitStore`, `RoutineStore` und die Aktion für „Woche planen“. `EveningSheet` zeigt sonntags (Wochentag des Blatt-Tags) die Zeile „Wochenreflexion ›“, die das Blatt schließt und `router.open(.review)` aufruft. Nichts aus der Reflexion erreicht den Snapshot, Siri oder ChatGPT.
-- [ ] **Step 4:** Tests aus Step 2 → grün. Sichtprüfung gegen GW1.
-- [ ] **Step 5: Commit.** `git commit -m "feat: add habits, reflection and week planning to the weekly review"`
+- [x] **Step 2:** `CORE HabitRulesTests`, `APP WeekReflectionTests`, `APP WeekReviewModelTests` → rot.
+- [x] **Step 3: Umsetzen.** Drei Abschnitte am Ende von `WeekReviewView`, auch in einer sonst leeren Woche: „Gewohnheiten“ (je Zeile „3 von 4“, laufende Woche mit „bisher“, Balken), „Reflexion“ (zwei mehrzeilige Felder „Was lief gut?“, „Belastet mich etwas?“), „Neue Woche planen“ (drei Häkchen und „Woche planen ›“). Gespeichert wird entprellt und beim Verlassen. `makeWeekReviewModel()` übergibt `HabitStore`, `RoutineStore` und die Aktion für „Woche planen“. `EveningSheet` zeigt sonntags (Wochentag des Blatt-Tags) die Zeile „Wochenreflexion ›“, die das Blatt schließt und `router.open(.review)` aufruft. Nichts aus der Reflexion erreicht den Snapshot, Siri oder ChatGPT.
+- [x] **Step 4:** Tests aus Step 2 → grün. Sichtprüfung gegen GW1.
+- [x] **Step 5: Commit.** `git commit -m "feat: add habits, reflection and week planning to the weekly review"`
 
 ### Task 16: Leitfragen-Vorlage · #146 · Zeile 13
 

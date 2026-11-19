@@ -12,6 +12,9 @@ final class WeekReviewModel {
     private(set) var review: WeekReview?
     /// The "Schritte" section appears only after the step sheet was shown.
     private(set) var showsSteps = false
+    /// Phase 7: the habits active in the shown week and the written reflection (empty without a routine store).
+    private(set) var habitSummaries: [HabitWeekSummary] = []
+    var reflection = WeekReflection()
 
     private let store: IntakeStore
     private let health: any HealthStoring
@@ -20,11 +23,18 @@ final class WeekReviewModel {
     @ObservationIgnored private let now: () -> Date
     @ObservationIgnored private let completedReminders: (DateInterval) async -> [Date]
     @ObservationIgnored private let completedLocalTasks: (DateInterval) -> [Date]
+    @ObservationIgnored private let habits: HabitsModel?
+    @ObservationIgnored private let routineStore: RoutineStore?
+    @ObservationIgnored private let openPlanWeek: ((PlanDay) -> Void)?
 
     init(store: IntakeStore, health: any HealthStoring, settings: AppSettings, calendar: Calendar = .tagwerk,
          now: @escaping () -> Date = Date.init,
          completedReminders: @escaping (DateInterval) async -> [Date],
-         completedLocalTasks: @escaping (DateInterval) -> [Date]) {
+         completedLocalTasks: @escaping (DateInterval) -> [Date],
+         habits: HabitsModel? = nil, routineStore: RoutineStore? = nil, openPlanWeek: ((PlanDay) -> Void)? = nil) {
+        self.habits = habits
+        self.routineStore = routineStore
+        self.openPlanWeek = openPlanWeek
         self.store = store
         self.health = health
         self.settings = settings
@@ -42,22 +52,43 @@ final class WeekReviewModel {
     var title: String { WeekReview.title(weekStart: weekStart, calendar: calendar) }
 
     func goBack() async {
+        saveReflection()
         weekStart = weekStart.adding(days: -7, calendar: calendar)
         await reload()
     }
 
     func goForward() async {
         guard canGoForward else { return }
+        saveReflection()
         weekStart = weekStart.adding(days: 7, calendar: calendar)
         await reload()
     }
 
     /// Jumps to the week containing a chosen day; later weeks show the current week (only back in time).
     func go(toWeekOf target: PlanDay) async {
+        saveReflection()
         let start = PlanDay(date: IntakeRules.weekStart(containing: target.startDate(in: calendar), calendar: calendar),
                             calendar: calendar)
         weekStart = min(start, currentWeekStart)
         await reload()
+    }
+
+    /// Habits of the week and its reflection; the reflection belongs to the week, so a change of week loads another one.
+    private func loadRoutineParts(for week: PlanDay) {
+        if let habits {
+            habitSummaries = HabitRules.weekSummaries(habits.habits, weekStart: week, today: today, facts: habits.facts, calendar: calendar)
+        }
+        if let routineStore { reflection = routineStore.reflection(weekStart: week) }
+    }
+
+    /// Writes the reflection of the shown week.
+    func saveReflection() {
+        routineStore?.saveReflection(reflection, weekStart: weekStart, at: now())
+    }
+
+    /// "Woche planen": opens "Planen" in the week view of the following week.
+    func planNextWeek() {
+        openPlanWeek?(weekStart.adding(days: 7, calendar: calendar))
     }
 
     func reload() async {
@@ -90,6 +121,7 @@ final class WeekReviewModel {
                                      stepsPerDay: settings.goalStepsPerDay,
                                      proteinGrams: settings.proteinGoalEnabled ? settings.goalProteinGrams : nil)
         showsSteps = stepsAsked
+        loadRoutineParts(for: requested)
         review = WeekReview.make(weekStart: requested, now: now(), meals: meals, drinks: drinks, workouts: workouts,
                                  steps: steps, completedDates: completed, goals: goals, calendar: calendar)
     }

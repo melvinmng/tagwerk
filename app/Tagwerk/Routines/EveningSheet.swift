@@ -68,6 +68,23 @@ struct EveningSheet: View {
 
                 NoteField(model: note)
 
+                // Sundays: the weekly review is one tap away.
+                if day.weekday(in: model.calendar) == 1 {
+                    Section {
+                        Button {
+                            model.closeSheet()
+                            environment.router.open(.review)
+                        } label: {
+                            HStack {
+                                Label("Wochenreflexion", systemImage: "square.and.pencil")
+                                Spacer()
+                                Image(systemName: "chevron.right").font(.caption.weight(.semibold)).foregroundStyle(.tertiary)
+                            }
+                        }
+                        .tint(.primary)
+                    }
+                }
+
                 if let next = model.planning.nextPlanDay {
                     Section {
                         Button {

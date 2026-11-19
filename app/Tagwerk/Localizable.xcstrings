@@ -1797,6 +1797,22 @@
         }
       }
     },
+    "%lld von %lld bisher": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$lld von %2$lld bisher"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld of %2$lld so far"
+          }
+        }
+      }
+    },
     "%lld von %lld min Tageslicht": {
       "localizations": {
         "de": {
@@ -3342,6 +3358,16 @@
         }
       }
     },
+    "Aufgaben der Woche festgelegt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tasks of the week set"
+          }
+        }
+      }
+    },
     "Aufgaben erledigt": {
       "localizations": {
         "en": {
@@ -3614,6 +3640,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "For deadlines and P1"
+          }
+        }
+      }
+    },
+    "Beide Felder sind freiwillig. Die Reflexion liegt nur auf diesem iPhone.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Both fields are optional. The reflection stays on this iPhone only."
+          }
+        }
+      }
+    },
+    "Belastet mich etwas?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Is something weighing on me?"
           }
         }
       }
@@ -6428,6 +6474,16 @@
         }
       }
     },
+    "Gewohnheiten eingeplant": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Habits planned"
+          }
+        }
+      }
+    },
     "Gewohnheiten · %lld von %lld": {
       "localizations": {
         "de": {
@@ -7170,6 +7226,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tagwerk can’t write to this calendar."
+          }
+        }
+      }
+    },
+    "In dieser Woche war keine Gewohnheit aktiv.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No habit was active this week."
           }
         }
       }
@@ -8935,6 +9001,16 @@
         }
       }
     },
+    "Neue Woche planen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plan the new week"
+          }
+        }
+      }
+    },
     "Neuer Punkt": {
       "localizations": {
         "en": {
@@ -9959,6 +10035,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Cycling"
+          }
+        }
+      }
+    },
+    "Reflexion": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reflection"
           }
         }
       }
@@ -11203,6 +11289,16 @@
     "Termine der nächsten 7 Tage. „Zusammengefasst“: gleicher Termin wird über die Kopie aus einem anderen Kalender gezeigt.": {
       "shouldTranslate": false
     },
+    "Termine eingeplant": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Appointments planned"
+          }
+        }
+      }
+    },
     "Termine werden durchsucht …": {
       "localizations": {
         "en": {
@@ -12158,6 +12254,16 @@
         }
       }
     },
+    "Was lief gut?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What went well?"
+          }
+        }
+      }
+    },
     "Was soll auf die Liste?": {
       "localizations": {
         "en": {
@@ -12544,6 +12650,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Weekend (Sat)"
+          }
+        }
+      }
+    },
+    "Wochenreflexion": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Weekly reflection"
           }
         }
       }

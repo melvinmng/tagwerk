@@ -161,7 +161,7 @@ struct NoteSuggestionModelTests {
         #expect(text.contains("Wochenaufgabe"))          // due 24.11., inside the window
         #expect(!text.contains("Zu spät dran"))           // due 25.11., outside
         #expect(!text.contains("Geheime Aufgabennotiz"))  // notes of tasks never go
-        for marker in ["Dankbar-Marker", "Lesen 20 min"] {
+        for marker in ["Dankbar-Marker", "Lesen 20 min", "Reflexion-Marker"] {
             #expect(!text.contains(marker) && !sent.instructions.contains(marker))
         }
     }
@@ -172,6 +172,7 @@ struct NoteSuggestionModelTests {
         store.update(PlanDay(year: 2026, month: 11, day: 18)) { $0.gratitude = ["Dankbar-Marker"] }
         HabitStore(context: container.mainContext).save(Habit(name: "Lesen 20 min", symbol: "book", order: 0,
                                                               start: PlanDay(year: 2026, month: 11, day: 1)))
+        store.saveReflection(WeekReflection(wentWell: "Reflexion-Marker"), weekStart: PlanDay(year: 2026, month: 11, day: 16), at: clock.now)
     }
 
     // MARK: Context

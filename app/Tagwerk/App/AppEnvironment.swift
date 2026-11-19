@@ -601,7 +601,14 @@ final class AppEnvironment {
                                completedReminders: { [weak self] interval in
                                    await reminderStore.completionDates(in: interval, listIDs: self?.taskReminderListIDs())
                                },
-                               completedLocalTasks: { interval in local.completionDates(in: interval) })
+                               completedLocalTasks: { interval in local.completionDates(in: interval) },
+                               habits: habits, routineStore: routineStore,
+                               openPlanWeek: { [weak self] week in
+                                   guard let self else { return }
+                                   planning.scope = .week
+                                   planning.anchor = week
+                                   requestedTab = 0
+                               })
     }
 
     // MARK: Widget snapshot (phase 4 design §4.1)
