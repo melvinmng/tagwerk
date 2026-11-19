@@ -22,6 +22,20 @@ struct PlanHeaderTextTests {
         #expect(PlanHeaderText.titleCandidates(scope: .month, anchor: today, range: week, calendar: calendar) == ["November", "Nov"])
     }
 
+    @Test func displayedTitle_isFixedPerScopeAndShortWithLargeText() {
+        let thursday = PlanDay(year: 2026, month: 11, day: 19)
+        func shown(_ scope: PlanScope, large: Bool) -> String {
+            PlanHeaderText.displayedTitle(scope: scope, anchor: thursday, range: scope == .week ? week : thursday...thursday,
+                                          calendar: calendar, largeText: large)
+        }
+        #expect(shown(.day, large: false) == "Do. 19. Nov.")
+        #expect(shown(.day, large: true) == "19. Nov.")
+        #expect(shown(.week, large: false) == "16.–22. Nov.")
+        #expect(shown(.week, large: true) == "16.–22.11.")
+        #expect(shown(.month, large: false) == "November")
+        #expect(shown(.month, large: true) == "Nov")
+    }
+
     @Test func titleCandidates_startWithTheFullTitle() {
         for scope in PlanScope.allCases {
             let candidates = PlanHeaderText.titleCandidates(scope: scope, anchor: today, range: week, calendar: calendar)

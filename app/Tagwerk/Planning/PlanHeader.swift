@@ -44,6 +44,16 @@ enum PlanHeaderText {
         return candidates.filter { seen.insert($0).inserted }
     }
 
+    /// The title the header shows. `ViewThatFits` in a toolbar item gets no usable width (it always took the
+    /// shortest candidate, seen on the iPhone 17 simulator), so the form is fixed: the day view takes the middle
+    /// candidate, the others the full one, and with accessibility text sizes everything takes the shortest.
+    static func displayedTitle(scope: PlanScope, anchor: PlanDay, range: ClosedRange<PlanDay>, calendar: Calendar,
+                               largeText: Bool) -> String {
+        let candidates = titleCandidates(scope: scope, anchor: anchor, range: range, calendar: calendar)
+        if largeText { return candidates[candidates.count - 1] }
+        return scope == .day && candidates.count > 1 ? candidates[1] : candidates[0]
+    }
+
     /// Day "HEUTE · KW 47", week "DIESE WOCHE · KW 47", month "DIESER MONAT · 2026".
     static func caption(scope: PlanScope, anchor: PlanDay, today: PlanDay, range: ClosedRange<PlanDay>, calendar: Calendar) -> String {
         let week = calendar.component(.weekOfYear, from: anchor.startDate(in: calendar))
@@ -83,21 +93,18 @@ enum PlanHeaderText {
 struct PlanTitleButton: View {
     @Bindable var model: PlanningModel
     @State private var picking = false
+    @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
         let current = PlanHeaderText.isCurrent(scope: model.scope, anchor: model.anchor, today: model.today, range: model.range)
         let caption = PlanHeaderText.caption(scope: model.scope, anchor: model.anchor, today: model.today,
                                              range: model.range, calendar: model.calendar)
         let title = PlanHeaderText.title(scope: model.scope, anchor: model.anchor, range: model.range, calendar: model.calendar)
-        let candidates = PlanHeaderText.titleCandidates(scope: model.scope, anchor: model.anchor, range: model.range,
-                                                        calendar: model.calendar)
+        let shown = PlanHeaderText.displayedTitle(scope: model.scope, anchor: model.anchor, range: model.range,
+                                                  calendar: model.calendar, largeText: typeSize.isAccessibilitySize)
         Button { picking = true } label: {
-            // The longest form that fits; VoiceOver always reads the full one.
-            ViewThatFits(in: .horizontal) {
-                ForEach(candidates, id: \.self) { candidate in
-                    PageTitleLabel(caption: caption, title: candidate, isCurrent: current, titleScales: false).fixedSize()
-                }
-            }
+            // VoiceOver always reads the full title (below).
+            PageTitleLabel(caption: caption, title: shown, isCurrent: current, titleScales: false).fixedSize()
         }
         .buttonStyle(.plain)
         .accessibilityElement(children: .ignore)
