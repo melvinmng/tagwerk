@@ -196,8 +196,9 @@ struct DayView: View {
                              title: String(localized: "Mittagspause"), detail: CapacityText.duration(minutes), color: .gray)
             }
             .foregroundStyle(.primary)
-        case .travel:
-            EmptyView()
+        case .travel(let segment):
+            TravelRow(segment: segment, transport: model.settings.travelTransport,
+                      time: clock(segment.range.lowerBound, on: plan.day))
         case .gap(let range):
             GapLine(text: String(localized: "frei \(clock(range.lowerBound, on: plan.day))–\(clock(range.upperBound, on: plan.day))"))
                 .dropDestination(for: String.self) { keys, _ in

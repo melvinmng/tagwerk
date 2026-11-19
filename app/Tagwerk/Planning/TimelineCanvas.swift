@@ -73,6 +73,16 @@ struct TimelineCanvas: View {
                 if let line = snapLine {
                     snapIndicator(minutes: line, shown: shown, width: geometry.size.width)
                 }
+                // Travel time lies behind the entries, in the column of the event it leads to (#168).
+                ForEach(plan.travel) { segment in
+                    if let index = entries.firstIndex(where: { $0.id == segment.eventID }) {
+                        let columnWidth = width / CGFloat(columnCount(index: index, ranges: ranges, columns: columns))
+                        TravelSegmentView(segment: segment, transport: model.settings.travelTransport)
+                            .frame(width: columnWidth - 2, height: max(14, height(segment.range.count)))
+                            .offset(x: labelWidth + 6 + CGFloat(columns[index]) * columnWidth, y: y(segment.range.lowerBound, shown))
+                            .allowsHitTesting(false)
+                    }
+                }
                 ForEach(Array(entries.enumerated()), id: \.element.id) { index, entry in
                     let range = liveRange(entry)
                     let count = columnCount(index: index, ranges: ranges, columns: columns)
@@ -136,7 +146,7 @@ struct TimelineCanvas: View {
     /// Visible hours: working time widened to every entry, with an hour of margin.
     var shownRange: Range<Int> {
         let hours = model.workHours(on: plan.day) ?? WorkHours(startMinutes: 540, endMinutes: 1080)
-        let ranges = entries.map(baseRange) + blockSuggestions.map(Self.range) + extensionRanges
+        let ranges = entries.map(baseRange) + blockSuggestions.map(Self.range) + extensionRanges + plan.travel.map(\.range)
         let lower = min(hours.startMinutes, ranges.map(\.lowerBound).min() ?? hours.startMinutes)
         let upper = max(hours.endMinutes, ranges.map(\.upperBound).max() ?? hours.endMinutes)
         return max(0, (lower / 60 - 1) * 60)..<min(1440, ((upper + 59) / 60 + 1) * 60)

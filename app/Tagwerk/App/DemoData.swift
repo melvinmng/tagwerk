@@ -31,6 +31,11 @@ enum DemoData {
             settings.selectedCalendarIDs = nil
             settings.selectedReminderListIDs = [ids.reminderList]
             settings.planCalendarID = ids.planCalendar
+            if DemoTravelEstimator.isRequested {
+                settings.homeAddress = "Musterstraße 1, Berlin"
+                settings.homeLatitude = 52.52
+                settings.homeLongitude = 13.405
+            }
             settings.deadlineCalendarIDs = [ids.deadlineCalendar]
             seedRecurringLocalTask(environment)
             await environment.taskList.reload()
@@ -228,24 +233,26 @@ enum DemoData {
         let plan = try makeCalendar(planCalendarTitle, for: .event, color: CGColor(srgbRed: 0.18, green: 0.72, blue: 0.63, alpha: 1))
         let list = try makeCalendar("Demo Aufgaben", for: .reminder, color: CGColor(srgbRed: 1, green: 0.3, blue: 0.3, alpha: 1))
 
-        func event(_ title: String, _ calendarItem: EKCalendar, _ start: Date, _ end: Date, allDay: Bool = false) throws {
+        func event(_ title: String, _ calendarItem: EKCalendar, _ start: Date, _ end: Date, allDay: Bool = false,
+                   location: String? = nil) throws {
             let item = EKEvent(eventStore: store)
             item.calendar = calendarItem
             item.title = title
+            item.location = location
             item.startDate = start
             item.endDate = end
             item.isAllDay = allDay
             try store.save(item, span: .thisEvent, commit: false)
         }
         // The same meeting in two calendars reproduces duplicate rows.
-        try event("Seminar", work, at(0, 10), at(0, 12, 30))
+        try event("Seminar", work, at(0, 10), at(0, 12, 30), location: "Universität, Unter den Linden 6, Berlin")
         try event("Seminar", copy, at(0, 10), at(0, 12, 30))
-        try event("Sprechstunde", work, at(0, 15), at(0, 16))
+        try event("Sprechstunde", work, at(0, 15), at(0, 16), location: "Praxis Dr. Muster, Hauptstraße 5, Berlin")
         try event("Projektwoche", work, at(0, 0), at(1, 0), allDay: true)
         try event("Anmeldung Abschlussarbeit", uni, at(0, 0), at(1, 0), allDay: true)
         try event("Klausur Statistik", uni, at(3, 10), at(3, 12))
         try event("Abgabe Hausarbeit", uni, at(40, 0), at(41, 0), allDay: true)
-        try event("Teamtreffen", work, at(1, 9, 30), at(1, 11))
+        try event("Teamtreffen", work, at(1, 9, 30), at(1, 11), location: "Zoom")
         // A deadline whose notification fires about two minutes after the start (checks banner and tap).
         let soon = Date().addingTimeInterval(TimeInterval((leadTimeMinutes + 3) * 60))
         let soonStart = calendar.date(bySetting: .second, value: 0, of: soon) ?? soon

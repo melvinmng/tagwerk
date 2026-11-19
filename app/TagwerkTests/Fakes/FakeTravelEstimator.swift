@@ -22,10 +22,10 @@ final class FakeTravelEstimator: TravelTimeEstimating, @unchecked Sendable {
     var tripCalls: [String] { lock.withLock { _tripCalls } }
     var geocodeCalls: [String] { lock.withLock { _geocodeCalls } }
 
-    func coordinates(for place: TravelPlace) async throws -> (latitude: Double, longitude: Double) {
-        lock.withLock { _geocodeCalls.append(place.text) }
-        if failingTexts.contains(place.text) { throw TravelTimeError.addressNotFound }
-        return (52.5, 13.4)
+    func lookUp(address: String) async throws -> PlaceLookup {
+        lock.withLock { _geocodeCalls.append(address) }
+        if failingTexts.contains(address) { throw TravelTimeError.addressNotFound }
+        return PlaceLookup(latitude: 52.5, longitude: 13.4, description: address)
     }
 
     func minutes(from: TravelPlace, to: TravelPlace, transport: TravelTransport, arrival: Date) async throws -> Int {

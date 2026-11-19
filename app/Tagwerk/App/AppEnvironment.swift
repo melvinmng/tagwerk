@@ -108,6 +108,14 @@ final class AppEnvironment {
 
     /// `notificationCenter` defaults to the system center, `health` to HealthKit and `reminderStore` to the
     /// EventKit gateway; tests and demo data pass fakes.
+    /// The travel time service; the simulator can answer with fixed demo times (`-TagwerkDemoTravel`).
+    private static func makeTravelTimes() -> TravelTimeService {
+        #if DEBUG && targetEnvironment(simulator)
+        if DemoTravelEstimator.isRequested { return TravelTimeService(estimator: DemoTravelEstimator(), cacheURL: nil) }
+        #endif
+        return TravelTimeService()
+    }
+
     init(modelContainer: ModelContainer, notificationCenter: (any NotificationCenterClient)? = nil,
          health: (any HealthStoring)? = nil, snapshotWriter: WidgetSnapshotWriter? = nil,
          reminderStore: (any ReminderStore)? = nil, eventSearcher: (any EventSearching)? = nil,
@@ -148,7 +156,7 @@ final class AppEnvironment {
         let suggestionStore = SuggestionStore(context: context)
         let blockPlanner = BlockPlanner(store: gateway, planStore: planStore, links: EventLinkStore(context: context),
                                         settings: settings, calendar: .tagwerk)
-        let travelTimes = travelTimes ?? TravelTimeService()
+        let travelTimes = travelTimes ?? Self.makeTravelTimes()
         self.travelTimes = travelTimes
         self.planning = PlanningModel(taskList: taskList, calendarStore: gateway, reminderStore: reminderStore, planStore: planStore,
                                       efforts: RecurringEffortStore(context: context), blocks: blockPlanner, settings: settings,

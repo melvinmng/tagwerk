@@ -6,10 +6,18 @@ import TagwerkCore
 
 /// Asks for the way between two places. Only places and the arrival time go out (to Apple Maps), never to ChatGPT.
 protocol TravelTimeEstimating: Sendable {
-    /// Coordinates for a place that has none (address text → Apple Maps).
-    func coordinates(for place: TravelPlace) async throws -> (latitude: Double, longitude: Double)
+    /// Looks up an address text (→ Apple Maps): its coordinates and how Apple Maps writes it.
+    func lookUp(address: String) async throws -> PlaceLookup
     /// The travel time in minutes, rounded up to 5; 0 under 3 minutes. Both places have coordinates.
     func minutes(from: TravelPlace, to: TravelPlace, transport: TravelTransport, arrival: Date) async throws -> Int
+}
+
+/// An address found by Apple Maps.
+struct PlaceLookup: Equatable, Sendable {
+    var latitude: Double
+    var longitude: Double
+    /// The address as Apple Maps writes it, for the settings ("Gefunden: …").
+    var description: String
 }
 
 enum TravelTimeError: Error, Equatable {
@@ -20,11 +28,13 @@ enum TravelTimeError: Error, Equatable {
 /// Apple Maps through MapKit (`MKGeocodingRequest`, `MKDirections`). Needs no location permission: both ends are
 /// addresses or coordinates, never the device's position.
 struct MapKitTravelEstimator: TravelTimeEstimating {
-    func coordinates(for place: TravelPlace) async throws -> (latitude: Double, longitude: Double) {
-        guard let request = MKGeocodingRequest(addressString: place.text) else { throw TravelTimeError.addressNotFound }
+    func lookUp(address: String) async throws -> PlaceLookup {
+        guard let request = MKGeocodingRequest(addressString: address) else { throw TravelTimeError.addressNotFound }
         let items = try await request.mapItems
-        guard let coordinate = items.first?.location.coordinate else { throw TravelTimeError.addressNotFound }
-        return (coordinate.latitude, coordinate.longitude)
+        guard let item = items.first else { throw TravelTimeError.addressNotFound }
+        let coordinate = item.location.coordinate
+        return PlaceLookup(latitude: coordinate.latitude, longitude: coordinate.longitude,
+                           description: item.address?.fullAddress ?? item.name ?? address)
     }
 
     func minutes(from: TravelPlace, to: TravelPlace, transport: TravelTransport, arrival: Date) async throws -> Int {
@@ -120,6 +130,11 @@ final class TravelTimeService {
         return gotNewValue
     }
 
+    /// Looks up an address for the settings (the home address). Nothing is cached here.
+    func lookUp(address: String) async throws -> PlaceLookup {
+        try await estimator.lookUp(address: address)
+    }
+
     /// The place with coordinates: its own, the cached lookup, or a new lookup (cached on success). The place keeps
     /// its key, so the trip's cache entry does not depend on whether the lookup came from the cache.
     private func located(_ place: TravelPlace) async throws -> TravelPlace {
@@ -133,7 +148,7 @@ final class TravelTimeService {
         }
         if failedKeys.contains(placeKey) { throw TravelTimeError.addressNotFound }
         do {
-            let found = try await estimator.coordinates(for: place)
+            let found = try await estimator.lookUp(address: place.text)
             cache.store(latitude: found.latitude, longitude: found.longitude, forPlace: placeKey, now: now())
             result.latitude = found.latitude
             result.longitude = found.longitude
