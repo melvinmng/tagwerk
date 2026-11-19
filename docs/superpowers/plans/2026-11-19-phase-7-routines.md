@@ -410,7 +410,7 @@ struct HabitListView: View { let model: HabitsModel }            // all habits, 
 struct HabitSheet: View { let model: HabitsModel; let habit: Habit? }
 ```
 
-- [ ] **Step 1: Tests schreiben (rot).** `HabitTextTests`:
+- [x] **Step 1: Tests schreiben (rot).** `HabitTextTests`:
 
 ```swift
 @Test func subtitle_daily()        // == "7 Tage 5/7 · 30 Tage 73 % · Serie 3"
@@ -422,10 +422,10 @@ struct HabitSheet: View { let model: HabitsModel; let habit: Habit? }
 @Test func header_withAndWithoutCounter()
 ```
 
-- [ ] **Step 2:** `APP HabitTextTests` → rot.
-- [ ] **Step 3: Umsetzen.** Reihenfolge in `CaptureView`: Schnellerfassung, Health-Karte, (Task 9: „Routinen“), `HabitsSection`, Mahlzeiten, Getränke, Trainings. Zeile nach Design §7.1: Häkchen, Symbol, Name, Unterzeile; automatisch erfüllte Zeile mit Marke „automatisch“ und `sourceDetail`, Tippen zeigt die Quelle und ändert nichts; offene Zeile ruft `model.toggle`. Künftige Tage gibt es in „Erfassen“ nicht (`canGoForward`). `HabitsSection` lädt mit `.task(id: capture.day) { await model.reload(day: capture.day) }`. `HabitSheet` nach Design §7.2: Name (40 Zeichen), Symbol, „Erfüllt durch“ (vergebene Quellen deaktiviert, `daylight` nicht in der Auswahl), „Tage pro Woche“ 1–7 mit dem Fußtext aus GR2, „Zählt ab“ (heute − 89 … heute), „Pausieren“, „Gewohnheit löschen“ mit Rückfrage. „Anlegen“ ist bei `!model.canAddHabit` deaktiviert mit Hinweis. Texte deutsch und englisch.
-- [ ] **Step 4:** `APP HabitTextTests` → grün. Sichtprüfung im Simulator gegen GO1, GH1, GH3, GR2: hell, dunkel, größte Schriftstufe, Englisch, VoiceOver-Texte der Zeilen.
-- [ ] **Step 5: Commit.** `git commit -m "feat: add the habits section, habit list and habit sheet"`
+- [x] **Step 2:** `APP HabitTextTests` → rot.
+- [x] **Step 3: Umsetzen.** Reihenfolge in `CaptureView`: Schnellerfassung, Health-Karte, (Task 9: „Routinen“), `HabitsSection`, Mahlzeiten, Getränke, Trainings. Zeile nach Design §7.1: Häkchen, Symbol, Name, Unterzeile; automatisch erfüllte Zeile mit Marke „automatisch“ und `sourceDetail`, Tippen zeigt die Quelle und ändert nichts; offene Zeile ruft `model.toggle`. Künftige Tage gibt es in „Erfassen“ nicht (`canGoForward`). `HabitsSection` lädt mit `.task(id: capture.day) { await model.reload(day: capture.day) }`. `HabitSheet` nach Design §7.2: Name (40 Zeichen), Symbol, „Erfüllt durch“ (vergebene Quellen deaktiviert, `daylight` nicht in der Auswahl), „Tage pro Woche“ 1–7 mit dem Fußtext aus GR2, „Zählt ab“ (heute − 89 … heute), „Pausieren“, „Gewohnheit löschen“ mit Rückfrage. „Anlegen“ ist bei `!model.canAddHabit` deaktiviert mit Hinweis. Texte deutsch und englisch.
+- [x] **Step 4:** `APP HabitTextTests` → grün. Sichtprüfung im Simulator gegen GO1, GH1, GH3, GR2: hell, dunkel, größte Schriftstufe, Englisch, VoiceOver-Texte der Zeilen.
+- [x] **Step 5: Commit.** `git commit -m "feat: add the habits section, habit list and habit sheet"`
 
 ### Task 7: Kurzbefehl „Gewohnheit abhaken“, Zähler im Snapshot und im Widget · #141 · Zeile 4
 

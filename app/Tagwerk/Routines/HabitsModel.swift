@@ -89,6 +89,12 @@ final class HabitsModel {
         refreshLocal()
     }
 
+    /// Shows another day at once from the stores; Health is read by `reload`.
+    func show(_ target: PlanDay) {
+        day = min(target, today)
+        refreshLocal()
+    }
+
     /// Store and settings only, no Health.
     func refreshLocal() {
         let today = self.today

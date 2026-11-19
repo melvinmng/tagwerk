@@ -8,6 +8,7 @@ struct CaptureView: View {
     @Environment(AppEnvironment.self) private var environment
     @State private var sheet: CaptureSheet?
     @State private var showsReview = false
+    @State private var showsHabitList = false
     @State private var limitBumps = 0
 
     enum CaptureSheet: Identifiable {
@@ -62,6 +63,7 @@ struct CaptureView: View {
                 if model.showsHealthCard {
                     Section { HealthCard(model: model) }
                 }
+                HabitsSection(model: environment.habits, capture: model) { showsHabitList = true }
                 mealSection
                 drinkSection
                 workoutSection
@@ -73,6 +75,9 @@ struct CaptureView: View {
             .sensoryFeedback(.impact(flexibility: .rigid, intensity: 0.7), trigger: limitBumps)
             .navigationDestination(isPresented: $showsReview) {
                 WeekReviewView(model: environment.makeWeekReviewModel())
+            }
+            .navigationDestination(isPresented: $showsHabitList) {
+                HabitListView(model: environment.habits)
             }
             .assistantToolbarButton { .capture }
             .safeAreaInset(edge: .bottom) {
@@ -88,10 +93,15 @@ struct CaptureView: View {
             }
             .task {
                 await model.reload()
+                await environment.habits.reload(day: model.day)
                 // Catch up on entries that could not reach Health before (design §4.2).
                 await model.syncPending()
             }
-            .refreshable { await model.reload() }
+            .refreshable {
+                await model.reload()
+                await environment.habits.reload(day: model.day)
+            }
+            .onChange(of: model.day) { _, day in environment.habits.show(day) }
             .onAppear(perform: applyPrefill)
             .onChange(of: environment.router.capturePrefill) { _, _ in applyPrefill() }
             .sheet(item: $sheet) { sheet in

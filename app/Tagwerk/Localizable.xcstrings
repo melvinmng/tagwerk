@@ -70,6 +70,38 @@
         }
       }
     },
+    "%@ %lld min": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@ %2$lld min"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ %2$lld min"
+          }
+        }
+      }
+    },
+    "%@ %lld min aus Health": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@ %2$lld min aus Health"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ %2$lld min from Health"
+          }
+        }
+      }
+    },
     "%@ %lld.": {
       "localizations": {
         "de": {
@@ -429,6 +461,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "%1$@ of %2$@"
+          }
+        }
+      }
+    },
+    "%@ von %@ Schritten": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@ von %2$@ Schritten"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ of %2$@ steps"
           }
         }
       }
@@ -1157,6 +1205,16 @@
         }
       }
     },
+    "%lld Tage pro Woche": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld days per week"
+          }
+        }
+      }
+    },
     "%lld Tagen": {
       "localizations": {
         "de": {
@@ -1673,6 +1731,22 @@
         }
       }
     },
+    "%lld von %lld min Tageslicht": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$lld von %2$lld min Tageslicht"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld of %2$lld min daylight"
+          }
+        }
+      }
+    },
     "%lld von heute": {
       "localizations": {
         "en": {
@@ -1951,12 +2025,58 @@
         }
       }
     },
+    "1 Tag pro Woche": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 day per week"
+          }
+        }
+      }
+    },
     "1 passt nicht mehr": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "1 no longer fits"
+          }
+        }
+      }
+    },
+    "30 Tage %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "30 days %@"
+          }
+        }
+      }
+    },
+    "7 Tage %lld/%lld": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "7 Tage %1$lld/%2$lld"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "7 days %1$lld/%2$lld"
+          }
+        }
+      }
+    },
+    "7 bedeutet täglich. Quote: erfüllte Tage ÷ Zieltage, höchstens 100 %. Serie bei weniger als 7: Wochen in Folge mit erreichtem Ziel.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "7 means daily. Rate: fulfilled days ÷ target days, at most 100 %. Streak with fewer than 7: consecutive weeks that reached the goal."
           }
         }
       }
@@ -2466,6 +2586,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Due this day, not assigned"
+          }
+        }
+      }
+    },
+    "An diesem Tag ist keine Gewohnheit aktiv.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No habit is active on this day."
           }
         }
       }
@@ -3188,6 +3318,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Automatic"
+          }
+        }
+      }
+    },
+    "Automatische Quellen haken sich selbst ab, auch an Tagen ohne App-Start. Jede Quelle gilt für höchstens eine Gewohnheit. Du kannst jede Gewohnheit zusätzlich von Hand abhaken.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Automatic sources check themselves off, even on days you don’t open the app. Each source applies to one habit at most. You can always check off a habit by hand as well."
           }
         }
       }
@@ -4201,6 +4341,16 @@
         }
       }
     },
+    "Die Gewohnheit und ihre Häkchen werden gelöscht.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The habit and its checkmarks will be deleted."
+          }
+        }
+      }
+    },
     "Die Kategorie gilt für jeden Artikel mit diesem Namen.": {
       "localizations": {
         "en": {
@@ -4437,6 +4587,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "This week"
+          }
+        }
+      }
+    },
+    "Diese Woche %lld von %lld": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Diese Woche %1$lld von %2$lld"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This week %1$lld of %2$lld"
           }
         }
       }
@@ -5010,6 +5176,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Logged"
+          }
+        }
+      }
+    },
+    "Erfüllt durch": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fulfilled by"
           }
         }
       }
@@ -5774,6 +5950,82 @@
         }
       }
     },
+    "Gewohnheit": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Habit"
+          }
+        }
+      }
+    },
+    "Gewohnheit anlegen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add habit"
+          }
+        }
+      }
+    },
+    "Gewohnheit löschen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete habit"
+          }
+        }
+      }
+    },
+    "Gewohnheit löschen?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete habit?"
+          }
+        }
+      }
+    },
+    "Gewohnheit öffnen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open habit"
+          }
+        }
+      }
+    },
+    "Gewohnheiten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Habits"
+          }
+        }
+      }
+    },
+    "Gewohnheiten · %lld von %lld": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Gewohnheiten · %1$lld von %2$lld"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Habits · %1$lld of %2$lld"
+          }
+        }
+      }
+    },
     "Gib diesen Code auf GitHub ein:": {
       "localizations": {
         "en": {
@@ -6150,6 +6402,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Frequency"
+          }
+        }
+      }
+    },
+    "Höchstens %lld aktive Gewohnheiten. Pausiere oder lösche eine, um eine neue anzulegen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "At most %lld active habits. Pause or delete one to add a new one."
           }
         }
       }
@@ -8055,6 +8317,16 @@
         }
       }
     },
+    "Neue Gewohnheit": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New habit"
+          }
+        }
+      }
+    },
     "Neue Kategorie": {
       "localizations": {
         "en": {
@@ -8795,6 +9067,16 @@
         }
       }
     },
+    "Pausieren": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pause"
+          }
+        }
+      }
+    },
     "Pausiert": {
       "localizations": {
         "en": {
@@ -8821,6 +9103,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Paused, heard nothing"
+          }
+        }
+      }
+    },
+    "Pausierte Tage zählen weder in die Quote noch brechen sie eine Serie.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paused days neither count toward the rate nor break a streak."
           }
         }
       }
@@ -9229,6 +9521,16 @@
         }
       }
     },
+    "Schrittziel erreicht": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Step goal reached"
+          }
+        }
+      }
+    },
     "Schwimmen": {
       "localizations": {
         "en": {
@@ -9418,6 +9720,56 @@
           "stringUnit": {
             "state": "translated",
             "value": "Sending …"
+          }
+        }
+      }
+    },
+    "Serie %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Streak %lld"
+          }
+        }
+      }
+    },
+    "Serie %lld Wochen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Streak %lld weeks"
+          }
+        }
+      }
+    },
+    "Serie %lld+": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Streak %lld+"
+          }
+        }
+      }
+    },
+    "Serie %lld+ Wochen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Streak %lld+ weeks"
+          }
+        }
+      }
+    },
+    "Serie 1 Woche": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Streak 1 week"
           }
         }
       }
@@ -9791,6 +10143,16 @@
         }
       }
     },
+    "Symbol": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Symbol"
+          }
+        }
+      }
+    },
     "Tag": {
       "localizations": {
         "en": {
@@ -9827,6 +10189,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Open day ›"
+          }
+        }
+      }
+    },
+    "Tage pro Woche": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Days per week"
           }
         }
       }
@@ -10257,6 +10629,16 @@
         }
       }
     },
+    "Training erfasst": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Workout logged"
+          }
+        }
+      }
+    },
     "Training in Tagwerk erfassen": {
       "localizations": {
         "en": {
@@ -10659,6 +11041,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Discarded"
+          }
+        }
+      }
+    },
+    "Von Hand abhaken": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check off by hand"
           }
         }
       }
@@ -11142,6 +11534,16 @@
         }
       }
     },
+    "Wasserziel erreicht": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Water goal reached"
+          }
+        }
+      }
+    },
     "Weiter": {
       "localizations": {
         "en": {
@@ -11522,6 +11924,16 @@
         }
       }
     },
+    "Zeit bei Tageslicht": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Time in daylight"
+          }
+        }
+      }
+    },
     "Zeitblock": {
       "localizations": {
         "en": {
@@ -11850,6 +12262,16 @@
         }
       }
     },
+    "Zählt ab": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Counts from"
+          }
+        }
+      }
+    },
     "Zählt als": {
       "localizations": {
         "en": {
@@ -11958,6 +12380,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "off"
+          }
+        }
+      }
+    },
+    "automatisch": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "automatic"
           }
         }
       }
@@ -12569,6 +13001,16 @@
         }
       }
     },
+    "offen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "open"
+          }
+        }
+      }
+    },
     "ohne Project": {
       "localizations": {
         "en": {
@@ -12595,6 +13037,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "fits into the free time"
+          }
+        }
+      }
+    },
+    "pausiert": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "paused"
           }
         }
       }
