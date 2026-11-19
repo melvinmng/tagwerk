@@ -270,7 +270,7 @@ public enum HabitRules {
 }
 ```
 
-- [ ] **Step 1: Tests schreiben (rot).** `HabitRulesTests`, heute = 18.11.2026 (Mittwoch), Kalender `makeCalendar()`:
+- [x] **Step 1: Tests schreiben (rot).** `HabitRulesTests`, heute = 18.11.2026 (Mittwoch), Kalender `makeCalendar()`:
 
 ```swift
 @Test func active_respectsStartPausesAndFuture()
@@ -303,10 +303,10 @@ public enum HabitRules {
 
 `HabitStoreTests` (In-Memory-Container): `save_cutsNameToFortyCharacters`, `delete_removesChecksOfTheHabit`, `setCheck_twice_keepsOneRecord`, `setCheck_false_removesTheManualCheck`, `pauseAndResume_recordsTheClosedPause` (pausiert 16.11., fortgesetzt 18.11. → `pauses == [16.11....17.11.]`, `pausedSince == nil`), `reorder_writesOrder`. `ModelStoreLocationTests` bekommt die Erwartung, dass das Schema `HabitRecord` und `HabitCheckRecord` enthält und der bestehende Store öffnet.
 
-- [ ] **Step 2:** `CORE HabitRulesTests`, `APP HabitStoreTests` → rot.
-- [ ] **Step 3: Umsetzen.** `HabitRules` rechnet nur im Fenster. Zieltage = zählende Tage × `daysPerWeek` ÷ 7; Quote = `Int((Double(done) / target * 100).rounded())`, höchstens 100. Wochen sind Montag bis Sonntag (`IntakeRules.weekStart`). `HabitRecord.pausesData` ist JSON von `[HabitPause]`. Beide Klassen in `ModelContainerFactory.schema` ergänzen.
-- [ ] **Step 4:** `CORE HabitRulesTests`, `APP HabitStoreTests`, `APP ModelStoreLocationTests` → grün.
-- [ ] **Step 5: Commit.**
+- [x] **Step 2:** `CORE HabitRulesTests`, `APP HabitStoreTests` → rot.
+- [x] **Step 3: Umsetzen.** `HabitRules` rechnet nur im Fenster. Zieltage = zählende Tage × `daysPerWeek` ÷ 7; Quote = `Int((Double(done) / target * 100).rounded())`, höchstens 100. Wochen sind Montag bis Sonntag (`IntakeRules.weekStart`). `HabitRecord.pausesData` ist JSON von `[HabitPause]`. Beide Klassen in `ModelContainerFactory.schema` ergänzen.
+- [x] **Step 4:** `CORE HabitRulesTests`, `APP HabitStoreTests`, `APP ModelStoreLocationTests` → grün.
+- [x] **Step 5: Commit.**
 
 ```bash
 git add app/Packages/TagwerkCore app/Tagwerk/Routines/HabitRecords.swift app/Tagwerk/Persistence/ModelContainerFactory.swift app/TagwerkTests

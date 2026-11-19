@@ -9,7 +9,8 @@ enum ModelContainerFactory {
                                      PlanSuggestionRecord.self, ChatThreadRecord.self,
                                      EventDeadlineMark.self, DeadlineEventLink.self, DeadlineSuggestionDismissal.self,
                                      MealRecord.self, DrinkRecord.self, WorkoutRecord.self, PendingHealthDeletion.self,
-                                     ShoppingCategory.self, ShoppingAssignment.self, NoteRecord.self])
+                                     ShoppingCategory.self, ShoppingAssignment.self, NoteRecord.self,
+                                     HabitRecord.self, HabitCheckRecord.self])
 
     static func make(inMemory: Bool) throws -> ModelContainer {
         try ModelContainer(for: schema, configurations: inMemory ? ModelConfiguration(isStoredInMemoryOnly: true)
