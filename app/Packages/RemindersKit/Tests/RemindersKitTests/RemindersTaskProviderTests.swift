@@ -319,3 +319,44 @@ final class MemoryEstimateStore: EstimateStore {
     func minutes(for reminderID: String) -> Int? { values[reminderID] }
     func setMinutes(_ minutes: Int?, for reminderID: String) { values[reminderID] = minutes }
 }
+
+@MainActor
+struct ReminderAlarmStoreTests {
+    let store = FakeReminderStore()
+
+    init() {
+        store.records["r"] = ReminderRecord(id: "r", title: "Abgabe", notes: nil, due: DueDate(year: 2026, month: 11, day: 20, hour: 12),
+                                            ekPriority: 0, isCompleted: false, listID: "inbox", lastModified: Date(timeIntervalSince1970: 1),
+                                            alarms: [.before(amount: 10, unit: .minutes)])
+    }
+
+    @Test func setAlarms_addsMissingOnesOnly() throws {
+        try store.setAlarms([.before(amount: 1, unit: .days), .before(amount: 600, unit: .minutes)], forReminder: "r")
+        #expect(store.records["r"]?.alarms == [.before(amount: 10, unit: .minutes), .before(amount: 1, unit: .days),
+                                               .before(amount: 600, unit: .minutes)])
+        try store.setAlarms([.before(amount: 1, unit: .days)], forReminder: "r")
+        #expect(store.records["r"]?.alarms.count == 3)
+    }
+
+    @Test func removeAlarms_keepsForeignAlarms() throws {
+        try store.setAlarms([.before(amount: 1, unit: .days)], forReminder: "r")
+        try store.removeAlarms([.before(amount: 24, unit: .hours), .before(amount: 5, unit: .weeks)], forReminder: "r")
+        #expect(store.records["r"]?.alarms == [.before(amount: 10, unit: .minutes)])
+    }
+
+    @Test func saveWithoutAlarmChange_keepsStoredAlarms() throws {
+        var record = try #require(store.records["r"])
+        record.alarms = []
+        record.title = "Neu"
+        _ = try store.save(record, recurrence: .unchanged)
+        #expect(store.records["r"]?.alarms == [.before(amount: 10, unit: .minutes)])
+    }
+
+    @Test func eventDraft_withoutAlarms_leavesEventAlarmsUntouched() {
+        let event = CalendarEvent(id: "e", externalID: nil, calendarID: "c", title: "T", start: Date(timeIntervalSince1970: 1_000),
+                                  end: Date(timeIntervalSince1970: 2_000), isAllDay: false, url: nil, isBusy: true, version: "1")
+        #expect(EventDraft(event).alarms == nil)
+        #expect(EventDraft(title: "T", start: event.start, end: event.end, isAllDay: false, calendarID: "c", notes: nil, location: nil,
+                           url: nil, alarms: [.before(amount: 1, unit: .days)]).alarms == [.before(amount: 1, unit: .days)])
+    }
+}

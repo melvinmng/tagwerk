@@ -164,6 +164,83 @@ public final class EventKitGateway: ReminderStore {
         return Self.record(reminder)
     }
 
+    // MARK: Alarms
+
+    public func setAlarms(_ offsets: [ReminderOffset], forReminder id: String) throws {
+        guard let reminder = ekReminder(id: id) else { throw TaskWriteError.notFound }
+        guard let (anchor, isAllDay) = Self.alarmAnchor(of: reminder) else {
+            throw TaskWriteError.failed(String(localized: "Erinnerungen brauchen ein Fälligkeitsdatum.", bundle: .module))
+        }
+        let calendar = Calendar.current
+        for offset in offsets {
+            let exists = (reminder.alarms ?? []).contains {
+                Self.alarm($0, matches: offset, anchor: anchor, isAllDay: isAllDay, calendar: calendar, includingAbsolute: true)
+            }
+            if !exists, let alarm = Self.alarm(for: offset, anchor: anchor, isAllDay: isAllDay, calendar: calendar) {
+                reminder.addAlarm(alarm)
+            }
+        }
+        try store.save(reminder, commit: true)
+    }
+
+    public func removeAlarms(_ offsets: [ReminderOffset], forReminder id: String) throws {
+        guard let reminder = ekReminder(id: id) else { throw TaskWriteError.notFound }
+        guard let (anchor, isAllDay) = Self.alarmAnchor(of: reminder) else { return }
+        let calendar = Calendar.current
+        for alarm in reminder.alarms ?? [] where offsets.contains(where: {
+            Self.alarm(alarm, matches: $0, anchor: anchor, isAllDay: isAllDay, calendar: calendar, includingAbsolute: false)
+        }) {
+            reminder.removeAlarm(alarm)
+        }
+        try store.save(reminder, commit: true)
+    }
+
+    /// The moment relative alarms of a reminder count from, and whether its due date has no time.
+    nonisolated static func alarmAnchor(of reminder: EKReminder) -> (Date, Bool)? {
+        guard let due = dueDate(reminder.dueDateComponents) else { return nil }
+        let calendar = Calendar.current
+        return (due.startDate(in: calendar), !due.hasTime)
+    }
+
+    /// The reminders Tagwerk can show for `alarms`: relative alarms and fixed moments; location alarms and alarms after
+    /// the start are left out. A fixed alarm at the anchor itself (what the Reminders app adds for a due time) reads as
+    /// "at time of event". Without an anchor only fixed moments are readable.
+    nonisolated static func offsets(of alarms: [EKAlarm]?, anchor: Date?, isAllDay: Bool) -> [ReminderOffset] {
+        let list: [ReminderOffset] = (alarms ?? []).compactMap { alarm in
+            guard alarm.structuredLocation == nil else { return nil }
+            if let date = alarm.absoluteDate {
+                if let anchor, !isAllDay, date == anchor { return .before(amount: 0, unit: .minutes) }
+                return .absolute(date)
+            }
+            guard anchor != nil else { return nil }
+            return AlarmMapping.offset(relativeOffset: alarm.relativeOffset, isAllDay: isAllDay)
+        }
+        return ReminderOffset.normalized(list, isAllDay: isAllDay)
+    }
+
+    nonisolated static func alarm(for offset: ReminderOffset, anchor: Date, isAllDay: Bool, calendar: Calendar) -> EKAlarm? {
+        if case .absolute(let date) = offset { return EKAlarm(absoluteDate: date) }
+        guard let relative = AlarmMapping.relativeOffset(for: offset, anchor: anchor, isAllDay: isAllDay, calendar: calendar) else {
+            return nil
+        }
+        return EKAlarm(relativeOffset: relative)
+    }
+
+    /// Whether `alarm` is the alarm that `offset` would write; `includingAbsolute` also accepts a fixed alarm at the
+    /// moment the offset resolves to (to avoid adding a duplicate of the alarm the Reminders app made).
+    nonisolated static func alarm(_ alarm: EKAlarm, matches offset: ReminderOffset, anchor: Date, isAllDay: Bool,
+                                  calendar: Calendar, includingAbsolute: Bool) -> Bool {
+        guard alarm.structuredLocation == nil else { return false }
+        if case .absolute(let date) = offset { return alarm.absoluteDate == date }
+        if let absolute = alarm.absoluteDate {
+            return includingAbsolute && offset.fireDate(anchor: anchor, isAllDay: isAllDay, calendar: calendar) == absolute
+        }
+        guard let relative = AlarmMapping.relativeOffset(for: offset, anchor: anchor, isAllDay: isAllDay, calendar: calendar) else {
+            return false
+        }
+        return abs(alarm.relativeOffset - relative) < 1
+    }
+
     // MARK: Helpers
 
     /// Replaces all rules of the reminder by the one for `recurrence`; `nil` removes them all.
@@ -202,7 +279,8 @@ public final class EventKitGateway: ReminderStore {
     }
 
     nonisolated static func record(_ reminder: EKReminder) -> ReminderRecord {
-        ReminderRecord(
+        let anchor = alarmAnchor(of: reminder)
+        return ReminderRecord(
             id: reminder.calendarItemIdentifier,
             title: reminder.title ?? "",
             notes: reminder.notes,
@@ -213,7 +291,8 @@ public final class EventKitGateway: ReminderStore {
             lastModified: reminder.lastModifiedDate,
             recurrence: recurrence(reminder),
             createdAt: reminder.creationDate,
-            completedAt: reminder.completionDate
+            completedAt: reminder.completionDate,
+            alarms: offsets(of: reminder.alarms, anchor: anchor?.0, isAllDay: anchor?.1 ?? false)
         )
     }
 
@@ -373,6 +452,11 @@ extension EventKitGateway: CalendarStore {
         return Self.calendarEvent(event)
     }
 
+    public func alarms(ofEvent id: String) -> [ReminderOffset] {
+        guard let event = ekEvent(id: id) else { return [] }
+        return Self.offsets(of: event.alarms, anchor: event.startDate, isAllDay: event.isAllDay)
+    }
+
     public func deleteEvent(id: String, span: EventSpan, expectedVersion: String?) throws {
         guard let event = ekEvent(id: id) else { throw TaskWriteError.notFound }
         let current = Self.calendarEvent(event)
@@ -389,6 +473,21 @@ extension EventKitGateway: CalendarStore {
         event.notes = draft.notes
         event.location = draft.location
         event.url = draft.url
+        if let alarms = draft.alarms { replaceAlarms(of: event, with: alarms) }
+    }
+
+    /// Replaces the alarms Tagwerk can show; alarms after the start and location alarms stay as they are.
+    private func replaceAlarms(of event: EKEvent, with offsets: [ReminderOffset]) {
+        let calendar = Calendar.current
+        for alarm in event.alarms ?? [] where alarm.structuredLocation == nil
+            && (alarm.absoluteDate != nil || AlarmMapping.offset(relativeOffset: alarm.relativeOffset, isAllDay: event.isAllDay) != nil) {
+            event.removeAlarm(alarm)
+        }
+        for offset in ReminderOffset.normalized(offsets, isAllDay: event.isAllDay) {
+            if let alarm = Self.alarm(for: offset, anchor: event.startDate, isAllDay: event.isAllDay, calendar: calendar) {
+                event.addAlarm(alarm)
+            }
+        }
     }
 
     nonisolated static func ekSpan(_ span: EventSpan) -> EKSpan {

@@ -51,7 +51,9 @@ public enum ReminderOffset: Codable, Hashable, Sendable {
         }
     }
 
-    /// Equal distances compare equal: 60 minutes and 1 hour are one reminder.
+    /// Whether both mean the same distance or moment: 60 minutes and 1 hour are one reminder.
+    public func isEquivalent(to other: ReminderOffset) -> Bool { identityKey == other.identityKey }
+
     private var identityKey: [Int] {
         switch self {
         case .before(let amount, let unit): [0, amount * unit.minutes]
