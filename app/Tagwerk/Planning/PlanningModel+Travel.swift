@@ -23,7 +23,8 @@ extension PlanningModel {
     /// finds everything in the cache and returns `false`, so there is no loop.
     @discardableResult
     func refreshTravelTimes() async -> Bool {
-        guard let travelTimes, settings.travelTimeEnabled else { return false }
+        // The month does not show travel time; looking up a whole month would only cost requests.
+        guard let travelTimes, settings.travelTimeEnabled, scope != .month else { return false }
         let legs = days.flatMap { plan in travelLegs(for: plan.day, events: plan.events + plan.blocks) }
         guard !legs.isEmpty else { return false }
         guard await travelTimes.fetchMissing(legs: legs, transport: settings.travelTransport) else { return false }

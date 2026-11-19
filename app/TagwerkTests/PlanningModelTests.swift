@@ -2095,6 +2095,15 @@ struct PlanningModelTests {
         #expect(estimator.geocodeCalls.isEmpty)
     }
 
+    @Test func travel_monthScope_doesNotFetch() async {
+        calendarStore.storedEvents = [meeting()]
+        let (model, estimator) = await travelModel()
+        model.scope = .month
+        await model.reload()
+        #expect(await model.refreshTravelTimes() == false)
+        #expect(estimator.tripCalls.isEmpty)
+    }
+
     @Test func travel_withoutHome_firstEventHasNoSegment() async {
         calendarStore.storedEvents = [meeting()]
         let (model, estimator) = await travelModel(home: nil)
