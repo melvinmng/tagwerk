@@ -125,6 +125,18 @@ final class ShoppingModel {
         return categories.categories().first { $0.id == id }?.name
     }
 
+    /// Category name of every open item that has one, read from the sections already sorted and one fetch of the
+    /// categories; items in "Sonstiges" are missing.
+    func categoryNamesByItemID() -> [String: String] {
+        let names = Dictionary(categories.categories().map { ($0.id, $0.name) }, uniquingKeysWith: { first, _ in first })
+        var result: [String: String] = [:]
+        for section in sections {
+            guard let id = section.categoryID, let name = names[id] else { continue }
+            for item in section.items { result[item.id] = name }
+        }
+        return result
+    }
+
     private func clear(_ newState: State) {
         state = newState
         listTitle = nil

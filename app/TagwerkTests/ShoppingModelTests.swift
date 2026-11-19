@@ -66,6 +66,16 @@ struct ShoppingModelTests {
         #expect(model.openItems.contains { $0.name == "Kaffee" && $0.quantity == "2 Packungen" })
     }
 
+    @Test func categoryNamesByItemID_nameTheSectionOfEachOpenItem_andSkipOther() async {
+        store.records["screws"] = ReminderRecord(id: "screws", title: "Schrauben", notes: nil, due: nil, ekPriority: 0,
+                                                 isCompleted: false, listID: "shop", lastModified: nil)
+        await model.reload()
+        let names = model.categoryNamesByItemID()
+        #expect(names["milk"] == "Kühlregal")
+        #expect(names["screws"] == nil)   // "Sonstiges" has no category name
+        for item in model.openItems { #expect(names[item.id] == model.categoryName(of: item)) }
+    }
+
     @Test func add_afterAFreshLoad_skipsTheLeadingReload() async {
         await model.reload()
         let calls = store.openReminderCalls

@@ -21,9 +21,10 @@ extension AppTools {
 
     func listShopping(includeCompleted: Bool) async throws -> String {
         let shopping = try await readyShopping()
+        let categoryNames = shopping.categoryNamesByItemID()
         let open = shopping.openItems.prefix(Self.maxListedShoppingItems).map { item -> [String: Any] in
             ["id": item.id, "name": item.name, "quantity": item.quantity ?? NSNull(),
-             "category": shopping.categoryName(of: item) ?? ShoppingSorter.otherName]
+             "category": categoryNames[item.id] ?? ShoppingSorter.otherName]
         }
         let completed = includeCompleted ? shopping.completedItems.map { ["id": $0.id, "name": $0.name] } : []
         return Self.json(["ok": true, "list": shopping.listTitle ?? "", "open": open, "completed": completed])
