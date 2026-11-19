@@ -92,6 +92,7 @@ struct SettingsView: View {
                     } label: {
                         LabeledContent("Datensicherung", value: BackupSettingsView.lastBackupText(settings.lastAutoBackupAt))
                     }
+                    NavigationLink("Fokus-Timer") { FocusSettingsView() }
                 }
 
                 Section {

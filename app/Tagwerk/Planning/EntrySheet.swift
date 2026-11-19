@@ -154,6 +154,7 @@ struct EntrySheet: View {
         }
 
         Section {
+            if isBlock && model.linkedTask(eventID: event.id) != nil { FocusStartButton(block: event) }
             if isBlock && model.linkedTask(eventID: event.id) != nil { duplicateRow(event) }
             if isBlock { Button("Auf anderen Tag …") { movingDay = true } }
             if event.isEditable && !event.isInvitation {

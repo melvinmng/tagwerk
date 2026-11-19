@@ -7,6 +7,7 @@ struct TagwerkWidgetBundle: WidgetBundle {
     var body: some Widget {
         NextUpWidget()
         TodayWidget()
+        FocusLiveActivity()
     }
 }
 

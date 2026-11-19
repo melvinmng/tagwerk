@@ -66,6 +66,10 @@ final class AppEnvironment {
     let routineNotifications: RoutineNotificationScheduler
     /// Meal estimates with ChatGPT; only after consent and a tap (main design §7).
     let mealEstimator: MealEstimator
+    /// Focus timer sessions and the collection (plan P3, #161); stays on this device.
+    let focusStore: FocusStore
+    /// The focus timer: one session at a time, Live Activity and one notification at the end of the phase.
+    let focus: FocusTimerModel
     /// Writes the snapshot file the widget reads (phase 4); `directory == nil` in tests and unsigned builds.
     let snapshotWriter: WidgetSnapshotWriter
     /// Reads events for the search away from the main thread; its own read-only store.
@@ -99,7 +103,8 @@ final class AppEnvironment {
     /// EventKit gateway; tests and demo data pass fakes.
     init(modelContainer: ModelContainer, notificationCenter: (any NotificationCenterClient)? = nil,
          health: (any HealthStoring)? = nil, snapshotWriter: WidgetSnapshotWriter? = nil,
-         reminderStore: (any ReminderStore)? = nil, eventSearcher: (any EventSearching)? = nil) throws {
+         reminderStore: (any ReminderStore)? = nil, eventSearcher: (any EventSearching)? = nil,
+         focusNotificationCenter: (any FocusNotificationCenter)? = nil) throws {
         self.modelContainer = modelContainer
         self.snapshotWriter = snapshotWriter ?? WidgetSnapshotWriter(directory: nil, reload: {})
         let context = modelContainer.mainContext
@@ -241,6 +246,20 @@ final class AppEnvironment {
         self.routineNotifications = RoutineNotificationScheduler(center: notificationCenter ?? SystemNotificationCenter(),
                                                                  store: routineStore, settings: settings)
         let routines = self.routines
+        let focusStore = FocusStore(context: context)
+        self.focusStore = focusStore
+        let focus = FocusTimerModel(store: focusStore, settings: { settings.focusTimerSettings }, activity: FocusActivityController(),
+                                    notifications: FocusNotificationScheduler(center: focusNotificationCenter))
+        self.focus = focus
+        focus.completeTask = { key in
+            guard let id = TaskID(key: key) else { return }
+            await taskList.complete(id)
+        }
+        focus.postponeTask = { key in
+            guard let id = TaskID(key: key) else { return }
+            await planning.assign(id, to: planning.planDay(for: .tomorrow), moveBlocks: true)
+        }
+        focus.installIntentHandler()
         taskList.onCompletionChanged = { id, isCompleted in
             await planning.didChangeCompletion(id, isCompleted: isCompleted)
             await MainActor.run { routines.focusChanged(id, isCompleted: isCompleted) }
