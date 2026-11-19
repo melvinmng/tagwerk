@@ -292,6 +292,20 @@ struct RoutinesModelTests {
         #expect(early.focusMarks(today).first?.title == "Exposé Kapitel 2")
     }
 
+    @Test func vanishedTask_staysOpenWhenItsSourceFailedOrLostAccess() async {
+        let gone = makeTask("Exposé Kapitel 2", source: .local)
+        routineStore.addFocus(gone, on: today)
+        for error in [TaskWriteError.accessDenied, .signedOut, .failed("Netzwerk")] {
+            let source = FakeTaskProvider(source: .local)
+            source.readError = error
+            let failing = TaskListModel(providers: [source], now: { self.clock.now }, calendar: calendar)
+            let model = makeModel(taskList: failing)
+            await failing.reload()
+            model.refreshFocus()
+            #expect(model.focusMarks(today).first?.doneAt == nil)
+        }
+    }
+
     @Test func refreshFocus_followsAChangedTitle_andReopensAMarkWhoseTaskIsOpenAgain() async {
         let model = makeModel()
         let item = task("Geplant")

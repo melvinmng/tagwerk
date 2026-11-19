@@ -314,7 +314,12 @@ extension RoutinesModel {
     }
 
     private func isSettled(_ source: TaskSource) -> Bool {
-        taskList.sourceStates[source] != nil && !taskList.loadingSources.contains(source)
+        guard !taskList.loadingSources.contains(source) else { return false }
+        // Only data (live or cached) proves a task left the list; failed, no-access and signed-out sources cleared their items.
+        switch taskList.sourceStates[source] {
+        case .loaded?, .offline?: return true
+        default: return false
+        }
     }
 
     private func changedFocus() {
