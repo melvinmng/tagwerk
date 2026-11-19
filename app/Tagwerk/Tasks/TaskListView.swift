@@ -10,6 +10,9 @@ struct TaskListView: View {
     /// Opens the effort sheet of a repeating task.
     var onEditRecurring: ((RecurringItem, PlanDay) -> Void)?
     @State private var isCreating = false
+    @State private var showsParkedShares = false
+    @State private var clipboardMail: ClipboardMail?
+    @State private var showsEmptyClipboard = false
     @State private var reschedulingItem: TaskItem?
     @State private var pickingDateFor: TaskItem?
     @State private var editing: TaskItem?
@@ -49,6 +52,19 @@ struct TaskListView: View {
                             if let url = URL(string: UIApplication.openSettingsURLString) { openURL(url) }
                         }
                     )
+                }
+
+                // Shared items that were offered several times without a decision (#165).
+                if !isSelecting, !environment.shareInbox.parked.isEmpty {
+                    Section {
+                        Button { showsParkedShares = true } label: {
+                            HStack {
+                                Label("Geteilt (\(environment.shareInbox.parked.count))", systemImage: "square.and.arrow.down")
+                                Spacer()
+                                Image(systemName: "chevron.right").font(.footnote.weight(.semibold)).foregroundStyle(.tertiary)
+                            }
+                        }
+                    }
                 }
 
                 // Shopping list and notes: independent of the source filter, hidden while selecting tasks.
@@ -128,7 +144,14 @@ struct TaskListView: View {
                     ToolbarItem(placement: .topBarTrailing) { SearchButton() }
                 }
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button { isCreating = true } label: { Label("Neue Aufgabe", systemImage: "plus") }
+                    // A tap creates a task as before; a long press offers the mail from the clipboard (#166).
+                    Menu {
+                        Button { openClipboardMail() } label: { Label("Mail aus Zwischenablage", systemImage: "envelope") }
+                    } label: {
+                        Label("Neue Aufgabe", systemImage: "plus")
+                    } primaryAction: {
+                        isCreating = true
+                    }
                 }
                 AssistantToolbarItems { .tasks }
             }
@@ -142,6 +165,11 @@ struct TaskListView: View {
                 await environment.shopping.reload()
             }
             .sheet(isPresented: $isCreating) { NewTaskSheet(model: model) }
+            .sheet(isPresented: $showsParkedShares, onDismiss: { environment.shareInbox.requestRefresh() }) { ParkedShareSheet() }
+            .sheet(item: $clipboardMail) { mail in
+                MailTaskFlow(model: environment.makeMailTaskModel(text: mail.text), onFinished: {})
+            }
+            .alert("Die Zwischenablage enthält keinen Text.", isPresented: $showsEmptyClipboard) { Button("OK") {} }
             .sheet(item: $editing) { item in
                 if let provider = model.provider(for: item.id.source) {
                     TaskEditorView(item: item, provider: provider, calendar: model.calendar,
@@ -421,6 +449,21 @@ struct TaskListView: View {
     private func commentAction(for provider: any TaskProvider) -> TaskEditorModel.CommentAction? {
         guard let gitHub = provider as? GitHubTaskProvider else { return nil }
         return { id, text, version in try await gitHub.addComment(to: id, body: text, expectedVersion: version) }
+    }
+
+    /// Text copied from a mail, read from the clipboard only now: iOS asks once, nothing is read in the background.
+    private struct ClipboardMail: Identifiable {
+        let id = UUID()
+        let text: String
+    }
+
+    private func openClipboardMail() {
+        let text = UIPasteboard.general.string?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        if text.isEmpty {
+            showsEmptyClipboard = true
+        } else {
+            clipboardMail = ClipboardMail(text: text)
+        }
     }
 
     /// Sources in the current filter that could not be loaded.

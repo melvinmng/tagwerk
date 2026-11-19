@@ -7,6 +7,7 @@ struct RootView: View {
     @State private var editingTask: TaskItem?
     @State private var openEvent: CalendarEvent?
     @State private var recurringEdit: RecurringEdit?
+    @State private var shareOffer: Task<Void, Never>?
 
     /// K1 (the separate place of the tab bar) did not hold on iOS 27: the search tab sits inside the bar.
     /// The fallback K2 puts the button top right in every tab (`AssistantButton`).
@@ -26,6 +27,16 @@ struct RootView: View {
 
     private var searchPresented: Binding<Bool> {
         Binding(get: { environment.isSearchPresented }, set: { environment.isSearchPresented = $0 })
+    }
+
+    private var shareItem: Binding<ShareInboxItem?> {
+        Binding(get: { environment.shareInbox.current }, set: { if $0 == nil { environment.shareInbox.dismissCurrent() } })
+    }
+
+    /// Any sheet over the tabs; shared items wait until none is open (no sheet over a sheet).
+    private var hasOpenSheet: Bool {
+        editingTask != nil || openEvent != nil || recurringEdit != nil || environment.routines.sheet != nil
+            || environment.isSearchPresented || environment.assistant.isPresented || environment.focus.isPresented
     }
 
     struct RecurringEdit: Identifiable {
@@ -126,6 +137,16 @@ struct RootView: View {
         .sheet(item: $recurringEdit) { edit in
             RecurringEffortSheet(item: edit.item, day: edit.day, model: environment.planning)
         }
+        .sheet(item: shareItem, onDismiss: { offerSharedItems() }) { item in
+            ShareImportSheet(item: item)
+        }
+        .onChange(of: environment.shareInbox.refreshRequests) { _, _ in offerSharedItems() }
+        .onChange(of: environment.settings.setupCompleted) { _, _ in offerSharedItems() }
+        .onChange(of: hasOpenSheet) { _, open in if !open { offerSharedItems() } }
+        // The chat and the focus timer are sheets over the tabs; an open shared item closes first and stays in the inbox.
+        .onChange(of: environment.assistant.isPresented) { _, presented in if presented { environment.shareInbox.dismissCurrent() } }
+        .onChange(of: environment.focus.isPresented) { _, presented in if presented { environment.shareInbox.dismissCurrent() } }
+        .onAppear { offerSharedItems() }
         .fullScreenCover(isPresented: showsSetup) {
             SetupView(model: environment.makeSetupModel(), loginModel: environment.makeGitHubLoginModel(),
                       chatGPTSignIn: ChatGPTSignInModel(ai: environment.ai)) {
@@ -153,6 +174,7 @@ struct RootView: View {
         environment.routines.sheet = nil
         environment.closeSearch()
         environment.assistant.isPresented = false
+        environment.shareInbox.dismissCurrent()
         switch route {
         case .task(let id): showTask(id)
         case .tasksTab: selectedTab = 1
@@ -164,7 +186,8 @@ struct RootView: View {
     private func openRouterTarget() {
         guard let request = environment.router.takeRequest(setupCompleted: environment.settings.setupCompleted) else { return }
         let hadOpenSheet = editingTask != nil || openEvent != nil || recurringEdit != nil || environment.routines.sheet != nil
-            || environment.isSearchPresented || environment.assistant.isPresented
+            || environment.isSearchPresented || environment.assistant.isPresented || environment.shareInbox.current != nil
+        environment.shareInbox.dismissCurrent()
         editingTask = nil
         openEvent = nil
         recurringEdit = nil
@@ -184,6 +207,23 @@ struct RootView: View {
         case .routineWeek:
             showDay(environment.planning.today)
             presentRoutine(afterSheetClosed: hadOpenSheet) { environment.routines.openWeek() }
+        }
+    }
+
+    /// Opens the next shared item once no other sheet is open. It waits for a closing sheet (like `presentRoutine`), and
+    /// nothing is offered before the setup is done (checked by the model).
+    private func offerSharedItems() {
+        shareOffer?.cancel()
+        shareOffer = Task { @MainActor in
+            var delay = 350
+            for _ in 0..<40 {
+                try? await Task.sleep(for: .milliseconds(delay))
+                if Task.isCancelled { return }
+                // Sheets owned by a tab (new task, meal, recipe, camera) close without telling this view; look again shortly.
+                let isBlocked = environment.shareInbox.refresh(canPresent: !hasOpenSheet && !PresentedSheet.isShown)
+                if !isBlocked { return }
+                delay = 1500
+            }
         }
     }
 

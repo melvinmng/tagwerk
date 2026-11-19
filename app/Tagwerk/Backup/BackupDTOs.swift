@@ -1154,6 +1154,8 @@ struct AppSettingsBackup: Codable, Equatable {
     var shoppingSortConsent: Bool
     /// Added with "Rezept hinzufügen"; files without it read as `nil`, which leaves the setting as it is.
     var shoppingRecipeConsent: Bool?
+    /// Added with the mail summary (#166); files without it read as `nil`, which leaves the setting as it is.
+    var mailSummaryConsent: Bool?
     var healthCardDismissed: Bool
     var showsIntakeInPlan: Bool
     var widgetShowsNutrition: Bool
@@ -1232,6 +1234,7 @@ struct AppSettingsBackup: Codable, Equatable {
         shoppingCategoriesSeeded = record.shoppingCategoriesSeeded
         shoppingSortConsent = record.shoppingSortConsent
         shoppingRecipeConsent = record.shoppingRecipeConsent
+        mailSummaryConsent = record.mailSummaryConsent
         healthCardDismissed = record.healthCardDismissed
         showsIntakeInPlan = record.showsIntakeInPlan
         widgetShowsNutrition = record.widgetShowsNutrition
@@ -1308,6 +1311,7 @@ struct AppSettingsBackup: Codable, Equatable {
         record.shoppingCategoriesSeeded = shoppingCategoriesSeeded
         record.shoppingSortConsent = shoppingSortConsent
         if let shoppingRecipeConsent { record.shoppingRecipeConsent = shoppingRecipeConsent }
+        if let mailSummaryConsent { record.mailSummaryConsent = mailSummaryConsent }
         record.healthCardDismissed = healthCardDismissed
         record.showsIntakeInPlan = showsIntakeInPlan
         record.widgetShowsNutrition = widgetShowsNutrition

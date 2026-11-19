@@ -11,6 +11,10 @@ struct RecipeSheet: View {
     let model: ShoppingModel
     /// Called after the ingredients were added, with the line for the page's notice.
     let onFinished: (String) -> Void
+    /// Shared content (plan P6): the input starts with this link, text or photo instead of an empty text.
+    var start: RecipeStart?
+    /// Offered by shared items: "Verwerfen" removes the item instead of only closing the sheet.
+    var onDiscard: (() -> Void)?
 
     @State private var hasConsent = false
     @State private var result: RecipeResult?
@@ -27,7 +31,7 @@ struct RecipeSheet: View {
         NavigationStack {
             Group {
                 if hasConsent {
-                    RecipeInputView(model: model) { result = RecipeResult(candidates: $0) }
+                    RecipeInputView(model: model, start: start) { result = RecipeResult(candidates: $0) }
                 } else {
                     RecipeConsentView {
                         environment.settings.shoppingRecipeConsent = true
@@ -42,6 +46,14 @@ struct RecipeSheet: View {
             .toolbar {
                 if hasConsent {
                     ToolbarItem(placement: .cancellationAction) { Button("Abbrechen") { dismiss() } }
+                }
+                if let onDiscard {
+                    ToolbarItem(placement: .bottomBar) {
+                        Button("Verwerfen", role: .destructive) {
+                            onDiscard()
+                            dismiss()
+                        }
+                    }
                 }
             }
             .navigationDestination(item: $result) { found in
@@ -100,11 +112,31 @@ struct RecipeConsentView: View {
 
 // MARK: Input
 
+/// What a shared item puts into the input of the recipe sheet.
+enum RecipeStart {
+    case link(String)
+    case text(String)
+    case photo(UIImage)
+}
+
 /// Text, photo or link, and the button that reads the recipe.
 struct RecipeInputView: View {
     @Environment(AppEnvironment.self) private var environment
     let model: ShoppingModel
+    var start: RecipeStart?
     let onResult: ([RecipeImporter.Candidate]) -> Void
+
+    init(model: ShoppingModel, start: RecipeStart? = nil, onResult: @escaping ([RecipeImporter.Candidate]) -> Void) {
+        self.model = model
+        self.start = start
+        self.onResult = onResult
+        switch start {
+        case .link(let text): _source = State(initialValue: .link); _linkText = State(initialValue: text)
+        case .text(let text): _recipeText = State(initialValue: text)
+        case .photo(let image): _source = State(initialValue: .photo); _photo = State(initialValue: image)
+        case nil: break
+        }
+    }
 
     private enum Source: String, CaseIterable, Identifiable {
         case text, photo, link

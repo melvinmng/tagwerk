@@ -11,11 +11,22 @@ struct NewTaskSheet: View {
 
     @State private var target: TaskSource
 
-    /// `prefilledTitle` only fills the title; source and the other fields stay as in any new task.
-    init(model: TaskListModel, prefilledTitle: String? = nil, onCreated: (() -> Void)? = nil) {
+    /// Offered by shared items: "Verwerfen" removes the item instead of only closing the sheet.
+    private let onDiscard: (() -> Void)?
+
+    /// `prefilledTitle` only fills the title; source and the other fields stay as in any new task. Shared content and mails
+    /// also fill the notes (the link goes on its own last line) and the due date; a date without a time sets no time.
+    init(model: TaskListModel, prefilledTitle: String? = nil, onCreated: (() -> Void)? = nil,
+         prefilledNotes: String? = nil, prefilledURL: URL? = nil, prefilledDue: DueDate? = nil, onDiscard: (() -> Void)? = nil) {
         self.model = model
         self.onCreated = onCreated
+        self.onDiscard = onDiscard
         _title = State(initialValue: prefilledTitle ?? "")
+        _notes = State(initialValue: NewTaskPrefill.notes(text: prefilledNotes, url: prefilledURL) ?? "")
+        let dueFields = NewTaskPrefill.dueFields(prefilledDue, calendar: model.calendar, fallback: Date())
+        _hasDue = State(initialValue: dueFields.hasDue)
+        _dueDate = State(initialValue: dueFields.date)
+        _hasTime = State(initialValue: dueFields.hasTime)
         let available = Set(Self.availableTargets(in: model))
         _target = State(initialValue: model.filter.creationTarget(available: available))
         _priority = State(initialValue: model.filter.creationTarget(available: available) == .reminders ? .p4 : nil)
@@ -176,6 +187,14 @@ struct NewTaskSheet: View {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Hinzufügen") { Task { await save() } }
                         .disabled(!canSave)
+                }
+                if let onDiscard {
+                    ToolbarItem(placement: .bottomBar) {
+                        Button("Verwerfen", role: .destructive) {
+                            onDiscard()
+                            dismiss()
+                        }
+                    }
                 }
             }
             .task { reminderLists = await model.containers(for: .reminders) }

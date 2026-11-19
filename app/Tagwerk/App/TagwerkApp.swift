@@ -2,6 +2,7 @@ import AppIntents
 import HealthBridge
 import SwiftData
 import SwiftUI
+import TagwerkCore
 import UserNotifications
 
 @main
@@ -19,7 +20,8 @@ struct TagwerkApp: App {
             // Hosted unit tests never write into the real App Group container.
             let isTestHost = ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
             let environment = try AppEnvironment(modelContainer: container, health: health,
-                                                 snapshotWriter: isTestHost ? nil : .live())
+                                                 snapshotWriter: isTestHost ? nil : .live(),
+                                                 shareInbox: isTestHost ? nil : AppGroup.shareInboxDirectory.map { ShareInbox(directory: $0) })
             _environment = State(initialValue: environment)
             // App Intents run in this process and share the one model container (phase 4 design §8).
             let services = IntentServices(environment: environment)
@@ -69,6 +71,8 @@ struct TagwerkApp: App {
                 .onChange(of: scenePhase) { _, phase in
                     switch phase {
                     case .active:
+                        // Items shared from other apps; the root view opens their sheets once nothing else is open.
+                        environment.shareInbox.appBecameActive()
                         Task {
                             await environment.focus.restore()
                             // A start before the first unlock could not read the GitHub sign-in; try again.
