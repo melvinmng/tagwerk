@@ -130,4 +130,34 @@ struct LocalizedTests {
     @Test func appLanguage_followsTheTestLanguage() {
         #expect(VoiceLanguage.app == .german)
     }
+
+    /// Phase 5 design §5.10: every line of the table has its English text.
+    @Test func shoppingTexts_haveEnglish() {
+        let expected: [(String.LocalizationValue, String)] = [
+            ("Einkaufsliste", "Shopping List"), ("Notizen", "Notes"), ("Einkaufsliste einrichten", "Set up shopping list"),
+            ("Liste „\("Einkauf")“ als Einkaufsliste verwenden?", "Use the list “Einkauf” as your shopping list?"),
+            ("Verwenden", "Use"), ("Andere Liste …", "Another List …"), ("Nicht jetzt", "Not now"),
+            ("\(7) offen", "7 open"), ("Artikel hinzufügen", "Add item"), ("Erledigt · \(3)", "Completed · 3"),
+            ("Erledigte entfernen", "Remove Completed"), ("Sonstiges", "Other"), ("Kategorien verwalten", "Manage Categories"),
+            ("Mit ChatGPT sortieren", "Sort with ChatGPT"), ("Vorschlag von ChatGPT", "Suggestion from ChatGPT"),
+            ("Vorschlag übernehmen", "Apply"), ("Verwerfen", "Discard"), ("Neue Notiz", "New note"),
+            ("Tagesstart", "Morning"), ("Tagesabschluss", "Evening"), ("Auf die Einkaufsliste", "Add to Shopping List"),
+            ("Einkaufsliste zeigen", "Show Shopping List"), ("Einkaufsliste ändern", "Change shopping list"),
+        ]
+        for (key, english) in expected {
+            #expect(Localized.string(key, in: .english, bundle: .main) == english)
+        }
+        // The key differs from the German text, because "Übernehmen" elsewhere means "Accept".
+        #expect(Localized.string("Vorschlag übernehmen", in: .german, bundle: .main) == "Übernehmen")
+    }
+
+    @Test func shoppingPlurals_followTheCount() {
+        func english(_ key: String.LocalizationValue) -> String { Localized.string(key, in: .english, bundle: .main) }
+        #expect(english("\(1) Artikel hinzugefügt:") == "1 item added:")
+        #expect(english("\(3) Artikel hinzugefügt:") == "3 items added:")
+        #expect(english("\(1) erledigte Artikel endgültig löschen?") == "Permanently delete 1 completed item?")
+        #expect(Localized.string("\(1) erledigte Artikel endgültig löschen?", in: .german, bundle: .main)
+                == "1 erledigten Artikel endgültig löschen?")
+        #expect(Localized.string("und \(1) weitere", in: .german, bundle: .main) == "und 1 weiterer")
+    }
 }

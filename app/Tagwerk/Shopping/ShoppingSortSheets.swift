@@ -95,7 +95,7 @@ struct ShoppingSortResultSheet: View {
                 }
                 if !proposal.changes.isEmpty {
                     ToolbarItem(placement: .confirmationAction) {
-                        Button("Übernehmen") { onApply(selected) }.disabled(selected.changes.isEmpty)
+                        Button("Vorschlag übernehmen") { onApply(selected) }.disabled(selected.changes.isEmpty)
                     }
                 }
             }

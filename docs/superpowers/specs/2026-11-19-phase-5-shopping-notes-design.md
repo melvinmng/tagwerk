@@ -507,3 +507,43 @@ Schätzungen in Stunden, ohne Review-Schleifen. Sie sind Erfahrungswerte aus den
 | | **Summe** | | **62** |
 
 Reihenfolge: 0 → 1, 2 → 3 → 4, 5 → 6, 7 → 8, 10, 11 → 12. Paket 9 (Notizen) hängt an nichts davon und kann jederzeit nach Paket 1 laufen. Ein erster nutzbarer Stand (Liste raus aus den Aufgaben, flache Einkaufsseite) entsteht nach den Paketen 1, 2, 5 und Teilen von 6 und 7.
+
+## Nachtrag: Spike 0 (Stand 2026-11-19)
+
+Der Spike am Gerät (S1–S5) ist **nicht durchgeführt**. Gebaut wurde mit den Annahmen aus §7; keine davon ist damit belegt.
+
+| Nr. | Stand | Angenommene Vorgabe | Folge, falls die Annahme nicht hält |
+|---|---|---|---|
+| S1 | offen | keine (ohne Einfluss auf den Bau) | Hinweis, dass neue Artikel in Erinnerungen unsortiert erscheinen |
+| S2 | offen | `creationDate` und `completionDate` sind gefüllt | `completedAt = completionDate ?? lastModifiedDate` in `EventKitGateway.record(_:)` |
+| S3 | offen | geteilte Listen lassen sich schreiben | keine Änderung nötig (Fehlermeldung genügt) |
+| S4 | offen | der Hintergrund-Intent darf schreiben | `AddToShoppingListIntent.supportedModes = .foreground(.immediate)` |
+| S5 | offen | erledigte Artikel lassen sich schnell lesen | „Erledigt“ erst beim Aufklappen laden |
+
+## Nachtrag: Abweichungen bei der Umsetzung (Stand 2026-11-19)
+
+Umgesetzt sind die Tasks 2–17 des Plans. Die Regeln R1–R12 und §5.3–§5.10 sind unverändert; abgewichen wurde nur an den folgenden Stellen.
+
+**Aus dem Plan (A1–A6):**
+- A1: `ReminderStore.defaultListID()` legt Apples Standardliste offen (Standard `nil`).
+- A2: `ShoppingModel` liest `EventKitGateway.changes` nicht selbst; `AppEnvironment.startObservingChanges()` lädt es mit. Eine eigene Entprellung gibt es nicht.
+- A3: `AppEnvironment.init` nimmt einen `reminderStore` entgegen (Standard: das Gateway).
+- A4: Eine Zuordnung ohne Kategorie bedeutet „Sonstiges“ und schlägt das Wörterbuch. Das gilt für Handzuordnungen und für übernommene Vorschläge von ChatGPT.
+- A5: `ShoppingInputParser.parseAll(_:)` meldet zusätzlich die Zahl der weggelassenen Artikel.
+- A6: `setShoppingList(_:)` plant Mitteilungen und Snapshot ausdrücklich neu.
+
+**Zusätzlich bei der Umsetzung:**
+- R2: Die Faltung macht aus „ß“ ein „ss“ (Verhalten von Foundation). „Äpfel“ und „Apfel“ erhalten denselben Schlüssel, weil „ä“ zu „a“ wird; Einzahl und Mehrzahl werden weiterhin nicht angeglichen.
+- R3: Eine Zahl mit Einheit, aber ohne Namen („500 g“) bleibt ein Name. Ein Teil, der nur aus „und“/„and“ besteht, entfällt.
+- §5.1: Ein Notizfeld gilt als „lang“, sobald nach der ersten Zeile noch Text folgt, auch wenn die erste Zeile leer ist.
+- §5.4: Die Unterzeile „7 offen · Liste ‚Einkauf‘ in Erinnerungen“ steht als erste Zeile der Liste, nicht im Navigationskopf. Marken entstehen laufend aus dem Feldinhalt; „Senden“ legt genau die gezeigten Marken an. Der Pfeil in der Aufnahmeleiste füllt nur das Feld.
+- §5.5: Eine von ChatGPT vorgeschlagene neue Kategorie erscheint nur, wenn ihr mindestens ein Artikel zugeordnet wird. Je Artikel zählt der erste Eintrag der Antwort, auch wenn er ungültig ist.
+- §5.6: Der Pfeil in der Aufnahmeleiste der Notizen speichert die diktierte Notiz sofort (er ist das Tippen des Nutzers).
+- §5.7: Die Zeile „Erinnerungslisten“ zeigt jetzt immer „n von m“ (vorher „Alle“, wenn alles gewählt war).
+- §5.8: Die Sammelkarte nennt eine angegebene Menge („＋ 2 Zwiebeln“). Die Antwort von `update_shopping` enthält `failed` und `failure` nur, wenn ein Schreibvorgang scheiterte.
+- §5.9: Die Antwort des Kurzbefehls zählt wieder geöffnete Artikel als hinzugefügt.
+- §5.10: „Übernehmen“ heißt im Ergebnisblatt englisch „Apply“ (eigener Schlüssel, weil derselbe deutsche Text an anderer Stelle „Accept“ bedeutet). „Nicht jetzt“ bleibt beim vorhandenen „Not now“. „Lösen“ heißt bei Notizen englisch „Unpin“.
+- Wörterbuch: 581 Begriffe. Die Trefferquote ist nicht gemessen.
+
+**Geräte-Checkliste (Plan, Task 17, Schritt 4):** nicht durchgeführt; alle acht Punkte sind offen.
+

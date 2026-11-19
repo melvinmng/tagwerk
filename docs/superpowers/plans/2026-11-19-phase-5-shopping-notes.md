@@ -2,7 +2,9 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-> **Status:** Entwurf vom 19.11.2026 zur freigegebenen Spec (Freigabe 19.11.2026). Nichts gebaut, nichts am Gerät oder im Simulator geprüft. Die Aussagen zum Ist-Zustand stammen aus dem Quelltext dieses Standes; die Aussagen zu EventKit stammen aus der Spec (dort als [SDK]/[Annahme] markiert) und sind bis Task 1 ungeprüft.
+> **Umsetzungsstand 19.11.2026:** Tasks 2–17 sind umgesetzt (`app/test-all.sh` grün). Offen sind Task 1 (Spike am Gerät), die Sichtprüfungen im Simulator (Tasks 9, 11, 14) und die Geräte-Checkliste (Task 17, Schritt 4). Einzelheiten: `docs/superpowers/2026-11-19-overnight-log.md`, Abschnitt „Phase 5 Einkaufsliste und Notizen“.
+
+> **Status bei Planerstellung:** Entwurf vom 19.11.2026 zur freigegebenen Spec (Freigabe 19.11.2026). Nichts gebaut, nichts am Gerät oder im Simulator geprüft. Die Aussagen zum Ist-Zustand stammen aus dem Quelltext dieses Standes; die Aussagen zu EventKit stammen aus der Spec (dort als [SDK]/[Annahme] markiert) und sind bis Task 1 ungeprüft.
 
 **Goal:** Eine gewählte Erinnerungsliste wird zur Einkaufsliste mit eigener Seite (Kategorien, Abhaken, Eingabe mit Diktat, Siri, Assistent) und fällt aus Aufgaben, Planung, Wochenrückblick und Mitteilungen heraus; Notizen bekommen einen lokalen Speicher `NoteRecord` mit Liste, Schnellerfassung und Editor.
 
@@ -1229,7 +1231,7 @@ extension NotesListView {
 **Files:**
 - Modify: `Tagwerk/Localizable.xcstrings`, `Tagwerk/AppShortcuts.xcstrings`, `Packages/TagwerkCore/Sources/TagwerkCore/Resources/Localizable.xcstrings`, `Packages/RemindersKit/Sources/RemindersKit/Resources/Localizable.xcstrings`, `Tagwerk/App/DemoData.swift`, `TagwerkTests/LocalizedTests.swift`, Spec (Nachtrag)
 
-- [ ] **Schritt 1: Englisch prüfen.** Jede Zeile der Tabelle Spec §5.10 steht wörtlich im Katalog; Mehrzahl („1 Artikel“/„3 Artikel“, „1 item“/„3 items“, „%lld offen“, „Erledigt · %lld“) über Plural-Varianten. Test in `LocalizedTests`:
+- [x] **Schritt 1: Englisch prüfen.** Jede Zeile der Tabelle Spec §5.10 steht wörtlich im Katalog; Mehrzahl („1 Artikel“/„3 Artikel“, „1 item“/„3 items“, „%lld offen“, „Erledigt · %lld“) über Plural-Varianten. Test in `LocalizedTests`:
 
 ```swift
 @Test func shoppingTexts_haveEnglish() {
@@ -1240,9 +1242,9 @@ extension NotesListView {
 }
 ```
 
-- [ ] **Schritt 2: Demo-Daten** (`-TagwerkDemoData`, nur Simulator): `DemoData` legt drei Notizen an (eine `free` angeheftet, eine `free` diktiert, eine `evening` mit `dayKey` von gestern) und seedet die Kategorien. Einen Demo-Store für Erinnerungen gibt es nicht: Die Einkaufsliste zeigt im Simulator die echten Erinnerungen des Simulators oder, ohne Freigabe, den Zustand ohne Zugriff.
-- [ ] **Schritt 3:** `app/test-all.sh`. Erwartet: `ALL TESTS PASSED`.
-- [ ] **Schritt 4: Geräte-Checkliste** (echtes iPhone, echte Liste; Ergebnis je Zeile festhalten):
+- [x] **Schritt 2: Demo-Daten** (`-TagwerkDemoData`, nur Simulator): `DemoData` legt drei Notizen an (eine `free` angeheftet, eine `free` diktiert, eine `evening` mit `dayKey` von gestern) und seedet die Kategorien. Einen Demo-Store für Erinnerungen gibt es nicht: Die Einkaufsliste zeigt im Simulator die echten Erinnerungen des Simulators oder, ohne Freigabe, den Zustand ohne Zugriff.
+- [x] **Schritt 3:** `app/test-all.sh`. Erwartet: `ALL TESTS PASSED`.
+- [ ] **Schritt 4: Geräte-Checkliste** (offen, nicht durchgeführt) (echtes iPhone, echte Liste; Ergebnis je Zeile festhalten):
   1. Diktat in der Eingabezeile: „Kaffee, Reis und zwei Zwiebeln“ erzeugt drei Marken, nichts wird ohne Tippen gespeichert.
   2. Siri erkennt „Auf die Einkaufsliste in Tagwerk“ und fragt „Was soll auf die Liste?“; auch bei gesperrtem Gerät.
   3. Kaltstart über `tagwerk://shopping` (Safari) öffnet die Einkaufsseite; ohne gewählte Liste die Einstellungsseite.
@@ -1251,8 +1253,8 @@ extension NotesListView {
   6. Wörterbuch an der echten Liste: Anteil der Artikel unter „Sonstiges“ notieren (nur Beobachtung, kein Abnahmekriterium).
   7. „Mit ChatGPT sortieren“: Einwilligung erscheint einmal; Ergebnisblatt; Flugmodus → Meldung „Keine Verbindung“.
   8. Hell, dunkel, größte Schriftstufe, Englisch, VoiceOver auf Einkaufsseite, Kategorien und Notizen.
-- [ ] **Schritt 5:** Nachtrag „Abweichungen bei der Umsetzung“ ans Ende der Spec (A1–A6 aus diesem Plan, Spike-Folgen, Ergebnis der Checkliste).
-- [ ] **Schritt 6:** Commit: `git add app docs/superpowers && git commit -m "docs: record phase 5 device checks and deviations"`
+- [x] **Schritt 5:** Nachtrag „Abweichungen bei der Umsetzung“ ans Ende der Spec (A1–A6 aus diesem Plan, Spike-Folgen, Ergebnis der Checkliste).
+- [x] **Schritt 6:** Commit: `git add app docs/superpowers && git commit -m "docs: record phase 5 device checks and deviations"`
 
 ## Reihenfolge und Abhängigkeiten der Tasks
 

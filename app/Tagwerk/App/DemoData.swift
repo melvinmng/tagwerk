@@ -38,11 +38,29 @@ enum DemoData {
             try seedIntake(environment)
             await environment.capture.reload()
             seedCompletedTasks(environment)
+            seedNotes(environment)
             // Phase 4: the widget reads the demo plan right away.
             environment.writeSnapshot()
             print("DemoData: sample data created")
         } catch {
             print("DemoData: seeding failed: \(error)")
+        }
+    }
+
+    /// Phase 5: three notes (one pinned, one dictated, one evening thought of yesterday, so the filter shows)
+    /// and the built-in shopping categories. There is no demo reminder store: the shopping list shows the
+    /// simulator's real reminders once a list is chosen.
+    private static func seedNotes(_ environment: AppEnvironment) {
+        environment.shoppingCategories.seedIfNeeded()
+        let notes = environment.notes
+        guard notes.count == 0 else { return }
+        let planning = environment.planning
+        let yesterday = planning.today.adding(days: -1, calendar: planning.calendar)
+        notes.create(text: "Heute lief die Gliederung gut.\nMorgen zuerst die Quellen sichten.", kind: .evening,
+                     dayKey: NoteDayKey.string(yesterday))
+        notes.create(text: "Geschenkidee für Lea\nKochbuch oder Konzertkarten", wasDictated: true)
+        if let pinned = notes.create(text: "Ideen Hausarbeit\nGliederung überarbeiten\nZwei weitere Quellen suchen") {
+            notes.setPinned(pinned.id, true)
         }
     }
 

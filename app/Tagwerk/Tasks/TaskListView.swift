@@ -128,8 +128,15 @@ struct TaskListView: View {
                 }
                 AssistantToolbarItems { .tasks }
             }
-            .refreshable { await model.reload() }
-            .task { await model.reload() }
+            // The shopping row's counter follows every reload of the tasks.
+            .refreshable {
+                await model.reload()
+                await environment.shopping.reload()
+            }
+            .task {
+                await model.reload()
+                await environment.shopping.reload()
+            }
             .sheet(isPresented: $isCreating) { NewTaskSheet(model: model) }
             .sheet(item: $editing) { item in
                 if let provider = model.provider(for: item.id.source) {

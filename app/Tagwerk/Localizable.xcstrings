@@ -768,24 +768,6 @@
     },
     "%lld Artikel hinzugefügt:": {
       "localizations": {
-        "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld item added:"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld items added:"
-                }
-              }
-            }
-          }
-        },
         "de": {
           "variations": {
             "plural": {
@@ -799,6 +781,24 @@
                 "stringUnit": {
                   "state": "translated",
                   "value": "%lld Artikel hinzugefügt:"
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld item added:"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld items added:"
                 }
               }
             }
@@ -10475,6 +10475,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Suggestion · move"
+          }
+        }
+      }
+    },
+    "Vorschlag übernehmen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apply"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Übernehmen"
           }
         }
       }
