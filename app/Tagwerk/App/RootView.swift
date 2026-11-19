@@ -149,6 +149,8 @@ struct RootView: View {
     /// Opens the target of a `tagwerk://` link or shortcut once setup is done; links only navigate.
     private func openRouterTarget() {
         guard let request = environment.router.takeRequest(setupCompleted: environment.settings.setupCompleted) else { return }
+        let hadOpenSheet = editingTask != nil || openEvent != nil || recurringEdit != nil || environment.routines.sheet != nil
+            || environment.isSearchPresented || environment.assistant.isPresented
         editingTask = nil
         openEvent = nil
         recurringEdit = nil
@@ -161,10 +163,23 @@ struct RootView: View {
         case .shopping: environment.openShopping()
         case .routineStart:
             showDay(environment.planning.today)
-            environment.routines.openStart()
+            presentRoutine(afterSheetClosed: hadOpenSheet) { environment.routines.openStart() }
         case .routineEvening:
             showDay(environment.planning.today)
-            environment.routines.openEvening()
+            presentRoutine(afterSheetClosed: hadOpenSheet) { environment.routines.openEvening() }
+        }
+    }
+
+    /// SwiftUI drops a sheet that is presented in the same update in which another one is dismissed, so the routine
+    /// sheet waits for the closing animation (like `showTask`) when a sheet was open.
+    private func presentRoutine(afterSheetClosed: Bool, _ present: @escaping @MainActor () -> Void) {
+        guard afterSheetClosed else {
+            present()
+            return
+        }
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(350))
+            present()
         }
     }
 
