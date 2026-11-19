@@ -139,7 +139,8 @@ public enum MarkdownText {
         case "quot": return "\""
         case "apos": return "'"
         case "nbsp": return " "
-        default: break
+        default:
+            if let named = namedEntities[name] { return named }
         }
         guard name.hasPrefix("#") else { return nil }
         let digits = name.dropFirst()
@@ -147,6 +148,14 @@ public enum MarkdownText {
         guard let value, let scalar = Unicode.Scalar(value) else { return nil }
         return String(Character(scalar))
     }
+
+    /// Named entities beyond the XML ones that German and English pages use; anything else stays as written.
+    private static let namedEntities: [String: String] = [
+        "auml": "ä", "ouml": "ö", "uuml": "ü", "Auml": "Ä", "Ouml": "Ö", "Uuml": "Ü", "szlig": "ß", "euro": "€",
+        "hellip": "…", "ndash": "–", "mdash": "—", "bull": "•", "middot": "·", "laquo": "«", "raquo": "»",
+        "ldquo": "“", "rdquo": "”", "lsquo": "‘", "rsquo": "’", "deg": "°", "frac12": "½", "frac14": "¼", "frac34": "¾",
+        "times": "×", "copy": "©", "reg": "®", "eacute": "é", "egrave": "è", "agrave": "à", "ccedil": "ç"
+    ]
 
     // MARK: Helpers
 
