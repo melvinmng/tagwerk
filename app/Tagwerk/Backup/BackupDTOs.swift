@@ -911,6 +911,103 @@ struct FocusMarkBackup: BackupEntity {
     }
 }
 
+/// A finished focus timer session (plan P3). A session that is still running is not part of the backup: its timer state is bound to
+/// this device (Live Activity, notification), so only sessions with an outcome are written. `activityID` is device-bound too.
+struct FocusSessionBackup: BackupEntity {
+    static let modelName = "FocusSessionRecord"
+    var id: UUID
+    var taskKey: String?
+    var blockEventID: String?
+    var title: String
+    var start: Date
+    var pausesJSON: Data?
+    var pausedSince: Date?
+    var skipsJSON: Data?
+    var settingsJSON: Data?
+    var endedAt: Date?
+    var outcomeRaw: String?
+    var focusedSeconds: Int
+
+    init(_ record: FocusSessionRecord) {
+        id = record.id
+        taskKey = record.taskKey
+        blockEventID = record.blockEventID
+        title = record.title
+        start = record.start
+        pausesJSON = record.pausesJSON
+        pausedSince = record.pausedSince
+        skipsJSON = record.skipsJSON
+        settingsJSON = record.settingsJSON
+        endedAt = record.endedAt
+        outcomeRaw = record.outcomeRaw
+        focusedSeconds = record.focusedSeconds
+    }
+
+    func makeRecord() -> FocusSessionRecord {
+        let record = FocusSessionRecord(id: id, taskKey: taskKey, blockEventID: blockEventID, title: title, state: FocusTimerState(start: start, settings: FocusTimerSettings()))
+        record.id = id
+        record.taskKey = taskKey
+        record.blockEventID = blockEventID
+        record.title = title
+        record.start = start
+        record.pausesJSON = pausesJSON
+        record.pausedSince = pausedSince
+        record.skipsJSON = skipsJSON
+        record.settingsJSON = settingsJSON
+        record.endedAt = endedAt
+        record.outcomeRaw = outcomeRaw
+        record.focusedSeconds = focusedSeconds
+        record.activityID = nil
+        return record
+    }
+}
+
+struct EffortSampleBackup: BackupEntity {
+    static let modelName = "EffortSampleRecord"
+    var id: UUID
+    var taskKey: String
+    var sourceRaw: String
+    var labelsJSON: Data?
+    var estimateMinutes: Int?
+    var actualMinutes: Int
+    var methodRaw: String
+    var completedAt: Date
+    var trimmedEventID: String?
+    var trimmedOriginalEnd: Date?
+    var trimmedNewEnd: Date?
+
+    init(_ record: EffortSampleRecord) {
+        id = record.id
+        taskKey = record.taskKey
+        sourceRaw = record.sourceRaw
+        labelsJSON = record.labelsJSON
+        estimateMinutes = record.estimateMinutes
+        actualMinutes = record.actualMinutes
+        methodRaw = record.methodRaw
+        completedAt = record.completedAt
+        trimmedEventID = record.trimmedEventID
+        trimmedOriginalEnd = record.trimmedOriginalEnd
+        trimmedNewEnd = record.trimmedNewEnd
+    }
+
+    func makeRecord() -> EffortSampleRecord {
+        let record = EffortSampleRecord(taskKey: taskKey, source: .local, labels: [], estimateMinutes: estimateMinutes, actualMinutes: actualMinutes,
+                                        method: .focus, completedAt: completedAt)
+        record.id = id
+        record.taskKey = taskKey
+        record.sourceRaw = sourceRaw
+        record.labelsJSON = labelsJSON
+        record.estimateMinutes = estimateMinutes
+        record.actualMinutes = actualMinutes
+        record.methodRaw = methodRaw
+        record.completedAt = completedAt
+        record.trimmedEventID = trimmedEventID
+        record.trimmedOriginalEnd = trimmedOriginalEnd
+        record.trimmedNewEnd = trimmedNewEnd
+        return record
+    }
+}
+
 struct WeekReflectionBackup: BackupEntity {
     static let modelName = "WeekReflectionRecord"
     var weekKey: String
@@ -1036,6 +1133,13 @@ struct AppSettingsBackup: Codable, Equatable {
     var weekPlanningReminderEnabled: Bool?
     var weekPlanningReminderWeekday: Int?
     var weekPlanningReminderMinutes: Int?
+    /// Optional, so a backup written before the focus timer settings were part of it still decodes; a missing value keeps the default.
+    var focusWorkMinutes: Int?
+    var focusShortBreakMinutes: Int?
+    var focusLongBreakMinutes: Int?
+    var focusRounds: Int?
+    var focusUsesPomodoro: Bool?
+    var effortHistoryInPlanning: Bool?
     var showsRoutinesInPlan: Bool
     var noteSuggestionConsent: Bool
     var noteSortOrderRaw: String
@@ -1105,6 +1209,12 @@ struct AppSettingsBackup: Codable, Equatable {
         weekPlanningReminderEnabled = record.weekPlanningReminderEnabled
         weekPlanningReminderWeekday = record.weekPlanningReminderWeekday
         weekPlanningReminderMinutes = record.weekPlanningReminderMinutes
+        focusWorkMinutes = record.focusWorkMinutes
+        focusShortBreakMinutes = record.focusShortBreakMinutes
+        focusLongBreakMinutes = record.focusLongBreakMinutes
+        focusRounds = record.focusRounds
+        focusUsesPomodoro = record.focusUsesPomodoro
+        effortHistoryInPlanning = record.effortHistoryInPlanning
         showsRoutinesInPlan = record.showsRoutinesInPlan
         noteSuggestionConsent = record.noteSuggestionConsent
         noteSortOrderRaw = record.noteSortOrderRaw
@@ -1174,6 +1284,12 @@ struct AppSettingsBackup: Codable, Equatable {
         if let weekPlanningReminderEnabled { record.weekPlanningReminderEnabled = weekPlanningReminderEnabled }
         if let weekPlanningReminderWeekday { record.weekPlanningReminderWeekday = weekPlanningReminderWeekday }
         if let weekPlanningReminderMinutes { record.weekPlanningReminderMinutes = weekPlanningReminderMinutes }
+        if let focusWorkMinutes { record.focusWorkMinutes = focusWorkMinutes }
+        if let focusShortBreakMinutes { record.focusShortBreakMinutes = focusShortBreakMinutes }
+        if let focusLongBreakMinutes { record.focusLongBreakMinutes = focusLongBreakMinutes }
+        if let focusRounds { record.focusRounds = focusRounds }
+        if let focusUsesPomodoro { record.focusUsesPomodoro = focusUsesPomodoro }
+        if let effortHistoryInPlanning { record.effortHistoryInPlanning = effortHistoryInPlanning }
         record.showsRoutinesInPlan = showsRoutinesInPlan
         record.noteSuggestionConsent = noteSuggestionConsent
         record.noteSortOrderRaw = noteSortOrderRaw
@@ -1224,6 +1340,10 @@ struct BackupEntities: Codable, Equatable {
     var routineDays: [RoutineDayBackup] = []
     var eveningChecklistItems: [EveningChecklistItemBackup] = []
     var focusMarks: [FocusMarkBackup] = []
+    /// Optional on purpose: a file written before the focus data was part of the backup has no such lists. `nil` means "the file says
+    /// nothing about it", and a restore then leaves the focus data of this device alone instead of wiping it.
+    var focusSessions: [FocusSessionBackup]?
+    var effortSamples: [EffortSampleBackup]?
     var weekReflections: [WeekReflectionBackup] = []
 
     init() {}
@@ -1260,11 +1380,13 @@ struct BackupEntities: Codable, Equatable {
         routineDays = try container.decodeIfPresent([RoutineDayBackup].self, forKey: .routineDays) ?? []
         eveningChecklistItems = try container.decodeIfPresent([EveningChecklistItemBackup].self, forKey: .eveningChecklistItems) ?? []
         focusMarks = try container.decodeIfPresent([FocusMarkBackup].self, forKey: .focusMarks) ?? []
+        focusSessions = try container.decodeIfPresent([FocusSessionBackup].self, forKey: .focusSessions)
+        effortSamples = try container.decodeIfPresent([EffortSampleBackup].self, forKey: .effortSamples)
         weekReflections = try container.decodeIfPresent([WeekReflectionBackup].self, forKey: .weekReflections) ?? []
     }
 
     /// Model names of everything the file holds, for the completeness check against the schema.
-    static let modelNames: Set<String> = ["AppSettings", LocalTaskBackup.modelName, LocalOccurrenceCompletionBackup.modelName, DayAssignmentBackup.modelName, DayOverrideBackup.modelName, ReminderEstimateBackup.modelName, EventTaskLinkBackup.modelName, RecurringEffortValueBackup.modelName, RecurringEffortOverrideBackup.modelName, RecurringOccurrenceDoneBackup.modelName, DayLunchBackup.modelName, EventAvailabilityMarkBackup.modelName, EventMergeDecisionBackup.modelName, ReminderOverrideBackup.modelName, EventDeadlineMarkBackup.modelName, DeadlineEventLinkBackup.modelName, DeadlineSuggestionDismissalBackup.modelName, MealBackup.modelName, DrinkBackup.modelName, WorkoutBackup.modelName, ShoppingCategoryBackup.modelName, ShoppingAssignmentBackup.modelName, NoteBackup.modelName, NoteFolderBackup.modelName, BibleStudySessionBackup.modelName, HabitBackup.modelName, HabitCheckBackup.modelName, RoutineDayBackup.modelName, EveningChecklistItemBackup.modelName, FocusMarkBackup.modelName, WeekReflectionBackup.modelName]
+    static let modelNames: Set<String> = ["AppSettings", LocalTaskBackup.modelName, LocalOccurrenceCompletionBackup.modelName, DayAssignmentBackup.modelName, DayOverrideBackup.modelName, ReminderEstimateBackup.modelName, EventTaskLinkBackup.modelName, RecurringEffortValueBackup.modelName, RecurringEffortOverrideBackup.modelName, RecurringOccurrenceDoneBackup.modelName, DayLunchBackup.modelName, EventAvailabilityMarkBackup.modelName, EventMergeDecisionBackup.modelName, ReminderOverrideBackup.modelName, EventDeadlineMarkBackup.modelName, DeadlineEventLinkBackup.modelName, DeadlineSuggestionDismissalBackup.modelName, MealBackup.modelName, DrinkBackup.modelName, WorkoutBackup.modelName, ShoppingCategoryBackup.modelName, ShoppingAssignmentBackup.modelName, NoteBackup.modelName, NoteFolderBackup.modelName, BibleStudySessionBackup.modelName, HabitBackup.modelName, HabitCheckBackup.modelName, RoutineDayBackup.modelName, EveningChecklistItemBackup.modelName, FocusMarkBackup.modelName, FocusSessionBackup.modelName, EffortSampleBackup.modelName, WeekReflectionBackup.modelName]
 }
 
 extension BackupEntities {
@@ -1303,6 +1425,9 @@ extension BackupEntities {
         routineDays = Self.fetch(RoutineDayRecord.self, in: context).map(RoutineDayBackup.init)
         eveningChecklistItems = Self.fetch(EveningChecklistItemRecord.self, in: context).map(EveningChecklistItemBackup.init)
         focusMarks = Self.fetch(FocusMarkRecord.self, in: context).map(FocusMarkBackup.init)
+        // Only closed sessions: a running one is device-bound state and is left out.
+        focusSessions = Self.fetch(FocusSessionRecord.self, in: context).filter { $0.outcomeRaw != nil }.map(FocusSessionBackup.init)
+        effortSamples = Self.fetch(EffortSampleRecord.self, in: context).map(EffortSampleBackup.init)
         weekReflections = Self.fetch(WeekReflectionRecord.self, in: context).map(WeekReflectionBackup.init)
     }
 
@@ -1341,6 +1466,10 @@ extension BackupEntities {
         Self.delete(RoutineDayRecord.self, in: context) { _ in true }
         Self.delete(EveningChecklistItemRecord.self, in: context) { _ in true }
         Self.delete(FocusMarkRecord.self, in: context) { _ in true }
+        // A running focus session belongs to the live timer of this device and stays; only closed sessions are replaced. Files
+        // from before the focus data was part of the backup leave the sessions and samples of this device untouched.
+        if focusSessions != nil { Self.delete(FocusSessionRecord.self, in: context) { $0.outcomeRaw != nil } }
+        if effortSamples != nil { Self.delete(EffortSampleRecord.self, in: context) { _ in true } }
         Self.delete(WeekReflectionRecord.self, in: context) { _ in true }
         // Unique keys of the old records must be gone before records with the same keys come in.
         try context.save()
@@ -1373,6 +1502,9 @@ extension BackupEntities {
         for item in routineDays { context.insert(item.makeRecord()) }
         for item in eveningChecklistItems { context.insert(item.makeRecord()) }
         for item in focusMarks { context.insert(item.makeRecord()) }
+        let keptSessionIDs = Set(Self.fetch(FocusSessionRecord.self, in: context).map(\.id))
+        for item in focusSessions ?? [] where item.outcomeRaw != nil && !keptSessionIDs.contains(item.id) { context.insert(item.makeRecord()) }
+        for item in effortSamples ?? [] { context.insert(item.makeRecord()) }
         for item in weekReflections { context.insert(item.makeRecord()) }
         try context.save()
     }
