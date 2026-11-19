@@ -551,9 +551,10 @@ final class PlanningModel {
         await reload()
     }
 
-    /// The recurring-effort entry of a repeating task on `day`; `nil` for other tasks.
+    /// The recurring-effort entry of a repeating task on `day`; `nil` for other tasks. A task carrying a rule counts
+    /// before the next reload (a local task that just got one).
     func recurringItem(for task: TaskItem, on day: PlanDay) -> RecurringItem? {
-        guard recurringTaskIDs.contains(task.id) else { return nil }
+        guard task.recurrence != nil || recurringTaskIDs.contains(task.id) else { return nil }
         return RecurringItem(taskID: task.id, title: task.title, minutes: efforts.minutes(for: task.id, on: day) ?? 0)
     }
 

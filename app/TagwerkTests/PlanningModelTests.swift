@@ -929,6 +929,15 @@ struct PlanningModelTests {
         #expect(model.efforts.minutes(for: TaskID(source: .reminders, rawValue: "Lesen"), on: today) == nil)
     }
 
+    /// A task that just got its rule is a series before the planning reloads (editor, "Aufwand ändern …").
+    @Test func recurringItem_followsTheTaskBeforeReload() async throws {
+        let model = await model()
+        let reading = recurringLocalReading()
+        await taskList.reload()
+        let task = try #require(taskList.items.first { $0.id == reading })
+        #expect(model.recurringItem(for: task, on: today) == RecurringItem(taskID: reading, title: "Lesen", minutes: 60))
+    }
+
     /// A reminder listed by the task list with its rule and read from Reminders counts once.
     @Test func recurringReminderInTaskList_countsOnce() async {
         recurringTraining()

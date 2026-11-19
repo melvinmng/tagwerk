@@ -156,17 +156,19 @@ Skizze (Stand der Freigabe):
 | Wochenrückschau | `completionDates` = `completedAt` erledigter Aufgaben + alle `LocalOccurrenceCompletion` im Zeitraum; jedes Vorkommen zählt einmal. | `LocalTaskProvider.completionDates` |
 | Planung | `RecurringSeries` (TaskID, Titel, Regel) aus Erinnerungen mit Regel und offenen Aufgaben anderer Quellen mit Regel, je TaskID einmal. `recurringTaskIDs: Set<TaskID>`, `RecurringItem.taskID`, `recurrenceRules`/`recurrences` je TaskID; Reservierung, Abzug durch Blöcke, KI-Last, „Von heute übrig“, Sitzungsfenster, `blocksOffSeries` und `didChangeCompletion` gelten damit für beide Quellen. | `Planning/PlanningModel.swift` |
 | Aufwand der Serie | `RecurringEffortStore` arbeitet mit `TaskID` und speichert `TaskID.key` in den bestehenden Attributen `reminderID` (keine Umbenennung, kein Schema-Risiko). Einträge mit bloßer Erinnerungs-ID werden beim Öffnen des Speichers einmalig auf `reminders:<ID>` umgeschrieben (auch die eindeutigen Schlüssel der Tageswerte und erledigten Termine). | `Planning/RecurringEffortStore.swift` |
-| Oberfläche | Zeile „Wiederholen“ im Editor über `editableFields`; in „Neue Aufgabe“ für „Lokal“ freigegeben (GitHub bleibt deaktiviert) mit dem Hinweis „Nur in Tagwerk. Beim Abhaken rückt die Aufgabe auf den nächsten Termin.“; ↻ in der Liste über `recurringTaskIDs`. | `Editor/RecurrenceEditorModel.swift`, `Tasks/NewTaskSheet.swift`, `Tasks/TaskListView.swift` |
+| Oberfläche | Zeile „Wiederholen“ im Editor über `editableFields`; in „Neue Aufgabe“ für „Lokal“ freigegeben (GitHub bleibt deaktiviert) mit dem Hinweis „Nur in Tagwerk. Beim Abhaken rückt die Aufgabe auf den nächsten Termin.“; ↻ in der Liste und `recurringItem` gelten schon vor dem nächsten Neuladen der Planung, sobald die Aufgabe eine Regel trägt. | `Editor/RecurrenceEditorModel.swift`, `Tasks/NewTaskSheet.swift`, `Tasks/TaskListView.swift` |
 | Mitteilungen, Widget, KI | Keine eigene Behandlung von Wiederholungen bei Erinnerungen gefunden; eine lokale Serie verhält sich dort wie eine einzelne Aufgabe mit ihrer aktuellen Fälligkeit. Die KI-Planung setzt wie bei Erinnerungen den Aufwand der Serie statt der Schätzung ein (`AIPlanner.makeInput` über `recurringItem`). | – |
 | Demodaten | „Pflanzen gießen“ alle 3 Tage ab heute (nur Simulator, einmalig angelegt). | `App/DemoData.swift` |
 
-**Tests:** `RecurrenceAdvanceTests` (10, TagwerkCore); `LocalTaskRecurrenceTests` (13), `RecurringLocalCompletionTests` (3), `RecurringEffortStoreTests` (5), `RecurringEffortMigrationTests` (3, Altbestand), neue Fälle in `PlanningModelTests` (7), `TaskEditorRecurrenceTests` (1), `RecurrenceAvailabilityTests`, `LocalizedTests`.
+**Tests:** `RecurrenceAdvanceTests` (10, TagwerkCore); `LocalTaskRecurrenceTests` (13), `RecurringLocalCompletionTests` (3), `RecurringEffortStoreTests` (5), `RecurringEffortMigrationTests` (3, Altbestand), neue Fälle in `PlanningModelTests` (8), `TaskEditorRecurrenceTests` (1), `RecurrenceAvailabilityTests`, `LocalizedTests`.
 
 **Entscheidungen und Abweichungen von der Skizze:**
 
 - Die Anzahl zählt die verbleibenden Termine ab der aktuellen Fälligkeit, wie `occurrences` sie ab `start` zählt. Liegt die Fälligkeit nicht auf einem Termin der Regel, verbraucht das Abhaken keine Anzahl.
 - Das Erledigt-Protokoll ist ein eigenes Modell statt eines Felds an `LocalTask`; es bleibt beim Löschen der Aufgabe erhalten, damit die Wochenrückschau vergangene Vorkommen weiter zählt.
 - Wird eine lokale Aufgabe zur Serie, ersetzt im Editor und in der Planung der Aufwand der Serie die Schätzung (wie bei Erinnerungen); `estimateMinutes` bleibt gespeichert, zählt aber nicht.
+- Gilt auch für Erinnerungen: `TaskListModel.complete` entfernt eine Aufgabe nur noch, wenn die Quelle sie als erledigt zurückgibt, und `applyReturning` meldet die Erledigung, sobald die Änderung „erledigt“ setzt. Gibt EventKit eine wiederkehrende Erinnerung nach dem Abhaken offen zurück, bleibt sie mit dem nächsten Termin stehen, statt bis zum Neuladen zu verschwinden.
+- Eine überfällige Serie rückt beim Abhaken auf den ersten Termin nach ihrer alten Fälligkeit, der noch in der Vergangenheit liegen kann; jedes Abhaken zählt in der Wochenrückschau einmal. Das entspricht der Skizze wörtlich; ein Sprung auf den nächsten Termin ab heute wäre eine eigene Entscheidung.
 - „Erledigt“ im Editor rückt eine Serie ebenfalls weiter; `didSave` meldet dabei keine Erledigung an die Planung. Das hat keine Folge für die Reservierung, weil der heutige Termin nach dem Weiterrücken nicht mehr zur Serie gehört.
 
 **Prüfung am Gerät (offen):**
@@ -177,6 +179,8 @@ Skizze (Stand der Freigabe):
 4. Planung: Aufwand der Serie setzen („Nur dieser Tag“, „Alle“), Reservierung an den Tagen der Serie, ↻ in der Liste.
 5. Wochenrückschau zählt jedes abgehakte Vorkommen einmal.
 6. Mitteilung zur Fälligkeit folgt dem neuen Termin nach dem Abhaken.
+7. Überfällige Serie abhaken: Sie rückt auf den Termin nach der alten Fälligkeit (eventuell noch vergangen).
+8. Wiederkehrende Erinnerung in Tagwerk abhaken: Verhalten der Liste nach der Änderung an `complete` (bleibt sie mit nächstem Termin stehen oder verschwindet sie bis zum Neuladen).
 
 ## 10. Risiken
 
