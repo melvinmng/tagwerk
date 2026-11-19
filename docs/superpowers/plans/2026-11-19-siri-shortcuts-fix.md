@@ -95,6 +95,10 @@ Geprüft am 2026-11-19 über Apples Dokumentationsdaten (`developer.apple.com/tu
 3. **Einstellungen › Erfassen › „Siri & Kurzbefehle“** (`CaptureSettingsView.swift`): `SiriTipView` für „Wasser erfassen“ (oben, schließbar) und `ShortcutsLink()` (unter der Satzliste); Fußtext um den Hinweis ergänzt, bei Nichterkennung in der App „Kurzbefehle“ zu prüfen und den Satz über „Tippen für Siri“ zu probieren (Katalog und `scripts/translations/en.json` nachgezogen). Die angezeigte Satzliste war schon synchron zu den bleibenden Sätzen.
 4. **Test** (`AppShortcutsTests`): der Provider liefert 8 Kurzbefehle, höchstens 10. Mehr ist mit Swift Testing nicht sinnvoll, weil `AppShortcut` seine Sätze nicht herausgibt; die Sätze prüft Punkt 2.
 
+### Testergebnis
+
+`app/test-all.sh` nach dem letzten Code-Commit (`0a9f306`), alle Stufen grün einschließlich „string catalogs“ (`check-strings.py --require-english` samt neuem Satz-Abgleich, `sync-strings.sh --check`): AIKit 98, GitHubKit 139, HealthBridge 11, RemindersKit 87, TagwerkCore 646, App 1160 Tests bestanden. Letzte Zeile: `ALL TESTS PASSED`. Der Merge von `origin/main` war ohne Änderung („Already up to date“). Der temporäre Ordner `DerivedData-siri-check` ist gelöscht.
+
 ### Abweichungen vom Plan
 
 - **Plan nennt 24 Sätze, es waren 23** (Zählfehler im Plan). Im Bestand oben vermerkt.
