@@ -5376,6 +5376,16 @@
         }
       }
     },
+    "Issue anlegen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Create issue"
+          }
+        }
+      }
+    },
     "Jahr": {
       "localizations": {
         "en": {
@@ -6917,6 +6927,16 @@
         }
       }
     },
+    "Niemandem zugewiesen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not assigned to anyone"
+          }
+        }
+      }
+    },
     "Noch einzuplanen": {
       "localizations": {
         "en": {
@@ -7522,6 +7542,26 @@
     "Probeaufnahme starten": {
       "shouldTranslate": false
     },
+    "Project %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Project %@"
+          }
+        }
+      }
+    },
+    "Project fehlt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Project missing"
+          }
+        }
+      }
+    },
     "Projects": {
       "localizations": {
         "en": {
@@ -7611,6 +7651,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Repository"
+          }
+        }
+      }
+    },
+    "Repository fehlt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Repository missing"
           }
         }
       }
@@ -9932,6 +9982,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Assignees"
+          }
+        }
+      }
+    },
+    "Zugewiesen: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Assigned to: %@"
+          }
+        }
+      }
+    },
+    "Zugewiesen: %@ (nicht dir)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Assigned to: %@ (not you)"
           }
         }
       }

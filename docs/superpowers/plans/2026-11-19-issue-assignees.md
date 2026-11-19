@@ -598,7 +598,7 @@ Regeln: `assignsBeyondMe`: `name == "create_task"`, `source == "github"`, `assig
 Karte (`describe`, `create_task` mit `source == "github"`): Titel = Issue-Titel; erste Zeile „Issue anlegen · <repository> · Project <Titel, …>“, dazu Fälligkeit und Priorität wie heute; eigene Zeile „Zugewiesen: dir“ · „Zugewiesen: dir und lea-m“ · „Zugewiesen: lea-m (nicht dir)“ · „Niemandem zugewiesen“ (immer alle Logins, A5); danach Notizen. Ziel synchron aus `gitHubDirectory()?.storedCatalog` über `AppTools.gitHubTarget`; nicht auflösbar → „Repository fehlt“ bzw. „Project fehlt“ an der Stelle. Andere Quellen wie bisher.
 Instruktionen: ein Absatz nach dem Termin-Absatz, nur wenn `gitHubDirectory() != nil`: „Für ein GitHub-Issue rufst du zuerst list_github_targets auf und übergibst repository und project_ids ausdrücklich. list_assignees rufst du nur auf, wenn der Nutzer das Issue jemandem zuweisen will. Passt ein genannter Name zu keinem oder zu mehreren Logins, frag nach, statt zu raten.“ Im Aufgaben-Chat eines Issues zusätzlich „Naheliegendes Ziel für neue Issues: <repository>.“ aus `issueReference`.
 
-- [ ] **Step 1: Tests schreiben.**
+- [x] **Step 1: Tests schreiben.**
   `AssistantModelTests`:
   - `describe_gitHubIssue_namesRepositoryProjectAndAssignees`: Argumente `repository: "beispiel/app"`, `project_ids: ["PVT_1"]`, `assignees: ["lea-m"]` → `change` enthält „Issue anlegen · beispiel/app · Project App“ und die Zeile „Zugewiesen: lea-m (nicht dir)“
   - `describe_gitHubIssue_assigneeVariants`: `null` → „Zugewiesen: dir“; `["octo", "lea-m"]` → „Zugewiesen: dir und lea-m“; `[]` → „Niemandem zugewiesen“
@@ -610,10 +610,10 @@ Instruktionen: ein Absatz nach dem Termin-Absatz, nur wenn `gitHubDirectory() !=
   - `instructions_mentionGitHubToolsOnlyWithGitHub`: enthält `list_github_targets` und `list_assignees` nur mit Directory
   
   `VoiceModeMachineTests`: `confirmAll_withGuardedCard_asksForSingleConfirmation` (Effekt spricht `.guardedNeedTap`), `confirm_singleGuardedCard_confirms`.
-- [ ] **Step 2:** `APP AssistantModelTests` → FAIL.
-- [ ] **Step 3:** Umsetzen; `AppEnvironment` setzt `assistant.gitHubDirectory` wie in Task 8.
-- [ ] **Step 4:** `APP AssistantModelTests`, `PKG TagwerkCore VoiceModeMachineTests`, `APP VoiceModeControllerTests` → PASS.
-- [ ] **Step 5:** Commit `feat: show repository, projects and assignees on the assistant's issue card`.
+- [x] **Step 2:** `APP AssistantModelTests` → FAIL.
+- [x] **Step 3:** Umsetzen; `AppEnvironment` setzt `assistant.gitHubDirectory` wie in Task 8.
+- [x] **Step 4:** `APP AssistantModelTests`, `PKG TagwerkCore VoiceModeMachineTests`, `APP VoiceModeControllerTests` → PASS.
+- [x] **Step 5:** Commit `feat: show repository, projects and assignees on the assistant's issue card`.
 
 ---
 

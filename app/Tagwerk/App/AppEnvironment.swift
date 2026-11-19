@@ -144,6 +144,7 @@ final class AppEnvironment {
             })
         let gitHubProvider = self.gitHub
         assistant.reader = GitHubRepositoryReader(api: gitHubProvider.api)
+        assistant.gitHubDirectory = { [taskList] in taskList.provider(for: .github) as? GitHubTaskProvider }
         assistant.issueReference = { id in
             gitHubProvider.issueReference(for: id).map { IssueReference(repository: $0.repository, number: $0.number, nodeID: $0.nodeID) }
         }

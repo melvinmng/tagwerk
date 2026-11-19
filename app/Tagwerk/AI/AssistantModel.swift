@@ -55,6 +55,8 @@ final class AssistantModel {
     /// GitHub access and issue lookup for chats about one task.
     @ObservationIgnored var reader: RepositoryReading?
     @ObservationIgnored var issueReference: (TaskID) -> IssueReference? = { _ in nil }
+    /// GitHub catalog and login for the issue card and the instructions; `nil` while GitHub is not signed in.
+    @ObservationIgnored var gitHubDirectory: () -> (any GitHubDirectory)? = { nil }
     /// The task a task chat is about and its loaded context (comments, neighbours …).
     private(set) var task: TaskItem?
     @ObservationIgnored private var taskContext: String?
@@ -166,16 +168,30 @@ final class AssistantModel {
     /// The cards waiting for an answer, for the voice mode (issue #120).
     var openCards: OpenCards {
         let pending = conversation?.pendingActions ?? []
-        return OpenCards(ids: pending.map(\.id), deletes: pending.filter { $0.name == "delete_event" }.count)
+        let me = gitHubDirectory()?.login
+        return OpenCards(ids: pending.map(\.id), deletes: pending.filter { $0.name == "delete_event" }.count,
+                         guarded: pending.filter { Self.assignsBeyondMe($0, me: me) }.count)
+    }
+
+    /// True for a `create_task` call that assigns an issue to other people or to no one. Such a card is
+    /// visible to others on GitHub, so by voice it is confirmed alone, never together with other cards.
+    static func assignsBeyondMe(_ call: ToolCall, me: String?) -> Bool {
+        guard call.name == "create_task",
+              let args = try? JSONSerialization.jsonObject(with: call.arguments) as? [String: Any],
+              args["source"] as? String == "github", let assignees = args["assignees"] as? [String] else { return false }
+        guard let me else { return true }
+        return assignees.isEmpty || assignees.contains { !AssigneeSelection.isMe($0, me: me) }
     }
 
     /// Spoken "ja" after the countdown: confirms the cards the user answered to, if they are still open.
     func confirmCards(_ ids: [String]) async {
         guard let conversation else { onTurnFinished?(.rejected); return }
         let calls = conversation.pendingActions.filter { ids.contains($0.id) }
-        // Exactly the cards the user answered to; deletions only one at a time ("Ja, löschen").
+        // Exactly the cards the user answered to; deletions only one at a time ("Ja, löschen"), and so
+        // are issues assigned to other people or to no one.
+        let me = gitHubDirectory()?.login
         guard !calls.isEmpty, calls.count == ids.count,
-              calls.count == 1 || !calls.contains(where: { $0.name == "delete_event" }) else {
+              calls.count == 1 || !calls.contains(where: { $0.name == "delete_event" || Self.assignsBeyondMe($0, me: me) }) else {
             onTurnFinished?(.rejected)
             return
         }
@@ -362,9 +378,25 @@ final class AssistantModel {
         Termine kannst du anlegen, ändern und löschen (create_event, update_event, delete_event), in jedem \
         beschreibbaren Kalender; ohne Nennung eines Kalenders im Standardkalender. Nennt der Nutzer keine Dauer, \
         dauert ein neuer Termin eine Stunde.
+        \(gitHubInstructions())
         \(onTurnFinished == nil ? "" : Self.voiceModeInstructions)
         \(contextText())
         """
+    }
+
+    /// How to create GitHub issues; only while GitHub is signed in. Logins of other people reach the model
+    /// only through list_assignees, so it is told to call that only when the user wants to assign.
+    private func gitHubInstructions() -> String {
+        guard gitHubDirectory() != nil else { return "" }
+        var text = """
+        Für ein GitHub-Issue rufst du zuerst list_github_targets auf und übergibst repository und project_ids \
+        ausdrücklich. list_assignees rufst du nur auf, wenn der Nutzer das Issue jemandem zuweisen will. Passt ein \
+        genannter Name zu keinem oder zu mehreren Logins, frag nach, statt zu raten.
+        """
+        if case .task(let id) = context, id.source == .github, let reference = issueReference(id) {
+            text += " Naheliegendes Ziel für neue Issues: \(reference.repository)."
+        }
+        return text
     }
 
     private func contextText() -> String {
@@ -421,6 +453,14 @@ final class AssistantModel {
         }
         func duration(_ minutes: Int) -> String { CapacityText.duration(minutes) }
         switch call.name {
+        case "create_task" where string("source") == "github":
+            var parts = [text("Issue anlegen")] + issueTarget(args, text: text)
+            if let due = string("due") { parts.append(text("fällig \(dayText(due))")) }
+            if let priority = string("priority") { parts.append(priority) }
+            // Everyone the issue goes to is named in full before the user confirms.
+            let assignment = "\n" + issueAssignment(args["assignees"] as? [String], language: language, text: text)
+            let notes = string("notes").map { "\n" + text("Notizen: „\($0)“") } ?? ""
+            return ActionCard(title: title, change: parts.joined(separator: " · ") + assignment + notes)
         case "create_task":
             var parts = [text("Neue Aufgabe")]
             if let source = string("source") { parts.append(source == "github" ? text("als GitHub-Issue") : source) }
@@ -492,6 +532,42 @@ final class AssistantModel {
 
 extension AssistantModel {
     /// Cards for calendar events (issue #118): what is written, in which calendar, and whether it fits.
+    /// Repository and projects of an issue card. `null` arguments resolve like the execution does, from the
+    /// stored catalog; what cannot be resolved is named as missing (the execution then reports the error).
+    private func issueTarget(_ args: [String: Any], text: (String.LocalizationValue) -> String) -> [String] {
+        let repository = (args["repository"] as? String).flatMap { $0.isEmpty ? nil : $0 }
+        let projectIDs = args["project_ids"] as? [String]
+        let missingProject = text("Project fehlt")
+        guard let catalog = gitHubDirectory()?.storedCatalog else {
+            return [repository ?? text("Repository fehlt"), missingProject]
+        }
+        func titles(_ ids: [String]) -> String? {
+            let found = ids.compactMap { id in catalog.projects.first { $0.id == id }?.title }
+            return found.count == ids.count && !found.isEmpty ? text("Project \(found.joined(separator: ", "))") : nil
+        }
+        switch AppTools.gitHubTarget(repository: repository, projectIDs: projectIDs, catalog: catalog) {
+        case .success(let target):
+            return [target.repository, titles(target.projectIDs) ?? missingProject]
+        case .failure(.repositoryMissing), .failure(.repositoryUnknown):
+            return [text("Repository fehlt"), projectIDs.flatMap(titles) ?? missingProject]
+        case .failure(.projectMissing), .failure(.projectUnknown):
+            let known = repository.flatMap { name in catalog.repositories.first { $0.lowercased() == name.lowercased() } }
+            return [known ?? catalog.repositories.first ?? text("Repository fehlt"), missingProject]
+        }
+    }
+
+    /// "Zugewiesen: dir", "Zugewiesen: dir und lea-m", "Zugewiesen: lea-m (nicht dir)", "Niemandem zugewiesen".
+    /// Always every login, never a count.
+    private func issueAssignment(_ assignees: [String]?, language: VoiceLanguage,
+                                 text: (String.LocalizationValue) -> String) -> String {
+        guard let assignees else { return text("Zugewiesen: \(text("dir"))") }
+        if assignees.isEmpty { return text("Niemandem zugewiesen") }
+        let me = gitHubDirectory()?.login
+        let names = AssigneeSelection.names(selected: assignees, me: me, summarize: false, language: language)
+        let includesMe = assignees.contains { AssigneeSelection.isMe($0, me: me) }
+        return includesMe ? text("Zugewiesen: \(names)") : text("Zugewiesen: \(names) (nicht dir)")
+    }
+
     fileprivate func describeEvent(_ name: String, series: Bool, language: VoiceLanguage,
                                    string: (String) -> String?) -> ActionCard {
         func text(_ key: String.LocalizationValue) -> String { Localized.string(key, in: language, bundle: .main) }

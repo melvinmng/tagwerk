@@ -1,5 +1,6 @@
 import AIKit
 import Foundation
+import GitHubKit
 import RemindersKit
 import SwiftData
 import Testing
@@ -325,5 +326,178 @@ struct AssistantModelTests {
         let card = model.describe(call)
         #expect(card.title == "Fahrrad")
         #expect(card.change.contains("→"))
+    }
+}
+
+@MainActor
+struct AssistantGitHubCardTests {
+    let container: ModelContainer
+    let settings: AppSettings
+    let calendarStore = FakeCalendarStore()
+    let github = FakeTaskProvider(source: .github)
+    let directory = FakeGitHubDirectory.single()
+    let taskList: TaskListModel
+    let responder = FakePlanResponder()
+    let calendar = testCalendar()
+
+    init() throws {
+        container = try ModelContainerFactory.make(inMemory: true)
+        settings = try AppSettings.current(in: container.mainContext)
+        github.viewerLogin = "octo"
+        taskList = TaskListModel(providers: [github], now: testNow, calendar: calendar)
+    }
+
+    private func make(signedIn: Bool = true) async -> AssistantModel {
+        await taskList.reload()
+        let planStore = PlanStore(context: container.mainContext)
+        let blocks = BlockPlanner(store: calendarStore, planStore: planStore, links: EventLinkStore(context: container.mainContext),
+                                  settings: settings, calendar: calendar)
+        let planning = PlanningModel(taskList: taskList, calendarStore: calendarStore, reminderStore: FakeAccessStore(),
+                                     planStore: planStore, efforts: RecurringEffortStore(context: container.mainContext),
+                                     blocks: blocks, settings: settings, marks: EventMarkStore(context: container.mainContext),
+                                     now: testNow, calendar: calendar)
+        await planning.reload()
+        let directory = self.directory
+        let tools = AppTools(taskList: taskList, planning: planning, planner: nil, events: { _ in [] },
+                             gitHub: { signedIn ? directory : nil })
+        let model = AssistantModel(responder: responder, tools: tools, model: { "gpt-test" },
+                                   store: ChatStore(context: container.mainContext), planning: planning, now: testNow)
+        model.language = { .german }
+        model.gitHubDirectory = { signedIn ? directory : nil }
+        return model
+    }
+
+    /// Arguments of a create_task call for an issue; `repository`, `projects` and `assignees` are raw JSON.
+    private func arguments(_ title: String = "Export", repository: String = #""beispiel/app""#, projects: String = #"["PVT_1"]"#,
+                           assignees: String = "null", due: String = "null", notes: String = "null") -> String {
+        #"{"title":"\#(title)","due":\#(due),"priority":null,"minutes":null,"notes":\#(notes),"source":"github","#
+            + #""repository":\#(repository),"project_ids":\#(projects),"assignees":\#(assignees)}"#
+    }
+
+    private func call(_ arguments: String, id: String = "c1") -> ToolCall {
+        ToolCall(id: id, name: "create_task", arguments: Data(arguments.utf8))
+    }
+
+    @Test func describe_gitHubIssue_namesRepositoryProjectAndAssignees() async {
+        let model = await make()
+        let card = model.describe(call(arguments(assignees: #"["lea-m"]"#, due: #""2026-11-20""#, notes: #""Details""#)))
+        #expect(card.title == "Export")
+        let lines = card.change.split(separator: "\n").map(String.init)
+        #expect(lines.count == 3)
+        #expect(lines[0].hasPrefix("Issue anlegen · beispiel/app · Project App · fällig "))
+        #expect(lines[1] == "Zugewiesen: lea-m (nicht dir)")
+        #expect(lines[2] == "Notizen: „Details“")
+    }
+
+    @Test func describe_gitHubIssue_assigneeVariants() async {
+        let model = await make()
+        func line(_ assignees: String) -> String {
+            String(model.describe(call(arguments(assignees: assignees))).change.split(separator: "\n").last ?? "")
+        }
+        #expect(line("null") == "Zugewiesen: dir")
+        #expect(line(#"["octo"]"#) == "Zugewiesen: dir")
+        #expect(line(#"["octo","lea-m"]"#) == "Zugewiesen: dir und lea-m")
+        #expect(line(#"["lea-m","jonas-k","sam","x"]"#) == "Zugewiesen: lea-m, jonas-k, sam und x (nicht dir)")
+        #expect(line("[]") == "Niemandem zugewiesen")
+    }
+
+    @Test func describe_gitHubIssue_nullTargets_resolveFromStoredCatalog() async {
+        let model = await make()
+        let card = model.describe(call(arguments(repository: "null", projects: "null")))
+        #expect(card.change.hasPrefix("Issue anlegen · beispiel/app · Project App"))
+    }
+
+    @Test func describe_gitHubIssue_unresolvableTargets_sayMissing() async {
+        directory.storedCatalog = GitHubCatalog(repositories: ["beispiel/app", "beispiel/web"], projects: [],
+                                                fetchedAt: Date(timeIntervalSince1970: 0))
+        let model = await make()
+        let card = model.describe(call(arguments(repository: "null", projects: "null")))
+        #expect(card.change.hasPrefix("Issue anlegen · Repository fehlt · Project fehlt"))
+        let named = model.describe(call(arguments(repository: #""beispiel/web""#, projects: "null")))
+        #expect(named.change.hasPrefix("Issue anlegen · beispiel/web · Project fehlt"))
+    }
+
+    @Test func describe_gitHubIssue_inEnglish() async {
+        let model = await make()
+        let card = model.describe(call(arguments(assignees: #"["lea-m"]"#)), language: .english)
+        #expect(card.change == "Create issue · beispiel/app · Project App\nAssigned to: lea-m (not you)")
+        let mine = model.describe(call(arguments(assignees: #"["octo","lea-m"]"#)), language: .english)
+        #expect(mine.change.hasSuffix("Assigned to: you and lea-m"))
+        let nobody = model.describe(call(arguments(assignees: "[]")), language: .english)
+        #expect(nobody.change.hasSuffix("Not assigned to anyone"))
+    }
+
+    @Test func describe_otherSources_stayAsBefore() async {
+        let model = await make()
+        let local = ToolCall(id: "c1", name: "create_task", arguments: Data(
+            #"{"title":"Neu","due":null,"priority":"P2","minutes":null,"notes":null,"source":"local","repository":null,"project_ids":null,"assignees":null}"#.utf8))
+        #expect(model.describe(local).change == "Neue Aufgabe · local · P2")
+    }
+
+    @Test func assignsBeyondMe_onlyForIssuesWithOthersOrNoOne() {
+        func beyond(_ arguments: String, me: String? = "octo") -> Bool {
+            AssistantModel.assignsBeyondMe(call(arguments), me: me)
+        }
+        #expect(!beyond(arguments()))
+        #expect(!beyond(arguments(assignees: #"["Octo"]"#)))
+        #expect(beyond(arguments(assignees: #"["octo","lea-m"]"#)))
+        #expect(beyond(arguments(assignees: "[]")))
+        #expect(beyond(arguments(assignees: #"["octo"]"#), me: nil))
+        let complete = ToolCall(id: "c", name: "complete_task", arguments: Data(#"{"id":"local:x"}"#.utf8))
+        #expect(!AssistantModel.assignsBeyondMe(complete, me: "octo"))
+    }
+
+    private func sendTwoCards(_ model: AssistantModel) async {
+        responder.enqueueEvents([.functionCall(callID: "c1", name: "create_task", arguments: arguments("Für Lea", assignees: #"["lea-m"]"#)),
+                                 .functionCall(callID: "c2", name: "create_task", arguments: arguments("Für mich")),
+                                 .completed(usage: nil)])
+        await model.send("Leg zwei Issues an", spoken: true)
+    }
+
+    @Test func openCards_countGuardedAssignmentCards() async {
+        let model = await make()
+        model.open(context: .tasks)
+        await sendTwoCards(model)
+        #expect(model.openCards == OpenCards(ids: ["c1", "c2"], deletes: 0, guarded: 1))
+    }
+
+    @Test func confirmCards_refusesGuardedCardTogetherWithOthers() async {
+        let model = await make()
+        var turns: [AssistantModel.TurnOutcome] = []
+        // The voice mode keeps the open conversation, so the chat opens before the turn handler is set.
+        model.open(context: .tasks)
+        model.onTurnFinished = { turns.append($0) }
+        await sendTwoCards(model)
+
+        await model.confirmCards(["c1", "c2"])
+        #expect(turns.last == .rejected)
+        #expect(github.createdDrafts.isEmpty)
+
+        responder.enqueue("Angelegt.")
+        await model.confirmCards(["c1"])
+        #expect(github.createdDrafts.map(\.title) == ["Für Lea"])
+        #expect(github.createdDrafts.last?.assignees == ["lea-m"])
+        #expect(model.openCards.ids == ["c2"])
+    }
+
+    @Test func instructions_mentionGitHubToolsOnlyWithGitHub() async {
+        let signedIn = await make()
+        signedIn.open(context: .tasks)
+        #expect(signedIn.instructions().contains("list_github_targets"))
+        #expect(signedIn.instructions().contains("list_assignees"))
+        let signedOut = await make(signedIn: false)
+        signedOut.open(context: .tasks)
+        #expect(!signedOut.instructions().contains("list_github_targets"))
+        #expect(!signedOut.instructions().contains("list_assignees"))
+    }
+
+    @Test func instructions_inAnIssueChat_nameItsRepositoryAsTarget() async {
+        var issue = makeTask("Login", source: .github)
+        issue.assignees = ["octo"]
+        github.tasks = [issue]
+        let model = await make()
+        model.issueReference = { _ in IssueReference(repository: "beispiel/app", number: 42, nodeID: "I_42") }
+        model.open(task: issue)
+        #expect(model.instructions().contains("Naheliegendes Ziel für neue Issues: beispiel/app."))
     }
 }
