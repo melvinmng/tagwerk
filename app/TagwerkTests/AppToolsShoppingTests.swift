@@ -120,6 +120,15 @@ struct AppToolsShoppingTests {
         #expect(store.records["bread"]?.isCompleted == false)
     }
 
+    @Test func updateShopping_reloadsTheListOnlyThreeTimes() async {
+        let tools = await makeTools()
+        let calls = store.openReminderCalls
+        _ = await run(tools, "update_shopping",
+                      #"{"add":[{"name":"Kaffee","quantity":null}],"check_off":["eggs","milk"]}"#)
+        // Once to read the list, once after adding, once after checking off.
+        #expect(store.openReminderCalls == calls + 3)
+    }
+
     @Test func updateShopping_checkOffForeignReminder_isNotFound_andStaysOpen() async {
         let result = await run(await makeTools(), "update_shopping", #"{"add":[],"check_off":["essay","nope"]}"#)
         #expect(result["not_found"] as? [String] == ["essay", "nope"])

@@ -46,18 +46,11 @@ extension AppTools {
             return ParsedItem(name: String(name.prefix(ShoppingInputParser.maxNameLength)),
                               quantity: quantity?.isEmpty == false ? quantity : nil)
         }
-        let report = items.isEmpty ? ShoppingModel.AddReport() : await shopping.add(items)
-        var checkedOff: [String] = []
-        var notFound: [String] = []
-        for id in checkOff {
-            let name = shopping.openItems.first { $0.id == id }?.name
-            do {
-                try await shopping.checkOff(id: id)
-                checkedOff.append(name ?? id)
-            } catch {
-                notFound.append(id)
-            }
-        }
+        // `readyShopping` just loaded the list; the adds and the check-offs each read it once more at the end.
+        let report = items.isEmpty ? ShoppingModel.AddReport() : await shopping.add(items, reloadFirst: false)
+        let checkOffReport = await shopping.checkOff(ids: checkOff)
+        let checkedOff = checkOffReport.checkedOff
+        let notFound = checkOffReport.notFound
         var result: [String: Any] = ["ok": true, "added": report.added, "reopened": report.reopened,
                                      "already_on_list": report.alreadyOnList, "checked_off": checkedOff, "not_found": notFound]
         if !report.failed.isEmpty {

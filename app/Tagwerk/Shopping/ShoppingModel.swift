@@ -146,8 +146,9 @@ final class ShoppingModel {
 
     /// Adds items without creating duplicates: an open item of the same name stays (a given quantity replaces
     /// its quantity), a recently completed one is reopened, anything else becomes a new plain reminder.
-    func add(_ items: [ParsedItem]) async -> AddReport {
-        await reload()
+    /// A caller that loaded the list just before passes `reloadFirst: false` to save the second read.
+    func add(_ items: [ParsedItem], reloadFirst: Bool = true) async -> AddReport {
+        if reloadFirst { await reload() }
         var report = AddReport()
         guard state == .ready, let listID = settings.shoppingListID else {
             report.failed = items.map(\.name)
@@ -201,6 +202,30 @@ final class ShoppingModel {
         record.isCompleted = true
         _ = try store.save(record, recurrence: .unchanged)
         await reload()
+    }
+
+    /// Result of checking off several items; names for the items that were checked off, ids for the others.
+    struct CheckOffReport: Equatable {
+        var checkedOff: [String] = []
+        var notFound: [String] = []
+    }
+
+    /// Checks off several items: every item is saved, then the list is read once. An id outside the shopping list
+    /// or a failed write lands in `notFound` and does not stop the rest.
+    func checkOff(ids: [String]) async -> CheckOffReport {
+        var report = CheckOffReport()
+        for id in ids {
+            do {
+                var record = try shoppingRecord(id)
+                record.isCompleted = true
+                _ = try store.save(record, recurrence: .unchanged)
+                report.checkedOff.append(record.title)
+            } catch {
+                report.notFound.append(id)
+            }
+        }
+        if !ids.isEmpty { await reload() }
+        return report
     }
 
     func reopen(id: String) async throws {

@@ -83,7 +83,8 @@ final class IntentServices {
         }
         let items = ShoppingInputParser.parseAll(text).items
         guard !items.isEmpty else { return "Ich habe keinen Artikel verstanden." }
-        let report = await shopping.add(items)
+        // The list was just loaded above.
+        let report = await shopping.add(items, reloadFirst: false)
         return LocalizedStringResource(stringLiteral: Self.shoppingReply(report))
     }
 

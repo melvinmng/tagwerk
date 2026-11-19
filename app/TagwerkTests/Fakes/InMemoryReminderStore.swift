@@ -17,6 +17,8 @@ final class InMemoryReminderStore: ReminderStore {
     var failingDeleteIDs: Set<String> = []
     private(set) var createCount = 0
     private(set) var saveCount = 0
+    /// How often `openReminders` was asked, i.e. how many full reloads a model started.
+    private(set) var openReminderCalls = 0
     /// The periods `completedReminders` was asked for.
     private(set) var completedIntervals: [DateInterval] = []
 
@@ -34,7 +36,8 @@ final class InMemoryReminderStore: ReminderStore {
     func calendars() -> [ListInfo] { [] }
 
     func openReminders(in listIDs: Set<String>?) async -> [ReminderRecord] {
-        records.values
+        openReminderCalls += 1
+        return records.values
             .filter { !$0.isCompleted && (listIDs?.contains($0.listID) ?? true) }
             .sorted { $0.id < $1.id }
     }

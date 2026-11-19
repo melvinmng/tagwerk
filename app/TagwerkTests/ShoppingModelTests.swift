@@ -66,6 +66,29 @@ struct ShoppingModelTests {
         #expect(model.openItems.contains { $0.name == "Kaffee" && $0.quantity == "2 Packungen" })
     }
 
+    @Test func add_afterAFreshLoad_skipsTheLeadingReload() async {
+        await model.reload()
+        let calls = store.openReminderCalls
+        let report = await model.add([ParsedItem(name: "Kaffee", quantity: nil)], reloadFirst: false)
+        #expect(report.added == ["Kaffee"])
+        #expect(store.openReminderCalls == calls + 1)   // only the reload after writing
+        let defaultCalls = store.openReminderCalls
+        _ = await model.add([ParsedItem(name: "Tee", quantity: nil)])
+        #expect(store.openReminderCalls == defaultCalls + 2)
+    }
+
+    @Test func checkOffSeveral_savesAllAndReloadsOnce() async {
+        await model.reload()
+        let calls = store.openReminderCalls
+        let report = await model.checkOff(ids: ["milk", "essay", "bananas", "nope"])
+        #expect(report.checkedOff == ["Milch", "Bananen"])
+        #expect(report.notFound == ["essay", "nope"])
+        #expect(store.records["milk"]?.isCompleted == true && store.records["bananas"]?.isCompleted == true)
+        #expect(store.records["essay"]?.isCompleted == false)
+        #expect(store.openReminderCalls == calls + 1)
+        #expect(model.openItems.isEmpty)
+    }
+
     @Test func add_openDuplicate_createsNothing_replacesQuantity() async {
         let report = await model.add([ParsedItem(name: "milch", quantity: "2")])
         #expect(store.createCount == 0)
