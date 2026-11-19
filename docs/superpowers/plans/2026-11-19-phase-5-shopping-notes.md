@@ -1018,7 +1018,7 @@ enum ReminderListSummary {
 ```
   - `create` kürzt Leerraum außen; leerer Text → `nil`, nichts wird angelegt. Für `kind != .free` mit `dayKey`: gibt es schon eine Notiz dieser Art und dieses Tages, wird deren Text ersetzt und sie zurückgegeben (Eindeutigkeit im Code, Spec §5.1).
 
-- [ ] **Schritt 1: Tests schreiben**
+- [x] **Schritt 1: Tests schreiben**
 
 ```swift
 // NoteTextTests
@@ -1051,10 +1051,10 @@ enum ReminderListSummary {
 @Test func schema_opensExistingStore()                                      // ModelStoreLocationTests stays green with NoteRecord in the schema
 ```
 
-- [ ] **Schritt 2:** Beide Suiten ausführen. Erwartet: Übersetzungsfehler.
-- [ ] **Schritt 3: Umsetzen.**
-- [ ] **Schritt 4:** `NoteTextTests`, `NoteStoreTests`, `ModelStoreLocationTests` ausführen. Erwartet: grün.
-- [ ] **Schritt 5:** Commit: `git add app/Packages/TagwerkCore app/Tagwerk app/TagwerkTests && git commit -m "feat: add local note store"`
+- [x] **Schritt 2:** Beide Suiten ausführen. Erwartet: Übersetzungsfehler.
+- [x] **Schritt 3: Umsetzen.**
+- [x] **Schritt 4:** `NoteTextTests`, `NoteStoreTests`, `ModelStoreLocationTests` ausführen. Erwartet: grün.
+- [x] **Schritt 5:** Commit: `git add app/Packages/TagwerkCore app/Tagwerk app/TagwerkTests && git commit -m "feat: add local note store"`
 
 ---
 

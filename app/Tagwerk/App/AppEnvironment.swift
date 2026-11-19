@@ -23,6 +23,8 @@ final class AppEnvironment {
     let shopping: ShoppingModel
     /// "Mit ChatGPT sortieren"; sends item names only after consent and on the user's tap.
     let shoppingSorter: ShoppingSorter
+    /// Notes stored on this device only (phase 5); never sent to ChatGPT.
+    let notes: NoteStore
     let taskList: TaskListModel
     let planning: PlanningModel
     let gitHubTokens: TokenManager
@@ -91,6 +93,7 @@ final class AppEnvironment {
         self.settings = settings
         self.gateway = gateway
         self.reminderStore = reminderStore
+        self.notes = NoteStore(context: context)
         let shoppingCategories = ShoppingCategoryStore(context: context, settings: settings)
         self.shoppingCategories = shoppingCategories
         self.shopping = ShoppingModel(store: reminderStore, settings: settings, categories: shoppingCategories)
