@@ -39,7 +39,7 @@ struct RoutineCard: View {
         .padding(.horizontal, 12)
         .padding(.vertical, 8)
         .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 14))
-        .task { await model.refreshCardOverview() }
+        .task(id: model.cardOverviewInputs) { await model.refreshCardOverview() }
     }
 
     private func focus(_ marks: [FocusMark], done: Int, total: Int) -> some View {

@@ -228,7 +228,16 @@ extension RoutinesModel {
         return .morning(overview: cardOverview.map(Self.shortOverviewText) ?? "")
     }
 
-    /// Reads the numbers of the morning card; the card calls it when it appears.
+    /// Changes whenever the inputs of the overview change (tasks loaded, recurring reminders recognized), so the card
+    /// recomputes its numbers instead of keeping the ones from its first appearance.
+    var cardOverviewInputs: Int {
+        var hasher = Hasher()
+        for item in taskList.items { hasher.combine(item.id.rawValue) }
+        for id in planning.recurringReminderIDs.sorted() { hasher.combine(id) }
+        return hasher.finalize()
+    }
+
+    /// Reads the numbers of the morning card; the card calls it when it appears and when its inputs change.
     func refreshCardOverview() async {
         cardOverview = await overview(for: today)
     }
