@@ -84,9 +84,21 @@ struct SharePayloadTests {
     }
 
     @Test func targets_offerMailTaskOnlyForMailOrText() {
-        #expect(SharePayload.classify([.url(page)])?.availableTargets.contains(.mailTask) == false)
+        #expect(SharePayload.classify([.url(page)])?.availableTargets == [.task, .note, .recipe])
         #expect(SharePayload.classify([.text("Hallo Welt")])?.availableTargets.contains(.mailTask) == true)
         let mail = SharePayload.classify([.file(typeIdentifier: "public.data", name: "x.eml", byteCount: 1)])
-        #expect(mail?.availableTargets == [.task, .note, .mailTask])
+        #expect(mail?.availableTargets == [.mailTask, .task, .note])
+    }
+
+    @Test func targets_alwaysContainTheSuggestion() {
+        let samples: [[SharePart]] = [
+            [.url(page)], [.url(URL(string: "https://example.com/rezept/1")!)], [.text("Milch\nEier")], [.text(String(repeating: "x", count: 90))],
+            [.file(typeIdentifier: "public.png", name: "a.png", byteCount: 1)], [.file(typeIdentifier: "com.adobe.pdf", name: "a.pdf", byteCount: 1)],
+            [.file(typeIdentifier: "public.data", name: "a.eml", byteCount: 1)],
+        ]
+        for parts in samples {
+            let payload = SharePayload.classify(parts)
+            #expect(payload.map { $0.availableTargets.contains($0.suggestedTarget) } == true)
+        }
     }
 }

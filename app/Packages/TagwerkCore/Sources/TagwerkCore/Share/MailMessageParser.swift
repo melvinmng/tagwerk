@@ -126,8 +126,12 @@ public enum MailMessageParser {
 
     // MARK: Transfer encodings
 
+    /// UTF-8 first, also when a read cut the last character in two (up to three bytes are dropped); else Latin-1.
     private static func decodeText(_ data: Data) -> String? {
-        String(data: data, encoding: .utf8) ?? String(data: data, encoding: .isoLatin1)
+        for dropped in 0...3 where data.count > dropped {
+            if let text = String(data: data.dropLast(dropped), encoding: .utf8) { return text }
+        }
+        return String(data: data, encoding: .isoLatin1)
     }
 
     private static func decodeTransfer(_ body: String, encoding: String?, charset: String?) -> String {

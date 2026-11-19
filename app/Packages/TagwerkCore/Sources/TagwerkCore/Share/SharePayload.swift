@@ -105,12 +105,17 @@ public struct SharePayload: Sendable, Hashable {
         }
     }
 
-    /// The targets the picker offers for this payload; "Mail zu Aufgabe" only for mails and text (a pasted mail).
+    /// The targets the picker offers, the most likely first. "Mail zu Aufgabe" is offered for mails and for text, because
+    /// markdown or a mail marked in the Mail app arrives as plain text. A file can only be attached to a note; for a task
+    /// the extension says so.
     public var availableTargets: [ShareTarget] {
-        var targets: [ShareTarget] = [.task, .note, .shopping, .recipe]
-        if kind == .mail || kind == .text { targets.append(.mailTask) }
-        if kind == .mail { targets.removeAll { $0 == .shopping || $0 == .recipe } }
-        return targets
+        switch kind {
+        case .mail: [.mailTask, .task, .note]
+        case .url: [.task, .note, .recipe]
+        case .text: [.task, .note, .shopping, .recipe, .mailTask]
+        case .image: [.note, .task, .recipe]
+        case .file: [.note, .task]
+        }
     }
 
     static let maximumShoppingLineLength = 40
