@@ -139,3 +139,66 @@ Jede Entscheidung nennt die Optionen, die Wahl und das Risiko, falls sie falsch 
 
 - AIKit 98, GitHubKit 129, HealthBridge 11, RemindersKit 84 (vorher 64), TagwerkCore 529 (vorher 501), App 893 (vorher 789) Tests bestanden.
 - Letzte Zeile: `ALL TESTS PASSED`
+
+## Suche
+
+Plan: `plans/2026-11-19-search.md` · Spec: `specs/2026-11-19-search-design.md` · Branch `feat/search-issues-planning`, aufgesetzt auf dem Stand von #136 und Phase 5.
+Umgesetzt sind die Tasks 2–11 und der automatisierbare Teil von Task 12. Task 1 (Spike am Gerät) und die manuellen Schritte 2–4 von Task 12 sind offen.
+
+Commits (in Reihenfolge): `4e546c6` Suchkern · `05f133a` Terminquelle · `79d685a` Aufgabenquelle und Erledigte · `ec13138` Ergebnisse und `SearchModel` · `f87af68` Suchblatt · `3e33760` Einstieg (Lupe, Titelregel, `AppEnvironment`) · `f795343` Treffer-Aktionen · `4bdbf62` GitHub-Online-Suche · `1bcdac4` Notizen und Einkaufsliste · `465c016` Werkzeug `search`. Die Tasks 3 und 4 lagen als unversionierter Stand eines früheren Laufs vor; ich habe sie geprüft (Pakettests, `app/test-all.sh`) und in zwei Commits getrennt.
+
+**Schnittstellen für Phase 7:** `SearchButton` und `PlanHeaderText.titleCandidates(scope:anchor:range:calendar:)` heißen wie im Plan. Gedanken-Notizen (`morning`/`evening`) werden über denselben `NoteRecord`-Speicher durchsucht; die Zeile trägt „Tagesstart/Tagesabschluss · Tag“ über `NoteSearchItem.dayKey`.
+
+### (a) Entscheidungen
+
+Jede Entscheidung nennt die Wahl und das Risiko, falls sie falsch ist.
+
+1. **Spike (Task 1) nicht ausgeführt, Standardannahmen des Specs gebaut:** eigener `EKEventStore` im `actor` `EventSearchReader`, `ViewThatFits` für den Titel, `repo:`-Liste mit höchstens 30 Angaben, Blatt über Blatt. Der Rückfall `GatewayEventSearcher` und der Rückfall „feste Kurzform“ sind nicht gebaut; `IssueSearchQuery.makeByOwner` ist gebaut und getestet, aber nicht verdrahtet. Risiko: Fällt ein Punkt am Gerät durch, ist die genannte Stelle nachzuziehen.
+2. **Notizen und Einkaufsliste öffnen in eigenen Blättern mit eigenem `NavigationStack`** (`NoteEditorSheet`, `ShoppingListSheet` in `EntrySheets.swift`, Schaltfläche „Fertig“), angehängt an das `SearchSheet`. Damit funktioniert das Öffnen aus „Planen“ und aus „Aufgaben“ gleich und berührt `environment.tasksPath` nicht (der Stack von „Aufgaben“ zeigt außerhalb des Tabs nichts). Die zwei `tasksPath.append` in `ShoppingListView` liegen nur in den Zuständen „keine Liste“ und „Liste verschwunden“; sie sind bei Treffern (Zustand „bereit“) nicht erreichbar.
+3. **`AppEnvironment.openSearch()` erzeugt das Modell, `activeSearch` ist stark statt schwach.** Das Blatt darf sein Modell nicht bei jedem Neuaufbau von `RootView` neu bekommen. `closeSearch()` schließt das Blatt und `SearchModel.close()` leert Termine, Erledigte und Online-Treffer, sodass nichts über die Lebensdauer des Blatts hinaus liegt.
+4. **`SearchSources` und `SearchToolSources` sind `@MainActor`-Closures** statt nebenläufiger; der echte Abruf läuft trotzdem im `actor` `EventSearchReader`. Der Kalenderzugriff wird über `reminderStore.calendarAccessState` geprüft (testbar), `eventSearcher` ist über `AppEnvironment.init` ersetzbar.
+5. **Titelkandidaten folgen dem Formatter statt dem Spec-Text:** „Do. 19. Nov.“ und „Nov“ (Spec: „Do., 19. Nov.“, „Nov.“). Grund: Sprach- und regionsrichtig, auch auf Englisch; der Spec-Text wäre eine feste deutsche Schreibweise.
+6. **„Im Plan zeigen“ für Termine ohne Markierung des Termins** (F5). Der Termin wird vor dem Öffnen über `SearchEventResolver` neu aufgelöst (Grundkennung, Beginn, Kalender des Treffers oder zusammengeführter Kalender); `PlanningModel.resolveEvent(matching:)` liest die rohe Tagesabfrage der lesbaren Kalender, nicht `markedEvents` (das `appliedMerges` verändert).
+7. **Menüs gekürzt:** Aufgabe „Öffnen“, „Im Plan zeigen“/„In Aufgaben zeigen“, „Erledigt“ statt des vollen `TaskContextMenu` (der braucht Datums- und Löschdialoge). Termin: „Öffnen“, „Im Plan zeigen“, „Als Deadline markieren“ bzw. „Markierung entfernen“, Letzteres nur ohne Rückfrage (kein Serien- oder Verknüpfungsfall). Alle Einträge außer den Deadline-Einträgen sind auch VoiceOver-Aktionen.
+8. **Lücke A4 doppelt geschlossen:** `TaskListModel.reopen(_:)` für das Menü und `didSave(_:wasCompleted:)` für den Editor. Ohne Letzteres hätte „Erledigt“ ausschalten im Editor einer erledigten Aufgabe die Planung nicht erreicht.
+9. **Ausschnitt-Zeile immer, auch bei Ort und Kalender**, zusätzlich zur Unterzeile „Kalender · Ort“. Trefferhervorhebung als gelber Hintergrund plus fett über `inlinePresentationIntent` statt `semibold`, damit die Schriftgröße der Zeile bleibt.
+10. **Online-Treffer ohne Hervorhebung** (GitHub kann im Text gefunden haben, nicht im Titel). `IssueSearchError.from` bildet 401 auf „abgemeldet“, 403/429 und „rate limit“ im GraphQL-Text auf „Limit“ ab; bei „abgemeldet“ lädt das Blatt `taskList.reload(only: [.github])` (vorhandener Weg `onSignedOut`). Repositories: erst die der Projects, dann die eigenen, höchstens 30.
+11. **Werkzeug `search`:** Von Notizen, Terminnotizen und Aufgabennotizen geht nur `matchedIn` (Feldnamen) hinaus, nie ein Ausschnitt; `searched.to` ist bei „null“ das (exklusive) Fensterende wie in `SearchWindow.initial`, bei Angabe das übergebene Datum; ohne Kalenderzugriff steht `calendarAccess: false` in der Antwort, damit eine leere Terminliste nicht als „nichts gefunden“ gelesen wird.
+12. **String-Kataloge:** Der App-Katalog bleibt im kompakten Format der Datei (ein Hilfsskript im Scratchpad stellt es nach `xcstringstool sync` wieder her), Pakete im Xcode-Stil unverändert; englische Texte stehen zusätzlich angehängt in `scripts/translations/en.json`. Zusätzliche Texte, die der Spec nicht nennt: „Eingabe löschen“, „Erledigte einbeziehen“, „Keine weiteren Treffer auf GitHub.“, „GitHub wird durchsucht …“, „Öffnet das Issue auf GitHub“, „Einkaufsliste öffnen“, „Einkauf“, die Kopf-Ansagen („Termine, 3 kommende“ usw.), „Titel/Nummer/Art/Menge“ als Feldnamen, die drei Werkzeug-Fehlertexte.
+
+### (b) Abweichungen vom Plan
+
+- Task 5: `searchOnline` und `checkOffShopping` kamen erst in den Tasks 9 und 10 ins `SearchModel`; `SearchModel.settle()` (nur Debug) gibt Tests etwas zum Abwarten. Neuabruf wiederholt jedes geholte Intervall einzeln, weil EventKit je Anfrage höchstens vier Jahre beantwortet; erweiterte Jahre werden ohne doppelte IDs angehängt.
+- Task 7: `activeSearch` stark, `openSearch()` neu (siehe a.3); `PageTitleLabel` bekam `titleScales`, die Zeile darüber `lineLimit(1)` und Verkleinerung bis 80 %.
+- Task 8: `TaskEditorSheet` war schon durch die Vorschlagsblätter belegt; die neue Hülle heißt `AppTaskEditorSheet` und behält für „Planen“ das bisherige Verhalten (keine Container, keine Kommentare); die Suche schaltet beides wie die Aufgabenliste ein. `TaskListView` baut weiter ihren eigenen Editor.
+- Task 9: Der Plan-Test legte unnötig eine Viewer-Antwort an; die Tests folgen dem tatsächlichen Ablauf (gespeicherter Katalog statt Abruf). `NoteSearchItem` bekam `dayKey`, `noteSubtitle` hat keinen `kindRaw`-Parameter.
+- Task 10: Die Suche setzt `checkOffShopping` nur, wenn eine Einkaufsliste gewählt ist.
+- Task 12: Die Demo-Daten wurden nicht erweitert; die vorhandenen Demo-Termine und -Aufgaben liefern schon Treffer (am iPhone-17-Simulator gesehen). Die Spec-Nachträge stehen am Ende des Specs.
+- Roter Lauf: Bei den App-Tasks bestand er aus dem Übersetzungsfehler fehlender Typen (Paket-Tests Task 5 wurden separat rot gesehen), nicht aus einem eigenen Lauf vor der Umsetzung; Task 8 und 9 wurden zusätzlich während der Umsetzung rot (Namenskonflikt, Katalogabruf im Test) und korrigiert.
+- `app/test-all.sh` lief vor jedem Commit, der die App berührt (Tasks 3 bis 11).
+- Abschlussreview: Selbstreview des Autors, kein unabhängiger Reviewer (keine Subagenten erlaubt).
+
+### (c) Offene manuelle Prüfungen am Gerät
+
+- **Task 1 (Spike):** (1) Dauer des Terminabrufs über 18 Monate mit eigenem `EKEventStore`, Sichtbarkeit von Änderungen des ersten Stores; (2) Titelbreite in „Planen“ mit drei Einträgen rechts, auch größte Schrift (am iPhone-17-Simulator passte „Thursday, 19. Nov“ in der Standardschrift); (3) GitHub-Suche mit 30 `repo:`-Angaben und privaten Repositories; (4) Blatt über Blatt inklusive „Im Plan zeigen“ aus dem inneren Blatt.
+- **Task 12, Schritte 2–4:** Englisch im Simulator (alle sieben Köpfe, Fußzeilen, Fehlertexte), VoiceOver (Lupe, Köpfe mit Zähler, Marken „ausgewählt“, Schalter, Zeilen, Aktionen), größte Schriftstufe (Marken-Zeile rollt, Titel in „Planen“).
+- **Geräte-Checkliste** (Ergebnis in den Spec-Nachtrag schreiben): Aufgaben sofort, Termine unter 1 s · Termin in Kalender-App ändern bei offenem Blatt · „Ältere Termine durchsuchen“ zweimal · Dauer von „✓ Erledigte“ über 12 Monate und erledigte Vorkommen wiederkehrender Erinnerungen · abonnierter und zusammengeführter Termin öffnen, Deadline-Marke wie in „Planen“ · Abhaken mit Kapsel, „Wieder öffnen“, „Im Plan zeigen“ · „Auf GitHub suchen“ mit und ohne Netz, im Flugmodus kein Abruf beim Tippen · Assistent „Wann ist die Statistik-Klausur?“ nutzt `search`, Antwort ohne Notiztext · Blatt schließt bei Assistent, Mitteilung und `tagwerk://plan/today`.
+- Am Simulator gesehen (iPhone 17, nur Ansehen): Lupe öffnet das Blatt mit Fokus, Termin- und Aufgabentreffer mit Hervorhebung, „Ältere Termine durchsuchen“, Fußzeile, Termin-Blatt über der Suche und Rückkehr. Nicht gesehen: Notizen, Einkaufsliste, GitHub, Erledigte, Menüs, „Im Plan zeigen“, dunkle Darstellung, Englisch.
+
+### (d) Bekannte Lücken / nicht umgesetzt
+
+- Für Blatt, Zeilen und Menüs gibt es keine UI-Tests; getestet ist die Logik (Kern, Modell, Texte, Auflösung, Quellen, Werkzeug).
+- `NotesListView` in „Aufgaben“ schiebt Notizen weiter über `environment.tasksPath`; nur die Suche nutzt die eigenen Blätter.
+- `ShoppingListView` zeigt in der Leiste des Einkaufsblatts den Assistenten-Knopf; ein Tipp schließt die Suche und öffnet den Assistenten.
+- Die Deadline-Einträge im Termin-Menü fehlen für Serien-Marken und Marken mit Vorbereitungs-Verknüpfungen (dort bleibt der Weg über „Öffnen“); VoiceOver-Aktionen gibt es dafür nicht.
+- Der erste Terminabruf startet auch bei Filter „Aufgaben“ (einmal je Blatt); wer nur Aufgaben sucht, bezahlt ihn mit.
+- Ältere Erledigte als 12 Monate fehlen bei Erinnerungen (F6); „Erledigt“-Zeilen von GitHub gibt es nur über die Online-Suche.
+- `searched.to` im Werkzeug ist bei Standardfenster das exklusive Ende (ein Tag nach dem letzten gesuchten).
+- Die Menü-Einträge „Erledigt“ und „Wieder öffnen“ schreiben ohne Rückfrage; bei Konflikt erscheint der Hinweis „Die Aufgabe wurde inzwischen geändert …“.
+
+### (e) Testergebnis
+
+`app/test-all.sh`, letzter Lauf nach dem letzten Code-Commit (`465c016`), alle Stufen grün einschließlich „string catalogs“ (`check-strings.py --require-english` und `sync-strings.sh --check`):
+
+- AIKit 98, GitHubKit 137 (vorher 129), HealthBridge 11, RemindersKit 87 (vorher 84), TagwerkCore 571 (vorher 529), App 964 (vorher 893) Tests bestanden.
+- Letzte Zeile: `ALL TESTS PASSED`

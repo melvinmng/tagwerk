@@ -397,3 +397,32 @@ Vorschlag: eigenständiges Epic **„Suche nach Terminen und Aufgaben“**, Aufg
 | | **Summe** | | | **42,5** |
 
 Dem Umsetzenden überlassen: Ordnerstruktur innerhalb von `Search/`, Namen der Typen, Testaufbau, Farbton der Hinterlegung im Rahmen des Mockups.
+
+## Nachtrag: Abweichungen bei der Umsetzung und Geräte-Checkliste
+
+Stand 2026-11-19. Die Umsetzung steht auf dem Branch `feat/search-issues-planning`; Einzelheiten, Entscheidungen und offene Punkte stehen im Abschnitt „Suche“ von `../2026-11-19-overnight-log.md`.
+
+**Abweichungen vom Spec.**
+- Titelkandidaten in „Planen“ folgen dem Formatter („Do. 19. Nov.“, „Nov“) statt der festen Schreibweise aus §6.1.
+- Notizen und Einkaufsliste öffnen in eigenen Blättern mit eigenem `NavigationStack` am Suchblatt; beide Phase-5-Ansichten sind dafür unverändert.
+- Das Menü einer offenen Aufgabe ist gekürzt (Öffnen, Im Plan/In Aufgaben zeigen, Erledigt); der volle `TaskContextMenu` fehlt.
+- Das Werkzeug `search` liefert von Notizfeldern nur `matchedIn`, nie Ausschnitte; ohne Kalenderzugriff meldet es `calendarAccess: false`.
+- Wieder öffnen aus dem Editor einer erledigten Aufgabe meldet die Planung über `TaskListModel.didSave(_:wasCompleted:)`.
+
+**Spike S0 (§10) und Geräte-Checkliste: noch offen.** Punkte 1, 2, 3 und 5 aus §10 wurden nicht am Gerät geprüft; gebaut ist der jeweilige Standardweg des Specs. Auszufüllen, sobald ein Gerät zur Verfügung steht:
+
+| Prüfung | Ergebnis |
+|---|---|
+| Terminabruf 18 Monate (eigener Store), Sicht auf Änderungen des ersten Stores | offen |
+| Titelbreite „Planen“, Standard- und größte Schrift | offen (Simulator iPhone 17, Standardschrift: lange Form passt) |
+| GitHub: 30 `repo:`-Angaben, private Repositories | offen |
+| Erledigte Erinnerungen: Dauer über 12 Monate, wiederkehrende Vorkommen | offen |
+| Blatt über Blatt, „Im Plan zeigen“ aus dem inneren Blatt | offen |
+| Erstes Suchwort: Aufgaben sofort, Termine unter 1 s | offen |
+| Termin in der Kalender-App ändern, Blatt offen | offen |
+| „Ältere Termine durchsuchen“ zweimal | offen |
+| Abonnierter und zusammengeführter Termin, Deadline-Marke | offen |
+| Abhaken mit Kapsel, „Wieder öffnen“, „Im Plan zeigen“ | offen |
+| „Auf GitHub suchen“ mit und ohne Netz; kein Abruf beim Tippen | offen |
+| Assistent nutzt `search`, Antwort ohne Notiztext | offen |
+| Blatt schließt bei Assistent, Mitteilung, `tagwerk://plan/today` | offen |
