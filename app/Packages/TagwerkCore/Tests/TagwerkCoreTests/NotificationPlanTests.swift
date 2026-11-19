@@ -143,10 +143,10 @@ struct NotificationPlanTests {
         var renamed = task("Alt", source: .github, due: due)
         renamed.title = "Neu"
         let second = plan([renamed])
-        #expect(first.first?.id == "tagwerk.task.github:Alt")
+        #expect(first.first?.id == "tagwerk.task.github:Alt#0")
         #expect(first.first?.id == second.first?.id)
         let events = plan([], events: [event("e1", start: instant(2026, 11, 20, 10, 0, in: calendar))])
-        #expect(events.first?.id == "tagwerk.event.e1")
+        #expect(events.first?.id == "tagwerk.event.e1#0")
     }
 
     @Test func dateOnlyBody_hasNoTime() {
