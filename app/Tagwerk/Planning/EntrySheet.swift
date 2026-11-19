@@ -81,7 +81,7 @@ struct EntrySheet: View {
             }
             if event.isRecurring { Label("Wiederholt sich", systemImage: "arrow.trianglehead.2.clockwise").foregroundStyle(.secondary) }
             if let location = event.location, !location.isEmpty { LabeledContent("Ort", value: location) }
-            TravelInfoRow(eventID: event.id, model: model)
+            TravelInfoRow(event: event, model: model)
             if let notes = event.notes, !notes.isEmpty, !CalendarBlockRules.isBlockNote(notes) {
                 Text(notes).font(.subheadline).foregroundStyle(.secondary)
             }

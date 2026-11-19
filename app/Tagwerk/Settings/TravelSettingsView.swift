@@ -18,7 +18,7 @@ struct TravelSettingsView: View {
             Section {
                 Toggle("Fahrzeit berücksichtigen", isOn: $settings.travelTimeEnabled)
             } footer: {
-                Text("Die Fahrzeit berechnet Apple Karten aus dem Ort des vorherigen Termins oder deiner Heimadresse. Dafür gehen Ort und Adresse an Apple. Tagwerk nutzt deinen Standort nicht. Ohne Netz oder ohne Ort gibt es keinen Puffer.")
+                Text("Die Fahrzeit berechnet Apple Karten aus dem Ort des vorherigen Termins oder deiner Heimadresse. Dafür gehen Ort und Adresse an Apple. Tagwerk nutzt deinen Standort nicht. Berechnete Werte bleiben gespeichert und gelten auch ohne Netz. Fehlt ein Wert und gibt es kein Netz, schätzt Tagwerk die Fahrzeit vorläufig: mit dem letzten bekannten Wert zum selben Ziel, sonst mit 30 Minuten. Ohne Ort gibt es keine Fahrzeit. Im Termin lässt sie sich auch von Hand festlegen.")
             }
             if settings.travelTimeEnabled {
                 Section {

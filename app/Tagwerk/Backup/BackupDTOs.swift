@@ -335,6 +335,32 @@ struct EventAvailabilityMarkBackup: BackupEntity {
     }
 }
 
+struct EventTravelOverrideBackup: BackupEntity {
+    static let modelName = "EventTravelOverride"
+    var key: String
+    var eventKey: String
+    var seriesFrom: Date?
+    var modeName: String
+    var minutes: Int
+
+    init(_ record: EventTravelOverride) {
+        key = record.key
+        eventKey = record.eventKey
+        seriesFrom = record.seriesFrom
+        modeName = record.modeName
+        minutes = record.minutes
+    }
+
+    func makeRecord() -> EventTravelOverride {
+        let record = EventTravelOverride(TravelOverride(eventKey: eventKey, seriesFrom: seriesFrom,
+                                                        mode: TravelOverrideMode(storedName: modeName, minutes: minutes)))
+        record.key = key
+        record.modeName = modeName
+        record.minutes = minutes
+        return record
+    }
+}
+
 struct EventMergeDecisionBackup: BackupEntity {
     static let modelName = "EventMergeDecision"
     var key: String
@@ -1361,6 +1387,9 @@ struct BackupEntities: Codable, Equatable {
     var dayLunches: [DayLunchBackup] = []
     var eventAvailabilityMarks: [EventAvailabilityMarkBackup] = []
     var eventMergeDecisions: [EventMergeDecisionBackup] = []
+    /// Manual travel times (F2). A file from before that read as an empty list: a restore then leaves no overrides, like the
+    /// state the file was written in.
+    var eventTravelOverrides: [EventTravelOverrideBackup] = []
     var reminderOverrides: [ReminderOverrideBackup] = []
     var eventDeadlineMarks: [EventDeadlineMarkBackup] = []
     var deadlineEventLinks: [DeadlineEventLinkBackup] = []
@@ -1402,6 +1431,7 @@ struct BackupEntities: Codable, Equatable {
         dayLunches = try container.decodeIfPresent([DayLunchBackup].self, forKey: .dayLunches) ?? []
         eventAvailabilityMarks = try container.decodeIfPresent([EventAvailabilityMarkBackup].self, forKey: .eventAvailabilityMarks) ?? []
         eventMergeDecisions = try container.decodeIfPresent([EventMergeDecisionBackup].self, forKey: .eventMergeDecisions) ?? []
+        eventTravelOverrides = try container.decodeIfPresent([EventTravelOverrideBackup].self, forKey: .eventTravelOverrides) ?? []
         reminderOverrides = try container.decodeIfPresent([ReminderOverrideBackup].self, forKey: .reminderOverrides) ?? []
         eventDeadlineMarks = try container.decodeIfPresent([EventDeadlineMarkBackup].self, forKey: .eventDeadlineMarks) ?? []
         deadlineEventLinks = try container.decodeIfPresent([DeadlineEventLinkBackup].self, forKey: .deadlineEventLinks) ?? []
@@ -1426,7 +1456,7 @@ struct BackupEntities: Codable, Equatable {
     }
 
     /// Model names of everything the file holds, for the completeness check against the schema.
-    static let modelNames: Set<String> = ["AppSettings", LocalTaskBackup.modelName, LocalOccurrenceCompletionBackup.modelName, DayAssignmentBackup.modelName, DayOverrideBackup.modelName, ReminderEstimateBackup.modelName, EventTaskLinkBackup.modelName, RecurringEffortValueBackup.modelName, RecurringEffortOverrideBackup.modelName, RecurringOccurrenceDoneBackup.modelName, DayLunchBackup.modelName, EventAvailabilityMarkBackup.modelName, EventMergeDecisionBackup.modelName, ReminderOverrideBackup.modelName, EventDeadlineMarkBackup.modelName, DeadlineEventLinkBackup.modelName, DeadlineSuggestionDismissalBackup.modelName, MealBackup.modelName, DrinkBackup.modelName, WorkoutBackup.modelName, ShoppingCategoryBackup.modelName, ShoppingAssignmentBackup.modelName, NoteBackup.modelName, NoteFolderBackup.modelName, NoteAttachmentBackup.modelName, BibleStudySessionBackup.modelName, HabitBackup.modelName, HabitCheckBackup.modelName, RoutineDayBackup.modelName, EveningChecklistItemBackup.modelName, FocusMarkBackup.modelName, FocusSessionBackup.modelName, EffortSampleBackup.modelName, WeekReflectionBackup.modelName]
+    static let modelNames: Set<String> = ["AppSettings", LocalTaskBackup.modelName, LocalOccurrenceCompletionBackup.modelName, DayAssignmentBackup.modelName, DayOverrideBackup.modelName, ReminderEstimateBackup.modelName, EventTaskLinkBackup.modelName, RecurringEffortValueBackup.modelName, RecurringEffortOverrideBackup.modelName, RecurringOccurrenceDoneBackup.modelName, DayLunchBackup.modelName, EventAvailabilityMarkBackup.modelName, EventMergeDecisionBackup.modelName, EventTravelOverrideBackup.modelName, ReminderOverrideBackup.modelName, EventDeadlineMarkBackup.modelName, DeadlineEventLinkBackup.modelName, DeadlineSuggestionDismissalBackup.modelName, MealBackup.modelName, DrinkBackup.modelName, WorkoutBackup.modelName, ShoppingCategoryBackup.modelName, ShoppingAssignmentBackup.modelName, NoteBackup.modelName, NoteFolderBackup.modelName, NoteAttachmentBackup.modelName, BibleStudySessionBackup.modelName, HabitBackup.modelName, HabitCheckBackup.modelName, RoutineDayBackup.modelName, EveningChecklistItemBackup.modelName, FocusMarkBackup.modelName, FocusSessionBackup.modelName, EffortSampleBackup.modelName, WeekReflectionBackup.modelName]
 }
 
 extension BackupEntities {
@@ -1449,6 +1479,7 @@ extension BackupEntities {
         dayLunches = Self.fetch(DayLunchRecord.self, in: context).map(DayLunchBackup.init)
         eventAvailabilityMarks = Self.fetch(EventAvailabilityMark.self, in: context).map(EventAvailabilityMarkBackup.init)
         eventMergeDecisions = Self.fetch(EventMergeDecision.self, in: context).map(EventMergeDecisionBackup.init)
+        eventTravelOverrides = Self.fetch(EventTravelOverride.self, in: context).map(EventTravelOverrideBackup.init)
         reminderOverrides = Self.fetch(ReminderOverrideRecord.self, in: context).map(ReminderOverrideBackup.init)
         eventDeadlineMarks = Self.fetch(EventDeadlineMark.self, in: context).map(EventDeadlineMarkBackup.init)
         deadlineEventLinks = Self.fetch(DeadlineEventLink.self, in: context).map(DeadlineEventLinkBackup.init)
@@ -1501,6 +1532,7 @@ extension BackupEntities {
         Self.delete(DayLunchRecord.self, in: context) { _ in true }
         Self.delete(EventAvailabilityMark.self, in: context) { _ in true }
         Self.delete(EventMergeDecision.self, in: context) { _ in true }
+        Self.delete(EventTravelOverride.self, in: context) { _ in true }
         Self.delete(ReminderOverrideRecord.self, in: context) { _ in true }
         Self.delete(EventDeadlineMark.self, in: context) { _ in true }
         Self.delete(DeadlineEventLink.self, in: context) { _ in true }
@@ -1537,6 +1569,7 @@ extension BackupEntities {
         for item in dayLunches { context.insert(item.makeRecord()) }
         for item in eventAvailabilityMarks { context.insert(item.makeRecord()) }
         for item in eventMergeDecisions { context.insert(item.makeRecord()) }
+        for item in eventTravelOverrides { context.insert(item.makeRecord()) }
         for item in reminderOverrides { context.insert(item.makeRecord()) }
         for item in eventDeadlineMarks { context.insert(item.makeRecord()) }
         for item in deadlineEventLinks { context.insert(item.makeRecord()) }

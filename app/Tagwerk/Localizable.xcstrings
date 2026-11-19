@@ -652,12 +652,32 @@
         }
       }
     },
+    "%@ · geschätzt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ · estimated"
+          }
+        }
+      }
+    },
     "%@ · knapp": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "%@ · tight"
+          }
+        }
+      }
+    },
+    "%@ · manuell": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ · manual"
           }
         }
       }
@@ -778,6 +798,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "%1$@, about %2$@ kilocalories"
+          }
+        }
+      }
+    },
+    "%@, geschätzt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@, estimated"
           }
         }
       }
@@ -4161,6 +4191,16 @@
         }
       }
     },
+    "Automatisch berechnet Apple Karten die Fahrzeit. „Keine“ und eine feste Zeit gelten nur in Tagwerk, auch ohne Netz, und haben Vorrang.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apple Maps calculates the travel time automatically. “None” and a fixed time apply only in Tagwerk, also without a network, and take precedence."
+          }
+        }
+      }
+    },
     "Automatisch sichern": {
       "localizations": {
         "en": {
@@ -5718,7 +5758,18 @@
         }
       }
     },
+    "Die Fahrzeit berechnet Apple Karten aus dem Ort des vorherigen Termins oder deiner Heimadresse. Dafür gehen Ort und Adresse an Apple. Tagwerk nutzt deinen Standort nicht. Berechnete Werte bleiben gespeichert und gelten auch ohne Netz. Fehlt ein Wert und gibt es kein Netz, schätzt Tagwerk die Fahrzeit vorläufig: mit dem letzten bekannten Wert zum selben Ziel, sonst mit 30 Minuten. Ohne Ort gibt es keine Fahrzeit. Im Termin lässt sie sich auch von Hand festlegen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apple Maps calculates the travel time from the place of the previous event or from your home address. The place and the address are sent to Apple for this. Tagwerk does not use your location. Calculated values stay stored and also apply without a network. If a value is missing and there is no network, Tagwerk estimates the travel time for now: with the last known value to the same destination, otherwise with 30 minutes. Without a place there is no travel time. You can also set it by hand in the event."
+          }
+        }
+      }
+    },
     "Die Fahrzeit berechnet Apple Karten aus dem Ort des vorherigen Termins oder deiner Heimadresse. Dafür gehen Ort und Adresse an Apple. Tagwerk nutzt deinen Standort nicht. Ohne Netz oder ohne Ort gibt es keinen Puffer.": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -7405,12 +7456,32 @@
         }
       }
     },
+    "Fahrzeit %@ · manuell": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Travel time %@ · manual"
+          }
+        }
+      }
+    },
     "Fahrzeit %lld Minuten %@, %@": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Travel time %lld minutes %@, %@"
+          }
+        }
+      }
+    },
+    "Fahrzeit %lld Minuten, manuell festgelegt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Travel time %lld minutes, set manually"
           }
         }
       }
@@ -7426,6 +7497,7 @@
       }
     },
     "Fahrzeit · %@ %@ %@": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -7441,6 +7513,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Done"
+          }
+        }
+      }
+    },
+    "Feste Zeit": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fixed time"
           }
         }
       }
@@ -18064,6 +18146,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "latest: “%@” · %@"
+          }
+        }
+      }
+    },
+    "~%@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "~%@"
           }
         }
       }

@@ -80,9 +80,21 @@ struct MapKitTravelEstimator: TravelTimeEstimating {
     }
 }
 
+/// What the plan knows about the trips of a day, by event ID.
+struct ResolvedTravelTimes: Equatable {
+    /// Known travel times (also older ones; 0 for a trip under 3 minutes).
+    var minutes: [String: Int] = [:]
+    /// Estimates for trips that could not be asked (no network) and have no value yet.
+    var provisionalMinutes: [String: Int] = [:]
+}
+
 /// Travel times for the trips of the plan: read synchronously from the cache, fetched in the background.
-/// A failed request is not cached and not repeated in the same session, so a missing network or an unknown
-/// address costs one request, not a loop.
+///
+/// Offline (F2): a stored time is used at any age and only asked for again online (`TravelTimeCache`). A trip without a
+/// value whose request failed for a network reason (`TravelFailure.offline`) is `provisional`: the plan shows an
+/// estimate (last time to the same destination, else 30 minutes) until a fresh value arrives; it is asked again after
+/// `transientRetryInterval`. "Not found" answers are stored and give no block; a request that cannot be asked at all
+/// (no starting point) is not repeated in the same session.
 ///
 /// Plausibility (see `TravelPlausibility`): the text of a place without coordinates is only looked up when there is a
 /// reference point (home or the other end of the trip, with coordinates), and a result more than 50 km away from it
@@ -90,15 +102,22 @@ struct MapKitTravelEstimator: TravelTimeEstimating {
 @MainActor
 @Observable
 final class TravelTimeService {
-    /// Counts the times new values arrived; a view can use it to refresh.
+    /// Counts the times the plan changed because of the service (a new value, a trip turning provisional or not);
+    /// a view can use it to refresh.
     private(set) var revision = 0
     /// Requests per `fetchMissing` call (MapKit throttles bursts).
     static let requestsPerRun = 20
+    /// A trip that failed for a network reason is not asked again before this many seconds have passed.
+    static let transientRetryInterval: TimeInterval = 60
 
     @ObservationIgnored private var cache: TravelTimeCache
     @ObservationIgnored private let estimator: any TravelTimeEstimating
     @ObservationIgnored private let now: () -> Date
+    /// Trips and places that cannot be asked in this session.
     @ObservationIgnored private var failedKeys: Set<String> = []
+    /// Trips without a value whose last request failed for a network reason.
+    @ObservationIgnored private var provisionalKeys: Set<String> = []
+    @ObservationIgnored private var retryAfter: [String: Date] = [:]
     @ObservationIgnored private var isFetching = false
 
     init(estimator: any TravelTimeEstimating = MapKitTravelEstimator(), cacheURL: URL? = TravelTimeCache.defaultFileURL,
@@ -110,49 +129,76 @@ final class TravelTimeService {
 
     /// Event ID → known travel time (0 for a trip under 3 minutes). Trips without a value are left out.
     func cachedMinutes(for legs: [TravelLeg], transport: TravelTransport) -> [String: Int] {
-        var result: [String: Int] = [:]
+        resolvedTimes(for: legs, transport: transport).minutes
+    }
+
+    /// The known times and the estimates for trips that could not be asked.
+    func resolvedTimes(for legs: [TravelLeg], transport: TravelTransport) -> ResolvedTravelTimes {
+        var result = ResolvedTravelTimes()
         for leg in legs {
             let key = TravelTimeCache.tripKey(from: leg.from, to: leg.to, transport: transport)
-            if let minutes = cache.minutes(forTrip: key, now: now()) { result[leg.eventID] = minutes }
+            if let minutes = cache.minutes(forTrip: key) {
+                result.minutes[leg.eventID] = minutes
+            } else if !cache.isRejected(forTrip: key), provisionalKeys.contains(key) {
+                result.provisionalMinutes[leg.eventID] = TravelRules.provisionalMinutes(
+                    lastKnownToDestination: cache.latestMinutes(toDestination: leg.to.key, transport: transport))
+            }
         }
         return result
     }
 
-    /// Looks up the trips that have no value yet, one after the other, at most `requestsPerRun` requests. Returns
-    /// `true` when new values arrived (the caller reloads once). A leg that failed earlier in this session is skipped.
+    /// Looks up the trips that have no value yet or an old one, one after the other, at most `requestsPerRun` requests.
+    /// Returns `true` when the plan changes (a new or different value, a trip that turned provisional or got its
+    /// value); the caller reloads once. The same failure a second time returns `false`, so there is no loop.
     /// `home` is the home place; with coordinates it is the reference point for looking up free-text places.
     func fetchMissing(legs: [TravelLeg], transport: TravelTransport, home: TravelPlace? = nil) async -> Bool {
         while isFetching { try? await Task.sleep(for: .milliseconds(50)) }
         isFetching = true
         defer { isFetching = false }
         var requests = 0
-        var gotNewValue = false
+        var changesPlan = false
+        var changesCache = false
         var seen = Set<String>()
         for leg in legs {
             let key = TravelTimeCache.tripKey(from: leg.from, to: leg.to, transport: transport)
-            guard seen.insert(key).inserted, cache.minutes(forTrip: key, now: now()) == nil,
-                  !failedKeys.contains(key) else { continue }
+            guard seen.insert(key).inserted, cache.needsRefresh(forTrip: key, now: now()), !failedKeys.contains(key),
+                  (retryAfter[key] ?? .distantPast) <= now() else { continue }
             guard requests < Self.requestsPerRun else { break }
             requests += 1
+            let previous = cache.minutes(forTrip: key)
+            let wasProvisional = provisionalKeys.contains(key)
             do {
                 let from = try await located(leg.from, otherEnd: leg.to, home: home)
                 let to = try await located(leg.to, otherEnd: leg.from, home: home)
                 let minutes = try await estimator.minutes(from: from, to: to, transport: transport, arrival: leg.arrival)
-                guard TravelPlausibility.isPlausibleTravelTime(minutes: minutes) else {
-                    failedKeys.insert(key)
-                    continue
-                }
+                guard TravelPlausibility.isPlausibleTravelTime(minutes: minutes) else { throw TravelTimeError.addressNotFound }
                 cache.store(minutes: minutes, forTrip: key, now: now())
-                gotNewValue = true
+                provisionalKeys.remove(key)
+                retryAfter[key] = nil
+                changesCache = true
+                if wasProvisional || previous != minutes { changesPlan = true }
             } catch {
-                failedKeys.insert(key)
+                switch TravelFailure.classify(error) {
+                case .offline:
+                    retryAfter[key] = now().addingTimeInterval(Self.transientRetryInterval)
+                    // A trip with an older value or a remembered "not found" keeps showing that; only a trip with no
+                    // answer at all gets the provisional block.
+                    if cache.entries[key] == nil, provisionalKeys.insert(key).inserted { changesPlan = true }
+                case .notFound:
+                    cache.storeRejected(forTrip: key, now: now())
+                    provisionalKeys.remove(key)
+                    retryAfter[key] = nil
+                    changesCache = true
+                    if wasProvisional || previous != nil { changesPlan = true }
+                case .unresolvable:
+                    failedKeys.insert(key)
+                    if provisionalKeys.remove(key) != nil { changesPlan = true }
+                }
             }
         }
-        if gotNewValue {
-            cache.save()
-            revision += 1
-        }
-        return gotNewValue
+        if changesCache { cache.save() }
+        if changesPlan { revision += 1 }
+        return changesPlan
     }
 
     /// Looks up an address for the settings (the home address). Nothing is cached here.
@@ -194,7 +240,8 @@ final class TravelTimeService {
             result.longitude = found.longitude
             return result
         } catch {
-            failedKeys.insert(failureKey)
+            // A network failure is not a verdict on the place: it is looked up again later.
+            if TravelFailure.classify(error) != .offline { failedKeys.insert(failureKey) }
             throw error
         }
     }
