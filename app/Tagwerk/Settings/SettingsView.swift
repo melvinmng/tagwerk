@@ -77,6 +77,14 @@ struct SettingsView: View {
                 }
 
                 Section {
+                    NavigationLink {
+                        RoutineSettingsView()
+                    } label: {
+                        LabeledContent("Routinen", value: DateText.time(minutes: settings.bedtimeMinutes, calendar: .tagwerk))
+                    }
+                }
+
+                Section {
                     Stepper("Vorlauf: \(leadTimeText(settings.leadTimeMinutes))", value: $settings.leadTimeMinutes, in: 15...2880, step: 15)
                     Toggle("GitHub-Issues", isOn: $settings.githubTaskNotifications)
                     Toggle("Erinnerungen", isOn: $settings.reminderTaskNotifications)

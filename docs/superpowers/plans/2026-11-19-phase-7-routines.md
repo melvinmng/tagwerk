@@ -530,7 +530,7 @@ public enum RoutineSchedule {
 struct RoutineSettingsView: View     // sections as in design §11
 ```
 
-- [ ] **Step 1: Tests schreiben (rot).**
+- [x] **Step 1: Tests schreiben (rot).**
 
 ```swift
 // RoutineScheduleTests
@@ -550,10 +550,10 @@ struct RoutineSettingsView: View     // sections as in design §11
 @Test func settingsDefaults()                       // the six defaults of design §5.5
 ```
 
-- [ ] **Step 2:** `CORE RoutineScheduleTests`, `APP RoutineStoreTests` → rot.
-- [ ] **Step 3: Umsetzen.** `RoutineDayRecord.dayKey` ist `@Attribute(.unique)` wie `DayOverrideRecord`. `RoutineSettingsView` nach Design §11 (Tagesabschluss, Abend-Checkliste mit „n min vorher · Uhrzeit“ bzw. „ohne Erinnerung“, Tagesstart, Planen, Gewohnheiten › `HabitListView`, Gedanken-Notiz mit Schalter, der ohne ChatGPT-Anmeldung deaktiviert ist). `SettingsView` bekommt nach „Erfassen“ einen Abschnitt mit der Zeile „Routinen“ (Wert: Schlafzeit). Die Abschnitte „Tagesstart“ (Erinnerung) und „Gedanken-Notiz“ schalten in diesem Task nur die Felder; ihre Wirkung folgt in Task 10, 11 und 14.
-- [ ] **Step 4:** `CORE RoutineScheduleTests`, `APP RoutineStoreTests`, `APP ModelStoreLocationTests` → grün. Sichtprüfung gegen GS·E.
-- [ ] **Step 5: Commit.** `git commit -m "feat: add routine day records, evening checklist and routine settings"`
+- [x] **Step 2:** `CORE RoutineScheduleTests`, `APP RoutineStoreTests` → rot.
+- [x] **Step 3: Umsetzen.** `RoutineDayRecord.dayKey` ist `@Attribute(.unique)` wie `DayOverrideRecord`. `RoutineSettingsView` nach Design §11 (Tagesabschluss, Abend-Checkliste mit „n min vorher · Uhrzeit“ bzw. „ohne Erinnerung“, Tagesstart, Planen, Gewohnheiten › `HabitListView`, Gedanken-Notiz mit Schalter, der ohne ChatGPT-Anmeldung deaktiviert ist). `SettingsView` bekommt nach „Erfassen“ einen Abschnitt mit der Zeile „Routinen“ (Wert: Schlafzeit). Die Abschnitte „Tagesstart“ (Erinnerung) und „Gedanken-Notiz“ schalten in diesem Task nur die Felder; ihre Wirkung folgt in Task 10, 11 und 14.
+- [x] **Step 4:** `CORE RoutineScheduleTests`, `APP RoutineStoreTests`, `APP ModelStoreLocationTests` → grün. Sichtprüfung gegen GS·E.
+- [x] **Step 5: Commit.** `git commit -m "feat: add routine day records, evening checklist and routine settings"`
 
 ### Task 9: Blatt „Tagesabschluss“, Abendzeile, Zeilen in „Erfassen“, Routen · #142 · Zeile 6
 

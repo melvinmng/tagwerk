@@ -783,6 +783,16 @@
         }
       }
     },
+    "Handy weglegen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Put the phone away"
+          }
+        }
+      }
+    },
     "Haushalt" : {
       "localizations" : {
         "en" : {
@@ -845,6 +855,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Always"
+          }
+        }
+      }
+    },
+    "Ins Bett" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Go to bed"
           }
         }
       }
@@ -1137,6 +1157,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Later"
+          }
+        }
+      }
+    },
+    "Tagesabschluss öffnen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open evening wrap-up"
           }
         }
       }

@@ -84,6 +84,18 @@ final class AppSettings {
     /// Phase 4: calories and water in the "Heute" widget; off keeps the values out of the shared snapshot file.
     var widgetShowsNutrition: Bool = true
 
+    /// Phase 7 routines: target bedtime in minutes after midnight (23:00); the evening checklist counts back from it.
+    var bedtimeMinutes: Int = 1380
+    /// Notifications of the evening checklist; at most four, one per point with a time anchor.
+    var eveningRemindersEnabled: Bool = true
+    /// The optional reminder to start the day, off by default.
+    var morningReminderEnabled: Bool = false
+    var morningReminderMinutes: Int = 450
+    /// The routine card and the evening line in "Planen".
+    var showsRoutinesInPlan: Bool = true
+    /// "Notizen an ChatGPT senden": a thought note may be sent, only on a tap on "Vorschläge holen".
+    var noteSuggestionConsent: Bool = false
+
     /// Voice: microphone in conversations (plan voice-chat, SP7a).
     var voiceInputEnabled: Bool = true
     /// The one-time explanation before the first recording (SP8a) was confirmed.

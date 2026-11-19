@@ -1613,6 +1613,32 @@
         }
       }
     },
+    "%lld min vorher": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld min before"
+          }
+        }
+      }
+    },
+    "%lld min vorher · %@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$lld min vorher · %2$@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld min before · %2$@"
+          }
+        }
+      }
+    },
     "%lld ml": {
       "localizations": {
         "en": {
@@ -2127,6 +2153,16 @@
         }
       }
     },
+    "Abend-Checkliste": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Evening checklist"
+          }
+        }
+      }
+    },
     "Abgeben": {
       "localizations": {
         "en": {
@@ -2219,6 +2255,16 @@
     },
     "Abspielen": {
       "shouldTranslate": false
+    },
+    "Abstand": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lead time"
+          }
+        }
+      }
     },
     "Abstand zwischen Terminen und eingeplanten Aufgaben.": {
       "localizations": {
@@ -4111,6 +4157,16 @@
         }
       }
     },
+    "Der Punkt konnte nicht gespeichert werden.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The item could not be saved."
+          }
+        }
+      }
+    },
     "Der Suchtext braucht mindestens zwei Zeichen.": {
       "localizations": {
         "en": {
@@ -4527,6 +4583,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "The time is invalid."
+          }
+        }
+      }
+    },
+    "Die Zeiten folgen der Schlafzeit. Höchstens vier Punkte erinnern; weitere stehen nur in der Liste.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The times follow your bedtime. At most four items remind you; the others only appear in the list."
           }
         }
       }
@@ -5253,6 +5319,16 @@
         }
       }
     },
+    "Erinnerungen am Abend": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Evening reminders"
+          }
+        }
+      }
+    },
     "Erinnerungen und lokale Aufgaben werden gelöscht, GitHub-Issues als „nicht geplant“ geschlossen.": {
       "localizations": {
         "en": {
@@ -5774,6 +5850,16 @@
         }
       }
     },
+    "Für Vorschläge sendet Tagwerk den Text der jeweiligen Gedanken-Notiz sowie deine offenen Aufgaben und Termine der nächsten 7 Tage (Titel, Fälligkeit, Zeit) an ChatGPT (OpenAI), und nur, wenn du bei der Notiz auf „Vorschläge holen“ tippst. Dankbarkeit, Gewohnheiten, Wochenreflexion, Daten aus Health und frühere Notizen werden nie gesendet.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "For suggestions, Tagwerk sends the text of that thoughts note plus your open tasks and events of the next 7 days (title, due date, time) to ChatGPT (OpenAI), and only when you tap “Get suggestions” on the note. Gratitude, habits, weekly reflection, Health data and earlier notes are never sent."
+          }
+        }
+      }
+    },
     "Für alle Tage": {
       "localizations": {
         "en": {
@@ -5830,6 +5916,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Thoughts"
+          }
+        }
+      }
+    },
+    "Gedanken-Notiz": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Thoughts note"
           }
         }
       }
@@ -6056,6 +6152,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Habits"
+          }
+        }
+      }
+    },
+    "Gewohnheiten bearbeiten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit habits"
           }
         }
       }
@@ -6512,6 +6618,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "At most 30 items per call."
+          }
+        }
+      }
+    },
+    "Höchstens vier Punkte erinnern. Schalte bei einem anderen Punkt die Erinnerung aus.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "At most four items remind you. Turn off the reminder of another item first."
           }
         }
       }
@@ -7874,6 +7990,16 @@
         }
       }
     },
+    "Melde dich unter Einstellungen › KI bei ChatGPT an, um Vorschläge aus einer Notiz zu holen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sign in to ChatGPT under Settings › AI to get suggestions from a note."
+          }
+        }
+      }
+    },
     "Menge": {
       "localizations": {
         "en": {
@@ -8457,6 +8583,16 @@
         }
       }
     },
+    "Neuer Punkt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New item"
+          }
+        }
+      }
+    },
     "Neuer Termin": {
       "localizations": {
         "en": {
@@ -8706,6 +8842,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Notes"
+          }
+        }
+      }
+    },
+    "Notizen an ChatGPT senden": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send notes to ChatGPT"
           }
         }
       }
@@ -9405,6 +9551,26 @@
         }
       }
     },
+    "Punkt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Item"
+          }
+        }
+      }
+    },
+    "Punkt hinzufügen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add item"
+          }
+        }
+      }
+    },
     "Quellen": {
       "localizations": {
         "en": {
@@ -9507,6 +9673,16 @@
     },
     "Route": {
       "shouldTranslate": false
+    },
+    "Routinen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Routines"
+          }
+        }
+      }
     },
     "Runde %lld": {
       "shouldTranslate": false
@@ -11994,6 +12170,16 @@
         }
       }
     },
+    "Zeigt die Karte „Tagesstart“ bzw. „Fokus heute“ und abends die Zeile „Tagesabschluss“ im Tab „Planen“.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shows the “Morning start” or “Today’s focus” card and, in the evening, the “Evening wrap-up” row in the Plan tab."
+          }
+        }
+      }
+    },
     "Zeit": {
       "localizations": {
         "en": {
@@ -12128,6 +12314,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Goals"
+          }
+        }
+      }
+    },
+    "Zielschlafzeit": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Target bedtime"
           }
         }
       }
@@ -13087,6 +13283,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "open"
+          }
+        }
+      }
+    },
+    "ohne Erinnerung": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "no reminder"
           }
         }
       }

@@ -1,0 +1,196 @@
+import SwiftUI
+import TagwerkCore
+
+/// Einstellungen › Routinen (mockup GS·E, design §11): bedtime, evening checklist, morning reminder, "Planen" and the
+/// consent for suggestions from a thought note.
+struct RoutineSettingsView: View {
+    @Environment(AppEnvironment.self) private var environment
+    @State private var editing: ChecklistItem?
+    @State private var isAdding = false
+
+    var body: some View {
+        @Bindable var settings = environment.settings
+        let store = environment.routineStore
+        let items = store.checklist()
+        Form {
+            Section {
+                DatePicker("Zielschlafzeit", selection: time($settings.bedtimeMinutes), displayedComponents: .hourAndMinute)
+                Toggle("Erinnerungen am Abend", isOn: $settings.eveningRemindersEnabled)
+            } header: {
+                Text("Tagesabschluss")
+            }
+
+            Section {
+                ForEach(items) { item in
+                    Button { editing = item } label: {
+                        HStack {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(item.title)
+                                Text(detail(item, bedtime: settings.bedtimeMinutes)).font(.caption).foregroundStyle(.secondary)
+                            }
+                            Spacer()
+                            Image(systemName: "chevron.right").font(.caption.weight(.semibold)).foregroundStyle(.tertiary)
+                        }
+                    }
+                    .tint(.primary)
+                }
+                .onDelete { offsets in offsets.map { items[$0].id }.forEach(store.deleteItem) }
+                .onMove { source, destination in
+                    var ids = items.map(\.id)
+                    ids.move(fromOffsets: source, toOffset: destination)
+                    store.reorderItems(ids)
+                }
+                if items.isEmpty {
+                    Button("Vorschlag übernehmen") { store.adoptSuggestion() }
+                }
+                Button { isAdding = true } label: { Label("Punkt hinzufügen", systemImage: "plus.circle") }
+                    .disabled(items.count >= RoutineSchedule.maximumItems)
+            } header: {
+                Text("Abend-Checkliste")
+            } footer: {
+                Text("Die Zeiten folgen der Schlafzeit. Höchstens vier Punkte erinnern; weitere stehen nur in der Liste.")
+            }
+
+            Section {
+                Toggle("Erinnerung", isOn: $settings.morningReminderEnabled)
+                if settings.morningReminderEnabled {
+                    DatePicker("Uhrzeit", selection: time($settings.morningReminderMinutes), displayedComponents: .hourAndMinute)
+                }
+            } header: {
+                Text("Tagesstart")
+            }
+
+            Section {
+                Toggle("In Planen anzeigen", isOn: $settings.showsRoutinesInPlan)
+            } header: {
+                Text("Planen")
+            } footer: {
+                Text("Zeigt die Karte „Tagesstart“ bzw. „Fokus heute“ und abends die Zeile „Tagesabschluss“ im Tab „Planen“.")
+            }
+
+            Section {
+                NavigationLink("Gewohnheiten bearbeiten") { HabitListView(model: environment.habits) }
+            } header: {
+                Text("Gewohnheiten")
+            }
+
+            Section {
+                Toggle("Notizen an ChatGPT senden", isOn: $settings.noteSuggestionConsent)
+                    .disabled(!environment.ai.isSignedIn)
+            } header: {
+                Text("Gedanken-Notiz")
+            } footer: {
+                if environment.ai.isSignedIn {
+                    Text("Für Vorschläge sendet Tagwerk den Text der jeweiligen Gedanken-Notiz sowie deine offenen Aufgaben und Termine der nächsten 7 Tage (Titel, Fälligkeit, Zeit) an ChatGPT (OpenAI), und nur, wenn du bei der Notiz auf „Vorschläge holen“ tippst. Dankbarkeit, Gewohnheiten, Wochenreflexion, Daten aus Health und frühere Notizen werden nie gesendet.")
+                } else {
+                    Text("Melde dich unter Einstellungen › KI bei ChatGPT an, um Vorschläge aus einer Notiz zu holen.")
+                }
+            }
+        }
+        .navigationTitle("Routinen")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar { if !items.isEmpty { EditButton() } }
+        .sheet(item: $editing) { item in
+            ChecklistItemSheet(store: store, bedtimeMinutes: settings.bedtimeMinutes, item: item, isNew: false)
+        }
+        .sheet(isPresented: $isAdding) {
+            ChecklistItemSheet(store: store, bedtimeMinutes: settings.bedtimeMinutes,
+                               item: ChecklistItem(title: "", order: items.count, offsetMinutes: 30), isNew: true)
+        }
+        .task { await environment.ai.refreshAccount() }
+    }
+
+    /// "60 min vorher · 22:00" or "ohne Erinnerung".
+    private func detail(_ item: ChecklistItem, bedtime: Int) -> String {
+        guard let offset = item.offsetMinutes else { return String(localized: "ohne Erinnerung") }
+        let clock = DateText.time(minutes: RoutineSchedule.anchorMinutes(bedtimeMinutes: bedtime, offsetMinutes: offset),
+                                  calendar: .tagwerk)
+        return String(localized: "\(offset) min vorher · \(clock)")
+    }
+
+    /// Bridges "minutes since midnight" to a `Date` for time pickers.
+    private func time(_ minutes: Binding<Int>) -> Binding<Date> {
+        let calendar = Calendar.tagwerk
+        return Binding(
+            get: { calendar.date(bySettingHour: minutes.wrappedValue / 60, minute: minutes.wrappedValue % 60, second: 0, of: .now) ?? .now },
+            set: { date in
+                let parts = calendar.dateComponents([.hour, .minute], from: date)
+                minutes.wrappedValue = (parts.hour ?? 0) * 60 + (parts.minute ?? 0)
+            }
+        )
+    }
+}
+
+/// One checklist point: name, and an optional reminder some minutes before bedtime.
+private struct ChecklistItemSheet: View {
+    let store: RoutineStore
+    let bedtimeMinutes: Int
+    let isNew: Bool
+    @Environment(\.dismiss) private var dismiss
+    @State private var item: ChecklistItem
+    @State private var remindsMe: Bool
+    @State private var refused = false
+
+    init(store: RoutineStore, bedtimeMinutes: Int, item: ChecklistItem, isNew: Bool) {
+        self.store = store
+        self.bedtimeMinutes = bedtimeMinutes
+        self.isNew = isNew
+        _item = State(initialValue: item)
+        _remindsMe = State(initialValue: item.offsetMinutes != nil)
+    }
+
+    private var otherReminders: Int {
+        store.checklist().filter { $0.id != item.id && $0.offsetMinutes != nil }.count
+    }
+
+    private var canRemind: Bool { remindsMe || otherReminders < RoutineSchedule.maximumReminders }
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section("Name") {
+                    TextField("Name", text: $item.title)
+                        .onChange(of: item.title) { _, value in
+                            if value.count > RoutineSchedule.titleLimit { item.title = String(value.prefix(RoutineSchedule.titleLimit)) }
+                        }
+                }
+                Section {
+                    Toggle("Erinnerung", isOn: $remindsMe).disabled(!canRemind)
+                    if remindsMe {
+                        let offset = item.offsetMinutes ?? 30
+                        Stepper(value: Binding(get: { item.offsetMinutes ?? 30 }, set: { item.offsetMinutes = $0 }),
+                                in: RoutineSchedule.offsetRange, step: RoutineSchedule.offsetStep) {
+                            LabeledContent("Abstand", value: String(localized: "\(offset) min vorher"))
+                        }
+                        LabeledContent("Uhrzeit", value: DateText.time(
+                            minutes: RoutineSchedule.anchorMinutes(bedtimeMinutes: bedtimeMinutes, offsetMinutes: offset),
+                            calendar: .tagwerk))
+                    }
+                } footer: {
+                    if !canRemind {
+                        Text("Höchstens vier Punkte erinnern. Schalte bei einem anderen Punkt die Erinnerung aus.")
+                    } else if refused {
+                        Text("Der Punkt konnte nicht gespeichert werden.")
+                    }
+                }
+            }
+            .navigationTitle(isNew ? "Neuer Punkt" : "Punkt")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) { Button("Abbrechen") { dismiss() } }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Fertig", action: save)
+                        .disabled(item.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                }
+            }
+            .onChange(of: remindsMe) { _, reminds in
+                item.offsetMinutes = reminds ? (item.offsetMinutes ?? 30) : nil
+            }
+        }
+        .presentationDetents([.medium])
+    }
+
+    private func save() {
+        if store.saveItem(item) { dismiss() } else { refused = true }
+    }
+}

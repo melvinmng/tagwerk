@@ -57,6 +57,8 @@ final class AppEnvironment {
     let capture: CaptureModel
     /// Habits of the "Erfassen" tab, their counter in "Planen" and in the widget (phase 7).
     let habits: HabitsModel
+    /// Day entries and the evening checklist of the routines (phase 7).
+    let routineStore: RoutineStore
     /// Meal estimates with ChatGPT; only after consent and a tap (main design §7).
     let mealEstimator: MealEstimator
     /// Writes the snapshot file the widget reads (phase 4); `directory == nil` in tests and unsigned builds.
@@ -204,6 +206,7 @@ final class AppEnvironment {
         self.intake = intake
         self.healthMirror = mirror
         self.capture = CaptureModel(store: intake, mirror: mirror, health: healthStore, settings: settings)
+        self.routineStore = RoutineStore(context: context)
         self.habits = HabitsModel(store: HabitStore(context: context), intake: intake, health: healthStore, settings: settings)
         self.mealEstimator = MealEstimator(responder: ai.client, model: { try await ai.selectedModel() },
                                            hasConsent: { settings.mealEstimationConsent })
