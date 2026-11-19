@@ -31,6 +31,19 @@ struct PrivateNotesTests {
         #expect(labels.sorted() == ["calendarNames", "completedTasks", "events"])
     }
 
+    @Test func search_matchesPlainText_notMarkup() throws {
+        let container = try ModelContainerFactory.make(inMemory: true)
+        let notes = NoteStore(context: container.mainContext)
+        let reference = MarkdownText.reference(for: UUID(uuidString: "3F2504E0-4F89-41D3-9A0C-0305E82C3301")!, name: "Foto", isImage: true)
+        let note = try #require(notes.create(text: "# Urlaub\n**Packliste** <i>Sonnencreme</i> \(reference)"))
+        let item = AppEnvironment.searchItem(for: note, folderNames: [:])
+        #expect(item.text == "Urlaub\nPackliste Sonnencreme")
+        #expect(NoteText.matches(item.text, query: "packliste sonnencreme"))
+        #expect(!NoteText.matches(item.text, query: "attachment") && !NoteText.matches(item.text, query: "3F2504E0"))
+        // The label of a note in a folder or of a routine note does not change.
+        #expect(AppEnvironment.searchItem(for: try #require(notes.create(text: "Traum", kind: .dream, dayKey: "2026-11-18")), folderNames: [:]).kindLabel == "Dream Log")
+    }
+
     @Test func widgetSnapshot_hasNoFieldForNoteText() {
         let entry = SnapshotEntry(id: "e", title: "Termin", start: .now, end: .now, kind: .event, colorHex: nil, isAllDay: false)
         let day = SnapshotDay(day: PlanDay(year: 2026, month: 11, day: 19), entries: [entry], deadlineCount: 0, intake: nil)

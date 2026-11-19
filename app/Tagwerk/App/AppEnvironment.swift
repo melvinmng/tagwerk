@@ -447,6 +447,13 @@ final class AppEnvironment {
         activeSearch?.close()
     }
 
+    /// A note as the search sees it. The search reads the plain text only: no Markdown, no HTML, no attachment references.
+    static func searchItem(for note: NoteRecord, folderNames: [UUID: String]) -> NoteSearchItem {
+        let folderName = note.kind == .free ? note.folderID.flatMap { folderNames[$0] } : nil
+        return NoteSearchItem(id: note.id, text: MarkdownText.plainText(note.text), kindLabel: folderName ?? kindLabel(of: note.kind),
+                              updatedAt: note.updatedAt, dayKey: note.kind == .free || note.kind == .bibleStudy ? nil : note.dayKey)
+    }
+
     /// Name of a note's kind in a search row.
     static func kindLabel(of kind: NoteKind) -> String {
         switch kind {
@@ -518,11 +525,7 @@ final class AppEnvironment {
             notes: {
                 // A note in a folder shows the folder name as its label; the trash is not searched.
                 let folderNames = Dictionary(notes.folders().map { ($0.id, $0.name) }, uniquingKeysWith: { first, _ in first })
-                return notes.notes().map { note in
-                    let folderName = note.kind == .free ? note.folderID.flatMap { folderNames[$0] } : nil
-                    return NoteSearchItem(id: note.id, text: note.text, kindLabel: folderName ?? Self.kindLabel(of: note.kind),
-                                          updatedAt: note.updatedAt, dayKey: note.kind == .free || note.kind == .bibleStudy ? nil : note.dayKey)
-                }
+                return notes.notes().map { Self.searchItem(for: $0, folderNames: folderNames) }
             },
             shopping: {
                 // Only open items of a list that is set up; completed ones stay out (spec F7).
