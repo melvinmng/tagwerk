@@ -184,7 +184,7 @@ Testbefehle:
   - `ReminderStore.defaultListID() -> String?` (Standard `nil`, Abweichung A1)
   - `FakeReminderStore`: echte `completedReminders`, `defaultListID()` liefert das vorhandene `defaultListID`; `save` setzt `completedAt` beim Wechsel auf erledigt (auf den Wert von `tick()`) und löscht es beim Wiederöffnen; `create` setzt `createdAt`.
 
-- [ ] **Schritt 1: Tests schreiben** (`CompletedRemindersTests`, `@MainActor struct`, Store wie in `RemindersTaskProviderTests`)
+- [x] **Schritt 1: Tests schreiben** (`CompletedRemindersTests`, `@MainActor struct`, Store wie in `RemindersTaskProviderTests`)
 
 ```swift
 @Test func completedReminders_onlyInIntervalAndLists() async {
@@ -208,10 +208,10 @@ Testbefehle:
 }
 ```
 
-- [ ] **Schritt 2:** Suite `CompletedRemindersTests` ausführen. Erwartet: Übersetzungsfehler (`completedReminders` unbekannt).
-- [ ] **Schritt 3: Umsetzen.** `EventKitGateway.completedReminders` nach dem Muster von `completionDates` (`:80–96`), mit derselben Zugriffsprüfung und mit `Self.record` statt Datum; leere Auswahl → `[]`. `record(_:)`: `createdAt: reminder.creationDate`, `completedAt: reminder.completionDate`. `listInfo(_:)`: `isWritable: calendar.allowsContentModifications`. `defaultListID()`: `store.defaultCalendarForNewReminders()?.calendarIdentifier`. `save(_:recurrence:)` schreibt die beiden neuen Felder nie.
-- [ ] **Schritt 4:** Ganzes Paket `RemindersKit` testen. Erwartet: alle Tests grün (die vorhandenen unverändert).
-- [ ] **Schritt 5:** Commit: `git add app/Packages/RemindersKit && git commit -m "feat: read completed reminders, creation dates and list writability"`
+- [x] **Schritt 2:** Suite `CompletedRemindersTests` ausführen. Erwartet: Übersetzungsfehler (`completedReminders` unbekannt).
+- [x] **Schritt 3: Umsetzen.** `EventKitGateway.completedReminders` nach dem Muster von `completionDates` (`:80–96`), mit derselben Zugriffsprüfung und mit `Self.record` statt Datum; leere Auswahl → `[]`. `record(_:)`: `createdAt: reminder.creationDate`, `completedAt: reminder.completionDate`. `listInfo(_:)`: `isWritable: calendar.allowsContentModifications`. `defaultListID()`: `store.defaultCalendarForNewReminders()?.calendarIdentifier`. `save(_:recurrence:)` schreibt die beiden neuen Felder nie.
+- [x] **Schritt 4:** Ganzes Paket `RemindersKit` testen. Erwartet: alle Tests grün (die vorhandenen unverändert).
+- [x] **Schritt 5:** Commit: `git add app/Packages/RemindersKit && git commit -m "feat: read completed reminders, creation dates and list writability"`
 
 ---
 

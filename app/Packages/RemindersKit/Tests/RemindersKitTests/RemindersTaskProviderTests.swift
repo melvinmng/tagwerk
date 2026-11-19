@@ -107,7 +107,7 @@ struct RemindersTaskProviderTests {
         let inDefault = try await sut.create(TaskDraft(title: "Standard"))
         #expect(inList.container.id == "studium")
         #expect(store.records[inList.id.rawValue]?.ekPriority == 1)
-        #expect(inDefault.container.id == store.defaultListID)
+        #expect(inDefault.container.id == store.defaultList)
     }
 
     @Test func containers_listAllReminderLists() async throws {
