@@ -177,7 +177,8 @@ struct CaptureModelTests {
         let yesterday = model.day.adding(days: -1, calendar: calendar)
         let today = model.day
         model.show(yesterday)
-        #expect(model.steps == nil)
+        // Yesterday's steps were read after the reload, so they are there at once.
+        #expect(model.steps == 8240)
         // While yesterday's query runs, the user swipes back to today.
         let once = Once()
         health.onStepsRead = { _ in
@@ -473,7 +474,7 @@ struct CaptureModelTests {
 
     // MARK: Neighbour page
 
-    @Test func summaryForNeighbourDay_readsStoredEntriesOnly() async {
+    @Test func pageForNeighbourDay_readsStoredEntriesAndLeavesTheShownDayAlone() async {
         let health = FakeHealthStore(stepsAccess: .asked)
         health.steps = [steps(6412)]
         let model = make(health)
@@ -482,10 +483,54 @@ struct CaptureModelTests {
         let noon = yesterday.startDate(in: calendar).addingTimeInterval(12 * 3600)
         store.addDrink(DrinkValue(id: UUID(), date: noon, milliliters: 400))
         store.addDrink(DrinkValue(id: UUID(), date: noon.addingTimeInterval(3600), milliliters: 250))
-        let summary = model.summary(for: yesterday)
-        #expect(summary.waterMilliliters == 650)
-        // The shown day is untouched, and a day without entries is empty (no Health read, no steps).
+        let page = model.page(for: yesterday)
+        #expect(page.day == yesterday)
+        #expect(page.drinks.count == 2)
+        #expect(page.intake.waterMilliliters == 650)
+        // The shown day is untouched, and a day without entries is empty.
         #expect(model.intake == .empty)
-        #expect(model.summary(for: yesterday.adding(days: -1, calendar: calendar)) == .empty)
+        let before = model.page(for: yesterday.adding(days: -1, calendar: calendar))
+        #expect(before.intake == .empty)
+        #expect(!before.hasEntries)
+    }
+
+    @Test func pageForShownDay_isTheShownPage() async {
+        let model = make(FakeHealthStore())
+        await model.reload()
+        #expect(model.page(for: model.day) == model.current)
+    }
+
+    @Test func pageForNeighbourDay_carriesTheStepsAndHealthWorkoutsReadAfterTheReload() async {
+        let health = FakeHealthStore()
+        health.steps = [steps(6412), steps(8240, daysAgo: 1)]
+        let yesterdayStart = now.addingTimeInterval(-86_400)
+        health.foreign = [ForeignWorkout(id: UUID(), activityName: "Rudern", activity: nil, start: yesterdayStart,
+                                         end: yesterdayStart.addingTimeInterval(3600), kilocalories: 300, sourceName: "Apple Watch")]
+        let model = make(health)
+        await model.reload()
+        let yesterday = model.day.adding(days: -1, calendar: calendar)
+        let page = model.page(for: yesterday)
+        #expect(page.steps == 8240)
+        #expect(page.workouts.map(\.displayName) == ["Rudern"])
+        #expect(page.dayMinutes == 60)
+        // A day far outside what was read has no numbers rather than wrong ones.
+        #expect(model.page(for: yesterday.adding(days: -20, calendar: calendar)).steps == nil)
+    }
+
+    @Test func show_withReadNeighbour_hasItsHealthNumbersAtOnce() async {
+        let health = FakeHealthStore()
+        health.steps = [steps(6412), steps(8240, daysAgo: 1)]
+        let yesterdayStart = now.addingTimeInterval(-86_400)
+        health.foreign = [ForeignWorkout(id: UUID(), activityName: "Rudern", activity: nil, start: yesterdayStart,
+                                         end: yesterdayStart.addingTimeInterval(3600), kilocalories: 300, sourceName: "Apple Watch")]
+        let model = make(health)
+        await model.reload()
+        let stepReads = health.stepsReads.count
+        let page = model.page(for: model.day.adding(days: -1, calendar: calendar))
+        model.show(model.day.adding(days: -1, calendar: calendar))
+        // No Health query and no wait: the shown page equals the preview that was dragged in.
+        #expect(health.stepsReads.count == stepReads)
+        #expect(model.current == page)
+        #expect(model.steps == 8240)
     }
 }

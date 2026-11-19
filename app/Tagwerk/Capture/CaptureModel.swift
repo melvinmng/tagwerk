@@ -3,6 +3,23 @@ import HealthBridge
 import Observation
 import TagwerkCore
 
+/// Everything the page of one day shows from the model: its entries, the sums against the goals, the training time
+/// and the steps. The shown page and the preview of a neighbour page are built from the same value.
+struct CaptureDay: Equatable {
+    var day: PlanDay
+    var meals: [MealValue]
+    var drinks: [DrinkValue]
+    /// Own and Health workouts of the day, by start.
+    var workouts: [WorkoutValue]
+    var intake: DayIntake
+    var dayMinutes: Int
+    var weekMinutes: Int
+    /// `nil` without a value (shown as "–", never 0).
+    var steps: Int?
+
+    var hasEntries: Bool { !meals.isEmpty || !drinks.isEmpty || !workouts.isEmpty }
+}
+
 /// State of the "Erfassen" tab (mockup E1a, ST1): one day with totals against the goals, own entries, Health workouts
 /// and steps.
 ///
@@ -56,6 +73,16 @@ final class CaptureModel {
     private var todayStepsValue: DaySteps?
     private(set) var undo: UndoNotice?
     @ObservationIgnored private var weekForeign: [WorkoutValue] = []
+    /// Health workouts and steps of the weeks around the shown day, read after each reload. A day change inside this
+    /// window shows them at once, so the neighbour page and the page after it carry the same numbers.
+    @ObservationIgnored private var healthCache: HealthCache?
+
+    struct HealthCache {
+        /// The weeks of the day before and the day after the shown day.
+        var interval: DateInterval
+        var foreign: [WorkoutValue]
+        var steps: [PlanDay: Int]
+    }
 
     struct DaySteps: Equatable {
         var day: PlanDay
@@ -101,7 +128,10 @@ final class CaptureModel {
         case value(Int?)
     }
 
-    var stepsTile: StepsTile {
+    var stepsTile: StepsTile { stepsTile(for: steps) }
+
+    /// The steps tile for a page that shows `steps` (the shown day or a neighbour).
+    func stepsTile(for steps: Int?) -> StepsTile {
         switch stepsAccess {
         case .unavailable: .hidden
         case .notAsked: .allow
@@ -123,8 +153,10 @@ final class CaptureModel {
         return [first, second]
     }
 
-    var summaryRows: [[SummaryTile]] {
-        Self.summaryRows(protein: settings.proteinGoalEnabled, steps: stepsTile != .hidden,
+    var summaryRows: [[SummaryTile]] { summaryRows(steps: steps) }
+
+    func summaryRows(steps: Int?) -> [[SummaryTile]] {
+        Self.summaryRows(protein: settings.proteinGoalEnabled, steps: stepsTile(for: steps) != .hidden,
                          training: settings.goalWorkoutMinutesPerWeek > 0)
     }
 
@@ -148,12 +180,7 @@ final class CaptureModel {
         var foreignOfWeek: [WorkoutValue] = []
         if access.wasAsked {
             let foreign = (try? await health.foreignWorkouts(in: week)) ?? []
-            foreignOfWeek = foreign.map { workout in
-                WorkoutValue(id: workout.id.uuidString, activity: workout.activity ?? .other, start: workout.start,
-                             minutes: max(0, Int(workout.end.timeIntervalSince(workout.start) / 60)),
-                             kilocalories: workout.kilocalories, sourceName: workout.sourceName, isOwn: false,
-                             customName: workout.activity == nil ? workout.activityName : nil)
-            }
+            foreignOfWeek = foreign.map(Self.workoutValue)
         }
         let stepsAccess = await health.stepsAccess()
         self.stepsAccess = stepsAccess
@@ -174,6 +201,37 @@ final class CaptureModel {
         weekForeign = foreignOfWeek
         steps = stepsOfDay
         refreshLocal(week: week)
+        await prefetchNeighbourHealth()
+    }
+
+    private static func workoutValue(_ workout: ForeignWorkout) -> WorkoutValue {
+        WorkoutValue(id: workout.id.uuidString, activity: workout.activity ?? .other, start: workout.start,
+                     minutes: max(0, Int(workout.end.timeIntervalSince(workout.start) / 60)),
+                     kilocalories: workout.kilocalories, sourceName: workout.sourceName, isOwn: false,
+                     customName: workout.activity == nil ? workout.activityName : nil)
+    }
+
+    /// Reads the Health workouts and steps of the days around the shown one, in one query each, so the next page
+    /// change needs no wait. Only what `reload()` reads as well (access asked before); a failed read keeps the
+    /// cache as it is.
+    private func prefetchNeighbourHealth() async {
+        let shown = day
+        let first = IntakeRules.weekStart(containing: shown.adding(days: -1, calendar: calendar).startDate(in: calendar), calendar: calendar)
+        let lastWeek = IntakeRules.weekStart(containing: shown.adding(days: 1, calendar: calendar).startDate(in: calendar), calendar: calendar)
+        let end = PlanDay(date: lastWeek, calendar: calendar).adding(days: 7, calendar: calendar).startDate(in: calendar)
+        let interval = DateInterval(start: first, end: end)
+        var foreign: [WorkoutValue] = []
+        if await health.access().wasAsked {
+            guard let read = try? await health.foreignWorkouts(in: interval) else { return }
+            foreign = read.map(Self.workoutValue)
+        }
+        var steps: [PlanDay: Int] = [:]
+        if await health.stepsAccess() == .asked {
+            guard let sums = try? await health.dailySteps(in: interval, calendar: calendar) else { return }
+            steps = Dictionary(sums.map { (PlanDay(date: $0.start, calendar: calendar), $0.count) }) { first, _ in first }
+        }
+        guard !Task.isCancelled else { return }
+        healthCache = HealthCache(interval: interval, foreign: foreign, steps: steps)
     }
 
     /// The step sum of one day: `.some(nil)` without statistics, `nil` when the read failed (errors are not logged:
@@ -203,10 +261,31 @@ final class CaptureModel {
         refreshToday()
     }
 
-    /// The sums of another day, read from the local entries only (no Health query, no steps): the preview of the
-    /// neighbouring page while swiping.
-    func summary(for day: PlanDay) -> DayIntake {
-        IntakeRules.dayIntake(meals: store.meals(on: day, calendar: calendar), drinks: store.drinks(on: day, calendar: calendar))
+    /// The shown day as the page displays it.
+    var current: CaptureDay {
+        CaptureDay(day: day, meals: meals, drinks: drinks, workouts: workouts, intake: intake, dayMinutes: dayMinutes,
+                   weekMinutes: weekMinutes, steps: steps)
+    }
+
+    /// The page of another day for the preview beside the shown one: the local entries and, from the Health cache,
+    /// the Health workouts and the steps. Reads no Health and changes nothing.
+    func page(for target: PlanDay) -> CaptureDay {
+        if target == day { return current }
+        let dayStart = target.startDate(in: calendar)
+        let dayEnd = target.adding(days: 1, calendar: calendar).startDate(in: calendar)
+        let weekStart = IntakeRules.weekStart(containing: dayStart, calendar: calendar)
+        let weekInterval = DateInterval(start: weekStart, end: PlanDay(date: weekStart, calendar: calendar).adding(days: 7, calendar: calendar)
+            .startDate(in: calendar))
+        let meals = store.meals(on: target, calendar: calendar)
+        let drinks = store.drinks(on: target, calendar: calendar)
+        let foreign = healthCache.map { $0.interval.contains(weekStart) ? $0.foreign : [] } ?? []
+        let weekWorkouts = store.workouts(in: weekInterval) + foreign.filter { weekInterval.contains($0.start) }
+        let workouts = weekWorkouts.filter { $0.start >= dayStart && $0.start < dayEnd }.sorted { $0.start < $1.start }
+        let steps = target == today ? todaySteps : healthCache?.steps[target]
+        return CaptureDay(day: target, meals: meals, drinks: drinks, workouts: workouts,
+                          intake: IntakeRules.dayIntake(meals: meals, drinks: drinks),
+                          dayMinutes: IntakeRules.workoutMinutes(weekWorkouts, in: DateInterval(start: dayStart, end: dayEnd)),
+                          weekMinutes: IntakeRules.workoutMinutes(weekWorkouts, in: weekInterval), steps: steps)
     }
 
     /// Recomputes today's sums; every local change passes here (add, edit, delete, undo).
@@ -250,8 +329,15 @@ final class CaptureModel {
         let next = min(target, today)
         guard next != day else { return false }
         day = next
-        // Steps of another day arrive with the reload; today's count is already known.
-        steps = next == today ? todaySteps : nil
+        // The Health numbers of the neighbouring days were read after the last reload; without them (or beyond that
+        // window) the steps and Health workouts of another day arrive with the reload.
+        let nextWeek = IntakeRules.weekStart(containing: next.startDate(in: calendar), calendar: calendar)
+        if let cache = healthCache, cache.interval.contains(nextWeek) {
+            weekForeign = cache.foreign
+            steps = next == today ? todaySteps : cache.steps[next]
+        } else {
+            steps = next == today ? todaySteps : nil
+        }
         refreshLocal()
         return true
     }

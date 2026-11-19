@@ -5,19 +5,22 @@ import TagwerkCore
 struct HabitsSection: View {
     let model: HabitsModel
     let capture: CaptureModel
+    /// The day of the page this section belongs to (the shown day or a neighbour while it is dragged in).
+    let day: PlanDay
     let onEdit: () -> Void
     @State private var sheet: Habit?
     @State private var creating = false
 
     var body: some View {
-        let counter = shownCounter
+        let rows = model.rows(for: day)
+        let counter = shownCounter(rows)
         Section {
             if model.habits.isEmpty {
                 Button { creating = true } label: { Label("Gewohnheit anlegen", systemImage: "plus.circle") }
-            } else if model.rows.isEmpty {
+            } else if rows.isEmpty {
                 Text("An diesem Tag ist keine Gewohnheit aktiv.").foregroundStyle(.secondary)
             }
-            ForEach(model.rows) { row in
+            ForEach(rows) { row in
                 HabitRow(row: row, model: model, capture: capture) { sheet = row.habit }
             }
         } header: {
@@ -33,8 +36,8 @@ struct HabitsSection: View {
     }
 
     /// "3 von 5" for the shown day; nothing without a row.
-    private var shownCounter: HabitCounter? {
-        model.rows.isEmpty ? nil : HabitCounter(done: model.rows.filter(\.isFulfilled).count, total: model.rows.count)
+    private func shownCounter(_ rows: [HabitsModel.Row]) -> HabitCounter? {
+        rows.isEmpty ? nil : HabitCounter(done: rows.filter(\.isFulfilled).count, total: rows.count)
     }
 }
 
