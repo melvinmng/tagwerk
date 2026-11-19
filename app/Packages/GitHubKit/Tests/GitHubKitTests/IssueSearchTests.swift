@@ -14,13 +14,31 @@ struct IssueSearchTests {
         return (GitHubAPI(transport: transport, tokens: tokens), tokens)
     }
 
-    @Test func queryListsAtMostThirtyRepositories() {
-        let repos = (1...40).map { "octo/r\($0)" }
+    @Test func queryListsRepositoriesWhileItFitsTheLengthLimit() {
+        let repos = (1...8).map { "octo/r\($0)" }
         let query = IssueSearchQuery.make(text: "login", repositories: repos, login: "octo")
         #expect(query.hasPrefix("is:issue login repo:octo/r1 "))
-        #expect(query.components(separatedBy: "repo:").count - 1 == 30)
-        #expect(!query.contains("octo/r31"))
+        #expect(query.components(separatedBy: "repo:").count - 1 == 8)
+        #expect(query.count <= IssueSearchQuery.maxLength)
         #expect(IssueSearchQuery.make(text: "login", repositories: [], login: "octo") == "is:issue login user:octo")
+    }
+
+    @Test func manyRepositoriesFallBackToOwnerQualifiersWithinTheLimit() {
+        let own = (1...40).map { "octo/repository-number-\($0)" }
+        let others = (1...40).map { "org\($0)/service-\($0)" }
+        let query = IssueSearchQuery.make(text: "login", repositories: own + others, login: "octo")
+        #expect(!query.contains("repo:"))
+        #expect(query.hasPrefix("is:issue login user:octo org:org1 org:org2 "))
+        #expect(query.count <= IssueSearchQuery.maxLength)
+        // Owners that do not fit are dropped, the login's own scope stays.
+        #expect(query.contains("user:octo"))
+        #expect(!query.contains("org:org40"))
+    }
+
+    @Test func manyRepositoriesOfOneOwnerCollapseToOneQualifier() {
+        let repos = (1...40).map { "acme/repository-number-\($0)" }
+        let query = IssueSearchQuery.make(text: "login", repositories: repos, login: "octo")
+        #expect(query == "is:issue login user:octo org:acme")
     }
 
     @Test func ownerFallbackNamesEachOwnerOnce() {

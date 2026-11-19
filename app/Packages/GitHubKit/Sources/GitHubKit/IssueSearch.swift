@@ -5,16 +5,21 @@ import TagwerkCore
 /// as a GraphQL variable; it is never part of the GraphQL document.
 public enum IssueSearchQuery {
     public static let maxRepositories = 30
+    /// GitHub refuses longer search strings (256 characters on REST; the same limit is assumed for GraphQL).
+    public static let maxLength = 256
 
-    /// "is:issue <text> repo:a/b …" for the first 30 repositories; without repositories "is:issue <text> user:<login>".
+    /// "is:issue <text> repo:a/b …" for the first 30 repositories. If that exceeds `maxLength`, or without
+    /// repositories, the search is scoped by owner instead (`makeByOwner`), so users with many repositories still search.
     public static func make(text: String, repositories: [String], login: String) -> String {
         guard !repositories.isEmpty else { return "is:issue \(text) user:\(login)" }
         let scopes = repositories.prefix(maxRepositories).map { "repo:\($0)" }
-        return (["is:issue", text] + scopes).joined(separator: " ")
+        let query = (["is:issue", text] + scopes).joined(separator: " ")
+        guard query.count > maxLength else { return query }
+        return makeByOwner(text: text, repositories: repositories, login: login)
     }
 
-    /// Fallback if GitHub refuses many `repo:` qualifiers: "is:issue <text> user:<login> org:<owner> …" for the
-    /// owners of `repositories` (each owner once, the login's own repositories covered by `user:`).
+    /// "is:issue <text> user:<login> org:<owner> …" for the owners of `repositories` (each owner once, the login's own
+    /// repositories covered by `user:`). Owners that would exceed `maxLength` are left out; `user:<login>` always stays.
     public static func makeByOwner(text: String, repositories: [String], login: String) -> String {
         var owners: [String] = []
         for repository in repositories {
@@ -22,7 +27,13 @@ public enum IssueSearchQuery {
                   owner.lowercased() != login.lowercased(), !owners.contains(owner) else { continue }
             owners.append(owner)
         }
-        return (["is:issue", text, "user:\(login)"] + owners.map { "org:\($0)" }).joined(separator: " ")
+        var query = ["is:issue", text, "user:\(login)"].joined(separator: " ")
+        for owner in owners {
+            let extended = query + " org:\(owner)"
+            guard extended.count <= maxLength else { break }
+            query = extended
+        }
+        return query
     }
 }
 
@@ -109,7 +120,8 @@ private struct SearchVariables: Encodable, Sendable {
 }
 
 extension GitHubAPI {
-    /// One request, first page, at most 20 issues, scoped to `repositories` (at most 30) or to `login`.
+    /// One request, first page, at most 20 issues, scoped to `repositories` (at most 30, within the query length limit),
+    /// otherwise to their owners.
     /// Throws `IssueSearchError`.
     public func searchIssues(text: String, repositories: [String], login: String) async throws -> [IssueSearchHit] {
         let search = IssueSearchQuery.make(text: text, repositories: repositories, login: login)
@@ -140,7 +152,7 @@ extension GitHubTaskProvider {
             do { viewer = try await api.viewerLogin() } catch { throw IssueSearchError.from(error) }
         }
         let catalog = await catalog(maxAge: .infinity)
-        // Repositories of the user's projects first, then the owned ones; GitHub takes at most 30 qualifiers.
+        // Repositories of the user's projects first, then the owned ones; the query builder falls back to owners if the list is long.
         var repositories: [String] = []
         for repository in (catalog?.projects.flatMap(\.repositories) ?? []) + (catalog?.repositories ?? [])
         where !repositories.contains(repository) {
