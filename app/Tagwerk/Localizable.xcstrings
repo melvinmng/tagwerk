@@ -10325,12 +10325,12 @@
         }
       }
     },
-    "Sag einen der Sätze zu Siri oder füge ihn in der App „Kurzbefehle“ hinzu. „Wasser erfassen“ lässt sich dort auch auf die Aktionstaste oder den Home-Bildschirm legen.": {
+    "Sag einen der Sätze zu Siri oder füge ihn in der App „Kurzbefehle“ hinzu. „Wasser erfassen“ lässt sich dort auch auf die Aktionstaste oder den Home-Bildschirm legen. Erkennt Siri einen Satz nicht, prüfe in der App „Kurzbefehle“, ob dort die Tagwerk-Kurzbefehle stehen, und probiere den Satz als Text über „Tippen für Siri“.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Say one of the phrases to Siri or add it in the Shortcuts app. “Log water” can also be put on the Action button or the Home Screen there."
+            "value": "Say one of the phrases to Siri or add it in the Shortcuts app. “Log water” can also be put on the Action button or the Home Screen there. If Siri does not recognize a phrase, check in the Shortcuts app that the Tagwerk shortcuts are listed there, and try the phrase as text with Type to Siri."
           }
         }
       }

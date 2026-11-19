@@ -4,6 +4,8 @@
 Default: structure checks of every catalog in app/
   - placeholders (%@, %lld, %1$@ …) of the English value match the German key
   - every App Shortcuts phrase names the app (${applicationName})
+  - the phrases in TagwerkIntents.swift and AppShortcuts.xcstrings match in both directions, and every phrase
+    listed in the "Siri & Kurzbefehle" section of CaptureSettingsView is a real phrase
   - the German usage texts in InfoPlist.xcstrings equal those in app/project.yml
 --require-english: additionally every key that should be translated has a translated English value
 --same A B: exits 1 when two catalogs differ (used by sync-strings.sh --check)
@@ -93,6 +95,46 @@ def check_structure(path, data, require_english, problems):
             problems.append(f"{path.relative_to(ROOT)}: English plural without German plural: {key!r}")
 
 
+SHORTCUT_PHRASES_SOURCE = APP / "Tagwerk" / "Intents" / "TagwerkIntents.swift"
+SHORTCUT_SETTINGS_SOURCE = APP / "Tagwerk" / "Settings" / "CaptureSettingsView.swift"
+
+
+def source_phrases(text):
+    """Phrases of the AppShortcut(...) definitions, written like the catalog keys: \\(.applicationName) -> ${applicationName}."""
+    phrases = []
+    for block in re.findall(r"phrases:\s*\[(.*?)\]", text, re.DOTALL):
+        for literal in re.findall(r'"((?:[^"\\]|\\.)*)"', block):
+            phrase = literal.replace("\\(.applicationName)", "${applicationName}")
+            phrase = re.sub(r"\\\(\\\.\$(\w+)\)", r"${\1}", phrase)
+            phrases.append(phrase)
+    return phrases
+
+
+def check_shortcut_phrases(problems):
+    """The code is the source of truth: the hand-maintained catalog must not miss or keep a phrase, and the settings list must not name an unknown one."""
+    catalog = ROOT / "app" / "Tagwerk" / "AppShortcuts.xcstrings"
+    if not SHORTCUT_PHRASES_SOURCE.exists() or not catalog.exists():
+        return
+    phrases = source_phrases(SHORTCUT_PHRASES_SOURCE.read_text(encoding="utf-8"))
+    keys = set(load(catalog).get("strings", {}))
+    for phrase in phrases:
+        if phrase not in keys:
+            problems.append(f"{catalog.relative_to(ROOT)}: phrase missing in the catalog: {phrase!r}")
+    for key in sorted(keys - set(phrases)):
+        problems.append(f"{catalog.relative_to(ROOT)}: key without phrase in {SHORTCUT_PHRASES_SOURCE.name}: {key!r}")
+    if len(phrases) != len(set(phrases)):
+        problems.append(f"{SHORTCUT_PHRASES_SOURCE.relative_to(ROOT)}: duplicate App Shortcuts phrase")
+    if SHORTCUT_SETTINGS_SOURCE.exists():
+        patterns = []
+        for phrase in phrases:
+            pattern = re.escape(phrase).replace(re.escape("${applicationName}"), "Tagwerk")
+            patterns.append(re.compile("^" + re.sub(r"\\\$\\\{\w+\\\}", ".+", pattern) + "$"))
+        shown = re.findall(r'^\s*phrase\("([^"]+)",', SHORTCUT_SETTINGS_SOURCE.read_text(encoding="utf-8"), re.MULTILINE)
+        for text in shown:
+            if not any(pattern.match(text.rstrip("?")) for pattern in patterns):
+                problems.append(f"{SHORTCUT_SETTINGS_SOURCE.relative_to(ROOT)}: listed phrase is not an App Shortcuts phrase: {text!r}")
+
+
 def check_info_plist(problems):
     project = (APP / "project.yml").read_text(encoding="utf-8")
     for path in catalogs():
@@ -126,6 +168,7 @@ def main(arguments):
     for path in catalogs():
         check_structure(path, load(path), require_english, problems)
     check_info_plist(problems)
+    check_shortcut_phrases(problems)
     for problem in problems:
         print(problem, file=sys.stderr)
     if problems:
