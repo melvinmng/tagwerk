@@ -68,6 +68,15 @@ final class AppSettings {
     var goalProteinGrams: Int = 120
     /// The one-time consent for meal estimates (main design §7). The settings switch binds to it; off means typing values.
     var mealEstimationConsent: Bool = false
+    /// Phase 5: the reminder list that serves as the shopping list; `nil` means none. Its reminders are not tasks.
+    /// Written only through `AppEnvironment.setShoppingList(_:)`, which reloads everything that depends on it.
+    var shoppingListID: String? = nil
+    /// The card suggesting a shopping list was answered with "Nicht jetzt".
+    var shoppingSuggestionDismissed: Bool = false
+    /// The built-in shopping categories were created once; deleting them later does not bring them back.
+    var shoppingCategoriesSeeded: Bool = false
+    /// The one-time consent for "Mit ChatGPT sortieren"; the settings switch binds to it.
+    var shoppingSortConsent: Bool = false
     /// The Health card in the tab was dismissed with "Nicht jetzt".
     var healthCardDismissed: Bool = false
     /// Phase 4: the calories/water line in the head of "Planen" (today's day view, from the first entry).

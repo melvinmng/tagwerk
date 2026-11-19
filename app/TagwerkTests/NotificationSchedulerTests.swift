@@ -1,4 +1,5 @@
 import Foundation
+import RemindersKit
 import SwiftData
 import Testing
 import TagwerkCore
@@ -55,6 +56,22 @@ struct NotificationSchedulerTests {
         await scheduler.reschedule()
         #expect(center.pending.isEmpty)
         #expect(scheduler.authorization == .notDetermined)
+    }
+
+    @Test func shoppingItems_getNoNotification() async {
+        let store = InMemoryReminderStore(
+            lists: [ListInfo(id: "uni", title: "Uni", colorHex: nil, kind: .calDAV),
+                    ListInfo(id: "shop", title: "Einkauf", colorHex: nil, kind: .calDAV)],
+            records: [ReminderRecord(id: "milk", title: "Milch", notes: nil, due: due(20), ekPriority: 0, isCompleted: false,
+                                     listID: "shop", lastModified: nil),
+                      ReminderRecord(id: "essay", title: "Abgabe", notes: nil, due: due(20), ekPriority: 0, isCompleted: false,
+                                     listID: "uni", lastModified: nil)])
+        let provider = RemindersTaskProvider(store: store, selectedListIDs: { nil }, excludedListID: { "shop" })
+        let list = TaskListModel(providers: [provider])
+        await list.reload()
+        let scheduler = makeScheduler(list)
+        await scheduler.reschedule()
+        #expect(center.pendingIDs == ["tagwerk.task.reminders:essay"])
     }
 
     @Test func schedulesAllSources_byDefault() async {

@@ -317,7 +317,7 @@ public enum ShoppingListFilter {
   - `AppEnvironment.setShoppingList(_ id: String?) async`: setzt `settings.shoppingListID`, dann `taskList.reload(only: [.reminders])`, `planning.reload()`, `notifications.scheduleSoon()`, `scheduleSnapshot()`. (Task 8 hängt `shopping.reload()` an.)
   - `InMemoryReminderStore` (App-Tests): `final class InMemoryReminderStore: ReminderStore` mit `accessState = .fullAccess`, `listInfos: [ListInfo]`, `records: [String: ReminderRecord]`, `defaultList: String?`, `now: () -> Date`, `failingDeleteIDs: Set<String>`, `private(set) var createCount`; `openReminders`, `completedReminders`, `reminder`, `save` (setzt/löscht `completedAt` wie der Paket-Fake, `lastModified = now()`), `create` (Kennung `"new-<n>"`, `createdAt = now()`), `delete` (wirft `TaskWriteError.notFound` bzw. `.failed` für `failingDeleteIDs`), `defaultListID()`.
 
-- [ ] **Schritt 1: Tests schreiben**
+- [x] **Schritt 1: Tests schreiben**
 
 ```swift
 // ShoppingExclusionTests: environment with InMemoryReminderStore(lists: uni, shop; open "task-1" in uni, "milk" in shop), setupCompleted = true
@@ -357,10 +357,10 @@ public enum ShoppingListFilter {
 }
 ```
 
-- [ ] **Schritt 2:** `ShoppingExclusionTests` ausführen. Erwartet: Übersetzungsfehler (`setShoppingList` unbekannt).
-- [ ] **Schritt 3: Umsetzen.** `AppEnvironment`: Provider-Aufruf um `excludedListID: { settings.shoppingListID }` ergänzen; `makeWeekReviewModel()` nutzt `reminderStore.completionDates(in:listIDs: taskReminderListIDs())`. `PlanningModel`: private Funktion `planningReminders() async -> [ReminderRecord]` (liest `openReminders(in: nil)`, entfernt `listID == settings.shoppingListID`), an beiden Stellen (`:232`, `:302`) verwenden. `InMemoryReminderStore` anlegen.
-- [ ] **Schritt 4:** Suiten `ShoppingExclusionTests`, `PlanningModelTests`, `NotificationSchedulerTests`, `WeekReviewModelTests`, `ModelStoreLocationTests` ausführen. Erwartet: grün.
-- [ ] **Schritt 5:** Commit: `git add app/Tagwerk app/TagwerkTests && git commit -m "feat: add shopping list setting and exclude it from planning and review"`
+- [x] **Schritt 2:** `ShoppingExclusionTests` ausführen. Erwartet: Übersetzungsfehler (`setShoppingList` unbekannt).
+- [x] **Schritt 3: Umsetzen.** `AppEnvironment`: Provider-Aufruf um `excludedListID: { settings.shoppingListID }` ergänzen; `makeWeekReviewModel()` nutzt `reminderStore.completionDates(in:listIDs: taskReminderListIDs())`. `PlanningModel`: private Funktion `planningReminders() async -> [ReminderRecord]` (liest `openReminders(in: nil)`, entfernt `listID == settings.shoppingListID`), an beiden Stellen (`:232`, `:302`) verwenden. `InMemoryReminderStore` anlegen.
+- [x] **Schritt 4:** Suiten `ShoppingExclusionTests`, `PlanningModelTests`, `NotificationSchedulerTests`, `WeekReviewModelTests`, `ModelStoreLocationTests` ausführen. Erwartet: grün.
+- [x] **Schritt 5:** Commit: `git add app/Tagwerk app/TagwerkTests && git commit -m "feat: add shopping list setting and exclude it from planning and review"`
 
 ---
 

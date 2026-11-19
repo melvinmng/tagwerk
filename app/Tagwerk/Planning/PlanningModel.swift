@@ -224,12 +224,20 @@ final class PlanningModel {
         }
     }
 
+    /// Open reminders of all lists, read past the list selection to recognize recurring ones; the shopping
+    /// list is left out, because its entries are not tasks.
+    private func planningReminders() async -> [ReminderRecord] {
+        guard reminderStore.accessState == .fullAccess else { return [] }
+        let shoppingListID = settings.shoppingListID
+        return await reminderStore.openReminders(in: nil).filter { $0.listID != shoppingListID }
+    }
+
     func reload() async {
         let range = self.range
         let open = taskList.items.filter { !$0.isCompleted }
         pruneAssignments(open: open)
 
-        let reminders = reminderStore.accessState == .fullAccess ? await reminderStore.openReminders(in: nil) : []
+        let reminders = await planningReminders()
         let recurringIDs = Set(reminders.filter { $0.recurrence != nil }.map(\.id))
         let interval = DateInterval(start: range.lowerBound.startDate(in: calendar),
                                     end: range.upperBound.adding(days: 1, calendar: calendar).startDate(in: calendar))
@@ -299,7 +307,7 @@ final class PlanningModel {
     /// from a full day). Computed like `reload()` without changing what is shown.
     func planInputs(in range: ClosedRange<PlanDay>) async -> [PlanInputDay] {
         let open = taskList.items.filter { !$0.isCompleted }
-        let reminders = reminderStore.accessState == .fullAccess ? await reminderStore.openReminders(in: nil) : []
+        let reminders = await planningReminders()
         let recurringIDs = Set(reminders.filter { $0.recurrence != nil }.map(\.id))
         let interval = DateInterval(start: range.lowerBound.startDate(in: calendar),
                                     end: range.upperBound.adding(days: 1, calendar: calendar).startDate(in: calendar))

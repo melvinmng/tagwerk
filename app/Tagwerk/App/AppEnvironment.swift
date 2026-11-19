@@ -14,6 +14,8 @@ import TagwerkCore
 final class AppEnvironment {
     let modelContainer: ModelContainer
     let gateway: EventKitGateway
+    /// Reminders for tasks, planning, the weekly review and the shopping list; the gateway unless a test passes a fake.
+    let reminderStore: any ReminderStore
     let settings: AppSettings
     let taskList: TaskListModel
     let planning: PlanningModel
@@ -63,27 +65,31 @@ final class AppEnvironment {
     @ObservationIgnored private var snapshotUpdates: Task<Void, Never>?
     @ObservationIgnored private var pendingSnapshot: Task<Void, Never>?
 
-    /// `notificationCenter` defaults to the system center and `health` to HealthKit; tests and demo data pass fakes.
+    /// `notificationCenter` defaults to the system center, `health` to HealthKit and `reminderStore` to the
+    /// EventKit gateway; tests and demo data pass fakes.
     init(modelContainer: ModelContainer, notificationCenter: (any NotificationCenterClient)? = nil,
-         health: (any HealthStoring)? = nil, snapshotWriter: WidgetSnapshotWriter? = nil) throws {
+         health: (any HealthStoring)? = nil, snapshotWriter: WidgetSnapshotWriter? = nil,
+         reminderStore: (any ReminderStore)? = nil) throws {
         self.modelContainer = modelContainer
         self.snapshotWriter = snapshotWriter ?? WidgetSnapshotWriter(directory: nil, reload: {})
         let context = modelContainer.mainContext
         let settings = try AppSettings.current(in: context)
         settings.migrateWorkoutGoalIfNeeded()
         let gateway = EventKitGateway()
-        let reminders = RemindersTaskProvider(store: gateway, estimates: SwiftDataEstimateStore(context: context)) {
-            settings.selectedReminderListIDs.map(Set.init)
-        }
+        let reminderStore: any ReminderStore = reminderStore ?? gateway
+        let reminders = RemindersTaskProvider(store: reminderStore, estimates: SwiftDataEstimateStore(context: context),
+                                              selectedListIDs: { settings.selectedReminderListIDs.map(Set.init) },
+                                              excludedListID: { settings.shoppingListID })
         self.settings = settings
         self.gateway = gateway
+        self.reminderStore = reminderStore
         let taskList = TaskListModel(providers: [reminders, LocalTaskProvider(context: context)])
         self.taskList = taskList
         let planStore = PlanStore(context: context)
         let suggestionStore = SuggestionStore(context: context)
         let blockPlanner = BlockPlanner(store: gateway, planStore: planStore, links: EventLinkStore(context: context),
                                         settings: settings, calendar: .tagwerk)
-        self.planning = PlanningModel(taskList: taskList, calendarStore: gateway, reminderStore: gateway, planStore: planStore,
+        self.planning = PlanningModel(taskList: taskList, calendarStore: gateway, reminderStore: reminderStore, planStore: planStore,
                                       efforts: RecurringEffortStore(context: context), blocks: blockPlanner, settings: settings,
                                       marks: EventMarkStore(context: context), suggestions: suggestionStore)
 
@@ -241,21 +247,40 @@ final class AppEnvironment {
 
     func makeSetupModel() -> SetupModel {
         let notifications = self.notifications
-        return SetupModel(store: gateway, settings: settings, calendarStore: gateway, isChatGPTSignedIn: ai.isSignedIn,
+        return SetupModel(store: reminderStore, settings: settings, calendarStore: gateway, isChatGPTSignedIn: ai.isSignedIn,
                           notificationsAllowed: notifications.authorization == .authorized,
                           requestNotifications: { await notifications.requestAuthorization() })
     }
 
     /// Current authorization of a source that needs system permission; `nil` for sources without one.
     func accessState(for source: TaskSource) -> AccessState? {
-        source == .reminders ? gateway.accessState : nil
+        source == .reminders ? reminderStore.accessState : nil
     }
 
     /// Asks the system for access (only possible while it is undetermined) and reloads the list.
     func requestAccess(for source: TaskSource) async {
         guard source == .reminders else { return }
-        _ = try? await gateway.requestAccess()
+        _ = try? await reminderStore.requestAccess()
         await taskList.reload()
+    }
+
+    // MARK: Shopping list (phase 5)
+
+    /// The reminder lists that feed tasks and the weekly review: the selection without the shopping list.
+    /// `nil` means all lists; an empty set means none.
+    func taskReminderListIDs() -> Set<String>? {
+        ShoppingListFilter.taskListIDs(selected: settings.selectedReminderListIDs.map(Set.init),
+                                       all: reminderStore.lists().map(\.id), shopping: settings.shoppingListID)
+    }
+
+    /// The only place that changes the shopping list. Everything that shows reminders as tasks follows at once:
+    /// the task list, the plan, the notifications and the widget snapshot.
+    func setShoppingList(_ id: String?) async {
+        settings.shoppingListID = id
+        await taskList.reload(only: [.reminders])
+        await planning.reload()
+        notifications.scheduleSoon()
+        scheduleSnapshot()
     }
 
     func restartSetup() {
@@ -338,12 +363,12 @@ final class AppEnvironment {
 
     /// The weekly review (phase 4); completed reminders only from the selected lists and with full access.
     func makeWeekReviewModel() -> WeekReviewModel {
-        let gateway = self.gateway
+        let reminderStore = self.reminderStore
         let settings = self.settings
         let local = LocalTaskProvider(context: modelContainer.mainContext)
         return WeekReviewModel(store: intake, health: health, settings: settings, calendar: capture.calendar,
-                               completedReminders: { interval in
-                                   await gateway.completionDates(in: interval, listIDs: settings.selectedReminderListIDs.map(Set.init))
+                               completedReminders: { [weak self] interval in
+                                   await reminderStore.completionDates(in: interval, listIDs: self?.taskReminderListIDs())
                                },
                                completedLocalTasks: { interval in local.completionDates(in: interval) })
     }

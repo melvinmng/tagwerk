@@ -396,6 +396,19 @@ struct PlanningModelTests {
         #expect(day.capacity.plannedMinutes == 0)
     }
 
+    @Test func recurringReminderInShoppingList_isIgnored() async {
+        func daily(_ id: String, list: String) -> ReminderRecord {
+            ReminderRecord(id: id, title: id, notes: nil, due: DueDate(year: 2026, month: 11, day: 18), ekPriority: 0,
+                           isCompleted: false, listID: list, lastModified: nil,
+                           recurrence: Recurrence(rule: .daily(interval: 1), start: today, end: nil, count: nil))
+        }
+        accessStore.accessState = .fullAccess
+        accessStore.openRecords = [daily("shop-1", list: "shop"), daily("uni-1", list: "uni")]
+        settings.shoppingListID = "shop"
+        let model = await model()
+        #expect(model.recurringReminderIDs == ["uni-1"])
+    }
+
     private func addTask(_ title: String, estimate: Int?) {
         local.tasks.append(TaskItem(id: id(title), title: title, notes: nil, due: nil, priority: nil, estimateMinutes: estimate,
                                     isCompleted: false, container: TaskContainer(id: "local", name: "Lokal", colorHex: nil),
