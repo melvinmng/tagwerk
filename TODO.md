@@ -103,14 +103,14 @@ GitHub-Konto: @melvinmng · bestätigt zuweisbar · geprüft 2026-11-17 · ich
 - [x] [#108](https://github.com/melvinmng/tagwerk/issues/108) Sprache: Mikrofon in Chat und Vorschlagsblatt {status: Done; prio: P2 (High); aufwand: 6h; epic: #103}
 - [x] [#109](https://github.com/melvinmng/tagwerk/issues/109) Sprache: Einstellungen und Sprache der KI-Antworten {status: Done; prio: P2 (High); aufwand: 3h; epic: #103}
 - [x] [#110](https://github.com/melvinmng/tagwerk/issues/110) Sprache: Sprechmodus {status: Done; prio: P2 (High); aufwand: 8h; epic: #103}
-- [ ] [#113](https://github.com/melvinmng/tagwerk/issues/113) Phase 5: Einkaufsliste und Notizen einbinden {status: Ready; prio: P3 (Medium)}
+- [ ] [#113](https://github.com/melvinmng/tagwerk/issues/113) Phase 5: Einkaufsliste und Notizen einbinden {status: In review; prio: P3 (Medium)}
 - [ ] [#115](https://github.com/melvinmng/tagwerk/issues/115) Phase 6: Jira als Aufgabenquelle anbinden {status: Backlog; prio: P4 (Low)}
 - [x] [#118](https://github.com/melvinmng/tagwerk/issues/118) KI: Termine anlegen, ändern und löschen {status: Done; prio: P2 (High); aufwand: 4h; epic: #2}
 - [x] [#120](https://github.com/melvinmng/tagwerk/issues/120) Sprechmodus: Vorschläge per Stimme annehmen, ablehnen und korrigieren {status: Done; prio: P2 (High); aufwand: 5h; epic: #103}
 - [x] [#124](https://github.com/melvinmng/tagwerk/issues/124) App auf Englisch (Sprache folgt dem iPhone) {status: Done; prio: P3 (Medium); aufwand: 8h}
 - [ ] [#134](https://github.com/melvinmng/tagwerk/issues/134) Tage und Wochen in „Planen“ und „Erfassen“ als mitziehbare Seiten blättern (Finger zieht den Nachbartag mit) {status: Backlog; prio: P4 (Low)}
-- [ ] [#136](https://github.com/melvinmng/tagwerk/issues/136) GitHub-Issues beim Anlegen an andere Teilnehmer des gewählten Projects vergeben (Teilnehmer je Project abrufen) {status: Backlog; prio: P4 (Low)}
-- [ ] [#140](https://github.com/melvinmng/tagwerk/issues/140) Phase 7: Routinen und Gewohnheiten einbinden {status: Backlog; prio: P3 (Medium)}
+- [x] [#136](https://github.com/melvinmng/tagwerk/issues/136) GitHub-Issues beim Anlegen an andere Teilnehmer des gewählten Projects vergeben (Teilnehmer je Project abrufen) {status: Done; prio: P4 (Low)}
+- [ ] [#140](https://github.com/melvinmng/tagwerk/issues/140) Phase 7: Routinen und Gewohnheiten einbinden {status: In review; prio: P3 (Medium)}
 - [ ] [#141](https://github.com/melvinmng/tagwerk/issues/141) Gewohnheiten täglich abhaken und Quoten zeigen {status: Backlog; prio: P3 (Medium); aufwand: 16h; epic: #140}
 - [ ] [#142](https://github.com/melvinmng/tagwerk/issues/142) Tagesabschluss mit Schlaf-Checkliste und Erinnerungen {status: Backlog; prio: P3 (Medium); aufwand: 8h; epic: #140}
 - [ ] [#143](https://github.com/melvinmng/tagwerk/issues/143) Gedanken-Notiz in Aufgaben und Planänderungen umwandeln {status: Backlog; prio: P3 (Medium); aufwand: 8h; epic: #140}
@@ -138,6 +138,7 @@ GitHub-Konto: @melvinmng · bestätigt zuweisbar · geprüft 2026-11-17 · ich
 - [ ] [#168](https://github.com/melvinmng/tagwerk/issues/168) Fahrzeit zwischen Terminen berücksichtigen {status: Ready; prio: P3 (Medium)}
 - [ ] [#169](https://github.com/melvinmng/tagwerk/issues/169) Ruhezeiten für Benachrichtigungen {status: Backlog; prio: P3 (Medium)}
 - [ ] [#170](https://github.com/melvinmng/tagwerk/issues/170) Apple Watch: Komplikation „Als Nächstes“ und Abhaken {status: Backlog; prio: P4 (Low)}
+- [ ] [#173](https://github.com/melvinmng/tagwerk/issues/173) Designrunde zu PR #172: Befunde der Sichtprüfung und offene Entscheidungen {status: Ready; prio: P3 (Medium)}
 
 ## Notizen
 
@@ -146,11 +147,9 @@ GitHub-Konto: @melvinmng · bestätigt zuweisbar · geprüft 2026-11-17 · ich
 
 _Automatisch aus [Tagwerk](https://github.com/users/melvinmng/projects/17) erzeugt. Nicht von Hand bearbeiten; Aufgaben oben unter den Personen pflegen._
 
-### Backlog (28)
+### Backlog (26)
 - [#115](https://github.com/melvinmng/tagwerk/issues/115) Phase 6: Jira als Aufgabenquelle anbinden · @melvinmng · Prio P4 (Low)
 - [#134](https://github.com/melvinmng/tagwerk/issues/134) Tage und Wochen in „Planen“ und „Erfassen“ als mitziehbare Seiten blättern (Finger zieht den Nachbartag mit) · @melvinmng · Prio P4 (Low)
-- [#136](https://github.com/melvinmng/tagwerk/issues/136) GitHub-Issues beim Anlegen an andere Teilnehmer des gewählten Projects vergeben (Teilnehmer je Project abrufen) · @melvinmng · Prio P4 (Low)
-- [#140](https://github.com/melvinmng/tagwerk/issues/140) Phase 7: Routinen und Gewohnheiten einbinden · @melvinmng · Prio P3 (Medium)
 - [#141](https://github.com/melvinmng/tagwerk/issues/141) Gewohnheiten täglich abhaken und Quoten zeigen · @melvinmng · Prio P3 (Medium) · 16h
 - [#142](https://github.com/melvinmng/tagwerk/issues/142) Tagesabschluss mit Schlaf-Checkliste und Erinnerungen · @melvinmng · Prio P3 (Medium) · 8h
 - [#143](https://github.com/melvinmng/tagwerk/issues/143) Gedanken-Notiz in Aufgaben und Planänderungen umwandeln · @melvinmng · Prio P3 (Medium) · 8h
@@ -177,14 +176,19 @@ _Automatisch aus [Tagwerk](https://github.com/users/melvinmng/projects/17) erzeu
 - [#170](https://github.com/melvinmng/tagwerk/issues/170) Apple Watch: Komplikation „Als Nächstes“ und Abhaken · @melvinmng · Prio P4 (Low)
 
 ### Bereit (4)
-- [#113](https://github.com/melvinmng/tagwerk/issues/113) Phase 5: Einkaufsliste und Notizen einbinden · @melvinmng · Prio P3 (Medium)
 - [#159](https://github.com/melvinmng/tagwerk/issues/159) UI-Tests für die Hauptwege · @melvinmng · Prio P3 (Medium)
 - [#164](https://github.com/melvinmng/tagwerk/issues/164) Wochenplanung als geführter Ablauf · @melvinmng · Prio P3 (Medium)
 - [#168](https://github.com/melvinmng/tagwerk/issues/168) Fahrzeit zwischen Terminen berücksichtigen · @melvinmng · Prio P3 (Medium)
+- [#173](https://github.com/melvinmng/tagwerk/issues/173) Designrunde zu PR #172: Befunde der Sichtprüfung und offene Entscheidungen · @melvinmng · Prio P3 (Medium)
+
+### In Prüfung (2)
+- [#113](https://github.com/melvinmng/tagwerk/issues/113) Phase 5: Einkaufsliste und Notizen einbinden · @melvinmng · Prio P3 (Medium)
+- [#140](https://github.com/melvinmng/tagwerk/issues/140) Phase 7: Routinen und Gewohnheiten einbinden · @melvinmng · Prio P3 (Medium)
 
 ### Nicht zugeordnet (0)
 
 ### Zuletzt erledigt (10)
+- [#136](https://github.com/melvinmng/tagwerk/issues/136) GitHub-Issues beim Anlegen an andere Teilnehmer des gewählten Projects vergeben (Teilnehmer je Project abrufen) · @melvinmng
 - [#124](https://github.com/melvinmng/tagwerk/issues/124) App auf Englisch (Sprache folgt dem iPhone) · @melvinmng
 - [#2](https://github.com/melvinmng/tagwerk/issues/2) Phase 2: Aufgaben, Kalender und KI-Tagesplan umsetzen · @melvinmng
 - [#4](https://github.com/melvinmng/tagwerk/issues/4) Phase 4: Widget, Kurzbefehle und Wochenrückblick ergänzen · @melvinmng
@@ -194,5 +198,4 @@ _Automatisch aus [Tagwerk](https://github.com/users/melvinmng/projects/17) erzeu
 - [#97](https://github.com/melvinmng/tagwerk/issues/97) Install-Skript für App und Widget-Extension · @melvinmng
 - [#96](https://github.com/melvinmng/tagwerk/issues/96) Widgets „Als Nächstes“ und „Heute“ · @melvinmng
 - [#95](https://github.com/melvinmng/tagwerk/issues/95) Siri-Kurzbefehle für Wasser, Mahlzeit, Training und Tagesüberblick · @melvinmng
-- [#94](https://github.com/melvinmng/tagwerk/issues/94) Deeplinks tagwerk:// für Planen, Erfassen und Rückblick · @melvinmng
 <!-- t3gh:end -->
