@@ -1,4 +1,5 @@
 import Foundation
+import ImageIO
 import SwiftData
 import TagwerkCore
 import UIKit
@@ -103,6 +104,57 @@ final class NoteAttachmentStore {
         guard let record = record(id: id) else { return nil }
         let url = fileURL(for: record)
         return fileManager.fileExists(atPath: url.path) ? url : nil
+    }
+
+    /// The pictures and files a note's text refers to, for its card in a list: the first picture and the number of files.
+    /// `records` is `index()` of one fetch for the whole list.
+    struct CardInfo: Equatable {
+        var firstImageID: UUID?
+        var fileCount = 0
+    }
+
+    func index() -> [UUID: NoteAttachmentRecord] {
+        Dictionary(records().map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
+    }
+
+    static func cardInfo(text: String, index: [UUID: NoteAttachmentRecord]) -> CardInfo {
+        var info = CardInfo()
+        for id in MarkdownText.attachmentReferences(in: text) {
+            guard let record = index[id] else { continue }
+            if UTType(record.typeIdentifier)?.conforms(to: .image) == true {
+                if info.firstImageID == nil { info.firstImageID = id }
+            } else {
+                info.fileCount += 1
+            }
+        }
+        return info
+    }
+
+    private let thumbnails = NSCache<NSString, UIImage>()
+
+    /// A small picture of an attachment for a list card; read through ImageIO, so the full picture is never decoded.
+    func thumbnail(for id: UUID, edge: CGFloat = 96) -> UIImage? {
+        let key = "\(id.uuidString)-\(Int(edge))" as NSString
+        if let cached = thumbnails.object(forKey: key) { return cached }
+        guard let url = url(for: id), let source = CGImageSourceCreateWithURL(url as CFURL, nil) else { return nil }
+        let options: [CFString: Any] = [kCGImageSourceCreateThumbnailFromImageAlways: true, kCGImageSourceCreateThumbnailWithTransform: true,
+                                        kCGImageSourceThumbnailMaxPixelSize: edge]
+        guard let image = CGImageSourceCreateThumbnailAtIndex(source, 0, options as CFDictionary) else { return nil }
+        let result = UIImage(cgImage: image)
+        thumbnails.setObject(result, forKey: key)
+        return result
+    }
+
+    /// A copy of the file under its own name in a temporary folder, for Quick Look and the share sheet (the stored file is
+    /// named by its ID). The system cleans the folder up.
+    func exportURL(for id: UUID) -> URL? {
+        guard let source = url(for: id), let record = record(id: id) else { return nil }
+        let folder = fileManager.temporaryDirectory.appending(path: "NoteAttachmentExports/\(id.uuidString)", directoryHint: .isDirectory)
+        let target = folder.appending(path: record.fileName.isEmpty ? source.lastPathComponent : record.fileName)
+        try? fileManager.createDirectory(at: folder, withIntermediateDirectories: true)
+        try? fileManager.removeItem(at: target)
+        do { try fileManager.copyItem(at: source, to: target) } catch { return nil }
+        return target
     }
 
     func data(for id: UUID) -> Data? {

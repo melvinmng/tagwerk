@@ -52,12 +52,17 @@ public enum MarkdownText {
     /// The IDs of all attachments the text refers to, as `attachment:<UUID>` in a link, an image or a raw HTML attribute.
     /// The scheme is matched without regard to case. Other schemes and addresses that merely contain the word are ignored.
     public static func attachmentIDs(in markdown: String) -> Set<UUID> {
+        Set(attachmentReferences(in: markdown))
+    }
+
+    /// The same IDs in the order of their first reference, each once (the first picture of a note is its thumbnail).
+    public static func attachmentReferences(in markdown: String) -> [UUID] {
         let range = NSRange(markdown.startIndex..., in: markdown)
-        let found = attachmentReference.matches(in: markdown, range: range).compactMap { match -> UUID? in
-            guard let idRange = Range(match.range(at: 1), in: markdown) else { return nil }
-            return UUID(uuidString: String(markdown[idRange]))
+        var seen = Set<UUID>()
+        return attachmentReference.matches(in: markdown, range: range).compactMap { match -> UUID? in
+            guard let idRange = Range(match.range(at: 1), in: markdown), let id = UUID(uuidString: String(markdown[idRange])) else { return nil }
+            return seen.insert(id).inserted ? id : nil
         }
-        return Set(found)
     }
 
     /// The Markdown reference to an attachment: `![name](attachment:ID)` for an image, `[name](attachment:ID)` for a file.

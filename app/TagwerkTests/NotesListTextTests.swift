@@ -97,4 +97,27 @@ struct NotesListTextTests {
     @Test func footer_dream_namesTheDreamLogAndDay() {
         #expect(footer(note(kind: .dream, dayKey: "2026-11-18", updated: at(19, 7))) == "Dream Log · 18.11.")
     }
+
+    // MARK: Markdown and attachments (P5)
+
+    @Test func card_previewUsesPlainText() {
+        let text = "# Urlaub planen\n- [ ] **Koffer** packen\n[Plan.pdf](attachment:A1B2C3D4-0000-4000-8000-000000000002)"
+        let entry = note(text, updated: at(19, 8))
+        #expect(NoteText.title(entry.text) == "Urlaub planen")
+        #expect(NoteText.preview(entry.text) == "Koffer packen\nPlan.pdf")
+    }
+
+    @Test func cardInfo_findsTheFirstPictureAndCountsFiles() {
+        let picture = NoteAttachmentRecord(noteID: nil, fileName: "Foto.jpg", typeIdentifier: "public.jpeg", byteCount: 1)
+        let secondPicture = NoteAttachmentRecord(noteID: nil, fileName: "Zwei.jpg", typeIdentifier: "public.jpeg", byteCount: 1)
+        let file = NoteAttachmentRecord(noteID: nil, fileName: "Plan.pdf", typeIdentifier: "com.adobe.pdf", byteCount: 1)
+        let index = Dictionary(uniqueKeysWithValues: [picture, secondPicture, file].map { ($0.id, $0) })
+        let text = [MarkdownText.reference(for: file.id, name: "Plan.pdf", isImage: false),
+                    MarkdownText.reference(for: secondPicture.id, name: "Bild", isImage: true),
+                    MarkdownText.reference(for: picture.id, name: "Bild", isImage: true),
+                    MarkdownText.reference(for: UUID(), name: "Fehlt", isImage: false)].joined(separator: "\n")
+        let info = NoteAttachmentStore.cardInfo(text: text, index: index)
+        #expect(info.firstImageID == secondPicture.id && info.fileCount == 1)
+        #expect(NoteAttachmentStore.cardInfo(text: "ohne", index: index) == NoteAttachmentStore.CardInfo())
+    }
 }

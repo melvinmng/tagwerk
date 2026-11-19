@@ -50,6 +50,7 @@ struct NotesListView: View {
     var body: some View {
         @Bindable var settings = environment.settings
         let notes = visibleNotes
+        let attachmentIndex = store.attachments?.index() ?? [:]
         List(selection: $selection) {
             if isJournal, !editMode.isEditing {
                 Section {
@@ -69,7 +70,7 @@ struct NotesListView: View {
                     .listRowBackground(Color.clear)
             }
             Section {
-                ForEach(notes, id: \.id) { card($0) }
+                ForEach(notes, id: \.id) { card($0, attachmentIndex: attachmentIndex) }
             } footer: {
                 Text(isTrash ? Self.trashFootnote : Self.listFootnote)
             }
@@ -218,7 +219,8 @@ struct NotesListView: View {
 
     // MARK: Cards
 
-    private func card(_ note: NoteRecord) -> some View {
+    private func card(_ note: NoteRecord, attachmentIndex: [UUID: NoteAttachmentRecord]) -> some View {
+        let attachmentInfo = NoteAttachmentStore.cardInfo(text: note.text, index: attachmentIndex)
         let isJournalEntry = note.kind == .journal
         // The entries of the routine folders are named by their day.
         let isRoutineEntry = folderRole?.noteKind != nil
@@ -233,20 +235,31 @@ struct NotesListView: View {
             guard !editMode.isEditing, !isTrash else { return }
             environment.tasksPath.append(.note(note.id))
         } label: {
-            VStack(alignment: .leading, spacing: 4) {
-                HStack(alignment: .firstTextBaseline) {
-                    Text(title).font(.body.weight(.semibold)).foregroundStyle(.primary).lineLimit(1)
-                    Spacer(minLength: 4)
-                    if note.isPinned {
-                        Image(systemName: "pin.fill").font(.footnote).foregroundStyle(.secondary)
-                            .accessibilityLabel("Angeheftet")
+            HStack(alignment: .top, spacing: 10) {
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack(alignment: .firstTextBaseline) {
+                        Text(title).font(.body.weight(.semibold)).foregroundStyle(.primary).lineLimit(1)
+                        Spacer(minLength: 4)
+                        if attachmentInfo.fileCount > 0 {
+                            Label("\(attachmentInfo.fileCount)", systemImage: "paperclip")
+                                .font(.footnote).foregroundStyle(.secondary).labelStyle(.titleAndIcon)
+                                .accessibilityLabel("\(attachmentInfo.fileCount) Dateien angehängt")
+                        }
+                        if note.isPinned {
+                            Image(systemName: "pin.fill").font(.footnote).foregroundStyle(.secondary)
+                                .accessibilityLabel("Angeheftet")
+                        }
                     }
+                    if !preview.isEmpty {
+                        Text(preview).font(.subheadline).foregroundStyle(.secondary).lineLimit(2)
+                    }
+                    Text(footerText(for: note))
+                        .font(.caption).foregroundStyle(.secondary)
                 }
-                if !preview.isEmpty {
-                    Text(preview).font(.subheadline).foregroundStyle(.secondary).lineLimit(2)
+                if let imageID = attachmentInfo.firstImageID, let thumbnail = store.attachments?.thumbnail(for: imageID) {
+                    Image(uiImage: thumbnail).resizable().scaledToFill().frame(width: 48, height: 48)
+                        .clipShape(RoundedRectangle(cornerRadius: 8)).accessibilityHidden(true)
                 }
-                Text(footerText(for: note))
-                    .font(.caption).foregroundStyle(.secondary)
             }
             .padding(.vertical, 2)
             .frame(maxWidth: .infinity, alignment: .leading)

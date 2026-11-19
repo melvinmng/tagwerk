@@ -74,6 +74,11 @@ struct MarkdownTextTests {
         #expect(MarkdownText.attachmentIDs(in: markdown) == [first, second])
     }
 
+    @Test func attachmentReferences_keepDocumentOrderWithoutRepeats() {
+        let markdown = "[b](attachment:A1B2C3D4-0000-4000-8000-000000000002) ![a](attachment:3F2504E0-4F89-41D3-9A0C-0305E82C3301) ![a](attachment:3F2504E0-4F89-41D3-9A0C-0305E82C3301)"
+        #expect(MarkdownText.attachmentReferences(in: markdown) == [second, first])
+    }
+
     @Test func attachmentIDs_ignoresOtherSchemes() {
         let markdown = """
         [x](https://example.com/attachment:3F2504E0-4F89-41D3-9A0C-0305E82C3301)
