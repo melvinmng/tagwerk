@@ -466,7 +466,6 @@ final class AppEnvironment {
         case .dream: String(localized: "Dream Log")
         case .journal: String(localized: "Tagebuch")
         case .bibleStudy: String(localized: "Bible Study")
-        case .dream: String(localized: "Dream Log")
         }
     }
 

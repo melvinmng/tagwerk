@@ -396,7 +396,7 @@ extension NotesListView {
     /// Under the list. A thought note can go to ChatGPT, but only by a tap on "Vorschläge holen" with the consent
     /// of the routine settings (phase 7); own notes have no such button and are never sent.
     static var listFootnote: String {
-        String(localized: "Notizen liegen nur auf diesem iPhone. An ChatGPT geht eine Gedanken-Notiz nur, wenn du bei ihr auf „Vorschläge holen“ tippst.")
+        String(localized: "Notizen liegen nur auf diesem iPhone. An ChatGPT geht eine Brain-Dump-Notiz nur, wenn du bei ihr auf „Vorschläge holen“ tippst.")
     }
 
     /// Own notes: when they were changed last ("heute 08:12", "Dienstag" within the last six days, "12. Nov."),

@@ -7646,6 +7646,7 @@
       }
     },
     "Gedanken": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -11372,12 +11373,12 @@
         }
       }
     },
-    "Notizen liegen nur auf diesem iPhone. An ChatGPT geht eine Gedanken-Notiz nur, wenn du bei ihr auf „Vorschläge holen“ tippst.": {
+    "Notizen liegen nur auf diesem iPhone. An ChatGPT geht eine Brain-Dump-Notiz nur, wenn du bei ihr auf „Vorschläge holen“ tippst.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Notes stay on this iPhone only. A thoughts note goes to ChatGPT only when you tap “Get suggestions” on it."
+            "value": "Notes stay on this iPhone only. A Brain Dump note goes to ChatGPT only when you tap “Get suggestions” on it."
           }
         }
       }

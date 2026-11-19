@@ -1491,7 +1491,6 @@
   "%lld Aufgaben daraus": "%lld tasks from it",
   "1 Aufgabe daraus": "1 task from it",
   "Als Aufgabe anlegen": "Create as task",
-  "Notizen liegen nur auf diesem iPhone. An ChatGPT geht eine Gedanken-Notiz nur, wenn du bei ihr auf „Vorschläge holen“ tippst.": "Notes stay on this iPhone only. A thoughts note goes to ChatGPT only when you tap “Get suggestions” on it.",
   "Was geht dir durch den Kopf?": "What’s on your mind?",
   "%lld Vorschläge aus der Notiz": "%lld suggestions from the note",
   "**Gesendet wird** der Text dieser einen Notiz, dazu deine offenen Aufgaben und Termine der nächsten 7 Tage (Titel, Fälligkeit, Zeit).": "**What is sent** is the text of this one note, plus your open tasks and events of the next 7 days (title, due date, time).",
@@ -1813,5 +1812,6 @@
   "Zutaten holen": "Get ingredients",
   "https://…": "https://…",
   "schon auf der Liste": "already on the list",
-  "„Rezept hinzufügen“ sendet auf dein Tippen den Rezepttext oder das Foto und die Namen deiner Kategorien. Bei einem Link geht nur der gelesene Text der Seite weg, nicht die Adresse. Schaltest du das aus, fragt Tagwerk beim nächsten Rezept erneut.": "“Add recipe” sends the recipe text or the photo and the names of your categories when you tap. For a link, only the text read from the page leaves the device, not the address. If you turn this off, Tagwerk asks again at the next recipe."
+  "„Rezept hinzufügen“ sendet auf dein Tippen den Rezepttext oder das Foto und die Namen deiner Kategorien. Bei einem Link geht nur der gelesene Text der Seite weg, nicht die Adresse. Schaltest du das aus, fragt Tagwerk beim nächsten Rezept erneut.": "“Add recipe” sends the recipe text or the photo and the names of your categories when you tap. For a link, only the text read from the page leaves the device, not the address. If you turn this off, Tagwerk asks again at the next recipe.",
+  "Notizen liegen nur auf diesem iPhone. An ChatGPT geht eine Brain-Dump-Notiz nur, wenn du bei ihr auf „Vorschläge holen“ tippst.": "Notes stay on this iPhone only. A Brain Dump note goes to ChatGPT only when you tap “Get suggestions” on it."
 }
