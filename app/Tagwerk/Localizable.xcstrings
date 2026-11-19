@@ -3951,6 +3951,16 @@
         }
       }
     },
+    "Der Termin wurde geändert.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The event has changed."
+          }
+        }
+      }
+    },
     "Der Ton wird auf dem iPhone in Text umgewandelt. Änderungen führt Tagwerk erst aus, wenn du sie bestätigst.": {
       "localizations": {
         "en": {
@@ -6184,6 +6194,16 @@
         }
       }
     },
+    "Im Plan zeigen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show in plan"
+          }
+        }
+      }
+    },
     "In %lld Kalendern": {
       "localizations": {
         "de": {
@@ -6260,6 +6280,16 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "In Aufgaben zeigen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show in tasks"
           }
         }
       }

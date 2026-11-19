@@ -1736,6 +1736,15 @@ final class PlanningModel {
         deadline.time ?? deadline.day.adding(days: 1, calendar: calendar).startDate(in: calendar)
     }
 
+    /// The event a search hit stands for, read the way "Planen" reads its days: the day of the hit in the readable
+    /// calendars, so the opened event carries the ID that links and deadline marks expect. `nil` when it changed.
+    func resolveEvent(matching hit: CalendarEvent) -> CalendarEvent? {
+        let day = PlanDay(date: hit.start, calendar: calendar)
+        let interval = DateInterval(start: day.startDate(in: calendar),
+                                    end: day.adding(days: 1, calendar: calendar).startDate(in: calendar))
+        return SearchEventResolver.resolve(hit, among: calendarStore.events(in: interval, calendarIDs: readableCalendarIDs()))
+    }
+
     /// Selected calendars plus plan and deadline calendars; `nil` (all) when nothing is selected.
     func readableCalendarIDs() -> Set<String>? {
         guard let selected = settings.selectedCalendarIDs else { return nil }

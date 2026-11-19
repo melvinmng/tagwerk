@@ -1364,5 +1364,8 @@
   "wöchentlich": "weekly",
   "Ältere Termine durchsuchen": "Search older events",
   "✓ Erledigte": "✓ Completed",
-  "Durchsucht Termine und Aufgaben": "Searches events and tasks"
+  "Durchsucht Termine und Aufgaben": "Searches events and tasks",
+  "Der Termin wurde geändert.": "The event has changed.",
+  "Im Plan zeigen": "Show in plan",
+  "In Aufgaben zeigen": "Show in tasks"
 }

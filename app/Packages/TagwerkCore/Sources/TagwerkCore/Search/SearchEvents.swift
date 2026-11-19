@@ -137,3 +137,21 @@ public enum EventSeriesGrouping {
         return isMonthly ? .monthly : nil
     }
 }
+
+/// Finds the event of a fresh day fetch that a search hit stands for. The IDs of an 18-month fetch can differ
+/// from those of a day fetch (`CalendarBlockRules.uniqueIDs` depends on the events of one fetch), so the hit is
+/// matched by base ID, start and calendar.
+public enum SearchEventResolver {
+    /// Same base ID and same start, in the hit's calendar or in a calendar either side was merged from.
+    /// The hit's own calendar wins when several copies match.
+    public static func resolve(_ hit: CalendarEvent, among dayEvents: [CalendarEvent]) -> CalendarEvent? {
+        let base = SearchEventID.base(hit.id)
+        let candidates = dayEvents.filter { event in
+            guard event.start == hit.start, SearchEventID.base(event.id) == base else { return false }
+            return event.calendarID == hit.calendarID
+                || hit.mergedCalendarIDs.contains(event.calendarID)
+                || event.mergedCalendarIDs.contains(hit.calendarID)
+        }
+        return candidates.first { $0.calendarID == hit.calendarID } ?? candidates.first
+    }
+}

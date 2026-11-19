@@ -12,6 +12,11 @@ struct SearchSheet: View {
     @Environment(AppEnvironment.self) private var environment
     @Environment(\.dismiss) private var dismiss
     @FocusState private var fieldFocused: Bool
+    @State private var openTask: TaskItem?
+    @State private var openContainers: [TaskContainer] = []
+    @State private var openEvent: CalendarEvent?
+    /// Short hint, e.g. "Der Termin wurde geändert."; shown as an alert together with errors of the task list.
+    @State private var notice: String?
 
     init(model: SearchModel, onShowDay: @escaping (PlanDay) -> Void, onShowTask: @escaping (TaskID) -> Void) {
         self.model = model
@@ -41,9 +46,97 @@ struct SearchSheet: View {
             .listStyle(.insetGrouped)
             .scrollDismissesKeyboard(.interactively)
             .safeAreaInset(edge: .top, spacing: 0) { header }
+            .safeAreaInset(edge: .bottom, spacing: 0) { undoBar }
+            .animation(.spring(duration: 0.35), value: environment.taskList.lastCompleted?.id)
             .toolbar(.hidden, for: .navigationBar)
         }
         .onAppear { fieldFocused = true }
+        .sheet(item: $openTask, onDismiss: refreshAfterSheet) { task in
+            AppTaskEditorSheet(item: task, containers: openContainers, allowsComments: true, respectsOffline: true,
+                            onShowDay: onShowDay)
+        }
+        .sheet(item: $openEvent, onDismiss: refreshAfterSheet) { event in
+            EventEntrySheet(event: event, onShowTask: onShowTask)
+        }
+        .alert("Hinweis", isPresented: hasAlert) {
+            Button("OK") { notice = nil; environment.taskList.clearError() }
+        } message: {
+            Text(notice ?? environment.taskList.lastError ?? "")
+        }
+    }
+
+    private var hasAlert: Binding<Bool> {
+        Binding(get: { notice != nil || environment.taskList.lastError != nil },
+                set: { if !$0 { notice = nil; environment.taskList.clearError() } })
+    }
+
+    /// After a sheet over the search closed, the hits may have changed (title, completion, date).
+    private func refreshAfterSheet() {
+        Task { await model.refresh() }
+    }
+
+    @ViewBuilder private var undoBar: some View {
+        if let completed = environment.taskList.lastCompleted {
+            UndoCapsule(title: completed.title, duration: 5,
+                        onUndo: { Task { await environment.taskList.undoComplete(); await model.refresh() } },
+                        onExpire: { if environment.taskList.lastCompleted?.id == completed.id { environment.taskList.dismissUndo() } })
+                .id(completed.id)
+                .transition(.move(edge: .bottom).combined(with: .opacity))
+        }
+    }
+
+    // MARK: Actions
+
+    /// Tap on an event: opens the sheet for the event as "Planen" knows it; a changed event ends in a hint.
+    private func open(_ event: CalendarEvent) {
+        if let resolved = environment.planning.resolveEvent(matching: event) {
+            openEvent = resolved
+        } else {
+            notice = String(localized: "Der Termin wurde geändert.")
+            Task { await model.refresh() }
+        }
+    }
+
+    private func open(_ task: TaskItem) {
+        Task {
+            openContainers = task.editableFields.contains(.container) ? await environment.taskList.containers(for: task.id.source) : []
+            openTask = task
+        }
+    }
+
+    private func showInPlan(_ event: CalendarEvent) {
+        onShowDay(PlanDay(date: event.start, calendar: calendar))
+    }
+
+    private func complete(_ task: TaskItem) {
+        guard environment.taskList.sourceStates[task.id.source]?.isOffline != true else {
+            notice = TaskListModel.message(for: TaskWriteError.offline)
+            return
+        }
+        Task {
+            await environment.taskList.complete(task.id)
+            await model.refresh()
+        }
+    }
+
+    private func reopen(_ task: TaskItem) {
+        Task {
+            await environment.taskList.reopen(task)
+            await model.refresh()
+        }
+    }
+
+    private func setDeadline(_ event: CalendarEvent, marked: Bool) {
+        guard let resolved = environment.planning.resolveEvent(matching: event) else {
+            notice = String(localized: "Der Termin wurde geändert.")
+            return
+        }
+        Task {
+            if marked { await environment.planning.unmarkDeadline(resolved) } else {
+                await environment.planning.markDeadline(resolved, series: false)
+            }
+            await model.refresh()
+        }
     }
 
     // MARK: Header
@@ -224,17 +317,64 @@ struct SearchSheet: View {
     @ViewBuilder private func rowView(_ row: SearchRow) -> some View {
         switch row {
         case .event(let eventRow, let match):
-            SearchEventRow(row: eventRow, match: match, calendarName: model.calendarName(of: eventRow.event),
-                           isDeadline: environment.planning.deadlineEventIDs(among: [eventRow.event]).contains(eventRow.event.id),
-                           isPast: EventSeriesGrouping.isPast(eventRow.event, now: now, calendar: calendar),
+            let event = eventRow.event
+            SearchEventRow(row: eventRow, match: match, calendarName: model.calendarName(of: event),
+                           isDeadline: environment.planning.deadlineEventIDs(among: [event]).contains(event.id),
+                           isPast: EventSeriesGrouping.isPast(event, now: now, calendar: calendar),
                            now: now, calendar: calendar)
+                .onTapGesture { open(event) }
+                .contextMenu { eventMenu(event) }
+                .accessibilityAddTraits(.isButton)
+                .accessibilityAction(named: Text("Öffnen")) { open(event) }
+                .accessibilityAction(named: Text("Im Plan zeigen")) { showInPlan(event) }
         case .task(let item, let match):
             SearchTaskRow(item: item, match: match, now: now, calendar: calendar,
-                          isReadOnly: environment.taskList.sourceStates[item.id.source]?.isOffline == true) {}
+                          isReadOnly: environment.taskList.sourceStates[item.id.source]?.isOffline == true) { complete(item) }
+                .onTapGesture { open(item) }
+                .contextMenu { taskMenu(item) }
+                .accessibilityAddTraits(.isButton)
+                .accessibilityAction(named: Text("Öffnen")) { open(item) }
+                .accessibilityAction(named: Text("Erledigt")) { complete(item) }
         case .completed(let group, let match):
+            let item = group.latest.item
             SearchCompletedRow(group: group, match: match, now: now, calendar: calendar)
+                .onTapGesture { open(item) }
+                .contextMenu {
+                    Button("Öffnen", systemImage: "chevron.right") { open(item) }
+                    Button("Wieder öffnen", systemImage: "arrow.uturn.backward") { reopen(item) }
+                }
+                .accessibilityAddTraits(.isButton)
+                .accessibilityAction(named: Text("Öffnen")) { open(item) }
+                .accessibilityAction(named: Text("Wieder öffnen")) { reopen(item) }
         case .online, .note, .shopping:
             EmptyView()
+        }
+    }
+
+    @ViewBuilder private func eventMenu(_ event: CalendarEvent) -> some View {
+        Button("Öffnen", systemImage: "chevron.right") { open(event) }
+        Button("Im Plan zeigen", systemImage: "calendar") { showInPlan(event) }
+        // The deadline entries need the event as "Planen" knows it.
+        if let resolved = environment.planning.resolveEvent(matching: event), !environment.planning.isInDeadlineCalendar(resolved) {
+            if environment.planning.isMarkedDeadline(resolved) {
+                if !environment.planning.needsUnmarkConfirmation(resolved) {
+                    Button("Markierung entfernen", systemImage: "flag.slash", role: .destructive) { setDeadline(event, marked: true) }
+                }
+            } else {
+                Button("Als Deadline markieren", systemImage: "flag") { setDeadline(event, marked: false) }
+            }
+        }
+    }
+
+    @ViewBuilder private func taskMenu(_ item: TaskItem) -> some View {
+        Button("Öffnen", systemImage: "chevron.right") { open(item) }
+        if let day = environment.planning.plannedInfo(for: item.id).day {
+            Button("Im Plan zeigen", systemImage: "calendar") { onShowDay(day) }
+        } else {
+            Button("In Aufgaben zeigen", systemImage: "checklist") { onShowTask(item.id) }
+        }
+        if environment.taskList.sourceStates[item.id.source]?.isOffline != true {
+            Button("Erledigt", systemImage: "checkmark.circle") { complete(item) }
         }
     }
 }

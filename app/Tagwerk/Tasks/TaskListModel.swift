@@ -234,6 +234,22 @@ final class TaskListModel {
         await onCompletionChanged?(completed.id, false)
     }
 
+    /// Reopens a completed task that is not in `items` (a search hit). Returns the reopened task, or `nil` after
+    /// an error, which is in `lastError`.
+    @discardableResult
+    func reopen(_ task: TaskItem) async -> TaskItem? {
+        var edit = TaskEdit()
+        edit.isCompleted = .set(false)
+        guard let provider = provider(for: task.id.source) else {
+            lastError = Self.message(for: TaskWriteError.accessDenied)
+            return nil
+        }
+        guard let reopened = await write(edit, to: task.id, version: task.version) else { return nil }
+        await settle(reopened, provider: provider, announce: false)
+        await onCompletionChanged?(task.id, false)
+        return reopened
+    }
+
     /// Deletes (GitHub: closes as not planned) with the displayed version, or `version` from the editor.
     func delete(_ id: TaskID, version: String? = nil) async {
         guard let provider = provider(for: id.source),
@@ -312,14 +328,16 @@ final class TaskListModel {
 
     /// Stores an item returned by the editor. `requestedAssignees` are the people the editor added;
     /// those missing from the saved item were dropped by the source and are reported.
-    func didSave(_ item: TaskItem, requestedAssignees: [String] = []) {
+    /// `wasCompleted` tells that the editor opened a completed task, which is not in `items` (search hits):
+    /// reopening it then reports the completion change like a task from the list.
+    func didSave(_ item: TaskItem, requestedAssignees: [String] = [], wasCompleted: Bool = false) {
         nextGeneration(for: item.id.source)
         let missing = AssigneeRules.missing(requested: requestedAssignees, actual: item.assignees)
         if !missing.isEmpty {
             lastError = Self.unassignedMessage(number: item.issueNumber, created: false, missing: missing)
         }
-        if let previous = items.first(where: { $0.id == item.id }), previous.isCompleted != item.isCompleted,
-           let hook = onCompletionChanged {
+        let previousCompletion = items.first(where: { $0.id == item.id })?.isCompleted ?? (wasCompleted ? true : nil)
+        if let previousCompletion, previousCompletion != item.isCompleted, let hook = onCompletionChanged {
             Task { await hook(item.id, item.isCompleted) }
         }
         if item.isCompleted {

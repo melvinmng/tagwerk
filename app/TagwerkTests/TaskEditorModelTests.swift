@@ -18,6 +18,18 @@ struct TaskEditorModelTests {
         #expect(provider.appliedEdits.isEmpty)
     }
 
+    @Test func completedTaskOutsideTheListCanBeReopenedInTheEditor() async {
+        var done = makeTask("Erledigte Aufgabe", source: .reminders, version: "5")
+        done.isCompleted = true
+        provider.tasks.append(done)
+        let model = TaskEditorModel(item: done, provider: provider)
+        model.draft.isCompleted = false
+        #expect(await model.save())
+        #expect(model.saved?.isCompleted == false)
+        #expect(provider.appliedEdits.last?.edit.isCompleted == .set(false))
+        #expect(provider.appliedEdits.last?.expectedVersion == "5")
+    }
+
     @Test func save_changedTitle_sendsOnlyTitle() async {
         let model = TaskEditorModel(item: item, provider: provider)
         model.draft.title = "Neu"

@@ -12,6 +12,62 @@ struct TaskListModelTests {
         TaskListModel(providers: [reminders, local], now: testNow, calendar: testCalendar())
     }
 
+    private func completedTask(_ title: String, source: TaskSource, version: String = "1") -> TaskItem {
+        var task = makeTask(title, source: source, version: version)
+        task.isCompleted = true
+        return task
+    }
+
+    @Test func reopen_insertsTaskAndReportsCompletionChange() async {
+        let done = completedTask("Fahrrad-Pumpe", source: .local)
+        local.tasks.append(done)                                       // the provider holds it completed, items do not
+        let model = makeModel()
+        await model.reload()
+        #expect(!model.items.contains { $0.id == done.id })
+        var reported: [(TaskID, Bool)] = []
+        model.onCompletionChanged = { id, flag in reported.append((id, flag)) }
+        let reopened = await model.reopen(done)
+        #expect(reopened?.isCompleted == false)
+        #expect(model.items.contains { $0.id == done.id })
+        #expect(reported.count == 1 && reported[0].0 == done.id && reported[0].1 == false)
+        #expect(local.appliedEdits.last?.expectedVersion == done.version)
+    }
+
+    @Test func reopen_reportsMissingTaskInsteadOfInserting() async {
+        let model = makeModel()
+        await model.reload()
+        let ghost = completedTask("Gelöscht", source: .local)
+        let reopened = await model.reopen(ghost)
+        #expect(reopened == nil)
+        #expect(model.lastError == "Die Aufgabe existiert nicht mehr.")
+        #expect(!model.items.contains { $0.id == ghost.id })
+    }
+
+    @Test func reopen_conflictKeepsTheListAndReloads() async {
+        let done = completedTask("Fahrrad-Pumpe", source: .local)
+        local.tasks.append(done)
+        var current = done
+        current.version = "2"
+        local.conflictOnNextApply = current
+        let model = makeModel()
+        await model.reload()
+        #expect(await model.reopen(done) == nil)
+        #expect(model.lastError == "Die Aufgabe wurde inzwischen geändert. Die Liste ist jetzt aktuell.")
+    }
+
+    @Test func didSave_reopenedFromOutsideTheListReportsTheCompletionChange() async {
+        let model = makeModel()
+        await model.reload()
+        var reopened = completedTask("Fahrrad-Pumpe", source: .local)
+        reopened.isCompleted = false
+        var reported: [(TaskID, Bool)] = []
+        model.onCompletionChanged = { id, flag in reported.append((id, flag)) }
+        model.didSave(reopened, wasCompleted: true)
+        await waitUntil { !reported.isEmpty }
+        #expect(reported.count == 1 && reported[0].1 == false)
+        #expect(model.items.contains { $0.id == reopened.id })
+    }
+
     @Test func highlight_setsAndClears() {
         let model = makeModel()
         let id = TaskID(source: .local, rawValue: "Fahrrad")

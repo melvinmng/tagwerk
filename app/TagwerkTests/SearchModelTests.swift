@@ -228,6 +228,22 @@ struct SearchModelTests {
         #expect(titles(model.results).isEmpty)
     }
 
+    @Test func refreshReloadsCompletedTasksOnlyWhileTheSwitchIsOn() async {
+        let model = probe.model()
+        model.text = "statistik"
+        await model.refresh()
+        #expect(probe.completedCalls == 0)
+        model.includeCompleted = true
+        await model.settle()
+        #expect(probe.completedCalls == 1)
+        var done = makeTask("Statistik Übung", source: .reminders)
+        done.isCompleted = true
+        probe.completed = [CompletedTask(item: done, completedAt: day(2026, 11, 12))]
+        await model.refresh()
+        #expect(probe.completedCalls == 2)
+        #expect(model.results.sections.map(\.kind).contains(.completedTasks))
+    }
+
     @Test func sectionsShowTwentyFiveRowsThenMore() async {
         probe.tasks = (1...60).map { makeTask("Treffer \($0)", source: .local) }
         let model = probe.model()

@@ -51,6 +51,26 @@ struct PlanningModelTests {
         calendar.date(from: DateComponents(year: 2026, month: 11, day: day, hour: hour, minute: minute))!
     }
 
+    @Test func resolveEvent_readsTheDayOfTheHitFromReadableCalendars() async {
+        let model = await model()
+        let start = at(20, 9)
+        let stored = CalendarEvent(id: "abc#cal|1", externalID: nil, calendarID: "cal", title: "Klausur", start: start,
+                                   end: start.addingTimeInterval(3600), isAllDay: false, url: nil, isBusy: true, version: "7")
+        let hidden = CalendarEvent(id: "x#other|1", externalID: nil, calendarID: "other", title: "Klausur", start: start,
+                                   end: start.addingTimeInterval(3600), isAllDay: false, url: nil, isBusy: true, version: "7")
+        calendarStore.storedEvents = [stored, hidden]
+        settings.selectedCalendarIDs = ["cal"]
+        let hit = CalendarEvent(id: "abc|1", externalID: nil, calendarID: "cal", title: "Klausur", start: start,
+                                end: start.addingTimeInterval(3600), isAllDay: false, url: nil, isBusy: true, version: "7")
+        #expect(model.resolveEvent(matching: hit)?.id == "abc#cal|1")
+        var changed = hit
+        changed.start = at(20, 15)
+        #expect(model.resolveEvent(matching: changed) == nil)
+        var elsewhere = hit
+        elsewhere.calendarID = "other"
+        #expect(model.resolveEvent(matching: elsewhere) == nil)   // "other" is not a readable calendar
+    }
+
     @Test func didHandOver_removesDayAndFutureBlocks_keepsPastBlocks() async throws {
         let model = await model()
         let issue = github.tasks[0]

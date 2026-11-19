@@ -94,18 +94,10 @@ struct RootView: View {
             }
         }
         .sheet(item: $editingTask) { task in
-            if let provider = environment.taskList.provider(for: task.id.source) {
-                TaskEditorView(item: task, provider: provider, calendar: environment.taskList.calendar, containers: [],
-                               onDelete: { version in Task { await environment.taskList.delete(task.id, version: version) } },
-                               planning: environment.planning,
-                               onShowDay: showDay) { saved, requested in
-                    environment.taskList.didSave(saved, requestedAssignees: requested)
-                }
-            }
+            AppTaskEditorSheet(item: task, onShowDay: showDay)
         }
         .sheet(item: $openEvent) { event in
-            EntrySheet(entry: .event(event, environment.planning.linkedTask(eventID: event.id)?.id),
-                       model: environment.planning, onShowTask: showTask)
+            EventEntrySheet(event: event, onShowTask: showTask)
         }
         .sheet(item: $recurringEdit) { edit in
             RecurringEffortSheet(item: edit.item, day: edit.day, model: environment.planning)

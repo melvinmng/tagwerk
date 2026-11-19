@@ -129,4 +129,37 @@ import Testing
         #expect(rows.upcoming.map(\.id) == ["a", "c"])
         #expect(rows.past.map(\.id) == ["z", "y"])
     }
+    // MARK: SearchEventResolver
+
+    @Test func resolveFindsSameOccurrenceDespiteDifferentIDForm() {
+        let start = instant(2026, 11, 20, 9)
+        let hit = event("abc|\(Int(start.timeIntervalSince1970))", start: start, recurring: true)
+        let fetched = event("abc#cal|\(Int(start.timeIntervalSince1970))", start: start, recurring: true)
+        let other = event("xyz", start: start)
+        #expect(SearchEventResolver.resolve(hit, among: [other, fetched])?.id == fetched.id)
+    }
+
+    @Test func resolveFindsMergedAndMultiDayEvents() {
+        let start = instant(2026, 11, 20, 9)
+        // a) the hit was kept from "work" and merged "uni"; the fetch holds the copy of "uni"
+        var mergedHit = event("e1", calendarID: "work", start: start)
+        mergedHit.mergedCalendarIDs = ["uni"]
+        let uniCopy = event("e1#uni", calendarID: "uni", start: start)
+        #expect(SearchEventResolver.resolve(mergedHit, among: [uniCopy])?.id == "e1#uni")
+        // the exact calendar wins when both copies are there
+        let workCopy = event("e1#work", calendarID: "work", start: start)
+        #expect(SearchEventResolver.resolve(mergedHit, among: [uniCopy, workCopy])?.id == "e1#work")
+        // b) a multi-day event that began the day before is still found by its start
+        let multiStart = instant(2026, 11, 19, 20)
+        let multiDayHit = event("trip", start: multiStart, hours: 30)
+        #expect(SearchEventResolver.resolve(multiDayHit, among: [event("trip", start: multiStart, hours: 30)]) != nil)
+    }
+
+    @Test func resolveReturnsNilWhenStartOrCalendarChanged() {
+        let start = instant(2026, 11, 20, 9)
+        let hit = event("e1", calendarID: "work", start: start)
+        #expect(SearchEventResolver.resolve(hit, among: [event("e1", calendarID: "work", start: start.addingTimeInterval(3600))]) == nil)
+        #expect(SearchEventResolver.resolve(hit, among: [event("e1", calendarID: "uni", start: start)]) == nil)
+        #expect(SearchEventResolver.resolve(hit, among: []) == nil)
+    }
 }
