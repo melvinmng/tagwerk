@@ -377,12 +377,32 @@
       },
       "shouldTranslate": false
     },
+    "%@ stehen schon auf der Liste.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ are already on the list."
+          }
+        }
+      }
+    },
     "%@ stehen schon drauf": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "%@ are already on the list"
+          }
+        }
+      }
+    },
+    "%@ steht schon auf der Liste.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ is already on the list."
           }
         }
       }
@@ -742,6 +762,46 @@
           "stringUnit": {
             "state": "translated",
             "value": "%lld"
+          }
+        }
+      }
+    },
+    "%lld Artikel hinzugefügt:": {
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld item added:"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld items added:"
+                }
+              }
+            }
+          }
+        },
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Artikel hinzugefügt:"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Artikel hinzugefügt:"
+                }
+              }
+            }
           }
         }
       }
@@ -2820,6 +2880,26 @@
         }
       }
     },
+    "Auf die Einkaufsliste": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add to Shopping List"
+          }
+        }
+      }
+    },
+    "Auf die Einkaufsliste in Tagwerk": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add to shopping list in Tagwerk"
+          }
+        }
+      }
+    },
     "Auf einen Tag einplanen": {
       "localizations": {
         "en": {
@@ -3558,6 +3638,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "That didn’t work · paused"
+          }
+        }
+      }
+    },
+    "Das hat nicht geklappt: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "That did not work: %@"
           }
         }
       }
@@ -4468,6 +4558,26 @@
         }
       }
     },
+    "Einkaufsliste in Tagwerk zeigen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show shopping list in Tagwerk"
+          }
+        }
+      }
+    },
+    "Einkaufsliste zeigen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show Shopping List"
+          }
+        }
+      }
+    },
     "Einkaufsliste ändern": {
       "localizations": {
         "en": {
@@ -5192,6 +5302,26 @@
         }
       }
     },
+    "Fügt Artikel hinzu, ohne Tagwerk zu öffnen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adds items without opening Tagwerk"
+          }
+        }
+      }
+    },
+    "Fügt Artikel zur Einkaufsliste hinzu, ohne Tagwerk zu öffnen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adds items to the shopping list without opening Tagwerk."
+          }
+        }
+      }
+    },
     "Für Schätzungen aus Text oder Foto melde dich unter Einstellungen › KI bei ChatGPT an.": {
       "localizations": {
         "en": {
@@ -5794,6 +5924,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Me (%@)"
+          }
+        }
+      }
+    },
+    "Ich habe keinen Artikel verstanden.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I did not catch any item."
           }
         }
       }
@@ -10400,6 +10540,16 @@
         }
       }
     },
+    "Was soll auf die Liste?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What should go on the list?"
+          }
+        }
+      }
+    },
     "Was steht heute an?": {
       "localizations": {
         "en": {
@@ -10776,6 +10926,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Choose a reminders list as your shopping list."
+          }
+        }
+      }
+    },
+    "Wähle zuerst in Tagwerk unter Einstellungen › Einkaufsliste eine Liste.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "First choose a list in Tagwerk under Settings › Shopping List."
           }
         }
       }
@@ -12238,6 +12398,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Opens the issue in the browser"
+          }
+        }
+      }
+    },
+    "Öffnet die Einkaufsliste": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opens the shopping list"
+          }
+        }
+      }
+    },
+    "Öffnet die Einkaufsliste in Tagwerk.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opens the shopping list in Tagwerk."
           }
         }
       }

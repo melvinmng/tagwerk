@@ -46,6 +46,46 @@ final class IntentServices {
         return Overview(text: snapshot.overviewText(at: now, calendar: calendar), entries: upcoming.isTomorrow ? [] : upcoming.entries)
     }
 
+    /// "Auf die Einkaufsliste": splits the spoken text into items and adds them without duplicates.
+    /// Needs only reminders, the settings and the categories: no loaded task list, no network, no AI feature.
+    /// The reply names only what was just said, so it may be spoken on a locked device.
+    func addToShopping(text: String) async -> LocalizedStringResource {
+        let shopping = environment.shopping
+        await shopping.reload()
+        switch shopping.state {
+        case .accessDenied: return "Tagwerk hat keinen Zugriff auf Erinnerungen."
+        case .noList, .listMissing: return "Wähle zuerst in Tagwerk unter Einstellungen › Einkaufsliste eine Liste."
+        case .ready: break
+        }
+        let items = ShoppingInputParser.parseAll(text).items
+        guard !items.isEmpty else { return "Ich habe keinen Artikel verstanden." }
+        let report = await shopping.add(items)
+        return LocalizedStringResource(stringLiteral: Self.shoppingReply(report))
+    }
+
+    /// One sentence per group; reopened items count as added.
+    static func shoppingReply(_ report: ShoppingModel.AddReport) -> String {
+        var sentences: [String] = []
+        let added = report.added + report.reopened
+        if !added.isEmpty {
+            sentences.append(String(localized: "\(added.count) Artikel hinzugefügt:") + " " + added.joined(separator: ", ") + ".")
+        }
+        if report.alreadyOnList.count == 1 {
+            sentences.append(String(localized: "\(report.alreadyOnList[0]) steht schon auf der Liste."))
+        } else if !report.alreadyOnList.isEmpty {
+            sentences.append(String(localized: "\(report.alreadyOnList.joined(separator: ", ")) stehen schon auf der Liste."))
+        }
+        if !report.failed.isEmpty {
+            sentences.append(String(localized: "Das hat nicht geklappt: \(report.errorMessage ?? report.failed.joined(separator: ", "))"))
+        }
+        return sentences.joined(separator: " ")
+    }
+
+    /// "Einkaufsliste zeigen": only navigates, like the `tagwerk://shopping` link.
+    func openShopping() {
+        environment.router.open(.shopping)
+    }
+
     /// Opens the meal sheet with the text prefilled; estimating still needs a tap in the sheet (and consent).
     func openMeal(text: String?) {
         let trimmed = text?.trimmingCharacters(in: .whitespacesAndNewlines)

@@ -49,4 +49,12 @@ struct AppRouterTests {
         #expect(router.receivedCount == 2)
         #expect(router.takeRequest(setupCompleted: true)?.route == .planToday)
     }
+
+    @Test func router_shoppingLink_hasNoPrefill() {
+        let router = AppRouter()
+        #expect(router.open(URL(string: "tagwerk://shopping?add=Bier")!))
+        let request = router.takeRequest(setupCompleted: true)
+        #expect(request?.route == .shopping && request?.prefill == nil)
+        #expect(router.takeCapturePrefill() == nil)
+    }
 }

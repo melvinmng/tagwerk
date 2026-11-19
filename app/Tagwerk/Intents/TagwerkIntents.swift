@@ -72,6 +72,40 @@ struct LogWorkoutIntent: AppIntent {
     }
 }
 
+/// "Auf die Einkaufsliste": runs in the background and adds the named items to the chosen reminder list.
+/// The reply repeats only what was just said, so no unlocked device is required.
+struct AddToShoppingListIntent: AppIntent {
+    static let title: LocalizedStringResource = "Auf die Einkaufsliste"
+    static let description = IntentDescription("Fügt Artikel zur Einkaufsliste hinzu, ohne Tagwerk zu öffnen.")
+    static let supportedModes: IntentModes = .background
+
+    @Parameter(title: "Artikel", requestValueDialog: "Was soll auf die Liste?")
+    var items: String
+
+    @Dependency private var services: IntentServices
+
+    @MainActor
+    func perform() async throws -> some IntentResult & ProvidesDialog {
+        let reply = await services.addToShopping(text: items)
+        return .result(dialog: IntentDialog(reply))
+    }
+}
+
+/// "Einkaufsliste zeigen": opens the shopping page.
+struct OpenShoppingListIntent: AppIntent {
+    static let title: LocalizedStringResource = "Einkaufsliste zeigen"
+    static let description = IntentDescription("Öffnet die Einkaufsliste in Tagwerk.")
+    static let supportedModes: IntentModes = .foreground(.immediate)
+
+    @Dependency private var services: IntentServices
+
+    @MainActor
+    func perform() async throws -> some IntentResult {
+        services.openShopping()
+        return .result()
+    }
+}
+
 /// "Was steht heute an?": events, blocks and deadlines from the widget snapshot, never nutrition.
 struct TodayOverviewIntent: AppIntent {
     static let title: LocalizedStringResource = "Was steht heute an?"
@@ -129,5 +163,13 @@ struct TagwerkShortcuts: AppShortcutsProvider {
             "Was steht heute in \(.applicationName) an",
             "Mein Tag in \(.applicationName)",
         ], shortTitle: "Heute", systemImageName: "calendar")
+        AppShortcut(intent: AddToShoppingListIntent(), phrases: [
+            "Auf die Einkaufsliste in \(.applicationName)",
+            "Zur Einkaufsliste in \(.applicationName) hinzufügen",
+            "Einkaufsliste in \(.applicationName) ergänzen",
+        ], shortTitle: "Auf die Einkaufsliste", systemImageName: "cart.badge.plus")
+        AppShortcut(intent: OpenShoppingListIntent(), phrases: [
+            "Einkaufsliste in \(.applicationName) zeigen",
+        ], shortTitle: "Einkaufsliste zeigen", systemImageName: "cart")
     }
 }

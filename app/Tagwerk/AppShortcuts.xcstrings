@@ -11,6 +11,36 @@
         }
       }
     },
+    "Auf die Einkaufsliste in ${applicationName}": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add to shopping list in ${applicationName}"
+          }
+        }
+      }
+    },
+    "Einkaufsliste in ${applicationName} ergänzen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add items to the shopping list in ${applicationName}"
+          }
+        }
+      }
+    },
+    "Einkaufsliste in ${applicationName} zeigen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show shopping list in ${applicationName}"
+          }
+        }
+      }
+    },
     "Essen in ${applicationName} erfassen": {
       "localizations": {
         "en": {
@@ -87,6 +117,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Log water with ${applicationName}"
+          }
+        }
+      }
+    },
+    "Zur Einkaufsliste in ${applicationName} hinzufügen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add to my shopping list in ${applicationName}"
           }
         }
       }

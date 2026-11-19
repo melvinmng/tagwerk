@@ -292,6 +292,13 @@ final class AppEnvironment {
                                        all: reminderStore.lists().map(\.id), shopping: settings.shoppingListID)
     }
 
+    /// Shows the shopping page in the "Aufgaben" tab, or its settings page while no list is chosen.
+    /// Replaces whatever was pushed there; used by the deep link and the shortcut.
+    func openShopping() {
+        tasksPath = [settings.shoppingListID == nil ? .shoppingSettings : .shopping]
+        requestedTab = 1
+    }
+
     /// The only place that changes the shopping list. Everything that shows reminders as tasks follows at once:
     /// the task list, the plan, the notifications and the widget snapshot.
     func setShoppingList(_ id: String?) async {

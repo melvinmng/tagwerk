@@ -1298,5 +1298,23 @@
   "Anheftung lösen": "Unpin",
   "Einkaufsliste ändern": "Change shopping list",
   "Es ist keine Einkaufsliste eingerichtet. Einstellungen › Einkaufsliste.": "No shopping list is set up. Settings › Shopping List.",
-  "Höchstens 30 Artikel je Aufruf.": "At most 30 items per call."
+  "Höchstens 30 Artikel je Aufruf.": "At most 30 items per call.",
+  "%@ stehen schon auf der Liste.": "%@ are already on the list.",
+  "%@ steht schon auf der Liste.": "%@ is already on the list.",
+  "%lld Artikel hinzugefügt:": {
+    "one": "%lld item added:",
+    "other": "%lld items added:"
+  },
+  "Auf die Einkaufsliste": "Add to Shopping List",
+  "Auf die Einkaufsliste in Tagwerk": "Add to shopping list in Tagwerk",
+  "Das hat nicht geklappt: %@": "That did not work: %@",
+  "Einkaufsliste in Tagwerk zeigen": "Show shopping list in Tagwerk",
+  "Einkaufsliste zeigen": "Show Shopping List",
+  "Fügt Artikel hinzu, ohne Tagwerk zu öffnen": "Adds items without opening Tagwerk",
+  "Fügt Artikel zur Einkaufsliste hinzu, ohne Tagwerk zu öffnen.": "Adds items to the shopping list without opening Tagwerk.",
+  "Ich habe keinen Artikel verstanden.": "I did not catch any item.",
+  "Was soll auf die Liste?": "What should go on the list?",
+  "Wähle zuerst in Tagwerk unter Einstellungen › Einkaufsliste eine Liste.": "First choose a list in Tagwerk under Settings › Shopping List.",
+  "Öffnet die Einkaufsliste": "Opens the shopping list",
+  "Öffnet die Einkaufsliste in Tagwerk.": "Opens the shopping list in Tagwerk."
 }

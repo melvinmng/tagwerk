@@ -1182,7 +1182,7 @@ extension NotesListView {
   - `struct AddToShoppingListIntent: AppIntent` (Titel „Auf die Einkaufsliste“, `supportedModes = .background`, `@Parameter(title: "Artikel", requestValueDialog: "Was soll auf die Liste?") var items: String`, keine `authenticationPolicy`); `struct OpenShoppingListIntent: AppIntent` (Titel „Einkaufsliste zeigen“, `.foreground(.immediate)`, ruft `environment.router.open(.shopping)` über `IntentServices.openShopping()`).
   - Sätze: „Auf die Einkaufsliste in \(.applicationName)“, „Zur Einkaufsliste in \(.applicationName) hinzufügen“, „Einkaufsliste in \(.applicationName) ergänzen“; „Einkaufsliste in \(.applicationName) zeigen“.
 
-- [ ] **Schritt 1: Tests schreiben**
+- [x] **Schritt 1: Tests schreiben**
 
 ```swift
 // AppRouteTests
@@ -1215,10 +1215,10 @@ extension NotesListView {
 }
 ```
 
-- [ ] **Schritt 2:** Die drei Suiten ausführen. Erwartet: Übersetzungsfehler.
-- [ ] **Schritt 3: Umsetzen.** `AppRouter.open`: `.shopping` ohne Prefill. `RootView.openRouterTarget()`: `case .shopping: environment.openShopping()`. `addToShopping`: `await environment.shopping.reload()`, Zustände `.accessDenied`/`.noList`/`.listMissing` → Texte oben (`.listMissing` wie `.noList`), sonst `parseAll` → `add` → Antwort; „wieder geöffnet“ zählt in der Antwort als hinzugefügt; bei `failed` der Satz „Das hat nicht geklappt: %@“ mit `errorMessage`. Kein Aufruf von `taskList`, `planning`, `ai`. Fällt Spike S4 durch: `supportedModes = .foreground(.immediate)`. Zwei `AppShortcut`-Einträge in `TagwerkShortcuts`; zwei Zeilen in `CaptureSettingsView` (`phrase("Auf die Einkaufsliste in Tagwerk", "Fügt Artikel hinzu, ohne Tagwerk zu öffnen")`, `phrase("Einkaufsliste in Tagwerk zeigen", "Öffnet die Einkaufsliste")`).
-- [ ] **Schritt 4:** `AppRouteTests`, `AppRouterTests`, `IntentServicesTests` und `app/test-all.sh`. Erwartet: grün (auch `AppShortcuts.xcstrings` mit englischen Sätzen).
-- [ ] **Schritt 5:** Commit: `git add app && git commit -m "feat: add shopping list shortcuts and deep link"`
+- [x] **Schritt 2:** Die drei Suiten ausführen. Erwartet: Übersetzungsfehler.
+- [x] **Schritt 3: Umsetzen.** `AppRouter.open`: `.shopping` ohne Prefill. `RootView.openRouterTarget()`: `case .shopping: environment.openShopping()`. `addToShopping`: `await environment.shopping.reload()`, Zustände `.accessDenied`/`.noList`/`.listMissing` → Texte oben (`.listMissing` wie `.noList`), sonst `parseAll` → `add` → Antwort; „wieder geöffnet“ zählt in der Antwort als hinzugefügt; bei `failed` der Satz „Das hat nicht geklappt: %@“ mit `errorMessage`. Kein Aufruf von `taskList`, `planning`, `ai`. Fällt Spike S4 durch: `supportedModes = .foreground(.immediate)`. Zwei `AppShortcut`-Einträge in `TagwerkShortcuts`; zwei Zeilen in `CaptureSettingsView` (`phrase("Auf die Einkaufsliste in Tagwerk", "Fügt Artikel hinzu, ohne Tagwerk zu öffnen")`, `phrase("Einkaufsliste in Tagwerk zeigen", "Öffnet die Einkaufsliste")`).
+- [x] **Schritt 4:** `AppRouteTests`, `AppRouterTests`, `IntentServicesTests` und `app/test-all.sh`. Erwartet: grün (auch `AppShortcuts.xcstrings` mit englischen Sätzen).
+- [x] **Schritt 5:** Commit: `git add app && git commit -m "feat: add shopping list shortcuts and deep link"`
 
 ---
 

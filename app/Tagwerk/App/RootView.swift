@@ -141,6 +141,7 @@ struct RootView: View {
         switch request.route {
         case .planToday: showDay(environment.planning.today)
         case .capture, .captureMeal, .captureWorkout, .review: selectedTab = 3
+        case .shopping: environment.openShopping()
         }
     }
 

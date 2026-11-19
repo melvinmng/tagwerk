@@ -54,6 +54,8 @@ struct CaptureSettingsView: View {
                 phrase("Mahlzeit in Tagwerk erfassen", "Öffnet das Blatt „Essen“")
                 phrase("Training in Tagwerk erfassen", "Öffnet das Blatt „Training“")
                 phrase("Was steht heute in Tagwerk an?", "Nennt Termine, Blöcke und Deadlines von heute")
+                phrase("Auf die Einkaufsliste in Tagwerk", "Fügt Artikel hinzu, ohne Tagwerk zu öffnen")
+                phrase("Einkaufsliste in Tagwerk zeigen", "Öffnet die Einkaufsliste")
             } header: {
                 Text("Siri & Kurzbefehle")
             } footer: {
