@@ -4401,6 +4401,16 @@
         }
       }
     },
+    "Es ist keine Einkaufsliste eingerichtet.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No shopping list is set up."
+          }
+        }
+      }
+    },
     "Essen": {
       "localizations": {
         "en": {

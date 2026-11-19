@@ -688,7 +688,7 @@ public enum ShoppingCategoryRules {
   - Schreibvorgänge prüfen vor dem Schreiben über `store.reminder(id:)`, dass `listID == settings.shoppingListID`.
   - Jede Schreibfunktion endet mit `reload()`.
 
-- [ ] **Schritt 1: Tests schreiben** (Store mit Liste `shop` „Einkauf“ und `uni`; `now` fest; Kategorien geseedet)
+- [x] **Schritt 1: Tests schreiben** (Store mit Liste `shop` „Einkauf“ und `uni`; `now` fest; Kategorien geseedet)
 
 ```swift
 @Test func reload_readsOpenAndRecentlyCompletedOfShoppingListOnly() async
@@ -730,10 +730,10 @@ public enum ShoppingCategoryRules {
 @Test func noAccess_stateAccessDenied() async
 ```
 
-- [ ] **Schritt 2:** Suite ausführen. Erwartet: Übersetzungsfehler.
-- [ ] **Schritt 3: Umsetzen.** `ShoppingItem` aus `ReminderRecord` über `ShoppingItem.quantity(fromNotes:)`. R4 arbeitet auf dem frisch geladenen Stand und führt den Stand je verarbeitetem Artikel nach (dadurch greift Review Focus 1 ohne Sonderfall). Fällt Spike S2 für `completionDate` durch, gilt die Folge aus Task 1; fällt S5 durch, `loadCompleted()` abspalten.
-- [ ] **Schritt 4:** Suiten `ShoppingModelTests`, `ShoppingExclusionTests` ausführen. Erwartet: grün.
-- [ ] **Schritt 5:** Commit: `git add app/Tagwerk app/TagwerkTests && git commit -m "feat: add shopping model on top of reminders"`
+- [x] **Schritt 2:** Suite ausführen. Erwartet: Übersetzungsfehler.
+- [x] **Schritt 3: Umsetzen.** `ShoppingItem` aus `ReminderRecord` über `ShoppingItem.quantity(fromNotes:)`. R4 arbeitet auf dem frisch geladenen Stand und führt den Stand je verarbeitetem Artikel nach (dadurch greift Review Focus 1 ohne Sonderfall). Fällt Spike S2 für `completionDate` durch, gilt die Folge aus Task 1; fällt S5 durch, `loadCompleted()` abspalten.
+- [x] **Schritt 4:** Suiten `ShoppingModelTests`, `ShoppingExclusionTests` ausführen. Erwartet: grün.
+- [x] **Schritt 5:** Commit: `git add app/Tagwerk app/TagwerkTests && git commit -m "feat: add shopping model on top of reminders"`
 
 ---
 

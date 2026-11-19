@@ -17,6 +17,10 @@ final class AppEnvironment {
     /// Reminders for tasks, planning, the weekly review and the shopping list; the gateway unless a test passes a fake.
     let reminderStore: any ReminderStore
     let settings: AppSettings
+    /// Categories of the shopping list and the learned assignments (phase 5).
+    let shoppingCategories: ShoppingCategoryStore
+    /// The shopping list; reads and writes the chosen reminder list.
+    let shopping: ShoppingModel
     let taskList: TaskListModel
     let planning: PlanningModel
     let gitHubTokens: TokenManager
@@ -83,6 +87,9 @@ final class AppEnvironment {
         self.settings = settings
         self.gateway = gateway
         self.reminderStore = reminderStore
+        let shoppingCategories = ShoppingCategoryStore(context: context, settings: settings)
+        self.shoppingCategories = shoppingCategories
+        self.shopping = ShoppingModel(store: reminderStore, settings: settings, categories: shoppingCategories)
         let taskList = TaskListModel(providers: [reminders, LocalTaskProvider(context: context)])
         self.taskList = taskList
         let planStore = PlanStore(context: context)
@@ -279,6 +286,7 @@ final class AppEnvironment {
         settings.shoppingListID = id
         await taskList.reload(only: [.reminders])
         await planning.reload()
+        await shopping.reload()
         notifications.scheduleSoon()
         scheduleSnapshot()
     }
@@ -324,6 +332,8 @@ final class AppEnvironment {
                 // EventKit changes concern Reminders only; GitHub and local tasks stay as they are.
                 await self?.taskList.reload(only: [.reminders])
                 await self?.planning.reload()
+                // The shopping list follows here, because the stream has room for one consumer only.
+                await self?.shopping.reload()
                 // Deadline calendar events may have changed; this is the only consumer of `changes`.
                 self?.notifications.scheduleSoon()
                 // Today's events may have changed while "Planen" shows another period.

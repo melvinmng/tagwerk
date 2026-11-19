@@ -47,6 +47,7 @@ struct TagwerkApp: App {
                     if environment.settings.setupCompleted {
                         await environment.taskList.reload()
                         await environment.planning.reload()
+                        await environment.shopping.reload()
                     }
                     await environment.activateGitHubIfSignedIn()
                     environment.startReconnectWatch()
