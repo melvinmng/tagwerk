@@ -122,12 +122,20 @@ final class NotificationScheduler {
             return !replaceable.contains { request.id.hasPrefix(PlannedNotification.identifierPrefix(for: $0)) }
         }
 
+        // Quiet hours and the Focus filter (plan quiet-hours). A Focus start that iOS never ended is dropped here.
+        let quietHours = settings.quietHours
+        let focus = FocusQuiet.dropping(staleIn: settings.focusQuietState, now: current)
+        if focus != settings.focusQuietState { settings.focusQuietState = focus }
+        let focusHold = FocusQuiet.hold(since: focus.since, now: current, quietHours: quietHours, calendar: calendar)
+        let catchUpFrom = focus.since == nil ? focus.catchUpFrom : nil
+
         // Planned without the margin: a request that fires within the next minute stays when it is still wanted
         // unchanged, but nothing new is added that close (it could be in the past once iOS receives it).
         let rules = NotificationRules(leadTimeMinutes: settings.leadTimeMinutes,
                                       includesDeadlineCalendars: settings.deadlineCalendarNotifications,
                                       taskSources: enabled,
-                                      limit: max(0, Self.limit - kept.count), minimumDelay: 0)
+                                      limit: max(0, Self.limit - kept.count), minimumDelay: 0,
+                                      quietHours: quietHours, focusHold: focusHold, focusCatchUpFrom: catchUpFrom)
         let tasks = taskList.items.filter { replaceable.contains($0.id.source) }
         let locale = locale()
         let wanted = notificationPlan(tasks: tasks, deadlineEvents: events ?? [], rules: rules, now: current, calendar: calendar,
@@ -155,6 +163,8 @@ final class NotificationScheduler {
                 log.error("Adding a notification failed: \(error.localizedDescription, privacy: .public)")
             }
         }
+        // The catch-up happens once: a later run would plan the same notifications again.
+        if catchUpFrom != nil { settings.focusQuietCatchUpFrom = nil }
     }
 
     /// Removes the notifications of a source after a voluntary sign-out (its state is gone, not `.signedOut`).

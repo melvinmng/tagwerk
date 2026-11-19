@@ -28,6 +28,18 @@ final class IntentServices {
         return "\(amountText) ml Wasser erfasst."
     }
 
+    /// The Focus filter "Mitteilungen ruhen lassen" (plan quiet-hours, decision 5): iOS runs it when a Focus with the
+    /// filter starts (`active`) and, with the default value, when it ends. Remembers the state and plans the
+    /// notifications again; the plan holds them back while active and lets those that came due fire after the end.
+    func setFocusQuiet(active: Bool, now: Date = .now) async {
+        let settings = environment.settings
+        settings.focusQuietState = FocusQuiet.applying(active: active, now: now, to: settings.focusQuietState)
+        try? environment.modelContainer.mainContext.save()
+        // A cold start in the background has loaded nothing; sources that are not loaded keep their old requests.
+        if settings.setupCompleted { await environment.loadTasksInBackground() }
+        await environment.notifications.reschedule()
+    }
+
     /// The habits active today, for the shortcut's choice of habit.
     func activeHabits() -> [Habit] {
         let habits = environment.habits
