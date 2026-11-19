@@ -202,3 +202,77 @@ Jede Entscheidung nennt die Wahl und das Risiko, falls sie falsch ist.
 
 - AIKit 98, GitHubKit 137 (vorher 129), HealthBridge 11, RemindersKit 87 (vorher 84), TagwerkCore 571 (vorher 529), App 965 (vorher 893) Tests bestanden.
 - Letzte Zeile: `ALL TESTS PASSED`
+
+## Phase 7 Routinen
+
+Plan: `plans/2026-11-19-phase-7-routines.md` · Spec: `specs/2026-11-19-phase-7-routines-design.md` (§9.2: KI-Kontext sind die offenen Aufgaben und Termine der nächsten 7 Tage) · Branch `feat/search-issues-planning`, aufgesetzt auf dem Stand von #136, Phase 5 und Suche.
+Umgesetzt sind die Tasks 4–16 (Gewohnheiten, Tagesabschluss, Tagesstart, Fokus, Gedanken-Notiz mit Vorschlägen, Wochenreflexion, Leitfragen). Die Spikes (Tasks 1–3), die optionale Tageslicht-Quelle (Task 17) und die Geräte-Schritte von Task 18 sind offen.
+
+Commits (in Reihenfolge): `907b40d` Datentypen und `HabitRules` · `5c29fcf` `HabitsModel`, Zähler in „Planen“ · `3e5f5e9` Abschnitt, Liste und Blatt „Gewohnheit“ · `e55e719` Kurzbefehl, Snapshot, Widget · `dbbf9da` Tageseintrag, Checkliste, Einstellungen › Routinen · `5c89f0d` Blatt „Tagesabschluss“, Routen, Abendzeile · `3eb3129` wiederholende Mitteilungen · `9ecff95` Blatt „Tagesstart“, Morgen-Erinnerung · `0f504ed` Fokus, Routine-Karte, Stern · `5078322` Gedanken-Notiz · `ada7f38` Vorschläge aus der Notiz · `e6afae0` Wochenreflexion · `0642ff0` Leitfragen · `26f82ad` Korrektur nach der Sichtprüfung (Karte umbrechen, „0/0“ vermeiden).
+
+**Schnittstellen für spätere Arbeit:** `AppRoute.routineStart`/`.routineEvening`, `SnapshotDay.habits`, `NoteRecord.derivedActionCount`, `ActionCardDescriber` (von `AssistantModel.describe` und `NoteSuggestionModel` genutzt), `PlanningModel.focusTaskIDs` und `taskIDsWithBlocks(on:)`, `NoteStore.saveThought`/`addDerivedAction`.
+
+### (a) Entscheidungen
+
+Jede Entscheidung nennt die Wahl und das Risiko, falls sie falsch ist.
+
+1. **Spikes, Tageslicht und Geräteschritte nicht ausgeführt.** Die Quelle „Zeit bei Tageslicht“ (Task 17) ist nicht gebaut: Sie ändert Health-Lesetypen und `InfoPlist`; die Freigabe lässt sich ohne Gerät nicht prüfen. `HabitSource.daylight` liegt im Datentyp und in den Regeln, erscheint aber nie in der Auswahl. Risiko: keines für den Bestand; die Quelle fehlt bis zum Spike.
+2. **Benachrichtigungstexte der Notizliste (Hinweis des Auftrags):** Der Fußtext der Notizenliste lautet jetzt „Notizen liegen nur auf diesem iPhone. An ChatGPT geht eine Gedanken-Notiz nur, wenn du bei ihr auf ‚Vorschläge holen‘ tippst.“ Der alte Katalogschlüssel („… nicht an ChatGPT gesendet“) ist gelöscht. Eine Suche in App und Katalogen ergab keinen weiteren Text, der behauptet, Notizen gingen nie an ChatGPT.
+3. **Tagesrückblick „Aufgaben erledigt e von n“:** e zählt Erledigungen aus Erinnerungen und lokalen Aufgaben (die Leser des Wochenrückblicks), n = e + offene Aufgaben des Tages; GitHub-Issues zählen nur als offen. Fußtext im Blatt: „Erledigt: Erinnerungen und lokale Aufgaben, ohne GitHub.“ Risiko: Die Zahl ist für GitHub-Nutzer zu niedrig.
+4. **Zähler im Snapshot bleibt hoch, wenn Health nicht lesbar ist (Review Focus 2).** Ohne aktuelle Health-Werte (Kaltstart, Hintergrund, fehlgeschlagene Abfrage) behält der Snapshot den zuletzt geschriebenen Zähler desselben Tages, wenn er höher ist und `total` gleich bleibt (`snapshotHabits(existing:now:)`). Risiko: Ein bewusst zurückgenommenes Handhäkchen senkt den Wert im Widget erst nach dem nächsten Health-Lauf; ein Siri-Häkchen bei Health-Gewohnheiten ohne Health-Lesung kann im Widget bis zum nächsten App-Start fehlen.
+5. **Wöchentliches Ziel zählt künftige Tage der laufenden Woche mit** (`isCountable` ohne „nicht in der Zukunft“). Sonst wäre das Ziel am Montag `round(3·1/7) = 1` und nach einem Häkchen erreicht. Risiko: bei Pausen mitten in der Woche rundet das Ziel anteilig wie im Spec.
+6. **Serie in Wochen:** Die Obergrenze ist 12 Wochen („12+“), unabhängig davon, ob die laufende Woche mitgezählt wird (Plan-Test: 13 erreichte Wochen ergeben `.weeks(12, isCapped: true)`).
+7. **Automatische Zeilen** zeigen die Marke „automatisch“ und die Quelle dauerhaft; ein Tipp ändert nichts (Spec: „Tippen zeigt die Quelle“). Risiko: weniger interaktiv als im Spec; die Information ist dieselbe.
+8. **Health wird nur beim Erscheinen von „Erfassen“, beim Ziehen und beim Aktivwerden gelesen**, nicht bei jedem Tageswechsel in „Erfassen“ (`HabitsModel.show` liest nur den Speicher). Risiko: Health-Werte eines vergangenen Tages stehen erst nach dem nächsten Lauf da; innerhalb des 90-Tage-Fensters sind sie bereits geladen.
+9. **Englische Texte „Tagesstart“/„Tagesabschluss“** lauten jetzt „Morning start“/„Evening wrap-up“ (Spec §12) statt „Morning“/„Evening“ aus Phase 5; `LocalizedTests` ist angepasst. Risiko: Die Herkunftszeile der Notizliste wird auf Englisch länger.
+10. **Vorschläge aus der Notiz:** `create_task` mit `source: "github"` wird verworfen (kein `list_github_targets`, Zuweisungen sind nicht prüfbar; die Karten der Zuweisung aus #136 gelten damit nicht für Notiz-Karten). Der Kontext schneidet bei mehr als 60 Aufgaben die ältesten und bei mehr als 100 Terminen die spätesten ab (Spec §9.2). `update_event` ist auf Termine beschränkt, die Tagwerk geschrieben hat (`canEditAsBlock`, Abweichung A7). Risiko: keine Issue-Vorschläge aus Notizen.
+11. **Der Pfeil in der Aufnahmeleiste der Notiz ist abgeschaltet** (`canSend: false`): `DictationMachine.send` würde den Entwurf leeren; das Diktat füllt nur das Feld. Das Diktat steht an der Schreibmarke, der Text dahinter wird nach dem Diktat wieder angesetzt.
+12. **Schließen des Blatts** (`routines.sheet == nil`) beendet eine Aufnahme, verwirft offene Karten und späte Antworten; `onDisappear` der Zeile speichert nur den Text, weil Formularzeilen beim Scrollen verschwinden.
+13. **Spec/Plan-Lücke bei der Notiz „ausgeführte Vorschläge“:** `derivedActionCount` zählt nur Karten ohne Fehler und „Als Aufgabe anlegen“, wenn `NewTaskSheet.create` keinen neuen Fehlertext setzt (die Funktion liefert kein Ergebnis).
+14. **String-Kataloge:** Das App-Format bleibt kompakt; Abgleich über ein Hilfsskript im Scratchpad (nicht im Repository). Englische Texte stehen zusätzlich in `scripts/translations/en.json`. Plural-Formen sind vermieden: „1 Termin“/„1 Aufgabe“/„Serie 1 Woche“ haben eigene Schlüssel. Prozentwerte erscheinen in beiden Sprachen als „73 %“.
+15. **Zusätzliche Texte, die das Spec nicht nennt:** Hinweis „Mitteilungen sind für Tagwerk nicht erlaubt …“ samt Knöpfen, „Heute ausblenden“, „An diesem Tag ist keine Gewohnheit aktiv.“, „In dieser Woche war keine Gewohnheit aktiv.“, „Heute ist noch keine Aufgabe geplant.“, „Vorschläge werden geholt …“, Fehlertexte der Vorschläge, VoiceOver-Texte der Zeilen.
+
+### (b) Abweichungen vom Plan
+
+- **Task 4/15:** `HabitRules.weekSummaries` und `HabitWeekSummary` (Task 15) entstanden schon in Task 4, mit den Core-Tests dort. Der Schema-Test für `HabitRecord` liegt in `HabitStoreTests`, nicht in `ModelStoreLocationTests`.
+- **Task 5:** `FakeHealthStore` zählt Abfragen schon (`foreignReads`, `stepsReads`, `failStepReads`); keine neuen Zähler.
+- **Task 7:** Die Phrase nutzt `HabitEntity` mit eigener Abfrage; `HabitsModel.onListChanged` aktualisiert die Siri-Parameter (nicht `onChanged`).
+- **Task 8:** `RoutineSchedule.suggestedItems` ist eine berechnete Eigenschaft (Titel in der Sprache beim Übernehmen); `RoutineStore` ist `@Observable`.
+- **Task 9:** `RoutinesModel.tasks(of:)` verallgemeinert Regel 12 auf beliebige Tage; neu ist `PlanningModel.taskIDsWithBlocks(on:)`.
+- **Task 10:** `NotificationDelegate.handle(_:)` als testbarer Einstieg; `RoutineNotificationScheduler` ist `@Observable` und reiht Läufe ein. Die Mitteilungsplanung der Routinen läuft zusätzlich über `Observations` (Schlafzeit, Schalter, Checkliste).
+- **Task 12:** Der Stern liest `PlanningModel.focusTaskIDs` (von `RoutinesModel` gesetzt), statt `RoutinesModel` durch die Zeitleiste zu reichen. `RoutinesModel.init` hat eine optionale Closure `isRecurring` (Testnaht).
+- **Task 13:** `NoteStore.save()` ist nicht mehr privat. `NoteField` ist eine einzige Formularzeile.
+- **Task 14:** `ActionCardDescriber` ist wirklich herausgelöst (inklusive `spoken:`), `AssistantModel.describe` leitet weiter; die vorhandenen `describe`-Tests blieben unverändert grün. Die Funktionsliste wird aus `AppTools.definitions` gefiltert.
+- **TDD:** Für Task 4 (App-Teil), Task 6 (`HabitText`), Task 14 und Teile von Task 13/16 liefen Test und Code in einem Schritt; ein eigener roter Lauf wurde nicht in jedem Task gesehen. Rot gesehen wurde bei Core-Tests (Tasks 4, 7, 8, 9, 10, 11, 16) und bei den App-Tests der Tasks 5, 7, 8, 9, 10, 11, 12, 13, 15.
+- `app/test-all.sh` lief vor jedem Commit (nach Task 4 nachgeholt). Er dauert etwa eine Minute.
+- Sichtprüfung im Simulator (iPhone 17, Demo-Daten) am Ende für Planen (Zähler, Tagesstart-Karte), Erfassen (Routinen, Gewohnheiten), Blatt „Gewohnheit“ (anlegen, abhaken) und Blatt „Tagesstart“; daraus entstand `26f82ad`.
+- Abschlussreview: Selbstreview des Autors, kein unabhängiger Reviewer (keine Subagenten erlaubt).
+
+### (c) Offene manuelle Prüfungen am Gerät
+
+- **Task 1:** Tageslicht-Spike (Watch, Freigabe, Werte ohne Watch). **Task 2:** antippbares Widget. **Task 3:** Aktionen in Mitteilungen. **Task 17** (Quelle „Zeit bei Tageslicht“) hängt an Task 1.
+- **Task 10 Schritt 5:** Mitteilung kommt ohne App-Start; überlebt Neustart und Drüberinstallieren; Verhalten im Fokus „Schlafen“; Tippen öffnet das Blatt bei beendeter App.
+- **Task 13 Schritt 4:** Spracheingabe im Notizfeld außerhalb des Assistenten (Diktat an der Schreibmarke).
+- **Task 18 Schritte 2–3:** Zeitumstellung und Zeitzonenwechsel bei wiederholenden Auslösern; Siri erkennt die deutsche Phrase mit Gewohnheitsnamen; Abhaken bei gesperrtem Gerät; fünf Routine-Mitteilungen bei vollen 50 Deadline-Plätzen; Höhe der Routine-Karte auf dem kleinsten Gerät; Drüberinstallieren über einen Stand vor Phase 7 (Store öffnet, Widget liest alte Snapshot-Datei).
+- Widget „Heute“ mit und ohne Ernährung (Zähler, Platz in der rechten Spalte); Sperrbildschirm-Widgets zeigen den Zähler nie.
+- Sichtprüfung: Blatt „Tagesabschluss“ (abends), Fokus-Karte und Sterne in Liste und Stundenraster, Wochenrückblick-Abschnitte, Einstellungen › Routinen, Zustimmungsblatt und Vorschlagskarten (braucht ChatGPT-Anmeldung), jeweils hell, dunkel, größte Schrift, Englisch, VoiceOver.
+- Echter Lauf von „Vorschläge holen“ gegen ChatGPT (Qualität der Karten, Latenz, `update_event` auf einem Zeitblock).
+
+### (d) Bekannte Lücken / nicht umgesetzt
+
+- Für Ansichten (Karte, Blätter, Abschnitte) gibt es keine UI-Tests; getestet ist die Logik dahinter.
+- Das Widget wurde nicht im Simulator angesehen; die Planen-Zeile, Erfassen und das Blatt „Tagesstart“ schon.
+- Die Quelle `daylight` ist nur Datentyp und Regel; ohne Spike gibt es keine Auswahl und keine Freigabe.
+- Bei Health-Gewohnheiten ohne aktuelle Health-Lesung kann der Zähler im Snapshot kurz zu hoch oder zu niedrig stehen (Entscheidung 4).
+- Die Tagesstart-Karte zeigt die Zahlen erst nach dem Laden der Aufgaben; die Karte kann „0 Aufgaben“ nennen, das Blatt danach „1 Aufgabe“.
+- `HabitsSection` hängt die Blätter an die Section; bei mehreren Zeilen gilt ein einzelnes `item`, das Anlegen und Öffnen wurde im Simulator einmal geprüft, nicht alle Wege.
+- Vorschläge aus der Notiz erzeugen keine GitHub-Issues (Entscheidung 10); Karten kennen keine Rückfrage zur Zuweisung.
+- Die Gedanken-Notiz im Assistenten, Aktionen in Mitteilungen, antippbares Widget und feste Wochentage bleiben Nicht-Ziele des Specs.
+- Abschlussreview: Selbstreview des Autors.
+
+### (e) Testergebnis
+
+`app/test-all.sh`, letzter Lauf nach dem letzten Code-Commit (`26f82ad`), alle Stufen grün einschließlich „string catalogs“ (`check-strings.py --require-english` und `sync-strings.sh --check`):
+
+- AIKit 98, GitHubKit 137, HealthBridge 11, RemindersKit 87, TagwerkCore 621 (vorher 571), App 1107 (vorher 965) Tests bestanden.
+- Letzte Zeile: `ALL TESTS PASSED`
