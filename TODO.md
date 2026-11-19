@@ -146,6 +146,7 @@ GitHub-Konto: @melvinmng · bestätigt zuweisbar · geprüft 2026-11-17 · ich
 - [ ] [#181](https://github.com/melvinmng/tagwerk/issues/181) Gewohnheiten: Vorschlag aus dem früheren Notion-Tracker übernehmen {status: Backlog; prio: P3 (Medium); epic: #140}
 - [ ] [#182](https://github.com/melvinmng/tagwerk/issues/182) Tagebuch mit Gott aus Notion übernehmen {status: Backlog; prio: P3 (Medium); epic: #113}
 - [ ] [#184](https://github.com/melvinmng/tagwerk/issues/184) Tastatur überall in der App per Tipp auf eine leere Fläche schließen {status: Backlog; prio: P3 (Medium)}
+- [ ] [#186](https://github.com/melvinmng/tagwerk/issues/186) Bible Study in Tagwerk: Ablauf und Struktur aus Notion übernehmen {status: Backlog; prio: P3 (Medium)}
 
 ## Notizen
 
@@ -154,7 +155,7 @@ GitHub-Konto: @melvinmng · bestätigt zuweisbar · geprüft 2026-11-17 · ich
 
 _Automatisch aus [Tagwerk](https://github.com/users/melvinmng/projects/17) erzeugt. Nicht von Hand bearbeiten; Aufgaben oben unter den Personen pflegen._
 
-### Backlog (31)
+### Backlog (32)
 - [#115](https://github.com/melvinmng/tagwerk/issues/115) Phase 6: Jira als Aufgabenquelle anbinden · @melvinmng · Prio P4 (Low)
 - [#134](https://github.com/melvinmng/tagwerk/issues/134) Tage und Wochen in „Planen“ und „Erfassen“ als mitziehbare Seiten blättern (Finger zieht den Nachbartag mit) · @melvinmng · Prio P4 (Low)
 - [#141](https://github.com/melvinmng/tagwerk/issues/141) Gewohnheiten täglich abhaken und Quoten zeigen · @melvinmng · Prio P3 (Medium) · 16h
@@ -186,6 +187,7 @@ _Automatisch aus [Tagwerk](https://github.com/users/melvinmng/projects/17) erzeu
 - [#181](https://github.com/melvinmng/tagwerk/issues/181) Gewohnheiten: Vorschlag aus dem früheren Notion-Tracker übernehmen · @melvinmng · Prio P3 (Medium)
 - [#182](https://github.com/melvinmng/tagwerk/issues/182) Tagebuch mit Gott aus Notion übernehmen · @melvinmng · Prio P3 (Medium)
 - [#184](https://github.com/melvinmng/tagwerk/issues/184) Tastatur überall in der App per Tipp auf eine leere Fläche schließen · @melvinmng · Prio P3 (Medium)
+- [#186](https://github.com/melvinmng/tagwerk/issues/186) Bible Study in Tagwerk: Ablauf und Struktur aus Notion übernehmen · @melvinmng · Prio P3 (Medium)
 
 ### Bereit (6)
 - [#159](https://github.com/melvinmng/tagwerk/issues/159) UI-Tests für die Hauptwege · @melvinmng · Prio P3 (Medium)
