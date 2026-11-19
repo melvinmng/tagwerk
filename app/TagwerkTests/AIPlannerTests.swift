@@ -913,4 +913,40 @@ extension AIPlannerTests {
         #expect(store.batches().filter { $0.scope == .day }.isEmpty)
         #expect(planner.dismissedCount == 1)
     }
+
+    // MARK: Expected effort (plan P3, #162)
+
+    @Test func instructions_mentionExpectedMinutesOnlyWhenPresent() {
+        let without = AIPlanner.instructions(.day, language: .german)
+        let with = AIPlanner.instructions(.day, language: .german, usesExpectedMinutes: true)
+        #expect(!without.contains("expectedMinutes"))
+        #expect(with.contains("expectedMinutes: erwarteter Aufwand aus bisherigen Messungen der Person"))
+        #expect(with.contains("statt minutes"))
+    }
+
+    @Test func historySwitchOff_sendsNoExpectedMinutes() async throws {
+        var bike = makeTask("Fahrrad", source: .local, due: DueDate(year: 2026, month: 11, day: 18))
+        bike.estimateMinutes = 30
+        local.tasks = [bike]
+        github.tasks = []
+        // Three measured completions that took 1.5 times the estimate.
+        let focusStore = FocusStore(context: container.mainContext)
+        let tracker = EffortTracker(store: focusStore, blocks: blocks, calendarStore: calendarStore, settings: settings, now: testNow)
+        for offset in 1...3 {
+            focusStore.add(EffortSampleRecord(taskKey: "local:alt\(offset)", source: .local, labels: [], estimateMinutes: 30, actualMinutes: 45,
+                                              method: .blocks, completedAt: testNow().addingTimeInterval(TimeInterval(-offset * 86_400))))
+        }
+        responder.enqueue(Self.dayAnswer(Self.block("local:Fahrrad", "14:00", 45)))
+        responder.enqueue(Self.dayAnswer(Self.block("local:Fahrrad", "14:00", 45)))
+        let (planner, _) = await make()
+        planner.expectedMinutes = { tracker.expectedMinutes(for: $0) }
+        await planner.plan(scope: .day, anchor: today)
+        #expect(lastInputText().contains("\"expectedMinutes\":45"))
+        #expect(responder.instructions.last?.contains("expectedMinutes: erwarteter Aufwand") == true)
+
+        settings.effortHistoryInPlanning = false
+        await planner.plan(scope: .day, anchor: today)
+        #expect(!lastInputText().contains("expectedMinutes"))
+        #expect(responder.instructions.last?.contains("expectedMinutes") == false)
+    }
 }

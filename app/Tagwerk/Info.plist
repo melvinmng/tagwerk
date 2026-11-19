@@ -51,6 +51,8 @@
 	<string>Tagwerk wandelt deine Sprache auf dem iPhone in Text um. Der Ton verlässt das Gerät nicht.</string>
 	<key>NSRemindersFullAccessUsageDescription</key>
 	<string>Tagwerk liest und bearbeitet deine Erinnerungen, um sie mit deinen anderen Aufgaben zusammenzuführen.</string>
+	<key>NSSupportsLiveActivities</key>
+	<true/>
 	<key>TagwerkAppGroup</key>
 	<string>group.$(TAGWERK_BUNDLE_ID)</string>
 	<key>UIBackgroundModes</key>

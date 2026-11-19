@@ -68,6 +68,7 @@ struct CaptureView: View {
                 mealSection
                 drinkSection
                 workoutSection
+                FocusCaptureSection()
             }
             .pageSwipe(daySwipe)
             .navigationTitle("Erfassen")

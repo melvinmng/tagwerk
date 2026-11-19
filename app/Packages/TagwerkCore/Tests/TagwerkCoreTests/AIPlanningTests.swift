@@ -566,6 +566,33 @@ struct AIPlanningTests {
         #expect(firstTask["id"] as? String == "local:a")
     }
 
+    @Test func modelJSON_includesExpectedMinutesOnlyWhenDifferent() throws {
+        var different = task("a", minutes: 30)
+        different.expectedMinutes = 45
+        var same = task("b", minutes: 30)
+        same.expectedMinutes = 30
+        let plain = task("c", minutes: 30)
+        let json = try #require(try JSONSerialization.jsonObject(
+            with: input(tasks: [different, same, plain]).modelJSON()) as? [String: Any])
+        let tasks = try #require(json["tasks"] as? [[String: Any]])
+        #expect(tasks[0]["expectedMinutes"] as? Int == 45)
+        #expect(tasks[1]["expectedMinutes"] == nil)
+        #expect(tasks[2]["expectedMinutes"] == nil)
+    }
+
+    @Test func input_withoutHistory_isUnchanged() throws {
+        let tasks = [item("a", due: DueDate(year: 2026, month: 11, day: 18))]
+        let without = makeInput(tasks: tasks)
+        #expect(without.tasks.allSatisfy { $0.expectedMinutes == nil })
+        let withHistory = makePlanInput(scope: .day, days: [planDay(today)], tasks: tasks, assignments: [:], anchors: [:], today: today,
+                                        nowMinutes: nowMinutes, timeZoneID: "Europe/Berlin", defaultTaskMinutes: 30,
+                                        expectedMinutes: ["local:a": 45], calendar: calendar)
+        #expect(withHistory.tasks.first?.expectedMinutes == 45)
+        // The JSON of an input without history has no such field at all.
+        let json = String(decoding: try without.modelJSON(), as: UTF8.self)
+        #expect(!json.contains("expectedMinutes"))
+    }
+
     // MARK: Schemas and decoding
 
     @Test func schemas_areStrictAndParse() throws {

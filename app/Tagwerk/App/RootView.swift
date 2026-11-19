@@ -16,6 +16,10 @@ struct RootView: View {
         Binding(get: { environment.assistant.isPresented }, set: { environment.assistant.isPresented = $0 })
     }
 
+    private var focusPresented: Binding<Bool> {
+        Binding(get: { environment.focus.isPresented }, set: { environment.focus.isPresented = $0 })
+    }
+
     private var routinesSheet: Binding<RoutinesModel.Sheet?> {
         Binding(get: { environment.routines.sheet }, set: { environment.routines.sheet = $0 })
     }
@@ -64,6 +68,9 @@ struct RootView: View {
         .sheet(isPresented: assistantPresented) {
             ChatView(assistant: environment.assistant)
         }
+        .sheet(isPresented: focusPresented) {
+            FocusTimerView()
+        }
         .sheet(isPresented: searchPresented, onDismiss: { environment.closeSearch() }) {
             if let model = environment.activeSearch {
                 SearchSheet(model: model,
@@ -74,12 +81,16 @@ struct RootView: View {
         .background(KeyboardDismissalInstaller())
         .onChange(of: environment.assistant.isPresented) { _, presented in
             // The chat is its own sheet over the tabs; other sheets close first.
-            if presented { editingTask = nil; openEvent = nil; recurringEdit = nil; environment.routines.sheet = nil; environment.closeSearch() }
+            if presented { editingTask = nil; openEvent = nil; recurringEdit = nil; environment.routines.sheet = nil; environment.closeSearch(); environment.focus.isPresented = false }
+        }
+        .onChange(of: environment.focus.isPresented) { _, presented in
+            // The focus timer is a sheet over the tabs like the chat; other sheets close first.
+            if presented { editingTask = nil; openEvent = nil; recurringEdit = nil; environment.routines.sheet = nil; environment.closeSearch(); environment.assistant.isPresented = false }
         }
         .onChange(of: environment.notificationNavigator.receivedCount) { _, _ in openNotificationTarget() }
         .onChange(of: environment.router.receivedCount) { _, _ in openRouterTarget() }
         .onChange(of: environment.settings.setupCompleted) { _, _ in openRouterTarget() }
-        .onOpenURL { url in environment.router.open(url) }
+        .onOpenURL { url in if !environment.focus.open(url: url) { environment.router.open(url) } }
         // An intent may set the route before the first render; then `onChange` never fires.
         .onAppear { openRouterTarget() }
         // A tap on a cold start arrives before the tasks are there. Local tasks load within one update, so the

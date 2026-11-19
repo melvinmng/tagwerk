@@ -1623,6 +1623,22 @@
         }
       }
     },
+    "%lld gewachsen · %lld gewelkt": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$lld gewachsen · %2$lld gewelkt"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld grown · %2$lld wilted"
+          }
+        }
+      }
+    },
     "%lld h": {
       "localizations": {
         "en": {
@@ -1675,6 +1691,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "%lld min"
+          }
+        }
+      }
+    },
+    "%lld min Fokus": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld min of focus"
           }
         }
       }
@@ -3544,6 +3570,16 @@
         }
       }
     },
+    "Aufgabe erledigen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Complete task"
+          }
+        }
+      }
+    },
     "Aufgabe hier einplanen …": {
       "localizations": {
         "en": {
@@ -3560,6 +3596,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Find task"
+          }
+        }
+      }
+    },
+    "Aufgabe verschieben": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Postpone task"
           }
         }
       }
@@ -3956,6 +4002,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Both open “Plan” in the week you are planning. You start the AI plan there with the AI button; nothing is sent from here."
+          }
+        }
+      }
+    },
+    "Beim Planen geht je Aufgabe auch eine erwartete Dauer in Minuten mit, abgeleitet aus deinen bisherigen Messungen. Die Messungen selbst und die Labels bleiben auf dem iPhone. Abschalten kannst du das unter Einstellungen › Fokus-Timer.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "When planning, an expected duration in minutes is also sent for each task, derived from your earlier measurements. The measurements themselves and the labels stay on your iPhone. You can turn this off under Settings › Focus timer."
           }
         }
       }
@@ -4638,6 +4694,36 @@
           "stringUnit": {
             "state": "translated",
             "value": "Duration: %lld min"
+          }
+        }
+      }
+    },
+    "Dauern etwa so lange wie geschätzt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Take about as long as estimated"
+          }
+        }
+      }
+    },
+    "Dauern im Schnitt %@ kürzer als geschätzt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Take %@ less time than estimated on average"
+          }
+        }
+      }
+    },
+    "Dauern im Schnitt %@ länger als geschätzt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Take %@ longer than estimated on average"
           }
         }
       }
@@ -6175,6 +6261,16 @@
         }
       }
     },
+    "Erfahrungswerte in der Planung nutzen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use past effort in planning"
+          }
+        }
+      }
+    },
     "Erfassen": {
       "localizations": {
         "en": {
@@ -6620,12 +6716,42 @@
         }
       }
     },
+    "Fokus abbrechen?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancel focus?"
+          }
+        }
+      }
+    },
+    "Fokus abbrechen? Das Stück der Sammlung welkt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancel focus? The piece of your collection will wilt."
+          }
+        }
+      }
+    },
     "Fokus entfernen": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Remove focus"
+          }
+        }
+      }
+    },
+    "Fokus fortsetzen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continue focus"
           }
         }
       }
@@ -6646,12 +6772,102 @@
         }
       }
     },
+    "Fokus in dieser Woche": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Focus this week"
+          }
+        }
+      }
+    },
+    "Fokus läuft": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Focus running"
+          }
+        }
+      }
+    },
+    "Fokus pausieren": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pause focus"
+          }
+        }
+      }
+    },
+    "Fokus starten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start focus"
+          }
+        }
+      }
+    },
+    "Fokus öffnen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open focus"
+          }
+        }
+      }
+    },
+    "Fokus-Timer": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Focus timer"
+          }
+        }
+      }
+    },
     "Fokus: %@": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Focus: %@"
+          }
+        }
+      }
+    },
+    "Fokus: %lld min": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Focus: %lld min"
+          }
+        }
+      }
+    },
+    "Fokuszeit vorbei": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Focus time over"
+          }
+        }
+      }
+    },
+    "Fortsetzen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Resume"
           }
         }
       }
@@ -6702,6 +6918,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Free"
+          }
+        }
+      }
+    },
+    "Frei starten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start without a task"
           }
         }
       }
@@ -7015,6 +7241,16 @@
         }
       }
     },
+    "Gemessen über Fokus-Timer und Zeitblöcke, letzte 8 Wochen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Measured with the focus timer and time blocks, last 8 weeks."
+          }
+        }
+      }
+    },
     "Geplant": {
       "localizations": {
         "en": {
@@ -7051,6 +7287,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Total"
+          }
+        }
+      }
+    },
+    "Geschafft": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Finished"
           }
         }
       }
@@ -7127,6 +7373,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Keep separate"
+          }
+        }
+      }
+    },
+    "Gewachsen, Stufe %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Grown, stage %lld"
+          }
+        }
+      }
+    },
+    "Gewelkt, Stufe %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wilted, stage %lld"
           }
         }
       }
@@ -8178,6 +8444,16 @@
         }
       }
     },
+    "Jede beendete Fokus-Sitzung ergibt ein Stück. Wer früher abbricht, bekommt ein gewelktes.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Every finished focus session gives you a piece. Stop early and it wilts."
+          }
+        }
+      }
+    },
     "Jetzt sichern": {
       "localizations": {
         "en": {
@@ -8377,6 +8653,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Not a book of the Bible, not imported"
+          }
+        }
+      }
+    },
+    "Kein Fokus läuft": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No focus running"
           }
         }
       }
@@ -8867,6 +9153,16 @@
         }
       }
     },
+    "Kurze Pause": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Short break"
+          }
+        }
+      }
+    },
     "Kurzen Moment für Dankbarkeit genommen?": {
       "localizations": {
         "en": {
@@ -8929,6 +9225,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Labels (comma-separated)"
+          }
+        }
+      }
+    },
+    "Lange Pause": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Long break"
+          }
+        }
+      }
+    },
+    "Lange Pause: %lld min": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Long break: %lld min"
           }
         }
       }
@@ -9446,6 +9762,16 @@
         }
       }
     },
+    "Messungen in dieser Woche": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Measurements this week"
+          }
+        }
+      }
+    },
     "Mikrofon": {
       "localizations": {
         "en": {
@@ -9582,6 +9908,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Plan with AI"
+          }
+        }
+      }
+    },
+    "Mit Pomodoro wechseln sich Fokus und Pause ab, nach der letzten Runde folgt die lange Pause. Ohne Pomodoro läuft eine einzelne Fokuszeit. Ein Zeitblock ohne Pomodoro setzt die Fokuszeit auf seine Restlänge.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "With Pomodoro, focus and breaks alternate and the long break follows the last round. Without Pomodoro, a single focus period runs. A time block without Pomodoro sets the focus time to what is left of the block."
           }
         }
       }
@@ -10352,6 +10688,16 @@
     "Noch keine Planung protokolliert.": {
       "shouldTranslate": false
     },
+    "Noch leer": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Empty so far"
+          }
+        }
+      }
+    },
     "Noch nicht in Health gespeichert. Tagwerk versucht es erneut.": {
       "localizations": {
         "en": {
@@ -10368,6 +10714,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Nothing logged yet. Tap Food, Drink or Workout above."
+          }
+        }
+      }
+    },
+    "Noch nichts gesammelt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing collected yet"
+          }
+        }
+      }
+    },
+    "Noch zu wenige Messungen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not enough measurements yet."
           }
         }
       }
@@ -10801,6 +11167,16 @@
         }
       }
     },
+    "Ohne Schätzung gemessen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Measured without estimate"
+          }
+        }
+      }
+    },
     "Ohne Tagebuch und Bible Study.": {
       "localizations": {
         "en": {
@@ -10979,6 +11355,36 @@
         }
       }
     },
+    "Pause vorbei": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Break over"
+          }
+        }
+      }
+    },
+    "Pause überspringen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Skip break"
+          }
+        }
+      }
+    },
+    "Pause: %lld min": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Break: %lld min"
+          }
+        }
+      }
+    },
     "Pausieren": {
       "localizations": {
         "en": {
@@ -11111,6 +11517,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Planning preferences · %1$lld of %2$lld"
+          }
+        }
+      }
+    },
+    "Pomodoro": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pomodoro"
           }
         }
       }
@@ -11433,6 +11849,32 @@
     "Runde %lld": {
       "shouldTranslate": false
     },
+    "Runde %lld von %lld": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Runde %1$lld von %2$lld"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Round %1$lld of %2$lld"
+          }
+        }
+      }
+    },
+    "Runden: %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rounds: %lld"
+          }
+        }
+      }
+    },
     "Rückblick · %@": {
       "localizations": {
         "en": {
@@ -11459,6 +11901,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Say one of the phrases to Siri or add it in the Shortcuts app. “Log water” can also be put on the Action button or the Home Screen there. If Siri does not recognize a phrase, check in the Shortcuts app that the Tagwerk shortcuts are listed there, and try the phrase as text with Type to Siri."
+          }
+        }
+      }
+    },
+    "Sammlung": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Collection"
           }
         }
       }
@@ -11609,6 +12061,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Estimation"
+          }
+        }
+      }
+    },
+    "Schätzung und Ist": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Estimate vs. actual"
           }
         }
       }
@@ -12557,6 +13019,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tagwerk reads your events to plan your day. The calendar isn’t changed."
+          }
+        }
+      }
+    },
+    "Tagwerk misst den Aufwand beim Abhaken aus Fokus-Timer und Zeitblöcken. Die Messwerte bleiben auf dem iPhone. Ist der Schalter an, geht bei der KI-Planung je Aufgabe nur eine erwartete Dauer in Minuten mit, keine Labels und keine Statistik.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tagwerk measures the effort when you complete a task, from the focus timer and time blocks. The measurements stay on your iPhone. When the switch is on, AI planning receives only an expected duration in minutes per task, no labels and no statistics."
           }
         }
       }
@@ -13972,6 +14444,16 @@
         }
       }
     },
+    "Weitermachen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keep going"
+          }
+        }
+      }
+    },
     "Welche Gewohnheit?": {
       "localizations": {
         "en": {
@@ -14238,6 +14720,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Week"
+          }
+        }
+      }
+    },
+    "Woche ab %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Week of %@"
           }
         }
       }

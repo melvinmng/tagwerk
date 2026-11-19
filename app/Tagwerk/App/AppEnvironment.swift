@@ -66,6 +66,12 @@ final class AppEnvironment {
     let routineNotifications: RoutineNotificationScheduler
     /// Meal estimates with ChatGPT; only after consent and a tap (main design §7).
     let mealEstimator: MealEstimator
+    /// Focus timer sessions and the collection (plan P3, #161); stays on this device.
+    let focusStore: FocusStore
+    /// The focus timer: one session at a time, Live Activity and one notification at the end of the phase.
+    let focus: FocusTimerModel
+    /// Measures the actual effort when a task is completed and cuts a block that ended early (plan P3, #162).
+    let effort: EffortTracker
     /// Writes the snapshot file the widget reads (phase 4); `directory == nil` in tests and unsigned builds.
     let snapshotWriter: WidgetSnapshotWriter
     /// Reads events for the search away from the main thread; its own read-only store.
@@ -99,7 +105,8 @@ final class AppEnvironment {
     /// EventKit gateway; tests and demo data pass fakes.
     init(modelContainer: ModelContainer, notificationCenter: (any NotificationCenterClient)? = nil,
          health: (any HealthStoring)? = nil, snapshotWriter: WidgetSnapshotWriter? = nil,
-         reminderStore: (any ReminderStore)? = nil, eventSearcher: (any EventSearching)? = nil) throws {
+         reminderStore: (any ReminderStore)? = nil, eventSearcher: (any EventSearching)? = nil,
+         focusNotificationCenter: (any FocusNotificationCenter)? = nil) throws {
         self.modelContainer = modelContainer
         self.snapshotWriter = snapshotWriter ?? WidgetSnapshotWriter(directory: nil, reload: {})
         let context = modelContainer.mainContext
@@ -241,7 +248,28 @@ final class AppEnvironment {
         self.routineNotifications = RoutineNotificationScheduler(center: notificationCenter ?? SystemNotificationCenter(),
                                                                  store: routineStore, settings: settings)
         let routines = self.routines
+        let focusStore = FocusStore(context: context)
+        self.focusStore = focusStore
+        let focus = FocusTimerModel(store: focusStore, settings: { settings.focusTimerSettings }, activity: FocusActivityController(),
+                                    notifications: FocusNotificationScheduler(center: focusNotificationCenter))
+        self.focus = focus
+        focus.postponeTask = { key in
+            guard let id = TaskID(key: key) else { return }
+            await planning.assign(id, to: planning.planDay(for: .tomorrow), moveBlocks: true)
+        }
+        focus.installIntentHandler()
+        let effort = EffortTracker(store: focusStore, blocks: blockPlanner, calendarStore: gateway, settings: settings)
+        self.effort = effort
+        // Only the expected minutes per task go to the planning, and only while the setting is on.
+        planner.expectedMinutes = { effort.expectedMinutes(for: $0) }
+        taskList.onCompletedItem = { item, date in
+            // A timer running for the task ends first, so its focus time counts for this completion.
+            await focus.didComplete(taskKey: item.id.key)
+            if await effort.didComplete(item, at: date) { await planning.reload() }
+        }
         taskList.onCompletionChanged = { id, isCompleted in
+            // "Rückgängig": the sample goes and a block that was cut gets its end back, before the plan reads again.
+            if !isCompleted, await effort.didReopen(id) { await planning.reload() }
             await planning.didChangeCompletion(id, isCompleted: isCompleted)
             await MainActor.run { routines.focusChanged(id, isCompleted: isCompleted) }
         }
@@ -252,6 +280,13 @@ final class AppEnvironment {
                 cache.clear()
                 catalogStore.clear()
             }
+        }
+        // "Erledigt" on the Live Activity can start the app in the background, where no list is loaded yet: the tasks
+        // are loaded first (with GitHub registered), because completing needs the displayed item and its version.
+        focus.completeTask = { [weak self] key in
+            guard let self, let id = TaskID(key: key) else { return }
+            if !taskList.items.contains(where: { $0.id == id }) { await loadTasksInBackground() }
+            await taskList.complete(id)
         }
     }
 

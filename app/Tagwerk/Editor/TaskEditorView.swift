@@ -222,6 +222,10 @@ struct TaskEditorView: View {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Abbrechen") { dismiss() }
                 }
+                // Starting the timer closes the editor, so it is offered only while nothing would be lost.
+                ToolbarItem(placement: .secondaryAction) {
+                    if !model.original.isCompleted && !model.hasChanges { FocusStartButton(task: model.original) }
+                }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Sichern") {
                         // The reach question only comes when the effort of a recurring reminder changed (R1);

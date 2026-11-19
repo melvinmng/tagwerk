@@ -124,6 +124,9 @@ public struct PlanInputTask: Sendable, Hashable {
     public var sessionMinutes: Int?
     /// The day work has to start at the latest so the effort fits before the deadline.
     public var latestStart: PlanDay?
+    /// Expected effort from the person's earlier measurements (plan P3, #162); `nil` without enough measurements.
+    /// Only this number leaves the device, never the measurements themselves.
+    public var expectedMinutes: Int?
 
     public init(id: String, source: TaskSource, title: String, due: DueDate?, priority: Priority?, minutes: Int?,
                 important: Bool, plannedDay: PlanDay?, anchor: DueDate?) {
@@ -207,7 +210,8 @@ public func makePlanInput(scope: PlanScope, days: [PlanInputDay], tasks: [TaskIt
                           anchors: [TaskID: DueDate], today: PlanDay, nowMinutes: Int, timeZoneID: String,
                           defaultTaskMinutes: Int, only: Set<TaskID>? = nil, excluding: Set<TaskID> = [],
                           lookaheadDays: Set<PlanDay> = [], blockedMinutes: [TaskID: Int] = [:],
-                          earliestWorkDay: PlanDay? = nil, calendar: Calendar = .current) -> PlanInput {
+                          earliestWorkDay: PlanDay? = nil, expectedMinutes: [String: Int] = [:],
+                          calendar: Calendar = .current) -> PlanInput {
     // A day plan counts window, daily share and order from the planned day (plan-tomorrow, F5); "overdue"
     // stays measured against the real today. `earliest` moves past today only once today's work time is over.
     let reference = scope == .day ? max(today, days.first?.day ?? today) : today
@@ -253,6 +257,7 @@ public func makePlanInput(scope: PlanScope, days: [PlanInputDay], tasks: [TaskIt
         item.remainingMinutes = remaining(task)
         item.sessionMinutes = session(task)
         item.latestStart = latestStart(task)
+        item.expectedMinutes = expectedMinutes[task.id.key]
         return item
     }
 
@@ -893,6 +898,7 @@ extension PlanInput {
         struct Task: Encodable {
             let id: String; let source: String; let title: String; let due: String?; let priority: String?
             let minutes: Int?; let remainingMinutes: Int?; let sessionMinutes: Int?; let latestStart: String?
+            let expectedMinutes: Int?
             let important: Bool; let plannedDay: String?; let deadline: String?
         }
         struct Limits: Encodable {
@@ -943,6 +949,8 @@ extension PlanInput {
                 Task(id: task.id, source: task.source.rawValue, title: task.title, due: task.due.map(dueString),
                      priority: task.priority?.label, minutes: task.minutes, remainingMinutes: task.remainingMinutes,
                      sessionMinutes: task.sessionMinutes, latestStart: task.latestStart.map(dayString),
+                     // Only when it differs from the estimate; then the model plans with it.
+                     expectedMinutes: task.expectedMinutes == task.minutes ? nil : task.expectedMinutes,
                      important: task.important, plannedDay: task.plannedDay.map(dayString), deadline: task.anchor.map(dueString))
             },
             omittedCount: omittedCount

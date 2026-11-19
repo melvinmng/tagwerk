@@ -53,6 +53,14 @@ final class BlockPlanner {
             .sorted { $0.start < $1.start }
     }
 
+    /// Blocks of `taskID` in the plan calendar that overlap `interval`, oldest first (effort measuring, plan P3).
+    func blocks(for taskID: TaskID, in interval: DateInterval) -> [CalendarEvent] {
+        guard let calendarID = settings.planCalendarID else { return [] }
+        return store.events(in: interval, calendarIDs: [calendarID])
+            .filter { $0.url.flatMap(TaskLinkURL.parse) == taskID }
+            .sorted { $0.start < $1.start }
+    }
+
     /// All blocks in the plan calendar from `date` on, grouped by their task.
     func blocksByTask(after date: Date) -> [TaskID: [CalendarEvent]] {
         guard let calendarID = settings.planCalendarID else { return [:] }
