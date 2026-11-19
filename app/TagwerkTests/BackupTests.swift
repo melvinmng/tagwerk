@@ -13,24 +13,30 @@ struct BackupTests {
     let source: ModelContainer
     let sourceSettings: AppSettings
     let backup: BackupService
+    let sourceFiles: NoteAttachmentStore
+    let sourceDirectory = FileManager.default.temporaryDirectory.appending(path: "backup-source-" + UUID().uuidString, directoryHint: .isDirectory)
 
     init() throws {
         source = try ModelContainerFactory.make(inMemory: true)
         sourceSettings = try AppSettings.current(in: source.mainContext)
         let clock = self.clock
+        sourceFiles = NoteAttachmentStore(context: source.mainContext, directory: sourceDirectory, now: { clock.now })
         backup = BackupService(context: source.mainContext, settings: sourceSettings, calendar: calendar, appVersion: "1.0-test",
-                               now: { clock.now })
+                               now: { clock.now }, attachments: sourceFiles)
         Self.populate(source.mainContext, settings: sourceSettings, now: clock.now)
+        Self.addAttachments(sourceFiles, context: source.mainContext)
     }
 
     /// A target with its own settings record, as a fresh install has.
-    private func makeTarget() throws -> (container: ModelContainer, settings: AppSettings, service: BackupService) {
+    private func makeTarget() throws -> (container: ModelContainer, settings: AppSettings, service: BackupService, files: NoteAttachmentStore) {
         let container = try ModelContainerFactory.make(inMemory: true)
         let settings = try AppSettings.current(in: container.mainContext)
         let clock = self.clock
+        let directory = FileManager.default.temporaryDirectory.appending(path: "backup-target-" + UUID().uuidString, directoryHint: .isDirectory)
+        let files = NoteAttachmentStore(context: container.mainContext, directory: directory, now: { clock.now })
         let service = BackupService(context: container.mainContext, settings: settings, calendar: calendar, appVersion: "1.0-test",
-                                    now: { clock.now })
-        return (container, settings, service)
+                                    now: { clock.now }, attachments: files)
+        return (container, settings, service, files)
     }
 
     // MARK: Test data
@@ -173,6 +179,23 @@ struct BackupTests {
         try? context.save()
     }
 
+    /// One attachment of an own note and one of the journal entry, so the backup has to tell them apart.
+    static func addAttachments(_ files: NoteAttachmentStore, context: ModelContext) {
+        let notes = (try? context.fetch(FetchDescriptor<NoteRecord>())) ?? []
+        let folder = FileManager.default.temporaryDirectory.appending(path: "backup-files-" + UUID().uuidString, directoryHint: .isDirectory)
+        try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        for (text, name, bytes) in [("Geschenkidee\nBuch", "Plan.pdf", 1500), ("Allgemeine Stimmung\nDankbar", "Gebet.pdf", 900)] {
+            // A different byte pattern per file, so one file's base64 is never a part of the other's.
+            let factor = name == "Plan.pdf" ? 1 : 7
+            guard let note = notes.first(where: { $0.text == text }) else { continue }
+            let url = folder.appending(path: name)
+            try? Data((0..<bytes).map { UInt8(($0 * factor + 3) % 251) }).write(to: url)
+            _ = try? files.addFile(at: url, to: note.id)
+            note.text += "\n" + (files.attachments(of: note.id).last.map { MarkdownText.reference(for: $0.id, name: name, isImage: false) } ?? "")
+        }
+        try? context.save()
+    }
+
     // MARK: Helpers
 
     /// Each list of a `BackupEntities` as a set of its JSON texts, so the comparison ignores the order of a fetch.
@@ -191,8 +214,9 @@ struct BackupTests {
         return result
     }
 
-    private func entities(of context: ModelContext, settings: AppSettings, includePrivate: Bool = true) -> BackupEntities {
-        BackupEntities(collecting: context, settings: settings, includePrivate: includePrivate)
+    private func entities(of context: ModelContext, settings: AppSettings, includePrivate: Bool = true,
+                          attachments: NoteAttachmentStore? = nil) -> BackupEntities {
+        BackupEntities(collecting: context, settings: settings, includePrivate: includePrivate, attachments: attachments)
     }
 
     // MARK: Completeness
@@ -252,7 +276,7 @@ struct BackupTests {
 
     @Test func theTestData_holdsARecordOfEveryModelInTheBackup() {
         var counts: [String: Int] = [:]
-        for child in Mirror(reflecting: entities(of: source.mainContext, settings: sourceSettings)).children {
+        for child in Mirror(reflecting: entities(of: source.mainContext, settings: sourceSettings, attachments: sourceFiles)).children {
             if let list = child.value as? [any BackupEntity], let first = list.first { counts[type(of: first).modelName, default: 0] += list.count }
         }
         let missing = BackupEntities.modelNames.subtracting(counts.keys).subtracting(["AppSettings"])
@@ -266,8 +290,8 @@ struct BackupTests {
         let target = try makeTarget()
         let inspection = try target.service.inspect(data)
         try target.service.restore(inspection)
-        let before = try canonical(entities(of: source.mainContext, settings: sourceSettings))
-        let after = try canonical(entities(of: target.container.mainContext, settings: target.settings))
+        let before = try canonical(entities(of: source.mainContext, settings: sourceSettings, attachments: sourceFiles))
+        let after = try canonical(entities(of: target.container.mainContext, settings: target.settings, attachments: target.files))
         for key in before.keys.sorted() { #expect(before[key] == after[key], "\(key) differs after the round trip") }
         #expect(before.values.contains { !$0.isEmpty })
     }
@@ -324,7 +348,7 @@ struct BackupTests {
         }
         // The Keychain accounts are the only places for secrets; none of their names is in the code that writes the file.
         #expect(KeychainChatGPTCredentialStore.tokensAccount == "chatgpt.tokens" && KeychainCredentialStore.account == "github.credentials")
-        #expect(text.contains("\"format\" : \"tagwerk-backup\"") && text.contains("\"schemaVersion\" : 1"))
+        #expect(text.contains("\"format\" : \"tagwerk-backup\"") && text.contains("\"schemaVersion\" : 2"))
     }
 
     @Test func aHigherVersion_isRefused_andNothingChanges() throws {
@@ -513,6 +537,68 @@ struct BackupTests {
         #expect(store.folders().compactMap(\.role).filter { $0 == .brainDump }.count == 1)
     }
 
+    // MARK: Attachments
+
+    @Test func backup_containsAttachmentData() throws {
+        let inspection = try makeTarget().service.inspect(try backup.makeBackupData(includePrivate: true))
+        let names = Set(inspection.entities.noteAttachments.map(\.fileName))
+        #expect(names == ["Plan.pdf", "Gebet.pdf"])
+        let plan = try #require(inspection.entities.noteAttachments.first { $0.fileName == "Plan.pdf" })
+        #expect(plan.data.count == 1500 && plan.typeIdentifier == "com.adobe.pdf")
+        #expect(plan.data == Data((0..<1500).map { UInt8(($0 + 3) % 251) }))
+        #expect(sourceFiles.summary.count == 2 && sourceFiles.summary.bytes == 2400)
+        #expect(BackupSettingsView.attachmentsText(sourceFiles.summary)?.hasPrefix("2 · ") == true)
+        #expect(BackupSettingsView.attachmentsText((0, 0)) == nil && BackupSettingsView.attachmentsText(nil) == nil)
+    }
+
+    @Test func backupWithoutPrivate_dropsAttachmentsOfJournal() throws {
+        let data = try backup.makeBackupData(includePrivate: false)
+        let inspection = try makeTarget().service.inspect(data)
+        #expect(inspection.entities.noteAttachments.map(\.fileName) == ["Plan.pdf"])
+        // The bytes of the journal attachment are not in the file in any form.
+        let journalBytes = Data((0..<900).map { UInt8(($0 * 7 + 3) % 251) }).base64EncodedString()
+        #expect(!String(decoding: data, as: UTF8.self).contains(journalBytes.prefix(120)))
+    }
+
+    @Test func restore_writesAttachmentFiles() throws {
+        let target = try makeTarget()
+        try target.service.restore(try target.service.inspect(try backup.makeBackupData(includePrivate: true)))
+        let restored = target.files.records()
+        #expect(Set(restored.map(\.fileName)) == ["Plan.pdf", "Gebet.pdf"])
+        for record in restored {
+            let original = try #require(sourceFiles.record(id: record.id))
+            #expect(record.noteID == original.noteID && record.byteCount == original.byteCount)
+            #expect(target.files.data(for: record.id) == sourceFiles.data(for: record.id))
+        }
+        // A second restore replaces the files instead of doubling them.
+        try target.service.restore(try target.service.inspect(try backup.makeBackupData(includePrivate: true)))
+        #expect(target.files.records().count == 2)
+    }
+
+    @Test func restore_ofOlderFileWithoutAttachments_works() throws {
+        let target = try makeTarget()
+        let stray = NoteAttachmentRecord(noteID: UUID(), fileName: "alt.pdf", typeIdentifier: "com.adobe.pdf", byteCount: 1)
+        target.container.mainContext.insert(stray)
+        try target.container.mainContext.save()
+        let minimal = Data("{\"format\":\"tagwerk-backup\",\"schemaVersion\":1,\"appVersion\":\"1\",\"createdAt\":\"x\",\"includesPrivateNotes\":true,\"entities\":{}}".utf8)
+        try target.service.restore(try target.service.inspect(minimal))
+        #expect(target.files.records().isEmpty)
+    }
+
+    @Test func restoreWithoutPrivate_keepsTheAttachmentsOfTheExistingJournal() throws {
+        let target = try makeTarget()
+        let context = target.container.mainContext
+        let entry = NoteRecord(text: "Mein Eintrag", kind: .journal, dayKey: "2026-11-01", now: clock.now)
+        context.insert(entry)
+        try context.save()
+        let file = FileManager.default.temporaryDirectory.appending(path: "keep-" + UUID().uuidString + ".pdf")
+        try Data(repeating: 1, count: 10).write(to: file)
+        let kept = try target.files.addFile(at: file, to: entry.id)
+        try target.service.restore(try target.service.inspect(try backup.makeBackupData(includePrivate: false)))
+        #expect(target.files.url(for: kept.id) != nil)
+        #expect(Set(target.files.records().map(\.fileName)) == ["Plan.pdf", kept.fileName])
+    }
+
     @Test func restoringAFileWithoutPrivateContent_keepsTheExistingJournalAndBibleStudy() throws {
         let target = try makeTarget()
         let context = target.container.mainContext
@@ -538,7 +624,7 @@ struct BackupTests {
         try context.save()
         try target.service.restore(try target.service.inspect(try backup.makeBackupData(includePrivate: true)))
         let journal = try context.fetch(FetchDescriptor<NoteRecord>()).filter { $0.kind == .journal }
-        #expect(journal.map(\.text) == ["Allgemeine Stimmung\nDankbar"])
+        #expect(journal.count == 1 && journal[0].text.hasPrefix("Allgemeine Stimmung\nDankbar"))
     }
 
     // MARK: Safety copy and automatic backup

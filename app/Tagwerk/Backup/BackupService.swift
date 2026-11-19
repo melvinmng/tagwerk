@@ -64,16 +64,23 @@ final class BackupService {
     @ObservationIgnored private let appVersion: String
     /// Runs after a restore, also after a failed one that put the old state back (the app files the notes into their folders).
     @ObservationIgnored private let afterRestore: @MainActor () -> Void
+    /// The bytes of the notes' attachments; without it a backup holds none and a restore leaves them alone.
+    @ObservationIgnored private let attachments: NoteAttachmentStore?
 
     init(context: ModelContext, settings: AppSettings, calendar: Calendar = .tagwerk, appVersion: String? = nil,
-         now: @escaping () -> Date = Date.init, afterRestore: @escaping @MainActor () -> Void = {}) {
+         now: @escaping () -> Date = Date.init, attachments: NoteAttachmentStore? = nil,
+         afterRestore: @escaping @MainActor () -> Void = {}) {
         self.afterRestore = afterRestore
+        self.attachments = attachments
         self.context = context
         self.settings = settings
         self.calendar = calendar
         self.now = now
         self.appVersion = appVersion ?? (Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0")
     }
+
+    /// Number and total size of the attachments a full backup holds (for the backup page).
+    var attachmentSummary: (count: Int, bytes: Int)? { attachments?.summary }
 
     // MARK: Writing a backup
 
@@ -84,7 +91,8 @@ final class BackupService {
         let includePrivate = includePrivate ?? settings.backupIncludesPrivateNotes
         let envelope = Envelope(format: BackupRules.format, schemaVersion: BackupRules.schemaVersion, appVersion: appVersion,
                                 createdAt: ISO8601DateFormatter().string(from: now()), includesPrivateNotes: includePrivate,
-                                entities: BackupEntities(collecting: context, settings: settings, includePrivate: includePrivate))
+                                entities: BackupEntities(collecting: context, settings: settings, includePrivate: includePrivate,
+                                                         attachments: attachments))
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
         return try encoder.encode(envelope)
@@ -111,12 +119,13 @@ final class BackupService {
     /// the store without data. In that case the previous state comes back from the safety copy and `.restoreFailed` is thrown.
     func restore(_ inspection: Inspection, recoveringFrom safetyCopy: Data? = nil) throws {
         do {
-            try inspection.entities.restore(into: context, settings: settings, replacePrivate: inspection.header.includesPrivateNotes)
+            try inspection.entities.restore(into: context, settings: settings, replacePrivate: inspection.header.includesPrivateNotes,
+                                              attachments: attachments)
             afterRestore()
         } catch {
             context.rollback()
             if let safetyCopy, let previous = try? inspect(safetyCopy) {
-                try? previous.entities.restore(into: context, settings: settings, replacePrivate: true)
+                try? previous.entities.restore(into: context, settings: settings, replacePrivate: true, attachments: attachments)
             }
             afterRestore()
             throw BackupError.restoreFailed

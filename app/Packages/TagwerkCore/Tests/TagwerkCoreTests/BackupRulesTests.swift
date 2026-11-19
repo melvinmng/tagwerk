@@ -47,8 +47,9 @@ struct BackupRulesTests {
 
     @Test func compatibility_refusesForeignFilesAndNewerVersions() {
         #expect(BackupRules.compatibility(format: "tagwerk-backup", schemaVersion: 1) == .readable)
+        #expect(BackupRules.compatibility(format: "tagwerk-backup", schemaVersion: 2) == .readable)
         #expect(BackupRules.compatibility(format: "tagwerk-backup", schemaVersion: 0) == .readable)
-        #expect(BackupRules.compatibility(format: "tagwerk-backup", schemaVersion: 2) == .newerVersion(2))
+        #expect(BackupRules.compatibility(format: "tagwerk-backup", schemaVersion: 3) == .newerVersion(3))
         #expect(BackupRules.compatibility(format: "something-else", schemaVersion: 1) == .notABackup)
     }
 }

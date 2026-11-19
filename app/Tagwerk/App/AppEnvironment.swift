@@ -125,11 +125,13 @@ final class AppEnvironment {
         let searcher: any EventSearching = eventSearcher ?? EventSearchReader()
         self.eventSearcher = searcher
         self.remindersProvider = reminders
-        let noteStore = NoteStore(context: context)
+        let attachments = NoteAttachmentStore(context: context)
+        let noteStore = NoteStore(context: context, attachments: attachments)
         // The fixed folders must exist before the first frame; a restore may bring notes without them.
         noteStore.ensureDefaultFolders()
+        attachments.purgeOrphans(existingNoteIDs: Set(noteStore.allNotes().map(\.id)))
         self.notes = noteStore
-        self.backup = BackupService(context: context, settings: settings, afterRestore: { [noteStore] in
+        self.backup = BackupService(context: context, settings: settings, attachments: attachments, afterRestore: { [noteStore] in
             noteStore.ensureDefaultFolders()
             noteStore.save()
         })

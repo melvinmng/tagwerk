@@ -25,9 +25,14 @@ final class NoteStore {
     /// Bumped by every write; views read it to follow changes.
     private(set) var revision = 0
 
-    init(context: ModelContext, now: @escaping () -> Date = Date.init) {
+    /// The pictures and files of the notes; `nil` where nothing needs them (most tests). A note that goes for good takes
+    /// its attachments with it.
+    @ObservationIgnored let attachments: NoteAttachmentStore?
+
+    init(context: ModelContext, now: @escaping () -> Date = Date.init, attachments: NoteAttachmentStore? = nil) {
         self.context = context
         self.now = now
+        self.attachments = attachments
     }
 
     // MARK: Reading
@@ -142,6 +147,7 @@ final class NoteStore {
     /// Removes a note for good, without a trip through "Zuletzt gelöscht".
     func delete(_ id: UUID) {
         guard let record = note(id: id) else { return }
+        attachments?.deleteAll(of: id)
         context.delete(record)
         save()
     }
@@ -152,6 +158,7 @@ final class NoteStore {
         guard let record = note(id: id) else { return }
         let isBlank = record.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         guard isBlank || (record.kind == .journal && JournalTemplate.isOnlyTemplate(record.text)) else { return }
+        attachments?.deleteAll(of: id)
         context.delete(record)
         save()
     }
@@ -176,7 +183,10 @@ final class NoteStore {
 
     /// Empties "Zuletzt gelöscht".
     func emptyTrash() {
-        for record in all() where record.deletedAt != nil { context.delete(record) }
+        for record in all() where record.deletedAt != nil {
+            attachments?.deleteAll(of: record.id)
+            context.delete(record)
+        }
         save()
     }
 
@@ -188,7 +198,10 @@ final class NoteStore {
             record.deletedAt.map { NoteFolderRules.isExpired(deletedAt: $0, now: reference, calendar: calendar) } ?? false
         }
         guard !expired.isEmpty else { return 0 }
-        for record in expired { context.delete(record) }
+        for record in expired {
+            attachments?.deleteAll(of: record.id)
+            context.delete(record)
+        }
         save()
         return expired.count
     }

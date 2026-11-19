@@ -19,8 +19,11 @@ struct BackupSettingsView: View {
             Section {
                 Button { makeBackup(service) } label: { Label("Jetzt sichern", systemImage: "square.and.arrow.up") }
                 Button { isChoosingFile = true } label: { Label("Wiederherstellen …", systemImage: "arrow.counterclockwise") }
+                if let text = Self.attachmentsText(service.attachmentSummary) {
+                    LabeledContent("Anhänge in Notizen", value: text)
+                }
             } footer: {
-                Text("Die Sicherung ist eine einzelne Datei mit allen eigenen Daten. Sie ist nicht verschlüsselt und liegt dort, wo du sie speicherst, zum Beispiel in iCloud Drive. Anmeldedaten für GitHub und ChatGPT sind nie darin.")
+                Text("Die Sicherung ist eine einzelne Datei mit allen eigenen Daten, auch den Bildern und Dateien in Notizen. Sie ist nicht verschlüsselt und liegt dort, wo du sie speicherst, zum Beispiel in iCloud Drive. Anmeldedaten für GitHub und ChatGPT sind nie darin.")
             }
 
             Section {
@@ -70,6 +73,13 @@ struct BackupSettingsView: View {
             if let pendingRestore { Text(Self.summary(pendingRestore)) }
         }
         .alert(alertText ?? "", isPresented: alertBinding) { Button("OK", role: .cancel) {} }
+    }
+
+    /// "12 · 34 MB"; `nil` without attachments, so the row only shows when it matters for the file size.
+    static func attachmentsText(_ summary: (count: Int, bytes: Int)?) -> String? {
+        guard let summary, summary.count > 0 else { return nil }
+        let size = summary.bytes.formatted(.byteCount(style: .file))
+        return "\(summary.count) · \(size)"
     }
 
     // MARK: Actions
