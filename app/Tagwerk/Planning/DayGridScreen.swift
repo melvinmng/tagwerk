@@ -14,6 +14,8 @@ struct DayGridScreen<Summary: View, Header: View>: View {
     @ViewBuilder let timelineHeader: () -> Header
     let onOpenEntry: (DayEntry) -> Void
     let onPlanTask: (TaskItem) -> Void
+    /// Set while a block or a task is dragged, so the page container ignores sideways drags.
+    var isLocked: Binding<Bool> = .constant(false)
 
     @State private var isDragging = false
     @State private var canvasFrame: CGRect = .zero
@@ -67,7 +69,7 @@ struct DayGridScreen<Summary: View, Header: View>: View {
         .contentMargins(.bottom, 80, for: .scrollContent)  // room for the collapsed panel
         .onGeometryChange(for: CGRect.self) { $0.frame(in: .named("screen")) } action: { scrollFrame = $0 }
         .scrollDisabled(isDragging || taskDrag != nil)
-        .simultaneousGesture(pageSwipeGesture { model.step($0.step) })
+        .onChange(of: isDragging || taskDrag != nil) { _, locked in isLocked.wrappedValue = locked }
         .overlay(alignment: .bottom) {
             VStack(spacing: 8) {
                 if lunchChanged { lunchBar }

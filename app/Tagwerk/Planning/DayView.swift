@@ -20,19 +20,31 @@ struct DayView: View {
     @State private var blockFor: TaskItem?
     @State private var sheetEntry: DayEntry?
     @State private var showsGrid = true
+    /// A block or task is being dragged in the grid; the page container ignores sideways drags meanwhile.
+    @State private var gridLocked = false
     /// Bumped every minute so the list places the "now" row anew.
     @State private var nowTick = 0
 
     var body: some View {
         Group {
             if let plan = model.days.first {
-                if showsGrid {
-                    DayGridScreen(model: model, plan: plan, onOpenTask: onOpenTask, onEditRecurring: onEditRecurring,
-                                  menuActions: plannedActions, summary: { summary(plan) },
-                                  timelineHeader: { timelineHeader }, onOpenEntry: { sheetEntry = $0 },
-                                  onPlanTask: { blockFor = $0 })
-                } else {
-                    listContent(plan)
+                PagedContainer(canGoBack: true, canGoForward: true, isLocked: gridLocked,
+                               contentID: { model.days.first?.day },
+                               onPage: { model.step($0.step) }, onBlockedEdge: {}) { slot in
+                    switch slot {
+                    case .current:
+                        if showsGrid {
+                            DayGridScreen(model: model, plan: plan, onOpenTask: onOpenTask, onEditRecurring: onEditRecurring,
+                                          menuActions: plannedActions, summary: { summary(plan) },
+                                          timelineHeader: { timelineHeader }, onOpenEntry: { sheetEntry = $0 },
+                                          onPlanTask: { blockFor = $0 }, isLocked: $gridLocked)
+                        } else {
+                            listContent(plan)
+                        }
+                    case .previous: preview(of: plan.day.adding(days: -1, calendar: model.calendar))
+                    case .next: preview(of: plan.day.adding(days: 1, calendar: model.calendar))
+                    case .arrived: preview(of: model.anchor)
+                    }
                 }
             } else {
                 // Keeps a view in place before the first load; otherwise the parent's `.task` would never run.
@@ -61,6 +73,11 @@ struct DayView: View {
                 }
             }
         }
+    }
+
+    /// The neighbouring day while the page is dragged: its preloaded plan, grid or list like the shown day.
+    private func preview(of day: PlanDay) -> some View {
+        DayPagePreview(model: model, day: day, plan: model.neighbourPlans[day], showsGrid: showsGrid)
     }
 
     // MARK: Shared parts
@@ -150,7 +167,6 @@ struct DayView: View {
             TaskSections(model: model, plan: plan, onOpenTask: onOpenTask, onEditRecurring: onEditRecurring,
                          menuActions: plannedActions)
         }
-        .simultaneousGesture(pageSwipeGesture { model.step($0.step) })
         .modifier(NowListBehavior(model: model, day: plan.day, tick: $nowTick))
     }
 

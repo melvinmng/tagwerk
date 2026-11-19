@@ -9,6 +9,36 @@ struct WeekReviewView: View {
     @State private var pendingSave: Task<Void, Never>?
 
     var body: some View {
+        PagedContainer(canGoBack: true, canGoForward: model.canGoForward, isLocked: false, excludesLeadingEdge: true,
+                       onPage: { direction in Task { direction == .back ? await model.goBack() : await model.goForward() } },
+                       onBlockedEdge: {}) { slot in
+            switch slot {
+            case .current: reviewList
+            case .previous, .arrived: WeekReviewPagePreview(model: model, weekStart: model.weekStart.adding(days: -7, calendar: model.calendar))
+            case .next: WeekReviewPagePreview(model: model, weekStart: model.weekStart.adding(days: 7, calendar: model.calendar))
+            }
+        }
+        .navigationTitle("Wochenrückblick")
+        .navigationBarTitleDisplayMode(.inline)
+        .animation(.snappy, value: model.review)
+        .sensoryFeedback(.selection, trigger: model.weekStart)
+        .task { await model.reload() }
+        // The reflection is saved shortly after typing and when the page closes.
+        .onChange(of: model.reflection) { _, _ in
+            pendingSave?.cancel()
+            pendingSave = Task {
+                try? await Task.sleep(for: .milliseconds(500))
+                guard !Task.isCancelled else { return }
+                model.saveReflection()
+            }
+        }
+        .onDisappear {
+            pendingSave?.cancel()
+            model.saveReflection()
+        }
+    }
+
+    private var reviewList: some View {
         List {
             Section {
                 header
@@ -44,27 +74,6 @@ struct WeekReviewView: View {
             WeekReflectionSections(model: model)
         }
         .scrollDismissesKeyboard(.interactively)
-        .navigationTitle("Wochenrückblick")
-        .navigationBarTitleDisplayMode(.inline)
-        .pageSwipe(excludesLeadingEdge: true) { direction in
-            Task { direction == .back ? await model.goBack() : await model.goForward() }
-        }
-        .animation(.snappy, value: model.review)
-        .sensoryFeedback(.selection, trigger: model.weekStart)
-        .task { await model.reload() }
-        // The reflection is saved shortly after typing and when the page closes.
-        .onChange(of: model.reflection) { _, _ in
-            pendingSave?.cancel()
-            pendingSave = Task {
-                try? await Task.sleep(for: .milliseconds(500))
-                guard !Task.isCancelled else { return }
-                model.saveReflection()
-            }
-        }
-        .onDisappear {
-            pendingSave?.cancel()
-            model.saveReflection()
-        }
     }
 
     /// Mockup EK1: caption "DIESE WOCHE · KW 47" above the week "16.–22. Nov." with ▾, then "Heute" and the arrows.

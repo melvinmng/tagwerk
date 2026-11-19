@@ -118,6 +118,12 @@ final class PlanningModel {
     var scope: PlanScope = .day
     var anchor: PlanDay
     private(set) var days: [DayPlan] = []
+    /// Plans of the neighbouring days (day scope) or weeks (week scope) for the page previews while swiping. They
+    /// carry no AI suggestions; see `loadNeighbours()`.
+    var neighbourPlans: [PlanDay: DayPlan] = [:]
+    @ObservationIgnored var neighbourLoad: Task<Void, Never>?
+    /// The app turns this on; tests leave it off, so no background load outlives a test's store.
+    @ObservationIgnored var loadsNeighboursAfterReload = false
     /// Tasks that are the open focus of today (phase 7); set by `RoutinesModel`. The day view puts a star on them.
     var focusTaskIDs: Set<TaskID> = []
     private(set) var unplanned: [TaskItem] = []
@@ -301,6 +307,7 @@ final class PlanningModel {
             return allAssignments[task.id].map { $0 < today } ?? false
         }, calendar: calendar)
         await updateEvening(open: open, allAssignments: allAssignments, recurringIDs: recurringIDs)
+        scheduleNeighbourLoad()
     }
 
     /// Open tasks with a time block (own or linked event) on `day`, read without changing what is shown.
@@ -315,6 +322,12 @@ final class PlanningModel {
     /// The AI view of days outside the shown range (e.g. the next week as targets for moving tasks away
     /// from a full day). Computed like `reload()` without changing what is shown.
     func planInputs(in range: ClosedRange<PlanDay>) async -> [PlanInputDay] {
+        await dayPlans(in: range, withDeadlines: false).compactMap(\.planInput)
+    }
+
+    /// The plans of days outside (or inside) the shown range, computed like `reload()` without changing what is shown.
+    /// Page previews ask for the deadlines too; the AI view does not need them.
+    func dayPlans(in range: ClosedRange<PlanDay>, withDeadlines: Bool = true) async -> [DayPlan] {
         let open = taskList.items.filter { !$0.isCompleted }
         let series = await recurringSeries(open: open)
         let recurringIDs = Set(series.map(\.id))
@@ -326,19 +339,22 @@ final class PlanningModel {
         let deadlineIDs = deadlineIDs(in: events, marked: marked)
         let links = Dictionary(resolveLinks(events: events, tasks: open, manual: blocks.links.manualLinks()).map { ($0.eventID, $0.taskID) },
                                uniquingKeysWith: { first, _ in first })
+        let deadlines = withDeadlines
+            ? importantDeadlines(tasks: open, events: events, deadlineCalendarIDs: Set(settings.deadlineCalendarIDs ?? []),
+                                 markedEventIDs: marked, in: range, calendar: calendar)
+            : []
         let assignments = planStore.assignments(in: range)
         let overrides = planStore.overrides(in: range)
         let tasksByID = Dictionary(open.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
         let everything = PlanDay(year: 1, month: 1, day: 1)...PlanDay(year: 9999, month: 12, day: 31)
         let allAssignments = planStore.assignments(in: everything)
-        var result: [PlanInputDay] = []
+        var result: [DayPlan] = []
         var day = range.lowerBound
         while day <= range.upperBound {
-            let plan = dayPlan(day, events: events, links: links, deadlines: [], assignments: assignments,
-                               overrides: overrides, tasksByID: tasksByID, series: series,
-                               recurringIDs: recurringIDs, open: open, allAssignments: allAssignments,
-                               deadlineIDs: deadlineIDs)
-            if let input = plan.planInput { result.append(input) }
+            result.append(dayPlan(day, events: events, links: links, deadlines: deadlines, assignments: assignments,
+                                  overrides: overrides, tasksByID: tasksByID, series: series,
+                                  recurringIDs: recurringIDs, open: open, allAssignments: allAssignments,
+                                  deadlineIDs: deadlineIDs))
             day = day.adding(days: 1, calendar: calendar)
         }
         return result

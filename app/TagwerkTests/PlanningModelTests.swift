@@ -1981,4 +1981,62 @@ struct PlanningModelTests {
         await model.unmarkDeadline(exam)
         #expect(changes == 2)
     }
+
+    // MARK: Neighbour pages
+
+    @Test func neighbourPlans_dayScope_holdsPreviousAndNextDay() async {
+        let model = await model()
+        await model.loadNeighbours()
+        #expect(Set(model.neighbourPlans.keys) == [today.adding(days: -1, calendar: calendar), today.adding(days: 1, calendar: calendar)])
+        #expect(model.days.map(\.day) == [today])
+    }
+
+    @Test func neighbourPlans_weekScope_holdsSevenDaysEach() async {
+        let model = await model()
+        model.scope = .week
+        await model.reload()
+        await model.loadNeighbours()
+        let thisMonday = PlanDay(year: 2026, month: 11, day: 16)
+        let expected = (-7...(-1)).map { thisMonday.adding(days: $0, calendar: calendar) }
+            + (7...13).map { thisMonday.adding(days: $0, calendar: calendar) }
+        #expect(Set(model.neighbourPlans.keys) == Set(expected))
+        #expect(model.neighbourPlans.count == 14)
+    }
+
+    @Test func neighbourPlans_monthScope_isEmpty() async {
+        let model = await model()
+        model.scope = .month
+        await model.reload()
+        await model.loadNeighbours()
+        #expect(model.neighbourPlans.isEmpty)
+    }
+
+    @Test func neighbourPlans_doNotContainSuggestions() async {
+        let store = SuggestionStore(context: container.mainContext)
+        let tomorrow = today.adding(days: 1, calendar: calendar)
+        let block = PlanSuggestion(id: UUID(), kind: .block, taskKey: "local:Fahrrad", title: "Fahrrad", day: tomorrow,
+                                   startMinutes: 14 * 60, minutes: 60, reason: "r")
+        store.replace(with: SuggestionBatch(id: UUID(), scope: .day, days: [tomorrow], createdAt: testNow(), suggestions: [block],
+                                            unscheduled: [], risks: [], estimates: [:]))
+        await taskList.reload()
+        let model = PlanningModel(taskList: taskList, calendarStore: calendarStore, reminderStore: accessStore,
+                                  planStore: planStore, efforts: RecurringEffortStore(context: container.mainContext),
+                                  blocks: blocks, settings: settings, marks: EventMarkStore(context: container.mainContext),
+                                  suggestions: store, now: testNow, calendar: calendar)
+        model.anchor = tomorrow
+        await model.reload()
+        #expect(model.days.first?.suggestions.count == 1)
+        await model.loadNeighbours()
+        #expect(model.neighbourPlans.values.allSatisfy { $0.suggestions.isEmpty })
+    }
+
+    @Test func neighbourPlans_followTheShownDayAfterReload() async {
+        let model = await model()
+        model.anchor = today.adding(days: 3, calendar: calendar)
+        await model.reload()
+        await model.loadNeighbours()
+        #expect(model.neighbourPlans[today.adding(days: 2, calendar: calendar)] != nil)
+        #expect(model.neighbourPlans[today.adding(days: 4, calendar: calendar)] != nil)
+        #expect(model.neighbourPlans[today.adding(days: -1, calendar: calendar)] == nil)
+    }
 }

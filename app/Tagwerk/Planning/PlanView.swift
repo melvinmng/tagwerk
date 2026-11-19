@@ -131,7 +131,11 @@ struct PlanView: View {
                 }
                 AssistantToolbarItems { .planning(scope: model.scope, anchor: model.anchor) }
             }
-            .task(id: "\(model.scope)-\(model.anchor)") { await model.reload() }
+            .task(id: "\(model.scope)-\(model.anchor)") {
+                // The page previews need the neighbouring plans once the tab is on screen.
+                model.loadsNeighboursAfterReload = true
+                await model.reload()
+            }
             .refreshable { await model.taskList.reload(); await model.reload() }
             .onChange(of: model.taskList.items) { _, _ in Task { await model.reload() } }
             .confirmationDialog("Zeitblöcke mitverschieben?", isPresented: hasPendingDecision, titleVisibility: .visible) {
