@@ -13,15 +13,20 @@ struct RoutineSettingsView: View {
         @Bindable var settings = environment.settings
         let store = environment.routineStore
         let items = store.checklist()
+        let conflict = RoutineSchedule.quietHoursConflict(
+            settings.quietHours, items: items, bedtimeMinutes: settings.bedtimeMinutes, eveningEnabled: settings.eveningRemindersEnabled,
+            morningEnabled: settings.morningReminderEnabled, morningMinutes: settings.morningReminderMinutes)
         Form {
             Section {
-                DatePicker("Zielschlafzeit", selection: time($settings.bedtimeMinutes), displayedComponents: .hourAndMinute)
+                DatePicker("Zielschlafzeit", selection: $settings.bedtimeMinutes.asTime(), displayedComponents: .hourAndMinute)
                 Toggle("Erinnerungen am Abend", isOn: $settings.eveningRemindersEnabled)
                 if settings.eveningRemindersEnabled, environment.routineNotifications.authorization != .authorized {
                     notificationHint
                 }
             } header: {
                 Text("Tagesabschluss")
+            } footer: {
+                if conflict.evening { Text(Self.quietHoursNote) }
             }
 
             Section {
@@ -58,10 +63,12 @@ struct RoutineSettingsView: View {
             Section {
                 Toggle("Erinnerung", isOn: $settings.morningReminderEnabled)
                 if settings.morningReminderEnabled {
-                    DatePicker("Uhrzeit", selection: time($settings.morningReminderMinutes), displayedComponents: .hourAndMinute)
+                    DatePicker("Uhrzeit", selection: $settings.morningReminderMinutes.asTime(), displayedComponents: .hourAndMinute)
                 }
             } header: {
                 Text("Tagesstart")
+            } footer: {
+                if conflict.morning { Text(Self.quietHoursNote) }
             }
 
             Section {
@@ -136,16 +143,9 @@ struct RoutineSettingsView: View {
         return String(localized: "\(offset) min vorher · \(clock)")
     }
 
-    /// Bridges "minutes since midnight" to a `Date` for time pickers.
-    private func time(_ minutes: Binding<Int>) -> Binding<Date> {
-        let calendar = Calendar.tagwerk
-        return Binding(
-            get: { calendar.date(bySettingHour: minutes.wrappedValue / 60, minute: minutes.wrappedValue % 60, second: 0, of: .now) ?? .now },
-            set: { date in
-                let parts = calendar.dateComponents([.hour, .minute], from: date)
-                minutes.wrappedValue = (parts.hour ?? 0) * 60 + (parts.minute ?? 0)
-            }
-        )
+    /// Routine reminders are exempt from the quiet hours; the hint says so where one of them falls into the window.
+    private static var quietHoursNote: String {
+        String(localized: "Eine dieser Erinnerungen liegt in den Ruhezeiten. Routine-Erinnerungen kommen trotzdem.")
     }
 }
 

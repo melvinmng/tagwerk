@@ -96,6 +96,18 @@ final class AppSettings {
     /// "Notizen an ChatGPT senden": a thought note may be sent, only on a tap on "Vorschläge holen".
     var noteSuggestionConsent: Bool = false
 
+    /// Quiet hours (plan quiet-hours, #169): task and deadline notifications that fall into the window move to its end.
+    var quietHoursEnabled: Bool = false
+    /// The window starts at `bedtimeMinutes`; `quietStartMinutes` applies only while this is off.
+    var quietHoursStartsAtBedtime: Bool = true
+    var quietStartMinutes: Int = 1380
+    var quietEndMinutes: Int = 420
+    /// Focus filter "Mitteilungen ruhen lassen" (runtime state, not a preference): set while a Focus with the filter is
+    /// active, and the start kept after it ended until the notifications that came due meanwhile were caught up.
+    var focusQuietSince: Date? = nil
+    var focusQuietCatchUpFrom: Date? = nil
+    var focusQuietCatchUpAt: Date? = nil
+
     /// Voice: microphone in conversations (plan voice-chat, SP7a).
     var voiceInputEnabled: Bool = true
     /// The one-time explanation before the first recording (SP8a) was confirmed.
@@ -151,6 +163,22 @@ extension AppSettings {
         guard !workoutGoalMigrated else { return }
         if goalWorkoutsPerWeek == 0 { goalWorkoutMinutesPerWeek = 0 }
         workoutGoalMigrated = true
+    }
+
+    /// The quiet hours the settings describe; `nil` when switched off or empty.
+    var quietHours: QuietHours? {
+        QuietHours.resolved(enabled: quietHoursEnabled, startsAtBedtime: quietHoursStartsAtBedtime, bedtimeMinutes: bedtimeMinutes,
+                            startMinutes: quietStartMinutes, endMinutes: quietEndMinutes)
+    }
+
+    /// The Focus filter state, see `FocusQuiet`.
+    var focusQuietState: FocusQuiet.State {
+        get { FocusQuiet.State(since: focusQuietSince, catchUpFrom: focusQuietCatchUpFrom, catchUpAt: focusQuietCatchUpAt) }
+        set {
+            focusQuietSince = newValue.since
+            focusQuietCatchUpFrom = newValue.catchUpFrom
+            focusQuietCatchUpAt = newValue.catchUpAt
+        }
     }
 
     /// Task sources whose switch for notifications is on.

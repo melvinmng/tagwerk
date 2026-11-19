@@ -45,13 +45,20 @@ public struct NotificationRules: Sendable, Hashable {
     public var allDayEventHour: Int
     /// Notifications must fire at least this long after `now`; earlier ones are skipped.
     public var minimumDelay: TimeInterval
+    /// Daily window in which task and deadline notifications are moved to the window end instead of firing; `nil` is off.
+    public var quietHours: QuietHours?
+    /// While a Focus filter holds notifications back: those that would fire inside it move to its end.
+    public var focusHold: FocusHold?
+    /// After a Focus filter ended: notifications that came due while it held them back fire once at its `at`.
+    public var focusCatchUp: FocusCatchUp?
 
     /// Margin before a new notification may fire.
     public static let defaultMinimumDelay: TimeInterval = 60
 
     public init(leadTimeMinutes: Int, includesDeadlineCalendars: Bool,
                 taskSources: Set<TaskSource> = Set(TaskSource.allCases), limit: Int = 50, dateOnlyHour: Int = 9,
-                allDayEventHour: Int = 18, minimumDelay: TimeInterval = defaultMinimumDelay) {
+                allDayEventHour: Int = 18, minimumDelay: TimeInterval = defaultMinimumDelay, quietHours: QuietHours? = nil,
+                focusHold: FocusHold? = nil, focusCatchUp: FocusCatchUp? = nil) {
         self.leadTimeMinutes = leadTimeMinutes
         self.includesDeadlineCalendars = includesDeadlineCalendars
         self.taskSources = taskSources
@@ -59,6 +66,19 @@ public struct NotificationRules: Sendable, Hashable {
         self.dateOnlyHour = dateOnlyHour
         self.allDayEventHour = allDayEventHour
         self.minimumDelay = minimumDelay
+        self.quietHours = quietHours
+        self.focusHold = focusHold
+        self.focusCatchUp = focusCatchUp
+    }
+
+    /// When a notification that would fire at `fire` is delivered: caught up after a Focus filter, held back while one
+    /// is active, and finally moved out of the quiet hours. Unchanged when none of the three applies.
+    func deliveryDate(for fire: Date, calendar: Calendar) -> Date {
+        var delivery = fire
+        if let catchUp = focusCatchUp, delivery >= catchUp.from, delivery < catchUp.at { delivery = catchUp.at }
+        if let hold = focusHold, delivery >= hold.from, delivery < hold.until { delivery = hold.until }
+        if let quietHours { delivery = quietHours.shifted(delivery, calendar: calendar) }
+        return delivery
     }
 }
 
@@ -78,12 +98,17 @@ public func notificationPlan(tasks: [TaskItem], deadlineEvents: [CalendarEvent],
         parts.minute = due.minute ?? 0
         // A due date without time reminds on the morning of the due day; the lead time applies to timed ones only.
         guard let dueMoment = calendar.date(from: parts),
-              let fire = due.hasTime ? calendar.date(byAdding: .minute, value: -rules.leadTimeMinutes, to: dueMoment) : dueMoment,
-              fire >= earliest else { continue }
+              let original = due.hasTime ? calendar.date(byAdding: .minute, value: -rules.leadTimeMinutes, to: dueMoment) : dueMoment
+        else { continue }
+        // Moved before the check: a notification that was due during the quiet hours is still wanted after they began.
+        let fire = rules.deliveryDate(for: original, calendar: calendar)
+        guard fire >= earliest else { continue }
         let time = due.hasTime ? dueMoment : nil
+        let dueDay = PlanDay(due)
+        let isOverdue = texts.isOverdue(day: dueDay, time: time, fire: fire)
         result.append(PlannedNotification(
             id: PlannedNotification.identifier(for: task.id), fireDate: fire, title: texts.title(task.title),
-            body: texts.taskBody(dueDay: PlanDay(due), time: time, fire: fire, container: task.container.name),
+            body: texts.taskBody(dueDay: dueDay, time: time, fire: fire, container: task.container.name, overdue: isOverdue),
             target: .task(task.id), source: task.id.source))
     }
 
@@ -91,20 +116,23 @@ public func notificationPlan(tasks: [TaskItem], deadlineEvents: [CalendarEvent],
         var seen = Set<String>()
         for event in deadlineEvents where seen.insert(event.id).inserted {
             let day = PlanDay(date: event.start, calendar: calendar)
-            let fire: Date?
+            let original: Date?
             if event.isAllDay {
                 // All-day deadlines remind on the evening before, without lead time (design 2b §11.13).
                 var parts = day.adding(days: -1, calendar: calendar).startDate(in: calendar).components(in: calendar)
                 parts.hour = rules.allDayEventHour
                 parts.minute = 0
-                fire = calendar.date(from: parts)
+                original = calendar.date(from: parts)
             } else {
-                fire = calendar.date(byAdding: .minute, value: -rules.leadTimeMinutes, to: event.start)
+                original = calendar.date(byAdding: .minute, value: -rules.leadTimeMinutes, to: event.start)
             }
-            guard let fire, fire >= earliest else { continue }
+            guard let original else { continue }
+            let fire = rules.deliveryDate(for: original, calendar: calendar)
+            guard fire >= earliest else { continue }
+            let time = event.isAllDay ? nil : event.start
             result.append(PlannedNotification(
                 id: PlannedNotification.identifier(forEvent: event.id), fireDate: fire, title: texts.title(event.title),
-                body: texts.eventBody(day: day, time: event.isAllDay ? nil : event.start, fire: fire),
+                body: texts.eventBody(day: day, time: time, fire: fire, overdue: texts.isOverdue(day: day, time: time, fire: fire)),
                 target: .event(id: event.id, day: day), source: nil))
         }
     }
@@ -126,18 +154,25 @@ private struct NotificationTexts {
         return trimmed.isEmpty ? text("Ohne Titel") : trimmed
     }
 
-    func taskBody(dueDay: PlanDay, time: Date?, fire: Date, container: String) -> String {
-        let moment = moment(day: dueDay, time: time, fire: fire)
-        return text("Fällig \(moment) · \(container)")
+    /// A notification moved past its due moment (quiet hours, Focus): a timed one after the time, one for a whole day
+    /// from the day after.
+    func isOverdue(day: PlanDay, time: Date?, fire: Date) -> Bool {
+        if let time { return fire > time }
+        return PlanDay(date: fire, calendar: calendar) > day
     }
 
-    func eventBody(day: PlanDay, time: Date?, fire: Date) -> String {
+    func taskBody(dueDay: PlanDay, time: Date?, fire: Date, container: String, overdue: Bool = false) -> String {
+        let moment = moment(day: dueDay, time: time, fire: fire)
+        return overdue ? text("War fällig \(moment) · \(container)") : text("Fällig \(moment) · \(container)")
+    }
+
+    func eventBody(day: PlanDay, time: Date?, fire: Date, overdue: Bool = false) -> String {
         if time == nil {
             let dayPart = dayText(day, fire: fire)
-            return text("Deadline \(dayPart), ganztägig")
+            return overdue ? text("Deadline war \(dayPart), ganztägig") : text("Deadline \(dayPart), ganztägig")
         }
         let moment = moment(day: day, time: time, fire: fire)
-        return text("Deadline \(moment)")
+        return overdue ? text("Deadline war \(moment)") : text("Deadline \(moment)")
     }
 
     private func moment(day: PlanDay, time: Date?, fire: Date) -> String {
@@ -151,6 +186,7 @@ private struct NotificationTexts {
         let fireDay = PlanDay(date: fire, calendar: calendar)
         if day == fireDay { return text("heute") }
         if day == fireDay.adding(days: 1, calendar: calendar) { return text("morgen") }
+        if day == fireDay.adding(days: -1, calendar: calendar) { return text("gestern") }
         let weekday = DateText.shortWeekday(day, calendar: calendar, locale: locale)
         let date = DateText.numericDay(day, calendar: calendar, locale: locale)
         return text("am \(weekday), \(date)")

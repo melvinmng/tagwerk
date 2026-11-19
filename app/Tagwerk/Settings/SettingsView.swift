@@ -90,6 +90,11 @@ struct SettingsView: View {
                     Toggle("Erinnerungen", isOn: $settings.reminderTaskNotifications)
                     Toggle("Lokale Aufgaben", isOn: $settings.localTaskNotifications)
                     Toggle("Deadline-Termine", isOn: $settings.deadlineCalendarNotifications)
+                    NavigationLink {
+                        QuietHoursSettingsView()
+                    } label: {
+                        LabeledContent("Ruhezeiten", value: QuietHoursSettingsView.summary(settings))
+                    }
                 } header: {
                     Text("Benachrichtigungen")
                 } footer: {
