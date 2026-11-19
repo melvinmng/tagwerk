@@ -57,6 +57,8 @@ final class AppEnvironment {
     let snapshotWriter: WidgetSnapshotWriter
     /// A tab another view asks to show (e.g. "Mit KI planen" from the task list jumps to "Planen").
     var requestedTab: Int?
+    /// Pages on top of the task list (shopping list, notes); a deep link sets it to open the shopping list.
+    var tasksPath: [TasksDestination] = []
     private let gitHubCache: SwiftDataGitHubCache
     private let gitHubCatalogStore: SwiftDataGitHubCatalogStore
     /// Age after which the repository/project catalog is fetched again.

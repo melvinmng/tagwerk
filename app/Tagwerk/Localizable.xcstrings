@@ -377,6 +377,26 @@
       },
       "shouldTranslate": false
     },
+    "%@ stehen schon drauf": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ are already on the list"
+          }
+        }
+      }
+    },
+    "%@ steht schon drauf": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ is already on the list"
+          }
+        }
+      }
+    },
     "%@ von %@": {
       "localizations": {
         "de": {
@@ -421,6 +441,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "%1$@ suggested · %2$@ free after accepting"
+          }
+        }
+      }
+    },
+    "%@ wieder geöffnet": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ reopened"
           }
         }
       }
@@ -1249,6 +1279,46 @@
         }
       }
     },
+    "%lld erledigte Artikel endgültig löschen?": {
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Permanently delete %lld completed item?"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Permanently delete %lld completed items?"
+                }
+              }
+            }
+          }
+        },
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld erledigten Artikel endgültig löschen?"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld erledigte Artikel endgültig löschen?"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "%lld fällig in diesem Zeitraum": {
       "localizations": {
         "en": {
@@ -1325,6 +1395,16 @@
         }
       }
     },
+    "%lld hinzugefügt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld added"
+          }
+        }
+      }
+    },
     "%lld kcal": {
       "localizations": {
         "en": {
@@ -1361,6 +1441,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "%lld not scheduled"
+          }
+        }
+      }
+    },
+    "%lld offen · Liste „%@“ in Erinnerungen": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$lld offen · Liste „%2$@“ in Erinnerungen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld open · list “%@” in Reminders"
           }
         }
       }
@@ -1681,6 +1777,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Hand over"
+          }
+        }
+      }
+    },
+    "Abhaken": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check off"
           }
         }
       }
@@ -2148,6 +2254,16 @@
         }
       }
     },
+    "Andere Liste wählen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose Another List"
+          }
+        }
+      }
+    },
     "Andere Menge: %lld ml": {
       "localizations": {
         "en": {
@@ -2198,6 +2314,16 @@
         }
       }
     },
+    "Anlegen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Create"
+          }
+        }
+      }
+    },
     "Anlegen als": {
       "localizations": {
         "en": {
@@ -2224,6 +2350,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Signing in …"
+          }
+        }
+      }
+    },
+    "Anmeldung unter Einstellungen › KI": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sign in under Settings › AI"
           }
         }
       }
@@ -2394,6 +2530,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Type"
+          }
+        }
+      }
+    },
+    "Artikel": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Item"
+          }
+        }
+      }
+    },
+    "Artikel hinzufügen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add item"
           }
         }
       }
@@ -2710,6 +2866,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Automatic"
+          }
+        }
+      }
+    },
+    "Bearbeiten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit"
           }
         }
       }
@@ -3623,12 +3789,42 @@
         }
       }
     },
+    "Die Kategorie gilt für jeden Artikel mit diesem Namen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The category applies to every item with this name."
+          }
+        }
+      }
+    },
+    "Die Kategorie konnte nicht angelegt werden.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The category could not be created."
+          }
+        }
+      }
+    },
     "Die Knöpfe im Tab erfassen sofort. Getränke mit Kalorien trägst du unter „Essen“ ein.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "The buttons in the tab log right away. Log drinks with calories under “Food”."
+          }
+        }
+      }
+    },
+    "Die Liste ist leer. Füge unten Artikel hinzu.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The list is empty. Add items below."
           }
         }
       }
@@ -3739,6 +3935,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "The time is invalid."
+          }
+        }
+      }
+    },
+    "Die bisherige Liste gibt es nicht mehr.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The previous list no longer exists."
           }
         }
       }
@@ -3976,6 +4182,16 @@
         }
       }
     },
+    "Einkaufsliste": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shopping List"
+          }
+        }
+      }
+    },
     "Einladung": {
       "localizations": {
         "en": {
@@ -4146,6 +4362,16 @@
         }
       }
     },
+    "Entfernt den Artikel aus der Eingabe": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Removes the item from the input"
+          }
+        }
+      }
+    },
     "Entstehen über „Künftig immer“ auf einer Vorschlagskarte. Nach dem Löschen fragt Tagwerk wieder.": {
       "localizations": {
         "en": {
@@ -4271,6 +4497,16 @@
         }
       }
     },
+    "Erlaube Tagwerk in den iOS-Einstellungen den vollen Zugriff auf Erinnerungen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Allow Tagwerk full access to Reminders in iOS Settings."
+          }
+        }
+      }
+    },
     "Erlaube den Vollzugriff in den Einstellungen, damit Tagwerk sie anzeigen kann.": {
       "localizations": {
         "en": {
@@ -4317,6 +4553,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Done"
+          }
+        }
+      }
+    },
+    "Erledigt · %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Completed · %lld"
+          }
+        }
+      }
+    },
+    "Erledigte entfernen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove Completed"
           }
         }
       }
@@ -5136,6 +5392,16 @@
         }
       }
     },
+    "Höchstens 20 Artikel auf einmal": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "At most 20 items at a time"
+          }
+        }
+      }
+    },
     "Hört zu · auf dem iPhone": {
       "localizations": {
         "en": {
@@ -5506,8 +5772,28 @@
         }
       }
     },
+    "Kategorie": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Category"
+          }
+        }
+      }
+    },
     "Kategorie nach dem Sprechen: %@": {
       "shouldTranslate": false
+    },
+    "Kategorien verwalten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Manage Categories"
+          }
+        }
+      }
     },
     "Kein": {
       "localizations": {
@@ -5559,6 +5845,16 @@
         }
       }
     },
+    "Kein Zugriff auf Erinnerungen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No Access to Reminders"
+          }
+        }
+      }
+    },
     "Kein Zugriff auf diese Quelle.": {
       "localizations": {
         "en": {
@@ -5595,6 +5891,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "No deadline after this event"
+          }
+        }
+      }
+    },
+    "Keine Einkaufsliste": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No Shopping List"
           }
         }
       }
@@ -6004,6 +6310,16 @@
         }
       }
     },
+    "Liste verschwunden": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "List Is Gone"
+          }
+        }
+      }
+    },
     "Liste von ChatGPT · %@": {
       "localizations": {
         "en": {
@@ -6024,6 +6340,16 @@
         }
       }
     },
+    "Liste wählen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose List"
+          }
+        }
+      }
+    },
     "Lokal": {
       "localizations": {
         "en": {
@@ -6040,6 +6366,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Local tasks"
+          }
+        }
+      }
+    },
+    "Längere Notiz, in Erinnerungen bearbeiten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Longer note, edit it in Reminders"
           }
         }
       }
@@ -6454,6 +6790,16 @@
         }
       }
     },
+    "Mit ChatGPT sortieren": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sort with ChatGPT"
+          }
+        }
+      }
+    },
     "Mit GitHub anmelden": {
       "localizations": {
         "en": {
@@ -6783,6 +7129,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "New task"
+          }
+        }
+      }
+    },
+    "Neue Kategorie": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New Category"
+          }
+        }
+      }
+    },
+    "Neue Kategorie …": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New Category …"
           }
         }
       }
@@ -9608,6 +9974,16 @@
         }
       }
     },
+    "Wieder öffnen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reopen"
+          }
+        }
+      }
+    },
     "Wiederholen": {
       "localizations": {
         "en": {
@@ -9794,6 +10170,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Weekday and day of the month come from the due date."
+          }
+        }
+      }
+    },
+    "Wähle eine Erinnerungsliste als Einkaufsliste.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a reminders list as your shopping list."
           }
         }
       }
@@ -10344,6 +10730,16 @@
         }
       }
     },
+    "erledigt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "completed"
+          }
+        }
+      }
+    },
     "frei": {
       "localizations": {
         "en": {
@@ -10725,6 +11121,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "not allowed"
+          }
+        }
+      }
+    },
+    "nicht erledigt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "not completed"
           }
         }
       }
@@ -11530,6 +11936,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "✓ Applied · %@"
+          }
+        }
+      }
+    },
+    "✦ Sortieren": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "✦ Sort"
           }
         }
       }

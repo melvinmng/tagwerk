@@ -1,0 +1,270 @@
+import SwiftUI
+import TagwerkCore
+
+/// The shopping page: open items in category sections, checking off, the folded "Erledigt" section and the
+/// input bar. It has no navigation stack of its own, so it can be pushed or shown in a sheet.
+struct ShoppingListView: View {
+    @Environment(AppEnvironment.self) private var environment
+    let model: ShoppingModel
+
+    @State private var editing: ShoppingItem?
+    @State private var showsCompleted = false
+    @State private var confirmsRemoveCompleted = false
+    @State private var showsCategories = false
+    /// The line above the input field: feedback after adding or the text of a write error.
+    @State private var notice: String?
+    /// The item that gets the category typed into the "Neue Kategorie" dialog.
+    @State private var newCategoryItem: ShoppingItem?
+    @State private var newCategoryName = ""
+
+    init(model: ShoppingModel) {
+        self.model = model
+    }
+
+    private var categories: [ShoppingCategoryInfo] { environment.shoppingCategories.categories() }
+
+    var body: some View {
+        content
+            .navigationTitle("Einkaufsliste")
+            .navigationBarTitleDisplayMode(.large)
+            .toolbar {
+                if model.state == .ready {
+                    ToolbarItem(placement: .topBarTrailing) { menu }
+                }
+                AssistantToolbarItems { .tasks }
+            }
+            .sheet(item: $editing) { item in
+                ShoppingItemSheet(model: model, item: item) { notice = $0 }
+            }
+            .alert("Neue Kategorie", isPresented: newCategoryBinding) {
+                TextField("Name", text: $newCategoryName)
+                Button("Anlegen", action: createCategory)
+                Button("Abbrechen", role: .cancel) {}
+            }
+            .confirmationDialog("\(model.completedItems.count) erledigte Artikel endgültig löschen?",
+                                isPresented: $confirmsRemoveCompleted, titleVisibility: .visible) {
+                Button("Löschen", role: .destructive) { Task { await model.removeCompleted() } }
+                Button("Abbrechen", role: .cancel) {}
+            }
+            .task {
+                environment.shoppingCategories.seedIfNeeded()
+                await model.reload()
+            }
+    }
+
+    // MARK: States
+
+    @ViewBuilder private var content: some View {
+        switch model.state {
+        case .ready:
+            list
+                .safeAreaInset(edge: .bottom) { ShoppingInputBar(model: model, notice: $notice) }
+        case .accessDenied:
+            ContentUnavailableView {
+                Label("Kein Zugriff auf Erinnerungen", systemImage: "lock")
+            } description: {
+                Text("Erlaube Tagwerk in den iOS-Einstellungen den vollen Zugriff auf Erinnerungen.")
+            } actions: {
+                Button("Einstellungen öffnen") {
+                    if let url = URL(string: UIApplication.openSettingsURLString) { UIApplication.shared.open(url) }
+                }
+            }
+        case .listMissing:
+            ContentUnavailableView {
+                Label("Liste verschwunden", systemImage: "questionmark.folder")
+            } description: {
+                Text("Die bisherige Liste gibt es nicht mehr.")
+            } actions: {
+                Button("Andere Liste wählen") { environment.tasksPath.append(.shoppingSettings) }
+            }
+        case .noList:
+            ContentUnavailableView {
+                Label("Keine Einkaufsliste", systemImage: "cart")
+            } description: {
+                Text("Wähle eine Erinnerungsliste als Einkaufsliste.")
+            } actions: {
+                Button("Liste wählen") { environment.tasksPath.append(.shoppingSettings) }
+            }
+        }
+    }
+
+    private var list: some View {
+        List {
+            Section {
+                Text("\(model.openItems.count) offen · Liste „\(model.listTitle ?? "")“ in Erinnerungen")
+                    .font(.subheadline).foregroundStyle(.secondary)
+                    .listRowBackground(Color.clear)
+                    .listRowInsets(EdgeInsets(top: 0, leading: 4, bottom: 0, trailing: 4))
+            }
+            if model.openItems.isEmpty && model.completedItems.isEmpty {
+                Section {
+                    Text("Die Liste ist leer. Füge unten Artikel hinzu.")
+                        .foregroundStyle(.secondary)
+                        .frame(maxWidth: .infinity, alignment: .center)
+                        .listRowBackground(Color.clear)
+                }
+            }
+            ForEach(model.sections) { section in
+                Section {
+                    ForEach(section.items) { row($0) }
+                } header: {
+                    sectionHeader(section)
+                }
+            }
+            if !model.completedItems.isEmpty {
+                Section {
+                    DisclosureGroup(isExpanded: $showsCompleted) {
+                        ForEach(model.completedItems) { row($0) }
+                    } label: {
+                        Text("Erledigt · \(model.completedItems.count)").foregroundStyle(.secondary)
+                    }
+                }
+            }
+        }
+        .listStyle(.insetGrouped)
+        .refreshable { await model.reload() }
+    }
+
+    private func sectionHeader(_ section: ShoppingSection) -> some View {
+        HStack {
+            Text(title(of: section.categoryID))
+            Spacer()
+            if section.categoryID == nil, environment.ai.isSignedIn {
+                Button("✦ Sortieren") { startSorting() }
+                    .font(.footnote)
+                    .textCase(nil)
+            }
+        }
+    }
+
+    private func title(of categoryID: UUID?) -> String {
+        guard let categoryID else { return String(localized: "Sonstiges") }
+        return categories.first { $0.id == categoryID }?.name ?? String(localized: "Sonstiges")
+    }
+
+    // MARK: Rows
+
+    private func row(_ item: ShoppingItem) -> some View {
+        HStack(spacing: 12) {
+            Button {
+                toggle(item)
+            } label: {
+                Image(systemName: item.isCompleted ? "checkmark.circle.fill" : "circle")
+                    .font(.title2)
+                    .foregroundStyle(item.isCompleted ? Color.secondary : Color.accentColor)
+                    .frame(width: 32, height: 44)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.borderless)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(item.name)
+                    .strikethrough(item.isCompleted)
+                    .foregroundStyle(item.isCompleted ? .secondary : .primary)
+                if let quantity = item.quantity {
+                    Text(quantity).font(.subheadline).foregroundStyle(.secondary)
+                }
+            }
+            Spacer(minLength: 0)
+        }
+        .contentShape(Rectangle())
+        .onTapGesture { editing = item }
+        .contextMenu { rowMenu(item) }
+        .swipeActions(edge: .trailing) {
+            Button(role: .destructive) { delete(item) } label: { Label("Löschen", systemImage: "trash") }
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(ShoppingInput.accessibilityLabel(item))
+        .accessibilityAddTraits(.isButton)
+        .accessibilityAction(named: item.isCompleted ? Text("Wieder öffnen") : Text("Abhaken")) { toggle(item) }
+        .accessibilityAction(named: Text("Bearbeiten")) { editing = item }
+        .accessibilityAction(named: Text("Löschen")) { delete(item) }
+    }
+
+    @ViewBuilder private func rowMenu(_ item: ShoppingItem) -> some View {
+        let current = model.categoryID(of: item)
+        Menu("Kategorie") {
+            ForEach(categories) { category in
+                Button {
+                    model.setCategory(category.id, forItemID: item.id)
+                } label: {
+                    if category.id == current { Label(category.name, systemImage: "checkmark") } else { Text(category.name) }
+                }
+            }
+            Button {
+                model.setCategory(nil, forItemID: item.id)
+            } label: {
+                if current == nil { Label("Sonstiges", systemImage: "checkmark") } else { Text("Sonstiges") }
+            }
+            Divider()
+            Button("Neue Kategorie …") {
+                newCategoryName = ""
+                newCategoryItem = item
+            }
+        }
+        Button { editing = item } label: { Label("Bearbeiten", systemImage: "pencil") }
+        Button(role: .destructive) { delete(item) } label: { Label("Löschen", systemImage: "trash") }
+    }
+
+    // MARK: Menu
+
+    private var menu: some View {
+        Menu {
+            Button(action: startSorting) {
+                Label("Mit ChatGPT sortieren", systemImage: "sparkles")
+                if !environment.ai.isSignedIn { Text("Anmeldung unter Einstellungen › KI") }
+            }
+            .disabled(true)
+            Button { showsCategories = true } label: { Label("Kategorien verwalten", systemImage: "list.bullet.indent") }
+                .disabled(true)
+            Button(role: .destructive) {
+                confirmsRemoveCompleted = true
+            } label: {
+                Label("Erledigte entfernen", systemImage: "trash")
+            }
+            .disabled(model.completedItems.isEmpty)
+        } label: {
+            Image(systemName: "ellipsis")
+        }
+        .accessibilityLabel("Mehr")
+    }
+
+    // MARK: Actions
+
+    private func toggle(_ item: ShoppingItem) {
+        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+        perform {
+            if item.isCompleted { try await model.reopen(id: item.id) } else { try await model.checkOff(id: item.id) }
+        }
+    }
+
+    private func delete(_ item: ShoppingItem) {
+        perform { try await model.delete(id: item.id) }
+    }
+
+    private func perform(_ operation: @escaping @MainActor () async throws -> Void) {
+        Task {
+            do {
+                try await operation()
+            } catch {
+                notice = TaskListModel.message(for: error)
+            }
+        }
+    }
+
+    private var newCategoryBinding: Binding<Bool> {
+        Binding(get: { newCategoryItem != nil }, set: { if !$0 { newCategoryItem = nil } })
+    }
+
+    /// Creates the typed category at the end and puts the item into it at once.
+    private func createCategory() {
+        guard let item = newCategoryItem else { return }
+        do {
+            let category = try environment.shoppingCategories.add(name: newCategoryName)
+            model.setCategory(category.id, forItemID: item.id)
+        } catch {
+            notice = String(localized: "Die Kategorie konnte nicht angelegt werden.")
+        }
+    }
+
+    private func startSorting() {}
+}

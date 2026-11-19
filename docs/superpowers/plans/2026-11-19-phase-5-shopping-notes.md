@@ -763,7 +763,7 @@ enum ShoppingInput {
 }
 ```
 
-- [ ] **Schritt 1: Tests schreiben**
+- [x] **Schritt 1: Tests schreiben**
 
 ```swift
 @Test func preview_onlyForSeveralOrDictated() {
@@ -784,9 +784,9 @@ enum ShoppingInput {
 }
 ```
 
-- [ ] **Schritt 2:** Suite ausführen. Erwartet: Übersetzungsfehler.
-- [ ] **Schritt 3: `ShoppingInput` umsetzen**, Suite grün.
-- [ ] **Schritt 4: Seite bauen** nach Spec §5.4, Punkt für Punkt:
+- [x] **Schritt 2:** Suite ausführen. Erwartet: Übersetzungsfehler.
+- [x] **Schritt 3: `ShoppingInput` umsetzen**, Suite grün.
+- [x] **Schritt 4: Seite bauen** nach Spec §5.4, Punkt für Punkt:
   - Kopf: Titel „Einkaufsliste“, Unterzeile „%lld offen · Liste ‚%@‘ in Erinnerungen“; Leiste: Menü „⋯“ („Mit ChatGPT sortieren“, „Kategorien verwalten“, „Erledigte entfernen“) und Assistenten-Knopf (Kontext `.tasks`).
   - Abschnitte aus `model.sections`; Titel aus den Kategorien, `nil` → „Sonstiges“.
   - Zeile: Kreis (Tipp → `checkOff`, `UIImpactFeedbackGenerator(style: .light)`), Name, Menge sekundär; Tipp auf die Zeile → `ShoppingItemSheet`; Kontextmenü „Kategorie“ (alle Kategorien, Haken an der aktuellen, „Sonstiges“, „Neue Kategorie …“), „Bearbeiten“, „Löschen“; Wischen links „Löschen“ ohne Rückfrage.
@@ -797,9 +797,9 @@ enum ShoppingInput {
   - Eingabezeile `ShoppingInputBar` unten (`safeAreaInset`): Feld „Artikel hinzufügen“, Mikrofon nur bei `settings.voiceInputEnabled`, Senden-Knopf bei Text; Marken über der Zeile nach `needsPreview`, Tipp entfernt eine Marke, Senden legt an; nach dem Diktat nie ohne Tippen speichern; Rückmeldung über dem Feld (verschwindet nach 4 s).
   - Zustände: leer („Die Liste ist leer. Füge unten Artikel hinzu.“), `.accessDenied` (Knopf zu den iOS-Einstellungen), `.listMissing` und `.noList` (Knopf „Andere Liste wählen“ → `environment.tasksPath.append(.shoppingSettings)`, Ziel entsteht in Task 11); Schreibfehler als Meldung über dem Feld mit `TaskListModel.message(for:)`.
   - Aktualisierung: `.task { await model.reload() }`, `.refreshable`.
-- [ ] **Schritt 5: Sichtprüfung im Simulator** (Erinnerungen im Simulator freigeben, dort eine Liste „Einkauf“ mit fünf Artikeln anlegen; bis Task 11 die Auswahlseite liefert, die Liste vorläufig in einem `#Preview` über `setShoppingList` wählen): hell, dunkel, größte Schriftstufe, Englisch, VoiceOver liest „Hafermilch, 2 Packungen, nicht erledigt“. Am Gerät nicht geprüft; das folgt in Task 17.
-- [ ] **Schritt 6:** `app/test-all.sh`. Erwartet: `ALL TESTS PASSED` (Kataloge enthalten die neuen Texte deutsch und englisch).
-- [ ] **Schritt 7:** Commit: `git add app/Tagwerk app/TagwerkTests && git commit -m "feat: add shopping list page with input bar and dictation"`
+- [ ] **Schritt 5: Sichtprüfung im Simulator** (offen, in der Nacht nicht durchgeführt) (Erinnerungen im Simulator freigeben, dort eine Liste „Einkauf“ mit fünf Artikeln anlegen; bis Task 11 die Auswahlseite liefert, die Liste vorläufig in einem `#Preview` über `setShoppingList` wählen): hell, dunkel, größte Schriftstufe, Englisch, VoiceOver liest „Hafermilch, 2 Packungen, nicht erledigt“. Am Gerät nicht geprüft; das folgt in Task 17.
+- [x] **Schritt 6:** `app/test-all.sh`. Erwartet: `ALL TESTS PASSED` (Kataloge enthalten die neuen Texte deutsch und englisch).
+- [x] **Schritt 7:** Commit: `git add app/Tagwerk app/TagwerkTests && git commit -m "feat: add shopping list page with input bar and dictation"`
 
 ---
 
