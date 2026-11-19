@@ -603,7 +603,7 @@ public enum ShoppingCategoryRules {
 ```
   - `assign(..., manual: false)` überschreibt nie eine vorhandene Zuordnung mit `sourceRaw == "manual"` (Festlegung 10).
 
-- [ ] **Schritt 1: Tests schreiben** (In-Memory-Container über `ModelContainerFactory.make(inMemory: true)`)
+- [x] **Schritt 1: Tests schreiben** (In-Memory-Container über `ModelContainerFactory.make(inMemory: true)`)
 
 ```swift
 @Test func seed_createsTenBuiltinsInOrder_once() {
@@ -631,10 +631,10 @@ public enum ShoppingCategoryRules {
 }
 ```
 
-- [ ] **Schritt 2:** Suite ausführen. Erwartet: Übersetzungsfehler.
-- [ ] **Schritt 3: Umsetzen.**
-- [ ] **Schritt 4:** Suiten `ShoppingCategoryStoreTests`, `ModelStoreLocationTests` ausführen. Erwartet: grün.
-- [ ] **Schritt 5:** Commit: `git add app/Tagwerk app/TagwerkTests && git commit -m "feat: store shopping categories and learned assignments"`
+- [x] **Schritt 2:** Suite ausführen. Erwartet: Übersetzungsfehler.
+- [x] **Schritt 3: Umsetzen.**
+- [x] **Schritt 4:** Suiten `ShoppingCategoryStoreTests`, `ModelStoreLocationTests` ausführen. Erwartet: grün.
+- [x] **Schritt 5:** Commit: `git add app/Tagwerk app/TagwerkTests && git commit -m "feat: store shopping categories and learned assignments"`
 
 ---
 
