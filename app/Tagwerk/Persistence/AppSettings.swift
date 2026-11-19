@@ -124,6 +124,15 @@ final class AppSettings {
     var focusQuietCatchUpFrom: Date? = nil
     var focusQuietCatchUpAt: Date? = nil
 
+    /// Focus timer (plan P3, #161): durations of the phases, the number of rounds and whether breaks are used at all.
+    var focusWorkMinutes: Int = 25
+    var focusShortBreakMinutes: Int = 5
+    var focusLongBreakMinutes: Int = 15
+    var focusRounds: Int = 4
+    var focusUsesPomodoro: Bool = true
+    /// "Erfahrungswerte in der Planung nutzen" (#162): the AI planning gets an expected effort per task.
+    var effortHistoryInPlanning: Bool = true
+
     /// Voice: microphone in conversations (plan voice-chat, SP7a).
     var voiceInputEnabled: Bool = true
     /// The one-time explanation before the first recording (SP8a) was confirmed.
@@ -144,6 +153,22 @@ final class AppSettings {
     var voiceModeSendDelay: Double = 2
     var voiceModeSilenceLimit: Double = 30
     var voiceModeExplained: Bool = false
+
+    /// The focus timer durations as the rules want them (clamped).
+    var focusTimerSettings: FocusTimerSettings {
+        get {
+            FocusTimerSettings(workMinutes: focusWorkMinutes, shortBreakMinutes: focusShortBreakMinutes,
+                               longBreakMinutes: focusLongBreakMinutes, rounds: focusRounds, isPomodoro: focusUsesPomodoro)
+        }
+        set {
+            let clamped = newValue.clamped
+            focusWorkMinutes = clamped.workMinutes
+            focusShortBreakMinutes = clamped.shortBreakMinutes
+            focusLongBreakMinutes = clamped.longBreakMinutes
+            focusRounds = clamped.rounds
+            focusUsesPomodoro = clamped.isPomodoro
+        }
+    }
 
     var noteSortOrder: NoteSortOrder {
         get { NoteSortOrder(rawValue: noteSortOrderRaw) ?? .modified }
