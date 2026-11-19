@@ -24,18 +24,26 @@ enum KeyboardTapPolicy {
     }
 }
 
-/// Registry of the frames marked with `.keepsKeyboardOnTap()`, one entry per view.
+/// Registry of the views marked with `.keepsKeyboardOnTap()`. It keeps weak references to UIKit anchors and
+/// converts their bounds into window coordinates at tap time, so the frames match `UITouch.location(in: nil)`
+/// in sheets as well (SwiftUI's `.global` space is not guaranteed to be the window space there).
 @MainActor
 final class KeyboardKeepZones {
     static let shared = KeyboardKeepZones()
 
-    private var framesByID: [String: CGRect] = [:]
+    private let anchors = NSHashTable<UIView>.weakObjects()
 
-    var frames: [CGRect] { Array(framesByID.values) }
+    /// Frames in window coordinates of all anchors that are currently in a window.
+    var frames: [CGRect] {
+        anchors.allObjects.compactMap { view in
+            guard view.window != nil else { return nil }
+            return view.convert(view.bounds, to: nil)
+        }
+    }
 
-    func update(id: String, frame: CGRect) { framesByID[id] = frame }
+    func add(_ view: UIView) { anchors.add(view) }
 
-    func remove(id: String) { framesByID[id] = nil }
+    func remove(_ view: UIView) { anchors.remove(view) }
 }
 
 /// Owns the window-wide tap recognizer. The recognizer never cancels or delays touches and recognizes
@@ -135,14 +143,29 @@ extension View {
 }
 
 private struct KeepsKeyboardOnTap: ViewModifier {
-    @State private var id = UUID().uuidString
-
     func body(content: Content) -> some View {
-        content
-            .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { frame in
-                KeyboardKeepZones.shared.update(id: id, frame: frame)
+        content.background(KeepZoneAnchor())
+    }
+}
+
+/// Invisible UIKit view behind a marked input bar. It never receives touches; it only gives the registry
+/// a frame that UIKit can convert into window coordinates.
+private struct KeepZoneAnchor: UIViewRepresentable {
+    func makeUIView(context: Context) -> AnchorView {
+        let view = AnchorView()
+        view.isUserInteractionEnabled = false
+        return view
+    }
+
+    func updateUIView(_ uiView: AnchorView, context: Context) {}
+
+    final class AnchorView: UIView {
+        override func didMoveToWindow() {
+            super.didMoveToWindow()
+            MainActor.assumeIsolated {
+                if window != nil { KeyboardKeepZones.shared.add(self) } else { KeyboardKeepZones.shared.remove(self) }
             }
-            .onDisappear { KeyboardKeepZones.shared.remove(id: id) }
+        }
     }
 }
 

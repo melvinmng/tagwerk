@@ -1,5 +1,6 @@
 import CoreGraphics
 import Testing
+import UIKit
 @testable import Tagwerk
 
 @MainActor
@@ -28,14 +29,21 @@ struct KeyboardTapPolicyTests {
         #expect(KeyboardTapPolicy.shouldDismiss(isKeyboardVisible: true, touchIsInTextInput: false, point: point, keepZones: zones))
     }
 
-    @Test func registry_keepsOneFramePerView_andForgetsRemovedViews() {
+    @Test func registry_reportsWindowFrames_andSkipsViewsOutsideAWindow() {
         let registry = KeyboardKeepZones()
-        registry.update(id: "bar", frame: CGRect(x: 0, y: 0, width: 10, height: 10))
-        registry.update(id: "bar", frame: CGRect(x: 0, y: 50, width: 10, height: 10))
-        registry.update(id: "header", frame: CGRect(x: 0, y: 100, width: 10, height: 10))
-        #expect(registry.frames.count == 2)
-        #expect(registry.frames.contains(CGRect(x: 0, y: 50, width: 10, height: 10)))
-        registry.remove(id: "bar")
-        #expect(registry.frames == [CGRect(x: 0, y: 100, width: 10, height: 10)])
+        let window = UIWindow(frame: CGRect(x: 0, y: 0, width: 400, height: 800))
+        // A container offset like a sheet, so the anchor's own frame differs from its window frame.
+        let sheet = UIView(frame: CGRect(x: 0, y: 200, width: 400, height: 600))
+        window.addSubview(sheet)
+        let bar = UIView(frame: CGRect(x: 10, y: 500, width: 380, height: 50))
+        sheet.addSubview(bar)
+        let detached = UIView(frame: CGRect(x: 0, y: 0, width: 10, height: 10))
+        registry.add(bar)
+        registry.add(detached)
+
+        #expect(registry.frames == [CGRect(x: 10, y: 700, width: 380, height: 50)])
+
+        registry.remove(bar)
+        #expect(registry.frames.isEmpty)
     }
 }
