@@ -122,7 +122,8 @@ final class NoteStore {
         return (try? context.fetch(FetchDescriptor<NoteRecord>())) ?? []
     }
 
-    private func save() {
+    /// Saves and bumps `revision`; internal so the routines' extension can write through the same path.
+    func save() {
         try? context.save()
         revision += 1
     }

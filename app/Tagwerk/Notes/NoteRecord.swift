@@ -19,6 +19,8 @@ final class NoteRecord {
     var wasDictated: Bool = false
     /// When suggestions were derived from the note (phase 7); `nil` until then.
     var processedAt: Date? = nil
+    /// Phase 7: executed suggestions and tasks created by hand from this note ("2 Aufgaben daraus").
+    var derivedActionCount: Int = 0
 
     init(text: String, kind: NoteKind = .free, dayKey: String? = nil, wasDictated: Bool = false, now: Date = .now) {
         self.text = text

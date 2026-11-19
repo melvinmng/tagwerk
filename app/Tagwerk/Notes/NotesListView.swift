@@ -40,7 +40,7 @@ struct NotesListView: View {
             Section {
                 ForEach(notes, id: \.id) { card($0) }
             } footer: {
-                Text("Notizen liegen nur auf diesem iPhone. Sie werden nicht an ChatGPT gesendet.")
+                Text(Self.listFootnote)
             }
         }
         .navigationTitle("Notizen")
@@ -160,6 +160,12 @@ struct NotesListView: View {
 // MARK: Texts
 
 extension NotesListView {
+    /// Under the list. A thought note can go to ChatGPT, but only by a tap on "Vorschläge holen" with the consent
+    /// of the routine settings (phase 7); own notes have no such button and are never sent.
+    static var listFootnote: String {
+        String(localized: "Notizen liegen nur auf diesem iPhone. An ChatGPT geht eine Gedanken-Notiz nur, wenn du bei ihr auf „Vorschläge holen“ tippst.")
+    }
+
     /// Own notes: when they were changed last ("heute 08:12", "Dienstag" within the last six days, "12. Nov."),
     /// with "· diktiert" for dictated ones. Thought notes: their origin and day ("Tagesabschluss · 18.11.").
     static func footer(for note: NoteRecord, now: Date, calendar: Calendar) -> String {
@@ -170,7 +176,12 @@ extension NotesListView {
         case .morning, .evening:
             let origin = note.kind == .morning ? String(localized: "Tagesstart") : String(localized: "Tagesabschluss")
             let day = note.dayKey.flatMap(NoteDayKey.day) ?? PlanDay(date: note.createdAt, calendar: calendar)
-            return "\(origin) · \(DateText.numericDay(day, calendar: calendar))"
+            let text = "\(origin) · \(DateText.numericDay(day, calendar: calendar))"
+            switch note.derivedActionCount {
+            case ...0: return text
+            case 1: return text + " · " + String(localized: "1 Aufgabe daraus")
+            default: return text + " · " + String(localized: "\(note.derivedActionCount) Aufgaben daraus")
+            }
         }
     }
 

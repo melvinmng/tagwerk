@@ -45,4 +45,22 @@ struct NotesListTextTests {
                 == "zuletzt: „Ideen Hausarbeit“ · heute 08:12")
         #expect(NotesListView.entrySubtitle(latest: nil, now: now, calendar: calendar) == "Noch keine Notizen")
     }
+
+    @Test func footer_thoughts_namesTheTasksDerivedFromThem() {
+        let derived = note(kind: .evening, dayKey: "2026-11-18", updated: at(19, 7))
+        derived.derivedActionCount = 2
+        #expect(footer(derived) == "Tagesabschluss · 18.11. · 2 Aufgaben daraus")
+        derived.derivedActionCount = 1
+        #expect(footer(derived) == "Tagesabschluss · 18.11. · 1 Aufgabe daraus")
+        derived.derivedActionCount = 0
+        #expect(footer(derived) == "Tagesabschluss · 18.11.")
+        let free = note(updated: at(19, 8, 12))
+        free.derivedActionCount = 3
+        #expect(footer(free) == "heute 08:12")
+    }
+
+    @Test func listFootnote_staysTrueOnceThoughtsCanBeSent() {
+        #expect(NotesListView.listFootnote ==
+                "Notizen liegen nur auf diesem iPhone. An ChatGPT geht eine Gedanken-Notiz nur, wenn du bei ihr auf „Vorschläge holen“ tippst.")
+    }
 }

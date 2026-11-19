@@ -994,6 +994,16 @@
         }
       }
     },
+    "%lld Aufgaben daraus": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld tasks from it"
+          }
+        }
+      }
+    },
     "%lld Aufgaben gesendet, %lld gekürzt · %lld min frei · %lld Zeichen": {
       "localizations": {
         "de": {
@@ -2071,6 +2081,16 @@
         }
       }
     },
+    "1 Aufgabe daraus": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 task from it"
+          }
+        }
+      }
+    },
     "1 Stunde": {
       "localizations": {
         "en": {
@@ -2602,6 +2622,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Accept all (%lld)"
+          }
+        }
+      }
+    },
+    "Als Aufgabe anlegen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Create as task"
           }
         }
       }
@@ -9068,12 +9098,12 @@
         }
       }
     },
-    "Notizen liegen nur auf diesem iPhone. Sie werden nicht an ChatGPT gesendet.": {
+    "Notizen liegen nur auf diesem iPhone. An ChatGPT geht eine Gedanken-Notiz nur, wenn du bei ihr auf „Vorschläge holen“ tippst.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Notes are stored on this iPhone only. They are not sent to ChatGPT."
+            "value": "Notes stay on this iPhone only. A thoughts note goes to ChatGPT only when you tap “Get suggestions” on it."
           }
         }
       }
@@ -11964,6 +11994,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Waiting for confirmation …"
+          }
+        }
+      }
+    },
+    "Was geht dir durch den Kopf?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What’s on your mind?"
           }
         }
       }

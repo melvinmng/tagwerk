@@ -5,12 +5,17 @@ import TagwerkCore
 /// Creates a local task or a reminder.
 struct NewTaskSheet: View {
     let model: TaskListModel
+    /// Called after the task was created (the thoughts note counts it as derived).
+    let onCreated: (() -> Void)?
     @Environment(\.dismiss) private var dismiss
 
     @State private var target: TaskSource
 
-    init(model: TaskListModel) {
+    /// `prefilledTitle` only fills the title; source and the other fields stay as in any new task.
+    init(model: TaskListModel, prefilledTitle: String? = nil, onCreated: (() -> Void)? = nil) {
         self.model = model
+        self.onCreated = onCreated
+        _title = State(initialValue: prefilledTitle ?? "")
         let available = Set(Self.availableTargets(in: model))
         _target = State(initialValue: model.filter.creationTarget(available: available))
         _priority = State(initialValue: model.filter.creationTarget(available: available) == .reminders ? .p4 : nil)
@@ -18,7 +23,7 @@ struct NewTaskSheet: View {
         let login = (model.provider(for: .github) as? GitHubTaskProvider)?.login
         _assignees = State(initialValue: Set([login].compactMap { $0 }))
     }
-    @State private var title = ""
+    @State private var title: String
     @State private var notes = ""
     @State private var hasDue = false
     @State private var hasTime = false
@@ -172,7 +177,10 @@ struct NewTaskSheet: View {
                 due: hasDue ? DueDate(date: dueDate, includeTime: false, calendar: model.calendar) : nil),
             assignees: target == .github ? selectedAssignees : nil
         )
+        let errorBefore = model.lastError
         await model.create(draft, in: target)
+        // `create` reports no result; a new error message means it did not work out.
+        if model.lastError == errorBefore || model.lastError == nil { onCreated?() }
         dismiss()
     }
 }

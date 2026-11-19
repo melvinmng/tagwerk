@@ -105,8 +105,8 @@ struct RootView: View {
         }
         .sheet(item: routinesSheet) { sheet in
             switch sheet {
-            case .evening(let day): EveningSheet(model: environment.routines, day: day)
-            case .start(let day): MorningSheet(model: environment.routines, day: day)
+            case .evening(let day): EveningSheet(model: environment.routines, day: day, notes: environment.notes)
+            case .start(let day): MorningSheet(model: environment.routines, day: day, notes: environment.notes)
             }
         }
         .sheet(item: $recurringEdit) { edit in

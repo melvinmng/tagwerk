@@ -1488,5 +1488,10 @@
   "Tagesfokus": "Daily focus",
   "Tagesfokus · %lld von %lld gewählt": "Daily focus · %1$lld of %2$lld chosen",
   "Tagesstart · Fokus wählen": "Morning start · Choose focus",
-  "Tagesstart · Fokus wählen · %@": "Morning start · Choose focus · %@"
+  "Tagesstart · Fokus wählen · %@": "Morning start · Choose focus · %@",
+  "%lld Aufgaben daraus": "%lld tasks from it",
+  "1 Aufgabe daraus": "1 task from it",
+  "Als Aufgabe anlegen": "Create as task",
+  "Notizen liegen nur auf diesem iPhone. An ChatGPT geht eine Gedanken-Notiz nur, wenn du bei ihr auf „Vorschläge holen“ tippst.": "Notes stay on this iPhone only. A thoughts note goes to ChatGPT only when you tap “Get suggestions” on it.",
+  "Was geht dir durch den Kopf?": "What’s on your mind?"
 }

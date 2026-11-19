@@ -831,7 +831,7 @@ struct NoteField: View { let model: NoteFieldModel }     // section "Gedanken"
 // NewTaskSheet.init(model: TaskListModel, prefilledTitle: String? = nil, onCreated: (() -> Void)? = nil)
 ```
 
-- [ ] **Step 1: Tests schreiben (rot).**
+- [x] **Step 1: Tests schreiben (rot).**
 
 ```swift
 // NoteFieldModelTests (sleep is a controllable fake)
@@ -849,10 +849,10 @@ struct NoteField: View { let model: NoteFieldModel }     // section "Gedanken"
 
 Listentest (Testdatei von `NotesListView` aus Phase 5): `footer(for:now:calendar:)` liefert „Tagesabschluss · 18.11. · 2 Aufgaben daraus“ bei `derivedActionCount == 2`, ohne Zusatz bei 0; Fußnote der Liste lautet „Notizen liegen nur auf diesem iPhone. An ChatGPT geht eine Gedanken-Notiz nur, wenn du bei ihr auf ‚Vorschläge holen‘ tippst.“
 
-- [ ] **Step 2:** `APP NoteFieldModelTests` → rot.
-- [ ] **Step 3: Umsetzen.** `saveThought` ruft für Text mit Inhalt `create(text:kind:dayKey:wasDictated:)` (Phase 5 aktualisiert dabei die vorhandene Notiz des Tages und der Art) und löscht bei reinem Leerraum die vorhandene Notiz über `delete(_:)`. `NoteField` nach Design §7.6: mehrzeiliges Feld „Was geht dir durch den Kopf?“ mit `TextSelection`, Mikrofon nur bei `voiceInputEnabled` (eigener `VoiceInputModel` über `VoiceInputFactory.make(_:)` mit `readDraft = draftBeforeCursor`, `writeDraft = writeDictation`, `onSend = { _ in }`; `VoiceMicrophoneButton` und `VoiceRecordingBar` wie im Assistenten), darunter bei vorhandenem Text „＋ Als Aufgabe anlegen“ (öffnet `NewTaskSheet(model:prefilledTitle:onCreated:)`). „Vorschläge holen“ und der Fußtext folgen in Task 14. Beide Blätter bekommen den Abschnitt „Gedanken“ und rufen `flush()` beim Schließen. Die Notiz des Tagesabschlusses nutzt den Tag des Blatts (Regel 10).
+- [x] **Step 2:** `APP NoteFieldModelTests` → rot.
+- [x] **Step 3: Umsetzen.** `saveThought` ruft für Text mit Inhalt `create(text:kind:dayKey:wasDictated:)` (Phase 5 aktualisiert dabei die vorhandene Notiz des Tages und der Art) und löscht bei reinem Leerraum die vorhandene Notiz über `delete(_:)`. `NoteField` nach Design §7.6: mehrzeiliges Feld „Was geht dir durch den Kopf?“ mit `TextSelection`, Mikrofon nur bei `voiceInputEnabled` (eigener `VoiceInputModel` über `VoiceInputFactory.make(_:)` mit `readDraft = draftBeforeCursor`, `writeDraft = writeDictation`, `onSend = { _ in }`; `VoiceMicrophoneButton` und `VoiceRecordingBar` wie im Assistenten), darunter bei vorhandenem Text „＋ Als Aufgabe anlegen“ (öffnet `NewTaskSheet(model:prefilledTitle:onCreated:)`). „Vorschläge holen“ und der Fußtext folgen in Task 14. Beide Blätter bekommen den Abschnitt „Gedanken“ und rufen `flush()` beim Schließen. Die Notiz des Tagesabschlusses nutzt den Tag des Blatts (Regel 10).
 - [ ] **Step 4:** Tests aus Step 2 und die Notiz-Tests aus Phase 5 → grün. Geräteprüfung (§15.2): Spracheingabe im Notizfeld außerhalb des Assistenten.
-- [ ] **Step 5: Commit.** `git commit -m "feat: add the thoughts note to the morning and evening sheets"`
+- [x] **Step 5: Commit.** `git commit -m "feat: add the thoughts note to the morning and evening sheets"`
 
 ### Task 14: Zustimmung, `NoteSuggestionModel`, Kontext, Karten im Blatt · #143 · Zeile 11
 

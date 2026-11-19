@@ -8,6 +8,14 @@ struct EveningSheet: View {
     let day: PlanDay
     @Environment(AppEnvironment.self) private var environment
     @State private var review: RoutinesModel.DayReview?
+    @State private var note: NoteFieldModel
+
+    init(model: RoutinesModel, day: PlanDay, notes: NoteStore) {
+        self.model = model
+        self.day = day
+        // The wrap-up note belongs to the day the sheet was opened for (rule 10).
+        _note = State(initialValue: NoteFieldModel(store: notes, kind: .evening, day: day))
+    }
 
     var body: some View {
         let items = model.checklist()
@@ -58,6 +66,8 @@ struct EveningSheet: View {
                     Text("Abend-Checkliste · Schlafzeit \(DateText.time(minutes: model.settings.bedtimeMinutes, calendar: model.calendar))")
                 }
 
+                NoteField(model: note)
+
                 if let next = model.planning.nextPlanDay {
                     Section {
                         Button {
@@ -80,7 +90,7 @@ struct EveningSheet: View {
             }
             .navigationTitle("Tagesabschluss")
             .navigationBarTitleDisplayMode(.inline)
-            .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Fertig") { model.finishEvening(day) } } }
+            .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Fertig") { note.flush(); model.finishEvening(day) } } }
             .task { review = await model.dayReview(day) }
         }
     }

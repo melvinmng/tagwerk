@@ -6,10 +6,17 @@ import TagwerkCore
 struct MorningSheet: View {
     let model: RoutinesModel
     let day: PlanDay
+
+    init(model: RoutinesModel, day: PlanDay, notes: NoteStore) {
+        self.model = model
+        self.day = day
+        _note = State(initialValue: NoteFieldModel(store: notes, kind: .morning, day: day))
+    }
     @State private var gratitude: [String] = ["", "", ""]
     @State private var overview: RoutinesModel.Overview?
     @State private var isLoaded = false
     @State private var showsAll = false
+    @State private var note: NoteFieldModel
 
     /// The first field, then one more each time the previous one is filled (at most three).
     private var visibleFields: Int {
@@ -73,12 +80,14 @@ struct MorningSheet: View {
                 if let overview {
                     Section("Heute") { Text(RoutinesModel.overviewText(overview)) }
                 }
+                NoteField(model: note)
             }
             .navigationTitle("Tagesstart")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Fertig") {
+                        note.flush()
                         model.setGratitude(gratitude, on: day)
                         model.finishStart(day)
                     }
