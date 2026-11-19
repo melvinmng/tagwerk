@@ -128,7 +128,7 @@ struct AppToolsTests {
         #expect((result["events"] as? [[String: Any]])?.first?["matchedIn"] as? [String] == ["title"])
         #expect(result["eventCount"] as? Int == 1)
         #expect(result["taskCount"] as? Int == 1)
-        #expect((result["searched"] as? [String: String]) == ["from": "2026-05-18", "to": "2027-11-18"])
+        #expect((result["searched"] as? [String: String]) == ["from": "2026-05-18", "to": "2027-11-17"])
     }
 
     @Test func search_neverReturnsNoteText() async throws {

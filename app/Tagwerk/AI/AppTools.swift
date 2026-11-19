@@ -186,8 +186,10 @@ final class AppTools: ToolHandler {
         }
         var answer: [String: Any] = [
             "events": Array(events), "tasks": Array(tasks), "eventCount": eventRows.count, "taskCount": taskRows.count,
+            // `end` is exclusive: the last searched day is the one before it.
             "searched": ["from": AIPlanner.dayString(PlanDay(date: start, calendar: calendar)),
-                         "to": args.string("to") ?? AIPlanner.dayString(PlanDay(date: end, calendar: calendar))],
+                         "to": args.string("to") ?? AIPlanner.dayString(
+                            PlanDay(date: calendar.date(byAdding: .day, value: -1, to: end) ?? end, calendar: calendar))],
         ]
         // Without calendar access an empty event list would read as "nothing found".
         if filter != .tasks, fetched == nil { answer["calendarAccess"] = false }
