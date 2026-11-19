@@ -119,6 +119,7 @@ GitHub-Konto: @melvinmng · bestätigt zuweisbar · geprüft 2026-11-17 · ich
 - [ ] [#146](https://github.com/melvinmng/tagwerk/issues/146) Leitfragen zur Reflexion als optionale Vorlage {status: Backlog; prio: P3 (Medium); aufwand: 3h; epic: #140}
 - [ ] [#150](https://github.com/melvinmng/tagwerk/issues/150) Einkaufsliste: Rezept hochladen (Foto, Text oder Link) und die nötigen Zutaten per ChatGPT als Artikel hinzufügen {status: Backlog; prio: P3 (Medium); epic: #113}
 - [ ] [#151](https://github.com/melvinmng/tagwerk/issues/151) Flexible und mehrfache Erinnerungen für Aufgaben, Deadlines und Kalendertermine (beliebig viele, frei wählbare Zeitpunkte; bei Serien „Nur dieser / Alle folgenden“) {status: Backlog; prio: P3 (Medium)}
+- [ ] [#152](https://github.com/melvinmng/tagwerk/issues/152) Notizen ausbauen: Ordner, Verschieben, Löschen und mindestens der Funktionsumfang von Apple Notizen {status: Backlog; prio: P3 (Medium); epic: #113}
 
 ## Notizen
 
@@ -127,7 +128,7 @@ GitHub-Konto: @melvinmng · bestätigt zuweisbar · geprüft 2026-11-17 · ich
 
 _Automatisch aus [Tagwerk](https://github.com/users/melvinmng/projects/17) erzeugt. Nicht von Hand bearbeiten; Aufgaben oben unter den Personen pflegen._
 
-### Backlog (12)
+### Backlog (13)
 - [#115](https://github.com/melvinmng/tagwerk/issues/115) Phase 6: Jira als Aufgabenquelle anbinden · @melvinmng · Prio P4 (Low)
 - [#134](https://github.com/melvinmng/tagwerk/issues/134) Tage und Wochen in „Planen“ und „Erfassen“ als mitziehbare Seiten blättern (Finger zieht den Nachbartag mit) · @melvinmng · Prio P4 (Low)
 - [#136](https://github.com/melvinmng/tagwerk/issues/136) GitHub-Issues beim Anlegen an andere Teilnehmer des gewählten Projects vergeben (Teilnehmer je Project abrufen) · @melvinmng · Prio P4 (Low)
@@ -140,6 +141,7 @@ _Automatisch aus [Tagwerk](https://github.com/users/melvinmng/projects/17) erzeu
 - [#146](https://github.com/melvinmng/tagwerk/issues/146) Leitfragen zur Reflexion als optionale Vorlage · @melvinmng · Prio P3 (Medium) · 3h
 - [#150](https://github.com/melvinmng/tagwerk/issues/150) Einkaufsliste: Rezept hochladen und Zutaten per ChatGPT hinzufügen · @melvinmng · Prio P3 (Medium)
 - [#151](https://github.com/melvinmng/tagwerk/issues/151) Flexible und mehrfache Erinnerungen für Aufgaben, Deadlines und Kalendertermine · @melvinmng · Prio P3 (Medium)
+- [#152](https://github.com/melvinmng/tagwerk/issues/152) Notizen ausbauen: Ordner, Verschieben und Funktionsumfang von Apple Notizen · @melvinmng · Prio P3 (Medium)
 
 ### Bereit (1)
 - [#113](https://github.com/melvinmng/tagwerk/issues/113) Phase 5: Einkaufsliste und Notizen einbinden · @melvinmng · Prio P3 (Medium)
