@@ -264,6 +264,8 @@ final class AppEnvironment {
         focus.installIntentHandler()
         let effort = EffortTracker(store: focusStore, blocks: blockPlanner, calendarStore: gateway, settings: settings)
         self.effort = effort
+        // Only the expected minutes per task go to the planning, and only while the setting is on.
+        planner.expectedMinutes = { effort.expectedMinutes(for: $0) }
         taskList.onCompletedItem = { item, date in
             // A timer running for the task ends first, so its focus time counts for this completion.
             await focus.didComplete(taskKey: item.id.key)

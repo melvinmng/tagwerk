@@ -4006,6 +4006,16 @@
         }
       }
     },
+    "Beim Planen geht je Aufgabe auch eine erwartete Dauer in Minuten mit, abgeleitet aus deinen bisherigen Messungen. Die Messungen selbst und die Labels bleiben auf dem iPhone. Abschalten kannst du das unter Einstellungen › Fokus-Timer.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "When planning, an expected duration in minutes is also sent for each task, derived from your earlier measurements. The measurements themselves and the labels stay on your iPhone. You can turn this off under Settings › Focus timer."
+          }
+        }
+      }
+    },
     "Belastet mich etwas?": {
       "localizations": {
         "en": {
@@ -4684,6 +4694,36 @@
           "stringUnit": {
             "state": "translated",
             "value": "Duration: %lld min"
+          }
+        }
+      }
+    },
+    "Dauern etwa so lange wie geschätzt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Take about as long as estimated"
+          }
+        }
+      }
+    },
+    "Dauern im Schnitt %@ kürzer als geschätzt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Take %@ less time than estimated on average"
+          }
+        }
+      }
+    },
+    "Dauern im Schnitt %@ länger als geschätzt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Take %@ longer than estimated on average"
           }
         }
       }
@@ -6732,6 +6772,16 @@
         }
       }
     },
+    "Fokus in dieser Woche": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Focus this week"
+          }
+        }
+      }
+    },
     "Fokus läuft": {
       "localizations": {
         "en": {
@@ -7187,6 +7237,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Deleted"
+          }
+        }
+      }
+    },
+    "Gemessen über Fokus-Timer und Zeitblöcke, letzte 8 Wochen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Measured with the focus timer and time blocks, last 8 weeks."
           }
         }
       }
@@ -9702,6 +9762,16 @@
         }
       }
     },
+    "Messungen in dieser Woche": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Measurements this week"
+          }
+        }
+      }
+    },
     "Mikrofon": {
       "localizations": {
         "en": {
@@ -10658,6 +10728,16 @@
         }
       }
     },
+    "Noch zu wenige Messungen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not enough measurements yet."
+          }
+        }
+      }
+    },
     "Notiz": {
       "localizations": {
         "en": {
@@ -11083,6 +11163,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Add without estimate"
+          }
+        }
+      }
+    },
+    "Ohne Schätzung gemessen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Measured without estimate"
           }
         }
       }
@@ -11971,6 +12061,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Estimation"
+          }
+        }
+      }
+    },
+    "Schätzung und Ist": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Estimate vs. actual"
           }
         }
       }

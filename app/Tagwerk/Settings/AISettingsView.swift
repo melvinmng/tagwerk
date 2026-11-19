@@ -219,6 +219,7 @@ struct AIPrivacyView: View {
             Section {
                 Text(AIStatusMessage.privacyNotice)
                 Text("Tagwerk ruft die KI nur auf, wenn du sie selbst startest, zum Beispiel mit „Tag planen“ oder einer Nachricht an den Assistenten. Im Hintergrund geschieht das nie, und Tagwerk fragt nicht bei jedem Aufruf erneut nach.")
+                Text("Beim Planen geht je Aufgabe auch eine erwartete Dauer in Minuten mit, abgeleitet aus deinen bisherigen Messungen. Die Messungen selbst und die Labels bleiben auf dem iPhone. Abschalten kannst du das unter Einstellungen › Fokus-Timer.")
                 Text("„Abmelden“ löscht die Anmeldung bei ChatGPT von diesem iPhone. Danach sind die KI-Funktionen aus, bis du dich wieder anmeldest.")
             }
         }

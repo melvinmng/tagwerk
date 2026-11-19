@@ -67,7 +67,9 @@ extension AIPlanner {
         do {
             let model = try await model()
             let request = try await revisionRequest(batch: batch, about: suggestion, comment: comment, refs: refs)
-            let instructions = Self.instructions(batch.scope, longerDays: longerDays(), language: language()) + Self.preferenceText(preferences())
+            let usesExpected = makeInput(scope: batch.scope, only: Set(batch.suggestions.compactMap(\.taskID))).tasks.contains { $0.expectedMinutes != nil }
+            let instructions = Self.instructions(batch.scope, longerDays: longerDays(), language: language(), usesExpectedMinutes: usesExpected)
+                + Self.preferenceText(preferences())
                 + "\n" + Self.revisionInstructions(language: language())
             var text = ""
             var completed = false

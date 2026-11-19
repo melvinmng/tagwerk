@@ -39,6 +39,7 @@ struct WeekReviewView: View {
                     Text("Erinnerungen und lokale Aufgaben, ohne GitHub")
                 }
             }
+            EffortReviewSection(model: model)
             // Phase 7: also in a week without any entry.
             WeekReflectionSections(model: model)
         }

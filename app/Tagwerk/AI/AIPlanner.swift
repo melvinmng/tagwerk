@@ -34,6 +34,9 @@ final class AIPlanner {
     @ObservationIgnored var longerDays: @MainActor () -> LongerDays = { .forDeadlines }
     /// "Planungsvorgaben" (mockup VR1): short sentences sent with every planning and conversation.
     @ObservationIgnored var preferences: @MainActor () -> [String] = { [] }
+    /// Expected minutes per task (`TaskID.key`) from the person's measured effort (plan P3, #162); empty without enough
+    /// measurements or when the setting is off. Only these numbers go to the model.
+    @ObservationIgnored var expectedMinutes: @MainActor ([TaskItem]) -> [String: Int] = { _ in [:] }
     /// The language of the reasons the model writes; they are shown and stored (plan english-app, decision 8).
     @ObservationIgnored var language: @MainActor () -> VoiceLanguage = { .app }
 
@@ -101,14 +104,15 @@ final class AIPlanner {
             let model = try await model()
             if consumeModelFallback() { notice = Self.modelFallbackMessage }
             let inputText = String(decoding: try input.modelJSON(), as: UTF8.self)
-            let firstText = try await answer(model: model, scope: scope, input: [.user(inputText)])
+            let usesExpected = input.tasks.contains { $0.expectedMinutes != nil }
+            let firstText = try await answer(model: model, scope: scope, input: [.user(inputText)], usesExpectedMinutes: usesExpected)
             var (accepted, violations) = validate(try decode(firstText, scope: scope), input: input)
             let firstViolations = violations
             if !violations.isEmpty {
                 // One follow-up with the violations; what still fails goes to "Nicht eingeplant".
                 let retryText = try await answer(model: model, scope: scope, input: [
                     .user(inputText), .assistant(firstText), .user(Self.violationMessage(violations)),
-                ])
+                ], usesExpectedMinutes: usesExpected)
                 (accepted, violations) = validate(try decode(retryText, scope: scope), input: input)
             }
             let beforeP1 = Self.blockCount(accepted)
@@ -530,12 +534,13 @@ final class AIPlanner {
 
     // MARK: Model call
 
-    private func answer(model: String, scope: PlanScope, input: [InputItem]) async throws -> String {
+    private func answer(model: String, scope: PlanScope, input: [InputItem], usesExpectedMinutes: Bool = false) async throws -> String {
         let schema = scope == .day ? (name: "day_plan", schema: AIPlanSchemas.dayPlanSchema)
                                    : (name: "period_plan", schema: AIPlanSchemas.periodPlanSchema)
         var text = ""
         var completed = false
-        let instructions = Self.instructions(scope, longerDays: longerDays(), language: language()) + Self.preferenceText(preferences())
+        let instructions = Self.instructions(scope, longerDays: longerDays(), language: language(),
+                                             usesExpectedMinutes: usesExpectedMinutes) + Self.preferenceText(preferences())
         for try await event in responder.respond(model: model, instructions: instructions, input: input,
                                                   tools: [], jsonSchema: schema) {
             switch event {
@@ -554,7 +559,13 @@ final class AIPlanner {
         try PlanOutput.decode(Data(text.utf8), scope: scope)
     }
 
-    static func instructions(_ scope: PlanScope, longerDays: LongerDays = .forDeadlines, language: VoiceLanguage) -> String {
+    static func instructions(_ scope: PlanScope, longerDays: LongerDays = .forDeadlines, language: VoiceLanguage,
+                             usesExpectedMinutes: Bool = false) -> String {
+        // Only when a task carries the field, so the text of a plan without measurements stays as it was.
+        let expected = usesExpectedMinutes ? """
+             expectedMinutes: erwarteter Aufwand aus bisherigen Messungen der Person; plane Blöcke mit diesem Wert \
+            statt minutes.
+            """ : ""
         let longer: String = switch longerDays {
         case .never: "(b) Schlage keine längeren Tage vor (dayChanges bleibt leer)."
         case .forDeadlines: """
@@ -578,7 +589,7 @@ final class AIPlanner {
         an dem die Arbeit beginnen muss, sessionMinutes der Anteil für einen Tag. Plane für solche Aufgaben einen \
         Block von sessionMinutes, sobald latestStart erreicht oder überschritten ist, auch bei niedriger Priorität.
         3. Ein Block je Aufgabe und Tag, Dauer = remainingMinutes (oder sessionMinutes, oder deine Schätzung in \
-        estimates), mindestens 15 Minuten.
+        estimates), mindestens 15 Minuten.\(expected)
         4. Ist es zu voll, in dieser Reihenfolge: (a) Aufgaben mit P3 oder ohne Priorität, die erst nach dem Zieltag \
         fällig sind, auf einen Zieltag mit freier Zeit verschieben (moves); nie P1 oder Wichtiges. \(longer) \
         (d) Der Rest steht mit konkretem Grund in unscheduled.
@@ -682,6 +693,7 @@ final class AIPlanner {
             // work due today (decision 6); the re-check on accepting uses the same rule.
             earliestWorkDay: scope == .day && planning.isTodayOver && planning.anchor == planning.nextPlanDay
                 ? planning.nextPlanDay : nil,
+            expectedMinutes: expectedMinutes(tasks),
             calendar: planning.calendar
         )
     }

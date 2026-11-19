@@ -1691,5 +1691,15 @@
   "Tagwerk misst den Aufwand beim Abhaken aus Fokus-Timer und Zeitblöcken. Die Messwerte bleiben auf dem iPhone. Ist der Schalter an, geht bei der KI-Planung je Aufgabe nur eine erwartete Dauer in Minuten mit, keine Labels und keine Statistik.": "Tagwerk measures the effort when you complete a task, from the focus timer and time blocks. The measurements stay on your iPhone. When the switch is on, AI planning receives only an expected duration in minutes per task, no labels and no statistics.",
   "Weitermachen": "Keep going",
   "Woche ab %@": "Week of %@",
-  "%lld min Fokus": "%lld min of focus"
+  "%lld min Fokus": "%lld min of focus",
+  "Beim Planen geht je Aufgabe auch eine erwartete Dauer in Minuten mit, abgeleitet aus deinen bisherigen Messungen. Die Messungen selbst und die Labels bleiben auf dem iPhone. Abschalten kannst du das unter Einstellungen › Fokus-Timer.": "When planning, an expected duration in minutes is also sent for each task, derived from your earlier measurements. The measurements themselves and the labels stay on your iPhone. You can turn this off under Settings › Focus timer.",
+  "Dauern etwa so lange wie geschätzt": "Take about as long as estimated",
+  "Dauern im Schnitt %@ kürzer als geschätzt": "Take %@ less time than estimated on average",
+  "Dauern im Schnitt %@ länger als geschätzt": "Take %@ longer than estimated on average",
+  "Fokus in dieser Woche": "Focus this week",
+  "Gemessen über Fokus-Timer und Zeitblöcke, letzte 8 Wochen.": "Measured with the focus timer and time blocks, last 8 weeks.",
+  "Messungen in dieser Woche": "Measurements this week",
+  "Noch zu wenige Messungen.": "Not enough measurements yet.",
+  "Ohne Schätzung gemessen": "Measured without estimate",
+  "Schätzung und Ist": "Estimate vs. actual"
 }

@@ -31,6 +31,13 @@ public struct EffortGroup: Sendable, Equatable {
     public let medianRatio: Double?
     /// The same as a percentage deviation from the estimate (+40 = took 40 % longer); `nil` like `medianRatio`.
     public let deviationPercent: Int?
+
+    public init(kind: EffortGroupKind, count: Int, medianRatio: Double?, deviationPercent: Int?) {
+        self.kind = kind
+        self.count = count
+        self.medianRatio = medianRatio
+        self.deviationPercent = deviationPercent
+    }
 }
 
 public enum EffortStats {
