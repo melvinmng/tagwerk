@@ -505,7 +505,7 @@ public enum ShoppingCategoryRules {
   - „Sonstiges“/„Other“ ist in beiden Sprachen reserviert, unabhängig von der App-Sprache.
   - `ShoppingDictionary.json`: Form `{ "produce": ["banane", "bananen", "apfel", …], … }`, Schlüssel genau die zehn `rawValue`s, 400–600 Begriffe gesamt, deutsch und englisch, jeder Begriff bereits `ShoppingName.key`-normalisiert und in genau einer Kategorie. Der Inhalt ist dem Umsetzenden überlassen (Spec §10); Pflichtbegriffe aus den Tests: `milch`, `brot`, `banane`, `bananen`, `eier`, `hackfleisch`, `spulmittel`, `kaffee`, `reis`, `zwiebeln`, `milk`, `bread`.
 
-- [ ] **Schritt 1: Tests schreiben**
+- [x] **Schritt 1: Tests schreiben**
 
 ```swift
 // dictionary used in logic tests: ["chilled": ["milch", "eier"], "bakery": ["brot"], "produce": ["banane", "bananen"], "pantry": ["kokosmilch"]]
@@ -567,10 +567,10 @@ public enum ShoppingCategoryRules {
 }
 ```
 
-- [ ] **Schritt 2:** Suite ausführen. Erwartet: Übersetzungsfehler.
-- [ ] **Schritt 3: Umsetzen.** Wörterbuch einmal in ein `[String: String]` (Begriff → `builtinKey`) umdrehen; Endungssuche über die Begriffe mit mindestens 4 Zeichen, längster Treffer über (a)–(c) gemeinsam. `Package.swift` bleibt unverändert (`resources: [.process("Resources")]` erfasst die JSON-Datei).
-- [ ] **Schritt 4:** Paket `TagwerkCore` testen. Erwartet: grün.
-- [ ] **Schritt 5:** Commit: `git add app/Packages/TagwerkCore && git commit -m "feat: classify shopping items with a bundled dictionary"`
+- [x] **Schritt 2:** Suite ausführen. Erwartet: Übersetzungsfehler.
+- [x] **Schritt 3: Umsetzen.** Wörterbuch einmal in ein `[String: String]` (Begriff → `builtinKey`) umdrehen; Endungssuche über die Begriffe mit mindestens 4 Zeichen, längster Treffer über (a)–(c) gemeinsam. `Package.swift` bleibt unverändert (`resources: [.process("Resources")]` erfasst die JSON-Datei).
+- [x] **Schritt 4:** Paket `TagwerkCore` testen. Erwartet: grün.
+- [x] **Schritt 5:** Commit: `git add app/Packages/TagwerkCore && git commit -m "feat: classify shopping items with a bundled dictionary"`
 
 ---
 

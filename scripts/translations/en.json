@@ -1176,5 +1176,15 @@
   "Project fehlt": "Project missing",
   "Zugewiesen: %@": "Assigned to: %@",
   "Zugewiesen: %@ (nicht dir)": "Assigned to: %@ (not you)",
-  "Niemandem zugewiesen": "Not assigned to anyone"
+  "Niemandem zugewiesen": "Not assigned to anyone",
+  "Obst & Gemüse": "Fruit & Vegetables",
+  "Brot & Backwaren": "Bread & Bakery",
+  "Kühlregal": "Dairy & Chilled",
+  "Fleisch & Fisch": "Meat & Fish",
+  "Tiefkühl": "Frozen",
+  "Vorrat & Konserven": "Pantry",
+  "Frühstück & Süßes": "Breakfast & Sweets",
+  "Getränke": "Drinks",
+  "Haushalt": "Household",
+  "Drogerie": "Personal Care"
 }

@@ -427,6 +427,16 @@
         }
       }
     },
+    "Brot & Backwaren" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bread & Bakery"
+          }
+        }
+      }
+    },
     "Danach noch %@ zu viel." : {
       "localizations" : {
         "en" : {
@@ -677,6 +687,16 @@
         }
       }
     },
+    "Drogerie" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Personal Care"
+          }
+        }
+      }
+    },
     "Eigene Regel aus Erinnerungen" : {
       "localizations" : {
         "en" : {
@@ -687,12 +707,32 @@
         }
       }
     },
+    "Fleisch & Fisch" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Meat & Fish"
+          }
+        }
+      }
+    },
     "Frühstück" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Breakfast"
+          }
+        }
+      }
+    },
+    "Frühstück & Süßes" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Breakfast & Sweets"
           }
         }
       }
@@ -723,12 +763,32 @@
         }
       }
     },
+    "Getränke" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Drinks"
+          }
+        }
+      }
+    },
     "HIIT" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "HIIT"
+          }
+        }
+      }
+    },
+    "Haushalt" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Household"
           }
         }
       }
@@ -931,6 +991,16 @@
         }
       }
     },
+    "Kühlregal" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dairy & Chilled"
+          }
+        }
+      }
+    },
     "Laufen" : {
       "localizations" : {
         "en" : {
@@ -987,6 +1057,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Next week"
+          }
+        }
+      }
+    },
+    "Obst & Gemüse" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fruit & Vegetables"
           }
         }
       }
@@ -1057,6 +1137,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Later"
+          }
+        }
+      }
+    },
+    "Tiefkühl" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Frozen"
+          }
+        }
+      }
+    },
+    "Vorrat & Konserven" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pantry"
           }
         }
       }
