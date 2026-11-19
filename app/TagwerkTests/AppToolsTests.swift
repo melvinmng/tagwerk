@@ -74,6 +74,179 @@ struct AppToolsTests {
         }
     }
 
+    // MARK: search
+
+    private func makeSearch(events: [CalendarEvent] = [], completed: [CompletedTask] = [], access: Bool = true) async -> AppTools {
+        calendarStore.storedEvents = events
+        await taskList.reload()
+        let planning = PlanningModel(taskList: taskList, calendarStore: calendarStore, reminderStore: FakeAccessStore(),
+                                     planStore: planStore, efforts: RecurringEffortStore(context: container.mainContext),
+                                     blocks: blocks, settings: settings, marks: EventMarkStore(context: container.mainContext),
+                                     suggestions: store, now: testNow, calendar: calendar)
+        await planning.reload()
+        let calendarStore = self.calendarStore
+        let sources = SearchToolSources(
+            events: { interval in access ? calendarStore.events(in: interval, calendarIDs: nil) : nil },
+            calendarNames: { ["cal": "Uni"] },
+            completedTasks: { completed })
+        return AppTools(taskList: taskList, planning: planning, planner: nil,
+                        events: { interval in calendarStore.events(in: interval, calendarIDs: nil) }, search: sources)
+    }
+
+    private func searchEvent(_ title: String, id: String? = nil, on day: DateComponents, recurring: Bool = false,
+                             notes: String? = nil, location: String? = nil) -> CalendarEvent {
+        let start = calendar.date(from: DateComponents(year: day.year, month: day.month, day: day.day, hour: 9))!
+        var event = CalendarEvent(id: id ?? title, externalID: nil, calendarID: "cal", title: title, start: start,
+                                  end: start.addingTimeInterval(3600), isAllDay: false, url: nil, isBusy: true, version: "1")
+        event.isRecurring = recurring
+        event.notes = notes
+        event.location = location
+        return event
+    }
+
+    private func searchArguments(_ query: String, kind: String = "all", completed: Bool = false, from: String? = nil, to: String? = nil) -> String {
+        func quoted(_ value: String?) -> String { value.map { "\"\($0)\"" } ?? "null" }
+        return #"{"query":"\#(query)","kind":"\#(kind)","include_completed":\#(completed),"from":\#(quoted(from)),"to":\#(quoted(to))}"#
+    }
+
+    @Test func search_isAReadToolWithStrictSchema() async throws {
+        let tools = await makeSearch()
+        #expect(tools.kind(of: "search") == .read)
+        let definition = try #require(tools.definitions.first { $0.name == "search" })
+        let schema = try #require(try JSONSerialization.jsonObject(with: definition.parameters) as? [String: Any])
+        #expect(Set(schema["required"] as? [String] ?? []) == ["query", "kind", "include_completed", "from", "to"])
+        #expect(definition.strict)
+        #expect(definition.description.hasPrefix("Searches calendar events and tasks by text"))
+    }
+
+    @Test func search_findsEventsAndTasksInDefaultWindow() async throws {
+        local.tasks.append(makeTask("Statistik Übungsblatt", source: .local))
+        let tools = await makeSearch(events: [searchEvent("Klausur Statistik", on: DateComponents(year: 2027, month: 2, day: 10))])
+        let result = await run(tools, "search", searchArguments("statistik"))
+        #expect((result["events"] as? [[String: Any]])?.first?["title"] as? String == "Klausur Statistik")
+        #expect((result["tasks"] as? [[String: Any]])?.first?["matchedIn"] as? [String] == ["title"])
+        #expect((result["events"] as? [[String: Any]])?.first?["matchedIn"] as? [String] == ["title"])
+        #expect(result["eventCount"] as? Int == 1)
+        #expect(result["taskCount"] as? Int == 1)
+        #expect((result["searched"] as? [String: String]) == ["from": "2026-05-18", "to": "2027-11-18"])
+    }
+
+    @Test func search_neverReturnsNoteText() async throws {
+        var task = makeTask("Lernen", source: .local)
+        task.notes = "Zugangscode Blau-77 geheim"
+        local.tasks.append(task)
+        let tools = await makeSearch(events: [searchEvent("Besprechung", on: DateComponents(year: 2026, month: 12, day: 1),
+                                                          notes: "Raum 12 geheim")])
+        let output = await tools.run(ToolCall(id: "c", name: "search", arguments: Data(searchArguments("geheim").utf8)))
+        #expect(!output.contains("Raum 12") && !output.contains("Zugangscode") && !output.contains("Blau-77"))
+        let result = try #require(try JSONSerialization.jsonObject(with: Data(output.utf8)) as? [String: Any])
+        #expect((result["events"] as? [[String: Any]])?.first?["matchedIn"] as? [String] == ["notes"])
+        #expect((result["tasks"] as? [[String: Any]])?.first?["matchedIn"] as? [String] == ["notes"])
+        #expect(result["eventCount"] as? Int == 1 && result["taskCount"] as? Int == 1)
+    }
+
+    @Test func search_seriesCarriesMoreOccurrences() async throws {
+        let base = calendar.date(from: DateComponents(year: 2026, month: 11, day: 20, hour: 9))!
+        let events = (0..<10).map { index -> CalendarEvent in
+            var event = searchEvent("Statistik Vorlesung", id: "abc|\(1_795_000_000 + index * 604_800)",
+                                    on: DateComponents(year: 2026, month: 11, day: 20), recurring: true)
+            event.start = calendar.date(byAdding: .day, value: index * 7, to: base)!
+            event.end = event.start.addingTimeInterval(3600)
+            return event
+        }
+        let tools = await makeSearch(events: events)
+        let result = await run(tools, "search", searchArguments("statistik", kind: "events"))
+        let listed = try #require(result["events"] as? [[String: Any]])
+        #expect(listed.count == 1)
+        #expect(listed.first?["moreOccurrences"] as? Int == 9)
+        #expect(listed.first?["recurring"] as? Bool == true)
+    }
+
+    @Test func search_completedOnlyOnRequest() async throws {
+        var item = makeTask("Statistik Übung", source: .reminders)
+        item.isCompleted = true
+        let done = CompletedTask(item: item, completedAt: calendar.date(from: DateComponents(year: 2026, month: 11, day: 12, hour: 8)))
+        let tools = await makeSearch(completed: [done])
+        let without = await run(tools, "search", searchArguments("statistik", kind: "tasks"))
+        #expect((without["tasks"] as? [[String: Any]])?.isEmpty == true)
+        let with = await run(tools, "search", searchArguments("statistik", kind: "tasks", completed: true))
+        let task = try #require((with["tasks"] as? [[String: Any]])?.first)
+        #expect(task["completed"] as? Bool == true)
+        #expect((task["completedAt"] as? String)?.hasPrefix("2026-11-12") == true)
+    }
+
+    @Test func search_capsAtTwentyAndReportsTotals() async throws {
+        local.tasks += (1...30).map { makeTask("Treffer \($0)", source: .local) }
+        let tools = await makeSearch()
+        let result = await run(tools, "search", searchArguments("treffer", kind: "tasks"))
+        #expect((result["tasks"] as? [[String: Any]])?.count == 20)
+        #expect(result["taskCount"] as? Int == 30)
+    }
+
+    @Test func search_kindLimitsTheAnswer() async throws {
+        local.tasks.append(makeTask("Statistik lernen", source: .local))
+        let tools = await makeSearch(events: [searchEvent("Statistik Klausur", on: DateComponents(year: 2026, month: 12, day: 3))])
+        let events = await run(tools, "search", searchArguments("statistik", kind: "events"))
+        #expect((events["tasks"] as? [[String: Any]])?.isEmpty == true && events["taskCount"] as? Int == 0)
+        #expect(events["eventCount"] as? Int == 1)
+        let tasks = await run(tools, "search", searchArguments("statistik", kind: "tasks"))
+        #expect((tasks["events"] as? [[String: Any]])?.isEmpty == true && tasks["eventCount"] as? Int == 0)
+        #expect(tasks["taskCount"] as? Int == 1)
+    }
+
+    @Test func search_upcomingEventsComeBeforePastOnes() async throws {
+        let tools = await makeSearch(events: [searchEvent("Statistik alt", on: DateComponents(year: 2026, month: 10, day: 1)),
+                                              searchEvent("Statistik neu", on: DateComponents(year: 2026, month: 12, day: 1))])
+        let result = await run(tools, "search", searchArguments("statistik", kind: "events"))
+        #expect((result["events"] as? [[String: Any]])?.map { $0["title"] as? String } == ["Statistik neu", "Statistik alt"])
+    }
+
+    @Test func search_rejectsBadArguments() async throws {
+        let tools = await makeSearch()
+        func error(_ arguments: String) async -> String? { await run(tools, "search", arguments)["error"] as? String }
+        #expect(await error(searchArguments("a")) == "Der Suchtext braucht mindestens zwei Zeichen.")
+        #expect(await error(searchArguments("ab", from: "2027-01-01", to: "2026-01-01")) == "Der Zeitraum ist ungültig.")
+        #expect(await error(searchArguments("ab", from: "2020-01-01", to: "2026-01-01")) == "Der Zeitraum darf höchstens vier Jahre umfassen.")
+        // Only "to", and earlier than the default start.
+        #expect(await error(searchArguments("ab", to: "2026-01-01")) == "Der Zeitraum ist ungültig.")
+        #expect(await error(searchArguments("ab", from: "kein-datum")) == "Das Datum from ist ungültig.")
+    }
+
+    @Test func search_acceptsAnExplicitPeriod() async throws {
+        let tools = await makeSearch(events: [searchEvent("Statistik 2024", on: DateComponents(year: 2024, month: 5, day: 6))])
+        let result = await run(tools, "search", searchArguments("statistik", kind: "events", from: "2024-01-01", to: "2024-12-31"))
+        #expect(result["eventCount"] as? Int == 1)
+        #expect((result["searched"] as? [String: String]) == ["from": "2024-01-01", "to": "2024-12-31"])
+    }
+
+    @Test func search_withoutCalendarAccessStillAnswersTasks() async throws {
+        local.tasks.append(makeTask("Statistik lernen", source: .local))
+        let tools = await makeSearch(access: false)
+        let result = await run(tools, "search", searchArguments("statistik"))
+        #expect((result["events"] as? [[String: Any]])?.isEmpty == true)
+        #expect(result["taskCount"] as? Int == 1)
+        #expect(result["calendarAccess"] as? Bool == false)
+    }
+
+    @Test func search_withoutSourcesReportsItself() async throws {
+        let (tools, _) = await make()
+        let result = await run(tools, "search", searchArguments("statistik"))
+        #expect(result["error"] as? String == "Die Suche ist nicht verfügbar.")
+    }
+
+    @Test func listEvents_outputIsUnchangedAfterExtraction() async throws {
+        let (tools, _) = await make()
+        let start = calendar.date(from: DateComponents(year: 2026, month: 11, day: 19, hour: 9))!
+        var event = CalendarEvent(id: "e1", externalID: nil, calendarID: "plan", title: "Seminar", start: start,
+                                  end: start.addingTimeInterval(3600), isAllDay: false, url: nil, isBusy: true, version: "1")
+        event.location = "Raum 3"
+        calendarStore.storedEvents = [event]
+        let result = await run(tools, "list_events", #"{"from":"2026-11-19","to":"2026-11-19"}"#)
+        let listed = try #require((result["events"] as? [[String: Any]])?.first)
+        #expect(Set(listed.keys) == ["id", "title", "allDay", "busy", "calendarId", "editable", "recurring", "calendar", "location", "start", "end"])
+        #expect(listed["location"] as? String == "Raum 3")
+    }
+
     @Test func listTasks_returnsCompactJSON() async throws {
         let (tools, _) = await make()
         let result = await run(tools, "list_tasks", #"{"filter":"all"}"#)

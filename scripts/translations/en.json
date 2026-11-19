@@ -1381,5 +1381,8 @@
   "ohne Project": "no project",
   "Öffnet das Issue auf GitHub": "Opens the issue on GitHub",
   "Einkauf": "Shopping",
-  "Einkaufsliste öffnen": "Open shopping list"
+  "Einkaufsliste öffnen": "Open shopping list",
+  "Der Suchtext braucht mindestens zwei Zeichen.": "The search text needs at least two characters.",
+  "Der Zeitraum darf höchstens vier Jahre umfassen.": "The period may cover at most four years.",
+  "Die Suche ist nicht verfügbar.": "Search is not available."
 }

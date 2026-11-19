@@ -3951,6 +3951,16 @@
         }
       }
     },
+    "Der Suchtext braucht mindestens zwei Zeichen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The search text needs at least two characters."
+          }
+        }
+      }
+    },
     "Der Tag liegt in der Vergangenheit.": {
       "localizations": {
         "en": {
@@ -3987,6 +3997,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "The suggestion no longer fits: %@"
+          }
+        }
+      }
+    },
+    "Der Zeitraum darf höchstens vier Jahre umfassen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The period may cover at most four years."
           }
         }
       }
@@ -4257,6 +4277,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "The estimate failed. Try again or enter the values yourself."
+          }
+        }
+      }
+    },
+    "Die Suche ist nicht verfügbar.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search is not available."
           }
         }
       }

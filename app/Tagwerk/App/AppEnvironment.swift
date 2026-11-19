@@ -101,7 +101,8 @@ final class AppEnvironment {
         self.settings = settings
         self.gateway = gateway
         self.reminderStore = reminderStore
-        self.eventSearcher = eventSearcher ?? EventSearchReader()
+        let searcher: any EventSearching = eventSearcher ?? EventSearchReader()
+        self.eventSearcher = searcher
         self.remindersProvider = reminders
         self.notes = NoteStore(context: context)
         let shoppingCategories = ShoppingCategoryStore(context: context, settings: settings)
@@ -150,7 +151,11 @@ final class AppEnvironment {
         let tools = AppTools(taskList: taskList, planning: planning, planner: planner,
                              events: { interval in gateway.events(in: interval, calendarIDs: nil) },
                              gitHub: { [taskList] in taskList.provider(for: .github) as? GitHubTaskProvider },
-                             shopping: shopping)
+                             shopping: shopping,
+                             search: SearchToolSources(
+                                 events: Self.searchEventSource(searcher: searcher, store: reminderStore, planning: planning, settings: settings),
+                                 calendarNames: Self.searchCalendarNames(planning: planning),
+                                 completedTasks: Self.searchCompletedSource(reminders: reminders, taskList: taskList)))
         self.assistant = AssistantModel(responder: ai.client, tools: tools, model: { try await ai.selectedModel() },
                                         store: ChatStore(context: context), planning: planning)
         self.voiceOutput = VoiceOutputModel(speaker: SystemSpeaker(), audio: SystemVoiceAudioSession.shared, preferences: {
@@ -344,6 +349,33 @@ final class AppEnvironment {
         }
     }
 
+    /// Events for the search sheet and the assistant: the calendars "Planen" reads, fetched off the main thread,
+    /// time blocks dropped, duplicates merged like in "Planen". `nil` without calendar access.
+    private static func searchEventSource(searcher: any EventSearching, store: any ReminderStore, planning: PlanningModel,
+                                          settings: AppSettings) -> @MainActor (DateInterval) async -> [CalendarEvent]? {
+        { interval in
+            guard store.calendarAccessState == .fullAccess else { return nil }
+            let raw = await searcher.events(in: interval, calendarIDs: planning.readableCalendarIDs())
+            return SearchEvents.prepare(raw, planCalendarID: settings.planCalendarID, merge: settings.mergeDuplicateEvents)
+        }
+    }
+
+    private static func searchCalendarNames(planning: PlanningModel) -> @MainActor () -> [String: String] {
+        { Dictionary(planning.eventCalendars.map { ($0.id, $0.title) }, uniquingKeysWith: { first, _ in first }) }
+    }
+
+    /// Completed reminders of the last 12 months plus all completed local tasks.
+    private static func searchCompletedSource(reminders: RemindersTaskProvider, taskList: TaskListModel) -> @MainActor () async -> [CompletedTask] {
+        {
+            let now = Date.now
+            let start = Calendar.tagwerk.date(byAdding: .month, value: -12, to: now) ?? now
+            // The end lies slightly ahead, so a reminder completed this very moment is not cut off.
+            let interval = DateInterval(start: start, end: now.addingTimeInterval(60))
+            let local = (taskList.provider(for: .local) as? LocalTaskProvider)?.completedTasks() ?? []
+            return await reminders.completedTasks(in: interval) + local
+        }
+    }
+
     /// Wires a search model to the app's sources. Tasks are read from the loaded list, events through the
     /// search reader in the calendars "Planen" reads, completed reminders of the last 12 months and all
     /// completed local tasks on demand.
@@ -369,20 +401,9 @@ final class AppEnvironment {
         let shopping = self.shopping
         var sources = SearchSources(
             openTasks: { sortedTasks(taskList.items, calendar: planning.calendar) },
-            events: { interval in
-                guard reminderStore.calendarAccessState == .fullAccess else { return nil }
-                let raw = await searcher.events(in: interval, calendarIDs: planning.readableCalendarIDs())
-                return SearchEvents.prepare(raw, planCalendarID: settings.planCalendarID, merge: settings.mergeDuplicateEvents)
-            },
-            calendarNames: { Dictionary(planning.eventCalendars.map { ($0.id, $0.title) }, uniquingKeysWith: { first, _ in first }) },
-            completedTasks: { [weak self] in
-                let now = Date.now
-                let start = Calendar.tagwerk.date(byAdding: .month, value: -12, to: now) ?? now
-                // The end lies slightly ahead, so a reminder completed this very moment is not cut off.
-                let interval = DateInterval(start: start, end: now.addingTimeInterval(60))
-                let local = (self?.taskList.provider(for: .local) as? LocalTaskProvider)?.completedTasks() ?? []
-                return await reminders.completedTasks(in: interval) + local
-            },
+            events: Self.searchEventSource(searcher: searcher, store: reminderStore, planning: planning, settings: settings),
+            calendarNames: Self.searchCalendarNames(planning: planning),
+            completedTasks: Self.searchCompletedSource(reminders: reminders, taskList: taskList),
             notes: {
                 notes.notes().map { note in
                     NoteSearchItem(id: note.id, text: note.text, kindLabel: Self.kindLabel(of: note.kind), updatedAt: note.updatedAt,

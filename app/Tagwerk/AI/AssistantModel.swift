@@ -380,6 +380,8 @@ final class AssistantModel {
         Termine kannst du anlegen, ändern und löschen (create_event, update_event, delete_event), in jedem \
         beschreibbaren Kalender; ohne Nennung eines Kalenders im Standardkalender. Nennt der Nutzer keine Dauer, \
         dauert ein neuer Termin eine Stunde.
+        Fragt der Nutzer nach einem bestimmten Termin oder einer bestimmten Aufgabe, nutze search, statt mit list_events \
+        Zeiträume zu raten.
         Einkaufsartikel stehen nicht in list_tasks: Die Einkaufsliste liest du mit list_shopping und änderst sie mit \
         update_shopping (hinzufügen, abhaken). Lege Einkaufsartikel nie über create_task an.
         \(gitHubInstructions())

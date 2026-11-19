@@ -11,8 +11,11 @@ import TagwerkCore
 @MainActor
 final class AppTools: ToolHandler {
     static let readTools: Set<String> = ["list_tasks", "list_events", "list_calendars", "get_task",
-                                         "list_github_targets", "list_assignees", "list_shopping"]
+                                         "list_github_targets", "list_assignees", "list_shopping", "search"]
     static let maxListedTasks = 60
+    static let maxSearchResults = 20
+    /// The longest period one search may cover (a single EventKit request reads at most four years).
+    static let maxSearchYears = 4
     static let maxListedRepositories = 30
 
     let taskList: TaskListModel
@@ -23,12 +26,16 @@ final class AppTools: ToolHandler {
     let gitHub: () -> (any GitHubDirectory)?
     /// The shopping list; `nil` in contexts without one (the functions then report that no list is set up).
     let shopping: ShoppingModel?
+    /// Where `search` reads events and completed tasks; `nil` in contexts without a search.
+    private let search: SearchToolSources?
     /// After "plan_period": the chat closes and "Planen" shows the suggestions (review item 11).
     var onPlanned: (() -> Void)?
 
     init(taskList: TaskListModel, planning: PlanningModel, planner: AIPlanner?,
          events: @escaping (DateInterval) -> [CalendarEvent],
-         gitHub: @escaping () -> (any GitHubDirectory)? = { nil }, shopping: ShoppingModel? = nil) {
+         gitHub: @escaping () -> (any GitHubDirectory)? = { nil }, shopping: ShoppingModel? = nil,
+         search: SearchToolSources? = nil) {
+        self.search = search
         self.gitHub = gitHub
         self.shopping = shopping
         self.taskList = taskList
@@ -62,6 +69,7 @@ final class AppTools: ToolHandler {
         case "list_tasks": return listTasks(filter: args.string("filter") ?? "all")
         case "get_task": return Self.json(["task": Self.detail(try task(args.require("id")))])
         case "list_events": return try listEvents(from: args.day("from"), to: args.day("to"))
+        case "search": return try await runSearch(args)
         case "list_calendars": return listCalendars()
         case "list_github_targets": return try await listGitHubTargets()
         case "list_assignees": return try await listAssignees(repository: args.require("repository"))
@@ -117,6 +125,75 @@ final class AppTools: ToolHandler {
 
     // MARK: Read
 
+    /// `search`: events and tasks by text. Notes, shopping items and online hits are not part of it, and the text
+    /// of a note field never leaves: an entry names the fields that matched (`matchedIn`) and nothing more.
+    private func runSearch(_ args: Arguments) async throws -> String {
+        guard let search else { throw ToolError(String(localized: "Die Suche ist nicht verfügbar.")) }
+        guard let query = SearchQuery(try args.require("query")) else {
+            throw ToolError(String(localized: "Der Suchtext braucht mindestens zwei Zeichen."))
+        }
+        let filter: SearchFilter = switch args.string("kind") {
+        case "events": .events
+        case "tasks": .tasks
+        default: .all
+        }
+        let calendar = planning.calendar
+        let window = SearchWindow.initial(now: planning.now(), calendar: calendar)
+        let start = try args.string("from").map { _ in try args.day("from").startDate(in: calendar) } ?? window.start
+        let end = try args.string("to").map { _ in
+            try args.day("to").adding(days: 1, calendar: calendar).startDate(in: calendar)
+        } ?? window.end
+        guard start < end else { throw ToolError(String(localized: "Der Zeitraum ist ungültig.")) }
+        guard let limit = calendar.date(byAdding: .year, value: Self.maxSearchYears, to: start), end <= limit else {
+            throw ToolError(String(localized: "Der Zeitraum darf höchstens vier Jahre umfassen."))
+        }
+
+        let includeCompleted = args.bool("include_completed") ?? false
+        let fetched = filter == .tasks ? [] : await search.events(DateInterval(start: start, end: end))
+        let completed = includeCompleted && filter != .events ? await search.completedTasks() : []
+        let input = SearchInput(events: fetched, calendarNames: search.calendarNames(),
+                                openTasks: taskList.items.filter { !$0.isCompleted }, completed: completed)
+        let results = SearchResults.make(query: query, filter: filter, includeCompleted: includeCompleted, input: input,
+                                         now: planning.now(), calendar: calendar)
+
+        var eventRows: [(EventRow, SearchMatch)] = []
+        var taskRows: [(item: TaskItem, completedAt: Date?, isCompleted: Bool, match: SearchMatch)] = []
+        for section in results.sections {
+            for row in section.rows {
+                switch row {
+                case .event(let eventRow, let match): eventRows.append((eventRow, match))
+                case .task(let item, let match): taskRows.append((item, nil, false, match))
+                case .completed(let group, let match): taskRows.append((group.latest.item, group.latest.completedAt, true, match))
+                case .online, .note, .shopping: break
+                }
+            }
+        }
+        let deadlineIDs = planning.deadlineEventIDs(among: eventRows.map(\.0.event))
+        let events = eventRows.prefix(Self.maxSearchResults).map { row, match -> [String: Any] in
+            var item = eventSummary(row.event, deadlineIDs: deadlineIDs)
+            item["matchedIn"] = match.matchedFields.map(\.rawValue)
+            if row.moreOccurrences > 0 { item["moreOccurrences"] = row.moreOccurrences }
+            return item
+        }
+        let tasks = taskRows.prefix(Self.maxSearchResults).map { row -> [String: Any] in
+            var item = Self.summary(row.item)
+            item["matchedIn"] = row.match.matchedFields.map(\.rawValue)
+            if row.isCompleted {
+                item["completed"] = true
+                if let date = row.completedAt { item["completedAt"] = date.formatted(.iso8601.year().month().day().time(includingFractionalSeconds: false)) }
+            }
+            return item
+        }
+        var answer: [String: Any] = [
+            "events": Array(events), "tasks": Array(tasks), "eventCount": eventRows.count, "taskCount": taskRows.count,
+            "searched": ["from": AIPlanner.dayString(PlanDay(date: start, calendar: calendar)),
+                         "to": args.string("to") ?? AIPlanner.dayString(PlanDay(date: end, calendar: calendar))],
+        ]
+        // Without calendar access an empty event list would read as "nothing found".
+        if filter != .tasks, fetched == nil { answer["calendarAccess"] = false }
+        return Self.json(answer)
+    }
+
     private func listTasks(filter: String) -> String {
         let today = planning.today
         let assignments = planning.planStore.assignments(in: PlanDay(year: 1, month: 1, day: 1)...PlanDay(year: 9999, month: 12, day: 31))
@@ -139,24 +216,27 @@ final class AppTools: ToolHandler {
         return Self.json(["tasks": Array(tasks), "count": filtered.count])
     }
 
+    /// One event as the assistant sees it (`list_events` and `search`).
+    func eventSummary(_ event: CalendarEvent, deadlineIDs: Set<String>) -> [String: Any] {
+        var item: [String: Any] = ["id": event.id, "title": event.title, "allDay": event.isAllDay, "busy": event.isBusy,
+                                   "calendarId": event.calendarID, "editable": event.isEditable && !event.isInvitation,
+                                   "recurring": event.isRecurring]
+        if let name = planning.calendarTitle(event.calendarID) { item["calendar"] = name }
+        if let location = event.location, !location.isEmpty { item["location"] = location }
+        item["start"] = event.start.formatted(.iso8601.year().month().day().time(includingFractionalSeconds: false))
+        item["end"] = event.end.formatted(.iso8601.year().month().day().time(includingFractionalSeconds: false))
+        if let task = planning.linkedTask(eventID: event.id) { item["linkedTask"] = task.id.key }
+        if deadlineIDs.contains(event.id) { item["deadline"] = true }
+        return item
+    }
+
     private func listEvents(from: PlanDay, to: PlanDay) throws -> String {
         guard from <= to else { throw ToolError(String(localized: "Der Zeitraum ist ungültig.")) }
         let calendar = planning.calendar
         let interval = DateInterval(start: from.startDate(in: calendar), end: to.adding(days: 1, calendar: calendar).startDate(in: calendar))
         let found = events(interval)
         let deadlineIDs = planning.deadlineEventIDs(among: found)
-        let list = found.sorted { $0.start < $1.start }.prefix(100).map { event -> [String: Any] in
-            var item: [String: Any] = ["id": event.id, "title": event.title, "allDay": event.isAllDay, "busy": event.isBusy,
-                                       "calendarId": event.calendarID, "editable": event.isEditable && !event.isInvitation,
-                                       "recurring": event.isRecurring]
-            if let name = planning.calendarTitle(event.calendarID) { item["calendar"] = name }
-            if let location = event.location, !location.isEmpty { item["location"] = location }
-            item["start"] = event.start.formatted(.iso8601.year().month().day().time(includingFractionalSeconds: false))
-            item["end"] = event.end.formatted(.iso8601.year().month().day().time(includingFractionalSeconds: false))
-            if let task = planning.linkedTask(eventID: event.id) { item["linkedTask"] = task.id.key }
-            if deadlineIDs.contains(event.id) { item["deadline"] = true }
-            return item
-        }
+        let list = found.sorted { $0.start < $1.start }.prefix(100).map { eventSummary($0, deadlineIDs: deadlineIDs) }
         return Self.json(["events": Array(list)])
     }
 
@@ -429,4 +509,12 @@ final class AppTools: ToolHandler {
             return DueDate(year: day.year, month: day.month, day: day.day)
         }
     }
+}
+
+/// Where the assistant's `search` reads events and completed tasks, like the sources of the search sheet.
+struct SearchToolSources {
+    /// Events of a period in the calendars selected in the settings (decision F4), already prepared; `nil` without access.
+    var events: @MainActor (DateInterval) async -> [CalendarEvent]?
+    var calendarNames: @MainActor () -> [String: String]
+    var completedTasks: @MainActor () async -> [CompletedTask]
 }

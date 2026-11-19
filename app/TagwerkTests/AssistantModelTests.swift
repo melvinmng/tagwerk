@@ -215,6 +215,12 @@ struct AssistantModelTests {
         #expect(allDay.change.contains(" bis "))
     }
 
+    @Test func instructions_mentionSearch() async throws {
+        let (model, _, _) = await make()
+        model.open(context: .settings)
+        #expect(model.instructions().contains("search"))
+    }
+
     @Test func instructions_inVoiceMode_askForSpokenReplies() async throws {
         let (model, _, _) = await make()
         model.open(context: .settings)
