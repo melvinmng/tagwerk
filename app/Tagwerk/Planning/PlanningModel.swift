@@ -1737,7 +1737,7 @@ final class PlanningModel {
     }
 
     /// Selected calendars plus plan and deadline calendars; `nil` (all) when nothing is selected.
-    private func readableCalendarIDs() -> Set<String>? {
+    func readableCalendarIDs() -> Set<String>? {
         guard let selected = settings.selectedCalendarIDs else { return nil }
         var ids = Set(selected)
         if let plan = settings.planCalendarID { ids.insert(plan) }
