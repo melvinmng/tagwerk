@@ -127,6 +127,8 @@ final class PlanningModel {
     /// Plans of the neighbouring days (day scope) or weeks (week scope) for the page previews while swiping. They
     /// carry no AI suggestions; see `loadNeighbours()`.
     var neighbourPlans: [PlanDay: DayPlan] = [:]
+    /// The day-relative state the day page shows besides its plan (day scope only), for the plans of `neighbourPlans`.
+    var neighbourExtras: [PlanDay: DayPageExtras] = [:]
     @ObservationIgnored var neighbourLoad: Task<Void, Never>?
     /// The app turns this on; tests leave it off, so no background load (neighbour plans, travel times) outlives a
     /// test's store.
@@ -302,6 +304,8 @@ final class PlanningModel {
             result.append(plan)
             day = day.adding(days: 1, calendar: calendar)
         }
+        // A page change while this reload was running: the newer reload shows the new range.
+        guard self.range == range else { return }
         days = result
 
         // Left over from a past day ("liegen geblieben") counts as unplanned again, also in week and month.
@@ -365,6 +369,14 @@ final class PlanningModel {
     /// The plans of days outside (or inside) the shown range, computed like `reload()` without changing what is shown.
     /// Page previews ask for the deadlines too; the AI view does not need them.
     func dayPlans(in range: ClosedRange<PlanDay>, withDeadlines: Bool = true) async -> [DayPlan] {
+        await dayPlansAndState(in: range, withDeadlines: withDeadlines).plans
+    }
+
+    /// The plans of `range` with the derived state of its events that the pages show: merge suggestions, deadline
+    /// event IDs and preparation targets. Changes nothing that is shown.
+    private func dayPlansAndState(in range: ClosedRange<PlanDay>, withDeadlines: Bool = true) async
+        -> (plans: [DayPlan], mergeSuggestions: [MergeSuggestion], deadlineEventIDs: Set<String>,
+            preparationTargets: [String: PreparationTarget]) {
         let open = taskList.items.filter { !$0.isCompleted }
         let series = await recurringSeries(open: open)
         let recurringIDs = Set(series.map(\.id))
@@ -372,7 +384,7 @@ final class PlanningModel {
                                     end: range.upperBound.adding(days: 1, calendar: calendar).startDate(in: calendar))
         let raw = calendarStore.events(in: interval, calendarIDs: readableCalendarIDs())
         let marked = deadlineMarks.markedIDs(in: raw)
-        let (events, _) = markedEvents(raw, keeping: marked)
+        let (events, merges) = markedEvents(raw, keeping: marked)
         let deadlineIDs = deadlineIDs(in: events, marked: marked)
         let links = Dictionary(resolveLinks(events: events, tasks: open, manual: blocks.links.manualLinks()).map { ($0.eventID, $0.taskID) },
                                uniquingKeysWith: { first, _ in first })
@@ -394,7 +406,34 @@ final class PlanningModel {
                                   deadlineIDs: deadlineIDs))
             day = day.adding(days: 1, calendar: calendar)
         }
-        return result
+        return (result, merges, deadlineIDs, deadlineMarks.preparationTargets(for: events))
+    }
+
+    /// The state of the shown day page besides `days`.
+    var currentExtras: DayPageExtras {
+        DayPageExtras(upcomingDeadlines: upcomingDeadlines, deadlineSuggestions: deadlineSuggestions, preparation: preparation,
+                      mergeSuggestions: mergeSuggestions, deadlineEventIDs: deadlineEventIDs,
+                      preparationTargets: preparationTargets, suggestionBatches: suggestionBatches)
+    }
+
+    /// The plan of one day with everything its page shows, computed like `reload()` does for the shown day but
+    /// without changing what is shown (neighbour pages, #134 follow-up). The open AI suggestions come from the
+    /// local store; nothing is asked of the AI.
+    func dayPage(_ day: PlanDay) async -> (plan: DayPlan, extras: DayPageExtras)? {
+        let state = await dayPlansAndState(in: day...day)
+        guard var plan = state.plans.first else { return nil }
+        let batches = suggestionStore?.batches(in: day...day) ?? []
+        // A move shows on the day the task leaves, where the user decides about it (as in `reload()`).
+        plan.suggestions = batches.flatMap(\.suggestions).filter { suggestion in
+            (suggestion.kind == .move ? (suggestion.fromDay ?? suggestion.day) : suggestion.day) == day
+        }
+        let open = taskList.items.filter { !$0.isCompleted }
+        let upcoming = upcomingState(from: day, open: open, refreshesLinks: false)
+        let extras = DayPageExtras(upcomingDeadlines: upcoming.deadlines, deadlineSuggestions: upcoming.suggestions,
+                                   preparation: upcoming.preparation, mergeSuggestions: state.mergeSuggestions,
+                                   deadlineEventIDs: state.deadlineEventIDs, preparationTargets: state.preparationTargets,
+                                   suggestionBatches: batches)
+        return (plan, extras)
     }
 
     /// Events, time blocks and deadlines of `count` days from `first` for the widget snapshot (phase 4).
@@ -459,12 +498,37 @@ final class PlanningModel {
     /// One day, week or month forward (`1`) or back (`-1`), for arrows and swiping.
     func step(_ direction: Int) {
         switch scope {
-        case .day: anchor = anchor.adding(days: direction, calendar: calendar)
+        case .day:
+            let target = anchor.adding(days: direction, calendar: calendar)
+            // The page that is left becomes a neighbour of the new one; the new page's plan and cards are adopted
+            // at once when they were loaded beforehand, so the day changes in one step (no wait for `reload()`).
+            if let current = days.first, current.day == anchor {
+                neighbourPlans[current.day] = current
+                neighbourExtras[current.day] = currentExtras
+            }
+            anchor = target
+            adoptCachedPage()
         case .week: anchor = anchor.adding(days: 7 * direction, calendar: calendar)
         case .month:
             let moved = calendar.date(byAdding: .month, value: direction, to: anchor.startDate(in: calendar))
             anchor = moved.map { PlanDay(date: $0, calendar: calendar) } ?? anchor
         }
+    }
+
+    /// Shows the cached page of the anchor (day scope) without waiting for `reload()`. `false` when it was not loaded.
+    /// The reload that follows computes the same values again.
+    @discardableResult
+    func adoptCachedPage() -> Bool {
+        guard scope == .day, let plan = neighbourPlans[anchor], let extras = neighbourExtras[anchor] else { return false }
+        days = [plan]
+        upcomingDeadlines = extras.upcomingDeadlines
+        deadlineSuggestions = extras.deadlineSuggestions
+        preparation = extras.preparation
+        mergeSuggestions = extras.mergeSuggestions
+        deadlineEventIDs = extras.deadlineEventIDs
+        preparationTargets = extras.preparationTargets
+        suggestionBatches = extras.suggestionBatches
+        return true
     }
 
     /// Plans `id` for `day` (Tagwerk only). Future time blocks require a decision first.
@@ -1800,7 +1864,18 @@ final class PlanningModel {
     /// Deadlines from the shown day over the next 14 days: deadline calendars, marked events (also from calendars that
     /// are not shown) and tasks. Also updates the preparation sums and the keyword suggestions (DL3) of that window.
     private func loadUpcomingDeadlines(open: [TaskItem]) -> [ImportantDeadline] {
-        let range = anchor...anchor.adding(days: 13, calendar: calendar)
+        let state = upcomingState(from: anchor, open: open, refreshesLinks: true)
+        deadlineSuggestions = state.suggestions
+        preparation = state.preparation
+        return state.deadlines
+    }
+
+    /// The deadline card state of the page of `day`: deadlines over the next 14 days, keyword suggestions and
+    /// preparation sums. Changes nothing in the model; `refreshesLinks` also keeps the titles and moments on the
+    /// preparation links current (the shown page only).
+    private func upcomingState(from day: PlanDay, open: [TaskItem], refreshesLinks: Bool)
+        -> (deadlines: [ImportantDeadline], suggestions: [CalendarEvent], preparation: [String: PreparationSummary]) {
+        let range = day...day.adding(days: 13, calendar: calendar)
         let interval = DateInterval(start: range.lowerBound.startDate(in: calendar),
                                     end: range.upperBound.adding(days: 1, calendar: calendar).startDate(in: calendar))
         let deadlineCalendars = Set(settings.deadlineCalendarIDs ?? [])
@@ -1817,21 +1892,22 @@ final class PlanningModel {
             event.end > current && (readable?.contains(event.calendarID) ?? true)
                 && event.url.flatMap(TaskLinkURL.parse) == nil && !linked.contains(event.id)
         }
-        deadlineSuggestions = TagwerkCore.deadlineSuggestions(
+        let suggestions = TagwerkCore.deadlineSuggestions(
             events: suggestionCandidates, excludingEventIDs: marked.union(deadlineMarks.dismissedSuggestionIDs()),
             excludingCalendarIDs: deadlineCalendars.union(settings.planCalendarID.map { [$0] } ?? []))
-        preparation = preparationSummaries(for: deadlines)
-        return deadlines
+        return (deadlines, suggestions, preparationSummaries(for: deadlines, refreshesLinks: refreshesLinks))
     }
 
     /// Preparation sums of the deadlines that have linked events; keeps title and moment on their links current.
-    private func preparationSummaries(for deadlines: [ImportantDeadline]) -> [String: PreparationSummary] {
+    private func preparationSummaries(for deadlines: [ImportantDeadline], refreshesLinks: Bool = true) -> [String: PreparationSummary] {
         let links = deadlineMarks.allLinks()
         let keys = Set(links.map(\.deadlineKey))
         let linked = deadlines.filter { keys.contains($0.preparationKey) }
         guard !linked.isEmpty else { return [:] }
-        for deadline in linked {
-            deadlineMarks.refreshDeadline(key: deadline.preparationKey, title: deadline.title, until: deadlineMoment(deadline))
+        if refreshesLinks {
+            for deadline in linked {
+                deadlineMarks.refreshDeadline(key: deadline.preparationKey, title: deadline.title, until: deadlineMoment(deadline))
+            }
         }
         let current = now()
         let end = linked.map(deadlineMoment).max() ?? current

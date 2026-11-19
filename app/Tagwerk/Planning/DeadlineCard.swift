@@ -6,9 +6,11 @@ import TagwerkCore
 struct DeadlineCard: View {
     let model: PlanningModel
     let actions: DeadlineActions
+    /// Set in the preview of a neighbour page: the deadlines of that day.
+    @Environment(\.dayPageExtras) private var pageExtras
 
     var body: some View {
-        let deadlines = model.upcomingDeadlines
+        let deadlines = pageExtras?.upcomingDeadlines ?? model.upcomingDeadlines
         let orphans = model.orphanedMarks
         if !deadlines.isEmpty || !orphans.isEmpty {
             VStack(alignment: .leading, spacing: 8) {

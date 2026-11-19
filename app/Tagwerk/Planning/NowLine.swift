@@ -99,18 +99,26 @@ struct NowListBehavior: ViewModifier {
     let model: PlanningModel
     let day: PlanDay
     @Binding var tick: Int
+    /// Off in the preview of a neighbour page: it neither scrolls nor ticks.
+    var isEnabled = true
+    /// The day this list first showed: only that day is scrolled to the current time, and only when it is today.
+    @State private var openedDay: PlanDay?
     @State private var scrolledFor: PlanDay?
 
     func body(content: Content) -> some View {
         ScrollViewReader { proxy in
             content
                 .task(id: day) {
-                    guard day == model.today, scrolledFor != day else { return }
+                    guard isEnabled else { return }
+                    if openedDay == nil { openedDay = day }
+                    guard NowMarker.alignsOnOpening(openedDay: openedDay, shownDay: day, today: model.today),
+                          scrolledFor != day else { return }
                     await Task.yield()
                     withAnimation(nil) { proxy.scrollTo("now-row", anchor: UnitPoint(x: 0.5, y: 0.33)) }
                     scrolledFor = day
                 }
                 .task {
+                    guard isEnabled else { return }
                     while !Task.isCancelled {
                         let secondsToNextMinute = 60 - Int(Date.now.timeIntervalSince1970) % 60
                         try? await Task.sleep(for: .seconds(secondsToNextMinute))

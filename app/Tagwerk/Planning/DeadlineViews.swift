@@ -83,11 +83,12 @@ struct DeadlineRowLabel: View {
     let deadline: ImportantDeadline
     let model: PlanningModel
     var showsDistance = true
+    @Environment(\.dayPageExtras) private var pageExtras
 
     var body: some View {
         let text = DeadlineText(calendar: model.calendar)
         let calendarName = deadline.calendarID.flatMap(model.calendarTitle)
-        let preparation = model.preparation[deadline.preparationKey]
+        let preparation = (pageExtras?.preparation ?? model.preparation)[deadline.preparationKey]
         HStack(alignment: .firstTextBaseline) {
             Image(systemName: deadline.kind == .epic ? "diamond.fill" : "flag.fill")
                 .foregroundStyle(.red)
@@ -198,9 +199,10 @@ private struct MarkReassignSheet: View {
 struct DeadlineSuggestionCard: View {
     let model: PlanningModel
     @State private var askingSeries = false
+    @Environment(\.dayPageExtras) private var pageExtras
 
     var body: some View {
-        if let event = model.deadlineSuggestions.first {
+        if let event = (pageExtras?.deadlineSuggestions ?? model.deadlineSuggestions).first {
             let text = DeadlineText(calendar: model.calendar)
             VStack(alignment: .leading, spacing: 8) {
                 Label("Sieht nach einer Prüfung aus", systemImage: "flag")

@@ -1,76 +1,30 @@
 import SwiftUI
 import TagwerkCore
 
-/// The neighbouring day while the page is dragged (#134): the real hour grid or list of that day from its
-/// preloaded plan, without any interaction. Without a plan yet it shows the date and a progress indicator.
+/// The neighbouring day beside the shown page while its plan is not loaded yet: the date and a progress indicator.
+/// Once the plan is there, the preview is the real page itself (`DayView.preview(of:)`).
 struct DayPagePreview: View {
     let model: PlanningModel
     let day: PlanDay
-    let plan: DayPlan?
-    let showsGrid: Bool
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 12) {
-                title
-                if let plan {
-                    capacity(plan)
-                    Text("Ablauf").font(.headline)
-                    if showsGrid { grid(plan) } else { list(plan) }
-                } else {
-                    ProgressView().frame(maxWidth: .infinity).padding(.top, 80)
-                }
+        let range = day...day
+        VStack(alignment: .leading, spacing: 12) {
+            VStack(alignment: .leading, spacing: 0) {
+                Text(PlanHeaderText.caption(scope: .day, anchor: day, today: model.today, range: range, calendar: model.calendar))
+                    .font(.caption2.weight(.semibold)).foregroundStyle(.secondary)
+                Text(PlanHeaderText.title(scope: .day, anchor: day, range: range, calendar: model.calendar))
+                    .font(.title3.bold())
             }
-            .padding(.horizontal)
-            .padding(.top, 8)
+            ProgressView().frame(maxWidth: .infinity).padding(.top, 80)
+            Spacer()
         }
-        .scrollDisabled(true)
+        .padding(.horizontal)
+        .padding(.top, 8)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .allowsHitTesting(false)
         .accessibilityHidden(true)
-        .background(Color(.systemBackground))
-    }
-
-    private var title: some View {
-        let range = day...day
-        return VStack(alignment: .leading, spacing: 0) {
-            Text(PlanHeaderText.caption(scope: .day, anchor: day, today: model.today, range: range, calendar: model.calendar))
-                .font(.caption2.weight(.semibold)).foregroundStyle(.secondary)
-            Text(PlanHeaderText.title(scope: .day, anchor: day, range: range, calendar: model.calendar))
-                .font(.title3.bold())
-        }
-    }
-
-    private func capacity(_ plan: DayPlan) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text(plan.isPast ? String(localized: "Vergangen") : CapacityText.remaining(plan.capacity)).font(.headline)
-            CapacityBar(capacity: plan.capacity)
-        }
-        .padding(12)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 14))
-    }
-
-    private func grid(_ plan: DayPlan) -> some View {
-        var entries: [DayEntry] = plan.events.filter { !$0.isAllDay }.map { .event($0, nil) }
-        entries += plan.blocks.map { .event($0, plan.links[$0.id]) }
-        if !plan.capacity.isDayOff, let lunch = model.lunch(on: plan.day) { entries.append(.lunch(day: plan.day, range: lunch)) }
-        return TimelineCanvas(model: model, plan: plan, entries: entries, selectingIDs: nil, taskPreview: nil,
-                              onTap: { _ in }, onToggleSelection: { _ in }, onCommit: { _ in }, isDragging: .constant(false))
-    }
-
-    @ViewBuilder
-    private func list(_ plan: DayPlan) -> some View {
-        let rows = model.timelineWithGaps(for: plan)
-        if rows.isEmpty { Text("Keine Termine").foregroundStyle(.secondary) }
-        ForEach(rows) { row in
-            if case .gap = row { EmptyView() } else {
-                HStack(alignment: .top, spacing: 10) {
-                    Text(DateText.time(minutes: model.startMinutes(of: row, on: plan.day), calendar: model.calendar))
-                        .font(.caption.monospacedDigit()).foregroundStyle(.secondary).frame(width: 48, alignment: .leading)
-                    Text(row.label)
-                }
-            }
-        }
+        .background(Color(.systemBackground), ignoresSafeAreaEdges: [])
     }
 }
 

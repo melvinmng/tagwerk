@@ -157,11 +157,13 @@ struct PlanControlRow: View {
 /// Phase 4 (mockup P1a): calories and water of today in the day view, from the first entry of the day.
 struct PlanIntakeLine: View {
     let model: PlanningModel
+    /// The day of the page the line belongs to (a neighbour page is not the model's anchor).
+    var day: PlanDay?
     @Environment(AppEnvironment.self) private var environment
 
     var body: some View {
         let intake = environment.capture.planHeaderLine
-        if model.scope == .day, model.anchor == model.today,
+        if model.scope == .day, (day ?? model.anchor) == model.today,
            let line = PlanHeaderText.statusLine(intake: intake, habits: environment.habits.todayCounter) {
             Button { environment.router.open(.capture) } label: {
                 HStack(spacing: 4) {

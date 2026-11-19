@@ -11,7 +11,9 @@ enum PageSlot {
     case arrived
 }
 
-/// Shows the real page and, while the finger drags sideways, the neighbouring page beside it; pages on release.
+/// Shows the real page with the neighbouring pages built beside it (outside the screen) and moves them along with the
+/// finger while it drags sideways; pages on release. There is no clip: the real page must stay the one scroll view the
+/// navigation bar tracks, otherwise a large title would not show. The window clips what lies beyond the screen.
 ///
 /// The drag is a UIKit pan recognizer (spike #134, variant C): it begins only for mostly sideways movement and
 /// cancels the touches of the content once it has begun, so buttons under the finger do not fire. Vertical
@@ -28,6 +30,8 @@ struct PagedContainer<Page: View>: View {
     /// loaded the new day); `nil` pages without waiting.
     var contentID: () -> AnyHashable? = { nil }
     let onPage: (PageSwipe) -> Void
+    /// A drag begins; the neighbour pages take over what they need from the shown page (e.g. its scroll offset).
+    var onDragBegan: () -> Void = {}
     /// A drag at a blocked edge ended (no later day in "Erfassen").
     let onBlockedEdge: () -> Void
     @ViewBuilder let page: (_ slot: PageSlot) -> Page
@@ -44,27 +48,35 @@ struct PagedContainer<Page: View>: View {
     var body: some View {
         let id = contentID()
         ZStack {
-            if dragOffset > 0, canGoBack { page(.previous).offset(x: dragOffset - width).allowsHitTesting(false) }
-            if dragOffset < 0, canGoForward { page(.next).offset(x: dragOffset + width).allowsHitTesting(false) }
-            // The real page stays in place (it keeps its scroll position and state); after paging, the preview of the
-            // new page lies over it until the real content has caught up.
+            // The neighbours stay in place beside the screen, so a drag finds them built (as in a paged scroll view)
+            // and they have already taken their data.
+            if canGoBack { neighbour(.previous, at: dragOffset - width) }
+            if canGoForward { neighbour(.next, at: dragOffset + width) }
+            // The real page stays in place (it keeps its scroll position and state). When the model has the new page
+            // at once (cached neighbour), `contentID` changes with the paging and nothing lies over it. Otherwise the
+            // preview of the new page lies over it until the real content has caught up.
             page(.current).offset(x: dragOffset)
             if isArriving {
-                page(.arrived).background(.background).allowsHitTesting(false)
+                page(.arrived).background(.background, ignoresSafeAreaEdges: []).allowsHitTesting(false)
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .clipped()
         .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { width = $0 }
         .onChange(of: id) { _, _ in isArriving = false }
         .gesture(PagePanRecognizer(isLocked: isLocked, excludesLeadingEdge: excludesLeadingEdge) { event in
             switch event {
-            case .began: flush()
+            case .began:
+                flush()
+                onDragBegan()
             case .changed(let translation): follow(translation)
             case .ended(let translation, let predicted): release(translation: translation, predicted: predicted)
             case .cancelled: withAnimation(.snappy) { dragOffset = 0 }
             }
         })
+    }
+
+    private func neighbour(_ slot: PageSlot, at x: CGFloat) -> some View {
+        page(slot).offset(x: x).allowsHitTesting(false).accessibilityHidden(true)
     }
 
     /// Runs the page change of an earlier drag at once (a quick second swipe starts before the first one ended).

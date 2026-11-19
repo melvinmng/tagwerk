@@ -8,19 +8,21 @@ struct AIPlanBar: View {
     @Environment(AppEnvironment.self) private var environment
     let scope: PlanScope
     @State private var showsResult = false
+    /// Set in the preview of a neighbour page: the open suggestions of that day.
+    @Environment(\.dayPageExtras) private var pageExtras
 
     private var planner: AIPlanner { environment.planner }
     private var planning: PlanningModel { environment.planning }
     /// Only the results of this kind of plan: the day shows the day plan, week and month the period plan.
     private var batches: [SuggestionBatch] {
-        planning.suggestionBatches.filter { ($0.scope == .day) == (scope == .day) }
+        (pageExtras?.suggestionBatches ?? planning.suggestionBatches).filter { ($0.scope == .day) == (scope == .day) }
     }
     private var suggestions: [PlanSuggestion] { batches.flatMap(\.suggestions) }
     private var unscheduledCount: Int { batches.reduce(0) { $0 + $1.unscheduled.count } }
     private var riskCount: Int { batches.reduce(0) { $0 + $1.risks.count } }
 
     /// Hidden when the whole period lies in the past.
-    var isVisible: Bool { planning.days.contains { !$0.isPast } }
+    var isVisible: Bool { pageExtras != nil || planning.days.contains { !$0.isPast } }
 
     var body: some View {
         if isVisible {

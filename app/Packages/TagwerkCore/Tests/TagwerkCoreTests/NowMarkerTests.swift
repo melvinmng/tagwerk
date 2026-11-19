@@ -6,6 +6,26 @@ struct NowMarkerTests {
     let calendar = makeCalendar()
     let today = PlanDay(year: 2026, month: 11, day: 19)
 
+    @Test func alignsOnOpening_firstOpenOnToday_aligns() {
+        #expect(NowMarker.alignsOnOpening(openedDay: nil, shownDay: today, today: today))
+        #expect(NowMarker.alignsOnOpening(openedDay: today, shownDay: today, today: today))
+    }
+
+    @Test func alignsOnOpening_firstOpenOnAnotherDay_doesNot() {
+        let tomorrow = today.adding(days: 1, calendar: calendar)
+        #expect(!NowMarker.alignsOnOpening(openedDay: nil, shownDay: tomorrow, today: today))
+    }
+
+    @Test func alignsOnOpening_afterPagingToTodayFromAnotherDay_doesNot() {
+        let yesterday = today.adding(days: -1, calendar: calendar)
+        #expect(!NowMarker.alignsOnOpening(openedDay: yesterday, shownDay: today, today: today))
+    }
+
+    @Test func alignsOnOpening_afterPagingAwayFromToday_doesNot() {
+        let tomorrow = today.adding(days: 1, calendar: calendar)
+        #expect(!NowMarker.alignsOnOpening(openedDay: today, shownDay: tomorrow, today: today))
+    }
+
     @Test func minutes_today_returnsMinutesSinceMidnight() {
         let now = instant(2026, 11, 19, 14, 32)
         #expect(NowMarker.minutes(now: now, day: today, calendar: calendar) == 14 * 60 + 32)

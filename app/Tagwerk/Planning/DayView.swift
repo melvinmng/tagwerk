@@ -22,6 +22,9 @@ struct DayView: View {
     @State private var showsGrid = true
     /// A block or task is being dragged in the grid; the page container ignores sideways drags meanwhile.
     @State private var gridLocked = false
+    /// The vertical offset of the shown page; the neighbour previews stand at the same height while one is dragged in.
+    @State private var offsetBox = ScrollOffsetBox()
+    @State private var previewOffset: CGFloat = 0
     /// Bumped every minute so the list places the "now" row anew.
     @State private var nowTick = 0
 
@@ -30,17 +33,10 @@ struct DayView: View {
             if let plan = model.days.first {
                 PagedContainer(canGoBack: true, canGoForward: true, isLocked: gridLocked,
                                contentID: { model.days.first?.day },
-                               onPage: { model.step($0.step) }, onBlockedEdge: {}) { slot in
+                               onPage: { model.step($0.step) },
+                               onDragBegan: { previewOffset = offsetBox.y }, onBlockedEdge: {}) { slot in
                     switch slot {
-                    case .current:
-                        if showsGrid {
-                            DayGridScreen(model: model, plan: plan, onOpenTask: onOpenTask, onEditRecurring: onEditRecurring,
-                                          menuActions: plannedActions, summary: { summary(plan) },
-                                          timelineHeader: { timelineHeader }, onOpenEntry: { sheetEntry = $0 },
-                                          onPlanTask: { blockFor = $0 }, isLocked: $gridLocked)
-                        } else {
-                            listContent(plan)
-                        }
+                    case .current: pageContent(plan)
                     case .previous: preview(of: plan.day.adding(days: -1, calendar: model.calendar))
                     case .next: preview(of: plan.day.adding(days: 1, calendar: model.calendar))
                     case .arrived: preview(of: model.anchor)
@@ -75,9 +71,32 @@ struct DayView: View {
         }
     }
 
-    /// The neighbouring day while the page is dragged: its preloaded plan, grid or list like the shown day.
+    /// The page of a day: grid or list. The preview of a neighbour is the very same view built from its preloaded plan
+    /// and cards, so nothing moves when the page arrives (#134 follow-up).
+    @ViewBuilder
+    private func pageContent(_ plan: DayPlan, extras: DayPageExtras? = nil, isPreview: Bool = false) -> some View {
+        if showsGrid {
+            DayGridScreen(model: model, plan: plan, onOpenTask: onOpenTask, onEditRecurring: onEditRecurring,
+                          menuActions: plannedActions, summary: { summary(plan) },
+                          timelineHeader: { timelineHeader }, onOpenEntry: { sheetEntry = $0 },
+                          onPlanTask: { blockFor = $0 }, isLocked: isPreview ? .constant(false) : $gridLocked,
+                          offsetBox: isPreview ? nil : offsetBox, previewOffset: isPreview ? previewOffset : nil)
+        } else {
+            listContent(plan, extras: extras, isPreview: isPreview)
+        }
+    }
+
+    /// The neighbouring day beside the shown page: its preloaded page without interaction; the date and a progress
+    /// indicator while it is not loaded yet.
+    @ViewBuilder
     private func preview(of day: PlanDay) -> some View {
-        DayPagePreview(model: model, day: day, plan: model.neighbourPlans[day], showsGrid: showsGrid)
+        if let plan = model.neighbourPlans[day], let extras = model.neighbourExtras[day] {
+            pageContent(plan, extras: extras, isPreview: true)
+                .environment(\.dayPageExtras, extras)
+                .environment(\.isPagePreview, true)
+        } else {
+            DayPagePreview(model: model, day: day)
+        }
     }
 
     // MARK: Shared parts
@@ -85,9 +104,9 @@ struct DayView: View {
     /// Header, deadlines, capacity and all-day events (above the timeline in both modes).
     @ViewBuilder
     private func summary(_ plan: DayPlan) -> some View {
-        PlanIntakeLine(model: model)
+        PlanIntakeLine(model: model, day: plan.day)
         // The one new element of phase 7: the morning card or today's focus, in the day view of today only.
-        if model.scope == .day, model.anchor == model.today { RoutineCard(model: environment.routines, plan: plan) }
+        if model.scope == .day, plan.day == model.today { RoutineCard(model: environment.routines, plan: plan) }
         DeadlineCard(model: model, actions: deadlineActions)
         DeadlineSuggestionCard(model: model)
         CapacityCard(model: model, plan: plan) { editingHours = true }
@@ -141,8 +160,9 @@ struct DayView: View {
 
     // MARK: List mode
 
-    private func listContent(_ plan: DayPlan) -> some View {
-        List {
+    private func listContent(_ plan: DayPlan, extras: DayPageExtras? = nil, isPreview: Bool = false) -> some View {
+        let marks = extras ?? model.currentExtras
+        return List {
             Section {
                 summary(plan)
                     .listRowInsets(EdgeInsets(top: 6, leading: 16, bottom: 6, trailing: 16))
@@ -153,9 +173,9 @@ struct DayView: View {
                 let rows = model.timelineWithGaps(for: plan)
                 let nowIndex = nowTick >= 0 ? model.nowRowIndex(in: rows, on: plan.day) : nil
                 if rows.isEmpty { Text("Keine Termine").foregroundStyle(.secondary) }
-                ForEach(rows.prefix(nowIndex ?? rows.count)) { row in timelineRow(row, plan: plan) }
+                ForEach(rows.prefix(nowIndex ?? rows.count)) { row in timelineRow(row, plan: plan, marks: marks) }
                 NowRowSlot(model: model, day: plan.day, isShown: nowIndex != nil)
-                ForEach(rows.dropFirst(nowIndex ?? rows.count)) { row in timelineRow(row, plan: plan) }
+                ForEach(rows.dropFirst(nowIndex ?? rows.count)) { row in timelineRow(row, plan: plan, marks: marks) }
                 // Open AI suggestions in list mode (mockup W3).
                 ForEach(plan.suggestions.filter { $0.kind == .block }.sorted { ($0.startMinutes ?? 0) < ($1.startMinutes ?? 0) }) { suggestion in
                     SuggestionRow(suggestion: suggestion)
@@ -167,16 +187,16 @@ struct DayView: View {
             TaskSections(model: model, plan: plan, onOpenTask: onOpenTask, onEditRecurring: onEditRecurring,
                          menuActions: plannedActions)
         }
-        .modifier(NowListBehavior(model: model, day: plan.day, tick: $nowTick))
+        .modifier(NowListBehavior(model: model, day: plan.day, tick: $nowTick, isEnabled: !isPreview))
     }
 
     @ViewBuilder
-    private func timelineRow(_ row: TimelineRow, plan: DayPlan) -> some View {
+    private func timelineRow(_ row: TimelineRow, plan: DayPlan, marks: DayPageExtras) -> some View {
         switch row {
         case .event(let event):
-            let isDeadline = model.deadlineEventIDs.contains(event.id)
+            let isDeadline = marks.deadlineEventIDs.contains(event.id)
             Button { sheetEntry = .event(event, nil) } label: {
-                TimelineLine(time: event.start, title: (isDeadline ? "⚑ " : "") + event.title, detail: eventDetail(event),
+                TimelineLine(time: event.start, title: (isDeadline ? "⚑ " : "") + event.title, detail: eventDetail(event, marks: marks),
                              color: isDeadline ? .red : (event.isBusy ? .blue : .gray))
             }
             .foregroundStyle(.primary)
@@ -216,15 +236,15 @@ struct DayView: View {
                           onConfirmUnmark: { unmarking = event })
     }
 
-    private func eventDetail(_ event: CalendarEvent) -> String {
+    private func eventDetail(_ event: CalendarEvent, marks: DayPageExtras) -> String {
         var parts = [String(localized: "bis \(event.end.formatted(date: .omitted, time: .shortened))")]
         if !event.isBusy { parts.append(String(localized: "Frei")) }
         if !event.mergedCalendarIDs.isEmpty { parts.append(String(localized: "\(event.mergedCalendarIDs.count + 1) Kalender")) }
         let text = DeadlineText(calendar: model.calendar)
-        if model.deadlineEventIDs.contains(event.id) {
+        if marks.deadlineEventIDs.contains(event.id) {
             parts.append(text.timelineMark(isMarked: !model.isInDeadlineCalendar(event)))
         }
-        if let target = model.preparationTarget(forEventID: event.id) {
+        if let target = marks.preparationTargets[event.id] {
             parts.append(text.preparationMark(target, today: model.today))
         }
         return parts.joined(separator: " · ")
