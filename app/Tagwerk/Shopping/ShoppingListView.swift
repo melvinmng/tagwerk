@@ -157,6 +157,7 @@ struct ShoppingListView: View {
                 }
             }
         }
+        .scrollDismissesKeyboard(.interactively)
         .listStyle(.insetGrouped)
         .refreshable { await model.reload() }
     }

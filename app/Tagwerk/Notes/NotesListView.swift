@@ -43,6 +43,7 @@ struct NotesListView: View {
                 Text(Self.listFootnote)
             }
         }
+        .scrollDismissesKeyboard(.interactively)
         .navigationTitle("Notizen")
         .safeAreaInset(edge: .bottom) { captureBar }
         .confirmationDialog("Notiz endgültig löschen?", isPresented: deletingBinding, titleVisibility: .visible) {
@@ -128,6 +129,7 @@ struct NotesListView: View {
         }
         .padding(.horizontal, 16).padding(.vertical, 8)
         .background(.bar)
+        .keepsKeyboardOnTap()
         .onChange(of: draft) { _, newValue in
             if newValue.isEmpty { draftWasDictated = false }
         }

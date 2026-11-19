@@ -51,7 +51,7 @@ struct EventEditSheet: View {
                     Text("Abonnierte Kalender, Feiertage und Geburtstage sind schreibgeschützt und fehlen hier.")
                 }
                 Section("Notiz") {
-                    TextField("Notiz", text: notes, axis: .vertical).lineLimit(2...6)
+                    TextField("Notiz", text: notes, axis: .vertical).lineLimit(2...6).keyboardDoneButton()
                 }
                 Section {
                     Button("Weitere Optionen …") { openSystemEditor() }
@@ -59,6 +59,7 @@ struct EventEditSheet: View {
                     Text("Wiederholung, Teilnehmende und Hinweise stellst du in Apples Termin-Editor ein.")
                 }
             }
+            .scrollDismissesKeyboard(.interactively)
             .navigationTitle(existing == nil ? "Neuer Termin" : "Termin bearbeiten")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

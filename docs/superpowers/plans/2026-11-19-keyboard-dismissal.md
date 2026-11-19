@@ -52,3 +52,55 @@ Zusätzlich `.scrollDismissesKeyboard(.interactively)` an jeden `Form`, jede `Li
 ## Für das Design-Sammelissue
 
 - Ob auch Formulare zusätzlich einen sichtbaren „Fertig“-Knopf über der Tastatur bekommen sollen (heute nur Felder ohne Return-Taste und TextEditoren).
+
+## Stand
+
+### Gebaut
+
+- `app/Tagwerk/Common/KeyboardDismissal.swift` (neuer Ordner `Common`, weil es keinen passenderen für gemeinsame Modifier gab):
+  - `KeyboardTapPolicy.shouldDismiss(isKeyboardVisible:touchIsInTextInput:point:keepZones:)` als reine Funktion.
+  - `KeyboardKeepZones` (Register der Rahmen, je View-ID ein Eintrag).
+  - `KeyboardDismissalController` mit dem fensterweiten `UITapGestureRecognizer` (`cancelsTouchesInView = false`, `delaysTouchesBegan = false`, gleichzeitige Erkennung mit allen Gesten). Der Tastaturzustand kommt aus `keyboardWillShow`/`keyboardWillHide`. Der Tipp-Erkenner ignoriert Tipps auf `UITextField`, `UITextView`, `UISearchBar` und alle Views darin.
+  - `KeyboardDismissalInstaller` (Anker in `RootView` per `.background`), im Test-Host nicht aktiv.
+  - Modifier `.keepsKeyboardOnTap()`, `.keyboardDoneButton()` (eigener Fokus) und `.keyboardDoneButton(focus:)` (für Felder mit vorhandenem `@FocusState`).
+- Tests: `app/TagwerkTests/KeyboardTapPolicyTests.swift` (Entscheidungsregeln und Register).
+- `EstimateField` nutzt jetzt `.keyboardDoneButton(focus:)`; die eigene Toolbar entfällt.
+- „Fertig“-Knopf an: `NoteField` (Abend und Morgen, #177), `NoteEditorView`, `DecimalField`, kcal-Feld in `WorkoutSheet`, beide Felder in `WeekReflectionSections`, Notizfelder in `NewTaskSheet`, `TaskEditorView` (Titel, Notiz, Kommentar) und `EventEditSheet`, Freitext in `MealSheet`.
+- `.keepsKeyboardOnTap()` an: Chat-Composer, `ShoppingInputBar`, Notiz-`captureBar`, Suchkopf, beide Zeilen des Vorschlags-Composers (Schnellantworten und Eingabe), Suchfeld in `UnplannedDrawer`.
+- `.scrollDismissesKeyboard(.interactively)` an allen `Form`/`List` mit Eingabefeldern oder über einer Eingabeleiste sowie an den `.searchable`-Listen (`MonthView`, `DeadlineViews`, `EntrySheet`).
+
+### Abweichungen und Annahmen
+
+- Der Plan sieht einen einzigen „Fertig“-Knopf je Feld vor. Dasselbe Wort steht in `MorningSheet` und `EveningSheet` bereits oben rechts für „Sheet abschließen“. Beide Bedeutungen unterscheiden sich (Tastatur schließen gegenüber Abschluss). Ich habe die vorhandene Beschriftung wie im Plan wiederverwendet; ob der Tastaturknopf anders heißen soll, gehört ins Design-Sammelissue.
+- Zusätzlich zur Liste im Plan haben Mehrzeilenfelder mit `axis: .vertical` im `TaskEditorView` (Titel, Kommentar) und im `MealSheet` einen „Fertig“-Knopf bekommen, weil Return dort einen Zeilenumbruch einfügt. Chat-Composer und Notiz-Schnellerfassung bekommen ihn bewusst nicht (eigener Sendeknopf, Tastatur bleibt offen).
+- Alert-Textfelder (`ShoppingListView:76`, `ShoppingCategoriesView:83/88`) und Felder in `RoutineSettingsView`-Zeilen sind einzeilig mit Return-Taste und blieben unverändert. Ob der Tipp-Erkenner in Alerts greift, ist ungeprüft (Alerts haben ihre eigene Präsentation); sie haben ohnehin eine Bestätigungstaste.
+- Kein roter Testlauf vor der Implementierung: Die Tests referenzieren neue Typen und scheiterten damit schon am Build, der Ablauf ist also von Rot zu Grün gegangen.
+
+### Offen
+
+- Der Tipp-Erkenner lässt sich nur auf dem Gerät prüfen (keine UI-Tests im Projekt).
+- Die Rahmen in `KeepZones` nutzen `.global` (Fensterkoordinaten); bei Rotation oder Split View wird neu gemeldet, das ist aber nicht getestet.
+- Tastaturstatus kommt aus Benachrichtigungen. Bei einer Hardware-Tastatur ohne Bildschirmtastatur wird `keyboardWillShow` nicht in jedem Fall gesendet; dann bleibt der Hintergrund-Tipp ohne Wirkung, Scrollen und „Fertig“ funktionieren weiter.
+
+### Gerätetest für Melvin (bitte abhaken)
+
+Hintergrund-Tipp und Scrollen schließen die Tastatur in jedem Feld; „Fertig“ nur, wo angegeben.
+
+- [ ] Tagesabschluss (`EveningSheet`): Gedanken-Feld, „Fertig“ über der Tastatur, Tipp auf leere Fläche, Scrollen (#177)
+- [ ] Tagesstart (`MorningSheet`): Dankbar-Felder, Gedanken-Feld mit „Fertig“
+- [ ] Wochenrückblick: beide Reflexionsfelder mit „Fertig“
+- [ ] Notiz-Editor (`NoteEditorView`) mit „Fertig“
+- [ ] Notiz-Schnellerfassung: Senden lässt die Tastatur offen
+- [ ] Chat: Senden lässt die Tastatur offen; Tipp in den Verlauf schließt sie
+- [ ] Einkaufsliste: Hinzufügen lässt die Tastatur offen; Artikel-Sheet schließt per Tipp
+- [ ] Suche: Tippen in den Kopf behält die Tastatur, Tipp in die Ergebnisse schließt sie
+- [ ] Vorschlags-Composer (Planung): Senden und Schnellantworten lassen die Tastatur offen
+- [ ] Ungeplante-Ablage: Suchfeld, Tipp auf Zeile schließt
+- [ ] Neue Aufgabe: Notizfeld mit „Fertig“
+- [ ] Aufgabe bearbeiten: Titel, Notiz, Kommentar mit „Fertig“; Aufwandsfeld mit „Fertig“ (nur ein Knopf sichtbar)
+- [ ] Termin bearbeiten: Notizfeld mit „Fertig“
+- [ ] Mahlzeit: Freitext mit „Fertig“, Dezimalfelder (Zahlenblock) mit „Fertig“
+- [ ] Training: Kalorienfeld (Zifferntastatur) mit „Fertig“
+- [ ] Gewohnheit, Routine-Einstellungen, KI-Einstellungen: Tipp auf leere Fläche schließt die Tastatur
+- [ ] Zeilen, Knöpfe, Menüs, Wischaktionen reagieren bei offener Tastatur unverändert
+- [ ] Tipp in ein anderes Textfeld wechselt den Fokus ohne Flackern
