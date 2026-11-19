@@ -306,8 +306,10 @@ final class TaskListModel {
         replace(updated)
     }
 
-    func create(_ draft: TaskDraft, in source: TaskSource) async {
-        guard let provider = provider(for: source) else { return }
+    /// Creates the task; returns it, or `nil` if nothing was created (the reason is in `lastError`).
+    @discardableResult
+    func create(_ draft: TaskDraft, in source: TaskSource) async -> TaskItem? {
+        guard let provider = provider(for: source) else { return nil }
         do {
             let created = try await provider.create(draft)
             nextGeneration(for: source)
@@ -317,8 +319,10 @@ final class TaskListModel {
             if !missing.isEmpty {
                 lastError = Self.unassignedMessage(number: created.issueNumber, created: true, missing: missing)
             }
+            return created
         } catch {
             lastError = Self.message(for: error)
+            return nil
         }
     }
 

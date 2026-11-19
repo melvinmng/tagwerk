@@ -472,6 +472,25 @@ struct TaskListAssigneeTests {
 
     private var listedTitles: [String] { model.items.map(\.title) }
 
+    @Test func create_returnsTheCreatedItem_evenWhenAnAssigneeWasDropped() async {
+        github.droppedAssignees = ["lea-m"]
+        let created = await model.create(draft(["octo", "lea-m"]), in: .github)
+        #expect(created != nil)
+        #expect(model.lastError != nil)   // the "could not be assigned" warning must not hide the success
+    }
+
+    @Test func create_returnsNilOnFailure_evenWithTheSameMessageAsBefore() async {
+        github.applyError = .failed("Nope")
+        let first = await model.create(draft(nil), in: .github)
+        let second = await model.create(draft(nil), in: .github)
+        #expect(first == nil && second == nil)
+        #expect(model.lastError != nil)
+    }
+
+    @Test func create_returnsNilWithoutARegisteredSource() async {
+        #expect(await model.create(TaskDraft(title: "Neu"), in: .reminders) == nil)
+    }
+
     @Test func create_forMe_addsItemWithoutNotice() async {
         await model.create(draft(nil), in: .github)
         #expect(listedTitles == ["Export"])

@@ -181,10 +181,7 @@ struct NewTaskSheet: View {
                 due: hasDue ? DueDate(date: dueDate, includeTime: false, calendar: model.calendar) : nil),
             assignees: target == .github ? AssigneeSelection.draftAssignees(selected: selectedAssignees, chosen: assigneesChosen) : nil
         )
-        let errorBefore = model.lastError
-        await model.create(draft, in: target)
-        // `create` reports no result; a new error message means it did not work out.
-        if model.lastError == errorBefore || model.lastError == nil { onCreated?() }
+        if await model.create(draft, in: target) != nil { onCreated?() }
         dismiss()
     }
 }
