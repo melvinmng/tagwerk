@@ -144,7 +144,7 @@ GitHub-Konto: @melvinmng · bestätigt zuweisbar · geprüft 2026-11-17 · ich
 - [ ] [#178](https://github.com/melvinmng/tagwerk/issues/178) Siri-Kurzbefehle der Einkaufsliste werden nicht erkannt {status: Backlog; prio: P4 (Low)}
 - [ ] [#180](https://github.com/melvinmng/tagwerk/issues/180) Notizen: Tagesstart und Tagesabschluss in eigenen Ordnern {status: Backlog; prio: P3 (Medium); epic: #113}
 - [ ] [#181](https://github.com/melvinmng/tagwerk/issues/181) Gewohnheiten: Vorschlag aus dem früheren Notion-Tracker übernehmen {status: Backlog; prio: P3 (Medium); epic: #140}
-- [ ] [#182](https://github.com/melvinmng/tagwerk/issues/182) Tagebuch mit Gott aus Notion übernehmen
+- [ ] [#182](https://github.com/melvinmng/tagwerk/issues/182) Tagebuch mit Gott aus Notion übernehmen {status: Backlog; prio: P3 (Medium); epic: #113}
 
 ## Notizen
 
@@ -183,7 +183,7 @@ _Automatisch aus [Tagwerk](https://github.com/users/melvinmng/projects/17) erzeu
 - [#178](https://github.com/melvinmng/tagwerk/issues/178) Siri-Kurzbefehle der Einkaufsliste werden nicht erkannt · @melvinmng · Prio P4 (Low)
 - [#180](https://github.com/melvinmng/tagwerk/issues/180) Notizen: Tagesstart und Tagesabschluss in eigenen Ordnern · @melvinmng · Prio P3 (Medium)
 - [#181](https://github.com/melvinmng/tagwerk/issues/181) Gewohnheiten: Vorschlag aus dem früheren Notion-Tracker übernehmen · @melvinmng · Prio P3 (Medium)
-- [#182](https://github.com/melvinmng/tagwerk/issues/182) Tagebuch mit Gott aus Notion übernehmen · @melvinmng
+- [#182](https://github.com/melvinmng/tagwerk/issues/182) Tagebuch mit Gott aus Notion übernehmen · @melvinmng · Prio P3 (Medium)
 
 ### Bereit (6)
 - [#159](https://github.com/melvinmng/tagwerk/issues/159) UI-Tests für die Hauptwege · @melvinmng · Prio P3 (Medium)
