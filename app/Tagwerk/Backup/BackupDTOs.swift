@@ -1254,7 +1254,7 @@ extension BackupEntities {
     /// `replacePrivate` is false (the file was written without journal and Bible Study content), the journal and Bible Study
     /// notes, their folders and the sessions on this device stay as they are.
     @MainActor
-    func restore(into context: ModelContext, settings: AppSettings, replacePrivate: Bool) {
+    func restore(into context: ModelContext, settings: AppSettings, replacePrivate: Bool) throws {
         self.settings?.apply(to: settings)
         Self.delete(LocalTask.self, in: context) { _ in true }
         Self.delete(LocalOccurrenceCompletion.self, in: context) { _ in true }
@@ -1286,7 +1286,7 @@ extension BackupEntities {
         Self.delete(FocusMarkRecord.self, in: context) { _ in true }
         Self.delete(WeekReflectionRecord.self, in: context) { _ in true }
         // Unique keys of the old records must be gone before records with the same keys come in.
-        try? context.save()
+        try context.save()
         for item in localTasks { context.insert(item.makeRecord()) }
         for item in localOccurrenceCompletions { context.insert(item.makeRecord()) }
         for item in dayAssignments { context.insert(item.makeRecord()) }
@@ -1316,7 +1316,7 @@ extension BackupEntities {
         for item in eveningChecklistItems { context.insert(item.makeRecord()) }
         for item in focusMarks { context.insert(item.makeRecord()) }
         for item in weekReflections { context.insert(item.makeRecord()) }
-        try? context.save()
+        try context.save()
     }
 
     @MainActor

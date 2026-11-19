@@ -46,6 +46,7 @@ final class BackupService {
         case noFolder
         case folderUnavailable
         case writeFailed
+        case restoreFailed
     }
 
     /// What the last automatic run did, for the settings page.
@@ -102,10 +103,19 @@ final class BackupService {
         return Inspection(header: header, entities: envelope.entities)
     }
 
-    /// Replaces the data of everything in the file. Call `writeSafetyCopy` first.
-    func restore(_ inspection: Inspection) {
-        inspection.entities.restore(into: context, settings: settings, replacePrivate: inspection.header.includesPrivateNotes)
-        try? context.save()
+    /// Replaces the data of everything in the file. Call `writeSafetyCopy` first and pass its content as `safetyCopy`:
+    /// the replacement saves twice (old unique keys must be gone first), so a failure after the first save would leave
+    /// the store without data. In that case the previous state comes back from the safety copy and `.restoreFailed` is thrown.
+    func restore(_ inspection: Inspection, recoveringFrom safetyCopy: Data? = nil) throws {
+        do {
+            try inspection.entities.restore(into: context, settings: settings, replacePrivate: inspection.header.includesPrivateNotes)
+        } catch {
+            context.rollback()
+            if let safetyCopy, let previous = try? inspect(safetyCopy) {
+                try? previous.entities.restore(into: context, settings: settings, replacePrivate: true)
+            }
+            throw BackupError.restoreFailed
+        }
     }
 
     /// A copy of the current state in `directory` (the app documents), made before a restore replaces anything. It always holds
@@ -211,6 +221,7 @@ final class BackupService {
         case .noFolder: String(localized: "Wähle zuerst einen Ordner für die automatische Sicherung.")
         case .folderUnavailable: String(localized: "Der gewählte Ordner ist nicht mehr erreichbar. Wähle ihn neu.")
         case .writeFailed: String(localized: "Die Sicherung ließ sich nicht schreiben. Prüfe den Ordner und den freien Speicher.")
+        case .restoreFailed: String(localized: "Die Sicherung ließ sich nicht wiederherstellen. Der vorherige Stand wurde zurückgeholt; eine Kopie liegt im Ordner „Sicherungen“ in den Dokumenten von Tagwerk.")
         }
     }
 }

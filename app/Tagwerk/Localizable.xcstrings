@@ -5115,6 +5115,16 @@
         }
       }
     },
+    "Die Sicherung ließ sich nicht wiederherstellen. Der vorherige Stand wurde zurückgeholt; eine Kopie liegt im Ordner „Sicherungen“ in den Dokumenten von Tagwerk.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The backup could not be restored. The previous state was brought back; a copy is in the “Sicherungen” folder in Tagwerk's documents."
+          }
+        }
+      }
+    },
     "Die Sicherung lässt sich nicht lesen.": {
       "localizations": {
         "en": {

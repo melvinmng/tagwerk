@@ -104,13 +104,23 @@ struct BackupSettingsView: View {
     private func restore(_ service: BackupService) {
         guard let inspection = pendingRestore else { return }
         pendingRestore = nil
+        let safetyCopy: Data
         do {
-            try service.writeSafetyCopy(into: BackupService.safetyCopyDirectory)
+            let url = try service.writeSafetyCopy(into: BackupService.safetyCopyDirectory)
+            safetyCopy = try Data(contentsOf: url)
         } catch {
             alertText = String(localized: "Die Kopie des bisherigen Stands ließ sich nicht schreiben. Es wurde nichts ersetzt.")
             return
         }
-        service.restore(inspection)
+        do {
+            try service.restore(inspection, recoveringFrom: safetyCopy)
+        } catch {
+            Task {
+                await environment.reloadAfterRestore()
+                alertText = BackupService.message(for: .restoreFailed)
+            }
+            return
+        }
         Task {
             await environment.reloadAfterRestore()
             alertText = String(localized: "Wiederhergestellt. Eine Kopie des vorherigen Stands liegt im Ordner „Sicherungen“ in den Dokumenten von Tagwerk.")

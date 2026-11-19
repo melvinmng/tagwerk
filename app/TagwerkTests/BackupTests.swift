@@ -187,7 +187,7 @@ struct BackupTests {
         let data = try backup.makeBackupData()
         let target = try makeTarget()
         let inspection = try target.service.inspect(data)
-        target.service.restore(inspection)
+        try target.service.restore(inspection)
         let before = try canonical(entities(of: source.mainContext, settings: sourceSettings))
         let after = try canonical(entities(of: target.container.mainContext, settings: target.settings))
         for key in before.keys.sorted() { #expect(before[key] == after[key], "\(key) differs after the round trip") }
@@ -201,9 +201,9 @@ struct BackupTests {
         defer { try? FileManager.default.removeItem(at: url) }
         let target = try makeTarget()
         let reloaded = try Data(contentsOf: url)
-        target.service.restore(try target.service.inspect(reloaded))
+        try target.service.restore(try target.service.inspect(reloaded))
         // Restoring the same file again replaces, it does not duplicate.
-        target.service.restore(try target.service.inspect(reloaded))
+        try target.service.restore(try target.service.inspect(reloaded))
         let counts = entities(of: target.container.mainContext, settings: target.settings)
         #expect(counts.localTasks.count == 1 && counts.notes.count == 5 && counts.habits.count == 1 && counts.noteFolders.count == 3)
     }
@@ -214,7 +214,7 @@ struct BackupTests {
         target.settings.backupFolderBookmark = Data("local bookmark".utf8)
         target.settings.autoBackupEnabled = false
         let record = target.settings
-        target.service.restore(try target.service.inspect(try backup.makeBackupData()))
+        try target.service.restore(try target.service.inspect(try backup.makeBackupData()))
         #expect(target.settings === record, "the settings record must stay the same instance")
         #expect(record.goalKilocalories == 2100 && record.bedtimeMinutes == 1320 && record.selectedCalendarIDs == ["cal-1", "cal-2"])
         #expect(record.shoppingListID == "list-7" && record.noteSortOrderRaw == "title")
@@ -229,7 +229,7 @@ struct BackupTests {
         context.insert(LocalTask(title: "Nur auf dem Ziel", createdAt: clock.now))
         context.insert(CachedGitHubIssue(issueID: "i-1", payload: Data(), fetchedAt: clock.now))
         try context.save()
-        target.service.restore(try target.service.inspect(try backup.makeBackupData()))
+        try target.service.restore(try target.service.inspect(try backup.makeBackupData()))
         let titles = try context.fetch(FetchDescriptor<LocalTask>()).map(\.title)
         #expect(titles == ["Quellen sichten"])
         // Models that are not in the backup are not touched.
@@ -297,7 +297,7 @@ struct BackupTests {
         context.insert(BibleStudySessionRecord(dayKey: "2026-11-01", book: "43", passage: "1", noteID: entry.id, startedAt: clock.now))
         context.insert(NoteRecord(text: "Normale Notiz, wird ersetzt", now: clock.now))
         try context.save()
-        target.service.restore(try target.service.inspect(try backup.makeBackupData(includePrivate: false)))
+        try target.service.restore(try target.service.inspect(try backup.makeBackupData(includePrivate: false)))
         let notes = try context.fetch(FetchDescriptor<NoteRecord>())
         #expect(notes.contains { $0.text == "Mein Eintrag" } && !notes.contains { $0.text.hasPrefix("Normale Notiz") })
         #expect(try context.fetchCount(FetchDescriptor<BibleStudySessionRecord>()) == 1)
@@ -309,7 +309,7 @@ struct BackupTests {
         let context = target.container.mainContext
         context.insert(NoteRecord(text: "Alter Eintrag", kind: .journal, dayKey: "2026-11-01", now: clock.now))
         try context.save()
-        target.service.restore(try target.service.inspect(try backup.makeBackupData(includePrivate: true)))
+        try target.service.restore(try target.service.inspect(try backup.makeBackupData(includePrivate: true)))
         let journal = try context.fetch(FetchDescriptor<NoteRecord>()).filter { $0.kind == .journal }
         #expect(journal.map(\.text) == ["Allgemeine Stimmung\nDankbar"])
     }
