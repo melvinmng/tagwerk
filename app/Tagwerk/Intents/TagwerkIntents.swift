@@ -139,6 +139,69 @@ struct AddToShoppingListIntent: AppIntent {
     }
 }
 
+/// An article name as Siri and Shortcuts see it. The id is the name itself, so any name can be rebuilt from it.
+struct ShoppingArticleEntity: AppEntity {
+    static let typeDisplayRepresentation: TypeDisplayRepresentation = "Artikel"
+    static let defaultQuery = ShoppingArticleEntityQuery()
+
+    var id: String
+    @Property(title: "Name") var name: String
+
+    var displayRepresentation: DisplayRepresentation { DisplayRepresentation(title: LocalizedStringResource(stringLiteral: name)) }
+
+    init(name: String) {
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        id = trimmed
+        self.name = trimmed
+    }
+
+    /// Entities for stored ids; blank ids are dropped.
+    static func entities(for identifiers: [String]) -> [ShoppingArticleEntity] {
+        identifiers.map(ShoppingArticleEntity.init(name:)).filter { !$0.name.isEmpty }
+    }
+}
+
+/// Resolves article names: the suggested ones (own history and common terms) are what Siri can speak in a phrase;
+/// typed or spoken text is matched against them and otherwise taken as it is.
+struct ShoppingArticleEntityQuery: EntityStringQuery {
+    @Dependency private var services: IntentServices
+
+    @MainActor
+    func entities(for identifiers: [String]) async throws -> [ShoppingArticleEntity] {
+        ShoppingArticleEntity.entities(for: identifiers)
+    }
+
+    @MainActor
+    func entities(matching string: String) async throws -> [ShoppingArticleEntity] {
+        await services.shoppingArticleNames(matching: string).map(ShoppingArticleEntity.init(name:))
+    }
+
+    @MainActor
+    func suggestedEntities() async throws -> [ShoppingArticleEntity] {
+        await services.shoppingArticleNames().map(ShoppingArticleEntity.init(name:))
+    }
+}
+
+/// "Füge Milch zur Einkaufsliste hinzu": the article is part of the spoken phrase. Runs in the background like
+/// the text shortcut; without a recognized article Siri asks the same question.
+struct AddShoppingArticleIntent: AppIntent {
+    static let title: LocalizedStringResource = "Artikel auf die Einkaufsliste"
+    static let description = IntentDescription("Fügt einen Artikel zur Einkaufsliste hinzu, ohne Tagwerk zu öffnen.")
+    static let supportedModes: IntentModes = .background
+
+    @Parameter(title: "Artikel", requestValueDialog: "Was soll auf die Liste?")
+    var article: ShoppingArticleEntity
+
+    /// Not private: a test sets it, the system injects it otherwise.
+    @Dependency var services: IntentServices
+
+    @MainActor
+    func perform() async throws -> some IntentResult & ProvidesDialog {
+        let reply = await services.addToShopping(article: article)
+        return .result(dialog: IntentDialog(reply))
+    }
+}
+
 /// "Einkaufsliste zeigen": opens the shopping page.
 struct OpenShoppingListIntent: AppIntent {
     static let title: LocalizedStringResource = "Einkaufsliste zeigen"
@@ -215,7 +278,19 @@ struct TagwerkShortcuts: AppShortcutsProvider {
             "Auf die Einkaufsliste in \(.applicationName)",
             "Zur Einkaufsliste in \(.applicationName) hinzufügen",
             "Einkaufsliste in \(.applicationName) ergänzen",
+            "Füge etwas zur Einkaufsliste in \(.applicationName) hinzu",
+            "Ich brauche etwas aus dem Laden in \(.applicationName)",
+            "Einkaufsliste in \(.applicationName)",
+            "Neuer Artikel in \(.applicationName)",
+            "Etwas auf die Einkaufsliste in \(.applicationName) setzen",
         ], shortTitle: "Auf die Einkaufsliste", systemImageName: "cart.badge.plus")
+        // The article is part of the phrase; its names come from `ShoppingArticleEntityQuery.suggestedEntities`
+        // and are refreshed with `updateAppShortcutParameters()`.
+        AppShortcut(intent: AddShoppingArticleIntent(), phrases: [
+            "Füge \(\.$article) zur Einkaufsliste in \(.applicationName) hinzu",
+            "\(\.$article) auf die Einkaufsliste in \(.applicationName)",
+            "Setz \(\.$article) auf die Einkaufsliste in \(.applicationName)",
+        ], shortTitle: "Artikel auf die Einkaufsliste", systemImageName: "cart.badge.plus")
         AppShortcut(intent: CheckHabitIntent(), phrases: [
             "\(\.$habit) in \(.applicationName) abhaken",
             "Gewohnheit in \(.applicationName) abhaken",

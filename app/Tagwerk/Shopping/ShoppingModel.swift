@@ -32,6 +32,8 @@ final class ShoppingModel {
 
     /// "Erledigt" shows items completed within this time before now.
     static let completedWindow: TimeInterval = 7 * 24 * 3600
+    /// Names of items completed within this time before now are offered to Siri as article names.
+    static let historyWindow: TimeInterval = 180 * 24 * 3600
 
     @ObservationIgnored private let store: any ReminderStore
     @ObservationIgnored private let settings: AppSettings
@@ -46,6 +48,11 @@ final class ShoppingModel {
     /// Items completed within `completedWindow`, newest first.
     private(set) var completedItems: [ShoppingItem] = []
     private(set) var sections: [ShoppingSection] = []
+
+    /// Called when the set of item names seen by `reload()` changed (first load included), so Siri can learn
+    /// the new names. Not called when only quantities or the order changed.
+    @ObservationIgnored var onNamesChanged: (() -> Void)?
+    @ObservationIgnored private var nameSignature: Set<String>?
 
     @ObservationIgnored private var openRecords: [ReminderRecord] = []
     @ObservationIgnored private var completedRecords: [ReminderRecord] = []
@@ -75,6 +82,28 @@ final class ShoppingModel {
         listTitle = list.title
         completedItems = completedRecords.map(Self.item)
         refreshSections()
+        notifyIfNamesChanged()
+    }
+
+    /// Open and completed items of the shopping list with the date they were last touched; the source of the
+    /// names Siri can speak. Reads further back than `completedItems`. Empty without access or list.
+    func history() async -> [ShoppingHistoryEntry] {
+        guard store.accessState == .fullAccess, let listID = settings.shoppingListID,
+              store.lists().contains(where: { $0.id == listID }) else { return [] }
+        let current = now()
+        let window = DateInterval(start: current.addingTimeInterval(-Self.historyWindow), end: current.addingTimeInterval(60))
+        let open = await store.openReminders(in: [listID])
+        let completed = await store.completedReminders(in: window, listIDs: [listID])
+        return (open + completed).map { record in
+            ShoppingHistoryEntry(name: record.title, date: [record.completedAt, record.createdAt].compactMap { $0 }.max())
+        }
+    }
+
+    private func notifyIfNamesChanged() {
+        let signature = Set((openRecords + completedRecords).map { ShoppingName.key($0.title) })
+        guard signature != nameSignature else { return }
+        nameSignature = signature
+        onNamesChanged?()
     }
 
     /// Sorts the open items into sections again, e.g. after categories or assignments changed.
@@ -104,6 +133,7 @@ final class ShoppingModel {
         openItems = []
         completedItems = []
         sections = []
+        notifyIfNamesChanged()
     }
 
     private static func item(_ record: ReminderRecord) -> ShoppingItem {

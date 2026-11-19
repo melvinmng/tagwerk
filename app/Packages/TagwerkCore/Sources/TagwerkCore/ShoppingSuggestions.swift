@@ -59,6 +59,16 @@ public enum ShoppingSuggestions {
         return Array(result.prefix(limit))
     }
 
+    /// The names that contain the typed or spoken text, ignoring case and diacritics; names that start with it
+    /// come first, the given order is kept inside each group.
+    public static func matching(_ query: String, in names: [String]) -> [String] {
+        let queryKey = ShoppingName.key(query)
+        guard !queryKey.isEmpty else { return [] }
+        let candidates = names.map { (name: $0, key: ShoppingName.key($0)) }.filter { $0.key.contains(queryKey) }
+        return candidates.filter { $0.key.hasPrefix(queryKey) }.map(\.name)
+            + candidates.filter { !$0.key.hasPrefix(queryKey) }.map(\.name)
+    }
+
     /// Common items with their proper spelling, most common first; every one is a term of the offline dictionary
     /// (a test checks that). The list of the given language comes first, the other one follows.
     public static func commonTerms(preferEnglish: Bool) -> [String] {

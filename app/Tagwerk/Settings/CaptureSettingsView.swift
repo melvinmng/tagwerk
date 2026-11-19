@@ -56,6 +56,7 @@ struct CaptureSettingsView: View {
                 phrase("Was steht heute in Tagwerk an?", "Nennt Termine, Blöcke und Deadlines von heute")
                 phrase("Gewohnheit in Tagwerk abhaken", "Hakt eine Gewohnheit für heute ab")
                 phrase("Auf die Einkaufsliste in Tagwerk", "Fügt Artikel hinzu, ohne Tagwerk zu öffnen")
+                phrase("Füge Milch zur Einkaufsliste in Tagwerk hinzu", "Nennt den Artikel im Satz; Siri kennt deine bisherigen Artikel")
                 phrase("Einkaufsliste in Tagwerk zeigen", "Öffnet die Einkaufsliste")
             } header: {
                 Text("Siri & Kurzbefehle")

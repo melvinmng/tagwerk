@@ -685,6 +685,9 @@ final class AppEnvironment {
         }
         habits.onChanged = { [weak self] in self?.scheduleSnapshot() }
         habits.onListChanged = { TagwerkShortcuts.updateAppShortcutParameters() }
+        // New article names become speakable; the first load after launch also reports its names.
+        shopping.onNamesChanged = { TagwerkShortcuts.updateAppShortcutParameters() }
+        TagwerkShortcuts.updateAppShortcutParameters()
         let changes = Observations { @MainActor [weak self] () -> Int in
             guard let self else { return 0 }
             var hasher = Hasher()

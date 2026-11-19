@@ -87,6 +87,36 @@ final class IntentServices {
         return LocalizedStringResource(stringLiteral: Self.shoppingReply(report))
     }
 
+    /// "Füge Milch zur Einkaufsliste hinzu": adds the chosen article through the same path as the text shortcut.
+    /// A free-typed name may still hold a quantity or several items; it is split like spoken text.
+    func addToShopping(article: ShoppingArticleEntity) async -> LocalizedStringResource {
+        await addToShopping(text: article.name)
+    }
+
+    /// The article names Siri can speak, see `ShoppingSuggestions`: own names (open and completed) first,
+    /// then common terms from the offline dictionary in the app language. Reads Reminders only; with no list
+    /// or access only the common terms remain.
+    func shoppingArticleNames(preferEnglish: Bool = IntentServices.prefersEnglish) async -> [String] {
+        let history = await environment.shopping.history()
+        return ShoppingSuggestions.articles(history: history, commonTerms: ShoppingSuggestions.commonTerms(preferEnglish: preferEnglish))
+    }
+
+    /// Names that match a typed or spoken text. A text that matches no suggestion but holds an article resolves
+    /// to itself, so a spoken answer to "Was soll auf die Liste?" always works; blank text resolves to nothing.
+    func shoppingArticleNames(matching text: String, preferEnglish: Bool = IntentServices.prefersEnglish) async -> [String] {
+        let matches = ShoppingSuggestions.matching(text, in: await shoppingArticleNames(preferEnglish: preferEnglish))
+        guard matches.isEmpty else { return matches }
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !ShoppingInputParser.parseAll(trimmed).items.isEmpty else { return [] }
+        return [String(trimmed.prefix(Self.maxArticleTextLength))]
+    }
+
+    /// Longest free-typed article text that is accepted as one entity.
+    static let maxArticleTextLength = 200
+
+    /// Whether the app currently runs in English; decides which common terms come first.
+    static var prefersEnglish: Bool { Bundle.main.preferredLocalizations.first?.hasPrefix("en") == true }
+
     /// One sentence per group; reopened items count as added.
     static func shoppingReply(_ report: ShoppingModel.AddReport) -> String {
         var sentences: [String] = []

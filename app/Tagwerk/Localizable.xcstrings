@@ -3158,6 +3158,16 @@
         }
       }
     },
+    "Artikel auf die Einkaufsliste": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add Item to Shopping List"
+          }
+        }
+      }
+    },
     "Artikel hinzufügen": {
       "localizations": {
         "en": {
@@ -6118,6 +6128,16 @@
         }
       }
     },
+    "Füge Milch zur Einkaufsliste in Tagwerk hinzu": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add milk to the shopping list in Tagwerk"
+          }
+        }
+      }
+    },
     "Fügt Artikel hinzu, ohne Tagwerk zu öffnen": {
       "localizations": {
         "en": {
@@ -6134,6 +6154,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Adds items to the shopping list without opening Tagwerk."
+          }
+        }
+      }
+    },
+    "Fügt einen Artikel zur Einkaufsliste hinzu, ohne Tagwerk zu öffnen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adds an item to the shopping list without opening Tagwerk."
           }
         }
       }
@@ -8907,6 +8937,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Lists today’s events, blocks and deadlines."
+          }
+        }
+      }
+    },
+    "Nennt den Artikel im Satz; Siri kennt deine bisherigen Artikel": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Names the item in the sentence; Siri knows the items you used before"
           }
         }
       }

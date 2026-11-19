@@ -90,4 +90,19 @@ struct ShoppingSuggestionsTests {
         #expect(german.contains("Käse") && german.contains("Äpfel") && german.contains("Öl"))
         #expect(german.allSatisfy { $0.first?.isUppercase == true })
     }
+
+    // MARK: Matching
+
+    @Test func matching_prefixBeforeInside_ignoresCaseAndDiacritics() {
+        let names = ["Hafermilch", "Milch", "Milchreis", "Käse", "Kokosmilch"]
+        #expect(ShoppingSuggestions.matching("milch", in: names) == ["Milch", "Milchreis", "Hafermilch", "Kokosmilch"])
+        #expect(ShoppingSuggestions.matching("KASE", in: names) == ["Käse"])
+        #expect(ShoppingSuggestions.matching("  käs ", in: names) == ["Käse"])
+    }
+
+    @Test func matching_blankOrUnknown_givesNothing() {
+        #expect(ShoppingSuggestions.matching("", in: ["Milch"]).isEmpty)
+        #expect(ShoppingSuggestions.matching("   ", in: ["Milch"]).isEmpty)
+        #expect(ShoppingSuggestions.matching("Schrauben", in: ["Milch"]).isEmpty)
+    }
 }

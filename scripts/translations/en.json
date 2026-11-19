@@ -1527,5 +1527,9 @@
   "Was hat abgehalten?": "What held me back?",
   "Was hat geholfen?": "What helped?",
   "Was war mein Ziel?": "What was my goal?",
-  "7 Tage –": "7 days –"
+  "7 Tage –": "7 days –",
+  "Artikel auf die Einkaufsliste": "Add Item to Shopping List",
+  "Fügt einen Artikel zur Einkaufsliste hinzu, ohne Tagwerk zu öffnen.": "Adds an item to the shopping list without opening Tagwerk.",
+  "Füge Milch zur Einkaufsliste in Tagwerk hinzu": "Add milk to the shopping list in Tagwerk",
+  "Nennt den Artikel im Satz; Siri kennt deine bisherigen Artikel": "Names the item in the sentence; Siri knows the items you used before"
 }
