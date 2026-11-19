@@ -7,7 +7,6 @@ set -euo pipefail
 export DEVELOPER_DIR="/Applications/Xcode.app/Contents/Developer"
 
 SCRIPT_DIR="${0:A:h}"
-DESTINATION='platform=iOS Simulator,name=iPhone 18 Pro'
 CURRENT_STAGE="setup"
 
 # Reports the failing stage and stops the script.
@@ -16,10 +15,14 @@ stage_failed() {
   exit 1
 }
 
-LOG_DIR="${TMPDIR:-/tmp}/tagwerk-tests"
+# Per-checkout simulator, derived data and logs, so several checkouts can test at the same time.
+source "$SCRIPT_DIR/../scripts/test-env.sh"
+DESTINATION=$(tagwerk_test_destination) || stage_failed
+LOG_DIR="$TAGWERK_TEST_LOG_DIR"
 # The app stage builds here, so the String Catalog check can reuse its .stringsdata.
-DERIVED="$HOME/Library/Developer/Tagwerk/DerivedData-tests"
+DERIVED="$TAGWERK_TEST_DERIVED"
 mkdir -p "$LOG_DIR"
+echo "==> setup: $DESTINATION, derived data $DERIVED"
 
 # Runs xcodebuild test, keeps the full log and fails when no test was executed.
 run_tests() {

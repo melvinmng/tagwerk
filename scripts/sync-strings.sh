@@ -16,8 +16,8 @@ export DEVELOPER_DIR="/Applications/Xcode.app/Contents/Developer"
 
 REPO_ROOT="${0:A:h:h}"
 APP_DIR="$REPO_ROOT/app"
-DERIVED="$HOME/Library/Developer/Tagwerk/DerivedData-tests"
-DESTINATION='platform=iOS Simulator,name=iPhone 18 Pro'
+source "$REPO_ROOT/scripts/test-env.sh"
+DERIVED="$TAGWERK_TEST_DERIVED"
 CHECK=0
 BUILD=1
 
@@ -35,6 +35,7 @@ WORK=$(mktemp -d)
 trap 'rm -rf "$WORK"' EXIT
 
 if (( BUILD )); then
+  DESTINATION=$(tagwerk_test_destination) || exit 2
   if ! xcodebuild build-for-testing -project "$APP_DIR/Tagwerk.xcodeproj" -scheme Tagwerk -destination "$DESTINATION" \
       -derivedDataPath "$DERIVED" > "$WORK/build.log" 2>&1; then
     tail -n 20 "$WORK/build.log" >&2
