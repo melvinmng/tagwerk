@@ -1,0 +1,354 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tagwerk · Phase 5 · Einkaufsliste und Notizen · Mockups EO, EQ, EG, NQ, EA, ES</title>
+<style>
+  /* Mockup frame uses the host theme (with fallbacks); phone screens depict the app in iOS dark or light mode. */
+  :root { color-scheme: light dark; }
+  body { font: 14px var(--font-sans, system-ui, sans-serif); color: var(--foreground, CanvasText); margin: 16px; }
+  h1 { font-size: 20px; margin: 0 0 4px; }
+  h2 { font-size: 18px; margin: 38px 0 4px; padding-top: 16px; border-top: 1px solid rgba(128,128,128,.3); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .area { display: inline-grid; place-items: center; min-width: 34px; height: 34px; padding: 0 6px; border-radius: 9px; background: #0a84ff; color: #fff; font: 800 14px system-ui; flex-shrink: 0; box-sizing: border-box; }
+  .area.g { background: #30d158; color: #000; }
+  .area.n { background: #8e8e93; }
+  .lead { color: var(--muted-foreground, #777); margin: 0 0 14px; line-height: 1.5; max-width: 980px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(392px, 1fr)); gap: 22px; align-items: start; }
+  .label { font: 600 13px var(--font-sans, system-ui); color: var(--muted-foreground, #777); margin: 0 0 8px 4px; }
+  .label b { color: var(--foreground, CanvasText); }
+  .code { display: inline-block; background: rgba(128,128,128,.28); color: var(--foreground, CanvasText); border-radius: 6px; padding: 1px 8px; font: 800 13px system-ui; margin-right: 4px; }
+  .code.r { background: #30d158; color: #000; }
+  .rec { background: #30d158; color: #000; font-size: 11px; font-weight: 700; padding: 1px 7px; border-radius: 99px; margin-left: 4px; }
+  .same { background: rgba(128,128,128,.28); font-size: 11px; font-weight: 700; padding: 1px 7px; border-radius: 99px; margin-left: 4px; }
+  .pc { font-size: 12.5px; color: var(--muted-foreground, #777); line-height: 1.5; margin: 8px 4px 0; max-width: 390px; }
+  .pc b { color: var(--foreground, CanvasText); }
+  .box { border: 1px solid rgba(48,209,88,.5); background: rgba(48,209,88,.07); border-radius: 12px; padding: 12px 16px; margin-top: 16px; line-height: 1.55; font-size: 13px; max-width: 1100px; }
+  .box h3 { margin: 0 0 6px; font-size: 14px; }
+  .box ul, .box ol { margin: 4px 0 0; padding-left: 20px; }
+  .box li { margin-bottom: 3px; }
+  .box.neutral { border-color: rgba(128,128,128,.4); background: rgba(128,128,128,.07); }
+  .box.warn { border-color: rgba(255,159,10,.6); background: rgba(255,159,10,.08); }
+  code { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; background: rgba(128,128,128,.16); padding: 1px 4px; border-radius: 4px; }
+  .tablewrap { overflow-x: auto; }
+  table.sum { border-collapse: collapse; font-size: 13px; margin-top: 6px; }
+  table.sum td, table.sum th { padding: 5px 14px 5px 0; vertical-align: top; text-align: left; border-bottom: 1px solid rgba(128,128,128,.22); }
+  table.sum th { font-size: 12px; color: var(--muted-foreground, #777); }
+
+  .phone {
+    --bg: #000; --card: #1c1c1e; --card2: #2c2c2e; --sep: #38383a; --text: #fff; --sub: #8e8e93; --dim: #c7c7cc;
+    --blue: #0a84ff; --green: #30d158; --orange: #ff9f0a; --red: #ff453a; --purple: #bf5af2; --sheet: #1c1c1e; --row: #2c2c2e;
+    --segon: #636366; --frame: #2a2a2c; --redbg: rgba(255,69,58,.16);
+    --glass: rgba(72,72,78,.62); --glassline: rgba(255,255,255,.16); --glassshadow: inset 0 1px 0 rgba(255,255,255,.18), 0 8px 24px rgba(0,0,0,.55);
+    background: var(--bg); color: var(--text); border-radius: 40px; padding: 14px 12px 12px;
+    font: 15px -apple-system, "SF Pro Text", system-ui, sans-serif; border: 6px solid var(--frame);
+    width: 390px; max-width: 100%; box-sizing: border-box; height: 760px;
+    display: flex; flex-direction: column; position: relative; overflow: hidden;
+  }
+  .phone.light {
+    --bg: #f2f2f7; --card: #fff; --card2: #e3e3e8; --sep: #d1d1d6; --text: #000; --sub: #6c6c70; --dim: #3c3c43;
+    --blue: #007aff; --green: #34c759; --orange: #ff9500; --red: #ff3b30; --purple: #af52de; --sheet: #f2f2f7; --row: #fff;
+    --segon: #fff; --frame: #c7c7cc; --redbg: rgba(255,59,48,.12);
+    --glass: rgba(255,255,255,.78); --glassline: rgba(0,0,0,.06); --glassshadow: inset 0 1px 0 rgba(255,255,255,.9), 0 4px 14px rgba(0,0,0,.14);
+  }
+  /* Cropped frame: only the upper part of the screen matters. */
+  .phone.crop { height: 430px; border-bottom-left-radius: 0; border-bottom-right-radius: 0; border-bottom: 0; }
+  .phone.crop::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 50px; background: linear-gradient(transparent, var(--bg)); z-index: 4; pointer-events: none; }
+  .status { display: flex; justify-content: space-between; font: 600 13px system-ui; padding: 0 12px 10px; flex-shrink: 0; }
+  .glass { background: var(--glass); backdrop-filter: blur(18px) saturate(1.6); -webkit-backdrop-filter: blur(18px) saturate(1.6);
+    border: 1px solid var(--glassline); box-shadow: var(--glassshadow); }
+  .scr { flex: 1; min-height: 0; overflow: hidden; display: flex; flex-direction: column; }
+  .scr > * { flex-shrink: 0; }
+
+  /* Head of "Planen" as built (PK2): date title in the bar, one control row below */
+  .nav { display: flex; align-items: center; justify-content: space-between; gap: 8px; height: 44px; padding: 0 2px; margin-bottom: 6px; flex-shrink: 0; }
+  .nav .r { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+  .gb { width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; font-size: 21px; flex-shrink: 0; color: var(--text); box-sizing: border-box; }
+  .gb.ai { background: rgba(175,82,222,.86); color: #fff; border-color: rgba(255,255,255,.22); font-size: 18px; }
+  .seg { display: flex; background: var(--card2); border-radius: 99px; padding: 2px; }
+  .seg span { flex: 1; text-align: center; padding: 9px 2px; font-size: 13px; border-radius: 99px; color: var(--dim); white-space: nowrap; }
+  .seg span.on { background: var(--segon); color: var(--text); font-weight: 600; box-shadow: 0 1px 3px rgba(0,0,0,.18); }
+  .ttl { min-width: 0; padding-left: 6px; line-height: 1.15; }
+  .ttl b { display: block; font: 700 19px system-ui; letter-spacing: -.2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .ttl small { display: block; font: 600 11px system-ui; text-transform: uppercase; letter-spacing: .4px; color: var(--sub); }
+  .ttl small.now { color: var(--blue); }
+  .car { font-size: .72em; color: var(--sub); vertical-align: .25em; margin-left: 2px; }
+  .row2 { display: flex; align-items: center; gap: 8px; padding: 0 2px; margin-bottom: 10px; flex-shrink: 0; }
+  .row2 .seg { flex: 1; min-width: 0; }
+  .today { color: var(--blue); font: 600 14px system-ui; padding: 0 6px; }
+  .stepper { display: flex; border-radius: 99px; flex-shrink: 0; height: 44px; box-sizing: border-box; }
+  .stepper span { width: 44px; display: grid; place-items: center; font-size: 19px; }
+  .stepper span + span { border-left: 1px solid var(--glassline); }
+  .tb { margin: 8px auto 0; width: 96%; display: flex; border-radius: 99px; padding: 5px; font-size: 10px; color: var(--dim); text-align: center; box-sizing: border-box; flex-shrink: 0; position: relative; z-index: 3; }
+  .tb span { flex: 1; padding: 4px 0 3px; border-radius: 99px; }
+  .tb .on { color: var(--blue); background: rgba(128,128,128,.22); font-weight: 600; }
+  .ico { font-size: 17px; display: block; font-style: normal; line-height: 20px; }
+
+  /* Deadline card (DeadlineCard as built: red tint, flag, title, kind line, relative day) */
+  .dlc { background: var(--redbg); border-radius: 14px; padding: 10px 12px; margin: 0 0 8px; }
+  .dlc .h { color: var(--red); font: 700 12px system-ui; margin-bottom: 6px; }
+  .dl { display: flex; align-items: baseline; gap: 8px; padding: 3px 0; }
+  .dl .f { color: var(--red); font-size: 12px; width: 12px; flex-shrink: 0; }
+  .dl .t { flex: 1; min-width: 0; font: 600 14px system-ui; }
+  .dl .t small { display: block; font: 400 12px system-ui; color: var(--sub); margin-top: 1px; }
+  .dl .w { color: var(--red); font: 600 12px system-ui; white-space: nowrap; }
+  .dl.gone .t, .dl.gone .f { color: var(--sub); }
+  .dl.gone .w { color: var(--sub); }
+  .mk { display: inline-block; font: 700 10px system-ui; color: var(--red); border: 1px solid var(--red); border-radius: 99px; padding: 0 6px; margin-right: 4px; vertical-align: 1px; }
+  .lk { display: inline-block; font: 600 10.5px system-ui; color: var(--red); background: var(--redbg); border-radius: 99px; padding: 1px 7px; margin-top: 3px; }
+  .btns { display: flex; gap: 8px; margin: 6px 0 2px 20px; }
+  .btn { font: 600 12px system-ui; border-radius: 99px; padding: 5px 11px; background: var(--card2); color: var(--blue); }
+  .btn.d { color: var(--red); }
+  .btn.p { background: var(--red); color: #fff; }
+
+  /* Capacity stub, timeline grid, list rows */
+  .cap { background: var(--card); border-radius: 16px; padding: 9px 12px; margin: 0 0 8px; font-size: 13px; }
+  .cap b { font-size: 15px; display: block; }
+  .cap i { display: block; height: 5px; border-radius: 99px; background: var(--green); margin: 6px 0 2px; }
+  .cap small { color: var(--sub); font-size: 11.5px; }
+  .abl { display: flex; justify-content: space-between; align-items: center; color: var(--sub); font: 600 12px system-ui; text-transform: uppercase; letter-spacing: .4px; margin: 4px 8px 12px; }
+  .abl span { text-transform: none; letter-spacing: 0; color: var(--blue); font-size: 13px; }
+  .hg { position: relative; margin: 2px 0 6px 44px; border-left: 1px solid var(--sep); height: 340px; }
+  .hg .hl { position: absolute; left: -44px; right: 0; border-top: 1px solid var(--sep); font: 11px ui-monospace, monospace; color: var(--sub); padding-left: 2px; height: 0; }
+  .hg .hl span { position: relative; top: -8px; background: var(--bg); padding-right: 4px; }
+  .hg .ev { position: absolute; left: 4px; right: 4px; border-radius: 9px; padding: 4px 8px; font-size: 12.5px; box-sizing: border-box; overflow: hidden; }
+  .hg .ev small { color: var(--sub); font-size: 11px; display: block; }
+  .hg .ev.e { background: rgba(10,132,255,.22); border-left: 4px solid var(--blue); }
+  .hg .ev.p { background: rgba(48,209,88,.2); border-left: 4px solid var(--green); }
+  .hg .ev.d { background: rgba(255,69,58,.24); border-left: 4px solid var(--red); font-weight: 600; }
+  .hg .ev.d small { font-weight: 400; }
+  .list { background: var(--card); border-radius: 18px; overflow: hidden; margin-bottom: 8px; }
+  .tl { display: flex; gap: 10px; padding: 9px 12px; border-bottom: 1px solid var(--sep); font-size: 14px; }
+  .tl:last-child { border-bottom: 0; }
+  .tl .tm { font: 11.5px ui-monospace, monospace; color: var(--sub); width: 42px; flex-shrink: 0; padding-top: 2px; }
+  .tl .bar { width: 4px; border-radius: 2px; background: var(--blue); flex-shrink: 0; }
+  .tl .bar.d { background: var(--red); }
+  .tl .bar.p { background: var(--green); }
+  .tl .tx { flex: 1; min-width: 0; }
+  .tl .tx small { display: block; color: var(--sub); font-size: 12px; margin-top: 1px; }
+  .tl.hot { background: var(--card2); }
+  .section { color: var(--sub); font: 600 12px system-ui; text-transform: uppercase; letter-spacing: .4px; margin: 10px 8px 4px; }
+  .wkrow { background: var(--card); border-radius: 14px; padding: 9px 12px; margin-bottom: 6px; font-size: 13.5px; }
+  .wkrow .hd { display: flex; justify-content: space-between; font: 600 13px system-ui; margin-bottom: 4px; }
+  .wkrow .hd span { color: var(--sub); font-weight: 400; font-size: 12px; }
+  .wkrow .dd { color: var(--red); padding: 2px 0; }
+  .wkrow .ta { padding: 2px 0; }
+  .wkrow .no { color: var(--sub); }
+
+  /* Sheet ("Termin", EntrySheet as built: grouped form) */
+  .dim { position: absolute; inset: 0; background: rgba(0,0,0,.45); z-index: 5; }
+  .sheet { position: absolute; left: 0; right: 0; bottom: 0; top: 64px; background: var(--sheet); border-radius: 30px 30px 0 0; z-index: 6; padding: 8px 14px 0; overflow: hidden; }
+  .phone:not(.light) .sheet { background: #111113; }
+  .sheet .grab { width: 36px; height: 5px; border-radius: 99px; background: var(--sub); opacity: .5; margin: 0 auto 6px; }
+  .sheet .bar { display: flex; justify-content: center; position: relative; font: 600 15px system-ui; padding: 4px 0 10px; }
+  .sheet .bar span { position: absolute; right: 2px; color: var(--blue); }
+  .fs { background: var(--row); border-radius: 14px; margin-bottom: 4px; overflow: hidden; }
+  .fr { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 9px 12px; border-bottom: 1px solid var(--sep); font-size: 14px; }
+  .fr:last-child { border-bottom: 0; }
+  .fr .v { color: var(--sub); text-align: right; font-size: 13px; }
+  .fr.col { display: block; }
+  .fr.col small { display: block; color: var(--sub); font-size: 12px; margin-top: 1px; }
+  .fr.a { color: var(--blue); }
+  .fr.x { color: var(--red); }
+  .fr.new { box-shadow: inset 3px 0 0 #ffd60a; }
+  .fh { color: var(--sub); font: 600 11.5px system-ui; text-transform: uppercase; letter-spacing: .4px; margin: 10px 12px 4px; }
+  .ff { color: var(--sub); font-size: 11.5px; line-height: 1.4; margin: 3px 12px 8px; }
+  .tog { width: 46px; height: 28px; border-radius: 99px; background: rgba(120,120,128,.36); position: relative; flex-shrink: 0; }
+  .tog::after { content: ""; position: absolute; top: 2px; left: 2px; width: 24px; height: 24px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.3); }
+  .tog.on { background: var(--green); }
+  .tog.on::after { left: 20px; }
+  .seg2 { display: flex; background: var(--card2); border-radius: 9px; padding: 2px; flex: 1; }
+  .seg2 span { flex: 1; text-align: center; padding: 5px 2px; font-size: 13px; border-radius: 7px; color: var(--dim); }
+  .seg2 span.on { background: var(--segon); color: var(--text); font-weight: 600; }
+
+  /* Context menu and dialogs */
+  .menu { position: absolute; z-index: 8; width: 262px; border-radius: 16px; overflow: hidden; font-size: 15px; }
+  .menu div { display: flex; justify-content: space-between; padding: 11px 14px; border-bottom: 1px solid var(--glassline); }
+  .menu div:last-child { border-bottom: 0; }
+  .menu div.new { box-shadow: inset 3px 0 0 #ffd60a; }
+  .menu div.x { color: var(--red); }
+  .dialog { position: absolute; z-index: 9; left: 14px; right: 14px; bottom: 16px; border-radius: 22px; padding: 12px 14px 8px; font-size: 14px; }
+  .dialog b { display: block; text-align: center; font-size: 13px; color: var(--sub); font-weight: 600; margin-bottom: 8px; line-height: 1.4; }
+  .dialog div { text-align: center; padding: 11px 0; border-top: 1px solid var(--glassline); color: var(--blue); font-size: 16px; }
+  .dialog div.x { color: var(--red); }
+  .sug { background: var(--card); border: 1px dashed var(--red); border-radius: 14px; padding: 10px 12px; margin: 0 0 8px; font-size: 13.5px; }
+  .sug small { display: block; color: var(--sub); font-size: 12px; margin: 2px 0 8px; }
+  .sug .btns { margin-left: 0; }
+
+  /* Lock screen notification and widget */
+  .lock { text-align: center; padding: 26px 0 14px; }
+  .lock b { display: block; font: 300 64px/1 system-ui; }
+  .lock span { color: var(--dim); font-size: 15px; }
+  .note { border-radius: 20px; padding: 10px 12px; margin: 0 2px 10px; font-size: 13.5px; }
+  .note .a { display: flex; justify-content: space-between; color: var(--dim); font-size: 11.5px; margin-bottom: 2px; }
+  .note b { display: block; }
+  .wdg { background: var(--card); border-radius: 22px; padding: 12px 14px; margin: 0 2px; font-size: 13px; }
+  .wdg .d { color: var(--red); font: 700 11px system-ui; text-transform: uppercase; }
+  .wdg .rw { display: flex; gap: 8px; padding: 4px 0; }
+  .wdg .rw i { width: 3px; border-radius: 2px; background: var(--blue); font-style: normal; }
+  .wdg .rw i.d { background: var(--red); }
+  .wdg .rw small { color: var(--sub); display: block; font-size: 11px; }
+  .wdg .ft { color: var(--red); font: 600 12px system-ui; margin-top: 4px; }
+
+  /* Annotations */
+  .zone { position: absolute; border: 1.5px dashed #ffd60a; border-radius: 12px; z-index: 7; pointer-events: none; box-sizing: border-box; }
+  .zone.bad { border-color: #ff453a; }
+  .zl { position: absolute; z-index: 8; font: 700 10px system-ui; color: #ffd60a; background: rgba(0,0,0,.82); border-radius: 5px; padding: 2px 6px; white-space: nowrap; }
+  .zl.bad { color: #ff8a82; }
+
+  /* Phase 5 additions: large title, check rows, entry bar, chat, widgets */
+  .lt { font: 800 30px system-ui; letter-spacing: -.4px; margin: 2px 6px 10px; }
+  .lt small { display: block; font: 400 13px system-ui; color: var(--sub); letter-spacing: 0; margin-top: 2px; }
+  .back { color: var(--blue); font: 400 16px system-ui; padding-left: 4px; }
+  .ck { width: 20px; height: 20px; border-radius: 50%; border: 1.6px solid var(--sub); flex-shrink: 0; box-sizing: border-box; margin-top: 1px; }
+  .ck.done { background: var(--blue); border-color: var(--blue); position: relative; }
+  .ck.done::after { content: "✓"; position: absolute; inset: 0; display: grid; place-items: center; color: #fff; font: 700 11px system-ui; }
+  .tl.off .tx { color: var(--sub); text-decoration: line-through; }
+  .tl.new, .list.new, .wdg.new { box-shadow: inset 3px 0 0 #ffd60a; }
+  .tl .ch { color: var(--sub); font-size: 13px; white-space: nowrap; }
+  .inp { display: flex; align-items: center; gap: 8px; border-radius: 99px; padding: 6px 6px 6px 14px; margin: auto 2px 0; font-size: 14px; color: var(--sub); }
+  .inp b { flex: 1; font-weight: 400; color: var(--sub); }
+  .inp b.t { color: var(--text); }
+  .inp i { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; background: var(--card2); font-style: normal; font-size: 15px; color: var(--text); flex-shrink: 0; }
+  .inp i.rec2 { background: var(--red); color: #fff; }
+  .inp i.go { background: var(--blue); color: #fff; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 4px 8px; }
+  .chip { font: 600 12.5px system-ui; border-radius: 99px; padding: 5px 11px; background: var(--card2); color: var(--text); }
+  .chip.b { background: rgba(10,132,255,.2); color: var(--blue); }
+  .msg { max-width: 82%; border-radius: 18px; padding: 8px 12px; margin: 0 4px 8px; font-size: 14px; line-height: 1.4; }
+  .msg.u { align-self: flex-end; background: var(--blue); color: #fff; }
+  .msg.a { align-self: flex-start; background: var(--card); }
+  .act { align-self: stretch; background: var(--card); border: 1px solid var(--sep); border-radius: 16px; padding: 10px 12px; margin: 0 4px 8px; font-size: 13.5px; }
+  .act b { display: block; margin-bottom: 4px; }
+  .act small { display: block; color: var(--sub); font-size: 12px; margin-bottom: 8px; }
+  .act .btns { margin: 0; justify-content: flex-end; }
+  .btn.b { background: var(--blue); color: #fff; }
+  .undo { display: flex; justify-content: space-between; align-items: center; border-radius: 99px; padding: 10px 16px; margin: auto 6px 4px; font-size: 13.5px; }
+  .undo span { color: var(--blue); font-weight: 600; }
+  .hint { background: rgba(255,159,10,.14); border-radius: 12px; padding: 8px 12px; margin: 0 0 8px; font-size: 12.5px; line-height: 1.4; }
+  .hint b { color: var(--orange); }
+  .ncard { background: var(--card); border-radius: 16px; padding: 10px 12px; margin-bottom: 8px; font-size: 14px; }
+  .ncard b { display: block; }
+  .ncard p { margin: 2px 0 4px; color: var(--dim); font-size: 13px; line-height: 1.35; }
+  .ncard small { color: var(--sub); font-size: 11.5px; }
+  .home { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 14px 4px; }
+  .wdg h4 { margin: 0 0 6px; font: 700 12px system-ui; color: var(--blue); text-transform: uppercase; letter-spacing: .3px; }
+  .wdg .it { display: flex; gap: 7px; align-items: center; padding: 3px 0; font-size: 13px; }
+  .wdg .it .ck { width: 15px; height: 15px; margin: 0; }
+  .wdg .mo { color: var(--sub); font-size: 11.5px; margin-top: 4px; }
+  .appico { height: 64px; border-radius: 16px; background: var(--card2); opacity: .5; }
+</style>
+</head>
+<body>
+
+<h1>Tagwerk · Phase 5 · Einkaufsliste und Notizen einbinden · Mockups EO, EQ, EG, NQ, EA und ES</h1>
+<p class="lead">Anlass: Epic #113 „Phase 5: Einkaufsliste und Notizen einbinden“: ansehen, abhaken und ergänzen, auch per Assistent und Sprache. Diese Datei zeigt sechs offene Entscheidungen mit je zwei bis drei Varianten: Ort in der App (<b>EO</b>), Wahl und Ausschluss der Liste (<b>EQ</b>), Abschnitte (<b>EG</b>), Quelle der Notizen (<b>NQ</b>), Rechte des Assistenten (<b>EA</b>) und schnelles Hinzufügen (<b>ES</b>). Die Kürzel sind neu und kommen in keiner anderen Datei unter <code>docs/superpowers/mockups/</code> vor. Alle Daten sind erfunden, Stichtag ist Donnerstag, 19. November 2026, 17:40 Uhr (KW 47). Die Bilder sind statisches HTML und nicht maßstabsgetreu. <b>Nichts in dieser Datei ist am Gerät oder im Simulator geprüft</b>; der Ist-Zustand ist aus dem Quelltext abgeleitet. Gelb gestrichelt oder mit gelbem Rand links: neu gegenüber heute. Rot gestrichelt: Schwachstelle der Variante. Grün: Empfehlung.</p>
+
+<div class="box neutral">
+  <h3>Die sechs Entscheidungen auf einen Blick</h3>
+  <div class="tablewrap"><table class="sum">
+    <tr><th>Nr.</th><th>Frage</th><th>Varianten</th><th>Empfehlung</th><th>Warum</th></tr>
+    <tr><td>1</td><td>Wo erscheinen Einkaufsliste und Notizen?</td><td><span class="code">EO1</span> eigener Tab · <span class="code r">EO2</span> oben in „Aufgaben“ · <span class="code">EO3</span> in „Erfassen“</td><td><span class="code r">EO2</span></td><td>keine Änderung an der Tab-Leiste, die drei andere Vorhaben gleichzeitig betrifft</td></tr>
+    <tr><td>2</td><td>Welche Liste ist die Einkaufsliste, wie fällt sie aus den Aufgaben?</td><td><span class="code r">EQ1</span> Vorschlag am Namen · <span class="code">EQ2</span> nur Einstellungen · <span class="code">EQ3</span> eigene Liste anlegen</td><td><span class="code r">EQ1</span></td><td>EventKit kennt keinen Listentyp; einmal fragen statt raten oder suchen lassen</td></tr>
+    <tr><td>3</td><td>Abschnitte, obwohl EventKit keine liefert?</td><td><span class="code">EG1</span> flach · <span class="code r">EG2</span> eigene Kategorien offline · <span class="code">EG3</span> ChatGPT sortiert</td><td><span class="code r">EG2</span></td><td>im Laden zählt Reihenfolge; offline und vorhersehbar</td></tr>
+    <tr><td>4</td><td>Quelle der Notizen (gemeinsam mit Phase 7)</td><td><span class="code r">NQ1</span> eigene Notizen · <span class="code">NQ2</span> Kurzbefehl-Brücke · <span class="code">NQ3</span> Erinnerungsliste</td><td><span class="code r">NQ1</span></td><td>einziger Weg, der ohne Handarbeit funktioniert und „lokal“ aus #143 erfüllt</td></tr>
+    <tr><td>5</td><td>Rechte des Assistenten</td><td><span class="code">EA1</span> nur lesen · <span class="code r">EA2</span> Sammelkarte · <span class="code">EA3</span> ohne Bestätigung</td><td><span class="code r">EA2</span></td><td>bleibt bei „Schreiben nur nach Bestätigung“</td></tr>
+    <tr><td>6</td><td>Schnelles Hinzufügen, Kurzbefehl, Widget</td><td><span class="code r">ES1</span> Diktat + Kurzbefehl · <span class="code">ES3</span> zusätzlich Widget</td><td><span class="code r">ES1</span></td><td>Siri und das Widget von Erinnerungen decken den Rest schon ab</td></tr>
+  </table></div>
+</div>
+
+<div class="box warn">
+  <h3>Übergreifend, vor der Freigabe abzustimmen</h3>
+  <ul>
+    <li><b>Tab-Leiste:</b> EO1 fügt einen fünften Tab hinzu. Globale Suche, Phase 7 (Routinen) und diese Phase konkurrieren um denselben Platz. Diese Datei nimmt keinen neuen Tab an; die Empfehlung EO2 kommt ohne aus.</li>
+    <li><b>Notizspeicher:</b> NQ1 ist als gemeinsamer Speicher mit Phase 7 (#143) gedacht. Wird dort anders entschieden, muss Entscheidung 4 neu aufgemacht werden.</li>
+    <li><b>Suche:</b> Sucht die globale Suche in Aufgaben, findet sie Artikel der Einkaufsliste nach dem Ausschluss nicht mehr. Ob die Suche Einkaufsliste und Notizen einbezieht, gehört in deren Entwurf.</li>
+  </ul>
+</div>
+
+<div class="box neutral">
+  <h3>Befund aus dem Quelltext</h3>
+  <ul>
+    <li>Erinnerungen laufen über <code>EventKitGateway</code>, den einzigen Besitzer des <code>EKEventStore</code>. Gelesen werden nur <b>offene</b> Erinnerungen (<code>EventKitGateway.swift:65–78</code>); erledigte kennt Tagwerk nur als Datum für den Wochenrückblick (<code>:80–96</code>). Für „Erledigt“ in der Einkaufsliste und für das Wiederöffnen fehlt also eine Lesefunktion.</li>
+    <li><code>ReminderRecord</code> trägt Titel, Notiz, Fälligkeit, Priorität, erledigt, Liste, Änderungsdatum, Wiederholung (<code>ReminderRecord.swift:5–31</code>). Anlegen, Speichern und Löschen sind vorhanden (<code>EventKitGateway.swift:105–150</code>) und reichen für Artikel aus.</li>
+    <li>Die Listenwahl wirkt an drei Stellen: Aufgaben (<code>AppEnvironment.swift:75–77</code>), Erledigt-Zähler im Wochenrückblick (<code>AppEnvironment.swift:343</code>), Auswahl in den Einstellungen (<code>SettingsView.swift:42–49</code>, <code>SourceSelectionView.swift</code>). An genau diesen Stellen muss die Einkaufsliste abgezogen werden; Planung, Mitteilungen und der Assistent lesen die Aufgabenliste und folgen dann von selbst (aus dem Code abgeleitet, nicht getestet).</li>
+    <li>Die Planung liest zusätzlich alle Listen, aber nur um wiederkehrende Erinnerungen zu erkennen (<code>PlanningModel.swift:232–233, 302–303</code>). Ein wiederkehrender Artikel („Milch, wöchentlich“) muss dort ebenfalls ausgenommen werden.</li>
+    <li>Die Listenauswahl beim Anlegen einer Aufgabe kommt aus <code>containers()</code> (<code>RemindersTaskProvider.swift:36–39</code>) und würde die Einkaufsliste weiter anbieten.</li>
+    <li>Einstellungen sind ein einzelnes SwiftData-Objekt; neue Felder brauchen einen Standardwert (<code>AppSettings.swift:5–8</code>). Neue Datensätze kommen in das Schema in <code>ModelContainerFactory.swift:5–11</code>.</li>
+  </ul>
+</div>
+
+<h2><span class="area">EO</span> Entscheidung 1 · Wo erscheinen Einkaufsliste und Notizen?</h2><p class="lead">Heute hat die App vier Tabs: Planen, Aufgaben, Erfassen, Einstellungen (<code>RootView.swift:27–53</code>). Ein fünfter Tab ist eine übergreifende Entscheidung: Parallel werden eine globale Suche, Phase 7 (Routinen) und die Issue-Zuweisung geplant; die Suche könnte denselben Platz beanspruchen. Die Detailansicht der Liste (EO2b) ist in allen drei Varianten dieselbe; offen ist nur der Einstieg.</p><div class="grid"><div><p class="label"><span class="code">EO1</span><b>Eigener Tab „Listen“</b></p><div class="phone "><div class="status"><span>17:40</span><span>●●● 5G</span></div><div class="nav"><span></span><div class="r"><span class="gb glass">＋</span><span class="gb glass ai">✦</span></div></div><div class="lt">Listen</div><div class="row2"><div class="seg"><span class="on">Einkauf · 7</span><span>Notizen · 3</span></div></div><div class="scr"><div class="section">Obst &amp; Gemüse</div><div class="list"><div class="tl"><span class="ck"></span><span class="tx">Bananen</span></div><div class="tl"><span class="ck"></span><span class="tx">Tomaten</span></div></div><div class="section">Kühlregal</div><div class="list"><div class="tl"><span class="ck"></span><span class="tx">Hafermilch<small>2 Packungen</small></span></div><div class="tl"><span class="ck"></span><span class="tx">Eier<small>10 Stück</small></span></div><div class="tl"><span class="ck"></span><span class="tx">Joghurt</span></div></div><div class="section">Brot &amp; Backwaren</div><div class="list"><div class="tl"><span class="ck"></span><span class="tx">Vollkornbrot</span></div></div><div class="section">Haushalt</div><div class="list"><div class="tl"><span class="ck"></span><span class="tx">Spülmittel</span></div></div><div class="inp glass"><b>Artikel hinzufügen</b><i class="">🎙</i></div></div><div class="tb glass"><span><i class="ico">▦</i>Planen</span><span><i class="ico">☑︎</i>Aufgaben</span><span class="on"><i class="ico">☰</i>Listen</span><span><i class="ico">＋</i>Erfassen</span><span><i class="ico">⚙︎</i>Einstellungen</span></div><div class="zone" style="left:14px;right:14px;bottom:10px;height:56px"></div></div><p class="pc"><b>Dafür:</b> ein Tipp bis zur Liste, eigener Ort auch für Notizen und spätere Listen. <b>Dagegen:</b> fünfter Tab (auf dem iPhone das Maximum ohne „Mehr“), verdrängt Suche oder Routinen; ein Tab für eine Funktion, die man ein- bis zweimal pro Woche braucht. <b>Übergreifend, nicht allein hier entscheidbar.</b></p></div><div><p class="label"><span class="code r">EO2</span><b>Einstieg oben in „Aufgaben“</b><span class="rec">Empfehlung</span></p><div class="phone "><div class="status"><span>17:40</span><span>●●● 5G</span></div><div class="nav"><span></span><div class="r"><span class="gb glass">＋</span><span class="gb glass ai">✦</span></div></div><div class="lt">Aufgaben</div><div class="scr"><div class="list"><div class="tl new"><span class="tx">🛒 Einkaufsliste<small>Hafermilch, Bananen, Eier und 4 weitere</small></span><span class="ch">7 offen ›</span></div><div class="tl new"><span class="tx">✎ Notizen<small>zuletzt: „Ideen Hausarbeit“ · heute 08:12</small></span><span class="ch">3 ›</span></div></div><div class="section">Heute</div><div class="list"><div class="tl"><span class="ck"></span><span class="tx">Angebot überarbeiten<small>tagwerk #131 · P1 · heute</small></span></div><div class="tl"><span class="ck"></span><span class="tx">Lernzettel Statistik<small>Erinnerungen · Uni · heute 18:00</small></span></div><div class="tl"><span class="ck"></span><span class="tx">Steuerbeleg scannen<small>Lokal · morgen</small></span></div></div><div class="section">Demnächst</div><div class="list"><div class="tl"><span class="ck"></span><span class="tx">Präsentation Methoden<small>Erinnerungen · Uni · Fr., 27. Nov.</small></span></div><div class="tl"><span class="ck"></span><span class="tx">Review PR #148<small>tagwerk #148 · P2</small></span></div></div></div><div class="tb glass"><span><i class="ico">▦</i>Planen</span><span class="on"><i class="ico">☑︎</i>Aufgaben</span><span><i class="ico">＋</i>Erfassen</span><span><i class="ico">⚙︎</i>Einstellungen</span></div></div><p class="pc"><b>Dafür:</b> keine Änderung an der Tab-Leiste; die Einkaufsliste ist technisch eine Erinnerungsliste und „Aufgaben“ ist deren Zuhause; der Zähler ist ohne Antippen sichtbar. <b>Dagegen:</b> zwei Tipps bis zur Liste; Notizen sind keine Aufgaben, die Karte mischt zwei Arten von Inhalt.</p></div><div><p class="label"><span class="code">EO2b</span><b>Die Liste selbst (gilt für alle Varianten)</b></p><div class="phone "><div class="status"><span>17:40</span><span>●●● 5G</span></div><div class="nav"><span class="back">‹ Aufgaben</span><span></span><div class="r"><span class="gb glass">＋</span><span class="gb glass ai">✦</span></div></div><div class="lt">Einkaufsliste<small>7 offen · Liste „Einkauf“ in Erinnerungen</small></div><div class="scr"><div class="section">Obst &amp; Gemüse</div><div class="list"><div class="tl"><span class="ck"></span><span class="tx">Bananen</span></div><div class="tl"><span class="ck"></span><span class="tx">Tomaten</span></div></div><div class="section">Kühlregal</div><div class="list"><div class="tl"><span class="ck"></span><span class="tx">Hafermilch<small>2 Packungen</small></span></div><div class="tl"><span class="ck"></span><span class="tx">Eier<small>10 Stück</small></span></div><div class="tl"><span class="ck"></span><span class="tx">Joghurt</span></div></div><div class="section">Brot &amp; Backwaren</div><div class="list"><div class="tl"><span class="ck"></span><span class="tx">Vollkornbrot</span></div></div><div class="section">Haushalt</div><div class="list"><div class="tl"><span class="ck"></span><span class="tx">Spülmittel</span></div></div><div class="inp glass"><b>Artikel hinzufügen</b><i class="">🎙</i></div></div><div class="tb glass"><span><i class="ico">▦</i>Planen</span><span class="on"><i class="ico">☑︎</i>Aufgaben</span><span><i class="ico">＋</i>Erfassen</span><span><i class="ico">⚙︎</i>Einstellungen</span></div></div><p class="pc">Abhaken per Tipp auf den Kreis, Eingabezeile mit Mikrofon unten, erledigte Artikel eingeklappt am Ende. In EO1 fehlt nur der Zurück-Pfeil.</p></div><div><p class="label"><span class="code">EO3</span><b>Abschnitt in „Erfassen“</b></p><div class="phone "><div class="status"><span>17:40</span><span>●●● 5G</span></div><div class="nav"><div class="ttl"><small class="now">Heute · KW 47</small><b>Donnerstag, 19. Nov. <span class="car">▾</span></b></div><div class="r"><span class="gb glass ai">✦</span></div></div><div class="scr"><div class="cap"><b>1.420 / 2.300 kcal</b><i></i><small>Wasser 1,2 / 2,0 l · Schritte 6.240 / 8.000</small></div><div class="fs"><div class="fr"><span>📊 Wochenrückblick</span><span class="v">Woche ›</span></div></div><div class="chips" style="margin-top:8px"><span class="chip">🍴 Essen</span><span class="chip">💧 Trinken</span><span class="chip">🏃 Training</span></div><div class="section">Listen · unabhängig vom Tag</div><div class="list"><div class="tl new"><span class="tx">🛒 Einkaufsliste<small>Hafermilch, Bananen, Eier und 4 weitere</small></span><span class="ch">7 offen ›</span></div><div class="tl new"><span class="tx">✎ Notizen<small>zuletzt: „Ideen Hausarbeit“ · heute 08:12</small></span><span class="ch">3 ›</span></div></div><div class="section">Essen</div><div class="list"><div class="tl"><span class="tm">12:40</span><span class="tx">Linsensuppe<small>520 kcal · geschätzt</small></span></div></div></div><div class="tb glass"><span><i class="ico">▦</i>Planen</span><span><i class="ico">☑︎</i>Aufgaben</span><span class="on"><i class="ico">＋</i>Erfassen</span><span><i class="ico">⚙︎</i>Einstellungen</span></div><div class="zone bad" style="top:44px;left:10px;right:10px;height:52px"></div></div><p class="pc"><b>Dafür:</b> „Erfassen“ ist schon der Ort für schnelles Eintragen. <b>Dagegen:</b> der Tab ist an einen Tag gebunden (Tagesnavigation und Wischen, <code>CaptureView.swift:33–35, 41, 69</code>); eine Einkaufsliste hat keinen Tag. Wer auf gestern wischt, sähe dieselbe Liste. Passt eher zur Gedanken-Notiz aus Phase 7 als zur Einkaufsliste.</p></div></div>
+<h2><span class="area">EQ</span> Entscheidung 2 · Welche Erinnerungsliste ist die Einkaufsliste, und wie verschwindet sie aus den Aufgaben?</h2><p class="lead">Heute liest Tagwerk alle gewählten Erinnerungslisten als Aufgaben (<code>RemindersTaskProvider.swift:25–29</code>, <code>AppEnvironment.swift:75–77</code>); <code>selectedReminderListIDs == nil</code> bedeutet „alle“ (<code>AppSettings.swift:23–24</code>). Eine Liste „Einkauf“ landet deshalb mit jedem Artikel unter „Ohne Datum“ und im Aufgabenvorrat der Planung. EventKit kennt keinen Listentyp: <code>EKCalendar</code> hat nur Titel, Farbe, Quelle und Schreibrechte (SDK-Header iOS 27.2). Tagwerk kann die Einkaufsliste also nicht sicher erkennen, nur am Namen raten.</p><div class="grid"><div><p class="label"><span class="code r">EQ1</span><b>Vorschlag am Namen, einmal bestätigen</b><span class="rec">Empfehlung</span></p><div class="phone "><div class="status"><span>17:40</span><span>●●● 5G</span></div><div class="nav"><span></span><div class="r"><span class="gb glass">＋</span><span class="gb glass ai">✦</span></div></div><div class="lt">Aufgaben</div><div class="scr"><div class="sug" style="border-color:var(--blue)"><b>Liste „Einkauf“ als Einkaufsliste verwenden?</b><small>Sie erscheint dann hier als eigene Liste und nicht mehr unter den Aufgaben. 9 Erinnerungen, davon 7 offen.</small><div class="btns"><span class="btn b">Verwenden</span><span class="btn">Andere Liste …</span><span class="btn">Nicht jetzt</span></div></div><div class="section">Heute</div><div class="list"><div class="tl"><span class="ck"></span><span class="tx">Angebot überarbeiten<small>tagwerk #131 · P1 · heute</small></span></div><div class="tl"><span class="ck"></span><span class="tx">Lernzettel Statistik<small>Erinnerungen · Uni · heute 18:00</small></span></div><div class="tl"><span class="ck"></span><span class="tx">Steuerbeleg scannen<small>Lokal · morgen</small></span></div></div><div class="section">Ohne Datum</div><div class="list"><div class="tl"><span class="ck"></span><span class="tx">Hafermilch<small>Erinnerungen · Einkauf</small></span></div><div class="tl"><span class="ck"></span><span class="tx">Bananen<small>Erinnerungen · Einkauf</small></span></div><div class="tl"><span class="ck"></span><span class="tx">Eier<small>Erinnerungen · Einkauf</small></span></div><div class="tl"><span class="ck"></span><span class="tx">Spülmittel<small>Erinnerungen · Einkauf</small></span></div></div></div><div class="tb glass"><span><i class="ico">▦</i>Planen</span><span class="on"><i class="ico">☑︎</i>Aufgaben</span><span><i class="ico">＋</i>Erfassen</span><span><i class="ico">⚙︎</i>Einstellungen</span></div><div class="zone bad" style="top:440px;left:10px;right:10px;height:196px"></div><span class="zl bad" style="top:424px;left:22px">heute: Artikel stehen zwischen den Aufgaben</span></div><p class="pc">Findet Tagwerk genau eine Liste, deren Name auf „Einkauf“, „Einkaufsliste“, „Groceries“ oder „Shopping“ passt, fragt eine Karte einmal nach. Ohne Treffer oder nach „Nicht jetzt“ bleibt die Zeile in den Einstellungen (EQ2). <b>Dafür:</b> kein Suchen in den Einstellungen, kein stilles Umsortieren. <b>Dagegen:</b> eine Karte mehr; Namensraten kann danebenliegen.</p></div><div><p class="label"><span class="code">EQ2</span><b>Nur Auswahl in den Einstellungen</b></p><div class="phone "><div class="status"><span>17:40</span><span>●●● 5G</span></div><div class="nav"><span class="back">‹ Einstellungen</span><span></span><div class="r"><span class="gb glass ai">✦</span></div></div><div class="lt">Einkaufsliste</div><div class="scr"><div class="fs"><div class="fr"><span><b style="color:#ff9f0a">●</b> Einkauf</span><span class="v" style="color:var(--blue)">✓</span></div><div class="fr"><span><b style="color:#0a84ff">●</b> Erinnerungen</span><span class="v"></span></div><div class="fr"><span><b style="color:#bf5af2">●</b> Uni</span><span class="v"></span></div><div class="fr"><span><b style="color:#30d158">●</b> Haushalt</span><span class="v"></span></div><div class="fr"><span>Keine</span><span class="v"></span></div></div><p class="ff">Die gewählte Liste erscheint als Einkaufsliste. Ihre Einträge stehen nicht mehr unter „Aufgaben“, werden nicht eingeplant, zählen nicht im Wochenrückblick und lösen keine Tagwerk-Mitteilungen aus. In der App „Erinnerungen“ ändert sich nichts.</p><div class="fh">Quellen</div><div class="fs"><div class="fr "><span>Kalender</span><span class="v">5 von 7 ›</span></div><div class="fr "><span>Erinnerungslisten</span><span class="v">3 von 4 ›</span></div><div class="fr new"><span>Einkaufsliste</span><span class="v">Einkauf ›</span></div></div><p class="ff">So sieht die neue Zeile im Abschnitt „Quellen“ aus (<code>SettingsView.swift:33–50</code>).</p></div><div class="tb glass"><span><i class="ico">▦</i>Planen</span><span><i class="ico">☑︎</i>Aufgaben</span><span><i class="ico">＋</i>Erfassen</span><span class="on"><i class="ico">⚙︎</i>Einstellungen</span></div></div><p class="pc">Neue Zeile „Einkaufsliste“ unter „Quellen“, Einfachauswahl. <b>Dafür:</b> am wenigsten Code, nichts wird geraten. <b>Dagegen:</b> bis man die Zeile findet, stehen die Artikel weiter zwischen den Aufgaben. EQ1 enthält diese Ansicht ohnehin als Rückfallweg.</p></div><div><p class="label"><span class="code">EQ3</span><b>Tagwerk legt eine eigene Liste an</b></p><div class="phone crop"><div class="status"><span>17:40</span><span>●●● 5G</span></div><div class="nav"><span class="back">‹ Einstellungen</span><span></span><div class="r"><span class="gb glass ai">✦</span></div></div><div class="lt">Einkaufsliste</div><div class="scr"><div class="fs"><div class="fr a new"><span>＋ Neue Liste „Einkaufsliste“ anlegen</span><span class="v"></span></div></div><p class="ff">Tagwerk legt eine eigene Liste in Erinnerungen an (iCloud, sichtbar auf Mac und Watch) und nutzt nur diese.</p><div class="hint"><b>Annahme, nicht geprüft:</b> Eine über EventKit angelegte Liste hat nicht den Typ „Einkaufsliste“ der App Erinnerungen. Apples automatische Abschnitte gäbe es dort erst, wenn man den Typ in Erinnerungen von Hand umstellt.</div></div></div><p class="pc">Wie beim Plan-Kalender (<code>EventKitGateway.swift:294–307</code>). <b>Dafür:</b> eindeutige Zuordnung. <b>Dagegen:</b> wer schon eine Einkaufsliste führt (auch geteilt mit der Familie), hätte zwei; Siri-Sätze wie „Setz Milch auf meine Einkaufsliste“ treffen weiter die alte.</p></div></div>
+<h2><span class="area">EG</span> Entscheidung 3 · Abschnitte: Apples Kategorien sind über EventKit nicht lesbar</h2><p class="lead"><b>Geprüft:</b> In den EventKit-Headern des iOS-27.2-SDK hat <code>EKReminder</code> nur Start, Fälligkeit, erledigt, Erledigungsdatum und Priorität (plus Titel, Notiz, Alarme, Wiederholung aus <code>EKCalendarItem</code>); von Abschnitten, Unteraufgaben, Tags oder einem Einkaufslisten-Typ steht dort nichts. Entwicklerforen bestätigen das für Abschnitte. Tagwerk kann Apples Einteilung „Obst &amp; Gemüse“, „Milchprodukte“ usw. also weder lesen noch schreiben. <b>Am Gerät zu prüfen (Spike):</b> ob Artikel, die Tagwerk über EventKit anlegt, in der App Erinnerungen trotzdem automatisch einsortiert werden, und in welcher Reihenfolge EventKit die Einträge liefert.</p><div class="grid"><div><p class="label"><span class="code">EG1</span><b>Flache Liste</b></p><div class="phone "><div class="status"><span>17:40</span><span>●●● 5G</span></div><div class="nav"><span class="back">‹ Aufgaben</span><span></span><div class="r"><span class="gb glass">＋</span><span class="gb glass ai">✦</span></div></div><div class="lt">Einkaufsliste<small>7 offen · Liste „Einkauf“ in Erinnerungen</small></div><div class="scr"><div class="list"><div class="tl"><span class="ck"></span><span class="tx">Hafermilch<small>2 Packungen</small></span></div><div class="tl"><span class="ck"></span><span class="tx">Bananen</span></div><div class="tl"><span class="ck"></span><span class="tx">Eier<small>10 Stück</small></span></div><div class="tl"><span class="ck"></span><span class="tx">Spülmittel</span></div><div class="tl"><span class="ck"></span><span class="tx">Vollkornbrot</span></div><div class="tl"><span class="ck"></span><span class="tx">Joghurt</span></div><div class="tl"><span class="ck"></span><span class="tx">Tomaten</span></div></div><div class="section">Erledigt · 2</div><div class="list"><div class="tl off"><span class="ck done"></span><span class="tx">Kaffee</span></div><div class="tl off"><span class="ck done"></span><span class="tx">Zahnpasta</span></div></div><div class="inp glass"><b>Artikel hinzufügen</b><i class="">🎙</i></div></div><div class="tb glass"><span><i class="ico">▦</i>Planen</span><span class="on"><i class="ico">☑︎</i>Aufgaben</span><span><i class="ico">＋</i>Erfassen</span><span><i class="ico">⚙︎</i>Einstellungen</span></div></div><p class="pc">Offene Artikel in der Reihenfolge des Anlegens, erledigte unten. <b>Dafür:</b> kleinster Umfang, nichts kann falsch einsortiert werden. <b>Dagegen:</b> im Laden läuft man hin und her; schlechter als die App Erinnerungen.</p></div><div><p class="label"><span class="code r">EG2</span><b>Eigene Kategorien in Tagwerk, ohne Netz</b><span class="rec">Empfehlung</span></p><div class="phone "><div class="status"><span>17:40</span><span>●●● 5G</span></div><div class="nav"><span class="back">‹ Aufgaben</span><span></span><div class="r"><span class="gb glass">＋</span><span class="gb glass ai">✦</span></div></div><div class="lt">Einkaufsliste<small>7 offen · Liste „Einkauf“ in Erinnerungen</small></div><div class="scr"><div class="section">Obst &amp; Gemüse</div><div class="list"><div class="tl"><span class="ck"></span><span class="tx">Bananen</span></div><div class="tl"><span class="ck"></span><span class="tx">Tomaten</span></div></div><div class="section">Kühlregal</div><div class="list"><div class="tl"><span class="ck"></span><span class="tx">Hafermilch<small>2 Packungen</small></span></div><div class="tl"><span class="ck"></span><span class="tx">Eier<small>10 Stück</small></span></div><div class="tl"><span class="ck"></span><span class="tx">Joghurt</span></div></div><div class="section">Brot &amp; Backwaren</div><div class="list"><div class="tl"><span class="ck"></span><span class="tx">Vollkornbrot</span></div></div><div class="section">Haushalt</div><div class="list"><div class="tl"><span class="ck"></span><span class="tx">Spülmittel</span><span class="ch">Kategorie ▾</span></div></div><div class="inp glass"><b>Artikel hinzufügen</b><i class="">🎙</i></div></div><div class="tb glass"><span><i class="ico">▦</i>Planen</span><span class="on"><i class="ico">☑︎</i>Aufgaben</span><span><i class="ico">＋</i>Erfassen</span><span><i class="ico">⚙︎</i>Einstellungen</span></div><div class="menu glass" style="right:18px;bottom:128px"><div>Obst &amp; Gemüse</div><div>Kühlregal</div><div>Brot &amp; Backwaren</div><div>Haushalt <span>✓</span></div><div>Neue Kategorie …</div></div></div><p class="pc">Ein mitgeliefertes Wörterbuch (deutsch und englisch) ordnet bekannte Artikel einer Kategorie zu; Unbekanntes landet unter „Sonstiges“. Per Menü lässt sich die Kategorie ändern, Tagwerk merkt sich das je Artikelname. <b>Dafür:</b> offline, sofort, vorhersehbar. <b>Dagegen:</b> die Einteilung lebt nur in Tagwerk und kann von der in Erinnerungen abweichen; das Wörterbuch muss gepflegt werden.</p></div><div><p class="label"><span class="code">EG3</span><b>Sortieren durch ChatGPT</b></p><div class="phone "><div class="status"><span>17:40</span><span>●●● 5G</span></div><div class="nav"><span class="back">‹ Aufgaben</span><span></span><div class="r"><span class="gb glass">＋</span><span class="gb glass ai">✦</span></div></div><div class="lt">Einkaufsliste<small>7 offen · Liste „Einkauf“ in Erinnerungen</small></div><div class="scr"><div class="hint"><b>Sortieren mit ChatGPT:</b> Die Artikelnamen werden an ChatGPT gesendet. Ohne Netz bleibt die Liste unsortiert.</div><div class="section">Obst &amp; Gemüse</div><div class="list"><div class="tl"><span class="ck"></span><span class="tx">Bananen</span></div><div class="tl"><span class="ck"></span><span class="tx">Tomaten</span></div></div><div class="section">Kühlregal</div><div class="list"><div class="tl"><span class="ck"></span><span class="tx">Hafermilch<small>2 Packungen</small></span></div><div class="tl"><span class="ck"></span><span class="tx">Eier<small>10 Stück</small></span></div><div class="tl"><span class="ck"></span><span class="tx">Joghurt</span></div></div><div class="section">Brot &amp; Backwaren</div><div class="list"><div class="tl"><span class="ck"></span><span class="tx">Vollkornbrot</span></div></div><div class="section">Haushalt</div><div class="list"><div class="tl"><span class="ck"></span><span class="tx">Spülmittel</span></div></div><div class="inp glass"><b>Artikel hinzufügen</b><i class="">🎙</i></div></div><div class="tb glass"><span><i class="ico">▦</i>Planen</span><span class="on"><i class="ico">☑︎</i>Aufgaben</span><span><i class="ico">＋</i>Erfassen</span><span><i class="ico">⚙︎</i>Einstellungen</span></div></div><p class="pc"><b>Dafür:</b> kennt auch ungewöhnliche Artikel, kein Wörterbuch. <b>Dagegen:</b> braucht Anmeldung und Netz, Wartezeit im Laden, Artikelnamen verlassen das Gerät, Ergebnis nicht reproduzierbar. Höchstens später als Zusatz für „Sonstiges“.</p></div></div>
+<h2><span class="area">NQ</span> Entscheidung 4 · Woher kommen die Notizen? (gemeinsam mit Phase 7, #143)</h2><p class="lead">Für Apple Notizen gibt es keine dokumentierte Schnittstelle für andere Apps; erreichbar sind sie nur über Kurzbefehle-Aktionen („Notiz erstellen“, „An Notiz anhängen“, „Notizen suchen“), die der Nutzer ausführt, nicht die App. Phase 7 (#143, Gedanken-Notiz am Morgen oder Abend) braucht ebenfalls einen Ort für freien Text, der lokal bleibt und nur nach Zustimmung an ChatGPT geht. Beides sollte <b>ein</b> Speicher sein. Der App-Speicher ist heute rein lokal: SwiftData ohne iCloud (<code>ModelContainerFactory.swift:5–22</code>, Berechtigungen nur HealthKit und App-Gruppe in <code>Tagwerk.entitlements</code>).</p><div class="grid"><div><p class="label"><span class="code r">NQ1</span><b>Eigene Notizen in Tagwerk</b><span class="rec">Empfehlung</span></p><div class="phone "><div class="status"><span>17:40</span><span>●●● 5G</span></div><div class="nav"><span class="back">‹ Aufgaben</span><span></span><div class="r"><span class="gb glass">＋</span><span class="gb glass ai">✦</span></div></div><div class="lt">Notizen</div><div class="scr"><div class="ncard new"><b>📌 Ideen Hausarbeit</b><p>Gliederung umstellen: erst Begriffe, dann Vergleich der Modelle …</p><small>heute 08:12 · diktiert</small></div><div class="ncard"><b>Geschenk Mama</b><p>Kochbuch von Ottolenghi, oder Gutschein Gärtnerei</p><small>Dienstag</small></div><div class="ncard"><b>Fragen an Steuerberater</b><p>Arbeitszimmer anteilig? Belege Fortbildung</p><small>12. Nov.</small></div><p class="ff">Notizen liegen nur auf diesem iPhone. Sie werden nicht an ChatGPT gesendet.</p><div class="inp glass"><b>Neue Notiz</b><i class="">🎙</i></div></div><div class="tb glass"><span><i class="ico">▦</i>Planen</span><span class="on"><i class="ico">☑︎</i>Aufgaben</span><span><i class="ico">＋</i>Erfassen</span><span><i class="ico">⚙︎</i>Einstellungen</span></div></div><p class="pc">Ein neuer Datensatz <code>NoteRecord</code> im vorhandenen SwiftData-Speicher, den Phase 5 (freie Notizen) und Phase 7 (Gedanken-Notiz) gemeinsam nutzen. <b>Dafür:</b> funktioniert sofort und offline, volle Kontrolle über Datenschutz, eine Grundlage für beide Phasen. <b>Dagegen:</b> kein Abgleich mit Mac oder iPad, bestehende Apple-Notizen bleiben draußen; nach Löschen der App sind die Notizen weg.</p></div><div><p class="label"><span class="code">NQ2</span><b>Brücke zu Apple Notizen per Kurzbefehl</b></p><div class="phone "><div class="status"><span>17:40</span><span>●●● 5G</span></div><div class="nav"><span class="back">‹ Einstellungen</span><span></span><div class="r"><span class="gb glass ai">✦</span></div></div><div class="lt">Apple Notizen</div><div class="scr"><div class="hint"><b>Nur über einen Kurzbefehl:</b> Tagwerk kann Apple Notizen nicht selbst lesen. Ein Kurzbefehl, den du einmal einrichtest, sucht Notizen und übergibt sie an Tagwerk.</div><div class="fs"><div class="fr "><span>1 · Kurzbefehl „Notizen an Tagwerk“ laden</span><span class="v">›</span></div><div class="fr "><span>2 · Ordner in Notizen wählen</span><span class="v">Tagwerk ›</span></div><div class="fr a"><span>Jetzt abgleichen</span><span class="v"></span></div></div><p class="ff">Stand: heute 08:12 · 3 Notizen · nur lesen. Neue Notizen aus Tagwerk gehen über „Notiz erstellen“ im selben Kurzbefehl.</p><div class="ncard"><b>📌 Ideen Hausarbeit</b><p>Gliederung umstellen: erst Begriffe, dann Vergleich der Modelle …</p><small>heute 08:12 · diktiert</small></div><div class="ncard"><b>Geschenk Mama</b><p>Kochbuch von Ottolenghi, oder Gutschein Gärtnerei</p><small>Dienstag</small></div><div class="ncard"><b>Fragen an Steuerberater</b><p>Arbeitszimmer anteilig? Belege Fortbildung</p><small>12. Nov.</small></div></div><div class="tb glass"><span><i class="ico">▦</i>Planen</span><span><i class="ico">☑︎</i>Aufgaben</span><span><i class="ico">＋</i>Erfassen</span><span class="on"><i class="ico">⚙︎</i>Einstellungen</span></div><div class="zone bad" style="top:232px;left:10px;right:10px;height:150px"></div><span class="zl bad" style="top:384px;left:22px">Einrichtung von Hand · Abgleich öffnet die Kurzbefehle-App</span></div><p class="pc"><b>Dafür:</b> die vorhandenen Notizen werden sichtbar, iCloud-Abgleich kommt von Apple. <b>Dagegen:</b> Einrichtung von Hand, Abgleich nur auf Anstoß und mit Wechsel in die Kurzbefehle-App, kein stabiler Bezug auf eine einzelne Notiz, nur Klartext. Für Phase 7 ungeeignet, weil dort jede Notiz sofort verarbeitet werden soll. Technisch ungeprüft.</p></div><div><p class="label"><span class="code">NQ3</span><b>Notizen als Erinnerungsliste</b></p><div class="phone "><div class="status"><span>17:40</span><span>●●● 5G</span></div><div class="nav"><span class="back">‹ Aufgaben</span><span></span><div class="r"><span class="gb glass">＋</span><span class="gb glass ai">✦</span></div></div><div class="lt">Notizen<small>Liste „Notizen“ in Erinnerungen</small></div><div class="scr"><div class="list"><div class="tl"><span class="ck"></span><span class="tx">Ideen Hausarbeit<small>Gliederung umstellen: erst Begriffe, dann Vergleich …</small></span></div><div class="tl"><span class="ck"></span><span class="tx">Geschenk Mama<small>Kochbuch von Ottolenghi, oder Gutschein Gärtnerei</small></span></div><div class="tl"><span class="ck"></span><span class="tx">Fragen an Steuerberater<small>Arbeitszimmer anteilig? Belege Fortbildung</small></span></div></div><p class="ff">Jede Notiz ist eine Erinnerung: Titel plus Notizfeld. Abgleich über iCloud wie alle Erinnerungen.</p><div class="inp glass"><b>Neue Notiz</b><i class="">🎙</i></div></div><div class="tb glass"><span><i class="ico">▦</i>Planen</span><span class="on"><i class="ico">☑︎</i>Aufgaben</span><span><i class="ico">＋</i>Erfassen</span><span><i class="ico">⚙︎</i>Einstellungen</span></div><div class="zone bad" style="top:150px;left:14px;width:40px;height:170px"></div><span class="zl bad" style="top:322px;left:22px">Kreise zum Abhaken passen nicht zu Notizen</span></div><p class="pc"><b>Dafür:</b> iCloud-Abgleich und Mac-Sichtbarkeit ohne eigenen Code; nutzt denselben Unterbau wie die Einkaufsliste. <b>Dagegen:</b> zweckfremd: Notizen stehen in Erinnerungen als abhakbare Einträge, lange Texte im Notizfeld; die Liste müsste wie die Einkaufsliste aus den Aufgaben ausgenommen werden. Widerspricht „Notizen bleiben lokal“ aus #143.</p></div></div>
+<h2><span class="area">EA</span> Entscheidung 5 · Was darf der Assistent mit der Einkaufsliste (und mit Notizen)?</h2><p class="lead">Heute gilt eine feste Regel: Lesende Funktionen antworten sofort, schreibende laufen erst nach „Bestätigen“ auf einer Aktionskarte (<code>AppTools.swift:8</code>, <code>ChatView.swift:266–286</code>; alle Schreibfunktionen tragen „Needs confirmation“ in <code>AppTools+Definitions.swift:43–104</code>). Da die Einkaufsliste aus den Aufgaben herausfällt, sieht der Assistent sie ohne neue Funktionen gar nicht mehr. Bei jeder Nutzung gehen die Artikelnamen an ChatGPT.</p><div class="grid"><div><p class="label"><span class="code">EA1</span><b>Nur lesen</b></p><div class="phone "><div class="status"><span>17:40</span><span>●●● 5G</span></div><div class="dim" style="opacity:.35"></div><div class="sheet" style="display:flex;flex-direction:column;top:40px"><div class="grab"></div><div class="bar">Assistent<span>Fertig</span></div><div style="flex:1;display:flex;flex-direction:column;min-height:0"><div class="msg u">Was steht auf der Einkaufsliste?</div><div class="msg a">7 Artikel sind offen: Hafermilch (2 Packungen), Bananen, Eier, Spülmittel, Vollkornbrot, Joghurt, Tomaten.</div><div class="msg u">Setz Kaffee und Reis dazu.</div><div class="msg a">Das kann ich hier nicht ändern. Öffne die Einkaufsliste unter „Aufgaben“ und tippe unten auf „Artikel hinzufügen“.</div><div class="inp glass" style="margin-top:auto"><b>Nachricht</b><i>🎙</i><i class="go">↑</i></div></div></div></div><p class="pc">Eine Funktion <code>list_shopping</code>. <b>Dafür:</b> kein Risiko. <b>Dagegen:</b> verfehlt den Wunsch aus dem Epic („ergänzen, auch per Assistent und Sprache“).</p></div><div><p class="label"><span class="code r">EA2</span><b>Lesen, hinzufügen, abhaken · mit einer Sammelkarte</b><span class="rec">Empfehlung</span></p><div class="phone "><div class="status"><span>17:40</span><span>●●● 5G</span></div><div class="dim" style="opacity:.35"></div><div class="sheet" style="display:flex;flex-direction:column;top:40px"><div class="grab"></div><div class="bar">Assistent<span>Fertig</span></div><div style="flex:1;display:flex;flex-direction:column;min-height:0"><div class="msg u">Setz Kaffee, Reis und Zwiebeln auf die Einkaufsliste und hak die Eier ab.</div><div class="act"><b>Einkaufsliste ändern</b><small>＋ Kaffee · ＋ Reis · ＋ Zwiebeln<br>✓ Eier abhaken</small><div class="btns"><span class="btn">Abbrechen</span><span class="btn b">Bestätigen</span></div></div><div class="msg a" style="color:var(--sub)">Eine Karte für alle vier Änderungen.</div><div class="inp glass" style="margin-top:auto"><b>Nachricht</b><i>🎙</i><i class="go">↑</i></div></div></div></div><p class="pc"><code>list_shopping</code> und <code>update_shopping</code> (mehrere Artikel hinzufügen und abhaken in einem Aufruf). <b>Dafür:</b> bleibt bei der bestehenden Regel, eine Bestätigung für beliebig viele Artikel, funktioniert auch im Sprachmodus wie die anderen Karten. <b>Dagegen:</b> ein Tipp oder ein „Ja“ mehr als nötig.</p></div><div><p class="label"><span class="code">EA3</span><b>Ohne Bestätigung, mit „Widerrufen“</b></p><div class="phone "><div class="status"><span>17:40</span><span>●●● 5G</span></div><div class="dim" style="opacity:.35"></div><div class="sheet" style="display:flex;flex-direction:column;top:40px"><div class="grab"></div><div class="bar">Assistent<span>Fertig</span></div><div style="flex:1;display:flex;flex-direction:column;min-height:0"><div class="msg u">Setz Kaffee, Reis und Zwiebeln auf die Einkaufsliste und hak die Eier ab.</div><div class="msg a">Erledigt: Kaffee, Reis und Zwiebeln stehen auf der Liste, Eier sind abgehakt.</div><div class="undo glass"><b style="font-weight:500">4 Änderungen an der Einkaufsliste</b><span>Widerrufen</span></div><div class="inp glass" style="margin-top:auto"><b>Nachricht</b><i>🎙</i><i class="go">↑</i></div></div></div></div><p class="pc"><b>Dafür:</b> am schnellsten, besonders freihändig. <b>Dagegen:</b> erste Ausnahme von „Schreiben nur nach Bestätigung“; ein Hörfehler steht sofort in der (vielleicht geteilten) Liste. Sinnvoll erst, wenn EA2 im Alltag als zu langsam auffällt.</p></div></div>
+<h2><span class="area">ES</span> Entscheidung 6 · Schnelles Hinzufügen: Diktat, Kurzbefehl, Widget</h2><p class="lead">Vorhanden sind Diktat im Chat (<code>VoiceInputModel.swift</code>, <code>VoiceComposer.swift</code>), vier Kurzbefehle (<code>TagwerkIntents.swift:113–132</code>) und zwei Widgets, die eine Schnappschuss-Datei aus der App-Gruppe lesen (<code>TagwerkWidgetBundle.swift:14–30</code>). Siri kann bereits ohne Tagwerk „Setz Milch auf meine Einkaufsliste“ ausführen, und die App Erinnerungen bringt ein eigenes Listen-Widget mit. Ein Tagwerk-Widget für die Einkaufsliste wäre also weitgehend eine Dopplung.</p><div class="grid"><div><p class="label"><span class="code r">ES1</span><b>Eingabezeile mit Diktat und ein Kurzbefehl</b><span class="rec">Empfehlung</span></p><div class="phone "><div class="status"><span>17:40</span><span>●●● 5G</span></div><div class="nav"><span class="back">‹ Aufgaben</span><span></span><div class="r"><span class="gb glass">＋</span><span class="gb glass ai">✦</span></div></div><div class="lt">Einkaufsliste<small>7 offen · Liste „Einkauf“ in Erinnerungen</small></div><div class="scr"><div class="section">Obst &amp; Gemüse</div><div class="list"><div class="tl"><span class="ck"></span><span class="tx">Bananen</span></div><div class="tl"><span class="ck"></span><span class="tx">Tomaten</span></div></div><div class="section">Kühlregal</div><div class="list"><div class="tl"><span class="ck"></span><span class="tx">Hafermilch<small>2 Packungen</small></span></div><div class="tl"><span class="ck"></span><span class="tx">Eier<small>10 Stück</small></span></div><div class="tl"><span class="ck"></span><span class="tx">Joghurt</span></div></div><div class="section">Brot &amp; Backwaren</div><div class="list"><div class="tl"><span class="ck"></span><span class="tx">Vollkornbrot</span></div></div><div class="section">Haushalt</div><div class="list"><div class="tl"><span class="ck"></span><span class="tx">Spülmittel</span></div></div><div class="chips" style="margin-top:auto"><span class="chip b">＋ Kaffee</span><span class="chip b">＋ Reis</span><span class="chip b">＋ 2 Zwiebeln</span></div><div class="inp glass"><b class="t">Kaffee, Reis und zwei Zwiebeln</b><i class="rec2">■</i></div></div><div class="tb glass"><span><i class="ico">▦</i>Planen</span><span class="on"><i class="ico">☑︎</i>Aufgaben</span><span><i class="ico">＋</i>Erfassen</span><span><i class="ico">⚙︎</i>Einstellungen</span></div><div class="zone" style="left:10px;right:10px;bottom:74px;height:96px"></div><span class="zl" style="bottom:172px;left:22px">Diktat wird an „,“ und „und“ getrennt · Vorschau vor dem Speichern</span></div><p class="pc">Mehrere Artikel in einem Satz, Vorschau als Marken, dann speichern. Dazu der Kurzbefehl „Zur Einkaufsliste hinzufügen“ (ES2 zeigt ihn). Kein Widget in Phase 5. <b>Dafür:</b> deckt „ansehen, abhaken, ergänzen, auch per Sprache“ ab, wenig neuer Unterbau. <b>Dagegen:</b> kein Blick auf die Liste vom Home-Bildschirm aus Tagwerk heraus.</p></div><div><p class="label"><span class="code">ES2</span><b>Der Kurzbefehl (Teil von ES1)</b></p><div class="phone "><div class="status"><span>17:40</span><span>●●● 5G</span></div><div class="lock"><b>17:40</b><span>Donnerstag, 19. November</span></div><div class="note glass" style="margin-top:14px"><div class="a"><span>KURZBEFEHLE · TAGWERK</span><span>jetzt</span></div><b>Zur Einkaufsliste hinzufügen</b>Was soll auf die Liste?</div><div class="note glass"><div class="a"><span>TAGWERK</span><span>jetzt</span></div><b>3 Artikel hinzugefügt</b>Kaffee, Reis, Zwiebeln · 10 offen</div><p class="ff" style="margin-top:10px">Sätze: „Zur Einkaufsliste in Tagwerk hinzufügen“, „Einkaufsliste in Tagwerk zeigen“. Läuft im Hintergrund wie „Wasser erfassen“.</p></div><p class="pc">Hintergrund-Intent wie <code>LogWaterIntent</code>; schreibt über EventKit in die gewählte Liste. Ohne gewählte Einkaufsliste antwortet er mit einem Hinweis auf die Einstellungen.</p></div><div><p class="label"><span class="code">ES3</span><b>Zusätzlich ein Widget „Einkauf“ (nur lesen)</b></p><div class="phone crop"><div class="status"><span>17:40</span><span>●●● 5G</span></div><div class="home"><div class="wdg new"><h4>🛒 Einkauf · 7</h4><div class="it"><span class="ck"></span>Hafermilch</div><div class="it"><span class="ck"></span>Bananen</div><div class="it"><span class="ck"></span>Eier</div><div class="it"><span class="ck"></span>Spülmittel</div><div class="mo">und 3 weitere · Tippen öffnet die Liste</div></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:12px"><div class="appico"></div><div class="appico"></div><div class="appico"></div><div class="appico"></div></div></div></div><p class="pc"><b>Dafür:</b> Liste ohne Öffnen der App sichtbar. <b>Dagegen:</b> rund 5 Stunden mehr; die Artikel müssten in die Schnappschuss-Datei der App-Gruppe; doppelt zum Widget von Erinnerungen. Abhaken im Widget (ES3 mit Tippen) bräuchte EventKit-Zugriff im Widget-Prozess: <b>ungeprüft</b>, eigener Spike.</p></div></div>
+
+<div class="box">
+  <h3>Empfohlener Zuschnitt: EO2 · EQ1 · EG2 · NQ1 · EA2 · ES1</h3>
+  <ul>
+    <li><b>Einstieg:</b> Karte oben in „Aufgaben“ mit „Einkaufsliste“ und „Notizen“; keine Änderung an der Tab-Leiste.</li>
+    <li><b>Quelle:</b> eine gewählte Erinnerungsliste; Vorschlag am Namen, Rückfallweg in den Einstellungen unter „Quellen“.</li>
+    <li><b>Ausschluss:</b> Die Liste fällt aus Aufgaben, Planung, Wochenrückblick, Mitteilungen und dem Aufgabenvorrat des Assistenten.</li>
+    <li><b>Abschnitte:</b> eigene Kategorien aus einem Wörterbuch, Korrektur per Menü, nur in Tagwerk gespeichert.</li>
+    <li><b>Notizen:</b> eigener, lokaler Speicher, den Phase 7 mitbenutzt.</li>
+    <li><b>Assistent:</b> lesen, hinzufügen, abhaken über eine Sammelkarte; keine Notiz-Funktionen in Phase 5.</li>
+    <li><b>Schnell hinzufügen:</b> Eingabezeile mit Diktat, Kurzbefehl „Zur Einkaufsliste hinzufügen“; Widget zurückgestellt.</li>
+  </ul>
+</div>
+
+<div class="box neutral">
+  <h3>Gemeinsamer Notizspeicher für Phase 5 und Phase 7 (Vorschlag zu NQ1)</h3>
+  <ul>
+    <li>Ein Datensatz <code>NoteRecord</code> im vorhandenen SwiftData-Speicher: Kennung, Text, angelegt, geändert, Art (<code>free</code> für Phase 5; <code>morning</code>, <code>evening</code> für die Gedanken-Notiz aus #143), Tag (nur für Gedanken-Notizen), angeheftet, „diktiert“, „verarbeitet am“ (Phase 7: wann daraus Vorschläge wurden).</li>
+    <li>Phase 5 zeigt nur Art <code>free</code>; Phase 7 schreibt und liest <code>morning</code>/<code>evening</code> und ergänzt die Verarbeitung. Wer zuerst baut, legt den Datensatz an; die andere Phase fügt nur Felder mit Standardwert hinzu.</li>
+    <li>Regel für beide: Notiztext verlässt das Gerät nur nach ausdrücklicher Zustimmung im Einzelfall. Deshalb bekommt der Assistent in Phase 5 keine Funktion zum Lesen von Notizen.</li>
+    <li><b>iCloud:</b> nicht in Phase 5. Der Speicher hat heute keine iCloud-Berechtigung, und <code>LocalTask</code> nutzt ein eindeutiges Feld (<code>LocalTask.swift:9</code>), das sich nach Apples Vorgaben für SwiftData mit CloudKit nicht verträgt; ein Abgleich bräuchte einen getrennten Speicher nur für Notizen. <code>NoteRecord</code> wird so angelegt, dass das später möglich bleibt (alle Felder mit Standardwert, kein eindeutiges Feld). Diese Einschätzung stützt sich auf Dokumentationswissen, nicht auf einen Versuch.</li>
+  </ul>
+</div>
+
+<div class="box neutral">
+  <h3>Was geprüft ist und was nicht</h3>
+  <ul>
+    <li><b>Geprüft im Quelltext:</b> alle Stellen mit Dateiangabe in dieser Datei.</li>
+    <li><b>Geprüft in den SDK-Headern (iPhoneOS 27.2, EventKit):</b> <code>EKReminder</code> und <code>EKCalendar</code> haben keine Eigenschaft für Abschnitte, Unteraufgaben, Tags oder den Listentyp „Einkaufsliste“.</li>
+    <li><b>Aus Websuche, nicht aus Apple-Dokumentation:</b> Entwicklerforen berichten, dass EventKit Abschnitte nicht offenlegt; für Apple Notizen wurde keine dokumentierte Schnittstelle gefunden, nur Kurzbefehle-Aktionen.</li>
+    <li><b>Spike am Gerät (vor dem Plan, etwa 2 Stunden):</b> (1) Werden über EventKit angelegte Artikel in einer Einkaufsliste von Erinnerungen automatisch einsortiert? (2) In welcher Reihenfolge liefert EventKit die Einträge, und bleibt sie stabil? (3) Verhält sich eine geteilte Einkaufsliste beim Schreiben wie eine eigene? (4) Nur falls ES3 gewünscht: EventKit-Zugriff aus dem Widget-Prozess.</li>
+    <li><b>Nicht geprüft:</b> die Kurzbefehl-Brücke NQ2; die Bilder dieser Datei (statisches HTML, nicht maßstabsgetreu, nichts davon lief am Gerät oder im Simulator).</li>
+  </ul>
+</div>
+
+<div class="box neutral">
+  <h3>Kleinere Festlegungen ohne Rückfrage</h3>
+  <ol>
+    <li>Artikel haben in Tagwerk nur Titel und eine optionale Mengenangabe im Notizfeld; Fälligkeit, Priorität und Aufwand werden nicht gezeigt.</li>
+    <li>Abhaken setzt die Erinnerung auf erledigt (nicht löschen). Erledigte Artikel der letzten 7 Tage stehen eingeklappt unter „Erledigt“ und lassen sich wieder öffnen; „Erledigte entfernen“ löscht sie nach Rückfrage.</li>
+    <li>Ein Artikel, der schon offen auf der Liste steht, wird nicht doppelt angelegt; ein kürzlich erledigter gleichen Namens wird wieder geöffnet.</li>
+    <li>Die Einkaufsliste verschwindet auch aus der Listenauswahl für neue Aufgaben und aus der Auswahl „Erinnerungslisten“ (dort grau mit dem Vermerk „Einkaufsliste“).</li>
+    <li>Wiederkehrende Erinnerungen der Einkaufsliste werden in der Planung nicht als wiederkehrende Aufgaben geführt.</li>
+    <li>Kein Eintrag in „Planen“. Ein Hinweis „Einkaufen: 7 Artikel“ am Tag wäre ein eigener, späterer Wunsch.</li>
+    <li>Kategorien und gelernte Zuordnungen liegen lokal in SwiftData und werden nicht in Erinnerungen zurückgeschrieben.</li>
+    <li>Diktat nutzt die vorhandene Spracherkennung und deren einmalige Erklärung; kein neuer Schalter.</li>
+    <li>Neue Route <code>tagwerk://shopping</code> für Kurzbefehl und spätere Widgets, nach dem Muster von <code>AppRoute</code>.</li>
+    <li>Ist keine Einkaufsliste gewählt, zeigt die Karte in „Aufgaben“ nur „Einkaufsliste einrichten“; ohne Zugriff auf Erinnerungen erscheint sie gar nicht.</li>
+    <li>Englische Texte werden wie üblich im Stringkatalog ergänzt.</li>
+  </ol>
+</div>
+
+<div class="box warn">
+  <h3>Offene Fragen</h3>
+  <ol>
+    <li>Einstieg: EO2 (oben in „Aufgaben“), oder soll ein eigener Tab ernsthaft gegen Suche und Routinen abgewogen werden?</li>
+    <li>Listenwahl: Vorschlagskarte EQ1, oder reicht die Zeile in den Einstellungen (EQ2)?</li>
+    <li>Ist deine Einkaufsliste mit jemandem geteilt? Dann wiegt EA3 (Schreiben ohne Bestätigung) schwerer, und der Spike muss geteilte Listen abdecken.</li>
+    <li>Abschnitte: eigene Kategorien (EG2) trotz möglicher Abweichung von Erinnerungen, oder zuerst flach (EG1) und das Spike-Ergebnis abwarten?</li>
+    <li>Notizen: eigener lokaler Speicher (NQ1) gemeinsam mit Phase 7? Und gehören freie Notizen überhaupt in Phase 5, oder nur der Speicher, während die Oberfläche mit #143 kommt?</li>
+    <li>Reicht „nur auf diesem iPhone“ für Notizen, oder ist Abgleich mit dem Mac Voraussetzung? Dann wäre NQ3 oder ein getrennter iCloud-Speicher neu zu bewerten.</li>
+    <li>Assistent: Sammelkarte (EA2), oder gleich ohne Bestätigung (EA3)?</li>
+    <li>Widget für die Einkaufsliste jetzt (ES3) oder zurückstellen?</li>
+  </ol>
+</div>
+
+</body>
+</html>
