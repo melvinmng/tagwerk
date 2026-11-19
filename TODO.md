@@ -118,7 +118,7 @@ GitHub-Konto: @melvinmng · bestätigt zuweisbar · geprüft 2026-11-17 · ich
 - [ ] [#145](https://github.com/melvinmng/tagwerk/issues/145) Tagesstart mit Dankbarkeit und Tagesfokus {status: Backlog; prio: P3 (Medium); aufwand: 6h; epic: #140}
 - [ ] [#146](https://github.com/melvinmng/tagwerk/issues/146) Leitfragen zur Reflexion als optionale Vorlage {status: Backlog; prio: P3 (Medium); aufwand: 3h; epic: #140}
 - [ ] [#150](https://github.com/melvinmng/tagwerk/issues/150) Einkaufsliste: Rezept hochladen (Foto, Text oder Link) und die nötigen Zutaten per ChatGPT als Artikel hinzufügen {status: Backlog; prio: P3 (Medium); epic: #113}
-- [ ] [#151](https://github.com/melvinmng/tagwerk/issues/151) Flexible und mehrfache Erinnerungen für Aufgaben, Deadlines und Kalendertermine (beliebig viele, frei wählbare Zeitpunkte; bei Serien „Nur dieser / Alle folgenden“)
+- [ ] [#151](https://github.com/melvinmng/tagwerk/issues/151) Flexible und mehrfache Erinnerungen für Aufgaben, Deadlines und Kalendertermine (beliebig viele, frei wählbare Zeitpunkte; bei Serien „Nur dieser / Alle folgenden“) {status: Backlog; prio: P3 (Medium)}
 
 ## Notizen
 
