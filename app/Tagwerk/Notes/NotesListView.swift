@@ -1,38 +1,36 @@
 import SwiftUI
 import TagwerkCore
 
-/// The notes page: cards, quick capture at the bottom, pinning and deleting. Notes stay on this device.
-/// It has no navigation stack of its own.
+/// The notes of one folder (or of "Alle Notizen", "Gedanken", "Zuletzt gelöscht"): search, sorting, selection, quick
+/// capture at the bottom, pinning, moving and deleting. Notes stay on this device. It has no navigation stack of its own.
 struct NotesListView: View {
     @Environment(AppEnvironment.self) private var environment
     let store: NoteStore
+    let scope: NotesScope
 
-    @State private var filter: NoteStore.Filter = .all
     @State private var draft = ""
     @State private var draftWasDictated = false
     @State private var voice: VoiceInputModel?
-    @State private var deleting: NoteRecord?
+    @State private var searchText = ""
+    @State private var editMode: EditMode = .inactive
+    @State private var selection = Set<UUID>()
+    @State private var movingNoteIDs: [UUID] = []
+    @State private var confirmsEmptyTrash = false
+    @State private var deletingForGood: [UUID] = []
 
-    init(store: NoteStore) {
+    init(store: NoteStore, scope: NotesScope = .all) {
         self.store = store
+        self.scope = scope
     }
 
+    private var isTrash: Bool { scope == .trash }
+
     var body: some View {
-        let hasThoughts = store.hasThoughts
-        let notes = store.notes(hasThoughts ? filter : .all)
-        List {
-            if hasThoughts {
-                Picker("Filter", selection: $filter) {
-                    Text("Alle").tag(NoteStore.Filter.all)
-                    Text("Gedanken").tag(NoteStore.Filter.thoughts)
-                    Text("Eigene").tag(NoteStore.Filter.own)
-                }
-                .pickerStyle(.segmented)
-                .listRowBackground(Color.clear)
-                .listRowInsets(EdgeInsets())
-            }
+        @Bindable var settings = environment.settings
+        let notes = visibleNotes
+        List(selection: $selection) {
             if notes.isEmpty {
-                Text("Noch keine Notizen. Schreib oder diktiere unten die erste.")
+                Text(emptyText)
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, alignment: .center)
                     .listRowBackground(Color.clear)
@@ -40,19 +38,107 @@ struct NotesListView: View {
             Section {
                 ForEach(notes, id: \.id) { card($0) }
             } footer: {
-                Text(Self.listFootnote)
+                Text(isTrash ? Self.trashFootnote : Self.listFootnote)
             }
         }
-        .navigationTitle("Notizen")
-        .safeAreaInset(edge: .bottom) { captureBar }
-        .confirmationDialog("Notiz endgültig löschen?", isPresented: deletingBinding, titleVisibility: .visible) {
-            Button("Löschen", role: .destructive) {
-                if let deleting { store.delete(deleting.id) }
+        .navigationTitle(title)
+        .searchable(text: $searchText, prompt: "Notizen durchsuchen")
+        .environment(\.editMode, $editMode)
+        .toolbar {
+            if !isTrash || !notes.isEmpty { ToolbarItem(placement: .topBarTrailing) { EditButton() } }
+            if !isTrash {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Menu {
+                        Picker("Sortieren nach", selection: $settings.noteSortOrder) {
+                            Text("Bearbeitet").tag(NoteSortOrder.modified)
+                            Text("Erstellt").tag(NoteSortOrder.created)
+                            Text("Titel").tag(NoteSortOrder.title)
+                        }
+                    } label: {
+                        Image(systemName: "arrow.up.arrow.down")
+                    }
+                    .accessibilityLabel("Sortieren")
+                }
+            } else if !notes.isEmpty {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button("Alle löschen", role: .destructive) { confirmsEmptyTrash = true }
+                }
+            }
+            if editMode.isEditing {
+                ToolbarItemGroup(placement: .bottomBar) { selectionActions }
+            }
+        }
+        .safeAreaInset(edge: .bottom) {
+            if scope.allowsCapture, !editMode.isEditing { captureBar }
+        }
+        .confirmationDialog("Alle Notizen in „Zuletzt gelöscht“ endgültig löschen?", isPresented: $confirmsEmptyTrash, titleVisibility: .visible) {
+            Button("Alle löschen", role: .destructive) { store.emptyTrash() }
+            Button("Abbrechen", role: .cancel) {}
+        }
+        .confirmationDialog("Notiz endgültig löschen?", isPresented: deletingForGoodBinding, titleVisibility: .visible) {
+            Button("Endgültig löschen", role: .destructive) {
+                for id in deletingForGood { store.delete(id) }
+                selection.subtract(deletingForGood)
             }
             Button("Abbrechen", role: .cancel) {}
         }
-        .onAppear(perform: prepareVoice)
+        .sheet(isPresented: movingBinding) {
+            NoteFolderPickerSheet(store: store, title: "Bewegen nach") { target in
+                store.move(noteIDs: movingNoteIDs, to: target)
+                selection.subtract(movingNoteIDs)
+                if selection.isEmpty { editMode = .inactive }
+            }
+        }
+        .onAppear {
+            store.purgeExpired(calendar: environment.planning.calendar)
+            prepareVoice()
+        }
         .onDisappear { voice?.cancel() }
+    }
+
+    // MARK: Content
+
+    private var visibleNotes: [NoteRecord] {
+        store.notes(scope.filter, sortedBy: environment.settings.noteSortOrder)
+            .filter { NoteText.matches($0.text, query: searchText) }
+    }
+
+    private var title: String {
+        switch scope {
+        case .all: String(localized: "Alle Notizen")
+        case .standard: String(localized: "Notizen")
+        case .thoughts: String(localized: "Gedanken")
+        case .trash: String(localized: "Zuletzt gelöscht")
+        case .folder(let id): store.folder(id: id)?.name ?? String(localized: "Notizen")
+        }
+    }
+
+    private var emptyText: String {
+        if !searchText.isEmpty { return String(localized: "Keine Notizen gefunden.") }
+        return isTrash ? String(localized: "Keine gelöschten Notizen.")
+                       : String(localized: "Noch keine Notizen. Schreib oder diktiere unten die erste.")
+    }
+
+    @ViewBuilder private var selectionActions: some View {
+        if isTrash {
+            Button("Wiederherstellen") {
+                for id in selection { store.restore(id) }
+                selection = []
+            }
+            .disabled(selection.isEmpty)
+            Spacer()
+            Button("Löschen", role: .destructive) { deletingForGood = Array(selection) }
+                .disabled(selection.isEmpty)
+        } else {
+            Button("Bewegen") { movingNoteIDs = Array(selection) }
+                .disabled(selection.isEmpty)
+            Spacer()
+            Button("Löschen", role: .destructive) {
+                for id in selection { store.trash(id) }
+                selection = []
+            }
+            .disabled(selection.isEmpty)
+        }
     }
 
     // MARK: Cards
@@ -61,6 +147,8 @@ struct NotesListView: View {
         let title = NoteText.title(note.text)
         let preview = NoteText.preview(note.text)
         return Button {
+            // In selection mode the list itself toggles the row; a tap must not also open the note.
+            guard !editMode.isEditing, !isTrash else { return }
             environment.tasksPath.append(.note(note.id))
         } label: {
             VStack(alignment: .leading, spacing: 4) {
@@ -75,23 +163,63 @@ struct NotesListView: View {
                 if !preview.isEmpty {
                     Text(preview).font(.subheadline).foregroundStyle(.secondary).lineLimit(2)
                 }
-                Text(Self.footer(for: note, now: .now, calendar: environment.planning.calendar))
+                Text(footerText(for: note))
                     .font(.caption).foregroundStyle(.secondary)
             }
             .padding(.vertical, 2)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .contentShape(Rectangle())
         }
+        // Without this the whole row takes the accent colour of a button (#173).
+        .buttonStyle(.plain)
+        .tag(note.id)
         .swipeActions(edge: .trailing) {
-            // Without a trash there is no way back, so deleting asks first.
-            Button { deleting = note } label: { Label("Löschen", systemImage: "trash") }.tint(.red)
+            if isTrash {
+                Button { deletingForGood = [note.id] } label: { Label("Löschen", systemImage: "trash") }.tint(.red)
+            } else {
+                // The trash is the way back, so deleting does not ask.
+                Button { store.trash(note.id) } label: { Label("Löschen", systemImage: "trash") }.tint(.red)
+                if note.kind == .free {
+                    Button { movingNoteIDs = [note.id] } label: { Label("Bewegen", systemImage: "folder") }.tint(.indigo)
+                }
+            }
         }
         .swipeActions(edge: .leading) {
-            Button {
-                store.setPinned(note.id, !note.isPinned)
-            } label: {
-                Label(note.isPinned ? "Anheftung lösen" : "Anheften", systemImage: note.isPinned ? "pin.slash" : "pin")
+            if isTrash {
+                Button { store.restore(note.id) } label: { Label("Wiederherstellen", systemImage: "arrow.uturn.backward") }.tint(.green)
+            } else {
+                Button {
+                    store.setPinned(note.id, !note.isPinned)
+                } label: {
+                    Label(note.isPinned ? "Anheftung lösen" : "Anheften", systemImage: note.isPinned ? "pin.slash" : "pin")
+                }
+                .tint(.orange)
             }
-            .tint(.orange)
         }
+        .contextMenu {
+            if isTrash {
+                Button { store.restore(note.id) } label: { Label("Wiederherstellen", systemImage: "arrow.uturn.backward") }
+                Button(role: .destructive) { deletingForGood = [note.id] } label: { Label("Endgültig löschen", systemImage: "trash") }
+            } else {
+                Button { store.setPinned(note.id, !note.isPinned) } label: {
+                    Label(note.isPinned ? "Anheftung lösen" : "Anheften", systemImage: note.isPinned ? "pin.slash" : "pin")
+                }
+                if note.kind == .free {
+                    Button { movingNoteIDs = [note.id] } label: { Label("Bewegen", systemImage: "folder") }
+                }
+                ShareLink(item: note.text) { Label("Teilen", systemImage: "square.and.arrow.up") }
+                Button(role: .destructive) { store.trash(note.id) } label: { Label("Löschen", systemImage: "trash") }
+            }
+        }
+    }
+
+    /// In the trash the footer names the days left; elsewhere the usual change date or origin.
+    private func footerText(for note: NoteRecord) -> String {
+        guard isTrash, let deletedAt = note.deletedAt else {
+            return Self.footer(for: note, now: .now, calendar: environment.planning.calendar)
+        }
+        let days = NoteFolderRules.daysLeft(deletedAt: deletedAt, now: .now, calendar: environment.planning.calendar)
+        return String(localized: "Noch \(days) Tage")
     }
 
     // MARK: Quick capture
@@ -147,13 +275,17 @@ struct NotesListView: View {
     }
 
     private func save(_ text: String, dictated: Bool) {
-        guard store.create(text: text, wasDictated: dictated) != nil else { return }
+        guard store.create(text: text, wasDictated: dictated, folderID: scope.captureFolderID) != nil else { return }
         draft = ""
         draftWasDictated = false
     }
 
-    private var deletingBinding: Binding<Bool> {
-        Binding(get: { deleting != nil }, set: { if !$0 { deleting = nil } })
+    private var movingBinding: Binding<Bool> {
+        Binding(get: { !movingNoteIDs.isEmpty }, set: { if !$0 { movingNoteIDs = [] } })
+    }
+
+    private var deletingForGoodBinding: Binding<Bool> {
+        Binding(get: { !deletingForGood.isEmpty }, set: { if !$0 { deletingForGood = [] } })
     }
 }
 
@@ -183,6 +315,10 @@ extension NotesListView {
             default: return text + " · " + String(localized: "\(note.derivedActionCount) Aufgaben daraus")
             }
         }
+    }
+
+    static var trashFootnote: String {
+        String(localized: "Notizen bleiben hier \(NoteFolderRules.retentionDays) Tage und werden dann endgültig gelöscht.")
     }
 
     /// The line under "Notizen" in the task list: the note changed last, or that there is none.

@@ -27,4 +27,11 @@ struct NoteTextTests {
     @Test func kind_hasThreeStableRawValues() {
         #expect(NoteKind.allCases.map(\.rawValue) == ["free", "morning", "evening"])
     }
+
+    @Test func matches_ignoresCaseAccentsAndOrder() {
+        #expect(NoteText.matches("Gliederung für die Hausarbeit", query: "hausarbeit GLIEDERUNG"))
+        #expect(NoteText.matches("Straße", query: "strasse"))
+        #expect(NoteText.matches("anything", query: "  "))
+        #expect(!NoteText.matches("Gliederung", query: "Gliederung Quellen"))
+    }
 }

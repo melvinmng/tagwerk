@@ -103,7 +103,8 @@ struct TaskListView: View {
                 case .shoppingSettings: ShoppingSettingsView()
                 case .shoppingCategories:
                     ShoppingCategoriesView(store: environment.shoppingCategories, model: environment.shopping)
-                case .notes: NotesListView(store: environment.notes)
+                case .notes: NotesFoldersView(store: environment.notes)
+                case .notesFolder(let scope): NotesListView(store: environment.notes, scope: scope)
                 case .note(let id): NoteEditorView(noteID: id, store: environment.notes)
                 }
             }

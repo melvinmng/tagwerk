@@ -96,6 +96,9 @@ final class AppSettings {
     /// "Notizen an ChatGPT senden": a thought note may be sent, only on a tap on "Vorschläge holen".
     var noteSuggestionConsent: Bool = false
 
+    /// Order of the note lists (`NoteSortOrder` raw value); one setting for all folders.
+    var noteSortOrderRaw: String = "modified"
+
     /// Voice: microphone in conversations (plan voice-chat, SP7a).
     var voiceInputEnabled: Bool = true
     /// The one-time explanation before the first recording (SP8a) was confirmed.
@@ -116,6 +119,11 @@ final class AppSettings {
     var voiceModeSendDelay: Double = 2
     var voiceModeSilenceLimit: Double = 30
     var voiceModeExplained: Bool = false
+
+    var noteSortOrder: NoteSortOrder {
+        get { NoteSortOrder(rawValue: noteSortOrderRaw) ?? .modified }
+        set { noteSortOrderRaw = newValue.rawValue }
+    }
 
     static let maximumPlanningRules = 5
 

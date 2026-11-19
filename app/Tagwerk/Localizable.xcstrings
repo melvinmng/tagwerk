@@ -1145,6 +1145,16 @@
         }
       }
     },
+    "%lld Notizen kommen nach „Zuletzt gelöscht“.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld notes go to “Recently deleted”."
+          }
+        }
+      }
+    },
     "%lld Personen": {
       "localizations": {
         "de": {
@@ -2592,6 +2602,26 @@
         }
       }
     },
+    "Alle Notizen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All notes"
+          }
+        }
+      }
+    },
+    "Alle Notizen in „Zuletzt gelöscht“ endgültig löschen?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Permanently delete all notes in “Recently deleted”?"
+          }
+        }
+      }
+    },
     "Alle Projects": {
       "localizations": {
         "en": {
@@ -2668,6 +2698,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Schedule all"
+          }
+        }
+      }
+    },
+    "Alle löschen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete all"
           }
         }
       }
@@ -3594,6 +3634,16 @@
         }
       }
     },
+    "Bearbeitet": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edited"
+          }
+        }
+      }
+    },
     "Beenden": {
       "localizations": {
         "en": {
@@ -3750,6 +3800,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Confirm"
+          }
+        }
+      }
+    },
+    "Bewegen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Move"
+          }
+        }
+      }
+    },
+    "Bewegen nach": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Move to"
           }
         }
       }
@@ -4136,6 +4206,16 @@
         }
       }
     },
+    "Das hat nicht geklappt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "That didn’t work."
+          }
+        }
+      }
+    },
     "Das hat nicht geklappt: %@": {
       "localizations": {
         "en": {
@@ -4365,6 +4445,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "The code has expired. Please start over."
+          }
+        }
+      }
+    },
+    "Der Name darf höchstens %lld Zeichen haben.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The name can have at most %lld characters."
           }
         }
       }
@@ -4955,6 +5045,16 @@
         }
       }
     },
+    "Diesen Ordner gibt es auf dieser Ebene schon.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This folder already exists at this level."
+          }
+        }
+      }
+    },
     "Diesen Termin gibt es nicht mehr.": {
       "localizations": {
         "en": {
@@ -4991,6 +5091,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "This month · %@"
+          }
+        }
+      }
+    },
+    "Dieser Ordner ist fest vergeben und lässt sich nicht löschen oder bewegen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This folder has a fixed purpose and can’t be deleted or moved."
           }
         }
       }
@@ -5169,6 +5279,7 @@
       }
     },
     "Eigene": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -5184,6 +5295,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Custom rule from Reminders"
+          }
+        }
+      }
+    },
+    "Ein Ordner lässt sich nicht in sich selbst bewegen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A folder can’t be moved into itself."
           }
         }
       }
@@ -5474,6 +5595,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Change end"
+          }
+        }
+      }
+    },
+    "Endgültig löschen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete permanently"
           }
         }
       }
@@ -5809,6 +5940,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Only “Accept” creates the block in the plan calendar."
+          }
+        }
+      }
+    },
+    "Erstellt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Created"
           }
         }
       }
@@ -7643,6 +7784,16 @@
         }
       }
     },
+    "Keine Notizen gefunden.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No notes found."
+          }
+        }
+      }
+    },
     "Keine Pause": {
       "localizations": {
         "en": {
@@ -7779,6 +7930,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "No suggestions from this note."
+          }
+        }
+      }
+    },
+    "Keine gelöschten Notizen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No deleted notes."
           }
         }
       }
@@ -9091,6 +9252,16 @@
         }
       }
     },
+    "Neuer Ordner": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New folder"
+          }
+        }
+      }
+    },
     "Neuer Punkt": {
       "localizations": {
         "en": {
@@ -9107,6 +9278,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "New event"
+          }
+        }
+      }
+    },
+    "Neuer Unterordner": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New subfolder"
           }
         }
       }
@@ -9261,6 +9442,16 @@
         }
       }
     },
+    "Noch %lld Tage": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld days left"
+          }
+        }
+      }
+    },
     "Noch einzuplanen": {
       "localizations": {
         "en": {
@@ -9360,6 +9551,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Send notes to ChatGPT"
+          }
+        }
+      }
+    },
+    "Notizen bleiben hier %lld Tage und werden dann endgültig gelöscht.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notes stay here for %lld days and are then deleted permanently."
+          }
+        }
+      }
+    },
+    "Notizen durchsuchen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search notes"
           }
         }
       }
@@ -9719,6 +9930,56 @@
           "stringUnit": {
             "state": "translated",
             "value": "Online results open on GitHub. To edit an issue in Tagwerk it must be assigned to you and belong to a project."
+          }
+        }
+      }
+    },
+    "Ordner": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Folders"
+          }
+        }
+      }
+    },
+    "Ordner bewegen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Move folder"
+          }
+        }
+      }
+    },
+    "Ordner lassen sich höchstens drei Ebenen tief verschachteln.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Folders can be nested three levels deep at most."
+          }
+        }
+      }
+    },
+    "Ordner umbenennen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rename folder"
+          }
+        }
+      }
+    },
+    "Ordner „%@“ löschen?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete folder “%@”?"
           }
         }
       }
@@ -10648,6 +10909,26 @@
         }
       }
     },
+    "Sortieren": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sort"
+          }
+        }
+      }
+    },
+    "Sortieren nach": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sort by"
+          }
+        }
+      }
+    },
     "Sprachdienste": {
       "shouldTranslate": false
     },
@@ -11222,6 +11503,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tagwerk block"
+          }
+        }
+      }
+    },
+    "Teilen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Share"
           }
         }
       }
@@ -12564,6 +12855,16 @@
         }
       }
     },
+    "Wiederherstellen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restore"
+          }
+        }
+      }
+    },
     "Wiederholen": {
       "localizations": {
         "en": {
@@ -13048,6 +13349,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Allow access"
+          }
+        }
+      }
+    },
+    "Zuletzt gelöscht": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recently deleted"
           }
         }
       }

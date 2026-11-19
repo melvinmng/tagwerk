@@ -33,6 +33,8 @@ struct ShoppingCategoriesView: View {
                             Text("\(openCount(category.id))").monospacedDigit().foregroundStyle(.secondary)
                         }
                     }
+                    // Without this the whole row takes the accent colour of a button (#173).
+                    .buttonStyle(.plain)
                     .accessibilityHint("Umbenennen")
                 }
                 .onMove { offsets, target in

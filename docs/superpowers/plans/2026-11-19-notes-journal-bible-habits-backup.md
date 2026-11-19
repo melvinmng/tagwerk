@@ -294,3 +294,37 @@ Abhängigkeiten: 2 und 3 brauchen die Ordner aus 1. 4 braucht die Quellen aus 2 
    7. Commits mit Präfix `feat:`/`fix:`/`test:`/`docs:`
 3. Nach jeder Stufe einen kurzen Abschnitt „Stand“ am Ende dieses Plans: Was ist gebaut, welche Entscheidungen weichen ab, was ist offen.
 4. Wenn eine Stufe wegen eines Befunds im Code nicht wie geplant geht: begründete Annahme treffen, im Plan dokumentieren, weiterarbeiten. Nur bei einer echten Richtungsfrage (z. B. Datenverlust möglich) anhalten und fragen.
+
+## Stand nach Stufe 1 (Notizen-Ordner, #152)
+
+**Gebaut**
+- Core: `NoteFolderRules` (Baum, Tiefe 3, Namensregeln, Verschiebe-Prüfung, Zähler samt Unterordnern, 30-Tage-Frist), `NoteSortOrder`/`NoteSortKey`, `NoteText.matches` (Suche mit der Faltung der globalen Suche).
+- App: `NoteFolderRecord`, `NoteRecord.folderID`/`deletedAt`, `AppSettings.noteSortOrderRaw`; `NoteStore` mit Ordnern, `move`, `trash`/`restore`/`emptyTrash`/`purgeExpired`, Sortierung, `ensureSystemFolder` (für Stufe 2 und 3).
+- Oberfläche: `NotesFoldersView` (Alle Notizen, Notizen, Gedanken, Ordnerbaum, Systemordner, Zuletzt gelöscht), `NotesListView` je Ordner (Suche, Sortiermenü, Mehrfachauswahl mit Bewegen und Löschen, Swipe, Kontextmenü, Teilen), `NoteFolderPickerSheet`, Teilen und Papierkorb im Editor.
+- Farbfehler #173: `.buttonStyle(.plain)` auf den Zeilen der Notizliste und der Kategorienliste der Einkaufsliste. Nur per Quelltext behoben, nicht am Gerät gesehen.
+- Globale Suche: Notizen im Ordner tragen den Ordnernamen als Art-Bezeichnung (`kindLabel`), gelöschte Notizen erscheinen nicht.
+- Demo-Daten: zwei Ordner (einer mit Unterordner) und eine Notiz in „Zuletzt gelöscht“.
+
+**Entscheidungen und Abweichungen**
+- Der Ordnerbaum steht eingerückt in einer flachen Liste statt als `DisclosureGroup`. Ein Tipp öffnet die Notizen genau dieses Ordners, die Zahl am Rand zählt Unterordner mit.
+- Systemordner (`roleRaw` gesetzt) lassen sich umbenennen, aber weder löschen noch bewegen und nehmen keine Unterordner auf.
+- Nur eigene Notizen (`kind == .free`) lassen sich bewegen. Gedanken-Notizen bleiben im virtuellen Ordner „Gedanken“, der nur erscheint, wenn es welche gibt.
+- „Notizen“ (Standardordner) zeigt eigene Notizen ohne Ordner. Eine Notiz mit unbekanntem Ordner zählt dazu. „Alle Notizen“ zeigt alles außer dem Papierkorb.
+- Eine gelöschte Notiz behält ihre `folderID`. „Wiederherstellen“ setzt sie zurück, oder nach „Notizen“, wenn der Ordner fehlt. Ein Ordner löscht seine Unterordner und schickt deren Notizen in den Papierkorb. Angeheftete Notizen verlieren dabei die Anheftung.
+- Wischen und das Editor-Menü verschieben ohne Rückfrage in den Papierkorb (es gibt den Weg zurück). Endgültiges Löschen fragt nach. `NoteStore.delete` bleibt endgültig (Tagesabschluss ohne Text, `deleteIfEmpty`).
+- Eine gelöschte Gedanken-Notiz blockiert keine neue für denselben Tag (`note(kind:dayKey:)` ignoriert den Papierkorb).
+- `purgeExpired` läuft beim Öffnen der Ordneransicht und der Notizliste. Der Aufruf beim App-Start folgt in Stufe 5 zusammen mit dem Hintergrundwechsel.
+
+**Abgleich mit Apple Notizen**
+
+| Funktion | Apple Notizen | Tagwerk nach Stufe 1 | Offen |
+|---|---|---|---|
+| Ordner und Unterordner | ja | ja, bis Tiefe 3 | – |
+| Zuletzt gelöscht (30 Tage) | ja | ja | – |
+| Notizen verschieben, Mehrfachauswahl | ja | ja | – |
+| Sortierung | ja (Datum, Titel) | ja (Bearbeitet, Erstellt, Titel), global | Wahl je Ordner |
+| Suche | ja | ja, je Ordner und global | Suche im Papierkorb |
+| Anheften | ja | ja | – |
+| Teilen als Text | ja | ja | Teilen mit anderen |
+| Checklisten, Formatierung, Tabellen, Bilder, Anhänge | ja | nein | #155 |
+| Tags, Sperren | ja | nein | Design-Sammelissue |

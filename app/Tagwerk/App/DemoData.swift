@@ -63,6 +63,19 @@ enum DemoData {
         if let pinned = notes.create(text: "Ideen Hausarbeit\nGliederung überarbeiten\nZwei weitere Quellen suchen") {
             notes.setPinned(pinned.id, true)
         }
+        // Two folders (one with a subfolder) and a note in "Zuletzt gelöscht".
+        if let study = try? notes.createFolder(name: "Studium") {
+            notes.create(text: "Literaturliste\nDrei Quellen zur Statistik", folderID: study.id)
+            if let thesis = try? notes.createFolder(name: "Hausarbeit", parentID: study.id) {
+                notes.create(text: "Gliederung\n1 Einleitung, 2 Methode, 3 Ergebnisse", folderID: thesis.id)
+            }
+        }
+        if let home = try? notes.createFolder(name: "Haushalt") {
+            notes.create(text: "Handwerker anrufen\nHeizung entlüften", folderID: home.id)
+        }
+        if let discarded = notes.create(text: "Alte Einkaufsidee\nNicht mehr nötig") {
+            notes.trash(discarded.id)
+        }
     }
 
     /// A local task repeating every three days from today, to try ticking off and "Rückgängig" (plan 2026-11-18,

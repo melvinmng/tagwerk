@@ -449,9 +449,12 @@ final class AppEnvironment {
             calendarNames: Self.searchCalendarNames(planning: planning),
             completedTasks: Self.searchCompletedSource(reminders: reminders, taskList: taskList),
             notes: {
-                notes.notes().map { note in
-                    NoteSearchItem(id: note.id, text: note.text, kindLabel: Self.kindLabel(of: note.kind), updatedAt: note.updatedAt,
-                                   dayKey: note.kind == .free ? nil : note.dayKey)
+                // A note in a folder shows the folder name as its label; the trash is not searched.
+                let folderNames = Dictionary(notes.folders().map { ($0.id, $0.name) }, uniquingKeysWith: { first, _ in first })
+                return notes.notes().map { note in
+                    let folderName = note.kind == .free ? note.folderID.flatMap { folderNames[$0] } : nil
+                    return NoteSearchItem(id: note.id, text: note.text, kindLabel: folderName ?? Self.kindLabel(of: note.kind),
+                                          updatedAt: note.updatedAt, dayKey: note.kind == .free ? nil : note.dayKey)
                 }
             },
             shopping: {

@@ -37,6 +37,15 @@ public enum NoteText {
         lines(text).filter { !$0.isEmpty }.dropFirst().joined(separator: "\n")
     }
 
+    /// Whether every word of `query` occurs in `text`, ignoring case, accents and umlaut spelling like the global
+    /// search does. An empty query matches everything.
+    public static func matches(_ text: String, query: String) -> Bool {
+        let words = SearchText.fold(query).split(whereSeparator: \.isWhitespace)
+        guard !words.isEmpty else { return true }
+        let folded = SearchText.fold(text)
+        return words.allSatisfy { folded.contains($0) }
+    }
+
     private static func lines(_ text: String) -> [String] {
         text.split(omittingEmptySubsequences: false, whereSeparator: \.isNewline)
             .map { $0.trimmingCharacters(in: .whitespaces) }

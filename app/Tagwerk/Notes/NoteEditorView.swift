@@ -12,7 +12,6 @@ struct NoteEditorView: View {
     @State private var text = ""
     @State private var isLoaded = false
     @State private var wasDeleted = false
-    @State private var confirmsDelete = false
 
     init(noteID: UUID, store: NoteStore) {
         self.noteID = noteID
@@ -35,20 +34,19 @@ struct NoteEditorView: View {
                                 Label(note.isPinned ? "Anheftung lösen" : "Anheften", systemImage: note.isPinned ? "pin.slash" : "pin")
                             }
                         }
-                        Button(role: .destructive) { confirmsDelete = true } label: { Label("Löschen", systemImage: "trash") }
+                        ShareLink(item: text) { Label("Teilen", systemImage: "square.and.arrow.up") }
+                        // The trash is the way back, so deleting does not ask.
+                        Button(role: .destructive) {
+                            store.updateText(noteID, text: text)
+                            wasDeleted = true
+                            store.trash(noteID)
+                            dismiss()
+                        } label: { Label("Löschen", systemImage: "trash") }
                     } label: {
                         Image(systemName: "ellipsis")
                     }
                     .accessibilityLabel("Mehr")
                 }
-            }
-            .confirmationDialog("Notiz endgültig löschen?", isPresented: $confirmsDelete, titleVisibility: .visible) {
-                Button("Löschen", role: .destructive) {
-                    wasDeleted = true
-                    store.delete(noteID)
-                    dismiss()
-                }
-                Button("Abbrechen", role: .cancel) {}
             }
             .onAppear {
                 guard !isLoaded else { return }
