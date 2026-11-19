@@ -30,6 +30,13 @@ final class FakeNotificationCenter: NotificationCenterClient {
         pending[notification.id] = PendingNotification(id: notification.id, fireDate: notification.fireDate)
     }
 
+    private(set) var addedRepeating: [RoutineNotification] = []
+
+    func addRepeating(_ notification: RoutineNotification) async throws {
+        addedRepeating.append(notification)
+        pending[notification.id] = PendingNotification(id: notification.id, fireDate: nil)
+    }
+
     func removePending(_ identifiers: [String]) async {
         for id in identifiers { pending[id] = nil }
     }

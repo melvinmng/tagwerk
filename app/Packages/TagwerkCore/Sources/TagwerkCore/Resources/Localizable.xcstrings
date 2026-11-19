@@ -1071,6 +1071,22 @@
         }
       }
     },
+    "Noch %lld min bis zur Schlafzeit (%@)" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Noch %1$lld min bis zur Schlafzeit (%2$@)"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld min until bedtime (%2$@)"
+          }
+        }
+      }
+    },
     "Nächste Woche" : {
       "localizations" : {
         "en" : {
@@ -1117,6 +1133,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Cycling"
+          }
+        }
+      }
+    },
+    "Schlafzeit (%@)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bedtime (%@)"
           }
         }
       }

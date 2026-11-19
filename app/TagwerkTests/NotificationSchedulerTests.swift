@@ -413,4 +413,15 @@ struct NotificationSchedulerTests {
         #expect(center.pendingIDs == ["tagwerk.event.exam"])
         #expect(center.added.filter { $0.id == "tagwerk.event.exam" }.count == 1)
     }
+
+
+    @Test func routineRequests_areNeitherCountedNorRemoved() async {
+        let routineIDs = (0..<5).map { "tagwerk.routine.evening.\($0)" }
+        routineIDs.forEach { center.seed($0, fireDate: nil) }
+        local.tasks = (0..<60).map { makeTask("T\($0)", source: .local, due: due(20 + $0 % 5, 12)) }
+        let scheduler = makeScheduler(await loadedList([local]))
+        await scheduler.reschedule()
+        #expect(center.added.count == 50)
+        #expect(Set(routineIDs).isSubset(of: center.pendingIDs))
+    }
 }

@@ -655,7 +655,7 @@ extension RoutineSchedule {
 }
 ```
 
-- [ ] **Step 1: Tests schreiben (rot).**
+- [x] **Step 1: Tests schreiben (rot).**
 
 ```swift
 // RoutineScheduleTests
@@ -677,11 +677,11 @@ extension RoutineSchedule {
 // userInfo ["route": "routine/evening"] -> router has a pending .routineEvening, navigator.hasPendingTarget == false
 ```
 
-- [ ] **Step 2:** `CORE RoutineScheduleTests`, `APP RoutineNotificationTests`, `APP NotificationSchedulerTests`, `APP NotificationNavigatorTests` → rot.
-- [ ] **Step 3: Umsetzen.** `SystemNotificationCenter.addRepeating`: `UNCalendarNotificationTrigger(dateMatching: DateComponents(hour:minute:), repeats: true)` ohne Zeitzone, `threadIdentifier = "routine"`, `interruptionLevel = .active`, `userInfo = ["route": route.rawValue]`. `NotificationScheduler.performReschedule` filtert `ours` zusätzlich mit `!$0.id.hasPrefix(PlannedNotification.routineIdentifierPrefix)`. Der Delegate reicht `userInfo["route"]` über `AppRoute(rawValue:)` an `router.open(_:)`, alles andere wie bisher an den Navigator. `reschedule()` läuft beim App-Start (`TagwerkApp`, nach `startNotificationUpdates()`), bei `.active` und nach jeder Änderung an Schlafzeit, Checkliste oder Schaltern in `RoutineSettingsView`. Fehlt die Erlaubnis, zeigt `RoutineSettingsView` den Hinweis und den Knopf der Benachrichtigungs-Einstellungen (`environment.notifications.requestAuthorization()`).
-- [ ] **Step 4:** Tests aus Step 2 → grün.
+- [x] **Step 2:** `CORE RoutineScheduleTests`, `APP RoutineNotificationTests`, `APP NotificationSchedulerTests`, `APP NotificationNavigatorTests` → rot.
+- [x] **Step 3: Umsetzen.** `SystemNotificationCenter.addRepeating`: `UNCalendarNotificationTrigger(dateMatching: DateComponents(hour:minute:), repeats: true)` ohne Zeitzone, `threadIdentifier = "routine"`, `interruptionLevel = .active`, `userInfo = ["route": route.rawValue]`. `NotificationScheduler.performReschedule` filtert `ours` zusätzlich mit `!$0.id.hasPrefix(PlannedNotification.routineIdentifierPrefix)`. Der Delegate reicht `userInfo["route"]` über `AppRoute(rawValue:)` an `router.open(_:)`, alles andere wie bisher an den Navigator. `reschedule()` läuft beim App-Start (`TagwerkApp`, nach `startNotificationUpdates()`), bei `.active` und nach jeder Änderung an Schlafzeit, Checkliste oder Schaltern in `RoutineSettingsView`. Fehlt die Erlaubnis, zeigt `RoutineSettingsView` den Hinweis und den Knopf der Benachrichtigungs-Einstellungen (`environment.notifications.requestAuthorization()`).
+- [x] **Step 4:** Tests aus Step 2 → grün.
 - [ ] **Step 5: Geräteprüfung (Design §15.2), Ergebnis im Issue #142:** Mitteilung kommt ohne App-Start; überlebt Neustart und Drüberinstallieren; Verhalten im Fokus „Schlafen“; Tippen öffnet das Blatt „Tagesabschluss“ (auch bei beendeter App). **Schlägt „überlebt Neustart“ fehl:** kein Umbau; im Issue vermerken, dass erst der nächste App-Start neu einplant, und dem Nutzer melden.
-- [ ] **Step 6: Commit.** `git commit -m "feat: schedule repeating evening reminders outside the deadline budget"`
+- [x] **Step 6: Commit.** `git commit -m "feat: schedule repeating evening reminders outside the deadline budget"`
 
 ### Task 11: Blatt „Tagesstart“ mit Dankbarkeit und Überblick; Erinnerung am Morgen · #145 · Zeile 8
 

@@ -49,7 +49,7 @@ final class AppEnvironment {
     /// Target of a `tagwerk://` link or a shortcut until the app shows it (phase 4).
     let router = AppRouter()
     /// Delegate of the system notification center; held here because the center keeps it weakly.
-    @ObservationIgnored private(set) lazy var notificationDelegate = NotificationDelegate(navigator: notificationNavigator)
+    @ObservationIgnored private(set) lazy var notificationDelegate = NotificationDelegate(navigator: notificationNavigator, router: router)
     /// Meals, water and workouts (phase 3); mirrored to Health only after the user allowed it.
     let intake: IntakeStore
     let health: any HealthStoring
@@ -61,6 +61,8 @@ final class AppEnvironment {
     let routineStore: RoutineStore
     /// The routine sheets, the evening line and the evening wrap-up (phase 7).
     let routines: RoutinesModel
+    /// Repeating evening (and morning) reminders; their own scheduler outside the 50-slot deadline budget.
+    let routineNotifications: RoutineNotificationScheduler
     /// Meal estimates with ChatGPT; only after consent and a tap (main design §7).
     let mealEstimator: MealEstimator
     /// Writes the snapshot file the widget reads (phase 4); `directory == nil` in tests and unsigned builds.
@@ -84,6 +86,7 @@ final class AppEnvironment {
     @ObservationIgnored private var changeObservation: Task<Void, Never>?
     @ObservationIgnored private var reconnectWatch: Task<Void, Never>?
     @ObservationIgnored private var pathMonitor: NWPathMonitor?
+    @ObservationIgnored private var routineUpdates: Task<Void, Never>?
     @ObservationIgnored private var notificationUpdates: Task<Void, Never>?
     @ObservationIgnored private var gitHubRegistration: Task<Void, Never>?
     @ObservationIgnored private var snapshotUpdates: Task<Void, Never>?
@@ -225,6 +228,8 @@ final class AppEnvironment {
                 return await reminderStore.completionDates(in: interval, listIDs: listIDs).count
                     + localTasks.completionDates(in: interval).count
             })
+        self.routineNotifications = RoutineNotificationScheduler(center: notificationCenter ?? SystemNotificationCenter(),
+                                                                 store: routineStore, settings: settings)
         taskList.onCompletionChanged = { id, isCompleted in await planning.didChangeCompletion(id, isCompleted: isCompleted) }
         taskList.onHandedOver = { id in await planning.didHandOver(id) }
         // An ended GitHub sign-in (expired or revoked) forgets the cached issues of that account.
@@ -496,6 +501,26 @@ final class AppEnvironment {
 
     /// Reschedules notifications whenever tasks, source states or notification settings change.
     /// The first value arrives at once and schedules after the start.
+    /// Re-plans the routine reminders when the bedtime, the checklist or one of the switches changes.
+    func startRoutineReminderUpdates() {
+        guard routineUpdates == nil else { return }
+        let changes = Observations { @MainActor [weak self] () -> Int in
+            guard let self else { return 0 }
+            var hasher = Hasher()
+            hasher.combine(settings.bedtimeMinutes)
+            hasher.combine(settings.eveningRemindersEnabled)
+            hasher.combine(routineStore.checklist())
+            return hasher.finalize()
+        }
+        routineUpdates = Task { [weak self] in
+            var last: Int?
+            for await value in changes where value != last {
+                last = value
+                await self?.routineNotifications.reschedule()
+            }
+        }
+    }
+
     func startNotificationUpdates() {
         guard notificationUpdates == nil else { return }
         // Marking or unmarking a deadline event changes the notifications and the widget's deadline rows.

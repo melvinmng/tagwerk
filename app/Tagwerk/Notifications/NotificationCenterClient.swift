@@ -20,6 +20,8 @@ protocol NotificationCenterClient: AnyObject {
     func requestAuthorization() async throws -> Bool
     func pendingRequests() async -> [PendingNotification]
     func add(_ notification: PlannedNotification) async throws
+    /// A reminder that repeats every day at the same clock time (phase 7 routines).
+    func addRepeating(_ notification: RoutineNotification) async throws
     func removePending(_ identifiers: [String]) async
 }
 
@@ -28,6 +30,8 @@ enum NotificationPayload {
     static let taskKey = "taskKey"
     static let eventID = "eventID"
     static let day = "day"
+    /// Path of an `AppRoute`; a routine notification carries this instead of a task or event.
+    static let route = "route"
 
     static func userInfo(for target: PlannedNotification.Target) -> [String: String] {
         switch target {
@@ -96,6 +100,25 @@ final class SystemNotificationCenter: NotificationCenterClient {
         var parts = calendar.dateComponents([.year, .month, .day, .hour, .minute, .second], from: notification.fireDate)
         parts.timeZone = calendar.timeZone
         let trigger = UNCalendarNotificationTrigger(dateMatching: parts, repeats: false)
+        let request = UNNotificationRequest(identifier: notification.id, content: content, trigger: trigger)
+        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+            center.add(request) { error in
+                if let error { continuation.resume(throwing: error) } else { continuation.resume() }
+            }
+        }
+    }
+
+    func addRepeating(_ notification: RoutineNotification) async throws {
+        let content = UNMutableNotificationContent()
+        content.title = notification.title
+        content.body = notification.body
+        content.sound = .default
+        content.interruptionLevel = .active
+        content.threadIdentifier = "routine"
+        content.userInfo = [NotificationPayload.route: notification.route.rawValue]
+        // Hour and minute only, no time zone: the reminder follows the clock of the place the phone is in.
+        let trigger = UNCalendarNotificationTrigger(dateMatching: DateComponents(hour: notification.hour, minute: notification.minute),
+                                                    repeats: true)
         let request = UNNotificationRequest(identifier: notification.id, content: content, trigger: trigger)
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
             center.add(request) { error in

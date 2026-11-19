@@ -43,6 +43,27 @@ public struct RoutineDayValue: Sendable, Hashable {
     }
 }
 
+/// A reminder of the routines that repeats every day at the same time (phase 7 design §8.1). The texts are static.
+public struct RoutineNotification: Sendable, Hashable, Identifiable {
+    /// "tagwerk.routine.evening.<UUID>" or "tagwerk.routine.morning".
+    public var id: String
+    public var hour: Int
+    public var minute: Int
+    public var title: String
+    public var body: String
+    /// What a tap opens; carried in the notification as the link path.
+    public var route: AppRoute
+
+    public init(id: String, hour: Int, minute: Int, title: String, body: String, route: AppRoute) {
+        self.id = id
+        self.hour = hour
+        self.minute = minute
+        self.title = title
+        self.body = body
+        self.route = route
+    }
+}
+
 /// Pure rules of the daily routines (phase 7 design §6, rules 9–11, and §11).
 public enum RoutineSchedule {
     /// Before 04:00 the evening wrap-up still belongs to the day before (rule 10).
@@ -100,6 +121,24 @@ public enum RoutineSchedule {
     /// The points that remind: the first four with an offset, by order.
     public static func reminderItems(_ items: [ChecklistItem]) -> [ChecklistItem] {
         Array(items.sorted { $0.order < $1.order }.filter { $0.offsetMinutes != nil }.prefix(maximumReminders))
+    }
+
+    /// One daily reminder per checklist point with an offset, at most four (design §8.1). Title is the name of the point,
+    /// the text counts down to the bedtime. Texts and clock follow `locale`; nothing here depends on today's data.
+    public static func eveningNotifications(items: [ChecklistItem], bedtimeMinutes: Int, enabled: Bool, locale: Locale,
+                                            calendar: Calendar = Calendar(identifier: .gregorian)) -> [RoutineNotification] {
+        guard enabled else { return [] }
+        let language = VoiceLanguage.from(locale: locale)
+        let bedtime = DateText.time(minutes: bedtimeMinutes, calendar: calendar, locale: locale)
+        return reminderItems(items).compactMap { item in
+            guard let offset = item.offsetMinutes else { return nil }
+            let anchor = anchorMinutes(bedtimeMinutes: bedtimeMinutes, offsetMinutes: offset)
+            let body = offset == 0
+                ? Localized.string("Schlafzeit (\(bedtime))", in: language, bundle: .module)
+                : Localized.string("Noch \(offset) min bis zur Schlafzeit (\(bedtime))", in: language, bundle: .module)
+            return RoutineNotification(id: "\(PlannedNotification.routineIdentifierPrefix)evening.\(item.id.uuidString)",
+                                       hour: anchor / 60, minute: anchor % 60, title: item.title, body: body, route: .routineEvening)
+        }
     }
 
     /// Checked points that still exist; ids of deleted points are ignored.

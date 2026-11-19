@@ -52,6 +52,7 @@ struct TagwerkApp: App {
                     await environment.activateGitHubIfSignedIn()
                     environment.startReconnectWatch()
                     environment.startNotificationUpdates()
+                    environment.startRoutineReminderUpdates()
                     environment.startSnapshotUpdates()
                 }
                 .onChange(of: scenePhase) { _, phase in
@@ -65,6 +66,7 @@ struct TagwerkApp: App {
                             await environment.planning.reload()
                             // The permission may have changed in the iOS settings; the time zone may have changed.
                             await environment.notifications.reschedule()
+                            await environment.routineNotifications.reschedule()
                             // Health entries that could not be written or deleted earlier.
                             await environment.capture.reload()  // follows to the new day after midnight
                             await environment.habits.reload(day: environment.habits.today)

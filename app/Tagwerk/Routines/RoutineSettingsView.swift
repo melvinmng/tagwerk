@@ -5,6 +5,7 @@ import TagwerkCore
 /// consent for suggestions from a thought note.
 struct RoutineSettingsView: View {
     @Environment(AppEnvironment.self) private var environment
+    @Environment(\.openURL) private var openURL
     @State private var editing: ChecklistItem?
     @State private var isAdding = false
 
@@ -16,6 +17,9 @@ struct RoutineSettingsView: View {
             Section {
                 DatePicker("Zielschlafzeit", selection: time($settings.bedtimeMinutes), displayedComponents: .hourAndMinute)
                 Toggle("Erinnerungen am Abend", isOn: $settings.eveningRemindersEnabled)
+                if settings.eveningRemindersEnabled, environment.routineNotifications.authorization != .authorized {
+                    notificationHint
+                }
             } header: {
                 Text("Tagesabschluss")
             }
@@ -97,7 +101,31 @@ struct RoutineSettingsView: View {
             ChecklistItemSheet(store: store, bedtimeMinutes: settings.bedtimeMinutes,
                                item: ChecklistItem(title: "", order: items.count, offsetMinutes: 30), isNew: true)
         }
-        .task { await environment.ai.refreshAccount() }
+        .task {
+            await environment.ai.refreshAccount()
+            // Reads the permission; the hint above follows it.
+            await environment.routineNotifications.reschedule()
+        }
+    }
+
+    /// Without permission the reminders cannot appear; the card and the line in "Planen" stay the way in.
+    @ViewBuilder
+    private var notificationHint: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Label("Mitteilungen sind für Tagwerk nicht erlaubt. Ohne Erlaubnis erinnert nur die Zeile in „Planen“.",
+                  systemImage: "bell.slash")
+                .font(.footnote).foregroundStyle(.secondary)
+            Button(environment.routineNotifications.authorization == .notDetermined ? "Mitteilungen erlauben" : "Mitteilungen in den Einstellungen") {
+                if environment.routineNotifications.authorization == .notDetermined {
+                    Task {
+                        await environment.notifications.requestAuthorization()
+                        await environment.routineNotifications.reschedule()
+                    }
+                } else if let url = URL(string: UIApplication.openNotificationSettingsURLString) {
+                    openURL(url)
+                }
+            }
+        }
     }
 
     /// "60 min vorher · 22:00" or "ohne Erinnerung".

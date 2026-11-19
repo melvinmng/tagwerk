@@ -73,4 +73,61 @@ struct RoutineScheduleTests {
     @Test func gratitude_keepsAtMostThreeNonEmptyEntries() {
         #expect(RoutineDayValue.normalizedGratitude(["  Kaffee ", "", "Sonne", "   ", "Ruhe", "Vierte"]) == ["Kaffee", "Sonne", "Ruhe"])
     }
+
+    // MARK: Evening notifications
+
+    private func noSpaceVariants(_ text: String) -> String {
+        text.replacingOccurrences(of: "\u{202F}", with: " ").replacingOccurrences(of: "\u{00A0}", with: " ")
+    }
+
+    @Test func eveningNotifications_textAndTime() {
+        let handy = item("Handy weglegen", order: 0, offset: 60)
+        let result = RoutineSchedule.eveningNotifications(items: [handy], bedtimeMinutes: 1380, enabled: true,
+                                                          locale: Locale(identifier: "de_DE"))
+        #expect(result.count == 1)
+        #expect(result[0].hour == 22 && result[0].minute == 0)
+        #expect(result[0].title == "Handy weglegen")
+        #expect(result[0].body == "Noch 60 min bis zur Schlafzeit (23:00)")
+        #expect(result[0].route == .routineEvening)
+        #expect(result[0].id == "tagwerk.routine.evening.\(handy.id.uuidString)")
+    }
+
+    @Test func eveningNotifications_atBedtime() {
+        let bed = item("Ins Bett", order: 0, offset: 0)
+        let result = RoutineSchedule.eveningNotifications(items: [bed], bedtimeMinutes: 1380, enabled: true,
+                                                          locale: Locale(identifier: "de_DE"))
+        #expect(result[0].body == "Schlafzeit (23:00)")
+        #expect(result[0].hour == 23 && result[0].minute == 0)
+    }
+
+    @Test func eveningNotifications_english() {
+        let handy = item("Phone away", order: 0, offset: 60)
+        let result = RoutineSchedule.eveningNotifications(items: [handy], bedtimeMinutes: 1380, enabled: true,
+                                                          locale: Locale(identifier: "en_US"))
+        #expect(noSpaceVariants(result[0].body) == "60 min until bedtime (11:00 PM)")
+        let atBedtime = RoutineSchedule.eveningNotifications(items: [item("Bed", order: 0, offset: 0)], bedtimeMinutes: 1380,
+                                                             enabled: true, locale: Locale(identifier: "en_US"))
+        #expect(noSpaceVariants(atBedtime[0].body) == "Bedtime (11:00 PM)")
+    }
+
+    @Test func eveningNotifications_atMostFour_andNoneWhenDisabledOrWithoutItems() {
+        let items = (0..<6).map { item("P\($0)", order: $0, offset: 30 + $0 * 5) }
+        let locale = Locale(identifier: "de_DE")
+        #expect(RoutineSchedule.eveningNotifications(items: items, bedtimeMinutes: 1380, enabled: true, locale: locale).count == 4)
+        #expect(RoutineSchedule.eveningNotifications(items: items, bedtimeMinutes: 1380, enabled: false, locale: locale).isEmpty)
+        #expect(RoutineSchedule.eveningNotifications(items: [], bedtimeMinutes: 1380, enabled: true, locale: locale).isEmpty)
+        #expect(RoutineSchedule.eveningNotifications(items: [item("Ohne", order: 0, offset: nil)], bedtimeMinutes: 1380,
+                                                     enabled: true, locale: locale).isEmpty)
+    }
+
+    @Test func eveningNotifications_wrapAroundMidnight() {
+        let result = RoutineSchedule.eveningNotifications(items: [item("A", order: 0, offset: 90)], bedtimeMinutes: 30, enabled: true,
+                                                          locale: Locale(identifier: "de_DE"))
+        #expect(result[0].hour == 23 && result[0].minute == 0)
+    }
+
+    @Test func routineIdentifierPrefix_isUnderTheTagwerkPrefix() {
+        #expect(PlannedNotification.routineIdentifierPrefix == "tagwerk.routine.")
+        #expect(PlannedNotification.routineIdentifierPrefix.hasPrefix(PlannedNotification.identifierPrefix))
+    }
 }

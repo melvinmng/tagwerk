@@ -8289,6 +8289,36 @@
         }
       }
     },
+    "Mitteilungen erlauben": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Allow notifications"
+          }
+        }
+      }
+    },
+    "Mitteilungen in den Einstellungen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notifications in Settings"
+          }
+        }
+      }
+    },
+    "Mitteilungen sind für Tagwerk nicht erlaubt. Ohne Erlaubnis erinnert nur die Zeile in „Planen“.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notifications are not allowed for Tagwerk. Without permission only the row in Plan reminds you."
+          }
+        }
+      }
+    },
     "Mittel": {
       "localizations": {
         "en": {

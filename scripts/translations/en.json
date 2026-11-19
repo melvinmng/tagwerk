@@ -1465,5 +1465,10 @@
   "Punkte in den Einstellungen anlegen": "Add items in Settings",
   "Schlafzeit %@": "Bedtime %@",
   "Öffnet den Tagesabschluss": "Opens the evening wrap-up",
-  "★ Fokus": "★ Focus"
+  "★ Fokus": "★ Focus",
+  "Mitteilungen erlauben": "Allow notifications",
+  "Mitteilungen in den Einstellungen": "Notifications in Settings",
+  "Mitteilungen sind für Tagwerk nicht erlaubt. Ohne Erlaubnis erinnert nur die Zeile in „Planen“.": "Notifications are not allowed for Tagwerk. Without permission only the row in Plan reminds you.",
+  "Noch %lld min bis zur Schlafzeit (%@)": "%1$lld min until bedtime (%2$@)",
+  "Schlafzeit (%@)": "Bedtime (%@)"
 }
