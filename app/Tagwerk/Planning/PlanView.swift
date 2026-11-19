@@ -109,6 +109,8 @@ struct PlanView: View {
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) { PlanTitleButton(model: model) }
                     .sharedBackgroundVisibility(.hidden)
+                // Search and ＋ share one glass area; the assistant stays apart on the outside.
+                ToolbarItem(placement: .topBarTrailing) { SearchButton() }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button { creatingEvent = true } label: { Label("Neuer Termin", systemImage: "plus") }
                 }

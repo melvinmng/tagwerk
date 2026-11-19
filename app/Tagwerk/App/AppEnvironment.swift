@@ -59,6 +59,14 @@ final class AppEnvironment {
     let mealEstimator: MealEstimator
     /// Writes the snapshot file the widget reads (phase 4); `directory == nil` in tests and unsigned builds.
     let snapshotWriter: WidgetSnapshotWriter
+    /// Reads events for the search away from the main thread; its own read-only store.
+    let eventSearcher: any EventSearching
+    /// Reminders as tasks; also the source of the completed ones for the search.
+    private let remindersProvider: RemindersTaskProvider
+    /// The search sheet is open. Set through `openSearch()`; assistant, notifications and links close it.
+    var isSearchPresented = false
+    /// The model of the open (or last) search sheet; it holds nothing after `close()`.
+    @ObservationIgnored private(set) var activeSearch: SearchModel?
     /// A tab another view asks to show (e.g. "Mit KI planen" from the task list jumps to "Planen").
     var requestedTab: Int?
     /// Pages on top of the task list (shopping list, notes); a deep link sets it to open the shopping list.
@@ -79,7 +87,7 @@ final class AppEnvironment {
     /// EventKit gateway; tests and demo data pass fakes.
     init(modelContainer: ModelContainer, notificationCenter: (any NotificationCenterClient)? = nil,
          health: (any HealthStoring)? = nil, snapshotWriter: WidgetSnapshotWriter? = nil,
-         reminderStore: (any ReminderStore)? = nil) throws {
+         reminderStore: (any ReminderStore)? = nil, eventSearcher: (any EventSearching)? = nil) throws {
         self.modelContainer = modelContainer
         self.snapshotWriter = snapshotWriter ?? WidgetSnapshotWriter(directory: nil, reload: {})
         let context = modelContainer.mainContext
@@ -93,6 +101,8 @@ final class AppEnvironment {
         self.settings = settings
         self.gateway = gateway
         self.reminderStore = reminderStore
+        self.eventSearcher = eventSearcher ?? EventSearchReader()
+        self.remindersProvider = reminders
         self.notes = NoteStore(context: context)
         let shoppingCategories = ShoppingCategoryStore(context: context, settings: settings)
         self.shoppingCategories = shoppingCategories
@@ -310,6 +320,50 @@ final class AppEnvironment {
         scheduleSnapshot()
     }
 
+    // MARK: Search
+
+    /// Opens the search sheet with a fresh model; the previous one is closed.
+    func openSearch() {
+        activeSearch?.close()
+        activeSearch = makeSearchModel()
+        isSearchPresented = true
+    }
+
+    /// Closes the sheet and stops the model; what it loaded is dropped.
+    func closeSearch() {
+        isSearchPresented = false
+        activeSearch?.close()
+    }
+
+    /// Wires a search model to the app's sources. Tasks are read from the loaded list, events through the
+    /// search reader in the calendars "Planen" reads, completed reminders of the last 12 months and all
+    /// completed local tasks on demand.
+    func makeSearchModel() -> SearchModel {
+        let planning = self.planning
+        let taskList = self.taskList
+        let settings = self.settings
+        let reminderStore = self.reminderStore
+        let searcher = self.eventSearcher
+        let reminders = self.remindersProvider
+        let sources = SearchSources(
+            openTasks: { sortedTasks(taskList.items, calendar: planning.calendar) },
+            events: { interval in
+                guard reminderStore.calendarAccessState == .fullAccess else { return nil }
+                let raw = await searcher.events(in: interval, calendarIDs: planning.readableCalendarIDs())
+                return SearchEvents.prepare(raw, planCalendarID: settings.planCalendarID, merge: settings.mergeDuplicateEvents)
+            },
+            calendarNames: { Dictionary(planning.eventCalendars.map { ($0.id, $0.title) }, uniquingKeysWith: { first, _ in first }) },
+            completedTasks: { [weak self] in
+                let now = Date.now
+                let start = Calendar.tagwerk.date(byAdding: .month, value: -12, to: now) ?? now
+                // The end lies slightly ahead, so a reminder completed this very moment is not cut off.
+                let interval = DateInterval(start: start, end: now.addingTimeInterval(60))
+                let local = (self?.taskList.provider(for: .local) as? LocalTaskProvider)?.completedTasks() ?? []
+                return await reminders.completedTasks(in: interval) + local
+            })
+        return SearchModel(sources: sources, calendar: planning.calendar)
+    }
+
     func restartSetup() {
         settings.setupCompleted = false
     }
@@ -351,6 +405,8 @@ final class AppEnvironment {
                 // EventKit changes concern Reminders only; GitHub and local tasks stay as they are.
                 await self?.taskList.reload(only: [.reminders])
                 await self?.planning.reload()
+                // The open search fetches its events again.
+                self?.activeSearch?.eventStoreChanged()
                 // The shopping list follows here, because the stream has room for one consumer only.
                 await self?.shopping.reload()
                 // Deadline calendar events may have changed; this is the only consumer of `changes`.

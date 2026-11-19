@@ -16,6 +16,10 @@ struct RootView: View {
         Binding(get: { environment.assistant.isPresented }, set: { environment.assistant.isPresented = $0 })
     }
 
+    private var searchPresented: Binding<Bool> {
+        Binding(get: { environment.isSearchPresented }, set: { environment.isSearchPresented = $0 })
+    }
+
     struct RecurringEdit: Identifiable {
         var id: String { item.reminderID + "\(day)" }
         let item: RecurringItem
@@ -56,9 +60,16 @@ struct RootView: View {
         .sheet(isPresented: assistantPresented) {
             ChatView(assistant: environment.assistant)
         }
+        .sheet(isPresented: searchPresented, onDismiss: { environment.closeSearch() }) {
+            if let model = environment.activeSearch {
+                SearchSheet(model: model,
+                            onShowDay: { day in environment.closeSearch(); showDay(day) },
+                            onShowTask: { id in environment.closeSearch(); showTask(id) })
+            }
+        }
         .onChange(of: environment.assistant.isPresented) { _, presented in
             // The chat is its own sheet over the tabs; other sheets close first.
-            if presented { editingTask = nil; openEvent = nil; recurringEdit = nil }
+            if presented { editingTask = nil; openEvent = nil; recurringEdit = nil; environment.closeSearch() }
         }
         .onChange(of: environment.notificationNavigator.receivedCount) { _, _ in openNotificationTarget() }
         .onChange(of: environment.router.receivedCount) { _, _ in openRouterTarget() }
@@ -123,6 +134,7 @@ struct RootView: View {
         editingTask = nil
         openEvent = nil
         recurringEdit = nil
+        environment.closeSearch()
         environment.assistant.isPresented = false
         switch route {
         case .task(let id): showTask(id)
@@ -137,6 +149,7 @@ struct RootView: View {
         editingTask = nil
         openEvent = nil
         recurringEdit = nil
+        environment.closeSearch()
         environment.assistant.isPresented = false
         switch request.route {
         case .planToday: showDay(environment.planning.today)

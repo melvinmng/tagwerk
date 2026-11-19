@@ -123,6 +123,9 @@ struct TaskListView: View {
                         Button(selection == all ? "Keine" : "Alle") { selection = selection == all ? [] : all }
                     }
                 }
+                if !isSelecting {
+                    ToolbarItem(placement: .topBarTrailing) { SearchButton() }
+                }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button { isCreating = true } label: { Label("Neue Aufgabe", systemImage: "plus") }
                 }

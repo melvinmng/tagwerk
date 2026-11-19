@@ -13,6 +13,22 @@ struct PlanHeaderTextTests {
         PlanHeaderText.caption(scope: scope, anchor: anchor, today: today, range: range ?? anchor...anchor, calendar: calendar)
     }
 
+    @Test func titleCandidates_shortenWithoutEllipsis() {
+        let thursday = PlanDay(year: 2026, month: 11, day: 19)
+        #expect(PlanHeaderText.titleCandidates(scope: .day, anchor: thursday, range: thursday...thursday, calendar: calendar)
+                == ["Donnerstag, 19. Nov.", "Do. 19. Nov.", "19. Nov."])
+        #expect(PlanHeaderText.titleCandidates(scope: .week, anchor: today, range: week, calendar: calendar)
+                == ["16.–22. Nov.", "16.–22.11."])
+        #expect(PlanHeaderText.titleCandidates(scope: .month, anchor: today, range: week, calendar: calendar) == ["November", "Nov"])
+    }
+
+    @Test func titleCandidates_startWithTheFullTitle() {
+        for scope in PlanScope.allCases {
+            let candidates = PlanHeaderText.titleCandidates(scope: scope, anchor: today, range: week, calendar: calendar)
+            #expect(candidates.first == PlanHeaderText.title(scope: scope, anchor: today, range: week, calendar: calendar))
+        }
+    }
+
     @Test func dayCaption_relativeDays() {
         #expect(caption(.day, today) == "HEUTE · KW 47")
         #expect(caption(.day, PlanDay(year: 2026, month: 11, day: 19)) == "MORGEN · KW 47")

@@ -4564,6 +4564,16 @@
         }
       }
     },
+    "Durchsucht Termine und Aufgaben": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Searches events and tasks"
+          }
+        }
+      }
+    },
     "Durchsucht Termine, Aufgaben, Notizen und die Einkaufsliste.": {
       "localizations": {
         "en": {

@@ -17,6 +17,8 @@ final class InMemoryReminderStore: ReminderStore {
     var failingDeleteIDs: Set<String> = []
     private(set) var createCount = 0
     private(set) var saveCount = 0
+    /// The periods `completedReminders` was asked for.
+    private(set) var completedIntervals: [DateInterval] = []
 
     init(lists: [ListInfo] = [], records: [ReminderRecord] = [], defaultList: String? = nil,
          now: @escaping () -> Date = Date.init) {
@@ -38,7 +40,8 @@ final class InMemoryReminderStore: ReminderStore {
     }
 
     func completedReminders(in interval: DateInterval, listIDs: Set<String>) async -> [ReminderRecord] {
-        records.values
+        completedIntervals.append(interval)
+        return records.values
             .filter { record in
                 guard record.isCompleted, listIDs.contains(record.listID), let date = record.completedAt else { return false }
                 return interval.contains(date)

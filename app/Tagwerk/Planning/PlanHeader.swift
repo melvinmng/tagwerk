@@ -24,6 +24,26 @@ enum PlanHeaderText {
         }
     }
 
+    /// The title in decreasing length, longest first; the first is `title(...)`. The header shows the longest one
+    /// that fits, so the title is never cut off with an ellipsis:
+    /// day "Donnerstag, 19. Nov." → "Do. 19. Nov." → "19. Nov.", week "16.–22. Nov." → "16.–22.11.", month "November" → "Nov".
+    static func titleCandidates(scope: PlanScope, anchor: PlanDay, range: ClosedRange<PlanDay>, calendar: Calendar) -> [String] {
+        let start = anchor.startDate(in: calendar)
+        var candidates = [title(scope: scope, anchor: anchor, range: range, calendar: calendar)]
+        switch scope {
+        case .day:
+            candidates.append(start.formatted(.dateTime.weekday(.abbreviated).day().month(.abbreviated)))
+            candidates.append(start.formatted(.dateTime.day().month(.abbreviated)))
+        case .week:
+            let first = range.lowerBound.startDate(in: calendar), last = range.upperBound.startDate(in: calendar)
+            candidates.append((first..<last).formatted(.interval.day().month(.twoDigits)))
+        case .month:
+            candidates.append(start.formatted(.dateTime.month(.abbreviated)))
+        }
+        var seen = Set<String>()
+        return candidates.filter { seen.insert($0).inserted }
+    }
+
     /// Day "HEUTE · KW 47", week "DIESE WOCHE · KW 47", month "DIESER MONAT · 2026".
     static func caption(scope: PlanScope, anchor: PlanDay, today: PlanDay, range: ClosedRange<PlanDay>, calendar: Calendar) -> String {
         let week = calendar.component(.weekOfYear, from: anchor.startDate(in: calendar))
@@ -69,8 +89,15 @@ struct PlanTitleButton: View {
         let caption = PlanHeaderText.caption(scope: model.scope, anchor: model.anchor, today: model.today,
                                              range: model.range, calendar: model.calendar)
         let title = PlanHeaderText.title(scope: model.scope, anchor: model.anchor, range: model.range, calendar: model.calendar)
+        let candidates = PlanHeaderText.titleCandidates(scope: model.scope, anchor: model.anchor, range: model.range,
+                                                        calendar: model.calendar)
         Button { picking = true } label: {
-            PageTitleLabel(caption: caption, title: title, isCurrent: current).fixedSize()
+            // The longest form that fits; VoiceOver always reads the full one.
+            ViewThatFits(in: .horizontal) {
+                ForEach(candidates, id: \.self) { candidate in
+                    PageTitleLabel(caption: caption, title: candidate, isCurrent: current, titleScales: false).fixedSize()
+                }
+            }
         }
         .buttonStyle(.plain)
         .accessibilityElement(children: .ignore)

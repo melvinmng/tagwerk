@@ -1363,5 +1363,6 @@
   "vor %lld Tagen": "%lld days ago",
   "wöchentlich": "weekly",
   "Ältere Termine durchsuchen": "Search older events",
-  "✓ Erledigte": "✓ Completed"
+  "✓ Erledigte": "✓ Completed",
+  "Durchsucht Termine und Aufgaben": "Searches events and tasks"
 }
