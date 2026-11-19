@@ -132,12 +132,51 @@ Jeder Schritt: Test schreiben, Fehlschlag sehen, umsetzen, Paket- bzw. App-Tests
 8. **Ansichten und Texte:** `RecurrenceEditorView`, Zeilen in Editor und „Neue Aufgabe“, Rückfrage, Lokalisierung (`LocalizedTests` deckt fehlende Übersetzungen auf).
 9. **Prüfung am Gerät:** Regel in Tagwerk anlegen, in der Erinnerungen-App ansehen und umgekehrt; abhaken und Weiterrücken beobachten; Regel ändern mit vorhandenen Blöcken. Erst danach gilt die Funktion als geprüft.
 
-## 9. Stufe 2 (Skizze): lokale Aufgaben
+## 9. Stufe 2: lokale Aufgaben
+
+**Status:** Gebaut am 19.11.2026 auf `feature/local-recurrence` (Freigabe durch den Nutzer). Am Gerät noch nicht geprüft.
+
+Skizze (Stand der Freigabe):
 
 - `LocalTask.recurrenceData: Data?` (optional, wie die Schema-Regel verlangt); `LocalTaskProvider` liest und schreibt das Feld und nimmt `.recurrence` in `editableFields` auf.
 - Abhaken einer Serie setzt die Fälligkeit auf `nextOccurrence` nach dem aktuellen Termin, senkt eine Anzahl und lässt die Aufgabe offen; ohne weiteren Termin wird sie erledigt. „Rückgängig“ stellt Fälligkeit und Anzahl wieder her.
 - Wochenrückschau: erledigte Vorkommen brauchen einen eigenen Eintrag, weil `completedAt` nur einmal je Aufgabe existiert (`LocalTask.swift:23–24`).
 - `PlanningModel`, `RecurringItem` und `RecurringEffortStore` von `reminderID` auf eine quellenunabhängige Kennung umstellen; vorhandene Einträge müssen lesbar bleiben.
+
+### 9.1 Umsetzung
+
+| Teil | Umsetzung | Fundstelle |
+|---|---|---|
+| Weiterrücken | `advancedSeries(due:recurrence:calendar:)`: Serie beginnt am aktuellen Fälligkeitstag, neue Fälligkeit ist der erste Termin danach (Uhrzeit bleibt), eine Anzahl sinkt um die durchlaufenen Termine; `nil`, wenn kein Termin folgt. | `TagwerkCore/Recurrence.swift` |
+| Speicher | `LocalTask.recurrenceData` (JSON von `Recurrence`); beim Lesen folgt `start` dem Fälligkeitsdatum, ohne Fälligkeit gibt es keine Regel. Neues Modell `LocalOccurrenceCompletion` (Aufgabe, Zeitpunkt, Fälligkeit und Anzahl davor, Revision danach) im Schema, Speicher weiter außerhalb der App Group. | `Persistence/LocalTask.swift`, `ModelContainerFactory.swift` |
+| Schreiben | Regeln wie bei Erinnerungen: Regel ohne Fälligkeit wird abgelehnt, Fälligkeit aus entfernt die Regel, `.unsupported` und ungültige Regeln werden nie gespeichert; `.recurrence` in `editableFields`. | `Persistence/LocalTaskProvider.swift` |
+| Abhaken | Mit weiterem Termin: Fälligkeit und Anzahl rücken weiter, Aufgabe bleibt offen, ein `LocalOccurrenceCompletion` wird angelegt. Letzter Termin: erledigt wie bisher (`completedAt`), Fälligkeit und Anzahl bleiben stehen. | `LocalTaskProvider.setCompleted` |
+| Rückgängig | `isCompleted = false` auf einer offenen Serie stellt Fälligkeit und Anzahl aus dem letzten Eintrag wieder her und löscht ihn, aber nur, wenn die Aufgabe seit dem Abhaken unverändert ist (Revision). Die Liste schickt dafür wie bisher die Version nach dem Abhaken. | `LocalTaskProvider.undoLastOccurrence`, `TaskListModel.undoComplete` |
+| Liste | `complete` entfernt nur erledigte Aufgaben; eine weitergerückte Serie bleibt mit neuer Fälligkeit stehen. `onCompletionChanged` wird auch dann gemeldet (auch über `applyReturning`, also für den Assistenten). | `Tasks/TaskListModel.swift` |
+| Wochenrückschau | `completionDates` = `completedAt` erledigter Aufgaben + alle `LocalOccurrenceCompletion` im Zeitraum; jedes Vorkommen zählt einmal. | `LocalTaskProvider.completionDates` |
+| Planung | `RecurringSeries` (TaskID, Titel, Regel) aus Erinnerungen mit Regel und offenen Aufgaben anderer Quellen mit Regel, je TaskID einmal. `recurringTaskIDs: Set<TaskID>`, `RecurringItem.taskID`, `recurrenceRules`/`recurrences` je TaskID; Reservierung, Abzug durch Blöcke, KI-Last, „Von heute übrig“, Sitzungsfenster, `blocksOffSeries` und `didChangeCompletion` gelten damit für beide Quellen. | `Planning/PlanningModel.swift` |
+| Aufwand der Serie | `RecurringEffortStore` arbeitet mit `TaskID` und speichert `TaskID.key` in den bestehenden Attributen `reminderID` (keine Umbenennung, kein Schema-Risiko). Einträge mit bloßer Erinnerungs-ID werden beim Öffnen des Speichers einmalig auf `reminders:<ID>` umgeschrieben (auch die eindeutigen Schlüssel der Tageswerte und erledigten Termine). | `Planning/RecurringEffortStore.swift` |
+| Oberfläche | Zeile „Wiederholen“ im Editor über `editableFields`; in „Neue Aufgabe“ für „Lokal“ freigegeben (GitHub bleibt deaktiviert) mit dem Hinweis „Nur in Tagwerk. Beim Abhaken rückt die Aufgabe auf den nächsten Termin.“; ↻ in der Liste über `recurringTaskIDs`. | `Editor/RecurrenceEditorModel.swift`, `Tasks/NewTaskSheet.swift`, `Tasks/TaskListView.swift` |
+| Mitteilungen, Widget, KI | Keine eigene Behandlung von Wiederholungen bei Erinnerungen gefunden; eine lokale Serie verhält sich dort wie eine einzelne Aufgabe mit ihrer aktuellen Fälligkeit. Die KI-Planung setzt wie bei Erinnerungen den Aufwand der Serie statt der Schätzung ein (`AIPlanner.makeInput` über `recurringItem`). | – |
+| Demodaten | „Pflanzen gießen“ alle 3 Tage ab heute (nur Simulator, einmalig angelegt). | `App/DemoData.swift` |
+
+**Tests:** `RecurrenceAdvanceTests` (10, TagwerkCore); `LocalTaskRecurrenceTests` (13), `RecurringLocalCompletionTests` (3), `RecurringEffortStoreTests` (5), `RecurringEffortMigrationTests` (3, Altbestand), neue Fälle in `PlanningModelTests` (7), `TaskEditorRecurrenceTests` (1), `RecurrenceAvailabilityTests`, `LocalizedTests`.
+
+**Entscheidungen und Abweichungen von der Skizze:**
+
+- Die Anzahl zählt die verbleibenden Termine ab der aktuellen Fälligkeit, wie `occurrences` sie ab `start` zählt. Liegt die Fälligkeit nicht auf einem Termin der Regel, verbraucht das Abhaken keine Anzahl.
+- Das Erledigt-Protokoll ist ein eigenes Modell statt eines Felds an `LocalTask`; es bleibt beim Löschen der Aufgabe erhalten, damit die Wochenrückschau vergangene Vorkommen weiter zählt.
+- Wird eine lokale Aufgabe zur Serie, ersetzt im Editor und in der Planung der Aufwand der Serie die Schätzung (wie bei Erinnerungen); `estimateMinutes` bleibt gespeichert, zählt aber nicht.
+- „Erledigt“ im Editor rückt eine Serie ebenfalls weiter; `didSave` meldet dabei keine Erledigung an die Planung. Das hat keine Folge für die Reservierung, weil der heutige Termin nach dem Weiterrücken nicht mehr zur Serie gehört.
+
+**Prüfung am Gerät (offen):**
+
+1. Vorhandene Installation aktualisieren: App startet mit dem neuen Attribut und dem neuen Modell, lokale Aufgaben und Aufwände wiederkehrender Erinnerungen („Aufwand ändern …“) sind unverändert.
+2. Lokale Aufgabe mit Regel anlegen („Neue Aufgabe“ → Lokal → Wiederholen), Hinweis sichtbar; Regel im Editor ändern und entfernen; „Fällig“ aus entfernt die Regel.
+3. Abhaken: Aufgabe bleibt mit nächstem Termin und gleicher Uhrzeit stehen; „Rückgängig“ stellt Datum und Anzahl wieder her; bei „Nach Anzahl“ verschwindet sie nach dem letzten Termin.
+4. Planung: Aufwand der Serie setzen („Nur dieser Tag“, „Alle“), Reservierung an den Tagen der Serie, ↻ in der Liste.
+5. Wochenrückschau zählt jedes abgehakte Vorkommen einmal.
+6. Mitteilung zur Fälligkeit folgt dem neuen Termin nach dem Abhaken.
 
 ## 10. Risiken
 
