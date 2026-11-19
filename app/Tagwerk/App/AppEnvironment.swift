@@ -257,7 +257,7 @@ final class AppEnvironment {
             notes: notes, hasConsent: { settings.noteSuggestionConsent },
             context: {
                 NoteSuggestionContext.make(taskList: taskList, planning: planning,
-                                           events: { gateway.events(in: $0, calendarIDs: nil) },
+                                           events: { gateway.events(in: $0, calendarIDs: planning.readableCalendarIDs()) },
                                            planCalendarID: settings.planCalendarID, now: .now)
             })
     }

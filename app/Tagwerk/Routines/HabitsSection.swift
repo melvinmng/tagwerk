@@ -21,14 +21,15 @@ struct HabitsSection: View {
                 HabitRow(row: row, model: model, capture: capture) { sheet = row.habit }
             }
         } header: {
+            // The sheets hang on this one view: on the section they would apply to every row.
             HStack {
                 Text(HabitText.header(counter))
                 Spacer()
                 if !model.habits.isEmpty { Button("Bearbeiten", action: onEdit).textCase(nil) }
             }
+            .sheet(item: $sheet) { habit in HabitSheet(model: model, habit: habit) }
+            .sheet(isPresented: $creating) { HabitSheet(model: model, habit: nil) }
         }
-        .sheet(item: $sheet) { habit in HabitSheet(model: model, habit: habit) }
-        .sheet(isPresented: $creating) { HabitSheet(model: model, habit: nil) }
     }
 
     /// "3 von 5" for the shown day; nothing without a row.

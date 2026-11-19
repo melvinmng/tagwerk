@@ -40,7 +40,8 @@ final class IntentServices {
     func checkHabit(id: UUID) async -> LocalizedStringResource {
         let habits = environment.habits
         // Best effort: Health may be unreadable here; the counter then keeps its last value (see `AppEnvironment`).
-        await habits.reload(day: habits.today)
+        // Keeps the day the tab shows; the check below is always for today.
+        await habits.reload()
         guard let habit = habits.habits.first(where: { $0.id == id }),
               HabitRules.isActive(habit, on: habits.today, today: habits.today) else {
             return "Diese Gewohnheit gibt es nicht mehr."

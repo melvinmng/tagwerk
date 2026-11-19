@@ -70,7 +70,7 @@ struct TagwerkApp: App {
                             await environment.routineNotifications.reschedule()
                             // Health entries that could not be written or deleted earlier.
                             await environment.capture.reload()  // follows to the new day after midnight
-                            await environment.habits.reload(day: environment.habits.today)
+                            await environment.habits.reload(day: environment.capture.day)
                             await environment.capture.syncPending()
                         }
                     case .background:
@@ -82,7 +82,7 @@ struct TagwerkApp: App {
                             await environment.notifications.reschedule()
                             // Health entries that could not be written or deleted earlier.
                             await environment.capture.reload()  // follows to the new day after midnight
-                            await environment.habits.reload(day: environment.habits.today)
+                            await environment.habits.reload(day: environment.capture.day)
                             await environment.capture.syncPending()
                             // Again after the reload, in case Health catch-up or the new day changed something.
                             environment.writeSnapshot()

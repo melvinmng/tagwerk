@@ -148,6 +148,17 @@ struct IntentServicesTests {
         #expect(services.activeHabits().map(\.id) == [active.id])
     }
 
+    @Test func checkHabit_keepsTheDayShownInCapture() async throws {
+        let (services, environment) = try make()
+        let habit = addHabit(environment)
+        let past = environment.habits.today.adding(days: -1, calendar: environment.habits.calendar)
+        environment.habits.show(past)
+        _ = await services.checkHabit(id: habit.id)
+        // Siri checks today; the section keeps showing the day the tab shows.
+        #expect(environment.habits.day == past)
+        #expect(environment.habits.facts.manualChecks[habit.id] == [environment.habits.today])
+    }
+
     @Test func backgroundSnapshot_withoutHealthFacts_neverLowersTheCounter() async throws {
         let (services, environment) = try make()
         let today = environment.habits.today
