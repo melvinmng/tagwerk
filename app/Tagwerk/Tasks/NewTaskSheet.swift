@@ -37,6 +37,8 @@ struct NewTaskSheet: View {
     @State private var projectsEdited = false
     @State private var gitHubError: String?
     @State private var assignees: Set<String>
+    /// The user changed the people; until then the draft keeps the default "Ich" (`nil`).
+    @State private var assigneesChosen = false
     @State private var assigneeLoad: AssigneeLoad = .idle
     @State private var recurrence: Recurrence?
 
@@ -93,7 +95,9 @@ struct NewTaskSheet: View {
                         ProjectSelectionRow(projects: (catalog?.projects ?? []).map { (id: $0.id, title: $0.title) },
                                             selection: $projectIDs, edited: $projectsEdited)
                         AssigneeSelectionRow(candidates: assigneeCandidates, me: gitHub?.login, load: assigneeLoad,
-                                             selection: $assignees, isEnabled: repository != nil)
+                                             selection: Binding(get: { assignees },
+                                                                set: { assignees = $0; assigneesChosen = true }),
+                                             isEnabled: repository != nil, showsDefaultMe: !assigneesChosen)
                     } footer: {
                         if let gitHubError {
                             Text(gitHubError)
@@ -175,7 +179,7 @@ struct NewTaskSheet: View {
             recurrence: RecurrenceAvailability.draftRecurrence(
                 recurrence, target: target,
                 due: hasDue ? DueDate(date: dueDate, includeTime: false, calendar: model.calendar) : nil),
-            assignees: target == .github ? selectedAssignees : nil
+            assignees: target == .github ? AssigneeSelection.draftAssignees(selected: selectedAssignees, chosen: assigneesChosen) : nil
         )
         let errorBefore = model.lastError
         await model.create(draft, in: target)
@@ -230,9 +234,13 @@ extension NewTaskSheet {
         }
     }
 
+    /// Stands for the signed-in user in the footer while nothing was chosen (the login may not be known yet).
+    private static let defaultAssigneeMarker = "me"
+
     /// Says before saving who gets the issue; a missing project choice comes first.
     private var gitHubFooter: String {
-        let assignment = AssigneeSelection.footer(selected: selectedAssignees, me: gitHub?.login)
+        let assignment = assigneesChosen ? AssigneeSelection.footer(selected: selectedAssignees, me: gitHub?.login)
+            : AssigneeSelection.footer(selected: [Self.defaultAssigneeMarker], me: Self.defaultAssigneeMarker)
         guard repository != nil, projectIDs.isEmpty, !(catalog?.projects.isEmpty ?? true) else { return assignment }
         return String(localized: "Mindestens ein Projekt wählen.") + " " + assignment
     }
@@ -241,6 +249,7 @@ extension NewTaskSheet {
     /// the signed-in user, also after an own choice, so an issue never goes to the people of another repository.
     private func loadAssignees() async {
         assignees = Set([gitHub?.login].compactMap { $0 })
+        assigneesChosen = false
         guard let repository, let gitHub else {
             assigneeLoad = .idle
             return

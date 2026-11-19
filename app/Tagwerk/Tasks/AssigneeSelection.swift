@@ -21,6 +21,13 @@ enum AssigneeSelection {
         return mine + others
     }
 
+    /// People of the draft. Until the user chose, the default "Ich" travels as `nil`: the provider then assigns the
+    /// signed-in user, also when the login was not known yet while the sheet was open. An explicit choice, even
+    /// "Niemand", is sent as it is.
+    static func draftAssignees(selected: [String], chosen: Bool) -> [String]? {
+        chosen ? selected : nil
+    }
+
     /// Collapsed value of the row: "Niemand", "Ich", "Ich, lea-m", from three people on the count.
     static func value(selected: [String], me: String?) -> String {
         switch selected.count {
@@ -117,6 +124,8 @@ struct AssigneeSelectionRow: View {
     let load: AssigneeLoad
     @Binding var selection: Set<String>
     var isEnabled = true
+    /// Nothing was chosen yet: the draft goes to the signed-in user, even if the login is not known yet.
+    var showsDefaultMe = false
 
     private var selected: [String] { candidates.filter(selection.contains) }
 
@@ -143,7 +152,7 @@ struct AssigneeSelectionRow: View {
         } label: {
             LabeledContent {
                 HStack(spacing: 4) {
-                    Text(AssigneeSelection.value(selected: selected, me: me))
+                    Text(showsDefaultMe ? String(localized: "Ich") : AssigneeSelection.value(selected: selected, me: me))
                     Image(systemName: "chevron.up.chevron.down").imageScale(.small)
                 }
                 .lineLimit(1)
@@ -156,7 +165,7 @@ struct AssigneeSelectionRow: View {
         .menuActionDismissBehavior(.disabled)
         .disabled(!isEnabled)
         .accessibilityLabel("Zugewiesen")
-        .accessibilityValue(selected.isEmpty ? String(localized: "Niemand")
+        .accessibilityValue(showsDefaultMe ? String(localized: "Ich") : selected.isEmpty ? String(localized: "Niemand")
             : selected.map { AssigneeSelection.isMe($0, me: me) ? String(localized: "Ich") : $0 }.formatted(.list(type: .and)))
         .accessibilityHint("Mehrfachauswahl")
     }

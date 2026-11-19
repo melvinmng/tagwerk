@@ -20,6 +20,17 @@ struct AssigneeSelectionTests {
         #expect(AssigneeSelection.ordered(candidates: ["b", "a"], me: nil) == ["a", "b"])
     }
 
+    @Test func draftAssignees_untouchedDefaultStaysNil_soTheProviderAssignsTheViewer() {
+        // Also while the login is unknown: an empty selection that nobody chose must never become "nobody".
+        #expect(AssigneeSelection.draftAssignees(selected: [], chosen: false) == nil)
+        #expect(AssigneeSelection.draftAssignees(selected: ["octo"], chosen: false) == nil)
+    }
+
+    @Test func draftAssignees_explicitChoiceIsSentAsIs_includingNobody() {
+        #expect(AssigneeSelection.draftAssignees(selected: [], chosen: true) == [])
+        #expect(AssigneeSelection.draftAssignees(selected: ["lea-m"], chosen: true) == ["lea-m"])
+    }
+
     @Test func value_cases() {
         #expect(AssigneeSelection.value(selected: [], me: me) == "Niemand")
         #expect(AssigneeSelection.value(selected: ["octo"], me: me) == "Ich")
