@@ -161,7 +161,10 @@ struct EntrySheet: View {
         }
 
         Section {
-            if isBlock && model.linkedTask(eventID: event.id) != nil { FocusStartButton(block: event) }
+            if let linked = model.linkedTask(eventID: event.id) {
+                // A linked calendar event starts the timer for its task; a time block also sizes the session to the block.
+                if isBlock { FocusStartButton(block: event) } else { FocusStartButton(task: linked) }
+            }
             if isBlock && model.linkedTask(eventID: event.id) != nil { duplicateRow(event) }
             if isBlock { Button("Auf anderen Tag …") { movingDay = true } }
             if event.isEditable && !event.isInvitation {

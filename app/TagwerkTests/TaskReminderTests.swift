@@ -44,6 +44,19 @@ struct TaskReminderTests {
         #expect(!reminders.hasChanges)
     }
 
+    @Test func editor_showsTheDefaultOfTheTaskSource() {
+        var perSource = defaults
+        perSource.set([.before(amount: 1, unit: .days)], for: .githubIssue, isAllDay: false)
+        perSource.set([.before(amount: 30, unit: .minutes)], for: .appleReminder, isAllDay: false)
+        for (source, expected) in [(TaskSource.github, ReminderOffset.before(amount: 1, unit: .days)),
+                                   (.reminders, .before(amount: 30, unit: .minutes)), (.local, .before(amount: 2, unit: .hours))] {
+            let item = task("Eintrag", source: source)
+            let reminders = TaskReminderModel(item: item, overrides: overrides, reminderStore: nil, defaults: perSource)
+            #expect(reminders.list.isUsingDefault)
+            #expect(reminders.list.displayed == [expected])
+        }
+    }
+
     @Test func save_githubTask_storesTagwerkOverride() async {
         let item = task("Issue", source: .github)
         let (model, reminders, provider) = editor(item)

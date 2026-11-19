@@ -510,6 +510,15 @@ struct LinkSuggestionTests {
         #expect(!TaskContextMenu.showsAIEntries(isSignedIn: false))
     }
 
+    @Test func contextMenu_offersFocusStart_forOpenTasksOfEverySource() {
+        for source in TaskSource.allCases {
+            var item = makeTask("Aufgabe", source: source)
+            #expect(TaskContextMenu.showsFocusStart(for: item))
+            item.isCompleted = true
+            #expect(!TaskContextMenu.showsFocusStart(for: item))
+        }
+    }
+
 }
 
 @MainActor

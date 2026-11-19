@@ -34,6 +34,9 @@ struct TaskContextMenu: View {
     /// The AI entries appear only with a ChatGPT sign-in (mockup d: order dates, AI, done, destructive).
     static func showsAIEntries(isSignedIn: Bool) -> Bool { isSignedIn }
 
+    /// "Fokus starten" is offered for every open task, from every list that shows this menu.
+    static func showsFocusStart(for item: TaskItem) -> Bool { !item.isCompleted }
+
     /// The day "Mit KI planen" plans: the day the Planen day view shows, if it is today or later, else today
     /// (plan-tomorrow, F8). Menus outside the day view pass no day.
     static func aiPlanAnchor(shownDay: PlanDay?, today: PlanDay) -> PlanDay {
@@ -79,6 +82,9 @@ struct TaskContextMenu: View {
                     toggleFocus()
                 }
             }
+        }
+        if Self.showsFocusStart(for: item) {
+            Section { FocusStartButton(task: item) }
         }
         if actions.createBlock != nil || actions.unassign != nil || actions.editEffort != nil {
             Section {

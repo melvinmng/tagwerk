@@ -381,6 +381,27 @@ struct BackupTests {
         #expect(override.offsets == [.before(amount: 2, unit: .days)])
     }
 
+    /// A backup from before every task source got its own default list holds one list "task"; it applies to all three.
+    @Test func backupWithFormerTaskDefaults_restoresToEveryTaskKind() throws {
+        let data = try backup.makeBackupData()
+        var object = try #require(try JSONSerialization.jsonObject(with: data) as? [String: Any])
+        var entities = try #require(object["entities"] as? [String: Any])
+        var settings = try #require(entities["settings"] as? [String: Any])
+        var former = ReminderDefaults()
+        former.set([.before(amount: 3, unit: .hours)], for: .localTask, isAllDay: false)
+        let formerJSON = String(decoding: former.encoded(), as: UTF8.self).replacingOccurrences(of: "\"localTask\"", with: "\"task\"")
+        #expect(formerJSON.contains("\"task\""))
+        settings["reminderDefaultsData"] = Data(formerJSON.utf8).base64EncodedString()
+        entities["settings"] = settings
+        object["entities"] = entities
+        let old = try JSONSerialization.data(withJSONObject: object)
+        let target = try makeTarget()
+        try target.service.restore(try target.service.inspect(old))
+        for kind in [ReminderKind.localTask, .githubIssue, .appleReminder] {
+            #expect(target.settings.reminderDefaults.offsets(for: kind, isAllDay: false) == [.before(amount: 3, unit: .hours)])
+        }
+    }
+
     @Test func oldBackupWithoutReminderFields_restores() throws {
         let data = try backup.makeBackupData()
         var object = try #require(try JSONSerialization.jsonObject(with: data) as? [String: Any])

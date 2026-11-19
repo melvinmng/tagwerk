@@ -33,7 +33,25 @@ struct NotificationPlanMultipleTests {
 
     private func defaults(task: [ReminderOffset] = [], taskAllDay: [ReminderOffset] = [], deadline: [ReminderOffset] = [],
                           deadlineAllDay: [ReminderOffset] = []) -> ReminderDefaults {
-        ReminderDefaults(timed: [.task: task, .deadline: deadline], allDay: [.task: taskAllDay, .deadline: deadlineAllDay])
+        var defaults = ReminderDefaults(timed: [.deadline: deadline], allDay: [.deadline: deadlineAllDay])
+        for kind in [ReminderKind.localTask, .githubIssue, .appleReminder] {
+            defaults.timed[kind] = task
+            defaults.allDay[kind] = taskAllDay
+        }
+        return defaults
+    }
+
+    @Test func eachTaskSource_usesItsOwnDefaultList() {
+        var perKind = defaults(task: [.before(amount: 1, unit: .hours)])
+        perKind.set([.before(amount: 1, unit: .days)], for: .githubIssue, isAllDay: false)
+        perKind.set([], for: .appleReminder, isAllDay: false)
+        let tasks = [task("Lokal", day: 20, hour: 12, source: .local), task("Issue", day: 20, hour: 12, source: .github),
+                     task("Apple", day: 20, hour: 12, source: .reminders)]
+        let plan = result(tasks, rules: rules(perKind)).notifications
+        let dates = Dictionary(uniqueKeysWithValues: plan.map { ($0.title, $0.fireDate) })
+        #expect(dates["Lokal"] == at(20, 11))
+        #expect(dates["Issue"] == at(19, 12))
+        #expect(dates["Apple"] == nil)
     }
 
     @Test func migratedDefaults_planSameFireDatesAsLegacyRules() {

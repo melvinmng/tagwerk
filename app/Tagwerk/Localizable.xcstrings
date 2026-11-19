@@ -3523,6 +3523,26 @@
         }
       }
     },
+    "Apple Erinnerungen mit Uhrzeit": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apple Reminders with a time"
+          }
+        }
+      }
+    },
+    "Apple Erinnerungen ohne Uhrzeit": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apple Reminders without a time"
+          }
+        }
+      }
+    },
     "Arbeitstag": {
       "localizations": {
         "en": {
@@ -3904,6 +3924,7 @@
       }
     },
     "Aufgaben mit Uhrzeit": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -3914,6 +3935,7 @@
       }
     },
     "Aufgaben ohne Uhrzeit": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -5191,6 +5213,26 @@
         }
       }
     },
+    "Deadline-Termine ganztägig": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All-day deadline events"
+          }
+        }
+      }
+    },
+    "Deadline-Termine mit Uhrzeit": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deadline events with a time"
+          }
+        }
+      }
+    },
     "Deadlines": {
       "localizations": {
         "en": {
@@ -5202,6 +5244,7 @@
       }
     },
     "Deadlines ganztägig": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -5212,6 +5255,7 @@
       }
     },
     "Deadlines mit Uhrzeit": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -8430,7 +8474,18 @@
         }
       }
     },
+    "Gilt für alle Apple Erinnerungen ohne eigene Erinnerungen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Applies to all Apple Reminders without reminders of their own."
+          }
+        }
+      }
+    },
     "Gilt für alle Aufgaben ohne eigene Erinnerungen.": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -8450,12 +8505,32 @@
         }
       }
     },
+    "Gilt für alle GitHub-Issues ohne eigene Erinnerungen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Applies to all GitHub issues without reminders of their own."
+          }
+        }
+      }
+    },
     "Gilt für alle Wiederholungen.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Applies to all repetitions."
+          }
+        }
+      }
+    },
+    "Gilt für alle lokalen Aufgaben ohne eigene Erinnerungen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Applies to all local tasks without reminders of their own."
           }
         }
       }
@@ -8596,6 +8671,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "GitHub issues"
+          }
+        }
+      }
+    },
+    "GitHub-Issues mit Uhrzeit": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "GitHub issues with a time"
+          }
+        }
+      }
+    },
+    "GitHub-Issues ohne Uhrzeit": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "GitHub issues without a time"
           }
         }
       }
@@ -9457,6 +9552,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Calendar diagnostics"
+          }
+        }
+      }
+    },
+    "Kalendertermine ganztägig": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All-day calendar events"
+          }
+        }
+      }
+    },
+    "Kalendertermine mit Uhrzeit": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Calendar events with a time"
           }
         }
       }
@@ -10405,6 +10520,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Local tasks"
+          }
+        }
+      }
+    },
+    "Lokale Aufgaben mit Uhrzeit": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Local tasks with a time"
+          }
+        }
+      }
+    },
+    "Lokale Aufgaben ohne Uhrzeit": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Local tasks without a time"
           }
         }
       }
@@ -14538,6 +14673,7 @@
       "shouldTranslate": false
     },
     "Termine ganztägig": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -14548,6 +14684,7 @@
       }
     },
     "Termine mit Uhrzeit": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {

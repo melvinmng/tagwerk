@@ -17,6 +17,8 @@ final class TaskReminderModel {
     @ObservationIgnored private let overrides: ReminderOverrideStore
     @ObservationIgnored private let reminderStore: (any ReminderStore)?
     @ObservationIgnored private let defaults: ReminderDefaults
+    /// Which default list applies: every task source has its own.
+    @ObservationIgnored private var kind: ReminderKind { .forTask(source: item.id.source) }
     @ObservationIgnored private let initial: ReminderListResult
     /// The answer to the question "Nur diese" / "Alle folgenden"; asked once per save.
     var reach: Reach = .onlyThis
@@ -27,19 +29,20 @@ final class TaskReminderModel {
         self.overrides = overrides
         self.reminderStore = reminderStore
         self.defaults = defaults
+        let kind = ReminderKind.forTask(source: item.id.source)
         let isAllDay = !(item.due?.hasTime ?? false)
         let resolved = ReminderOverrideResolution.resolve(
             itemKey: ReminderOverride.key(task: item.id), due: item.due, isAllDay: isAllDay,
-            overrides: overrides.overrides(), defaults: defaults.offsets(for: .task, isAllDay: isAllDay))
+            overrides: overrides.overrides(), defaults: defaults.offsets(for: kind, isAllDay: isAllDay))
         list = ReminderListModel(offsets: resolved.isCustom ? resolved.offsets : nil,
-                                 defaultOffsets: defaults.offsets(for: .task, isAllDay: isAllDay), isAllDay: isAllDay)
+                                 defaultOffsets: defaults.offsets(for: kind, isAllDay: isAllDay), isAllDay: isAllDay)
         initial = list.result
     }
 
     /// The time of the due date changed: a date without time offers no hour distances and has its own default.
     func dueChanged(to due: DueDate?) {
         let isAllDay = !(due?.hasTime ?? false)
-        list.configure(isAllDay: isAllDay, defaultOffsets: defaults.offsets(for: .task, isAllDay: isAllDay))
+        list.configure(isAllDay: isAllDay, defaultOffsets: defaults.offsets(for: kind, isAllDay: isAllDay))
     }
 
     var hasChanges: Bool { list.result != initial }
