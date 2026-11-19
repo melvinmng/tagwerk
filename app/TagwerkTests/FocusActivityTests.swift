@@ -70,6 +70,18 @@ struct FocusActivityTests {
         #expect(model.snapshot(at: clock.now)?.isPaused == false)
     }
 
+    @Test func intentHandler_afterABackgroundLaunch_restoresTheSessionFirst() async {
+        await makeModel().start(task: nil, block: nil)
+        clock.advance(minutes: 10)
+        // The app was started in the background by the button; nothing called `restore()` yet.
+        let survivor = FakeFocusActivity()
+        survivor.existing = true
+        let restarted = makeModel(activity: survivor)
+        await restarted.handle(.togglePause)
+        #expect(restarted.snapshot(at: clock.now)?.isPaused == true)
+        #expect(survivor.adoptCount == 1)
+    }
+
     @Test func contentState_mapsPhaseAndTimes() {
         let end = testNow().addingTimeInterval(600)
         let content = FocusActivityContent(title: "T", isPomodoro: true, kind: .shortBreak, round: 2, rounds: 4, phaseEnd: end, pausedRemaining: nil)

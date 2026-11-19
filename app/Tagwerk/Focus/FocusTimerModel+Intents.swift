@@ -3,6 +3,8 @@ import Foundation
 extension FocusTimerModel {
     /// A button of the Live Activity. Does nothing without a session (the activity may be older than the app's state).
     func handle(_ action: FocusIntentAction) async {
+        // A button tap can start the app in the background; the session is then still in the store only.
+        if !isRunning { await restore() }
         guard let snap = snapshot(at: now()) else { return }
         switch action {
         case .togglePause: await snap.isPaused ? resume() : pause()
