@@ -1384,5 +1384,6 @@
   "Einkaufsliste öffnen": "Open shopping list",
   "Der Suchtext braucht mindestens zwei Zeichen.": "The search text needs at least two characters.",
   "Der Zeitraum darf höchstens vier Jahre umfassen.": "The period may cover at most four years.",
-  "Die Suche ist nicht verfügbar.": "Search is not available."
+  "Die Suche ist nicht verfügbar.": "Search is not available.",
+  "✓ %lld von %lld": "✓ %lld of %lld"
 }

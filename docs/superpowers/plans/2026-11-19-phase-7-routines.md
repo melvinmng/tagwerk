@@ -360,7 +360,7 @@ extension PlanHeaderText {
 }
 ```
 
-- [ ] **Step 1: Tests schreiben (rot).** `HabitsModelTests` mit `FakeHealthStore`, heute = `testNow()`:
+- [x] **Step 1: Tests schreiben (rot).** `HabitsModelTests` mit `FakeHealthStore`, heute = `testNow()`:
 
 ```swift
 @Test func waterHabit_isAutomaticOnceTheGoalIsReached()
@@ -381,10 +381,10 @@ extension PlanHeaderText {
 
 `PlanHeaderTextTests`: `statusLine_appendsTheHabitCounter` (`statusLine(intake: "~1.240 / 2.300 kcal · 2,1 l", habits: .init(done: 3, total: 5)) == "~1.240 / 2.300 kcal · 2,1 l · ✓ 3 von 5"`), `statusLine_counterAlone` (`== "✓ 3 von 5"`), `statusLine_withoutBoth_isNil`. `IntakeStoreTests`: `drinksInInterval_returnsOnlyDrinksInside`. `FakeHealthStore` bekommt Zähler für Abfragen und `failsStepRead`.
 
-- [ ] **Step 2:** `APP HabitsModelTests`, `APP PlanHeaderTextTests` → rot.
-- [ ] **Step 3: Umsetzen.** `reload` liest Handhäkchen, Getränke und eigene Trainings aus dem Store und danach Health nur, wenn der jeweilige Zugriff schon erfragt wurde. Ein fehlgeschlagener Lesevorgang behält die Werte des letzten Laufs, solange `today` gleich ist. `AppEnvironment` legt `habits: HabitsModel` an; die vorhandene Closure `capture.onTodayChanged` ruft zusätzlich `habits.refreshLocal()`; `habits.onChanged` ruft `scheduleSnapshot()`. `TagwerkApp` lädt `habits` dort neu, wo `capture.reload()` läuft. `PlanIntakeLine` zeigt `PlanHeaderText.statusLine(intake: environment.capture.planHeaderLine, habits: environment.habits.todayCounter)`; die Flamme erscheint nur mit Ernährungstext; Tippen öffnet „Erfassen“ wie bisher.
-- [ ] **Step 4:** `APP HabitsModelTests`, `APP PlanHeaderTextTests`, `APP IntakeStoreTests`, `APP CaptureModelTests` → grün.
-- [ ] **Step 5: Commit.** `git commit -m "feat: compute habit fulfilment and show the counter in the plan header"`
+- [x] **Step 2:** `APP HabitsModelTests`, `APP PlanHeaderTextTests` → rot.
+- [x] **Step 3: Umsetzen.** `reload` liest Handhäkchen, Getränke und eigene Trainings aus dem Store und danach Health nur, wenn der jeweilige Zugriff schon erfragt wurde. Ein fehlgeschlagener Lesevorgang behält die Werte des letzten Laufs, solange `today` gleich ist. `AppEnvironment` legt `habits: HabitsModel` an; die vorhandene Closure `capture.onTodayChanged` ruft zusätzlich `habits.refreshLocal()`; `habits.onChanged` ruft `scheduleSnapshot()`. `TagwerkApp` lädt `habits` dort neu, wo `capture.reload()` läuft. `PlanIntakeLine` zeigt `PlanHeaderText.statusLine(intake: environment.capture.planHeaderLine, habits: environment.habits.todayCounter)`; die Flamme erscheint nur mit Ernährungstext; Tippen öffnet „Erfassen“ wie bisher.
+- [x] **Step 4:** `APP HabitsModelTests`, `APP PlanHeaderTextTests`, `APP IntakeStoreTests`, `APP CaptureModelTests` → grün.
+- [x] **Step 5: Commit.** `git commit -m "feat: compute habit fulfilment and show the counter in the plan header"`
 
 ### Task 6: Abschnitt „Gewohnheiten“, Liste „Bearbeiten“, Blatt „Gewohnheit“ · #141 · Zeile 2
 

@@ -55,6 +55,8 @@ final class AppEnvironment {
     let health: any HealthStoring
     let healthMirror: HealthMirror
     let capture: CaptureModel
+    /// Habits of the "Erfassen" tab, their counter in "Planen" and in the widget (phase 7).
+    let habits: HabitsModel
     /// Meal estimates with ChatGPT; only after consent and a tap (main design §7).
     let mealEstimator: MealEstimator
     /// Writes the snapshot file the widget reads (phase 4); `directory == nil` in tests and unsigned builds.
@@ -202,6 +204,7 @@ final class AppEnvironment {
         self.intake = intake
         self.healthMirror = mirror
         self.capture = CaptureModel(store: intake, mirror: mirror, health: healthStore, settings: settings)
+        self.habits = HabitsModel(store: HabitStore(context: context), intake: intake, health: healthStore, settings: settings)
         self.mealEstimator = MealEstimator(responder: ai.client, model: { try await ai.selectedModel() },
                                            hasConsent: { settings.mealEstimationConsent })
         self.shoppingSorter = ShoppingSorter(responder: ai.client, model: { try await ai.selectedModel() },
@@ -569,7 +572,11 @@ final class AppEnvironment {
     /// Rewrites the snapshot whenever the plan, tasks, today's intake or the widget-relevant settings change.
     func startSnapshotUpdates() {
         guard snapshotUpdates == nil else { return }
-        capture.onTodayChanged = { [weak self] in self?.scheduleSnapshot() }
+        capture.onTodayChanged = { [weak self] in
+            self?.habits.refreshLocal()
+            self?.scheduleSnapshot()
+        }
+        habits.onChanged = { [weak self] in self?.scheduleSnapshot() }
         let changes = Observations { @MainActor [weak self] () -> Int in
             guard let self else { return 0 }
             var hasher = Hasher()

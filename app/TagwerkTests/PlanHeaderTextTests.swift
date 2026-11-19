@@ -79,4 +79,18 @@ struct PlanHeaderTextTests {
         #expect(PlanHeaderText.stepLabel(scope: .week, direction: 1) == "Nächste Woche")
         #expect(PlanHeaderText.stepLabel(scope: .month, direction: -1) == "Vorheriger Monat")
     }
+
+    @Test func statusLine_appendsTheHabitCounter() {
+        #expect(PlanHeaderText.statusLine(intake: "~1.240 / 2.300 kcal · 2,1 l", habits: HabitCounter(done: 3, total: 5))
+                == "~1.240 / 2.300 kcal · 2,1 l · ✓ 3 von 5")
+    }
+
+    @Test func statusLine_counterAlone() {
+        #expect(PlanHeaderText.statusLine(intake: nil, habits: HabitCounter(done: 3, total: 5)) == "✓ 3 von 5")
+    }
+
+    @Test func statusLine_withoutBoth_isNil() {
+        #expect(PlanHeaderText.statusLine(intake: nil, habits: nil) == nil)
+        #expect(PlanHeaderText.statusLine(intake: "~1.240 / 2.300 kcal", habits: nil) == "~1.240 / 2.300 kcal")
+    }
 }

@@ -77,6 +77,17 @@ enum PlanHeaderText {
         }
     }
 
+    /// "~1.240 / 2.300 kcal · 2,1 l · ✓ 3 von 5"; the counter alone when there is no intake text, `nil` without both.
+    static func statusLine(intake: String?, habits: HabitCounter?) -> String? {
+        let parts = [intake, habits.map(habitCounter)].compactMap { $0 }
+        return parts.isEmpty ? nil : parts.joined(separator: " · ")
+    }
+
+    /// "✓ 3 von 5".
+    static func habitCounter(_ counter: HabitCounter) -> String {
+        String(localized: "✓ \(counter.done) von \(counter.total)")
+    }
+
     static func stepLabel(scope: PlanScope, direction: Int) -> String {
         switch (scope, direction < 0) {
         case (.day, true): String(localized: "Vorheriger Tag")
@@ -149,10 +160,13 @@ struct PlanIntakeLine: View {
     @Environment(AppEnvironment.self) private var environment
 
     var body: some View {
-        if model.scope == .day, model.anchor == model.today, let line = environment.capture.planHeaderLine {
+        let intake = environment.capture.planHeaderLine
+        if model.scope == .day, model.anchor == model.today,
+           let line = PlanHeaderText.statusLine(intake: intake, habits: environment.habits.todayCounter) {
             Button { environment.router.open(.capture) } label: {
                 HStack(spacing: 4) {
-                    Image(systemName: "flame.fill").foregroundStyle(.orange)
+                    // The flame belongs to the nutrition text; the habit counter may stand alone.
+                    if intake != nil { Image(systemName: "flame.fill").foregroundStyle(.orange) }
                     Text(line).monospacedDigit()
                     Image(systemName: "chevron.right").font(.caption2.weight(.semibold))
                 }
