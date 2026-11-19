@@ -93,6 +93,15 @@ struct RoutinesSection: View {
 
     var body: some View {
         Section("Routinen") {
+            Button { model.openStart(day) } label: {
+                HStack {
+                    Label("Tagesstart", systemImage: "sun.max")
+                    Spacer()
+                    Text(model.captureStartDetail(day)).font(.subheadline).foregroundStyle(.secondary).multilineTextAlignment(.trailing)
+                    Image(systemName: "chevron.right").font(.caption.weight(.semibold)).foregroundStyle(.tertiary)
+                }
+            }
+            .tint(.primary)
             Button { model.openEvening(day) } label: {
                 HStack {
                     Label("Tagesabschluss", systemImage: "bed.double")

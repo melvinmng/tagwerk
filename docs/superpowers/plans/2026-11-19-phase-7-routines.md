@@ -710,7 +710,7 @@ extension RoutinesModel {
 struct MorningSheet: View { let model: RoutinesModel; let day: PlanDay }
 ```
 
-- [ ] **Step 1: Tests schreiben (rot).**
+- [x] **Step 1: Tests schreiben (rot).**
 
 ```swift
 @Test func morningNotification_textAndTime()        // 450 -> hour 7, minute 30, "Tagesstart", "Fokus für heute wählen?"
@@ -723,10 +723,10 @@ struct MorningSheet: View { let model: RoutinesModel; let day: PlanDay }
 @Test func captureStartDetail_openAndDone()         // "Fokus wählen" and "✓ 07:42"
 ```
 
-- [ ] **Step 2:** `APP RoutinesModelTests`, `CORE RoutineScheduleTests`, `APP RoutineNotificationTests` → rot.
-- [ ] **Step 3: Umsetzen.** `MorningSheet` nach Design §7.4: „Dankbar für“ (ein Feld; das zweite und dritte erscheinen nach Eingabe), „Heute“ mit `overviewText`, „Fertig“ rechts oben ruft `finishStart`; Wischen speichert nur. Die Abschnitte „Tagesfokus“ (Task 12) und „Gedanken“ (Task 13) kommen in ihren Tasks dazu. Für vergangene Tage fehlt „Heute“. `RootView` zeigt `MorningSheet` für `.start(day)`. `CaptureView`: Zeile „Tagesstart“ über „Tagesabschluss“. `RoutineNotificationScheduler.reschedule()` legt zusätzlich `morningNotification` an.
-- [ ] **Step 4:** Tests aus Step 2 → grün. Sichtprüfung gegen GA1 (Blatt).
-- [ ] **Step 5: Commit.** `git commit -m "feat: add the morning start sheet and the optional morning reminder"`
+- [x] **Step 2:** `APP RoutinesModelTests`, `CORE RoutineScheduleTests`, `APP RoutineNotificationTests` → rot.
+- [x] **Step 3: Umsetzen.** `MorningSheet` nach Design §7.4: „Dankbar für“ (ein Feld; das zweite und dritte erscheinen nach Eingabe), „Heute“ mit `overviewText`, „Fertig“ rechts oben ruft `finishStart`; Wischen speichert nur. Die Abschnitte „Tagesfokus“ (Task 12) und „Gedanken“ (Task 13) kommen in ihren Tasks dazu. Für vergangene Tage fehlt „Heute“. `RootView` zeigt `MorningSheet` für `.start(day)`. `CaptureView`: Zeile „Tagesstart“ über „Tagesabschluss“. `RoutineNotificationScheduler.reschedule()` legt zusätzlich `morningNotification` an.
+- [x] **Step 4:** Tests aus Step 2 → grün. Sichtprüfung gegen GA1 (Blatt).
+- [x] **Step 5: Commit.** `git commit -m "feat: add the morning start sheet and the optional morning reminder"`
 
 ### Task 12: Fokus, Routine-Karte in „Planen“, Stern und Kontextmenü · #145 · Zeile 9
 

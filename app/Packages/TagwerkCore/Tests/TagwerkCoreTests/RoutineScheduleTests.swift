@@ -130,4 +130,17 @@ struct RoutineScheduleTests {
         #expect(PlannedNotification.routineIdentifierPrefix == "tagwerk.routine.")
         #expect(PlannedNotification.routineIdentifierPrefix.hasPrefix(PlannedNotification.identifierPrefix))
     }
+
+    @Test func morningNotification_textAndTime() throws {
+        let notification = try #require(RoutineSchedule.morningNotification(enabled: true, minutes: 450, locale: Locale(identifier: "de_DE")))
+        #expect(notification.hour == 7 && notification.minute == 30)
+        #expect(notification.title == "Tagesstart" && notification.body == "Fokus für heute wählen?")
+        #expect(notification.id == "tagwerk.routine.morning" && notification.route == .routineStart)
+        let english = try #require(RoutineSchedule.morningNotification(enabled: true, minutes: 450, locale: Locale(identifier: "en_US")))
+        #expect(english.title == "Morning start" && english.body == "Choose a focus for today?")
+    }
+
+    @Test func morningNotification_offByDefault() {
+        #expect(RoutineSchedule.morningNotification(enabled: false, minutes: 450, locale: Locale(identifier: "de_DE")) == nil)
+    }
 }

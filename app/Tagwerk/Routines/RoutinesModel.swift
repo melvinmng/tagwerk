@@ -147,3 +147,48 @@ final class RoutinesModel {
         return bedtime + " · " + String(localized: "Checkliste \(checked) von \(total)")
     }
 }
+
+// MARK: Morning start
+
+extension RoutinesModel {
+    /// "3 Termine · 5 Aufgaben · 3 h 30 frei" of the sheet.
+    struct Overview: Equatable {
+        var events: Int
+        var tasks: Int
+        var freeMinutes: Int
+    }
+
+    /// Today only; for other days the sheet shows no overview.
+    func overview(for day: PlanDay) async -> Overview? {
+        guard day == today else { return nil }
+        let input = await planning.planInputs(in: day...day).first
+        let free = input.map { max(0, $0.availableMinutes - $0.plannedMinutes) } ?? 0
+        return Overview(events: input?.events.count ?? 0, tasks: tasks(of: day).count, freeMinutes: free)
+    }
+
+    func setGratitude(_ entries: [String], on day: PlanDay) {
+        store.update(day) { $0.gratitude = entries }
+        revision += 1
+    }
+
+    /// Marks the start as completed, also without any input; closes the sheet.
+    func finishStart(_ day: PlanDay) {
+        store.update(day) { $0.startCompletedAt = self.now() }
+        revision += 1
+        sheet = nil
+    }
+
+    /// "Fokus wählen" or "✓ 07:42".
+    func captureStartDetail(_ day: PlanDay) -> String {
+        _ = revision
+        guard let done = store.day(day).startCompletedAt else { return String(localized: "Fokus wählen") }
+        return "✓ \(DateText.time(done, calendar: calendar))"
+    }
+
+    static func overviewText(_ overview: Overview) -> String {
+        let events = overview.events == 1 ? String(localized: "1 Termin") : String(localized: "\(overview.events) Termine")
+        let tasks = overview.tasks == 1 ? String(localized: "1 Aufgabe") : String(localized: "\(overview.tasks) Aufgaben")
+        let free = String(localized: "\(CapacityText.duration(overview.freeMinutes)) frei")
+        return [events, tasks, free].joined(separator: " · ")
+    }
+}

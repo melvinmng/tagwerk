@@ -717,6 +717,16 @@
         }
       }
     },
+    "Fokus für heute wählen?" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose a focus for today?"
+          }
+        }
+      }
+    },
     "Frühstück" : {
       "localizations" : {
         "en" : {
@@ -1193,6 +1203,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Open evening wrap-up"
+          }
+        }
+      }
+    },
+    "Tagesstart" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Morning start"
           }
         }
       }

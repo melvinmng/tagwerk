@@ -141,6 +141,16 @@ public enum RoutineSchedule {
         }
     }
 
+    /// The optional reminder to start the day; `nil` while switched off (design §8.1).
+    public static func morningNotification(enabled: Bool, minutes: Int, locale: Locale) -> RoutineNotification? {
+        guard enabled else { return nil }
+        let language = VoiceLanguage.from(locale: locale)
+        let clamped = ((minutes % 1440) + 1440) % 1440
+        return RoutineNotification(id: "\(PlannedNotification.routineIdentifierPrefix)morning", hour: clamped / 60, minute: clamped % 60,
+                                   title: Localized.string("Tagesstart", in: language, bundle: .module),
+                                   body: Localized.string("Fokus für heute wählen?", in: language, bundle: .module), route: .routineStart)
+    }
+
     /// Checked points that still exist; ids of deleted points are ignored.
     public static func checkedCount(_ day: RoutineDayValue, items: [ChecklistItem]) -> Int {
         items.filter { day.checkedItemIDs.contains($0.id) }.count

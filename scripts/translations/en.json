@@ -1292,8 +1292,8 @@
   "Notiz endgültig löschen?": "Permanently delete this note?",
   "Notiz sichern": "Save note",
   "Notizen liegen nur auf diesem iPhone. Sie werden nicht an ChatGPT gesendet.": "Notes are stored on this iPhone only. They are not sent to ChatGPT.",
-  "Tagesabschluss": "Evening",
-  "Tagesstart": "Morning",
+  "Tagesabschluss": "Evening wrap-up",
+  "Tagesstart": "Morning start",
   "zuletzt: „%@“ · %@": "latest: “%@” · %@",
   "Anheftung lösen": "Unpin",
   "Einkaufsliste ändern": "Change shopping list",
@@ -1470,5 +1470,10 @@
   "Mitteilungen in den Einstellungen": "Notifications in Settings",
   "Mitteilungen sind für Tagwerk nicht erlaubt. Ohne Erlaubnis erinnert nur die Zeile in „Planen“.": "Notifications are not allowed for Tagwerk. Without permission only the row in Plan reminds you.",
   "Noch %lld min bis zur Schlafzeit (%@)": "%1$lld min until bedtime (%2$@)",
-  "Schlafzeit (%@)": "Bedtime (%@)"
+  "Schlafzeit (%@)": "Bedtime (%@)",
+  "1 Aufgabe": "1 task",
+  "1 Termin": "1 event",
+  "Dankbar für": "Grateful for",
+  "Fokus wählen": "Choose focus",
+  "Fokus für heute wählen?": "Choose a focus for today?"
 }

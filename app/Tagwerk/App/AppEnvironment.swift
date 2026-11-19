@@ -509,6 +509,8 @@ final class AppEnvironment {
             var hasher = Hasher()
             hasher.combine(settings.bedtimeMinutes)
             hasher.combine(settings.eveningRemindersEnabled)
+            hasher.combine(settings.morningReminderEnabled)
+            hasher.combine(settings.morningReminderMinutes)
             hasher.combine(routineStore.checklist())
             return hasher.finalize()
         }

@@ -63,4 +63,26 @@ struct RoutineNotificationTests {
         let first = center.addedRepeating.first
         #expect(first?.hour == 20 && first?.minute == 30)
     }
+
+    @Test func reschedule_addsTheMorningRequest_whenEnabled() async {
+        store.adoptSuggestion()
+        store.saveItem(ChecklistItem(title: "Vierter", order: 3, offsetMinutes: 15))
+        settings.morningReminderEnabled = true
+        await makeScheduler().reschedule()
+        #expect(center.pendingIDs.contains("tagwerk.routine.morning"))
+        #expect(center.pendingIDs.count == 5)
+        #expect(center.addedRepeating.first { $0.id == "tagwerk.routine.morning" }?.route == .routineStart)
+    }
+
+    @Test func reschedule_morningStaysOffByDefault() async {
+        await makeScheduler().reschedule()
+        #expect(!center.pendingIDs.contains("tagwerk.routine.morning"))
+    }
+
+    @Test func reschedule_morningFollowsItsTime() async {
+        settings.morningReminderEnabled = true
+        settings.morningReminderMinutes = 8 * 60
+        await makeScheduler().reschedule()
+        #expect(center.addedRepeating.first?.hour == 8 && center.addedRepeating.first?.minute == 0)
+    }
 }

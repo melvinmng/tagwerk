@@ -44,8 +44,13 @@ final class RoutineNotificationScheduler {
         let existing = await center.pendingRequests().map(\.id).filter { $0.hasPrefix(PlannedNotification.routineIdentifierPrefix) }
         if !existing.isEmpty { await center.removePending(existing) }
         guard authorization == .authorized else { return }
-        let wanted = RoutineSchedule.eveningNotifications(items: store.checklist(), bedtimeMinutes: settings.bedtimeMinutes,
-                                                          enabled: settings.eveningRemindersEnabled, locale: locale())
+        let locale = locale()
+        var wanted = RoutineSchedule.eveningNotifications(items: store.checklist(), bedtimeMinutes: settings.bedtimeMinutes,
+                                                          enabled: settings.eveningRemindersEnabled, locale: locale)
+        if let morning = RoutineSchedule.morningNotification(enabled: settings.morningReminderEnabled,
+                                                             minutes: settings.morningReminderMinutes, locale: locale) {
+            wanted.append(morning)
+        }
         for notification in wanted {
             do {
                 try await center.addRepeating(notification)

@@ -141,7 +141,7 @@ struct LocalizedTests {
             ("Erledigte entfernen", "Remove Completed"), ("Sonstiges", "Other"), ("Kategorien verwalten", "Manage Categories"),
             ("Mit ChatGPT sortieren", "Sort with ChatGPT"), ("Vorschlag von ChatGPT", "Suggestion from ChatGPT"),
             ("Vorschlag übernehmen", "Apply"), ("Verwerfen", "Discard"), ("Neue Notiz", "New note"),
-            ("Tagesstart", "Morning"), ("Tagesabschluss", "Evening"), ("Auf die Einkaufsliste", "Add to Shopping List"),
+            ("Tagesstart", "Morning start"), ("Tagesabschluss", "Evening wrap-up"), ("Auf die Einkaufsliste", "Add to Shopping List"),
             ("Einkaufsliste zeigen", "Show Shopping List"), ("Einkaufsliste ändern", "Change shopping list"),
         ]
         for (key, english) in expected {

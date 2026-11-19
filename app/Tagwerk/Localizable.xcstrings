@@ -2061,6 +2061,16 @@
         }
       }
     },
+    "1 Aufgabe": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 task"
+          }
+        }
+      }
+    },
     "1 Stunde": {
       "localizations": {
         "en": {
@@ -2077,6 +2087,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "1 day per week"
+          }
+        }
+      }
+    },
+    "1 Termin": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 event"
           }
         }
       }
@@ -3796,6 +3816,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "iOS will ask for microphone access next."
+          }
+        }
+      }
+    },
+    "Dankbar für": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Grateful for"
           }
         }
       }
@@ -5683,6 +5713,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Filter"
+          }
+        }
+      }
+    },
+    "Fokus wählen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose focus"
           }
         }
       }
@@ -10550,7 +10590,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Evening"
+            "value": "Evening wrap-up"
           }
         }
       }
@@ -10560,7 +10600,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Morning"
+            "value": "Morning start"
           }
         }
       }

@@ -164,4 +164,48 @@ struct RoutinesModelTests {
     @Test func captureEveningDetail_withoutChecklist_namesOnlyTheBedtime() {
         #expect(makeModel().captureEveningDetail(today) == "Schlafzeit 23:00")
     }
+
+    // MARK: Morning start
+
+    @Test func finishStart_withoutInput_marksTheDayCompleted() {
+        let model = makeModel()
+        model.openStart()
+        model.finishStart(today)
+        #expect(model.value(today).startCompletedAt == clock.now)
+        #expect(model.value(today).gratitude.isEmpty)
+        #expect(model.sheet == nil)
+    }
+
+    @Test func swipeDismiss_savesGratitudeButDoesNotComplete() {
+        let model = makeModel()
+        model.setGratitude(["Kaffee"], on: today)
+        #expect(model.value(today).gratitude == ["Kaffee"])
+        #expect(model.value(today).startCompletedAt == nil)
+    }
+
+    @Test func gratitude_keepsAtMostThree() {
+        let model = makeModel()
+        model.setGratitude(["A", "B", "C", "D"], on: today)
+        #expect(model.value(today).gratitude == ["A", "B", "C"])
+    }
+
+    @Test func overviewText_format() {
+        #expect(RoutinesModel.overviewText(.init(events: 3, tasks: 5, freeMinutes: 210)) == "3 Termine · 5 Aufgaben · 3 h 30 frei")
+        #expect(RoutinesModel.overviewText(.init(events: 1, tasks: 1, freeMinutes: 45)) == "1 Termin · 1 Aufgabe · 45 min frei")
+    }
+
+    @Test func overview_countsTasksOfTodayAndIsTodayOnly() async {
+        planStore.assign(TaskID(source: .local, rawValue: "Geplant"), to: today)
+        let model = makeModel()
+        let overview = await model.overview(for: today)
+        #expect(overview?.tasks == 2 && overview?.events == 0)
+        #expect(await model.overview(for: today.adding(days: -1, calendar: calendar)) == nil)
+    }
+
+    @Test func captureStartDetail_openAndDone() {
+        let model = makeModel()
+        #expect(model.captureStartDetail(today) == "Fokus wählen")
+        routineStore.update(today) { $0.startCompletedAt = self.at(18, 7, 42) }
+        #expect(model.captureStartDetail(today) == "✓ 07:42")
+    }
 }
