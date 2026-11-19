@@ -377,6 +377,16 @@
         }
       }
     },
+    "Action Items" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Action items"
+          }
+        }
+      }
+    },
     "Alle %lld Jahre am %@" : {
       "localizations" : {
         "en" : {
@@ -423,6 +433,56 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Every %1$lld weeks on %2$@"
+          }
+        }
+      }
+    },
+    "Allgemeine Stimmung" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "General mood"
+          }
+        }
+      }
+    },
+    "Aus Notion importiert" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Imported from Notion"
+          }
+        }
+      }
+    },
+    "Bett machen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Make the bed"
+          }
+        }
+      }
+    },
+    "Bewegung" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Exercise"
+          }
+        }
+      }
+    },
+    "Bible Study" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bible Study"
           }
         }
       }
@@ -717,6 +777,16 @@
         }
       }
     },
+    "Duschen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shower"
+          }
+        }
+      }
+    },
     "Eigene Regel aus Erinnerungen" : {
       "localizations" : {
         "en" : {
@@ -803,12 +873,32 @@
         }
       }
     },
+    "Generelle Gedanken" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "General thoughts"
+          }
+        }
+      }
+    },
     "Getränke" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Drinks"
+          }
+        }
+      }
+    },
+    "Haupterlebnisse des heutigen Tages" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Main events of today"
           }
         }
       }
@@ -979,6 +1069,16 @@
         }
       }
     },
+    "Journal schreiben" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Write in journal"
+          }
+        }
+      }
+    },
     "KW %lld · %lld. %@ – %lld. %@" : {
       "localizations" : {
         "de" : {
@@ -1071,6 +1171,26 @@
         }
       }
     },
+    "Lernen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Study"
+          }
+        }
+      }
+    },
+    "Lesen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Read"
+          }
+        }
+      }
+    },
     "Meine eigene Rolle" : {
       "localizations" : {
         "en" : {
@@ -1133,6 +1253,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$lld min until bedtime (%2$@)"
+          }
+        }
+      }
+    },
+    "Notizen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Notes"
           }
         }
       }
@@ -1227,6 +1357,16 @@
         }
       }
     },
+    "Sonnenlicht" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sunlight"
+          }
+        }
+      }
+    },
     "Sonstiges" : {
       "localizations" : {
         "en" : {
@@ -1243,6 +1383,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Later"
+          }
+        }
+      }
+    },
+    "Tag reflektieren" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reflect on the day"
+          }
+        }
+      }
+    },
+    "Tagebuch" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Journal"
           }
         }
       }
@@ -1339,6 +1499,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "What was my goal?"
+          }
+        }
+      }
+    },
+    "Wasser trinken" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Drink water"
+          }
+        }
+      }
+    },
+    "Wie geht es mir im Moment grundsätzlich?" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "How am I doing in general right now?"
           }
         }
       }

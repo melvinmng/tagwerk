@@ -1065,6 +1065,22 @@
         }
       }
     },
+    "%lld Aufgaben, %lld Notizen, %lld Gewohnheiten, %lld Mahlzeiten": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$lld Aufgaben, %2$lld Notizen, %3$lld Gewohnheiten, %4$lld Mahlzeiten"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld tasks, %lld notes, %lld habits, %lld meals"
+          }
+        }
+      }
+    },
     "%lld Einträge": {
       "localizations": {
         "de": {
@@ -1151,6 +1167,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Log %lld milliliters of water"
+          }
+        }
+      }
+    },
+    "%lld Notizen kommen nach „Zuletzt gelöscht“.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld notes go to “Recently deleted”."
           }
         }
       }
@@ -1465,6 +1491,16 @@
         }
       }
     },
+    "%lld angehängt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld appended"
+          }
+        }
+      }
+    },
     "%lld ausgewählt · %@": {
       "localizations": {
         "de": {
@@ -1675,6 +1711,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "%lld ml"
+          }
+        }
+      }
+    },
+    "%lld neu": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld new"
           }
         }
       }
@@ -1987,6 +2033,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "%lld overdue"
+          }
+        }
+      }
+    },
+    "%lld übersprungen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld skipped"
           }
         }
       }
@@ -2379,6 +2435,16 @@
         }
       }
     },
+    "Abschließen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Complete"
+          }
+        }
+      }
+    },
     "Abspielen": {
       "shouldTranslate": false
     },
@@ -2602,6 +2668,36 @@
         }
       }
     },
+    "Alle Daten durch die Sicherung ersetzen?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Replace all data with the backup?"
+          }
+        }
+      }
+    },
+    "Alle Notizen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All notes"
+          }
+        }
+      }
+    },
+    "Alle Notizen in „Zuletzt gelöscht“ endgültig löschen?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Permanently delete all notes in “Recently deleted”?"
+          }
+        }
+      }
+    },
     "Alle Projects": {
       "localizations": {
         "en": {
@@ -2678,6 +2774,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Schedule all"
+          }
+        }
+      }
+    },
+    "Alle löschen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete all"
           }
         }
       }
@@ -2782,6 +2888,16 @@
         }
       }
     },
+    "Altes Testament": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Old Testament"
+          }
+        }
+      }
+    },
     "Am %@ %@": {
       "localizations": {
         "en": {
@@ -2862,6 +2978,16 @@
         }
       }
     },
+    "Anderen Ordner wählen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose another folder"
+          }
+        }
+      }
+    },
     "Anderer Tag": {
       "localizations": {
         "en": {
@@ -2888,6 +3014,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Pinned"
+          }
+        }
+      }
+    },
+    "Angeheftete Notizen stehen immer oben. Die Wahl gilt für alle Ordner.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pinned notes always stay on top. The choice applies to all folders."
           }
         }
       }
@@ -3574,6 +3710,16 @@
         }
       }
     },
+    "Aus Notion importieren": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Import from Notion"
+          }
+        }
+      }
+    },
     "Ausplanen": {
       "localizations": {
         "en": {
@@ -3604,12 +3750,32 @@
         }
       }
     },
+    "Automatisch sichern": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Back up automatically"
+          }
+        }
+      }
+    },
     "Automatische Quellen haken sich selbst ab, auch an Tagen ohne App-Start. Jede Quelle gilt für höchstens eine Gewohnheit. Du kannst jede Gewohnheit zusätzlich von Hand abhaken.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Automatic sources check themselves off, even on days you don’t open the app. Each source applies to one habit at most. You can always check off a habit by hand as well."
+          }
+        }
+      }
+    },
+    "Automatische Sicherung": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Automatic backup"
           }
         }
       }
@@ -3630,6 +3796,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Edit …"
+          }
+        }
+      }
+    },
+    "Bearbeitet": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edited"
           }
         }
       }
@@ -3804,6 +3980,66 @@
         }
       }
     },
+    "Bewegen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Move"
+          }
+        }
+      }
+    },
+    "Bewegen nach": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Move to"
+          }
+        }
+      }
+    },
+    "Bible Study": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bible Study"
+          }
+        }
+      }
+    },
+    "Bible Study abschließen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Complete Bible Study"
+          }
+        }
+      }
+    },
+    "Bible Study starten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start Bible Study"
+          }
+        }
+      }
+    },
+    "Bible-Study-Sitzung abgeschlossen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bible Study session completed"
+          }
+        }
+      }
+    },
     "Bis": {
       "localizations": {
         "en": {
@@ -3876,6 +4112,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Delete blocks"
+          }
+        }
+      }
+    },
+    "Buch": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Book"
+          }
+        }
+      }
+    },
+    "Buch hat schon eine Notiz": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Book already has a note"
           }
         }
       }
@@ -4186,6 +4442,16 @@
         }
       }
     },
+    "Das hat nicht geklappt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "That didn’t work."
+          }
+        }
+      }
+    },
     "Das hat nicht geklappt: %@": {
       "localizations": {
         "en": {
@@ -4196,12 +4462,42 @@
         }
       }
     },
+    "Das ist eine ZIP-Datei. Entpacke den Export zuerst in der Dateien-App und wähle den entpackten Ordner.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This is a ZIP file. Unpack the export in the Files app first and choose the unpacked folder."
+          }
+        }
+      }
+    },
+    "Das ist keine Tagwerk-Sicherung.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This is not a Tagwerk backup."
+          }
+        }
+      }
+    },
     "Datenschutzhinweis": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Privacy notice"
+          }
+        }
+      }
+    },
+    "Datensicherung": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Data backup"
           }
         }
       }
@@ -4419,12 +4715,52 @@
         }
       }
     },
+    "Der Eintrag bleibt auf deinem iPhone und geht nie an ChatGPT.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The entry stays on your iPhone and never goes to ChatGPT."
+          }
+        }
+      }
+    },
+    "Der Name darf höchstens %lld Zeichen haben.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The name can have at most %lld characters."
+          }
+        }
+      }
+    },
     "Der Name darf höchstens 30 Zeichen haben.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "The name can have at most 30 characters."
+          }
+        }
+      }
+    },
+    "Der Ordner enthält zu viele Dateien für einen Import.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The folder contains too many files for an import."
+          }
+        }
+      }
+    },
+    "Der Ordner lässt sich nicht lesen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The folder can’t be read."
           }
         }
       }
@@ -4479,6 +4815,16 @@
         }
       }
     },
+    "Der Text deiner Notizen bleibt auf deinem iPhone und geht nie an ChatGPT.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The text of your notes stays on your iPhone and never goes to ChatGPT."
+          }
+        }
+      }
+    },
     "Der Ton wird auf dem iPhone in Text umgewandelt. Änderungen führt Tagwerk erst aus, wenn du sie bestätigst.": {
       "localizations": {
         "en": {
@@ -4525,6 +4871,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "The period is invalid."
+          }
+        }
+      }
+    },
+    "Der gewählte Ordner ist nicht mehr erreichbar. Wähle ihn neu.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The chosen folder is no longer available. Choose it again."
           }
         }
       }
@@ -4729,6 +5085,16 @@
         }
       }
     },
+    "Die Kopie des bisherigen Stands ließ sich nicht schreiben. Es wurde nichts ersetzt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The copy of the previous state could not be written. Nothing was replaced."
+          }
+        }
+      }
+    },
     "Die Liste ist leer. Füge unten Artikel hinzu.": {
       "localizations": {
         "en": {
@@ -4785,6 +5151,46 @@
           "stringUnit": {
             "state": "translated",
             "value": "The estimate failed. Try again or enter the values yourself."
+          }
+        }
+      }
+    },
+    "Die Sicherung ist eine einzelne Datei mit allen eigenen Daten. Sie ist nicht verschlüsselt und liegt dort, wo du sie speicherst, zum Beispiel in iCloud Drive. Anmeldedaten für GitHub und ChatGPT sind nie darin.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The backup is a single file with all your own data. It is not encrypted and lies wherever you save it, for example in iCloud Drive. Sign-in credentials for GitHub and ChatGPT are never in it."
+          }
+        }
+      }
+    },
+    "Die Sicherung ließ sich nicht schreiben. Prüfe den Ordner und den freien Speicher.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The backup could not be written. Check the folder and the free storage."
+          }
+        }
+      }
+    },
+    "Die Sicherung ließ sich nicht wiederherstellen. Der vorherige Stand wurde zurückgeholt; eine Kopie liegt im Ordner „Sicherungen“ in den Dokumenten von Tagwerk.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The backup could not be restored. The previous state was brought back; a copy is in the “Sicherungen” folder in Tagwerk's documents."
+          }
+        }
+      }
+    },
+    "Die Sicherung lässt sich nicht lesen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The backup can’t be read."
           }
         }
       }
@@ -4959,6 +5365,16 @@
         }
       }
     },
+    "Diese Sicherung stammt aus einer neueren Version von Tagwerk. Aktualisiere die App und versuche es noch einmal.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This backup comes from a newer version of Tagwerk. Update the app and try again."
+          }
+        }
+      }
+    },
     "Diese Termine gibt es nicht.": {
       "localizations": {
         "en": {
@@ -5015,6 +5431,16 @@
         }
       }
     },
+    "Diesen Ordner gibt es auf dieser Ebene schon.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This folder already exists at this level."
+          }
+        }
+      }
+    },
     "Diesen Termin gibt es nicht mehr.": {
       "localizations": {
         "en": {
@@ -5051,6 +5477,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "This month · %@"
+          }
+        }
+      }
+    },
+    "Dieser Ordner ist fest vergeben und lässt sich nicht löschen oder bewegen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This folder has a fixed purpose and can’t be deleted or moved."
           }
         }
       }
@@ -5229,6 +5665,7 @@
       }
     },
     "Eigene": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -5244,6 +5681,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Custom rule from Reminders"
+          }
+        }
+      }
+    },
+    "Ein Ordner lässt sich nicht in sich selbst bewegen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A folder can’t be moved into itself."
           }
         }
       }
@@ -5468,6 +5915,16 @@
         }
       }
     },
+    "Einträge im Export": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Entries in the export"
+          }
+        }
+      }
+    },
     "Einverstanden und Vorschläge holen": {
       "localizations": {
         "en": {
@@ -5544,6 +6001,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Change end"
+          }
+        }
+      }
+    },
+    "Endgültig löschen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete permanently"
           }
         }
       }
@@ -5883,6 +6350,16 @@
         }
       }
     },
+    "Erstellt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Created"
+          }
+        }
+      }
+    },
     "Erweitert": {
       "localizations": {
         "en": {
@@ -5959,6 +6436,36 @@
           "stringUnit": {
             "state": "translated",
             "value": "Food"
+          }
+        }
+      }
+    },
+    "Export wird gelesen …": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reading the export …"
+          }
+        }
+      }
+    },
+    "Export-Ordner wählen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose export folder"
+          }
+        }
+      }
+    },
+    "Exportiere in Notion mit „Markdown & CSV“, entpacke die Datei in der Dateien-App (Tipp auf die ZIP-Datei) und wähle dann den entpackten Ordner. Eine ZIP-Datei liest Tagwerk nicht selbst.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Export from Notion as “Markdown & CSV”, unpack the file in the Files app (tap the ZIP file) and then choose the unpacked folder. Tagwerk doesn’t read a ZIP file itself."
           }
         }
       }
@@ -6650,6 +7157,16 @@
         }
       }
     },
+    "Gibt es dafür schon einen Text, wird der importierte Text darunter angehängt, hinter einer Trennlinie. Nichts wird überschrieben.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "If there is already text for it, the imported text is appended below it, after a separator line. Nothing is overwritten."
+          }
+        }
+      }
+    },
     "Gilt ab %@.": {
       "localizations": {
         "en": {
@@ -6696,6 +7213,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Applies to planning and the assistant. If the selected model is no longer available, Tagwerk switches to “Automatic” and tells you on the next request."
+          }
+        }
+      }
+    },
+    "Gilt für „Jetzt sichern“ und die automatische Sicherung. Ohne diese Inhalte bleiben beim Wiederherstellen vorhandene Einträge in Tagebuch und Bible Study erhalten.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Applies to “Back up now” and the automatic backup. Without this content, existing entries in the journal and Bible Study are kept when restoring."
           }
         }
       }
@@ -6910,6 +7437,17 @@
         }
       }
     },
+    "Hat ein Tag schon einen Eintrag, wird der importierte Text darunter angehängt, hinter einer Trennlinie. Nichts wird überschrieben.": {
+      "extractionState": "stale",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "If a day already has an entry, the imported text is appended below it, after a separator line. Nothing is overwritten."
+          }
+        }
+      }
+    },
     "Health": {
       "localizations": {
         "en": {
@@ -6976,6 +7514,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Open today, not assigned"
+          }
+        }
+      }
+    },
+    "Heute schreiben": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Write today"
           }
         }
       }
@@ -7066,6 +7614,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Frequency"
+          }
+        }
+      }
+    },
+    "Höchstens %lld aktive Gewohnheiten. Jede automatische Quelle gilt für höchstens eine Gewohnheit; ist sie schon vergeben, hakst du die Gewohnheit von Hand ab.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "At most %lld active habits. Each automatic source serves one habit at most; if it is already used, you tick the habit by hand."
           }
         }
       }
@@ -7216,6 +7774,76 @@
           "stringUnit": {
             "state": "translated",
             "value": "Show in plan"
+          }
+        }
+      }
+    },
+    "Im gewählten Ordner wurden keine Einträge von „Tagebuch mit Gott“ gefunden. Wähle den entpackten Export (den Ordner mit den .md- und .csv-Dateien).": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No entries from “Tagebuch mit Gott” were found in the chosen folder. Choose the unpacked export (the folder with the .md and .csv files)."
+          }
+        }
+      }
+    },
+    "Im gewählten Ordner wurden keine Seiten von „Bible Studies“ gefunden. Wähle den entpackten Export (den Ordner mit den .md- und .csv-Dateien).": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No pages from “Bible Studies” were found in the chosen folder. Choose the unpacked export (the folder with the .md and .csv files)."
+          }
+        }
+      }
+    },
+    "Import": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Import"
+          }
+        }
+      }
+    },
+    "Import abgeschlossen:": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Import finished:"
+          }
+        }
+      }
+    },
+    "Importieren": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Import"
+          }
+        }
+      }
+    },
+    "Importiert werden die Seiten, die in Notion zu „Bible Studies“ gehören, je Bibelbuch eine Notiz. Sitzungen lassen sich daraus nicht ableiten. Der Text bleibt auf deinem iPhone.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pages that belong to “Bible Studies” in Notion are imported, one note per book of the Bible. Sessions can’t be derived from them. The text stays on your iPhone."
+          }
+        }
+      }
+    },
+    "Importiert werden die Seiten, die in Notion zu „Tagebuch mit Gott“ gehören. Der Text bleibt auf deinem iPhone.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pages that belong to “Tagebuch mit Gott” in Notion are imported. The text stays on your iPhone."
           }
         }
       }
@@ -7430,6 +8058,16 @@
         }
       }
     },
+    "Jetzt sichern": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Back up now"
+          }
+        }
+      }
+    },
     "Jährlich": {
       "localizations": {
         "en": {
@@ -7603,6 +8241,16 @@
         }
       }
     },
+    "Kein Bibelbuch, nicht importiert": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not a book of the Bible, not imported"
+          }
+        }
+      }
+    },
     "Kein Plan-Kalender": {
       "localizations": {
         "en": {
@@ -7729,6 +8377,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "No meals logged"
+          }
+        }
+      }
+    },
+    "Keine Notizen gefunden.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No notes found."
           }
         }
       }
@@ -7869,6 +8527,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "No suggestions from this note."
+          }
+        }
+      }
+    },
+    "Keine gelöschten Notizen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No deleted notes."
           }
         }
       }
@@ -8128,12 +8796,32 @@
         }
       }
     },
+    "Letzte Sicherung": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Last backup"
+          }
+        }
+      }
+    },
     "Letzter Termin: %@": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Last occurrence: %@"
+          }
+        }
+      }
+    },
+    "Liest einen entpackten Notion-Export. Nichts davon verlässt dein iPhone.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reads an unpacked Notion export. None of it leaves your iPhone."
           }
         }
       }
@@ -8738,6 +9426,16 @@
         }
       }
     },
+    "Mit Tagebuch und Bible Study.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "With journal and Bible Study."
+          }
+        }
+      }
+    },
     "Mit Tagwerk sprechen": {
       "localizations": {
         "en": {
@@ -9091,6 +9789,16 @@
         }
       }
     },
+    "Neu": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New"
+          }
+        }
+      }
+    },
     "Neu laden": {
       "localizations": {
         "en": {
@@ -9211,6 +9919,16 @@
         }
       }
     },
+    "Neuer Ordner": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New folder"
+          }
+        }
+      }
+    },
     "Neuer Punkt": {
       "localizations": {
         "en": {
@@ -9231,12 +9949,32 @@
         }
       }
     },
+    "Neuer Unterordner": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New subfolder"
+          }
+        }
+      }
+    },
     "Neuer Zeitblock": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "New time block"
+          }
+        }
+      }
+    },
+    "Neues Testament": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New Testament"
           }
         }
       }
@@ -9257,6 +9995,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Not scheduled"
+          }
+        }
+      }
+    },
+    "Nicht gesichert: der Chatverlauf mit dem Assistenten und Zwischenspeicher, die Tagwerk neu lädt. Beim Wiederherstellen werden alle gesicherten Daten ersetzt. Angaben, die an dieses Gerät gebunden sind (Kalender, Erinnerungslisten, Einkaufsliste), werden übernommen; fehlen sie auf dem Gerät, verhält sich Tagwerk wie bei einer fehlenden Liste.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not backed up: the chat history with the assistant and caches that Tagwerk reloads. Restoring replaces all backed-up data. Values tied to this device (calendars, reminder lists, shopping list) are taken over; if they are missing on the device, Tagwerk behaves as it does for a missing list."
+          }
+        }
+      }
+    },
+    "Nicht gewählt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not chosen"
           }
         }
       }
@@ -9381,12 +10139,32 @@
         }
       }
     },
+    "Noch %lld Tage": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld days left"
+          }
+        }
+      }
+    },
     "Noch einzuplanen": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Still to schedule"
+          }
+        }
+      }
+    },
+    "Noch keine": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "None yet"
           }
         }
       }
@@ -9480,6 +10258,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Send notes to ChatGPT"
+          }
+        }
+      }
+    },
+    "Notizen bleiben hier %lld Tage und werden dann endgültig gelöscht.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notes stay here for %lld days and are then deleted permanently."
+          }
+        }
+      }
+    },
+    "Notizen durchsuchen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search notes"
           }
         }
       }
@@ -9833,6 +10631,16 @@
         }
       }
     },
+    "Ohne Tagebuch und Bible Study.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Without journal and Bible Study."
+          }
+        }
+      }
+    },
     "Ohne Uhrzeit": {
       "localizations": {
         "en": {
@@ -9843,12 +10651,72 @@
         }
       }
     },
+    "Ohne erkennbares Datum, nicht importiert": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No usable date, not imported"
+          }
+        }
+      }
+    },
     "Online-Treffer öffnen sich auf GitHub. Zum Bearbeiten in Tagwerk muss ein Issue dir zugewiesen sein und in einem Project liegen.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Online results open on GitHub. To edit an issue in Tagwerk it must be assigned to you and belong to a project."
+          }
+        }
+      }
+    },
+    "Ordner": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Folders"
+          }
+        }
+      }
+    },
+    "Ordner bewegen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Move folder"
+          }
+        }
+      }
+    },
+    "Ordner lassen sich höchstens drei Ebenen tief verschachteln.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Folders can be nested three levels deep at most."
+          }
+        }
+      }
+    },
+    "Ordner umbenennen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rename folder"
+          }
+        }
+      }
+    },
+    "Ordner „%@“ löschen?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete folder “%@”?"
           }
         }
       }
@@ -9869,6 +10737,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Location → %@"
+          }
+        }
+      }
+    },
+    "Passt nicht mehr dazu: Pausiere oder lösche eine Gewohnheit.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No longer fits: pause or delete a habit."
           }
         }
       }
@@ -10229,6 +11107,16 @@
         }
       }
     },
+    "Quelle schon vergeben: Du hakst sie von Hand ab.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Source already used: you tick it by hand."
+          }
+        }
+      }
+    },
     "Quellen": {
       "localizations": {
         "en": {
@@ -10401,6 +11289,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Close"
+          }
+        }
+      }
+    },
+    "Schon importiert": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Already imported"
           }
         }
       }
@@ -10585,6 +11483,16 @@
         }
       }
     },
+    "Seiten im Export": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pages in the export"
+          }
+        }
+      }
+    },
     "Senden": {
       "localizations": {
         "en": {
@@ -10738,6 +11646,32 @@
         }
       }
     },
+    "Sicherung vom %@: %@. %@ Das ersetzt die gesicherten Daten auf diesem iPhone.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Sicherung vom %1$@: %2$@. %3$@ Das ersetzt die gesicherten Daten auf diesem iPhone."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Backup from %@: %@. %@ This replaces the backed-up data on this iPhone."
+          }
+        }
+      }
+    },
+    "Sicherungsordner": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Backup folder"
+          }
+        }
+      }
+    },
     "Sie erscheint dann hier als eigene Liste und nicht mehr unter den Aufgaben.": {
       "localizations": {
         "en": {
@@ -10768,6 +11702,26 @@
         }
       }
     },
+    "Sitzung abgeschlossen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Session completed"
+          }
+        }
+      }
+    },
+    "Sitzung läuft": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Session in progress"
+          }
+        }
+      }
+    },
     "So lange vor der Fälligkeit erinnert Tagwerk an Aufgaben und Deadline-Termine der eingeschalteten Quellen. Deadline-Termine sind Termine aus Deadline-Kalendern und als Deadline markierte Termine. An Aufgaben ohne Uhrzeit erinnert Tagwerk am Fälligkeitstag um 9:00. An ganztägige Deadline-Termine erinnert Tagwerk am Vortag um 18:00.": {
       "localizations": {
         "en": {
@@ -10784,6 +11738,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Other"
+          }
+        }
+      }
+    },
+    "Sortieren": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sort"
+          }
+        }
+      }
+    },
+    "Sortieren nach": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sort by"
           }
         }
       }
@@ -11087,6 +12061,16 @@
         }
       }
     },
+    "Stelle, z. B. 3,21-31": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Passage, e.g. 3,21-31"
+          }
+        }
+      }
+    },
     "Stimme %@": {
       "localizations": {
         "en": {
@@ -11137,6 +12121,16 @@
         }
       }
     },
+    "Tag hat schon einen Eintrag": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Day already has an entry"
+          }
+        }
+      }
+    },
     "Tag planen": {
       "localizations": {
         "en": {
@@ -11177,12 +12171,82 @@
         }
       }
     },
+    "Tagebuch": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Journal"
+          }
+        }
+      }
+    },
+    "Tagebuch geschrieben": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Journal written"
+          }
+        }
+      }
+    },
+    "Tagebuch mit Gott": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Journal with God"
+          }
+        }
+      }
+    },
+    "Tagebuch schreiben": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Write in journal"
+          }
+        }
+      }
+    },
+    "Tagebuch und Bible Study einschließen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Include journal and Bible Study"
+          }
+        }
+      }
+    },
     "Tagesabschluss": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Evening wrap-up"
+          }
+        }
+      }
+    },
+    "Tagesabschluss abgeschlossen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wrap-up completed"
+          }
+        }
+      }
+    },
+    "Tagesabschluss erledigt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Evening wrap-up done"
           }
         }
       }
@@ -11412,6 +12476,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Pause Tagwerk notifications"
+          }
+        }
+      }
+    },
+    "Teilen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Share"
           }
         }
       }
@@ -12341,6 +13415,16 @@
         }
       }
     },
+    "Vorschau": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preview"
+          }
+        }
+      }
+    },
     "Vorschlag": {
       "localizations": {
         "en": {
@@ -12664,6 +13748,16 @@
         }
       }
     },
+    "Weiteren Export importieren": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Import another export"
+          }
+        }
+      }
+    },
     "Welche Gewohnheit?": {
       "localizations": {
         "en": {
@@ -12750,6 +13844,36 @@
           "stringUnit": {
             "state": "translated",
             "value": "Reopen"
+          }
+        }
+      }
+    },
+    "Wiederhergestellt. Eine Kopie des vorherigen Stands liegt im Ordner „Sicherungen“ in den Dokumenten von Tagwerk.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restored. A copy of the previous state is in the “Sicherungen” folder in the Tagwerk documents."
+          }
+        }
+      }
+    },
+    "Wiederherstellen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restore"
+          }
+        }
+      }
+    },
+    "Wiederherstellen …": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restore …"
           }
         }
       }
@@ -12964,6 +14088,26 @@
         }
       }
     },
+    "Wähle einen Ordner, zum Beispiel in iCloud Drive. Beim Wechsel in den Hintergrund sichert Tagwerk, wenn die letzte Sicherung älter als 24 Stunden ist. Die letzten %lld Dateien bleiben, ältere mit dem Namen „Tagwerk-Sicherung-…“ werden gelöscht. Andere Dateien im Ordner rührt Tagwerk nicht an.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a folder, for example in iCloud Drive. When the app moves to the background, Tagwerk backs up if the last backup is older than 24 hours. The last %lld files are kept; older ones named “Tagwerk-Sicherung-…” are deleted. Tagwerk doesn’t touch other files in the folder."
+          }
+        }
+      }
+    },
+    "Wähle zuerst einen Ordner für die automatische Sicherung.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a folder for the automatic backup first."
+          }
+        }
+      }
+    },
     "Wähle zuerst in Tagwerk unter Einstellungen › Einkaufsliste eine Liste.": {
       "localizations": {
         "en": {
@@ -13136,6 +14280,16 @@
         }
       }
     },
+    "Zeitraum": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Period"
+          }
+        }
+      }
+    },
     "Ziel an %lld von %lld Tagen · Ø %@": {
       "localizations": {
         "de": {
@@ -13238,6 +14392,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Allow access"
+          }
+        }
+      }
+    },
+    "Zuletzt gelöscht": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recently deleted"
           }
         }
       }

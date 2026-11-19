@@ -60,6 +60,9 @@ final class NoteSuggestionModel {
 
     /// One request. Without consent nothing happens, not even the model list is loaded.
     func fetch(noteID: UUID, text: String, kind: NoteKind) async {
+        // Private notes (journal, later Bible Study) never go to ChatGPT, whatever the consent says. The stored kind counts
+        // as well as the one the caller names.
+        guard !kind.isPrivate, notes.note(id: noteID)?.kind.isPrivate != true else { return }
         guard hasConsent() else { return }
         generation += 1
         let mine = generation

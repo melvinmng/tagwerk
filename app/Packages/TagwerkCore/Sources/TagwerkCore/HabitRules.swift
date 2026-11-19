@@ -10,9 +10,10 @@ public extension PlanDay {
     }
 }
 
-/// What fulfils a habit besides a manual check.
+/// What fulfils a habit besides a manual check. The three last cases come from the app's own routines: a closed evening
+/// wrap-up, a journal entry that holds more than the template, and a completed Bible Study session.
 public enum HabitSource: String, Sendable, Codable, CaseIterable {
-    case manual, water, workout, steps, daylight
+    case manual, water, workout, steps, daylight, eveningClosed, journal, bibleStudy
 }
 
 /// A closed pause of a habit; both ends are included.
@@ -65,10 +66,17 @@ public struct HabitFacts: Sendable, Equatable {
     public var daylightMinutes: [PlanDay: Int]
     public var goalWaterMilliliters: Int
     public var goalSteps: Int
+    /// Days whose evening wrap-up was completed.
+    public var closedDays: Set<PlanDay>
+    /// Days with a journal entry that holds more than the unfilled template.
+    public var journalDays: Set<PlanDay>
+    /// Days with a completed Bible Study session.
+    public var bibleStudyDays: Set<PlanDay>
 
     public init(manualChecks: [UUID: Set<PlanDay>] = [:], waterMilliliters: [PlanDay: Int] = [:], workoutDays: Set<PlanDay> = [],
                 steps: [PlanDay: Int] = [:], daylightMinutes: [PlanDay: Int] = [:], goalWaterMilliliters: Int = 0,
-                goalSteps: Int = 0) {
+                goalSteps: Int = 0, closedDays: Set<PlanDay> = [], journalDays: Set<PlanDay> = [],
+                bibleStudyDays: Set<PlanDay> = []) {
         self.manualChecks = manualChecks
         self.waterMilliliters = waterMilliliters
         self.workoutDays = workoutDays
@@ -76,6 +84,9 @@ public struct HabitFacts: Sendable, Equatable {
         self.daylightMinutes = daylightMinutes
         self.goalWaterMilliliters = goalWaterMilliliters
         self.goalSteps = goalSteps
+        self.closedDays = closedDays
+        self.journalDays = journalDays
+        self.bibleStudyDays = bibleStudyDays
     }
 
     public static let empty = HabitFacts()
@@ -146,6 +157,9 @@ public enum HabitRules {
         case .workout: facts.workoutDays.contains(day)
         case .steps: facts.goalSteps > 0 && (facts.steps[day] ?? 0) >= facts.goalSteps
         case .daylight: facts.daylightMinutes[day].map { $0 >= habit.daylightMinutes } ?? false
+        case .eveningClosed: facts.closedDays.contains(day)
+        case .journal: facts.journalDays.contains(day)
+        case .bibleStudy: facts.bibleStudyDays.contains(day)
         }
     }
 

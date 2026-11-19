@@ -96,6 +96,18 @@ final class AppSettings {
     /// "Notizen an ChatGPT senden": a thought note may be sent, only on a tap on "Vorschläge holen".
     var noteSuggestionConsent: Bool = false
 
+    /// Order of the note lists (`NoteSortOrder` raw value); one setting for all folders.
+    var noteSortOrderRaw: String = "modified"
+
+    /// Data backup (#158). "Tagebuch und Bible Study einschließen" applies to "Jetzt sichern" and the automatic backup.
+    var backupIncludesPrivateNotes: Bool = true
+    var autoBackupEnabled: Bool = false
+    /// Security-scoped bookmark of the folder for automatic backups. Tied to this device, so it is not part of a backup.
+    var backupFolderBookmark: Data? = nil
+    var lastAutoBackupAt: Date? = nil
+    /// Why the last automatic backup failed; shown in the settings, blocks nothing.
+    var lastBackupError: String? = nil
+
     /// Quiet hours (plan quiet-hours, #169): task and deadline notifications that fall into the window move to its end.
     var quietHoursEnabled: Bool = false
     /// The window starts at `bedtimeMinutes`; `quietStartMinutes` applies only while this is off.
@@ -128,6 +140,11 @@ final class AppSettings {
     var voiceModeSendDelay: Double = 2
     var voiceModeSilenceLimit: Double = 30
     var voiceModeExplained: Bool = false
+
+    var noteSortOrder: NoteSortOrder {
+        get { NoteSortOrder(rawValue: noteSortOrderRaw) ?? .modified }
+        set { noteSortOrderRaw = newValue.rawValue }
+    }
 
     static let maximumPlanningRules = 5
 

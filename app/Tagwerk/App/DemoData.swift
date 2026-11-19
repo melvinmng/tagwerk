@@ -63,6 +63,39 @@ enum DemoData {
         if let pinned = notes.create(text: "Ideen Hausarbeit\nGliederung überarbeiten\nZwei weitere Quellen suchen") {
             notes.setPinned(pinned.id, true)
         }
+        // Two folders (one with a subfolder) and a note in "Zuletzt gelöscht".
+        if let study = try? notes.createFolder(name: "Studium") {
+            notes.create(text: "Literaturliste\nDrei Quellen zur Statistik", folderID: study.id)
+            if let thesis = try? notes.createFolder(name: "Hausarbeit", parentID: study.id) {
+                notes.create(text: "Gliederung\n1 Einleitung, 2 Methode, 3 Ergebnisse", folderID: thesis.id)
+            }
+        }
+        if let home = try? notes.createFolder(name: "Haushalt") {
+            notes.create(text: "Handwerker anrufen\nHeizung entlüften", folderID: home.id)
+        }
+        // One journal entry for yesterday, with the template filled in.
+        let entry = notes.openJournalEntry(dayKey: NoteDayKey.string(yesterday))
+        notes.updateText(entry.id, text: """
+            Allgemeine Stimmung
+            Wie geht es mir im Moment grundsätzlich?
+            Ruhig und dankbar.
+
+            Haupterlebnisse des heutigen Tages
+            Ein langer Spaziergang am Fluss.
+
+            Tagebuch
+            Heute war ein guter Tag. Ich habe mir Zeit zum Nachdenken genommen.
+            """)
+        // Bible Study: the note of Romans with a completed session yesterday.
+        if let romans = BibleBooks.book(number: 45) {
+            let started = notes.startSession(book: romans, passage: "3,21-31", dayKey: NoteDayKey.string(yesterday),
+                                             dateText: BibleStudyStartSheet.dateText(yesterday))
+            notes.updateText(started.note.id, text: started.note.text + "3,24: ohne Verdienst gerecht gemacht, aus seiner Gnade.\n")
+            notes.completeSession(started.session.id)
+        }
+        if let discarded = notes.create(text: "Alte Einkaufsidee\nNicht mehr nötig") {
+            notes.trash(discarded.id)
+        }
     }
 
     /// A local task repeating every three days from today, to try ticking off and "Rückgängig" (plan 2026-11-18,

@@ -11,9 +11,9 @@ final class NoteRecord {
     var text: String = ""
     var createdAt: Date = Date.now
     var updatedAt: Date = Date.now
-    /// Raw value of `NoteKind`: "free", "morning" or "evening".
+    /// Raw value of `NoteKind`: "free", "morning", "evening", "journal" or "bibleStudy".
     var kindRaw: String = "free"
-    /// "YYYY-MM-DD" (`NoteDayKey`), only for morning and evening notes.
+    /// "YYYY-MM-DD" (`NoteDayKey`), only for morning, evening and journal notes.
     var dayKey: String? = nil
     var isPinned: Bool = false
     var wasDictated: Bool = false
@@ -21,6 +21,16 @@ final class NoteRecord {
     var processedAt: Date? = nil
     /// Phase 7: executed suggestions and tasks created by hand from this note ("2 Aufgaben daraus").
     var derivedActionCount: Int = 0
+    /// The folder the note lies in; `nil` is the default folder "Notizen" (and the virtual "Gedanken" for thought notes).
+    /// A note in the trash keeps its folder, so "Wiederherstellen" can put it back.
+    var folderID: UUID? = nil
+    /// When the note went to "Zuletzt gelöscht"; `nil` for a live note.
+    var deletedAt: Date? = nil
+    /// Ids of the Notion pages this note was filled from, separated by spaces; `nil` for notes that were never imported.
+    /// An import of the same page twice is skipped; a day that already had an entry gets later pages appended.
+    var importSourceID: String? = nil
+    /// `BibleBook.key` of a Bible Study note (one note per book); `nil` for every other note.
+    var bookKey: String? = nil
 
     init(text: String, kind: NoteKind = .free, dayKey: String? = nil, wasDictated: Bool = false, now: Date = .now) {
         self.text = text

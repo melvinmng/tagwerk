@@ -294,3 +294,112 @@ Abhängigkeiten: 2 und 3 brauchen die Ordner aus 1. 4 braucht die Quellen aus 2 
    7. Commits mit Präfix `feat:`/`fix:`/`test:`/`docs:`
 3. Nach jeder Stufe einen kurzen Abschnitt „Stand“ am Ende dieses Plans: Was ist gebaut, welche Entscheidungen weichen ab, was ist offen.
 4. Wenn eine Stufe wegen eines Befunds im Code nicht wie geplant geht: begründete Annahme treffen, im Plan dokumentieren, weiterarbeiten. Nur bei einer echten Richtungsfrage (z. B. Datenverlust möglich) anhalten und fragen.
+
+## Stand nach Stufe 1 (Notizen-Ordner, #152)
+
+**Gebaut**
+- Core: `NoteFolderRules` (Baum, Tiefe 3, Namensregeln, Verschiebe-Prüfung, Zähler samt Unterordnern, 30-Tage-Frist), `NoteSortOrder`/`NoteSortKey`, `NoteText.matches` (Suche mit der Faltung der globalen Suche).
+- App: `NoteFolderRecord`, `NoteRecord.folderID`/`deletedAt`, `AppSettings.noteSortOrderRaw`; `NoteStore` mit Ordnern, `move`, `trash`/`restore`/`emptyTrash`/`purgeExpired`, Sortierung, `ensureSystemFolder` (für Stufe 2 und 3).
+- Oberfläche: `NotesFoldersView` (Alle Notizen, Notizen, Gedanken, Ordnerbaum, Systemordner, Zuletzt gelöscht), `NotesListView` je Ordner (Suche, Sortiermenü, Mehrfachauswahl mit Bewegen und Löschen, Swipe, Kontextmenü, Teilen), `NoteFolderPickerSheet`, Teilen und Papierkorb im Editor.
+- Farbfehler #173: `.buttonStyle(.plain)` auf den Zeilen der Notizliste und der Kategorienliste der Einkaufsliste. Nur per Quelltext behoben, nicht am Gerät gesehen.
+- Globale Suche: Notizen im Ordner tragen den Ordnernamen als Art-Bezeichnung (`kindLabel`), gelöschte Notizen erscheinen nicht.
+- Demo-Daten: zwei Ordner (einer mit Unterordner) und eine Notiz in „Zuletzt gelöscht“.
+
+**Entscheidungen und Abweichungen**
+- Der Ordnerbaum steht eingerückt in einer flachen Liste statt als `DisclosureGroup`. Ein Tipp öffnet die Notizen genau dieses Ordners, die Zahl am Rand zählt Unterordner mit.
+- Systemordner (`roleRaw` gesetzt) lassen sich umbenennen, aber weder löschen noch bewegen und nehmen keine Unterordner auf.
+- Nur eigene Notizen (`kind == .free`) lassen sich bewegen. Gedanken-Notizen bleiben im virtuellen Ordner „Gedanken“, der nur erscheint, wenn es welche gibt.
+- „Notizen“ (Standardordner) zeigt eigene Notizen ohne Ordner. Eine Notiz mit unbekanntem Ordner zählt dazu. „Alle Notizen“ zeigt alles außer dem Papierkorb.
+- Eine gelöschte Notiz behält ihre `folderID`. „Wiederherstellen“ setzt sie zurück, oder nach „Notizen“, wenn der Ordner fehlt. Ein Ordner löscht seine Unterordner und schickt deren Notizen in den Papierkorb. Angeheftete Notizen verlieren dabei die Anheftung.
+- Wischen und das Editor-Menü verschieben ohne Rückfrage in den Papierkorb (es gibt den Weg zurück). Endgültiges Löschen fragt nach. `NoteStore.delete` bleibt endgültig (Tagesabschluss ohne Text, `deleteIfEmpty`).
+- Eine gelöschte Gedanken-Notiz blockiert keine neue für denselben Tag (`note(kind:dayKey:)` ignoriert den Papierkorb).
+- `purgeExpired` läuft beim Öffnen der Ordneransicht und der Notizliste. Der Aufruf beim App-Start folgt in Stufe 5 zusammen mit dem Hintergrundwechsel.
+
+**Abgleich mit Apple Notizen**
+
+| Funktion | Apple Notizen | Tagwerk nach Stufe 1 | Offen |
+|---|---|---|---|
+| Ordner und Unterordner | ja | ja, bis Tiefe 3 | – |
+| Zuletzt gelöscht (30 Tage) | ja | ja | – |
+| Notizen verschieben, Mehrfachauswahl | ja | ja | – |
+| Sortierung | ja (Datum, Titel) | ja (Bearbeitet, Erstellt, Titel), global | Wahl je Ordner |
+| Suche | ja | ja, je Ordner und global | Suche im Papierkorb |
+| Anheften | ja | ja | – |
+| Teilen als Text | ja | ja | Teilen mit anderen |
+| Checklisten, Formatierung, Tabellen, Bilder, Anhänge | ja | nein | #155 |
+| Tags, Sperren | ja | nein | Design-Sammelissue |
+
+## Stand nach Stufe 2 (Tagebuch mit Gott, #182)
+
+**Gebaut**
+- Core: `NoteKind.journal` mit zentralem Prädikat `NoteKind.isPrivate`, `JournalTemplate` (drei Abschnitte, deutsch und englisch, `isOnlyTemplate`, `contentLines`), `NotionCSV` (Anführungszeichen, Zeilenumbrüche in Feldern, BOM, CRLF), `NotionDate` (lokalisierte Datumswerte, Datum im Titel), `NotionMarkdown` (Überschriften auf Vorlagen-Abschnitte abbilden), `NotionExportParser` (Seiten, Tagebuch-Plan, Tagesregel, Bible-Study-Notizen für Stufe 3), `NotionImportPlanner` (Vorschau, Anhängen unter Trennlinie, Marker).
+- App: `NoteRecord.importSourceID`, `NoteStore+Journal` (Systemordner, Eintrag je Tag aus der Vorlage, Import mit Dubletten- und Konfliktbehandlung), „Heute schreiben“ im Systemordner, Zeile „Tagebuch schreiben“ im Tagesabschluss (öffnet den Eintrag im `NoteEditorSheet`), Einstellungen → Notizen (Sortierung und „Aus Notion importieren“), `NotionImportView` mit Ordnerwahl, Vorschau und Ergebnis.
+- Datenschutz: `NoteSuggestionModel.fetch` bricht bei privaten Notizen ab, nach der übergebenen und nach der gespeicherten Art. `PrivateNotesTests` prüft Prädikat, Werkzeuge des Assistenten und diesen Abbruch. Das Widget-Snapshot-Modell hat kein Feld für Notiztext.
+- Demo-Daten: ein Eintrag für gestern.
+
+**Entscheidungen und Abweichungen**
+- Die Notion-CSV enthält keine Seiten-ID. Die Seiten-ID steht nur im Dateinamen der `.md`-Datei. Der Parser ordnet deshalb CSV-Zeilen über den Titel den `.md`-Dateien zu (bei gleichen Titeln der Reihe nach). Die Eigenschaften werden aus den Eigenschaftszeilen der Seite und aus der CSV zusammengeführt, die Seite gewinnt. Ohne CSV genügt die `.md`-Datei.
+- Tagesregel wie im Plan: Titel gewinnt bei höchstens einem Tag Abstand zur Erstellungszeit, sonst die Erstellungszeit in der Zeitzone des Geräts mit der 04:00-Regel (`RoutineSchedule.routineDay`). `Created time` wird als UTC gelesen. Das ist eine Annahme aus der Recherche, keine Prüfung an einer echten Datei.
+- `importSourceID` enthält die Notion-ID, bei angehängten Seiten mehrere durch Leerzeichen getrennt. Gelöschte (Papierkorb) Importe zählen als importiert; nach dem endgültigen Löschen würde ein erneuter Import den Eintrag zurückbringen.
+- Die Vorlage hat keine Titelzeile. In Listen heißt ein Eintrag „Donnerstag, 19. November 2026“, die Vorschau zeigt die ersten ausgefüllten Zeilen ohne Vorlagen-Überschriften.
+- Ein unberührter Eintrag (nur Vorlage) wird beim Schließen des Editors gelöscht. Ein Import in einen Tag mit unberührter Vorlage ersetzt sie statt anzuhängen.
+- Der importierte Text wird immer mit deutschen Überschriften und deutscher Trennzeile geschrieben, weil die Notion-Inhalte deutsch sind.
+- Die Notizen-Ansicht legt den Systemordner „Tagebuch mit Gott“ erst beim ersten Öffnen an. Bis dahin zeigt sie eine Zeile, die ihn anlegt und öffnet.
+- Die Oberfläche (Import, Tagesabschluss-Zeile) ist nur kompiliert und durch Store-Tests abgedeckt, nicht am Gerät gesehen. Der Parser ist nicht gegen eine echte Exportdatei geprüft (Testdaten sind erfunden).
+
+## Stand nach Stufe 3 (Bible Study, #186)
+
+**Gebaut**
+- Core: `BibleBooks` (66 Bücher, deutsche Schreibweise wie in Notion mit englischen Namen, Erkennung über Name, Kürzel, Schreibweise ohne Umlaute oder Punkte und eindeutigen Namensanfang), `BibleStudyTemplate` (Buchnotiz: Name als Titel, „Generelle Gedanken“, „Action Items“, „Notizen“; datierter Sitzungsabschnitt), `NoteKind.bibleStudy` (privat), `NotionImportPlanner.biblePreview`.
+- App: `NoteRecord.bookKey` (eine Notiz je Buch), `BibleStudySessionRecord` (im Schema), `NoteStore+BibleStudy` (Systemordner, Buchnotiz, Sitzung starten und abschließen, abgeschlossene Tage, Import).
+- Oberfläche: im Systemordner „Bible Study starten“ (Blatt mit Buchwahl, zuletzt gelesenes Buch vorgeschlagen, Stelle) und offene Sitzungen mit „Abschließen“; im Editor „Bible Study abschließen“ und der Cursor am Ende des neuen Abschnitts; Einstieg im Import (Auswahl Tagebuch / Bible Study); Demo-Daten (Römer mit einer abgeschlossenen Sitzung von gestern).
+- Datenschutz: wie Stufe 2 über `NoteKind.isPrivate`, der Test für die Vorschläge deckt auch Bible-Study-Notizen ab.
+
+**Entscheidungen und Abweichungen**
+- Buchnotiz und Sitzung hängen über `bookKey` (Nummer im Kanon als Text) zusammen, nicht über den Titel, damit eine umbenannte Titelzeile nichts zerbricht. Der Import ordnet Notion-Titel mit `BibleBooks.book(matching:)` einem Buch zu. Titel, die kein Buch sind („Kochbuch“), erscheinen in der Vorschau als nicht importiert.
+- Der Tag einer Sitzung folgt der Abendregel (vor 04:00 zählt zum Vortag), wie beim Tagebuch.
+- Der Datumstitel im Abschnitt ist fest „TT.MM.JJJJ“, damit alle Abschnitte einer Notiz gleich aussehen.
+- Der Einstieg im Blatt „Tagesstart“ ist schon in Stufe 3 vorgesehen und kommt mit der Gewohnheitsquelle in Stufe 4, weil er davon abhängt.
+- Der Import legt nie Sitzungen an. Eine Buchnotiz aus Notion beginnt mit dem Buchnamen, danach folgt der umgewandelte Text. Hat das Buch schon eine Notiz, wird der Text unter der Trennlinie angehängt.
+
+## Stand nach Stufe 4 (Gewohnheiten-Vorschlag, #181)
+
+**Gebaut**
+- Core: `HabitSource.eveningClosed`, `.journal`, `.bibleStudy`; `HabitFacts.closedDays`/`journalDays`/`bibleStudyDays`; `HabitRules.isSourceFulfilled` für die drei Quellen (Quote, Serie und Zähler arbeiten unverändert darauf); `HabitSuggestions` mit den zehn Gewohnheiten (Namen lokalisiert, Symbol, Quelle), `missing` (Namensvergleich ohne Groß-/Kleinschreibung und Akzente), `plan` (Höchstzahl, eine automatische Quelle je Gewohnheit) und `habits(for:existing:today:)`.
+- App: `HabitDaySources` (Tage aus `RoutineStore.closedDays`, `NoteStore.journalDays`, `NoteStore.completedSessionDays`) in `HabitsModel`, `HabitsModel.adopt` und `missingSuggestions`, `HabitText` (Titel und Details), Auswahl der Quellen im `HabitSheet`, `HabitSuggestionSheet` (Häkchen je Gewohnheit, vorausgewählt, Hinweise zu vergebenen Quellen und zur Höchstzahl), Knopf „Vorschlag übernehmen“ in `HabitListView`, Zeile „Bible Study starten“ im Blatt „Tagesstart“, wenn eine aktive Gewohnheit mit Quelle Bible Study existiert.
+
+**Entscheidungen und Abweichungen**
+- Zählt ein Tagebucheintrag: nur ein lebender (nicht gelöschter) Eintrag des Tages, der mehr als die Vorlage enthält (`JournalTemplate.isOnlyTemplate`).
+- Eine Bible-Study-Sitzung zählt am Tag, an dem sie gestartet wurde (Abendregel), sobald sie abgeschlossen ist.
+- Das Tagesabschluss-Häkchen liest `RoutineDayRecord.closeCompletedAt` des Tages. Die Quelle bleibt im Blatt und in den Gewohnheiten rein berechnet, es wird nichts gespeichert.
+- Bei der Übernahme zählen pausierte Gewohnheiten nicht gegen `maximumActive`, ihre Quelle ist aber weiter vergeben (wie `takenSources`). Was nicht mehr passt, steht im Blatt mit Hinweis und wird nicht übernommen.
+- „Sonnenlicht“ ist manuell, solange die Quelle `daylight` nicht gebaut ist (wie im Plan). Das Symbol `shower` und `book.pages` setzt ein ausreichend neues SF-Symbol-Set voraus; auf iOS 27 vorhanden, nicht am Gerät gesehen.
+- Die Auswahl im Blatt nutzt die Namen zum Zeitpunkt des Öffnens (Sprache der App).
+
+**Offen**
+- Der Import der Häkchen-Historie aus Notion und die Darstellung automatisch erfüllter Gewohnheiten (#173, Punkt 11) stehen weiter im Design-Sammelissue.
+
+## Stand nach Stufe 5 (Datensicherung, #158)
+
+**Gebaut**
+- Core: `BackupRules` (Dateiname `Tagwerk-Sicherung-YYYY-MM-DD-HHmm.json`, eigenes Namensmuster, Aufräumen auf die letzten 7 Dateien als reine Funktion, 24-Stunden-Regel, Prüfung von Format und `schemaVersion`).
+- App (`app/Tagwerk/Backup`): `BackupDTOs.swift` (eine `Codable`-Struktur je Modell, 29 Modelle plus die Einstellungen; aus den Modellen erzeugt und danach von Hand zu pflegen), `BackupService` (Sicherung schreiben, Datei prüfen, Wiederherstellen, Sicherheitskopie, automatische Sicherung in den gewählten Ordner), `BackupCoverage` (ausgeschlossene Modelle mit Begründung), `BackupDocument`, `BackupSettingsView` (Einstellungen → Datensicherung: „Jetzt sichern“ über `fileExporter`, „Wiederherstellen …“ über `fileImporter`, Schalter für Tagebuch und Bible Study, Ordner und Schalter für die automatische Sicherung, letzte Sicherung, Fehler).
+- Schema: `AppSettings.backupIncludesPrivateNotes`, `autoBackupEnabled`, `backupFolderBookmark`, `lastAutoBackupAt`, `lastBackupError`. Der Hintergrundwechsel in `TagwerkApp` ruft `runAutomaticBackupIfDue` auf (mit Hintergrundaufgabe). Beim App-Start läuft `NoteStore.purgeExpired`.
+- Tests: Vollständigkeitsprüfung gegen `ModelContainerFactory.schema` (Pflicht: jedes Modell hat einen DTO oder steht mit Begründung in `BackupCoverage.excluded`; ein zweiter Test verlangt für jedes Modell im Backup einen Datensatz in den Testdaten), Rundlauf Export → Import in einen leeren Store mit Vergleich je Liste, zweite Wiederherstellung ohne Dubletten, Einstellungen am selben Objekt ohne gerätegebundene Werte, keine Geheimnisse in der Datei, Ablehnung einer höheren Version und fremder Dateien, Schalter für Tagebuch und Bible Study (Export ohne diese Inhalte, Wiederherstellen behält vorhandene Einträge), Sicherheitskopie, automatische Sicherung (fällig, einmal am Tag, nur eigene Dateien aufräumen, fehlender Ordner). Zusätzlich `NoteMigrationTests`: ein echter Store im Zustand vor den Ordnern wird mit dem neuen Schema geöffnet, Text, Art und Anheftung der Notizen bleiben.
+
+**Entscheidungen und Abweichungen**
+- Ausgeschlossen sind `CachedGitHubIssue`, `CachedGitHubCatalog`, `GitHubSyncState`, `PlanSuggestionRecord`, `PendingHealthDeletion` und `ChatThreadRecord` (Begründung je Modell in `BackupCoverage`). In den Einstellungen fehlen die ChatGPT-Modellliste (Zwischenspeicher) und alles, was an dieses Gerät gebunden ist (Ordner-Lesezeichen, Zeitpunkt und Fehler der letzten automatischen Sicherung, Schalter für die automatische Sicherung).
+- Keine Datei enthält Schlüsselbund-Einträge: Der Code liest den Schlüsselbund gar nicht. Der Test sucht trotzdem nach den Kontonamen und typischen Token-Schlüsseln.
+- Datumswerte stehen als Sekunden seit 2001-01-01 UTC (Standard von `Codable`), damit der Rundlauf exakt bleibt. Lesbar sind das Format, die Version, die App-Version und `createdAt` im Kopf der Datei.
+- Wiederherstellen ersetzt alle enthaltenen Modelle (Löschen, Speichern, Einfügen). Die Einstellungen werden am vorhandenen Objekt gesetzt, weil die App es im Speicher hält. Nach dem Wiederherstellen laden Aufgaben, Planung, Einkauf, Erfassen und Gewohnheiten neu (`reloadAfterRestore`).
+- Die Sicherheitskopie vor dem Wiederherstellen enthält immer alles, auch Tagebuch und Bible Study, und liegt unter `Dokumente/Sicherungen` mit dem Namen `Tagwerk-Vor-Wiederherstellung-…` (nicht im Muster des Aufräumens). Damit der Ordner in der Dateien-App sichtbar ist, sind `UIFileSharingEnabled` und `LSSupportsOpeningDocumentsInPlace` in `project.yml` gesetzt. Die Datei ist unverschlüsselt und liegt mit Dateischutz `complete` im App-Ordner.
+- Eine Datei, die ohne Tagebuch und Bible Study geschrieben wurde, lässt die vorhandenen Einträge, deren Systemordner und die Sitzungen unangetastet. Der Gesundheitsabgleich (`healthVersion`, `healthSynced`) wird mit den Einträgen übernommen.
+- Die Oberfläche der Einstellungsseite ist nur kompiliert, nicht am Gerät gesehen. Die automatische Sicherung nutzt ein Lesezeichen (`bookmarkData`) ohne Sicherheitsbereich-Option (unter iOS nicht nötig). Ob iCloud Drive als Ordner am Gerät funktioniert, ist ungeprüft.
+
+## Stand zur Übergabe
+
+- `app/test-all.sh` vollständig grün auf dem Stand vor diesem Nachtrag (AIKit 98, GitHubKit 139, HealthBridge 11, RemindersKit 87, TagwerkCore 702, App 1224 Tests, String-Kataloge). `origin/main` hatte zu diesem Zeitpunkt keine neuen Commits.
+- Nachtrag zu Stufe 4: `AppEnvironment.startHabitSourceUpdates` liest die Gewohnheiten neu, sobald der Notizen- oder der Routinen-Speicher schreibt. Ohne diese Verbindung hätten Tagebuch, Bible-Study-Sitzung und Tagesabschluss die Zeilen erst nach einem Neuladen des Tabs erfüllt (`HabitSourceUpdatesTests`).
+- Der Assistent erreicht keine Notizen: `search` bekommt nur Termine und Aufgaben (`SearchToolSources`), das Widget-Snapshot-Modell hat kein Notizfeld. Beides ist durch `PrivateNotesTests` abgesichert.
+- Die gemeinsamen Tastatur-Modifier (`.keyboardDoneButton()`, `.keepsKeyboardOnTap()`, `app/Tagwerk/Common/KeyboardDismissal.swift`) sind nicht auf `origin/main`, nur auf dem Zweig `feature/keyboard-dismissal`. Sie sind deshalb nicht angewendet. Nach dem Merge dieses Zweigs fehlen sie an: Ordnersuche (`.searchable`), den Namensfeldern der Ordner-Alerts (`NotesFoldersView`), `NotionImportView`, dem Stellenfeld in `BibleStudyStartSheet` und dem `TextEditor` in `NoteEditorView`.
+- Oberfläche insgesamt nur kompiliert und über Store-Tests abgedeckt, nicht am Gerät oder Simulator gesehen. Der Notion-Parser ist nicht an einer echten Exportdatei geprüft.

@@ -24,7 +24,21 @@ struct NoteTextTests {
         #expect(NoteDayKey.day("2026-11-18T10:00") == nil)
     }
 
-    @Test func kind_hasThreeStableRawValues() {
-        #expect(NoteKind.allCases.map(\.rawValue) == ["free", "morning", "evening"])
+    @Test func kind_hasStableRawValues() {
+        // Stored in the database and in backups: never rename, only append.
+        #expect(NoteKind.allCases.map(\.rawValue) == ["free", "morning", "evening", "journal", "bibleStudy"])
+    }
+
+    @Test func matches_ignoresCaseAccentsAndOrder() {
+        #expect(NoteText.matches("Gliederung für die Hausarbeit", query: "hausarbeit GLIEDERUNG"))
+        #expect(NoteText.matches("Straße", query: "strasse"))
+        #expect(NoteText.matches("anything", query: "  "))
+        #expect(!NoteText.matches("Gliederung", query: "Gliederung Quellen"))
+    }
+
+    @Test func journalAndBibleStudyArePrivate_otherKindsAreNot() {
+        #expect(NoteKind.journal.isPrivate && NoteKind.bibleStudy.isPrivate)
+        #expect(NoteKind.allCases.filter(\.isPrivate) == [.journal, .bibleStudy])
+        #expect(NoteKind(rawValue: "journal") == .journal)
     }
 }

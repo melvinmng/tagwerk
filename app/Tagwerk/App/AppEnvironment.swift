@@ -25,6 +25,7 @@ final class AppEnvironment {
     let shoppingSorter: ShoppingSorter
     /// Notes stored on this device only (phase 5); never sent to ChatGPT.
     let notes: NoteStore
+    let backup: BackupService
     let taskList: TaskListModel
     let planning: PlanningModel
     let gitHubTokens: TokenManager
@@ -88,6 +89,7 @@ final class AppEnvironment {
     @ObservationIgnored private var pathMonitor: NWPathMonitor?
     @ObservationIgnored private var routineUpdates: Task<Void, Never>?
     @ObservationIgnored private var focusUpdates: Task<Void, Never>?
+    @ObservationIgnored private var habitSourceUpdates: Task<Void, Never>?
     @ObservationIgnored private var notificationUpdates: Task<Void, Never>?
     @ObservationIgnored private var gitHubRegistration: Task<Void, Never>?
     @ObservationIgnored private var snapshotUpdates: Task<Void, Never>?
@@ -115,6 +117,7 @@ final class AppEnvironment {
         self.eventSearcher = searcher
         self.remindersProvider = reminders
         self.notes = NoteStore(context: context)
+        self.backup = BackupService(context: context, settings: settings)
         let shoppingCategories = ShoppingCategoryStore(context: context, settings: settings)
         self.shoppingCategories = shoppingCategories
         self.shopping = ShoppingModel(store: reminderStore, settings: settings, categories: shoppingCategories)
@@ -213,7 +216,13 @@ final class AppEnvironment {
         self.healthMirror = mirror
         self.capture = CaptureModel(store: intake, mirror: mirror, health: healthStore, settings: settings)
         self.routineStore = RoutineStore(context: context)
-        self.habits = HabitsModel(store: HabitStore(context: context), intake: intake, health: healthStore, settings: settings)
+        // The habit sources of the routines read the evening wrap-ups, the journal and the Bible Study sessions.
+        let routineDays = self.routineStore
+        let noteDays = self.notes
+        self.habits = HabitsModel(store: HabitStore(context: context), intake: intake, health: healthStore, settings: settings,
+                                  daySources: HabitDaySources(closedDays: { routineDays.closedDays(in: $0) },
+                                                              journalDays: { noteDays.journalDays(in: $0) },
+                                                              bibleStudyDays: { noteDays.completedSessionDays(in: $0) }))
         self.mealEstimator = MealEstimator(responder: ai.client, model: { try await ai.selectedModel() },
                                            hasConsent: { settings.mealEstimationConsent })
         self.shoppingSorter = ShoppingSorter(responder: ai.client, model: { try await ai.selectedModel() },
@@ -396,6 +405,8 @@ final class AppEnvironment {
         case .free: String(localized: "Notiz")
         case .morning: String(localized: "Tagesstart")
         case .evening: String(localized: "Tagesabschluss")
+        case .journal: String(localized: "Tagebuch")
+        case .bibleStudy: String(localized: "Bible Study")
         }
     }
 
@@ -455,9 +466,12 @@ final class AppEnvironment {
             calendarNames: Self.searchCalendarNames(planning: planning),
             completedTasks: Self.searchCompletedSource(reminders: reminders, taskList: taskList),
             notes: {
-                notes.notes().map { note in
-                    NoteSearchItem(id: note.id, text: note.text, kindLabel: Self.kindLabel(of: note.kind), updatedAt: note.updatedAt,
-                                   dayKey: note.kind == .free ? nil : note.dayKey)
+                // A note in a folder shows the folder name as its label; the trash is not searched.
+                let folderNames = Dictionary(notes.folders().map { ($0.id, $0.name) }, uniquingKeysWith: { first, _ in first })
+                return notes.notes().map { note in
+                    let folderName = note.kind == .free ? note.folderID.flatMap { folderNames[$0] } : nil
+                    return NoteSearchItem(id: note.id, text: note.text, kindLabel: folderName ?? Self.kindLabel(of: note.kind),
+                                          updatedAt: note.updatedAt, dayKey: note.kind == .free || note.kind == .bibleStudy ? nil : note.dayKey)
                 }
             },
             shopping: {
@@ -471,6 +485,17 @@ final class AppEnvironment {
             sources.checkOffShopping = { id in try? await shopping.checkOff(id: id) }
         }
         return SearchModel(sources: sources, calendar: planning.calendar)
+    }
+
+    /// After a restore replaced the data: everything that keeps a copy in memory reads again.
+    func reloadAfterRestore() async {
+        notes.save()
+        habits.refreshLocal()
+        await taskList.reload()
+        await planning.reload()
+        await shopping.reload()
+        await capture.reload()
+        writeSnapshot()
     }
 
     func restartSetup() {
@@ -546,6 +571,27 @@ final class AppEnvironment {
             for await value in changes where value != last {
                 last = value
                 await self?.routineNotifications.reschedule()
+            }
+        }
+    }
+
+    /// The habit sources of the routines (a closed wrap-up, a written journal entry, a completed Bible Study session) live in
+    /// other stores. Every write there bumps a `revision`; the habits read their facts again, so the rows and the counter follow
+    /// without opening the tab or relaunching.
+    func startHabitSourceUpdates() {
+        guard habitSourceUpdates == nil else { return }
+        let changes = Observations { @MainActor [weak self] () -> Int in
+            guard let self else { return 0 }
+            var hasher = Hasher()
+            hasher.combine(notes.revision)
+            hasher.combine(routineStore.revision)
+            return hasher.finalize()
+        }
+        habitSourceUpdates = Task { [weak self] in
+            var last: Int?
+            for await value in changes where value != last {
+                last = value
+                self?.habits.refreshLocal()
             }
         }
     }

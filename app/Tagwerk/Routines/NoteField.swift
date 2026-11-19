@@ -32,7 +32,7 @@ final class NoteFieldModel {
     init(store: NoteStore, kind: NoteKind, day: PlanDay, debounce: Duration = .milliseconds(500),
          sleep: @escaping (Duration) async -> Void = { try? await Task.sleep(for: $0) },
          isSignedIn: @escaping () -> Bool = { false }, now: @escaping () -> Date = Date.init, calendar: Calendar = .tagwerk) {
-        precondition(kind != .free)
+        precondition(kind == .morning || kind == .evening)
         self.isSignedIn = isSignedIn
         self.now = now
         self.calendar = calendar

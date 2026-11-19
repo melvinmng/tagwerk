@@ -17,7 +17,7 @@ struct HabitSheet: View {
 
     private var trimmedName: String { name.trimmingCharacters(in: .whitespacesAndNewlines) }
     private var canSave: Bool { !trimmedName.isEmpty && (habit != nil || model.canAddHabit) }
-    private var sources: [HabitSource] { [.manual, .water, .workout, .steps] }
+    private var sources: [HabitSource] { [.manual, .water, .workout, .steps, .eveningClosed, .journal, .bibleStudy] }
 
     var body: some View {
         NavigationStack {

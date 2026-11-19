@@ -1,8 +1,19 @@
 import Foundation
 
-/// Origin of a note: the user's own note, or the thoughts captured at the start or the end of a day.
+/// Origin of a note: the user's own note, the thoughts captured at the start or the end of a day, or an entry of the
+/// journal "Tagebuch mit Gott", or a note of the Bible Study folder. An unknown stored value reads as `.free`.
 public enum NoteKind: String, Sendable, CaseIterable {
-    case free, morning, evening
+    case free, morning, evening, journal, bibleStudy
+
+    /// Private notes never leave the device: not to ChatGPT (not even with the consent for thought notes), not to the
+    /// assistant's tools and not to the widget. The in-app search is local and may show them. Every place that sends or
+    /// shares note content has to check this one predicate.
+    public var isPrivate: Bool {
+        switch self {
+        case .journal, .bibleStudy: true
+        case .free, .morning, .evening: false
+        }
+    }
 }
 
 /// The day a thought note belongs to, stored as "YYYY-MM-DD".
@@ -35,6 +46,15 @@ public enum NoteText {
     /// The non-empty lines after the title line.
     public static func preview(_ text: String) -> String {
         lines(text).filter { !$0.isEmpty }.dropFirst().joined(separator: "\n")
+    }
+
+    /// Whether every word of `query` occurs in `text`, ignoring case, accents and umlaut spelling like the global
+    /// search does. An empty query matches everything.
+    public static func matches(_ text: String, query: String) -> Bool {
+        let words = SearchText.fold(query).split(whereSeparator: \.isWhitespace)
+        guard !words.isEmpty else { return true }
+        let folded = SearchText.fold(text)
+        return words.allSatisfy { folded.contains($0) }
     }
 
     private static func lines(_ text: String) -> [String] {

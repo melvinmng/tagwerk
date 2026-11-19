@@ -6,5 +6,6 @@ enum TasksDestination: Hashable {
     case shoppingSettings
     case shoppingCategories
     case notes
+    case notesFolder(NotesScope)
     case note(UUID)
 }
