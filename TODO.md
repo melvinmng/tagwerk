@@ -139,6 +139,7 @@ GitHub-Konto: @melvinmng · bestätigt zuweisbar · geprüft 2026-11-17 · ich
 - [ ] [#169](https://github.com/melvinmng/tagwerk/issues/169) Ruhezeiten für Benachrichtigungen {status: Backlog; prio: P3 (Medium)}
 - [ ] [#170](https://github.com/melvinmng/tagwerk/issues/170) Apple Watch: Komplikation „Als Nächstes“ und Abhaken {status: Backlog; prio: P4 (Low)}
 - [ ] [#173](https://github.com/melvinmng/tagwerk/issues/173) Designrunde zu PR #172: Befunde der Sichtprüfung und offene Entscheidungen {status: Ready; prio: P3 (Medium)}
+- [ ] [#175](https://github.com/melvinmng/tagwerk/issues/175) Gerätetests der Suche {status: Ready; prio: P3 (Medium)}
 
 ## Notizen
 
@@ -175,11 +176,12 @@ _Automatisch aus [Tagwerk](https://github.com/users/melvinmng/projects/17) erzeu
 - [#169](https://github.com/melvinmng/tagwerk/issues/169) Ruhezeiten für Benachrichtigungen · @melvinmng · Prio P3 (Medium)
 - [#170](https://github.com/melvinmng/tagwerk/issues/170) Apple Watch: Komplikation „Als Nächstes“ und Abhaken · @melvinmng · Prio P4 (Low)
 
-### Bereit (4)
+### Bereit (5)
 - [#159](https://github.com/melvinmng/tagwerk/issues/159) UI-Tests für die Hauptwege · @melvinmng · Prio P3 (Medium)
 - [#164](https://github.com/melvinmng/tagwerk/issues/164) Wochenplanung als geführter Ablauf · @melvinmng · Prio P3 (Medium)
 - [#168](https://github.com/melvinmng/tagwerk/issues/168) Fahrzeit zwischen Terminen berücksichtigen · @melvinmng · Prio P3 (Medium)
 - [#173](https://github.com/melvinmng/tagwerk/issues/173) Designrunde zu PR #172: Befunde der Sichtprüfung und offene Entscheidungen · @melvinmng · Prio P3 (Medium)
+- [#175](https://github.com/melvinmng/tagwerk/issues/175) Gerätetests der Suche · @melvinmng · Prio P3 (Medium)
 
 ### In Prüfung (2)
 - [#113](https://github.com/melvinmng/tagwerk/issues/113) Phase 5: Einkaufsliste und Notizen einbinden · @melvinmng · Prio P3 (Medium)
