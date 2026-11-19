@@ -47,6 +47,8 @@ struct TagwerkApp: App {
                     #endif
                     // Reads the keychain only; nothing is sent to OpenAI at start (§8.4).
                     await environment.ai.refreshAccount()
+                    // Notes in "Zuletzt gelöscht" go for good after 30 days.
+                    environment.notes.purgeExpired(calendar: environment.planning.calendar)
                     environment.startObservingChanges()
                     // The "Planen" tab is shown first; it needs the tasks without waiting for the task tab.
                     if environment.settings.setupCompleted {
@@ -82,6 +84,13 @@ struct TagwerkApp: App {
                         // Directly, not debounced: the app may be suspended before a delayed run starts.
                         // The snapshot reads the store directly, so it is written first, before any await.
                         environment.writeSnapshot()
+                        // The automatic backup reads the store directly; a background task keeps the app alive until it is written.
+                        var backupTask = UIBackgroundTaskIdentifier.invalid
+                        backupTask = UIApplication.shared.beginBackgroundTask(withName: "tagwerk.backup") {
+                            UIApplication.shared.endBackgroundTask(backupTask)
+                        }
+                        environment.backup.runAutomaticBackupIfDue()
+                        if backupTask != .invalid { UIApplication.shared.endBackgroundTask(backupTask) }
                         Task {
                             await environment.makeBackgroundRefresh().submitNext()
                             await environment.notifications.reschedule()

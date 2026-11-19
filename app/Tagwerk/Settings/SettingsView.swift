@@ -87,6 +87,11 @@ struct SettingsView: View {
                     } label: {
                         LabeledContent("Notizen", value: NotesSettingsView.sortName(settings.noteSortOrder))
                     }
+                    NavigationLink {
+                        BackupSettingsView()
+                    } label: {
+                        LabeledContent("Datensicherung", value: BackupSettingsView.lastBackupText(settings.lastAutoBackupAt))
+                    }
                 }
 
                 Section {

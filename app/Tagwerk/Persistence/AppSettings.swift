@@ -99,6 +99,15 @@ final class AppSettings {
     /// Order of the note lists (`NoteSortOrder` raw value); one setting for all folders.
     var noteSortOrderRaw: String = "modified"
 
+    /// Data backup (#158). "Tagebuch und Bible Study einschließen" applies to "Jetzt sichern" and the automatic backup.
+    var backupIncludesPrivateNotes: Bool = true
+    var autoBackupEnabled: Bool = false
+    /// Security-scoped bookmark of the folder for automatic backups. Tied to this device, so it is not part of a backup.
+    var backupFolderBookmark: Data? = nil
+    var lastAutoBackupAt: Date? = nil
+    /// Why the last automatic backup failed; shown in the settings, blocks nothing.
+    var lastBackupError: String? = nil
+
     /// Voice: microphone in conversations (plan voice-chat, SP7a).
     var voiceInputEnabled: Bool = true
     /// The one-time explanation before the first recording (SP8a) was confirmed.

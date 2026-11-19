@@ -25,6 +25,7 @@ final class AppEnvironment {
     let shoppingSorter: ShoppingSorter
     /// Notes stored on this device only (phase 5); never sent to ChatGPT.
     let notes: NoteStore
+    let backup: BackupService
     let taskList: TaskListModel
     let planning: PlanningModel
     let gitHubTokens: TokenManager
@@ -115,6 +116,7 @@ final class AppEnvironment {
         self.eventSearcher = searcher
         self.remindersProvider = reminders
         self.notes = NoteStore(context: context)
+        self.backup = BackupService(context: context, settings: settings)
         let shoppingCategories = ShoppingCategoryStore(context: context, settings: settings)
         self.shoppingCategories = shoppingCategories
         self.shopping = ShoppingModel(store: reminderStore, settings: settings, categories: shoppingCategories)
@@ -476,6 +478,17 @@ final class AppEnvironment {
             sources.checkOffShopping = { id in try? await shopping.checkOff(id: id) }
         }
         return SearchModel(sources: sources, calendar: planning.calendar)
+    }
+
+    /// After a restore replaced the data: everything that keeps a copy in memory reads again.
+    func reloadAfterRestore() async {
+        notes.save()
+        habits.refreshLocal()
+        await taskList.reload()
+        await planning.reload()
+        await shopping.reload()
+        await capture.reload()
+        writeSnapshot()
     }
 
     func restartSetup() {
