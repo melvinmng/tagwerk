@@ -23,6 +23,7 @@ final class AppEnvironment {
     let shopping: ShoppingModel
     /// "Mit ChatGPT sortieren"; sends item names only after consent and on the user's tap.
     let shoppingSorter: ShoppingSorter
+    let recipeImporter: RecipeImporter
     /// Notes stored on this device only (phase 5); never sent to ChatGPT.
     let notes: NoteStore
     let backup: BackupService
@@ -246,6 +247,8 @@ final class AppEnvironment {
                                            hasConsent: { settings.mealEstimationConsent })
         self.shoppingSorter = ShoppingSorter(responder: ai.client, model: { try await ai.selectedModel() },
                                              hasConsent: { settings.shoppingSortConsent })
+        self.recipeImporter = RecipeImporter(responder: ai.client, model: { try await ai.selectedModel() },
+                                             hasConsent: { settings.shoppingRecipeConsent })
         let planning = self.planning
         let localTasks = LocalTaskProvider(context: context)
         self.routines = RoutinesModel(
