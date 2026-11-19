@@ -398,7 +398,7 @@ public struct ShoppingItem: Sendable, Hashable, Identifiable {
   - Zahlwörter → Ziffern: ein/eine/einen/eins = 1 … zwölf = 12; one … twelve. Einheiten exakt nach Spec R3 Nr. 2, ohne Beachtung der Großschreibung; die Einheit bleibt in der Schreibweise der Eingabe.
   - Trennung an ` und ` / ` and ` nur mit Leerraum auf beiden Seiten und ohne Beachtung der Großschreibung.
 
-- [ ] **Schritt 1: Tests schreiben**
+- [x] **Schritt 1: Tests schreiben**
 
 ```swift
 @Test func key_lowercasesTrimsCollapsesAndFolds() {
@@ -443,10 +443,10 @@ public struct ShoppingItem: Sendable, Hashable, Identifiable {
 }
 ```
 
-- [ ] **Schritt 2:** Suite ausführen. Erwartet: Übersetzungsfehler.
-- [ ] **Schritt 3: Umsetzen** nach den Signaturen; Faltung mit `folding(options: [.diacriticInsensitive, .caseInsensitive], locale: Locale(identifier: "en_US_POSIX"))`.
-- [ ] **Schritt 4:** Suite ausführen. Erwartet: grün.
-- [ ] **Schritt 5:** Commit: `git add app/Packages/TagwerkCore && git commit -m "feat: parse shopping input into items and quantities"`
+- [x] **Schritt 2:** Suite ausführen. Erwartet: Übersetzungsfehler.
+- [x] **Schritt 3: Umsetzen** nach den Signaturen; Faltung mit `folding(options: [.diacriticInsensitive, .caseInsensitive], locale: Locale(identifier: "en_US_POSIX"))`.
+- [x] **Schritt 4:** Suite ausführen. Erwartet: grün.
+- [x] **Schritt 5:** Commit: `git add app/Packages/TagwerkCore && git commit -m "feat: parse shopping input into items and quantities"`
 
 ---
 
