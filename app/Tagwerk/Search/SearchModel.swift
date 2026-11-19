@@ -218,6 +218,11 @@ final class SearchModel {
                                      now: now(), calendar: calendar)
     }
 
+    /// Name of the calendar an event comes from, for the row.
+    func calendarName(of event: CalendarEvent) -> String? {
+        sources.calendarNames()[event.calendarID]
+    }
+
     func visibleRows(in section: SearchSection) -> [SearchRow] {
         Array(section.rows.prefix(visibleCounts[section.kind] ?? Self.pageSize))
     }
@@ -241,6 +246,10 @@ final class SearchModel {
         loadTask?.cancel()
         completedTask?.cancel()
         onlineTask?.cancel()
+        // Nothing of the search outlives the sheet.
+        loadedEvents = []
+        completed = []
+        online = nil
         results = .empty
     }
 

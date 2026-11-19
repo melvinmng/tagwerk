@@ -1693,6 +1693,32 @@
         }
       }
     },
+    "%lld weitere": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld more"
+          }
+        }
+      }
+    },
+    "%lld weitere bis %@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$lld weitere bis %2$@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld more until %@"
+          }
+        }
+      }
+    },
     "%lld weiteren Personen": {
       "localizations": {
         "de": {
@@ -2996,6 +3022,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Loading tasks …"
+          }
+        }
+      }
+    },
+    "Aufgaben · %lld offen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tasks · %lld open"
+          }
+        }
+      }
+    },
+    "Aufgaben, %lld offen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tasks, %lld open"
           }
         }
       }
@@ -4518,6 +4564,36 @@
         }
       }
     },
+    "Durchsucht Termine, Aufgaben, Notizen und die Einkaufsliste.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Searches events, tasks, notes and the shopping list."
+          }
+        }
+      }
+    },
+    "Durchsucht: 6 Monate zurück, 12 Monate voraus.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Searched: 6 months back, 12 months ahead."
+          }
+        }
+      }
+    },
+    "Durchsucht: ab %@, 12 Monate voraus.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Searched: from %@, 12 months ahead."
+          }
+        }
+      }
+    },
     "Eigene": {
       "localizations": {
         "en": {
@@ -4544,6 +4620,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Another day turns the block into a move. It stays a suggestion until you accept it."
+          }
+        }
+      }
+    },
+    "Eingabe löschen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clear text"
           }
         }
       }
@@ -4588,12 +4674,32 @@
         }
       }
     },
+    "Einkaufsliste · %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shopping list · %lld"
+          }
+        }
+      }
+    },
     "Einkaufsliste ändern": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Change shopping list"
+          }
+        }
+      }
+    },
+    "Einkaufsliste, %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shopping list, %lld"
           }
         }
       }
@@ -4979,6 +5085,36 @@
           "stringUnit": {
             "state": "translated",
             "value": "Completed · %lld"
+          }
+        }
+      }
+    },
+    "Erledigt, %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Completed, %lld"
+          }
+        }
+      }
+    },
+    "Erledigte Aufgabe": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Completed task"
+          }
+        }
+      }
+    },
+    "Erledigte einbeziehen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Include completed"
           }
         }
       }
@@ -5482,6 +5618,16 @@
         }
       }
     },
+    "Geschlossene Issues findet nur die GitHub-Suche.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Closed issues are only found by the GitHub search."
+          }
+        }
+      }
+    },
     "Geschätzt": {
       "localizations": {
         "en": {
@@ -5668,6 +5814,36 @@
         }
       }
     },
+    "GitHub online, %lld weitere": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "GitHub online, %lld more"
+          }
+        }
+      }
+    },
+    "GitHub · online": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "GitHub · online"
+          }
+        }
+      }
+    },
+    "GitHub · online · %lld weitere": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "GitHub · online · %lld more"
+          }
+        }
+      }
+    },
     "GitHub-Aufgaben sind nur lesbar, bis GitHub wieder antwortet.": {
       "localizations": {
         "en": {
@@ -5704,6 +5880,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "GitHub issues don’t repeat"
+          }
+        }
+      }
+    },
+    "GitHub: Stand von %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "GitHub: as of %@"
           }
         }
       }
@@ -6391,6 +6577,16 @@
         }
       }
     },
+    "Kein Zugriff auf Kalender – Termine werden nicht durchsucht.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No access to calendars – events are not searched."
+          }
+        }
+      }
+    },
     "Kein Zugriff auf diese Quelle.": {
       "localizations": {
         "en": {
@@ -6517,6 +6713,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "No events before the deadline"
+          }
+        }
+      }
+    },
+    "Keine Treffer für „%@“.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No results for “%@”."
           }
         }
       }
@@ -6759,6 +6965,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Shorter"
+          }
+        }
+      }
+    },
+    "Label": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Label"
           }
         }
       }
@@ -8022,6 +8238,16 @@
         }
       }
     },
+    "Notizen · %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notes · %lld"
+          }
+        }
+      }
+    },
     "Notizen → „%@“": {
       "localizations": {
         "en": {
@@ -8032,12 +8258,32 @@
         }
       }
     },
+    "Notizen, %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notes, %lld"
+          }
+        }
+      }
+    },
     "Notizen: „%@“": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Notes: “%@”"
+          }
+        }
+      }
+    },
+    "Nummer": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Number"
           }
         }
       }
@@ -8583,6 +8829,16 @@
     },
     "Probeaufnahme starten": {
       "shouldTranslate": false
+    },
+    "Project": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Project"
+          }
+        }
+      }
     },
     "Project %@": {
       "localizations": {
@@ -9375,6 +9631,16 @@
         }
       }
     },
+    "Suchen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search"
+          }
+        }
+      }
+    },
     "Tag": {
       "localizations": {
         "en": {
@@ -9708,6 +9974,16 @@
         }
       }
     },
+    "Termine": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Events"
+          }
+        }
+      }
+    },
     "Termine antippen, um sie auszuwählen": {
       "localizations": {
         "en": {
@@ -9731,12 +10007,42 @@
     "Termine der nächsten 7 Tage. „Zusammengefasst“: gleicher Termin wird über die Kopie aus einem anderen Kalender gezeigt.": {
       "shouldTranslate": false
     },
+    "Termine werden durchsucht …": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Searching events …"
+          }
+        }
+      }
+    },
     "Termine zusammenfassen (mit Rückfrage)": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Merge events (with confirmation)"
+          }
+        }
+      }
+    },
+    "Termine · %lld kommende": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Events · %lld upcoming"
+          }
+        }
+      }
+    },
+    "Termine, %lld kommende": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Events, %lld upcoming"
           }
         }
       }
@@ -10007,6 +10313,36 @@
           "stringUnit": {
             "state": "translated",
             "value": "Past"
+          }
+        }
+      }
+    },
+    "Vergangene Termine": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Past events"
+          }
+        }
+      }
+    },
+    "Vergangene Termine · %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Past events · %lld"
+          }
+        }
+      }
+    },
+    "Vergangene Termine, %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Past events, %lld"
           }
         }
       }
@@ -10672,6 +11008,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "More"
+          }
+        }
+      }
+    },
+    "Weitere %lld zeigen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show %lld more"
           }
         }
       }
@@ -11396,6 +11742,16 @@
         }
       }
     },
+    "alle 2 Wochen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "every 2 weeks"
+          }
+        }
+      }
+    },
     "als GitHub-Issue": {
       "localizations": {
         "en": {
@@ -11548,6 +11904,32 @@
           "stringUnit": {
             "state": "translated",
             "value": "completed"
+          }
+        }
+      }
+    },
+    "erledigt %@ · %@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "erledigt %1$@ · %2$@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "completed %@ · %@"
+          }
+        }
+      }
+    },
+    "erledigt · %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "completed · %@"
           }
         }
       }
@@ -11884,6 +12266,16 @@
         }
       }
     },
+    "monatlich": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "monthly"
+          }
+        }
+      }
+    },
     "morgen": {
       "localizations": {
         "en": {
@@ -12087,6 +12479,16 @@
         }
       }
     },
+    "täglich": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "daily"
+          }
+        }
+      }
+    },
     "und %lld weitere": {
       "localizations": {
         "de": {
@@ -12199,6 +12601,26 @@
         }
       }
     },
+    "vor %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "before %@"
+          }
+        }
+      }
+    },
+    "vor %lld Tagen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld days ago"
+          }
+        }
+      }
+    },
     "wiederkehrend": {
       "localizations": {
         "en": {
@@ -12228,6 +12650,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "always merged"
+          }
+        }
+      }
+    },
+    "wöchentlich": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "weekly"
           }
         }
       }
@@ -12284,6 +12716,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Older messages are no longer sent along."
+          }
+        }
+      }
+    },
+    "Ältere Termine durchsuchen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search older events"
           }
         }
       }
@@ -12864,6 +13306,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "✓ Applied · %@"
+          }
+        }
+      }
+    },
+    "✓ Erledigte": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "✓ Completed"
           }
         }
       }
