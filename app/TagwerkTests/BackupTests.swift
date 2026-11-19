@@ -132,6 +132,25 @@ struct BackupTests {
         let focus = FocusMarkRecord(taskKey: "local|1", title: "Quellen sichten", day: day, order: 1, createdAt: now)
         focus.doneAt = now
         context.insert(focus)
+        let focusState = FocusTimerState(start: now, settings: FocusTimerSettings(), pauses: [DateInterval(start: now.addingTimeInterval(600), duration: 120)],
+                                         skips: [now.addingTimeInterval(1500)], endedAt: now.addingTimeInterval(1800))
+        let focusSession = FocusSessionRecord(taskKey: "local|1", blockEventID: "evt-7", title: "Quellen sichten", state: focusState)
+        focusSession.outcome = .completed
+        focusSession.focusedSeconds = 1500
+        focusSession.activityID = "activity-1"
+        context.insert(focusSession)
+        let effort = EffortSampleRecord(taskKey: "local|1", source: .local, labels: ["Studium"], estimateMinutes: 45, actualMinutes: 38,
+                                        method: .partialBlock, completedAt: now)
+        effort.trimmedEventID = "evt-7"
+        effort.trimmedOriginalEnd = now.addingTimeInterval(3600)
+        effort.trimmedNewEnd = now.addingTimeInterval(2400)
+        context.insert(effort)
+        settings.focusWorkMinutes = 50
+        settings.focusShortBreakMinutes = 10
+        settings.focusLongBreakMinutes = 30
+        settings.focusRounds = 3
+        settings.focusUsesPomodoro = false
+        settings.effortHistoryInPlanning = false
         let reflection = WeekReflectionRecord(weekStart: day, updatedAt: now)
         reflection.wentWell = "Viel geschafft"
         reflection.burdens = "Wenig Schlaf"
@@ -343,6 +362,88 @@ struct BackupTests {
         // The file knows nothing of reminder defaults, so they fall back to the ones derived from the lead time.
         #expect(target.settings.reminderDefaultsData == nil)
         #expect(target.settings.reminderDefaults == .legacy(leadTimeMinutes: target.settings.leadTimeMinutes))
+    }
+
+    // MARK: Focus timer data
+
+    @Test func backup_roundTripsFocusSessionsEffortSamplesAndSettings() throws {
+        let target = try makeTarget()
+        try target.service.restore(try target.service.inspect(try backup.makeBackupData()))
+        let context = target.container.mainContext
+        let session = try #require(try context.fetch(FetchDescriptor<FocusSessionRecord>()).first)
+        #expect(session.outcome == .completed && session.focusedSeconds == 1500 && session.taskKey == "local|1" && session.blockEventID == "evt-7")
+        #expect(session.state.pauses.count == 1 && session.state.skips.count == 1 && session.endedAt == clock.now.addingTimeInterval(1800))
+        #expect(session.activityID == nil, "the Live Activity belongs to this device and is not restored")
+        #expect(session.piece != nil)
+        let sample = try #require(try context.fetch(FetchDescriptor<EffortSampleRecord>()).first)
+        #expect(sample.actualMinutes == 38 && sample.estimateMinutes == 45 && sample.methodRaw == EffortMethod.partialBlock.rawValue && sample.value.labels == ["Studium"])
+        #expect(sample.trimmedEventID == "evt-7" && sample.trimmedNewEnd == clock.now.addingTimeInterval(2400))
+        #expect(target.settings.focusWorkMinutes == 50 && target.settings.focusRounds == 3 && !target.settings.focusUsesPomodoro)
+        #expect(!target.settings.effortHistoryInPlanning)
+    }
+
+    @Test func aRunningFocusSession_isNotBackedUp_andSurvivesARestore() throws {
+        let running = FocusSessionRecord(taskKey: "local|2", blockEventID: nil, title: "Läuft", state: FocusTimerState(start: clock.now, settings: FocusTimerSettings()))
+        source.mainContext.insert(running)
+        try source.mainContext.save()
+        let data = try backup.makeBackupData()
+        let inspection = try makeTarget().service.inspect(data)
+        #expect(inspection.entities.focusSessions?.count == 1, "only the closed session is written")
+        // On a device with its own running session and an older closed one, only the closed one is replaced.
+        let target = try makeTarget()
+        let context = target.container.mainContext
+        let local = FocusSessionRecord(taskKey: "local|3", blockEventID: nil, title: "Hier", state: FocusTimerState(start: clock.now, settings: FocusTimerSettings()))
+        context.insert(local)
+        let oldClosed = FocusSessionRecord(taskKey: "local|4", blockEventID: nil, title: "Alt", state: FocusTimerState(start: clock.now, settings: FocusTimerSettings()))
+        oldClosed.outcome = .aborted
+        context.insert(oldClosed)
+        try context.save()
+        try target.service.restore(inspection)
+        let titles = try context.fetch(FetchDescriptor<FocusSessionRecord>()).map(\.title).sorted()
+        #expect(titles == ["Hier", "Quellen sichten"])
+        #expect(local.isRunning && !local.isDeleted)
+    }
+
+    @Test func oldBackupWithoutFocusData_restores_andKeepsTheFocusDataOfTheDevice() throws {
+        let data = try backup.makeBackupData()
+        var object = try #require(try JSONSerialization.jsonObject(with: data) as? [String: Any])
+        var entities = try #require(object["entities"] as? [String: Any])
+        entities.removeValue(forKey: "focusSessions")
+        entities.removeValue(forKey: "effortSamples")
+        var settings = try #require(entities["settings"] as? [String: Any])
+        for key in ["focusWorkMinutes", "focusShortBreakMinutes", "focusLongBreakMinutes", "focusRounds", "focusUsesPomodoro", "effortHistoryInPlanning"] {
+            settings.removeValue(forKey: key)
+        }
+        entities["settings"] = settings
+        object["entities"] = entities
+        let old = try JSONSerialization.data(withJSONObject: object)
+        let target = try makeTarget()
+        let context = target.container.mainContext
+        let closed = FocusSessionRecord(taskKey: "local|4", blockEventID: nil, title: "Lokal", state: FocusTimerState(start: clock.now, settings: FocusTimerSettings()))
+        closed.outcome = .completed
+        context.insert(closed)
+        context.insert(EffortSampleRecord(taskKey: "local|4", source: .local, labels: [], estimateMinutes: nil, actualMinutes: 20, method: .focus, completedAt: clock.now))
+        target.settings.focusWorkMinutes = 40
+        try context.save()
+        try target.service.restore(try target.service.inspect(old))
+        #expect(try context.fetchCount(FetchDescriptor<LocalTask>()) == 1, "the rest of the file is restored")
+        #expect(try context.fetch(FetchDescriptor<FocusSessionRecord>()).map(\.title) == ["Lokal"])
+        #expect(try context.fetchCount(FetchDescriptor<EffortSampleRecord>()) == 1)
+        #expect(target.settings.focusWorkMinutes == 40 && target.settings.focusRounds == 4 && target.settings.focusUsesPomodoro)
+    }
+
+    @Test func aFileWithEmptyFocusLists_replacesTheFocusDataOfTheDevice() throws {
+        let emptySource = try ModelContainerFactory.make(inMemory: true)
+        let emptySettings = try AppSettings.current(in: emptySource.mainContext)
+        let clock = self.clock
+        let emptyBackup = BackupService(context: emptySource.mainContext, settings: emptySettings, calendar: calendar, appVersion: "1.0-test", now: { clock.now })
+        let data = try emptyBackup.makeBackupData()
+        let target = try makeTarget()
+        let context = target.container.mainContext
+        context.insert(EffortSampleRecord(taskKey: "local|4", source: .local, labels: [], estimateMinutes: nil, actualMinutes: 20, method: .focus, completedAt: clock.now))
+        try context.save()
+        try target.service.restore(try target.service.inspect(data))
+        #expect(try context.fetchCount(FetchDescriptor<EffortSampleRecord>()) == 0)
     }
 
     @Test func aFileWithoutSomeLists_readsThemAsEmpty() throws {
