@@ -138,7 +138,31 @@
 - Prüfen, ob `UIApplication.shared.canOpenURL(URL(string: "message://%3C…%3E")!)` die Mail-App öffnet. Dazu braucht es `LSApplicationQueriesSchemes: [message]` in `Info.plist`.
 - Falls nicht verlässlich: Link nur anlegen, wenn eine Message-ID vorliegt, und ohne `canOpenURL` speichern. Am Gerät prüfen.
 
-- [ ] Nachtrag „Spike-Ergebnis“ mit S1–S3 unter diesem Task, Commit `docs: record p6 spike results`.
+- [x] Nachtrag „Spike-Ergebnis“ mit S1–S3 unter diesem Task, Commit `docs: record p6 spike results`.
+
+### Spike-Ergebnis (Stand 19.11.2026, Arbeitskopie ohne Gerät und ohne Apple-ID in Xcode)
+
+**S1 Signierung mit dem Personal Team: nicht entscheidbar, Rückfall gebaut.**
+- Befund: `xcodebuild -scheme Tagwerk -destination generic/platform=iOS -allowProvisioningUpdates` mit den Werten aus `scripts/install-config.zsh` scheitert hier vor der Profilerstellung, weil in dieser Xcode-Sitzung keine Apple-ID angemeldet ist. Wörtlich:
+  - `error: No Accounts: Add a new account in Accounts settings. (in target 'TagwerkShare' from project 'Tagwerk')`
+  - `error: No profiles for '<Bundle-ID>.share' were found: Xcode couldn't find any iOS App Development provisioning profiles matching '<Bundle-ID>.share'. (in target 'TagwerkShare' from project 'Tagwerk')`
+- Das ist kein Limit- oder Capability-Fehler. Ob das Personal Team eine weitere App-ID (`<Bundle-ID>.share` mit App Group) anlegen darf, ist damit weder bestätigt noch widerlegt. Es wurde keine App-ID registriert.
+- Folge: Das Paket ist komplett gebaut und im Simulator getestet (der Simulator braucht kein Profil). Die Signierung der Erweiterung prüft die Hauptsitzung mit dem Nutzer (Gerätetest 1). Die Bundle-ID steht nicht in diesem Plan und nicht in den Commits.
+
+**S2 Was liefert Apple Mail im Teilen-Blatt: am Gerät offen, alle drei Rückfälle gebaut.**
+- Belegt: Im SDK (iPhoneSimulator 27.2) gibt es `UTType.emailMessage` (`public.email-message`). `com.apple.mail.email` ist in den SDK-Dateien nicht deklariert; die Kennung ist aus Mail auf dem Mac bekannt, für iOS **nicht belegt**. Die Erweiterung erkennt beide Kennungen und die Endung `.eml`.
+- Nicht belegt: Der Simulator enthält kein Mail (39 Apps, keine Mail-App) und das Briefing verbietet die Gerätewerkzeuge; „Teilen“ aus „Dateien“ und Safari wurde deshalb nicht im Simulator ausgeführt. Die Erweiterung loggt in DEBUG die `registeredTypeIdentifiers` (nur Kennungen, nie Inhalte), damit der Gerätetest 7 die Antwort liefert.
+
+| Quelle | gelieferte Typen (Erwartung, ungeprüft) | Was Tagwerk daraus macht |
+|---|---|---|
+| Datei `.eml` (Dateien, Mac, „Sichern in Dateien“) | `public.email-message` oder `com.apple.mail.email`, Dateiendung `.eml` | R2: Die Erweiterung liest höchstens die ersten 2 MB, `MailMessageParser` liest Betreff, Absender, Datum, Message-ID, Text. Die Datei wird nicht abgelegt. Ziel „Mail zu Aufgabe“. |
+| In Mail markierter Text | `public.plain-text` | R1: Text; die Auswahl enthält „Mail zu Aufgabe“ (neben Aufgabe, Notiz, Einkauf, Rezept). Kein Betreff, kein Link. |
+| Ganze Nachricht über Teilen in Mail | unbekannt (am Gerät klären) | Je nach Typ wie `.eml`, Text oder Link. |
+| Kopierter Text | `public.utf8-plain-text` | R3: Menü am „+“ in „Aufgaben“ → „Mail aus Zwischenablage“. |
+
+**S3 `message:`-Link: Entscheidung ohne `canOpenURL`.**
+- Befund: `xcrun simctl openurl <Simulator> "message://%3Cabc@example.com%3E"` schlägt im eigenen Simulator mit `LSApplicationWorkspaceErrorDomain` Code 115 fehl, weil dort kein Mail installiert ist. Das sagt nichts über das iPhone.
+- Entscheidung (konservativ, wie im Plan vorgesehen): Der Link steht als Text in den Notizen, wenn die Mail eine Message-ID hat, ohne `canOpenURL`. Deshalb kommt `LSApplicationQueriesSchemes` **nicht** in die `Info.plist`. Gerätetest 7 prüft, ob der Link genau diese Mail öffnet.
 
 ## Task 1: `SharePayload` – Klassifizierung (TagwerkCore)
 
