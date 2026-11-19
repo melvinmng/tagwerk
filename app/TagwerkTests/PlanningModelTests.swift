@@ -398,7 +398,7 @@ struct PlanningModelTests {
         accessStore.accessState = .fullAccess
         let reminders = FakeTaskProvider(source: .reminders, tasks: [makeTask("k", source: .reminders, due: DueDate(year: 2026, month: 11, day: 18))])
         await taskList.register(reminders)
-        RecurringEffortStore(context: container.mainContext).setForAll(60, reminderID: "k", from: PlanDay(year: 2026, month: 11, day: 10))
+        RecurringEffortStore(context: container.mainContext).setForAll(60, task: TaskID(source: .reminders, rawValue: "k"), from: PlanDay(year: 2026, month: 11, day: 10))
         let task = try #require(taskList.items.first { $0.id.source == .reminders })
         _ = try blocks.createBlock(for: task, start: at(17, 9), minutes: 60)
         var model = await model()
@@ -419,7 +419,7 @@ struct PlanningModelTests {
         let reminders = FakeTaskProvider(source: .reminders, tasks: [makeTask("b", source: .reminders, due: DueDate(year: 2026, month: 11, day: 18))])
         await taskList.register(reminders)
         if let effort {
-            RecurringEffortStore(context: container.mainContext).setForAll(effort, reminderID: "b", from: PlanDay(year: 2026, month: 11, day: 10))
+            RecurringEffortStore(context: container.mainContext).setForAll(effort, task: TaskID(source: .reminders, rawValue: "b"), from: PlanDay(year: 2026, month: 11, day: 10))
         }
         return try #require(taskList.items.first { $0.id.source == .reminders })
     }
@@ -434,12 +434,12 @@ struct PlanningModelTests {
                                                   recurrence: Recurrence(rule: rule, start: start, end: nil, count: nil))]
         accessStore.accessState = .fullAccess
         await taskList.register(FakeTaskProvider(source: .reminders, tasks: [makeTask("s", source: .reminders, due: due)]))
-        RecurringEffortStore(context: container.mainContext).setForAll(30, reminderID: "s", from: PlanDay(year: 2026, month: 11, day: 16))
+        RecurringEffortStore(context: container.mainContext).setForAll(30, task: TaskID(source: .reminders, rawValue: "s"), from: PlanDay(year: 2026, month: 11, day: 16))
         return try #require(taskList.items.first { $0.id.source == .reminders })
     }
 
     private func reservedDays(_ model: PlanningModel) -> [Int] {
-        model.days.filter { $0.recurring.contains { $0.reminderID == "s" && $0.minutes == 30 } }.map(\.day.day)
+        model.days.filter { $0.recurring.contains { $0.taskID.rawValue == "s" && $0.minutes == 30 } }.map(\.day.day)
     }
 
     @Test func ruleChange_reservesOnNewDays() async throws {
@@ -513,7 +513,7 @@ struct PlanningModelTests {
     @Test func suggestedBlockMinutes_recurringReminder_usesEffortOfTheDay() async throws {
         let task = try await addDailyReminder(effort: 15)
         let tomorrow = today.adding(days: 1, calendar: calendar)
-        RecurringEffortStore(context: container.mainContext).setForDay(45, reminderID: "b", day: tomorrow)
+        RecurringEffortStore(context: container.mainContext).setForDay(45, task: TaskID(source: .reminders, rawValue: "b"), day: tomorrow)
         let model = await model()
         #expect(model.suggestedBlockMinutes(for: task, on: today) == 15)
         #expect(model.suggestedBlockMinutes(for: task, on: tomorrow) == 45)
@@ -645,7 +645,7 @@ struct PlanningModelTests {
         accessStore.accessState = .fullAccess
         let reminders = FakeTaskProvider(source: .reminders, tasks: [makeTask("k", source: .reminders, due: DueDate(year: 2026, month: 11, day: 18))])
         await taskList.register(reminders)
-        RecurringEffortStore(context: container.mainContext).setForAll(120, reminderID: "k", from: PlanDay(year: 2026, month: 11, day: 10))
+        RecurringEffortStore(context: container.mainContext).setForAll(120, task: TaskID(source: .reminders, rawValue: "k"), from: PlanDay(year: 2026, month: 11, day: 10))
         let task = try #require(taskList.items.first { $0.id.source == .reminders })
         _ = try blocks.createBlock(for: task, start: at(18, 14), minutes: 120)
         let model = await model()
@@ -792,9 +792,9 @@ struct PlanningModelTests {
                                                   recurrence: Recurrence(rule: .daily(interval: 1), start: PlanDay(year: 2026, month: 11, day: 16),
                                                                          end: nil, count: nil))]
         accessStore.accessState = .fullAccess
-        RecurringEffortStore(context: container.mainContext).setForAll(180, reminderID: "k", from: PlanDay(year: 2026, month: 11, day: 1))
+        RecurringEffortStore(context: container.mainContext).setForAll(180, task: TaskID(source: .reminders, rawValue: "k"), from: PlanDay(year: 2026, month: 11, day: 1))
         let model = await model()
-        #expect(model.days.first?.recurring == [RecurringItem(reminderID: "k", title: "Karteikarten", minutes: 180)])
+        #expect(model.days.first?.recurring == [RecurringItem(taskID: TaskID(source: .reminders, rawValue: "k"), title: "Karteikarten", minutes: 180)])
         #expect(model.days.first?.capacity.availableMinutes == 300)
     }
 
@@ -816,9 +816,9 @@ struct PlanningModelTests {
         }
         let recurring = reminder("k", "Karteikarten")
         let once = reminder("e", "Einmalig")
-        #expect(model.recurringItem(for: recurring, on: today) == RecurringItem(reminderID: "k", title: "Karteikarten", minutes: 0))
+        #expect(model.recurringItem(for: recurring, on: today) == RecurringItem(taskID: TaskID(source: .reminders, rawValue: "k"), title: "Karteikarten", minutes: 0))
         #expect(model.recurringItem(for: once, on: today) == nil)
-        await model.setRecurringEffort(45, reminderID: "k", day: today, forAll: true)
+        await model.setRecurringEffort(45, task: TaskID(source: .reminders, rawValue: "k"), day: today, forAll: true)
         #expect(model.recurringItem(for: recurring, on: today)?.minutes == 45)
     }
 
@@ -850,7 +850,7 @@ struct PlanningModelTests {
                                                   ekPriority: 0, isCompleted: false, listID: "l", lastModified: nil,
                                                   recurrence: Recurrence(rule: .daily(interval: 1), start: today, end: nil, count: nil))]
         accessStore.accessState = .fullAccess
-        RecurringEffortStore(context: container.mainContext).setForAll(60, reminderID: "k", from: today)
+        RecurringEffortStore(context: container.mainContext).setForAll(60, task: TaskID(source: .reminders, rawValue: "k"), from: today)
     }
 
     @Test func completingRecurringToday_freesItsEffort() async {
@@ -868,8 +868,95 @@ struct PlanningModelTests {
         recurringTraining()
         let model = await model()
         await model.didChangeCompletion(id("Fahrrad"), isCompleted: true)
-        #expect(model.efforts.isDone(reminderID: "Fahrrad", day: today) == false)
+        #expect(model.efforts.isDone(task: id("Fahrrad"), day: today) == false)
         #expect(model.days.first?.capacity.remainingMinutes == 360)
+    }
+
+    // MARK: Recurring local tasks (plan 2026-11-18, stage 2)
+
+    /// A local "Lesen" every day from today with an estimate that must not count on top of the series effort.
+    private func recurringLocalReading(effort: Int? = 60) -> TaskID {
+        var task = makeTask("Lesen", source: .local, due: DueDate(year: 2026, month: 11, day: 18))
+        task.estimateMinutes = 120
+        task.recurrence = Recurrence(rule: .daily(interval: 1), start: today, end: nil, count: nil)
+        local.tasks.append(task)
+        if let effort { RecurringEffortStore(context: container.mainContext).setForAll(effort, task: task.id, from: today) }
+        return task.id
+    }
+
+    @Test func recurringLocalTask_reservesEffortLikeReminder() async throws {
+        let reading = recurringLocalReading()
+        let model = await model()
+        #expect(model.recurringTaskIDs == [reading])
+        #expect(model.days.first?.recurring == [RecurringItem(taskID: reading, title: "Lesen", minutes: 60)])
+        #expect(model.days.first?.capacity.remainingMinutes == 360)
+        let task = try #require(taskList.items.first { $0.id == reading })
+        #expect(model.recurringItem(for: task, on: today) == RecurringItem(taskID: reading, title: "Lesen", minutes: 60))
+        #expect(model.effortMinutes(of: task) == 60)
+    }
+
+    /// The series effort replaces the estimate: due today, the task does not add its estimate as load.
+    @Test func recurringLocalTask_countsOnlyThroughItsEffort() async {
+        _ = recurringLocalReading(effort: nil)
+        let model = await model()
+        #expect(model.days.first?.capacity.plannedMinutes == 0)
+        #expect(model.days.first?.capacity.remainingMinutes == 420)
+    }
+
+    @Test func recurringLocalTask_effortReachesFollowingOccurrences() async {
+        let reading = recurringLocalReading()
+        let model = await model()
+        model.scope = .week
+        await model.reload()
+        #expect(model.days.filter { $0.recurring.contains { $0.taskID == reading } }.map(\.day.day) == [18, 19, 20, 21, 22])
+    }
+
+    @Test func completingRecurringLocalToday_freesItsEffort() async {
+        let reading = recurringLocalReading()
+        let model = await model()
+        await model.didChangeCompletion(reading, isCompleted: true)
+        #expect(model.efforts.isDone(task: reading, day: today))
+        #expect(model.days.first?.capacity.remainingMinutes == 420)
+        await model.didChangeCompletion(reading, isCompleted: false)
+        #expect(model.days.first?.capacity.remainingMinutes == 360)
+    }
+
+    @Test func recurringLocalTask_settingEffortUsesTaskKey() async throws {
+        let reading = recurringLocalReading(effort: nil)
+        let model = await model()
+        await model.setRecurringEffort(45, task: reading, day: today, forAll: true)
+        #expect(model.efforts.minutes(for: reading, on: today) == 45)
+        #expect(model.efforts.minutes(for: TaskID(source: .reminders, rawValue: "Lesen"), on: today) == nil)
+    }
+
+    /// A task that just got its rule is a series before the planning reloads (editor, "Aufwand ändern …").
+    @Test func recurringItem_followsTheTaskBeforeReload() async throws {
+        let model = await model()
+        let reading = recurringLocalReading()
+        await taskList.reload()
+        let task = try #require(taskList.items.first { $0.id == reading })
+        #expect(model.recurringItem(for: task, on: today) == RecurringItem(taskID: reading, title: "Lesen", minutes: 60))
+    }
+
+    /// A reminder listed by the task list with its rule and read from Reminders counts once.
+    @Test func recurringReminderInTaskList_countsOnce() async {
+        recurringTraining()
+        var listed = makeTask("k", source: .reminders, due: DueDate(year: 2026, month: 11, day: 18))
+        listed.recurrence = Recurrence(rule: .daily(interval: 1), start: today, end: nil, count: nil)
+        await taskList.register(FakeTaskProvider(source: .reminders, tasks: [listed]))
+        let model = await model()
+        #expect(model.days.first?.recurring.count == 1)
+        #expect(model.days.first?.capacity.remainingMinutes == 360)
+    }
+
+    /// Blocks count against the occurrence of the series (daily: the same day), not against the last 60 days.
+    @Test func recurringLocalTask_blocksCountForTheirOccurrence() async throws {
+        let reading = recurringLocalReading()
+        let model = await model()
+        let task = try #require(taskList.items.first { $0.id == reading })
+        await model.createBlock(for: task, start: at(17, 14), minutes: 30)
+        await model.createBlock(for: task, start: at(18, 14), minutes: 45)
+        #expect(model.blockedMinutes(of: reading) == 45)
     }
 
     @Test func duplicateEvents_shownBothUntilAnswered_thenOnce() async throws {
@@ -1427,11 +1514,11 @@ struct PlanningModelTests {
 
     @Test func recurringEffort_setForDayAndForAll() async {
         let model = await model()
-        await model.setRecurringEffort(60, reminderID: "k", day: today, forAll: false)
-        #expect(model.efforts.minutes(for: "k", on: today) == 60)
-        #expect(model.efforts.minutes(for: "k", on: today.adding(days: 1, calendar: calendar)) == nil)
-        await model.setRecurringEffort(120, reminderID: "k", day: today, forAll: true)
-        #expect(model.efforts.minutes(for: "k", on: today.adding(days: 1, calendar: calendar)) == 120)
+        await model.setRecurringEffort(60, task: TaskID(source: .reminders, rawValue: "k"), day: today, forAll: false)
+        #expect(model.efforts.minutes(for: TaskID(source: .reminders, rawValue: "k"), on: today) == 60)
+        #expect(model.efforts.minutes(for: TaskID(source: .reminders, rawValue: "k"), on: today.adding(days: 1, calendar: calendar)) == nil)
+        await model.setRecurringEffort(120, task: TaskID(source: .reminders, rawValue: "k"), day: today, forAll: true)
+        #expect(model.efforts.minutes(for: TaskID(source: .reminders, rawValue: "k"), on: today.adding(days: 1, calendar: calendar)) == 120)
     }
 
     @Test func plannedInfo_forEditor() async throws {

@@ -429,7 +429,7 @@ struct AIPlannerTests {
         var reminder = makeTask("blumen", source: .reminders, due: DueDate(year: 2026, month: 11, day: 15))
         reminder.priority = .p1
         await taskList.register(FakeTaskProvider(source: .reminders, tasks: [reminder]))
-        RecurringEffortStore(context: container.mainContext).setForAll(15, reminderID: "blumen", from: PlanDay(year: 2026, month: 11, day: 15))
+        RecurringEffortStore(context: container.mainContext).setForAll(15, task: TaskID(source: .reminders, rawValue: "blumen"), from: PlanDay(year: 2026, month: 11, day: 15))
         responder.enqueue(Self.dayAnswer(""))
         let (planner, planning) = await make(reminderStore: access)
         await planner.plan(scope: .day, anchor: today)
@@ -772,8 +772,8 @@ extension AIPlannerTests {
         await taskList.register(FakeTaskProvider(source: .reminders,
                                                  tasks: [makeTask("k", source: .reminders, due: DueDate(year: 2026, month: 11, day: 19))]))
         let efforts = RecurringEffortStore(context: container.mainContext)
-        efforts.setForAll(30, reminderID: "k", from: today)
-        efforts.setForDay(90, reminderID: "k", day: tomorrow)
+        efforts.setForAll(30, task: TaskID(source: .reminders, rawValue: "k"), from: today)
+        efforts.setForDay(90, task: TaskID(source: .reminders, rawValue: "k"), day: tomorrow)
         let (planner, planning) = await make(reminderStore: reminderStore)
         planning.anchor = tomorrow
         await planning.reload()

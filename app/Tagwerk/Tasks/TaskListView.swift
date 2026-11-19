@@ -7,7 +7,7 @@ struct TaskListView: View {
     @Bindable var model: TaskListModel
     /// Shows a planned day in the "Planen" tab (editor section "Geplant").
     var onShowDay: ((PlanDay) -> Void)?
-    /// Opens the effort sheet of a recurring reminder.
+    /// Opens the effort sheet of a repeating task.
     var onEditRecurring: ((RecurringItem, PlanDay) -> Void)?
     @State private var isCreating = false
     @State private var reschedulingItem: TaskItem?
@@ -158,7 +158,7 @@ struct TaskListView: View {
 
     private func row(_ item: TaskItem, section: TaskSection) -> some View {
         TaskRow(item: item, section: section, now: model.now(), calendar: model.calendar, isReadOnly: !isWritable(item),
-                isRecurring: item.id.source == .reminders && environment.planning.recurringReminderIDs.contains(item.id.rawValue)) {
+                isRecurring: item.recurrence != nil || environment.planning.recurringTaskIDs.contains(item.id)) {
             if isWritable(item) { Task { await model.complete(item.id) } } else { showsOfflineInfo = true }
         }
         .tag(item.id)

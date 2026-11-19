@@ -13,10 +13,10 @@ extension PlanScope {
     }
 }
 
-/// Effort a recurring reminder reserves on one day.
+/// Effort a repeating task (recurring reminder or local task) reserves on one day.
 struct RecurringItem: Hashable, Identifiable {
-    var id: String { reminderID }
-    let reminderID: String
+    var id: String { taskID.key }
+    let taskID: TaskID
     let title: String
     let minutes: Int
     /// Completed in Tagwerk on this day: the effort no longer reserves time.
@@ -124,8 +124,8 @@ final class PlanningModel {
     private(set) var overdue: [TaskItem] = []
     /// Important deadlines from the anchor day over the next 14 days (deadline card of the day view).
     private(set) var upcomingDeadlines: [ImportantDeadline] = []
-    /// Reminder IDs with a repetition rule (for "Aufwand ändern …").
-    private(set) var recurringReminderIDs: Set<String> = []
+    /// Tasks with a repetition: reminders with a rule and local tasks (for "Aufwand ändern …" and ↻).
+    private(set) var recurringTaskIDs: Set<TaskID> = []
     private var resolvedLinks: [String: ResolvedLink] = [:]
     private(set) var pendingBlockDecision: PendingBlockDecision?
     private(set) var lastError: String?
@@ -155,10 +155,10 @@ final class PlanningModel {
     private(set) var toSchedule: [TaskItem] = []
     /// Minutes already in blocks per task (session window), for the AI's remaining effort.
     private(set) var blockedMinutesByTask: [TaskID: Int] = [:]
-    /// Repetition rules of recurring reminders (reminder ID → rule), for their session window.
-    private var recurrenceRules: [String: RecurrenceRule] = [:]
-    /// Full recurrences of open reminders, to compare a changed rule with the current one.
-    private var recurrences: [String: Recurrence] = [:]
+    /// Repetition rules of repeating tasks, for their session window.
+    private var recurrenceRules: [TaskID: RecurrenceRule] = [:]
+    /// Full recurrences of open repeating tasks, to compare a changed rule with the current one.
+    private var recurrences: [TaskID: Recurrence] = [:]
     /// The block created by the last "Duplizieren", for "Widerrufen".
     private(set) var lastDuplicate: CalendarEvent?
     /// Open AI suggestion batches that touch the shown range.
@@ -229,8 +229,8 @@ final class PlanningModel {
         let open = taskList.items.filter { !$0.isCompleted }
         pruneAssignments(open: open)
 
-        let reminders = reminderStore.accessState == .fullAccess ? await reminderStore.openReminders(in: nil) : []
-        let recurringIDs = Set(reminders.filter { $0.recurrence != nil }.map(\.id))
+        let series = await recurringSeries(open: open)
+        let recurringIDs = Set(series.map(\.id))
         let interval = DateInterval(start: range.lowerBound.startDate(in: calendar),
                                     end: range.upperBound.adding(days: 1, calendar: calendar).startDate(in: calendar))
         // Marks first: follow moved events and report vanished ones before anything reads the marked IDs.
@@ -245,11 +245,9 @@ final class PlanningModel {
         preparationTargets = deadlineMarks.preparationTargets(for: events)
         let resolved = resolveLinks(events: events, tasks: open, manual: blocks.links.manualLinks())
         resolvedLinks = Dictionary(resolved.map { ($0.eventID, $0) }, uniquingKeysWith: { first, _ in first })
-        recurringReminderIDs = recurringIDs
-        recurrenceRules = Dictionary(reminders.compactMap { record in record.recurrence.map { (record.id, $0.rule) } },
-                                     uniquingKeysWith: { first, _ in first })
-        recurrences = Dictionary(reminders.compactMap { record in record.recurrence.map { (record.id, $0) } },
-                                 uniquingKeysWith: { first, _ in first })
+        recurringTaskIDs = recurringIDs
+        recurrenceRules = Dictionary(series.map { ($0.id, $0.recurrence.rule) }, uniquingKeysWith: { first, _ in first })
+        recurrences = Dictionary(series.map { ($0.id, $0.recurrence) }, uniquingKeysWith: { first, _ in first })
         updateSessions(open: open)
         let links = resolvedLinks.mapValues(\.taskID)
         let deadlines = importantDeadlines(tasks: open, events: events,
@@ -270,7 +268,7 @@ final class PlanningModel {
         var day = range.lowerBound
         while day <= range.upperBound {
             var plan = dayPlan(day, events: events, links: links, deadlines: deadlines, assignments: assignments,
-                               overrides: overrides, tasksByID: tasksByID, reminders: reminders,
+                               overrides: overrides, tasksByID: tasksByID, series: series,
                                recurringIDs: recurringIDs, open: open, allAssignments: allAssignments,
                                deadlineIDs: deadlineIDs)
             plan.suggestions = suggestionsByDay[day] ?? []
@@ -299,8 +297,8 @@ final class PlanningModel {
     /// from a full day). Computed like `reload()` without changing what is shown.
     func planInputs(in range: ClosedRange<PlanDay>) async -> [PlanInputDay] {
         let open = taskList.items.filter { !$0.isCompleted }
-        let reminders = reminderStore.accessState == .fullAccess ? await reminderStore.openReminders(in: nil) : []
-        let recurringIDs = Set(reminders.filter { $0.recurrence != nil }.map(\.id))
+        let series = await recurringSeries(open: open)
+        let recurringIDs = Set(series.map(\.id))
         let interval = DateInterval(start: range.lowerBound.startDate(in: calendar),
                                     end: range.upperBound.adding(days: 1, calendar: calendar).startDate(in: calendar))
         let raw = calendarStore.events(in: interval, calendarIDs: readableCalendarIDs())
@@ -318,7 +316,7 @@ final class PlanningModel {
         var day = range.lowerBound
         while day <= range.upperBound {
             let plan = dayPlan(day, events: events, links: links, deadlines: [], assignments: assignments,
-                               overrides: overrides, tasksByID: tasksByID, reminders: reminders,
+                               overrides: overrides, tasksByID: tasksByID, series: series,
                                recurringIDs: recurringIDs, open: open, allAssignments: allAssignments,
                                deadlineIDs: deadlineIDs)
             if let input = plan.planInput { result.append(input) }
@@ -462,7 +460,7 @@ final class PlanningModel {
             }
         }
         if edit.recurringMinutes != edit.originalRecurringMinutes, recurringItem(for: task, on: today) != nil {
-            await setRecurringEffort(edit.recurringMinutes, reminderID: task.id.rawValue, day: today, forAll: edit.recurringForAll)
+            await setRecurringEffort(edit.recurringMinutes, task: task.id, day: today, forAll: edit.recurringForAll)
         }
         await reload()
     }
@@ -544,20 +542,20 @@ final class PlanningModel {
     }
 
     /// "Nur dieser Tag" (`forAll == false`) or "Alle" from this day on.
-    func setRecurringEffort(_ minutes: Int?, reminderID: String, day: PlanDay, forAll: Bool) async {
+    func setRecurringEffort(_ minutes: Int?, task: TaskID, day: PlanDay, forAll: Bool) async {
         if forAll {
-            efforts.setForAll(minutes, reminderID: reminderID, from: day)
+            efforts.setForAll(minutes, task: task, from: day)
         } else {
-            efforts.setForDay(minutes ?? 0, reminderID: reminderID, day: day)
+            efforts.setForDay(minutes ?? 0, task: task, day: day)
         }
         await reload()
     }
 
-    /// The recurring-effort entry of a reminder with a repetition rule on `day`; `nil` for other tasks.
+    /// The recurring-effort entry of a repeating task on `day`; `nil` for other tasks. A task carrying a rule counts
+    /// before the next reload (a local task that just got one).
     func recurringItem(for task: TaskItem, on day: PlanDay) -> RecurringItem? {
-        guard task.id.source == .reminders, recurringReminderIDs.contains(task.id.rawValue) else { return nil }
-        return RecurringItem(reminderID: task.id.rawValue, title: task.title,
-                             minutes: efforts.minutes(for: task.id.rawValue, on: day) ?? 0)
+        guard task.recurrence != nil || recurringTaskIDs.contains(task.id) else { return nil }
+        return RecurringItem(taskID: task.id, title: task.title, minutes: efforts.minutes(for: task.id, on: day) ?? 0)
     }
 
     /// Future blocks of `task` whose occurrence disappears under `recurrence`. A block prepares the occurrence of
@@ -567,7 +565,7 @@ final class PlanningModel {
     /// save question names them).
     func blocksOffSeries(for task: TaskItem, recurrence: Recurrence) -> [CalendarEvent] {
         if case .unsupported = recurrence.rule { return [] }
-        let current = task.recurrence ?? (task.id.source == .reminders ? recurrences[task.id.rawValue] : nil)
+        let current = task.recurrence ?? recurrences[task.id]
         return blocks.futureBlocks(for: task.id, after: now()).filter { block in
             let day = PlanDay(date: block.start, calendar: calendar)
             let served: PlanDay = if let current, case .unsupported = current.rule { day }
@@ -576,13 +574,13 @@ final class PlanningModel {
         }
     }
 
-    /// Completing a recurring reminder in Tagwerk frees today's effort; reopening reserves it again (design §13.3).
+    /// Completing a repeating task in Tagwerk frees today's effort; reopening reserves it again (design §13.3).
     func didChangeCompletion(_ id: TaskID, isCompleted: Bool) async {
-        guard id.source == .reminders, recurringReminderIDs.contains(id.rawValue) else { return }
+        guard recurringTaskIDs.contains(id) else { return }
         if isCompleted {
-            efforts.markDone(reminderID: id.rawValue, day: today)
+            efforts.markDone(task: id, day: today)
         } else {
-            efforts.unmarkDone(reminderID: id.rawValue, day: today)
+            efforts.unmarkDone(task: id, day: today)
         }
         await reload()
     }
@@ -1107,7 +1105,7 @@ final class PlanningModel {
     /// The period whose blocks count for `day`: the occurrence of a recurring reminder (ending with `day`),
     /// else from 60 days before today on without end.
     private func sessionWindow(of id: TaskID, on day: PlanDay) -> Range<Date> {
-        if id.source == .reminders, let rule = recurrenceRules[id.rawValue],
+        if let rule = recurrenceRules[id],
            let start = TagwerkCore.sessionWindowStart(for: rule, today: day, calendar: calendar) {
             return start.startDate(in: calendar)..<day.adding(days: 1, calendar: calendar).startDate(in: calendar)
         }
@@ -1263,7 +1261,7 @@ final class PlanningModel {
     }
 
     /// Recomputes the evening state from the real today; independent of the shown range.
-    private func updateEvening(open: [TaskItem], allAssignments: [TaskID: PlanDay], recurringIDs: Set<String>) async {
+    private func updateEvening(open: [TaskItem], allAssignments: [TaskID: PlanDay], recurringIDs: Set<TaskID>) async {
         let today = self.today
         let current = now()
         let nowMinutes = minutes(current, from: today.startDate(in: calendar))
@@ -1275,7 +1273,7 @@ final class PlanningModel {
         nextPlanDay = (1...5).lazy.map { today.adding(days: $0, calendar: self.calendar) }
             .first { (self.workHours(on: $0)?.minutes ?? 0) > 0 }
         leftFromToday = isTodayOver ? sortedTasks(open.filter { task in
-            if task.id.source == .reminders, recurringIDs.contains(task.id.rawValue) { return false }
+            if recurringIDs.contains(task.id) { return false }
             let planned = allAssignments[task.id]
             let dueToday = task.due.map { PlanDay($0) == today } ?? false
             guard planned == today || (dueToday && (planned.map { $0 <= today } ?? true)) else { return false }
@@ -1499,9 +1497,24 @@ final class PlanningModel {
 
     // MARK: Private
 
+    /// Repeating tasks whose effort is reserved: reminders with a rule (read from Reminders, all lists) and open
+    /// tasks of other sources with a repetition (local tasks). A reminder counts once even when the task list
+    /// carries its rule too.
+    private func recurringSeries(open: [TaskItem]) async -> [RecurringSeries] {
+        let reminders = reminderStore.accessState == .fullAccess ? await reminderStore.openReminders(in: nil) : []
+        let fromReminders = reminders.compactMap { record in
+            record.recurrence.map { RecurringSeries(id: TaskID(source: .reminders, rawValue: record.id), title: record.title, recurrence: $0) }
+        }
+        let others = open.compactMap { task in
+            task.id.source == .reminders ? nil : task.recurrence.map { RecurringSeries(id: task.id, title: task.title, recurrence: $0) }
+        }
+        var seen: Set<TaskID> = []
+        return (fromReminders + others).filter { seen.insert($0.id).inserted }
+    }
+
     private func dayPlan(_ day: PlanDay, events: [CalendarEvent], links taskLinks: [String: TaskID], deadlines: [ImportantDeadline],
                          assignments: [TaskID: PlanDay], overrides: [PlanDay: DayOverride], tasksByID: [TaskID: TaskItem],
-                         reminders: [ReminderRecord], recurringIDs: Set<String>, open: [TaskItem],
+                         series: [RecurringSeries], recurringIDs: Set<TaskID>, open: [TaskItem],
                          allAssignments: [TaskID: PlanDay], deadlineIDs: Set<String>) -> DayPlan {
         // A deadline event linked to a task is the task's anchor (AI, event sheet), not work on it: it stays an event,
         // counts as busy and is no time block (decision 5, plan deadline-marking Task 10).
@@ -1533,8 +1546,8 @@ final class PlanningModel {
         var estimated = 0
         var counted: [String: Int] = [:]
         for task in assignedSorted + openToday where !tasksWithBlocks.contains(task.id) {
-            // Recurring reminders count once, through their recurring effort.
-            if task.id.source == .reminders, recurringIDs.contains(task.id.rawValue) { continue }
+            // Repeating tasks count once, through their recurring effort.
+            if recurringIDs.contains(task.id) { continue }
             let minutes = task.estimateMinutes ?? settings.defaultTaskMinutes
             if task.estimateMinutes == nil { estimated += 1 }
             planned += minutes
@@ -1550,12 +1563,11 @@ final class PlanningModel {
             let from = max(event.start, start), to = min(event.end, end)
             blockMinutesByTask[id, default: 0] += max(0, Int(to.timeIntervalSince(from) / 60))
         }
-        let coveredRecurring = reminders.reduce(0) { total, reminder in
-            guard reminder.recurrence != nil, let blocked = blockMinutesByTask[TaskID(source: .reminders, rawValue: reminder.id)],
-                  let reserved = efforts.minutes(for: reminder.id, on: day) else { return total }
+        let coveredRecurring = series.reduce(0) { total, item in
+            guard let blocked = blockMinutesByTask[item.id], let reserved = efforts.minutes(for: item.id, on: day) else { return total }
             return total + min(reserved, blocked)
         }
-        let recurringMinutes = max(0, efforts.reservedMinutes(on: day, reminders: reminders, calendar: calendar) - coveredRecurring)
+        let recurringMinutes = max(0, efforts.reservedMinutes(on: day, series: series, calendar: calendar) - coveredRecurring)
         var input = CapacityInput(
             hours: hours,
             lunchStartMinutes: lunch(on: day)?.lowerBound ?? 0, lunchMinutes: lunch(on: day)?.count ?? 0,
@@ -1568,10 +1580,10 @@ final class PlanningModel {
         // of them replaces its reservation instead of adding to it.
         var aiCounted = counted
         var reservedLoad = 0
-        for reminder in reminders where reminder.recurrence != nil {
-            let key = TaskID(source: .reminders, rawValue: reminder.id)
-            guard let reserved = efforts.minutes(for: reminder.id, on: day), reserved > 0,
-                  !occurrences(of: reminder.recurrence!, in: day...day, calendar: calendar).isEmpty else { continue }
+        for item in series {
+            let key = item.id
+            guard let reserved = efforts.minutes(for: key, on: day), reserved > 0,
+                  !occurrences(of: item.recurrence, in: day...day, calendar: calendar).isEmpty else { continue }
             let open = max(0, reserved - (blockMinutesByTask[key] ?? 0))
             guard open > 0 else { continue }
             aiCounted[key.key, default: 0] += open
@@ -1594,12 +1606,10 @@ final class PlanningModel {
             }
         }
         let pastDue = Set(assigned.filter { task in task.due.map { PlanDay($0) < day } ?? false }.map(\.id))
-        let recurring = reminders.compactMap { reminder -> RecurringItem? in
-            guard let recurrence = reminder.recurrence,
-                  !occurrences(of: recurrence, in: day...day, calendar: calendar).isEmpty,
-                  let minutes = efforts.minutes(for: reminder.id, on: day), minutes > 0 else { return nil }
-            return RecurringItem(reminderID: reminder.id, title: reminder.title, minutes: minutes,
-                                 isDone: efforts.isDone(reminderID: reminder.id, day: day))
+        let recurring = series.compactMap { item -> RecurringItem? in
+            guard !occurrences(of: item.recurrence, in: day...day, calendar: calendar).isEmpty,
+                  let minutes = efforts.minutes(for: item.id, on: day), minutes > 0 else { return nil }
+            return RecurringItem(taskID: item.id, title: item.title, minutes: minutes, isDone: efforts.isDone(task: item.id, day: day))
         }
         // Merging only affects the display; capacity above used every event (overlaps are unified).
         // Merged copies were removed in `markedEvents` (only after the user's answer, design §13.15 M1).
