@@ -93,6 +93,7 @@ public enum GitHubMapping {
         if projects.contains(where: { $0.field(named: dueField) != nil }) { editable.insert(.due) }
         if projects.contains(where: { $0.field(named: priorityField) != nil }) { editable.insert(.priority) }
         if projects.contains(where: { estimateFieldName(in: $0) != nil }) { editable.insert(.estimate) }
+        if projects.contains(where: { !statusOptions(in: $0).isEmpty }) { editable.insert(.status) }
 
         return TaskItem(
             id: TaskID(source: .github, rawValue: record.issueID),
@@ -113,7 +114,12 @@ public enum GitHubMapping {
                 EpicInfo(id: $0.id, number: $0.number, title: $0.title, due: $0.due, isEpic: $0.labels.contains(epicLabel))
             },
             isEpic: record.labels.contains(epicLabel),
-            assignees: record.assignees
+            assignees: record.assignees,
+            statuses: placements.map { placement in
+                SubContainerStatus(subContainerID: placement.project.id, subContainerName: placement.project.title,
+                                   current: placement.status, options: statusOptions(in: placement.project),
+                                   isWritable: placement.project.canWrite)
+            }
         )
     }
 

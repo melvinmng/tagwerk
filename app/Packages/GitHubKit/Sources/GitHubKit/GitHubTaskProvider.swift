@@ -152,7 +152,8 @@ public final class GitHubTaskProvider: TaskProvider {
             let writer = GitHubWriter(api: api)
             try await writer.updateIssue(current, title: nil, body: nil, labels: nil, state: .closeNotPlanned)
             for placement in current.placements where placement.project.canWrite {
-                try await writer.setField(placement, fieldName: GitHubMapping.statusField, value: .singleSelect(GitHubMapping.doneStatus))
+                guard let done = GitHubMapping.doneOption(in: placement.project) else { continue }
+                try await writer.setField(placement, fieldName: GitHubMapping.statusField, value: .singleSelect(done))
             }
             records[current.issueID] = nil
         } catch {
@@ -177,12 +178,14 @@ public final class GitHubTaskProvider: TaskProvider {
     }
 
     /// Creates an issue in `draft.containerID` (repository), assigned to `draft.assignees` or, when
-    /// those are `nil`, to the viewer, and adds it to every project in `draft.subContainerIDs` with
-    /// the draft's field values and status "Ready". The returned item carries the assignees GitHub
-    /// actually set; an issue that is not assigned to the viewer is returned but not remembered.
+    /// those are `nil`, to the viewer, and adds it to every project in `draft.subContainerIDs` (none is
+    /// allowed) with the draft's field values and status: `draft.startStatus`, otherwise "Ready" or the
+    /// first stage of the project that is not "Done". The status is validated against every project
+    /// before the issue is created. The returned item carries the assignees GitHub actually set; an issue
+    /// that is not visible for the viewer (not assigned, or without a project) is returned but not remembered.
     public func create(_ draft: TaskDraft) async throws -> TaskItem {
-        guard let repository = draft.containerID, !draft.subContainerIDs.isEmpty else {
-            throw TaskWriteError.failed(String(localized: "Bitte Repository und mindestens ein Project wählen.", bundle: .module))
+        guard let repository = draft.containerID else {
+            throw TaskWriteError.failed(String(localized: "Bitte ein Repository wählen.", bundle: .module))
         }
         if let chosen = draft.assignees, chosen.count > AssigneeRules.maximum { throw Self.tooManyAssignees }
         do {
@@ -191,12 +194,13 @@ public final class GitHubTaskProvider: TaskProvider {
             projects = available
             let targets = draft.subContainerIDs.compactMap { id in available.first { $0.id == id } }
             guard targets.count == draft.subContainerIDs.count else { throw TaskWriteError.notFound }
+            let startStatuses = try targets.map { try Self.startStatus(in: $0, requested: draft.startStatus) }
 
             let writer = GitHubWriter(api: api)
             let issueID = try await writer.createIssue(repository: repository, title: draft.title, body: draft.notes,
                                                        assignees: draft.assignees ?? [viewer])
-            for project in targets {
-                try await addToProject(project, issueID: issueID, draft: draft, writer: writer)
+            for (project, status) in zip(targets, startStatuses) {
+                try await addToProject(project, issueID: issueID, draft: draft, status: status, writer: writer)
             }
 
             guard let fresh = try await api.issue(nodeID: issueID) else { throw TaskWriteError.notFound }
@@ -207,11 +211,29 @@ public final class GitHubTaskProvider: TaskProvider {
         }
     }
 
+    /// Start status of a new issue in `project`: the requested one (it must exist there and must not be
+    /// "Done", because the issue would be open but hidden), else the reopen option; `nil` skips the field.
+    private static func startStatus(in project: ProjectInfo, requested: String?) throws -> String? {
+        guard let requested else { return GitHubMapping.reopenOption(in: project) }
+        if GitHubMapping.isDone(requested) {
+            throw TaskWriteError.failed(String(localized: "Ein neues Issue kann nicht mit dem Status „Done“ beginnen.", bundle: .module))
+        }
+        guard let option = GitHubMapping.statusOption(named: requested, in: project) else {
+            throw missingStatus(requested, in: project)
+        }
+        return option
+    }
+
+    private static func missingStatus(_ status: String, in project: ProjectInfo) -> TaskWriteError {
+        .failed(String(localized: "Den Status „\(status)“ gibt es im Project „\(project.title)“ nicht.", bundle: .module))
+    }
+
     private static var tooManyAssignees: TaskWriteError {
         .failed(String(localized: "Höchstens 10 Personen je Issue.", bundle: .module))
     }
 
-    private func addToProject(_ project: ProjectInfo, issueID: String, draft: TaskDraft, writer: GitHubWriter) async throws {
+    private func addToProject(_ project: ProjectInfo, issueID: String, draft: TaskDraft, status: String?,
+                              writer: GitHubWriter) async throws {
         let itemID = try await writer.addToProject(projectID: project.id, contentID: issueID)
         let placement = ProjectPlacement(project: project, itemID: itemID, itemUpdatedAt: now(),
                                          status: nil, priority: nil, due: nil, estimateMinutes: nil)
@@ -225,7 +247,9 @@ public final class GitHubTaskProvider: TaskProvider {
             try await writer.setField(placement, fieldName: fieldName,
                                       value: .number(GitHubMapping.fieldValue(fromMinutes: minutes, fieldName: fieldName)))
         }
-        try await writer.setField(placement, fieldName: GitHubMapping.statusField, value: .singleSelect(GitHubMapping.reopenStatus))
+        if let status {
+            try await writer.setField(placement, fieldName: GitHubMapping.statusField, value: .singleSelect(status))
+        }
     }
 
     /// Repositories and projects for creating an issue: the stored catalog while it is younger than
@@ -267,9 +291,11 @@ public final class GitHubTaskProvider: TaskProvider {
         }
     }
 
-    /// An issue that was just written belongs to the user's lists while the user is assigned.
+    /// An issue that was just written belongs to the user's lists while the user is assigned and the
+    /// issue sits in at least one project (`statuses` has one entry per placement, writable or not).
     /// Reading keeps using `GitHubMapping.isVisible`; this only covers the moment after a write.
     public func isListed(_ item: TaskItem) -> Bool {
+        guard !item.statuses.isEmpty else { return false }
         guard let login else { return true }
         return AssigneeRules.contains(item.assignees, login)
     }
@@ -287,8 +313,29 @@ public final class GitHubTaskProvider: TaskProvider {
 
     private func write(_ edit: TaskEdit, to record: GitHubIssueRecord) async throws {
         let writer = GitHubWriter(api: api)
+        let writable = record.placements.filter(\.project.canWrite)
+        // Everything that can fail on its own is checked before the first request, so no edit is written half.
+        let explicitStatus = try Self.resolveStatusChanges(edit.statusChanges, in: writable)
+
         var state: IssueStateChange?
-        if case .set(let completed) = edit.isCompleted { state = completed ? .close : .reopen }
+        var completion: Bool?
+        if case .set(let completed) = edit.isCompleted {
+            completion = completed
+            state = completed ? .close : .reopen
+        }
+        // A status change can finish or reopen the issue on its own (design rules 3 and 4).
+        var reopensAfterStatus = false
+        if completion == nil, !explicitStatus.isEmpty {
+            let resulting = writable.map { explicitStatus[$0.project.id] ?? $0.status }
+            if record.isOpen, explicitStatus.values.contains(where: GitHubMapping.isDone), resulting.allSatisfy(GitHubMapping.isDone) {
+                // Done in every writable project: the issue is finished, otherwise it would be open but hidden.
+                state = .close
+            } else if !record.isOpen, explicitStatus.values.contains(where: { !GitHubMapping.isDone($0) }) {
+                // The status is written first, so a failure never leaves an open issue that is Done everywhere.
+                state = .reopen
+                reopensAfterStatus = true
+            }
+        }
 
         var title: String?
         if case .set(let value) = edit.title { title = value }
@@ -296,9 +343,8 @@ public final class GitHubTaskProvider: TaskProvider {
         if case .set(let value) = edit.notes { body = .some(value) }
         var labels: [String]?
         if case .set(let value) = edit.labels { labels = value }
-        try await writer.updateIssue(record, title: title, body: body, labels: labels, state: state)
+        try await writer.updateIssue(record, title: title, body: body, labels: labels, state: reopensAfterStatus ? nil : state)
 
-        let writable = record.placements.filter(\.project.canWrite)
         let targets = writable.filter { edit.targetSubContainerIDs?.contains($0.project.id) ?? true }
         for placement in targets {
             if case .set(let due) = edit.due {
@@ -316,11 +362,23 @@ public final class GitHubTaskProvider: TaskProvider {
             }
         }
 
-        if let state {
-            let status = state == .close ? GitHubMapping.doneStatus : GitHubMapping.reopenStatus
-            for placement in writable {
-                try await writer.setField(placement, fieldName: GitHubMapping.statusField, value: .singleSelect(status))
+        // Status per project: a chosen stage wins over the one that completing or reopening implies.
+        for placement in writable {
+            let project = placement.project
+            let option: String?
+            if let chosen = explicitStatus[project.id] {
+                option = chosen
+            } else if let completion {
+                option = completion ? GitHubMapping.doneOption(in: project) : GitHubMapping.reopenOption(in: project)
+            } else {
+                option = nil
             }
+            if let option {
+                try await writer.setField(placement, fieldName: GitHubMapping.statusField, value: .singleSelect(option))
+            }
+        }
+        if reopensAfterStatus {
+            try await writer.updateIssue(record, title: nil, body: nil, labels: nil, state: .reopen)
         }
 
         // Assignees come last and as a difference: adding first, removing (possibly the user) at the very
@@ -329,6 +387,22 @@ public final class GitHubTaskProvider: TaskProvider {
             if !change.add.isEmpty { try await writer.addAssignees(record, logins: change.add) }
             if !change.remove.isEmpty { try await writer.removeAssignees(record, logins: change.remove) }
         }
+    }
+
+    /// Maps project IDs to the option names as the project spells them. Throws when a project is not a
+    /// writable placement of the issue or lacks the chosen stage.
+    private static func resolveStatusChanges(_ changes: [String: String], in writable: [ProjectPlacement]) throws -> [String: String] {
+        var resolved: [String: String] = [:]
+        for (projectID, name) in changes {
+            guard let placement = writable.first(where: { $0.project.id == projectID }) else {
+                throw TaskWriteError.failed(String(localized: "Der Status lässt sich in diesem Project nicht ändern.", bundle: .module))
+            }
+            guard let option = GitHubMapping.statusOption(named: name, in: placement.project) else {
+                throw missingStatus(name, in: placement.project)
+            }
+            resolved[projectID] = option
+        }
+        return resolved
     }
 
     private func remember(_ visible: [GitHubIssueRecord]) {
@@ -343,7 +417,7 @@ public final class GitHubTaskProvider: TaskProvider {
             .compactMap { record in
                 var shown = record
                 shown.placements = record.placements.filter { selection.contains($0.project.id) }
-                guard shown.placements.contains(where: { $0.status != GitHubMapping.doneStatus }) else { return nil }
+                guard shown.placements.contains(where: { !GitHubMapping.isDone($0.status) }) else { return nil }
                 var item = GitHubMapping.taskItem(shown)
                 // The version must describe the whole issue, because writes compare against all its items.
                 item.version = GitHubMapping.version(record)

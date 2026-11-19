@@ -150,3 +150,52 @@ extension Fixtures {
         """
     }
 }
+
+/// A project board for status tests: option IDs are "OPT<number>_<stage>", item IDs "PVTI_<number>".
+struct Board {
+    var number: Int
+    var stages: [String] = ["Backlog", "Ready", "In progress", "Blocked", "In review", "Done"]
+    /// Current status of the issue's item; `nil` for a board that has no value yet.
+    var status: String? = "Ready"
+    var writable = true
+
+    var projectID: String { "PVT_\(number)" }
+    var itemID: String { "PVTI_\(number)" }
+    func optionID(_ stage: String) -> String { "OPT\(number)_\(stage)" }
+
+    var fieldsJSON: String {
+        let options = stages.map { #"{"id":"\#(optionID($0))","name":"\#($0)"}"# }.joined(separator: ",")
+        return #"{"id":"F\#(number)_status","name":"Status","options":[\#(options)]},{"id":"F\#(number)_due","name":"Due date"}"#
+    }
+}
+
+extension Fixtures {
+    /// Viewer whose projects are `boards`.
+    static func boardViewer(_ boards: [Board]) -> String {
+        let nodes = boards.map { board in
+            #"{"id":"\#(board.projectID)","number":\#(board.number),"title":"Projekt \#(board.number)","closed":false,"repositories":{"nodes":[{"nameWithOwner":"beispiel/app"}]},"fields":{"nodes":[\#(board.fieldsJSON)]}}"#
+        }
+        return #"{"data":{"viewer":{"login":"octo","projectsV2":{"nodes":["# + nodes.joined(separator: ",") + "]}}}}"
+    }
+
+    /// Issue I_1 placed on `boards`.
+    static func boardIssue(state: String = "OPEN", assignees: [String] = ["octo"], updatedAt: String = "2026-11-17T13:00:00Z",
+                           boards: [Board]) -> String {
+        let people = assignees.map { #"{"login":"\#($0)"}"# }.joined(separator: ",")
+        let items = boards.map { board -> String in
+            let status = board.status.map { #"{"name":"\#($0)","field":{"name":"Status"}}"# } ?? ""
+            return """
+            {"id":"\(board.itemID)","updatedAt":"2026-11-17T13:00:00Z","isArchived":false,
+             "project":{"id":"\(board.projectID)","number":\(board.number),"title":"Projekt \(board.number)","closed":false,
+               "viewerCanUpdate":\(board.writable),"fields":{"nodes":[\(board.fieldsJSON)]}},
+             "fieldValues":{"nodes":[\(status)]}}
+            """
+        }
+        return """
+        {"data":{"node":{"__typename":"Issue","id":"I_1","number":1,"title":"Issue 1","body":"Beschreibung","state":"\(state)",
+          "updatedAt":"\(updatedAt)","url":"https://github.com/beispiel/app/issues/1",
+          "repository":{"nameWithOwner":"beispiel/app"},"assignees":{"nodes":[\(people)]},"labels":{"nodes":[]},
+          "projectItems":{"nodes":[\(items.joined(separator: ","))]}}}}
+        """
+    }
+}

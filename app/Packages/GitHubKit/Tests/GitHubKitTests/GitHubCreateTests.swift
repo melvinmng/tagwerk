@@ -117,11 +117,121 @@ struct GitHubCreateTests {
         #expect(item.id == TaskID(source: .github, rawValue: "I_1"))
     }
 
-    @Test func create_withoutProject_throwsFailed() async {
-        var incomplete = draft()
-        incomplete.subContainerIDs = []
-        await #expect(throws: TaskWriteError.self) { try await makeProvider().create(incomplete) }
+    // MARK: Without a project (#153)
+
+    @Test func create_withoutProject_createsIssueOnly_andReturnsItNotRemembered() async throws {
+        transport.enqueueJSON("/graphql", Fixtures.viewerProjects)
+        transport.enqueueJSON("/repos/beispiel/app/issues", status: 201, #"{"id":7,"node_id":"I_1","number":7}"#)
+        transport.enqueueJSON("/graphql", Fixtures.boardIssue(boards: []))
+        var noProject = draft()
+        noProject.subContainerIDs = []
+        let provider = makeProvider()
+
+        let item = try await provider.create(noProject)
+
+        #expect(!transport.requests.contains { $0.bodyString.contains("addProjectV2ItemById") })
+        #expect(!transport.requests.contains { $0.bodyString.contains("updateProjectV2ItemFieldValue") })
+        #expect(try postedAssignees() == ["octo"])
+        #expect(item.statuses.isEmpty)
+        #expect(!provider.isListed(item))
+        #expect(provider.issueReference(for: item.id) == nil)
+        #expect(provider.cachedTasks.isEmpty)
+    }
+
+    @Test func create_withoutRepository_failsBeforeAnyRequest() async {
+        var noRepository = draft()
+        noRepository.containerID = nil
+        await #expect(throws: TaskWriteError.failed("Bitte ein Repository wählen.")) { try await makeProvider().create(noRepository) }
         #expect(transport.requests.isEmpty)
+    }
+
+    // MARK: Start status (#154)
+
+    private func enqueueBoardCreate(_ boards: [Board]) {
+        transport.enqueueJSON("/graphql", Fixtures.boardViewer(boards))
+        transport.enqueueJSON("/repos/beispiel/app/issues", status: 201, #"{"id":7,"node_id":"I_new","number":7}"#)
+        // Per project: add to the project, then set the status.
+        for _ in boards {
+            transport.enqueueJSON("/graphql", #"{"data":{"addProjectV2ItemById":{"item":{"id":"PVTI_new"}}}}"#)
+            transport.enqueueJSON("/graphql", Fixtures.mutationOK)
+        }
+        transport.enqueueJSON("/graphql", Fixtures.boardIssue(boards: boards))
+    }
+
+    private func statusMutations() -> [String] {
+        transport.requests.map(\.bodyString).filter { $0.contains("updateProjectV2ItemFieldValue") }
+    }
+
+    @Test func create_startStatus_isWrittenInEveryProject_withItsOwnOptionID() async throws {
+        let boards = [Board(number: 1), Board(number: 2, stages: ["Todo", "In progress", "Done"])]
+        enqueueBoardCreate(boards)
+        var chosen = draft()
+        chosen.subContainerIDs = ["PVT_1", "PVT_2"]
+        chosen.due = nil
+        chosen.priority = nil
+        chosen.estimateMinutes = nil
+        chosen.startStatus = "In progress"
+
+        _ = try await makeProvider().create(chosen)
+
+        let mutations = statusMutations()
+        #expect(mutations.count == 2)
+        #expect(mutations[0].contains("F1_status") && mutations[0].contains("OPT1_In progress"))
+        #expect(mutations[1].contains("F2_status") && mutations[1].contains("OPT2_In progress"))
+    }
+
+    @Test func create_withoutStartStatus_usesReadyOrFirstNonDoneStagePerProject() async throws {
+        let boards = [Board(number: 1), Board(number: 2, stages: ["Done", "Backlog", "Doing"])]
+        enqueueBoardCreate(boards)
+        var chosen = draft()
+        chosen.subContainerIDs = ["PVT_1", "PVT_2"]
+        chosen.due = nil
+        chosen.priority = nil
+        chosen.estimateMinutes = nil
+
+        _ = try await makeProvider().create(chosen)
+
+        let mutations = statusMutations()
+        #expect(mutations[0].contains("OPT1_Ready"))
+        #expect(mutations[1].contains("OPT2_Backlog"))
+    }
+
+    @Test func create_startStatusMissingInOneProject_failsBeforeTheIssueIsCreated() async {
+        let boards = [Board(number: 1), Board(number: 2, stages: ["Todo", "Done"])]
+        transport.enqueueJSON("/graphql", Fixtures.boardViewer(boards))
+        var chosen = draft()
+        chosen.subContainerIDs = ["PVT_1", "PVT_2"]
+        chosen.startStatus = "In progress"
+
+        await #expect(throws: TaskWriteError.failed("Den Status „In progress“ gibt es im Project „Projekt 2“ nicht.")) {
+            try await makeProvider().create(chosen)
+        }
+        #expect(!transport.requests.contains { $0.httpMethod == "POST" && $0.url?.path.hasPrefix("/repos") == true })
+    }
+
+    @Test func create_startStatusDone_isRejectedBeforeTheIssueIsCreated() async {
+        transport.enqueueJSON("/graphql", Fixtures.boardViewer([Board(number: 1)]))
+        var chosen = draft()
+        chosen.startStatus = "done"
+
+        await #expect(throws: TaskWriteError.self) { try await makeProvider().create(chosen) }
+        #expect(!transport.requests.contains { $0.httpMethod == "POST" && $0.url?.path.hasPrefix("/repos") == true })
+    }
+
+    @Test func create_projectWithoutUsableStage_skipsStatusQuietly() async throws {
+        let boards = [Board(number: 1, stages: ["Done"])]
+        transport.enqueueJSON("/graphql", Fixtures.boardViewer(boards))
+        transport.enqueueJSON("/repos/beispiel/app/issues", status: 201, #"{"id":7,"node_id":"I_new","number":7}"#)
+        transport.enqueueJSON("/graphql", #"{"data":{"addProjectV2ItemById":{"item":{"id":"PVTI_new"}}}}"#)
+        transport.enqueueJSON("/graphql", Fixtures.boardIssue(boards: boards))
+        var chosen = draft()
+        chosen.due = nil
+        chosen.priority = nil
+        chosen.estimateMinutes = nil
+
+        _ = try await makeProvider().create(chosen)
+
+        #expect(statusMutations().isEmpty)
     }
 
     @Test func create_offline_throwsOffline() async {
