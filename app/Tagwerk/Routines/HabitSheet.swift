@@ -82,6 +82,7 @@ struct HabitSheet: View {
                     }
                 }
             }
+            .scrollDismissesKeyboard(.interactively)
             .navigationTitle(habit == nil ? "Neue Gewohnheit" : "Gewohnheit")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

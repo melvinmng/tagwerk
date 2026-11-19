@@ -547,6 +547,26 @@
         }
       }
     },
+    "Deadline war %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deadline was %@"
+          }
+        }
+      }
+    },
+    "Deadline war %@, ganztägig" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deadline was %@, all day"
+          }
+        }
+      }
+    },
     "Der Block liegt außerhalb der Arbeitszeit." : {
       "localizations" : {
         "en" : {
@@ -1437,6 +1457,22 @@
         }
       }
     },
+    "War fällig %@ · %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "War fällig %1$@ · %2$@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Was due %1$@ · %2$@"
+          }
+        }
+      }
+    },
     "Was hat abgehalten?" : {
       "localizations" : {
         "en" : {
@@ -1535,6 +1571,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "until %@"
+          }
+        }
+      }
+    },
+    "gestern" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "yesterday"
           }
         }
       }

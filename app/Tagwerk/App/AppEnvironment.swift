@@ -283,6 +283,12 @@ final class AppEnvironment {
             writeSnapshot: { [weak self] in self?.writeSnapshot() })
     }
 
+    /// Loads every source once, registering GitHub first when signed in; for work that runs without the app's first
+    /// screen, like a Focus filter. Does not read the GitHub catalog.
+    func loadTasksInBackground() async {
+        if await !registerGitHubIfSignedIn() { await taskList.reload() }
+    }
+
     /// Adds GitHub to the task list when credentials exist.
     func activateGitHubIfSignedIn() async {
         guard await registerGitHubIfSignedIn() else { return }
@@ -627,6 +633,13 @@ final class AppEnvironment {
             hasher.combine(settings.deadlineCalendarNotifications)
             hasher.combine(settings.notifiedTaskSources)
             hasher.combine(settings.deadlineCalendarIDs)
+            // Quiet hours; the bedtime counts while the window starts at it.
+            hasher.combine(settings.quietHoursEnabled)
+            hasher.combine(settings.quietHoursStartsAtBedtime)
+            hasher.combine(settings.quietStartMinutes)
+            hasher.combine(settings.quietEndMinutes)
+            hasher.combine(settings.bedtimeMinutes)
+            hasher.combine(settings.focusQuietSince)
             return hasher.finalize()
         }
         notificationUpdates = Task { [weak self] in

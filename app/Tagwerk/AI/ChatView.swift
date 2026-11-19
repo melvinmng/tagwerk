@@ -259,6 +259,7 @@ struct ChatView: View {
         .padding(.horizontal)
         .padding(.vertical, 8)
         .background(.bar)
+        .keepsKeyboardOnTap()
     }
 }
 

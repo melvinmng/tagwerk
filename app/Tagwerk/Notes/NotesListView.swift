@@ -65,6 +65,7 @@ struct NotesListView: View {
                 Text(isTrash ? Self.trashFootnote : Self.listFootnote)
             }
         }
+        .scrollDismissesKeyboard(.interactively)
         .navigationTitle(title)
         .searchable(text: $searchText, prompt: "Notizen durchsuchen")
         .environment(\.editMode, $editMode)
@@ -321,6 +322,7 @@ struct NotesListView: View {
         }
         .padding(.horizontal, 16).padding(.vertical, 8)
         .background(.bar)
+        .keepsKeyboardOnTap()
         .onChange(of: draft) { _, newValue in
             if newValue.isEmpty { draftWasDictated = false }
         }

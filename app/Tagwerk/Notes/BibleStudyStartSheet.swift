@@ -32,6 +32,7 @@ struct BibleStudyStartSheet: View {
                     Text("Der Text deiner Notizen bleibt auf deinem iPhone und geht nie an ChatGPT.")
                 }
             }
+            .scrollDismissesKeyboard(.interactively)
             .navigationTitle("Bible Study starten")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

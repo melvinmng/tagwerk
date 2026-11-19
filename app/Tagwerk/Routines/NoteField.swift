@@ -172,6 +172,7 @@ struct NoteField: View {
                 } else {
                     HStack(alignment: .top, spacing: 4) {
                         TextEditor(text: Bindable(model).text, selection: Bindable(model).selection)
+                            .keyboardDoneButton()
                             .frame(minHeight: 110)
                             .overlay(alignment: .topLeading) {
                                 if model.text.isEmpty {

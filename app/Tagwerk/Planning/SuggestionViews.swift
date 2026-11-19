@@ -372,6 +372,7 @@ struct SuggestionDetail: View {
                      : "Erst „Übernehmen“ legt den Block im Plan-Kalender an.")
             }
         }
+        .scrollDismissesKeyboard(.interactively)
         .navigationTitle("Vorschlag")
         .navigationBarTitleDisplayMode(.inline)
         .safeAreaInset(edge: .bottom) {
@@ -541,6 +542,7 @@ struct SuggestionConversation: View {
                         }
                     }
                 }
+                .keepsKeyboardOnTap()
                 HStack(spacing: 8) {
                     TextField("Zum Vorschlag etwas sagen …", text: $text)
                         .focused(isFocused)
@@ -560,6 +562,7 @@ struct SuggestionConversation: View {
                     .disabled(isSending || text.trimmingCharacters(in: .whitespaces).isEmpty)
                     .accessibilityLabel("Senden")
                 }
+                .keepsKeyboardOnTap()
             }
         } header: {
             Label("Mit ChatGPT besprechen", systemImage: "sparkles")

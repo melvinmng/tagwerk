@@ -74,6 +74,7 @@ struct ShoppingInputBar: View {
         }
         .padding(.horizontal, 16).padding(.vertical, 8)
         .background(.bar)
+        .keepsKeyboardOnTap()
         .onChange(of: text) { _, newValue in
             removed = []
             if newValue.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty { wasDictated = false }
