@@ -1737,5 +1737,13 @@
   "Tage": "Days",
   "Wochen": "Weeks",
   "Tage vorher: %lld": "Days before: %lld",
-  "Schnellauswahl": "Quick picks"
+  "Schnellauswahl": "Quick picks",
+  "Alle folgenden": "All following",
+  "Die Aufgabe ist gesichert, die Erinnerungen nicht: %@": "The task is saved, the reminders are not: %@",
+  "Die Erinnerungen-App ist nicht erreichbar.": "The Reminders app is not available.",
+  "Diese Aufgabe wiederholt sich. Die Erinnerungen gelten nur für diese Fälligkeit oder für alle folgenden.": "This task repeats. The reminders apply to this due date only or to all following ones.",
+  "Eigene Erinnerungen werden in der Erinnerungen-App gespeichert. Ruhezeiten gelten dafür nicht.": "Custom reminders are stored in the Reminders app. Quiet hours do not apply to them.",
+  "Erinnerungen ändern": "Change reminders",
+  "Gilt für alle Wiederholungen.": "Applies to all repetitions.",
+  "Nur diese": "Only this one"
 }

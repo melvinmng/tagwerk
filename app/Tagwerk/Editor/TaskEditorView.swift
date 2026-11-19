@@ -10,6 +10,9 @@ struct TaskEditorView: View {
     /// Receives the saved item and the people this save added (for the warning when GitHub dropped one).
     let onSaved: (TaskItem, [String]) -> Void
     @Environment(\.dismiss) private var dismiss
+    @Environment(AppEnvironment.self) private var environment
+    /// The reminders of the task (plan P4); created when the editor appears.
+    @State private var reminders: TaskReminderModel?
 
     let isReadOnly: Bool
     let onDelete: ((String) -> Void)?
@@ -116,6 +119,8 @@ struct TaskEditorView: View {
                     }
                 }
 
+                remindersSection
+
                 statusSection
 
                 if model.isVisible(.notes) {
@@ -168,8 +173,12 @@ struct TaskEditorView: View {
             .onDisappear {
                 // After the user's own comment, the list needs the new version however the sheet closes.
                 if let refreshed = model.refreshed { onSaved(refreshed, []) }
+                // The task was written although its reminders were not: the list must know the new version.
+                if model.reminderFailureAfterSave, let saved = model.saved { onSaved(saved, model.requestedAssignees) }
             }
             .task { await loadAssignable() }
+            .task { prepareReminders() }
+            .onChange(of: model.draft.due) { _, due in reminders?.dueChanged(to: due) }
             .navigationTitle(title)
             .confirmationDialog(TaskListView.deleteQuestion(for: model.original), isPresented: $confirmsDelete,
                                 titleVisibility: .visible) {
@@ -190,10 +199,12 @@ struct TaskEditorView: View {
                 case .effortReach:
                     Button("Nur am \(todayText)") {
                         plannedEdit?.recurringForAll = false
+                        reminders?.reach = .onlyThis
                         Task { await finish(model.save()) }
                     }
                     Button("Für alle ab \(todayText)") {
                         plannedEdit?.recurringForAll = true
+                        reminders?.reach = .allFollowing
                         Task { await finish(model.save()) }
                     }
                 case .keepBlocks(let blocks):
@@ -204,6 +215,15 @@ struct TaskEditorView: View {
                     }
                 case .handOver:
                     Button("Abgeben", role: .destructive) { Task { await finish(model.save()) } }
+                case .remindersReach:
+                    Button("Nur diese") {
+                        reminders?.reach = .onlyThis
+                        Task { await finish(model.save()) }
+                    }
+                    Button("Alle folgenden") {
+                        reminders?.reach = .allFollowing
+                        Task { await finish(model.save()) }
+                    }
                 }
                 Button("Abbrechen", role: .cancel) {}
             } message: { question in
@@ -216,6 +236,8 @@ struct TaskEditorView: View {
                 case .handOver(let futureBlocks):
                     Text(TaskEditorModel.handOverMessage(number: model.original.issueNumber, futureBlocks: futureBlocks,
                                                          leavesUnassigned: (model.draft.assignees ?? []).isEmpty))
+                case .remindersReach:
+                    Text("Diese Aufgabe wiederholt sich. Die Erinnerungen gelten nur für diese Fälligkeit oder für alle folgenden.")
                 }
             }
             .toolbar {
@@ -237,7 +259,8 @@ struct TaskEditorView: View {
                         // Removing myself is asked first, with the number of time blocks that will be deleted.
                         let handOverBlocks = model.handsOver ? (planning?.futureBlockCount(for: model.original.id) ?? 0) : nil
                         if let question = TaskEditorModel.saveQuestion(effortChanged: effortChanged, blocksOffSeries: offSeries,
-                                                                       handOverFutureBlocks: handOverBlocks) {
+                                                                       handOverFutureBlocks: handOverBlocks,
+                                                                       remindersReach: model.asksReminderReach) {
                             saveQuestion = question
                         } else {
                             Task { await finish(model.save()) }
@@ -259,6 +282,42 @@ struct TaskEditorView: View {
         }
     }
 
+    // MARK: Reminders (plan P4)
+
+    private func prepareReminders() {
+        guard reminders == nil, model.isVisible(.due) else { return }
+        let created = TaskReminderModel(item: model.original, overrides: environment.reminderOverrides,
+                                        reminderStore: environment.reminderStore, defaults: environment.settings.reminderDefaults)
+        created.dueChanged(to: model.draft.due)
+        reminders = created
+        model.reminders = created
+    }
+
+    /// The list of reminders; without a due date only a hint, because the reminders count from it. The picker opens as
+    /// a page of the navigation stack, so no sheet hangs on a row.
+    @ViewBuilder private var remindersSection: some View {
+        if let reminders, model.isVisible(.due) {
+            Section {
+                if model.draft.due == nil {
+                    Text("Erinnerungen brauchen ein Fälligkeitsdatum.").foregroundStyle(.secondary)
+                } else {
+                    ReminderListEditor(model: reminders.list, calendar: calendar)
+                }
+            } header: {
+                Text("Erinnerungen")
+            } footer: {
+                if model.draft.due != nil, let footer = remindersFooter(reminders) { Text(footer) }
+            }
+        }
+    }
+
+    private func remindersFooter(_ reminders: TaskReminderModel) -> String? {
+        guard model.original.id.source == .reminders else { return nil }
+        let base = String(localized: "Eigene Erinnerungen werden in der Erinnerungen-App gespeichert. Ruhezeiten gelten dafür nicht.")
+        return reminders.appliesToAllRepetitions(recurring: model.draft.recurrence != nil)
+            ? base + " " + String(localized: "Gilt für alle Wiederholungen.") : base
+    }
+
     private var sourceName: String {
         switch model.original.id.source {
         case .github: "GitHub"
@@ -276,6 +335,7 @@ struct TaskEditorView: View {
 
     private func finish(_ success: Bool) {
         guard success else { return }
+        if reminders?.hasChanges == true { environment.notifications.scheduleSoon() }
         if let saved = model.saved { onSaved(saved, model.requestedAssignees) }
         // A handed-over issue leaves the plan; its planning edits must not create a day or block again.
         if model.savedIsListed, let planning, let plannedEdit, plannedEdit != planning.plannedEdit(for: model.original) {
@@ -312,6 +372,7 @@ struct TaskEditorView: View {
     private var saveQuestionTitle: String {
         switch saveQuestion {
         case .keepBlocks: String(localized: "Wiederholung geändert")
+        case .remindersReach: String(localized: "Erinnerungen ändern")
         case .handOver: String(localized: "Du bist danach nicht mehr zugewiesen.")
         case .effortReach, nil: effortQuestion
         }

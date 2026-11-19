@@ -2844,6 +2844,16 @@
         }
       }
     },
+    "Alle folgenden": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All following"
+          }
+        }
+      }
+    },
     "Alle löschen": {
       "localizations": {
         "en": {
@@ -5201,6 +5211,16 @@
         }
       }
     },
+    "Die Aufgabe ist gesichert, die Erinnerungen nicht: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The task is saved, the reminders are not: %@"
+          }
+        }
+      }
+    },
     "Die Aufgabe wurde inzwischen geändert.": {
       "localizations": {
         "en": {
@@ -5227,6 +5247,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Recording failed. You can keep typing."
+          }
+        }
+      }
+    },
+    "Die Erinnerungen-App ist nicht erreichbar.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The Reminders app is not available."
           }
         }
       }
@@ -5497,6 +5527,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "That task doesn’t exist."
+          }
+        }
+      }
+    },
+    "Diese Aufgabe wiederholt sich. Die Erinnerungen gelten nur für diese Fälligkeit oder für alle folgenden.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This task repeats. The reminders apply to this due date only or to all following ones."
           }
         }
       }
@@ -5857,6 +5897,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Own"
+          }
+        }
+      }
+    },
+    "Eigene Erinnerungen werden in der Erinnerungen-App gespeichert. Ruhezeiten gelten dafür nicht.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Custom reminders are stored in the Reminders app. Quiet hours do not apply to them."
           }
         }
       }
@@ -6364,6 +6414,16 @@
         }
       }
     },
+    "Erinnerungen brauchen ein Fälligkeitsdatum.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reminders need a due date."
+          }
+        }
+      }
+    },
     "Erinnerungen und lokale Aufgaben werden gelöscht, GitHub-Issues als „nicht geplant“ geschlossen.": {
       "localizations": {
         "en": {
@@ -6380,6 +6440,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Reminders and local tasks, without GitHub"
+          }
+        }
+      }
+    },
+    "Erinnerungen ändern": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Change reminders"
           }
         }
       }
@@ -7599,6 +7669,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Applies to planning and the assistant. If the selected model is no longer available, Tagwerk switches to “Automatic” and tells you on the next request."
+          }
+        }
+      }
+    },
+    "Gilt für alle Wiederholungen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Applies to all repetitions."
           }
         }
       }
@@ -11000,6 +11080,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Can only be moved to a later day."
+          }
+        }
+      }
+    },
+    "Nur diese": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only this one"
           }
         }
       }
