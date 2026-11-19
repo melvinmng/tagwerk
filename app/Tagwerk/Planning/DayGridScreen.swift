@@ -233,7 +233,8 @@ struct DayGridScreen<Summary: View, Header: View>: View {
             }
             .background(.bar, in: RoundedRectangle(cornerRadius: 16))
             // Moves sit at their task rows, so the panel opens when there are any (proposal §5).
-            .onChange(of: moveSuggestions.count) { _, count in if count > 0 { panelExpanded = true } }
+            // Not in a preview: `panelExpanded` is shared by every page, a neighbour must not open the shown panel.
+            .onChange(of: moveSuggestions.count) { _, count in if count > 0, !isPreview { panelExpanded = true } }
             // While dragging, the panel slides down to its header so the grid behind is free; the dragged row
             // stays in the hierarchy so its gesture keeps running.
             .offset(y: dragging && panelExpanded ? panelBodyHeight : 0)

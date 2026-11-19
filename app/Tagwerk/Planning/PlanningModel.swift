@@ -259,6 +259,9 @@ final class PlanningModel {
         pruneAssignments(open: open)
 
         let series = await recurringSeries(open: open)
+        // A page change while the reminders were read: the reload of the new range shows the new page. Everything from
+        // here on writes the shown state without another suspension, so a stale run must not get this far.
+        guard self.range == range else { return }
         let recurringIDs = Set(series.map(\.id))
         let interval = DateInterval(start: range.lowerBound.startDate(in: calendar),
                                     end: range.upperBound.adding(days: 1, calendar: calendar).startDate(in: calendar))
@@ -304,8 +307,6 @@ final class PlanningModel {
             result.append(plan)
             day = day.adding(days: 1, calendar: calendar)
         }
-        // A page change while this reload was running: the newer reload shows the new range.
-        guard self.range == range else { return }
         days = result
 
         // Left over from a past day ("liegen geblieben") counts as unplanned again, also in week and month.
