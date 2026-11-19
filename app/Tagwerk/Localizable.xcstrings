@@ -524,6 +524,16 @@
         }
       }
     },
+    "%@ · diktiert": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ · dictated"
+          }
+        }
+      }
+    },
     "%@ · ganztägig": {
       "localizations": {
         "en": {
@@ -2424,6 +2434,16 @@
         }
       }
     },
+    "Angeheftet": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pinned"
+          }
+        }
+      }
+    },
     "Angemeldet als": {
       "localizations": {
         "en": {
@@ -2440,6 +2460,32 @@
           "stringUnit": {
             "state": "translated",
             "value": "Signed in as %@"
+          }
+        }
+      }
+    },
+    "Anheften": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pin"
+          }
+        }
+      }
+    },
+    "Anheftung lösen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unpin"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lösen"
           }
         }
       }
@@ -4372,6 +4418,16 @@
         }
       }
     },
+    "Eigene": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Own"
+          }
+        }
+      }
+    },
     "Eigene Regel aus Erinnerungen": {
       "localizations": {
         "en": {
@@ -5182,6 +5238,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "All day"
+          }
+        }
+      }
+    },
+    "Gedanken": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Thoughts"
           }
         }
       }
@@ -7483,6 +7549,16 @@
         }
       }
     },
+    "Neue Notiz": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New note"
+          }
+        }
+      }
+    },
     "Neue Vorgabe": {
       "localizations": {
         "en": {
@@ -7673,6 +7749,16 @@
         }
       }
     },
+    "Noch keine Notizen. Schreib oder diktiere unten die erste.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No notes yet. Write or dictate the first one below."
+          }
+        }
+      }
+    },
     "Noch keine Planung protokolliert.": {
       "shouldTranslate": false
     },
@@ -7706,12 +7792,42 @@
         }
       }
     },
+    "Notiz endgültig löschen?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Permanently delete this note?"
+          }
+        }
+      }
+    },
+    "Notiz sichern": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save note"
+          }
+        }
+      }
+    },
     "Notizen": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Notes"
+          }
+        }
+      }
+    },
+    "Notizen liegen nur auf diesem iPhone. Sie werden nicht an ChatGPT gesendet.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notes are stored on this iPhone only. They are not sent to ChatGPT."
           }
         }
       }
@@ -9105,6 +9221,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Open day ›"
+          }
+        }
+      }
+    },
+    "Tagesabschluss": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Evening"
+          }
+        }
+      }
+    },
+    "Tagesstart": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Morning"
           }
         }
       }
@@ -11886,6 +12022,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "last %@"
+          }
+        }
+      }
+    },
+    "zuletzt: „%@“ · %@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "zuletzt: „%1$@“ · %2$@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "latest: “%@” · %@"
           }
         }
       }

@@ -95,7 +95,10 @@ struct TasksEntrySection: View {
         Button {
             environment.tasksPath.append(.notes)
         } label: {
-            entryLabel(symbol: "note.text", title: "Notizen", subtitle: String(localized: "Noch keine Notizen"), trailing: nil)
+            let notes = environment.notes
+            entryLabel(symbol: "note.text", title: "Notizen",
+                       subtitle: NotesListView.entrySubtitle(latest: notes.latest, now: .now, calendar: environment.planning.calendar),
+                       trailing: notes.count > 0 ? "\(notes.count)" : nil)
         }
     }
 

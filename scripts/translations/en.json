@@ -1281,5 +1281,19 @@
   "Vorschlag von ChatGPT": "Suggestion from ChatGPT",
   "Zum Sortieren ist deine Einwilligung nötig.": "Sorting needs your consent.",
   "Zum Sortieren sendet Tagwerk die Namen deiner offenen Artikel und die Namen deiner Kategorien an ChatGPT (OpenAI), über das Konto, mit dem du angemeldet bist.": "To sort, Tagwerk sends the names of your open items and the names of your categories to ChatGPT (OpenAI), through the account you are signed in with.",
-  "Änderungen": "Changes"
+  "Änderungen": "Changes",
+  "%@ · diktiert": "%@ · dictated",
+  "Angeheftet": "Pinned",
+  "Anheften": "Pin",
+  "Eigene": "Own",
+  "Gedanken": "Thoughts",
+  "Neue Notiz": "New note",
+  "Noch keine Notizen. Schreib oder diktiere unten die erste.": "No notes yet. Write or dictate the first one below.",
+  "Notiz endgültig löschen?": "Permanently delete this note?",
+  "Notiz sichern": "Save note",
+  "Notizen liegen nur auf diesem iPhone. Sie werden nicht an ChatGPT gesendet.": "Notes are stored on this iPhone only. They are not sent to ChatGPT.",
+  "Tagesabschluss": "Evening",
+  "Tagesstart": "Morning",
+  "zuletzt: „%@“ · %@": "latest: “%@” · %@",
+  "Anheftung lösen": "Unpin"
 }

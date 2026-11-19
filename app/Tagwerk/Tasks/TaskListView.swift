@@ -103,8 +103,8 @@ struct TaskListView: View {
                 case .shoppingSettings: ShoppingSettingsView()
                 case .shoppingCategories:
                     ShoppingCategoriesView(store: environment.shoppingCategories, model: environment.shopping)
-                case .notes, .note:
-                    ContentUnavailableView("Noch keine Notizen", systemImage: "note.text")
+                case .notes: NotesListView(store: environment.notes)
+                case .note(let id): NoteEditorView(noteID: id, store: environment.notes)
                 }
             }
             .toolbar {

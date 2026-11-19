@@ -1081,7 +1081,7 @@ extension NotesListView {
 }
 ```
 
-- [ ] **Schritt 1: Tests schreiben**
+- [x] **Schritt 1: Tests schreiben**
 
 ```swift
 @Test func footer_freeNote_relativeDates() {
@@ -1096,11 +1096,11 @@ extension NotesListView {
 }
 ```
 
-- [ ] **Schritt 2:** Suite ausführen. Erwartet: Übersetzungsfehler.
-- [ ] **Schritt 3: Texte umsetzen**, Suite grün.
-- [ ] **Schritt 4: Oberfläche bauen** nach Spec §5.6: Karten (Titel fett, Vorschau zwei Zeilen, Fußzeile, 📌 bei angehefteten); Segmentleiste „Alle · Gedanken · Eigene“ nur bei `store.hasThoughts`; Eingabezeile unten „Neue Notiz“ (mehrzeilig, Mikrofon bei `voiceInputEnabled`; Senden → `create(text:wasDictated:)`, Feld leeren); Wischen links „Löschen“ mit Rückfrage, rechts „Anheften“/„Lösen“; Fußnote „Notizen liegen nur auf diesem iPhone. Sie werden nicht an ChatGPT gesendet.“; leerer Zustand „Noch keine Notizen. Schreib oder diktiere unten die erste.“. Editor: `TextEditor` über die ganze Fläche; Speichern entprellt 0,5 s (`task(id: text)` mit `Task.sleep`) und in `onDisappear`, dort zusätzlich `deleteIfEmpty`; Menü „Anheften“/„Lösen“, „Löschen“ (mit Rückfrage); Art und Tag sind nicht bearbeitbar. Tipp auf eine Karte → `environment.tasksPath.append(.note(id))`. Zeile „Notizen“ in `TasksEntrySection`: `entrySubtitle`, rechts `store.count`.
-- [ ] **Schritt 5:** Sichtprüfung im Simulator inklusive einer von Hand über `NoteStore.create(text:kind:dayKey:)` angelegten Gedanken-Notiz (Demo-Daten, Task 17): Filter erscheint, Fußzeile stimmt. `app/test-all.sh` grün.
-- [ ] **Schritt 6:** Commit: `git add app/Tagwerk app/TagwerkTests && git commit -m "feat: add notes list, quick capture and editor"`
+- [x] **Schritt 2:** Suite ausführen. Erwartet: Übersetzungsfehler.
+- [x] **Schritt 3: Texte umsetzen**, Suite grün.
+- [x] **Schritt 4: Oberfläche bauen** nach Spec §5.6: Karten (Titel fett, Vorschau zwei Zeilen, Fußzeile, 📌 bei angehefteten); Segmentleiste „Alle · Gedanken · Eigene“ nur bei `store.hasThoughts`; Eingabezeile unten „Neue Notiz“ (mehrzeilig, Mikrofon bei `voiceInputEnabled`; Senden → `create(text:wasDictated:)`, Feld leeren); Wischen links „Löschen“ mit Rückfrage, rechts „Anheften“/„Lösen“; Fußnote „Notizen liegen nur auf diesem iPhone. Sie werden nicht an ChatGPT gesendet.“; leerer Zustand „Noch keine Notizen. Schreib oder diktiere unten die erste.“. Editor: `TextEditor` über die ganze Fläche; Speichern entprellt 0,5 s (`task(id: text)` mit `Task.sleep`) und in `onDisappear`, dort zusätzlich `deleteIfEmpty`; Menü „Anheften“/„Lösen“, „Löschen“ (mit Rückfrage); Art und Tag sind nicht bearbeitbar. Tipp auf eine Karte → `environment.tasksPath.append(.note(id))`. Zeile „Notizen“ in `TasksEntrySection`: `entrySubtitle`, rechts `store.count`.
+- [ ] **Schritt 5:** (Sichtprüfung offen; `app/test-all.sh` grün) Sichtprüfung im Simulator inklusive einer von Hand über `NoteStore.create(text:kind:dayKey:)` angelegten Gedanken-Notiz (Demo-Daten, Task 17): Filter erscheint, Fußzeile stimmt. `app/test-all.sh` grün.
+- [x] **Schritt 6:** Commit: `git add app/Tagwerk app/TagwerkTests && git commit -m "feat: add notes list, quick capture and editor"`
 
 ---
 
