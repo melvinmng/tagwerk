@@ -32,12 +32,12 @@ struct EntrySheet: View {
 
     var body: some View {
         NavigationStack {
-            Form {
+            eventPresentations(Form {
                 switch current {
                 case .lunch(let day, let range): lunchContent(day: day, range: range)
                 case .event(let event, let taskID): eventContent(event, taskID: taskID)
                 }
-            }
+            })
             .navigationTitle(navigationTitle)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Fertig") { dismiss() } } }
@@ -164,23 +164,35 @@ struct EntrySheet: View {
                 if let url = URL(string: "calshow:\(Int(event.start.timeIntervalSinceReferenceDate))") { openURL(url) }
             }
         }
-        .sheet(isPresented: $editing) {
-            EventEditSheet(model: model, existing: event, day: PlanDay(date: event.start, calendar: model.calendar))
-        }
-        .sheet(isPresented: $movingDay) { BlockDaySheet(block: event, model: model) }
-        .confirmationDialog(event.isRecurring ? "Dieser Termin wiederholt sich" : "Löschen?", isPresented: $askingDelete,
-                            titleVisibility: .visible) {
-            if event.isRecurring {
-                Button("Nur diesen Termin löschen", role: .destructive) { delete(event, .thisEvent) }
-                Button("Diesen und alle folgenden löschen", role: .destructive) { delete(event, .futureEvents) }
-            } else {
-                Button("Löschen", role: .destructive) { delete(event, .thisEvent) }
-            }
-        }
-        .confirmationDialog("Dieser Termin wiederholt sich", isPresented: hasSeriesChange, titleVisibility: .visible,
-                            presenting: pendingSeriesChange) { change in
-            Button("Nur diesen Termin") { apply(change, to: event, series: false) }
-            Button("Diesen und alle folgenden") { apply(change, to: event, series: true) }
+    }
+
+    /// Sheets and dialogs of an event. They hang on the form, not on a section: inside a form a section passes
+    /// its modifiers on to every row, so several rows presented the same sheet at once and SwiftUI closed the
+    /// whole stack, including this sheet ("Auf anderen Tag …").
+    @ViewBuilder
+    private func eventPresentations(_ content: some View) -> some View {
+        if case .event(let event, _) = current {
+            content
+                .sheet(isPresented: $editing) {
+                    EventEditSheet(model: model, existing: event, day: PlanDay(date: event.start, calendar: model.calendar))
+                }
+                .sheet(isPresented: $movingDay) { BlockDaySheet(block: event, model: model) { dismiss() } }
+                .confirmationDialog(event.isRecurring ? "Dieser Termin wiederholt sich" : "Löschen?", isPresented: $askingDelete,
+                                    titleVisibility: .visible) {
+                    if event.isRecurring {
+                        Button("Nur diesen Termin löschen", role: .destructive) { delete(event, .thisEvent) }
+                        Button("Diesen und alle folgenden löschen", role: .destructive) { delete(event, .futureEvents) }
+                    } else {
+                        Button("Löschen", role: .destructive) { delete(event, .thisEvent) }
+                    }
+                }
+                .confirmationDialog("Dieser Termin wiederholt sich", isPresented: hasSeriesChange, titleVisibility: .visible,
+                                    presenting: pendingSeriesChange) { change in
+                    Button("Nur diesen Termin") { apply(change, to: event, series: false) }
+                    Button("Diesen und alle folgenden") { apply(change, to: event, series: true) }
+                }
+        } else {
+            content
         }
     }
 
