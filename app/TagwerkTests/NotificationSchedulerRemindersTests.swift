@@ -45,8 +45,10 @@ struct NotificationSchedulerRemindersTests {
 
     private func useThreeReminders() {
         var defaults = settings.reminderDefaults
-        defaults.set([.before(amount: 1, unit: .weeks), .before(amount: 1, unit: .days), .before(amount: 1, unit: .hours)],
-                     for: .task, isAllDay: false)
+        for kind in [ReminderKind.localTask, .githubIssue, .appleReminder] {
+            defaults.set([.before(amount: 1, unit: .weeks), .before(amount: 1, unit: .days), .before(amount: 1, unit: .hours)],
+                         for: kind, isAllDay: false)
+        }
         settings.reminderDefaults = defaults
     }
 
@@ -148,8 +150,10 @@ struct NotificationSchedulerRemindersTests {
         settings.quietStartMinutes = 22 * 60
         settings.quietEndMinutes = 7 * 60
         var defaults = settings.reminderDefaults
-        defaults.set([.at(daysBefore: 2, hour: 23, minute: 0), .before(amount: 1, unit: .days), .before(amount: 1, unit: .hours)],
-                     for: .task, isAllDay: false)
+        for kind in [ReminderKind.localTask, .githubIssue, .appleReminder] {
+            defaults.set([.at(daysBefore: 2, hour: 23, minute: 0), .before(amount: 1, unit: .days), .before(amount: 1, unit: .hours)],
+                         for: kind, isAllDay: false)
+        }
         settings.reminderDefaults = defaults
         // Due 25th at 06:00: 2 days before at 23:00 (night) and 1 day before (24th 06:00, night) both move to 07:00;
         // 1 hour before (05:00, night) moves to 07:00 as well, so only the first of them stays.

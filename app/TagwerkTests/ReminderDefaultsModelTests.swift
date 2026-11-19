@@ -8,10 +8,10 @@ import TagwerkCore
 struct ReminderDefaultsModelTests {
     @Test func firstOpening_showsTheMigratedValues() {
         let model = ReminderDefaultsModel(defaults: .legacy(leadTimeMinutes: 90))
-        let task = model.list(.init(kind: .task, isAllDay: false))
-        let allDayTask = model.list(.init(kind: .task, isAllDay: true))
-        #expect(task.offsets == [.before(amount: 90, unit: .minutes)])
-        #expect(allDayTask.offsets == [.at(daysBefore: 0, hour: 9, minute: 0)])
+        for kind in [ReminderKind.localTask, .githubIssue, .appleReminder] {
+            #expect(model.list(.init(kind: kind, isAllDay: false)).offsets == [.before(amount: 90, unit: .minutes)])
+            #expect(model.list(.init(kind: kind, isAllDay: true)).offsets == [.at(daysBefore: 0, hour: 9, minute: 0)])
+        }
         #expect(model.list(.init(kind: .deadline, isAllDay: true)).offsets == [.at(daysBefore: 1, hour: 18, minute: 0)])
         #expect(model.list(.init(kind: .event, isAllDay: false)).offsets.isEmpty)
         #expect(model.defaults == ReminderDefaults.legacy(leadTimeMinutes: 90))
@@ -21,10 +21,13 @@ struct ReminderDefaultsModelTests {
         let model = ReminderDefaultsModel(defaults: .legacy(leadTimeMinutes: 120))
         let events = model.list(.init(kind: .event, isAllDay: false))
         events.add(.before(amount: 15, unit: .minutes))
-        let tasks = model.list(.init(kind: .task, isAllDay: false))
-        tasks.add(.before(amount: 1, unit: .days))
+        let issues = model.list(.init(kind: .githubIssue, isAllDay: false))
+        issues.add(.before(amount: 1, unit: .days))
         #expect(model.defaults.offsets(for: .event, isAllDay: false) == [.before(amount: 15, unit: .minutes)])
-        #expect(model.defaults.offsets(for: .task, isAllDay: false) == [.before(amount: 1, unit: .days), .before(amount: 2, unit: .hours)])
+        #expect(model.defaults.offsets(for: .githubIssue, isAllDay: false) == [.before(amount: 1, unit: .days), .before(amount: 2, unit: .hours)])
+        // The other task kinds keep their own lists.
+        #expect(model.defaults.offsets(for: .localTask, isAllDay: false) == [.before(amount: 2, unit: .hours)])
+        #expect(model.defaults.offsets(for: .appleReminder, isAllDay: false) == [.before(amount: 2, unit: .hours)])
         #expect(model.defaults.offsets(for: .deadline, isAllDay: false) == [.before(amount: 2, unit: .hours)])
     }
 
@@ -44,6 +47,6 @@ struct ReminderDefaultsModelTests {
         model.list(.init(kind: .event, isAllDay: true)).add(.at(daysBefore: 1, hour: 20, minute: 0))
         settings.reminderDefaults = model.defaults
         #expect(settings.reminderDefaults.offsets(for: .event, isAllDay: true) == [.at(daysBefore: 1, hour: 20, minute: 0)])
-        #expect(settings.reminderDefaults.offsets(for: .task, isAllDay: false) == [.before(amount: 1, unit: .hours)])
+        #expect(settings.reminderDefaults.offsets(for: .localTask, isAllDay: false) == [.before(amount: 1, unit: .hours)])
     }
 }

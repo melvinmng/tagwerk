@@ -99,9 +99,9 @@ struct ReminderOverrideStoreTests {
         #expect(settings.reminderDefaultsData == nil)
         #expect(settings.reminderDefaults == .legacy(leadTimeMinutes: 60))
         var changed = settings.reminderDefaults
-        changed.set([.before(amount: 1, unit: .weeks)], for: .task, isAllDay: false)
+        changed.set([.before(amount: 1, unit: .weeks)], for: .localTask, isAllDay: false)
         settings.reminderDefaults = changed
         settings.leadTimeMinutes = 240
-        #expect(settings.reminderDefaults.offsets(for: .task, isAllDay: false) == [.before(amount: 1, unit: .weeks)])
+        #expect(settings.reminderDefaults.offsets(for: .localTask, isAllDay: false) == [.before(amount: 1, unit: .weeks)])
     }
 }

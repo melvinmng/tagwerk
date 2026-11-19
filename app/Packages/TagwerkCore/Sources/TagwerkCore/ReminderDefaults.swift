@@ -1,8 +1,27 @@
 import Foundation
 
-/// The kinds of entries that get reminders.
+/// The kinds of entries that get reminders, in the order of the settings page. Every task source has its own kind, so
+/// the default reminders of GitHub issues, Apple reminders and local tasks can differ.
 public enum ReminderKind: String, Codable, CaseIterable, Hashable, Sendable {
-    case task, deadline, event
+    /// Events of the calendars (Apple Calendar), applied when an event is created in Tagwerk.
+    case event
+    case appleReminder, githubIssue, localTask
+    case deadline
+
+    /// The kind of a task from this source.
+    public static func forTask(source: TaskSource) -> ReminderKind {
+        switch source {
+        case .reminders: .appleReminder
+        case .github: .githubIssue
+        case .local: .localTask
+        }
+    }
+
+    /// The kinds of tasks.
+    static let taskKinds: [ReminderKind] = [.appleReminder, .githubIssue, .localTask]
+
+    /// Key of the one list for all tasks, as stored before every source got its own kind.
+    fileprivate static let formerTaskKey = "task"
 }
 
 /// The reminders an entry gets when it has no list of its own (plan P4, assumptions A2, A5 and A6). Every kind has one
@@ -18,13 +37,18 @@ public struct ReminderDefaults: Codable, Hashable, Sendable {
 
     private enum CodingKeys: String, CodingKey { case timed, allDay }
 
-    /// Keyed by the raw value of the kind, so the stored JSON is an object with a stable key order.
+    /// Keyed by the raw value of the kind, so the stored JSON is an object with a stable key order. The former list
+    /// "task" applies to every task kind that has no list of its own, so data from before the split behaves as before.
     public init(from decoder: any Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         func read(_ key: CodingKeys) throws -> [ReminderKind: [ReminderOffset]] {
             let raw = try container.decodeIfPresent([String: [ReminderOffset]].self, forKey: key) ?? [:]
-            return Dictionary(raw.compactMap { entry in ReminderKind(rawValue: entry.key).map { ($0, entry.value) } },
-                              uniquingKeysWith: { first, _ in first })
+            var lists = Dictionary(raw.compactMap { entry in ReminderKind(rawValue: entry.key).map { ($0, entry.value) } },
+                                   uniquingKeysWith: { first, _ in first })
+            if let former = raw[ReminderKind.formerTaskKey] {
+                for kind in ReminderKind.taskKinds where lists[kind] == nil { lists[kind] = former }
+            }
+            return lists
         }
         timed = try read(.timed)
         allDay = try read(.allDay)
@@ -57,9 +81,14 @@ public struct ReminderDefaults: Codable, Hashable, Sendable {
         let lead: ReminderOffset = minutes > 0 && minutes % 60 == 0 ? .before(amount: minutes / 60, unit: .hours)
             : .before(amount: minutes, unit: .minutes)
         return ReminderDefaults(
-            timed: [.task: [lead], .deadline: [lead], .event: []],
-            allDay: [.task: [.at(daysBefore: 0, hour: dateOnlyHour, minute: 0)],
-                     .deadline: [.at(daysBefore: 1, hour: allDayEventHour, minute: 0)], .event: []])
+            timed: tasks([lead]).merging([.deadline: [lead], .event: []]) { first, _ in first },
+            allDay: tasks([.at(daysBefore: 0, hour: dateOnlyHour, minute: 0)])
+                .merging([.deadline: [.at(daysBefore: 1, hour: allDayEventHour, minute: 0)], .event: []]) { first, _ in first })
+    }
+
+    /// The same list for every task kind.
+    private static func tasks(_ offsets: [ReminderOffset]) -> [ReminderKind: [ReminderOffset]] {
+        Dictionary(uniqueKeysWithValues: ReminderKind.taskKinds.map { ($0, offsets) })
     }
 
     /// Reads stored defaults; without data or with unreadable data the legacy rules apply.

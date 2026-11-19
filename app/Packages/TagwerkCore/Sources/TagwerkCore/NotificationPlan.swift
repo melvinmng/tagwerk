@@ -155,7 +155,7 @@ public func notificationPlanResult(tasks: [TaskItem], deadlineEvents: [CalendarE
         let anchor = due.startDate(in: calendar)
         let resolved = ReminderOverrideResolution.resolve(
             itemKey: ReminderOverride.key(task: task.id), due: due, isAllDay: isAllDay, overrides: rules.overrides,
-            defaults: defaults.offsets(for: .task, isAllDay: isAllDay))
+            defaults: defaults.offsets(for: .forTask(source: task.id.source), isAllDay: isAllDay))
         // Alarms written to the Reminders app: iOS fires them, Tagwerk adds none of its own.
         guard resolved.storage == .tagwerk else { continue }
         let time = due.hasTime ? anchor : nil
