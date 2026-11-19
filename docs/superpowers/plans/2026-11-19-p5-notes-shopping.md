@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-> **Status:** Entwurf vom 19.11.2026 auf dem Stand `origin/main` 70a2b9c. Ohne Mockups (Designrunde #188 folgt später). Nichts gebaut, nichts im Simulator oder am Gerät geprüft.
+> **Status:** umgesetzt, siehe Abschnitt „Stand“ am Ende. Entwurf vom 19.11.2026 auf dem Stand `origin/main` 70a2b9c. Ohne Mockups (Designrunde #188 folgt später). Nichts gebaut, nichts im Simulator oder am Gerät geprüft.
 
 **Goal:** Notizen bekommen drei feste Ordner („Brain Dump“, „Tagesstart“, „Tagesabschluss“), Markdown mit Ansicht, sicheres HTML, Bilder und Dateianhänge. Die Einkaufsliste bekommt zwei Sammelaktionen und „Rezept hinzufügen“ mit ChatGPT.
 
@@ -533,3 +533,47 @@ Der Text bleibt so lesbar, exportierbar und durchsuchbar. Der Verweis wird an de
     - Kategorien stimmen, vorhandene Artikel sind abgewählt.
     - Ohne Netz kommt eine Meldung.
     - Nach Widerruf der Zustimmung erscheint die Rückfrage erneut.
+
+
+---
+
+## Stand (umgesetzt am 19.11.2026)
+
+Branch `feat/p5-notes-shopping` (der Worktree war schon auf diesem Namen angelegt, statt `feat/notes-folders-markdown-shopping`). Alle Tasks 1–16 sind umgesetzt, `app/test-all.sh` ist grün. Nicht geprüft: alles, was ein Gerät braucht (siehe „Gerätetests“).
+
+### Erweiterung durch den Auftraggeber: Ordner „Dream Log“
+
+- Vierter fester Ordner `NoteFolderRole.dreamLog` (Name „Dream Log“, Symbol `moon.zzz`), steht nach „Tagesabschluss“ im Abschnitt der Systemordner. Er listet Notizen mit `NoteKind.dream` (Rohwert `"dream"`), eine datierte Notiz je Tag, sortiert nach Tag absteigend, ohne Schnellerfassung.
+- `NoteKind.dream` wurde hier ergänzt, weil P1 den Fall parallel einführt (gleicher Rohwert, der Merge dedupliziert). `NoteStore.saveThought` akzeptiert `.dream`.
+- Traumnotizen sind privat wie die Dankbarkeit: `NoteKind.dream.isPrivate == true`, daher gehen sie nie an ChatGPT, den Assistenten oder das Widget (alle Sende-Stellen prüfen dieses eine Prädikat).
+- Die Sicherung behandelt sie wie Morgen-/Abendnotizen. Dafür trennt der Code zwei Fragen: `isPrivate` (verlässt das Gerät nie) und neu `isInDefaultBackup` (auch ohne den Schalter „Tagebuch und Bible Study einschließen“ gesichert). Nur Tagebuch und Bible Study sind nicht in der Standardsicherung.
+- Der Ordner „Tagesstart“ zeigt weiter nur die Morgeneinträge (Dankbarkeit + Brain Dump), nicht die Traumnotizen.
+
+### Abweichungen vom Plan
+
+1. **`acceptsOwnNotes`** ist für Tagebuch und Bible Study `true`, nicht `false`: Der Ordnerwähler bietet sie heute an und `move` akzeptiert freie Notizen dort. Das bestehende Verhalten ist festgeschrieben.
+2. **Checkboxen ohne JavaScript:** Die Ansicht rendert jede Checkbox als Link `tagwerk-toggle:<n>` (mit `data-index`, `role="checkbox"`), den die App im `WKNavigationDelegate` abfängt. Kein `WKUserScript`, kein `<input>` (ein deaktiviertes Eingabefeld würde den Tipp verschlucken). Damit entfällt die offene Frage nach Skripten in eigener Welt. Die Zählung entspricht `togglingCheckbox` und ist getestet; Checkboxen in Zitaten und ohne Text gelten wie im Parser nicht.
+3. **Zeilenregel für Checkboxen** verlangt Text hinter der Box und kennt keine Zitat-Präfixe, weil der Parser das so entscheidet. Nummerierte Listen (`1. [ ]`) zählen mit.
+4. **Weiche Zeilenumbrüche** werden als `<br>` dargestellt (Notiztext soll so aussehen, wie getippt), Smart-Punctuation ist aus.
+5. **`ShoppingModel.removeCompleted()`** ist entfernt (kein Aufrufer mehr). Für „alle Zeiträume“ beginnt das Intervall bei `Date(timeIntervalSince1970: 0)` statt `.distantPast` (konservative Wahl der offenen Frage; am Gerät prüfen, ob EventKit auch `.distantPast` annimmt).
+6. **Datumstitel** in den Routine-Ordnern: „Do. 19. Nov.“ (ohne Komma, so formatiert es `Date.FormatStyle`).
+7. **Gedanken-Filter entfernt:** `NoteStore.Filter.thoughts`, `hasThoughts` und `NotesScope.thoughts` sind weg. Tests nutzen einen Test-Helfer `thoughtNotes()`.
+8. **Sicherung:** `BackupRules.schemaVersion` ist jetzt 2 (Anhänge). `AppSettingsBackup.shoppingRecipeConsent` ist optional (`Bool?`), alte Dateien bleiben lesbar. Die Wiederherstellung löscht Anhänge geräteseitig nur für Notizen, die ersetzt werden; Anhänge privater Notizen bleiben, wenn die Datei ohne private Inhalte geschrieben wurde.
+9. **`purgeOrphans`** läuft beim Start, löscht aber nichts, wenn es keine einzige Notiz gibt oder keinen einzigen Datensatz (sieht dann nach einem nicht geladenen Speicher aus, die Dateien wären die einzige Kopie).
+10. **Anhänge in Quick Look/Teilen** gehen über Kopien mit dem echten Dateinamen im temporären Ordner (`NoteAttachmentStore.exportURL`), weil die gespeicherte Datei nach ihrer ID heißt.
+11. **Kamera-Zweckangabe** (`NSCameraUsageDescription`) nennt jetzt auch Fotos für Notizen (project.yml, Info.plist, InfoPlist.xcstrings).
+12. **Rezept-Blatt** ist ein Blatt mit eigener Navigation (Zustimmung → Eingabe → Ergebnis), keine drei getrennten Blätter. Ein Link ohne Schema wird mit `https://` ergänzt (`RecipeImporter.url(from:)`).
+13. **Tests der WebView:** Die Sicherheitseinstellungen (JavaScript aus, Content Rules kompilieren, Schema-Handler liefert nur Bilder) sind in einem echten `WKWebView` im Test geprüft (`NoteMarkdownViewTests`).
+14. **Fehler gefunden und behoben:** Die Dunkelvariablen der Notizseite standen ohne Selektor im CSS und griffen nicht (aufgefallen bei der Sichtprüfung der Snapshots, jetzt getestet).
+
+### Sichtprüfung
+
+Statt einer manuellen Simulator-Sitzung (ohne Geräte-Werkzeuge ist kein Antippen möglich) wurde die Markdown-Seite in einem Test-WKWebView gerendert und als Bild geprüft: Überschriften, Hervorhebungen, Checkliste, Tabelle, Zitat, Bild, PDF-Chip, nummerierte Liste, Codeblock, hell und dunkel. Die HTML-Testnotiz (`<script>`, `<img src=https://…>`, `<iframe>`, `onclick`) zeigt nur den erlaubten Text. Nicht gesehen: die SwiftUI-Blätter (Ordneransicht, Editor, Einkaufs-Menü, Rezept-Blätter).
+
+### Offene Gerätetests
+
+Alle Punkte der Liste „Gerätetests“ oben, zusätzlich:
+
+- Tippen auf eine Checkbox in der Ansicht (Link-Navigation, Scrollposition bleibt) und auf `mailto:`/Webadressen.
+- Einfügen über „Einfügen“ (`PasteButton` im Menü; auf dem Gerät prüfen, ob er im Menü sichtbar und aktiv ist).
+- Dream Log: Notizen kommen erst mit P1 (Feld im Morgen-Blatt). Bis dahin ist der Ordner leer.
