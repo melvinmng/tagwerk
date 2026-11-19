@@ -279,7 +279,7 @@ Jede Entscheidung nennt die Wahl und das Risiko, falls sie falsch ist.
 
 ## Siri Einkaufsliste
 
-Auftrag: Siri soll offenere Formulierungen verstehen, auch einen Satz, der den Artikel nennt („Füge Milch zur Einkaufsliste in Tagwerk hinzu“). Branch `feat/search-issues-planning`. Commits: `f5ea6e7` Namensliste für Siri (`TagwerkCore`) · `8b5c4a9` Sätze, Entity, Intent, Katalog, Einstellungstext.
+Auftrag: Siri soll offenere Formulierungen verstehen, auch einen Satz, der den Artikel nennt („Füge Milch zur Einkaufsliste in Tagwerk hinzu“). Branch `feat/search-issues-planning`. Commits: `f5ea6e7` Namensliste für Siri (`TagwerkCore`) · `8b5c4a9` Sätze, Entity, Intent, Katalog, Einstellungstext · `e41424d` Korrekturen aus der Durchsicht (Auffrischen bei Hintergrundstart, genauer Treffer).
 
 ### (a) Was gebaut ist
 
@@ -287,27 +287,28 @@ Auftrag: Siri soll offenere Formulierungen verstehen, auch einen Satz, der den A
 - **Fünf neue Sätze ohne Parameter** (am bestehenden `AddToShoppingListIntent`, Rückfrage „Was soll auf die Liste?“, die alten drei bleiben): „Füge etwas zur Einkaufsliste in Tagwerk hinzu“ · „Ich brauche etwas aus dem Laden in Tagwerk“ · „Einkaufsliste in Tagwerk“ · „Neuer Artikel in Tagwerk“ · „Etwas auf die Einkaufsliste in Tagwerk setzen“.
 - **Drei neue Sätze mit Artikel** (neuer `AddShoppingArticleIntent`, Hintergrund-Modus, Parameter `ShoppingArticleEntity`): „Füge \(Artikel) zur Einkaufsliste in Tagwerk hinzu“ · „\(Artikel) auf die Einkaufsliste in Tagwerk“ · „Setz \(Artikel) auf die Einkaufsliste in Tagwerk“. Der Intent ruft `IntentServices.addToShopping(article:)`, das den bestehenden Weg nutzt (`addToShopping(text:)` → Zerlegen, Duplikate, Wiedereröffnen, Kategorie). Es gibt jetzt 8 App-Kurzbefehle (Grenze des Systems: 10).
 - **Vorschlagsliste** (`ShoppingSuggestions.articles`): zuerst die eigenen Namen aus der Einkaufsliste (offen und erledigt, bis 180 Tage zurück), sortiert nach Häufigkeit, dann Aktualität, dann Name; danach häufige Begriffe in der App-Sprache (die andere Sprache folgt); Duplikate ohne Rücksicht auf Groß-/Kleinschreibung und Umlaute; Obergrenze 150; von mehreren Schreibweisen gilt die neueste.
-- **Auffrischen:** `ShoppingModel.onNamesChanged` meldet, wenn sich die Menge der Namen nach einem Neuladen ändert (auch beim ersten Laden); `AppEnvironment.startSnapshotUpdates` ruft dann `TagwerkShortcuts.updateAppShortcutParameters()` auf, zusätzlich einmal beim Start.
+- **Auffrischen:** `ShoppingModel.onNamesChanged` meldet, wenn sich die Menge der Namen nach einem Neuladen ändert (auch beim ersten Laden). Der Haken wird in `TagwerkApp.init` gesetzt (nicht erst in `RootView.task`, das bei einem Hintergrundstart durch einen Intent nicht läuft, E10) und ruft `TagwerkShortcuts.updateAppShortcutParameters()` auf; in Unit-Tests ist er nicht gesetzt. Zusätzlich ruft `startSnapshotUpdates` die Aktualisierung einmal beim Vordergrundstart auf. Die Verdrahtung in `TagwerkApp.init` ist nicht automatisch getestet, nur der Haken im Modell.
 - **Englisch:** alle acht Sätze im Katalog `AppShortcuts.xcstrings` (mit `${applicationName}`, bzw. `${article}`), Titel und Beschreibung des neuen Intents, zwei Zeilen in der Einstellungsseite „Erfassen“ (Beispielsatz mit Milch); `scripts/translations/en.json` nachgezogen.
 - **Einstellungen › Erfassen:** neue Zeile „Füge Milch zur Einkaufsliste in Tagwerk hinzu“ (nicht verlangt; sonst wäre der Satz nirgends auffindbar).
 
 ### (b) Entscheidungen
 
 1. **Häufige Begriffe als gepflegte Liste statt aus dem Wörterbuch abgeleitet.** Das Wörterbuch hat nur gefaltete Schlüssel („kase“, „apfel“) und keine Häufigkeit; Siri bekäme „Kase“. Gewählt: eine Liste in `ShoppingSuggestions` (≈ 80 deutsche, ≈ 45 englische Begriffe, richtig geschrieben, nach Häufigkeit sortiert). Ein Test stellt sicher, dass jeder Begriff ein Begriff des Offline-Wörterbuchs ist. Risiko: die Rangfolge ist geschätzt, nicht gemessen.
-2. **Unbekannte Namen lösen sich zu sich selbst auf**, statt leer zu bleiben. Die Vorgabe „unbekannte Namen fallen auf die Frage zurück“ hätte sonst bei der Antwort auf „Was soll auf die Liste?“ eine Schleife erzeugt (leeres Ergebnis → Siri fragt erneut). Leerer oder nicht zerlegbarer Text löst sich zu nichts auf. Ein frei getippter Text wird beim Hinzufügen wie gesprochener Text zerlegt („2 Zwiebeln“ → Zwiebeln mit Menge 2; „Milch und Brot“ → zwei Artikel). Ein Name mit Komma in der Historie würde dabei ebenfalls zerlegt (selten, nicht behandelt).
+2. **Unbekannte Namen lösen sich zu sich selbst auf**, statt leer zu bleiben. Die Vorgabe „unbekannte Namen fallen auf die Frage zurück“ hätte sonst bei der Antwort auf „Was soll auf die Liste?“ eine Schleife erzeugt (leeres Ergebnis → Siri fragt erneut). Leerer oder nicht zerlegbarer Text löst sich zu nichts auf. Entspricht der Text genau einem Vorschlag („Milch“), ist das der einzige Treffer, damit Siri nicht zwischen „Milch“, „Milchreis“ und „Hafermilch“ rückfragt; bei Teiltext („hafer“) kommen alle Treffer, Anfang vor Mitte. Ein frei getippter Text wird beim Hinzufügen wie gesprochener Text zerlegt („2 Zwiebeln“ → Zwiebeln mit Menge 2; „Milch und Brot“ → zwei Artikel). Ein Name mit Komma in der Historie würde dabei ebenfalls zerlegt (selten, nicht behandelt).
 3. **Entity-ID ist der Name selbst**; `entities(for:)` baut die Entity daraus wieder auf, ohne die Liste zu lesen. Gespeicherte Kurzbefehle brauchen so keinen Treffer in der aktuellen Vorschlagsliste.
 4. **Reihenfolge der eigenen Namen:** erst Häufigkeit, dann Aktualität. Da Tagwerk wiederholte Artikel wieder öffnet statt neu anzulegen, zählt die Häufigkeit in der Praxis meist 1 und die Aktualität entscheidet. Die Historie umfasst 180 Tage (`ShoppingModel.historyWindow`); die Seite „Erledigt“ bleibt bei 7 Tagen. Die Dauer von `predicateForCompletedReminders` über 180 Tage ist nicht gemessen (wie S5); sie fällt nur an, wenn das System die Vorschläge abfragt.
 5. **Auffrischen nur bei Änderung der Namensmenge** (Schlüsselmenge der offenen und der 7 Tage erledigten Artikel), nicht bei jedem Neuladen, damit `updateAppShortcutParameters()` nicht ständig läuft. Namen, die nur in der längeren Historie stehen, ändern die Menge nicht und werden beim nächsten Auffrischen oder Start berücksichtigt.
 6. **Kein eigenes Verhalten ohne Liste oder Zugriff:** dann bleiben nur die häufigen Begriffe; beim Hinzufügen antwortet der Intent wie bisher („Wähle zuerst …“).
 7. **`AddShoppingArticleIntent.services` ist nicht `private`**, damit der Test die Abhängigkeit setzen kann (`AppDependencyManager.add` greift außerhalb des Systemablaufs nicht).
-8. **Satz „Einkaufsliste in Tagwerk“ ohne Verb** steht vom Auftrag so vor und liegt neben „Einkaufsliste in Tagwerk zeigen“. Wer nur „Einkaufsliste in Tagwerk“ sagt und die Seite sehen will, bekommt die Rückfrage.
+8. **Satz „Einkaufsliste in Tagwerk“ ohne Verb** steht so im Auftrag und liegt neben „Einkaufsliste in Tagwerk zeigen“. Wer nur „Einkaufsliste in Tagwerk“ sagt und die Seite sehen will, bekommt die Rückfrage.
 9. **Rot-Lauf:** Die Tests für `ShoppingSuggestions` und die App-Seite wurden vor dem Code geschrieben, aber nicht einzeln rot gelaufen (kein Lauf zwischen Test und Implementierung). Der erste grüne Lauf der App-Tests fand einen Fehler im Test (Wörterbuchbegriff „Hafermilch“) und eine Abhängigkeits-Falle (Punkt 7).
 
 ### (c) Offene Prüfungen am Gerät (Siri-Erkennung ist im Simulator nicht prüfbar)
 
 - Sätze ohne Parameter: jeder der fünf neuen Sätze und die drei alten lösen die Rückfrage „Was soll auf die Liste?“ aus; Antwort „Kaffee und Reis“ legt zwei Artikel an.
 - Sätze mit Artikel: „Füge Milch zur Einkaufsliste in Tagwerk hinzu“, „Eier auf die Einkaufsliste in Tagwerk“, „Setz Käse auf die Einkaufsliste in Tagwerk“ — mit einem Namen aus der eigenen Liste, mit einem häufigen Begriff, mit einem unbekannten Namen (was sagt Siri?).
-- Ein neu angelegter Artikel wird nach kurzer Zeit sprechbar (nach `updateAppShortcutParameters()`); die Wartezeit ist unbekannt.
+- Ein neu angelegter Artikel wird nach kurzer Zeit sprechbar (nach `updateAppShortcutParameters()`); die Wartezeit ist unbekannt. Auch prüfen, wenn der Artikel per Siri bei beendeter App angelegt wurde (Haken in `TagwerkApp.init`).
+- Antwort „Milch“ auf die Rückfrage: Siri fragt nicht zwischen „Milch“ und „Milchreis“ nach.
 - Mehrdeutigkeit zwischen „Einkaufsliste in Tagwerk“ und „Einkaufsliste in Tagwerk zeigen“.
 - Menge der Sätze: 3 Sätze × bis 150 Namen plus Gewohnheiten bleiben unter der Grenze des Systems (angenommen 1000, nicht geprüft); sonst Obergrenze senken.
 - Englisch: die englischen Sätze, Anzeige der Entity („Item“) in der App „Kurzbefehle“, Verhalten der Vorschlagsliste mit englischer App-Sprache (englische Begriffe zuerst).
@@ -315,6 +316,6 @@ Auftrag: Siri soll offenere Formulierungen verstehen, auch einen Satz, der den A
 
 ### (d) Testergebnis
 
-`app/test-all.sh`, Lauf nach dem Code-Commit `8b5c4a9`, alle Stufen grün einschließlich „string catalogs“: AIKit 98, GitHubKit 137, HealthBridge 11, RemindersKit 87, TagwerkCore 635 (vorher 621), App 1119 (vorher 1108) Tests bestanden. Neue Tests: 14 in `ShoppingSuggestionsTests` (Quellen, Reihenfolge, Duplikate, Grenze 150, Wörterbuchbezug, Treffersuche) und 11 in `ShoppingSiriTests` (Namensliste, Auflösung, Hinzufügen über den bestehenden Weg mit Fake-Speicher, Intent-`perform`, Auffrischen-Hook).
+`app/test-all.sh`, Lauf nach dem Code-Commit `e41424d`, alle Stufen grün einschließlich „string catalogs“: AIKit 98, GitHubKit 137, HealthBridge 11, RemindersKit 87, TagwerkCore 636 (vorher 621), App 1119 (vorher 1108) Tests bestanden. Neue Tests: 15 in `ShoppingSuggestionsTests` (Quellen, Reihenfolge, Duplikate, Grenze 150, Wörterbuchbezug, Treffersuche) und 11 in `ShoppingSiriTests` (Namensliste, Auflösung, Hinzufügen über den bestehenden Weg mit Fake-Speicher, Intent-`perform`, Auffrischen-Hook).
 
 Letzte Zeile: `ALL TESTS PASSED`
