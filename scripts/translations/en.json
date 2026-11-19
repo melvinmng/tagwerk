@@ -1426,5 +1426,13 @@
   "Zählt ab": "Counts from",
   "automatisch": "automatic",
   "offen": "open",
-  "pausiert": "paused"
+  "pausiert": "paused",
+  "%@ ist für heute abgehakt.": "%@ is checked off for today.",
+  "%@ war heute schon abgehakt.": "%@ was already checked off today.",
+  "Diese Gewohnheit gibt es nicht mehr.": "This habit no longer exists.",
+  "Gewohnheit abhaken": "Check off habit",
+  "Gewohnheit in Tagwerk abhaken": "Check off a habit in Tagwerk",
+  "Hakt eine Gewohnheit für heute ab": "Checks off a habit for today",
+  "Hakt eine Gewohnheit für heute ab, ohne die App zu öffnen.": "Checks off a habit for today without opening the app.",
+  "Welche Gewohnheit?": "Which habit?"
 }

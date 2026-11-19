@@ -11,6 +11,16 @@
         }
       }
     },
+    "${habit} in ${applicationName} abhaken": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check off ${habit} in ${applicationName}"
+          }
+        }
+      }
+    },
     "Auf die Einkaufsliste in ${applicationName}": {
       "localizations": {
         "en": {
@@ -47,6 +57,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Log food in ${applicationName}"
+          }
+        }
+      }
+    },
+    "Gewohnheit in ${applicationName} abhaken": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check off a habit in ${applicationName}"
           }
         }
       }

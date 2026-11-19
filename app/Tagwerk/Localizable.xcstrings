@@ -282,6 +282,16 @@
         }
       }
     },
+    "%@ ist für heute abgehakt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ is checked off for today."
+          }
+        }
+      }
+    },
     "%@ ist in %@ nicht zuweisbar.": {
       "localizations": {
         "de": {
@@ -509,6 +519,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "%1$@ suggested · %2$@ free after accepting"
+          }
+        }
+      }
+    },
+    "%@ war heute schon abgehakt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ was already checked off today."
           }
         }
       }
@@ -4551,6 +4571,16 @@
         }
       }
     },
+    "Diese Gewohnheit gibt es nicht mehr.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This habit no longer exists."
+          }
+        }
+      }
+    },
     "Diese Kategorie gibt es schon.": {
       "localizations": {
         "en": {
@@ -5960,12 +5990,32 @@
         }
       }
     },
+    "Gewohnheit abhaken": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check off habit"
+          }
+        }
+      }
+    },
     "Gewohnheit anlegen": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Add habit"
+          }
+        }
+      }
+    },
+    "Gewohnheit in Tagwerk abhaken": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check off a habit in Tagwerk"
           }
         }
       }
@@ -6262,6 +6312,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "HIIT"
+          }
+        }
+      }
+    },
+    "Hakt eine Gewohnheit für heute ab": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Checks off a habit for today"
+          }
+        }
+      }
+    },
+    "Hakt eine Gewohnheit für heute ab, ohne die App zu öffnen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Checks off a habit for today without opening the app."
           }
         }
       }
@@ -11580,6 +11650,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "More options …"
+          }
+        }
+      }
+    },
+    "Welche Gewohnheit?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Which habit?"
           }
         }
       }

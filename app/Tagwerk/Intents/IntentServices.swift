@@ -28,6 +28,29 @@ final class IntentServices {
         return "\(amountText) ml Wasser erfasst."
     }
 
+    /// The habits active today, for the shortcut's choice of habit.
+    func activeHabits() -> [Habit] {
+        let habits = environment.habits
+        habits.refreshLocal()
+        return habits.habits.filter { HabitRules.isActive($0, on: habits.today, today: habits.today) }
+    }
+
+    /// "Gewohnheit abhaken": today's manual check, also for a habit with an automatic source; writes the snapshot.
+    /// The reply names neither streak nor rate, so it may be spoken on a locked device.
+    func checkHabit(id: UUID) async -> LocalizedStringResource {
+        let habits = environment.habits
+        // Best effort: Health may be unreadable here; the counter then keeps its last value (see `AppEnvironment`).
+        await habits.reload(day: habits.today)
+        guard let habit = habits.habits.first(where: { $0.id == id }),
+              HabitRules.isActive(habit, on: habits.today, today: habits.today) else {
+            return "Diese Gewohnheit gibt es nicht mehr."
+        }
+        let changed = await habits.checkToday(id)
+        environment.writeSnapshot()
+        let name = habit.name
+        return changed ? "\(name) ist für heute abgehakt." : "\(name) war heute schon abgehakt."
+    }
+
     struct Overview {
         var text: String
         var entries: [SnapshotEntry]

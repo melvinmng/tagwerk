@@ -33,6 +33,54 @@ struct LogWaterIntent: AppIntent {
     }
 }
 
+/// A habit as Siri and Shortcuts see it: only its name, never streaks or rates.
+struct HabitEntity: AppEntity {
+    static let typeDisplayRepresentation: TypeDisplayRepresentation = "Gewohnheit"
+    static let defaultQuery = HabitEntityQuery()
+
+    var id: UUID
+    @Property(title: "Name") var name: String
+
+    var displayRepresentation: DisplayRepresentation { DisplayRepresentation(title: LocalizedStringResource(stringLiteral: name)) }
+
+    init(_ habit: Habit) {
+        id = habit.id
+        name = habit.name
+    }
+}
+
+struct HabitEntityQuery: EntityQuery {
+    @Dependency private var services: IntentServices
+
+    @MainActor
+    func entities(for identifiers: [UUID]) async throws -> [HabitEntity] {
+        services.activeHabits().filter { identifiers.contains($0.id) }.map(HabitEntity.init)
+    }
+
+    @MainActor
+    func suggestedEntities() async throws -> [HabitEntity] {
+        services.activeHabits().map(HabitEntity.init)
+    }
+}
+
+/// "Gewohnheit abhaken": runs in the background and checks a habit off for today. There is no undo by voice.
+struct CheckHabitIntent: AppIntent {
+    static let title: LocalizedStringResource = "Gewohnheit abhaken"
+    static let description = IntentDescription("Hakt eine Gewohnheit für heute ab, ohne die App zu öffnen.")
+    static let supportedModes: IntentModes = .background
+
+    @Parameter(title: "Gewohnheit", requestValueDialog: "Welche Gewohnheit?")
+    var habit: HabitEntity
+
+    @Dependency private var services: IntentServices
+
+    @MainActor
+    func perform() async throws -> some IntentResult & ProvidesDialog {
+        let reply = await services.checkHabit(id: habit.id)
+        return .result(dialog: IntentDialog(reply))
+    }
+}
+
 /// "Mahlzeit erfassen": opens the meal sheet; estimating needs a tap there (main design §7).
 struct LogMealIntent: AppIntent {
     static let title: LocalizedStringResource = "Mahlzeit erfassen"
@@ -168,6 +216,10 @@ struct TagwerkShortcuts: AppShortcutsProvider {
             "Zur Einkaufsliste in \(.applicationName) hinzufügen",
             "Einkaufsliste in \(.applicationName) ergänzen",
         ], shortTitle: "Auf die Einkaufsliste", systemImageName: "cart.badge.plus")
+        AppShortcut(intent: CheckHabitIntent(), phrases: [
+            "\(\.$habit) in \(.applicationName) abhaken",
+            "Gewohnheit in \(.applicationName) abhaken",
+        ], shortTitle: "Gewohnheit abhaken", systemImageName: "checkmark.circle")
         AppShortcut(intent: OpenShoppingListIntent(), phrases: [
             "Einkaufsliste in \(.applicationName) zeigen",
         ], shortTitle: "Einkaufsliste zeigen", systemImageName: "cart")

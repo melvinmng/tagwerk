@@ -92,4 +92,73 @@ struct IntentServicesTests {
         #expect(environment.router.takeRequest(setupCompleted: true)?.route == .captureWorkout)
         #expect(environment.router.takeCapturePrefill() == .workout(activity: .running, minutes: 30))
     }
+
+    // MARK: Habits (phase 7)
+
+    private func addHabit(_ environment: AppEnvironment, name: String = "Lesen 20 min", source: HabitSource = .manual,
+                          pausedSince: PlanDay? = nil) -> Habit {
+        let habit = Habit(name: name, symbol: "book", order: environment.habits.habits.count, source: source,
+                          start: environment.habits.today, pausedSince: pausedSince)
+        environment.habits.save(habit)
+        return habit
+    }
+
+    private func seedSnapshot(_ environment: AppEnvironment) {
+        let today = environment.habits.today
+        environment.snapshotWriter.write(WidgetSnapshot(createdAt: .now, days: [SnapshotDay(day: today, entries: [], deadlineCount: 0,
+                                                                                            intake: nil)]))
+    }
+
+    @Test func checkHabit_addsManualCheckForToday_writesSnapshot() async throws {
+        let (services, environment) = try make()
+        seedSnapshot(environment)
+        let habit = addHabit(environment)
+        let reply = await services.checkHabit(id: habit.id)
+        #expect(String(localized: reply) == "Lesen 20 min ist für heute abgehakt.")
+        #expect(environment.snapshotWriter.current()?.days.first?.habits == SnapshotHabits(done: 1, total: 1))
+    }
+
+    @Test func checkHabit_twice_saysAlreadyChecked() async throws {
+        let (services, environment) = try make()
+        let habit = addHabit(environment)
+        _ = await services.checkHabit(id: habit.id)
+        #expect(String(localized: await services.checkHabit(id: habit.id)) == "Lesen 20 min war heute schon abgehakt.")
+    }
+
+    @Test func checkHabit_onAutomaticHabit_stillStoresTheManualCheck() async throws {
+        let (services, environment) = try make()
+        let habit = addHabit(environment, name: "Wasser", source: .water)
+        let reply = await services.checkHabit(id: habit.id)
+        #expect(String(localized: reply) == "Wasser ist für heute abgehakt.")
+        #expect(environment.habits.facts.manualChecks[habit.id] == [environment.habits.today])
+    }
+
+    @Test func checkHabit_unknownOrPausedHabit_changesNothing() async throws {
+        let (services, environment) = try make()
+        let paused = addHabit(environment, pausedSince: environment.habits.today)
+        #expect(String(localized: await services.checkHabit(id: paused.id)) == "Diese Gewohnheit gibt es nicht mehr.")
+        #expect(String(localized: await services.checkHabit(id: UUID())) == "Diese Gewohnheit gibt es nicht mehr.")
+        #expect(environment.habits.facts.manualChecks.isEmpty)
+    }
+
+    @Test func activeHabits_listsOnlyActiveOnes() throws {
+        let (services, environment) = try make()
+        let active = addHabit(environment, name: "Lesen")
+        _ = addHabit(environment, name: "Pausiert", pausedSince: environment.habits.today)
+        #expect(services.activeHabits().map(\.id) == [active.id])
+    }
+
+    @Test func backgroundSnapshot_withoutHealthFacts_neverLowersTheCounter() async throws {
+        let (services, environment) = try make()
+        let today = environment.habits.today
+        _ = addHabit(environment, name: "Schritte", source: .steps)
+        let manual = addHabit(environment, name: "Lesen")
+        // The file was written while Health values were known: both habits counted.
+        environment.snapshotWriter.write(WidgetSnapshot(createdAt: .now, days: [
+            SnapshotDay(day: today, entries: [], deadlineCount: 0, intake: nil, habits: SnapshotHabits(done: 2, total: 2))]))
+        // A background run while Health cannot be read: the step habit cannot be calculated, the counter must not fall.
+        health.failStepReads = true
+        _ = await services.checkHabit(id: manual.id)
+        #expect(environment.snapshotWriter.current()?.days.first?.habits == SnapshotHabits(done: 2, total: 2))
+    }
 }

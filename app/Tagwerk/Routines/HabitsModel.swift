@@ -30,6 +30,8 @@ final class HabitsModel {
     /// Bumped by every recalculation; views read it to follow changes.
     private(set) var revision = 0
     @ObservationIgnored var onChanged: (() -> Void)?
+    /// Called when habits are created, changed, sorted, paused or deleted (Siri's phrase parameters follow them).
+    @ObservationIgnored var onListChanged: (() -> Void)?
     let calendar: Calendar
 
     @ObservationIgnored private let store: HabitStore
@@ -41,6 +43,7 @@ final class HabitsModel {
     @ObservationIgnored private var healthWorkoutDays: Set<PlanDay> = []
     @ObservationIgnored private var healthSteps: [PlanDay: Int] = [:]
     @ObservationIgnored private var healthReadDay: PlanDay?
+    @ObservationIgnored private var healthReadWasComplete = false
 
     init(store: HabitStore, intake: IntakeStore, health: any HealthStoring, settings: AppSettings,
          calendar: Calendar = .tagwerk, now: @escaping () -> Date = Date.init) {
@@ -55,6 +58,10 @@ final class HabitsModel {
     }
 
     var today: PlanDay { PlanDay(date: now(), calendar: calendar) }
+
+    /// Health was read today and every type the user allowed answered; without that, habits fed by Health cannot be
+    /// calculated and a counter written now could be lower than the real one.
+    var hasCurrentHealthFacts: Bool { healthReadDay == today && healthReadWasComplete }
 
     var canAddHabit: Bool { habits.filter { $0.pausedSince == nil }.count < HabitRules.maximumActive }
 
@@ -75,17 +82,27 @@ final class HabitsModel {
         let sameDay = healthReadDay == today
         var workoutDays = sameDay ? healthWorkoutDays : []
         var steps = sameDay ? healthSteps : [:]
+        var complete = true
         let access = await health.access()
-        if access.wasAsked, let foreign = try? await health.foreignWorkouts(in: interval) {
-            workoutDays = Set(foreign.filter { Self.isCounting(start: $0.start, end: $0.end) }
-                .map { PlanDay(date: $0.start, calendar: calendar) })
+        if access.wasAsked {
+            if let foreign = try? await health.foreignWorkouts(in: interval) {
+                workoutDays = Set(foreign.filter { Self.isCounting(start: $0.start, end: $0.end) }
+                    .map { PlanDay(date: $0.start, calendar: calendar) })
+            } else {
+                complete = false
+            }
         }
-        if await health.stepsAccess() == .asked, let sums = try? await health.dailySteps(in: interval, calendar: calendar) {
-            steps = Dictionary(sums.map { (PlanDay(date: $0.start, calendar: calendar), $0.count) }) { first, _ in first }
+        if await health.stepsAccess() == .asked {
+            if let sums = try? await health.dailySteps(in: interval, calendar: calendar) {
+                steps = Dictionary(sums.map { (PlanDay(date: $0.start, calendar: calendar), $0.count) }) { first, _ in first }
+            } else {
+                complete = false
+            }
         }
         healthWorkoutDays = workoutDays
         healthSteps = steps
         healthReadDay = today
+        healthReadWasComplete = complete
         refreshLocal()
     }
 
@@ -95,8 +112,8 @@ final class HabitsModel {
         refreshLocal()
     }
 
-    /// Store and settings only, no Health.
-    func refreshLocal() {
+    /// Store and settings only, no Health. `notify: false` for callers that run inside `onChanged` handlers.
+    func refreshLocal(notify: Bool = true) {
         let today = self.today
         let window = HabitRules.window(today: today, calendar: calendar)
         let interval = DateInterval(start: window.lowerBound.startDate(in: calendar),
@@ -120,7 +137,7 @@ final class HabitsModel {
         }
         todayCounter = HabitRules.counter(habits, today: today, facts: facts, calendar: calendar)
         revision += 1
-        onChanged?()
+        if notify { onChanged?() }
     }
 
     private static func isCounting(start: Date, end: Date) -> Bool {
@@ -145,8 +162,16 @@ final class HabitsModel {
         return changed
     }
 
-    func save(_ habit: Habit) { store.save(habit); refreshLocal() }
-    func delete(_ id: UUID) { store.delete(id); refreshLocal() }
-    func reorder(_ ids: [UUID]) { store.reorder(ids); refreshLocal() }
-    func setPaused(_ id: UUID, _ paused: Bool) { store.setPaused(id, paused, today: today, calendar: calendar); refreshLocal() }
+    func save(_ habit: Habit) { store.save(habit); changedList() }
+    func delete(_ id: UUID) { store.delete(id); changedList() }
+    func reorder(_ ids: [UUID]) { store.reorder(ids); changedList() }
+    func setPaused(_ id: UUID, _ paused: Bool) {
+        store.setPaused(id, paused, today: today, calendar: calendar)
+        changedList()
+    }
+
+    private func changedList() {
+        refreshLocal()
+        onListChanged?()
+    }
 }

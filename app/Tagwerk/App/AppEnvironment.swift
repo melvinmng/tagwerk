@@ -526,8 +526,22 @@ final class AppEnvironment {
     func makeSnapshot(now: Date = .now) -> WidgetSnapshot {
         let today = PlanDay(date: now, calendar: planning.calendar)
         return WidgetSnapshot.make(createdAt: now, days: planning.snapshotInput(from: today, days: 3),
-                                   todayIntake: snapshotIntake(on: today), showsNutrition: settings.widgetShowsNutrition,
-                                   calendar: planning.calendar)
+                                   todayIntake: snapshotIntake(on: today),
+                                   todayHabits: snapshotHabits(existing: snapshotWriter.current(), now: now),
+                                   showsNutrition: settings.widgetShowsNutrition, calendar: planning.calendar)
+    }
+
+    /// Today's habit counter. While Health values are not current (a cold start, a background run, a failed read) a
+    /// counter calculated without them could be lower than the real one; then the last written counter of the same day
+    /// is kept when it is higher (design §10: "last known values").
+    private func snapshotHabits(existing: WidgetSnapshot?, now: Date) -> SnapshotHabits? {
+        habits.refreshLocal(notify: false)
+        let calendar = planning.calendar
+        guard habits.today == PlanDay(date: now, calendar: calendar), let counter = habits.todayCounter else { return nil }
+        if !habits.hasCurrentHealthFacts, let old = existing?.habits(at: now, calendar: calendar), old.total == counter.total {
+            return SnapshotHabits(done: max(old.done, counter.done), total: counter.total)
+        }
+        return counter
     }
 
     /// The day's sums straight from the store: correct after midnight and on a background launch without a reload.
@@ -555,7 +569,9 @@ final class AppEnvironment {
             snapshotWriter.write(makeSnapshot(now: now))
         } else if let existing = snapshotWriter.current() {
             let today = PlanDay(date: now, calendar: planning.calendar)
-            snapshotWriter.write(existing.replacingIntake(snapshotIntake(on: today), on: today, createdAt: now))
+            snapshotWriter.write(existing.replacingToday(intake: snapshotIntake(on: today),
+                                                         habits: snapshotHabits(existing: existing, now: now),
+                                                         on: today, createdAt: now))
         }
     }
 
@@ -577,6 +593,7 @@ final class AppEnvironment {
             self?.scheduleSnapshot()
         }
         habits.onChanged = { [weak self] in self?.scheduleSnapshot() }
+        habits.onListChanged = { TagwerkShortcuts.updateAppShortcutParameters() }
         let changes = Observations { @MainActor [weak self] () -> Int in
             guard let self else { return 0 }
             var hasher = Hasher()
@@ -601,6 +618,7 @@ final class AppEnvironment {
             hasher.combine(capture.todayIntake)
             hasher.combine(capture.todaySteps)
             hasher.combine(settings.goalStepsPerDay)
+            hasher.combine(habits.todayCounter)
             return hasher.finalize()
         }
         snapshotUpdates = Task { [weak self] in

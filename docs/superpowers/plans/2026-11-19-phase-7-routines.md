@@ -453,7 +453,7 @@ extension IntentServices {
 }
 ```
 
-- [ ] **Step 1: Tests schreiben (rot).**
+- [x] **Step 1: Tests schreiben (rot).**
 
 ```swift
 // WidgetSnapshotTests
@@ -470,10 +470,10 @@ extension IntentServices {
 @Test func checkHabit_unknownOrPausedHabit_changesNothing()   // reply "Diese Gewohnheit gibt es nicht mehr."
 ```
 
-- [ ] **Step 2:** `CORE WidgetSnapshotTests`, `APP IntentServicesTests` → rot.
-- [ ] **Step 3: Umsetzen.** `AppEnvironment.makeSnapshot` übergibt `habits.todayCounter` nur, wenn `habits.today` der Snapshot-Tag ist; `writeSnapshot` ruft im Hintergrundweg `replacingToday`. `checkHabit` lädt `habits` neu, setzt das Handhäkchen, schreibt den Snapshot; die Antwort nennt weder Serie noch Quote. Phrasen: „\(\.$habit) in \(.applicationName) abhaken“ und „Gewohnheit in \(.applicationName) abhaken“, Kurztitel „Gewohnheit abhaken“, Symbol `checkmark.circle`. `habits.onChanged` ruft zusätzlich `TagwerkShortcuts.updateAppShortcutParameters()`. Widget „Heute“: Zeile „✓ 3 von 5“ in der rechten Spalte unter Wasser und Schritten, `privacySensitive`; ohne Ernährung (`content.intake == nil`) zeigt der Plan drei Zeilen und darunter den Zähler. `NextUpView` und alle Sperrbildschirm-Familien bleiben unverändert. `CaptureSettingsView` nennt die neue Phrase.
-- [ ] **Step 4:** `CORE WidgetSnapshotTests`, `APP IntentServicesTests`, `APP WidgetSnapshotWriterTests` → grün. Sichtprüfung des Widgets im Simulator (mit und ohne Ernährung, GB1).
-- [ ] **Step 5: Commit.** `git commit -m "feat: add the check-habit shortcut and the habit counter in the widget"`
+- [x] **Step 2:** `CORE WidgetSnapshotTests`, `APP IntentServicesTests` → rot.
+- [x] **Step 3: Umsetzen.** `AppEnvironment.makeSnapshot` übergibt `habits.todayCounter` nur, wenn `habits.today` der Snapshot-Tag ist; `writeSnapshot` ruft im Hintergrundweg `replacingToday`. `checkHabit` lädt `habits` neu, setzt das Handhäkchen, schreibt den Snapshot; die Antwort nennt weder Serie noch Quote. Phrasen: „\(\.$habit) in \(.applicationName) abhaken“ und „Gewohnheit in \(.applicationName) abhaken“, Kurztitel „Gewohnheit abhaken“, Symbol `checkmark.circle`. `habits.onChanged` ruft zusätzlich `TagwerkShortcuts.updateAppShortcutParameters()`. Widget „Heute“: Zeile „✓ 3 von 5“ in der rechten Spalte unter Wasser und Schritten, `privacySensitive`; ohne Ernährung (`content.intake == nil`) zeigt der Plan drei Zeilen und darunter den Zähler. `NextUpView` und alle Sperrbildschirm-Familien bleiben unverändert. `CaptureSettingsView` nennt die neue Phrase.
+- [x] **Step 4:** `CORE WidgetSnapshotTests`, `APP IntentServicesTests`, `APP WidgetSnapshotWriterTests` → grün. Sichtprüfung des Widgets im Simulator (mit und ohne Ernährung, GB1).
+- [x] **Step 5: Commit.** `git commit -m "feat: add the check-habit shortcut and the habit counter in the widget"`
 
 ### Task 8: Tageseintrag, Abend-Checkliste, `RoutineSchedule`, Einstellungen › Routinen · #142 · Zeile 5
 
