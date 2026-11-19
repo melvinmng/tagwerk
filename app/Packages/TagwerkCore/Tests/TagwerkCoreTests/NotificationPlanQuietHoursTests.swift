@@ -193,12 +193,15 @@ struct NotificationPlanQuietHoursTests {
         let later = at(18, 12)
         let at1201 = later.addingTimeInterval(60)
         let tasks = [task("Gehalten", day: 18, hour: 10), task("Davor", day: 18, hour: 8, minute: 30), task("Später", day: 18, hour: 15)]
-        let result = plan(tasks, rules: rules(catchUp: FocusCatchUp(from: at(18, 9), at: at1201)), now: later)
+        // Like the scheduler, which plans without a margin and keeps requests that are already pending.
+        var catchUpRules = rules(catchUp: FocusCatchUp(from: at(18, 9), at: at1201))
+        catchUpRules.minimumDelay = 0
+        let result = plan(tasks, rules: catchUpRules, now: later)
         #expect(result.map(\.title) == ["Gehalten", "Später"])
         #expect(result.first?.fireDate == at1201)
         #expect(result.first?.body == "War fällig heute um 10:00 · Lokal")
         // A run half a minute later plans the same moment.
-        let again = plan(tasks, rules: rules(catchUp: FocusCatchUp(from: at(18, 9), at: at1201)), now: later.addingTimeInterval(30))
+        let again = plan(tasks, rules: catchUpRules, now: later.addingTimeInterval(30))
         #expect(again.map(\.fireDate) == result.map(\.fireDate))
     }
 
