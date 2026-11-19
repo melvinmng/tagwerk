@@ -8,7 +8,9 @@ public enum GitHubMapping {
     public static let dueField = "Due date"
     public static let estimateHoursField = "Estimate (h)"
     public static let estimateDaysField = "Estimate (MDs)"
+    /// Name of the option that marks an item as finished (compared without regard to case).
     public static let doneStatus = "Done"
+    /// Preferred option for reopened and new issues; projects without it fall back to `reopenOption(in:)`.
     public static let reopenStatus = "Ready"
     /// Label that marks an epic (convention of t3gh).
     public static let epicLabel = "epic"
@@ -45,11 +47,39 @@ public enum GitHubMapping {
         project.field(named: priorityField)?.options.keys.sorted().first { self.priority(fromOption: $0) == priority }
     }
 
+    /// Whether `status` is the "Done" option (case-insensitive). No status counts as not done.
+    public static func isDone(_ status: String?) -> Bool {
+        status?.caseInsensitiveCompare(doneStatus) == .orderedSame
+    }
+
+    /// Option names of the Status field of `project` in board order; empty without a Status field.
+    public static func statusOptions(in project: ProjectInfo) -> [String] {
+        project.field(named: statusField)?.orderedOptions.map(\.name) ?? []
+    }
+
+    /// The name of the "Done" option as the project spells it, or `nil` when it has none.
+    public static func doneOption(in project: ProjectInfo) -> String? {
+        statusOptions(in: project).first(where: isDone)
+    }
+
+    /// Status for reopened issues and new issues without a chosen status: "Ready" when the project has
+    /// it, otherwise the first option in board order that is not "Done"; `nil` without such an option.
+    public static func reopenOption(in project: ProjectInfo) -> String? {
+        let options = statusOptions(in: project)
+        return options.first { $0.caseInsensitiveCompare(reopenStatus) == .orderedSame }
+            ?? options.first { !isDone($0) }
+    }
+
+    /// The option of `project` spelled like `name` (case-insensitive), or `nil`.
+    public static func statusOption(named name: String, in project: ProjectInfo) -> String? {
+        statusOptions(in: project).first { $0.caseInsensitiveCompare(name) == .orderedSame }
+    }
+
     /// Shown when the issue is open, assigned to `login`, and not "Done" in at least one project.
     public static func isVisible(_ record: GitHubIssueRecord, login: String) -> Bool {
         record.isOpen
             && record.assignees.contains(login)
-            && record.placements.contains { $0.status != doneStatus }
+            && record.placements.contains { !isDone($0.status) }
     }
 
     public static func taskItem(_ record: GitHubIssueRecord) -> TaskItem {

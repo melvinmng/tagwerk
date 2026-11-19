@@ -135,3 +135,18 @@ extension Fixtures {
         #"{"data":{"search":{"nodes":["# + nodes.joined(separator: ",") + "]}}}"
     }
 }
+
+extension Fixtures {
+    /// Viewer with one project whose Status field lists `statusOptions` in board order.
+    static func viewerProjectsJSON(statusOptions: [String]) -> String {
+        let options = statusOptions.enumerated().map { #"{"id":"OPT_\#($0.offset)","name":"\#($0.element)"}"# }.joined(separator: ",")
+        return """
+        {"data":{"viewer":{"login":"octo","projectsV2":{"nodes":[
+          {"id":"PVT_1","number":1,"title":"App","closed":false,"repositories":{"nodes":[{"nameWithOwner":"beispiel/app"}]},"fields":{"nodes":[
+            {"id":"F_status","name":"Status","options":[\(options)]},
+            {"id":"F_due","name":"Due date"}
+          ]}}
+        ]}}}}
+        """
+    }
+}

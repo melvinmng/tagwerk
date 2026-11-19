@@ -94,7 +94,7 @@ enum ProjectsQuery {
                 fields: fields.nodes.compactMap { node in
                     guard let id = node.id, let name = node.name else { return nil }
                     return ProjectField(id: id, name: name,
-                                        options: Dictionary((node.options ?? []).map { ($0.name, $0.id) }, uniquingKeysWith: { a, _ in a }))
+                                        orderedOptions: (node.options ?? []).map { ProjectFieldOption(id: $0.id, name: $0.name) })
                 },
                 repositories: repositories?.nodes.map(\.nameWithOwner) ?? [],
                 canWrite: viewerCanUpdate ?? true
