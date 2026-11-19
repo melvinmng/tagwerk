@@ -494,7 +494,7 @@ Die Fixtures sind selbst geschriebene `.eml` als String-Literale mit erfundenen 
 
 ## Protokoll (Abschluss, 19.11.2026)
 
-**Stand:** Branch `feat/p6-share-mail` auf `origin/main` 0c7dd3b. Alle drei P5-Bausteine (Notiz-Anhänge, Rezept-Ablauf, Ordner „Brain Dump“) lagen auf `main`; es gab keinen Rückfall. `app/test-all.sh` grün: TagwerkCore 978, App 1521 Tests, String-Kataloge in Ordnung.
+**Stand:** Branch `feat/p6-share-mail` auf `origin/main` 0c7dd3b. Alle drei P5-Bausteine (Notiz-Anhänge, Rezept-Ablauf, Ordner „Brain Dump“) lagen auf `main`; es gab keinen Rückfall. `app/test-all.sh` grün: TagwerkCore 979, App 1525 Tests (AIKit 98, GitHubKit 180, HealthBridge 11, RemindersKit 99), String-Kataloge in Ordnung.
 
 **Spike-Ergebnisse:** siehe Nachtrag unter Task 0. S1 (Signierung) scheitert in dieser Sitzung schon an „No Accounts“, S2 (Mail-Typen) und S3 (`message:`-Link) sind ohne Gerät nicht entscheidbar.
 
