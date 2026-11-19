@@ -661,7 +661,7 @@ final class AIPlanner {
         let everything = PlanDay(year: 1, month: 1, day: 1)...PlanDay(year: 9999, month: 12, day: 31)
         let now = planning.now()
         let dayStart = today.startDate(in: planning.calendar)
-        // Recurring reminders take part with their effort of the planned day (their time is reserved for them).
+        // Repeating tasks take part with their effort of the planned day (their time is reserved for them).
         let effortDay = scope == .day ? max(today, planning.anchor) : today
         let tasks = planning.taskList.items.map { task -> TaskItem in
             guard let recurring = planning.recurringItem(for: task, on: effortDay) else { return task }
