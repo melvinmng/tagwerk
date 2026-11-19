@@ -7968,6 +7968,16 @@
     "Leeren": {
       "shouldTranslate": false
     },
+    "Leitfragen einfügen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Insert guiding questions"
+          }
+        }
+      }
+    },
     "Letzter Termin: %@": {
       "localizations": {
         "en": {

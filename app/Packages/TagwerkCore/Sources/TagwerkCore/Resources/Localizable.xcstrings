@@ -707,6 +707,16 @@
         }
       }
     },
+    "Erfahrungen mit anderen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Experiences with others"
+          }
+        }
+      }
+    },
     "Fleisch & Fisch" : {
       "localizations" : {
         "en" : {
@@ -1041,6 +1051,16 @@
         }
       }
     },
+    "Meine eigene Rolle" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "My own role"
+          }
+        }
+      }
+    },
     "Mittagessen" : {
       "localizations" : {
         "en" : {
@@ -1093,6 +1113,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$lld min until bedtime (%2$@)"
+          }
+        }
+      }
+    },
+    "Nächste Schritte" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Next steps"
           }
         }
       }
@@ -1243,6 +1273,36 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Hiking"
+          }
+        }
+      }
+    },
+    "Was hat abgehalten?" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "What held me back?"
+          }
+        }
+      }
+    },
+    "Was hat geholfen?" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "What helped?"
+          }
+        }
+      }
+    },
+    "Was war mein Ziel?" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "What was my goal?"
           }
         }
       }

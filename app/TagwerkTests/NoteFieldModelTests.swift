@@ -119,4 +119,16 @@ struct NoteFieldModelTests {
         let model = makeModel()
         #expect(model.text.isEmpty && model.noteID == nil)
     }
+
+    @Test func guidingQuestions_areAppendedAndSavedAsOrdinaryText() {
+        let model = makeModel()
+        model.text = "Heute war gut."
+        #expect(model.offersGuidingQuestions)
+        model.insertGuidingQuestions(locale: Locale(identifier: "de_DE"))
+        #expect(!model.offersGuidingQuestions)
+        model.flush()
+        let saved = store.note(kind: .evening, dayKey: "2026-11-18")?.text ?? ""
+        #expect(saved.hasPrefix("Heute war gut.\n\nWas war mein Ziel?"))
+        #expect(!model.wasDictated)
+    }
 }

@@ -1020,7 +1020,7 @@ public enum NoteTemplate {
 }
 ```
 
-- [ ] **Step 1: Tests schreiben (rot).**
+- [x] **Step 1: Tests schreiben (rot).**
 
 ```swift
 @Test func guidingQuestions_german()
@@ -1032,10 +1032,10 @@ public enum NoteTemplate {
 @Test func guidingQuestions_english_haveSixEntries()
 ```
 
-- [ ] **Step 2:** `CORE NoteTemplateTests` → rot.
-- [ ] **Step 3: Umsetzen.** Knopf „Leitfragen einfügen“ im Kopf des Abschnitts „Gedanken“; er fehlt bei `containsGuidingQuestions`. Die Fragen werden in der App-Sprache eingefügt und sind danach Text der Notiz.
-- [ ] **Step 4:** `CORE NoteTemplateTests`, `APP NoteFieldModelTests` → grün.
-- [ ] **Step 5: Commit.** `git commit -m "feat: add the guiding questions template to the thoughts note"`
+- [x] **Step 2:** `CORE NoteTemplateTests` → rot.
+- [x] **Step 3: Umsetzen.** Knopf „Leitfragen einfügen“ im Kopf des Abschnitts „Gedanken“; er fehlt bei `containsGuidingQuestions`. Die Fragen werden in der App-Sprache eingefügt und sind danach Text der Notiz.
+- [x] **Step 4:** `CORE NoteTemplateTests`, `APP NoteFieldModelTests` → grün.
+- [x] **Step 5: Commit.** `git commit -m "feat: add the guiding questions template to the thoughts note"`
 
 ### Task 17 (optional, nur nach bestandenem Task 1): Quelle „Zeit bei Tageslicht“ · #141 · Zeile 15
 
@@ -1055,11 +1055,11 @@ func dailyDaylight(in interval: DateInterval, calendar: Calendar) async throws -
 // HealthKitStore: static var daylightReadTypes: Set<HKObjectType>   (not in coreReadTypes, not in connectReadTypes)
 ```
 
-- [ ] **Step 1: Tests schreiben (rot).** `daylightHabit_isAutomaticWithData_andManualWithout` (25 min bei Schwelle 20 → automatisch; Tag ohne Wert → offen und von Hand abhakbar), `daylight_isReadOnlyAfterItsOwnRequest` (ohne Anfrage keine Abfrage), `coreReadTypes_doNotContainDaylight`, `reload_readsHealthAtMostThreeTimes` (jetzt mit Tageslicht genau drei).
-- [ ] **Step 2:** `APP HabitsModelTests` → rot.
-- [ ] **Step 3: Umsetzen.** „Zeit bei Tageslicht“ in „Erfüllt durch“ mit Schwelle 5–120 min und dem Hinweis aus GH3; die Auswahl löst `requestDaylightAuthorization()` aus (nur nach Tippen). Werte, die laut Spike für Tage ohne Watch 0 sind, gelten als „kein Wert“.
-- [ ] **Step 4:** `APP HabitsModelTests`, HealthBridge-Tests → grün. Geräteprüfung mit Watch.
-- [ ] **Step 5: Commit.** `git commit -m "feat: fulfil a habit from time in daylight"`
+- [x] **Step 1: Tests schreiben (rot).** `daylightHabit_isAutomaticWithData_andManualWithout` (25 min bei Schwelle 20 → automatisch; Tag ohne Wert → offen und von Hand abhakbar), `daylight_isReadOnlyAfterItsOwnRequest` (ohne Anfrage keine Abfrage), `coreReadTypes_doNotContainDaylight`, `reload_readsHealthAtMostThreeTimes` (jetzt mit Tageslicht genau drei).
+- [x] **Step 2:** `APP HabitsModelTests` → rot.
+- [x] **Step 3: Umsetzen.** „Zeit bei Tageslicht“ in „Erfüllt durch“ mit Schwelle 5–120 min und dem Hinweis aus GH3; die Auswahl löst `requestDaylightAuthorization()` aus (nur nach Tippen). Werte, die laut Spike für Tage ohne Watch 0 sind, gelten als „kein Wert“.
+- [x] **Step 4:** `APP HabitsModelTests`, HealthBridge-Tests → grün. Geräteprüfung mit Watch.
+- [x] **Step 5: Commit.** `git commit -m "feat: fulfil a habit from time in daylight"`
 
 ### Task 18: Geräte-Checkliste und Abschluss · #140
 

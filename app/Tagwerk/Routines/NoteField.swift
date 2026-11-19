@@ -113,6 +113,21 @@ final class NoteFieldModel {
         return range.lowerBound
     }
 
+    // MARK: Guiding questions
+
+    /// "Leitfragen einfügen" is offered until the first question is in the text, in either language (the questions stay
+    /// as they were inserted when the app language changes later).
+    var offersGuidingQuestions: Bool {
+        !VoiceLanguage.allCases.contains { NoteTemplate.containsGuidingQuestions(text, locale: $0.locale) }
+    }
+
+    /// Appends the six questions in the app language; the text stays an ordinary note.
+    func insertGuidingQuestions(locale: Locale = .current) {
+        text = NoteTemplate.appendingGuidingQuestions(to: text, locale: locale)
+        selection = nil
+        textChanged()
+    }
+
     // MARK: Suggestions
 
     /// "Vorschläge holen" is offered with a ChatGPT sign-in, text, and only for the day the sheet belongs to now: the
@@ -204,7 +219,13 @@ struct NoteField: View {
                     onDecline: { asksConsent = false })
             }
         } header: {
-            Text("Gedanken")
+            HStack {
+                Text("Gedanken")
+                Spacer()
+                if model.offersGuidingQuestions {
+                    Button("Leitfragen einfügen") { model.insertGuidingQuestions() }.textCase(nil)
+                }
+            }
         }
         if let suggestions { suggestionSection(suggestions) }
     }
