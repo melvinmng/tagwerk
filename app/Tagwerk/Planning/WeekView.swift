@@ -14,6 +14,25 @@ struct WeekView: View {
     }
 
     var body: some View {
+        PagedContainer(canGoBack: true, canGoForward: true, isLocked: false, contentID: { model.days.first?.day },
+                       onPage: { model.step($0.step) }, onBlockedEdge: {}) { slot in
+            switch slot {
+            case .current: weekList
+            case .previous: weekPreview(offset: -7)
+            case .next: weekPreview(offset: 7)
+            case .arrived: weekPreview(offset: 0)
+            }
+        }
+    }
+
+    /// The neighbouring week while the page is dragged; `offset` counts days from the shown week.
+    private func weekPreview(offset: Int) -> some View {
+        let start = model.range.lowerBound.adding(days: offset, calendar: model.calendar)
+        let plans = (0..<7).compactMap { model.neighbourPlans[start.adding(days: $0, calendar: model.calendar)] }
+        return WeekPagePreview(model: model, weekStart: start, plans: plans)
+    }
+
+    private var weekList: some View {
         List {
             // The AI bar as its own card under the header (mockup V1), like in the month.
             Section {
@@ -83,7 +102,6 @@ struct WeekView: View {
                 }
             }
         }
-        .simultaneousGesture(pageSwipeGesture { model.step($0.step) })  // next or previous week
         .safeAreaInset(edge: .bottom) { Color.clear.frame(height: model.unplanned.isEmpty ? 0 : 56) }
         .overlay(alignment: .bottom) { UnplannedDrawer(model: model) }
         .ignoresSafeArea(.keyboard, edges: .bottom)

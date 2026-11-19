@@ -539,6 +539,10 @@ extension EventKitGateway: CalendarStore {
         result.isEditable = event.calendar?.allowsContentModifications ?? false
         result.notes = event.notes
         result.location = event.location
+        if let coordinate = event.structuredLocation?.geoLocation?.coordinate {
+            result.latitude = coordinate.latitude
+            result.longitude = coordinate.longitude
+        }
         return result
     }
 }

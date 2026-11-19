@@ -622,6 +622,16 @@
         }
       }
     },
+    "%@ · Zuhause gesetzt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ · home set"
+          }
+        }
+      }
+    },
     "%@ · diktiert": {
       "localizations": {
         "en": {
@@ -638,6 +648,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "%@ · all day"
+          }
+        }
+      }
+    },
+    "%@ · knapp": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ · tight"
           }
         }
       }
@@ -670,6 +690,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "%1$@ · no longer in the calendar (last %2$@)"
+          }
+        }
+      }
+    },
+    "%@ · ohne Heimadresse": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ · no home address"
           }
         }
       }
@@ -768,6 +798,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "%@, no steps"
+          }
+        }
+      }
+    },
+    "%@, knapp": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@, tight"
           }
         }
       }
@@ -2596,6 +2636,26 @@
         }
       }
     },
+    "Adresse nicht gefunden": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Address not found"
+          }
+        }
+      }
+    },
+    "Adresse wird geprüft …": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Checking address …"
+          }
+        }
+      }
+    },
     "Aktionen": {
       "localizations": {
         "en": {
@@ -3978,6 +4038,16 @@
         }
       }
     },
+    "Auto": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Car"
+          }
+        }
+      }
+    },
     "Automatisch": {
       "localizations": {
         "en": {
@@ -4400,6 +4470,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Book already has a note"
+          }
+        }
+      }
+    },
+    "Bus und Bahn": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Public transport"
           }
         }
       }
@@ -5489,6 +5569,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "The Reminders app is not available."
+          }
+        }
+      }
+    },
+    "Die Fahrzeit berechnet Apple Karten aus dem Ort des vorherigen Termins oder deiner Heimadresse. Dafür gehen Ort und Adresse an Apple. Tagwerk nutzt deinen Standort nicht. Ohne Netz oder ohne Ort gibt es keinen Puffer.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apple Maps calculates the travel time from the place of the previous event or from your home address. The place and the address are sent to Apple for this. Tagwerk does not use your location. Without a network or without a place, there is no buffer."
           }
         }
       }
@@ -7090,6 +7180,76 @@
         }
       }
     },
+    "Fahrrad": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bicycle"
+          }
+        }
+      }
+    },
+    "Fahrzeit": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Travel time"
+          }
+        }
+      }
+    },
+    "Fahrzeit %@ · ab Zuhause": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Travel time %@ · from home"
+          }
+        }
+      }
+    },
+    "Fahrzeit %@ · ab vorherigem Termin": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Travel time %@ · from the previous event"
+          }
+        }
+      }
+    },
+    "Fahrzeit %lld Minuten %@, %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Travel time %lld minutes %@, %@"
+          }
+        }
+      }
+    },
+    "Fahrzeit berücksichtigen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Include travel time"
+          }
+        }
+      }
+    },
+    "Fahrzeit · %@ %@ %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Travel time · %@ %@ %@"
+          }
+        }
+      }
+    },
     "Fertig": {
       "localizations": {
         "en": {
@@ -7652,6 +7812,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Thoughts"
+          }
+        }
+      }
+    },
+    "Gefunden: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Found: %@"
           }
         }
       }
@@ -8319,6 +8489,16 @@
         }
       }
     },
+    "Heimadresse": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Home address"
+          }
+        }
+      }
+    },
     "Heute": {
       "localizations": {
         "en": {
@@ -8955,6 +9135,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Back up now"
+          }
+        }
+      }
+    },
+    "Jetzt · %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Now · %@"
+          }
+        }
+      }
+    },
+    "Jetzt, %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Now, %@"
           }
         }
       }
@@ -13449,6 +13649,16 @@
         }
       }
     },
+    "Straße, Ort": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Street, city"
+          }
+        }
+      }
+    },
     "Stunden": {
       "localizations": {
         "en": {
@@ -14461,6 +14671,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Assigned: %@. Open on GitHub available."
+          }
+        }
+      }
+    },
+    "Verkehrsmittel": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transport"
           }
         }
       }
@@ -15879,6 +16099,16 @@
         }
       }
     },
+    "Zu Fuß": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Walking"
+          }
+        }
+      }
+    },
     "Zu den KI-Einstellungen": {
       "localizations": {
         "en": {
@@ -16205,6 +16435,16 @@
         }
       }
     },
+    "ab Zuhause": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "from home"
+          }
+        }
+      }
+    },
     "ab jetzt · %@ bis %@ · ganzer Tag %@": {
       "localizations": {
         "de": {
@@ -16217,6 +16457,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "from now · %1$@ to %2$@ · whole day %3$@"
+          }
+        }
+      }
+    },
+    "ab vorherigem Termin": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "from the previous event"
           }
         }
       }
@@ -16815,6 +17065,36 @@
         }
       }
     },
+    "mit Bus und Bahn": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "by public transport"
+          }
+        }
+      }
+    },
+    "mit dem Auto": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "by car"
+          }
+        }
+      }
+    },
+    "mit dem Fahrrad": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "by bike"
+          }
+        }
+      }
+    },
     "monatlich": {
       "localizations": {
         "en": {
@@ -17279,6 +17559,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "e.g. don’t schedule emails after 6 PM"
+          }
+        }
+      }
+    },
+    "zu Fuß": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "on foot"
           }
         }
       }

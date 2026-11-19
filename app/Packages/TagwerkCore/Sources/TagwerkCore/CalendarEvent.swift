@@ -23,6 +23,9 @@ public struct CalendarEvent: Sendable, Hashable, Identifiable {
     public var isInvitation = false
     public var notes: String?
     public var location: String?
+    /// Coordinates of the event's structured location, when the calendar app resolved the address.
+    public var latitude: Double?
+    public var longitude: Double?
 
     public init(id: String, externalID: String?, calendarID: String, title: String, start: Date, end: Date,
                 isAllDay: Bool, url: URL?, isBusy: Bool, version: String) {

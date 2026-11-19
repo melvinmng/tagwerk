@@ -470,4 +470,22 @@ struct CaptureModelTests {
         await model.reload()
         #expect(model.planHeaderLine == nil)
     }
+
+    // MARK: Neighbour page
+
+    @Test func summaryForNeighbourDay_readsStoredEntriesOnly() async {
+        let health = FakeHealthStore(stepsAccess: .asked)
+        health.steps = [steps(6412)]
+        let model = make(health)
+        await model.reload()
+        let yesterday = model.day.adding(days: -1, calendar: calendar)
+        let noon = yesterday.startDate(in: calendar).addingTimeInterval(12 * 3600)
+        store.addDrink(DrinkValue(id: UUID(), date: noon, milliliters: 400))
+        store.addDrink(DrinkValue(id: UUID(), date: noon.addingTimeInterval(3600), milliliters: 250))
+        let summary = model.summary(for: yesterday)
+        #expect(summary.waterMilliliters == 650)
+        // The shown day is untouched, and a day without entries is empty (no Health read, no steps).
+        #expect(model.intake == .empty)
+        #expect(model.summary(for: yesterday.adding(days: -1, calendar: calendar)) == .empty)
+    }
 }

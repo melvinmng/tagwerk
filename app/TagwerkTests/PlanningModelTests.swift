@@ -1981,4 +1981,216 @@ struct PlanningModelTests {
         await model.unmarkDeadline(exam)
         #expect(changes == 2)
     }
+
+    // MARK: Neighbour pages
+
+    @Test func neighbourPlans_dayScope_holdsPreviousAndNextDay() async {
+        let model = await model()
+        await model.loadNeighbours()
+        #expect(Set(model.neighbourPlans.keys) == [today.adding(days: -1, calendar: calendar), today.adding(days: 1, calendar: calendar)])
+        #expect(model.days.map(\.day) == [today])
+    }
+
+    @Test func neighbourPlans_weekScope_holdsSevenDaysEach() async {
+        let model = await model()
+        model.scope = .week
+        await model.reload()
+        await model.loadNeighbours()
+        let thisMonday = PlanDay(year: 2026, month: 11, day: 16)
+        let expected = (-7...(-1)).map { thisMonday.adding(days: $0, calendar: calendar) }
+            + (7...13).map { thisMonday.adding(days: $0, calendar: calendar) }
+        #expect(Set(model.neighbourPlans.keys) == Set(expected))
+        #expect(model.neighbourPlans.count == 14)
+    }
+
+    @Test func neighbourPlans_monthScope_isEmpty() async {
+        let model = await model()
+        model.scope = .month
+        await model.reload()
+        await model.loadNeighbours()
+        #expect(model.neighbourPlans.isEmpty)
+    }
+
+    @Test func neighbourPlans_doNotContainSuggestions() async {
+        let store = SuggestionStore(context: container.mainContext)
+        let tomorrow = today.adding(days: 1, calendar: calendar)
+        let block = PlanSuggestion(id: UUID(), kind: .block, taskKey: "local:Fahrrad", title: "Fahrrad", day: tomorrow,
+                                   startMinutes: 14 * 60, minutes: 60, reason: "r")
+        store.replace(with: SuggestionBatch(id: UUID(), scope: .day, days: [tomorrow], createdAt: testNow(), suggestions: [block],
+                                            unscheduled: [], risks: [], estimates: [:]))
+        await taskList.reload()
+        let model = PlanningModel(taskList: taskList, calendarStore: calendarStore, reminderStore: accessStore,
+                                  planStore: planStore, efforts: RecurringEffortStore(context: container.mainContext),
+                                  blocks: blocks, settings: settings, marks: EventMarkStore(context: container.mainContext),
+                                  suggestions: store, now: testNow, calendar: calendar)
+        model.anchor = tomorrow
+        await model.reload()
+        #expect(model.days.first?.suggestions.count == 1)
+        await model.loadNeighbours()
+        #expect(model.neighbourPlans.values.allSatisfy { $0.suggestions.isEmpty })
+    }
+
+    @Test func neighbourPlans_followTheShownDayAfterReload() async {
+        let model = await model()
+        model.anchor = today.adding(days: 3, calendar: calendar)
+        await model.reload()
+        await model.loadNeighbours()
+        #expect(model.neighbourPlans[today.adding(days: 2, calendar: calendar)] != nil)
+        #expect(model.neighbourPlans[today.adding(days: 4, calendar: calendar)] != nil)
+        #expect(model.neighbourPlans[today.adding(days: -1, calendar: calendar)] == nil)
+    }
+
+    // MARK: Travel time (#168)
+
+    private func travelModel(_ estimator: FakeTravelEstimator = FakeTravelEstimator(), home: String? = "Musterstraße 1, Berlin",
+                             enabled: Bool = true) async -> (PlanningModel, FakeTravelEstimator) {
+        settings.homeAddress = home
+        // As after the settings check: a home address that Apple Maps found carries its coordinates (Berlin).
+        settings.homeLatitude = home == nil ? nil : 52.52
+        settings.homeLongitude = home == nil ? nil : 13.405
+        settings.travelTimeEnabled = enabled
+        await taskList.reload()
+        let service = TravelTimeService(estimator: estimator, cacheURL: nil, now: testNow)
+        let model = PlanningModel(taskList: taskList, calendarStore: calendarStore, reminderStore: accessStore,
+                                  planStore: planStore, efforts: RecurringEffortStore(context: container.mainContext),
+                                  blocks: blocks, settings: settings, marks: EventMarkStore(context: container.mainContext),
+                                  now: testNow, calendar: calendar, travelTimes: service)
+        await model.reload()
+        return (model, estimator)
+    }
+
+    /// A meeting today from `start` for one hour; testNow is 10:00.
+    private func meeting(_ id: String = "m1", hour: Int = 14, minute: Int = 0, location: String? = "Büro, Berlin") -> CalendarEvent {
+        var event = CalendarEvent(id: id, externalID: nil, calendarID: "work", title: id, start: at(18, hour, minute),
+                                  end: at(18, hour + 1, minute), isAllDay: false, url: nil, isBusy: true, version: "1")
+        event.location = location
+        return event
+    }
+
+    @Test func travel_addsSegmentBeforeEventWithLocation() async throws {
+        calendarStore.storedEvents = [meeting()]
+        let (model, estimator) = await travelModel()
+        #expect(model.days.first?.travel.isEmpty == true)
+        #expect(await model.refreshTravelTimes())
+        let segment = try #require(model.days.first?.travel.first)
+        #expect(segment.eventID == "m1")
+        #expect(segment.range == 815..<840)
+        #expect(segment.origin == .home)
+        #expect(estimator.tripCalls == ["Musterstraße 1, Berlin>Büro, Berlin>automobile"])
+    }
+
+    @Test func travel_reducesCapacity() async throws {
+        calendarStore.storedEvents = [meeting()]
+        let (model, _) = await travelModel()
+        let before = try #require(model.days.first?.capacity)
+        await model.refreshTravelTimes()
+        let after = try #require(model.days.first?.capacity)
+        #expect(before.availableMinutes - after.availableMinutes == 25)
+        #expect((before.remainingMinutes ?? 0) - (after.remainingMinutes ?? 0) == 25)
+    }
+
+    @Test func travel_disabledSetting_addsNothing() async {
+        calendarStore.storedEvents = [meeting()]
+        let (model, estimator) = await travelModel(enabled: false)
+        #expect(await model.refreshTravelTimes() == false)
+        #expect(model.days.first?.travel.isEmpty == true)
+        #expect(estimator.tripCalls.isEmpty)
+        #expect(estimator.geocodeCalls.isEmpty)
+    }
+
+    @Test func travel_monthScope_doesNotFetch() async {
+        calendarStore.storedEvents = [meeting()]
+        let (model, estimator) = await travelModel()
+        model.scope = .month
+        await model.reload()
+        #expect(await model.refreshTravelTimes() == false)
+        #expect(estimator.tripCalls.isEmpty)
+    }
+
+    @Test func travel_withoutHome_firstEventHasNoSegment() async {
+        calendarStore.storedEvents = [meeting()]
+        let (model, estimator) = await travelModel(home: nil)
+        #expect(await model.refreshTravelTimes() == false)
+        #expect(model.days.first?.travel.isEmpty == true)
+        #expect(estimator.tripCalls.isEmpty)
+    }
+
+    @Test func travel_locationFarFromHome_hasNoSegment() async {
+        // "Bibliothek" resolves to Munich while home is in Berlin: no absurd trip, no blocked capacity.
+        calendarStore.storedEvents = [meeting(location: "Bibliothek")]
+        let estimator = FakeTravelEstimator()
+        estimator.locations = ["Bibliothek": TravelCoordinate(latitude: 48.137, longitude: 11.575)]
+        let (model, _) = await travelModel(estimator)
+        let before = model.days.first?.capacity
+        #expect(await model.refreshTravelTimes() == false)
+        #expect(model.days.first?.travel.isEmpty == true)
+        #expect(model.days.first?.capacity == before)
+        #expect(estimator.tripCalls.isEmpty)
+    }
+
+    @Test func travel_onlineLocation_hasNoSegment() async {
+        calendarStore.storedEvents = [meeting(location: "Zoom")]
+        let (model, estimator) = await travelModel()
+        #expect(await model.refreshTravelTimes() == false)
+        #expect(model.days.first?.travel.isEmpty == true)
+        #expect(estimator.tripCalls.isEmpty)
+    }
+
+    @Test func travel_withoutNetwork_keepsCapacityLikeWithoutTravel() async throws {
+        calendarStore.storedEvents = [meeting()]
+        let estimator = FakeTravelEstimator()
+        estimator.failingTexts = ["Büro, Berlin"]
+        let (model, _) = await travelModel(estimator)
+        let before = try #require(model.days.first?.capacity)
+        #expect(await model.refreshTravelTimes() == false)
+        #expect(model.days.first?.capacity == before)
+        #expect(model.days.first?.travel.isEmpty == true)
+    }
+
+    @Test func travel_lateValue_reloadsOnce() async {
+        calendarStore.storedEvents = [meeting()]
+        let (model, estimator) = await travelModel()
+        #expect(await model.refreshTravelTimes())
+        // Everything is cached now: the next call neither asks nor reloads.
+        #expect(await model.refreshTravelTimes() == false)
+        #expect(estimator.tripCalls.count == 1)
+        #expect(model.days.first?.travel.count == 1)
+    }
+
+    @Test func travel_rowPrecedesEventInTimeline() async throws {
+        calendarStore.storedEvents = [meeting()]
+        let (model, _) = await travelModel()
+        await model.refreshTravelTimes()
+        let plan = try #require(model.days.first)
+        let rows = model.timelineWithGaps(for: plan)
+        let travelIndex = try #require(rows.firstIndex { if case .travel = $0 { true } else { false } })
+        let eventIndex = try #require(rows.firstIndex { if case .event = $0 { true } else { false } })
+        #expect(travelIndex < eventIndex)
+        #expect(rows[travelIndex].id == "travel-m1")
+        // The free stretches leave the trip out.
+        let gaps = model.gaps(for: plan)
+        #expect(gaps.allSatisfy { !$0.overlaps(815..<840) })
+    }
+
+    @Test func travel_planInputMarksTravelBusy() async throws {
+        calendarStore.storedEvents = [meeting()]
+        let (model, _) = await travelModel()
+        await model.refreshTravelTimes()
+        let input = try #require(model.days.first?.planInput)
+        #expect(input.busy.contains(815..<840))
+        let travelEvent = try #require(input.events.first { $0.travel })
+        #expect(travelEvent.title == "Fahrzeit")
+        #expect(travelEvent.busy)
+        // No place reaches the AI input.
+        #expect(!input.events.contains { $0.title.contains("Büro") && $0.travel })
+    }
+
+    @Test func travel_followingEvent_startsAtPreviousPlace() async throws {
+        calendarStore.storedEvents = [meeting("a", hour: 11, location: "Büro, Berlin"), meeting("b", hour: 13, minute: 30, location: "Kunde, Potsdam")]
+        let (model, estimator) = await travelModel()
+        await model.refreshTravelTimes()
+        #expect(estimator.tripCalls.contains("Büro, Berlin>Kunde, Potsdam>automobile"))
+        let second = try #require(model.days.first?.travel.first { $0.eventID == "b" })
+        #expect(second.origin == .previousEvent(id: "a"))
+    }
 }

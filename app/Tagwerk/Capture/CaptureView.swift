@@ -29,48 +29,22 @@ struct CaptureView: View {
         }
     }
 
-    // Day swipe over the whole list, like "Planen"; entries are deleted from their context menu instead of swipe actions.
+    // Day swipe over the whole list, like "Planen" (PagedContainer); entries are deleted from their context menu
+    // instead of swipe actions. Forward on today is a limit: the page springs back and `limitBumps` taps.
     private func daySwipe(_ direction: PageSwipe) {
         if !model.navigate(by: direction) { limitBumps += 1 }
     }
 
     var body: some View {
         NavigationStack {
-            List {
-                Section {
-                    DayNavigation(model: model)
-                    DaySummary(model: model)
-                    // R3a: entry to the weekly review (a row of its own, so VoiceOver keeps the summary as one element).
-                    Button { showsReview = true } label: {
-                        HStack {
-                            Label("Wochenrückblick", systemImage: "chart.bar")
-                            Spacer()
-                            Text("Woche").foregroundStyle(.secondary)
-                            Image(systemName: "chevron.right").font(.caption.weight(.semibold)).foregroundStyle(.tertiary)
-                        }
-                    }
-                    .foregroundStyle(.primary)
-                    
+            PagedContainer(canGoBack: true, canGoForward: model.canGoForward, isLocked: false,
+                           onPage: daySwipe, onBlockedEdge: { limitBumps += 1 }) { slot in
+                switch slot {
+                case .current: dayList
+                case .previous, .arrived: CapturePagePreview(model: model, day: model.day.adding(days: -1, calendar: model.calendar))
+                case .next: CapturePagePreview(model: model, day: model.day.adding(days: 1, calendar: model.calendar))
                 }
-                Section {
-                    quickEntry
-                } footer: {
-                    if !model.hasEntries {
-                        Text(model.isToday ? "Noch nichts erfasst. Tippe oben auf Essen, Trinken oder Training."
-                                           : "An diesem Tag ist nichts erfasst.")
-                    }
-                }
-                if model.showsHealthCard {
-                    Section { HealthCard(model: model) }
-                }
-                RoutinesSection(model: environment.routines, day: model.day)
-                HabitsSection(model: environment.habits, capture: model) { showsHabitList = true }
-                mealSection
-                drinkSection
-                workoutSection
-                FocusCaptureSection()
             }
-            .pageSwipe(daySwipe)
             .navigationTitle("Erfassen")
             .sensoryFeedback(.selection, trigger: model.day)
             // Swiping forward on today: a firm tap instead of silence (there is no later day).
@@ -117,6 +91,44 @@ struct CaptureView: View {
                 case .workout(let workout): WorkoutSheet(model: model, existing: workout)
                 }
             }
+        }
+    }
+
+    /// The day: summary, quick entry and the entries by kind.
+    private var dayList: some View {
+        List {
+                Section {
+                    DayNavigation(model: model)
+                    DaySummary(model: model)
+                    // R3a: entry to the weekly review (a row of its own, so VoiceOver keeps the summary as one element).
+                    Button { showsReview = true } label: {
+                        HStack {
+                            Label("Wochenrückblick", systemImage: "chart.bar")
+                            Spacer()
+                            Text("Woche").foregroundStyle(.secondary)
+                            Image(systemName: "chevron.right").font(.caption.weight(.semibold)).foregroundStyle(.tertiary)
+                        }
+                    }
+                    .foregroundStyle(.primary)
+                    
+                }
+                Section {
+                    quickEntry
+                } footer: {
+                    if !model.hasEntries {
+                        Text(model.isToday ? "Noch nichts erfasst. Tippe oben auf Essen, Trinken oder Training."
+                                           : "An diesem Tag ist nichts erfasst.")
+                    }
+                }
+                if model.showsHealthCard {
+                    Section { HealthCard(model: model) }
+                }
+                RoutinesSection(model: environment.routines, day: model.day)
+                HabitsSection(model: environment.habits, capture: model) { showsHabitList = true }
+                mealSection
+                drinkSection
+                workoutSection
+                FocusCaptureSection()
         }
     }
 

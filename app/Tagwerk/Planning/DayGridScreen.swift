@@ -14,6 +14,8 @@ struct DayGridScreen<Summary: View, Header: View>: View {
     @ViewBuilder let timelineHeader: () -> Header
     let onOpenEntry: (DayEntry) -> Void
     let onPlanTask: (TaskItem) -> Void
+    /// Set while a block or a task is dragged, so the page container ignores sideways drags.
+    var isLocked: Binding<Bool> = .constant(false)
 
     @State private var isDragging = false
     @State private var canvasFrame: CGRect = .zero
@@ -35,6 +37,12 @@ struct DayGridScreen<Summary: View, Header: View>: View {
     /// -1 scrolls up, 1 down while a dragged task is near the edge of the visible grid.
     @State private var edgeScroll = 0
     @State private var drops = 0
+    /// The day whose grid is being aligned to the current time, until `nowAlignmentEnds` or the first touch scroll.
+    /// The content above the grid can still grow while it loads, so the alignment repeats in that window only.
+    @State private var canvasTopInContent: CGFloat = 0
+    @State private var nowAlignedDay: PlanDay?
+    @State private var nowAlignmentEnds = Date.distantPast
+    @State private var userScrolled = false
 
     var body: some View {
         ScrollView {
@@ -50,15 +58,18 @@ struct DayGridScreen<Summary: View, Header: View>: View {
                 }
                 canvas
                     .onGeometryChange(for: CGRect.self) { $0.frame(in: .named("screen")) } action: { canvasFrame = $0 }
+                    .onGeometryChange(for: CGFloat.self) { $0.frame(in: .named("gridContent")).minY } action: { canvasTopInContent = $0 }
             }
             .padding(.horizontal)
+            .coordinateSpace(.named("gridContent"))
         }
         .scrollPosition($scrollPosition)
         .onScrollGeometryChange(for: CGFloat.self) { $0.contentOffset.y } action: { _, offset in contentOffsetY = offset }
+        .onScrollPhaseChange { _, phase in if phase == .interacting { userScrolled = true } }
         .contentMargins(.bottom, 80, for: .scrollContent)  // room for the collapsed panel
         .onGeometryChange(for: CGRect.self) { $0.frame(in: .named("screen")) } action: { scrollFrame = $0 }
         .scrollDisabled(isDragging || taskDrag != nil)
-        .simultaneousGesture(pageSwipeGesture { model.step($0.step) })
+        .onChange(of: isDragging || taskDrag != nil) { _, locked in isLocked.wrappedValue = locked }
         .overlay(alignment: .bottom) {
             VStack(spacing: 8) {
                 if lunchChanged { lunchBar }
@@ -66,6 +77,9 @@ struct DayGridScreen<Summary: View, Header: View>: View {
             }
             .padding(.horizontal)
             .padding(.bottom, 8)
+        }
+        .task(id: OpenKey(day: plan.day, canvasTop: Int(canvasTopInContent.rounded()), isMeasured: canvasFrame.height > 0 && scrollFrame.height > 0)) {
+            scrollToNowOnOpening()
         }
         .task(id: edgeScroll) {
             // Scrolls the grid while a dragged task rests near its top or bottom edge.
@@ -90,6 +104,34 @@ struct DayGridScreen<Summary: View, Header: View>: View {
             Button("Nur an diesem Tag") { applyFree(series: false) }
             Button("Auch alle künftigen Termine dieser Serien") { applyFree(series: true) }
         }
+    }
+
+    // MARK: Current time
+
+    private struct OpenKey: Equatable {
+        let day: PlanDay
+        /// Grid top in the scroll content, rounded: changes when the content above it grows.
+        let canvasTop: Int
+        let isMeasured: Bool
+    }
+
+    /// Opening today puts the current time at a third of the visible height. It repeats while the content above
+    /// the grid is still loading (a few seconds at most) and stops at the first scroll by the user.
+    private func scrollToNowOnOpening() {
+        guard plan.day == model.today, canvasFrame.height > 0, scrollFrame.height > 0,
+              let minutes = NowMarker.minutes(now: model.now(), day: plan.day, calendar: model.calendar) else { return }
+        if nowAlignedDay != plan.day {
+            nowAlignedDay = plan.day
+            nowAlignmentEnds = Date.now.addingTimeInterval(3)
+            userScrolled = false
+        }
+        guard Date.now < nowAlignmentEnds, !userScrolled else { return }
+        let shown = canvas.shownRange
+        guard NowMarker.position(nowMinutes: minutes, shown: shown) != nil else { return }
+        let target = NowMarker.scrollTarget(nowMinutes: minutes, shown: shown, hourHeight: Double(TimelineCanvas.hourHeight),
+                                            inset: Double(TimelineCanvas.lineInset), canvasTop: Double(canvasTopInContent),
+                                            viewportHeight: Double(scrollFrame.height))
+        scrollPosition.scrollTo(y: CGFloat(target))
     }
 
     // MARK: Canvas

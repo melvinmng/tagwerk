@@ -203,6 +203,12 @@ final class CaptureModel {
         refreshToday()
     }
 
+    /// The sums of another day, read from the local entries only (no Health query, no steps): the preview of the
+    /// neighbouring page while swiping.
+    func summary(for day: PlanDay) -> DayIntake {
+        IntakeRules.dayIntake(meals: store.meals(on: day, calendar: calendar), drinks: store.drinks(on: day, calendar: calendar))
+    }
+
     /// Recomputes today's sums; every local change passes here (add, edit, delete, undo).
     private func refreshToday() {
         let today = self.today

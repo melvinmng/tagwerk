@@ -30,12 +30,15 @@ enum TimelineRow: Identifiable, Equatable {
     case lunch(startMinutes: Int, minutes: Int)
     /// A free stretch to drop tasks into (list mode, design §13.4 C2).
     case gap(Range<Int>)
+    /// The way to the event that follows (#168).
+    case travel(TravelSegment)
 
     var id: String {
         switch self {
         case .event(let event), .block(let event, _): event.id
         case .lunch: "lunch"
         case .gap(let range): "gap-\(range.lowerBound)"
+        case .travel(let segment): "travel-\(segment.eventID)"
         }
     }
 
@@ -44,6 +47,7 @@ enum TimelineRow: Identifiable, Equatable {
         case .event(let event), .block(let event, _): event.title
         case .lunch: String(localized: "Mittagspause")
         case .gap: String(localized: "frei")
+        case .travel: String(localized: "Fahrzeit")
         }
     }
 }
@@ -75,6 +79,8 @@ struct DayPlan: Identifiable, Equatable {
     var suggestions: [PlanSuggestion] = []
     /// The day lies before today.
     let isPast: Bool
+    /// Travel time before events with a place, in time order (#168).
+    var travel: [TravelSegment] = []
 }
 
 /// Planning changes made in the task editor; applied together with "Sichern" (design §13.4 C4, §13.8 G4).
@@ -118,6 +124,15 @@ final class PlanningModel {
     var scope: PlanScope = .day
     var anchor: PlanDay
     private(set) var days: [DayPlan] = []
+    /// Plans of the neighbouring days (day scope) or weeks (week scope) for the page previews while swiping. They
+    /// carry no AI suggestions; see `loadNeighbours()`.
+    var neighbourPlans: [PlanDay: DayPlan] = [:]
+    @ObservationIgnored var neighbourLoad: Task<Void, Never>?
+    /// The app turns this on; tests leave it off, so no background load (neighbour plans, travel times) outlives a
+    /// test's store.
+    @ObservationIgnored var runsBackgroundLoads = false
+    /// Travel times for the trips before events with a place; `nil` in tests that do not need them.
+    let travelTimes: TravelTimeService?
     /// Tasks that are the open focus of today (phase 7); set by `RoutinesModel`. The day view puts a star on them.
     var focusTaskIDs: Set<TaskID> = []
     private(set) var unplanned: [TaskItem] = []
@@ -138,7 +153,7 @@ final class PlanningModel {
     let planStore: PlanStore
     let efforts: RecurringEffortStore
     let blocks: BlockPlanner
-    private let settings: AppSettings
+    let settings: AppSettings
     let now: () -> Date
     let calendar: Calendar
     let marks: EventMarkStore
@@ -192,7 +207,9 @@ final class PlanningModel {
     init(taskList: TaskListModel, calendarStore: CalendarStore, reminderStore: ReminderStore, planStore: PlanStore,
          efforts: RecurringEffortStore, blocks: BlockPlanner, settings: AppSettings, marks: EventMarkStore,
          deadlineMarks: DeadlineMarkStore? = nil,
-         suggestions: SuggestionStore? = nil, now: @escaping () -> Date = Date.init, calendar: Calendar = .tagwerk) {
+         suggestions: SuggestionStore? = nil, now: @escaping () -> Date = Date.init, calendar: Calendar = .tagwerk,
+         travelTimes: TravelTimeService? = nil) {
+        self.travelTimes = travelTimes
         self.deadlineMarks = deadlineMarks ?? DeadlineMarkStore(context: marks.modelContext)
         self.suggestionStore = suggestions
         self.marks = marks
@@ -301,6 +318,7 @@ final class PlanningModel {
             return allAssignments[task.id].map { $0 < today } ?? false
         }, calendar: calendar)
         await updateEvening(open: open, allAssignments: allAssignments, recurringIDs: recurringIDs)
+        scheduleBackgroundLoads()
     }
 
     /// Open tasks with a time block (own or linked event) on `day`, read without changing what is shown.
@@ -339,6 +357,41 @@ final class PlanningModel {
                                recurringIDs: recurringIDs, open: open, allAssignments: allAssignments,
                                deadlineIDs: deadlineIDs)
             if let input = plan.planInput { result.append(input) }
+            day = day.adding(days: 1, calendar: calendar)
+        }
+        return result
+    }
+
+    /// The plans of days outside (or inside) the shown range, computed like `reload()` without changing what is shown.
+    /// Page previews ask for the deadlines too; the AI view does not need them.
+    func dayPlans(in range: ClosedRange<PlanDay>, withDeadlines: Bool = true) async -> [DayPlan] {
+        let open = taskList.items.filter { !$0.isCompleted }
+        let series = await recurringSeries(open: open)
+        let recurringIDs = Set(series.map(\.id))
+        let interval = DateInterval(start: range.lowerBound.startDate(in: calendar),
+                                    end: range.upperBound.adding(days: 1, calendar: calendar).startDate(in: calendar))
+        let raw = calendarStore.events(in: interval, calendarIDs: readableCalendarIDs())
+        let marked = deadlineMarks.markedIDs(in: raw)
+        let (events, _) = markedEvents(raw, keeping: marked)
+        let deadlineIDs = deadlineIDs(in: events, marked: marked)
+        let links = Dictionary(resolveLinks(events: events, tasks: open, manual: blocks.links.manualLinks()).map { ($0.eventID, $0.taskID) },
+                               uniquingKeysWith: { first, _ in first })
+        let deadlines = withDeadlines
+            ? importantDeadlines(tasks: open, events: events, deadlineCalendarIDs: Set(settings.deadlineCalendarIDs ?? []),
+                                 markedEventIDs: marked, in: range, calendar: calendar)
+            : []
+        let assignments = planStore.assignments(in: range)
+        let overrides = planStore.overrides(in: range)
+        let tasksByID = Dictionary(open.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
+        let everything = PlanDay(year: 1, month: 1, day: 1)...PlanDay(year: 9999, month: 12, day: 31)
+        let allAssignments = planStore.assignments(in: everything)
+        var result: [DayPlan] = []
+        var day = range.lowerBound
+        while day <= range.upperBound {
+            result.append(dayPlan(day, events: events, links: links, deadlines: deadlines, assignments: assignments,
+                                  overrides: overrides, tasksByID: tasksByID, series: series,
+                                  recurringIDs: recurringIDs, open: open, allAssignments: allAssignments,
+                                  deadlineIDs: deadlineIDs))
             day = day.adding(days: 1, calendar: calendar)
         }
         return result
@@ -643,6 +696,7 @@ final class PlanningModel {
         if !plan.capacity.isDayOff, let lunch = lunch(on: plan.day) {
             rows.append((lunch.lowerBound, .lunch(startMinutes: lunch.lowerBound, minutes: lunch.count)))
         }
+        rows += plan.travel.map { ($0.range.lowerBound, .travel($0)) }
         return rows.sorted { $0.0 < $1.0 }.map(\.1)
     }
 
@@ -655,6 +709,7 @@ final class PlanningModel {
             case .event(let event), .block(let event, _): minutes(event.start, from: dayStart)
             case .lunch(let start, _): start
             case .gap(let range): range.lowerBound
+            case .travel(let segment): segment.range.lowerBound
             }
         }
         let rows = timeline(for: plan) + gaps(for: plan).map(TimelineRow.gap)
@@ -1455,6 +1510,7 @@ final class PlanningModel {
     func gaps(for plan: DayPlan) -> [Range<Int>] {
         guard let hours = workHours(on: plan.day) else { return [] }
         let busy = busyIntervals(events: plan.events + plan.blocks, on: plan.day, calendar: calendar, excluding: [])
+            + plan.travel.map(\.range)
         let lunch = lunch(on: plan.day)
         let from = plan.day == today ? minutes(now(), from: plan.day.startDate(in: calendar)) : nil
         return freeGaps(hours: hours, busy: busy, lunch: lunch, buffer: settings.bufferMinutes, from: from)
@@ -1671,13 +1727,14 @@ final class PlanningModel {
             return total + min(reserved, blocked)
         }
         let recurringMinutes = max(0, efforts.reservedMinutes(on: day, series: series, calendar: calendar) - coveredRecurring)
+        let travel = travelSegments(for: day, events: dayEvents)
         var input = CapacityInput(
             hours: hours,
             lunchStartMinutes: lunch(on: day)?.lowerBound ?? 0, lunchMinutes: lunch(on: day)?.count ?? 0,
             bufferMinutes: settings.bufferMinutes,
             busyIntervals: busyIntervals(events: dayEvents, on: day, calendar: calendar, excluding: linkedIDs),
             recurringMinutes: recurringMinutes,
-            plannedMinutes: planned, estimatedCount: estimated
+            plannedMinutes: planned, estimatedCount: estimated, travelIntervals: travel.map(\.range)
         )
         // For the AI, the reserved effort of recurring reminders is the load of those tasks: a block for one
         // of them replaces its reservation instead of adding to it.
@@ -1698,7 +1755,7 @@ final class PlanningModel {
             blocks: linkedEvents.map { minutes($0.start, from: start)..<minutes($0.end, from: start) },
             recurringMinutes: max(0, recurringMinutes - reservedLoad), plannedMinutes: planned + reservedLoad,
             bufferMinutes: settings.bufferMinutes, calendar: calendar, countedTaskMinutes: aiCounted,
-            deadlineEventIDs: deadlineIDs
+            deadlineEventIDs: deadlineIDs, travel: travel.map(\.range)
         )
         if day == today {
             let current = now()
@@ -1720,7 +1777,7 @@ final class PlanningModel {
         return DayPlan(day: day, capacity: capacity(input), deadlines: deadlines.filter { $0.day == day },
                        events: shown.filter { links[$0.id] == nil }, blocks: shown.filter { links[$0.id] != nil && !$0.isAllDay },
                        assigned: assignedSorted, openToday: openToday, links: links.filter { id, _ in linkedEvents.contains { $0.id == id } },
-                       isPastDue: pastDue, recurring: recurring, planInput: planInput, isPast: day < today)
+                       isPastDue: pastDue, recurring: recurring, planInput: planInput, isPast: day < today, travel: travel)
     }
 
     /// Unlinked copies (same title and time in another calendar) of linked events: their time is already

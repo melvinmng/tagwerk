@@ -41,6 +41,16 @@ struct EventMergingTests {
         #expect(merged.map(\.id) == ["b"])
     }
 
+    @Test func coordinates_doNotPreventMerging() {
+        // One calendar resolved the address, the other did not: still the same event.
+        var located = event("a", "work")
+        located.latitude = 52.52
+        located.longitude = 13.405
+        let merged = mergingDuplicates([located, event("b", "shared")], links: [:])
+        #expect(merged.count == 1)
+        #expect(merged.first?.mergedCalendarIDs == ["shared"])
+    }
+
     @Test func linkedCopy_isKept() {
         let merged = mergingDuplicates([event("a", "work"), event("b", "shared")],
                                        links: ["b": TaskID(source: .local, rawValue: "x")])
