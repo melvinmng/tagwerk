@@ -32,6 +32,32 @@ struct RemindersTaskProviderTests {
         return edit
     }
 
+    @Test func completedTasks_useSelectedListsWithoutShoppingList() async {
+        store.listInfos.append(ListInfo(id: "shop", title: "Einkauf", colorHex: nil, kind: .local))
+        let day = Date(timeIntervalSince1970: 50_000)
+        store.records["c"]?.completedAt = day
+        store.records["d"] = ReminderRecord(id: "d", title: "Milch", notes: nil, due: nil, ekPriority: 0, isCompleted: true,
+                                            listID: "shop", lastModified: day, completedAt: day)
+        store.records["e"] = ReminderRecord(id: "e", title: "Abgabe", notes: nil, due: nil, ekPriority: 0, isCompleted: true,
+                                            listID: "studium", lastModified: day, completedAt: day)
+        let sut = RemindersTaskProvider(store: store, selectedListIDs: { nil }, excludedListID: { "shop" })
+        let interval = DateInterval(start: Date(timeIntervalSince1970: 0), end: Date(timeIntervalSince1970: 100_000))
+        let completed = await sut.completedTasks(in: interval)
+        #expect(Set(completed.map(\.item.title)) == ["Erledigt", "Abgabe"])
+        #expect(completed.allSatisfy { $0.item.isCompleted && $0.completedAt == day })
+        #expect(completed.first { $0.item.title == "Abgabe" }?.item.container.name == "Studium")
+
+        let selected = RemindersTaskProvider(store: store, selectedListIDs: { ["studium"] }, excludedListID: { "shop" })
+        #expect(await selected.completedTasks(in: interval).map(\.item.title) == ["Abgabe"])
+    }
+
+    @Test func completedTasks_areEmptyWithoutFullAccess() async {
+        store.records["c"]?.completedAt = Date(timeIntervalSince1970: 50_000)
+        store.accessState = .denied
+        let interval = DateInterval(start: Date(timeIntervalSince1970: 0), end: Date(timeIntervalSince1970: 100_000))
+        #expect(await provider().completedTasks(in: interval).isEmpty)
+    }
+
     @Test func openTasks_allLists_excludesCompleted() async throws {
         let titles = try await provider().openTasks().map(\.title)
         #expect(Set(titles) == ["Kapitel 2 gliedern", "Einkaufen"])

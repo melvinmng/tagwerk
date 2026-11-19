@@ -30,6 +30,24 @@ struct LocalTaskProviderTests {
         #expect(created.priority == .p3)
     }
 
+    @Test func completedTasks_returnAllCompletedIncludingUndated() async throws {
+        let done = try await provider.create(TaskDraft(title: "Erledigt"))
+        _ = try await provider.create(TaskDraft(title: "Offen"))
+        var edit = TaskEdit()
+        edit.isCompleted = .set(true)
+        _ = try await provider.apply(edit, to: done.id, expectedVersion: done.version)
+        // Completed before phase 4: no completion date.
+        let old = LocalTask(title: "Alt")
+        old.isCompleted = true
+        container.mainContext.insert(old)
+
+        let completed = provider.completedTasks()
+        #expect(Set(completed.map(\.item.title)) == ["Erledigt", "Alt"])
+        #expect(completed.allSatisfy { $0.item.isCompleted })
+        #expect(completed.first { $0.item.title == "Erledigt" }?.completedAt != nil)
+        #expect(completed.first { $0.item.title == "Alt" }?.completedAt == nil)
+    }
+
     @Test func openTasks_excludesCompleted() async throws {
         let done = try await provider.create(TaskDraft(title: "Erledigt"))
         _ = try await provider.create(TaskDraft(title: "Offen"))

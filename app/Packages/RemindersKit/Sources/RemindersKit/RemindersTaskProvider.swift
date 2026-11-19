@@ -1,3 +1,4 @@
+import Foundation
 import TagwerkCore
 
 /// Local effort for reminders: EventKit cannot store one, so it lives in Tagwerk.
@@ -32,6 +33,19 @@ public final class RemindersTaskProvider: TaskProvider {
         let listIDs = ShoppingListFilter.taskListIDs(selected: selectedListIDs(), all: store.lists().map(\.id),
                                                      shopping: excludedListID())
         return await store.openReminders(in: listIDs).map { map($0, lists: lists) }
+    }
+
+    /// Reminders completed within `interval` in the lists that feed tasks (without the shopping list),
+    /// for the search. Empty without full access.
+    public func completedTasks(in interval: DateInterval) async -> [CompletedTask] {
+        guard store.accessState == .fullAccess else { return [] }
+        let lists = listsByID()
+        let all = store.lists().map(\.id)
+        let listIDs = ShoppingListFilter.taskListIDs(selected: selectedListIDs(), all: all, shopping: excludedListID())
+            ?? Set(all)
+        return await store.completedReminders(in: interval, listIDs: listIDs).map { record in
+            CompletedTask(item: map(record, lists: lists), completedAt: record.completedAt)
+        }
     }
 
     public func task(id: TaskID) async throws -> TaskItem? {
