@@ -154,6 +154,24 @@ struct TaskReminderTests {
         #expect(overrides.overrides(for: key).map(\.scope) == [.always])
     }
 
+    @Test func recurringLocal_useDefaultForThisDue_whileAnEntryWideListApplies_writesTheDefaultDown() async throws {
+        let item = task("Serie", source: .local, recurrence: weekly(from: due))
+        let key = ReminderOverride.key(task: item.id)
+        try overrides.save(ReminderOverride(itemKey: key, scope: .always, offsets: [.before(amount: 3, unit: .days)]))
+        let (model, reminders, _) = editor(item)
+        #expect(!reminders.list.isUsingDefault)
+        reminders.list.useDefault()
+        reminders.reach = .onlyThis
+        #expect(await model.save())
+        let resolved = ReminderOverrideResolution.resolve(itemKey: key, due: due, isAllDay: false, overrides: overrides.overrides(),
+                                                          defaults: [.before(amount: 9, unit: .days)])
+        #expect(resolved.offsets == [.before(amount: 2, unit: .hours)])
+        // Other due dates keep the entry-wide list.
+        let later = ReminderOverrideResolution.resolve(itemKey: key, due: DueDate(year: 2026, month: 12, day: 4, hour: 12), isAllDay: false,
+                                                       overrides: overrides.overrides(), defaults: [])
+        #expect(later.offsets == [.before(amount: 3, unit: .days)])
+    }
+
     @Test func nonRecurringTask_asksNoReachQuestion() {
         let (model, reminders, _) = editor(task("Einmalig", source: .local))
         reminders.list.customize()

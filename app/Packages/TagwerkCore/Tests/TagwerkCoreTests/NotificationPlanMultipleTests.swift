@@ -56,6 +56,23 @@ struct NotificationPlanMultipleTests {
         #expect(dates["Termin B"] == at(20, 13))
     }
 
+    @Test func migratedDefaults_matchTheFormerAbsoluteMinuteRule_acrossDaylightSaving() {
+        // Berlin ends daylight saving time on Sunday 25 Oct 2026 at 03:00. The former rule subtracted absolute minutes.
+        let dueMoment = instant(2026, 10, 25, 10, 0, in: calendar)
+        let early = instant(2026, 10, 1, 8, 0, in: calendar)
+        let item = makeItem("Sonntag", due: DueDate(year: 2026, month: 10, day: 25, hour: 10, minute: 0))
+        let start = instant(2026, 10, 25, 10, 0, in: calendar)
+        let event = CalendarEvent(id: "E", externalID: nil, calendarID: "deadlines", title: "E", start: start, end: start.addingTimeInterval(3600),
+                                  isAllDay: false, url: nil, isBusy: true, version: "1")
+        for lead in [15, 60, 90, 120, 1440, 2880] {
+            let expected = dueMoment.addingTimeInterval(TimeInterval(-lead * 60))
+            for defaults in [nil, Optional(ReminderDefaults.legacy(leadTimeMinutes: lead))] {
+                let plan = notificationPlan(tasks: [item], deadlineEvents: [event], rules: rules(defaults, lead: lead), now: early, calendar: calendar)
+                #expect(plan.map(\.fireDate) == [expected, expected], "lead \(lead) min, defaults \(defaults == nil ? "legacy" : "migrated")")
+            }
+        }
+    }
+
     @Test func threeOffsets_yieldThreeNotificationsWithIndexedIDs() {
         let three = defaults(task: [.before(amount: 1, unit: .hours), .before(amount: 1, unit: .weeks), .before(amount: 1, unit: .days)])
         let item = task("Plan", day: 27, hour: 12)

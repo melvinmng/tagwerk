@@ -112,6 +112,10 @@ struct EntrySheet: View {
         }
 
         deadlineSection(event)
+        // Its own section: the dialogs of the deadline section hang on it and would be presented once per row.
+        if environment.settings.deadlineCalendarNotifications, model.isInDeadlineCalendar(event) || model.isMarkedDeadline(event) {
+            Section { remindersRow(event) }
+        }
         if let deadline {
             PreparationSection(deadline: deadline, model: model) { event in
                 model.showDay(of: event)
@@ -214,9 +218,6 @@ struct EntrySheet: View {
                     setMarked(event, mark)
                 }))
                 .tint(.red)
-            }
-            if environment.settings.deadlineCalendarNotifications, model.isInDeadlineCalendar(event) || model.isMarkedDeadline(event) {
-                remindersRow(event)
             }
         } header: {
             Text("Deadline")

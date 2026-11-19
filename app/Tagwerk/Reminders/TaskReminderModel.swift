@@ -75,6 +75,13 @@ final class TaskReminderModel {
         case .useDefault:
             if onlyThis {
                 try overrides.remove(itemKey: key, scope: scope)
+                // An entry-wide list would still apply to this due date: the default is written down for it explicitly.
+                let isAllDay = !(due?.hasTime ?? false)
+                let remaining = ReminderOverrideResolution.resolve(itemKey: key, due: due, isAllDay: isAllDay, overrides: overrides.overrides(),
+                                                                   defaults: list.defaultOffsets)
+                if remaining.isCustom {
+                    try overrides.save(ReminderOverride(itemKey: key, scope: scope, storage: .tagwerk, offsets: list.defaultOffsets))
+                }
             } else {
                 // For all following due dates the default applies again, also over an earlier "only this one".
                 try overrides.removeAll(itemKey: key)

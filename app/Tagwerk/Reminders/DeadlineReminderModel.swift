@@ -56,7 +56,9 @@ final class DeadlineReminderModel {
         guard hasChanges else { return }
         let key = Self.itemKey(for: event)
         let day = PlanDay(date: event.start, calendar: calendar)
-        let scope: ReminderOverride.Scope = !event.isRecurring ? .always : reach == .onlyThis ? .occurrence(event.id) : .seriesFrom(day)
+        // A deadline that does not repeat gets a list for its own occurrence ID: calendars can share an identifier, and the
+        // series part of the key would then reach several deadlines.
+        let scope: ReminderOverride.Scope = !event.isRecurring || reach == .onlyThis ? .occurrence(event.id) : .seriesFrom(day)
         let following = event.isRecurring && reach == .allFollowing
         switch list.result {
         case .custom(let offsets):

@@ -48,10 +48,14 @@ public struct ReminderDefaults: Codable, Hashable, Sendable {
     }
 
     /// The defaults that behave like the fixed rules before reminders became flexible: tasks and deadlines with a time
-    /// remind one lead time before, tasks without a time at `dateOnlyHour` on their day, all-day deadlines at
+    /// remind one lead time before (in hours or minutes, so the moment is the same as with the former fixed rule), tasks without a time at `dateOnlyHour` on their day, all-day deadlines at
     /// `allDayEventHour` on the evening before; events remind nothing.
     public static func legacy(leadTimeMinutes: Int, dateOnlyHour: Int = 9, allDayEventHour: Int = 18) -> ReminderDefaults {
-        let lead = ReminderOffset.largestUnit(minutes: leadTimeMinutes)
+        // At most hours: the old rule subtracted absolute minutes, while days count calendar days and would differ by an
+        // hour on a day with a daylight-saving change.
+        let minutes = max(leadTimeMinutes, 0)
+        let lead: ReminderOffset = minutes > 0 && minutes % 60 == 0 ? .before(amount: minutes / 60, unit: .hours)
+            : .before(amount: minutes, unit: .minutes)
         return ReminderDefaults(
             timed: [.task: [lead], .deadline: [lead], .event: []],
             allDay: [.task: [.at(daysBefore: 0, hour: dateOnlyHour, minute: 0)],

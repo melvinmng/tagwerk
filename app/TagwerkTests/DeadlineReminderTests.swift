@@ -121,7 +121,7 @@ struct DeadlineReminderTests {
         #expect(offsets(events[2]) == own)
     }
 
-    @Test func nonRecurringDeadline_storesAnEntryWideListWithoutAskingForReach() throws {
+    @Test func nonRecurringDeadline_storesAListForItsOwnOccurrenceWithoutAskingForReach() throws {
         var single = series()[0]
         single.id = "einzeln"
         single.isRecurring = false
@@ -130,7 +130,8 @@ struct DeadlineReminderTests {
         reminders.list.add(.before(amount: 1, unit: .weeks))
         #expect(!reminders.asksReach)
         try reminders.save(reach: .onlyThis)
-        #expect(overrides.overrides(for: ReminderOverride.key(deadlineSeries: "einzeln")).map(\.scope) == [.always])
+        #expect(overrides.overrides(for: ReminderOverride.key(deadlineSeries: "einzeln")).map(\.scope) == [.occurrence("einzeln")])
+        #expect(offsets(single) == [.before(amount: 1, unit: .weeks), .before(amount: 2, unit: .hours)])
     }
 
     @Test func allDayDeadline_hasItsOwnDefault() {

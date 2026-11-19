@@ -13,6 +13,12 @@ struct ReminderDefaultsTests {
         #expect(defaults.offsets(for: .event, isAllDay: true).isEmpty)
     }
 
+    @Test func legacy_neverUsesDays_soDaylightSavingDoesNotShiftTheMoment() {
+        #expect(ReminderDefaults.legacy(leadTimeMinutes: 1440).offsets(for: .task, isAllDay: false) == [.before(amount: 24, unit: .hours)])
+        #expect(ReminderDefaults.legacy(leadTimeMinutes: 2880).offsets(for: .deadline, isAllDay: false) == [.before(amount: 48, unit: .hours)])
+        #expect(ReminderDefaults.legacy(leadTimeMinutes: 15).offsets(for: .task, isAllDay: false) == [.before(amount: 15, unit: .minutes)])
+    }
+
     @Test func legacy_usesTheGivenHours() {
         let defaults = ReminderDefaults.legacy(leadTimeMinutes: 90, dateOnlyHour: 8, allDayEventHour: 20)
         #expect(defaults.offsets(for: .task, isAllDay: false) == [.before(amount: 90, unit: .minutes)])

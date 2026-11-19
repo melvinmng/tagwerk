@@ -26,8 +26,9 @@ struct ReminderDefaultsView: View {
         .task {
             if model == nil { model = ReminderDefaultsModel(defaults: environment.settings.reminderDefaults) }
         }
-        .onChange(of: model?.defaults) { _, defaults in
-            if let defaults { environment.settings.reminderDefaults = defaults }
+        .onChange(of: model?.defaults) { old, defaults in
+            // The first value, when the model is created, is not a change.
+            if old != nil, let defaults { environment.settings.reminderDefaults = defaults }
         }
     }
 

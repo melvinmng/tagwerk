@@ -25,7 +25,7 @@ public enum ReminderText {
         case .absolute(let date):
             let day = date.formatted(Date.FormatStyle(date: .numeric, time: .omitted, locale: locale, calendar: calendar,
                                                       timeZone: calendar.timeZone))
-            return "\(day), \(DateText.time(date, calendar: calendar, locale: locale))"
+            return [day, DateText.time(date, calendar: calendar, locale: locale)].joined(separator: ", ")
         }
     }
 
