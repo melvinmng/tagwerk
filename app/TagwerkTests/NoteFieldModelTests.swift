@@ -41,6 +41,28 @@ struct NoteFieldModelTests {
         #expect(store.count == 2)
     }
 
+    @Test func dreamLog_savesAsADatedNote_onePerDay_andIsNeverOfferedForSuggestions() async throws {
+        let model = NoteFieldModel(store: store, kind: .dream, day: day, debounce: .milliseconds(1), sleep: { _ in },
+                                   isSignedIn: { true }, now: { testNow() })
+        model.text = "Ich bin geflogen."
+        model.textChanged()
+        await model.waitForSave()
+        let note = try #require(store.note(kind: .dream, dayKey: "2026-11-18"))
+        #expect(note.kindRaw == "dream" && note.text == "Ich bin geflogen." && note.folderID == nil)
+        // Same day and kind: the same record; the evening note of that day is another one.
+        let again = NoteFieldModel(store: store, kind: .dream, day: day, debounce: .milliseconds(1), sleep: { _ in })
+        #expect(again.text == "Ich bin geflogen.")
+        again.text = "Ich bin geflogen. Dann gefallen."
+        again.flush()
+        #expect(store.count == 1)
+        #expect(!model.canSuggest)
+        #expect(!model.offersGuidingQuestions)
+        // Cleared text removes the note like any thought note.
+        again.text = "  "
+        again.flush()
+        #expect(store.note(kind: .dream, dayKey: "2026-11-18") == nil)
+    }
+
     @Test func close_flushesThePendingSave() {
         let model = NoteFieldModel(store: store, kind: .evening, day: day, debounce: .seconds(60), sleep: { _ in try? await Task.sleep(for: .seconds(60)) })
         model.text = "Schnell geschrieben"
@@ -128,7 +150,7 @@ struct NoteFieldModelTests {
         #expect(!model.offersGuidingQuestions)
         model.flush()
         let saved = store.note(kind: .evening, dayKey: "2026-11-18")?.text ?? ""
-        #expect(saved.hasPrefix("Heute war gut.\n\nWas war mein Ziel?"))
+        #expect(saved.hasPrefix("Heute war gut.\n\nWas will ich in meinem Leben (im Moment) erreichen?"))
         #expect(!model.wasDictated)
     }
 }

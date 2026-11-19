@@ -27,7 +27,8 @@ struct RoutineNotificationTests {
         await makeScheduler().reschedule()
         #expect(!center.pendingIDs.contains("tagwerk.routine.evening.OLD"))
         #expect(center.pendingIDs.count == 3 && center.pendingIDs.allSatisfy { $0.hasPrefix("tagwerk.routine.evening.") })
-        #expect(center.addedRepeating.map(\.title) == ["Tagesabschluss öffnen", "Handy weglegen", "Ins Bett"])
+        #expect(center.addedRepeating.map(\.title) == ["Alle Aufgaben bis eine Stunde vorm Schlafen erledigen", "Eine Stunde vorm Schlafen fertig machen",
+                                                          "Eine halbe Stunde vorm Schlafen ins Bett legen"])
     }
 
     @Test func reschedule_keepsDeadlineRequests() async {
@@ -62,6 +63,27 @@ struct RoutineNotificationTests {
         await makeScheduler().reschedule()
         let first = center.addedRepeating.first
         #expect(first?.hour == 20 && first?.minute == 30)
+    }
+
+    @Test func scheduler_addsAtMostSixRoutineReminders() async {
+        store.adoptSuggestion()
+        store.saveItem(ChecklistItem(title: "Vierter", order: 5, offsetMinutes: 15))
+        // A fifth reminder point is refused by the store; the limit of the plan holds on top of it.
+        #expect(!store.saveItem(ChecklistItem(title: "Fünfter", order: 6, offsetMinutes: 10)))
+        settings.morningReminderEnabled = true
+        settings.weekPlanningReminderEnabled = true
+        await makeScheduler().reschedule()
+        let routineIDs = center.pendingIDs.filter { $0.hasPrefix("tagwerk.routine.") }
+        #expect(routineIDs.count == 6)
+        #expect(routineIDs.count <= RoutineSchedule.maximumRoutineNotifications)
+        let week = center.addedRepeating.first { $0.id == "tagwerk.routine.week" }
+        #expect(week?.weekday == 1 && week?.hour == 18 && week?.route == .routineWeek)
+    }
+
+    @Test func reschedule_weekReminderOffByDefault() async {
+        store.adoptSuggestion()
+        await makeScheduler().reschedule()
+        #expect(!center.pendingIDs.contains("tagwerk.routine.week"))
     }
 
     @Test func reschedule_addsTheMorningRequest_whenEnabled() async {

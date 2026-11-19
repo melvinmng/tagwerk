@@ -66,9 +66,9 @@ struct RoutineStoreTests {
     }
 
     @Test func saveItem_cutsTheTitle_andRoundsTheOffsetToFiveMinutes() {
-        _ = store.saveItem(ChecklistItem(title: String(repeating: "x", count: 60), order: 0, offsetMinutes: 62))
+        _ = store.saveItem(ChecklistItem(title: String(repeating: "x", count: 80), order: 0, offsetMinutes: 62))
         let saved = store.checklist()[0]
-        #expect(saved.title.count == 40 && saved.offsetMinutes == 60)
+        #expect(saved.title.count == RoutineSchedule.titleLimit && saved.offsetMinutes == 60)
         _ = store.saveItem(ChecklistItem(title: "Weit", order: 1, offsetMinutes: 999))
         #expect(store.checklist()[1].offsetMinutes == 240)
     }
@@ -84,11 +84,41 @@ struct RoutineStoreTests {
         #expect(store.checklist().map(\.title) == ["A"])
     }
 
-    @Test func adoptSuggestion_createsThreeItems_onlyIntoAnEmptyList() {
+    @Test func adoptSuggestion_createsFiveItems_onlyIntoAnEmptyList() {
         store.adoptSuggestion()
-        #expect(store.checklist().map(\.offsetMinutes) == [90, 60, 30])
+        #expect(store.checklist().map(\.offsetMinutes) == [nil, 90, 60, nil, 30])
+        #expect(store.checklist().first?.title == "Helle Lichter ausmachen")
+        // The long titles of the original template are stored whole.
+        #expect(store.checklist().map(\.title) == RoutineSchedule.suggestedItems.map(\.title))
         store.adoptSuggestion()
-        #expect(store.checklist().count == 3)
+        #expect(store.checklist().count == 5)
+    }
+
+    private func adoptLegacyList(_ titles: [String] = ["Tagesabschluss öffnen", "Handy weglegen", "Ins Bett"]) -> [ChecklistItem] {
+        let items = zip(titles.indices, titles).map { ChecklistItem(title: $1, order: $0, offsetMinutes: [90, 60, 30][$0 % 3]) }
+        for item in items { store.saveItem(item) }
+        return items
+    }
+
+    @Test func replaceLegacySuggestion_replacesTheUntouchedOldList() {
+        let old = adoptLegacyList()
+        #expect(store.replaceLegacySuggestion())
+        let items = store.checklist()
+        #expect(items.count == 5)
+        #expect(Set(items.map(\.id)).isDisjoint(with: Set(old.map(\.id))))
+        #expect(items.map(\.offsetMinutes) == [nil, 90, 60, nil, 30])
+    }
+
+    @Test func replaceLegacySuggestion_keepsAnEditedList() {
+        let old = adoptLegacyList(["Tagesabschluss öffnen", "Handy weglegen", "Schlafen"])
+        #expect(!store.replaceLegacySuggestion())
+        #expect(store.checklist().map(\.id) == old.map(\.id))
+        #expect(store.checklist().map(\.title) == ["Tagesabschluss öffnen", "Handy weglegen", "Schlafen"])
+    }
+
+    @Test func replaceLegacySuggestion_onAnEmptyList_doesNothing() {
+        #expect(!store.replaceLegacySuggestion())
+        #expect(store.checklist().isEmpty)
     }
 
     @Test func settingsDefaults() throws {

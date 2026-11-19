@@ -405,6 +405,7 @@ final class AppEnvironment {
         case .free: String(localized: "Notiz")
         case .morning: String(localized: "Tagesstart")
         case .evening: String(localized: "Tagesabschluss")
+        case .dream: String(localized: "Dream Log")
         case .journal: String(localized: "Tagebuch")
         case .bibleStudy: String(localized: "Bible Study")
         }
@@ -556,6 +557,8 @@ final class AppEnvironment {
     /// Re-plans the routine reminders when the bedtime, the checklist or one of the switches changes.
     func startRoutineReminderUpdates() {
         guard routineUpdates == nil else { return }
+        // An untouched three-point list of an earlier version is replaced before the first reminders are planned.
+        routineStore.replaceLegacySuggestion()
         let changes = Observations { @MainActor [weak self] () -> Int in
             guard let self else { return 0 }
             var hasher = Hasher()
@@ -563,6 +566,9 @@ final class AppEnvironment {
             hasher.combine(settings.eveningRemindersEnabled)
             hasher.combine(settings.morningReminderEnabled)
             hasher.combine(settings.morningReminderMinutes)
+            hasher.combine(settings.weekPlanningReminderEnabled)
+            hasher.combine(settings.weekPlanningReminderWeekday)
+            hasher.combine(settings.weekPlanningReminderMinutes)
             hasher.combine(routineStore.checklist())
             return hasher.finalize()
         }
@@ -668,6 +674,19 @@ final class AppEnvironment {
                                    planning.anchor = week
                                    requestedTab = 0
                                })
+    }
+
+    /// The guided weekly planning (#164): the weekly review moved to the reviewed week, plus the deadlines of the planned one.
+    func makeWeekPlanningModel() -> WeekPlanningModel {
+        let taskList = self.taskList, planning = self.planning
+        return WeekPlanningModel(
+            weekReview: makeWeekReviewModel(), calendar: capture.calendar,
+            tasks: { taskList.items.filter { !$0.isCompleted } },
+            deadlineEvents: { range in
+                await planning.planInputs(in: range).flatMap { day in
+                    day.events.filter(\.deadline).map { WeekPlanningModel.DeadlineEvent(title: $0.title, day: day.day) }
+                }
+            })
     }
 
     // MARK: Widget snapshot (phase 4 design §4.1)

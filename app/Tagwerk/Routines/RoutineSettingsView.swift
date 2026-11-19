@@ -15,7 +15,8 @@ struct RoutineSettingsView: View {
         let items = store.checklist()
         let conflict = RoutineSchedule.quietHoursConflict(
             settings.quietHours, items: items, bedtimeMinutes: settings.bedtimeMinutes, eveningEnabled: settings.eveningRemindersEnabled,
-            morningEnabled: settings.morningReminderEnabled, morningMinutes: settings.morningReminderMinutes)
+            morningEnabled: settings.morningReminderEnabled, morningMinutes: settings.morningReminderMinutes,
+            weekEnabled: settings.weekPlanningReminderEnabled, weekMinutes: settings.weekPlanningReminderMinutes)
         Form {
             Section {
                 DatePicker("Zielschlafzeit", selection: $settings.bedtimeMinutes.asTime(), displayedComponents: .hourAndMinute)
@@ -72,6 +73,22 @@ struct RoutineSettingsView: View {
             }
 
             Section {
+                Toggle("Erinnerung", isOn: $settings.weekPlanningReminderEnabled)
+                if settings.weekPlanningReminderEnabled {
+                    Picker("Wochentag", selection: $settings.weekPlanningReminderWeekday) {
+                        let names = Calendar.tagwerk.standaloneWeekdaySymbols
+                        ForEach(1...7, id: \.self) { weekday in Text(names[weekday - 1]).tag(weekday) }
+                    }
+                    DatePicker("Uhrzeit", selection: $settings.weekPlanningReminderMinutes.asTime(), displayedComponents: .hourAndMinute)
+                    if environment.routineNotifications.authorization != .authorized { notificationHint }
+                }
+            } header: {
+                Text("Wochenplanung")
+            } footer: {
+                if conflict.week { Text(Self.quietHoursNote) }
+            }
+
+            Section {
                 Toggle("In Planen anzeigen", isOn: $settings.showsRoutinesInPlan)
             } header: {
                 Text("Planen")
@@ -89,10 +106,10 @@ struct RoutineSettingsView: View {
                 Toggle("Notizen an ChatGPT senden", isOn: $settings.noteSuggestionConsent)
                     .disabled(!environment.ai.isSignedIn)
             } header: {
-                Text("Gedanken-Notiz")
+                Text("Brain Dump")
             } footer: {
                 if environment.ai.isSignedIn {
-                    Text("Für Vorschläge sendet Tagwerk den Text der jeweiligen Gedanken-Notiz sowie deine offenen Aufgaben und Termine der nächsten 7 Tage (Titel, Fälligkeit, Zeit) an ChatGPT (OpenAI), und nur, wenn du bei der Notiz auf „Vorschläge holen“ tippst. Dankbarkeit, Gewohnheiten, Wochenreflexion, Daten aus Health und frühere Notizen werden nie gesendet.")
+                    Text("Für Vorschläge sendet Tagwerk den Text der jeweiligen Brain-Dump-Notiz sowie deine offenen Aufgaben und Termine der nächsten 7 Tage (Titel, Fälligkeit, Zeit) an ChatGPT (OpenAI), und nur, wenn du bei der Notiz auf „Vorschläge holen“ tippst. Dankbarkeit, Dream Log, Gewohnheiten, Wochenreflexion, Daten aus Health und frühere Notizen werden nie gesendet.")
                 } else {
                     Text("Melde dich unter Einstellungen › KI bei ChatGPT an, um Vorschläge aus einer Notiz zu holen.")
                 }

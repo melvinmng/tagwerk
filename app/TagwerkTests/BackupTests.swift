@@ -94,6 +94,7 @@ struct BackupTests {
         context.insert(own)
         let thought = NoteRecord(text: "Ruhiger Tag", kind: .evening, dayKey: "2026-11-18", now: now)
         context.insert(thought)
+        context.insert(NoteRecord(text: "Ein erfundener Traum", kind: .dream, dayKey: "2026-11-18", now: now))
         let trashed = NoteRecord(text: "Alt", now: now)
         trashed.deletedAt = now
         trashed.importSourceID = "abc"
@@ -132,6 +133,8 @@ struct BackupTests {
         reflection.wentWell = "Viel geschafft"
         reflection.burdens = "Wenig Schlaf"
         reflection.plannedHabits = true
+        reflection.goalsProgress = "Projekt läuft"
+        reflection.gratitudeTaken = true
         context.insert(reflection)
         try? context.save()
     }
@@ -172,6 +175,47 @@ struct BackupTests {
         #expect(BackupCoverage.excluded.values.allSatisfy { !$0.isEmpty })
     }
 
+    @Test func settingsBackup_roundTripsWeekPlanningReminder() throws {
+        sourceSettings.weekPlanningReminderEnabled = true
+        sourceSettings.weekPlanningReminderWeekday = 6
+        sourceSettings.weekPlanningReminderMinutes = 1140
+        let data = try JSONEncoder().encode(AppSettingsBackup(sourceSettings))
+        let decoded = try JSONDecoder().decode(AppSettingsBackup.self, from: data)
+        let target = try makeTarget()
+        decoded.apply(to: target.settings)
+        #expect(target.settings.weekPlanningReminderEnabled)
+        #expect(target.settings.weekPlanningReminderWeekday == 6 && target.settings.weekPlanningReminderMinutes == 1140)
+        // An older backup without the three fields keeps the defaults of the target.
+        var object = try #require(try JSONSerialization.jsonObject(with: data) as? [String: Any])
+        for key in ["weekPlanningReminderEnabled", "weekPlanningReminderWeekday", "weekPlanningReminderMinutes"] { object[key] = nil }
+        let older = try JSONDecoder().decode(AppSettingsBackup.self, from: JSONSerialization.data(withJSONObject: object))
+        let fresh = try makeTarget()
+        older.apply(to: fresh.settings)
+        #expect(!fresh.settings.weekPlanningReminderEnabled)
+        #expect(fresh.settings.weekPlanningReminderWeekday == 1 && fresh.settings.weekPlanningReminderMinutes == 1080)
+    }
+
+    @Test func weekReflectionBackup_roundTripsNewFields() throws {
+        let record = WeekReflectionRecord(weekStart: PlanDay(year: 2026, month: 11, day: 16), updatedAt: clock.now)
+        record.goalsProgress = "Projekt läuft"
+        record.gratitudeTaken = true
+        let decoded = try JSONDecoder().decode(WeekReflectionBackup.self, from: JSONEncoder().encode(WeekReflectionBackup(record)))
+        let restored = decoded.makeRecord()
+        #expect(restored.goalsProgress == "Projekt läuft" && restored.gratitudeTaken)
+    }
+
+    @Test func weekReflectionBackup_decodesAnOlderBackupWithoutNewFields() throws {
+        let json = """
+        {"weekKey":"2026-11-16","wentWell":"Viel geschafft","burdens":"Wenig Schlaf","plannedAppointments":true,
+         "plannedHabits":true,"plannedTasks":false,"updatedAt":0}
+        """
+        let decoder = JSONDecoder()
+        let backup = try decoder.decode(WeekReflectionBackup.self, from: Data(json.utf8))
+        let record = backup.makeRecord()
+        #expect(record.wentWell == "Viel geschafft" && record.goalsProgress.isEmpty && !record.gratitudeTaken)
+        #expect(record.value.calendarPlanned)
+    }
+
     @Test func theTestData_holdsARecordOfEveryModelInTheBackup() {
         var counts: [String: Int] = [:]
         for child in Mirror(reflecting: entities(of: source.mainContext, settings: sourceSettings)).children {
@@ -205,7 +249,7 @@ struct BackupTests {
         // Restoring the same file again replaces, it does not duplicate.
         try target.service.restore(try target.service.inspect(reloaded))
         let counts = entities(of: target.container.mainContext, settings: target.settings)
-        #expect(counts.localTasks.count == 1 && counts.notes.count == 5 && counts.habits.count == 1 && counts.noteFolders.count == 3)
+        #expect(counts.localTasks.count == 1 && counts.notes.count == 6 && counts.habits.count == 1 && counts.noteFolders.count == 3)
     }
 
     @Test func settings_areAppliedInPlace_withoutDeviceBoundValues() throws {
@@ -279,7 +323,8 @@ struct BackupTests {
         let inspection = try makeTarget().service.inspect(data)
         #expect(!inspection.header.includesPrivateNotes)
         let kinds = Set(inspection.entities.notes.map(\.kindRaw))
-        #expect(kinds == ["free", "evening"])
+        // The dream log is part of the backup like the thought notes; it is not behind the private switch.
+        #expect(kinds == ["free", "evening", "dream"])
         #expect(inspection.entities.noteFolders.map(\.name) == ["Studium"])
         #expect(inspection.entities.bibleStudySessions.isEmpty)
         let text = String(decoding: data, as: UTF8.self)

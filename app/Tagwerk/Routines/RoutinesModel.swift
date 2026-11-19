@@ -11,11 +11,17 @@ final class RoutinesModel {
     enum Sheet: Identifiable, Equatable {
         case start(PlanDay)
         case evening(PlanDay)
+        /// "Unerledigtes verschieben" from the capacity card of today.
+        case leftover
+        /// The guided weekly planning (#164).
+        case week
 
         var id: String {
             switch self {
             case .start(let day): "start-\(day.dayKey)"
             case .evening(let day): "evening-\(day.dayKey)"
+            case .leftover: "leftover"
+            case .week: "week"
             }
         }
     }
@@ -81,6 +87,16 @@ final class RoutinesModel {
     /// `nil`: the evening day (before 04:00 that is yesterday).
     func openEvening(_ day: PlanDay? = nil) { sheet = .evening(day ?? eveningDay) }
 
+    func openLeftover() { sheet = .leftover }
+
+    func openWeek() { sheet = .week }
+
+    /// "Unerledigtes verschieben" is offered in the wrap-up of the real today only (#163). After midnight the wrap-up still
+    /// belongs to yesterday; the leftovers the planning knows then are those of the new day, so nothing is offered.
+    func offersLeftover(for day: PlanDay) -> Bool {
+        day == today && !planning.leftFromToday.isEmpty
+    }
+
     func closeSheet() { sheet = nil }
 
     // MARK: Day values
@@ -105,9 +121,7 @@ final class RoutinesModel {
 
     // MARK: Tasks of a day
 
-    /// Open tasks of today for the focus and the review (rule 12).
-    func todayTasks() -> [TaskItem] { tasks(of: today) }
-
+    /// Open tasks of a day for the review (rule 12).
     func tasks(of day: PlanDay) -> [TaskItem] {
         let planned = Set(planning.planStore.assignments(in: day...day).filter { $0.value == day }.keys)
         let recurring = Set(taskList.items.filter(isRecurring).map(\.id))
@@ -187,10 +201,10 @@ extension RoutinesModel {
         sheet = nil
     }
 
-    /// "Fokus wählen" or "✓ 07:42".
+    /// "Starten" or "✓ 07:42".
     func captureStartDetail(_ day: PlanDay) -> String {
         _ = revision
-        guard let done = store.day(day).startCompletedAt else { return String(localized: "Fokus wählen") }
+        guard let done = store.day(day).startCompletedAt else { return String(localized: "Starten") }
         let time = "✓ \(DateText.time(done, calendar: calendar))"
         guard let first = store.focusMarks(on: day).first else { return time }
         return time + " · " + String(localized: "Fokus: \(first.title)")

@@ -807,16 +807,6 @@
         }
       }
     },
-    "Fokus für heute wählen?" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Choose a focus for today?"
-          }
-        }
-      }
-    },
     "Frühstück" : {
       "localizations" : {
         "en" : {
@@ -903,16 +893,6 @@
         }
       }
     },
-    "Handy weglegen" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Put the phone away"
-          }
-        }
-      }
-    },
     "Haushalt" : {
       "localizations" : {
         "en" : {
@@ -975,16 +955,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Always"
-          }
-        }
-      }
-    },
-    "Ins Bett" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Go to bed"
           }
         }
       }
@@ -1377,16 +1347,6 @@
         }
       }
     },
-    "Tagesabschluss öffnen" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Open evening wrap-up"
-          }
-        }
-      }
-    },
     "Tagesstart" : {
       "localizations" : {
         "en" : {
@@ -1677,6 +1637,86 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "What can I do to actively improve the negative things in my life?"
+          }
+        }
+      }
+    },
+    "Helle Lichter ausmachen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Turn off bright lights"
+          }
+        }
+      }
+    },
+    "Alle Aufgaben bis eine Stunde vorm Schlafen erledigen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Finish all tasks one hour before sleep"
+          }
+        }
+      }
+    },
+    "Eine Stunde vorm Schlafen fertig machen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Get ready one hour before sleep"
+          }
+        }
+      }
+    },
+    "Zähne putzen, umziehen, Haus/Wohnung aufräumen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Brush teeth, change, tidy up the home"
+          }
+        }
+      }
+    },
+    "Eine halbe Stunde vorm Schlafen ins Bett legen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Go to bed half an hour before sleep"
+          }
+        }
+      }
+    },
+    "Ein ruhiger Start in den Tag?" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A calm start to your day?"
+          }
+        }
+      }
+    },
+    "Wochenplanung" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Weekly planning"
+          }
+        }
+      }
+    },
+    "5 Minuten für die neue Woche?" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "5 minutes for the new week?"
           }
         }
       }

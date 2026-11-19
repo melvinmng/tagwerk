@@ -26,7 +26,8 @@ struct NoteTextTests {
 
     @Test func kind_hasStableRawValues() {
         // Stored in the database and in backups: never rename, only append.
-        #expect(NoteKind.allCases.map(\.rawValue) == ["free", "morning", "evening", "journal", "bibleStudy"])
+        #expect(NoteKind.allCases.map(\.rawValue) == ["free", "morning", "evening", "journal", "bibleStudy", "dream"])
+        #expect(NoteKind(rawValue: "dream") == .dream)
     }
 
     @Test func matches_ignoresCaseAccentsAndOrder() {
@@ -40,5 +41,11 @@ struct NoteTextTests {
         #expect(NoteKind.journal.isPrivate && NoteKind.bibleStudy.isPrivate)
         #expect(NoteKind.allCases.filter(\.isPrivate) == [.journal, .bibleStudy])
         #expect(NoteKind(rawValue: "journal") == .journal)
+    }
+
+    @Test func onlyTheThoughtNotesMayBeSentForSuggestions() {
+        #expect(NoteKind.allCases.filter(\.allowsSuggestions) == [.morning, .evening])
+        // The dream log is not private in the sense of the backup opt-in, but it is never sent.
+        #expect(!NoteKind.dream.isPrivate && !NoteKind.dream.allowsSuggestions)
     }
 }

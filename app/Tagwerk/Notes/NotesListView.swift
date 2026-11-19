@@ -377,6 +377,9 @@ extension NotesListView {
             return String(localized: "Tagebuch") + " · " + DateText.numericDay(day, calendar: calendar)
         case .bibleStudy:
             return String(localized: "Bible Study") + " · " + relativeDate(note.updatedAt, now: now, calendar: calendar)
+        case .dream:
+            let day = note.dayKey.flatMap(NoteDayKey.day) ?? PlanDay(date: note.createdAt, calendar: calendar)
+            return String(localized: "Dream Log") + " · " + DateText.numericDay(day, calendar: calendar)
         case .morning, .evening:
             let origin = note.kind == .morning ? String(localized: "Tagesstart") : String(localized: "Tagesabschluss")
             let day = note.dayKey.flatMap(NoteDayKey.day) ?? PlanDay(date: note.createdAt, calendar: calendar)

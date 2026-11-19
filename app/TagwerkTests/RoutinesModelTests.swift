@@ -83,6 +83,25 @@ struct RoutinesModelTests {
         #expect(model.eveningDay == today)
     }
 
+    @Test func leftoverEntry_eveningSheetOfToday_isOffered() {
+        // 22:00: today's work is over and "Heute fällig" is still open.
+        #expect(!planning.leftFromToday.isEmpty)
+        let model = makeModel()
+        #expect(model.offersLeftover(for: today))
+        model.openLeftover()
+        #expect(model.sheet == .leftover)
+    }
+
+    @Test func leftoverEntry_afterMidnight_isNotOffered() {
+        let model = makeModel()
+        // 00:10: the wrap-up still belongs to yesterday; the tasks of the new day are not its leftovers.
+        clock.now = at(19, 0, 10)
+        model.openEvening()
+        guard case .evening(let opened) = model.sheet else { Issue.record("no evening sheet"); return }
+        #expect(opened == today)
+        #expect(!model.offersLeftover(for: opened))
+    }
+
     @Test func openStart_opensToday() {
         let model = makeModel()
         model.openStart()
@@ -150,10 +169,10 @@ struct RoutinesModelTests {
         #expect(await model.dayReview(today).habits == HabitCounter(done: 0, total: 1))
     }
 
-    @Test func todayTasks_arePlannedDueOrBlocked() {
+    @Test func tasksOfToday_arePlannedDueOrBlocked() {
         planStore.assign(TaskID(source: .local, rawValue: "Geplant"), to: today)
         let model = makeModel()
-        #expect(Set(model.todayTasks().map(\.title)) == ["Heute fällig", "Geplant"])
+        #expect(Set(model.tasks(of: today).map(\.title)) == ["Heute fällig", "Geplant"])
     }
 
     @Test func captureEveningDetail_openAndDone() {
@@ -207,7 +226,7 @@ struct RoutinesModelTests {
 
     @Test func captureStartDetail_openAndDone() {
         let model = makeModel()
-        #expect(model.captureStartDetail(today) == "Fokus wählen")
+        #expect(model.captureStartDetail(today) == "Starten")
         routineStore.update(today) { $0.startCompletedAt = self.at(18, 7, 42) }
         #expect(model.captureStartDetail(today) == "✓ 07:42")
     }

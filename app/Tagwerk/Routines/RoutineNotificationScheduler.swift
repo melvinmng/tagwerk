@@ -51,6 +51,13 @@ final class RoutineNotificationScheduler {
                                                              minutes: settings.morningReminderMinutes, locale: locale) {
             wanted.append(morning)
         }
+        if let week = RoutineSchedule.weekPlanningNotification(enabled: settings.weekPlanningReminderEnabled,
+                                                               weekday: settings.weekPlanningReminderWeekday,
+                                                               minutes: settings.weekPlanningReminderMinutes, locale: locale) {
+            wanted.append(week)
+        }
+        // The routines keep to their own six places, next to the 50 of the task reminders.
+        wanted = Array(wanted.prefix(RoutineSchedule.maximumRoutineNotifications))
         for notification in wanted {
             do {
                 try await center.addRepeating(notification)

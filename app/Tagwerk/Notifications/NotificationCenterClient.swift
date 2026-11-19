@@ -20,7 +20,7 @@ protocol NotificationCenterClient: AnyObject {
     func requestAuthorization() async throws -> Bool
     func pendingRequests() async -> [PendingNotification]
     func add(_ notification: PlannedNotification) async throws
-    /// A reminder that repeats every day at the same clock time (phase 7 routines).
+    /// A reminder that repeats every day (or every week on `weekday`) at the same clock time (phase 7 routines).
     func addRepeating(_ notification: RoutineNotification) async throws
     func removePending(_ identifiers: [String]) async
 }
@@ -117,8 +117,9 @@ final class SystemNotificationCenter: NotificationCenterClient {
         content.threadIdentifier = "routine"
         content.userInfo = [NotificationPayload.route: notification.route.rawValue]
         // Hour and minute only, no time zone: the reminder follows the clock of the place the phone is in.
-        let trigger = UNCalendarNotificationTrigger(dateMatching: DateComponents(hour: notification.hour, minute: notification.minute),
-                                                    repeats: true)
+        // With a weekday the reminder repeats weekly on that day, else daily.
+        let trigger = UNCalendarNotificationTrigger(
+            dateMatching: DateComponents(hour: notification.hour, minute: notification.minute, weekday: notification.weekday), repeats: true)
         let request = UNNotificationRequest(identifier: notification.id, content: content, trigger: trigger)
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
             center.add(request) { error in

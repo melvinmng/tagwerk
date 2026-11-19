@@ -228,6 +228,10 @@ struct CapacityCard: View {
                 Divider()
                 eveningLine(entry)
             }
+            if plan.day == model.today, !model.leftFromToday.isEmpty {
+                Divider()
+                LeftoverLine(count: model.leftFromToday.count) { environment.routines.openLeftover() }
+            }
             if plan.day == model.today, environment.routines.eveningLine != nil {
                 Divider()
                 wrapUpLine

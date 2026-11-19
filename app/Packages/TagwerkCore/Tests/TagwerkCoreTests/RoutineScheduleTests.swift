@@ -65,9 +65,64 @@ struct RoutineScheduleTests {
         #expect(RoutineSchedule.checkedCount(day, items: [first, second]) == 1)
     }
 
-    @Test func suggestedItems_areThreeWithNinetySixtyThirtyMinutes() {
-        #expect(RoutineSchedule.suggestedItems.map(\.offsetMinutes) == [90, 60, 30])
-        #expect(RoutineSchedule.suggestedItems.map(\.title) == ["Tagesabschluss öffnen", "Handy weglegen", "Ins Bett"])
+    @Test func suggestedItems_followTheOriginalTemplate() {
+        let items = RoutineSchedule.suggestedItems
+        #expect(items.count == 5)
+        #expect(items.map(\.title) == ["Helle Lichter ausmachen", "Alle Aufgaben bis eine Stunde vorm Schlafen erledigen",
+                                       "Eine Stunde vorm Schlafen fertig machen", "Zähne putzen, umziehen, Haus/Wohnung aufräumen",
+                                       "Eine halbe Stunde vorm Schlafen ins Bett legen"])
+        #expect(items.map(\.offsetMinutes) == [nil, 90, 60, nil, 30])
+        let checklist = items.enumerated().map { ChecklistItem(title: $1.title, order: $0, offsetMinutes: $1.offsetMinutes) }
+        #expect(RoutineSchedule.reminderItems(checklist).count == 3)
+        #expect(items.allSatisfy { $0.title.count <= RoutineSchedule.titleLimit })
+    }
+
+    private func legacyList(_ titles: [String], offsets: [Int?] = [90, 60, 30]) -> [ChecklistItem] {
+        titles.enumerated().map { ChecklistItem(title: $1, order: $0, offsetMinutes: offsets[$0]) }
+    }
+
+    @Test func isLegacySuggestion_exactOldList_isTrue() {
+        #expect(RoutineSchedule.isLegacySuggestion(legacyList(["Tagesabschluss öffnen", "Handy weglegen", "Ins Bett"])))
+        #expect(RoutineSchedule.isLegacySuggestion(legacyList(["Open evening wrap-up", "Put the phone away", "Go to bed"])))
+        // The order of the property decides, not the position in the array.
+        #expect(RoutineSchedule.isLegacySuggestion(legacyList(["Tagesabschluss öffnen", "Handy weglegen", "Ins Bett"]).reversed()))
+    }
+
+    @Test func isLegacySuggestion_anyChange_isFalse() {
+        #expect(!RoutineSchedule.isLegacySuggestion([]))
+        #expect(!RoutineSchedule.isLegacySuggestion(legacyList(["Tagesabschluss öffnen", "Handy weglegen", "Schlafen"])))
+        #expect(!RoutineSchedule.isLegacySuggestion(legacyList(["Tagesabschluss öffnen", "Handy weglegen", "Ins Bett"], offsets: [90, 60, 45])))
+        #expect(!RoutineSchedule.isLegacySuggestion(legacyList(["Handy weglegen", "Tagesabschluss öffnen", "Ins Bett"])))
+        #expect(!RoutineSchedule.isLegacySuggestion(legacyList(["Tagesabschluss öffnen", "Handy weglegen", "Ins Bett", "Lesen"],
+                                                               offsets: [90, 60, 30, nil])))
+        // A list that mixes both languages is not the untouched suggestion.
+        #expect(!RoutineSchedule.isLegacySuggestion(legacyList(["Tagesabschluss öffnen", "Put the phone away", "Ins Bett"])))
+    }
+
+    @Test func weekPlanningNotification_offByDefault_returnsNil() {
+        #expect(RoutineSchedule.weekPlanningNotification(enabled: false, weekday: 1, minutes: 1080, locale: Locale(identifier: "de_DE")) == nil)
+    }
+
+    @Test func weekPlanningNotification_carriesWeekdayAndRoute() throws {
+        let german = try #require(RoutineSchedule.weekPlanningNotification(enabled: true, weekday: 1, minutes: 1080, locale: Locale(identifier: "de_DE")))
+        #expect(german.id == "tagwerk.routine.week" && german.id.hasPrefix(PlannedNotification.routineIdentifierPrefix))
+        #expect(german.hour == 18 && german.minute == 0 && german.weekday == 1)
+        #expect(german.route == .routineWeek)
+        #expect(german.title == "Wochenplanung" && german.body == "5 Minuten für die neue Woche?")
+        let english = try #require(RoutineSchedule.weekPlanningNotification(enabled: true, weekday: 7, minutes: 1500, locale: Locale(identifier: "en_US")))
+        #expect(english.weekday == 7 && english.hour == 1 && english.minute == 0)
+        #expect(english.title == "Weekly planning")
+        // Daily reminders carry no weekday.
+        #expect(RoutineSchedule.morningNotification(enabled: true, minutes: 450, locale: Locale(identifier: "de_DE"))?.weekday == nil)
+    }
+
+    @Test func quietHoursConflict_includesTheWeeklyReminder() {
+        let quiet = QuietHours(startMinutes: 1320, endMinutes: 420)
+        let conflict = RoutineSchedule.quietHoursConflict(quiet, items: [], bedtimeMinutes: 1380, eveningEnabled: false,
+                                                          morningEnabled: false, morningMinutes: 450, weekEnabled: true, weekMinutes: 1380)
+        #expect(conflict.week && !conflict.evening && !conflict.morning && !conflict.isEmpty)
+        #expect(RoutineSchedule.quietHoursConflict(quiet, items: [], bedtimeMinutes: 1380, eveningEnabled: false, morningEnabled: false,
+                                                   morningMinutes: 450, weekEnabled: true, weekMinutes: 1080).isEmpty)
     }
 
     @Test func gratitude_keepsAtMostThreeNonEmptyEntries() {
@@ -134,10 +189,10 @@ struct RoutineScheduleTests {
     @Test func morningNotification_textAndTime() throws {
         let notification = try #require(RoutineSchedule.morningNotification(enabled: true, minutes: 450, locale: Locale(identifier: "de_DE")))
         #expect(notification.hour == 7 && notification.minute == 30)
-        #expect(notification.title == "Tagesstart" && notification.body == "Fokus für heute wählen?")
+        #expect(notification.title == "Tagesstart" && notification.body == "Ein ruhiger Start in den Tag?")
         #expect(notification.id == "tagwerk.routine.morning" && notification.route == .routineStart)
         let english = try #require(RoutineSchedule.morningNotification(enabled: true, minutes: 450, locale: Locale(identifier: "en_US")))
-        #expect(english.title == "Morning start" && english.body == "Choose a focus for today?")
+        #expect(english.title == "Morning start" && english.body == "A calm start to your day?")
     }
 
     @Test func morningNotification_offByDefault() {

@@ -108,6 +108,8 @@ struct RootView: View {
             switch sheet {
             case .evening(let day): EveningSheet(model: environment.routines, day: day, notes: environment.notes, isSignedIn: { environment.ai.isSignedIn })
             case .start(let day): MorningSheet(model: environment.routines, day: day, notes: environment.notes, isSignedIn: { environment.ai.isSignedIn })
+            case .leftover: LeftoverSheet(planning: environment.planning, taskList: environment.taskList, onFinished: { _ in })
+            case .week: WeekPlanningSheet(model: environment.makeWeekPlanningModel())
             }
         }
         .sheet(item: $recurringEdit) { edit in
@@ -168,6 +170,9 @@ struct RootView: View {
         case .routineEvening:
             showDay(environment.planning.today)
             presentRoutine(afterSheetClosed: hadOpenSheet) { environment.routines.openEvening() }
+        case .routineWeek:
+            showDay(environment.planning.today)
+            presentRoutine(afterSheetClosed: hadOpenSheet) { environment.routines.openWeek() }
         }
     }
 
