@@ -50,4 +50,24 @@ struct NoteTextTests {
         // The dream log is private (never sent) but part of the default backup.
         #expect(NoteKind.dream.isPrivate && !NoteKind.dream.allowsSuggestions && NoteKind.dream.isInDefaultBackup)
     }
+
+    @Test func title_ofMarkdownHeading_isPlain() {
+        #expect(NoteText.title("# Einkauf\n- Milch") == "Einkauf")
+        #expect(NoteText.preview("# Einkauf\n- Milch\n**Brot**") == "Milch\nBrot")
+        // A first line that is only an image is skipped.
+        #expect(NoteText.title("![Bild](attachment:3F2504E0-4F89-41D3-9A0C-0305E82C3301)\nUrlaub") == "Urlaub")
+    }
+
+    @Test func matches_findsWordInsideBold() {
+        #expect(NoteText.matches("Das ist **wichtig** heute", query: "wichtig"))
+        #expect(NoteText.matches("[Rechnung](https://example.com)", query: "rechnung"))
+        #expect(!NoteText.matches("[Rechnung](https://example.com)", query: "example"))
+    }
+
+    @Test func matches_doesNotFindAttachmentUUID() {
+        let text = "Foto\n![Bild](attachment:3F2504E0-4F89-41D3-9A0C-0305E82C3301)"
+        #expect(!NoteText.matches(text, query: "3F2504E0"))
+        #expect(!NoteText.matches(text, query: "attachment"))
+        #expect(NoteText.matches(text, query: "foto"))
+    }
 }

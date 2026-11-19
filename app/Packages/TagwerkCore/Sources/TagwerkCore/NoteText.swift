@@ -54,32 +54,35 @@ public enum NoteDayKey {
     }
 }
 
-/// A note has no title of its own: the title is its first line, the rest is the preview.
+/// A note has no title of its own: the title is its first line, the rest is the preview. Titles, previews and the
+/// search work on the plain text of the note (`MarkdownText.plainText`), so "# Einkauf" is titled "Einkauf" and a word
+/// inside bold text is found.
 public enum NoteText {
     public static let maxTitleLength = 60
 
-    /// The first non-empty line, trimmed and cut to `maxTitleLength` characters; empty for a note without text.
+    /// The first non-empty line of the plain text, trimmed and cut to `maxTitleLength` characters; empty for a note
+    /// without text.
     public static func title(_ text: String) -> String {
         guard let line = lines(text).first(where: { !$0.isEmpty }) else { return "" }
         return String(line.prefix(maxTitleLength))
     }
 
-    /// The non-empty lines after the title line.
+    /// The non-empty lines of the plain text after the title line.
     public static func preview(_ text: String) -> String {
         lines(text).filter { !$0.isEmpty }.dropFirst().joined(separator: "\n")
     }
 
-    /// Whether every word of `query` occurs in `text`, ignoring case, accents and umlaut spelling like the global
-    /// search does. An empty query matches everything.
+    /// Whether every word of `query` occurs in the plain text of `text`, ignoring case, accents and umlaut spelling like
+    /// the global search does. An empty query matches everything. Markup and attachment references are not searched.
     public static func matches(_ text: String, query: String) -> Bool {
         let words = SearchText.fold(query).split(whereSeparator: \.isWhitespace)
         guard !words.isEmpty else { return true }
-        let folded = SearchText.fold(text)
+        let folded = SearchText.fold(MarkdownText.plainText(text))
         return words.allSatisfy { folded.contains($0) }
     }
 
     private static func lines(_ text: String) -> [String] {
-        text.split(omittingEmptySubsequences: false, whereSeparator: \.isNewline)
+        MarkdownText.plainText(text).split(omittingEmptySubsequences: false, whereSeparator: \.isNewline)
             .map { $0.trimmingCharacters(in: .whitespaces) }
     }
 }
