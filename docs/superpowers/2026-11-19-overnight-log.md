@@ -341,3 +341,57 @@ Rot-Lauf: Bei 1, 6 und 7 lief der Test vor der Korrektur nachweislich rot. Bei 2
 `app/test-all.sh` nach den Korrekturen, alle Stufen grün einschließlich „string catalogs“: AIKit 98, GitHubKit 139, HealthBridge 11, RemindersKit 87, TagwerkCore 636, App 1130 Tests bestanden.
 
 Letzte Zeile: `ALL TESTS PASSED`
+
+## P3 Fokus und Aufwand (#161, #162)
+
+Plan: `plans/2026-11-19-p3-focus-effort.md` · Spike: `spikes/2026-11-19-family-controls.md` · Branch `feat/p3-focus-effort`.
+Umgesetzt sind die Tasks 0–11 und 13. Task 12 (App-Sperre) entfällt, weil der Spike negativ ausfiel. Ungeprüft am Gerät (siehe c).
+
+Commits (in Reihenfolge): `1099676` Plan · `0941342` Spike · `ebb5a5c` Phasenregeln · `a7c7ea7` Belohnungsstufen · `4c20e81` Aufwandsregeln · `b93fcf5` Aufwandsstatistik · `0f28458` Speicher · `382af85` Timer, Live Activity und Oberfläche (Tasks 6–8) · `1a1ec4b` Aufwandsmessung · `b85fdb7` Wochenrückblick und KI-Faktor (Tasks 10–11) · `bfc5f61` und `fec397a` Korrekturen aus der Prüfung (Taste der Live Activity nach Hintergrundstart, Link beim Kaltstart).
+
+### Spike (Task 0): negativ
+
+`com.apple.developer.family-controls` ließ sich mit dem Personal Team nicht signieren (Profil enthält die Fähigkeit nicht). In der Kommandozeilen-Sitzung fehlte zusätzlich das Xcode-Konto („No Accounts“), das Profil ließ sich also nicht neu anfordern; das ist im Spike-Dokument vermerkt. Nach der Vorgabe des Plans entfällt Task 12: keine App-Sperre, kein Entitlement, kein Eintrag in den Einstellungen. Im PR-Text steht: „App-Sperre nicht gebaut: Family Controls mit Personal Team nicht signierbar.“
+
+### (a) Entscheidungen
+
+1. **Blockende wird aufgerundet, nicht abgerundet** (Vorgabe der Hauptsitzung, gegen den Plan): Abhaken um 14:21 kürzt den Block auf 14:25, um 14:20 auf 14:20. Gerundet wird auf die Uhr, nicht relativ zum Blockbeginn. Der Ist-Aufwand bleibt unrundet (21 min). Ein Block wird nie verlängert; liegt das aufgerundete Ende am oder nach dem alten Ende, bleibt er. Unter 5 Minuten seit Blockbeginn wird nicht gekürzt.
+2. **Zukünftige Blöcke einer erledigten Aufgabe bleiben unberührt** (Vorgabe der Hauptsitzung). Ihre Löschung ist weiter offen.
+3. **Eigenes Protokoll für die Mitteilung statt `NotificationCenterClient`.** Optionen: das Protokoll um eine Methode erweitern (Fake und Konflikte mit P4) oder ein eigenes kleines Protokoll. Gewählt: `FocusNotificationCenter` mit eigenem Fake. Der Bezeichner `focus.phaseEnd` liegt außerhalb des Präfixes `tagwerk.`, den `NotificationScheduler` und `RoutineNotificationScheduler` bereinigen. Risiko: zwei Wege zum Mitteilungszentrum.
+4. **Nur eine Mitteilung (Ende der laufenden Phase), wie im Plan.** Folge: Läuft ein Pomodoro bei geschlossener App, kommt die Mitteilung nur zum ersten Phasenende; die weiteren Phasen zeigt die Live Activity. Der Gerätetest 2 („Mitteilung zu jedem Phasenende“) kann so nicht bestehen. Alternative: bis zu 3 vorplanen (Budget: 50 + 6 + 1 = 57 von 64, Platz für 7). Nicht gebaut, weil der Plan „höchstens eine“ vorgibt.
+5. **Phasenwechsel ergeben sich aus Zeitstempeln, auch ohne Antippen.** Ein 25/5-Pomodoro, um 10:00 gestartet und um 10:26 geöffnet, zeigt die Pause mit 4 Minuten Rest; um 10:31 läuft Runde 2 mit 24 Minuten. Der Plan nennt 10:31 mit „Pause noch 4 min“, das passt nicht zu 25 + 5 Minuten; der Test nutzt 10:26 und 10:31.
+6. **„Weiter“ der Live Activity:** In einer Pause überspringt es die Pause, nach dem Ende der Sitzung beendet es sie als gewachsen und startet eine neue für dieselbe Aufgabe. Während der Arbeitsphase gibt es keinen „Weiter“-Knopf.
+7. **„Verschieben“ verschiebt zukünftige Blöcke mit** (`assign(… moveBlocks: true)`), statt die Rückfrage der Planung zu öffnen oder die Blöcke zu löschen. Grund: Die Rückfrage wäre über der Live Activity nicht sichtbar, Löschen wäre zerstörend.
+8. **Sitzung vor Aufgabe beenden.** `finish(.complete)` speichert die Sitzung (Ende, Fokus-Zeit), bevor die Aufgabe abgehakt wird; sonst sähe die Aufwandsmessung die Fokus-Zeit nicht. Wird die Aufgabe anderswo abgehakt, endet ihre laufende Sitzung als gewachsen (`didComplete(taskKey:)`).
+9. **Veraltete Sitzung (über 12 Stunden):** Lief sie durch, zählt sie als gewachsen, sonst als abgebrochen (unter 1 Minute Fokus: verworfen). Ältere offene Reste neben der neuesten werden abgebrochen.
+10. **Eine Sitzung unter 1 Minute Fokus hinterlässt nichts** (kein Stück), auch wenn sie „Erledigt“ endet.
+11. **Rückgängig stellt das Blockende nur her, wenn niemand den Block danach änderte** (gespeichert: altes und neues Ende des Blocks, Prüfung auf das neue Ende; zusätzlich die Versionsprüfung des Kalenders). Die Stichprobe wird in jedem Fall gelöscht, aber nur für das Abhaken der letzten 24 Stunden.
+12. **Wiederkehrende Aufgaben:** Blöcke zählen nur, wenn sie nach dem vorigen Abhaken begannen. Ein Block, der beim vorigen Abhaken lief, wird so nicht ein zweites Mal gezählt.
+13. **Fokus-Sitzungen und Messwerte sind nicht in der Datensicherung** (`BackupCoverage` mit Begründung). Offen: Soll die Sammlung eine Wiederherstellung überleben? Dann bräuchte es zwei Backup-Typen.
+14. **Branch `feat/p3-focus-effort`** (vorgegeben) statt `feat/focus-timer-effort` aus dem Plan.
+15. **Neue Wörter:** „Kurze Pause“ (Phase) und „Pausieren“ (Knopf), damit „Pause“ im Englischen nicht „Pause“ für die Pausenphase heißt; „%lld min Fokus“ ohne Plural; „Dauern im Schnitt …“ als Satzbaustein mit Prozentwert aus dem Format des Gebietsschemas.
+16. **Live Activity öffnet den Fokus mit `tagwerk://focus`.** Das ist kein `AppRoute`, sondern wird in `RootView.onOpenURL` vor dem Router abgefangen; ein Link ohne Sitzung wird vorgemerkt und öffnet das Blatt, sobald `restore()` eine Sitzung zurückgebracht hat.
+
+### (b) Abweichungen vom Plan
+
+- **Commits zusammengelegt:** Tasks 6, 7 und 8 sind ein Commit, ebenso 10 und 11 (die Änderungen an `AppEnvironment`, den Katalogen und `en.json` liegen quer zu den Tasks). Die Zwischenstände `0f28458` und `1a1ec4b` wurden nicht einzeln gebaut; `app/test-all.sh` lief auf dem vollständigen Baum vor dem Aufteilen, danach auf `fec397a`.
+- **Zusätzliche Eingriffe außerhalb der Konflikttabelle:** `Editor/TaskEditorView.swift` (Eintrag „Fokus starten“ in der Werkzeugleiste, statt in `AppTaskEditorSheet`, weil der Editor seine eigene Navigation hat; nur ohne offene Änderungen), `App/TagwerkApp.swift` (`restore()` beim Start und beim Aktivwerden), `Settings/AISettingsView.swift` (ein Satz im Datenschutzhinweis; `ChatGPTSignInModel.privacyNotice` blieb unverändert, damit `LocalizedTests` und die Kataloge stabil bleiben), `AI/AIPlanner+Revision.swift` (Anweisung mit dem neuen Hinweis), `Backup/BackupCoverage.swift`, `TagwerkTests/Fakes/FakeCalendarStore.swift` (Hook `beforeUpdate`).
+- **Mehr als eine Zeile in Dateien der Tabelle:** `RootView` (Blatt, `onOpenURL`, Schließen-Kette in beide Richtungen), `AppEnvironment` (Eigenschaften `focusStore`, `focus`, `effort`, Parameter `focusNotificationCenter` im `init`, Zeile für den Planer, die Hooks), `TaskListModel` (Hook `onCompletedItem`; `didSave` und `applyReturning` sind umgebaut, nicht nur ergänzt, damit die Messung vor `onCompletionChanged` läuft).
+- **`FocusShielding` und `FocusShieldPolicy` entfallen** mit Task 12.
+- **Sichtprüfung im Simulator (Task 8)** nicht ausgeführt (die Geräte- und Simulatorwerkzeuge sind für diese Instanz gesperrt); sie steht unter den offenen Gerätetests.
+- **`FocusTimerModel` bekommt `now` öffentlich und Hooks `completeTask`/`postponeTask`** statt der App-Modelle direkt, damit die Tests ohne `TaskListModel` laufen.
+- **Backup:** siehe (a) 13.
+
+### (c) Offene Gerätetests
+
+Die Tests 1–10 aus dem Plan sind alle offen. Zusätzlich:
+
+- Start aus einem Blockblatt und aus dem Aufgabeneditor: Das Blatt schließt, 400 ms später öffnet sich das Fokus-Blatt; prüfen, dass es zuverlässig erscheint.
+- `.secondaryAction` im Aufgabeneditor: Sitz und Sichtbarkeit des Eintrags „Fokus starten“.
+- Live Activity: Tippen auf die Karte öffnet das Fokus-Blatt, auch bei kaltem Start; „Erledigt“ aus der Sperrbildschirm-Karte nach einem Hintergrundstart schließt die Aufgabe wirklich.
+- Gerätetest 2 (Mitteilung zu jedem Phasenende) erwartet mehr als die eine geplante Mitteilung; siehe (a) 4.
+- Sichtprüfung des Fokus-Blatts, der Sammlung und des Wochenrückblicks in hell, dunkel und bei großer Schrift (AX3).
+
+### (d) Tests
+
+`app/test-all.sh` auf `fec397a`, alle Stufen grün einschließlich „string catalogs“: AIKit 98, GitHubKit 180, HealthBridge 11, RemindersKit 87, TagwerkCore 798, App 1327 Tests bestanden. Letzte Zeile: `ALL TESTS PASSED`.
