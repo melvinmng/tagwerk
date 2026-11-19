@@ -1244,5 +1244,25 @@
   "Umbenennen": "Rename",
   "für alles ohne Kategorie": "for everything without a category",
   "„%@“ löschen?": "Delete “%@”?",
-  "„Sonstiges“ ist fest vergeben und kann nicht als Name dienen.": "“Other” is reserved and cannot be used as a name."
+  "„Sonstiges“ ist fest vergeben und kann nicht als Name dienen.": "“Other” is reserved and cannot be used as a name.",
+  "und %lld weitere": {
+    "one": "and %lld more",
+    "other": "and %lld more"
+  },
+  "%lld offen": "%lld open",
+  "%lld offene Erinnerungen.": {
+    "one": "%lld open reminder.",
+    "other": "%lld open reminders."
+  },
+  "Andere Liste …": "Another List …",
+  "Die gewählte Liste erscheint als Einkaufsliste. Ihre Einträge stehen nicht mehr unter „Aufgaben“, werden nicht eingeplant, zählen nicht im Wochenrückblick und lösen keine Tagwerk-Mitteilungen aus. In der App „Erinnerungen“ ändert sich nichts.": "The chosen list appears as your shopping list. Its entries no longer show under “Tasks”, are not planned, do not count in the weekly review and trigger no Tagwerk notifications. Nothing changes in the Reminders app.",
+  "Einkaufsliste einrichten": "Set up shopping list",
+  "Liste „%@“ als Einkaufsliste verwenden?": "Use the list “%@” as your shopping list?",
+  "Nichts offen": "Nothing open",
+  "Noch keine Notizen": "No notes yet",
+  "Notizen": "Notes",
+  "Sendet auf dein Tippen die Namen der offenen Artikel und deiner Kategorien an ChatGPT. Fragst du den Assistenten nach der Einkaufsliste, gehen die Artikelnamen ebenfalls an ChatGPT.": "On your tap, sends the names of the open items and of your categories to ChatGPT. If you ask the assistant about the shopping list, the item names go to ChatGPT as well.",
+  "Sie erscheint dann hier als eigene Liste und nicht mehr unter den Aufgaben.": "It then appears here as its own list and no longer among the tasks.",
+  "Tagwerk hat keinen Zugriff auf Erinnerungen.": "Tagwerk has no access to Reminders.",
+  "Verwenden": "Use"
 }

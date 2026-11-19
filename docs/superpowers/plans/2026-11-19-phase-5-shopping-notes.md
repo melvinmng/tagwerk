@@ -874,7 +874,7 @@ enum ReminderListSummary {
   - `SourceSelectionView` bekommt `var lockedIDs: [String: LocalizedStringKey] = [:]` (Kennung → Vermerk); gesperrte Zeilen sind grau, nicht wählbar, ohne Haken, mit dem Vermerk rechts.
   - `struct ShoppingSettingsView: View` (ohne eigenen `NavigationStack`).
 
-- [ ] **Schritt 1: Tests schreiben**
+- [x] **Schritt 1: Tests schreiben**
 
 ```swift
 @Test func entry_hiddenWithoutFullAccess()                                   // access .denied → .hidden
@@ -894,15 +894,15 @@ enum ReminderListSummary {
 }
 ```
 
-- [ ] **Schritt 2:** Suite ausführen. Erwartet: Übersetzungsfehler.
-- [ ] **Schritt 3: Logik umsetzen**, Suite grün.
-- [ ] **Schritt 4: Oberfläche bauen.**
+- [x] **Schritt 2:** Suite ausführen. Erwartet: Übersetzungsfehler.
+- [x] **Schritt 3: Logik umsetzen**, Suite grün.
+- [x] **Schritt 4: Oberfläche bauen.**
   - `TaskListView`: `NavigationStack(path: Bindable(environment).tasksPath)`; `.navigationDestination(for: TasksDestination.self)` (`.shopping` → `ShoppingListView`, `.shoppingSettings` → `ShoppingSettingsView`, `.shoppingCategories` → `ShoppingCategoriesView`, `.notes`/`.note` → Platzhalter bis Task 14). `TasksEntrySection` als erste `Section` nach Filter und `SourceProblemRow`s, vor `model.sections`; ausgeblendet bei `isSelecting`; unabhängig von `model.filter`; Zeilen als `Button` ohne `tag`, damit sie nicht auswählbar sind. Die Überlagerung „Keine Aufgaben“ (`:61–71`) würde die Karten verdecken, weil der Abschnitt jetzt immer Zeilen hat: Der leere Zustand und die Ladeanzeige werden deshalb zu einer Listenzeile unter `TasksEntrySection` (gleiche Texte und Symbole).
   - Vorschlagskarte EQ1: Texte nach Spec §5.3; Zahl offener Erinnerungen über `reminderStore.openReminders(in: [listID]).count` (eigene Abfrage); „Verwenden“ → `setShoppingList(listID)`; „Andere Liste …“ → `tasksPath.append(.shoppingSettings)`; „Nicht jetzt“ → `shoppingSuggestionDismissed = true`.
   - `ShoppingSettingsView` nach Spec §5.7: Einfachauswahl der beschreibbaren Listen (Farbpunkt, Titel) plus „Keine“ → `setShoppingList`; Fußtext wörtlich; Abschnitt „Kategorien“ mit Anzahl; Abschnitt „ChatGPT“ mit Schalter `shoppingSortConsent` und Fußtext wörtlich.
   - `SettingsView`, Abschnitt „Quellen“: neue Zeile „Einkaufsliste“ (Wert Listentitel oder „Keine“) unter „Erinnerungslisten“; „Erinnerungslisten“ mit `lockedIDs: [shoppingListID: "Einkaufsliste"]` und `ReminderListSummary.text`.
-- [ ] **Schritt 5:** Sichtprüfung im Simulator: Vorschlagskarte, „Verwenden“ entfernt die Artikel sofort aus „Aufgaben“, Auswahlmodus blendet den Abschnitt aus, gesperrte Zeile in „Erinnerungslisten“. `app/test-all.sh` grün.
-- [ ] **Schritt 6:** Commit: `git add app/Tagwerk app/TagwerkTests && git commit -m "feat: add shopping and notes entry rows and shopping settings"`
+- [ ] **Schritt 5:** (Sichtprüfung offen; `app/test-all.sh` grün) Sichtprüfung im Simulator: Vorschlagskarte, „Verwenden“ entfernt die Artikel sofort aus „Aufgaben“, Auswahlmodus blendet den Abschnitt aus, gesperrte Zeile in „Erinnerungslisten“. `app/test-all.sh` grün.
+- [x] **Schritt 6:** Commit: `git add app/Tagwerk app/TagwerkTests && git commit -m "feat: add shopping and notes entry rows and shopping settings"`
 
 ---
 

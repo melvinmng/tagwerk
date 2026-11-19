@@ -7,18 +7,32 @@ struct SourceSelectionView: View {
     let items: [ListInfo]
     let defaultSelection: Set<String>
     @Binding var selection: [String]?
+    /// Entries that cannot be chosen here, with the note shown instead of the checkmark
+    /// (the shopping list among the reminder lists).
+    var lockedIDs: [String: LocalizedStringKey] = [:]
 
     var body: some View {
         List(items) { item in
-            Button {
-                toggle(item.id)
-            } label: {
+            if let note = lockedIDs[item.id] {
                 HStack {
-                    Circle().fill(Color(hex: item.colorHex) ?? .accentColor).frame(width: 10, height: 10)
-                    Text(item.title).foregroundStyle(.primary)
+                    Circle().fill(.secondary.opacity(0.5)).frame(width: 10, height: 10)
+                    Text(item.title)
                     Spacer()
-                    if current.contains(item.id) {
-                        Image(systemName: "checkmark").foregroundStyle(.tint)
+                    Text(note).font(.subheadline)
+                }
+                .foregroundStyle(.secondary)
+                .accessibilityElement(children: .combine)
+            } else {
+                Button {
+                    toggle(item.id)
+                } label: {
+                    HStack {
+                        Circle().fill(Color(hex: item.colorHex) ?? .accentColor).frame(width: 10, height: 10)
+                        Text(item.title).foregroundStyle(.primary)
+                        Spacer()
+                        if current.contains(item.id) {
+                            Image(systemName: "checkmark").foregroundStyle(.tint)
+                        }
                     }
                 }
             }
