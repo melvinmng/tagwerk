@@ -34,7 +34,7 @@ struct PrivateNotesTests {
     @Test func widgetSnapshot_hasNoFieldForNoteText() {
         let entry = SnapshotEntry(id: "e", title: "Termin", start: .now, end: .now, kind: .event, colorHex: nil, isAllDay: false)
         let day = SnapshotDay(day: PlanDay(year: 2026, month: 11, day: 19), entries: [entry], deadlineCount: 0, intake: nil)
-        let labels = (Mirror(reflecting: entry).children + Mirror(reflecting: day).children).compactMap(\.label)
+        let labels = (Array(Mirror(reflecting: entry).children) + Array(Mirror(reflecting: day).children)).compactMap(\.label)
         #expect(!labels.contains { $0.localizedCaseInsensitiveContains("note") || $0.localizedCaseInsensitiveContains("journal") })
     }
 
