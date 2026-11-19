@@ -243,7 +243,7 @@ struct NotesListView: View {
                         if attachmentInfo.fileCount > 0 {
                             Label("\(attachmentInfo.fileCount)", systemImage: "paperclip")
                                 .font(.footnote).foregroundStyle(.secondary).labelStyle(.titleAndIcon)
-                                .accessibilityLabel("\(attachmentInfo.fileCount) Dateien angehängt")
+                                .accessibilityLabel("Dateien angehängt: \(attachmentInfo.fileCount)")
                         }
                         if note.isPinned {
                             Image(systemName: "pin.fill").font(.footnote).foregroundStyle(.secondary)

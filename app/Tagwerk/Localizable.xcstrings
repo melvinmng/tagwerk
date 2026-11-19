@@ -844,6 +844,26 @@
         }
       }
     },
+    "%lld Artikel aus dem Rezept hinzugefügt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld items from the recipe added."
+          }
+        }
+      }
+    },
+    "%lld Artikel hinzufügen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add %lld items"
+          }
+        }
+      }
+    },
     "%lld Artikel hinzugefügt:": {
       "localizations": {
         "de": {
@@ -1534,6 +1554,7 @@
       }
     },
     "%lld erledigte Artikel endgültig löschen?": {
+      "extractionState": "stale",
       "localizations": {
         "de": {
           "variations": {
@@ -1569,6 +1590,16 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "%lld erledigte Artikel löschen?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete %lld completed items?"
           }
         }
       }
@@ -2150,6 +2181,16 @@
         }
       }
     },
+    "**Gesendet wird:** der Rezepttext oder das Foto und die Kategorienamen. Bei einem Link nur der gelesene Text der Seite, nicht die Adresse.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "**What is sent:** the recipe text or the photo and the category names. For a link, only the text read from the page, not the address."
+          }
+        }
+      }
+    },
     "**Nicht gesendet werden** Dankbarkeit, Gewohnheiten, Wochenreflexion, Daten aus Health und frühere Notizen.": {
       "localizations": {
         "en": {
@@ -2180,6 +2221,16 @@
         }
       }
     },
+    "**Nicht gesendet werden:** deine Einkaufsliste, Mengen auf der Liste, Aufgaben, Termine, Notizen, Daten aus Health.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "**What is not sent:** your shopping list, quantities on the list, tasks, events, notes, Health data."
+          }
+        }
+      }
+    },
     "**Nur auf dein Tippen:** Ohne „Schätzen“ verlässt nichts das iPhone.": {
       "localizations": {
         "en": {
@@ -2206,6 +2257,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "**Only when you tap:** without “Get suggestions”, no note leaves the iPhone."
+          }
+        }
+      }
+    },
+    "**Nur auf dein Tippen:** Ohne „Zutaten holen“ verlässt nichts das iPhone. Auch ein Link wird erst dann geladen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "**Only when you tap:** without “Get ingredients”, nothing leaves the iPhone. A link is loaded only then, too."
           }
         }
       }
@@ -2845,6 +2906,16 @@
         }
       }
     },
+    "Alle erledigten löschen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete all completed"
+          }
+        }
+      }
+    },
     "Alle folgenden": {
       "localizations": {
         "en": {
@@ -3187,6 +3258,36 @@
           "stringUnit": {
             "state": "translated",
             "value": "Unpin"
+          }
+        }
+      }
+    },
+    "Anhänge in Notizen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Attachments in notes"
+          }
+        }
+      }
+    },
+    "Anhänge teilen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Share attachments"
+          }
+        }
+      }
+    },
+    "Anhängen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Attach"
           }
         }
       }
@@ -4187,6 +4288,16 @@
         }
       }
     },
+    "Bild": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Image"
+          }
+        }
+      }
+    },
     "Bis": {
       "localizations": {
         "en": {
@@ -4309,6 +4420,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "ChatGPT is replying …"
+          }
+        }
+      }
+    },
+    "ChatGPT liest das Rezept …": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ChatGPT is reading the recipe …"
           }
         }
       }
@@ -4579,6 +4700,16 @@
         }
       }
     },
+    "Das Rezept ließ sich nicht lesen. Versuch es noch einmal.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The recipe could not be read. Try again."
+          }
+        }
+      }
+    },
     "Das Sortieren ist fehlgeschlagen. Versuch es noch einmal.": {
       "localizations": {
         "en": {
@@ -4639,12 +4770,42 @@
         }
       }
     },
+    "Das ist kein Bild, das sich anhängen lässt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This is not an image that can be attached."
+          }
+        }
+      }
+    },
     "Das ist keine Tagwerk-Sicherung.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "This is not a Tagwerk backup."
+          }
+        }
+      }
+    },
+    "Datei": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "File"
+          }
+        }
+      }
+    },
+    "Dateien angehängt: %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Files attached: %lld"
           }
         }
       }
@@ -5302,6 +5463,26 @@
         }
       }
     },
+    "Die Datei ist größer als %lld MB und lässt sich nicht anhängen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The file is larger than %lld MB and cannot be attached."
+          }
+        }
+      }
+    },
+    "Die Datei ließ sich nicht lesen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The file could not be read."
+          }
+        }
+      }
+    },
     "Die Erinnerungen-App ist nicht erreichbar.": {
       "localizations": {
         "en": {
@@ -5332,6 +5513,16 @@
         }
       }
     },
+    "Die Kategorien kommen von ChatGPT und lassen sich später in der Liste ändern.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The categories come from ChatGPT and can be changed later in the list."
+          }
+        }
+      }
+    },
     "Die Knöpfe im Tab erfassen sofort. Getränke mit Kalorien trägst du unter „Essen“ ein.": {
       "localizations": {
         "en": {
@@ -5358,6 +5549,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "The list is empty. Add items below."
+          }
+        }
+      }
+    },
+    "Die Liste ist schon leer.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The list is already empty."
           }
         }
       }
@@ -5412,7 +5613,28 @@
         }
       }
     },
+    "Die Seite ließ sich nicht laden. Prüfe den Link oder füge den Rezepttext ein.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The page could not be loaded. Check the link or paste the recipe text."
+          }
+        }
+      }
+    },
+    "Die Sicherung ist eine einzelne Datei mit allen eigenen Daten, auch den Bildern und Dateien in Notizen. Sie ist nicht verschlüsselt und liegt dort, wo du sie speicherst, zum Beispiel in iCloud Drive. Anmeldedaten für GitHub und ChatGPT sind nie darin.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The backup is a single file with all your own data, including the pictures and files in notes. It is not encrypted and lies wherever you save it, for example in iCloud Drive. Sign-in data for GitHub and ChatGPT is never in it."
+          }
+        }
+      }
+    },
     "Die Sicherung ist eine einzelne Datei mit allen eigenen Daten. Sie ist nicht verschlüsselt und liegt dort, wo du sie speicherst, zum Beispiel in iCloud Drive. Anmeldedaten für GitHub und ChatGPT sind nie darin.": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -6252,6 +6474,16 @@
         }
       }
     },
+    "Einverstanden": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Agree"
+          }
+        }
+      }
+    },
     "Einverstanden und Vorschläge holen": {
       "localizations": {
         "en": {
@@ -6678,6 +6910,7 @@
       }
     },
     "Erledigte entfernen": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -6763,6 +6996,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "There are no items to sort."
+          }
+        }
+      }
+    },
+    "Es gibt keine erledigten Artikel.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "There are no completed items."
           }
         }
       }
@@ -7043,6 +7286,16 @@
         }
       }
     },
+    "Foto": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Photo"
+          }
+        }
+      }
+    },
     "Foto aufnehmen": {
       "localizations": {
         "en": {
@@ -7059,6 +7312,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Choose photo"
+          }
+        }
+      }
+    },
+    "Foto des Rezepts": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Photo of the recipe"
           }
         }
       }
@@ -7238,6 +7501,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Add milk to the shopping list in Tagwerk"
+          }
+        }
+      }
+    },
+    "Füge die Zutatenliste oder das ganze Rezept ein. Es werden höchstens %lld Zeichen gelesen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paste the ingredient list or the whole recipe. At most %lld characters are read."
           }
         }
       }
@@ -7458,6 +7731,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Total"
+          }
+        }
+      }
+    },
+    "Gesamte Liste leeren? %lld Artikel werden gelöscht.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clear the whole list? %lld items will be deleted."
           }
         }
       }
@@ -8555,6 +8838,16 @@
         }
       }
     },
+    "In dem Rezept wurden keine Zutaten gefunden.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No ingredients were found in the recipe."
+          }
+        }
+      }
+    },
     "In den nächsten freien Block": {
       "localizations": {
         "en": {
@@ -9118,6 +9411,16 @@
         }
       }
     },
+    "Keine Verbindung. Das Lesen eines Rezepts braucht Internet.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No connection. Reading a recipe needs the internet."
+          }
+        }
+      }
+    },
     "Keine Verbindung. Das Sortieren braucht Internet.": {
       "localizations": {
         "en": {
@@ -9523,12 +9826,32 @@
         }
       }
     },
+    "Link": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Link"
+          }
+        }
+      }
+    },
     "Link kopieren": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Copy link"
+          }
+        }
+      }
+    },
+    "Link zum Rezept": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Link to the recipe"
           }
         }
       }
@@ -9569,6 +9892,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Collapse list"
+          }
+        }
+      }
+    },
+    "Liste leeren": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clear list"
           }
         }
       }
@@ -11954,6 +12287,16 @@
         }
       }
     },
+    "Quelle": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Source"
+          }
+        }
+      }
+    },
     "Quelle schon vergeben: Du hakst sie von Hand ab.": {
       "localizations": {
         "en": {
@@ -12060,6 +12403,46 @@
           "stringUnit": {
             "state": "translated",
             "value": "%@ left"
+          }
+        }
+      }
+    },
+    "Rezept hinzufügen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add recipe"
+          }
+        }
+      }
+    },
+    "Rezept hinzufügen …": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add recipe …"
+          }
+        }
+      }
+    },
+    "Rezepte mit ChatGPT lesen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Read recipes with ChatGPT"
+          }
+        }
+      }
+    },
+    "Rezepttext": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recipe text"
           }
         }
       }
@@ -12621,6 +13004,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "It then appears here as its own list and no longer among the tasks."
+          }
+        }
+      }
+    },
+    "Sie verschwinden auch aus Apple Erinnerungen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "They also disappear from Apple Reminders."
           }
         }
       }
@@ -13345,6 +13738,16 @@
         }
       }
     },
+    "Tagwerk lädt die Seite erst, wenn du „Zutaten holen“ tippst, und sendet nur den gelesenen Text, nicht die Adresse.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tagwerk loads the page only when you tap “Get ingredients”, and sends only the text it read, not the address."
+          }
+        }
+      }
+    },
     "Tagwerk misst den Aufwand beim Abhaken aus Fokus-Timer und Zeitblöcken. Die Messwerte bleiben auf dem iPhone. Ist der Schalter an, geht bei der KI-Planung je Aufgabe nur eine erwartete Dauer in Minuten mit, keine Labels und keine Statistik.": {
       "localizations": {
         "en": {
@@ -13681,6 +14084,16 @@
         }
       }
     },
+    "Text": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Text"
+          }
+        }
+      }
+    },
     "Tippen": {
       "localizations": {
         "en": {
@@ -13887,6 +14300,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ultra"
+          }
+        }
+      }
+    },
+    "Um ein Rezept zu lesen, sendet Tagwerk den Rezepttext oder das Foto und die Namen deiner Kategorien an ChatGPT (OpenAI), über das Konto, mit dem du angemeldet bist.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "To read a recipe, Tagwerk sends the recipe text or the photo and the names of your categories to ChatGPT (OpenAI), through the account you are signed in with."
           }
         }
       }
@@ -15545,6 +15968,26 @@
         }
       }
     },
+    "Zum Beispiel die Seite aus einem Kochbuch. Das Foto wird verkleinert und nicht gespeichert.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "For example a page from a cookbook. The photo is scaled down and not saved."
+          }
+        }
+      }
+    },
+    "Zum Lesen von Rezepten ist deine Einwilligung nötig.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your consent is needed to read recipes."
+          }
+        }
+      }
+    },
     "Zum Löschen nach links wischen": {
       "localizations": {
         "en": {
@@ -15701,6 +16144,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "In the iOS settings under Focus, you can also add a Focus filter for Tagwerk and choose “Pause notifications”. While that Focus is active, Tagwerk holds notifications back until the end of quiet hours, or for 8 hours at most without quiet hours. After the Focus, notifications that came due in the meantime arrive."
+          }
+        }
+      }
+    },
+    "Zutaten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ingredients"
+          }
+        }
+      }
+    },
+    "Zutaten holen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Get ingredients"
           }
         }
       }
@@ -16161,6 +16624,16 @@
         }
       }
     },
+    "https://…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "https://…"
+          }
+        }
+      }
+    },
     "iOS meldet diese Erinnerungen selbst, auch in Apple Kalender. Ruhezeiten gelten dafür nicht.": {
       "localizations": {
         "en": {
@@ -16530,6 +17003,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "check"
+          }
+        }
+      }
+    },
+    "schon auf der Liste": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "already on the list"
           }
         }
       }
@@ -17411,6 +17894,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "“Reload” discards your changes. “Save anyway” writes only your changes and overwrites nothing on %@."
+          }
+        }
+      }
+    },
+    "„Rezept hinzufügen“ sendet auf dein Tippen den Rezepttext oder das Foto und die Namen deiner Kategorien. Bei einem Link geht nur der gelesene Text der Seite weg, nicht die Adresse. Schaltest du das aus, fragt Tagwerk beim nächsten Rezept erneut.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“Add recipe” sends the recipe text or the photo and the names of your categories when you tap. For a link, only the text read from the page leaves the device, not the address. If you turn this off, Tagwerk asks again at the next recipe."
           }
         }
       }
