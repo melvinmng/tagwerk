@@ -388,6 +388,55 @@ struct PlanningModelTests {
         #expect(model.lastMoveGroup == nil)
     }
 
+    @Test func placeInFreeBlocks_createsBlocksAndPlansTheDays() async throws {
+        planStore.assign(id("Fahrrad"), to: today)
+        let model = await model(at: 18, 40)
+        let outcome = await model.placeInFreeBlocks([id("Fahrrad"), id("Abgabe")])
+        #expect(outcome == PlanningModel.LeftoverOutcome(placed: 2, late: 0, unplaced: 0))
+        #expect(calendarStore.storedEvents.count == 2)
+        // The task due tomorrow lands tomorrow; nothing overlaps.
+        #expect(planStore.assignment(for: id("Abgabe")) == tomorrow)
+        let spans = calendarStore.storedEvents.map { $0.start..<$0.end }
+        #expect(!spans[0].overlaps(spans[1]))
+        #expect(model.lastMoveGroup?.count == 2)
+        #expect(model.lastMoveGroup?.allSatisfy { $0.createdBlockIDs.count == 1 } == true)
+    }
+
+    @Test func placeInFreeBlocks_undoDeletesTheNewBlocksAndRestoresTheDay() async throws {
+        planStore.assign(id("Fahrrad"), to: today)
+        let model = await model(at: 18, 40)
+        _ = await model.placeInFreeBlocks([id("Fahrrad")])
+        #expect(calendarStore.storedEvents.count == 1)
+        #expect(planStore.assignment(for: id("Fahrrad")) != today)
+        await model.undoMoveGroup()
+        #expect(calendarStore.storedEvents.isEmpty)
+        #expect(planStore.assignment(for: id("Fahrrad")) == today)
+        #expect(model.lastMoveGroup == nil)
+    }
+
+    @Test func placeInFreeBlocks_reportsUnplacedTasks() async throws {
+        planStore.assign(id("Fahrrad"), to: today)
+        // A block longer than any working day fits nowhere.
+        settings.defaultTaskMinutes = 900
+        let model = await model(at: 18, 40)
+        let outcome = await model.placeInFreeBlocks([id("Fahrrad")])
+        #expect(outcome == PlanningModel.LeftoverOutcome(placed: 0, late: 0, unplaced: 1))
+        #expect(calendarStore.storedEvents.isEmpty)
+        #expect(model.lastMoveGroup == nil)
+        #expect(planStore.assignment(for: id("Fahrrad")) == today)
+    }
+
+    @Test func moveTasks_undo_stillWorks() async throws {
+        // The existing way "Alle auf morgen" does not create blocks and takes none back.
+        planStore.assign(id("Fahrrad"), to: today)
+        let model = await model(at: 18, 40)
+        await model.moveTasks([id("Fahrrad")], to: tomorrow)
+        #expect(model.lastMoveGroup?.first?.createdBlockIDs.isEmpty == true)
+        await model.undoMoveGroup()
+        #expect(planStore.assignment(for: id("Fahrrad")) == today)
+        #expect(calendarStore.storedEvents.isEmpty)
+    }
+
     @Test func overdue_includesPastDueWithoutAssignment_notCounted() async throws {
         local.tasks.append(makeTask("Vergessen", source: .local, due: DueDate(year: 2026, month: 11, day: 15)))
         let model = await model()
