@@ -118,7 +118,7 @@ GitHub-Konto: @melvinmng · bestätigt zuweisbar · geprüft 2026-11-17 · ich
 - [ ] [#145](https://github.com/melvinmng/tagwerk/issues/145) Tagesstart mit Dankbarkeit und Tagesfokus {status: Backlog; prio: P3 (Medium); aufwand: 6h; epic: #140}
 - [ ] [#146](https://github.com/melvinmng/tagwerk/issues/146) Leitfragen zur Reflexion als optionale Vorlage {status: Backlog; prio: P3 (Medium); aufwand: 3h; epic: #140}
 - [ ] [#150](https://github.com/melvinmng/tagwerk/issues/150) Einkaufsliste: Rezept hochladen (Foto, Text oder Link) und die nötigen Zutaten per ChatGPT als Artikel hinzufügen {status: Backlog; prio: P3 (Medium); epic: #113}
-- [ ] [#151](https://github.com/melvinmng/tagwerk/issues/151) Erinnerungen für Kalendertermine: beliebig viele je Termin (z. B. 2 Wochen und 1 Tag vorher); bei Serien Rückfrage „Nur dieser Termin / Alle folgenden“ {status: Backlog; prio: P3 (Medium)}
+- [ ] [#151](https://github.com/melvinmng/tagwerk/issues/151) Flexible und mehrfache Erinnerungen für Aufgaben, Deadlines und Kalendertermine (beliebig viele, frei wählbare Zeitpunkte; bei Serien „Nur dieser / Alle folgenden“)
 
 ## Notizen
 
@@ -139,7 +139,7 @@ _Automatisch aus [Tagwerk](https://github.com/users/melvinmng/projects/17) erzeu
 - [#145](https://github.com/melvinmng/tagwerk/issues/145) Tagesstart mit Dankbarkeit und Tagesfokus · @melvinmng · Prio P3 (Medium) · 6h
 - [#146](https://github.com/melvinmng/tagwerk/issues/146) Leitfragen zur Reflexion als optionale Vorlage · @melvinmng · Prio P3 (Medium) · 3h
 - [#150](https://github.com/melvinmng/tagwerk/issues/150) Einkaufsliste: Rezept hochladen und Zutaten per ChatGPT hinzufügen · @melvinmng · Prio P3 (Medium)
-- [#151](https://github.com/melvinmng/tagwerk/issues/151) Mehrere Erinnerungen für Kalendertermine · @melvinmng · Prio P3 (Medium)
+- [#151](https://github.com/melvinmng/tagwerk/issues/151) Flexible und mehrfache Erinnerungen für Aufgaben, Deadlines und Kalendertermine · @melvinmng · Prio P3 (Medium)
 
 ### Bereit (1)
 - [#113](https://github.com/melvinmng/tagwerk/issues/113) Phase 5: Einkaufsliste und Notizen einbinden · @melvinmng · Prio P3 (Medium)
