@@ -69,6 +69,57 @@ struct TaskListModelTests {
         #expect(model.items.contains { $0.id == reopened.id })
     }
 
+    @Test func didSave_completedInEditor_offersUndo() async throws {
+        let model = makeModel()
+        await model.reload()
+        var done = try #require(model.items.first { $0.title == "Fahrrad" })
+        done.isCompleted = true
+        model.didSave(done)
+        #expect(!model.items.contains { $0.id == done.id })
+        #expect(model.lastCompleted?.id == done.id)
+        await model.undoComplete()
+        #expect(model.items.contains { $0.id == done.id && !$0.isCompleted })
+        #expect(model.lastCompleted == nil)
+    }
+
+    /// GitHub project workflows change the issue right after closing; "Rückgängig" must still reopen it.
+    @Test func undoComplete_versionChangedAfterCompletion_retriesAgainstCurrentVersion() async {
+        let model = makeModel()
+        await model.reload()
+        let id = TaskID(source: .local, rawValue: "Fahrrad")
+        await model.complete(id)
+        var touched = completedTask("Fahrrad", source: .local, version: "3")
+        touched.notes = "Status von einem Workflow gesetzt"
+        local.conflictOnNextApply = touched
+        await model.undoComplete()
+        #expect(model.lastError == nil)
+        #expect(model.items.contains { $0.id == id && !$0.isCompleted })
+        #expect(local.appliedEdits.last?.expectedVersion == "3")
+        #expect(local.appliedEdits.last?.edit.isCompleted == .set(false))
+    }
+
+    @Test func undoComplete_alreadyReopenedElsewhere_adoptsCurrentState() async {
+        let model = makeModel()
+        await model.reload()
+        let id = TaskID(source: .local, rawValue: "Fahrrad")
+        await model.complete(id)
+        local.conflictOnNextApply = makeTask("Fahrrad", source: .local, version: "4")
+        let writesBefore = local.appliedEdits.count
+        await model.undoComplete()
+        #expect(model.lastError == nil)
+        #expect(model.items.contains { $0.id == id && $0.version == "4" })
+        #expect(local.appliedEdits.count == writesBefore + 1)
+    }
+
+    @Test func didSave_editingAnAlreadyCompletedTask_offersNoUndo() async {
+        let model = makeModel()
+        await model.reload()
+        var edited = completedTask("Fahrrad-Pumpe", source: .local)
+        edited.notes = "Ventil prüfen"
+        model.didSave(edited, wasCompleted: true)
+        #expect(model.lastCompleted == nil)
+    }
+
     @Test func highlight_setsAndClears() {
         let model = makeModel()
         let id = TaskID(source: .local, rawValue: "Fahrrad")

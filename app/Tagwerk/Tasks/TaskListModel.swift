@@ -245,9 +245,39 @@ final class TaskListModel {
         lastCompleted = nil
         var edit = TaskEdit()
         edit.isCompleted = .set(false)
-        guard let reopened = await write(edit, to: completed.id, version: completed.version) else { return }
+        guard let reopened = await writeUndo(edit, to: completed.id, version: completed.version) else { return }
         replace(reopened)
         await onCompletionChanged?(completed.id, false)
+    }
+
+    /// Writes the reopening of "Rückgängig". Completing often changes the item once more on the source side
+    /// (GitHub project workflows set the status after closing), so the version from the completion is stale
+    /// within seconds. The edit only touches the completion, so a conflict is retried once against the
+    /// current version while the item is still completed. If it is open already, that state is adopted.
+    private func writeUndo(_ edit: TaskEdit, to id: TaskID, version: String) async -> TaskItem? {
+        guard let provider = provider(for: id.source) else { return nil }
+        do {
+            let reopened: TaskItem
+            do {
+                reopened = try await provider.apply(edit, to: id, expectedVersion: version)
+            } catch TaskWriteError.conflict(let current) {
+                guard current.isCompleted else {
+                    nextGeneration(for: id.source)
+                    return current
+                }
+                reopened = try await provider.apply(edit, to: id, expectedVersion: current.version)
+            }
+            nextGeneration(for: id.source)
+            return reopened
+        } catch TaskWriteError.conflict {
+            lastError = String(localized: "Die Aufgabe wurde inzwischen geändert. Die Liste ist jetzt aktuell.")
+            await reload()
+        } catch TaskWriteError.signedOut {
+            signOut(id.source)
+        } catch {
+            lastError = Self.message(for: error)
+        }
+        return nil
     }
 
     /// Reopens a completed task that is not in `items` (a search hit). Returns the reopened task, or `nil` after
@@ -362,6 +392,8 @@ final class TaskListModel {
         }
         if item.isCompleted {
             items.removeAll { $0.id == item.id }
+            // Completed in the editor ("Erledigt" or a Done status): same "Rückgängig" capsule as in the list.
+            if previousCompletion == false { lastCompleted = item }
         } else if let provider = provider(for: item.id.source), !provider.isListed(item) {
             handOver(item, announce: true)
             if let hook = onHandedOver {
