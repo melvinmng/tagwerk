@@ -118,6 +118,8 @@ final class PlanningModel {
     var scope: PlanScope = .day
     var anchor: PlanDay
     private(set) var days: [DayPlan] = []
+    /// Tasks that are the open focus of today (phase 7); set by `RoutinesModel`. The day view puts a star on them.
+    var focusTaskIDs: Set<TaskID> = []
     private(set) var unplanned: [TaskItem] = []
     /// Open tasks planned before today or due before today without a planned day; not counted as load until
     /// they are moved to a day (design §13.9).

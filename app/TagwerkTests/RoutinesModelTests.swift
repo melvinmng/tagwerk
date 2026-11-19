@@ -60,11 +60,14 @@ struct RoutinesModelTests {
         routineStore = RoutineStore(context: container.mainContext, now: { now.now })
     }
 
-    private func makeModel() -> RoutinesModel {
+    private func makeModel(taskList override: TaskListModel? = nil, isRecurring: ((TaskItem) -> Bool)? = nil) -> RoutinesModel {
         let clock = self.clock, completed = self.completed
-        return RoutinesModel(store: routineStore, planning: planning, taskList: taskList, habits: habits, settings: settings,
-                             completedCount: { _ in completed.count }, calendar: calendar, now: { clock.now })
+        return RoutinesModel(store: routineStore, planning: planning, taskList: override ?? taskList, habits: habits,
+                             settings: settings, completedCount: { _ in completed.count }, calendar: calendar,
+                             now: { clock.now }, isRecurring: isRecurring)
     }
+
+    private func task(_ title: String) -> TaskItem { local.tasks.first { $0.title == title }! }
 
     private func addChecklist() {
         for (index, offset) in [90, 60, 30].enumerated() {
@@ -207,5 +210,137 @@ struct RoutinesModelTests {
         #expect(model.captureStartDetail(today) == "Fokus wählen")
         routineStore.update(today) { $0.startCompletedAt = self.at(18, 7, 42) }
         #expect(model.captureStartDetail(today) == "✓ 07:42")
+    }
+
+    // MARK: Focus and card
+
+    @Test func card_isMorningBetweenFourAndNoon_untilCompletedOrDismissed() {
+        let model = makeModel()
+        clock.now = at(18, 8)
+        if case .morning = model.card {} else { Issue.record("expected the morning card at 08:00") }
+        clock.now = at(18, 3, 59)
+        #expect(model.card == nil)
+        clock.now = at(18, 8)
+        model.dismissMorningCard()
+        #expect(model.card == nil)
+        routineStore.update(today) { $0.startDismissed = false; $0.startCompletedAt = self.clock.now }
+        #expect(model.card == nil)
+    }
+
+    @Test func card_isFocusOnceAFocusIsChosen_andAnOpenFocusTaskRemains() {
+        let model = makeModel()
+        clock.now = at(18, 8)
+        routineStore.addFocus(task("Heute fällig"), on: today)
+        routineStore.addFocus(task("Geplant"), on: today)
+        routineStore.setFocusDone(taskKey: task("Geplant").id.key, on: today, at: clock.now)
+        guard case .focus(let marks, let done, let total) = model.card else { Issue.record("expected the focus card"); return }
+        #expect(marks.count == 2 && done == 1 && total == 2)
+    }
+
+    @Test func card_isNil_whenAllFocusTasksAreDone_orRoutinesAreHiddenInPlan() {
+        let model = makeModel()
+        clock.now = at(18, 8)
+        routineStore.addFocus(task("Geplant"), on: today)
+        routineStore.setFocusDone(taskKey: task("Geplant").id.key, on: today, at: clock.now)
+        #expect(model.card == nil)
+        routineStore.setFocusDone(taskKey: task("Geplant").id.key, on: today, at: nil)
+        #expect(model.card != nil)
+        settings.showsRoutinesInPlan = false
+        #expect(model.card == nil)
+    }
+
+    @Test func card_isNil_afterNoonWithoutFocus() {
+        let model = makeModel()
+        clock.now = at(18, 12)
+        #expect(model.card == nil)
+    }
+
+    @Test func completeFocus_completesTheTaskInItsSource_andSetsDoneAt() async throws {
+        let model = makeModel()
+        let item = task("Heute fällig")
+        model.toggleFocus(item)
+        let mark = try #require(model.focusMarks(today).first)
+        await model.completeFocus(mark)
+        #expect(local.appliedEdits.contains { $0.id == item.id })
+        #expect(model.focusMarks(today).first?.doneAt != nil)
+        #expect(!taskList.items.contains { $0.id == item.id })
+    }
+
+    @Test func undoComplete_clearsDoneAt() {
+        let model = makeModel()
+        let item = task("Geplant")
+        model.toggleFocus(item)
+        model.focusChanged(item.id, isCompleted: true)
+        #expect(model.focusMarks(today).first?.doneAt != nil)
+        model.focusChanged(item.id, isCompleted: false)
+        #expect(model.focusMarks(today).first?.doneAt == nil)
+    }
+
+    @Test func vanishedTask_isDoneOnlyAfterItsSourceSettled() async {
+        let gone = makeTask("Exposé Kapitel 2", source: .local)
+        routineStore.addFocus(gone, on: today)
+        // The source has not answered yet: the mark stays open.
+        let loadingSource = FakeTaskProvider(source: .local)
+        let loading = TaskListModel(providers: [loadingSource], now: { self.clock.now }, calendar: calendar)
+        let early = makeModel(taskList: loading)
+        early.refreshFocus()
+        #expect(early.focusMarks(today).first?.doneAt == nil)
+        // Loaded, the task is missing: it counts as done and keeps its remembered title.
+        await loading.reload()
+        early.refreshFocus()
+        #expect(early.focusMarks(today).first?.doneAt != nil)
+        #expect(early.focusMarks(today).first?.title == "Exposé Kapitel 2")
+    }
+
+    @Test func refreshFocus_followsAChangedTitle_andReopensAMarkWhoseTaskIsOpenAgain() async {
+        let model = makeModel()
+        let item = task("Geplant")
+        model.toggleFocus(item)
+        model.focusChanged(item.id, isCompleted: true)
+        model.refreshFocus()   // the task is open in the list: the completion was undone elsewhere
+        #expect(model.focusMarks(today).first?.doneAt == nil)
+    }
+
+    @Test func toggleFocus_onARecurringOccurrence_isIgnored() {
+        let model = makeModel(isRecurring: { $0.title == "Geplant" })
+        model.toggleFocus(task("Geplant"))
+        #expect(model.focusMarks(today).isEmpty)
+        model.toggleFocus(task("Heute fällig"))
+        #expect(model.focusMarks(today).count == 1)
+        #expect(model.isFocus(task("Heute fällig").id))
+        model.toggleFocus(task("Heute fällig"))
+        #expect(model.focusMarks(today).isEmpty)
+    }
+
+    @Test func toggleFocus_stopsAtThree() {
+        let model = makeModel()
+        for title in ["Heute fällig", "Geplant", "Später"] { model.toggleFocus(task(title)) }
+        let extra = makeTask("Vierte", source: .local)
+        model.toggleFocus(extra)
+        #expect(model.focusMarks(today).count == 3)
+    }
+
+    @Test func focusOfPastDays_isReadOnly() {
+        // Only "today" takes marks: after midnight the 18th can no longer change.
+        let model = makeModel()
+        clock.now = at(19, 10)
+        model.toggleFocus(task("Geplant"))   // "today" is now the 19th: this marks the 19th, not the 18th
+        #expect(model.focusMarks(today).isEmpty)
+        #expect(model.focusMarks(today.adding(days: 1, calendar: calendar)).count == 1)
+    }
+
+    @Test func captureStartDetail_namesTheFirstFocus() {
+        let model = makeModel()
+        routineStore.addFocus(makeTask("Exposé Kapitel 2", source: .local), on: today)
+        routineStore.update(today) { $0.startCompletedAt = self.at(18, 7, 42) }
+        #expect(model.captureStartDetail(today) == "✓ 07:42 · Fokus: Exposé Kapitel 2")
+    }
+
+    @Test func dayReview_hasAFocusLineWithFocus() async {
+        let model = makeModel()
+        model.toggleFocus(task("Heute fällig"))
+        model.toggleFocus(task("Geplant"))
+        model.focusChanged(task("Geplant").id, isCompleted: true)
+        #expect(await model.dayReview(today).focus == HabitCounter(done: 1, total: 2))
     }
 }

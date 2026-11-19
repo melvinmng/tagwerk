@@ -53,6 +53,7 @@ struct TagwerkApp: App {
                     environment.startReconnectWatch()
                     environment.startNotificationUpdates()
                     environment.startRoutineReminderUpdates()
+                    environment.startFocusUpdates()
                     environment.startSnapshotUpdates()
                 }
                 .onChange(of: scenePhase) { _, phase in

@@ -417,6 +417,10 @@ struct EntryStyle {
             // Deadline events (deadline calendars and marked) are red in the timeline, with a text mark (DL2).
             let isDeadline = model.deadlineEventIDs.contains(event.id)
             if isDeadline { title = "⚑ " + event.title }
+            // The time block of today's focus task carries the star as well (phase 7).
+            if let taskID, model.focusTaskIDs.contains(taskID), PlanDay(date: event.start, calendar: model.calendar) == model.today {
+                title = "★ " + title
+            }
             color = isDeadline ? .red : (isBlock ? .green : (taskID != nil ? .teal : .blue))
             var parts: [String] = []
             let text = DeadlineText(calendar: model.calendar)

@@ -48,9 +48,15 @@ final class RoutinesModel {
     let calendar: Calendar
     @ObservationIgnored private let completedCount: (DateInterval) async -> Int
     @ObservationIgnored private let now: () -> Date
+    /// Whether a task is an occurrence of a recurring reminder (not selectable as focus); defaults to the plan's list.
+    @ObservationIgnored private let isRecurringOverride: ((TaskItem) -> Bool)?
+    /// The overview shown in the morning card; refreshed by the card.
+    private(set) var cardOverview: Overview?
 
     init(store: RoutineStore, planning: PlanningModel, taskList: TaskListModel, habits: HabitsModel, settings: AppSettings,
-         completedCount: @escaping (DateInterval) async -> Int, calendar: Calendar = .tagwerk, now: @escaping () -> Date = Date.init) {
+         completedCount: @escaping (DateInterval) async -> Int, calendar: Calendar = .tagwerk, now: @escaping () -> Date = Date.init,
+         isRecurring: ((TaskItem) -> Bool)? = nil) {
+        self.isRecurringOverride = isRecurring
         self.store = store
         self.planning = planning
         self.taskList = taskList
@@ -59,6 +65,7 @@ final class RoutinesModel {
         self.completedCount = completedCount
         self.calendar = calendar
         self.now = now
+        syncFocusToPlan()
     }
 
     var today: PlanDay { PlanDay(date: now(), calendar: calendar) }
@@ -103,7 +110,7 @@ final class RoutinesModel {
 
     func tasks(of day: PlanDay) -> [TaskItem] {
         let planned = Set(planning.planStore.assignments(in: day...day).filter { $0.value == day }.keys)
-        let recurring = Set(planning.recurringReminderIDs.map { TaskID(source: .reminders, rawValue: $0) })
+        let recurring = Set(taskList.items.filter(isRecurring).map(\.id))
         return FocusRules.candidates(taskList.items, plannedToday: planned, blockedToday: planning.taskIDsWithBlocks(on: day),
                                      recurring: recurring, today: day, calendar: calendar)
     }
@@ -115,7 +122,9 @@ final class RoutinesModel {
     func dayReview(_ day: PlanDay) async -> DayReview {
         let interval = DateInterval(start: day.startDate(in: calendar), end: day.adding(days: 1, calendar: calendar).startDate(in: calendar))
         let done = await completedCount(interval)
-        return DayReview(tasksDone: done, tasksTotal: done + tasks(of: day).count, habits: habits.counter(on: day), focus: nil)
+        let marks = store.focusMarks(on: day)
+        let focus = marks.isEmpty ? nil : HabitCounter(done: marks.filter { $0.doneAt != nil }.count, total: marks.count)
+        return DayReview(tasksDone: done, tasksTotal: done + tasks(of: day).count, habits: habits.counter(on: day), focus: focus)
     }
 
     /// The evening line in "Planen" (rule 11); `nil` when switched off or not yet due.
@@ -182,7 +191,9 @@ extension RoutinesModel {
     func captureStartDetail(_ day: PlanDay) -> String {
         _ = revision
         guard let done = store.day(day).startCompletedAt else { return String(localized: "Fokus wählen") }
-        return "✓ \(DateText.time(done, calendar: calendar))"
+        let time = "✓ \(DateText.time(done, calendar: calendar))"
+        guard let first = store.focusMarks(on: day).first else { return time }
+        return time + " · " + String(localized: "Fokus: \(first.title)")
     }
 
     static func overviewText(_ overview: Overview) -> String {
@@ -190,5 +201,121 @@ extension RoutinesModel {
         let tasks = overview.tasks == 1 ? String(localized: "1 Aufgabe") : String(localized: "\(overview.tasks) Aufgaben")
         let free = String(localized: "\(CapacityText.duration(overview.freeMinutes)) frei")
         return [events, tasks, free].joined(separator: " · ")
+    }
+}
+
+// MARK: Focus and card
+
+extension RoutinesModel {
+    /// The one new element above the timeline in "Planen": the morning card or the focus card, never both.
+    enum Card: Equatable {
+        case morning(overview: String)
+        case focus(marks: [FocusMark], done: Int, total: Int)
+    }
+
+    /// Rule 11. A chosen focus replaces the morning card; with nothing left open there is no card.
+    var card: Card? {
+        _ = revision
+        guard settings.showsRoutinesInPlan else { return nil }
+        let marks = store.focusMarks(on: today)
+        if !marks.isEmpty {
+            let done = marks.filter { $0.doneAt != nil }.count
+            return done < marks.count ? .focus(marks: marks, done: done, total: marks.count) : nil
+        }
+        let value = store.day(today)
+        guard RoutineSchedule.showsMorningCard(minutesOfDay: RoutineSchedule.minutesOfDay(now(), calendar: calendar),
+                                               completed: value.startCompletedAt != nil, dismissed: value.startDismissed) else { return nil }
+        return .morning(overview: cardOverview.map(Self.shortOverviewText) ?? "")
+    }
+
+    /// Reads the numbers of the morning card; the card calls it when it appears.
+    func refreshCardOverview() async {
+        cardOverview = await overview(for: today)
+    }
+
+    /// "3 Termine, 5 Aufgaben" of the morning card.
+    static func shortOverviewText(_ overview: Overview) -> String {
+        let events = overview.events == 1 ? String(localized: "1 Termin") : String(localized: "\(overview.events) Termine")
+        let tasks = overview.tasks == 1 ? String(localized: "1 Aufgabe") : String(localized: "\(overview.tasks) Aufgaben")
+        return events + ", " + tasks
+    }
+
+    func dismissMorningCard() {
+        store.update(today) { $0.startDismissed = true }
+        revision += 1
+    }
+
+    func focusMarks(_ day: PlanDay) -> [FocusMark] {
+        _ = revision
+        return store.focusMarks(on: day)
+    }
+
+    /// Today only.
+    func isFocus(_ id: TaskID) -> Bool {
+        store.focusMarks(on: today).contains { $0.taskKey == id.key }
+    }
+
+    func isRecurring(_ task: TaskItem) -> Bool {
+        if let isRecurringOverride { return isRecurringOverride(task) }
+        return task.id.source == .reminders && planning.recurringReminderIDs.contains(task.id.rawValue)
+    }
+
+    /// Marks or unmarks a task of today; recurring occurrences and a fourth mark are ignored.
+    func toggleFocus(_ task: TaskItem) {
+        let day = today
+        if isFocus(task.id) {
+            store.removeFocus(taskKey: task.id.key, on: day)
+        } else if !isRecurring(task) {
+            store.addFocus(task, on: day)
+        }
+        changedFocus()
+    }
+
+    /// Completes the task in its own source through the task list; the mark itself never writes to a source.
+    func completeFocus(_ mark: FocusMark) async {
+        guard let id = mark.taskID else { return }
+        await taskList.complete(id)
+        guard !taskList.items.contains(where: { $0.id == id }) else { return }
+        store.setFocusDone(taskKey: mark.taskKey, on: today, at: now())
+        changedFocus()
+    }
+
+    /// From `taskList.onCompletionChanged`: a completion or its undo, wherever it happened.
+    func focusChanged(_ id: TaskID, isCompleted: Bool) {
+        let day = today
+        guard store.focusMarks(on: day).contains(where: { $0.taskKey == id.key }) else { return }
+        store.setFocusDone(taskKey: id.key, on: day, at: isCompleted ? now() : nil)
+        changedFocus()
+    }
+
+    /// After the tasks loaded: a mark whose task left the open list counts as done, but only once its source answered
+    /// (review focus 3); an open task follows its title and reopens a mark that was set done. Runs for today only.
+    func refreshFocus() {
+        let day = today
+        for mark in store.focusMarks(on: day) {
+            guard let id = mark.taskID else { continue }
+            if let task = taskList.items.first(where: { $0.id == id }) {
+                store.updateFocusTitle(taskKey: mark.taskKey, on: day, title: task.title)
+                if mark.doneAt != nil { store.setFocusDone(taskKey: mark.taskKey, on: day, at: nil) }
+            } else if mark.doneAt == nil, isSettled(id.source) {
+                store.setFocusDone(taskKey: mark.taskKey, on: day, at: now())
+            }
+        }
+        changedFocus()
+    }
+
+    private func isSettled(_ source: TaskSource) -> Bool {
+        taskList.sourceStates[source] != nil && !taskList.loadingSources.contains(source)
+    }
+
+    private func changedFocus() {
+        revision += 1
+        syncFocusToPlan()
+    }
+
+    /// The stars of "Planen" follow the open marks of today.
+    func syncFocusToPlan() {
+        let open = Set(store.focusMarks(on: today).filter { $0.doneAt == nil }.compactMap(\.taskID))
+        if planning.focusTaskIDs != open { planning.focusTaskIDs = open }
     }
 }

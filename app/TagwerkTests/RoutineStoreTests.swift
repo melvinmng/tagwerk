@@ -105,4 +105,42 @@ struct RoutineStoreTests {
         let names = Set(ModelContainerFactory.schema.entities.map(\.name))
         #expect(names.isSuperset(of: ["RoutineDayRecord", "EveningChecklistItemRecord"]))
     }
+
+    // MARK: Focus
+
+    private func task(_ title: String) -> TaskItem { makeTask(title, source: .local) }
+
+    @Test func addFocus_allowsAtMostThreePerDay() {
+        #expect(store.addFocus(task("A"), on: day))
+        #expect(store.addFocus(task("B"), on: day))
+        #expect(store.addFocus(task("C"), on: day))
+        #expect(!store.addFocus(task("D"), on: day))
+        #expect(!store.addFocus(task("A"), on: day))
+        #expect(store.focusMarks(on: day).map(\.title) == ["A", "B", "C"])
+    }
+
+    @Test func sameTask_canBeFocusOnTwoDays() {
+        let next = day.adding(days: 1, calendar: testCalendar())
+        #expect(store.addFocus(task("A"), on: day))
+        #expect(store.addFocus(task("A"), on: next))
+        #expect(store.focusMarks(on: day).count == 1 && store.focusMarks(on: next).count == 1)
+    }
+
+    @Test func removeFocus_andSetDone_andTitle() {
+        let item = task("Alt")
+        store.addFocus(item, on: day)
+        store.setFocusDone(taskKey: item.id.key, on: day, at: testNow())
+        #expect(store.focusMarks(on: day).first?.doneAt == testNow())
+        store.updateFocusTitle(taskKey: item.id.key, on: day, title: "Neu")
+        #expect(store.focusMarks(on: day).first?.title == "Neu")
+        store.removeFocus(taskKey: item.id.key, on: day)
+        #expect(store.focusMarks(on: day).isEmpty)
+        // A removed mark frees its place.
+        for title in ["A", "B", "C"] { store.addFocus(task(title), on: day) }
+        #expect(store.focusMarks(on: day).count == 3)
+    }
+
+    @Test func schema_containsFocusMark() {
+        #expect(ModelContainerFactory.schema.entities.map(\.name).contains("FocusMarkRecord"))
+    }
 }

@@ -2326,6 +2326,16 @@
         }
       }
     },
+    "Alle %lld Aufgaben von heute zeigen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show all %lld tasks of today"
+          }
+        }
+      }
+    },
     "Alle %lld Jahre": {
       "localizations": {
         "de": {
@@ -2602,6 +2612,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Mark as deadline"
+          }
+        }
+      }
+    },
+    "Als Fokus markieren": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mark as focus"
           }
         }
       }
@@ -5717,12 +5737,58 @@
         }
       }
     },
+    "Fokus": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Focus"
+          }
+        }
+      }
+    },
+    "Fokus entfernen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove focus"
+          }
+        }
+      }
+    },
+    "Fokus heute · %lld von %lld": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Fokus heute · %1$lld von %2$lld"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Today’s focus · %1$lld of %2$lld"
+          }
+        }
+      }
+    },
     "Fokus wählen": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Choose focus"
+          }
+        }
+      }
+    },
+    "Fokus: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Focus: %@"
           }
         }
       }
@@ -6508,6 +6574,16 @@
         }
       }
     },
+    "Hakt die Aufgabe ab": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Checks off the task"
+          }
+        }
+      }
+    },
     "Hakt eine Gewohnheit für heute ab": {
       "localizations": {
         "en": {
@@ -6564,6 +6640,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Today"
+          }
+        }
+      }
+    },
+    "Heute ausblenden": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hide for today"
+          }
+        }
+      }
+    },
+    "Heute ist noch keine Aufgabe geplant.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No task is planned for today yet."
           }
         }
       }
@@ -10595,12 +10691,58 @@
         }
       }
     },
+    "Tagesfokus": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Daily focus"
+          }
+        }
+      }
+    },
+    "Tagesfokus · %lld von %lld gewählt": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Tagesfokus · %1$lld von %2$lld gewählt"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Daily focus · %1$lld of %2$lld chosen"
+          }
+        }
+      }
+    },
     "Tagesstart": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Morning start"
+          }
+        }
+      }
+    },
+    "Tagesstart · Fokus wählen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Morning start · Choose focus"
+          }
+        }
+      }
+    },
+    "Tagesstart · Fokus wählen · %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Morning start · Choose focus · %@"
           }
         }
       }

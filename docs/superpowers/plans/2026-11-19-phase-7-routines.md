@@ -767,7 +767,7 @@ extension RoutinesModel {
 struct RoutineCard: View { let model: RoutinesModel }
 ```
 
-- [ ] **Step 1: Tests schreiben (rot).**
+- [x] **Step 1: Tests schreiben (rot).**
 
 ```swift
 // RoutineStoreTests
@@ -787,10 +787,10 @@ struct RoutineCard: View { let model: RoutinesModel }
 @Test func captureStartDetail_namesTheFirstFocus()                       // "✓ 07:42 · Fokus: Exposé Kapitel 2"
 ```
 
-- [ ] **Step 2:** `APP RoutineStoreTests`, `APP RoutinesModelTests` → rot.
-- [ ] **Step 3: Umsetzen.** `DayView.summary(_:)`: `RoutineCard` zwischen `PlanIntakeLine` und `DeadlineCard`, nur bei `model.scope == .day && model.anchor == model.today`. Tagesstart-Zustand einzeilig mit „Starten“ (öffnet das Blatt) und „✕“ (`dismissMorningCard`); Fokus-Zustand mit Kopf „Fokus heute · 1 von 2 · Ändern“ und höchstens drei Zeilen (Kreis, Titel, Zeitblock falls vorhanden, Stern; erledigte durchgestrichen). `MorningSheet` bekommt „Tagesfokus · n von 3 gewählt“ mit den ersten drei aus `todayTasks()` und „Alle n Aufgaben von heute zeigen“; für vergangene Tage nur lesbar. Stern an Fokus-Aufgaben in `PlannedTaskRow` und an ihren Zeitblöcken im Ablauf (Liste und Stundenraster), nicht im Tab „Aufgaben“. `DayView.plannedActions` setzt `toggleFocus`/`isFocus` nur in der Tagesansicht von heute; `TaskContextMenu` zeigt „Als Fokus markieren“ bzw. „Fokus entfernen“. `EveningSheet` zeigt die Zeile „★ Fokus 1 von 2“. Die vorhandene Closure `taskList.onCompletionChanged` in `AppEnvironment` ruft zusätzlich `routines.focusChanged`; `refreshFocus()` läuft nach jedem Laden der Aufgaben.
-- [ ] **Step 4:** Tests aus Step 2 und `APP PlanningModelTests` → grün. Sichtprüfung gegen GF1 und GA1 (Karte), Höhe der Karte im Stundenraster auf dem kleinsten Gerät.
-- [ ] **Step 5: Commit.** `git commit -m "feat: add the daily focus with the routine card and focus stars"`
+- [x] **Step 2:** `APP RoutineStoreTests`, `APP RoutinesModelTests` → rot.
+- [x] **Step 3: Umsetzen.** `DayView.summary(_:)`: `RoutineCard` zwischen `PlanIntakeLine` und `DeadlineCard`, nur bei `model.scope == .day && model.anchor == model.today`. Tagesstart-Zustand einzeilig mit „Starten“ (öffnet das Blatt) und „✕“ (`dismissMorningCard`); Fokus-Zustand mit Kopf „Fokus heute · 1 von 2 · Ändern“ und höchstens drei Zeilen (Kreis, Titel, Zeitblock falls vorhanden, Stern; erledigte durchgestrichen). `MorningSheet` bekommt „Tagesfokus · n von 3 gewählt“ mit den ersten drei aus `todayTasks()` und „Alle n Aufgaben von heute zeigen“; für vergangene Tage nur lesbar. Stern an Fokus-Aufgaben in `PlannedTaskRow` und an ihren Zeitblöcken im Ablauf (Liste und Stundenraster), nicht im Tab „Aufgaben“. `DayView.plannedActions` setzt `toggleFocus`/`isFocus` nur in der Tagesansicht von heute; `TaskContextMenu` zeigt „Als Fokus markieren“ bzw. „Fokus entfernen“. `EveningSheet` zeigt die Zeile „★ Fokus 1 von 2“. Die vorhandene Closure `taskList.onCompletionChanged` in `AppEnvironment` ruft zusätzlich `routines.focusChanged`; `refreshFocus()` läuft nach jedem Laden der Aufgaben.
+- [x] **Step 4:** Tests aus Step 2 und `APP PlanningModelTests` → grün. Sichtprüfung gegen GF1 und GA1 (Karte), Höhe der Karte im Stundenraster auf dem kleinsten Gerät.
+- [x] **Step 5: Commit.** `git commit -m "feat: add the daily focus with the routine card and focus stars"`
 
 ### Task 13: Notizfeld auf `NoteRecord`/`NoteStore`, Spracheingabe, „Als Aufgabe anlegen“ · #143 · Zeile 10
 

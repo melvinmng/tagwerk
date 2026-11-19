@@ -67,6 +67,45 @@ final class EveningChecklistItemRecord {
     var value: ChecklistItem { ChecklistItem(id: id, title: title, order: order, offsetMinutes: offsetMinutes) }
 }
 
+/// A task marked as focus of a day (design §5.2, deviation A2: `title` is remembered, so a task that left the list can
+/// still be shown crossed out). No unique field: the same task may be focus on several days.
+@Model
+final class FocusMarkRecord {
+    /// `TaskID.key`.
+    var taskKey: String = ""
+    var year: Int = 1970
+    var month: Int = 1
+    var day: Int = 1
+    var order: Int = 0
+    /// Set as soon as the app sees the task as completed.
+    var doneAt: Date? = nil
+    var createdAt: Date = Date.now
+    var title: String = ""
+
+    init(taskKey: String, title: String, day: PlanDay, order: Int, createdAt: Date) {
+        self.taskKey = taskKey
+        self.title = title
+        self.year = day.year
+        self.month = day.month
+        self.day = day.day
+        self.order = order
+        self.createdAt = createdAt
+    }
+
+    var planDay: PlanDay { PlanDay(year: year, month: month, day: day) }
+    var value: FocusMark { FocusMark(taskKey: taskKey, title: title, order: order, doneAt: doneAt) }
+}
+
+struct FocusMark: Equatable, Identifiable {
+    var id: String { taskKey }
+    var taskKey: String
+    var title: String
+    var order: Int
+    var doneAt: Date?
+
+    var taskID: TaskID? { TaskID(key: taskKey) }
+}
+
 /// Reads and writes the routine days and the evening checklist. Reading never inserts. Nothing here leaves the device.
 @MainActor
 @Observable
@@ -149,6 +188,50 @@ final class RoutineStore {
     static func normalizedOffset(_ minutes: Int) -> Int {
         let clamped = min(RoutineSchedule.offsetRange.upperBound, max(RoutineSchedule.offsetRange.lowerBound, minutes))
         return Int((Double(clamped) / Double(RoutineSchedule.offsetStep)).rounded()) * RoutineSchedule.offsetStep
+    }
+
+    // MARK: Focus
+
+    /// The marks of a day, by order.
+    func focusMarks(on day: PlanDay) -> [FocusMark] {
+        _ = revision
+        return focusRecords(on: day).sorted { ($0.order, $0.createdAt) < ($1.order, $1.createdAt) }.map(\.value)
+    }
+
+    /// `false` at three marks or when the task is already marked that day.
+    @discardableResult
+    func addFocus(_ task: TaskItem, on day: PlanDay) -> Bool {
+        let existing = focusRecords(on: day)
+        guard existing.count < FocusRules.maximumMarks, !existing.contains(where: { $0.taskKey == task.id.key }) else { return false }
+        let order = (existing.map(\.order).max() ?? -1) + 1
+        context.insert(FocusMarkRecord(taskKey: task.id.key, title: task.title, day: day, order: order, createdAt: now()))
+        save()
+        return true
+    }
+
+    func removeFocus(taskKey: String, on day: PlanDay) {
+        focusRecords(on: day).filter { $0.taskKey == taskKey }.forEach { context.delete($0) }
+        save()
+    }
+
+    func setFocusDone(taskKey: String, on day: PlanDay, at date: Date?) {
+        let matches = focusRecords(on: day).filter { $0.taskKey == taskKey && $0.doneAt != date }
+        guard !matches.isEmpty else { return }
+        matches.forEach { $0.doneAt = date }
+        save()
+    }
+
+    func updateFocusTitle(taskKey: String, on day: PlanDay, title: String) {
+        let matches = focusRecords(on: day).filter { $0.taskKey == taskKey && $0.title != title }
+        guard !matches.isEmpty else { return }
+        matches.forEach { $0.title = title }
+        save()
+    }
+
+    private func focusRecords(on day: PlanDay) -> [FocusMarkRecord] {
+        let (year, month, dayNumber) = (day.year, day.month, day.day)
+        let descriptor = FetchDescriptor<FocusMarkRecord>(predicate: #Predicate { $0.year == year && $0.month == month && $0.day == dayNumber })
+        return (try? context.fetch(descriptor)) ?? []
     }
 
     private func itemRecords() -> [EveningChecklistItemRecord] {

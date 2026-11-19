@@ -5,6 +5,7 @@ import TagwerkCore
 /// sheet for events, blocks and the lunch break (U1).
 struct DayView: View {
     @Bindable var model: PlanningModel
+    @Environment(AppEnvironment.self) private var environment
     let onOpenTask: (TaskID) -> Void
     let onShowTask: (TaskID) -> Void
     let onOpenEvent: (CalendarEvent) -> Void
@@ -66,6 +67,8 @@ struct DayView: View {
     @ViewBuilder
     private func summary(_ plan: DayPlan) -> some View {
         PlanIntakeLine(model: model)
+        // The one new element of phase 7: the morning card or today's focus, in the day view of today only.
+        if model.scope == .day, model.anchor == model.today { RoutineCard(model: environment.routines, plan: plan) }
         DeadlineCard(model: model, actions: deadlineActions)
         DeadlineSuggestionCard(model: model)
         CapacityCard(model: model, plan: plan) { editingHours = true }
@@ -106,6 +109,11 @@ struct DayView: View {
         var actions = menuActions(task)
         actions.createBlock = { blockFor = task }
         actions.shownDay = model.anchor
+        // Focus belongs to today: the menu entry exists in the day view of today only, not for recurring occurrences.
+        if model.scope == .day, model.anchor == model.today, !environment.routines.isRecurring(task) {
+            actions.toggleFocus = { environment.routines.toggleFocus(task) }
+            actions.isFocus = environment.routines.isFocus(task.id)
+        }
         if model.planStore.assignment(for: task.id) != nil {
             actions.unassign = { Task { await model.unassign(task.id) } }
         }
@@ -153,7 +161,8 @@ struct DayView: View {
             .contextMenu { eventMenu(event, taskID: nil) }
         case .block(let event, let taskID):
             Button { sheetEntry = .event(event, taskID) } label: {
-                TimelineLine(time: event.start, title: event.title,
+                TimelineLine(time: event.start,
+                             title: (plan.day == model.today && model.focusTaskIDs.contains(taskID) ? "★ " : "") + event.title,
                              detail: CapacityText.duration(Int(event.end.timeIntervalSince(event.start) / 60)) + " · "
                                  + (model.canEditAsBlock(event) ? String(localized: "Zeitblock") : String(localized: "verknüpft")),
                              color: .green)
@@ -380,11 +389,14 @@ struct TaskSections: View {
     }
 
     private func taskRow(_ task: TaskItem, isPastDue: Bool) -> some View {
-        PlannedTaskRow(task: task, isPastDue: isPastDue)
+        PlannedTaskRow(task: task, isPastDue: isPastDue, isFocus: isFocus(task.id))
             .contentShape(Rectangle())
             .onTapGesture { onOpenTask(task.id) }
             .contextMenu { TaskContextMenu(item: task, actions: menuActions(task)) }
     }
+
+    /// The star of a focus task; only in the plan of today.
+    private func isFocus(_ id: TaskID) -> Bool { plan.day == model.today && model.focusTaskIDs.contains(id) }
 
     /// A task that is not yet committed to the shown day, with its effort for recurring reminders and the commit
     /// button ("Heute", "Morgen", "Einplanen"); leftovers from today move with their blocks (`moves`).
@@ -392,7 +404,7 @@ struct TaskSections: View {
         let recurring = model.recurringItem(for: task, on: plan.day)
         return HStack {
             VStack(alignment: .leading, spacing: 2) {
-                Text((recurring != nil ? "↻ " : "") + task.title).lineLimit(2)
+                Text((recurring != nil ? "↻ " : "") + (isFocus(task.id) ? "★ " : "") + task.title).lineLimit(2)
                 HStack(spacing: 6) {
                     if let recurring, recurring.minutes > 0 {
                         Text("\(CapacityText.duration(recurring.minutes)) reserviert")
@@ -464,11 +476,13 @@ private struct TimelineLine: View {
 struct PlannedTaskRow: View {
     let task: TaskItem
     let isPastDue: Bool
+    /// The task is today's focus: a star next to the title.
+    var isFocus = false
 
     var body: some View {
         HStack {
             VStack(alignment: .leading, spacing: 2) {
-                Text(task.title).lineLimit(2)
+                Text((isFocus ? "★ " : "") + task.title).lineLimit(2)
                 HStack(spacing: 6) {
                     Text(EstimateHours.text(minutes: task.estimateMinutes))
                     if isPastDue { Label("nach Fälligkeit", systemImage: "exclamationmark.triangle.fill").foregroundStyle(.orange) }

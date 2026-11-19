@@ -87,6 +87,7 @@ final class AppEnvironment {
     @ObservationIgnored private var reconnectWatch: Task<Void, Never>?
     @ObservationIgnored private var pathMonitor: NWPathMonitor?
     @ObservationIgnored private var routineUpdates: Task<Void, Never>?
+    @ObservationIgnored private var focusUpdates: Task<Void, Never>?
     @ObservationIgnored private var notificationUpdates: Task<Void, Never>?
     @ObservationIgnored private var gitHubRegistration: Task<Void, Never>?
     @ObservationIgnored private var snapshotUpdates: Task<Void, Never>?
@@ -230,7 +231,11 @@ final class AppEnvironment {
             })
         self.routineNotifications = RoutineNotificationScheduler(center: notificationCenter ?? SystemNotificationCenter(),
                                                                  store: routineStore, settings: settings)
-        taskList.onCompletionChanged = { id, isCompleted in await planning.didChangeCompletion(id, isCompleted: isCompleted) }
+        let routines = self.routines
+        taskList.onCompletionChanged = { id, isCompleted in
+            await planning.didChangeCompletion(id, isCompleted: isCompleted)
+            await MainActor.run { routines.focusChanged(id, isCompleted: isCompleted) }
+        }
         taskList.onHandedOver = { id in await planning.didHandOver(id) }
         // An ended GitHub sign-in (expired or revoked) forgets the cached issues of that account.
         taskList.onSignedOut = { source in
@@ -519,6 +524,27 @@ final class AppEnvironment {
             for await value in changes where value != last {
                 last = value
                 await self?.routineNotifications.reschedule()
+            }
+        }
+    }
+
+    /// Keeps today's focus marks in line with the tasks after every load (design: a task that left the list is done once
+    /// its source has answered).
+    func startFocusUpdates() {
+        guard focusUpdates == nil else { return }
+        let changes = Observations { @MainActor [weak self] () -> Int in
+            guard let self else { return 0 }
+            var hasher = Hasher()
+            hasher.combine(taskList.items.map { "\($0.id.key)|\($0.title)" })
+            hasher.combine(taskList.sourceStates.mapValues { String(describing: $0) })
+            hasher.combine(taskList.loadingSources)
+            return hasher.finalize()
+        }
+        focusUpdates = Task { [weak self] in
+            var last: Int?
+            for await value in changes where value != last {
+                last = value
+                self?.routines.refreshFocus()
             }
         }
     }

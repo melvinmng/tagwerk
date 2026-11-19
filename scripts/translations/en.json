@@ -1475,5 +1475,18 @@
   "1 Termin": "1 event",
   "Dankbar für": "Grateful for",
   "Fokus wählen": "Choose focus",
-  "Fokus für heute wählen?": "Choose a focus for today?"
+  "Fokus für heute wählen?": "Choose a focus for today?",
+  "Alle %lld Aufgaben von heute zeigen": "Show all %lld tasks of today",
+  "Als Fokus markieren": "Mark as focus",
+  "Fokus": "Focus",
+  "Fokus entfernen": "Remove focus",
+  "Fokus heute · %lld von %lld": "Today’s focus · %1$lld of %2$lld",
+  "Fokus: %@": "Focus: %@",
+  "Hakt die Aufgabe ab": "Checks off the task",
+  "Heute ausblenden": "Hide for today",
+  "Heute ist noch keine Aufgabe geplant.": "No task is planned for today yet.",
+  "Tagesfokus": "Daily focus",
+  "Tagesfokus · %lld von %lld gewählt": "Daily focus · %1$lld of %2$lld chosen",
+  "Tagesstart · Fokus wählen": "Morning start · Choose focus",
+  "Tagesstart · Fokus wählen · %@": "Morning start · Choose focus · %@"
 }
