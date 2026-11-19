@@ -46,14 +46,14 @@ struct NotificationSchedulerQuietHoursTests {
         // Due 01:00 with the default 2 h lead time: 23:00 the evening before.
         local.tasks = [task("A", day: 19, hour: 1)]
         await scheduler(now: testNow()).reschedule()
-        #expect(center.pending["tagwerk.task.local:A"]?.fireDate == at(18, 23))
+        #expect(center.pending["tagwerk.task.local:A#0"]?.fireDate == at(18, 23))
     }
 
     @Test func quietHoursOn_movesTheRequestToTheEnd_withTheOverdueText() async {
         enableQuietHours()
         local.tasks = [task("A", day: 19, hour: 1)]
         await scheduler(now: testNow()).reschedule()
-        #expect(center.pending["tagwerk.task.local:A"]?.fireDate == at(19, 7))
+        #expect(center.pending["tagwerk.task.local:A#0"]?.fireDate == at(19, 7))
         #expect(center.added.last?.body == "War fällig heute um 01:00 · local")
     }
 
@@ -63,10 +63,10 @@ struct NotificationSchedulerQuietHoursTests {
         // Due 00:30, fires 22:30: inside 22:00-07:00, outside the default 23:00-07:00 only by half an hour.
         local.tasks = [task("A", day: 19, hour: 0, minute: 30)]
         await scheduler(now: testNow()).reschedule()
-        #expect(center.pending["tagwerk.task.local:A"]?.fireDate == at(19, 7))
+        #expect(center.pending["tagwerk.task.local:A#0"]?.fireDate == at(19, 7))
         settings.bedtimeMinutes = 23 * 60 + 30
         await scheduler(now: testNow()).reschedule()
-        #expect(center.pending["tagwerk.task.local:A"]?.fireDate == at(18, 22, 30))
+        #expect(center.pending["tagwerk.task.local:A#0"]?.fireDate == at(18, 22, 30))
     }
 
     @Test func rescheduleDuringTheNight_keepsTheMovedRequest() async {
@@ -76,7 +76,7 @@ struct NotificationSchedulerQuietHoursTests {
         center.clearAdded()
         // 02:00: the original 23:00 is long past, but the request for 07:00 must survive any run.
         await scheduler(now: at(19, 2)).reschedule()
-        #expect(center.pending["tagwerk.task.local:A"]?.fireDate == at(19, 7))
+        #expect(center.pending["tagwerk.task.local:A#0"]?.fireDate == at(19, 7))
     }
 
     @Test func limitAndOrder_workWithMovedTimes() async {
@@ -86,8 +86,8 @@ struct NotificationSchedulerQuietHoursTests {
         #expect(center.pending.count == NotificationScheduler.limit)
         #expect(center.pending.values.allSatisfy { $0.fireDate == at(19, 7) })
         // All share one time: the order falls back to the identifier, so the first fifty identifiers stay.
-        #expect(center.pendingIDs.contains("tagwerk.task.local:T49"))
-        #expect(!center.pendingIDs.contains("tagwerk.task.local:T50"))
+        #expect(center.pendingIDs.contains("tagwerk.task.local:T49#0"))
+        #expect(!center.pendingIDs.contains("tagwerk.task.local:T50#0"))
     }
 
     // MARK: Focus filter
@@ -96,7 +96,7 @@ struct NotificationSchedulerQuietHoursTests {
         settings.focusQuietSince = at(18, 9)
         local.tasks = [task("A", day: 18, hour: 14)]  // fires 12:00
         await scheduler(now: testNow()).reschedule()
-        #expect(center.pending["tagwerk.task.local:A"]?.fireDate == at(18, 17))
+        #expect(center.pending["tagwerk.task.local:A#0"]?.fireDate == at(18, 17))
     }
 
     @Test func focusActive_withQuietHours_holdsUntilTheirEnd() async {
@@ -104,7 +104,7 @@ struct NotificationSchedulerQuietHoursTests {
         settings.focusQuietSince = at(18, 9)
         local.tasks = [task("A", day: 18, hour: 14)]
         await scheduler(now: testNow()).reschedule()
-        #expect(center.pending["tagwerk.task.local:A"]?.fireDate == at(19, 7))
+        #expect(center.pending["tagwerk.task.local:A#0"]?.fireDate == at(19, 7))
     }
 
     @Test func focusEndsEarly_restoresTheOriginalTime() async {
@@ -113,7 +113,7 @@ struct NotificationSchedulerQuietHoursTests {
         await scheduler(now: testNow()).reschedule()
         settings.focusQuietState = FocusQuiet.applying(active: false, now: testNow(), to: settings.focusQuietState)
         await scheduler(now: testNow()).reschedule()
-        #expect(center.pending["tagwerk.task.local:A"]?.fireDate == at(18, 12))
+        #expect(center.pending["tagwerk.task.local:A#0"]?.fireDate == at(18, 12))
     }
 
     @Test func focusEnded_catchesUpWhatCameDueMeanwhile_once() async {
@@ -123,14 +123,14 @@ struct NotificationSchedulerQuietHoursTests {
         let first = await scheduler(now: now)
         await first.reschedule()
         let catchUpMoment = now.addingTimeInterval(60)
-        #expect(center.pending["tagwerk.task.local:A"]?.fireDate == catchUpMoment)
-        #expect(center.pending["tagwerk.task.local:B"] == nil)  // came due before the Focus started
+        #expect(center.pending["tagwerk.task.local:A#0"]?.fireDate == catchUpMoment)
+        #expect(center.pending["tagwerk.task.local:B#0"] == nil)  // came due before the Focus started
         #expect(center.added.last?.body == "War fällig heute um 13:00 · local")
 
         // A second run before the moment plans the same one; after it, nothing is planned again.
         await scheduler(now: now.addingTimeInterval(30)).reschedule()
-        #expect(center.pending["tagwerk.task.local:A"]?.fireDate == catchUpMoment)
-        center.removePendingForTest("tagwerk.task.local:A")  // delivered
+        #expect(center.pending["tagwerk.task.local:A#0"]?.fireDate == catchUpMoment)
+        center.removePendingForTest("tagwerk.task.local:A#0")  // delivered
         await scheduler(now: catchUpMoment.addingTimeInterval(5)).reschedule()
         #expect(center.pending.isEmpty)
         #expect(settings.focusQuietState == FocusQuiet.State())
@@ -140,7 +140,7 @@ struct NotificationSchedulerQuietHoursTests {
         settings.focusQuietSince = at(16, 9)
         local.tasks = [task("A", day: 18, hour: 14)]
         await scheduler(now: testNow()).reschedule()
-        #expect(center.pending["tagwerk.task.local:A"]?.fireDate == at(18, 12))
+        #expect(center.pending["tagwerk.task.local:A#0"]?.fireDate == at(18, 12))
         #expect(settings.focusQuietSince == nil)
     }
 }

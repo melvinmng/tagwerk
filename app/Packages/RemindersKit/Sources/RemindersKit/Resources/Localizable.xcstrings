@@ -61,6 +61,16 @@
         }
       }
     },
+    "Erinnerungen brauchen ein Fälligkeitsdatum." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reminders need a due date."
+          }
+        }
+      }
+    },
     "Geplant mit Tagwerk" : {
       "localizations" : {
         "en" : {

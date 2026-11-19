@@ -18,6 +18,8 @@ final class BackgroundRefresh {
     /// Rewrites the widget snapshot after loading (phase 4); keeps the plan part when sources did not load in time.
     private let writeSnapshot: () -> Void
     private let submit: (Date) async throws -> Void
+    /// When the notification plan wants to run again because more is wanted than the budget holds; `nil` when it is complete.
+    private let nextRefill: () -> Date?
     private let now: () -> Date
     /// iOS grants about 30 s; loading gets part of it, scheduling uses whatever has arrived by then.
     private let loadBudget: Duration
@@ -26,7 +28,8 @@ final class BackgroundRefresh {
     init(prepare: @escaping () async -> Bool, reload: @escaping () async -> Void, reschedule: @escaping () async -> Void,
          writeSnapshot: @escaping () -> Void = {},
          submit: @escaping (Date) async throws -> Void = BackgroundRefresh.submitToSystem, now: @escaping () -> Date = Date.init,
-         loadBudget: Duration = .seconds(20)) {
+         loadBudget: Duration = .seconds(20), nextRefill: @escaping () -> Date? = { nil }) {
+        self.nextRefill = nextRefill
         self.prepare = prepare
         self.reload = reload
         self.reschedule = reschedule
@@ -45,13 +48,18 @@ final class BackgroundRefresh {
             if await !prepare() { await reload() }
         }
         await reschedule()
+        // The plan may have found more notifications than fit the budget: ask for a run before the planned ones are used up.
+        if let refill = nextRefill(), refill < now().addingTimeInterval(Self.interval) { await submitNext() }
         writeSnapshot()
     }
 
-    /// Asks iOS for the next run; failures (e.g. in the simulator) are only logged.
+    /// Asks iOS for the next run: after `interval`, or earlier when the notification plan needs a refill. Failures
+    /// (e.g. in the simulator) are only logged.
     func submitNext() async {
+        var earliest = now().addingTimeInterval(Self.interval)
+        if let refill = nextRefill() { earliest = min(earliest, refill) }
         do {
-            try await submit(now().addingTimeInterval(Self.interval))
+            try await submit(earliest)
         } catch {
             log.notice("Submitting the background refresh failed: \(error.localizedDescription, privacy: .public)")
         }
