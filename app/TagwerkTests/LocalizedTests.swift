@@ -27,6 +27,44 @@ struct LocalizedTests {
         #expect([overlaps(1), overlaps(3)] == ["überschneidet 1 Termin", "überschneidet 3 Termine"])
     }
 
+    // MARK: Issue assignees (#136)
+
+    @Test func privacyNotice_namesGitHubUsernames() {
+        #expect(AIStatusMessage.privacyNotice.contains("GitHub-Benutzernamen zuweisbarer Personen"))
+        let english = Localized.string(
+            "Wenn du KI-Funktionen nutzt, gehen die dafür nötigen Daten (Termine, Aufgaben, bei Issues auch Repo-Inhalte und GitHub-Benutzernamen zuweisbarer Personen) an OpenAI.",
+            in: .english, bundle: .main)
+        #expect(english.contains("GitHub usernames of assignable people"))
+        #expect(english.hasPrefix("When you use AI features"))
+    }
+
+    @Test func handOverBlocks_pluralForms() {
+        func german(_ count: Int) -> String { String(localized: "\(count) geplante Zeitblöcke werden gelöscht.") }
+        func english(_ count: Int) -> String {
+            Localized.string("\(count) geplante Zeitblöcke werden gelöscht.", in: .english, bundle: .main)
+        }
+        #expect([german(1), german(2)] == ["1 geplanter Zeitblock wird gelöscht.", "2 geplante Zeitblöcke werden gelöscht."])
+        #expect([english(1), english(2)] == ["1 planned time block will be deleted.", "2 planned time blocks will be deleted."])
+    }
+
+    @Test func people_pluralForms() {
+        #expect(Localized.string("\(3) Personen", in: .english, bundle: .main) == "3 people")
+        #expect(Localized.string("\(3) Personen", in: .german, bundle: .main) == "3 Personen")
+        #expect(Localized.string("\(4) weiteren Personen", in: .english, bundle: .main) == "4 other people")
+    }
+
+    @Test func assigneeTexts_inEnglish() {
+        func english(_ key: String.LocalizationValue) -> String { Localized.string(key, in: .english, bundle: .main) }
+        #expect(english("Zugewiesen") == "Assignees")
+        #expect(english("Niemand") == "No one")
+        #expect(english("Vergeben") == "Assigned")
+        #expect(english("Abgeben") == "Hand over")
+        #expect(english("Du bist danach nicht mehr zugewiesen.") == "You will no longer be assigned.")
+        #expect(english("#\(151) angelegt, aber \("lea-m") konnte nicht zugewiesen werden.") == "#151 created, but lea-m could not be assigned.")
+        #expect(english("\("#151") an \("lea-m")") == "#151 to lea-m")
+        #expect(english("\("lea-m") ist in \("beispiel/app") nicht zuweisbar.") == "lea-m cannot be assigned in beispiel/app.")
+    }
+
     @Test func englishLookups_useTheGlossary() {
         func english(_ key: String.LocalizationValue) -> String { Localized.string(key, in: .english, bundle: .main) }
         #expect(english("Neue Aufgabe") == "New task")

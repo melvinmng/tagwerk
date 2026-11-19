@@ -627,14 +627,14 @@ Instruktionen: ein Absatz nach dem Termin-Absatz, nur wenn `gitHubDirectory() !=
 
 **Interfaces – Consumes:** alle Zeichenketten aus Tasks 3–9.
 
-- [ ] **Step 1:** Tests in `LocalizedTests`:
+- [x] **Step 1:** Tests in `LocalizedTests`:
   - `privacyNotice_namesGitHubUsernames`: deutsch enthält „GitHub-Benutzernamen zuweisbarer Personen“; englisch „GitHub usernames of assignable people“
   - `handOverBlocks_pluralForms`: deutsch `1 → "1 geplanter Zeitblock wird gelöscht."`, `2 → "2 geplante Zeitblöcke werden gelöscht."`; englisch `1 → "1 planned time block will be deleted."`, `2 → "2 planned time blocks will be deleted."`
   - `people_pluralForms`: englisch `"3 people"`, deutsch `"3 Personen"`
-- [ ] **Step 2:** `APP LocalizedTests` → FAIL.
-- [ ] **Step 3:** `privacyNotice` auf „… (Termine, Aufgaben, bei Issues auch Repo-Inhalte und GitHub-Benutzernamen zuweisbarer Personen) an OpenAI.“ ändern; `scripts/sync-strings.sh` ausführen; englische Werte und Plural-Varianten gegen die Tabelle in Spec §5.8 abgleichen (Abweichungen nur nach A5).
-- [ ] **Step 4:** `APP LocalizedTests` → PASS; `ALL` → `ALL TESTS PASSED` (einschließlich Stufe „string catalogs“).
-- [ ] **Step 5:** Commit `docs: mention GitHub usernames in the AI privacy notice and complete English texts`.
+- [x] **Step 2:** `APP LocalizedTests` → FAIL.
+- [x] **Step 3:** `privacyNotice` auf „… (Termine, Aufgaben, bei Issues auch Repo-Inhalte und GitHub-Benutzernamen zuweisbarer Personen) an OpenAI.“ ändern; `scripts/sync-strings.sh` ausführen; englische Werte und Plural-Varianten gegen die Tabelle in Spec §5.8 abgleichen (Abweichungen nur nach A5).
+- [x] **Step 4:** `APP LocalizedTests` → PASS; `ALL` → `ALL TESTS PASSED` (einschließlich Stufe „string catalogs“).
+- [x] **Step 5:** Commit `docs: mention GitHub usernames in the AI privacy notice and complete English texts`.
 
 ---
 
