@@ -5551,6 +5551,16 @@
         }
       }
     },
+    "Diese Deadline wiederholt sich": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This deadline repeats"
+          }
+        }
+      }
+    },
     "Diese Gewohnheit gibt es nicht mehr.": {
       "localizations": {
         "en": {
@@ -5643,6 +5653,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "This week · week %lld"
+          }
+        }
+      }
+    },
+    "Diese und alle folgenden": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This and all following"
           }
         }
       }
@@ -11094,6 +11114,16 @@
         }
       }
     },
+    "Nur diese Deadline": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only this deadline"
+          }
+        }
+      }
+    },
     "Nur diesen Termin": {
       "localizations": {
         "en": {
@@ -13159,6 +13189,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tagwerk reminds you before the due date of GitHub and local tasks and of events from your deadline calendars. Reminders from the Reminders app still notify you on their own."
+          }
+        }
+      }
+    },
+    "Tagwerk erinnert mit Mitteilungen. Ruhezeiten und Fokus-Filter gelten dafür.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tagwerk reminds you with notifications. Quiet hours and Focus filters apply to them."
           }
         }
       }
@@ -15994,6 +16034,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "%@ still free today"
+          }
+        }
+      }
+    },
+    "iOS meldet diese Erinnerungen selbst, auch in Apple Kalender. Ruhezeiten gelten dafür nicht.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iOS delivers these reminders itself, also in Apple Calendar. Quiet hours do not apply to them."
           }
         }
       }

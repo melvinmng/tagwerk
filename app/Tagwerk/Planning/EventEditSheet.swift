@@ -14,6 +14,10 @@ struct EventEditSheet: View {
     @State private var draft: EventDraft
     @State private var askingSpan = false
     @State private var systemEditor: SystemEditorRequest?
+    /// The alarms of the event (plan P4). A new event starts with the default for events.
+    @State private var reminderList: ReminderListModel
+    /// The list when the sheet opened; alarms are written only when it changed, so alarms Tagwerk cannot show stay as they are.
+    @State private var initialReminders: [ReminderOffset]
 
     /// `existing == nil` creates a new event on `day` at the suggested start.
     init(model: PlanningModel, existing: CalendarEvent?, day: PlanDay) {
@@ -21,7 +25,13 @@ struct EventEditSheet: View {
         self.existing = existing
         if let existing {
             _draft = State(initialValue: EventDraft(existing))
+            let list = ReminderListModel(list: model.alarms(ofEvent: existing.id), isAllDay: existing.isAllDay)
+            _reminderList = State(initialValue: list)
+            _initialReminders = State(initialValue: list.offsets)
         } else {
+            let list = ReminderListModel(list: model.defaultEventReminders(isAllDay: false), isAllDay: false)
+            _reminderList = State(initialValue: list)
+            _initialReminders = State(initialValue: [])
             let start = suggestedBlockStart(on: day, hours: model.workHours(on: day), minutes: 60, now: model.now(),
                                             calendar: model.calendar)
             _draft = State(initialValue: EventDraft(title: "", start: start, end: start.addingTimeInterval(3600), isAllDay: false,
@@ -54,12 +64,20 @@ struct EventEditSheet: View {
                     TextField("Notiz", text: notes, axis: .vertical).lineLimit(2...6).keyboardDoneButton()
                 }
                 Section {
+                    ReminderListEditor(model: reminderList, defaultSwitchTitle: nil, calendar: model.calendar)
+                } header: {
+                    Text("Erinnerungen")
+                } footer: {
+                    Text("iOS meldet diese Erinnerungen selbst, auch in Apple Kalender. Ruhezeiten gelten dafür nicht.")
+                }
+                Section {
                     Button("Weitere Optionen …") { openSystemEditor() }
                 } footer: {
                     Text("Wiederholung, Teilnehmende und Hinweise stellst du in Apples Termin-Editor ein.")
                 }
             }
             .scrollDismissesKeyboard(.interactively)
+            .onChange(of: draft.isAllDay) { _, allDay in changeAllDay(to: allDay) }
             .navigationTitle(existing == nil ? "Neuer Termin" : "Termin bearbeiten")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -94,7 +112,22 @@ struct EventEditSheet: View {
         Binding(get: { draft.notes ?? "" }, set: { draft.notes = $0.isEmpty ? nil : $0 })
     }
 
+    /// An all-day event has no hour distances. A new event that still has the default list gets the all-day default.
+    private func changeAllDay(to allDay: Bool) {
+        let untouchedDefault = existing == nil && reminderList.offsets == model.defaultEventReminders(isAllDay: !allDay)
+        reminderList.configure(isAllDay: allDay, defaultOffsets: [])
+        if untouchedDefault { reminderList.setList(model.defaultEventReminders(isAllDay: allDay)) }
+    }
+
+    /// The alarms to write: `nil` leaves them alone (nothing changed, or a new event without any).
+    private func alarmsToWrite() -> [ReminderOffset]? {
+        let list = reminderList.offsets
+        if existing == nil { return list.isEmpty ? nil : list }
+        return list == initialReminders && draft.isAllDay == existing?.isAllDay ? nil : list
+    }
+
     private func save(span: EventSpan) {
+        draft.alarms = alarmsToWrite()
         Task {
             if let existing {
                 await model.updateEvent(existing, with: draft, span: span)
@@ -111,6 +144,7 @@ struct EventEditSheet: View {
             var id = existing?.id
             var created: CalendarEvent?
             if id == nil, !draft.title.isEmpty {
+                draft.alarms = alarmsToWrite()
                 created = await model.createEvent(draft)
                 id = created?.id
             }

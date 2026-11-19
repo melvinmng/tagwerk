@@ -1745,5 +1745,10 @@
   "Eigene Erinnerungen werden in der Erinnerungen-App gespeichert. Ruhezeiten gelten dafür nicht.": "Custom reminders are stored in the Reminders app. Quiet hours do not apply to them.",
   "Erinnerungen ändern": "Change reminders",
   "Gilt für alle Wiederholungen.": "Applies to all repetitions.",
-  "Nur diese": "Only this one"
+  "Nur diese": "Only this one",
+  "Diese Deadline wiederholt sich": "This deadline repeats",
+  "Diese und alle folgenden": "This and all following",
+  "Nur diese Deadline": "Only this deadline",
+  "Tagwerk erinnert mit Mitteilungen. Ruhezeiten und Fokus-Filter gelten dafür.": "Tagwerk reminds you with notifications. Quiet hours and Focus filters apply to them.",
+  "iOS meldet diese Erinnerungen selbst, auch in Apple Kalender. Ruhezeiten gelten dafür nicht.": "iOS delivers these reminders itself, also in Apple Calendar. Quiet hours do not apply to them."
 }

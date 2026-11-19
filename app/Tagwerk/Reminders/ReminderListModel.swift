@@ -55,6 +55,12 @@ final class ReminderListModel {
         offsets.remove(at: index)
     }
 
+    /// Replaces the own list (a list without a default behind it).
+    func setList(_ list: [ReminderOffset]) {
+        isUsingDefault = false
+        offsets = ReminderOffset.normalized(list, isAllDay: isAllDay)
+    }
+
     /// Goes back to the default; the own list is dropped.
     func useDefault() {
         isUsingDefault = true

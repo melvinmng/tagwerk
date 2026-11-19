@@ -10,6 +10,12 @@ final class FakeCalendarStore: CalendarStore {
     var beforeUpdate: (() -> Void)?
     var calendars: [ListInfo] = [ListInfo(id: "plan", title: "Tagwerk", colorHex: nil, kind: .calDAV)]
     private var counter = 0
+    /// Alarms by event ID, set by `createEvent` and `updateEvent` when the draft carries alarms.
+    var alarmsByEvent: [String: [ReminderOffset]] = [:]
+    /// The span of every `updateEvent`, in order.
+    private(set) var updateSpans: [EventSpan] = []
+
+    func alarms(ofEvent id: String) -> [ReminderOffset] { alarmsByEvent[id] ?? [] }
 
     func events(in interval: DateInterval, calendarIDs: Set<String>?) -> [CalendarEvent] {
         storedEvents.filter { $0.end > interval.start && $0.start < interval.end && (calendarIDs?.contains($0.calendarID) ?? true) }
@@ -46,6 +52,7 @@ final class FakeCalendarStore: CalendarStore {
         event.notes = draft.notes
         event.location = draft.location
         storedEvents.append(event)
+        if let alarms = draft.alarms { alarmsByEvent[event.id] = alarms }
         return event
     }
 
@@ -59,6 +66,7 @@ final class FakeCalendarStore: CalendarStore {
         let shift = draft.start.timeIntervalSince(current.start)
         let length = draft.end.timeIntervalSince(draft.start)
         let series = CalendarBlockRules.parseOccurrenceID(id).0
+        updateSpans.append(span)
         for position in storedEvents.indices {
             let other = storedEvents[position]
             let affected = position == index
@@ -75,6 +83,7 @@ final class FakeCalendarStore: CalendarStore {
             storedEvents[position].location = draft.location
             storedEvents[position].calendarID = draft.calendarID
             storedEvents[position].version = "v\(counter)"
+            if let alarms = draft.alarms { alarmsByEvent[storedEvents[position].id] = alarms }
         }
         return storedEvents[index]
     }

@@ -10,6 +10,8 @@ struct EntrySheet: View {
     let onShowTask: (TaskID) -> Void
     @Environment(\.dismiss) private var dismiss
     @Environment(\.openURL) private var openURL
+    @Environment(AppEnvironment.self) private var environment
+    @State private var editingReminders = false
     @State private var editing = false
     @State private var movingDay = false
     @State private var askingDelete = false
@@ -178,6 +180,7 @@ struct EntrySheet: View {
                     EventEditSheet(model: model, existing: event, day: PlanDay(date: event.start, calendar: model.calendar))
                 }
                 .sheet(isPresented: $movingDay) { BlockDaySheet(block: event, model: model) { dismiss() } }
+                .sheet(isPresented: $editingReminders) { DeadlineReminderSheet(event: event, calendar: model.calendar) }
                 .confirmationDialog(event.isRecurring ? "Dieser Termin wiederholt sich" : "Löschen?", isPresented: $askingDelete,
                                     titleVisibility: .visible) {
                     if event.isRecurring {
@@ -212,6 +215,9 @@ struct EntrySheet: View {
                 }))
                 .tint(.red)
             }
+            if environment.settings.deadlineCalendarNotifications, model.isInDeadlineCalendar(event) || model.isMarkedDeadline(event) {
+                remindersRow(event)
+            }
         } header: {
             Text("Deadline")
         } footer: {
@@ -221,6 +227,21 @@ struct EntrySheet: View {
         }
         .seriesMarkQuestion(isPresented: $askingMarkSeries, event: event, model: model)
         .unmarkConfirmation(event: $confirmingUnmark, model: model)
+    }
+
+    /// "Erinnerungen" of a deadline with their short form; opens `DeadlineReminderSheet` (plan P4).
+    private func remindersRow(_ event: CalendarEvent) -> some View {
+        let offsets = DeadlineReminderModel.offsets(for: event, overrides: environment.reminderOverrides,
+                                                    defaults: environment.settings.reminderDefaults, calendar: model.calendar)
+        return Button { editingReminders = true } label: {
+            LabeledContent("Erinnerungen") {
+                HStack(spacing: 4) {
+                    Text(ReminderText.summary(offsets, locale: .current, calendar: model.calendar))
+                    Image(systemName: "chevron.right").font(.footnote.weight(.semibold)).foregroundStyle(.tertiary)
+                }
+            }
+        }
+        .foregroundStyle(.primary)
     }
 
     private func setMarked(_ event: CalendarEvent, _ mark: Bool) {
