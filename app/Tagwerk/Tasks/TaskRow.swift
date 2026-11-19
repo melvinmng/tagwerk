@@ -8,7 +8,7 @@ struct TaskRow: View {
     let now: Date
     let calendar: Calendar
     var isReadOnly = false
-    /// Recurring reminder: marked with ↻ (design §13.8).
+    /// Repeating task (reminder or local): marked with ↻ (design §13.8).
     var isRecurring = false
     let onComplete: () -> Void
 
