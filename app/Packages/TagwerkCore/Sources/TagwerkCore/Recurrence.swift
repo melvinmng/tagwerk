@@ -120,6 +120,35 @@ public func nextOccurrences(of recurrence: Recurrence, onOrAfter day: PlanDay, l
     return result
 }
 
+/// A repeating task moved on to its next occurrence (local tasks, plan 2026-11-18, stage 2).
+public struct AdvancedSeries: Sendable, Hashable {
+    /// The next occurrence, with the time of day of the previous due date.
+    public let due: DueDate
+    /// The series from the new due date on; a count holds the occurrences still left.
+    public let recurrence: Recurrence
+}
+
+/// Ticking off the occurrence due on `due`: the series starts at `due` (its stored start is ignored, like for
+/// reminders), the next due date is the first occurrence after that day, and a count drops by the occurrences
+/// passed (one, or none when `due` is off the rule). `nil` when no occurrence follows: the task is done.
+public func advancedSeries(due: DueDate, recurrence: Recurrence, calendar: Calendar) -> AdvancedSeries? {
+    var series = recurrence
+    series.start = PlanDay(due)
+    let dayAfter = series.start.adding(days: 1, calendar: calendar)
+    guard let next = nextOccurrence(of: series, onOrAfter: dayAfter, calendar: calendar) else { return nil }
+    var nextDue = due
+    nextDue.year = next.year
+    nextDue.month = next.month
+    nextDue.day = next.day
+    var advanced = series
+    advanced.start = next
+    if let count = series.count {
+        let passed = occurrences(of: series, in: series.start...next.adding(days: -1, calendar: calendar), calendar: calendar).count
+        advanced.count = count - passed
+    }
+    return AdvancedSeries(due: nextDue, recurrence: advanced)
+}
+
 /// Upper bound for the gap between two occurrences: months without day 31 (at most a year apart for any
 /// interval cycle) and February 29 (at most eight years apart, because of century years).
 private func searchHorizonDays(for rule: RecurrenceRule) -> Int {
