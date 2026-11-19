@@ -1,17 +1,65 @@
 import Foundation
 import TagwerkCore
 
-/// A field of a GitHub Project. `options` maps option names to option IDs (single-select fields only).
+/// One option of a single-select project field.
+public struct ProjectFieldOption: Codable, Sendable, Equatable, Hashable {
+    public let id: String
+    public let name: String
+
+    public init(id: String, name: String) {
+        self.id = id
+        self.name = name
+    }
+}
+
+/// A field of a GitHub Project. `orderedOptions` lists the options of a single-select field in board
+/// order; `options` maps option names to option IDs.
 public struct ProjectField: Codable, Sendable, Equatable {
     public let id: String
     public let name: String
-    public let options: [String: String]
+    public let orderedOptions: [ProjectFieldOption]
 
-    public init(id: String, name: String, options: [String: String]) {
+    /// Option names to option IDs, derived from `orderedOptions`.
+    public var options: [String: String] {
+        Dictionary(orderedOptions.map { ($0.name, $0.id) }, uniquingKeysWith: { first, _ in first })
+    }
+
+    /// Options in board order. Repeated names keep their first occurrence.
+    public init(id: String, name: String, orderedOptions: [ProjectFieldOption]) {
         self.id = id
         self.name = name
-        self.options = options
+        var seen = Set<String>()
+        self.orderedOptions = orderedOptions.filter { seen.insert($0.name).inserted }
     }
+
+    /// Options without a known board order; they are ordered by name.
+    public init(id: String, name: String, options: [String: String]) {
+        self.init(id: id, name: name,
+                  orderedOptions: options.sorted { $0.key < $1.key }.map { ProjectFieldOption(id: $0.value, name: $0.key) })
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        let id = try container.decode(String.self, forKey: .id)
+        let name = try container.decode(String.self, forKey: .name)
+        if let ordered = try container.decodeIfPresent([ProjectFieldOption].self, forKey: .orderedOptions) {
+            self.init(id: id, name: name, orderedOptions: ordered)
+        } else {
+            // Caches written before the board order was kept only hold the dictionary.
+            self.init(id: id, name: name, options: try container.decodeIfPresent([String: String].self, forKey: .options) ?? [:])
+        }
+    }
+
+    /// Writes the dictionary as well, so the cache stays readable for older builds.
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(id, forKey: .id)
+        try container.encode(name, forKey: .name)
+        try container.encode(options, forKey: .options)
+        try container.encode(orderedOptions, forKey: .orderedOptions)
+    }
+
+    enum CodingKeys: String, CodingKey { case id, name, options, orderedOptions }
 }
 
 /// An open GitHub Project (v2) with its field definitions.

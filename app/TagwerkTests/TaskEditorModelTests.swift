@@ -419,3 +419,105 @@ struct TaskEditorAssigneeTests {
         #expect(model.savedIsListed == false)
     }
 }
+
+
+@MainActor
+struct TaskEditorStatusTests {
+    let provider: FakeTaskProvider
+    let issue: TaskItem
+
+    init() {
+        var issue = makeTask("Login", source: .github, version: "1")
+        issue.assignees = ["octo"]
+        issue.editableFields.insert(.status)
+        issue.subContainers = [TaskContainer(id: "PVT_1", name: "App", colorHex: nil), TaskContainer(id: "PVT_2", name: "Studium", colorHex: nil)]
+        issue.statuses = [
+            SubContainerStatus(subContainerID: "PVT_1", subContainerName: "App", current: "Ready",
+                               options: ["Backlog", "Ready", "In progress", "Done"], isWritable: true),
+            SubContainerStatus(subContainerID: "PVT_2", subContainerName: "Studium", current: "Todo",
+                               options: ["Todo", "Doing", "Done"], isWritable: true),
+        ]
+        self.issue = issue
+        provider = FakeTaskProvider(source: .github, tasks: [issue])
+        provider.viewerLogin = "octo"
+    }
+
+    private func makeModel() -> TaskEditorModel {
+        TaskEditorModel(item: issue, provider: provider, viewerLogin: "octo")
+    }
+
+    @Test func setStatus_changesOnlyThatProject_andSavesAsStatusChange() async {
+        let model = makeModel()
+        model.setStatus("Doing", in: "PVT_2")
+        #expect(model.hasChanges)
+        #expect(await model.save())
+        let edit = provider.appliedEdits.last?.edit
+        #expect(edit?.statusChanges == ["PVT_2": "Doing"])
+        #expect(edit?.isCompleted.isUnchanged == true)
+        #expect(edit?.targetSubContainerIDs == nil)
+    }
+
+    @Test func setStatus_ignoresTheProjectTargetPicker() async {
+        let model = makeModel()
+        model.targetProjects = ["PVT_1"]
+        model.setStatus("Doing", in: "PVT_2")
+        #expect(await model.save())
+        #expect(provider.appliedEdits.last?.edit.statusChanges == ["PVT_2": "Doing"])
+    }
+
+    @Test func setStatus_unknownStageOrReadOnlyProject_isIgnored() {
+        var item = issue
+        item.statuses[1] = SubContainerStatus(subContainerID: "PVT_2", subContainerName: "Studium", current: "Todo",
+                                              options: ["Todo", "Done"], isWritable: false)
+        let model = TaskEditorModel(item: item, provider: provider, viewerLogin: "octo")
+        model.setStatus("Blocked", in: "PVT_1")
+        model.setStatus("Done", in: "PVT_2")
+        #expect(!model.hasChanges)
+    }
+
+    @Test func statusRows_hideProjectsWithoutAStatusField() {
+        var item = issue
+        item.statuses.append(SubContainerStatus(subContainerID: "PVT_3", subContainerName: "Ohne", current: nil, options: [], isWritable: true))
+        let model = TaskEditorModel(item: item, provider: provider, viewerLogin: "octo")
+        #expect(model.statusRows.map(\.subContainerID) == ["PVT_1", "PVT_2"])
+    }
+
+    @Test func done_inEveryProject_returnsTheCompletedIssue() async {
+        let model = makeModel()
+        model.setStatus("Done", in: "PVT_1")
+        model.setStatus("Done", in: "PVT_2")
+        #expect(await model.save())
+        #expect(model.saved?.isCompleted == true)
+    }
+
+    @Test func statusOnlyEdit_isNotDroppedAsEmpty() async {
+        let model = makeModel()
+        model.setStatus("In progress", in: "PVT_1")
+        #expect(await model.save())
+        #expect(provider.appliedEdits.count == 1)
+    }
+
+    @Test func conflict_namesTheProject_whenSeveralProjectsExist() async {
+        var external = issue
+        external.version = "2"
+        external.statuses[0].current = "Blocked"
+        provider.conflictOnNextApply = external
+        let model = makeModel()
+        model.draft.title = "Mein Titel"
+        #expect(!(await model.save()))
+        let changes = model.conflictChanges
+        #expect(changes.map(\.field) == ["Status · App"])
+        #expect(changes.first?.before == "Ready" && changes.first?.after == "Blocked")
+    }
+
+    @Test func conflict_withMyOwnStatusChange_isAnOverlap() async {
+        var external = issue
+        external.version = "2"
+        external.statuses[1].current = "Doing"
+        provider.conflictOnNextApply = external
+        let model = makeModel()
+        model.setStatus("Done", in: "PVT_2")
+        #expect(!(await model.save()))
+        #expect(model.conflictChanges.first?.mine == "Done")
+    }
+}

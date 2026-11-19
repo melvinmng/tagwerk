@@ -11,12 +11,48 @@
         }
       }
     },
-    "Bitte Repository und mindestens ein Project wählen." : {
+    "Bitte ein Repository wählen." : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Choose a repository and at least one project."
+            "value" : "Choose a repository."
+          }
+        }
+      }
+    },
+    "Den Status „%@“ gibt es im Project „%@“ nicht." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Den Status „%1$@“ gibt es im Project „%2$@“ nicht."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The status “%1$@” does not exist in the project “%2$@”."
+          }
+        }
+      }
+    },
+    "Der Status lässt sich in diesem Project nicht ändern." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The status cannot be changed in this project."
+          }
+        }
+      }
+    },
+    "Ein neues Issue kann nicht mit dem Status „Done“ beginnen." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A new issue cannot start with the status “Done”."
           }
         }
       }

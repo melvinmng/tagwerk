@@ -407,7 +407,8 @@ struct TaskListView: View {
                 return environment.planning.recurringItem(for: item, on: today).map { recurring in { open(recurring, today) } }
             },
             isWritable: isWritable(item),
-            plannedText: environment.planning.plannedText(for: item.id)
+            plannedText: environment.planning.plannedText(for: item.id),
+            setStatus: { projectID, status in Task { await model.setStatus(item.id, subContainerID: projectID, to: status) } }
         )
     }
 

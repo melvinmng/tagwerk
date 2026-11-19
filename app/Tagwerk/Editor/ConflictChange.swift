@@ -27,10 +27,22 @@ struct ConflictChange: Equatable, Identifiable {
             (String(localized: "Notiz"), { ($0.notes ?? "").ifEmpty("–") }),
             (String(localized: "Erledigt"), { $0.isCompleted ? String(localized: "ja") : String(localized: "nein") }),
         ]
-        return fields.compactMap { name, value in
+        return (fields + statusFields(original: original, current: current)).compactMap { name, value in
             let before = value(original), after = value(current), mine = value(draft)
             guard before != after else { return nil }
             return ConflictChange(field: name, before: before, after: after, mine: mine != before ? mine : nil)
+        }
+    }
+
+    /// One "Status" row per Project; with several Projects the row names the Project.
+    private static func statusFields(original: TaskItem, current: TaskItem) -> [(String, (TaskItem) -> String)] {
+        var seen = Set<String>()
+        let rows = (current.statuses + original.statuses).filter { seen.insert($0.subContainerID).inserted }
+        return rows.map { row in
+            let name = rows.count > 1 ? String(localized: "Status · \(row.subContainerName)") : String(localized: "Status")
+            return (name, { item in
+                item.statuses.first { $0.subContainerID == row.subContainerID }?.current ?? "–"
+            })
         }
     }
 

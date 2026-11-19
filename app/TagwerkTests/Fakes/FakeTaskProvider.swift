@@ -26,6 +26,10 @@ final class FakeTaskProvider: TaskProvider {
     var viewerLogin: String?
     /// Logins the source drops silently when writing, like GitHub does for people who cannot be assigned.
     var droppedAssignees: Set<String> = []
+    /// Like GitHub: an item that sits in no sub-container (Project) is not listed.
+    var requiresPlacementToBeListed = false
+    /// Stages of every sub-container the fake creates for a GitHub issue.
+    var statusOptions = ["Backlog", "Ready", "In progress", "Done"]
     private(set) var createdDrafts: [TaskDraft] = []
     private(set) var openTasksCalls = 0
     private(set) var appliedEdits: [AppliedEdit] = []
@@ -68,6 +72,7 @@ final class FakeTaskProvider: TaskProvider {
         if case .set(let minutes) = edit.estimateMinutes { item.estimateMinutes = minutes }
         if case .set(let completed) = edit.isCompleted { item.isCompleted = completed }
         if case .set(let recurrence) = edit.recurrence { item.recurrence = recurrence }
+        applyStatusChanges(edit.statusChanges, to: &item)
         if case .set(let change) = edit.assignees {
             item.assignees = AssigneeRules.applying(change, to: item.assignees ?? []).filter { !droppedAssignees.contains($0) }
         }
@@ -90,7 +95,18 @@ final class FakeTaskProvider: TaskProvider {
         tasks.removeAll { $0.id == id }
     }
 
+    /// Sets the stages and, like GitHub, finishes the item when every writable sub-container is "Done".
+    private func applyStatusChanges(_ changes: [String: String], to item: inout TaskItem) {
+        guard !changes.isEmpty else { return }
+        for index in item.statuses.indices {
+            if let change = changes[item.statuses[index].subContainerID] { item.statuses[index].current = change }
+        }
+        let writable = item.statuses.filter(\.isWritable)
+        if !writable.isEmpty, writable.allSatisfy({ $0.current?.lowercased() == "done" }) { item.isCompleted = true }
+    }
+
     func isListed(_ item: TaskItem) -> Bool {
+        if requiresPlacementToBeListed, item.statuses.isEmpty { return false }
         guard let viewerLogin else { return true }
         return AssigneeRules.contains(item.assignees, viewerLogin)
     }
@@ -107,7 +123,11 @@ final class FakeTaskProvider: TaskProvider {
             container: TaskContainer(id: draft.containerID ?? "default", name: "Standard", colorHex: nil),
             url: isIssue ? URL(string: "https://github.com/beispiel/app/issues/151") : nil,
             version: String(revision), editableFields: [.title, .notes, .due, .priority],
-            recurrence: draft.recurrence, assignees: isIssue ? assignees : nil
+            recurrence: draft.recurrence, assignees: isIssue ? assignees : nil,
+            statuses: isIssue ? draft.subContainerIDs.map {
+                SubContainerStatus(subContainerID: $0, subContainerName: $0, current: draft.startStatus ?? "Ready",
+                                   options: statusOptions, isWritable: true)
+            } : []
         )
         tasks.append(item)
         return item

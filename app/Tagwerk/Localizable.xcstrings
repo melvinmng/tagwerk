@@ -210,6 +210,16 @@
         }
       }
     },
+    "%@ angelegt · ohne Project": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ created · no project"
+          }
+        }
+      }
+    },
     "%@ bis %@ · ganztägig": {
       "localizations": {
         "de": {
@@ -2882,6 +2892,26 @@
         }
       }
     },
+    "Angelegt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Created"
+          }
+        }
+      }
+    },
+    "Angelegt: %@. Auf GitHub öffnen verfügbar.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Created: %@. Open on GitHub available."
+          }
+        }
+      }
+    },
     "Angemeldet als": {
       "localizations": {
         "en": {
@@ -4405,6 +4435,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "The item could not be saved."
+          }
+        }
+      }
+    },
+    "Der Status gilt je Project, unabhängig von „Ändern in“.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The status applies per project, regardless of “Change in”."
           }
         }
       }
@@ -7573,6 +7613,16 @@
         }
       }
     },
+    "Kein Project": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No project"
+          }
+        }
+      }
+    },
     "Kein Wasser erfasst": {
       "localizations": {
         "en": {
@@ -8594,16 +8644,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Microphone not allowed. You can keep typing."
-          }
-        }
-      }
-    },
-    "Mindestens ein Projekt wählen.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Choose at least one project."
           }
         }
       }
@@ -9769,6 +9809,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Without a due date, the repeat is removed."
+          }
+        }
+      }
+    },
+    "Ohne Project erscheint das Issue nicht in deinen Aufgaben.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Without a project, the issue does not appear in your tasks."
           }
         }
       }
@@ -10993,6 +11043,46 @@
           "stringUnit": {
             "state": "translated",
             "value": "Starting …"
+          }
+        }
+      }
+    },
+    "Status": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Status"
+          }
+        }
+      }
+    },
+    "Status · %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Status · %@"
+          }
+        }
+      }
+    },
+    "Status · ändert GitHub": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Status · changes GitHub"
+          }
+        }
+      }
+    },
+    "Status ändern": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Change status"
           }
         }
       }
@@ -13844,6 +13934,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "no effort"
+          }
+        }
+      }
+    },
+    "kein Status": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "no status"
           }
         }
       }

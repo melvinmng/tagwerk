@@ -224,6 +224,21 @@ final class TaskListModel {
         await onCompletionChanged?(id, true)
     }
 
+    /// Sets the status of a task in one sub-container (GitHub: one Project). Finishing it in every writable
+    /// project completes the issue: it leaves the list with the same capsule as "Erledigt".
+    func setStatus(_ id: TaskID, subContainerID: String, to status: String) async {
+        var edit = TaskEdit()
+        edit.statusChanges = [subContainerID: status]
+        guard let provider = provider(for: id.source), let updated = await write(edit, to: id) else { return }
+        if updated.isCompleted {
+            items.removeAll { $0.id == id }
+            lastCompleted = updated
+            await onCompletionChanged?(id, true)
+        } else {
+            await settle(updated, provider: provider, announce: false)
+        }
+    }
+
     /// Reopens the task completed last ("Rückgängig").
     func undoComplete() async {
         guard let completed = lastCompleted else { return }
