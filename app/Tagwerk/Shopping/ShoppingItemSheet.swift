@@ -52,6 +52,7 @@ struct ShoppingItemSheet: View {
                     }
                 }
             }
+            .scrollDismissesKeyboard(.interactively)
             .navigationTitle("Artikel")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
