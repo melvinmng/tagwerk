@@ -8,8 +8,13 @@ let package = Package(
     products: [
         .library(name: "TagwerkCore", targets: ["TagwerkCore"])
     ],
+    dependencies: [
+        // Pinned to an exact release (0.9.0, published 2026-09-21): the notes render Markdown through its parser.
+        .package(url: "https://github.com/swiftlang/swift-markdown.git", exact: "0.9.0")
+    ],
     targets: [
-        .target(name: "TagwerkCore", resources: [.process("Resources")]),
+        .target(name: "TagwerkCore", dependencies: [.product(name: "Markdown", package: "swift-markdown")],
+                resources: [.process("Resources")]),
         .testTarget(name: "TagwerkCoreTests", dependencies: ["TagwerkCore"])
     ]
 )

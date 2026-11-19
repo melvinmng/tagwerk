@@ -99,7 +99,7 @@ struct MarkdownTextTests {
         #expect(MarkdownText.togglingCheckbox(at: 1, in: markdown) == "- [ ] eins\n- [ ] zwei\n  * [ ] drei")
         #expect(MarkdownText.togglingCheckbox(at: 2, in: markdown) == "- [ ] eins\n- [x] zwei\n  * [x] drei")
         #expect(MarkdownText.togglingCheckbox(at: 0, in: "+ [X] groß") == "+ [ ] groß")
-        #expect(MarkdownText.togglingCheckbox(at: 0, in: "> - [ ] im Zitat") == "> - [x] im Zitat")
+        #expect(MarkdownText.togglingCheckbox(at: 0, in: "1. [ ] numeriert") == "1. [x] numeriert")
         #expect(MarkdownText.checkboxCount(in: markdown) == 3)
     }
 
@@ -110,7 +110,7 @@ struct MarkdownTextTests {
     }
 
     @Test func togglingCheckbox_outOfRange_returnsTextUnchanged() {
-        let markdown = "- [ ] eins\nText [ ] kein Punkt\n-[ ] kein Leerzeichen"
+        let markdown = "- [ ] eins\nText [ ] kein Punkt\n-[ ] kein Leerzeichen\n- [ ]\n> - [ ] im Zitat"
         #expect(MarkdownText.togglingCheckbox(at: 1, in: markdown) == markdown)
         #expect(MarkdownText.togglingCheckbox(at: -1, in: markdown) == markdown)
         #expect(MarkdownText.togglingCheckbox(at: 0, in: "") == "")

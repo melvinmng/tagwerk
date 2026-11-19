@@ -73,8 +73,8 @@ public enum MarkdownText {
     // MARK: Checkboxes
 
     /// Flips the checkbox with the given zero-based position among all checkboxes of the text, in document order.
-    /// A checkbox is a list item `- [ ]` or `- [x]` (also with `*`, `+` or `1.`, indented, inside a quote). Lines inside
-    /// fenced code blocks do not count. Text stays unchanged for a position that does not exist.
+    /// A checkbox is a list item `- [ ] text` or `- [x] text` (also with `*`, `+` or `1.`, indented) with text behind the
+    /// box, which is what the Markdown parser takes as a task. Lines inside fenced code blocks do not count. Text stays unchanged for a position that does not exist.
     public static func togglingCheckbox(at index: Int, in markdown: String) -> String {
         guard index >= 0 else { return markdown }
         var lines = markdown.split(omittingEmptySubsequences: false, whereSeparator: \.isNewline).map(String.init)
@@ -182,7 +182,7 @@ public enum MarkdownText {
     private static let emphasisStar = make(#"(?<![\w*])\*(?=\S)(.+?)(?<=\S)\*(?![\w*])"#)
     private static let emphasisUnderscore = make(#"(?<![\w])_(?=\S)(.+?)(?<=\S)_(?![\w])"#)
     private static let entity = make(#"&(#[0-9]+|#[xX][0-9a-fA-F]+|[A-Za-z]+);"#)
-    private static let checkbox = make(#"^(?:\s*>)*\s*(?:[-*+]|\d+[.)])\s+\[([ xX])\](?:\s|$)"#)
+    private static let checkbox = make(#"^\s*(?:[-*+]|\d+[.)])\s+\[([ xX])\]\s+\S"#)
     private static let attachmentReference = make(
         #"(?<![\w/:.\-])attachment:([0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12})"#, .caseInsensitive)
 }
