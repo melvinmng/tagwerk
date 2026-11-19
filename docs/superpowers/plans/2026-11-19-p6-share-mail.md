@@ -489,3 +489,39 @@ Die Fixtures sind selbst geschriebene `.eml` als String-Literale mit erfundenen 
 8. **Kalter Start:** drei Teilungen bei geschlossener App, danach die Blätter nacheinander, keines doppelt.
 9. **Gesperrtes Gerät:** Nach dem Entsperren aus dem Sperrbildschirm-Teilen sichern, dann den Import prüfen (Datenschutzklasse).
 10. **Englische Oberfläche:** Erweiterung und Blätter.
+
+---
+
+## Protokoll (Abschluss, 19.11.2026)
+
+**Stand:** Branch `feat/p6-share-mail` auf `origin/main` 0c7dd3b. Alle drei P5-Bausteine (Notiz-Anhänge, Rezept-Ablauf, Ordner „Brain Dump“) lagen auf `main`; es gab keinen Rückfall. `app/test-all.sh` grün: TagwerkCore 978, App 1521 Tests, String-Kataloge in Ordnung.
+
+**Spike-Ergebnisse:** siehe Nachtrag unter Task 0. S1 (Signierung) scheitert in dieser Sitzung schon an „No Accounts“, S2 (Mail-Typen) und S3 (`message:`-Link) sind ohne Gerät nicht entscheidbar.
+
+**Abweichungen vom Plan, mit Grund**
+- `SharePayload.availableTargets` ist enger als im Plan: Dateien bieten nur Notiz und Aufgabe, Bilder zusätzlich Rezept, Mails Mail zu Aufgabe, Aufgabe und Notiz. Grund: Einkauf aus einer PDF ergibt keinen Sinn; eine Mail wird nicht als Einkauf geteilt.
+- Aufgabe aus einer Datei übernimmt die Datei nicht (Aufgaben haben keine Anhänge). Die Erweiterung sagt das vor dem Sichern („Dateien werden nur bei Notizen übernommen.“) und legt die Datei dann gar nicht erst ab.
+- Eine geteilte `.eml` wird bereits in der Erweiterung gelesen (höchstens 2 MB) und nicht kopiert. Grund: Speichergrenze der Erweiterung und Datenschutz (der Anhang landet nie im Eingang).
+- `ShareInboxModel` hat `appBecameActive()` und `requestRefresh()` statt eines `refresh()` aus `TagwerkApp`: Das Wurzelblatt prüft, ob ein anderes Blatt offen ist (`refresh(canPresent:)`), weil nur es das weiß. `finish(_:)` ohne `kept`, `accept(_:)` und `ShareInbox.resetOffers` kamen für „Übernehmen“ in der Liste „Geteilt (n)“ dazu.
+- Weggewischt = Eingang ruht bis zum nächsten Aktivwerden (nicht nur der eine Eintrag), und Einträge, die noch nie angeboten wurden, kommen vor erneut angebotenen. Grund: Drei weggewischte Blätter sollen nicht sofort wieder erscheinen.
+- „Mail aus Zwischenablage“ liegt im Menü am „+“ (langes Drücken; Tippen legt wie bisher eine Aufgabe an), weil es in „Aufgaben“ kein vorhandenes Menü gab.
+- Die Einwilligung `mailSummaryConsent` steht in Einstellungen › KI und im Backup-DTO (optional, wie `shoppingRecipeConsent`).
+- `Tagwerk/App/Color+Hex.swift` wird nicht in die Erweiterung eingebunden (nicht gebraucht). Die Erweiterung hängt nur an `TagwerkCore`.
+- `LSApplicationQueriesSchemes` wurde nicht eingetragen (S3-Entscheidung).
+- Commits sind gröber geschnitten als die Tasks: Task 5, 7, 8 und 9 stecken in einem App-Commit, Task 10 und die Strings in einem Doku-Commit. `app/test-all.sh` lief erst nach Task 9 vollständig; die Paketteile liefen je Task einzeln.
+- Tests wurden zusammen mit der Umsetzung geschrieben, nicht strikt vorher.
+
+**Eigene Entscheidungen (Optionen, Risiko)**
+- Notiz aus Teilen liegt im Ordner „Alle Notizen“ (kein Ordner). Option: „Brain Dump“ oder wählbar (Designpunkt #188). Risiko gering.
+- Rezept-Erkennung per Schlagwort („rezept“, „recipe“, „chefkoch“ in Host, Pfad oder Titel) nur als Vorauswahl; im Blatt der Erweiterung änderbar.
+- `NewTaskSheet` bekam `prefilledNotes`, `prefilledURL`, `prefilledDue`, `onDiscard` mit Standardwerten. `TaskDraft` hat kein URL-Feld, der Link steht deshalb als letzte Zeile in den Notizen.
+- Schlägt ein Anhang beim Übernehmen in die Notiz fehl, wird die Notiz mit den übrigen Teilen angelegt und der Fehler in einem Hinweis genannt (Option: nichts anlegen; Risiko: doppelte Notiz beim Wiederholen).
+- Zeitlimit der Zusammenfassung 30 s; Fehlertexte wie bei der Mahlzeitenschätzung, plus „zu lange gebraucht“.
+- Das Prompt nennt das heutige Datum und sagt, der Mailtext sei Inhalt und keine Anweisung (Schutz vor eingebetteten Anweisungen). Das Datum ist nicht Teil der Mail.
+- Die Erweiterung loggt in DEBUG nur Typ-Kennungen und Größen (`os.Logger`, `privacy: .public` nur dafür).
+
+**Offene Gerätetests:** die Liste „Gerätetests“ unten gilt unverändert (1 bis 10). Zusätzlich zu klären:
+- Welche Typen liefert Mail auf iOS 27 (DEBUG-Log der Erweiterung, Konsole am Mac)?
+- Öffnet `message://%3C<Message-ID>%3E` genau die Mail (S3)?
+- Erscheint „Tagwerk“ in der Aktivierungsliste von Safari, Fotos, Dateien und Mail, und wie viel Speicher braucht die Erweiterung bei 25-MB-Dateien (Grenze etwa 120 MB)?
+- Setzt ein Sperrbildschirm-Teilen den Eintrag (Datenschutzklasse `completeUntilFirstUserAuthentication`)?
