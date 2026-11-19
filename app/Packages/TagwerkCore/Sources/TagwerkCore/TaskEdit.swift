@@ -23,6 +23,8 @@ public struct TaskEdit: Sendable, Equatable {
     public var labels: FieldChange<[String]> = .unchanged
     /// Written only when `.set`; `.set(nil)` removes the repetition. Sources never rewrite an unchanged rule.
     public var recurrence: FieldChange<Recurrence?> = .unchanged
+    /// Always a difference against the state the user saw, never a target list.
+    public var assignees: FieldChange<AssigneeChange> = .unchanged
     /// Sub-containers (e.g. GitHub Projects) that field changes apply to; `nil` means all.
     public var targetSubContainerIDs: Set<String>? = nil
 
@@ -31,7 +33,7 @@ public struct TaskEdit: Sendable, Equatable {
     public var isEmpty: Bool {
         title.isUnchanged && notes.isUnchanged && due.isUnchanged && priority.isUnchanged
             && estimateMinutes.isUnchanged && containerID.isUnchanged && isCompleted.isUnchanged
-            && labels.isUnchanged && recurrence.isUnchanged
+            && labels.isUnchanged && recurrence.isUnchanged && assignees.isUnchanged
     }
 
     /// Builds an edit that sets exactly the fields in which `edited` differs from `original`.
@@ -46,6 +48,9 @@ public struct TaskEdit: Sendable, Equatable {
         if edited.isCompleted != original.isCompleted { edit.isCompleted = .set(edited.isCompleted) }
         if edited.labels != original.labels { edit.labels = .set(edited.labels ?? []) }
         if !sameSeries(original.recurrence, edited.recurrence) { edit.recurrence = .set(edited.recurrence) }
+        if let change = AssigneeRules.change(original: original.assignees, edited: edited.assignees) {
+            edit.assignees = .set(change)
+        }
         return edit
     }
 
