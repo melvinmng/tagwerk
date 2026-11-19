@@ -14,9 +14,14 @@ public struct CapacityInput: Sendable, Hashable {
     public var nowMinutes: Int?
     /// Load still ahead today: unblocked tasks in full and the part of time blocks after now.
     public var remainingPlannedMinutes: Int?
+    /// Travel time before events with a place (minutes since midnight). Blocked like the lunch break: without buffer,
+    /// and counted once where it overlaps the buffer of another event.
+    public var travelIntervals: [Range<Int>]
 
     public init(hours: WorkHours?, lunchStartMinutes: Int, lunchMinutes: Int, bufferMinutes: Int,
-                busyIntervals: [Range<Int>], recurringMinutes: Int, plannedMinutes: Int, estimatedCount: Int) {
+                busyIntervals: [Range<Int>], recurringMinutes: Int, plannedMinutes: Int, estimatedCount: Int,
+                travelIntervals: [Range<Int>] = []) {
+        self.travelIntervals = travelIntervals
         self.hours = hours
         self.lunchStartMinutes = lunchStartMinutes
         self.lunchMinutes = lunchMinutes
@@ -53,6 +58,7 @@ public func capacity(_ input: CapacityInput) -> DayCapacity {
     if input.lunchMinutes > 0 {
         blocks.append(input.lunchStartMinutes..<(input.lunchStartMinutes + input.lunchMinutes))
     }
+    blocks += input.travelIntervals
     let work = hours.startMinutes..<hours.endMinutes
     let blocked = mergedLength(blocks.compactMap { clip($0, to: work) })
     let available = max(0, hours.minutes - blocked - input.recurringMinutes)

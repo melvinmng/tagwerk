@@ -23,6 +23,8 @@ public struct PlanInputEvent: Sendable, Hashable {
     public var deadline: Bool
     /// Linked to a task: it counts as that task's planned load.
     public var linkedToTask: Bool
+    /// The way to an event with a place. It carries no place: the model only learns that the time is taken.
+    public var travel = false
 }
 
 /// One day of the planning period with everything the checks need.
@@ -32,8 +34,12 @@ public struct PlanInputDay: Sendable, Hashable {
     public var hours: WorkHours?
     /// Lunch of this day in minutes since midnight.
     public var lunch: Range<Int>?
-    /// Occupied minutes from busy, unlinked events (without buffer).
+    /// Occupied minutes from busy, unlinked events and the travel time (without buffer).
     public var busy: [Range<Int>]
+    /// The travel time part of `busy`; the capacity counts it without buffer.
+    public var travel: [Range<Int>]
+    /// The busy events alone, to compute the capacity again for other hours.
+    var eventBusy: [Range<Int>]
     /// Existing time blocks and other task-linked events.
     public var blocks: [Range<Int>]
     public var bufferMinutes: Int
@@ -51,7 +57,7 @@ public struct PlanInputDay: Sendable, Hashable {
     public init(day: PlanDay, hours: WorkHours?, lunch: Range<Int>?, events: [CalendarEvent], linkedEventIDs: Set<String>,
                 deadlineCalendarIDs: Set<String>, blocks: [Range<Int>], recurringMinutes: Int, plannedMinutes: Int,
                 bufferMinutes: Int, calendar: Calendar, countedTaskMinutes: [String: Int] = [:],
-                deadlineEventIDs: Set<String> = []) {
+                deadlineEventIDs: Set<String> = [], travel: [Range<Int>] = []) {
         self.day = day
         self.countedTaskMinutes = countedTaskMinutes
         self.hours = hours
@@ -61,17 +67,19 @@ public struct PlanInputDay: Sendable, Hashable {
         self.recurringMinutes = recurringMinutes
         self.plannedMinutes = plannedMinutes
         let busy = busyIntervals(events: events, on: day, calendar: calendar, excluding: linkedEventIDs)
-        self.busy = busy
+        self.eventBusy = busy
+        self.travel = travel
+        self.busy = busy + travel
         let capacityInput = CapacityInput(hours: hours, lunchStartMinutes: lunch?.lowerBound ?? 0,
                                           lunchMinutes: lunch?.count ?? 0, bufferMinutes: bufferMinutes,
                                           busyIntervals: busy, recurringMinutes: recurringMinutes,
-                                          plannedMinutes: plannedMinutes, estimatedCount: 0)
+                                          plannedMinutes: plannedMinutes, estimatedCount: 0, travelIntervals: travel)
         self.availableMinutes = capacity(capacityInput).availableMinutes
 
         let dayStart = day.startDate(in: calendar)
         let dayEnd = day.adding(days: 1, calendar: calendar).startDate(in: calendar)
         let dayLength = Int(dayEnd.timeIntervalSince(dayStart) / 60)
-        self.events = events
+        var listed = events
             .filter { $0.end > dayStart && $0.start < dayEnd }
             .sorted { $0.start < $1.start }
             .map { event in
@@ -86,6 +94,15 @@ public struct PlanInputDay: Sendable, Hashable {
                     linkedToTask: linked
                 )
             }
+        // The trips are listed like events, with a fixed title and no place (privacy: places never leave the device).
+        listed += travel.map { range in
+            PlanInputEvent(title: "Fahrzeit", start: max(0, range.lowerBound), end: min(dayLength, range.upperBound),
+                           allDay: false, busy: true, deadline: false, linkedToTask: false, travel: true)
+        }
+        self.events = listed.enumerated().sorted { lhs, rhs in
+            let left = lhs.element.start ?? -1, right = rhs.element.start ?? -1
+            return left != right ? left < right : lhs.offset < rhs.offset
+        }.map(\.element)
     }
 }
 
@@ -96,8 +113,8 @@ extension PlanInputDay {
         day.hours = hours
         day.availableMinutes = capacity(CapacityInput(
             hours: hours, lunchStartMinutes: lunch?.lowerBound ?? 0, lunchMinutes: lunch?.count ?? 0,
-            bufferMinutes: bufferMinutes, busyIntervals: busy, recurringMinutes: recurringMinutes,
-            plannedMinutes: plannedMinutes, estimatedCount: 0
+            bufferMinutes: bufferMinutes, busyIntervals: eventBusy, recurringMinutes: recurringMinutes,
+            plannedMinutes: plannedMinutes, estimatedCount: 0, travelIntervals: travel
         )).availableMinutes
         return day
     }
