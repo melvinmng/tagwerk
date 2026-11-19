@@ -6,6 +6,8 @@ import TagwerkCore
 @MainActor
 final class FakeCalendarStore: CalendarStore {
     var storedEvents: [CalendarEvent] = []
+    /// Runs at the start of every update, so a test can change the calendar between a read and the write.
+    var beforeUpdate: (() -> Void)?
     var calendars: [ListInfo] = [ListInfo(id: "plan", title: "Tagwerk", colorHex: nil, kind: .calDAV)]
     private var counter = 0
 
@@ -49,6 +51,7 @@ final class FakeCalendarStore: CalendarStore {
 
     /// `.futureEvents` applies the title and the time shift to every later occurrence of the same series ("<id>|<seconds>").
     func updateEvent(id: String, with draft: EventDraft, span: EventSpan, expectedVersion: String?) throws -> CalendarEvent {
+        beforeUpdate?()
         guard let index = storedEvents.firstIndex(where: { $0.id == id }) else { throw TaskWriteError.notFound }
         let current = storedEvents[index]
         try CalendarBlockRules.checkEditable(current)

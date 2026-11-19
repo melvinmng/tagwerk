@@ -92,6 +92,10 @@ final class TaskListModel {
     @ObservationIgnored var onSignedOut: ((TaskSource) -> Void)?
     /// Called after a task was completed (`true`) or reopened (`false`) through Tagwerk.
     @ObservationIgnored var onCompletionChanged: ((TaskID, Bool) async -> Void)?
+    /// A task was completed, with the item as written and the moment (effort measuring, plan P3). Runs before
+    /// `onCompletionChanged`, so a time block is cut before the plan reads the calendar again. Also called for a
+    /// repeating task that stays open with its next occurrence.
+    @ObservationIgnored var onCompletedItem: ((TaskItem, Date) async -> Void)?
     /// Called after a written task left the user's lists (handed over to others), so planning can clean up.
     @ObservationIgnored var onHandedOver: ((TaskID) async -> Void)?
     let now: () -> Date
@@ -221,6 +225,7 @@ final class TaskListModel {
         // A repeating local task stays open and moves on to its next occurrence.
         if updated.isCompleted { items.removeAll { $0.id == id } } else { replace(updated) }
         lastCompleted = updated
+        await onCompletedItem?(updated, now())
         await onCompletionChanged?(id, true)
     }
 
@@ -233,6 +238,7 @@ final class TaskListModel {
         if updated.isCompleted {
             items.removeAll { $0.id == id }
             lastCompleted = updated
+            await onCompletedItem?(updated, now())
             await onCompletionChanged?(id, true)
         } else {
             await settle(updated, provider: provider, announce: false)
@@ -388,7 +394,11 @@ final class TaskListModel {
         }
         let previousCompletion = items.first(where: { $0.id == item.id })?.isCompleted ?? (wasCompleted ? true : nil)
         if let previousCompletion, previousCompletion != item.isCompleted, let hook = onCompletionChanged {
-            Task { await hook(item.id, item.isCompleted) }
+            let completedHook = onCompletedItem, moment = now()
+            Task {
+                if item.isCompleted { await completedHook?(item, moment) }
+                await hook(item.id, item.isCompleted)
+            }
         }
         if item.isCompleted {
             items.removeAll { $0.id == item.id }
@@ -426,7 +436,10 @@ final class TaskListModel {
                 await settle(updated, provider: provider, announce: false)
             }
             // Also when a repeating local task stays open with its next occurrence.
-            if case .set(true) = edit.isCompleted, !item.isCompleted { await onCompletionChanged?(id, true) }
+            if case .set(true) = edit.isCompleted, !item.isCompleted {
+                await onCompletedItem?(updated, now())
+                await onCompletionChanged?(id, true)
+            }
             return updated
         } catch TaskWriteError.conflict(let current) {
             await reload(only: [id.source])

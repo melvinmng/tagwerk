@@ -70,6 +70,8 @@ final class AppEnvironment {
     let focusStore: FocusStore
     /// The focus timer: one session at a time, Live Activity and one notification at the end of the phase.
     let focus: FocusTimerModel
+    /// Measures the actual effort when a task is completed and cuts a block that ended early (plan P3, #162).
+    let effort: EffortTracker
     /// Writes the snapshot file the widget reads (phase 4); `directory == nil` in tests and unsigned builds.
     let snapshotWriter: WidgetSnapshotWriter
     /// Reads events for the search away from the main thread; its own read-only store.
@@ -260,7 +262,16 @@ final class AppEnvironment {
             await planning.assign(id, to: planning.planDay(for: .tomorrow), moveBlocks: true)
         }
         focus.installIntentHandler()
+        let effort = EffortTracker(store: focusStore, blocks: blockPlanner, calendarStore: gateway, settings: settings)
+        self.effort = effort
+        taskList.onCompletedItem = { item, date in
+            // A timer running for the task ends first, so its focus time counts for this completion.
+            await focus.didComplete(taskKey: item.id.key)
+            if await effort.didComplete(item, at: date) { await planning.reload() }
+        }
         taskList.onCompletionChanged = { id, isCompleted in
+            // "Rückgängig": the sample goes and a block that was cut gets its end back, before the plan reads again.
+            if !isCompleted, await effort.didReopen(id) { await planning.reload() }
             await planning.didChangeCompletion(id, isCompleted: isCompleted)
             await MainActor.run { routines.focusChanged(id, isCompleted: isCompleted) }
         }
