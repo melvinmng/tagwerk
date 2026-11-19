@@ -265,3 +265,31 @@ struct RecipeImporterTests {
         #expect(model.sections.first { $0.categoryID == household.id }?.items.map(\.name).contains("Joghurt") == true)
     }
 }
+
+@MainActor
+struct RecipeImporterLinkTextTests {
+    @Test func url_addsHttpsOnlyWhenThereIsNoScheme() {
+        #expect(RecipeImporter.url(from: " example.com/rezept ")?.absoluteString == "https://example.com/rezept")
+        #expect(RecipeImporter.url(from: "http://example.com/a")?.absoluteString == "http://example.com/a")
+        #expect(RecipeImporter.url(from: "file:///etc/passwd")?.scheme == "file")
+        #expect(RecipeImporter.url(from: "") == nil && RecipeImporter.url(from: "zwei Wörter") == nil)
+    }
+}
+
+@MainActor
+struct RecipeResultTests {
+    private let milk = RecipeImporter.Candidate(name: "Milch", quantity: "1 L", category: "Kühlregal", alreadyOnList: true)
+    private let flour = RecipeImporter.Candidate(name: "Mehl", quantity: nil, category: "Vorrat", alreadyOnList: false)
+
+    @Test func selection_dropsDeselectedItems() {
+        #expect(RecipeResultView.selection([milk, flour], deselected: [milk.id]).map(\.name) == ["Mehl"])
+        #expect(RecipeResultView.selection([milk, flour], deselected: []).count == 2)
+    }
+
+    @Test func resultLine_countsAddedAndReopened_orNamesTheError() {
+        #expect(RecipeResultView.resultLine(ShoppingModel.AddReport(added: ["a", "b"], reopened: ["c"])) == "3 Artikel aus dem Rezept hinzugefügt.")
+        var failed = ShoppingModel.AddReport(failed: ["a"])
+        failed.errorMessage = "Kein Zugriff."
+        #expect(RecipeResultView.resultLine(failed) == "Kein Zugriff.")
+    }
+}

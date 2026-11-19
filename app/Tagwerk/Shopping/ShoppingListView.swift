@@ -22,6 +22,7 @@ struct ShoppingListView: View {
     @State private var newCategoryItem: ShoppingItem?
     @State private var newCategoryName = ""
     @State private var showsSortConsent = false
+    @State private var showsRecipe = false
     /// The running request to ChatGPT; cancelling it discards the answer.
     @State private var sorting: Task<Void, Never>?
     /// Identifies the running request, so a cancelled one cannot clear the state of its successor.
@@ -64,6 +65,9 @@ struct ShoppingListView: View {
                 } onDecline: {
                     showsSortConsent = false
                 }
+            }
+            .sheet(isPresented: $showsRecipe) {
+                RecipeSheet(model: model) { notice = $0 }
             }
             .sheet(item: $proposal) { proposal in
                 ShoppingSortResultSheet(proposal: proposal.value) { selected in
@@ -275,6 +279,11 @@ struct ShoppingListView: View {
                 if !environment.ai.isSignedIn { Text("Anmeldung unter Einstellungen › KI") }
             }
             .disabled(!environment.ai.isSignedIn || sorting != nil)
+            Button { showsRecipe = true } label: {
+                Label("Rezept hinzufügen …", systemImage: "fork.knife")
+                if !environment.ai.isSignedIn { Text("Anmeldung unter Einstellungen › KI") }
+            }
+            .disabled(!environment.ai.isSignedIn)
             Button { showsCategories = true } label: { Label("Kategorien verwalten", systemImage: "list.bullet.indent") }
             Button(role: .destructive) {
                 askRemoveCompleted()

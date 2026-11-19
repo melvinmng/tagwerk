@@ -40,10 +40,14 @@ struct ShoppingSettingsView: View {
             }
             Section {
                 Toggle("Mit ChatGPT sortieren", isOn: $settings.shoppingSortConsent)
+                Toggle("Rezepte mit ChatGPT lesen", isOn: $settings.shoppingRecipeConsent)
             } header: {
                 Text("ChatGPT")
             } footer: {
-                Text("Sendet auf dein Tippen die Namen der offenen Artikel und deiner Kategorien an ChatGPT. Fragst du den Assistenten nach der Einkaufsliste, gehen die Artikelnamen ebenfalls an ChatGPT.")
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("Sendet auf dein Tippen die Namen der offenen Artikel und deiner Kategorien an ChatGPT. Fragst du den Assistenten nach der Einkaufsliste, gehen die Artikelnamen ebenfalls an ChatGPT.")
+                    Text("„Rezept hinzufügen“ sendet auf dein Tippen den Rezepttext oder das Foto und die Namen deiner Kategorien. Bei einem Link geht nur der gelesene Text der Seite weg, nicht die Adresse. Schaltest du das aus, fragt Tagwerk beim nächsten Rezept erneut.")
+                }
             }
         }
         .navigationTitle("Einkaufsliste")

@@ -124,6 +124,14 @@ final class RecipeImporter {
         return limited
     }
 
+    /// The address from the link field: trimmed, and "https://" is put in front of an address typed without a scheme
+    /// ("example.com/rezept"). Anything else that does not parse stays as it is and is refused later.
+    static func url(from text: String) -> URL? {
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty, !trimmed.contains(where: \.isWhitespace) else { return nil }
+        return URL(string: trimmed.contains(":") ? trimmed : "https://" + trimmed)
+    }
+
     /// Only http and https links are loaded.
     static func isWebLink(_ url: URL) -> Bool {
         guard let scheme = url.scheme?.lowercased(), scheme == "http" || scheme == "https" else { return false }
