@@ -1,3 +1,4 @@
+import GitHubKit
 import SwiftUI
 import TagwerkCore
 
@@ -6,7 +7,8 @@ struct TaskEditorView: View {
     @State private var model: TaskEditorModel
     let calendar: Calendar
     let containers: [TaskContainer]
-    let onSaved: (TaskItem) -> Void
+    /// Receives the saved item and the people this save added (for the warning when GitHub dropped one).
+    let onSaved: (TaskItem, [String]) -> Void
     @Environment(\.dismiss) private var dismiss
 
     let isReadOnly: Bool
@@ -17,16 +19,23 @@ struct TaskEditorView: View {
     @State private var saveQuestion: TaskEditorModel.SaveQuestion?
     @State private var labelText = ""
     @State private var confirmsDelete = false
+    /// Source of the assignable people; `nil` for tasks that are no GitHub issues.
+    private let gitHub: GitHubTaskProvider?
+    @State private var assignable: [String]?
+    @State private var assigneeLoad: AssigneeLoad = .idle
 
     init(item: TaskItem, provider: any TaskProvider, calendar: Calendar, containers: [TaskContainer],
          addComment: TaskEditorModel.CommentAction? = nil, isReadOnly: Bool = false,
          onDelete: ((String) -> Void)? = nil, planning: PlanningModel? = nil,
-         onShowDay: ((PlanDay) -> Void)? = nil, onSaved: @escaping (TaskItem) -> Void) {
+         onShowDay: ((PlanDay) -> Void)? = nil, onSaved: @escaping (TaskItem, [String]) -> Void) {
+        let gitHub = provider as? GitHubTaskProvider
+        self.gitHub = gitHub
         self.onDelete = onDelete
         self.planning = planning
         _plannedEdit = State(initialValue: planning?.plannedEdit(for: item))
         self.onShowDay = onShowDay
-        _model = State(initialValue: TaskEditorModel(item: item, provider: provider, addComment: addComment))
+        _model = State(initialValue: TaskEditorModel(item: item, provider: provider, addComment: addComment,
+                                                         viewerLogin: gitHub?.login))
         self.calendar = calendar
         self.containers = containers
         self.isReadOnly = isReadOnly
@@ -64,6 +73,7 @@ struct TaskEditorView: View {
                     TextField("Titel", text: $model.draft.title, axis: .vertical)
                     if model.original.id.source == .github {
                         LabeledContent("Repo", value: model.original.container.name)
+                        assigneeRow
                     }
                     if model.isVisible(.labels) {
                         TextField("Labels (kommagetrennt)", text: $labelText)
@@ -153,8 +163,9 @@ struct TaskEditorView: View {
             .animation(.default, value: model.conflict == nil)
             .onDisappear {
                 // After the user's own comment, the list needs the new version however the sheet closes.
-                if let refreshed = model.refreshed { onSaved(refreshed) }
+                if let refreshed = model.refreshed { onSaved(refreshed, []) }
             }
+            .task { await loadAssignable() }
             .navigationTitle(title)
             .confirmationDialog(TaskListView.deleteQuestion(for: model.original), isPresented: $confirmsDelete,
                                 titleVisibility: .visible) {
@@ -187,6 +198,8 @@ struct TaskEditorView: View {
                     } else {
                         Button("Sichern, Blöcke behalten") { Task { await finish(model.save()) } }
                     }
+                case .handOver:
+                    Button("Abgeben", role: .destructive) { Task { await finish(model.save()) } }
                 }
                 Button("Abbrechen", role: .cancel) {}
             } message: { question in
@@ -196,6 +209,9 @@ struct TaskEditorView: View {
                          + (blocks.isEmpty ? "" : " " + blocksNotice(blocks)))
                 case .keepBlocks(let blocks):
                     Text(blocksNotice(blocks))
+                case .handOver(let futureBlocks):
+                    Text(TaskEditorModel.handOverMessage(number: model.original.issueNumber, futureBlocks: futureBlocks,
+                                                         leavesUnassigned: (model.draft.assignees ?? []).isEmpty))
                 }
             }
             .toolbar {
@@ -210,7 +226,10 @@ struct TaskEditorView: View {
                         let offSeries = model.changedRecurrence.map { recurrence in
                             planning?.blocksOffSeries(for: model.original, recurrence: recurrence) ?? []
                         } ?? []
-                        if let question = TaskEditorModel.saveQuestion(effortChanged: effortChanged, blocksOffSeries: offSeries) {
+                        // Removing myself is asked first, with the number of time blocks that will be deleted.
+                        let handOverBlocks = model.handsOver ? (planning?.futureBlockCount(for: model.original.id) ?? 0) : nil
+                        if let question = TaskEditorModel.saveQuestion(effortChanged: effortChanged, blocksOffSeries: offSeries,
+                                                                       handOverFutureBlocks: handOverBlocks) {
                             saveQuestion = question
                         } else {
                             Task { await finish(model.save()) }
@@ -249,8 +268,9 @@ struct TaskEditorView: View {
 
     private func finish(_ success: Bool) {
         guard success else { return }
-        if let saved = model.saved { onSaved(saved) }
-        if let planning, let plannedEdit, plannedEdit != planning.plannedEdit(for: model.original) {
+        if let saved = model.saved { onSaved(saved, model.requestedAssignees) }
+        // A handed-over issue leaves the plan; its planning edits must not create a day or block again.
+        if model.savedIsListed, let planning, let plannedEdit, plannedEdit != planning.plannedEdit(for: model.original) {
             let task = model.saved ?? model.original
             Task { await planning.applyPlanning(plannedEdit, for: task) }
         }
@@ -284,6 +304,7 @@ struct TaskEditorView: View {
     private var saveQuestionTitle: String {
         switch saveQuestion {
         case .keepBlocks: String(localized: "Wiederholung geändert")
+        case .handOver: String(localized: "Du bist danach nicht mehr zugewiesen.")
         case .effortReach, nil: effortQuestion
         }
     }
@@ -297,6 +318,30 @@ struct TaskEditorView: View {
     private func longDay(_ day: PlanDay) -> String {
         day.startDate(in: calendar).formatted(
             Date.FormatStyle(calendar: calendar, timeZone: calendar.timeZone).weekday(.abbreviated).day().month(.abbreviated))
+    }
+
+    // MARK: Assignees
+
+    /// "Zugewiesen" for every issue: a menu of the assignable and the assigned people; a fixed value offline.
+    @ViewBuilder private var assigneeRow: some View {
+        let candidates = model.assigneeCandidates(assignable: assignable)
+        if isReadOnly {
+            LabeledContent("Zugewiesen", value: AssigneeSelection.value(selected: model.draft.assignees ?? [], me: model.viewerLogin))
+        } else {
+            AssigneeSelectionRow(candidates: candidates, me: model.viewerLogin, load: assigneeLoad,
+                                 selection: Binding(get: { Set(model.draft.assignees ?? []) },
+                                                    set: { model.setAssignees($0, candidates: candidates) }))
+        }
+    }
+
+    /// Loads the assignable people of the issue's repository when the editor opens. Until then and after
+    /// a failed load the menu offers only the assigned people (removing works, adding does not).
+    private func loadAssignable() async {
+        guard let gitHub, model.original.id.source == .github, !isReadOnly else { return }
+        let repository = model.original.container.id
+        assigneeLoad = .loading(repository: repository)
+        assignable = await gitHub.assignableUsers(in: repository, maxAge: AppEnvironment.catalogMaxAge)
+        assigneeLoad = assigneeLoad.adopting(assignable, for: repository, selected: repository)
     }
 
     // MARK: Recurrence

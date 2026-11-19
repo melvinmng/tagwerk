@@ -24,6 +24,36 @@ enum PlanHeaderText {
         }
     }
 
+    /// The title in decreasing length, longest first; the first is `title(...)`. The header shows the longest one
+    /// that fits, so the title is never cut off with an ellipsis:
+    /// day "Donnerstag, 19. Nov." → "Do. 19. Nov." → "19. Nov.", week "16.–22. Nov." → "16.–22.11.", month "November" → "Nov".
+    static func titleCandidates(scope: PlanScope, anchor: PlanDay, range: ClosedRange<PlanDay>, calendar: Calendar) -> [String] {
+        let start = anchor.startDate(in: calendar)
+        var candidates = [title(scope: scope, anchor: anchor, range: range, calendar: calendar)]
+        switch scope {
+        case .day:
+            candidates.append(start.formatted(.dateTime.weekday(.abbreviated).day().month(.abbreviated)))
+            candidates.append(start.formatted(.dateTime.day().month(.abbreviated)))
+        case .week:
+            let first = range.lowerBound.startDate(in: calendar), last = range.upperBound.startDate(in: calendar)
+            candidates.append((first..<last).formatted(.interval.day().month(.twoDigits)))
+        case .month:
+            candidates.append(start.formatted(.dateTime.month(.abbreviated)))
+        }
+        var seen = Set<String>()
+        return candidates.filter { seen.insert($0).inserted }
+    }
+
+    /// The title the header shows. `ViewThatFits` in a toolbar item gets no usable width (it always took the
+    /// shortest candidate, seen on the iPhone 17 simulator), so the form is fixed: the day view takes the middle
+    /// candidate, the others the full one, and with accessibility text sizes everything takes the shortest.
+    static func displayedTitle(scope: PlanScope, anchor: PlanDay, range: ClosedRange<PlanDay>, calendar: Calendar,
+                               largeText: Bool) -> String {
+        let candidates = titleCandidates(scope: scope, anchor: anchor, range: range, calendar: calendar)
+        if largeText { return candidates[candidates.count - 1] }
+        return scope == .day && candidates.count > 1 ? candidates[1] : candidates[0]
+    }
+
     /// Day "HEUTE · KW 47", week "DIESE WOCHE · KW 47", month "DIESER MONAT · 2026".
     static func caption(scope: PlanScope, anchor: PlanDay, today: PlanDay, range: ClosedRange<PlanDay>, calendar: Calendar) -> String {
         let week = calendar.component(.weekOfYear, from: anchor.startDate(in: calendar))
@@ -47,6 +77,17 @@ enum PlanHeaderText {
         }
     }
 
+    /// "~1.240 / 2.300 kcal · 2,1 l · ✓ 3 von 5"; the counter alone when there is no intake text, `nil` without both.
+    static func statusLine(intake: String?, habits: HabitCounter?) -> String? {
+        let parts = [intake, habits.map(habitCounter)].compactMap { $0 }
+        return parts.isEmpty ? nil : parts.joined(separator: " · ")
+    }
+
+    /// "✓ 3 von 5".
+    static func habitCounter(_ counter: HabitCounter) -> String {
+        String(localized: "✓ \(counter.done) von \(counter.total)")
+    }
+
     static func stepLabel(scope: PlanScope, direction: Int) -> String {
         switch (scope, direction < 0) {
         case (.day, true): String(localized: "Vorheriger Tag")
@@ -63,14 +104,18 @@ enum PlanHeaderText {
 struct PlanTitleButton: View {
     @Bindable var model: PlanningModel
     @State private var picking = false
+    @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
         let current = PlanHeaderText.isCurrent(scope: model.scope, anchor: model.anchor, today: model.today, range: model.range)
         let caption = PlanHeaderText.caption(scope: model.scope, anchor: model.anchor, today: model.today,
                                              range: model.range, calendar: model.calendar)
         let title = PlanHeaderText.title(scope: model.scope, anchor: model.anchor, range: model.range, calendar: model.calendar)
+        let shown = PlanHeaderText.displayedTitle(scope: model.scope, anchor: model.anchor, range: model.range,
+                                                  calendar: model.calendar, largeText: typeSize.isAccessibilitySize)
         Button { picking = true } label: {
-            PageTitleLabel(caption: caption, title: title, isCurrent: current).fixedSize()
+            // VoiceOver always reads the full title (below).
+            PageTitleLabel(caption: caption, title: shown, isCurrent: current, titleScales: false).fixedSize()
         }
         .buttonStyle(.plain)
         .accessibilityElement(children: .ignore)
@@ -115,10 +160,13 @@ struct PlanIntakeLine: View {
     @Environment(AppEnvironment.self) private var environment
 
     var body: some View {
-        if model.scope == .day, model.anchor == model.today, let line = environment.capture.planHeaderLine {
+        let intake = environment.capture.planHeaderLine
+        if model.scope == .day, model.anchor == model.today,
+           let line = PlanHeaderText.statusLine(intake: intake, habits: environment.habits.todayCounter) {
             Button { environment.router.open(.capture) } label: {
                 HStack(spacing: 4) {
-                    Image(systemName: "flame.fill").foregroundStyle(.orange)
+                    // The flame belongs to the nutrition text; the habit counter may stand alone.
+                    if intake != nil { Image(systemName: "flame.fill").foregroundStyle(.orange) }
                     Text(line).monospacedDigit()
                     Image(systemName: "chevron.right").font(.caption2.weight(.semibold))
                 }

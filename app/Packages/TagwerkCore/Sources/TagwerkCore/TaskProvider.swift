@@ -35,12 +35,17 @@ public protocol TaskProvider: AnyObject {
     var cachedTasks: [TaskItem] { get }
     /// Adds a comment; only sources with comments (GitHub) support it.
     func addComment(_ body: String, to id: TaskID) async throws
+    /// Whether a task that was just written still belongs to the user's lists.
+    /// GitHub answers `false` for an issue the user is no longer assigned to.
+    func isListed(_ item: TaskItem) -> Bool
 }
 
 extension TaskProvider {
     public func addComment(_ body: String, to id: TaskID) async throws {
         throw TaskWriteError.failed(String(localized: "Kommentare gibt es nur bei GitHub-Issues.", bundle: .module))
     }
+
+    public func isListed(_ item: TaskItem) -> Bool { true }
 
     public var offlineSince: Date? { nil }
     public var offlineReason: String? { nil }

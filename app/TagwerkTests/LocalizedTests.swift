@@ -27,6 +27,44 @@ struct LocalizedTests {
         #expect([overlaps(1), overlaps(3)] == ["überschneidet 1 Termin", "überschneidet 3 Termine"])
     }
 
+    // MARK: Issue assignees (#136)
+
+    @Test func privacyNotice_namesGitHubUsernames() {
+        #expect(AIStatusMessage.privacyNotice.contains("GitHub-Benutzernamen zuweisbarer Personen"))
+        let english = Localized.string(
+            "Wenn du KI-Funktionen nutzt, gehen die dafür nötigen Daten (Termine, Aufgaben, bei Issues auch Repo-Inhalte und GitHub-Benutzernamen zuweisbarer Personen) an OpenAI.",
+            in: .english, bundle: .main)
+        #expect(english.contains("GitHub usernames of assignable people"))
+        #expect(english.hasPrefix("When you use AI features"))
+    }
+
+    @Test func handOverBlocks_pluralForms() {
+        func german(_ count: Int) -> String { String(localized: "\(count) geplante Zeitblöcke werden gelöscht.") }
+        func english(_ count: Int) -> String {
+            Localized.string("\(count) geplante Zeitblöcke werden gelöscht.", in: .english, bundle: .main)
+        }
+        #expect([german(1), german(2)] == ["1 geplanter Zeitblock wird gelöscht.", "2 geplante Zeitblöcke werden gelöscht."])
+        #expect([english(1), english(2)] == ["1 planned time block will be deleted.", "2 planned time blocks will be deleted."])
+    }
+
+    @Test func people_pluralForms() {
+        #expect(Localized.string("\(3) Personen", in: .english, bundle: .main) == "3 people")
+        #expect(Localized.string("\(3) Personen", in: .german, bundle: .main) == "3 Personen")
+        #expect(Localized.string("\(4) weiteren Personen", in: .english, bundle: .main) == "4 other people")
+    }
+
+    @Test func assigneeTexts_inEnglish() {
+        func english(_ key: String.LocalizationValue) -> String { Localized.string(key, in: .english, bundle: .main) }
+        #expect(english("Zugewiesen") == "Assignees")
+        #expect(english("Niemand") == "No one")
+        #expect(english("Vergeben") == "Assigned")
+        #expect(english("Abgeben") == "Hand over")
+        #expect(english("Du bist danach nicht mehr zugewiesen.") == "You will no longer be assigned.")
+        #expect(english("#\(151) angelegt, aber \("lea-m") konnte nicht zugewiesen werden.") == "#151 created, but lea-m could not be assigned.")
+        #expect(english("\("#151") an \("lea-m")") == "#151 to lea-m")
+        #expect(english("\("lea-m") ist in \("beispiel/app") nicht zuweisbar.") == "lea-m cannot be assigned in beispiel/app.")
+    }
+
     @Test func englishLookups_useTheGlossary() {
         func english(_ key: String.LocalizationValue) -> String { Localized.string(key, in: .english, bundle: .main) }
         #expect(english("Neue Aufgabe") == "New task")
@@ -93,5 +131,35 @@ struct LocalizedTests {
 
     @Test func appLanguage_followsTheTestLanguage() {
         #expect(VoiceLanguage.app == .german)
+    }
+
+    /// Phase 5 design §5.10: every line of the table has its English text.
+    @Test func shoppingTexts_haveEnglish() {
+        let expected: [(String.LocalizationValue, String)] = [
+            ("Einkaufsliste", "Shopping List"), ("Notizen", "Notes"), ("Einkaufsliste einrichten", "Set up shopping list"),
+            ("Liste „\("Einkauf")“ als Einkaufsliste verwenden?", "Use the list “Einkauf” as your shopping list?"),
+            ("Verwenden", "Use"), ("Andere Liste …", "Another List …"), ("Nicht jetzt", "Not now"),
+            ("\(7) offen", "7 open"), ("Artikel hinzufügen", "Add item"), ("Erledigt · \(3)", "Completed · 3"),
+            ("Erledigte entfernen", "Remove Completed"), ("Sonstiges", "Other"), ("Kategorien verwalten", "Manage Categories"),
+            ("Mit ChatGPT sortieren", "Sort with ChatGPT"), ("Vorschlag von ChatGPT", "Suggestion from ChatGPT"),
+            ("Vorschlag übernehmen", "Apply"), ("Verwerfen", "Discard"), ("Neue Notiz", "New note"),
+            ("Tagesstart", "Morning start"), ("Tagesabschluss", "Evening wrap-up"), ("Auf die Einkaufsliste", "Add to Shopping List"),
+            ("Einkaufsliste zeigen", "Show Shopping List"), ("Einkaufsliste ändern", "Change shopping list"),
+        ]
+        for (key, english) in expected {
+            #expect(Localized.string(key, in: .english, bundle: .main) == english)
+        }
+        // The key differs from the German text, because "Übernehmen" elsewhere means "Accept".
+        #expect(Localized.string("Vorschlag übernehmen", in: .german, bundle: .main) == "Übernehmen")
+    }
+
+    @Test func shoppingPlurals_followTheCount() {
+        func english(_ key: String.LocalizationValue) -> String { Localized.string(key, in: .english, bundle: .main) }
+        #expect(english("\(1) Artikel hinzugefügt:") == "1 item added:")
+        #expect(english("\(3) Artikel hinzugefügt:") == "3 items added:")
+        #expect(english("\(1) erledigte Artikel endgültig löschen?") == "Permanently delete 1 completed item?")
+        #expect(Localized.string("\(1) erledigte Artikel endgültig löschen?", in: .german, bundle: .main)
+                == "1 erledigten Artikel endgültig löschen?")
+        #expect(Localized.string("und \(1) weitere", in: .german, bundle: .main) == "und 1 weiterer")
     }
 }

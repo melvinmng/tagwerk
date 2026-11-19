@@ -13,6 +13,36 @@ struct PlanHeaderTextTests {
         PlanHeaderText.caption(scope: scope, anchor: anchor, today: today, range: range ?? anchor...anchor, calendar: calendar)
     }
 
+    @Test func titleCandidates_shortenWithoutEllipsis() {
+        let thursday = PlanDay(year: 2026, month: 11, day: 19)
+        #expect(PlanHeaderText.titleCandidates(scope: .day, anchor: thursday, range: thursday...thursday, calendar: calendar)
+                == ["Donnerstag, 19. Nov.", "Do. 19. Nov.", "19. Nov."])
+        #expect(PlanHeaderText.titleCandidates(scope: .week, anchor: today, range: week, calendar: calendar)
+                == ["16.–22. Nov.", "16.–22.11."])
+        #expect(PlanHeaderText.titleCandidates(scope: .month, anchor: today, range: week, calendar: calendar) == ["November", "Nov"])
+    }
+
+    @Test func displayedTitle_isFixedPerScopeAndShortWithLargeText() {
+        let thursday = PlanDay(year: 2026, month: 11, day: 19)
+        func shown(_ scope: PlanScope, large: Bool) -> String {
+            PlanHeaderText.displayedTitle(scope: scope, anchor: thursday, range: scope == .week ? week : thursday...thursday,
+                                          calendar: calendar, largeText: large)
+        }
+        #expect(shown(.day, large: false) == "Do. 19. Nov.")
+        #expect(shown(.day, large: true) == "19. Nov.")
+        #expect(shown(.week, large: false) == "16.–22. Nov.")
+        #expect(shown(.week, large: true) == "16.–22.11.")
+        #expect(shown(.month, large: false) == "November")
+        #expect(shown(.month, large: true) == "Nov")
+    }
+
+    @Test func titleCandidates_startWithTheFullTitle() {
+        for scope in PlanScope.allCases {
+            let candidates = PlanHeaderText.titleCandidates(scope: scope, anchor: today, range: week, calendar: calendar)
+            #expect(candidates.first == PlanHeaderText.title(scope: scope, anchor: today, range: week, calendar: calendar))
+        }
+    }
+
     @Test func dayCaption_relativeDays() {
         #expect(caption(.day, today) == "HEUTE · KW 47")
         #expect(caption(.day, PlanDay(year: 2026, month: 11, day: 19)) == "MORGEN · KW 47")
@@ -48,5 +78,19 @@ struct PlanHeaderTextTests {
         #expect(PlanHeaderText.stepLabel(scope: .day, direction: -1) == "Vorheriger Tag")
         #expect(PlanHeaderText.stepLabel(scope: .week, direction: 1) == "Nächste Woche")
         #expect(PlanHeaderText.stepLabel(scope: .month, direction: -1) == "Vorheriger Monat")
+    }
+
+    @Test func statusLine_appendsTheHabitCounter() {
+        #expect(PlanHeaderText.statusLine(intake: "~1.240 / 2.300 kcal · 2,1 l", habits: HabitCounter(done: 3, total: 5))
+                == "~1.240 / 2.300 kcal · 2,1 l · ✓ 3 von 5")
+    }
+
+    @Test func statusLine_counterAlone() {
+        #expect(PlanHeaderText.statusLine(intake: nil, habits: HabitCounter(done: 3, total: 5)) == "✓ 3 von 5")
+    }
+
+    @Test func statusLine_withoutBoth_isNil() {
+        #expect(PlanHeaderText.statusLine(intake: nil, habits: nil) == nil)
+        #expect(PlanHeaderText.statusLine(intake: "~1.240 / 2.300 kcal", habits: nil) == "~1.240 / 2.300 kcal")
     }
 }

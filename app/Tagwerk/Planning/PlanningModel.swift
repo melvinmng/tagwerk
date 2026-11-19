@@ -118,6 +118,8 @@ final class PlanningModel {
     var scope: PlanScope = .day
     var anchor: PlanDay
     private(set) var days: [DayPlan] = []
+    /// Tasks that are the open focus of today (phase 7); set by `RoutinesModel`. The day view puts a star on them.
+    var focusTaskIDs: Set<TaskID> = []
     private(set) var unplanned: [TaskItem] = []
     /// Open tasks planned before today or due before today without a planned day; not counted as load until
     /// they are moved to a day (design §13.9).
@@ -224,6 +226,14 @@ final class PlanningModel {
         }
     }
 
+    /// Open reminders of all lists, read past the list selection to recognize recurring ones; the shopping
+    /// list is left out, because its entries are not tasks.
+    private func planningReminders() async -> [ReminderRecord] {
+        guard reminderStore.accessState == .fullAccess else { return [] }
+        let shoppingListID = settings.shoppingListID
+        return await reminderStore.openReminders(in: nil).filter { $0.listID != shoppingListID }
+    }
+
     func reload() async {
         let range = self.range
         let open = taskList.items.filter { !$0.isCompleted }
@@ -291,6 +301,15 @@ final class PlanningModel {
             return allAssignments[task.id].map { $0 < today } ?? false
         }, calendar: calendar)
         await updateEvening(open: open, allAssignments: allAssignments, recurringIDs: recurringIDs)
+    }
+
+    /// Open tasks with a time block (own or linked event) on `day`, read without changing what is shown.
+    func taskIDsWithBlocks(on day: PlanDay) -> Set<TaskID> {
+        let open = taskList.items.filter { !$0.isCompleted }
+        let interval = DateInterval(start: day.startDate(in: calendar),
+                                    end: day.adding(days: 1, calendar: calendar).startDate(in: calendar))
+        let events = calendarStore.events(in: interval, calendarIDs: readableCalendarIDs())
+        return Set(resolveLinks(events: events, tasks: open, manual: blocks.links.manualLinks()).map(\.taskID))
     }
 
     /// The AI view of days outside the shown range (e.g. the next week as targets for moving tasks away
@@ -581,6 +600,22 @@ final class PlanningModel {
             efforts.markDone(task: id, day: today)
         } else {
             efforts.unmarkDone(task: id, day: today)
+        }
+        await reload()
+    }
+
+    /// Blocks of a task that start after this moment; exactly those a hand-over deletes.
+    func futureBlockCount(for id: TaskID) -> Int {
+        blocks.futureBlocks(for: id, after: now()).count
+    }
+
+    /// The issue left the user's lists: its planned day and its future blocks go, past blocks stay.
+    func didHandOver(_ id: TaskID) async {
+        planStore.unassign(id)
+        do {
+            try blocks.deleteFutureBlocks(of: id, after: now())
+        } catch {
+            lastError = TaskListModel.message(for: error)
         }
         await reload()
     }
@@ -1501,7 +1536,7 @@ final class PlanningModel {
     /// tasks of other sources with a repetition (local tasks). A reminder counts once even when the task list
     /// carries its rule too.
     private func recurringSeries(open: [TaskItem]) async -> [RecurringSeries] {
-        let reminders = reminderStore.accessState == .fullAccess ? await reminderStore.openReminders(in: nil) : []
+        let reminders = await planningReminders()
         let fromReminders = reminders.compactMap { record in
             record.recurrence.map { RecurringSeries(id: TaskID(source: .reminders, rawValue: record.id), title: record.title, recurrence: $0) }
         }
@@ -1722,8 +1757,17 @@ final class PlanningModel {
         deadline.time ?? deadline.day.adding(days: 1, calendar: calendar).startDate(in: calendar)
     }
 
+    /// The event a search hit stands for, read the way "Planen" reads its days: the day of the hit in the readable
+    /// calendars, so the opened event carries the ID that links and deadline marks expect. `nil` when it changed.
+    func resolveEvent(matching hit: CalendarEvent) -> CalendarEvent? {
+        let day = PlanDay(date: hit.start, calendar: calendar)
+        let interval = DateInterval(start: day.startDate(in: calendar),
+                                    end: day.adding(days: 1, calendar: calendar).startDate(in: calendar))
+        return SearchEventResolver.resolve(hit, among: calendarStore.events(in: interval, calendarIDs: readableCalendarIDs()))
+    }
+
     /// Selected calendars plus plan and deadline calendars; `nil` (all) when nothing is selected.
-    private func readableCalendarIDs() -> Set<String>? {
+    func readableCalendarIDs() -> Set<String>? {
         guard let selected = settings.selectedCalendarIDs else { return nil }
         var ids = Set(selected)
         if let plan = settings.planCalendarID { ids.insert(plan) }

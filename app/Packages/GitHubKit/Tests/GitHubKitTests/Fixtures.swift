@@ -92,11 +92,12 @@ extension Fixtures {
     /// Issue I_1 in project 1 (Status, Priority, Due date, Estimate (h)) and project 2 (Status, Due date, Estimate (MDs)).
     static func issue(state: String = "OPEN", status1: String = "Ready", status2: String = "Ready",
                       updatedAt: String = "2026-11-17T13:00:00Z", title: String = "Issue 1",
-                      project2Writable: Bool = true) -> String {
-        """
+                      project2Writable: Bool = true, assignees: [String] = ["octo"]) -> String {
+        let assigneeNodes = assignees.map { #"{"login":"\#($0)"}"# }.joined(separator: ",")
+        return """
         {"data":{"node":{"__typename":"Issue","id":"I_1","number":1,"title":"\(title)","body":"Beschreibung","state":"\(state)",
           "updatedAt":"\(updatedAt)","url":"https://github.com/beispiel/app/issues/1",
-          "repository":{"nameWithOwner":"beispiel/app"},"assignees":{"nodes":[{"login":"octo"}]},"labels":{"nodes":[{"name":"bug"}]},
+          "repository":{"nameWithOwner":"beispiel/app"},"assignees":{"nodes":[\(assigneeNodes)]},"labels":{"nodes":[{"name":"bug"}]},
           "projectItems":{"nodes":[
             {"id":"PVTI_a","updatedAt":"2026-11-17T13:00:00Z","isArchived":false,
              "project":{"id":"PVT_1","number":1,"title":"App","closed":false,"fields":{"nodes":[
@@ -116,4 +117,21 @@ extension Fixtures {
     static let mutationOK = #"{"data":{"updateProjectV2ItemFieldValue":{"projectV2Item":{"id":"x"}}}}"#
     static let clearOK = #"{"data":{"clearProjectV2ItemFieldValue":{"projectV2Item":{"id":"x"}}}}"#
     static let issuePatchOK = #"{"id":1,"node_id":"I_1","number":1}"#
+}
+
+extension Fixtures {
+    /// One issue node of the online search: `items` are raw JSON project items.
+    static func searchNode(id: String, number: Int, state: String = "OPEN", assignees: [String] = [], items: [String] = []) -> String {
+        let people = assignees.map { #"{"login":"\#($0)"}"# }.joined(separator: ",")
+        return """
+        {"__typename":"Issue","id":"\(id)","number":\(number),"title":"Issue \(number)","body":"",
+         "state":"\(state)","updatedAt":"2026-11-17T10:00:00Z","url":"https://github.com/octo/r/issues/\(number)",
+         "repository":{"nameWithOwner":"octo/r"},"assignees":{"nodes":[\(people)]},"labels":{"nodes":[]},
+         "projectItems":{"nodes":[\(items.joined(separator: ","))]}}
+        """
+    }
+
+    static func searchResponse(_ nodes: [String]) -> String {
+        #"{"data":{"search":{"nodes":["# + nodes.joined(separator: ",") + "]}}}"
+    }
 }

@@ -11,12 +11,122 @@
         }
       }
     },
+    "${article} auf die Einkaufsliste in ${applicationName}": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "${article} to the shopping list in ${applicationName}"
+          }
+        }
+      }
+    },
+    "${habit} in ${applicationName} abhaken": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check off ${habit} in ${applicationName}"
+          }
+        }
+      }
+    },
+    "Auf die Einkaufsliste in ${applicationName}": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add to shopping list in ${applicationName}"
+          }
+        }
+      }
+    },
+    "Einkaufsliste in ${applicationName}": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shopping list in ${applicationName}"
+          }
+        }
+      }
+    },
+    "Einkaufsliste in ${applicationName} ergänzen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add items to the shopping list in ${applicationName}"
+          }
+        }
+      }
+    },
+    "Einkaufsliste in ${applicationName} zeigen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show shopping list in ${applicationName}"
+          }
+        }
+      }
+    },
     "Essen in ${applicationName} erfassen": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Log food in ${applicationName}"
+          }
+        }
+      }
+    },
+    "Etwas auf die Einkaufsliste in ${applicationName} setzen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Put something on the shopping list in ${applicationName}"
+          }
+        }
+      }
+    },
+    "Füge ${article} zur Einkaufsliste in ${applicationName} hinzu": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add ${article} to my shopping list in ${applicationName}"
+          }
+        }
+      }
+    },
+    "Füge etwas zur Einkaufsliste in ${applicationName} hinzu": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add something to the shopping list in ${applicationName}"
+          }
+        }
+      }
+    },
+    "Gewohnheit in ${applicationName} abhaken": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check off a habit in ${applicationName}"
+          }
+        }
+      }
+    },
+    "Ich brauche etwas aus dem Laden in ${applicationName}": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I need something from the store in ${applicationName}"
           }
         }
       }
@@ -37,6 +147,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "My day in ${applicationName}"
+          }
+        }
+      }
+    },
+    "Neuer Artikel in ${applicationName}": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New item in ${applicationName}"
+          }
+        }
+      }
+    },
+    "Setz ${article} auf die Einkaufsliste in ${applicationName}": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Put ${article} on the shopping list in ${applicationName}"
           }
         }
       }
@@ -87,6 +217,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Log water with ${applicationName}"
+          }
+        }
+      }
+    },
+    "Zur Einkaufsliste in ${applicationName} hinzufügen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add to my shopping list in ${applicationName}"
           }
         }
       }

@@ -8,6 +8,11 @@ public enum AppRoute: String, Sendable, Hashable, CaseIterable {
     case captureMeal = "capture/meal"
     case captureWorkout = "capture/workout"
     case review = "review"
+    /// The shopping list (phase 5); without a chosen list the app shows its settings page instead.
+    case shopping = "shopping"
+    /// The morning start and the evening wrap-up (phase 7): "Planen" on today with the sheet above it.
+    case routineStart = "routine/start"
+    case routineEvening = "routine/evening"
 
     public static let scheme = "tagwerk"
 

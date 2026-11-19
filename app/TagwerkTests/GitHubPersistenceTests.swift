@@ -101,4 +101,14 @@ struct SwiftDataCatalogStoreTests {
         #expect(store.load()?.projects.first?.repositories == ["beispiel/app"])
         #expect(try container.mainContext.fetchCount(FetchDescriptor<CachedGitHubCatalog>()) == 1)
     }
+
+    @Test func catalog_roundTripsAssignable() throws {
+        let container = try ModelContainerFactory.make(inMemory: true)
+        let store = SwiftDataGitHubCatalogStore(context: container.mainContext)
+        let users = AssignableUsers(logins: ["octo"], fetchedAt: Date(timeIntervalSince1970: 5))
+        store.store(GitHubCatalog(repositories: ["beispiel/app"], projects: [], fetchedAt: Date(timeIntervalSince1970: 1),
+                                  assignable: ["beispiel/app": users]))
+        #expect(store.load()?.assignable["beispiel/app"]?.logins == ["octo"])
+        #expect(store.load()?.assignable["beispiel/app"]?.fetchedAt == Date(timeIntervalSince1970: 5))
+    }
 }

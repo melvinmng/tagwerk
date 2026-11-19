@@ -42,10 +42,17 @@ struct SettingsView: View {
                     NavigationLink {
                         SourceSelectionView(title: "Erinnerungslisten", items: reminderLists,
                                             defaultSelection: Set(reminderLists.map(\.id)),
-                                            selection: $settings.selectedReminderListIDs)
+                                            selection: $settings.selectedReminderListIDs,
+                                            lockedIDs: settings.shoppingListID.map { [$0: "Einkaufsliste"] } ?? [:])
                     } label: {
-                        LabeledContent("Erinnerungslisten", value: summary(settings.selectedReminderListIDs, all: reminderLists,
-                                                                           fallback: Set(reminderLists.map(\.id))))
+                        LabeledContent("Erinnerungslisten",
+                                       value: ReminderListSummary.text(selected: settings.selectedReminderListIDs, lists: reminderLists,
+                                                                       shopping: settings.shoppingListID))
+                    }
+                    NavigationLink {
+                        ShoppingSettingsView()
+                    } label: {
+                        LabeledContent("Einkaufsliste", value: shoppingListSummary)
                     }
                 }
 
@@ -66,6 +73,14 @@ struct SettingsView: View {
                         LabeledContent("Erfassen", value: IntakeFormat.goalSummary(
                             kcal: settings.goalKilocalories, waterMilliliters: settings.goalWaterMilliliters,
                             workoutMinutesPerWeek: settings.goalWorkoutMinutesPerWeek))
+                    }
+                }
+
+                Section {
+                    NavigationLink {
+                        RoutineSettingsView()
+                    } label: {
+                        LabeledContent("Routinen", value: DateText.time(minutes: settings.bedtimeMinutes, calendar: .tagwerk))
                     }
                 }
 
@@ -210,7 +225,14 @@ struct SettingsView: View {
 
     private func loadSources() {
         calendars = environment.gateway.calendarAccessState == .fullAccess ? environment.gateway.calendars() : []
-        reminderLists = environment.gateway.accessState == .fullAccess ? environment.gateway.lists() : []
+        reminderLists = environment.reminderStore.accessState == .fullAccess ? environment.reminderStore.lists() : []
+    }
+
+    /// Title of the reminder list that serves as the shopping list, or "Keine".
+    private var shoppingListSummary: String {
+        guard let id = environment.settings.shoppingListID,
+              let list = reminderLists.first(where: { $0.id == id }) else { return String(localized: "Keine") }
+        return list.title
     }
 
     @ViewBuilder

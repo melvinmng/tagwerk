@@ -34,19 +34,35 @@ def english_values(entry):
         return []
     values = []
 
-    def walk(node):
+    def walk(node, in_plural=False):
         if isinstance(node, dict):
             if "stringUnit" in node:
-                values.append(node["stringUnit"])
-            for value in node.values():
-                walk(value)
+                values.append(dict(node["stringUnit"], _plural=in_plural))
+            for key, value in node.items():
+                walk(value, in_plural or key == "plural")
 
     walk(unit)
     return values
 
 
 def placeholders(text):
-    return sorted(PLACEHOLDER.findall(text))
+    """Placeholder types of a text; positional indexes (%1$@) count like their plain form (%@)."""
+    return sorted(re.sub(r"\d+\$", "", match) for match in PLACEHOLDER.findall(text))
+
+
+def placeholders_compatible(value, source, is_plural_form):
+    """A plural form such as "one" may leave out the counted number ("Every year")."""
+    found, expected = placeholders(value), placeholders(source)
+    if found == expected:
+        return True
+    if not is_plural_form:
+        return False
+    remaining = list(expected)
+    for item in found:
+        if item not in remaining:
+            return False
+        remaining.remove(item)
+    return True
 
 
 def check_structure(path, data, require_english, problems):
@@ -63,7 +79,7 @@ def check_structure(path, data, require_english, problems):
         if name != "InfoPlist.xcstrings":
             for unit in units:
                 value = unit.get("value", "")
-                if placeholders(value) != placeholders(source):
+                if not placeholders_compatible(value, source, unit.get("_plural", False)):
                     problems.append(f"{path.relative_to(ROOT)}: placeholders differ: {key!r} -> {value!r}")
         if require_english and not key.strip() == "":
             translated = [u for u in units if u.get("state") == "translated" and u.get("value", "").strip()]

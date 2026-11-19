@@ -61,6 +61,8 @@ public enum ActionAnnouncement {
         case sayDelete
         /// "Alle bestätigen" while a deletion is among the cards.
         case deletesNeedTap
+        /// "Alle bestätigen" while a card assigns an issue to other people or to no one.
+        case guardedNeedTap
         /// The confirmation countdown was stopped.
         case cancelled
     }
@@ -75,6 +77,8 @@ public enum ActionAnnouncement {
         case (.sayDelete, .english): "To delete, say: yes, delete."
         case (.deletesNeedTap, .german): "Löschungen bitte einzeln bestätigen."
         case (.deletesNeedTap, .english): "Please confirm deletions one by one."
+        case (.guardedNeedTap, .german): "Zuweisungen an andere bitte einzeln bestätigen."
+        case (.guardedNeedTap, .english): "Please confirm assignments to others one by one."
         case (.cancelled, .german): "Abgebrochen."
         case (.cancelled, .english): "Cancelled."
         }

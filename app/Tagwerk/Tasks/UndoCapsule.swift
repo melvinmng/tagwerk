@@ -1,12 +1,19 @@
 import SwiftUI
 
-/// Confirmation after completing a task (mockup 1A): glass capsule with the title and an undo
-/// button whose ring shows the remaining time.
+/// Confirmation after an action (mockup 1A): glass capsule with the title and one button whose ring
+/// shows the remaining time. The button undoes the action by default; callers may give it another
+/// title, symbol and hint (e.g. "Auf GitHub öffnen" after handing over an issue).
 struct UndoCapsule: View {
     let title: String
     var caption: LocalizedStringResource = "Erledigt"
     var symbol = "checkmark.circle.fill"
     let duration: TimeInterval
+    var actionTitle: LocalizedStringResource = "Rückgängig"
+    var actionSymbol = "arrow.uturn.backward"
+    var actionHint: LocalizedStringResource = "Markiert die Aufgabe wieder als offen"
+    /// Spoken on appear; `nil` keeps "<caption>: <title>. Rückgängig verfügbar."
+    var announcement: String? = nil
+    /// Action of the button.
     let onUndo: () -> Void
     let onExpire: () -> Void
 
@@ -27,7 +34,8 @@ struct UndoCapsule: View {
         .padding(.bottom, 4)
         .onAppear {
             let spokenCaption = String(localized: caption)
-            AccessibilityNotification.Announcement(String(localized: "\(spokenCaption): \(title). Rückgängig verfügbar.")).post()
+            AccessibilityNotification.Announcement(
+                announcement ?? String(localized: "\(spokenCaption): \(title). Rückgängig verfügbar.")).post()
             if !reduceMotion {
                 withAnimation(.linear(duration: duration)) { remaining = 0 }
             }
@@ -63,16 +71,40 @@ struct UndoCapsule: View {
                         .trim(from: 0, to: remaining)
                         .stroke(.tint, style: StrokeStyle(lineWidth: 2.5, lineCap: .round))
                         .rotationEffect(.degrees(-90))
-                    Image(systemName: "arrow.uturn.backward").font(.caption.weight(.bold))
+                    Image(systemName: actionSymbol).font(.caption.weight(.bold))
                 }
                 .frame(width: 26, height: 26)
                 .accessibilityHidden(true)
-                Text("Rückgängig").fontWeight(.semibold)
+                Text(actionTitle).fontWeight(.semibold)
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
         }
         .buttonStyle(.glass)
-        .accessibilityHint("Markiert die Aufgabe wieder als offen")
+        .accessibilityHint(Text(actionHint))
+    }
+}
+
+/// "Vergeben" after an issue left the user's lists (mockup ZD1): number and people, with the only way
+/// to the issue on GitHub. There is nothing to undo; the capsule stays 8 seconds.
+struct HandedOverCapsule: View {
+    let model: TaskListModel
+    @Environment(\.openURL) private var openURL
+
+    var body: some View {
+        if let notice = model.lastHandedOver {
+            UndoCapsule(title: AssigneeSelection.capsuleTitle(number: notice.number, assignees: notice.assignees),
+                        caption: "Vergeben", symbol: "person.crop.circle.badge.checkmark", duration: 8,
+                        actionTitle: "Auf GitHub öffnen", actionSymbol: "arrow.up.right",
+                        actionHint: "Öffnet das Issue im Browser",
+                        announcement: AssigneeSelection.announcement(number: notice.number, assignees: notice.assignees),
+                        onUndo: {
+                            if let url = notice.url { openURL(url) }
+                            model.dismissHandedOver()
+                        },
+                        onExpire: { if model.lastHandedOver == notice { model.dismissHandedOver() } })
+                .id(notice.id)
+                .transition(.move(edge: .bottom).combined(with: .opacity))
+        }
     }
 }

@@ -23,9 +23,19 @@ public protocol ReminderStore: AnyObject {
                 recurrence: Recurrence?) throws -> ReminderRecord
     /// Completion dates of reminders completed within `interval` in the given lists; `nil` means all lists.
     func completionDates(in interval: DateInterval, listIDs: Set<String>?) async -> [Date]
+    /// Reminders completed within `interval` in the given lists. An empty set means no list.
+    func completedReminders(in interval: DateInterval, listIDs: Set<String>) async -> [ReminderRecord]
+    /// The list the store uses for a new reminder without a list, if it tells.
+    func defaultListID() -> String?
 }
 
 extension ReminderStore {
     /// Stores without completed reminders (fakes) report none.
     public func completionDates(in interval: DateInterval, listIDs: Set<String>?) async -> [Date] { [] }
+
+    /// Stores without completed reminders (fakes) report none.
+    public func completedReminders(in interval: DateInterval, listIDs: Set<String>) async -> [ReminderRecord] { [] }
+
+    /// Stores that do not expose their default list report none; callers then keep the store's own choice.
+    public func defaultListID() -> String? { nil }
 }

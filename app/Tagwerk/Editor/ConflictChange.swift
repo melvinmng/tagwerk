@@ -22,6 +22,8 @@ struct ConflictChange: Equatable, Identifiable {
             (String(localized: "Geschätzt"), { EstimateHours.text(minutes: $0.estimateMinutes) }),
             (String(localized: "Liste"), { $0.container.name }),
             (String(localized: "Labels"), { ($0.labels ?? []).joined(separator: ", ").ifEmpty("–") }),
+            // Plain logins: this function does not know which one is the signed-in user.
+            (String(localized: "Zugewiesen"), { ($0.assignees ?? []).joined(separator: ", ").ifEmpty("–") }),
             (String(localized: "Notiz"), { ($0.notes ?? "").ifEmpty("–") }),
             (String(localized: "Erledigt"), { $0.isCompleted ? String(localized: "ja") : String(localized: "nein") }),
         ]

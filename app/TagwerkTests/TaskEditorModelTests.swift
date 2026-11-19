@@ -19,6 +19,18 @@ struct TaskEditorModelTests {
         #expect(provider.appliedEdits.isEmpty)
     }
 
+    @Test func completedTaskOutsideTheListCanBeReopenedInTheEditor() async {
+        var done = makeTask("Erledigte Aufgabe", source: .reminders, version: "5")
+        done.isCompleted = true
+        provider.tasks.append(done)
+        let model = TaskEditorModel(item: done, provider: provider)
+        model.draft.isCompleted = false
+        #expect(await model.save())
+        #expect(model.saved?.isCompleted == false)
+        #expect(provider.appliedEdits.last?.edit.isCompleted == .set(false))
+        #expect(provider.appliedEdits.last?.expectedVersion == "5")
+    }
+
     @Test func save_changedTitle_sendsOnlyTitle() async {
         let model = TaskEditorModel(item: item, provider: provider)
         model.draft.title = "Neu"
@@ -287,3 +299,123 @@ struct TaskEditorRecurrenceTests {
     }
 }
 
+
+@MainActor
+struct TaskEditorAssigneeTests {
+    let issue: TaskItem
+    let provider: FakeTaskProvider
+
+    init() {
+        var issue = makeTask("Login", source: .github, version: "1")
+        issue.assignees = ["octo", "lea-m"]
+        issue.url = URL(string: "https://github.com/beispiel/app/issues/151")
+        self.issue = issue
+        provider = FakeTaskProvider(source: .github, tasks: [issue])
+        provider.viewerLogin = "octo"
+    }
+
+    private func makeModel(_ item: TaskItem? = nil, viewerLogin: String? = "octo") -> TaskEditorModel {
+        TaskEditorModel(item: item ?? issue, provider: provider, viewerLogin: viewerLogin)
+    }
+
+    @Test func assignees_addPerson_sendsOnlyTheDifference() async {
+        let model = makeModel()
+        model.draft.assignees = ["octo", "lea-m", "sam"]
+        #expect(model.requestedAssignees == ["sam"])
+        #expect(await model.save())
+        #expect(provider.appliedEdits.last?.edit.assignees == .set(AssigneeChange(add: ["sam"], remove: [])))
+        #expect(model.savedIsListed)
+    }
+
+    @Test func assignees_unchanged_hasNoChanges() {
+        let model = makeModel()
+        model.draft.assignees = ["lea-m", "Octo"]
+        #expect(!model.hasChanges)
+        #expect(model.requestedAssignees.isEmpty)
+        #expect(model.savedIsListed)
+    }
+
+    @Test func handsOver_onlyWhenIWasAssignedAndLeave() {
+        let leaving = makeModel()
+        leaving.draft.assignees = ["lea-m"]
+        #expect(leaving.handsOver)
+
+        let staying = makeModel()
+        staying.draft.assignees = ["octo"]
+        #expect(!staying.handsOver)
+
+        var foreign = issue
+        foreign.assignees = ["lea-m"]
+        let notMine = makeModel(foreign)
+        notMine.draft.assignees = []
+        #expect(!notMine.handsOver)
+
+        let unknown = makeModel(viewerLogin: nil)
+        unknown.draft.assignees = ["lea-m"]
+        #expect(!unknown.handsOver)
+    }
+
+    @Test func saveQuestion_handOverWins() {
+        #expect(TaskEditorModel.saveQuestion(effortChanged: false, blocksOffSeries: [], handOverFutureBlocks: 2)
+            == .handOver(futureBlocks: 2))
+        #expect(TaskEditorModel.saveQuestion(effortChanged: true, blocksOffSeries: [], handOverFutureBlocks: 0)
+            == .handOver(futureBlocks: 0))
+        #expect(TaskEditorModel.saveQuestion(effortChanged: false, blocksOffSeries: [], handOverFutureBlocks: nil) == nil)
+        #expect(TaskEditorModel.saveQuestion(effortChanged: true, blocksOffSeries: []) == .effortReach(blocksOffSeries: []))
+    }
+
+    @Test func handOverMessage_cases() {
+        #expect(TaskEditorModel.handOverMessage(number: 151, futureBlocks: 0, leavesUnassigned: false)
+            == "#151 verschwindet aus Aufgaben und Planung.")
+        #expect(TaskEditorModel.handOverMessage(number: 151, futureBlocks: 2, leavesUnassigned: false)
+            == "#151 verschwindet aus Aufgaben und Planung. 2 geplante Zeitblöcke werden gelöscht.")
+        #expect(TaskEditorModel.handOverMessage(number: 151, futureBlocks: 1, leavesUnassigned: false)
+            .hasSuffix("1 geplanter Zeitblock wird gelöscht."))
+        #expect(TaskEditorModel.handOverMessage(number: 151, futureBlocks: 0, leavesUnassigned: true)
+            == "#151 verschwindet aus Aufgaben und Planung. Das Issue ist dann niemandem zugewiesen.")
+        #expect(TaskEditorModel.handOverMessage(number: nil, futureBlocks: 0, leavesUnassigned: false)
+            == "Das Issue verschwindet aus Aufgaben und Planung.")
+    }
+
+    @Test func assigneeCandidates_keepAssignedPeopleWhoAreNoLongerAssignable() {
+        let model = makeModel()
+        #expect(model.assigneeCandidates(assignable: ["octo", "sam"]) == ["octo", "lea-m", "sam"])
+        #expect(model.assigneeCandidates(assignable: nil) == ["octo", "lea-m"])
+    }
+
+    @Test func setAssignees_keepsCandidateOrder() {
+        let model = makeModel()
+        model.setAssignees(["sam", "octo"], candidates: ["octo", "lea-m", "sam"])
+        #expect(model.draft.assignees == ["octo", "sam"])
+        #expect(model.hasChanges)
+    }
+
+    @Test func saveAnyway_afterConflict_writesDifferenceAgainstOpeningState() async {
+        var external = issue
+        external.assignees = ["octo", "lea-m", "new"]
+        external.version = "2"
+        provider.conflictOnNextApply = external
+        let model = makeModel()
+        model.draft.assignees = ["octo", "lea-m", "sam"]
+
+        #expect(await model.save() == false)
+        #expect(model.conflictChanges.map(\.field) == ["Zugewiesen"])
+        #expect(await model.saveAnyway())
+
+        let second = provider.appliedEdits.last
+        #expect(provider.appliedEdits.count == 2)
+        #expect(second?.expectedVersion == nil)
+        #expect(second?.edit.assignees == .set(AssigneeChange(add: ["sam"], remove: [])))
+        // The person added on GitHub meanwhile stays.
+        #expect(model.saved?.assignees == ["octo", "lea-m", "new", "sam"])
+    }
+
+    @Test func handOver_skipsPlanningEdit() async {
+        let model = makeModel()
+        model.draft.assignees = ["lea-m"]
+        #expect(model.handsOver)
+        #expect(await model.save())
+        #expect(model.saved?.assignees == ["lea-m"])
+        #expect(model.savedIsListed == false)
+    }
+}

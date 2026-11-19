@@ -114,6 +114,19 @@ public struct GitHubAPI: Sendable {
         }
     }
 
+    /// Logins that can be assigned to issues of `repository` ("owner/name"). Only the first page of 100.
+    public func assignableUsers(repository: String) async throws -> [String] {
+        struct User: Decodable { let login: String }
+        let data = try await rest("GET", "repos/\(repository)/assignees", query: [
+            URLQueryItem(name: "per_page", value: "100"),
+        ])
+        do {
+            return try JSONDecoder().decode([User].self, from: data).map(\.login)
+        } catch {
+            throw GitHubAPIError.decoding(String(describing: error))
+        }
+    }
+
     /// Sends a REST request with an optional JSON body and returns the response body.
     @discardableResult
     func rest(_ method: String, _ path: String, query: [URLQueryItem] = [],

@@ -57,7 +57,7 @@ public enum GitHubMapping {
         let due = placements.compactMap(\.due).min { lhs, rhs in
             (lhs.year, lhs.month, lhs.day, lhs.hour ?? 0, lhs.minute ?? 0) < (rhs.year, rhs.month, rhs.day, rhs.hour ?? 0, rhs.minute ?? 0)
         }
-        var editable: Set<TaskField> = [.title, .notes, .labels]
+        var editable: Set<TaskField> = [.title, .notes, .labels, .assignees]
         // Only projects the login may change count for editing (readable foreign boards may be read-only).
         let projects = placements.map(\.project).filter(\.canWrite)
         if projects.contains(where: { $0.field(named: dueField) != nil }) { editable.insert(.due) }
@@ -82,7 +82,8 @@ public enum GitHubMapping {
             epic: record.parent.map {
                 EpicInfo(id: $0.id, number: $0.number, title: $0.title, due: $0.due, isEpic: $0.labels.contains(epicLabel))
             },
-            isEpic: record.labels.contains(epicLabel)
+            isEpic: record.labels.contains(epicLabel),
+            assignees: record.assignees
         )
     }
 

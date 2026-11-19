@@ -11,7 +11,7 @@ final class FakeReminderStore: ReminderStore {
     var calendarInfos: [ListInfo] = []
     var listInfos: [ListInfo] = []
     var records: [String: ReminderRecord] = [:]
-    var defaultListID = "inbox"
+    var defaultList = "inbox"
     private(set) var saveCount = 0
     /// The recurrence change passed with every save, in order.
     private(set) var recurrenceChanges: [FieldChange<Recurrence?>] = []
@@ -33,6 +33,17 @@ final class FakeReminderStore: ReminderStore {
             .sorted { $0.id < $1.id }
     }
 
+    func completedReminders(in interval: DateInterval, listIDs: Set<String>) async -> [ReminderRecord] {
+        records.values
+            .filter { record in
+                guard record.isCompleted, listIDs.contains(record.listID), let date = record.completedAt else { return false }
+                return interval.contains(date)
+            }
+            .sorted { $0.id < $1.id }
+    }
+
+    func defaultListID() -> String? { defaultList }
+
     func reminder(id: String) -> ReminderRecord? { records[id] }
 
     /// Like the gateway: the rule changes only through `recurrence`, never through `record.recurrence`.
@@ -44,6 +55,14 @@ final class FakeReminderStore: ReminderStore {
         if case .set(let newRecurrence) = recurrence { stored.recurrence = newRecurrence }
         if let due = stored.due { stored.recurrence?.start = PlanDay(due) } else { stored.recurrence = nil }
         stored.lastModified = tick()
+        // Like EventKit: the completion date follows the completed flag and cannot be written directly.
+        let previous = records[record.id]
+        stored.createdAt = previous?.createdAt
+        if stored.isCompleted {
+            stored.completedAt = previous?.isCompleted == true ? previous?.completedAt : stored.lastModified
+        } else {
+            stored.completedAt = nil
+        }
         records[record.id] = stored
         return stored
     }
@@ -53,10 +72,12 @@ final class FakeReminderStore: ReminderStore {
         createdRecurrences.append(recurrence)
         let record = ReminderRecord(
             id: "new-\(records.count + 1)", title: title, notes: notes, due: due, ekPriority: ekPriority,
-            isCompleted: false, listID: listID ?? defaultListID, lastModified: tick(), recurrence: recurrence
+            isCompleted: false, listID: listID ?? defaultList, lastModified: tick(), recurrence: recurrence
         )
-        records[record.id] = record
-        return record
+        var created = record
+        created.createdAt = created.lastModified
+        records[created.id] = created
+        return created
     }
 
     func delete(id: String) throws {

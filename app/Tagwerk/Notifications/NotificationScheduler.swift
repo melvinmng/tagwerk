@@ -100,7 +100,10 @@ final class NotificationScheduler {
         await refreshAuthorization()
         guard authorization == .authorized else { return }
         let current = now()
-        let ours = await center.pendingRequests().filter { $0.id.hasPrefix(PlannedNotification.identifierPrefix) }
+        // The routine reminders (phase 7) share the prefix but have their own scheduler and their own five places.
+        let ours = await center.pendingRequests().filter {
+            $0.id.hasPrefix(PlannedNotification.identifierPrefix) && !$0.id.hasPrefix(PlannedNotification.routineIdentifierPrefix)
+        }
 
         // Sources that are not loaded right now keep their notifications (a background launch before
         // GitHub is registered, a failing source, missing access). A sign-out or a switched-off source clears them.

@@ -64,4 +64,29 @@ struct NotificationNavigatorTests {
         navigator.receive(NotificationPayload.userInfo(for: .event(id: "e", day: day)))
         #expect(navigator.takeRoute(taskList: list) == .day(day))
     }
+
+    @Test func routePayload_goesToTheRouter_notTheNavigator() {
+        let navigator = NotificationNavigator()
+        let router = AppRouter()
+        let delegate = NotificationDelegate(navigator: navigator, router: router)
+        delegate.handle(["route": "routine/evening"])
+        #expect(router.takeRequest(setupCompleted: true)?.route == .routineEvening)
+        #expect(!navigator.hasPendingTarget && navigator.receivedCount == 0)
+    }
+
+    @Test func taskPayload_stillGoesToTheNavigator() {
+        let navigator = NotificationNavigator()
+        let router = AppRouter()
+        let delegate = NotificationDelegate(navigator: navigator, router: router)
+        delegate.handle(NotificationPayload.userInfo(for: .task(TaskID(source: .local, rawValue: "A"))))
+        #expect(navigator.hasPendingTarget)
+        #expect(router.takeRequest(setupCompleted: true) == nil)
+    }
+
+    @Test func unknownRoute_isIgnored() {
+        let navigator = NotificationNavigator()
+        let router = AppRouter()
+        NotificationDelegate(navigator: navigator, router: router).handle(["route": "settings/everything"])
+        #expect(router.takeRequest(setupCompleted: true) == nil)
+    }
 }

@@ -76,6 +76,15 @@ struct IntakeStoreTests {
         #expect(store.workouts(in: DateInterval(start: noon.addingTimeInterval(-60), duration: 3600)) == [run])
         #expect(store.latestWorkout() == run)
     }
+
+    @Test func drinksInInterval_returnsOnlyDrinksInside() {
+        let inside = DrinkValue(id: UUID(), date: noon, milliliters: 250)
+        let before = DrinkValue(id: UUID(), date: today.adding(days: -1, calendar: calendar).startDate(in: calendar).addingTimeInterval(-60), milliliters: 300)
+        let after = DrinkValue(id: UUID(), date: today.adding(days: 1, calendar: calendar).startDate(in: calendar), milliliters: 400)
+        [inside, before, after].forEach { store.addDrink($0) }
+        let interval = DateInterval(start: today.startDate(in: calendar), end: today.adding(days: 1, calendar: calendar).startDate(in: calendar))
+        #expect(store.drinks(in: interval).map(\.milliliters) == [250])
+    }
 }
 
 @MainActor

@@ -18,7 +18,7 @@ struct WidgetSnapshotTests {
     }
 
     private func make(today events: [CalendarEvent] = [], blocks: [CalendarEvent] = [], tomorrow: [CalendarEvent] = [],
-                      intake: SnapshotIntake? = nil, showsNutrition: Bool = true) -> WidgetSnapshot {
+                      intake: SnapshotIntake? = nil, habits: SnapshotHabits? = nil, showsNutrition: Bool = true) -> WidgetSnapshot {
         WidgetSnapshot.make(
             createdAt: instant(2026, 11, 18, 8, 0, in: calendar),
             days: [
@@ -26,7 +26,7 @@ struct WidgetSnapshotTests {
                 SnapshotDayInput(day: today.adding(days: 1, calendar: calendar), events: tomorrow, blocks: [], deadlines: [],
                                  colorHex: { _ in nil }),
             ],
-            todayIntake: intake, showsNutrition: showsNutrition, calendar: calendar)
+            todayIntake: intake, todayHabits: habits, showsNutrition: showsNutrition, calendar: calendar)
     }
 
     // MARK: Encoding
@@ -195,20 +195,20 @@ struct WidgetSnapshotTests {
         #expect(snapshot.days[0].entries[0].id != snapshot.days[1].entries[0].id)
     }
 
-    @Test func replacingIntake_keepsPlan() {
+    @Test func replacingToday_keepsPlan() {
         let snapshot = make(today: [event("Vorlesung", 9, 10)])
-        let updated = snapshot.replacingIntake(intake(kcal: 500), on: today, createdAt: instant(2026, 11, 18, 9, 0, in: calendar))
+        let updated = snapshot.replacingToday(intake: intake(kcal: 500), habits: nil, on: today, createdAt: instant(2026, 11, 18, 9, 0, in: calendar))
         #expect(updated.days[0].entries == snapshot.days[0].entries)
         #expect(updated.days[0].intake?.kcal == 500)
-        let later = updated.replacingIntake(intake(kcal: 1), on: today.adding(days: 1, calendar: calendar), createdAt: .now)
+        let later = updated.replacingToday(intake: intake(kcal: 1), habits: nil, on: today.adding(days: 1, calendar: calendar), createdAt: .now)
         #expect(later.days[0].intake == nil)
         #expect(later.days[1].intake?.kcal == 1)
     }
 
-    @Test func replacingIntake_missingDay_staysStale() {
+    @Test func replacingToday_missingDay_staysStale() {
         let snapshot = make(today: [event("Vorlesung", 9, 10)], intake: intake())
         let thursday = today.adding(days: 3, calendar: calendar)
-        let updated = snapshot.replacingIntake(intake(), on: thursday, createdAt: .now)
+        let updated = snapshot.replacingToday(intake: intake(), habits: nil, on: thursday, createdAt: .now)
         #expect(updated.isStale(at: thursday.startDate(in: calendar).addingTimeInterval(3600), calendar: calendar))
         #expect(updated.days.allSatisfy { $0.intake == nil })
     }
@@ -251,5 +251,49 @@ struct WidgetSnapshotTests {
         let snapshot = make()
         #expect(snapshot.overviewText(at: instant(2026, 11, 18, 9, 0, in: calendar), calendar: calendar)
             == "Heute steht nichts an.")
+    }
+
+    // MARK: Habits (phase 7)
+
+    @Test func habits_belongToTodayOnly() {
+        let snapshot = make(habits: SnapshotHabits(done: 3, total: 5))
+        #expect(snapshot.days[0].habits == SnapshotHabits(done: 3, total: 5))
+        #expect(snapshot.days[1].habits == nil)
+        #expect(snapshot.habits(at: instant(2026, 11, 18, 9, 0, in: calendar), calendar: calendar) == SnapshotHabits(done: 3, total: 5))
+        #expect(snapshot.habits(at: instant(2026, 11, 19, 0, 30, in: calendar), calendar: calendar) == nil)
+    }
+
+    @Test func habits_stayWhenNutritionIsHidden() {
+        let snapshot = make(intake: intake(), habits: SnapshotHabits(done: 1, total: 2), showsNutrition: false)
+        #expect(snapshot.days[0].intake == nil)
+        #expect(snapshot.days[0].habits == SnapshotHabits(done: 1, total: 2))
+    }
+
+    @Test func oldFileWithoutHabits_decodes() throws {
+        let snapshot = make(today: [event("Vorlesung", 9, 10)], intake: intake())
+        var json = try #require(JSONSerialization.jsonObject(with: snapshot.encoded()) as? [String: Any])
+        var days = try #require(json["days"] as? [[String: Any]])
+        days = days.map { var copy = $0; copy.removeValue(forKey: "habits"); return copy }
+        json["days"] = days
+        let decoded = try #require(WidgetSnapshot.decode(JSONSerialization.data(withJSONObject: json)))
+        #expect(decoded.days[0].habits == nil && decoded.schemaVersion == 1)
+    }
+
+    @Test func replacingToday_replacesIntakeAndHabits_keepsEntries() {
+        let snapshot = make(today: [event("Vorlesung", 9, 10)], intake: intake(kcal: 100), habits: SnapshotHabits(done: 0, total: 2))
+        let updated = snapshot.replacingToday(intake: intake(kcal: 500), habits: SnapshotHabits(done: 1, total: 2), on: today,
+                                              createdAt: instant(2026, 11, 18, 9, 0, in: calendar))
+        #expect(updated.days[0].entries == snapshot.days[0].entries)
+        #expect(updated.days[0].intake?.kcal == 500 && updated.days[0].habits == SnapshotHabits(done: 1, total: 2))
+        let later = updated.replacingToday(intake: nil, habits: SnapshotHabits(done: 2, total: 2),
+                                           on: today.adding(days: 1, calendar: calendar), createdAt: .now)
+        #expect(later.days[0].habits == nil && later.days[1].habits == SnapshotHabits(done: 2, total: 2))
+    }
+
+    @Test func snapshot_containsNoHabitNames() throws {
+        let snapshot = make(habits: SnapshotHabits(done: 1, total: 2))
+        let text = String(decoding: try snapshot.encoded(), as: UTF8.self)
+        #expect(!text.contains("Lesen 20 min"))
+        #expect(text.contains("\"habits\":{\"done\":1,\"total\":2}"))
     }
 }

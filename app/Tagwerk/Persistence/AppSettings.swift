@@ -68,12 +68,33 @@ final class AppSettings {
     var goalProteinGrams: Int = 120
     /// The one-time consent for meal estimates (main design §7). The settings switch binds to it; off means typing values.
     var mealEstimationConsent: Bool = false
+    /// Phase 5: the reminder list that serves as the shopping list; `nil` means none. Its reminders are not tasks.
+    /// Written only through `AppEnvironment.setShoppingList(_:)`, which reloads everything that depends on it.
+    var shoppingListID: String? = nil
+    /// The card suggesting a shopping list was answered with "Nicht jetzt".
+    var shoppingSuggestionDismissed: Bool = false
+    /// The built-in shopping categories were created once; deleting them later does not bring them back.
+    var shoppingCategoriesSeeded: Bool = false
+    /// The one-time consent for "Mit ChatGPT sortieren"; the settings switch binds to it.
+    var shoppingSortConsent: Bool = false
     /// The Health card in the tab was dismissed with "Nicht jetzt".
     var healthCardDismissed: Bool = false
     /// Phase 4: the calories/water line in the head of "Planen" (today's day view, from the first entry).
     var showsIntakeInPlan: Bool = true
     /// Phase 4: calories and water in the "Heute" widget; off keeps the values out of the shared snapshot file.
     var widgetShowsNutrition: Bool = true
+
+    /// Phase 7 routines: target bedtime in minutes after midnight (23:00); the evening checklist counts back from it.
+    var bedtimeMinutes: Int = 1380
+    /// Notifications of the evening checklist; at most four, one per point with a time anchor.
+    var eveningRemindersEnabled: Bool = true
+    /// The optional reminder to start the day, off by default.
+    var morningReminderEnabled: Bool = false
+    var morningReminderMinutes: Int = 450
+    /// The routine card and the evening line in "Planen".
+    var showsRoutinesInPlan: Bool = true
+    /// "Notizen an ChatGPT senden": a thought note may be sent, only on a tap on "Vorschläge holen".
+    var noteSuggestionConsent: Bool = false
 
     /// Voice: microphone in conversations (plan voice-chat, SP7a).
     var voiceInputEnabled: Bool = true

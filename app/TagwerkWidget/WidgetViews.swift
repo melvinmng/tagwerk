@@ -14,6 +14,8 @@ struct WidgetContent {
     let state: State
     let deadlines: Int
     let intake: SnapshotIntake?
+    /// Today's habit counter; only the "Heute" widget on the home screen shows it.
+    let habits: SnapshotHabits?
 
     init(entry: SnapshotTimelineEntry, limit: Int) {
         let calendar = Calendar.widget
@@ -21,6 +23,7 @@ struct WidgetContent {
             state = .stale
             deadlines = 0
             intake = nil
+            habits = nil
             return
         }
         let upcoming = snapshot.upcoming(at: entry.date, calendar: calendar, limit: limit)
@@ -31,6 +34,7 @@ struct WidgetContent {
         }
         deadlines = snapshot.deadlineCount(at: entry.date, calendar: calendar)
         intake = snapshot.intake(at: entry.date, calendar: calendar)
+        habits = snapshot.habits(at: entry.date, calendar: calendar)
     }
 
     static func time(_ date: Date) -> String { DateText.time(date, calendar: .widget) }
@@ -45,6 +49,11 @@ struct WidgetContent {
         case 0: nil
         default: String(localized: "⚠︎ \(count) Deadlines heute")
         }
+    }
+
+    /// "✓ 3 von 5".
+    static func habitCounter(_ counter: SnapshotHabits) -> String {
+        String(localized: "✓ \(counter.done) von \(counter.total)")
     }
 
     static var staleText: String { String(localized: "Tagwerk öffnen, um den Plan zu laden") }
@@ -157,21 +166,27 @@ struct TodayView: View {
 
     var body: some View {
         let content = WidgetContent(entry: entry, limit: 4)
+        // Without nutrition the counter takes the place of the fourth plan row (design §10).
+        let counterBelowPlan = content.intake == nil && content.habits != nil
         HStack(alignment: .top, spacing: 12) {
             Link(destination: AppRoute.planToday.url) {
-                plan(content, limit: content.intake == nil ? 4 : 3)
+                plan(content, limit: content.intake == nil && !counterBelowPlan ? 4 : 3, showsCounter: counterBelowPlan)
             }
             if let intake = content.intake {
                 Divider()
                 Link(destination: AppRoute.capture.url) {
-                    nutrition(intake).frame(width: 118)
+                    VStack(alignment: .leading, spacing: 6) {
+                        nutrition(intake)
+                        if let habits = content.habits { counter(habits) }
+                    }
+                    .frame(width: 118, alignment: .leading)
                 }
             }
         }
     }
 
     @ViewBuilder
-    private func plan(_ content: WidgetContent, limit: Int) -> some View {
+    private func plan(_ content: WidgetContent, limit: Int, showsCounter: Bool) -> some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(headerText).font(.caption2.weight(.semibold)).foregroundStyle(.secondary)
             switch content.state {
@@ -195,11 +210,22 @@ struct TodayView: View {
                 }
             }
             Spacer(minLength: 0)
+            if showsCounter, let habits = content.habits {
+                Link(destination: AppRoute.capture.url) { counter(habits) }
+            }
             if let footer = WidgetContent.deadlineFooter(content.deadlines) {
                 Text(footer).font(.caption2.weight(.semibold)).foregroundStyle(.orange)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    /// "✓ 3 von 5": numbers only, never a habit name; hidden on the lock screen by `privacySensitive`.
+    private func counter(_ habits: SnapshotHabits) -> some View {
+        Text(WidgetContent.habitCounter(habits))
+            .font(.caption.monospacedDigit())
+            .foregroundStyle(.secondary)
+            .privacySensitive()
     }
 
     /// Fixes the date part, e.g. "HEUTE · Mi 18 Nov" → "HEUTE · Mi 18. Nov".

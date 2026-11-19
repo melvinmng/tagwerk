@@ -2,6 +2,32 @@
   "sourceLanguage": "de",
   "strings": {
     "": {},
+    "#%lld angelegt, aber %@ konnte nicht zugewiesen werden.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "#%1$lld angelegt, aber %2$@ konnte nicht zugewiesen werden."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "#%lld created, but %@ could not be assigned."
+          }
+        }
+      }
+    },
+    "#%lld verschwindet aus Aufgaben und Planung.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "#%lld will disappear from tasks and planning."
+          }
+        }
+      }
+    },
     "%@\n\nDie Anmeldung öffnet eine Seite von ChatGPT und kehrt danach von selbst zu Tagwerk zurück. Planen mit KI und der Assistent brauchen sie; alles andere läuft ohne.": {
       "localizations": {
         "en": {
@@ -40,6 +66,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "%1$@ %2$@ → %3$@"
+          }
+        }
+      }
+    },
+    "%@ %lld min": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@ %2$lld min"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ %2$lld min"
+          }
+        }
+      }
+    },
+    "%@ %lld min aus Health": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@ %2$lld min aus Health"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ %2$lld min from Health"
           }
         }
       }
@@ -136,6 +194,22 @@
         }
       }
     },
+    "%@ an %@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@ an %2$@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ to %2$@"
+          }
+        }
+      }
+    },
     "%@ bis %@ · ganztägig": {
       "localizations": {
         "de": {
@@ -208,6 +282,32 @@
         }
       }
     },
+    "%@ ist für heute abgehakt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ is checked off for today."
+          }
+        }
+      }
+    },
+    "%@ ist in %@ nicht zuweisbar.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@ ist in %2$@ nicht zuweisbar."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ cannot be assigned in %2$@."
+          }
+        }
+      }
+    },
     "%@ jetzt erfassen": {
       "localizations": {
         "en": {
@@ -224,6 +324,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "No break on %@"
+          }
+        }
+      }
+    },
+    "%@ konnte nicht zugewiesen werden.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ could not be assigned."
           }
         }
       }
@@ -268,6 +378,16 @@
         }
       }
     },
+    "%@ ohne Zuweisung": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ unassigned"
+          }
+        }
+      }
+    },
     "%@ planen": {
       "localizations": {
         "en": {
@@ -299,6 +419,46 @@
       },
       "shouldTranslate": false
     },
+    "%@ stehen schon auf der Liste.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ are already on the list."
+          }
+        }
+      }
+    },
+    "%@ stehen schon drauf": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ are already on the list"
+          }
+        }
+      }
+    },
+    "%@ steht schon auf der Liste.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ is already on the list."
+          }
+        }
+      }
+    },
+    "%@ steht schon drauf": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ is already on the list"
+          }
+        }
+      }
+    },
     "%@ von %@": {
       "localizations": {
         "de": {
@@ -311,6 +471,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "%1$@ of %2$@"
+          }
+        }
+      }
+    },
+    "%@ von %@ Schritten": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@ von %2$@ Schritten"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ of %2$@ steps"
           }
         }
       }
@@ -343,6 +519,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "%1$@ suggested · %2$@ free after accepting"
+          }
+        }
+      }
+    },
+    "%@ war heute schon abgehakt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ was already checked off today."
+          }
+        }
+      }
+    },
+    "%@ wieder geöffnet": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ reopened"
           }
         }
       }
@@ -412,6 +608,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "%1$@ · %2$@ left"
+          }
+        }
+      }
+    },
+    "%@ · diktiert": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ · dictated"
           }
         }
       }
@@ -628,6 +834,86 @@
         }
       }
     },
+    "%lld Artikel hinzugefügt:": {
+      "localizations": {
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Artikel hinzugefügt:"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Artikel hinzugefügt:"
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld item added:"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld items added:"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "%lld Artikel werden neu einsortiert, meist unter „Sonstiges“.": {
+      "localizations": {
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Artikel wird neu einsortiert, meist unter „Sonstiges“."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Artikel werden neu einsortiert, meist unter „Sonstiges“."
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld item will be sorted again, usually under “Other”."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld items will be sorted again, usually under “Other”."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "%lld Aufgabe(n) ohne Aufwand mit Standarddauer gerechnet": {
       "localizations": {
         "de": {
@@ -704,6 +990,16 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "%lld Aufgaben daraus": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld tasks from it"
           }
         }
       }
@@ -849,6 +1145,46 @@
         }
       }
     },
+    "%lld Personen": {
+      "localizations": {
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Person"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Personen"
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld person"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld people"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "%lld Projekte": {
       "localizations": {
         "en": {
@@ -895,6 +1231,16 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "%lld Tage pro Woche": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld days per week"
           }
         }
       }
@@ -1019,6 +1365,16 @@
         }
       }
     },
+    "%lld Vorschläge aus der Notiz": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld suggestions from the note"
+          }
+        }
+      }
+    },
     "%lld Vorschläge geändert": {
       "localizations": {
         "de": {
@@ -1131,12 +1487,92 @@
         }
       }
     },
+    "%lld erledigte Artikel endgültig löschen?": {
+      "localizations": {
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld erledigten Artikel endgültig löschen?"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld erledigte Artikel endgültig löschen?"
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Permanently delete %lld completed item?"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Permanently delete %lld completed items?"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "%lld fällig in diesem Zeitraum": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "%lld due in this period"
+          }
+        }
+      }
+    },
+    "%lld geplante Zeitblöcke werden gelöscht.": {
+      "localizations": {
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld geplanter Zeitblock wird gelöscht."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld geplante Zeitblöcke werden gelöscht."
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld planned time block will be deleted."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld planned time blocks will be deleted."
+                }
+              }
+            }
           }
         }
       }
@@ -1167,6 +1603,16 @@
         }
       }
     },
+    "%lld hinzugefügt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld added"
+          }
+        }
+      }
+    },
     "%lld kcal": {
       "localizations": {
         "en": {
@@ -1187,6 +1633,32 @@
         }
       }
     },
+    "%lld min vorher": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld min before"
+          }
+        }
+      }
+    },
+    "%lld min vorher · %@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$lld min vorher · %2$@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld min before · %2$@"
+          }
+        }
+      }
+    },
     "%lld ml": {
       "localizations": {
         "en": {
@@ -1203,6 +1675,72 @@
           "stringUnit": {
             "state": "translated",
             "value": "%lld not scheduled"
+          }
+        }
+      }
+    },
+    "%lld offen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld open"
+          }
+        }
+      }
+    },
+    "%lld offen · Liste „%@“ in Erinnerungen": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$lld offen · Liste „%2$@“ in Erinnerungen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld open · list “%@” in Reminders"
+          }
+        }
+      }
+    },
+    "%lld offene Erinnerungen.": {
+      "localizations": {
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld offene Erinnerung."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld offene Erinnerungen."
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld open reminder."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld open reminders."
+                }
+              }
+            }
           }
         }
       }
@@ -1259,6 +1797,38 @@
         }
       }
     },
+    "%lld von %lld bisher": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$lld von %2$lld bisher"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld of %2$lld so far"
+          }
+        }
+      }
+    },
+    "%lld von %lld min Tageslicht": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$lld von %2$lld min Tageslicht"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld of %2$lld min daylight"
+          }
+        }
+      }
+    },
     "%lld von heute": {
       "localizations": {
         "en": {
@@ -1275,6 +1845,72 @@
           "stringUnit": {
             "state": "translated",
             "value": "%lld left from today"
+          }
+        }
+      }
+    },
+    "%lld weitere": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld more"
+          }
+        }
+      }
+    },
+    "%lld weitere bis %@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$lld weitere bis %2$@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld more until %@"
+          }
+        }
+      }
+    },
+    "%lld weiteren Personen": {
+      "localizations": {
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld weiteren Person"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld weiteren Personen"
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld other person"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld other people"
+                }
+              }
+            }
           }
         }
       }
@@ -1361,12 +1997,42 @@
         }
       }
     },
+    "**Gesendet wird** der Text dieser einen Notiz, dazu deine offenen Aufgaben und Termine der nächsten 7 Tage (Titel, Fälligkeit, Zeit).": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "**What is sent** is the text of this one note, plus your open tasks and events of the next 7 days (title, due date, time)."
+          }
+        }
+      }
+    },
     "**Gesendet wird** nur der Text und das Foto dieser Mahlzeit. Fotos gehen verkleinert und ohne Ortsangabe raus.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "**Only the text and photo** of this meal are sent. Photos are downsized and sent without location data."
+          }
+        }
+      }
+    },
+    "**Gesendet wird:** Artikelnamen und Kategorienamen. In einer geteilten Liste auch Artikel, die andere eingetragen haben.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "**What is sent:** item names and category names. In a shared list also items that others added."
+          }
+        }
+      }
+    },
+    "**Nicht gesendet werden** Dankbarkeit, Gewohnheiten, Wochenreflexion, Daten aus Health und frühere Notizen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "**What is not sent** is gratitude, habits, weekly reflection, Health data and earlier notes."
           }
         }
       }
@@ -1381,12 +2047,42 @@
         }
       }
     },
+    "**Nicht gesendet werden:** Mengen, erledigte Artikel, Aufgaben, Termine, Notizen, Daten aus Health.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "**What is not sent:** quantities, completed items, tasks, events, notes, data from Health."
+          }
+        }
+      }
+    },
     "**Nur auf dein Tippen:** Ohne „Schätzen“ verlässt nichts das iPhone.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "**Only when you tap:** Nothing leaves your iPhone without “Estimate”."
+          }
+        }
+      }
+    },
+    "**Nur auf dein Tippen:** Ohne „Sortieren“ verlässt nichts das iPhone.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "**Only on your tap:** Without “Sort”, nothing leaves the iPhone."
+          }
+        }
+      }
+    },
+    "**Nur auf dein Tippen:** Ohne „Vorschläge holen“ verlässt keine Notiz das iPhone.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "**Only when you tap:** without “Get suggestions”, no note leaves the iPhone."
           }
         }
       }
@@ -1431,6 +2127,26 @@
         }
       }
     },
+    "1 Aufgabe": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 task"
+          }
+        }
+      }
+    },
+    "1 Aufgabe daraus": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 task from it"
+          }
+        }
+      }
+    },
     "1 Stunde": {
       "localizations": {
         "en": {
@@ -1441,12 +2157,78 @@
         }
       }
     },
+    "1 Tag pro Woche": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 day per week"
+          }
+        }
+      }
+    },
+    "1 Termin": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 event"
+          }
+        }
+      }
+    },
     "1 passt nicht mehr": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "1 no longer fits"
+          }
+        }
+      }
+    },
+    "30 Tage %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "30 days %@"
+          }
+        }
+      }
+    },
+    "7 Tage %lld/%lld": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "7 Tage %1$lld/%2$lld"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "7 days %1$lld/%2$lld"
+          }
+        }
+      }
+    },
+    "7 Tage –": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "7 days –"
+          }
+        }
+      }
+    },
+    "7 bedeutet täglich. Quote: erfüllte Tage ÷ Zieltage, höchstens 100 %. Serie bei weniger als 7: Wochen in Folge mit erreichtem Ziel.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "7 means daily. Rate: fulfilled days ÷ target days, at most 100 %. Streak with fewer than 7: consecutive weeks that reached the goal."
           }
         }
       }
@@ -1473,6 +2255,56 @@
           "stringUnit": {
             "state": "translated",
             "value": "Cancel"
+          }
+        }
+      }
+    },
+    "Abend-Checkliste": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Evening checklist"
+          }
+        }
+      }
+    },
+    "Abend-Checkliste · Schlafzeit %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Evening checklist · Bedtime %@"
+          }
+        }
+      }
+    },
+    "Abgeben": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hand over"
+          }
+        }
+      }
+    },
+    "Abhaken": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check off"
+          }
+        }
+      }
+    },
+    "Abhaken: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check off: %@"
           }
         }
       }
@@ -1540,6 +2372,16 @@
     "Abspielen": {
       "shouldTranslate": false
     },
+    "Abstand": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lead time"
+          }
+        }
+      }
+    },
     "Abstand zwischen Terminen und eingeplanten Aufgaben.": {
       "localizations": {
         "en": {
@@ -1566,6 +2408,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "All"
+          }
+        }
+      }
+    },
+    "Alle %lld Aufgaben von heute zeigen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show all %lld tasks of today"
           }
         }
       }
@@ -1840,12 +2692,32 @@
         }
       }
     },
+    "Als Aufgabe anlegen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Create as task"
+          }
+        }
+      }
+    },
     "Als Deadline markieren": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Mark as deadline"
+          }
+        }
+      }
+    },
+    "Als Fokus markieren": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mark as focus"
           }
         }
       }
@@ -1930,12 +2802,42 @@
         }
       }
     },
+    "An diesem Tag ist keine Gewohnheit aktiv.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No habit is active on this day."
+          }
+        }
+      }
+    },
     "An diesem Tag ist nichts erfasst.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Nothing is logged on this day."
+          }
+        }
+      }
+    },
+    "Andere Liste wählen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose Another List"
+          }
+        }
+      }
+    },
+    "Andere Liste …": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Another List …"
           }
         }
       }
@@ -1970,6 +2872,16 @@
         }
       }
     },
+    "Angeheftet": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pinned"
+          }
+        }
+      }
+    },
     "Angemeldet als": {
       "localizations": {
         "en": {
@@ -1986,6 +2898,42 @@
           "stringUnit": {
             "state": "translated",
             "value": "Signed in as %@"
+          }
+        }
+      }
+    },
+    "Anheften": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pin"
+          }
+        }
+      }
+    },
+    "Anheftung lösen": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lösen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unpin"
+          }
+        }
+      }
+    },
+    "Anlegen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Create"
           }
         }
       }
@@ -2016,6 +2964,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Signing in …"
+          }
+        }
+      }
+    },
+    "Anmeldung unter Einstellungen › KI": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sign in under Settings › AI"
           }
         }
       }
@@ -2190,6 +3148,36 @@
         }
       }
     },
+    "Artikel": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Item"
+          }
+        }
+      }
+    },
+    "Artikel auf die Einkaufsliste": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add Item to Shopping List"
+          }
+        }
+      }
+    },
+    "Artikel hinzufügen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add item"
+          }
+        }
+      }
+    },
     "Assistent": {
       "localizations": {
         "en": {
@@ -2240,6 +3228,16 @@
         }
       }
     },
+    "Auf GitHub suchen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search on GitHub"
+          }
+        }
+      }
+    },
     "Auf GitHub öffnen": {
       "localizations": {
         "en": {
@@ -2276,6 +3274,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "To another day …"
+          }
+        }
+      }
+    },
+    "Auf die Einkaufsliste": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add to Shopping List"
+          }
+        }
+      }
+    },
+    "Auf die Einkaufsliste in Tagwerk": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add to shopping list in Tagwerk"
           }
         }
       }
@@ -2360,12 +3378,52 @@
         }
       }
     },
+    "Aufgaben der Woche festgelegt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tasks of the week set"
+          }
+        }
+      }
+    },
+    "Aufgaben erledigt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tasks completed"
+          }
+        }
+      }
+    },
     "Aufgaben werden geladen …": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Loading tasks …"
+          }
+        }
+      }
+    },
+    "Aufgaben · %lld offen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tasks · %lld open"
+          }
+        }
+      }
+    },
+    "Aufgaben, %lld offen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tasks, %lld open"
           }
         }
       }
@@ -2506,6 +3564,26 @@
         }
       }
     },
+    "Automatische Quellen haken sich selbst ab, auch an Tagen ohne App-Start. Jede Quelle gilt für höchstens eine Gewohnheit. Du kannst jede Gewohnheit zusätzlich von Hand abhaken.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Automatic sources check themselves off, even on days you don’t open the app. Each source applies to one habit at most. You can always check off a habit by hand as well."
+          }
+        }
+      }
+    },
+    "Bearbeiten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit"
+          }
+        }
+      }
+    },
     "Bearbeiten …": {
       "localizations": {
         "en": {
@@ -2582,6 +3660,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "For deadlines and P1"
+          }
+        }
+      }
+    },
+    "Beide Felder sind freiwillig. Die Reflexion liegt nur auf diesem iPhone.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Both fields are optional. The reflection stays on this iPhone only."
+          }
+        }
+      }
+    },
+    "Belastet mich etwas?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Is something weighing on me?"
           }
         }
       }
@@ -2702,6 +3800,26 @@
         }
       }
     },
+    "Bitte ein Project nennen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Please name a project."
+          }
+        }
+      }
+    },
+    "Bitte ein Repository nennen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Please name a repository."
+          }
+        }
+      }
+    },
     "Blöcke löschen": {
       "localizations": {
         "en": {
@@ -2742,6 +3860,16 @@
         }
       }
     },
+    "ChatGPT nimmt gerade keine Anfragen an. Versuch es später noch einmal.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ChatGPT is not accepting requests right now. Try again later."
+          }
+        }
+      }
+    },
     "ChatGPT plant den Monat …": {
       "localizations": {
         "en": {
@@ -2772,12 +3900,48 @@
         }
       }
     },
+    "ChatGPT schlägt keine andere Einteilung vor.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ChatGPT suggests no other arrangement."
+          }
+        }
+      }
+    },
+    "ChatGPT sortiert …": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ChatGPT is sorting …"
+          }
+        }
+      }
+    },
     "ChatGPT spricht … · Mikrofon aus": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "ChatGPT is speaking … · Microphone off"
+          }
+        }
+      }
+    },
+    "Checkliste %lld von %lld": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Checkliste %1$lld von %2$lld"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Checklist %1$lld of %2$lld"
           }
         }
       }
@@ -2808,6 +3972,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "iOS will ask for microphone access next."
+          }
+        }
+      }
+    },
+    "Dankbar für": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Grateful for"
           }
         }
       }
@@ -2882,12 +4056,62 @@
         }
       }
     },
-    "Das Issue wird dir zugewiesen.": {
+    "Das Issue ist dann niemandem zugewiesen.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "The issue will be assigned to you."
+            "value": "The issue will then be assigned to no one."
+          }
+        }
+      }
+    },
+    "Das Issue verschwindet aus Aufgaben und Planung.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The issue will disappear from tasks and planning."
+          }
+        }
+      }
+    },
+    "Das Issue wird %@ zugewiesen und erscheint danach nicht in deinen Aufgaben.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The issue will be assigned to %@ and will not appear in your tasks."
+          }
+        }
+      }
+    },
+    "Das Issue wird %@ zugewiesen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The issue will be assigned to %@."
+          }
+        }
+      }
+    },
+    "Das Issue wird niemandem zugewiesen und erscheint danach nicht in deinen Aufgaben.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The issue will not be assigned to anyone and will not appear in your tasks."
+          }
+        }
+      }
+    },
+    "Das Sortieren ist fehlgeschlagen. Versuch es noch einmal.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sorting failed. Try again."
           }
         }
       }
@@ -2908,6 +4132,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "That didn’t work · paused"
+          }
+        }
+      }
+    },
+    "Das hat nicht geklappt: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "That did not work: %@"
           }
         }
       }
@@ -3135,12 +4369,52 @@
         }
       }
     },
+    "Der Name darf höchstens 30 Zeichen haben.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The name can have at most 30 characters."
+          }
+        }
+      }
+    },
+    "Der Punkt konnte nicht gespeichert werden.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The item could not be saved."
+          }
+        }
+      }
+    },
+    "Der Suchtext braucht mindestens zwei Zeichen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The search text needs at least two characters."
+          }
+        }
+      }
+    },
     "Der Tag liegt in der Vergangenheit.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "The day is in the past."
+          }
+        }
+      }
+    },
+    "Der Termin wurde geändert.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The event has changed."
           }
         }
       }
@@ -3161,6 +4435,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "The suggestion no longer fits: %@"
+          }
+        }
+      }
+    },
+    "Der Zeitraum darf höchstens vier Jahre umfassen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The period may cover at most four years."
           }
         }
       }
@@ -3355,12 +4639,42 @@
         }
       }
     },
+    "Die Gewohnheit und ihre Häkchen werden gelöscht.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The habit and its checkmarks will be deleted."
+          }
+        }
+      }
+    },
+    "Die Kategorie gilt für jeden Artikel mit diesem Namen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The category applies to every item with this name."
+          }
+        }
+      }
+    },
     "Die Knöpfe im Tab erfassen sofort. Getränke mit Kalorien trägst du unter „Essen“ ein.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "The buttons in the tab log right away. Log drinks with calories under “Food”."
+          }
+        }
+      }
+    },
+    "Die Liste ist leer. Füge unten Artikel hinzu.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The list is empty. Add items below."
           }
         }
       }
@@ -3415,6 +4729,16 @@
         }
       }
     },
+    "Die Suche ist nicht verfügbar.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search is not available."
+          }
+        }
+      }
+    },
     "Die Termine bleiben in ihren Kalendern und zählen wie bisher als belegte Zeit.": {
       "localizations": {
         "en": {
@@ -3465,12 +4789,62 @@
         }
       }
     },
+    "Die Vorschläge konnten nicht geholt werden. Versuch es noch einmal.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The suggestions could not be fetched. Try again."
+          }
+        }
+      }
+    },
+    "Die Zahl nennt die offenen Artikel. Tippe auf einen Namen, um ihn zu ändern.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The number shows the open items. Tap a name to change it."
+          }
+        }
+      }
+    },
     "Die Zeit ist ungültig.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "The time is invalid."
+          }
+        }
+      }
+    },
+    "Die Zeiten folgen der Schlafzeit. Höchstens vier Punkte erinnern; weitere stehen nur in der Liste.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The times follow your bedtime. At most four items remind you; the others only appear in the list."
+          }
+        }
+      }
+    },
+    "Die bisherige Liste gibt es nicht mehr.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The previous list no longer exists."
+          }
+        }
+      }
+    },
+    "Die gewählte Liste erscheint als Einkaufsliste. Ihre Einträge stehen nicht mehr unter „Aufgaben“, werden nicht eingeplant, zählen nicht im Wochenrückblick und lösen keine Tagwerk-Mitteilungen aus. In der App „Erinnerungen“ ändert sich nichts.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The chosen list appears as your shopping list. Its entries no longer show under “Tasks”, are not planned, do not count in the weekly review and trigger no Tagwerk notifications. Nothing changes in the Reminders app."
           }
         }
       }
@@ -3491,6 +4865,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "This task repeats. Title, due date and priority apply to all days."
+          }
+        }
+      }
+    },
+    "Diese Gewohnheit gibt es nicht mehr.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This habit no longer exists."
+          }
+        }
+      }
+    },
+    "Diese Kategorie gibt es schon.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This category already exists."
           }
         }
       }
@@ -3531,6 +4925,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "This week"
+          }
+        }
+      }
+    },
+    "Diese Woche %lld von %lld": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Diese Woche %1$lld von %2$lld"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This week %1$lld of %2$lld"
           }
         }
       }
@@ -3605,6 +5015,26 @@
         }
       }
     },
+    "Dieses Project steht nicht in der Liste von list_github_targets.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This project is not in the list from list_github_targets."
+          }
+        }
+      }
+    },
+    "Dieses Repository steht nicht in der Liste von list_github_targets.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This repository is not in the list from list_github_targets."
+          }
+        }
+      }
+    },
     "Diktat": {
       "shouldTranslate": false
     },
@@ -3614,6 +5044,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "You"
+          }
+        }
+      }
+    },
+    "Du bist danach nicht mehr zugewiesen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You will no longer be assigned."
           }
         }
       }
@@ -3628,12 +5068,32 @@
         }
       }
     },
+    "Du kannst das in den Einstellungen unter „Einkaufsliste“ widerrufen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You can withdraw this in Settings under “Shopping List”."
+          }
+        }
+      }
+    },
     "Du kannst das in den Einstellungen unter „Erfassen“ widerrufen.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "You can revoke this in Settings under “Log”."
+          }
+        }
+      }
+    },
+    "Du kannst das in den Einstellungen unter „Routinen“ widerrufen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You can revoke this in Settings under “Routines”."
           }
         }
       }
@@ -3668,6 +5128,56 @@
         }
       }
     },
+    "Durchsucht Termine und Aufgaben": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Searches events and tasks"
+          }
+        }
+      }
+    },
+    "Durchsucht Termine, Aufgaben, Notizen und die Einkaufsliste.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Searches events, tasks, notes and the shopping list."
+          }
+        }
+      }
+    },
+    "Durchsucht: 6 Monate zurück, 12 Monate voraus.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Searched: 6 months back, 12 months ahead."
+          }
+        }
+      }
+    },
+    "Durchsucht: ab %@, 12 Monate voraus.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Searched: from %@, 12 months ahead."
+          }
+        }
+      }
+    },
+    "Eigene": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Own"
+          }
+        }
+      }
+    },
     "Eigene Regel aus Erinnerungen": {
       "localizations": {
         "en": {
@@ -3694,6 +5204,106 @@
           "stringUnit": {
             "state": "translated",
             "value": "A repeating task needs a due date."
+          }
+        }
+      }
+    },
+    "Eingabe löschen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clear text"
+          }
+        }
+      }
+    },
+    "Einkauf": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shopping"
+          }
+        }
+      }
+    },
+    "Einkaufsliste": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shopping List"
+          }
+        }
+      }
+    },
+    "Einkaufsliste einrichten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Set up shopping list"
+          }
+        }
+      }
+    },
+    "Einkaufsliste in Tagwerk zeigen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show shopping list in Tagwerk"
+          }
+        }
+      }
+    },
+    "Einkaufsliste zeigen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show Shopping List"
+          }
+        }
+      }
+    },
+    "Einkaufsliste · %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shopping list · %lld"
+          }
+        }
+      }
+    },
+    "Einkaufsliste ändern": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Change shopping list"
+          }
+        }
+      }
+    },
+    "Einkaufsliste öffnen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open shopping list"
+          }
+        }
+      }
+    },
+    "Einkaufsliste, %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shopping list, %lld"
           }
         }
       }
@@ -3788,12 +5398,32 @@
         }
       }
     },
+    "Einverstanden und Vorschläge holen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Agree and get suggestions"
+          }
+        }
+      }
+    },
     "Einverstanden und schätzen": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Agree and estimate"
+          }
+        }
+      }
+    },
+    "Einverstanden und sortieren": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Agree and Sort"
           }
         }
       }
@@ -3868,6 +5498,16 @@
         }
       }
     },
+    "Entfernt den Artikel aus der Eingabe": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Removes the item from the input"
+          }
+        }
+      }
+    },
     "Entstehen über „Künftig immer“ auf einer Vorschlagskarte. Nach dem Löschen fragt Tagwerk wieder.": {
       "localizations": {
         "en": {
@@ -3908,6 +5548,16 @@
         }
       }
     },
+    "Erfüllt durch": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fulfilled by"
+          }
+        }
+      }
+    },
     "Ergebnis": {
       "shouldTranslate": false
     },
@@ -3937,6 +5587,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Reminders"
+          }
+        }
+      }
+    },
+    "Erinnerungen am Abend": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Evening reminders"
           }
         }
       }
@@ -3993,6 +5653,16 @@
         }
       }
     },
+    "Erlaube Tagwerk in den iOS-Einstellungen den vollen Zugriff auf Erinnerungen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Allow Tagwerk full access to Reminders in iOS Settings."
+          }
+        }
+      }
+    },
     "Erlaube den Vollzugriff in den Einstellungen, damit Tagwerk sie anzeigen kann.": {
       "localizations": {
         "en": {
@@ -4039,6 +5709,66 @@
           "stringUnit": {
             "state": "translated",
             "value": "Done"
+          }
+        }
+      }
+    },
+    "Erledigt · %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Completed · %lld"
+          }
+        }
+      }
+    },
+    "Erledigt, %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Completed, %lld"
+          }
+        }
+      }
+    },
+    "Erledigt: Erinnerungen und lokale Aufgaben, ohne GitHub.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Completed: reminders and local tasks, without GitHub."
+          }
+        }
+      }
+    },
+    "Erledigte Aufgabe": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Completed task"
+          }
+        }
+      }
+    },
+    "Erledigte einbeziehen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Include completed"
+          }
+        }
+      }
+    },
+    "Erledigte entfernen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove Completed"
           }
         }
       }
@@ -4103,6 +5833,16 @@
         }
       }
     },
+    "Es gibt keine Artikel zum Sortieren.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "There are no items to sort."
+          }
+        }
+      }
+    },
     "Es gibt keinen beschreibbaren Kalender.": {
       "localizations": {
         "en": {
@@ -4119,6 +5859,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "There is nothing to change."
+          }
+        }
+      }
+    },
+    "Es ist keine Einkaufsliste eingerichtet.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No shopping list is set up."
+          }
+        }
+      }
+    },
+    "Es ist keine Einkaufsliste eingerichtet. Einstellungen › Einkaufsliste.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No shopping list is set up. Settings › Shopping List."
           }
         }
       }
@@ -4159,6 +5919,62 @@
           "stringUnit": {
             "state": "translated",
             "value": "Filter"
+          }
+        }
+      }
+    },
+    "Fokus": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Focus"
+          }
+        }
+      }
+    },
+    "Fokus entfernen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove focus"
+          }
+        }
+      }
+    },
+    "Fokus heute · %lld von %lld": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Fokus heute · %1$lld von %2$lld"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Today’s focus · %1$lld of %2$lld"
+          }
+        }
+      }
+    },
+    "Fokus wählen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose focus"
+          }
+        }
+      }
+    },
+    "Fokus: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Focus: %@"
           }
         }
       }
@@ -4332,6 +6148,46 @@
         }
       }
     },
+    "Füge Milch zur Einkaufsliste in Tagwerk hinzu": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add milk to the shopping list in Tagwerk"
+          }
+        }
+      }
+    },
+    "Fügt Artikel hinzu, ohne Tagwerk zu öffnen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adds items without opening Tagwerk"
+          }
+        }
+      }
+    },
+    "Fügt Artikel zur Einkaufsliste hinzu, ohne Tagwerk zu öffnen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adds items to the shopping list without opening Tagwerk."
+          }
+        }
+      }
+    },
+    "Fügt einen Artikel zur Einkaufsliste hinzu, ohne Tagwerk zu öffnen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adds an item to the shopping list without opening Tagwerk."
+          }
+        }
+      }
+    },
     "Für Schätzungen aus Text oder Foto melde dich unter Einstellungen › KI bei ChatGPT an.": {
       "localizations": {
         "en": {
@@ -4348,6 +6204,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Estimates need your consent."
+          }
+        }
+      }
+    },
+    "Für Vorschläge sendet Tagwerk den Text der jeweiligen Gedanken-Notiz sowie deine offenen Aufgaben und Termine der nächsten 7 Tage (Titel, Fälligkeit, Zeit) an ChatGPT (OpenAI), und nur, wenn du bei der Notiz auf „Vorschläge holen“ tippst. Dankbarkeit, Gewohnheiten, Wochenreflexion, Daten aus Health und frühere Notizen werden nie gesendet.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "For suggestions, Tagwerk sends the text of that thoughts note plus your open tasks and events of the next 7 days (title, due date, time) to ChatGPT (OpenAI), and only when you tap “Get suggestions” on the note. Gratitude, habits, weekly reflection, Health data and earlier notes are never sent."
+          }
+        }
+      }
+    },
+    "Für Vorschläge sendet Tagwerk den Text dieser Notiz an ChatGPT (OpenAI), über das Konto, mit dem du angemeldet bist.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "For suggestions, Tagwerk sends the text of this note to ChatGPT (OpenAI), through the account you are signed in with."
           }
         }
       }
@@ -4398,6 +6274,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "All day"
+          }
+        }
+      }
+    },
+    "Gedanken": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Thoughts"
+          }
+        }
+      }
+    },
+    "Gedanken-Notiz": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Thoughts note"
           }
         }
       }
@@ -4472,6 +6368,16 @@
         }
       }
     },
+    "Geschlossene Issues findet nur die GitHub-Suche.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Closed issues are only found by the GitHub search."
+          }
+        }
+      }
+    },
     "Geschätzt": {
       "localizations": {
         "en": {
@@ -4538,12 +6444,138 @@
         }
       }
     },
+    "Gewohnheit": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Habit"
+          }
+        }
+      }
+    },
+    "Gewohnheit abhaken": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check off habit"
+          }
+        }
+      }
+    },
+    "Gewohnheit anlegen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add habit"
+          }
+        }
+      }
+    },
+    "Gewohnheit in Tagwerk abhaken": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check off a habit in Tagwerk"
+          }
+        }
+      }
+    },
+    "Gewohnheit löschen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete habit"
+          }
+        }
+      }
+    },
+    "Gewohnheit löschen?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete habit?"
+          }
+        }
+      }
+    },
+    "Gewohnheit öffnen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open habit"
+          }
+        }
+      }
+    },
+    "Gewohnheiten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Habits"
+          }
+        }
+      }
+    },
+    "Gewohnheiten bearbeiten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit habits"
+          }
+        }
+      }
+    },
+    "Gewohnheiten eingeplant": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Habits planned"
+          }
+        }
+      }
+    },
+    "Gewohnheiten · %lld von %lld": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Gewohnheiten · %1$lld von %2$lld"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Habits · %1$lld of %2$lld"
+          }
+        }
+      }
+    },
     "Gib diesen Code auf GitHub ein:": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Enter this code on GitHub:"
+          }
+        }
+      }
+    },
+    "Gib einen Namen ein.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter a name."
           }
         }
       }
@@ -4638,12 +6670,62 @@
         }
       }
     },
+    "GitHub nimmt gerade keine Suche an. Später erneut versuchen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "GitHub is not accepting searches right now. Try again later."
+          }
+        }
+      }
+    },
     "GitHub offline": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "GitHub offline"
+          }
+        }
+      }
+    },
+    "GitHub online, %lld weitere": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "GitHub online, %lld more"
+          }
+        }
+      }
+    },
+    "GitHub wird durchsucht …": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Searching GitHub …"
+          }
+        }
+      }
+    },
+    "GitHub · online": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "GitHub · online"
+          }
+        }
+      }
+    },
+    "GitHub · online · %lld weitere": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "GitHub · online · %lld more"
           }
         }
       }
@@ -4688,6 +6770,16 @@
         }
       }
     },
+    "GitHub: Stand von %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "GitHub: as of %@"
+          }
+        }
+      }
+    },
     "Gleich hört Tagwerk wieder zu": {
       "localizations": {
         "en": {
@@ -4704,6 +6796,36 @@
           "stringUnit": {
             "state": "translated",
             "value": "HIIT"
+          }
+        }
+      }
+    },
+    "Hakt die Aufgabe ab": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Checks off the task"
+          }
+        }
+      }
+    },
+    "Hakt eine Gewohnheit für heute ab": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Checks off a habit for today"
+          }
+        }
+      }
+    },
+    "Hakt eine Gewohnheit für heute ab, ohne die App zu öffnen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Checks off a habit for today without opening the app."
           }
         }
       }
@@ -4744,6 +6866,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Today"
+          }
+        }
+      }
+    },
+    "Heute ausblenden": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hide for today"
+          }
+        }
+      }
+    },
+    "Heute ist noch keine Aufgabe geplant.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No task is planned for today yet."
           }
         }
       }
@@ -4818,6 +6960,16 @@
         }
       }
     },
+    "Hinzufügen: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add: %@"
+          }
+        }
+      }
+    },
     "Hoch": {
       "localizations": {
         "en": {
@@ -4834,6 +6986,56 @@
           "stringUnit": {
             "state": "translated",
             "value": "Frequency"
+          }
+        }
+      }
+    },
+    "Höchstens %lld aktive Gewohnheiten. Pausiere oder lösche eine, um eine neue anzulegen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "At most %lld active habits. Pause or delete one to add a new one."
+          }
+        }
+      }
+    },
+    "Höchstens 10 Personen je Issue.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "At most 10 people per issue."
+          }
+        }
+      }
+    },
+    "Höchstens 20 Artikel auf einmal": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "At most 20 items at a time"
+          }
+        }
+      }
+    },
+    "Höchstens 30 Artikel je Aufruf.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "At most 30 items per call."
+          }
+        }
+      }
+    },
+    "Höchstens vier Punkte erinnern. Schalte bei einem anderen Punkt die Erinnerung aus.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "At most four items remind you. Turn off the reminder of another item first."
           }
         }
       }
@@ -4868,6 +7070,36 @@
         }
       }
     },
+    "Ich": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Me"
+          }
+        }
+      }
+    },
+    "Ich (%@)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Me (%@)"
+          }
+        }
+      }
+    },
+    "Ich habe keinen Artikel verstanden.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I did not catch any item."
+          }
+        }
+      }
+    },
     "Im Chat startet der Knopf rechts neben dem leeren Feld den Sprechmodus. Tagwerk sendet nach der Pause, liest die Antwort vor und hört danach wieder zu. Änderungen führt es erst aus, wenn du sie bestätigst. „Änderungen ansagen“ gilt auch hier.": {
       "localizations": {
         "en": {
@@ -4894,6 +7126,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Open in Calendar"
+          }
+        }
+      }
+    },
+    "Im Plan zeigen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show in plan"
           }
         }
       }
@@ -4978,6 +7220,16 @@
         }
       }
     },
+    "In Aufgaben zeigen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show in tasks"
+          }
+        }
+      }
+    },
     "In Health erlauben %@": {
       "localizations": {
         "en": {
@@ -5038,6 +7290,16 @@
         }
       }
     },
+    "In dieser Woche war keine Gewohnheit aktiv.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No habit was active this week."
+          }
+        }
+      }
+    },
     "In dieser Woche wurde nichts erfasst.": {
       "localizations": {
         "en": {
@@ -5064,6 +7326,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Issue #%@"
+          }
+        }
+      }
+    },
+    "Issue anlegen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Create issue"
           }
         }
       }
@@ -5178,8 +7450,58 @@
         }
       }
     },
+    "Kategorie": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Category"
+          }
+        }
+      }
+    },
+    "Kategorie hinzufügen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add Category"
+          }
+        }
+      }
+    },
     "Kategorie nach dem Sprechen: %@": {
       "shouldTranslate": false
+    },
+    "Kategorie umbenennen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rename Category"
+          }
+        }
+      }
+    },
+    "Kategorien": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Categories"
+          }
+        }
+      }
+    },
+    "Kategorien verwalten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Manage Categories"
+          }
+        }
+      }
     },
     "Kein": {
       "localizations": {
@@ -5231,6 +7553,26 @@
         }
       }
     },
+    "Kein Zugriff auf Erinnerungen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No Access to Reminders"
+          }
+        }
+      }
+    },
+    "Kein Zugriff auf Kalender – Termine werden nicht durchsucht.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No access to calendars – events are not searched."
+          }
+        }
+      }
+    },
     "Kein Zugriff auf diese Quelle.": {
       "localizations": {
         "en": {
@@ -5267,6 +7609,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "No deadline after this event"
+          }
+        }
+      }
+    },
+    "Keine Einkaufsliste": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No Shopping List"
           }
         }
       }
@@ -5351,6 +7703,16 @@
         }
       }
     },
+    "Keine Treffer für „%@“.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No results for “%@”."
+          }
+        }
+      }
+    },
     "Keine Verbindung zu GitHub.": {
       "localizations": {
         "en": {
@@ -5371,12 +7733,32 @@
         }
       }
     },
+    "Keine Verbindung. Das Sortieren braucht Internet.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No connection. Sorting needs the internet."
+          }
+        }
+      }
+    },
     "Keine Verbindung. Die Schätzung braucht Internet.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "No connection. The estimate needs internet."
+          }
+        }
+      }
+    },
+    "Keine Verbindung. Vorschläge brauchen Internet.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No connection. Suggestions need the internet."
           }
         }
       }
@@ -5391,12 +7773,32 @@
         }
       }
     },
+    "Keine Vorschläge aus dieser Notiz.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No suggestions from this note."
+          }
+        }
+      }
+    },
     "Keine offenen Aufgaben zum Planen.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "No open tasks to plan."
+          }
+        }
+      }
+    },
+    "Keine weiteren Treffer auf GitHub.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No further results on GitHub."
           }
         }
       }
@@ -5583,6 +7985,16 @@
         }
       }
     },
+    "Label": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Label"
+          }
+        }
+      }
+    },
     "Labels": {
       "localizations": {
         "en": {
@@ -5616,6 +8028,16 @@
     "Leeren": {
       "shouldTranslate": false
     },
+    "Leitfragen einfügen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Insert guiding questions"
+          }
+        }
+      }
+    },
     "Letzter Termin: %@": {
       "localizations": {
         "en": {
@@ -5632,6 +8054,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Reading aloud · Stop"
+          }
+        }
+      }
+    },
+    "Link kopieren": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copy link"
           }
         }
       }
@@ -5676,6 +8108,16 @@
         }
       }
     },
+    "Liste verschwunden": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "List Is Gone"
+          }
+        }
+      }
+    },
     "Liste von ChatGPT · %@": {
       "localizations": {
         "en": {
@@ -5696,6 +8138,26 @@
         }
       }
     },
+    "Liste wählen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose List"
+          }
+        }
+      }
+    },
+    "Liste „%@“ als Einkaufsliste verwenden?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use the list “%@” as your shopping list?"
+          }
+        }
+      }
+    },
     "Lokal": {
       "localizations": {
         "en": {
@@ -5712,6 +8174,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Local tasks"
+          }
+        }
+      }
+    },
+    "Längere Notiz, in Erinnerungen bearbeiten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Longer note, edit it in Reminders"
           }
         }
       }
@@ -5896,12 +8368,32 @@
         }
       }
     },
+    "Mehr als 30 Kategorien sind nicht möglich.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "More than 30 categories are not possible."
+          }
+        }
+      }
+    },
     "Mehrere möglich": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Multiple allowed"
+          }
+        }
+      }
+    },
+    "Mehrere möglich · höchstens 10": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Multiple allowed · up to 10"
           }
         }
       }
@@ -5942,6 +8434,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Sign in to ChatGPT under Settings › AI to have meals estimated."
+          }
+        }
+      }
+    },
+    "Melde dich unter Einstellungen › KI bei ChatGPT an, um Vorschläge aus einer Notiz zu holen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sign in to ChatGPT under Settings › AI to get suggestions from a note."
+          }
+        }
+      }
+    },
+    "Melde dich unter Einstellungen › KI bei ChatGPT an, um Vorschläge zu holen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sign in to ChatGPT under Settings › AI to get suggestions."
           }
         }
       }
@@ -6046,12 +8558,12 @@
         }
       }
     },
-    "Mindestens ein Projekt wählen. Das Issue wird dir zugewiesen.": {
+    "Mindestens ein Projekt wählen.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Choose at least one project. The issue will be assigned to you."
+            "value": "Choose at least one project."
           }
         }
       }
@@ -6116,6 +8628,16 @@
         }
       }
     },
+    "Mit ChatGPT sortieren": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sort with ChatGPT"
+          }
+        }
+      }
+    },
     "Mit GitHub anmelden": {
       "localizations": {
         "en": {
@@ -6175,6 +8697,36 @@
           "stringUnit": {
             "state": "translated",
             "value": "Lunch break %@"
+          }
+        }
+      }
+    },
+    "Mitteilungen erlauben": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Allow notifications"
+          }
+        }
+      }
+    },
+    "Mitteilungen in den Einstellungen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notifications in Settings"
+          }
+        }
+      }
+    },
+    "Mitteilungen sind für Tagwerk nicht erlaubt. Ohne Erlaubnis erinnert nur die Zeile in „Planen“.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notifications are not allowed for Tagwerk. Without permission only the row in Plan reminds you."
           }
         }
       }
@@ -6409,6 +8961,16 @@
         }
       }
     },
+    "Nennt den Artikel im Satz; Siri kennt deine bisherigen Artikel": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Names the item in the sentence; Siri knows the items you used before"
+          }
+        }
+      }
+    },
     "Neu laden": {
       "localizations": {
         "en": {
@@ -6449,12 +9011,92 @@
         }
       }
     },
+    "Neue Gewohnheit": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New habit"
+          }
+        }
+      }
+    },
+    "Neue Kategorie": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New Category"
+          }
+        }
+      }
+    },
+    "Neue Kategorie „%@“ anlegen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Create new category “%@”"
+          }
+        }
+      }
+    },
+    "Neue Kategorie …": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New Category …"
+          }
+        }
+      }
+    },
+    "Neue Kategorien": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New Categories"
+          }
+        }
+      }
+    },
+    "Neue Notiz": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New note"
+          }
+        }
+      }
+    },
     "Neue Vorgabe": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "New preference"
+          }
+        }
+      }
+    },
+    "Neue Woche planen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plan the new week"
+          }
+        }
+      }
+    },
+    "Neuer Punkt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New item"
           }
         }
       }
@@ -6559,6 +9201,16 @@
         }
       }
     },
+    "Nichts offen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing open"
+          }
+        }
+      }
+    },
     "Nichts verstanden. Es kam kein Text an. Sprich näher am iPhone oder tippe.": {
       "localizations": {
         "en": {
@@ -6589,12 +9241,52 @@
         }
       }
     },
+    "Niemand": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No one"
+          }
+        }
+      }
+    },
+    "Niemandem zugewiesen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not assigned to anyone"
+          }
+        }
+      }
+    },
     "Noch einzuplanen": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Still to schedule"
+          }
+        }
+      }
+    },
+    "Noch keine Notizen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No notes yet"
+          }
+        }
+      }
+    },
+    "Noch keine Notizen. Schreib oder diktiere unten die erste.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No notes yet. Write or dictate the first one below."
           }
         }
       }
@@ -6632,6 +9324,76 @@
         }
       }
     },
+    "Notiz endgültig löschen?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Permanently delete this note?"
+          }
+        }
+      }
+    },
+    "Notiz sichern": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save note"
+          }
+        }
+      }
+    },
+    "Notizen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notes"
+          }
+        }
+      }
+    },
+    "Notizen an ChatGPT senden": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send notes to ChatGPT"
+          }
+        }
+      }
+    },
+    "Notizen liegen nur auf diesem iPhone. An ChatGPT geht eine Gedanken-Notiz nur, wenn du bei ihr auf „Vorschläge holen“ tippst.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notes stay on this iPhone only. A thoughts note goes to ChatGPT only when you tap “Get suggestions” on it."
+          }
+        }
+      }
+    },
+    "Notizen von ChatGPT auswerten lassen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Let ChatGPT evaluate notes"
+          }
+        }
+      }
+    },
+    "Notizen · %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notes · %lld"
+          }
+        }
+      }
+    },
     "Notizen → „%@“": {
       "localizations": {
         "en": {
@@ -6642,12 +9404,32 @@
         }
       }
     },
+    "Notizen, %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notes, %lld"
+          }
+        }
+      }
+    },
     "Notizen: „%@“": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Notes: “%@”"
+          }
+        }
+      }
+    },
+    "Nummer": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Number"
           }
         }
       }
@@ -6931,6 +9713,16 @@
         }
       }
     },
+    "Online-Treffer öffnen sich auf GitHub. Zum Bearbeiten in Tagwerk muss ein Issue dir zugewiesen sein und in einem Project liegen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Online results open on GitHub. To edit an issue in Tagwerk it must be assigned to you and belong to a project."
+          }
+        }
+      }
+    },
     "Ort": {
       "localizations": {
         "en": {
@@ -7009,6 +9801,16 @@
         }
       }
     },
+    "Pausieren": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pause"
+          }
+        }
+      }
+    },
     "Pausiert": {
       "localizations": {
         "en": {
@@ -7035,6 +9837,36 @@
           "stringUnit": {
             "state": "translated",
             "value": "Paused, heard nothing"
+          }
+        }
+      }
+    },
+    "Pausierte Tage zählen weder in die Quote noch brechen sie eine Serie.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paused days neither count toward the rate nor break a streak."
+          }
+        }
+      }
+    },
+    "Personen konnten nicht geladen werden": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Could not load people"
+          }
+        }
+      }
+    },
+    "Personen werden geladen …": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Loading people …"
           }
         }
       }
@@ -7174,6 +10006,36 @@
     "Probeaufnahme starten": {
       "shouldTranslate": false
     },
+    "Project": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Project"
+          }
+        }
+      }
+    },
+    "Project %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Project %@"
+          }
+        }
+      }
+    },
+    "Project fehlt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Project missing"
+          }
+        }
+      }
+    },
     "Projects": {
       "localizations": {
         "en": {
@@ -7207,6 +10069,36 @@
         }
       }
     },
+    "Punkt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Item"
+          }
+        }
+      }
+    },
+    "Punkt hinzufügen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add item"
+          }
+        }
+      }
+    },
+    "Punkte in den Einstellungen anlegen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add items in Settings"
+          }
+        }
+      }
+    },
     "Quellen": {
       "localizations": {
         "en": {
@@ -7223,6 +10115,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Cycling"
+          }
+        }
+      }
+    },
+    "Reflexion": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reflection"
           }
         }
       }
@@ -7267,6 +10169,26 @@
         }
       }
     },
+    "Repository fehlt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Repository missing"
+          }
+        }
+      }
+    },
+    "Repository, Projects und Zugewiesene gibt es nur bei GitHub-Issues.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Repository, projects and assignees only exist for GitHub issues."
+          }
+        }
+      }
+    },
     "Rest %@": {
       "localizations": {
         "en": {
@@ -7290,6 +10212,16 @@
     "Route": {
       "shouldTranslate": false
     },
+    "Routinen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Routines"
+          }
+        }
+      }
+    },
     "Runde %lld": {
       "shouldTranslate": false
     },
@@ -7309,6 +10241,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Say one of the phrases to Siri or add it in the Shortcuts app. “Log water” can also be put on the Action button or the Home Screen there."
+          }
+        }
+      }
+    },
+    "Schlafzeit %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bedtime %@"
           }
         }
       }
@@ -7369,6 +10311,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Steps per day: %@"
+          }
+        }
+      }
+    },
+    "Schrittziel erreicht": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Step goal reached"
           }
         }
       }
@@ -7533,6 +10485,16 @@
         }
       }
     },
+    "Sendet auf dein Tippen die Namen der offenen Artikel und deiner Kategorien an ChatGPT. Fragst du den Assistenten nach der Einkaufsliste, gehen die Artikelnamen ebenfalls an ChatGPT.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "On your tap, sends the names of the open items and of your categories to ChatGPT. If you ask the assistant about the shopping list, the item names go to ChatGPT as well."
+          }
+        }
+      }
+    },
     "Sendet einen gesprochenen Testsatz und einen kurzen Text an OpenAI und ChatGPT, um zu sehen, welche Sprachdienste dein Abo freigibt. Angezeigt werden Status, erkannter Text und Fehlermeldungen, nie die Anmeldung.": {
       "shouldTranslate": false
     },
@@ -7552,6 +10514,56 @@
           "stringUnit": {
             "state": "translated",
             "value": "Sending …"
+          }
+        }
+      }
+    },
+    "Serie %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Streak %lld"
+          }
+        }
+      }
+    },
+    "Serie %lld Wochen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Streak %lld weeks"
+          }
+        }
+      }
+    },
+    "Serie %lld+": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Streak %lld+"
+          }
+        }
+      }
+    },
+    "Serie %lld+ Wochen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Streak %lld+ weeks"
+          }
+        }
+      }
+    },
+    "Serie 1 Woche": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Streak 1 week"
           }
         }
       }
@@ -7582,6 +10594,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Save, keep blocks"
+          }
+        }
+      }
+    },
+    "Sie erscheint dann hier als eigene Liste und nicht mehr unter den Aufgaben.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "It then appears here as its own list and no longer among the tasks."
           }
         }
       }
@@ -7855,6 +10877,16 @@
         }
       }
     },
+    "Standardkategorien wiederherstellen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restore Default Categories"
+          }
+        }
+      }
+    },
     "Starten": {
       "localizations": {
         "en": {
@@ -7891,6 +10923,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Stop"
+          }
+        }
+      }
+    },
+    "Suchen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search"
+          }
+        }
+      }
+    },
+    "Symbol": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Symbol"
           }
         }
       }
@@ -7935,6 +10987,82 @@
         }
       }
     },
+    "Tage pro Woche": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Days per week"
+          }
+        }
+      }
+    },
+    "Tagesabschluss": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Evening wrap-up"
+          }
+        }
+      }
+    },
+    "Tagesfokus": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Daily focus"
+          }
+        }
+      }
+    },
+    "Tagesfokus · %lld von %lld gewählt": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Tagesfokus · %1$lld von %2$lld gewählt"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Daily focus · %1$lld of %2$lld chosen"
+          }
+        }
+      }
+    },
+    "Tagesstart": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Morning start"
+          }
+        }
+      }
+    },
+    "Tagesstart · Fokus wählen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Morning start · Choose focus"
+          }
+        }
+      }
+    },
+    "Tagesstart · Fokus wählen · %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Morning start · Choose focus · %@"
+          }
+        }
+      }
+    },
     "Tagwerk darf nicht nach Health schreiben. Deine Einträge bleiben in Tagwerk. Ändern kannst du das in der App „Health“ unter Profil › Apps › Tagwerk.": {
       "localizations": {
         "en": {
@@ -7951,6 +11079,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tagwerk reminds you before the due date of GitHub and local tasks and of events from your deadline calendars. Reminders from the Reminders app still notify you on their own."
+          }
+        }
+      }
+    },
+    "Tagwerk hat keinen Zugriff auf Erinnerungen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tagwerk has no access to Reminders."
           }
         }
       }
@@ -8198,6 +11336,16 @@
         }
       }
     },
+    "Termine": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Events"
+          }
+        }
+      }
+    },
     "Termine antippen, um sie auszuwählen": {
       "localizations": {
         "en": {
@@ -8221,12 +11369,52 @@
     "Termine der nächsten 7 Tage. „Zusammengefasst“: gleicher Termin wird über die Kopie aus einem anderen Kalender gezeigt.": {
       "shouldTranslate": false
     },
+    "Termine eingeplant": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Appointments planned"
+          }
+        }
+      }
+    },
+    "Termine werden durchsucht …": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Searching events …"
+          }
+        }
+      }
+    },
     "Termine zusammenfassen (mit Rückfrage)": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Merge events (with confirmation)"
+          }
+        }
+      }
+    },
+    "Termine · %lld kommende": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Events · %lld upcoming"
+          }
+        }
+      }
+    },
+    "Termine, %lld kommende": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Events, %lld upcoming"
           }
         }
       }
@@ -8287,6 +11475,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Log a workout"
+          }
+        }
+      }
+    },
+    "Training erfasst": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Workout logged"
           }
         }
       }
@@ -8431,6 +11629,16 @@
         }
       }
     },
+    "Umbenennen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rename"
+          }
+        }
+      }
+    },
     "Unbekannte Funktion %@.": {
       "localizations": {
         "en": {
@@ -8487,6 +11695,56 @@
           "stringUnit": {
             "state": "translated",
             "value": "Past"
+          }
+        }
+      }
+    },
+    "Vergangene Termine": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Past events"
+          }
+        }
+      }
+    },
+    "Vergangene Termine · %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Past events · %lld"
+          }
+        }
+      }
+    },
+    "Vergangene Termine, %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Past events, %lld"
+          }
+        }
+      }
+    },
+    "Vergeben": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Assigned"
+          }
+        }
+      }
+    },
+    "Vergeben: %@. Auf GitHub öffnen verfügbar.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Assigned: %@. Open on GitHub available."
           }
         }
       }
@@ -8607,6 +11865,16 @@
         }
       }
     },
+    "Verwenden": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use"
+          }
+        }
+      }
+    },
     "Verwerfen": {
       "localizations": {
         "en": {
@@ -8623,6 +11891,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Discarded"
+          }
+        }
+      }
+    },
+    "Von Hand abhaken": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check off by hand"
           }
         }
       }
@@ -8883,6 +12161,16 @@
         }
       }
     },
+    "Vorschlag von ChatGPT": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suggestion from ChatGPT"
+          }
+        }
+      }
+    },
     "Vorschlag · %@": {
       "localizations": {
         "en": {
@@ -8939,6 +12227,22 @@
         }
       }
     },
+    "Vorschlag übernehmen": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Übernehmen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apply"
+          }
+        }
+      }
+    },
     "Vorschläge": {
       "localizations": {
         "en": {
@@ -8949,12 +12253,32 @@
         }
       }
     },
+    "Vorschläge holen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Get suggestions"
+          }
+        }
+      }
+    },
     "Vorschläge in der Planen-Ansicht anlegen": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Create suggestions in the Plan view"
+          }
+        }
+      }
+    },
+    "Vorschläge werden geholt …": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Getting suggestions …"
           }
         }
       }
@@ -8990,12 +12314,42 @@
         }
       }
     },
+    "Was geht dir durch den Kopf?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What’s on your mind?"
+          }
+        }
+      }
+    },
     "Was hast du gegessen?": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "What did you eat?"
+          }
+        }
+      }
+    },
+    "Was lief gut?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What went well?"
+          }
+        }
+      }
+    },
+    "Was soll auf die Liste?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What should go on the list?"
           }
         }
       }
@@ -9070,6 +12424,16 @@
         }
       }
     },
+    "Wasserziel erreicht": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Water goal reached"
+          }
+        }
+      }
+    },
     "Weiter": {
       "localizations": {
         "en": {
@@ -9090,12 +12454,32 @@
         }
       }
     },
+    "Weitere %lld zeigen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show %lld more"
+          }
+        }
+      }
+    },
     "Weitere Optionen …": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "More options …"
+          }
+        }
+      }
+    },
+    "Welche Gewohnheit?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Which habit?"
           }
         }
       }
@@ -9110,12 +12494,12 @@
         }
       }
     },
-    "Wenn du KI-Funktionen nutzt, gehen die dafür nötigen Daten (Termine, Aufgaben, bei Issues auch Repo-Inhalte) an OpenAI.": {
+    "Wenn du KI-Funktionen nutzt, gehen die dafür nötigen Daten (Termine, Aufgaben, bei Issues auch Repo-Inhalte und GitHub-Benutzernamen zuweisbarer Personen) an OpenAI.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "When you use AI features, the data they need (events, tasks, and for issues also repo contents) goes to OpenAI."
+            "value": "When you use AI features, the data they need (events, tasks, and for issues also repo contents and GitHub usernames of assignable people) goes to OpenAI."
           }
         }
       }
@@ -9166,6 +12550,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "How OpenAI handles the data sent depends on the settings of your ChatGPT account."
+          }
+        }
+      }
+    },
+    "Wieder öffnen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reopen"
           }
         }
       }
@@ -9340,6 +12734,16 @@
         }
       }
     },
+    "Wochenreflexion": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Weekly reflection"
+          }
+        }
+      }
+    },
     "Wochenrückblick": {
       "localizations": {
         "en": {
@@ -9356,6 +12760,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Weekday and day of the month come from the due date."
+          }
+        }
+      }
+    },
+    "Wähle eine Erinnerungsliste als Einkaufsliste.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a reminders list as your shopping list."
+          }
+        }
+      }
+    },
+    "Wähle zuerst in Tagwerk unter Einstellungen › Einkaufsliste eine Liste.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "First choose a list in Tagwerk under Settings › Shopping List."
           }
         }
       }
@@ -9400,12 +12824,32 @@
         }
       }
     },
+    "Zeigt die Karte „Tagesstart“ bzw. „Fokus heute“ und abends die Zeile „Tagesabschluss“ im Tab „Planen“.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shows the “Morning start” or “Today’s focus” card and, in the evening, the “Evening wrap-up” row in the Plan tab."
+          }
+        }
+      }
+    },
     "Zeit": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Time"
+          }
+        }
+      }
+    },
+    "Zeit bei Tageslicht": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Time in daylight"
           }
         }
       }
@@ -9528,6 +12972,16 @@
         }
       }
     },
+    "Zielschlafzeit": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Target bedtime"
+          }
+        }
+      }
+    },
     "Zu Deadline zuordnen …": {
       "localizations": {
         "en": {
@@ -9544,6 +12998,36 @@
           "stringUnit": {
             "state": "translated",
             "value": "Go to AI settings"
+          }
+        }
+      }
+    },
+    "Zugewiesen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Assignees"
+          }
+        }
+      }
+    },
+    "Zugewiesen: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Assigned to: %@"
+          }
+        }
+      }
+    },
+    "Zugewiesen: %@ (nicht dir)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Assigned to: %@ (not you)"
           }
         }
       }
@@ -9594,6 +13078,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "To estimate, Tagwerk only sends the text and photo of the meal in question to ChatGPT (OpenAI), and only when you tap “Estimate”. Data from Health, goals and earlier entries are never sent. When turned off, you enter values yourself."
+          }
+        }
+      }
+    },
+    "Zum Sortieren ist deine Einwilligung nötig.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sorting needs your consent."
+          }
+        }
+      }
+    },
+    "Zum Sortieren sendet Tagwerk die Namen deiner offenen Artikel und die Namen deiner Kategorien an ChatGPT (OpenAI), über das Konto, mit dem du angemeldet bist.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "To sort, Tagwerk sends the names of your open items and the names of your categories to ChatGPT (OpenAI), through the account you are signed in with."
           }
         }
       }
@@ -9688,6 +13192,16 @@
         }
       }
     },
+    "Zählt ab": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Counts from"
+          }
+        }
+      }
+    },
     "Zählt als": {
       "localizations": {
         "en": {
@@ -9730,12 +13244,32 @@
         }
       }
     },
+    "alle 2 Wochen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "every 2 weeks"
+          }
+        }
+      }
+    },
     "als GitHub-Issue": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "as GitHub issue"
+          }
+        }
+      }
+    },
+    "anderen zugewiesen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "assigned to others"
           }
         }
       }
@@ -9760,12 +13294,32 @@
         }
       }
     },
+    "auch geschlossene und fremde": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "including closed and unassigned issues"
+          }
+        }
+      }
+    },
     "aus": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "off"
+          }
+        }
+      }
+    },
+    "automatisch": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "automatic"
           }
         }
       }
@@ -9846,6 +13400,16 @@
         }
       }
     },
+    "dir": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "you"
+          }
+        }
+      }
+    },
     "eingetragen": {
       "localizations": {
         "en": {
@@ -9862,6 +13426,42 @@
           "stringUnit": {
             "state": "translated",
             "value": "allowed"
+          }
+        }
+      }
+    },
+    "erledigt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "completed"
+          }
+        }
+      }
+    },
+    "erledigt %@ · %@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "erledigt %1$@ · %2$@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "completed %@ · %@"
+          }
+        }
+      }
+    },
+    "erledigt · %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "completed · %@"
           }
         }
       }
@@ -9918,6 +13518,16 @@
         }
       }
     },
+    "für alles ohne Kategorie": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "for everything without a category"
+          }
+        }
+      }
+    },
     "ganztägig": {
       "localizations": {
         "en": {
@@ -9934,6 +13544,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "planned %@"
+          }
+        }
+      }
+    },
+    "geschlossen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "closed"
           }
         }
       }
@@ -10188,6 +13808,16 @@
         }
       }
     },
+    "monatlich": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "monthly"
+          }
+        }
+      }
+    },
     "morgen": {
       "localizations": {
         "en": {
@@ -10251,12 +13881,32 @@
         }
       }
     },
+    "nicht erledigt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "not completed"
+          }
+        }
+      }
+    },
     "nicht verfügbar": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "not available"
+          }
+        }
+      }
+    },
+    "nicht zugewiesen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "unassigned"
           }
         }
       }
@@ -10281,6 +13931,36 @@
         }
       }
     },
+    "offen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "open"
+          }
+        }
+      }
+    },
+    "ohne Erinnerung": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "no reminder"
+          }
+        }
+      }
+    },
+    "ohne Project": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "no project"
+          }
+        }
+      }
+    },
     "ohne Ziel": {
       "localizations": {
         "en": {
@@ -10297,6 +13977,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "fits into the free time"
+          }
+        }
+      }
+    },
+    "pausiert": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "paused"
           }
         }
       }
@@ -10381,6 +14071,56 @@
         }
       }
     },
+    "täglich": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "daily"
+          }
+        }
+      }
+    },
+    "und %lld weitere": {
+      "localizations": {
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "und %lld weiterer"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "und %lld weitere"
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "and %lld more"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "and %lld more"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "verbunden": {
       "localizations": {
         "en": {
@@ -10453,6 +14193,26 @@
         }
       }
     },
+    "vor %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "before %@"
+          }
+        }
+      }
+    },
+    "vor %lld Tagen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld days ago"
+          }
+        }
+      }
+    },
     "wiederkehrend": {
       "localizations": {
         "en": {
@@ -10486,6 +14246,16 @@
         }
       }
     },
+    "wöchentlich": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "weekly"
+          }
+        }
+      }
+    },
     "z. B. Mails nicht nach 18 Uhr einplanen": {
       "localizations": {
         "en": {
@@ -10506,6 +14276,22 @@
         }
       }
     },
+    "zuletzt: „%@“ · %@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "zuletzt: „%1$@“ · %2$@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "latest: “%@” · %@"
+          }
+        }
+      }
+    },
     "·": {
       "localizations": {
         "en": {
@@ -10522,6 +14308,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Older messages are no longer sent along."
+          }
+        }
+      }
+    },
+    "Ältere Termine durchsuchen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search older events"
           }
         }
       }
@@ -10552,6 +14348,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Change"
+          }
+        }
+      }
+    },
+    "Änderungen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Changes"
           }
         }
       }
@@ -10652,6 +14458,56 @@
           "stringUnit": {
             "state": "translated",
             "value": "Opens the “Workout” sheet in Tagwerk."
+          }
+        }
+      }
+    },
+    "Öffnet das Issue auf GitHub": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opens the issue on GitHub"
+          }
+        }
+      }
+    },
+    "Öffnet das Issue im Browser": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opens the issue in the browser"
+          }
+        }
+      }
+    },
+    "Öffnet den Tagesabschluss": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opens the evening wrap-up"
+          }
+        }
+      }
+    },
+    "Öffnet die Einkaufsliste": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opens the shopping list"
+          }
+        }
+      }
+    },
+    "Öffnet die Einkaufsliste in Tagwerk.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opens the shopping list in Tagwerk."
           }
         }
       }
@@ -10906,6 +14762,16 @@
         }
       }
     },
+    "„%@“ löschen?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete “%@”?"
+          }
+        }
+      }
+    },
     "„%@“ wiederholt sich": {
       "localizations": {
         "en": {
@@ -11006,6 +14872,26 @@
         }
       }
     },
+    "„Sonstiges“ ist fest vergeben und kann nicht als Name dienen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“Other” is reserved and cannot be used as a name."
+          }
+        }
+      }
+    },
+    "„Vorschläge holen“ sendet diese Notiz an ChatGPT. Nichts wird ohne deine Bestätigung geändert.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“Get suggestions” sends this note to ChatGPT. Nothing is changed without your confirmation."
+          }
+        }
+      }
+    },
     "„＋“ erfasst die Mahlzeit sofort für jetzt. Tippe auf die Zeile, um sie vorher anzupassen.": {
       "localizations": {
         "en": {
@@ -11026,6 +14912,32 @@
         }
       }
     },
+    "★ Fokus": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "★ Focus"
+          }
+        }
+      }
+    },
+    "✓ %lld von %lld": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "✓ %1$lld von %2$lld"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "✓ %lld of %lld"
+          }
+        }
+      }
+    },
     "✓ Ausgeführt": {
       "localizations": {
         "en": {
@@ -11042,6 +14954,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "✓ Applied · %@"
+          }
+        }
+      }
+    },
+    "✓ Erledigte": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "✓ Completed"
+          }
+        }
+      }
+    },
+    "✦ Sortieren": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "✦ Sort"
           }
         }
       }
