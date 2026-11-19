@@ -87,13 +87,19 @@ struct GitHubMappingTests {
     @Test func taskItem_projectWithoutPriority_hidesPriorityField() {
         let record = makeRecord(placements: [makePlacement(makeProject(1, fields: ["Status", "Due date"]))])
         let item = GitHubMapping.taskItem(record)
-        #expect(item.editableFields == [.title, .notes, .labels, .due])
+        #expect(item.editableFields == [.title, .notes, .labels, .assignees, .due])
         #expect(item.priority == nil)
     }
 
     @Test func taskItem_mandaysProject_showsEstimateField() {
         let record = makeRecord(placements: [makePlacement(makeProject(8, fields: ["Status", "Estimate (MDs)"]))])
         #expect(GitHubMapping.taskItem(record).editableFields.contains(.estimate))
+    }
+
+    @Test func taskItem_carriesAssigneesAndMakesThemEditable() {
+        let item = GitHubMapping.taskItem(makeRecord(assignees: ["octo", "lea-m"], placements: [makePlacement(makeProject(1))]))
+        #expect(item.assignees == ["octo", "lea-m"])
+        #expect(item.editableFields.contains(.assignees))
     }
 
     @Test func version_changesWhenAnyItemChanges() {

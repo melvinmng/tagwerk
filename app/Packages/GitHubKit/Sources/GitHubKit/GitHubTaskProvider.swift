@@ -215,12 +215,42 @@ public final class GitHubTaskProvider: TaskProvider {
         do {
             async let repositories = api.ownedRepositories()
             async let viewer = api.viewerProjects()
-            let fresh = GitHubCatalog(repositories: try await repositories, projects: try await viewer.projects, fetchedAt: now())
+            let fetched = try await repositories
+            // Assignable people are loaded per repository on demand; a reload keeps them for repositories that remain.
+            let kept = (stored?.assignable ?? [:]).filter { fetched.contains($0.key) }
+            let fresh = GitHubCatalog(repositories: fetched, projects: try await viewer.projects, fetchedAt: now(), assignable: kept)
             catalogStore?.store(fresh)
             return fresh
         } catch {
             return stored
         }
+    }
+
+    /// The stored catalog without any request, for callers that cannot wait (assistant card).
+    public var storedCatalog: GitHubCatalog? { catalogStore?.load() }
+
+    /// People who can be assigned in `repository`: the stored list while it is younger than `maxAge`,
+    /// otherwise fetched again. When fetching fails, the stored list of any age is returned, else `nil`.
+    public func assignableUsers(in repository: String, maxAge: TimeInterval) async -> [String]? {
+        let stored = catalogStore?.load()?.assignable[repository]
+        if let stored, now().timeIntervalSince(stored.fetchedAt) < maxAge { return stored.logins }
+        do {
+            let logins = try await api.assignableUsers(repository: repository)
+            // Without a stored catalog there is nothing to attach the list to; it is returned but not kept.
+            if let catalog = catalogStore?.load() {
+                catalogStore?.store(catalog.withAssignable(AssignableUsers(logins: logins, fetchedAt: now()), for: repository))
+            }
+            return logins
+        } catch {
+            return stored?.logins
+        }
+    }
+
+    /// An issue that was just written belongs to the user's lists while the user is assigned.
+    /// Reading keeps using `GitHubMapping.isVisible`; this only covers the moment after a write.
+    public func isListed(_ item: TaskItem) -> Bool {
+        guard let login else { return true }
+        return AssigneeRules.contains(item.assignees, login)
     }
 
     /// Repositories offered when creating an issue.

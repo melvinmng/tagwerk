@@ -237,7 +237,7 @@ public func isListed(_ item: TaskItem) -> Bool
 
 Regeln: `GitHubCatalog.init(from:)` liest `assignable` mit `decodeIfPresent` (Standard `[:]`). `assignableUsers(in:maxAge:)`: gespeicherter Stand jünger als `maxAge` → zurück; sonst abrufen, per `withAssignable` in den gespeicherten Katalog schreiben (ohne gespeicherten Katalog nur zurückgeben, A7); bei Fehler gespeicherter Stand beliebigen Alters, sonst `nil`. `catalog(maxAge:)` übernimmt beim Neuladen `stored.assignable` für Repositories, die im neuen Ergebnis stehen. `GitHubMapping.taskItem`: `assignees: record.assignees`, `.assignees` immer in `editable`. `isListed`: `true`, wenn `login == nil` oder `AssigneeRules.contains(item.assignees, login)`. `Fixtures.issue` erhält `assignees: [String] = ["octo"]`.
 
-- [ ] **Step 1: Tests schreiben** (`GitHubAssigneeTests`, Aufbau wie `GitHubCreateTests.makeProvider`, mit `MemoryGitHubCatalogStore` falls nicht vorhanden als Test-Hilfstyp):
+- [x] **Step 1: Tests schreiben** (`GitHubAssigneeTests`, Aufbau wie `GitHubCreateTests.makeProvider`, mit `MemoryGitHubCatalogStore` falls nicht vorhanden als Test-Hilfstyp):
   - `assignableUsers_requestsFirstPageOfHundred`: Anfrage an `/repos/beispiel/app/assignees?per_page=100`; Antwort `[{"login":"octo"},{"login":"lea-m"}]` → `["octo", "lea-m"]`
   - `assignableUsers_freshCacheSkipsRequest`: zweiter Aufruf mit `maxAge: 300` → `transport.requests(to: "/repos/beispiel/app/assignees").count == 1`
   - `assignableUsers_expiredCacheRefetchesAndStores`: `maxAge: 0` → zwei Anfragen; `store.load()?.assignable["beispiel/app"]?.logins` ist die neue Liste
@@ -249,10 +249,10 @@ Regeln: `GitHubCatalog.init(from:)` liest `assignable` mit `decodeIfPresent` (St
   
   In `GitHubMappingTests`: `taskItem_carriesAssigneesAndMakesThemEditable` (`item.assignees == ["octo"]`, `item.editableFields.contains(.assignees)`).
   In `GitHubPersistenceTests`: `catalog_roundTripsAssignable` (SwiftData-Store, `assignable["beispiel/app"]?.logins == ["octo"]`).
-- [ ] **Step 2:** `PKG GitHubKit GitHubAssigneeTests` → FAIL.
-- [ ] **Step 3:** Umsetzen nach Interfaces und Regeln.
-- [ ] **Step 4:** `PKG GitHubKit GitHubAssigneeTests`, `PKG GitHubKit GitHubMappingTests`, `APP SwiftDataCatalogStoreTests` → PASS.
-- [ ] **Step 5:** Commit `feat: load assignable users per repository into the GitHub catalog`.
+- [x] **Step 2:** `PKG GitHubKit GitHubAssigneeTests` → FAIL.
+- [x] **Step 3:** Umsetzen nach Interfaces und Regeln.
+- [x] **Step 4:** `PKG GitHubKit GitHubAssigneeTests`, `PKG GitHubKit GitHubMappingTests`, `APP SwiftDataCatalogStoreTests` → PASS.
+- [x] **Step 5:** Commit `feat: load assignable users per repository into the GitHub catalog`.
 
 ---
 
