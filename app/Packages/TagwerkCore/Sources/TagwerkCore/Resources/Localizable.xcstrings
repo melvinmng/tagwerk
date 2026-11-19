@@ -797,16 +797,6 @@
         }
       }
     },
-    "Erfahrungen mit anderen" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Experiences with others"
-          }
-        }
-      }
-    },
     "Fleisch & Fisch" : {
       "localizations" : {
         "en" : {
@@ -1191,16 +1181,6 @@
         }
       }
     },
-    "Meine eigene Rolle" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "My own role"
-          }
-        }
-      }
-    },
     "Mittagessen" : {
       "localizations" : {
         "en" : {
@@ -1263,16 +1243,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Notes"
-          }
-        }
-      }
-    },
-    "Nächste Schritte" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Next steps"
           }
         }
       }
@@ -1473,36 +1443,6 @@
         }
       }
     },
-    "Was hat abgehalten?" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "What held me back?"
-          }
-        }
-      }
-    },
-    "Was hat geholfen?" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "What helped?"
-          }
-        }
-      }
-    },
-    "Was war mein Ziel?" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "What was my goal?"
-          }
-        }
-      }
-    },
     "Wasser trinken" : {
       "localizations" : {
         "en" : {
@@ -1657,6 +1597,86 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Overdue"
+          }
+        }
+      }
+    },
+    "Was will ich in meinem Leben (im Moment) erreichen?" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "What do I want to achieve in my life (right now)?"
+          }
+        }
+      }
+    },
+    "Was habe ich gemacht, um zu erreichen, was ich will?" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "What have I done to achieve what I want?"
+          }
+        }
+      }
+    },
+    "Was habe ich gemacht, das mich davon abgehalten hat, zu erreichen, was ich will?" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "What have I done that kept me from achieving what I want?"
+          }
+        }
+      }
+    },
+    "Was für Erfahrungen habe ich in letzter Zeit mit anderen Menschen gemacht? (positive und negative)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "What experiences have I had with other people lately? (positive and negative)"
+          }
+        }
+      }
+    },
+    "Was bedrückt mich sonst grade?" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "What else is weighing on me right now?"
+          }
+        }
+      }
+    },
+    "Wie habe ich gehandelt und was für Gedanken habe ich mir gemacht, die diese Erfahrungen schlimmer gemacht haben, als nötig?" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "How did I act, and which thoughts did I have, that made these experiences worse than necessary?"
+          }
+        }
+      }
+    },
+    "Was für eine Rolle spiele ich in den negativen Dingen, die passiert sind? Kann ich Eigenverantwortung übernehmen?" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "What role do I play in the negative things that happened? Can I take responsibility?"
+          }
+        }
+      }
+    },
+    "Was kann ich machen, um die negativen Dinge in meinem Leben aktiv zu verbessern?" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "What can I do to actively improve the negative things in my life?"
           }
         }
       }
