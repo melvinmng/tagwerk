@@ -255,11 +255,15 @@ struct TodayOverviewSnippet: View {
 }
 
 /// The phrases Siri and Shortcuts offer without setup (design §8); every phrase names the app.
+///
+/// Few, short and clearly separated phrases per shortcut (Apple HIG "App Shortcuts", editorial guidelines): two
+/// variants at most, no phrase that is a prefix or a loose paraphrase of another one, and no generic request such
+/// as "Neuer Artikel" that Siri could also read as a general question. Keep `AppShortcuts.xcstrings` and the phrase
+/// list in `CaptureSettingsView` in step; `scripts/check-strings.py` fails when they drift apart.
 struct TagwerkShortcuts: AppShortcutsProvider {
     static var appShortcuts: [AppShortcut] {
         AppShortcut(intent: LogWaterIntent(), phrases: [
             "Wasser in \(.applicationName) erfassen",
-            "Wasser mit \(.applicationName) erfassen",
             "Trinken in \(.applicationName) erfassen",
         ], shortTitle: "Wasser erfassen", systemImageName: "drop.fill")
         AppShortcut(intent: LogMealIntent(), phrases: [
@@ -277,19 +281,12 @@ struct TagwerkShortcuts: AppShortcutsProvider {
         AppShortcut(intent: AddToShoppingListIntent(), phrases: [
             "Auf die Einkaufsliste in \(.applicationName)",
             "Zur Einkaufsliste in \(.applicationName) hinzufügen",
-            "Einkaufsliste in \(.applicationName) ergänzen",
-            "Füge etwas zur Einkaufsliste in \(.applicationName) hinzu",
-            "Ich brauche etwas aus dem Laden in \(.applicationName)",
-            "Einkaufsliste in \(.applicationName)",
-            "Neuer Artikel in \(.applicationName)",
-            "Etwas auf die Einkaufsliste in \(.applicationName) setzen",
         ], shortTitle: "Auf die Einkaufsliste", systemImageName: "cart.badge.plus")
         // The article is part of the phrase; its names come from `ShoppingArticleEntityQuery.suggestedEntities`
         // and are refreshed with `updateAppShortcutParameters()`.
         AppShortcut(intent: AddShoppingArticleIntent(), phrases: [
             "Füge \(\.$article) zur Einkaufsliste in \(.applicationName) hinzu",
             "\(\.$article) auf die Einkaufsliste in \(.applicationName)",
-            "Setz \(\.$article) auf die Einkaufsliste in \(.applicationName)",
         ], shortTitle: "Artikel auf die Einkaufsliste", systemImageName: "cart.badge.plus")
         AppShortcut(intent: CheckHabitIntent(), phrases: [
             "\(\.$habit) in \(.applicationName) abhaken",
