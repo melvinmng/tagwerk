@@ -95,9 +95,21 @@ struct BackupTests {
         own.processedAt = now
         own.derivedActionCount = 2
         context.insert(own)
+        let eveningFolder = NoteFolderRecord(name: "Tagesabschluss", order: 4, role: .eveningRoutine, now: now)
+        context.insert(eveningFolder)
         let thought = NoteRecord(text: "Ruhiger Tag", kind: .evening, dayKey: "2026-11-18", now: now)
+        thought.folderID = eveningFolder.id
         context.insert(thought)
-        context.insert(NoteRecord(text: "Ein erfundener Traum", kind: .dream, dayKey: "2026-11-18", now: now))
+        let brainDumpFolder = NoteFolderRecord(name: "Brain Dump", order: 3, role: .brainDump, now: now)
+        context.insert(brainDumpFolder)
+        let brainDumpNote = NoteRecord(text: "Kopf leeren", now: now)
+        brainDumpNote.folderID = brainDumpFolder.id
+        context.insert(brainDumpNote)
+        let dreamFolder = NoteFolderRecord(name: "Dream Log", order: 5, role: .dreamLog, now: now)
+        context.insert(dreamFolder)
+        let dream = NoteRecord(text: "Traum vom Meer", kind: .dream, dayKey: "2026-11-18", now: now)
+        dream.folderID = dreamFolder.id
+        context.insert(dream)
         let trashed = NoteRecord(text: "Alt", now: now)
         trashed.deletedAt = now
         trashed.importSourceID = "abc"
@@ -271,7 +283,7 @@ struct BackupTests {
         // Restoring the same file again replaces, it does not duplicate.
         try target.service.restore(try target.service.inspect(reloaded))
         let counts = entities(of: target.container.mainContext, settings: target.settings)
-        #expect(counts.localTasks.count == 1 && counts.notes.count == 6 && counts.habits.count == 1 && counts.noteFolders.count == 3)
+        #expect(counts.localTasks.count == 1 && counts.notes.count == 7 && counts.habits.count == 1 && counts.noteFolders.count == 6)
     }
 
     @Test func settings_areAppliedInPlace_withoutDeviceBoundValues() throws {
@@ -459,12 +471,46 @@ struct BackupTests {
         let inspection = try makeTarget().service.inspect(data)
         #expect(!inspection.header.includesPrivateNotes)
         let kinds = Set(inspection.entities.notes.map(\.kindRaw))
-        // The dream log is part of the backup like the thought notes; it is not behind the private switch.
         #expect(kinds == ["free", "evening", "dream"])
-        #expect(inspection.entities.noteFolders.map(\.name) == ["Studium"])
+        #expect(Set(inspection.entities.noteFolders.map(\.name)) == ["Studium", "Brain Dump", "Tagesabschluss", "Dream Log"])
         #expect(inspection.entities.bibleStudySessions.isEmpty)
         let text = String(decoding: data, as: UTF8.self)
         #expect(!text.contains("Dankbar") && !text.contains("3,21-31") && !text.contains("Allgemeine Stimmung"))
+    }
+
+    @Test func backupWithoutPrivate_keepsBrainDumpRoutineAndDreamFolders() throws {
+        let inspection = try makeTarget().service.inspect(try backup.makeBackupData(includePrivate: false))
+        let roles = Set(inspection.entities.noteFolders.compactMap(\.roleRaw))
+        #expect(roles == ["brainDump", "eveningRoutine", "dreamLog"])
+        let texts = Set(inspection.entities.notes.map(\.text))
+        #expect(texts.contains("Kopf leeren") && texts.contains("Ruhiger Tag") && texts.contains("Traum vom Meer"))
+    }
+
+    @Test func backupWithoutPrivate_dropsJournalAndBibleStudyFolders() throws {
+        let inspection = try makeTarget().service.inspect(try backup.makeBackupData(includePrivate: false))
+        let roles = Set(inspection.entities.noteFolders.compactMap(\.roleRaw))
+        #expect(!roles.contains("journal") && !roles.contains("bibleStudy"))
+        #expect(!inspection.entities.notes.contains { $0.kindRaw == "journal" || $0.kindRaw == "bibleStudy" })
+    }
+
+    @Test func restore_routineNotesLandInTheirFolders() throws {
+        // A file from before the fixed folders: thought notes without a folder. The restore files them afterwards.
+        let target = try makeTarget()
+        let context = target.container.mainContext
+        let store = NoteStore(context: context, now: { self.clock.now })
+        let service = BackupService(context: context, settings: target.settings, calendar: calendar, appVersion: "1.0-test",
+                                    now: { self.clock.now }, afterRestore: { store.ensureDefaultFolders() })
+        context.insert(NoteRecord(text: "Altes", kind: .morning, dayKey: "2026-11-18", now: clock.now))
+        context.insert(NoteRecord(text: "Traum", kind: .dream, dayKey: "2026-11-18", now: clock.now))
+        try context.save()
+        let oldFile = try target.service.makeBackupData(includePrivate: false)
+        try service.restore(try service.inspect(oldFile))
+        let notes = try context.fetch(FetchDescriptor<NoteRecord>())
+        let morning = try #require(notes.first { $0.kind == .morning })
+        let dream = try #require(notes.first { $0.kind == .dream })
+        #expect(morning.folderID == store.folder(role: .morningRoutine)?.id && morning.folderID != nil)
+        #expect(dream.folderID == store.folder(role: .dreamLog)?.id && dream.folderID != nil)
+        #expect(store.folders().compactMap(\.role).filter { $0 == .brainDump }.count == 1)
     }
 
     @Test func restoringAFileWithoutPrivateContent_keepsTheExistingJournalAndBibleStudy() throws {

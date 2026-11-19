@@ -1,6 +1,5 @@
 import Foundation
 
-<<<<<<< HEAD
 /// Origin of a note: the user's own note, the thoughts captured at the start or the end of a day, the dream log of the
 /// morning start, an entry of the journal "Tagebuch mit Gott", or a note of the Bible Study folder. An unknown stored
 /// value reads as `.free`. The raw values are stored and written to backups: never rename, only append.

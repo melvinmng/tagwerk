@@ -1417,8 +1417,8 @@ extension BackupEntities {
         workouts = Self.fetch(WorkoutRecord.self, in: context).map(WorkoutBackup.init)
         shoppingCategories = Self.fetch(ShoppingCategory.self, in: context).map(ShoppingCategoryBackup.init)
         shoppingAssignments = Self.fetch(ShoppingAssignment.self, in: context).map(ShoppingAssignmentBackup.init)
-        notes = Self.fetch(NoteRecord.self, in: context).filter { includePrivate || !$0.kind.isPrivate }.map(NoteBackup.init)
-        noteFolders = Self.fetch(NoteFolderRecord.self, in: context).filter { includePrivate || $0.role == nil }.map(NoteFolderBackup.init)
+        notes = Self.fetch(NoteRecord.self, in: context).filter { includePrivate || $0.kind.isInDefaultBackup }.map(NoteBackup.init)
+        noteFolders = Self.fetch(NoteFolderRecord.self, in: context).filter { includePrivate || Self.isInDefaultBackup(folderRole: $0.role) }.map(NoteFolderBackup.init)
         bibleStudySessions = includePrivate ? Self.fetch(BibleStudySessionRecord.self, in: context).map(BibleStudySessionBackup.init) : []
         habits = Self.fetch(HabitRecord.self, in: context).map(HabitBackup.init)
         habitChecks = Self.fetch(HabitCheckRecord.self, in: context).map(HabitCheckBackup.init)
@@ -1458,8 +1458,8 @@ extension BackupEntities {
         Self.delete(WorkoutRecord.self, in: context) { _ in true }
         Self.delete(ShoppingCategory.self, in: context) { _ in true }
         Self.delete(ShoppingAssignment.self, in: context) { _ in true }
-        Self.delete(NoteRecord.self, in: context) { replacePrivate || !$0.kind.isPrivate }
-        Self.delete(NoteFolderRecord.self, in: context) { replacePrivate || $0.role == nil }
+        Self.delete(NoteRecord.self, in: context) { replacePrivate || $0.kind.isInDefaultBackup }
+        Self.delete(NoteFolderRecord.self, in: context) { replacePrivate || Self.isInDefaultBackup(folderRole: $0.role) }
         if replacePrivate { Self.delete(BibleStudySessionRecord.self, in: context) { _ in true } }
         Self.delete(HabitRecord.self, in: context) { _ in true }
         Self.delete(HabitCheckRecord.self, in: context) { _ in true }
@@ -1494,8 +1494,8 @@ extension BackupEntities {
         for item in workouts { context.insert(item.makeRecord()) }
         for item in shoppingCategories { context.insert(item.makeRecord()) }
         for item in shoppingAssignments { context.insert(item.makeRecord()) }
-        for item in notes where replacePrivate || !(NoteKind(rawValue: item.kindRaw) ?? .free).isPrivate { context.insert(item.makeRecord()) }
-        for item in noteFolders where replacePrivate || NoteFolderRole(rawValue: item.roleRaw ?? "") == nil { context.insert(item.makeRecord()) }
+        for item in notes where replacePrivate || (NoteKind(rawValue: item.kindRaw) ?? .free).isInDefaultBackup { context.insert(item.makeRecord()) }
+        for item in noteFolders where replacePrivate || Self.isInDefaultBackup(folderRole: item.roleRaw.flatMap(NoteFolderRole.init(rawValue:))) { context.insert(item.makeRecord()) }
         if replacePrivate { for item in bibleStudySessions { context.insert(item.makeRecord()) } }
         for item in habits { context.insert(item.makeRecord()) }
         for item in habitChecks { context.insert(item.makeRecord()) }
@@ -1507,6 +1507,13 @@ extension BackupEntities {
         for item in effortSamples ?? [] { context.insert(item.makeRecord()) }
         for item in weekReflections { context.insert(item.makeRecord()) }
         try context.save()
+    }
+
+    /// Whether a note folder is part of a backup written without the switch "Tagebuch und Bible Study einschließen": the
+    /// user's own folders and the fixed folders of Brain Dump, Tagesstart, Tagesabschluss and Dream Log are, journal and
+    /// Bible Study are not.
+    private static func isInDefaultBackup(folderRole: NoteFolderRole?) -> Bool {
+        folderRole?.isInDefaultBackup ?? true
     }
 
     @MainActor
