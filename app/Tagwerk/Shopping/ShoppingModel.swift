@@ -90,6 +90,12 @@ final class ShoppingModel {
                                       categories: categories.categories(), dictionary: dictionary)
     }
 
+    /// Name of the category the item is shown under; `nil` is "Sonstiges".
+    func categoryName(of item: ShoppingItem) -> String? {
+        guard let id = categoryID(of: item) else { return nil }
+        return categories.categories().first { $0.id == id }?.name
+    }
+
     private func clear(_ newState: State) {
         state = newState
         listTitle = nil

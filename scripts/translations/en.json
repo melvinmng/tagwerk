@@ -1295,5 +1295,8 @@
   "Tagesabschluss": "Evening",
   "Tagesstart": "Morning",
   "zuletzt: „%@“ · %@": "latest: “%@” · %@",
-  "Anheftung lösen": "Unpin"
+  "Anheftung lösen": "Unpin",
+  "Einkaufsliste ändern": "Change shopping list",
+  "Es ist keine Einkaufsliste eingerichtet. Einstellungen › Einkaufsliste.": "No shopping list is set up. Settings › Shopping List.",
+  "Höchstens 30 Artikel je Aufruf.": "At most 30 items per call."
 }

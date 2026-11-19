@@ -57,6 +57,8 @@ final class AssistantModel {
     @ObservationIgnored var issueReference: (TaskID) -> IssueReference? = { _ in nil }
     /// GitHub catalog and login for the issue card and the instructions; `nil` while GitHub is not signed in.
     @ObservationIgnored var gitHubDirectory: () -> (any GitHubDirectory)? = { nil }
+    /// Name of an open shopping item by its id, for the card of `update_shopping`.
+    @ObservationIgnored var shoppingItemName: (String) -> String? = { _ in nil }
     /// The task a task chat is about and its loaded context (comments, neighbours …).
     private(set) var task: TaskItem?
     @ObservationIgnored private var taskContext: String?
@@ -378,6 +380,8 @@ final class AssistantModel {
         Termine kannst du anlegen, ändern und löschen (create_event, update_event, delete_event), in jedem \
         beschreibbaren Kalender; ohne Nennung eines Kalenders im Standardkalender. Nennt der Nutzer keine Dauer, \
         dauert ein neuer Termin eine Stunde.
+        Einkaufsartikel stehen nicht in list_tasks: Die Einkaufsliste liest du mit list_shopping und änderst sie mit \
+        update_shopping (hinzufügen, abhaken). Lege Einkaufsartikel nie über create_task an.
         \(gitHubInstructions())
         \(onTurnFinished == nil ? "" : Self.voiceModeInstructions)
         \(contextText())
@@ -522,6 +526,14 @@ final class AssistantModel {
             return ActionCard(title: action, change: text("Vorschläge in der Planen-Ansicht anlegen"))
         case "add_comment":
             return ActionCard(title: title, change: text("Kommentar: „\(string("body") ?? "")“"))
+        case "update_shopping":
+            // One card for every change of the call: what is added (with quantity) and what is checked off.
+            let additions = (args["add"] as? [[String: Any]] ?? []).compactMap { entry -> String? in
+                guard let name = entry["name"] as? String, !name.isEmpty else { return nil }
+                return "＋ " + [entry["quantity"] as? String, name].compactMap { $0 }.joined(separator: " ")
+            }
+            let checks = (args["check_off"] as? [String] ?? []).map { "✓ " + (shoppingItemName($0) ?? $0) }
+            return ActionCard(title: text("Einkaufsliste ändern"), change: (additions + checks).joined(separator: " · "))
         case "create_event", "update_event", "delete_event":
             return describeEvent(call.name, series: args["series"] as? Bool == true, language: language, string: string)
         default:

@@ -2476,16 +2476,16 @@
     },
     "Anheftung lösen": {
       "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Unpin"
-          }
-        },
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "Lösen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unpin"
           }
         }
       }
@@ -4468,6 +4468,16 @@
         }
       }
     },
+    "Einkaufsliste ändern": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Change shopping list"
+          }
+        }
+      }
+    },
     "Einladung": {
       "localizations": {
         "en": {
@@ -4959,6 +4969,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "No shopping list is set up."
+          }
+        }
+      }
+    },
+    "Es ist keine Einkaufsliste eingerichtet. Einstellungen › Einkaufsliste.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No shopping list is set up. Settings › Shopping List."
           }
         }
       }
@@ -5714,6 +5734,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "At most 20 items at a time"
+          }
+        }
+      }
+    },
+    "Höchstens 30 Artikel je Aufruf.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "At most 30 items per call."
           }
         }
       }

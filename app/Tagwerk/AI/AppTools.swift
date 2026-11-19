@@ -11,7 +11,7 @@ import TagwerkCore
 @MainActor
 final class AppTools: ToolHandler {
     static let readTools: Set<String> = ["list_tasks", "list_events", "list_calendars", "get_task",
-                                         "list_github_targets", "list_assignees"]
+                                         "list_github_targets", "list_assignees", "list_shopping"]
     static let maxListedTasks = 60
     static let maxListedRepositories = 30
 
@@ -21,13 +21,16 @@ final class AppTools: ToolHandler {
     private let events: (DateInterval) -> [CalendarEvent]
     /// GitHub catalog and assignable people; `nil` while GitHub is not signed in.
     let gitHub: () -> (any GitHubDirectory)?
+    /// The shopping list; `nil` in contexts without one (the functions then report that no list is set up).
+    let shopping: ShoppingModel?
     /// After "plan_period": the chat closes and "Planen" shows the suggestions (review item 11).
     var onPlanned: (() -> Void)?
 
     init(taskList: TaskListModel, planning: PlanningModel, planner: AIPlanner?,
          events: @escaping (DateInterval) -> [CalendarEvent],
-         gitHub: @escaping () -> (any GitHubDirectory)? = { nil }) {
+         gitHub: @escaping () -> (any GitHubDirectory)? = { nil }, shopping: ShoppingModel? = nil) {
         self.gitHub = gitHub
+        self.shopping = shopping
         self.taskList = taskList
         self.planning = planning
         self.planner = planner
@@ -62,6 +65,8 @@ final class AppTools: ToolHandler {
         case "list_calendars": return listCalendars()
         case "list_github_targets": return try await listGitHubTargets()
         case "list_assignees": return try await listAssignees(repository: args.require("repository"))
+        case "list_shopping": return try await listShopping(includeCompleted: args.bool("include_completed") ?? false)
+        case "update_shopping": return try await updateShopping(args)
         case "create_event": return try await createEvent(args)
         case "update_event": return try await updateEvent(args)
         case "delete_event": return try await deleteEvent(args)

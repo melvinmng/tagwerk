@@ -139,7 +139,8 @@ final class AppEnvironment {
         planner.preferences = { settings.aiPlanningRules }
         let tools = AppTools(taskList: taskList, planning: planning, planner: planner,
                              events: { interval in gateway.events(in: interval, calendarIDs: nil) },
-                             gitHub: { [taskList] in taskList.provider(for: .github) as? GitHubTaskProvider })
+                             gitHub: { [taskList] in taskList.provider(for: .github) as? GitHubTaskProvider },
+                             shopping: shopping)
         self.assistant = AssistantModel(responder: ai.client, tools: tools, model: { try await ai.selectedModel() },
                                         store: ChatStore(context: context), planning: planning)
         self.voiceOutput = VoiceOutputModel(speaker: SystemSpeaker(), audio: SystemVoiceAudioSession.shared, preferences: {
@@ -164,6 +165,8 @@ final class AppEnvironment {
             })
         let gitHubProvider = self.gitHub
         assistant.reader = GitHubRepositoryReader(api: gitHubProvider.api)
+        let shopping = self.shopping
+        assistant.shoppingItemName = { id in shopping.openItems.first { $0.id == id }?.name }
         assistant.gitHubDirectory = { [taskList] in taskList.provider(for: .github) as? GitHubTaskProvider }
         assistant.issueReference = { id in
             gitHubProvider.issueReference(for: id).map { IssueReference(repository: $0.repository, number: $0.number, nodeID: $0.nodeID) }

@@ -1120,7 +1120,7 @@ extension NotesListView {
   - `update_shopping { add: [{name: string, quantity: string|null}], check_off: [string] }` → `{"ok":true,"added":[…],"reopened":[…],"already_on_list":[…],"checked_off":[…],"not_found":[…]}` (Namen bzw. bei `not_found` die Kennungen).
   - Karte: Titel „Einkaufsliste ändern“, Änderung „＋ Kaffee · ＋ Reis · ＋ Zwiebeln · ✓ Eier“ (Name zu einer Kennung aus `shopping.openItems`, sonst die Kennung).
 
-- [ ] **Schritt 1: Tests schreiben** (in `AppToolsTests`: `ShoppingModel` mit `InMemoryReminderStore`, Liste `shop` mit „Milch“ (Menge „2“), „Eier“; `uni` mit „Seminararbeit“)
+- [x] **Schritt 1: Tests schreiben** (in `AppToolsTests`: `ShoppingModel` mit `InMemoryReminderStore`, Liste `shop` mit „Milch“ (Menge „2“), „Eier“; `uni` mit „Seminararbeit“)
 
 ```swift
 @Test func listShopping_isReadTool_andListsOpenWithCategory() async {
@@ -1158,10 +1158,10 @@ extension NotesListView {
 @Test func instructions_mentionShoppingTools()                             // contains "list_shopping", "update_shopping", "create_task"
 ```
 
-- [ ] **Schritt 2:** Beide Suiten ausführen. Erwartet: Übersetzungsfehler bzw. rot.
-- [ ] **Schritt 3: Umsetzen.** Vor beiden Funktionen `await shopping.reload()`; `state != .ready` oder `shopping == nil` → Fehlertext oben. `update_shopping`: Namen kürzen (leer verwerfen, höchstens 80 Zeichen), `add` über `ShoppingModel.add`, `check_off` je Kennung über `checkOff(id:)` (Fehler → `not_found`), Teilfehler brechen nicht ab. Schemas über die vorhandenen Helfer (`object`, `string(nullable:)`, `boolean`, Felder als `["type": "array", "items": …]`), Beschreibung von `update_shopping` endet mit „Needs confirmation.“. Systemhinweis: ein Satz nach dem Termin-Absatz: Einkaufsartikel stehen nicht in `list_tasks`; lesen mit `list_shopping`, ändern mit `update_shopping`; Artikel nie über `create_task` anlegen. Die Ansage im Sprachmodus folgt ohne weitere Änderung aus `describe(_:language:)`.
-- [ ] **Schritt 4:** `AppToolsTests`, `AssistantModelTests` ausführen. Erwartet: grün.
-- [ ] **Schritt 5:** Commit: `git add app/Tagwerk app/TagwerkTests && git commit -m "feat: let the assistant read and change the shopping list"`
+- [x] **Schritt 2:** Beide Suiten ausführen. Erwartet: Übersetzungsfehler bzw. rot.
+- [x] **Schritt 3: Umsetzen.** Vor beiden Funktionen `await shopping.reload()`; `state != .ready` oder `shopping == nil` → Fehlertext oben. `update_shopping`: Namen kürzen (leer verwerfen, höchstens 80 Zeichen), `add` über `ShoppingModel.add`, `check_off` je Kennung über `checkOff(id:)` (Fehler → `not_found`), Teilfehler brechen nicht ab. Schemas über die vorhandenen Helfer (`object`, `string(nullable:)`, `boolean`, Felder als `["type": "array", "items": …]`), Beschreibung von `update_shopping` endet mit „Needs confirmation.“. Systemhinweis: ein Satz nach dem Termin-Absatz: Einkaufsartikel stehen nicht in `list_tasks`; lesen mit `list_shopping`, ändern mit `update_shopping`; Artikel nie über `create_task` anlegen. Die Ansage im Sprachmodus folgt ohne weitere Änderung aus `describe(_:language:)`.
+- [x] **Schritt 4:** `AppToolsTests`, `AssistantModelTests` ausführen. Erwartet: grün.
+- [x] **Schritt 5:** Commit: `git add app/Tagwerk app/TagwerkTests && git commit -m "feat: let the assistant read and change the shopping list"`
 
 ---
 

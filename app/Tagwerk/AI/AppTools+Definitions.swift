@@ -55,6 +55,12 @@ extension AppTools {
             tool("list_events", "Lists calendar events between two days (inclusive) with id, calendar, whether it is editable and recurring, and whether it is a deadline.",
                  ["from": day, "to": day]),
             tool("list_calendars", "Lists the event calendars with id, title, whether they are writable and which one is the default for new events.", [:]),
+            tool("list_shopping", "Lists the shopping list: open items with id, name, quantity and category; items completed in the last 7 days only when include_completed is true. Shopping items are not tasks and never appear in list_tasks.",
+                 ["include_completed": boolean]),
+            tool("update_shopping", "Adds items to the shopping list and checks items off. add: item names with an optional quantity such as \"2\" or \"500 g\"; an item that is already on the list is not added twice. check_off: item ids from list_shopping. At most 30 entries each. Needs confirmation.", [
+                "add": ["type": "array", "items": object(["name": string(), "quantity": string(nullable: true)])],
+                "check_off": strings("Item ids from list_shopping"),
+            ]),
             tool("create_event", "Creates a calendar event. Without calendar_id it goes to the default (plan) calendar; use another writable calendar only when the user names it. Timed: YYYY-MM-DDTHH:mm; all day: YYYY-MM-DD with inclusive end day. Needs confirmation.", [
                 "title": string(),
                 "start": string("YYYY-MM-DDTHH:mm, or YYYY-MM-DD when all_day"),
