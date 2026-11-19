@@ -32,6 +32,7 @@ struct ShoppingCategoriesView: View {
                             Spacer()
                             Text("\(openCount(category.id))").monospacedDigit().foregroundStyle(.secondary)
                         }
+                        .contentShape(Rectangle())
                     }
                     // Without this the whole row takes the accent colour of a button (#173).
                     .buttonStyle(.plain)

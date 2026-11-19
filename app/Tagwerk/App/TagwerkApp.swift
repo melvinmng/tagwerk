@@ -61,6 +61,7 @@ struct TagwerkApp: App {
                     environment.startNotificationUpdates()
                     environment.startRoutineReminderUpdates()
                     environment.startFocusUpdates()
+                    environment.startHabitSourceUpdates()
                     environment.startSnapshotUpdates()
                 }
                 .onChange(of: scenePhase) { _, phase in

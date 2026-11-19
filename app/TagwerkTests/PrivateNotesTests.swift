@@ -24,6 +24,20 @@ struct PrivateNotesTests {
         for name in NoteSuggestionRules.allowedTools { #expect(!name.localizedCaseInsensitiveContains("note")) }
     }
 
+    @Test func assistantSearch_hasNoSourceForNotes() {
+        // The assistant's `search` tool reads events and tasks only. It is built from these sources, so a note cannot reach it.
+        let sources = SearchToolSources(events: { _ in nil }, calendarNames: { [:] }, completedTasks: { [] })
+        let labels = Mirror(reflecting: sources).children.compactMap(\.label)
+        #expect(labels.sorted() == ["calendarNames", "completedTasks", "events"])
+    }
+
+    @Test func widgetSnapshot_hasNoFieldForNoteText() {
+        let entry = SnapshotEntry(id: "e", title: "Termin", start: .now, end: .now, kind: .event, colorHex: nil, isAllDay: false)
+        let day = SnapshotDay(day: PlanDay(year: 2026, month: 11, day: 19), entries: [entry], deadlineCount: 0, intake: nil)
+        let labels = (Mirror(reflecting: entry).children + Mirror(reflecting: day).children).compactMap(\.label)
+        #expect(!labels.contains { $0.localizedCaseInsensitiveContains("note") || $0.localizedCaseInsensitiveContains("journal") })
+    }
+
     @Test func suggestions_neverSendAPrivateNote_evenWithConsent() async throws {
         let container = try ModelContainerFactory.make(inMemory: true)
         let notes = NoteStore(context: container.mainContext)

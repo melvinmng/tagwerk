@@ -89,6 +89,7 @@ final class AppEnvironment {
     @ObservationIgnored private var pathMonitor: NWPathMonitor?
     @ObservationIgnored private var routineUpdates: Task<Void, Never>?
     @ObservationIgnored private var focusUpdates: Task<Void, Never>?
+    @ObservationIgnored private var habitSourceUpdates: Task<Void, Never>?
     @ObservationIgnored private var notificationUpdates: Task<Void, Never>?
     @ObservationIgnored private var gitHubRegistration: Task<Void, Never>?
     @ObservationIgnored private var snapshotUpdates: Task<Void, Never>?
@@ -564,6 +565,27 @@ final class AppEnvironment {
             for await value in changes where value != last {
                 last = value
                 await self?.routineNotifications.reschedule()
+            }
+        }
+    }
+
+    /// The habit sources of the routines (a closed wrap-up, a written journal entry, a completed Bible Study session) live in
+    /// other stores. Every write there bumps a `revision`; the habits read their facts again, so the rows and the counter follow
+    /// without opening the tab or relaunching.
+    func startHabitSourceUpdates() {
+        guard habitSourceUpdates == nil else { return }
+        let changes = Observations { @MainActor [weak self] () -> Int in
+            guard let self else { return 0 }
+            var hasher = Hasher()
+            hasher.combine(notes.revision)
+            hasher.combine(routineStore.revision)
+            return hasher.finalize()
+        }
+        habitSourceUpdates = Task { [weak self] in
+            var last: Int?
+            for await value in changes where value != last {
+                last = value
+                self?.habits.refreshLocal()
             }
         }
     }

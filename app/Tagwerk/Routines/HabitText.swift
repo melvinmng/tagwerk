@@ -6,7 +6,9 @@ enum HabitText {
     /// SF Symbols a habit can wear.
     static let symbols = ["checkmark.circle", "book", "figure.walk", "figure.run", "figure.strengthtraining.traditional",
                           "drop", "bed.double", "leaf", "pencil", "brain.head.profile", "heart", "sun.max", "fork.knife",
-                          "music.note", "pills", "cup.and.saucer", "moon.stars", "sparkles"]
+                          "music.note", "pills", "cup.and.saucer", "moon.stars", "sparkles",
+                          // The symbols of the suggested habits, so the sheet of a taken-over habit shows its symbol selected.
+                          "book.closed", "shower", "graduationcap", "book.pages"]
 
     /// "Gewohnheiten · 3 von 5" or "Gewohnheiten" without active habits.
     static func header(_ counter: HabitCounter?) -> String {
