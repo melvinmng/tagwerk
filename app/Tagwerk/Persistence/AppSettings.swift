@@ -138,6 +138,15 @@ final class AppSettings {
     /// "Erfahrungswerte in der Planung nutzen" (#162): the AI planning gets an expected effort per task.
     var effortHistoryInPlanning: Bool = true
 
+    /// Travel time before events with a place (#168). The home address and its coordinates stay on this device; the
+    /// address text goes to Apple Maps only, to look up the way, never to ChatGPT.
+    var travelTimeEnabled: Bool = true
+    var homeAddress: String? = nil
+    var homeLatitude: Double? = nil
+    var homeLongitude: Double? = nil
+    /// `TravelTransport` raw value.
+    var travelTransportRaw: String = "automobile"
+
     /// Voice: microphone in conversations (plan voice-chat, SP7a).
     var voiceInputEnabled: Bool = true
     /// The one-time explanation before the first recording (SP8a) was confirmed.
