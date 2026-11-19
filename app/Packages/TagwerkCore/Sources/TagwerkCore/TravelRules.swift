@@ -59,6 +59,16 @@ public struct TravelLeg: Sendable, Hashable {
 
 /// The travel time before an event as a block of the day.
 public struct TravelSegment: Sendable, Hashable, Identifiable {
+    /// Where the minutes come from.
+    public enum Source: Sendable, Hashable {
+        /// Apple Maps (or its last stored answer).
+        case automatic
+        /// An estimate while no value can be fetched (no network): the last known time to the same place, else 30 minutes.
+        case provisional
+        /// Set by hand for this event.
+        case manual
+    }
+
     public var id: String { eventID }
     public var eventID: String
     /// Minutes of the day, ending at the start of the event.
@@ -67,13 +77,16 @@ public struct TravelSegment: Sendable, Hashable, Identifiable {
     public var origin: TravelLeg.Origin
     /// The trip starts before the previous event ends.
     public var isTight: Bool
+    public var source: Source
 
-    public init(eventID: String, range: Range<Int>, minutes: Int, origin: TravelLeg.Origin, isTight: Bool) {
+    public init(eventID: String, range: Range<Int>, minutes: Int, origin: TravelLeg.Origin, isTight: Bool,
+                source: Source = .automatic) {
         self.eventID = eventID
         self.range = range
         self.minutes = minutes
         self.origin = origin
         self.isTight = isTight
+        self.source = source
     }
 }
 
@@ -134,23 +147,97 @@ public enum TravelRules {
         return result
     }
 
-    /// The travel blocks of `day`: `(start − minutes)..<start`, cut at midnight. A trip without a value in `minutes`
-    /// (offline, not loaded yet), with zero minutes or longer than `TravelPlausibility.maximumTravelMinutes` has no block.
-    public static func segments(legs: [TravelLeg], minutes: [String: Int], events: [CalendarEvent],
+    /// Time assumed for a trip that cannot be looked up and has no earlier value to the same place.
+    public static let defaultProvisionalMinutes = 30
+
+    /// The estimate for a trip without a value: the last known time to the same destination (from any starting point),
+    /// else `defaultProvisionalMinutes`. A time of 0 ("under 3 minutes", possibly from a nearby starting point) or one
+    /// above `TravelPlausibility.maximumTravelMinutes` says nothing about this trip.
+    public static func provisionalMinutes(lastKnownToDestination: Int?) -> Int {
+        guard let known = lastKnownToDestination, known > 0, TravelPlausibility.isPlausibleTravelTime(minutes: known) else {
+            return defaultProvisionalMinutes
+        }
+        return known
+    }
+
+    /// The travel blocks of `day`: `(start − minutes)..<start`, cut at midnight, in the order of the events.
+    ///
+    /// Per event, in this order:
+    /// 1. An override decides first: `none` gives no block, `fixed` a block of that length (also without a trip, for an
+    ///    event without a place or without a home address).
+    /// 2. Otherwise the time in `minutes` (Apple Maps, event ID → minutes).
+    /// 3. Otherwise the estimate in `provisionalMinutes` (the trip could not be looked up, no network).
+    /// 4. Otherwise no block.
+    ///
+    /// A time of 0, or longer than `TravelPlausibility.maximumTravelMinutes`, gives no block, except a manual one, which
+    /// is bounded to that maximum instead.
+    public static func segments(legs: [TravelLeg], minutes: [String: Int], provisionalMinutes: [String: Int] = [:],
+                                overrides: [String: TravelOverrideMode] = [:], events: [CalendarEvent],
                                 on day: PlanDay, calendar: Calendar) -> [TravelSegment] {
         let dayStart = day.startDate(in: calendar)
+        let dayEnd = day.adding(days: 1, calendar: calendar).startDate(in: calendar)
         let byID = Dictionary(events.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
-        return legs.compactMap { leg in
-            guard let travel = minutes[leg.eventID], travel > 0, TravelPlausibility.isPlausibleTravelTime(minutes: travel) else { return nil }
-            let start = Int(leg.arrival.timeIntervalSince(dayStart) / 60)
+
+        func segment(eventID: String, arrival: Date, travel: Int, origin: TravelLeg.Origin, source: TravelSegment.Source) -> TravelSegment? {
+            let start = Int(arrival.timeIntervalSince(dayStart) / 60)
             let from = max(0, start - travel)
             guard from < start else { return nil }
             var isTight = false
-            if case .previousEvent(let id) = leg.origin, let previous = byID[id] {
+            if case .previousEvent(let id) = origin, let previous = byID[id] {
                 isTight = Int(previous.end.timeIntervalSince(dayStart) / 60) > from
             }
-            return TravelSegment(eventID: leg.eventID, range: from..<start, minutes: start - from, origin: leg.origin, isTight: isTight)
+            return TravelSegment(eventID: eventID, range: from..<start, minutes: start - from, origin: origin, isTight: isTight, source: source)
         }
+
+        var result: [TravelSegment] = []
+        var handled = Set<String>()
+        for leg in legs where handled.insert(leg.eventID).inserted {
+            let travel: Int
+            let source: TravelSegment.Source
+            switch overrides[leg.eventID] ?? .automatic {
+            case .none:
+                continue
+            case .fixed(let fixed):
+                travel = TravelOverrideRules.clampedFixedMinutes(fixed)
+                source = .manual
+            case .automatic:
+                if let known = minutes[leg.eventID] {
+                    travel = known
+                    source = .automatic
+                } else if let estimate = provisionalMinutes[leg.eventID] {
+                    travel = estimate
+                    source = .provisional
+                } else {
+                    continue
+                }
+                guard travel > 0, TravelPlausibility.isPlausibleTravelTime(minutes: travel) else { continue }
+            }
+            if let found = segment(eventID: leg.eventID, arrival: leg.arrival, travel: travel, origin: leg.origin, source: source) {
+                result.append(found)
+            }
+        }
+
+        // A manual time needs no trip: events without a place, online events and events without a home address.
+        let places = events.filter { event in
+            !event.isAllDay && event.isBusy && event.start >= dayStart && event.start < dayEnd
+                && event.location.map(isPhysicalLocation) == true
+        }
+        for event in events where !event.isAllDay && event.isBusy && event.start >= dayStart && event.start < dayEnd {
+            guard case .fixed(let fixed)? = overrides[event.id], handled.insert(event.id).inserted else { continue }
+            let earlier = places.filter { $0.id != event.id && $0.end <= event.start }
+            let previous = earlier.max { $0.end != $1.end ? $0.end < $1.end : $0.start < $1.start }
+            let origin: TravelLeg.Origin
+            if let previous, event.start.timeIntervalSince(previous.end) <= TimeInterval(homeGapMinutes * 60) {
+                origin = .previousEvent(id: previous.id)
+            } else {
+                origin = .home
+            }
+            if let found = segment(eventID: event.id, arrival: event.start, travel: TravelOverrideRules.clampedFixedMinutes(fixed),
+                                   origin: origin, source: .manual) {
+                result.append(found)
+            }
+        }
+        return result.sorted { $0.range.upperBound != $1.range.upperBound ? $0.range.upperBound < $1.range.upperBound : $0.eventID < $1.eventID }
     }
 
     /// Rounds an estimated travel time up to 5 minutes; 0 when under 3 minutes.

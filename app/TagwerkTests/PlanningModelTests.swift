@@ -2043,14 +2043,14 @@ struct PlanningModelTests {
     // MARK: Travel time (#168)
 
     private func travelModel(_ estimator: FakeTravelEstimator = FakeTravelEstimator(), home: String? = "Musterstraße 1, Berlin",
-                             enabled: Bool = true) async -> (PlanningModel, FakeTravelEstimator) {
+                             enabled: Bool = true, serviceClock: (() -> Date)? = nil) async -> (PlanningModel, FakeTravelEstimator) {
         settings.homeAddress = home
         // As after the settings check: a home address that Apple Maps found carries its coordinates (Berlin).
         settings.homeLatitude = home == nil ? nil : 52.52
         settings.homeLongitude = home == nil ? nil : 13.405
         settings.travelTimeEnabled = enabled
         await taskList.reload()
-        let service = TravelTimeService(estimator: estimator, cacheURL: nil, now: testNow)
+        let service = TravelTimeService(estimator: estimator, cacheURL: nil, now: serviceClock ?? testNow)
         let model = PlanningModel(taskList: taskList, calendarStore: calendarStore, reminderStore: accessStore,
                                   planStore: planStore, efforts: RecurringEffortStore(context: container.mainContext),
                                   blocks: blocks, settings: settings, marks: EventMarkStore(context: container.mainContext),
@@ -2136,7 +2136,7 @@ struct PlanningModelTests {
         #expect(estimator.tripCalls.isEmpty)
     }
 
-    @Test func travel_withoutNetwork_keepsCapacityLikeWithoutTravel() async throws {
+    @Test func travel_placeNotFound_keepsCapacityLikeWithoutTravel() async throws {
         calendarStore.storedEvents = [meeting()]
         let estimator = FakeTravelEstimator()
         estimator.failingTexts = ["Büro, Berlin"]
@@ -2145,6 +2145,140 @@ struct PlanningModelTests {
         #expect(await model.refreshTravelTimes() == false)
         #expect(model.days.first?.capacity == before)
         #expect(model.days.first?.travel.isEmpty == true)
+    }
+
+    // MARK: Travel time without network (F2)
+
+    @Test func travel_withoutNetwork_showsAProvisionalBlockThatCounts() async throws {
+        calendarStore.storedEvents = [meeting()]
+        let estimator = FakeTravelEstimator()
+        estimator.isOffline = true
+        let (model, _) = await travelModel(estimator)
+        let before = try #require(model.days.first?.capacity)
+        #expect(await model.refreshTravelTimes())
+        let segment = try #require(model.days.first?.travel.first)
+        #expect(segment.source == .provisional)
+        #expect(segment.minutes == 30)
+        #expect(segment.range == 810..<840)
+        let after = try #require(model.days.first?.capacity)
+        #expect(before.availableMinutes - after.availableMinutes == 30)
+        let input = try #require(model.days.first?.planInput)
+        #expect(input.busy.contains(810..<840))
+        #expect(input.events.contains { $0.travel && $0.title == "Fahrzeit" })
+        // The same failure again neither reloads nor asks again right away.
+        let calls = estimator.tripCalls.count + estimator.geocodeCalls.count
+        #expect(await model.refreshTravelTimes() == false)
+        #expect(estimator.tripCalls.count + estimator.geocodeCalls.count == calls)
+        #expect(model.days.first?.travel.count == 1)
+    }
+
+    @Test func travel_estimateIsReplacedWhenTheNetworkIsBack() async throws {
+        calendarStore.storedEvents = [meeting()]
+        final class Clock: @unchecked Sendable { var now = testNow() }
+        let clock = Clock()
+        let estimator = FakeTravelEstimator()
+        estimator.isOffline = true
+        let (model, _) = await travelModel(estimator, serviceClock: { clock.now })
+        #expect(await model.refreshTravelTimes())
+        #expect(model.days.first?.travel.first?.source == .provisional)
+        estimator.isOffline = false
+        clock.now = clock.now.addingTimeInterval(TravelTimeService.transientRetryInterval + 1)
+        #expect(await model.refreshTravelTimes())
+        let segment = try #require(model.days.first?.travel.first)
+        #expect(segment.source == .automatic)
+        #expect(segment.minutes == 25)
+    }
+
+    // MARK: Manual travel time (F2)
+
+    @Test func manualTravelTime_none_removesTheBlockAndIsNotAsked() async throws {
+        calendarStore.storedEvents = [meeting()]
+        let (model, estimator) = await travelModel()
+        let event = try #require(model.days.first?.events.first)
+        await model.setTravelOverride(.none, for: event, series: false)
+        #expect(await model.refreshTravelTimes() == false)
+        #expect(model.days.first?.travel.isEmpty == true)
+        #expect(estimator.tripCalls.isEmpty)
+        #expect(estimator.geocodeCalls.isEmpty)
+    }
+
+    @Test func manualTravelTime_fixed_winsOverTheAutomaticValueAndCounts() async throws {
+        calendarStore.storedEvents = [meeting()]
+        let (model, _) = await travelModel()
+        await model.refreshTravelTimes()
+        let before = try #require(model.days.first?.capacity)
+        let event = try #require(model.days.first?.events.first)
+        await model.setTravelOverride(.fixed(minutes: 45), for: event, series: false)
+        let segment = try #require(model.days.first?.travel.first)
+        #expect(segment.source == .manual)
+        #expect(segment.minutes == 45)
+        #expect(segment.range == 795..<840)
+        let after = try #require(model.days.first?.capacity)
+        #expect(before.availableMinutes - after.availableMinutes == 20)
+        #expect(model.days.first?.planInput?.busy.contains(795..<840) == true)
+        // Back to automatic: the Apple Maps value is there again.
+        await model.setTravelOverride(.automatic, for: event, series: false)
+        #expect(model.days.first?.travel.first?.minutes == 25)
+        #expect(model.travelOverrideMode(for: event) == .automatic)
+    }
+
+    @Test func manualTravelTime_worksOfflineAndWithoutHomeAddress() async throws {
+        calendarStore.storedEvents = [meeting()]
+        let estimator = FakeTravelEstimator()
+        estimator.isOffline = true
+        let (model, _) = await travelModel(estimator, home: nil)
+        #expect(model.days.first?.travel.isEmpty == true)
+        let event = try #require(model.days.first?.events.first)
+        await model.setTravelOverride(.fixed(minutes: 20), for: event, series: false)
+        let segment = try #require(model.days.first?.travel.first)
+        #expect(segment.minutes == 20)
+        #expect(segment.source == .manual)
+        #expect(estimator.tripCalls.isEmpty)
+    }
+
+    @Test func manualTravelTime_forAnEventWithoutPlace_isHonoured() async throws {
+        calendarStore.storedEvents = [meeting(location: nil)]
+        let (model, _) = await travelModel()
+        let event = try #require(model.days.first?.events.first)
+        await model.setTravelOverride(.fixed(minutes: 10), for: event, series: false)
+        #expect(model.days.first?.travel.first?.minutes == 10)
+    }
+
+    @Test func manualTravelTime_isIgnoredWhileTravelIsOff() async throws {
+        calendarStore.storedEvents = [meeting()]
+        let (model, _) = await travelModel(enabled: false)
+        let event = try #require(model.days.first?.events.first)
+        await model.setTravelOverride(.fixed(minutes: 20), for: event, series: false)
+        #expect(model.days.first?.travel.isEmpty == true)
+        // The decision is kept for when the setting is switched on again.
+        #expect(model.travelOverrideMode(for: event) == .fixed(minutes: 20))
+    }
+
+    @Test func manualTravelTime_ofARepeatingEvent_appliesToOneOrAllFollowing() async throws {
+        var first = meeting("series|1800000000")
+        first.isRecurring = true
+        var second = meeting("series|1800604800")
+        second.isRecurring = true
+        second.start = first.start.addingTimeInterval(7 * 86_400)
+        second.end = first.end.addingTimeInterval(7 * 86_400)
+        var third = meeting("series|1801209600")
+        third.isRecurring = true
+        third.start = first.start.addingTimeInterval(14 * 86_400)
+        third.end = first.end.addingTimeInterval(14 * 86_400)
+        let (model, _) = await travelModel()
+        let store = TravelOverrideStore(context: container.mainContext)
+
+        store.set(.none, eventID: second.id, seriesID: "series", start: second.start, series: true)
+        #expect(model.travelOverrideMode(for: first) == .automatic)
+        #expect(model.travelOverrideMode(for: second) == .none)
+        #expect(model.travelOverrideMode(for: third) == .none)
+        // "Only this one" for the third occurrence beats the series.
+        store.set(.fixed(minutes: 15), eventID: third.id, seriesID: "series", start: third.start, series: false)
+        #expect(model.travelOverrideMode(for: third) == .fixed(minutes: 15))
+        #expect(model.travelOverrideMode(for: second) == .none)
+        // "Only this one: automatic" beats the series "none".
+        store.set(.automatic, eventID: third.id, seriesID: "series", start: third.start, series: false)
+        #expect(model.travelOverrideMode(for: third) == .automatic)
     }
 
     @Test func travel_lateValue_reloadsOnce() async {

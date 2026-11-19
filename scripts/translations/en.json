@@ -1832,10 +1832,13 @@
   "Auto": "Car",
   "Bus und Bahn": "Public transport",
   "Die Fahrzeit berechnet Apple Karten aus dem Ort des vorherigen Termins oder deiner Heimadresse. Dafür gehen Ort und Adresse an Apple. Tagwerk nutzt deinen Standort nicht. Ohne Netz oder ohne Ort gibt es keinen Puffer.": "Apple Maps calculates the travel time from the place of the previous event or from your home address. The place and the address are sent to Apple for this. Tagwerk does not use your location. Without a network or without a place, there is no buffer.",
+  "Die Fahrzeit berechnet Apple Karten aus dem Ort des vorherigen Termins oder deiner Heimadresse. Dafür gehen Ort und Adresse an Apple. Tagwerk nutzt deinen Standort nicht. Berechnete Werte bleiben gespeichert und gelten auch ohne Netz. Fehlt ein Wert und gibt es kein Netz, schätzt Tagwerk die Fahrzeit vorläufig: mit dem letzten bekannten Wert zum selben Ziel, sonst mit 30 Minuten. Ohne Ort gibt es keine Fahrzeit. Im Termin lässt sie sich auch von Hand festlegen.": "Apple Maps calculates the travel time from the place of the previous event or from your home address. The place and the address are sent to Apple for this. Tagwerk does not use your location. Calculated values stay stored and also apply without a network. If a value is missing and there is no network, Tagwerk estimates the travel time for now: with the last known value to the same destination, otherwise with 30 minutes. Without a place there is no travel time. You can also set it by hand in the event.",
   "Fahrrad": "Bicycle",
   "Fahrzeit %@ · ab Zuhause": "Travel time %@ · from home",
   "Fahrzeit %@ · ab vorherigem Termin": "Travel time %@ · from the previous event",
+  "Fahrzeit %@ · manuell": "Travel time %@ · manual",
   "Fahrzeit %lld Minuten %@, %@": "Travel time %lld minutes %@, %@",
+  "Fahrzeit %lld Minuten, manuell festgelegt": "Travel time %lld minutes, set manually",
   "Fahrzeit berücksichtigen": "Include travel time",
   "Fahrzeit · %@ %@ %@": "Travel time · %@ %@ %@",
   "Gefunden: %@": "Found: %@",
@@ -1891,5 +1894,11 @@
   "Tagwerk": "Tagwerk",
   "Tagwerk kann gerade nichts übernehmen.": "Tagwerk can’t take anything over right now.",
   "Wird gelesen …": "Reading …",
-  "Zu groß für Tagwerk (höchstens 25 MB)": "Too large for Tagwerk (at most 25 MB)"
+  "Zu groß für Tagwerk (höchstens 25 MB)": "Too large for Tagwerk (at most 25 MB)",
+  "%@ · geschätzt": "%@ · estimated",
+  "%@ · manuell": "%@ · manual",
+  "%@, geschätzt": "%@, estimated",
+  "Automatisch berechnet Apple Karten die Fahrzeit. „Keine“ und eine feste Zeit gelten nur in Tagwerk, auch ohne Netz, und haben Vorrang.": "Apple Maps calculates the travel time automatically. “None” and a fixed time apply only in Tagwerk, also without a network, and take precedence.",
+  "Feste Zeit": "Fixed time",
+  "~%@": "~%@"
 }

@@ -50,16 +50,27 @@ struct TravelRow: View {
     }
 }
 
-/// One line under "Ort" in the entry sheet: "Fahrzeit · 25 min mit dem Auto ab Zuhause"; nothing without a value.
+/// One row under "Ort" in the entry sheet: "Fahrzeit" with what applies now ("25 min mit dem Auto ab Zuhause", "~30 min ·
+/// geschätzt", "Keine", "25 min · manuell"). It opens `TravelOverrideView`, where the time can be set by hand. Shown for
+/// timed events while the setting "Fahrzeit berücksichtigen" is on.
 struct TravelInfoRow: View {
-    let eventID: String
+    let event: CalendarEvent
     let model: PlanningModel
 
     var body: some View {
-        if let segment = model.days.lazy.compactMap({ $0.travel.first { $0.eventID == eventID } }).first {
-            Label(TravelText.entryText(segment, transport: model.settings.travelTransport),
-                  systemImage: TravelText.symbol(model.settings.travelTransport))
-                .foregroundStyle(segment.isTight ? Color.orange : Color.secondary)
+        if model.settings.travelTimeEnabled, !event.isAllDay {
+            let transport = model.settings.travelTransport
+            let segment = model.days.lazy.compactMap { $0.travel.first { $0.eventID == event.id } }.first
+            NavigationLink {
+                TravelOverrideView(event: event, model: model)
+            } label: {
+                LabeledContent {
+                    Text(TravelText.overrideSummary(model.travelOverrideMode(for: event), segment: segment, transport: transport))
+                        .foregroundStyle(segment?.isTight == true ? Color.orange : Color.secondary)
+                } label: {
+                    Label("Fahrzeit", systemImage: TravelText.symbol(transport))
+                }
+            }
         }
     }
 }

@@ -73,6 +73,7 @@ struct BackupTests {
         context.insert(RecurringOccurrenceDone(reminderID: "rem-2", day: day))
         context.insert(DayLunchRecord(day: day, startMinutes: 750, minutes: 45))
         context.insert(EventAvailabilityMark(eventKey: "evt-2", seriesFrom: now, isFree: true))
+        context.insert(EventTravelOverride(TravelOverride(eventKey: "evt-2", seriesFrom: now, mode: .fixed(minutes: 35))))
         context.insert(EventMergeDecision(key: "merge-1", placeholderEventID: "evt-3", ruleTitle: "Vorlesung", ruleCalendarID: "cal-1", isMerged: true))
         let mark = EventDeadlineMark(eventKey: "evt-4", externalID: "ext-4", calendarID: "cal-2", title: "Klausur", start: now, isAllDay: true,
                                      isSeries: false, createdAt: now)
@@ -419,6 +420,37 @@ struct BackupTests {
         // The file knows nothing of reminder defaults, so they fall back to the ones derived from the lead time.
         #expect(target.settings.reminderDefaultsData == nil)
         #expect(target.settings.reminderDefaults == .legacy(leadTimeMinutes: target.settings.leadTimeMinutes))
+    }
+
+    // MARK: Manual travel time (F2)
+
+    @Test func backup_roundTripsManualTravelTimes() throws {
+        let context = source.mainContext
+        context.insert(EventTravelOverride(TravelOverride(eventKey: "evt-8|1800000000", seriesFrom: nil, mode: .none)))
+        context.insert(EventTravelOverride(TravelOverride(eventKey: "evt-9", seriesFrom: nil, mode: .automatic)))
+        try context.save()
+        let target = try makeTarget()
+        try target.service.restore(try target.service.inspect(try backup.makeBackupData()))
+        let restored = try target.container.mainContext.fetch(FetchDescriptor<EventTravelOverride>()).map(\.asOverride)
+        #expect(Set(restored.map(\.mode)) == [.fixed(minutes: 35), .none, .automatic])
+        #expect(restored.contains { $0.eventKey == "evt-2" && $0.seriesFrom != nil && $0.mode == .fixed(minutes: 35) })
+        #expect(restored.contains { $0.eventKey == "evt-8|1800000000" && $0.seriesFrom == nil && $0.mode == .none })
+    }
+
+    @Test func oldBackupWithoutManualTravelTimes_restores() throws {
+        let data = try backup.makeBackupData()
+        var object = try #require(try JSONSerialization.jsonObject(with: data) as? [String: Any])
+        var entities = try #require(object["entities"] as? [String: Any])
+        entities.removeValue(forKey: "eventTravelOverrides")
+        object["entities"] = entities
+        let old = try JSONSerialization.data(withJSONObject: object)
+        let target = try makeTarget()
+        target.container.mainContext.insert(EventTravelOverride(TravelOverride(eventKey: "left-over", seriesFrom: nil, mode: .none)))
+        try target.container.mainContext.save()
+        try target.service.restore(try target.service.inspect(old))
+        // The file stands for the state it was written in, which had no manual travel times.
+        #expect(try target.container.mainContext.fetchCount(FetchDescriptor<EventTravelOverride>()) == 0)
+        #expect(try target.container.mainContext.fetchCount(FetchDescriptor<EventAvailabilityMark>()) == 1)
     }
 
     // MARK: Focus timer data

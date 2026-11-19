@@ -56,34 +56,234 @@ struct TravelTimeServiceTests {
         #expect(service.cachedMinutes(for: [leg("e1"), leg("e2")], transport: .automobile) == ["e1": 25, "e2": 25])
     }
 
-    @Test func failedRequest_isNotCachedAndNotRetriedInSameSession() async {
+    @Test func notFound_isRememberedAndNotAskedAgain() async {
         estimator.failingTexts = ["Büro, Berlin"]
         let service = service(fileURL: fileURL)
         let trip = leg()
+        // "Not found" is no network problem: no provisional block, no reload.
         #expect(await service.fetchMissing(legs: [trip], transport: .automobile, home: home) == false)
-        #expect(service.cachedMinutes(for: [trip], transport: .automobile).isEmpty)
+        #expect(service.resolvedTimes(for: [trip], transport: .automobile) == ResolvedTravelTimes())
         let callsAfterFirst = estimator.tripCalls.count + estimator.geocodeCalls.count
         #expect(await service.fetchMissing(legs: [trip], transport: .automobile, home: home) == false)
         #expect(estimator.tripCalls.count + estimator.geocodeCalls.count == callsAfterFirst)
         #expect(service.revision == 0)
-        // A new session (network is back) tries again.
+        // The verdict survives a restart (the file holds it), so a start without network shows no provisional block either.
         estimator.failingTexts = []
+        estimator.isOffline = true
+        let nextSession = self.service(fileURL: fileURL)
+        #expect(await nextSession.fetchMissing(legs: [trip], transport: .automobile, home: home) == false)
+        #expect(nextSession.resolvedTimes(for: [trip], transport: .automobile) == ResolvedTravelTimes())
+        #expect(estimator.tripCalls.count + estimator.geocodeCalls.count == callsAfterFirst)
+    }
+
+    @Test func notFound_isAskedAgainAfterOneDay() async {
+        estimator.failingTexts = ["Büro, Berlin"]
+        let service = service(fileURL: fileURL)
+        let trip = leg()
+        _ = await service.fetchMissing(legs: [trip], transport: .automobile, home: home)
+        estimator.failingTexts = []
+        clock.now = clock.now.addingTimeInterval(TravelTimeCache.rejectedLifetime + 60)
         let nextSession = self.service(fileURL: fileURL)
         #expect(await nextSession.fetchMissing(legs: [trip], transport: .automobile, home: home))
         #expect(nextSession.cachedMinutes(for: [trip], transport: .automobile) == ["e1": 25])
     }
 
-    @Test func expiredEntry_isFetchedAgain() async {
+    @Test func notFound_replacesAnOldValue() async {
         let service = service()
         let trip = leg()
         _ = await service.fetchMissing(legs: [trip], transport: .automobile, home: home)
-        clock.now = clock.now.addingTimeInterval(13 * 86_400)
-        #expect(service.cachedMinutes(for: [trip], transport: .automobile) == ["e1": 25])
-        clock.now = clock.now.addingTimeInterval(2 * 86_400)
-        #expect(service.cachedMinutes(for: [trip], transport: .automobile).isEmpty)
+        clock.now = clock.now.addingTimeInterval(15 * 86_400)
+        estimator.minutes = 200  // implausible: the answer for the trip is now "no usable time"
+        #expect(await service.fetchMissing(legs: [trip], transport: .automobile, home: home))
+        #expect(service.resolvedTimes(for: [trip], transport: .automobile) == ResolvedTravelTimes())
+    }
+
+    @Test func oldEntry_staysUsableOffline_andIsRefreshedOnline() async {
+        let service = service()
+        let trip = leg()
+        _ = await service.fetchMissing(legs: [trip], transport: .automobile, home: home)
+        clock.now = clock.now.addingTimeInterval(30 * 86_400)
+        // Offline: the value of 30 days ago is still the value, not an estimate.
+        estimator.isOffline = true
+        #expect(await service.fetchMissing(legs: [trip], transport: .automobile, home: home) == false)
+        #expect(service.resolvedTimes(for: [trip], transport: .automobile) == ResolvedTravelTimes(minutes: ["e1": 25]))
+        // Online again, after the retry interval: a different answer replaces it.
+        estimator.isOffline = false
         estimator.minutes = 30
+        clock.now = clock.now.addingTimeInterval(TravelTimeService.transientRetryInterval + 1)
         #expect(await service.fetchMissing(legs: [trip], transport: .automobile, home: home))
         #expect(service.cachedMinutes(for: [trip], transport: .automobile) == ["e1": 30])
+    }
+
+    @Test func refreshWithTheSameValue_changesNothingVisible() async {
+        let service = service()
+        let trip = leg()
+        _ = await service.fetchMissing(legs: [trip], transport: .automobile, home: home)
+        let revision = service.revision
+        clock.now = clock.now.addingTimeInterval(15 * 86_400)
+        #expect(await service.fetchMissing(legs: [trip], transport: .automobile, home: home) == false)
+        #expect(service.revision == revision)
+        #expect(estimator.tripCalls.count == 2)
+        // The refresh restarted the clock of the entry: no new request right away.
+        #expect(await service.fetchMissing(legs: [trip], transport: .automobile, home: home) == false)
+        #expect(estimator.tripCalls.count == 2)
+    }
+
+    // MARK: Offline (F2)
+
+    @Test func offline_withoutAnyValue_givesAThirtyMinuteEstimate() async {
+        estimator.isOffline = true
+        let service = service()
+        let trip = leg()
+        #expect(service.resolvedTimes(for: [trip], transport: .automobile) == ResolvedTravelTimes())
+        #expect(await service.fetchMissing(legs: [trip], transport: .automobile, home: home))
+        #expect(service.resolvedTimes(for: [trip], transport: .automobile) == ResolvedTravelTimes(provisionalMinutes: ["e1": 30]))
+        #expect(service.cachedMinutes(for: [trip], transport: .automobile).isEmpty)
+        #expect(service.revision == 1)
+    }
+
+    @Test func offline_sameFailureAgain_doesNotReloadAndIsNotRetriedAtOnce() async {
+        estimator.isOffline = true
+        let service = service()
+        let trip = leg()
+        _ = await service.fetchMissing(legs: [trip], transport: .automobile, home: home)
+        let calls = estimator.tripCalls.count + estimator.geocodeCalls.count
+        #expect(await service.fetchMissing(legs: [trip], transport: .automobile, home: home) == false)
+        #expect(estimator.tripCalls.count + estimator.geocodeCalls.count == calls)
+        // After the interval it asks again; the same answer is no change, so no reload.
+        clock.now = clock.now.addingTimeInterval(TravelTimeService.transientRetryInterval + 1)
+        #expect(await service.fetchMissing(legs: [trip], transport: .automobile, home: home) == false)
+        #expect(estimator.tripCalls.count + estimator.geocodeCalls.count > calls)
+        #expect(service.revision == 1)
+        #expect(service.resolvedTimes(for: [trip], transport: .automobile).provisionalMinutes == ["e1": 30])
+    }
+
+    @Test func offline_estimateIsReplacedByTheFreshValueOnline() async {
+        estimator.isOffline = true
+        let service = service(fileURL: fileURL)
+        let trip = leg()
+        _ = await service.fetchMissing(legs: [trip], transport: .automobile, home: home)
+        estimator.isOffline = false
+        clock.now = clock.now.addingTimeInterval(TravelTimeService.transientRetryInterval + 1)
+        #expect(await service.fetchMissing(legs: [trip], transport: .automobile, home: home))
+        #expect(service.resolvedTimes(for: [trip], transport: .automobile) == ResolvedTravelTimes(minutes: ["e1": 25]))
+        #expect(service.revision == 2)
+    }
+
+    @Test func offline_usesTheLastKnownTimeToTheSameDestination() async {
+        let service = service()
+        let known = TravelLeg(eventID: "old", origin: .previousEvent(id: "x"), from: TravelPlace(text: "Kunde, Potsdam", latitude: 52.4, longitude: 13.06),
+                              to: TravelPlace(text: "Büro, Berlin"), arrival: clock.now.addingTimeInterval(3600))
+        estimator.minutes = 20
+        _ = await service.fetchMissing(legs: [known], transport: .automobile, home: home)
+        // A trip to the same destination from home: no value of its own, the network is gone.
+        estimator.isOffline = true
+        let trip = leg("e2", to: "Büro, Berlin")
+        #expect(await service.fetchMissing(legs: [trip], transport: .automobile, home: home))
+        #expect(service.resolvedTimes(for: [trip], transport: .automobile).provisionalMinutes == ["e2": 20])
+    }
+
+    @Test func offline_ignoresOtherDestinationsAndTransports() async {
+        let service = service()
+        estimator.minutes = 20
+        _ = await service.fetchMissing(legs: [leg("e1", to: "Büro, Berlin")], transport: .automobile, home: home)
+        _ = await service.fetchMissing(legs: [leg("e2", to: "Kunde, Potsdam")], transport: .walking, home: home)
+        estimator.isOffline = true
+        let otherDestination = leg("e3", to: "Uni, Berlin")
+        let otherTransport = leg("e4", to: "Büro, Berlin")
+        #expect(await service.fetchMissing(legs: [otherDestination], transport: .automobile, home: home))
+        #expect(await service.fetchMissing(legs: [otherTransport], transport: .transit, home: home))
+        #expect(service.resolvedTimes(for: [otherDestination], transport: .automobile).provisionalMinutes == ["e3": 30])
+        #expect(service.resolvedTimes(for: [otherTransport], transport: .transit).provisionalMinutes == ["e4": 30])
+    }
+
+    @Test func offline_afterRestart_keepsStoredValuesAndEstimatesTheRest() async {
+        let service = service(fileURL: fileURL)
+        let stored = leg("e1", to: "Büro, Berlin")
+        _ = await service.fetchMissing(legs: [stored], transport: .automobile, home: home)
+        estimator.isOffline = true
+        clock.now = clock.now.addingTimeInterval(40 * 86_400)
+        let restarted = self.service(fileURL: fileURL)
+        let fresh = leg("e2", to: "Kunde, Potsdam")
+        _ = await restarted.fetchMissing(legs: [stored, fresh], transport: .automobile, home: home)
+        let resolved = restarted.resolvedTimes(for: [stored, fresh], transport: .automobile)
+        #expect(resolved.minutes == ["e1": 25])
+        #expect(resolved.provisionalMinutes == ["e2": 30])
+    }
+
+    @Test func offlineLookup_isNotRememberedAsUnknownPlace() async {
+        // The place text cannot be looked up without network. That says nothing about the place.
+        estimator.isOffline = true
+        let service = service()
+        let trip = leg()
+        _ = await service.fetchMissing(legs: [trip], transport: .automobile, home: home)
+        estimator.isOffline = false
+        clock.now = clock.now.addingTimeInterval(TravelTimeService.transientRetryInterval + 1)
+        #expect(await service.fetchMissing(legs: [trip], transport: .automobile, home: home))
+        #expect(service.cachedMinutes(for: [trip], transport: .automobile) == ["e1": 25])
+    }
+
+    @Test func offline_unresolvableTrip_getsNoEstimate() async {
+        // No starting point with coordinates: not a network problem, the trip cannot be asked at all.
+        estimator.isOffline = true
+        let service = service()
+        let textOnlyHome = TravelPlace(text: "Zuhause, Berlin")
+        let trip = TravelLeg(eventID: "e1", origin: .home, from: textOnlyHome, to: TravelPlace(text: "Raum 2.14"),
+                             arrival: clock.now.addingTimeInterval(3600))
+        #expect(await service.fetchMissing(legs: [trip], transport: .automobile, home: textOnlyHome) == false)
+        #expect(service.resolvedTimes(for: [trip], transport: .automobile) == ResolvedTravelTimes())
+    }
+
+    // MARK: Cache
+
+    @Test func cache_readsOldEntriesWithoutRejectedField() throws {
+        let json = """
+        {"a|b|automobile": {"minutes": 15, "storedAt": "2026-01-01T10:00:00Z"},
+         "place|text:büro": {"latitude": 52.5, "longitude": 13.4, "storedAt": "2026-01-01T10:00:00Z"}}
+        """
+        try Data(json.utf8).write(to: fileURL)
+        let cache = TravelTimeCache(fileURL: fileURL)
+        #expect(cache.minutes(forTrip: "a|b|automobile") == 15)
+        #expect(!cache.isRejected(forTrip: "a|b|automobile"))
+        #expect(cache.entries.count == 2)
+        try? FileManager.default.removeItem(at: fileURL)
+    }
+
+    @Test func cache_rejectedTrip_hasNoMinutesButIsKnown() {
+        var cache = TravelTimeCache(fileURL: nil)
+        cache.storeRejected(forTrip: "a|b|automobile", now: clock.now)
+        #expect(cache.minutes(forTrip: "a|b|automobile") == nil)
+        #expect(cache.isRejected(forTrip: "a|b|automobile"))
+        #expect(!cache.needsRefresh(forTrip: "a|b|automobile", now: clock.now.addingTimeInterval(3600)))
+        #expect(cache.needsRefresh(forTrip: "a|b|automobile", now: clock.now.addingTimeInterval(TravelTimeCache.rejectedLifetime)))
+        cache.store(minutes: 10, forTrip: "a|b|automobile", now: clock.now)
+        #expect(cache.minutes(forTrip: "a|b|automobile") == 10)
+        #expect(!cache.isRejected(forTrip: "a|b|automobile"))
+    }
+
+    @Test func cache_needsRefresh_onlyAfterTheLifetime() {
+        var cache = TravelTimeCache(fileURL: nil)
+        #expect(cache.needsRefresh(forTrip: "a|b|automobile", now: clock.now))
+        cache.store(minutes: 10, forTrip: "a|b|automobile", now: clock.now)
+        #expect(!cache.needsRefresh(forTrip: "a|b|automobile", now: clock.now.addingTimeInterval(TravelTimeCache.lifetime - 1)))
+        #expect(cache.needsRefresh(forTrip: "a|b|automobile", now: clock.now.addingTimeInterval(TravelTimeCache.lifetime)))
+        // Reading ignores the age.
+        #expect(cache.minutes(forTrip: "a|b|automobile") == 10)
+    }
+
+    @Test func cache_latestMinutesToDestination_picksTheNewestUsableOne() {
+        var cache = TravelTimeCache(fileURL: nil)
+        cache.store(minutes: 10, forTrip: "geo:1|text:büro|automobile", now: clock.now)
+        cache.store(minutes: 25, forTrip: "text:zuhause|text:büro|automobile", now: clock.now.addingTimeInterval(60))
+        cache.store(minutes: 0, forTrip: "text:nah|text:büro|automobile", now: clock.now.addingTimeInterval(120))
+        cache.storeRejected(forTrip: "text:ort|text:büro|automobile", now: clock.now.addingTimeInterval(180))
+        cache.store(minutes: 45, forTrip: "text:zuhause|text:büro|walking", now: clock.now.addingTimeInterval(240))
+        cache.store(minutes: 40, forTrip: "text:zuhause|text:anderes büro|automobile", now: clock.now.addingTimeInterval(300))
+        cache.store(latitude: 1, longitude: 2, forPlace: "place|text:büro", now: clock.now.addingTimeInterval(360))
+        #expect(cache.latestMinutes(toDestination: "text:büro", transport: .automobile) == 25)
+        #expect(cache.latestMinutes(toDestination: "text:büro", transport: .walking) == 45)
+        #expect(cache.latestMinutes(toDestination: "text:büro", transport: .transit) == nil)
+        #expect(cache.latestMinutes(toDestination: "text:unbekannt", transport: .automobile) == nil)
     }
 
     @Test func cache_dropsOldestBeyondLimit() {
@@ -93,9 +293,9 @@ struct TravelTimeServiceTests {
         }
         let now = clock.now.addingTimeInterval(1000)
         #expect(cache.entries.count == TravelTimeCache.maximumEntries)
-        #expect(cache.minutes(forTrip: "trip-0", now: now) == nil)
-        #expect(cache.minutes(forTrip: "trip-1", now: now) == 1)
-        #expect(cache.minutes(forTrip: "trip-\(TravelTimeCache.maximumEntries)", now: now) == TravelTimeCache.maximumEntries)
+        #expect(cache.minutes(forTrip: "trip-0") == nil)
+        #expect(cache.minutes(forTrip: "trip-1") == 1)
+        #expect(cache.minutes(forTrip: "trip-\(TravelTimeCache.maximumEntries)") == TravelTimeCache.maximumEntries)
     }
 
     @Test func cache_roundTripsThroughFile() {
@@ -104,7 +304,7 @@ struct TravelTimeServiceTests {
         cache.store(latitude: 52.5, longitude: 13.4, forPlace: "place|text:büro", now: clock.now)
         cache.save()
         let loaded = TravelTimeCache(fileURL: fileURL)
-        #expect(loaded.minutes(forTrip: "a|b|automobile", now: clock.now) == 15)
+        #expect(loaded.minutes(forTrip: "a|b|automobile") == 15)
         let place = loaded.coordinates(forPlace: "place|text:büro", now: clock.now)
         #expect(place?.latitude == 52.5)
         #expect(place?.longitude == 13.4)
@@ -165,9 +365,11 @@ struct TravelTimeServiceTests {
         #expect(service.cachedMinutes(for: [trip], transport: .automobile).isEmpty)
         #expect(estimator.tripCalls.isEmpty)
         #expect(service.revision == 0)
-        // Neither the place nor the trip reached the file: a new session starts without them.
-        #expect(TravelTimeCache(fileURL: fileURL).entries.isEmpty)
-        // Failed for the session like other failures: no second lookup.
+        // Neither the place nor a time reached the file; only the verdict for the trip did.
+        let stored = TravelTimeCache(fileURL: fileURL)
+        #expect(stored.entries.values.allSatisfy { $0.rejected == true && $0.minutes == nil && $0.latitude == nil })
+        #expect(stored.entries.count == 1)
+        // Remembered like other "not found" answers: no second lookup.
         #expect(await service.fetchMissing(legs: [trip], transport: .automobile, home: home) == false)
         #expect(estimator.geocodeCalls == ["Bibliothek"])
     }
@@ -244,8 +446,10 @@ struct TravelTimeServiceTests {
         #expect(await service.fetchMissing(legs: [trip], transport: .automobile, home: home) == false)
         #expect(service.cachedMinutes(for: [trip], transport: .automobile).isEmpty)
         #expect(service.revision == 0)
-        #expect(TravelTimeCache(fileURL: fileURL).entries.isEmpty)
-        // Not retried in the same session.
+        let trips = TravelTimeCache(fileURL: fileURL).entries.filter { !$0.key.hasPrefix("place|") }
+        #expect(trips.count == 1)
+        #expect(trips.values.allSatisfy { $0.rejected == true && $0.minutes == nil })
+        // Not asked again.
         #expect(await service.fetchMissing(legs: [trip], transport: .automobile, home: home) == false)
         #expect(estimator.tripCalls.count == 1)
     }
