@@ -24,6 +24,10 @@ final class AppEnvironment {
     /// "Mit ChatGPT sortieren"; sends item names only after consent and on the user's tap.
     let shoppingSorter: ShoppingSorter
     let recipeImporter: RecipeImporter
+    /// Items the share extension left for the app (#165); read when the app becomes active, confirmed by the user.
+    let shareInbox: ShareInboxModel
+    /// "Mit ChatGPT zusammenfassen" on a shared mail (#166); sends only after consent and on the user's tap.
+    let mailSummarizer: MailSummarizer
     /// Notes stored on this device only (phase 5); never sent to ChatGPT.
     let notes: NoteStore
     let backup: BackupService
@@ -120,7 +124,7 @@ final class AppEnvironment {
          health: (any HealthStoring)? = nil, snapshotWriter: WidgetSnapshotWriter? = nil,
          reminderStore: (any ReminderStore)? = nil, eventSearcher: (any EventSearching)? = nil,
          focusNotificationCenter: (any FocusNotificationCenter)? = nil,
-         travelTimes: TravelTimeService? = nil) throws {
+         travelTimes: TravelTimeService? = nil, shareInbox: ShareInbox? = nil) throws {
         self.modelContainer = modelContainer
         self.snapshotWriter = snapshotWriter ?? WidgetSnapshotWriter(directory: nil, reload: {})
         let context = modelContainer.mainContext
@@ -263,6 +267,9 @@ final class AppEnvironment {
                                              hasConsent: { settings.shoppingSortConsent })
         self.recipeImporter = RecipeImporter(responder: ai.client, model: { try await ai.selectedModel() },
                                              hasConsent: { settings.shoppingRecipeConsent })
+        self.shareInbox = ShareInboxModel(inbox: shareInbox, isSetupCompleted: { settings.setupCompleted })
+        self.mailSummarizer = MailSummarizer(responder: ai.client, model: { try await ai.selectedModel() },
+                                             hasConsent: { settings.mailSummaryConsent })
         let planning = self.planning
         let localTasks = LocalTaskProvider(context: context)
         self.routines = RoutinesModel(
@@ -317,6 +324,24 @@ final class AppEnvironment {
             if !taskList.items.contains(where: { $0.id == id }) { await loadTasksInBackground() }
             await taskList.complete(id)
         }
+    }
+
+    /// The model of the sheet "Mail zu Aufgabe" for a shared item: the mail if the extension parsed one, else its text.
+    func makeMailTaskModel(for item: ShareInboxItem) -> MailTaskModel {
+        let settings = self.settings
+        let consent: @MainActor () -> Bool = { settings.mailSummaryConsent }
+        let grant: @MainActor () -> Void = { settings.mailSummaryConsent = true }
+        if let mail = item.mail {
+            return MailTaskModel(mail: mail, summarizer: mailSummarizer, hasConsent: consent, grantConsent: grant)
+        }
+        return makeMailTaskModel(text: item.text ?? item.title)
+    }
+
+    /// The model for a mail copied as text (selected in Mail, or pasted from the clipboard).
+    func makeMailTaskModel(text: String) -> MailTaskModel {
+        let settings = self.settings
+        return MailTaskModel(text: text, summarizer: mailSummarizer, hasConsent: { settings.mailSummaryConsent },
+                             grantConsent: { settings.mailSummaryConsent = true })
     }
 
     /// A model for the suggestions of one thoughts note; the sheet drops it when it closes (design §9.3).

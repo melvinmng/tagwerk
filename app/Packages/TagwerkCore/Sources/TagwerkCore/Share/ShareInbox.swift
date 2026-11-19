@@ -87,6 +87,13 @@ public final class ShareInbox {
         try? save(item)
     }
 
+    /// Starts the offers again ("Übernehmen" in the list of parked items); does nothing for an unknown ID.
+    public func resetOffers(_ id: UUID) {
+        guard var item = load(id) else { return }
+        item.offeredCount = 0
+        try? save(item)
+    }
+
     /// Deletes the item and its files.
     public func remove(_ id: UUID) {
         try? fileManager.removeItem(at: jsonURL(for: id))

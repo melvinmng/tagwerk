@@ -105,6 +105,15 @@ final class ShareInboxTests {
         #expect(inbox.pending().count == 1)
     }
 
+    @Test func resetOffers_startsAgain() throws {
+        let inbox = makeInbox()
+        let stored = try inbox.write(item("x"))
+        inbox.markOffered(stored.id)
+        inbox.markOffered(stored.id)
+        inbox.resetOffers(stored.id)
+        #expect(inbox.pending().first?.offeredCount == 0)
+    }
+
     @Test func filesAreCopiedNotMoved() throws {
         let inbox = makeInbox()
         let source = try makeSourceFile("c.png", bytes: 42)
