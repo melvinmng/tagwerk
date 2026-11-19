@@ -403,7 +403,7 @@ Dem Umsetzenden überlassen: Ordnerstruktur innerhalb von `Search/`, Namen der T
 Stand 2026-11-19. Die Umsetzung steht auf dem Branch `feat/search-issues-planning`; Einzelheiten, Entscheidungen und offene Punkte stehen im Abschnitt „Suche“ von `../2026-11-19-overnight-log.md`.
 
 **Abweichungen vom Spec.**
-- Titelkandidaten in „Planen“ folgen dem Formatter („Do. 19. Nov.“, „Nov“) statt der festen Schreibweise aus §6.1.
+- Titel in „Planen“: Am iPhone-17-Simulator bekam `ViewThatFits` im Leisten-Eintrag keine nutzbare Breite (es wählte immer die kürzeste Form). Gebaut ist deshalb der Rückfall aus §6.1 in angepasster Form: Tagesansicht mittlere Form, Woche und Monat volle Form, bei Schriftgrößen der Bedienungshilfen die kürzeste. Die Kandidaten folgen dem Formatter („Do. 19. Nov.“, „Nov“) statt der Schreibweise aus §6.1.
 - Notizen und Einkaufsliste öffnen in eigenen Blättern mit eigenem `NavigationStack` am Suchblatt; beide Phase-5-Ansichten sind dafür unverändert.
 - Das Menü einer offenen Aufgabe ist gekürzt (Öffnen, Im Plan/In Aufgaben zeigen, Erledigt); der volle `TaskContextMenu` fehlt.
 - Das Werkzeug `search` liefert von Notizfeldern nur `matchedIn`, nie Ausschnitte; ohne Kalenderzugriff meldet es `calendarAccess: false`.
@@ -414,7 +414,7 @@ Stand 2026-11-19. Die Umsetzung steht auf dem Branch `feat/search-issues-plannin
 | Prüfung | Ergebnis |
 |---|---|
 | Terminabruf 18 Monate (eigener Store), Sicht auf Änderungen des ersten Stores | offen |
-| Titelbreite „Planen“, Standard- und größte Schrift | offen (Simulator iPhone 17, Standardschrift: lange Form passt) |
+| Titelbreite „Planen“, Standard- und größte Schrift | teilweise: Simulator iPhone 17 zeigte, dass `ViewThatFits` in der Leiste nicht greift (Rückfall gebaut); iPhone 16 Pro und größte Schrift offen |
 | GitHub: 30 `repo:`-Angaben, private Repositories | offen |
 | Erledigte Erinnerungen: Dauer über 12 Monate, wiederkehrende Vorkommen | offen |
 | Blatt über Blatt, „Im Plan zeigen“ aus dem inneren Blatt | offen |
