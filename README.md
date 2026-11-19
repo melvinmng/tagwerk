@@ -141,7 +141,14 @@ Der Tab **Planen** zeigt Tag, Woche oder Monat. Der **Arbeitstag** einer Aufgabe
 - [`docs/superpowers/`](docs/superpowers/) enthält Entwürfe und Implementierungspläne.
 - [`spike/`](spike/) ist der Machbarkeitsprototyp aus Phase 1.
 
-Die Tests verwenden Xcode 27.2, XcodeGen 2.46 und einen iOS-Simulator **iPhone 18 Pro**. Für die Simulator-Tests genügt die heruntergeladene iOS-Simulatorlaufzeit in Xcode.
+Die Tests verwenden Xcode 27.2, XcodeGen 2.46 und einen iOS-Simulator vom Typ **iPhone 18 Pro**. Für die Simulator-Tests genügt die heruntergeladene iOS-Simulatorlaufzeit in Xcode.
+
+Jeder Checkout (Hauptordner oder Worktree) testet mit eigenem Simulator, eigenem DerivedData-Ordner und eigenen Logs, damit mehrere Checkouts gleichzeitig testen können. Die Einstellungen stehen in [`scripts/test-env.sh`](scripts/test-env.sh):
+
+- Beim ersten Lauf legt `test-all.sh` den Simulator „Tagwerk Tests &lt;Checkout&gt;“ an.
+- `TAGWERK_TEST_SIMULATOR` wählt stattdessen einen vorhandenen Simulator (Name oder UDID).
+- `TAGWERK_TEST_DERIVED_DATA` setzt einen anderen DerivedData-Ordner.
+- Nach dem Entfernen eines Worktrees bleiben Simulator und `~/Library/Developer/Tagwerk/DerivedData-tests-<Checkout>` liegen; sie lassen sich mit `xcrun simctl delete "Tagwerk Tests <Checkout>"` bzw. durch Löschen des Ordners entfernen.
 
 ```zsh
 app/test-all.sh          # Swift package and app tests in the simulator
