@@ -1,4 +1,5 @@
 import Foundation
+import OSLog
 import RemindersKit
 import TagwerkCore
 
@@ -20,6 +21,7 @@ final class EffortTracker {
     private let calendarStore: CalendarStore
     private let settings: AppSettings
     private let now: () -> Date
+    private let log = Logger(subsystem: "local.tagwerk", category: "effort")
 
     init(store: FocusStore, blocks: BlockPlanner, calendarStore: CalendarStore, settings: AppSettings,
          now: @escaping () -> Date = Date.init) {
@@ -43,12 +45,9 @@ final class EffortTracker {
                                           focusedSeconds: focusedSeconds, since: previous)
         var trimmed: (eventID: String, oldEnd: Date, newEnd: Date)?
         if let trim = outcome.trim, let block = events.first(where: { $0.id == trim.blockID }) {
-            do {
-                let updated = try calendarStore.moveBlock(id: block.id, to: block.start, end: trim.newEnd, expectedVersion: block.version)
-                trimmed = (updated.id, trim.oldEnd, updated.end)
-            } catch {
-                // The block changed in the meantime or cannot be written: it stays as it is; the sample still counts.
-            }
+            if let updated = cut(block, to: trim.newEnd) { trimmed = (updated.id, trim.oldEnd, updated.end) }
+        } else if outcome.trim == nil, !outcome.tooShortToTrim {
+            log.debug("No block cut for \(key, privacy: .private): \(events.count) blocks found, none running or none to shorten")
         }
         guard let minutes = outcome.actualMinutes, let method = outcome.method else { return trimmed != nil }
         let sample = EffortSampleRecord(taskKey: key, source: item.id.source, labels: item.labels ?? [],
@@ -59,6 +58,26 @@ final class EffortTracker {
         sample.trimmedNewEnd = trimmed?.newEnd
         store.add(sample)
         return trimmed != nil
+    }
+
+    /// Writes the new end of a block. A write that fails only because the version moved on (a sync touched the event) is
+    /// repeated once against the current event, as long as its start and end are still the ones that were read. A block
+    /// somebody changed stays as it is. The reason of every failure is logged, because the block just stays long
+    /// otherwise.
+    private func cut(_ block: CalendarEvent, to newEnd: Date) -> CalendarEvent? {
+        do {
+            return try calendarStore.moveBlock(id: block.id, to: block.start, end: newEnd, expectedVersion: block.version)
+        } catch {
+            log.error("Block cut failed: \(String(describing: error), privacy: .public)")
+            guard let current = calendarStore.event(id: block.id), current.version != block.version,
+                  current.start == block.start, current.end == block.end else { return nil }
+            do {
+                return try calendarStore.moveBlock(id: block.id, to: block.start, end: newEnd, expectedVersion: current.version)
+            } catch {
+                log.error("Block cut failed again: \(String(describing: error), privacy: .public)")
+                return nil
+            }
+        }
     }
 
     /// "Rückgängig": the newest sample of the task goes, and a block cut for it gets its old end back, but only while

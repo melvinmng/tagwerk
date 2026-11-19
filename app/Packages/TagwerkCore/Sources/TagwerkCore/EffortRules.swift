@@ -53,10 +53,15 @@ public enum EffortRules {
     ///   - completedAt: when the task was ticked off.
     ///   - blocks: blocks of the task in the plan calendar.
     ///   - focusedSeconds: focus time of the task since the previous completion.
-    ///   - since: the previous completion of the same task; blocks that started before it were counted then.
+    ///   - since: the previous completion of the same task; blocks that started before it were counted then. The block
+    ///     that is running at `completedAt` is always considered.
     public static func outcome(completedAt: Date, blocks: [EffortBlock], focusedSeconds: Int, since: Date? = nil) -> EffortOutcome {
-        let relevant = blocks.filter { since == nil || $0.start >= since! }.sorted { $0.start < $1.start }
-        let running = relevant.first { $0.start <= completedAt && completedAt < $0.end }
+        let ordered = blocks.sorted { $0.start < $1.start }
+        // The running block is looked up among all blocks. A block that is running now cannot have been counted at the
+        // previous completion (that would have ended it), so a measurement left behind (task reopened outside Tagwerk)
+        // must never hide it from the cut.
+        let running = ordered.first { $0.start <= completedAt && completedAt < $0.end }
+        let relevant = ordered.filter { since == nil || $0.start >= since! || $0.id == running?.id }
         let trimDecision = running.map { trim(running: $0, completedAt: completedAt) }
 
         if focusedSeconds >= minimumFocusSeconds {

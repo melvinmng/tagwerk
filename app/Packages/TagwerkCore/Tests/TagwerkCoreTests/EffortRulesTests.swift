@@ -96,4 +96,13 @@ struct EffortRulesTests {
         #expect(result.actualMinutes == 45)
         #expect(result.method == .blocks)
     }
+
+    @Test func runningBlock_isCutEvenWhenAnOlderMeasurementStartsInsideIt() {
+        // A completion at 14:05 stayed behind (the task was reopened outside Tagwerk). The block 14:00-15:00 that is
+        // running now started before it, but it is the block of this completion and must still be cut.
+        let result = EffortRules.outcome(completedAt: completed(14, 20), blocks: [block("b", 19, (14, 0), (15, 0))],
+                                         focusedSeconds: 0, since: completed(14, 5))
+        #expect(result.trim == BlockTrim(blockID: "b", newEnd: completed(14, 20), oldEnd: completed(15, 0)))
+        #expect(result.actualMinutes == 20)
+    }
 }

@@ -95,11 +95,15 @@ struct EffortTrackerTests {
     @Test func trimConflict_keepsTheBlockButRecordsTheSample() async throws {
         let item = task()
         let block = try addBlock(item, from: (14, 0), to: (15, 0))
-        // The calendar changes between reading the block and writing the cut.
-        calendarStore.beforeUpdate = { [calendarStore] in calendarStore.storedEvents[0].version = "edited-elsewhere" }
+        // Somebody moves the end between reading the block and writing the cut.
+        let movedEnd = at(18, 15, 30)
+        calendarStore.beforeUpdate = { [calendarStore] in
+            calendarStore.storedEvents[0].version = "edited-elsewhere"
+            calendarStore.storedEvents[0].end = movedEnd
+        }
         let trimmed = await tracker().didComplete(item, at: at(18, 14, 20))
         #expect(!trimmed)
-        #expect(calendarStore.event(id: block.id)?.end == at(18, 15, 0))
+        #expect(calendarStore.event(id: block.id)?.end == at(18, 15, 30))
         #expect(samples.first?.actualMinutes == 20)
         #expect(samples.first?.trimmedEventID == nil)
     }
