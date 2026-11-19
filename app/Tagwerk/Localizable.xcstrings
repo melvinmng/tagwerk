@@ -152,6 +152,22 @@
         }
       }
     },
+    "%@ an %@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@ an %2$@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ to %2$@"
+          }
+        }
+      }
+    },
     "%@ bis %@ · ganztägig": {
       "localizations": {
         "de": {
@@ -290,6 +306,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "%@ open"
+          }
+        }
+      }
+    },
+    "%@ ohne Zuweisung": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ unassigned"
           }
         }
       }
@@ -875,6 +901,46 @@
         }
       }
     },
+    "%lld Personen": {
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld person"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld people"
+                }
+              }
+            }
+          }
+        },
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Person"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Personen"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "%lld Projekte": {
       "localizations": {
         "en": {
@@ -1301,6 +1367,46 @@
           "stringUnit": {
             "state": "translated",
             "value": "%lld left from today"
+          }
+        }
+      }
+    },
+    "%lld weiteren Personen": {
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld other person"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld other people"
+                }
+              }
+            }
+          }
+        },
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld weiteren Person"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld weiteren Personen"
+                }
+              }
+            }
           }
         }
       }
@@ -2908,12 +3014,32 @@
         }
       }
     },
-    "Das Issue wird dir zugewiesen.": {
+    "Das Issue wird %@ zugewiesen und erscheint danach nicht in deinen Aufgaben.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "The issue will be assigned to you."
+            "value": "The issue will be assigned to %@ and will not appear in your tasks."
+          }
+        }
+      }
+    },
+    "Das Issue wird %@ zugewiesen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The issue will be assigned to %@."
+          }
+        }
+      }
+    },
+    "Das Issue wird niemandem zugewiesen und erscheint danach nicht in deinen Aufgaben.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The issue will not be assigned to anyone and will not appear in your tasks."
           }
         }
       }
@@ -4874,6 +5000,26 @@
         }
       }
     },
+    "Ich": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Me"
+          }
+        }
+      }
+    },
+    "Ich (%@)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Me (%@)"
+          }
+        }
+      }
+    },
     "Im Chat startet der Knopf rechts neben dem leeren Feld den Sprechmodus. Tagwerk sendet nach der Pause, liest die Antwort vor und hört danach wieder zu. Änderungen führt es erst aus, wenn du sie bestätigst. „Änderungen ansagen“ gilt auch hier.": {
       "localizations": {
         "en": {
@@ -5912,6 +6058,16 @@
         }
       }
     },
+    "Mehrere möglich · höchstens 10": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Multiple allowed · up to 10"
+          }
+        }
+      }
+    },
     "Mehrfachauswahl": {
       "localizations": {
         "en": {
@@ -6052,12 +6208,12 @@
         }
       }
     },
-    "Mindestens ein Projekt wählen. Das Issue wird dir zugewiesen.": {
+    "Mindestens ein Projekt wählen.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Choose at least one project. The issue will be assigned to you."
+            "value": "Choose at least one project."
           }
         }
       }
@@ -6595,6 +6751,16 @@
         }
       }
     },
+    "Niemand": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No one"
+          }
+        }
+      }
+    },
     "Noch einzuplanen": {
       "localizations": {
         "en": {
@@ -7041,6 +7207,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Paused, heard nothing"
+          }
+        }
+      }
+    },
+    "Personen konnten nicht geladen werden": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Could not load people"
+          }
+        }
+      }
+    },
+    "Personen werden geladen …": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Loading people …"
           }
         }
       }
@@ -9554,6 +9740,16 @@
         }
       }
     },
+    "Zugewiesen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Assignees"
+          }
+        }
+      }
+    },
     "Zugriff": {
       "localizations": {
         "en": {
@@ -9848,6 +10044,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "this device"
+          }
+        }
+      }
+    },
+    "dir": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "you"
           }
         }
       }

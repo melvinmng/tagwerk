@@ -14,6 +14,9 @@ struct NewTaskSheet: View {
         let available = Set(Self.availableTargets(in: model))
         _target = State(initialValue: model.filter.creationTarget(available: available))
         _priority = State(initialValue: model.filter.creationTarget(available: available) == .reminders ? .p4 : nil)
+        // The default is always the signed-in user, never a remembered choice.
+        let login = (model.provider(for: .github) as? GitHubTaskProvider)?.login
+        _assignees = State(initialValue: Set([login].compactMap { $0 }))
     }
     @State private var title = ""
     @State private var notes = ""
@@ -28,11 +31,21 @@ struct NewTaskSheet: View {
     @State private var projectIDs: Set<String> = []
     @State private var projectsEdited = false
     @State private var gitHubError: String?
+    @State private var assignees: Set<String>
+    @State private var assigneeLoad: AssigneeLoad = .idle
     @State private var recurrence: Recurrence?
 
     private var gitHub: GitHubTaskProvider? { model.provider(for: .github) as? GitHubTaskProvider }
 
     private var targets: [TaskSource] { Self.availableTargets(in: model) }
+
+    /// People offered for the chosen repository: the signed-in user first, also while loading or after a failed load.
+    private var assigneeCandidates: [String] {
+        AssigneeSelection.ordered(candidates: assigneeLoad.logins(for: repository), me: gitHub?.login)
+    }
+
+    /// The chosen people in menu order.
+    private var selectedAssignees: [String] { assigneeCandidates.filter(assignees.contains) }
 
     /// Sources a task can be created in right now (registered and loaded; Local always).
     static func availableTargets(in model: TaskListModel) -> [TaskSource] {
@@ -74,16 +87,17 @@ struct NewTaskSheet: View {
                         }
                         ProjectSelectionRow(projects: (catalog?.projects ?? []).map { (id: $0.id, title: $0.title) },
                                             selection: $projectIDs, edited: $projectsEdited)
+                        AssigneeSelectionRow(candidates: assigneeCandidates, me: gitHub?.login, load: assigneeLoad,
+                                             selection: $assignees, isEnabled: repository != nil)
                     } footer: {
                         if let gitHubError {
                             Text(gitHubError)
-                        } else if repository != nil, projectIDs.isEmpty, !(catalog?.projects.isEmpty ?? true) {
-                            Text("Mindestens ein Projekt wählen. Das Issue wird dir zugewiesen.")
                         } else {
-                            Text("Das Issue wird dir zugewiesen.")
+                            Text(gitHubFooter)
                         }
                     }
                     .task(id: target) { await loadCatalog() }
+                    .task(id: repository) { await loadAssignees() }
                     .onChange(of: repository) { _, repo in
                         // Preselect the projects linked to the chosen repository.
                         guard let repo, let catalog else { return }
@@ -155,7 +169,8 @@ struct NewTaskSheet: View {
             subContainerIDs: target == .github ? (catalog?.projects ?? []).map(\.id).filter(projectIDs.contains) : [],
             recurrence: RecurrenceAvailability.draftRecurrence(
                 recurrence, target: target,
-                due: hasDue ? DueDate(date: dueDate, includeTime: false, calendar: model.calendar) : nil)
+                due: hasDue ? DueDate(date: dueDate, includeTime: false, calendar: model.calendar) : nil),
+            assignees: target == .github ? selectedAssignees : nil
         )
         await model.create(draft, in: target)
         dismiss()
@@ -205,6 +220,26 @@ extension NewTaskSheet {
         case .reminders: String(localized: "Erinnerung")
         case .github: String(localized: "GitHub-Issue")
         }
+    }
+
+    /// Says before saving who gets the issue; a missing project choice comes first.
+    private var gitHubFooter: String {
+        let assignment = AssigneeSelection.footer(selected: selectedAssignees, me: gitHub?.login)
+        guard repository != nil, projectIDs.isEmpty, !(catalog?.projects.isEmpty ?? true) else { return assignment }
+        return String(localized: "Mindestens ein Projekt wählen.") + " " + assignment
+    }
+
+    /// Loads the assignable people of the chosen repository. Every repository change resets the choice to
+    /// the signed-in user, also after an own choice, so an issue never goes to the people of another repository.
+    private func loadAssignees() async {
+        assignees = Set([gitHub?.login].compactMap { $0 })
+        guard let repository, let gitHub else {
+            assigneeLoad = .idle
+            return
+        }
+        assigneeLoad = .loading(repository: repository)
+        let logins = await gitHub.assignableUsers(in: repository, maxAge: AppEnvironment.catalogMaxAge)
+        assigneeLoad = assigneeLoad.adopting(logins, for: repository, selected: self.repository)
     }
 
     private func loadCatalog() async {

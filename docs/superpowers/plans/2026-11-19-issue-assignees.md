@@ -406,7 +406,7 @@ struct AssigneeSelectionRow: View {
 
 Regeln der Zeile: wie `ProjectSelectionRow` (`Menu`, `Toggle`, `menuActionDismissBehavior(.disabled)`), Abschnittstitel „Mehrere möglich · höchstens 10“, nicht gewählte Schalter deaktiviert bei `!canAdd`, deaktivierte Hinweiszeile „Personen werden geladen …“ bzw. „Personen konnten nicht geladen werden“, VoiceOver-Label „Zugewiesen“, Wert als Liste, Hinweis „Mehrfachauswahl“. Im Blatt: `@State assignees: Set<String>` (Anfang `[login]`), `@State assigneeLoad`; `.task(id: repository)` setzt zuerst die Auswahl auf „Ich“ zurück, lädt und übernimmt über `adopting`; ohne Repository ist die Zeile deaktiviert; Fußtext: Katalogfehler, sonst (ggf. vorangestellt „Mindestens ein Projekt wählen.“) `AssigneeSelection.footer`. `save()`: `assignees:` = Auswahl in Menüreihenfolge, nur bei `target == .github`. „Ich“ steht auch dann zur Wahl, wenn GitHub mich nicht meldet (F5); nur ich zuweisbar → Menü bleibt aktiv (F3).
 
-- [ ] **Step 1: Tests schreiben** (`AssigneeSelectionTests`, `me = "octo"`):
+- [x] **Step 1: Tests schreiben** (`AssigneeSelectionTests`, `me = "octo"`):
   - `ordered_putsMeFirstThenAlphabeticalIgnoringCase`: `ordered(candidates: ["sam-dev", "Jonas-k", "octo", "lea-m"], me: "octo") == ["octo", "Jonas-k", "lea-m", "sam-dev"]`
   - `ordered_addsMeWhenGitHubOmitsMe`: `ordered(candidates: ["lea-m"], me: "octo") == ["octo", "lea-m"]`
   - `value_cases`: `[] → "Niemand"`, `["octo"] → "Ich"`, `["lea-m", "octo"] → "Ich, lea-m"`, drei → `"3 Personen"`
@@ -416,10 +416,10 @@ Regeln der Zeile: wie `ProjectSelectionRow` (`Menu`, `Toggle`, `menuActionDismis
   - `canAdd_stopsAtTen`: `canAdd(selectedCount: 9)`, `!canAdd(selectedCount: 10)`
   - `AssigneeLoadTests.staleResultIsDiscarded`: `AssigneeLoad.loading(repository: "a/x").adopting(["lea-m"], for: "a/x", selected: "a/y") == .loading(repository: "a/x")` (Review Focus 2)
   - `AssigneeLoadTests.nilResultFails`: `adopting(nil, for: "a/x", selected: "a/x") == .failed(repository: "a/x")`
-- [ ] **Step 2:** `APP AssigneeSelectionTests` → FAIL.
-- [ ] **Step 3:** Umsetzen; Texte mit Englisch eintragen (Spec §5.8; nach A5 „Das Issue wird %@ zugewiesen.“ → „The issue will be assigned to %@.“, „dir“ → „you“).
-- [ ] **Step 4:** `APP AssigneeSelectionTests`, `APP ProjectSelectionTests` → PASS; im Simulator Blatt öffnen: Zeile unter „Projekte“, Fußtext folgt der Auswahl.
-- [ ] **Step 5:** Commit `feat: choose assignees when creating an issue`.
+- [x] **Step 2:** `APP AssigneeSelectionTests` → FAIL.
+- [x] **Step 3:** Umsetzen; Texte mit Englisch eintragen (Spec §5.8; nach A5 „Das Issue wird %@ zugewiesen.“ → „The issue will be assigned to %@.“, „dir“ → „you“).
+- [x] **Step 4:** `APP AssigneeSelectionTests`, `APP ProjectSelectionTests` → PASS; im Simulator Blatt öffnen: Zeile unter „Projekte“, Fußtext folgt der Auswahl.
+- [x] **Step 5:** Commit `feat: choose assignees when creating an issue`.
 
 ---
 

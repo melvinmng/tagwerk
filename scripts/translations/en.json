@@ -1130,5 +1130,27 @@
   "Sprache Englisch, auf Deutsch wechseln": "Language English, switch to German",
   "Höchstens 10 Personen je Issue.": "At most 10 people per issue.",
   "#%lld angelegt, aber %@ konnte nicht zugewiesen werden.": "#%lld created, but %@ could not be assigned.",
-  "%@ konnte nicht zugewiesen werden.": "%@ could not be assigned."
+  "%@ konnte nicht zugewiesen werden.": "%@ could not be assigned.",
+  "Zugewiesen": "Assignees",
+  "Ich": "Me",
+  "Ich (%@)": "Me (%@)",
+  "Niemand": "No one",
+  "%lld Personen": {
+    "one": "%lld person",
+    "other": "%lld people"
+  },
+  "Mehrere möglich · höchstens 10": "Multiple allowed · up to 10",
+  "Personen werden geladen …": "Loading people …",
+  "Personen konnten nicht geladen werden": "Could not load people",
+  "Das Issue wird %@ zugewiesen.": "The issue will be assigned to %@.",
+  "Das Issue wird %@ zugewiesen und erscheint danach nicht in deinen Aufgaben.": "The issue will be assigned to %@ and will not appear in your tasks.",
+  "Das Issue wird niemandem zugewiesen und erscheint danach nicht in deinen Aufgaben.": "The issue will not be assigned to anyone and will not appear in your tasks.",
+  "%lld weiteren Personen": {
+    "one": "%lld other person",
+    "other": "%lld other people"
+  },
+  "dir": "you",
+  "%@ an %@": "%1$@ to %2$@",
+  "%@ ohne Zuweisung": "%@ unassigned",
+  "Mindestens ein Projekt wählen.": "Choose at least one project."
 }
