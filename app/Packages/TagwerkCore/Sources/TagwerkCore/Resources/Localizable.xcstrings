@@ -1,193 +1,169 @@
 {
-  "sourceLanguage" : "de",
-  "strings" : {
-    "%@ / %@ kcal · %@ / %@" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$@ / %2$@ kcal · %3$@ / %4$@"
+  "sourceLanguage": "de",
+  "strings": {
+    "%@ + %lld weitere": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ + %2$lld weitere"
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$@ / %2$@ kcal · %3$@ / %4$@"
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ + %2$lld more"
           }
         }
       }
     },
-    "%@ Schritte" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@ steps"
-          }
-        }
-      }
-    },
-    "%@ g" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@ g"
-          }
-        }
-      }
-    },
-    "%@ kcal" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@ kcal"
-          }
-        }
-      }
-    },
-    "%@ kcal · %@" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$@ kcal · %2$@"
+    "%@ / %@ kcal · %@ / %@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@ / %2$@ kcal · %3$@ / %4$@"
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$@ kcal · %2$@"
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ / %2$@ kcal · %3$@ / %4$@"
           }
         }
       }
     },
-    "%@ kcal · %@ · %@" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$@ kcal · %2$@ · %3$@"
+    "%@ Schritte": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ steps"
+          }
+        }
+      }
+    },
+    "%@ g": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ g"
+          }
+        }
+      }
+    },
+    "%@ kcal": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ kcal"
+          }
+        }
+      }
+    },
+    "%@ kcal · %@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@ kcal · %2$@"
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$@ kcal · %2$@ · %3$@"
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ kcal · %2$@"
           }
         }
       }
     },
-    "%@ l" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@ L"
-          }
-        }
-      }
-    },
-    "%@ um %@" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$@ um %2$@"
+    "%@ kcal · %@ · %@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@ kcal · %2$@ · %3$@"
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$@ at %2$@"
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ kcal · %2$@ · %3$@"
           }
         }
       }
     },
-    "%@ über Ziel" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@ over goal"
+    "%@ l": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ L"
           }
         }
       }
     },
-    "%lld Blöcke" : {
-      "localizations" : {
-        "de" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld Block"
+    "%@ um %@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@ um %2$@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ at %2$@"
+          }
+        }
+      }
+    },
+    "%@ über Ziel": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ over goal"
+          }
+        }
+      }
+    },
+    "%lld Blöcke": {
+      "localizations": {
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Block"
                 }
               },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld Blöcke"
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Blöcke"
                 }
               }
             }
           }
         },
-        "en" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld block"
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld block"
                 }
               },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld blocks"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "%lld Deadlines" : {
-      "localizations" : {
-        "de" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld Deadline"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld Deadlines"
-                }
-              }
-            }
-          }
-        },
-        "en" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld deadline"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld deadlines"
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld blocks"
                 }
               }
             }
@@ -195,79 +171,39 @@
         }
       }
     },
-    "%lld Mal" : {
-      "localizations" : {
-        "de" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld Mal"
+    "%lld Deadlines": {
+      "localizations": {
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Deadline"
                 }
               },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld Mal"
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Deadlines"
                 }
               }
             }
           }
         },
-        "en" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "once"
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld deadline"
                 }
               },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld times"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "%lld Termine" : {
-      "localizations" : {
-        "de" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld Termin"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld Termine"
-                }
-              }
-            }
-          }
-        },
-        "en" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld event"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld events"
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld deadlines"
                 }
               }
             }
@@ -275,39 +211,39 @@
         }
       }
     },
-    "%lld Trainings" : {
-      "localizations" : {
-        "de" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld Training"
+    "%lld Mal": {
+      "localizations": {
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Mal"
                 }
               },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld Trainings"
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Mal"
                 }
               }
             }
           }
         },
-        "en" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld workout"
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "once"
                 }
               },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld workouts"
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld times"
                 }
               }
             }
@@ -315,1412 +251,1708 @@
         }
       }
     },
-    "%lld h" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld h"
-          }
-        }
-      }
-    },
-    "%lld h %@" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$lld h %2$@"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$lld h %2$@"
-          }
-        }
-      }
-    },
-    "%lld h %lld min" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$lld h %2$lld min"
+    "%lld Minuten vorher": {
+      "localizations": {
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Minute vorher"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Minuten vorher"
+                }
+              }
+            }
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$lld h %2$lld min"
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld minute before"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld minutes before"
+                }
+              }
+            }
           }
         }
       }
     },
-    "%lld min" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld min"
-          }
-        }
-      }
-    },
-    "Abendessen" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dinner"
-          }
-        }
-      }
-    },
-    "Action Items" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Action items"
-          }
-        }
-      }
-    },
-    "Alle %lld Jahre am %@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Every %1$lld years on %2$@"
-          }
-        }
-      }
-    },
-    "Alle %lld Monate am %@ %@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Every %1$lld months on the %2$@ %3$@"
-          }
-        }
-      }
-    },
-    "Alle %lld Monate am %lld." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Every %1$lld months on day %2$lld"
-          }
-        }
-      }
-    },
-    "Alle %lld Tage" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Every %lld days"
-          }
-        }
-      }
-    },
-    "Alle %lld Wochen am %@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Every %1$lld weeks on %2$@"
-          }
-        }
-      }
-    },
-    "Allgemeine Stimmung" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "General mood"
-          }
-        }
-      }
-    },
-    "Aus Notion importiert" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Imported from Notion"
-          }
-        }
-      }
-    },
-    "Bett machen" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Make the bed"
-          }
-        }
-      }
-    },
-    "Bewegung" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Exercise"
-          }
-        }
-      }
-    },
-    "Bible Study" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bible Study"
-          }
-        }
-      }
-    },
-    "Brot & Backwaren" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bread & Bakery"
-          }
-        }
-      }
-    },
-    "Danach noch %@ zu viel." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Still %@ over afterward."
-          }
-        }
-      }
-    },
-    "Das Datum ist ungültig." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The date is invalid."
-          }
-        }
-      }
-    },
-    "Das verlängert die Arbeitszeit nicht." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "That doesn’t extend the working hours."
-          }
-        }
-      }
-    },
-    "Deadline %@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Deadline %@"
-          }
-        }
-      }
-    },
-    "Deadline %@, ganztägig" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Deadline %@, all day"
-          }
-        }
-      }
-    },
-    "Deadline war %@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Deadline was %@"
-          }
-        }
-      }
-    },
-    "Deadline war %@, ganztägig" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Deadline was %@, all day"
-          }
-        }
-      }
-    },
-    "Der Block liegt außerhalb der Arbeitszeit." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The block is outside working hours."
-          }
-        }
-      }
-    },
-    "Der Block liegt in der Mittagspause." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The block falls in the lunch break."
-          }
-        }
-      }
-    },
-    "Der Block überschneidet sich mit einem Termin oder dessen Puffer." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The block overlaps with an event or its buffer."
-          }
-        }
-      }
-    },
-    "Der Block überschneidet sich mit einem anderen Block." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The block overlaps with another block."
-          }
-        }
-      }
-    },
-    "Der Tag ist frei." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The day is free."
-          }
-        }
-      }
-    },
-    "Der Tag liegt außerhalb des Zeitraums." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The day is outside the period."
-          }
-        }
-      }
-    },
-    "Der Vorschlag liegt in der Vergangenheit." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The suggestion is in the past."
-          }
-        }
-      }
-    },
-    "Der Vorschlag liegt nach der Fälligkeit." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The suggestion is after the due date."
-          }
-        }
-      }
-    },
-    "Der Vorschlag liegt nach der zugehörigen Deadline." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The suggestion is after the related deadline."
-          }
-        }
-      }
-    },
-    "Die Antwort passt nicht zum Zeitraum." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The response doesn’t match the period."
-          }
-        }
-      }
-    },
-    "Die Aufgabe ist an diesem Tag nicht eingeplant." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The task isn’t scheduled on this day."
-          }
-        }
-      }
-    },
-    "Die Aufgabe ist schon einem Tag zugeordnet." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The task is already assigned to a day."
-          }
-        }
-      }
-    },
-    "Die Aufgabe wurde doppelt vorgeschlagen." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The task was suggested twice."
-          }
-        }
-      }
-    },
-    "Die Dauer ist ungültig." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The duration is invalid."
-          }
-        }
-      }
-    },
-    "Die Kapazität des Tages ist überschritten." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The day’s capacity is exceeded."
-          }
-        }
-      }
-    },
-    "Die Uhrzeit ist ungültig." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The time is invalid."
-          }
-        }
-      }
-    },
-    "Die längere Arbeitszeit liegt außerhalb von 7 bis 21 Uhr oder über 12 Stunden." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The longer working time is outside 7 AM to 9 PM or exceeds 12 hours."
-          }
-        }
-      }
-    },
-    "Die längere Arbeitszeit wird nicht gebraucht." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The longer working time isn’t needed."
-          }
-        }
-      }
-    },
-    "Diese Aufgabe gibt es nicht." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "That task doesn’t exist."
-          }
-        }
-      }
-    },
-    "Diese Woche" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "This week"
-          }
-        }
-      }
-    },
-    "Drogerie" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Personal Care"
-          }
-        }
-      }
-    },
-    "Duschen" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Shower"
-          }
-        }
-      }
-    },
-    "Eigene Regel aus Erinnerungen" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Custom rule from Reminders"
-          }
-        }
-      }
-    },
-    "Fleisch & Fisch" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Meat & Fish"
-          }
-        }
-      }
-    },
-    "Frühstück" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Breakfast"
-          }
-        }
-      }
-    },
-    "Frühstück & Süßes" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Breakfast & Sweets"
-          }
-        }
-      }
-    },
-    "Fällig %@ · %@" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Fällig %1$@ · %2$@"
+    "%lld Stunden vorher": {
+      "localizations": {
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Stunde vorher"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Stunden vorher"
+                }
+              }
+            }
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Due %1$@ · %2$@"
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld hour before"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld hours before"
+                }
+              }
+            }
           }
         }
       }
     },
-    "Gehen" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Walking"
-          }
-        }
-      }
-    },
-    "Generelle Gedanken" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "General thoughts"
-          }
-        }
-      }
-    },
-    "Getränke" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Drinks"
-          }
-        }
-      }
-    },
-    "Haupterlebnisse des heutigen Tages" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Main events of today"
-          }
-        }
-      }
-    },
-    "HIIT" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "HIIT"
-          }
-        }
-      }
-    },
-    "Haushalt" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Household"
-          }
-        }
-      }
-    },
-    "Heute" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Today"
-          }
-        }
-      }
-    },
-    "Heute steht nichts an." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nothing on today."
-          }
-        }
-      }
-    },
-    "Heute: %@. Als Nächstes %@ %@." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Heute: %1$@. Als Nächstes %2$@ %3$@."
+    "%lld Tage vorher": {
+      "localizations": {
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Tag vorher"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Tage vorher"
+                }
+              }
+            }
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Today: %1$@. Next up: %2$@ %3$@."
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld day before"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld days before"
+                }
+              }
+            }
           }
         }
       }
     },
-    "Heute: %@. Davon steht nichts mehr an." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Today: %@. Nothing more coming up."
-          }
-        }
-      }
-    },
-    "Immer" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Always"
-          }
-        }
-      }
-    },
-    "Jede Woche am %@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Every week on %@"
-          }
-        }
-      }
-    },
-    "Jeden Monat am %@ %@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Every month on the %1$@ %2$@"
-          }
-        }
-      }
-    },
-    "Jeden Monat am %lld." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Every month on day %lld"
-          }
-        }
-      }
-    },
-    "Jeden Tag" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Every day"
-          }
-        }
-      }
-    },
-    "Jeden Werktag (Mo bis Fr)" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Every weekday (Mon to Fri)"
-          }
-        }
-      }
-    },
-    "Jedes Jahr am %@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Every year on %@"
-          }
-        }
-      }
-    },
-    "Jedes Wochenende (Sa und So)" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Every weekend (Sat and Sun)"
-          }
-        }
-      }
-    },
-    "Journal schreiben" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Write in journal"
-          }
-        }
-      }
-    },
-    "KW %lld · %lld. %@ – %lld. %@" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "KW %1$lld · %2$lld. %3$@ – %4$lld. %5$@"
+    "%lld Tage vorher um %@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld Tage vorher um %2$@"
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Week %1$lld · %3$@ %2$lld – %5$@ %4$lld"
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld days before at %2$@"
           }
         }
       }
     },
-    "KW %lld · %lld.–%lld. %@" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "KW %1$lld · %2$lld.–%3$lld. %4$@"
+    "%lld Termine": {
+      "localizations": {
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Termin"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Termine"
+                }
+              }
+            }
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Week %1$lld · %4$@ %2$lld–%3$lld"
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld event"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld events"
+                }
+              }
+            }
           }
         }
       }
     },
-    "Kein Training" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No workouts"
-          }
-        }
-      }
-    },
-    "Keine Schritte aus Health" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No steps from Health"
-          }
-        }
-      }
-    },
-    "Kommentare gibt es nur bei GitHub-Issues." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Comments are only available for GitHub issues."
-          }
-        }
-      }
-    },
-    "Krafttraining" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Strength training"
-          }
-        }
-      }
-    },
-    "Kühlregal" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dairy & Chilled"
-          }
-        }
-      }
-    },
-    "Laufen" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Running"
-          }
-        }
-      }
-    },
-    "Lernen" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Study"
-          }
-        }
-      }
-    },
-    "Lesen" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Read"
-          }
-        }
-      }
-    },
-    "Mittagessen" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Lunch"
-          }
-        }
-      }
-    },
-    "Morgen" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tomorrow"
-          }
-        }
-      }
-    },
-    "Nach gesprochenen Nachrichten" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "After spoken messages"
-          }
-        }
-      }
-    },
-    "Nie" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Never"
-          }
-        }
-      }
-    },
-    "Noch %lld min bis zur Schlafzeit (%@)" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Noch %1$lld min bis zur Schlafzeit (%2$@)"
+    "%lld Trainings": {
+      "localizations": {
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Training"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Trainings"
+                }
+              }
+            }
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$lld min until bedtime (%2$@)"
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld workout"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld workouts"
+                }
+              }
+            }
           }
         }
       }
     },
-    "Notizen" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Notes"
-          }
-        }
-      }
-    },
-    "Nächste Woche" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Next week"
-          }
-        }
-      }
-    },
-    "Obst & Gemüse" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Fruit & Vegetables"
-          }
-        }
-      }
-    },
-    "Ohne Datum" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No date"
-          }
-        }
-      }
-    },
-    "Ohne Titel" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Untitled"
-          }
-        }
-      }
-    },
-    "Radfahren" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Cycling"
-          }
-        }
-      }
-    },
-    "Schlafzeit (%@)" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bedtime (%@)"
-          }
-        }
-      }
-    },
-    "Schwimmen" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Swimming"
-          }
-        }
-      }
-    },
-    "Snack" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Snack"
-          }
-        }
-      }
-    },
-    "Sonnenlicht" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sunlight"
-          }
-        }
-      }
-    },
-    "Sonstiges" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Other"
-          }
-        }
-      }
-    },
-    "Später" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Later"
-          }
-        }
-      }
-    },
-    "Tag reflektieren" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Reflect on the day"
-          }
-        }
-      }
-    },
-    "Tagebuch" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Journal"
-          }
-        }
-      }
-    },
-    "Tagesstart" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Morning start"
-          }
-        }
-      }
-    },
-    "Tiefkühl" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Frozen"
-          }
-        }
-      }
-    },
-    "Vorrat & Konserven" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Pantry"
-          }
-        }
-      }
-    },
-    "Wandern" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Hiking"
-          }
-        }
-      }
-    },
-    "War fällig %@ · %@" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "War fällig %1$@ · %2$@"
+    "%lld Wochen vorher": {
+      "localizations": {
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Woche vorher"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Wochen vorher"
+                }
+              }
+            }
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Was due %1$@ · %2$@"
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld week before"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld weeks before"
+                }
+              }
+            }
           }
         }
       }
     },
-    "Wasser trinken" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Drink water"
+    "%lld h": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld h"
           }
         }
       }
     },
-    "Wie geht es mir im Moment grundsätzlich?" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "How am I doing in general right now?"
-          }
-        }
-      }
-    },
-    "Yoga" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Yoga"
-          }
-        }
-      }
-    },
-    "Ziel an %lld von %lld Tagen" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Ziel an %1$lld von %2$lld Tagen"
+    "%lld h %@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$lld h %2$@"
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Goal met on %1$lld of %2$lld days"
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld h %2$@"
           }
         }
       }
     },
-    "am %@, %@" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "am %1$@, %2$@"
+    "%lld h %lld min": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$lld h %2$lld min"
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "on %1$@, %2$@"
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld h %2$lld min"
           }
         }
       }
     },
-    "bis %@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "until %@"
+    "%lld min": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld min"
           }
         }
       }
     },
-    "gestern" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "yesterday"
+    "1 Tag vorher um %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 day before at %@"
           }
         }
       }
     },
-    "heute" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "today"
+    "5 Minuten für die neue Woche?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "5 minutes for the new week?"
           }
         }
       }
     },
-    "morgen" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "tomorrow"
+    "Abendessen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dinner"
           }
         }
       }
     },
-    "noch %@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@ left"
+    "Action Items": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Action items"
           }
         }
       }
     },
-    "wahrscheinlich zwischen %@ und %@ kcal" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "wahrscheinlich zwischen %1$@ und %2$@ kcal"
+    "Alle %lld Jahre am %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Every %1$lld years on %2$@"
+          }
+        }
+      }
+    },
+    "Alle %lld Monate am %@ %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Every %1$lld months on the %2$@ %3$@"
+          }
+        }
+      }
+    },
+    "Alle %lld Monate am %lld.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Every %1$lld months on day %2$lld"
+          }
+        }
+      }
+    },
+    "Alle %lld Tage": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Every %lld days"
+          }
+        }
+      }
+    },
+    "Alle %lld Wochen am %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Every %1$lld weeks on %2$@"
+          }
+        }
+      }
+    },
+    "Alle Aufgaben bis eine Stunde vorm Schlafen erledigen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Finish all tasks one hour before sleep"
+          }
+        }
+      }
+    },
+    "Allgemeine Stimmung": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "General mood"
+          }
+        }
+      }
+    },
+    "Am selben Tag um %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "On the same day at %@"
+          }
+        }
+      }
+    },
+    "Aus Notion importiert": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Imported from Notion"
+          }
+        }
+      }
+    },
+    "Bett machen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Make the bed"
+          }
+        }
+      }
+    },
+    "Bewegung": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Exercise"
+          }
+        }
+      }
+    },
+    "Bible Study": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bible Study"
+          }
+        }
+      }
+    },
+    "Brot & Backwaren": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bread & Bakery"
+          }
+        }
+      }
+    },
+    "Danach noch %@ zu viel.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Still %@ over afterward."
+          }
+        }
+      }
+    },
+    "Das Datum ist ungültig.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The date is invalid."
+          }
+        }
+      }
+    },
+    "Das verlängert die Arbeitszeit nicht.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "That doesn’t extend the working hours."
+          }
+        }
+      }
+    },
+    "Deadline %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deadline %@"
+          }
+        }
+      }
+    },
+    "Deadline %@, ganztägig": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deadline %@, all day"
+          }
+        }
+      }
+    },
+    "Deadline war %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deadline was %@"
+          }
+        }
+      }
+    },
+    "Deadline war %@, ganztägig": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deadline was %@, all day"
+          }
+        }
+      }
+    },
+    "Der Block liegt außerhalb der Arbeitszeit.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The block is outside working hours."
+          }
+        }
+      }
+    },
+    "Der Block liegt in der Mittagspause.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The block falls in the lunch break."
+          }
+        }
+      }
+    },
+    "Der Block überschneidet sich mit einem Termin oder dessen Puffer.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The block overlaps with an event or its buffer."
+          }
+        }
+      }
+    },
+    "Der Block überschneidet sich mit einem anderen Block.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The block overlaps with another block."
+          }
+        }
+      }
+    },
+    "Der Tag ist frei.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The day is free."
+          }
+        }
+      }
+    },
+    "Der Tag liegt außerhalb des Zeitraums.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The day is outside the period."
+          }
+        }
+      }
+    },
+    "Der Vorschlag liegt in der Vergangenheit.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The suggestion is in the past."
+          }
+        }
+      }
+    },
+    "Der Vorschlag liegt nach der Fälligkeit.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The suggestion is after the due date."
+          }
+        }
+      }
+    },
+    "Der Vorschlag liegt nach der zugehörigen Deadline.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The suggestion is after the related deadline."
+          }
+        }
+      }
+    },
+    "Die Antwort passt nicht zum Zeitraum.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The response doesn’t match the period."
+          }
+        }
+      }
+    },
+    "Die Aufgabe ist an diesem Tag nicht eingeplant.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The task isn’t scheduled on this day."
+          }
+        }
+      }
+    },
+    "Die Aufgabe ist schon einem Tag zugeordnet.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The task is already assigned to a day."
+          }
+        }
+      }
+    },
+    "Die Aufgabe wurde doppelt vorgeschlagen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The task was suggested twice."
+          }
+        }
+      }
+    },
+    "Die Dauer ist ungültig.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The duration is invalid."
+          }
+        }
+      }
+    },
+    "Die Kapazität des Tages ist überschritten.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The day’s capacity is exceeded."
+          }
+        }
+      }
+    },
+    "Die Uhrzeit ist ungültig.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The time is invalid."
+          }
+        }
+      }
+    },
+    "Die längere Arbeitszeit liegt außerhalb von 7 bis 21 Uhr oder über 12 Stunden.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The longer working time is outside 7 AM to 9 PM or exceeds 12 hours."
+          }
+        }
+      }
+    },
+    "Die längere Arbeitszeit wird nicht gebraucht.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The longer working time isn’t needed."
+          }
+        }
+      }
+    },
+    "Diese Aufgabe gibt es nicht.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "That task doesn’t exist."
+          }
+        }
+      }
+    },
+    "Diese Woche": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This week"
+          }
+        }
+      }
+    },
+    "Drogerie": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Personal Care"
+          }
+        }
+      }
+    },
+    "Duschen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shower"
+          }
+        }
+      }
+    },
+    "Eigene Regel aus Erinnerungen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Custom rule from Reminders"
+          }
+        }
+      }
+    },
+    "Ein ruhiger Start in den Tag?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A calm start to your day?"
+          }
+        }
+      }
+    },
+    "Eine Stunde vorm Schlafen fertig machen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Get ready one hour before sleep"
+          }
+        }
+      }
+    },
+    "Eine halbe Stunde vorm Schlafen ins Bett legen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Go to bed half an hour before sleep"
+          }
+        }
+      }
+    },
+    "Fleisch & Fisch": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Meat & Fish"
+          }
+        }
+      }
+    },
+    "Frühstück": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Breakfast"
+          }
+        }
+      }
+    },
+    "Frühstück & Süßes": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Breakfast & Sweets"
+          }
+        }
+      }
+    },
+    "Fällig %@ · %@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Fällig %1$@ · %2$@"
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "probably between %1$@ and %2$@ kcal"
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Due %1$@ · %2$@"
           }
         }
       }
     },
-    "×%@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "×%@"
+    "Gehen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Walking"
           }
         }
       }
     },
-    "Ø %@ pro Tag" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Avg. %@ per day"
+    "Generelle Gedanken": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "General thoughts"
           }
         }
       }
     },
-    "Überfällig" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Overdue"
+    "Getränke": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Drinks"
           }
         }
       }
     },
-    "Was will ich in meinem Leben (im Moment) erreichen?" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "What do I want to achieve in my life (right now)?"
+    "HIIT": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "HIIT"
           }
         }
       }
     },
-    "Was habe ich gemacht, um zu erreichen, was ich will?" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "What have I done to achieve what I want?"
+    "Haupterlebnisse des heutigen Tages": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Main events of today"
           }
         }
       }
     },
-    "Was habe ich gemacht, das mich davon abgehalten hat, zu erreichen, was ich will?" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "What have I done that kept me from achieving what I want?"
+    "Haushalt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Household"
           }
         }
       }
     },
-    "Was für Erfahrungen habe ich in letzter Zeit mit anderen Menschen gemacht? (positive und negative)" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "What experiences have I had with other people lately? (positive and negative)"
+    "Helle Lichter ausmachen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turn off bright lights"
           }
         }
       }
     },
-    "Was bedrückt mich sonst grade?" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "What else is weighing on me right now?"
+    "Heute": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Today"
           }
         }
       }
     },
-    "Wie habe ich gehandelt und was für Gedanken habe ich mir gemacht, die diese Erfahrungen schlimmer gemacht haben, als nötig?" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "How did I act, and which thoughts did I have, that made these experiences worse than necessary?"
+    "Heute steht nichts an.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing on today."
           }
         }
       }
     },
-    "Was für eine Rolle spiele ich in den negativen Dingen, die passiert sind? Kann ich Eigenverantwortung übernehmen?" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "What role do I play in the negative things that happened? Can I take responsibility?"
+    "Heute: %@. Als Nächstes %@ %@.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Heute: %1$@. Als Nächstes %2$@ %3$@."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Today: %1$@. Next up: %2$@ %3$@."
           }
         }
       }
     },
-    "Was kann ich machen, um die negativen Dinge in meinem Leben aktiv zu verbessern?" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "What can I do to actively improve the negative things in my life?"
+    "Heute: %@. Davon steht nichts mehr an.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Today: %@. Nothing more coming up."
           }
         }
       }
     },
-    "Helle Lichter ausmachen" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Turn off bright lights"
+    "Immer": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Always"
           }
         }
       }
     },
-    "Alle Aufgaben bis eine Stunde vorm Schlafen erledigen" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Finish all tasks one hour before sleep"
+    "Jede Woche am %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Every week on %@"
           }
         }
       }
     },
-    "Eine Stunde vorm Schlafen fertig machen" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Get ready one hour before sleep"
+    "Jeden Monat am %@ %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Every month on the %1$@ %2$@"
           }
         }
       }
     },
-    "Zähne putzen, umziehen, Haus/Wohnung aufräumen" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Brush teeth, change, tidy up the home"
+    "Jeden Monat am %lld.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Every month on day %lld"
           }
         }
       }
     },
-    "Eine halbe Stunde vorm Schlafen ins Bett legen" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Go to bed half an hour before sleep"
+    "Jeden Tag": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Every day"
           }
         }
       }
     },
-    "Ein ruhiger Start in den Tag?" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "A calm start to your day?"
+    "Jeden Werktag (Mo bis Fr)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Every weekday (Mon to Fri)"
           }
         }
       }
     },
-    "Wochenplanung" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Weekly planning"
+    "Jedes Jahr am %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Every year on %@"
           }
         }
       }
     },
-    "5 Minuten für die neue Woche?" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "5 minutes for the new week?"
+    "Jedes Wochenende (Sa und So)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Every weekend (Sat and Sun)"
+          }
+        }
+      }
+    },
+    "Journal schreiben": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Write in journal"
+          }
+        }
+      }
+    },
+    "KW %lld · %lld. %@ – %lld. %@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "KW %1$lld · %2$lld. %3$@ – %4$lld. %5$@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Week %1$lld · %3$@ %2$lld – %5$@ %4$lld"
+          }
+        }
+      }
+    },
+    "KW %lld · %lld.–%lld. %@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "KW %1$lld · %2$lld.–%3$lld. %4$@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Week %1$lld · %4$@ %2$lld–%3$lld"
+          }
+        }
+      }
+    },
+    "Kein Training": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No workouts"
+          }
+        }
+      }
+    },
+    "Keine": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "None"
+          }
+        }
+      }
+    },
+    "Keine Schritte aus Health": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No steps from Health"
+          }
+        }
+      }
+    },
+    "Kommentare gibt es nur bei GitHub-Issues.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comments are only available for GitHub issues."
+          }
+        }
+      }
+    },
+    "Krafttraining": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Strength training"
+          }
+        }
+      }
+    },
+    "Kühlregal": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dairy & Chilled"
+          }
+        }
+      }
+    },
+    "Laufen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Running"
+          }
+        }
+      }
+    },
+    "Lernen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Study"
+          }
+        }
+      }
+    },
+    "Lesen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Read"
+          }
+        }
+      }
+    },
+    "Mittagessen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lunch"
+          }
+        }
+      }
+    },
+    "Morgen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tomorrow"
+          }
+        }
+      }
+    },
+    "Nach gesprochenen Nachrichten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "After spoken messages"
+          }
+        }
+      }
+    },
+    "Nie": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Never"
+          }
+        }
+      }
+    },
+    "Noch %lld min bis zur Schlafzeit (%@)": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Noch %1$lld min bis zur Schlafzeit (%2$@)"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld min until bedtime (%2$@)"
+          }
+        }
+      }
+    },
+    "Notizen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notes"
+          }
+        }
+      }
+    },
+    "Nächste Woche": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Next week"
+          }
+        }
+      }
+    },
+    "Obst & Gemüse": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fruit & Vegetables"
+          }
+        }
+      }
+    },
+    "Ohne Datum": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No date"
+          }
+        }
+      }
+    },
+    "Ohne Titel": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Untitled"
+          }
+        }
+      }
+    },
+    "Radfahren": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cycling"
+          }
+        }
+      }
+    },
+    "Schlafzeit (%@)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bedtime (%@)"
+          }
+        }
+      }
+    },
+    "Schwimmen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Swimming"
+          }
+        }
+      }
+    },
+    "Snack": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Snack"
+          }
+        }
+      }
+    },
+    "Sonnenlicht": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sunlight"
+          }
+        }
+      }
+    },
+    "Sonstiges": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Other"
+          }
+        }
+      }
+    },
+    "Später": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Later"
+          }
+        }
+      }
+    },
+    "Tag reflektieren": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reflect on the day"
+          }
+        }
+      }
+    },
+    "Tagebuch": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Journal"
+          }
+        }
+      }
+    },
+    "Tagesstart": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Morning start"
+          }
+        }
+      }
+    },
+    "Tiefkühl": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Frozen"
+          }
+        }
+      }
+    },
+    "Vorrat & Konserven": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pantry"
+          }
+        }
+      }
+    },
+    "Wandern": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hiking"
+          }
+        }
+      }
+    },
+    "War fällig %@ · %@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "War fällig %1$@ · %2$@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Was due %1$@ · %2$@"
+          }
+        }
+      }
+    },
+    "Was bedrückt mich sonst grade?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What else is weighing on me right now?"
+          }
+        }
+      }
+    },
+    "Was für Erfahrungen habe ich in letzter Zeit mit anderen Menschen gemacht? (positive und negative)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What experiences have I had with other people lately? (positive and negative)"
+          }
+        }
+      }
+    },
+    "Was für eine Rolle spiele ich in den negativen Dingen, die passiert sind? Kann ich Eigenverantwortung übernehmen?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What role do I play in the negative things that happened? Can I take responsibility?"
+          }
+        }
+      }
+    },
+    "Was habe ich gemacht, das mich davon abgehalten hat, zu erreichen, was ich will?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What have I done that kept me from achieving what I want?"
+          }
+        }
+      }
+    },
+    "Was habe ich gemacht, um zu erreichen, was ich will?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What have I done to achieve what I want?"
+          }
+        }
+      }
+    },
+    "Was kann ich machen, um die negativen Dinge in meinem Leben aktiv zu verbessern?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What can I do to actively improve the negative things in my life?"
+          }
+        }
+      }
+    },
+    "Was will ich in meinem Leben (im Moment) erreichen?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What do I want to achieve in my life (right now)?"
+          }
+        }
+      }
+    },
+    "Wasser trinken": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Drink water"
+          }
+        }
+      }
+    },
+    "Wie geht es mir im Moment grundsätzlich?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "How am I doing in general right now?"
+          }
+        }
+      }
+    },
+    "Wie habe ich gehandelt und was für Gedanken habe ich mir gemacht, die diese Erfahrungen schlimmer gemacht haben, als nötig?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "How did I act, and which thoughts did I have, that made these experiences worse than necessary?"
+          }
+        }
+      }
+    },
+    "Wochenplanung": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Weekly planning"
+          }
+        }
+      }
+    },
+    "Yoga": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yoga"
+          }
+        }
+      }
+    },
+    "Ziel an %lld von %lld Tagen": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Ziel an %1$lld von %2$lld Tagen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Goal met on %1$lld of %2$lld days"
+          }
+        }
+      }
+    },
+    "Zum Zeitpunkt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "At time of event"
+          }
+        }
+      }
+    },
+    "Zähne putzen, umziehen, Haus/Wohnung aufräumen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Brush teeth, change, tidy up the home"
+          }
+        }
+      }
+    },
+    "am %@, %@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "am %1$@, %2$@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "on %1$@, %2$@"
+          }
+        }
+      }
+    },
+    "bis %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "until %@"
+          }
+        }
+      }
+    },
+    "gestern": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "yesterday"
+          }
+        }
+      }
+    },
+    "heute": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "today"
+          }
+        }
+      }
+    },
+    "morgen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tomorrow"
+          }
+        }
+      }
+    },
+    "noch %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ left"
+          }
+        }
+      }
+    },
+    "wahrscheinlich zwischen %@ und %@ kcal": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "wahrscheinlich zwischen %1$@ und %2$@ kcal"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "probably between %1$@ and %2$@ kcal"
+          }
+        }
+      }
+    },
+    "×%@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "×%@"
+          }
+        }
+      }
+    },
+    "Ø %@ pro Tag": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Avg. %@ per day"
+          }
+        }
+      }
+    },
+    "Überfällig": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Overdue"
           }
         }
       }
     }
   },
-  "version" : "1.0"
+  "version": "1.0"
 }
