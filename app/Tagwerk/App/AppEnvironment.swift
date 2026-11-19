@@ -253,10 +253,6 @@ final class AppEnvironment {
         let focus = FocusTimerModel(store: focusStore, settings: { settings.focusTimerSettings }, activity: FocusActivityController(),
                                     notifications: FocusNotificationScheduler(center: focusNotificationCenter))
         self.focus = focus
-        focus.completeTask = { key in
-            guard let id = TaskID(key: key) else { return }
-            await taskList.complete(id)
-        }
         focus.postponeTask = { key in
             guard let id = TaskID(key: key) else { return }
             await planning.assign(id, to: planning.planDay(for: .tomorrow), moveBlocks: true)
@@ -284,6 +280,13 @@ final class AppEnvironment {
                 cache.clear()
                 catalogStore.clear()
             }
+        }
+        // "Erledigt" on the Live Activity can start the app in the background, where no list is loaded yet: the tasks
+        // are loaded first (with GitHub registered), because completing needs the displayed item and its version.
+        focus.completeTask = { [weak self] key in
+            guard let self, let id = TaskID(key: key) else { return }
+            if !taskList.items.contains(where: { $0.id == id }) { await loadTasksInBackground() }
+            await taskList.complete(id)
         }
     }
 

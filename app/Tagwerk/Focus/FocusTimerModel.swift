@@ -40,6 +40,8 @@ final class FocusTimerModel {
     @ObservationIgnored private let notifications: FocusNotificationScheduling
     @ObservationIgnored private let wakesAtPhaseEnd: Bool
     @ObservationIgnored private var record: FocusSessionRecord?
+    /// A link of the Live Activity arrived before the session was restored; the sheet opens once it is.
+    @ObservationIgnored var showsWhenRestored = false
     @ObservationIgnored private var wake: Task<Void, Never>?
 
     init(store: FocusStore, settings: @escaping () -> FocusTimerSettings, activity: FocusActivityControlling,
@@ -153,6 +155,11 @@ final class FocusTimerModel {
     /// Takes over a session from the store after the app started again, or brings the outputs back in line after it came
     /// to the foreground. A session older than 12 hours is ended; the Live Activity is taken over, never doubled.
     func restore() async {
+        // A link that came in before the restore opens the sheet, but only for a session that is really there.
+        defer {
+            if showsWhenRestored && session != nil { isPresented = true }
+            showsWhenRestored = false
+        }
         if session != nil {
             await syncOutputs()
             return

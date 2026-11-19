@@ -42,6 +42,8 @@ struct TagwerkApp: App {
             RootView()
                 .environment(environment)
                 .task {
+                    // A focus session that survived the app being closed or killed; first, before the slow network calls.
+                    await environment.focus.restore()
                     #if DEBUG && targetEnvironment(simulator)
                     await DemoData.seedIfRequested(environment)
                     #endif
@@ -61,8 +63,6 @@ struct TagwerkApp: App {
                     environment.startNotificationUpdates()
                     environment.startRoutineReminderUpdates()
                     environment.startFocusUpdates()
-                    // A focus session that survived the app being closed or killed.
-                    await environment.focus.restore()
                     environment.startHabitSourceUpdates()
                     environment.startSnapshotUpdates()
                 }
@@ -70,6 +70,7 @@ struct TagwerkApp: App {
                     switch phase {
                     case .active:
                         Task {
+                            await environment.focus.restore()
                             // A start before the first unlock could not read the GitHub sign-in; try again.
                             await environment.activateGitHubIfSignedIn()
                             await environment.retryGitHubIfNeeded()
@@ -82,7 +83,6 @@ struct TagwerkApp: App {
                             await environment.capture.reload()  // follows to the new day after midnight
                             await environment.habits.reload(day: environment.capture.day)
                             await environment.capture.syncPending()
-                            await environment.focus.restore()
                         }
                     case .background:
                         // Directly, not debounced: the app may be suspended before a delayed run starts.

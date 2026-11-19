@@ -89,6 +89,24 @@ struct FocusActivityTests {
         #expect(state.kind == .shortBreak && state.round == 2 && state.rounds == 4 && state.phaseEnd == end)
     }
 
+    @Test func link_beforeTheRestore_opensTheSheetOnceTheSessionIsBack() async {
+        await makeModel().start(task: nil, block: nil)
+        let restarted = makeModel(activity: FakeFocusActivity())
+        // Cold launch: the link arrives first, `restore()` follows.
+        #expect(restarted.open(url: FocusLink.url))
+        #expect(!restarted.isPresented)
+        await restarted.restore()
+        #expect(restarted.isPresented)
+        // Without a session the request is dropped and does not pop up later.
+        let empty = makeModel(activity: FakeFocusActivity())
+        #expect(empty.open(url: FocusLink.url))
+        await empty.restore()
+        await empty.start(task: nil, block: nil)
+        empty.isPresented = false
+        await empty.restore()
+        #expect(!empty.isPresented)
+    }
+
     @Test func link_opensTheSheetOnlyWhileRunning() async {
         let model = makeModel()
         #expect(model.open(url: FocusLink.url))

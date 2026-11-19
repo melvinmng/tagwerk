@@ -22,7 +22,7 @@ extension FocusTimerModel {
     /// Shows the sheet for the link of the Live Activity. Returns `false` for any other link.
     func open(url: URL) -> Bool {
         guard url == FocusLink.url else { return false }
-        if isRunning { isPresented = true }
+        if isRunning { isPresented = true } else { showsWhenRestored = true }
         return true
     }
 }
