@@ -816,7 +816,7 @@ enum ShoppingInput {
 - Consumes: `ShoppingCategoryStore` (Task 7), `ShoppingModel.sections`, `refreshSections()` (Task 8).
 - Produces: `struct ShoppingCategoriesView: View { init(store: ShoppingCategoryStore, model: ShoppingModel) }` (ohne eigenen `NavigationStack`); `ShoppingCategoriesView.deleteQuestion(name: String, openCount: Int) -> String`; `ShoppingCategoriesView.message(for: ShoppingCategoryRules.NameError) -> String`.
 
-- [ ] **Schritt 1: Tests schreiben**
+- [x] **Schritt 1: Tests schreiben**
 
 ```swift
 @Test func deleteQuestion_namesOpenItemCount() {
@@ -831,10 +831,10 @@ enum ShoppingInput {
 }
 ```
 
-- [ ] **Schritt 2:** Suite ausführen. Erwartet: Übersetzungsfehler.
-- [ ] **Schritt 3: Seite bauen** nach Spec §5.5: `.task { store.seedIfNeeded() }`; Liste dauerhaft im Bearbeitungsmodus (`.environment(\.editMode, .constant(.active))`, `onMove`, `onDelete` mit Rückfrage); Zahl offener Artikel je Kategorie aus `model.sections`; Tipp auf den Namen → Dialog zum Umbenennen; letzte Zeile „Kategorie hinzufügen“; darunter fest und grau „Sonstiges · für alles ohne Kategorie“; Fußknopf „Standardkategorien wiederherstellen“. Nach jeder Änderung `model.refreshSections()`. Die Einkaufsseite ruft `seedIfNeeded()` ebenfalls in ihrem `.task` (R12).
-- [ ] **Schritt 4:** `ShoppingCategoryStoreTests` ausführen. Erwartet: grün. Sichtprüfung im Simulator: Umsortieren, Umbenennen einer Standardkategorie, Löschen mit Rückfrage, Wiederherstellen.
-- [ ] **Schritt 5:** Commit: `git add app/Tagwerk app/TagwerkTests && git commit -m "feat: manage shopping categories"`
+- [x] **Schritt 2:** Suite ausführen. Erwartet: Übersetzungsfehler.
+- [x] **Schritt 3: Seite bauen** nach Spec §5.5: `.task { store.seedIfNeeded() }`; Liste dauerhaft im Bearbeitungsmodus (`.environment(\.editMode, .constant(.active))`, `onMove`, `onDelete` mit Rückfrage); Zahl offener Artikel je Kategorie aus `model.sections`; Tipp auf den Namen → Dialog zum Umbenennen; letzte Zeile „Kategorie hinzufügen“; darunter fest und grau „Sonstiges · für alles ohne Kategorie“; Fußknopf „Standardkategorien wiederherstellen“. Nach jeder Änderung `model.refreshSections()`. Die Einkaufsseite ruft `seedIfNeeded()` ebenfalls in ihrem `.task` (R12).
+- [x] **Schritt 4:** `ShoppingCategoryStoreTests` ausführen. Erwartet: grün. Sichtprüfung im Simulator: Umsortieren, Umbenennen einer Standardkategorie, Löschen mit Rückfrage, Wiederherstellen.
+- [x] **Schritt 5:** Commit: `git add app/Tagwerk app/TagwerkTests && git commit -m "feat: manage shopping categories"`
 
 ---
 

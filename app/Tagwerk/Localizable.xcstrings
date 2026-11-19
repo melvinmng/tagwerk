@@ -736,6 +736,46 @@
         }
       }
     },
+    "%lld Artikel werden neu einsortiert, meist unter „Sonstiges“.": {
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld item will be sorted again, usually under “Other”."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld items will be sorted again, usually under “Other”."
+                }
+              }
+            }
+          }
+        },
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Artikel wird neu einsortiert, meist unter „Sonstiges“."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Artikel werden neu einsortiert, meist unter „Sonstiges“."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "%lld Aufgabe(n) ohne Aufwand mit Standarddauer gerechnet": {
       "localizations": {
         "de": {
@@ -1281,24 +1321,6 @@
     },
     "%lld erledigte Artikel endgültig löschen?": {
       "localizations": {
-        "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "Permanently delete %lld completed item?"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "Permanently delete %lld completed items?"
-                }
-              }
-            }
-          }
-        },
         "de": {
           "variations": {
             "plural": {
@@ -1312,6 +1334,24 @@
                 "stringUnit": {
                   "state": "translated",
                   "value": "%lld erledigte Artikel endgültig löschen?"
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Permanently delete %lld completed item?"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Permanently delete %lld completed items?"
                 }
               }
             }
@@ -3569,6 +3609,16 @@
         }
       }
     },
+    "Der Name darf höchstens 30 Zeichen haben.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The name can have at most 30 characters."
+          }
+        }
+      }
+    },
     "Der Tag liegt in der Vergangenheit.": {
       "localizations": {
         "en": {
@@ -3799,16 +3849,6 @@
         }
       }
     },
-    "Die Kategorie konnte nicht angelegt werden.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "The category could not be created."
-          }
-        }
-      }
-    },
     "Die Knöpfe im Tab erfassen sofort. Getränke mit Kalorien trägst du unter „Essen“ ein.": {
       "localizations": {
         "en": {
@@ -3929,6 +3969,16 @@
         }
       }
     },
+    "Die Zahl nennt die offenen Artikel. Tippe auf einen Namen, um ihn zu ändern.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The number shows the open items. Tap a name to change it."
+          }
+        }
+      }
+    },
     "Die Zeit ist ungültig.": {
       "localizations": {
         "en": {
@@ -3965,6 +4015,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "This task repeats. Title, due date and priority apply to all days."
+          }
+        }
+      }
+    },
+    "Diese Kategorie gibt es schon.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This category already exists."
           }
         }
       }
@@ -5092,6 +5152,16 @@
         }
       }
     },
+    "Gib einen Namen ein.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter a name."
+          }
+        }
+      }
+    },
     "Gilt ab %@.": {
       "localizations": {
         "en": {
@@ -5782,8 +5852,38 @@
         }
       }
     },
+    "Kategorie hinzufügen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add Category"
+          }
+        }
+      }
+    },
     "Kategorie nach dem Sprechen: %@": {
       "shouldTranslate": false
+    },
+    "Kategorie umbenennen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rename Category"
+          }
+        }
+      }
+    },
+    "Kategorien": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Categories"
+          }
+        }
+      }
     },
     "Kategorien verwalten": {
       "localizations": {
@@ -6556,6 +6656,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "More"
+          }
+        }
+      }
+    },
+    "Mehr als 30 Kategorien sind nicht möglich.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "More than 30 categories are not possible."
           }
         }
       }
@@ -8639,6 +8749,16 @@
         }
       }
     },
+    "Standardkategorien wiederherstellen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restore Default Categories"
+          }
+        }
+      }
+    },
     "Starten": {
       "localizations": {
         "en": {
@@ -9211,6 +9331,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ultra"
+          }
+        }
+      }
+    },
+    "Umbenennen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rename"
           }
         }
       }
@@ -10792,6 +10922,16 @@
         }
       }
     },
+    "für alles ohne Kategorie": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "for everything without a category"
+          }
+        }
+      }
+    },
     "ganztägig": {
       "localizations": {
         "en": {
@@ -11800,6 +11940,16 @@
         }
       }
     },
+    "„%@“ löschen?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete “%@”?"
+          }
+        }
+      }
+    },
     "„%@“ wiederholt sich": {
       "localizations": {
         "en": {
@@ -11896,6 +12046,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "“Reload” discards your changes. “Save anyway” writes only your changes and overwrites nothing on %@."
+          }
+        }
+      }
+    },
+    "„Sonstiges“ ist fest vergeben und kann nicht als Name dienen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“Other” is reserved and cannot be used as a name."
           }
         }
       }

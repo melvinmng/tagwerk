@@ -102,4 +102,21 @@ struct ShoppingCategoryStoreTests {
         store.assign(nameKey: "reis", to: b, manual: false)
         #expect(store.assignments()["reis"] == ShoppingAssignmentInfo(categoryID: b, isManual: false))
     }
+
+    // MARK: Texts of the categories page
+
+    @Test func deleteQuestion_namesOpenItemCount() {
+        #expect(ShoppingCategoriesView.deleteQuestion(name: "Kühlregal", openCount: 3)
+                == "„Kühlregal“ löschen? 3 Artikel werden neu einsortiert, meist unter „Sonstiges“.")
+        #expect(ShoppingCategoriesView.deleteQuestion(name: "Kühlregal", openCount: 1)
+                == "„Kühlregal“ löschen? 1 Artikel wird neu einsortiert, meist unter „Sonstiges“.")
+        #expect(ShoppingCategoriesView.deleteQuestion(name: "Tiefkühl", openCount: 0) == "„Tiefkühl“ löschen?")
+    }
+
+    @Test func nameErrorMessages_coverEveryCase() {
+        let errors: [ShoppingCategoryRules.NameError] = [.empty, .tooLong, .duplicate, .reserved, .limitReached]
+        let messages = errors.map(ShoppingCategoriesView.message(for:))
+        #expect(messages.allSatisfy { !$0.isEmpty })
+        #expect(Set(messages).count == errors.count)
+    }
 }

@@ -33,6 +33,9 @@ struct ShoppingListView: View {
                 }
                 AssistantToolbarItems { .tasks }
             }
+            .navigationDestination(isPresented: $showsCategories) {
+                ShoppingCategoriesView(store: environment.shoppingCategories, model: model)
+            }
             .sheet(item: $editing) { item in
                 ShoppingItemSheet(model: model, item: item) { notice = $0 }
             }
@@ -215,7 +218,6 @@ struct ShoppingListView: View {
             }
             .disabled(true)
             Button { showsCategories = true } label: { Label("Kategorien verwalten", systemImage: "list.bullet.indent") }
-                .disabled(true)
             Button(role: .destructive) {
                 confirmsRemoveCompleted = true
             } label: {
@@ -261,8 +263,10 @@ struct ShoppingListView: View {
         do {
             let category = try environment.shoppingCategories.add(name: newCategoryName)
             model.setCategory(category.id, forItemID: item.id)
+        } catch let error as ShoppingCategoryRules.NameError {
+            notice = ShoppingCategoriesView.message(for: error)
         } catch {
-            notice = String(localized: "Die Kategorie konnte nicht angelegt werden.")
+            notice = TaskListModel.message(for: error)
         }
     }
 

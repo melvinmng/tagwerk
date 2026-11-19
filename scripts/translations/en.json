@@ -1205,7 +1205,6 @@
   "Artikel hinzufügen": "Add item",
   "Bearbeiten": "Edit",
   "Die Kategorie gilt für jeden Artikel mit diesem Namen.": "The category applies to every item with this name.",
-  "Die Kategorie konnte nicht angelegt werden.": "The category could not be created.",
   "Die Liste ist leer. Füge unten Artikel hinzu.": "The list is empty. Add items below.",
   "Die bisherige Liste gibt es nicht mehr.": "The previous list no longer exists.",
   "Einkaufsliste": "Shopping List",
@@ -1228,5 +1227,22 @@
   "Wähle eine Erinnerungsliste als Einkaufsliste.": "Choose a reminders list as your shopping list.",
   "erledigt": "completed",
   "nicht erledigt": "not completed",
-  "✦ Sortieren": "✦ Sort"
+  "✦ Sortieren": "✦ Sort",
+  "%lld Artikel werden neu einsortiert, meist unter „Sonstiges“.": {
+    "one": "%lld item will be sorted again, usually under “Other”.",
+    "other": "%lld items will be sorted again, usually under “Other”."
+  },
+  "Der Name darf höchstens 30 Zeichen haben.": "The name can have at most 30 characters.",
+  "Die Zahl nennt die offenen Artikel. Tippe auf einen Namen, um ihn zu ändern.": "The number shows the open items. Tap a name to change it.",
+  "Diese Kategorie gibt es schon.": "This category already exists.",
+  "Gib einen Namen ein.": "Enter a name.",
+  "Kategorie hinzufügen": "Add Category",
+  "Kategorie umbenennen": "Rename Category",
+  "Kategorien": "Categories",
+  "Mehr als 30 Kategorien sind nicht möglich.": "More than 30 categories are not possible.",
+  "Standardkategorien wiederherstellen": "Restore Default Categories",
+  "Umbenennen": "Rename",
+  "für alles ohne Kategorie": "for everything without a category",
+  "„%@“ löschen?": "Delete “%@”?",
+  "„Sonstiges“ ist fest vergeben und kann nicht als Name dienen.": "“Other” is reserved and cannot be used as a name."
 }
