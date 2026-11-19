@@ -24,6 +24,11 @@ struct TagwerkApp: App {
             // App Intents run in this process and share the one model container (phase 4 design §8).
             let services = IntentServices(environment: environment)
             AppDependencyManager.shared.add(dependency: services)
+            // New article names become speakable, also after a Siri add that launched the app in the background
+            // (`RootView.task` does not run then). Hosted unit tests do not talk to the system.
+            if !isTestHost {
+                environment.shopping.onNamesChanged = { TagwerkShortcuts.updateAppShortcutParameters() }
+            }
             // Set before launch ends, so a tap that launched the app is not lost.
             UNUserNotificationCenter.current().delegate = environment.notificationDelegate
         } catch {

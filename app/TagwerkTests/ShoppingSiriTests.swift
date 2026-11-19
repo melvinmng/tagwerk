@@ -84,8 +84,10 @@ struct ShoppingSiriTests {
 
     @Test func matching_findsSuggestionsWithoutDiacritics() async throws {
         let test = try ShoppingSiriTests(records: Self.history)
-        #expect(await test.services.shoppingArticleNames(matching: "kase", preferEnglish: false).first == "Käse")
-        #expect(await test.services.shoppingArticleNames(matching: "milch", preferEnglish: false).first == "Milch")
+        #expect(await test.services.shoppingArticleNames(matching: "kase", preferEnglish: false) == ["Käse"])
+        // "Milch" is a suggestion by itself: the answer is one entity, not Milch, Milchreis, Hafermilch ...
+        #expect(await test.services.shoppingArticleNames(matching: "milch", preferEnglish: false) == ["Milch"])
+        #expect(await test.services.shoppingArticleNames(matching: "hafer", preferEnglish: false).first == "Hafermilch")
     }
 
     @Test func matching_unknownName_resolvesToItself_blankToNothing() async throws {

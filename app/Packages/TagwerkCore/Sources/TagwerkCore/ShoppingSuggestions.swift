@@ -59,14 +59,17 @@ public enum ShoppingSuggestions {
         return Array(result.prefix(limit))
     }
 
-    /// The names that contain the typed or spoken text, ignoring case and diacritics; names that start with it
-    /// come first, the given order is kept inside each group.
+    /// The names that match the typed or spoken text, ignoring case and diacritics. A name that equals the text
+    /// is the only match, so Siri does not ask "Which one?" between "Milch" and "Milchreis". Otherwise every name
+    /// that contains the text; names that start with it come first, the given order is kept inside each group.
     public static func matching(_ query: String, in names: [String]) -> [String] {
         let queryKey = ShoppingName.key(query)
         guard !queryKey.isEmpty else { return [] }
-        let candidates = names.map { (name: $0, key: ShoppingName.key($0)) }.filter { $0.key.contains(queryKey) }
-        return candidates.filter { $0.key.hasPrefix(queryKey) }.map(\.name)
-            + candidates.filter { !$0.key.hasPrefix(queryKey) }.map(\.name)
+        let candidates = names.map { (name: $0, key: ShoppingName.key($0)) }
+        if let exact = candidates.first(where: { $0.key == queryKey }) { return [exact.name] }
+        let containing = candidates.filter { $0.key.contains(queryKey) }
+        return containing.filter { $0.key.hasPrefix(queryKey) }.map(\.name)
+            + containing.filter { !$0.key.hasPrefix(queryKey) }.map(\.name)
     }
 
     /// Common items with their proper spelling, most common first; every one is a term of the offline dictionary

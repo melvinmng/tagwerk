@@ -93,11 +93,17 @@ struct ShoppingSuggestionsTests {
 
     // MARK: Matching
 
-    @Test func matching_prefixBeforeInside_ignoresCaseAndDiacritics() {
-        let names = ["Hafermilch", "Milch", "Milchreis", "Käse", "Kokosmilch"]
-        #expect(ShoppingSuggestions.matching("milch", in: names) == ["Milch", "Milchreis", "Hafermilch", "Kokosmilch"])
-        #expect(ShoppingSuggestions.matching("KASE", in: names) == ["Käse"])
+    @Test func matching_partialText_prefixBeforeInside_ignoresCaseAndDiacritics() {
+        let names = ["Hafermilch", "Milchreis", "Käse", "Kokosmilch", "Milchpulver"]
+        #expect(ShoppingSuggestions.matching("milch", in: names) == ["Milchreis", "Milchpulver", "Hafermilch", "Kokosmilch"])
         #expect(ShoppingSuggestions.matching("  käs ", in: names) == ["Käse"])
+    }
+
+    @Test func matching_exactName_isTheOnlyMatch() {
+        let names = ["Hafermilch", "Milch", "Milchreis"]
+        #expect(ShoppingSuggestions.matching("milch", in: names) == ["Milch"])
+        #expect(ShoppingSuggestions.matching("MILCH ", in: names) == ["Milch"])
+        #expect(ShoppingSuggestions.matching("kase", in: ["Käse", "Käsekuchen"]) == ["Käse"])
     }
 
     @Test func matching_blankOrUnknown_givesNothing() {

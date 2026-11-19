@@ -685,8 +685,8 @@ final class AppEnvironment {
         }
         habits.onChanged = { [weak self] in self?.scheduleSnapshot() }
         habits.onListChanged = { TagwerkShortcuts.updateAppShortcutParameters() }
-        // New article names become speakable; the first load after launch also reports its names.
-        shopping.onNamesChanged = { TagwerkShortcuts.updateAppShortcutParameters() }
+        // Refreshes the speakable article names once at start; later changes are reported by the hook that
+        // `TagwerkApp` installs at launch (it must also exist when an intent launches the app in the background).
         TagwerkShortcuts.updateAppShortcutParameters()
         let changes = Observations { @MainActor [weak self] () -> Int in
             guard let self else { return 0 }
