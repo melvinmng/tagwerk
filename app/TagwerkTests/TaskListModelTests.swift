@@ -742,6 +742,7 @@ struct TaskListStatusTests {
     // MARK: Issues without a Project (#153)
 
     @Test func create_withoutProject_isNotListed_andShowsTheNoProjectCapsule() async {
+        await model.reload()
         let draft = TaskDraft(title: "Export", containerID: "beispiel/app", subContainerIDs: [])
         let created = await model.create(draft, in: .github)
         #expect(created != nil)
