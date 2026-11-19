@@ -110,6 +110,39 @@ struct RemindersTaskProviderTests {
         #expect(inDefault.container.id == store.defaultList)
     }
 
+    // MARK: Shopping list exclusion
+
+    private func shoppingProvider(selected: Set<String>? = nil) -> RemindersTaskProvider {
+        store.listInfos.append(ListInfo(id: "einkauf", title: "Einkauf", colorHex: nil, kind: .calDAV))
+        store.records["milk"] = ReminderRecord(id: "milk", title: "Milch", notes: nil, due: nil, ekPriority: 0,
+                                               isCompleted: false, listID: "einkauf", lastModified: nil)
+        return RemindersTaskProvider(store: store, selectedListIDs: { selected }, excludedListID: { "einkauf" })
+    }
+
+    @Test func openTasks_excludesShoppingList() async throws {
+        let all = try await shoppingProvider().openTasks()
+        #expect(Set(all.map(\.title)) == ["Kapitel 2 gliedern", "Einkaufen"])
+        let selected = try await shoppingProvider(selected: ["privat", "einkauf"]).openTasks()
+        #expect(selected.map(\.title) == ["Einkaufen"])
+    }
+
+    @Test func containers_omitShoppingList() async throws {
+        #expect(try await shoppingProvider().containers().map(\.id) == ["studium", "privat"])
+    }
+
+    @Test func create_defaultListIsShopping_usesFirstOtherList() async throws {
+        let sut = shoppingProvider()
+        store.defaultList = "einkauf"
+        let created = try await sut.create(TaskDraft(title: "Standard"))
+        #expect(created.container.id == "privat")
+    }
+
+    @Test func create_withoutExcludedList_behavesAsBefore() async throws {
+        store.defaultList = "privat"
+        let created = try await provider().create(TaskDraft(title: "Standard"))
+        #expect(created.container.id == "privat")
+    }
+
     @Test func containers_listAllReminderLists() async throws {
         #expect(try await provider().containers().map(\.id) == ["studium", "privat"])
     }

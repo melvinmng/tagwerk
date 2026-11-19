@@ -245,7 +245,7 @@ public enum ShoppingListFilter {
 ```
   - `RemindersTaskProvider.init(store:estimates:selectedListIDs:excludedListID:)` mit `excludedListID: @escaping @MainActor () -> String? = { nil }` als letztem Parameter.
 
-- [ ] **Schritt 1: Tests schreiben**
+- [x] **Schritt 1: Tests schreiben**
 
 ```swift
 // ShoppingListFilterTests
@@ -292,10 +292,10 @@ public enum ShoppingListFilter {
 @Test func create_withoutExcludedList_behavesAsBefore() async throws        // default init: container.id == store.defaultListID
 ```
 
-- [ ] **Schritt 2:** Beide Suiten ausführen. Erwartet: Übersetzungsfehler (`ShoppingListFilter` unbekannt).
-- [ ] **Schritt 3: Umsetzen.** Im Provider: `openTasks()` ruft `store.openReminders(in: ShoppingListFilter.taskListIDs(selected: selectedListIDs(), all: store.lists().map(\.id), shopping: excludedListID()))`; `containers()` filtert `excludedListID()` heraus; `create(_:)` setzt `listID` über `listForNewReminder` (Sortierung der Titel mit `localizedStandardCompare`). `task(id:)`, `apply`, `delete` bleiben unverändert.
-- [ ] **Schritt 4:** Paket `RemindersKit` testen. Erwartet: grün.
-- [ ] **Schritt 5:** Commit: `git add app/Packages/RemindersKit && git commit -m "feat: exclude the shopping list from reminder tasks"`
+- [x] **Schritt 2:** Beide Suiten ausführen. Erwartet: Übersetzungsfehler (`ShoppingListFilter` unbekannt).
+- [x] **Schritt 3: Umsetzen.** Im Provider: `openTasks()` ruft `store.openReminders(in: ShoppingListFilter.taskListIDs(selected: selectedListIDs(), all: store.lists().map(\.id), shopping: excludedListID()))`; `containers()` filtert `excludedListID()` heraus; `create(_:)` setzt `listID` über `listForNewReminder` (Sortierung der Titel mit `localizedStandardCompare`). `task(id:)`, `apply`, `delete` bleiben unverändert.
+- [x] **Schritt 4:** Paket `RemindersKit` testen. Erwartet: grün.
+- [x] **Schritt 5:** Commit: `git add app/Packages/RemindersKit && git commit -m "feat: exclude the shopping list from reminder tasks"`
 
 ---
 
