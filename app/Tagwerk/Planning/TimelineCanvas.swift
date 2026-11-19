@@ -118,6 +118,8 @@ struct TimelineCanvas: View {
                 if let preview = taskPreview {
                     previewBlock(preview, shown: shown, width: width)
                 }
+                NowLine(model: model, day: plan.day, shown: shown, labelWidth: labelWidth, width: geometry.size.width)
+                    .zIndex(3)
             }
             .coordinateSpace(.named("canvas"))
         }
@@ -376,7 +378,12 @@ struct TimelineCanvas: View {
     }
 
     private func y(_ minutes: Int, _ shown: Range<Int>) -> CGFloat {
-        CGFloat(minutes - shown.lowerBound) / 60 * Self.hourHeight + Self.lineInset
+        Self.y(minutes, shown)
+    }
+
+    /// Vertical position of a time in the canvas; also used by the "now" line.
+    static func y(_ minutes: Int, _ shown: Range<Int>) -> CGFloat {
+        CGFloat(minutes - shown.lowerBound) / 60 * hourHeight + lineInset
     }
 
     private func height(_ minutes: Int) -> CGFloat {

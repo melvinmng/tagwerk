@@ -8959,6 +8959,26 @@
         }
       }
     },
+    "Jetzt · %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Now · %@"
+          }
+        }
+      }
+    },
+    "Jetzt, %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Now, %@"
+          }
+        }
+      }
+    },
     "Jährlich": {
       "localizations": {
         "en": {

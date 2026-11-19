@@ -20,6 +20,8 @@ struct DayView: View {
     @State private var blockFor: TaskItem?
     @State private var sheetEntry: DayEntry?
     @State private var showsGrid = true
+    /// Bumped every minute so the list places the "now" row anew.
+    @State private var nowTick = 0
 
     var body: some View {
         Group {
@@ -132,8 +134,11 @@ struct DayView: View {
             }
             Section {
                 let rows = model.timelineWithGaps(for: plan)
+                let nowIndex = nowTick >= 0 ? model.nowRowIndex(in: rows, on: plan.day) : nil
                 if rows.isEmpty { Text("Keine Termine").foregroundStyle(.secondary) }
-                ForEach(rows) { row in timelineRow(row, plan: plan) }
+                ForEach(rows.prefix(nowIndex ?? rows.count)) { row in timelineRow(row, plan: plan) }
+                NowRowSlot(model: model, day: plan.day, isShown: nowIndex != nil)
+                ForEach(rows.dropFirst(nowIndex ?? rows.count)) { row in timelineRow(row, plan: plan) }
                 // Open AI suggestions in list mode (mockup W3).
                 ForEach(plan.suggestions.filter { $0.kind == .block }.sorted { ($0.startMinutes ?? 0) < ($1.startMinutes ?? 0) }) { suggestion in
                     SuggestionRow(suggestion: suggestion)
@@ -146,6 +151,7 @@ struct DayView: View {
                          menuActions: plannedActions)
         }
         .simultaneousGesture(pageSwipeGesture { model.step($0.step) })
+        .modifier(NowListBehavior(model: model, day: plan.day, tick: $nowTick))
     }
 
     @ViewBuilder
