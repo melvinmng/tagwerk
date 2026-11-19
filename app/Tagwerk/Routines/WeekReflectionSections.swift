@@ -28,8 +28,8 @@ struct WeekReflectionSections: View {
         }
 
         Section {
-            TextField("Was lief gut?", text: $model.reflection.wentWell, axis: .vertical).lineLimit(2...8)
-            TextField("Belastet mich etwas?", text: $model.reflection.burdens, axis: .vertical).lineLimit(2...8)
+            TextField("Was lief gut?", text: $model.reflection.wentWell, axis: .vertical).lineLimit(2...8).keyboardDoneButton()
+            TextField("Belastet mich etwas?", text: $model.reflection.burdens, axis: .vertical).lineLimit(2...8).keyboardDoneButton()
         } header: {
             Text("Reflexion")
         } footer: {

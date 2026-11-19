@@ -3564,6 +3564,16 @@
         }
       }
     },
+    "Aus": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Off"
+          }
+        }
+      }
+    },
     "Ausplanen": {
       "localizations": {
         "en": {
@@ -3640,6 +3650,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Start"
+          }
+        }
+      }
+    },
+    "Beginn bei Zielschlafzeit": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start at target bedtime"
           }
         }
       }
@@ -5244,6 +5264,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "A repeating task needs a due date."
+          }
+        }
+      }
+    },
+    "Eine dieser Erinnerungen liegt in den Ruhezeiten. Routine-Erinnerungen kommen trotzdem.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "One of these reminders falls within quiet hours. Routine reminders still come through."
           }
         }
       }
@@ -7020,6 +7050,16 @@
         }
       }
     },
+    "Hält Mitteilungen zu Aufgaben und Deadline-Terminen zurück, solange der Fokus aktiv ist. Sie kommen nach den Ruhezeiten oder nach dem Fokus.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Holds back notifications for tasks and deadline events while the Focus is active. They arrive after quiet hours or after the Focus."
+          }
+        }
+      }
+    },
     "Häufigkeit": {
       "localizations": {
         "en": {
@@ -8761,12 +8801,52 @@
         }
       }
     },
+    "Mitteilungen ruhen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notifications paused"
+          }
+        }
+      }
+    },
+    "Mitteilungen ruhen lassen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pause notifications"
+          }
+        }
+      }
+    },
     "Mitteilungen sind für Tagwerk nicht erlaubt. Ohne Erlaubnis erinnert nur die Zeile in „Planen“.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Notifications are not allowed for Tagwerk. Without permission only the row in Plan reminds you."
+          }
+        }
+      }
+    },
+    "Mitteilungen wie gewohnt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notifications as usual"
+          }
+        }
+      }
+    },
+    "Mitteilungen zu Aufgaben und Deadline-Terminen, die in die Ruhezeit fallen, kommen erst am Ende der Ruhezeit. Sie entfallen nicht. Erinnerungen der Routinen bleiben davon ausgenommen. Die Zielschlafzeit stellst du unter Routinen ein.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notifications for tasks and deadline events that fall within quiet hours arrive at the end of quiet hours instead of being dropped. Routine reminders are exempt. You set the target bedtime under Routines."
           }
         }
       }
@@ -10272,6 +10352,16 @@
         }
       }
     },
+    "Ruhezeiten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quiet hours"
+          }
+        }
+      }
+    },
     "Runde %lld": {
       "shouldTranslate": false
     },
@@ -10285,12 +10375,12 @@
         }
       }
     },
-    "Sag einen der Sätze zu Siri oder füge ihn in der App „Kurzbefehle“ hinzu. „Wasser erfassen“ lässt sich dort auch auf die Aktionstaste oder den Home-Bildschirm legen.": {
+    "Sag einen der Sätze zu Siri oder füge ihn in der App „Kurzbefehle“ hinzu. „Wasser erfassen“ lässt sich dort auch auf die Aktionstaste oder den Home-Bildschirm legen. Erkennt Siri einen Satz nicht, prüfe in der App „Kurzbefehle“, ob dort die Tagwerk-Kurzbefehle stehen, und probiere den Satz als Text über „Tippen für Siri“.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Say one of the phrases to Siri or add it in the Shortcuts app. “Log water” can also be put on the Action button or the Home Screen there."
+            "value": "Say one of the phrases to Siri or add it in the Shortcuts app. “Log water” can also be put on the Action button or the Home Screen there. If Siri does not recognize a phrase, check in the Shortcuts app that the Tagwerk shortcuts are listed there, and try the phrase as text with Type to Siri."
           }
         }
       }
@@ -11312,6 +11402,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tagwerk block"
+          }
+        }
+      }
+    },
+    "Tagwerk-Mitteilungen ruhen lassen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pause Tagwerk notifications"
           }
         }
       }
@@ -13278,6 +13378,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Merged at your request; the copy with the most details is shown."
+          }
+        }
+      }
+    },
+    "Zusätzlich kannst du in den iOS-Einstellungen unter Fokus einen Fokus-Filter für Tagwerk hinzufügen und „Mitteilungen ruhen lassen“ wählen. Solange dieser Fokus aktiv ist, hält Tagwerk die Mitteilungen bis zum Ende der Ruhezeit zurück, ohne Ruhezeit für höchstens 8 Stunden. Nach dem Fokus kommen Mitteilungen, die inzwischen fällig wurden.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In the iOS settings under Focus, you can also add a Focus filter for Tagwerk and choose “Pause notifications”. While that Focus is active, Tagwerk holds notifications back until the end of quiet hours, or for 8 hours at most without quiet hours. After the Focus, notifications that came due in the meantime arrive."
           }
         }
       }

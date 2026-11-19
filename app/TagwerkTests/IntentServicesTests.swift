@@ -17,6 +17,19 @@ struct IntentServicesTests {
         return (IntentServices(environment: environment), environment)
     }
 
+    @Test func focusFilter_remembersStartAndEnd_forTheNotificationPlan() async throws {
+        let (services, environment) = try make()
+        let start = Date(timeIntervalSince1970: 1_800_000_000)
+        await services.setFocusQuiet(active: true, now: start)
+        #expect(environment.settings.focusQuietState == FocusQuiet.State(since: start))
+        // A second run with the same value keeps the first start.
+        await services.setFocusQuiet(active: true, now: start.addingTimeInterval(600))
+        #expect(environment.settings.focusQuietSince == start)
+        await services.setFocusQuiet(active: false, now: start.addingTimeInterval(3600))
+        #expect(environment.settings.focusQuietSince == nil)
+        #expect(environment.settings.focusQuietCatchUpFrom == start)
+    }
+
     @Test func logWater_savesDrinkNow_writesSnapshot_replyWithoutTotal() async throws {
         let (services, environment) = try make()
         let today = PlanDay(date: .now, calendar: environment.planning.calendar)

@@ -198,6 +198,7 @@ struct SearchSheet: View {
         .padding(.top, 12)
         .padding(.bottom, 8)
         .background(.bar)
+        .keepsKeyboardOnTap()
     }
 
     private var filterMarks: some View {

@@ -71,6 +71,7 @@ struct TaskEditorView: View {
 
                 Section {
                     TextField("Titel", text: $model.draft.title, axis: .vertical)
+                        .keyboardDoneButton()
                     if model.original.id.source == .github {
                         LabeledContent("Repo", value: model.original.container.name)
                         assigneeRow
@@ -119,7 +120,7 @@ struct TaskEditorView: View {
 
                 if model.isVisible(.notes) {
                     Section(model.original.id.source == .github ? "Beschreibung (Markdown)" : "Notiz") {
-                        TextField("Notiz", text: notes, axis: .vertical).lineLimit(3...10)
+                        TextField("Notiz", text: notes, axis: .vertical).lineLimit(3...10).keyboardDoneButton()
                     }
                 }
 
@@ -144,7 +145,7 @@ struct TaskEditorView: View {
 
                 if model.canComment {
                     Section("Kommentar") {
-                        TextField("Kommentar schreiben", text: $model.comment, axis: .vertical).lineLimit(2...6)
+                        TextField("Kommentar schreiben", text: $model.comment, axis: .vertical).lineLimit(2...6).keyboardDoneButton()
                         Button("Senden") { Task { await model.postComment() } }
                             .disabled(isReadOnly || model.isPostingComment || model.comment.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                     }
@@ -162,6 +163,7 @@ struct TaskEditorView: View {
                     }
                 }
             }
+            .scrollDismissesKeyboard(.interactively)
             .animation(.default, value: model.conflict == nil)
             .onDisappear {
                 // After the user's own comment, the list needs the new version however the sheet closes.

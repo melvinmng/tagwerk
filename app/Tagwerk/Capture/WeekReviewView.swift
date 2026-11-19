@@ -42,6 +42,7 @@ struct WeekReviewView: View {
             // Phase 7: also in a week without any entry.
             WeekReflectionSections(model: model)
         }
+        .scrollDismissesKeyboard(.interactively)
         .navigationTitle("Wochenrückblick")
         .navigationBarTitleDisplayMode(.inline)
         .pageSwipe(excludesLeadingEdge: true) { direction in

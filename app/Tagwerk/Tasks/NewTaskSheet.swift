@@ -94,6 +94,7 @@ struct NewTaskSheet: View {
                 Section {
                     TextField("Titel", text: $title)
                     TextField("Notiz", text: $notes, axis: .vertical)
+                        .keyboardDoneButton()
                 }
 
                 if target == .github {
@@ -165,6 +166,7 @@ struct NewTaskSheet: View {
                     if !isOn { recurrence = nil }
                 }
             }
+            .scrollDismissesKeyboard(.interactively)
             .navigationTitle("Neue Aufgabe")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

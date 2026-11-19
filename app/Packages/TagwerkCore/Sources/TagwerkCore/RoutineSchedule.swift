@@ -151,10 +151,34 @@ public enum RoutineSchedule {
                                    body: Localized.string("Fokus für heute wählen?", in: language, bundle: .module), route: .routineStart)
     }
 
+    /// Which routine reminders sit inside the quiet hours. They are exempt (plan quiet-hours, decision 4): the settings
+    /// say so instead of moving them.
+    public static func quietHoursConflict(_ quietHours: QuietHours?, items: [ChecklistItem], bedtimeMinutes: Int,
+                                          eveningEnabled: Bool, morningEnabled: Bool, morningMinutes: Int) -> QuietHoursConflict {
+        guard let quietHours else { return QuietHoursConflict(evening: false, morning: false) }
+        let evening = eveningEnabled && reminderItems(items).contains { item in
+            item.offsetMinutes.map { quietHours.contains(minutes: anchorMinutes(bedtimeMinutes: bedtimeMinutes, offsetMinutes: $0)) } ?? false
+        }
+        return QuietHoursConflict(evening: evening, morning: morningEnabled && quietHours.contains(minutes: morningMinutes))
+    }
+
     /// Checked points that still exist; ids of deleted points are ignored.
     public static func checkedCount(_ day: RoutineDayValue, items: [ChecklistItem]) -> Int {
         items.filter { day.checkedItemIDs.contains($0.id) }.count
     }
+}
+
+/// Routine reminders that fall inside the quiet hours.
+public struct QuietHoursConflict: Equatable, Sendable {
+    public let evening: Bool
+    public let morning: Bool
+
+    public init(evening: Bool, morning: Bool) {
+        self.evening = evening
+        self.morning = morning
+    }
+
+    public var isEmpty: Bool { !evening && !morning }
 }
 
 /// Rules of the daily focus (phase 7 design §6, rule 12).

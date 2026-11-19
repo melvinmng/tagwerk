@@ -392,6 +392,7 @@ struct TaskLinkPicker: View {
             }
             .foregroundStyle(.primary)
         }
+        .scrollDismissesKeyboard(.interactively)
         .searchable(text: $search, prompt: "Aufgabe suchen")
         .navigationTitle("Aufgabe wählen")
     }

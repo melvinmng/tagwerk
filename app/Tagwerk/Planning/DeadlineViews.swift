@@ -179,6 +179,7 @@ private struct MarkReassignSheet: View {
                 } label: { EventPickRow(event: event, model: model) }
                     .foregroundStyle(.primary)
             }
+            .scrollDismissesKeyboard(.interactively)
             .searchable(text: $search, prompt: "Termin suchen")
             .navigationTitle("Termin wählen")
             .navigationBarTitleDisplayMode(.inline)
@@ -352,6 +353,7 @@ struct EventLinkPicker: View {
                 if filtered.isEmpty { Text("Keine Termine bis zur Deadline").foregroundStyle(.secondary) }
             }
         }
+        .scrollDismissesKeyboard(.interactively)
         .searchable(text: $search, prompt: "Termin suchen")
         .navigationTitle("Termin wählen")
         .confirmationDialog(askingSeries.map { String(localized: "„\($0.title)“ wiederholt sich") } ?? "",

@@ -185,6 +185,7 @@ private struct PlanTaskPicker: View {
                 }
                 .foregroundStyle(.primary)
             }
+            .scrollDismissesKeyboard(.interactively)
             .searchable(text: $search, prompt: "Aufgabe suchen")
             .navigationTitle(day.startDate(in: model.calendar).formatted(.dateTime.weekday(.abbreviated).day().month()))
             .navigationBarTitleDisplayMode(.inline)
