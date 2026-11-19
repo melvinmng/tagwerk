@@ -16,6 +16,10 @@ struct RootView: View {
         Binding(get: { environment.assistant.isPresented }, set: { environment.assistant.isPresented = $0 })
     }
 
+    private var routinesSheet: Binding<RoutinesModel.Sheet?> {
+        Binding(get: { environment.routines.sheet }, set: { environment.routines.sheet = $0 })
+    }
+
     private var searchPresented: Binding<Bool> {
         Binding(get: { environment.isSearchPresented }, set: { environment.isSearchPresented = $0 })
     }
@@ -69,7 +73,7 @@ struct RootView: View {
         }
         .onChange(of: environment.assistant.isPresented) { _, presented in
             // The chat is its own sheet over the tabs; other sheets close first.
-            if presented { editingTask = nil; openEvent = nil; recurringEdit = nil; environment.closeSearch() }
+            if presented { editingTask = nil; openEvent = nil; recurringEdit = nil; environment.routines.sheet = nil; environment.closeSearch() }
         }
         .onChange(of: environment.notificationNavigator.receivedCount) { _, _ in openNotificationTarget() }
         .onChange(of: environment.router.receivedCount) { _, _ in openRouterTarget() }
@@ -99,6 +103,12 @@ struct RootView: View {
         .sheet(item: $openEvent) { event in
             EventEntrySheet(event: event, onShowTask: showTask)
         }
+        .sheet(item: routinesSheet) { sheet in
+            switch sheet {
+            case .evening(let day): EveningSheet(model: environment.routines, day: day)
+            case .start(let day): MorningSheet(model: environment.routines, day: day)
+            }
+        }
         .sheet(item: $recurringEdit) { edit in
             RecurringEffortSheet(item: edit.item, day: edit.day, model: environment.planning)
         }
@@ -126,6 +136,7 @@ struct RootView: View {
         editingTask = nil
         openEvent = nil
         recurringEdit = nil
+        environment.routines.sheet = nil
         environment.closeSearch()
         environment.assistant.isPresented = false
         switch route {
@@ -141,12 +152,19 @@ struct RootView: View {
         editingTask = nil
         openEvent = nil
         recurringEdit = nil
+        environment.routines.sheet = nil
         environment.closeSearch()
         environment.assistant.isPresented = false
         switch request.route {
         case .planToday: showDay(environment.planning.today)
         case .capture, .captureMeal, .captureWorkout, .review: selectedTab = 3
         case .shopping: environment.openShopping()
+        case .routineStart:
+            showDay(environment.planning.today)
+            environment.routines.openStart()
+        case .routineEvening:
+            showDay(environment.planning.today)
+            environment.routines.openEvening()
         }
     }
 

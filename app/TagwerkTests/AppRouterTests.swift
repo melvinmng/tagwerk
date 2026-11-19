@@ -57,4 +57,14 @@ struct AppRouterTests {
         #expect(request?.route == .shopping && request?.prefill == nil)
         #expect(router.takeCapturePrefill() == nil)
     }
+
+    @Test func router_routineRoutes_haveNoPrefill() {
+        let router = AppRouter()
+        router.open(URL(string: "tagwerk://routine/evening")!)
+        #expect(router.takeRequest(setupCompleted: true) == AppRouter.Request(route: .routineEvening, prefill: nil))
+        #expect(router.takeCapturePrefill() == nil)
+        router.open(.routineStart)
+        #expect(router.takeRequest(setupCompleted: true)?.route == .routineStart)
+        #expect(router.takeCapturePrefill() == nil)
+    }
 }

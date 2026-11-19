@@ -2163,6 +2163,16 @@
         }
       }
     },
+    "Abend-Checkliste · Schlafzeit %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Evening checklist · Bedtime %@"
+          }
+        }
+      }
+    },
     "Abgeben": {
       "localizations": {
         "en": {
@@ -3222,6 +3232,16 @@
         }
       }
     },
+    "Aufgaben erledigt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tasks completed"
+          }
+        }
+      }
+    },
     "Aufgaben werden geladen …": {
       "localizations": {
         "en": {
@@ -3730,6 +3750,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "ChatGPT is speaking … · Microphone off"
+          }
+        }
+      }
+    },
+    "Checkliste %lld von %lld": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Checkliste %1$lld von %2$lld"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Checklist %1$lld of %2$lld"
           }
         }
       }
@@ -5457,6 +5493,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Completed, %lld"
+          }
+        }
+      }
+    },
+    "Erledigt: Erinnerungen und lokale Aufgaben, ohne GitHub.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Completed: reminders and local tasks, without GitHub."
           }
         }
       }
@@ -9571,6 +9617,16 @@
         }
       }
     },
+    "Punkte in den Einstellungen anlegen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add items in Settings"
+          }
+        }
+      }
+    },
     "Quellen": {
       "localizations": {
         "en": {
@@ -9703,6 +9759,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Say one of the phrases to Siri or add it in the Shortcuts app. “Log water” can also be put on the Action button or the Home Screen there."
+          }
+        }
+      }
+    },
+    "Schlafzeit %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bedtime %@"
           }
         }
       }
@@ -13828,6 +13894,16 @@
         }
       }
     },
+    "Öffnet den Tagesabschluss": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opens the evening wrap-up"
+          }
+        }
+      }
+    },
     "Öffnet die Einkaufsliste": {
       "localizations": {
         "en": {
@@ -14234,6 +14310,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "↻ %@ reserved"
+          }
+        }
+      }
+    },
+    "★ Fokus": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "★ Focus"
           }
         }
       }

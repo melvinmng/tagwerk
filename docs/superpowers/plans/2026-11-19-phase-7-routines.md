@@ -597,7 +597,7 @@ public enum FocusRules {                               // in RoutineSchedule.swi
 struct EveningSheet: View { let model: RoutinesModel; let day: PlanDay }
 ```
 
-- [ ] **Step 1: Tests schreiben (rot).**
+- [x] **Step 1: Tests schreiben (rot).**
 
 ```swift
 // AppRouteTests
@@ -619,10 +619,10 @@ struct EveningSheet: View { let model: RoutinesModel; let day: PlanDay }
 @Test func captureEveningDetail_openAndDone()                  // "Schlafzeit 23:00 · Checkliste 0 von 3" and "✓ 22:10"
 ```
 
-- [ ] **Step 2:** `CORE AppRouteTests`, `CORE FocusRulesTests`, `APP RoutinesModelTests`, `APP AppRouterTests` → rot.
-- [ ] **Step 3: Umsetzen.** `AppEnvironment` legt `routines: RoutinesModel` an (`completedCount` aus den beiden Lesern des Wochenrückblicks). `RootView`: `.sheet(item:)` auf `environment.routines.sheet` zeigt `EveningSheet` bzw. (Task 11) `MorningSheet`; `openRouterTarget()` behandelt `.routineStart`/`.routineEvening` mit `showDay(planning.today)` und `routines.openStart()`/`openEvening()`; das Routinen-Blatt schließt wie die anderen, wenn der Assistent, eine Mitteilung oder eine Route öffnet. `EveningSheet` nach Design §7.5: „Heute“ (drei Zeilen, Fokus-Zeile nur mit Fokus, Fußtext aus A1), „Abend-Checkliste · Schlafzeit 23:00“ mit Uhrzeit je Punkt, ohne Punkte der Hinweis „Punkte in den Einstellungen anlegen“, Zeile „☾ Morgen planen · …“ nur mit `planning.nextPlanDay` (setzt `planning.anchor`, `environment.requestedTab = 0`, schließt das Blatt), „Fertig“ ruft `finishEvening(day)`. `CapacityCard`: Zeile „🛏 Tagesabschluss · Schlafzeit 23:00 · Checkliste 0 von 3 ›“ bei `plan.day == model.today` und `routines.eveningLine != nil`, unabhängig von `eveningEntry`, nach „Fertig“ mit Häkchen. `CaptureView`: Abschnitt „Routinen“ vor „Gewohnheiten“ mit der Zeile „Tagesabschluss“ für den gezeigten Tag (die Zeile „Tagesstart“ folgt in Task 11).
-- [ ] **Step 4:** Tests aus Step 2 → grün. Sichtprüfung gegen GS·B und GA1 (abends).
-- [ ] **Step 5: Commit.** `git commit -m "feat: add the evening wrap-up sheet, routine routes and the evening line"`
+- [x] **Step 2:** `CORE AppRouteTests`, `CORE FocusRulesTests`, `APP RoutinesModelTests`, `APP AppRouterTests` → rot.
+- [x] **Step 3: Umsetzen.** `AppEnvironment` legt `routines: RoutinesModel` an (`completedCount` aus den beiden Lesern des Wochenrückblicks). `RootView`: `.sheet(item:)` auf `environment.routines.sheet` zeigt `EveningSheet` bzw. (Task 11) `MorningSheet`; `openRouterTarget()` behandelt `.routineStart`/`.routineEvening` mit `showDay(planning.today)` und `routines.openStart()`/`openEvening()`; das Routinen-Blatt schließt wie die anderen, wenn der Assistent, eine Mitteilung oder eine Route öffnet. `EveningSheet` nach Design §7.5: „Heute“ (drei Zeilen, Fokus-Zeile nur mit Fokus, Fußtext aus A1), „Abend-Checkliste · Schlafzeit 23:00“ mit Uhrzeit je Punkt, ohne Punkte der Hinweis „Punkte in den Einstellungen anlegen“, Zeile „☾ Morgen planen · …“ nur mit `planning.nextPlanDay` (setzt `planning.anchor`, `environment.requestedTab = 0`, schließt das Blatt), „Fertig“ ruft `finishEvening(day)`. `CapacityCard`: Zeile „🛏 Tagesabschluss · Schlafzeit 23:00 · Checkliste 0 von 3 ›“ bei `plan.day == model.today` und `routines.eveningLine != nil`, unabhängig von `eveningEntry`, nach „Fertig“ mit Häkchen. `CaptureView`: Abschnitt „Routinen“ vor „Gewohnheiten“ mit der Zeile „Tagesabschluss“ für den gezeigten Tag (die Zeile „Tagesstart“ folgt in Task 11).
+- [x] **Step 4:** Tests aus Step 2 → grün. Sichtprüfung gegen GS·B und GA1 (abends).
+- [x] **Step 5: Commit.** `git commit -m "feat: add the evening wrap-up sheet, routine routes and the evening line"`
 
 ### Task 10: Wiederholende Mitteilungen, Ausschluss im Scheduler, Sprung über den Router · #142 · Zeile 7
 

@@ -107,3 +107,23 @@ public enum RoutineSchedule {
         items.filter { day.checkedItemIDs.contains($0.id) }.count
     }
 }
+
+/// Rules of the daily focus (phase 7 design §6, rule 12).
+public enum FocusRules {
+    public static let maximumMarks = 3
+
+    /// Open tasks of `today`: planned for that day, due that day or with a time block that day; recurring occurrences
+    /// are left out. Sorted: priority 1 and tasks due that day first, then the usual order of `sortedTasks`.
+    public static func candidates(_ tasks: [TaskItem], plannedToday: Set<TaskID>, blockedToday: Set<TaskID>,
+                                  recurring: Set<TaskID>, today: PlanDay, calendar: Calendar) -> [TaskItem] {
+        func isDueToday(_ task: TaskItem) -> Bool { task.due.map { PlanDay($0) == today } ?? false }
+        let chosen = tasks.filter { task in
+            !task.isCompleted && !recurring.contains(task.id)
+                && (plannedToday.contains(task.id) || blockedToday.contains(task.id) || isDueToday(task))
+        }
+        let sorted = sortedTasks(chosen, calendar: calendar)
+        let urgent = sorted.filter { $0.priority == .p1 || isDueToday($0) }
+        let rest = sorted.filter { !($0.priority == .p1 || isDueToday($0)) }
+        return urgent + rest
+    }
+}

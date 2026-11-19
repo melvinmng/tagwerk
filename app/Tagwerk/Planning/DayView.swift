@@ -203,6 +203,7 @@ struct DayView: View {
 
 /// Remaining time today (B1) or the day's capacity; opens the working hours of the day.
 struct CapacityCard: View {
+    @Environment(AppEnvironment.self) private var environment
     let model: PlanningModel
     let plan: DayPlan
     let onEdit: () -> Void
@@ -218,9 +219,37 @@ struct CapacityCard: View {
                 Divider()
                 eveningLine(entry)
             }
+            if plan.day == model.today, environment.routines.eveningLine != nil {
+                Divider()
+                wrapUpLine
+            }
         }
         .padding(12)
         .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 14))
+    }
+
+    /// "🛏 Tagesabschluss · Schlafzeit 23:00 · Checkliste 0 von 3 ›", independent of "Morgen planen"; after "Fertig"
+    /// with a checkmark. Opens the sheet; nothing is written by looking at it.
+    private var wrapUpLine: some View {
+        let routines = environment.routines
+        let isDone = routines.eveningLine?.isDone == true
+        return Button {
+            routines.openEvening()
+        } label: {
+            HStack(spacing: 10) {
+                Image(systemName: isDone ? "checkmark.circle.fill" : "bed.double")
+                    .foregroundStyle(isDone ? Color.green : Color.accentColor)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Tagesabschluss").font(.subheadline.weight(.semibold))
+                    Text(routines.captureEveningDetail(routines.eveningDay)).font(.caption).foregroundStyle(.secondary)
+                }
+                Spacer()
+                Image(systemName: "chevron.right").font(.caption).foregroundStyle(.secondary)
+            }
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityHint("Öffnet den Tagesabschluss")
     }
 
     /// "☾ Morgen planen · Do. 19. Nov. · 3 h 15 frei · 2 von heute übrig" (MP2): a tap only shows that day;

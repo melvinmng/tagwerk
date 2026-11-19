@@ -59,6 +59,8 @@ final class AppEnvironment {
     let habits: HabitsModel
     /// Day entries and the evening checklist of the routines (phase 7).
     let routineStore: RoutineStore
+    /// The routine sheets, the evening line and the evening wrap-up (phase 7).
+    let routines: RoutinesModel
     /// Meal estimates with ChatGPT; only after consent and a tap (main design §7).
     let mealEstimator: MealEstimator
     /// Writes the snapshot file the widget reads (phase 4); `directory == nil` in tests and unsigned builds.
@@ -213,6 +215,16 @@ final class AppEnvironment {
         self.shoppingSorter = ShoppingSorter(responder: ai.client, model: { try await ai.selectedModel() },
                                              hasConsent: { settings.shoppingSortConsent })
         let planning = self.planning
+        let localTasks = LocalTaskProvider(context: context)
+        self.routines = RoutinesModel(
+            store: routineStore, planning: planning, taskList: taskList, habits: habits, settings: settings,
+            completedCount: { interval in
+                // Same readers as the weekly review: reminders (without the shopping list) and local tasks.
+                let listIDs = ShoppingListFilter.taskListIDs(selected: settings.selectedReminderListIDs.map(Set.init),
+                                                             all: reminderStore.lists().map(\.id), shopping: settings.shoppingListID)
+                return await reminderStore.completionDates(in: interval, listIDs: listIDs).count
+                    + localTasks.completionDates(in: interval).count
+            })
         taskList.onCompletionChanged = { id, isCompleted in await planning.didChangeCompletion(id, isCompleted: isCompleted) }
         taskList.onHandedOver = { id in await planning.didHandOver(id) }
         // An ended GitHub sign-in (expired or revoked) forgets the cached issues of that account.

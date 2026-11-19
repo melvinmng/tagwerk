@@ -303,6 +303,15 @@ final class PlanningModel {
         await updateEvening(open: open, allAssignments: allAssignments, recurringIDs: recurringIDs)
     }
 
+    /// Open tasks with a time block (own or linked event) on `day`, read without changing what is shown.
+    func taskIDsWithBlocks(on day: PlanDay) -> Set<TaskID> {
+        let open = taskList.items.filter { !$0.isCompleted }
+        let interval = DateInterval(start: day.startDate(in: calendar),
+                                    end: day.adding(days: 1, calendar: calendar).startDate(in: calendar))
+        let events = calendarStore.events(in: interval, calendarIDs: readableCalendarIDs())
+        return Set(resolveLinks(events: events, tasks: open, manual: blocks.links.manualLinks()).map(\.taskID))
+    }
+
     /// The AI view of days outside the shown range (e.g. the next week as targets for moving tasks away
     /// from a full day). Computed like `reload()` without changing what is shown.
     func planInputs(in range: ClosedRange<PlanDay>) async -> [PlanInputDay] {

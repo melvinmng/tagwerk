@@ -63,6 +63,7 @@ struct CaptureView: View {
                 if model.showsHealthCard {
                     Section { HealthCard(model: model) }
                 }
+                RoutinesSection(model: environment.routines, day: model.day)
                 HabitsSection(model: environment.habits, capture: model) { showsHabitList = true }
                 mealSection
                 drinkSection

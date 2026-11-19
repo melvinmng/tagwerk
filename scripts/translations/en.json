@@ -1457,5 +1457,13 @@
   "ohne Erinnerung": "no reminder",
   "Handy weglegen": "Put the phone away",
   "Ins Bett": "Go to bed",
-  "Tagesabschluss öffnen": "Open evening wrap-up"
+  "Tagesabschluss öffnen": "Open evening wrap-up",
+  "Abend-Checkliste · Schlafzeit %@": "Evening checklist · Bedtime %@",
+  "Aufgaben erledigt": "Tasks completed",
+  "Checkliste %lld von %lld": "Checklist %1$lld of %2$lld",
+  "Erledigt: Erinnerungen und lokale Aufgaben, ohne GitHub.": "Completed: reminders and local tasks, without GitHub.",
+  "Punkte in den Einstellungen anlegen": "Add items in Settings",
+  "Schlafzeit %@": "Bedtime %@",
+  "Öffnet den Tagesabschluss": "Opens the evening wrap-up",
+  "★ Fokus": "★ Focus"
 }

@@ -65,6 +65,11 @@ final class HabitsModel {
 
     var canAddHabit: Bool { habits.filter { $0.pausedSince == nil }.count < HabitRules.maximumActive }
 
+    /// The counter of rule 8 for any day inside the window (the evening sheet of yesterday after midnight).
+    func counter(on day: PlanDay) -> HabitCounter? {
+        HabitRules.counter(habits, today: day, facts: facts, calendar: calendar)
+    }
+
     /// Automatic sources already used by another habit (paused ones included).
     func takenSources(excluding id: UUID?) -> Set<HabitSource> {
         Set(habits.filter { $0.id != id && $0.source != .manual }.map(\.source))
