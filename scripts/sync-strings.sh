@@ -78,7 +78,7 @@ sync_catalog() {
 DIFFERENT=0
 INTERMEDIATES="$DERIVED/Build/Intermediates.noindex/Tagwerk.build"
 
-for target in Tagwerk TagwerkWidget; do
+for target in Tagwerk TagwerkWidget TagwerkShare; do
   catalog="$APP_DIR/$target/Localizable.xcstrings"
   [[ -f "$catalog" ]] || continue
   files=("$INTERMEDIATES"/*-iphonesimulator/$target.build/Objects-normal/*/*.stringsdata(N))

@@ -134,6 +134,13 @@ Der Tab **Planen** zeigt Tag, Woche oder Monat. Der **Arbeitstag** einer Aufgabe
 - **Gleiche Termine** in mehreren Kalendern fasst Tagwerk nur nach deiner Zustimmung zusammen. **Einstellungen → Planen → Kalender-Diagnose** zeigt je Kalender, welche Termine gelesen und gezeigt werden.
 - **Wichtige Deadlines:** P1-Aufgaben, GitHub-Epics (Label `epic`) und Termine aus Deadline-Kalendern.
 
+## Aus anderen Apps teilen
+
+- **Teilen → Tagwerk** legt Links, Text, Bilder und Dateien aus Safari, Mail, Dateien, Fotos und anderen Apps als Aufgabe, Notiz, Einkauf oder Rezept an. Die Erweiterung sichert den Eintrag nur auf dem iPhone, ohne Netzaufruf und ohne Zugriff auf deine Anmeldungen oder Daten in Tagwerk. Die App öffnet das passende Blatt beim nächsten Öffnen; gespeichert wird erst, wenn du dort bestätigst.
+- **Eingang:** höchstens 20 offene Einträge, Dateien bis 25 MB, Einträge nach 14 Tagen verworfen. Ein weggewischtes Blatt kommt höchstens dreimal wieder, danach steht der Eintrag unter „Geteilt (n)“ in „Aufgaben“.
+- **Datensicherung:** Der Eingang ist ein Zwischenspeicher, von der Sicherung ausgenommen und nicht durchsuchbar.
+- **Mail zu Aufgabe:** Aus einer geteilten Mail (oder Text aus der Zwischenablage über das Menü am „+“ in „Aufgaben“) wird eine Aufgabe mit dem Betreff als Titel und, wenn die Mail eine Nachrichten-ID hat, einem Link zurück zur Mail. Auf Wunsch schlägt ChatGPT Titel, Zusammenfassung und Fälligkeit vor, nur nach Zustimmung unter Einstellungen › KI und nur auf dein Tippen auf „Mit ChatGPT zusammenfassen“. Gesendet werden Betreff, Absendername und Text (höchstens 12 000 Zeichen), nie Anhänge, Adressen, Empfänger oder die Nachrichten-ID.
+
 ## Entwicklung
 
 - [`app/`](app/) enthält die SwiftUI-App und ihre lokalen Swift-Pakete. XcodeGen erzeugt das Xcode-Projekt aus [`app/project.yml`](app/project.yml).

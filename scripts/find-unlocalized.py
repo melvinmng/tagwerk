@@ -29,7 +29,7 @@ EXCLUDED = [
 
 def main(arguments):
     summary = "--summary" in arguments
-    roots = [a for a in arguments if not a.startswith("--")] or ["Tagwerk", "TagwerkWidget", "Packages"]
+    roots = [a for a in arguments if not a.startswith("--")] or ["Tagwerk", "TagwerkWidget", "TagwerkShare", "Packages"]
     sources = [p for r in roots for p in (APP / r).rglob("*.swift")
                if "/Tests/" not in str(p) and "/.build/" not in str(p)]
     sources = [p for p in sources if not any(str(p).endswith(e) for e in EXCLUDED)]
