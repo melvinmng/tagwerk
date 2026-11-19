@@ -83,6 +83,7 @@ struct UnplannedDrawer: View {
                 .textFieldStyle(.roundedBorder)
                 .padding(.horizontal)
                 .padding(.bottom, 6)
+                .keepsKeyboardOnTap()
             list(sections)
         }
     }
@@ -96,6 +97,7 @@ struct UnplannedDrawer: View {
                 ForEach(sections.other.prefix(200)) { row($0) }
             }
         }
+        .scrollDismissesKeyboard(.interactively)
         .listStyle(.plain)
         .scrollContentBackground(.hidden)
     }

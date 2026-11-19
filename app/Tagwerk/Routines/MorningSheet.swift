@@ -82,6 +82,7 @@ struct MorningSheet: View {
                 }
                 NoteField(model: note)
             }
+            .scrollDismissesKeyboard(.interactively)
             .navigationTitle("Tagesstart")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

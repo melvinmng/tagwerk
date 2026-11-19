@@ -105,6 +105,7 @@ struct EveningSheet: View {
                     }
                 }
             }
+            .scrollDismissesKeyboard(.interactively)
             .navigationTitle("Tagesabschluss")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Fertig") { note.flush(); model.finishEvening(day) } } }

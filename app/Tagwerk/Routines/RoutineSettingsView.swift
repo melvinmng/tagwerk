@@ -202,6 +202,7 @@ private struct ChecklistItemSheet: View {
                     }
                 }
             }
+            .scrollDismissesKeyboard(.interactively)
             .navigationTitle(isNew ? "Neuer Punkt" : "Punkt")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

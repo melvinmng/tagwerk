@@ -71,6 +71,7 @@ struct RootView: View {
                             onShowTask: { id in environment.closeSearch(); showTask(id) })
             }
         }
+        .background(KeyboardDismissalInstaller())
         .onChange(of: environment.assistant.isPresented) { _, presented in
             // The chat is its own sheet over the tabs; other sheets close first.
             if presented { editingTask = nil; openEvent = nil; recurringEdit = nil; environment.routines.sheet = nil; environment.closeSearch() }

@@ -16,6 +16,7 @@ struct EstimateField: View {
                         .keyboardType(.decimalPad)
                         .multilineTextAlignment(.center)
                         .focused($isTyping)
+                        .keyboardDoneButton(focus: $isTyping)
                         .frame(minWidth: 44, maxWidth: 64)
                         .accessibilityLabel("Geschätzter Aufwand in Stunden")
                     Text("h").foregroundStyle(.secondary)
@@ -44,14 +45,6 @@ struct EstimateField: View {
             if input.minutes != value { input = EstimateInput(minutes: value) }
         }
         .onChange(of: isTyping) { _, typing in if !typing { input.endEditing() } }
-        .toolbar {
-            if isTyping {
-                ToolbarItemGroup(placement: .keyboard) {
-                    Spacer()
-                    Button("Fertig") { isTyping = false }
-                }
-            }
-        }
     }
 
     private func stepButton(_ symbol: String, direction: Int, label: String) -> some View {
