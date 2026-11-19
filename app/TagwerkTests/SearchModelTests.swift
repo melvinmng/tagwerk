@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+import GitHubKit
 import TagwerkCore
 @testable import Tagwerk
 
@@ -13,12 +14,16 @@ final class SearchProbe {
     var notes: [NoteSearchItem] = []
     var shopping: [ShoppingSearchItem] = []
     var gate: Gate?
+    /// `nil` = GitHub not connected.
+    var online: Result<[OnlineIssue], IssueSearchError>?
+    var onlineGate: Gate?
+    private(set) var onlineTexts: [String] = []
     private(set) var eventIntervals: [DateInterval] = []
     private(set) var completedCalls = 0
     private(set) var sleeps: [Duration] = []
 
     func sources() -> SearchSources {
-        SearchSources(
+        var sources = SearchSources(
             openTasks: { self.tasks },
             events: { interval in
                 self.eventIntervals.append(interval)
@@ -33,6 +38,14 @@ final class SearchProbe {
             },
             notes: { self.notes },
             shopping: { self.shopping })
+        if online != nil {
+            sources.searchOnline = { text in
+                self.onlineTexts.append(text)
+                if let gate = self.onlineGate { await gate.wait() }
+                return try self.online!.get()
+            }
+        }
+        return sources
     }
 
     func model() -> SearchModel {
@@ -242,6 +255,90 @@ struct SearchModelTests {
         await model.refresh()
         #expect(probe.completedCalls == 2)
         #expect(model.results.sections.map(\.kind).contains(.completedTasks))
+    }
+
+    private func issue(_ id: String, _ title: String, marker: OnlineIssueMarker? = .closed) -> OnlineIssue {
+        OnlineIssue(id: id, number: 42, title: title, repository: "octo/r", url: URL(string: "https://github.com/octo/r/issues/42")!,
+                    updatedAt: testNow(), marker: marker)
+    }
+
+    @Test func onlineSearchRunsOnlyOnTap() async {
+        probe.online = .success([issue("I_1", "Statistik-Bug")])
+        let model = probe.model()
+        model.text = "  statistik "
+        await model.settle()
+        #expect(probe.onlineTexts.isEmpty)
+        #expect(model.showsOnlineSearchRow)
+        await model.searchOnline()
+        #expect(probe.onlineTexts == ["statistik"])
+        #expect(model.onlineState == .loaded)
+        #expect(model.results.sections.map(\.kind).contains(.online))
+        #expect(!model.showsOnlineSearchRow)
+    }
+
+    @Test func onlineSectionDisappearsWhenTheTextChanges() async {
+        probe.online = .success([issue("I_1", "Statistik-Bug")])
+        let model = probe.model()
+        model.text = "statistik"
+        await model.searchOnline()
+        #expect(model.results.sections.map(\.kind).contains(.online))
+        model.text = "statistik lernen"
+        #expect(model.onlineState == .idle)
+        #expect(!model.results.sections.map(\.kind).contains(.online))
+        #expect(model.showsOnlineSearchRow)
+    }
+
+    @Test func onlineFailureKeepsLocalResults() async {
+        probe.online = .failure(.offline)
+        let model = probe.model()
+        model.text = "statistik"
+        let before = model.results.sections.map(\.kind)
+        await model.searchOnline()
+        #expect(model.onlineState == .failed(.offline))
+        #expect(model.results.sections.map(\.kind) == before)
+        #expect(model.showsOnlineSearchRow)          // "Erneut versuchen"
+    }
+
+    @Test func onlineRowHiddenWithoutGitHubAndUnderEventsFilter() async {
+        let withoutGitHub = probe.model()
+        withoutGitHub.text = "statistik"
+        #expect(!withoutGitHub.showsOnlineSearchRow)
+        probe.online = .success([])
+        let model = probe.model()
+        #expect(!model.showsOnlineSearchRow)          // no text yet
+        model.text = "statistik"
+        #expect(model.showsOnlineSearchRow)
+        model.filter = .events
+        #expect(!model.showsOnlineSearchRow)
+    }
+
+    @Test func lateOnlineAnswerNeverOverwritesNewerQuery() async {
+        probe.online = .success([issue("I_1", "Statistik-Bug")])
+        let gate = Gate()
+        probe.onlineGate = gate
+        let model = probe.model()
+        model.text = "statistik"
+        let search = Task { await model.searchOnline() }
+        await waitUntil { probe.onlineTexts.count == 1 }
+        model.text = "mathe"
+        gate.open()
+        await search.value
+        #expect(model.onlineState == .idle)
+        #expect(!model.results.sections.map(\.kind).contains(.online))
+    }
+
+    @Test func closedModelIgnoresTheOnlineAnswer() async {
+        probe.online = .success([issue("I_1", "Statistik-Bug")])
+        let gate = Gate()
+        probe.onlineGate = gate
+        let model = probe.model()
+        model.text = "statistik"
+        let search = Task { await model.searchOnline() }
+        await waitUntil { probe.onlineTexts.count == 1 }
+        model.close()
+        gate.open()
+        await search.value
+        #expect(model.results.isEmpty)
     }
 
     @Test func sectionsShowTwentyFiveRowsThenMore() async {

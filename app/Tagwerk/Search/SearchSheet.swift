@@ -1,5 +1,7 @@
+import GitHubKit
 import SwiftUI
 import TagwerkCore
+import UIKit
 
 /// The search sheet: a field, the kind marks and the sections of the hits (spec §6).
 struct SearchSheet: View {
@@ -11,6 +13,7 @@ struct SearchSheet: View {
 
     @Environment(AppEnvironment.self) private var environment
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.openURL) private var openURL
     @FocusState private var fieldFocused: Bool
     @State private var openTask: TaskItem?
     @State private var openContainers: [TaskContainer] = []
@@ -102,6 +105,12 @@ struct SearchSheet: View {
             openContainers = task.editableFields.contains(.container) ? await environment.taskList.containers(for: task.id.source) : []
             openTask = task
         }
+    }
+
+    /// Searches GitHub; an ended sign-in goes the way every other source takes (reload ends in the sign-in banner).
+    private func searchOnline() async {
+        await model.searchOnline()
+        if model.onlineState == .failed(.signedOut) { await environment.taskList.reload(only: [.github]) }
     }
 
     private func showInPlan(_ event: CalendarEvent) {
@@ -261,7 +270,14 @@ struct SearchSheet: View {
     private var displayedKinds: [SearchSectionKind] {
         SearchSectionKind.allCases.filter { kind in
             if model.results.sections.contains(where: { $0.kind == kind }) { return true }
-            return kind == .pastEvents && showsOlderEventsRow
+            switch kind {
+            case .pastEvents: return showsOlderEventsRow
+            // The row "Auf GitHub suchen" lives in "Aufgaben", also without hits there.
+            case .openTasks: return model.showsOnlineSearchRow || model.onlineState == .loading
+            // A finished search without a hit still says so.
+            case .online: return model.onlineState == .loaded
+            default: return false
+            }
         }
     }
 
@@ -279,6 +295,20 @@ struct SearchSheet: View {
             if let section, model.hiddenCount(in: section) > 0 {
                 Button { model.showMore(kind) } label: {
                     Text("Weitere \(min(SearchModel.pageSize, model.hiddenCount(in: section))) zeigen")
+                }
+            }
+            if kind == .online, model.onlineState == .loaded, section == nil {
+                Text("Keine weiteren Treffer auf GitHub.").foregroundStyle(.secondary)
+            }
+            if kind == .openTasks {
+                if model.onlineState == .loading {
+                    HStack(spacing: 10) {
+                        ProgressView()
+                        Text("GitHub wird durchsucht …").foregroundStyle(.secondary)
+                    }
+                    .accessibilityElement(children: .combine)
+                } else if model.showsOnlineSearchRow {
+                    SearchOnlineAskRow(state: model.onlineState) { Task { await searchOnline() } }
                 }
             }
             if kind == .pastEvents, showsOlderEventsRow {
@@ -307,6 +337,8 @@ struct SearchSheet: View {
             }
         case .completedTasks:
             Text("Geschlossene Issues findet nur die GitHub-Suche.")
+        case .online:
+            Text("Online-Treffer öffnen sich auf GitHub. Zum Bearbeiten in Tagwerk muss ein Issue dir zugewiesen sein und in einem Project liegen.")
         default:
             EmptyView()
         }
@@ -346,7 +378,16 @@ struct SearchSheet: View {
                 .accessibilityAddTraits(.isButton)
                 .accessibilityAction(named: Text("Öffnen")) { open(item) }
                 .accessibilityAction(named: Text("Wieder öffnen")) { reopen(item) }
-        case .online, .note, .shopping:
+        case .online(let issue):
+            SearchOnlineRow(issue: issue, now: now, calendar: calendar)
+                .onTapGesture { openURL(issue.url) }
+                .contextMenu {
+                    Button("Auf GitHub öffnen", systemImage: "arrow.up.right.square") { openURL(issue.url) }
+                    Button("Link kopieren", systemImage: "link") { UIPasteboard.general.url = issue.url }
+                }
+                .accessibilityAddTraits(.isButton)
+                .accessibilityAction(named: Text("Auf GitHub öffnen")) { openURL(issue.url) }
+        case .note, .shopping:
             EmptyView()
         }
     }

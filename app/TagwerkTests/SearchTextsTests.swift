@@ -1,4 +1,5 @@
 import Foundation
+import GitHubKit
 import SwiftUI
 import Testing
 import TagwerkCore
@@ -97,6 +98,19 @@ struct SearchTextsTests {
         #expect(SearchTexts.snippetLabel(.container) == "Liste")
         #expect(SearchTexts.snippetLabel(.project) == "Project")
         #expect(SearchTexts.snippetLabel(.label) == "Label")
+    }
+
+    @Test func onlineTextsNameMarkerRepositoryAndDate() {
+        let issue = OnlineIssue(id: "I", number: 42, title: "Bug", repository: "octo/app", url: URL(string: "https://github.com/octo/app/issues/42")!,
+                                updatedAt: date(2026, 11, 12), marker: .closed)
+        #expect(SearchTexts.onlineSubtitle(issue, now: now, calendar: calendar) == "octo/app · 12.11.")
+        let old = OnlineIssue(id: "I", number: 1, title: "Alt", repository: "octo/app", url: issue.url, updatedAt: date(2025, 3, 4), marker: nil)
+        #expect(SearchTexts.onlineSubtitle(old, now: now, calendar: calendar) == "octo/app · 04.03.2025")
+        #expect([OnlineIssueMarker.closed, .unassigned, .assignedToOthers, .noProject].map(SearchTexts.markerText)
+                == ["geschlossen", "nicht zugewiesen", "anderen zugewiesen", "ohne Project"])
+        #expect(SearchTexts.onlineError(.offline) == "Keine Verbindung zu GitHub.")
+        #expect(SearchTexts.onlineError(.rateLimited) == "GitHub nimmt gerade keine Suche an. Später erneut versuchen.")
+        #expect(SearchTexts.onlineError(.failed("Boom")) == "Boom")
     }
 
     @Test func highlightMarksOnlyTheGivenRanges() {

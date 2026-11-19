@@ -1367,5 +1367,17 @@
   "Durchsucht Termine und Aufgaben": "Searches events and tasks",
   "Der Termin wurde geändert.": "The event has changed.",
   "Im Plan zeigen": "Show in plan",
-  "In Aufgaben zeigen": "Show in tasks"
+  "In Aufgaben zeigen": "Show in tasks",
+  "Auf GitHub suchen": "Search on GitHub",
+  "GitHub nimmt gerade keine Suche an. Später erneut versuchen.": "GitHub is not accepting searches right now. Try again later.",
+  "GitHub wird durchsucht …": "Searching GitHub …",
+  "Keine weiteren Treffer auf GitHub.": "No further results on GitHub.",
+  "Link kopieren": "Copy link",
+  "Online-Treffer öffnen sich auf GitHub. Zum Bearbeiten in Tagwerk muss ein Issue dir zugewiesen sein und in einem Project liegen.": "Online results open on GitHub. To edit an issue in Tagwerk it must be assigned to you and belong to a project.",
+  "anderen zugewiesen": "assigned to others",
+  "auch geschlossene und fremde": "including closed and unassigned issues",
+  "geschlossen": "closed",
+  "nicht zugewiesen": "unassigned",
+  "ohne Project": "no project",
+  "Öffnet das Issue auf GitHub": "Opens the issue on GitHub"
 }

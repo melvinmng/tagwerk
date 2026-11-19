@@ -345,6 +345,17 @@ final class AppEnvironment {
         let reminderStore = self.reminderStore
         let searcher = self.eventSearcher
         let reminders = self.remindersProvider
+        var searchOnline: (@MainActor (String) async throws -> [OnlineIssue])?
+        if isGitHubActive {
+            searchOnline = { [weak self] text in
+                guard let self, let gitHub = self.taskList.provider(for: .github) as? GitHubTaskProvider else {
+                    throw IssueSearchError.signedOut
+                }
+                // Issues that are among the tasks already stay out; the search adds closed and unassigned ones.
+                let loaded = Set(self.taskList.items.filter { $0.id.source == .github }.map(\.id.rawValue))
+                return try await gitHub.searchOnline(text, excluding: loaded)
+            }
+        }
         let sources = SearchSources(
             openTasks: { sortedTasks(taskList.items, calendar: planning.calendar) },
             events: { interval in
@@ -360,7 +371,8 @@ final class AppEnvironment {
                 let interval = DateInterval(start: start, end: now.addingTimeInterval(60))
                 let local = (self?.taskList.provider(for: .local) as? LocalTaskProvider)?.completedTasks() ?? []
                 return await reminders.completedTasks(in: interval) + local
-            })
+            },
+            searchOnline: searchOnline)
         return SearchModel(sources: sources, calendar: planning.calendar)
     }
 

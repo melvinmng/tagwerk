@@ -69,6 +69,13 @@ struct SearchEntryTests {
         #expect(titles(model) == ["Statistik Übungsblatt"])
     }
 
+    @Test func onlineSearchIsOfferedOnlyWithGitHub() async {
+        #expect(!environment.isGitHubActive)
+        let model = environment.makeSearchModel()
+        model.text = "statistik"
+        #expect(!model.showsOnlineSearchRow)
+    }
+
     @Test func eventsComeFromTheSearcherWithTheReadableCalendars() async {
         let start = Date(timeIntervalSince1970: 1_800_000_000)
         var event = CalendarEvent(id: "e1", externalID: nil, calendarID: "cal", title: "Statistik Klausur", start: start,

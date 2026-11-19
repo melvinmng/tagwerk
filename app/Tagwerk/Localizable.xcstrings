@@ -2876,6 +2876,16 @@
         }
       }
     },
+    "Auf GitHub suchen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search on GitHub"
+          }
+        }
+      }
+    },
     "Auf GitHub öffnen": {
       "localizations": {
         "en": {
@@ -5824,6 +5834,16 @@
         }
       }
     },
+    "GitHub nimmt gerade keine Suche an. Später erneut versuchen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "GitHub is not accepting searches right now. Try again later."
+          }
+        }
+      }
+    },
     "GitHub offline": {
       "localizations": {
         "en": {
@@ -5840,6 +5860,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "GitHub online, %lld more"
+          }
+        }
+      }
+    },
+    "GitHub wird durchsucht …": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Searching GitHub …"
           }
         }
       }
@@ -6827,6 +6857,16 @@
         }
       }
     },
+    "Keine weiteren Treffer auf GitHub.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No further results on GitHub."
+          }
+        }
+      }
+    },
     "Keine zugewiesenen Issues in offenen Projects": {
       "localizations": {
         "en": {
@@ -7068,6 +7108,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Reading aloud · Stop"
+          }
+        }
+      }
+    },
+    "Link kopieren": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copy link"
           }
         }
       }
@@ -8603,6 +8653,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "No time"
+          }
+        }
+      }
+    },
+    "Online-Treffer öffnen sich auf GitHub. Zum Bearbeiten in Tagwerk muss ein Issue dir zugewiesen sein und in einem Project liegen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Online results open on GitHub. To edit an issue in Tagwerk it must be assigned to you and belong to a project."
           }
         }
       }
@@ -11802,6 +11862,16 @@
         }
       }
     },
+    "anderen zugewiesen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "assigned to others"
+          }
+        }
+      }
+    },
     "angemeldet": {
       "localizations": {
         "en": {
@@ -11818,6 +11888,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "also all future ones"
+          }
+        }
+      }
+    },
+    "auch geschlossene und fremde": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "including closed and unassigned issues"
           }
         }
       }
@@ -12052,6 +12132,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "planned %@"
+          }
+        }
+      }
+    },
+    "geschlossen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "closed"
           }
         }
       }
@@ -12399,6 +12489,16 @@
         }
       }
     },
+    "nicht zugewiesen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "unassigned"
+          }
+        }
+      }
+    },
     "noch %@": {
       "localizations": {
         "en": {
@@ -12415,6 +12515,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "not scheduled yet"
+          }
+        }
+      }
+    },
+    "ohne Project": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "no project"
           }
         }
       }
@@ -12906,6 +13016,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Opens the “Workout” sheet in Tagwerk."
+          }
+        }
+      }
+    },
+    "Öffnet das Issue auf GitHub": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opens the issue on GitHub"
           }
         }
       }

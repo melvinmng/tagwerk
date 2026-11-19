@@ -1,4 +1,5 @@
 import Foundation
+import GitHubKit
 import SwiftUI
 import TagwerkCore
 
@@ -133,6 +134,35 @@ enum SearchTexts {
         case .issueNumber: String(localized: "Nummer")
         case .kind: String(localized: "Art")
         case .quantity: String(localized: "Menge")
+        }
+    }
+
+    // MARK: Online hits
+
+    static func markerText(_ marker: OnlineIssueMarker) -> String {
+        switch marker {
+        case .closed: String(localized: "geschlossen")
+        case .unassigned: String(localized: "nicht zugewiesen")
+        case .assignedToOthers: String(localized: "anderen zugewiesen")
+        case .noProject: String(localized: "ohne Project")
+        }
+    }
+
+    /// "octo/app · 12.11."; with the year when the last change is not in the current year.
+    static func onlineSubtitle(_ issue: OnlineIssue, now: Date, calendar: Calendar) -> String {
+        let day = PlanDay(date: issue.updatedAt, calendar: calendar)
+        let sameYear = calendar.component(.year, from: issue.updatedAt) == calendar.component(.year, from: now)
+        let date = sameYear ? DateText.numericDay(day, calendar: calendar) : DateText.numericDate(day, calendar: calendar)
+        return "\(issue.repository) · \(date)"
+    }
+
+    /// The text under the row "Auf GitHub suchen" after a failed search.
+    static func onlineError(_ error: IssueSearchError) -> String {
+        switch error {
+        case .offline: String(localized: "Keine Verbindung zu GitHub.")
+        case .rateLimited: String(localized: "GitHub nimmt gerade keine Suche an. Später erneut versuchen.")
+        case .signedOut: String(localized: "Die Anmeldung ist abgelaufen. Bitte melde dich neu an.")
+        case .failed(let message): message
         }
     }
 

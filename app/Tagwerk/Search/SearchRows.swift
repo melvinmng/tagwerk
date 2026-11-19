@@ -1,3 +1,4 @@
+import GitHubKit
 import SwiftUI
 import TagwerkCore
 
@@ -131,5 +132,71 @@ struct SearchLoadingRow: View {
             Text("Termine werden durchsucht …").foregroundStyle(.secondary)
         }
         .accessibilityElement(children: .combine)
+    }
+}
+
+/// A GitHub hit from the online search: dashed circle (nothing to check off here), number and title, the reason it
+/// is not among the tasks, repository and date. Read-only; a tap opens GitHub.
+struct SearchOnlineRow: View {
+    let issue: OnlineIssue
+    let now: Date
+    let calendar: Calendar
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 12) {
+            Image(systemName: "circle.dashed").font(.title3).foregroundStyle(.secondary).opacity(0.45).accessibilityHidden(true)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(verbatim: "#\(issue.number) \(issue.title)")
+                    .foregroundStyle(issue.marker == .closed ? .secondary : .primary)
+                if let marker = issue.marker {
+                    Text(SearchTexts.markerText(marker))
+                        .font(.caption2.weight(.semibold))
+                        .padding(.horizontal, 7)
+                        .padding(.vertical, 2)
+                        .background(.quaternary, in: Capsule())
+                }
+                Text(SearchTexts.onlineSubtitle(issue, now: now, calendar: calendar)).font(.caption).foregroundStyle(.secondary)
+            }
+            Spacer(minLength: 0)
+        }
+        .contentShape(Rectangle())
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(spokenText)
+        .accessibilityHint("Öffnet das Issue auf GitHub")
+    }
+
+    private var spokenText: String {
+        var parts = ["GitHub", "#\(issue.number)", issue.title]
+        if let marker = issue.marker { parts.append(SearchTexts.markerText(marker)) }
+        parts.append(SearchTexts.onlineSubtitle(issue, now: now, calendar: calendar))
+        return parts.joined(separator: ", ")
+    }
+}
+
+/// The last row of "Aufgaben": the one tap after which a search text goes to GitHub.
+struct SearchOnlineAskRow: View {
+    let state: SearchModel.OnlineState
+    let action: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            if case .failed(let error) = state {
+                Text(SearchTexts.onlineError(error)).font(.footnote).foregroundStyle(.red)
+            }
+            Button(action: action) {
+                HStack(spacing: 12) {
+                    Image(systemName: "network").frame(width: 24)
+                    VStack(alignment: .leading, spacing: 1) {
+                        Text(isFailed ? "Erneut versuchen" : "Auf GitHub suchen")
+                        Text("auch geschlossene und fremde").font(.caption).foregroundStyle(.secondary)
+                    }
+                }
+            }
+        }
+    }
+
+    private var isFailed: Bool {
+        if case .failed = state { return true }
+        return false
     }
 }

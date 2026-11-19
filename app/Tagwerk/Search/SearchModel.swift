@@ -1,4 +1,5 @@
 import Foundation
+import GitHubKit
 import Observation
 import TagwerkCore
 
@@ -23,6 +24,7 @@ struct SearchSources {
 @Observable
 final class SearchModel {
     enum EventState: Equatable { case idle, loading, loaded, noAccess }
+    enum OnlineState: Equatable { case idle, loading, loaded, failed(IssueSearchError) }
 
     /// Rows shown per section at first and added by each tap on "Weitere zeigen".
     static let pageSize = 25
@@ -35,6 +37,7 @@ final class SearchModel {
     private(set) var results: SearchResults = .empty
     private(set) var query: SearchQuery?
     private(set) var eventState: EventState = .idle
+    private(set) var onlineState: OnlineState = .idle
     /// Start of the searched period.
     private(set) var windowStart: Date
     private(set) var canExtendWindow = true
@@ -59,7 +62,6 @@ final class SearchModel {
     @ObservationIgnored private var debounceTask: Task<Void, Never>?
     @ObservationIgnored private var loadTask: Task<Void, Never>?
     @ObservationIgnored private var completedTask: Task<Void, Never>?
-    @ObservationIgnored private var onlineTask: Task<Void, Never>?
     @ObservationIgnored private var refetchRequested = false
     @ObservationIgnored private var onlineGeneration = 0
 
@@ -80,8 +82,8 @@ final class SearchModel {
         if newQuery != query {
             query = newQuery
             online = nil
+            onlineState = .idle
             onlineGeneration += 1
-            onlineTask?.cancel()
             resetPaging()
         }
         evaluate()
@@ -203,6 +205,37 @@ final class SearchModel {
         evaluate()
     }
 
+    // MARK: Online
+
+    /// "Auf GitHub suchen" is offered while GitHub is connected, a text is there and events are not the only filter.
+    var showsOnlineSearchRow: Bool {
+        guard sources.searchOnline != nil, query != nil, filter != .events else { return false }
+        switch onlineState {
+        case .idle, .failed: return true
+        case .loading, .loaded: return false
+        }
+    }
+
+    /// The tap on "Auf GitHub suchen": the only moment a search text leaves the device.
+    func searchOnline() async {
+        guard !isClosed, let source = sources.searchOnline, let query, onlineState != .loading else { return }
+        let generation = onlineGeneration
+        onlineState = .loading
+        let outcome: Result<[OnlineIssue], Error>
+        do { outcome = .success(try await source(query.text)) } catch { outcome = .failure(error) }
+        // A newer text or a closed sheet makes this answer obsolete.
+        guard !isClosed, generation == onlineGeneration else { return }
+        switch outcome {
+        case .success(let issues):
+            online = issues
+            onlineState = .loaded
+        case .failure(let error):
+            online = nil
+            onlineState = .failed((error as? IssueSearchError) ?? .failed(error.localizedDescription))
+        }
+        evaluate()
+    }
+
     // MARK: Results
 
     /// Filters everything that is loaded for the current text; tasks, notes and shopping are always current.
@@ -245,7 +278,6 @@ final class SearchModel {
         debounceTask?.cancel()
         loadTask?.cancel()
         completedTask?.cancel()
-        onlineTask?.cancel()
         // Nothing of the search outlives the sheet.
         loadedEvents = []
         completed = []

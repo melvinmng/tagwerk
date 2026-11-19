@@ -118,3 +118,20 @@ extension Fixtures {
     static let clearOK = #"{"data":{"clearProjectV2ItemFieldValue":{"projectV2Item":{"id":"x"}}}}"#
     static let issuePatchOK = #"{"id":1,"node_id":"I_1","number":1}"#
 }
+
+extension Fixtures {
+    /// One issue node of the online search: `items` are raw JSON project items.
+    static func searchNode(id: String, number: Int, state: String = "OPEN", assignees: [String] = [], items: [String] = []) -> String {
+        let people = assignees.map { #"{"login":"\#($0)"}"# }.joined(separator: ",")
+        return """
+        {"__typename":"Issue","id":"\(id)","number":\(number),"title":"Issue \(number)","body":"",
+         "state":"\(state)","updatedAt":"2026-11-17T10:00:00Z","url":"https://github.com/octo/r/issues/\(number)",
+         "repository":{"nameWithOwner":"octo/r"},"assignees":{"nodes":[\(people)]},"labels":{"nodes":[]},
+         "projectItems":{"nodes":[\(items.joined(separator: ","))]}}
+        """
+    }
+
+    static func searchResponse(_ nodes: [String]) -> String {
+        #"{"data":{"search":{"nodes":["# + nodes.joined(separator: ",") + "]}}}"
+    }
+}
