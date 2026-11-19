@@ -25,6 +25,7 @@ struct AISettingsView: View {
             if ai.isSignedIn { ChatGPTCaptureSection() }
             #endif
         }
+        .scrollDismissesKeyboard(.interactively)
         .navigationTitle("KI")
         .navigationBarTitleDisplayMode(.inline)
         .task {
@@ -221,6 +222,7 @@ struct AIPrivacyView: View {
                 Text("„Abmelden“ löscht die Anmeldung bei ChatGPT von diesem iPhone. Danach sind die KI-Funktionen aus, bis du dich wieder anmeldest.")
             }
         }
+        .scrollDismissesKeyboard(.interactively)
         .navigationTitle("Datenschutzhinweis")
         .navigationBarTitleDisplayMode(.inline)
     }

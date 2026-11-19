@@ -22,6 +22,7 @@ struct NoteEditorView: View {
     var body: some View {
         let note = store.note(id: noteID)
         TextEditor(text: $text)
+            .keyboardDoneButton()
             .padding(.horizontal, 12)
             .navigationTitle(title(of: note))
             .navigationBarTitleDisplayMode(.inline)

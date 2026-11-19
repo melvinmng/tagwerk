@@ -34,6 +34,7 @@ struct WorkoutSheet: View {
                         Spacer()
                         TextField("–", text: $kilocaloriesText)
                             .keyboardType(.numberPad)
+                            .keyboardDoneButton()
                             .multilineTextAlignment(.trailing)
                             .frame(maxWidth: 100)
                         Text("kcal").foregroundStyle(.secondary)
@@ -59,6 +60,7 @@ struct WorkoutSheet: View {
                     }
                 }
             }
+            .scrollDismissesKeyboard(.interactively)
             .navigationTitle("Training")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

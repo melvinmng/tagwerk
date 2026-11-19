@@ -117,6 +117,7 @@ struct MealSheet: View {
                     HStack(alignment: .top) {
                         TextField(photo == nil ? "Was hast du gegessen?" : "Hinweis, z. B. „halbe Portion“", text: $text, axis: .vertical)
                             .focused($textFocused)
+                            .keyboardDoneButton(focus: $textFocused)
                             .lineLimit(1...4)
                             .disabled(phase == .estimating)
                         if environment.settings.voiceInputEnabled, let voice, phase != .estimating {
@@ -188,6 +189,7 @@ struct MealSheet: View {
 
             repeatSection
         }
+        .scrollDismissesKeyboard(.interactively)
         .onAppear {
             textFocused = existing == nil
             if voice == nil {
@@ -288,6 +290,7 @@ struct MealSheet: View {
                 }
             }
         }
+        .scrollDismissesKeyboard(.interactively)
     }
 
     private var provenance: String {
@@ -581,6 +584,7 @@ private struct MealItemEditor: View {
                     Text("Werte je Menge ×1. Eigene Werte gelten als genau und stehen ohne „~“.")
                 }
             }
+            .scrollDismissesKeyboard(.interactively)
             .navigationTitle(item.name.isEmpty ? "Posten" : item.name)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -634,6 +638,7 @@ struct DecimalField: View {
     var body: some View {
         TextField("–", text: $text)
             .keyboardType(.decimalPad)
+            .keyboardDoneButton()
             .multilineTextAlignment(.trailing)
             .frame(maxWidth: 100)
             .onAppear {
