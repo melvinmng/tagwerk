@@ -118,6 +118,9 @@ final class AppSettings {
     var quietHoursStartsAtBedtime: Bool = true
     var quietStartMinutes: Int = 1380
     var quietEndMinutes: Int = 420
+
+    /// JSON of `ReminderDefaults` (plan P4); `nil` means the defaults that behave like the former lead time.
+    var reminderDefaultsData: Data? = nil
     /// Focus filter "Mitteilungen ruhen lassen" (runtime state, not a preference): set while a Focus with the filter is
     /// active, and the start kept after it ended until the notifications that came due meanwhile were caught up.
     var focusQuietSince: Date? = nil
@@ -215,6 +218,13 @@ extension AppSettings {
     var quietHours: QuietHours? {
         QuietHours.resolved(enabled: quietHoursEnabled, startsAtBedtime: quietHoursStartsAtBedtime, bedtimeMinutes: bedtimeMinutes,
                             startMinutes: quietStartMinutes, endMinutes: quietEndMinutes)
+    }
+
+    /// The reminders entries get without a list of their own; `leadTimeMinutes` stays in the schema as the source of the
+    /// migrated defaults.
+    var reminderDefaults: ReminderDefaults {
+        get { ReminderDefaults.decode(reminderDefaultsData, leadTimeMinutes: leadTimeMinutes) }
+        set { reminderDefaultsData = newValue.encoded() }
     }
 
     /// The Focus filter state, see `FocusQuiet`.

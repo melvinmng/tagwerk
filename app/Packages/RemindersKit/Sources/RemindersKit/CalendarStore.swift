@@ -31,9 +31,13 @@ public struct EventDraft: Sendable, Equatable {
     public var notes: String?
     public var location: String?
     public var url: URL?
+    /// Alarms of the event; `nil` leaves the alarms as they are. A list replaces the alarms of the event, except those
+    /// Tagwerk cannot show (after the start, location based), which stay.
+    public var alarms: [ReminderOffset]?
 
     public init(title: String, start: Date, end: Date, isAllDay: Bool, calendarID: String, notes: String?,
-                location: String?, url: URL?) {
+                location: String?, url: URL?, alarms: [ReminderOffset]? = nil) {
+        self.alarms = alarms
         self.title = title
         self.start = start
         self.end = end
@@ -67,9 +71,14 @@ public protocol CalendarStore: AnyObject {
     /// Throws a conflict when `expectedVersion` is stale, `.notFound` when gone, and refuses read-only events.
     func updateEvent(id: String, with draft: EventDraft, span: EventSpan, expectedVersion: String?) throws -> CalendarEvent
     func deleteEvent(id: String, span: EventSpan, expectedVersion: String?) throws
+    /// The time alarms of an event (one occurrence for a series), for the editor.
+    func alarms(ofEvent id: String) -> [ReminderOffset]
 }
 
 public extension CalendarStore {
+    /// Stores without alarm support report none.
+    func alarms(ofEvent id: String) -> [ReminderOffset] { [] }
+
     /// Moves one occurrence of a time block, keeping its other fields.
     func moveBlock(id: String, to start: Date, end: Date, expectedVersion: String?) throws -> CalendarEvent {
         guard let current = event(id: id) else { throw TaskWriteError.notFound }

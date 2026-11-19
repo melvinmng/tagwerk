@@ -1499,6 +1499,14 @@ final class PlanningModel {
         }
     }
 
+    /// The alarms of an event (one occurrence for a series), shown in the event editor.
+    func alarms(ofEvent id: String) -> [ReminderOffset] { calendarStore.alarms(ofEvent: id) }
+
+    /// The reminders a new event starts with in the editor ("Termine" in the default reminders).
+    func defaultEventReminders(isAllDay: Bool) -> [ReminderOffset] {
+        settings.reminderDefaults.offsets(for: .event, isAllDay: isAllDay)
+    }
+
     /// New events go to the plan calendar unless the user picks another one.
     var defaultEventCalendarID: String? { calendarStore.planCalendar(id: settings.planCalendarID)?.id }
 

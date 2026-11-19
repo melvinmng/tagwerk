@@ -137,6 +137,7 @@ final class LocalTaskProvider: TaskProvider {
         if let expectedVersion, expectedVersion != String(task.revision) {
             throw TaskWriteError.conflict(current: Self.item(task))
         }
+        ReminderOverrideStore.deleteRecords(itemKey: ReminderOverride.key(task: id), in: context)
         context.delete(task)
         try save()
     }

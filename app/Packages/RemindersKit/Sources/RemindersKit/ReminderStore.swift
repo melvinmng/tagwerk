@@ -27,6 +27,11 @@ public protocol ReminderStore: AnyObject {
     func completedReminders(in interval: DateInterval, listIDs: Set<String>) async -> [ReminderRecord]
     /// The list the store uses for a new reminder without a list, if it tells.
     func defaultListID() -> String?
+    /// Makes sure the reminder has alarms at these distances from its due date; alarms that exist already are kept and
+    /// nothing else is touched. Needs a due date.
+    func setAlarms(_ offsets: [ReminderOffset], forReminder id: String) throws
+    /// Removes the alarms at exactly these distances and keeps every other alarm, such as those made in the Reminders app.
+    func removeAlarms(_ offsets: [ReminderOffset], forReminder id: String) throws
 }
 
 extension ReminderStore {
@@ -38,4 +43,10 @@ extension ReminderStore {
 
     /// Stores that do not expose their default list report none; callers then keep the store's own choice.
     public func defaultListID() -> String? { nil }
+
+    /// Stores without alarm support ignore the request.
+    public func setAlarms(_ offsets: [ReminderOffset], forReminder id: String) throws {}
+
+    /// Stores without alarm support ignore the request.
+    public func removeAlarms(_ offsets: [ReminderOffset], forReminder id: String) throws {}
 }

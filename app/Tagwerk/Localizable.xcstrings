@@ -2104,6 +2104,7 @@
       }
     },
     "%lld:%@ h": {
+      "extractionState": "stale",
       "localizations": {
         "de": {
           "stringUnit": {
@@ -2840,6 +2841,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Schedule all"
+          }
+        }
+      }
+    },
+    "Alle folgenden": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All following"
           }
         }
       }
@@ -3666,6 +3677,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tasks due this week or earlier, plus the deadlines from your calendars."
+          }
+        }
+      }
+    },
+    "Aufgaben mit Uhrzeit": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tasks with a time"
+          }
+        }
+      }
+    },
+    "Aufgaben ohne Uhrzeit": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tasks without a time"
           }
         }
       }
@@ -4818,6 +4849,26 @@
         }
       }
     },
+    "Deadlines ganztägig": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All-day deadlines"
+          }
+        }
+      }
+    },
+    "Deadlines mit Uhrzeit": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deadlines with a time"
+          }
+        }
+      }
+    },
     "Debug": {
       "shouldTranslate": false
     },
@@ -5201,6 +5252,16 @@
         }
       }
     },
+    "Die Aufgabe ist gesichert, die Erinnerungen nicht: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The task is saved, the reminders are not: %@"
+          }
+        }
+      }
+    },
     "Die Aufgabe wurde inzwischen geändert.": {
       "localizations": {
         "en": {
@@ -5227,6 +5288,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Recording failed. You can keep typing."
+          }
+        }
+      }
+    },
+    "Die Erinnerungen-App ist nicht erreichbar.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The Reminders app is not available."
           }
         }
       }
@@ -5371,6 +5442,16 @@
         }
       }
     },
+    "Die Standard-Erinnerungen legen fest, wann Tagwerk an Aufgaben und Deadline-Termine der eingeschalteten Quellen erinnert. Einzelne Aufgaben und Deadlines lassen sich abweichend einstellen. Deadline-Termine sind Termine aus Deadline-Kalendern und als Deadline markierte Termine.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The default reminders set when Tagwerk reminds you of tasks and deadline events from the enabled sources. You can set individual tasks and deadlines differently. Deadline events are events from deadline calendars and events marked as deadlines."
+          }
+        }
+      }
+    },
     "Die Suche ist nicht verfügbar.": {
       "localizations": {
         "en": {
@@ -5501,12 +5582,32 @@
         }
       }
     },
+    "Diese Aufgabe wiederholt sich. Die Erinnerungen gelten nur für diese Fälligkeit oder für alle folgenden.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This task repeats. The reminders apply to this due date only or to all following ones."
+          }
+        }
+      }
+    },
     "Diese Aufgabe wiederholt sich. Titel, Fälligkeit und Priorität gelten für alle Tage.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "This task repeats. Title, due date and priority apply to all days."
+          }
+        }
+      }
+    },
+    "Diese Deadline wiederholt sich": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This deadline repeats"
           }
         }
       }
@@ -5603,6 +5704,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "This week · week %lld"
+          }
+        }
+      }
+    },
+    "Diese und alle folgenden": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This and all following"
           }
         }
       }
@@ -5861,6 +5972,16 @@
         }
       }
     },
+    "Eigene Erinnerungen werden in der Erinnerungen-App gespeichert. Ruhezeiten gelten dafür nicht.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Custom reminders are stored in the Reminders app. Quiet hours do not apply to them."
+          }
+        }
+      }
+    },
     "Eigene Regel aus Erinnerungen": {
       "localizations": {
         "en": {
@@ -5917,6 +6038,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Clear text"
+          }
+        }
+      }
+    },
+    "Einheit": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unit"
           }
         }
       }
@@ -6324,6 +6455,16 @@
         }
       }
     },
+    "Erinnerung hinzufügen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add reminder"
+          }
+        }
+      }
+    },
     "Erinnerungen": {
       "localizations": {
         "en": {
@@ -6344,6 +6485,16 @@
         }
       }
     },
+    "Erinnerungen brauchen ein Fälligkeitsdatum.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reminders need a due date."
+          }
+        }
+      }
+    },
     "Erinnerungen und lokale Aufgaben werden gelöscht, GitHub-Issues als „nicht geplant“ geschlossen.": {
       "localizations": {
         "en": {
@@ -6360,6 +6511,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Reminders and local tasks, without GitHub"
+          }
+        }
+      }
+    },
+    "Erinnerungen ändern": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Change reminders"
           }
         }
       }
@@ -7583,6 +7744,36 @@
         }
       }
     },
+    "Gilt für alle Aufgaben ohne eigene Erinnerungen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Applies to all tasks without reminders of their own."
+          }
+        }
+      }
+    },
+    "Gilt für alle Deadline-Termine ohne eigene Erinnerungen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Applies to all deadline events without reminders of their own."
+          }
+        }
+      }
+    },
+    "Gilt für alle Wiederholungen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Applies to all repetitions."
+          }
+        }
+      }
+    },
     "Gilt für „Jetzt sichern“ und die automatische Sicherung. Ohne diese Inhalte bleiben beim Wiederherstellen vorhandene Einträge in Tagebuch und Bible Study erhalten.": {
       "localizations": {
         "en": {
@@ -8787,6 +8978,16 @@
         }
       }
     },
+    "Keine Erinnerungen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No reminders"
+          }
+        }
+      }
+    },
     "Keine Fälligkeiten in der neuen Woche.": {
       "localizations": {
         "en": {
@@ -9742,6 +9943,16 @@
         }
       }
     },
+    "Menge: %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Amount: %lld"
+          }
+        }
+      }
+    },
     "Menge: %lld ml": {
       "localizations": {
         "en": {
@@ -9828,6 +10039,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Minimal"
+          }
+        }
+      }
+    },
+    "Minuten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Minutes"
           }
         }
       }
@@ -10954,6 +11175,26 @@
         }
       }
     },
+    "Nur diese": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only this one"
+          }
+        }
+      }
+    },
+    "Nur diese Deadline": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only this deadline"
+          }
+        }
+      }
+    },
     "Nur diesen Termin": {
       "localizations": {
         "en": {
@@ -11935,6 +12176,16 @@
         }
       }
     },
+    "Schnellauswahl": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quick picks"
+          }
+        }
+      }
+    },
     "Schon importiert": {
       "localizations": {
         "en": {
@@ -12405,6 +12656,7 @@
       }
     },
     "So lange vor der Fälligkeit erinnert Tagwerk an Aufgaben und Deadline-Termine der eingeschalteten Quellen. Deadline-Termine sind Termine aus Deadline-Kalendern und als Deadline markierte Termine. An Aufgaben ohne Uhrzeit erinnert Tagwerk am Fälligkeitstag um 9:00. An ganztägige Deadline-Termine erinnert Tagwerk am Vortag um 18:00.": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -12643,12 +12895,32 @@
         }
       }
     },
+    "Standard verwenden": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use default"
+          }
+        }
+      }
+    },
     "Standard wiederherstellen": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Restore default"
+          }
+        }
+      }
+    },
+    "Standard-Erinnerungen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Default reminders"
           }
         }
       }
@@ -12773,6 +13045,16 @@
         }
       }
     },
+    "Stunden": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hours"
+          }
+        }
+      }
+    },
     "Suchen": {
       "localizations": {
         "en": {
@@ -12843,12 +13125,32 @@
         }
       }
     },
+    "Tage": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Days"
+          }
+        }
+      }
+    },
     "Tage pro Woche": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Days per week"
+          }
+        }
+      }
+    },
+    "Tage vorher: %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Days before: %lld"
           }
         }
       }
@@ -12969,6 +13271,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tagwerk reminds you before the due date of GitHub and local tasks and of events from your deadline calendars. Reminders from the Reminders app still notify you on their own."
+          }
+        }
+      }
+    },
+    "Tagwerk erinnert mit Mitteilungen. Ruhezeiten und Fokus-Filter gelten dafür.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tagwerk reminds you with notifications. Quiet hours and Focus filters apply to them."
           }
         }
       }
@@ -13288,6 +13600,26 @@
     },
     "Termine der nächsten 7 Tage. „Zusammengefasst“: gleicher Termin wird über die Kopie aus einem anderen Kalender gezeigt.": {
       "shouldTranslate": false
+    },
+    "Termine ganztägig": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All-day events"
+          }
+        }
+      }
+    },
+    "Termine mit Uhrzeit": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Events with a time"
+          }
+        }
+      }
     },
     "Termine und Gewohnheiten in den Kalender eingetragen?": {
       "localizations": {
@@ -14031,6 +14363,16 @@
         }
       }
     },
+    "Vorher": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Before"
+          }
+        }
+      }
+    },
     "Vorherige Woche": {
       "localizations": {
         "en": {
@@ -14062,6 +14404,7 @@
       }
     },
     "Vorlauf: %@": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -14674,6 +15017,16 @@
         }
       }
     },
+    "Wird beim Anlegen eines Termins in Tagwerk übernommen. Bestehende Termine bleiben unverändert.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Applied when you create an event in Tagwerk. Existing events stay unchanged."
+          }
+        }
+      }
+    },
     "Wird beim ersten Sprechen geladen": {
       "localizations": {
         "en": {
@@ -14750,6 +15103,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Choose week"
+          }
+        }
+      }
+    },
+    "Wochen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Weeks"
           }
         }
       }
@@ -15092,6 +15455,16 @@
         }
       }
     },
+    "Zu einer Uhrzeit": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "At a time of day"
+          }
+        }
+      }
+    },
     "Zugewiesen": {
       "localizations": {
         "en": {
@@ -15158,6 +15531,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Recent and frequent"
+          }
+        }
+      }
+    },
+    "Zum Löschen nach links wischen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Swipe left to delete"
           }
         }
       }
@@ -15764,6 +16147,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "%@ still free today"
+          }
+        }
+      }
+    },
+    "iOS meldet diese Erinnerungen selbst, auch in Apple Kalender. Ruhezeiten gelten dafür nicht.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iOS delivers these reminders itself, also in Apple Calendar. Quiet hours do not apply to them."
           }
         }
       }

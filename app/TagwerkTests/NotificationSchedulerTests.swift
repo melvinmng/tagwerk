@@ -71,7 +71,7 @@ struct NotificationSchedulerTests {
         await list.reload()
         let scheduler = makeScheduler(list)
         await scheduler.reschedule()
-        #expect(center.pendingIDs == ["tagwerk.task.reminders:essay"])
+        #expect(center.pendingIDs == ["tagwerk.task.reminders:essay#0"])
     }
 
     @Test func schedulesAllSources_byDefault() async {
@@ -80,7 +80,7 @@ struct NotificationSchedulerTests {
         reminders.tasks = [makeTask("Erinnerung", source: .reminders, due: due(20))]
         let scheduler = makeScheduler(await loadedList())
         await scheduler.reschedule()
-        #expect(center.pendingIDs == ["tagwerk.task.github:Issue", "tagwerk.task.local:Lokal", "tagwerk.task.reminders:Erinnerung"])
+        #expect(center.pendingIDs == ["tagwerk.task.github:Issue#0", "tagwerk.task.local:Lokal#0", "tagwerk.task.reminders:Erinnerung#0"])
     }
 
     @Test func sourceSwitchOff_removesOnlyItsNotifications() async {
@@ -92,7 +92,7 @@ struct NotificationSchedulerTests {
         settings.githubTaskNotifications = false
         settings.reminderTaskNotifications = false
         await scheduler.reschedule()
-        #expect(center.pendingIDs == ["tagwerk.task.local:Lokal"])
+        #expect(center.pendingIDs == ["tagwerk.task.local:Lokal#0"])
         settings.localTaskNotifications = false
         await scheduler.reschedule()
         #expect(center.pending.isEmpty)
@@ -115,7 +115,7 @@ struct NotificationSchedulerTests {
         local.tasks.removeAll { $0.title == "A" }
         await list.reload()
         await scheduler.reschedule()
-        #expect(center.pendingIDs == ["tagwerk.task.local:B"])
+        #expect(center.pendingIDs == ["tagwerk.task.local:B#0"])
     }
 
     @Test func handOver_removesPendingNotification() async {
@@ -126,7 +126,7 @@ struct NotificationSchedulerTests {
         let list = await loadedList()
         let scheduler = makeScheduler(list)
         await scheduler.reschedule()
-        #expect(center.pendingIDs == ["tagwerk.task.github:Login"])
+        #expect(center.pendingIDs == ["tagwerk.task.github:Login#0"])
 
         issue.assignees = ["lea-m"]
         list.didSave(issue)
@@ -143,7 +143,7 @@ struct NotificationSchedulerTests {
         await list.reload()
         await scheduler.reschedule()
         let expected = calendar.date(from: DateComponents(year: 2026, month: 11, day: 25, hour: 9))
-        #expect(center.pending["tagwerk.task.local:A"]?.fireDate == expected)
+        #expect(center.pending["tagwerk.task.local:A#0"]?.fireDate == expected)
     }
 
     @Test func leadTimeChanged_reschedulesAll() async {
@@ -154,14 +154,14 @@ struct NotificationSchedulerTests {
         settings.leadTimeMinutes = 60
         await scheduler.reschedule()
         let expected = calendar.date(from: DateComponents(year: 2026, month: 11, day: 20, hour: 17))
-        #expect(center.pending["tagwerk.task.local:A"]?.fireDate == expected)
+        #expect(center.pending["tagwerk.task.local:A#0"]?.fireDate == expected)
     }
 
     @Test mutating func deadlineSwitchOff_removesEventNotifications() async {
         events = [event("klausur", day: 20, hour: 10)]
         let scheduler = makeScheduler(await loadedList())
         await scheduler.reschedule()
-        #expect(center.pendingIDs == ["tagwerk.event.klausur"])
+        #expect(center.pendingIDs == ["tagwerk.event.klausur#0"])
         settings.deadlineCalendarNotifications = false
         await scheduler.reschedule()
         #expect(center.pending.isEmpty)
@@ -181,7 +181,7 @@ struct NotificationSchedulerTests {
         local.tasks = [makeTask("Lokal", source: .local, due: due(20))]
         let scheduler = makeScheduler(await loadedList([local, reminders]))
         await scheduler.reschedule()
-        #expect(center.pendingIDs == ["tagwerk.task.github:Issue", "tagwerk.task.local:Lokal"])
+        #expect(center.pendingIDs == ["tagwerk.task.github:Issue", "tagwerk.task.local:Lokal#0"])
     }
 
     @Test func githubFailed_keepsExistingGitHubNotifications() async {
@@ -198,7 +198,7 @@ struct NotificationSchedulerTests {
         github.offlineSince = testNow()
         let scheduler = makeScheduler(await loadedList())
         await scheduler.reschedule()
-        #expect(center.pendingIDs == ["tagwerk.task.github:Neu"])
+        #expect(center.pendingIDs == ["tagwerk.task.github:Neu#0"])
     }
 
     @Test func githubSignedOut_removesGitHubNotifications() async {
@@ -220,7 +220,7 @@ struct NotificationSchedulerTests {
         await scheduler.reschedule()
         await list.unregister(.github)
         await scheduler.removeNotifications(of: .github)
-        #expect(center.pendingIDs == ["tagwerk.task.local:Lokal"])
+        #expect(center.pendingIDs == ["tagwerk.task.local:Lokal#0"])
     }
 
     @Test func foreignPendingRequests_untouched() async {
@@ -248,8 +248,8 @@ struct NotificationSchedulerTests {
         let scheduler = makeScheduler(await loadedList([local]))
         await scheduler.reschedule()
         #expect(center.pending.count == 50)
-        #expect(center.pendingIDs.contains("tagwerk.task.local:L39"))
-        #expect(!center.pendingIDs.contains("tagwerk.task.local:L40"))
+        #expect(center.pendingIDs.contains("tagwerk.task.local:L39#0"))
+        #expect(!center.pendingIDs.contains("tagwerk.task.local:L40#0"))
     }
 
     @Test func requestAuthorization_grantedReschedulesAtOnce() async {
@@ -258,28 +258,28 @@ struct NotificationSchedulerTests {
         let scheduler = makeScheduler(await loadedList())
         let granted = await scheduler.requestAuthorization()
         #expect(granted)
-        #expect(center.pendingIDs == ["tagwerk.task.local:A"])
+        #expect(center.pendingIDs == ["tagwerk.task.local:A#0"])
     }
 
     @Test func pendingWithinMargin_kept() async {
         // Due 12:00 with 2 h lead time fires at 10:00, 30 s after "now" (09:59:30), inside the 60 s margin.
-        center.seed("tagwerk.task.local:Gleich", fireDate: testNow())
+        center.seed("tagwerk.task.local:Gleich#0", fireDate: testNow())
         local.tasks = [makeTask("Gleich", source: .local, due: due(18, 12))]
         let scheduler = NotificationScheduler(center: center, taskList: await loadedList([local]),
                                               deadlineEvents: { _, _ in [] }, settings: settings,
                                               now: { testNow().addingTimeInterval(-30) }, calendar: calendar)
         await scheduler.reschedule()
-        #expect(center.pendingIDs.contains("tagwerk.task.local:Gleich"))
+        #expect(center.pendingIDs.contains("tagwerk.task.local:Gleich#0"))
         #expect(center.added.isEmpty)
     }
 
     @Test func pendingWithinMarginButMoved_removed() async {
-        center.seed("tagwerk.task.local:Gleich", fireDate: testNow().addingTimeInterval(30))
+        center.seed("tagwerk.task.local:Gleich#0", fireDate: testNow().addingTimeInterval(30))
         local.tasks = [makeTask("Gleich", source: .local, due: due(25))]
         let scheduler = makeScheduler(await loadedList([local]))
         await scheduler.reschedule()
         let expected = calendar.date(from: DateComponents(year: 2026, month: 11, day: 25, hour: 9))
-        #expect(center.pending["tagwerk.task.local:Gleich"]?.fireDate == expected)
+        #expect(center.pending["tagwerk.task.local:Gleich#0"]?.fireDate == expected)
     }
 
     @Test func concurrentRuns_doNotReviveRemovedNotifications() async {
@@ -307,14 +307,14 @@ struct NotificationSchedulerTests {
         let scheduler = makeScheduler(await loadedList([local, reminders]), locale: { box.locale })
 
         await scheduler.reschedule()
-        #expect(lastAdded("tagwerk.task.local:Lokal")?.body.hasPrefix("Fällig ") == true)
+        #expect(lastAdded("tagwerk.task.local:Lokal#0")?.body.hasPrefix("Fällig ") == true)
 
         box.locale = Locale(identifier: "en_US")
         center.clearAdded()
         await scheduler.reschedule()
         // The loaded sources are replaced in English; the unloaded GitHub request stays untouched and unrecorded.
-        #expect(lastAdded("tagwerk.task.local:Lokal")?.body.hasPrefix("Due ") == true)
-        #expect(center.pendingIDs == ["tagwerk.task.github:Issue", "tagwerk.task.local:Lokal"])
+        #expect(lastAdded("tagwerk.task.local:Lokal#0")?.body.hasPrefix("Due ") == true)
+        #expect(center.pendingIDs == ["tagwerk.task.github:Issue", "tagwerk.task.local:Lokal#0"])
         #expect(!center.added.contains { $0.id.hasPrefix("tagwerk.task.github:") })
     }
 
@@ -332,7 +332,7 @@ struct NotificationSchedulerTests {
         let loaded = await loadedList([github, local])
         let later = makeScheduler(loaded, locale: { box.locale })
         await later.reschedule()
-        #expect(lastAdded("tagwerk.task.github:Issue")?.body.hasPrefix("Due ") == true)
+        #expect(lastAdded("tagwerk.task.github:Issue#0")?.body.hasPrefix("Due ") == true)
     }
 
     @Test mutating func languageSwitch_replansDeadlineEventsOnlyWithCalendarAccess() async {
@@ -346,7 +346,7 @@ struct NotificationSchedulerTests {
         center.clearAdded()
         let withoutAccess = makeScheduler(await loadedList([local]), locale: { box.locale })
         await withoutAccess.reschedule()
-        #expect(center.pendingIDs.contains("tagwerk.event.Abgabe"))
+        #expect(center.pendingIDs.contains("tagwerk.event.Abgabe#0"))
         #expect(center.added.isEmpty)
     }
 
@@ -377,8 +377,8 @@ struct NotificationSchedulerTests {
         marks.ids = ["exam"]
         let scheduler = makeMarkedScheduler(await loadedList([local]), marks: marks)
         await scheduler.reschedule()
-        #expect(center.pendingIDs == ["tagwerk.event.exam"])
-        #expect(lastAdded("tagwerk.event.exam")?.title == "Klausur Statistik")
+        #expect(center.pendingIDs == ["tagwerk.event.exam#0"])
+        #expect(lastAdded("tagwerk.event.exam#0")?.title == "Klausur Statistik")
     }
 
     @Test mutating func switchOffRemovesMarkedEventNotifications() async {
@@ -387,7 +387,7 @@ struct NotificationSchedulerTests {
         marks.ids = ["exam"]
         let scheduler = makeMarkedScheduler(await loadedList([local]), marks: marks)
         await scheduler.reschedule()
-        #expect(center.pendingIDs == ["tagwerk.event.exam"])
+        #expect(center.pendingIDs == ["tagwerk.event.exam#0"])
         settings.deadlineCalendarNotifications = false
         await scheduler.reschedule()
         #expect(center.pending.isEmpty)
@@ -410,8 +410,8 @@ struct NotificationSchedulerTests {
         marks.ids = ["exam"]
         let scheduler = makeMarkedScheduler(await loadedList([local]), marks: marks)
         await scheduler.reschedule()
-        #expect(center.pendingIDs == ["tagwerk.event.exam"])
-        #expect(center.added.filter { $0.id == "tagwerk.event.exam" }.count == 1)
+        #expect(center.pendingIDs == ["tagwerk.event.exam#0"])
+        #expect(center.added.filter { $0.id == "tagwerk.event.exam#0" }.count == 1)
     }
 
 

@@ -43,6 +43,8 @@ final class AppEnvironment {
     let makeRecognizer: @MainActor () -> SpeechRecognizing
     /// The voice mode of the assistant chat (SP5a).
     let voiceMode: VoiceModeController
+    /// Per-entry reminder lists that replace the default reminders (plan P4).
+    let reminderOverrides: ReminderOverrideStore
     /// Deadline notifications (design 2b §9); never calls an AI feature.
     let notifications: NotificationScheduler
     /// Target of a tapped notification until the app shows it.
@@ -207,6 +209,8 @@ final class AppEnvironment {
             gitHubProvider.issueReference(for: id).map { IssueReference(repository: $0.repository, number: $0.number, nodeID: $0.nodeID) }
         }
         let deadlineMarks = self.planning.deadlineMarks
+        let reminderOverrides = ReminderOverrideStore(context: context)
+        self.reminderOverrides = reminderOverrides
         self.notifications = NotificationScheduler(
             center: notificationCenter ?? SystemNotificationCenter(), taskList: taskList,
             deadlineEvents: { interval, ids in
@@ -214,7 +218,7 @@ final class AppEnvironment {
             },
             markedDeadlines: MarkedDeadlineSource(calendarIDs: { Set(deadlineMarks.marks().map(\.calendarID)) },
                                                   markedIDs: { deadlineMarks.markedIDs(in: $0) }),
-            settings: settings)
+            settings: settings, reminderOverrides: reminderOverrides)
         let healthStore = health ?? HealthKitStore()
         let intake = IntakeStore(context: context)
         let mirror = HealthMirror(store: intake, health: healthStore)
@@ -315,7 +319,8 @@ final class AppEnvironment {
             },
             reload: { [weak self] in await self?.taskList.reload() },
             reschedule: { [weak self] in await self?.notifications.reschedule() },
-            writeSnapshot: { [weak self] in self?.writeSnapshot() })
+            writeSnapshot: { [weak self] in self?.writeSnapshot() },
+            nextRefill: { [weak self] in self?.notifications.nextRefill })
     }
 
     /// Loads every source once, registering GitHub first when signed in; for work that runs without the app's first
@@ -660,6 +665,8 @@ final class AppEnvironment {
 
     func startNotificationUpdates() {
         guard notificationUpdates == nil else { return }
+        // "Only this one" lists of repeating tasks are useless once the series moved on.
+        reminderOverrides.removeStaleOnlyDue(today: PlanDay(date: .now, calendar: planning.calendar))
         // Marking or unmarking a deadline event changes the notifications and the widget's deadline rows.
         planning.onDeadlinesChanged = { [weak self] in
             self?.notifications.scheduleSoon()
@@ -671,6 +678,8 @@ final class AppEnvironment {
             hasher.combine(taskList.items)
             hasher.combine(taskList.sourceStates.mapValues { String(describing: $0) })
             hasher.combine(settings.leadTimeMinutes)
+            hasher.combine(settings.reminderDefaultsData)
+            hasher.combine(reminderOverrides.revision)
             hasher.combine(settings.deadlineCalendarNotifications)
             hasher.combine(settings.notifiedTaskSources)
             hasher.combine(settings.deadlineCalendarIDs)

@@ -1152,6 +1152,48 @@ struct PlanningModelTests {
         #expect(calendarStore.storedEvents.map(\.title) == ["Lauf", "Lauf", "Lauf"])
     }
 
+    @Test func newEvent_prefillsEventDefaults() async {
+        let model = await model()
+        // Events have no default reminders until the user sets some (A3).
+        #expect(model.defaultEventReminders(isAllDay: false).isEmpty)
+        var defaults = settings.reminderDefaults
+        defaults.set([.before(amount: 15, unit: .minutes)], for: .event, isAllDay: false)
+        defaults.set([.at(daysBefore: 1, hour: 18, minute: 0)], for: .event, isAllDay: true)
+        settings.reminderDefaults = defaults
+        #expect(model.defaultEventReminders(isAllDay: false) == [.before(amount: 15, unit: .minutes)])
+        #expect(model.defaultEventReminders(isAllDay: true) == [.at(daysBefore: 1, hour: 18, minute: 0)])
+    }
+
+    @Test func createEvent_passesTheAlarmsToTheStore() async throws {
+        let model = await model()
+        let created = await model.createEvent(EventDraft(title: "Lernen", start: at(18, 16), end: at(18, 17), isAllDay: false,
+                                                         calendarID: "plan", notes: nil, location: nil, url: nil,
+                                                         alarms: [.before(amount: 1, unit: .days)]))
+        #expect(model.alarms(ofEvent: try #require(created).id) == [.before(amount: 1, unit: .days)])
+    }
+
+    @Test func updateEvent_passesAlarmsWithSpan() async throws {
+        calendarStore.storedEvents = [18, 19, 20].map { day in
+            var event = CalendarEvent(id: "sport|\(Int(at(day, 18).timeIntervalSince1970))", externalID: nil, calendarID: "work",
+                                      title: "Sport", start: at(day, 18), end: at(day, 19), isAllDay: false, url: nil,
+                                      isBusy: true, version: "1")
+            event.isRecurring = true
+            return event
+        }
+        let model = await model()
+        let second = calendarStore.storedEvents[1]
+        var change = draft(second)
+        change.alarms = [.at(daysBefore: 1, hour: 18, minute: 0)]
+        await model.updateEvent(second, with: change, span: .futureEvents)
+        #expect(calendarStore.updateSpans == [.futureEvents])
+        #expect(model.alarms(ofEvent: calendarStore.storedEvents[0].id).isEmpty)
+        #expect(model.alarms(ofEvent: calendarStore.storedEvents[1].id) == [.at(daysBefore: 1, hour: 18, minute: 0)])
+        #expect(model.alarms(ofEvent: calendarStore.storedEvents[2].id) == [.at(daysBefore: 1, hour: 18, minute: 0)])
+        // A draft without alarms leaves them as they are.
+        await model.updateEvent(second, with: draft(second, title: "Lauf"), span: .thisEvent)
+        #expect(model.alarms(ofEvent: second.id) == [.at(daysBefore: 1, hour: 18, minute: 0)])
+    }
+
     @Test func moveBlock_changesEventAndAssignment() async throws {
         let model = await model()
         let task = try #require(taskList.items.first { $0.title == "Fahrrad" })

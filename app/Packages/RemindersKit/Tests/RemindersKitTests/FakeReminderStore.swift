@@ -55,6 +55,8 @@ final class FakeReminderStore: ReminderStore {
         if case .set(let newRecurrence) = recurrence { stored.recurrence = newRecurrence }
         if let due = stored.due { stored.recurrence?.start = PlanDay(due) } else { stored.recurrence = nil }
         stored.lastModified = tick()
+        // Alarms change only through setAlarms and removeAlarms.
+        stored.alarms = records[record.id]?.alarms ?? []
         // Like EventKit: the completion date follows the completed flag and cannot be written directly.
         let previous = records[record.id]
         stored.createdAt = previous?.createdAt
@@ -78,6 +80,21 @@ final class FakeReminderStore: ReminderStore {
         created.createdAt = created.lastModified
         records[created.id] = created
         return created
+    }
+
+    func setAlarms(_ offsets: [ReminderOffset], forReminder id: String) throws {
+        guard var record = records[id] else { throw TaskWriteError.notFound }
+        guard record.due != nil else { throw TaskWriteError.failed("Erinnerungen brauchen ein Fälligkeitsdatum.") }
+        for offset in offsets where !record.alarms.contains(where: { $0.isEquivalent(to: offset) }) { record.alarms.append(offset) }
+        record.lastModified = tick()
+        records[id] = record
+    }
+
+    func removeAlarms(_ offsets: [ReminderOffset], forReminder id: String) throws {
+        guard var record = records[id] else { throw TaskWriteError.notFound }
+        record.alarms.removeAll { alarm in offsets.contains { $0.isEquivalent(to: alarm) } }
+        record.lastModified = tick()
+        records[id] = record
     }
 
     func delete(id: String) throws {

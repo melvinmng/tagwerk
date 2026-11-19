@@ -21,8 +21,17 @@ final class NotificationScheduler {
 
     /// Deadline events ahead are read this far.
     static let eventHorizonDays = 60
-    /// iOS keeps 64 pending requests per app; Tagwerk stays below that.
-    static let limit = 50
+    /// iOS keeps 64 pending requests per app; Tagwerk plans at most this many task and deadline notifications and shares
+    /// the rest with the routines and other features (`NotificationBudget`).
+    static let limit = NotificationBudget.tasksAndDeadlines
+    /// Earliest start of a refill run, so a run that is due right now does not ask for "immediately".
+    static let minimumRefillDelay: TimeInterval = 15 * 60
+    /// A refill run is asked for this long before the last planned notification fires.
+    static let refillLead: TimeInterval = 60 * 60
+
+    /// When more notifications are wanted than fit the budget, the moment to run again so the later ones are added
+    /// before the planned ones have all fired; `nil` when everything wanted is planned.
+    private(set) var nextRefill: Date?
 
     @ObservationIgnored private let center: any NotificationCenterClient
     @ObservationIgnored private let taskList: TaskListModel
@@ -30,6 +39,8 @@ final class NotificationScheduler {
     @ObservationIgnored private let deadlineEvents: (DateInterval, Set<String>) -> [CalendarEvent]?
     @ObservationIgnored private let markedDeadlines: MarkedDeadlineSource
     @ObservationIgnored private let settings: AppSettings
+    /// Per-entry reminder lists (plan P4); `nil` plans every entry with the defaults.
+    @ObservationIgnored private let reminderOverrides: ReminderOverrideStore?
     @ObservationIgnored private let now: () -> Date
     @ObservationIgnored private let calendar: Calendar
     /// The locale of the texts and formats. Every run replaces the requests of all loaded sources, so a language
@@ -44,7 +55,8 @@ final class NotificationScheduler {
          deadlineEvents: @escaping (DateInterval, Set<String>) -> [CalendarEvent]?,
          markedDeadlines: MarkedDeadlineSource = .none,
          settings: AppSettings, now: @escaping () -> Date = Date.init, calendar: Calendar = .tagwerk,
-         locale: @escaping () -> Locale = { .current }) {
+         locale: @escaping () -> Locale = { .current }, reminderOverrides: ReminderOverrideStore? = nil) {
+        self.reminderOverrides = reminderOverrides
         self.center = center
         self.taskList = taskList
         self.deadlineEvents = deadlineEvents
@@ -100,10 +112,9 @@ final class NotificationScheduler {
         await refreshAuthorization()
         guard authorization == .authorized else { return }
         let current = now()
-        // The routine reminders (phase 7) share the prefix but have their own scheduler and their own five places.
-        let ours = await center.pendingRequests().filter {
-            $0.id.hasPrefix(PlannedNotification.identifierPrefix) && !$0.id.hasPrefix(PlannedNotification.routineIdentifierPrefix)
-        }
+        // Only task and deadline notifications belong to this plan. The routine reminders and other features have their own
+        // prefixes, schedulers and places in the budget and are left alone.
+        let ours = await center.pendingRequests().filter { PlannedNotification.isBudgeted($0.id) }
 
         // Sources that are not loaded right now keep their notifications (a background launch before
         // GitHub is registered, a failing source, missing access). A sign-out or a switched-off source clears them.
@@ -130,15 +141,27 @@ final class NotificationScheduler {
 
         // Planned without the margin: a request that fires within the next minute stays when it is still wanted
         // unchanged, but nothing new is added that close (it could be in the past once iOS receives it).
+        // Occurrences of a recurring deadline share the overrides of their series.
+        var seriesKey: [String: String] = [:]
+        for event in events ?? [] { seriesKey[event.id] = seriesIdentifier(of: event.id) }
         let rules = NotificationRules(leadTimeMinutes: settings.leadTimeMinutes,
                                       includesDeadlineCalendars: settings.deadlineCalendarNotifications,
                                       taskSources: enabled,
                                       limit: max(0, Self.limit - kept.count), minimumDelay: 0,
-                                      quietHours: quietHours, focusHold: focusHold, focusCatchUp: catchUp)
+                                      quietHours: quietHours, focusHold: focusHold, focusCatchUp: catchUp,
+                                      defaults: settings.reminderDefaults, overrides: reminderOverrides?.overrides() ?? [:],
+                                      seriesKey: seriesKey)
         let tasks = taskList.items.filter { replaceable.contains($0.id.source) }
         let locale = locale()
-        let wanted = notificationPlan(tasks: tasks, deadlineEvents: events ?? [], rules: rules, now: current, calendar: calendar,
-                                      locale: locale)
+        let result = notificationPlanResult(tasks: tasks, deadlineEvents: events ?? [], rules: rules, now: current, calendar: calendar,
+                                            locale: locale)
+        let wanted = result.notifications
+        // More wanted than the budget holds: the later ones follow when earlier ones have fired (rolling plan).
+        if result.omittedCount > 0, let last = wanted.last {
+            nextRefill = max(last.fireDate.addingTimeInterval(-Self.refillLead), current.addingTimeInterval(Self.minimumRefillDelay))
+        } else {
+            nextRefill = nil
+        }
         let earliestNew = current.addingTimeInterval(NotificationRules.defaultMinimumDelay)
         let pendingDates = Dictionary(ours.map { ($0.id, $0.fireDate) }, uniquingKeysWith: { first, _ in first })
         var plan: [PlannedNotification] = []

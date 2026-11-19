@@ -14,6 +14,8 @@ final class TaskEditorModel {
     private(set) var errorMessage: String?
     /// Result of the last successful save, handed back to the list.
     private(set) var saved: TaskItem?
+    /// The task was written but its reminders were not; the list needs the saved task although the sheet stays open.
+    private(set) var reminderFailureAfterSave = false
 
     /// Projects that field changes apply to (GitHub issues in several projects); default: all.
     var targetProjects: Set<String>
@@ -31,6 +33,10 @@ final class TaskEditorModel {
     /// Login of the signed-in GitHub user; `nil` for other sources or while it is still unknown
     /// (start from the offline cache). Without it, nobody is shown as "Ich" and no hand-over is asked.
     var viewerLogin: String?
+
+    /// The reminders of the task (plan P4); set by the editor, `nil` where reminders are not offered. They are written
+    /// after the task itself, so an Apple reminder has its due date when the alarms are added.
+    var reminders: TaskReminderModel?
 
     init(item: TaskItem, provider: any TaskProvider, addComment: CommentAction? = nil, viewerLogin: String? = nil) {
         self.draft = item
@@ -182,15 +188,23 @@ final class TaskEditorModel {
         /// The user removed themselves from an issue: it leaves tasks and planning, and its future
         /// time blocks (their number is named) are deleted.
         case handOver(futureBlocks: Int)
+        /// The reminders of a repeating local task changed: "Nur diese" or "Alle folgenden".
+        case remindersReach
     }
 
     /// `handOverFutureBlocks` is set when this save hands the issue over; that question comes first
     /// (it cannot coincide with the reminder cases, which only concern recurring reminders).
     static func saveQuestion(effortChanged: Bool, blocksOffSeries: [CalendarEvent],
-                             handOverFutureBlocks: Int? = nil) -> SaveQuestion? {
+                             handOverFutureBlocks: Int? = nil, remindersReach: Bool = false) -> SaveQuestion? {
         if let handOverFutureBlocks { return .handOver(futureBlocks: handOverFutureBlocks) }
         if effortChanged { return .effortReach(blocksOffSeries: blocksOffSeries) }
-        return blocksOffSeries.isEmpty ? nil : .keepBlocks(blocksOffSeries)
+        if !blocksOffSeries.isEmpty { return .keepBlocks(blocksOffSeries) }
+        return remindersReach ? .remindersReach : nil
+    }
+
+    /// Whether saving has to ask how far the reminders of a repeating local task reach.
+    var asksReminderReach: Bool {
+        reminders?.needsReachQuestion(due: draft.due, recurring: draft.recurrence != nil) == true
     }
 
     /// Saves the user's changes if the source is unchanged. Returns `true` when the sheet can close.
@@ -217,9 +231,28 @@ final class TaskEditorModel {
         }
     }
 
+    /// Writes the reminders after the task. The task stays saved when this fails: the editor shows the error and keeps the
+    /// task as it is now, so a second try writes the reminders only.
+    private func saveReminders() -> Bool {
+        guard let reminders else { return true }
+        do {
+            try reminders.save(due: draft.due, recurring: draft.recurrence != nil)
+            reminderFailureAfterSave = false
+            return true
+        } catch {
+            reminderFailureAfterSave = saved != nil
+            if let saved {
+                original = saved
+                draft.version = saved.version
+            }
+            errorMessage = String(localized: "Die Aufgabe ist gesichert, die Erinnerungen nicht: \(TaskListModel.message(for: error))")
+            return false
+        }
+    }
+
     private func write(expectedVersion: String?) async -> Bool {
         var edit = TaskEdit.diff(from: original, to: draft)
-        guard !edit.isEmpty else { return true }
+        guard !edit.isEmpty else { return saveReminders() }
         let allProjects = Set(original.subContainers.map(\.id))
         if !targetProjects.isEmpty, targetProjects != allProjects { edit.targetSubContainerIDs = targetProjects }
         isSaving = true
@@ -229,7 +262,7 @@ final class TaskEditorModel {
             refreshed = nil  // the saved item supersedes the state after the comment
             conflict = nil
             errorMessage = nil
-            return true
+            return saveReminders()
         } catch TaskWriteError.conflict(let current) {
             conflict = current
             return false

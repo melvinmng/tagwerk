@@ -44,7 +44,7 @@ struct BackgroundRefreshTests {
             now: { testNow() })
         await refresh.run()
         #expect(steps == ["submit 7200", "prepare", "reload", "reschedule"])
-        #expect(center.pendingIDs == ["tagwerk.task.local:A"])
+        #expect(center.pendingIDs == ["tagwerk.task.local:A#0"])
     }
 
     @Test func run_preparedSourceLoadsOnce() async {
@@ -87,7 +87,7 @@ struct BackgroundRefreshTests {
                                         now: { testNow() }, loadBudget: .milliseconds(200))
         await refresh.run()
         // GitHub is still loading: local is scheduled, GitHub keeps what it had (nothing here).
-        #expect(center.pendingIDs == ["tagwerk.task.local:A"])
+        #expect(center.pendingIDs == ["tagwerk.task.local:A#0"])
         gate.open()
     }
 

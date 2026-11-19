@@ -18,10 +18,14 @@ public struct ReminderRecord: Sendable, Equatable {
     public var createdAt: Date?
     /// Completion date as reported by the store; read-only, never written back.
     public var completedAt: Date?
+    /// Time alarms of the reminder, relative to its due date; read-only here, changed only through
+    /// `ReminderStore.setAlarms` and `removeAlarms`.
+    public var alarms: [ReminderOffset]
 
     public init(id: String, title: String, notes: String?, due: DueDate?, ekPriority: Int,
                 isCompleted: Bool, listID: String, lastModified: Date?, recurrence: Recurrence? = nil,
-                createdAt: Date? = nil, completedAt: Date? = nil) {
+                createdAt: Date? = nil, completedAt: Date? = nil, alarms: [ReminderOffset] = []) {
+        self.alarms = alarms
         self.recurrence = recurrence
         self.createdAt = createdAt
         self.completedAt = completedAt
