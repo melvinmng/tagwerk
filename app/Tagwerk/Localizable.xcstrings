@@ -1465,6 +1465,16 @@
         }
       }
     },
+    "%lld angehängt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld appended"
+          }
+        }
+      }
+    },
     "%lld ausgewählt · %@": {
       "localizations": {
         "de": {
@@ -1675,6 +1685,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "%lld ml"
+          }
+        }
+      }
+    },
+    "%lld neu": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld new"
           }
         }
       }
@@ -1987,6 +2007,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "%lld overdue"
+          }
+        }
+      }
+    },
+    "%lld übersprungen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld skipped"
           }
         }
       }
@@ -2892,6 +2922,16 @@
         }
       }
     },
+    "Anderen Ordner wählen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose another folder"
+          }
+        }
+      }
+    },
     "Anderer Tag": {
       "localizations": {
         "en": {
@@ -2918,6 +2958,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Pinned"
+          }
+        }
+      }
+    },
+    "Angeheftete Notizen stehen immer oben. Die Wahl gilt für alle Ordner.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pinned notes always stay on top. The choice applies to all folders."
           }
         }
       }
@@ -3574,6 +3624,16 @@
         }
       }
     },
+    "Aus Notion importieren": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Import from Notion"
+          }
+        }
+      }
+    },
     "Ausplanen": {
       "localizations": {
         "en": {
@@ -4226,6 +4286,16 @@
         }
       }
     },
+    "Das ist eine ZIP-Datei. Entpacke den Export zuerst in der Dateien-App und wähle den entpackten Ordner.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This is a ZIP file. Unpack the export in the Files app first and choose the unpacked folder."
+          }
+        }
+      }
+    },
     "Datenschutzhinweis": {
       "localizations": {
         "en": {
@@ -4449,6 +4519,16 @@
         }
       }
     },
+    "Der Eintrag bleibt auf deinem iPhone und geht nie an ChatGPT.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The entry stays on your iPhone and never goes to ChatGPT."
+          }
+        }
+      }
+    },
     "Der Name darf höchstens %lld Zeichen haben.": {
       "localizations": {
         "en": {
@@ -4465,6 +4545,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "The name can have at most 30 characters."
+          }
+        }
+      }
+    },
+    "Der Ordner enthält zu viele Dateien für einen Import.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The folder contains too many files for an import."
+          }
+        }
+      }
+    },
+    "Der Ordner lässt sich nicht lesen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The folder can’t be read."
           }
         }
       }
@@ -5519,6 +5619,16 @@
         }
       }
     },
+    "Einträge im Export": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Entries in the export"
+          }
+        }
+      }
+    },
     "Einverstanden und Vorschläge holen": {
       "localizations": {
         "en": {
@@ -6030,6 +6140,36 @@
           "stringUnit": {
             "state": "translated",
             "value": "Food"
+          }
+        }
+      }
+    },
+    "Export wird gelesen …": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reading the export …"
+          }
+        }
+      }
+    },
+    "Export-Ordner wählen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose export folder"
+          }
+        }
+      }
+    },
+    "Exportiere in Notion mit „Markdown & CSV“, entpacke die Datei in der Dateien-App (Tipp auf die ZIP-Datei) und wähle dann den entpackten Ordner. Eine ZIP-Datei liest Tagwerk nicht selbst.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Export from Notion as “Markdown & CSV”, unpack the file in the Files app (tap the ZIP file) and then choose the unpacked folder. Tagwerk doesn’t read a ZIP file itself."
           }
         }
       }
@@ -6981,6 +7121,16 @@
         }
       }
     },
+    "Hat ein Tag schon einen Eintrag, wird der importierte Text darunter angehängt, hinter einer Trennlinie. Nichts wird überschrieben.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "If a day already has an entry, the imported text is appended below it, after a separator line. Nothing is overwritten."
+          }
+        }
+      }
+    },
     "Health": {
       "localizations": {
         "en": {
@@ -7047,6 +7197,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Open today, not assigned"
+          }
+        }
+      }
+    },
+    "Heute schreiben": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Write today"
           }
         }
       }
@@ -7277,6 +7437,56 @@
           "stringUnit": {
             "state": "translated",
             "value": "Show in plan"
+          }
+        }
+      }
+    },
+    "Im gewählten Ordner wurden keine Einträge von „Tagebuch mit Gott“ gefunden. Wähle den entpackten Export (den Ordner mit den .md- und .csv-Dateien).": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No entries from “Tagebuch mit Gott” were found in the chosen folder. Choose the unpacked export (the folder with the .md and .csv files)."
+          }
+        }
+      }
+    },
+    "Import": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Import"
+          }
+        }
+      }
+    },
+    "Import abgeschlossen:": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Import finished:"
+          }
+        }
+      }
+    },
+    "Importieren": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Import"
+          }
+        }
+      }
+    },
+    "Importiert werden die Seiten, die in Notion zu „Tagebuch mit Gott“ gehören. Der Text bleibt auf deinem iPhone.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pages that belong to “Tagebuch mit Gott” in Notion are imported. The text stays on your iPhone."
           }
         }
       }
@@ -8209,6 +8419,16 @@
         }
       }
     },
+    "Liest einen entpackten Notion-Export. Nichts davon verlässt dein iPhone.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reads an unpacked Notion export. None of it leaves your iPhone."
+          }
+        }
+      }
+    },
     "Liest vor · Stopp": {
       "localizations": {
         "en": {
@@ -9132,6 +9352,16 @@
         }
       }
     },
+    "Neu": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New"
+          }
+        }
+      }
+    },
     "Neu laden": {
       "localizations": {
         "en": {
@@ -9924,6 +10154,16 @@
         }
       }
     },
+    "Ohne erkennbares Datum, nicht importiert": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No usable date, not imported"
+          }
+        }
+      }
+    },
     "Online-Treffer öffnen sich auf GitHub. Zum Bearbeiten in Tagwerk muss ein Issue dir zugewiesen sein und in einem Project liegen.": {
       "localizations": {
         "en": {
@@ -10522,6 +10762,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Close"
+          }
+        }
+      }
+    },
+    "Schon importiert": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Already imported"
           }
         }
       }
@@ -11238,6 +11488,16 @@
         }
       }
     },
+    "Tag hat schon einen Eintrag": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Day already has an entry"
+          }
+        }
+      }
+    },
     "Tag planen": {
       "localizations": {
         "en": {
@@ -11274,6 +11534,36 @@
           "stringUnit": {
             "state": "translated",
             "value": "Days per week"
+          }
+        }
+      }
+    },
+    "Tagebuch": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Journal"
+          }
+        }
+      }
+    },
+    "Tagebuch mit Gott": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Journal with God"
+          }
+        }
+      }
+    },
+    "Tagebuch schreiben": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Write in journal"
           }
         }
       }
@@ -12442,6 +12732,16 @@
         }
       }
     },
+    "Vorschau": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preview"
+          }
+        }
+      }
+    },
     "Vorschlag": {
       "localizations": {
         "en": {
@@ -12761,6 +13061,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "More options …"
+          }
+        }
+      }
+    },
+    "Weiteren Export importieren": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Import another export"
           }
         }
       }
@@ -13243,6 +13553,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Also move time blocks?"
+          }
+        }
+      }
+    },
+    "Zeitraum": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Period"
           }
         }
       }

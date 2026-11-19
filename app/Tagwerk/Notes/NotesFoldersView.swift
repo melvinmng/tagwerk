@@ -37,9 +37,14 @@ struct NotesFoldersView: View {
                     ForEach(own) { folderRow($0, count: counts[$0.id] ?? 0) }
                 }
             }
-            if !system.isEmpty {
-                Section {
-                    ForEach(system) { folderRow($0, count: counts[$0.id] ?? 0) }
+            Section {
+                ForEach(system) { folderRow($0, count: counts[$0.id] ?? 0) }
+                // The journal folder is created when it is first opened.
+                if store.folder(role: .journal) == nil {
+                    Button { openJournal() } label: {
+                        rowLabel(symbol: Self.symbol(for: .journal), title: Text("Tagebuch mit Gott"), count: 0, depth: 1)
+                    }
+                    .buttonStyle(.plain)
                 }
             }
             Section {
@@ -164,6 +169,11 @@ struct NotesFoldersView: View {
     }
 
     // MARK: Actions
+
+    private func openJournal() {
+        let folder = store.ensureJournalFolder()
+        environment.tasksPath.append(.notesFolder(.folder(folder.id)))
+    }
 
     private func startCreating(under parentID: UUID?) {
         nameText = ""

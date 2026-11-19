@@ -21,8 +21,9 @@ final class NoteStore {
         case trash
     }
 
-    @ObservationIgnored private let context: ModelContext
-    @ObservationIgnored private let now: () -> Date
+    /// Internal, so the extensions for journal and Bible Study in other files write through the same context.
+    @ObservationIgnored let context: ModelContext
+    @ObservationIgnored let now: () -> Date
     /// Bumped by every write; views read it to follow changes.
     private(set) var revision = 0
 
@@ -67,7 +68,7 @@ final class NoteStore {
         all().first { $0.deletedAt == nil && $0.kind == kind && $0.dayKey == dayKey }
     }
 
-    var hasThoughts: Bool { all().contains { $0.deletedAt == nil && $0.kind != .free } }
+    var hasThoughts: Bool { all().contains { $0.deletedAt == nil && ($0.kind == .morning || $0.kind == .evening) } }
 
     /// Notes that are not in the trash.
     var count: Int { all().filter { $0.deletedAt == nil }.count }
@@ -97,8 +98,12 @@ final class NoteStore {
             return existing
         }
         let record = NoteRecord(text: trimmed, kind: kind, dayKey: kind == .free ? nil : dayKey, wasDictated: wasDictated, now: now())
-        // Thought notes live in the virtual folder "Gedanken", never in a real one.
-        record.folderID = (kind == .morning || kind == .evening) ? nil : folderID
+        // Thought notes live in the virtual folder "Gedanken", journal entries in their system folder.
+        switch kind {
+        case .morning, .evening: record.folderID = nil
+        case .journal: record.folderID = ensureJournalFolder().id
+        case .free: record.folderID = folderID
+        }
         context.insert(record)
         save()
         return record
@@ -132,10 +137,12 @@ final class NoteStore {
         save()
     }
 
-    /// Removes a note that holds only whitespace, e.g. when the editor closes.
+    /// Removes a note that holds only whitespace, e.g. when the editor closes. A journal entry that still holds only
+    /// the unfilled template counts as empty too.
     func deleteIfEmpty(_ id: UUID) {
-        guard let record = note(id: id),
-              record.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
+        guard let record = note(id: id) else { return }
+        let isBlank = record.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        guard isBlank || (record.kind == .journal && JournalTemplate.isOnlyTemplate(record.text)) else { return }
         context.delete(record)
         save()
     }

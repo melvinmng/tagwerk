@@ -9,6 +9,7 @@ struct EveningSheet: View {
     @Environment(AppEnvironment.self) private var environment
     @State private var review: RoutinesModel.DayReview?
     @State private var note: NoteFieldModel
+    @State private var journalSheet: JournalSheetTarget?
 
     init(model: RoutinesModel, day: PlanDay, notes: NoteStore, isSignedIn: @escaping () -> Bool) {
         self.model = model
@@ -68,6 +69,19 @@ struct EveningSheet: View {
 
                 NoteField(model: note)
 
+                Section {
+                    Button { openJournal() } label: {
+                        HStack {
+                            Label("Tagebuch schreiben", systemImage: "book.closed")
+                            Spacer()
+                            Image(systemName: "chevron.right").font(.caption.weight(.semibold)).foregroundStyle(.tertiary)
+                        }
+                    }
+                    .tint(.primary)
+                } footer: {
+                    Text("Der Eintrag bleibt auf deinem iPhone und geht nie an ChatGPT.")
+                }
+
                 // Sundays: the weekly review is one tap away.
                 if day.weekday(in: model.calendar) == 1 {
                     Section {
@@ -109,8 +123,20 @@ struct EveningSheet: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Fertig") { note.flush(); model.finishEvening(day) } } }
             .task { review = await model.dayReview(day) }
+            .sheet(item: $journalSheet) { target in NoteEditorSheet(noteID: target.id) }
         }
     }
+
+    /// The journal entry of the day this wrap-up belongs to, created from the template when there is none.
+    private func openJournal() {
+        let entry = environment.notes.openJournalEntry(dayKey: NoteDayKey.string(day))
+        journalSheet = JournalSheetTarget(id: entry.id)
+    }
+}
+
+/// The journal entry shown in a sheet over the wrap-up.
+struct JournalSheetTarget: Identifiable {
+    let id: UUID
 }
 
 /// The section "Routinen" of "Erfassen": one row per routine for the shown day; past days stay readable and fillable.

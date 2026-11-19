@@ -7,7 +7,7 @@ extension NoteStore {
     /// `kind` is `.morning` or `.evening`; `create` keeps it at one note per day and kind.
     @discardableResult
     func saveThought(_ text: String, kind: NoteKind, dayKey: String, wasDictated: Bool) -> NoteRecord? {
-        precondition(kind != .free, "a thought note is a morning or an evening note")
+        precondition(kind == .morning || kind == .evening, "a thought note is a morning or an evening note")
         if text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             if let existing = note(kind: kind, dayKey: dayKey) { delete(existing.id) }
             return nil

@@ -427,6 +427,26 @@
         }
       }
     },
+    "Allgemeine Stimmung" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "General mood"
+          }
+        }
+      }
+    },
+    "Aus Notion importiert" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Imported from Notion"
+          }
+        }
+      }
+    },
     "Brot & Backwaren" : {
       "localizations" : {
         "en" : {
@@ -789,6 +809,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Drinks"
+          }
+        }
+      }
+    },
+    "Haupterlebnisse des heutigen Tages" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Main events of today"
           }
         }
       }
@@ -1227,6 +1257,16 @@
         }
       }
     },
+    "Tagebuch" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Journal"
+          }
+        }
+      }
+    },
     "Tagesabschluss öffnen" : {
       "localizations" : {
         "en" : {
@@ -1303,6 +1343,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "What was my goal?"
+          }
+        }
+      }
+    },
+    "Wie geht es mir im Moment grundsätzlich?" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "How am I doing in general right now?"
           }
         }
       }

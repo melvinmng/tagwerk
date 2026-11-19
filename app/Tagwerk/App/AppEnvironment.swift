@@ -390,6 +390,7 @@ final class AppEnvironment {
         case .free: String(localized: "Notiz")
         case .morning: String(localized: "Tagesstart")
         case .evening: String(localized: "Tagesabschluss")
+        case .journal: String(localized: "Tagebuch")
         }
     }
 

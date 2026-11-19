@@ -82,6 +82,11 @@ struct SettingsView: View {
                     } label: {
                         LabeledContent("Routinen", value: DateText.time(minutes: settings.bedtimeMinutes, calendar: .tagwerk))
                     }
+                    NavigationLink {
+                        NotesSettingsView()
+                    } label: {
+                        LabeledContent("Notizen", value: NotesSettingsView.sortName(settings.noteSortOrder))
+                    }
                 }
 
                 Section {

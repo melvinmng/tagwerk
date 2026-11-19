@@ -328,3 +328,21 @@ Abhängigkeiten: 2 und 3 brauchen die Ordner aus 1. 4 braucht die Quellen aus 2 
 | Teilen als Text | ja | ja | Teilen mit anderen |
 | Checklisten, Formatierung, Tabellen, Bilder, Anhänge | ja | nein | #155 |
 | Tags, Sperren | ja | nein | Design-Sammelissue |
+
+## Stand nach Stufe 2 (Tagebuch mit Gott, #182)
+
+**Gebaut**
+- Core: `NoteKind.journal` mit zentralem Prädikat `NoteKind.isPrivate`, `JournalTemplate` (drei Abschnitte, deutsch und englisch, `isOnlyTemplate`, `contentLines`), `NotionCSV` (Anführungszeichen, Zeilenumbrüche in Feldern, BOM, CRLF), `NotionDate` (lokalisierte Datumswerte, Datum im Titel), `NotionMarkdown` (Überschriften auf Vorlagen-Abschnitte abbilden), `NotionExportParser` (Seiten, Tagebuch-Plan, Tagesregel, Bible-Study-Notizen für Stufe 3), `NotionImportPlanner` (Vorschau, Anhängen unter Trennlinie, Marker).
+- App: `NoteRecord.importSourceID`, `NoteStore+Journal` (Systemordner, Eintrag je Tag aus der Vorlage, Import mit Dubletten- und Konfliktbehandlung), „Heute schreiben“ im Systemordner, Zeile „Tagebuch schreiben“ im Tagesabschluss (öffnet den Eintrag im `NoteEditorSheet`), Einstellungen → Notizen (Sortierung und „Aus Notion importieren“), `NotionImportView` mit Ordnerwahl, Vorschau und Ergebnis.
+- Datenschutz: `NoteSuggestionModel.fetch` bricht bei privaten Notizen ab, nach der übergebenen und nach der gespeicherten Art. `PrivateNotesTests` prüft Prädikat, Werkzeuge des Assistenten und diesen Abbruch. Das Widget-Snapshot-Modell hat kein Feld für Notiztext.
+- Demo-Daten: ein Eintrag für gestern.
+
+**Entscheidungen und Abweichungen**
+- Die Notion-CSV enthält keine Seiten-ID. Die Seiten-ID steht nur im Dateinamen der `.md`-Datei. Der Parser ordnet deshalb CSV-Zeilen über den Titel den `.md`-Dateien zu (bei gleichen Titeln der Reihe nach). Die Eigenschaften werden aus den Eigenschaftszeilen der Seite und aus der CSV zusammengeführt, die Seite gewinnt. Ohne CSV genügt die `.md`-Datei.
+- Tagesregel wie im Plan: Titel gewinnt bei höchstens einem Tag Abstand zur Erstellungszeit, sonst die Erstellungszeit in der Zeitzone des Geräts mit der 04:00-Regel (`RoutineSchedule.routineDay`). `Created time` wird als UTC gelesen. Das ist eine Annahme aus der Recherche, keine Prüfung an einer echten Datei.
+- `importSourceID` enthält die Notion-ID, bei angehängten Seiten mehrere durch Leerzeichen getrennt. Gelöschte (Papierkorb) Importe zählen als importiert; nach dem endgültigen Löschen würde ein erneuter Import den Eintrag zurückbringen.
+- Die Vorlage hat keine Titelzeile. In Listen heißt ein Eintrag „Donnerstag, 19. November 2026“, die Vorschau zeigt die ersten ausgefüllten Zeilen ohne Vorlagen-Überschriften.
+- Ein unberührter Eintrag (nur Vorlage) wird beim Schließen des Editors gelöscht. Ein Import in einen Tag mit unberührter Vorlage ersetzt sie statt anzuhängen.
+- Der importierte Text wird immer mit deutschen Überschriften und deutscher Trennzeile geschrieben, weil die Notion-Inhalte deutsch sind.
+- Die Notizen-Ansicht legt den Systemordner „Tagebuch mit Gott“ erst beim ersten Öffnen an. Bis dahin zeigt sie eine Zeile, die ihn anlegt und öffnet.
+- Die Oberfläche (Import, Tagesabschluss-Zeile) ist nur kompiliert und durch Store-Tests abgedeckt, nicht am Gerät gesehen. Der Parser ist nicht gegen eine echte Exportdatei geprüft (Testdaten sind erfunden).

@@ -25,10 +25,24 @@ struct NotesListView: View {
 
     private var isTrash: Bool { scope == .trash }
 
+    /// The system folder of the journal: it opens with "Heute schreiben".
+    private var isJournal: Bool {
+        if case .folder(let id) = scope { return store.folder(id: id)?.role == .journal }
+        return false
+    }
+
     var body: some View {
         @Bindable var settings = environment.settings
         let notes = visibleNotes
         List(selection: $selection) {
+            if isJournal, !editMode.isEditing {
+                Section {
+                    Button { writeToday() } label: {
+                        Label("Heute schreiben", systemImage: "square.and.pencil").foregroundStyle(.tint)
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
             if notes.isEmpty {
                 Text(emptyText)
                     .foregroundStyle(.secondary)
@@ -98,6 +112,13 @@ struct NotesListView: View {
 
     // MARK: Content
 
+    /// Opens the entry of today (rule 10: before 04:00 it is still yesterday's), created from the template if needed.
+    private func writeToday() {
+        let day = RoutineSchedule.routineDay(at: .now, calendar: environment.planning.calendar)
+        let entry = store.openJournalEntry(dayKey: NoteDayKey.string(day))
+        environment.tasksPath.append(.note(entry.id))
+    }
+
     private var visibleNotes: [NoteRecord] {
         store.notes(scope.filter, sortedBy: environment.settings.noteSortOrder)
             .filter { NoteText.matches($0.text, query: searchText) }
@@ -144,8 +165,9 @@ struct NotesListView: View {
     // MARK: Cards
 
     private func card(_ note: NoteRecord) -> some View {
-        let title = NoteText.title(note.text)
-        let preview = NoteText.preview(note.text)
+        let isJournalEntry = note.kind == .journal
+        let title = isJournalEntry ? Self.journalTitle(note, calendar: environment.planning.calendar) : NoteText.title(note.text)
+        let preview = isJournalEntry ? JournalTemplate.contentLines(note.text).prefix(2).joined(separator: "\n") : NoteText.preview(note.text)
         return Button {
             // In selection mode the list itself toggles the row; a tap must not also open the note.
             guard !editMode.isEditing, !isTrash else { return }
@@ -305,6 +327,9 @@ extension NotesListView {
         case .free:
             let date = relativeDate(note.updatedAt, now: now, calendar: calendar)
             return note.wasDictated ? String(localized: "\(date) · diktiert") : date
+        case .journal:
+            let day = note.dayKey.flatMap(NoteDayKey.day) ?? PlanDay(date: note.createdAt, calendar: calendar)
+            return String(localized: "Tagebuch") + " · " + DateText.numericDay(day, calendar: calendar)
         case .morning, .evening:
             let origin = note.kind == .morning ? String(localized: "Tagesstart") : String(localized: "Tagesabschluss")
             let day = note.dayKey.flatMap(NoteDayKey.day) ?? PlanDay(date: note.createdAt, calendar: calendar)
@@ -315,6 +340,13 @@ extension NotesListView {
             default: return text + " · " + String(localized: "\(note.derivedActionCount) Aufgaben daraus")
             }
         }
+    }
+
+    /// The title of a journal entry in a list: its weekday and day ("Donnerstag, 19. November 2026").
+    static func journalTitle(_ note: NoteRecord, calendar: Calendar) -> String {
+        let day = note.dayKey.flatMap(NoteDayKey.day) ?? PlanDay(date: note.createdAt, calendar: calendar)
+        let style = Date.FormatStyle(locale: .current, calendar: calendar, timeZone: calendar.timeZone)
+        return day.startDate(in: calendar).formatted(style.weekday(.wide).day().month(.wide).year())
     }
 
     static var trashFootnote: String {

@@ -73,6 +73,19 @@ enum DemoData {
         if let home = try? notes.createFolder(name: "Haushalt") {
             notes.create(text: "Handwerker anrufen\nHeizung entlüften", folderID: home.id)
         }
+        // One journal entry for yesterday, with the template filled in.
+        let entry = notes.openJournalEntry(dayKey: NoteDayKey.string(yesterday))
+        notes.updateText(entry.id, text: """
+            Allgemeine Stimmung
+            Wie geht es mir im Moment grundsätzlich?
+            Ruhig und dankbar.
+
+            Haupterlebnisse des heutigen Tages
+            Ein langer Spaziergang am Fluss.
+
+            Tagebuch
+            Heute war ein guter Tag. Ich habe mir Zeit zum Nachdenken genommen.
+            """)
         if let discarded = notes.create(text: "Alte Einkaufsidee\nNicht mehr nötig") {
             notes.trash(discarded.id)
         }
