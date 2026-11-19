@@ -145,4 +145,50 @@ struct TaskEditRecurrenceTests {
         edit.recurrence = .set(nil)
         #expect(!edit.isEmpty)
     }
+
+    // MARK: Status per sub-container
+
+    private func statusRow(_ id: String, current: String?, writable: Bool = true) -> SubContainerStatus {
+        SubContainerStatus(subContainerID: id, subContainerName: "Projekt \(id)", current: current,
+                           options: ["Backlog", "Ready", "Done"], isWritable: writable)
+    }
+
+    @Test func diff_status_setsChangedProjectOnly() {
+        var original = makeItem("A", source: .github)
+        original.statuses = [statusRow("P1", current: "Ready"), statusRow("P2", current: "Backlog")]
+        var changed = original
+        changed.statuses[1].current = "Done"
+
+        let edit = TaskEdit.diff(from: original, to: changed)
+
+        #expect(edit.statusChanges == ["P2": "Done"])
+        #expect(!edit.isEmpty)
+    }
+
+    @Test func diff_status_unchanged_isEmpty() {
+        var item = makeItem("A", source: .github)
+        item.statuses = [statusRow("P1", current: "Ready")]
+        #expect(TaskEdit.diff(from: item, to: item).statusChanges.isEmpty)
+        #expect(TaskEdit.diff(from: item, to: item).isEmpty)
+    }
+
+    @Test func diff_status_clearedToNil_isNotAChange() {
+        var original = makeItem("A", source: .github)
+        original.statuses = [statusRow("P1", current: "Ready")]
+        var changed = original
+        changed.statuses[0].current = nil
+        #expect(TaskEdit.diff(from: original, to: changed).statusChanges.isEmpty)
+    }
+
+    @Test func statusOnlyEdit_isNotEmpty() {
+        var edit = TaskEdit()
+        edit.statusChanges = ["P1": "Done"]
+        #expect(!edit.isEmpty)
+    }
+
+    @Test func taskItem_defaultsHaveNoStatuses_andDraftHasNoStartStatus() {
+        #expect(makeItem("A").statuses.isEmpty)
+        #expect(TaskDraft(title: "A").startStatus == nil)
+        #expect(TaskEdit().statusChanges.isEmpty)
+    }
 }
