@@ -140,6 +140,8 @@ GitHub-Konto: @melvinmng · bestätigt zuweisbar · geprüft 2026-11-17 · ich
 - [ ] [#170](https://github.com/melvinmng/tagwerk/issues/170) Apple Watch: Komplikation „Als Nächstes“ und Abhaken {status: Backlog; prio: P4 (Low)}
 - [ ] [#173](https://github.com/melvinmng/tagwerk/issues/173) Designrunde zu PR #172: Befunde der Sichtprüfung und offene Entscheidungen {status: Ready; prio: P3 (Medium)}
 - [ ] [#175](https://github.com/melvinmng/tagwerk/issues/175) Gerätetests der Suche {status: Ready; prio: P3 (Medium)}
+- [ ] [#177](https://github.com/melvinmng/tagwerk/issues/177) Tagesabschluss: Tastatur der Gedanken-Notiz lässt sich nicht schließen {status: Ready; prio: P3 (Medium)}
+- [ ] [#178](https://github.com/melvinmng/tagwerk/issues/178) Siri-Kurzbefehle der Einkaufsliste werden nicht erkannt {status: Backlog; prio: P4 (Low)}
 
 ## Notizen
 
@@ -148,7 +150,7 @@ GitHub-Konto: @melvinmng · bestätigt zuweisbar · geprüft 2026-11-17 · ich
 
 _Automatisch aus [Tagwerk](https://github.com/users/melvinmng/projects/17) erzeugt. Nicht von Hand bearbeiten; Aufgaben oben unter den Personen pflegen._
 
-### Backlog (26)
+### Backlog (27)
 - [#115](https://github.com/melvinmng/tagwerk/issues/115) Phase 6: Jira als Aufgabenquelle anbinden · @melvinmng · Prio P4 (Low)
 - [#134](https://github.com/melvinmng/tagwerk/issues/134) Tage und Wochen in „Planen“ und „Erfassen“ als mitziehbare Seiten blättern (Finger zieht den Nachbartag mit) · @melvinmng · Prio P4 (Low)
 - [#141](https://github.com/melvinmng/tagwerk/issues/141) Gewohnheiten täglich abhaken und Quoten zeigen · @melvinmng · Prio P3 (Medium) · 16h
@@ -175,13 +177,15 @@ _Automatisch aus [Tagwerk](https://github.com/users/melvinmng/projects/17) erzeu
 - [#167](https://github.com/melvinmng/tagwerk/issues/167) Steuerelemente im Kontrollzentrum und auf der Aktionstaste · @melvinmng · Prio P3 (Medium)
 - [#169](https://github.com/melvinmng/tagwerk/issues/169) Ruhezeiten für Benachrichtigungen · @melvinmng · Prio P3 (Medium)
 - [#170](https://github.com/melvinmng/tagwerk/issues/170) Apple Watch: Komplikation „Als Nächstes“ und Abhaken · @melvinmng · Prio P4 (Low)
+- [#178](https://github.com/melvinmng/tagwerk/issues/178) Siri-Kurzbefehle der Einkaufsliste werden nicht erkannt · @melvinmng · Prio P4 (Low)
 
-### Bereit (5)
+### Bereit (6)
 - [#159](https://github.com/melvinmng/tagwerk/issues/159) UI-Tests für die Hauptwege · @melvinmng · Prio P3 (Medium)
 - [#164](https://github.com/melvinmng/tagwerk/issues/164) Wochenplanung als geführter Ablauf · @melvinmng · Prio P3 (Medium)
 - [#168](https://github.com/melvinmng/tagwerk/issues/168) Fahrzeit zwischen Terminen berücksichtigen · @melvinmng · Prio P3 (Medium)
 - [#173](https://github.com/melvinmng/tagwerk/issues/173) Designrunde zu PR #172: Befunde der Sichtprüfung und offene Entscheidungen · @melvinmng · Prio P3 (Medium)
 - [#175](https://github.com/melvinmng/tagwerk/issues/175) Gerätetests der Suche · @melvinmng · Prio P3 (Medium)
+- [#177](https://github.com/melvinmng/tagwerk/issues/177) Tagesabschluss: Tastatur der Gedanken-Notiz lässt sich nicht schließen · @melvinmng · Prio P3 (Medium)
 
 ### In Prüfung (2)
 - [#113](https://github.com/melvinmng/tagwerk/issues/113) Phase 5: Einkaufsliste und Notizen einbinden · @melvinmng · Prio P3 (Medium)
