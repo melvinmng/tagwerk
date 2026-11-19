@@ -46,13 +46,20 @@ final class ShareInboxModel {
     func requestRefresh() { refreshRequests += 1 }
 
     /// Reads the inbox and opens the next item when allowed. Calling it again while an item is open changes nothing.
-    func refresh(canPresent: Bool = true) {
-        guard let inbox else { return }
+    /// Returns `true` when an item is waiting only because another sheet is open (`canPresent == false`), so the caller
+    /// can look again later.
+    @discardableResult
+    func refresh(canPresent: Bool = true) -> Bool {
+        guard let inbox else { return false }
         let items = inbox.pending()
         parked = items.filter { $0.offeredCount >= ShareInbox.maximumOffers }
-        guard current == nil, !isPaused, canPresent, isSetupCompleted() else { return }
-        current = items.filter { $0.offeredCount < ShareInbox.maximumOffers }
+        guard current == nil, !isPaused, isSetupCompleted() else { return false }
+        let next = items.filter { $0.offeredCount < ShareInbox.maximumOffers }
             .min { ($0.offeredCount, $0.createdAt, $0.id.uuidString) < ($1.offeredCount, $1.createdAt, $1.id.uuidString) }
+        guard let next else { return false }
+        guard canPresent else { return true }
+        current = next
+        return false
     }
 
     /// The sheet was swiped away or closed with "Abbrechen": the item stays, counted as offered.

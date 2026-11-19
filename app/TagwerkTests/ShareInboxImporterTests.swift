@@ -116,6 +116,21 @@ final class ShareInboxImporterTests {
         #expect(model.current?.title == "wartet")
     }
 
+    @Test func openSheet_makesRefreshReportWaiting() throws {
+        let model = makeModel()
+        #expect(model.refresh(canPresent: false) == false)  // nothing waits
+        try put("wartet")
+        #expect(model.refresh(canPresent: false) == true)
+        #expect(model.current == nil)
+        #expect(model.refresh(canPresent: true) == false)
+        #expect(model.current?.title == "wartet")
+        // Setup not done: nothing waits for a sheet to close, the setup comes first.
+        model.finish(try #require(model.current?.id))
+        try put("später")
+        setupCompleted = false
+        #expect(model.refresh(canPresent: false) == false)
+    }
+
     @Test func finish_removesFiles() throws {
         let model = makeModel()
         let source = root.appending(path: "bild.png")
