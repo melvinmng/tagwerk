@@ -20,7 +20,10 @@ struct GitHubAssigneeTests {
     private func item(assignees: [String]?) -> TaskItem {
         TaskItem(id: TaskID(source: .github, rawValue: "I_1"), title: "Issue", notes: nil, due: nil, priority: nil,
                  estimateMinutes: nil, isCompleted: false, container: TaskContainer(id: "beispiel/app", name: "beispiel/app", colorHex: nil),
-                 url: nil, version: "1", editableFields: [], assignees: assignees)
+                 url: nil, version: "1", editableFields: [], assignees: assignees,
+                 // A listed issue sits in at least one project.
+                 statuses: [SubContainerStatus(subContainerID: "PVT_1", subContainerName: "App", current: "Ready",
+                                               options: ["Ready", "Done"], isWritable: true)])
     }
 
     @Test func assignableUsers_requestsFirstPageOfHundred() async throws {

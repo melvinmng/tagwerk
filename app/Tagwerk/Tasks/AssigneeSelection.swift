@@ -79,6 +79,16 @@ enum AssigneeSelection {
         }
     }
 
+    /// Title of the capsule for an issue without a Project: "#151 angelegt · ohne Project".
+    static func noProjectTitle(number: Int?) -> String {
+        let issue = number.map { "#\($0)" } ?? "Issue"
+        return String(localized: "\(issue) angelegt · ohne Project")
+    }
+
+    static func noProjectAnnouncement(number: Int?) -> String {
+        String(localized: "Angelegt: \(noProjectTitle(number: number)). Auf GitHub öffnen verfügbar.")
+    }
+
     /// VoiceOver announcement of the "Vergeben" capsule.
     static func announcement(number: Int?, assignees: [String]) -> String {
         String(localized: "Vergeben: \(capsuleTitle(number: number, assignees: assignees)). Auf GitHub öffnen verfügbar.")

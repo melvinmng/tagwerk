@@ -116,6 +116,8 @@ struct TaskEditorView: View {
                     }
                 }
 
+                statusSection
+
                 if model.isVisible(.notes) {
                     Section(model.original.id.source == .github ? "Beschreibung (Markdown)" : "Notiz") {
                         TextField("Notiz", text: notes, axis: .vertical).lineLimit(3...10).keyboardDoneButton()
@@ -429,6 +431,41 @@ struct TaskEditorView: View {
         Binding(
             get: { model.draft.notes ?? "" },
             set: { model.draft.notes = $0.isEmpty ? nil : $0 }
+        )
+    }
+
+    /// One picker per Project (issue #154); only for issues whose Projects have a Status field.
+    @ViewBuilder private var statusSection: some View {
+        if model.isVisible(.status), !model.statusRows.isEmpty {
+            Section {
+                ForEach(model.statusRows, id: \.subContainerID) { row in
+                    statusRow(row)
+                }
+            } header: {
+                Text("Status")
+            } footer: {
+                if model.statusRows.count > 1 {
+                    Text("Der Status gilt je Project, unabhängig von „Ändern in“.")
+                }
+            }
+        }
+    }
+
+    @ViewBuilder private func statusRow(_ row: SubContainerStatus) -> some View {
+        if row.isWritable {
+            Picker(row.subContainerName, selection: statusBinding(row.subContainerID)) {
+                if row.current == nil { Text("–").tag(String?.none) }
+                ForEach(row.options, id: \.self) { Text($0).tag(Optional($0)) }
+            }
+        } else {
+            LabeledContent(row.subContainerName, value: row.current ?? "–")
+        }
+    }
+
+    private func statusBinding(_ subContainerID: String) -> Binding<String?> {
+        Binding(
+            get: { model.draft.statuses.first { $0.subContainerID == subContainerID }?.current },
+            set: { if let status = $0 { model.setStatus(status, in: subContainerID) } }
         )
     }
 

@@ -83,6 +83,18 @@ final class TaskEditorModel {
         original.editableFields.contains(field)
     }
 
+    // MARK: Status per project (issue #154)
+
+    /// Status rows of the draft (one per Project); the editor shows them only when `.status` is editable.
+    var statusRows: [SubContainerStatus] { draft.statuses.filter { !$0.options.isEmpty } }
+
+    /// Sets the stage of one Project in the draft. Always per project, independent of `targetProjects`.
+    func setStatus(_ status: String, in subContainerID: String) {
+        guard let index = draft.statuses.firstIndex(where: { $0.subContainerID == subContainerID && $0.isWritable }),
+              draft.statuses[index].options.contains(status) else { return }
+        draft.statuses[index].current = status
+    }
+
     // MARK: Assignees (issue #136)
 
     /// The user was assigned when the editor opened and is not in the draft any more.

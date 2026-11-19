@@ -27,13 +27,16 @@ public struct TaskEdit: Sendable, Equatable {
     public var assignees: FieldChange<AssigneeChange> = .unchanged
     /// Sub-containers (e.g. GitHub Projects) that field changes apply to; `nil` means all.
     public var targetSubContainerIDs: Set<String>? = nil
+    /// New stage per sub-container ID (GitHub: Project ID to option name). Independent of
+    /// `targetSubContainerIDs`, because a status is always set per sub-container.
+    public var statusChanges: [String: String] = [:]
 
     public init() {}
 
     public var isEmpty: Bool {
         title.isUnchanged && notes.isUnchanged && due.isUnchanged && priority.isUnchanged
             && estimateMinutes.isUnchanged && containerID.isUnchanged && isCompleted.isUnchanged
-            && labels.isUnchanged && recurrence.isUnchanged && assignees.isUnchanged
+            && labels.isUnchanged && recurrence.isUnchanged && assignees.isUnchanged && statusChanges.isEmpty
     }
 
     /// Builds an edit that sets exactly the fields in which `edited` differs from `original`.
@@ -50,6 +53,12 @@ public struct TaskEdit: Sendable, Equatable {
         if !sameSeries(original.recurrence, edited.recurrence) { edit.recurrence = .set(edited.recurrence) }
         if let change = AssigneeRules.change(original: original.assignees, edited: edited.assignees) {
             edit.assignees = .set(change)
+        }
+        for edited in edited.statuses {
+            guard let current = edited.current,
+                  let before = original.statuses.first(where: { $0.subContainerID == edited.subContainerID }),
+                  before.current != current else { continue }
+            edit.statusChanges[edited.subContainerID] = current
         }
         return edit
     }

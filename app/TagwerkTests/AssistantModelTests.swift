@@ -413,6 +413,15 @@ struct AssistantGitHubCardTests {
         #expect(card.change.hasPrefix("Issue anlegen · beispiel/app · Project App"))
     }
 
+    @Test func describe_gitHubIssue_emptyProjectList_saysNoProject_notMissing() async {
+        let model = await make()
+        let card = model.describe(call(arguments(repository: #""beispiel/app""#, projects: "[]")))
+        #expect(card.change.hasPrefix("Issue anlegen · beispiel/app · Kein Project"))
+        #expect(!card.change.contains("Project fehlt"))
+        let inferred = model.describe(call(arguments(repository: "null", projects: "[]")))
+        #expect(inferred.change.hasPrefix("Issue anlegen · beispiel/app · Kein Project"))
+    }
+
     @Test func describe_gitHubIssue_unresolvableTargets_sayMissing() async {
         directory.storedCatalog = GitHubCatalog(repositories: ["beispiel/app", "beispiel/web"], projects: [],
                                                 fetchedAt: Date(timeIntervalSince1970: 0))

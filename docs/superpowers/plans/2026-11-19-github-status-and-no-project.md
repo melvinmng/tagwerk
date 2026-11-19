@@ -62,3 +62,46 @@ Beides liegt im selben Thread, weil es denselben Anlege- und Schreibweg (`GitHub
 - Wortlaut der Kapsel und des Footers für Issues ohne Project.
 - Regeln 3 und 4 bestätigen (Done in einem von mehreren Projects, Wiederöffnen ohne „Ready“).
 - Später: Issues ohne Project trotzdem anzeigen (eigene Quelle je Repository). Status über den Assistenten.
+
+## Stand
+
+Umgesetzt auf dem Branch `feature/github-status-no-project` (Aufgaben 1 bis 8). Testergebnisse siehe Übergabe.
+
+### Was gebaut wurde
+
+- **GitHubKit, Optionen (Regel 1).** `ProjectField.orderedOptions: [ProjectFieldOption]` (id, name) in Board-Reihenfolge. `options` ist jetzt berechnet. Alte Caches ohne `orderedOptions` dekodieren weiter und fallen auf die Reihenfolge nach Name zurück. Neu geschriebene Caches enthalten beide Schlüssel. `ProjectsQuery.ProjectNode.info` übernimmt die GraphQL-Reihenfolge.
+- **Done und Wiederöffnen je Project (Regeln 3 und 4).** `GitHubMapping.isDone`, `doneOption(in:)`, `reopenOption(in:)`, `statusOption(named:in:)`, `statusOptions(in:)`. „Done“ wird ohne Beachtung der Groß-/Kleinschreibung erkannt und mit der Schreibweise des Projects geschrieben. `isVisible`, `displayed()` und `delete` nutzen dieselben Helfer.
+- **TagwerkCore (Regel 2).** `SubContainerStatus`, `TaskItem.statuses`, `TaskField.status`, `TaskEdit.statusChanges` (mit `diff` und `isEmpty`), `TaskDraft.startStatus`.
+- **GitHubKit, Schreiben (Regel 10).** `write` prüft alle Statuswechsel vor der ersten Anfrage (Project beschreibbar, Option vorhanden, sonst `TaskWriteError.failed`). Reihenfolge: Issue-Felder, Project-Felder, Status, Zuweisungen.
+- **GitHubKit, Anlegen (Regeln 5 und 6).** Ohne Project möglich (kein `addProjectV2ItemById`). Startstatus wird gegen alle Ziel-Projects geprüft, bevor das Issue per POST entsteht. Ohne Angabe gilt Regel 4 je Project. `isListed` verlangt mindestens eine Platzierung.
+- **App.** `NewTaskSheet` (Picker „Status“, `canSave` nur mit Repository, neuer Footer), `ProjectSelectionRow` (Eintrag „Kein Project“), `HandedOverNotice.reason` (`.handedOver` / `.noProject`) mit eigenem Titel, Titelzeile und Ansage, Editor-Abschnitt „Status“, Zeile in der Konfliktkarte je Project, Kontextmenü „Status“ (`TaskMenuActions.setStatus` mit Standardwert `nil`), `TaskListModel.setStatus`.
+- **Assistent (Regel 7).** `project_ids: []` heißt ausdrücklich „ohne Project“, `nil` behält die Vorbelegung. Aktionskarte „Kein Project“, Werkzeugbeschreibung und `gitHubInstructions()` angepasst. Die Antwort enthält weiter `listed: false` mit `number` und `url`.
+- **Strings.** App-Katalog und Paketkatalog von GitHubKit, jeweils mit englischer Übersetzung. Der Schlüssel „Bitte Repository und mindestens ein Project wählen.“ und „Mindestens ein Projekt wählen.“ entfielen.
+
+### Entscheidungen und Abweichungen (begründet)
+
+1. **Statuswechsel, der das Issue schließt.** Es zählt der Zustand nach dem Wechsel: Sind danach alle beschreibbaren Projects Done und wurde mindestens eines davon in diesem Edit auf Done gesetzt, wird das Issue geschlossen (gleicher Weg wie Abhaken, `state_reason: completed`). Das gilt auch, wenn ein Project vorher schon Done war. Nicht beschreibbare Projects zählen nicht (Regel 3: „alle beschreibbaren“).
+   Offen für Melvins Bestätigung: `displayed()` wendet die Project-Auswahl der Nutzerin oder des Nutzers vor der Prüfung „nicht Done“ an. Wird Done im einzigen ausgewählten Project gesetzt, während das Issue in einem nicht ausgewählten Project noch nicht Done ist, bleibt das Issue offen, `settle` hält es bis zum nächsten Laden in der Liste, dann fällt es aus der Auswahl heraus. Das ist das bestehende Verhalten der Project-Auswahl und wurde hier nicht geändert. Es ist offen, aber über den eigenen Filter ausgeblendet.
+2. **Wiederöffnen über den Status.** Ein Wechsel auf eine Nicht-Done-Option bei einem geschlossenen Issue öffnet es wieder, auch wenn das Project vorher nicht Done war (ein geschlossenes Issue mit „In progress“ wäre widersprüchlich). Die anderen Projects bleiben unverändert. Die Reihenfolge ist umgekehrt zu den übrigen Schreibwegen: erst das Feld, dann `PATCH open`. Ein Fehler beim Feld lässt das Issue so geschlossen statt offen und überall Done (unsichtbar).
+3. **Gewählter Status gegen implizierten Status.** Kommt `isCompleted` zusammen mit `statusChanges`, gewinnt die gewählte Stufe für das jeweilige Project; die übrigen Projects erhalten Done bzw. die Wiederöffnen-Option.
+4. **Stille Auslassungen nur bei impliziten Werten.** Ein Project ohne Done-Option (Abhaken, Löschen) oder ohne passende Startstufe wird übersprungen wie bisher. Ausdrücklich gewählte Stufen, die fehlen, sind Fehler. Als Startstatus ist „Done“ abgelehnt (das Issue wäre offen, aber unsichtbar).
+5. **`statuses` hat einen Eintrag je Platzierung**, auch bei lesbaren Fremd-Projects und Projects ohne Status-Feld (dann `options: []`). Grund: `isListed` braucht ein Signal „hat Platzierung“, und `subContainers` enthält nur beschreibbare Projects; ein Issue nur auf einem fremden Board wäre sonst fälschlich „nicht in den Listen“. Editor und Kontextmenü zeigen nur beschreibbare Zeilen mit Optionen. `.status` ist nur editierbar, wenn ein beschreibbares Project Optionen hat.
+6. **Grund der Kapsel bei Zusammentreffen.** Ein Issue ohne Platzierung zeigt immer „angelegt · ohne Project“, auch wenn es zugleich anderen zugewiesen wurde. Der Grund ist am Item sicher erkennbar, die Zuweisung bräuchte den Login. Die Zugewiesenen stehen dann nicht in der Kapsel.
+7. **Editor und „Erledigt“.** Der Schalter „Erledigt“ ändert die angezeigten Status-Picker nicht; die Wirkung (Done bzw. Wiederöffnen-Stufe je Project) tritt erst beim Speichern ein.
+8. **Kontextmenü: Status, der alle Projects auf Done bringt.** Wie „Erledigt“: Das Issue verlässt die Liste, die Kapsel „Rückgängig“ erscheint. „Rückgängig“ setzt die Wiederöffnen-Stufe (Regel 4), nicht die alten Stufen.
+9. **Sprache.** Die Texte folgen den Wörtern aus dem Plan („Kein Project“, „ohne Project“), während andere Zeilen der Oberfläche „Projekt/Projekte“ sagen. Das ist offen für das Design-Sammelissue.
+10. **`feature/keyboard-dismissal`** war zum Zeitpunkt des Merges von `origin/main` nicht gemergt. Die neuen Eingaben sind Picker und Menüs; es gibt kein neues Textfeld, also nichts zu übernehmen.
+
+### Offen
+
+- Status als Marke in der Aufgabenzeile, Platzierung und Aussehen der neuen Bedienelemente, Wortlaut der Kapsel und des Footers: Design-Sammelissue (siehe oben).
+- Issues ohne Project trotzdem anzeigen (eigene Quelle je Repository) und Status über den Assistenten: bewusst nicht Teil dieses Plans.
+- Der Endpunkt `updateProjectV2ItemFieldValue` ist nur über `StubTransport` und erfundene Fixtures getestet, nie gegen GitHub.
+
+### Nur auf dem Gerät prüfbar
+
+- Ein Project mit echten Stufen (z. B. Backlog, Ready, In progress, Blocked, In review, Done): Reihenfolge der Optionen im Editor, im Menü und im Blatt „Neue Aufgabe“ gleicht dem Board.
+- Issue ohne Project anlegen (Blatt und Assistent): Kapsel „angelegt · ohne Project“ mit „Auf GitHub öffnen“, Issue erscheint nicht in der Liste.
+- Statuswechsel auf Done in einem von zwei Projects: Issue bleibt offen und sichtbar. In beiden: Issue schließt und die Kapsel „Rückgängig“ erscheint.
+- Project-Workflows auf GitHub, die beim Schließen oder Öffnen selbst einen Status setzen: Das Ergebnis nach dem erneuten Lesen stimmt mit dem Board überein.
+- Alter Offline-Cache (App aktualisiert, ohne Netz gestartet): Status-Optionen erscheinen, bis zum nächsten Laden nach Namen sortiert.

@@ -40,7 +40,27 @@ public struct TaskContainer: Sendable, Hashable, Codable {
 
 /// Fields the editor can show and change. A source lists only the fields it supports.
 public enum TaskField: Sendable, Hashable, Codable {
-    case title, notes, due, priority, estimate, container, labels, recurrence, assignees
+    case title, notes, due, priority, estimate, container, labels, recurrence, assignees, status
+}
+
+/// Status of a task in one sub-container (for GitHub: the Status field of one Project).
+/// `options` lists the stages of that sub-container in its own order, including the finishing stage.
+public struct SubContainerStatus: Hashable, Sendable {
+    public let subContainerID: String
+    public let subContainerName: String
+    /// Current stage; `nil` when the item has no value yet.
+    public var current: String?
+    public let options: [String]
+    /// Whether the user may change the status (readable foreign boards may be read-only).
+    public let isWritable: Bool
+
+    public init(subContainerID: String, subContainerName: String, current: String?, options: [String], isWritable: Bool) {
+        self.subContainerID = subContainerID
+        self.subContainerName = subContainerName
+        self.current = current
+        self.options = options
+        self.isWritable = isWritable
+    }
 }
 
 /// Source-independent view of a task.
@@ -69,14 +89,18 @@ public struct TaskItem: Identifiable, Sendable, Hashable {
     public var recurrence: Recurrence?
     /// Assigned logins in the order of the source (GitHub); `nil` for sources without assignment.
     public var assignees: [String]?
+    /// Status per sub-container (GitHub Projects), one entry per placement; empty for other sources and
+    /// for issues without a Project.
+    public var statuses: [SubContainerStatus]
 
     public init(
         id: TaskID, title: String, notes: String?, due: DueDate?, priority: Priority?,
         estimateMinutes: Int?, isCompleted: Bool, container: TaskContainer, url: URL?,
         version: String, editableFields: Set<TaskField>,
         subContainers: [TaskContainer] = [], labels: [String]? = nil, epic: EpicInfo? = nil, isEpic: Bool = false,
-        recurrence: Recurrence? = nil, assignees: [String]? = nil
+        recurrence: Recurrence? = nil, assignees: [String]? = nil, statuses: [SubContainerStatus] = []
     ) {
+        self.statuses = statuses
         self.recurrence = recurrence
         self.assignees = assignees
         self.epic = epic
@@ -112,10 +136,13 @@ public struct TaskDraft: Sendable, Hashable {
     public var recurrence: Recurrence?
     /// People to assign; `nil` is the default of the source (GitHub: the signed-in user), `[]` is no one.
     public var assignees: [String]?
+    /// Initial stage in every target sub-container; `nil` lets the source choose its default.
+    public var startStatus: String?
 
     public init(title: String, notes: String? = nil, due: DueDate? = nil, priority: Priority? = nil,
                 estimateMinutes: Int? = nil, containerID: String? = nil, subContainerIDs: [String] = [],
-                recurrence: Recurrence? = nil, assignees: [String]? = nil) {
+                recurrence: Recurrence? = nil, assignees: [String]? = nil, startStatus: String? = nil) {
+        self.startStatus = startStatus
         self.recurrence = recurrence
         self.assignees = assignees
         self.subContainerIDs = subContainerIDs

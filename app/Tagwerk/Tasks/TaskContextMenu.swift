@@ -16,6 +16,8 @@ struct TaskMenuActions {
     /// "Arbeitstag: Mi. 18. Nov." or "noch nicht eingeplant".
     var plannedText = String(localized: "noch nicht eingeplant")
     var unassign: (() -> Void)? = nil
+    /// Sets the status in one sub-container (GitHub Project ID, option); `nil` where status is not offered.
+    var setStatus: ((String, String) -> Void)? = nil
     /// Day view only: the shown day, which "Mit KI planen" plans when it is today or later.
     var shownDay: PlanDay? = nil
     /// Day view of today only: marks the task as today's focus or removes the mark (phase 7).
@@ -66,6 +68,11 @@ struct TaskContextMenu: View {
                 }
             }
         }
+        if actions.isWritable, let setStatus = actions.setStatus, !Self.statusRows(of: item).isEmpty {
+            Section("Status · ändert GitHub") {
+                statusMenu(setStatus)
+            }
+        }
         if let toggleFocus = actions.toggleFocus {
             Section {
                 Button(actions.isFocus ? "Fokus entfernen" : "Als Fokus markieren", systemImage: actions.isFocus ? "star.slash" : "star") {
@@ -105,6 +112,43 @@ struct TaskContextMenu: View {
             Section {
                 Button("Erledigt", systemImage: "checkmark.circle") { actions.complete() }
                 Button(TaskListView.deleteTitle(for: item), systemImage: "trash", role: .destructive) { actions.delete() }
+            }
+        }
+    }
+
+    /// Status rows the user may change: writable projects that have a Status field.
+    static func statusRows(of item: TaskItem) -> [SubContainerStatus] {
+        guard item.id.source == .github, item.editableFields.contains(.status) else { return [] }
+        return item.statuses.filter { $0.isWritable && !$0.options.isEmpty }
+    }
+
+    /// One project: the stages with a checkmark at the current one. Several projects: one submenu each.
+    @ViewBuilder private func statusMenu(_ setStatus: @escaping (String, String) -> Void) -> some View {
+        let rows = Self.statusRows(of: item)
+        if rows.count == 1, let row = rows.first {
+            Menu {
+                statusOptions(of: row, setStatus)
+            } label: {
+                Label("Status ändern", systemImage: "circle.dashed")
+                Text(row.current ?? String(localized: "kein Status"))
+            }
+        } else {
+            Menu {
+                ForEach(rows, id: \.subContainerID) { row in
+                    Menu(row.subContainerName) { statusOptions(of: row, setStatus) }
+                }
+            } label: {
+                Label("Status ändern", systemImage: "circle.dashed")
+            }
+        }
+    }
+
+    private func statusOptions(of row: SubContainerStatus, _ setStatus: @escaping (String, String) -> Void) -> some View {
+        ForEach(row.options, id: \.self) { option in
+            Button {
+                setStatus(row.subContainerID, option)
+            } label: {
+                if option == row.current { Label(option, systemImage: "checkmark") } else { Text(option) }
             }
         }
     }
