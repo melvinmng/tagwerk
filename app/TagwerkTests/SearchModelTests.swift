@@ -196,7 +196,7 @@ struct SearchModelTests {
         #expect(!model.canExtendWindow)
     }
 
-    @Test func completedLoadOnceWhenSwitchTurnsOn() async {
+    @Test func completedReloadedEachTimeSwitchTurnsOn() async {
         var done = makeTask("Statistik Übung", source: .reminders)
         done.isCompleted = true
         probe.completed = [CompletedTask(item: done, completedAt: day(2026, 11, 12))]
@@ -208,10 +208,25 @@ struct SearchModelTests {
         model.includeCompleted = false
         model.includeCompleted = true
         await model.settle()
-        #expect(probe.completedCalls == 1)
+        #expect(probe.completedCalls == 2)
         #expect(model.results.sections.map(\.kind).contains(.completedTasks))
         model.includeCompleted = false
         #expect(!model.results.sections.map(\.kind).contains(.completedTasks))
+    }
+
+    @Test func completedTaskCompletedWhileSwitchWasOff_showsAfterTurningItOnAgain() async {
+        let model = probe.model()
+        model.text = "statistik"
+        model.includeCompleted = true
+        await model.settle()
+        #expect(!model.results.sections.map(\.kind).contains(.completedTasks))
+        model.includeCompleted = false
+        var done = makeTask("Statistik Übung", source: .reminders)
+        done.isCompleted = true
+        probe.completed = [CompletedTask(item: done, completedAt: day(2026, 11, 12))]
+        model.includeCompleted = true
+        await model.settle()
+        #expect(model.results.sections.map(\.kind).contains(.completedTasks))
     }
 
     @Test func eventStoreChangeRefetchesLoadedWindow() async {

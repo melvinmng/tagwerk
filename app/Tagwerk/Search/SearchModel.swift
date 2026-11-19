@@ -99,7 +99,8 @@ final class SearchModel {
     private func includeCompletedChanged() {
         guard !isClosed else { return }
         resetPaging()
-        if includeCompleted, !completedLoaded, !isLoadingCompleted { loadCompleted() }
+        // Every switch-on reads again: tasks may have been completed or reopened while the switch was off.
+        if includeCompleted, !isLoadingCompleted { loadCompleted() }
         evaluate()
     }
 
