@@ -1,8 +1,9 @@
 import SwiftUI
 import TagwerkCore
 
-/// The notes entry page: "Alle Notizen", the default folder, "Gedanken", the user's folders as a tree, the system
-/// folders and "Zuletzt gelöscht". It has no navigation stack of its own.
+/// The notes entry page: "Alle Notizen", the default folder, "Brain Dump", the user's folders as a tree, the system
+/// folders (Tagesstart, Tagesabschluss, Dream Log, journal, Bible Study) and "Zuletzt gelöscht". It has no navigation
+/// stack of its own.
 struct NotesFoldersView: View {
     @Environment(AppEnvironment.self) private var environment
     let store: NoteStore
@@ -23,13 +24,13 @@ struct NotesFoldersView: View {
         let counts = store.folderCounts()
         let tree = store.folderTree()
         let own = tree.filter { $0.folder.role == nil }.flatMap(\.flattened)
-        let system = tree.filter { $0.folder.role != nil }.flatMap(\.flattened)
+        let system = Self.systemFolders(tree)
         List {
             Section {
                 scopeRow(.all, symbol: "tray.full", title: "Alle Notizen", count: store.count)
                 scopeRow(.standard, symbol: "note.text", title: "Notizen", count: store.notes(.own).count)
-                if store.hasThoughts {
-                    scopeRow(.thoughts, symbol: "moon.stars", title: "Gedanken", count: store.notes(.thoughts).count)
+                if let brainDump = store.folder(role: .brainDump) {
+                    brainDumpRow(brainDump, count: counts[brainDump.id] ?? 0)
                 }
             }
             if !own.isEmpty {
@@ -107,6 +108,26 @@ struct NotesFoldersView: View {
         .buttonStyle(.plain)
     }
 
+    /// "Brain Dump": a tap opens the folder, the swipe from the leading edge starts a new note in it.
+    private func brainDumpRow(_ folder: NoteFolderRecord, count: Int) -> some View {
+        Button {
+            environment.tasksPath.append(.notesFolder(.folder(folder.id)))
+        } label: {
+            rowLabel(symbol: Self.symbol(for: .brainDump), title: Text(folder.name), count: count, depth: 1)
+        }
+        .buttonStyle(.plain)
+        .swipeActions(edge: .leading) {
+            Button { newBrainDumpNote(in: folder) } label: { Label("Neu", systemImage: "square.and.pencil") }.tint(.accentColor)
+        }
+        .contextMenu {
+            Button { newBrainDumpNote(in: folder) } label: { Label("Neu", systemImage: "square.and.pencil") }
+            Button { startRenaming(folder.id) } label: { Label("Umbenennen", systemImage: "pencil") }
+        }
+        .swipeActions(edge: .trailing) {
+            Button { startRenaming(folder.id) } label: { Label("Umbenennen", systemImage: "pencil") }.tint(.indigo)
+        }
+    }
+
     private func folderRow(_ node: NoteFolderNode, count: Int) -> some View {
         let folder = node.folder
         return Button {
@@ -149,8 +170,21 @@ struct NotesFoldersView: View {
         switch role {
         case .journal: "book.closed"
         case .bibleStudy: "book.pages"
+        case .brainDump: "brain.head.profile"
+        case .morningRoutine: "sun.horizon"
+        case .eveningRoutine: "moon.stars"
+        case .dreamLog: "moon.zzz"
         case nil: "folder"
         }
+    }
+
+    /// The system folders of the second section in display order: the routine folders and the Dream Log first, then
+    /// journal and Bible Study. "Brain Dump" has its own row in the first section.
+    static func systemFolders(_ tree: [NoteFolderNode]) -> [NoteFolderNode] {
+        let rank: [NoteFolderRole: Int] = [.morningRoutine: 0, .eveningRoutine: 1, .dreamLog: 2, .journal: 3, .bibleStudy: 4]
+        return tree.filter { $0.folder.role != nil && $0.folder.role != .brainDump }
+            .flatMap(\.flattened)
+            .sorted { (rank[$0.folder.role ?? .journal] ?? 9) < (rank[$1.folder.role ?? .journal] ?? 9) }
     }
 
     // MARK: Texts
@@ -184,6 +218,12 @@ struct NotesFoldersView: View {
     private func openBibleStudy() {
         let folder = store.ensureBibleStudyFolder()
         environment.tasksPath.append(.notesFolder(.folder(folder.id)))
+    }
+
+    /// Creates an empty note in Brain Dump and opens it; it is removed again if the editor closes without text.
+    private func newBrainDumpNote(in folder: NoteFolderRecord) {
+        let note = store.createBlank(folderID: folder.id)
+        environment.tasksPath.append(.note(note.id))
     }
 
     private func startCreating(under parentID: UUID?) {

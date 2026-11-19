@@ -1761,5 +1761,8 @@
   "Standard-Erinnerungen": "Default reminders",
   "Termine ganztägig": "All-day events",
   "Termine mit Uhrzeit": "Events with a time",
-  "Wird beim Anlegen eines Termins in Tagwerk übernommen. Bestehende Termine bleiben unverändert.": "Applied when you create an event in Tagwerk. Existing events stay unchanged."
+  "Wird beim Anlegen eines Termins in Tagwerk übernommen. Bestehende Termine bleiben unverändert.": "Applied when you create an event in Tagwerk. Existing events stay unchanged.",
+  "Brain Dump": "Brain Dump",
+  "Dream Log": "Dream Log",
+  "Dankbar für: %@": "Grateful for: %@"
 }

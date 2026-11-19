@@ -49,7 +49,7 @@ struct JournalStoreTests {
         let other = try store.createFolder(name: "Haus")
         store.move(noteIDs: [note.id], to: other.id)
         #expect(note.folderID == store.folder(role: .journal)?.id)
-        #expect(store.notes(.thoughts).isEmpty && !store.hasThoughts)
+        #expect(store.thoughtNotes().isEmpty)
     }
 
     @Test func import_createsEntriesDatedLikeNotion() throws {

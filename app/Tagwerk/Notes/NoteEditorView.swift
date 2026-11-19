@@ -21,9 +21,19 @@ struct NoteEditorView: View {
 
     var body: some View {
         let note = store.note(id: noteID)
-        TextEditor(text: $text, selection: $selection)
-            .keyboardDoneButton()
-            .padding(.horizontal, 12)
+        VStack(alignment: .leading, spacing: 0) {
+            // The gratitude of a morning entry stays in the routine record; the editor only shows it above the text.
+            let gratitude = NotesListView.gratitudeLine(gratitude(of: note))
+            if !gratitude.isEmpty {
+                Text(gratitude)
+                    .font(.subheadline).foregroundStyle(.secondary)
+                    .padding(.horizontal, 17).padding(.vertical, 8)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            TextEditor(text: $text, selection: $selection)
+                .keyboardDoneButton()
+                .padding(.horizontal, 12)
+        }
             .navigationTitle(title(of: note))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -74,6 +84,11 @@ struct NoteEditorView: View {
                 store.updateText(noteID, text: text)
                 store.deleteIfEmpty(noteID)
             }
+    }
+
+    private func gratitude(of note: NoteRecord?) -> [String] {
+        guard let note, note.kind == .morning, let day = note.dayKey.flatMap(NoteDayKey.day) else { return [] }
+        return environment.routines.value(day).gratitude
     }
 
     /// Thought notes name their origin and day; kind and day cannot be changed here.

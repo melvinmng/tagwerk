@@ -63,4 +63,38 @@ struct NotesListTextTests {
         #expect(NotesListView.listFootnote ==
                 "Notizen liegen nur auf diesem iPhone. An ChatGPT geht eine Gedanken-Notiz nur, wenn du bei ihr auf „Vorschläge holen“ tippst.")
     }
+
+    // MARK: Fixed folders (P5)
+
+    @Test func routineTitle_showsTheDay() {
+        let entry = note(kind: .morning, dayKey: "2026-11-19", updated: at(19, 7))
+        #expect(NotesListView.routineTitle(entry, calendar: calendar) == "Do. 19. Nov.")
+        // Without a day key the creation day counts.
+        #expect(NotesListView.routineTitle(note(kind: .dream, dayKey: nil, updated: at(18, 7)), calendar: calendar) == "Mi. 18. Nov.")
+    }
+
+    @Test func morningPreview_listsGratitude() {
+        let entry = note("Kopf leeren\nZweite Zeile\nDritte", kind: .morning, dayKey: "2026-11-19", updated: at(19, 7))
+        #expect(NotesListView.gratitudeLine(["Kaffee", " ", "Sonne", "Familie"]) == "Dankbar für: Kaffee · Sonne · Familie")
+        #expect(NotesListView.routinePreview(entry, gratitude: ["Kaffee", "Sonne"]) == "Dankbar für: Kaffee · Sonne\nKopf leeren")
+    }
+
+    @Test func morningPreview_withoutGratitude_isEmpty() {
+        let entry = note("Kopf leeren\nZweite Zeile\nDritte", kind: .morning, dayKey: "2026-11-19", updated: at(19, 7))
+        #expect(NotesListView.gratitudeLine([]).isEmpty && NotesListView.gratitudeLine(["  "]).isEmpty)
+        #expect(NotesListView.routinePreview(entry, gratitude: []) == "Kopf leeren\nZweite Zeile")
+        // Only morning entries show gratitude.
+        let evening = note("Ruhig", kind: .evening, dayKey: "2026-11-19", updated: at(19, 7))
+        #expect(NotesListView.routinePreview(evening, gratitude: ["Kaffee"]) == "Ruhig")
+    }
+
+    @Test func routineEntries_sortNewestDayFirst() {
+        let older = note(kind: .morning, dayKey: "2026-11-17", updated: at(19, 9))
+        let newer = note(kind: .morning, dayKey: "2026-11-18", updated: at(18, 7))
+        #expect(NotesListView.byDayDescending([older, newer]).map { $0.dayKey } == ["2026-11-18", "2026-11-17"])
+    }
+
+    @Test func footer_dream_namesTheDreamLogAndDay() {
+        #expect(footer(note(kind: .dream, dayKey: "2026-11-18", updated: at(19, 7))) == "Dream Log · 18.11.")
+    }
 }

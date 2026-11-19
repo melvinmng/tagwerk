@@ -6,8 +6,6 @@ enum NotesScope: Hashable {
     case all
     /// The default folder "Notizen".
     case standard
-    /// The virtual folder "Gedanken" with the notes of the daily routines.
-    case thoughts
     /// "Zuletzt gelöscht".
     case trash
     case folder(UUID)
@@ -16,7 +14,6 @@ enum NotesScope: Hashable {
         switch self {
         case .all: .all
         case .standard: .own
-        case .thoughts: .thoughts
         case .trash: .trash
         case .folder(let id): .folder(id)
         }
@@ -26,7 +23,7 @@ enum NotesScope: Hashable {
     var allowsCapture: Bool {
         switch self {
         case .all, .standard, .folder: true
-        case .thoughts, .trash: false
+        case .trash: false
         }
     }
 

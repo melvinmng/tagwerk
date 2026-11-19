@@ -94,6 +94,6 @@ struct BibleStudyStoreTests {
         let note = store.openBibleNote(book: romans, locale: german)
         let folder = try store.createFolder(name: "Haus")
         store.move(noteIDs: [note.id], to: folder.id)
-        #expect(note.folderID == store.folder(role: .bibleStudy)?.id && !store.hasThoughts)
+        #expect(note.folderID == store.folder(role: .bibleStudy)?.id && store.thoughtNotes().isEmpty)
     }
 }

@@ -62,9 +62,12 @@ final class BackupService {
     @ObservationIgnored private let now: () -> Date
     @ObservationIgnored private let calendar: Calendar
     @ObservationIgnored private let appVersion: String
+    /// Runs after a restore, also after a failed one that put the old state back (the app files the notes into their folders).
+    @ObservationIgnored private let afterRestore: @MainActor () -> Void
 
     init(context: ModelContext, settings: AppSettings, calendar: Calendar = .tagwerk, appVersion: String? = nil,
-         now: @escaping () -> Date = Date.init) {
+         now: @escaping () -> Date = Date.init, afterRestore: @escaping @MainActor () -> Void = {}) {
+        self.afterRestore = afterRestore
         self.context = context
         self.settings = settings
         self.calendar = calendar
@@ -109,11 +112,13 @@ final class BackupService {
     func restore(_ inspection: Inspection, recoveringFrom safetyCopy: Data? = nil) throws {
         do {
             try inspection.entities.restore(into: context, settings: settings, replacePrivate: inspection.header.includesPrivateNotes)
+            afterRestore()
         } catch {
             context.rollback()
             if let safetyCopy, let previous = try? inspect(safetyCopy) {
                 try? previous.entities.restore(into: context, settings: settings, replacePrivate: true)
             }
+            afterRestore()
             throw BackupError.restoreFailed
         }
     }

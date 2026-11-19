@@ -4449,6 +4449,16 @@
         }
       }
     },
+    "Dankbar für: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Grateful for: %@"
+          }
+        }
+      }
+    },
     "Darin war kein Essen zu erkennen. Beschreib die Mahlzeit genauer oder trag die Werte selbst ein.": {
       "localizations": {
         "en": {

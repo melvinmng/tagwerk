@@ -125,8 +125,14 @@ final class AppEnvironment {
         let searcher: any EventSearching = eventSearcher ?? EventSearchReader()
         self.eventSearcher = searcher
         self.remindersProvider = reminders
-        self.notes = NoteStore(context: context)
-        self.backup = BackupService(context: context, settings: settings)
+        let noteStore = NoteStore(context: context)
+        // The fixed folders must exist before the first frame; a restore may bring notes without them.
+        noteStore.ensureDefaultFolders()
+        self.notes = noteStore
+        self.backup = BackupService(context: context, settings: settings, afterRestore: { [noteStore] in
+            noteStore.ensureDefaultFolders()
+            noteStore.save()
+        })
         let shoppingCategories = ShoppingCategoryStore(context: context, settings: settings)
         self.shoppingCategories = shoppingCategories
         self.shopping = ShoppingModel(store: reminderStore, settings: settings, categories: shoppingCategories)
