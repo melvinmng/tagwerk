@@ -50,18 +50,30 @@ struct GitHubWriter: Sendable {
             project: placement.project.id, item: placement.itemID, field: field.id, value: encoded))
     }
 
-    /// Creates an issue assigned to `assignee` and returns its node ID.
-    func createIssue(repository: String, title: String, body: String?, assignee: String) async throws -> String {
+    /// Creates an issue assigned to `assignees` (may be empty) and returns its node ID.
+    func createIssue(repository: String, title: String, body: String?, assignees: [String]) async throws -> String {
         struct NewIssue: Encodable, Sendable { let title: String; let body: String?; let assignees: [String] }
         struct Created: Decodable { let node_id: String }
         let data = try await api.rest("POST", "repos/\(repository)/issues",
-                                      body: NewIssue(title: title, body: body, assignees: [assignee]))
+                                      body: NewIssue(title: title, body: body, assignees: assignees))
         do {
             return try JSONDecoder().decode(Created.self, from: data).node_id
         } catch {
             throw GitHubAPIError.decoding(String(describing: error))
         }
     }
+
+    /// Adds people to the assignees of an issue; the existing assignees stay.
+    func addAssignees(_ record: GitHubIssueRecord, logins: [String]) async throws {
+        try await api.rest("POST", "repos/\(record.repository)/issues/\(record.number)/assignees", body: AssigneeList(assignees: logins))
+    }
+
+    /// Removes people from the assignees of an issue; everyone else stays.
+    func removeAssignees(_ record: GitHubIssueRecord, logins: [String]) async throws {
+        try await api.rest("DELETE", "repos/\(record.repository)/issues/\(record.number)/assignees", body: AssigneeList(assignees: logins))
+    }
+
+    private struct AssigneeList: Encodable, Sendable { let assignees: [String] }
 
     /// Adds an issue to a project and returns the new item ID.
     func addToProject(projectID: String, contentID: String) async throws -> String {

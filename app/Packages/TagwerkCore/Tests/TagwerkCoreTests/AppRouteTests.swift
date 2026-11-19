@@ -27,4 +27,17 @@ struct AppRouteTests {
             #expect(AppRoute(url: route.url) == route)
         }
     }
+
+    @Test func route_parsesShopping_andIgnoresParameters() {
+        #expect(AppRoute(url: URL(string: "tagwerk://shopping")!) == .shopping)
+        #expect(AppRoute(url: URL(string: "tagwerk://shopping?add=Bier")!) == .shopping)
+        #expect(AppRoute.shopping.url.absoluteString == "tagwerk://shopping")
+        #expect(AppRoute(url: URL(string: "tagwerk://shopping/add")!) == nil)
+    }
+
+    @Test func route_parsesRoutinePaths() {
+        #expect(AppRoute(url: URL(string: "tagwerk://routine/start")!) == .routineStart)
+        #expect(AppRoute(url: URL(string: "tagwerk://routine/evening")!) == .routineEvening)
+        #expect(AppRoute(url: URL(string: "tagwerk://routine/abend")!) == nil)
+    }
 }

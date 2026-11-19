@@ -16,6 +16,14 @@ struct RootView: View {
         Binding(get: { environment.assistant.isPresented }, set: { environment.assistant.isPresented = $0 })
     }
 
+    private var routinesSheet: Binding<RoutinesModel.Sheet?> {
+        Binding(get: { environment.routines.sheet }, set: { environment.routines.sheet = $0 })
+    }
+
+    private var searchPresented: Binding<Bool> {
+        Binding(get: { environment.isSearchPresented }, set: { environment.isSearchPresented = $0 })
+    }
+
     struct RecurringEdit: Identifiable {
         var id: String { item.id + "\(day)" }
         let item: RecurringItem
@@ -56,9 +64,16 @@ struct RootView: View {
         .sheet(isPresented: assistantPresented) {
             ChatView(assistant: environment.assistant)
         }
+        .sheet(isPresented: searchPresented, onDismiss: { environment.closeSearch() }) {
+            if let model = environment.activeSearch {
+                SearchSheet(model: model,
+                            onShowDay: { day in environment.closeSearch(); showDay(day) },
+                            onShowTask: { id in environment.closeSearch(); showTask(id) })
+            }
+        }
         .onChange(of: environment.assistant.isPresented) { _, presented in
             // The chat is its own sheet over the tabs; other sheets close first.
-            if presented { editingTask = nil; openEvent = nil; recurringEdit = nil }
+            if presented { editingTask = nil; openEvent = nil; recurringEdit = nil; environment.routines.sheet = nil; environment.closeSearch() }
         }
         .onChange(of: environment.notificationNavigator.receivedCount) { _, _ in openNotificationTarget() }
         .onChange(of: environment.router.receivedCount) { _, _ in openRouterTarget() }
@@ -83,18 +98,16 @@ struct RootView: View {
             }
         }
         .sheet(item: $editingTask) { task in
-            if let provider = environment.taskList.provider(for: task.id.source) {
-                TaskEditorView(item: task, provider: provider, calendar: environment.taskList.calendar, containers: [],
-                               onDelete: { version in Task { await environment.taskList.delete(task.id, version: version) } },
-                               planning: environment.planning,
-                               onShowDay: showDay) { saved in
-                    environment.taskList.didSave(saved)
-                }
-            }
+            AppTaskEditorSheet(item: task, onShowDay: showDay)
         }
         .sheet(item: $openEvent) { event in
-            EntrySheet(entry: .event(event, environment.planning.linkedTask(eventID: event.id)?.id),
-                       model: environment.planning, onShowTask: showTask)
+            EventEntrySheet(event: event, onShowTask: showTask)
+        }
+        .sheet(item: routinesSheet) { sheet in
+            switch sheet {
+            case .evening(let day): EveningSheet(model: environment.routines, day: day, notes: environment.notes, isSignedIn: { environment.ai.isSignedIn })
+            case .start(let day): MorningSheet(model: environment.routines, day: day, notes: environment.notes, isSignedIn: { environment.ai.isSignedIn })
+            }
         }
         .sheet(item: $recurringEdit) { edit in
             RecurringEffortSheet(item: edit.item, day: edit.day, model: environment.planning)
@@ -123,6 +136,8 @@ struct RootView: View {
         editingTask = nil
         openEvent = nil
         recurringEdit = nil
+        environment.routines.sheet = nil
+        environment.closeSearch()
         environment.assistant.isPresented = false
         switch route {
         case .task(let id): showTask(id)
@@ -134,13 +149,37 @@ struct RootView: View {
     /// Opens the target of a `tagwerk://` link or shortcut once setup is done; links only navigate.
     private func openRouterTarget() {
         guard let request = environment.router.takeRequest(setupCompleted: environment.settings.setupCompleted) else { return }
+        let hadOpenSheet = editingTask != nil || openEvent != nil || recurringEdit != nil || environment.routines.sheet != nil
+            || environment.isSearchPresented || environment.assistant.isPresented
         editingTask = nil
         openEvent = nil
         recurringEdit = nil
+        environment.routines.sheet = nil
+        environment.closeSearch()
         environment.assistant.isPresented = false
         switch request.route {
         case .planToday: showDay(environment.planning.today)
         case .capture, .captureMeal, .captureWorkout, .review: selectedTab = 3
+        case .shopping: environment.openShopping()
+        case .routineStart:
+            showDay(environment.planning.today)
+            presentRoutine(afterSheetClosed: hadOpenSheet) { environment.routines.openStart() }
+        case .routineEvening:
+            showDay(environment.planning.today)
+            presentRoutine(afterSheetClosed: hadOpenSheet) { environment.routines.openEvening() }
+        }
+    }
+
+    /// SwiftUI drops a sheet that is presented in the same update in which another one is dismissed, so the routine
+    /// sheet waits for the closing animation (like `showTask`) when a sheet was open.
+    private func presentRoutine(afterSheetClosed: Bool, _ present: @escaping @MainActor () -> Void) {
+        guard afterSheetClosed else {
+            present()
+            return
+        }
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(350))
+            present()
         }
     }
 

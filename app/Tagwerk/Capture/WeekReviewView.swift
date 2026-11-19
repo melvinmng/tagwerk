@@ -6,6 +6,7 @@ import TagwerkCore
 struct WeekReviewView: View {
     @State var model: WeekReviewModel
     @State private var picking = false
+    @State private var pendingSave: Task<Void, Never>?
 
     var body: some View {
         List {
@@ -38,6 +39,8 @@ struct WeekReviewView: View {
                     Text("Erinnerungen und lokale Aufgaben, ohne GitHub")
                 }
             }
+            // Phase 7: also in a week without any entry.
+            WeekReflectionSections(model: model)
         }
         .navigationTitle("Wochenrückblick")
         .navigationBarTitleDisplayMode(.inline)
@@ -47,6 +50,19 @@ struct WeekReviewView: View {
         .animation(.snappy, value: model.review)
         .sensoryFeedback(.selection, trigger: model.weekStart)
         .task { await model.reload() }
+        // The reflection is saved shortly after typing and when the page closes.
+        .onChange(of: model.reflection) { _, _ in
+            pendingSave?.cancel()
+            pendingSave = Task {
+                try? await Task.sleep(for: .milliseconds(500))
+                guard !Task.isCancelled else { return }
+                model.saveReflection()
+            }
+        }
+        .onDisappear {
+            pendingSave?.cancel()
+            model.saveReflection()
+        }
     }
 
     /// Mockup EK1: caption "DIESE WOCHE · KW 47" above the week "16.–22. Nov." with ▾, then "Heute" and the arrows.

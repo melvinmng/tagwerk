@@ -427,6 +427,16 @@
         }
       }
     },
+    "Brot & Backwaren" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bread & Bakery"
+          }
+        }
+      }
+    },
     "Danach noch %@ zu viel." : {
       "localizations" : {
         "en" : {
@@ -677,6 +687,16 @@
         }
       }
     },
+    "Drogerie" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Personal Care"
+          }
+        }
+      }
+    },
     "Eigene Regel aus Erinnerungen" : {
       "localizations" : {
         "en" : {
@@ -687,12 +707,52 @@
         }
       }
     },
+    "Erfahrungen mit anderen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Experiences with others"
+          }
+        }
+      }
+    },
+    "Fleisch & Fisch" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Meat & Fish"
+          }
+        }
+      }
+    },
+    "Fokus für heute wählen?" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose a focus for today?"
+          }
+        }
+      }
+    },
     "Frühstück" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Breakfast"
+          }
+        }
+      }
+    },
+    "Frühstück & Süßes" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Breakfast & Sweets"
           }
         }
       }
@@ -723,12 +783,42 @@
         }
       }
     },
+    "Getränke" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Drinks"
+          }
+        }
+      }
+    },
     "HIIT" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "HIIT"
+          }
+        }
+      }
+    },
+    "Handy weglegen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Put the phone away"
+          }
+        }
+      }
+    },
+    "Haushalt" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Household"
           }
         }
       }
@@ -785,6 +875,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Always"
+          }
+        }
+      }
+    },
+    "Ins Bett" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Go to bed"
           }
         }
       }
@@ -931,12 +1031,32 @@
         }
       }
     },
+    "Kühlregal" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dairy & Chilled"
+          }
+        }
+      }
+    },
     "Laufen" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Running"
+          }
+        }
+      }
+    },
+    "Meine eigene Rolle" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "My own role"
           }
         }
       }
@@ -981,12 +1101,48 @@
         }
       }
     },
+    "Noch %lld min bis zur Schlafzeit (%@)" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Noch %1$lld min bis zur Schlafzeit (%2$@)"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld min until bedtime (%2$@)"
+          }
+        }
+      }
+    },
+    "Nächste Schritte" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Next steps"
+          }
+        }
+      }
+    },
     "Nächste Woche" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Next week"
+          }
+        }
+      }
+    },
+    "Obst & Gemüse" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fruit & Vegetables"
           }
         }
       }
@@ -1017,6 +1173,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Cycling"
+          }
+        }
+      }
+    },
+    "Schlafzeit (%@)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bedtime (%@)"
           }
         }
       }
@@ -1061,12 +1227,82 @@
         }
       }
     },
+    "Tagesabschluss öffnen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open evening wrap-up"
+          }
+        }
+      }
+    },
+    "Tagesstart" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Morning start"
+          }
+        }
+      }
+    },
+    "Tiefkühl" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Frozen"
+          }
+        }
+      }
+    },
+    "Vorrat & Konserven" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pantry"
+          }
+        }
+      }
+    },
     "Wandern" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Hiking"
+          }
+        }
+      }
+    },
+    "Was hat abgehalten?" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "What held me back?"
+          }
+        }
+      }
+    },
+    "Was hat geholfen?" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "What helped?"
+          }
+        }
+      }
+    },
+    "Was war mein Ziel?" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "What was my goal?"
           }
         }
       }

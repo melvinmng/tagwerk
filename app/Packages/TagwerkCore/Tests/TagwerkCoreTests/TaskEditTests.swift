@@ -40,6 +40,27 @@ struct TaskEditTests {
         #expect(due == nil)
     }
 
+    @Test func diff_assignees_setsDifference() {
+        var original = makeItem("A", source: .github)
+        original.assignees = ["octo"]
+        var changed = original
+        changed.assignees = ["octo", "lea-m"]
+
+        let edit = TaskEdit.diff(from: original, to: changed)
+
+        #expect(edit.assignees == .set(AssigneeChange(add: ["lea-m"], remove: [])))
+        #expect(!edit.isEmpty)
+    }
+
+    @Test func diff_sameAssigneesInOtherOrder_isEmpty() {
+        var original = makeItem("A", source: .github)
+        original.assignees = ["octo", "lea-m"]
+        var changed = original
+        changed.assignees = ["Lea-M", "octo"]
+
+        #expect(TaskEdit.diff(from: original, to: changed).isEmpty)
+    }
+
     @Test func taskEdit_default_isEmpty() {
         #expect(TaskEdit().isEmpty)
     }

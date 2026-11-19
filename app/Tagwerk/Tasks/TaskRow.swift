@@ -10,6 +10,8 @@ struct TaskRow: View {
     var isReadOnly = false
     /// Repeating task (reminder or local): marked with ↻ (design §13.8).
     var isRecurring = false
+    /// Title with highlighted passages (search); replaces the plain title, the issue number stays in front.
+    var titleText: AttributedString?
     let onComplete: () -> Void
 
     var body: some View {
@@ -24,7 +26,7 @@ struct TaskRow: View {
             .accessibilityLabel(isReadOnly ? "Nur lesbar, GitHub offline" : "Erledigt")
 
             VStack(alignment: .leading, spacing: 2) {
-                Text(displayTitle)
+                titleLine
                 HStack(spacing: 6) {
                     if isRecurring {
                         Image(systemName: "arrow.trianglehead.2.clockwise").accessibilityLabel("wiederkehrend")
@@ -54,6 +56,17 @@ struct TaskRow: View {
             }
         }
         .contentShape(Rectangle())
+    }
+
+    private var titleLine: Text {
+        guard let titleText else { return Text(displayTitle) }
+        return Text(issuePrefix) + Text(titleText)
+    }
+
+    /// "#42 " for GitHub issues, otherwise empty.
+    private var issuePrefix: String {
+        guard item.id.source == .github, let number = item.url?.lastPathComponent, Int(number) != nil else { return "" }
+        return "#\(number) "
     }
 
     /// GitHub issues show their number, as in "#42 Login-Fehler beheben".

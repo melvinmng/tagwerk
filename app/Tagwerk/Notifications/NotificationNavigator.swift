@@ -52,9 +52,26 @@ final class NotificationNavigator {
 /// nonisolated and pass only strings to the main actor.
 final class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate {
     private let navigator: NotificationNavigator
+    private let router: AppRouter
 
-    init(navigator: NotificationNavigator) {
+    init(navigator: NotificationNavigator, router: AppRouter) {
         self.navigator = navigator
+        self.router = router
+    }
+
+    /// A routine reminder carries the path of a link and goes to the router; everything else to the navigator.
+    @MainActor
+    func handle(_ strings: [String: String]) {
+        Self.dispatch(strings, navigator: navigator, router: router)
+    }
+
+    @MainActor
+    private static func dispatch(_ strings: [String: String], navigator: NotificationNavigator, router: AppRouter) {
+        if let path = strings[NotificationPayload.route] {
+            if let route = AppRoute(rawValue: path) { router.open(route) }
+            return
+        }
+        navigator.receive(strings)
     }
 
     /// Shows the banner also while Tagwerk is open.
@@ -69,8 +86,8 @@ final class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate {
         for (key, value) in response.notification.request.content.userInfo {
             if let key = key as? String, let value = value as? String { strings[key] = value }
         }
-        let navigator = self.navigator
-        Task { @MainActor in navigator.receive(strings) }
+        let navigator = self.navigator, router = self.router
+        Task { @MainActor in Self.dispatch(strings, navigator: navigator, router: router) }
         completionHandler()
     }
 }

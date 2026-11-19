@@ -36,14 +36,18 @@ public enum VoiceReply: Equatable, Sendable {
     }
 }
 
-/// The action cards that wait for an answer: their call IDs, and how many of them delete something.
+/// The action cards that wait for an answer: their call IDs, how many of them delete something, and
+/// how many must be confirmed one by one for another reason (assigning an issue to other people).
 public struct OpenCards: Equatable, Sendable {
     public var ids: [String]
     public var deletes: Int
+    /// Cards that a spoken "alle bestätigen" must not confirm; a single one is confirmed by a plain "ja".
+    public var guarded: Int
 
-    public init(ids: [String], deletes: Int) {
+    public init(ids: [String], deletes: Int, guarded: Int = 0) {
         self.ids = ids
         self.deletes = deletes
+        self.guarded = guarded
     }
 
     public static let none = OpenCards(ids: [], deletes: 0)

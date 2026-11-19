@@ -394,6 +394,8 @@ public struct VoiceModeMachine: Equatable, Sendable {
             return say(.sayDelete, now: now)
         case .confirmAll where cards.deletes > 0:
             return say(.deletesNeedTap, now: now)
+        case .confirmAll where cards.guarded > 0:
+            return say(.guardedNeedTap, now: now)
         case .confirm, .confirmDelete, .confirmAll:
             clearText()
             phase = .confirming(deadline: .distantFuture)

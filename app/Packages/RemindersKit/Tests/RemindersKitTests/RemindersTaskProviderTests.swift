@@ -32,6 +32,32 @@ struct RemindersTaskProviderTests {
         return edit
     }
 
+    @Test func completedTasks_useSelectedListsWithoutShoppingList() async {
+        store.listInfos.append(ListInfo(id: "shop", title: "Einkauf", colorHex: nil, kind: .local))
+        let day = Date(timeIntervalSince1970: 50_000)
+        store.records["c"]?.completedAt = day
+        store.records["d"] = ReminderRecord(id: "d", title: "Milch", notes: nil, due: nil, ekPriority: 0, isCompleted: true,
+                                            listID: "shop", lastModified: day, completedAt: day)
+        store.records["e"] = ReminderRecord(id: "e", title: "Abgabe", notes: nil, due: nil, ekPriority: 0, isCompleted: true,
+                                            listID: "studium", lastModified: day, completedAt: day)
+        let sut = RemindersTaskProvider(store: store, selectedListIDs: { nil }, excludedListID: { "shop" })
+        let interval = DateInterval(start: Date(timeIntervalSince1970: 0), end: Date(timeIntervalSince1970: 100_000))
+        let completed = await sut.completedTasks(in: interval)
+        #expect(Set(completed.map(\.item.title)) == ["Erledigt", "Abgabe"])
+        #expect(completed.allSatisfy { $0.item.isCompleted && $0.completedAt == day })
+        #expect(completed.first { $0.item.title == "Abgabe" }?.item.container.name == "Studium")
+
+        let selected = RemindersTaskProvider(store: store, selectedListIDs: { ["studium"] }, excludedListID: { "shop" })
+        #expect(await selected.completedTasks(in: interval).map(\.item.title) == ["Abgabe"])
+    }
+
+    @Test func completedTasks_areEmptyWithoutFullAccess() async {
+        store.records["c"]?.completedAt = Date(timeIntervalSince1970: 50_000)
+        store.accessState = .denied
+        let interval = DateInterval(start: Date(timeIntervalSince1970: 0), end: Date(timeIntervalSince1970: 100_000))
+        #expect(await provider().completedTasks(in: interval).isEmpty)
+    }
+
     @Test func openTasks_allLists_excludesCompleted() async throws {
         let titles = try await provider().openTasks().map(\.title)
         #expect(Set(titles) == ["Kapitel 2 gliedern", "Einkaufen"])
@@ -107,7 +133,40 @@ struct RemindersTaskProviderTests {
         let inDefault = try await sut.create(TaskDraft(title: "Standard"))
         #expect(inList.container.id == "studium")
         #expect(store.records[inList.id.rawValue]?.ekPriority == 1)
-        #expect(inDefault.container.id == store.defaultListID)
+        #expect(inDefault.container.id == store.defaultList)
+    }
+
+    // MARK: Shopping list exclusion
+
+    private func shoppingProvider(selected: Set<String>? = nil) -> RemindersTaskProvider {
+        store.listInfos.append(ListInfo(id: "einkauf", title: "Einkauf", colorHex: nil, kind: .calDAV))
+        store.records["milk"] = ReminderRecord(id: "milk", title: "Milch", notes: nil, due: nil, ekPriority: 0,
+                                               isCompleted: false, listID: "einkauf", lastModified: nil)
+        return RemindersTaskProvider(store: store, selectedListIDs: { selected }, excludedListID: { "einkauf" })
+    }
+
+    @Test func openTasks_excludesShoppingList() async throws {
+        let all = try await shoppingProvider().openTasks()
+        #expect(Set(all.map(\.title)) == ["Kapitel 2 gliedern", "Einkaufen"])
+        let selected = try await shoppingProvider(selected: ["privat", "einkauf"]).openTasks()
+        #expect(selected.map(\.title) == ["Einkaufen"])
+    }
+
+    @Test func containers_omitShoppingList() async throws {
+        #expect(try await shoppingProvider().containers().map(\.id) == ["studium", "privat"])
+    }
+
+    @Test func create_defaultListIsShopping_usesFirstOtherList() async throws {
+        let sut = shoppingProvider()
+        store.defaultList = "einkauf"
+        let created = try await sut.create(TaskDraft(title: "Standard"))
+        #expect(created.container.id == "privat")
+    }
+
+    @Test func create_withoutExcludedList_behavesAsBefore() async throws {
+        store.defaultList = "privat"
+        let created = try await provider().create(TaskDraft(title: "Standard"))
+        #expect(created.container.id == "privat")
     }
 
     @Test func containers_listAllReminderLists() async throws {

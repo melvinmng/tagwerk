@@ -1,3 +1,4 @@
+import Foundation
 import TagwerkCore
 
 /// Local effort for reminders: EventKit cannot store one, so it lives in Tagwerk.
@@ -14,18 +15,37 @@ public final class RemindersTaskProvider: TaskProvider {
     private let store: ReminderStore
     private let estimates: EstimateStore?
     private let selectedListIDs: @MainActor () -> Set<String>?
+    /// The shopping list, if one is chosen: its reminders are not tasks and it receives no new task.
+    private let excludedListID: @MainActor () -> String?
 
     public init(store: ReminderStore, estimates: EstimateStore? = nil,
-                selectedListIDs: @escaping @MainActor () -> Set<String>?) {
+                selectedListIDs: @escaping @MainActor () -> Set<String>?,
+                excludedListID: @escaping @MainActor () -> String? = { nil }) {
         self.store = store
         self.estimates = estimates
         self.selectedListIDs = selectedListIDs
+        self.excludedListID = excludedListID
     }
 
     public func openTasks() async throws -> [TaskItem] {
         try requireAccess()
         let lists = listsByID()
-        return await store.openReminders(in: selectedListIDs()).map { map($0, lists: lists) }
+        let listIDs = ShoppingListFilter.taskListIDs(selected: selectedListIDs(), all: store.lists().map(\.id),
+                                                     shopping: excludedListID())
+        return await store.openReminders(in: listIDs).map { map($0, lists: lists) }
+    }
+
+    /// Reminders completed within `interval` in the lists that feed tasks (without the shopping list),
+    /// for the search. Empty without full access.
+    public func completedTasks(in interval: DateInterval) async -> [CompletedTask] {
+        guard store.accessState == .fullAccess else { return [] }
+        let lists = listsByID()
+        let all = store.lists().map(\.id)
+        let listIDs = ShoppingListFilter.taskListIDs(selected: selectedListIDs(), all: all, shopping: excludedListID())
+            ?? Set(all)
+        return await store.completedReminders(in: interval, listIDs: listIDs).map { record in
+            CompletedTask(item: map(record, lists: lists), completedAt: record.completedAt)
+        }
     }
 
     public func task(id: TaskID) async throws -> TaskItem? {
@@ -35,7 +55,10 @@ public final class RemindersTaskProvider: TaskProvider {
 
     public func containers() async throws -> [TaskContainer] {
         try requireAccess()
-        return store.lists().map { TaskContainer(id: $0.id, name: $0.title, colorHex: $0.colorHex) }
+        let excluded = excludedListID()
+        return store.lists()
+            .filter { $0.id != excluded }
+            .map { TaskContainer(id: $0.id, name: $0.title, colorHex: $0.colorHex) }
     }
 
     public func apply(_ edit: TaskEdit, to id: TaskID, expectedVersion: String?) async throws -> TaskItem {
@@ -70,10 +93,14 @@ public final class RemindersTaskProvider: TaskProvider {
     public func create(_ draft: TaskDraft) async throws -> TaskItem {
         try requireAccess()
         try ReminderMapping.validateNew(recurrence: draft.recurrence, due: draft.due)
+        let listID = try ShoppingListFilter.listForNewReminder(
+            requested: draft.containerID, defaultListID: store.defaultListID(), shopping: excludedListID(),
+            selected: selectedListIDs(), lists: store.lists()
+        )
         let record = try perform {
             try store.create(
                 title: draft.title, notes: draft.notes, due: draft.due,
-                ekPriority: ReminderMapping.ekPriority(from: draft.priority), listID: draft.containerID,
+                ekPriority: ReminderMapping.ekPriority(from: draft.priority), listID: listID,
                 recurrence: draft.recurrence
             )
         }

@@ -100,6 +100,8 @@ struct PlanView: View {
             .overlay(alignment: .bottom) { moveUndo }
             .overlay(alignment: .bottom) { moveGroupUndo }
             .overlay(alignment: .bottom) { acceptAllUndo }
+            .overlay(alignment: .bottom) { HandedOverCapsule(model: environment.taskList).padding(.bottom, 60) }
+            .animation(.spring(duration: 0.35), value: environment.taskList.lastHandedOver)
             .navigationTitle("Planen")
             .toolbarTitleDisplayMode(.inline)
             // The date title replaces the bar title; the tab bar already says "Planen" (mockup PK2).
@@ -107,6 +109,8 @@ struct PlanView: View {
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) { PlanTitleButton(model: model) }
                     .sharedBackgroundVisibility(.hidden)
+                // Search and ＋ share one glass area; the assistant stays apart on the outside.
+                ToolbarItem(placement: .topBarTrailing) { SearchButton() }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button { creatingEvent = true } label: { Label("Neuer Termin", systemImage: "plus") }
                 }

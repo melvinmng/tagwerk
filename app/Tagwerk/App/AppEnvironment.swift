@@ -14,7 +14,17 @@ import TagwerkCore
 final class AppEnvironment {
     let modelContainer: ModelContainer
     let gateway: EventKitGateway
+    /// Reminders for tasks, planning, the weekly review and the shopping list; the gateway unless a test passes a fake.
+    let reminderStore: any ReminderStore
     let settings: AppSettings
+    /// Categories of the shopping list and the learned assignments (phase 5).
+    let shoppingCategories: ShoppingCategoryStore
+    /// The shopping list; reads and writes the chosen reminder list.
+    let shopping: ShoppingModel
+    /// "Mit ChatGPT sortieren"; sends item names only after consent and on the user's tap.
+    let shoppingSorter: ShoppingSorter
+    /// Notes stored on this device only (phase 5); never sent to ChatGPT.
+    let notes: NoteStore
     let taskList: TaskListModel
     let planning: PlanningModel
     let gitHubTokens: TokenManager
@@ -39,18 +49,36 @@ final class AppEnvironment {
     /// Target of a `tagwerk://` link or a shortcut until the app shows it (phase 4).
     let router = AppRouter()
     /// Delegate of the system notification center; held here because the center keeps it weakly.
-    @ObservationIgnored private(set) lazy var notificationDelegate = NotificationDelegate(navigator: notificationNavigator)
+    @ObservationIgnored private(set) lazy var notificationDelegate = NotificationDelegate(navigator: notificationNavigator, router: router)
     /// Meals, water and workouts (phase 3); mirrored to Health only after the user allowed it.
     let intake: IntakeStore
     let health: any HealthStoring
     let healthMirror: HealthMirror
     let capture: CaptureModel
+    /// Habits of the "Erfassen" tab, their counter in "Planen" and in the widget (phase 7).
+    let habits: HabitsModel
+    /// Day entries and the evening checklist of the routines (phase 7).
+    let routineStore: RoutineStore
+    /// The routine sheets, the evening line and the evening wrap-up (phase 7).
+    let routines: RoutinesModel
+    /// Repeating evening (and morning) reminders; their own scheduler outside the 50-slot deadline budget.
+    let routineNotifications: RoutineNotificationScheduler
     /// Meal estimates with ChatGPT; only after consent and a tap (main design §7).
     let mealEstimator: MealEstimator
     /// Writes the snapshot file the widget reads (phase 4); `directory == nil` in tests and unsigned builds.
     let snapshotWriter: WidgetSnapshotWriter
+    /// Reads events for the search away from the main thread; its own read-only store.
+    let eventSearcher: any EventSearching
+    /// Reminders as tasks; also the source of the completed ones for the search.
+    private let remindersProvider: RemindersTaskProvider
+    /// The search sheet is open. Set through `openSearch()`; assistant, notifications and links close it.
+    var isSearchPresented = false
+    /// The model of the open (or last) search sheet; it holds nothing after `close()`.
+    @ObservationIgnored private(set) var activeSearch: SearchModel?
     /// A tab another view asks to show (e.g. "Mit KI planen" from the task list jumps to "Planen").
     var requestedTab: Int?
+    /// Pages on top of the task list (shopping list, notes); a deep link sets it to open the shopping list.
+    var tasksPath: [TasksDestination] = []
     private let gitHubCache: SwiftDataGitHubCache
     private let gitHubCatalogStore: SwiftDataGitHubCatalogStore
     /// Age after which the repository/project catalog is fetched again.
@@ -58,32 +86,45 @@ final class AppEnvironment {
     @ObservationIgnored private var changeObservation: Task<Void, Never>?
     @ObservationIgnored private var reconnectWatch: Task<Void, Never>?
     @ObservationIgnored private var pathMonitor: NWPathMonitor?
+    @ObservationIgnored private var routineUpdates: Task<Void, Never>?
+    @ObservationIgnored private var focusUpdates: Task<Void, Never>?
     @ObservationIgnored private var notificationUpdates: Task<Void, Never>?
     @ObservationIgnored private var gitHubRegistration: Task<Void, Never>?
     @ObservationIgnored private var snapshotUpdates: Task<Void, Never>?
     @ObservationIgnored private var pendingSnapshot: Task<Void, Never>?
 
-    /// `notificationCenter` defaults to the system center and `health` to HealthKit; tests and demo data pass fakes.
+    /// `notificationCenter` defaults to the system center, `health` to HealthKit and `reminderStore` to the
+    /// EventKit gateway; tests and demo data pass fakes.
     init(modelContainer: ModelContainer, notificationCenter: (any NotificationCenterClient)? = nil,
-         health: (any HealthStoring)? = nil, snapshotWriter: WidgetSnapshotWriter? = nil) throws {
+         health: (any HealthStoring)? = nil, snapshotWriter: WidgetSnapshotWriter? = nil,
+         reminderStore: (any ReminderStore)? = nil, eventSearcher: (any EventSearching)? = nil) throws {
         self.modelContainer = modelContainer
         self.snapshotWriter = snapshotWriter ?? WidgetSnapshotWriter(directory: nil, reload: {})
         let context = modelContainer.mainContext
         let settings = try AppSettings.current(in: context)
         settings.migrateWorkoutGoalIfNeeded()
         let gateway = EventKitGateway()
-        let reminders = RemindersTaskProvider(store: gateway, estimates: SwiftDataEstimateStore(context: context)) {
-            settings.selectedReminderListIDs.map(Set.init)
-        }
+        let reminderStore: any ReminderStore = reminderStore ?? gateway
+        let reminders = RemindersTaskProvider(store: reminderStore, estimates: SwiftDataEstimateStore(context: context),
+                                              selectedListIDs: { settings.selectedReminderListIDs.map(Set.init) },
+                                              excludedListID: { settings.shoppingListID })
         self.settings = settings
         self.gateway = gateway
+        self.reminderStore = reminderStore
+        let searcher: any EventSearching = eventSearcher ?? EventSearchReader()
+        self.eventSearcher = searcher
+        self.remindersProvider = reminders
+        self.notes = NoteStore(context: context)
+        let shoppingCategories = ShoppingCategoryStore(context: context, settings: settings)
+        self.shoppingCategories = shoppingCategories
+        self.shopping = ShoppingModel(store: reminderStore, settings: settings, categories: shoppingCategories)
         let taskList = TaskListModel(providers: [reminders, LocalTaskProvider(context: context)])
         self.taskList = taskList
         let planStore = PlanStore(context: context)
         let suggestionStore = SuggestionStore(context: context)
         let blockPlanner = BlockPlanner(store: gateway, planStore: planStore, links: EventLinkStore(context: context),
                                         settings: settings, calendar: .tagwerk)
-        self.planning = PlanningModel(taskList: taskList, calendarStore: gateway, reminderStore: gateway, planStore: planStore,
+        self.planning = PlanningModel(taskList: taskList, calendarStore: gateway, reminderStore: reminderStore, planStore: planStore,
                                       efforts: RecurringEffortStore(context: context), blocks: blockPlanner, settings: settings,
                                       marks: EventMarkStore(context: context), suggestions: suggestionStore)
 
@@ -118,7 +159,13 @@ final class AppEnvironment {
         planner.longerDays = { AIPlanner.LongerDays(rawValue: settings.aiLongerDays) ?? .forDeadlines }
         planner.preferences = { settings.aiPlanningRules }
         let tools = AppTools(taskList: taskList, planning: planning, planner: planner,
-                             events: { interval in gateway.events(in: interval, calendarIDs: nil) })
+                             events: { interval in gateway.events(in: interval, calendarIDs: nil) },
+                             gitHub: { [taskList] in taskList.provider(for: .github) as? GitHubTaskProvider },
+                             shopping: shopping,
+                             search: SearchToolSources(
+                                 events: Self.searchEventSource(searcher: searcher, store: reminderStore, planning: planning, settings: settings),
+                                 calendarNames: Self.searchCalendarNames(planning: planning),
+                                 completedTasks: Self.searchCompletedSource(reminders: reminders, taskList: taskList)))
         self.assistant = AssistantModel(responder: ai.client, tools: tools, model: { try await ai.selectedModel() },
                                         store: ChatStore(context: context), planning: planning)
         self.voiceOutput = VoiceOutputModel(speaker: SystemSpeaker(), audio: SystemVoiceAudioSession.shared, preferences: {
@@ -143,6 +190,9 @@ final class AppEnvironment {
             })
         let gitHubProvider = self.gitHub
         assistant.reader = GitHubRepositoryReader(api: gitHubProvider.api)
+        let shopping = self.shopping
+        assistant.shoppingItemName = { id in shopping.openItems.first { $0.id == id }?.name }
+        assistant.gitHubDirectory = { [taskList] in taskList.provider(for: .github) as? GitHubTaskProvider }
         assistant.issueReference = { id in
             gitHubProvider.issueReference(for: id).map { IssueReference(repository: $0.repository, number: $0.number, nodeID: $0.nodeID) }
         }
@@ -162,10 +212,31 @@ final class AppEnvironment {
         self.intake = intake
         self.healthMirror = mirror
         self.capture = CaptureModel(store: intake, mirror: mirror, health: healthStore, settings: settings)
+        self.routineStore = RoutineStore(context: context)
+        self.habits = HabitsModel(store: HabitStore(context: context), intake: intake, health: healthStore, settings: settings)
         self.mealEstimator = MealEstimator(responder: ai.client, model: { try await ai.selectedModel() },
                                            hasConsent: { settings.mealEstimationConsent })
+        self.shoppingSorter = ShoppingSorter(responder: ai.client, model: { try await ai.selectedModel() },
+                                             hasConsent: { settings.shoppingSortConsent })
         let planning = self.planning
-        taskList.onCompletionChanged = { id, isCompleted in await planning.didChangeCompletion(id, isCompleted: isCompleted) }
+        let localTasks = LocalTaskProvider(context: context)
+        self.routines = RoutinesModel(
+            store: routineStore, planning: planning, taskList: taskList, habits: habits, settings: settings,
+            completedCount: { interval in
+                // Same readers as the weekly review: reminders (without the shopping list) and local tasks.
+                let listIDs = ShoppingListFilter.taskListIDs(selected: settings.selectedReminderListIDs.map(Set.init),
+                                                             all: reminderStore.lists().map(\.id), shopping: settings.shoppingListID)
+                return await reminderStore.completionDates(in: interval, listIDs: listIDs).count
+                    + localTasks.completionDates(in: interval).count
+            })
+        self.routineNotifications = RoutineNotificationScheduler(center: notificationCenter ?? SystemNotificationCenter(),
+                                                                 store: routineStore, settings: settings)
+        let routines = self.routines
+        taskList.onCompletionChanged = { id, isCompleted in
+            await planning.didChangeCompletion(id, isCompleted: isCompleted)
+            await MainActor.run { routines.focusChanged(id, isCompleted: isCompleted) }
+        }
+        taskList.onHandedOver = { id in await planning.didHandOver(id) }
         // An ended GitHub sign-in (expired or revoked) forgets the cached issues of that account.
         taskList.onSignedOut = { source in
             if source == .github {
@@ -173,6 +244,22 @@ final class AppEnvironment {
                 catalogStore.clear()
             }
         }
+    }
+
+    /// A model for the suggestions of one thoughts note; the sheet drops it when it closes (design §9.3).
+    func makeNoteSuggestionModel() -> NoteSuggestionModel {
+        let settings = self.settings
+        let planning = self.planning, taskList = self.taskList, gateway = self.gateway, ai = self.ai
+        return NoteSuggestionModel(
+            responder: ai.client, model: { try await ai.selectedModel() }, tools: assistant.tools,
+            describer: ActionCardDescriber(planning: planning, gitHubDirectory: assistant.gitHubDirectory,
+                                           shoppingItemName: assistant.shoppingItemName),
+            notes: notes, hasConsent: { settings.noteSuggestionConsent },
+            context: {
+                NoteSuggestionContext.make(taskList: taskList, planning: planning,
+                                           events: { gateway.events(in: $0, calendarIDs: planning.readableCalendarIDs()) },
+                                           planCalendarID: settings.planCalendarID, now: .now)
+            })
     }
 
     /// The background refresh: GitHub is registered without the catalog, every source loads once, then the
@@ -238,21 +325,146 @@ final class AppEnvironment {
 
     func makeSetupModel() -> SetupModel {
         let notifications = self.notifications
-        return SetupModel(store: gateway, settings: settings, calendarStore: gateway, isChatGPTSignedIn: ai.isSignedIn,
+        return SetupModel(store: reminderStore, settings: settings, calendarStore: gateway, isChatGPTSignedIn: ai.isSignedIn,
                           notificationsAllowed: notifications.authorization == .authorized,
                           requestNotifications: { await notifications.requestAuthorization() })
     }
 
     /// Current authorization of a source that needs system permission; `nil` for sources without one.
     func accessState(for source: TaskSource) -> AccessState? {
-        source == .reminders ? gateway.accessState : nil
+        source == .reminders ? reminderStore.accessState : nil
     }
 
     /// Asks the system for access (only possible while it is undetermined) and reloads the list.
     func requestAccess(for source: TaskSource) async {
         guard source == .reminders else { return }
-        _ = try? await gateway.requestAccess()
+        _ = try? await reminderStore.requestAccess()
         await taskList.reload()
+    }
+
+    // MARK: Shopping list (phase 5)
+
+    /// The reminder lists that feed tasks and the weekly review: the selection without the shopping list.
+    /// `nil` means all lists; an empty set means none.
+    func taskReminderListIDs() -> Set<String>? {
+        ShoppingListFilter.taskListIDs(selected: settings.selectedReminderListIDs.map(Set.init),
+                                       all: reminderStore.lists().map(\.id), shopping: settings.shoppingListID)
+    }
+
+    /// Shows the shopping page in the "Aufgaben" tab, or its settings page while no list is chosen.
+    /// Replaces whatever was pushed there; used by the deep link and the shortcut.
+    func openShopping() {
+        tasksPath = [settings.shoppingListID == nil ? .shoppingSettings : .shopping]
+        requestedTab = 1
+    }
+
+    /// The only place that changes the shopping list. Everything that shows reminders as tasks follows at once:
+    /// the task list, the plan, the notifications and the widget snapshot.
+    func setShoppingList(_ id: String?) async {
+        settings.shoppingListID = id
+        await taskList.reload(only: [.reminders])
+        await planning.reload()
+        await shopping.reload()
+        notifications.scheduleSoon()
+        scheduleSnapshot()
+    }
+
+    // MARK: Search
+
+    /// Opens the search sheet with a fresh model; the previous one is closed.
+    func openSearch() {
+        activeSearch?.close()
+        activeSearch = makeSearchModel()
+        isSearchPresented = true
+    }
+
+    /// Closes the sheet and stops the model; what it loaded is dropped.
+    func closeSearch() {
+        isSearchPresented = false
+        activeSearch?.close()
+    }
+
+    /// Name of a note's kind in a search row.
+    static func kindLabel(of kind: NoteKind) -> String {
+        switch kind {
+        case .free: String(localized: "Notiz")
+        case .morning: String(localized: "Tagesstart")
+        case .evening: String(localized: "Tagesabschluss")
+        }
+    }
+
+    /// Events for the search sheet and the assistant: the calendars "Planen" reads, fetched off the main thread,
+    /// time blocks dropped, duplicates merged like in "Planen". `nil` without calendar access.
+    private static func searchEventSource(searcher: any EventSearching, store: any ReminderStore, planning: PlanningModel,
+                                          settings: AppSettings) -> @MainActor (DateInterval) async -> [CalendarEvent]? {
+        { interval in
+            guard store.calendarAccessState == .fullAccess else { return nil }
+            let raw = await searcher.events(in: interval, calendarIDs: planning.readableCalendarIDs())
+            return SearchEvents.prepare(raw, planCalendarID: settings.planCalendarID, merge: settings.mergeDuplicateEvents)
+        }
+    }
+
+    private static func searchCalendarNames(planning: PlanningModel) -> @MainActor () -> [String: String] {
+        { Dictionary(planning.eventCalendars.map { ($0.id, $0.title) }, uniquingKeysWith: { first, _ in first }) }
+    }
+
+    /// Completed reminders of the last 12 months plus all completed local tasks.
+    private static func searchCompletedSource(reminders: RemindersTaskProvider, taskList: TaskListModel) -> @MainActor () async -> [CompletedTask] {
+        {
+            let now = Date.now
+            let start = Calendar.tagwerk.date(byAdding: .month, value: -12, to: now) ?? now
+            // The end lies slightly ahead, so a reminder completed this very moment is not cut off.
+            let interval = DateInterval(start: start, end: now.addingTimeInterval(60))
+            let local = (taskList.provider(for: .local) as? LocalTaskProvider)?.completedTasks() ?? []
+            return await reminders.completedTasks(in: interval) + local
+        }
+    }
+
+    /// Wires a search model to the app's sources. Tasks are read from the loaded list, events through the
+    /// search reader in the calendars "Planen" reads, completed reminders of the last 12 months and all
+    /// completed local tasks on demand.
+    func makeSearchModel() -> SearchModel {
+        let planning = self.planning
+        let taskList = self.taskList
+        let settings = self.settings
+        let reminderStore = self.reminderStore
+        let searcher = self.eventSearcher
+        let reminders = self.remindersProvider
+        var searchOnline: (@MainActor (String) async throws -> [OnlineIssue])?
+        if isGitHubActive {
+            searchOnline = { [weak self] text in
+                guard let self, let gitHub = self.taskList.provider(for: .github) as? GitHubTaskProvider else {
+                    throw IssueSearchError.signedOut
+                }
+                // Issues that are among the tasks already stay out; the search adds closed and unassigned ones.
+                let loaded = Set(self.taskList.items.filter { $0.id.source == .github }.map(\.id.rawValue))
+                return try await gitHub.searchOnline(text, excluding: loaded)
+            }
+        }
+        let notes = self.notes
+        let shopping = self.shopping
+        var sources = SearchSources(
+            openTasks: { sortedTasks(taskList.items, calendar: planning.calendar) },
+            events: Self.searchEventSource(searcher: searcher, store: reminderStore, planning: planning, settings: settings),
+            calendarNames: Self.searchCalendarNames(planning: planning),
+            completedTasks: Self.searchCompletedSource(reminders: reminders, taskList: taskList),
+            notes: {
+                notes.notes().map { note in
+                    NoteSearchItem(id: note.id, text: note.text, kindLabel: Self.kindLabel(of: note.kind), updatedAt: note.updatedAt,
+                                   dayKey: note.kind == .free ? nil : note.dayKey)
+                }
+            },
+            shopping: {
+                // Only open items of a list that is set up; completed ones stay out (spec F7).
+                guard shopping.state == .ready else { return [] }
+                return shopping.openItems.map { ShoppingSearchItem(id: $0.id, name: $0.name, quantity: $0.quantity) }
+            },
+            searchOnline: searchOnline)
+        if settings.shoppingListID != nil {
+            // A failed write leaves the item on the list; the model reads the rows again either way.
+            sources.checkOffShopping = { id in try? await shopping.checkOff(id: id) }
+        }
+        return SearchModel(sources: sources, calendar: planning.calendar)
     }
 
     func restartSetup() {
@@ -296,6 +508,10 @@ final class AppEnvironment {
                 // EventKit changes concern Reminders only; GitHub and local tasks stay as they are.
                 await self?.taskList.reload(only: [.reminders])
                 await self?.planning.reload()
+                // The open search fetches its events again.
+                self?.activeSearch?.eventStoreChanged()
+                // The shopping list follows here, because the stream has room for one consumer only.
+                await self?.shopping.reload()
                 // Deadline calendar events may have changed; this is the only consumer of `changes`.
                 self?.notifications.scheduleSoon()
                 // Today's events may have changed while "Planen" shows another period.
@@ -306,6 +522,49 @@ final class AppEnvironment {
 
     /// Reschedules notifications whenever tasks, source states or notification settings change.
     /// The first value arrives at once and schedules after the start.
+    /// Re-plans the routine reminders when the bedtime, the checklist or one of the switches changes.
+    func startRoutineReminderUpdates() {
+        guard routineUpdates == nil else { return }
+        let changes = Observations { @MainActor [weak self] () -> Int in
+            guard let self else { return 0 }
+            var hasher = Hasher()
+            hasher.combine(settings.bedtimeMinutes)
+            hasher.combine(settings.eveningRemindersEnabled)
+            hasher.combine(settings.morningReminderEnabled)
+            hasher.combine(settings.morningReminderMinutes)
+            hasher.combine(routineStore.checklist())
+            return hasher.finalize()
+        }
+        routineUpdates = Task { [weak self] in
+            var last: Int?
+            for await value in changes where value != last {
+                last = value
+                await self?.routineNotifications.reschedule()
+            }
+        }
+    }
+
+    /// Keeps today's focus marks in line with the tasks after every load (design: a task that left the list is done once
+    /// its source has answered).
+    func startFocusUpdates() {
+        guard focusUpdates == nil else { return }
+        let changes = Observations { @MainActor [weak self] () -> Int in
+            guard let self else { return 0 }
+            var hasher = Hasher()
+            hasher.combine(taskList.items.map { "\($0.id.key)|\($0.title)" })
+            hasher.combine(taskList.sourceStates.mapValues { String(describing: $0) })
+            hasher.combine(taskList.loadingSources)
+            return hasher.finalize()
+        }
+        focusUpdates = Task { [weak self] in
+            var last: Int?
+            for await value in changes where value != last {
+                last = value
+                self?.routines.refreshFocus()
+            }
+        }
+    }
+
     func startNotificationUpdates() {
         guard notificationUpdates == nil else { return }
         // Marking or unmarking a deadline event changes the notifications and the widget's deadline rows.
@@ -335,14 +594,21 @@ final class AppEnvironment {
 
     /// The weekly review (phase 4); completed reminders only from the selected lists and with full access.
     func makeWeekReviewModel() -> WeekReviewModel {
-        let gateway = self.gateway
+        let reminderStore = self.reminderStore
         let settings = self.settings
         let local = LocalTaskProvider(context: modelContainer.mainContext)
         return WeekReviewModel(store: intake, health: health, settings: settings, calendar: capture.calendar,
-                               completedReminders: { interval in
-                                   await gateway.completionDates(in: interval, listIDs: settings.selectedReminderListIDs.map(Set.init))
+                               completedReminders: { [weak self] interval in
+                                   await reminderStore.completionDates(in: interval, listIDs: self?.taskReminderListIDs())
                                },
-                               completedLocalTasks: { interval in local.completionDates(in: interval) })
+                               completedLocalTasks: { interval in local.completionDates(in: interval) },
+                               habits: habits, routineStore: routineStore,
+                               openPlanWeek: { [weak self] week in
+                                   guard let self else { return }
+                                   planning.scope = .week
+                                   planning.anchor = week
+                                   requestedTab = 0
+                               })
     }
 
     // MARK: Widget snapshot (phase 4 design §4.1)
@@ -351,8 +617,22 @@ final class AppEnvironment {
     func makeSnapshot(now: Date = .now) -> WidgetSnapshot {
         let today = PlanDay(date: now, calendar: planning.calendar)
         return WidgetSnapshot.make(createdAt: now, days: planning.snapshotInput(from: today, days: 3),
-                                   todayIntake: snapshotIntake(on: today), showsNutrition: settings.widgetShowsNutrition,
-                                   calendar: planning.calendar)
+                                   todayIntake: snapshotIntake(on: today),
+                                   todayHabits: snapshotHabits(existing: snapshotWriter.current(), now: now),
+                                   showsNutrition: settings.widgetShowsNutrition, calendar: planning.calendar)
+    }
+
+    /// Today's habit counter. While Health values are not current (a cold start, a background run, a failed read) a
+    /// counter calculated without them could be lower than the real one; then the last written counter of the same day
+    /// is kept when it is higher (design §10: "last known values").
+    private func snapshotHabits(existing: WidgetSnapshot?, now: Date) -> SnapshotHabits? {
+        habits.refreshLocal(notify: false)
+        let calendar = planning.calendar
+        guard habits.today == PlanDay(date: now, calendar: calendar), let counter = habits.todayCounter else { return nil }
+        if !habits.hasCurrentHealthFacts, let old = existing?.habits(at: now, calendar: calendar), old.total == counter.total {
+            return SnapshotHabits(done: max(old.done, counter.done), total: counter.total)
+        }
+        return counter
     }
 
     /// The day's sums straight from the store: correct after midnight and on a background launch without a reload.
@@ -380,7 +660,9 @@ final class AppEnvironment {
             snapshotWriter.write(makeSnapshot(now: now))
         } else if let existing = snapshotWriter.current() {
             let today = PlanDay(date: now, calendar: planning.calendar)
-            snapshotWriter.write(existing.replacingIntake(snapshotIntake(on: today), on: today, createdAt: now))
+            snapshotWriter.write(existing.replacingToday(intake: snapshotIntake(on: today),
+                                                         habits: snapshotHabits(existing: existing, now: now),
+                                                         on: today, createdAt: now))
         }
     }
 
@@ -397,7 +679,15 @@ final class AppEnvironment {
     /// Rewrites the snapshot whenever the plan, tasks, today's intake or the widget-relevant settings change.
     func startSnapshotUpdates() {
         guard snapshotUpdates == nil else { return }
-        capture.onTodayChanged = { [weak self] in self?.scheduleSnapshot() }
+        capture.onTodayChanged = { [weak self] in
+            self?.habits.refreshLocal()
+            self?.scheduleSnapshot()
+        }
+        habits.onChanged = { [weak self] in self?.scheduleSnapshot() }
+        habits.onListChanged = { TagwerkShortcuts.updateAppShortcutParameters() }
+        // Refreshes the speakable article names once at start; later changes are reported by the hook that
+        // `TagwerkApp` installs at launch (it must also exist when an intent launches the app in the background).
+        TagwerkShortcuts.updateAppShortcutParameters()
         let changes = Observations { @MainActor [weak self] () -> Int in
             guard let self else { return 0 }
             var hasher = Hasher()
@@ -422,6 +712,7 @@ final class AppEnvironment {
             hasher.combine(capture.todayIntake)
             hasher.combine(capture.todaySteps)
             hasher.combine(settings.goalStepsPerDay)
+            hasher.combine(habits.todayCounter)
             return hasher.finalize()
         }
         snapshotUpdates = Task { [weak self] in

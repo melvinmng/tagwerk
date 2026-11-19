@@ -41,7 +41,7 @@ final class AppRouter {
         case .captureWorkout: .workout(activity: nil, minutes: nil)
         case .review: .review
         case .capture: .today
-        case .planToday: nil
+        case .planToday, .shopping, .routineStart, .routineEvening: nil
         }
         pending = Request(route: route, prefill: prefill ?? defaultPrefill)
         receivedCount += 1

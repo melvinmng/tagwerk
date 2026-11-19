@@ -24,6 +24,11 @@ struct TagwerkApp: App {
             // App Intents run in this process and share the one model container (phase 4 design §8).
             let services = IntentServices(environment: environment)
             AppDependencyManager.shared.add(dependency: services)
+            // New article names become speakable, also after a Siri add that launched the app in the background
+            // (`RootView.task` does not run then). Hosted unit tests do not talk to the system.
+            if !isTestHost {
+                environment.shopping.onNamesChanged = { TagwerkShortcuts.updateAppShortcutParameters() }
+            }
             // Set before launch ends, so a tap that launched the app is not lost.
             UNUserNotificationCenter.current().delegate = environment.notificationDelegate
         } catch {
@@ -47,10 +52,13 @@ struct TagwerkApp: App {
                     if environment.settings.setupCompleted {
                         await environment.taskList.reload()
                         await environment.planning.reload()
+                        await environment.shopping.reload()
                     }
                     await environment.activateGitHubIfSignedIn()
                     environment.startReconnectWatch()
                     environment.startNotificationUpdates()
+                    environment.startRoutineReminderUpdates()
+                    environment.startFocusUpdates()
                     environment.startSnapshotUpdates()
                 }
                 .onChange(of: scenePhase) { _, phase in
@@ -64,8 +72,10 @@ struct TagwerkApp: App {
                             await environment.planning.reload()
                             // The permission may have changed in the iOS settings; the time zone may have changed.
                             await environment.notifications.reschedule()
+                            await environment.routineNotifications.reschedule()
                             // Health entries that could not be written or deleted earlier.
                             await environment.capture.reload()  // follows to the new day after midnight
+                            await environment.habits.reload(day: environment.capture.day)
                             await environment.capture.syncPending()
                         }
                     case .background:
@@ -77,6 +87,7 @@ struct TagwerkApp: App {
                             await environment.notifications.reschedule()
                             // Health entries that could not be written or deleted earlier.
                             await environment.capture.reload()  // follows to the new day after midnight
+                            await environment.habits.reload(day: environment.capture.day)
                             await environment.capture.syncPending()
                             // Again after the reload, in case Health catch-up or the new day changed something.
                             environment.writeSnapshot()

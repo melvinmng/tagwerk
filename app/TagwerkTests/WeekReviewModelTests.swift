@@ -130,6 +130,62 @@ struct WeekReviewModelTests {
         await model.reload()
         #expect(model.review?.averageProtein == 40)
     }
+
+    // MARK: Habits and reflection (phase 7)
+
+    private func makePhase7(_ habits: HabitsModel, routines: RoutineStore, opened: Opened = Opened()) -> WeekReviewModel {
+        let now = self.now
+        return WeekReviewModel(store: store, health: FakeHealthStore(), settings: settings, calendar: calendar, now: { now },
+                               completedReminders: { _ in [] }, completedLocalTasks: { _ in [] },
+                               habits: habits, routineStore: routines, openPlanWeek: { opened.days.append($0) })
+    }
+
+    final class Opened { var days: [PlanDay] = [] }
+
+    @Test func reload_loadsHabitSummariesAndTheReflectionOfTheShownWeek() async {
+        let now = self.now
+        let habitStore = HabitStore(context: container.mainContext, now: { now })
+        let habit = Habit(name: "Lesen", symbol: "book", order: 0, start: PlanDay(year: 2026, month: 11, day: 1))
+        habitStore.save(habit)
+        habitStore.setCheck(habit.id, on: PlanDay(year: 2026, month: 11, day: 16), checked: true, at: now)
+        let habits = HabitsModel(store: habitStore, intake: store, health: FakeHealthStore(), settings: settings, calendar: calendar,
+                                 now: { now })
+        let routines = RoutineStore(context: container.mainContext, now: { now })
+        routines.saveReflection(WeekReflection(wentWell: "Sport"), weekStart: PlanDay(year: 2026, month: 11, day: 16), at: now)
+        let model = makePhase7(habits, routines: routines)
+        await model.reload()
+        #expect(model.habitSummaries.count == 1)
+        #expect(model.habitSummaries[0].done == 1 && model.habitSummaries[0].isRunning)
+        #expect(model.reflection.wentWell == "Sport")
+        // The previous week has no reflection and no active habit days before the start.
+        await model.goBack()
+        #expect(model.reflection == WeekReflection())
+    }
+
+    @Test func saveReflection_writesTheShownWeek() async {
+        let now = self.now
+        let habits = HabitsModel(store: HabitStore(context: container.mainContext, now: { now }), intake: store,
+                                 health: FakeHealthStore(), settings: settings, calendar: calendar, now: { now })
+        let routines = RoutineStore(context: container.mainContext, now: { now })
+        let model = makePhase7(habits, routines: routines)
+        await model.reload()
+        model.reflection.burdens = "Viel los"
+        model.reflection.plannedTasks = true
+        model.saveReflection()
+        #expect(routines.reflection(weekStart: PlanDay(year: 2026, month: 11, day: 16)).burdens == "Viel los")
+        #expect(routines.reflection(weekStart: PlanDay(year: 2026, month: 11, day: 16)).plannedTasks)
+    }
+
+    @Test func planNextWeek_showsTheWeekViewOfTheFollowingWeek() async {
+        let now = self.now
+        let habits = HabitsModel(store: HabitStore(context: container.mainContext, now: { now }), intake: store,
+                                 health: FakeHealthStore(), settings: settings, calendar: calendar, now: { now })
+        let opened = Opened()
+        let model = makePhase7(habits, routines: RoutineStore(context: container.mainContext, now: { now }), opened: opened)
+        await model.reload()
+        model.planNextWeek()
+        #expect(opened.days == [PlanDay(year: 2026, month: 11, day: 23)])
+    }
 }
 
 struct PageSwipeTests {

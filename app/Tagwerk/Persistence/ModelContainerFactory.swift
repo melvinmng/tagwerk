@@ -8,7 +8,11 @@ enum ModelContainerFactory {
                                      DayLunchRecord.self, EventAvailabilityMark.self, EventMergeDecision.self,
                                      PlanSuggestionRecord.self, ChatThreadRecord.self,
                                      EventDeadlineMark.self, DeadlineEventLink.self, DeadlineSuggestionDismissal.self,
-                                     MealRecord.self, DrinkRecord.self, WorkoutRecord.self, PendingHealthDeletion.self])
+                                     MealRecord.self, DrinkRecord.self, WorkoutRecord.self, PendingHealthDeletion.self,
+                                     ShoppingCategory.self, ShoppingAssignment.self, NoteRecord.self,
+                                     HabitRecord.self, HabitCheckRecord.self,
+                                     RoutineDayRecord.self, EveningChecklistItemRecord.self, FocusMarkRecord.self,
+                                     WeekReflectionRecord.self])
 
     static func make(inMemory: Bool) throws -> ModelContainer {
         try ModelContainer(for: schema, configurations: inMemory ? ModelConfiguration(isStoredInMemoryOnly: true)

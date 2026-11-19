@@ -40,7 +40,7 @@ public struct TaskContainer: Sendable, Hashable, Codable {
 
 /// Fields the editor can show and change. A source lists only the fields it supports.
 public enum TaskField: Sendable, Hashable, Codable {
-    case title, notes, due, priority, estimate, container, labels, recurrence
+    case title, notes, due, priority, estimate, container, labels, recurrence, assignees
 }
 
 /// Source-independent view of a task.
@@ -67,15 +67,18 @@ public struct TaskItem: Identifiable, Sendable, Hashable {
     public var isEpic: Bool
     /// Repetition of the task (reminders only in stage 1); its `start` follows the due date.
     public var recurrence: Recurrence?
+    /// Assigned logins in the order of the source (GitHub); `nil` for sources without assignment.
+    public var assignees: [String]?
 
     public init(
         id: TaskID, title: String, notes: String?, due: DueDate?, priority: Priority?,
         estimateMinutes: Int?, isCompleted: Bool, container: TaskContainer, url: URL?,
         version: String, editableFields: Set<TaskField>,
         subContainers: [TaskContainer] = [], labels: [String]? = nil, epic: EpicInfo? = nil, isEpic: Bool = false,
-        recurrence: Recurrence? = nil
+        recurrence: Recurrence? = nil, assignees: [String]? = nil
     ) {
         self.recurrence = recurrence
+        self.assignees = assignees
         self.epic = epic
         self.isEpic = isEpic
         self.id = id
@@ -107,11 +110,14 @@ public struct TaskDraft: Sendable, Hashable {
     public var subContainerIDs: [String]
     /// Repetition of the new task; requires a due date.
     public var recurrence: Recurrence?
+    /// People to assign; `nil` is the default of the source (GitHub: the signed-in user), `[]` is no one.
+    public var assignees: [String]?
 
     public init(title: String, notes: String? = nil, due: DueDate? = nil, priority: Priority? = nil,
                 estimateMinutes: Int? = nil, containerID: String? = nil, subContainerIDs: [String] = [],
-                recurrence: Recurrence? = nil) {
+                recurrence: Recurrence? = nil, assignees: [String]? = nil) {
         self.recurrence = recurrence
+        self.assignees = assignees
         self.subContainerIDs = subContainerIDs
         self.title = title
         self.notes = notes

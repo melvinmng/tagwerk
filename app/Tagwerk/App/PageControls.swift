@@ -47,14 +47,18 @@ struct PageTitleLabel: View {
     let title: String
     let isCurrent: Bool
     var titleFont: Font = .title3.bold()
+    /// `false` keeps the title at full size; the plan header picks a shorter text instead of shrinking it.
+    var titleScales = true
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             Text(caption)
                 .font(.caption2.weight(.semibold))
                 .foregroundStyle(isCurrent ? Color.accentColor : .secondary)
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
             HStack(alignment: .firstTextBaseline, spacing: 4) {
-                Text(title).font(titleFont).lineLimit(1).minimumScaleFactor(0.8)
+                Text(title).font(titleFont).lineLimit(1).minimumScaleFactor(titleScales ? 0.8 : 1)
                 Image(systemName: "chevron.down").font(.caption.weight(.semibold)).foregroundStyle(.secondary)
             }
         }

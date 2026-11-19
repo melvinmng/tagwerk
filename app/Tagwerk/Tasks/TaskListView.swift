@@ -26,7 +26,7 @@ struct TaskListView: View {
     @Environment(AppEnvironment.self) private var environment
 
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: Bindable(environment).tasksPath) {
             ScrollViewReader { proxy in
             List(selection: $selection) {
                 if model.availableFilters.count > 2 {
@@ -51,22 +51,30 @@ struct TaskListView: View {
                     )
                 }
 
+                // Shopping list and notes: independent of the source filter, hidden while selecting tasks.
+                if !isSelecting { TasksEntrySection() }
+
+                // A row instead of an overlay: the entry section above always has rows the overlay would cover.
+                if model.sections.isEmpty && problemSources.isEmpty {
+                    Group {
+                        if !model.loadingSources.isDisjoint(with: model.filter.sources) {
+                            ProgressView("Aufgaben werden geladen …")
+                        } else if model.filter == .github {
+                            ContentUnavailableView("Keine zugewiesenen Issues in offenen Projects", systemImage: "checkmark.circle")
+                        } else {
+                            ContentUnavailableView("Keine Aufgaben", systemImage: "checkmark.circle")
+                        }
+                    }
+                    .frame(maxWidth: .infinity)
+                    .listRowBackground(Color.clear)
+                    .listRowSeparator(.hidden)
+                }
+
                 ForEach(model.sections, id: \.0) { section, items in
                     Section(section.title) {
                         ForEach(items) { item in
                             row(item, section: section)
                         }
-                    }
-                }
-            }
-            .overlay {
-                if model.sections.isEmpty && problemSources.isEmpty {
-                    if !model.loadingSources.isDisjoint(with: model.filter.sources) {
-                        ProgressView("Aufgaben werden geladen …")
-                    } else if model.filter == .github {
-                        ContentUnavailableView("Keine zugewiesenen Issues in offenen Projects", systemImage: "checkmark.circle")
-                    } else {
-                        ContentUnavailableView("Keine Aufgaben", systemImage: "checkmark.circle")
                     }
                 }
             }
@@ -82,10 +90,23 @@ struct TaskListView: View {
                 }
             }
             }
-            .safeAreaInset(edge: .bottom) { isSelecting ? AnyView(selectionBar) : AnyView(undoBar) }
+            .safeAreaInset(edge: .bottom) {
+                isSelecting ? AnyView(selectionBar) : AnyView(VStack(spacing: 0) { HandedOverCapsule(model: model); undoBar })
+            }
             .animation(.spring(duration: 0.35), value: model.lastCompleted?.id)
+            .animation(.spring(duration: 0.35), value: model.lastHandedOver)
             .onChange(of: gitHubOfflineSince == nil) { _, online in if online { showsOfflineInfo = false } }
             .navigationTitle("Aufgaben")
+            .navigationDestination(for: TasksDestination.self) { destination in
+                switch destination {
+                case .shopping: ShoppingListView(model: environment.shopping)
+                case .shoppingSettings: ShoppingSettingsView()
+                case .shoppingCategories:
+                    ShoppingCategoriesView(store: environment.shoppingCategories, model: environment.shopping)
+                case .notes: NotesListView(store: environment.notes)
+                case .note(let id): NoteEditorView(noteID: id, store: environment.notes)
+                }
+            }
             .toolbar {
                 if gitHubOfflineSince != nil {
                     ToolbarItem(placement: .topBarTrailing) { offlineIndicator }
@@ -102,13 +123,23 @@ struct TaskListView: View {
                         Button(selection == all ? "Keine" : "Alle") { selection = selection == all ? [] : all }
                     }
                 }
+                if !isSelecting {
+                    ToolbarItem(placement: .topBarTrailing) { SearchButton() }
+                }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button { isCreating = true } label: { Label("Neue Aufgabe", systemImage: "plus") }
                 }
                 AssistantToolbarItems { .tasks }
             }
-            .refreshable { await model.reload() }
-            .task { await model.reload() }
+            // The shopping row's counter follows every reload of the tasks.
+            .refreshable {
+                await model.reload()
+                await environment.shopping.reload()
+            }
+            .task {
+                await model.reload()
+                await environment.shopping.reload()
+            }
             .sheet(isPresented: $isCreating) { NewTaskSheet(model: model) }
             .sheet(item: $editing) { item in
                 if let provider = model.provider(for: item.id.source) {
@@ -118,8 +149,8 @@ struct TaskListView: View {
                                    isReadOnly: model.sourceStates[item.id.source]?.isOffline == true,
                                    onDelete: { version in Task { await model.delete(item.id, version: version) } },
                                    planning: environment.planning,
-                                   onShowDay: onShowDay) { saved in
-                        model.didSave(saved)
+                                   onShowDay: onShowDay) { saved, requested in
+                        model.didSave(saved, requestedAssignees: requested)
                     }
                 }
             }

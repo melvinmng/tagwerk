@@ -408,6 +408,25 @@ struct VoiceModeMachineTests {
         #expect(reply(&machine, "Alle bestätigen", at: 8) == [.prompt(.deletesNeedTap)])
     }
 
+    @Test func confirmAll_withGuardedCard_asksForSingleConfirmation() {
+        var machine = listeningWithCards(OpenCards(ids: ["a", "g"], deletes: 0, guarded: 1))
+        #expect(reply(&machine, "Alle bestätigen", at: 8) == [.prompt(.guardedNeedTap)])
+        #expect(ActionAnnouncement.prompt(.guardedNeedTap, language: .german) == "Zuweisungen an andere bitte einzeln bestätigen.")
+        #expect(ActionAnnouncement.prompt(.guardedNeedTap, language: .english) == "Please confirm assignments to others one by one.")
+    }
+
+    @Test func confirm_singleGuardedCard_confirms() {
+        var machine = listeningWithCards(OpenCards(ids: ["g1"], deletes: 0, guarded: 1))
+        #expect(reply(&machine, "Ja", at: 8) == [.startListening(.german)])
+        machine.recordingStarted(now: at(11.5))
+        #expect(machine.tick(now: at(13.5)) == [.cancelListening, .confirm(ids: ["g1"])])
+    }
+
+    @Test func openCards_guardedDefaultsToZero() {
+        #expect(OpenCards(ids: ["a"], deletes: 0).guarded == 0)
+        #expect(OpenCards.none.guarded == 0)
+    }
+
     @Test func tapWhileListening_takesTheAnswer() {
         var machine = listeningWithCards(card)
         machine.heard(final: "Äh", volatile: "", now: at(8))

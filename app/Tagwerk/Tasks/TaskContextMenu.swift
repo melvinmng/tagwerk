@@ -18,6 +18,9 @@ struct TaskMenuActions {
     var unassign: (() -> Void)? = nil
     /// Day view only: the shown day, which "Mit KI planen" plans when it is today or later.
     var shownDay: PlanDay? = nil
+    /// Day view of today only: marks the task as today's focus or removes the mark (phase 7).
+    var toggleFocus: (() -> Void)? = nil
+    var isFocus = false
 }
 
 struct TaskContextMenu: View {
@@ -60,6 +63,13 @@ struct TaskContextMenu: View {
                 } label: {
                     Label("Fälligkeit verschieben", systemImage: "calendar.badge.clock")
                     Text(dueText)
+                }
+            }
+        }
+        if let toggleFocus = actions.toggleFocus {
+            Section {
+                Button(actions.isFocus ? "Fokus entfernen" : "Als Fokus markieren", systemImage: actions.isFocus ? "star.slash" : "star") {
+                    toggleFocus()
                 }
             }
         }

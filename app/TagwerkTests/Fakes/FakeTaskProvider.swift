@@ -22,6 +22,11 @@ final class FakeTaskProvider: TaskProvider {
     var cachedTasks: [TaskItem] { cached }
     /// When set, `openTasks` takes its snapshot first and then waits for the gate (a slow source).
     var gate: Gate?
+    /// Login of the signed-in user; with it, only tasks assigned to that login are listed (GitHub).
+    var viewerLogin: String?
+    /// Logins the source drops silently when writing, like GitHub does for people who cannot be assigned.
+    var droppedAssignees: Set<String> = []
+    private(set) var createdDrafts: [TaskDraft] = []
     private(set) var openTasksCalls = 0
     private(set) var appliedEdits: [AppliedEdit] = []
     private var revision = 100
@@ -63,6 +68,9 @@ final class FakeTaskProvider: TaskProvider {
         if case .set(let minutes) = edit.estimateMinutes { item.estimateMinutes = minutes }
         if case .set(let completed) = edit.isCompleted { item.isCompleted = completed }
         if case .set(let recurrence) = edit.recurrence { item.recurrence = recurrence }
+        if case .set(let change) = edit.assignees {
+            item.assignees = AssigneeRules.applying(change, to: item.assignees ?? []).filter { !droppedAssignees.contains($0) }
+        }
         revision += 1
         item.version = String(revision)
         replace(item)
@@ -82,14 +90,24 @@ final class FakeTaskProvider: TaskProvider {
         tasks.removeAll { $0.id == id }
     }
 
+    func isListed(_ item: TaskItem) -> Bool {
+        guard let viewerLogin else { return true }
+        return AssigneeRules.contains(item.assignees, viewerLogin)
+    }
+
     func create(_ draft: TaskDraft) async throws -> TaskItem {
+        createdDrafts.append(draft)
+        if let applyError { throw applyError }
         revision += 1
+        let isIssue = source == .github
+        let assignees = (draft.assignees ?? [viewerLogin].compactMap { $0 }).filter { !droppedAssignees.contains($0) }
         let item = TaskItem(
             id: TaskID(source: source, rawValue: "new-\(revision)"), title: draft.title, notes: draft.notes,
             due: draft.due, priority: draft.priority, estimateMinutes: draft.estimateMinutes, isCompleted: false,
             container: TaskContainer(id: draft.containerID ?? "default", name: "Standard", colorHex: nil),
-            url: nil, version: String(revision), editableFields: [.title, .notes, .due, .priority],
-            recurrence: draft.recurrence
+            url: isIssue ? URL(string: "https://github.com/beispiel/app/issues/151") : nil,
+            version: String(revision), editableFields: [.title, .notes, .due, .priority],
+            recurrence: draft.recurrence, assignees: isIssue ? assignees : nil
         )
         tasks.append(item)
         return item

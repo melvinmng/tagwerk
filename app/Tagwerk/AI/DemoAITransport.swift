@@ -31,6 +31,10 @@ final class DemoAITransport: AIHTTPTransport {
             return Self.stream([Self.event(["type": "response.output_text.delta", "delta": meal]),
                                 Self.event(["type": "response.completed", "response": [:]])], request: request)
         }
+        if let sort = Self.shoppingSortAnswer(for: request) {
+            return Self.stream([Self.event(["type": "response.output_text.delta", "delta": sort]),
+                                Self.event(["type": "response.completed", "response": [:]])], request: request)
+        }
         if let plan = Self.planAnswer(for: request) {
             return Self.stream([Self.event(["type": "response.output_text.delta", "delta": plan]),
                                 Self.event(["type": "response.completed", "response": [:]])], request: request)
@@ -76,7 +80,7 @@ final class DemoAITransport: AIHTTPTransport {
             return [event(["type": "response.output_text.delta", "delta": "Erledigt. Die Demo-Aufgabe steht jetzt in deiner Liste."]),
                     event(["type": "response.completed", "response": [:]])]
         }
-        let arguments = #"{"title":"Demo-Aufgabe","due":null,"priority":"P3","minutes":30,"notes":null,"source":"local"}"#
+        let arguments = #"{"title":"Demo-Aufgabe","due":null,"priority":"P3","minutes":30,"notes":null,"source":"local","repository":null,"project_ids":null,"assignees":null}"#
         return [event(["type": "response.output_text.delta", "delta": "Ich schlage vor, dafür eine Aufgabe anzulegen."]),
                 event(["type": "response.output_item.done", "item": ["type": "function_call", "call_id": "demo-\(UUID().uuidString)",
                                                                     "name": "create_task", "arguments": arguments]]),
@@ -97,6 +101,22 @@ final class DemoAITransport: AIHTTPTransport {
             return #"{"title":"","items":[]}"#
         }
         return #"{"title":"Brötchen mit Käse","items":[{"name":"Brötchen","amount":"2 Stück","kcal_min":250,"kcal":300,"kcal_max":350,"protein_g":10,"carbs_g":56,"fat_g":2},{"name":"Käse","amount":"2 Scheiben","kcal_min":150,"kcal":180,"kcal_max":220,"protein_g":12,"carbs_g":0,"fat_g":14}]}"#
+    }
+
+    /// Shopping demo: every item goes to the first category of the request, the first item into a new "Demo" category.
+    static func shoppingSortAnswer(for request: URLRequest) -> String? {
+        guard let body = request.httpBody,
+              let json = try? JSONSerialization.jsonObject(with: body) as? [String: Any],
+              let format = (json["text"] as? [String: Any])?["format"] as? [String: Any],
+              format["name"] as? String == "shopping_sort" else { return nil }
+        let content = ((json["input"] as? [[String: Any]])?.first?["content"] as? [[String: Any]]) ?? []
+        let text = content.compactMap { $0["text"] as? String }.joined()
+        let sent = (try? JSONSerialization.jsonObject(with: Data(text.utf8)) as? [String: [String]]) ?? [:]
+        let items = sent["items"] ?? []
+        let first = sent["categories"]?.first ?? ""
+        let assignments = items.enumerated().map { index, item in ["item": item, "category": index == 0 ? "Demo" : first] }
+        let answer: [String: Any] = ["assignments": assignments, "new_categories": ["Demo"]]
+        return String(decoding: (try? JSONSerialization.data(withJSONObject: answer)) ?? Data(), as: UTF8.self)
     }
 
     private static func planAnswer(for request: URLRequest) -> String? {

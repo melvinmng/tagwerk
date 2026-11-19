@@ -26,6 +26,9 @@ public struct PlannedNotification: Sendable, Hashable, Identifiable {
     /// Identifier prefix of all task notifications of one source.
     public static func identifierPrefix(for source: TaskSource) -> String { "\(identifierPrefix)task.\(source.rawValue):" }
     public static let eventIdentifierPrefix = "\(identifierPrefix)event."
+    /// Identifier prefix of the repeating routine reminders (phase 7). They live next to the deadline notifications and
+    /// are neither counted against their budget nor removed by it.
+    public static let routineIdentifierPrefix = "\(identifierPrefix)routine."
 }
 
 /// Settings that shape the notification plan.

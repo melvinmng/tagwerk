@@ -125,6 +125,13 @@ final class LocalTaskProvider: TaskProvider {
         return tasks.filter { $0 >= start && $0 < end } + ((try? context.fetch(occurrences)) ?? []).map(\.completedAt)
     }
 
+    /// All completed local tasks with their completion moment, for the search. Tasks completed before
+    /// phase 4 carry no date.
+    func completedTasks() -> [CompletedTask] {
+        let descriptor = FetchDescriptor<LocalTask>(predicate: #Predicate { $0.isCompleted })
+        return ((try? context.fetch(descriptor)) ?? []).map { CompletedTask(item: Self.item($0), completedAt: $0.completedAt) }
+    }
+
     func delete(_ id: TaskID, expectedVersion: String?) async throws {
         guard let task = try record(id) else { throw TaskWriteError.notFound }
         if let expectedVersion, expectedVersion != String(task.revision) {

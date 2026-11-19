@@ -306,6 +306,22 @@
           }
         }
       }
+    },
+    "✓ %lld von %lld" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "✓ %1$lld von %2$lld"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "✓ %lld of %lld"
+          }
+        }
+      }
     }
   },
   "version" : "1.0"

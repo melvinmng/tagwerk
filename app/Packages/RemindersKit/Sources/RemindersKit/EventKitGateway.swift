@@ -95,6 +95,23 @@ public final class EventKitGateway: ReminderStore {
         }
     }
 
+    public func completedReminders(in interval: DateInterval, listIDs: Set<String>) async -> [ReminderRecord] {
+        guard accessState == .fullAccess else { return [] }
+        let calendars = store.calendars(for: .reminder).filter { listIDs.contains($0.calendarIdentifier) }
+        if calendars.isEmpty { return [] }
+        let predicate = store.predicateForCompletedReminders(withCompletionDateStarting: interval.start, ending: interval.end,
+                                                             calendars: calendars)
+        return await withCheckedContinuation { continuation in
+            store.fetchReminders(matching: predicate) { reminders in
+                continuation.resume(returning: (reminders ?? []).map(Self.record))
+            }
+        }
+    }
+
+    public func defaultListID() -> String? {
+        store.defaultCalendarForNewReminders()?.calendarIdentifier
+    }
+
     public func reminder(id: String) -> ReminderRecord? {
         guard let reminder = ekReminder(id: id) else { return nil }
         return Self.record(reminder)
@@ -194,7 +211,9 @@ public final class EventKitGateway: ReminderStore {
             isCompleted: reminder.isCompleted,
             listID: reminder.calendar?.calendarIdentifier ?? "",
             lastModified: reminder.lastModifiedDate,
-            recurrence: recurrence(reminder)
+            recurrence: recurrence(reminder),
+            createdAt: reminder.creationDate,
+            completedAt: reminder.completionDate
         )
     }
 
@@ -223,7 +242,8 @@ public final class EventKitGateway: ReminderStore {
 
     nonisolated static func listInfo(_ calendar: EKCalendar) -> ListInfo {
         ListInfo(id: calendar.calendarIdentifier, title: calendar.title,
-                 colorHex: hex(calendar.cgColor), kind: kind(calendar.type))
+                 colorHex: hex(calendar.cgColor), kind: kind(calendar.type),
+                 isWritable: calendar.allowsContentModifications)
     }
 
     nonisolated static func kind(_ type: EKCalendarType) -> CalendarKind {

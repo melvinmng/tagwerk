@@ -50,6 +50,9 @@ public struct SnapshotIntake: Sendable, Hashable, Codable {
     }
 }
 
+/// Today's habit counter ("✓ 3 von 5"): numbers only, never a name (phase 7 design §5.6).
+public typealias SnapshotHabits = HabitCounter
+
 public struct SnapshotDay: Sendable, Hashable, Codable {
     public var day: PlanDay
     public var entries: [SnapshotEntry]
@@ -58,15 +61,18 @@ public struct SnapshotDay: Sendable, Hashable, Codable {
     /// Counts before the entry limit, for Siri's overview; `nil` falls back to counting `entries`.
     public var eventCount: Int?
     public var blockCount: Int?
+    /// Habit counter of today only; optional, so files written before it still decode.
+    public var habits: SnapshotHabits?
 
     public init(day: PlanDay, entries: [SnapshotEntry], deadlineCount: Int, intake: SnapshotIntake?,
-                eventCount: Int? = nil, blockCount: Int? = nil) {
+                eventCount: Int? = nil, blockCount: Int? = nil, habits: SnapshotHabits? = nil) {
         self.day = day
         self.entries = entries
         self.deadlineCount = deadlineCount
         self.intake = intake
         self.eventCount = eventCount
         self.blockCount = blockCount
+        self.habits = habits
     }
 }
 
@@ -114,8 +120,9 @@ public struct WidgetSnapshot: Sendable, Hashable, Codable {
     // MARK: Building
 
     /// Builds the snapshot; `todayIntake` belongs to the first day and is dropped when nutrition is hidden.
+    /// `todayHabits` belongs to the first day too and stays when nutrition is hidden.
     public static func make(createdAt: Date, days inputs: [SnapshotDayInput], todayIntake: SnapshotIntake?,
-                            showsNutrition: Bool, calendar: Calendar) -> WidgetSnapshot {
+                            todayHabits: SnapshotHabits? = nil, showsNutrition: Bool, calendar: Calendar) -> WidgetSnapshot {
         let days = inputs.enumerated().map { index, input in
             let all = entries(of: input, calendar: calendar)
             let allDay = all.filter(\.isAllDay).prefix(maximumAllDayEntriesPerDay)
@@ -123,20 +130,26 @@ public struct WidgetSnapshot: Sendable, Hashable, Codable {
             return SnapshotDay(day: input.day, entries: Array(allDay) + Array(timed), deadlineCount: input.deadlines.count,
                                intake: index == 0 && showsNutrition ? todayIntake : nil,
                                eventCount: all.filter { $0.kind == .event }.count,
-                               blockCount: all.filter { $0.kind == .block }.count)
+                               blockCount: all.filter { $0.kind == .block }.count,
+                               habits: index == 0 ? todayHabits : nil)
         }
         return WidgetSnapshot(createdAt: createdAt, days: days)
     }
 
-    /// The same plan with new intake for `day`; used where the plan sources are not loaded (Siri in the background),
-    /// so the plan part of an existing file is kept instead of being replaced by an empty one. Older days lose their
-    /// intake. A file without `day` stays stale: adding an empty day would claim "nothing planned".
-    public func replacingIntake(_ intake: SnapshotIntake?, on day: PlanDay, createdAt: Date) -> WidgetSnapshot {
+    /// The same plan with new intake and habit counter for `day`; used where the plan sources are not loaded (Siri in
+    /// the background), so the plan part of an existing file is kept instead of being replaced by an empty one. Older
+    /// days lose their intake and counter. A file without `day` stays stale: adding an empty day would claim "nothing
+    /// planned".
+    public func replacingToday(intake: SnapshotIntake?, habits: SnapshotHabits?, on day: PlanDay, createdAt: Date) -> WidgetSnapshot {
         var copy = self
-        for index in copy.days.indices where copy.days[index].day != day { copy.days[index].intake = nil }
+        for index in copy.days.indices where copy.days[index].day != day {
+            copy.days[index].intake = nil
+            copy.days[index].habits = nil
+        }
         guard let index = copy.days.firstIndex(where: { $0.day == day }) else { return copy }
         copy.createdAt = createdAt
         copy.days[index].intake = intake
+        copy.days[index].habits = habits
         return copy
     }
 
@@ -230,6 +243,11 @@ public struct WidgetSnapshot: Sendable, Hashable, Codable {
     /// Today's intake, only while the snapshot still describes the day of `date` (never yesterday's sums).
     public func intake(at date: Date, calendar: Calendar) -> SnapshotIntake? {
         days.first { $0.day == PlanDay(date: date, calendar: calendar) }?.intake
+    }
+
+    /// Today's habit counter, only while the snapshot still describes the day of `date`.
+    public func habits(at date: Date, calendar: Calendar) -> SnapshotHabits? {
+        days.first { $0.day == PlanDay(date: date, calendar: calendar) }?.habits
     }
 
     public func deadlineCount(at date: Date, calendar: Calendar) -> Int {
