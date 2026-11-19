@@ -487,7 +487,7 @@ let onSaved: (TaskItem, [String]) -> Void
 
 Regeln: Zeile „Zugewiesen“ unter „Repo“, nur bei `source == .github`, immer (F15); Bindung auf `model.draft.assignees` (Reihenfolge wie `assigneeCandidates`); Laden in `.task` über `(provider as? GitHubTaskProvider)?.assignableUsers(in: original.container.id, maxAge: AppEnvironment.catalogMaxAge)`; bis dahin und bei Fehler nur die aktuell Zugewiesenen; bei `isReadOnly` `LabeledContent("Zugewiesen", value:)`. `viewerLogin` kommt aus `(provider as? GitHubTaskProvider)?.login`; unbekannt → Zeile ohne „Ich“, `handsOver == false`. „Sichern“: `handOverFutureBlocks = model.handsOver ? (planning?.futureBlockCount(for: id) ?? 0) : nil`; `.handOver` hat Vorrang (kollidiert laut Spec nicht mit den Erinnerungs-Fällen). Dialog: Titel „Du bist danach nicht mehr zugewiesen.“, Text aus `handOverMessage`, Knöpfe „Abgeben“ (`role: .destructive`) und „Abbrechen“. „Trotzdem sichern“ fragt nicht erneut. `finish`: `onSaved(saved, model.requestedAssignees)`; `applyPlanning` nur bei `model.savedIsListed`. `ConflictChange.changes`: Zeile „Zugewiesen“ nach „Labels“, Logins kommagetrennt, „–“ bei leer oder `nil`. Die drei Aufrufer reichen `requested` an `didSave(_:requestedAssignees:)` weiter.
 
-- [ ] **Step 1: Tests schreiben.**
+- [x] **Step 1: Tests schreiben.**
   `TaskEditorModelTests` (GitHub-Item mit `assignees: ["octo", "lea-m"]`, `viewerLogin: "octo"`):
   - `assignees_addPerson_sendsOnlyTheDifference`: Draft `["octo", "lea-m", "sam"]` → `appliedEdits.last?.edit.assignees == .set(AssigneeChange(add: ["sam"], remove: []))`, `requestedAssignees == ["sam"]`
   - `assignees_unchanged_hasNoChanges`
@@ -499,10 +499,10 @@ Regeln: Zeile „Zugewiesen“ unter „Repo“, nur bei `source == .github`, im
   - `handOver_skipsPlanningEdit`: Fake mit `viewerLogin = "octo"`, Sichern mit Draft `["lea-m"]` → `savedIsListed == false` (Review Focus 4)
   
   `EstimateAndConflictTests`: `conflictChanges_listAssignees`: Original `["octo"]`, aktuell `["octo", "new"]`, Draft `["octo", "sam"]` → `ConflictChange(field: "Zugewiesen", before: "octo", after: "octo, new", mine: "octo, sam")`.
-- [ ] **Step 2:** `APP TaskEditorModelTests` → FAIL.
-- [ ] **Step 3:** Umsetzen; Texte mit Englisch und Plural-Varianten für „%lld geplante Zeitblöcke werden gelöscht.“.
-- [ ] **Step 4:** `APP TaskEditorModelTests`, `APP EstimateAndConflictTests` → PASS.
-- [ ] **Step 5:** Commit `feat: edit issue assignees with a hand-over question`.
+- [x] **Step 2:** `APP TaskEditorModelTests` → FAIL.
+- [x] **Step 3:** Umsetzen; Texte mit Englisch und Plural-Varianten für „%lld geplante Zeitblöcke werden gelöscht.“.
+- [x] **Step 4:** `APP TaskEditorModelTests`, `APP EstimateAndConflictTests` → PASS.
+- [x] **Step 5:** Commit `feat: edit issue assignees with a hand-over question`.
 
 ---
 

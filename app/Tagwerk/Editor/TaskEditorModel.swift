@@ -28,11 +28,16 @@ final class TaskEditorModel {
     typealias CommentAction = (TaskID, String, String) async throws -> TaskItem?
     private let addComment: CommentAction?
 
-    init(item: TaskItem, provider: any TaskProvider, addComment: CommentAction? = nil) {
+    /// Login of the signed-in GitHub user; `nil` for other sources or while it is still unknown
+    /// (start from the offline cache). Without it, nobody is shown as "Ich" and no hand-over is asked.
+    var viewerLogin: String?
+
+    init(item: TaskItem, provider: any TaskProvider, addComment: CommentAction? = nil, viewerLogin: String? = nil) {
         self.draft = item
         self.original = item
         self.provider = provider
         self.addComment = addComment
+        self.viewerLogin = viewerLogin
         self.targetProjects = Set(item.subContainers.map(\.id))
     }
 
@@ -76,6 +81,45 @@ final class TaskEditorModel {
 
     func isVisible(_ field: TaskField) -> Bool {
         original.editableFields.contains(field)
+    }
+
+    // MARK: Assignees (issue #136)
+
+    /// The user was assigned when the editor opened and is not in the draft any more.
+    var handsOver: Bool {
+        guard let viewerLogin else { return false }
+        return AssigneeRules.contains(original.assignees, viewerLogin) && !AssigneeRules.contains(draft.assignees, viewerLogin)
+    }
+
+    /// Logins this save adds; handed to the list for the comparison after writing.
+    var requestedAssignees: [String] {
+        AssigneeRules.change(original: original.assignees, edited: draft.assignees)?.add ?? []
+    }
+
+    /// False when the saved item no longer belongs to the user's lists (handed over).
+    var savedIsListed: Bool {
+        saved.map { provider.isListed($0) } ?? true
+    }
+
+    /// People offered in the row: the assignable ones united with the currently assigned, the user first.
+    /// Someone who is assigned but no longer assignable stays visible and can be removed. While the
+    /// assignable people are unknown (`nil`), only the assigned ones are offered.
+    func assigneeCandidates(assignable: [String]?) -> [String] {
+        AssigneeSelection.sorted((assignable ?? []) + (original.assignees ?? []) + (draft.assignees ?? []), me: viewerLogin)
+    }
+
+    /// Takes the selection of the row into the draft, in the order of the row.
+    func setAssignees(_ selection: Set<String>, candidates: [String]) {
+        draft.assignees = candidates.filter(selection.contains)
+    }
+
+    /// Text of the question before the user gives an issue away.
+    static func handOverMessage(number: Int?, futureBlocks: Int, leavesUnassigned: Bool) -> String {
+        var parts = [number.map { String(localized: "#\($0) verschwindet aus Aufgaben und Planung.") }
+            ?? String(localized: "Das Issue verschwindet aus Aufgaben und Planung.")]
+        if futureBlocks > 0 { parts.append(String(localized: "\(futureBlocks) geplante Zeitblöcke werden gelöscht.")) }
+        if leavesUnassigned { parts.append(String(localized: "Das Issue ist dann niemandem zugewiesen.")) }
+        return parts.joined(separator: " ")
     }
 
     // MARK: Recurrence (plan 2026-11-18, stage 1)
@@ -124,9 +168,16 @@ final class TaskEditorModel {
         case effortReach(blocksOffSeries: [CalendarEvent])
         /// The new rule leaves planned blocks on days without an occurrence; they stay in the calendar.
         case keepBlocks([CalendarEvent])
+        /// The user removed themselves from an issue: it leaves tasks and planning, and its future
+        /// time blocks (their number is named) are deleted.
+        case handOver(futureBlocks: Int)
     }
 
-    static func saveQuestion(effortChanged: Bool, blocksOffSeries: [CalendarEvent]) -> SaveQuestion? {
+    /// `handOverFutureBlocks` is set when this save hands the issue over; that question comes first
+    /// (it cannot coincide with the reminder cases, which only concern recurring reminders).
+    static func saveQuestion(effortChanged: Bool, blocksOffSeries: [CalendarEvent],
+                             handOverFutureBlocks: Int? = nil) -> SaveQuestion? {
+        if let handOverFutureBlocks { return .handOver(futureBlocks: handOverFutureBlocks) }
         if effortChanged { return .effortReach(blocksOffSeries: blocksOffSeries) }
         return blocksOffSeries.isEmpty ? nil : .keepBlocks(blocksOffSeries)
     }

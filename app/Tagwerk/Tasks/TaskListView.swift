@@ -121,8 +121,8 @@ struct TaskListView: View {
                                    isReadOnly: model.sourceStates[item.id.source]?.isOffline == true,
                                    onDelete: { version in Task { await model.delete(item.id, version: version) } },
                                    planning: environment.planning,
-                                   onShowDay: onShowDay) { saved in
-                        model.didSave(saved)
+                                   onShowDay: onShowDay) { saved, requested in
+                        model.didSave(saved, requestedAssignees: requested)
                     }
                 }
             }

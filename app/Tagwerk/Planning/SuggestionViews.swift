@@ -718,8 +718,8 @@ struct TaskEditorSheet: View {
         if let provider = environment.taskList.provider(for: task.id.source) {
             TaskEditorView(item: task, provider: provider, calendar: environment.taskList.calendar, containers: [],
                            onDelete: { version in Task { await environment.taskList.delete(task.id, version: version) } },
-                           planning: environment.planning) { saved in
-                environment.taskList.didSave(saved)
+                           planning: environment.planning) { saved, requested in
+                environment.taskList.didSave(saved, requestedAssignees: requested)
                 Task { await environment.planning.reload() }
             }
         }

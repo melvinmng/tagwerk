@@ -1155,5 +1155,14 @@
   "Mindestens ein Projekt wählen.": "Choose at least one project.",
   "Vergeben": "Assigned",
   "Vergeben: %@. Auf GitHub öffnen verfügbar.": "Assigned: %@. Open on GitHub available.",
-  "Öffnet das Issue im Browser": "Opens the issue in the browser"
+  "Öffnet das Issue im Browser": "Opens the issue in the browser",
+  "Du bist danach nicht mehr zugewiesen.": "You will no longer be assigned.",
+  "#%lld verschwindet aus Aufgaben und Planung.": "#%lld will disappear from tasks and planning.",
+  "Das Issue verschwindet aus Aufgaben und Planung.": "The issue will disappear from tasks and planning.",
+  "%lld geplante Zeitblöcke werden gelöscht.": {
+    "one": "%lld planned time block will be deleted.",
+    "other": "%lld planned time blocks will be deleted."
+  },
+  "Das Issue ist dann niemandem zugewiesen.": "The issue will then be assigned to no one.",
+  "Abgeben": "Hand over"
 }

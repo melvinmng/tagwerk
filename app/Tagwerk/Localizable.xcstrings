@@ -18,6 +18,16 @@
         }
       }
     },
+    "#%lld verschwindet aus Aufgaben und Planung.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "#%lld will disappear from tasks and planning."
+          }
+        }
+      }
+    },
     "%@\n\nDie Anmeldung öffnet eine Seite von ChatGPT und kehrt danach von selbst zu Tagwerk zurück. Planen mit KI und der Assistent brauchen sie; alles andere läuft ohne.": {
       "localizations": {
         "en": {
@@ -1233,6 +1243,46 @@
         }
       }
     },
+    "%lld geplante Zeitblöcke werden gelöscht.": {
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld planned time block will be deleted."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld planned time blocks will be deleted."
+                }
+              }
+            }
+          }
+        },
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld geplanter Zeitblock wird gelöscht."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld geplante Zeitblöcke werden gelöscht."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "%lld h": {
       "localizations": {
         "en": {
@@ -1605,6 +1655,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Cancel"
+          }
+        }
+      }
+    },
+    "Abgeben": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hand over"
           }
         }
       }
@@ -3014,6 +3074,26 @@
         }
       }
     },
+    "Das Issue ist dann niemandem zugewiesen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The issue will then be assigned to no one."
+          }
+        }
+      }
+    },
+    "Das Issue verschwindet aus Aufgaben und Planung.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The issue will disappear from tasks and planning."
+          }
+        }
+      }
+    },
     "Das Issue wird %@ zugewiesen und erscheint danach nicht in deinen Aufgaben.": {
       "localizations": {
         "en": {
@@ -3756,6 +3836,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "You"
+          }
+        }
+      }
+    },
+    "Du bist danach nicht mehr zugewiesen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You will no longer be assigned."
           }
         }
       }
