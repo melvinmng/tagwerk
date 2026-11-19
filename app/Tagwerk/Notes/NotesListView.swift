@@ -17,6 +17,7 @@ struct NotesListView: View {
     @State private var movingNoteIDs: [UUID] = []
     @State private var confirmsEmptyTrash = false
     @State private var deletingForGood: [UUID] = []
+    @State private var isStartingBibleStudy = false
 
     init(store: NoteStore, scope: NotesScope = .all) {
         self.store = store
@@ -31,6 +32,12 @@ struct NotesListView: View {
         return false
     }
 
+    /// The system folder of Bible Study: it opens with "Bible Study starten".
+    private var isBibleStudy: Bool {
+        if case .folder(let id) = scope { return store.folder(id: id)?.role == .bibleStudy }
+        return false
+    }
+
     var body: some View {
         @Bindable var settings = environment.settings
         let notes = visibleNotes
@@ -42,6 +49,9 @@ struct NotesListView: View {
                     }
                     .buttonStyle(.plain)
                 }
+            }
+            if isBibleStudy, !editMode.isEditing {
+                bibleStudySection
             }
             if notes.isEmpty {
                 Text(emptyText)
@@ -96,6 +106,9 @@ struct NotesListView: View {
             }
             Button("Abbrechen", role: .cancel) {}
         }
+        .sheet(isPresented: $isStartingBibleStudy) {
+            BibleStudyStartSheet(store: store) { noteID in environment.tasksPath.append(.note(noteID)) }
+        }
         .sheet(isPresented: movingBinding) {
             NoteFolderPickerSheet(store: store, title: "Bewegen nach") { target in
                 store.move(noteIDs: movingNoteIDs, to: target)
@@ -111,6 +124,36 @@ struct NotesListView: View {
     }
 
     // MARK: Content
+
+    /// "Bible Study starten" and the sessions that are still open.
+    @ViewBuilder private var bibleStudySection: some View {
+        Section {
+            Button { isStartingBibleStudy = true } label: {
+                Label("Bible Study starten", systemImage: "book.pages").foregroundStyle(.tint)
+            }
+            .buttonStyle(.plain)
+            ForEach(store.sessions().filter { $0.completedAt == nil }.sorted { $0.startedAt > $1.startedAt }, id: \.id) { session in
+                HStack {
+                    Button { environment.tasksPath.append(.note(session.noteID)) } label: {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(Self.sessionTitle(session)).foregroundStyle(.primary)
+                            Text("Sitzung läuft").font(.caption).foregroundStyle(.secondary)
+                        }
+                    }
+                    .buttonStyle(.plain)
+                    Spacer()
+                    Button("Abschließen") { store.completeSession(session.id) }
+                        .buttonStyle(.bordered)
+                }
+            }
+        }
+    }
+
+    /// "Römer 3,21-31".
+    static func sessionTitle(_ session: BibleStudySessionRecord, locale: Locale = .current) -> String {
+        let name = BibleBooks.book(key: session.book)?.name(locale: locale) ?? ""
+        return session.passage.isEmpty ? name : name + " " + session.passage
+    }
 
     /// Opens the entry of today (rule 10: before 04:00 it is still yesterday's), created from the template if needed.
     private func writeToday() {
@@ -330,6 +373,8 @@ extension NotesListView {
         case .journal:
             let day = note.dayKey.flatMap(NoteDayKey.day) ?? PlanDay(date: note.createdAt, calendar: calendar)
             return String(localized: "Tagebuch") + " · " + DateText.numericDay(day, calendar: calendar)
+        case .bibleStudy:
+            return String(localized: "Bible Study") + " · " + relativeDate(note.updatedAt, now: now, calendar: calendar)
         case .morning, .evening:
             let origin = note.kind == .morning ? String(localized: "Tagesstart") : String(localized: "Tagesabschluss")
             let day = note.dayKey.flatMap(NoteDayKey.day) ?? PlanDay(date: note.createdAt, calendar: calendar)

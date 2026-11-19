@@ -26,7 +26,7 @@ struct NoteTextTests {
 
     @Test func kind_hasStableRawValues() {
         // Stored in the database and in backups: never rename, only append.
-        #expect(NoteKind.allCases.map(\.rawValue) == ["free", "morning", "evening", "journal"])
+        #expect(NoteKind.allCases.map(\.rawValue) == ["free", "morning", "evening", "journal", "bibleStudy"])
     }
 
     @Test func matches_ignoresCaseAccentsAndOrder() {
@@ -36,9 +36,9 @@ struct NoteTextTests {
         #expect(!NoteText.matches("Gliederung", query: "Gliederung Quellen"))
     }
 
-    @Test func journalIsPrivate_otherKindsAreNot() {
-        #expect(NoteKind.journal.isPrivate)
-        #expect(NoteKind.allCases.filter(\.isPrivate) == [.journal])
+    @Test func journalAndBibleStudyArePrivate_otherKindsAreNot() {
+        #expect(NoteKind.journal.isPrivate && NoteKind.bibleStudy.isPrivate)
+        #expect(NoteKind.allCases.filter(\.isPrivate) == [.journal, .bibleStudy])
         #expect(NoteKind(rawValue: "journal") == .journal)
     }
 }

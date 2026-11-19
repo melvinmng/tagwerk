@@ -377,6 +377,16 @@
         }
       }
     },
+    "Action Items" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Action items"
+          }
+        }
+      }
+    },
     "Alle %lld Jahre am %@" : {
       "localizations" : {
         "en" : {
@@ -803,6 +813,16 @@
         }
       }
     },
+    "Generelle Gedanken" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "General thoughts"
+          }
+        }
+      }
+    },
     "Getränke" : {
       "localizations" : {
         "en" : {
@@ -1143,6 +1163,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$lld min until bedtime (%2$@)"
+          }
+        }
+      }
+    },
+    "Notizen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Notes"
           }
         }
       }

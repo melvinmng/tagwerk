@@ -1,16 +1,16 @@
 import Foundation
 
 /// Origin of a note: the user's own note, the thoughts captured at the start or the end of a day, or an entry of the
-/// journal "Tagebuch mit Gott". An unknown stored value reads as `.free`.
+/// journal "Tagebuch mit Gott", or a note of the Bible Study folder. An unknown stored value reads as `.free`.
 public enum NoteKind: String, Sendable, CaseIterable {
-    case free, morning, evening, journal
+    case free, morning, evening, journal, bibleStudy
 
     /// Private notes never leave the device: not to ChatGPT (not even with the consent for thought notes), not to the
     /// assistant's tools and not to the widget. The in-app search is local and may show them. Every place that sends or
     /// shares note content has to check this one predicate.
     public var isPrivate: Bool {
         switch self {
-        case .journal: true
+        case .journal, .bibleStudy: true
         case .free, .morning, .evening: false
         }
     }

@@ -4,8 +4,6 @@ import TagwerkCore
 /// Settings → Notizen → "Aus Notion importieren": pick the unpacked export folder, look at the preview, import.
 struct NotionImportView: View {
     @Environment(AppEnvironment.self) private var environment
-    let target: NotionImportTarget
-
     @State private var model: NotionImportModel?
     @State private var isPicking = false
 
@@ -28,16 +26,16 @@ struct NotionImportView: View {
         List {
             switch model.phase {
             case .idle:
-                instructions
+                instructions(model)
             case .reading:
                 Section { HStack { ProgressView(); Text("Export wird gelesen …").padding(.leading, 8) } }
             case .preview(let preview):
                 previewSections(preview, model: model)
-            case .done(let result):
-                doneSection(result, model: model)
+            case .done(let summary):
+                doneSection(summary, model: model)
             case .failed(let message):
                 Section { Text(message).foregroundStyle(.red) }
-                instructions
+                instructions(model)
             }
         }
         .fileImporter(isPresented: $isPicking, allowedContentTypes: [.folder]) { result in
@@ -47,32 +45,44 @@ struct NotionImportView: View {
 
     // MARK: Sections
 
-    private var instructions: some View {
+    private func instructions(_ model: NotionImportModel) -> some View {
         Group {
             Section {
+                @Bindable var model = model
+                Picker("Importieren", selection: $model.target) {
+                    Text("Tagebuch mit Gott").tag(NotionImportTarget.journal)
+                    Text("Bible Study").tag(NotionImportTarget.bibleStudy)
+                }
+                .pickerStyle(.segmented)
                 Button { isPicking = true } label: { Label("Export-Ordner wählen", systemImage: "folder") }
             } footer: {
                 Text("Exportiere in Notion mit „Markdown & CSV“, entpacke die Datei in der Dateien-App (Tipp auf die ZIP-Datei) und wähle dann den entpackten Ordner. Eine ZIP-Datei liest Tagwerk nicht selbst.")
             }
             Section {
-                Text("Importiert werden die Seiten, die in Notion zu „Tagebuch mit Gott“ gehören. Der Text bleibt auf deinem iPhone.")
-                    .font(.footnote).foregroundStyle(.secondary)
+                Group {
+                    if model.target == .journal {
+                        Text("Importiert werden die Seiten, die in Notion zu „Tagebuch mit Gott“ gehören. Der Text bleibt auf deinem iPhone.")
+                    } else {
+                        Text("Importiert werden die Seiten, die in Notion zu „Bible Studies“ gehören, je Bibelbuch eine Notiz. Sitzungen lassen sich daraus nicht ableiten. Der Text bleibt auf deinem iPhone.")
+                    }
+                }
+                .font(.footnote).foregroundStyle(.secondary)
             }
         }
     }
 
     @ViewBuilder
     private func previewSections(_ preview: NotionImportModel.Preview, model: NotionImportModel) -> some View {
-        let plan = preview.plan
         let counts = preview.counts
         Section("Vorschau") {
-            LabeledContent("Einträge im Export", value: "\(plan.foundCount)")
-            if let first = plan.firstDay, let last = plan.lastDay {
+            LabeledContent(preview.isBibleStudy ? String(localized: "Seiten im Export") : String(localized: "Einträge im Export"), value: "\(preview.foundCount)")
+            if let first = preview.firstDay, let last = preview.lastDay {
                 LabeledContent("Zeitraum", value: Self.period(first, last, calendar: environment.planning.calendar))
             }
             LabeledContent("Neu", value: "\(counts.newCount)")
             if counts.conflictCount > 0 {
-                LabeledContent("Tag hat schon einen Eintrag", value: "\(counts.conflictCount)")
+                LabeledContent(preview.isBibleStudy ? String(localized: "Buch hat schon eine Notiz") : String(localized: "Tag hat schon einen Eintrag"),
+                               value: "\(counts.conflictCount)")
             }
             if counts.alreadyImportedCount > 0 {
                 LabeledContent("Schon importiert", value: "\(counts.alreadyImportedCount)")
@@ -82,14 +92,14 @@ struct NotionImportView: View {
             Section {
                 EmptyView()
             } footer: {
-                Text("Hat ein Tag schon einen Eintrag, wird der importierte Text darunter angehängt, hinter einer Trennlinie. Nichts wird überschrieben.")
+                Text("Gibt es dafür schon einen Text, wird der importierte Text darunter angehängt, hinter einer Trennlinie. Nichts wird überschrieben.")
             }
         }
-        if !plan.skipped.isEmpty {
+        if !preview.leftOutTitles.isEmpty {
             Section {
-                ForEach(plan.skipped, id: \.title) { Text($0.title) }
+                ForEach(preview.leftOutTitles, id: \.self) { Text($0) }
             } header: {
-                Text("Ohne erkennbares Datum, nicht importiert")
+                Text(preview.isBibleStudy ? String(localized: "Kein Bibelbuch, nicht importiert") : String(localized: "Ohne erkennbares Datum, nicht importiert"))
             }
         }
         Section {
@@ -99,9 +109,9 @@ struct NotionImportView: View {
         }
     }
 
-    private func doneSection(_ result: NoteStore.ImportResult, model: NotionImportModel) -> some View {
+    private func doneSection(_ summary: NotionImportModel.Summary, model: NotionImportModel) -> some View {
         Section {
-            Label(Self.summary(result), systemImage: "checkmark.circle").foregroundStyle(.green)
+            Label(Self.summary(summary), systemImage: "checkmark.circle").foregroundStyle(.green)
             Button("Weiteren Export importieren") { model.reset() }
         }
     }
@@ -115,7 +125,7 @@ struct NotionImportView: View {
         return first == last ? from : "\(from) – \(to)"
     }
 
-    static func summary(_ result: NoteStore.ImportResult) -> String {
+    static func summary(_ result: NotionImportModel.Summary) -> String {
         var parts = [String(localized: "\(result.created) neu")]
         if result.appended > 0 { parts.append(String(localized: "\(result.appended) angehängt")) }
         if result.skipped > 0 { parts.append(String(localized: "\(result.skipped) übersprungen")) }

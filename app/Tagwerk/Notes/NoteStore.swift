@@ -102,7 +102,7 @@ final class NoteStore {
         switch kind {
         case .morning, .evening: record.folderID = nil
         case .journal: record.folderID = ensureJournalFolder().id
-        case .free: record.folderID = folderID
+        case .free, .bibleStudy: record.folderID = folderID
         }
         context.insert(record)
         save()

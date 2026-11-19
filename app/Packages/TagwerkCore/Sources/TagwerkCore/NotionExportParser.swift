@@ -274,6 +274,30 @@ public enum NotionImportPlanner {
         return preview
     }
 
+    /// The same for Bible Study notes: a page for a book that has a note (`existingBookKeys`) is a conflict (its text is
+    /// appended), a second page for a book in the same import too. Pages whose title is not a book are listed as unmatched.
+    public static func biblePreview(pages: [NotionBibleNote], existingBookKeys: Set<String>, importedIDs: Set<String>)
+        -> (preview: NotionImportPreview, unmatched: [String]) {
+        var preview = NotionImportPreview()
+        var unmatched: [String] = []
+        var taken = existingBookKeys
+        for page in pages {
+            if importedIDs.contains(page.id) {
+                preview.alreadyImportedCount += 1
+            } else if let book = BibleBooks.book(matching: page.title) {
+                if taken.contains(book.key) {
+                    preview.conflictCount += 1
+                } else {
+                    preview.newCount += 1
+                    taken.insert(book.key)
+                }
+            } else {
+                unmatched.append(page.title)
+            }
+        }
+        return (preview, unmatched)
+    }
+
     /// The separator line under which imported text is appended to an existing entry.
     public static func separator(locale: Locale) -> String {
         Localized.string("Aus Notion importiert", in: VoiceLanguage.from(locale: locale), bundle: .module)

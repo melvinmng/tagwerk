@@ -9,7 +9,7 @@ enum ModelContainerFactory {
                                      PlanSuggestionRecord.self, ChatThreadRecord.self,
                                      EventDeadlineMark.self, DeadlineEventLink.self, DeadlineSuggestionDismissal.self,
                                      MealRecord.self, DrinkRecord.self, WorkoutRecord.self, PendingHealthDeletion.self,
-                                     ShoppingCategory.self, ShoppingAssignment.self, NoteRecord.self, NoteFolderRecord.self,
+                                     ShoppingCategory.self, ShoppingAssignment.self, NoteRecord.self, NoteFolderRecord.self, BibleStudySessionRecord.self,
                                      HabitRecord.self, HabitCheckRecord.self,
                                      RoutineDayRecord.self, EveningChecklistItemRecord.self, FocusMarkRecord.self,
                                      WeekReflectionRecord.self])

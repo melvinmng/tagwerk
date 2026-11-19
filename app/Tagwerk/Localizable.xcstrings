@@ -2409,6 +2409,16 @@
         }
       }
     },
+    "Abschließen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Complete"
+          }
+        }
+      }
+    },
     "Abspielen": {
       "shouldTranslate": false
     },
@@ -2838,6 +2848,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Close as not planned"
+          }
+        }
+      }
+    },
+    "Altes Testament": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Old Testament"
           }
         }
       }
@@ -3884,6 +3904,36 @@
         }
       }
     },
+    "Bible Study": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bible Study"
+          }
+        }
+      }
+    },
+    "Bible Study abschließen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Complete Bible Study"
+          }
+        }
+      }
+    },
+    "Bible Study starten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start Bible Study"
+          }
+        }
+      }
+    },
     "Bis": {
       "localizations": {
         "en": {
@@ -3956,6 +4006,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Delete blocks"
+          }
+        }
+      }
+    },
+    "Buch": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Book"
+          }
+        }
+      }
+    },
+    "Buch hat schon eine Notiz": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Book already has a note"
           }
         }
       }
@@ -4605,6 +4675,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "The event has changed."
+          }
+        }
+      }
+    },
+    "Der Text deiner Notizen bleibt auf deinem iPhone und geht nie an ChatGPT.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The text of your notes stays on your iPhone and never goes to ChatGPT."
           }
         }
       }
@@ -6861,6 +6941,16 @@
         }
       }
     },
+    "Gibt es dafür schon einen Text, wird der importierte Text darunter angehängt, hinter einer Trennlinie. Nichts wird überschrieben.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "If there is already text for it, the imported text is appended below it, after a separator line. Nothing is overwritten."
+          }
+        }
+      }
+    },
     "Gilt ab %@.": {
       "localizations": {
         "en": {
@@ -7122,6 +7212,7 @@
       }
     },
     "Hat ein Tag schon einen Eintrag, wird der importierte Text darunter angehängt, hinter einer Trennlinie. Nichts wird überschrieben.": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -7451,6 +7542,16 @@
         }
       }
     },
+    "Im gewählten Ordner wurden keine Seiten von „Bible Studies“ gefunden. Wähle den entpackten Export (den Ordner mit den .md- und .csv-Dateien).": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No pages from “Bible Studies” were found in the chosen folder. Choose the unpacked export (the folder with the .md and .csv files)."
+          }
+        }
+      }
+    },
     "Import": {
       "localizations": {
         "en": {
@@ -7477,6 +7578,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Import"
+          }
+        }
+      }
+    },
+    "Importiert werden die Seiten, die in Notion zu „Bible Studies“ gehören, je Bibelbuch eine Notiz. Sitzungen lassen sich daraus nicht ableiten. Der Text bleibt auf deinem iPhone.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pages that belong to “Bible Studies” in Notion are imported, one note per book of the Bible. Sessions can’t be derived from them. The text stays on your iPhone."
           }
         }
       }
@@ -7870,6 +7981,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "No effort"
+          }
+        }
+      }
+    },
+    "Kein Bibelbuch, nicht importiert": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not a book of the Bible, not imported"
           }
         }
       }
@@ -9532,6 +9653,16 @@
         }
       }
     },
+    "Neues Testament": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New Testament"
+          }
+        }
+      }
+    },
     "Nicht ausgeführt": {
       "localizations": {
         "en": {
@@ -10956,6 +11087,16 @@
         }
       }
     },
+    "Seiten im Export": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pages in the export"
+          }
+        }
+      }
+    },
     "Senden": {
       "localizations": {
         "en": {
@@ -11135,6 +11276,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Siri & Shortcuts"
+          }
+        }
+      }
+    },
+    "Sitzung läuft": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Session in progress"
           }
         }
       }
@@ -11434,6 +11585,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Starting …"
+          }
+        }
+      }
+    },
+    "Stelle, z. B. 3,21-31": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Passage, e.g. 3,21-31"
           }
         }
       }

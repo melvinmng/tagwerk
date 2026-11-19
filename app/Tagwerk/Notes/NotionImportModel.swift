@@ -3,8 +3,9 @@ import Observation
 import TagwerkCore
 
 /// What an import reads from the unpacked Notion export: the journal "Tagebuch mit Gott" or the Bible Study notes.
-enum NotionImportTarget: Hashable {
+enum NotionImportTarget: Hashable, CaseIterable {
     case journal
+    case bibleStudy
 }
 
 /// Reads the folder of an unpacked Notion export, shows what an import would do and then stores it. Only a folder is read
@@ -12,19 +13,43 @@ enum NotionImportTarget: Hashable {
 @MainActor
 @Observable
 final class NotionImportModel {
+    /// What was found, ready to be stored.
+    enum Payload: Equatable {
+        case journal(NotionJournalPlan)
+        case bibleStudy([NotionBibleNote])
+    }
+
     struct Preview: Equatable {
-        var plan: NotionJournalPlan
+        var payload: Payload
         var counts: NotionImportPreview
+        var foundCount: Int
+        var firstDay: PlanDay?
+        var lastDay: PlanDay?
+        /// Journal: pages without a usable date. Bible Study: pages whose title is not a book.
+        var leftOutTitles: [String]
+
+        var isBibleStudy: Bool {
+            if case .bibleStudy = payload { return true }
+            return false
+        }
+    }
+
+    struct Summary: Equatable {
+        var created = 0
+        var appended = 0
+        var skipped = 0
+        var leftOutTitles: [String] = []
     }
 
     enum Phase: Equatable {
         case idle
         case reading
         case preview(Preview)
-        case done(NoteStore.ImportResult)
+        case done(Summary)
         case failed(String)
     }
 
+    var target: NotionImportTarget = .journal
     private(set) var phase: Phase = .idle
 
     @ObservationIgnored private let store: NoteStore
@@ -39,10 +64,17 @@ final class NotionImportModel {
     func load(folder url: URL) async {
         phase = .reading
         let calendar = self.calendar
-        let outcome = await Task.detached(priority: .userInitiated) { () -> Result<NotionJournalPlan, NotionExportReader.ReadError> in
+        let target = self.target
+        let outcome = await Task.detached(priority: .userInitiated) { () -> Result<Payload, NotionExportReader.ReadError> in
             do {
                 let files = try NotionExportReader.readFiles(in: url)
-                return .success(NotionExportParser.journalPlan(in: files, calendar: calendar))
+                switch target {
+                case .journal:
+                    return .success(.journal(NotionExportParser.journalPlan(in: files, calendar: calendar)))
+                case .bibleStudy:
+                    let sections = BibleStudyTemplate.importSections(locale: Locale(identifier: "de_DE"))
+                    return .success(.bibleStudy(NotionExportParser.bibleStudyNotes(in: files, sections: sections)))
+                }
             } catch let error as NotionExportReader.ReadError {
                 return .failure(error)
             } catch {
@@ -52,20 +84,44 @@ final class NotionImportModel {
         switch outcome {
         case .failure(let error):
             phase = .failed(Self.message(for: error))
-        case .success(let plan):
+        case .success(let payload):
+            phase = makePreview(payload, target: target)
+        }
+    }
+
+    private func makePreview(_ payload: Payload, target: NotionImportTarget) -> Phase {
+        let imported = store.importedSourceIDs
+        switch payload {
+        case .journal(let plan):
             guard plan.foundCount > 0 else {
-                phase = .failed(String(localized: "Im gewählten Ordner wurden keine Einträge von „Tagebuch mit Gott“ gefunden. Wähle den entpackten Export (den Ordner mit den .md- und .csv-Dateien)."))
-                return
+                return .failed(String(localized: "Im gewählten Ordner wurden keine Einträge von „Tagebuch mit Gott“ gefunden. Wähle den entpackten Export (den Ordner mit den .md- und .csv-Dateien)."))
             }
-            let counts = NotionImportPlanner.preview(entries: plan.entries, existingDayKeys: store.journalDayKeys,
-                                                    importedIDs: store.importedSourceIDs)
-            phase = .preview(Preview(plan: plan, counts: counts))
+            let counts = NotionImportPlanner.preview(entries: plan.entries, existingDayKeys: store.journalDayKeys, importedIDs: imported)
+            return .preview(Preview(payload: payload, counts: counts, foundCount: plan.foundCount, firstDay: plan.firstDay,
+                                    lastDay: plan.lastDay, leftOutTitles: plan.skipped.map(\.title)))
+        case .bibleStudy(let pages):
+            guard !pages.isEmpty else {
+                return .failed(String(localized: "Im gewählten Ordner wurden keine Seiten von „Bible Studies“ gefunden. Wähle den entpackten Export (den Ordner mit den .md- und .csv-Dateien)."))
+            }
+            let existing = Set(store.notes(.all).filter { $0.kind == .bibleStudy }.compactMap(\.bookKey))
+            let result = NotionImportPlanner.biblePreview(pages: pages, existingBookKeys: existing, importedIDs: imported)
+            return .preview(Preview(payload: payload, counts: result.preview, foundCount: pages.count, firstDay: nil, lastDay: nil,
+                                    leftOutTitles: result.unmatched))
         }
     }
 
     func runImport() {
         guard case .preview(let preview) = phase else { return }
-        phase = .done(store.importJournal(preview.plan.entries))
+        switch preview.payload {
+        case .journal(let plan):
+            let result = store.importJournal(plan.entries)
+            phase = .done(Summary(created: result.created, appended: result.appended, skipped: result.skipped,
+                                  leftOutTitles: plan.skipped.map(\.title)))
+        case .bibleStudy(let pages):
+            let result = store.importBibleNotes(pages)
+            phase = .done(Summary(created: result.created, appended: result.appended, skipped: result.skipped,
+                                  leftOutTitles: result.unmatched))
+        }
     }
 
     func reset() { phase = .idle }

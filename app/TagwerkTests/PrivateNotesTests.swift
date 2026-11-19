@@ -5,13 +5,13 @@ import Testing
 import TagwerkCore
 @testable import Tagwerk
 
-/// Journal entries (and later Bible Study notes) never go to ChatGPT, the assistant's tools or the widget. These tests
+/// Journal entries and Bible Study notes never go to ChatGPT, the assistant's tools or the widget. These tests
 /// guard every place that sends or shares note content.
 @MainActor
 struct PrivateNotesTests {
     @Test func everyPrivateKind_isCoveredByThePredicate() {
         let privateKinds = NoteKind.allCases.filter(\.isPrivate)
-        #expect(privateKinds.contains(.journal))
+        #expect(privateKinds.contains(.journal) && privateKinds.contains(.bibleStudy))
         #expect(!NoteKind.free.isPrivate && !NoteKind.morning.isPrivate && !NoteKind.evening.isPrivate)
     }
 
@@ -50,6 +50,8 @@ struct PrivateNotesTests {
         // Whatever kind the caller names, the stored kind of the note decides as well.
         await model.fetch(noteID: entry.id, text: "Erfundener Text", kind: .journal)
         await model.fetch(noteID: entry.id, text: "Erfundener Text", kind: .evening)
+        let study = notes.openBibleNote(book: BibleBooks.book(number: 45)!, locale: Locale(identifier: "de_DE"))
+        await model.fetch(noteID: study.id, text: "Erfundener Text", kind: .free)
         #expect(responder.calls == 0 && counter.models == 0)
         #expect(model.phase == .idle)
     }

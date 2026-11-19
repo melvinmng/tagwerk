@@ -346,3 +346,18 @@ Abhängigkeiten: 2 und 3 brauchen die Ordner aus 1. 4 braucht die Quellen aus 2 
 - Der importierte Text wird immer mit deutschen Überschriften und deutscher Trennzeile geschrieben, weil die Notion-Inhalte deutsch sind.
 - Die Notizen-Ansicht legt den Systemordner „Tagebuch mit Gott“ erst beim ersten Öffnen an. Bis dahin zeigt sie eine Zeile, die ihn anlegt und öffnet.
 - Die Oberfläche (Import, Tagesabschluss-Zeile) ist nur kompiliert und durch Store-Tests abgedeckt, nicht am Gerät gesehen. Der Parser ist nicht gegen eine echte Exportdatei geprüft (Testdaten sind erfunden).
+
+## Stand nach Stufe 3 (Bible Study, #186)
+
+**Gebaut**
+- Core: `BibleBooks` (66 Bücher, deutsche Schreibweise wie in Notion mit englischen Namen, Erkennung über Name, Kürzel, Schreibweise ohne Umlaute oder Punkte und eindeutigen Namensanfang), `BibleStudyTemplate` (Buchnotiz: Name als Titel, „Generelle Gedanken“, „Action Items“, „Notizen“; datierter Sitzungsabschnitt), `NoteKind.bibleStudy` (privat), `NotionImportPlanner.biblePreview`.
+- App: `NoteRecord.bookKey` (eine Notiz je Buch), `BibleStudySessionRecord` (im Schema), `NoteStore+BibleStudy` (Systemordner, Buchnotiz, Sitzung starten und abschließen, abgeschlossene Tage, Import).
+- Oberfläche: im Systemordner „Bible Study starten“ (Blatt mit Buchwahl, zuletzt gelesenes Buch vorgeschlagen, Stelle) und offene Sitzungen mit „Abschließen“; im Editor „Bible Study abschließen“ und der Cursor am Ende des neuen Abschnitts; Einstieg im Import (Auswahl Tagebuch / Bible Study); Demo-Daten (Römer mit einer abgeschlossenen Sitzung von gestern).
+- Datenschutz: wie Stufe 2 über `NoteKind.isPrivate`, der Test für die Vorschläge deckt auch Bible-Study-Notizen ab.
+
+**Entscheidungen und Abweichungen**
+- Buchnotiz und Sitzung hängen über `bookKey` (Nummer im Kanon als Text) zusammen, nicht über den Titel, damit eine umbenannte Titelzeile nichts zerbricht. Der Import ordnet Notion-Titel mit `BibleBooks.book(matching:)` einem Buch zu. Titel, die kein Buch sind („Kochbuch“), erscheinen in der Vorschau als nicht importiert.
+- Der Tag einer Sitzung folgt der Abendregel (vor 04:00 zählt zum Vortag), wie beim Tagebuch.
+- Der Datumstitel im Abschnitt ist fest „TT.MM.JJJJ“, damit alle Abschnitte einer Notiz gleich aussehen.
+- Der Einstieg im Blatt „Tagesstart“ ist schon in Stufe 3 vorgesehen und kommt mit der Gewohnheitsquelle in Stufe 4, weil er davon abhängt.
+- Der Import legt nie Sitzungen an. Eine Buchnotiz aus Notion beginnt mit dem Buchnamen, danach folgt der umgewandelte Text. Hat das Buch schon eine Notiz, wird der Text unter der Trennlinie angehängt.

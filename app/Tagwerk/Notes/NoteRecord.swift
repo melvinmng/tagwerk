@@ -11,7 +11,7 @@ final class NoteRecord {
     var text: String = ""
     var createdAt: Date = Date.now
     var updatedAt: Date = Date.now
-    /// Raw value of `NoteKind`: "free", "morning", "evening" or "journal".
+    /// Raw value of `NoteKind`: "free", "morning", "evening", "journal" or "bibleStudy".
     var kindRaw: String = "free"
     /// "YYYY-MM-DD" (`NoteDayKey`), only for morning, evening and journal notes.
     var dayKey: String? = nil
@@ -29,6 +29,8 @@ final class NoteRecord {
     /// Ids of the Notion pages this note was filled from, separated by spaces; `nil` for notes that were never imported.
     /// An import of the same page twice is skipped; a day that already had an entry gets later pages appended.
     var importSourceID: String? = nil
+    /// `BibleBook.key` of a Bible Study note (one note per book); `nil` for every other note.
+    var bookKey: String? = nil
 
     init(text: String, kind: NoteKind = .free, dayKey: String? = nil, wasDictated: Bool = false, now: Date = .now) {
         self.text = text

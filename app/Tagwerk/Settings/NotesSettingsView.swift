@@ -16,7 +16,7 @@ struct NotesSettingsView: View {
                 Text("Angeheftete Notizen stehen immer oben. Die Wahl gilt für alle Ordner.")
             }
             Section {
-                NavigationLink("Aus Notion importieren") { NotionImportView(target: .journal) }
+                NavigationLink("Aus Notion importieren") { NotionImportView() }
             } header: {
                 Text("Import")
             } footer: {

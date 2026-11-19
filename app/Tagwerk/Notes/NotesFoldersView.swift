@@ -46,6 +46,12 @@ struct NotesFoldersView: View {
                     }
                     .buttonStyle(.plain)
                 }
+                if store.folder(role: .bibleStudy) == nil {
+                    Button { openBibleStudy() } label: {
+                        rowLabel(symbol: Self.symbol(for: .bibleStudy), title: Text("Bible Study"), count: 0, depth: 1)
+                    }
+                    .buttonStyle(.plain)
+                }
             }
             Section {
                 scopeRow(.trash, symbol: "trash", title: "Zuletzt gelöscht", count: store.trashedCount)
@@ -172,6 +178,11 @@ struct NotesFoldersView: View {
 
     private func openJournal() {
         let folder = store.ensureJournalFolder()
+        environment.tasksPath.append(.notesFolder(.folder(folder.id)))
+    }
+
+    private func openBibleStudy() {
+        let folder = store.ensureBibleStudyFolder()
         environment.tasksPath.append(.notesFolder(.folder(folder.id)))
     }
 

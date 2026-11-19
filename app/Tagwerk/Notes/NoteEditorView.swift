@@ -12,6 +12,7 @@ struct NoteEditorView: View {
     @State private var text = ""
     @State private var isLoaded = false
     @State private var wasDeleted = false
+    @State private var selection: TextSelection?
 
     init(noteID: UUID, store: NoteStore) {
         self.noteID = noteID
@@ -20,7 +21,7 @@ struct NoteEditorView: View {
 
     var body: some View {
         let note = store.note(id: noteID)
-        TextEditor(text: $text)
+        TextEditor(text: $text, selection: $selection)
             .padding(.horizontal, 12)
             .navigationTitle(title(of: note))
             .navigationBarTitleDisplayMode(.inline)
@@ -33,6 +34,12 @@ struct NoteEditorView: View {
                             } label: {
                                 Label(note.isPinned ? "Anheftung lösen" : "Anheften", systemImage: note.isPinned ? "pin.slash" : "pin")
                             }
+                        }
+                        if let session = store.openSession(noteID: noteID) {
+                            Button {
+                                store.updateText(noteID, text: text)
+                                store.completeSession(session.id)
+                            } label: { Label("Bible Study abschließen", systemImage: "checkmark.circle") }
                         }
                         ShareLink(item: text) { Label("Teilen", systemImage: "square.and.arrow.up") }
                         // The trash is the way back, so deleting does not ask.
@@ -52,6 +59,8 @@ struct NoteEditorView: View {
                 guard !isLoaded else { return }
                 text = note?.text ?? ""
                 isLoaded = true
+                // A running Bible Study session starts with the cursor below its new section.
+                if store.openSession(noteID: noteID) != nil { selection = TextSelection(insertionPoint: text.endIndex) }
             }
             // Debounced saving: every keystroke restarts the wait.
             .task(id: text) {

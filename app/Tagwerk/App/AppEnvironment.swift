@@ -391,6 +391,7 @@ final class AppEnvironment {
         case .morning: String(localized: "Tagesstart")
         case .evening: String(localized: "Tagesabschluss")
         case .journal: String(localized: "Tagebuch")
+        case .bibleStudy: String(localized: "Bible Study")
         }
     }
 
@@ -455,7 +456,7 @@ final class AppEnvironment {
                 return notes.notes().map { note in
                     let folderName = note.kind == .free ? note.folderID.flatMap { folderNames[$0] } : nil
                     return NoteSearchItem(id: note.id, text: note.text, kindLabel: folderName ?? Self.kindLabel(of: note.kind),
-                                          updatedAt: note.updatedAt, dayKey: note.kind == .free ? nil : note.dayKey)
+                                          updatedAt: note.updatedAt, dayKey: note.kind == .free || note.kind == .bibleStudy ? nil : note.dayKey)
                 }
             },
             shopping: {
