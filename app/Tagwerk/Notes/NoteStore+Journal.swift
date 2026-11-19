@@ -32,6 +32,12 @@ extension NoteStore {
         Set(notes(.all).filter { $0.kind == .journal }.compactMap(\.dayKey))
     }
 
+    /// The days inside `range` with a journal entry that holds more than the unfilled template.
+    func journalDays(in range: ClosedRange<PlanDay>) -> Set<PlanDay> {
+        Set(notes(.all).filter { $0.kind == .journal && !JournalTemplate.isOnlyTemplate($0.text) }
+            .compactMap { $0.dayKey.flatMap(PlanDay.init(dayKey:)) }.filter { range.contains($0) })
+    }
+
     /// Notion page ids of everything imported so far, including notes in the trash (a deleted import is not brought back).
     var importedSourceIDs: Set<String> {
         (notes(.all) + notes(.trash)).reduce(into: Set<String>()) { $0.formUnion(NotionImportPlanner.markerIDs($1.importSourceID)) }

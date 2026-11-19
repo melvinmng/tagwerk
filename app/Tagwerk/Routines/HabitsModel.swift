@@ -9,6 +9,13 @@ import TagwerkCore
 /// Health is read with at most three queries per run (foreign workouts, daily steps and, later, daylight) and only
 /// when the user was asked before. A failed read keeps the values of the last read of the same day, so the counter does
 /// not fall while the phone is locked.
+/// Where the habit sources of the app's own routines read their days from. Each closure gets the 90-day window.
+struct HabitDaySources {
+    var closedDays: @MainActor (ClosedRange<PlanDay>) -> Set<PlanDay> = { _ in [] }
+    var journalDays: @MainActor (ClosedRange<PlanDay>) -> Set<PlanDay> = { _ in [] }
+    var bibleStudyDays: @MainActor (ClosedRange<PlanDay>) -> Set<PlanDay> = { _ in [] }
+}
+
 @MainActor
 @Observable
 final class HabitsModel {
@@ -38,6 +45,7 @@ final class HabitsModel {
     @ObservationIgnored private let intake: IntakeStore
     @ObservationIgnored private let health: any HealthStoring
     @ObservationIgnored private let settings: AppSettings
+    @ObservationIgnored private let daySources: HabitDaySources
     @ObservationIgnored private let now: () -> Date
     /// Last Health values and the day they were read.
     @ObservationIgnored private var healthWorkoutDays: Set<PlanDay> = []
@@ -46,11 +54,12 @@ final class HabitsModel {
     @ObservationIgnored private var healthReadWasComplete = false
 
     init(store: HabitStore, intake: IntakeStore, health: any HealthStoring, settings: AppSettings,
-         calendar: Calendar = .tagwerk, now: @escaping () -> Date = Date.init) {
+         daySources: HabitDaySources = HabitDaySources(), calendar: Calendar = .tagwerk, now: @escaping () -> Date = Date.init) {
         self.store = store
         self.intake = intake
         self.health = health
         self.settings = settings
+        self.daySources = daySources
         self.calendar = calendar
         self.now = now
         self.day = PlanDay(date: now(), calendar: calendar)
@@ -134,7 +143,8 @@ final class HabitsModel {
         }
         facts = HabitFacts(manualChecks: store.checks(in: window), waterMilliliters: water, workoutDays: workoutDays,
                            steps: healthSteps, goalWaterMilliliters: settings.goalWaterMilliliters,
-                           goalSteps: settings.goalStepsPerDay)
+                           goalSteps: settings.goalStepsPerDay, closedDays: daySources.closedDays(window),
+                           journalDays: daySources.journalDays(window), bibleStudyDays: daySources.bibleStudyDays(window))
         day = min(day, today)
         rows = habits.filter { HabitRules.isActive($0, on: day, today: today) }.map { habit in
             Row(habit: habit, isFulfilled: HabitRules.isFulfilled(habit, on: day, facts: facts),
@@ -165,6 +175,23 @@ final class HabitsModel {
         let changed = store.setCheck(id, on: today, checked: true, at: now())
         refreshLocal()
         return changed
+    }
+
+    /// Whether a habit with `source` exists and is not paused.
+    func hasActiveHabit(source: HabitSource) -> Bool {
+        habits.contains { $0.source == source && $0.pausedSince == nil }
+    }
+
+    /// The suggestions that no habit has yet (see `HabitSuggestions`).
+    var missingSuggestions: [HabitSuggestion] { HabitSuggestions.missing(existing: habits) }
+
+    /// Takes over the selected suggestions and returns what was done.
+    @discardableResult
+    func adopt(_ selected: [HabitSuggestion]) -> HabitSuggestions.Plan {
+        let plan = HabitSuggestions.plan(selected: selected, existing: habits)
+        for habit in HabitSuggestions.habits(for: plan, existing: habits, today: today) { store.save(habit) }
+        changedList()
+        return plan
     }
 
     func save(_ habit: Habit) { store.save(habit); changedList() }

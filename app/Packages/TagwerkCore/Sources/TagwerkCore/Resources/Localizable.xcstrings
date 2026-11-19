@@ -457,6 +457,36 @@
         }
       }
     },
+    "Bett machen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Make the bed"
+          }
+        }
+      }
+    },
+    "Bewegung" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Exercise"
+          }
+        }
+      }
+    },
+    "Bible Study" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bible Study"
+          }
+        }
+      }
+    },
     "Brot & Backwaren" : {
       "localizations" : {
         "en" : {
@@ -723,6 +753,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Personal Care"
+          }
+        }
+      }
+    },
+    "Duschen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shower"
           }
         }
       }
@@ -1009,6 +1049,16 @@
         }
       }
     },
+    "Journal schreiben" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Write in journal"
+          }
+        }
+      }
+    },
     "KW %lld · %lld. %@ – %lld. %@" : {
       "localizations" : {
         "de" : {
@@ -1097,6 +1147,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Running"
+          }
+        }
+      }
+    },
+    "Lernen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Study"
+          }
+        }
+      }
+    },
+    "Lesen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Read"
           }
         }
       }
@@ -1267,6 +1337,16 @@
         }
       }
     },
+    "Sonnenlicht" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sunlight"
+          }
+        }
+      }
+    },
     "Sonstiges" : {
       "localizations" : {
         "en" : {
@@ -1283,6 +1363,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Later"
+          }
+        }
+      }
+    },
+    "Tag reflektieren" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reflect on the day"
           }
         }
       }
@@ -1373,6 +1463,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "What was my goal?"
+          }
+        }
+      }
+    },
+    "Wasser trinken" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Drink water"
           }
         }
       }

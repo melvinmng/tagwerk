@@ -176,6 +176,13 @@ final class RoutineStore {
         save()
     }
 
+    /// The days inside `range` whose evening wrap-up was completed.
+    func closedDays(in range: ClosedRange<PlanDay>) -> Set<PlanDay> {
+        _ = revision
+        let records = (try? context.fetch(FetchDescriptor<RoutineDayRecord>(predicate: #Predicate { $0.closeCompletedAt != nil }))) ?? []
+        return Set(records.map { PlanDay(year: $0.year, month: $0.month, day: $0.day) }.filter { range.contains($0) })
+    }
+
     private func dayRecord(_ day: PlanDay) -> RoutineDayRecord? {
         let key = day.dayKey
         return try? context.fetch(FetchDescriptor<RoutineDayRecord>(predicate: #Predicate { $0.dayKey == key })).first

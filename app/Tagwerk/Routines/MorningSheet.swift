@@ -17,6 +17,9 @@ struct MorningSheet: View {
     @State private var isLoaded = false
     @State private var showsAll = false
     @State private var note: NoteFieldModel
+    @Environment(AppEnvironment.self) private var environment
+    @State private var isStartingBibleStudy = false
+    @State private var bibleSheet: JournalSheetTarget?
 
     /// The first field, then one more each time the previous one is filled (at most three).
     private var visibleFields: Int {
@@ -80,6 +83,19 @@ struct MorningSheet: View {
                 if let overview {
                     Section("Heute") { Text(RoutinesModel.overviewText(overview)) }
                 }
+                // Only when a habit is fulfilled by Bible Study: one tap to the start of a session.
+                if model.habits.hasActiveHabit(source: .bibleStudy) {
+                    Section {
+                        Button { isStartingBibleStudy = true } label: {
+                            HStack {
+                                Label("Bible Study starten", systemImage: "book.pages")
+                                Spacer()
+                                Image(systemName: "chevron.right").font(.caption.weight(.semibold)).foregroundStyle(.tertiary)
+                            }
+                        }
+                        .tint(.primary)
+                    }
+                }
                 NoteField(model: note)
             }
             .navigationTitle("Tagesstart")
@@ -101,6 +117,10 @@ struct MorningSheet: View {
                 }
                 overview = await model.overview(for: day)
             }
+            .sheet(isPresented: $isStartingBibleStudy) {
+                BibleStudyStartSheet(store: environment.notes) { noteID in bibleSheet = JournalSheetTarget(id: noteID) }
+            }
+            .sheet(item: $bibleSheet) { target in NoteEditorSheet(noteID: target.id) }
             // Swiping the sheet away: what was typed stays, the start is not marked as done.
             .onDisappear { if isLoaded { model.setGratitude(gratitude, on: day) } }
         }

@@ -6,6 +6,7 @@ struct HabitListView: View {
     let model: HabitsModel
     @State private var sheet: Habit?
     @State private var creating = false
+    @State private var adoptingSuggestions = false
 
     var body: some View {
         List {
@@ -31,6 +32,10 @@ struct HabitListView: View {
                 }
                 Button { creating = true } label: { Label("Gewohnheit anlegen", systemImage: "plus.circle") }
                     .disabled(!model.canAddHabit)
+                if !model.missingSuggestions.isEmpty {
+                    Button { adoptingSuggestions = true } label: { Label("Vorschlag übernehmen", systemImage: "sparkles") }
+                        .disabled(!model.canAddHabit)
+                }
             } footer: {
                 if !model.canAddHabit {
                     Text("Höchstens \(HabitRules.maximumActive) aktive Gewohnheiten. Pausiere oder lösche eine, um eine neue anzulegen.")
@@ -42,6 +47,7 @@ struct HabitListView: View {
         .toolbar { EditButton() }
         .sheet(item: $sheet) { habit in HabitSheet(model: model, habit: habit) }
         .sheet(isPresented: $creating) { HabitSheet(model: model, habit: nil) }
+        .sheet(isPresented: $adoptingSuggestions) { HabitSuggestionSheet(model: model) }
     }
 
     /// "Täglich · Wasserziel erreicht · pausiert".

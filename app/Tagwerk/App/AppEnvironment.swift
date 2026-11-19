@@ -213,7 +213,13 @@ final class AppEnvironment {
         self.healthMirror = mirror
         self.capture = CaptureModel(store: intake, mirror: mirror, health: healthStore, settings: settings)
         self.routineStore = RoutineStore(context: context)
-        self.habits = HabitsModel(store: HabitStore(context: context), intake: intake, health: healthStore, settings: settings)
+        // The habit sources of the routines read the evening wrap-ups, the journal and the Bible Study sessions.
+        let routineDays = self.routineStore
+        let noteDays = self.notes
+        self.habits = HabitsModel(store: HabitStore(context: context), intake: intake, health: healthStore, settings: settings,
+                                  daySources: HabitDaySources(closedDays: { routineDays.closedDays(in: $0) },
+                                                              journalDays: { noteDays.journalDays(in: $0) },
+                                                              bibleStudyDays: { noteDays.completedSessionDays(in: $0) }))
         self.mealEstimator = MealEstimator(responder: ai.client, model: { try await ai.selectedModel() },
                                            hasConsent: { settings.mealEstimationConsent })
         self.shoppingSorter = ShoppingSorter(responder: ai.client, model: { try await ai.selectedModel() },

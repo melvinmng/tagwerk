@@ -183,4 +183,28 @@ struct HabitRulesTests {
         #expect(PlanDay(dayKey: "2026-11-08") == PlanDay(year: 2026, month: 11, day: 8))
         #expect(PlanDay(dayKey: "nope") == nil)
     }
+
+    @Test func fulfilled_byTheRoutineSources() {
+        let closed = habit(start: day(11, 1), source: .eveningClosed)
+        let journal = habit(start: day(11, 1), source: .journal)
+        let bible = habit(start: day(11, 1), source: .bibleStudy)
+        var data = HabitFacts.empty
+        #expect(![closed, journal, bible].contains { HabitRules.isFulfilled($0, on: today, facts: data) })
+        data.closedDays = [today]
+        #expect(HabitRules.isFulfilled(closed, on: today, facts: data))
+        #expect(!HabitRules.isFulfilled(journal, on: today, facts: data) && !HabitRules.isFulfilled(bible, on: today, facts: data))
+        data.journalDays = [today]
+        data.bibleStudyDays = [day(11, 17)]
+        #expect(HabitRules.isFulfilled(journal, on: today, facts: data))
+        #expect(!HabitRules.isFulfilled(bible, on: today, facts: data))
+        #expect(HabitRules.isFulfilled(bible, on: day(11, 17), facts: data))
+        #expect(HabitRules.isSourceFulfilled(bible, on: day(11, 17), facts: data))
+    }
+
+    @Test func routineSources_countInStreaks() {
+        let closed = habit(start: day(11, 14), source: .eveningClosed)
+        var data = HabitFacts.empty
+        data.closedDays = [day(11, 16), day(11, 17), day(11, 18)]
+        #expect(HabitRules.streak(closed, today: today, facts: data, calendar: calendar) == .days(3, isCapped: false))
+    }
 }

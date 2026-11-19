@@ -3934,6 +3934,16 @@
         }
       }
     },
+    "Bible-Study-Sitzung abgeschlossen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bible Study session completed"
+          }
+        }
+      }
+    },
     "Bis": {
       "localizations": {
         "en": {
@@ -7382,6 +7392,16 @@
         }
       }
     },
+    "Höchstens %lld aktive Gewohnheiten. Jede automatische Quelle gilt für höchstens eine Gewohnheit; ist sie schon vergeben, hakst du die Gewohnheit von Hand ab.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "At most %lld active habits. Each automatic source serves one habit at most; if it is already used, you tick the habit by hand."
+          }
+        }
+      }
+    },
     "Höchstens %lld aktive Gewohnheiten. Pausiere oder lösche eine, um eine neue anzulegen.": {
       "localizations": {
         "en": {
@@ -10375,6 +10395,16 @@
         }
       }
     },
+    "Passt nicht mehr dazu: Pausiere oder lösche eine Gewohnheit.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No longer fits: pause or delete a habit."
+          }
+        }
+      }
+    },
     "Pause": {
       "localizations": {
         "en": {
@@ -10727,6 +10757,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Add items in Settings"
+          }
+        }
+      }
+    },
+    "Quelle schon vergeben: Du hakst sie von Hand ab.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Source already used: you tick it by hand."
           }
         }
       }
@@ -11280,6 +11320,16 @@
         }
       }
     },
+    "Sitzung abgeschlossen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Session completed"
+          }
+        }
+      }
+    },
     "Sitzung läuft": {
       "localizations": {
         "en": {
@@ -11709,6 +11759,16 @@
         }
       }
     },
+    "Tagebuch geschrieben": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Journal written"
+          }
+        }
+      }
+    },
     "Tagebuch mit Gott": {
       "localizations": {
         "en": {
@@ -11735,6 +11795,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Evening wrap-up"
+          }
+        }
+      }
+    },
+    "Tagesabschluss abgeschlossen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wrap-up completed"
+          }
+        }
+      }
+    },
+    "Tagesabschluss erledigt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Evening wrap-up done"
           }
         }
       }

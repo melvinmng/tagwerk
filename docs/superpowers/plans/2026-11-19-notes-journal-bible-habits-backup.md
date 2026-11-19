@@ -361,3 +361,20 @@ Abhängigkeiten: 2 und 3 brauchen die Ordner aus 1. 4 braucht die Quellen aus 2 
 - Der Datumstitel im Abschnitt ist fest „TT.MM.JJJJ“, damit alle Abschnitte einer Notiz gleich aussehen.
 - Der Einstieg im Blatt „Tagesstart“ ist schon in Stufe 3 vorgesehen und kommt mit der Gewohnheitsquelle in Stufe 4, weil er davon abhängt.
 - Der Import legt nie Sitzungen an. Eine Buchnotiz aus Notion beginnt mit dem Buchnamen, danach folgt der umgewandelte Text. Hat das Buch schon eine Notiz, wird der Text unter der Trennlinie angehängt.
+
+## Stand nach Stufe 4 (Gewohnheiten-Vorschlag, #181)
+
+**Gebaut**
+- Core: `HabitSource.eveningClosed`, `.journal`, `.bibleStudy`; `HabitFacts.closedDays`/`journalDays`/`bibleStudyDays`; `HabitRules.isSourceFulfilled` für die drei Quellen (Quote, Serie und Zähler arbeiten unverändert darauf); `HabitSuggestions` mit den zehn Gewohnheiten (Namen lokalisiert, Symbol, Quelle), `missing` (Namensvergleich ohne Groß-/Kleinschreibung und Akzente), `plan` (Höchstzahl, eine automatische Quelle je Gewohnheit) und `habits(for:existing:today:)`.
+- App: `HabitDaySources` (Tage aus `RoutineStore.closedDays`, `NoteStore.journalDays`, `NoteStore.completedSessionDays`) in `HabitsModel`, `HabitsModel.adopt` und `missingSuggestions`, `HabitText` (Titel und Details), Auswahl der Quellen im `HabitSheet`, `HabitSuggestionSheet` (Häkchen je Gewohnheit, vorausgewählt, Hinweise zu vergebenen Quellen und zur Höchstzahl), Knopf „Vorschlag übernehmen“ in `HabitListView`, Zeile „Bible Study starten“ im Blatt „Tagesstart“, wenn eine aktive Gewohnheit mit Quelle Bible Study existiert.
+
+**Entscheidungen und Abweichungen**
+- Zählt ein Tagebucheintrag: nur ein lebender (nicht gelöschter) Eintrag des Tages, der mehr als die Vorlage enthält (`JournalTemplate.isOnlyTemplate`).
+- Eine Bible-Study-Sitzung zählt am Tag, an dem sie gestartet wurde (Abendregel), sobald sie abgeschlossen ist.
+- Das Tagesabschluss-Häkchen liest `RoutineDayRecord.closeCompletedAt` des Tages. Die Quelle bleibt im Blatt und in den Gewohnheiten rein berechnet, es wird nichts gespeichert.
+- Bei der Übernahme zählen pausierte Gewohnheiten nicht gegen `maximumActive`, ihre Quelle ist aber weiter vergeben (wie `takenSources`). Was nicht mehr passt, steht im Blatt mit Hinweis und wird nicht übernommen.
+- „Sonnenlicht“ ist manuell, solange die Quelle `daylight` nicht gebaut ist (wie im Plan). Das Symbol `shower` und `book.pages` setzt ein ausreichend neues SF-Symbol-Set voraus; auf iOS 27 vorhanden, nicht am Gerät gesehen.
+- Die Auswahl im Blatt nutzt die Namen zum Zeitpunkt des Öffnens (Sprache der App).
+
+**Offen**
+- Der Import der Häkchen-Historie aus Notion und die Darstellung automatisch erfüllter Gewohnheiten (#173, Punkt 11) stehen weiter im Design-Sammelissue.

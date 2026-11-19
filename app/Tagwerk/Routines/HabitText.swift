@@ -66,6 +66,12 @@ enum HabitText {
         case .daylight:
             let minutes = facts.daylightMinutes[day] ?? 0
             return String(localized: "\(minutes) von \(habit.daylightMinutes) min Tageslicht")
+        case .eveningClosed:
+            return facts.closedDays.contains(day) ? String(localized: "Tagesabschluss abgeschlossen") : nil
+        case .journal:
+            return facts.journalDays.contains(day) ? String(localized: "Tagebuch geschrieben") : nil
+        case .bibleStudy:
+            return facts.bibleStudyDays.contains(day) ? String(localized: "Sitzung abgeschlossen") : nil
         }
     }
 
@@ -83,6 +89,9 @@ enum HabitText {
         case .workout: String(localized: "Training erfasst")
         case .steps: String(localized: "Schrittziel erreicht")
         case .daylight: String(localized: "Zeit bei Tageslicht")
+        case .eveningClosed: String(localized: "Tagesabschluss erledigt")
+        case .journal: String(localized: "Tagebuch geschrieben")
+        case .bibleStudy: String(localized: "Bible-Study-Sitzung abgeschlossen")
         }
     }
 }
