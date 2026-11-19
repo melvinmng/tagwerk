@@ -153,7 +153,7 @@ final class AssistantModel {
             }
         }
         let language = VoiceLanguage.detect(texts.joined(separator: " "), fallback: fallback)
-        let cards = calls.map { describe($0, language: language) }.map { (title: $0.title, change: $0.change) }
+        let cards = calls.map { describe($0, language: language, spoken: true) }.map { (title: $0.title, change: $0.change) }
         let parts = (executed ? [ActionAnnouncement.executed(language)] : []) + texts
         var speech = parts
         let open = openCards
@@ -239,7 +239,7 @@ final class AssistantModel {
         let language = VoiceLanguage.detect(texts.joined(separator: " ").isEmpty ? userText : texts.joined(separator: " "),
                                             fallback: .detect(userText, fallback: .app))
         // Cards are announced in the language of the answer, not mixed with the app language.
-        let cards = calls.map { describe($0, language: language) }.map { (title: $0.title, change: $0.change) }
+        let cards = calls.map { describe($0, language: language, spoken: true) }.map { (title: $0.title, change: $0.change) }
         if announcesActions(), let announcement = ActionAnnouncement.text(for: cards, language: language) {
             texts.append(announcement)
         }
@@ -444,7 +444,8 @@ final class AssistantModel {
         language == .app ? .current : language.locale
     }
 
-    func describe(_ call: ToolCall, language: VoiceLanguage = .app) -> ActionCard {
+    /// `spoken`: the card is read aloud; texts then avoid symbols that speech drops (the screen keeps them).
+    func describe(_ call: ToolCall, language: VoiceLanguage = .app, spoken: Bool = false) -> ActionCard {
         let args = (try? JSONSerialization.jsonObject(with: call.arguments) as? [String: Any]) ?? [:]
         func string(_ key: String) -> String? { (args[key] as? String).flatMap { $0.isEmpty ? nil : $0 } }
         func text(_ key: String.LocalizationValue) -> String { Localized.string(key, in: language, bundle: .main) }
@@ -530,10 +531,18 @@ final class AssistantModel {
             // One card for every change of the call: what is added (with quantity) and what is checked off.
             let additions = (args["add"] as? [[String: Any]] ?? []).compactMap { entry -> String? in
                 guard let name = entry["name"] as? String, !name.isEmpty else { return nil }
-                return "＋ " + [entry["quantity"] as? String, name].compactMap { $0 }.joined(separator: " ")
+                return [entry["quantity"] as? String, name].compactMap { $0 }.joined(separator: " ")
             }
-            let checks = (args["check_off"] as? [String] ?? []).map { "✓ " + (shoppingItemName($0) ?? $0) }
-            return ActionCard(title: text("Einkaufsliste ändern"), change: (additions + checks).joined(separator: " · "))
+            let checks = (args["check_off"] as? [String] ?? []).map { shoppingItemName($0) ?? $0 }
+            guard spoken else {
+                let marks = additions.map { "＋ " + $0 } + checks.map { "✓ " + $0 }
+                return ActionCard(title: text("Einkaufsliste ändern"), change: marks.joined(separator: " · "))
+            }
+            // Announced cards lose decorative symbols when spoken, so adding and checking off are named in words.
+            var parts: [String] = []
+            if !additions.isEmpty { parts.append(text("Hinzufügen: \(additions.joined(separator: ", "))")) }
+            if !checks.isEmpty { parts.append(text("Abhaken: \(checks.joined(separator: ", "))")) }
+            return ActionCard(title: text("Einkaufsliste ändern"), change: parts.joined(separator: " · "))
         case "create_event", "update_event", "delete_event":
             return describeEvent(call.name, series: args["series"] as? Bool == true, language: language, string: string)
         default:

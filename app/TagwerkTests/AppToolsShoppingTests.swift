@@ -212,6 +212,20 @@ struct AppToolsShoppingTests {
         #expect(model.describe(call).change == "＋ 2 Zwiebeln · ✓ gone")
     }
 
+    /// Spoken cards drop decorative symbols, so the announced card must name adding and checking off in words.
+    @Test func describe_updateShopping_announcedCardUsesWords() async {
+        let model = await makeAssistant()
+        let call = ToolCall(id: "c1", name: "update_shopping", arguments: Data(
+            #"{"add":[{"name":"Kaffee","quantity":null},{"name":"Zwiebeln","quantity":"2"}],"check_off":["eggs"]}"#.utf8))
+        #expect(model.describe(call, language: .german, spoken: true).change == "Hinzufügen: Kaffee, 2 Zwiebeln · Abhaken: Eier")
+        #expect(model.describe(call, language: .english, spoken: true).change == "Add: Kaffee, 2 Zwiebeln · Check off: Eier")
+        let spoken = ActionAnnouncement.text(for: [(title: "Einkaufsliste ändern", change: model.describe(call, language: .german, spoken: true).change)],
+                                             language: .german, byVoice: true)
+        #expect(spoken?.contains("Abhaken: Eier") == true)
+        // On screen the same call keeps the compact symbols.
+        #expect(model.describe(call, language: .german).change == "＋ Kaffee · ＋ 2 Zwiebeln · ✓ Eier")
+    }
+
     @Test func instructions_mentionShoppingTools() async {
         let text = await makeAssistant().instructions()
         #expect(text.contains("list_shopping") && text.contains("update_shopping") && text.contains("create_task"))

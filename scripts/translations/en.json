@@ -1317,5 +1317,7 @@
   "Wähle zuerst in Tagwerk unter Einstellungen › Einkaufsliste eine Liste.": "First choose a list in Tagwerk under Settings › Shopping List.",
   "Öffnet die Einkaufsliste": "Opens the shopping list",
   "Öffnet die Einkaufsliste in Tagwerk.": "Opens the shopping list in Tagwerk.",
-  "Vorschlag übernehmen": "Apply"
+  "Vorschlag übernehmen": "Apply",
+  "Hinzufügen: %@": "Add: %@",
+  "Abhaken: %@": "Check off: %@"
 }
