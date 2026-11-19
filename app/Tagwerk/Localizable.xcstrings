@@ -2213,6 +2213,16 @@
         }
       }
     },
+    "7 Tage –": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "7 days –"
+          }
+        }
+      }
+    },
     "7 bedeutet täglich. Quote: erfüllte Tage ÷ Zieltage, höchstens 100 %. Serie bei weniger als 7: Wochen in Folge mit erreichtem Ziel.": {
       "localizations": {
         "en": {

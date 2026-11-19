@@ -20,7 +20,8 @@ enum HabitText {
         let first: String
         if habit.daysPerWeek >= 7 {
             let week = HabitRules.progress(habit, lastDays: 7, today: today, facts: facts, calendar: calendar)
-            first = String(localized: "7 Tage \(week.done)/\(week.counting)")
+            // "0/0" says nothing for a habit that has no counting day yet.
+            first = week.counting == 0 ? String(localized: "7 Tage –") : String(localized: "7 Tage \(week.done)/\(week.counting)")
         } else {
             let week = HabitRules.weekProgress(habit, weekContaining: today, today: today, facts: facts, calendar: calendar)
             first = String(localized: "Diese Woche \(week.done) von \(week.goal)")

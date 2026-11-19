@@ -42,6 +42,11 @@ struct HabitTextTests {
         #expect(HabitText.subtitle(fresh, today: today, facts: .empty, calendar: calendar).contains("30 Tage –"))
     }
 
+    @Test func subtitle_dailyWithoutCountingDays_hasNoZeroOverZero() {
+        let fresh = habit(start: today)
+        #expect(HabitText.subtitle(fresh, today: today, facts: .empty, calendar: calendar).hasPrefix("7 Tage – · 30 Tage –"))
+    }
+
     @Test func streak_capped() {
         #expect(HabitText.streak(.days(90, isCapped: true)) == "Serie 90+")
         #expect(HabitText.streak(.weeks(12, isCapped: true)) == "Serie 12+ Wochen")

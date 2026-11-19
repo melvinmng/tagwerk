@@ -24,9 +24,9 @@ struct RoutineCard: View {
             Image(systemName: "sun.max.fill").foregroundStyle(.orange)
             Text(overview.isEmpty ? String(localized: "Tagesstart · Fokus wählen")
                                   : String(localized: "Tagesstart · Fokus wählen · \(overview)"))
-                .font(.subheadline)
-                .lineLimit(1)
-                .minimumScaleFactor(0.8)
+                .font(.footnote)
+                // Two lines instead of cutting the numbers off; the card stays one row of buttons high.
+                .lineLimit(2)
             Spacer(minLength: 4)
             Button("Starten") { model.openStart() }
                 .buttonStyle(.borderedProminent)
