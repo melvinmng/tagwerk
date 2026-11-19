@@ -946,7 +946,7 @@ enum ReminderListSummary {
   - `ShoppingSortConsentSheet(onAgree:onDecline:)` und `ShoppingSortResultSheet(proposal:onApply:onDiscard:)`; `ShoppingSortResultSheet.selection(proposal:deselectedCategories:deselectedItems:) -> Proposal` (wird eine neue Kategorie abgewählt, fallen ihre Artikel heraus).
   - „Übernehmen“: gewählte neue Kategorien über `categories.add(name:)` am Ende anlegen, je Änderung `categories.assign(nameKey:to:manual: false)`, dann `model.refreshSections()`. Nie ein Schreibzugriff auf Erinnerungen.
 
-- [ ] **Schritt 1: Tests schreiben**
+- [x] **Schritt 1: Tests schreiben**
 
 ```swift
 @Test func sort_withoutConsent_sendsNothing() async {
@@ -977,11 +977,11 @@ enum ReminderListSummary {
     // after apply: assignments()["sojasauce"] == (pantry.id, isManual: false); store.saveCount and createCount unchanged
 ```
 
-- [ ] **Schritt 2:** Suite ausführen. Erwartet: Übersetzungsfehler.
-- [ ] **Schritt 3: `ShoppingSorter` umsetzen** nach dem Aufbau von `MealEstimator` (`estimate`, `collect`, `withTimeout`, `failure(for:)`); `tools: []`, `jsonSchema: (name: "shopping_sort", schema: Self.schema)`. Schema: `{ "assignments": [{ "item": string, "category": string }], "new_categories": [string] }`, `additionalProperties: false`, alle Felder erforderlich. Der Wortlaut des Auftrags ist dem Umsetzenden überlassen; er muss enthalten: nur die genannten Artikel einordnen, vorhandene Kategorien bevorzugen, höchstens 3 neue, „Sonstiges“ erlaubt.
-- [ ] **Schritt 4: Blätter und Verdrahtung.** Menüpunkt ausgegraut mit Unterzeile „Anmeldung unter Einstellungen › KI“ ohne `environment.ai.isSignedIn`; „✦ Sortieren“ an der Abschnittszeile „Sonstiges“ nur angemeldet. Erstes Tippen ohne `shoppingSortConsent` zeigt `ShoppingSortConsentSheet` (Texte wörtlich aus Spec §5.5 Nr. 2, `.presentationDetents([.large])`, `.interactiveDismissDisabled()`); „Einverstanden und sortieren“ setzt die Einwilligung und startet. Während der Anfrage Fortschrittsanzeige mit „Abbrechen“. Fehler als Meldung mit `Failure.message` (Texte nach dem Muster von `MealEstimator.Failure`, auf „Sortieren“ bezogen).
-- [ ] **Schritt 5:** `ShoppingSorterTests` und `app/test-all.sh`. Erwartet: grün. Sichtprüfung mit `-TagwerkDemoAI` (Antwort für `shopping_sort` in `DemoAITransport` ergänzen).
-- [ ] **Schritt 6:** Commit: `git add app/Tagwerk app/TagwerkTests && git commit -m "feat: sort shopping items with ChatGPT after consent"`
+- [x] **Schritt 2:** Suite ausführen. Erwartet: Übersetzungsfehler.
+- [x] **Schritt 3: `ShoppingSorter` umsetzen** nach dem Aufbau von `MealEstimator` (`estimate`, `collect`, `withTimeout`, `failure(for:)`); `tools: []`, `jsonSchema: (name: "shopping_sort", schema: Self.schema)`. Schema: `{ "assignments": [{ "item": string, "category": string }], "new_categories": [string] }`, `additionalProperties: false`, alle Felder erforderlich. Der Wortlaut des Auftrags ist dem Umsetzenden überlassen; er muss enthalten: nur die genannten Artikel einordnen, vorhandene Kategorien bevorzugen, höchstens 3 neue, „Sonstiges“ erlaubt.
+- [x] **Schritt 4: Blätter und Verdrahtung.** Menüpunkt ausgegraut mit Unterzeile „Anmeldung unter Einstellungen › KI“ ohne `environment.ai.isSignedIn`; „✦ Sortieren“ an der Abschnittszeile „Sonstiges“ nur angemeldet. Erstes Tippen ohne `shoppingSortConsent` zeigt `ShoppingSortConsentSheet` (Texte wörtlich aus Spec §5.5 Nr. 2, `.presentationDetents([.large])`, `.interactiveDismissDisabled()`); „Einverstanden und sortieren“ setzt die Einwilligung und startet. Während der Anfrage Fortschrittsanzeige mit „Abbrechen“. Fehler als Meldung mit `Failure.message` (Texte nach dem Muster von `MealEstimator.Failure`, auf „Sortieren“ bezogen).
+- [x] **Schritt 5:** `ShoppingSorterTests` und `app/test-all.sh`. Erwartet: grün. Sichtprüfung mit `-TagwerkDemoAI` (Antwort für `shopping_sort` in `DemoAITransport` ergänzen).
+- [x] **Schritt 6:** Commit: `git add app/Tagwerk app/TagwerkTests && git commit -m "feat: sort shopping items with ChatGPT after consent"`
 
 ---
 

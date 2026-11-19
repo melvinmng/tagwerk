@@ -1513,24 +1513,6 @@
     },
     "%lld offene Erinnerungen.": {
       "localizations": {
-        "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld open reminder."
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld open reminders."
-                }
-              }
-            }
-          }
-        },
         "de": {
           "variations": {
             "plural": {
@@ -1544,6 +1526,24 @@
                 "stringUnit": {
                   "state": "translated",
                   "value": "%lld offene Erinnerungen."
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld open reminder."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld open reminders."
                 }
               }
             }
@@ -1755,6 +1755,16 @@
         }
       }
     },
+    "**Gesendet wird:** Artikelnamen und Kategorienamen. In einer geteilten Liste auch Artikel, die andere eingetragen haben.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "**What is sent:** item names and category names. In a shared list also items that others added."
+          }
+        }
+      }
+    },
     "**Nicht gesendet werden** Daten aus Health, deine Ziele und frühere Einträge.": {
       "localizations": {
         "en": {
@@ -1765,12 +1775,32 @@
         }
       }
     },
+    "**Nicht gesendet werden:** Mengen, erledigte Artikel, Aufgaben, Termine, Notizen, Daten aus Health.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "**What is not sent:** quantities, completed items, tasks, events, notes, data from Health."
+          }
+        }
+      }
+    },
     "**Nur auf dein Tippen:** Ohne „Schätzen“ verlässt nichts das iPhone.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "**Only when you tap:** Nothing leaves your iPhone without “Estimate”."
+          }
+        }
+      }
+    },
+    "**Nur auf dein Tippen:** Ohne „Sortieren“ verlässt nichts das iPhone.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "**Only on your tap:** Without “Sort”, nothing leaves the iPhone."
           }
         }
       }
@@ -3236,6 +3266,16 @@
         }
       }
     },
+    "ChatGPT nimmt gerade keine Anfragen an. Versuch es später noch einmal.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ChatGPT is not accepting requests right now. Try again later."
+          }
+        }
+      }
+    },
     "ChatGPT plant den Monat …": {
       "localizations": {
         "en": {
@@ -3262,6 +3302,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "ChatGPT is planning the week …"
+          }
+        }
+      }
+    },
+    "ChatGPT schlägt keine andere Einteilung vor.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ChatGPT suggests no other arrangement."
+          }
+        }
+      }
+    },
+    "ChatGPT sortiert …": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ChatGPT is sorting …"
           }
         }
       }
@@ -3422,6 +3482,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "The issue will not be assigned to anyone and will not appear in your tasks."
+          }
+        }
+      }
+    },
+    "Das Sortieren ist fehlgeschlagen. Versuch es noch einmal.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sorting failed. Try again."
           }
         }
       }
@@ -4252,6 +4322,16 @@
         }
       }
     },
+    "Du kannst das in den Einstellungen unter „Einkaufsliste“ widerrufen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You can withdraw this in Settings under “Shopping List”."
+          }
+        }
+      }
+    },
     "Du kannst das in den Einstellungen unter „Erfassen“ widerrufen.": {
       "localizations": {
         "en": {
@@ -4428,6 +4508,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Agree and estimate"
+          }
+        }
+      }
+    },
+    "Einverstanden und sortieren": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Agree and Sort"
           }
         }
       }
@@ -4773,6 +4863,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "It stays a suggestion until you accept it."
+          }
+        }
+      }
+    },
+    "Es gibt keine Artikel zum Sortieren.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "There are no items to sort."
           }
         }
       }
@@ -6185,6 +6285,16 @@
         }
       }
     },
+    "Keine Verbindung. Das Sortieren braucht Internet.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No connection. Sorting needs the internet."
+          }
+        }
+      }
+    },
     "Keine Verbindung. Die Schätzung braucht Internet.": {
       "localizations": {
         "en": {
@@ -7343,12 +7453,32 @@
         }
       }
     },
+    "Neue Kategorie „%@“ anlegen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Create new category “%@”"
+          }
+        }
+      }
+    },
     "Neue Kategorie …": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "New Category …"
+          }
+        }
+      }
+    },
+    "Neue Kategorien": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New Categories"
           }
         }
       }
@@ -9977,6 +10107,16 @@
         }
       }
     },
+    "Vorschlag von ChatGPT": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suggestion from ChatGPT"
+          }
+        }
+      }
+    },
     "Vorschlag · %@": {
       "localizations": {
         "en": {
@@ -10738,6 +10878,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "To estimate, Tagwerk only sends the text and photo of the meal in question to ChatGPT (OpenAI), and only when you tap “Estimate”. Data from Health, goals and earlier entries are never sent. When turned off, you enter values yourself."
+          }
+        }
+      }
+    },
+    "Zum Sortieren ist deine Einwilligung nötig.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sorting needs your consent."
+          }
+        }
+      }
+    },
+    "Zum Sortieren sendet Tagwerk die Namen deiner offenen Artikel und die Namen deiner Kategorien an ChatGPT (OpenAI), über das Konto, mit dem du angemeldet bist.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "To sort, Tagwerk sends the names of your open items and the names of your categories to ChatGPT (OpenAI), through the account you are signed in with."
           }
         }
       }
@@ -11567,24 +11727,6 @@
     },
     "und %lld weitere": {
       "localizations": {
-        "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "and %lld more"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "and %lld more"
-                }
-              }
-            }
-          }
-        },
         "de": {
           "variations": {
             "plural": {
@@ -11598,6 +11740,24 @@
                 "stringUnit": {
                   "state": "translated",
                   "value": "und %lld weitere"
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "and %lld more"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "and %lld more"
                 }
               }
             }
@@ -11776,6 +11936,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Change"
+          }
+        }
+      }
+    },
+    "Änderungen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Changes"
           }
         }
       }

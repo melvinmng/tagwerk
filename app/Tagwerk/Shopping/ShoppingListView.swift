@@ -16,6 +16,18 @@ struct ShoppingListView: View {
     /// The item that gets the category typed into the "Neue Kategorie" dialog.
     @State private var newCategoryItem: ShoppingItem?
     @State private var newCategoryName = ""
+    @State private var showsSortConsent = false
+    /// The running request to ChatGPT; cancelling it discards the answer.
+    @State private var sorting: Task<Void, Never>?
+    /// Identifies the running request, so a cancelled one cannot clear the state of its successor.
+    @State private var sortingID: UUID?
+    @State private var proposal: SortProposal?
+
+    /// The proposal of one request, identifiable for the result sheet.
+    private struct SortProposal: Identifiable {
+        let id = UUID()
+        let value: ShoppingSorter.Proposal
+    }
 
     init(model: ShoppingModel) {
         self.model = model
@@ -39,6 +51,27 @@ struct ShoppingListView: View {
             .sheet(item: $editing) { item in
                 ShoppingItemSheet(model: model, item: item) { notice = $0 }
             }
+            .sheet(isPresented: $showsSortConsent) {
+                ShoppingSortConsentSheet {
+                    environment.settings.shoppingSortConsent = true
+                    showsSortConsent = false
+                    sort()
+                } onDecline: {
+                    showsSortConsent = false
+                }
+            }
+            .sheet(item: $proposal) { proposal in
+                ShoppingSortResultSheet(proposal: proposal.value) { selected in
+                    ShoppingSorter.apply(selected, categories: environment.shoppingCategories, model: model)
+                    self.proposal = nil
+                } onDiscard: {
+                    self.proposal = nil
+                }
+            }
+            .overlay {
+                if sorting != nil { sortingOverlay }
+            }
+            .onDisappear { cancelSorting() }
             .alert("Neue Kategorie", isPresented: newCategoryBinding) {
                 TextField("Name", text: $newCategoryName)
                 Button("Anlegen", action: createCategory)
@@ -216,7 +249,7 @@ struct ShoppingListView: View {
                 Label("Mit ChatGPT sortieren", systemImage: "sparkles")
                 if !environment.ai.isSignedIn { Text("Anmeldung unter Einstellungen › KI") }
             }
-            .disabled(true)
+            .disabled(!environment.ai.isSignedIn || sorting != nil)
             Button { showsCategories = true } label: { Label("Kategorien verwalten", systemImage: "list.bullet.indent") }
             Button(role: .destructive) {
                 confirmsRemoveCompleted = true
@@ -270,5 +303,52 @@ struct ShoppingListView: View {
         }
     }
 
-    private func startSorting() {}
+    // MARK: Sorting with ChatGPT
+
+    private var sortingOverlay: some View {
+        VStack(spacing: 12) {
+            ProgressView("ChatGPT sortiert …")
+            Button("Abbrechen", action: cancelSorting)
+        }
+        .padding(20)
+        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
+    }
+
+    /// The first tap asks for consent; nothing is sent before the user agreed.
+    private func startSorting() {
+        guard environment.ai.isSignedIn, sorting == nil else { return }
+        if environment.settings.shoppingSortConsent { sort() } else { showsSortConsent = true }
+    }
+
+    private func sort() {
+        let categories = categories
+        let request = ShoppingSorter.request(sections: model.sections, assignments: environment.shoppingCategories.assignments(),
+                                             categories: categories)
+        guard !request.itemNames.isEmpty else {
+            notice = String(localized: "Es gibt keine Artikel zum Sortieren.")
+            return
+        }
+        let current = ShoppingSorter.currentCategories(sections: model.sections, categories: categories)
+        let id = UUID()
+        sortingID = id
+        sorting = Task {
+            defer { if sortingID == id { sorting = nil } }
+            do {
+                let result = try await environment.shoppingSorter.sort(request, current: current)
+                // A cancelled request must not show a late answer.
+                guard !Task.isCancelled else { return }
+                proposal = SortProposal(value: result)
+            } catch let failure as ShoppingSorter.Failure {
+                if !Task.isCancelled { notice = failure.message }
+            } catch {
+                // Cancelled by the user: nothing to report.
+            }
+        }
+    }
+
+    private func cancelSorting() {
+        sorting?.cancel()
+        sorting = nil
+        sortingID = nil
+    }
 }

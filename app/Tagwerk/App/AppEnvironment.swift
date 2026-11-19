@@ -21,6 +21,8 @@ final class AppEnvironment {
     let shoppingCategories: ShoppingCategoryStore
     /// The shopping list; reads and writes the chosen reminder list.
     let shopping: ShoppingModel
+    /// "Mit ChatGPT sortieren"; sends item names only after consent and on the user's tap.
+    let shoppingSorter: ShoppingSorter
     let taskList: TaskListModel
     let planning: PlanningModel
     let gitHubTokens: TokenManager
@@ -181,6 +183,8 @@ final class AppEnvironment {
         self.capture = CaptureModel(store: intake, mirror: mirror, health: healthStore, settings: settings)
         self.mealEstimator = MealEstimator(responder: ai.client, model: { try await ai.selectedModel() },
                                            hasConsent: { settings.mealEstimationConsent })
+        self.shoppingSorter = ShoppingSorter(responder: ai.client, model: { try await ai.selectedModel() },
+                                             hasConsent: { settings.shoppingSortConsent })
         let planning = self.planning
         taskList.onCompletionChanged = { id, isCompleted in await planning.didChangeCompletion(id, isCompleted: isCompleted) }
         taskList.onHandedOver = { id in await planning.didHandOver(id) }

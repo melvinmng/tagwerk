@@ -1264,5 +1264,22 @@
   "Sendet auf dein Tippen die Namen der offenen Artikel und deiner Kategorien an ChatGPT. Fragst du den Assistenten nach der Einkaufsliste, gehen die Artikelnamen ebenfalls an ChatGPT.": "On your tap, sends the names of the open items and of your categories to ChatGPT. If you ask the assistant about the shopping list, the item names go to ChatGPT as well.",
   "Sie erscheint dann hier als eigene Liste und nicht mehr unter den Aufgaben.": "It then appears here as its own list and no longer among the tasks.",
   "Tagwerk hat keinen Zugriff auf Erinnerungen.": "Tagwerk has no access to Reminders.",
-  "Verwenden": "Use"
+  "Verwenden": "Use",
+  "**Gesendet wird:** Artikelnamen und Kategorienamen. In einer geteilten Liste auch Artikel, die andere eingetragen haben.": "**What is sent:** item names and category names. In a shared list also items that others added.",
+  "**Nicht gesendet werden:** Mengen, erledigte Artikel, Aufgaben, Termine, Notizen, Daten aus Health.": "**What is not sent:** quantities, completed items, tasks, events, notes, data from Health.",
+  "**Nur auf dein Tippen:** Ohne „Sortieren“ verlässt nichts das iPhone.": "**Only on your tap:** Without “Sort”, nothing leaves the iPhone.",
+  "ChatGPT nimmt gerade keine Anfragen an. Versuch es später noch einmal.": "ChatGPT is not accepting requests right now. Try again later.",
+  "ChatGPT schlägt keine andere Einteilung vor.": "ChatGPT suggests no other arrangement.",
+  "ChatGPT sortiert …": "ChatGPT is sorting …",
+  "Das Sortieren ist fehlgeschlagen. Versuch es noch einmal.": "Sorting failed. Try again.",
+  "Du kannst das in den Einstellungen unter „Einkaufsliste“ widerrufen.": "You can withdraw this in Settings under “Shopping List”.",
+  "Einverstanden und sortieren": "Agree and Sort",
+  "Es gibt keine Artikel zum Sortieren.": "There are no items to sort.",
+  "Keine Verbindung. Das Sortieren braucht Internet.": "No connection. Sorting needs the internet.",
+  "Neue Kategorie „%@“ anlegen": "Create new category “%@”",
+  "Neue Kategorien": "New Categories",
+  "Vorschlag von ChatGPT": "Suggestion from ChatGPT",
+  "Zum Sortieren ist deine Einwilligung nötig.": "Sorting needs your consent.",
+  "Zum Sortieren sendet Tagwerk die Namen deiner offenen Artikel und die Namen deiner Kategorien an ChatGPT (OpenAI), über das Konto, mit dem du angemeldet bist.": "To sort, Tagwerk sends the names of your open items and the names of your categories to ChatGPT (OpenAI), through the account you are signed in with.",
+  "Änderungen": "Changes"
 }
