@@ -68,6 +68,19 @@ struct PlanView: View {
         }
     }
 
+    /// After "Erledigt" (context menu, editor) or a status that completes the issue: "Rückgängig" as in the task list.
+    @ViewBuilder
+    private var completeUndo: some View {
+        let taskList = environment.taskList
+        if let completed = taskList.lastCompleted {
+            UndoCapsule(title: completed.title, duration: 5,
+                        onUndo: { Task { await taskList.undoComplete(); await model.reload() } },
+                        onExpire: { if taskList.lastCompleted?.id == completed.id { taskList.dismissUndo() } })
+                .id(completed.id)
+                .padding(.bottom, 60)
+        }
+    }
+
     /// After "Alle übernehmen": one "Rückgängig" for blocks, days, hours and moves (mockup AW1).
     @ViewBuilder
     private var acceptAllUndo: some View {
@@ -100,8 +113,10 @@ struct PlanView: View {
             .overlay(alignment: .bottom) { moveUndo }
             .overlay(alignment: .bottom) { moveGroupUndo }
             .overlay(alignment: .bottom) { acceptAllUndo }
+            .overlay(alignment: .bottom) { completeUndo }
             .overlay(alignment: .bottom) { HandedOverCapsule(model: environment.taskList).padding(.bottom, 60) }
             .animation(.spring(duration: 0.35), value: environment.taskList.lastHandedOver)
+            .animation(.spring(duration: 0.35), value: environment.taskList.lastCompleted?.id)
             .navigationTitle("Planen")
             .toolbarTitleDisplayMode(.inline)
             // The date title replaces the bar title; the tab bar already says "Planen" (mockup PK2).
