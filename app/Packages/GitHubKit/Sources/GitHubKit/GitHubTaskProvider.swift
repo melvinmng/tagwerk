@@ -117,9 +117,22 @@ public final class GitHubTaskProvider: TaskProvider {
                 records[current.issueID] = current
                 throw TaskWriteError.conflict(current: currentItem)
             }
+            if case .set(let change) = edit.assignees {
+                // The own login decides below whether the issue stays remembered.
+                if login == nil { login = try await api.viewerProjects().login }
+                guard AssigneeRules.applying(change, to: current.assignees).count <= AssigneeRules.maximum else {
+                    throw Self.tooManyAssignees
+                }
+            }
             try await write(edit, to: current)
             guard let fresh = try await api.issue(nodeID: id.rawValue) else { throw TaskWriteError.notFound }
-            records[fresh.issueID] = fresh
+            if let login, !AssigneeRules.contains(fresh.assignees, login) {
+                // Handed over: the issue no longer belongs to the user's lists. Closed issues stay
+                // remembered as before, because completing and undoing build on the record.
+                records[fresh.issueID] = nil
+            } else {
+                records[fresh.issueID] = fresh
+            }
             offlineSince = nil
             return GitHubMapping.taskItem(fresh)
         } catch {
@@ -163,12 +176,15 @@ public final class GitHubTaskProvider: TaskProvider {
         }
     }
 
-    /// Creates an issue assigned to the viewer in `draft.containerID` (repository) and adds it to
-    /// every project in `draft.subContainerIDs` with the draft's field values and status "Ready".
+    /// Creates an issue in `draft.containerID` (repository), assigned to `draft.assignees` or, when
+    /// those are `nil`, to the viewer, and adds it to every project in `draft.subContainerIDs` with
+    /// the draft's field values and status "Ready". The returned item carries the assignees GitHub
+    /// actually set; an issue that is not assigned to the viewer is returned but not remembered.
     public func create(_ draft: TaskDraft) async throws -> TaskItem {
         guard let repository = draft.containerID, !draft.subContainerIDs.isEmpty else {
             throw TaskWriteError.failed(String(localized: "Bitte Repository und mindestens ein Project wählen.", bundle: .module))
         }
+        if let chosen = draft.assignees, chosen.count > AssigneeRules.maximum { throw Self.tooManyAssignees }
         do {
             let (viewer, available) = try await api.viewerProjects()
             login = viewer
@@ -177,17 +193,22 @@ public final class GitHubTaskProvider: TaskProvider {
             guard targets.count == draft.subContainerIDs.count else { throw TaskWriteError.notFound }
 
             let writer = GitHubWriter(api: api)
-            let issueID = try await writer.createIssue(repository: repository, title: draft.title, body: draft.notes, assignee: viewer)
+            let issueID = try await writer.createIssue(repository: repository, title: draft.title, body: draft.notes,
+                                                       assignees: draft.assignees ?? [viewer])
             for project in targets {
                 try await addToProject(project, issueID: issueID, draft: draft, writer: writer)
             }
 
             guard let fresh = try await api.issue(nodeID: issueID) else { throw TaskWriteError.notFound }
-            records[fresh.issueID] = fresh
+            if GitHubMapping.isVisible(fresh, login: viewer) { records[fresh.issueID] = fresh }
             return GitHubMapping.taskItem(fresh)
         } catch {
             throw Self.taskError(error)
         }
+    }
+
+    private static var tooManyAssignees: TaskWriteError {
+        .failed(String(localized: "Höchstens 10 Personen je Issue.", bundle: .module))
     }
 
     private func addToProject(_ project: ProjectInfo, issueID: String, draft: TaskDraft, writer: GitHubWriter) async throws {
@@ -300,6 +321,13 @@ public final class GitHubTaskProvider: TaskProvider {
             for placement in writable {
                 try await writer.setField(placement, fieldName: GitHubMapping.statusField, value: .singleSelect(status))
             }
+        }
+
+        // Assignees come last and as a difference: adding first, removing (possibly the user) at the very
+        // end. When an earlier step fails, the user is still assigned and the issue stays visible.
+        if case .set(let change) = edit.assignees {
+            if !change.add.isEmpty { try await writer.addAssignees(record, logins: change.add) }
+            if !change.remove.isEmpty { try await writer.removeAssignees(record, logins: change.remove) }
         }
     }
 

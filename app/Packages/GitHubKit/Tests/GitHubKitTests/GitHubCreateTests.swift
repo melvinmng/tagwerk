@@ -20,12 +20,63 @@ struct GitHubCreateTests {
                   priority: .p2, estimateMinutes: 120, containerID: "beispiel/app", subContainerIDs: ["PVT_1"])
     }
 
-    private func enqueueCreateFlow() {
+    private func enqueueCreateFlow(assignees: [String] = ["octo"]) {
         transport.enqueueJSON("/graphql", Fixtures.viewerProjects)
         transport.enqueueJSON("/repos/beispiel/app/issues", status: 201, #"{"id":7,"node_id":"I_new","number":7}"#)
         transport.enqueueJSON("/graphql", #"{"data":{"addProjectV2ItemById":{"item":{"id":"PVTI_new"}}}}"#)
         for _ in 0..<4 { transport.enqueueJSON("/graphql", Fixtures.mutationOK) }
-        transport.enqueueJSON("/graphql", Fixtures.issue())
+        transport.enqueueJSON("/graphql", Fixtures.issue(assignees: assignees))
+    }
+
+    /// The `assignees` array of the issue POST.
+    private func postedAssignees() throws -> [String]? {
+        let post = try #require(transport.requests.first { $0.httpMethod == "POST" && $0.url?.path == "/repos/beispiel/app/issues" })
+        let json = try #require(try JSONSerialization.jsonObject(with: post.httpBody ?? Data()) as? [String: Any])
+        return json["assignees"] as? [String]
+    }
+
+    @Test func create_sendsChosenAssignees() async throws {
+        enqueueCreateFlow(assignees: ["octo", "lea-m"])
+        var chosen = draft()
+        chosen.assignees = ["octo", "lea-m"]
+        let item = try await makeProvider().create(chosen)
+        #expect(try postedAssignees() == ["octo", "lea-m"])
+        #expect(item.assignees == ["octo", "lea-m"])
+    }
+
+    @Test func create_emptyAssignees_sendsEmptyList() async throws {
+        enqueueCreateFlow(assignees: [])
+        var chosen = draft()
+        chosen.assignees = []
+        _ = try await makeProvider().create(chosen)
+        #expect(try postedAssignees() == [])
+    }
+
+    @Test func create_moreThanTen_failsBeforeAnyRequest() async {
+        var chosen = draft()
+        chosen.assignees = (1...11).map { "user-\($0)" }
+        await #expect(throws: TaskWriteError.failed("Höchstens 10 Personen je Issue.")) {
+            try await makeProvider().create(chosen)
+        }
+        #expect(transport.requests.isEmpty)
+    }
+
+    @Test func create_forOthersOnly_isNotRemembered() async throws {
+        enqueueCreateFlow(assignees: ["lea-m"])
+        var chosen = draft()
+        chosen.assignees = ["lea-m"]
+        let provider = makeProvider()
+        let item = try await provider.create(chosen)
+        #expect(item.assignees == ["lea-m"])
+        #expect(provider.cachedTasks.isEmpty)
+        #expect(provider.issueReference(for: item.id) == nil)
+    }
+
+    @Test func create_forMe_isRemembered() async throws {
+        enqueueCreateFlow()
+        let provider = makeProvider()
+        let item = try await provider.create(draft())
+        #expect(provider.issueReference(for: item.id) != nil)
     }
 
     @Test func create_postsIssueAssignedToViewer() async throws {

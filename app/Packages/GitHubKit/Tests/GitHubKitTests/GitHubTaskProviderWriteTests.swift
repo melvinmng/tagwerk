@@ -55,6 +55,133 @@ struct GitHubTaskProviderWriteTests {
         #expect(provider.issueReference(for: TaskID(source: .github, rawValue: "I_unknown")) == nil)
     }
 
+    // MARK: Assignees
+
+    private let assigneesPath = "/repos/beispiel/app/issues/1/assignees"
+
+    /// "<METHOD> <path>" of every REST write after the initial load.
+    private func restWrites() -> [String] {
+        transport.requests.filter { $0.url?.path.hasPrefix("/repos") == true }
+            .map { "\($0.httpMethod ?? "") \($0.url?.path ?? "")" }
+    }
+
+    @Test func assign_postsAddThenDeletesRemove_afterAllOtherWrites() async throws {
+        let provider = makeProvider()
+        let item = try await loadItem(provider)
+        transport.enqueueJSON("/graphql", Fixtures.issue())
+        transport.enqueueJSON("/graphql", Fixtures.viewerProjects)
+        transport.enqueueJSON("/repos/beispiel/app/issues/1", Fixtures.issuePatchOK)
+        transport.enqueueJSON(assigneesPath, status: 201, Fixtures.issuePatchOK)
+        transport.enqueueJSON(assigneesPath, Fixtures.issuePatchOK)
+        transport.enqueueJSON("/graphql", Fixtures.issue(updatedAt: "2026-11-17T14:00:00Z", assignees: ["lea-m"]))
+
+        let change = AssigneeChange(add: ["lea-m"], remove: ["octo"])
+        _ = try await provider.apply(edit { $0.title = .set("Neu"); $0.assignees = .set(change) },
+                                     to: issueID, expectedVersion: item.version)
+
+        #expect(restWrites() == ["PATCH /repos/beispiel/app/issues/1",
+                                 "POST /repos/beispiel/app/issues/1/assignees",
+                                 "DELETE /repos/beispiel/app/issues/1/assignees"])
+        let writes = transport.requests(to: assigneesPath)
+        #expect(writes[0].bodyString == #"{"assignees":["lea-m"]}"#)
+        #expect(writes[1].bodyString == #"{"assignees":["octo"]}"#)
+        // The assignee writes come after every other write and directly before the final read.
+        let last = Array(transport.requests.suffix(3))
+        #expect(last[0].httpMethod == "POST" && last[1].httpMethod == "DELETE" && last[2].bodyString.contains("projectItems"))
+    }
+
+    @Test func assign_addOnly_sendsNoDelete() async throws {
+        let provider = makeProvider()
+        let item = try await loadItem(provider)
+        transport.enqueueJSON("/graphql", Fixtures.issue())
+        transport.enqueueJSON("/graphql", Fixtures.viewerProjects)
+        transport.enqueueJSON(assigneesPath, status: 201, Fixtures.issuePatchOK)
+        transport.enqueueJSON("/graphql", Fixtures.issue(updatedAt: "2026-11-17T14:00:00Z", assignees: ["octo", "lea-m"]))
+
+        let result = try await provider.apply(edit { $0.assignees = .set(AssigneeChange(add: ["lea-m"])) },
+                                              to: issueID, expectedVersion: item.version)
+
+        #expect(restWrites() == ["POST /repos/beispiel/app/issues/1/assignees"])
+        #expect(result.assignees == ["octo", "lea-m"])
+        #expect(provider.issueReference(for: issueID) != nil)
+    }
+
+    @Test func assign_withoutVersionCheck_writesOnlyTheDifference() async throws {
+        let provider = makeProvider()
+        _ = try await loadItem(provider)
+        // Someone added "new" on GitHub after the editor was opened.
+        transport.enqueueJSON("/graphql", Fixtures.issue(updatedAt: "2026-11-17T13:30:00Z", assignees: ["octo", "new"]))
+        transport.enqueueJSON("/graphql", Fixtures.viewerProjects)
+        transport.enqueueJSON(assigneesPath, status: 201, Fixtures.issuePatchOK)
+        transport.enqueueJSON("/graphql", Fixtures.issue(updatedAt: "2026-11-17T14:00:00Z", assignees: ["octo", "new", "lea-m"]))
+
+        let result = try await provider.apply(edit { $0.assignees = .set(AssigneeChange(add: ["lea-m"])) },
+                                              to: issueID, expectedVersion: nil)
+
+        #expect(restWrites() == ["POST /repos/beispiel/app/issues/1/assignees"])
+        #expect(!transport.requests.contains { $0.url?.path.hasPrefix("/repos") == true && $0.bodyString.contains("new") })
+        #expect(result.assignees == ["octo", "new", "lea-m"])
+    }
+
+    @Test func assign_overTenAfterMerge_failsWithoutWrites() async throws {
+        let provider = makeProvider()
+        _ = try await loadItem(provider)
+        let ten = (1...10).map { "user-\($0)" }
+        transport.enqueueJSON("/graphql", Fixtures.issue(assignees: ten))
+        transport.enqueueJSON("/graphql", Fixtures.viewerProjects)
+
+        await #expect(throws: TaskWriteError.failed("Höchstens 10 Personen je Issue.")) {
+            try await provider.apply(edit { $0.assignees = .set(AssigneeChange(add: ["x"])) }, to: issueID, expectedVersion: nil)
+        }
+        #expect(restWrites().isEmpty)
+    }
+
+    @Test func assign_removingMyself_dropsIssueFromRecords() async throws {
+        let provider = makeProvider()
+        let item = try await loadItem(provider)
+        transport.enqueueJSON("/graphql", Fixtures.issue(assignees: ["octo", "lea-m"]))
+        transport.enqueueJSON("/graphql", Fixtures.viewerProjects)
+        transport.enqueueJSON(assigneesPath, Fixtures.issuePatchOK)
+        transport.enqueueJSON("/graphql", Fixtures.issue(updatedAt: "2026-11-17T14:00:00Z", assignees: ["lea-m"]))
+
+        let result = try await provider.apply(edit { $0.assignees = .set(AssigneeChange(remove: ["octo"])) },
+                                              to: issueID, expectedVersion: item.version)
+
+        #expect(restWrites() == ["DELETE /repos/beispiel/app/issues/1/assignees"])
+        #expect(result.assignees == ["lea-m"])
+        #expect(provider.issueReference(for: issueID) == nil)
+        #expect(!provider.isListed(result))
+    }
+
+    @Test func apply_removeFails_keepsIssueListedAndThrows() async throws {
+        let provider = makeProvider()
+        let item = try await loadItem(provider)
+        transport.enqueueJSON("/graphql", Fixtures.issue())
+        transport.enqueueJSON("/graphql", Fixtures.viewerProjects)
+        transport.enqueueJSON(assigneesPath, status: 201, Fixtures.issuePatchOK)
+        transport.enqueueJSON(assigneesPath, status: 500, "{}")
+
+        let change = AssigneeChange(add: ["lea-m"], remove: ["octo"])
+        await #expect(throws: TaskWriteError.failed("GitHub antwortet mit Fehler 500.")) {
+            try await provider.apply(edit { $0.assignees = .set(change) }, to: issueID, expectedVersion: item.version)
+        }
+        #expect(restWrites() == ["POST /repos/beispiel/app/issues/1/assignees", "DELETE /repos/beispiel/app/issues/1/assignees"])
+        #expect(provider.issueReference(for: issueID) != nil)
+    }
+
+    @Test func complete_keepsClosedIssueRemembered() async throws {
+        let provider = makeProvider()
+        let item = try await loadItem(provider)
+        transport.enqueueJSON("/graphql", Fixtures.issue())
+        transport.enqueueJSON("/repos/beispiel/app/issues/1", Fixtures.issuePatchOK)
+        transport.enqueueJSON("/graphql", Fixtures.mutationOK)
+        transport.enqueueJSON("/graphql", Fixtures.mutationOK)
+        transport.enqueueJSON("/graphql", Fixtures.issue(state: "CLOSED", status1: "Done", status2: "Done", updatedAt: "2026-11-17T14:00:00Z"))
+
+        _ = try await provider.apply(edit { $0.isCompleted = .set(true) }, to: issueID, expectedVersion: item.version)
+        #expect(provider.issueReference(for: issueID) != nil)
+    }
+
     @Test func complete_closesIssueBeforeSettingDoneInAllProjects() async throws {
         let provider = makeProvider()
         let item = try await loadItem(provider)

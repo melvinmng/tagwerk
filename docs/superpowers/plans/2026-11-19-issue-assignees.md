@@ -277,7 +277,7 @@ func removeAssignees(_ record: GitHubIssueRecord, logins: [String]) async throws
 Regeln `create`: Zielmenge `draft.assignees ?? [viewer]`; mehr als 10 → `TaskWriteError.failed("Höchstens 10 Personen je Issue.")` **vor** `viewerProjects()`, sofern `draft.assignees` gesetzt ist; `fresh` nur bei `GitHubMapping.isVisible(fresh, login: viewer)` in `records`; Rückgabe immer `taskItem(fresh)`.
 Regeln `apply` bei `.set(change)`: ist `login == nil`, vor dem Schreiben `viewerProjects()` laden; Prüfung `AssigneeRules.applying(change, to: current.assignees).count <= 10`, sonst Fehler ohne Schreiben; in `write` nach dem Status-Block erst `addAssignees(change.add)` (nur wenn nicht leer), zuletzt `removeAssignees(change.remove)`; nach dem Lesen `records[id] = nil`, wenn der eigene Login nicht mehr in `fresh.assignees` steht (A4), sonst wie heute.
 
-- [ ] **Step 1: Tests schreiben.**
+- [x] **Step 1: Tests schreiben.**
   In `GitHubCreateTests`:
   - `create_withoutAssignees_assignsViewer` (bestehenden Test `create_postsIssueAssignedToViewer` behalten: `json["assignees"] == ["octo"]`)
   - `create_sendsChosenAssignees`: `draft.assignees = ["octo", "lea-m"]` → Body `["octo", "lea-m"]`
@@ -292,10 +292,10 @@ Regeln `apply` bei `.set(change)`: ist `login == nil`, vor dem Schreiben `viewer
   - `assign_overTenAfterMerge_failsWithoutWrites`: aktueller Stand mit 10 Logins, `add: ["x"]` → Fehler, keine Schreibaufrufe
   - `assign_removingMyself_dropsIssueFromRecords`: frischer Stand `Fixtures.issue(assignees: ["lea-m"])` → Rückgabe `assignees == ["lea-m"]`, `provider.issueReference(for:) == nil`
   - `apply_removeFails_keepsIssueListedAndThrows`: DELETE antwortet 500 → `TaskWriteError.failed`, `provider.issueReference(for:) != nil` (Review Focus 5)
-- [ ] **Step 2:** `PKG GitHubKit GitHubCreateTests` → FAIL (Signatur/Verhalten).
-- [ ] **Step 3:** Umsetzen; Fehlertext in `GitHubKit/Resources/Localizable.xcstrings` (EN „At most 10 people per issue.“).
-- [ ] **Step 4:** `PKG GitHubKit GitHubCreateTests`, `PKG GitHubKit GitHubTaskProviderWriteTests` → PASS.
-- [ ] **Step 5:** Commit `feat: write issue assignees as a difference`.
+- [x] **Step 2:** `PKG GitHubKit GitHubCreateTests` → FAIL (Signatur/Verhalten).
+- [x] **Step 3:** Umsetzen; Fehlertext in `GitHubKit/Resources/Localizable.xcstrings` (EN „At most 10 people per issue.“).
+- [x] **Step 4:** `PKG GitHubKit GitHubCreateTests`, `PKG GitHubKit GitHubTaskProviderWriteTests` → PASS.
+- [x] **Step 5:** Commit `feat: write issue assignees as a difference`.
 
 ---
 

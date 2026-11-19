@@ -1127,5 +1127,6 @@
     "one": "⚠︎ %lld deadline today",
     "other": "⚠︎ %lld deadlines today"
   },
-  "Sprache Englisch, auf Deutsch wechseln": "Language English, switch to German"
+  "Sprache Englisch, auf Deutsch wechseln": "Language English, switch to German",
+  "Höchstens 10 Personen je Issue.": "At most 10 people per issue."
 }

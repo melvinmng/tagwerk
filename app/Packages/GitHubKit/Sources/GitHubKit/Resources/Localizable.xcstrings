@@ -41,6 +41,16 @@
         }
       }
     },
+    "Höchstens 10 Personen je Issue." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "At most 10 people per issue."
+          }
+        }
+      }
+    },
     "Keine Verbindung zu GitHub." : {
       "localizations" : {
         "en" : {
