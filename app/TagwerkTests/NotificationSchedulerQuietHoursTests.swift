@@ -1,0 +1,146 @@
+import Foundation
+import SwiftData
+import Testing
+import TagwerkCore
+@testable import Tagwerk
+
+/// Quiet hours and the Focus filter in the scheduler (plan quiet-hours, #169). `now` is Wednesday 2026-11-18 10:00 unless
+/// a test moves it.
+@MainActor
+struct NotificationSchedulerQuietHoursTests {
+    let container: ModelContainer
+    let settings: AppSettings
+    let center = FakeNotificationCenter()
+    let local = FakeTaskProvider(source: .local)
+    let calendar = testCalendar()
+
+    init() throws {
+        container = try ModelContainerFactory.make(inMemory: true)
+        settings = try AppSettings.current(in: container.mainContext)
+        settings.deadlineCalendarIDs = []
+    }
+
+    private func at(_ day: Int, _ hour: Int, _ minute: Int = 0) -> Date {
+        calendar.date(from: DateComponents(year: 2026, month: 11, day: day, hour: hour, minute: minute))!
+    }
+
+    private func task(_ title: String, day: Int, hour: Int, minute: Int = 0) -> TaskItem {
+        makeTask(title, source: .local, due: DueDate(year: 2026, month: 11, day: day, hour: hour, minute: minute))
+    }
+
+    private func scheduler(now: Date) async -> NotificationScheduler {
+        let list = TaskListModel(providers: [local])
+        await list.reload()
+        return NotificationScheduler(center: center, taskList: list, deadlineEvents: { _, _ in [] }, settings: settings,
+                                     now: { now }, calendar: calendar, locale: { Locale(identifier: "de_DE") })
+    }
+
+    private func enableQuietHours(coupledToBedtime: Bool = false) {
+        settings.quietHoursEnabled = true
+        settings.quietHoursStartsAtBedtime = coupledToBedtime
+        settings.quietStartMinutes = 23 * 60
+        settings.quietEndMinutes = 7 * 60
+    }
+
+    @Test func quietHoursOff_firesAtTheOriginalTime() async {
+        // Due 01:00 with the default 2 h lead time: 23:00 the evening before.
+        local.tasks = [task("A", day: 19, hour: 1)]
+        await scheduler(now: testNow()).reschedule()
+        #expect(center.pending["tagwerk.task.local:A"]?.fireDate == at(18, 23))
+    }
+
+    @Test func quietHoursOn_movesTheRequestToTheEnd_withTheOverdueText() async {
+        enableQuietHours()
+        local.tasks = [task("A", day: 19, hour: 1)]
+        await scheduler(now: testNow()).reschedule()
+        #expect(center.pending["tagwerk.task.local:A"]?.fireDate == at(19, 7))
+        #expect(center.added.last?.body == "War fällig heute um 01:00 · local")
+    }
+
+    @Test func windowStartFollowsTheBedtime_whileCoupled() async {
+        enableQuietHours(coupledToBedtime: true)
+        settings.bedtimeMinutes = 22 * 60
+        // Due 00:30, fires 22:30: inside 22:00-07:00, outside the default 23:00-07:00 only by half an hour.
+        local.tasks = [task("A", day: 19, hour: 0, minute: 30)]
+        await scheduler(now: testNow()).reschedule()
+        #expect(center.pending["tagwerk.task.local:A"]?.fireDate == at(19, 7))
+        settings.bedtimeMinutes = 23 * 60 + 30
+        await scheduler(now: testNow()).reschedule()
+        #expect(center.pending["tagwerk.task.local:A"]?.fireDate == at(18, 22, 30))
+    }
+
+    @Test func rescheduleDuringTheNight_keepsTheMovedRequest() async {
+        enableQuietHours()
+        local.tasks = [task("A", day: 19, hour: 1)]
+        await scheduler(now: testNow()).reschedule()
+        center.clearAdded()
+        // 02:00: the original 23:00 is long past, but the request for 07:00 must survive any run.
+        await scheduler(now: at(19, 2)).reschedule()
+        #expect(center.pending["tagwerk.task.local:A"]?.fireDate == at(19, 7))
+    }
+
+    @Test func limitAndOrder_workWithMovedTimes() async {
+        enableQuietHours()
+        local.tasks = (0..<60).map { task("T\(String(format: "%02d", $0))", day: 19, hour: 1, minute: $0) }
+        await scheduler(now: testNow()).reschedule()
+        #expect(center.pending.count == NotificationScheduler.limit)
+        #expect(center.pending.values.allSatisfy { $0.fireDate == at(19, 7) })
+        // All share one time: the order falls back to the identifier, so the first fifty identifiers stay.
+        #expect(center.pendingIDs.contains("tagwerk.task.local:T49"))
+        #expect(!center.pendingIDs.contains("tagwerk.task.local:T50"))
+    }
+
+    // MARK: Focus filter
+
+    @Test func focusActive_holdsNotificationsBack_untilEightHoursAfterTheStart() async {
+        settings.focusQuietSince = at(18, 9)
+        local.tasks = [task("A", day: 18, hour: 14)]  // fires 12:00
+        await scheduler(now: testNow()).reschedule()
+        #expect(center.pending["tagwerk.task.local:A"]?.fireDate == at(18, 17))
+    }
+
+    @Test func focusActive_withQuietHours_holdsUntilTheirEnd() async {
+        enableQuietHours()
+        settings.focusQuietSince = at(18, 9)
+        local.tasks = [task("A", day: 18, hour: 14)]
+        await scheduler(now: testNow()).reschedule()
+        #expect(center.pending["tagwerk.task.local:A"]?.fireDate == at(19, 7))
+    }
+
+    @Test func focusEndsEarly_restoresTheOriginalTime() async {
+        settings.focusQuietSince = at(18, 9)
+        local.tasks = [task("A", day: 18, hour: 14)]
+        await scheduler(now: testNow()).reschedule()
+        settings.focusQuietState = FocusQuiet.applying(active: false, now: testNow(), to: settings.focusQuietState)
+        await scheduler(now: testNow()).reschedule()
+        #expect(center.pending["tagwerk.task.local:A"]?.fireDate == at(18, 12))
+    }
+
+    @Test func focusEnded_catchesUpWhatCameDueMeanwhile_once() async {
+        local.tasks = [task("A", day: 18, hour: 13), task("B", day: 18, hour: 8)]  // fire 11:00 and 06:00
+        settings.focusQuietState = FocusQuiet.State(since: nil, catchUpFrom: at(18, 9))
+        let now = at(18, 13)
+        let first = await scheduler(now: now)
+        await first.reschedule()
+        let catchUpMoment = now.addingTimeInterval(60)
+        #expect(center.pending["tagwerk.task.local:A"]?.fireDate == catchUpMoment)
+        #expect(center.pending["tagwerk.task.local:B"] == nil)  // came due before the Focus started
+        #expect(center.added.last?.body == "War fällig heute um 13:00 · local")
+
+        // A second run before the moment plans the same one; after it, nothing is planned again.
+        await scheduler(now: now.addingTimeInterval(30)).reschedule()
+        #expect(center.pending["tagwerk.task.local:A"]?.fireDate == catchUpMoment)
+        center.removePendingForTest("tagwerk.task.local:A")  // delivered
+        await scheduler(now: catchUpMoment.addingTimeInterval(5)).reschedule()
+        #expect(center.pending.isEmpty)
+        #expect(settings.focusQuietState == FocusQuiet.State())
+    }
+
+    @Test func staleFocusStart_isDropped() async {
+        settings.focusQuietSince = at(16, 9)
+        local.tasks = [task("A", day: 18, hour: 14)]
+        await scheduler(now: testNow()).reschedule()
+        #expect(center.pending["tagwerk.task.local:A"]?.fireDate == at(18, 12))
+        #expect(settings.focusQuietSince == nil)
+    }
+}

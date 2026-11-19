@@ -106,6 +106,7 @@ final class AppSettings {
     /// active, and the start kept after it ended until the notifications that came due meanwhile were caught up.
     var focusQuietSince: Date? = nil
     var focusQuietCatchUpFrom: Date? = nil
+    var focusQuietCatchUpAt: Date? = nil
 
     /// Voice: microphone in conversations (plan voice-chat, SP7a).
     var voiceInputEnabled: Bool = true
@@ -172,10 +173,11 @@ extension AppSettings {
 
     /// The Focus filter state, see `FocusQuiet`.
     var focusQuietState: FocusQuiet.State {
-        get { FocusQuiet.State(since: focusQuietSince, catchUpFrom: focusQuietCatchUpFrom) }
+        get { FocusQuiet.State(since: focusQuietSince, catchUpFrom: focusQuietCatchUpFrom, catchUpAt: focusQuietCatchUpAt) }
         set {
             focusQuietSince = newValue.since
             focusQuietCatchUpFrom = newValue.catchUpFrom
+            focusQuietCatchUpAt = newValue.catchUpAt
         }
     }
 

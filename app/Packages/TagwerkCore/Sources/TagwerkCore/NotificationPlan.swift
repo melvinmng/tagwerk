@@ -49,8 +49,8 @@ public struct NotificationRules: Sendable, Hashable {
     public var quietHours: QuietHours?
     /// While a Focus filter holds notifications back: those that would fire inside it move to its end.
     public var focusHold: FocusHold?
-    /// After a Focus filter ended: notifications that came due since this moment, while they were held, fire now.
-    public var focusCatchUpFrom: Date?
+    /// After a Focus filter ended: notifications that came due while it held them back fire once at its `at`.
+    public var focusCatchUp: FocusCatchUp?
 
     /// Margin before a new notification may fire.
     public static let defaultMinimumDelay: TimeInterval = 60
@@ -58,7 +58,7 @@ public struct NotificationRules: Sendable, Hashable {
     public init(leadTimeMinutes: Int, includesDeadlineCalendars: Bool,
                 taskSources: Set<TaskSource> = Set(TaskSource.allCases), limit: Int = 50, dateOnlyHour: Int = 9,
                 allDayEventHour: Int = 18, minimumDelay: TimeInterval = defaultMinimumDelay, quietHours: QuietHours? = nil,
-                focusHold: FocusHold? = nil, focusCatchUpFrom: Date? = nil) {
+                focusHold: FocusHold? = nil, focusCatchUp: FocusCatchUp? = nil) {
         self.leadTimeMinutes = leadTimeMinutes
         self.includesDeadlineCalendars = includesDeadlineCalendars
         self.taskSources = taskSources
@@ -68,17 +68,14 @@ public struct NotificationRules: Sendable, Hashable {
         self.minimumDelay = minimumDelay
         self.quietHours = quietHours
         self.focusHold = focusHold
-        self.focusCatchUpFrom = focusCatchUpFrom
+        self.focusCatchUp = focusCatchUp
     }
 
     /// When a notification that would fire at `fire` is delivered: caught up after a Focus filter, held back while one
     /// is active, and finally moved out of the quiet hours. Unchanged when none of the three applies.
-    func deliveryDate(for fire: Date, earliest: Date, calendar: Calendar) -> Date {
+    func deliveryDate(for fire: Date, calendar: Calendar) -> Date {
         var delivery = fire
-        if let catchUpFrom = focusCatchUpFrom, delivery >= catchUpFrom, delivery < earliest {
-            // At least a minute ahead, so the request is still accepted when it is added.
-            delivery = max(earliest, earliest.addingTimeInterval(Self.defaultMinimumDelay - minimumDelay))
-        }
+        if let catchUp = focusCatchUp, delivery >= catchUp.from, delivery < catchUp.at { delivery = catchUp.at }
         if let hold = focusHold, delivery >= hold.from, delivery < hold.until { delivery = hold.until }
         if let quietHours { delivery = quietHours.shifted(delivery, calendar: calendar) }
         return delivery
@@ -104,7 +101,7 @@ public func notificationPlan(tasks: [TaskItem], deadlineEvents: [CalendarEvent],
               let original = due.hasTime ? calendar.date(byAdding: .minute, value: -rules.leadTimeMinutes, to: dueMoment) : dueMoment
         else { continue }
         // Moved before the check: a notification that was due during the quiet hours is still wanted after they began.
-        let fire = rules.deliveryDate(for: original, earliest: earliest, calendar: calendar)
+        let fire = rules.deliveryDate(for: original, calendar: calendar)
         guard fire >= earliest else { continue }
         let time = due.hasTime ? dueMoment : nil
         let dueDay = PlanDay(due)
@@ -130,7 +127,7 @@ public func notificationPlan(tasks: [TaskItem], deadlineEvents: [CalendarEvent],
                 original = calendar.date(byAdding: .minute, value: -rules.leadTimeMinutes, to: event.start)
             }
             guard let original else { continue }
-            let fire = rules.deliveryDate(for: original, earliest: earliest, calendar: calendar)
+            let fire = rules.deliveryDate(for: original, calendar: calendar)
             guard fire >= earliest else { continue }
             let time = event.isAllDay ? nil : event.start
             result.append(PlannedNotification(

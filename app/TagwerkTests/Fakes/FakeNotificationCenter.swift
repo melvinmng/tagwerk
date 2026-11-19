@@ -48,5 +48,8 @@ final class FakeNotificationCenter: NotificationCenterClient {
 
     func clearAdded() { added = [] }
 
+    /// Removes a request as if it had been delivered.
+    func removePendingForTest(_ id: String) { pending[id] = nil }
+
     var pendingIDs: Set<String> { Set(pending.keys) }
 }

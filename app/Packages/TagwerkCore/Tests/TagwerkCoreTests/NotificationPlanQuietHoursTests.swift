@@ -12,10 +12,10 @@ struct NotificationPlanQuietHoursTests {
 
     private func at(_ day: Int, _ hour: Int, _ minute: Int = 0) -> Date { instant(2026, 11, day, hour, minute, in: calendar) }
 
-    private func rules(leadTime: Int = 0, quietHours: QuietHours? = nil, hold: FocusHold? = nil, catchUp: Date? = nil,
+    private func rules(leadTime: Int = 0, quietHours: QuietHours? = nil, hold: FocusHold? = nil, catchUp: FocusCatchUp? = nil,
                        limit: Int = 50) -> NotificationRules {
         NotificationRules(leadTimeMinutes: leadTime, includesDeadlineCalendars: true, limit: limit, quietHours: quietHours,
-                          focusHold: hold, focusCatchUpFrom: catchUp)
+                          focusHold: hold, focusCatchUp: catchUp)
     }
 
     private func task(_ title: String, day: Int, hour: Int? = nil, minute: Int = 0) -> TaskItem {
@@ -189,27 +189,22 @@ struct NotificationPlanQuietHoursTests {
         #expect(result.map(\.fireDate) == [at(19, 7)])
     }
 
-    @Test func focusCatchUp_firesWhatCameDueWhileHeld() {
+    @Test func focusCatchUp_firesWhatCameDueWhileHeldOnce_atTheChosenMoment() {
         let later = at(18, 12)
+        let at1201 = later.addingTimeInterval(60)
         let tasks = [task("Gehalten", day: 18, hour: 10), task("Davor", day: 18, hour: 8, minute: 30), task("Später", day: 18, hour: 15)]
-        var catchUp = rules(catchUp: at(18, 9))
-        catchUp.minimumDelay = NotificationRules.defaultMinimumDelay
-        let result = plan(tasks, rules: catchUp, now: later)
+        let result = plan(tasks, rules: rules(catchUp: FocusCatchUp(from: at(18, 9), at: at1201)), now: later)
         #expect(result.map(\.title) == ["Gehalten", "Später"])
-        #expect(result.first?.fireDate == later.addingTimeInterval(60))
+        #expect(result.first?.fireDate == at1201)
         #expect(result.first?.body == "War fällig heute um 10:00 · Lokal")
-    }
-
-    @Test func focusCatchUp_withSchedulerMargin_staysAMinuteAhead() {
-        // The scheduler plans without a margin (minimumDelay 0) and drops anything closer than a minute.
-        var catchUp = rules(catchUp: at(18, 9))
-        catchUp.minimumDelay = 0
-        let result = plan([task("A", day: 18, hour: 10)], rules: catchUp, now: at(18, 12))
-        #expect(result.first?.fireDate == at(18, 12).addingTimeInterval(NotificationRules.defaultMinimumDelay))
+        // A run half a minute later plans the same moment.
+        let again = plan(tasks, rules: rules(catchUp: FocusCatchUp(from: at(18, 9), at: at1201)), now: later.addingTimeInterval(30))
+        #expect(again.map(\.fireDate) == result.map(\.fireDate))
     }
 
     @Test func focusCatchUp_insideTheQuietHours_waitsForTheEnd() {
-        let result = plan([task("A", day: 18, hour: 22)], rules: rules(quietHours: night, catchUp: at(18, 20)), now: at(18, 23, 30))
+        let catchUp = FocusCatchUp(from: at(18, 20), at: at(18, 23, 31))
+        let result = plan([task("A", day: 18, hour: 22)], rules: rules(quietHours: night, catchUp: catchUp), now: at(18, 23, 30))
         #expect(result.map(\.fireDate) == [at(19, 7)])
     }
 }
