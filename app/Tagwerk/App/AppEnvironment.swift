@@ -23,6 +23,7 @@ final class AppEnvironment {
     let shopping: ShoppingModel
     /// "Mit ChatGPT sortieren"; sends item names only after consent and on the user's tap.
     let shoppingSorter: ShoppingSorter
+    let recipeImporter: RecipeImporter
     /// Notes stored on this device only (phase 5); never sent to ChatGPT.
     let notes: NoteStore
     let backup: BackupService
@@ -125,8 +126,16 @@ final class AppEnvironment {
         let searcher: any EventSearching = eventSearcher ?? EventSearchReader()
         self.eventSearcher = searcher
         self.remindersProvider = reminders
-        self.notes = NoteStore(context: context)
-        self.backup = BackupService(context: context, settings: settings)
+        let attachments = NoteAttachmentStore(context: context)
+        let noteStore = NoteStore(context: context, attachments: attachments)
+        // The fixed folders must exist before the first frame; a restore may bring notes without them.
+        noteStore.ensureDefaultFolders()
+        attachments.purgeOrphans(existingNoteIDs: Set(noteStore.allNotes().map(\.id)))
+        self.notes = noteStore
+        self.backup = BackupService(context: context, settings: settings, attachments: attachments, afterRestore: { [noteStore] in
+            noteStore.ensureDefaultFolders()
+            noteStore.save()
+        })
         let shoppingCategories = ShoppingCategoryStore(context: context, settings: settings)
         self.shoppingCategories = shoppingCategories
         self.shopping = ShoppingModel(store: reminderStore, settings: settings, categories: shoppingCategories)
@@ -238,6 +247,8 @@ final class AppEnvironment {
                                            hasConsent: { settings.mealEstimationConsent })
         self.shoppingSorter = ShoppingSorter(responder: ai.client, model: { try await ai.selectedModel() },
                                              hasConsent: { settings.shoppingSortConsent })
+        self.recipeImporter = RecipeImporter(responder: ai.client, model: { try await ai.selectedModel() },
+                                             hasConsent: { settings.shoppingRecipeConsent })
         let planning = self.planning
         let localTasks = LocalTaskProvider(context: context)
         self.routines = RoutinesModel(
@@ -439,6 +450,13 @@ final class AppEnvironment {
         activeSearch?.close()
     }
 
+    /// A note as the search sees it. The search reads the plain text only: no Markdown, no HTML, no attachment references.
+    static func searchItem(for note: NoteRecord, folderNames: [UUID: String]) -> NoteSearchItem {
+        let folderName = note.kind == .free ? note.folderID.flatMap { folderNames[$0] } : nil
+        return NoteSearchItem(id: note.id, text: MarkdownText.plainText(note.text), kindLabel: folderName ?? kindLabel(of: note.kind),
+                              updatedAt: note.updatedAt, dayKey: note.kind == .free || note.kind == .bibleStudy ? nil : note.dayKey)
+    }
+
     /// Name of a note's kind in a search row.
     static func kindLabel(of kind: NoteKind) -> String {
         switch kind {
@@ -509,11 +527,7 @@ final class AppEnvironment {
             notes: {
                 // A note in a folder shows the folder name as its label; the trash is not searched.
                 let folderNames = Dictionary(notes.folders().map { ($0.id, $0.name) }, uniquingKeysWith: { first, _ in first })
-                return notes.notes().map { note in
-                    let folderName = note.kind == .free ? note.folderID.flatMap { folderNames[$0] } : nil
-                    return NoteSearchItem(id: note.id, text: note.text, kindLabel: folderName ?? Self.kindLabel(of: note.kind),
-                                          updatedAt: note.updatedAt, dayKey: note.kind == .free || note.kind == .bibleStudy ? nil : note.dayKey)
-                }
+                return notes.notes().map { Self.searchItem(for: $0, folderNames: folderNames) }
             },
             shopping: {
                 // Only open items of a list that is set up; completed ones stay out (spec F7).

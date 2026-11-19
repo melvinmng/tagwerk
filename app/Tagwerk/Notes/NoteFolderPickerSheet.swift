@@ -22,13 +22,16 @@ struct NoteFolderPickerSheet: View {
 
     var body: some View {
         let infos = store.folders().map(\.info)
+        // Folders that only the routines fill (Tagesstart, Tagesabschluss, Dream Log) are no destination for notes.
+        // Moving a folder has its own rules (`validateMove`), so they stay visible there, disabled.
         let nodes = NoteFolderRules.tree(infos).flatMap(\.flattened)
+            .filter { movingFolderID != nil || $0.folder.role?.acceptsOwnNotes ?? true }
         NavigationStack {
             List {
                 row(name: String(localized: "Notizen"), id: nil, depth: 1, isEnabled: true, symbol: "note.text")
                 ForEach(nodes) { node in
                     row(name: node.folder.name, id: node.id, depth: node.depth, isEnabled: isEnabled(node.id, infos: infos),
-                        symbol: node.folder.role == nil ? "folder" : "folder.badge.gearshape")
+                        symbol: NotesFoldersView.symbol(for: node.folder.role))
                 }
             }
             .navigationTitle(title)

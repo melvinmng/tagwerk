@@ -11,7 +11,7 @@ import TagwerkCore
 struct PrivateNotesTests {
     @Test func everyPrivateKind_isCoveredByThePredicate() {
         let privateKinds = NoteKind.allCases.filter(\.isPrivate)
-        #expect(privateKinds.contains(.journal) && privateKinds.contains(.bibleStudy))
+        #expect(privateKinds.contains(.journal) && privateKinds.contains(.bibleStudy) && privateKinds.contains(.dream))
         #expect(!NoteKind.free.isPrivate && !NoteKind.morning.isPrivate && !NoteKind.evening.isPrivate)
     }
 
@@ -29,6 +29,19 @@ struct PrivateNotesTests {
         let sources = SearchToolSources(events: { _ in nil }, calendarNames: { [:] }, completedTasks: { [] })
         let labels = Mirror(reflecting: sources).children.compactMap(\.label)
         #expect(labels.sorted() == ["calendarNames", "completedTasks", "events"])
+    }
+
+    @Test func search_matchesPlainText_notMarkup() throws {
+        let container = try ModelContainerFactory.make(inMemory: true)
+        let notes = NoteStore(context: container.mainContext)
+        let reference = MarkdownText.reference(for: UUID(uuidString: "3F2504E0-4F89-41D3-9A0C-0305E82C3301")!, name: "Foto", isImage: true)
+        let note = try #require(notes.create(text: "# Urlaub\n**Packliste** <i>Sonnencreme</i> \(reference)"))
+        let item = AppEnvironment.searchItem(for: note, folderNames: [:])
+        #expect(item.text == "Urlaub\nPackliste Sonnencreme")
+        #expect(NoteText.matches(item.text, query: "packliste sonnencreme"))
+        #expect(!NoteText.matches(item.text, query: "attachment") && !NoteText.matches(item.text, query: "3F2504E0"))
+        // The label of a note in a folder or of a routine note does not change.
+        #expect(AppEnvironment.searchItem(for: try #require(notes.create(text: "Traum", kind: .dream, dayKey: "2026-11-18")), folderNames: [:]).kindLabel == "Dream Log")
     }
 
     @Test func widgetSnapshot_hasNoFieldForNoteText() {

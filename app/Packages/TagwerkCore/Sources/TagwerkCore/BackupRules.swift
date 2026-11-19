@@ -5,7 +5,8 @@ import Foundation
 public enum BackupRules {
     public static let format = "tagwerk-backup"
     /// The version of the file layout this app writes and reads. A higher version in a file is refused.
-    public static let schemaVersion = 1
+    /// Version 2 added the attachments of notes; files of version 1 stay readable.
+    public static let schemaVersion = 2
     /// Automatic backups at most this often.
     public static let automaticIntervalSeconds: TimeInterval = 24 * 60 * 60
     /// Automatic backups kept in the folder.

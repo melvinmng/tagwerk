@@ -166,6 +166,33 @@ struct NoteSuggestionModelTests {
         }
     }
 
+    @Test func request_sendsPlainTextWithoutAttachmentReferences() async {
+        let reference = MarkdownText.reference(for: UUID(uuidString: "3F2504E0-4F89-41D3-9A0C-0305E82C3301")!, name: "Foto", isImage: true)
+        let file = MarkdownText.reference(for: UUID(uuidString: "A1B2C3D4-0000-4000-8000-000000000002")!, name: "Plan.pdf", isImage: false)
+        let text = "# Training\n- [ ] **Zahnarzt** anrufen\n\(reference)\n\(file)"
+        let model = makeModel()
+        await model.fetch(noteID: note(text).id, text: text, kind: .evening)
+        let sent = responder.sent[0].input.compactMap { item -> String? in if case .user(let text) = item { text } else { nil } }.joined(separator: "\n")
+        #expect(sent.contains("Training") && sent.contains("Zahnarzt anrufen") && sent.contains("Plan.pdf"))
+        #expect(!sent.contains("attachment:") && !sent.contains("3F2504E0") && !sent.contains("**") && !sent.contains("!["))
+    }
+
+    @Test func request_sendsNoHtml() async {
+        let text = "Vor <b onclick=\"x()\">fett</b> <img src=\"https://example.com/pixel.png\"> <script>alert(1)</script>nach"
+        let model = makeModel()
+        await model.fetch(noteID: note(text).id, text: text, kind: .evening)
+        let sent = responder.sent[0].input.compactMap { item -> String? in if case .user(let text) = item { text } else { nil } }.joined(separator: "\n")
+        #expect(sent.contains("Vor fett") && sent.contains("nach"))
+        #expect(!sent.contains("<b") && !sent.contains("<img") && !sent.contains("<script") && !sent.contains("example.com") && !sent.contains("onclick"))
+    }
+
+    @Test func fetch_neverSendsADreamNote() async {
+        let dream = notes.create(text: "Traum vom Meer", kind: .dream, dayKey: "2026-11-18")!
+        let model = makeModel()
+        await model.fetch(noteID: dream.id, text: "Traum vom Meer", kind: .dream)
+        #expect(responder.calls == 0 && counter.models == 0)
+    }
+
     /// Routine data that must never reach the request.
     private func routineLeakCheckSetup() {
         let store = RoutineStore(context: container.mainContext)

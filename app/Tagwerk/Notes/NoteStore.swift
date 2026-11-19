@@ -11,8 +11,6 @@ final class NoteStore {
     enum Filter: Equatable {
         /// Every note that is not in the trash.
         case all
-        /// Morning and evening notes (the virtual folder "Gedanken").
-        case thoughts
         /// The user's own notes in the default folder "Notizen".
         case own
         /// The notes lying directly in one folder.
@@ -27,9 +25,14 @@ final class NoteStore {
     /// Bumped by every write; views read it to follow changes.
     private(set) var revision = 0
 
-    init(context: ModelContext, now: @escaping () -> Date = Date.init) {
+    /// The pictures and files of the notes; `nil` where nothing needs them (most tests). A note that goes for good takes
+    /// its attachments with it.
+    @ObservationIgnored let attachments: NoteAttachmentStore?
+
+    init(context: ModelContext, now: @escaping () -> Date = Date.init, attachments: NoteAttachmentStore? = nil) {
         self.context = context
         self.now = now
+        self.attachments = attachments
     }
 
     // MARK: Reading
@@ -42,7 +45,6 @@ final class NoteStore {
             guard note.deletedAt == nil else { return false }
             switch filter {
             case .all: return true
-            case .thoughts: return note.kind == .morning || note.kind == .evening
             // A note whose folder is gone reads as lying in the default folder.
             case .own: return note.kind == .free && (note.folderID.map { !folderIDs.contains($0) } ?? true)
             case .folder(let id): return note.folderID == id
@@ -67,8 +69,6 @@ final class NoteStore {
     func note(kind: NoteKind, dayKey: String) -> NoteRecord? {
         all().first { $0.deletedAt == nil && $0.kind == kind && $0.dayKey == dayKey }
     }
-
-    var hasThoughts: Bool { all().contains { $0.deletedAt == nil && ($0.kind == .morning || $0.kind == .evening) } }
 
     /// Notes that are not in the trash.
     var count: Int { all().filter { $0.deletedAt == nil }.count }
@@ -98,12 +98,26 @@ final class NoteStore {
             return existing
         }
         let record = NoteRecord(text: trimmed, kind: kind, dayKey: kind == .free ? nil : dayKey, wasDictated: wasDictated, now: now())
-        // Thought notes live in the virtual folder "Gedanken", journal entries in their system folder.
+        // Thought and dream notes live in the fixed folder of their kind, journal entries in their system folder.
         switch kind {
-        case .morning, .evening, .dream: record.folderID = nil
+        case .morning, .evening, .dream:
+            if let role = NoteFolderRole.role(for: kind) {
+                record.folderID = ensureSystemFolder(role, name: Self.defaultFolderName(for: role)).id
+            }
         case .journal: record.folderID = ensureJournalFolder().id
         case .free, .bibleStudy: record.folderID = folderID
         }
+        context.insert(record)
+        save()
+        return record
+    }
+
+    /// A new empty free note in a folder (`nil` is "Notizen"), for the editor to fill. `deleteIfEmpty` removes it
+    /// again when the editor closes without text.
+    @discardableResult
+    func createBlank(folderID: UUID? = nil) -> NoteRecord {
+        let record = NoteRecord(text: "", kind: .free, now: now())
+        record.folderID = folderID
         context.insert(record)
         save()
         return record
@@ -133,6 +147,7 @@ final class NoteStore {
     /// Removes a note for good, without a trip through "Zuletzt gelöscht".
     func delete(_ id: UUID) {
         guard let record = note(id: id) else { return }
+        attachments?.deleteAll(of: id)
         context.delete(record)
         save()
     }
@@ -143,6 +158,7 @@ final class NoteStore {
         guard let record = note(id: id) else { return }
         let isBlank = record.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         guard isBlank || (record.kind == .journal && JournalTemplate.isOnlyTemplate(record.text)) else { return }
+        attachments?.deleteAll(of: id)
         context.delete(record)
         save()
     }
@@ -167,7 +183,10 @@ final class NoteStore {
 
     /// Empties "Zuletzt gelöscht".
     func emptyTrash() {
-        for record in all() where record.deletedAt != nil { context.delete(record) }
+        for record in all() where record.deletedAt != nil {
+            attachments?.deleteAll(of: record.id)
+            context.delete(record)
+        }
         save()
     }
 
@@ -179,7 +198,10 @@ final class NoteStore {
             record.deletedAt.map { NoteFolderRules.isExpired(deletedAt: $0, now: reference, calendar: calendar) } ?? false
         }
         guard !expired.isEmpty else { return 0 }
-        for record in expired { context.delete(record) }
+        for record in expired {
+            attachments?.deleteAll(of: record.id)
+            context.delete(record)
+        }
         save()
         return expired.count
     }
@@ -275,9 +297,12 @@ final class NoteStore {
         return all().filter { $0.deletedAt == nil && $0.folderID.map(removed.contains) == true }.count
     }
 
-    /// Moves the user's own notes into a folder (`nil` is "Notizen"). Thought notes stay where they are.
+    /// Moves the user's own notes into a folder (`nil` is "Notizen"). Thought notes stay where they are. A folder that
+    /// is filled by the routines only (Tagesstart, Tagesabschluss, Dream Log) refuses the move.
     func move(noteIDs: [UUID], to folderID: UUID?) {
-        if let folderID, folder(id: folderID) == nil { return }
+        if let folderID {
+            guard let target = folder(id: folderID), target.role?.acceptsOwnNotes ?? true else { return }
+        }
         let wanted = Set(noteIDs)
         var changed = false
         for record in all() where wanted.contains(record.id) && record.deletedAt == nil && record.kind == .free
@@ -287,6 +312,9 @@ final class NoteStore {
         }
         if changed { save() }
     }
+
+    /// Every note including the trash; internal for the extensions of this store.
+    func allNotes() -> [NoteRecord] { all() }
 
     private func all() -> [NoteRecord] {
         _ = revision

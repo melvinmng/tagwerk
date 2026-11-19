@@ -1,31 +1,38 @@
 import Foundation
 
 /// Origin of a note: the user's own note, the thoughts captured at the start or the end of a day, the dream log of the
-/// morning start, or an entry of the journal "Tagebuch mit Gott", or a note of the Bible Study folder. An unknown stored
+/// morning start, an entry of the journal "Tagebuch mit Gott", or a note of the Bible Study folder. An unknown stored
 /// value reads as `.free`. The raw values are stored and written to backups: never rename, only append.
 public enum NoteKind: String, Sendable, CaseIterable {
     case free, morning, evening, journal, bibleStudy
-    /// The optional dream log of the morning start: one note per day, like the morning and evening notes.
+    /// One dated dream note per day, written in the morning routine ("Dream Log").
     case dream
 
-    /// Private notes (journal, Bible Study) never leave the device: not to ChatGPT (not even with the consent for thought
-    /// notes), not to the assistant's tools and not to the widget. The in-app search is local and may show them. This
-    /// predicate also gates the opt-in of the backup. Sending note content to ChatGPT needs `allowsSuggestions` on top: the
-    /// dream log is not `isPrivate` (it is part of the backup like the thought notes) but is never sent.
+    /// Private notes never leave the device: not to ChatGPT (not even with the consent for thought notes), not to the
+    /// assistant's tools and not to the widget. The in-app search is local and may show them. Every place that sends or
+    /// shares note content has to check this predicate. Whether a backup holds them is `isInDefaultBackup`.
     public var isPrivate: Bool {
         switch self {
-        case .journal, .bibleStudy: true
-        case .free, .morning, .evening, .dream: false
+        case .journal, .bibleStudy, .dream: true
+        case .free, .morning, .evening: false
         }
     }
 
     /// Whether "Vorschläge holen" may send the note to ChatGPT: only the thought notes of the morning and the evening.
-    /// The dream log stays on the device like the gratitude entries, although it is part of the backup (so it is not
-    /// `isPrivate`, which governs the opt-in of the backup).
     public var allowsSuggestions: Bool {
         switch self {
         case .morning, .evening: true
         case .free, .journal, .bibleStudy, .dream: false
+        }
+    }
+
+    /// Whether a backup holds notes of this kind without the switch "Tagebuch und Bible Study einschließen".
+    /// Dreams are private like the gratitude entries (never sent anywhere), yet they belong to the daily routine
+    /// and are restored with it, so they are backed up like the morning and evening notes.
+    public var isInDefaultBackup: Bool {
+        switch self {
+        case .journal, .bibleStudy: false
+        case .free, .morning, .evening, .dream: true
         }
     }
 }
@@ -47,32 +54,35 @@ public enum NoteDayKey {
     }
 }
 
-/// A note has no title of its own: the title is its first line, the rest is the preview.
+/// A note has no title of its own: the title is its first line, the rest is the preview. Titles, previews and the
+/// search work on the plain text of the note (`MarkdownText.plainText`), so "# Einkauf" is titled "Einkauf" and a word
+/// inside bold text is found.
 public enum NoteText {
     public static let maxTitleLength = 60
 
-    /// The first non-empty line, trimmed and cut to `maxTitleLength` characters; empty for a note without text.
+    /// The first non-empty line of the plain text, trimmed and cut to `maxTitleLength` characters; empty for a note
+    /// without text.
     public static func title(_ text: String) -> String {
         guard let line = lines(text).first(where: { !$0.isEmpty }) else { return "" }
         return String(line.prefix(maxTitleLength))
     }
 
-    /// The non-empty lines after the title line.
+    /// The non-empty lines of the plain text after the title line.
     public static func preview(_ text: String) -> String {
         lines(text).filter { !$0.isEmpty }.dropFirst().joined(separator: "\n")
     }
 
-    /// Whether every word of `query` occurs in `text`, ignoring case, accents and umlaut spelling like the global
-    /// search does. An empty query matches everything.
+    /// Whether every word of `query` occurs in the plain text of `text`, ignoring case, accents and umlaut spelling like
+    /// the global search does. An empty query matches everything. Markup and attachment references are not searched.
     public static func matches(_ text: String, query: String) -> Bool {
         let words = SearchText.fold(query).split(whereSeparator: \.isWhitespace)
         guard !words.isEmpty else { return true }
-        let folded = SearchText.fold(text)
+        let folded = SearchText.fold(MarkdownText.plainText(text))
         return words.allSatisfy { folded.contains($0) }
     }
 
     private static func lines(_ text: String) -> [String] {
-        text.split(omittingEmptySubsequences: false, whereSeparator: \.isNewline)
+        MarkdownText.plainText(text).split(omittingEmptySubsequences: false, whereSeparator: \.isNewline)
             .map { $0.trimmingCharacters(in: .whitespaces) }
     }
 }

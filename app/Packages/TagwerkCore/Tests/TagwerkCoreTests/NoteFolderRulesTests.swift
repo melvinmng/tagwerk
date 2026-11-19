@@ -54,6 +54,70 @@ struct NoteFolderRulesTests {
         #expect(!NoteFolderRules.canCreateFolder(under: journal.id, in: [journal]))
     }
 
+    @Test func role_rawValues_areStable() {
+        #expect(NoteFolderRole.journal.rawValue == "journal")
+        #expect(NoteFolderRole.bibleStudy.rawValue == "bibleStudy")
+        #expect(NoteFolderRole.brainDump.rawValue == "brainDump")
+        #expect(NoteFolderRole.morningRoutine.rawValue == "morningRoutine")
+        #expect(NoteFolderRole.eveningRoutine.rawValue == "eveningRoutine")
+        #expect(NoteFolderRole.dreamLog.rawValue == "dreamLog")
+        #expect(NoteKind.dream.rawValue == "dream")
+    }
+
+    @Test func role_isPrivate_journalBibleStudyAndDreamLog() {
+        #expect(Set(NoteFolderRole.allCases.filter(\.isPrivate)) == [.journal, .bibleStudy, .dreamLog])
+    }
+
+    @Test func role_defaultBackup_onlyJournalAndBibleStudyAreLeftOut() {
+        #expect(Set(NoteFolderRole.allCases.filter { !$0.isInDefaultBackup }) == [.journal, .bibleStudy])
+    }
+
+    @Test func role_agreesWithNoteKind_onPrivacyAndBackup() {
+        for role in NoteFolderRole.allCases {
+            guard let kind = role.noteKind else { continue }
+            #expect(role.isPrivate == kind.isPrivate, "privacy of \(role)")
+            #expect(role.isInDefaultBackup == kind.isInDefaultBackup, "backup of \(role)")
+        }
+        #expect(NoteKind.dream.isPrivate && NoteKind.dream.isInDefaultBackup)
+    }
+
+    @Test func role_forKind_findsTheFolderOfThoughtAndDreamNotes() {
+        #expect(NoteFolderRole.role(for: .morning) == .morningRoutine)
+        #expect(NoteFolderRole.role(for: .evening) == .eveningRoutine)
+        #expect(NoteFolderRole.role(for: .dream) == .dreamLog)
+        #expect(NoteFolderRole.role(for: .free) == nil)
+        #expect(NoteFolderRole.role(for: .journal) == nil)
+    }
+
+    @Test func role_noteKind_mapsRoutineFolders() {
+        #expect(NoteFolderRole.dreamLog.noteKind == .dream)
+        #expect(NoteFolderRole.morningRoutine.noteKind == .morning)
+        #expect(NoteFolderRole.eveningRoutine.noteKind == .evening)
+        #expect(NoteFolderRole.brainDump.noteKind == nil)
+        #expect(NoteFolderRole.journal.noteKind == nil)
+    }
+
+    @Test func role_acceptsOwnNotes_onlyRoutineFoldersRefuse() {
+        #expect(NoteFolderRole.brainDump.acceptsOwnNotes)
+        #expect(!NoteFolderRole.morningRoutine.acceptsOwnNotes)
+        #expect(!NoteFolderRole.eveningRoutine.acceptsOwnNotes)
+        #expect(!NoteFolderRole.dreamLog.acceptsOwnNotes)
+        // Existing behaviour: the folder picker has always offered these two.
+        #expect(NoteFolderRole.journal.acceptsOwnNotes && NoteFolderRole.bibleStudy.acceptsOwnNotes)
+    }
+
+    @Test func canCreateFolder_belowBrainDump_isFalse() {
+        let brainDump = folder("Brain Dump", role: .brainDump)
+        #expect(!NoteFolderRules.canCreateFolder(under: brainDump.id, in: [brainDump]))
+    }
+
+    @Test func validateMove_brainDump_throwsSystemFolder() {
+        let brainDump = folder("Brain Dump", role: .brainDump)
+        let other = folder("Anderer")
+        #expect(throws: NoteFolderRules.MoveError.systemFolder) { try NoteFolderRules.validateMove(brainDump.id, to: other.id, in: [brainDump, other]) }
+        #expect(throws: NoteFolderRules.MoveError.systemFolder) { try NoteFolderRules.validateMove(other.id, to: brainDump.id, in: [brainDump, other]) }
+    }
+
     @Test func validateMove_rejectsCyclesDepthAndSystemFolders() throws {
         let one = folder("1")
         let two = folder("2", parent: one)

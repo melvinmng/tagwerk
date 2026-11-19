@@ -77,6 +77,8 @@ final class AppSettings {
     var shoppingCategoriesSeeded: Bool = false
     /// The one-time consent for "Mit ChatGPT sortieren"; the settings switch binds to it.
     var shoppingSortConsent: Bool = false
+    /// The one-time consent for "Rezept hinzufügen" (reading a recipe with ChatGPT); the settings switch binds to it.
+    var shoppingRecipeConsent: Bool = false
     /// The Health card in the tab was dismissed with "Nicht jetzt".
     var healthCardDismissed: Bool = false
     /// Phase 4: the calories/water line in the head of "Planen" (today's day view, from the first entry).

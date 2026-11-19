@@ -698,6 +698,36 @@ struct NoteFolderBackup: BackupEntity {
     }
 }
 
+/// A file attached to a note, with its bytes (base64 in the JSON). `init(_:)` carries the metadata only: the bytes lie
+/// in `NoteAttachmentStore`, so the collector uses `init(_:data:)`.
+struct NoteAttachmentBackup: BackupEntity {
+    static let modelName = "NoteAttachmentRecord"
+    var id: UUID
+    var noteID: UUID?
+    var fileName: String
+    var typeIdentifier: String
+    var createdAt: Date
+    var data: Data
+
+    init(_ record: NoteAttachmentRecord) {
+        self.init(record, data: Data())
+    }
+
+    init(_ record: NoteAttachmentRecord, data: Data) {
+        id = record.id
+        noteID = record.noteID
+        fileName = record.fileName
+        typeIdentifier = record.typeIdentifier
+        createdAt = record.createdAt
+        self.data = data
+    }
+
+    /// The record without its file; `BackupEntities.restore` writes the bytes through `NoteAttachmentStore`.
+    func makeRecord() -> NoteAttachmentRecord {
+        NoteAttachmentRecord(id: id, noteID: noteID, fileName: fileName, typeIdentifier: typeIdentifier, byteCount: data.count, createdAt: createdAt)
+    }
+}
+
 struct BibleStudySessionBackup: BackupEntity {
     static let modelName = "BibleStudySessionRecord"
     var id: UUID
@@ -1122,6 +1152,8 @@ struct AppSettingsBackup: Codable, Equatable {
     var shoppingSuggestionDismissed: Bool
     var shoppingCategoriesSeeded: Bool
     var shoppingSortConsent: Bool
+    /// Added with "Rezept hinzufügen"; files without it read as `nil`, which leaves the setting as it is.
+    var shoppingRecipeConsent: Bool?
     var healthCardDismissed: Bool
     var showsIntakeInPlan: Bool
     var widgetShowsNutrition: Bool
@@ -1199,6 +1231,7 @@ struct AppSettingsBackup: Codable, Equatable {
         shoppingSuggestionDismissed = record.shoppingSuggestionDismissed
         shoppingCategoriesSeeded = record.shoppingCategoriesSeeded
         shoppingSortConsent = record.shoppingSortConsent
+        shoppingRecipeConsent = record.shoppingRecipeConsent
         healthCardDismissed = record.healthCardDismissed
         showsIntakeInPlan = record.showsIntakeInPlan
         widgetShowsNutrition = record.widgetShowsNutrition
@@ -1274,6 +1307,7 @@ struct AppSettingsBackup: Codable, Equatable {
         record.shoppingSuggestionDismissed = shoppingSuggestionDismissed
         record.shoppingCategoriesSeeded = shoppingCategoriesSeeded
         record.shoppingSortConsent = shoppingSortConsent
+        if let shoppingRecipeConsent { record.shoppingRecipeConsent = shoppingRecipeConsent }
         record.healthCardDismissed = healthCardDismissed
         record.showsIntakeInPlan = showsIntakeInPlan
         record.widgetShowsNutrition = widgetShowsNutrition
@@ -1334,6 +1368,7 @@ struct BackupEntities: Codable, Equatable {
     var shoppingAssignments: [ShoppingAssignmentBackup] = []
     var notes: [NoteBackup] = []
     var noteFolders: [NoteFolderBackup] = []
+    var noteAttachments: [NoteAttachmentBackup] = []
     var bibleStudySessions: [BibleStudySessionBackup] = []
     var habits: [HabitBackup] = []
     var habitChecks: [HabitCheckBackup] = []
@@ -1374,6 +1409,7 @@ struct BackupEntities: Codable, Equatable {
         shoppingAssignments = try container.decodeIfPresent([ShoppingAssignmentBackup].self, forKey: .shoppingAssignments) ?? []
         notes = try container.decodeIfPresent([NoteBackup].self, forKey: .notes) ?? []
         noteFolders = try container.decodeIfPresent([NoteFolderBackup].self, forKey: .noteFolders) ?? []
+        noteAttachments = try container.decodeIfPresent([NoteAttachmentBackup].self, forKey: .noteAttachments) ?? []
         bibleStudySessions = try container.decodeIfPresent([BibleStudySessionBackup].self, forKey: .bibleStudySessions) ?? []
         habits = try container.decodeIfPresent([HabitBackup].self, forKey: .habits) ?? []
         habitChecks = try container.decodeIfPresent([HabitCheckBackup].self, forKey: .habitChecks) ?? []
@@ -1386,14 +1422,15 @@ struct BackupEntities: Codable, Equatable {
     }
 
     /// Model names of everything the file holds, for the completeness check against the schema.
-    static let modelNames: Set<String> = ["AppSettings", LocalTaskBackup.modelName, LocalOccurrenceCompletionBackup.modelName, DayAssignmentBackup.modelName, DayOverrideBackup.modelName, ReminderEstimateBackup.modelName, EventTaskLinkBackup.modelName, RecurringEffortValueBackup.modelName, RecurringEffortOverrideBackup.modelName, RecurringOccurrenceDoneBackup.modelName, DayLunchBackup.modelName, EventAvailabilityMarkBackup.modelName, EventMergeDecisionBackup.modelName, ReminderOverrideBackup.modelName, EventDeadlineMarkBackup.modelName, DeadlineEventLinkBackup.modelName, DeadlineSuggestionDismissalBackup.modelName, MealBackup.modelName, DrinkBackup.modelName, WorkoutBackup.modelName, ShoppingCategoryBackup.modelName, ShoppingAssignmentBackup.modelName, NoteBackup.modelName, NoteFolderBackup.modelName, BibleStudySessionBackup.modelName, HabitBackup.modelName, HabitCheckBackup.modelName, RoutineDayBackup.modelName, EveningChecklistItemBackup.modelName, FocusMarkBackup.modelName, FocusSessionBackup.modelName, EffortSampleBackup.modelName, WeekReflectionBackup.modelName]
+    static let modelNames: Set<String> = ["AppSettings", LocalTaskBackup.modelName, LocalOccurrenceCompletionBackup.modelName, DayAssignmentBackup.modelName, DayOverrideBackup.modelName, ReminderEstimateBackup.modelName, EventTaskLinkBackup.modelName, RecurringEffortValueBackup.modelName, RecurringEffortOverrideBackup.modelName, RecurringOccurrenceDoneBackup.modelName, DayLunchBackup.modelName, EventAvailabilityMarkBackup.modelName, EventMergeDecisionBackup.modelName, ReminderOverrideBackup.modelName, EventDeadlineMarkBackup.modelName, DeadlineEventLinkBackup.modelName, DeadlineSuggestionDismissalBackup.modelName, MealBackup.modelName, DrinkBackup.modelName, WorkoutBackup.modelName, ShoppingCategoryBackup.modelName, ShoppingAssignmentBackup.modelName, NoteBackup.modelName, NoteFolderBackup.modelName, NoteAttachmentBackup.modelName, BibleStudySessionBackup.modelName, HabitBackup.modelName, HabitCheckBackup.modelName, RoutineDayBackup.modelName, EveningChecklistItemBackup.modelName, FocusMarkBackup.modelName, FocusSessionBackup.modelName, EffortSampleBackup.modelName, WeekReflectionBackup.modelName]
 }
 
 extension BackupEntities {
     /// All records of the models in the backup. `includePrivate: false` leaves out journal and Bible Study content: the notes of
-    /// those kinds, their system folders and the sessions.
+    /// those kinds, their system folders, the sessions and the attachments of those notes. `attachments` supplies the bytes
+    /// of the attachments; without it the file holds none.
     @MainActor
-    init(collecting context: ModelContext, settings: AppSettings, includePrivate: Bool) {
+    init(collecting context: ModelContext, settings: AppSettings, includePrivate: Bool, attachments: NoteAttachmentStore? = nil) {
         self.init()
         self.settings = AppSettingsBackup(settings)
         localTasks = Self.fetch(LocalTask.self, in: context).map(LocalTaskBackup.init)
@@ -1417,8 +1454,13 @@ extension BackupEntities {
         workouts = Self.fetch(WorkoutRecord.self, in: context).map(WorkoutBackup.init)
         shoppingCategories = Self.fetch(ShoppingCategory.self, in: context).map(ShoppingCategoryBackup.init)
         shoppingAssignments = Self.fetch(ShoppingAssignment.self, in: context).map(ShoppingAssignmentBackup.init)
-        notes = Self.fetch(NoteRecord.self, in: context).filter { includePrivate || !$0.kind.isPrivate }.map(NoteBackup.init)
-        noteFolders = Self.fetch(NoteFolderRecord.self, in: context).filter { includePrivate || $0.role == nil }.map(NoteFolderBackup.init)
+        notes = Self.fetch(NoteRecord.self, in: context).filter { includePrivate || $0.kind.isInDefaultBackup }.map(NoteBackup.init)
+        noteFolders = Self.fetch(NoteFolderRecord.self, in: context).filter { includePrivate || Self.isInDefaultBackup(folderRole: $0.role) }.map(NoteFolderBackup.init)
+        let keptNoteIDs = Set(notes.map(\.id))
+        noteAttachments = attachments.map { store in
+            store.records().filter { $0.noteID.map(keptNoteIDs.contains) ?? false }
+                .compactMap { record in store.data(for: record.id).map { NoteAttachmentBackup(record, data: $0) } }
+        } ?? []
         bibleStudySessions = includePrivate ? Self.fetch(BibleStudySessionRecord.self, in: context).map(BibleStudySessionBackup.init) : []
         habits = Self.fetch(HabitRecord.self, in: context).map(HabitBackup.init)
         habitChecks = Self.fetch(HabitCheckRecord.self, in: context).map(HabitCheckBackup.init)
@@ -1435,8 +1477,14 @@ extension BackupEntities {
     /// `replacePrivate` is false (the file was written without journal and Bible Study content), the journal and Bible Study
     /// notes, their folders and the sessions on this device stay as they are.
     @MainActor
-    func restore(into context: ModelContext, settings: AppSettings, replacePrivate: Bool) throws {
+    func restore(into context: ModelContext, settings: AppSettings, replacePrivate: Bool, attachments: NoteAttachmentStore? = nil) throws {
         self.settings?.apply(to: settings)
+        if let attachments {
+            // The attachments of notes that stay on this device (private notes not in the file) stay too.
+            let protectedNoteIDs = Set(Self.fetch(NoteRecord.self, in: context)
+                .filter { !replacePrivate && !$0.kind.isInDefaultBackup }.map(\.id))
+            attachments.delete(ids: attachments.records().filter { $0.noteID.map { !protectedNoteIDs.contains($0) } ?? true }.map(\.id))
+        }
         Self.delete(LocalTask.self, in: context) { _ in true }
         Self.delete(LocalOccurrenceCompletion.self, in: context) { _ in true }
         Self.delete(DayAssignment.self, in: context) { _ in true }
@@ -1458,8 +1506,8 @@ extension BackupEntities {
         Self.delete(WorkoutRecord.self, in: context) { _ in true }
         Self.delete(ShoppingCategory.self, in: context) { _ in true }
         Self.delete(ShoppingAssignment.self, in: context) { _ in true }
-        Self.delete(NoteRecord.self, in: context) { replacePrivate || !$0.kind.isPrivate }
-        Self.delete(NoteFolderRecord.self, in: context) { replacePrivate || $0.role == nil }
+        Self.delete(NoteRecord.self, in: context) { replacePrivate || $0.kind.isInDefaultBackup }
+        Self.delete(NoteFolderRecord.self, in: context) { replacePrivate || Self.isInDefaultBackup(folderRole: $0.role) }
         if replacePrivate { Self.delete(BibleStudySessionRecord.self, in: context) { _ in true } }
         Self.delete(HabitRecord.self, in: context) { _ in true }
         Self.delete(HabitCheckRecord.self, in: context) { _ in true }
@@ -1494,8 +1542,14 @@ extension BackupEntities {
         for item in workouts { context.insert(item.makeRecord()) }
         for item in shoppingCategories { context.insert(item.makeRecord()) }
         for item in shoppingAssignments { context.insert(item.makeRecord()) }
-        for item in notes where replacePrivate || !(NoteKind(rawValue: item.kindRaw) ?? .free).isPrivate { context.insert(item.makeRecord()) }
-        for item in noteFolders where replacePrivate || NoteFolderRole(rawValue: item.roleRaw ?? "") == nil { context.insert(item.makeRecord()) }
+        for item in notes where replacePrivate || (NoteKind(rawValue: item.kindRaw) ?? .free).isInDefaultBackup { context.insert(item.makeRecord()) }
+        for item in noteFolders where replacePrivate || Self.isInDefaultBackup(folderRole: item.roleRaw.flatMap(NoteFolderRole.init(rawValue:))) { context.insert(item.makeRecord()) }
+        if let attachments {
+            for item in noteAttachments {
+                try attachments.restore(id: item.id, noteID: item.noteID, fileName: item.fileName, typeIdentifier: item.typeIdentifier,
+                                        createdAt: item.createdAt, data: item.data)
+            }
+        }
         if replacePrivate { for item in bibleStudySessions { context.insert(item.makeRecord()) } }
         for item in habits { context.insert(item.makeRecord()) }
         for item in habitChecks { context.insert(item.makeRecord()) }
@@ -1507,6 +1561,13 @@ extension BackupEntities {
         for item in effortSamples ?? [] { context.insert(item.makeRecord()) }
         for item in weekReflections { context.insert(item.makeRecord()) }
         try context.save()
+    }
+
+    /// Whether a note folder is part of a backup written without the switch "Tagebuch und Bible Study einschließen": the
+    /// user's own folders and the fixed folders of Brain Dump, Tagesstart, Tagesabschluss and Dream Log are, journal and
+    /// Bible Study are not.
+    private static func isInDefaultBackup(folderRole: NoteFolderRole?) -> Bool {
+        folderRole?.isInDefaultBackup ?? true
     }
 
     @MainActor

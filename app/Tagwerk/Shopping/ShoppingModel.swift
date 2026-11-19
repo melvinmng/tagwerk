@@ -266,14 +266,45 @@ final class ShoppingModel {
         await reload()
     }
 
-    /// Deletes exactly the items shown under "Erledigt"; older completed ones stay in Reminders.
-    /// Returns the number of deleted items.
+    /// The start of "all time" for completed items. Not `Date.distantPast`: EventKit may refuse a range that wide.
+    private static let beginningOfTime = Date(timeIntervalSince1970: 0)
+
+    /// Every completed reminder of the shopping list, however long ago it was completed; empty without a usable list.
+    private func allCompletedRecords() async -> [ReminderRecord] {
+        guard store.accessState == .fullAccess, let listID = settings.shoppingListID,
+              store.lists().contains(where: { $0.id == listID }) else { return [] }
+        let interval = DateInterval(start: Self.beginningOfTime, end: now().addingTimeInterval(60))
+        return await store.completedReminders(in: interval, listIDs: [listID])
+    }
+
+    /// How many completed items the shopping list holds, also those older than the "Erledigt" section shows.
+    func allCompletedCount() async -> Int {
+        await allCompletedRecords().count
+    }
+
+    /// Deletes every completed item of the shopping list, also those completed longer ago than the "Erledigt" section
+    /// shows. Each one is checked against the shopping list first, so no other list is touched. Returns the number deleted.
     @discardableResult
-    func removeCompleted() async -> Int {
+    func removeAllCompleted() async -> Int {
         var deleted = 0
-        for item in completedItems {
-            guard let record = try? shoppingRecord(item.id), record.isCompleted else { continue }
-            if (try? store.delete(id: item.id)) != nil { deleted += 1 }
+        for record in await allCompletedRecords() {
+            guard let fresh = try? shoppingRecord(record.id), fresh.isCompleted else { continue }
+            if (try? store.delete(id: record.id)) != nil { deleted += 1 }
+        }
+        await reload()
+        return deleted
+    }
+
+    /// Deletes every open and every completed item of the shopping list. The list and its categories stay, and so do the
+    /// assignments of names to categories: they apply to future items. Returns the number deleted.
+    @discardableResult
+    func clearList() async -> Int {
+        guard state == .ready, let listID = settings.shoppingListID else { return 0 }
+        var deleted = 0
+        let records = await store.openReminders(in: [listID]) + (await allCompletedRecords())
+        for record in records {
+            guard (try? shoppingRecord(record.id)) != nil else { continue }
+            if (try? store.delete(id: record.id)) != nil { deleted += 1 }
         }
         await reload()
         return deleted

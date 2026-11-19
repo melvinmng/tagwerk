@@ -53,7 +53,7 @@ targets:
         NSHealthShareUsageDescription: "Tagwerk zeigt deine Trainings und Schritte aus Health im Tab „Erfassen“."
         NSHealthUpdateUsageDescription: "Tagwerk speichert deine Mahlzeiten, dein Wasser und deine Trainings in Health."
         NSMicrophoneUsageDescription: "Tagwerk wandelt deine Sprache auf dem iPhone in Text um. Der Ton verlässt das Gerät nicht."
-        NSCameraUsageDescription: "Tagwerk nimmt Fotos von Mahlzeiten auf, um Kalorien und Nährwerte schätzen zu lassen."
+        NSCameraUsageDescription: "Tagwerk nimmt Fotos von Mahlzeiten auf, um Kalorien und Nährwerte schätzen zu lassen, und Fotos, die du an eine Notiz anhängst."
         GitHubClientID: $(GITHUB_CLIENT_ID)
         UIBackgroundModes: [fetch]
         NSSupportsLiveActivities: true

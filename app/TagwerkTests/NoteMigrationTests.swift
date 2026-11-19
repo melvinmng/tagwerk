@@ -61,6 +61,6 @@ struct NoteMigrationTests {
         #expect(notes.allSatisfy { $0.folderID == nil && $0.deletedAt == nil && $0.importSourceID == nil && $0.bookKey == nil })
         // The notes show up where they did before: "Notizen" and "Gedanken".
         let store = NoteStore(context: current.mainContext)
-        #expect(store.notes(.own).map(\.text) == ["Geschenkidee\nBuch"] && store.notes(.thoughts).map(\.text) == ["Ruhiger Tag"])
+        #expect(store.notes(.own).map(\.text) == ["Geschenkidee\nBuch"] && store.notes().filter { $0.kind == .evening }.map(\.text) == ["Ruhiger Tag"])
     }
 }

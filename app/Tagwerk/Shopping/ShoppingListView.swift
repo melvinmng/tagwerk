@@ -10,6 +10,11 @@ struct ShoppingListView: View {
     @State private var editing: ShoppingItem?
     @State private var showsCompleted = false
     @State private var confirmsRemoveCompleted = false
+    @State private var confirmsClearList = false
+    /// Completed items of the whole list (not only those of the last seven days), loaded when the page appears and when a
+    /// confirmation opens.
+    @State private var completedTotal = 0
+    @State private var clearListTotal = 0
     @State private var showsCategories = false
     /// The line above the input field: feedback after adding or the text of a write error.
     @State private var notice: String?
@@ -17,6 +22,7 @@ struct ShoppingListView: View {
     @State private var newCategoryItem: ShoppingItem?
     @State private var newCategoryName = ""
     @State private var showsSortConsent = false
+    @State private var showsRecipe = false
     /// The running request to ChatGPT; cancelling it discards the answer.
     @State private var sorting: Task<Void, Never>?
     /// Identifies the running request, so a cancelled one cannot clear the state of its successor.
@@ -60,6 +66,9 @@ struct ShoppingListView: View {
                     showsSortConsent = false
                 }
             }
+            .sheet(isPresented: $showsRecipe) {
+                RecipeSheet(model: model) { notice = $0 }
+            }
             .sheet(item: $proposal) { proposal in
                 ShoppingSortResultSheet(proposal: proposal.value) { selected in
                     ShoppingSorter.apply(selected, categories: environment.shoppingCategories, model: model)
@@ -77,14 +86,33 @@ struct ShoppingListView: View {
                 Button("Anlegen", action: createCategory)
                 Button("Abbrechen", role: .cancel) {}
             }
-            .confirmationDialog("\(model.completedItems.count) erledigte Artikel endgültig löschen?",
-                                isPresented: $confirmsRemoveCompleted, titleVisibility: .visible) {
-                Button("Löschen", role: .destructive) { Task { await model.removeCompleted() } }
+            .confirmationDialog(Self.removeCompletedQuestion(count: completedTotal), isPresented: $confirmsRemoveCompleted,
+                                titleVisibility: .visible) {
+                Button("Alle erledigten löschen", role: .destructive) {
+                    Task {
+                        await model.removeAllCompleted()
+                        completedTotal = await model.allCompletedCount()
+                    }
+                }
                 Button("Abbrechen", role: .cancel) {}
+            } message: {
+                Text(Self.remindersNotice)
+            }
+            .confirmationDialog(Self.clearListQuestion(count: clearListTotal), isPresented: $confirmsClearList, titleVisibility: .visible) {
+                Button("Liste leeren", role: .destructive) {
+                    Task {
+                        await model.clearList()
+                        completedTotal = await model.allCompletedCount()
+                    }
+                }
+                Button("Abbrechen", role: .cancel) {}
+            } message: {
+                Text(Self.remindersNotice)
             }
             .task {
                 environment.shoppingCategories.seedIfNeeded()
                 await model.reload()
+                completedTotal = await model.allCompletedCount()
             }
     }
 
@@ -251,17 +279,58 @@ struct ShoppingListView: View {
                 if !environment.ai.isSignedIn { Text("Anmeldung unter Einstellungen › KI") }
             }
             .disabled(!environment.ai.isSignedIn || sorting != nil)
+            Button { showsRecipe = true } label: {
+                Label("Rezept hinzufügen …", systemImage: "fork.knife")
+                if !environment.ai.isSignedIn { Text("Anmeldung unter Einstellungen › KI") }
+            }
+            .disabled(!environment.ai.isSignedIn)
             Button { showsCategories = true } label: { Label("Kategorien verwalten", systemImage: "list.bullet.indent") }
             Button(role: .destructive) {
-                confirmsRemoveCompleted = true
+                askRemoveCompleted()
             } label: {
-                Label("Erledigte entfernen", systemImage: "trash")
+                Label("Alle erledigten löschen", systemImage: "trash")
             }
-            .disabled(model.completedItems.isEmpty)
+            .disabled(model.completedItems.isEmpty && completedTotal == 0)
+            Button(role: .destructive) {
+                askClearList()
+            } label: {
+                Label("Liste leeren", systemImage: "trash.slash")
+            }
+            .disabled(model.openItems.isEmpty && model.completedItems.isEmpty && completedTotal == 0)
         } label: {
             Image(systemName: "ellipsis")
         }
         .accessibilityLabel("Mehr")
+    }
+
+    // MARK: Clearing
+
+    /// "12 erledigte Artikel löschen?"
+    static func removeCompletedQuestion(count: Int) -> String {
+        String(localized: "\(count) erledigte Artikel löschen?")
+    }
+
+    /// "Gesamte Liste leeren? 20 Artikel werden gelöscht."
+    static func clearListQuestion(count: Int) -> String {
+        String(localized: "Gesamte Liste leeren? \(count) Artikel werden gelöscht.")
+    }
+
+    static var remindersNotice: String { String(localized: "Sie verschwinden auch aus Apple Erinnerungen.") }
+
+    /// Reads the number first, so the question names what is really deleted, including items older than seven days.
+    private func askRemoveCompleted() {
+        Task {
+            completedTotal = await model.allCompletedCount()
+            if completedTotal > 0 { confirmsRemoveCompleted = true } else { notice = String(localized: "Es gibt keine erledigten Artikel.") }
+        }
+    }
+
+    private func askClearList() {
+        Task {
+            completedTotal = await model.allCompletedCount()
+            clearListTotal = model.openItems.count + completedTotal
+            if clearListTotal > 0 { confirmsClearList = true } else { notice = String(localized: "Die Liste ist schon leer.") }
+        }
     }
 
     // MARK: Actions

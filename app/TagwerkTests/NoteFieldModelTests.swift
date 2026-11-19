@@ -48,7 +48,9 @@ struct NoteFieldModelTests {
         model.textChanged()
         await model.waitForSave()
         let note = try #require(store.note(kind: .dream, dayKey: "2026-11-18"))
-        #expect(note.kindRaw == "dream" && note.text == "Ich bin geflogen." && note.folderID == nil)
+        #expect(note.kindRaw == "dream" && note.text == "Ich bin geflogen.")
+        // Dream notes are filed into the fixed folder "Dream Log".
+        #expect(note.folderID != nil && note.folderID == store.folder(role: .dreamLog)?.id)
         // Same day and kind: the same record; the evening note of that day is another one.
         let again = NoteFieldModel(store: store, kind: .dream, day: day, debounce: .milliseconds(1), sleep: { _ in })
         #expect(again.text == "Ich bin geflogen.")

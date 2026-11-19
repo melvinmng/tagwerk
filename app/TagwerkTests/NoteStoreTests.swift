@@ -4,6 +4,11 @@ import Testing
 import TagwerkCore
 @testable import Tagwerk
 
+extension NoteStore {
+    /// Test helper: the live morning and evening notes.
+    func thoughtNotes() -> [NoteRecord] { notes().filter { $0.kind == .morning || $0.kind == .evening } }
+}
+
 @MainActor
 struct NoteStoreTests {
     final class Clock { var now = testNow() }
@@ -58,15 +63,15 @@ struct NoteStoreTests {
         #expect(note.isPinned && note.updatedAt == created)
     }
 
-    @Test func filter_thoughtsAndOwn() throws {
-        #expect(!store.hasThoughts)
+    @Test func filter_ownAndAll() throws {
+        #expect(store.thoughtNotes().isEmpty)
         let a = try #require(store.create(text: "a")); advance()
         let b = try #require(store.create(text: "b", kind: .morning, dayKey: "2026-11-18")); advance()
         let c = try #require(store.create(text: "c", kind: .evening, dayKey: "2026-11-18"))
-        #expect(store.notes(.thoughts).map(\.id) == [c.id, b.id])
+        #expect(store.thoughtNotes().map(\.id) == [c.id, b.id])
         #expect(store.notes(.own).map(\.id) == [a.id])
         #expect(store.notes(.all).count == 3)
-        #expect(store.hasThoughts)
+        #expect(!store.thoughtNotes().isEmpty)
         #expect(store.note(kind: .morning, dayKey: "2026-11-18")?.id == b.id)
         #expect(store.note(kind: .morning, dayKey: "2026-11-19") == nil)
     }
@@ -102,7 +107,7 @@ struct NoteStoreTests {
         let note = try #require(store.create(text: "a"))
         note.kindRaw = "weekly"
         #expect(note.kind == .free)
-        #expect(store.notes(.own).count == 1 && !store.hasThoughts)
+        #expect(store.notes(.own).count == 1 && store.thoughtNotes().isEmpty)
     }
 
     @Test func writes_bumpRevision() throws {
@@ -154,12 +159,13 @@ struct NoteStoreTests {
         let inside = try #require(store.create(text: "drin", folderID: folder.id))
         let loose = try #require(store.create(text: "lose"))
         let thought = try #require(store.create(text: "Gedanke", kind: .evening, dayKey: "2026-11-18", folderID: folder.id))
-        #expect(thought.folderID == nil)
+        // A thought note lands in the fixed folder of its kind, whatever folder was passed.
+        #expect(thought.folderID == store.folder(role: .eveningRoutine)?.id)
         #expect(store.notes(.folder(folder.id)).map(\.id) == [inside.id])
         #expect(store.notes(.own).map(\.id) == [loose.id])
         store.move(noteIDs: [loose.id, thought.id], to: folder.id)
         #expect(Set(store.notes(.folder(folder.id)).map(\.id)) == [inside.id, loose.id])
-        #expect(thought.folderID == nil)
+        #expect(thought.folderID == store.folder(role: .eveningRoutine)?.id)
         store.move(noteIDs: [loose.id], to: nil)
         #expect(store.notes(.own).map(\.id) == [loose.id])
         // An unknown folder leaves the note where it is.
@@ -224,6 +230,109 @@ struct NoteStoreTests {
         #expect(store.folder(role: .journal)?.name == "Mein Tagebuch")
     }
 
+    // MARK: Fixed folders (P5)
+
+    @Test func ensureDefaultFolders_createsFourFoldersOnce() {
+        store.ensureDefaultFolders()
+        store.ensureDefaultFolders()
+        let roles = store.folders().compactMap(\.role)
+        #expect(roles.count == 4 && Set(roles) == [.brainDump, .morningRoutine, .eveningRoutine, .dreamLog])
+        #expect(store.folder(role: .brainDump)?.name == "Brain Dump")
+        #expect(store.folder(role: .morningRoutine)?.name == "Tagesstart")
+        #expect(store.folder(role: .eveningRoutine)?.name == "Tagesabschluss")
+        #expect(store.folder(role: .dreamLog)?.name == "Dream Log")
+        let orders = NoteStore.defaultFolderRoles.compactMap { store.folder(role: $0)?.order }
+        #expect(orders == orders.sorted() && Set(orders).count == 4)
+    }
+
+    @Test func ensureDefaultFolders_keepsRenamedFolder() throws {
+        store.ensureDefaultFolders()
+        let id = try #require(store.folder(role: .brainDump)?.id)
+        try store.renameFolder(id, to: "Kopf leeren")
+        store.ensureDefaultFolders()
+        #expect(store.folder(role: .brainDump)?.name == "Kopf leeren" && store.folders().count == 4)
+    }
+
+    @Test func ensureDefaultFolders_withoutChanges_doesNotWrite() {
+        store.ensureDefaultFolders()
+        let revision = store.revision
+        store.ensureDefaultFolders()
+        #expect(store.revision == revision)
+    }
+
+    /// Notes written before the fixed folders existed (or restored without them) have no folder yet.
+    private func legacyNote(kind: NoteKind, dayKey: String, text: String, folderID: UUID? = nil) -> NoteRecord {
+        let record = NoteRecord(text: text, kind: kind, dayKey: dayKey, now: clock.now)
+        record.folderID = folderID
+        container.mainContext.insert(record)
+        store.save()
+        return record
+    }
+
+    @Test func sortRoutineNotes_movesExistingThoughtNotesIntoTheirFolders() {
+        let morning = legacyNote(kind: .morning, dayKey: "2026-11-18", text: "m")
+        let evening = legacyNote(kind: .evening, dayKey: "2026-11-18", text: "e")
+        let dream = legacyNote(kind: .dream, dayKey: "2026-11-18", text: "d")
+        store.ensureDefaultFolders()
+        #expect(morning.folderID == store.folder(role: .morningRoutine)?.id)
+        #expect(evening.folderID == store.folder(role: .eveningRoutine)?.id)
+        #expect(dream.folderID == store.folder(role: .dreamLog)?.id)
+    }
+
+    @Test func sortRoutineNotes_repairsDanglingFolderID_andCoversTheTrash() {
+        let dangling = legacyNote(kind: .morning, dayKey: "2026-11-18", text: "m", folderID: UUID())
+        let trashed = legacyNote(kind: .evening, dayKey: "2026-11-17", text: "e")
+        store.trash(trashed.id)
+        store.ensureDefaultFolders()
+        #expect(dangling.folderID == store.folder(role: .morningRoutine)?.id)
+        #expect(trashed.folderID == store.folder(role: .eveningRoutine)?.id && trashed.deletedAt != nil)
+    }
+
+    @Test func sortRoutineNotes_leavesFreeJournalAndBibleStudyNotesAlone() throws {
+        let work = try store.createFolder(name: "Arbeit")
+        let free = try #require(store.create(text: "frei", folderID: work.id))
+        let loose = try #require(store.create(text: "lose"))
+        let journal = try #require(store.create(text: "Eintrag", kind: .journal, dayKey: "2026-11-18"))
+        let bible = try #require(store.create(text: "Studie", kind: .bibleStudy, dayKey: "2026-11-18", folderID: work.id))
+        let journalFolder = journal.folderID
+        store.ensureDefaultFolders()
+        #expect(free.folderID == work.id && loose.folderID == nil && bible.folderID == work.id)
+        #expect(journal.folderID == journalFolder)
+    }
+
+    @Test func saveThought_landsInTheRoutineFolder() throws {
+        let morning = try #require(store.saveThought("Gedanke", kind: .morning, dayKey: "2026-11-18", wasDictated: false))
+        let dream = try #require(store.saveThought("Traum", kind: .dream, dayKey: "2026-11-18", wasDictated: false))
+        #expect(morning.folderID == store.folder(role: .morningRoutine)?.id)
+        #expect(dream.folderID == store.folder(role: .dreamLog)?.id)
+        #expect(store.notes(.folder(try #require(store.folder(role: .morningRoutine)?.id))).map(\.id) == [morning.id])
+    }
+
+    @Test func move_intoRoutineFolders_isRefused() throws {
+        store.ensureDefaultFolders()
+        let note = try #require(store.create(text: "frei"))
+        for role in [NoteFolderRole.morningRoutine, .eveningRoutine, .dreamLog] {
+            store.move(noteIDs: [note.id], to: store.folder(role: role)?.id)
+            #expect(note.folderID == nil, "moved into \(role)")
+        }
+    }
+
+    @Test func move_intoBrainDump_works() throws {
+        store.ensureDefaultFolders()
+        let note = try #require(store.create(text: "frei"))
+        let brainDump = try #require(store.folder(role: .brainDump))
+        store.move(noteIDs: [note.id], to: brainDump.id)
+        #expect(note.folderID == brainDump.id && store.notes(.folder(brainDump.id)).map(\.id) == [note.id])
+    }
+
+    @Test func deleteFolder_fixedFolders_throwSystemFolder() throws {
+        store.ensureDefaultFolders()
+        for role in NoteStore.defaultFolderRoles {
+            let id = try #require(store.folder(role: role)?.id)
+            #expect(throws: NoteFolderRules.MoveError.systemFolder) { try store.deleteFolder(id) }
+        }
+    }
+
     @Test func purgeExpired_removesNotesAfterThirtyDays() throws {
         let calendar = testCalendar()
         let old = try #require(store.create(text: "alt"))
@@ -250,7 +359,7 @@ struct NoteStoreTests {
         store.trash(first.id)
         #expect(store.note(kind: .evening, dayKey: "2026-11-18") == nil)
         let second = try #require(store.create(text: "neu", kind: .evening, dayKey: "2026-11-18"))
-        #expect(second.id != first.id && store.notes(.thoughts).map(\.id) == [second.id])
+        #expect(second.id != first.id && store.thoughtNotes().map(\.id) == [second.id])
     }
 
     @Test func sorting_byCreatedAndTitle() throws {

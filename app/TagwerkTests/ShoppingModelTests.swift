@@ -193,12 +193,73 @@ struct ShoppingModelTests {
         #expect(!model.openItems.contains { $0.id == "milk" })
     }
 
-    @Test func removeCompleted_deletesOnlyLastSevenDays() async {
+    // MARK: Clearing (#156)
+
+    @Test func allCompletedCount_countsBeyondWindow() async {
         await model.reload()
-        #expect(await model.removeCompleted() == 2)
-        #expect(store.records.values.contains { $0.title == "Reis" })
-        #expect(store.records["foreign-done"] != nil)
+        #expect(model.completedItems.count == 2)
+        // "Reis" was completed eight days ago and is not shown under "Erledigt", but it counts.
+        let total = await model.allCompletedCount()
+        #expect(total == 3)
+    }
+
+    @Test func removeAllCompleted_deletesOlderThanSevenDaysToo() async {
+        await model.reload()
+        let removed = await model.removeAllCompleted()
+        #expect(removed == 3)
+        #expect(!store.records.values.contains { $0.listID == "shop" && $0.isCompleted })
+        #expect(store.records["rice"] == nil)
         #expect(model.completedItems.isEmpty)
+        let remaining = await model.allCompletedCount()
+        #expect(remaining == 0)
+    }
+
+    @Test func removeAllCompleted_leavesOpenItems() async {
+        await model.reload()
+        await model.removeAllCompleted()
+        #expect(store.records["milk"] != nil && store.records["bananas"] != nil)
+        #expect(model.openItems.map(\.name) == ["Bananen", "Milch"])
+    }
+
+    @Test func clearList_deletesOpenAndCompleted() async {
+        await model.reload()
+        let cleared = await model.clearList()
+        #expect(cleared == 5)
+        #expect(!store.records.values.contains { $0.listID == "shop" })
+        #expect(model.state == .ready && model.openItems.isEmpty && model.completedItems.isEmpty && model.sections.isEmpty)
+        // The list itself stays and takes new items.
+        let report = await model.add([ParsedItem(name: "Kaffee", quantity: nil)])
+        #expect(report.added == ["Kaffee"])
+    }
+
+    @Test func clearList_keepsCategoriesAndAssignments() async throws {
+        await model.reload()
+        let household = try category(.household)
+        model.setCategory(household, forItemID: "milk")
+        let categoryCount = categories.categories().count
+        let assignmentCount = categories.assignments().count
+        await model.clearList()
+        #expect(categories.categories().count == categoryCount && categories.assignments().count == assignmentCount)
+        // A new item of that name lands in the remembered category.
+        _ = await model.add([ParsedItem(name: "Milch", quantity: nil)])
+        #expect(model.sections.first { $0.categoryID == household }?.items.map(\.name) == ["Milch"])
+    }
+
+    @Test func clearList_neverTouchesOtherLists() async {
+        await model.reload()
+        await model.clearList()
+        await model.removeAllCompleted()
+        #expect(store.records["essay"] != nil && store.records["foreign-done"] != nil)
+        #expect(store.records.values.filter { $0.listID == "uni" }.count == 2)
+    }
+
+    @Test func clearList_withoutAList_deletesNothing() async {
+        settings.shoppingListID = nil
+        let cleared = await model.clearList()
+        let removed = await model.removeAllCompleted()
+        let counted = await model.allCompletedCount()
+        #expect(cleared == 0 && removed == 0 && counted == 0)
+        #expect(store.records.count == 7)
     }
 
     @Test func setCategory_appliesToEveryItemOfThatName() async throws {

@@ -146,7 +146,7 @@ final class NoteSuggestionModel {
         return """
         Today: \(day), \(clock). The note is the \(origin) note.
         Note:
-        \(text)
+        \(MarkdownText.plainText(text))
 
         Open tasks and events of the next 7 days as JSON:
         \(context.json)
