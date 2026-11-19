@@ -658,6 +658,24 @@ struct AppToolsGitHubTests {
         #expect(github.createdDrafts.last?.subContainerIDs == ["PVT_1"])
     }
 
+    @Test func createIssue_emptyProjectList_meansNoProject_notTheLinkedDefault() async {
+        github.requiresPlacementToBeListed = true
+        let result = await run(await make(), "create_task", issue(repository: "beispiel/app", projects: []))
+        #expect(result["ok"] as? Bool == true)
+        #expect(github.createdDrafts.last?.subContainerIDs == [])
+        #expect(result["listed"] as? Bool == false)
+        #expect(result["number"] as? Int == 151)
+        #expect(result["url"] as? String == "https://github.com/beispiel/app/issues/151")
+        #expect(result["id"] == nil && result["task"] == nil)
+        // The assistant reports the issue in its answer; no capsule on top.
+        #expect(taskList.lastHandedOver == nil)
+    }
+
+    @Test func createIssue_missingProjectList_stillUsesTheLinkedProjects() async {
+        _ = await run(await make(), "create_task", issue(repository: "beispiel/app", projects: nil))
+        #expect(github.createdDrafts.last?.subContainerIDs == ["PVT_1"])
+    }
+
     @Test func createIssue_twoRepositoriesWithoutName_returnsError() async {
         addSecondRepository()
         let result = await run(await make(), "create_task", issue())
@@ -750,5 +768,8 @@ struct AppToolsGitHubTests {
         #expect(AppTools.gitHubTarget(repository: nil, projectIDs: ["PVT_9"], catalog: two) == .failure(.projectUnknown))
         let none = GitHubCatalog(repositories: [], projects: [], fetchedAt: .distantPast)
         #expect(AppTools.gitHubTarget(repository: nil, projectIDs: nil, catalog: none) == .failure(.repositoryMissing))
+        // An explicitly empty list is a choice, not a gap: even two unlinked projects do not ask.
+        #expect(AppTools.gitHubTarget(repository: nil, projectIDs: [], catalog: two)
+            == .success(AppTools.GitHubTarget(repository: "beispiel/app", projectIDs: [])))
     }
 }

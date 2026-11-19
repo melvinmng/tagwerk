@@ -396,8 +396,10 @@ final class AssistantModel {
         guard gitHubDirectory() != nil else { return "" }
         var text = """
         Für ein GitHub-Issue rufst du zuerst list_github_targets auf und übergibst repository und project_ids \
-        ausdrücklich. list_assignees rufst du nur auf, wenn der Nutzer das Issue jemandem zuweisen will. Passt ein \
-        genannter Name zu keinem oder zu mehreren Logins, frag nach, statt zu raten.
+        ausdrücklich. Will der Nutzer das Issue ohne Project anlegen, übergibst du project_ids als leere Liste []; es \
+        erscheint dann nicht in seinen Aufgaben, und du sagst ihm das mit Nummer und Link. list_assignees rufst du nur \
+        auf, wenn der Nutzer das Issue jemandem zuweisen will. Passt ein genannter Name zu keinem oder zu mehreren \
+        Logins, frag nach, statt zu raten.
         """
         if case .task(let id) = context, id.source == .github, let reference = issueReference(id) {
             text += " Naheliegendes Ziel für neue Issues: \(reference.repository)."

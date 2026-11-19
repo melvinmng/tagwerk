@@ -680,3 +680,125 @@ struct ReconnectTests {
         #expect(model.sourceStates[.github] == .loaded)
     }
 }
+
+
+@MainActor
+struct TaskListStatusTests {
+    let github: FakeTaskProvider
+    let model: TaskListModel
+    let issueID = TaskID(source: .github, rawValue: "Login")
+
+    init() {
+        var issue = makeTask("Login", source: .github, due: DueDate(year: 2026, month: 11, day: 20))
+        issue.assignees = ["octo"]
+        issue.url = URL(string: "https://github.com/beispiel/app/issues/42")
+        issue.editableFields.insert(.status)
+        issue.statuses = [
+            SubContainerStatus(subContainerID: "PVT_1", subContainerName: "App", current: "Ready",
+                               options: ["Backlog", "Ready", "In progress", "Done"], isWritable: true),
+            SubContainerStatus(subContainerID: "PVT_2", subContainerName: "Studium", current: "Ready",
+                               options: ["Backlog", "Ready", "In progress", "Done"], isWritable: true),
+        ]
+        github = FakeTaskProvider(source: .github, tasks: [issue])
+        github.viewerLogin = "octo"
+        github.requiresPlacementToBeListed = true
+        model = TaskListModel(providers: [github], now: testNow, calendar: testCalendar())
+    }
+
+    @Test func setStatus_sendsOneStatusChange_andKeepsTheItemListed() async {
+        await model.reload()
+        await model.setStatus(issueID, subContainerID: "PVT_1", to: "In progress")
+        #expect(github.appliedEdits.last?.edit.statusChanges == ["PVT_1": "In progress"])
+        #expect(model.items.first?.statuses.first?.current == "In progress")
+        #expect(model.lastCompleted == nil)
+    }
+
+    @Test func setStatus_doneInOneOfTwoProjects_keepsTheIssueOpenInTheList() async {
+        await model.reload()
+        await model.setStatus(issueID, subContainerID: "PVT_1", to: "Done")
+        #expect(model.items.count == 1)
+        #expect(model.lastCompleted == nil)
+    }
+
+    @Test func setStatus_doneInEveryProject_completesLikeErledigt() async {
+        await model.reload()
+        var completions: [(TaskID, Bool)] = []
+        model.onCompletionChanged = { id, flag in completions.append((id, flag)) }
+        await model.setStatus(issueID, subContainerID: "PVT_1", to: "Done")
+        await model.setStatus(issueID, subContainerID: "PVT_2", to: "Done")
+        #expect(model.items.isEmpty)
+        #expect(model.lastCompleted?.id == issueID)
+        #expect(completions.count == 1 && completions[0].1 == true)
+    }
+
+    @Test func setStatus_failure_showsErrorAndLeavesTheList() async {
+        await model.reload()
+        github.applyError = .failed("Den Status „Blocked“ gibt es im Project „App“ nicht.")
+        await model.setStatus(issueID, subContainerID: "PVT_1", to: "Blocked")
+        #expect(model.lastError == "Den Status „Blocked“ gibt es im Project „App“ nicht.")
+        #expect(model.items.first?.statuses.first?.current == "Ready")
+    }
+
+    // MARK: Issues without a Project (#153)
+
+    @Test func create_withoutProject_isNotListed_andShowsTheNoProjectCapsule() async {
+        let draft = TaskDraft(title: "Export", containerID: "beispiel/app", subContainerIDs: [])
+        let created = await model.create(draft, in: .github)
+        #expect(created != nil)
+        #expect(model.items.count == 1)   // only the existing issue
+        #expect(!model.items.contains { $0.title == "Export" })
+        #expect(model.lastHandedOver?.reason == .noProject)
+        #expect(model.lastHandedOver?.number == 151)
+        #expect(model.lastHandedOver?.title == "#151 angelegt · ohne Project")
+        #expect(model.lastHandedOver?.url == URL(string: "https://github.com/beispiel/app/issues/151"))
+        #expect(model.lastError == nil)
+    }
+
+    @Test func create_withProject_staysListed_withoutCapsule() async {
+        let draft = TaskDraft(title: "Export", containerID: "beispiel/app", subContainerIDs: ["PVT_1"], startStatus: "In progress")
+        await model.create(draft, in: .github)
+        #expect(model.items.contains { $0.title == "Export" })
+        #expect(model.lastHandedOver == nil)
+        #expect(github.createdDrafts.last?.startStatus == "In progress")
+    }
+
+    @Test func create_forOthersInAProject_isStillTheHandedOverCapsule() async {
+        let draft = TaskDraft(title: "Export", containerID: "beispiel/app", subContainerIDs: ["PVT_1"], assignees: ["lea-m"])
+        await model.create(draft, in: .github)
+        #expect(model.lastHandedOver?.reason == .handedOver)
+        #expect(model.lastHandedOver?.title == "#151 an lea-m")
+    }
+
+    @Test func noProjectNotice_texts() {
+        #expect(AssigneeSelection.noProjectTitle(number: 7) == "#7 angelegt · ohne Project")
+        #expect(AssigneeSelection.noProjectTitle(number: nil) == "Issue angelegt · ohne Project")
+        #expect(AssigneeSelection.noProjectAnnouncement(number: 7) == "Angelegt: #7 angelegt · ohne Project. Auf GitHub öffnen verfügbar.")
+    }
+}
+
+struct TaskContextMenuStatusTests {
+    private func item(statuses: [SubContainerStatus], fields: Set<TaskField> = [.status]) -> TaskItem {
+        var item = makeTask("Login", source: .github)
+        item.editableFields = fields
+        item.statuses = statuses
+        return item
+    }
+
+    private func row(_ id: String, writable: Bool = true, options: [String] = ["Ready", "Done"]) -> SubContainerStatus {
+        SubContainerStatus(subContainerID: id, subContainerName: id, current: "Ready", options: options, isWritable: writable)
+    }
+
+    @Test func statusRows_onlyWritableProjectsWithOptions() {
+        let rows = TaskContextMenu.statusRows(of: item(statuses: [row("A"), row("B", writable: false), row("C", options: [])]))
+        #expect(rows.map(\.subContainerID) == ["A"])
+    }
+
+    @Test func statusRows_emptyWithoutEditableStatusOrOutsideGitHub() {
+        #expect(TaskContextMenu.statusRows(of: item(statuses: [row("A")], fields: [.title])).isEmpty)
+        var local = item(statuses: [row("A")])
+        local = TaskItem(id: TaskID(source: .local, rawValue: "x"), title: "x", notes: nil, due: nil, priority: nil,
+                         estimateMinutes: nil, isCompleted: false, container: local.container, url: nil, version: "1",
+                         editableFields: [.status], statuses: [row("A")])
+        #expect(TaskContextMenu.statusRows(of: local).isEmpty)
+    }
+}

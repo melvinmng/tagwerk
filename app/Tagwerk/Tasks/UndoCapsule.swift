@@ -93,11 +93,11 @@ struct HandedOverCapsule: View {
 
     var body: some View {
         if let notice = model.lastHandedOver {
-            UndoCapsule(title: AssigneeSelection.capsuleTitle(number: notice.number, assignees: notice.assignees),
-                        caption: "Vergeben", symbol: "person.crop.circle.badge.checkmark", duration: 8,
+            UndoCapsule(title: notice.title,
+                        caption: notice.caption, symbol: notice.symbol, duration: 8,
                         actionTitle: "Auf GitHub öffnen", actionSymbol: "arrow.up.right",
                         actionHint: "Öffnet das Issue im Browser",
-                        announcement: AssigneeSelection.announcement(number: notice.number, assignees: notice.assignees),
+                        announcement: notice.announcement,
                         onUndo: {
                             if let url = notice.url { openURL(url) }
                             model.dismissHandedOver()

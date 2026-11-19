@@ -125,7 +125,8 @@ struct ActionCardDescriber {
     private func issueTarget(_ args: [String: Any], text: (String.LocalizationValue) -> String) -> [String] {
         let repository = (args["repository"] as? String).flatMap { $0.isEmpty ? nil : $0 }
         let projectIDs = args["project_ids"] as? [String]
-        let missingProject = text("Project fehlt")
+        // An explicitly empty list is a choice ("Kein Project"), not a gap.
+        let missingProject = projectIDs?.isEmpty == true ? text("Kein Project") : text("Project fehlt")
         guard let catalog = gitHubDirectory()?.storedCatalog else {
             return [repository ?? text("Repository fehlt"), missingProject]
         }

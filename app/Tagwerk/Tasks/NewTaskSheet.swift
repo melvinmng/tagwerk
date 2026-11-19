@@ -35,6 +35,7 @@ struct NewTaskSheet: View {
     @State private var repository: String?
     @State private var projectIDs: Set<String> = []
     @State private var projectsEdited = false
+    @State private var startStatus: String?
     @State private var gitHubError: String?
     @State private var assignees: Set<String>
     /// The user changed the people; until then the draft keeps the default "Ich" (`nil`).
@@ -66,7 +67,16 @@ struct NewTaskSheet: View {
 
     private var canSave: Bool {
         guard !title.trimmingCharacters(in: .whitespaces).isEmpty else { return false }
-        return target != .github || (repository != nil && !projectIDs.isEmpty)
+        // A GitHub issue needs a repository; a project is optional (#153).
+        return target != .github || repository != nil
+    }
+
+    /// Projects of the catalog that are selected, in catalog order.
+    private var selectedProjects: [ProjectInfo] { (catalog?.projects ?? []).filter { projectIDs.contains($0.id) } }
+
+    /// Start stages that all selected projects have; empty without a project.
+    private var startStatusOptions: [String] {
+        ProjectSelection.commonStatusOptions(selectedProjects.map(GitHubMapping.statusOptions(in:)))
     }
 
     var body: some View {
@@ -94,6 +104,11 @@ struct NewTaskSheet: View {
                         }
                         ProjectSelectionRow(projects: (catalog?.projects ?? []).map { (id: $0.id, title: $0.title) },
                                             selection: $projectIDs, edited: $projectsEdited)
+                        if !startStatusOptions.isEmpty {
+                            Picker("Status", selection: $startStatus) {
+                                ForEach(startStatusOptions, id: \.self) { Text($0).tag(Optional($0)) }
+                            }
+                        }
                         AssigneeSelectionRow(candidates: assigneeCandidates, me: gitHub?.login, load: assigneeLoad,
                                              selection: Binding(get: { assignees },
                                                                 set: { assignees = $0; assigneesChosen = true }),
@@ -106,6 +121,9 @@ struct NewTaskSheet: View {
                         }
                     }
                     .task(id: target) { await loadCatalog() }
+                    .onChange(of: startStatusOptions, initial: true) { _, options in
+                        startStatus = ProjectSelection.startStatus(current: startStatus, options: options)
+                    }
                     .task(id: repository) { await loadAssignees() }
                     .onChange(of: repository) { _, repo in
                         // Preselect the projects linked to the chosen repository.
@@ -177,11 +195,12 @@ struct NewTaskSheet: View {
             due: hasDue ? DueDate(date: dueDate, includeTime: hasTime && target != .github, calendar: model.calendar) : nil,
             priority: priority,
             containerID: target == .reminders ? listID : target == .github ? repository : nil,
-            subContainerIDs: target == .github ? (catalog?.projects ?? []).map(\.id).filter(projectIDs.contains) : [],
+            subContainerIDs: target == .github ? selectedProjects.map(\.id) : [],
             recurrence: RecurrenceAvailability.draftRecurrence(
                 recurrence, target: target,
                 due: hasDue ? DueDate(date: dueDate, includeTime: false, calendar: model.calendar) : nil),
-            assignees: target == .github ? AssigneeSelection.draftAssignees(selected: selectedAssignees, chosen: assigneesChosen) : nil
+            assignees: target == .github ? AssigneeSelection.draftAssignees(selected: selectedAssignees, chosen: assigneesChosen) : nil,
+            startStatus: target == .github && !projectIDs.isEmpty ? startStatus : nil
         )
         if await model.create(draft, in: target) != nil { onCreated?() }
         dismiss()
@@ -236,12 +255,12 @@ extension NewTaskSheet {
     /// Stands for the signed-in user in the footer while nothing was chosen (the login may not be known yet).
     private static let defaultAssigneeMarker = "me"
 
-    /// Says before saving who gets the issue; a missing project choice comes first.
+    /// Says before saving who gets the issue; without a project it first says where the issue will not appear.
     private var gitHubFooter: String {
         let assignment = assigneesChosen ? AssigneeSelection.footer(selected: selectedAssignees, me: gitHub?.login)
             : AssigneeSelection.footer(selected: [Self.defaultAssigneeMarker], me: Self.defaultAssigneeMarker)
-        guard repository != nil, projectIDs.isEmpty, !(catalog?.projects.isEmpty ?? true) else { return assignment }
-        return String(localized: "Mindestens ein Projekt wählen.") + " " + assignment
+        guard repository != nil, projectIDs.isEmpty else { return assignment }
+        return String(localized: "Ohne Project erscheint das Issue nicht in deinen Aufgaben.") + " " + assignment
     }
 
     /// Loads the assignable people of the chosen repository. Every repository change resets the choice to

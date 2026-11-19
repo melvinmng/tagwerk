@@ -175,7 +175,13 @@ struct PlanView: View {
                 { onEditRecurring(recurring, model.anchor) }
             },
             isWritable: writable,
-            plannedText: model.plannedText(for: item.id)
+            plannedText: model.plannedText(for: item.id),
+            setStatus: { projectID, status in
+                Task {
+                    await model.taskList.setStatus(item.id, subContainerID: projectID, to: status)
+                    await model.reload()
+                }
+            }
         )
     }
 

@@ -24,8 +24,9 @@ extension AppTools {
     }
 
     /// Resolves the target of a new issue. Without a repository the only one of the catalog is taken;
-    /// without projects those linked to the repository (the preselection of the sheet), else the only project.
-    /// The defaults are a safety net: the model is told to pass both explicitly.
+    /// without projects (`nil`) those linked to the repository (the preselection of the sheet), else the
+    /// only project. An empty list means explicitly "no Project" (issue #153). The defaults are a safety
+    /// net: the model is told to pass both explicitly.
     static func gitHubTarget(repository: String?, projectIDs: [String]?, catalog: GitHubCatalog) -> Result<GitHubTarget, GitHubTargetError> {
         let resolved: String
         if let repository {
@@ -38,7 +39,10 @@ extension AppTools {
             resolved = catalog.repositories[0]
         }
 
-        if let projectIDs, !projectIDs.isEmpty {
+        if let projectIDs, projectIDs.isEmpty {
+            return .success(GitHubTarget(repository: resolved, projectIDs: []))
+        }
+        if let projectIDs {
             let known = Set(catalog.projects.map(\.id))
             guard projectIDs.allSatisfy(known.contains) else { return .failure(.projectUnknown) }
             return .success(GitHubTarget(repository: resolved, projectIDs: projectIDs))

@@ -1,11 +1,12 @@
+import GitHubKit
 import SwiftUI
 
 /// Texts and preselection of the GitHub project row in "Neue Aufgabe" (multi-select menu like the repository row).
 enum ProjectSelection {
-    /// Collapsed value: "Wählen …", one or two names, from three on the count.
+    /// Collapsed value: "Kein Project", one or two names, from three on the count.
     static func value(titles: [String]) -> String {
         switch titles.count {
-        case 0: String(localized: "Wählen …")
+        case 0: String(localized: "Kein Project")
         case 1, 2: titles.joined(separator: ", ")
         default: String(localized: "\(titles.count) Projekte")
         }
@@ -15,6 +16,27 @@ enum ProjectSelection {
     /// after a manual choice they are added.
     static func preselect(current: Set<String>, linked: Set<String>, edited: Bool) -> Set<String> {
         edited ? current.union(linked) : linked
+    }
+
+    /// Start stages offered for new issues: the stages that every selected project has, in the order of
+    /// the first project, without "Done" (a new issue must not start as finished). Empty without a project.
+    static func commonStatusOptions(_ optionLists: [[String]]) -> [String] {
+        guard let first = optionLists.first else { return [] }
+        return first.filter { option in
+            !GitHubMapping.isDone(option)
+                && optionLists.dropFirst().allSatisfy { list in list.contains { $0.caseInsensitiveCompare(option) == .orderedSame } }
+        }
+    }
+
+    /// Preselected start stage: "Ready" when offered, otherwise the first option in board order.
+    static func defaultStartStatus(in options: [String]) -> String? {
+        options.first { $0.caseInsensitiveCompare(GitHubMapping.reopenStatus) == .orderedSame } ?? options.first
+    }
+
+    /// The selection after a change of the options: kept while still offered, else the default.
+    static func startStatus(current: String?, options: [String]) -> String? {
+        if let current, options.contains(current) { return current }
+        return defaultStartStatus(in: options)
     }
 }
 
@@ -28,6 +50,13 @@ struct ProjectSelectionRow: View {
 
     var body: some View {
         Menu {
+            Toggle("Kein Project", isOn: Binding(
+                get: { selection.isEmpty },
+                set: { isOn in
+                    guard isOn else { return }
+                    edited = true
+                    selection = []
+                }))
             Section("Mehrere möglich") {
                 ForEach(projects, id: \.id) { project in
                     Toggle(project.title, isOn: Binding(
