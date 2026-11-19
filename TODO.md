@@ -128,12 +128,12 @@ GitHub-Konto: @melvinmng · bestätigt zuweisbar · geprüft 2026-11-17 · ich
 - [x] [#158](https://github.com/melvinmng/tagwerk/issues/158) Datensicherung und iCloud-Abgleich für lokale Daten {status: Done; prio: P2 (High)}
 - [ ] [#159](https://github.com/melvinmng/tagwerk/issues/159) UI-Tests für die Hauptwege {status: Ready; prio: P3 (Medium)}
 - [ ] [#160](https://github.com/melvinmng/tagwerk/issues/160) Barrierefreiheit und große Schrift prüfen {status: Backlog; prio: P4 (Low)}
-- [ ] [#161](https://github.com/melvinmng/tagwerk/issues/161) Fokus-Modus: Timer, Pomodoro, App-Sperre und Belohnung {status: In review; prio: P3 (Medium)}
+- [ ] [#161](https://github.com/melvinmng/tagwerk/issues/161) Fokus-Modus: Timer, Pomodoro, App-Sperre und Belohnung {status: Blocked; prio: P3 (Medium)}
 - [ ] [#162](https://github.com/melvinmng/tagwerk/issues/162) Ist-Aufwand gegen Schätzung auswerten {status: In review; prio: P3 (Medium)}
 - [ ] [#163](https://github.com/melvinmng/tagwerk/issues/163) Unerledigtes am Abend mit einem Tipp verschieben {status: In review; prio: P3 (Medium)}
 - [ ] [#164](https://github.com/melvinmng/tagwerk/issues/164) Wochenplanung als geführter Ablauf {status: In review; prio: P3 (Medium)}
-- [ ] [#165](https://github.com/melvinmng/tagwerk/issues/165) Teilen-Erweiterung: aus anderen Apps in Tagwerk übernehmen {status: In progress; prio: P3 (Medium)}
-- [ ] [#166](https://github.com/melvinmng/tagwerk/issues/166) Mail zu Aufgabe mit KI-Zusammenfassung {status: In progress; prio: P3 (Medium)}
+- [ ] [#165](https://github.com/melvinmng/tagwerk/issues/165) Teilen-Erweiterung: aus anderen Apps in Tagwerk übernehmen {status: In review; prio: P3 (Medium)}
+- [ ] [#166](https://github.com/melvinmng/tagwerk/issues/166) Mail zu Aufgabe mit KI-Zusammenfassung {status: In review; prio: P3 (Medium)}
 - [ ] [#167](https://github.com/melvinmng/tagwerk/issues/167) Steuerelemente im Kontrollzentrum und auf der Aktionstaste {status: Backlog; prio: P3 (Medium)}
 - [ ] [#168](https://github.com/melvinmng/tagwerk/issues/168) Fahrzeit zwischen Terminen berücksichtigen {status: In review; prio: P3 (Medium)}
 - [x] [#169](https://github.com/melvinmng/tagwerk/issues/169) Ruhezeiten für Benachrichtigungen {status: Done; prio: P3 (Medium)}
@@ -170,11 +170,7 @@ _Automatisch aus [Tagwerk](https://github.com/users/melvinmng/projects/17) erzeu
 - [#175](https://github.com/melvinmng/tagwerk/issues/175) Gerätetests der Suche · @melvinmng · Prio P3 (Medium)
 - [#200](https://github.com/melvinmng/tagwerk/issues/200) test · @melvinmng · Prio P4 (Low) · fällig 2026-11-19
 
-### In Arbeit (2)
-- [#165](https://github.com/melvinmng/tagwerk/issues/165) Teilen-Erweiterung: aus anderen Apps in Tagwerk übernehmen · @melvinmng · Prio P3 (Medium)
-- [#166](https://github.com/melvinmng/tagwerk/issues/166) Mail zu Aufgabe mit KI-Zusammenfassung · @melvinmng · Prio P3 (Medium)
-
-### In Prüfung (20)
+### In Prüfung (21)
 - [#113](https://github.com/melvinmng/tagwerk/issues/113) Phase 5: Einkaufsliste und Notizen einbinden · @melvinmng · Prio P3 (Medium)
 - [#134](https://github.com/melvinmng/tagwerk/issues/134) Tage und Wochen in „Planen“ und „Erfassen“ als mitziehbare Seiten blättern (Finger zieht den Nachbartag mit) · @melvinmng · Prio P4 (Low)
 - [#140](https://github.com/melvinmng/tagwerk/issues/140) Phase 7: Routinen und Gewohnheiten einbinden · @melvinmng · Prio P3 (Medium)
@@ -189,12 +185,16 @@ _Automatisch aus [Tagwerk](https://github.com/users/melvinmng/projects/17) erzeu
 - [#155](https://github.com/melvinmng/tagwerk/issues/155) Notizen: Markdown, HTML, Bilder und Dateianhänge · @melvinmng · Prio P3 (Medium)
 - [#156](https://github.com/melvinmng/tagwerk/issues/156) Einkaufsliste: alle erledigten Artikel löschen und die ganze Liste leeren · @melvinmng · Prio P3 (Medium)
 - [#157](https://github.com/melvinmng/tagwerk/issues/157) Tagesansicht: aktuelle Uhrzeit im Ablauf markieren · @melvinmng · Prio P3 (Medium)
-- [#161](https://github.com/melvinmng/tagwerk/issues/161) Fokus-Modus: Timer, Pomodoro, App-Sperre und Belohnung · @melvinmng · Prio P3 (Medium)
 - [#162](https://github.com/melvinmng/tagwerk/issues/162) Ist-Aufwand gegen Schätzung auswerten · @melvinmng · Prio P3 (Medium)
 - [#163](https://github.com/melvinmng/tagwerk/issues/163) Unerledigtes am Abend mit einem Tipp verschieben · @melvinmng · Prio P3 (Medium)
 - [#164](https://github.com/melvinmng/tagwerk/issues/164) Wochenplanung als geführter Ablauf · @melvinmng · Prio P3 (Medium)
+- [#165](https://github.com/melvinmng/tagwerk/issues/165) Teilen-Erweiterung: aus anderen Apps in Tagwerk übernehmen · @melvinmng · Prio P3 (Medium)
+- [#166](https://github.com/melvinmng/tagwerk/issues/166) Mail zu Aufgabe mit KI-Zusammenfassung · @melvinmng · Prio P3 (Medium)
 - [#168](https://github.com/melvinmng/tagwerk/issues/168) Fahrzeit zwischen Terminen berücksichtigen · @melvinmng · Prio P3 (Medium)
 - [#180](https://github.com/melvinmng/tagwerk/issues/180) Notizen: Tagesstart und Tagesabschluss in eigenen Ordnern · @melvinmng · Prio P3 (Medium)
+
+### Blockiert (1)
+- [#161](https://github.com/melvinmng/tagwerk/issues/161) Fokus-Modus: Timer, Pomodoro, App-Sperre und Belohnung · @melvinmng · Prio P3 (Medium)
 
 ### Nicht zugeordnet (0)
 
