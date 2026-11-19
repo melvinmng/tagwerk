@@ -126,6 +126,11 @@ struct SearchSheet: View {
         if model.onlineState == .failed(.signedOut) { await environment.taskList.reload(only: [.github]) }
     }
 
+    /// "Im Plan zeigen" for a planned task, otherwise "In Aufgaben zeigen".
+    private func showTask(_ item: TaskItem) {
+        if let day = environment.planning.plannedInfo(for: item.id).day { onShowDay(day) } else { onShowTask(item.id) }
+    }
+
     private func showInPlan(_ event: CalendarEvent) {
         onShowDay(PlanDay(date: event.start, calendar: calendar))
     }
@@ -379,6 +384,8 @@ struct SearchSheet: View {
                 .contextMenu { taskMenu(item) }
                 .accessibilityAddTraits(.isButton)
                 .accessibilityAction(named: Text("Öffnen")) { open(item) }
+                .accessibilityAction(named: Text(environment.planning.plannedInfo(for: item.id).day != nil
+                                                 ? "Im Plan zeigen" : "In Aufgaben zeigen")) { showTask(item) }
                 .accessibilityAction(named: Text("Erledigt")) { complete(item) }
         case .completed(let group, let match):
             let item = group.latest.item
@@ -400,6 +407,7 @@ struct SearchSheet: View {
                 }
                 .accessibilityAddTraits(.isButton)
                 .accessibilityAction(named: Text("Auf GitHub öffnen")) { openURL(issue.url) }
+                .accessibilityAction(named: Text("Link kopieren")) { UIPasteboard.general.url = issue.url }
         case .note(let note, let match):
             SearchNoteRow(note: note, match: match, calendar: calendar)
                 .onTapGesture { openNote = NoteTarget(id: note.id) }
@@ -436,10 +444,10 @@ struct SearchSheet: View {
 
     @ViewBuilder private func taskMenu(_ item: TaskItem) -> some View {
         Button("Öffnen", systemImage: "chevron.right") { open(item) }
-        if let day = environment.planning.plannedInfo(for: item.id).day {
-            Button("Im Plan zeigen", systemImage: "calendar") { onShowDay(day) }
+        if environment.planning.plannedInfo(for: item.id).day != nil {
+            Button("Im Plan zeigen", systemImage: "calendar") { showTask(item) }
         } else {
-            Button("In Aufgaben zeigen", systemImage: "checklist") { onShowTask(item.id) }
+            Button("In Aufgaben zeigen", systemImage: "checklist") { showTask(item) }
         }
         if environment.taskList.sourceStates[item.id.source]?.isOffline != true {
             Button("Erledigt", systemImage: "checkmark.circle") { complete(item) }
