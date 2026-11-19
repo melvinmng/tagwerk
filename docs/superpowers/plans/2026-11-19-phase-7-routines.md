@@ -16,7 +16,7 @@
 
 **Epic:** GitHub #140 mit #141 bis #146. Jede Aufgabe nennt ihr Issue und die Zeile aus dem Aufgabenschnitt (Design §16).
 
-**Reihenfolge der Vorhaben (verbindlich):** (1) #136 Issue-Zuweisung → (2) Phase 5 Einkaufsliste und Notizen (#113) → (3) Suche → (4) Phase 7. Die Tasks 13 und 14 setzen Phase 5 als gebaut voraus; alle anderen Tasks hängen nicht an Phase 5.
+**Reihenfolge der Vorhaben (verbindlich):** (1) #136 Issue-Zuweisung → (2) Phase 5 Einkaufsliste und Notizen (#113) → (3) Suche → (4) Phase 7. Die Tasks 13 und 14 setzen Phase 5 als gebaut voraus (`NoteRecord`, `NoteStore`, Notizen-Liste). Task 4 nutzt daraus nur den reinen Helfer `NoteDayKey`; alle übrigen Tasks hängen nicht an Phase 5.
 
 ## Global Constraints
 
@@ -77,15 +77,17 @@ Alle Stellen der Tabelle in Design §3 wurden am 19.11.2026 im Worktree nachgele
 | A6 | §8.3: Delegate reicht `route` an den `AppRouter` | Delegate kennt nur den Navigator | `NotificationDelegate` bekommt zusätzlich den Router. |
 | A7 | §9.3: `update_event` gilt nur für Tagwerk-Zeitblöcke | Kein Kennzeichen am Termin | Zeitblock = Termin im Plan-Kalender (`settings.planCalendarID`) mit verknüpfter Aufgabe (`planning.linkedTask(eventID:)`). Nur diese Kennungen sind für `update_event` zulässig. |
 | A8 | §10: „`replacingIntake` ersetzt künftig Tageswerte und Zähler“ | Funktion trägt nur `intake` | Umbenannt in `replacingToday(intake:habits:on:createdAt:)`; der einzige Aufrufer (`AppEnvironment.writeSnapshot`) zieht mit. |
-| A9 | §5.4: „Geschrieben wird nur über `NoteStore`“; Methodennamen stehen nicht im Phase-5-Design | Phase 5 ist noch nicht gebaut | Phase 7 legt die vier Zugriffe, die sie braucht, als `extension NoteStore` fest (Task 13) und setzt sie auf die Grundfunktionen aus dem Phase-5-Plan. |
+| A9 | §5.4: „Geschrieben wird nur über `NoteStore`“; Methodennamen stehen nicht im Phase-5-Design | Der Phase-5-Plan (`2026-11-19-phase-5-shopping-notes.md`, Task 13) legt sie fest: `note(kind:dayKey:)`, `create(text:kind:dayKey:wasDictated:)`, `updateText(_:text:)`, `markProcessed(_:at:)`, `delete(_:)` | Phase 7 nutzt diese Namen und ergänzt in einer `extension NoteStore` nur `saveThought` und `addDerivedAction` (Task 13). |
 | A10 | §16: Reihenfolge 1, 2, 3 in #141; Tageslicht-Spike „sinnvollerweise nach Aufgabe 3“ | – | Auftrag: Spikes zuerst. Der Tageslicht-Spike braucht nur eine Debug-Ansicht und läuft deshalb vorab. Innerhalb von #141 kommt das Modell (Zeile 3) vor der Oberfläche (Zeile 2), weil die Oberfläche es anzeigt. |
 
 ## Schnittstellen zu den anderen Plänen
 
 **Consumes (Phase 5, Namen aus `2026-11-19-phase-5-shopping-notes-design.md` §„Daten“ und §5.6):**
 - `NoteRecord` mit `id: UUID`, `text: String`, `createdAt: Date`, `updatedAt: Date`, `kindRaw: String` (`"free"`, `"morning"`, `"evening"`), `dayKey: String?` („YYYY-MM-DD“), `isPinned: Bool`, `wasDictated: Bool`, `processedAt: Date?`.
-- `NoteStore` (Anlegen, Ändern, Löschen, Abfragen nach Art und Tag) als einzige schreibende Stelle.
-- Notizen-Liste in „Aufgaben“ mit Herkunftszeile („Tagesstart · 18.11.“), Filter „Alle · Gedanken · Eigene“, Notiz-Editor und Fußnote.
+- `NoteStore` (`environment.notes`) als einzige schreibende Stelle; aus dem Phase-5-Plan (Task 13): `note(id:)`, `note(kind:dayKey:)`, `create(text:kind:dayKey:wasDictated:)` (legt je Art und Tag höchstens eine Gedanken-Notiz an und aktualisiert sie sonst), `updateText(_:text:)`, `markProcessed(_:at:)`, `delete(_:)`.
+- `NoteKind` (`.free`, `.morning`, `.evening`), `NoteDayKey.string(_:)`/`NoteDayKey.day(_:)`, `NoteText.title(_:)` aus `TagwerkCore/NoteText.swift`.
+- Notizen-Liste `NotesListView` (`app/Tagwerk/Notes/NotesListView.swift`) mit `NotesListView.footer(for:now:calendar:)`, Filter „Alle · Gedanken · Eigene“, `NoteEditorView` und Fußnote.
+- `VoiceInputFactory.make(_:)`, `VoiceMicrophoneButton`, `VoiceRecordingBar` (`app/Tagwerk/Voice/VoiceComposer.swift`, schon vorhanden).
 - `shoppingListID: String?` in `AppSettings` nur mittelbar: Fokus-Auswahl, Tagesrückblick und KI-Kontext lesen über `TaskListModel`/`PlanningModel` und erben den Ausschluss der Einkaufsliste.
 
 **Consumes (Issue-Zuweisung #136):** die dann gültige Definition von `create_task` in `AppTools.allDefinitions`; Task 14 filtert nur nach Namen und übernimmt neue Parameter ohne Änderung.
@@ -101,9 +103,9 @@ Alle Stellen der Tabelle in Design §3 wurden am 19.11.2026 im Worktree nachgele
 
 | Datei | Verantwortung |
 |---|---|
-| `app/Packages/TagwerkCore/Sources/TagwerkCore/HabitRules.swift` (neu) | `Habit`, `HabitSource`, `HabitPause`, `HabitFacts`, `HabitStreak`, `HabitCounter`, `HabitRules`, `PlanDay.dayKey` |
+| `app/Packages/TagwerkCore/Sources/TagwerkCore/HabitRules.swift` (neu) | `Habit`, `HabitSource`, `HabitPause`, `HabitFacts`, `HabitStreak`, `HabitCounter`, `HabitRules`, `PlanDay.dayKey` (ruft `NoteDayKey` aus Phase 5 auf) |
 | `…/TagwerkCore/RoutineSchedule.swift` (neu) | `ChecklistItem`, `RoutineDayValue`, `RoutineNotification`, `RoutineSchedule` (Zeitanker, Abendgrenze, Sichtbarkeit, Mitteilungen), `FocusRules` |
-| `…/TagwerkCore/NoteTemplate.swift` (neu) | Leitfragen-Vorlage, erste Zeile als Titel |
+| `…/TagwerkCore/NoteTemplate.swift` (neu) | Leitfragen-Vorlage |
 | `…/TagwerkCore/AppRoute.swift`, `WidgetSnapshot.swift`, `NotificationPlan.swift`, `WeekReview.swift` | Routen, `SnapshotHabits`, Präfix `tagwerk.routine.`, Wochenwerte der Gewohnheiten |
 | `app/Tagwerk/Routines/HabitRecords.swift` (neu) | `HabitRecord`, `HabitCheckRecord`, `HabitStore` |
 | `app/Tagwerk/Routines/HabitsModel.swift` (neu) | Fakten laden, Zeilen und Zähler berechnen |
@@ -205,13 +207,13 @@ Summe 63 h, mit Task 17 66 h (wie Design §16).
 - Test: `app/Packages/TagwerkCore/Tests/TagwerkCoreTests/HabitRulesTests.swift`, `app/TagwerkTests/HabitStoreTests.swift`, `app/TagwerkTests/ModelStoreLocationTests.swift`
 
 **Interfaces:**
-- Consumes: `PlanDay`, `IntakeRules.weekStart(containing:calendar:)`.
+- Consumes: `PlanDay`, `IntakeRules.weekStart(containing:calendar:)`; aus Phase 5 `NoteDayKey.string(_:)` und `NoteDayKey.day(_:)` (`TagwerkCore/NoteText.swift`).
 - Produces (TagwerkCore):
 
 ```swift
 public extension PlanDay {
-    var dayKey: String { get }            // "YYYY-MM-DD"
-    init?(dayKey: String)
+    var dayKey: String { get }            // "YYYY-MM-DD"; forwards to NoteDayKey.string(_:) of phase 5
+    init?(dayKey: String)                 // forwards to NoteDayKey.day(_:)
 }
 public enum HabitSource: String, Sendable, Codable, CaseIterable { case manual, water, workout, steps, daylight }
 public struct HabitPause: Sendable, Hashable, Codable { public var from: PlanDay; public var to: PlanDay }   // inclusive
@@ -795,39 +797,34 @@ struct RoutineCard: View { let model: RoutinesModel }
 **Voraussetzung:** Phase 5 ist gebaut (`NoteRecord`, `NoteStore`, Notizen-Liste).
 
 **Files:**
-- Create: `app/Tagwerk/Routines/NoteStore+Routines.swift`, `NoteField.swift`, `TagwerkCore/NoteTemplate.swift`
-- Modify: `NoteRecord` (Datei laut Phase-5-Plan; Feld `derivedActionCount`), Notizen-Liste aus Phase 5 (Fußzeile der Karte, Fußnote der Liste), `MorningSheet.swift`, `EveningSheet.swift`, `app/Tagwerk/Tasks/NewTaskSheet.swift:6–17`
-- Test: `NoteFieldModelTests.swift`, `NoteTemplateTests.swift` (Core), Listentest aus Phase 5
+- Create: `app/Tagwerk/Routines/NoteStore+Routines.swift`, `NoteField.swift`
+- Modify: `app/Tagwerk/Notes/NoteRecord.swift` (Feld `derivedActionCount`), `app/Tagwerk/Notes/NotesListView.swift` (`footer(for:now:calendar:)`, Fußnote der Liste), `MorningSheet.swift`, `EveningSheet.swift`, `app/Tagwerk/Tasks/NewTaskSheet.swift:6–17`
+- Test: `NoteFieldModelTests.swift`, Ergänzung im Listentest aus Phase 5 (`footer_thoughts_…`)
 
 **Interfaces:**
-- Consumes (Phase 5): `NoteRecord` (`id`, `text`, `createdAt`, `updatedAt`, `kindRaw`, `dayKey`, `isPinned`, `wasDictated`, `processedAt`), `NoteStore`; `VoiceInputModel` (`readDraft`, `writeDraft`, `tapMicrophone()`), `AppSettings.voiceInputEnabled`, `voiceExplained`, `environment.makeRecognizer`.
+- Consumes (Phase 5): `NoteRecord` (`id`, `text`, `createdAt`, `updatedAt`, `kindRaw`, `dayKey`, `isPinned`, `wasDictated`, `processedAt`), `NoteStore.note(kind:dayKey:)`, `create(text:kind:dayKey:wasDictated:)`, `delete(_:)`, `markProcessed(_:at:)`, `NoteKind`, `NoteText.title(_:)`, `NotesListView.footer(for:now:calendar:)`; `VoiceInputFactory.make(_:)`, `VoiceMicrophoneButton`, `VoiceRecordingBar`, `VoiceInputModel` (`readDraft`, `writeDraft`), `AppSettings.voiceInputEnabled`.
 - Produces:
 
 ```swift
 // NoteRecord: var derivedActionCount: Int = 0
-enum ThoughtKind: String { case morning, evening }                // values of NoteRecord.kindRaw
 extension NoteStore {
-    func thought(_ kind: ThoughtKind, dayKey: String) -> NoteRecord?
     /// Creates, updates or (for whitespace-only text) deletes the one thought note of that day and kind.
-    @discardableResult func saveThought(_ text: String, kind: ThoughtKind, dayKey: String, wasDictated: Bool) -> NoteRecord?
-    func markProcessed(_ id: UUID, at date: Date)
+    /// `kind` is .morning or .evening; built on create(text:kind:dayKey:wasDictated:) and delete(_:).
+    @discardableResult func saveThought(_ text: String, kind: NoteKind, dayKey: String, wasDictated: Bool) -> NoteRecord?
     func addDerivedAction(_ id: UUID)
-}
-public enum NoteTemplate {                                        // Task 16 adds the guiding questions
-    public static func firstLine(_ text: String) -> String?       // first non-empty line, trimmed
 }
 @MainActor @Observable final class NoteFieldModel {
     var text: String
     var selection: TextSelection?
     private(set) var noteID: UUID?
     private(set) var wasDictated: Bool
-    init(store: NoteStore, kind: ThoughtKind, day: PlanDay, debounce: Duration = .milliseconds(500),
+    init(store: NoteStore, kind: NoteKind, day: PlanDay, debounce: Duration = .milliseconds(500),
          sleep: @escaping (Duration) async -> Void = { try? await Task.sleep(for: $0) })
     func textChanged()                         // debounced save
     func flush()                               // immediate save; called when the sheet closes
     func draftBeforeCursor() -> String         // for VoiceInputModel.readDraft
     func writeDictation(_ draft: String)       // for VoiceInputModel.writeDraft: draft + text behind the cursor
-    var taskTitle: String? { get }             // NoteTemplate.firstLine(text)
+    var taskTitle: String? { get }             // NoteText.title(text); nil for an empty note
     func taskCreated()                         // addDerivedAction
 }
 struct NoteField: View { let model: NoteFieldModel }     // section "Gedanken"
@@ -845,17 +842,15 @@ struct NoteField: View { let model: NoteFieldModel }     // section "Gedanken"
 @Test func unchangedText_doesNotTouchUpdatedAt()
 @Test func dictation_insertsAtTheCursor()
 // text "Anfang Ende", cursor after "Anfang ": draftBeforeCursor() == "Anfang "; writeDictation("Anfang Mitte") -> text == "Anfang Mitte Ende", wasDictated == true
-@Test func taskTitle_isTheFirstNonEmptyLine()        // "\n  Einkauf planen \nmehr" -> "Einkauf planen"
+@Test func taskTitle_isTheFirstNonEmptyLine()        // "\n  Einkauf planen \nmehr" -> "Einkauf planen"; "  \n" -> nil
 @Test func taskCreated_incrementsDerivedActionCount()
 @Test func freeNotes_areNeverReturnedAsThought()     // a "free" note with the same dayKey is ignored
-// NoteTemplateTests
-@Test func firstLine_ofEmptyText_isNil()
 ```
 
-Listentest (in der Testdatei der Notizen-Liste aus Phase 5): Fußzeile „Tagesabschluss · 18.11. · 2 Aufgaben daraus“ bei `derivedActionCount == 2`, ohne Zusatz bei 0; Fußnote der Liste lautet „Notizen liegen nur auf diesem iPhone. An ChatGPT geht eine Gedanken-Notiz nur, wenn du bei ihr auf ‚Vorschläge holen‘ tippst.“
+Listentest (Testdatei von `NotesListView` aus Phase 5): `footer(for:now:calendar:)` liefert „Tagesabschluss · 18.11. · 2 Aufgaben daraus“ bei `derivedActionCount == 2`, ohne Zusatz bei 0; Fußnote der Liste lautet „Notizen liegen nur auf diesem iPhone. An ChatGPT geht eine Gedanken-Notiz nur, wenn du bei ihr auf ‚Vorschläge holen‘ tippst.“
 
-- [ ] **Step 2:** `APP NoteFieldModelTests`, `CORE NoteTemplateTests` → rot.
-- [ ] **Step 3: Umsetzen.** `NoteStore+Routines.swift` setzt die vier Zugriffe auf die Grundfunktionen aus dem Phase-5-Plan (vor dem Anlegen suchen; `updatedAt` nur bei geändertem Text). `NoteField` nach Design §7.6: mehrzeiliges Feld „Was geht dir durch den Kopf?“ mit `TextSelection`, Mikrofon nur bei `voiceInputEnabled` (eigener `VoiceInputModel` mit `onSend = { _ in }`, einmalige Erklärung über `voiceExplained`), darunter bei vorhandenem Text „＋ Als Aufgabe anlegen“ (öffnet `NewTaskSheet(model:prefilledTitle:onCreated:)`). „Vorschläge holen“ und der Fußtext folgen in Task 14. Beide Blätter bekommen den Abschnitt „Gedanken“ und rufen `flush()` beim Schließen. Die Notiz des Tagesabschlusses nutzt den Tag des Blatts (Regel 10).
+- [ ] **Step 2:** `APP NoteFieldModelTests` → rot.
+- [ ] **Step 3: Umsetzen.** `saveThought` ruft für Text mit Inhalt `create(text:kind:dayKey:wasDictated:)` (Phase 5 aktualisiert dabei die vorhandene Notiz des Tages und der Art) und löscht bei reinem Leerraum die vorhandene Notiz über `delete(_:)`. `NoteField` nach Design §7.6: mehrzeiliges Feld „Was geht dir durch den Kopf?“ mit `TextSelection`, Mikrofon nur bei `voiceInputEnabled` (eigener `VoiceInputModel` über `VoiceInputFactory.make(_:)` mit `readDraft = draftBeforeCursor`, `writeDraft = writeDictation`, `onSend = { _ in }`; `VoiceMicrophoneButton` und `VoiceRecordingBar` wie im Assistenten), darunter bei vorhandenem Text „＋ Als Aufgabe anlegen“ (öffnet `NewTaskSheet(model:prefilledTitle:onCreated:)`). „Vorschläge holen“ und der Fußtext folgen in Task 14. Beide Blätter bekommen den Abschnitt „Gedanken“ und rufen `flush()` beim Schließen. Die Notiz des Tagesabschlusses nutzt den Tag des Blatts (Regel 10).
 - [ ] **Step 4:** Tests aus Step 2 und die Notiz-Tests aus Phase 5 → grün. Geräteprüfung (§15.2): Spracheingabe im Notizfeld außerhalb des Assistenten.
 - [ ] **Step 5: Commit.** `git commit -m "feat: add the thoughts note to the morning and evening sheets"`
 
@@ -909,7 +904,7 @@ enum NoteSuggestionRules {
     init(responder: any ResponseStreaming, model: @escaping @MainActor () async throws -> String, tools: any ToolHandler,
          describer: ActionCardDescriber, notes: NoteStore, hasConsent: @escaping @MainActor () -> Bool,
          context: @escaping @MainActor () -> NoteSuggestionContext, now: @escaping () -> Date = Date.init)
-    func fetch(noteID: UUID, text: String, kind: ThoughtKind) async     // exactly one request
+    func fetch(noteID: UUID, text: String, kind: NoteKind) async        // exactly one request
     func confirm(_ id: String) async                                    // AppTools.run, no further request
     func decline(_ id: String)
     func confirmAll() async
@@ -1010,14 +1005,15 @@ extension RoutineStore {
 ### Task 16: Leitfragen-Vorlage · #146 · Zeile 13
 
 **Files:**
-- Modify: `TagwerkCore/NoteTemplate.swift`, `TagwerkCore/Resources/Localizable.xcstrings`, `app/Tagwerk/Routines/NoteField.swift`
+- Create: `app/Packages/TagwerkCore/Sources/TagwerkCore/NoteTemplate.swift`
+- Modify: `TagwerkCore/Resources/Localizable.xcstrings`, `app/Tagwerk/Routines/NoteField.swift`
 - Test: `NoteTemplateTests.swift`
 
 **Interfaces:**
 - Produces:
 
 ```swift
-extension NoteTemplate {
+public enum NoteTemplate {
     public static func guidingQuestions(locale: Locale) -> [String]            // six questions in the app language
     public static func appendingGuidingQuestions(to text: String, locale: Locale) -> String
     public static func containsGuidingQuestions(_ text: String, locale: Locale) -> Bool   // the first question is present
@@ -1076,7 +1072,7 @@ func dailyDaylight(in interval: DateInterval, calendar: Calendar) async throws -
 
 | Risiko | Folge | Gegenmaßnahme |
 |---|---|---|
-| Phase 5 baut `NoteStore` anders als ihr Design | Task 13 passt nicht | Nur `NoteStore+Routines.swift` hängt an den Grundfunktionen; Tests prüfen Verhalten, nicht Namen |
+| Phase 5 weicht beim Bauen von ihrem Plan ab | Task 13 passt nicht | Phase 7 hängt nur an den oben genannten Namen; `NoteStore+Routines.swift` und `NoteFieldModel` sind die einzigen Stellen, die sie aufrufen |
 | Wiederholende Auslöser überleben Neustart nicht (Annahme) | Erinnerung fehlt bis zum nächsten App-Start | Neu-Einplanen bei jedem Start und bei `.active`; Geräteprüfung in Task 10 |
 | Zähler „erledigt“ ohne GitHub (A1) | Tagesrückblick zu niedrig für GitHub-Nutzer | Fußtext nennt die Grenze; kein neuer Datentyp |
 | Gelöschte Fokus-Aufgabe gilt als erledigt | Fokus „2 von 2“ trotz Löschen | bewusst (nicht unterscheidbar); „Ändern“ entfernt die Marke |
@@ -1087,5 +1083,5 @@ func dailyDaylight(in interval: DateInterval, calendar: Calendar) async throws -
 ## Self-Review (am 19.11.2026 durchgeführt)
 
 - **Spec-Abdeckung:** §5 → Tasks 4, 8, 12, 13, 15; §6 Regeln 1–8 → Task 4/5, 9–11 → Task 8, 12 und 14 → Task 9, 13 → Task 16; §7.1–7.2 → Task 6; §7.3 → Tasks 5, 9, 12; §7.4 → Tasks 11–13; §7.5 → Tasks 9, 12, 13, 15; §7.6 → Tasks 13, 14; §7.7 → Task 16; §7.8 → Task 13; §7.9 → Task 15; §8 → Tasks 9–11; §9 → Task 14; §10 → Task 7; §11 → Tasks 8, 10, 14; §12 → in jedem Task mit Texten, geprüft in Task 18; §15.1 → Tasks 1–3, 17; §15.2 → Tasks 10, 13, 18.
-- **Typen:** `HabitCounter` wird als `SnapshotHabits` und für Fokus-Zähler wiederverwendet; `ThoughtKind`, `RoutinesModel.Sheet`, `RoutineNotification` und `FocusMark` sind je einmal definiert und in späteren Tasks gleich benannt.
+- **Typen:** `HabitCounter` wird als `SnapshotHabits` und für Fokus-Zähler wiederverwendet; `NoteKind` (aus Phase 5), `RoutinesModel.Sheet`, `RoutineNotification` und `FocusMark` sind je einmal definiert und in späteren Tasks gleich benannt.
 - **Proportion:** Der Plan enthält Signaturen, Testnamen und Werte, keine Funktionsrümpfe.
