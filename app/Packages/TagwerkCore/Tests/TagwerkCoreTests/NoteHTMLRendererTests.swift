@@ -139,7 +139,8 @@ struct NoteHTMLRendererTests {
     }
 
     @Test func page_followsSchemeAndTextSize() {
-        #expect(NoteHTMLRenderer.page(body: "", colorScheme: .system).contains("prefers-color-scheme: dark"))
+        #expect(NoteHTMLRenderer.page(body: "", colorScheme: .system).contains("prefers-color-scheme: dark) { :root { --text: #f2f2f7"))
+        #expect(NoteHTMLRenderer.page(body: "", colorScheme: .dark).contains(":root { --text: #f2f2f7"))
         #expect(!NoteHTMLRenderer.page(body: "", colorScheme: .light).contains("prefers-color-scheme: dark"))
         #expect(NoteHTMLRenderer.page(body: "", textScale: 2).contains("34.00px"))
         #expect(NoteHTMLRenderer.page(body: "", textScale: 100).contains("68.00px"))

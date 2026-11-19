@@ -37,8 +37,8 @@ public enum NoteHTMLRenderer {
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <style>
         :root { color-scheme: \(scheme); --text: #1c1c1e; --muted: #6c6c70; --line: #d1d1d6; --code: #f2f2f7; --accent: #0a84ff; }
-        \(colorScheme == .dark ? Self.darkVariables : "")
-        \(colorScheme == .system ? "@media (prefers-color-scheme: dark) { " + Self.darkVariables + " }" : "")
+        \(colorScheme == .dark ? ":root { " + Self.darkVariables + " }" : "")
+        \(colorScheme == .system ? "@media (prefers-color-scheme: dark) { :root { " + Self.darkVariables + " } }" : "")
         html { -webkit-text-size-adjust: 100%; }
         body { margin: 0; padding: 4px 2px 24px; color: var(--text); background: transparent; word-wrap: break-word;
                font: \(String(format: "%.2f", 17 * scale))px/1.45 -apple-system, system-ui, sans-serif; }
