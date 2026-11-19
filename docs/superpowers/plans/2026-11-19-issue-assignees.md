@@ -649,6 +649,10 @@ Instruktionen: ein Absatz nach dem Termin-Absatz, nur wenn `gitHubDirectory() !=
 - [ ] Dunkel, hell, größte Schriftstufe, Englisch, VoiceOver für Blatt, Editor-Zeile, Rückfrage und Kapsel.
 - [ ] Bei Abweichungen: `fix:`-Commit je Befund; sonst kein Commit.
 
+## Umsetzungsstand (19.11.2026)
+
+Tasks 1–10 sind umgesetzt und committet. Task 0 (S1–S4) und Task 11 (Abnahme am Gerät, S5–S6) sind nicht ausgeführt; gebaut wurde mit den Annahmen des Specs (alle Spikes positiv). Entscheidungen, Abweichungen und offene Prüfungen stehen in `../2026-11-19-overnight-log.md`, Abschnitt „#136 Zuweisung“.
+
 ## Schnittstellen zu den anderen Plänen
 
 **Produziert (von späteren Plänen nutzbar):** `TaskItem.assignees`, `TaskDraft.assignees`, `TaskField.assignees`, `TaskEdit.assignees`, `AssigneeChange`, `AssigneeRules`, `TaskProvider.isListed(_:)`, `TaskListModel.lastHandedOver`/`onHandedOver`/`didSave(_:requestedAssignees:)`, `HandedOverNotice`, `UndoCapsule`-Parameter `actionTitle`/`actionSymbol`/`actionHint`/`announcement`, `AppTools.gitHubDefinitions`, die erweiterte Definition von `create_task` (Felder `repository`, `project_ids`, `assignees`), `GitHubDirectory`, `OpenCards.guarded`.
