@@ -396,6 +396,142 @@ struct ReconnectPolicyTests {
 }
 
 @MainActor
+struct TaskListAssigneeTests {
+    let github: FakeTaskProvider
+    let model: TaskListModel
+    let issueID = TaskID(source: .github, rawValue: "Login")
+
+    init() {
+        var issue = makeTask("Login", source: .github, due: DueDate(year: 2026, month: 11, day: 20))
+        issue.assignees = ["octo"]
+        issue.url = URL(string: "https://github.com/beispiel/app/issues/42")
+        github = FakeTaskProvider(source: .github, tasks: [issue])
+        github.viewerLogin = "octo"
+        model = TaskListModel(providers: [github], now: testNow, calendar: testCalendar())
+    }
+
+    private func draft(_ assignees: [String]?) -> TaskDraft {
+        TaskDraft(title: "Export", containerID: "beispiel/app", subContainerIDs: ["PVT_1"], assignees: assignees)
+    }
+
+    private var listedTitles: [String] { model.items.map(\.title) }
+
+    @Test func create_forMe_addsItemWithoutNotice() async {
+        await model.create(draft(nil), in: .github)
+        #expect(listedTitles == ["Export"])
+        #expect(model.lastHandedOver == nil)
+        #expect(model.lastError == nil)
+    }
+
+    @Test func create_forOthers_neverEntersItems_andSetsNotice() async {
+        await model.create(draft(["lea-m"]), in: .github)
+        #expect(!model.items.contains { $0.id.source == .github })
+        #expect(model.lastHandedOver?.number == 151)
+        #expect(model.lastHandedOver?.assignees == ["lea-m"])
+        #expect(model.lastHandedOver?.url == URL(string: "https://github.com/beispiel/app/issues/151"))
+        #expect(model.lastError == nil)
+    }
+
+    @Test func create_forNoOne_setsNoticeWithoutAssignees() async {
+        await model.create(draft([]), in: .github)
+        #expect(model.items.isEmpty)
+        #expect(model.lastHandedOver?.number == 151)
+        #expect(model.lastHandedOver?.assignees == [])
+    }
+
+    @Test func create_droppedAssignee_warnsByName() async {
+        github.droppedAssignees = ["lea-m"]
+        await model.create(draft(["octo", "lea-m"]), in: .github)
+        #expect(model.lastError == "#151 angelegt, aber lea-m konnte nicht zugewiesen werden.")
+        #expect(listedTitles == ["Export"])
+        #expect(model.lastHandedOver == nil)
+    }
+
+    @Test func create_droppedOnlyAssignee_warnsAndHandsOver() async {
+        github.droppedAssignees = ["lea-m"]
+        await model.create(draft(["lea-m"]), in: .github)
+        #expect(model.lastError == "#151 angelegt, aber lea-m konnte nicht zugewiesen werden.")
+        #expect(model.lastHandedOver?.assignees == [])
+        #expect(model.items.isEmpty)
+    }
+
+    @Test func create_handedOver_callsHook() async {
+        var handedOver: [TaskID] = []
+        model.onHandedOver = { handedOver.append($0) }
+        await model.create(draft(["lea-m"]), in: .github)
+        #expect(handedOver.count == 1)
+    }
+
+    @Test func didSave_handedOver_removesItem_callsHookAndSetsNotice() async {
+        await model.reload()
+        var handedOver: [TaskID] = []
+        model.onHandedOver = { handedOver.append($0) }
+        var saved = github.tasks[0]
+        saved.assignees = ["lea-m"]
+
+        model.didSave(saved)
+        await waitUntil { !handedOver.isEmpty }
+
+        #expect(model.items.isEmpty)
+        #expect(handedOver == [issueID])
+        #expect(model.lastHandedOver?.number == 42)
+        #expect(model.lastHandedOver?.assignees == ["lea-m"])
+    }
+
+    @Test func didSave_stillMine_replacesItemWithoutNotice() async {
+        await model.reload()
+        var saved = github.tasks[0]
+        saved.title = "Login neu"
+        saved.assignees = ["octo", "lea-m"]
+        model.didSave(saved, requestedAssignees: ["lea-m"])
+        #expect(listedTitles == ["Login neu"])
+        #expect(model.lastHandedOver == nil)
+        #expect(model.lastError == nil)
+    }
+
+    @Test func didSave_missingRequestedAssignee_warns() async {
+        await model.reload()
+        model.didSave(github.tasks[0], requestedAssignees: ["sam"])
+        #expect(model.lastError == "sam konnte nicht zugewiesen werden.")
+        #expect(listedTitles == ["Login"])
+    }
+
+    @Test func unassignedMessage_listsSeveralPeople() {
+        #expect(TaskListModel.unassignedMessage(number: 7, created: true, missing: ["lea-m", "sam"])
+            == "#7 angelegt, aber lea-m und sam konnte nicht zugewiesen werden.")
+        #expect(TaskListModel.unassignedMessage(number: nil, created: true, missing: ["sam"]) == "sam konnte nicht zugewiesen werden.")
+    }
+
+    @Test func createReturning_forOthers_setsNoNotice_butRemovesFromItems() async throws {
+        let created = try await model.createReturning(draft(["lea-m"]), in: .github)
+        #expect(created.assignees == ["lea-m"])
+        #expect(model.items.isEmpty)
+        #expect(model.lastHandedOver == nil)
+        #expect(model.lastError == nil)
+    }
+
+    @Test func applyReturning_handedOver_removesItem() async throws {
+        await model.reload()
+        var handedOver: [TaskID] = []
+        model.onHandedOver = { handedOver.append($0) }
+        var edit = TaskEdit()
+        edit.assignees = .set(AssigneeChange(add: ["lea-m"], remove: ["octo"]))
+        let updated = try await model.applyReturning(edit, to: issueID)
+        #expect(updated.assignees == ["lea-m"])
+        #expect(model.items.isEmpty)
+        #expect(handedOver == [issueID])
+        #expect(model.lastHandedOver == nil)
+    }
+
+    @Test func handedOverNotice_readsNumberFromURL() {
+        var item = makeTask("Ohne", source: .github)
+        #expect(HandedOverNotice(item: item).number == nil)
+        item.url = URL(string: "https://github.com/beispiel/app/issues/9")
+        #expect(item.issueNumber == 9)
+    }
+}
+
+@MainActor
 struct ReconnectTests {
     /// While GitHub is offline, the list retries on its own and leaves the offline state when it answers again.
     @Test func reconnect_retriesUntilOnline() async {

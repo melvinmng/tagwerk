@@ -166,6 +166,7 @@ final class AppEnvironment {
                                            hasConsent: { settings.mealEstimationConsent })
         let planning = self.planning
         taskList.onCompletionChanged = { id, isCompleted in await planning.didChangeCompletion(id, isCompleted: isCompleted) }
+        taskList.onHandedOver = { id in await planning.didHandOver(id) }
         // An ended GitHub sign-in (expired or revoked) forgets the cached issues of that account.
         taskList.onSignedOut = { source in
             if source == .github {

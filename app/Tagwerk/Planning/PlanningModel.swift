@@ -587,6 +587,22 @@ final class PlanningModel {
         await reload()
     }
 
+    /// Blocks of a task that start after this moment; exactly those a hand-over deletes.
+    func futureBlockCount(for id: TaskID) -> Int {
+        blocks.futureBlocks(for: id, after: now()).count
+    }
+
+    /// The issue left the user's lists: its planned day and its future blocks go, past blocks stay.
+    func didHandOver(_ id: TaskID) async {
+        planStore.unassign(id)
+        do {
+            try blocks.deleteFutureBlocks(of: id, after: now())
+        } catch {
+            lastError = TaskListModel.message(for: error)
+        }
+        await reload()
+    }
+
     /// Planned day and future blocks of a task, for the editor's "Geplant" section.
     func plannedInfo(for id: TaskID) -> (day: PlanDay?, blocks: [CalendarEvent]) {
         (planStore.assignment(for: id), blocks.futureBlocks(for: id, after: today.startDate(in: calendar)))

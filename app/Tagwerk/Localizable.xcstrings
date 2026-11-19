@@ -2,6 +2,22 @@
   "sourceLanguage": "de",
   "strings": {
     "": {},
+    "#%lld angelegt, aber %@ konnte nicht zugewiesen werden.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "#%1$lld angelegt, aber %2$@ konnte nicht zugewiesen werden."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "#%lld created, but %@ could not be assigned."
+          }
+        }
+      }
+    },
     "%@\n\nDie Anmeldung öffnet eine Seite von ChatGPT und kehrt danach von selbst zu Tagwerk zurück. Planen mit KI und der Assistent brauchen sie; alles andere läuft ohne.": {
       "localizations": {
         "en": {
@@ -224,6 +240,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "No break on %@"
+          }
+        }
+      }
+    },
+    "%@ konnte nicht zugewiesen werden.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ could not be assigned."
           }
         }
       }

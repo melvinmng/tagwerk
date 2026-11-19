@@ -78,6 +78,8 @@ final class TaskListModel {
     /// Task to scroll to and mark briefly after "Aufgabe zeigen" (design §13.8 G3).
     private(set) var highlightedTaskID: TaskID?
     private(set) var lastError: String?
+    /// Issue that just left the lists because the user is not assigned to it; shown as the "Vergeben" capsule.
+    private(set) var lastHandedOver: HandedOverNotice?
     /// Sources whose current load has not finished yet.
     private(set) var loadingSources: Set<TaskSource> = []
 
@@ -90,6 +92,8 @@ final class TaskListModel {
     @ObservationIgnored var onSignedOut: ((TaskSource) -> Void)?
     /// Called after a task was completed (`true`) or reopened (`false`) through Tagwerk.
     @ObservationIgnored var onCompletionChanged: ((TaskID, Bool) async -> Void)?
+    /// Called after a written task left the user's lists (handed over to others), so planning can clean up.
+    @ObservationIgnored var onHandedOver: ((TaskID) async -> Void)?
     let now: () -> Date
     let calendar: Calendar
 
@@ -274,6 +278,10 @@ final class TaskListModel {
         lastCompleted = nil
     }
 
+    func dismissHandedOver() {
+        lastHandedOver = nil
+    }
+
     func reschedule(_ id: TaskID, option: RescheduleOption) async {
         guard let item = items.first(where: { $0.id == id }) else { return }
         var edit = TaskEdit()
@@ -285,8 +293,14 @@ final class TaskListModel {
     func create(_ draft: TaskDraft, in source: TaskSource) async {
         guard let provider = provider(for: source) else { return }
         do {
-            replace(try await provider.create(draft))
+            let created = try await provider.create(draft)
             nextGeneration(for: source)
+            await settle(created, provider: provider, announce: true)
+            // The source may drop people silently (GitHub: logins that cannot be assigned).
+            let missing = AssigneeRules.missing(requested: draft.assignees, actual: created.assignees)
+            if !missing.isEmpty {
+                lastError = Self.unassignedMessage(number: created.issueNumber, created: true, missing: missing)
+            }
         } catch {
             lastError = Self.message(for: error)
         }
@@ -296,15 +310,25 @@ final class TaskListModel {
         (try? await provider(for: source)?.containers()) ?? []
     }
 
-    /// Stores an item returned by the editor.
-    func didSave(_ item: TaskItem) {
+    /// Stores an item returned by the editor. `requestedAssignees` are the people the editor added;
+    /// those missing from the saved item were dropped by the source and are reported.
+    func didSave(_ item: TaskItem, requestedAssignees: [String] = []) {
         nextGeneration(for: item.id.source)
+        let missing = AssigneeRules.missing(requested: requestedAssignees, actual: item.assignees)
+        if !missing.isEmpty {
+            lastError = Self.unassignedMessage(number: item.issueNumber, created: false, missing: missing)
+        }
         if let previous = items.first(where: { $0.id == item.id }), previous.isCompleted != item.isCompleted,
            let hook = onCompletionChanged {
             Task { await hook(item.id, item.isCompleted) }
         }
         if item.isCompleted {
             items.removeAll { $0.id == item.id }
+        } else if let provider = provider(for: item.id.source), !provider.isListed(item) {
+            handOver(item, announce: true)
+            if let hook = onHandedOver {
+                Task { await hook(item.id) }
+            }
         } else {
             replace(item)
         }
@@ -329,7 +353,8 @@ final class TaskListModel {
                 items.removeAll { $0.id == id }
                 if !item.isCompleted { await onCompletionChanged?(id, true) }
             } else {
-                replace(updated)
+                // The assistant reports a hand-over in its own text, so no capsule here.
+                await settle(updated, provider: provider, announce: false)
             }
             return updated
         } catch TaskWriteError.conflict(let current) {
@@ -341,8 +366,9 @@ final class TaskListModel {
     func createReturning(_ draft: TaskDraft, in source: TaskSource) async throws -> TaskItem {
         guard let provider = provider(for: source) else { throw TaskWriteError.accessDenied }
         let created = try await provider.create(draft)
-        replace(created)
         nextGeneration(for: source)
+        // No capsule and no warning: the assistant reports number, link and dropped people in its answer.
+        await settle(created, provider: provider, announce: false)
         return created
     }
 
@@ -374,6 +400,33 @@ final class TaskListModel {
             lastError = Self.message(for: error)
         }
         return nil
+    }
+
+    /// Puts a written item into the list, or takes it out when the source says it no longer belongs
+    /// to the user's lists. Returns whether the item is listed.
+    @discardableResult
+    private func settle(_ item: TaskItem, provider: any TaskProvider, announce: Bool) async -> Bool {
+        guard !provider.isListed(item) else {
+            replace(item)
+            return true
+        }
+        handOver(item, announce: announce)
+        await onHandedOver?(item.id)
+        return false
+    }
+
+    private func handOver(_ item: TaskItem, announce: Bool) {
+        items.removeAll { $0.id == item.id }
+        if announce { lastHandedOver = HandedOverNotice(item: item) }
+    }
+
+    /// Warning for people the source dropped silently. `created` names the new issue number first.
+    static func unassignedMessage(number: Int?, created: Bool, missing: [String]) -> String {
+        let names = missing.formatted(.list(type: .and))
+        if created, let number {
+            return String(localized: "#\(number) angelegt, aber \(names) konnte nicht zugewiesen werden.")
+        }
+        return String(localized: "\(names) konnte nicht zugewiesen werden.")
     }
 
     private func replace(_ item: TaskItem) {

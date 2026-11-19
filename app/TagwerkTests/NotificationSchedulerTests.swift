@@ -101,6 +101,22 @@ struct NotificationSchedulerTests {
         #expect(center.pendingIDs == ["tagwerk.task.local:B"])
     }
 
+    @Test func handOver_removesPendingNotification() async {
+        var issue = makeTask("Login", source: .github, due: due(20))
+        issue.assignees = ["octo"]
+        github.tasks = [issue]
+        github.viewerLogin = "octo"
+        let list = await loadedList()
+        let scheduler = makeScheduler(list)
+        await scheduler.reschedule()
+        #expect(center.pendingIDs == ["tagwerk.task.github:Login"])
+
+        issue.assignees = ["lea-m"]
+        list.didSave(issue)
+        await scheduler.reschedule()
+        #expect(center.pendingIDs.isEmpty)
+    }
+
     @Test func dueChanged_replacesNotification() async {
         local.tasks = [makeTask("A", source: .local, due: due(20))]
         let list = await loadedList()

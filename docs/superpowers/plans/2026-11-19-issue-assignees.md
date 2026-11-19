@@ -338,7 +338,7 @@ Regeln: Eine private Hilfsfunktion `settle(_ item:, provider:, announce: Bool) -
 
 `FakeTaskProvider` erhält: `var viewerLogin: String?` (`isListed` = `viewerLogin == nil || AssigneeRules.contains(item.assignees, viewerLogin!)`), `var droppedAssignees: Set<String>` (werden beim Schreiben still verworfen), `private(set) var createdDrafts: [TaskDraft]`; `create` setzt bei `source == .github` `assignees = draft.assignees ?? [viewerLogin].compactMap { $0 }` und `url = https://github.com/beispiel/app/issues/151`; `apply` wendet `edit.assignees` mit `AssigneeRules.applying` an.
 
-- [ ] **Step 1: Tests schreiben** (`TaskListModelTests`, GitHub-Fake mit `viewerLogin = "octo"`):
+- [x] **Step 1: Tests schreiben** (`TaskListModelTests`, GitHub-Fake mit `viewerLogin = "octo"`):
   - `create_forMe_addsItemWithoutNotice`: `draft.assignees == nil` → Item in `items`, `lastHandedOver == nil`, `lastError == nil`
   - `create_forOthers_neverEntersItems_andSetsNotice`: `assignees: ["lea-m"]` → `!items.contains { $0.id.source == .github }`, `lastHandedOver?.number == 151`, `lastHandedOver?.assignees == ["lea-m"]`
   - `create_forNoOne_setsNoticeWithoutAssignees`
@@ -351,10 +351,10 @@ Regeln: Eine private Hilfsfunktion `settle(_ item:, provider:, announce: Bool) -
   
   `PlanningModelTests`: `didHandOver_removesDayAndFutureBlocks_keepsPastBlocks` (ein Block gestern, einer morgen; danach `planStore.assignment(for:) == nil`, nur der gestrige Block übrig), `futureBlockCount_countsFromNow`.
   `NotificationSchedulerTests`: `handOver_removesPendingNotification` (Issue mit Fälligkeit geplant; nach `didSave` eines nicht gelisteten Stands und `reschedule()` keine Anfrage mehr für die ID).
-- [ ] **Step 2:** `APP TaskListModelTests` → FAIL.
-- [ ] **Step 3:** Umsetzen; Texte mit Englisch in `Localizable.xcstrings`.
-- [ ] **Step 4:** `APP TaskListModelTests`, `APP PlanningModelTests`, `APP NotificationSchedulerTests` → PASS.
-- [ ] **Step 5:** Commit `feat: keep handed-over issues out of the list and the plan`.
+- [x] **Step 2:** `APP TaskListModelTests` → FAIL.
+- [x] **Step 3:** Umsetzen; Texte mit Englisch in `Localizable.xcstrings`.
+- [x] **Step 4:** `APP TaskListModelTests`, `APP PlanningModelTests`, `APP NotificationSchedulerTests` → PASS.
+- [x] **Step 5:** Commit `feat: keep handed-over issues out of the list and the plan`.
 
 ---
 

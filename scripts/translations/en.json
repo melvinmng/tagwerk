@@ -1128,5 +1128,7 @@
     "other": "⚠︎ %lld deadlines today"
   },
   "Sprache Englisch, auf Deutsch wechseln": "Language English, switch to German",
-  "Höchstens 10 Personen je Issue.": "At most 10 people per issue."
+  "Höchstens 10 Personen je Issue.": "At most 10 people per issue.",
+  "#%lld angelegt, aber %@ konnte nicht zugewiesen werden.": "#%lld created, but %@ could not be assigned.",
+  "%@ konnte nicht zugewiesen werden.": "%@ could not be assigned."
 }

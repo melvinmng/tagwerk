@@ -51,6 +51,32 @@ struct PlanningModelTests {
         calendar.date(from: DateComponents(year: 2026, month: 11, day: day, hour: hour, minute: minute))!
     }
 
+    @Test func didHandOver_removesDayAndFutureBlocks_keepsPastBlocks() async throws {
+        let model = await model()
+        let issue = github.tasks[0]
+        let past = try blocks.createBlock(for: issue, start: at(17, 9), minutes: 60)
+        _ = try blocks.createBlock(for: issue, start: at(19, 9), minutes: 60)
+        planStore.assign(issue.id, to: PlanDay(year: 2026, month: 11, day: 19))
+
+        await model.didHandOver(issue.id)
+
+        #expect(planStore.assignment(for: issue.id) == nil)
+        #expect(calendarStore.storedEvents.map(\.id) == [past.id])
+        #expect(model.lastError == nil)
+    }
+
+    @Test func futureBlockCount_countsFromNow() async throws {
+        let model = await model()
+        let issue = github.tasks[0]
+        // Earlier today (before 10:00) counts for the editor's "Geplant" section, but is not deleted on hand-over.
+        _ = try blocks.createBlock(for: issue, start: at(18, 8), minutes: 60)
+        _ = try blocks.createBlock(for: issue, start: at(18, 14), minutes: 60)
+        _ = try blocks.createBlock(for: issue, start: at(19, 9), minutes: 60)
+
+        #expect(model.futureBlockCount(for: issue.id) == 2)
+        #expect(model.plannedInfo(for: issue.id).blocks.count == 3)
+    }
+
     @Test func reload_week_hasSevenDaysMondayFirst() async {
         let model = await model()
         model.scope = .week
