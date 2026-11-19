@@ -89,18 +89,16 @@ struct EveningSheet: View {
                     Text("Der Eintrag bleibt auf deinem iPhone und geht nie an ChatGPT.")
                 }
 
-                // Only when a habit is fulfilled by Bible Study: one tap to the start of a session.
-                if model.habits.hasActiveHabit(source: .bibleStudy) {
-                    Section {
-                        Button { isStartingBibleStudy = true } label: {
-                            HStack {
-                                Label("Bible Study starten", systemImage: "book.pages")
-                                Spacer()
-                                Image(systemName: "chevron.right").font(.caption.weight(.semibold)).foregroundStyle(.tertiary)
-                            }
+                // Always offered, with or without a habit that Bible Study fulfils: one tap to the start of a session.
+                Section {
+                    Button { isStartingBibleStudy = true } label: {
+                        HStack {
+                            Label("Bible Study starten", systemImage: "book.pages")
+                            Spacer()
+                            Image(systemName: "chevron.right").font(.caption.weight(.semibold)).foregroundStyle(.tertiary)
                         }
-                        .tint(.primary)
                     }
+                    .tint(.primary)
                 }
 
                 // Sundays: the weekly planning is one tap away (it contains the reflection).
