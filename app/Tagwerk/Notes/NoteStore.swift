@@ -100,7 +100,7 @@ final class NoteStore {
         let record = NoteRecord(text: trimmed, kind: kind, dayKey: kind == .free ? nil : dayKey, wasDictated: wasDictated, now: now())
         // Thought notes live in the virtual folder "Gedanken", journal entries in their system folder.
         switch kind {
-        case .morning, .evening: record.folderID = nil
+        case .morning, .evening, .dream: record.folderID = nil
         case .journal: record.folderID = ensureJournalFolder().id
         case .free, .bibleStudy: record.folderID = folderID
         }

@@ -43,7 +43,8 @@ public struct RoutineDayValue: Sendable, Hashable {
     }
 }
 
-/// A reminder of the routines that repeats every day at the same time (phase 7 design §8.1). The texts are static.
+/// A reminder of the routines that repeats every day, or every week on one weekday, at the same time (phase 7 design
+/// §8.1). The texts are static.
 public struct RoutineNotification: Sendable, Hashable, Identifiable {
     /// "tagwerk.routine.evening.<UUID>" or "tagwerk.routine.morning".
     public var id: String
@@ -53,14 +54,17 @@ public struct RoutineNotification: Sendable, Hashable, Identifiable {
     public var body: String
     /// What a tap opens; carried in the notification as the link path.
     public var route: AppRoute
+    /// Calendar weekday (1 = Sunday … 7 = Saturday) for a reminder that repeats weekly; `nil` repeats every day.
+    public var weekday: Int?
 
-    public init(id: String, hour: Int, minute: Int, title: String, body: String, route: AppRoute) {
+    public init(id: String, hour: Int, minute: Int, title: String, body: String, route: AppRoute, weekday: Int? = nil) {
         self.id = id
         self.hour = hour
         self.minute = minute
         self.title = title
         self.body = body
         self.route = route
+        self.weekday = weekday
     }
 }
 
@@ -74,16 +78,38 @@ public enum RoutineSchedule {
     public static let fallbackEveningLeadMinutes = 90
     public static let maximumItems = 8
     public static let maximumReminders = 4
+    /// Routine reminders hold at most this many places: four evening points, the morning start and the weekly planning.
+    public static let maximumRoutineNotifications = 6
     public static let offsetRange = 0...240
     public static let offsetStep = 5
-    public static let titleLimit = 40
+    public static let titleLimit = 60
 
-    /// The checklist offered for an empty list (design §11): 90, 60 and 30 minutes before bedtime. Read at the time of
-    /// adoption, so the titles follow the app language of that moment.
-    public static var suggestedItems: [(title: String, offsetMinutes: Int)] {
-        [(String(localized: "Tagesabschluss öffnen", bundle: .module), 90),
-         (String(localized: "Handy weglegen", bundle: .module), 60),
-         (String(localized: "Ins Bett", bundle: .module), 30)]
+    /// The checklist offered for an empty list: the order of the original evening template. The offsets apply to the
+    /// default bedtime of 23:00; "from 22:00" is left out of the first title because the bedtime is adjustable. Three
+    /// points remind (90, 60 and 30 minutes before bedtime), below the limit of four. Read at the time of adoption, so
+    /// the titles follow the app language of that moment.
+    public static var suggestedItems: [(title: String, offsetMinutes: Int?)] {
+        [(String(localized: "Helle Lichter ausmachen", bundle: .module), nil),
+         (String(localized: "Alle Aufgaben bis eine Stunde vorm Schlafen erledigen", bundle: .module), 90),
+         (String(localized: "Eine Stunde vorm Schlafen fertig machen", bundle: .module), 60),
+         (String(localized: "Zähne putzen, umziehen, Haus/Wohnung aufräumen", bundle: .module), nil),
+         (String(localized: "Eine halbe Stunde vorm Schlafen ins Bett legen", bundle: .module), 30)]
+    }
+
+    /// The titles of the former three-point suggestion, German and English, as fixed strings (not translated): they are
+    /// compared with what is stored, which was written in one of the two languages.
+    public static let legacySuggestionTitles: [[String]] = [
+        ["Tagesabschluss öffnen", "Handy weglegen", "Ins Bett"],
+        ["Open evening wrap-up", "Put the phone away", "Go to bed"],
+    ]
+    private static let legacySuggestionOffsets = [90, 60, 30]
+
+    /// Whether `items` are exactly the former suggestion, untouched: same titles in the same order (by `order`) with
+    /// the offsets 90, 60 and 30. Any other list (renamed, reordered, other offset, more or fewer points) is the user's.
+    public static func isLegacySuggestion(_ items: [ChecklistItem]) -> Bool {
+        let sorted = items.sorted { $0.order < $1.order }
+        guard sorted.map(\.offsetMinutes) == legacySuggestionOffsets.map({ Optional($0) }) else { return false }
+        return legacySuggestionTitles.contains { $0 == sorted.map(\.title) }
     }
 
     /// Rule 9: bedtime minus offset, modulo 24 hours.
@@ -148,18 +174,33 @@ public enum RoutineSchedule {
         let clamped = ((minutes % 1440) + 1440) % 1440
         return RoutineNotification(id: "\(PlannedNotification.routineIdentifierPrefix)morning", hour: clamped / 60, minute: clamped % 60,
                                    title: Localized.string("Tagesstart", in: language, bundle: .module),
-                                   body: Localized.string("Fokus für heute wählen?", in: language, bundle: .module), route: .routineStart)
+                                   body: Localized.string("Ein ruhiger Start in den Tag?", in: language, bundle: .module), route: .routineStart)
+    }
+
+    /// The optional weekly reminder for the weekly planning (#164); `nil` while switched off. `weekday` counts like
+    /// `Calendar` (1 = Sunday), `minutes` since midnight.
+    public static func weekPlanningNotification(enabled: Bool, weekday: Int, minutes: Int, locale: Locale) -> RoutineNotification? {
+        guard enabled else { return nil }
+        let language = VoiceLanguage.from(locale: locale)
+        let clamped = ((minutes % 1440) + 1440) % 1440
+        let day = min(7, max(1, weekday))
+        return RoutineNotification(id: "\(PlannedNotification.routineIdentifierPrefix)week", hour: clamped / 60, minute: clamped % 60,
+                                   title: Localized.string("Wochenplanung", in: language, bundle: .module),
+                                   body: Localized.string("5 Minuten für die neue Woche?", in: language, bundle: .module),
+                                   route: .routineWeek, weekday: day)
     }
 
     /// Which routine reminders sit inside the quiet hours. They are exempt (plan quiet-hours, decision 4): the settings
     /// say so instead of moving them.
     public static func quietHoursConflict(_ quietHours: QuietHours?, items: [ChecklistItem], bedtimeMinutes: Int,
-                                          eveningEnabled: Bool, morningEnabled: Bool, morningMinutes: Int) -> QuietHoursConflict {
+                                          eveningEnabled: Bool, morningEnabled: Bool, morningMinutes: Int,
+                                          weekEnabled: Bool = false, weekMinutes: Int = 0) -> QuietHoursConflict {
         guard let quietHours else { return QuietHoursConflict(evening: false, morning: false) }
         let evening = eveningEnabled && reminderItems(items).contains { item in
             item.offsetMinutes.map { quietHours.contains(minutes: anchorMinutes(bedtimeMinutes: bedtimeMinutes, offsetMinutes: $0)) } ?? false
         }
-        return QuietHoursConflict(evening: evening, morning: morningEnabled && quietHours.contains(minutes: morningMinutes))
+        return QuietHoursConflict(evening: evening, morning: morningEnabled && quietHours.contains(minutes: morningMinutes),
+                                  week: weekEnabled && quietHours.contains(minutes: weekMinutes))
     }
 
     /// Checked points that still exist; ids of deleted points are ignored.
@@ -172,13 +213,15 @@ public enum RoutineSchedule {
 public struct QuietHoursConflict: Equatable, Sendable {
     public let evening: Bool
     public let morning: Bool
+    public let week: Bool
 
-    public init(evening: Bool, morning: Bool) {
+    public init(evening: Bool, morning: Bool, week: Bool = false) {
         self.evening = evening
         self.morning = morning
+        self.week = week
     }
 
-    public var isEmpty: Bool { !evening && !morning }
+    public var isEmpty: Bool { !evening && !morning && !week }
 }
 
 /// Rules of the daily focus (phase 7 design §6, rule 12).

@@ -91,6 +91,10 @@ final class AppSettings {
     /// The optional reminder to start the day, off by default.
     var morningReminderEnabled: Bool = false
     var morningReminderMinutes: Int = 450
+    /// The optional weekly reminder for the weekly planning (#164): off by default, Sunday (1) at 18:00.
+    var weekPlanningReminderEnabled: Bool = false
+    var weekPlanningReminderWeekday: Int = 1
+    var weekPlanningReminderMinutes: Int = 1080
     /// The routine card and the evening line in "Planen".
     var showsRoutinesInPlan: Bool = true
     /// "Notizen an ChatGPT senden": a thought note may be sent, only on a tap on "Vorschläge holen".

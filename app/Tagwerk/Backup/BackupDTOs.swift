@@ -920,6 +920,9 @@ struct WeekReflectionBackup: BackupEntity {
     var plannedHabits: Bool
     var plannedTasks: Bool
     var updatedAt: Date
+    /// Optional, so a backup written before the original weekly template still decodes.
+    var goalsProgress: String?
+    var gratitudeTaken: Bool?
 
     init(_ record: WeekReflectionRecord) {
         weekKey = record.weekKey
@@ -929,6 +932,8 @@ struct WeekReflectionBackup: BackupEntity {
         plannedHabits = record.plannedHabits
         plannedTasks = record.plannedTasks
         updatedAt = record.updatedAt
+        goalsProgress = record.goalsProgress
+        gratitudeTaken = record.gratitudeTaken
     }
 
     func makeRecord() -> WeekReflectionRecord {
@@ -940,6 +945,8 @@ struct WeekReflectionBackup: BackupEntity {
         record.plannedHabits = plannedHabits
         record.plannedTasks = plannedTasks
         record.updatedAt = updatedAt
+        record.goalsProgress = goalsProgress ?? ""
+        record.gratitudeTaken = gratitudeTaken ?? false
         return record
     }
 }
@@ -993,6 +1000,10 @@ struct AppSettingsBackup: Codable, Equatable {
     var eveningRemindersEnabled: Bool
     var morningReminderEnabled: Bool
     var morningReminderMinutes: Int
+    /// Optional, so a backup written before the weekly planning reminder still decodes; a missing value keeps the default.
+    var weekPlanningReminderEnabled: Bool?
+    var weekPlanningReminderWeekday: Int?
+    var weekPlanningReminderMinutes: Int?
     var showsRoutinesInPlan: Bool
     var noteSuggestionConsent: Bool
     var noteSortOrderRaw: String
@@ -1056,6 +1067,9 @@ struct AppSettingsBackup: Codable, Equatable {
         eveningRemindersEnabled = record.eveningRemindersEnabled
         morningReminderEnabled = record.morningReminderEnabled
         morningReminderMinutes = record.morningReminderMinutes
+        weekPlanningReminderEnabled = record.weekPlanningReminderEnabled
+        weekPlanningReminderWeekday = record.weekPlanningReminderWeekday
+        weekPlanningReminderMinutes = record.weekPlanningReminderMinutes
         showsRoutinesInPlan = record.showsRoutinesInPlan
         noteSuggestionConsent = record.noteSuggestionConsent
         noteSortOrderRaw = record.noteSortOrderRaw
@@ -1121,6 +1135,9 @@ struct AppSettingsBackup: Codable, Equatable {
         record.eveningRemindersEnabled = eveningRemindersEnabled
         record.morningReminderEnabled = morningReminderEnabled
         record.morningReminderMinutes = morningReminderMinutes
+        if let weekPlanningReminderEnabled { record.weekPlanningReminderEnabled = weekPlanningReminderEnabled }
+        if let weekPlanningReminderWeekday { record.weekPlanningReminderWeekday = weekPlanningReminderWeekday }
+        if let weekPlanningReminderMinutes { record.weekPlanningReminderMinutes = weekPlanningReminderMinutes }
         record.showsRoutinesInPlan = showsRoutinesInPlan
         record.noteSuggestionConsent = noteSuggestionConsent
         record.noteSortOrderRaw = noteSortOrderRaw

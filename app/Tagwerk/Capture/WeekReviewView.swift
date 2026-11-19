@@ -19,7 +19,7 @@ struct WeekReviewView: View {
                 }
                 caloriesSection(review)
                 Section {
-                    Text(waterText(review))
+                    Text(Self.waterText(review))
                 } header: { header("Wasser", review) }
                 Section {
                     Text(IntakeFormat.weekTraining(minutes: review.workoutMinutes, count: review.workoutCount,
@@ -154,7 +154,7 @@ struct WeekReviewView: View {
         }
     }
 
-    private func waterText(_ review: WeekReview) -> String {
+    static func waterText(_ review: WeekReview) -> String {
         guard let average = review.averageWaterMilliliters else { return String(localized: "Kein Wasser erfasst") }
         let days = review.days.filter { !$0.isFuture }.count
         return String(localized: "Ziel an \(review.waterGoalDays) von \(days) Tagen · Ø \(IntakeFormat.liters(average))")

@@ -1,17 +1,31 @@
 import Foundation
 
-/// Origin of a note: the user's own note, the thoughts captured at the start or the end of a day, or an entry of the
-/// journal "Tagebuch mit Gott", or a note of the Bible Study folder. An unknown stored value reads as `.free`.
+/// Origin of a note: the user's own note, the thoughts captured at the start or the end of a day, the dream log of the
+/// morning start, or an entry of the journal "Tagebuch mit Gott", or a note of the Bible Study folder. An unknown stored
+/// value reads as `.free`. The raw values are stored and written to backups: never rename, only append.
 public enum NoteKind: String, Sendable, CaseIterable {
     case free, morning, evening, journal, bibleStudy
+    /// The optional dream log of the morning start: one note per day, like the morning and evening notes.
+    case dream
 
-    /// Private notes never leave the device: not to ChatGPT (not even with the consent for thought notes), not to the
-    /// assistant's tools and not to the widget. The in-app search is local and may show them. Every place that sends or
-    /// shares note content has to check this one predicate.
+    /// Private notes (journal, Bible Study) never leave the device: not to ChatGPT (not even with the consent for thought
+    /// notes), not to the assistant's tools and not to the widget. The in-app search is local and may show them. This
+    /// predicate also gates the opt-in of the backup. Sending note content to ChatGPT needs `allowsSuggestions` on top: the
+    /// dream log is not `isPrivate` (it is part of the backup like the thought notes) but is never sent.
     public var isPrivate: Bool {
         switch self {
         case .journal, .bibleStudy: true
-        case .free, .morning, .evening: false
+        case .free, .morning, .evening, .dream: false
+        }
+    }
+
+    /// Whether "Vorschläge holen" may send the note to ChatGPT: only the thought notes of the morning and the evening.
+    /// The dream log stays on the device like the gratitude entries, although it is part of the backup (so it is not
+    /// `isPrivate`, which governs the opt-in of the backup).
+    public var allowsSuggestions: Bool {
+        switch self {
+        case .morning, .evening: true
+        case .free, .journal, .bibleStudy, .dream: false
         }
     }
 }

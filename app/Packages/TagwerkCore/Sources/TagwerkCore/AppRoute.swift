@@ -13,6 +13,8 @@ public enum AppRoute: String, Sendable, Hashable, CaseIterable {
     /// The morning start and the evening wrap-up (phase 7): "Planen" on today with the sheet above it.
     case routineStart = "routine/start"
     case routineEvening = "routine/evening"
+    /// The guided weekly planning (#164).
+    case routineWeek = "routine/week"
 
     public static let scheme = "tagwerk"
 

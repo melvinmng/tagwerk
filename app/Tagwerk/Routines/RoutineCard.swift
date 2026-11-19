@@ -22,8 +22,8 @@ struct RoutineCard: View {
     private func morning(_ overview: String) -> some View {
         HStack(spacing: 10) {
             Image(systemName: "sun.max.fill").foregroundStyle(.orange)
-            Text(overview.isEmpty ? String(localized: "Tagesstart · Fokus wählen")
-                                  : String(localized: "Tagesstart · Fokus wählen · \(overview)"))
+            Text(overview.isEmpty ? String(localized: "Tagesstart")
+                                  : String(localized: "Tagesstart · \(overview)"))
                 .font(.footnote)
                 // Two lines instead of cutting the numbers off; the card stays one row of buttons high.
                 .lineLimit(2)
@@ -47,7 +47,6 @@ struct RoutineCard: View {
             HStack {
                 Text("Fokus heute · \(done) von \(total)").font(.subheadline.weight(.semibold))
                 Spacer()
-                Button("Ändern") { model.openStart() }.font(.subheadline)
             }
             ForEach(marks.prefix(FocusRules.maximumMarks)) { mark in
                 HStack(spacing: 10) {

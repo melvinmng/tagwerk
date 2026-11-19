@@ -170,10 +170,10 @@ struct WeekReviewModelTests {
         let model = makePhase7(habits, routines: routines)
         await model.reload()
         model.reflection.burdens = "Viel los"
-        model.reflection.plannedTasks = true
+        model.reflection.tasksPlanned = true
         model.saveReflection()
         #expect(routines.reflection(weekStart: PlanDay(year: 2026, month: 11, day: 16)).burdens == "Viel los")
-        #expect(routines.reflection(weekStart: PlanDay(year: 2026, month: 11, day: 16)).plannedTasks)
+        #expect(routines.reflection(weekStart: PlanDay(year: 2026, month: 11, day: 16)).tasksPlanned)
     }
 
     @Test func planNextWeek_showsTheWeekViewOfTheFollowingWeek() async {

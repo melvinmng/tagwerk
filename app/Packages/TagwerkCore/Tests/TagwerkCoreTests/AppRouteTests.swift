@@ -35,6 +35,12 @@ struct AppRouteTests {
         #expect(AppRoute(url: URL(string: "tagwerk://shopping/add")!) == nil)
     }
 
+    @Test func appRoute_routineWeek_roundTrips() {
+        #expect(AppRoute(url: URL(string: "tagwerk://routine/week")!) == .routineWeek)
+        #expect(AppRoute.routineWeek.url.absoluteString == "tagwerk://routine/week")
+        #expect(AppRoute(url: AppRoute.routineWeek.url) == .routineWeek)
+    }
+
     @Test func route_parsesRoutinePaths() {
         #expect(AppRoute(url: URL(string: "tagwerk://routine/start")!) == .routineStart)
         #expect(AppRoute(url: URL(string: "tagwerk://routine/evening")!) == .routineEvening)

@@ -66,6 +66,10 @@ struct PrivateNotesTests {
         await model.fetch(noteID: entry.id, text: "Erfundener Text", kind: .evening)
         let study = notes.openBibleNote(book: BibleBooks.book(number: 45)!, locale: Locale(identifier: "de_DE"))
         await model.fetch(noteID: study.id, text: "Erfundener Text", kind: .free)
+        // The dream log never goes to ChatGPT either.
+        let dream = try #require(notes.create(text: "Erfundener Traum", kind: .dream, dayKey: "2026-11-19"))
+        await model.fetch(noteID: dream.id, text: "Erfundener Traum", kind: .dream)
+        await model.fetch(noteID: dream.id, text: "Erfundener Traum", kind: .evening)
         #expect(responder.calls == 0 && counter.models == 0)
         #expect(model.phase == .idle)
     }

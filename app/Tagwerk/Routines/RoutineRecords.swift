@@ -106,32 +106,43 @@ final class WeekReflectionRecord {
     var plannedHabits: Bool = false
     var plannedTasks: Bool = false
     var updatedAt: Date = Date.now
+    /// "Wie laufen meine Ziele, Projekte und Tasks?"; new with the original weekly template.
+    var goalsProgress: String = ""
+    var gratitudeTaken: Bool = false
 
     init(weekStart: PlanDay, updatedAt: Date) {
         self.weekKey = weekStart.dayKey
         self.updatedAt = updatedAt
     }
 
+    /// The appointments and the habits of earlier versions are one point now: it counts as done only when both were.
+    /// An older week with just one of the two shows the new point open (decision D4).
     var value: WeekReflection {
-        WeekReflection(wentWell: wentWell, burdens: burdens, plannedAppointments: plannedAppointments,
-                       plannedHabits: plannedHabits, plannedTasks: plannedTasks)
+        WeekReflection(wentWell: wentWell, burdens: burdens, goalsProgress: goalsProgress,
+                       calendarPlanned: plannedAppointments && plannedHabits, tasksPlanned: plannedTasks,
+                       gratitudeTaken: gratitudeTaken)
     }
 
     func apply(_ value: WeekReflection) {
         wentWell = value.wentWell
         burdens = value.burdens
-        plannedAppointments = value.plannedAppointments
-        plannedHabits = value.plannedHabits
-        plannedTasks = value.plannedTasks
+        goalsProgress = value.goalsProgress
+        plannedAppointments = value.calendarPlanned
+        plannedHabits = value.calendarPlanned
+        plannedTasks = value.tasksPlanned
+        gratitudeTaken = value.gratitudeTaken
     }
 }
 
+/// What the weekly review keeps per week: the texts of the reflection and the checks of the planning of the next week.
 struct WeekReflection: Equatable {
     var wentWell = ""
     var burdens = ""
-    var plannedAppointments = false
-    var plannedHabits = false
-    var plannedTasks = false
+    var goalsProgress = ""
+    /// Appointments and habits entered into the calendar.
+    var calendarPlanned = false
+    var tasksPlanned = false
+    var gratitudeTaken = false
 }
 
 struct FocusMark: Equatable, Identifiable {
@@ -196,7 +207,7 @@ final class RoutineStore {
         return itemRecords().sorted { ($0.order, $0.createdAt) < ($1.order, $1.createdAt) }.map(\.value)
     }
 
-    /// Inserts or updates by id. `false` for a ninth point or a fifth reminder; the title is cut to 40 characters and
+    /// Inserts or updates by id. `false` for a ninth point or a fifth reminder; the title is cut to 60 characters and
     /// the offset is rounded to steps of five minutes within 0 to 240.
     @discardableResult
     func saveItem(_ item: ChecklistItem) -> Bool {
@@ -220,6 +231,18 @@ final class RoutineStore {
     func reorderItems(_ ids: [UUID]) {
         for (index, id) in ids.enumerated() { itemRecord(id)?.order = index }
         save()
+    }
+
+    /// Replaces an untouched list of the former three-point suggestion with the current suggestion. Checked points of
+    /// earlier days point to the deleted ids and no longer count (`checkedCount` ignores them). `false` for any other
+    /// list, which stays as it is.
+    @discardableResult
+    func replaceLegacySuggestion() -> Bool {
+        let items = checklist()
+        guard RoutineSchedule.isLegacySuggestion(items) else { return false }
+        for item in items { deleteItem(item.id) }
+        adoptSuggestion()
+        return true
     }
 
     /// Creates the suggested points (design §11), only into an empty list.

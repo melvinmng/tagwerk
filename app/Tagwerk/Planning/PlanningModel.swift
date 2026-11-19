@@ -1181,10 +1181,13 @@ final class PlanningModel {
         let previousDay: PlanDay?
         /// Moved blocks with their former start.
         let blocks: [(id: String, start: Date)]
+        /// Blocks this move created ("In den nächsten freien Block"); taking the move back deletes them.
+        var createdBlockIDs: [String] = []
         var movedBlocks: Int { blocks.count }
 
         static func == (lhs: DayMove, rhs: DayMove) -> Bool {
             lhs.taskID == rhs.taskID && lhs.previousDay == rhs.previousDay && lhs.blocks.map(\.id) == rhs.blocks.map(\.id)
+                && lhs.createdBlockIDs == rhs.createdBlockIDs
         }
     }
 
@@ -1276,6 +1279,59 @@ final class PlanningModel {
         lastMoveGroup = moves.isEmpty ? nil : moves
     }
 
+    /// What "In den nächsten freien Block" did.
+    struct LeftoverOutcome: Equatable {
+        var placed: Int
+        /// Part of `placed`: the block lies after the due day.
+        var late: Int
+        var unplaced: Int
+    }
+
+    /// "In den nächsten freien Block" (#163): every task gets a time block in the first free stretch from the next working
+    /// day on (today only from now), up to its due day while there is room, never overlapping. One undo for all.
+    func placeInFreeBlocks(_ ids: [TaskID]) async -> LeftoverOutcome {
+        let tasks = ids.compactMap { id in taskList.items.first { $0.id == id && !$0.isCompleted } }
+        guard !tasks.isEmpty else { return LeftoverOutcome(placed: 0, late: 0, unplaced: 0) }
+        let today = self.today
+        // Today plus the next five working days, looked for within the next two weeks.
+        var lastDay = today
+        var workingDays = 0
+        for offset in 1...14 {
+            let day = today.adding(days: offset, calendar: calendar)
+            lastDay = day
+            if (workHours(on: day)?.minutes ?? 0) > 0 { workingDays += 1 }
+            if workingDays == 5 { break }
+        }
+        let inputs = await planInputs(in: today...lastDay)
+        let firstDay = inputs.first { $0.day > today && ($0.hours?.minutes ?? 0) > 0 }?.day ?? today
+        let items = tasks.map { task in
+            LeftoverPlacement.Item(taskKey: task.id.key, minutes: suggestedBlockMinutes(for: task, on: firstDay),
+                                   due: task.due.map { PlanDay($0) }, priority: task.priority)
+        }
+        let nowMinutes = minutes(now(), from: today.startDate(in: calendar))
+        let result = LeftoverPlacement.place(tasks: items, days: inputs, nowMinutes: nowMinutes, today: today)
+        var moves: [DayMove] = []
+        var late = 0
+        var failed = 0
+        for placed in result.placed {
+            guard let task = tasks.first(where: { $0.id.key == placed.taskKey }) else { continue }
+            let previous = planStore.assignment(for: task.id)
+            let start = placed.day.startDate(in: calendar).addingTimeInterval(TimeInterval(placed.range.lowerBound * 60))
+            do {
+                let block = try blocks.createBlock(for: task, start: start, minutes: placed.range.count)
+                moves.append(DayMove(taskID: task.id, previousDay: previous, blocks: [], createdBlockIDs: [block.id]))
+                if placed.lateForDue { late += 1 }
+            } catch {
+                lastError = TaskListModel.message(for: error)
+                failed += 1
+            }
+        }
+        lastMove = nil
+        lastMoveGroup = moves.isEmpty ? nil : moves
+        await reload()
+        return LeftoverOutcome(placed: moves.count, late: late, unplaced: result.unplaced.count + failed)
+    }
+
     func undoMoveGroup() async {
         guard let moves = lastMoveGroup else { return }
         lastMoveGroup = nil
@@ -1329,8 +1385,12 @@ final class PlanningModel {
         await undo(move)
     }
 
-    /// Takes a move back: blocks to their former start, the task to its former day.
+    /// Takes a move back: created blocks are deleted, moved blocks go to their former start, the task to its former day.
     func undo(_ move: DayMove) async {
+        for id in move.createdBlockIDs {
+            guard let block = calendarStore.event(id: id) else { continue }
+            try? calendarStore.deleteBlock(id: block.id, expectedVersion: block.version)
+        }
         for (id, start) in move.blocks {
             guard let block = calendarStore.event(id: id) else { continue }
             try? blocks.moveBlock(block, to: start)

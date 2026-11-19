@@ -1715,6 +1715,16 @@
         }
       }
     },
+    "%lld nach Fälligkeit": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld after the due date"
+          }
+        }
+      }
+    },
     "%lld neu": {
       "localizations": {
         "en": {
@@ -1801,6 +1811,16 @@
         }
       }
     },
+    "%lld ohne freien Platz": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld without free space"
+          }
+        }
+      }
+    },
     "%lld passen nicht mehr": {
       "localizations": {
         "en": {
@@ -1833,6 +1853,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Move %1$lld · relieves %2$@"
+          }
+        }
+      }
+    },
+    "%lld verschoben": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld moved"
           }
         }
       }
@@ -2299,6 +2329,16 @@
         }
       }
     },
+    "Ab %@, vor der Fälligkeit, ohne Überschneidung": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "From %@, before the due date, without overlap"
+          }
+        }
+      }
+    },
     "Ab %@: %@ statt %@. Frühere Tage behalten ihren Wert.": {
       "localizations": {
         "de": {
@@ -2488,16 +2528,6 @@
         }
       }
     },
-    "Alle %lld Aufgaben von heute zeigen": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Show all %lld tasks of today"
-          }
-        }
-      }
-    },
     "Alle %lld Jahre": {
       "localizations": {
         "de": {
@@ -2678,6 +2708,16 @@
         }
       }
     },
+    "Alle Felder sind freiwillig. Die Reflexion liegt nur auf diesem iPhone.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All fields are optional. The reflection stays on this iPhone only."
+          }
+        }
+      }
+    },
     "Alle Notizen": {
       "localizations": {
         "en": {
@@ -2804,6 +2844,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Accept all (%lld)"
+          }
+        }
+      }
+    },
+    "Alles auf %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Everything to %@"
+          }
+        }
+      }
+    },
+    "Alles auf den nächsten Arbeitstag": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Everything to the next working day"
           }
         }
       }
@@ -3544,22 +3604,22 @@
         }
       }
     },
-    "Aufgaben der Woche festgelegt": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Tasks of the week set"
-          }
-        }
-      }
-    },
     "Aufgaben erledigt": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Tasks completed"
+          }
+        }
+      }
+    },
+    "Aufgaben mit Fälligkeit in dieser Woche oder früher, dazu die Deadlines aus deinen Kalendern.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tasks due this week or earlier, plus the deadlines from your calendars."
           }
         }
       }
@@ -3890,12 +3950,12 @@
         }
       }
     },
-    "Beide Felder sind freiwillig. Die Reflexion liegt nur auf diesem iPhone.": {
+    "Beides öffnet „Planen“ in der Woche, die du planst. Den KI-Plan startest du dort mit dem KI-Knopf; von hier wird nichts gesendet.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Both fields are optional. The reflection stays on this iPhone only."
+            "value": "Both open “Plan” in the week you are planning. You start the AI plan there with the AI button; nothing is sent from here."
           }
         }
       }
@@ -4112,6 +4172,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Delete blocks"
+          }
+        }
+      }
+    },
+    "Brain Dump": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Brain Dump"
           }
         }
       }
@@ -4532,6 +4602,16 @@
         }
       }
     },
+    "Datum …": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Date …"
+          }
+        }
+      }
+    },
     "Dauer": {
       "localizations": {
         "en": {
@@ -4711,6 +4791,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "The code has expired. Please start over."
+          }
+        }
+      }
+    },
+    "Der Dream Log bleibt auf diesem iPhone und wird nie an ChatGPT gesendet.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The dream log stays on this iPhone and is never sent to ChatGPT."
           }
         }
       }
@@ -5534,6 +5624,16 @@
     "Diktat": {
       "shouldTranslate": false
     },
+    "Dream Log": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dream Log"
+          }
+        }
+      }
+    },
     "Du": {
       "localizations": {
         "en": {
@@ -5951,6 +6051,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Agree and Sort"
+          }
+        }
+      }
+    },
+    "Einzeln entscheiden": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Decide one by one"
           }
         }
       }
@@ -6536,16 +6646,6 @@
         }
       }
     },
-    "Fokus wählen": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Choose focus"
-          }
-        }
-      }
-    },
     "Fokus: %@": {
       "localizations": {
         "en": {
@@ -6725,6 +6825,16 @@
         }
       }
     },
+    "Fälligkeiten der neuen Woche": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Due in the new week"
+          }
+        }
+      }
+    },
     "Füge Milch zur Einkaufsliste in Tagwerk hinzu": {
       "localizations": {
         "en": {
@@ -6785,12 +6895,12 @@
         }
       }
     },
-    "Für Vorschläge sendet Tagwerk den Text der jeweiligen Gedanken-Notiz sowie deine offenen Aufgaben und Termine der nächsten 7 Tage (Titel, Fälligkeit, Zeit) an ChatGPT (OpenAI), und nur, wenn du bei der Notiz auf „Vorschläge holen“ tippst. Dankbarkeit, Gewohnheiten, Wochenreflexion, Daten aus Health und frühere Notizen werden nie gesendet.": {
+    "Für Vorschläge sendet Tagwerk den Text der jeweiligen Brain-Dump-Notiz sowie deine offenen Aufgaben und Termine der nächsten 7 Tage (Titel, Fälligkeit, Zeit) an ChatGPT (OpenAI), und nur, wenn du bei der Notiz auf „Vorschläge holen“ tippst. Dankbarkeit, Dream Log, Gewohnheiten, Wochenreflexion, Daten aus Health und frühere Notizen werden nie gesendet.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "For suggestions, Tagwerk sends the text of that thoughts note plus your open tasks and events of the next 7 days (title, due date, time) to ChatGPT (OpenAI), and only when you tap “Get suggestions” on the note. Gratitude, habits, weekly reflection, Health data and earlier notes are never sent."
+            "value": "For suggestions, Tagwerk sends the text of that brain dump note plus your open tasks and events of the next 7 days (title, due date, time) to ChatGPT (OpenAI), and only when you tap “Get suggestions” on the note. Gratitude, dream log, habits, weekly reflection, Health data and earlier notes are never sent."
           }
         }
       }
@@ -6845,6 +6955,16 @@
         }
       }
     },
+    "Ganzen Wochenrückblick öffnen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open the full weekly review"
+          }
+        }
+      }
+    },
     "Ganztägig": {
       "localizations": {
         "en": {
@@ -6861,16 +6981,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Thoughts"
-          }
-        }
-      }
-    },
-    "Gedanken-Notiz": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Thoughts note"
           }
         }
       }
@@ -7107,16 +7217,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Edit habits"
-          }
-        }
-      }
-    },
-    "Gewohnheiten eingeplant": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Habits planned"
           }
         }
       }
@@ -7488,16 +7588,6 @@
         }
       }
     },
-    "Heute ist noch keine Aufgabe geplant.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "No task is planned for today yet."
-          }
-        }
-      }
-    },
     "Heute keine Pause": {
       "localizations": {
         "en": {
@@ -7544,6 +7634,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Meals you’ve logged before appear here."
+          }
+        }
+      }
+    },
+    "Hier wird nur gelesen. Nichts davon verlässt dein iPhone.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Read-only here. None of this leaves your iPhone."
           }
         }
       }
@@ -7988,6 +8088,26 @@
         }
       }
     },
+    "In den nächsten freien Block": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Into the next free block"
+          }
+        }
+      }
+    },
+    "In den nächsten fünf Tagen ist kein Arbeitstag. Wähle ein Datum unter „Einzeln entscheiden“.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "There is no working day in the next five days. Pick a date under “Decide one by one”."
+          }
+        }
+      }
+    },
     "In diesen Kalender kann Tagwerk nicht schreiben.": {
       "localizations": {
         "en": {
@@ -8084,6 +8204,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "AI"
+          }
+        }
+      }
+    },
+    "KI-Wochenplan erstellen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Create AI weekly plan"
           }
         }
       }
@@ -8371,6 +8501,16 @@
         }
       }
     },
+    "Keine Fälligkeiten in der neuen Woche.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing is due in the new week."
+          }
+        }
+      }
+    },
     "Keine Mahlzeiten erfasst": {
       "localizations": {
         "en": {
@@ -8527,6 +8667,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "No suggestions from this note."
+          }
+        }
+      }
+    },
+    "Keine aktive Gewohnheit.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No active habit."
           }
         }
       }
@@ -8713,6 +8863,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Strength training"
+          }
+        }
+      }
+    },
+    "Kurzen Moment für Dankbarkeit genommen?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Took a short moment for gratitude?"
           }
         }
       }
@@ -10571,6 +10731,16 @@
         }
       }
     },
+    "Nächster freier Block": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Next free block"
+          }
+        }
+      }
+    },
     "OK": {
       "localizations": {
         "en": {
@@ -11064,6 +11234,16 @@
         }
       }
     },
+    "Projekte und Tasks der Woche eingetragen?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Projects and tasks of the week entered?"
+          }
+        }
+      }
+    },
     "Prüfe …": {
       "shouldTranslate": false
     },
@@ -11253,6 +11433,16 @@
     "Runde %lld": {
       "shouldTranslate": false
     },
+    "Rückblick · %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review · %@"
+          }
+        }
+      }
+    },
     "Rückgängig": {
       "localizations": {
         "en": {
@@ -11299,6 +11489,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Already imported"
+          }
+        }
+      }
+    },
+    "Schreib auf, was in deinen Kopf kommt. Sortier deine Gedanken.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Write down what comes to mind. Sort your thoughts."
+          }
+        }
+      }
+    },
+    "Schritt %lld von %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Step %lld of %lld"
           }
         }
       }
@@ -11489,6 +11699,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Pages in the export"
+          }
+        }
+      }
+    },
+    "Selbst planen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plan it myself"
           }
         }
       }
@@ -12251,32 +12471,6 @@
         }
       }
     },
-    "Tagesfokus": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Daily focus"
-          }
-        }
-      }
-    },
-    "Tagesfokus · %lld von %lld gewählt": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "new",
-            "value": "Tagesfokus · %1$lld von %2$lld gewählt"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Daily focus · %1$lld of %2$lld chosen"
-          }
-        }
-      }
-    },
     "Tagesstart": {
       "localizations": {
         "en": {
@@ -12287,22 +12481,12 @@
         }
       }
     },
-    "Tagesstart · Fokus wählen": {
+    "Tagesstart · %@": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Morning start · Choose focus"
-          }
-        }
-      }
-    },
-    "Tagesstart · Fokus wählen · %@": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Morning start · Choose focus · %@"
+            "value": "Morning start · %@"
           }
         }
       }
@@ -12633,12 +12817,12 @@
     "Termine der nächsten 7 Tage. „Zusammengefasst“: gleicher Termin wird über die Kopie aus einem anderen Kalender gezeigt.": {
       "shouldTranslate": false
     },
-    "Termine eingeplant": {
+    "Termine und Gewohnheiten in den Kalender eingetragen?": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Appointments planned"
+            "value": "Appointments and habits entered in the calendar?"
           }
         }
       }
@@ -12909,6 +13093,36 @@
           "stringUnit": {
             "state": "translated",
             "value": "Unknown function %@."
+          }
+        }
+      }
+    },
+    "Unerledigt von heute": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Left over from today"
+          }
+        }
+      }
+    },
+    "Unerledigtes verschieben": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Move leftovers"
+          }
+        }
+      }
+    },
+    "Unerledigtes verschieben · %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Move leftovers · %@"
           }
         }
       }
@@ -13588,22 +13802,22 @@
         }
       }
     },
-    "Was geht dir durch den Kopf?": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "What’s on your mind?"
-          }
-        }
-      }
-    },
     "Was hast du gegessen?": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "What did you eat?"
+          }
+        }
+      }
+    },
+    "Was hast du geträumt?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What did you dream?"
           }
         }
       }
@@ -13838,6 +14052,16 @@
         }
       }
     },
+    "Wie laufen meine Ziele, Projekte und Tasks?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "How are my goals, projects and tasks going?"
+          }
+        }
+      }
+    },
     "Wieder öffnen": {
       "localizations": {
         "en": {
@@ -13934,6 +14158,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Welcome"
+          }
+        }
+      }
+    },
+    "Willst du etwas ändern? Vielleicht hat dir der Brain Dump Klarheit gegeben. „Vorschläge holen“ prüft ihn gegen deine Aufgaben und Termine der nächsten 7 Tage.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Want to change something? Maybe the brain dump gave you clarity. “Get suggestions” checks it against your tasks and events of the next 7 days."
           }
         }
       }
@@ -14048,12 +14282,22 @@
         }
       }
     },
-    "Wochenreflexion": {
+    "Wochenplanung": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Weekly reflection"
+            "value": "Weekly planning"
+          }
+        }
+      }
+    },
+    "Wochenplanung starten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start the weekly planning"
           }
         }
       }
@@ -14064,6 +14308,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Weekly review"
+          }
+        }
+      }
+    },
+    "Wochentag": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Weekday"
           }
         }
       }
@@ -14492,6 +14746,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Remove from preparation"
+          }
+        }
+      }
+    },
+    "Zurück": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Back"
           }
         }
       }
@@ -15862,6 +16126,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Opens the evening wrap-up"
+          }
+        }
+      }
+    },
+    "Öffnet die Auswahl, wohin das Unerledigte soll": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opens the choice of where the leftovers go"
           }
         }
       }

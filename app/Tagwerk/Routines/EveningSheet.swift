@@ -10,6 +10,11 @@ struct EveningSheet: View {
     @State private var review: RoutinesModel.DayReview?
     @State private var note: NoteFieldModel
     @State private var journalSheet: JournalSheetTarget?
+    @State private var isStartingBibleStudy = false
+    @State private var bibleSheet: JournalSheetTarget?
+    @State private var isMovingLeftovers = false
+    /// What the last bulk action did, with what is needed to take it back; the capsule of "Planen" is behind this sheet.
+    @State private var leftoverReport: LeftoverSheet.Report?
 
     init(model: RoutinesModel, day: PlanDay, notes: NoteStore, isSignedIn: @escaping () -> Bool) {
         self.model = model
@@ -40,6 +45,8 @@ struct EveningSheet: View {
                 } footer: {
                     Text("Erledigt: Erinnerungen und lokale Aufgaben, ohne GitHub.")
                 }
+
+                leftoverSection
 
                 Section {
                     if items.isEmpty {
@@ -82,15 +89,33 @@ struct EveningSheet: View {
                     Text("Der Eintrag bleibt auf deinem iPhone und geht nie an ChatGPT.")
                 }
 
-                // Sundays: the weekly review is one tap away.
+                // Only when a habit is fulfilled by Bible Study: one tap to the start of a session.
+                if model.habits.hasActiveHabit(source: .bibleStudy) {
+                    Section {
+                        Button { isStartingBibleStudy = true } label: {
+                            HStack {
+                                Label("Bible Study starten", systemImage: "book.pages")
+                                Spacer()
+                                Image(systemName: "chevron.right").font(.caption.weight(.semibold)).foregroundStyle(.tertiary)
+                            }
+                        }
+                        .tint(.primary)
+                    }
+                }
+
+                // Sundays: the weekly planning is one tap away (it contains the reflection).
                 if day.weekday(in: model.calendar) == 1 {
                     Section {
                         Button {
                             model.closeSheet()
-                            environment.router.open(.review)
+                            // A sheet that opens in the same update in which another one closes is dropped.
+                            Task { @MainActor in
+                                try? await Task.sleep(for: .milliseconds(350))
+                                model.openWeek()
+                            }
                         } label: {
                             HStack {
-                                Label("Wochenreflexion", systemImage: "square.and.pencil")
+                                Label("Wochenplanung starten", systemImage: "calendar.badge.checkmark")
                                 Spacer()
                                 Image(systemName: "chevron.right").font(.caption.weight(.semibold)).foregroundStyle(.tertiary)
                             }
@@ -125,6 +150,46 @@ struct EveningSheet: View {
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Fertig") { note.flush(); model.finishEvening(day) } } }
             .task { review = await model.dayReview(day) }
             .sheet(item: $journalSheet) { target in NoteEditorSheet(noteID: target.id) }
+            .sheet(isPresented: $isStartingBibleStudy) {
+                BibleStudyStartSheet(store: environment.notes) { noteID in bibleSheet = JournalSheetTarget(id: noteID) }
+            }
+            .sheet(item: $bibleSheet) { target in NoteEditorSheet(noteID: target.id) }
+            .sheet(isPresented: $isMovingLeftovers) {
+                LeftoverSheet(planning: model.planning, taskList: model.taskList) { report in leftoverReport = report }
+            }
+        }
+    }
+
+    /// "Unerledigt von heute": the way to move what is left, and after a bulk action its result with "Rückgängig". Only for
+    /// the wrap-up of today (rule 10: after midnight it belongs to yesterday and offers nothing).
+    @ViewBuilder
+    private var leftoverSection: some View {
+        if model.offersLeftover(for: day) {
+            Section {
+                LeftoverLine(count: model.planning.leftFromToday.count) { isMovingLeftovers = true }
+            } header: {
+                Text("Unerledigt von heute")
+            }
+        }
+        if let report = leftoverReport {
+            Section {
+                HStack {
+                    Text(LeftoverSheetText.outcome(moved: report.moved, late: report.late, unplaced: report.unplaced))
+                    Spacer()
+                    if !report.moves.isEmpty {
+                        Button("Rückgängig") { undoLeftover(report) }.buttonStyle(.borderless)
+                    }
+                }
+            }
+        }
+    }
+
+    private func undoLeftover(_ report: LeftoverSheet.Report) {
+        leftoverReport = nil
+        Task {
+            for move in report.moves.reversed() { await model.planning.undo(move) }
+            // The same group may still be offered by the capsule of "Planen".
+            if model.planning.lastMoveGroup == report.moves { model.planning.clearMoveGroupUndo() }
         }
     }
 

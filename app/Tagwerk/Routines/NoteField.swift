@@ -3,8 +3,8 @@ import Observation
 import SwiftUI
 import TagwerkCore
 
-/// The thoughts note of the morning start and the evening wrap-up (phase 7 design §7.6): one note per day and kind in the
-/// shared `NoteRecord` store. Text is saved while typing (debounced) and when the sheet closes, before anything could be sent.
+/// The brain dump of the morning start and the evening wrap-up (phase 7 design §7.6) and the dream log of the morning
+/// start: one note per day and kind in the shared `NoteRecord` store. Text is saved while typing (debounced) and when the sheet closes, before anything could be sent.
 @MainActor
 @Observable
 final class NoteFieldModel {
@@ -32,7 +32,7 @@ final class NoteFieldModel {
     init(store: NoteStore, kind: NoteKind, day: PlanDay, debounce: Duration = .milliseconds(500),
          sleep: @escaping (Duration) async -> Void = { try? await Task.sleep(for: $0) },
          isSignedIn: @escaping () -> Bool = { false }, now: @escaping () -> Date = Date.init, calendar: Calendar = .tagwerk) {
-        precondition(kind == .morning || kind == .evening)
+        precondition(kind == .morning || kind == .evening || kind == .dream)
         self.isSignedIn = isSignedIn
         self.now = now
         self.calendar = calendar
@@ -118,10 +118,10 @@ final class NoteFieldModel {
     /// "Leitfragen einfügen" is offered until the first question is in the text, in either language (the questions stay
     /// as they were inserted when the app language changes later).
     var offersGuidingQuestions: Bool {
-        !VoiceLanguage.allCases.contains { NoteTemplate.containsGuidingQuestions(text, locale: $0.locale) }
+        kind != .dream && !VoiceLanguage.allCases.contains { NoteTemplate.containsGuidingQuestions(text, locale: $0.locale) }
     }
 
-    /// Appends the six questions in the app language; the text stays an ordinary note.
+    /// Appends the eight questions in the app language; the text stays an ordinary note.
     func insertGuidingQuestions(locale: Locale = .current) {
         text = NoteTemplate.appendingGuidingQuestions(to: text, locale: locale)
         selection = nil
@@ -134,7 +134,7 @@ final class NoteFieldModel {
     /// context of the request starts today and does not fit an older note (evening notes count until 03:59 for the day
     /// before, rule 10).
     var canSuggest: Bool {
-        isSignedIn() && taskTitle != nil && day == RoutineSchedule.routineDay(at: now(), calendar: calendar)
+        kind.allowsSuggestions && isSignedIn() && taskTitle != nil && day == RoutineSchedule.routineDay(at: now(), calendar: calendar)
     }
 
     // MARK: Tasks from the note
@@ -152,7 +152,8 @@ final class NoteFieldModel {
     }
 }
 
-/// The section "Gedanken" of both sheets: a multi-line field with a microphone and "Als Aufgabe anlegen".
+/// The section "Brain Dump" of both sheets (a multi-line field with a microphone and "Als Aufgabe anlegen") or, for the
+/// dream log of the morning start, a plain field with a microphone that is never sent anywhere.
 struct NoteField: View {
     let model: NoteFieldModel
     @Environment(AppEnvironment.self) private var environment
@@ -160,6 +161,8 @@ struct NoteField: View {
     @State private var creatingTask = false
     @State private var suggestions: NoteSuggestionModel?
     @State private var asksConsent = false
+
+    private var isDreamLog: Bool { model.kind == .dream }
 
     var body: some View {
         Section {
@@ -176,7 +179,8 @@ struct NoteField: View {
                             .frame(minHeight: 110)
                             .overlay(alignment: .topLeading) {
                                 if model.text.isEmpty {
-                                    Text("Was geht dir durch den Kopf?").foregroundStyle(.tertiary).padding(.top, 8).padding(.leading, 5)
+                                    Text(isDreamLog ? "Was hast du geträumt?" : "Schreib auf, was in deinen Kopf kommt. Sortier deine Gedanken.")
+                                        .foregroundStyle(.tertiary).padding(.top, 8).padding(.leading, 5)
                                         .allowsHitTesting(false)
                                 }
                             }
@@ -186,7 +190,7 @@ struct NoteField: View {
                         }
                     }
                 }
-                if model.taskTitle != nil {
+                if !isDreamLog, model.taskTitle != nil {
                     Button { creatingTask = true } label: { Label("Als Aufgabe anlegen", systemImage: "plus.circle") }
                         .buttonStyle(.borderless)
                     suggestionButton
@@ -221,14 +225,18 @@ struct NoteField: View {
             }
         } header: {
             HStack {
-                Text("Gedanken")
+                Text(isDreamLog ? "Dream Log" : "Brain Dump")
                 Spacer()
                 if model.offersGuidingQuestions {
                     Button("Leitfragen einfügen") { model.insertGuidingQuestions() }.textCase(nil)
                 }
             }
+        } footer: {
+            if isDreamLog {
+                Text("Der Dream Log bleibt auf diesem iPhone und wird nie an ChatGPT gesendet.")
+            }
         }
-        if let suggestions { suggestionSection(suggestions) }
+        if !isDreamLog, let suggestions { suggestionSection(suggestions) }
     }
 
     // MARK: Suggestions
@@ -245,13 +253,21 @@ struct NoteField: View {
                 }
                 .buttonStyle(.borderless)
                 .disabled(suggestions?.phase == .loading)
-                Text("„Vorschläge holen“ sendet diese Notiz an ChatGPT. Nichts wird ohne deine Bestätigung geändert.")
-                    .font(.footnote).foregroundStyle(.secondary)
+                Text(suggestionFooter).font(.footnote).foregroundStyle(.secondary)
             }
         } else {
             Text("Melde dich unter Einstellungen › KI bei ChatGPT an, um Vorschläge zu holen.")
                 .font(.footnote).foregroundStyle(.secondary)
         }
+    }
+
+    /// The evening wrap-up adds the invitation to check the brain dump against the next seven days; the sentence about
+    /// sending the note to ChatGPT stays in both sheets.
+    private var suggestionFooter: String {
+        let sending = String(localized: "„Vorschläge holen“ sendet diese Notiz an ChatGPT. Nichts wird ohne deine Bestätigung geändert.")
+        guard model.kind == .evening else { return sending }
+        let invitation = String(localized: "Willst du etwas ändern? Vielleicht hat dir der Brain Dump Klarheit gegeben. „Vorschläge holen“ prüft ihn gegen deine Aufgaben und Termine der nächsten 7 Tage.")
+        return invitation + " " + sending
     }
 
     @ViewBuilder
@@ -298,7 +314,8 @@ struct NoteField: View {
     }
 
     private func prepareVoice() {
-        if suggestions == nil { suggestions = environment.makeNoteSuggestionModel() }
+        // The dream log has no suggestions, so it needs no model that could send anything.
+        if suggestions == nil, !isDreamLog { suggestions = environment.makeNoteSuggestionModel() }
         guard voice == nil else { return }
         let input = VoiceInputFactory.make(environment)
         input.readDraft = { model.draftBeforeCursor() }
