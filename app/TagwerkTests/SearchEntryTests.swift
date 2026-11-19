@@ -42,6 +42,8 @@ struct SearchEntryTests {
             case .task(let item, _): item.title
             case .event(let row, _): row.event.title
             case .completed(let group, _): group.latest.item.title
+            case .note(let note, _): note.text
+            case .shopping(let item, _): item.name
             default: nil
             }
         }
@@ -111,6 +113,46 @@ struct SearchEntryTests {
         model.text = "statistik"
         await model.settle()
         #expect(!titles(model).contains("Statistik lernen"))
+    }
+
+    @Test func makeSearchModelReadsNotesAndOpenShoppingItems() async throws {
+        store.listInfos.append(ListInfo(id: "shop", title: "Einkauf", colorHex: nil, kind: .calDAV))
+        store.records["milk"] = ReminderRecord(id: "milk", title: "Statistik-Heft", notes: "2 Stück", due: nil, ekPriority: 0,
+                                               isCompleted: false, listID: "shop", lastModified: nil)
+        environment.settings.shoppingListID = "shop"
+        await environment.shopping.reload()
+        environment.notes.create(text: "Statistik Ideen")
+        await environment.taskList.reload()
+        let model = environment.makeSearchModel()
+        model.text = "statistik"
+        #expect(model.results.sections.map(\.kind).suffix(2) == [.notes, .shopping])
+        #expect(titles(model).contains("Statistik Ideen") && titles(model).contains("Statistik-Heft"))
+        // The shopping reminder is no task, and the note carries its kind label.
+        #expect(titles(model).filter { $0 == "Statistik-Heft" }.count == 1)
+    }
+
+    @Test func shoppingSectionNeedsAReadyList() async {
+        environment.notes.create(text: "Statistik Ideen")
+        let model = environment.makeSearchModel()
+        model.text = "statistik"
+        #expect(model.results.sections.map(\.kind).contains(.notes))
+        #expect(!model.results.sections.map(\.kind).contains(.shopping))
+    }
+
+    @Test func checkingOffInTheSearchCompletesTheShoppingReminder() async {
+        store.listInfos.append(ListInfo(id: "shop", title: "Einkauf", colorHex: nil, kind: .calDAV))
+        store.records["milk"] = ReminderRecord(id: "milk", title: "Hafermilch", notes: nil, due: nil, ekPriority: 0,
+                                               isCompleted: false, listID: "shop", lastModified: nil)
+        environment.settings.shoppingListID = "shop"
+        await environment.shopping.reload()
+        let model = environment.makeSearchModel()
+        model.text = "hafermilch"
+        guard case .shopping(let item, _)? = model.results.sections.first?.rows.first else {
+            Issue.record("no shopping row"); return
+        }
+        await model.checkOff(item)
+        #expect(store.records["milk"]?.isCompleted == true)
+        #expect(model.results.isEmpty)
     }
 
     @Test func completedTasksOfTheLastTwelveMonthsAreRead() async {

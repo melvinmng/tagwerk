@@ -42,12 +42,15 @@ public struct NoteSearchItem: Sendable, Hashable, Identifiable {
     public let text: String
     public let kindLabel: String
     public let updatedAt: Date
+    /// "YYYY-MM-DD" of a morning or evening note; `nil` for the user's own notes.
+    public let dayKey: String?
 
-    public init(id: UUID, text: String, kindLabel: String, updatedAt: Date) {
+    public init(id: UUID, text: String, kindLabel: String, updatedAt: Date, dayKey: String? = nil) {
         self.id = id
         self.text = text
         self.kindLabel = kindLabel
         self.updatedAt = updatedAt
+        self.dayKey = dayKey
     }
 }
 

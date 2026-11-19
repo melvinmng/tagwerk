@@ -335,6 +335,15 @@ final class AppEnvironment {
         activeSearch?.close()
     }
 
+    /// Name of a note's kind in a search row.
+    static func kindLabel(of kind: NoteKind) -> String {
+        switch kind {
+        case .free: String(localized: "Notiz")
+        case .morning: String(localized: "Tagesstart")
+        case .evening: String(localized: "Tagesabschluss")
+        }
+    }
+
     /// Wires a search model to the app's sources. Tasks are read from the loaded list, events through the
     /// search reader in the calendars "Planen" reads, completed reminders of the last 12 months and all
     /// completed local tasks on demand.
@@ -356,7 +365,9 @@ final class AppEnvironment {
                 return try await gitHub.searchOnline(text, excluding: loaded)
             }
         }
-        let sources = SearchSources(
+        let notes = self.notes
+        let shopping = self.shopping
+        var sources = SearchSources(
             openTasks: { sortedTasks(taskList.items, calendar: planning.calendar) },
             events: { interval in
                 guard reminderStore.calendarAccessState == .fullAccess else { return nil }
@@ -372,7 +383,22 @@ final class AppEnvironment {
                 let local = (self?.taskList.provider(for: .local) as? LocalTaskProvider)?.completedTasks() ?? []
                 return await reminders.completedTasks(in: interval) + local
             },
+            notes: {
+                notes.notes().map { note in
+                    NoteSearchItem(id: note.id, text: note.text, kindLabel: Self.kindLabel(of: note.kind), updatedAt: note.updatedAt,
+                                   dayKey: note.kind == .free ? nil : note.dayKey)
+                }
+            },
+            shopping: {
+                // Only open items of a list that is set up; completed ones stay out (spec F7).
+                guard shopping.state == .ready else { return [] }
+                return shopping.openItems.map { ShoppingSearchItem(id: $0.id, name: $0.name, quantity: $0.quantity) }
+            },
             searchOnline: searchOnline)
+        if settings.shoppingListID != nil {
+            // A failed write leaves the item on the list; the model reads the rows again either way.
+            sources.checkOffShopping = { id in try? await shopping.checkOff(id: id) }
+        }
         return SearchModel(sources: sources, calendar: planning.calendar)
     }
 

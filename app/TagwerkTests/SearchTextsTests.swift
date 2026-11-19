@@ -113,6 +113,14 @@ struct SearchTextsTests {
         #expect(SearchTexts.onlineError(.failed("Boom")) == "Boom")
     }
 
+    @Test func noteSubtitleNamesKindAndDay() {
+        #expect(SearchTexts.noteSubtitle(kindLabel: "Notiz", updatedAt: date(2026, 11, 12), dayKey: nil, calendar: calendar) == "Notiz · 12.11.")
+        #expect(SearchTexts.noteSubtitle(kindLabel: "Tagesabschluss", updatedAt: date(2026, 11, 19), dayKey: "2026-11-18", calendar: calendar)
+                == "Tagesabschluss · 18.11.")
+        #expect(SearchTexts.noteSubtitle(kindLabel: "Tagesstart", updatedAt: date(2026, 11, 19), dayKey: "kaputt", calendar: calendar)
+                == "Tagesstart · 19.11.")
+    }
+
     @Test func highlightMarksOnlyTheGivenRanges() {
         let text = "Hauptstraße 5"
         let ranges = SearchText.ranges(of: "strasse", in: text)

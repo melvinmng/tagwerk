@@ -200,3 +200,60 @@ struct SearchOnlineAskRow: View {
         return false
     }
 }
+
+/// A note hit: first line as the title, kind and day below, then the passage that matched.
+struct SearchNoteRow: View {
+    let note: NoteSearchItem
+    let match: SearchMatch
+    let calendar: Calendar
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 12) {
+            Image(systemName: "note.text").font(.title3).foregroundStyle(.secondary).frame(width: 24).accessibilityHidden(true)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(SearchTexts.highlighted(title, ranges: match.titleRanges)).lineLimit(2)
+                Text(SearchTexts.noteSubtitle(kindLabel: note.kindLabel, updatedAt: note.updatedAt, dayKey: note.dayKey, calendar: calendar))
+                    .font(.caption).foregroundStyle(.secondary)
+                if let snippet = match.snippet { SearchSnippetLine(snippet: snippet) }
+            }
+            Spacer(minLength: 0)
+        }
+        .contentShape(Rectangle())
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel([String(localized: "Notiz"), title,
+                             SearchTexts.noteSubtitle(kindLabel: note.kindLabel, updatedAt: note.updatedAt, dayKey: note.dayKey, calendar: calendar)]
+            .joined(separator: ", "))
+    }
+
+    /// The first line of the text, as the search document reads it.
+    private var title: String {
+        let trimmed = note.text.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.split(separator: "\n", maxSplits: 1, omittingEmptySubsequences: false).first.map(String.init) ?? ""
+    }
+}
+
+/// A shopping item hit: the circle checks it off, the row opens the list; "Einkauf" marks the source.
+struct SearchShoppingRow: View {
+    let item: ShoppingSearchItem
+    let match: SearchMatch
+    let onCheckOff: (() -> Void)?
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 12) {
+            Button { onCheckOff?() } label: {
+                Image(systemName: "circle").font(.title3).foregroundStyle(.secondary)
+            }
+            .buttonStyle(.plain)
+            .disabled(onCheckOff == nil)
+            .accessibilityLabel("Abhaken")
+            VStack(alignment: .leading, spacing: 2) {
+                Text(SearchTexts.highlighted(item.name, ranges: match.titleRanges))
+                if let quantity = item.quantity { Text(quantity).font(.caption).foregroundStyle(.secondary) }
+                if let snippet = match.snippet, snippet.field != .quantity { SearchSnippetLine(snippet: snippet) }
+            }
+            Spacer(minLength: 8)
+            Text("Einkauf").font(.caption).foregroundStyle(.secondary)
+        }
+        .contentShape(Rectangle())
+    }
+}

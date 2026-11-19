@@ -46,3 +46,31 @@ struct EventEntrySheet: View {
                    model: environment.planning, onShowTask: onShowTask)
     }
 }
+
+/// A note in its own navigation stack, so it opens from any tab; the notes page pushes it onto the stack of
+/// "Aufgaben" instead, where a sheet over another tab could not show it.
+struct NoteEditorSheet: View {
+    let noteID: UUID
+    @Environment(AppEnvironment.self) private var environment
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationStack {
+            NoteEditorView(noteID: noteID, store: environment.notes)
+                .toolbar { ToolbarItem(placement: .topBarLeading) { Button("Fertig") { dismiss() } } }
+        }
+    }
+}
+
+/// The shopping list in its own navigation stack, for the same reason.
+struct ShoppingListSheet: View {
+    @Environment(AppEnvironment.self) private var environment
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationStack {
+            ShoppingListView(model: environment.shopping)
+                .toolbar { ToolbarItem(placement: .topBarLeading) { Button("Fertig") { dismiss() } } }
+        }
+    }
+}

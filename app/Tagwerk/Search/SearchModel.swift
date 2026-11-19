@@ -14,6 +14,8 @@ struct SearchSources {
     var completedTasks: @MainActor () async -> [CompletedTask]
     var notes: @MainActor () -> [NoteSearchItem] = { [] }
     var shopping: @MainActor () -> [ShoppingSearchItem] = { [] }
+    /// Checks a shopping item off; `nil` while no shopping list is set up.
+    var checkOffShopping: (@MainActor (String) async -> Void)?
     /// GitHub issue search for one text; `nil` while GitHub is not connected.
     var searchOnline: (@MainActor (String) async throws -> [OnlineIssue])?
 }
@@ -233,6 +235,15 @@ final class SearchModel {
             online = nil
             onlineState = .failed((error as? IssueSearchError) ?? .failed(error.localizedDescription))
         }
+        evaluate()
+    }
+
+    // MARK: Shopping
+
+    /// The circle of a shopping row: the source checks the item off, then the rows are read again.
+    func checkOff(_ item: ShoppingSearchItem) async {
+        guard !isClosed, let checkOff = sources.checkOffShopping else { return }
+        await checkOff(item.id)
         evaluate()
     }
 

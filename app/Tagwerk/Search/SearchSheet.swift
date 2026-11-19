@@ -18,6 +18,8 @@ struct SearchSheet: View {
     @State private var openTask: TaskItem?
     @State private var openContainers: [TaskContainer] = []
     @State private var openEvent: CalendarEvent?
+    @State private var openNote: NoteTarget?
+    @State private var showsShopping = false
     /// Short hint, e.g. "Der Termin wurde geändert."; shown as an alert together with errors of the task list.
     @State private var notice: String?
 
@@ -29,6 +31,9 @@ struct SearchSheet: View {
 
     private var calendar: Calendar { environment.planning.calendar }
     private var now: Date { environment.taskList.now() }
+
+    /// A note to open in its own sheet (`UUID` is not `Identifiable`).
+    private struct NoteTarget: Identifiable { let id: UUID }
 
     var body: some View {
         NavigationStack {
@@ -60,6 +65,14 @@ struct SearchSheet: View {
         }
         .sheet(item: $openEvent, onDismiss: refreshAfterSheet) { event in
             EventEntrySheet(event: event, onShowTask: onShowTask)
+        }
+        // Notes and the shopping list open as sheets with their own stack: the search hangs at the tab bar and
+        // is reached from "Planen" as well, where the stack of "Aufgaben" shows nothing.
+        .sheet(item: $openNote, onDismiss: refreshAfterSheet) { target in
+            NoteEditorSheet(noteID: target.id)
+        }
+        .sheet(isPresented: $showsShopping, onDismiss: refreshAfterSheet) {
+            ShoppingListSheet()
         }
         .alert("Hinweis", isPresented: hasAlert) {
             Button("OK") { notice = nil; environment.taskList.clearError() }
@@ -387,8 +400,22 @@ struct SearchSheet: View {
                 }
                 .accessibilityAddTraits(.isButton)
                 .accessibilityAction(named: Text("Auf GitHub öffnen")) { openURL(issue.url) }
-        case .note, .shopping:
-            EmptyView()
+        case .note(let note, let match):
+            SearchNoteRow(note: note, match: match, calendar: calendar)
+                .onTapGesture { openNote = NoteTarget(id: note.id) }
+                .contextMenu { Button("Öffnen", systemImage: "chevron.right") { openNote = NoteTarget(id: note.id) } }
+                .accessibilityAddTraits(.isButton)
+                .accessibilityAction(named: Text("Öffnen")) { openNote = NoteTarget(id: note.id) }
+        case .shopping(let item, let match):
+            SearchShoppingRow(item: item, match: match, onCheckOff: { Task { await model.checkOff(item) } })
+                .onTapGesture { showsShopping = true }
+                .contextMenu {
+                    Button("Abhaken", systemImage: "checkmark.circle") { Task { await model.checkOff(item) } }
+                    Button("Einkaufsliste öffnen", systemImage: "cart") { showsShopping = true }
+                }
+                .accessibilityAddTraits(.isButton)
+                .accessibilityAction(named: Text("Abhaken")) { Task { await model.checkOff(item) } }
+                .accessibilityAction(named: Text("Einkaufsliste öffnen")) { showsShopping = true }
         }
     }
 

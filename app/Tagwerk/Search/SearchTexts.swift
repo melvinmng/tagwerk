@@ -137,6 +137,14 @@ enum SearchTexts {
         }
     }
 
+    // MARK: Notes
+
+    /// "Notiz · 12.11." or "Tagesabschluss · 18.11." (the day of a thought note, else the last change).
+    static func noteSubtitle(kindLabel: String, updatedAt: Date, dayKey: String?, calendar: Calendar) -> String {
+        let day = dayKey.flatMap(NoteDayKey.day) ?? PlanDay(date: updatedAt, calendar: calendar)
+        return "\(kindLabel) · \(DateText.numericDay(day, calendar: calendar))"
+    }
+
     // MARK: Online hits
 
     static func markerText(_ marker: OnlineIssueMarker) -> String {

@@ -1379,5 +1379,7 @@
   "geschlossen": "closed",
   "nicht zugewiesen": "unassigned",
   "ohne Project": "no project",
-  "Öffnet das Issue auf GitHub": "Opens the issue on GitHub"
+  "Öffnet das Issue auf GitHub": "Opens the issue on GitHub",
+  "Einkauf": "Shopping",
+  "Einkaufsliste öffnen": "Open shopping list"
 }

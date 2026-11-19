@@ -4664,6 +4664,16 @@
         }
       }
     },
+    "Einkauf": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shopping"
+          }
+        }
+      }
+    },
     "Einkaufsliste": {
       "localizations": {
         "en": {
@@ -4720,6 +4730,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Change shopping list"
+          }
+        }
+      }
+    },
+    "Einkaufsliste öffnen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open shopping list"
           }
         }
       }

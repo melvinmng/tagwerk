@@ -17,6 +17,8 @@ final class SearchProbe {
     /// `nil` = GitHub not connected.
     var online: Result<[OnlineIssue], IssueSearchError>?
     var onlineGate: Gate?
+    /// `nil` = no shopping list set up.
+    var checkedOff: [String]?
     private(set) var onlineTexts: [String] = []
     private(set) var eventIntervals: [DateInterval] = []
     private(set) var completedCalls = 0
@@ -38,6 +40,12 @@ final class SearchProbe {
             },
             notes: { self.notes },
             shopping: { self.shopping })
+        if checkedOff != nil {
+            sources.checkOffShopping = { id in
+                self.checkedOff?.append(id)
+                self.shopping.removeAll { $0.id == id }
+            }
+        }
         if online != nil {
             sources.searchOnline = { text in
                 self.onlineTexts.append(text)
@@ -76,7 +84,7 @@ struct SearchModelTests {
             case .task(let item, _): item.title
             case .completed(let group, _): group.latest.item.title
             case .online(let issue): issue.title
-            case .note(let note, _): note.text
+            case .note(let note, _): note.text.split(separator: "\n").first.map(String.init) ?? note.text
             case .shopping(let item, _): item.name
             }
         }
@@ -339,6 +347,52 @@ struct SearchModelTests {
         gate.open()
         await search.value
         #expect(model.results.isEmpty)
+    }
+
+    @Test func notesMatchTextAndKindLabel() async {
+        probe.notes = [NoteSearchItem(id: UUID(), text: "Ideen Hausarbeit\nGliederung", kindLabel: "Notiz", updatedAt: testNow()),
+                       NoteSearchItem(id: UUID(), text: "Ruhiger Tag", kindLabel: "Tagesabschluss", updatedAt: testNow(), dayKey: "2026-11-17")]
+        let model = probe.model()
+        model.text = "hausarbeit"
+        #expect(model.results.sections.map(\.kind) == [.notes])
+        model.text = "tagesabschluss"
+        #expect(titles(model.results) == ["Ruhiger Tag"])
+        model.filter = .tasks
+        #expect(model.results.isEmpty)
+    }
+
+    @Test func shoppingMatchesNameAndQuantity() async {
+        probe.shopping = [ShoppingSearchItem(id: "1", name: "Hafermilch", quantity: "2 Packungen")]
+        let model = probe.model()
+        model.text = "packungen"
+        #expect(model.results.sections.map(\.kind) == [.shopping])
+        model.text = "hafer"
+        #expect(titles(model.results) == ["Hafermilch"])
+    }
+
+    @Test func checkOffRemovesTheShoppingRow() async {
+        probe.checkedOff = []
+        probe.shopping = [ShoppingSearchItem(id: "1", name: "Hafermilch", quantity: nil)]
+        let model = probe.model()
+        model.text = "hafermilch"
+        #expect(model.results.sections.map(\.kind) == [.shopping])
+        await model.checkOff(ShoppingSearchItem(id: "1", name: "Hafermilch", quantity: nil))
+        #expect(probe.checkedOff == ["1"])
+        #expect(model.results.isEmpty)
+    }
+
+    @Test func checkOffWithoutAShoppingListDoesNothing() async {
+        probe.shopping = [ShoppingSearchItem(id: "1", name: "Hafermilch", quantity: nil)]
+        let model = probe.model()
+        model.text = "hafermilch"
+        await model.checkOff(ShoppingSearchItem(id: "1", name: "Hafermilch", quantity: nil))
+        #expect(model.results.sections.map(\.kind) == [.shopping])
+    }
+
+    @Test func sectionsStayHiddenWithoutPhaseFiveData() async {
+        let model = probe.model()
+        model.text = "statistik"
+        #expect(!model.results.sections.map(\.kind).contains(.notes) && !model.results.sections.map(\.kind).contains(.shopping))
     }
 
     @Test func sectionsShowTwentyFiveRowsThenMore() async {
