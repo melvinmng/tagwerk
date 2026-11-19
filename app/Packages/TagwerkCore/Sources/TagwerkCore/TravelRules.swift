@@ -135,13 +135,13 @@ public enum TravelRules {
     }
 
     /// The travel blocks of `day`: `(start − minutes)..<start`, cut at midnight. A trip without a value in `minutes`
-    /// (offline, not loaded yet) or with zero minutes has no block.
+    /// (offline, not loaded yet), with zero minutes or longer than `TravelPlausibility.maximumTravelMinutes` has no block.
     public static func segments(legs: [TravelLeg], minutes: [String: Int], events: [CalendarEvent],
                                 on day: PlanDay, calendar: Calendar) -> [TravelSegment] {
         let dayStart = day.startDate(in: calendar)
         let byID = Dictionary(events.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
         return legs.compactMap { leg in
-            guard let travel = minutes[leg.eventID], travel > 0 else { return nil }
+            guard let travel = minutes[leg.eventID], travel > 0, TravelPlausibility.isPlausibleTravelTime(minutes: travel) else { return nil }
             let start = Int(leg.arrival.timeIntervalSince(dayStart) / 60)
             let from = max(0, start - travel)
             guard from < start else { return nil }
