@@ -6,10 +6,16 @@ import TagwerkCore
 
 /// Asks for the way between two places. Only places and the arrival time go out (to Apple Maps), never to ChatGPT.
 protocol TravelTimeEstimating: Sendable {
-    /// Looks up an address text (→ Apple Maps): its coordinates and how Apple Maps writes it.
-    func lookUp(address: String) async throws -> PlaceLookup
+    /// Looks up an address text (→ Apple Maps): its coordinates and how Apple Maps writes it. With `near`, the search
+    /// is biased to a region around that point (a short text such as "Mensa" then finds the one close by).
+    func lookUp(address: String, near: TravelCoordinate?) async throws -> PlaceLookup
     /// The travel time in minutes, rounded up to 5; 0 under 3 minutes. Both places have coordinates.
     func minutes(from: TravelPlace, to: TravelPlace, transport: TravelTransport, arrival: Date) async throws -> Int
+}
+
+extension TravelTimeEstimating {
+    /// A lookup without a reference point (the home address in the settings).
+    func lookUp(address: String) async throws -> PlaceLookup { try await lookUp(address: address, near: nil) }
 }
 
 /// An address found by Apple Maps.
@@ -23,13 +29,23 @@ struct PlaceLookup: Equatable, Sendable {
 enum TravelTimeError: Error, Equatable {
     case addressNotFound
     case missingCoordinates
+    /// A free text without home or other end with coordinates: not looked up.
+    case noReferencePoint
 }
 
 /// Apple Maps through MapKit (`MKGeocodingRequest`, `MKDirections`). Needs no location permission: both ends are
 /// addresses or coordinates, never the device's position.
 struct MapKitTravelEstimator: TravelTimeEstimating {
-    func lookUp(address: String) async throws -> PlaceLookup {
+    /// The search region around a reference point: as wide as the plausibility radius, in both directions.
+    private static let searchSpanMeters = TravelPlausibility.maximumLookupDistanceMeters * 2
+
+    func lookUp(address: String, near: TravelCoordinate?) async throws -> PlaceLookup {
         guard let request = MKGeocodingRequest(addressString: address) else { throw TravelTimeError.addressNotFound }
+        if let near {
+            // `MKGeocodingRequest.region` biases the result towards the region (MapKit, iOS 26 and later).
+            request.region = MKCoordinateRegion(center: CLLocationCoordinate2D(latitude: near.latitude, longitude: near.longitude),
+                                                latitudinalMeters: Self.searchSpanMeters, longitudinalMeters: Self.searchSpanMeters)
+        }
         let items = try await request.mapItems
         guard let item = items.first else { throw TravelTimeError.addressNotFound }
         let coordinate = item.location.coordinate
@@ -67,6 +83,10 @@ struct MapKitTravelEstimator: TravelTimeEstimating {
 /// Travel times for the trips of the plan: read synchronously from the cache, fetched in the background.
 /// A failed request is not cached and not repeated in the same session, so a missing network or an unknown
 /// address costs one request, not a loop.
+///
+/// Plausibility (see `TravelPlausibility`): the text of a place without coordinates is only looked up when there is a
+/// reference point (home or the other end of the trip, with coordinates), and a result more than 50 km away from it
+/// counts as not found. A trip longer than 180 minutes is discarded. Neither is stored as a value.
 @MainActor
 @Observable
 final class TravelTimeService {
@@ -100,7 +120,8 @@ final class TravelTimeService {
 
     /// Looks up the trips that have no value yet, one after the other, at most `requestsPerRun` requests. Returns
     /// `true` when new values arrived (the caller reloads once). A leg that failed earlier in this session is skipped.
-    func fetchMissing(legs: [TravelLeg], transport: TravelTransport) async -> Bool {
+    /// `home` is the home place; with coordinates it is the reference point for looking up free-text places.
+    func fetchMissing(legs: [TravelLeg], transport: TravelTransport, home: TravelPlace? = nil) async -> Bool {
         while isFetching { try? await Task.sleep(for: .milliseconds(50)) }
         isFetching = true
         defer { isFetching = false }
@@ -114,9 +135,13 @@ final class TravelTimeService {
             guard requests < Self.requestsPerRun else { break }
             requests += 1
             do {
-                let from = try await located(leg.from)
-                let to = try await located(leg.to)
+                let from = try await located(leg.from, otherEnd: leg.to, home: home)
+                let to = try await located(leg.to, otherEnd: leg.from, home: home)
                 let minutes = try await estimator.minutes(from: from, to: to, transport: transport, arrival: leg.arrival)
+                guard TravelPlausibility.isPlausibleTravelTime(minutes: minutes) else {
+                    failedKeys.insert(key)
+                    continue
+                }
                 cache.store(minutes: minutes, forTrip: key, now: now())
                 gotNewValue = true
             } catch {
@@ -137,24 +162,39 @@ final class TravelTimeService {
 
     /// The place with coordinates: its own, the cached lookup, or a new lookup (cached on success). The place keeps
     /// its key, so the trip's cache entry does not depend on whether the lookup came from the cache.
-    private func located(_ place: TravelPlace) async throws -> TravelPlace {
+    ///
+    /// A free text is only looked up near a reference point (`TravelPlausibility.referencePoint`); a result outside the
+    /// plausible distance, also one from an older cache, counts as not found. The failure is remembered per place and
+    /// reference area, so the same text is checked again against a different reference.
+    private func located(_ place: TravelPlace, otherEnd: TravelPlace, home: TravelPlace?) async throws -> TravelPlace {
         if place.latitude != nil, place.longitude != nil { return place }
+        guard let reference = TravelPlausibility.referencePoint(home: home, otherEnd: otherEnd) else {
+            throw TravelTimeError.noReferencePoint
+        }
         let placeKey = TravelTimeCache.placeKey(place)
+        let failureKey = "\(placeKey)@\(String(format: "%.1f,%.1f", reference.latitude, reference.longitude))"
+        if failedKeys.contains(failureKey) { throw TravelTimeError.addressNotFound }
         var result = place
         if let known = cache.coordinates(forPlace: placeKey, now: now()) {
+            let coordinate = TravelCoordinate(latitude: known.latitude, longitude: known.longitude)
+            guard TravelPlausibility.isPlausibleLookup(coordinate, near: reference) else {
+                failedKeys.insert(failureKey)
+                throw TravelTimeError.addressNotFound
+            }
             result.latitude = known.latitude
             result.longitude = known.longitude
             return result
         }
-        if failedKeys.contains(placeKey) { throw TravelTimeError.addressNotFound }
         do {
-            let found = try await estimator.lookUp(address: place.text)
+            let found = try await estimator.lookUp(address: place.text, near: reference)
+            let coordinate = TravelCoordinate(latitude: found.latitude, longitude: found.longitude)
+            guard TravelPlausibility.isPlausibleLookup(coordinate, near: reference) else { throw TravelTimeError.addressNotFound }
             cache.store(latitude: found.latitude, longitude: found.longitude, forPlace: placeKey, now: now())
             result.latitude = found.latitude
             result.longitude = found.longitude
             return result
         } catch {
-            failedKeys.insert(placeKey)
+            failedKeys.insert(failureKey)
             throw error
         }
     }

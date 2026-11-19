@@ -27,7 +27,7 @@ extension PlanningModel {
         guard let travelTimes, settings.travelTimeEnabled, scope != .month else { return false }
         let legs = days.flatMap { plan in travelLegs(for: plan.day, events: plan.events + plan.blocks) }
         guard !legs.isEmpty else { return false }
-        guard await travelTimes.fetchMissing(legs: legs, transport: settings.travelTransport) else { return false }
+        guard await travelTimes.fetchMissing(legs: legs, transport: settings.travelTransport, home: settings.homePlace) else { return false }
         await reload()
         return true
     }

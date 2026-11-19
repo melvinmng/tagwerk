@@ -2045,6 +2045,9 @@ struct PlanningModelTests {
     private func travelModel(_ estimator: FakeTravelEstimator = FakeTravelEstimator(), home: String? = "Musterstraße 1, Berlin",
                              enabled: Bool = true) async -> (PlanningModel, FakeTravelEstimator) {
         settings.homeAddress = home
+        // As after the settings check: a home address that Apple Maps found carries its coordinates (Berlin).
+        settings.homeLatitude = home == nil ? nil : 52.52
+        settings.homeLongitude = home == nil ? nil : 13.405
         settings.travelTimeEnabled = enabled
         await taskList.reload()
         let service = TravelTimeService(estimator: estimator, cacheURL: nil, now: testNow)
@@ -2109,6 +2112,19 @@ struct PlanningModelTests {
         let (model, estimator) = await travelModel(home: nil)
         #expect(await model.refreshTravelTimes() == false)
         #expect(model.days.first?.travel.isEmpty == true)
+        #expect(estimator.tripCalls.isEmpty)
+    }
+
+    @Test func travel_locationFarFromHome_hasNoSegment() async {
+        // "Bibliothek" resolves to Munich while home is in Berlin: no absurd trip, no blocked capacity.
+        calendarStore.storedEvents = [meeting(location: "Bibliothek")]
+        let estimator = FakeTravelEstimator()
+        estimator.locations = ["Bibliothek": TravelCoordinate(latitude: 48.137, longitude: 11.575)]
+        let (model, _) = await travelModel(estimator)
+        let before = model.days.first?.capacity
+        #expect(await model.refreshTravelTimes() == false)
+        #expect(model.days.first?.travel.isEmpty == true)
+        #expect(model.days.first?.capacity == before)
         #expect(estimator.tripCalls.isEmpty)
     }
 

@@ -8,7 +8,7 @@ struct DemoTravelEstimator: TravelTimeEstimating {
     static let launchArgument = "-TagwerkDemoTravel"
     static var isRequested: Bool { ProcessInfo.processInfo.arguments.contains(launchArgument) }
 
-    func lookUp(address: String) async throws -> PlaceLookup {
+    func lookUp(address: String, near: TravelCoordinate?) async throws -> PlaceLookup {
         PlaceLookup(latitude: 52.52, longitude: 13.405, description: address)
     }
 
