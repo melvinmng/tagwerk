@@ -25,7 +25,7 @@ struct RootView: View {
     }
 
     struct RecurringEdit: Identifiable {
-        var id: String { item.reminderID + "\(day)" }
+        var id: String { item.id + "\(day)" }
         let item: RecurringItem
         let day: PlanDay
     }

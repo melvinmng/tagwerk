@@ -32,6 +32,7 @@ enum DemoData {
             settings.selectedReminderListIDs = [ids.reminderList]
             settings.planCalendarID = ids.planCalendar
             settings.deadlineCalendarIDs = [ids.deadlineCalendar]
+            seedRecurringLocalTask(environment)
             await environment.taskList.reload()
             await planSamples(environment)
             await environment.planning.reload()
@@ -62,6 +63,21 @@ enum DemoData {
         if let pinned = notes.create(text: "Ideen Hausarbeit\nGliederung überarbeiten\nZwei weitere Quellen suchen") {
             notes.setPinned(pinned.id, true)
         }
+    }
+
+    /// A local task repeating every three days from today, to try ticking off and "Rückgängig" (plan 2026-11-18,
+    /// stage 2). Local tasks are not wiped, so it is created only once.
+    private static func seedRecurringLocalTask(_ environment: AppEnvironment) {
+        let context = environment.modelContainer.mainContext
+        let title = "Pflanzen gießen"
+        let existing = FetchDescriptor<LocalTask>(predicate: #Predicate { $0.title == title })
+        guard ((try? context.fetchCount(existing)) ?? 0) == 0 else { return }
+        let today = PlanDay(date: .now, calendar: environment.planning.calendar)
+        let task = LocalTask(title: title)
+        task.due = DueDate(year: today.year, month: today.month, day: today.day)
+        task.recurrence = Recurrence(rule: .daily(interval: 3), start: today, end: nil, count: nil)
+        context.insert(task)
+        try? context.save()
     }
 
     /// Two local tasks completed earlier this week, so the weekly review shows "Erledigt".

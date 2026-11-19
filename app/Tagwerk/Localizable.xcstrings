@@ -4909,6 +4909,16 @@
         }
       }
     },
+    "Diese Wiederholung kann nicht gespeichert werden.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This repetition cannot be saved."
+          }
+        }
+      }
+    },
     "Diese Woche": {
       "localizations": {
         "en": {
@@ -5184,6 +5194,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Another day turns the block into a move. It stays a suggestion until you accept it."
+          }
+        }
+      }
+    },
+    "Eine Wiederholung braucht ein Fälligkeitsdatum.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A repeating task needs a due date."
           }
         }
       }
@@ -9520,16 +9540,6 @@
         }
       }
     },
-    "Nur für Erinnerungen": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Reminders only"
-          }
-        }
-      }
-    },
     "Nur für die Entwicklung: Der Mitschnitt schickt eine Testanfrage ohne persönliche Daten an OpenAI.": {
       "shouldTranslate": false
     },
@@ -9539,6 +9549,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Only in emergencies"
+          }
+        }
+      }
+    },
+    "Nur in Tagwerk. Beim Abhaken rückt die Aufgabe auf den nächsten Termin.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tagwerk only. Ticking it off moves the task to its next date."
           }
         }
       }

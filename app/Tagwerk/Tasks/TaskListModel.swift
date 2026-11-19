@@ -218,7 +218,8 @@ final class TaskListModel {
         var edit = TaskEdit()
         edit.isCompleted = .set(true)
         guard let updated = await write(edit, to: id) else { return }
-        items.removeAll { $0.id == id }
+        // A repeating local task stays open and moves on to its next occurrence.
+        if updated.isCompleted { items.removeAll { $0.id == id } } else { replace(updated) }
         lastCompleted = updated
         await onCompletionChanged?(id, true)
     }
@@ -373,11 +374,12 @@ final class TaskListModel {
             nextGeneration(for: id.source)
             if updated.isCompleted {
                 items.removeAll { $0.id == id }
-                if !item.isCompleted { await onCompletionChanged?(id, true) }
             } else {
                 // The assistant reports a hand-over in its own text, so no capsule here.
                 await settle(updated, provider: provider, announce: false)
             }
+            // Also when a repeating local task stays open with its next occurrence.
+            if case .set(true) = edit.isCompleted, !item.isCompleted { await onCompletionChanged?(id, true) }
             return updated
         } catch TaskWriteError.conflict(let current) {
             await reload(only: [id.source])

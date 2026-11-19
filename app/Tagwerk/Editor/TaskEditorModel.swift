@@ -122,10 +122,9 @@ final class TaskEditorModel {
         return parts.joined(separator: " ")
     }
 
-    // MARK: Recurrence (plan 2026-11-18, stage 1)
+    // MARK: Recurrence (plan 2026-11-18, stages 1 and 2)
 
-    /// Only sources that can write a repetition (reminders) show the row; GitHub issues and, in stage 1,
-    /// local tasks show none.
+    /// Only sources that can write a repetition (reminders, local tasks) show the row; GitHub issues show none.
     var showsRecurrenceRow: Bool { isVisible(.recurrence) }
 
     /// Sets the repetition from the recurrence page. A repetition needs a due date: without one, the due
@@ -137,7 +136,7 @@ final class TaskEditorModel {
         }
     }
 
-    /// "Fällig" on or off. Off also removes the repetition, because a repeating reminder needs a due date.
+    /// "Fällig" on or off. Off also removes the repetition, because a repeating task needs a due date.
     func setHasDue(_ isOn: Bool, today: PlanDay) {
         if isOn {
             if draft.due == nil { draft.due = DueDate(year: today.year, month: today.month, day: today.day) }

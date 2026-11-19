@@ -1,4 +1,5 @@
 import Foundation
+import SwiftData
 import Testing
 import TagwerkCore
 @testable import Tagwerk
@@ -351,6 +352,58 @@ struct TaskListModelTests {
         await model.complete(TaskID(source: .local, rawValue: "Fahrrad"))
         #expect(model.lastError == "Speicher voll")
         #expect(model.items.contains { $0.title == "Fahrrad" })
+    }
+}
+
+/// Ticking off a repeating local task keeps it in the list with its next due date (plan 2026-11-18, stage 2).
+@MainActor
+struct RecurringLocalCompletionTests {
+    let container: ModelContainer
+    let provider: LocalTaskProvider
+    let model: TaskListModel
+    let due = DueDate(year: 2026, month: 11, day: 18, hour: 8, minute: 0)
+    let nextDue = DueDate(year: 2026, month: 11, day: 19, hour: 8, minute: 0)
+
+    init() throws {
+        container = try ModelContainerFactory.make(inMemory: true)
+        provider = LocalTaskProvider(context: container.mainContext, calendar: testCalendar(), now: testNow)
+        model = TaskListModel(providers: [provider], now: testNow, calendar: testCalendar())
+    }
+
+    private func repeatingTask() async throws -> TaskID {
+        let series = Recurrence(rule: .daily(interval: 1), start: PlanDay(due), end: nil, count: nil)
+        let created = try await provider.create(TaskDraft(title: "Training", due: due, recurrence: series))
+        await model.reload()
+        return created.id
+    }
+
+    @Test func complete_keepsTaskWithNextDueAndReportsCompletion() async throws {
+        let id = try await repeatingTask()
+        var reported: [(TaskID, Bool)] = []
+        model.onCompletionChanged = { id, isCompleted in reported.append((id, isCompleted)) }
+        await model.complete(id)
+        #expect(model.items.first { $0.id == id }?.due == nextDue)
+        #expect(model.lastCompleted?.id == id)
+        #expect(reported.map(\.0) == [id])
+        #expect(reported.map(\.1) == [true])
+    }
+
+    @Test func undoComplete_restoresDueDate() async throws {
+        let id = try await repeatingTask()
+        await model.complete(id)
+        await model.undoComplete()
+        #expect(model.items.filter { $0.id == id }.map(\.due) == [due])
+    }
+
+    /// The assistant's "complete_task" also frees the day's effort of the series.
+    @Test func completeReturning_reportsCompletion() async throws {
+        let id = try await repeatingTask()
+        var reported: [Bool] = []
+        model.onCompletionChanged = { _, isCompleted in reported.append(isCompleted) }
+        let updated = try await model.completeReturning(id)
+        #expect(updated.isCompleted == false)
+        #expect(model.items.first { $0.id == id }?.due == nextDue)
+        #expect(reported == [true])
     }
 }
 

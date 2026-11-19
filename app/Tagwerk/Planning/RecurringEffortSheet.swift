@@ -1,7 +1,7 @@
 import SwiftUI
 import TagwerkCore
 
-/// Effort of a recurring reminder (mockup g-A): "Nur dieser Tag" or "Alle" from this day on.
+/// Effort of a repeating task (mockup g-A): "Nur dieser Tag" or "Alle" from this day on.
 struct RecurringEffortSheet: View {
     let item: RecurringItem
     let day: PlanDay
@@ -39,7 +39,7 @@ struct RecurringEffortSheet: View {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Sichern") {
                         Task {
-                            await model.setRecurringEffort(minutes, reminderID: item.reminderID, day: day, forAll: forAll)
+                            await model.setRecurringEffort(minutes, task: item.taskID, day: day, forAll: forAll)
                             dismiss()
                         }
                     }

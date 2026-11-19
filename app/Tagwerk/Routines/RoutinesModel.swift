@@ -233,7 +233,7 @@ extension RoutinesModel {
     var cardOverviewInputs: Int {
         var hasher = Hasher()
         for item in taskList.items { hasher.combine(item.id.rawValue) }
-        for id in planning.recurringReminderIDs.sorted() { hasher.combine(id) }
+        for id in planning.recurringTaskIDs.sorted(by: { $0.rawValue < $1.rawValue }) { hasher.combine(id) }
         return hasher.finalize()
     }
 
@@ -266,7 +266,7 @@ extension RoutinesModel {
 
     func isRecurring(_ task: TaskItem) -> Bool {
         if let isRecurringOverride { return isRecurringOverride(task) }
-        return task.id.source == .reminders && planning.recurringReminderIDs.contains(task.id.rawValue)
+        return planning.recurringTaskIDs.contains(task.id)
     }
 
     /// Marks or unmarks a task of today; recurring occurrences and a fourth mark are ignored.
