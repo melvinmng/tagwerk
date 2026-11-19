@@ -50,6 +50,36 @@ struct NoteMarkdownViewTests {
         #expect(webView.configuration.defaultWebpagePreferences.allowsContentJavaScript == false)
     }
 
+    /// The text colour the system-scheme page computes while the web view is in the given interface style.
+    private func bodyColor(style: UIUserInterfaceStyle) async throws -> String? {
+        let configuration = NoteMarkdownView.makeConfiguration(attachments: nil)
+        let webView = WKWebView(frame: CGRect(x: 0, y: 0, width: 320, height: 480), configuration: configuration)
+        let scene = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first
+        let window = scene.map { UIWindow(windowScene: $0) } ?? UIWindow(frame: CGRect(x: 0, y: 0, width: 320, height: 480))
+        window.frame = CGRect(x: 0, y: 0, width: 320, height: 480)
+        window.overrideUserInterfaceStyle = style
+        let controller = UIViewController()
+        controller.view.addSubview(webView)
+        window.rootViewController = controller
+        window.makeKeyAndVisible()
+        defer { window.isHidden = true }
+        let loader = Loader()
+        webView.navigationDelegate = loader
+        await withCheckedContinuation { continuation in
+            loader.continuation = continuation
+            webView.loadHTMLString(NoteHTMLRenderer.page(body: "<p>x</p>"), baseURL: nil)
+        }
+        try? await Task.sleep(for: .milliseconds(500))
+        withExtendedLifetime(loader) {}
+        return try await webView.evaluateJavaScript("getComputedStyle(document.body).color", in: nil, contentWorld: .defaultClient) as? String
+    }
+
+    @Test func systemPage_followsTheInterfaceStyle() async throws {
+        // The app uses the system scheme: the page's own media query must follow the web view's style.
+        #expect(try await bodyColor(style: .dark) == "rgb(242, 242, 247)")
+        #expect(try await bodyColor(style: .light) == "rgb(28, 28, 30)")
+    }
+
     @Test func attachmentImage_isServedFromTheStore_andOthersAre404() async throws {
         let container = try ModelContainerFactory.make(inMemory: true)
         let directory = FileManager.default.temporaryDirectory.appending(path: "webview-" + UUID().uuidString, directoryHint: .isDirectory)

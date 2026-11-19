@@ -564,11 +564,12 @@ Branch `feat/p5-notes-shopping` (der Worktree war schon auf diesem Namen angeleg
 11. **Kamera-Zweckangabe** (`NSCameraUsageDescription`) nennt jetzt auch Fotos für Notizen (project.yml, Info.plist, InfoPlist.xcstrings).
 12. **Rezept-Blatt** ist ein Blatt mit eigener Navigation (Zustimmung → Eingabe → Ergebnis), keine drei getrennten Blätter. Ein Link ohne Schema wird mit `https://` ergänzt (`RecipeImporter.url(from:)`).
 13. **Tests der WebView:** Die Sicherheitseinstellungen (JavaScript aus, Content Rules kompilieren, Schema-Handler liefert nur Bilder) sind in einem echten `WKWebView` im Test geprüft (`NoteMarkdownViewTests`).
-14. **Fehler gefunden und behoben:** Die Dunkelvariablen der Notizseite standen ohne Selektor im CSS und griffen nicht (aufgefallen bei der Sichtprüfung der Snapshots, jetzt getestet).
+14. **Fehler gefunden und behoben:** Die Dunkelvariablen der Notizseite standen ohne Selektor im CSS und griffen nicht (aufgefallen bei der Sichtprüfung der Snapshots). Der Pfad, den die App nutzt (Schema `system`, Media Query), ist jetzt in einem echten `WKWebView` mit hellem und dunklem Interface-Stil getestet (`systemPage_followsTheInterfaceStyle`).
+15. **Editor räumt nicht auf, solange Kamera oder Quick Look offen sind:** `onDisappear` speichert immer, entfernt eine leere Notiz und Anhänge ohne Verweis aber nur, wenn weder die Kamera noch die Vorschau über der Seite liegen. SwiftUI kann das Überdecken als Verschwinden melden; sonst ginge eine leere Brain-Dump-Notiz beim Öffnen der Kamera verloren.
 
 ### Sichtprüfung
 
-Statt einer manuellen Simulator-Sitzung (ohne Geräte-Werkzeuge ist kein Antippen möglich) wurde die Markdown-Seite in einem Test-WKWebView gerendert und als Bild geprüft: Überschriften, Hervorhebungen, Checkliste, Tabelle, Zitat, Bild, PDF-Chip, nummerierte Liste, Codeblock, hell und dunkel. Die HTML-Testnotiz (`<script>`, `<img src=https://…>`, `<iframe>`, `onclick`) zeigt nur den erlaubten Text. Nicht gesehen: die SwiftUI-Blätter (Ordneransicht, Editor, Einkaufs-Menü, Rezept-Blätter).
+Statt einer manuellen Simulator-Sitzung (ohne Geräte-Werkzeuge ist kein Antippen möglich) wurde die Markdown-Seite in einem Test-WKWebView gerendert und als Bild geprüft: Überschriften, Hervorhebungen, Checkliste, Tabelle, Zitat, Bild, PDF-Chip, nummerierte Liste, Codeblock, hell, dunkel über das erzwungene Schema der Seite. Die HTML-Testnotiz (`<script>`, `<img src=https://…>`, `<iframe>`, `onclick`) zeigt nur den erlaubten Text. Nicht gesehen: die SwiftUI-Blätter (Ordneransicht, Editor, Einkaufs-Menü, Rezept-Blätter).
 
 ### Offene Gerätetests
 

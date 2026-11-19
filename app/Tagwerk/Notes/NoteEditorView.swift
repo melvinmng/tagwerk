@@ -94,6 +94,9 @@ struct NoteEditorView: View {
             .onDisappear {
                 guard isLoaded, !wasDeleted else { return }
                 store.updateText(noteID, text: text)
+                // The camera and Quick Look cover this page; SwiftUI may report that as the page going away. The note is
+                // neither an empty one to remove nor an attachment list to trim while one of them is open.
+                guard !isTakingPhoto, previewURL == nil else { return }
                 store.deleteIfEmpty(noteID)
                 // An attachment goes only when its reference is gone from the saved text, not while the user is still writing.
                 if store.note(id: noteID) != nil { store.attachments?.removeUnreferenced(noteID: noteID, text: text) }
