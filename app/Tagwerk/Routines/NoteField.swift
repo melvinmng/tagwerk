@@ -16,6 +16,9 @@ final class NoteFieldModel {
     let kind: NoteKind
     let day: PlanDay
     @ObservationIgnored private let store: NoteStore
+    @ObservationIgnored private let isSignedIn: () -> Bool
+    @ObservationIgnored private let now: () -> Date
+    @ObservationIgnored private let calendar: Calendar
     @ObservationIgnored private let debounce: Duration
     @ObservationIgnored private let sleep: (Duration) async -> Void
     @ObservationIgnored private var pendingSave: Task<Void, Never>?
@@ -27,8 +30,12 @@ final class NoteFieldModel {
     @ObservationIgnored private var wasDictatedBeforeRecording = false
 
     init(store: NoteStore, kind: NoteKind, day: PlanDay, debounce: Duration = .milliseconds(500),
-         sleep: @escaping (Duration) async -> Void = { try? await Task.sleep(for: $0) }) {
+         sleep: @escaping (Duration) async -> Void = { try? await Task.sleep(for: $0) },
+         isSignedIn: @escaping () -> Bool = { false }, now: @escaping () -> Date = Date.init, calendar: Calendar = .tagwerk) {
         precondition(kind != .free)
+        self.isSignedIn = isSignedIn
+        self.now = now
+        self.calendar = calendar
         self.store = store
         self.kind = kind
         self.day = day
@@ -106,6 +113,15 @@ final class NoteFieldModel {
         return range.lowerBound
     }
 
+    // MARK: Suggestions
+
+    /// "Vorschläge holen" is offered with a ChatGPT sign-in, text, and only for the day the sheet belongs to now: the
+    /// context of the request starts today and does not fit an older note (evening notes count until 03:59 for the day
+    /// before, rule 10).
+    var canSuggest: Bool {
+        isSignedIn() && taskTitle != nil && day == RoutineSchedule.routineDay(at: now(), calendar: calendar)
+    }
+
     // MARK: Tasks from the note
 
     /// The first non-empty line, for "Als Aufgabe anlegen"; `nil` for an empty note.
@@ -127,6 +143,8 @@ struct NoteField: View {
     @Environment(AppEnvironment.self) private var environment
     @State private var voice: VoiceInputModel?
     @State private var creatingTask = false
+    @State private var suggestions: NoteSuggestionModel?
+    @State private var asksConsent = false
 
     var body: some View {
         Section {
@@ -155,23 +173,110 @@ struct NoteField: View {
                 if model.taskTitle != nil {
                     Button { creatingTask = true } label: { Label("Als Aufgabe anlegen", systemImage: "plus.circle") }
                         .buttonStyle(.borderless)
+                    suggestionButton
                 }
             }
-            .onChange(of: model.text) { _, _ in model.textChanged() }
+            .onChange(of: model.text) { _, _ in
+                model.textChanged()
+                // Cards belong to the text they came from.
+                if let suggestions, suggestions.phase != .idle { suggestions.reset() }
+            }
             .onAppear(perform: prepareVoice)
-            .onDisappear {
+            // A row of a form can scroll out of sight without the sheet closing, so only the text is saved here.
+            .onDisappear { model.flush() }
+            .onChange(of: environment.routines.sheet) { _, sheet in
+                guard sheet == nil else { return }
+                // The sheet closed: a recording ends, open cards expire and no answer may arrive for it later.
                 voice?.cancel()
                 model.flush()
+                suggestions?.reset()
             }
             .sheet(isPresented: $creatingTask) {
                 NewTaskSheet(model: environment.taskList, prefilledTitle: model.taskTitle, onCreated: { model.taskCreated() })
             }
+            .sheet(isPresented: $asksConsent) {
+                NoteConsentSheet(
+                    onAgree: {
+                        environment.settings.noteSuggestionConsent = true
+                        asksConsent = false
+                        fetchSuggestions()
+                    },
+                    onDecline: { asksConsent = false })
+            }
         } header: {
             Text("Gedanken")
         }
+        if let suggestions { suggestionSection(suggestions) }
+    }
+
+    // MARK: Suggestions
+
+    /// "✦ Vorschläge holen" with the sign-in; for an older day or without a sign-in it is not offered.
+    @ViewBuilder
+    private var suggestionButton: some View {
+        if environment.ai.isSignedIn {
+            if model.canSuggest {
+                Button {
+                    if environment.settings.noteSuggestionConsent { fetchSuggestions() } else { asksConsent = true }
+                } label: {
+                    Label("Vorschläge holen", systemImage: "sparkles")
+                }
+                .buttonStyle(.borderless)
+                .disabled(suggestions?.phase == .loading)
+                Text("„Vorschläge holen“ sendet diese Notiz an ChatGPT. Nichts wird ohne deine Bestätigung geändert.")
+                    .font(.footnote).foregroundStyle(.secondary)
+            }
+        } else {
+            Text("Melde dich unter Einstellungen › KI bei ChatGPT an, um Vorschläge zu holen.")
+                .font(.footnote).foregroundStyle(.secondary)
+        }
+    }
+
+    @ViewBuilder
+    private func suggestionSection(_ suggestions: NoteSuggestionModel) -> some View {
+        switch suggestions.phase {
+        case .idle:
+            EmptyView()
+        case .loading:
+            Section { HStack(spacing: 8) { ProgressView(); Text("Vorschläge werden geholt …").foregroundStyle(.secondary) } }
+        case .empty:
+            Section { Text("Keine Vorschläge aus dieser Notiz.").foregroundStyle(.secondary) }
+        case .failed(let message):
+            Section {
+                Label(message, systemImage: "exclamationmark.triangle").foregroundStyle(.orange)
+                Button("Erneut versuchen", action: fetchSuggestions)
+            }
+        case .loaded:
+            Section {
+                ForEach(suggestions.cards) { card in
+                    ActionCardView(card: card.text, status: card.status, time: card.time,
+                                   onConfirm: { Task { await suggestions.confirm(card.id) } },
+                                   onDecline: { suggestions.decline(card.id) })
+                }
+                if suggestions.openCount > 1 {
+                    Button { Task { await suggestions.confirmAll() } } label: {
+                        Text("Alle bestätigen (\(suggestions.openCount))").frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.borderedProminent)
+                }
+            } header: {
+                Text("\(suggestions.cards.count) Vorschläge aus der Notiz")
+            }
+        }
+    }
+
+    /// Saves the note first, so the text that is sent is the text that is stored.
+    private func fetchSuggestions() {
+        guard let suggestions else { return }
+        model.flush()
+        guard let noteID = model.noteID else { return }
+        let text = model.text
+        let kind = model.kind
+        Task { await suggestions.fetch(noteID: noteID, text: text, kind: kind) }
     }
 
     private func prepareVoice() {
+        if suggestions == nil { suggestions = environment.makeNoteSuggestionModel() }
         guard voice == nil else { return }
         let input = VoiceInputFactory.make(environment)
         input.readDraft = { model.draftBeforeCursor() }

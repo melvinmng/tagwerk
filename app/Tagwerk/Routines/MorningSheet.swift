@@ -7,10 +7,10 @@ struct MorningSheet: View {
     let model: RoutinesModel
     let day: PlanDay
 
-    init(model: RoutinesModel, day: PlanDay, notes: NoteStore) {
+    init(model: RoutinesModel, day: PlanDay, notes: NoteStore, isSignedIn: @escaping () -> Bool) {
         self.model = model
         self.day = day
-        _note = State(initialValue: NoteFieldModel(store: notes, kind: .morning, day: day))
+        _note = State(initialValue: NoteFieldModel(store: notes, kind: .morning, day: day, isSignedIn: isSignedIn))
     }
     @State private var gratitude: [String] = ["", "", ""]
     @State private var overview: RoutinesModel.Overview?

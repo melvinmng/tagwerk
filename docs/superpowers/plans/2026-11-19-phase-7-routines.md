@@ -915,7 +915,7 @@ struct NoteConsentSheet: View { let onAgree: () -> Void; let onDecline: () -> Vo
 // NoteFieldModel: var canSuggest: Bool   (signed in, text not empty, the sheet's day == RoutineSchedule.routineDay(at: now()))
 ```
 
-- [ ] **Step 1: Tests schreiben (rot).** `NoteSuggestionModelTests` mit einem Fake-Responder, der Aufrufe zählt und `instructions`, `input`, `tools` mitschneidet:
+- [x] **Step 1: Tests schreiben (rot).** `NoteSuggestionModelTests` mit einem Fake-Responder, der Aufrufe zählt und `instructions`, `input`, `tools` mitschneidet:
 
 ```swift
 @Test func fetch_withoutConsent_sendsNothing()                 // responder.calls == 0, the model closure was not called
@@ -943,10 +943,10 @@ struct NoteConsentSheet: View { let onAgree: () -> Void; let onDecline: () -> Vo
 
 `AssistantModelTests`: die vorhandenen `describe`-Tests bleiben unverändert grün (Nachweis, dass das Herauslösen nichts ändert).
 
-- [ ] **Step 2:** `APP NoteSuggestionModelTests` → rot.
-- [ ] **Step 3: Umsetzen.** `fetch` prüft die Zustimmung vor allem, was OpenAI erreichen kann (auch vor der Modellliste), wie `MealEstimator.estimate`. Eingabe: ein `InputItem.user` mit Notiz, Art, Datum und Uhrzeit sowie `context.json`; Anweisung auf Englisch (Wortlaut frei, Design §18): nur Funktionsaufrufe aus der Liste, höchstens fünf, nur Kennungen aus dem Kontext, Antwortsprache der Karten nicht nötig. Aufrufe werden aus `StreamEvent.functionCall` gesammelt; ein Strom ohne `completed` ist ein Fehler. Fehlertexte nach dem Muster von `MealEstimator.Failure` (keine Verbindung, Anmeldung abgelaufen, Nutzungsgrenze, fehlgeschlagen). Nichts davon wird geloggt. `NoteField`: unter dem Feld „✦ Vorschläge holen“ (nur mit ChatGPT-Anmeldung, sonst Hinweis auf Einstellungen › KI; nur bei `canSuggest`), Fußtext aus Design §7.6, Abschnitt „n Vorschläge aus der Notiz“ mit `ActionCardView`, „Alle bestätigen (n)“ ab zwei offenen Karten, „Keine Vorschläge aus dieser Notiz.“, Fehler mit „Erneut versuchen“. Erstes Tippen bei ausgeschaltetem Schalter zeigt `NoteConsentSheet` (Aufbau wie `MealConsentSheet`, Texte aus Design §9.1 mit „der nächsten 7 Tage“); „Einverstanden und Vorschläge holen“ setzt `noteSuggestionConsent = true` und ruft `fetch`. Vor `fetch` läuft `flush()`. `reset()` beim Schließen des Blatts und bei jeder Textänderung nach dem Laden. Fußtext des Schalters in `RoutineSettingsView` an §9.2 anpassen.
-- [ ] **Step 4:** `APP NoteSuggestionModelTests`, `APP AssistantModelTests`, `APP AppToolsTests` → grün. Sichtprüfung gegen GZ1 und GK1.
-- [ ] **Step 5: Commit.** `git commit -m "feat: suggest actions from a thoughts note after consent"`
+- [x] **Step 2:** `APP NoteSuggestionModelTests` → rot.
+- [x] **Step 3: Umsetzen.** `fetch` prüft die Zustimmung vor allem, was OpenAI erreichen kann (auch vor der Modellliste), wie `MealEstimator.estimate`. Eingabe: ein `InputItem.user` mit Notiz, Art, Datum und Uhrzeit sowie `context.json`; Anweisung auf Englisch (Wortlaut frei, Design §18): nur Funktionsaufrufe aus der Liste, höchstens fünf, nur Kennungen aus dem Kontext, Antwortsprache der Karten nicht nötig. Aufrufe werden aus `StreamEvent.functionCall` gesammelt; ein Strom ohne `completed` ist ein Fehler. Fehlertexte nach dem Muster von `MealEstimator.Failure` (keine Verbindung, Anmeldung abgelaufen, Nutzungsgrenze, fehlgeschlagen). Nichts davon wird geloggt. `NoteField`: unter dem Feld „✦ Vorschläge holen“ (nur mit ChatGPT-Anmeldung, sonst Hinweis auf Einstellungen › KI; nur bei `canSuggest`), Fußtext aus Design §7.6, Abschnitt „n Vorschläge aus der Notiz“ mit `ActionCardView`, „Alle bestätigen (n)“ ab zwei offenen Karten, „Keine Vorschläge aus dieser Notiz.“, Fehler mit „Erneut versuchen“. Erstes Tippen bei ausgeschaltetem Schalter zeigt `NoteConsentSheet` (Aufbau wie `MealConsentSheet`, Texte aus Design §9.1 mit „der nächsten 7 Tage“); „Einverstanden und Vorschläge holen“ setzt `noteSuggestionConsent = true` und ruft `fetch`. Vor `fetch` läuft `flush()`. `reset()` beim Schließen des Blatts und bei jeder Textänderung nach dem Laden. Fußtext des Schalters in `RoutineSettingsView` an §9.2 anpassen.
+- [x] **Step 4:** `APP NoteSuggestionModelTests`, `APP AssistantModelTests`, `APP AppToolsTests` → grün. Sichtprüfung gegen GZ1 und GK1.
+- [x] **Step 5: Commit.** `git commit -m "feat: suggest actions from a thoughts note after consent"`
 
 ### Task 15: Wochenreflexion · #144 · Zeile 12
 

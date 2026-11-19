@@ -10,11 +10,11 @@ struct EveningSheet: View {
     @State private var review: RoutinesModel.DayReview?
     @State private var note: NoteFieldModel
 
-    init(model: RoutinesModel, day: PlanDay, notes: NoteStore) {
+    init(model: RoutinesModel, day: PlanDay, notes: NoteStore, isSignedIn: @escaping () -> Bool) {
         self.model = model
         self.day = day
         // The wrap-up note belongs to the day the sheet was opened for (rule 10).
-        _note = State(initialValue: NoteFieldModel(store: notes, kind: .evening, day: day))
+        _note = State(initialValue: NoteFieldModel(store: notes, kind: .evening, day: day, isSignedIn: isSignedIn))
     }
 
     var body: some View {

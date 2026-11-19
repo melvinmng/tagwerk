@@ -246,6 +246,22 @@ final class AppEnvironment {
         }
     }
 
+    /// A model for the suggestions of one thoughts note; the sheet drops it when it closes (design §9.3).
+    func makeNoteSuggestionModel() -> NoteSuggestionModel {
+        let settings = self.settings
+        let planning = self.planning, taskList = self.taskList, gateway = self.gateway, ai = self.ai
+        return NoteSuggestionModel(
+            responder: ai.client, model: { try await ai.selectedModel() }, tools: assistant.tools,
+            describer: ActionCardDescriber(planning: planning, gitHubDirectory: assistant.gitHubDirectory,
+                                           shoppingItemName: assistant.shoppingItemName),
+            notes: notes, hasConsent: { settings.noteSuggestionConsent },
+            context: {
+                NoteSuggestionContext.make(taskList: taskList, planning: planning,
+                                           events: { gateway.events(in: $0, calendarIDs: nil) },
+                                           planCalendarID: settings.planCalendarID, now: .now)
+            })
+    }
+
     /// The background refresh: GitHub is registered without the catalog, every source loads once, then the
     /// notifications are rescheduled. Nothing here reaches an AI feature (§8.4).
     func makeBackgroundRefresh() -> BackgroundRefresh {

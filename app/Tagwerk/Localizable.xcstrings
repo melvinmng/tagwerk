@@ -1365,6 +1365,16 @@
         }
       }
     },
+    "%lld Vorschläge aus der Notiz": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld suggestions from the note"
+          }
+        }
+      }
+    },
     "%lld Vorschläge geändert": {
       "localizations": {
         "de": {
@@ -1971,6 +1981,16 @@
         }
       }
     },
+    "**Gesendet wird** der Text dieser einen Notiz, dazu deine offenen Aufgaben und Termine der nächsten 7 Tage (Titel, Fälligkeit, Zeit).": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "**What is sent** is the text of this one note, plus your open tasks and events of the next 7 days (title, due date, time)."
+          }
+        }
+      }
+    },
     "**Gesendet wird** nur der Text und das Foto dieser Mahlzeit. Fotos gehen verkleinert und ohne Ortsangabe raus.": {
       "localizations": {
         "en": {
@@ -1987,6 +2007,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "**What is sent:** item names and category names. In a shared list also items that others added."
+          }
+        }
+      }
+    },
+    "**Nicht gesendet werden** Dankbarkeit, Gewohnheiten, Wochenreflexion, Daten aus Health und frühere Notizen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "**What is not sent** is gratitude, habits, weekly reflection, Health data and earlier notes."
           }
         }
       }
@@ -2027,6 +2057,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "**Only on your tap:** Without “Sort”, nothing leaves the iPhone."
+          }
+        }
+      }
+    },
+    "**Nur auf dein Tippen:** Ohne „Vorschläge holen“ verlässt keine Notiz das iPhone.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "**Only when you tap:** without “Get suggestions”, no note leaves the iPhone."
           }
         }
       }
@@ -4683,6 +4723,16 @@
         }
       }
     },
+    "Die Vorschläge konnten nicht geholt werden. Versuch es noch einmal.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The suggestions could not be fetched. Try again."
+          }
+        }
+      }
+    },
     "Die Zahl nennt die offenen Artikel. Tippe auf einen Namen, um ihn zu ändern.": {
       "localizations": {
         "en": {
@@ -4958,6 +5008,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "You can revoke this in Settings under “Log”."
+          }
+        }
+      }
+    },
+    "Du kannst das in den Einstellungen unter „Routinen“ widerrufen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You can revoke this in Settings under “Routines”."
           }
         }
       }
@@ -5248,6 +5308,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Entry deleted"
+          }
+        }
+      }
+    },
+    "Einverstanden und Vorschläge holen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Agree and get suggestions"
           }
         }
       }
@@ -6038,6 +6108,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "For suggestions, Tagwerk sends the text of that thoughts note plus your open tasks and events of the next 7 days (title, due date, time) to ChatGPT (OpenAI), and only when you tap “Get suggestions” on the note. Gratitude, habits, weekly reflection, Health data and earlier notes are never sent."
+          }
+        }
+      }
+    },
+    "Für Vorschläge sendet Tagwerk den Text dieser Notiz an ChatGPT (OpenAI), über das Konto, mit dem du angemeldet bist.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "For suggestions, Tagwerk sends the text of this note to ChatGPT (OpenAI), through the account you are signed in with."
           }
         }
       }
@@ -7547,12 +7627,32 @@
         }
       }
     },
+    "Keine Verbindung. Vorschläge brauchen Internet.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No connection. Suggestions need the internet."
+          }
+        }
+      }
+    },
     "Keine Vorschläge": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "No suggestions"
+          }
+        }
+      }
+    },
+    "Keine Vorschläge aus dieser Notiz.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No suggestions from this note."
           }
         }
       }
@@ -8208,6 +8308,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Sign in to ChatGPT under Settings › AI to get suggestions from a note."
+          }
+        }
+      }
+    },
+    "Melde dich unter Einstellungen › KI bei ChatGPT an, um Vorschläge zu holen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sign in to ChatGPT under Settings › AI to get suggestions."
           }
         }
       }
@@ -9104,6 +9214,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Notes stay on this iPhone only. A thoughts note goes to ChatGPT only when you tap “Get suggestions” on it."
+          }
+        }
+      }
+    },
+    "Notizen von ChatGPT auswerten lassen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Let ChatGPT evaluate notes"
           }
         }
       }
@@ -11957,12 +12077,32 @@
         }
       }
     },
+    "Vorschläge holen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Get suggestions"
+          }
+        }
+      }
+    },
     "Vorschläge in der Planen-Ansicht anlegen": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Create suggestions in the Plan view"
+          }
+        }
+      }
+    },
+    "Vorschläge werden geholt …": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Getting suggestions …"
           }
         }
       }
@@ -14542,6 +14682,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "“Other” is reserved and cannot be used as a name."
+          }
+        }
+      }
+    },
+    "„Vorschläge holen“ sendet diese Notiz an ChatGPT. Nichts wird ohne deine Bestätigung geändert.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“Get suggestions” sends this note to ChatGPT. Nothing is changed without your confirmation."
           }
         }
       }
