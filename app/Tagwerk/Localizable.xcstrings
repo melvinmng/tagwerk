@@ -5921,6 +5921,16 @@
         }
       }
     },
+    "Einheit": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unit"
+          }
+        }
+      }
+    },
     "Einkauf": {
       "localizations": {
         "en": {
@@ -6320,6 +6330,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Reminder"
+          }
+        }
+      }
+    },
+    "Erinnerung hinzufügen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add reminder"
           }
         }
       }
@@ -8787,6 +8807,16 @@
         }
       }
     },
+    "Keine Erinnerungen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No reminders"
+          }
+        }
+      }
+    },
     "Keine Fälligkeiten in der neuen Woche.": {
       "localizations": {
         "en": {
@@ -9742,6 +9772,16 @@
         }
       }
     },
+    "Menge: %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Amount: %lld"
+          }
+        }
+      }
+    },
     "Menge: %lld ml": {
       "localizations": {
         "en": {
@@ -9828,6 +9868,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Minimal"
+          }
+        }
+      }
+    },
+    "Minuten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Minutes"
           }
         }
       }
@@ -11935,6 +11985,16 @@
         }
       }
     },
+    "Schnellauswahl": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quick picks"
+          }
+        }
+      }
+    },
     "Schon importiert": {
       "localizations": {
         "en": {
@@ -12643,6 +12703,16 @@
         }
       }
     },
+    "Standard verwenden": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use default"
+          }
+        }
+      }
+    },
     "Standard wiederherstellen": {
       "localizations": {
         "en": {
@@ -12773,6 +12843,16 @@
         }
       }
     },
+    "Stunden": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hours"
+          }
+        }
+      }
+    },
     "Suchen": {
       "localizations": {
         "en": {
@@ -12843,12 +12923,32 @@
         }
       }
     },
+    "Tage": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Days"
+          }
+        }
+      }
+    },
     "Tage pro Woche": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Days per week"
+          }
+        }
+      }
+    },
+    "Tage vorher: %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Days before: %lld"
           }
         }
       }
@@ -14031,6 +14131,16 @@
         }
       }
     },
+    "Vorher": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Before"
+          }
+        }
+      }
+    },
     "Vorherige Woche": {
       "localizations": {
         "en": {
@@ -14754,6 +14864,16 @@
         }
       }
     },
+    "Wochen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Weeks"
+          }
+        }
+      }
+    },
     "Wochenende": {
       "localizations": {
         "en": {
@@ -15092,6 +15212,16 @@
         }
       }
     },
+    "Zu einer Uhrzeit": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "At a time of day"
+          }
+        }
+      }
+    },
     "Zugewiesen": {
       "localizations": {
         "en": {
@@ -15158,6 +15288,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Recent and frequent"
+          }
+        }
+      }
+    },
+    "Zum Löschen nach links wischen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Swipe left to delete"
           }
         }
       }

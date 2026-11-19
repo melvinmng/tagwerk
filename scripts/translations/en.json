@@ -1723,5 +1723,19 @@
   "1 Tag vorher um %@": "1 day before at %@",
   "%lld Tage vorher um %@": "%1$lld days before at %2$@",
   "%@ + %lld weitere": "%1$@ + %2$lld more",
-  "Erinnerungen brauchen ein Fälligkeitsdatum.": "Reminders need a due date."
+  "Erinnerungen brauchen ein Fälligkeitsdatum.": "Reminders need a due date.",
+  "Standard verwenden": "Use default",
+  "Zum Löschen nach links wischen": "Swipe left to delete",
+  "Keine Erinnerungen": "No reminders",
+  "Erinnerung hinzufügen": "Add reminder",
+  "Vorher": "Before",
+  "Zu einer Uhrzeit": "At a time of day",
+  "Menge: %lld": "Amount: %lld",
+  "Einheit": "Unit",
+  "Minuten": "Minutes",
+  "Stunden": "Hours",
+  "Tage": "Days",
+  "Wochen": "Weeks",
+  "Tage vorher: %lld": "Days before: %lld",
+  "Schnellauswahl": "Quick picks"
 }
