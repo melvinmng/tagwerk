@@ -10,25 +10,32 @@ import TagwerkCore
 /// so the model learns about failures and can react.
 @MainActor
 final class AppTools: ToolHandler {
-    static let readTools: Set<String> = ["list_tasks", "list_events", "list_calendars", "get_task"]
+    static let readTools: Set<String> = ["list_tasks", "list_events", "list_calendars", "get_task",
+                                         "list_github_targets", "list_assignees"]
     static let maxListedTasks = 60
+    static let maxListedRepositories = 30
 
-    private let taskList: TaskListModel
+    let taskList: TaskListModel
     private let planning: PlanningModel
     private let planner: AIPlanner?
     private let events: (DateInterval) -> [CalendarEvent]
+    /// GitHub catalog and assignable people; `nil` while GitHub is not signed in.
+    let gitHub: () -> (any GitHubDirectory)?
     /// After "plan_period": the chat closes and "Planen" shows the suggestions (review item 11).
     var onPlanned: (() -> Void)?
 
     init(taskList: TaskListModel, planning: PlanningModel, planner: AIPlanner?,
-         events: @escaping (DateInterval) -> [CalendarEvent]) {
+         events: @escaping (DateInterval) -> [CalendarEvent],
+         gitHub: @escaping () -> (any GitHubDirectory)? = { nil }) {
+        self.gitHub = gitHub
         self.taskList = taskList
         self.planning = planning
         self.planner = planner
         self.events = events
     }
 
-    var definitions: [ToolDefinition] { Self.allDefinitions }
+    /// The GitHub read tools are only registered while GitHub is signed in.
+    var definitions: [ToolDefinition] { Self.allDefinitions + (gitHub() != nil ? Self.gitHubDefinitions : []) }
 
     func kind(of name: String) -> ToolKind { Self.readTools.contains(name) ? .read : .write }
 
@@ -53,6 +60,8 @@ final class AppTools: ToolHandler {
         case "get_task": return Self.json(["task": Self.detail(try task(args.require("id")))])
         case "list_events": return try listEvents(from: args.day("from"), to: args.day("to"))
         case "list_calendars": return listCalendars()
+        case "list_github_targets": return try await listGitHubTargets()
+        case "list_assignees": return try await listAssignees(repository: args.require("repository"))
         case "create_event": return try await createEvent(args)
         case "update_event": return try await updateEvent(args)
         case "delete_event": return try await deleteEvent(args)
@@ -248,6 +257,14 @@ final class AppTools: ToolHandler {
         let source = args.string("source").flatMap(TaskSource.init(rawValue:))
             ?? (available.contains(.reminders) ? .reminders : .local)
         guard available.contains(source) else { throw ToolError(String(localized: "Diese Quelle ist nicht verfügbar.")) }
+        let repository = args.string("repository"), projectIDs = args.optionalStrings("project_ids")
+        let assignees = args.optionalStrings("assignees")
+        if source == .github {
+            return try await createIssue(draft, repository: repository, projectIDs: projectIDs, assignees: assignees)
+        }
+        guard repository == nil, projectIDs == nil, assignees == nil else {
+            throw ToolError(String(localized: "Repository, Projects und Zugewiesene gibt es nur bei GitHub-Issues."))
+        }
         let created = try await taskList.createReturning(draft, in: source)
         return Self.json(["ok": true, "id": created.id.key, "task": Self.summary(created)])
     }
@@ -387,6 +404,8 @@ final class AppTools: ToolHandler {
         func int(_ key: String) -> Int? { (values[key] as? NSNumber)?.intValue }
         func bool(_ key: String) -> Bool? { values[key] as? Bool }
         func strings(_ key: String) -> [String] { values[key] as? [String] ?? [] }
+        /// `nil` for a missing or null value, so an empty list stays distinguishable.
+        func optionalStrings(_ key: String) -> [String]? { values[key] as? [String] }
         func priority(_ key: String) -> Priority? { string(key).flatMap(AppTools.priority) }
 
         func day(_ key: String) throws -> PlanDay {

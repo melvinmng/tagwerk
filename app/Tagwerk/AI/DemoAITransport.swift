@@ -76,7 +76,7 @@ final class DemoAITransport: AIHTTPTransport {
             return [event(["type": "response.output_text.delta", "delta": "Erledigt. Die Demo-Aufgabe steht jetzt in deiner Liste."]),
                     event(["type": "response.completed", "response": [:]])]
         }
-        let arguments = #"{"title":"Demo-Aufgabe","due":null,"priority":"P3","minutes":30,"notes":null,"source":"local"}"#
+        let arguments = #"{"title":"Demo-Aufgabe","due":null,"priority":"P3","minutes":30,"notes":null,"source":"local","repository":null,"project_ids":null,"assignees":null}"#
         return [event(["type": "response.output_text.delta", "delta": "Ich schlage vor, dafür eine Aufgabe anzulegen."]),
                 event(["type": "response.output_item.done", "item": ["type": "function_call", "call_id": "demo-\(UUID().uuidString)",
                                                                     "name": "create_task", "arguments": arguments]]),

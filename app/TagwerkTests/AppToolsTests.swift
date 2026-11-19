@@ -1,5 +1,6 @@
 import AIKit
 import Foundation
+import GitHubKit
 import RemindersKit
 import SwiftData
 import Testing
@@ -92,7 +93,7 @@ struct AppToolsTests {
         let (tools, _) = await make()
         #expect(tools.kind(of: "create_task") == .write)
         let result = await run(tools, "create_task",
-                               #"{"title":"Neu","due":"2026-11-19","priority":"P2","minutes":30,"notes":null,"source":"local"}"#)
+                               #"{"title":"Neu","due":"2026-11-19","priority":"P2","minutes":30,"notes":null,"source":"local","repository":null,"project_ids":null,"assignees":null}"#)
         #expect(result["ok"] as? Bool == true)
         let created = try #require(local.tasks.first { $0.title == "Neu" })
         #expect(created.due == DueDate(year: 2026, month: 11, day: 19))
@@ -336,4 +337,245 @@ struct LinkSuggestionTests {
         #expect(!TaskContextMenu.showsAIEntries(isSignedIn: false))
     }
 
+}
+
+@MainActor
+struct AppToolsGitHubTests {
+    let container: ModelContainer
+    let settings: AppSettings
+    let calendarStore = FakeCalendarStore()
+    let local = FakeTaskProvider(source: .local)
+    let github = FakeTaskProvider(source: .github)
+    let directory = FakeGitHubDirectory.single()
+    let taskList: TaskListModel
+    let calendar = testCalendar()
+
+    init() throws {
+        container = try ModelContainerFactory.make(inMemory: true)
+        settings = try AppSettings.current(in: container.mainContext)
+        github.viewerLogin = "octo"
+        taskList = TaskListModel(providers: [local, github], now: testNow, calendar: calendar)
+    }
+
+    private func make(signedIn: Bool = true) async -> AppTools {
+        await taskList.reload()
+        let planStore = PlanStore(context: container.mainContext)
+        let blocks = BlockPlanner(store: calendarStore, planStore: planStore, links: EventLinkStore(context: container.mainContext),
+                                  settings: settings, calendar: calendar)
+        let planning = PlanningModel(taskList: taskList, calendarStore: calendarStore, reminderStore: FakeAccessStore(),
+                                     planStore: planStore, efforts: RecurringEffortStore(context: container.mainContext),
+                                     blocks: blocks, settings: settings, marks: EventMarkStore(context: container.mainContext),
+                                     now: testNow, calendar: calendar)
+        let directory = self.directory
+        return AppTools(taskList: taskList, planning: planning, planner: nil, events: { _ in [] },
+                        gitHub: { signedIn ? directory : nil })
+    }
+
+    private func run(_ tools: AppTools, _ name: String, _ arguments: String) async -> [String: Any] {
+        let output = await tools.run(ToolCall(id: "c1", name: name, arguments: Data(arguments.utf8)))
+        return (try? JSONSerialization.jsonObject(with: Data(output.utf8)) as? [String: Any]) ?? ["raw": output]
+    }
+
+    /// Arguments of a create_task call for a GitHub issue; the three GitHub fields default to null.
+    private func issue(repository: String? = nil, projects: [String]? = nil, assignees: [String]? = nil,
+                       source: String = "github") -> String {
+        func json(_ value: Any?) -> String {
+            guard let value else { return "null" }
+            return String(decoding: try! JSONSerialization.data(withJSONObject: value, options: [.fragmentsAllowed]), as: UTF8.self)
+        }
+        return #"{"title":"Export","due":null,"priority":null,"minutes":null,"notes":null,"source":"\#(source)","#
+            + #""repository":\#(json(repository)),"project_ids":\#(json(projects)),"assignees":\#(json(assignees))}"#
+    }
+
+    private func addSecondRepository() {
+        let projects = directory.storedCatalog?.projects ?? []
+        directory.storedCatalog = GitHubCatalog(repositories: ["beispiel/app", "beispiel/web"], projects: projects,
+                                                fetchedAt: Date(timeIntervalSince1970: 0))
+    }
+
+    @Test func definitions_includeGitHubToolsOnlyWhenSignedIn() async {
+        let signedOut = await make(signedIn: false)
+        #expect(!signedOut.definitions.contains { $0.name == "list_github_targets" || $0.name == "list_assignees" })
+        let signedIn = await make()
+        let names = Set(signedIn.definitions.map(\.name))
+        #expect(names.isSuperset(of: ["list_github_targets", "list_assignees"]))
+        #expect(signedIn.kind(of: "list_github_targets") == .read)
+        #expect(signedIn.kind(of: "list_assignees") == .read)
+        #expect(signedIn.kind(of: "create_task") == .write)
+    }
+
+    @Test func gitHubDefinitions_areStrict() throws {
+        for definition in AppTools.gitHubDefinitions {
+            let schema = try #require(try JSONSerialization.jsonObject(with: definition.parameters) as? [String: Any])
+            let properties = try #require(schema["properties"] as? [String: Any])
+            #expect(schema["additionalProperties"] as? Bool == false)
+            #expect(Set(schema["required"] as? [String] ?? []) == Set(properties.keys))
+            #expect(definition.strict)
+        }
+    }
+
+    @Test func createTaskSchema_requiresTheThreeNullableGitHubFields() throws {
+        let definition = try #require(AppTools.allDefinitions.first { $0.name == "create_task" })
+        let schema = try #require(try JSONSerialization.jsonObject(with: definition.parameters) as? [String: Any])
+        let required = Set(schema["required"] as? [String] ?? [])
+        let properties = try #require(schema["properties"] as? [String: [String: Any]])
+        for field in ["repository", "project_ids", "assignees"] {
+            #expect(required.contains(field), "\(field)")
+            #expect((properties[field]?["type"] as? [String])?.contains("null") == true, "\(field)")
+        }
+    }
+
+    @Test func listGitHubTargets_returnsRepositoriesWithLinkedProjects() async throws {
+        let result = await run(await make(), "list_github_targets", "{}")
+        let repositories = try #require(result["repositories"] as? [[String: Any]])
+        #expect(repositories.count == 1)
+        #expect(repositories[0]["name"] as? String == "beispiel/app")
+        #expect(repositories[0]["linked_project_ids"] as? [String] == ["PVT_1"])
+        let projects = try #require(result["projects"] as? [[String: String]])
+        #expect(projects == [["id": "PVT_1", "title": "App"]])
+    }
+
+    @Test func listGitHubTargets_capsAtThirtyRepositories() async throws {
+        directory.storedCatalog = GitHubCatalog(repositories: (1...40).map { "beispiel/repo-\($0)" }, projects: [],
+                                                fetchedAt: Date(timeIntervalSince1970: 0))
+        let result = await run(await make(), "list_github_targets", "{}")
+        let repositories = try #require(result["repositories"] as? [[String: Any]])
+        #expect(repositories.count == 30)
+        #expect(repositories.first?["name"] as? String == "beispiel/repo-1")
+    }
+
+    @Test func listAssignees_returnsMeAndOthers() async {
+        let result = await run(await make(), "list_assignees", #"{"repository":"beispiel/app"}"#)
+        #expect(result["repository"] as? String == "beispiel/app")
+        #expect(result["me"] as? String == "octo")
+        #expect(result["assignees"] as? [String] == ["jonas-k", "lea-m"])
+    }
+
+    @Test func listAssignees_unknownRepository_returnsError() async {
+        let result = await run(await make(), "list_assignees", #"{"repository":"fremd/repo"}"#)
+        #expect(result["error"] != nil)
+        #expect(directory.assignableRequests.isEmpty)
+    }
+
+    @Test func listAssignees_notLoadable_returnsError() async {
+        directory.assignable = [:]
+        let result = await run(await make(), "list_assignees", #"{"repository":"beispiel/app"}"#)
+        #expect(result["error"] as? String == "Personen konnten nicht geladen werden")
+    }
+
+    @Test func createIssue_withoutAssignees_goesToMe() async {
+        let result = await run(await make(), "create_task", issue(repository: "beispiel/app", projects: ["PVT_1"]))
+        #expect(result["ok"] as? Bool == true)
+        #expect(result["listed"] as? Bool == true)
+        #expect(result["number"] as? Int == 151)
+        #expect(result["assignees"] as? [String] == ["octo"])
+        #expect(result["id"] != nil && result["task"] != nil)
+        #expect(result["not_assigned"] == nil)
+        #expect(github.createdDrafts.last?.containerID == "beispiel/app")
+        #expect(github.createdDrafts.last?.subContainerIDs == ["PVT_1"])
+        #expect(github.createdDrafts.last?.assignees == nil)
+        #expect(directory.assignableRequests.isEmpty)
+        #expect(taskList.items.contains { $0.id.source == .github })
+    }
+
+    @Test func createIssue_nullTargets_resolveToTheOnlyRepositoryAndLinkedProjects() async {
+        let result = await run(await make(), "create_task", issue())
+        #expect(result["ok"] as? Bool == true)
+        #expect(github.createdDrafts.last?.containerID == "beispiel/app")
+        #expect(github.createdDrafts.last?.subContainerIDs == ["PVT_1"])
+    }
+
+    @Test func createIssue_twoRepositoriesWithoutName_returnsError() async {
+        addSecondRepository()
+        let result = await run(await make(), "create_task", issue())
+        #expect(result["error"] as? String == "Bitte ein Repository nennen.")
+        #expect(github.createdDrafts.isEmpty)
+    }
+
+    @Test func createIssue_unknownRepositoryOrProject_returnsError() async {
+        let tools = await make()
+        #expect((await run(tools, "create_task", issue(repository: "fremd/repo")))["error"] != nil)
+        #expect((await run(tools, "create_task", issue(repository: "beispiel/app", projects: ["PVT_9"])))["error"] != nil)
+        #expect(github.createdDrafts.isEmpty)
+    }
+
+    @Test func createIssue_forOther_usesGitHubSpelling_andReportsNotListed() async {
+        let result = await run(await make(), "create_task", issue(repository: "beispiel/app", projects: ["PVT_1"], assignees: ["LEA-M"]))
+        #expect(github.createdDrafts.last?.assignees == ["lea-m"])
+        #expect(result["ok"] as? Bool == true)
+        #expect(result["number"] as? Int == 151)
+        #expect(result["url"] as? String == "https://github.com/beispiel/app/issues/151")
+        #expect(result["assignees"] as? [String] == ["lea-m"])
+        #expect(result["listed"] as? Bool == false)
+        #expect(result["id"] == nil && result["task"] == nil)
+        #expect(taskList.lastHandedOver == nil)
+        #expect(!taskList.items.contains { $0.id.source == .github })
+        #expect(directory.assignableRequests == ["beispiel/app"])
+    }
+
+    @Test func createIssue_forNoOne_sendsEmptyList() async {
+        let result = await run(await make(), "create_task", issue(assignees: []))
+        #expect(github.createdDrafts.last?.assignees == [])
+        #expect(result["listed"] as? Bool == false)
+        #expect(directory.assignableRequests.isEmpty)
+    }
+
+    @Test func createIssue_unknownLogin_createsNothing() async throws {
+        let result = await run(await make(), "create_task", issue(assignees: ["ghost"]))
+        let message = try #require(result["error"] as? String)
+        #expect(message == "ghost ist in beispiel/app nicht zuweisbar.")
+        #expect(github.createdDrafts.isEmpty)
+    }
+
+    @Test func createIssue_assignableNotLoadable_createsNothing() async {
+        directory.assignable = [:]
+        let result = await run(await make(), "create_task", issue(assignees: ["lea-m"]))
+        #expect(result["error"] as? String == "Personen konnten nicht geladen werden")
+        #expect(github.createdDrafts.isEmpty)
+    }
+
+    @Test func createIssue_droppedAssignee_reportsNotAssigned() async {
+        github.droppedAssignees = ["lea-m"]
+        let result = await run(await make(), "create_task", issue(assignees: ["octo", "lea-m"]))
+        #expect(result["ok"] as? Bool == true)
+        #expect(result["not_assigned"] as? [String] == ["lea-m"])
+        #expect(result["assignees"] as? [String] == ["octo"])
+        #expect(result["listed"] as? Bool == true)
+        #expect(taskList.lastError == nil)
+    }
+
+    @Test func createIssue_moreThanTen_returnsError() async {
+        let result = await run(await make(), "create_task", issue(assignees: (1...11).map { "user-\($0)" }))
+        #expect(result["error"] as? String == "Höchstens 10 Personen je Issue.")
+        #expect(github.createdDrafts.isEmpty)
+        #expect(directory.assignableRequests.isEmpty)
+    }
+
+    @Test func createLocalTask_withGitHubFields_returnsError() async {
+        let result = await run(await make(), "create_task", issue(assignees: ["lea-m"], source: "local"))
+        #expect(result["error"] != nil)
+        #expect(local.createdDrafts.isEmpty)
+    }
+
+    @Test func createLocalTask_withNullGitHubFields_works() async {
+        let result = await run(await make(), "create_task", issue(source: "local"))
+        #expect(result["ok"] as? Bool == true)
+        #expect(local.createdDrafts.count == 1)
+    }
+
+    @Test func gitHubTarget_noLinkedProjects_fallsBackToOnlyProject_orAsks() {
+        let unlinked = ProjectInfo(id: "PVT_1", number: 1, title: "App", fields: [], repositories: [])
+        let other = ProjectInfo(id: "PVT_2", number: 2, title: "Web", fields: [], repositories: [])
+        let one = GitHubCatalog(repositories: ["beispiel/app"], projects: [unlinked], fetchedAt: .distantPast)
+        let two = GitHubCatalog(repositories: ["beispiel/app"], projects: [unlinked, other], fetchedAt: .distantPast)
+        #expect(AppTools.gitHubTarget(repository: nil, projectIDs: nil, catalog: one)
+            == .success(AppTools.GitHubTarget(repository: "beispiel/app", projectIDs: ["PVT_1"])))
+        #expect(AppTools.gitHubTarget(repository: nil, projectIDs: nil, catalog: two) == .failure(.projectMissing))
+        #expect(AppTools.gitHubTarget(repository: "Beispiel/App", projectIDs: ["PVT_2"], catalog: two)
+            == .success(AppTools.GitHubTarget(repository: "beispiel/app", projectIDs: ["PVT_2"])))
+        #expect(AppTools.gitHubTarget(repository: "fremd/repo", projectIDs: nil, catalog: two) == .failure(.repositoryUnknown))
+        #expect(AppTools.gitHubTarget(repository: nil, projectIDs: ["PVT_9"], catalog: two) == .failure(.projectUnknown))
+        let none = GitHubCatalog(repositories: [], projects: [], fetchedAt: .distantPast)
+        #expect(AppTools.gitHubTarget(repository: nil, projectIDs: nil, catalog: none) == .failure(.repositoryMissing))
+    }
 }

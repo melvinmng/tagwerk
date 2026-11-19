@@ -250,6 +250,22 @@
         }
       }
     },
+    "%@ ist in %@ nicht zuweisbar.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@ ist in %2$@ nicht zuweisbar."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ cannot be assigned in %2$@."
+          }
+        }
+      }
+    },
     "%@ jetzt erfassen": {
       "localizations": {
         "en": {
@@ -1245,24 +1261,6 @@
     },
     "%lld geplante Zeitblöcke werden gelöscht.": {
       "localizations": {
-        "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld planned time block will be deleted."
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld planned time blocks will be deleted."
-                }
-              }
-            }
-          }
-        },
         "de": {
           "variations": {
             "plural": {
@@ -1276,6 +1274,24 @@
                 "stringUnit": {
                   "state": "translated",
                   "value": "%lld geplante Zeitblöcke werden gelöscht."
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld planned time block will be deleted."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld planned time blocks will be deleted."
                 }
               }
             }
@@ -2894,6 +2910,26 @@
         }
       }
     },
+    "Bitte ein Project nennen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Please name a project."
+          }
+        }
+      }
+    },
+    "Bitte ein Repository nennen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Please name a repository."
+          }
+        }
+      }
+    },
     "Blöcke löschen": {
       "localizations": {
         "en": {
@@ -3823,6 +3859,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "This event repeats"
+          }
+        }
+      }
+    },
+    "Dieses Project steht nicht in der Liste von list_github_targets.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This project is not in the list from list_github_targets."
+          }
+        }
+      }
+    },
+    "Dieses Repository steht nicht in der Liste von list_github_targets.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This repository is not in the list from list_github_targets."
           }
         }
       }
@@ -5056,6 +5112,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Frequency"
+          }
+        }
+      }
+    },
+    "Höchstens 10 Personen je Issue.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "At most 10 people per issue."
           }
         }
       }
@@ -7545,6 +7611,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Repository"
+          }
+        }
+      }
+    },
+    "Repository, Projects und Zugewiesene gibt es nur bei GitHub-Issues.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Repository, projects and assignees only exist for GitHub issues."
           }
         }
       }

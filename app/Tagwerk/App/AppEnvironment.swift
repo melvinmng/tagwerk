@@ -118,7 +118,8 @@ final class AppEnvironment {
         planner.longerDays = { AIPlanner.LongerDays(rawValue: settings.aiLongerDays) ?? .forDeadlines }
         planner.preferences = { settings.aiPlanningRules }
         let tools = AppTools(taskList: taskList, planning: planning, planner: planner,
-                             events: { interval in gateway.events(in: interval, calendarIDs: nil) })
+                             events: { interval in gateway.events(in: interval, calendarIDs: nil) },
+                             gitHub: { [taskList] in taskList.provider(for: .github) as? GitHubTaskProvider })
         self.assistant = AssistantModel(responder: ai.client, tools: tools, model: { try await ai.selectedModel() },
                                         store: ChatStore(context: context), planning: planning)
         self.voiceOutput = VoiceOutputModel(speaker: SystemSpeaker(), audio: SystemVoiceAudioSession.shared, preferences: {

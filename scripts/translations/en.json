@@ -1164,5 +1164,11 @@
     "other": "%lld planned time blocks will be deleted."
   },
   "Das Issue ist dann niemandem zugewiesen.": "The issue will then be assigned to no one.",
-  "Abgeben": "Hand over"
+  "Abgeben": "Hand over",
+  "Bitte ein Repository nennen.": "Please name a repository.",
+  "Bitte ein Project nennen.": "Please name a project.",
+  "Dieses Repository steht nicht in der Liste von list_github_targets.": "This repository is not in the list from list_github_targets.",
+  "Dieses Project steht nicht in der Liste von list_github_targets.": "This project is not in the list from list_github_targets.",
+  "%@ ist in %@ nicht zuweisbar.": "%1$@ cannot be assigned in %2$@.",
+  "Repository, Projects und Zugewiesene gibt es nur bei GitHub-Issues.": "Repository, projects and assignees only exist for GitHub issues."
 }

@@ -546,7 +546,7 @@ Regeln (Spec §5.7): `create_task` erhält `repository` (string, nullable), `pro
 
 `FakeGitHubDirectory`: `login`, `storedCatalog`, `assignable: [String: [String]]`, `private(set) var assignableRequests: [String]`.
 
-- [ ] **Step 1: Tests schreiben** (`AppToolsTests`; GitHub-Fake mit `viewerLogin = "octo"`, Katalog mit `beispiel/app` ↔ `PVT_1 „App“`, Zuweisbare `["octo", "lea-m", "jonas-k"]`):
+- [x] **Step 1: Tests schreiben** (`AppToolsTests`; GitHub-Fake mit `viewerLogin = "octo"`, Katalog mit `beispiel/app` ↔ `PVT_1 „App“`, Zuweisbare `["octo", "lea-m", "jonas-k"]`):
   - `definitions_includeGitHubToolsOnlyWhenSignedIn`: ohne Directory fehlen beide Namen; mit Directory vorhanden und `kind(of:) == .read`
   - `createTaskSchema_requiresTheThreeNullableGitHubFields`: `required` enthält `repository`, `project_ids`, `assignees`; Typ jeweils mit `"null"`
   - `listGitHubTargets_returnsRepositoriesWithLinkedProjects`: JSON `repositories[0] == {"name":"beispiel/app","linked_project_ids":["PVT_1"]}`, `projects[0] == {"id":"PVT_1","title":"App"}`
@@ -563,10 +563,10 @@ Regeln (Spec §5.7): `create_task` erhält `repository` (string, nullable), `pro
   - `createIssue_moreThanTen_returnsError`
   - `createLocalTask_withGitHubFields_returnsError`: `source: "local"`, `assignees: ["lea-m"]`
   - `gitHubTarget_noLinkedProjects_fallsBackToOnlyProject_orAsks`
-- [ ] **Step 2:** `APP AppToolsTests` → FAIL.
-- [ ] **Step 3:** Umsetzen; `AppEnvironment` übergibt `gitHub: { [taskList] in taskList.provider(for: .github) as? GitHubTaskProvider }`. Bestehende Tests, die `create_task` aufrufen, um die drei `null`-Felder ergänzen.
-- [ ] **Step 4:** `APP AppToolsTests` → PASS.
-- [ ] **Step 5:** Commit `feat: let the assistant create GitHub issues with repository, projects and assignees`.
+- [x] **Step 2:** `APP AppToolsTests` → FAIL.
+- [x] **Step 3:** Umsetzen; `AppEnvironment` übergibt `gitHub: { [taskList] in taskList.provider(for: .github) as? GitHubTaskProvider }`. Bestehende Tests, die `create_task` aufrufen, um die drei `null`-Felder ergänzen.
+- [x] **Step 4:** `APP AppToolsTests` → PASS.
+- [x] **Step 5:** Commit `feat: let the assistant create GitHub issues with repository, projects and assignees`.
 
 ---
 

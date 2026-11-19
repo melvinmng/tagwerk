@@ -28,6 +28,21 @@ extension AppTools {
         return ToolDefinition(name: name, description: description, parameters: data, strict: true)
     }
 
+    private static func strings(_ description: String? = nil, nullable: Bool = false) -> Schema {
+        var schema: Schema = ["type": nullable ? ["array", "null"] : "array", "items": ["type": "string"]]
+        if let description { schema["description"] = description }
+        return schema
+    }
+
+    /// Read tools for creating GitHub issues; only registered while GitHub is signed in.
+    static var gitHubDefinitions: [ToolDefinition] {
+        [
+            tool("list_github_targets", "Lists the user's GitHub repositories (most recently pushed first) with the ids of their linked projects, and all projects with id and title. Call it before creating a GitHub issue.", [:]),
+            tool("list_assignees", "Lists the people who can be assigned to issues of one repository: the user as me, everyone else as assignees (GitHub logins). Call it only when the user wants to assign an issue to someone.",
+                 ["repository": string("owner/name from list_github_targets")]),
+        ]
+    }
+
     private static var taskID: Schema { string("Task id as listed, e.g. github:123 or local:…") }
     private static var day: Schema { string("YYYY-MM-DD") }
     private static var priorities: [String] { ["P1", "P2", "P3", "P4", "P5"] }
@@ -62,13 +77,16 @@ extension AppTools {
             ]),
             tool("delete_event", "Deletes a calendar event. For recurring events ask whether only this occurrence or all future ones are meant (series). Needs confirmation.",
                  ["event_id": string(), "series": boolean]),
-            tool("create_task", "Creates a task. Needs confirmation by the user.", [
+            tool("create_task", "Creates a task. For GitHub issues call list_github_targets first and pass repository and project_ids; assignees only with logins from list_assignees, [] for no one, null for the user. For other sources the three GitHub fields must be null. Needs confirmation by the user.", [
                 "title": string(),
                 "due": string("YYYY-MM-DD or YYYY-MM-DDTHH:mm", nullable: true),
                 "priority": enumeration(priorities, nullable: true),
                 "minutes": integer(nullable: true),
                 "notes": string(nullable: true),
                 "source": enumeration(["reminders", "local", "github"], nullable: true),
+                "repository": string("owner/name from list_github_targets; GitHub issues only", nullable: true),
+                "project_ids": strings("Project ids from list_github_targets; GitHub issues only", nullable: true),
+                "assignees": strings("GitHub logins from list_assignees; [] assigns no one, null assigns the user", nullable: true),
             ]),
             tool("update_task", "Changes fields of a task; null leaves a field unchanged. Needs confirmation.", [
                 "id": taskID,
