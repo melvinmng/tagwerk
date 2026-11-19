@@ -82,8 +82,11 @@ struct TaskListView: View {
                 }
             }
             }
-            .safeAreaInset(edge: .bottom) { isSelecting ? AnyView(selectionBar) : AnyView(undoBar) }
+            .safeAreaInset(edge: .bottom) {
+                isSelecting ? AnyView(selectionBar) : AnyView(VStack(spacing: 0) { HandedOverCapsule(model: model); undoBar })
+            }
             .animation(.spring(duration: 0.35), value: model.lastCompleted?.id)
+            .animation(.spring(duration: 0.35), value: model.lastHandedOver)
             .onChange(of: gitHubOfflineSince == nil) { _, online in if online { showsOfflineInfo = false } }
             .navigationTitle("Aufgaben")
             .toolbar {

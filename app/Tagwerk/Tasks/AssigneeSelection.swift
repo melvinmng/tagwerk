@@ -72,6 +72,11 @@ enum AssigneeSelection {
         }
     }
 
+    /// VoiceOver announcement of the "Vergeben" capsule.
+    static func announcement(number: Int?, assignees: [String]) -> String {
+        String(localized: "Vergeben: \(capsuleTitle(number: number, assignees: assignees)). Auf GitHub öffnen verfügbar.")
+    }
+
     /// No further person can be chosen once the limit of GitHub is reached.
     static func canAdd(selectedCount: Int) -> Bool {
         selectedCount < AssigneeRules.maximum

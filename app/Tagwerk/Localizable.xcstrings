@@ -903,24 +903,6 @@
     },
     "%lld Personen": {
       "localizations": {
-        "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld person"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld people"
-                }
-              }
-            }
-          }
-        },
         "de": {
           "variations": {
             "plural": {
@@ -934,6 +916,24 @@
                 "stringUnit": {
                   "state": "translated",
                   "value": "%lld Personen"
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld person"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld people"
                 }
               }
             }
@@ -1373,24 +1373,6 @@
     },
     "%lld weiteren Personen": {
       "localizations": {
-        "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld other person"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld other people"
-                }
-              }
-            }
-          }
-        },
         "de": {
           "variations": {
             "plural": {
@@ -1404,6 +1386,24 @@
                 "stringUnit": {
                   "state": "translated",
                   "value": "%lld weiteren Personen"
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld other person"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld other people"
                 }
               }
             }
@@ -8683,6 +8683,26 @@
         }
       }
     },
+    "Vergeben": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Assigned"
+          }
+        }
+      }
+    },
+    "Vergeben: %@. Auf GitHub öffnen verfügbar.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Assigned: %@. Open on GitHub available."
+          }
+        }
+      }
+    },
     "Verknüpfung lösen": {
       "localizations": {
         "en": {
@@ -10864,6 +10884,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Opens the “Workout” sheet in Tagwerk."
+          }
+        }
+      }
+    },
+    "Öffnet das Issue im Browser": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opens the issue in the browser"
           }
         }
       }

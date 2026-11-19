@@ -445,11 +445,11 @@ var announcement: String? = nil
 
 Der Parameter `onUndo` bleibt die Aktion des Knopfs. Anzeige: in `TaskListView` eine eigene `handedOverBar` im selben `safeAreaInset` (über `undoBar`, `VStack`), in `PlanView` ein weiterer `overlay` mit `.padding(.bottom, 60)`; beide lesen `taskList.lastHandedOver`. Werte: `caption: "Vergeben"`, `symbol: "person.crop.circle.badge.checkmark"`, `duration: 8`, `actionTitle: "Auf GitHub öffnen"`, `actionSymbol: "arrow.up.right"`, Aktion `openURL(url)` und `dismissHandedOver()`, `onExpire` nur wenn dieselbe Notiz noch steht, `.id(notice.id)`. Ansage: „Vergeben: #151 an lea-m. Auf GitHub öffnen verfügbar.“
 
-- [ ] **Step 1:** Test `handedOverAnnouncement_namesNumberAndPeople` in `AssigneeSelectionTests`: `AssigneeSelection.announcement(number: 151, assignees: ["lea-m"]) == "Vergeben: #151 an lea-m. Auf GitHub öffnen verfügbar."` (Funktion in `AssigneeSelection` ergänzen).
-- [ ] **Step 2:** `APP AssigneeSelectionTests` → FAIL.
-- [ ] **Step 3:** Umsetzen.
-- [ ] **Step 4:** `APP AssigneeSelectionTests` → PASS; `APP AppSmokeTests` → PASS (bestehende Kapseln unverändert). Im Simulator: Issue nur an eine andere Person anlegen → Kapsel 8 s in „Aufgaben“ und „Planen“, Knopf öffnet GitHub.
-- [ ] **Step 5:** Commit `feat: show a capsule with a GitHub link after handing over an issue`.
+- [x] **Step 1:** Test `handedOverAnnouncement_namesNumberAndPeople` in `AssigneeSelectionTests`: `AssigneeSelection.announcement(number: 151, assignees: ["lea-m"]) == "Vergeben: #151 an lea-m. Auf GitHub öffnen verfügbar."` (Funktion in `AssigneeSelection` ergänzen).
+- [x] **Step 2:** `APP AssigneeSelectionTests` → FAIL.
+- [x] **Step 3:** Umsetzen.
+- [x] **Step 4:** `APP AssigneeSelectionTests` → PASS; `APP AppSmokeTests` → PASS (bestehende Kapseln unverändert). Im Simulator: Issue nur an eine andere Person anlegen → Kapsel 8 s in „Aufgaben“ und „Planen“, Knopf öffnet GitHub.
+- [x] **Step 5:** Commit `feat: show a capsule with a GitHub link after handing over an issue`.
 
 ---
 

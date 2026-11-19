@@ -69,6 +69,13 @@ struct AssigneeSelectionTests {
         #expect(AssigneeSelection.capsuleTitle(number: nil, assignees: ["lea-m"]) == "Issue an lea-m")
     }
 
+    @Test func handedOverAnnouncement_namesNumberAndPeople() {
+        #expect(AssigneeSelection.announcement(number: 151, assignees: ["lea-m"])
+            == "Vergeben: #151 an lea-m. Auf GitHub öffnen verfügbar.")
+        #expect(AssigneeSelection.announcement(number: 151, assignees: [])
+            == "Vergeben: #151 ohne Zuweisung. Auf GitHub öffnen verfügbar.")
+    }
+
     @Test func canAdd_stopsAtTen() {
         #expect(AssigneeSelection.canAdd(selectedCount: 9))
         #expect(!AssigneeSelection.canAdd(selectedCount: 10))

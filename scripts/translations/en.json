@@ -1152,5 +1152,8 @@
   "dir": "you",
   "%@ an %@": "%1$@ to %2$@",
   "%@ ohne Zuweisung": "%@ unassigned",
-  "Mindestens ein Projekt wählen.": "Choose at least one project."
+  "Mindestens ein Projekt wählen.": "Choose at least one project.",
+  "Vergeben": "Assigned",
+  "Vergeben: %@. Auf GitHub öffnen verfügbar.": "Assigned: %@. Open on GitHub available.",
+  "Öffnet das Issue im Browser": "Opens the issue in the browser"
 }
