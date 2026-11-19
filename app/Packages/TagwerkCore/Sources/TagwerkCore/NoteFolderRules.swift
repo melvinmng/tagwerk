@@ -4,6 +4,55 @@ import Foundation
 public enum NoteFolderRole: String, Sendable, CaseIterable {
     case journal
     case bibleStudy
+    /// Free-form thoughts; the user's own notes may be created in and moved into it.
+    case brainDump
+    /// Holds the morning thought notes of the daily routine.
+    case morningRoutine
+    /// Holds the evening thought notes of the daily routine.
+    case eveningRoutine
+    /// Holds the dream notes ("Dream Log"), one per day, written in the morning routine.
+    case dreamLog
+
+    /// The folder a kind of note belongs to; `nil` for kinds that have no fixed folder (free notes, journal, Bible Study).
+    public static func role(for kind: NoteKind) -> NoteFolderRole? {
+        allCases.first { $0.noteKind == kind }
+    }
+
+    /// Notes in a private folder never leave the device (see `NoteKind.isPrivate`).
+    public var isPrivate: Bool {
+        switch self {
+        case .journal, .bibleStudy, .dreamLog: true
+        case .brainDump, .morningRoutine, .eveningRoutine: false
+        }
+    }
+
+    /// Whether a backup holds the folder without the switch "Tagebuch und Bible Study einschließen" (same rule as
+    /// `NoteKind.isInDefaultBackup`).
+    public var isInDefaultBackup: Bool {
+        switch self {
+        case .journal, .bibleStudy: false
+        case .brainDump, .morningRoutine, .eveningRoutine, .dreamLog: true
+        }
+    }
+
+    /// Whether the user's own (free) notes may be moved into this folder. The routine folders and the Dream Log are
+    /// filled by the routines only. Journal and Bible Study keep the behaviour they always had: the folder picker offers them.
+    public var acceptsOwnNotes: Bool {
+        switch self {
+        case .journal, .bibleStudy, .brainDump: true
+        case .morningRoutine, .eveningRoutine, .dreamLog: false
+        }
+    }
+
+    /// The kind of thought note that belongs into the folder; `nil` for folders without a fixed kind of note.
+    public var noteKind: NoteKind? {
+        switch self {
+        case .morningRoutine: .morning
+        case .eveningRoutine: .evening
+        case .dreamLog: .dream
+        case .journal, .bibleStudy, .brainDump: nil
+        }
+    }
 }
 
 /// A folder as the rules see it, independent of the storage model.

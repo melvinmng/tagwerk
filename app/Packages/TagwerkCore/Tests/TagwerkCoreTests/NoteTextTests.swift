@@ -37,15 +37,17 @@ struct NoteTextTests {
         #expect(!NoteText.matches("Gliederung", query: "Gliederung Quellen"))
     }
 
-    @Test func journalAndBibleStudyArePrivate_otherKindsAreNot() {
-        #expect(NoteKind.journal.isPrivate && NoteKind.bibleStudy.isPrivate)
-        #expect(NoteKind.allCases.filter(\.isPrivate) == [.journal, .bibleStudy])
+    @Test func journalBibleStudyAndDreamsArePrivate_otherKindsAreNot() {
+        #expect(NoteKind.journal.isPrivate && NoteKind.bibleStudy.isPrivate && NoteKind.dream.isPrivate)
+        #expect(NoteKind.allCases.filter(\.isPrivate) == [.journal, .bibleStudy, .dream])
+        // Only journal and Bible Study need the backup switch; dreams are backed up like the morning notes.
+        #expect(NoteKind.allCases.filter { !$0.isInDefaultBackup } == [.journal, .bibleStudy])
         #expect(NoteKind(rawValue: "journal") == .journal)
     }
 
     @Test func onlyTheThoughtNotesMayBeSentForSuggestions() {
         #expect(NoteKind.allCases.filter(\.allowsSuggestions) == [.morning, .evening])
-        // The dream log is not private in the sense of the backup opt-in, but it is never sent.
-        #expect(!NoteKind.dream.isPrivate && !NoteKind.dream.allowsSuggestions)
+        // The dream log is private (never sent) but part of the default backup.
+        #expect(NoteKind.dream.isPrivate && !NoteKind.dream.allowsSuggestions && NoteKind.dream.isInDefaultBackup)
     }
 }

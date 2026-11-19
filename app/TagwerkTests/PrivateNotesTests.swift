@@ -11,7 +11,7 @@ import TagwerkCore
 struct PrivateNotesTests {
     @Test func everyPrivateKind_isCoveredByThePredicate() {
         let privateKinds = NoteKind.allCases.filter(\.isPrivate)
-        #expect(privateKinds.contains(.journal) && privateKinds.contains(.bibleStudy))
+        #expect(privateKinds.contains(.journal) && privateKinds.contains(.bibleStudy) && privateKinds.contains(.dream))
         #expect(!NoteKind.free.isPrivate && !NoteKind.morning.isPrivate && !NoteKind.evening.isPrivate)
     }
 
