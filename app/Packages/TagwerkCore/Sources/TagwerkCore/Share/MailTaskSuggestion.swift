@@ -28,6 +28,14 @@ public struct MailTaskSuggestion: Codable, Sendable, Equatable {
         public var due: DueDate?
     }
 
+    private static let address = try! NSRegularExpression(pattern: #"[A-Za-z0-9._%+\-]+@[A-Za-z0-9\-]+(?:\.[A-Za-z0-9\-]+)+"#)  // swiftlint:disable:this force_try
+
+    /// The text with every email address replaced by "[Adresse]". Signatures, quoted headers and forwarded recipients carry
+    /// addresses inside the text; they must not reach the request.
+    public static func redactingAddresses(_ text: String) -> String {
+        address.stringByReplacingMatches(in: text, range: NSRange(text.startIndex..., in: text), withTemplate: "[Adresse]")
+    }
+
     /// Decodes the answer; tolerates text around the JSON object.
     public static func decode(_ data: Data) throws -> MailTaskSuggestion {
         var payload = data

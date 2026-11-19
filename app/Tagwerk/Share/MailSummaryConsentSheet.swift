@@ -11,7 +11,7 @@ struct MailSummaryConsentSheet: View {
                 VStack(alignment: .leading, spacing: 16) {
                     Text("Für die Zusammenfassung sendet Tagwerk Betreff, Absendername und Text der Mail an ChatGPT (OpenAI), nur wenn du auf „Mit ChatGPT zusammenfassen“ tippst. Anhänge, Adressen und Empfänger werden nie gesendet.")
                     point("paperplane", "**Gesendet wird** der Betreff, der Name des Absenders und der Text der Mail, höchstens 12 000 Zeichen.")
-                    point("eye.slash", "**Nicht gesendet werden** Anhänge, E-Mail-Adressen, Empfänger und der Link zur Mail.")
+                    point("eye.slash", "**Nicht gesendet werden** Anhänge, E-Mail-Adressen (auch im Text), Empfänger und der Link zur Mail.")
                     point("hand.tap", "**Nur auf dein Tippen:** Ohne „Mit ChatGPT zusammenfassen“ verlässt nichts das iPhone. Die Vorschläge übernimmst du erst, wenn du sie bestätigst.")
                     Text("Wie OpenAI die gesendeten Daten behandelt, richtet sich nach den Einstellungen deines ChatGPT-Kontos.")
                         .font(.footnote).foregroundStyle(.secondary)

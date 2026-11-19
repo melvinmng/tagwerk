@@ -171,6 +171,8 @@ final class MailTaskModelTests {
         #expect(!sent.contains("message://"))
         // The sender's address is not sent as a header; the cut text is limited.
         #expect(!sent.contains("Von: Erika Muster <"))
+        #expect(!sent.contains("erika@example.com"))
+        #expect(sent.contains("Kontakt: [Adresse]."))
         #expect(sent.count <= 12_000 + 80)
         #expect(responder.instructions.first == MailTaskSuggestion.instructions(language: .german, today: Self.now, calendar: makeTestCalendar()))
     }

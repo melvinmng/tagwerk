@@ -178,7 +178,8 @@ final class MailTaskModel {
     /// The summary (when fetched), the sender and the link back to the mail.
     private func composeNotes() -> String {
         var lines: [String] = []
-        if let senderLine, !senderLine.isEmpty { lines.append(String(localized: "Von: \(senderLine)")) }
+        // The notes can reach other places (an issue, the assistant); only the name goes in, never the address.
+        if let senderName, !senderName.isEmpty { lines.append(String(localized: "Von: \(senderName)")) }
         if let mailLink { lines.append(mailLink.absoluteString) }
         let details = lines.joined(separator: "\n")
         return [summary, details].filter { !$0.isEmpty }.joined(separator: "\n\n")

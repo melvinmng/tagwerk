@@ -225,7 +225,7 @@ struct AIPrivacyView: View {
                 Text(AIStatusMessage.privacyNotice)
                 Text("Tagwerk ruft die KI nur auf, wenn du sie selbst startest, zum Beispiel mit „Tag planen“ oder einer Nachricht an den Assistenten. Im Hintergrund geschieht das nie, und Tagwerk fragt nicht bei jedem Aufruf erneut nach.")
                 Text("Beim Planen geht je Aufgabe auch eine erwartete Dauer in Minuten mit, abgeleitet aus deinen bisherigen Messungen. Die Messungen selbst und die Labels bleiben auf dem iPhone. Abschalten kannst du das unter Einstellungen › Fokus-Timer.")
-                Text("Für eine geteilte Mail sendet Tagwerk nur dann Betreff, Absendername und Text (höchstens 12 000 Zeichen) an ChatGPT, wenn du in der Einstellung „Mails von ChatGPT zusammenfassen“ zugestimmt hast und auf „Mit ChatGPT zusammenfassen“ tippst. Anhänge, Adressen, Empfänger und der Link zur Mail werden nie gesendet. Der Eingang für geteilte Inhalte liegt nur auf diesem iPhone und gehört nicht zur Datensicherung.")
+                Text("Für eine geteilte Mail sendet Tagwerk nur dann Betreff, Absendername und Text (höchstens 12 000 Zeichen) an ChatGPT, wenn du in der Einstellung „Mails von ChatGPT zusammenfassen“ zugestimmt hast und auf „Mit ChatGPT zusammenfassen“ tippst. Anhänge, Adressen, Empfänger und der Link zur Mail gehören nicht zur Zusammenfassung. Fragst du später den Assistenten nach der Aufgabe, kann deren Notiz mit dem Link an ChatGPT gehen, wie bei jeder Aufgabe. Der Eingang für geteilte Inhalte liegt nur auf diesem iPhone und gehört nicht zur Datensicherung.")
                 Text("„Abmelden“ löscht die Anmeldung bei ChatGPT von diesem iPhone. Danach sind die KI-Funktionen aus, bis du dich wieder anmeldest.")
             }
         }

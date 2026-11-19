@@ -29,7 +29,7 @@ struct ShareImportSheet: View {
     static func taskNotes(for item: ShareInboxItem) -> String? {
         if let mail = item.mail {
             var lines: [String] = []
-            if let sender = mail.senderName ?? mail.senderAddress { lines.append(String(localized: "Von: \(sender)")) }
+            if let sender = mail.senderName { lines.append(String(localized: "Von: \(sender)")) }
             if let messageID = mail.messageID, let link = MailLink.url(messageID: messageID) { lines.append(link.absoluteString) }
             return lines.isEmpty ? nil : lines.joined(separator: "\n")
         }

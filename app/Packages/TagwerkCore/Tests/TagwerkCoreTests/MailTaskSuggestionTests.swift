@@ -67,6 +67,14 @@ struct MailTaskSuggestionTests {
         #expect(throws: (any Error).self) { try MailTaskSuggestion.decode(Data("nope".utf8)) }
     }
 
+    @Test func redactingAddresses_removesEveryAddress() {
+        let text = "Von Erika <erika.muster+x@mail.example.com>, Kopie an max@example.org.\nAm 5.1. schrieb Hans (hans@sub.example.com):"
+        let redacted = MailTaskSuggestion.redactingAddresses(text)
+        #expect(!redacted.contains("@"))
+        #expect(redacted == "Von Erika <[Adresse]>, Kopie an [Adresse].\nAm 5.1. schrieb Hans ([Adresse]):")
+        #expect(MailTaskSuggestion.redactingAddresses("Kein Treffer: 5 @ 3") == "Kein Treffer: 5 @ 3")
+    }
+
     @Test func instructions_forbidInventedDeadlines() {
         let text = MailTaskSuggestion.instructions(language: .german, today: now, calendar: calendar)
         #expect(text.contains("2026-11-19"))

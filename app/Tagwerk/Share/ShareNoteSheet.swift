@@ -22,7 +22,13 @@ struct ShareNoteSheet: View {
 
     /// Title, text without the title line, and the link; the attachments are added when saving.
     static func initialText(for item: ShareInboxItem) -> String {
-        [item.title, NewTaskPrefill.sharedNotes(title: item.title, text: item.text), item.url?.absoluteString]
+        if let mail = item.mail {
+            // A mail has no text of its own in the item; the note gets the readable text and the link back.
+            let sender = mail.senderName.map { String(localized: "Von: \($0)") }
+            let link = mail.messageID.flatMap { MailLink.url(messageID: $0) }?.absoluteString
+            return [item.title, sender, mail.bodyText, link].compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: "\n\n")
+        }
+        return [item.title, NewTaskPrefill.sharedNotes(title: item.title, text: item.text), item.url?.absoluteString]
             .compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: "\n\n")
     }
 

@@ -2241,7 +2241,18 @@
         }
       }
     },
+    "**Nicht gesendet werden** Anhänge, E-Mail-Adressen (auch im Text), Empfänger und der Link zur Mail.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "**What is not sent:** attachments, email addresses (also in the text), recipients and the link to the mail."
+          }
+        }
+      }
+    },
     "**Nicht gesendet werden** Anhänge, E-Mail-Adressen, Empfänger und der Link zur Mail.": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -7945,7 +7956,18 @@
         }
       }
     },
+    "Für eine geteilte Mail sendet Tagwerk nur dann Betreff, Absendername und Text (höchstens 12 000 Zeichen) an ChatGPT, wenn du in der Einstellung „Mails von ChatGPT zusammenfassen“ zugestimmt hast und auf „Mit ChatGPT zusammenfassen“ tippst. Anhänge, Adressen, Empfänger und der Link zur Mail gehören nicht zur Zusammenfassung. Fragst du später den Assistenten nach der Aufgabe, kann deren Notiz mit dem Link an ChatGPT gehen, wie bei jeder Aufgabe. Der Eingang für geteilte Inhalte liegt nur auf diesem iPhone und gehört nicht zur Datensicherung.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "For a shared mail, Tagwerk sends the subject, the sender’s name and the text (at most 12,000 characters) to ChatGPT only if you agreed in the setting “Summarize mails with ChatGPT” and tap “Summarize with ChatGPT”. Attachments, addresses, recipients and the link to the mail are not part of the summary. If you later ask the assistant about the task, its note with the link can go to ChatGPT, like any task. The inbox for shared content exists only on this iPhone and is not part of the data backup."
+          }
+        }
+      }
+    },
     "Für eine geteilte Mail sendet Tagwerk nur dann Betreff, Absendername und Text (höchstens 12 000 Zeichen) an ChatGPT, wenn du in der Einstellung „Mails von ChatGPT zusammenfassen“ zugestimmt hast und auf „Mit ChatGPT zusammenfassen“ tippst. Anhänge, Adressen, Empfänger und der Link zur Mail werden nie gesendet. Der Eingang für geteilte Inhalte liegt nur auf diesem iPhone und gehört nicht zur Datensicherung.": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {

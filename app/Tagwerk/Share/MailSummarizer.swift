@@ -48,10 +48,12 @@ final class MailSummarizer {
 
     /// The text of the one request: subject, sender name and the cut text. Nothing else.
     nonisolated static func input(subject: String, senderName: String?, body: String) -> String {
-        var lines = ["Betreff: \(subject)"]
-        if let senderName, !senderName.isEmpty { lines.append("Von: \(senderName)") }
+        let redact = MailTaskSuggestion.redactingAddresses
+        var lines = ["Betreff: \(redact(subject))"]
+        if let senderName, !senderName.isEmpty { lines.append("Von: \(redact(senderName))") }
         lines.append("Text:")
-        lines.append(String(body.prefix(MailTaskSuggestion.maximumInputLength)))
+        // Addresses go before the cut, so the limit counts what is sent.
+        lines.append(String(redact(body).prefix(MailTaskSuggestion.maximumInputLength)))
         return lines.joined(separator: "\n")
     }
 
