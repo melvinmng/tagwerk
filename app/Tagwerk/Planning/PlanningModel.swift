@@ -333,7 +333,33 @@ final class PlanningModel {
     /// The AI view of days outside the shown range (e.g. the next week as targets for moving tasks away
     /// from a full day). Computed like `reload()` without changing what is shown.
     func planInputs(in range: ClosedRange<PlanDay>) async -> [PlanInputDay] {
-        await dayPlans(in: range, withDeadlines: false).compactMap(\.planInput)
+        let open = taskList.items.filter { !$0.isCompleted }
+        let series = await recurringSeries(open: open)
+        let recurringIDs = Set(series.map(\.id))
+        let interval = DateInterval(start: range.lowerBound.startDate(in: calendar),
+                                    end: range.upperBound.adding(days: 1, calendar: calendar).startDate(in: calendar))
+        let raw = calendarStore.events(in: interval, calendarIDs: readableCalendarIDs())
+        let marked = deadlineMarks.markedIDs(in: raw)
+        let (events, _) = markedEvents(raw, keeping: marked)
+        let deadlineIDs = deadlineIDs(in: events, marked: marked)
+        let links = Dictionary(resolveLinks(events: events, tasks: open, manual: blocks.links.manualLinks()).map { ($0.eventID, $0.taskID) },
+                               uniquingKeysWith: { first, _ in first })
+        let assignments = planStore.assignments(in: range)
+        let overrides = planStore.overrides(in: range)
+        let tasksByID = Dictionary(open.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
+        let everything = PlanDay(year: 1, month: 1, day: 1)...PlanDay(year: 9999, month: 12, day: 31)
+        let allAssignments = planStore.assignments(in: everything)
+        var result: [PlanInputDay] = []
+        var day = range.lowerBound
+        while day <= range.upperBound {
+            let plan = dayPlan(day, events: events, links: links, deadlines: [], assignments: assignments,
+                               overrides: overrides, tasksByID: tasksByID, series: series,
+                               recurringIDs: recurringIDs, open: open, allAssignments: allAssignments,
+                               deadlineIDs: deadlineIDs)
+            if let input = plan.planInput { result.append(input) }
+            day = day.adding(days: 1, calendar: calendar)
+        }
+        return result
     }
 
     /// The plans of days outside (or inside) the shown range, computed like `reload()` without changing what is shown.
