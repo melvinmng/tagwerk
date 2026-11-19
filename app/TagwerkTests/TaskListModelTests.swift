@@ -777,6 +777,7 @@ struct TaskListStatusTests {
     }
 }
 
+@MainActor
 struct TaskContextMenuStatusTests {
     private func item(statuses: [SubContainerStatus], fields: Set<TaskField> = [.status]) -> TaskItem {
         var item = makeTask("Login", source: .github)

@@ -91,9 +91,9 @@ public final class GitHubTaskProvider: TaskProvider {
         Set(records.values.map(\.repository)).sorted().map { TaskContainer(id: $0, name: $0, colorHex: nil) }
     }
 
-    /// Reloads the issue, compares versions and writes in a fixed order: issue fields, project fields,
-    /// close/reopen, project status in all projects. The result is read again afterwards, because
-    /// project workflows may change the status on their own.
+    /// Reloads the issue, compares versions and writes in a fixed order: issue fields (including closing),
+    /// project fields, project status per project, reopening after a status change, assignees. The result
+    /// is read again afterwards, because project workflows may change the status on their own.
     /// Repository, number and node ID of a loaded issue, for the issue chat (design §8.3).
     public func issueReference(for id: TaskID) -> (repository: String, number: Int, nodeID: String)? {
         records[id.rawValue].map { ($0.repository, $0.number, $0.issueID) }
