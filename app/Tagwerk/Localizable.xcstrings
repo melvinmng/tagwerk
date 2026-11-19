@@ -3515,6 +3515,16 @@
         }
       }
     },
+    "Diese Wiederholung kann nicht gespeichert werden.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This repetition cannot be saved."
+          }
+        }
+      }
+    },
     "Diese Woche": {
       "localizations": {
         "en": {
@@ -3674,6 +3684,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Another day turns the block into a move. It stays a suggestion until you accept it."
+          }
+        }
+      }
+    },
+    "Eine Wiederholung braucht ein Fälligkeitsdatum.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A repeating task needs a due date."
           }
         }
       }
