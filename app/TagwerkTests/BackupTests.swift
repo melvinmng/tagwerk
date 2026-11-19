@@ -75,6 +75,9 @@ struct BackupTests {
         context.insert(DeadlineEventLink(deadlineKey: "event:evt-4", eventKey: "evt-5", isSeries: true, externalID: "ext-5", calendarID: "cal-2",
                                          title: "Lernen", start: now, deadlineTitle: "Klausur", until: now.addingTimeInterval(86_400), createdAt: now))
         context.insert(DeadlineSuggestionDismissal(eventKey: "evt-6", start: now))
+        context.insert(ReminderOverrideRecord(ReminderOverride(itemKey: "deadline:evt-4", scope: .seriesFrom(day), storage: .tagwerk,
+                                                               offsets: [.before(amount: 2, unit: .days)]), updatedAt: now))
+        settings.reminderDefaultsData = ReminderDefaults.legacy(leadTimeMinutes: 90).encoded()
         let meal = MealRecord(MealValue(id: UUID(), date: now, kind: .lunch, title: "Nudeln", items: [], origin: .manual), estimatedAt: now, healthVersion: 3)
         meal.healthSynced = true
         context.insert(meal)
@@ -308,6 +311,38 @@ struct BackupTests {
         #expect(throws: BackupService.BackupError.notABackup) { try target.service.inspect(Data("{\"format\":\"other\",\"schemaVersion\":1}".utf8)) }
         let broken = Data("{\"format\":\"tagwerk-backup\",\"schemaVersion\":1,\"appVersion\":\"1\",\"createdAt\":\"x\",\"includesPrivateNotes\":true,\"entities\":{\"localTasks\":5}}".utf8)
         #expect(throws: BackupService.BackupError.unreadable) { try target.service.inspect(broken) }
+    }
+
+    @Test func backup_roundTripsReminderDefaultsAndOverrides() throws {
+        let data = try backup.makeBackupData()
+        let target = try makeTarget()
+        try target.service.restore(try target.service.inspect(data))
+        #expect(target.settings.reminderDefaultsData == ReminderDefaults.legacy(leadTimeMinutes: 90).encoded())
+        let records = try target.container.mainContext.fetch(FetchDescriptor<ReminderOverrideRecord>())
+        let override = try #require(records.first?.override)
+        #expect(records.count == 1)
+        #expect(override.itemKey == "deadline:evt-4")
+        #expect(override.scope == .seriesFrom(PlanDay(year: 2026, month: 11, day: 18)))
+        #expect(override.offsets == [.before(amount: 2, unit: .days)])
+    }
+
+    @Test func oldBackupWithoutReminderFields_restores() throws {
+        let data = try backup.makeBackupData()
+        var object = try #require(try JSONSerialization.jsonObject(with: data) as? [String: Any])
+        var entities = try #require(object["entities"] as? [String: Any])
+        entities.removeValue(forKey: "reminderOverrides")
+        var settings = try #require(entities["settings"] as? [String: Any])
+        settings.removeValue(forKey: "reminderDefaultsData")
+        entities["settings"] = settings
+        object["entities"] = entities
+        let old = try JSONSerialization.data(withJSONObject: object)
+        let target = try makeTarget()
+        target.settings.reminderDefaultsData = ReminderDefaults.legacy(leadTimeMinutes: 30).encoded()
+        try target.service.restore(try target.service.inspect(old))
+        #expect(try target.container.mainContext.fetchCount(FetchDescriptor<ReminderOverrideRecord>()) == 0)
+        // The file knows nothing of reminder defaults, so they fall back to the ones derived from the lead time.
+        #expect(target.settings.reminderDefaultsData == nil)
+        #expect(target.settings.reminderDefaults == .legacy(leadTimeMinutes: target.settings.leadTimeMinutes))
     }
 
     @Test func aFileWithoutSomeLists_readsThemAsEmpty() throws {

@@ -34,7 +34,10 @@ struct ReminderDefaultsTests {
         defaults.set([.before(amount: 1, unit: .days)], for: .deadline, isAllDay: true)
         defaults.set([.before(amount: 15, unit: .minutes)], for: .event, isAllDay: false)
         #expect(ReminderDefaults.decode(defaults.encoded(), leadTimeMinutes: 999) == defaults)
-        #expect(defaults.encoded() == defaults.encoded())
+        // Equal defaults give identical data, also when one of them was decoded (its dictionaries may order differently).
+        let decoded = ReminderDefaults.decode(defaults.encoded(), leadTimeMinutes: 999)
+        #expect(decoded.encoded() == defaults.encoded())
+        #expect(ReminderDefaults.legacy(leadTimeMinutes: 90).encoded() == ReminderDefaults.legacy(leadTimeMinutes: 90).encoded())
     }
 
     @Test func offsets_areNormalized() {

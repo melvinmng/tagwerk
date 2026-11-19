@@ -951,6 +951,38 @@ struct WeekReflectionBackup: BackupEntity {
     }
 }
 
+struct ReminderOverrideBackup: BackupEntity {
+    static let modelName = "ReminderOverrideRecord"
+    var key: String
+    var itemKey: String
+    var scopeRaw: String
+    var scopeValue: String?
+    var storageRaw: String
+    var offsetsData: Data
+    var updatedAt: Date
+
+    init(_ record: ReminderOverrideRecord) {
+        key = record.key
+        itemKey = record.itemKey
+        scopeRaw = record.scopeRaw
+        scopeValue = record.scopeValue
+        storageRaw = record.storageRaw
+        offsetsData = record.offsetsData
+        updatedAt = record.updatedAt
+    }
+
+    func makeRecord() -> ReminderOverrideRecord {
+        // The stored values are kept as they are; the record is built from a placeholder and then overwritten.
+        let record = ReminderOverrideRecord(ReminderOverride(itemKey: itemKey, scope: .always, offsets: []), updatedAt: updatedAt)
+        record.key = key
+        record.scopeRaw = scopeRaw
+        record.scopeValue = scopeValue
+        record.storageRaw = storageRaw
+        record.offsetsData = offsetsData
+        return record
+    }
+}
+
 /// The settings that travel with a backup. Left out: the model list from ChatGPT (a cache) and everything that names a place on
 /// this device (the backup folder and its state). Secrets are not in the database at all; they live in the Keychain.
 struct AppSettingsBackup: Codable, Equatable {
@@ -1019,8 +1051,11 @@ struct AppSettingsBackup: Codable, Equatable {
     var voiceModeSendDelay: Double
     var voiceModeSilenceLimit: Double
     var voiceModeExplained: Bool
+    /// Optional, so a file from before flexible reminders still opens (it restores the defaults derived from the lead time).
+    var reminderDefaultsData: Data?
 
     init(_ record: AppSettings) {
+        reminderDefaultsData = record.reminderDefaultsData
         workdayStartMinutes = record.workdayStartMinutes
         workdayEndMinutes = record.workdayEndMinutes
         lunchStartMinutes = record.lunchStartMinutes
@@ -1089,6 +1124,7 @@ struct AppSettingsBackup: Codable, Equatable {
 
     /// Writes the values into the one settings record the app already holds; it is never replaced.
     func apply(to record: AppSettings) {
+        record.reminderDefaultsData = reminderDefaultsData
         record.workdayStartMinutes = workdayStartMinutes
         record.workdayEndMinutes = workdayEndMinutes
         record.lunchStartMinutes = lunchStartMinutes
@@ -1171,6 +1207,7 @@ struct BackupEntities: Codable, Equatable {
     var dayLunches: [DayLunchBackup] = []
     var eventAvailabilityMarks: [EventAvailabilityMarkBackup] = []
     var eventMergeDecisions: [EventMergeDecisionBackup] = []
+    var reminderOverrides: [ReminderOverrideBackup] = []
     var eventDeadlineMarks: [EventDeadlineMarkBackup] = []
     var deadlineEventLinks: [DeadlineEventLinkBackup] = []
     var deadlineSuggestionDismissals: [DeadlineSuggestionDismissalBackup] = []
@@ -1206,6 +1243,7 @@ struct BackupEntities: Codable, Equatable {
         dayLunches = try container.decodeIfPresent([DayLunchBackup].self, forKey: .dayLunches) ?? []
         eventAvailabilityMarks = try container.decodeIfPresent([EventAvailabilityMarkBackup].self, forKey: .eventAvailabilityMarks) ?? []
         eventMergeDecisions = try container.decodeIfPresent([EventMergeDecisionBackup].self, forKey: .eventMergeDecisions) ?? []
+        reminderOverrides = try container.decodeIfPresent([ReminderOverrideBackup].self, forKey: .reminderOverrides) ?? []
         eventDeadlineMarks = try container.decodeIfPresent([EventDeadlineMarkBackup].self, forKey: .eventDeadlineMarks) ?? []
         deadlineEventLinks = try container.decodeIfPresent([DeadlineEventLinkBackup].self, forKey: .deadlineEventLinks) ?? []
         deadlineSuggestionDismissals = try container.decodeIfPresent([DeadlineSuggestionDismissalBackup].self, forKey: .deadlineSuggestionDismissals) ?? []
@@ -1226,7 +1264,7 @@ struct BackupEntities: Codable, Equatable {
     }
 
     /// Model names of everything the file holds, for the completeness check against the schema.
-    static let modelNames: Set<String> = ["AppSettings", LocalTaskBackup.modelName, LocalOccurrenceCompletionBackup.modelName, DayAssignmentBackup.modelName, DayOverrideBackup.modelName, ReminderEstimateBackup.modelName, EventTaskLinkBackup.modelName, RecurringEffortValueBackup.modelName, RecurringEffortOverrideBackup.modelName, RecurringOccurrenceDoneBackup.modelName, DayLunchBackup.modelName, EventAvailabilityMarkBackup.modelName, EventMergeDecisionBackup.modelName, EventDeadlineMarkBackup.modelName, DeadlineEventLinkBackup.modelName, DeadlineSuggestionDismissalBackup.modelName, MealBackup.modelName, DrinkBackup.modelName, WorkoutBackup.modelName, ShoppingCategoryBackup.modelName, ShoppingAssignmentBackup.modelName, NoteBackup.modelName, NoteFolderBackup.modelName, BibleStudySessionBackup.modelName, HabitBackup.modelName, HabitCheckBackup.modelName, RoutineDayBackup.modelName, EveningChecklistItemBackup.modelName, FocusMarkBackup.modelName, WeekReflectionBackup.modelName]
+    static let modelNames: Set<String> = ["AppSettings", LocalTaskBackup.modelName, LocalOccurrenceCompletionBackup.modelName, DayAssignmentBackup.modelName, DayOverrideBackup.modelName, ReminderEstimateBackup.modelName, EventTaskLinkBackup.modelName, RecurringEffortValueBackup.modelName, RecurringEffortOverrideBackup.modelName, RecurringOccurrenceDoneBackup.modelName, DayLunchBackup.modelName, EventAvailabilityMarkBackup.modelName, EventMergeDecisionBackup.modelName, ReminderOverrideBackup.modelName, EventDeadlineMarkBackup.modelName, DeadlineEventLinkBackup.modelName, DeadlineSuggestionDismissalBackup.modelName, MealBackup.modelName, DrinkBackup.modelName, WorkoutBackup.modelName, ShoppingCategoryBackup.modelName, ShoppingAssignmentBackup.modelName, NoteBackup.modelName, NoteFolderBackup.modelName, BibleStudySessionBackup.modelName, HabitBackup.modelName, HabitCheckBackup.modelName, RoutineDayBackup.modelName, EveningChecklistItemBackup.modelName, FocusMarkBackup.modelName, WeekReflectionBackup.modelName]
 }
 
 extension BackupEntities {
@@ -1248,6 +1286,7 @@ extension BackupEntities {
         dayLunches = Self.fetch(DayLunchRecord.self, in: context).map(DayLunchBackup.init)
         eventAvailabilityMarks = Self.fetch(EventAvailabilityMark.self, in: context).map(EventAvailabilityMarkBackup.init)
         eventMergeDecisions = Self.fetch(EventMergeDecision.self, in: context).map(EventMergeDecisionBackup.init)
+        reminderOverrides = Self.fetch(ReminderOverrideRecord.self, in: context).map(ReminderOverrideBackup.init)
         eventDeadlineMarks = Self.fetch(EventDeadlineMark.self, in: context).map(EventDeadlineMarkBackup.init)
         deadlineEventLinks = Self.fetch(DeadlineEventLink.self, in: context).map(DeadlineEventLinkBackup.init)
         deadlineSuggestionDismissals = Self.fetch(DeadlineSuggestionDismissal.self, in: context).map(DeadlineSuggestionDismissalBackup.init)
@@ -1285,6 +1324,7 @@ extension BackupEntities {
         Self.delete(DayLunchRecord.self, in: context) { _ in true }
         Self.delete(EventAvailabilityMark.self, in: context) { _ in true }
         Self.delete(EventMergeDecision.self, in: context) { _ in true }
+        Self.delete(ReminderOverrideRecord.self, in: context) { _ in true }
         Self.delete(EventDeadlineMark.self, in: context) { _ in true }
         Self.delete(DeadlineEventLink.self, in: context) { _ in true }
         Self.delete(DeadlineSuggestionDismissal.self, in: context) { _ in true }
@@ -1316,6 +1356,7 @@ extension BackupEntities {
         for item in dayLunches { context.insert(item.makeRecord()) }
         for item in eventAvailabilityMarks { context.insert(item.makeRecord()) }
         for item in eventMergeDecisions { context.insert(item.makeRecord()) }
+        for item in reminderOverrides { context.insert(item.makeRecord()) }
         for item in eventDeadlineMarks { context.insert(item.makeRecord()) }
         for item in deadlineEventLinks { context.insert(item.makeRecord()) }
         for item in deadlineSuggestionDismissals { context.insert(item.makeRecord()) }

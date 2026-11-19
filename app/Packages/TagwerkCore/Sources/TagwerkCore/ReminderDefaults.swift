@@ -16,6 +16,26 @@ public struct ReminderDefaults: Codable, Hashable, Sendable {
         self.allDay = allDay
     }
 
+    private enum CodingKeys: String, CodingKey { case timed, allDay }
+
+    /// Keyed by the raw value of the kind, so the stored JSON is an object with a stable key order.
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        func read(_ key: CodingKeys) throws -> [ReminderKind: [ReminderOffset]] {
+            let raw = try container.decodeIfPresent([String: [ReminderOffset]].self, forKey: key) ?? [:]
+            return Dictionary(raw.compactMap { entry in ReminderKind(rawValue: entry.key).map { ($0, entry.value) } },
+                              uniquingKeysWith: { first, _ in first })
+        }
+        timed = try read(.timed)
+        allDay = try read(.allDay)
+    }
+
+    public func encode(to encoder: any Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(Dictionary(uniqueKeysWithValues: timed.map { ($0.key.rawValue, $0.value) }), forKey: .timed)
+        try container.encode(Dictionary(uniqueKeysWithValues: allDay.map { ($0.key.rawValue, $0.value) }), forKey: .allDay)
+    }
+
     /// The normalized list for a kind; empty when none is set.
     public func offsets(for kind: ReminderKind, isAllDay: Bool) -> [ReminderOffset] {
         ReminderOffset.normalized((isAllDay ? allDay : timed)[kind] ?? [], isAllDay: isAllDay)
@@ -47,7 +67,7 @@ public struct ReminderDefaults: Codable, Hashable, Sendable {
     }
 
     public func encoded() -> Data {
-        // A fixed key order keeps the stored value, and with it the settings hash, stable between runs.
+        // Sorted keys keep the stored value, and with it the settings hash, identical for equal defaults.
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.sortedKeys]
         return (try? encoder.encode(self)) ?? Data()
