@@ -194,3 +194,32 @@
 7. Budget: > 50 Mitteilungen (Demo mit vielen Aufgaben × 3 Erinnerungen); nach einigen Stunden/Tagen werden spätere nachgefüllt (Hintergrund-Refresh und Öffnen der App). Routine-Mitteilungen bleiben vollständig.
 8. Zeitumstellung (Simulator-Zeitzone oder echtes Datum Ende März/Oktober): `.at`-Erinnerung zur richtigen Ortszeit.
 9. Sicherung und Wiederherstellung enthalten Standards und Abweichungen.
+
+---
+
+## Status-Nachtrag (19.11.2026)
+
+**Gebaut (Tasks 1–11, je ein Commit auf `feat/flexible-reminders`):** `ReminderOffset`/`ReminderText`, `ReminderDefaults` mit Migration aus dem Vorlauf, `ReminderOverride` mit Serienregel, mehrere Mitteilungen im `notificationPlan` samt `NotificationBudget`, EventKit-Alarme lesen/schreiben (`AlarmMapping`, `ReminderStore.setAlarms/removeAlarms`, `EventDraft.alarms`, `CalendarStore.alarms(ofEvent:)`), SwiftData-Typ `ReminderOverrideRecord` mit Store und Sicherung, umgestellter `NotificationScheduler` mit rollierendem Nachfüllen (`nextRefill`, `BackgroundRefresh`), `ReminderListEditor`/`ReminderOffsetPicker`, Erinnerungen im Aufgaben-Editor, im Termin-Editor und im Deadline-Blatt sowie die Einstellungsseite „Standard-Erinnerungen".
+
+**Abweichungen vom Entwurf:**
+
+- `NotificationBudget`: Aufgaben/Deadlines 50, Routinen 6, Fokus-Timer 1, Reserve 7 (Summe 64) statt 50/5/–/9.
+- `NotificationRules.defaults` ist optional; `nil` bedeutet die Altregeln aus `leadTimeMinutes`, `dateOnlyHour` und `allDayEventHour`. So bleiben alle bestehenden Aufrufer und Tests unverändert. Die Kennungen ohne Index (`identifier(for:)`) liefern den Index 0.
+- `AlarmMapping.offset` liefert `ReminderOffset?` (`nil` für Alarme nach dem Beginn eines Termins) und hat keinen `calendar`-Parameter. `EventKitGateway` lässt solche und ortsbezogene Alarme beim Ersetzen der Alarme stehen.
+- Einen Alarm, den Apples Erinnerungen-App zur Fälligkeit anlegt (absolut, genau zum Fälligkeitszeitpunkt), liest Tagwerk als „Zum Zeitpunkt".
+- `ReminderListModel` hat kein `didSet` (Absturz mit `@Observable`); Änderungen am Eintrag laufen über `configure(isAllDay:defaultOffsets:)`.
+- Zusammentreffen der Fragen beim Speichern: Ändert sich bei einer wiederholenden lokalen Aufgabe der Aufwand und die Erinnerungsliste, gilt die Antwort „Nur am …"/„Für alle ab …" auch für die Erinnerungen. Trifft die Frage zu den Blöcken der Serie mit der Erinnerungsfrage zusammen, gilt „Nur diese" (konservativ).
+- „Standard verwenden" für „Diese und alle folgenden" bei Deadlines: Würde eine frühere Serienliste weiter gelten, schreibt Tagwerk den Standard als eigene Liste ab diesem Tag auf (Schnappschuss), statt nur zu löschen.
+- Hinweis zum Speichern: Schlägt das Schreiben der Alarme fehl, bleibt die Aufgabe gespeichert; der Editor bleibt offen, zeigt den Fehler und schreibt beim zweiten Versuch nur noch die Erinnerungen.
+- Der Hinweis zu Deadlines („Erinnerungen" im Deadline-Abschnitt) erscheint nur, wenn der Schalter „Deadline-Termine" an ist.
+
+**Ungeprüft (nicht im Simulator oder auf dem Gerät gesehen):** alle neuen Bildschirme (Abschnitt im Aufgaben-Editor, Termin-Editor, Deadline-Blatt, Einstellungsseite, Picker), das tatsächliche Schreiben von `EKAlarm`s in Kalender und Erinnerungen (nur über Fakes getestet), das Nachfüllen im echten Hintergrund-Refresh sowie die Zeitumstellung mit echten Serien. Die Gerätetests 1–9 stehen aus.
+
+**Bekannte Grenzen:**
+
+- EventKit-Alarme (Termine, Apple-Erinnerungen mit eigener Liste) meldet iOS selbst; Ruhezeiten und Fokus-Filter gelten dafür nicht.
+- Zeitumstellung bei Serien-Alarmen: EventKit speichert einen Abstand für die ganze Serie. Tagwerk rechnet ihn für das gewählte Vorkommen aus („1 Tag vorher um 18:00" bleibt dort 18:00 Ortszeit); Vorkommen jenseits der Umstellung können eine Stunde Versatz haben.
+- Ein Termin-Alarm „1 Tag vorher um 18:00" liest Tagwerk später als Abstand in Stunden zurück („16 Stunden vorher"), weil EventKit nur den Abstand speichert; der Alarm selbst bleibt richtig.
+- Wiederholende Apple-Erinnerungen und GitHub-Issues kennen keine Einzel-Abweichung je Wiederholung; die Liste gilt für alle.
+- Ein Eintrag hat keine feste Obergrenze an Erinnerungen; nur die 50 frühesten Tagwerk-Mitteilungen sind gleichzeitig geplant, die übrigen folgen beim nächsten Lauf (Vordergrund, Änderungen, Hintergrund-Refresh).
+- Überschreitet die Zahl der Erinnerungen eines Eintrags die Mitteilungen, die iOS erlaubt, entscheidet allein die Fälligkeit; es gibt keine Warnung dafür.
