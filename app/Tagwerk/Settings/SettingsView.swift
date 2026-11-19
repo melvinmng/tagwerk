@@ -96,7 +96,13 @@ struct SettingsView: View {
                 }
 
                 Section {
-                    Stepper("Vorlauf: \(leadTimeText(settings.leadTimeMinutes))", value: $settings.leadTimeMinutes, in: 15...2880, step: 15)
+                    NavigationLink {
+                        ReminderDefaultsView()
+                    } label: {
+                        LabeledContent("Standard-Erinnerungen",
+                                       value: ReminderText.summary(settings.reminderDefaults.offsets(for: .task, isAllDay: false),
+                                                                   locale: .current, calendar: .tagwerk))
+                    }
                     Toggle("GitHub-Issues", isOn: $settings.githubTaskNotifications)
                     Toggle("Erinnerungen", isOn: $settings.reminderTaskNotifications)
                     Toggle("Lokale Aufgaben", isOn: $settings.localTaskNotifications)
@@ -171,7 +177,7 @@ struct SettingsView: View {
     private var notificationFooter: String {
         switch environment.notifications.authorization {
         case .authorized:
-            String(localized: "So lange vor der Fälligkeit erinnert Tagwerk an Aufgaben und Deadline-Termine der eingeschalteten Quellen. Deadline-Termine sind Termine aus Deadline-Kalendern und als Deadline markierte Termine. An Aufgaben ohne Uhrzeit erinnert Tagwerk am Fälligkeitstag um 9:00. An ganztägige Deadline-Termine erinnert Tagwerk am Vortag um 18:00.")
+            String(localized: "Die Standard-Erinnerungen legen fest, wann Tagwerk an Aufgaben und Deadline-Termine der eingeschalteten Quellen erinnert. Einzelne Aufgaben und Deadlines lassen sich abweichend einstellen. Deadline-Termine sind Termine aus Deadline-Kalendern und als Deadline markierte Termine.")
         case .notDetermined:
             String(localized: "Benachrichtigungen sind noch nicht erlaubt. Erlaube sie unten unter „Zugriff“.")
         case .denied:
@@ -281,11 +287,6 @@ struct SettingsView: View {
         guard !all.isEmpty else { return "–" }
         let count = selection.map { Set($0).intersection(all.map(\.id)).count } ?? fallback.count
         return count == all.count ? String(localized: "Alle") : String(localized: "\(count) von \(all.count)")
-    }
-
-    private func leadTimeText(_ minutes: Int) -> String {
-        minutes % 60 == 0 ? String(localized: "\(minutes / 60) h")
-            : String(localized: "\(minutes / 60):\(String(format: "%02d", minutes % 60)) h")
     }
 
     /// Bridges "minutes since midnight" to a `Date` for time pickers.

@@ -2104,6 +2104,7 @@
       }
     },
     "%lld:%@ h": {
+      "extractionState": "stale",
       "localizations": {
         "de": {
           "stringUnit": {
@@ -3680,6 +3681,26 @@
         }
       }
     },
+    "Aufgaben mit Uhrzeit": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tasks with a time"
+          }
+        }
+      }
+    },
+    "Aufgaben ohne Uhrzeit": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tasks without a time"
+          }
+        }
+      }
+    },
     "Aufgaben werden geladen …": {
       "localizations": {
         "en": {
@@ -4828,6 +4849,26 @@
         }
       }
     },
+    "Deadlines ganztägig": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All-day deadlines"
+          }
+        }
+      }
+    },
+    "Deadlines mit Uhrzeit": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deadlines with a time"
+          }
+        }
+      }
+    },
     "Debug": {
       "shouldTranslate": false
     },
@@ -5397,6 +5438,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "The backup can’t be read."
+          }
+        }
+      }
+    },
+    "Die Standard-Erinnerungen legen fest, wann Tagwerk an Aufgaben und Deadline-Termine der eingeschalteten Quellen erinnert. Einzelne Aufgaben und Deadlines lassen sich abweichend einstellen. Deadline-Termine sind Termine aus Deadline-Kalendern und als Deadline markierte Termine.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The default reminders set when Tagwerk reminds you of tasks and deadline events from the enabled sources. You can set individual tasks and deadlines differently. Deadline events are events from deadline calendars and events marked as deadlines."
           }
         }
       }
@@ -7689,6 +7740,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Applies to planning and the assistant. If the selected model is no longer available, Tagwerk switches to “Automatic” and tells you on the next request."
+          }
+        }
+      }
+    },
+    "Gilt für alle Aufgaben ohne eigene Erinnerungen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Applies to all tasks without reminders of their own."
+          }
+        }
+      }
+    },
+    "Gilt für alle Deadline-Termine ohne eigene Erinnerungen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Applies to all deadline events without reminders of their own."
           }
         }
       }
@@ -12585,6 +12656,7 @@
       }
     },
     "So lange vor der Fälligkeit erinnert Tagwerk an Aufgaben und Deadline-Termine der eingeschalteten Quellen. Deadline-Termine sind Termine aus Deadline-Kalendern und als Deadline markierte Termine. An Aufgaben ohne Uhrzeit erinnert Tagwerk am Fälligkeitstag um 9:00. An ganztägige Deadline-Termine erinnert Tagwerk am Vortag um 18:00.": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -12839,6 +12911,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Restore default"
+          }
+        }
+      }
+    },
+    "Standard-Erinnerungen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Default reminders"
           }
         }
       }
@@ -13518,6 +13600,26 @@
     },
     "Termine der nächsten 7 Tage. „Zusammengefasst“: gleicher Termin wird über die Kopie aus einem anderen Kalender gezeigt.": {
       "shouldTranslate": false
+    },
+    "Termine ganztägig": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All-day events"
+          }
+        }
+      }
+    },
+    "Termine mit Uhrzeit": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Events with a time"
+          }
+        }
+      }
     },
     "Termine und Gewohnheiten in den Kalender eingetragen?": {
       "localizations": {
@@ -14302,6 +14404,7 @@
       }
     },
     "Vorlauf: %@": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -14910,6 +15013,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Applying …"
+          }
+        }
+      }
+    },
+    "Wird beim Anlegen eines Termins in Tagwerk übernommen. Bestehende Termine bleiben unverändert.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Applied when you create an event in Tagwerk. Existing events stay unchanged."
           }
         }
       }

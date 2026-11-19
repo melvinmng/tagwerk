@@ -1750,5 +1750,16 @@
   "Diese und alle folgenden": "This and all following",
   "Nur diese Deadline": "Only this deadline",
   "Tagwerk erinnert mit Mitteilungen. Ruhezeiten und Fokus-Filter gelten dafür.": "Tagwerk reminds you with notifications. Quiet hours and Focus filters apply to them.",
-  "iOS meldet diese Erinnerungen selbst, auch in Apple Kalender. Ruhezeiten gelten dafür nicht.": "iOS delivers these reminders itself, also in Apple Calendar. Quiet hours do not apply to them."
+  "iOS meldet diese Erinnerungen selbst, auch in Apple Kalender. Ruhezeiten gelten dafür nicht.": "iOS delivers these reminders itself, also in Apple Calendar. Quiet hours do not apply to them.",
+  "Aufgaben mit Uhrzeit": "Tasks with a time",
+  "Aufgaben ohne Uhrzeit": "Tasks without a time",
+  "Deadlines ganztägig": "All-day deadlines",
+  "Deadlines mit Uhrzeit": "Deadlines with a time",
+  "Die Standard-Erinnerungen legen fest, wann Tagwerk an Aufgaben und Deadline-Termine der eingeschalteten Quellen erinnert. Einzelne Aufgaben und Deadlines lassen sich abweichend einstellen. Deadline-Termine sind Termine aus Deadline-Kalendern und als Deadline markierte Termine.": "The default reminders set when Tagwerk reminds you of tasks and deadline events from the enabled sources. You can set individual tasks and deadlines differently. Deadline events are events from deadline calendars and events marked as deadlines.",
+  "Gilt für alle Aufgaben ohne eigene Erinnerungen.": "Applies to all tasks without reminders of their own.",
+  "Gilt für alle Deadline-Termine ohne eigene Erinnerungen.": "Applies to all deadline events without reminders of their own.",
+  "Standard-Erinnerungen": "Default reminders",
+  "Termine ganztägig": "All-day events",
+  "Termine mit Uhrzeit": "Events with a time",
+  "Wird beim Anlegen eines Termins in Tagwerk übernommen. Bestehende Termine bleiben unverändert.": "Applied when you create an event in Tagwerk. Existing events stay unchanged."
 }
