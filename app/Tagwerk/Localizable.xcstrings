@@ -7090,6 +7090,16 @@
         }
       }
     },
+    "Fahrzeit": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Travel time"
+          }
+        }
+      }
+    },
     "Fertig": {
       "localizations": {
         "en": {

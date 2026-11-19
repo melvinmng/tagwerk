@@ -29,6 +29,8 @@ final class AppEnvironment {
     let backup: BackupService
     let taskList: TaskListModel
     let planning: PlanningModel
+    /// Travel times before events with a place; asks Apple Maps only for addresses (#168).
+    let travelTimes: TravelTimeService
     let gitHubTokens: TokenManager
     let gitHubLoginClient: DeviceFlowClient
     let gitHub: GitHubTaskProvider
@@ -109,7 +111,8 @@ final class AppEnvironment {
     init(modelContainer: ModelContainer, notificationCenter: (any NotificationCenterClient)? = nil,
          health: (any HealthStoring)? = nil, snapshotWriter: WidgetSnapshotWriter? = nil,
          reminderStore: (any ReminderStore)? = nil, eventSearcher: (any EventSearching)? = nil,
-         focusNotificationCenter: (any FocusNotificationCenter)? = nil) throws {
+         focusNotificationCenter: (any FocusNotificationCenter)? = nil,
+         travelTimes: TravelTimeService? = nil) throws {
         self.modelContainer = modelContainer
         self.snapshotWriter = snapshotWriter ?? WidgetSnapshotWriter(directory: nil, reload: {})
         let context = modelContainer.mainContext
@@ -145,9 +148,12 @@ final class AppEnvironment {
         let suggestionStore = SuggestionStore(context: context)
         let blockPlanner = BlockPlanner(store: gateway, planStore: planStore, links: EventLinkStore(context: context),
                                         settings: settings, calendar: .tagwerk)
+        let travelTimes = travelTimes ?? TravelTimeService()
+        self.travelTimes = travelTimes
         self.planning = PlanningModel(taskList: taskList, calendarStore: gateway, reminderStore: reminderStore, planStore: planStore,
                                       efforts: RecurringEffortStore(context: context), blocks: blockPlanner, settings: settings,
-                                      marks: EventMarkStore(context: context), suggestions: suggestionStore)
+                                      marks: EventMarkStore(context: context), suggestions: suggestionStore,
+                                      travelTimes: travelTimes)
 
         let clientID = Bundle.main.object(forInfoDictionaryKey: "GitHubClientID") as? String ?? ""
         // GitHub requests fail after 15 s instead of the default 60 s, so the cache appears quickly offline.

@@ -130,6 +130,7 @@ extension PlanningModel {
         case .event(let event), .block(let event, _): return Int(event.start.timeIntervalSince(dayStart) / 60)
         case .lunch(let start, _): return start
         case .gap(let range): return range.lowerBound
+        case .travel(let segment): return segment.range.lowerBound
         }
     }
 

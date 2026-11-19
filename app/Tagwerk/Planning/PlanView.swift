@@ -132,8 +132,8 @@ struct PlanView: View {
                 AssistantToolbarItems { .planning(scope: model.scope, anchor: model.anchor) }
             }
             .task(id: "\(model.scope)-\(model.anchor)") {
-                // The page previews need the neighbouring plans once the tab is on screen.
-                model.loadsNeighboursAfterReload = true
+                // The page previews and the travel times load in the background once the tab is on screen.
+                model.runsBackgroundLoads = true
                 await model.reload()
             }
             .refreshable { await model.taskList.reload(); await model.reload() }

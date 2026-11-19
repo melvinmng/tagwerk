@@ -32,10 +32,12 @@ extension PlanningModel {
         neighbourPlans = result
     }
 
-    /// Starts `loadNeighbours()` after a reload; an earlier run that is still going is cancelled. It never delays `days`.
-    func scheduleNeighbourLoad() {
-        guard loadsNeighboursAfterReload else { return }
+    /// Starts the loads that follow a reload: the neighbour plans (an earlier run that is still going is cancelled) and
+    /// missing travel times. Neither delays `days`.
+    func scheduleBackgroundLoads() {
+        guard runsBackgroundLoads else { return }
         neighbourLoad?.cancel()
         neighbourLoad = Task { [weak self] in await self?.loadNeighbours() }
+        Task { [weak self] in _ = await self?.refreshTravelTimes() }
     }
 }
