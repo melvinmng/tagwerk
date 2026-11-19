@@ -1,4 +1,5 @@
 import Foundation
+import SwiftData
 import Testing
 import TagwerkCore
 @testable import Tagwerk
@@ -224,6 +225,19 @@ struct TaskEditorRecurrenceTests {
         model.draft.due = DueDate(year: 2026, month: 11, day: 26)
         #expect(await model.save())
         #expect(provider.appliedEdits.first?.edit.recurrence == .unchanged)
+    }
+
+    /// Local tasks repeat in stage 2: the row is shown and the rule is stored in Tagwerk.
+    @Test func local_showsRowAndSavesRecurrence() async throws {
+        let container = try ModelContainerFactory.make(inMemory: true)
+        let provider = LocalTaskProvider(context: container.mainContext, calendar: testCalendar(), now: testNow)
+        let created = try await provider.create(TaskDraft(title: "Lesen", due: due))
+        let model = TaskEditorModel(item: created, provider: provider)
+        #expect(model.showsRecurrenceRow)
+        model.setRecurrence(weekly, fallbackDue: PlanDay(due))
+        #expect(await model.save())
+        #expect(try await provider.task(id: created.id)?.recurrence == weekly)
+        _ = container
     }
 
     @Test func github_hidesRecurrence() {

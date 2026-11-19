@@ -115,10 +115,12 @@ struct NewTaskSheet: View {
                 } footer: {
                     if target == .reminders, recurrence != nil {
                         Text("Wird als Regel in Erinnerungen gespeichert und ist dort ebenfalls sichtbar.")
+                    } else if target == .local, recurrence != nil {
+                        Text("Nur in Tagwerk. Beim Abhaken rückt die Aufgabe auf den nächsten Termin.")
                     }
                 }
                 .onChange(of: hasDue) { _, isOn in
-                    // A repeating reminder needs a due date (plan §6, rule 3).
+                    // A repeating task needs a due date (plan §6, rule 3).
                     if !isOn { recurrence = nil }
                 }
             }
@@ -163,7 +165,7 @@ struct NewTaskSheet: View {
 }
 
 extension NewTaskSheet {
-    /// "Wiederholen": the recurrence page for reminders; local tasks (stage 2) and GitHub issues show why not.
+    /// "Wiederholen": the recurrence page for reminders and local tasks; GitHub issues show why not.
     @ViewBuilder private var recurrenceRow: some View {
         let dueDay = PlanDay(date: dueDate, calendar: model.calendar)
         switch RecurrenceAvailability.forNewTask(target) {
