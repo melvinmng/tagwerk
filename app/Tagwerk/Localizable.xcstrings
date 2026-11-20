@@ -292,6 +292,16 @@
         }
       }
     },
+    "%@ ist dem Issue nicht zugewiesen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ is not assigned to the issue."
+          }
+        }
+      }
+    },
     "%@ ist für heute abgehakt.": {
       "localizations": {
         "en": {
@@ -445,6 +455,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "%@ are already on the list"
+          }
+        }
+      }
+    },
+    "%@ steht in add und in remove.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ is in both add and remove."
           }
         }
       }
@@ -16909,11 +16929,22 @@
       }
     },
     "Wenn du KI-Funktionen nutzt, gehen die dafür nötigen Daten (Termine, Aufgaben, bei Issues auch Repo-Inhalte und GitHub-Benutzernamen zuweisbarer Personen) an OpenAI.": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "When you use AI features, the data they need (events, tasks, and for issues also repo contents and GitHub usernames of assignable people) goes to OpenAI."
+          }
+        }
+      }
+    },
+    "Wenn du KI-Funktionen nutzt, gehen die dafür nötigen Daten (Termine, Aufgaben, bei Issues auch Repo-Inhalte und GitHub-Benutzernamen zuweisbarer und zugewiesener Personen) an OpenAI.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "When you use AI features, the data they need (events, tasks, and for issues also repo contents and GitHub usernames of assignable and assigned people) goes to OpenAI."
           }
         }
       }
@@ -17923,6 +17954,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Use ingredients"
+          }
+        }
+      }
+    },
+    "Zuweisen geht nur bei GitHub-Issues.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Assigning only works for GitHub issues."
           }
         }
       }

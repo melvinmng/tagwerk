@@ -2011,5 +2011,9 @@
   "Ziel": "Target",
   "Nur als Rezept speichern": "Save as recipe only",
   "Was soll mit dem Rezept geschehen?": "What should happen to the recipe?",
-  "Du wählst die Zutaten aus und kannst das Rezept zusätzlich als Notiz im Ordner „Rezepte“ sichern.": "You choose the ingredients and can also keep the recipe as a note in the “Recipes” folder."
+  "Du wählst die Zutaten aus und kannst das Rezept zusätzlich als Notiz im Ordner „Rezepte“ sichern.": "You choose the ingredients and can also keep the recipe as a note in the “Recipes” folder.",
+  "%@ ist dem Issue nicht zugewiesen.": "%@ is not assigned to the issue.",
+  "%@ steht in add und in remove.": "%@ is in both add and remove.",
+  "Zuweisen geht nur bei GitHub-Issues.": "Assigning only works for GitHub issues.",
+  "Wenn du KI-Funktionen nutzt, gehen die dafür nötigen Daten (Termine, Aufgaben, bei Issues auch Repo-Inhalte und GitHub-Benutzernamen zuweisbarer und zugewiesener Personen) an OpenAI.": "When you use AI features, the data they need (events, tasks, and for issues also repo contents and GitHub usernames of assignable and assigned people) goes to OpenAI."
 }

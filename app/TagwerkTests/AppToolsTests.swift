@@ -540,7 +540,14 @@ struct AppToolsGitHubTests {
     }
 
     private func make(signedIn: Bool = true) async -> AppTools {
+        await makeWithPlanning(signedIn: signedIn).tools
+    }
+
+    /// The tools together with the planning model and its stores, for tests that look at blocks and planned days.
+    private func makeWithPlanning(signedIn: Bool = true) async
+        -> (tools: AppTools, planning: PlanningModel, blocks: BlockPlanner, planStore: PlanStore) {
         await taskList.reload()
+        settings.planCalendarID = "plan"
         let planStore = PlanStore(context: container.mainContext)
         let blocks = BlockPlanner(store: calendarStore, planStore: planStore, links: EventLinkStore(context: container.mainContext),
                                   settings: settings, calendar: calendar)
@@ -548,9 +555,12 @@ struct AppToolsGitHubTests {
                                      planStore: planStore, efforts: RecurringEffortStore(context: container.mainContext),
                                      blocks: blocks, settings: settings, marks: EventMarkStore(context: container.mainContext),
                                      now: testNow, calendar: calendar)
+        // Like AppEnvironment: a hand-over deletes the planned day and the future blocks.
+        taskList.onHandedOver = { id in await planning.didHandOver(id) }
         let directory = self.directory
-        return AppTools(taskList: taskList, planning: planning, planner: nil, events: { _ in [] },
-                        gitHub: { signedIn ? directory : nil })
+        let tools = AppTools(taskList: taskList, planning: planning, planner: nil, events: { _ in [] },
+                             gitHub: { signedIn ? directory : nil })
+        return (tools, planning, blocks, planStore)
     }
 
     private func run(_ tools: AppTools, _ name: String, _ arguments: String) async -> [String: Any] {
@@ -780,5 +790,197 @@ struct AppToolsGitHubTests {
         // An explicitly empty list is a choice, not a gap: even two unlinked projects do not ask.
         #expect(AppTools.gitHubTarget(repository: nil, projectIDs: [], catalog: two)
             == .success(AppTools.GitHubTarget(repository: "beispiel/app", projectIDs: [])))
+    }
+}
+
+// MARK: assign_task (issue #173, decision 1)
+
+extension AppToolsGitHubTests {
+    private func issue(_ number: Int, assignees: [String]) -> TaskItem {
+        TaskItem(id: TaskID(source: .github, rawValue: "ISSUE_\(number)"), title: "Export \(number)", notes: nil, due: nil,
+                 priority: nil, estimateMinutes: nil, isCompleted: false,
+                 container: TaskContainer(id: "beispiel/app", name: "beispiel/app", colorHex: nil),
+                 url: URL(string: "https://github.com/beispiel/app/issues/\(number)"), version: "1",
+                 editableFields: [.title, .notes, .due, .priority, .assignees], assignees: assignees)
+    }
+
+    private func assignArguments(_ task: TaskItem, add: [String] = [], remove: [String] = []) -> String {
+        func json(_ values: [String]) -> String {
+            String(decoding: try! JSONSerialization.data(withJSONObject: values), as: UTF8.self)
+        }
+        return #"{"id":"\#(task.id.key)","add":\#(json(add)),"remove":\#(json(remove))}"#
+    }
+
+    private func at(_ day: Int, _ hour: Int) -> Date {
+        calendar.date(from: DateComponents(year: 2026, month: 11, day: day, hour: hour))!
+    }
+
+    // MARK: Plan
+
+    @Test func assignmentPlan_addAndRemove_keepsOrderAndSpelling() throws {
+        let plan = try AppTools.assignmentPlan(current: ["Octo", "Lea-M"], add: ["jonas-k"], remove: ["lea-m"], me: "octo").get()
+        #expect(plan.change == AssigneeChange(add: ["jonas-k"], remove: ["Lea-M"]))
+        #expect(plan.before == ["Octo", "Lea-M"])
+        #expect(plan.after == ["Octo", "jonas-k"])
+        #expect(!plan.handsOver)
+    }
+
+    @Test func assignmentPlan_removingUnassigned_fails() {
+        #expect(AppTools.assignmentPlan(current: ["octo"], add: [], remove: ["ghost", "lea-m"], me: "octo")
+            == .failure(.notAssigned(["ghost", "lea-m"])))
+    }
+
+    @Test func assignmentPlan_sameLoginInBoth_fails() {
+        #expect(AppTools.assignmentPlan(current: ["octo", "lea-m"], add: ["Lea-M"], remove: ["lea-m"], me: "octo")
+            == .failure(.conflicting(["Lea-M"])))
+    }
+
+    @Test func assignmentPlan_moreThanTen_fails() {
+        let current = (1...9).map { "user-\($0)" }
+        #expect(AppTools.assignmentPlan(current: current, add: ["a-1", "a-2"], remove: [], me: nil) == .failure(.tooMany))
+        // Exactly ten is allowed.
+        #expect((try? AppTools.assignmentPlan(current: current, add: ["a-1"], remove: [], me: nil).get())?.after.count == 10)
+    }
+
+    @Test func assignmentPlan_emptyChange_fails() {
+        #expect(AppTools.assignmentPlan(current: ["octo"], add: [], remove: [], me: "octo") == .failure(.nothingToChange))
+        // Adding someone who is assigned already changes nothing.
+        #expect(AppTools.assignmentPlan(current: ["octo"], add: ["OCTO"], remove: [], me: "octo") == .failure(.nothingToChange))
+    }
+
+    @Test func assignmentPlan_ignoresCaseOfOwnLogin() throws {
+        let plan = try AppTools.assignmentPlan(current: ["Octo", "lea-m"], add: [], remove: ["OCTO"], me: "octo").get()
+        #expect(plan.change == AssigneeChange(remove: ["Octo"]))
+        #expect(plan.handsOver)
+        let giveBack = try AppTools.assignmentPlan(current: ["lea-m"], add: ["OCTO"], remove: [], me: "octo").get()
+        #expect(giveBack.change == AssigneeChange(add: ["octo"]))
+        #expect(!giveBack.handsOver)
+    }
+
+    // MARK: Execution
+
+    @Test func assignTask_addsValidatedPerson() async throws {
+        let task = issue(212, assignees: ["octo"])
+        github.tasks = [task]
+        let result = await run(await make(), "assign_task", assignArguments(task, add: ["Lea-M"]))
+        #expect(result["ok"] as? Bool == true)
+        #expect(result["assignees"] as? [String] == ["octo", "lea-m"])
+        #expect(result["handed_over"] as? Bool == false)
+        #expect(result["deleted_blocks"] as? Int == 0)
+        #expect(result["not_assigned"] == nil)
+        let applied = try #require(github.appliedEdits.last)
+        guard case .set(let change) = applied.edit.assignees else { Issue.record("assignees not set"); return }
+        #expect(change == AssigneeChange(add: ["lea-m"]))
+        #expect(applied.edit.title.isUnchanged)
+        #expect(directory.assignableRequests == ["beispiel/app"])
+        #expect(taskList.items.contains { $0.id == task.id })
+    }
+
+    @Test func assignTask_ownLoginNeedsNoAssignableList() async {
+        let task = issue(212, assignees: ["lea-m"])
+        github.tasks = [task]
+        directory.assignable = [:]
+        let result = await run(await make(), "assign_task", assignArguments(task, add: ["OCTO"]))
+        #expect(result["ok"] as? Bool == true)
+        #expect(directory.assignableRequests.isEmpty)
+    }
+
+    @Test func assignTask_unknownLogin_writesNothing() async {
+        let task = issue(212, assignees: ["octo"])
+        github.tasks = [task]
+        let result = await run(await make(), "assign_task", assignArguments(task, add: ["ghost"]))
+        #expect(result["error"] as? String == "ghost ist in beispiel/app nicht zuweisbar.")
+        #expect(github.appliedEdits.isEmpty)
+    }
+
+    @Test func assignTask_assignableListFails_writesNothing() async {
+        let task = issue(212, assignees: ["octo"])
+        github.tasks = [task]
+        directory.assignable = [:]
+        let result = await run(await make(), "assign_task", assignArguments(task, add: ["lea-m"]))
+        #expect(result["error"] as? String == "Personen konnten nicht geladen werden")
+        #expect(github.appliedEdits.isEmpty)
+    }
+
+    @Test func assignTask_removingUnassignedPerson_writesNothing() async {
+        let task = issue(212, assignees: ["octo"])
+        github.tasks = [task]
+        let result = await run(await make(), "assign_task", assignArguments(task, remove: ["lea-m"]))
+        #expect(result["error"] != nil)
+        #expect(github.appliedEdits.isEmpty)
+    }
+
+    @Test func assignTask_handOver_deletesOnlyFutureBlocks() async throws {
+        let task = issue(212, assignees: ["octo", "lea-m"])
+        github.tasks = [task]
+        let (tools, planning, blocks, planStore) = await makeWithPlanning()
+        // testNow is 2026-11-18 10:00: one block lies in the past, two start later.
+        let past = try blocks.createBlock(for: task, start: at(17, 9), minutes: 60)
+        _ = try blocks.createBlock(for: task, start: at(18, 14), minutes: 60)
+        _ = try blocks.createBlock(for: task, start: at(19, 9), minutes: 60)
+        #expect(planning.futureBlockCount(for: task.id) == 2)
+
+        let result = await run(tools, "assign_task", assignArguments(task, remove: ["octo"]))
+
+        #expect(result["ok"] as? Bool == true)
+        #expect(result["handed_over"] as? Bool == true)
+        #expect(result["deleted_blocks"] as? Int == 2)
+        #expect(result["assignees"] as? [String] == ["lea-m"])
+        #expect(result["number"] as? Int == 212)
+        #expect(result["url"] as? String == "https://github.com/beispiel/app/issues/212")
+        #expect(!taskList.items.contains { $0.id == task.id })
+        #expect(calendarStore.storedEvents.map(\.id) == [past.id])
+        #expect(planStore.assignment(for: task.id) == nil)
+    }
+
+    @Test func assignTask_removeFails_keepsBlocks() async throws {
+        let task = issue(212, assignees: ["octo", "lea-m"])
+        github.tasks = [task]
+        let (tools, _, blocks, planStore) = await makeWithPlanning()
+        _ = try blocks.createBlock(for: task, start: at(19, 9), minutes: 60)
+        let day = planStore.assignment(for: task.id)
+        #expect(day != nil)
+        github.applyError = .failed("Netzwerkfehler")
+
+        let result = await run(tools, "assign_task", assignArguments(task, remove: ["octo"]))
+
+        #expect(result["error"] != nil)
+        #expect(result["ok"] == nil)
+        #expect(taskList.items.contains { $0.id == task.id })
+        #expect(calendarStore.storedEvents.count == 1)
+        #expect(planStore.assignment(for: task.id) == day)
+    }
+
+    @Test func assignTask_localTask_fails() async {
+        let task = makeTask("Fahrrad", source: .local)
+        local.tasks = [task]
+        let result = await run(await make(), "assign_task", assignArguments(task, add: ["lea-m"]))
+        #expect(result["error"] as? String == "Zuweisen geht nur bei GitHub-Issues.")
+        #expect(github.appliedEdits.isEmpty && local.appliedEdits.isEmpty)
+    }
+
+    @Test func assignTask_droppedPerson_isReported() async {
+        let task = issue(212, assignees: ["octo"])
+        github.tasks = [task]
+        github.droppedAssignees = ["lea-m"]
+        let result = await run(await make(), "assign_task", assignArguments(task, add: ["lea-m"]))
+        #expect(result["ok"] as? Bool == true)
+        #expect(result["not_assigned"] as? [String] == ["lea-m"])
+    }
+
+    @Test func getTask_listsAssignees() async throws {
+        let task = issue(212, assignees: ["octo", "lea-m"])
+        github.tasks = [task]
+        let result = await run(await make(), "get_task", #"{"id":"\#(task.id.key)"}"#)
+        let detail = try #require(result["task"] as? [String: Any])
+        #expect(detail["assignees"] as? [String] == ["octo", "lea-m"])
+        #expect(result["me"] as? String == "octo")
+    }
+
+    @Test func definitions_withoutGitHub_haveNoAssignTask() async {
+        #expect(!(await make(signedIn: false)).definitions.contains { $0.name == "assign_task" })
+        let signedIn = await make()
+        #expect(signedIn.definitions.contains { $0.name == "assign_task" })
+        #expect(signedIn.kind(of: "assign_task") == .write)
     }
 }

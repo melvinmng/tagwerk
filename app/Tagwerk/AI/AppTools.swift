@@ -19,7 +19,7 @@ final class AppTools: ToolHandler {
     static let maxListedRepositories = 30
 
     let taskList: TaskListModel
-    private let planning: PlanningModel
+    let planning: PlanningModel
     private let planner: AIPlanner?
     private let events: (DateInterval) -> [CalendarEvent]
     /// GitHub catalog and assignable people; `nil` while GitHub is not signed in.
@@ -67,7 +67,10 @@ final class AppTools: ToolHandler {
     private func dispatch(_ name: String, _ args: Arguments) async throws -> String {
         switch name {
         case "list_tasks": return listTasks(filter: args.string("filter") ?? "all")
-        case "get_task": return Self.json(["task": Self.detail(try task(args.require("id")))])
+        case "get_task":
+            var answer: [String: Any] = ["task": Self.detail(try task(args.require("id")))]
+            if let me = gitHub()?.login { answer["me"] = me }
+            return Self.json(answer)
         case "list_events": return try listEvents(from: args.day("from"), to: args.day("to"))
         case "search": return try await runSearch(args)
         case "list_calendars": return listCalendars()
@@ -79,6 +82,7 @@ final class AppTools: ToolHandler {
         case "update_event": return try await updateEvent(args)
         case "delete_event": return try await deleteEvent(args)
         case "create_task": return try await createTask(args)
+        case "assign_task": return try await assignTask(args)
         case "update_task": return try await updateTask(args)
         case "reschedule_task":
             let task = try task(args.require("id"))
@@ -427,7 +431,7 @@ final class AppTools: ToolHandler {
 
     // MARK: Helpers
 
-    private func task(_ id: String) throws -> TaskItem {
+    func task(_ id: String) throws -> TaskItem {
         guard let task = taskList.items.first(where: { $0.id.key == id }) else { throw ToolError(String(localized: "Diese Aufgabe gibt es nicht.")) }
         return task
     }
@@ -445,6 +449,7 @@ final class AppTools: ToolHandler {
         item["container"] = task.container.name
         if let notes = task.notes, !notes.isEmpty { item["notes"] = notes }
         if let labels = task.labels, !labels.isEmpty { item["labels"] = labels }
+        if let assignees = task.assignees { item["assignees"] = assignees }
         if let url = task.url { item["url"] = url.absoluteString }
         if let epic = task.epic { item["epic"] = "#\(epic.number) \(epic.title)" }
         return item

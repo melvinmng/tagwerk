@@ -8,7 +8,7 @@ struct AIStatusMessage: Equatable {
     let isWarning: Bool
 
     static var privacyNotice: String {
-        String(localized: "Wenn du KI-Funktionen nutzt, gehen die dafür nötigen Daten (Termine, Aufgaben, bei Issues auch Repo-Inhalte und GitHub-Benutzernamen zuweisbarer Personen) an OpenAI.")
+        String(localized: "Wenn du KI-Funktionen nutzt, gehen die dafür nötigen Daten (Termine, Aufgaben, bei Issues auch Repo-Inhalte und GitHub-Benutzernamen zuweisbarer und zugewiesener Personen) an OpenAI.")
     }
     static var expired: AIStatusMessage {
         AIStatusMessage(text: String(localized: "Die Anmeldung ist abgelaufen. Melde dich erneut an."), isWarning: true)

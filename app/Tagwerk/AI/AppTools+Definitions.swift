@@ -40,6 +40,11 @@ extension AppTools {
             tool("list_github_targets", "Lists the user's GitHub repositories (most recently pushed first) with the ids of their linked projects, and all projects with id and title. Call it before creating a GitHub issue.", [:]),
             tool("list_assignees", "Lists the people who can be assigned to issues of one repository: the user as me, everyone else as assignees (GitHub logins). Call it only when the user wants to assign an issue to someone.",
                  ["repository": string("owner/name from list_github_targets")]),
+            tool("assign_task", "Changes who is assigned to an existing GitHub issue. add and remove hold GitHub logins: add only logins from list_assignees (or me), remove only logins currently assigned (see get_task). Removing the user hands the issue over: it leaves the user's tasks and its future time blocks are deleted. Needs confirmation.", [
+                "id": taskID,
+                "add": strings("Logins to assign additionally"),
+                "remove": strings("Logins to unassign"),
+            ]),
         ]
     }
 

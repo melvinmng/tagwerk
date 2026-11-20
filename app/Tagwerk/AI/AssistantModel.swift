@@ -411,7 +411,9 @@ final class AssistantModel {
         ausdrücklich. Will der Nutzer das Issue ohne Project anlegen, übergibst du project_ids als leere Liste []; es \
         erscheint dann nicht in seinen Aufgaben, und du sagst ihm das mit Nummer und Link. list_assignees rufst du nur \
         auf, wenn der Nutzer das Issue jemandem zuweisen will. Passt ein genannter Name zu keinem oder zu mehreren \
-        Logins, frag nach, statt zu raten.
+        Logins, frag nach, statt zu raten. Um die Zuständigkeit eines bestehenden Issues zu ändern, nutze assign_task. \
+        Lies vorher mit get_task, wer zugewiesen ist, und mit list_assignees, wer zuweisbar ist. Entfernst du den \
+        Nutzer selbst, gibt er das Issue ab; sag ihm danach Nummer und Link.
         """
         if case .task(let id) = context, id.source == .github, let reference = issueReference(id) {
             text += " Naheliegendes Ziel für neue Issues: \(reference.repository)."
