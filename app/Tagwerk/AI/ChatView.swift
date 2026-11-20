@@ -205,6 +205,9 @@ struct ChatView: View {
             ActionCardView(card: assistant.describe(call), status: status, time: assistant.actionTimes[call.id],
                            onConfirm: { Task { await assistant.confirm(call) } },
                            onDecline: { Task { await assistant.decline(call) } })
+        case .activity:
+            // No tool shows an activity line yet (`read_note` does).
+            EmptyView()
         }
     }
 

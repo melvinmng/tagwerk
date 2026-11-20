@@ -76,6 +76,12 @@ final class TaskChatTools: ToolHandler {
         Self.repositoryTools.contains(name) ? .read : base.kind(of: name)
     }
 
+    func storedForm(of call: ToolCall, output: String?) -> (arguments: String, output: String?) {
+        base.storedForm(of: call, output: output)
+    }
+
+    func showsActivity(_ name: String) -> Bool { base.showsActivity(name) }
+
     func run(_ call: ToolCall) async -> String {
         guard Self.repositoryTools.contains(call.name) else { return await base.run(call) }
         guard let reference else { return AppTools.error("Diese Aufgabe ist kein GitHub-Issue.") }

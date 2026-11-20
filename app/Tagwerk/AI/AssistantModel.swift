@@ -375,7 +375,8 @@ final class AssistantModel {
 
     private func persist() {
         guard let conversation else { return }
-        store.save(conversation.history, actionTimes: actionTimes, for: key, now: now())
+        // Only the stored form: note text read in this session must not survive in the saved chat.
+        store.save(conversation.storableHistory, actionTimes: actionTimes, for: key, now: now())
         store.saveSpokenMarks(spokenMarks, for: key)
     }
 

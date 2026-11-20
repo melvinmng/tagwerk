@@ -160,4 +160,26 @@ extension AppTools {
         default: "failed"
         }
     }
+
+    // MARK: Stored form
+
+    /// Removes title and snippet from the note entries of a `search` output and marks each as `"redacted": true`; ids,
+    /// kind, dates, `matchedIn` and all counts stay (session rule: note text is not kept in a stored chat). An output
+    /// without note entries is returned unchanged. An output that is cut in the middle (`Conversation.clipped`) cannot
+    /// be parsed; if it holds note entries anyway it is replaced by a short marker, so no title is ever kept.
+    static func redactedSearchOutput(_ output: String) -> String {
+        guard let data = output.data(using: .utf8),
+              var object = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any] else {
+            return output.contains("\"id\":\"\(NoteToolAccess.keyPrefix)") ? #"{"ok":true,"redacted":true}"# : output
+        }
+        guard let notes = object["notes"] as? [[String: Any]] else { return output }
+        object["notes"] = notes.map { entry -> [String: Any] in
+            var kept = entry
+            kept["title"] = nil
+            kept["snippet"] = nil
+            kept["redacted"] = true
+            return kept
+        }
+        return json(object)
+    }
 }

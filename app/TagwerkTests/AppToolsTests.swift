@@ -283,6 +283,84 @@ struct AppToolsTests {
         #expect((result["issues"] as? [[String: Any]])?.count == 20)
     }
 
+    // MARK: stored form
+
+    @Test func redactedSearchOutput_dropsTitleAndSnippet_keepsIdsAndCounts() async throws {
+        let tools = await makeSearch(notes: [noteItem("Geheimtitel Eins\nDer Teigplan für Sonntag", updated: testNow()),
+                                             noteItem("Anderer Teigplan", kind: "Tagesstart", day: "2026-11-17")])
+        let output = await tools.run(ToolCall(id: "c", name: "search", arguments: Data(searchArguments("teigplan").utf8)))
+        #expect(output.contains("Geheimtitel") && output.contains("Der Teigplan"))
+        let redacted = AppTools.redactedSearchOutput(output)
+        #expect(!redacted.contains("Geheimtitel") && !redacted.contains("Anderer Teigplan") && !redacted.contains("Der Teigplan"))
+        let result = try #require(try JSONSerialization.jsonObject(with: Data(redacted.utf8)) as? [String: Any])
+        let notes = try #require(result["notes"] as? [[String: Any]])
+        #expect(notes.count == 2)
+        for entry in notes {
+            #expect(entry["redacted"] as? Bool == true)
+            #expect(entry["title"] == nil && entry["snippet"] == nil)
+            #expect((entry["id"] as? String)?.hasPrefix("note:") == true)
+            #expect(entry["kind"] != nil && entry["updated"] != nil && entry["matchedIn"] != nil)
+        }
+        #expect(notes.contains { $0["day"] as? String == "2026-11-17" })
+        #expect(result["noteCount"] as? Int == 2 && result["eventCount"] as? Int == 0 && result["taskCount"] as? Int == 0)
+    }
+
+    @Test func redactedSearchOutput_isIdempotent() async throws {
+        let tools = await makeSearch(notes: [noteItem("Geheimtitel\nInhalt mit Teigplan")])
+        let output = await tools.run(ToolCall(id: "c", name: "search", arguments: Data(searchArguments("teigplan").utf8)))
+        let once = AppTools.redactedSearchOutput(output)
+        #expect(AppTools.redactedSearchOutput(once) == once)
+    }
+
+    @Test func redactedSearchOutput_keepsEventsTasksShoppingAndIssues() async throws {
+        local.tasks.append(makeTask("Teig kneten", source: .local))
+        let tools = await makeSearch(notes: [noteItem("Teig Notiz")], shopping: [ShoppingSearchItem(id: "r1", name: "Teigwaren", quantity: nil)],
+                                     online: { _ in [self.onlineIssue("I_1", number: 1, marker: .closed)] })
+        let output = await tools.run(ToolCall(id: "c", name: "search", arguments: Data(searchArguments("teig", online: true).utf8)))
+        let before = try #require(try JSONSerialization.jsonObject(with: Data(output.utf8)) as? [String: Any])
+        let after = try #require(try JSONSerialization.jsonObject(with: Data(AppTools.redactedSearchOutput(output).utf8)) as? [String: Any])
+        for key in ["tasks", "events", "shopping", "issues", "taskCount", "eventCount", "shoppingCount", "noteCount", "searched"] {
+            #expect(NSDictionary(dictionary: [key: before[key] as Any]).isEqual(to: [key: after[key] as Any]), "\(key)")
+        }
+    }
+
+    @Test func redactedSearchOutput_clippedOutputWithNotes_isReplacedByMarker() {
+        // `Conversation.clipped` cuts in the middle of the JSON; a title must not survive in that case.
+        let clipped = #"{"notes":[{"id":"note:3F2504E0-4F89-41D3-9A0C-0305E82C3301","title":"Geheimtitel","sni"#
+        let result = AppTools.redactedSearchOutput(clipped)
+        #expect(!result.contains("Geheimtitel"))
+    }
+
+    @Test func storedForm_otherTools_areUnchanged() async throws {
+        let (tools, _) = await make()
+        let call = ToolCall(id: "c", name: "list_tasks", arguments: Data(#"{"filter":"all"}"#.utf8))
+        let output = #"{"tasks":[{"title":"Geheim"}]}"#
+        let stored = tools.storedForm(of: call, output: output)
+        #expect(stored.arguments == #"{"filter":"all"}"# && stored.output == output)
+        #expect(tools.storedForm(of: call, output: nil).output == nil)
+        let open = tools.storedForm(of: ToolCall(id: "s", name: "search", arguments: Data("{}".utf8)), output: nil)
+        #expect(open.output == nil)
+    }
+
+    @Test func storedForm_invalidJSON_isUnchanged() async throws {
+        let (tools, _) = await make()
+        let call = ToolCall(id: "c", name: "search", arguments: Data("{}".utf8))
+        #expect(tools.storedForm(of: call, output: "kein JSON").output == "kein JSON")
+        #expect(AppTools.redactedSearchOutput(#"{"error":"Der Suchtext braucht mindestens zwei Zeichen."}"#)
+                == #"{"error":"Der Suchtext braucht mindestens zwei Zeichen."}"#)
+    }
+
+    @Test func taskChatTools_forwardStoredForm() async throws {
+        let (tools, _) = await make()
+        let handler = TaskChatTools(base: tools, reader: NoRepositoryReader(), reference: nil)
+        let call = ToolCall(id: "c", name: "search", arguments: Data("{}".utf8))
+        let output = #"{"notes":[{"id":"note:3F2504E0-4F89-41D3-9A0C-0305E82C3301","title":"Geheimtitel","snippet":"Teig"}],"noteCount":1}"#
+        let stored = handler.storedForm(of: call, output: output)
+        #expect(stored.output?.contains("Geheimtitel") == false)
+        #expect(stored.output?.contains("redacted") == true)
+        #expect(handler.showsActivity("search") == false)
+    }
+
     @Test func search_seriesCarriesMoreOccurrences() async throws {
         let base = calendar.date(from: DateComponents(year: 2026, month: 11, day: 20, hour: 9))!
         let events = (0..<10).map { index -> CalendarEvent in

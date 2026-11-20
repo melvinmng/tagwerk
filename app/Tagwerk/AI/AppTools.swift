@@ -49,6 +49,16 @@ final class AppTools: ToolHandler {
 
     func kind(of name: String) -> ToolKind { Self.readTools.contains(name) ? .read : .write }
 
+    /// What a stored chat keeps of a call: the output of `search` without note titles and excerpts, everything else as is.
+    func storedForm(of call: ToolCall, output: String?) -> (arguments: String, output: String?) {
+        let arguments = String(decoding: call.arguments, as: UTF8.self)
+        guard call.name == "search", let output else { return (arguments, output) }
+        return (arguments, Self.redactedSearchOutput(output))
+    }
+
+    /// Read calls that are shown as a line in the chat; none yet (`read_note` joins them).
+    func showsActivity(_ name: String) -> Bool { false }
+
     func run(_ call: ToolCall) async -> String {
         guard let arguments = try? JSONSerialization.jsonObject(with: call.arguments) as? [String: Any] else {
             return Self.error(String(localized: "Die Argumente sind kein gültiges JSON."))
