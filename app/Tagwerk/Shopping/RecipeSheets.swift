@@ -55,6 +55,8 @@ struct RecipeSheet: View {
             }
         }
         .presentationDetents([.large])
+        // A sheet does not take the forced text size of the UI test mode from the window; no effect outside that mode.
+        .modifier(UITestAppearance())
     }
 }
 
@@ -88,6 +90,7 @@ struct RecipeConsentView: View {
             .padding()
         }
         .interactiveDismissDisabled()
+        .modifier(UITestAppearance())
     }
 
     private func point(_ symbol: String, _ text: LocalizedStringKey) -> some View {
@@ -263,6 +266,7 @@ struct RecipeInputView: View {
         Section {
             TextEditor(text: $recipeText)
                 .frame(minHeight: 220)
+                .accessibilityLabel("Rezepttext")
                 .keyboardDoneButton()
         } header: {
             Text("Rezepttext")
@@ -533,10 +537,11 @@ struct RecipeResultView: View {
             VStack(alignment: .leading, spacing: 2) {
                 HStack {
                     Text(candidate.name).foregroundStyle(.primary)
-                    if let quantity = candidate.quantity { Text(quantity).foregroundStyle(.secondary) }
+                    // A fixed grey: the hierarchical `.secondary` takes the tint of the button around the row and fails the contrast audit.
+                    if let quantity = candidate.quantity { Text(quantity).foregroundStyle(Color.secondary) }
                 }
                 Text(candidate.alreadyOnList ? candidate.category + " · " + String(localized: "schon auf der Liste") : candidate.category)
-                    .font(.subheadline).foregroundStyle(.secondary)
+                    .font(.subheadline).foregroundStyle(Color.secondary)
             }
             Spacer(minLength: 0)
         }

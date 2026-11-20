@@ -31,6 +31,10 @@ final class DemoAITransport: AIHTTPTransport {
             return Self.stream([Self.event(["type": "response.output_text.delta", "delta": meal]),
                                 Self.event(["type": "response.completed", "response": [:]])], request: request)
         }
+        if let recipe = Self.recipeAnswer(for: request) {
+            return Self.stream([Self.event(["type": "response.output_text.delta", "delta": recipe]),
+                                Self.event(["type": "response.completed", "response": [:]])], request: request)
+        }
         if let sort = Self.shoppingSortAnswer(for: request) {
             return Self.stream([Self.event(["type": "response.output_text.delta", "delta": sort]),
                                 Self.event(["type": "response.completed", "response": [:]])], request: request)
@@ -104,6 +108,22 @@ final class DemoAITransport: AIHTTPTransport {
     }
 
     /// Shopping demo: every item goes to the first category of the request, the first item into a new "Demo" category.
+    /// Recipe reading ("Rezept hinzufügen", "Rezept mit ChatGPT anlegen"): a fixed invented recipe for any input.
+    static func recipeAnswer(for request: URLRequest) -> String? {
+        guard let body = request.httpBody,
+              let json = try? JSONSerialization.jsonObject(with: body) as? [String: Any],
+              let format = (json["text"] as? [String: Any])?["format"] as? [String: Any],
+              format["name"] as? String == "recipe_ingredients" else { return nil }
+        let answer: [String: Any] = [
+            "title": "Demo Gemüsepfanne", "servings": 2,
+            "steps": ["Gemüse schneiden.", "In der Pfanne fünf Minuten braten."],
+            "items": [["name": "Paprika", "quantity": "2 Stück", "amount": 2, "unit": "Stück", "category": "Obst & Gemüse"],
+                      ["name": "Reis", "quantity": "150 g", "amount": 150, "unit": "g", "category": "Sonstiges"],
+                      ["name": "Salz", "quantity": "nach Geschmack", "category": "Sonstiges"]],
+        ]
+        return String(decoding: (try? JSONSerialization.data(withJSONObject: answer)) ?? Data(), as: UTF8.self)
+    }
+
     static func shoppingSortAnswer(for request: URLRequest) -> String? {
         guard let body = request.httpBody,
               let json = try? JSONSerialization.jsonObject(with: body) as? [String: Any],

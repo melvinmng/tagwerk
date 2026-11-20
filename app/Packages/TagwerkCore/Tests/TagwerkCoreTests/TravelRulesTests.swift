@@ -25,7 +25,7 @@ struct TravelRulesTests {
     // MARK: Which events get a leg
 
     @Test func onlineLocation_hasNoLeg() {
-        for text in ["Zoom", "zoom meeting", "Microsoft Teams-Besprechung", "Webex", "Google Meet", "Online", "FaceTime", "online-Termin"] {
+        for text in ["Zoom", "zoom meeting", "Microsoft Teams-Besprechung", "Webex", "Google Meet", "Online", "FaceTime", "Online-Meeting", "virtuell"] {
             #expect(legs([event("a", 600, 660, location: text)]).isEmpty, "\(text) is no physical place")
         }
     }
@@ -41,6 +41,37 @@ struct TravelRulesTests {
         #expect(TravelRules.isPhysicalLocation("Hauptstraße 5, 10115 Berlin"))
         #expect(TravelRules.isPhysicalLocation("Campus Nord, Raum 2.14"))
         #expect(!TravelRules.isPhysicalLocation("Teams"))
+    }
+
+    @Test func placesWithOnlineInTheName_arePhysical() {
+        #expect(TravelRules.isPhysicalLocation("Online Business Center"))
+        #expect(TravelRules.isPhysicalLocation("Online-Shop GmbH, Hauptstr. 1"))
+        #expect(TravelRules.isPhysicalLocation("Virtual Reality Lab, Raum 3"))
+        #expect(TravelRules.isPhysicalLocation("Teamsitzung, Raum 4"))
+        #expect(TravelRules.isPhysicalLocation("Zoomstraße 7, Berlin"))
+        #expect(TravelRules.isPhysicalLocation("Skypark Büro"))
+        #expect(TravelRules.isPhysicalLocation("Hauptstr. 1/2, Berlin"))
+        #expect(TravelRules.isPhysicalLocation("Raum 2.14/3"))
+    }
+
+    @Test func onlineMeetings_areNotPhysical() {
+        // Web addresses.
+        #expect(!TravelRules.isPhysicalLocation("https://meet.example.com/abc"))
+        #expect(!TravelRules.isPhysicalLocation("www.example.com/room"))
+        #expect(!TravelRules.isPhysicalLocation("  WWW.Example.com "))
+        #expect(!TravelRules.isPhysicalLocation("meet.google.com/abc-defg-hij"))
+        #expect(!TravelRules.isPhysicalLocation("Raum 3, www.example.com"))
+        // Known meeting services as whole words.
+        for service in ["Zoom", "Microsoft Teams", "Webex-Meeting", "FaceTime", "Google Meet", "google  meet", "Skype", "Jitsi",
+                        "Besprechung über Zoom (ID 123)", "Teams-Anruf"] {
+            #expect(!TravelRules.isPhysicalLocation(service), "\(service)")
+        }
+        // The whole text names an online event.
+        for text in ["online", "Online", "  Online-Meeting ", "Online meeting", "virtuell", "Virtuell", "virtual", "VIRTUAL"] {
+            #expect(!TravelRules.isPhysicalLocation(text), "\(text)")
+        }
+        #expect(!TravelRules.isPhysicalLocation(""))
+        #expect(!TravelRules.isPhysicalLocation("  \n"))
     }
 
     @Test func allDayAndFreeEvents_areIgnored() {
