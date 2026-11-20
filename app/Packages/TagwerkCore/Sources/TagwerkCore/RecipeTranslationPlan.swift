@@ -198,18 +198,23 @@ public struct RecipeTranslationPlan: Sendable, Equatable {
         }
     }
 
-    /// The numbers of a line in order: every run of digits is one number, and every other numeric character (½ ¼ ¾ ⅓ ⅔ …) is
-    /// one too. A decimal separator splits a number into two runs, so "1.5" and "1,5" read the same; "½" and "1/2" do not.
+    /// The numbers of a line in order, written as they are: a run of digits is one number, and a decimal point or comma between
+    /// two digits belongs to it ("1.5" and "1,5" are different, "1.000" and "1000" too). Every other numeric character
+    /// (½ ¼ ¾ ⅓ ⅔ …) is a number of its own, so "½" and "1/2" differ as well. Any such change is a failure.
     static func numberTokens(in text: String) -> [String] {
+        let characters = Array(text)
+        func isDigit(_ index: Int) -> Bool { characters.indices.contains(index) && characters[index].isASCII && characters[index].isNumber }
         var tokens: [String] = []
         var run = ""
-        for character in text {
-            if character.isASCII, character.isNumber {
+        for (index, character) in characters.enumerated() {
+            if isDigit(index) {
                 run.append(character)
-                continue
+            } else if (character == "." || character == ","), !run.isEmpty, isDigit(index + 1) {
+                run.append(character)
+            } else {
+                if !run.isEmpty { tokens.append(run); run = "" }
+                if character.isNumber { tokens.append(String(character)) }
             }
-            if !run.isEmpty { tokens.append(run); run = "" }
-            if character.isNumber { tokens.append(String(character)) }
         }
         if !run.isEmpty { tokens.append(run) }
         return tokens

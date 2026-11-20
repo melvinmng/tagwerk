@@ -243,6 +243,26 @@ struct RecipeTranslationPlanTests {
         }
     }
 
+    @Test func assembled_changedDecimalSeparator_throws() throws {
+        let plan = RecipeTranslationPlan(markdown: "## Ingredients\n- 1.5 cups milk\n")
+        let entry = plan.request[0]
+        #expect(throws: RecipeTranslationPlan.Failure.amountsChanged) {
+            try plan.assembled(translations: [entry.index: "1,5 Tassen Milch"], language: .german)
+        }
+        #expect(throws: RecipeTranslationPlan.Failure.amountsChanged) {
+            try plan.assembled(translations: [entry.index: "1 1/2 Tassen Milch"], language: .german)
+        }
+        // The same notation passes.
+        #expect(try plan.assembled(translations: [entry.index: "1.5 Tassen Milch"], language: .german) == "## Zutaten\n- 1.5 Tassen Milch\n")
+    }
+
+    @Test func numberTokens_keepSeparatorsBetweenDigits() {
+        #expect(RecipeTranslationPlan.numberTokens(in: "1.5 cups, 2,5 l and 1.000 g") == ["1.5", "2,5", "1.000"])
+        #expect(RecipeTranslationPlan.numberTokens(in: "1½ EL, 20. Mai, 3, 4") == ["1", "½", "20", "3", "4"])
+        #expect(RecipeTranslationPlan.numberTokens(in: "1/2 TL") == ["1", "2"])
+        #expect(RecipeTranslationPlan.numberTokens(in: "keine Zahl") == [])
+    }
+
     @Test func assembled_translatedUnit_isAccepted() throws {
         let plan = RecipeTranslationPlan(markdown: "## Ingredients\n- 2 tbsp curry paste\n- 1½ cups milk\n")
         let translations = Dictionary(uniqueKeysWithValues: plan.request.map {
