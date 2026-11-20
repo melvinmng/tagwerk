@@ -61,9 +61,12 @@ struct DayGridScreen<Summary: View, Header: View>: View {
                 ForEach(daySuggestions) { suggestion in mergeCard(suggestion) }
                 HStack {
                     timelineHeader()
-                    Button(selection == nil ? "Auswählen" : "Fertig") {
+                    Button {
                         selection = selection == nil ? [] : nil
+                    } label: {
+                        (selection == nil ? Text("Auswählen") : Text("Fertig")).touchTargetLabel()
                     }
+                    .touchTargetInset(vertical: 13)
                     .font(.subheadline)
                 }
                 canvas

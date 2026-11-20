@@ -13,9 +13,21 @@ enum UITestMode {
     static let launchArgument = "-TagwerkUITest"
     static let textSizeArgument = "-TagwerkUITestTextSize"
     static let darkArgument = "-TagwerkUITestDark"
+    static let clockArgument = "-TagwerkUITestNow"
 
     #if DEBUG && targetEnvironment(simulator)
     static var isActive: Bool { ProcessInfo.processInfo.arguments.contains(launchArgument) }
+
+    /// The current time of the app. `-TagwerkUITestNow HH:mm` pins the time of day (the date stays today's), so a run
+    /// that depends on the position of the "now" marker (the hour grid of "Planen" scrolls to it) gives the same result
+    /// at every hour. Without the argument this is the real time.
+    static func now() -> Date {
+        let arguments = ProcessInfo.processInfo.arguments
+        guard isActive, let index = arguments.firstIndex(of: clockArgument), index + 1 < arguments.count else { return Date() }
+        let parts = arguments[index + 1].split(separator: ":").compactMap { Int($0) }
+        guard parts.count == 2 else { return Date() }
+        return Calendar.tagwerk.date(bySettingHour: parts[0], minute: parts[1], second: 0, of: Date()) ?? Date()
+    }
 
     static var dynamicTypeSize: DynamicTypeSize? {
         let arguments = ProcessInfo.processInfo.arguments
@@ -31,6 +43,7 @@ enum UITestMode {
     }
     #else
     static var isActive: Bool { false }
+    static func now() -> Date { Date() }
     static var dynamicTypeSize: DynamicTypeSize? { nil }
     static var colorScheme: ColorScheme? { nil }
     #endif

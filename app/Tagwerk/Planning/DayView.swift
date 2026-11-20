@@ -137,7 +137,9 @@ struct DayView: View {
                 model.showsHourGrid = showsGrid
             } label: {
                 Image(systemName: showsGrid ? "list.bullet" : "calendar.day.timeline.left")
+                    .touchTargetLabel()
             }
+            .touchTargetInset(horizontal: 11, vertical: 14)
             .accessibilityLabel(showsGrid ? "Als Liste zeigen" : "Als Stundenraster zeigen")
         }
     }

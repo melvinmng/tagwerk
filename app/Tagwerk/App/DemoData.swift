@@ -262,7 +262,7 @@ enum DemoData {
         try event("Abgabe Hausarbeit", uni, at(40, 0), at(41, 0), allDay: true)
         try event("Teamtreffen", work, at(1, 9, 30), at(1, 11), location: "Zoom")
         // A deadline whose notification fires about two minutes after the start (checks banner and tap).
-        let soon = Date().addingTimeInterval(TimeInterval((leadTimeMinutes + 3) * 60))
+        let soon = UITestMode.now().addingTimeInterval(TimeInterval((leadTimeMinutes + 3) * 60))
         let soonStart = calendar.date(bySetting: .second, value: 0, of: soon) ?? soon
         try event("Abgabe Kurzbericht", uni, soonStart, soonStart.addingTimeInterval(30 * 60))
         let sport = EKEvent(eventStore: store)

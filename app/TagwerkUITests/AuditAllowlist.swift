@@ -5,16 +5,27 @@ import XCTest
 /// (docs/superpowers/plans/2026-11-19-g3-uitests-a11y.md). Blanket exceptions per audit type are not allowed.
 @MainActor
 enum AuditAllowlist {
+    /// Pins the time of day of the app for the audits (see `UITestMode.now`): morning, so the hour grid of "Planen" shows the
+    /// seminar, the lunch break, the demo deadline and the "now" line, and "Tagesabschluss" is still reachable.
+    static let fixedClockArguments = ["-TagwerkUITestNow", "09:30"]
+
     /// One accepted group of findings of one audit type. `labels` are regular expressions that must match the whole label
     /// (or the identifier) of the element; there is no entry without labels.
     private struct Entry {
         let auditType: XCUIAccessibilityAuditType
         let labels: [String]
         var elementType: XCUIElement.ElementType?
-        /// Only on this screen (`currentScreen`); `nil` for every screen.
-        var screen: String?
+        /// Only on these screens (`currentScreen`); `nil` for every screen.
+        var screens: [String]?
         let reason: String
     }
+
+    /// The two screens that show the hour grid of "Planen": default size and AX5 in dark mode.
+    private static let gridScreens = ["Planen (Tag)", "AX5/dark Planen"]
+    /// Texts of the entries in the hour grid: titles of the demo events and their time line ("10:00–12:30", with marks after a dot).
+    private static let gridCellLabels = [
+        "\\d\\d:\\d\\d–\\d\\d:\\d\\d( · .*)?", "Seminar", "Sprechstunde", "Mittagspause", "(⚑ )?Abgabe Kurzbericht",
+    ]
 
     private static let entries: [Entry] = [
         // MARK: Contrast (every group needs a colour decision, section "Designpunkte für #188")
@@ -36,7 +47,7 @@ enum AuditAllowlist {
         Entry(auditType: .contrast, labels: [
             "Ohne Uhrzeit", "0 · 0 min", "\\+3 offen", "1 überfällig", "Abgabe Kurzbericht", "Pretest vorbereiten", "Deadlines", "heute",
             "morgen", "in 3 Tagen", "Kalender Demo Uni(, .*)?", "P1", "„Seminar“ aus „Demo Freigabe“ liegt zur selben Zeit wie „Seminar“\\.",
-            "Künftig immer bei „Seminar“ aus „Demo Freigabe“", "Mit ChatGPT planen: in Einstellungen › KI anmelden",
+            "Künftig immer bei „Seminar“ aus „Demo Freigabe“", "Mit ChatGPT planen: in Einstellungen › KI anmelden", "Derselbe Termin\\?",
         ], reason: "Text on tinted cards (red deadline card, pink suggestion card) and on the translucent bar of the day view, in red, orange "
             + "or grey. The colours are part of the card design; contrast on tint is a design question (#188, \"Sekundärtexte auf getönten Karten\")."),
         Entry(auditType: .contrast, labels: [
@@ -44,13 +55,22 @@ enum AuditAllowlist {
         ], reason: "Button and segment texts in the accent colour or on Liquid Glass / bordered tint (navigation bar, filter marks, quick entry). "
             + "The system draws the background; no own colour to change without replacing the system style (#188)."),
 
+        Entry(auditType: .contrast, labels: gridCellLabels, screens: gridScreens, reason:
+            "Title and time of the entries in the hour grid of \"Planen\": text in the primary or secondary colour on the event colour at 24 % "
+            + "(blue, green, red, grey). The tint is the colour code of the grid (calendar, block, deadline, break); contrast on tint is a "
+            + "design question (#188, \"Sekundärtexte auf getönten Karten\")."),
+
         // MARK: Dynamic Type
+        Entry(auditType: .dynamicType, labels: ["\\d\\d:\\d\\d"] + gridCellLabels, screens: ["Planen (Tag)"], reason:
+            "Hour labels and entries of the hour grid of \"Planen\": the grid is time-proportional (fixed height per hour), so its texts are "
+            + "text styles but cannot grow with the size; the audit reports the partial support. Plan g3-uitests-a11y: the grid stays "
+            + "proportional, visibility at large sizes is decided in #188; the full text is in the accessibility label of each entry."),
         Entry(auditType: .dynamicType, labels: ["HEUTE · KW \\d+", "[A-Z][a-z]\\. \\d+\\. [A-Z][a-zä]+\\.", "Auswählen"], reason:
             "The date title in the bar of \"Planen\" is fixed in size on purpose (a toolbar item gets no width; with accessibility sizes it shows the "
             + "shortest form, see PlanHeaderText.displayedTitle); \"Auswählen\" is a system bar button. Header design: #188 / #175."),
         Entry(auditType: .dynamicType, labels: [
             "Punkte in den Einstellungen anlegen", "Mo\\. planen", "Fertig", "Brain Dump", "Leitfragen einfügen", "\\d+\\.\\d+\\.",
-        ], screen: "Tagesabschluss", reason: "Texts of the evening sheet (hint line, buttons, date of the next planning day) report a partial lack of "
+        ], screens: ["Tagesabschluss"], reason: "Texts of the evening sheet (hint line, buttons, date of the next planning day) report a partial lack of "
             + "Dynamic Type support; no clipping in the large text run. Stays on the device test list."),
         Entry(auditType: .dynamicType, labels: [
             "P1", "Ältere Termine durchsuchen · vor .*", "Durchsucht: 6 Monate zurück, 12 Monate voraus\\.",
@@ -58,6 +78,11 @@ enum AuditAllowlist {
             + "support. Not reproduced by eye in the large text run (no clipping there); stays on the device test list."),
 
         // MARK: Text clipped
+        Entry(auditType: .textClipped, labels: gridCellLabels, screens: gridScreens, reason:
+            "Title and time of the entries in the hour grid of \"Planen\": the grid is time-proportional with a fixed height per hour, and "
+            + "overlapping events share the width (up to four columns). Short or narrow entries cut their text by design; the full text is "
+            + "in the accessibility label of the entry. Plan g3-uitests-a11y (\"Das Raster in Planen bleibt zeitproportional\"), visibility "
+            + "in #188."),
         Entry(auditType: .textClipped, labels: [
             "Mit ChatGPT planen: in Einstellungen › KI anmelden", "1 Aufgabe ohne Aufwand mit Standarddauer gerechnet",
             "zuletzt: „Römer“ · heute \\d+:\\d+", "Wochenrückblick", "Punkte in den Einstellungen anlegen",
@@ -98,7 +123,7 @@ enum AuditAllowlist {
         // Every read of an element property is a query of its own and slow, so each is read once per finding.
         let label = element.label, identifier = element.identifier, elementType = element.elementType
         return entries.contains { entry in
-            guard entry.auditType == issue.auditType, entry.screen == nil || entry.screen == currentScreen,
+            guard entry.auditType == issue.auditType, entry.screens == nil || entry.screens?.contains(currentScreen) == true,
                   entry.elementType == nil || entry.elementType == elementType else { return false }
             return entry.labels.contains { pattern in
                 matches(label, pattern) || (!identifier.isEmpty && matches(identifier, pattern))

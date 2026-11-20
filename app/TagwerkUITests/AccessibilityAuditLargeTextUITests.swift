@@ -6,7 +6,7 @@ import XCTest
 final class AccessibilityAuditLargeTextUITests: UITestCase {
     // Forced inside the app (UI test mode): the simulator-wide settings of XCUIDevice and the launch argument
     // `-UIPreferredContentSizeCategoryName` had no effect on the SwiftUI app in the simulator of this Xcode version.
-    override var extraLaunchArguments: [String] { ["-TagwerkUITestTextSize", "accessibility5", "-TagwerkUITestDark"] }
+    override var extraLaunchArguments: [String] { ["-TagwerkUITestTextSize", "accessibility5", "-TagwerkUITestDark"] + AuditAllowlist.fixedClockArguments }
 
     private func audit(_ screen: String) throws {
         AuditAllowlist.currentScreen = "AX5/dark " + screen

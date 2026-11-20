@@ -3,6 +3,10 @@ import XCTest
 /// Automatic accessibility audit (`performAccessibilityAudit`) of the core screens in the default text size.
 /// One launch covers all screens, to keep the run short. Findings must be fixed or sit on `AuditAllowlist` with a reason.
 final class AccessibilityAuditUITests: UITestCase {
+    // A fixed time of day: the hour grid of "Planen" scrolls to the current time, so without it the audited part of the
+    // grid (and with it the findings) would depend on the hour of the run.
+    override var extraLaunchArguments: [String] { AuditAllowlist.fixedClockArguments }
+
     /// Runs the audit on the screen that is open now; findings that are not on the allowlist fail the test.
     private func audit(_ screen: String) throws {
         AuditAllowlist.currentScreen = screen
