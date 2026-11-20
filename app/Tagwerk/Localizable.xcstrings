@@ -2402,6 +2402,16 @@
         }
       }
     },
+    "+%@ ml": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "+%@ ml"
+          }
+        }
+      }
+    },
     "+%lld": {
       "localizations": {
         "en": {
@@ -2723,6 +2733,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Checking address …"
+          }
+        }
+      }
+    },
+    "Aktion": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Action"
           }
         }
       }
@@ -5388,6 +5408,16 @@
         }
       }
     },
+    "Der Fokus läuft schon.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Focus is already running."
+          }
+        }
+      }
+    },
     "Der Name darf höchstens %lld Zeichen haben.": {
       "localizations": {
         "en": {
@@ -7376,6 +7406,16 @@
         }
       }
     },
+    "Es läuft gerade kein Fokus.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No focus session is running."
+          }
+        }
+      }
+    },
     "Essen": {
       "localizations": {
         "en": {
@@ -7577,6 +7617,26 @@
         }
       }
     },
+    "Fokus beenden": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stop focus"
+          }
+        }
+      }
+    },
+    "Fokus beendet.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Focus stopped."
+          }
+        }
+      }
+    },
     "Fokus entfernen": {
       "localizations": {
         "en": {
@@ -7593,6 +7653,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Continue focus"
+          }
+        }
+      }
+    },
+    "Fokus gestartet.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Focus started."
           }
         }
       }
@@ -7649,6 +7719,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Start focus"
+          }
+        }
+      }
+    },
+    "Fokus starten in Tagwerk": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start focus in Tagwerk"
+          }
+        }
+      }
+    },
+    "Fokus starten oder beenden": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start or stop focus"
           }
         }
       }
@@ -8833,6 +8923,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Checks off a habit for today"
+          }
+        }
+      }
+    },
+    "Hakt eine Gewohnheit für heute ab, ohne Tagwerk zu öffnen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Checks off a habit for today without opening Tagwerk."
           }
         }
       }
@@ -10656,6 +10756,16 @@
         }
       }
     },
+    "Läuft": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Running"
+          }
+        }
+      }
+    },
     "Löschen": {
       "localizations": {
         "en": {
@@ -12022,12 +12132,32 @@
         }
       }
     },
+    "Notiz diktieren": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dictate Note"
+          }
+        }
+      }
+    },
     "Notiz endgültig löschen?": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Permanently delete this note?"
+          }
+        }
+      }
+    },
+    "Notiz in Tagwerk diktieren": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dictate a note in Tagwerk"
           }
         }
       }
@@ -14098,6 +14228,36 @@
         }
       }
     },
+    "Startet einen freien Fokus-Timer oder beendet den laufenden, ohne Tagwerk zu öffnen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Starts a free focus timer or ends the running one without opening Tagwerk."
+          }
+        }
+      }
+    },
+    "Startet oder beendet einen freien Fokus-Timer": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Starts or stops a free focus timer"
+          }
+        }
+      }
+    },
+    "Startet oder beendet einen freien Fokus-Timer.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Starts or stops a free focus timer."
+          }
+        }
+      }
+    },
     "Startet …": {
       "localizations": {
         "en": {
@@ -14374,6 +14534,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Evening wrap-up done"
+          }
+        }
+      }
+    },
+    "Tagesroutine": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Daily Routine"
           }
         }
       }
@@ -14992,6 +15162,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Logs 250 ml without opening Tagwerk"
+          }
+        }
+      }
+    },
+    "Trägt Wasser ein, ohne Tagwerk zu öffnen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Logs water without opening Tagwerk."
           }
         }
       }
@@ -18270,6 +18450,26 @@
         }
       }
     },
+    "Öffnet Brain Dump in Tagwerk und startet das Diktat.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opens Brain Dump in Tagwerk and starts dictation."
+          }
+        }
+      }
+    },
+    "Öffnet Brain Dump und startet das Diktat": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opens Brain Dump and starts dictation"
+          }
+        }
+      }
+    },
     "Öffnet ChatGPT mit dem Kontext dieses Bildschirms": {
       "localizations": {
         "en": {
@@ -18286,6 +18486,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Opens Log"
+          }
+        }
+      }
+    },
+    "Öffnet Erfassen für Essen, Wasser und Training.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opens Log for meals, water and workouts."
           }
         }
       }
@@ -18386,6 +18596,36 @@
           "stringUnit": {
             "state": "translated",
             "value": "Opens the shopping list in Tagwerk."
+          }
+        }
+      }
+    },
+    "Öffnet die Einkaufsliste.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opens the shopping list."
+          }
+        }
+      }
+    },
+    "Öffnet eine neue Notiz in Brain Dump und startet das Diktat.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opens a new note in Brain Dump and starts dictation."
+          }
+        }
+      }
+    },
+    "Öffnet morgens den Tagesstart, sonst den Tagesabschluss.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opens the morning start before noon, the evening wrap-up otherwise."
           }
         }
       }
