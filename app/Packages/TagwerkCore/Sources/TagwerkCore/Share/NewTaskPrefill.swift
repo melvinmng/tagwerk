@@ -30,15 +30,31 @@ public enum NewTaskPrefill {
     }
 
     /// The notes for shared text: the text without a first line that is the title already. `nil` when nothing is left.
+    /// A title that is only the cut start of a longer first line removes nothing (see `noteParts`).
     public static func sharedNotes(title: String, text: String?) -> String? {
+        noteParts(title: title, text: text).body
+    }
+
+    /// How a note shows a shared title and text without saying anything twice. The title line is dropped when it is the first
+    /// line of the text (the text is then the body without that line), or when it is only a cut start of a long first line
+    /// (the text stays whole and its first line is the heading). Otherwise, for instance a page title above a selection, the
+    /// title and the whole text both stay. `body` is `nil` when nothing is left of the text.
+    public static func noteParts(title: String, text: String?) -> (title: String?, body: String?) {
+        let cleanTitle = title.trimmingCharacters(in: .whitespacesAndNewlines)
         let lines = (text ?? "").split(omittingEmptySubsequences: false, whereSeparator: \.isNewline).map(String.init)
-        guard let first = lines.firstIndex(where: { !$0.trimmingCharacters(in: .whitespaces).isEmpty }) else { return nil }
-        var rest = lines
-        if lines[first].trimmingCharacters(in: .whitespaces) == title.trimmingCharacters(in: .whitespaces) {
-            rest.removeSubrange(...first)
+        guard let first = lines.firstIndex(where: { !$0.trimmingCharacters(in: .whitespaces).isEmpty }) else {
+            return (cleanTitle.isEmpty ? nil : cleanTitle, nil)
         }
-        let joined = rest.joined(separator: "\n").trimmingCharacters(in: .whitespacesAndNewlines)
-        return joined.isEmpty ? nil : joined
+        let firstLine = lines[first].trimmingCharacters(in: .whitespaces)
+        if firstLine == cleanTitle {
+            var rest = lines
+            rest.removeSubrange(...first)
+            let joined = rest.joined(separator: "\n").trimmingCharacters(in: .whitespacesAndNewlines)
+            return (cleanTitle, joined.isEmpty ? nil : joined)
+        }
+        let whole = lines.joined(separator: "\n").trimmingCharacters(in: .whitespacesAndNewlines)
+        if !cleanTitle.isEmpty, firstLine.hasPrefix(cleanTitle) { return (nil, whole) }
+        return (cleanTitle.isEmpty ? nil : cleanTitle, whole)
     }
 
     /// The fields of the due switch, date and time switch.

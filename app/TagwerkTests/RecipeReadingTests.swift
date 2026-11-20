@@ -52,7 +52,7 @@ final class RecipeReadingFixture {
         responder.calls[index].input.map { item -> String in
             switch item {
             case .user(let text): text
-            case .userImage(let text, _): text
+            case .userImage(let text, _), .userImages(let text, _): text
             default: ""
             }
         }.joined(separator: "\n")

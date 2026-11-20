@@ -27,7 +27,7 @@ struct SharePayloadTests {
         // Safari with the preprocessing script: the address, the page title and the selected text.
         let payload = SharePayload.classify([.url(page), .pageTitle("Ein guter Artikel"), .text("Der markierte Absatz\nmit zwei Zeilen")])
         #expect(payload?.kind == .url && payload?.url == page)
-        #expect(payload?.text == "Der markierte Absatz\nmit zwei Zeilen" && payload?.title == "Der markierte Absatz")
+        #expect(payload?.text == "Der markierte Absatz\nmit zwei Zeilen" && payload?.title == "Ein guter Artikel")
         #expect(payload?.pageTitle == "Ein guter Artikel")
     }
 
@@ -123,5 +123,28 @@ struct SharePayloadTests {
             let payload = SharePayload.classify(parts)
             #expect(payload.map { $0.availableTargets.contains($0.suggestedTarget) } == true)
         }
+    }
+}
+
+struct SharePayloadSelectionTests {
+    private let page = URL(string: "https://www.example.com/artikel/1")!
+
+    @Test func selectionWithPageTitle_titleIsThePageTitle_bodyIsTheSelection() {
+        let payload = SharePayload.classify([.url(page), .pageTitle("Ein guter Artikel"), .text("Der markierte Absatz\nmit zwei Zeilen")])
+        #expect(payload?.title == "Ein guter Artikel")
+        #expect(payload?.text == "Der markierte Absatz\nmit zwei Zeilen")
+    }
+
+    @Test func noteParts_dropsTheFirstLineOnlyWhenItIsTheTitle() {
+        #expect(NewTaskPrefill.noteParts(title: "Erste", text: "Erste\nRest").title == "Erste")
+        #expect(NewTaskPrefill.noteParts(title: "Erste", text: "Erste\nRest").body == "Rest")
+        // A title cut from a long first line: the text stands whole and is its own heading.
+        let long = String(repeating: "a", count: 200)
+        let cut = NewTaskPrefill.noteParts(title: String(long.prefix(120)), text: long + "\nRest")
+        #expect(cut.title == nil && cut.body == long + "\nRest")
+        // A page title differs from the first line: both stay.
+        let page = NewTaskPrefill.noteParts(title: "Seite", text: "Auswahl")
+        #expect(page.title == "Seite" && page.body == "Auswahl")
+        #expect(NewTaskPrefill.noteParts(title: "Nur Titel", text: nil).body == nil)
     }
 }

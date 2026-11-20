@@ -75,7 +75,7 @@ struct RecipeSaveOnlyTests {
             try await fixture.importer(consent: false).read(.text("250 g Linsen"), language: .german, categoryNames: [], openItemKeys: [])
         }
         await #expect(throws: RecipeImporter.Failure.consentMissing) {
-            try await fixture.importer(consent: false).read(.photo(jpeg: Data([1, 2, 3])), language: .german, categoryNames: [], openItemKeys: [])
+            try await fixture.importer(consent: false).read(.photos([Data([1, 2, 3])]), language: .german, categoryNames: [], openItemKeys: [])
         }
         await #expect(throws: RecipeImporter.Failure.consentMissing) {
             try await fixture.importer(consent: false).read(.link(URL(string: "https://example.com/r")!), language: .german, categoryNames: [], openItemKeys: [])
