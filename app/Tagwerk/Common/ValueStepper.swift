@@ -12,6 +12,7 @@ struct ValueStepper: View {
     private let range: ClosedRange<Double>
     private let step: Double
     private let unit: LocalizedStringKey?
+    private let appliesWhileTyping: Bool
     private let display: (Double) -> String
 
     @State private var model: ValueEntryModel
@@ -23,28 +24,35 @@ struct ValueStepper: View {
     ///   - kind: `.integer` for counts, `.durationMinutes` for minutes (also reads "1,5 h" and "1:30").
     ///   - scale: Typed unit times `scale` is the stored unit (`1000` when liters are typed and milliliters are stored).
     ///   - unit: Shown next to the field while typing.
+    ///   - appliesWhileTyping: Whether each readable keystroke already sets the value (so saving a sheet with the keyboard
+    ///     open keeps it). Turn it off when setting the value is costly, for example when it triggers planning.
     ///   - display: The value as the row shows it, for example "1 h 30 min".
     init(_ title: LocalizedStringKey, value: Binding<Int>, in range: ClosedRange<Int>, step: Int = 1,
          kind: NumberEntryKind = .integer, scale: Double = 1, unit: LocalizedStringKey? = nil,
-         display: @escaping (Int) -> String) {
+         appliesWhileTyping: Bool = true, display: @escaping (Int) -> String) {
         let adapter = Binding<Double>(get: { Double(value.wrappedValue) }, set: { value.wrappedValue = Int($0.rounded()) })
         self.init(title: title, value: adapter, range: Double(range.lowerBound)...Double(range.upperBound), step: Double(step),
-                  kind: kind, scale: scale, unit: unit, display: { display(Int($0.rounded())) })
+                  kind: kind, scale: scale, unit: unit, appliesWhileTyping: appliesWhileTyping,
+                  display: { display(Int($0.rounded())) })
     }
 
     /// Decimal value stored as `Double`, for example the quantity factor of a meal item.
     init(_ title: LocalizedStringKey, value: Binding<Double>, in range: ClosedRange<Double>, step: Double,
-         kind: NumberEntryKind, scale: Double = 1, unit: LocalizedStringKey? = nil, display: @escaping (Double) -> String) {
-        self.init(title: title, value: value, range: range, step: step, kind: kind, scale: scale, unit: unit, display: display)
+         kind: NumberEntryKind, scale: Double = 1, unit: LocalizedStringKey? = nil, appliesWhileTyping: Bool = true,
+         display: @escaping (Double) -> String) {
+        self.init(title: title, value: value, range: range, step: step, kind: kind, scale: scale, unit: unit,
+                  appliesWhileTyping: appliesWhileTyping, display: display)
     }
 
     private init(title: LocalizedStringKey, value: Binding<Double>, range: ClosedRange<Double>, step: Double,
-                 kind: NumberEntryKind, scale: Double, unit: LocalizedStringKey?, display: @escaping (Double) -> String) {
+                 kind: NumberEntryKind, scale: Double, unit: LocalizedStringKey?, appliesWhileTyping: Bool,
+                 display: @escaping (Double) -> String) {
         self.title = title
         self._value = value
         self.range = range
         self.step = step
         self.unit = unit
+        self.appliesWhileTyping = appliesWhileTyping
         self.display = display
         self._model = State(initialValue: ValueEntryModel(kind: kind, range: range, step: step, scale: scale))
     }
@@ -133,7 +141,8 @@ struct ValueStepper: View {
     }
 
     private func typed(_ text: String) {
-        if let live = model.typed(text), live != value { value = live }
+        let live = model.typed(text)
+        if appliesWhileTyping, let live, live != value { value = live }
     }
 
     private func finishEditing() {
@@ -177,4 +186,9 @@ private struct StepperAccessibility: ViewModifier {
                 .accessibilityAction(named: Text("Wert eingeben"), enterValue)
         }
     }
+}
+
+extension ValueStepper {
+    /// "45 min": the row text of a plain minute value.
+    static func minutesText(_ minutes: Int) -> String { String(localized: "\(minutes) min") }
 }
