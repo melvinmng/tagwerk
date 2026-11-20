@@ -9,10 +9,7 @@ final class AccessibilityAuditLargeTextUITests: UITestCase {
     override var extraLaunchArguments: [String] { ["-TagwerkUITestTextSize", "accessibility5", "-TagwerkUITestDark"] + AuditAllowlist.fixedClockArguments }
 
     private func audit(_ screen: String) throws {
-        AuditAllowlist.currentScreen = "AX5/dark " + screen
-        try app.performAccessibilityAudit(for: [.textClipped, .contrast]) { issue in
-            MainActor.assumeIsolated { AuditAllowlist.isAccepted(issue) }
-        }
+        try AuditAllowlist.audit(app, screen: "AX5/dark " + screen, for: [.textClipped, .contrast])
     }
 
     func testAuditLargestTextAndDark() throws {

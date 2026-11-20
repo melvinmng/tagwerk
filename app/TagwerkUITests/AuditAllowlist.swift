@@ -40,8 +40,9 @@ enum AuditAllowlist {
             "Brain Dump", "Leitfragen einfügen", "Schreib auf, was in deinen Kopf kommt\\. Sortier deine Gedanken\\.",
             "Der Eintrag bleibt auf deinem iPhone und geht nie an ChatGPT\\.", "heute \\d+:\\d+( · diktiert)?", "Bible Study · heute .*",
             "Tagebuch · .*",
-            // Titles and previews of the demo notes (the label of a note preview can have several lines).
-            "(?s)(Ideen Hausarbeit|Gliederung|Generelle Gedanken|Literaturliste|Handwerker anrufen|Heute lief die Gliederung gut|Geschenkidee für Lea|Kochbuch oder Konzertkarten|Römer|Allgemeine Stimmung|Alte Einkaufsidee).*",
+            // Titles and previews of the demo notes (the label of a note preview can have several lines). The preview of a note whose
+            // title is a heading line starts with the first body line, so these lines are listed as well.
+            "(?s)(Ideen Hausarbeit|Gliederung|Generelle Gedanken|Literaturliste|Handwerker anrufen|Heute lief die Gliederung gut|Geschenkidee für Lea|Kochbuch oder Konzertkarten|Römer|Allgemeine Stimmung|Alte Einkaufsidee|Ruhig und dankbar\\.|Heizung entlüften|1 Einleitung, 2 Methode, 3 Ergebnisse|Drei Quellen zur Statistik).*",
         ], reason: "Secondary text in the system grey (.secondary) on the grouped background or on a card: captions, counts, section "
             + "headers. Darkening it would change the look of the default size; decided together with the other grey texts in #188."),
         Entry(auditType: .contrast, labels: [
@@ -102,19 +103,44 @@ enum AuditAllowlist {
             + "Design question, together with the check circle of the lists (#188)."),
     ]
 
-    static func isAccepted(_ issue: XCUIAccessibilityAuditIssue) -> Bool {
-        let accepted = matchesAllowlist(issue)
+    /// Runs the audit on the open screen and fails the test for every finding that is not on the allowlist.
+    ///
+    /// The contrast check runs as a pass of its own. In a combined run (`.all`) the audit also switches the system text size for
+    /// the Dynamic Type check, and the elements of the contrast findings can no longer be resolved afterwards: they arrive
+    /// as `nil` ("Contrast nearly passed" for a `SwiftUI.AccessibilityNode` without label and frame), which no allowlist entry
+    /// can match. Run alone, the same findings come with their elements. The findings are collected in the handler and judged
+    /// after the audit, so the slow element queries of the judgement do not run while the audit is still reporting.
+    static func audit(_ app: XCUIApplication, screen: String, for auditTypes: XCUIAccessibilityAuditType,
+                      file: StaticString = #filePath, line: UInt = #line) throws {
+        currentScreen = screen
+        let passes = auditTypes.contains(.contrast) && auditTypes != .contrast ? [.contrast, auditTypes.subtracting(.contrast)] : [auditTypes]
+        for pass in passes {
+            var findings: [(issue: XCUIAccessibilityAuditIssue, element: XCUIElement?)] = []
+            try app.performAccessibilityAudit(for: pass) { issue in
+                findings.append((issue, issue.element))
+                return true
+            }
+            for finding in findings where !isAccepted(finding.issue, element: finding.element) {
+                let element = finding.element
+                XCTFail("\(screen): \(finding.issue.compactDescription) | \(finding.issue.detailedDescription) | "
+                    + "label=\(element?.label ?? "-") id=\(element?.identifier ?? "-") frame=\(element?.frame ?? .zero)", file: file, line: line)
+            }
+        }
+    }
+
+    private static func isAccepted(_ issue: XCUIAccessibilityAuditIssue, element: XCUIElement?) -> Bool {
+        let accepted = matchesAllowlist(issue, element: element)
         // Collect mode lists the findings that the allowlist does not cover yet; nothing fails.
         if collectsFindings {
-            if !accepted { record(issue) }
+            if !accepted { record(issue, element: element) }
             return true
         }
         return accepted
     }
 
-    private static func matchesAllowlist(_ issue: XCUIAccessibilityAuditIssue) -> Bool {
+    private static func matchesAllowlist(_ issue: XCUIAccessibilityAuditIssue, element: XCUIElement?) -> Bool {
         // Findings without an element cannot be matched by label; only the ones named here are accepted, per screen.
-        guard let element = issue.element else {
+        guard let element else {
             return currentScreen == "Notizenliste" && issue.auditType == .textClipped
             // Reason: the audit reports one clipped text without an element (frame 0×0) in the note list; nothing on the
             // screen is cut off visually. Stays on the device test list (large text).
@@ -140,9 +166,8 @@ enum AuditAllowlist {
 
     static var currentScreen = ""
 
-    private static func record(_ issue: XCUIAccessibilityAuditIssue) {
+    private static func record(_ issue: XCUIAccessibilityAuditIssue, element: XCUIElement?) {
         guard let path = collectFile else { return }
-        let element = issue.element
         let line = "\(currentScreen) | \(issue.auditType.rawValue) | \(issue.compactDescription) | label=\(element?.label ?? "-") "
             + "frame=\(element?.frame ?? .zero) id=\(element?.identifier ?? "-") type=\(element?.elementType.rawValue ?? 0)\n"
         if let handle = FileHandle(forWritingAtPath: path) {
