@@ -31,7 +31,7 @@ struct TagwerkApp: App {
             let services = IntentServices(environment: environment)
             AppDependencyManager.shared.add(dependency: services)
             // The controls run their intents here, also when the system starts the app in the background for one.
-            ControlActionRouter(writer: services, focus: environment.focus).install()
+            ControlActionRouter(writer: services, focus: environment.focus, router: environment.router).install()
             HabitEntitySource.activeHabits = { services.activeHabits() }
             // New article names become speakable, also after a Siri add that launched the app in the background
             // (`RootView.task` does not run then). Hosted unit tests do not talk to the system.

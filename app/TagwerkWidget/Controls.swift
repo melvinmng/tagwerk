@@ -5,6 +5,8 @@ import WidgetKit
 
 // The controls of Tagwerk for Control Center, the lock screen and the Action button (#167). They show generic
 // texts only: no habit name, no figures of the day, no task title (see `ControlText`).
+// The opening controls run `ControlOpenIntent`: `OpenURLIntent` with the private `tagwerk://` scheme does not open the app
+// from a control.
 
 /// "Wasser": a tap adds the configured amount (250 ml by default) without opening the app.
 struct WaterControl: ControlWidget {
@@ -58,7 +60,7 @@ struct HabitControlConfiguration: ControlConfigurationIntent {
 struct DictateControl: ControlWidget {
     var body: some ControlWidgetConfiguration {
         StaticControlConfiguration(kind: ControlKind.dictate) {
-            ControlWidgetButton(action: OpenURLIntent(AppRoute.notesDictate.url)) {
+            ControlWidgetButton(action: ControlOpenIntent(route: .notesDictate)) {
                 Label(ControlText.dictateName, systemImage: "mic.fill")
             }
         }
@@ -95,7 +97,7 @@ struct FocusControl: ControlWidget {
 struct CaptureControl: ControlWidget {
     var body: some ControlWidgetConfiguration {
         StaticControlConfiguration(kind: ControlKind.capture) {
-            ControlWidgetButton(action: OpenURLIntent(AppRoute.capture.url)) {
+            ControlWidgetButton(action: ControlOpenIntent(route: .capture)) {
                 Label(ControlText.captureName, systemImage: "plus.circle")
             }
         }
@@ -108,7 +110,7 @@ struct CaptureControl: ControlWidget {
 struct RoutineControl: ControlWidget {
     var body: some ControlWidgetConfiguration {
         StaticControlConfiguration(kind: ControlKind.routine) {
-            ControlWidgetButton(action: OpenURLIntent(AppRoute.routineNow.url)) {
+            ControlWidgetButton(action: ControlOpenIntent(route: .routineNow)) {
                 Label(ControlText.routineName, systemImage: "sun.horizon")
             }
         }
@@ -121,7 +123,7 @@ struct RoutineControl: ControlWidget {
 struct ShoppingControl: ControlWidget {
     var body: some ControlWidgetConfiguration {
         StaticControlConfiguration(kind: ControlKind.shopping) {
-            ControlWidgetButton(action: OpenURLIntent(AppRoute.shopping.url)) {
+            ControlWidgetButton(action: ControlOpenIntent(route: .shopping)) {
                 Label(ControlText.shoppingName, systemImage: "cart")
             }
         }
