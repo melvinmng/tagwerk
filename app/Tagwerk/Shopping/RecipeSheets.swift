@@ -434,12 +434,6 @@ struct RecipeResultView: View {
     /// "Ich koche für": the number the user chose, otherwise the one of the recipe.
     static func targetServings(base: Int?, cooking: Int?) -> Int? { cooking ?? base }
 
-    /// One tap of a stepper: from no number to `startServings`, otherwise by one within 1...50.
-    static func stepped(_ value: Int?, by delta: Int) -> Int {
-        guard let value else { return startServings }
-        return min(max(value + delta, servingsRange.lowerBound), servingsRange.upperBound)
-    }
-
     /// Whether "hinzufügen" is possible: at least one item is chosen, and the recipe's servings are known (the amounts cannot
     /// be scaled without them).
     static func canAdd(base: Int?, selectedCount: Int) -> Bool { base != nil && selectedCount > 0 }
@@ -480,8 +474,9 @@ struct RecipeResultView: View {
         let shown = Self.scaled(candidates: candidates, base: baseServings, target: target, locale: locale)
         List {
             Section {
-                servingsRow("Rezept für", value: baseServings, isMissing: baseServings == nil) { baseServings = Self.stepped(baseServings, by: $0) }
-                servingsRow("Ich koche für", value: target, isMissing: false) { cookingServings = Self.stepped(target, by: $0) }
+                ValueStepper("Rezept für", value: $baseServings, start: Self.startServings, in: Self.servingsRange)
+                ValueStepper("Ich koche für", value: Binding(get: { target }, set: { cookingServings = $0 }),
+                             start: Self.startServings, in: Self.servingsRange)
             } header: {
                 Text("Portionen")
             } footer: {
@@ -528,22 +523,6 @@ struct RecipeResultView: View {
             .disabled(!Self.canAdd(base: baseServings, selectedCount: selected.count) || isAdding)
             .padding()
             .background(.bar)
-        }
-    }
-
-    /// A stepper with the number in its label; the number is not tappable yet.
-    private func servingsRow(_ title: LocalizedStringKey, value: Int?, isMissing: Bool, change: @escaping (Int) -> Void) -> some View {
-        Stepper {
-            HStack {
-                Text(title)
-                Spacer()
-                Text(value.map(String.init) ?? "–").monospacedDigit()
-                    .foregroundStyle(isMissing ? Color.red : Color.secondary)
-            }
-        } onIncrement: {
-            change(1)
-        } onDecrement: {
-            change(-1)
         }
     }
 

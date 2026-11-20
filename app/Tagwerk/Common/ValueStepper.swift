@@ -14,6 +14,9 @@ struct ValueStepper: View {
     private let unit: LocalizedStringKey?
     private let appliesWhileTyping: Bool
     private let display: (Double) -> String
+    /// Whether the value is not set yet (an optional binding holding `nil`). `value` then reads as `startValue`.
+    private let isUnset: Bool
+    private let startValue: Double
 
     @State private var model: ValueEntryModel
     @FocusState private var isFocused: Bool
@@ -36,6 +39,19 @@ struct ValueStepper: View {
                   display: { display(Int($0.rounded())) })
     }
 
+    /// Whole number that may not be set yet (servings a recipe does not name). While it is `nil` the row shows a dash,
+    /// the first tap on − or + sets `start`, and the field opens blank; an entry that cannot be read leaves it `nil`.
+    init(_ title: LocalizedStringKey, value: Binding<Int?>, start: Int, in range: ClosedRange<Int>, step: Int = 1,
+         kind: NumberEntryKind = .integer, unit: LocalizedStringKey? = nil, appliesWhileTyping: Bool = true,
+         display: @escaping (Int) -> String = { String($0) }) {
+        let adapter = Binding<Double>(get: { Double(value.wrappedValue ?? start) },
+                                      set: { value.wrappedValue = Int($0.rounded()) })
+        self.init(title: title, value: adapter, range: Double(range.lowerBound)...Double(range.upperBound), step: Double(step),
+                  kind: kind, scale: 1, unit: unit, appliesWhileTyping: appliesWhileTyping,
+                  display: { value.wrappedValue == nil ? "–" : display(Int($0.rounded())) },
+                  isUnset: value.wrappedValue == nil, startValue: Double(start))
+    }
+
     /// Decimal value stored as `Double`, for example the quantity factor of a meal item.
     init(_ title: LocalizedStringKey, value: Binding<Double>, in range: ClosedRange<Double>, step: Double,
          kind: NumberEntryKind, scale: Double = 1, unit: LocalizedStringKey? = nil, appliesWhileTyping: Bool = true,
@@ -46,7 +62,9 @@ struct ValueStepper: View {
 
     private init(title: LocalizedStringKey, value: Binding<Double>, range: ClosedRange<Double>, step: Double,
                  kind: NumberEntryKind, scale: Double, unit: LocalizedStringKey?, appliesWhileTyping: Bool,
-                 display: @escaping (Double) -> String) {
+                 display: @escaping (Double) -> String, isUnset: Bool = false, startValue: Double = 0) {
+        self.isUnset = isUnset
+        self.startValue = startValue
         self.title = title
         self._value = value
         self.range = range
@@ -138,25 +156,34 @@ struct ValueStepper: View {
 
     private func beginEditing() {
         model.update(range: range, step: step)
-        model.begin(value: value)
+        model.begin(value: value, startsEmpty: isUnset)
     }
 
     private func typed(_ text: String) {
         model.update(range: range, step: step)
         let live = model.typed(text)
-        if appliesWhileTyping, let live, live != value { value = live }
+        if appliesWhileTyping, let live, live != value || isUnset { value = live }
     }
 
     private func finishEditing() {
         guard model.isEditing else { return }
         model.update(range: range, step: step)
+        let readable = model.hasReadableText
         let committed = model.commit(current: value, display: display)
-        if committed != value { value = committed }
+        if isUnset {
+            if readable { value = committed }  // an unreadable entry leaves the value unset
+        } else if committed != value {
+            value = committed
+        }
     }
 
     /// One step up (`direction` 1) or down (-1), limited to the range.
     private func step(_ direction: Int) {
         finishEditing()
+        if isUnset {
+            value = min(max(startValue, range.lowerBound), range.upperBound)
+            return
+        }
         let next = min(max(value + Double(direction) * step, range.lowerBound), range.upperBound)
         if next != value { value = next }
     }

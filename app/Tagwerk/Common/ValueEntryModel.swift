@@ -36,13 +36,17 @@ struct ValueEntryModel {
         self.step = step
     }
 
-    /// Opens the field with the current value, without unit and without grouping separator.
-    mutating func begin(value: Double) {
+    /// Opens the field with the current value, without unit and without grouping separator. `startsEmpty` opens it blank,
+    /// for a value that is not set yet.
+    mutating func begin(value: Double, startsEmpty: Bool = false) {
         valueAtBegin = value
-        text = NumberEntry.editingText(value / scale, kind: kind, locale: locale)
+        text = startsEmpty ? "" : NumberEntry.editingText(value / scale, kind: kind, locale: locale)
         isEditing = true
         hint = nil
     }
+
+    /// Whether the text in the field can be read as a number.
+    var hasReadableText: Bool { NumberEntry.parse(text, kind: kind, locale: locale) != nil }
 
     /// Takes the typed text. Returns the value to store right away (limited and rounded), or `nil` while the text is not
     /// readable. Storing on every keystroke means saving a sheet with the keyboard still open never loses the entry.

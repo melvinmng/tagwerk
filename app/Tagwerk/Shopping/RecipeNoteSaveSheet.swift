@@ -78,17 +78,7 @@ struct RecipeNoteSaveView: View {
                 TextField("Titel", text: $title)
             }
             Section {
-                Stepper {
-                    HStack {
-                        Text("Portionen")
-                        Spacer()
-                        Text(servings.map(String.init) ?? "–").monospacedDigit().foregroundStyle(.secondary)
-                    }
-                } onIncrement: {
-                    servings = RecipeResultView.stepped(servings, by: 1)
-                } onDecrement: {
-                    servings = RecipeResultView.stepped(servings, by: -1)
-                }
+                ValueStepper("Portionen", value: $servings, start: RecipeResultView.startServings, in: RecipeResultView.servingsRange)
             } footer: {
                 if servings == nil { Text("Im Rezept steht keine Portionszahl. Du kannst sie später in der Notiz ergänzen.") }
             }

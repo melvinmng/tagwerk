@@ -87,4 +87,17 @@ struct ValueEntryModelTests {
         #expect(model.commit(current: 15, display: { "\(Int($0)) min" }) == 15)
         #expect(model.hint == nil)
     }
+
+    @Test func begin_startsEmpty_forAValueThatIsNotSetYet() {
+        var model = ValueEntryModel(kind: .integer, range: 1...50, step: 1, locale: german)
+        model.begin(value: 4, startsEmpty: true)
+        #expect(model.text.isEmpty)
+        #expect(!model.hasReadableText)
+        // Nothing typed: the entry is unreadable, so the view leaves the value unset and the hint appears.
+        _ = model.commit(current: 4, display: { "\(Int($0))" })
+        #expect(model.hint?.contains("Zahl") == true)
+        model.begin(value: 4, startsEmpty: true)
+        #expect(model.typed("6") == 6)
+        #expect(model.hasReadableText)
+    }
 }
