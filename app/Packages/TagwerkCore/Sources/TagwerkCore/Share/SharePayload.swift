@@ -68,6 +68,7 @@ public struct SharePayload: Sendable, Hashable {
                 files.append((type, name))
             }
         }
+        texts = ShareItemText.mergeTexts(texts)
         let fileNames = files.map(\.name)
 
         // 1. A mail file wins over everything shared with it.
@@ -76,12 +77,13 @@ public struct SharePayload: Sendable, Hashable {
             let base = (name as NSString).deletingPathExtension
             return SharePayload(kind: .mail, title: cut(base), fileNames: fileNames)
         }
-        // 2. A web link; text shared with it (Safari adds the page title) becomes the title.
+        // 2. A web link. The title is the page title if Safari told it, else the first line of the text shared with it. The text
+        // (a selection, or the page title Safari adds as text) is the body once; it is never also a second text.
         if let webURL {
             let link = webURL.absoluteString
             let extra = texts.filter { $0 != link && $0 != pageTitle }
             let joined = extra.isEmpty ? nil : extra.joined(separator: "\n")
-            let title = joined.flatMap(firstLine) ?? pageTitle ?? host(of: webURL)
+            let title = pageTitle ?? joined.flatMap(firstLine) ?? host(of: webURL)
             return SharePayload(kind: .url, title: cut(title), text: joined, url: webURL, pageTitle: pageTitle.map(cut),
                                 fileNames: fileNames)
         }

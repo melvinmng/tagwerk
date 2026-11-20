@@ -28,16 +28,17 @@ struct ShareNoteSheet: View {
             let link = mail.messageID.flatMap { MailLink.url(messageID: $0) }?.absoluteString
             return [item.title, sender, mail.bodyText, link].compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: "\n\n")
         }
+        // Title and text never say the same twice: `noteParts` drops a title line the text starts with already.
+        let parts = NewTaskPrefill.noteParts(title: item.title, text: item.text)
         guard let url = item.url else {
-            return [item.title, NewTaskPrefill.sharedNotes(title: item.title, text: item.text)]
-                .compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: "\n\n")
+            return [parts.title, parts.body].compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: "\n\n")
         }
         // The link is a line of its own, "[Seitentitel](https://…)", instead of the raw address. When its text is the title
         // of the item already (a plain page share), the title line would only repeat it.
         let linkTitle = Self.linkTitle(for: item)
         let link = NewTaskPrefill.markdownLink(title: linkTitle, url: url)
-        let title = linkTitle == item.title ? nil : item.title
-        return [title, NewTaskPrefill.sharedNotes(title: item.title, text: item.text), link]
+        let title = linkTitle == item.title ? nil : parts.title
+        return [title, parts.body, link]
             .compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: "\n\n")
     }
 

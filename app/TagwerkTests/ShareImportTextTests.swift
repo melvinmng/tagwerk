@@ -63,4 +63,28 @@ struct ShareImportTextTests {
         #expect(ShareImportSheet.taskNotes(for: item) == "und mehr")
         #expect(NewTaskPrefill.notes(text: "und mehr", url: item.url) == "und mehr\nhttps://example.com/a")
     }
+
+    @Test func selectionWithPageTitle_noteHasTheSelectionOnceAndTheLink() {
+        // Page title as the item's title, the selection as its text, as the extension classifies it now.
+        let selection = "Ob du eine schnelle Antwort brauchst oder eine Reise planst."
+        let item = ShareInboxItem(createdAt: .now, target: .note, title: "Ein guter Artikel", text: selection,
+                                  url: URL(string: "https://example.com/a")!, pageTitle: "Ein guter Artikel")
+        let text = ShareNoteSheet.initialText(for: item)
+        #expect(text == "\(selection)\n\n[Ein guter Artikel](https://example.com/a)")
+        #expect(text.components(separatedBy: selection).count == 2)
+    }
+
+    @Test func longSelectionWithoutLink_isNotRepeatedByItsCutTitle() {
+        // The title is the first line cut to the maximum length; the note must not start with that cut and then repeat it.
+        let selection = String(repeating: "Wort ", count: 80).trimmingCharacters(in: .whitespaces)
+        let payload = SharePayload.classify([.text(selection)])
+        let item = ShareInboxItem(createdAt: .now, target: .note, title: payload?.title ?? "", text: payload?.text)
+        #expect(payload?.title.count == SharePayload.maximumTitleLength)
+        #expect(ShareNoteSheet.initialText(for: item) == selection)
+    }
+
+    @Test func selectionWithoutURL_noteIsTheTextOnce() {
+        let item = ShareInboxItem(createdAt: .now, target: .note, title: "Erste Zeile", text: "Erste Zeile\nZweite Zeile")
+        #expect(ShareNoteSheet.initialText(for: item) == "Erste Zeile\n\nZweite Zeile")
+    }
 }

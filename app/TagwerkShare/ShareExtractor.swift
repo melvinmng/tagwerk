@@ -34,11 +34,19 @@ enum ShareExtractor {
                 for provider in item.attachments ?? [] {
                     try await read(provider, into: &result)
                 }
-                // Safari delivers the page title or the selected text here.
-                if let text = item.attributedContentText?.string.trimmingCharacters(in: .whitespacesAndNewlines), !text.isEmpty,
-                   !result.parts.contains(where: { $0 == .text(text) }) {
-                    result.parts.append(.text(text))
-                }
+                // Safari delivers the page title or the selected text in the item itself, often next to a provider that carries
+                // the same text; `SharePayload.classify` merges the copies. A title only counts together with a web address.
+                #if DEBUG
+                // Identifiers and presence only, never content (spike S2): what Safari delivers for a selection or a page.
+                log.debug("""
+                    item: attachments \(item.attachments?.count ?? 0, privacy: .public), \
+                    title \(item.attributedTitle != nil, privacy: .public), \
+                    text \(item.attributedContentText != nil, privacy: .public), \
+                    userInfo keys \((item.userInfo?.keys.map { "\($0)" } ?? []).sorted().joined(separator: ", "), privacy: .public)
+                    """)
+                #endif
+                ShareItemText.merge(attributedTitle: item.attributedTitle?.string, attributedContentText: item.attributedContentText?.string,
+                                    into: &result.parts)
             }
             guard !result.parts.isEmpty else { throw ShareExtractionError.nothingShared }
             return result
