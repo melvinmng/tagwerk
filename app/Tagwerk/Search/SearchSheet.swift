@@ -20,6 +20,8 @@ struct SearchSheet: View {
     @State private var openEvent: CalendarEvent?
     @State private var openNote: NoteTarget?
     @State private var showsShopping = false
+    /// The task whose planned day is picked in a date sheet ("Anderer Tag …").
+    @State private var planningDateFor: TaskItem?
     /// Short hint, e.g. "Der Termin wurde geändert."; shown as an alert together with errors of the task list.
     @State private var notice: String?
 
@@ -74,6 +76,19 @@ struct SearchSheet: View {
         .sheet(isPresented: $showsShopping, onDismiss: refreshAfterSheet) {
             ShoppingListSheet()
         }
+        .sheet(item: $planningDateFor) { item in
+            RescheduleDateSheet(item: item, calendar: calendar, now: now) { day in
+                plan(item) { await environment.planning.assign(item.id, to: PlanDay(day)) }
+            }
+        }
+        // A task with future time blocks asks before it moves; the dialog of "Planen" lies beneath this sheet.
+        .confirmationDialog("Zeitblöcke mitverschieben?", isPresented: hasPendingBlockDecision, titleVisibility: .visible) {
+            Button("Mitverschieben") { resolveBlocks(move: true) }
+            Button("Blöcke löschen", role: .destructive) { resolveBlocks(move: false) }
+            Button("Abbrechen", role: .cancel) { environment.planning.cancelBlockDecision() }
+        } message: {
+            Text("Für diese Aufgabe gibt es geplante Zeitblöcke im Kalender.")
+        }
         .alert("Hinweis", isPresented: hasAlert) {
             Button("OK") { notice = nil; environment.taskList.clearError() }
         } message: {
@@ -84,6 +99,11 @@ struct SearchSheet: View {
     private var hasAlert: Binding<Bool> {
         Binding(get: { notice != nil || environment.taskList.lastError != nil },
                 set: { if !$0 { notice = nil; environment.taskList.clearError() } })
+    }
+
+    private var hasPendingBlockDecision: Binding<Bool> {
+        Binding(get: { environment.planning.pendingBlockDecision != nil },
+                set: { if !$0 { environment.planning.cancelBlockDecision() } })
     }
 
     /// After a sheet over the search closed, the hits may have changed (title, completion, date).
@@ -143,6 +163,42 @@ struct SearchSheet: View {
         Task {
             await environment.taskList.complete(task.id)
             await model.refresh()
+        }
+    }
+
+    /// Sets the planned day from a hit; the sheet stays open and VoiceOver says what happened.
+    private func plan(_ item: TaskItem, _ assign: @escaping () async -> Void) {
+        Task {
+            await assign()
+            // A task with future time blocks waits for the answer of the dialog; it announces afterwards.
+            guard environment.planning.pendingBlockDecision == nil else { return }
+            announcePlanned(item.id)
+            await model.refresh()
+        }
+    }
+
+    private func resolveBlocks(move: Bool) {
+        let id = environment.planning.pendingBlockDecision?.taskID
+        Task {
+            await environment.planning.resolveBlocks(move: move)
+            if let id { announcePlanned(id) }
+            await model.refresh()
+        }
+    }
+
+    private func announcePlanned(_ id: TaskID) {
+        let planning = environment.planning
+        guard let day = planning.plannedInfo(for: id).day else { return }
+        AccessibilityNotification.Announcement(
+            SearchTaskMenu.plannedAnnouncement(day: day, today: planning.today, calendar: calendar)).post()
+    }
+
+    /// "Fokus starten" from a VoiceOver action: closes the sheet, then starts the focus like the menu button does.
+    private func startFocus(_ item: TaskItem) {
+        dismiss()
+        Task {
+            try? await Task.sleep(for: .milliseconds(400))
+            await environment.focus.start(task: item, block: nil)
         }
     }
 
@@ -385,10 +441,10 @@ struct SearchSheet: View {
                 .onTapGesture { open(item) }
                 .contextMenu { taskMenu(item) }
                 .accessibilityAddTraits(.isButton)
-                .accessibilityAction(named: Text("Öffnen")) { open(item) }
-                .accessibilityAction(named: Text(environment.planning.plannedInfo(for: item.id).day != nil
-                                                 ? "Im Plan zeigen" : "In Aufgaben zeigen")) { showTask(item) }
-                .accessibilityAction(named: Text("Erledigt")) { complete(item) }
+                .modifier(SearchTaskAccessibilityActions(entries: taskMenuEntries(item),
+                                                         isPlanned: environment.planning.plannedInfo(for: item.id).day != nil,
+                                                         isFocusRunning: environment.focus.isRunning,
+                                                         actions: taskMenuActions(item)))
         case .completed(let group, let match):
             let item = group.latest.item
             SearchCompletedRow(group: group, match: match, now: now, calendar: calendar)
@@ -444,15 +500,23 @@ struct SearchSheet: View {
         }
     }
 
+    private func taskMenuEntries(_ item: TaskItem) -> [SearchTaskMenu.Entry] {
+        SearchTaskMenu.entries(for: item, isPlanned: environment.planning.plannedInfo(for: item.id).day != nil,
+                               isOffline: environment.taskList.sourceStates[item.id.source]?.isOffline == true)
+    }
+
+    private func taskMenuActions(_ item: TaskItem) -> SearchTaskMenuActions {
+        SearchTaskMenuActions(
+            open: { open(item) },
+            show: { showTask(item) },
+            plan: { option in plan(item) { await environment.planning.plan(item.id, option: option) } },
+            planOnDate: { planningDateFor = item },
+            startFocus: { startFocus(item) },
+            openOnGitHub: { if let url = item.url { openURL(url) } },
+            complete: { complete(item) })
+    }
+
     @ViewBuilder private func taskMenu(_ item: TaskItem) -> some View {
-        Button("Öffnen", systemImage: "chevron.right") { open(item) }
-        if environment.planning.plannedInfo(for: item.id).day != nil {
-            Button("Im Plan zeigen", systemImage: "calendar") { showTask(item) }
-        } else {
-            Button("In Aufgaben zeigen", systemImage: "checklist") { showTask(item) }
-        }
-        if environment.taskList.sourceStates[item.id.source]?.isOffline != true {
-            Button("Erledigt", systemImage: "checkmark.circle") { complete(item) }
-        }
+        SearchTaskMenuContent(item: item, entries: taskMenuEntries(item), actions: taskMenuActions(item))
     }
 }

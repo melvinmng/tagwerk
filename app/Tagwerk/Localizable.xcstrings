@@ -3441,6 +3441,16 @@
         }
       }
     },
+    "Anderen Tag einplanen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plan for another day"
+          }
+        }
+      }
+    },
     "Anderer Tag": {
       "localizations": {
         "en": {
@@ -6877,6 +6887,16 @@
         }
       }
     },
+    "Eingeplant für %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Planned for %@"
+          }
+        }
+      }
+    },
     "Einheit": {
       "localizations": {
         "en": {
@@ -8500,6 +8520,46 @@
           "stringUnit": {
             "state": "translated",
             "value": "For a shared mail, Tagwerk sends the subject, the sender’s name and the text (at most 12,000 characters) to ChatGPT only if you agreed in the setting “Summarize mails with ChatGPT” and tap “Summarize with ChatGPT”. Attachments, addresses, recipients and the link to the mail are never sent. The inbox for shared content exists only on this iPhone and is not part of the data backup."
+          }
+        }
+      }
+    },
+    "Für heute eingeplant": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Planned for today"
+          }
+        }
+      }
+    },
+    "Für heute einplanen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plan for today"
+          }
+        }
+      }
+    },
+    "Für morgen eingeplant": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Planned for tomorrow"
+          }
+        }
+      }
+    },
+    "Für morgen einplanen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plan for tomorrow"
           }
         }
       }

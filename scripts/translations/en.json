@@ -2011,5 +2011,11 @@
   "Ziel": "Target",
   "Nur als Rezept speichern": "Save as recipe only",
   "Was soll mit dem Rezept geschehen?": "What should happen to the recipe?",
-  "Du wählst die Zutaten aus und kannst das Rezept zusätzlich als Notiz im Ordner „Rezepte“ sichern.": "You choose the ingredients and can also keep the recipe as a note in the “Recipes” folder."
+  "Du wählst die Zutaten aus und kannst das Rezept zusätzlich als Notiz im Ordner „Rezepte“ sichern.": "You choose the ingredients and can also keep the recipe as a note in the “Recipes” folder.",
+  "Anderen Tag einplanen": "Plan for another day",
+  "Eingeplant für %@": "Planned for %@",
+  "Für heute eingeplant": "Planned for today",
+  "Für heute einplanen": "Plan for today",
+  "Für morgen eingeplant": "Planned for tomorrow",
+  "Für morgen einplanen": "Plan for tomorrow"
 }
