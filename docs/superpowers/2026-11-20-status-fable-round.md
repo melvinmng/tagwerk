@@ -39,7 +39,7 @@ Branch mit Plänen und Mockups: `chore/fable-open-items` (Worktree `t3-638057bd-
 | `2026-11-20-notes-chatgpt.md` | fertig; Block A = #232, Block B = #233 (baut auf #173 A/B auf) |
 | `2026-11-20-g3-system-anbindungen.md` | fertig, Strang L mit SP5c (L6–L9); SPC-Entscheidungen in #188; Zusatz: nach Textänderung der Sortier-Einwilligung einmal neu fragen |
 | `2026-11-20-g1-planen-fokus-erinnerungen.md` | fertig; offene Fragen 1–11 nach Empfehlung; Welle 1: P, F (F1–F7), E; Welle 2: V, F8, R |
-| `2026-11-20-g2-notizen-routinen.md` | in Arbeit |
+| `2026-11-20-g2-notizen-routinen.md` + `2026-11-20-g2-routinen-persoenliches.md` | fertig; 10 Stränge, 49 Tasks; Budget neu 44/17/1/2; DS4 nur bei „Ja“ aus DS0 |
 
 Festlegungen der Hauptsitzung zum G3-Plan: offene Fragen nach Empfehlung; Zeilenwert „10 Kurzbefehle“; Blau in dunklen Blättern erst messen.
 
