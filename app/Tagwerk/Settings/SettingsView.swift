@@ -21,11 +21,13 @@ struct SettingsView: View {
 
                 Section("Mittagspause") {
                     DatePicker("Beginn", selection: time($settings.lunchStartMinutes), displayedComponents: .hourAndMinute)
-                    Stepper("Dauer: \(settings.lunchDurationMinutes) min", value: $settings.lunchDurationMinutes, in: 0...180, step: 15)
+                    ValueStepper("Dauer", value: $settings.lunchDurationMinutes, in: 0...180, step: 15, kind: .durationMinutes,
+                                 unit: "min", display: ValueStepper.minutesText)
                 }
 
                 Section {
-                    Stepper("Puffer: \(settings.bufferMinutes) min", value: $settings.bufferMinutes, in: 0...60, step: 5)
+                    ValueStepper("Puffer", value: $settings.bufferMinutes, in: 0...60, step: 5, kind: .durationMinutes,
+                                 unit: "min", display: ValueStepper.minutesText)
                 } footer: {
                     Text("Abstand zwischen Terminen und eingeplanten Aufgaben.")
                 }
