@@ -12,6 +12,8 @@ public enum NoteFolderRole: String, Sendable, CaseIterable {
     case eveningRoutine
     /// Holds the dream notes ("Dream Log"), one per day, written in the morning routine.
     case dreamLog
+    /// The user's recipes, kept as structured notes (`RecipeNote`); own notes may be created in and moved into it.
+    case recipes
 
     /// The folder a kind of note belongs to; `nil` for kinds that have no fixed folder (free notes, journal, Bible Study).
     public static func role(for kind: NoteKind) -> NoteFolderRole? {
@@ -22,7 +24,7 @@ public enum NoteFolderRole: String, Sendable, CaseIterable {
     public var isPrivate: Bool {
         switch self {
         case .journal, .bibleStudy, .dreamLog: true
-        case .brainDump, .morningRoutine, .eveningRoutine: false
+        case .brainDump, .morningRoutine, .eveningRoutine, .recipes: false
         }
     }
 
@@ -31,7 +33,7 @@ public enum NoteFolderRole: String, Sendable, CaseIterable {
     public var isInDefaultBackup: Bool {
         switch self {
         case .journal, .bibleStudy: false
-        case .brainDump, .morningRoutine, .eveningRoutine, .dreamLog: true
+        case .brainDump, .morningRoutine, .eveningRoutine, .dreamLog, .recipes: true
         }
     }
 
@@ -39,7 +41,7 @@ public enum NoteFolderRole: String, Sendable, CaseIterable {
     /// filled by the routines only. Journal and Bible Study keep the behaviour they always had: the folder picker offers them.
     public var acceptsOwnNotes: Bool {
         switch self {
-        case .journal, .bibleStudy, .brainDump: true
+        case .journal, .bibleStudy, .brainDump, .recipes: true
         case .morningRoutine, .eveningRoutine, .dreamLog: false
         }
     }
@@ -50,7 +52,7 @@ public enum NoteFolderRole: String, Sendable, CaseIterable {
         case .morningRoutine: .morning
         case .eveningRoutine: .evening
         case .dreamLog: .dream
-        case .journal, .bibleStudy, .brainDump: nil
+        case .journal, .bibleStudy, .brainDump, .recipes: nil
         }
     }
 }

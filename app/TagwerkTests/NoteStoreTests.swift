@@ -232,17 +232,18 @@ struct NoteStoreTests {
 
     // MARK: Fixed folders (P5)
 
-    @Test func ensureDefaultFolders_createsFourFoldersOnce() {
+    @Test func ensureDefaultFolders_createsFiveFoldersOnce() {
         store.ensureDefaultFolders()
         store.ensureDefaultFolders()
         let roles = store.folders().compactMap(\.role)
-        #expect(roles.count == 4 && Set(roles) == [.brainDump, .morningRoutine, .eveningRoutine, .dreamLog])
+        #expect(roles.count == 5 && Set(roles) == [.brainDump, .morningRoutine, .eveningRoutine, .dreamLog, .recipes])
+        #expect(store.folder(role: .recipes)?.name == "Rezepte")
         #expect(store.folder(role: .brainDump)?.name == "Brain Dump")
         #expect(store.folder(role: .morningRoutine)?.name == "Tagesstart")
         #expect(store.folder(role: .eveningRoutine)?.name == "Tagesabschluss")
         #expect(store.folder(role: .dreamLog)?.name == "Dream Log")
         let orders = NoteStore.defaultFolderRoles.compactMap { store.folder(role: $0)?.order }
-        #expect(orders == orders.sorted() && Set(orders).count == 4)
+        #expect(orders == orders.sorted() && Set(orders).count == 5)
     }
 
     @Test func ensureDefaultFolders_keepsRenamedFolder() throws {
@@ -250,7 +251,22 @@ struct NoteStoreTests {
         let id = try #require(store.folder(role: .brainDump)?.id)
         try store.renameFolder(id, to: "Kopf leeren")
         store.ensureDefaultFolders()
-        #expect(store.folder(role: .brainDump)?.name == "Kopf leeren" && store.folders().count == 4)
+        #expect(store.folder(role: .brainDump)?.name == "Kopf leeren" && store.folders().count == 5)
+    }
+
+    @Test func ensureDefaultFolders_createsRecipesOnce_keepsRename() throws {
+        // A user of an older version has the four folders already; the recipes folder is added without a migration.
+        for role in [NoteFolderRole.brainDump, .morningRoutine, .eveningRoutine, .dreamLog] {
+            store.ensureSystemFolder(role, name: NoteStore.defaultFolderName(for: role))
+        }
+        #expect(store.folder(role: .recipes) == nil)
+        store.ensureDefaultFolders()
+        store.ensureDefaultFolders()
+        #expect(store.folders().filter { $0.role == .recipes }.count == 1)
+        let id = try #require(store.folder(role: .recipes)?.id)
+        try store.renameFolder(id, to: "Kochbuch")
+        store.ensureDefaultFolders()
+        #expect(store.folder(role: .recipes)?.name == "Kochbuch" && store.folders().count == 5)
     }
 
     @Test func ensureDefaultFolders_withoutChanges_doesNotWrite() {

@@ -1,7 +1,7 @@
 import SwiftUI
 import TagwerkCore
 
-/// The notes entry page: "Alle Notizen", the default folder, "Brain Dump", the user's folders as a tree, the system
+/// The notes entry page: "Alle Notizen", the default folder, "Brain Dump", "Rezepte", the user's folders as a tree, the system
 /// folders (Tagesstart, Tagesabschluss, Dream Log, journal, Bible Study) and "Zuletzt gelöscht". It has no navigation
 /// stack of its own.
 struct NotesFoldersView: View {
@@ -31,6 +31,9 @@ struct NotesFoldersView: View {
                 scopeRow(.standard, symbol: "note.text", title: "Notizen", count: store.notes(.own).count)
                 if let brainDump = store.folder(role: .brainDump) {
                     brainDumpRow(brainDump, count: counts[brainDump.id] ?? 0)
+                }
+                if let recipes = tree.first(where: { $0.folder.role == .recipes }) {
+                    folderRow(recipes, count: counts[recipes.id] ?? 0)
                 }
             }
             if !own.isEmpty {
@@ -174,15 +177,16 @@ struct NotesFoldersView: View {
         case .morningRoutine: "sun.horizon"
         case .eveningRoutine: "moon.stars"
         case .dreamLog: "moon.zzz"
+        case .recipes: "fork.knife"
         case nil: "folder"
         }
     }
 
     /// The system folders of the second section in display order: the routine folders and the Dream Log first, then
-    /// journal and Bible Study. "Brain Dump" has its own row in the first section.
+    /// journal and Bible Study. "Brain Dump" and "Rezepte" have their own rows in the first section.
     static func systemFolders(_ tree: [NoteFolderNode]) -> [NoteFolderNode] {
         let rank: [NoteFolderRole: Int] = [.morningRoutine: 0, .eveningRoutine: 1, .dreamLog: 2, .journal: 3, .bibleStudy: 4]
-        return tree.filter { $0.folder.role != nil && $0.folder.role != .brainDump }
+        return tree.filter { $0.folder.role != nil && $0.folder.role != .brainDump && $0.folder.role != .recipes }
             .flatMap(\.flattened)
             .sorted { (rank[$0.folder.role ?? .journal] ?? 9) < (rank[$1.folder.role ?? .journal] ?? 9) }
     }
