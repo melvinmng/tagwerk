@@ -78,6 +78,7 @@ targets:
       - path: Tagwerk/App/Color+Hex.swift
       - path: Tagwerk/Focus/Shared/FocusActivityAttributes.swift
       - path: Tagwerk/Focus/Shared/FocusActivityIntents.swift
+      - path: Tagwerk/Controls/Shared
     dependencies:
       - package: TagwerkCore
     entitlements:

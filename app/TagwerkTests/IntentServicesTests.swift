@@ -12,7 +12,8 @@ struct IntentServicesTests {
     private func make() throws -> (IntentServices, AppEnvironment) {
         let container = try ModelContainerFactory.make(inMemory: true)
         let environment = try AppEnvironment(modelContainer: container, notificationCenter: FakeNotificationCenter(),
-                                             health: health, snapshotWriter: WidgetSnapshotWriter(directory: directory, reload: {}))
+                                             health: health, snapshotWriter: WidgetSnapshotWriter(directory: directory, reload: {}),
+                                             focusNotificationCenter: FakeFocusNotificationCenter())
         environment.settings.setupCompleted = true
         return (IntentServices(environment: environment), environment)
     }
@@ -106,6 +107,47 @@ struct IntentServicesTests {
         #expect(environment.router.takeCapturePrefill() == .workout(activity: .running, minutes: 30))
     }
 
+    // MARK: Focus and dictation (#167)
+
+    @Test func startFocus_freeSession() async throws {
+        let (services, environment) = try make()
+        let reply = await services.setFocus(true)
+        #expect(String(localized: reply) == "Fokus gestartet.")
+        #expect(environment.focus.isRunning)
+        #expect(environment.focus.session?.title == "")
+        #expect(String(localized: await services.setFocus(true)) == "Der Fokus läuft schon.")
+        _ = await services.setFocus(false)
+    }
+
+    @Test func stopFocus_endsTheSession() async throws {
+        let (services, environment) = try make()
+        _ = await services.setFocus(true)
+        #expect(String(localized: await services.setFocus(false)) == "Fokus beendet.")
+        #expect(environment.focus.isRunning == false)
+    }
+
+    @Test func stopFocus_whenIdle_repliesNothingRunning() async throws {
+        let (services, _) = try make()
+        #expect(String(localized: await services.setFocus(false)) == "Es läuft gerade kein Fokus.")
+    }
+
+    @Test func openDictation_onlyNavigates() throws {
+        let (services, environment) = try make()
+        services.openDictation()
+        #expect(environment.router.takeRequest(setupCompleted: true)?.route == .notesDictate)
+        #expect(environment.router.takeDictationRequest())
+    }
+
+    @Test func openDictatedNote_withBrainDump_showsItsList() throws {
+        let (_, environment) = try make()
+        let folder = try #require(environment.notes.folder(role: .brainDump))
+        environment.router.open(.notesDictate)
+        _ = environment.router.takeRequest(setupCompleted: true)
+        environment.openDictatedNote()
+        #expect(environment.tasksPath == [.notes, .notesFolder(.folder(folder.id))])
+        #expect(environment.router.dictationRequested)
+    }
+
     // MARK: Habits (phase 7)
 
     private func addHabit(_ environment: AppEnvironment, name: String = "Lesen 20 min", source: HabitSource = .manual,
@@ -184,5 +226,24 @@ struct IntentServicesTests {
         health.failStepReads = true
         _ = await services.checkHabit(id: manual.id)
         #expect(environment.snapshotWriter.current()?.days.first?.habits == SnapshotHabits(done: 2, total: 2))
+    }
+
+    // MARK: Habit list for the control (#167)
+
+    @Test func habitList_writtenOnChange_withoutStats() throws {
+        let suite = "test.habits.\(UUID().uuidString)"
+        let state = ControlState(defaults: UserDefaults(suiteName: suite)!)
+        let container = try ModelContainerFactory.make(inMemory: true)
+        let environment = try AppEnvironment(modelContainer: container, notificationCenter: FakeNotificationCenter(), health: health,
+                                             snapshotWriter: WidgetSnapshotWriter(directory: directory, reload: {}), controlState: state)
+        environment.startSnapshotUpdates()
+        #expect(state.habits().isEmpty)
+        let habit = addHabit(environment, name: "Lesen 20 min")
+        #expect(state.habits() == [ControlHabit(id: habit.id, name: "Lesen 20 min", symbol: "book")])
+        let paused = addHabit(environment, name: "Pausiert", pausedSince: environment.habits.today)
+        #expect(state.habits().map(\.id) == [habit.id])
+        #expect(!state.habits().map(\.id).contains(paused.id))
+        environment.habits.delete(habit.id)
+        #expect(state.habits().isEmpty)
     }
 }

@@ -46,4 +46,22 @@ struct AppRouteTests {
         #expect(AppRoute(url: URL(string: "tagwerk://routine/evening")!) == .routineEvening)
         #expect(AppRoute(url: URL(string: "tagwerk://routine/abend")!) == nil)
     }
+
+    @Test func parses_notesDictate() {
+        #expect(AppRoute(url: URL(string: "tagwerk://notes/dictate")!) == .notesDictate)
+        #expect(AppRoute.notesDictate.url.absoluteString == "tagwerk://notes/dictate")
+        #expect(AppRoute(url: URL(string: "tagwerk://notes")!) == nil)
+    }
+
+    @Test func parses_routineNow() {
+        #expect(AppRoute(url: URL(string: "tagwerk://routine/now")!) == .routineNow)
+        #expect(AppRoute.routineNow.url.absoluteString == "tagwerk://routine/now")
+    }
+
+    @Test func allCases_roundTripURL() {
+        for route in AppRoute.allCases {
+            #expect(AppRoute(url: route.url) == route)
+        }
+        #expect(Set(AppRoute.allCases.map(\.rawValue)).count == AppRoute.allCases.count)
+    }
 }

@@ -21,11 +21,16 @@ struct TagwerkApp: App {
             let isTestHost = ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
             let environment = try AppEnvironment(modelContainer: container, health: health,
                                                  snapshotWriter: isTestHost ? nil : .live(),
-                                                 shareInbox: isTestHost ? nil : AppGroup.shareInboxDirectory.map { ShareInbox(directory: $0) })
+                                                 shareInbox: isTestHost ? nil : AppGroup.shareInboxDirectory.map { ShareInbox(directory: $0) },
+                                                 controlState: isTestHost ? nil : .live(),
+                                                 controlReloader: isTestHost ? nil : SystemControlReloader())
             _environment = State(initialValue: environment)
             // App Intents run in this process and share the one model container (phase 4 design §8).
             let services = IntentServices(environment: environment)
             AppDependencyManager.shared.add(dependency: services)
+            // The controls run their intents here, also when the system starts the app in the background for one.
+            ControlActionRouter(writer: services, focus: environment.focus).install()
+            HabitEntitySource.activeHabits = { services.activeHabits() }
             // New article names become speakable, also after a Siri add that launched the app in the background
             // (`RootView.task` does not run then). Hosted unit tests do not talk to the system.
             if !isTestHost {

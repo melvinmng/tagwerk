@@ -59,6 +59,16 @@
         }
       }
     },
+    "+%@ ml" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "+%@ ml"
+          }
+        }
+      }
+    },
     "/ %@ kcal" : {
       "localizations" : {
         "en" : {
@@ -109,6 +119,16 @@
         }
       }
     },
+    "Aus" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Off"
+          }
+        }
+      }
+    },
     "Dein nächster Termin oder Zeitblock und was danach kommt." : {
       "localizations" : {
         "en" : {
@@ -125,6 +145,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "The next entries of the day, with calories and water if you like."
+          }
+        }
+      }
+    },
+    "Einkaufsliste" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shopping List"
+          }
+        }
+      }
+    },
+    "Erfassen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Log"
           }
         }
       }
@@ -179,6 +219,26 @@
         }
       }
     },
+    "Gewohnheit" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Habit"
+          }
+        }
+      }
+    },
+    "Gewohnheit abhaken" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Check off habit"
+          }
+        }
+      }
+    },
     "HEUTE · %@ %lld. %@" : {
       "localizations" : {
         "de" : {
@@ -191,6 +251,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "TODAY · %1$@ %3$@ %2$lld"
+          }
+        }
+      }
+    },
+    "Hakt eine Gewohnheit für heute ab, ohne Tagwerk zu öffnen." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Checks off a habit for today without opening Tagwerk."
           }
         }
       }
@@ -245,12 +315,42 @@
         }
       }
     },
+    "Läuft" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Running"
+          }
+        }
+      }
+    },
     "MORGEN" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "TOMORROW"
+          }
+        }
+      }
+    },
+    "Menge" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Amount"
+          }
+        }
+      }
+    },
+    "Menge (ml)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Amount (ml)"
           }
         }
       }
@@ -281,12 +381,32 @@
         }
       }
     },
+    "Name" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Name"
+          }
+        }
+      }
+    },
     "Nichts mehr geplant" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Nothing more planned"
+          }
+        }
+      }
+    },
+    "Notiz diktieren" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dictate Note"
           }
         }
       }
@@ -342,6 +462,26 @@
         }
       }
     },
+    "Startet oder beendet einen freien Fokus-Timer." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Starts or stops a free focus timer."
+          }
+        }
+      }
+    },
+    "Tagesroutine" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Daily Routine"
+          }
+        }
+      }
+    },
     "Tagwerk öffnen" : {
       "localizations" : {
         "en" : {
@@ -362,6 +502,16 @@
         }
       }
     },
+    "Trägt Wasser ein, ohne Tagwerk zu öffnen." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Logs water without opening Tagwerk."
+          }
+        }
+      }
+    },
     "Verschieben" : {
       "localizations" : {
         "en" : {
@@ -378,6 +528,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Lecture"
+          }
+        }
+      }
+    },
+    "Wasser" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Water"
+          }
+        }
+      }
+    },
+    "Wasser erfassen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Log water"
           }
         }
       }
@@ -414,6 +584,46 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "then %1$@ %2$@"
+          }
+        }
+      }
+    },
+    "Öffnet Erfassen für Essen, Wasser und Training." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opens Log for meals, water and workouts."
+          }
+        }
+      }
+    },
+    "Öffnet die Einkaufsliste." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opens the shopping list."
+          }
+        }
+      }
+    },
+    "Öffnet eine neue Notiz in Brain Dump und startet das Diktat." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opens a new note in Brain Dump and starts dictation."
+          }
+        }
+      }
+    },
+    "Öffnet morgens den Tagesstart, sonst den Tagesabschluss." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opens the morning start before noon, the evening wrap-up otherwise."
           }
         }
       }

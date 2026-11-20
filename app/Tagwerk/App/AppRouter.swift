@@ -22,6 +22,15 @@ final class AppRouter {
     }
 
     private var pending: Request?
+    @ObservationIgnored private let now: () -> Date
+    @ObservationIgnored private let calendar: Calendar
+    /// "Notiz diktieren" arrived: the notes list of Brain Dump starts a recording once, see `takeDictationRequest()`.
+    private(set) var dictationRequested = false
+
+    init(now: @escaping () -> Date = Date.init, calendar: Calendar = .tagwerk) {
+        self.now = now
+        self.calendar = calendar
+    }
     /// Counts requests, so views react to every request, also to a second one for the same route.
     private(set) var receivedCount = 0
     /// Prefill for the "Erfassen" tab, consumed once by `CaptureView`.
@@ -41,18 +50,27 @@ final class AppRouter {
         case .captureWorkout: .workout(activity: nil, minutes: nil)
         case .review: .review
         case .capture: .today
-        case .planToday, .shopping, .routineStart, .routineEvening, .routineWeek: nil
+        case .planToday, .shopping, .routineStart, .routineEvening, .routineWeek, .routineNow, .notesDictate: nil
         }
         pending = Request(route: route, prefill: prefill ?? defaultPrefill)
         receivedCount += 1
     }
 
-    /// The buffered request once setup is done; `nil` before. Hands the prefill on to the capture tab.
+    /// The buffered request once setup is done; `nil` before. Hands the prefill on to the capture tab. "Tagesroutine"
+    /// is resolved here, at the time the request is shown: the start in the morning, the wrap-up otherwise.
     func takeRequest(setupCompleted: Bool) -> Request? {
-        guard setupCompleted, let request = pending else { return nil }
+        guard setupCompleted, var request = pending else { return nil }
         pending = nil
+        if request.route == .routineNow { request.route = RoutineSchedule.currentRoutine(at: now(), calendar: calendar) }
         capturePrefill = request.prefill
+        dictationRequested = request.route == .notesDictate
         return request
+    }
+
+    /// Whether a recording is to start in the notes list that was just opened; consumed once.
+    func takeDictationRequest() -> Bool {
+        defer { dictationRequested = false }
+        return dictationRequested
     }
 
     func takeCapturePrefill() -> CapturePrefill? {

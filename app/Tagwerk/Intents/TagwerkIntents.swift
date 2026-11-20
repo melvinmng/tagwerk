@@ -33,36 +33,6 @@ struct LogWaterIntent: AppIntent {
     }
 }
 
-/// A habit as Siri and Shortcuts see it: only its name, never streaks or rates.
-struct HabitEntity: AppEntity {
-    static let typeDisplayRepresentation: TypeDisplayRepresentation = "Gewohnheit"
-    static let defaultQuery = HabitEntityQuery()
-
-    var id: UUID
-    @Property(title: "Name") var name: String
-
-    var displayRepresentation: DisplayRepresentation { DisplayRepresentation(title: LocalizedStringResource(stringLiteral: name)) }
-
-    init(_ habit: Habit) {
-        id = habit.id
-        name = habit.name
-    }
-}
-
-struct HabitEntityQuery: EntityQuery {
-    @Dependency private var services: IntentServices
-
-    @MainActor
-    func entities(for identifiers: [UUID]) async throws -> [HabitEntity] {
-        services.activeHabits().filter { identifiers.contains($0.id) }.map(HabitEntity.init)
-    }
-
-    @MainActor
-    func suggestedEntities() async throws -> [HabitEntity] {
-        services.activeHabits().map(HabitEntity.init)
-    }
-}
-
 /// "Gewohnheit abhaken": runs in the background and checks a habit off for today. There is no undo by voice.
 struct CheckHabitIntent: AppIntent {
     static let title: LocalizedStringResource = "Gewohnheit abhaken"
@@ -217,6 +187,50 @@ struct OpenShoppingListIntent: AppIntent {
     }
 }
 
+/// What the focus shortcut does; the word is part of the spoken phrase ("Fokus starten in Tagwerk").
+enum FocusSwitchOption: String, AppEnum {
+    case start, stop
+
+    static let typeDisplayRepresentation: TypeDisplayRepresentation = "Fokus"
+    static let caseDisplayRepresentations: [FocusSwitchOption: DisplayRepresentation] = [
+        .start: "Fokus starten", .stop: "Fokus beenden",
+    ]
+}
+
+/// "Fokus starten / beenden": a free focus session without opening the app. One shortcut for both, because the system
+/// allows ten App Shortcuts in all.
+struct SetFocusIntent: AppIntent {
+    static let title: LocalizedStringResource = "Fokus starten oder beenden"
+    static let description = IntentDescription("Startet einen freien Fokus-Timer oder beendet den laufenden, ohne Tagwerk zu öffnen.")
+    static let supportedModes: IntentModes = .background
+
+    @Parameter(title: "Aktion", default: .start)
+    var action: FocusSwitchOption
+
+    @Dependency private var services: IntentServices
+
+    @MainActor
+    func perform() async throws -> some IntentResult & ProvidesDialog {
+        let reply = await services.setFocus(action == .start)
+        return .result(dialog: IntentDialog(reply))
+    }
+}
+
+/// "Notiz diktieren": opens a new note in Brain Dump with the recording running.
+struct DictateNoteIntent: AppIntent {
+    static let title: LocalizedStringResource = "Notiz diktieren"
+    static let description = IntentDescription("Öffnet Brain Dump in Tagwerk und startet das Diktat.")
+    static let supportedModes: IntentModes = .foreground(.immediate)
+
+    @Dependency private var services: IntentServices
+
+    @MainActor
+    func perform() async throws -> some IntentResult {
+        services.openDictation()
+        return .result()
+    }
+}
+
 /// "Was steht heute an?": events, blocks and deadlines from the widget snapshot, never nutrition.
 struct TodayOverviewIntent: AppIntent {
     static let title: LocalizedStringResource = "Was steht heute an?"
@@ -295,5 +309,12 @@ struct TagwerkShortcuts: AppShortcutsProvider {
         AppShortcut(intent: OpenShoppingListIntent(), phrases: [
             "Einkaufsliste in \(.applicationName) zeigen",
         ], shortTitle: "Einkaufsliste zeigen", systemImageName: "cart")
+        AppShortcut(intent: SetFocusIntent(), phrases: [
+            "\(\.$action) in \(.applicationName)",
+        ], shortTitle: "Fokus", systemImageName: "timer")
+        AppShortcut(intent: DictateNoteIntent(), phrases: [
+            "Notiz in \(.applicationName) diktieren",
+            "Diktat in \(.applicationName) starten",
+        ], shortTitle: "Notiz diktieren", systemImageName: "mic.fill")
     }
 }

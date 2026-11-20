@@ -124,6 +124,14 @@ public enum FocusTimerRules {
             completedRounds: completed, finishedAt: nil)
     }
 
+    /// When the whole session ends if nothing changes any more (no further pause, no further skipped break); `nil` while
+    /// the session is paused, because then the end depends on when it resumes. A session that already ended returns the
+    /// moment it finished.
+    public static func sessionEnd(of state: FocusTimerState) -> Date? {
+        let projected = snapshot(of: state, at: .distantFuture)
+        return projected.isPaused ? nil : projected.finishedAt
+    }
+
     /// The stretches of wall-clock time in which the timer counted focus: the work phases up to `date` (or the end of the
     /// session), without breaks and pauses, in order. Their lengths add up to `snapshot(of:at:).focusedSeconds`.
     public static func workIntervals(of state: FocusTimerState, at date: Date = .distantFuture) -> [DateInterval] {

@@ -28,6 +28,23 @@ final class IntentServices {
         return "\(amountText) ml Wasser erfasst."
     }
 
+    /// "Fokus starten / beenden": a free session without task or block, also from the background. The reply names no
+    /// task, so it may be spoken on a locked device.
+    func setFocus(_ on: Bool) async -> LocalizedStringResource {
+        let changed = await environment.focus.setRunning(on)
+        switch (on, changed) {
+        case (true, true): return "Fokus gestartet."
+        case (true, false): return "Der Fokus läuft schon."
+        case (false, true): return "Fokus beendet."
+        case (false, false): return "Es läuft gerade kein Fokus."
+        }
+    }
+
+    /// "Notiz diktieren": only navigates, like the `tagwerk://notes/dictate` link; the recording starts in the app.
+    func openDictation() {
+        environment.router.open(.notesDictate)
+    }
+
     /// The Focus filter "Mitteilungen ruhen lassen" (plan quiet-hours, decision 5): iOS runs it when a Focus with the
     /// filter starts (`active`) and, with the default value, when it ends. Remembers the state and plans the
     /// notifications again; the plan holds them back while active and lets those that came due fire after the end.

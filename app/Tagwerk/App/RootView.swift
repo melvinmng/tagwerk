@@ -207,6 +207,8 @@ struct RootView: View {
         case .routineWeek:
             showDay(environment.planning.today)
             presentRoutine(afterSheetClosed: hadOpenSheet) { environment.routines.openWeek() }
+        case .notesDictate: environment.openDictatedNote()
+        case .routineNow: break  // resolved to the start or the wrap-up by `AppRouter.takeRequest`
         }
     }
 
