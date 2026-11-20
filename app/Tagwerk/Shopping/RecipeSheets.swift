@@ -107,9 +107,32 @@ struct RecipeConsentView: View {
 enum RecipeStart {
     case link(String)
     case text(String)
-    case photo(UIImage)
+    /// The pictures of a shared item, in order; at most `RecipePhotos.maximumCount` are taken.
+    case photos([UIImage])
     /// A recipe note: "Zutaten auf die Einkaufsliste" in the note.
     case note(UUID)
+}
+
+/// A photo of the recipe, scaled down once when it is added (long edge 1,024 px, re-encoded, no metadata).
+private struct PickedPhoto: Identifiable {
+    let id = UUID()
+    let jpeg: Data
+    let image: UIImage
+
+    init?(image: UIImage) {
+        guard let jpeg = ImageDownscaler.jpeg(from: image, maxEdge: 1024), let scaled = UIImage(data: jpeg) else { return nil }
+        self.jpeg = jpeg
+        self.image = scaled
+    }
+}
+
+/// An image from the clipboard; the data is kept as it is and decoded where it is added.
+private struct PastedImage: Transferable {
+    let data: Data
+
+    static var transferRepresentation: some TransferRepresentation {
+        DataRepresentation(importedContentType: .image) { PastedImage(data: $0) }
+    }
 }
 
 /// What the recipe is read for.
@@ -140,7 +163,9 @@ struct RecipeInputView: View {
         switch start {
         case .link(let text): _source = State(initialValue: .link); _linkText = State(initialValue: text)
         case .text(let text): _recipeText = State(initialValue: text)
-        case .photo(let image): _source = State(initialValue: .photo); _photo = State(initialValue: image)
+        case .photos(let images):
+            _source = State(initialValue: .photo)
+            _photos = State(initialValue: images.prefix(RecipePhotos.maximumCount).compactMap(PickedPhoto.init(image:)))
         case .note(let id): _source = State(initialValue: .note); _noteID = State(initialValue: id)
         case nil: break
         }
@@ -154,10 +179,11 @@ struct RecipeInputView: View {
     @State private var source: Source = .text
     @State private var recipeText = ""
     @State private var linkText = ""
-    @State private var photo: UIImage?
+    @State private var photos: [PickedPhoto] = []
     @State private var noteID: UUID?
     @State private var showsOtherNotes = false
-    @State private var pickerItem: PhotosPickerItem?
+    @State private var pickerItems: [PhotosPickerItem] = []
+    @State private var showsPhotoLimit = false
     @State private var showsCamera = false
     @State private var showsConsent = false
     @State private var reading: Task<Void, Never>?
@@ -169,7 +195,7 @@ struct RecipeInputView: View {
     private var canRead: Bool {
         switch source {
         case .text: !recipeText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-        case .photo: photo != nil
+        case .photo: !photos.isEmpty
         case .link: !linkText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         case .note: selectedNoteText != nil
         }
@@ -229,7 +255,7 @@ struct RecipeInputView: View {
         .fullScreenCover(isPresented: $showsCamera) {
             CameraPicker { image in
                 showsCamera = false
-                if let image { photo = image }
+                if let image { add([image]) }
             }
             .ignoresSafeArea()
         }
@@ -245,11 +271,16 @@ struct RecipeInputView: View {
         .sheet(isPresented: $showsOtherNotes) {
             RecipeOtherNotesSheet(store: environment.notes, selectedID: $noteID)
         }
-        .onChange(of: pickerItem) { _, item in
-            guard let item else { return }
+        .onChange(of: pickerItems) { _, items in
+            guard !items.isEmpty else { return }
             Task {
-                if let data = try? await item.loadTransferable(type: Data.self), let image = UIImage(data: data) { photo = image }
-                pickerItem = nil
+                // In the order of the selection; a photo that cannot be read is skipped.
+                var images: [UIImage] = []
+                for item in items {
+                    if let data = try? await item.loadTransferable(type: Data.self), let image = UIImage(data: data) { images.append(image) }
+                }
+                pickerItems = []
+                add(images)
             }
         }
         .onDisappear { cancel() }
@@ -277,20 +308,49 @@ struct RecipeInputView: View {
 
     private var photoSection: some View {
         Section {
-            if let photo {
-                Image(uiImage: photo).resizable().scaledToFit().frame(maxHeight: 280)
-                    .clipShape(RoundedRectangle(cornerRadius: 8)).frame(maxWidth: .infinity)
-                Button("Foto entfernen", systemImage: "xmark.circle.fill", role: .destructive) { self.photo = nil }
+            ForEach(Array(photos.enumerated()), id: \.element.id) { index, photo in
+                HStack(spacing: 12) {
+                    Image(uiImage: photo.image).resizable().scaledToFill().frame(width: 48, height: 48)
+                        .clipShape(RoundedRectangle(cornerRadius: 6))
+                        .accessibilityHidden(true)
+                    Text("Foto \(index + 1)")
+                    Spacer()
+                    Button { photos.removeAll { $0.id == photo.id } } label: {
+                        Image(systemName: "xmark.circle.fill").foregroundStyle(.secondary)
+                    }
+                    .buttonStyle(.borderless)
+                    .accessibilityLabel("Foto \(index + 1) entfernen")
+                }
             }
-            PhotosPicker(selection: $pickerItem, matching: .images) { Label("Foto auswählen", systemImage: "photo") }
-            if UIImagePickerController.isSourceTypeAvailable(.camera) {
-                Button { showsCamera = true } label: { Label("Foto aufnehmen", systemImage: "camera") }
+            .onDelete { photos.remove(atOffsets: $0) }
+            if RecipePhotos.remainingSlots(current: photos.count) > 0 {
+                PhotosPicker(selection: $pickerItems, maxSelectionCount: RecipePhotos.remainingSlots(current: photos.count),
+                             selectionBehavior: .ordered, matching: .images) {
+                    Label(photos.isEmpty ? "Fotos auswählen" : "Weitere Fotos auswählen", systemImage: "photo.on.rectangle")
+                }
+                if UIImagePickerController.isSourceTypeAvailable(.camera) {
+                    Button { showsCamera = true } label: { Label("Foto aufnehmen", systemImage: "camera") }
+                }
+                PasteButton(payloadType: PastedImage.self) { pasted in
+                    add(pasted.compactMap { UIImage(data: $0.data) })
+                }
             }
         } header: {
-            Text("Foto des Rezepts")
+            Text("Fotos des Rezepts")
         } footer: {
-            Text("Zum Beispiel die Seite aus einem Kochbuch. Das Foto wird verkleinert und nicht gespeichert.")
+            if showsPhotoLimit || RecipePhotos.remainingSlots(current: photos.count) == 0 {
+                Text("Höchstens \(RecipePhotos.maximumCount) Fotos pro Rezept.")
+            } else {
+                Text("Zum Beispiel die Seiten aus einem Kochbuch oder mehrere Screenshots: bis zu \(RecipePhotos.maximumCount) Fotos, die zusammen als ein Rezept gelesen werden. Die Fotos werden verkleinert und nicht gespeichert.")
+            }
         }
+    }
+
+    /// Adds photos in order, up to the limit; the rest is dropped and the limit is named.
+    private func add(_ images: [UIImage]) {
+        let take = RecipePhotos.accepted(current: photos.count, incoming: images.count)
+        showsPhotoLimit = take < images.count
+        photos.append(contentsOf: images.prefix(take).compactMap(PickedPhoto.init(image:)))
     }
 
     private var linkSection: some View {
@@ -374,7 +434,7 @@ struct RecipeInputView: View {
     private func makeInput() -> RecipeImporter.Input? {
         switch source {
         case .text: return .text(recipeText)
-        case .photo: return photo.flatMap { ImageDownscaler.jpeg(from: $0, maxEdge: 1024) }.map { .photo(jpeg: $0) }
+        case .photo: return photos.isEmpty ? nil : .photos(photos.map(\.jpeg))
         case .link: return RecipeImporter.url(from: linkText).map { .link($0) }
         case .note: return noteID.flatMap { id in selectedNoteText.map { .note(id, text: $0) } }
         }

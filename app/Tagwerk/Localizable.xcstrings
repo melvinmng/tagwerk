@@ -1253,24 +1253,6 @@
     },
     "%lld Mal": {
       "localizations": {
-        "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld time"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld times"
-                }
-              }
-            }
-          }
-        },
         "de": {
           "variations": {
             "plural": {
@@ -1284,6 +1266,24 @@
                 "stringUnit": {
                   "state": "translated",
                   "value": "%lld Mal"
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld time"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld times"
                 }
               }
             }
@@ -5995,6 +5995,16 @@
         }
       }
     },
+    "Die Fotos sind zu viele oder zu groß. Nimm höchstens %lld Fotos.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "There are too many photos or they are too large. Use at most %lld photos."
+          }
+        }
+      }
+    },
     "Die Gewohnheit und ihre Häkchen werden gelöscht.": {
       "localizations": {
         "en": {
@@ -8032,6 +8042,26 @@
         }
       }
     },
+    "Foto %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Photo %lld"
+          }
+        }
+      }
+    },
+    "Foto %lld entfernen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove photo %lld"
+          }
+        }
+      }
+    },
     "Foto aufnehmen": {
       "localizations": {
         "en": {
@@ -8053,6 +8083,7 @@
       }
     },
     "Foto des Rezepts": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -8068,6 +8099,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Remove photo"
+          }
+        }
+      }
+    },
+    "Fotos auswählen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose photos"
+          }
+        }
+      }
+    },
+    "Fotos des Rezepts": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Photos of the recipe"
           }
         }
       }
@@ -9373,6 +9424,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Frequency"
+          }
+        }
+      }
+    },
+    "Höchstens %lld Fotos pro Rezept.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "At most %lld photos per recipe."
           }
         }
       }
@@ -16695,6 +16756,16 @@
         }
       }
     },
+    "Weitere Fotos auswählen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose more photos"
+          }
+        }
+      }
+    },
     "Weitere Optionen …": {
       "localizations": {
         "en": {
@@ -17514,11 +17585,22 @@
       }
     },
     "Zum Beispiel die Seite aus einem Kochbuch. Das Foto wird verkleinert und nicht gespeichert.": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "For example a page from a cookbook. The photo is scaled down and not saved."
+          }
+        }
+      }
+    },
+    "Zum Beispiel die Seiten aus einem Kochbuch oder mehrere Screenshots: bis zu %lld Fotos, die zusammen als ein Rezept gelesen werden. Die Fotos werden verkleinert und nicht gespeichert.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "For example the pages of a cookbook or several screenshots: up to %lld photos, read together as one recipe. The photos are scaled down and not saved."
           }
         }
       }

@@ -40,8 +40,11 @@ struct ShareImportSheet: View {
     private var recipeStart: RecipeStart? {
         if let url = item.url { return .link(url.absoluteString) }
         if let text = item.text, !text.isEmpty { return .text(text) }
-        if let file = item.files.first, let url = environment.shareInbox.url(for: file, in: item),
-           let data = try? Data(contentsOf: url), let image = UIImage(data: data) { return .photo(image) }
-        return nil
+        // Every picture of the item, in order, as the pages of one recipe (the sheet takes the first few).
+        let images = item.files.prefix(RecipePhotos.maximumCount).compactMap { file -> UIImage? in
+            guard let url = environment.shareInbox.url(for: file, in: item), let data = try? Data(contentsOf: url) else { return nil }
+            return UIImage(data: data)
+        }
+        return images.isEmpty ? nil : .photos(images)
     }
 }

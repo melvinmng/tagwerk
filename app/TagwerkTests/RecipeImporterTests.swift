@@ -62,7 +62,7 @@ struct RecipeImporterTests {
         responder.calls[index].input.map { item -> String in
             switch item {
             case .user(let text): text
-            case .userImage(let text, _): text
+            case .userImage(let text, _), .userImages(let text, _): text
             default: ""
             }
         }.joined(separator: "\n")
@@ -75,7 +75,7 @@ struct RecipeImporterTests {
             try await importer(consent: false).read(.text("500 g Mehl"), language: .german, categoryNames: categories, openItemKeys: [])
         }
         await #expect(throws: RecipeImporter.Failure.consentMissing) {
-            try await importer(consent: false).read(.photo(jpeg: Data([1, 2, 3])), language: .german, categoryNames: categories, openItemKeys: [])
+            try await importer(consent: false).read(.photos([Data([1, 2, 3])]), language: .german, categoryNames: categories, openItemKeys: [])
         }
         #expect(responder.calls.isEmpty && modelCalls.models == 0)
     }
@@ -112,9 +112,51 @@ struct RecipeImporterTests {
 
     @Test func photo_sendsTheImageWithTheCategoryNames() async throws {
         responder.enqueue(answer([("Butter", nil, "Kühlregal")]))
-        _ = try await importer().read(.photo(jpeg: Data([9, 8, 7])), language: .german, categoryNames: categories, openItemKeys: [])
+        _ = try await importer().read(.photos([Data([9, 8, 7])]), language: .german, categoryNames: categories, openItemKeys: [])
         guard case .userImage(let text, let jpeg) = responder.calls[0].input[0] else { Issue.record("no image sent"); return }
         #expect(jpeg == Data([9, 8, 7]) && text.contains("Kühlregal") && text.contains("photo"))
+    }
+
+    @Test func photos_goInOneRequestAsOneRecipe_inOrder() async throws {
+        responder.enqueue(answer([("Butter", nil, "Kühlregal"), ("Mehl", "500 g", "Vorrat & Konserven")]))
+        let pages = [Data([1]), Data([2]), Data([3])]
+        let result = try await importer().read(.photos(pages), language: .german, categoryNames: categories, openItemKeys: [])
+        // One request, one message, one image per page in the order given: one recipe.
+        #expect(responder.calls.count == 1 && responder.calls[0].input.count == 1)
+        guard case .userImages(let text, let jpegs) = responder.calls[0].input[0] else { Issue.record("no images sent"); return }
+        #expect(jpegs == pages)
+        #expect(text.contains("3 photos") && text.contains("one recipe") && text.contains("Kühlregal"))
+        #expect(result.candidates.map(\.name) == ["Butter", "Mehl"])
+    }
+
+    @Test func photos_limitsAreEnforcedBeforeAnythingIsSent() async {
+        let tooMany = Array(repeating: Data([1]), count: RecipePhotos.maximumCount + 1)
+        await #expect(throws: RecipeImporter.Failure.photosTooLarge) {
+            try await importer().read(.photos(tooMany), language: .german, categoryNames: categories, openItemKeys: [])
+        }
+        let tooLarge = [Data(count: RecipePhotos.maximumTotalBytes), Data([1])]
+        await #expect(throws: RecipeImporter.Failure.photosTooLarge) {
+            try await importer().read(.photos(tooLarge), language: .german, categoryNames: categories, openItemKeys: [])
+        }
+        await #expect(throws: RecipeImporter.Failure.nothingFound) {
+            try await importer().read(.photos([]), language: .german, categoryNames: categories, openItemKeys: [])
+        }
+        #expect(responder.calls.isEmpty)
+    }
+
+    @Test func photos_maximumCountIsAccepted() async throws {
+        responder.enqueue(answer([("Butter", nil, "Kühlregal")]))
+        let six = (0..<RecipePhotos.maximumCount).map { Data([UInt8($0 + 1)]) }
+        _ = try await importer().read(.photos(six), language: .german, categoryNames: categories, openItemKeys: [])
+        guard case .userImages(_, let jpegs) = responder.calls[0].input[0] else { Issue.record("no images sent"); return }
+        #expect(jpegs.count == 6)
+    }
+
+    @Test func photos_withoutConsent_sendNothing() async {
+        await #expect(throws: RecipeImporter.Failure.consentMissing) {
+            try await importer(consent: false).read(.photos([Data([1]), Data([2])]), language: .german, categoryNames: categories, openItemKeys: [])
+        }
+        #expect(responder.calls.isEmpty && modelCalls.models == 0)
     }
 
     // MARK: Links

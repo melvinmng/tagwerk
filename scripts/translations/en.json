@@ -1969,7 +1969,10 @@
   "Angepasst auf %@": "Adjusted to %@",
   "Intervall": "Interval",
   "Anzahl": "Count",
-  "%lld Mal": {"one": "%lld time", "other": "%lld times"},
+  "%lld Mal": {
+    "one": "%lld time",
+    "other": "%lld times"
+  },
   "Andere Menge": "Other amount",
   "Puffer": "Buffer",
   "Runden": "Rounds",
@@ -1992,5 +1995,13 @@
   "Kopiert": "Copied",
   "Offen": "Open",
   "Sprachchat": "Voice chat",
-  "Sprache im Sprachchat": "Voice chat language"
+  "Sprache im Sprachchat": "Voice chat language",
+  "Die Fotos sind zu viele oder zu groß. Nimm höchstens %lld Fotos.": "There are too many photos or they are too large. Use at most %lld photos.",
+  "Foto %lld": "Photo %lld",
+  "Foto %lld entfernen": "Remove photo %lld",
+  "Fotos auswählen": "Choose photos",
+  "Fotos des Rezepts": "Photos of the recipe",
+  "Höchstens %lld Fotos pro Rezept.": "At most %lld photos per recipe.",
+  "Weitere Fotos auswählen": "Choose more photos",
+  "Zum Beispiel die Seiten aus einem Kochbuch oder mehrere Screenshots: bis zu %lld Fotos, die zusammen als ein Rezept gelesen werden. Die Fotos werden verkleinert und nicht gespeichert.": "For example the pages of a cookbook or several screenshots: up to %lld photos, read together as one recipe. The photos are scaled down and not saved."
 }

@@ -50,6 +50,9 @@ public enum InputItem: Sendable, Equatable, Codable {
     /// A user message with a photo (JPEG), sent as `input_image` with a data URL (format verified in the spike).
     /// Callers must not persist it: images stay out of stored chat histories.
     case userImage(text: String, jpeg: Data)
+    /// A user message with several photos (JPEG) in the order given, e.g. the pages of one recipe: one `input_image` each.
+    /// Same rule as `userImage`: never persist it.
+    case userImages(text: String, jpegs: [Data])
     case assistant(String)
     case functionCall(callID: String, name: String, arguments: String)
     case functionOutput(callID: String, output: String)
@@ -60,7 +63,9 @@ public enum InputItem: Sendable, Equatable, Codable {
         case .user(let text):
             ["role": "user", "content": [["type": "input_text", "text": text]]]
         case .userImage(let text, let jpeg):
-            ["role": "user", "content": Self.imageContent(text: text, jpeg: jpeg)]
+            ["role": "user", "content": Self.imageContent(text: text, jpegs: [jpeg])]
+        case .userImages(let text, let jpegs):
+            ["role": "user", "content": Self.imageContent(text: text, jpegs: jpegs)]
         case .assistant(let text):
             ["type": "message", "role": "assistant", "content": [["type": "output_text", "text": text]]]
         case .functionCall(let callID, let name, let arguments):
@@ -70,12 +75,14 @@ public enum InputItem: Sendable, Equatable, Codable {
         }
     }
 
-    private static func imageContent(text: String, jpeg: Data) -> [[String: Any]] {
+    private static func imageContent(text: String, jpegs: [Data]) -> [[String: Any]] {
         var content: [[String: Any]] = []
         if !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             content.append(["type": "input_text", "text": text])
         }
-        content.append(["type": "input_image", "image_url": "data:image/jpeg;base64,\(jpeg.base64EncodedString())"])
+        for jpeg in jpegs {
+            content.append(["type": "input_image", "image_url": "data:image/jpeg;base64,\(jpeg.base64EncodedString())"])
+        }
         return content
     }
 }

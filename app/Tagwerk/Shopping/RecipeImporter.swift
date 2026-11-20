@@ -7,15 +7,16 @@ import TagwerkCore
 ///
 /// Follows `ShoppingSorter`: nothing is sent or fetched without the user's consent and tap, the answer is a proposal that is
 /// checked before anyone sees it, and a partial or late answer is never used. What goes to ChatGPT is the recipe text, or
-/// the photo, and the names of the shopping categories. For a link only the text that was read from the page is sent, never
+/// the photo or photos, and the names of the shopping categories. For a link only the text that was read from the page is sent, never
 /// the address. The list, quantities already on it, tasks, notes and Health data stay on the device.
 @MainActor
 final class RecipeImporter {
     /// Where the recipe comes from.
     enum Input: Equatable {
         case text(String)
-        /// A photo, already scaled down (`ImageDownscaler.jpeg`).
-        case photo(jpeg: Data)
+        /// The photos of one recipe (a recipe spread over several pages), in reading order, each already scaled down
+        /// (`ImageDownscaler.jpeg`). They go to ChatGPT in one request and make one recipe; limits in `RecipePhotos`.
+        case photos([Data])
         case link(URL)
         /// A note of the user and its text. A structured recipe note (`RecipeNote`) is read on the device, anything else is
         /// treated like pasted text. The caller makes sure the note is not private.
@@ -28,6 +29,8 @@ final class RecipeImporter {
         case linkUnreadable
         /// The answer holds no ingredient.
         case nothingFound
+        /// More photos than `RecipePhotos.maximumCount`, or together too large to send.
+        case photosTooLarge
 
         var message: String {
             switch self {
@@ -38,6 +41,7 @@ final class RecipeImporter {
             case .failed: String(localized: "Das Rezept ließ sich nicht lesen. Versuch es noch einmal.")
             case .linkUnreadable: String(localized: "Die Seite ließ sich nicht laden. Prüfe den Link oder füge den Rezepttext ein.")
             case .nothingFound: String(localized: "In dem Rezept wurden keine Zutaten gefunden.")
+            case .photosTooLarge: String(localized: "Die Fotos sind zu viele oder zu groß. Nimm höchstens \(RecipePhotos.maximumCount) Fotos.")
             }
         }
     }
@@ -122,8 +126,10 @@ final class RecipeImporter {
             let recipe = RecipeText.limited(text.trimmingCharacters(in: .whitespacesAndNewlines))
             guard !recipe.isEmpty else { throw Failure.nothingFound }
             message = .user(Self.inputText(recipe: recipe, categories: names, language: language))
-        case .photo(let jpeg):
-            message = .userImage(text: Self.inputText(recipe: nil, categories: names, language: language), jpeg: jpeg)
+        case .photos(let jpegs):
+            guard !jpegs.isEmpty else { throw Failure.nothingFound }
+            guard RecipePhotos.isSendable(byteCounts: jpegs.map(\.count)) else { throw Failure.photosTooLarge }
+            message = Self.photoMessage(jpegs, categories: names, language: language)
         case .link(let url):
             message = .user(Self.inputText(recipe: try await pageText(of: url), categories: names, language: language))
             sourceURL = url
@@ -365,17 +371,29 @@ final class RecipeImporter {
 
     /// The user message: the recipe text (or a note that the photo is the recipe), and the category names and the language
     /// of the result as JSON.
-    static func inputText(recipe: String?, categories: [String], language: VoiceLanguage) -> String {
+    static func inputText(recipe: String?, categories: [String], language: VoiceLanguage, photoCount: Int = 1) -> String {
         let object: [String: Any] = ["categories": categories, "language": RecipeLanguage.promptName(language)]
         let data = (try? JSONSerialization.data(withJSONObject: object, options: [.sortedKeys])) ?? Data()
         let json = String(decoding: data, as: UTF8.self)
-        guard let recipe else { return "The photo shows the recipe.\n\nCategories and language as JSON:\n\(json)" }
+        guard let recipe else {
+            let lead = photoCount > 1
+                ? "The \(photoCount) photos are the pages of one recipe, in reading order. Read all of them together as one recipe."
+                : "The photo shows the recipe."
+            return "\(lead)\n\nCategories and language as JSON:\n\(json)"
+        }
         return "Recipe:\n\(recipe)\n\nCategories and language as JSON:\n\(json)"
+    }
+
+    /// The request message for photos: one message with the text and one image per photo, so ChatGPT reads one recipe.
+    static func photoMessage(_ jpegs: [Data], categories: [String], language: VoiceLanguage) -> InputItem {
+        let text = inputText(recipe: nil, categories: categories, language: language, photoCount: jpegs.count)
+        return jpegs.count == 1 ? .userImage(text: text, jpeg: jpegs[0]) : .userImages(text: text, jpegs: jpegs)
     }
 
     static let instructions = """
     Du liest ein Rezept und gibst es strukturiert zurück: Titel, Portionen, Zutaten und Zubereitungsschritte. Die Eingabe ist \
-    der Rezepttext oder ein Foto des Rezepts, dazu JSON mit "categories" (die Kategorien der Einkaufsliste; die letzte steht \
+    der Rezepttext oder ein Foto des Rezepts (mehrere Fotos sind die Seiten eines einzigen Rezepts: lies sie zusammen und gib \
+    ein Rezept zurück), dazu JSON mit "categories" (die Kategorien der Einkaufsliste; die letzte steht \
     für alles ohne Kategorie) und "language" (die Sprache des Ergebnisses).
     - Schreibe title, name, unit, quantity und steps in der Sprache aus "language". Übersetze, wenn das Rezept eine andere \
     Sprache hat. Übersetze keine Eigennamen.
