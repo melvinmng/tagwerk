@@ -14,6 +14,7 @@
   "Melde dich in den Einstellungen mit ChatGPT an.": "Sign in with ChatGPT in Settings.",
   "Anmeldung derzeit nicht lesbar.": "Sign-in can’t be read right now.",
   "Bitte Repository und mindestens ein Project wählen.": "Choose a repository and at least one project.",
+  "Die GitHub-Projekte sind noch nicht geladen.": "The GitHub projects haven’t been loaded yet.",
   "GitHub antwortet mit Fehler %lld.": "GitHub responded with error %lld.",
   "GitHub-Anmeldung: %@": "GitHub sign-in: %@",
   "Keine Verbindung zu GitHub.": "No connection to GitHub.",

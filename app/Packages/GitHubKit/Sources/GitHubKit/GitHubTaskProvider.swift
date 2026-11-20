@@ -88,8 +88,15 @@ public final class GitHubTaskProvider: TaskProvider {
     }
 
     /// Closing moments of the issues assigned to the user, placed in a shown project and closed as completed
-    /// within `interval`. Used by the day review (one day) and the week review (one week). Throws `IssueSearchError`.
+    /// within `interval`. Used by the day review (one day) and the week review (one week). Throws `IssueSearchError`,
+    /// also when the user has not chosen projects and the projects are not loaded yet (no count instead of a false zero).
     public func closedIssueDates(in interval: DateInterval) async throws -> [Date] {
+        // Without a stored choice the shown projects are derived from the loaded projects and issues. Before the first
+        // load that default is empty, and an empty default would report a false zero instead of "not available".
+        let explicitSelection = selectedProjectIDs()
+        if explicitSelection == nil, projects.isEmpty {
+            throw IssueSearchError.failed(String(localized: "Die GitHub-Projekte sind noch nicht geladen.", bundle: .module))
+        }
         let viewer: String
         if let login {
             viewer = login
@@ -100,7 +107,7 @@ public final class GitHubTaskProvider: TaskProvider {
         // the interval itself is applied on the device.
         let issues = try await api.closedIssues(assignedTo: viewer, closedSince: Self.utcDate(interval.start, addingDays: -1),
                                                 closedUntil: Self.utcDate(interval.end))
-        let shown = selectedProjectIDs() ?? defaultSelectedProjectIDs
+        let shown = explicitSelection ?? defaultSelectedProjectIDs
         return issues
             .filter { $0.isCompleted && $0.closedAt >= interval.start && $0.closedAt < interval.end && !$0.projectIDs.isDisjoint(with: shown) }
             .map(\.closedAt)

@@ -5,7 +5,8 @@ import TagwerkCore
 public struct ClosedIssue: Sendable, Equatable {
     public let id: String
     public let closedAt: Date
-    /// `false` only for issues closed as "not planned"; issues without a reason count as completed.
+    /// `true` for issues closed as "completed" and for issues without a reason (older issues); "not planned" and
+    /// "duplicate" do not count as done.
     public let isCompleted: Bool
     /// Projects the issue sits in, archived items included: completing a task in Tagwerk can leave an archived item behind.
     public let projectIDs: Set<String>
@@ -80,7 +81,7 @@ extension GitHubAPI {
             for node in data.search.nodes.compactMap({ $0 }) {
                 guard let closedAt = node.closedAt else { continue }
                 issues.append(ClosedIssue(
-                    id: node.id, closedAt: closedAt, isCompleted: node.stateReason != "NOT_PLANNED",
+                    id: node.id, closedAt: closedAt, isCompleted: node.stateReason == nil || node.stateReason == "COMPLETED",
                     projectIDs: Set((node.projectItems?.nodes ?? []).compactMap { $0.project?.id })))
             }
             guard data.search.pageInfo.hasNextPage, let next = data.search.pageInfo.endCursor else { break }

@@ -85,6 +85,27 @@ struct ClosedIssuesTests {
         #expect(issues[0].closedAt == Self.date("2026-11-20T09:00:00Z"))
     }
 
+    @Test func closedIssues_countsOnlyCompletedOrMissingReasonAsCompleted() async throws {
+        transport.enqueueJSON("/graphql", Fixtures.closedResponse([
+            Fixtures.closedNode(id: "I_completed", closedAt: "2026-11-20T09:00:00Z", stateReason: "COMPLETED"),
+            Fixtures.closedNode(id: "I_notPlanned", closedAt: "2026-11-20T10:00:00Z", stateReason: "NOT_PLANNED"),
+            Fixtures.closedNode(id: "I_duplicate", closedAt: "2026-11-20T11:00:00Z", stateReason: "DUPLICATE"),
+            Fixtures.closedNode(id: "I_missing", closedAt: "2026-11-20T12:00:00Z", stateReason: nil),
+        ]))
+        let issues = try await makeAPI().0.closedIssues(assignedTo: "octo", closedSince: "2026-11-19")
+        let completed = Dictionary(uniqueKeysWithValues: issues.map { ($0.id, $0.isCompleted) })
+        #expect(completed == ["I_completed": true, "I_notPlanned": false, "I_duplicate": false, "I_missing": true])
+    }
+
+    @Test func closedIssueCount_skipsDuplicates() async throws {
+        enqueueLogin()
+        transport.enqueueJSON("/graphql", Fixtures.closedResponse([
+            Fixtures.closedNode(id: "I_1", closedAt: "2026-11-20T09:00:00Z", stateReason: "COMPLETED"),
+            Fixtures.closedNode(id: "I_2", closedAt: "2026-11-20T10:00:00Z", stateReason: "DUPLICATE"),
+        ]))
+        #expect(try await makeProvider().closedIssueCount(in: Self.day(2026, 11, 20)) == 1)
+    }
+
     @Test func closedIssues_followsSecondPage() async throws {
         transport.enqueueJSON("/graphql", Fixtures.closedResponse(
             [Fixtures.closedNode(id: "I_1", closedAt: "2026-11-20T09:00:00Z")], hasNextPage: true, endCursor: "CUR1"))
@@ -156,12 +177,27 @@ struct ClosedIssuesTests {
         #expect(try await provider.closedIssueCount(in: Self.day(2026, 11, 20)) == 1)
     }
 
-    @Test func closedIssueCount_withoutChosenProjects_usesTheDefaultSelection() async throws {
+    @Test func closedIssueCount_withoutChosenProjectsAndBeforeProjectsLoaded_isUnavailable() async {
         enqueueLogin()
-        // No stored choice and no loaded projects: the default selection is empty, so nothing counts.
+        // No stored choice and no loaded projects: the default selection is still empty and would report a false zero.
         transport.enqueueJSON("/graphql", Fixtures.closedResponse([Fixtures.closedNode(id: "I_1", closedAt: "2026-11-20T09:00:00Z")]))
         let provider = makeProvider(selected: nil)
-        #expect(try await provider.closedIssueCount(in: Self.day(2026, 11, 20)) == 0)
+        await #expect(throws: IssueSearchError.self) {
+            _ = try await provider.closedIssueCount(in: Self.day(2026, 11, 20))
+        }
+    }
+
+    @Test func closedIssueCount_withoutChosenProjects_usesTheDefaultSelectionOnceProjectsAreLoaded() async throws {
+        Fixtures.enqueueAssignedIssues(on: transport)
+        let provider = makeProvider(selected: nil)
+        _ = try await provider.openTasks()
+        #expect(provider.defaultSelectedProjectIDs.contains("PVT_1"))
+        // The provider knows its login from the load above, so no further login request is needed.
+        transport.enqueueJSON("/graphql", Fixtures.closedResponse([
+            Fixtures.closedNode(id: "I_1", closedAt: "2026-11-20T09:00:00Z", projectIDs: ["PVT_1"]),
+            Fixtures.closedNode(id: "I_2", closedAt: "2026-11-20T10:00:00Z", projectIDs: ["PVT_9"]),
+        ]))
+        #expect(try await provider.closedIssueCount(in: Self.day(2026, 11, 20)) == 1)
     }
 
     @Test func closedIssueCount_resolvesTheLoginWhenUnknown() async throws {
