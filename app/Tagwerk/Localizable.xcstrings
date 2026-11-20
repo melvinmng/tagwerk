@@ -3282,6 +3282,16 @@
         }
       }
     },
+    "Als Kopie sichern": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save as copy"
+          }
+        }
+      }
+    },
     "Als Liste zeigen": {
       "localizations": {
         "en": {
@@ -3328,6 +3338,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Close as not planned"
+          }
+        }
+      }
+    },
+    "Als „%@“ gesichert.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved as “%@”."
           }
         }
       }
@@ -6178,6 +6198,16 @@
         }
       }
     },
+    "Die Notiz wurde inzwischen geändert.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The note has been changed in the meantime."
+          }
+        }
+      }
+    },
     "Die Quelle ist nicht verfügbar.": {
       "localizations": {
         "en": {
@@ -7256,6 +7286,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Delete permanently"
+          }
+        }
+      }
+    },
+    "Englisch": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "English"
           }
         }
       }
@@ -13251,6 +13291,26 @@
         }
       }
     },
+    "Original": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Original"
+          }
+        }
+      }
+    },
+    "Original ersetzen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Replace original"
+          }
+        }
+      }
+    },
     "Ort": {
       "localizations": {
         "en": {
@@ -13905,6 +13965,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Save recipe"
+          }
+        }
+      }
+    },
+    "Rezept wird übersetzt …": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Translating recipe …"
+          }
+        }
+      }
+    },
+    "Rezept übersetzen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Translate recipe"
           }
         }
       }
@@ -15435,6 +15515,16 @@
         }
       }
     },
+    "Tagwerk sendet den Text dieser Notiz an ChatGPT. Du siehst die Übersetzung, bevor sich etwas ändert.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tagwerk sends the text of this note to ChatGPT. You see the translation before anything changes."
+          }
+        }
+      }
+    },
     "Tagwerk speichert Mahlzeiten, Wasser und Trainings zusätzlich in Health und zeigt deine Schritte sowie Trainings der Apple Watch und anderer Apps. Deine Einträge bleiben auch ohne Health in Tagwerk.": {
       "localizations": {
         "en": {
@@ -16645,6 +16735,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Suggestion from ChatGPT"
+          }
+        }
+      }
+    },
+    "Vorschlag von ChatGPT. Mengen bleiben unverändert; bitte kurz prüfen. Anmerkungen und Anhänge der Notiz bleiben erhalten.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suggestion from ChatGPT. Amounts stay unchanged; please check them briefly. Remarks and attachments of the note are kept."
           }
         }
       }
@@ -19706,6 +19806,46 @@
           "stringUnit": {
             "state": "translated",
             "value": "Overlaps with “%1$@” (%2$@, %3$@). The workout would be counted twice."
+          }
+        }
+      }
+    },
+    "Übersetzen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Translate"
+          }
+        }
+      }
+    },
+    "Übersetzen nach": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Translate to"
+          }
+        }
+      }
+    },
+    "Übersetzen …": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Translate …"
+          }
+        }
+      }
+    },
+    "Übersetzung": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Translation"
           }
         }
       }

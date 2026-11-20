@@ -30,7 +30,9 @@ struct NoteEditorView: View {
     @State private var shareURLs: [URL] = []
     @State private var failureText: String?
     @State private var isAddingToShopping = false
-    @State private var shoppingNotice: String?
+    @State private var translation: RecipeTranslationModel?
+    /// A hint after an action that ends in a sheet ("Als „…“ gesichert.", the result of the shopping list).
+    @State private var notice: String?
 
     init(noteID: UUID, store: NoteStore) {
         self.noteID = noteID
@@ -75,9 +77,16 @@ struct NoteEditorView: View {
             }
             .quickLookPreview($previewURL)
             .alert(failureText ?? "", isPresented: failureBinding) { Button("OK", role: .cancel) {} }
-            .alert(shoppingNotice ?? "", isPresented: noticeBinding) { Button("OK", role: .cancel) {} }
+            .alert(notice ?? "", isPresented: noticeBinding) { Button("OK", role: .cancel) {} }
             .sheet(isPresented: $isAddingToShopping) {
-                RecipeSheet(model: environment.shopping, onFinished: { shoppingNotice = $0 }, start: .note(noteID))
+                RecipeSheet(model: environment.shopping, onFinished: { notice = $0 }, start: .note(noteID))
+            }
+            .sheet(item: $translation) { model in
+                RecipeTranslationSheet(model: model, store: store) { copy in
+                    let title = NoteText.title(copy.text)
+                    let shown = title.isEmpty ? String(localized: "Ohne Titel") : title
+                    notice = String(localized: "Als „\(shown)“ gesichert.")
+                }
             }
             .onAppear {
                 guard !isLoaded else { return }
@@ -176,6 +185,14 @@ struct NoteEditorView: View {
                     isAddingToShopping = true
                 } label: { Label("Zutaten auf die Einkaufsliste", systemImage: "cart.badge.plus") }
             }
+            if let note, RecipeTranslationModel.isOffered(note, store: store) {
+                Button {
+                    // The translation reads the saved text of the note.
+                    saveText()
+                    translation = RecipeTranslationModel(noteID: noteID, store: store, translator: environment.recipeTranslator,
+                                                         recipeLanguage: environment.settings.resolvedRecipeLanguage)
+                } label: { Label("Übersetzen …", systemImage: "globe") }
+            }
             ShareLink(item: text) { Label("Teilen", systemImage: "square.and.arrow.up") }
             if !shareURLs.isEmpty {
                 ShareLink(items: shareURLs) { Label("Anhänge teilen", systemImage: "paperclip") }
@@ -200,7 +217,7 @@ struct NoteEditorView: View {
     }
 
     private var noticeBinding: Binding<Bool> {
-        Binding(get: { shoppingNotice != nil }, set: { if !$0 { shoppingNotice = nil } })
+        Binding(get: { notice != nil }, set: { if !$0 { notice = nil } })
     }
 
     // MARK: Actions
