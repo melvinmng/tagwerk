@@ -2204,6 +2204,22 @@
         }
       }
     },
+    "%lld. %@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$lld. %2$@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld. %2$@"
+          }
+        }
+      }
+    },
     "%lld:%@ h": {
       "extractionState": "stale",
       "localizations": {
@@ -2372,7 +2388,18 @@
         }
       }
     },
+    "**Nur auf dein Tippen:** Ohne „Zutaten holen“ oder „Rezept holen“ verlässt nichts das iPhone. Auch ein Link wird erst dann geladen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "**Only when you tap:** without “Get ingredients” or “Get recipe”, nothing leaves the iPhone. A link is loaded only then, too."
+          }
+        }
+      }
+    },
     "**Nur auf dein Tippen:** Ohne „Zutaten holen“ verlässt nichts das iPhone. Auch ein Link wird erst dann geladen.": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -3297,6 +3324,26 @@
         }
       }
     },
+    "Andere Notiz wählen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose another note"
+          }
+        }
+      }
+    },
+    "Andere Notiz wählen …": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose another note …"
+          }
+        }
+      }
+    },
     "Anderen Ordner wählen": {
       "localizations": {
         "en": {
@@ -3749,6 +3796,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Also all future events in these series"
+          }
+        }
+      }
+    },
+    "Auch als Rezept-Notiz sichern": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Also save as a recipe note"
           }
         }
       }
@@ -4963,12 +5020,32 @@
         }
       }
     },
+    "Das Rezept liegt als Notiz im Ordner „Rezepte“.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The recipe is saved as a note in the “Recipes” folder."
+          }
+        }
+      }
+    },
     "Das Rezept ließ sich nicht lesen. Versuch es noch einmal.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "The recipe could not be read. Try again."
+          }
+        }
+      }
+    },
+    "Das Rezept wird als Notiz im Ordner „Rezepte“ gespeichert. Die Einkaufsliste bleibt unverändert.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The recipe is saved as a note in the “Recipes” folder. The shopping list stays unchanged."
           }
         }
       }
@@ -5829,6 +5906,16 @@
         }
       }
     },
+    "Die Kategorien kommen aus deiner Einkaufsliste.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The categories come from your shopping list."
+          }
+        }
+      }
+    },
     "Die Kategorien kommen von ChatGPT und lassen sich später in der Liste ändern.": {
       "localizations": {
         "en": {
@@ -6586,6 +6673,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Another day turns the block into a move. It stays a suggestion until you accept it."
+          }
+        }
+      }
+    },
+    "Eine Notiz mit den Abschnitten „Zutaten“ und „Zubereitung“ liest Tagwerk auf dem iPhone. Jede andere Notiz liest ChatGPT, nachdem du „Zutaten holen“ getippt hast.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tagwerk reads a note with the sections “Ingredients” and “Instructions” on the iPhone. ChatGPT reads any other note after you tap “Get ingredients”."
           }
         }
       }
@@ -9268,6 +9365,16 @@
         }
       }
     },
+    "Ich koche für": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I’m cooking for"
+          }
+        }
+      }
+    },
     "Im Chat startet der Knopf rechts neben dem leeren Feld den Sprechmodus. Tagwerk sendet nach der Pause, liest die Antwort vor und hört danach wieder zu. Änderungen führt es erst aus, wenn du sie bestätigst. „Änderungen ansagen“ gilt auch hier.": {
       "localizations": {
         "en": {
@@ -9298,12 +9405,42 @@
         }
       }
     },
+    "Im Ordner „Rezepte“ ist noch keine Notiz.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "There’s no note in the “Recipes” folder yet."
+          }
+        }
+      }
+    },
     "Im Plan zeigen": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Show in plan"
+          }
+        }
+      }
+    },
+    "Im Rezept steht keine Portionszahl.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The recipe doesn’t state a number of servings."
+          }
+        }
+      }
+    },
+    "Im Rezept steht keine Portionszahl. Du kannst sie später in der Notiz ergänzen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The recipe doesn’t state a number of servings. You can add it to the note later."
           }
         }
       }
@@ -10041,6 +10178,16 @@
         }
       }
     },
+    "Keine Notizen vorhanden.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No notes."
+          }
+        }
+      }
+    },
     "Keine Pause": {
       "localizations": {
         "en": {
@@ -10505,6 +10652,16 @@
     },
     "Leeren": {
       "shouldTranslate": false
+    },
+    "Legt eine Notiz im Ordner „Rezepte“ an, mit den Zutaten in den Mengen des Rezepts.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Creates a note in the “Recipes” folder, with the ingredients in the amounts of the recipe."
+          }
+        }
+      }
     },
     "Leitfragen einfügen": {
       "localizations": {
@@ -12621,6 +12778,16 @@
         }
       }
     },
+    "Ohne Titel": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Untitled"
+          }
+        }
+      }
+    },
     "Ohne Uhrzeit": {
       "localizations": {
         "en": {
@@ -12965,6 +13132,16 @@
         }
       }
     },
+    "Portionen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Servings"
+          }
+        }
+      }
+    },
     "Posten": {
       "localizations": {
         "en": {
@@ -13257,6 +13434,16 @@
         }
       }
     },
+    "Rezept für": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recipe for"
+          }
+        }
+      }
+    },
     "Rezept hinzufügen": {
       "localizations": {
         "en": {
@@ -13273,6 +13460,46 @@
           "stringUnit": {
             "state": "translated",
             "value": "Add recipe …"
+          }
+        }
+      }
+    },
+    "Rezept holen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Get recipe"
+          }
+        }
+      }
+    },
+    "Rezept mit ChatGPT anlegen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Create recipe with ChatGPT"
+          }
+        }
+      }
+    },
+    "Rezept speichern": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save recipe"
+          }
+        }
+      }
+    },
+    "Rezepte": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recipes"
           }
         }
       }
@@ -14002,6 +14229,16 @@
         }
       }
     },
+    "Sprache für Rezepte": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recipe language"
+          }
+        }
+      }
+    },
     "Spracheingabe": {
       "localizations": {
         "en": {
@@ -14648,6 +14885,16 @@
         }
       }
     },
+    "Tagwerk lädt die Seite erst, wenn du „Rezept holen“ tippst, und sendet nur den gelesenen Text, nicht die Adresse.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tagwerk loads the page only when you tap “Get recipe”, and sends only the text it read, not the address."
+          }
+        }
+      }
+    },
     "Tagwerk lädt die Seite erst, wenn du „Zutaten holen“ tippst, und sendet nur den gelesenen Text, nicht die Adresse.": {
       "localizations": {
         "en": {
@@ -15032,6 +15279,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Title → %@"
+          }
+        }
+      }
+    },
+    "Titel, Zutaten und Zubereitung eines Rezepts schreibt ChatGPT in dieser Sprache und übersetzt, wenn das Rezept eine andere hat. Die Artikel auf der Einkaufsliste folgen ihr. „Wie die App“ nimmt die Sprache der App.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ChatGPT writes the title, ingredients and instructions of a recipe in this language and translates if the recipe is in another one. The items on the shopping list follow it. “Same as the app” uses the app’s language."
           }
         }
       }
@@ -16252,6 +16509,16 @@
         }
       }
     },
+    "Wie die App": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Same as the app"
+          }
+        }
+      }
+    },
     "Wie laufen meine Ziele, Projekte und Tasks?": {
       "localizations": {
         "en": {
@@ -16860,6 +17127,16 @@
         }
       }
     },
+    "Zubereitung": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Instructions"
+          }
+        }
+      }
+    },
     "Zugewiesen": {
       "localizations": {
         "en": {
@@ -17120,12 +17397,32 @@
         }
       }
     },
+    "Zutaten auf die Einkaufsliste": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add ingredients to the shopping list"
+          }
+        }
+      }
+    },
     "Zutaten holen": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Get ingredients"
+          }
+        }
+      }
+    },
+    "Zutaten übernehmen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use ingredients"
           }
         }
       }
@@ -18089,6 +18386,16 @@
         }
       }
     },
+    "strukturiert": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "structured"
+          }
+        }
+      }
+    },
     "teilweise · Health öffnen": {
       "localizations": {
         "en": {
@@ -18270,6 +18577,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "always merged"
+          }
+        }
+      }
+    },
+    "wird mit ChatGPT gelesen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "read with ChatGPT"
           }
         }
       }
