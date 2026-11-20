@@ -59,12 +59,13 @@ extension AppTools {
             tool("get_task", "Returns one task with notes, labels, container and link.", ["id": taskID]),
             tool("list_events", "Lists calendar events between two days (inclusive) with id, calendar, whether it is editable and recurring, and whether it is a deadline.",
                  ["from": day, "to": day]),
-            tool("search", "Searches calendar events and tasks by text (title, notes, location, list or repository, labels, issue number). Events are searched in the calendars selected in the settings, by default from 6 months back to 12 months ahead; pass from/to for another period of at most 4 years. Use it instead of guessing periods with list_events.", [
+            tool("search", "Searches calendar events, tasks, notes and shopping items by text (title, notes, location, list or repository, labels, issue number). Events are searched in the calendars selected in the settings, by default from 6 months back to 12 months ahead; pass from/to for another period of at most 4 years. Use it instead of guessing periods with list_events. Notes come with a title and a short excerpt. Private notes (journal, Bible Study, dream log) are never included. Notes and shopping items are searched only with kind all.", [
                 "query": string("Search text; every word must occur somewhere (at least 2 characters)"),
                 "kind": enumeration(["all", "events", "tasks"]),
                 "include_completed": boolean,
                 "from": string("YYYY-MM-DD, first day of the events period; null for 6 months back", nullable: true),
                 "to": string("YYYY-MM-DD, last day of the events period; null for 12 months ahead", nullable: true),
+                "github_online": ["type": "boolean", "description": "true only when the user asks about GitHub issues that are not among their tasks (closed, unassigned, assigned to others) or when the local results do not answer the question; it sends the search text to GitHub"],
             ]),
             tool("list_calendars", "Lists the event calendars with id, title, whether they are writable and which one is the default for new events.", [:]),
             tool("list_shopping", "Lists the shopping list: open items with id, name, quantity and category; items completed in the last 7 days only when include_completed is true. Shopping items are not tasks and never appear in list_tasks.",

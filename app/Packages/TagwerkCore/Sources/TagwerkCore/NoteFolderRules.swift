@@ -138,6 +138,35 @@ public enum NoteFolderRules {
         return Set(node.flattened.map(\.id))
     }
 
+    /// Folders whose notes never leave the device: every folder with a private role and all folders below one.
+    /// Folders of a reference cycle that holds a private folder count as private as well; the walk terminates (like `tree`).
+    public static func privateFolderIDs(in folders: [NoteFolderInfo]) -> Set<UUID> {
+        var result = Set<UUID>()
+        for folder in folders where folder.role?.isPrivate == true {
+            result.insert(folder.id)
+            result.formUnion(subtreeIDs(of: folder.id, in: folders))
+        }
+        // Absorbs folders whose chain of parents reaches a private folder even when `tree` cut the chain (cycles).
+        var changed = true
+        while changed {
+            changed = false
+            for folder in folders where !result.contains(folder.id) {
+                if let parentID = folder.parentID, result.contains(parentID) {
+                    result.insert(folder.id)
+                    changed = true
+                }
+            }
+        }
+        return result
+    }
+
+    /// Whether a note may be shown to the assistant: its kind is not private and it does not lie in a private folder.
+    public static func mayLeaveDevice(kind: NoteKind, folderID: UUID?, privateFolderIDs: Set<UUID>) -> Bool {
+        guard !kind.isPrivate else { return false }
+        if let folderID, privateFolderIDs.contains(folderID) { return false }
+        return true
+    }
+
     /// Levels of the folder's own subtree, counting the folder itself (a folder without children has height 1).
     static func height(of id: UUID, in folders: [NoteFolderInfo]) -> Int {
         guard let node = tree(folders).flatMap(\.flattened).first(where: { $0.id == id }) else { return 0 }

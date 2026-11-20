@@ -416,6 +416,11 @@ final class AssistantModel {
         dauert ein neuer Termin eine Stunde.
         Fragt der Nutzer nach einem bestimmten Termin oder einer bestimmten Aufgabe, nutze search, statt mit list_events \
         Zeiträume zu raten.
+        search findet auch Notizen und Einkaufsartikel. Von Notizen siehst du Titel und einen kurzen Ausschnitt. Gib \
+        Notiztext nicht wörtlich wieder, sondern nenne Titel und Datum, außer der Nutzer bittet ausdrücklich um den \
+        Wortlaut. Meldet search notesLocked, sag dem Nutzer, dass er „Notizen mit ChatGPT“ unter Einstellungen › KI \
+        einschalten kann. github_online setzt du nur, wenn es um Issues geht, die nicht in den Aufgaben stehen, oder \
+        wenn die lokale Suche nichts ergibt.
         Einkaufsartikel stehen nicht in list_tasks: Die Einkaufsliste liest du mit list_shopping und änderst sie mit \
         update_shopping (hinzufügen, abhaken). Lege Einkaufsartikel nie über create_task an.
         \(gitHubInstructions())

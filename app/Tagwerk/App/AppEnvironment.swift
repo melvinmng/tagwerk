@@ -210,7 +210,15 @@ final class AppEnvironment {
                              search: SearchToolSources(
                                  events: Self.searchEventSource(searcher: searcher, store: reminderStore, planning: planning, settings: settings),
                                  calendarNames: Self.searchCalendarNames(planning: planning),
-                                 completedTasks: Self.searchCompletedSource(reminders: reminders, taskList: taskList)))
+                                 completedTasks: Self.searchCompletedSource(reminders: reminders, taskList: taskList),
+                                 // The only source of notes for the assistant: `NoteToolAccess` leaves private notes out.
+                                 notes: { [noteStore] in
+                                     let access = NoteToolAccess(store: noteStore)
+                                     let folderNames = Self.folderNames(noteStore)
+                                     return access.visibleNotes().map { Self.searchItem(for: $0, folderNames: folderNames) }
+                                 },
+                                 shopping: Self.searchShoppingSource(shopping: shopping),
+                                 searchOnline: Self.searchOnlineSource(taskList: taskList)))
         self.assistant = AssistantModel(responder: ai.client, tools: tools, model: { try await ai.selectedModel() },
                                         store: ChatStore(context: context), planning: planning)
         self.voiceOutput = VoiceOutputModel(speaker: SystemSpeaker(), audio: SystemVoiceAudioSession.shared, preferences: {
@@ -512,6 +520,32 @@ final class AppEnvironment {
         activeSearch?.close()
     }
 
+    /// Folder names by id, the label of a note in a folder.
+    static func folderNames(_ notes: NoteStore) -> [UUID: String] {
+        Dictionary(notes.folders().map { ($0.id, $0.name) }, uniquingKeysWith: { first, _ in first })
+    }
+
+    /// Open items of a list that is set up; completed ones stay out (spec F7). Shared by the search sheet and the assistant.
+    static func searchShoppingSource(shopping: ShoppingModel) -> @MainActor () -> [ShoppingSearchItem] {
+        {
+            guard shopping.state == .ready else { return [] }
+            return shopping.openItems.map { ShoppingSearchItem(id: $0.id, name: $0.name, quantity: $0.quantity) }
+        }
+    }
+
+    /// The online issue search of the search sheet and the assistant; reads the GitHub provider when it runs, so a
+    /// sign-in after the start counts. Throws `IssueSearchError.signedOut` without one.
+    static func searchOnlineSource(taskList: TaskListModel) -> @MainActor (String) async throws -> [OnlineIssue] {
+        { [weak taskList] text in
+            guard let taskList, let gitHub = taskList.provider(for: .github) as? GitHubTaskProvider else {
+                throw IssueSearchError.signedOut
+            }
+            // Issues that are among the tasks already stay out; the search adds closed and unassigned ones.
+            let loaded = Set(taskList.items.filter { $0.id.source == .github }.map(\.id.rawValue))
+            return try await gitHub.searchOnline(text, excluding: loaded)
+        }
+    }
+
     /// A note as the search sees it. The search reads the plain text only: no Markdown, no HTML, no attachment references.
     static func searchItem(for note: NoteRecord, folderNames: [UUID: String]) -> NoteSearchItem {
         let folderName = note.kind == .free ? note.folderID.flatMap { folderNames[$0] } : nil
@@ -568,17 +602,7 @@ final class AppEnvironment {
         let reminderStore = self.reminderStore
         let searcher = self.eventSearcher
         let reminders = self.remindersProvider
-        var searchOnline: (@MainActor (String) async throws -> [OnlineIssue])?
-        if isGitHubActive {
-            searchOnline = { [weak self] text in
-                guard let self, let gitHub = self.taskList.provider(for: .github) as? GitHubTaskProvider else {
-                    throw IssueSearchError.signedOut
-                }
-                // Issues that are among the tasks already stay out; the search adds closed and unassigned ones.
-                let loaded = Set(self.taskList.items.filter { $0.id.source == .github }.map(\.id.rawValue))
-                return try await gitHub.searchOnline(text, excluding: loaded)
-            }
-        }
+        let searchOnline = isGitHubActive ? Self.searchOnlineSource(taskList: taskList) : nil
         let notes = self.notes
         let shopping = self.shopping
         var sources = SearchSources(
@@ -588,14 +612,10 @@ final class AppEnvironment {
             completedTasks: Self.searchCompletedSource(reminders: reminders, taskList: taskList),
             notes: {
                 // A note in a folder shows the folder name as its label; the trash is not searched.
-                let folderNames = Dictionary(notes.folders().map { ($0.id, $0.name) }, uniquingKeysWith: { first, _ in first })
+                let folderNames = Self.folderNames(notes)
                 return notes.notes().map { Self.searchItem(for: $0, folderNames: folderNames) }
             },
-            shopping: {
-                // Only open items of a list that is set up; completed ones stay out (spec F7).
-                guard shopping.state == .ready else { return [] }
-                return shopping.openItems.map { ShoppingSearchItem(id: $0.id, name: $0.name, quantity: $0.quantity) }
-            },
+            shopping: Self.searchShoppingSource(shopping: shopping),
             searchOnline: searchOnline)
         if settings.shoppingListID != nil {
             // A failed write leaves the item on the list; the model reads the rows again either way.

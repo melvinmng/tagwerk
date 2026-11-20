@@ -76,7 +76,9 @@ struct AppToolsTests {
 
     // MARK: search
 
-    private func makeSearch(events: [CalendarEvent] = [], completed: [CompletedTask] = [], access: Bool = true) async -> AppTools {
+    private func makeSearch(events: [CalendarEvent] = [], completed: [CompletedTask] = [], access: Bool = true,
+                            notes: [NoteSearchItem] = [], notesAllowed: Bool = true, shopping: [ShoppingSearchItem] = [],
+                            online: (@MainActor (String) async throws -> [OnlineIssue])? = nil) async -> AppTools {
         calendarStore.storedEvents = events
         await taskList.reload()
         let planning = PlanningModel(taskList: taskList, calendarStore: calendarStore, reminderStore: FakeAccessStore(),
@@ -88,9 +90,19 @@ struct AppToolsTests {
         let sources = SearchToolSources(
             events: { interval in access ? calendarStore.events(in: interval, calendarIDs: nil) : nil },
             calendarNames: { ["cal": "Uni"] },
-            completedTasks: { completed })
+            completedTasks: { completed },
+            notes: { notes }, shopping: { shopping }, searchOnline: online, notesAllowed: { notesAllowed })
         return AppTools(taskList: taskList, planning: planning, planner: nil,
                         events: { interval in calendarStore.events(in: interval, calendarIDs: nil) }, search: sources)
+    }
+
+    private func noteItem(_ text: String, kind: String = "Notiz", day: String? = nil, updated: Date? = nil) -> NoteSearchItem {
+        NoteSearchItem(id: UUID(), text: text, kindLabel: kind, updatedAt: updated ?? testNow(), dayKey: day)
+    }
+
+    private func onlineIssue(_ id: String, number: Int, marker: OnlineIssueMarker?, assignees: [String] = []) -> OnlineIssue {
+        OnlineIssue(id: id, number: number, title: "Issue \(number)", repository: "octo/r",
+                    url: URL(string: "https://github.com/octo/r/issues/\(number)")!, updatedAt: testNow(), marker: marker, assignees: assignees)
     }
 
     private func searchEvent(_ title: String, id: String? = nil, on day: DateComponents, recurring: Bool = false,
@@ -104,9 +116,10 @@ struct AppToolsTests {
         return event
     }
 
-    private func searchArguments(_ query: String, kind: String = "all", completed: Bool = false, from: String? = nil, to: String? = nil) -> String {
+    private func searchArguments(_ query: String, kind: String = "all", completed: Bool = false, from: String? = nil, to: String? = nil,
+                                 online: Bool = false) -> String {
         func quoted(_ value: String?) -> String { value.map { "\"\($0)\"" } ?? "null" }
-        return #"{"query":"\#(query)","kind":"\#(kind)","include_completed":\#(completed),"from":\#(quoted(from)),"to":\#(quoted(to))}"#
+        return #"{"query":"\#(query)","kind":"\#(kind)","include_completed":\#(completed),"from":\#(quoted(from)),"to":\#(quoted(to)),"github_online":\#(online)}"#
     }
 
     @Test func search_isAReadToolWithStrictSchema() async throws {
@@ -114,9 +127,10 @@ struct AppToolsTests {
         #expect(tools.kind(of: "search") == .read)
         let definition = try #require(tools.definitions.first { $0.name == "search" })
         let schema = try #require(try JSONSerialization.jsonObject(with: definition.parameters) as? [String: Any])
-        #expect(Set(schema["required"] as? [String] ?? []) == ["query", "kind", "include_completed", "from", "to"])
+        #expect(Set(schema["required"] as? [String] ?? []) == ["query", "kind", "include_completed", "from", "to", "github_online"])
         #expect(definition.strict)
-        #expect(definition.description.hasPrefix("Searches calendar events and tasks by text"))
+        #expect(definition.description.hasPrefix("Searches calendar events, tasks, notes and shopping items by text"))
+        #expect(definition.description.contains("Private notes (journal, Bible Study, dream log) are never included."))
     }
 
     @Test func search_findsEventsAndTasksInDefaultWindow() async throws {
@@ -143,6 +157,130 @@ struct AppToolsTests {
         #expect((result["events"] as? [[String: Any]])?.first?["matchedIn"] as? [String] == ["notes"])
         #expect((result["tasks"] as? [[String: Any]])?.first?["matchedIn"] as? [String] == ["notes"])
         #expect(result["eventCount"] as? Int == 1 && result["taskCount"] as? Int == 1)
+    }
+
+    // MARK: search: notes, shopping, GitHub
+
+    @Test func search_returnsNotesWithTitleAndSnippet() async throws {
+        let body = String(repeating: "Füllwort ", count: 120) + "Zugangscode Blau-77 " + String(repeating: "Ende ", count: 120)
+        let note = noteItem("Reiseplanung\n" + body, day: nil)
+        let tools = await makeSearch(notes: [note])
+        let output = await tools.run(ToolCall(id: "c", name: "search", arguments: Data(searchArguments("zugangscode").utf8)))
+        let result = try #require(try JSONSerialization.jsonObject(with: Data(output.utf8)) as? [String: Any])
+        let entry = try #require((result["notes"] as? [[String: Any]])?.first)
+        #expect(entry["id"] as? String == "note:\(note.id.uuidString)")
+        #expect(entry["title"] as? String == "Reiseplanung")
+        #expect(entry["kind"] as? String == "Notiz")
+        #expect(entry["matchedIn"] as? [String] == ["notes"])
+        let snippet = try #require(entry["snippet"] as? String)
+        #expect(snippet.contains("Zugangscode") && snippet.count <= 80)
+        #expect(entry["updated"] as? String == "2026-11-18")
+        #expect(result["noteCount"] as? Int == 1)
+        // Never the whole text of a 2 000 character note.
+        #expect(output.count < 1_500)
+        #expect(!output.contains(String(repeating: "Füllwort ", count: 20)))
+    }
+
+    @Test func search_noteDayIsReportedForRoutineNotes() async throws {
+        let tools = await makeSearch(notes: [noteItem("Gedanken zum Morgen", kind: "Tagesstart", day: "2026-11-17")])
+        let result = await run(tools, "search", searchArguments("morgen"))
+        let entry = try #require((result["notes"] as? [[String: Any]])?.first)
+        #expect(entry["day"] as? String == "2026-11-17" && entry["kind"] as? String == "Tagesstart")
+    }
+
+    @Test func search_titleIsCutAt80() async throws {
+        let title = String(repeating: "Lang ", count: 40)
+        let tools = await makeSearch(notes: [noteItem(title + "\nInhalt")])
+        let result = await run(tools, "search", searchArguments("lang"))
+        let entry = try #require((result["notes"] as? [[String: Any]])?.first)
+        let shown = try #require(entry["title"] as? String)
+        #expect(shown.count <= AppTools.maxNoteTitleLength && shown.hasSuffix("…"))
+        #expect(AppTools.truncated("kurz", to: 80) == "kurz")
+    }
+
+    @Test func search_notesLocked_returnsOnlyCount() async throws {
+        let tools = await makeSearch(notes: [noteItem("Geheimplan Alpha"), noteItem("Geheimplan Beta")], notesAllowed: false)
+        let output = await tools.run(ToolCall(id: "c", name: "search", arguments: Data(searchArguments("geheimplan").utf8)))
+        let result = try #require(try JSONSerialization.jsonObject(with: Data(output.utf8)) as? [String: Any])
+        #expect(result["notesLocked"] as? Bool == true)
+        #expect(result["noteCount"] as? Int == 2)
+        #expect(result["notes"] == nil)
+        #expect(!output.contains("Alpha") && !output.contains("Beta"))
+    }
+
+    @Test func search_returnsShoppingItems() async throws {
+        let tools = await makeSearch(shopping: [ShoppingSearchItem(id: "r1", name: "Hafermilch", quantity: "2"),
+                                                ShoppingSearchItem(id: "r2", name: "Brot", quantity: nil)])
+        let result = await run(tools, "search", searchArguments("hafer"))
+        let items = try #require(result["shopping"] as? [[String: Any]])
+        #expect(items.count == 1)
+        #expect(items.first?["id"] as? String == "r1" && items.first?["name"] as? String == "Hafermilch")
+        #expect(items.first?["quantity"] as? String == "2" && items.first?["matchedIn"] as? [String] == ["title"])
+        #expect(result["shoppingCount"] as? Int == 1)
+    }
+
+    @Test func search_kindEvents_hasNoNotesOrShopping() async throws {
+        let tools = await makeSearch(notes: [noteItem("Statistik Notiz")], shopping: [ShoppingSearchItem(id: "r", name: "Statistikbuch", quantity: nil)])
+        for kind in ["events", "tasks"] {
+            let result = await run(tools, "search", searchArguments("statistik", kind: kind))
+            #expect(result["notes"] == nil && result["noteCount"] == nil && result["notesLocked"] == nil, "\(kind)")
+            #expect(result["shopping"] == nil && result["shoppingCount"] == nil, "\(kind)")
+        }
+    }
+
+    @Test func search_withoutFlag_doesNotCallGitHub() async throws {
+        final class Counter { var calls = 0 }
+        let counter = Counter()
+        let tools = await makeSearch(online: { _ in counter.calls += 1; return [] })
+        let result = await run(tools, "search", searchArguments("statistik"))
+        #expect(counter.calls == 0)
+        #expect(result["issues"] == nil && result["githubError"] == nil)
+        // Not for events only either, even with the flag.
+        _ = await run(tools, "search", searchArguments("statistik", kind: "events", online: true))
+        #expect(counter.calls == 0)
+    }
+
+    @Test func search_withFlag_returnsIssues() async throws {
+        final class Recorder { var texts: [String] = [] }
+        let recorder = Recorder()
+        let issues = [onlineIssue("I_9", number: 9, marker: .closed, assignees: ["lea-m"]), onlineIssue("I_8", number: 8, marker: .unassigned),
+                      onlineIssue("I_7", number: 7, marker: .assignedToOthers, assignees: ["max"]), onlineIssue("I_6", number: 6, marker: .noProject),
+                      onlineIssue("I_5", number: 5, marker: nil)]
+        let tools = await makeSearch(online: { text in recorder.texts.append(text); return issues })
+        let result = await run(tools, "search", searchArguments("export", online: true))
+        #expect(recorder.texts == ["export"])
+        let listed = try #require(result["issues"] as? [[String: Any]])
+        #expect(listed.map { $0["state"] as? String } == ["closed", "unassigned", "assigned_to_others", "no_project", "open"])
+        #expect(listed.first?["id"] as? String == "github:I_9")
+        #expect(listed.first?["number"] as? Int == 9 && listed.first?["repository"] as? String == "octo/r")
+        #expect(listed.first?["url"] as? String == "https://github.com/octo/r/issues/9")
+        #expect(listed.first?["assignees"] as? [String] == ["lea-m"])
+        #expect(result["githubError"] == nil)
+    }
+
+    @Test func search_onlineFailure_reportsGithubError_keepsLocalResults() async throws {
+        local.tasks.append(makeTask("Export lokal", source: .local))
+        for (error, name) in [(IssueSearchError.offline, "offline"), (.rateLimited, "rate_limited"), (.signedOut, "signed_out"),
+                              (.failed("Secret detail"), "failed")] {
+            let tools = await makeSearch(online: { _ in throw error })
+            let output = await tools.run(ToolCall(id: "c", name: "search", arguments: Data(searchArguments("export", online: true).utf8)))
+            let result = try #require(try JSONSerialization.jsonObject(with: Data(output.utf8)) as? [String: Any])
+            #expect(result["githubError"] as? String == name)
+            #expect(result["issues"] == nil)
+            #expect(result["taskCount"] as? Int == 1)
+            #expect(!output.contains("Secret detail"))
+        }
+    }
+
+    @Test func search_capsEachListAtTwenty() async throws {
+        let notes = (1...30).map { noteItem("Treffer-Notiz \($0)") }
+        let shopping = (1...30).map { ShoppingSearchItem(id: "r\($0)", name: "Treffer-Artikel \($0)", quantity: nil) }
+        let issues = (1...30).map { onlineIssue("I_\($0)", number: $0, marker: .closed) }
+        let tools = await makeSearch(notes: notes, shopping: shopping, online: { _ in issues })
+        let result = await run(tools, "search", searchArguments("treffer", online: true))
+        #expect((result["notes"] as? [[String: Any]])?.count == 20 && result["noteCount"] as? Int == 30)
+        #expect((result["shopping"] as? [[String: Any]])?.count == 20 && result["shoppingCount"] as? Int == 30)
+        #expect((result["issues"] as? [[String: Any]])?.count == 20)
     }
 
     @Test func search_seriesCarriesMoreOccurrences() async throws {

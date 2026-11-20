@@ -27,7 +27,7 @@ final class AppTools: ToolHandler {
     /// The shopping list; `nil` in contexts without one (the functions then report that no list is set up).
     let shopping: ShoppingModel?
     /// Where `search` reads events and completed tasks; `nil` in contexts without a search.
-    private let search: SearchToolSources?
+    let search: SearchToolSources?
     /// After "plan_period": the chat closes and "Planen" shows the suggestions (review item 11).
     var onPlanned: (() -> Void)?
 
@@ -128,77 +128,6 @@ final class AppTools: ToolHandler {
     }
 
     // MARK: Read
-
-    /// `search`: events and tasks by text. Notes, shopping items and online hits are not part of it, and the text
-    /// of a note field never leaves: an entry names the fields that matched (`matchedIn`) and nothing more.
-    private func runSearch(_ args: Arguments) async throws -> String {
-        guard let search else { throw ToolError(String(localized: "Die Suche ist nicht verfügbar.")) }
-        guard let query = SearchQuery(try args.require("query")) else {
-            throw ToolError(String(localized: "Der Suchtext braucht mindestens zwei Zeichen."))
-        }
-        let filter: SearchFilter = switch args.string("kind") {
-        case "events": .events
-        case "tasks": .tasks
-        default: .all
-        }
-        let calendar = planning.calendar
-        let window = SearchWindow.initial(now: planning.now(), calendar: calendar)
-        let start = try args.string("from").map { _ in try args.day("from").startDate(in: calendar) } ?? window.start
-        let end = try args.string("to").map { _ in
-            try args.day("to").adding(days: 1, calendar: calendar).startDate(in: calendar)
-        } ?? window.end
-        guard start < end else { throw ToolError(String(localized: "Der Zeitraum ist ungültig.")) }
-        guard let limit = calendar.date(byAdding: .year, value: Self.maxSearchYears, to: start), end <= limit else {
-            throw ToolError(String(localized: "Der Zeitraum darf höchstens vier Jahre umfassen."))
-        }
-
-        let includeCompleted = args.bool("include_completed") ?? false
-        let fetched = filter == .tasks ? [] : await search.events(DateInterval(start: start, end: end))
-        let completed = includeCompleted && filter != .events ? await search.completedTasks() : []
-        let input = SearchInput(events: fetched, calendarNames: search.calendarNames(),
-                                openTasks: taskList.items.filter { !$0.isCompleted }, completed: completed)
-        let results = SearchResults.make(query: query, filter: filter, includeCompleted: includeCompleted, input: input,
-                                         now: planning.now(), calendar: calendar)
-
-        var eventRows: [(EventRow, SearchMatch)] = []
-        var taskRows: [(item: TaskItem, completedAt: Date?, isCompleted: Bool, match: SearchMatch)] = []
-        for section in results.sections {
-            for row in section.rows {
-                switch row {
-                case .event(let eventRow, let match): eventRows.append((eventRow, match))
-                case .task(let item, let match): taskRows.append((item, nil, false, match))
-                case .completed(let group, let match): taskRows.append((group.latest.item, group.latest.completedAt, true, match))
-                case .online, .note, .shopping: break
-                }
-            }
-        }
-        let deadlineIDs = planning.deadlineEventIDs(among: eventRows.map(\.0.event))
-        let events = eventRows.prefix(Self.maxSearchResults).map { row, match -> [String: Any] in
-            var item = eventSummary(row.event, deadlineIDs: deadlineIDs)
-            item["matchedIn"] = match.matchedFields.map(\.rawValue)
-            if row.moreOccurrences > 0 { item["moreOccurrences"] = row.moreOccurrences }
-            return item
-        }
-        let tasks = taskRows.prefix(Self.maxSearchResults).map { row -> [String: Any] in
-            var item = Self.summary(row.item)
-            item["matchedIn"] = row.match.matchedFields.map(\.rawValue)
-            if row.isCompleted {
-                item["completed"] = true
-                if let date = row.completedAt { item["completedAt"] = date.formatted(.iso8601.year().month().day().time(includingFractionalSeconds: false)) }
-            }
-            return item
-        }
-        var answer: [String: Any] = [
-            "events": Array(events), "tasks": Array(tasks), "eventCount": eventRows.count, "taskCount": taskRows.count,
-            // `end` is exclusive: the last searched day is the one before it.
-            "searched": ["from": AIPlanner.dayString(PlanDay(date: start, calendar: calendar)),
-                         "to": args.string("to") ?? AIPlanner.dayString(
-                            PlanDay(date: calendar.date(byAdding: .day, value: -1, to: end) ?? end, calendar: calendar))],
-        ]
-        // Without calendar access an empty event list would read as "nothing found".
-        if filter != .tasks, fetched == nil { answer["calendarAccess"] = false }
-        return Self.json(answer)
-    }
 
     private func listTasks(filter: String) -> String {
         let today = planning.today
@@ -518,10 +447,19 @@ final class AppTools: ToolHandler {
     }
 }
 
-/// Where the assistant's `search` reads events and completed tasks, like the sources of the search sheet.
+/// Where the assistant's `search` reads from, like the sources of the search sheet.
 struct SearchToolSources {
     /// Events of a period in the calendars selected in the settings (decision F4), already prepared; `nil` without access.
     var events: @MainActor (DateInterval) async -> [CalendarEvent]?
     var calendarNames: @MainActor () -> [String: String]
     var completedTasks: @MainActor () async -> [CompletedTask]
+    /// Notes that may leave the device (never private ones); empty in contexts without notes. Wired to
+    /// `NoteToolAccess.visibleNotes()`, the only place that selects notes for ChatGPT.
+    var notes: @MainActor () -> [NoteSearchItem] = { [] }
+    /// Open shopping items; empty in contexts without a list.
+    var shopping: @MainActor () -> [ShoppingSearchItem] = { [] }
+    /// GitHub issue search; `nil` where there is none. Throws `IssueSearchError` (also while GitHub is not signed in).
+    var searchOnline: (@MainActor (String) async throws -> [OnlineIssue])?
+    /// Whether note hits may be returned with title and excerpt (decision D5); wired to the consent in Task 4a.
+    var notesAllowed: @MainActor () -> Bool = { false }
 }
