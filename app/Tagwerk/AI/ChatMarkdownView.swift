@@ -114,23 +114,30 @@ private struct ChatBlockView: View {
 }
 
 /// A Markdown table: a grid that scrolls sideways when it is wider than the chat, with a bold head row and thin rules.
+///
+/// The width of every column is measured from its texts (at most `maximumColumnWidth`), because a grid sizes its rows
+/// before it wraps text, which would cut off a long cell that has to wrap.
 private struct ChatTableView: View {
     let table: ChatTable
     let spokenSentence: String?
+    /// The widest a column gets before its text wraps; it follows the text size.
+    @ScaledMetric(relativeTo: .subheadline) private var maximumColumnWidth: CGFloat = 220
+    @ScaledMetric(relativeTo: .subheadline) private var cellPadding: CGFloat = 8
 
     var body: some View {
+        let widths = columnWidths()
         ScrollView(.horizontal) {
             Grid(horizontalSpacing: 0, verticalSpacing: 0) {
                 GridRow {
                     ForEach(Array(table.header.enumerated()), id: \.offset) { column, cell in
-                        self.cell(cell, column: column, isHeader: true)
+                        self.cell(cell, column: column, width: widths[column], isHeader: true)
                     }
                 }
                 ForEach(Array(table.rows.enumerated()), id: \.offset) { _, row in
                     Divider()
                     GridRow {
                         ForEach(Array(row.enumerated()), id: \.offset) { column, cell in
-                            self.cell(cell, column: column, isHeader: false)
+                            self.cell(cell, column: column, width: widths[column], isHeader: false)
                         }
                     }
                 }
@@ -141,18 +148,43 @@ private struct ChatTableView: View {
         .scrollBounceBehavior(.basedOnSize, axes: .horizontal)
     }
 
-    private func cell(_ text: AttributedString, column: Int, isHeader: Bool) -> some View {
+    /// The text width of each column: its longest line, plus the cell padding, capped.
+    private func columnWidths() -> [CGFloat] {
+        let regular = UIFont.preferredFont(forTextStyle: .subheadline)
+        let bold = UIFont.systemFont(ofSize: regular.pointSize, weight: .semibold)
+        func width(of text: AttributedString, font: UIFont) -> CGFloat {
+            String(text.characters).split(whereSeparator: \.isNewline)
+                .map { (String($0) as NSString).size(withAttributes: [.font: font]).width }.max() ?? 0
+        }
+        return table.alignments.indices.map { column in
+            var widest = column < table.header.count ? width(of: table.header[column], font: bold) : 0
+            for row in table.rows where column < row.count { widest = max(widest, width(of: row[column], font: regular)) }
+            // A little reserve, because the measured width is the width of one line without kerning differences.
+            return min(ceil(widest) + 4, maximumColumnWidth) + 2 * cellPadding
+        }
+    }
+
+    private func cell(_ text: AttributedString, column: Int, width: CGFloat, isHeader: Bool) -> some View {
         let alignment = column < table.alignments.count ? table.alignments[column] : .leading
         return Text(spokenSentence.map { SpokenAnswerText.highlighted(text, sentence: $0) } ?? text)
             .font(isHeader ? .subheadline.weight(.semibold) : .subheadline)
-            .padding(.horizontal, 8).padding(.vertical, 5)
-            // A long cell wraps instead of making the table arbitrarily wide; the outer frame fills the column.
-            .frame(maxWidth: 240, alignment: Self.frameAlignment(alignment))
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: Self.frameAlignment(alignment))
+            .multilineTextAlignment(Self.textAlignment(alignment))
+            .padding(.horizontal, cellPadding).padding(.vertical, 5)
+            .frame(width: width, alignment: Self.frameAlignment(alignment))
+            .fixedSize(horizontal: false, vertical: true)
+            .frame(maxHeight: .infinity)
             .background(isHeader ? Color(.secondarySystemBackground) : .clear)
     }
 
     private static func frameAlignment(_ alignment: ChatColumnAlignment) -> Alignment {
+        switch alignment {
+        case .leading: .leading
+        case .center: .center
+        case .trailing: .trailing
+        }
+    }
+
+    private static func textAlignment(_ alignment: ChatColumnAlignment) -> TextAlignment {
         switch alignment {
         case .leading: .leading
         case .center: .center
