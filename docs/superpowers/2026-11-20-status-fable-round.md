@@ -47,15 +47,14 @@ Festlegungen der Hauptsitzung zum G3-Plan: offene Fragen nach Empfehlung; Zeilen
 
 | Branch | Inhalt | Stand |
 |---|---|---|
-| `feat/recipe-translate` | #232 Block A | läuft (Sonnet) |
+| `feat/recipe-translate` | #232 Block A | fertig und geprüft, Head `d8856a7`, `test-all` grün; bereit für PR. Hinweis für #233: `NoteEditorSync` lässt Änderungen von außen über ungespeichertes Tippen gewinnen |
 | `feat/closed-issues-in-reviews` | #173 Strang C (Tasks 6, 7, 7a) | umgesetzt (Head `7f8c597`); Review-Korrekturen laufen: DUPLICATE zählt fälschlich, stille 0 vor dem Laden der Projekte, UI-Audit „Portionen“ prüfen |
 | `feat/evening-reminders-per-day` | #173 Strang E (Tasks 10, 11) | fertig und geprüft, Head `c4c281a`, `test-all` grün; bereit für PR |
 | `feat/assistant-assign-and-search` | #173 Stränge A, B und Task 5 | läuft wieder (Sonnet), ab WIP `430fb8e` |
-| `feat/g3-search-menu` | G3 Strang U | pausiert, WIP-Commit `25b57f0` (U1 begonnen, ungetestet); Worktree entfernt |
+| `feat/g3-search-menu` | G3 Strang U | läuft wieder (Sonnet), ab WIP `25b57f0` |
 
 ## Warteschlange Umsetzung (je freier Xcode-Platz, nach Prüfung des fertigen Branches)
 
-1. G3 Strang U fortsetzen
 3. #173 Strang D (Tasks 8, 9), danach #233 Block B
 4. G3 Stränge S, G, T, L (mit SP5c); Strang K zuletzt nach T, L, S
 5. Gruppen 1 und 2 nach ihren Plänen
