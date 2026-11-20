@@ -4,7 +4,7 @@ import PackageDescription
 let package = Package(
     name: "TagwerkCore",
     defaultLocalization: "de",
-    platforms: [.iOS("27.0")],
+    platforms: [.iOS("27.0"), .watchOS("27.0")],
     products: [
         .library(name: "TagwerkCore", targets: ["TagwerkCore"])
     ],
