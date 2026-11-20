@@ -267,6 +267,9 @@ struct AppToolsTests {
         #expect(listed.first?["url"] as? String == "https://github.com/octo/r/issues/9")
         #expect(listed.first?["assignees"] as? [String] == ["lea-m"])
         #expect(result["githubError"] == nil)
+        // The ids of the answer are the keys a following assign_task takes.
+        #expect(Set(tools.foundIssues.keys) == ["github:I_9", "github:I_8", "github:I_7", "github:I_6", "github:I_5"])
+        #expect(tools.foundIssues["github:I_9"]?.assignees == ["lea-m"])
     }
 
     @Test func search_onlineFailure_reportsGithubError_keepsLocalResults() async throws {
@@ -1210,4 +1213,97 @@ extension AppToolsGitHubTests {
         #expect(signedIn.definitions.contains { $0.name == "assign_task" })
         #expect(signedIn.kind(of: "assign_task") == .write)
     }
+
+    // MARK: Issues outside the user's tasks (decision D3)
+
+    /// An issue the GitHub search found: the provider holds it, the task list does not.
+    private func foundIssue(_ number: Int, assignees: [String], marker: OnlineIssueMarker? = .unassigned) -> (TaskItem, OnlineIssue) {
+        let item = issue(number, assignees: assignees)
+        let online = OnlineIssue(id: item.id.rawValue, number: number, title: item.title, repository: "beispiel/app",
+                                 url: item.url!, updatedAt: testNow(), marker: marker, assignees: assignees)
+        return (item, online)
+    }
+
+    @Test func assignTask_unlistedIssue_takeOver_joinsList() async throws {
+        let (item, online) = foundIssue(151, assignees: [])
+        let tools = await make()
+        // The provider holds the issue, the loaded list does not (the search found it online).
+        github.tasks = [item]
+        #expect(!taskList.items.contains { $0.id == item.id })
+        tools.rememberFoundIssues([online])
+
+        let result = await run(tools, "assign_task", assignArguments(item, add: ["octo"]))
+
+        #expect(result["ok"] as? Bool == true)
+        #expect(result["assignees"] as? [String] == ["octo"])
+        #expect(result["handed_over"] as? Bool == false && result["deleted_blocks"] as? Int == 0)
+        #expect(result["in_tasks"] as? Bool == true)
+        #expect(result["number"] as? Int == 151 && result["url"] as? String == "https://github.com/beispiel/app/issues/151")
+        #expect(taskList.items.contains { $0.id == item.id })
+        let applied = try #require(github.appliedEdits.last)
+        #expect(applied.expectedVersion == nil)
+        guard case .set(let change) = applied.edit.assignees else { Issue.record("assignees not set"); return }
+        #expect(change == AssigneeChange(add: ["octo"]))
+    }
+
+    @Test func assignTask_unlistedIssue_assignOther_staysOut() async {
+        let (item, online) = foundIssue(151, assignees: ["max"], marker: .assignedToOthers)
+        let tools = await make()
+        // The provider holds the issue, the loaded list does not (the search found it online).
+        github.tasks = [item]
+        tools.rememberFoundIssues([online])
+
+        let result = await run(tools, "assign_task", assignArguments(item, add: ["Lea-M"], remove: ["max"]))
+
+        #expect(result["ok"] as? Bool == true)
+        #expect(result["assignees"] as? [String] == ["lea-m"])
+        #expect(result["in_tasks"] as? Bool == false)
+        #expect(!taskList.items.contains { $0.id == item.id })
+        #expect(directory.assignableRequests == ["beispiel/app"])
+    }
+
+    @Test func assignTask_unlistedIssue_unknownLoginOrPerson_writesNothing() async {
+        let (item, online) = foundIssue(151, assignees: ["max"], marker: .assignedToOthers)
+        let tools = await make()
+        // The provider holds the issue, the loaded list does not (the search found it online).
+        github.tasks = [item]
+        tools.rememberFoundIssues([online])
+        let unknown = await run(tools, "assign_task", assignArguments(item, add: ["ghost"]))
+        #expect(unknown["error"] as? String == "ghost ist in beispiel/app nicht zuweisbar.")
+        let notAssigned = await run(tools, "assign_task", assignArguments(item, remove: ["lea-m"]))
+        #expect(notAssigned["error"] != nil)
+        #expect(github.appliedEdits.isEmpty)
+    }
+
+    @Test func assignTask_unknownId_fails() async {
+        let (item, _) = foundIssue(151, assignees: [])
+        let tools = await make()
+        github.tasks = [item]
+        // Neither among the tasks nor among the found issues.
+        let result = await run(tools, "assign_task", assignArguments(item, add: ["octo"]))
+        #expect(result["error"] as? String == "Diese Aufgabe gibt es nicht.")
+        #expect(github.appliedEdits.isEmpty)
+    }
+
+    @Test func assignTask_closedIssue_fails() async {
+        let (item, online) = foundIssue(151, assignees: [], marker: .closed)
+        let tools = await make()
+        // The provider holds the issue, the loaded list does not (the search found it online).
+        github.tasks = [item]
+        tools.rememberFoundIssues([online])
+        let result = await run(tools, "assign_task", assignArguments(item, add: ["octo"]))
+        #expect(result["error"] as? String == "Geschlossene Issues lassen sich hier nicht zuweisen.")
+        #expect(github.appliedEdits.isEmpty)
+    }
+
+    @Test func foundIssues_areReplacedByEveryRememberCall() async {
+        let tools = await make()
+        let (_, first) = foundIssue(151, assignees: [])
+        let (_, second) = foundIssue(152, assignees: [])
+        tools.rememberFoundIssues([first])
+        #expect(Set(tools.foundIssues.keys) == ["github:ISSUE_151"])
+        tools.rememberFoundIssues([second])
+        #expect(Set(tools.foundIssues.keys) == ["github:ISSUE_152"])
+    }
 }
+

@@ -12,6 +12,8 @@ struct ActionCardDescriber {
     var gitHubDirectory: () -> (any GitHubDirectory)? = { nil }
     /// Name of an open shopping item by its id, for the card of `update_shopping`.
     var shoppingItemName: (String) -> String? = { _ in nil }
+    /// An issue of the last GitHub search by task key, for the card of `assign_task` on an issue outside the user's tasks.
+    var foundIssue: (String) -> OnlineIssue? = { _ in nil }
 
     /// `spoken`: the card is read aloud; texts then avoid symbols that speech drops (the screen keeps them).
     func describe(_ call: ToolCall, language: VoiceLanguage = .app, spoken: Bool = false) -> AssistantModel.ActionCard {
@@ -113,7 +115,9 @@ struct ActionCardDescriber {
             if !checks.isEmpty { parts.append(text("Abhaken: \(checks.joined(separator: ", "))")) }
             return AssistantModel.ActionCard(title: text("Einkaufsliste ändern"), change: parts.joined(separator: " · "))
         case "assign_task":
-            return describeAssignment(task: task, args: args, title: title, language: language, spoken: spoken)
+            // An issue outside the user's tasks comes from the last GitHub search.
+            let found = task == nil ? string("id").flatMap(foundIssue) : nil
+            return describeAssignment(task: task, found: found, args: args, title: found?.title ?? title, language: language, spoken: spoken)
         case "create_event", "update_event", "delete_event":
             return describeEvent(call.name, series: args["series"] as? Bool == true, language: language, string: string)
         default:
@@ -162,7 +166,7 @@ struct ActionCardDescriber {
     /// Card of `assign_task` (mockups ZU1a, ZU2): who is assigned before and after, and for a hand-over what it costs.
     /// The plan comes from the same function as the execution; when the issue is not loaded any more (or the change
     /// cannot be resolved) the card lists the requested change and the execution reports what is wrong.
-    private func describeAssignment(task: TaskItem?, args: [String: Any], title: String, language: VoiceLanguage,
+    private func describeAssignment(task: TaskItem?, found: OnlineIssue?, args: [String: Any], title: String, language: VoiceLanguage,
                                     spoken: Bool) -> AssistantModel.ActionCard {
         func text(_ key: String.LocalizationValue) -> String { Localized.string(key, in: language, bundle: .main) }
         let me = gitHubDirectory()?.login
@@ -185,18 +189,29 @@ struct ActionCardDescriber {
             return text("Zuweisung ändern: \(parts.joined(separator: ", "))")
         }
 
-        guard let task, case .success(let plan) = AppTools.assignmentPlan(current: task.assignees ?? [], add: add, remove: remove, me: me) else {
-            return AssistantModel.ActionCard(title: title, change: requested())
+        // An issue outside the lists is named by repository and number; nothing is planned for it, so no consequences.
+        let location = found.map { "\($0.repository) #\($0.number)" }
+        func prefixed(_ line: String) -> String {
+            guard let location else { return line }
+            return spoken ? location + ". " + line : location + "\n" + line
         }
-        let warning = plan.handsOver
-            ? TaskEditorModel.handOverMessage(number: task.issueNumber, futureBlocks: planning.futureBlockCount(for: task.id),
-                                              leavesUnassigned: plan.after.isEmpty)
+        guard let current = task?.assignees ?? found?.assignees ?? (task == nil ? nil : [String]()),
+              case .success(let plan) = AppTools.assignmentPlan(current: current, add: add, remove: remove, me: me) else {
+            return AssistantModel.ActionCard(title: title, change: prefixed(requested()))
+        }
+        // Only an issue of the user's lists is handed over; an issue found by the search was never in them.
+        let handsOver = task != nil && plan.handsOver
+        let warning = handsOver
+            ? task.flatMap { task in
+                TaskEditorModel.handOverMessage(number: task.issueNumber, futureBlocks: planning.futureBlockCount(for: task.id),
+                                                leavesUnassigned: plan.after.isEmpty)
+            }
             : nil
         let before = plan.before.isEmpty ? text("niemand") : names(plan.before)
         let after: String
         if plan.after.isEmpty {
             after = text("niemand")
-        } else if plan.handsOver {
+        } else if handsOver {
             after = text("\(names(plan.after)) (nicht mehr dir)")
         } else {
             after = names(plan.after)
@@ -204,8 +219,8 @@ struct ActionCardDescriber {
         var change = spoken ? requested() : text("Zugewiesen: \(before) → \(after)")
         // By voice the card is the only place that names the consequences, so they are read out as well.
         if spoken, let warning { change += ". " + warning }
-        return AssistantModel.ActionCard(title: title, change: change, warning: spoken ? nil : warning,
-                                         confirmTitle: plan.handsOver ? text("Abgeben") : nil, isDestructive: plan.handsOver)
+        return AssistantModel.ActionCard(title: title, change: prefixed(change), warning: spoken ? nil : warning,
+                                         confirmTitle: handsOver ? text("Abgeben") : nil, isDestructive: handsOver)
     }
 
     private func describeEvent(_ name: String, series: Bool, language: VoiceLanguage,

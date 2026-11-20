@@ -485,7 +485,9 @@ final class AssistantModel {
         auf, wenn der Nutzer das Issue jemandem zuweisen will. Passt ein genannter Name zu keinem oder zu mehreren \
         Logins, frag nach, statt zu raten. Um die Zuständigkeit eines bestehenden Issues zu ändern, nutze assign_task. \
         Lies vorher mit get_task, wer zugewiesen ist, und mit list_assignees, wer zuweisbar ist. Entfernst du den \
-        Nutzer selbst, gibt er das Issue ab; sag ihm danach Nummer und Link.
+        Nutzer selbst, gibt er das Issue ab; sag ihm danach Nummer und Link. Auch ein offenes Issue, das search mit \
+        github_online gefunden hat und das nicht in den Aufgaben steht, kannst du mit assign_task zuweisen, etwa wenn \
+        der Nutzer es übernehmen will; die id aus dem Suchergebnis gilt dafür bis zur nächsten GitHub-Suche.
         """
         if case .task(let id) = context, id.source == .github, let reference = issueReference(id) {
             text += " Naheliegendes Ziel für neue Issues: \(reference.repository)."
@@ -543,7 +545,8 @@ final class AssistantModel {
     /// `spoken`: the card is read aloud; texts then avoid symbols that speech drops (the screen keeps them).
     /// The texts come from `ActionCardDescriber`, which the thoughts note's suggestions use as well.
     func describe(_ call: ToolCall, language: VoiceLanguage = .app, spoken: Bool = false) -> ActionCard {
-        ActionCardDescriber(planning: planning, gitHubDirectory: gitHubDirectory, shoppingItemName: shoppingItemName)
+        ActionCardDescriber(planning: planning, gitHubDirectory: gitHubDirectory, shoppingItemName: shoppingItemName,
+                            foundIssue: { [tools] in tools.foundIssues[$0] })
             .describe(call, language: language, spoken: spoken)
     }
 }

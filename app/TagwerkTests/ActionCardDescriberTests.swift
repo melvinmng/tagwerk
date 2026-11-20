@@ -116,4 +116,29 @@ struct ActionCardDescriberTests {
         let card = describer.describe(call(task.id.key, add: ["lea-m"]), language: .english)
         #expect(card.change == "Assigned: you → you and lea-m")
     }
+
+    @Test func describe_assignTask_unlistedIssue_showsNumberAndRepository() async {
+        let (describer, _) = await make(issues: [])
+        let online = OnlineIssue(id: "ISSUE_151", number: 151, title: "Export prüfen", repository: "beispiel/app",
+                                 url: URL(string: "https://github.com/beispiel/app/issues/151")!, updatedAt: testNow(),
+                                 marker: .unassigned, assignees: [])
+        var withFound = describer
+        withFound.foundIssue = { $0 == "github:ISSUE_151" ? online : nil }
+        let card = withFound.describe(call("github:ISSUE_151", add: ["octo"]))
+        #expect(card.title == "Export prüfen")
+        #expect(card.change == "beispiel/app #151\nZugewiesen: niemand → dir")
+        // Nothing is planned for an issue outside the lists: no consequences, no red button.
+        #expect(card.warning == nil && card.confirmTitle == nil && !card.isDestructive)
+        let spoken = withFound.describe(call("github:ISSUE_151", add: ["octo"]), spoken: true)
+        #expect(spoken.change == "beispiel/app #151. Zuweisung ändern: du dazu")
+        // Taking someone else away from it names who is assigned afterwards.
+        var others = withFound
+        others.foundIssue = { _ in
+            OnlineIssue(id: "ISSUE_151", number: 151, title: "Export prüfen", repository: "beispiel/app",
+                        url: online.url, updatedAt: testNow(), marker: .assignedToOthers, assignees: ["max"])
+        }
+        #expect(others.describe(call("github:ISSUE_151", add: ["lea-m"], remove: ["max"])).change
+                == "beispiel/app #151\nZugewiesen: max → lea-m")
+    }
 }
+

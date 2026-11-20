@@ -1,5 +1,6 @@
 import AIKit
 import Foundation
+import GitHubKit
 import RemindersKit
 import TagwerkCore
 
@@ -28,6 +29,14 @@ final class AppTools: ToolHandler {
     let shopping: ShoppingModel?
     /// Where `search` reads events and completed tasks; `nil` in contexts without a search.
     let search: SearchToolSources?
+    /// Issues of the last successful online search by task key, so a following `assign_task` can name title, repository
+    /// and people. Kept in memory only; every successful online search replaces it.
+    private(set) var foundIssues: [String: OnlineIssue] = [:]
+
+    func rememberFoundIssues(_ issues: [OnlineIssue]) {
+        foundIssues = Dictionary(issues.map { (TaskID(source: .github, rawValue: $0.id).key, $0) }, uniquingKeysWith: { first, _ in first })
+    }
+
     /// The notes the assistant may see (never private ones); `nil` in contexts without notes.
     var noteAccess: NoteToolAccess?
     /// The note texts read in the running session; emptied when the session ends.

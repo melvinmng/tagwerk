@@ -115,8 +115,10 @@ extension AppTools {
         }
         if let onlineError {
             answer["githubError"] = onlineError
-        } else if online != nil {
+        } else if let online {
             answer["issues"] = issueRows.prefix(Self.maxSearchResults).map(Self.issueEntry)
+            // The ids in the answer stay valid for a following assign_task.
+            rememberFoundIssues(online)
         }
         return Self.json(answer)
     }
@@ -147,7 +149,7 @@ extension AppTools {
         case .noProject?: "no_project"
         case nil: "open"
         }
-        return ["id": "github:\(issue.id)", "number": issue.number, "title": issue.title, "repository": issue.repository,
+        return ["id": TaskID(source: .github, rawValue: issue.id).key, "number": issue.number, "title": issue.title, "repository": issue.repository,
                 "url": issue.url.absoluteString, "state": state, "assignees": issue.assignees]
     }
 

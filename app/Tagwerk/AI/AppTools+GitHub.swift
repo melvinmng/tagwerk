@@ -196,28 +196,49 @@ extension AppTools {
         return .success(AssignmentPlan(change: change, before: current, after: after, handsOver: handsOver))
     }
 
-    /// Changes who is assigned to an issue of the user's tasks after the confirmation. A person who is added must
-    /// be assignable in the repository (no blind assigning); an unknown login or a list that cannot be loaded
-    /// writes nothing. Giving the issue away removes it from the lists; `onHandedOver` deletes its future blocks.
+    /// The issue an `assign_task` call is about: one of the user's tasks, or one the online search found.
+    private struct AssignmentTarget {
+        let id: TaskID
+        let repository: String
+        let current: [String]
+        /// A task of the user's lists; otherwise an issue from `foundIssues`.
+        let task: TaskItem?
+        let found: OnlineIssue?
+    }
+
+    private func assignmentTarget(for key: String) throws -> AssignmentTarget {
+        if let task = taskList.items.first(where: { $0.id.key == key }) {
+            guard task.id.source == .github else { throw ToolError(AssignmentError.notAnIssue.message) }
+            return AssignmentTarget(id: task.id, repository: task.container.id, current: task.assignees ?? [], task: task, found: nil)
+        }
+        guard let found = foundIssues[key] else { throw ToolError(String(localized: "Diese Aufgabe gibt es nicht.")) }
+        guard found.marker != .closed else { throw ToolError(String(localized: "Geschlossene Issues lassen sich hier nicht zuweisen.")) }
+        return AssignmentTarget(id: TaskID(source: .github, rawValue: found.id), repository: found.repository, current: found.assignees,
+                                task: nil, found: found)
+    }
+
+    /// Changes who is assigned to an issue after the confirmation: one of the user's tasks or one that the GitHub
+    /// search found (taking over "weis mir #151 zu"). A person who is added must be assignable in the repository
+    /// (no blind assigning); an unknown login or a list that cannot be loaded writes nothing. Giving one of the user's
+    /// issues away removes it from the lists; `onHandedOver` deletes its future blocks.
     func assignTask(_ args: Arguments) async throws -> String {
-        let task = try task(args.require("id"))
-        guard task.id.source == .github else { throw ToolError(AssignmentError.notAnIssue.message) }
+        let target = try assignmentTarget(for: args.require("id"))
         guard let directory = gitHub() else { throw ToolError(String(localized: "Diese Quelle ist nicht verfügbar.")) }
         let me = directory.login
-        let current = task.assignees ?? []
+        let current = target.current
 
         var add: [String] = []
         let requested = args.strings("add")
         let others = requested.filter { !AssigneeSelection.isMe($0, me: me) && !AssigneeRules.contains(current, $0) }
         var assignable: [String] = []
         if !others.isEmpty {
-            guard let loaded = await directory.assignableUsers(in: task.container.id, maxAge: AppEnvironment.catalogMaxAge) else {
+            guard let loaded = await directory.assignableUsers(in: target.repository, maxAge: AppEnvironment.catalogMaxAge) else {
                 throw ToolError(String(localized: "Personen konnten nicht geladen werden"))
             }
             assignable = loaded
             let unknown = others.filter { AssigneeRules.canonical($0, in: loaded) == nil }
             guard unknown.isEmpty else {
-                throw ToolError(String(localized: "\(unknown.formatted(.list(type: .and))) ist in \(task.container.id) nicht zuweisbar."))
+                throw ToolError(String(localized: "\(unknown.formatted(.list(type: .and))) ist in \(target.repository) nicht zuweisbar."))
             }
         }
         for login in requested {
@@ -228,6 +249,20 @@ extension AppTools {
         switch Self.assignmentPlan(current: current, add: add, remove: args.strings("remove"), me: me) {
         case .success(let resolved): plan = resolved
         case .failure(let error): throw ToolError(error.message)
+        }
+
+        guard let task = target.task else {
+            // An issue outside the user's lists: nothing to plan away; it joins the lists when the user took it over.
+            let updated = try await taskList.assignUnlisted(plan.change, to: target.id)
+            var response: [String: Any] = ["ok": true, "assignees": updated.assignees ?? [], "handed_over": false, "deleted_blocks": 0,
+                                           "in_tasks": taskList.items.contains { $0.id == target.id }]
+            if let found = target.found {
+                response["number"] = found.number
+                response["url"] = found.url.absoluteString
+            }
+            let missing = AssigneeRules.missing(requested: plan.change.add, actual: updated.assignees)
+            if !missing.isEmpty { response["not_assigned"] = missing }
+            return Self.json(response)
         }
 
         let futureBlocks = planning.futureBlockCount(for: task.id)

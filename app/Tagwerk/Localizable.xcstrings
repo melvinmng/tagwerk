@@ -8745,6 +8745,16 @@
         }
       }
     },
+    "Geschlossene Issues lassen sich hier nicht zuweisen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Closed issues cannot be assigned here."
+          }
+        }
+      }
+    },
     "Geschätzt": {
       "localizations": {
         "en": {
