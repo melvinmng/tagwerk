@@ -95,7 +95,8 @@ struct RootView: View {
             if let model = environment.activeSearch {
                 SearchSheet(model: model,
                             onShowDay: { day in environment.closeSearch(); showDay(day) },
-                            onShowTask: { id in environment.closeSearch(); showTask(id) })
+                            onShowTask: { id in environment.closeSearch(); showTask(id) },
+                            onShowNoteFolder: { folderID in environment.closeSearch(); environment.showNotesFolder(folderID) })
             }
         }
         .background(KeyboardDismissalInstaller())

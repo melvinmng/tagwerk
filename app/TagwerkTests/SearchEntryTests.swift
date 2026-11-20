@@ -168,4 +168,29 @@ struct SearchEntryTests {
         let interval = store.completedIntervals[0]
         #expect(interval.end >= now && interval.duration > 360 * 24 * 3600 && interval.duration < 370 * 24 * 3600)
     }
+
+    // MARK: Note hits: "Im Ordner zeigen"
+
+    @Test func showNotesFolder_setsThePathToTheFolder() throws {
+        let folderID = UUID()
+        environment.showNotesFolder(folderID)
+        #expect(environment.tasksPath == [.notes, .notesFolder(.folder(folderID))])
+        #expect(environment.requestedTab == 1)
+    }
+
+    @Test func showNotesFolder_withoutFolder_opensAllNotes() {
+        environment.tasksPath = [.shopping]
+        environment.showNotesFolder(nil)
+        #expect(environment.tasksPath == [.notes, .notesFolder(.all)])
+        #expect(environment.requestedTab == 1)
+    }
+
+    @Test func notesFolderID_isTheFolderOfTheNote_orNilWhenItIsGone() throws {
+        let folder = try environment.notes.createFolder(name: "Ideen")
+        let note = environment.notes.createBlank(folderID: folder.id)
+        #expect(environment.notesFolderID(ofNote: note.id) == folder.id)
+        let loose = environment.notes.createBlank(folderID: nil)
+        #expect(environment.notesFolderID(ofNote: loose.id) == nil)
+        #expect(environment.notesFolderID(ofNote: UUID()) == nil)
+    }
 }

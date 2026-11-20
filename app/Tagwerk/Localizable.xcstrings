@@ -9699,6 +9699,16 @@
         }
       }
     },
+    "Im Ordner zeigen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show in folder"
+          }
+        }
+      }
+    },
     "Im Plan zeigen": {
       "localizations": {
         "en": {
