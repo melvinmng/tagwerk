@@ -39,7 +39,6 @@ struct CaptureSettingsView: View {
                         .accessibilityIdentifier("drinkPreset\(index + 1)")
                 }
                 Button("Zurücksetzen") { settings.drinkPresets = DrinkPresets.defaults }
-                    .disabled(settings.drinkPresets == DrinkPresets.defaults)
                     .accessibilityIdentifier("drinkPresetsReset")
             } header: {
                 Text("Trinkportionen")
