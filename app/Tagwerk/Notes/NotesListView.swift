@@ -367,7 +367,9 @@ struct NotesListView: View {
     /// "Notiz diktieren" (control): the recording starts as if the microphone was tapped. The request is used up even
     /// when dictation is off, so it cannot start a recording later.
     private func startRequestedDictation() {
-        guard environment.router.dictationRequested else { return }
+        // Only the list of Brain Dump takes the request; another list that is still on screen while the path changes
+        // must not start a recording into the wrong folder.
+        guard folderRole == .brainDump, environment.router.dictationRequested else { return }
         let wanted = environment.router.takeDictationRequest()
         if wanted, allowsCapture, environment.settings.voiceInputEnabled { voice?.tapMicrophone() }
     }

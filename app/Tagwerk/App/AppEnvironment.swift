@@ -471,7 +471,10 @@ final class AppEnvironment {
     /// Shows the notes of "Brain Dump" in the "Aufgaben" tab; the list starts a recording (`AppRouter.dictationRequested`).
     /// The note is created by the list's own send action, so nothing is written here.
     func openDictatedNote() {
+        if notes.folder(role: .brainDump) == nil { notes.ensureDefaultFolders() }
         guard let folder = notes.folder(role: .brainDump) else {
+            // No folder to record into: show the notes overview and drop the request, so no later list starts recording.
+            _ = router.takeDictationRequest()
             tasksPath = [.notes]
             requestedTab = 1
             return

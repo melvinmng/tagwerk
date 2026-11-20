@@ -32,12 +32,18 @@ struct HabitControl: ControlWidget {
     var body: some ControlWidgetConfiguration {
         AppIntentControlConfiguration(kind: ControlKind.habit, intent: HabitControlConfiguration.self) { configuration in
             ControlWidgetButton(action: ControlCheckHabitIntent(habit: configuration.habit)) {
-                Label(ControlText.habitName, systemImage: configuration.habit?.symbol ?? "checkmark.circle")
+                Label(ControlText.habitName, systemImage: Self.symbol(of: configuration.habit))
             }
         }
         .displayName(ControlText.habitName)
         .description(ControlText.habitDescription)
         .promptsForUserConfiguration()
+    }
+
+    /// The habit's symbol, or a check mark while none is chosen or the symbol did not come along.
+    private static func symbol(of habit: HabitEntity?) -> String {
+        guard let symbol = habit?.symbol, !symbol.isEmpty else { return "checkmark.circle" }
+        return symbol
     }
 }
 

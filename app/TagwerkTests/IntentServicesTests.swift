@@ -12,7 +12,8 @@ struct IntentServicesTests {
     private func make() throws -> (IntentServices, AppEnvironment) {
         let container = try ModelContainerFactory.make(inMemory: true)
         let environment = try AppEnvironment(modelContainer: container, notificationCenter: FakeNotificationCenter(),
-                                             health: health, snapshotWriter: WidgetSnapshotWriter(directory: directory, reload: {}))
+                                             health: health, snapshotWriter: WidgetSnapshotWriter(directory: directory, reload: {}),
+                                             focusNotificationCenter: FakeFocusNotificationCenter())
         environment.settings.setupCompleted = true
         return (IntentServices(environment: environment), environment)
     }
@@ -115,6 +116,7 @@ struct IntentServicesTests {
         #expect(environment.focus.isRunning)
         #expect(environment.focus.session?.title == "")
         #expect(String(localized: await services.setFocus(true)) == "Der Fokus läuft schon.")
+        _ = await services.setFocus(false)
     }
 
     @Test func stopFocus_endsTheSession() async throws {
@@ -134,6 +136,16 @@ struct IntentServicesTests {
         services.openDictation()
         #expect(environment.router.takeRequest(setupCompleted: true)?.route == .notesDictate)
         #expect(environment.router.takeDictationRequest())
+    }
+
+    @Test func openDictatedNote_withBrainDump_showsItsList() throws {
+        let (_, environment) = try make()
+        let folder = try #require(environment.notes.folder(role: .brainDump))
+        environment.router.open(.notesDictate)
+        _ = environment.router.takeRequest(setupCompleted: true)
+        environment.openDictatedNote()
+        #expect(environment.tasksPath == [.notes, .notesFolder(.folder(folder.id))])
+        #expect(environment.router.dictationRequested)
     }
 
     // MARK: Habits (phase 7)
