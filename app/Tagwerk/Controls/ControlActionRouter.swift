@@ -1,5 +1,6 @@
 import AppIntents
 import Foundation
+import TagwerkCore
 import WidgetKit
 
 /// Reloads a control after its state changed.
@@ -34,15 +35,27 @@ protocol ControlFocusSwitching: AnyObject {
 
 extension FocusTimerModel: ControlFocusSwitching {}
 
+/// The app's router as the opening controls see it.
+@MainActor
+protocol ControlRouteOpening: AnyObject {
+    func openControlRoute(_ route: AppRoute)
+}
+
+extension AppRouter: ControlRouteOpening {
+    func openControlRoute(_ route: AppRoute) { open(route) }
+}
+
 /// Carries out what the controls ask for, in the app's process. `TagwerkApp.init` installs it, before the first frame.
 @MainActor
 final class ControlActionRouter {
     private let writer: ControlWriting
     private let focus: ControlFocusSwitching
+    private let router: ControlRouteOpening
 
-    init(writer: ControlWriting, focus: ControlFocusSwitching) {
+    init(writer: ControlWriting, focus: ControlFocusSwitching, router: ControlRouteOpening) {
         self.writer = writer
         self.focus = focus
+        self.router = router
     }
 
     func handle(_ action: ControlAction) async {
@@ -50,6 +63,7 @@ final class ControlActionRouter {
         case .logWater(let milliliters): _ = await writer.logWater(milliliters: milliliters)
         case .checkHabit(let id): _ = await writer.checkHabit(id: id)
         case .setFocus(let on): await focus.setRunning(on)
+        case .open(let route): router.openControlRoute(route)
         }
     }
 

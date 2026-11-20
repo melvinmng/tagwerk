@@ -7,6 +7,7 @@ import TagwerkCore
 /// (once) is asked at that tap, and only when the chosen source needs ChatGPT.
 struct RecipeSheet: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(AppEnvironment.self) private var environment
     let model: ShoppingModel
     /// Called after the ingredients were added, with the line for the page's notice.
     let onFinished: (String) -> Void
@@ -14,8 +15,12 @@ struct RecipeSheet: View {
     var start: RecipeStart?
     /// Offered by shared items: "Verwerfen" removes the item instead of only closing the sheet.
     var onDiscard: (() -> Void)?
+    /// Shared items: the sheet first asks what happens with the recipe, "Zutaten auf die Einkaufsliste" or "Nur als Rezept
+    /// speichern". Without it the recipe always goes to the shopping list (the "Rezept hinzufügen" button).
+    var offersSaveOnly = false
 
     @State private var result: RecipeResult?
+    @State private var purpose: RecipePurpose = .shopping
 
     /// The recipe found, identifiable for the navigation.
     struct RecipeResult: Identifiable, Hashable {
@@ -23,14 +28,23 @@ struct RecipeSheet: View {
         let recipe: RecipeImporter.Result
         /// The recipe came from a note of the user: it is not saved as a second recipe note.
         let fromNote: Bool
+        /// The user chose "Nur als Rezept speichern": the result is saved as a note, the shopping list stays untouched.
+        var savesOnly = false
         static func == (lhs: RecipeResult, rhs: RecipeResult) -> Bool { lhs.id == rhs.id }
         func hash(into hasher: inout Hasher) { hasher.combine(id) }
     }
 
+    /// Whether a recipe read now is only saved: the choice exists and "Nur als Rezept speichern" is on.
+    static func savesOnly(offersSaveOnly: Bool, purpose: RecipePurpose) -> Bool {
+        offersSaveOnly && purpose == .saveOnly
+    }
+
     var body: some View {
         NavigationStack {
-            RecipeInputView(purpose: .shopping, model: model, start: start) { recipe, fromNote in
-                result = RecipeResult(recipe: recipe, fromNote: fromNote)
+            RecipeInputView(purpose: Self.savesOnly(offersSaveOnly: offersSaveOnly, purpose: purpose) ? .saveOnly : .shopping,
+                            model: model, start: start, purposeChoice: offersSaveOnly ? $purpose : nil) { recipe, fromNote in
+                result = RecipeResult(recipe: recipe, fromNote: fromNote,
+                                      savesOnly: Self.savesOnly(offersSaveOnly: offersSaveOnly, purpose: purpose))
             }
             .navigationTitle("Rezept hinzufügen")
             .navigationBarTitleDisplayMode(.inline)
@@ -46,11 +60,21 @@ struct RecipeSheet: View {
                 }
             }
             .navigationDestination(item: $result) { found in
-                RecipeResultView(result: found.recipe, fromNote: found.fromNote, model: model) { line in
-                    onFinished(line)
-                    dismiss()
-                } onDiscard: {
-                    dismiss()
+                if found.savesOnly {
+                    // The same confirmation as "Rezept mit ChatGPT anlegen"; the shopping list is not touched.
+                    RecipeNoteSaveView(result: found.recipe, store: environment.notes) { _ in
+                        onFinished(String(localized: "Das Rezept liegt als Notiz im Ordner „Rezepte“."))
+                        dismiss()
+                    } onDiscard: {
+                        dismiss()
+                    }
+                } else {
+                    RecipeResultView(result: found.recipe, fromNote: found.fromNote, model: model) { line in
+                        onFinished(line)
+                        dismiss()
+                    } onDiscard: {
+                        dismiss()
+                    }
                 }
             }
         }
@@ -151,14 +175,18 @@ struct RecipeInputView: View {
     /// The shopping list, to mark the ingredients that are on it already; `nil` when the recipe is only saved.
     let model: ShoppingModel?
     var start: RecipeStart?
+    /// Shared items: shows the choice between the shopping list and "Nur als Rezept speichern" above the source. The caller
+    /// passes the same value as `purpose`, so the request, the button and the consent text follow the choice.
+    var purposeChoice: Binding<RecipePurpose>?
     /// Called with the recipe and whether it came from a note of the user.
     let onResult: (RecipeImporter.Result, Bool) -> Void
 
-    init(purpose: RecipePurpose, model: ShoppingModel?, start: RecipeStart? = nil,
+    init(purpose: RecipePurpose, model: ShoppingModel?, start: RecipeStart? = nil, purposeChoice: Binding<RecipePurpose>? = nil,
          onResult: @escaping (RecipeImporter.Result, Bool) -> Void) {
         self.purpose = purpose
         self.model = model
         self.start = start
+        self.purposeChoice = purposeChoice
         self.onResult = onResult
         switch start {
         case .link(let text): _source = State(initialValue: .link); _linkText = State(initialValue: text)
@@ -215,6 +243,7 @@ struct RecipeInputView: View {
 
     var body: some View {
         Form {
+            if let purposeChoice { purposeSection(purposeChoice) }
             Section {
                 Picker("Quelle", selection: $source) {
                     ForEach(sources) { source in
@@ -284,6 +313,26 @@ struct RecipeInputView: View {
             }
         }
         .onDisappear { cancel() }
+    }
+
+    /// "Was soll mit dem Rezept geschehen?" for shared items. Both ways read once; the shopping way can also keep the recipe
+    /// as a note ("Auch als Rezept-Notiz sichern" on the next page), so both together are possible there.
+    private func purposeSection(_ choice: Binding<RecipePurpose>) -> some View {
+        Section {
+            Picker("Was soll mit dem Rezept geschehen?", selection: choice) {
+                Text("Zutaten auf die Einkaufsliste").tag(RecipePurpose.shopping)
+                Text("Nur als Rezept speichern").tag(RecipePurpose.saveOnly)
+            }
+            .pickerStyle(.inline)
+            .labelsHidden()
+        } header: {
+            Text("Was soll mit dem Rezept geschehen?")
+        } footer: {
+            switch choice.wrappedValue {
+            case .shopping: Text("Du wählst die Zutaten aus und kannst das Rezept zusätzlich als Notiz im Ordner „Rezepte“ sichern.")
+            case .saveOnly: Text("Das Rezept wird als Notiz im Ordner „Rezepte“ gespeichert. Die Einkaufsliste bleibt unverändert.")
+            }
+        }
     }
 
     private var readTitle: LocalizedStringKey {

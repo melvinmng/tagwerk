@@ -1,11 +1,14 @@
 import AppIntents
 import Foundation
+import TagwerkCore
 
 /// What a control asks the app to do. Plain data, so the app side can be tested without the system.
 enum ControlAction: Equatable, Sendable {
     case logWater(milliliters: Int)
     case checkHabit(id: UUID)
     case setFocus(Bool)
+    /// Shows a screen of the app. Navigates only; never writes anything (like a `tagwerk://` link).
+    case open(AppRoute)
 }
 
 /// Connects the controls to the app. Only the app sets the handler, at launch (`TagwerkApp.init`), because the system
@@ -69,6 +72,36 @@ struct ControlSetFocusIntent: SetValueIntent, LiveActivityIntent {
 
     func perform() async throws -> some IntentResult {
         await ControlActionBridge.handler?(.setFocus(value))
+        return .result()
+    }
+}
+
+/// The opening controls ("Erfassen", "Tagesroutine", "Einkaufsliste", "Notiz diktieren"). A control cannot open the app
+/// through `OpenURLIntent` with the private `tagwerk://` scheme (#167 device test: the tap did nothing), so these controls
+/// run an App Intent that asks the system to bring the app to the foreground (`supportedModes`). `perform()` then runs in
+/// the app's process and hands the route to the router; the app navigates as it does for a link.
+struct ControlOpenIntent: AppIntent {
+    static let title: LocalizedStringResource = "Tagwerk öffnen"
+    static let isDiscoverable = false
+    static let supportedModes: IntentModes = .foreground(.immediate)
+
+    /// The only screens a control may open. Everything else is ignored, so a crafted parameter cannot reach other routes.
+    static let allowedRoutes: [AppRoute] = [.capture, .routineNow, .shopping, .notesDictate]
+
+    /// `AppRoute.rawValue`, because an `AppRoute` is no `AppEnum` and the intent is not offered to Shortcuts.
+    @Parameter(title: "Ziel")
+    var route: String
+
+    init() {}
+
+    init(route: AppRoute) {
+        self.route = route.rawValue
+    }
+
+    func perform() async throws -> some IntentResult {
+        if let route = AppRoute(rawValue: route), Self.allowedRoutes.contains(route) {
+            await ControlActionBridge.handler?(.open(route))
+        }
         return .result()
     }
 }
