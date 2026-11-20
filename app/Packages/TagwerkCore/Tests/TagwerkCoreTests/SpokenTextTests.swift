@@ -20,6 +20,32 @@ struct SpokenTextTests {
         #expect(de("Siehe [die Doku](https://example.com/a?b=c) jetzt") == "Siehe die Doku jetzt")
     }
 
+    // MARK: Markdown answers (#225)
+
+    @Test func prepare_readsAnswerMarkupAsPlainText() {
+        #expect(de("Das ist *wichtig* und ~~falsch~~") == "Das ist wichtig und falsch")
+        #expect(de("> Zitat hier\nnormal") == "Zitat hier normal")
+        #expect(de("Text mit <b>fett</b> und<br>Umbruch") == "Text mit fett und Umbruch")
+        #expect(de("Tom &amp; Jerry") == "Tom & Jerry")
+    }
+
+    @Test func prepare_readsATableWithoutPipesOrSeparator() {
+        let table = "| Name | Zahl |\n|:-----|-----:|\n| a | 1 |\n| b | 2 |"
+        #expect(de(table) == "Name Zahl a 1 b 2")
+    }
+
+    @Test func prepare_dropsCodeFencesButKeepsTheCode() {
+        #expect(de("Vorher\n```swift\nlet a = 1\n```\nNachher") == "Vorher let a = 1 Nachher")
+    }
+
+    @Test func prepare_neverSpeaksMarkdownSymbols() {
+        let answer = "# Plan\n\n- **Mail** an [Anna](https://example.com)\n- `git push` ausführen\n\n| a | b |\n|---|---|\n| 1 | 2 |"
+        let spoken = de(answer)
+        for symbol in ["#", "**", "`", "|", "](", "---"] {
+            #expect(!spoken.contains(symbol), "found \(symbol) in: \(spoken)")
+        }
+    }
+
     @Test func prepare_removesEmoji_butKeepsDigits() {
         #expect(de("Super 😀 gemacht 🎉👍🏽 um 5 Uhr") == "Super gemacht um 5 Uhr")
         #expect(de("Test 1️⃣ ok") == "Test 1 ok")
