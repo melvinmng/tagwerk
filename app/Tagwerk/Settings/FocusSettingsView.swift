@@ -9,11 +9,14 @@ struct FocusSettingsView: View {
         Form {
             Section {
                 Toggle("Pomodoro", isOn: $settings.focusUsesPomodoro)
-                Stepper("Fokus: \(settings.focusWorkMinutes) min", value: $settings.focusWorkMinutes, in: 5...120, step: 5)
+                ValueStepper("Fokus", value: $settings.focusWorkMinutes, in: 5...120, step: 5, kind: .durationMinutes,
+                             unit: "min", display: ValueStepper.minutesText)
                 if settings.focusUsesPomodoro {
-                    Stepper("Pause: \(settings.focusShortBreakMinutes) min", value: $settings.focusShortBreakMinutes, in: 1...30)
-                    Stepper("Lange Pause: \(settings.focusLongBreakMinutes) min", value: $settings.focusLongBreakMinutes, in: 5...60, step: 5)
-                    Stepper("Runden: \(settings.focusRounds)", value: $settings.focusRounds, in: 1...8)
+                    ValueStepper("Pause", value: $settings.focusShortBreakMinutes, in: 1...30, kind: .durationMinutes,
+                                 unit: "min", display: ValueStepper.minutesText)
+                    ValueStepper("Lange Pause", value: $settings.focusLongBreakMinutes, in: 5...60, step: 5, kind: .durationMinutes,
+                                 unit: "min", display: ValueStepper.minutesText)
+                    ValueStepper("Runden", value: $settings.focusRounds, in: 1...8) { "\($0)" }
                 }
             } footer: {
                 Text("Mit Pomodoro wechseln sich Fokus und Pause ab, nach der letzten Runde folgt die lange Pause. Ohne Pomodoro läuft eine einzelne Fokuszeit. Ein Zeitblock ohne Pomodoro setzt die Fokuszeit auf seine Restlänge.")
