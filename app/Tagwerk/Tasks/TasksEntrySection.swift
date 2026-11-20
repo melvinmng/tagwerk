@@ -49,6 +49,7 @@ enum ReminderListSummary {
 /// The section at the head of "Aufgaben": the shopping list and the notes, each opening its own page.
 struct TasksEntrySection: View {
     @Environment(AppEnvironment.self) private var environment
+    @Environment(\.dynamicTypeSize) private var typeSize
     /// Open reminders of the suggested list, read once for the suggestion card.
     @State private var suggestedOpenCount: Int?
 
@@ -108,7 +109,7 @@ struct TasksEntrySection: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(title).font(.body.weight(.semibold)).foregroundStyle(.primary)
                 if let subtitle {
-                    Text(subtitle).font(.subheadline).foregroundStyle(.secondary).lineLimit(1)
+                    Text(subtitle).font(.subheadline).foregroundStyle(.secondary).lineLimit(typeSize.isAccessibilitySize ? nil : 1)
                 }
             }
             Spacer(minLength: 8)
