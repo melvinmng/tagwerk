@@ -87,6 +87,29 @@ public final class GitHubTaskProvider: TaskProvider {
         }
     }
 
+    /// Closing moments of the issues assigned to the user, placed in a shown project and closed as completed
+    /// within `interval`. Used by the day review (one day) and the week review (one week). Throws `IssueSearchError`.
+    public func closedIssueDates(in interval: DateInterval) async throws -> [Date] {
+        let viewer: String
+        if let login {
+            viewer = login
+        } else {
+            do { viewer = try await api.viewerLogin() } catch { throw IssueSearchError.from(error) }
+        }
+        // The search starts one day early (UTC date); the interval itself is applied on the device.
+        let issues = try await api.closedIssues(assignedTo: viewer, closedSince: Self.utcDayBefore(interval.start))
+        let shown = selectedProjectIDs() ?? defaultSelectedProjectIDs
+        return issues
+            .filter { $0.isCompleted && $0.closedAt >= interval.start && $0.closedAt < interval.end && !$0.projectIDs.isDisjoint(with: shown) }
+            .map(\.closedAt)
+            .sorted()
+    }
+
+    /// `closedIssueDates(in:).count`.
+    public func closedIssueCount(in interval: DateInterval) async throws -> Int {
+        try await closedIssueDates(in: interval).count
+    }
+
     public func containers() async throws -> [TaskContainer] {
         Set(records.values.map(\.repository)).sorted().map { TaskContainer(id: $0, name: $0, colorHex: nil) }
     }
