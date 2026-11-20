@@ -56,6 +56,13 @@ struct TaskRow: View {
             }
         }
         .contentShape(Rectangle())
+        // One element per row (screen reader, Voice Control, audit): the circle, due date, priority and list were
+        // separate elements. The circle stays a button for touch; "Erledigt" is an action of the row.
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(TaskRowText.accessibilityLabel(item: item, isRecurring: isRecurring, now: now, calendar: calendar))
+        .accessibilityAddTraits(.isButton)
+        .accessibilityAction(named: Text(isReadOnly ? "Nur lesbar, GitHub offline" : "Erledigt"), onComplete)
+        .accessibilityIdentifier(AccessibilityID.Tasks.row(item.title))
     }
 
     private var titleLine: Text {
@@ -81,5 +88,21 @@ struct TaskRow: View {
         case .today: .orange
         default: .secondary
         }
+    }
+}
+
+/// The spoken text of a task row: title, due date, repeat, priority and list, in this order.
+enum TaskRowText {
+    static func accessibilityLabel(item: TaskItem, isRecurring: Bool, now: Date, calendar: Calendar,
+                                   locale: Locale = .current) -> String {
+        var parts = [item.title]
+        if let due = item.due {
+            let dueText = DueText.text(due, now: now, calendar: calendar, locale: locale)
+            parts.append(String(localized: "fällig \(dueText)"))
+        }
+        if isRecurring { parts.append(String(localized: "wiederkehrend")) }
+        if let priority = item.priority { parts.append(String(localized: "Priorität \(priority.rawValue)")) }
+        parts.append(item.container.name)
+        return parts.joined(separator: ", ")
     }
 }

@@ -50,6 +50,8 @@ struct NowLine: View {
                 .offset(y: TimelineCanvas.y(position, shown) - 7)
                 .accessibilityElement(children: .ignore)
                 .accessibilityLabel(NowText.accessibilityLabel(time: time))
+                // A marker without an action: the audit must not measure it as a control.
+                .accessibilityAddTraits(.isStaticText)
             }
         }
         .allowsHitTesting(false)

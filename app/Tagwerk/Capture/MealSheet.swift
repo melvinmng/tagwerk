@@ -326,7 +326,7 @@ struct MealSheet: View {
         HStack {
             Text(title)
             Spacer()
-            DecimalField(value: value)
+            DecimalField(value: value).accessibilityLabel(Text(title))
             Text(unit).foregroundStyle(.secondary).frame(width: 34, alignment: .leading)
         }
     }
@@ -622,7 +622,7 @@ private struct MealItemEditor: View {
         HStack {
             Text(title)
             Spacer()
-            DecimalField(value: value)
+            DecimalField(value: value).accessibilityLabel(Text(title))
             Text(unit).foregroundStyle(.secondary).frame(width: 34, alignment: .leading)
         }
     }

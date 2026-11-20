@@ -177,6 +177,7 @@ struct NoteField: View {
                         TextEditor(text: Bindable(model).text, selection: Bindable(model).selection)
                             .keyboardDoneButton()
                             .frame(minHeight: 110)
+                            .accessibilityLabel(isDreamLog ? "Was hast du geträumt?" : "Brain Dump")
                             .overlay(alignment: .topLeading) {
                                 if model.text.isEmpty {
                                     Text(isDreamLog ? "Was hast du geträumt?" : "Schreib auf, was in deinen Kopf kommt. Sortier deine Gedanken.")

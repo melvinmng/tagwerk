@@ -84,9 +84,12 @@ struct DeadlineRowLabel: View {
     let model: PlanningModel
     var showsDistance = true
     @Environment(\.dayPageExtras) private var pageExtras
+    @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
         let text = DeadlineText(calendar: model.calendar)
+        // With accessibility text sizes the distance moves below the title, so the title keeps the full width.
+        let distanceBelow = typeSize.isAccessibilitySize
         let calendarName = deadline.calendarID.flatMap(model.calendarTitle)
         let preparation = (pageExtras?.preparation ?? model.preparation)[deadline.preparationKey]
         HStack(alignment: .firstTextBaseline) {
@@ -95,16 +98,19 @@ struct DeadlineRowLabel: View {
                 .font(.caption)
             VStack(alignment: .leading, spacing: 1) {
                 HStack(spacing: 6) {
-                    Text(deadline.title).font(.subheadline.weight(.semibold)).lineLimit(2)
+                    Text(deadline.title).font(.subheadline.weight(.semibold)).lineLimit(distanceBelow ? nil : 2)
                     if let badge = text.badge(deadline) { DeadlineBadge(text: badge) }
                 }
                 Text(text.detail(deadline, calendarName: calendarName)).font(.caption).foregroundStyle(.secondary)
                 if let line = text.preparation(preparation) {
                     Label(line, systemImage: "link").font(.caption).foregroundStyle(.secondary)
                 }
+                if showsDistance && distanceBelow {
+                    Text(text.relative(deadline.day, today: model.today)).font(.caption.weight(.semibold)).foregroundStyle(.red)
+                }
             }
             Spacer()
-            if showsDistance {
+            if showsDistance && !distanceBelow {
                 Text(text.relative(deadline.day, today: model.today)).font(.caption.weight(.semibold)).foregroundStyle(.red)
             }
         }

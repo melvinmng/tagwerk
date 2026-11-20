@@ -38,7 +38,9 @@ struct TimelineCanvas: View {
 
     static let hourHeight: CGFloat = 64
     static let lineInset: CGFloat = 8
-    private let labelWidth: CGFloat = 44
+    /// Width of the hour label column; grows with the text size (capped), so "08:00" is not squeezed at large sizes.
+    @ScaledMetric(relativeTo: .caption2) private var scaledLabelWidth: CGFloat = 44
+    private var labelWidth: CGFloat { min(scaledLabelWidth, 76) }
 
     @Environment(AppEnvironment.self) private var environment
     /// Set in the preview of a neighbour page: the marks of its events.

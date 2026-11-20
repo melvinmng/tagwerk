@@ -23,6 +23,7 @@ struct DayGridScreen<Summary: View, Header: View>: View {
 
     @Environment(\.dayPageExtras) private var pageExtras
     @Environment(\.isPagePreview) private var isPreview
+    @Environment(\.dynamicTypeSize) private var typeSize
     @State private var isDragging = false
     @State private var canvasFrame: CGRect = .zero
     @State private var taskDrag: (task: TaskItem, location: CGPoint)?
@@ -60,9 +61,12 @@ struct DayGridScreen<Summary: View, Header: View>: View {
                 ForEach(daySuggestions) { suggestion in mergeCard(suggestion) }
                 HStack {
                     timelineHeader()
-                    Button(selection == nil ? "Auswählen" : "Fertig") {
+                    Button {
                         selection = selection == nil ? [] : nil
+                    } label: {
+                        (selection == nil ? Text("Auswählen") : Text("Fertig")).touchTargetLabel()
                     }
+                    .touchTargetInset(vertical: 13)
                     .font(.subheadline)
                 }
                 canvas
@@ -247,7 +251,9 @@ struct DayGridScreen<Summary: View, Header: View>: View {
         return Button {
             withAnimation(.snappy) { panelExpanded.toggle() }
         } label: {
-            HStack(spacing: 6) {
+            // With accessibility text sizes the parts stack, so no text is cut off.
+            let stacked = typeSize.isAccessibilitySize
+            (stacked ? AnyLayout(VStackLayout(alignment: .leading, spacing: 4)) : AnyLayout(HStackLayout(spacing: 6))) {
                 if !toSchedule.isEmpty {
                     let rest = toSchedule.compactMap { model.sessionProgress[$0.id]?.remaining }.reduce(0, +)
                     Text("Rest \(CapacityText.duration(rest))").font(.subheadline.weight(.semibold)).foregroundStyle(.green)
@@ -264,11 +270,11 @@ struct DayGridScreen<Summary: View, Header: View>: View {
                 if !overdueToday.isEmpty {
                     Text("\(overdueToday.count) überfällig").font(.caption.weight(.semibold)).foregroundStyle(.orange)
                 }
-                Spacer()
+                if !stacked { Spacer() }
                 Image(systemName: panelExpanded ? "chevron.down" : "chevron.up").foregroundStyle(.secondary)
             }
             .padding(.horizontal, 14)
-            .frame(height: 52)
+            .frame(minHeight: 52)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)

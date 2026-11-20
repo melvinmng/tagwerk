@@ -13235,6 +13235,16 @@
         }
       }
     },
+    "Priorität %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Priority %lld"
+          }
+        }
+      }
+    },
     "Priorität: %@ → %@": {
       "localizations": {
         "de": {

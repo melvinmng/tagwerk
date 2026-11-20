@@ -140,6 +140,19 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: $(TAGWERK_BUNDLE_ID).tests
         TEST_HOST: "$(BUILT_PRODUCTS_DIR)/Tagwerk.app/Tagwerk"
         BUNDLE_LOADER: "$(TEST_HOST)"
+  TagwerkUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - TagwerkUITests
+      - path: Tagwerk/Common/AccessibilityID.swift
+    dependencies:
+      - target: Tagwerk
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+        PRODUCT_BUNDLE_IDENTIFIER: $(TAGWERK_BUNDLE_ID).uitests
+        TEST_TARGET_NAME: Tagwerk
 schemes:
   Tagwerk:
     build:
@@ -148,5 +161,14 @@ schemes:
         TagwerkTests: [test]
     test:
       targets: [TagwerkTests]
+      language: de
+      region: DE
+  TagwerkUITests:
+    build:
+      targets:
+        Tagwerk: all
+        TagwerkUITests: [test]
+    test:
+      targets: [TagwerkUITests]
       language: de
       region: DE

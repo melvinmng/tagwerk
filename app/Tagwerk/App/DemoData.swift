@@ -13,7 +13,7 @@ enum DemoData {
     private static let prefix = "Demo "
     private static let planCalendarTitle = "Demo Tagwerk"
 
-    static var isRequested: Bool { ProcessInfo.processInfo.arguments.contains(launchArgument) }
+    static var isRequested: Bool { ProcessInfo.processInfo.arguments.contains(launchArgument) || UITestMode.isActive }
 
     static func seedIfRequested(_ environment: AppEnvironment) async {
         guard isRequested else { return }
@@ -30,6 +30,8 @@ enum DemoData {
             settings.setupCompleted = true
             settings.selectedCalendarIDs = nil
             settings.selectedReminderListIDs = [ids.reminderList]
+            // The UI tests need a shopping list; it is not part of the normal demo data.
+            if let shoppingList = ids.shoppingList { settings.shoppingListID = shoppingList }
             settings.planCalendarID = ids.planCalendar
             if DemoTravelEstimator.isRequested {
                 settings.homeAddress = "Musterstraße 1, Berlin"
@@ -47,6 +49,7 @@ enum DemoData {
             seedNotes(environment)
             // Phase 4: the widget reads the demo plan right away.
             environment.writeSnapshot()
+            environment.isDemoDataReady = true
             print("DemoData: sample data created")
         } catch {
             print("DemoData: seeding failed: \(error)")
@@ -203,6 +206,8 @@ enum DemoData {
         let reminderList: String
         let planCalendar: String
         let deadlineCalendar: String
+        /// Only created for the UI tests.
+        let shoppingList: String?
     }
 
     private static func seed(_ store: EKEventStore, leadTimeMinutes: Int) throws -> SeededIDs {
@@ -232,6 +237,9 @@ enum DemoData {
         let uni = try makeCalendar("Demo Uni", for: .event, color: CGColor(srgbRed: 0.4, green: 0.8, blue: 0.3, alpha: 1))
         let plan = try makeCalendar(planCalendarTitle, for: .event, color: CGColor(srgbRed: 0.18, green: 0.72, blue: 0.63, alpha: 1))
         let list = try makeCalendar("Demo Aufgaben", for: .reminder, color: CGColor(srgbRed: 1, green: 0.3, blue: 0.3, alpha: 1))
+        let shoppingList = UITestMode.isActive
+            ? try makeCalendar("Demo Einkauf", for: .reminder, color: CGColor(srgbRed: 0.95, green: 0.6, blue: 0.1, alpha: 1))
+            : nil
 
         func event(_ title: String, _ calendarItem: EKCalendar, _ start: Date, _ end: Date, allDay: Bool = false,
                    location: String? = nil) throws {
@@ -254,7 +262,7 @@ enum DemoData {
         try event("Abgabe Hausarbeit", uni, at(40, 0), at(41, 0), allDay: true)
         try event("Teamtreffen", work, at(1, 9, 30), at(1, 11), location: "Zoom")
         // A deadline whose notification fires about two minutes after the start (checks banner and tap).
-        let soon = Date().addingTimeInterval(TimeInterval((leadTimeMinutes + 3) * 60))
+        let soon = UITestMode.now().addingTimeInterval(TimeInterval((leadTimeMinutes + 3) * 60))
         let soonStart = calendar.date(bySetting: .second, value: 0, of: soon) ?? soon
         try event("Abgabe Kurzbericht", uni, soonStart, soonStart.addingTimeInterval(30 * 60))
         let sport = EKEvent(eventStore: store)
@@ -295,7 +303,7 @@ enum DemoData {
         try reminder("Einkaufen", due: nil)
         try store.commit()
         return SeededIDs(reminderList: list.calendarIdentifier, planCalendar: plan.calendarIdentifier,
-                         deadlineCalendar: uni.calendarIdentifier)
+                         deadlineCalendar: uni.calendarIdentifier, shoppingList: shoppingList?.calendarIdentifier)
     }
 }
 #endif

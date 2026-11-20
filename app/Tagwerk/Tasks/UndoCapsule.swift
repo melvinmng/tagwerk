@@ -42,7 +42,8 @@ struct UndoCapsule: View {
         }
         .task {
             // Screen-reader users get no time limit; the capsule stays until the next action.
-            guard !voiceOverEnabled else { return }
+            // The UI tests need time between the action and the tap on "Rückgängig", like screen-reader users.
+            guard !voiceOverEnabled, !UITestMode.isActive else { return }
             try? await Task.sleep(for: .seconds(duration))
             if !Task.isCancelled { onExpire() }
         }

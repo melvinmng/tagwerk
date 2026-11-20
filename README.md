@@ -155,6 +155,8 @@ Jeder Checkout (Hauptordner oder Worktree) testet mit eigenem Simulator, eigenem
 - Beim ersten Lauf legt `test-all.sh` den Simulator „Tagwerk Tests &lt;Checkout&gt;“ an.
 - `TAGWERK_TEST_SIMULATOR` wählt stattdessen einen vorhandenen Simulator (Name oder UDID).
 - `TAGWERK_TEST_DERIVED_DATA` setzt einen anderen DerivedData-Ordner.
+- Die Stufe „app UI tests“ startet die App mit dem Startargument `-TagwerkUITest` (nur Debug-Build im Simulator): Speicher-Store, Demo-Daten, Demo-Einkaufsliste, offline. Vorher erteilt `test-all.sh` per `simctl privacy` Zugriff auf Kalender und Erinnerungen. Die Stufe dauert mehrere Minuten; beim schnellen Iterieren lässt sie sich mit `TAGWERK_SKIP_UI_TESTS=1 app/test-all.sh` überspringen, vor einem Merge läuft sie immer mit.
+- Der Barrierefreiheits-Audit listet mit `TEST_RUNNER_AUDIT_COLLECT_FILE=<Datei>` die Befunde, die weder behoben noch auf der Ausnahmenliste (`app/TagwerkUITests/AuditAllowlist.swift`) stehen, in eine Datei, statt zu scheitern.
 - Nach dem Entfernen eines Worktrees bleiben Simulator und `~/Library/Developer/Tagwerk/DerivedData-tests-<Checkout>` liegen; sie lassen sich mit `xcrun simctl delete "Tagwerk Tests <Checkout>"` bzw. durch Löschen des Ordners entfernen.
 
 ```zsh

@@ -75,6 +75,7 @@ struct TaskEditorView: View {
                 Section {
                     TextField("Titel", text: $model.draft.title, axis: .vertical)
                         .keyboardDoneButton()
+                        .accessibilityIdentifier(AccessibilityID.Tasks.editorTitle)
                     if model.original.id.source == .github {
                         LabeledContent("Repo", value: model.original.container.name)
                         assigneeRow
