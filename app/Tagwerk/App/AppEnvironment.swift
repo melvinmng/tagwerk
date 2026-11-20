@@ -787,6 +787,10 @@ final class AppEnvironment {
         let reminderStore = self.reminderStore
         let settings = self.settings
         let local = LocalTaskProvider(context: modelContainer.mainContext)
+        var closedIssueDates: (@MainActor (DateInterval) async throws -> [Date])?
+        if let gitHub = taskList.provider(for: .github) as? GitHubTaskProvider {
+            closedIssueDates = { interval in try await gitHub.closedIssueDates(in: interval) }
+        }
         return WeekReviewModel(store: intake, health: health, settings: settings, calendar: capture.calendar,
                                completedReminders: { [weak self] interval in
                                    await reminderStore.completionDates(in: interval, listIDs: self?.taskReminderListIDs())
@@ -798,7 +802,9 @@ final class AppEnvironment {
                                    planning.scope = .week
                                    planning.anchor = week
                                    requestedTab = 0
-                               })
+                               },
+                               // Closed GitHub issues of the week; `nil` while GitHub is not connected.
+                               closedIssueDates: closedIssueDates)
     }
 
     /// The guided weekly planning (#164): the weekly review moved to the reviewed week, plus the deadlines of the planned one.

@@ -450,7 +450,10 @@
   "Ergebnis der Planung": "Planning result",
   "Erinnerung": "Reminder",
   "Erinnerungen und lokale Aufgaben werden gelöscht, GitHub-Issues als „nicht geplant“ geschlossen.": "Reminders and local tasks are deleted; GitHub issues are closed as “not planned”.",
-  "Erinnerungen und lokale Aufgaben, ohne GitHub": "Reminders and local tasks, without GitHub",
+  "Erinnerungen und lokale Aufgaben": "Reminders and local tasks",
+  "Erinnerungen und lokale Aufgaben. GitHub wird geladen …": "Reminders and local tasks. Loading GitHub …",
+  "Erinnerungen, lokale Aufgaben und geschlossene GitHub-Issues": "Reminders, local tasks and closed GitHub issues",
+  "Erinnerungen und lokale Aufgaben. GitHub ist gerade nicht erreichbar.": "Reminders and local tasks. GitHub cannot be reached right now.",
   "Erinnerungslisten": "Reminder lists",
   "Erkannt: %@": {
     "shouldTranslate": false

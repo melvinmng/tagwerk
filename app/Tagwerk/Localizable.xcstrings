@@ -7351,6 +7351,16 @@
         }
       }
     },
+    "Erinnerungen und lokale Aufgaben": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reminders and local tasks"
+          }
+        }
+      }
+    },
     "Erinnerungen und lokale Aufgaben werden gelöscht, GitHub-Issues als „nicht geplant“ geschlossen.": {
       "localizations": {
         "en": {
@@ -7361,12 +7371,22 @@
         }
       }
     },
-    "Erinnerungen und lokale Aufgaben, ohne GitHub": {
+    "Erinnerungen und lokale Aufgaben. GitHub ist gerade nicht erreichbar.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Reminders and local tasks, without GitHub"
+            "value": "Reminders and local tasks. GitHub cannot be reached right now."
+          }
+        }
+      }
+    },
+    "Erinnerungen und lokale Aufgaben. GitHub wird geladen …": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reminders and local tasks. Loading GitHub …"
           }
         }
       }
@@ -7377,6 +7397,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Change reminders"
+          }
+        }
+      }
+    },
+    "Erinnerungen, lokale Aufgaben und geschlossene GitHub-Issues": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reminders, local tasks and closed GitHub issues"
           }
         }
       }
