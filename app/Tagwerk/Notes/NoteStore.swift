@@ -123,6 +123,24 @@ final class NoteStore {
         return record
     }
 
+    /// A copy of a note with `text` (trimmed; empty creates nothing): a new free note in the same folder, not pinned. The
+    /// pictures and files the text refers to are copied for the new note and the references are rewritten, so the copy keeps
+    /// them when the original is deleted for good. Without an attachment store the text stays as it is. A private, trashed or
+    /// unknown note is not copied.
+    @discardableResult
+    func duplicate(_ id: UUID, text: String) -> NoteRecord? {
+        guard let original = note(id: id), original.deletedAt == nil, original.kind == .free else { return nil }
+        if let folderID = original.folderID, folder(id: folderID)?.role?.isPrivate == true { return nil }
+        guard let copy = create(text: text, kind: .free, folderID: original.folderID) else { return nil }
+        guard let attachments else { return copy }
+        let referenced = MarkdownText.attachmentReferences(in: copy.text)
+        let mapping = attachments.duplicate(ids: referenced, to: copy.id)
+        guard !mapping.isEmpty else { return copy }
+        copy.text = MarkdownText.replacingAttachmentIDs(in: copy.text, with: mapping)
+        save()
+        return copy
+    }
+
     /// Replaces the text; the change date moves only when the text differs.
     func updateText(_ id: UUID, text: String) {
         guard let record = note(id: id), record.text != text else { return }
