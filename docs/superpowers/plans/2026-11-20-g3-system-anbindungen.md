@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-> **Status:** Stand 20.11.2026, nach den Entscheidungen des Nutzers (Kommentar „Entscheidungen zur Designgruppe 3“ in #188). Nichts gebaut, nichts am Gerät oder im Simulator geprüft. Code-Stand der Befunde: `90a07d1`. Die Kontrastwerte der Mockups sind gerechnet, nicht gemessen; Strang K misst zuerst.
+> **Status:** Stand 20.11.2026, nach den Entscheidungen des Nutzers (Kommentar „Entscheidungen zur Designgruppe 3“ in #188). Nichts gebaut, nichts am Gerät oder im Simulator geprüft. Code-Stand der Befunde: `90a07d1`. Die Kontrastwerte der Mockups sind gerechnet, nicht gemessen; Strang K misst zuerst. **Ergänzung SP5c** (Kommentar „Ergänzung zu SP5“ in #188): Tasks L6–L9 im Strang L, geplant nach den Empfehlungen SPC1–SPC8, die noch nicht entschieden sind; Code-Stand dieser Befunde: `547a88b`.
 
 **Goal:** Die entschiedenen Varianten der Gruppe 3 umsetzen: Tastaturknopf als Symbol und „Abschließen“ (TA), eigene Seite „Siri & Kurzbefehle“ mit Tipp-Karten am Ort der Handlung (SI), Status in der Aufgabenzeile, Wortlaut „Projekt“, Kapseln für Issues ohne Projekt und für „in einem Projekt erledigt“ (GH), Teilen-Erweiterung mit Kacheln und Mail-Karte (TE), eigene Seite „Sprachen“ mit getrennter Diktat-, Antwort-, Rezept- und Einkaufssprache samt Wechsel am Feld (SP), benannte Schrifttöne und Akzentfarbe statt Kontrast-Ausnahmen (KO), mittleres Kontextmenü auf Suchtreffern (SU).
 
@@ -10,10 +10,10 @@
 
 **Tech Stack:** Swift 6, SwiftUI (iOS 27), SwiftData, Swift Testing, XCUITest (`performAccessibilityAudit`), App Intents, String Catalogs (Deutsch als Quellsprache, Englisch).
 
-**Grundlagen:** Issue #188 samt Kommentaren; Mockups `docs/superpowers/mockups/2026-11-20-g3-system-anbindungen-mockups.html` (gewählte Varianten und Abschnitt „Technische Randbedingungen aus dem Quelltext“); Pläne `2026-11-19-keyboard-dismissal.md`, `-siri-shortcuts-fix.md`, `-github-status-and-no-project.md`, `-p6-share-mail.md`, `-g3-uitests-a11y.md`, `-search.md`; `2026-11-20-decisions-173.md`, `2026-11-20-notes-chatgpt.md`.
+**Grundlagen:** Issue #188 samt Kommentaren; Mockups `docs/superpowers/mockups/2026-11-20-g3-system-anbindungen-mockups.html` (gewählte Varianten und Abschnitt „Technische Randbedingungen aus dem Quelltext“) und `2026-11-20-g3-sp5c-shopping-translate-mockups.html` (SP5c: Artikel übersetzen, SPC1–SPC8); Pläne `2026-11-19-keyboard-dismissal.md`, `-siri-shortcuts-fix.md`, `-github-status-and-no-project.md`, `-p6-share-mail.md`, `-g3-uitests-a11y.md`, `-search.md`; `2026-11-20-decisions-173.md`, `2026-11-20-notes-chatgpt.md`.
 
 **Nicht in diesem Plan:**
-- SP5c (vorhandene Einkaufsartikel mit ChatGPT übersetzen): eigenes Folge-Issue, legt die Hauptsitzung an.
+- Aus SP5c (Tasks L6–L9) ausgenommen: Einheiten in Mengen übersetzen, erledigte Artikel übersetzen (SPC5b), Dubletten zusammenführen (SPC6b), ein Werkzeug des Assistenten zum Umbenennen von Artikeln, automatisches Übersetzen ohne Vorschau.
 - TE2c (Knopf „Tagwerk öffnen“), TE4 (Rezept-Wahl in der Erweiterung): abgelehnt.
 - Weitere Sprachen als Deutsch und Englisch.
 - Schrift auf Liquid Glass, vom System abgeblendete Knöpfe: bleiben Ausnahmen (Mockup „Was voraussichtlich in der Liste bleibt“).
@@ -27,7 +27,8 @@
 | Siri | SI1b, SI2b, SI3 ja, SI4a | Eigene Seite auf oberster Ebene, `ShortcutsLink` oben, Sätze in vier Gruppen, keine `SiriTipView` auf der Seite; Tipp-Karte an zwei Orten; Satzliste wie heute mit drei Korrekturen, zwei davon erst nach Gerätetest. Alle zehn Plätze bleiben belegt. |
 | GitHub | GH1a, GH2a, GH3a, GH4c, GH5c, GH6b, GH7b, GH8, GH9 | GH1a/GH2a/GH3a sind der Ist-Zustand (nur Wortlaut). Neu: Status in der Unterzeile, Kapseltexte, Kapsel beim Verschwinden, Fußtext ohne gemeinsame Stufe, „Projekt/Projekte“ in allen deutschen UI-Texten. |
 | Teilen, Mail | TE1b, TE2b, TE3b, TE4 nein | Kacheln statt Menü, Knopf unten, Bestätigung nennt Ziel; Mail als Karte, Vorschläge getönt. |
-| Sprachen | SP1b, SP2b, SP3b, SP4b, SP5b | Seite „Sprachen“; Einkaufsliste mit eigener Einstellung, Vorgabe „Wie Rezepte“; große Marke beim Diktieren; Wechsel je Ort gemerkt; Marke im Eingabefeld der Einkaufsliste. |
+| Sprachen | SP1b, SP2b, SP3b, SP4b, SP5b, SP5c | Seite „Sprachen“; Einkaufsliste mit eigener Einstellung, Vorgabe „Wie Rezepte“; große Marke beim Diktieren; Wechsel je Ort gemerkt; Marke im Eingabefeld der Einkaufsliste. SP5c: Karte nach dem Wechsel, Übersetzen der offenen Artikel mit ChatGPT samt Vorschau (L6–L9). |
+| SP5c im Einzelnen | **offen;** geplant nach Empfehlung SPC1a, SPC2a, SPC3a, SPC4b, SPC5a, SPC6a, SPC7a, SPC8b | Karte über dem Eingabefeld, bleibt bis zur Entscheidung; Vorschau „alt → neu“ mit Haken; Einwilligung „Sortieren“ im Wortlaut erweitert; nur offene Artikel; Dubletten bleiben unverändert; Hinweis auf geteilte Listen in der Vorschau; Kapsel mit „Rückgängig“. |
 | Kontrast | KO1a, KO2a, KO3a, KO4a | Sekundärtext 78 % im Hellen, Schrifttöne je Farbe, Uhrzeit im Raster 85 %, `AccentColor` #005FCC im Hellen. Eigener Block: messen, ersetzen, Ausnahmen streichen. |
 | Suche | SU1b, SU2 ja, SU3 ja | Aufgaben-Treffer: Öffnen, Zeigen, Einplanen (Heute, Morgen, Anderer Tag), Fokus starten, Auf GitHub öffnen, Erledigt. Termin-Treffer unverändert. Notiz-Treffer: „Im Ordner zeigen“. |
 
@@ -37,7 +38,7 @@
 - **GH6b:** In deutschen UI-Texten steht „Projekt/Projekte“, englisch „Project/Projects“. Wo der Zusammenhang fehlt (Suche): „GitHub-Projekt“. Code-Bezeichner und die englischen Werkzeugbeschreibungen des Assistenten bleiben unverändert. Das gilt auch für neue Texte der anderen Stränge.
 - **App Shortcuts:** höchstens zehn (`AppShortcutsTests.providerStaysWithinTheSystemLimitOfTenShortcuts`). Kein neuer Kurzbefehl. `TagwerkIntents.swift`, `AppShortcuts.xcstrings` und die Satzliste der Einstellungen stimmen überein (`scripts/check-strings.py`).
 - **Teilen-Erweiterung:** kein Netz, kein Schlüsselbund, kein Zugriff auf den Datenbestand; Bilder nur als Vorschaubild (`ShareModel.swift:7–8, 113–119`). Prüfbare Logik liegt in `TagwerkCore`, weil die Erweiterung kein Test-Target hat.
-- **Datenschutz:** An ChatGPT geht durch diesen Plan nichts Neues außer dem Feld „Sprache der Einkaufsliste“ im Rezeptimport (ein Sprachname). Mail-Adressen und der Link zur Mail gehen weiterhin nie hinaus (`MailTaskModel.swift:179–186`).
+- **Datenschutz:** An ChatGPT geht durch diesen Plan nichts Neues außer dem Feld „Sprache der Einkaufsliste“ im Rezeptimport (ein Sprachname) und, nur auf Tippen und mit Einwilligung, den Namen der offenen Einkaufsartikel samt Zielsprache beim Übersetzen (L7; dieselbe Datenart wie bei „Mit ChatGPT sortieren“, ohne Kategorienamen). Mail-Adressen und der Link zur Mail gehen weiterhin nie hinaus (`MailTaskModel.swift:179–186`).
 - **SwiftData:** Neue Attribute von `AppSettings` haben einen Standardwert oder sind optional. Neue Felder in `BackupDTOs.swift` sind optional, damit ältere Sicherungen lesbar bleiben.
 - **Farben:** Nach Strang K steht im App-Target keine neue `.foregroundStyle(.secondary)` und keine Systemfarbe als Schriftfarbe mehr; die anderen Stränge nutzen bis dahin die heutigen Farben und werden von Strang K mit ersetzt.
 - Code-Bezeichner, Kommentare, Log- und Testmeldungen englisch. Commits im Stil `feat: …`/`fix: …`, ohne Hinweis auf KI, ohne Co-Authored-By. Branches ohne Präfix `claude/`.
@@ -58,6 +59,8 @@
 | `2026-11-20-decisions-173.md`, Stränge A und B | `AppTools*.swift`, `ActionCardDescriber.swift`, `AssistantModel.swift`, `ChatView.swift`, `AppEnvironment.swift` (`makeSearchModel`), `AppSettings.swift`, `BackupDTOs.swift`, `AISettingsView.swift` | G5 (Wortlaut in drei KI-Dateien), L5 (eine Zeile der Systemanweisung), L1 (neue Einstellungsfelder) | G5 und der Anweisungsteil von L5 beginnen erst, wenn die Stränge A und B von #173 auf `main` sind. Neue Felder in `AppSettings`/`BackupDTOs` werden am Ende des jeweiligen Blocks angefügt; Konflikte sind reine Nachbarzeilen. |
 | `2026-11-20-decisions-173.md`, Suchwerkzeug | `AppTools+Search.swift`, `SearchResults.swift` | Strang U ändert nur `Search/SearchSheet.swift`, `Tasks/TaskContextMenu.swift`, `App/RootView.swift` | Kein Werkzeugcode in Strang U. |
 | `2026-11-20-notes-chatgpt.md`, Block A (#232) | `RecipeTranslationPlan` (TagwerkCore), `RecipeTranslator`, `RecipeConsentView`, `AIPrivacyView`, `NoteEditorView` | L4 ändert `RecipeImporter.swift`, `RecipeSheets.swift`; beide lesen `RecipeLanguage` | Block A nutzt `RecipeLanguage.resolve(setting:)` und `promptName`; L1 lässt beide Signaturen unverändert und ergänzt nur. L4 fasst `RecipeConsentView` und `AIPrivacyView` nicht an (der Einwilligungstext nennt die Sprache nicht). Eine übersetzte Rezept-Notiz wird weiter lokal gelesen; L4 ändert daran nichts (Test `translatedNote_stillOffersIngredientsForShopping` aus Block A muss grün bleiben). |
+| `2026-11-20-notes-chatgpt.md`, Block A, Task A2 | `RecipeRequest` (gemeinsame Hilfen `collect`, `withTimeout`, `failure(for:)`), `RecipeImporter` | L7 nutzt dieselben Hilfen und stellt `ShoppingSorter` darauf um | Wer zuerst auf `main` ist, legt `RecipeRequest` an; der andere übernimmt die Datei unverändert (Namen und Signaturen stehen in A2). L6–L9 fassen `RecipeTranslationPlan` und `RecipeTranslator` nicht an; übernommen wird das Verfahren (Indizes, striktes Schema, Prüfung vor der Vorschau), nicht der Code. |
+| `2026-11-20-decisions-173.md`, Entscheidung 6 | Artikelnamen gehen beim Assistenten ohne eigene Zustimmung an ChatGPT | L7 sendet Artikelnamen außerhalb des Chats | Entscheidung 6 bleibt auf den Assistenten beschränkt; das Übersetzen prüft `shoppingSortConsent` (SPC4b). |
 | Notiz-Sperre (NO10c, NO12) | Notizordner mit Face ID | U2 springt in einen Notizordner | Der Sprung geht über `tasksPath` in die normale Ordneransicht; eine Sperre greift dort wie bei jedem anderen Öffnen. |
 
 ## Review Focus
@@ -72,6 +75,9 @@
 8. **Suchmenü ohne Unwiderrufliches:** kein Löschen, kein Status, keine Fälligkeit; „Erledigt“ fehlt offline. → U1 (`searchTaskMenu_neverOffersDeleteOrStatus`).
 9. **Kontrast:** Jede gestrichene Ausnahme ist durch einen Audit-Lauf belegt, jede verbleibende hat einen aktuellen Grund; keine Pauschalausnahme. Flächen, Balken und Symbole behalten ihre Farbe. → K1, K5.
 10. **Mail zu Aufgabe:** Absender und Link stehen weiter in der Notiz der angelegten Aufgabe, auch wenn sie im Blatt eine eigene Zeile sind; ein Vorschlag überschreibt nie ein geändertes Feld. → S3.
+11. **Übersetzen sendet nur Namen und nur mit Einwilligung:** Ohne `shoppingSortConsent` erreicht nichts OpenAI, auch nicht die Modellliste; die Anfrage enthält weder Mengen noch Kategorien, erledigte Artikel oder IDs. → L7 (`translate_withoutConsent_neverCallsTheResponderOrTheModelList`, `translate_sendsNamesAndTargetOnly`).
+12. **Umbenennen ändert nur Titel, und nur was die Vorschau zeigte:** Notiz, Erledigt-Zustand und andere Listen bleiben; ein seit der Vorschau geänderter Artikel wird übersprungen; nichts wird gelöscht oder zusammengeführt; der Artikel bleibt in seinem Abschnitt. → L8 (`rename_writesOnlyTheTitle_andKeepsQuantityAndNotes`, `rename_itemRenamedSincePreview_isSkipped`, `rename_keepsTheSection_whenTheDictionaryWouldMoveTheItem`).
+13. **Keine Karte ohne Wechsel:** Nach dem Update, nach einer Wiederherstellung und bei leerer Liste erscheint keine Karte; „So lassen“ gilt bis zum nächsten Wechsel. → L6, L9.
 
 ## Ausgangslage (Befund)
 
@@ -115,7 +121,7 @@
 | **T** Tastatur und Siri | `feat/g3-keyboard-siri` | T1–T4 | `Common/KeyboardDismissal.swift`, `App/RootView.swift` (eine Zeile), `TagwerkShare/ShareView.swift` (eine Zeile, siehe S2), `Routines/EveningSheet.swift`, `MorningSheet.swift`, `Planning/DayView.swift` (Kommentar), **`Settings/SiriShortcutsSettingsView.swift`**, **`Intents/SiriPhraseCatalog.swift`**, `Settings/CaptureSettingsView.swift`, `Settings/SettingsView.swift`, `Shopping/ShoppingListView.swift`, `Capture/CaptureView.swift`, `Intents/TagwerkIntents.swift`, `Intents/IntentServices.swift`, `AppShortcuts.xcstrings`, `Persistence/AppSettings.swift`, `scripts/check-strings.py`, UI-Tests (`AccessibilityAuditUITests`, `AccessibilityAuditRecipesUITests`, `RoutineUITests`, `AuditAllowlist`) |
 | **G** GitHub | `feat/g3-github-status` | G1–G5 | `GitHubKit/GitHubMapping.swift`, `GitHubTaskProvider.swift`, `TagwerkCore/TaskProvider`-Protokoll, `Tasks/TaskRow.swift`, `HandedOverNotice.swift`, `AssigneeSelection.swift`, `TaskListModel.swift`, `UndoCapsule.swift`, `NewTaskSheet.swift`, `ProjectSelection.swift`, `TaskListView.swift`, `Editor/TaskEditorView.swift`, `Settings/GitHubSettingsSection.swift`, `Setup/SetupModel.swift`, `Search/SearchTexts.swift`, `Search/SearchSheet.swift:361`, `scripts/check-strings.py`; G5: `AI/ActionCardDescriber.swift`, `AppTools+GitHub.swift`, `AppTools.swift` |
 | **S** Teilen und Mail | `feat/g3-share-mail` | S1–S3 | **`TagwerkCore/Share/ShareSheetText.swift`**, `TagwerkShare/ShareModel.swift`, `ShareView.swift`, `ShareViewController.swift`, `TagwerkShare/Localizable.xcstrings`, `Share/MailTaskModel.swift`, `MailTaskSheet.swift` |
-| **L** Sprachen | `feat/g3-languages` | L1–L5 | **`TagwerkCore/Voice/ContentLanguages.swift`**, `TagwerkCore/Voice/VoiceChatLanguage.swift`, `VoiceLanguage.swift`, `RecipeLanguage.swift` (nur Ergänzung), `Persistence/AppSettings.swift`, `Backup/BackupDTOs.swift`, `App/AppEnvironment.swift`, **`Settings/LanguageSettingsView.swift`**, `Voice/VoiceSettingsView.swift`, `Settings/AISettingsView.swift`, `Settings/SettingsView.swift`, `Voice/VoiceComposer.swift`, `VoiceInputModel.swift`, die acht Aufrufer der Erkennungssprache, `Shopping/RecipeImporter.swift`, `RecipeSheets.swift`, `RecipeNoteWriter.swift`, `ShoppingInputBar.swift`, `AI/AssistantModel.swift:397` (L5), UI-Tests (`AccessibilityAuditRecipesUITests`, `AuditAllowlist`) |
+| **L** Sprachen | `feat/g3-languages` | L1–L9 | **`TagwerkCore/Voice/ContentLanguages.swift`**, `TagwerkCore/Voice/VoiceChatLanguage.swift`, `VoiceLanguage.swift`, `RecipeLanguage.swift` (nur Ergänzung), `Persistence/AppSettings.swift`, `Backup/BackupDTOs.swift`, `App/AppEnvironment.swift`, **`Settings/LanguageSettingsView.swift`**, `Voice/VoiceSettingsView.swift`, `Settings/AISettingsView.swift`, `Settings/SettingsView.swift`, `Voice/VoiceComposer.swift`, `VoiceInputModel.swift`, die acht Aufrufer der Erkennungssprache, `Shopping/RecipeImporter.swift`, `RecipeSheets.swift`, `RecipeNoteWriter.swift`, `ShoppingInputBar.swift`, `AI/AssistantModel.swift:397` (L5); L6–L9: **`TagwerkCore/ShoppingTranslationPlan.swift`**, **`Shopping/ShoppingTranslator.swift`**, **`Shopping/ShoppingTranslationModel.swift`**, **`Shopping/ShoppingTranslationSheets.swift`**, `Shopping/ShoppingModel.swift`, `ShoppingListView.swift`, `ShoppingSortSheets.swift`, `ShoppingSorter.swift` (nur gemeinsame Hilfen), `ShoppingSettingsView.swift`, `AI/DemoAITransport.swift`; UI-Tests (`AccessibilityAuditRecipesUITests`, `ShoppingUITests`, `AuditAllowlist`) |
 | **U** Suche | `feat/g3-search-menu` | U1–U2 | `Search/SearchSheet.swift`, **`Search/SearchTaskMenu.swift`**, `Tasks/TaskContextMenu.swift`, `App/RootView.swift`, `App/AppEnvironment.swift` (eine Funktion) |
 | **K** Kontrast | `feat/g3-contrast` | K1–K5 | `TagwerkUITests/AuditAllowlist.swift`, **`Design/Colors.xcassets`**, `project.yml`, **`Common/TextTones.swift`**, breit: alle Views mit Schriftfarben, `Planning/TimelineCanvas.swift`, **`scripts/check-colors.py`**, `test-all.sh` |
 
@@ -124,7 +130,8 @@
 | Datei | Stränge | Art |
 |---|---|---|
 | `Settings/SettingsView.swift` | T (Zeile „Siri & Kurzbefehle“), L (Zeile „Sprachen“) | je eine neue Zeile im selben Abschnitt; zweiter Merge löst von Hand |
-| `Persistence/AppSettings.swift` | T (zwei Schalter), L (drei Felder), #173 | Anfügen am Blockende |
+| `Persistence/AppSettings.swift` | T (zwei Schalter), L (drei Felder, L6 ein viertes), #173 | Anfügen am Blockende |
+| `Shopping/ShoppingListView.swift` | T (Tipp-Karte, T3), L (Marke in L5, Karte und Menüeintrag in L9) | T setzt die Tipp-Karte in die Liste, L9 die Übersetzen-Karte über die Eingabeleiste; verschiedene Stellen. Beide Karten können zugleich sichtbar sein (Z1 prüft das). |
 | `TagwerkUITests/AuditAllowlist.swift`, `AccessibilityAuditRecipesUITests.swift` | T, L (Seiten ziehen um), K (Einträge streichen) | **K beginnt erst, wenn T und L auf `main` sind** |
 | `App/RootView.swift` | T (eine Zeile `.submitLabel`), U (Rückruf für den Notizordner) | verschiedene Stellen |
 | `Search/SearchSheet.swift` | G (eine Textzeile, 361), U (Menüs) | verschiedene Stellen |
@@ -140,6 +147,7 @@ T Tastatur+Siri:  T1 ─► T2 ─► T3 ─► T4 (Gerätetest, bedingte Satzä
 G GitHub:         G1 ─► G2 ─► G3 ─► G4 ───────────────► G5 (nach #173 A und B)
 S Teilen+Mail:    S1 ─► S2        S3 (unabhängig von S1/S2)
 L Sprachen:       L1 ─► L2 ─► L3 ─► L4 ─► L5 (Anweisungszeile nach #173 A und B)
+                  L1 ─► L6 ─► L7 ─► L8 ─► L9 (L9 braucht die Marke aus L5)
 U Suche:          U1 ─► U2
 K Kontrast:       K1 (misst auf main nach T, L, S) ─► K2 ─► K3 ─► K4 ─► K5
 Abschluss:        Z1 (Geräteprüfung aller Stränge)
@@ -147,7 +155,7 @@ Abschluss:        Z1 (Geräteprüfung aller Stränge)
 
 - **Parallel:** T, G, S, L und U laufen gleichzeitig (fünf Umsetzer). K ist der sechste Strang und startet danach; K1 kann als reine Messung schon vorher auf `main` laufen, die verbindliche Ausgangsmessung entsteht aber erst nach dem Merge von T, L und S.
 - **Merge-Reihenfolge:** U und S zuerst (kleinste Überschneidung), dann G, T, L; K zuletzt. Jeder Strang ist ein Pull Request; G5 und die Anweisungszeile aus L5 sind Nachzügler-Commits auf eigenen kleinen Branches.
-- Innerhalb eines Strangs bauen die Tasks aufeinander auf, außer S3 (eigenständig).
+- Innerhalb eines Strangs bauen die Tasks aufeinander auf, außer S3 (eigenständig). L6–L8 hängen nur an L1 und können neben L2–L5 entstehen; L9 kommt zuletzt. Wird der Strang L dadurch zu groß für einen Pull Request, gehen L6–L9 als zweiter Pull Request `feat/g3-shopping-translate` nach dem Merge von L1–L5.
 
 ---
 
@@ -716,6 +724,247 @@ Assistent (eigener kleiner Commit nach #173): In der Systemanweisung zur Einkauf
 - [ ] **Step 2:** rot. **Step 3:** umsetzen. **Step 4:** `ALL`.
 - [ ] **Step 5:** Commits `feat: show and switch the language of the shopping list at its input field`, später `feat: tell the assistant the language of new shopping items`.
 
+### Ergänzung SP5c: vorhandene Artikel mit ChatGPT übersetzen (L6–L9)
+
+> **Status:** Ergänzung vom 20.11.2026 nach dem Kommentar „Ergänzung zu SP5“ in #188. Mockups: `docs/superpowers/mockups/2026-11-20-g3-sp5c-shopping-translate-mockups.html` (SPC1–SPC8). **Die Varianten sind noch nicht entschieden;** geplant ist nach den Empfehlungen SPC1a, SPC2a, SPC3a, SPC4b, SPC5a, SPC6a, SPC7a, SPC8b. Weicht die Entscheidung ab, ändert sich: SPC4c → eigenes Feld `shoppingTranslateConsent` statt `shoppingSortConsent` (L7, L9); SPC5b → `ShoppingTranslationPlan` nimmt zusätzlich `completedItems` (L6, L8); SPC8a → `undoRename` und die Kapsel entfallen (L8, L9). Nichts gebaut, nichts geprüft; Code-Stand der Befunde: `547a88b`.
+
+**Ablauf (verbindlich):**
+
+1. Die geltende Einkaufssprache (`contentLanguages.shoppingLanguage()`, L1) weicht von der zuletzt geklärten Sprache ab (`shoppingItemsLanguage`, neu) und es gibt offene Artikel → Karte über dem Eingabefeld. Der Anlass ist gleichgültig (Marke aus L5, Seite „Sprachen“, „Wie Rezepte“ nach geänderter Rezeptsprache, „Wie die App“ nach geänderter App-Sprache).
+2. „So lassen“ merkt die neue Sprache; die Karte kommt erst beim nächsten Wechsel wieder. Zurückschalten lässt sie ohne Schreibvorgang verschwinden.
+3. „Mit ChatGPT übersetzen“ (Karte oder Menü „•••“ › „Artikel übersetzen …“): Einwilligung prüfen (`shoppingSortConsent`; fehlt sie, Blatt mit dem Wortlaut „übersetzen“), dann **eine** Anfrage mit den Namen der offenen Artikel und dem Namen der Zielsprache.
+4. Die Antwort wird geprüft (unten). Bleibt kein Artikel mit neuem Namen übrig: Hinweis „Alle Artikel sind schon auf Englisch.“, Sprache gilt als geklärt. Sonst Vorschau „alt → neu“ mit Haken.
+5. „Übernehmen“ schreibt die Titel der gewählten Erinnerungen, hält die Kategorien, merkt die Sprache und zeigt die Kapsel mit „Rückgängig“. „Verwerfen“ ändert nichts; die Karte bleibt.
+
+**Übersetzungsverfahren (verbindlich, nach dem Muster von Block A in `2026-11-20-notes-chatgpt.md` und `ShoppingSorter`):**
+
+- **Gesendet** werden nur Namen offener Artikel, jeder Namensschlüssel (`ShoppingName.key`) einmal, in Listenreihenfolge; dazu die Zielsprache (`RecipeLanguage.promptName`). Nie Mengen, Notizen, Kategorien, erledigte Artikel oder Erinnerungs-IDs.
+- **Anfrage:** `{"target":"English","items":[{"i":0,"text":"Äpfel"},{"i":1,"text":"Karotten"}]}`. Antwort mit striktem Schema `shopping_translation`: `{"items":[{"i":Int,"text":String}]}`.
+- **Grenzen:** höchstens 100 Namen und 4 000 Zeichen je Anfrage. Darüber gehen die ersten 100 hinaus; die Vorschau nennt den Rest (`leftOut`). Anders als bei der Rezept-Notiz ist Kürzen hier unschädlich, weil jeder Artikel für sich steht und ein zweiter Lauf den Rest holt.
+- **Prüfung der ganzen Antwort** (sonst Fehler „Die Übersetzung passt nicht zur Liste. Versuch es noch einmal.“): genau die Indizes der Anfrage, jeder einmal.
+- **Prüfung je Eintrag** (ein Verstoß lässt nur diesen Artikel unverändert): Text nach dem Trimmen nicht leer; kein Zeilenumbruch; höchstens `ShoppingInputParser.maxNameLength` Zeichen (ein zu langer Name wird nicht gekürzt, sondern verworfen); dieselben Ziffernfolgen in derselben Reihenfolge wie im Original. Ist der Schlüssel des neuen Namens gleich dem alten, gilt der Artikel als unverändert und erscheint nicht.
+- **Dubletten (SPC6a):** Ist der neue Schlüssel der Schlüssel eines anderen offenen Artikels, oder bekam ein früherer Eintrag der Antwort bereits denselben neuen Schlüssel, wird der Artikel nicht umbenannt; die Vorschau führt ihn mit Grund unter „Bleibt unverändert“. Es wird nie gelöscht oder zusammengeführt.
+- **Anweisung** (englisch): jeden Eintrag einzeln übersetzen, gleiche Indizes; steht ein Name schon in der Zielsprache oder ist er ein Marken- oder Eigenname, unverändert zurückgeben; Zahlen genau so lassen; nichts hinzufügen (keine Menge, keine Erläuterung); Einzahl und Mehrzahl sowie Groß- oder Kleinschreibung des ersten Buchstabens beibehalten; kurze, im Handel übliche Bezeichnung.
+
+### Task L6: Regeln für Angebot und Übersetzung (TagwerkCore), Feld für die geklärte Sprache
+
+**Files:**
+- Create: `app/Packages/TagwerkCore/Sources/TagwerkCore/ShoppingTranslationPlan.swift`, `Tests/TagwerkCoreTests/ShoppingTranslationPlanTests.swift`
+- Modify: `app/Tagwerk/Persistence/AppSettings.swift` (ein Feld am Ende des Blocks aus L1)
+- Test: `TagwerkCoreTests/ShoppingTranslationPlanTests.swift`
+
+**Interfaces (Produces):**
+
+```swift
+/// Decides whether the shopping page offers to translate the existing items. Pure.
+public enum ShoppingTranslationOffer {
+    public enum Step: Equatable, Sendable {
+        case none
+        /// Store `language` as the settled one without asking (first run, empty list).
+        case adopt(VoiceLanguage)
+        case offer(VoiceLanguage)
+    }
+    /// `settled` is the stored raw value of the language the list was last settled in; `nil` before the first run.
+    public static func step(current: VoiceLanguage, settled: String?, openItemCount: Int) -> Step
+}
+
+/// The request for translating the names of open shopping items and the check of its answer. Pure.
+public struct ShoppingTranslationPlan: Sendable, Equatable {
+    public static let maximumItems = 100
+    public static let maximumCharacters = 4_000
+
+    /// One name that goes out, with every open item that carries it.
+    public struct Entry: Sendable, Equatable { public var index: Int; public var name: String; public var itemIDs: [String] }
+    public enum Blocked: Sendable, Equatable { case alreadyOnList, sameTranslationTwice }
+    public struct Change: Sendable, Equatable, Identifiable {
+        public var itemID: String
+        public var oldName: String
+        public var newName: String
+        public var quantity: String?          // shown only, never sent or written
+        public var blocked: Blocked?          // nil: can be applied
+        public var id: String { itemID }
+    }
+    public enum Failure: Error, Equatable { case indexMismatch }
+
+    /// `openItems` in list order. Names with the same key form one entry.
+    public init(openItems: [ShoppingItem])
+    public var entries: [Entry]
+    /// Open items beyond the limits.
+    public var leftOut: Int
+    public var request: [(index: Int, text: String)]
+    /// Only items whose name changes; entries that fail a per-entry check are dropped.
+    public func changes(translations: [(index: Int, text: String)]) throws(Failure) -> [Change]
+}
+
+// AppSettings (app target)
+/// Raw value of the language the open shopping items were last translated into or kept in ("So lassen").
+var shoppingItemsLanguage: String? = nil
+```
+
+`shoppingItemsLanguage` wird **nicht** gesichert (`BackupDTOs` bleibt): Nach einer Wiederherstellung ist der Wert leer, die geltende Sprache wird übernommen, es erscheint keine Karte.
+
+- [ ] **Step 1: Tests.**
+  - Angebot: `offer_firstRun_adoptsTheCurrentLanguage`, `offer_sameLanguage_isNone`, `offer_changedLanguageWithItems_offers`, `offer_changedLanguageEmptyList_adopts`, `offer_switchedBack_isNone`, `offer_unknownStoredValue_offers` (beschädigter Wert gilt als abweichend).
+  - Anfrage: `request_listsOpenNamesInListOrder`, `request_sameKeyGoesOutOnce` („Milch“, „milch “), `request_neverContainsQuantities`, `request_cutsAt100Names_andReportsTheRest`, `request_cutsAtCharacterLimit`.
+  - Prüfung: `changes_missingIndex_throws`, `changes_extraIndex_throws`, `changes_duplicateIndex_throws`.
+  - Je Eintrag: `changes_emptyText_keepsTheItem`, `changes_lineBreak_keepsTheItem`, `changes_tooLong_keepsTheItem`, `changes_changedNumber_keepsTheItem` („Cola 0,5 l“ → „Cola 0.33 l“), `changes_sameKey_isDropped` („Äpfel“ → „apfel“), `changes_brandNameReturnedUnchanged_isDropped`.
+  - Dubletten: `changes_translationAlreadyOnList_isBlocked` (Liste „Milch“, „milk“), `changes_twoItemsSameTranslation_secondIsBlocked` („Karotten“, „Möhren“ → „Carrots“), `changes_twoRemindersSameName_renameTogether`.
+  - `changes_carryTheQuantityForDisplay`, `changes_trimTheNewName`.
+- [ ] **Step 2:** `PKG TagwerkCore ShoppingTranslationPlanTests` → rot.
+- [ ] **Step 3:** umsetzen.
+- [ ] **Step 4:** `ALL`. Commit `feat: add the rules for offering and checking a translation of shopping items`.
+
+### Task L7: `ShoppingTranslator` (eine Anfrage an ChatGPT), Einwilligungstext (SPC4b)
+
+**Files:**
+- Create: `app/Tagwerk/Shopping/ShoppingTranslator.swift`, `app/TagwerkTests/ShoppingTranslatorTests.swift`
+- Modify: `app/Tagwerk/App/AppEnvironment.swift:25, 273` (neben `shoppingSorter`), `app/Tagwerk/AI/DemoAITransport.swift:131` (Antwort für `shopping_translation`), `app/Tagwerk/Shopping/ShoppingSortSheets.swift:5–45` (Blatt mit Anlass), `ShoppingSettingsView.swift:42–50`, Datenschutzhinweis in `Settings/AISettingsView.swift` (`AIPrivacyView`), sofern er das Sortieren nennt; `Localizable.xcstrings`, `en.json`
+
+**Interfaces (Produces):**
+
+```swift
+@MainActor
+final class ShoppingTranslator {
+    enum Failure: Error, Equatable {
+        case consentMissing, network, signedOut, usageLimit, failed, mismatch
+        var message: String { get }   // German; never contains item names
+    }
+    init(responder: any ResponseStreaming, model: @escaping @MainActor () async throws -> String,
+         hasConsent: @escaping @MainActor () -> Bool, timeout: Duration = .seconds(30))
+    /// One request. Throws before anything reaches OpenAI when the consent is missing.
+    func translate(_ plan: ShoppingTranslationPlan, to language: VoiceLanguage) async throws -> [ShoppingTranslationPlan.Change]
+    static let instructions: String
+    static let schema: [String: Any]
+    static func inputText(_ plan: ShoppingTranslationPlan, language: VoiceLanguage) -> String
+}
+
+// AppEnvironment
+let shoppingTranslator: ShoppingTranslator   // hasConsent: { settings.shoppingSortConsent }
+
+// ShoppingSortSheets.swift
+struct ShoppingSortConsentSheet: View {
+    enum Purpose { case sort, translate }
+    var purpose: Purpose = .sort            // existing callers stay valid
+}
+```
+
+Regeln:
+1. Reihenfolge wie `ShoppingSorter.sort`: `hasConsent()` zuerst (auch vor `model()`), dann Anfrage mit `jsonSchema: (name: "shopping_translation", schema:)`, dann `plan.changes`. `ShoppingTranslationPlan.Failure` wird `.mismatch`; nicht lesbares JSON wird `.failed`. Ein Stream ohne `completed` gilt als abgebrochen.
+2. `collect`, `withTimeout` und `failure(for:)` nicht ein drittes Mal kopieren: Ist Block A auf `main`, nutzt der Translator `RecipeRequest` (Block A, Task A2). Ist Block A noch nicht auf `main`, legt dieser Task die drei Hilfen als `RecipeRequest` im Ordner `Shopping/` an (derselbe Name, dieselben Signaturen wie in A2 beschrieben), stellt `ShoppingSorter` und `RecipeImporter` darauf um und Block A übernimmt die Datei. Verhalten beider bleibt gleich (bestehende Tests).
+3. Fehlertexte: `consentMissing` „Zum Übersetzen ist deine Einwilligung nötig.“, `network` „Keine Verbindung. Das Übersetzen braucht Internet.“, `signedOut` und `usageLimit` wie beim Sortieren, `failed` „Das Übersetzen ist fehlgeschlagen. Versuch es noch einmal.“, `mismatch` „Die Übersetzung passt nicht zur Liste. Versuch es noch einmal.“
+4. Einwilligungsblatt mit `purpose == .translate`: Titel „Mit ChatGPT übersetzen“, erster Satz, Punkte und Knopf „Einverstanden und übersetzen“ wie im Mockup SPC4b, dazu der Satz „Die Einwilligung gilt auch für „Mit ChatGPT sortieren“; dabei gehen zusätzlich die Namen deiner Kategorien mit.“ Das Blatt zum Sortieren bekommt den Gegensatz („… gilt auch für „Artikel übersetzen““).
+5. Einstellungen › Einkaufsliste: Schalter heißt „Mit ChatGPT sortieren und übersetzen“; erster Fußtext: „Sendet auf dein Tippen die Namen der offenen Artikel an ChatGPT, beim Sortieren auch die Namen deiner Kategorien. Fragst du den Assistenten nach der Einkaufsliste, gehen die Artikelnamen ebenfalls an ChatGPT.“
+
+- [ ] **Step 1: Tests** (mit `FakePlanResponder`): `translate_withoutConsent_neverCallsTheResponderOrTheModelList`, `translate_sendsNamesAndTargetOnly` (Eingabe enthält weder Menge noch Kategorie noch ID), `translate_returnsCheckedChanges`, `translate_answerWithMissingItem_throwsMismatch`, `translate_unreadableAnswer_throwsFailed`, `translate_cutStream_throwsFailed`, `translate_networkError_mapsToNetwork`, `translate_cancelled_rethrowsCancellation`, `failureMessages_neverContainItemNames`; `ShoppingSorterTests` und `RecipeImporterTests` bleiben grün (Regel 2).
+- [ ] **Step 2:** `APP ShoppingTranslatorTests` → rot. **Step 3:** umsetzen; Zeichenketten eintragen (alter Schlüssel „Mit ChatGPT sortieren“ als Schaltername bleibt für den Menüeintrag bestehen, der Fußtext-Schlüssel entfällt in `en.json`).
+- [ ] **Step 4:** `ALL`. Commit `feat: translate the names of open shopping items with one checked ChatGPT request`.
+
+### Task L8: Umbenennen in Apple Erinnerungen, Kategorien halten, Rückgängig (SPC5a, SPC6a, SPC8b)
+
+**Files:**
+- Modify: `app/Tagwerk/Shopping/ShoppingModel.swift:209–261` (neuer Abschnitt nach `update`)
+- Test: `app/TagwerkTests/ShoppingModelTests.swift` (mit `InMemoryReminderStore`), `ShoppingCategoryStoreTests.swift`
+
+**Interfaces (Produces):**
+
+```swift
+// ShoppingModel
+struct Renamed: Equatable { var id: String; var oldName: String; var newName: String }
+struct RenameReport: Equatable {
+    var renamed: [Renamed] = []
+    /// Items changed, checked off or deleted since the preview, or whose new name is on the list by now.
+    var skipped: Int = 0
+    var failed: Int = 0
+    var errorMessage: String?          // text of the first write error
+}
+/// Writes the titles of the given open items. Blocked changes are ignored.
+func rename(_ changes: [ShoppingTranslationPlan.Change]) async -> RenameReport
+/// Puts the old titles back where the item still carries the translated one. Returns the number restored.
+@discardableResult func undoRename(_ renamed: [Renamed]) async -> Int
+```
+
+Regeln:
+1. `rename` lädt zuerst (`reload()`), damit Dubletten gegen den aktuellen Stand geprüft werden, schreibt dann jede Erinnerung einzeln und lädt am Ende einmal. Ein Fehler hält den Rest nicht auf (Muster `checkOff(ids:)`).
+2. Je Änderung: `shoppingRecord(id)` (frisch, nur in der Einkaufsliste). Übersprungen wird, wenn die Erinnerung fehlt, erledigt ist, ihr Titelschlüssel nicht mehr der von `oldName` ist, oder der neue Schlüssel inzwischen der eines anderen offenen Artikels ist (der mitgeführte Stand wird wie in `add` je Artikel fortgeschrieben).
+3. Geschrieben wird nur `record.title`; `notes`, Fälligkeit, Erledigt-Zustand und Wiederholung bleiben (`recurrence: .unchanged`).
+4. **Kategorie halten:** Vor dem Schreiben die Kategorie des alten Schlüssels bestimmen (`ShoppingClassifier.categoryID(forKey:…)`). Hat der neue Schlüssel keine eigene Zuordnung und ergäbe er eine andere Kategorie, `categories.assign(nameKey: newKey, to: oldCategoryID, manual: oldAssignment?.isManual == true)`. Eine vorhandene Zuordnung des neuen Schlüssels bleibt unberührt, die des alten bleibt bestehen.
+5. `undoRename`: je Eintrag frisch lesen; nur wenn die Erinnerung offen ist und ihr Titelschlüssel der von `newName` ist, den alten Titel zurückschreiben. Angelegte Kategorie-Zuordnungen bleiben (sie schaden nicht).
+6. `onNamesChanged` feuert über `reload()` wie bisher.
+
+- [ ] **Step 1: Tests.**
+  - `rename_writesOnlyTheTitle_andKeepsQuantityAndNotes` (auch mit langer Notiz), `rename_ignoresBlockedChanges`, `rename_itemCheckedOffSincePreview_isSkipped`, `rename_itemRenamedSincePreview_isSkipped`, `rename_itemDeletedSincePreview_isSkipped`, `rename_newNameOnListByNow_isSkipped`, `rename_reminderOfAnotherList_isNeverWritten`, `rename_writeError_countsFailedAndContinues`, `rename_withoutAccess_reportsFailed`.
+  - `rename_keepsTheSection_whenTheDictionaryWouldMoveTheItem`, `rename_carriesAManualAssignmentAsManual`, `rename_existingAssignmentOfTheNewNameWins`, `rename_sameCategoryByDictionary_addsNoAssignment`.
+  - `undoRename_restoresTheOldTitles`, `undoRename_itemChangedAgain_isLeftAlone`, `undoRename_checkedOffItem_isLeftAlone`.
+  - `rename_notifiesNamesChanged`.
+- [ ] **Step 2:** `APP ShoppingModelTests` → rot. **Step 3:** umsetzen.
+- [ ] **Step 4:** `ALL`. Commit `feat: rename shopping items in Reminders and keep their categories`.
+
+### Task L9: Karte, Vorschau, Menüeintrag, Fehlerzustände (SPC1a, SPC2a, SPC3a, SPC7a, SPC8b)
+
+**Files:**
+- Create: `app/Tagwerk/Shopping/ShoppingTranslationModel.swift`, `app/Tagwerk/Shopping/ShoppingTranslationSheets.swift` (`ShoppingTranslationCard`, `ShoppingTranslationResultSheet`), `app/TagwerkTests/ShoppingTranslationModelTests.swift`
+- Modify: `app/Tagwerk/Shopping/ShoppingListView.swift:24–30, 56–83, 112–127, 274–283, 376–423` (Zustand, Blätter, Karte über der Eingabeleiste, Menüeintrag, Überlagerung, Kapsel), `app/Tagwerk/Shopping/RecipeSheets.swift` (Hinweistext aus L4, Regel 7), `Localizable.xcstrings`, `en.json`
+- Test: `ShoppingTranslationModelTests.swift`, `app/TagwerkUITests/ShoppingUITests.swift`, `AccessibilityAuditRecipesUITests.swift`, `AuditAllowlist.swift`
+
+**Interfaces (Produces):**
+
+```swift
+@MainActor @Observable
+final class ShoppingTranslationModel {
+    struct Offer: Equatable { var language: VoiceLanguage; var openCount: Int; var message: String? }
+    struct Preview: Equatable, Identifiable { let id: UUID; var changes: [ShoppingTranslationPlan.Change]; var leftOut: Int }
+
+    private(set) var offer: Offer?            // the card; nil hides it
+    private(set) var isTranslating = false
+    var preview: Preview?
+    private(set) var undo: [ShoppingModel.Renamed] = []   // non-empty while the capsule shows
+
+    init(shopping: ShoppingModel, settings: AppSettings, translator: ShoppingTranslator)
+    /// Called after every reload of the list and when a language setting changes.
+    func refreshOffer()
+    func keepAsIs()
+    /// Card and menu entry. The view has checked sign-in and consent before.
+    func translate() async
+    func cancel()
+    func apply(_ selected: [ShoppingTranslationPlan.Change]) async -> String?   // text for the notice line, nil when all went well
+    func undoLast() async
+    func capsuleExpired()
+    static func selection(_ changes: [ShoppingTranslationPlan.Change], deselected: Set<String>) -> [ShoppingTranslationPlan.Change]
+}
+```
+
+Verhalten:
+1. **Karte** (`ShoppingTranslationCard`) im `safeAreaInset` über `ShoppingInputBar`: Titel „Einkaufsliste jetzt auf Englisch“ / „… auf Deutsch“; Text „Neue Artikel kommen auf Englisch. Die 10 offenen Artikel bleiben, wie sie sind.“ (Einzahl: „Der offene Artikel bleibt, wie er ist.“); Knöpfe „Mit ChatGPT übersetzen“ (`sparkles`) und „So lassen“. Ohne Anmeldung ist der erste Knopf aus und trägt die Unterzeile „Anmeldung unter Einstellungen › KI“. Nach einem Fehler ersetzt `offer.message` den Text, der Knopf heißt „Noch einmal versuchen“. Bei großer Schrift stehen die Knöpfe untereinander (`ViewThatFits`). Die Karte ist ein Accessibility-Container mit Überschrift.
+2. **`refreshOffer`** wertet `ShoppingTranslationOffer.step` aus: `.adopt` schreibt `shoppingItemsLanguage`, `.offer` setzt `offer`, `.none` löscht sie. Aufrufer: `.task` und nach jedem `reload()` der Seite, `onChange` der geltenden Einkaufssprache (Marke aus L5), Rückkehr in den Vordergrund.
+3. **Menü „•••“:** „Artikel übersetzen …“ (`globe`) nach „Mit ChatGPT sortieren“, mit der Unterzeile der Zielsprache („ins Englische, mit ChatGPT“) bzw. „Anmeldung unter Einstellungen › KI“; aus ohne offene Artikel und während einer laufenden Anfrage.
+4. **Start:** nicht angemeldet → nichts. `shoppingSortConsent == false` → `ShoppingSortConsentSheet(purpose: .translate)`; „Einverstanden“ setzt den Schalter und startet, „Nicht jetzt“ lässt alles, wie es ist. Sonst `translate()`.
+5. **Laufende Anfrage:** Überlagerung „ChatGPT übersetzt …“ mit „Abbrechen“ (dieselbe View wie beim Sortieren, Text als Parameter). Ein Zähler verwirft Antworten nach `cancel()` oder dem Verlassen der Seite (Muster `sortingID`). Sortieren und Übersetzen schließen sich gegenseitig aus.
+6. **Ergebnis:** keine Änderung und nichts blockiert → Hinweiszeile „Alle Artikel sind schon auf Englisch.“, `shoppingItemsLanguage` setzen. Sonst `preview`.
+7. **Vorschau** (`ShoppingTranslationResultSheet`, `.presentationDetents([.medium, .large])`): Titel „Übersetzung“, „Verwerfen“ und „Übernehmen“ (aus ohne Auswahl); Abschnitt „6 von 7 Artikeln · Englisch“ mit Hakenzeilen (neuer Name, darunter der alte, Menge rechts, `checkRow` wie im Sortier-Blatt); Abschnitt „Bleibt unverändert“ mit den blockierten Artikeln und Grund („„Carrots“ steht dann schon auf der Liste“); Fußtext „Mengen bleiben, wie sie sind. Die Namen ändern sich in Apple Erinnerungen; in einer geteilten Liste sehen auch die anderen die neuen Namen.“, bei `leftOut > 0` zusätzlich „23 weitere Artikel: danach noch einmal über „•••“ übersetzen.“ VoiceOver je Zeile: „Äpfel wird Apples, ausgewählt“.
+8. **Übernehmen:** `shopping.rename`, `shoppingItemsLanguage` setzen (auch bei Teilerfolg), Kapsel `UndoCapsule(title: "6 Artikel übersetzt", caption: "Englisch", duration: 8, actionHint: "Stellt die alten Namen wieder her")`. Bei `skipped > 0` oder `failed > 0` statt der reinen Kapsel zusätzlich die Hinweiszeile „5 von 6 Artikeln übersetzt. 1 Artikel wurde inzwischen geändert und bleibt.“ bzw. mit der Meldung des ersten Schreibfehlers.
+9. **Rückgängig:** `undoRename`, `shoppingItemsLanguage` zurück auf den Wert vor dem Übernehmen; `refreshOffer` zeigt die Karte wieder.
+10. **Hinweis aus L4, Regel 7:** Der Satz im Ergebnisblatt wird ergänzt um „Über „•••“ › „Artikel übersetzen …“ kannst du sie danach übersetzen.“ (nur wenn L4 auf dem Branch ist; sonst trägt L4 den Satz ein).
+
+- [ ] **Step 1: Tests.**
+  - `refreshOffer_firstRun_adoptsWithoutCard`, `refreshOffer_afterSwitch_showsCardWithOpenCount`, `refreshOffer_switchedBack_hidesCardWithoutWriting`, `refreshOffer_emptyList_adopts`.
+  - `keepAsIs_settlesTheLanguage_andHidesTheCard`, `keepAsIs_cardReturnsOnlyAfterTheNextSwitch`.
+  - `translate_showsPreview`, `translate_nothingToChange_settlesAndShowsNoPreview`, `translate_failure_keepsCardWithMessage`, `translate_cancelled_ignoresALateAnswer`, `translate_onlyBlockedChanges_showsPreviewWithoutSelectableRows`.
+  - `selection_dropsDeselectedAndBlockedChanges`, `apply_renamesSettlesAndOffersUndo`, `apply_partial_returnsNoticeWithBothCounts`, `discard_keepsTheCard`.
+  - `undoLast_restoresNamesAndShowsTheCardAgain`, `capsuleExpired_dropsTheUndoState`.
+  - UI (`ShoppingUITests`, Demo-Transport): `translateOffer_previewApplyUndo` (Marke tippen, Karte, Einwilligung, Vorschau, Übernehmen, Namen englisch, Rückgängig, Namen deutsch); `translateOffer_keepAsIs_hidesTheCard`. Audit „Einkaufsliste › Karte „übersetzen““ und „Einkaufsliste › Übersetzung“ in `AccessibilityAuditRecipesUITests`; Muster in der Allowlist nur, wenn der Audit sie meldet.
+- [ ] **Step 2:** `APP ShoppingTranslationModelTests`, `UI ShoppingUITests` → rot. **Step 3:** umsetzen; Zeichenketten eintragen (Mehrzahlformen für „Artikel“ im Katalog).
+- [ ] **Step 4:** `ALL`. Commit `feat: offer to translate the shopping list after its language changed`.
+
+**Gerätetests L6–L9** (zusätzlich zu Z1):
+1. Deutsche Liste mit Mengen, Marke auf EN: Karte erscheint, bleibt nach App-Neustart, verschwindet beim Zurückschalten.
+2. Übersetzen: Vorschau, ein Artikel abgewählt, Übernehmen; in Apple Erinnerungen sind nur die Titel geändert, Notizen unverändert; Abschnitte unverändert, auch für einen von Hand zugeordneten Artikel.
+3. Geteilte Liste (zweites Gerät oder zweite Apple-ID): Die neuen Namen erscheinen dort; ein dort während der Vorschau abgehakter Artikel wird übersprungen.
+4. „Rückgängig“ innerhalb von 8 Sekunden; danach Karte wieder da.
+5. Flugmodus: Meldung in der Karte, Liste unverändert. Abbrechen während der Anfrage.
+6. Erste Nutzung ohne Einwilligung „Sortieren“: Blatt mit dem Wortlaut „übersetzen“; „Nicht jetzt“ sendet nichts. Danach fragt „Mit ChatGPT sortieren“ nicht erneut.
+7. Englische Oberfläche: Karte, Blatt, Vorschau, Kapsel. Große Schrift (AX3): Knöpfe der Karte untereinander, Vorschauzeilen umbrechen.
+8. Siri: „… auf die Einkaufsliste“ kennt nach dem Übersetzen die neuen Namen.
+
 ---
 
 ## Strang U: Suche
@@ -892,7 +1141,7 @@ Vier Commits nach Bereich, jeweils mit `ALL` dazwischen: (a) `Planning`, `Focus`
 | GitHub | Issue in zwei Projekten, nur eines gewählt, dort „Done“: Kapsel, Issue weg, auf GitHub offen. Issue ohne Projekt an andere: Kapsel nennt Person. Zeile zeigt „◐ In Progress“, nicht bei „Ready“ und „Backlog“. Zwei Projekte ohne gemeinsame Stufe: Fußtext. |
 | Teilen | Safari-Seite, Text aus Notizen, Bild aus Fotos, Mail: Kacheln, Vorwahl, Höhe des Blatts (halbhoch oder Rückfall), Bestätigung nennt das Ziel; Tagwerk zeigt das Geteilte beim Öffnen. |
 | Mail | Mail teilen, zusammenfassen, Felder getönt; ändern nimmt die Tönung; angelegte Aufgabe enthält „Von: …“ und den Link. |
-| Sprachen | Update von einer Version mit „Sprache im Sprachchat: English“: Diktat englisch, Antwort englisch. Rezepte English, Einkaufsliste Deutsch: Import einer englischen Seite legt deutsche Artikel an, Notiz englisch. Marke im Diktat schaltet um, gilt am Ort weiter, andere Orte unverändert. Marke in der Einkaufsliste ändert die Einstellung. |
+| Sprachen | Update von einer Version mit „Sprache im Sprachchat: English“: Diktat englisch, Antwort englisch. Rezepte English, Einkaufsliste Deutsch: Import einer englischen Seite legt deutsche Artikel an, Notiz englisch. Marke im Diktat schaltet um, gilt am Ort weiter, andere Orte unverändert. Marke in der Einkaufsliste ändert die Einstellung. Artikel übersetzen: Gerätetests L6–L9 (Karte, Vorschau, geteilte Liste, Rückgängig, Flugmodus, Einwilligung); Tipp-Karte (T3) und Übersetzen-Karte zugleich sichtbar. |
 | Kontrast | Sichtprüfung hell und dunkel: Planen, Aufgaben, Erfassen, Einkaufsliste, Einstellungen; „Kontrast erhöhen“ ein; Blau der Knöpfe; Widget unverändert. |
 | Suche | Treffer einplanen, Fokus starten (Blatt schließt, Timer öffnet), Issue auf GitHub öffnen, Notiz im Ordner zeigen (auch privater Ordner mit Sperre). |
 
@@ -902,7 +1151,7 @@ Vier Commits nach Bereich, jeweils mit `ALL` dazwischen: (a) `Planning`, `Focus`
 2. **GH7b, Planung beim Verschwinden.** Das Issue ist aus Tagwerk weg, aber offen. **Empfehlung (so geplant):** wie beim Abgeben geplanten Tag und künftige Zeitblöcke entfernen (`onHandedOver`); vergangene Blöcke bleiben.
 3. **Sprachchat-Antwort ohne „Wie die App“.** Das Mockup sagt, jede Zeile biete „Wie die App“; für die Antwort wäre das ein neues Verhalten (fest auf die App-Sprache), das heute niemand hat. **Empfehlung (so geplant):** nur „Wie gesprochen“, Deutsch, English.
 4. **Marke in der Einkaufsliste und „Wie Rezepte“.** Ein Tipp speichert eine feste Sprache; „Wie Rezepte“ kommt nur über die Einstellungen zurück. **Empfehlung (so geplant):** fester Wert, weil ein späteres Ändern der Rezeptsprache die Liste sonst still umstellt.
-5. **Rezept-Notiz lokal gelesen, Einkaufssprache weicht ab.** Ohne ChatGPT gibt es keine Übersetzung. **Empfehlung (so geplant):** Namen bleiben in der Sprache der Notiz, Hinweiszeile im Blatt; das Übersetzen gehört zu SP5c.
+5. **Rezept-Notiz lokal gelesen, Einkaufssprache weicht ab.** Ohne ChatGPT gibt es keine Übersetzung. **Empfehlung (so geplant):** Namen bleiben in der Sprache der Notiz, Hinweiszeile im Blatt. Mit SP5c verweist die Zeile auf „•••“ › „Artikel übersetzen …“ (L9, Punkt 10); die Karte erscheint dadurch nicht von selbst, weil sich die Einkaufssprache nicht geändert hat.
 6. **Zweite Einheit und freie Mengentexte.** Geplant sind zweiter Name **und** zweite Einheit („2 cans“ auf einer deutschen Liste wäre sonst falsch); freie Texte wie „nach Geschmack“ bleiben in der Rezeptsprache. **Empfehlung:** so lassen; ein drittes Feld erst, wenn es im Gerätetest stört.
 7. **Ändern von „Diktat“ in den Einstellungen und gemerkte Orte.** **Empfehlung:** Die gemerkten Orte bleiben (SP4b sagt „bis man zurückschaltet“); kein Zurücksetzen. Alternative: Ändern der Einstellung leert die Orte.
 8. **SI3 „einmal“.** **Empfehlung (so geplant):** sichtbar bis ✕ oder bis der Kurzbefehl einmal lief, nicht nur beim ersten Besuch.
@@ -910,6 +1159,10 @@ Vier Commits nach Bereich, jeweils mit `ALL` dazwischen: (a) `Planning`, `Focus`
 10. **Blau in dunklen Blättern.** Die Mockup-Tabelle zeigt für dunkle Blätter einen helleren blauen Schriftton (4,92), KO4a lässt `AccentColor` im Dunkeln bei #0A84FF. **Empfehlung:** erst messen (K1); meldet der Audit Akzenttext in dunklen Blättern, den dunklen Wert des Assets anheben (Kandidat #409CFF, rechnen und messen), statt einen zweiten Blauton einzuführen.
 11. **TE1b bei fünf Zielen.** Fünf Kacheln in einer Zeile sind bei Standardgröße knapp. **Empfehlung (so geplant):** Kurzname „Mail“ auf der Kachel, zwei Spalten ab AX1.
 12. **Halbhohes Blatt der Erweiterung.** Nicht geprüft, ob das System Detents einer Teilen-Erweiterung beachtet. **Empfehlung:** versuchen, sonst volle Höhe ohne weiteren Umbau.
+13. **SPC1–SPC8 (Artikel übersetzen).** Noch nicht entschieden; geplant nach den Empfehlungen (Kasten vor L6 nennt, was sich bei anderer Wahl ändert).
+14. **SPC4b und wer dem Sortieren schon zugestimmt hat.** Diese Nutzer werden beim ersten Übersetzen nicht erneut gefragt, obwohl der frühere Text nur das Sortieren nannte. **Empfehlung (so geplant):** hinnehmen, weil dieselben Daten an denselben Empfänger gehen und der Knopf ChatGPT nennt; wer das nicht will, wählt SPC4c (eigenes Feld, jeder wird einmal gefragt).
+15. **Karte nach einem Wechsel durch „Wie Rezepte“ oder die App-Sprache.** Die Einkaufssprache kann sich ändern, ohne dass die Einkaufsliste berührt wurde. **Empfehlung (so geplant):** Karte trotzdem zeigen; sie ist dann der einzige Hinweis, dass neue Artikel in einer anderen Sprache entstehen.
+16. **Großschreibung übersetzter Namen.** Englische Artikel kämen klein („carrots“), die deutsche Liste ist groß geschrieben. **Empfehlung (so geplant):** Anweisung „Schreibweise des ersten Buchstabens beibehalten“, keine Korrektur auf dem Gerät; im Gerätetest ansehen.
 
 ## Risiken
 
@@ -925,3 +1178,10 @@ Vier Commits nach Bereich, jeweils mit `ALL` dazwischen: (a) `Planning`, `Focus`
 - **Akzentfarbe als Asset** wirkt auf alle Systemsteuerelemente (Schalter, Picker, Links); Weiß auf dem gefüllten Knopf im Dunkeln bleibt rechnerisch unter 4,5 und voraussichtlich Ausnahme.
 - **Merge-Reihenfolge:** K gegen alle; wird K vor T oder L gemessen, ist die Ausgangsmessung für die umgezogenen Einstellungsseiten wertlos.
 - **Laufzeit der UI-Tests:** Zwei neue Audit-Bildschirme (Siri, Sprachen) und ein Suchtest verlängern die Stufe; die Audits sind zeitabhängig (Regel: zwei volle Läufe vor dem Merge von K).
+- **Übersetzung einzelner Wörter (L7):** Ohne Zusammenhang sind Artikelnamen mehrdeutig („Sahne“, „Quark“, „Schmand“, „Hack“); die Güte ist nicht geprüft. Absicherung sind Vorschau, Abwählen und „Rückgängig“, nicht die Prüfung der Antwort: Diese erkennt nur formale Fehler (Indizes, Leere, Zahlen), keine falsche Bedeutung.
+- **Umbenennen in geteilten Listen (L8):** Tagwerk erkennt nicht, ob die Liste geteilt ist (`ListInfo` hat kein Merkmal; ob EventKit eines liefert, ist nicht geprüft). Andere sehen die neuen Namen ohne Vorwarnung; der Hinweis steht nur in der Vorschau. „Rückgängig“ gilt 8 Sekunden; danach bleibt nur der Rückweg über Sprachwechsel und erneutes Übersetzen, der andere Namen ergeben kann als die ursprünglichen.
+- **Zeitfenster zwischen Vorschau und Schreiben (L8):** Die Prüfung „inzwischen geändert“ vergleicht den Titelschlüssel; eine Änderung, die iCloud erst nach dem Schreiben zustellt, überschreibt je nach Reihenfolge eine Seite. Das ist das Verhalten jedes Schreibwegs der Einkaufsliste und wird nicht gesondert gelöst.
+- **Gemischte Liste nach dem Übersetzen:** Mengen („1 Dose“), erledigte Artikel und blockierte Dubletten bleiben in der alten Sprache; ein englisch hinzugefügter Artikel öffnet einen deutsch erledigten nicht wieder (SPC5a).
+- **Kategorie-Zuordnungen wachsen (L8):** Jeder übersetzte Name, den das Wörterbuch anders einsortieren würde, erhält eine eigene Zuordnung. Bei wiederholtem Hin- und Herübersetzen entstehen Einträge für beide Sprachen; sie werden nicht aufgeräumt.
+- **Geteilte Einwilligung (SPC4b):** Der Schalter „Mit ChatGPT sortieren und übersetzen“ widerruft beides zugleich; getrennt abschalten lässt sich nur mit SPC4c.
+- **Überschneidung in `ShoppingListView.swift`:** Die Seite bekommt durch T3, L5 und L9 drei Ergänzungen und trägt schon vier Blätter; L9 legt den Zustand deshalb in `ShoppingTranslationModel` ab, nicht in weitere `@State`-Felder.
