@@ -62,9 +62,7 @@ struct HabitSheet: View {
                     Text("Automatische Quellen haken sich selbst ab, auch an Tagen ohne App-Start. Jede Quelle gilt für höchstens eine Gewohnheit. Du kannst jede Gewohnheit zusätzlich von Hand abhaken.")
                 }
                 Section {
-                    Stepper(value: $daysPerWeek, in: 1...7) {
-                        LabeledContent("Tage pro Woche") { Text("\(daysPerWeek)").monospacedDigit() }
-                    }
+                    ValueStepper("Tage pro Woche", value: $daysPerWeek, in: 1...7) { "\($0)" }
                     DatePicker("Zählt ab", selection: $start, in: startRange, displayedComponents: .date)
                 } footer: {
                     Text("7 bedeutet täglich. Quote: erfüllte Tage ÷ Zieltage, höchstens 100 %. Serie bei weniger als 7: Wochen in Folge mit erreichtem Ziel.")
