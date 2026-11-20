@@ -12,13 +12,15 @@ struct TagwerkApp: App {
 
     init() {
         do {
-            let container = try ModelContainerFactory.make(inMemory: false)
+            let container = try ModelContainerFactory.make(inMemory: UITestMode.isActive)
             var health: (any HealthStoring)?
             #if DEBUG && targetEnvironment(simulator)
             if DemoData.isRequested { health = DemoHealthStore() }
             #endif
             // Hosted unit tests never write into the real App Group container.
-            let isTestHost = ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
+            // The UI tests start the app itself, so they get the same protection through their launch argument.
+            let isTestHost = ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil || UITestMode.isActive
+            if UITestMode.isActive { UIView.setAnimationsEnabled(false) }
             let environment = try AppEnvironment(modelContainer: container, health: health,
                                                  snapshotWriter: isTestHost ? nil : .live(),
                                                  shareInbox: isTestHost ? nil : AppGroup.shareInboxDirectory.map { ShareInbox(directory: $0) },

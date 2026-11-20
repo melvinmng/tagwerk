@@ -76,6 +76,15 @@ struct RootView: View {
             }
 
         }
+        .overlay(alignment: .topLeading) {
+            // UI tests only: tells them that the demo data exists. Never shown outside the UI test mode.
+            if UITestMode.isActive && environment.isDemoDataReady {
+                Color.clear.frame(width: 1, height: 1)
+                    .accessibilityElement()
+                    .accessibilityLabel(Text(verbatim: "Demo data ready"))
+                    .accessibilityIdentifier(AccessibilityID.App.demoReady)
+            }
+        }
         .sheet(isPresented: assistantPresented) {
             ChatView(assistant: environment.assistant)
         }

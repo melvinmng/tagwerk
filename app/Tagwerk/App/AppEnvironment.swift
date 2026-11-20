@@ -93,6 +93,8 @@ final class AppEnvironment {
     var isSearchPresented = false
     /// The model of the open (or last) search sheet; it holds nothing after `close()`.
     @ObservationIgnored private(set) var activeSearch: SearchModel?
+    /// Set by `DemoData` once the sample data is created; the UI tests wait for the marker view it drives.
+    var isDemoDataReady = false
     /// A tab another view asks to show (e.g. "Mit KI planen" from the task list jumps to "Planen").
     var requestedTab: Int?
     /// Pages on top of the task list (shopping list, notes); a deep link sets it to open the shopping list.

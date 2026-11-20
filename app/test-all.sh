@@ -1,6 +1,7 @@
 #!/bin/zsh
-# Runs all test stages: every local Swift package under app/Packages, then the app scheme.
+# Runs all test stages: every local Swift package under app/Packages, the app scheme and the UI tests.
 # Stops at the first failing stage and reports which one failed.
+# TAGWERK_SKIP_UI_TESTS=1 skips the UI test stage (quick iterations only; the full run is required before a merge).
 
 set -euo pipefail
 
@@ -33,13 +34,19 @@ run_tests() {
     echo "Full log: $log" >&2
     return 1
   fi
-  local summary
-  summary=$(grep -E "Test run with [0-9]+ tests?" "$log" | tail -n 1 || true)
-  if [[ -z "$summary" || "$summary" == *"with 0 tests"* ]]; then
+  # Swift Testing prints "Test run with N tests", XCTest prints "Executed N tests". A bundle can print both, one of
+  # them with 0 (e.g. UI tests: XCTest only), so the run counts as empty only when no summary reports a test.
+  local summary="" line count
+  while IFS= read -r line; do
+    count=$(print -r -- "$line" | sed -nE 's/.*Test run with ([0-9]+) tests?.*/\1/p; s/.*Executed ([0-9]+) tests?,.*/\1/p' | head -n 1)
+    if [[ -n "$count" && "$count" -gt 0 ]]; then summary="$line"; fi
+  done < <(grep -E "Test run with [0-9]+ tests?|Executed [0-9]+ tests?," "$log" | grep -v "Test Suite")
+  if [[ -z "$summary" ]]; then
     echo "No tests were executed (log: $log)" >&2
     return 1
   fi
-  echo "    ${summary##*] }"
+  summary="${summary##*] }"
+  echo "    ${summary//$'\t'/}"
 }
 
 # Resolves the scheme to test: "<Pkg>" if the package exposes a single product, else "<Pkg>-Package".
@@ -79,6 +86,36 @@ xcodegen --quiet || stage_failed
 CURRENT_STAGE="app scheme Tagwerk"
 echo "==> $CURRENT_STAGE"
 run_tests -project "$SCRIPT_DIR/Tagwerk.xcodeproj" -scheme Tagwerk -destination "$DESTINATION" -derivedDataPath "$DERIVED" || stage_failed
+
+CURRENT_STAGE="app UI tests"
+echo "==> $CURRENT_STAGE"
+if [[ -n "${TAGWERK_SKIP_UI_TESTS:-}" ]]; then
+  echo "    skipped (TAGWERK_SKIP_UI_TESTS)"
+else
+  # The UI tests read the demo data from the Calendar and Reminders stores; the permissions are granted
+  # beforehand, so no system dialog can interrupt a test. The simulator is booted for this (it keeps running).
+  UI_SIMULATOR="${DESTINATION##*id=}"
+  if [[ "$DESTINATION" != *"id="* ]]; then
+    UI_SIMULATOR=$(xcrun simctl list devices available -j | /usr/bin/python3 -c '
+import json, sys
+name = sys.argv[1]
+for devices in json.load(sys.stdin)["devices"].values():
+    for device in devices:
+        if device["name"] == name:
+            print(device["udid"])
+            sys.exit(0)
+' "${DESTINATION##*name=}") || stage_failed
+  fi
+  APP_BUNDLE_ID=$(xcodebuild -project "$SCRIPT_DIR/Tagwerk.xcodeproj" -scheme Tagwerk -showBuildSettings 2>/dev/null \
+    | sed -nE 's/^ *PRODUCT_BUNDLE_IDENTIFIER = (.*)$/\1/p' | head -n 1)
+  [[ -n "$UI_SIMULATOR" && -n "$APP_BUNDLE_ID" ]] || { echo "Could not resolve the simulator or the bundle ID" >&2; stage_failed; }
+  xcrun simctl boot "$UI_SIMULATOR" 2>/dev/null || true
+  xcrun simctl bootstatus "$UI_SIMULATOR" -b > /dev/null 2>&1 || true
+  for service in calendar reminders; do
+    xcrun simctl privacy "$UI_SIMULATOR" grant "$service" "$APP_BUNDLE_ID" || stage_failed
+  done
+  run_tests -project "$SCRIPT_DIR/Tagwerk.xcodeproj" -scheme TagwerkUITests -destination "$DESTINATION" -derivedDataPath "$DERIVED" || stage_failed
+fi
 
 CURRENT_STAGE="string catalogs"
 echo "==> $CURRENT_STAGE"
