@@ -34,12 +34,12 @@ struct ReminderOffsetPicker: View {
                 .pickerStyle(.segmented)
                 switch mode {
                 case .before:
-                    Stepper("Menge: \(amount)", value: $amount, in: 0...ReminderOffset.maximumAmount)
+                    ValueStepper("Menge", value: $amount, in: 0...ReminderOffset.maximumAmount) { "\($0)" }
                     Picker("Einheit", selection: $unit) {
                         ForEach(units, id: \.self) { Text(Self.name(of: $0)).tag($0) }
                     }
                 case .atTime:
-                    Stepper("Tage vorher: \(daysBefore)", value: $daysBefore, in: 0...ReminderOffset.maximumDaysBefore)
+                    ValueStepper("Tage vorher", value: $daysBefore, in: 0...ReminderOffset.maximumDaysBefore) { "\($0)" }
                     DatePicker("Uhrzeit", selection: $time, displayedComponents: .hourAndMinute)
                         .environment(\.calendar, calendar)
                         .environment(\.timeZone, calendar.timeZone)

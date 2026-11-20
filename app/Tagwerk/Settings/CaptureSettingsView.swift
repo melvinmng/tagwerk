@@ -11,17 +11,20 @@ struct CaptureSettingsView: View {
         @Bindable var settings = environment.settings
         Form {
             Section {
-                Stepper("Kalorien: \(IntakeFormat.grouped(settings.goalKilocalories)) kcal", value: $settings.goalKilocalories,
-                        in: 1000...6000, step: 50)
-                Stepper("Wasser: \(IntakeFormat.liters(settings.goalWaterMilliliters))", value: $settings.goalWaterMilliliters,
-                        in: 500...6000, step: 250)
-                Stepper("Training pro Woche: \(workoutGoalText(settings.goalWorkoutMinutesPerWeek))",
-                        value: $settings.goalWorkoutMinutesPerWeek, in: 0...1200, step: 15)
-                Stepper("Schritte pro Tag: \(stepGoalText(settings.goalStepsPerDay))", value: $settings.goalStepsPerDay,
-                        in: 0...30000, step: 500)
+                ValueStepper("Kalorien", value: $settings.goalKilocalories, in: 1000...6000, step: 50, unit: "kcal") {
+                    IntakeFormat.kcal(Double($0), estimated: false)
+                }
+                ValueStepper("Wasser", value: $settings.goalWaterMilliliters, in: 500...6000, step: 250,
+                             kind: .decimal(fractionDigits: 2), scale: 1000, unit: "l") { IntakeFormat.liters($0) }
+                ValueStepper("Training pro Woche", value: $settings.goalWorkoutMinutesPerWeek, in: 0...1200, step: 15,
+                             kind: .durationMinutes, display: workoutGoalText)
+                ValueStepper("Schritte pro Tag", value: $settings.goalStepsPerDay, in: 0...30000, step: 500,
+                             unit: "Schritte", display: stepGoalText)
                 Toggle("Eiweiß-Ziel", isOn: $settings.proteinGoalEnabled)
                 if settings.proteinGoalEnabled {
-                    Stepper("Eiweiß: \(settings.goalProteinGrams) g", value: $settings.goalProteinGrams, in: 20...400, step: 5)
+                    ValueStepper("Eiweiß", value: $settings.goalProteinGrams, in: 20...400, step: 5, unit: "g") {
+                        IntakeFormat.grams(Double($0), estimated: false)
+                    }
                 }
             } header: {
                 Text("Ziele")

@@ -339,12 +339,9 @@ struct EntrySheet: View {
                 .foregroundStyle(.secondary)
         }
         Section {
-            stepRow("Beginn", value: clock(range.lowerBound, day: day), enabled: true) { step in
-                Task { await model.setLunch(startMinutes: range.lowerBound + step, minutes: range.count, on: day) }
-            }
-            stepRow("Dauer", value: CapacityText.duration(range.count), enabled: true) { step in
-                Task { await model.setLunch(startMinutes: range.lowerBound, minutes: max(15, range.count + step), on: day) }
-            }
+            DatePicker("Beginn", selection: lunchStart(range, on: day), displayedComponents: .hourAndMinute)
+            ValueStepper("Dauer", value: lunchDuration(range, on: day), in: 15...max(15, 24 * 60 - range.lowerBound), step: 15,
+                         kind: .durationMinutes, unit: "min", appliesWhileTyping: false, display: CapacityText.duration)
         } footer: {
             Text("Änderungen gelten nur für diesen Tag.")
         }
@@ -380,8 +377,25 @@ struct EntrySheet: View {
         return start..<(start + max(15, Int(event.end.timeIntervalSince(event.start) / 60)))
     }
 
-    private func clock(_ minutes: Int, day: PlanDay) -> String {
-        day.startDate(in: model.calendar).addingTimeInterval(TimeInterval(minutes * 60)).formatted(date: .omitted, time: .shortened)
+    /// The start of the lunch break as a time of day for the time picker; a change moves the break and keeps its length.
+    private func lunchStart(_ range: Range<Int>, on day: PlanDay) -> Binding<Date> {
+        let calendar = Calendar.tagwerk
+        return Binding(
+            get: { calendar.date(bySettingHour: range.lowerBound / 60, minute: range.lowerBound % 60, second: 0, of: .now) ?? .now },
+            set: { date in
+                let parts = calendar.dateComponents([.hour, .minute], from: date)
+                let start = (parts.hour ?? 0) * 60 + (parts.minute ?? 0)
+                Task { await model.setLunch(startMinutes: start, minutes: range.count, on: day) }
+            }
+        )
+    }
+
+    /// The length of the lunch break; a change keeps its start.
+    private func lunchDuration(_ range: Range<Int>, on day: PlanDay) -> Binding<Int> {
+        Binding(
+            get: { range.count },
+            set: { minutes in Task { await model.setLunch(startMinutes: range.lowerBound, minutes: minutes, on: day) } }
+        )
     }
 
     private func timeText(_ event: CalendarEvent) -> String {

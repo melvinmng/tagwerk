@@ -13,7 +13,7 @@ struct DrinkSheet: View {
         NavigationStack {
             Form {
                 Section {
-                    Stepper("Andere Menge: \(amount) ml", value: $amount, in: 50...2000, step: 50)
+                    ValueStepper("Andere Menge", value: $amount, in: 50...2000, step: 50, unit: "ml") { "\($0) ml" }
                     DatePicker("Zeit", selection: $time, displayedComponents: .hourAndMinute)
                     Button("Hinzufügen") {
                         let amount = amount
@@ -87,7 +87,7 @@ private struct DrinkEditSheet: View {
     var body: some View {
         NavigationStack {
             Form {
-                Stepper("Menge: \(drink.milliliters) ml", value: $drink.milliliters, in: 50...2000, step: 50)
+                ValueStepper("Menge", value: $drink.milliliters, in: 50...2000, step: 50, unit: "ml") { "\($0) ml" }
                 DatePicker("Zeit", selection: $drink.date, displayedComponents: .hourAndMinute)
             }
             .navigationTitle("Wasser")

@@ -203,10 +203,9 @@ private struct ChecklistItemSheet: View {
                     Toggle("Erinnerung", isOn: $remindsMe).disabled(!canRemind)
                     if remindsMe {
                         let offset = item.offsetMinutes ?? 30
-                        Stepper(value: Binding(get: { item.offsetMinutes ?? 30 }, set: { item.offsetMinutes = $0 }),
-                                in: RoutineSchedule.offsetRange, step: RoutineSchedule.offsetStep) {
-                            LabeledContent("Abstand", value: String(localized: "\(offset) min vorher"))
-                        }
+                        ValueStepper("Abstand", value: Binding(get: { item.offsetMinutes ?? 30 }, set: { item.offsetMinutes = $0 }),
+                                     in: RoutineSchedule.offsetRange, step: RoutineSchedule.offsetStep, kind: .durationMinutes,
+                                     unit: "min") { String(localized: "\($0) min vorher") }
                         LabeledContent("Uhrzeit", value: DateText.time(
                             minutes: RoutineSchedule.anchorMinutes(bedtimeMinutes: bedtimeMinutes, offsetMinutes: offset),
                             calendar: .tagwerk))

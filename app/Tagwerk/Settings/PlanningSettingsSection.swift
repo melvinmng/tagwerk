@@ -26,8 +26,8 @@ struct PlanningSettingsSection: View {
             } label: {
                 LabeledContent("Deadline-Kalender", value: deadlineSummary)
             }
-            Stepper("Standarddauer: \(CapacityText.duration(settings.defaultTaskMinutes))",
-                    value: $settings.defaultTaskMinutes, in: 15...240, step: 15)
+            ValueStepper("Standarddauer", value: $settings.defaultTaskMinutes, in: 15...240, step: 15, kind: .durationMinutes,
+                         unit: "min", display: CapacityText.duration)
             NavigationLink {
                 TravelSettingsView()
             } label: {

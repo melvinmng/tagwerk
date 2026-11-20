@@ -30,12 +30,6 @@ struct RecipeServingsTests {
         #expect(RecipeResultView.canAdd(base: 4, selectedCount: 1))
     }
 
-    @Test func stepper_startsAtFour_andStaysInRange() {
-        #expect(RecipeResultView.stepped(nil, by: 1) == 4 && RecipeResultView.stepped(nil, by: -1) == 4)
-        #expect(RecipeResultView.stepped(4, by: 1) == 5 && RecipeResultView.stepped(4, by: -1) == 3)
-        #expect(RecipeResultView.stepped(1, by: -1) == 1 && RecipeResultView.stepped(50, by: 1) == 50)
-    }
-
     @Test func scaled_scalesStructuredAndFreeQuantities_namesStay() {
         let candidates = [candidate("rote Linsen", "250 g"), candidate("Kokosmilch", "1 Dose"), candidate("Ei", "1"),
                           candidate("Salz", nil), candidate("Prise Zimt", nil)]

@@ -9,8 +9,7 @@ final class AccessibilityAuditUITests: UITestCase {
 
     /// Runs the audit on the screen that is open now; findings that are not on the allowlist fail the test.
     private func audit(_ screen: String) throws {
-        AuditAllowlist.currentScreen = screen
-        try app.performAccessibilityAudit(for: .all) { issue in MainActor.assumeIsolated { AuditAllowlist.isAccepted(issue) } }
+        try AuditAllowlist.audit(app, screen: screen, for: .all)
     }
 
     func testAuditDefaultSize() throws {
@@ -34,6 +33,9 @@ final class AccessibilityAuditUITests: UITestCase {
             app.textFields["Artikel hinzufügen"].typeText(item + "\n")
             waitFor(item)
         }
+        // The notice above the input ("1 hinzugefügt") fades out after four seconds; audited while it is visible, it adds a
+        // finding that depends on how fast the run is.
+        waitUntilGone(app.staticTexts.matching(NSPredicate(format: "label ENDSWITH %@", "hinzugefügt")).firstMatch)
         try audit("Einkaufsliste")
         app.navigationBars.buttons.firstMatch.tap()
 

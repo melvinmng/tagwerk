@@ -40,10 +40,10 @@ struct TravelOverrideView: View {
                 .pickerStyle(.inline)
                 .labelsHidden()
                 if choice == .fixed {
-                    Stepper(value: $minutes, in: TravelOverrideRules.minimumFixedMinutes...TravelOverrideRules.maximumFixedMinutes,
-                            step: TravelOverrideRules.stepMinutes) {
-                        LabeledContent("Dauer", value: CapacityText.duration(minutes))
-                    }
+                    ValueStepper("Dauer", value: $minutes,
+                                 in: TravelOverrideRules.minimumFixedMinutes...TravelOverrideRules.maximumFixedMinutes,
+                                 step: TravelOverrideRules.stepMinutes, kind: .durationMinutes, unit: "min",
+                                 display: CapacityText.duration)
                 }
             } footer: {
                 Text("Automatisch berechnet Apple Karten die Fahrzeit. „Keine“ und eine feste Zeit gelten nur in Tagwerk, auch ohne Netz, und haben Vorrang.")
