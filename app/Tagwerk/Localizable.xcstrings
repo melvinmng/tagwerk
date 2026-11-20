@@ -3456,6 +3456,16 @@
         }
       }
     },
+    "Angepasst auf %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adjusted to %@"
+          }
+        }
+      }
+    },
     "Anheften": {
       "localizations": {
         "en": {
@@ -4672,6 +4682,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Please name a repository."
+          }
+        }
+      }
+    },
+    "Bitte eine Zahl eingeben.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Please enter a number."
           }
         }
       }
@@ -16528,6 +16548,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Weekdays"
+          }
+        }
+      }
+    },
+    "Wert eingeben": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter value"
           }
         }
       }

@@ -1963,5 +1963,8 @@
   "**Nicht gesendet werden:** deine Einkaufsliste, Mengen auf der Liste, Aufgaben, Termine, andere Notizen, Daten aus Health. Eine Notiz mit Zutaten und Zubereitung liest Tagwerk auf dem iPhone, und private Notizen stehen nie zur Auswahl.": "**Not sent:** your shopping list, amounts on the list, tasks, events, other notes, Health data. Tagwerk reads a note with ingredients and instructions on the iPhone, and private notes are never offered.",
   "Notizen liegen nur auf diesem iPhone. An ChatGPT geht eine Brain-Dump-Notiz nur, wenn du bei ihr auf „Vorschläge holen“ tippst, und eine Notiz nur, wenn du sie bei „Rezept hinzufügen“ als Quelle wählst.": "Notes stay on this iPhone only. A Brain Dump note goes to ChatGPT only when you tap “Get suggestions” on it, and a note only when you choose it as the source in “Add recipe”.",
   "Für ein Rezept sendet Tagwerk auf dein Tippen den Rezepttext, das Foto oder den gelesenen Text einer Seite an ChatGPT, bei „Rezept hinzufügen“ dazu die Namen deiner Kategorien, wenn du in der Einkaufsliste zugestimmt hast. Wählst du eine Notiz ohne Zutaten und Zubereitung als Quelle, geht ihr Text an ChatGPT; eine Notiz mit beiden Abschnitten liest Tagwerk auf dem iPhone. Private Notizen (Tagebuch, Bible Study, Dream Log) stehen dafür nie zur Auswahl.": "For a recipe, Tagwerk sends the recipe text, the photo or the text read from a page to ChatGPT when you tap, and with “Add recipe” also the names of your categories, if you agreed in the shopping list settings. If you choose a note without ingredients and instructions as the source, its text goes to ChatGPT; Tagwerk reads a note with both sections on the iPhone. Private notes (journal, Bible Study, Dream Log) are never offered.",
-  "Priorität %lld": "Priority %lld"
+  "Priorität %lld": "Priority %lld",
+  "Wert eingeben": "Enter value",
+  "Bitte eine Zahl eingeben.": "Please enter a number.",
+  "Angepasst auf %@": "Adjusted to %@"
 }
