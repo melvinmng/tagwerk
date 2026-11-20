@@ -6716,6 +6716,16 @@
         }
       }
     },
+    "Du wählst die Zutaten aus und kannst das Rezept zusätzlich als Notiz im Ordner „Rezepte“ sichern.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You choose the ingredients and can also keep the recipe as a note in the “Recipes” folder."
+          }
+        }
+      }
+    },
     "Duplizieren": {
       "localizations": {
         "en": {
@@ -12729,6 +12739,16 @@
         }
       }
     },
+    "Nur als Rezept speichern": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save as recipe only"
+          }
+        }
+      }
+    },
     "Nur am %@": {
       "localizations": {
         "en": {
@@ -15374,6 +15394,16 @@
         }
       }
     },
+    "Tagwerk öffnen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Tagwerk"
+          }
+        }
+      }
+    },
     "Tagwerk-Block": {
       "localizations": {
         "en": {
@@ -16697,6 +16727,16 @@
         }
       }
     },
+    "Was soll mit dem Rezept geschehen?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What should happen to the recipe?"
+          }
+        }
+      }
+    },
     "Was steht heute an?": {
       "localizations": {
         "en": {
@@ -17476,6 +17516,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Period"
+          }
+        }
+      }
+    },
+    "Ziel": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Target"
           }
         }
       }

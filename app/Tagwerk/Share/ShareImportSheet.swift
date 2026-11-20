@@ -17,7 +17,8 @@ struct ShareImportSheet: View {
         case .shopping:
             ShareShoppingSheet(item: item, onFinished: finish)
         case .recipe:
-            RecipeSheet(model: environment.shopping, onFinished: { _ in finish() }, start: recipeStart, onDiscard: finish)
+            RecipeSheet(model: environment.shopping, onFinished: { _ in finish() }, start: recipeStart, onDiscard: finish,
+                        offersSaveOnly: true)
         case .mailTask:
             MailTaskFlow(model: environment.makeMailTaskModel(for: item), onFinished: finish, onDiscard: finish)
         }

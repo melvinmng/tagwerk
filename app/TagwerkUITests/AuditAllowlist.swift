@@ -194,6 +194,10 @@ enum AuditAllowlist {
             // Reason: the audit reports one clipped text without an element (frame 0×0) in the note list; nothing on the
             // screen is cut off visually. Stays on the device test list (large text). The recipe folder is a note list with the same
             // system search bar and reports the same single finding for the "UISearchBarTextField".
+            // The input of "Rezept mit ChatGPT anlegen" (text field, photos, link) reports two "Potentially inaccessible text" findings
+            // (element detection) without an element in this environment, also without the share choice; it reproduces on the code before
+            // that change; the element cannot be resolved. Stays on the device test list (VoiceOver).
+            if issue.auditType == .elementDetection { return currentScreen == "Rezept anlegen (Eingabe)" }
             guard issue.auditType == .textClipped else { return false }
             return currentScreen == "Notizenliste" || (currentScreen == "Rezepte" && issue.detailedDescription.contains("UISearchBarTextField"))
         }

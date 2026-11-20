@@ -291,3 +291,7 @@ Umgesetzt auf `feat/recipes-share` (Basis `7e1f989`). Tests laufen mit `app/test
 - „Salz nach Geschmack“ bleibt beim lokalen Lesen als Name der ganzen Zeile auf der Liste stehen.
 
 **Offene Gerätetests:** die neun Punkte unter „Gerätetests“, dazu der Spike aus Task 8 (Teilen aus dem Auswahlmenü in Safari). Ergebnis des Spikes: noch offen.
+
+### Nachtrag: Wahl beim Teilen eines Rezepts (Branch `fix/open-controls-share-recipe`)
+
+Teilt man Bilder, Text oder einen Link an Tagwerk und wählt „Rezept“, fragt das Blatt in der App zuerst: „Zutaten auf die Einkaufsliste“ oder „Nur als Rezept speichern“ (`RecipeSheet(offersSaveOnly: true)`, Auswahl als Abschnitt im `RecipeInputView`). Beide Wege lesen das Rezept mit einer ChatGPT-Anfrage und fragen dieselbe Einwilligung ab. „Nur speichern“ sendet keine Kategorienamen und führt auf die Bestätigung von „Rezept mit ChatGPT anlegen“ (`RecipeNoteSaveView`): Notiz im Ordner „Rezepte“, Einkaufsliste unverändert. „Zutaten auf die Einkaufsliste“ behält den Schalter „Auch als Rezept-Notiz sichern“ (standardmäßig an), damit beides zusammen möglich bleibt. Standard der Auswahl: „Zutaten auf die Einkaufsliste“ (bisheriges Verhalten). Das Blatt „Rezept hinzufügen“ der Einkaufsseite bleibt ohne Auswahl.
