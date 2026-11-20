@@ -16,7 +16,7 @@ struct ShareItemTextTests {
 
     // MARK: Selection shared from the selection menu
 
-    @Test func selectionWithoutURL_isTitleOnceAndBodyOnce() throws {
+    @Test func selectionWithoutURL_attachmentAndItemTextMergeIntoOneText() throws {
         // The selection arrives twice: as a plain-text attachment (with a trailing line break) and as the item's text.
         let merged = parts(providers: [.text(selection + "\n")], contentText: selection)
         let payload = try #require(SharePayload.classify(merged))

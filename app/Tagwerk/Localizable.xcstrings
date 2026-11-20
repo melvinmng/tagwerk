@@ -2321,6 +2321,7 @@
       }
     },
     "**Gesendet wird:** der Rezepttext oder das Foto und die Kategorienamen, oder der Text einer Notiz, die du ausdrücklich als Quelle wählst. Bei einem Link nur der gelesene Text der Seite, nicht die Adresse.": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -2337,6 +2338,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "**What is sent:** the recipe text or the photo and the category names. For a link, only the text read from the page, not the address."
+          }
+        }
+      }
+    },
+    "**Gesendet wird:** der Rezepttext oder die Fotos und die Kategorienamen, oder der Text einer Notiz, die du ausdrücklich als Quelle wählst. Bei einem Link nur der gelesene Text der Seite, nicht die Adresse.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "**Sent:** the recipe text or the photos and the category names, or the text of a note you explicitly choose as the source. For a link, only the text read from the page, not the address."
           }
         }
       }
@@ -15840,11 +15851,22 @@
       }
     },
     "Um ein Rezept zu lesen, sendet Tagwerk den Rezepttext oder das Foto und die Namen deiner Kategorien an ChatGPT (OpenAI), über das Konto, mit dem du angemeldet bist.": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "To read a recipe, Tagwerk sends the recipe text or the photo and the names of your categories to ChatGPT (OpenAI), through the account you are signed in with."
+          }
+        }
+      }
+    },
+    "Um ein Rezept zu lesen, sendet Tagwerk den Rezepttext oder die Fotos und die Namen deiner Kategorien an ChatGPT (OpenAI), über das Konto, mit dem du angemeldet bist.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "To read a recipe, Tagwerk sends the recipe text or the photos and the names of your categories to ChatGPT (OpenAI), through the account you are signed in with."
           }
         }
       }
@@ -19746,6 +19768,7 @@
       }
     },
     "„Rezept hinzufügen“ sendet auf dein Tippen den Rezepttext oder das Foto und die Namen deiner Kategorien, „Rezept mit ChatGPT anlegen“ nur den Rezepttext oder das Foto. Bei einem Link geht nur der gelesene Text der Seite weg, nicht die Adresse. Eine Rezept-Notiz mit Zutaten und Zubereitung liest Tagwerk auf dem iPhone. Schaltest du das aus, fragt Tagwerk beim nächsten Rezept erneut.": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -19762,6 +19785,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "“Add recipe” sends the recipe text or the photo and the names of your categories when you tap. For a link, only the text read from the page leaves the device, not the address. If you turn this off, Tagwerk asks again at the next recipe."
+          }
+        }
+      }
+    },
+    "„Rezept hinzufügen“ sendet auf dein Tippen den Rezepttext oder die Fotos und die Namen deiner Kategorien, „Rezept mit ChatGPT anlegen“ nur den Rezepttext oder die Fotos. Bei einem Link geht nur der gelesene Text der Seite weg, nicht die Adresse. Eine Rezept-Notiz mit Zutaten und Zubereitung liest Tagwerk auf dem iPhone. Schaltest du das aus, fragt Tagwerk beim nächsten Rezept erneut.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“Add recipe” sends the recipe text or the photos and the names of your categories when you tap; “Create recipe with ChatGPT” sends only the recipe text or the photos. For a link, only the text read from the page leaves, not the address. Tagwerk reads a recipe note with ingredients and instructions on the iPhone. If you turn this off, Tagwerk asks again for the next recipe."
           }
         }
       }

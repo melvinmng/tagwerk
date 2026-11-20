@@ -37,8 +37,12 @@ struct ShareNoteSheet: View {
         // of the item already (a plain page share), the title line would only repeat it.
         let linkTitle = Self.linkTitle(for: item)
         let link = NewTaskPrefill.markdownLink(title: linkTitle, url: url)
-        let title = linkTitle == item.title ? nil : parts.title
-        return [title, parts.body, link]
+        if linkTitle == item.title {
+            // The title is the page title, which the link carries. With a selection the link is the first line (it makes the
+            // title of the note) and the selection follows once; a page share without text is just the link.
+            return [link, parts.body].compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: "\n\n")
+        }
+        return [parts.title, parts.body, link]
             .compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: "\n\n")
     }
 

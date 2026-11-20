@@ -64,13 +64,15 @@ struct ShareImportTextTests {
         #expect(NewTaskPrefill.notes(text: "und mehr", url: item.url) == "und mehr\nhttps://example.com/a")
     }
 
-    @Test func selectionWithPageTitle_noteHasTheSelectionOnceAndTheLink() {
+    @Test func selectionWithPageTitle_noteIsTitledByThePageLinkAndHasTheSelectionOnce() {
         // Page title as the item's title, the selection as its text, as the extension classifies it now.
         let selection = "Ob du eine schnelle Antwort brauchst oder eine Reise planst."
         let item = ShareInboxItem(createdAt: .now, target: .note, title: "Ein guter Artikel", text: selection,
                                   url: URL(string: "https://example.com/a")!, pageTitle: "Ein guter Artikel")
         let text = ShareNoteSheet.initialText(for: item)
-        #expect(text == "\(selection)\n\n[Ein guter Artikel](https://example.com/a)")
+        // The first line of a note is its title: the page title, as the link; the selection follows once.
+        #expect(text == "[Ein guter Artikel](https://example.com/a)\n\n\(selection)")
+        #expect(NoteText.title(text) == "Ein guter Artikel")
         #expect(text.components(separatedBy: selection).count == 2)
     }
 
