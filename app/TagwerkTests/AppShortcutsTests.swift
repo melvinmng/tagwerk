@@ -6,7 +6,7 @@ import Testing
 /// `scripts/check-strings.py`; Siri's recognition itself can only be tested on a device.
 struct AppShortcutsTests {
     @Test func providerStaysWithinTheSystemLimitOfTenShortcuts() {
-        #expect(TagwerkShortcuts.appShortcuts.count == 8)
+        #expect(TagwerkShortcuts.appShortcuts.count == 10)
         #expect(TagwerkShortcuts.appShortcuts.count <= 10)
     }
 }

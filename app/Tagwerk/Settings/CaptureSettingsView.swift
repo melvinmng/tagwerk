@@ -65,6 +65,8 @@ struct CaptureSettingsView: View {
                 phrase("Auf die Einkaufsliste in Tagwerk", "Fügt Artikel hinzu, ohne Tagwerk zu öffnen")
                 phrase("Füge Milch zur Einkaufsliste in Tagwerk hinzu", "Nennt den Artikel im Satz; Siri kennt deine bisherigen Artikel")
                 phrase("Einkaufsliste in Tagwerk zeigen", "Öffnet die Einkaufsliste")
+                phrase("Fokus starten in Tagwerk", "Startet oder beendet einen freien Fokus-Timer")
+                phrase("Notiz in Tagwerk diktieren", "Öffnet Brain Dump und startet das Diktat")
                 ShortcutsLink()
             } header: {
                 Text("Siri & Kurzbefehle")

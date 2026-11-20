@@ -28,7 +28,8 @@ extension IntentServices: ControlWriting {}
 /// The focus timer as the focus control sees it.
 @MainActor
 protocol ControlFocusSwitching: AnyObject {
-    func setRunning(_ on: Bool) async
+    @discardableResult
+    func setRunning(_ on: Bool) async -> Bool
 }
 
 extension FocusTimerModel: ControlFocusSwitching {}

@@ -16,7 +16,9 @@ extension FocusTimerModel {
 
     /// The focus toggle of the control: "on" starts a free session, "off" ends the running one. Runs in the background and
     /// never opens the sheet; the session shows in the Live Activity.
-    func setRunning(_ on: Bool) async {
+    /// Returns whether something changed: a session was started or ended.
+    @discardableResult
+    func setRunning(_ on: Bool) async -> Bool {
         // The app may have been started in the background by the control; the session is then still in the store only.
         if !isRunning { await restore() }
         if on {
@@ -24,11 +26,14 @@ extension FocusTimerModel {
             // completes no task.
             if snapshot(at: now())?.phase == .finished { await stop() }
             // Running or paused already: leave it as it is (a second start would only show the sheet).
-            guard !isRunning else { return }
+            guard !isRunning else { return false }
             await start(task: nil, block: nil)
             isPresented = false
+            return true
         } else {
+            guard isRunning else { return false }
             await stop()
+            return true
         }
     }
 
