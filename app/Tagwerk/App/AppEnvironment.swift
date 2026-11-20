@@ -287,6 +287,11 @@ final class AppEnvironment {
                                                              all: reminderStore.lists().map(\.id), shopping: settings.shoppingListID)
                 return await reminderStore.completionDates(in: interval, listIDs: listIDs).count
                     + localTasks.completionDates(in: interval).count
+            },
+            // GitHub issues closed that day; `nil` while GitHub is not connected (asked at every use).
+            closedIssueCount: { [taskList] in
+                guard let gitHub = taskList.provider(for: .github) as? GitHubTaskProvider else { return nil }
+                return { interval in try await gitHub.closedIssueCount(in: interval) }
             })
         self.routineNotifications = RoutineNotificationScheduler(center: notificationCenter ?? SystemNotificationCenter(),
                                                                  store: routineStore, settings: settings)

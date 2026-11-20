@@ -7494,12 +7494,52 @@
         }
       }
     },
-    "Erledigt: Erinnerungen und lokale Aufgaben, ohne GitHub.": {
+    "Erledigt: Erinnerungen und lokale Aufgaben.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Completed: reminders and local tasks, without GitHub."
+            "value": "Completed: reminders and local tasks."
+          }
+        }
+      }
+    },
+    "Erledigt: Erinnerungen und lokale Aufgaben. GitHub ist gerade nicht erreichbar.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Completed: reminders and local tasks. GitHub cannot be reached right now."
+          }
+        }
+      }
+    },
+    "Erledigt: Erinnerungen und lokale Aufgaben. GitHub wird geladen …": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Completed: reminders and local tasks. Loading GitHub …"
+          }
+        }
+      }
+    },
+    "Erledigt: Erinnerungen, lokale Aufgaben und an diesem Tag geschlossene GitHub-Issues.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Completed: reminders, local tasks and GitHub issues closed on that day."
+          }
+        }
+      }
+    },
+    "Erledigt: Erinnerungen, lokale Aufgaben und heute geschlossene GitHub-Issues.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Completed: reminders, local tasks and GitHub issues closed today."
           }
         }
       }

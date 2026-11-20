@@ -43,7 +43,7 @@ struct EveningSheet: View {
                 } header: {
                     Text("Heute")
                 } footer: {
-                    Text("Erledigt: Erinnerungen und lokale Aufgaben, ohne GitHub.")
+                    Text(RoutinesModel.reviewFooter(review?.gitHub ?? .notConnected, isToday: day == model.today))
                 }
 
                 leftoverSection
@@ -146,7 +146,12 @@ struct EveningSheet: View {
             .navigationTitle("Tagesabschluss")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Fertig") { note.flush(); model.finishEvening(day) } } }
-            .task { review = await model.dayReview(day) }
+            .task {
+                // The local numbers show at once; the closed GitHub issues follow when GitHub answered.
+                let local = await model.dayReview(day)
+                review = local
+                review = await model.addingClosedIssues(to: local, day: day)
+            }
             .sheet(item: $journalSheet) { target in NoteEditorSheet(noteID: target.id) }
             .sheet(isPresented: $isStartingBibleStudy) {
                 BibleStudyStartSheet(store: environment.notes) { noteID in bibleSheet = JournalSheetTarget(id: noteID) }
