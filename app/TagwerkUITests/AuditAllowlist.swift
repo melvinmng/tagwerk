@@ -115,7 +115,7 @@ enum AuditAllowlist {
             "Titel", "Zutaten", "Zubereitung", "Sprachchat", "Rezepte", "Ziele", "Schätzung", "Anzeige", "Liste", "Kategorien", "Erinnerungen", "Keine",
             "Demo Einkauf", "[\\d.,]+( kcal| l)?", "Sprache für Rezepte", "In Planen anzeigen",
             "(?s)(Tagwerk wandelt Sprache|Die Sprache gilt für|Titel, Zutaten und Zubereitung eines Rezepts|Die Vorgaben sind Platzhalter|Zum Schätzen sendet).*",
-            "(?s)(Gesendet wird|Nicht gesendet werden|Um ein Rezept zu lesen).*", "(?s)„In Planen anzeigen“ zeigt .*",
+            "(?s)(Gesendet wird|Nicht gesendet werden|Um ein Rezept zu lesen).*", "(?s)„In Planen anzeigen“ zeigt .*", "Die drei Schnellknöpfe im Tab .*",
         ], screens: recipeScreens + recipeScreensLargeText, reason: "Section headers, footers, values and previews in the system grey (.secondary) on the "
             + "grouped background of a form or list; the last footer of a settings page also lies behind the tab bar. Same group as the "
             + "grey texts above; darkening it would change the look of the default size, decided in #188."),
