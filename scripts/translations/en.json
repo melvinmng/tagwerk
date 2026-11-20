@@ -1926,5 +1926,7 @@
   "Öffnet die Einkaufsliste.": "Opens the shopping list.",
   "Öffnet eine neue Notiz in Brain Dump und startet das Diktat.": "Opens a new note in Brain Dump and starts dictation.",
   "Öffnet morgens den Tagesstart, sonst den Tagesabschluss.": "Opens the morning start before noon, the evening wrap-up otherwise.",
-  "Menge (ml)": "Amount (ml)"
+  "Menge (ml)": "Amount (ml)",
+  "Zubereitung": "Instructions",
+  "Portionen": "Servings"
 }
