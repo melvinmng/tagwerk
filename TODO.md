@@ -110,45 +110,52 @@ GitHub-Konto: @melvinmng · bestätigt zuweisbar · geprüft 2026-11-17 · ich
 - [x] [#124](https://github.com/melvinmng/tagwerk/issues/124) App auf Englisch (Sprache folgt dem iPhone) {status: Done; prio: P3 (Medium); aufwand: 8h}
 - [ ] [#134](https://github.com/melvinmng/tagwerk/issues/134) Tage und Wochen in „Planen“ und „Erfassen“ als mitziehbare Seiten blättern (Finger zieht den Nachbartag mit) {status: In review; prio: P4 (Low)}
 - [x] [#136](https://github.com/melvinmng/tagwerk/issues/136) GitHub-Issues beim Anlegen an andere Teilnehmer des gewählten Projects vergeben (Teilnehmer je Project abrufen) {status: Done; prio: P4 (Low)}
-- [ ] [#140](https://github.com/melvinmng/tagwerk/issues/140) Phase 7: Routinen und Gewohnheiten einbinden {status: In review; prio: P3 (Medium)}
-- [ ] [#141](https://github.com/melvinmng/tagwerk/issues/141) Gewohnheiten täglich abhaken und Quoten zeigen {status: In review; prio: P3 (Medium); aufwand: 16h; epic: #140}
-- [ ] [#142](https://github.com/melvinmng/tagwerk/issues/142) Tagesabschluss mit Schlaf-Checkliste und Erinnerungen {status: In review; prio: P3 (Medium); aufwand: 8h; epic: #140}
-- [ ] [#143](https://github.com/melvinmng/tagwerk/issues/143) Gedanken-Notiz in Aufgaben und Planänderungen umwandeln {status: In review; prio: P3 (Medium); aufwand: 8h; epic: #140}
-- [ ] [#144](https://github.com/melvinmng/tagwerk/issues/144) Wochenreflexion im Wochenrückblick ergänzen {status: In review; prio: P3 (Medium); aufwand: 4h; epic: #140}
-- [ ] [#145](https://github.com/melvinmng/tagwerk/issues/145) Tagesstart mit Dankbarkeit und Tagesfokus {status: In review; prio: P3 (Medium); aufwand: 6h; epic: #140}
-- [ ] [#146](https://github.com/melvinmng/tagwerk/issues/146) Leitfragen zur Reflexion als optionale Vorlage {status: In review; prio: P3 (Medium); aufwand: 3h; epic: #140}
-- [ ] [#150](https://github.com/melvinmng/tagwerk/issues/150) Einkaufsliste: Rezept hochladen (Foto, Text oder Link) und die nötigen Zutaten per ChatGPT als Artikel hinzufügen {status: In review; prio: P3 (Medium); epic: #113}
-- [ ] [#156](https://github.com/melvinmng/tagwerk/issues/156) Einkaufsliste: alle erledigten Artikel auf einmal löschen und die gesamte Liste leeren {status: In review; prio: P3 (Medium); epic: #113}
+- [x] [#140](https://github.com/melvinmng/tagwerk/issues/140) Phase 7: Routinen und Gewohnheiten einbinden {status: Done; prio: P3 (Medium)}
+- [x] [#141](https://github.com/melvinmng/tagwerk/issues/141) Gewohnheiten täglich abhaken und Quoten zeigen {status: Done; prio: P3 (Medium); aufwand: 16h; epic: #140}
+- [x] [#142](https://github.com/melvinmng/tagwerk/issues/142) Tagesabschluss mit Schlaf-Checkliste und Erinnerungen {status: Done; prio: P3 (Medium); aufwand: 8h; epic: #140}
+- [x] [#143](https://github.com/melvinmng/tagwerk/issues/143) Gedanken-Notiz in Aufgaben und Planänderungen umwandeln {status: Done; prio: P3 (Medium); aufwand: 8h; epic: #140}
+- [x] [#144](https://github.com/melvinmng/tagwerk/issues/144) Wochenreflexion im Wochenrückblick ergänzen {status: Done; prio: P3 (Medium); aufwand: 4h; epic: #140}
+- [x] [#145](https://github.com/melvinmng/tagwerk/issues/145) Tagesstart mit Dankbarkeit und Tagesfokus {status: Done; prio: P3 (Medium); aufwand: 6h; epic: #140}
+- [x] [#146](https://github.com/melvinmng/tagwerk/issues/146) Leitfragen zur Reflexion als optionale Vorlage {status: Done; prio: P3 (Medium); aufwand: 3h; epic: #140}
+- [x] [#150](https://github.com/melvinmng/tagwerk/issues/150) Einkaufsliste: Rezept hochladen (Foto, Text oder Link) und die nötigen Zutaten per ChatGPT als Artikel hinzufügen {status: Done; prio: P3 (Medium); epic: #113}
+- [x] [#156](https://github.com/melvinmng/tagwerk/issues/156) Einkaufsliste: alle erledigten Artikel auf einmal löschen und die gesamte Liste leeren {status: Done; prio: P3 (Medium); epic: #113}
 - [ ] [#151](https://github.com/melvinmng/tagwerk/issues/151) Flexible und mehrfache Erinnerungen für Aufgaben, Deadlines und Kalendertermine (beliebig viele, frei wählbare Zeitpunkte; bei Serien „Nur dieser / Alle folgenden“) {status: In review; prio: P3 (Medium)}
-- [ ] [#157](https://github.com/melvinmng/tagwerk/issues/157) Tagesansicht in „Planen“: Markierung der aktuellen Uhrzeit im Ablauf, die sich selbst aktualisiert {status: In review; prio: P3 (Medium)}
+- [x] [#157](https://github.com/melvinmng/tagwerk/issues/157) Tagesansicht in „Planen“: Markierung der aktuellen Uhrzeit im Ablauf, die sich selbst aktualisiert {status: Done; prio: P3 (Medium)}
 - [x] [#152](https://github.com/melvinmng/tagwerk/issues/152) Notizen ausbauen: Ordner, Verschieben, Löschen und mindestens der Funktionsumfang von Apple Notizen {status: Done; prio: P3 (Medium); epic: #113}
-- [ ] [#155](https://github.com/melvinmng/tagwerk/issues/155) Notizen: Markdown, HTML, Bilder und Dateianhänge {status: In review; prio: P3 (Medium); epic: #113}
+- [x] [#155](https://github.com/melvinmng/tagwerk/issues/155) Notizen: Markdown, HTML, Bilder und Dateianhänge {status: Done; prio: P3 (Medium); epic: #113}
 - [x] [#153](https://github.com/melvinmng/tagwerk/issues/153) GitHub-Issue in einem Repository ohne Project anlegen {status: Done; prio: P2 (High)}
 - [x] [#154](https://github.com/melvinmng/tagwerk/issues/154) Status von GitHub-Issues einstellen (Stufen aus dem jeweiligen Project) {status: Done; prio: P2 (High)}
 - [x] [#158](https://github.com/melvinmng/tagwerk/issues/158) Datensicherung und iCloud-Abgleich für lokale Daten {status: Done; prio: P2 (High)}
-- [ ] [#159](https://github.com/melvinmng/tagwerk/issues/159) UI-Tests für die Hauptwege {status: Ready; prio: P3 (Medium)}
-- [ ] [#160](https://github.com/melvinmng/tagwerk/issues/160) Barrierefreiheit und große Schrift prüfen {status: Backlog; prio: P4 (Low)}
+- [ ] [#159](https://github.com/melvinmng/tagwerk/issues/159) UI-Tests für die Hauptwege {status: In review; prio: P3 (Medium)}
+- [ ] [#160](https://github.com/melvinmng/tagwerk/issues/160) Barrierefreiheit und große Schrift prüfen {status: In review; prio: P4 (Low)}
 - [ ] [#161](https://github.com/melvinmng/tagwerk/issues/161) Fokus-Modus: Timer, Pomodoro, App-Sperre und Belohnung {status: Blocked; prio: P3 (Medium)}
 - [ ] [#162](https://github.com/melvinmng/tagwerk/issues/162) Ist-Aufwand gegen Schätzung auswerten {status: In review; prio: P3 (Medium)}
-- [ ] [#163](https://github.com/melvinmng/tagwerk/issues/163) Unerledigtes am Abend mit einem Tipp verschieben {status: In review; prio: P3 (Medium)}
-- [ ] [#164](https://github.com/melvinmng/tagwerk/issues/164) Wochenplanung als geführter Ablauf {status: In review; prio: P3 (Medium)}
+- [x] [#163](https://github.com/melvinmng/tagwerk/issues/163) Unerledigtes am Abend mit einem Tipp verschieben {status: Done; prio: P3 (Medium)}
+- [x] [#164](https://github.com/melvinmng/tagwerk/issues/164) Wochenplanung als geführter Ablauf {status: Done; prio: P3 (Medium)}
 - [ ] [#165](https://github.com/melvinmng/tagwerk/issues/165) Teilen-Erweiterung: aus anderen Apps in Tagwerk übernehmen {status: In review; prio: P3 (Medium)}
 - [ ] [#166](https://github.com/melvinmng/tagwerk/issues/166) Mail zu Aufgabe mit KI-Zusammenfassung {status: In review; prio: P3 (Medium)}
-- [ ] [#167](https://github.com/melvinmng/tagwerk/issues/167) Steuerelemente im Kontrollzentrum und auf der Aktionstaste {status: Backlog; prio: P3 (Medium)}
+- [ ] [#167](https://github.com/melvinmng/tagwerk/issues/167) Steuerelemente im Kontrollzentrum und auf der Aktionstaste {status: In review; prio: P3 (Medium)}
 - [ ] [#168](https://github.com/melvinmng/tagwerk/issues/168) Fahrzeit zwischen Terminen berücksichtigen {status: In review; prio: P3 (Medium)}
 - [x] [#169](https://github.com/melvinmng/tagwerk/issues/169) Ruhezeiten für Benachrichtigungen {status: Done; prio: P3 (Medium)}
 - [ ] [#170](https://github.com/melvinmng/tagwerk/issues/170) Apple Watch: Komplikation „Als Nächstes“ und Abhaken {status: Backlog; prio: P4 (Low)}
 - [ ] [#173](https://github.com/melvinmng/tagwerk/issues/173) Designrunde zu PR #172: Befunde der Sichtprüfung und offene Entscheidungen {status: Ready; prio: P3 (Medium)}
-- [ ] [#175](https://github.com/melvinmng/tagwerk/issues/175) Gerätetests der Suche {status: Ready; prio: P3 (Medium)}
+- [x] [#175](https://github.com/melvinmng/tagwerk/issues/175) Gerätetests der Suche {status: Done; prio: P3 (Medium)}
 - [x] [#177](https://github.com/melvinmng/tagwerk/issues/177) Tagesabschluss: Tastatur der Gedanken-Notiz lässt sich nicht schließen {status: Done; prio: P3 (Medium)}
 - [x] [#178](https://github.com/melvinmng/tagwerk/issues/178) Siri-Kurzbefehle der Einkaufsliste werden nicht erkannt {status: Done; prio: P4 (Low)}
-- [ ] [#180](https://github.com/melvinmng/tagwerk/issues/180) Notizen: Tagesstart und Tagesabschluss in eigenen Ordnern {status: In review; prio: P3 (Medium); epic: #113}
+- [x] [#180](https://github.com/melvinmng/tagwerk/issues/180) Notizen: Tagesstart und Tagesabschluss in eigenen Ordnern {status: Done; prio: P3 (Medium); epic: #113}
 - [x] [#181](https://github.com/melvinmng/tagwerk/issues/181) Gewohnheiten: Vorschlag aus dem früheren Notion-Tracker übernehmen {status: Done; prio: P3 (Medium); epic: #140}
 - [x] [#182](https://github.com/melvinmng/tagwerk/issues/182) Tagebuch mit Gott aus Notion übernehmen {status: Done; prio: P3 (Medium); epic: #113}
 - [x] [#184](https://github.com/melvinmng/tagwerk/issues/184) Tastatur überall in der App per Tipp auf eine leere Fläche schließen {status: Done; prio: P3 (Medium)}
 - [x] [#186](https://github.com/melvinmng/tagwerk/issues/186) Bible Study in Tagwerk: Ablauf und Struktur aus Notion übernehmen {status: Done; prio: P3 (Medium)}
 - [ ] [#188](https://github.com/melvinmng/tagwerk/issues/188) Designrunde nach der technischen Umsetzung: Tastatur, Siri, GitHub-Status, Ruhezeiten, Notizen, Tagebuch, Bible Study, Gewohnheiten, Datensicherung {status: Backlog; prio: P3 (Medium)}
-- [ ] [#200](https://github.com/melvinmng/tagwerk/issues/200) test {status: Ready; prio: P4 (Low); fällig: 2026-11-19}
+- [x] [#200](https://github.com/melvinmng/tagwerk/issues/200) test {status: Done; prio: P4 (Low); fällig: 2026-11-19}
+- [ ] [#214](https://github.com/melvinmng/tagwerk/issues/214) Rezepte als Notizen mit Zutaten und Anleitung {status: In review; prio: P3 (Medium); epic: #113}
+- [ ] [#215](https://github.com/melvinmng/tagwerk/issues/215) Portionszahl beim Rezept-Import {status: In review; prio: P3 (Medium); epic: #113}
+- [ ] [#216](https://github.com/melvinmng/tagwerk/issues/216) Rezept-Zutaten in die Sprache der App übersetzen {status: In review; prio: P3 (Medium); epic: #113}
+- [ ] [#217](https://github.com/melvinmng/tagwerk/issues/217) Geteilter Text aus Safari: Adresse der Seite verlinken {status: In review; prio: P3 (Medium)}
+- [ ] [#218](https://github.com/melvinmng/tagwerk/issues/218) Zahlenfelder auch per Eingabe statt nur mit Plus und Minus {status: In review; prio: P3 (Medium)}
+- [ ] [#225](https://github.com/melvinmng/tagwerk/issues/225) Chat mit ChatGPT: Markdown und HTML richtig darstellen {status: In review; prio: P3 (Medium)}
+- [ ] [#226](https://github.com/melvinmng/tagwerk/issues/226) Bevorzugte Sprache für den Sprachchat mit ChatGPT {status: In review; prio: P3 (Medium)}
 
 ## Notizen
 
@@ -157,41 +164,32 @@ GitHub-Konto: @melvinmng · bestätigt zuweisbar · geprüft 2026-11-17 · ich
 
 _Automatisch aus [Tagwerk](https://github.com/users/melvinmng/projects/17) erzeugt. Nicht von Hand bearbeiten; Aufgaben oben unter den Personen pflegen._
 
-### Backlog (5)
+### Backlog (3)
 - [#115](https://github.com/melvinmng/tagwerk/issues/115) Phase 6: Jira als Aufgabenquelle anbinden · @melvinmng · Prio P4 (Low)
-- [#160](https://github.com/melvinmng/tagwerk/issues/160) Barrierefreiheit und große Schrift prüfen · @melvinmng · Prio P4 (Low)
-- [#167](https://github.com/melvinmng/tagwerk/issues/167) Steuerelemente im Kontrollzentrum und auf der Aktionstaste · @melvinmng · Prio P3 (Medium)
 - [#170](https://github.com/melvinmng/tagwerk/issues/170) Apple Watch: Komplikation „Als Nächstes“ und Abhaken · @melvinmng · Prio P4 (Low)
 - [#188](https://github.com/melvinmng/tagwerk/issues/188) Designrunde nach der technischen Umsetzung: Tastatur, Siri, GitHub-Status, Ruhezeiten, Notizen, Tagebuch, Bible Study, Gewohnheiten, Datensicherung · @melvinmng · Prio P3 (Medium)
 
-### Bereit (4)
-- [#159](https://github.com/melvinmng/tagwerk/issues/159) UI-Tests für die Hauptwege · @melvinmng · Prio P3 (Medium)
+### Bereit (1)
 - [#173](https://github.com/melvinmng/tagwerk/issues/173) Designrunde zu PR #172: Befunde der Sichtprüfung und offene Entscheidungen · @melvinmng · Prio P3 (Medium)
-- [#175](https://github.com/melvinmng/tagwerk/issues/175) Gerätetests der Suche · @melvinmng · Prio P3 (Medium)
-- [#200](https://github.com/melvinmng/tagwerk/issues/200) test · @melvinmng · Prio P4 (Low) · fällig 2026-11-19
 
-### In Prüfung (21)
+### In Prüfung (17)
 - [#113](https://github.com/melvinmng/tagwerk/issues/113) Phase 5: Einkaufsliste und Notizen einbinden · @melvinmng · Prio P3 (Medium)
 - [#134](https://github.com/melvinmng/tagwerk/issues/134) Tage und Wochen in „Planen“ und „Erfassen“ als mitziehbare Seiten blättern (Finger zieht den Nachbartag mit) · @melvinmng · Prio P4 (Low)
-- [#140](https://github.com/melvinmng/tagwerk/issues/140) Phase 7: Routinen und Gewohnheiten einbinden · @melvinmng · Prio P3 (Medium)
-- [#141](https://github.com/melvinmng/tagwerk/issues/141) Gewohnheiten täglich abhaken und Quoten zeigen · @melvinmng · Prio P3 (Medium) · 16h
-- [#142](https://github.com/melvinmng/tagwerk/issues/142) Tagesabschluss mit Schlaf-Checkliste und Erinnerungen · @melvinmng · Prio P3 (Medium) · 8h
-- [#143](https://github.com/melvinmng/tagwerk/issues/143) Gedanken-Notiz in Aufgaben und Planänderungen umwandeln · @melvinmng · Prio P3 (Medium) · 8h
-- [#144](https://github.com/melvinmng/tagwerk/issues/144) Wochenreflexion im Wochenrückblick ergänzen · @melvinmng · Prio P3 (Medium) · 4h
-- [#145](https://github.com/melvinmng/tagwerk/issues/145) Tagesstart mit Dankbarkeit und Tagesfokus · @melvinmng · Prio P3 (Medium) · 6h
-- [#146](https://github.com/melvinmng/tagwerk/issues/146) Leitfragen zur Reflexion als optionale Vorlage · @melvinmng · Prio P3 (Medium) · 3h
-- [#150](https://github.com/melvinmng/tagwerk/issues/150) Einkaufsliste: Rezept hochladen und Zutaten per ChatGPT hinzufügen · @melvinmng · Prio P3 (Medium)
 - [#151](https://github.com/melvinmng/tagwerk/issues/151) Flexible und mehrfache Erinnerungen für Aufgaben, Deadlines und Kalendertermine · @melvinmng · Prio P3 (Medium)
-- [#155](https://github.com/melvinmng/tagwerk/issues/155) Notizen: Markdown, HTML, Bilder und Dateianhänge · @melvinmng · Prio P3 (Medium)
-- [#156](https://github.com/melvinmng/tagwerk/issues/156) Einkaufsliste: alle erledigten Artikel löschen und die ganze Liste leeren · @melvinmng · Prio P3 (Medium)
-- [#157](https://github.com/melvinmng/tagwerk/issues/157) Tagesansicht: aktuelle Uhrzeit im Ablauf markieren · @melvinmng · Prio P3 (Medium)
+- [#159](https://github.com/melvinmng/tagwerk/issues/159) UI-Tests für die Hauptwege · @melvinmng · Prio P3 (Medium)
+- [#160](https://github.com/melvinmng/tagwerk/issues/160) Barrierefreiheit und große Schrift prüfen · @melvinmng · Prio P4 (Low)
 - [#162](https://github.com/melvinmng/tagwerk/issues/162) Ist-Aufwand gegen Schätzung auswerten · @melvinmng · Prio P3 (Medium)
-- [#163](https://github.com/melvinmng/tagwerk/issues/163) Unerledigtes am Abend mit einem Tipp verschieben · @melvinmng · Prio P3 (Medium)
-- [#164](https://github.com/melvinmng/tagwerk/issues/164) Wochenplanung als geführter Ablauf · @melvinmng · Prio P3 (Medium)
 - [#165](https://github.com/melvinmng/tagwerk/issues/165) Teilen-Erweiterung: aus anderen Apps in Tagwerk übernehmen · @melvinmng · Prio P3 (Medium)
 - [#166](https://github.com/melvinmng/tagwerk/issues/166) Mail zu Aufgabe mit KI-Zusammenfassung · @melvinmng · Prio P3 (Medium)
+- [#167](https://github.com/melvinmng/tagwerk/issues/167) Steuerelemente im Kontrollzentrum und auf der Aktionstaste · @melvinmng · Prio P3 (Medium)
 - [#168](https://github.com/melvinmng/tagwerk/issues/168) Fahrzeit zwischen Terminen berücksichtigen · @melvinmng · Prio P3 (Medium)
-- [#180](https://github.com/melvinmng/tagwerk/issues/180) Notizen: Tagesstart und Tagesabschluss in eigenen Ordnern · @melvinmng · Prio P3 (Medium)
+- [#214](https://github.com/melvinmng/tagwerk/issues/214) Rezepte als Notizen mit Zutaten und Anleitung · @melvinmng · Prio P3 (Medium)
+- [#215](https://github.com/melvinmng/tagwerk/issues/215) Portionszahl beim Rezept-Import · @melvinmng · Prio P3 (Medium)
+- [#216](https://github.com/melvinmng/tagwerk/issues/216) Rezept-Zutaten in die Sprache der App übersetzen · @melvinmng · Prio P3 (Medium)
+- [#217](https://github.com/melvinmng/tagwerk/issues/217) Geteilter Text aus Safari: Adresse der Seite verlinken · @melvinmng · Prio P3 (Medium)
+- [#218](https://github.com/melvinmng/tagwerk/issues/218) Zahlenfelder auch per Eingabe statt nur mit Plus und Minus · @melvinmng · Prio P3 (Medium)
+- [#225](https://github.com/melvinmng/tagwerk/issues/225) Chat mit ChatGPT: Markdown und HTML richtig darstellen · @melvinmng · Prio P3 (Medium)
+- [#226](https://github.com/melvinmng/tagwerk/issues/226) Bevorzugte Sprache für den Sprachchat mit ChatGPT · @melvinmng · Prio P3 (Medium)
 
 ### Blockiert (1)
 - [#161](https://github.com/melvinmng/tagwerk/issues/161) Fokus-Modus: Timer, Pomodoro, App-Sperre und Belohnung · @melvinmng · Prio P3 (Medium)
@@ -199,14 +197,14 @@ _Automatisch aus [Tagwerk](https://github.com/users/melvinmng/projects/17) erzeu
 ### Nicht zugeordnet (0)
 
 ### Zuletzt erledigt (10)
-- [#186](https://github.com/melvinmng/tagwerk/issues/186) Bible Study in Tagwerk: Ablauf und Struktur aus Notion übernehmen · @melvinmng
-- [#184](https://github.com/melvinmng/tagwerk/issues/184) Tastatur überall in der App per Tipp auf eine leere Fläche schließen · @melvinmng
-- [#182](https://github.com/melvinmng/tagwerk/issues/182) Tagebuch mit Gott aus Notion übernehmen · @melvinmng
-- [#181](https://github.com/melvinmng/tagwerk/issues/181) Gewohnheiten: Vorschlag aus dem früheren Notion-Tracker übernehmen · @melvinmng
-- [#178](https://github.com/melvinmng/tagwerk/issues/178) Siri-Kurzbefehle der Einkaufsliste werden nicht erkannt · @melvinmng
-- [#177](https://github.com/melvinmng/tagwerk/issues/177) Tagesabschluss: Tastatur der Gedanken-Notiz lässt sich nicht schließen · @melvinmng
-- [#169](https://github.com/melvinmng/tagwerk/issues/169) Ruhezeiten für Benachrichtigungen · @melvinmng
-- [#158](https://github.com/melvinmng/tagwerk/issues/158) Datensicherung und iCloud-Abgleich für lokale Daten · @melvinmng
-- [#154](https://github.com/melvinmng/tagwerk/issues/154) Status von GitHub-Issues einstellen (Stufen aus dem jeweiligen Project) · @melvinmng
-- [#153](https://github.com/melvinmng/tagwerk/issues/153) GitHub-Issue in einem Repository ohne Project anlegen · @melvinmng
+- [#140](https://github.com/melvinmng/tagwerk/issues/140) Phase 7: Routinen und Gewohnheiten einbinden · @melvinmng
+- [#175](https://github.com/melvinmng/tagwerk/issues/175) Gerätetests der Suche · @melvinmng
+- [#200](https://github.com/melvinmng/tagwerk/issues/200) test · @melvinmng
+- [#180](https://github.com/melvinmng/tagwerk/issues/180) Notizen: Tagesstart und Tagesabschluss in eigenen Ordnern · @melvinmng
+- [#157](https://github.com/melvinmng/tagwerk/issues/157) Tagesansicht: aktuelle Uhrzeit im Ablauf markieren · @melvinmng
+- [#156](https://github.com/melvinmng/tagwerk/issues/156) Einkaufsliste: alle erledigten Artikel löschen und die ganze Liste leeren · @melvinmng
+- [#155](https://github.com/melvinmng/tagwerk/issues/155) Notizen: Markdown, HTML, Bilder und Dateianhänge · @melvinmng
+- [#150](https://github.com/melvinmng/tagwerk/issues/150) Einkaufsliste: Rezept hochladen und Zutaten per ChatGPT hinzufügen · @melvinmng
+- [#164](https://github.com/melvinmng/tagwerk/issues/164) Wochenplanung als geführter Ablauf · @melvinmng
+- [#163](https://github.com/melvinmng/tagwerk/issues/163) Unerledigtes am Abend mit einem Tipp verschieben · @melvinmng
 <!-- t3gh:end -->
