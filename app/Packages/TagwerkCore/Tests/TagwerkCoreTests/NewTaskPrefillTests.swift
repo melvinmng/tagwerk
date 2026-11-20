@@ -5,6 +5,24 @@ import Testing
 struct NewTaskPrefillTests {
     private let link = URL(string: "https://example.com/artikel")!
 
+    @Test func markdownLink_writesTitleAndAddress() {
+        #expect(NewTaskPrefill.markdownLink(title: "Ein guter Artikel", url: link) == "[Ein guter Artikel](https://example.com/artikel)")
+        #expect(NewTaskPrefill.markdownLink(title: "  Zwei\nZeilen ", url: link) == "[Zwei Zeilen](https://example.com/artikel)")
+    }
+
+    @Test func markdownLink_hostWhenNoTitle() {
+        let www = URL(string: "https://www.example.com/a/b?x=1")!
+        #expect(NewTaskPrefill.markdownLink(title: nil, url: www) == "[example.com](https://www.example.com/a/b?x=1)")
+        #expect(NewTaskPrefill.markdownLink(title: "  \n ", url: link) == "[example.com](https://example.com/artikel)")
+    }
+
+    @Test func markdownLink_escapesBrackets() {
+        #expect(NewTaskPrefill.markdownLink(title: "Teil [1] von \\2", url: link) == "[Teil \\[1\\] von \\\\2](https://example.com/artikel)")
+        // Parentheses and spaces of the address would end the link early.
+        let odd = URL(string: "https://example.com/Seite_(Begriff)?a=b%20c")!
+        #expect(NewTaskPrefill.markdownLink(title: "Seite", url: odd) == "[Seite](https://example.com/Seite_%28Begriff%29?a=b%20c)")
+    }
+
     @Test func notes_appendURLOnOwnLine() {
         #expect(NewTaskPrefill.notes(text: " Zum Lesen\n", url: link) == "Zum Lesen\nhttps://example.com/artikel")
         // A link that is already in the text is not repeated.

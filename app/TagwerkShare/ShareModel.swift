@@ -88,7 +88,7 @@ final class ShareModel {
         if mail != nil, target == .mailTask { mail?.subject = cleanTitle }
         let item = ShareInboxItem(
             createdAt: Date(), target: target, title: cleanTitle, text: cleanText.isEmpty ? nil : cleanText,
-            url: payload.url, mail: mail)
+            url: payload.url, pageTitle: payload.pageTitle, mail: mail)
         let sources = (target == .note || target == .recipe) ? extracted.files : []
         let inbox = ShareInbox(directory: directory)
         do {

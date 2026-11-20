@@ -23,6 +23,29 @@ struct SharePayloadTests {
         #expect(payload?.text == nil)
     }
 
+    @Test func textWithURL_becomesURLKindWithText() {
+        // Safari with the preprocessing script: the address, the page title and the selected text.
+        let payload = SharePayload.classify([.url(page), .pageTitle("Ein guter Artikel"), .text("Der markierte Absatz\nmit zwei Zeilen")])
+        #expect(payload?.kind == .url && payload?.url == page)
+        #expect(payload?.text == "Der markierte Absatz\nmit zwei Zeilen" && payload?.title == "Der markierte Absatz")
+        #expect(payload?.pageTitle == "Ein guter Artikel")
+    }
+
+    @Test func pageTitle_withoutSelection_isTheTitle_notTheText() {
+        // Safari also hands the page title over as text; it is not a second text.
+        let payload = SharePayload.classify([.url(page), .pageTitle("Ein guter Artikel"), .text("Ein guter Artikel")])
+        #expect(payload?.title == "Ein guter Artikel" && payload?.text == nil && payload?.pageTitle == "Ein guter Artikel")
+        #expect(SharePayload.classify([.url(page), .pageTitle("  ")])?.title == "example.com")
+        #expect(SharePayload.classify([.url(page), .pageTitle("  ")])?.pageTitle == nil)
+        // Without a page title nothing changes.
+        #expect(SharePayload.classify([.url(page), .text("Ein guter Artikel")])?.pageTitle == nil)
+    }
+
+    @Test func pageTitle_withoutURL_isIgnored() {
+        #expect(SharePayload.classify([.pageTitle("Titel")]) == nil)
+        #expect(SharePayload.classify([.pageTitle("Titel"), .text("Nur Text")])?.kind == .text)
+    }
+
     @Test func emlFile_isMail() {
         let byType = SharePayload.classify([.file(typeIdentifier: "com.apple.mail.email", name: "Angebot.eml", byteCount: 900)])
         #expect(byType?.kind == .mail)

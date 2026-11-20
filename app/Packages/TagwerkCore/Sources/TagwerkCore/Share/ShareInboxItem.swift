@@ -28,13 +28,15 @@ public struct ShareInboxItem: Sendable, Hashable, Codable, Identifiable {
     public var title: String
     public var text: String?
     public var url: URL?
+    /// The title of the web page a link came from (Safari); `nil` for items that carry none, also for older ones.
+    public var pageTitle: String?
     public var files: [ShareInboxFile]
     public var mail: MailMessage?
     /// How often the app opened the sheet for this item; after `ShareInbox.maximumOffers` it is only listed.
     public var offeredCount: Int
 
     public init(id: UUID = UUID(), createdAt: Date, target: ShareTarget, title: String, text: String? = nil, url: URL? = nil,
-                files: [ShareInboxFile] = [], mail: MailMessage? = nil, offeredCount: Int = 0) {
+                pageTitle: String? = nil, files: [ShareInboxFile] = [], mail: MailMessage? = nil, offeredCount: Int = 0) {
         self.version = Self.currentVersion
         self.id = id
         self.createdAt = createdAt
@@ -42,6 +44,7 @@ public struct ShareInboxItem: Sendable, Hashable, Codable, Identifiable {
         self.title = title
         self.text = text
         self.url = url
+        self.pageTitle = pageTitle
         self.files = files
         self.mail = mail
         self.offeredCount = offeredCount

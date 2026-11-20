@@ -10,6 +10,8 @@ public enum ShareTarget: String, Sendable, Hashable, Codable, CaseIterable {
 public enum SharePart: Sendable, Hashable {
     case text(String)
     case url(URL)
+    /// The title of the web page a share came from (the Safari preprocessing script delivers it): the text of a link to it.
+    case pageTitle(String)
     /// A file already copied by the extension. `typeIdentifier` is the UTI the provider registered.
     case file(typeIdentifier: String, name: String, byteCount: Int)
 }
@@ -24,18 +26,22 @@ public struct SharePayload: Sendable, Hashable {
     public var title: String
     public var text: String?
     public var url: URL?
+    /// The title of the web page the item came from, when the sender told it (Safari). The title of the item can be the
+    /// first line of a selection instead.
+    public var pageTitle: String?
     public var fileNames: [String]
     /// Set by the extension after it parsed a shared `.eml`; the classification only recognizes the file.
     public var mail: MailMessage?
 
     public static let maximumTitleLength = 120
 
-    public init(kind: Kind, title: String, text: String? = nil, url: URL? = nil, fileNames: [String] = [],
+    public init(kind: Kind, title: String, text: String? = nil, url: URL? = nil, pageTitle: String? = nil, fileNames: [String] = [],
                 mail: MailMessage? = nil) {
         self.kind = kind
         self.title = title
         self.text = text
         self.url = url
+        self.pageTitle = pageTitle
         self.fileNames = fileNames
         self.mail = mail
     }
@@ -46,6 +52,7 @@ public struct SharePayload: Sendable, Hashable {
     public static func classify(_ parts: [SharePart]) -> SharePayload? {
         var texts: [String] = []
         var webURL: URL?
+        var pageTitle: String?
         var files: [(type: String, name: String)] = []
         for part in parts {
             switch part {
@@ -54,6 +61,9 @@ public struct SharePayload: Sendable, Hashable {
                 if !trimmed.isEmpty { texts.append(trimmed) }
             case .url(let value):
                 if webURL == nil, isWebURL(value) { webURL = value }
+            case .pageTitle(let value):
+                let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
+                if pageTitle == nil, !trimmed.isEmpty { pageTitle = trimmed }
             case .file(let type, let name, _):
                 files.append((type, name))
             }
@@ -69,10 +79,11 @@ public struct SharePayload: Sendable, Hashable {
         // 2. A web link; text shared with it (Safari adds the page title) becomes the title.
         if let webURL {
             let link = webURL.absoluteString
-            let extra = texts.filter { $0 != link }
+            let extra = texts.filter { $0 != link && $0 != pageTitle }
             let joined = extra.isEmpty ? nil : extra.joined(separator: "\n")
-            let title = joined.flatMap(firstLine) ?? host(of: webURL)
-            return SharePayload(kind: .url, title: cut(title), text: joined, url: webURL, fileNames: fileNames)
+            let title = joined.flatMap(firstLine) ?? pageTitle ?? host(of: webURL)
+            return SharePayload(kind: .url, title: cut(title), text: joined, url: webURL, pageTitle: pageTitle.map(cut),
+                                fileNames: fileNames)
         }
         // 3. Files: the first one decides for mixed content.
         if let first = files.first {

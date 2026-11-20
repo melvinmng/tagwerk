@@ -115,8 +115,10 @@ targets:
           NSExtensionPointIdentifier: com.apple.share-services
           NSExtensionPrincipalClass: $(PRODUCT_MODULE_NAME).ShareViewController
           NSExtensionAttributes:
+            NSExtensionJavaScriptPreprocessingFile: SafariPreprocessing
             NSExtensionActivationRule:
               NSExtensionActivationSupportsWebURLWithMaxCount: 1
+              NSExtensionActivationSupportsWebPageWithMaxCount: 1
               NSExtensionActivationSupportsText: true
               NSExtensionActivationSupportsImageWithMaxCount: 5
               NSExtensionActivationSupportsFileWithMaxCount: 5

@@ -11,6 +11,24 @@ public enum NewTaskPrefill {
         return body.isEmpty ? link : body + "\n" + link
     }
 
+    /// The link as Markdown, "[Titel](https://…)", for a note: it renders as a tappable title. Without a title the host stands
+    /// there. Brackets and backslashes of the title are escaped, line breaks become spaces, and brackets and spaces of the
+    /// address are written as escapes, so the link cannot end early. A task keeps the raw address (`notes(text:url:)`),
+    /// because the notes of a task do not render Markdown.
+    public static func markdownLink(title: String?, url: URL) -> String {
+        let host = url.host(percentEncoded: false).map { $0.hasPrefix("www.") ? String($0.dropFirst(4)) : $0 } ?? url.absoluteString
+        let cleaned = (title ?? "").split(whereSeparator: \.isNewline).joined(separator: " ").trimmingCharacters(in: .whitespaces)
+        let label = (cleaned.isEmpty ? host : cleaned)
+            .replacingOccurrences(of: "\\", with: "\\\\")
+            .replacingOccurrences(of: "[", with: "\\[")
+            .replacingOccurrences(of: "]", with: "\\]")
+        let address = url.absoluteString
+            .replacingOccurrences(of: " ", with: "%20")
+            .replacingOccurrences(of: "(", with: "%28")
+            .replacingOccurrences(of: ")", with: "%29")
+        return "[\(label)](\(address))"
+    }
+
     /// The notes for shared text: the text without a first line that is the title already. `nil` when nothing is left.
     public static func sharedNotes(title: String, text: String?) -> String? {
         let lines = (text ?? "").split(omittingEmptySubsequences: false, whereSeparator: \.isNewline).map(String.init)

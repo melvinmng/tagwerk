@@ -58,6 +58,11 @@ enum ShareExtractor {
         #endif
         let known = types.compactMap { identifier in UTType(identifier).map { (identifier, $0) } }
 
+        // The result of the Safari preprocessing script: address, title and selection of the page.
+        if known.contains(where: { $0.1.conforms(to: .propertyList) }) {
+            if let page = await loadPreprocessingResult(provider) { result.parts.append(contentsOf: page.parts) }
+            return
+        }
         if let file = known.first(where: { isFileType($0.1) }) {
             try await readFile(provider, typeIdentifier: file.0, into: &result)
         } else if known.contains(where: { $0.1.conforms(to: .fileURL) }) {
@@ -145,6 +150,16 @@ enum ShareExtractor {
         log.debug("copied file, \(size, privacy: .public) bytes")
         #endif
         return CopiedFile(url: target, name: name, size: size)
+    }
+
+    /// The property list Safari adds when the extension has a preprocessing script. It is read inside the callback, so only the
+    /// plain result crosses to the caller; a property list without the script's keys is ignored.
+    private static func loadPreprocessingResult(_ provider: NSItemProvider) async -> SafariPreprocessingResult? {
+        await withCheckedContinuation { continuation in
+            provider.loadItem(forTypeIdentifier: UTType.propertyList.identifier, options: nil) { item, _ in
+                continuation.resume(returning: SafariPreprocessingResult.parse(item))
+            }
+        }
     }
 
     private static func loadURL(_ provider: NSItemProvider) async -> URL? {

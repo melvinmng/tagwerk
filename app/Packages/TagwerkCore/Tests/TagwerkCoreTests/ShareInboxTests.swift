@@ -40,6 +40,21 @@ final class ShareInboxTests {
         #expect(inbox.pending() == [written])
     }
 
+    @Test func pageTitle_roundTrips_andItemsWithoutOneStillDecode() throws {
+        let inbox = makeInbox()
+        var written = item("Seite")
+        written.url = URL(string: "https://example.com/a")
+        written.pageTitle = "Guter Artikel"
+        try inbox.write(written)
+        #expect(inbox.pending().first?.pageTitle == "Guter Artikel")
+        // An item written before the field existed has no such key.
+        let encoded = try JSONEncoder().encode(item("alt"))
+        var object = try #require(try JSONSerialization.jsonObject(with: encoded) as? [String: Any])
+        object.removeValue(forKey: "pageTitle")
+        let old = try JSONDecoder().decode(ShareInboxItem.self, from: JSONSerialization.data(withJSONObject: object))
+        #expect(old.pageTitle == nil && old.title == "alt")
+    }
+
     @Test func pending_sortsByCreation() throws {
         let inbox = makeInbox()
         try inbox.write(item("zweite", at: clock.addingTimeInterval(-10)))
