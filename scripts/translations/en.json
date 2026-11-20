@@ -1956,5 +1956,6 @@
   "Zutaten auf die Einkaufsliste": "Add ingredients to the shopping list",
   "Zutaten übernehmen": "Use ingredients",
   "strukturiert": "structured",
-  "wird mit ChatGPT gelesen": "read with ChatGPT"
+  "wird mit ChatGPT gelesen": "read with ChatGPT",
+  "„Rezept hinzufügen“ sendet auf dein Tippen den Rezepttext oder das Foto und die Namen deiner Kategorien, „Rezept mit ChatGPT anlegen“ nur den Rezepttext oder das Foto. Bei einem Link geht nur der gelesene Text der Seite weg, nicht die Adresse. Eine Rezept-Notiz mit Zutaten und Zubereitung liest Tagwerk auf dem iPhone. Schaltest du das aus, fragt Tagwerk beim nächsten Rezept erneut.": "“Add recipe” sends the recipe text or the photo and the names of your categories when you tap; “Create recipe with ChatGPT” sends only the recipe text or the photo. For a link, only the text read from the page leaves, not the address. Tagwerk reads a recipe note with ingredients and instructions on the iPhone. If you turn this off, Tagwerk asks again for the next recipe."
 }

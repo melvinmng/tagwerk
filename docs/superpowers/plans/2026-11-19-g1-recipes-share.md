@@ -261,3 +261,33 @@ Quelle: [chefkoch.de](https://www.chefkoch.de/rezepte/…)
 7. Safari, Teilen-Taste der Seite mit markiertem Text: Die Notiz enthält den Text und einen antippbaren Link.
 8. Safari, markierter Text → „Teilen…“ aus dem Auswahlmenü: Hat die Notiz einen Link? Das Ergebnis in den Plan schreiben (Spike aus Task 8).
 9. Englische Oberfläche: Überschriften der Rezept-Notiz, Portionsfrage und Quelle „Notiz“.
+
+---
+
+## Stand der Umsetzung
+
+Umgesetzt auf `feat/recipes-share` (Basis `7e1f989`). Tests laufen mit `app/test-all.sh`. Nichts am Gerät geprüft.
+
+**Erweiterungen des Product Owners (zusätzlich zum Plan)**
+
+- **Rezept nur speichern (#214):** In den Notizen, Ordner „Rezepte“, steht „Rezept mit ChatGPT anlegen“ (neben dem normalen Anlegen). Foto, Text und Link laufen durch denselben Eingabeschritt und denselben `RecipeImporter.read` wie „Rezept hinzufügen“, mit denselben Einwilligungsregeln. Der Bestätigungsschritt (`RecipeNoteSaveView`) sichert Titel, Portionen, Zutaten und Schritte als strukturierte Rezept-Notiz. Die Einkaufsliste wird nicht angefasst. Beim reinen Speichern gehen keine Kategorienamen und keine offenen Artikel an ChatGPT. Der Schalter „Auch als Rezept-Notiz sichern“ im Einkaufs-Import bleibt. Tests: `RecipeSaveOnlyTests`.
+- **Sprache für Rezepte (#216):** Einstellungen › KI › Sprache, „Sprache für Rezepte“: „Wie die App“ (Standard) oder Deutsch oder English. Gespeichert in `AppSettings.recipeLanguage`, im Backup als optionales Feld (alte Dateien bleiben unberührt). Die Sprache gilt für Titel, Zutaten und Schritte der Anfrage, für die Überschriften der Rezept-Notiz und für die Artikel auf der Einkaufsliste. Auswahlregel: `RecipeLanguage.resolve`. Tests: `RecipeLanguageTests`, `RecipeLanguageSettingTests`, Backup-Tests.
+
+**Abweichungen vom Plan**
+
+- **Runden von g und ml:** Der Plan nennt „sonst auf 10“, das Beispiel im Review-Fokus verlangt aber 250 g → 375 g. Umgesetzt: unter 10 ganze Zahlen, bis 1000 Fünferschritte, ab 1000 Zehnerschritte.
+- **`Input.note`:** trägt den Notiztext (`.note(UUID, text:)`), damit der Importer keine Abhängigkeit zum `NoteStore` bekommt. Die Oberfläche prüft vorher, dass die Notiz nicht privat ist, auch nicht in einem privaten Ordner liegt (`RecipeNoteSource.isOffered`).
+- **Neue Notizen-Quelle** gibt es nur beim Einkaufs-Import, nicht beim reinen Speichern.
+- **Einwilligung:** Sie wird beim Tippen auf „Zutaten holen“ bzw. „Rezept holen“ abgefragt (Sheet am Formular), nicht mehr beim Start des Blatts.
+- **Safari-Seitentitel:** `SharePayload` und `ShareInboxItem` bekommen das optionale Feld `pageTitle`, `SharePart` den Fall `.pageTitle`. Die Auswertung des Skriptergebnisses liegt als `SafariPreprocessingResult` in TagwerkCore/Share.
+- **Eigener Ordner „Rezepte“ des Nutzers:** Ein bereits vorhandener eigener Ordner mit diesem Namen wird nicht übernommen. Es entsteht der feste Ordner zusätzlich.
+
+**Eigene Entscheidungen**
+
+- Mehr Einheiten als im Plan: mg, cl, dl, oz, lb, Bund, Scheibe, slice, piece. Zählbare Einheiten werden aufgerundet, cl, dl, oz und lb auf halbe Werte.
+- Ein Name mit „Dose“ ohne Einheit („1 große Dose“) wird wie die Einheit Dose gerundet.
+- Namen auf der Einkaufsliste bleiben beim Umrechnen im Singular („Ei“), in der Rezept-Notiz stehen Einheit und gezählte Namen im passenden Numerus („2 Zwiebeln“).
+- Die Stepper der Portionsfrage starten bei 4, wenn noch keine Zahl da ist.
+- „Salz nach Geschmack“ bleibt beim lokalen Lesen als Name der ganzen Zeile auf der Liste stehen.
+
+**Offene Gerätetests:** die neun Punkte unter „Gerätetests“, dazu der Spike aus Task 8 (Teilen aus dem Auswahlmenü in Safari). Ergebnis des Spikes: noch offen.
