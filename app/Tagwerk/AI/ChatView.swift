@@ -152,7 +152,8 @@ struct ChatView: View {
                         row(message).id(message.id)
                     }
                     if let text = conversation?.streamingText, !text.isEmpty {
-                        Text(text).frame(maxWidth: .infinity, alignment: .leading).id("streaming")
+                        // The same blocks as the finished message, so the answer does not change its look when it ends.
+                        ChatMarkdownView(text: text).id("streaming")
                     } else if conversation?.state == .streaming {
                         ProgressView().frame(maxWidth: .infinity, alignment: .leading).id("streaming")
                     }
@@ -194,7 +195,10 @@ struct ChatView: View {
         case .assistant(let text):
             VStack(alignment: .leading, spacing: 6) {
                 SpokenAnswerText(id: "message-\(message.id)", text: text).textSelection(.enabled)
-                ReadAloudButton(id: "message-\(message.id)", text: text)
+                HStack(spacing: 8) {
+                    ReadAloudButton(id: "message-\(message.id)", text: text)
+                    CopyAnswerButton(text: text)
+                }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
         case .action(let call, let status):

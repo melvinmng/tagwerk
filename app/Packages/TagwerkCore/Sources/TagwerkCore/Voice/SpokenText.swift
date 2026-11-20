@@ -4,10 +4,17 @@ import Foundation
 public enum SpokenText {
     // MARK: Preparation
 
+    /// The answer without Markdown and HTML markup (headings, lists, emphasis, tables, code fences, tags, entities):
+    /// what a reader would say, never the symbols. Line breaks stay, `<br>` counts as one.
+    public static func plainText(_ answer: String) -> String {
+        let lineBreaks = answer.replacingOccurrences(of: #"<br\s*/?>"#, with: "\n", options: [.regularExpression, .caseInsensitive])
+        return MarkdownText.plainText(lineBreaks)
+    }
+
     /// Removes Markdown, emoji and decorative symbols, spells out priority tokens and time ranges,
     /// and collapses whitespace. Single times such as "16:00" are kept unchanged.
     public static func prepare(_ text: String, language: VoiceLanguage) -> String {
-        var result = text
+        var result = plainText(text)
         result = replacing(#"\[([^\]\n]*)\]\([^)\n]*\)"#, in: result, with: "$1")
         result = replacing(#"(?m)^[ \t]*#{1,6}[ \t]+"#, in: result, with: "")
         result = replacing(#"(?m)^[ \t]*(?:[-*]|\d+\.)[ \t]+"#, in: result, with: "")

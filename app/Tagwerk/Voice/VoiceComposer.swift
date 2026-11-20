@@ -219,7 +219,7 @@ struct ReadAloudButton: View {
         let output = environment.voiceOutput
         let playing = output.speakingID == id
         return Button {
-            output.toggle(id: id, text: text, fallback: .german)
+            output.toggle(id: id, text: text, fallback: VoiceChatLanguage.resolve(setting: environment.settings.voiceRecognitionLanguage))
         } label: {
             Label(playing ? "Liest vor · Stopp" : "Vorlesen", systemImage: playing ? "stop.fill" : "speaker.wave.2")
                 .font(.caption)
@@ -232,7 +232,7 @@ struct ReadAloudButton: View {
     }
 }
 
-/// An answer with the sentence being read highlighted (SP3a).
+/// An answer drawn from its Markdown, with the sentence being read highlighted (SP3a, #225).
 struct SpokenAnswerText: View {
     @Environment(AppEnvironment.self) private var environment
     let id: String
@@ -240,15 +240,12 @@ struct SpokenAnswerText: View {
 
     var body: some View {
         let output = environment.voiceOutput
-        if output.speakingID == id, output.sentences.indices.contains(output.currentSentence),
-           let range = Self.range(of: output.sentences[output.currentSentence], in: text) {
-            Text(Self.highlighted(text, range: range))
-        } else {
-            Text(text)
-        }
+        let sentence = output.speakingID == id && output.sentences.indices.contains(output.currentSentence)
+            ? output.sentences[output.currentSentence] : nil
+        ChatMarkdownView(text: text, spokenSentence: sentence)
     }
 
-    /// The spoken sentence is prepared text; its first words locate it in the answer.
+    /// The spoken sentence is prepared text; its first words locate it in the shown text.
     static func range(of sentence: String, in text: String) -> Range<String.Index>? {
         let words = sentence.split(separator: " ").prefix(3).joined(separator: " ")
         guard !words.isEmpty, let start = text.range(of: words)?.lowerBound else { return nil }
@@ -257,12 +254,41 @@ struct SpokenAnswerText: View {
         return start..<end
     }
 
-    static func highlighted(_ text: String, range: Range<String.Index>) -> AttributedString {
-        var attributed = AttributedString(text)
+    /// `text` with the part that `sentence` points to marked; unchanged when the sentence is not in it (for example because
+    /// it belongs to another block, or its wording was changed for speaking).
+    static func highlighted(_ text: AttributedString, sentence: String) -> AttributedString {
+        let shown = String(text.characters)
+        guard let range = range(of: sentence, in: shown) else { return text }
+        var attributed = text
         if let lower = AttributedString.Index(range.lowerBound, within: attributed),
            let upper = AttributedString.Index(range.upperBound, within: attributed) {
             attributed[lower..<upper].backgroundColor = .accentColor.opacity(0.2)
         }
         return attributed
+    }
+}
+
+/// "Kopieren" under an answer: the answer as plain text, without Markdown symbols. Selecting text works only inside one
+/// block of a rendered answer, so the whole answer needs its own way to the pasteboard.
+struct CopyAnswerButton: View {
+    let text: String
+    @State private var copied = false
+
+    var body: some View {
+        Button {
+            UIPasteboard.general.string = MarkdownText.plainText(text)
+            copied = true
+            Task {
+                try? await Task.sleep(for: .seconds(2))
+                copied = false
+            }
+        } label: {
+            Label(copied ? "Kopiert" : "Kopieren", systemImage: copied ? "checkmark" : "doc.on.doc")
+                .font(.caption)
+                .padding(.horizontal, 10).padding(.vertical, 4)
+                .background(.thinMaterial, in: Capsule())
+        }
+        .buttonStyle(.plain)
+        .foregroundStyle(.secondary)
     }
 }

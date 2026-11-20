@@ -31,6 +31,12 @@ final class AssistantModel {
     @ObservationIgnored var readPolicy: () -> ReadAloudPolicy = { .never }
     @ObservationIgnored var announcesActions: () -> Bool = { true }
     @ObservationIgnored var readAutomatically: (_ id: String, _ text: String, _ fallback: VoiceLanguage) -> Void = { _, _, _ in }
+    /// The language chosen for the voice chat (Einstellungen › Sprache › "Sprache im Sprachchat"); `nil` follows the user.
+    /// It decides the answer language of the voice mode and the language that is read when the text gives no clear hint.
+    @ObservationIgnored var fixedVoiceLanguage: () -> VoiceLanguage? = { nil }
+
+    /// The language spoken text falls back to when it is too short to tell: the chosen voice chat language, else the app's.
+    private var speechFallback: VoiceLanguage { fixedVoiceLanguage() ?? .app }
 
     /// How a turn ended, for the voice mode (plan voice-chat, stage 2 point 9).
     enum TurnOutcome: Equatable {
@@ -128,7 +134,7 @@ final class AssistantModel {
         }
         persist()
         if onTurnFinished != nil {
-            reportTurn(after: index, executed: false, fallback: .detect(trimmed, fallback: .app))
+            reportTurn(after: index, executed: false, fallback: .detect(trimmed, fallback: speechFallback))
         } else {
             readNewOutput(after: index, spoken: spoken, userText: trimmed)
         }
@@ -204,7 +210,7 @@ final class AssistantModel {
             await conversation.confirm(call)
         }
         persist()
-        reportTurn(after: index - 1, executed: allExecuted(calls) && announcesActions(), fallback: .app)
+        reportTurn(after: index - 1, executed: allExecuted(calls) && announcesActions(), fallback: speechFallback)
     }
 
     /// Spoken "nein": declines the one card the user answered to.
@@ -237,7 +243,7 @@ final class AssistantModel {
             }
         }
         let language = VoiceLanguage.detect(texts.joined(separator: " ").isEmpty ? userText : texts.joined(separator: " "),
-                                            fallback: .detect(userText, fallback: .app))
+                                            fallback: .detect(userText, fallback: speechFallback))
         // Cards are announced in the language of the answer, not mixed with the app language.
         let cards = calls.map { describe($0, language: language, spoken: true) }.map { (title: $0.title, change: $0.change) }
         if announcesActions(), let announcement = ActionAnnouncement.text(for: cards, language: language) {
@@ -271,7 +277,7 @@ final class AssistantModel {
         if onTurnFinished != nil {
             let executed: Bool
             if case .done(let output) = status(of: call), ActionCardView.error(in: output) == nil { executed = true } else { executed = false }
-            reportTurn(after: index - 1, executed: executed && announcesActions(), fallback: .app)
+            reportTurn(after: index - 1, executed: executed && announcesActions(), fallback: speechFallback)
         } else {
             readAfterConfirmation(from: index, call: call)
         }
@@ -290,7 +296,7 @@ final class AssistantModel {
             if case .assistant(let text) = message.content { return text }
             return nil
         }
-        let language = VoiceLanguage.detect(texts.joined(separator: " "), fallback: .app)
+        let language = VoiceLanguage.detect(texts.joined(separator: " "), fallback: speechFallback)
         var parts = [String]()
         if announcesActions(), case .done(let output) = status(of: call), ActionCardView.error(in: output) == nil {
             parts.append(ActionAnnouncement.executed(language))
@@ -310,7 +316,7 @@ final class AssistantModel {
             await conversation.confirm(call)
         }
         persist()
-        reportTurn(after: index - 1, executed: allExecuted(calls) && announcesActions(), fallback: .app)
+        reportTurn(after: index - 1, executed: allExecuted(calls) && announcesActions(), fallback: speechFallback)
     }
 
     /// Whether every call ran without an error, for "Ausgeführt.".
@@ -325,14 +331,14 @@ final class AssistantModel {
         let index = conversation?.history.count ?? 0
         await conversation?.decline(call)
         persist()
-        reportTurn(after: index - 1, executed: false, fallback: .app)
+        reportTurn(after: index - 1, executed: false, fallback: speechFallback)
     }
 
     func retry() async {
         let index = conversation?.history.count ?? 0
         await conversation?.retry()
         persist()
-        reportTurn(after: index - 1, executed: false, fallback: .app)
+        reportTurn(after: index - 1, executed: false, fallback: speechFallback)
     }
 
     /// "Verlauf löschen".
@@ -361,6 +367,12 @@ final class AssistantModel {
     kurzen, gut sprechbaren Sätzen ohne Aufzählungen und Tabellen.
     """
 
+    /// The voice mode instructions plus, when a voice chat language is chosen, the order to answer in it.
+    private func voiceModeText() -> String {
+        guard let sentence = VoiceChatLanguage.answerInstruction(for: fixedVoiceLanguage()) else { return Self.voiceModeInstructions }
+        return Self.voiceModeInstructions + " " + sentence
+    }
+
     /// The language to answer in without a user message or when the message language is unclear.
     @ObservationIgnored var language: () -> VoiceLanguage = { .app }
 
@@ -385,7 +397,7 @@ final class AssistantModel {
         Einkaufsartikel stehen nicht in list_tasks: Die Einkaufsliste liest du mit list_shopping und änderst sie mit \
         update_shopping (hinzufügen, abhaken). Lege Einkaufsartikel nie über create_task an.
         \(gitHubInstructions())
-        \(onTurnFinished == nil ? "" : Self.voiceModeInstructions)
+        \(onTurnFinished == nil ? "" : voiceModeText())
         \(contextText())
         """
     }

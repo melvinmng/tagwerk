@@ -79,7 +79,8 @@ final class VoiceOutputModel {
             completion?(.notSpoken)
             return
         }
-        let language = VoiceLanguage.detect(text, fallback: fallback)
+        // Markdown and HTML symbols neither skew the language detection nor are they ever spoken (#225).
+        let language = VoiceLanguage.detect(SpokenText.plainText(text), fallback: fallback)
         let parts = SpokenText.sentences(SpokenText.prepare(text, language: language))
         guard !parts.isEmpty else { completion?(.notSpoken); return }
         let mode: VoiceAudioMode = explicit ? .speakingExplicit : .speakingAutomatic

@@ -1980,5 +1980,17 @@
   "g": "g",
   "l": "l",
   "min": "min",
-  "ml": "ml"
+  "ml": "ml",
+  "%lld.": {
+    "shouldTranslate": false
+  },
+  "•": {
+    "shouldTranslate": false
+  },
+  "Die Sprache gilt für die Spracherkennung (auch beim Diktieren in Notizen, Einkauf und Mahlzeiten), für die Antwort von ChatGPT im Sprechmodus und für die Stimme beim Vorlesen. „Wie die App“ nimmt die Sprache der App; ChatGPT antwortet dann in der Sprache, in der du sprichst. Im getippten Chat antwortet ChatGPT weiter in der Sprache, in der du schreibst.": "The language applies to speech recognition (also when dictating in notes, shopping and meals), to ChatGPT’s answer in the voice mode and to the voice that reads answers aloud. “Same as the app” uses the app’s language; ChatGPT then answers in the language you speak. In the typed chat, ChatGPT keeps answering in the language you write in.",
+  "Kopieren": "Copy",
+  "Kopiert": "Copied",
+  "Offen": "Open",
+  "Sprachchat": "Voice chat",
+  "Sprache im Sprachchat": "Voice chat language"
 }

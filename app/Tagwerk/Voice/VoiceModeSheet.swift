@@ -134,7 +134,7 @@ struct VoiceModePanel: View {
             }
         }
         if let streaming = assistant.conversation?.streamingText, !streaming.isEmpty {
-            Text(streaming).foregroundStyle(.secondary)
+            ChatMarkdownView(text: streaming).foregroundStyle(.secondary)
         }
     }
 

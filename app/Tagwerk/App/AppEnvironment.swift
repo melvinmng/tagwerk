@@ -220,6 +220,7 @@ final class AppEnvironment {
         let voiceOutput = self.voiceOutput
         assistant.readPolicy = { ReadAloudPolicy(rawValue: settings.voiceReadAloud) ?? .never }
         assistant.announcesActions = { settings.voiceAnnounceActions }
+        assistant.fixedVoiceLanguage = { VoiceChatLanguage.fixed(setting: settings.voiceRecognitionLanguage) }
         assistant.readAutomatically = { id, text, fallback in voiceOutput.speak(id: id, text: text, explicit: false, fallback: fallback) }
         let demoVoice = ProcessInfo.processInfo.arguments.contains("-TagwerkDemoVoice")
         let makeRecognizer: @MainActor () -> SpeechRecognizing = {

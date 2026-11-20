@@ -28,9 +28,9 @@ enum VoiceAvailability {
         }
     }
 
-    /// The language used for recognition: the setting, or the iPhone language when it says "auto".
+    /// The language used for recognition and as the voice chat language: the setting, or the app language when it says "auto".
     static func recognitionLanguage(setting: String, locale: Locale = .current) -> VoiceLanguage {
-        VoiceLanguage(rawValue: setting) ?? .from(locale: locale)
+        VoiceChatLanguage.resolve(setting: setting, locale: locale)
     }
 
     /// "Mikrofon an, Vorlesen nie" for the row in "KI".
@@ -57,14 +57,22 @@ struct VoiceSettingsView: View {
                 ForEach(VoiceLanguage.allCases, id: \.self) { language in
                     LabeledContent("Sprachpaket \(Self.name(language))", value: packs[language]?.label ?? "…")
                 }
-                Picker("Erkennung in", selection: $settings.voiceRecognitionLanguage) {
-                    Text("Automatisch").tag("auto")
-                    ForEach(VoiceLanguage.allCases, id: \.self) { Text(Self.name($0)).tag($0.rawValue) }
-                }
             } header: {
                 Text("Spracheingabe")
             } footer: {
                 Text("Tagwerk wandelt Sprache auf dem iPhone in Text um. Der Ton verlässt das Gerät nicht. An ChatGPT geht nur der Text, den du sendest.")
+            }
+
+            Section {
+                // Same stored value as the former "Erkennung in" ("auto", "de-DE", "en-US"), so nothing was migrated.
+                Picker("Sprache im Sprachchat", selection: $settings.voiceRecognitionLanguage) {
+                    Text("Wie die App").tag(VoiceChatLanguage.automatic)
+                    ForEach(VoiceChatLanguage.choices, id: \.self) { Text(Self.name($0)).tag($0.rawValue) }
+                }
+            } header: {
+                Text("Sprachchat")
+            } footer: {
+                Text("Die Sprache gilt für die Spracherkennung (auch beim Diktieren in Notizen, Einkauf und Mahlzeiten), für die Antwort von ChatGPT im Sprechmodus und für die Stimme beim Vorlesen. „Wie die App“ nimmt die Sprache der App; ChatGPT antwortet dann in der Sprache, in der du sprichst. Im getippten Chat antwortet ChatGPT weiter in der Sprache, in der du schreibst.")
             }
 
             Section {
