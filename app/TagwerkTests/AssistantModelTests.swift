@@ -231,6 +231,38 @@ struct AssistantModelTests {
         #expect(text.contains("nie auf"))
     }
 
+    @Test func instructions_inVoiceMode_answerInTheChosenLanguage() async throws {
+        let (model, _, _) = await make()
+        model.open(context: .settings)
+        model.fixedVoiceLanguage = { .english }
+        // A typed chat keeps answering in the language the user writes, whatever the voice chat language is.
+        #expect(!model.instructions().contains("immer auf"))
+        model.onTurnFinished = { _ in }
+        #expect(model.instructions().contains("Im Sprechmodus antwortest du immer auf Englisch (English)"))
+        model.fixedVoiceLanguage = { .german }
+        #expect(model.instructions().contains("Im Sprechmodus antwortest du immer auf Deutsch"))
+        // "Wie die App": the base rule stays, the language of the last message.
+        model.fixedVoiceLanguage = { nil }
+        let automatic = model.instructions()
+        #expect(!automatic.contains("immer auf"))
+        #expect(automatic.contains("in der Sprache der letzten Nachricht des Nutzers"))
+    }
+
+    @Test func autoRead_ofAShortAnswer_usesTheChosenVoiceLanguage() async throws {
+        let (model, _, _) = await make()
+        var languages: [VoiceLanguage] = []
+        model.readAutomatically = { _, _, language in languages.append(language) }
+        model.readPolicy = { .always }
+        model.open(context: .settings)
+        model.fixedVoiceLanguage = { .english }
+        responder.enqueue("Okay.")
+        await model.send("Ja", spoken: true)
+        model.fixedVoiceLanguage = { nil }
+        responder.enqueue("Okay.")
+        await model.send("Ja", spoken: true)
+        #expect(languages == [.english, VoiceLanguage.app])
+    }
+
     @Test func instructions_answerInTheAppLanguage_whenTheUserLanguageIsUnclear() async throws {
         let (german, _, _) = await make(language: .german)
         let (english, _, _) = await make(language: .english)
