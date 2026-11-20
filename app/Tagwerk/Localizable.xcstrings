@@ -2343,11 +2343,22 @@
       }
     },
     "**Gesendet wird:** der Rezepttext oder die Fotos und die Kategorienamen, oder der Text einer Notiz, die du ausdrücklich als Quelle wählst. Bei einem Link nur der gelesene Text der Seite, nicht die Adresse.": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "**Sent:** the recipe text or the photos and the category names, or the text of a note you explicitly choose as the source. For a link, only the text read from the page, not the address."
+          }
+        }
+      }
+    },
+    "**Gesendet wird:** der Rezepttext oder die Fotos und die Kategorienamen, oder der Text einer Notiz, die du ausdrücklich als Quelle wählst. Bei einem Link nur der gelesene Text der Seite, nicht die Adresse. Beim Übersetzen der Text der einen Rezept-Notiz, ohne Anhänge.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "**Sent:** the recipe text or the photos and the category names, or the text of a note you explicitly choose as the source. For a link, only the text read from the page, not the address. When translating, the text of the one recipe note, without attachments."
           }
         }
       }
@@ -2465,6 +2476,7 @@
       }
     },
     "**Nur auf dein Tippen:** Ohne „Zutaten holen“ oder „Rezept holen“ verlässt nichts das iPhone. Auch ein Link wird erst dann geladen.": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -2481,6 +2493,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "**Only when you tap:** without “Get ingredients”, nothing leaves the iPhone. A link is loaded only then, too."
+          }
+        }
+      }
+    },
+    "**Nur auf dein Tippen:** Ohne „Zutaten holen“, „Rezept holen“ oder „Übersetzen“ verlässt nichts das iPhone. Auch ein Link wird erst dann geladen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "**Only when you tap:** without “Get ingredients”, “Get recipe” or “Translate”, nothing leaves the iPhone. A link is loaded only then, too."
           }
         }
       }
@@ -8514,11 +8536,22 @@
       }
     },
     "Für ein Rezept sendet Tagwerk auf dein Tippen den Rezepttext, das Foto oder den gelesenen Text einer Seite an ChatGPT, bei „Rezept hinzufügen“ dazu die Namen deiner Kategorien, wenn du in der Einkaufsliste zugestimmt hast. Wählst du eine Notiz ohne Zutaten und Zubereitung als Quelle, geht ihr Text an ChatGPT; eine Notiz mit beiden Abschnitten liest Tagwerk auf dem iPhone. Private Notizen (Tagebuch, Bible Study, Dream Log) stehen dafür nie zur Auswahl.": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "For a recipe, Tagwerk sends the recipe text, the photo or the text read from a page to ChatGPT when you tap, and with “Add recipe” also the names of your categories, if you agreed in the shopping list settings. If you choose a note without ingredients and instructions as the source, its text goes to ChatGPT; Tagwerk reads a note with both sections on the iPhone. Private notes (journal, Bible Study, Dream Log) are never offered."
+          }
+        }
+      }
+    },
+    "Für ein Rezept sendet Tagwerk auf dein Tippen den Rezepttext, das Foto oder den gelesenen Text einer Seite an ChatGPT, bei „Rezept hinzufügen“ dazu die Namen deiner Kategorien, wenn du in der Einkaufsliste zugestimmt hast. Wählst du eine Notiz ohne Zutaten und Zubereitung als Quelle, geht ihr Text an ChatGPT; eine Notiz mit beiden Abschnitten liest Tagwerk auf dem iPhone. Übersetzt du eine Rezept-Notiz, geht ihr Text zeilenweise an ChatGPT; Überschriften, Anhänge und die Quelle bleiben auf dem iPhone. Private Notizen (Tagebuch, Bible Study, Dream Log) stehen dafür nie zur Auswahl.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "For a recipe, Tagwerk sends the recipe text, the photo or the text read from a page to ChatGPT when you tap, and with “Add recipe” also the names of your categories, if you agreed in the shopping list settings. If you choose a note without ingredients and instructions as the source, its text goes to ChatGPT; Tagwerk reads a note with both sections on the iPhone. If you translate a recipe note, its text goes to ChatGPT line by line; the headings, the attachments and the source stay on the iPhone. Private notes (journal, Bible Study, Dream Log) are never offered."
           }
         }
       }
@@ -13887,11 +13920,22 @@
       }
     },
     "Rezepte mit ChatGPT lesen": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Read recipes with ChatGPT"
+          }
+        }
+      }
+    },
+    "Rezepte mit ChatGPT lesen und übersetzen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Read and translate recipes with ChatGPT"
           }
         }
       }
@@ -15960,6 +16004,16 @@
         }
       }
     },
+    "Um ein Rezept zu lesen oder zu übersetzen, sendet Tagwerk den Rezepttext oder die Fotos und die Namen deiner Kategorien an ChatGPT (OpenAI), über das Konto, mit dem du angemeldet bist.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "To read or translate a recipe, Tagwerk sends the recipe text or the photos and the names of your categories to ChatGPT (OpenAI), through the account you are signed in with."
+          }
+        }
+      }
+    },
     "Um ein Rezept zu lesen, sendet Tagwerk den Rezepttext oder das Foto und die Namen deiner Kategorien an ChatGPT (OpenAI), über das Konto, mit dem du angemeldet bist.": {
       "extractionState": "stale",
       "localizations": {
@@ -15972,6 +16026,7 @@
       }
     },
     "Um ein Rezept zu lesen, sendet Tagwerk den Rezepttext oder die Fotos und die Namen deiner Kategorien an ChatGPT (OpenAI), über das Konto, mit dem du angemeldet bist.": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -19940,11 +19995,22 @@
       }
     },
     "„Rezept hinzufügen“ sendet auf dein Tippen den Rezepttext oder die Fotos und die Namen deiner Kategorien, „Rezept mit ChatGPT anlegen“ nur den Rezepttext oder die Fotos. Bei einem Link geht nur der gelesene Text der Seite weg, nicht die Adresse. Eine Rezept-Notiz mit Zutaten und Zubereitung liest Tagwerk auf dem iPhone. Schaltest du das aus, fragt Tagwerk beim nächsten Rezept erneut.": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "“Add recipe” sends the recipe text or the photos and the names of your categories when you tap; “Create recipe with ChatGPT” sends only the recipe text or the photos. For a link, only the text read from the page leaves, not the address. Tagwerk reads a recipe note with ingredients and instructions on the iPhone. If you turn this off, Tagwerk asks again for the next recipe."
+          }
+        }
+      }
+    },
+    "„Rezept hinzufügen“ sendet auf dein Tippen den Rezepttext oder die Fotos und die Namen deiner Kategorien, „Rezept mit ChatGPT anlegen“ nur den Rezepttext oder die Fotos. Bei einem Link geht nur der gelesene Text der Seite weg, nicht die Adresse. Eine Rezept-Notiz mit Zutaten und Zubereitung liest Tagwerk auf dem iPhone. „Übersetzen …“ in einer Rezept-Notiz sendet auf dein Tippen den Text dieser Notiz, ohne Anhänge. Schaltest du das aus, fragt Tagwerk beim nächsten Rezept erneut.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“Add recipe” sends the recipe text or the photos and the names of your categories when you tap; “Create recipe with ChatGPT” sends only the recipe text or the photos. For a link, only the text read from the page leaves, not the address. Tagwerk reads a recipe note with ingredients and instructions on the iPhone. “Translate …” in a recipe note sends the text of that note when you tap, without attachments. If you turn this off, Tagwerk asks again for the next recipe."
           }
         }
       }
