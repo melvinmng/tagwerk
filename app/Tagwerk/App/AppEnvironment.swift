@@ -291,6 +291,15 @@ final class AppEnvironment {
         self.routineNotifications = RoutineNotificationScheduler(center: notificationCenter ?? SystemNotificationCenter(),
                                                                  store: routineStore, settings: settings)
         let routines = self.routines
+        let routineNotifications = self.routineNotifications
+        // A checked point must not remind on that evening any more; unchecking plans the reminder again while it is ahead.
+        routines.onChecklistToggled = { id, day, isChecked in
+            if isChecked {
+                await routineNotifications.itemChecked(id, on: day)
+            } else {
+                await routineNotifications.reschedule()
+            }
+        }
         let focusStore = FocusStore(context: context)
         self.focusStore = focusStore
         let focus = FocusTimerModel(store: focusStore, settings: { settings.focusTimerSettings }, activity: FocusActivityController(),
@@ -376,7 +385,11 @@ final class AppEnvironment {
                 await self?.registerGitHubIfSignedIn() ?? false  // a registration loads all sources
             },
             reload: { [weak self] in await self?.taskList.reload() },
-            reschedule: { [weak self] in await self?.notifications.reschedule() },
+            reschedule: { [weak self] in
+                await self?.notifications.reschedule()
+                // The dated evening reminders run out after three days: fill them up as well.
+                await self?.routineNotifications.reschedule()
+            },
             writeSnapshot: { [weak self] in self?.writeSnapshot() },
             nextRefill: { [weak self] in self?.notifications.nextRefill })
     }

@@ -129,6 +129,25 @@ struct RoutinesModelTests {
         #expect(model.value(today).checkedItemIDs.isEmpty)
     }
 
+    @Test func toggleItem_callsHook() async {
+        addChecklist()
+        let model = makeModel()
+        let id = model.checklist()[0].id
+        var calls: [(UUID, PlanDay, Bool)] = []
+        await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
+            var remaining = 2
+            model.onChecklistToggled = { id, day, isChecked in
+                calls.append((id, day, isChecked))
+                remaining -= 1
+                if remaining == 0 { continuation.resume() }
+            }
+            model.toggleItem(id, on: today)
+            model.toggleItem(id, on: today)
+        }
+        #expect(calls.map(\.2) == [true, false])
+        #expect(calls.allSatisfy { $0.0 == id && $0.1 == today })
+    }
+
     @Test func eveningLine_hiddenBeforeTheEarliestAnchor_andWhenSwitchedOff() {
         addChecklist()
         let model = makeModel()

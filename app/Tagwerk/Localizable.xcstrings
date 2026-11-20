@@ -2707,6 +2707,16 @@
         }
       }
     },
+    "Abgehakte Punkte erinnern an dem Abend nicht mehr. Tagwerk plant die Erinnerungen für die nächsten 3 Tage und füllt sie nach, sobald du die App öffnest.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Checked items no longer remind you that evening. Tagwerk plans the reminders for the next 3 days and tops them up whenever you open the app."
+          }
+        }
+      }
+    },
     "Abhaken": {
       "localizations": {
         "en": {
