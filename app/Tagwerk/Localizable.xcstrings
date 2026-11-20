@@ -8174,12 +8174,12 @@
         }
       }
     },
-    "Gemessen über Fokus-Timer und Zeitblöcke, letzte 8 Wochen.": {
+    "Gemessen über Zeitblöcke; Fokus-Timer zählt nur außerhalb der Blöcke, letzte 8 Wochen.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Measured with the focus timer and time blocks, last 8 weeks."
+            "value": "Measured from time blocks; focus timer time only counts outside the blocks, last 8 weeks."
           }
         }
       }
@@ -14488,12 +14488,12 @@
         }
       }
     },
-    "Tagwerk misst den Aufwand beim Abhaken aus Fokus-Timer und Zeitblöcken. Die Messwerte bleiben auf dem iPhone. Ist der Schalter an, geht bei der KI-Planung je Aufgabe nur eine erwartete Dauer in Minuten mit, keine Labels und keine Statistik.": {
+    "Tagwerk misst den Aufwand beim Abhaken aus den Zeitblöcken der Aufgabe. Fokus-Timer-Zeit zählt nur, soweit sie außerhalb dieser Blöcke liegt, ohne Zeitblock zählt sie allein. Die Messwerte bleiben auf dem iPhone. Ist der Schalter an, geht bei der KI-Planung je Aufgabe nur eine erwartete Dauer in Minuten mit, keine Labels und keine Statistik.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tagwerk measures the effort when you complete a task, from the focus timer and time blocks. The measurements stay on your iPhone. When the switch is on, AI planning receives only an expected duration in minutes per task, no labels and no statistics."
+            "value": "Tagwerk measures the effort when you complete a task, from the time blocks of the task. Focus timer time only counts where it lies outside those blocks, and counts alone when there is no time block. The measurements stay on your iPhone. When the switch is on, AI planning receives only an expected duration in minutes per task, no labels and no statistics."
           }
         }
       }

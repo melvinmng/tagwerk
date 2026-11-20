@@ -1,12 +1,14 @@
 import Foundation
+import OSLog
 import RemindersKit
 import TagwerkCore
 
 /// Measures the actual effort when a task is completed and cuts a time block that ended early (plan P3, #162).
 ///
-/// The rules are in `EffortRules`. This class reads the blocks and the focus time, writes the cut through
-/// `CalendarStore.moveBlock` (with the version check) and stores the sample. Only blocks of the plan calendar that carry a
-/// task link are read, so Tagwerk never touches an appointment of the user.
+/// The rules are in `EffortRules`: the time blocks of the task decide, focus time only adds what lies outside them.
+/// This class reads the blocks and the focus intervals, writes the cut through
+/// `CalendarStore.moveBlock` (with the version check) and stores the sample. Only Tagwerk's own blocks (the task link in
+/// the event's URL) are read and cut, so Tagwerk never touches an appointment of the user.
 @MainActor
 final class EffortTracker {
     /// How far back the blocks of a task are searched, and how far ahead (a block that starts after midnight).
@@ -20,6 +22,7 @@ final class EffortTracker {
     private let calendarStore: CalendarStore
     private let settings: AppSettings
     private let now: () -> Date
+    private let log = Logger(subsystem: "local.tagwerk", category: "effort")
 
     init(store: FocusStore, blocks: BlockPlanner, calendarStore: CalendarStore, settings: AppSettings,
          now: @escaping () -> Date = Date.init) {
@@ -37,18 +40,16 @@ final class EffortTracker {
         let previous = store.latestSample(for: key)?.completedAt
         let window = DateInterval(start: completedAt.addingTimeInterval(-Self.lookBack), end: completedAt.addingTimeInterval(Self.lookAhead))
         let events = blocks.blocks(for: item.id, in: window)
-        let focusedSeconds = store.sessions(for: key, since: previous).reduce(0) { $0 + $1.focusedSeconds }
+        // The work phases of the timer sessions; only the part outside the task's blocks adds to the blocks' time.
+        let focus = store.sessions(for: key, since: previous).flatMap { FocusTimerRules.workIntervals(of: $0.state) }
         let outcome = EffortRules.outcome(completedAt: completedAt,
                                           blocks: events.map { EffortBlock(id: $0.id, start: $0.start, end: $0.end) },
-                                          focusedSeconds: focusedSeconds, since: previous)
+                                          focus: focus, since: previous)
         var trimmed: (eventID: String, oldEnd: Date, newEnd: Date)?
         if let trim = outcome.trim, let block = events.first(where: { $0.id == trim.blockID }) {
-            do {
-                let updated = try calendarStore.moveBlock(id: block.id, to: block.start, end: trim.newEnd, expectedVersion: block.version)
-                trimmed = (updated.id, trim.oldEnd, updated.end)
-            } catch {
-                // The block changed in the meantime or cannot be written: it stays as it is; the sample still counts.
-            }
+            if let updated = cut(block, to: trim.newEnd) { trimmed = (updated.id, trim.oldEnd, updated.end) }
+        } else if outcome.trim == nil, !outcome.tooShortToTrim {
+            log.debug("No block cut for \(key, privacy: .private): \(events.count) blocks found, none running or none to shorten")
         }
         guard let minutes = outcome.actualMinutes, let method = outcome.method else { return trimmed != nil }
         let sample = EffortSampleRecord(taskKey: key, source: item.id.source, labels: item.labels ?? [],
@@ -59,6 +60,26 @@ final class EffortTracker {
         sample.trimmedNewEnd = trimmed?.newEnd
         store.add(sample)
         return trimmed != nil
+    }
+
+    /// Writes the new end of a block. A write that fails only because the version moved on (a sync touched the event) is
+    /// repeated once against the current event, as long as its start and end are still the ones that were read. A block
+    /// somebody changed stays as it is. The reason of every failure is logged, because the block just stays long
+    /// otherwise.
+    private func cut(_ block: CalendarEvent, to newEnd: Date) -> CalendarEvent? {
+        do {
+            return try calendarStore.moveBlock(id: block.id, to: block.start, end: newEnd, expectedVersion: block.version)
+        } catch {
+            log.error("Block cut failed: \(String(describing: error), privacy: .public)")
+            guard let current = calendarStore.event(id: block.id), current.version != block.version,
+                  current.start == block.start, current.end == block.end else { return nil }
+            do {
+                return try calendarStore.moveBlock(id: block.id, to: block.start, end: newEnd, expectedVersion: current.version)
+            } catch {
+                log.error("Block cut failed again: \(String(describing: error), privacy: .public)")
+                return nil
+            }
+        }
     }
 
     /// "Rückgängig": the newest sample of the task goes, and a block cut for it gets its old end back, but only while

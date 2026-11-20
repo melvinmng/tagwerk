@@ -53,11 +53,13 @@ final class BlockPlanner {
             .sorted { $0.start < $1.start }
     }
 
-    /// Blocks of `taskID` in the plan calendar that overlap `interval`, oldest first (effort measuring, plan P3).
+    /// Tagwerk's own blocks of `taskID` that overlap `interval`, oldest first (effort measuring, plan P3). The link in the
+    /// event's URL marks a block as Tagwerk's, as in `PlanningModel.canEditAsBlock`; it is searched in every calendar, so
+    /// a block stays found after the plan calendar setting changed. Events the user only linked to the task (by title or
+    /// by hand) have no such URL and are never returned: they are the user's own appointments.
     func blocks(for taskID: TaskID, in interval: DateInterval) -> [CalendarEvent] {
-        guard let calendarID = settings.planCalendarID else { return [] }
-        return store.events(in: interval, calendarIDs: [calendarID])
-            .filter { $0.url.flatMap(TaskLinkURL.parse) == taskID }
+        store.events(in: interval, calendarIDs: nil)
+            .filter { $0.url.flatMap(TaskLinkURL.parse) == taskID && $0.isEditable && !$0.isInvitation }
             .sorted { $0.start < $1.start }
     }
 

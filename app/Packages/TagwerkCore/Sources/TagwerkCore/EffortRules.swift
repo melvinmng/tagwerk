@@ -15,12 +15,14 @@ public struct EffortBlock: Sendable, Equatable {
 
 /// Where the actual effort of a completion comes from.
 public enum EffortMethod: String, Sendable, Codable, Equatable {
-    /// Focus timer sessions.
+    /// Focus timer sessions only (the task had no time block that counts).
     case focus
     /// Time blocks that ended before the completion.
     case blocks
     /// Ended blocks plus the part of the running block up to the completion.
     case partialBlock
+    /// Time blocks as above plus the focus time that lies outside the blocks of the task.
+    case blocksAndFocus
 }
 
 /// The new end of a block that was still running when the task was completed.
@@ -47,30 +49,58 @@ public enum EffortRules {
     /// Focus time below this is not a measurement.
     public static let minimumFocusSeconds = 60
 
-    /// Actual effort of a completion.
+    /// Actual effort of a completion. The time blocks of the task decide; focus time only adds what lies outside them.
+    ///
+    /// 1. Block time: ended blocks fully plus the running block up to `completedAt` (several blocks that overlap count
+    ///    once). Blocks after `completedAt` do not count.
+    /// 2. Focus time: the focus intervals up to `completedAt` without the parts that lie inside a block of the task, so
+    ///    nothing is counted twice. Less than `minimumFocusSeconds` of it is no measurement.
+    /// 3. Without any block time the focus time alone is the effort.
     ///
     /// - Parameters:
     ///   - completedAt: when the task was ticked off.
     ///   - blocks: blocks of the task in the plan calendar.
-    ///   - focusedSeconds: focus time of the task since the previous completion.
-    ///   - since: the previous completion of the same task; blocks that started before it were counted then.
-    public static func outcome(completedAt: Date, blocks: [EffortBlock], focusedSeconds: Int, since: Date? = nil) -> EffortOutcome {
-        let relevant = blocks.filter { since == nil || $0.start >= since! }.sorted { $0.start < $1.start }
-        let running = relevant.first { $0.start <= completedAt && completedAt < $0.end }
+    ///   - focus: the stretches in which the focus timer counted focus for the task since the previous completion
+    ///     (work phases without breaks and pauses, `FocusTimerRules.workIntervals`).
+    ///   - since: the previous completion of the same task; blocks that started before it were counted then. The block
+    ///     that is running at `completedAt` is always considered.
+    public static func outcome(completedAt: Date, blocks: [EffortBlock], focus: [DateInterval] = [], since: Date? = nil) -> EffortOutcome {
+        let ordered = blocks.sorted { $0.start < $1.start }
+        // The running block is looked up among all blocks. A block that is running now cannot have been counted at the
+        // previous completion (that would have ended it), so a measurement left behind (task reopened outside Tagwerk)
+        // must never hide it from the cut.
+        let running = ordered.first { $0.start <= completedAt && completedAt < $0.end }
+        let relevant = ordered.filter { since == nil || $0.start >= since! || $0.id == running?.id }
         let trimDecision = running.map { trim(running: $0, completedAt: completedAt) }
 
-        if focusedSeconds >= minimumFocusSeconds {
-            return EffortOutcome(actualMinutes: max(1, minutes(Double(focusedSeconds))), method: .focus,
-                                 trim: trimDecision?.trim, tooShortToTrim: trimDecision?.tooShort ?? false)
+        let countedBlocks = merged(relevant.filter { $0.start < completedAt }.map {
+            DateInterval(start: $0.start, end: min($0.end, completedAt))
+        })
+        let blockSeconds = countedBlocks.reduce(0) { $0 + $1.duration }
+        // Focus inside any block of the task (also one counted earlier) is not extra time.
+        let focusBeforeCompletion = focus.compactMap { interval -> DateInterval? in
+            interval.start < completedAt ? DateInterval(start: interval.start, end: min(interval.end, completedAt)) : nil
         }
-        let pastSeconds = relevant.filter { $0.end <= completedAt }.reduce(0) { $0 + $1.end.timeIntervalSince($1.start) }
-        let runningSeconds = running.map { completedAt.timeIntervalSince($0.start) } ?? 0
-        let total = minutes(pastSeconds + runningSeconds)
-        guard total >= 1 else {
-            return EffortOutcome(actualMinutes: nil, method: nil, trim: trimDecision?.trim, tooShortToTrim: trimDecision?.tooShort ?? false)
+        let outsideBlocks = subtracting(ordered.map { DateInterval(start: $0.start, end: $0.end) }, from: merged(focusBeforeCompletion))
+        let focusSeconds = outsideBlocks.reduce(0) { $0 + $1.duration }
+        let countsFocus = focusSeconds >= Double(minimumFocusSeconds)
+
+        let total = blockSeconds + (countsFocus ? focusSeconds : 0)
+        let tooShort = trimDecision?.tooShort ?? false
+        var actual = minutes(total)
+        if actual < 1 {
+            guard countsFocus else {
+                return EffortOutcome(actualMinutes: nil, method: nil, trim: trimDecision?.trim, tooShortToTrim: tooShort)
+            }
+            actual = 1
         }
-        return EffortOutcome(actualMinutes: total, method: running == nil ? .blocks : .partialBlock,
-                             trim: trimDecision?.trim, tooShortToTrim: trimDecision?.tooShort ?? false)
+        let method: EffortMethod
+        switch (blockSeconds > 0, countsFocus) {
+        case (true, true): method = .blocksAndFocus
+        case (true, false): method = running == nil ? .blocks : .partialBlock
+        default: method = .focus
+        }
+        return EffortOutcome(actualMinutes: actual, method: method, trim: trimDecision?.trim, tooShortToTrim: tooShort)
     }
 
     /// The next multiple of `trimGridMinutes` on the clock at or after `date`.
@@ -88,4 +118,32 @@ public enum EffortRules {
     }
 
     private static func minutes(_ seconds: Double) -> Int { Int((seconds / 60).rounded()) }
+
+    /// The intervals sorted, with those that touch or overlap joined.
+    private static func merged(_ intervals: [DateInterval]) -> [DateInterval] {
+        var result: [DateInterval] = []
+        for interval in intervals.filter({ $0.duration > 0 }).sorted(by: { $0.start < $1.start }) {
+            if let last = result.last, interval.start <= last.end {
+                result[result.count - 1] = DateInterval(start: last.start, end: max(last.end, interval.end))
+            } else {
+                result.append(interval)
+            }
+        }
+        return result
+    }
+
+    /// The parts of `intervals` (merged, sorted) that lie outside every interval of `removed`.
+    private static func subtracting(_ removed: [DateInterval], from intervals: [DateInterval]) -> [DateInterval] {
+        var result = intervals
+        for cut in merged(removed) {
+            result = result.flatMap { interval -> [DateInterval] in
+                guard cut.start < interval.end, cut.end > interval.start else { return [interval] }
+                var parts: [DateInterval] = []
+                if cut.start > interval.start { parts.append(DateInterval(start: interval.start, end: cut.start)) }
+                if cut.end < interval.end { parts.append(DateInterval(start: cut.end, end: interval.end)) }
+                return parts
+            }
+        }
+        return result
+    }
 }

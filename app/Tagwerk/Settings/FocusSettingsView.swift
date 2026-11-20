@@ -22,7 +22,7 @@ struct FocusSettingsView: View {
             Section {
                 Toggle("Erfahrungswerte in der Planung nutzen", isOn: $settings.effortHistoryInPlanning)
             } footer: {
-                Text("Tagwerk misst den Aufwand beim Abhaken aus Fokus-Timer und Zeitblöcken. Die Messwerte bleiben auf dem iPhone. Ist der Schalter an, geht bei der KI-Planung je Aufgabe nur eine erwartete Dauer in Minuten mit, keine Labels und keine Statistik.")
+                Text("Tagwerk misst den Aufwand beim Abhaken aus den Zeitblöcken der Aufgabe. Fokus-Timer-Zeit zählt nur, soweit sie außerhalb dieser Blöcke liegt, ohne Zeitblock zählt sie allein. Die Messwerte bleiben auf dem iPhone. Ist der Schalter an, geht bei der KI-Planung je Aufgabe nur eine erwartete Dauer in Minuten mit, keine Labels und keine Statistik.")
             }
         }
         .navigationTitle("Fokus-Timer")
