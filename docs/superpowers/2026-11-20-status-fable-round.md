@@ -51,7 +51,8 @@ Festlegungen der Hauptsitzung zum G3-Plan: offene Fragen nach Empfehlung; Zeilen
 | `feat/closed-issues-in-reviews` | #173 Strang C (Tasks 6, 7, 7a) | umgesetzt (Head `7f8c597`); Review-Korrekturen laufen: DUPLICATE zählt fälschlich, stille 0 vor dem Laden der Projekte, UI-Audit „Portionen“ prüfen |
 | `feat/evening-reminders-per-day` | #173 Strang E (Tasks 10, 11) | fertig und geprüft, Head `c4c281a`, `test-all` grün; bereit für PR |
 | `feat/assistant-assign-and-search` | #173 Stränge A, B und Task 5 | läuft wieder (Sonnet), ab WIP `430fb8e` |
-| `feat/g3-search-menu` | G3 Strang U | läuft wieder (Sonnet), ab WIP `25b57f0` |
+| `feat/g3-search-menu` | G3 Strang U | fertig, Head `1205562`; UI-Stufe rot nur durch vorbestehende Fehler; offen: Notiz ohne Ordner soll nach „Notizen“ statt „Alle Notizen“ springen |
+| `fix/ui-test-stability` | vorbestehende UI-Testfehler (AX5-Datum Erfassen, Kontrast „Unerledigt von heute“, PlanUITests 23–24 Uhr, Audit-Timeouts) | läuft (Sonnet) |
 
 ## Warteschlange Umsetzung (je freier Xcode-Platz, nach Prüfung des fertigen Branches)
 
