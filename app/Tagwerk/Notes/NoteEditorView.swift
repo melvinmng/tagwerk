@@ -16,6 +16,8 @@ struct NoteEditorView: View {
     private enum Mode { case view, edit }
 
     @State private var text = ""
+    /// The text this page wrote to the store last, or loaded when it opened. A stored text that differs came from outside.
+    @State private var lastSavedText = ""
     @State private var isLoaded = false
     @State private var wasDeleted = false
     @State private var selection: TextSelection?
@@ -80,6 +82,7 @@ struct NoteEditorView: View {
             .onAppear {
                 guard !isLoaded else { return }
                 text = note?.text ?? ""
+                lastSavedText = text
                 isLoaded = true
                 // A new or empty note, a journal entry that is still the template and a running Bible Study session
                 // open for writing; a note with text opens as a page.
@@ -96,11 +99,14 @@ struct NoteEditorView: View {
             .task(id: text) {
                 guard isLoaded, !wasDeleted else { return }
                 try? await Task.sleep(for: .milliseconds(500))
-                if !Task.isCancelled { store.updateText(noteID, text: text) }
+                if !Task.isCancelled { saveText() }
             }
+            // A change of the note from outside (the translation, a confirmed suggestion) replaces the text on this page;
+            // otherwise the delayed save above would write the old text over it.
+            .onChange(of: store.revision) { adoptStoredText() }
             .onDisappear {
                 guard isLoaded, !wasDeleted else { return }
-                store.updateText(noteID, text: text)
+                saveText()
                 // The camera and Quick Look cover this page; SwiftUI may report that as the page going away. The note is
                 // neither an empty one to remove nor an attachment list to trim while one of them is open.
                 guard !isTakingPhoto, previewURL == nil else { return }
@@ -159,14 +165,14 @@ struct NoteEditorView: View {
             }
             if let session = store.openSession(noteID: noteID) {
                 Button {
-                    store.updateText(noteID, text: text)
+                    saveText()
                     store.completeSession(session.id)
                 } label: { Label("Bible Study abschließen", systemImage: "checkmark.circle") }
             }
             if let note, isRecipeNote(note) {
                 Button {
                     // The recipe sheet reads the saved text of the note.
-                    store.updateText(noteID, text: text)
+                    saveText()
                     isAddingToShopping = true
                 } label: { Label("Zutaten auf die Einkaufsliste", systemImage: "cart.badge.plus") }
             }
@@ -176,7 +182,7 @@ struct NoteEditorView: View {
             }
             // The trash is the way back, so deleting does not ask.
             Button(role: .destructive) {
-                store.updateText(noteID, text: text)
+                saveText()
                 wasDeleted = true
                 store.trash(noteID)
                 dismiss()
@@ -199,9 +205,32 @@ struct NoteEditorView: View {
 
     // MARK: Actions
 
+    /// Writes the text to the store. Every write of this page goes through here, so `lastSavedText` always names what the
+    /// page stored itself (`NoteEditorSync`).
+    private func saveText() {
+        lastSavedText = text
+        store.updateText(noteID, text: text)
+    }
+
+    /// Follows a change of the stored note that did not come from this page.
+    private func adoptStoredText() {
+        guard isLoaded, !wasDeleted else { return }
+        let note = store.note(id: noteID)
+        switch NoteEditorSync.resolution(local: text, lastSaved: lastSavedText, stored: note?.text, isTrashed: note?.deletedAt != nil) {
+        case .keep: break
+        case .adopt(let stored):
+            text = stored
+            lastSavedText = stored
+            refreshShareURLs()
+        case .close:
+            wasDeleted = true
+            dismiss()
+        }
+    }
+
     private func switchMode() {
         // Saving is immediate on a switch, so the list and the page never show an older text.
-        store.updateText(noteID, text: text)
+        saveText()
         mode = mode == .edit ? .view : .edit
         refreshShareURLs()
     }
@@ -211,7 +240,7 @@ struct NoteEditorView: View {
         let toggled = MarkdownText.togglingCheckbox(at: index, in: text)
         guard toggled != text else { return }
         text = toggled
-        store.updateText(noteID, text: toggled)
+        saveText()
     }
 
     private func openAttachment(_ id: UUID) {
@@ -287,7 +316,7 @@ struct NoteEditorView: View {
         text = result.text
         selection = TextSelection(insertionPoint: text.index(text.startIndex, offsetBy: result.cursorOffset))
         mode = .edit
-        store.updateText(noteID, text: text)
+        saveText()
         refreshShareURLs()
     }
 
