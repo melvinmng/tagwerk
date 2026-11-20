@@ -272,3 +272,29 @@ struct IntakeTests {
         #expect(IntakeFormat.shortRange(min: 1212, max: 1548, locale: english) == "1,210–1,550")
     }
 }
+
+struct DrinkPresetsTests {
+    @Test func defaults_areTheFormerFixedButtons() {
+        #expect(DrinkPresets.defaults == [250, 330, 500])
+        #expect(DrinkPresets.resolved(DrinkPresets.defaults) == [250, 330, 500])
+    }
+
+    @Test func resolved_clampsEveryValueIntoTheRange() {
+        #expect(DrinkPresets.resolved([0, 800, 99_999]) == [50, 800, 2000])
+        #expect(DrinkPresets.resolved([-5, 50, 2000]) == [50, 50, 2000])
+    }
+
+    @Test func resolved_keepsTheOrderOfTheUser() {
+        #expect(DrinkPresets.resolved([800, 250, 500]) == [800, 250, 500])
+    }
+
+    @Test func resolved_fillsMissingSlotsWithDefaultsAndDropsSurplus() {
+        #expect(DrinkPresets.resolved([]) == [250, 330, 500])
+        #expect(DrinkPresets.resolved([800]) == [800, 330, 500])
+        #expect(DrinkPresets.resolved([100, 200, 300, 400]) == [100, 200, 300])
+    }
+
+    @Test func defaults_liveOnTheStepGrid() {
+        #expect(DrinkPresets.defaults.allSatisfy { $0 % DrinkPresets.step == 0 && DrinkPresets.range.contains($0) })
+    }
+}

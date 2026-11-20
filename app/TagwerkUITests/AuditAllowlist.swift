@@ -45,7 +45,7 @@ enum AuditAllowlist {
             "Ältere Termine durchsuchen · vor .*", "Durchsucht: 6 Monate zurück, 12 Monate voraus\\.",
             "ab \\d+:\\d+ bis \\d+:\\d+ · ganzer Tag .*", "1 Aufgabe ohne Aufwand mit Standarddauer gerechnet", "Pflanzen gießen",
             "Erledigt: Erinnerungen und lokale Aufgaben, ohne GitHub\\.", "Abend-Checkliste · Schlafzeit .*", "Punkte in den Einstellungen anlegen",
-            "Brain Dump", "Leitfragen einfügen", "Schreib auf, was in deinen Kopf kommt\\. Sortier deine Gedanken\\.",
+            "Trinkportionen", "Brain Dump", "Leitfragen einfügen", "Schreib auf, was in deinen Kopf kommt\\. Sortier deine Gedanken\\.",
             "Der Eintrag bleibt auf deinem iPhone und geht nie an ChatGPT\\.", "heute \\d+:\\d+( · diktiert)?", "Bible Study · heute .*",
             "Tagebuch · .*",
             // Titles and previews of the demo notes (the label of a note preview can have several lines). The preview of a note whose
@@ -115,7 +115,7 @@ enum AuditAllowlist {
             "Titel", "Zutaten", "Zubereitung", "Sprachchat", "Rezepte", "Ziele", "Schätzung", "Anzeige", "Liste", "Kategorien", "Erinnerungen", "Keine",
             "Demo Einkauf", "[\\d.,]+( kcal| l)?", "Sprache für Rezepte", "In Planen anzeigen",
             "(?s)(Tagwerk wandelt Sprache|Die Sprache gilt für|Titel, Zutaten und Zubereitung eines Rezepts|Die Vorgaben sind Platzhalter|Zum Schätzen sendet).*",
-            "(?s)(Gesendet wird|Nicht gesendet werden|Um ein Rezept zu lesen).*", "(?s)„In Planen anzeigen“ zeigt .*",
+            "(?s)(Gesendet wird|Nicht gesendet werden|Um ein Rezept zu lesen).*", "(?s)„In Planen anzeigen“ zeigt .*", "Die drei Schnellknöpfe im Tab .*",
         ], screens: recipeScreens + recipeScreensLargeText, reason: "Section headers, footers, values and previews in the system grey (.secondary) on the "
             + "grouped background of a form or list; the last footer of a settings page also lies behind the tab bar. Same group as the "
             + "grey texts above; darkening it would change the look of the default size, decided in #188."),
@@ -126,7 +126,7 @@ enum AuditAllowlist {
             + "(passes with a larger font size); the colours are the system's primary and secondary text colours (#188)."),
         Entry(auditType: .contrast, labels: [
             "Einverstanden", "Nicht jetzt", "Rezept speichern", "\\d+ Artikel hinzufügen", "Verwerfen", "Neues Rezept", "Rezept mit ChatGPT anlegen",
-            "Andere Notiz wählen …", "Demo Linsensuppe", "Rezept holen", "Zutaten holen",
+            "Andere Notiz wählen …", "Demo Linsensuppe", "Rezept holen", "Zutaten holen", "Zurücksetzen", "\\d+ ml",
         ], screens: recipeScreens + recipeScreensLargeText, reason: "Texts in the accent colour (list buttons, note title in the picker), white on the "
             + "prominent button (system style; \"Rezept holen\" and \"Zutaten holen\" are dimmed by the system while the text field is empty) and \"Verwerfen\" in the navigation bar, whose Liquid Glass background lets the list scroll behind it. "
             + "The system draws the background; no own colour to change without replacing the system style (#188)."),
