@@ -1,7 +1,7 @@
 #!/bin/zsh
 # Brings the String Catalogs in line with the source code (plan english-app, Task 1).
 #
-# App and widget: the keys come from the .stringsdata files the compiler writes during a build.
+# App, widget and watch targets: the keys come from the .stringsdata files the compiler writes during a build.
 # Packages: the keys come from the .stringsdata of the package targets in the same build.
 # Hand-maintained catalogs (InfoPlist, AppShortcuts) are not touched.
 #
@@ -82,6 +82,15 @@ for target in Tagwerk TagwerkWidget TagwerkShare; do
   catalog="$APP_DIR/$target/Localizable.xcstrings"
   [[ -f "$catalog" ]] || continue
   files=("$INTERMEDIATES"/*-iphonesimulator/$target.build/Objects-normal/*/*.stringsdata(N))
+  files=(${files:#*ExtractedAppShortcutsMetadata*})
+  sync_catalog "$catalog" "${files[@]}"
+done
+
+# The watch app and its complications are built for the watch simulator as a dependency of the app scheme.
+for target in TagwerkWatch TagwerkWatchWidget; do
+  catalog="$APP_DIR/$target/Localizable.xcstrings"
+  [[ -f "$catalog" ]] || continue
+  files=("$INTERMEDIATES"/*-watchsimulator/$target.build/Objects-normal/*/*.stringsdata(N))
   files=(${files:#*ExtractedAppShortcutsMetadata*})
   sync_catalog "$catalog" "${files[@]}"
 done

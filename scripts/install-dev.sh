@@ -5,6 +5,9 @@
 # Usage: scripts/install-dev.sh
 # Exit codes: 0 installed, 1 build failed, 2 install failed, 64 configuration missing
 # On success it sets last-installed.<bundle> to "dev", which disables the refresh fallback until the next refresh install.
+# The iOS app carries the watch app (Tagwerk.app/Watch). With the optional WATCH_DEVICE_ID in the local config the script
+# also installs the watch app on the watch directly; without it, the Watch app on the iPhone installs it ("Verfügbare
+# Apps" or automatic installation). A failing watch install never fails the script.
 
 set -euo pipefail
 
@@ -47,6 +50,17 @@ if ! xcrun devicectl device install app --device "$DEVICE_ID" "$APP_PATH" 2>&1 |
   echo "Install failed. Last lines of the log:" >&2
   tail -n 10 "$INSTALL_LOG" >&2
   exit 2
+fi
+# Optional: the watch app straight to the watch. Best effort; the iPhone's Watch app installs it otherwise.
+if [[ -n "${WATCH_DEVICE_ID:-}" ]]; then
+  WATCH_APP_PATH="$DERIVED/Build/Products/Debug-watchos/TagwerkWatch.app"
+  echo "==> Installing on watch (log: $INSTALL_LOG)"
+  if [[ -d "$WATCH_APP_PATH" ]] && xcrun devicectl device install app --device "$WATCH_DEVICE_ID" "$WATCH_APP_PATH" 2>&1 \
+      | sed "s/$WATCH_DEVICE_ID/<watch>/g" >> "$INSTALL_LOG"; then
+    echo "Watch install OK."
+  else
+    echo "Watch install skipped or failed (see $INSTALL_LOG); the Watch app on the iPhone can install it." >&2
+  fi
 fi
 # The working tree is installed, so the installed commit is unknown to the refresh fallback.
 print -r -- dev > "$STATE_DIR/last-installed.$TAGWERK_BUNDLE_ID"

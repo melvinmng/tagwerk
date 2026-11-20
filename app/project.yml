@@ -4,6 +4,7 @@ options:
   developmentLanguage: de
   deploymentTarget:
     iOS: "27.0"
+    watchOS: "27.0"
 settings:
   base:
     SWIFT_VERSION: "6.0"
@@ -39,6 +40,7 @@ targets:
       - package: HealthBridge
       - target: TagwerkWidget
       - target: TagwerkShare
+      - target: TagwerkWatch
     entitlements:
       path: Tagwerk/Tagwerk.entitlements
       properties:
@@ -127,6 +129,53 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: $(TAGWERK_BUNDLE_ID).share
+        GENERATE_INFOPLIST_FILE: NO
+  TagwerkWatch:
+    type: application
+    platform: watchOS
+    sources:
+      - TagwerkWatch
+    dependencies:
+      - package: TagwerkCore
+      - target: TagwerkWatchWidget
+    entitlements:
+      path: TagwerkWatch/TagwerkWatch.entitlements
+      properties:
+        com.apple.security.application-groups: [group.$(TAGWERK_BUNDLE_ID)]
+    info:
+      path: TagwerkWatch/Info.plist
+      properties:
+        CFBundleDisplayName: Tagwerk
+        WKApplication: true
+        WKCompanionAppBundleIdentifier: $(TAGWERK_BUNDLE_ID)
+        TagwerkAppGroup: group.$(TAGWERK_BUNDLE_ID)
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: $(TAGWERK_BUNDLE_ID).watchkitapp
+        GENERATE_INFOPLIST_FILE: NO
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+  TagwerkWatchWidget:
+    type: app-extension
+    platform: watchOS
+    sources:
+      - TagwerkWatchWidget
+      - path: TagwerkWatch/Shared
+    dependencies:
+      - package: TagwerkCore
+    entitlements:
+      path: TagwerkWatchWidget/TagwerkWatchWidget.entitlements
+      properties:
+        com.apple.security.application-groups: [group.$(TAGWERK_BUNDLE_ID)]
+    info:
+      path: TagwerkWatchWidget/Info.plist
+      properties:
+        CFBundleDisplayName: Tagwerk
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+        TagwerkAppGroup: group.$(TAGWERK_BUNDLE_ID)
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: $(TAGWERK_BUNDLE_ID).watchkitapp.widget
         GENERATE_INFOPLIST_FILE: NO
   TagwerkTests:
     type: bundle.unit-test

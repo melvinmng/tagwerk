@@ -1,5 +1,5 @@
 #!/bin/zsh
-# Runs all test stages: every local Swift package under app/Packages, the app scheme and the UI tests.
+# Runs all test stages: every local Swift package under app/Packages, the app scheme, the watch build and the UI tests.
 # Stops at the first failing stage and reports which one failed.
 # TAGWERK_SKIP_UI_TESTS=1 skips the UI test stage (quick iterations only; the full run is required before a merge).
 
@@ -86,6 +86,23 @@ xcodegen --quiet || stage_failed
 CURRENT_STAGE="app scheme Tagwerk"
 echo "==> $CURRENT_STAGE"
 run_tests -project "$SCRIPT_DIR/Tagwerk.xcodeproj" -scheme Tagwerk -destination "$DESTINATION" -derivedDataPath "$DERIVED" || stage_failed
+
+# The watch app and its complications build for the watch simulator, which needs the SDK only, not a runtime.
+# Their rules (snapshot, next-up choice, queue, texts) live in TagwerkCore and are tested in the package stage.
+CURRENT_STAGE="watch build"
+echo "==> $CURRENT_STAGE"
+if ! xcodebuild -project "$SCRIPT_DIR/Tagwerk.xcodeproj" -scheme TagwerkWatch -destination 'generic/platform=watchOS Simulator' \
+    -derivedDataPath "$DERIVED" build > "$LOG_DIR/watch-build.log" 2>&1; then
+  grep -E "error:" "$LOG_DIR/watch-build.log" | sort -u | tail -n 30 >&2 || true
+  echo "Full log: $LOG_DIR/watch-build.log" >&2
+  stage_failed
+fi
+echo "    TagwerkWatch and TagwerkWatchWidget build for watchOS Simulator"
+if xcrun simctl list runtimes 2>/dev/null | grep -q "watchOS"; then
+  echo "    a watchOS runtime is installed, but there is no watch test target yet (rules are tested in TagwerkCore)"
+else
+  echo "    skipped on-watch tests: no watchOS runtime installed"
+fi
 
 CURRENT_STAGE="app UI tests"
 echo "==> $CURRENT_STAGE"

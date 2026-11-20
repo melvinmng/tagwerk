@@ -28,9 +28,10 @@ extension WatchSnapshot {
         return result
     }
 
-    /// The habit counter after the local changes, for the progress complication: it follows the habits that were
-    /// checked or unchecked here. Without a counter (no habits today) there is nothing to adjust.
-    public func habitCounterApplying(_ actions: [WatchAction], original: WatchSnapshot) -> HabitCounter? {
+    /// The habit counter after local changes, for the progress complication: `self` is the snapshot with the actions
+    /// applied, `original` the one the phone sent. The counter follows the habits that were checked or unchecked here.
+    /// Without a counter (no habits today) there is nothing to adjust.
+    public func habitCounter(relativeTo original: WatchSnapshot) -> HabitCounter? {
         guard let counter = original.habitCounter else { return nil }
         let before = Dictionary(uniqueKeysWithValues: original.habits.map { ($0.id, $0.done) })
         var delta = 0

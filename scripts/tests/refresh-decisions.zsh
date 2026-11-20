@@ -30,6 +30,9 @@ bundle=org.example.tagwerk
 check "app profile matches"               yes "$(is_tagwerk_profile "$team.$bundle" $team $bundle)"
 check "widget profile matches"            yes "$(is_tagwerk_profile "$team.$bundle.widget" $team $bundle)"
 check "other suffix matches"              yes "$(is_tagwerk_profile "$team.$bundle.other" $team $bundle)"
+check "watch app profile matches"         yes "$(is_tagwerk_profile "$team.$bundle.watchkitapp" $team $bundle)"
+check "watch widget profile matches"      yes "$(is_tagwerk_profile "$team.$bundle.watchkitapp.widget" $team $bundle)"
+check "lookalike watch widget no match"   no  "$(is_tagwerk_profile "$team.${bundle}x.watchkitapp.widget" $team $bundle)"
 check "foreign bundle does not match"     no  "$(is_tagwerk_profile "$team.org.example.other" $team $bundle)"
 check "prefix lookalike does not match"   no  "$(is_tagwerk_profile "$team.${bundle}x" $team $bundle)"
 check "prefix lookalike widget no match"  no  "$(is_tagwerk_profile "$team.${bundle}x.widget" $team $bundle)"
@@ -39,6 +42,19 @@ check "empty identifier does not match"   no  "$(is_tagwerk_profile "" $team $bu
 check "team only does not match"          no  "$(is_tagwerk_profile "$team" $team $bundle)"
 check "trailing dot only does not match"  no  "$(is_tagwerk_profile "$team.$bundle." $team $bundle)"
 check "dot in bundle is literal"          no  "$(is_tagwerk_profile "$team.orgXexample.tagwerk" $team $bundle)"
+
+# The installed app carries profiles in the app, its extensions, the embedded watch app and the watch app's extension.
+fake_app="$(mktemp -d)/Tagwerk.app"
+mkdir -p "$fake_app/PlugIns/TagwerkWidget.appex" "$fake_app/PlugIns/TagwerkShare.appex" \
+  "$fake_app/Watch/TagwerkWatch.app/PlugIns/TagwerkWatchWidget.appex"
+bundles=("${(@f)$(installed_profile_bundles "$fake_app")}")
+check "profile bundles: count"            5 "${#bundles}"
+check "profile bundles: app first"        "$fake_app" "${bundles[1]}"
+check "profile bundles: watch app listed" yes "$([[ "${bundles[(r)$fake_app/Watch/TagwerkWatch.app]}" == "$fake_app/Watch/TagwerkWatch.app" ]] && print yes || print no)"
+check "profile bundles: watch widget listed" yes "$([[ "${bundles[(r)$fake_app/Watch/TagwerkWatch.app/PlugIns/TagwerkWatchWidget.appex]}" != "" ]] && print yes || print no)"
+mkdir -p "${fake_app:h}/Plain.app"
+check "profile bundles: plain app only"   1 "$(installed_profile_bundles "${fake_app:h}/Plain.app" | wc -l | tr -d ' ')"
+rm -rf "${fake_app:h}"
 
 # The earliest expiry of app and extension profiles decides; unknown input stays unknown.
 check "earliest of three"                 100 "$(earliest_expiry 300 100 200)"
@@ -83,6 +99,12 @@ print -r -- 'error: Provisioning profile "x" doesn'"'"'t match the entitlements 
 check "application-groups error detected" yes "$(build_log_has_signing_error "$sign_log")"
 print -r -- 'error: Provisioning profile "iOS Team Provisioning Profile: org.example.tagwerk" is not available.' > "$sign_log"
 check "app provisioning error detected"   yes "$(build_log_has_signing_error "$sign_log")"
+print -r -- 'error: Signing for "TagwerkWatchWidget" requires a development team.' > "$sign_log"
+check "watch extension signing detected"  yes "$(build_log_has_signing_error "$sign_log")"
+print -r -- 'error: Provisioning profile "x" doesn'"'"'t include the application-groups entitlement (in target '"'"'TagwerkWatch'"'"')' > "$sign_log"
+check "watch app group error detected"    yes "$(build_log_has_signing_error "$sign_log")"
+print -r -- '/src/TagwerkWatch/WatchStore.swift:9:5: error: cannot find type '"'"'Foo'"'"' in scope' > "$sign_log"
+check "watch compile error is no signing" no "$(build_log_has_signing_error "$sign_log")"
 print -r -- '/src/TagwerkWidget/Widget.swift:12:5: error: cannot find type '"'"'Foo'"'"' in scope' > "$sign_log"
 check "widget compile error is no signing" no "$(build_log_has_signing_error "$sign_log")"
 print -r -- '/src/Tagwerk/Settings/ProfileView.swift:3:1: error: cannot find '"'"'ProfileView'"'"' in scope' > "$sign_log"

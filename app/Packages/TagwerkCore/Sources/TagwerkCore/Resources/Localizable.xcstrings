@@ -669,6 +669,16 @@
         }
       }
     },
+    "Als Nächstes": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Next up"
+          }
+        }
+      }
+    },
     "Am selben Tag um %@": {
       "localizations": {
         "en": {
@@ -1433,6 +1443,16 @@
         }
       }
     },
+    "Läuft": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Now"
+          }
+        }
+      }
+    },
     "Mittagessen": {
       "localizations": {
         "en": {
@@ -1459,6 +1479,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "After spoken messages"
+          }
+        }
+      }
+    },
+    "Nichts mehr heute": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing left today"
           }
         }
       }
@@ -1959,6 +1989,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "probably between %1$@ and %2$@ kcal"
+          }
+        }
+      }
+    },
+    "Öffne Tagwerk auf dem iPhone": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Tagwerk on your iPhone"
           }
         }
       }

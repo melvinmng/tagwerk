@@ -52,7 +52,8 @@ should_warn() {
 }
 
 # is_tagwerk_profile <application-identifier> <team> <bundle> -> yes|no
-# yes for exactly <team>.<bundle> (app) and <team>.<bundle>.<suffix> (extensions such as .widget).
+# yes for exactly <team>.<bundle> (app) and <team>.<bundle>.<suffix> (extensions such as .widget, and the watch app
+# .watchkitapp with its own extension .watchkitapp.widget: the suffix may have several levels).
 is_tagwerk_profile() {
   local identifier="$1" team="$2" bundle="$3"
   [[ -n "$identifier" && -n "$team" && -n "$bundle" ]] || { print no; return; }
@@ -82,8 +83,8 @@ fallback_commit() {
   return 0
 }
 
-# Signing related build errors, including those of the widget extension (profile, App Group entitlement).
-SIGNING_ERROR_PATTERN='error: .*([Pp]rovisioning|[Pp]rofile|[Ss]igning|[Cc]ertificate|[Ee]ntitlement|application-groups|App Group|TagwerkWidget.*(sign|profile|group))|Command CodeSign failed'
+# Signing related build errors, including those of the extensions and the watch targets (profile, App Group entitlement).
+SIGNING_ERROR_PATTERN='error: .*([Pp]rovisioning|[Pp]rofile|[Ss]igning|[Cc]ertificate|[Ee]ntitlement|application-groups|App Group|Tagwerk(Widget|Share|Watch|WatchWidget).*(sign|profile|group))|Command CodeSign failed'
 
 # build_log_has_signing_error <build log> -> yes|no
 # Compiler errors ("<file>.swift:<line>:<col>: error: ...") never count, even when they name a profile or a group.
@@ -119,6 +120,16 @@ restore_profiles() {
     if [[ -e "$target/${file:t}" ]]; then rm -f -- "$file"; else mv -f -- "$file" "$target/"; fi
   done
   return 0
+}
+
+# installed_profile_bundles <app bundle>: the bundles of an installed app that carry their own profile, one per line:
+# the app, its extensions (PlugIns/*.appex), the embedded watch app (Watch/*.app) and the extensions of the watch app.
+installed_profile_bundles() {
+  local app_path="$1" bundle
+  print -r -- "$app_path"
+  for bundle in "$app_path"/PlugIns/*.appex(N/) "$app_path"/Watch/*.app(N/) "$app_path"/Watch/*.app/PlugIns/*.appex(N/); do
+    print -r -- "$bundle"
+  done
 }
 
 [[ "${TAGWERK_SOURCE_ONLY:-0}" == "1" ]] && return 0
@@ -202,16 +213,16 @@ embedded_profile_expiry() {
 }
 
 # compute_installed_expiry <app bundle>: sets computed_expiry to the earliest expiry of the app profile and all
-# PlugIns/*.appex profiles, or to empty if any of them is unreadable (unknown).
+# profiles of its extensions and of the embedded watch app (installed_profile_bundles), or to empty if any of them is
+# unreadable (unknown).
 # An unreadable profile is logged and notified, and the earliest readable expiry is kept: storing nothing would make
 # every hourly run due and reinstall the app each hour.
 compute_installed_expiry() {
-  local app_path="$1" value appex
+  local app_path="$1" value bundle
   local -a values readable
-  value=$(embedded_profile_expiry "$app_path") || value=""
-  values=("$value")
-  for appex in "$app_path"/PlugIns/*.appex(N/); do
-    value=$(embedded_profile_expiry "$appex") || { log "profile: cannot read expiry of $(basename "$appex")"; value=""; }
+  values=()
+  for bundle in "${(@f)$(installed_profile_bundles "$app_path")}"; do
+    value=$(embedded_profile_expiry "$bundle") || { log "profile: cannot read expiry of $(basename "$bundle")"; value=""; }
     values+=("$value")
   done
   computed_expiry=$(earliest_expiry "${values[@]}")

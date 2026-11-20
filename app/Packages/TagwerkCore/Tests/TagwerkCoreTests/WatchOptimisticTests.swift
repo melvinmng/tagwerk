@@ -48,7 +48,7 @@ struct WatchOptimisticTests {
     @Test func counterFollowsTheLocalChanges() {
         let original = snapshot()
         let changed = original.applying([action(.checkHabit(id: readingHabit, on: true))])
-        #expect(changed.habitCounterApplying([], original: original) == HabitCounter(done: 1, total: 2))
+        #expect(changed.habitCounter(relativeTo: original) == HabitCounter(done: 1, total: 2))
     }
 
     @Test func inbox_collectsActionsInOrder_andDrains() throws {
