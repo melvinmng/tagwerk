@@ -66,6 +66,10 @@ struct NotesListView: View {
             }
             if folderRole == .recipes, !editMode.isEditing {
                 Section {
+                    Button { newRecipe() } label: {
+                        Label("Neues Rezept", systemImage: "square.and.pencil").foregroundStyle(.tint)
+                    }
+                    .buttonStyle(.plain)
                     Button { isCreatingRecipe = true } label: {
                         Label("Rezept mit ChatGPT anlegen", systemImage: "sparkles").foregroundStyle(.tint)
                     }
@@ -178,6 +182,12 @@ struct NotesListView: View {
     static func sessionTitle(_ session: BibleStudySessionRecord, locale: Locale = .current) -> String {
         let name = BibleBooks.book(key: session.book)?.name(locale: locale) ?? ""
         return session.passage.isEmpty ? name : name + " " + session.passage
+    }
+
+    /// "Neues Rezept": a note with the skeleton of a recipe in the folder "Rezepte", opened for writing.
+    private func newRecipe() {
+        guard let note = RecipeNoteWriter.createBlank(language: environment.settings.resolvedRecipeLanguage, store: store) else { return }
+        environment.tasksPath.append(.note(note.id))
     }
 
     /// Opens the entry of today (rule 10: before 04:00 it is still yesterday's), created from the template if needed.
@@ -418,9 +428,9 @@ struct NotesListView: View {
 
 extension NotesListView {
     /// Under the list. A thought note can go to ChatGPT, but only by a tap on "Vorschläge holen" with the consent
-    /// of the routine settings (phase 7); own notes have no such button and are never sent.
+    /// of the routine settings (phase 7); an own note only when the user picks it as the source of "Rezept hinzufügen".
     static var listFootnote: String {
-        String(localized: "Notizen liegen nur auf diesem iPhone. An ChatGPT geht eine Brain-Dump-Notiz nur, wenn du bei ihr auf „Vorschläge holen“ tippst.")
+        String(localized: "Notizen liegen nur auf diesem iPhone. An ChatGPT geht eine Brain-Dump-Notiz nur, wenn du bei ihr auf „Vorschläge holen“ tippst, und eine Notiz nur, wenn du sie bei „Rezept hinzufügen“ als Quelle wählst.")
     }
 
     /// Own notes: when they were changed last ("heute 08:12", "Dienstag" within the last six days, "12. Nov."),

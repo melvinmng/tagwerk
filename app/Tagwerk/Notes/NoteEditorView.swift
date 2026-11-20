@@ -86,6 +86,7 @@ struct NoteEditorView: View {
                 let isRunningSession = store.openSession(noteID: noteID) != nil
                 let isUntouched = text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
                     || (note?.kind == .journal && JournalTemplate.isOnlyTemplate(text))
+                    || (note?.kind == .free && RecipeNote.isOnlyTemplate(text))
                 mode = isRunningSession || isUntouched ? .edit : .view
                 // A running Bible Study session starts with the cursor below its new section.
                 if isRunningSession { selection = TextSelection(insertionPoint: text.endIndex) }

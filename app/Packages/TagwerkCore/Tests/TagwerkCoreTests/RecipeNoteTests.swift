@@ -113,6 +113,26 @@ struct RecipeNoteTests {
         #expect(RecipeNote.parse(english) == note)
     }
 
+    @Test func template_isNoRecipeUntilAnIngredientIsWritten() {
+        let german = RecipeNote.template(language: .german)
+        #expect(german.contains("## Zutaten") && german.contains("## Zubereitung") && german.contains("Portionen:"))
+        #expect(RecipeNote.template(language: .english).contains("## Ingredients"))
+        #expect(RecipeNote.parse(german) == nil)
+        let filled = german.replacingOccurrences(of: "- \n", with: "- 2 Eier\n").replacingOccurrences(of: "# \n", with: "# Rührei\n")
+        #expect(RecipeNote.parse(filled)?.ingredients == ["2 Eier"] && RecipeNote.parse(filled)?.title == "Rührei")
+    }
+
+    @Test func isOnlyTemplate_inEveryLanguage_untilSomethingIsWritten() {
+        for language in VoiceLanguage.allCases {
+            let template = RecipeNote.template(language: language)
+            #expect(RecipeNote.isOnlyTemplate(template))
+            // The store trims the text: trailing spaces and the last line break are gone.
+            #expect(RecipeNote.isOnlyTemplate(template.trimmingCharacters(in: .whitespacesAndNewlines)))
+            #expect(!RecipeNote.isOnlyTemplate(template + "Mehr"))
+        }
+        #expect(!RecipeNote.isOnlyTemplate("") && !RecipeNote.isOnlyTemplate("Einkaufsliste"))
+    }
+
     @Test func markdown_sourceLinkOnlyWhenURL() {
         let withoutURL = RecipeNote(title: "Brot", ingredients: ["500 g Mehl"]).markdown(language: .german)
         #expect(!withoutURL.contains("Quelle") && !withoutURL.contains("Portionen") && !withoutURL.contains("Zubereitung"))

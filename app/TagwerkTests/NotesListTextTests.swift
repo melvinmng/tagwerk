@@ -61,7 +61,7 @@ struct NotesListTextTests {
 
     @Test func listFootnote_staysTrueOnceThoughtsCanBeSent() {
         #expect(NotesListView.listFootnote ==
-                "Notizen liegen nur auf diesem iPhone. An ChatGPT geht eine Brain-Dump-Notiz nur, wenn du bei ihr auf „Vorschläge holen“ tippst.")
+                "Notizen liegen nur auf diesem iPhone. An ChatGPT geht eine Brain-Dump-Notiz nur, wenn du bei ihr auf „Vorschläge holen“ tippst, und eine Notiz nur, wenn du sie bei „Rezept hinzufügen“ als Quelle wählst.")
     }
 
     // MARK: Fixed folders (P5)

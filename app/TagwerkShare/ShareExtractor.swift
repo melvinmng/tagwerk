@@ -59,8 +59,9 @@ enum ShareExtractor {
         let known = types.compactMap { identifier in UTType(identifier).map { (identifier, $0) } }
 
         // The result of the Safari preprocessing script: address, title and selection of the page.
-        if known.contains(where: { $0.1.conforms(to: .propertyList) }) {
-            if let page = await loadPreprocessingResult(provider) { result.parts.append(contentsOf: page.parts) }
+        // Only a property list that holds that result is taken; any other one (a shared .plist file) goes down the chain below.
+        if known.contains(where: { $0.1.conforms(to: .propertyList) }), let page = await loadPreprocessingResult(provider) {
+            result.parts.append(contentsOf: page.parts)
             return
         }
         if let file = known.first(where: { isFileType($0.1) }) {

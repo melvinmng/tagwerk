@@ -18,12 +18,11 @@ public struct SafariPreprocessingResult: Sendable, Equatable {
         self.selection = selection
     }
 
-    /// Reads the item the provider loaded for the property list type: a dictionary with the results under `resultsKey`
-    /// (or, for convenience, the results themselves). `nil` when it holds nothing usable: only web addresses count, an
-    /// empty title or an empty selection is left out.
+    /// Reads the item the provider loaded for the property list type: a dictionary with the results under `resultsKey`.
+    /// Any other property list (a shared .plist file) is no result. `nil` when it holds nothing usable: only web addresses
+    /// count, an empty title or an empty selection is left out.
     public static func parse(_ item: Any?) -> SafariPreprocessingResult? {
-        guard let dictionary = item as? [AnyHashable: Any] else { return nil }
-        let results = (dictionary[resultsKey] as? [AnyHashable: Any]) ?? dictionary
+        guard let dictionary = item as? [AnyHashable: Any], let results = dictionary[resultsKey] as? [AnyHashable: Any] else { return nil }
         func string(_ key: String) -> String? {
             guard let value = results[key] as? String else { return nil }
             let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)

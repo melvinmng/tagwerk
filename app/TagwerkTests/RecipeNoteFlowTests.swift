@@ -141,3 +141,36 @@ struct RecipeSourceTests {
         #expect(RecipeNoteSource.recipeNotes(in: freshStore).isEmpty)
     }
 }
+
+@MainActor
+struct RecipeManualNoteTests {
+    let container: ModelContainer
+    let store: NoteStore
+
+    init() throws {
+        container = try ModelContainerFactory.make(inMemory: true)
+        store = NoteStore(context: container.mainContext, now: { testNow() })
+        store.ensureDefaultFolders()
+    }
+
+    @Test func newRecipe_createsTheSkeletonInTheRecipesFolder() throws {
+        let note = try #require(RecipeNoteWriter.createBlank(language: .german, store: store))
+        #expect(note.folderID == store.folder(role: .recipes)?.id && note.kind == .free)
+        #expect(note.text.contains("## Zutaten") && note.text.contains("## Zubereitung"))
+        #expect(RecipeNote.isOnlyTemplate(note.text) && RecipeNote.parse(note.text) == nil)
+        let english = try #require(RecipeNoteWriter.createBlank(language: .english, store: store))
+        #expect(english.text.contains("## Ingredients"))
+    }
+
+    @Test func untouchedSkeleton_isRemovedWhenTheNoteCloses_aWrittenOneStays() throws {
+        let untouched = try #require(RecipeNoteWriter.createBlank(language: .german, store: store))
+        store.deleteIfEmpty(untouched.id)
+        #expect(store.note(id: untouched.id) == nil)
+        let written = try #require(RecipeNoteWriter.createBlank(language: .german, store: store))
+        store.updateText(written.id, text: written.text.replacingOccurrences(of: "- \n", with: "- 2 Eier\n"))
+        store.deleteIfEmpty(written.id)
+        #expect(store.note(id: written.id) != nil)
+        // The note is a recipe now: the ingredients can go on the shopping list.
+        #expect(RecipeNote.parse(store.note(id: written.id)?.text ?? "")?.ingredients == ["2 Eier"])
+    }
+}

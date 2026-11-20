@@ -33,6 +33,14 @@ enum RecipeNoteWriter {
         return IngredientLine.parse(quantity + " x").amount == nil ? candidate.name + " " + quantity : quantity + " " + candidate.name
     }
 
+    /// "Neues Rezept": an empty recipe to fill in by hand, in the folder "Rezepte" (created if it is missing). The skeleton has
+    /// the title, the servings and the two sections in the recipe language.
+    @discardableResult
+    static func createBlank(language: VoiceLanguage, store: NoteStore) -> NoteRecord? {
+        let folder = store.ensureSystemFolder(.recipes, name: NoteStore.defaultFolderName(for: .recipes))
+        return store.create(text: RecipeNote.template(language: language), kind: .free, folderID: folder.id)
+    }
+
     /// Writes the note into the folder "Rezepte" (created if it is missing). `nil` when there is nothing to write.
     @discardableResult
     static func save(_ note: RecipeNote, language: VoiceLanguage, store: NoteStore) -> NoteRecord? {

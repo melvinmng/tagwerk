@@ -34,8 +34,8 @@ struct SafariPreprocessingResultTests {
         #expect(SafariPreprocessingResult.parse("text") == nil)
         #expect(SafariPreprocessingResult.parse([String: Any]()) == nil)
         #expect(SafariPreprocessingResult.parse(results(["url": 42, "title": 7])) == nil)
-        // The results themselves, without the wrapper key, are read too.
-        #expect(SafariPreprocessingResult.parse(["title": "Nur Titel"])?.title == "Nur Titel")
+        // A property list without the wrapper key (a shared .plist file) is no result, even with a "title" key.
+        #expect(SafariPreprocessingResult.parse(["title": "Nur Titel", "url": "https://example.com"]) == nil)
     }
 
     @Test func parse_cutsAVeryLongSelection() throws {

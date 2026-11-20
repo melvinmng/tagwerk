@@ -129,16 +129,38 @@ public struct RecipeNote: Sendable, Hashable {
     /// The line without its bullet ("- ", "* ", "• "), check box or number ("1. ", "2) ").
     private static func listItem(_ line: String) -> String {
         var text = Substring(line)
+        // A bullet or number without text is an empty list item, as in the template.
+        if ["-", "*", "+", "•"].contains(text) { return "" }
         for marker in ["- [ ] ", "- [x] ", "- ", "* ", "+ ", "• "] where text.hasPrefix(marker) {
             text = text.dropFirst(marker.count)
             break
         }
         let digits = text.prefix { $0.isASCII && $0.isNumber }
-        if !digits.isEmpty, digits.count <= 3, let separator = text.dropFirst(digits.count).first, separator == "." || separator == ")",
-           text.dropFirst(digits.count + 1).first == " " {
-            text = text.dropFirst(digits.count + 1)
+        if !digits.isEmpty, digits.count <= 3, let separator = text.dropFirst(digits.count).first, separator == "." || separator == ")" {
+            let rest = text.dropFirst(digits.count + 1)
+            if rest.isEmpty { return "" }
+            if rest.first == " " { text = rest }
         }
         return text.trimmingCharacters(in: .whitespaces)
+    }
+
+    // MARK: Template
+
+    /// The skeleton of a recipe the user writes by hand: the title line, the servings and the two sections, empty, in
+    /// `language`. Once an ingredient is written under "Zutaten" it reads as a recipe (`parse`).
+    public static func template(language: VoiceLanguage) -> String {
+        func text(_ key: String.LocalizationValue) -> String { Localized.string(key, in: language, bundle: .module) }
+        return "# \n\n\(text("Portionen")): \n\n## \(text("Zutaten"))\n- \n\n## \(text("Zubereitung"))\n1. \n"
+    }
+
+    /// Whether the text is still the untouched skeleton, in any language: it is no recipe yet, and the note is removed again
+    /// when it is closed unchanged.
+    public static func isOnlyTemplate(_ text: String) -> Bool {
+        func normalized(_ value: String) -> [String] {
+            value.split(whereSeparator: \.isNewline).map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
+        }
+        let lines = normalized(text)
+        return !lines.isEmpty && VoiceLanguage.allCases.contains { normalized(template(language: $0)) == lines }
     }
 
     // MARK: Writing

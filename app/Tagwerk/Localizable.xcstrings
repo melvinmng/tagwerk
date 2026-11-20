@@ -2277,7 +2277,18 @@
         }
       }
     },
+    "**Gesendet wird:** der Rezepttext oder das Foto und die Kategorienamen, oder der Text einer Notiz, die du ausdrücklich als Quelle wählst. Bei einem Link nur der gelesene Text der Seite, nicht die Adresse.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "**Sent:** the recipe text or the photo and the category names, or the text of a note you explicitly choose as the source. For a link, only the text read from the page, not the address."
+          }
+        }
+      }
+    },
     "**Gesendet wird:** der Rezepttext oder das Foto und die Kategorienamen. Bei einem Link nur der gelesene Text der Seite, nicht die Adresse.": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -2339,11 +2350,22 @@
       }
     },
     "**Nicht gesendet werden:** deine Einkaufsliste, Mengen auf der Liste, Aufgaben, Termine, Notizen, Daten aus Health.": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "**What is not sent:** your shopping list, quantities on the list, tasks, events, notes, Health data."
+          }
+        }
+      }
+    },
+    "**Nicht gesendet werden:** deine Einkaufsliste, Mengen auf der Liste, Aufgaben, Termine, andere Notizen, Daten aus Health. Eine Notiz mit Zutaten und Zubereitung liest Tagwerk auf dem iPhone, und private Notizen stehen nie zur Auswahl.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "**Not sent:** your shopping list, amounts on the list, tasks, events, other notes, Health data. Tagwerk reads a note with ingredients and instructions on the iPhone, and private notes are never offered."
           }
         }
       }
@@ -8269,6 +8291,16 @@
         }
       }
     },
+    "Für ein Rezept sendet Tagwerk auf dein Tippen den Rezepttext, das Foto oder den gelesenen Text einer Seite an ChatGPT, bei „Rezept hinzufügen“ dazu die Namen deiner Kategorien, wenn du in der Einkaufsliste zugestimmt hast. Wählst du eine Notiz ohne Zutaten und Zubereitung als Quelle, geht ihr Text an ChatGPT; eine Notiz mit beiden Abschnitten liest Tagwerk auf dem iPhone. Private Notizen (Tagebuch, Bible Study, Dream Log) stehen dafür nie zur Auswahl.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "For a recipe, Tagwerk sends the recipe text, the photo or the text read from a page to ChatGPT when you tap, and with “Add recipe” also the names of your categories, if you agreed in the shopping list settings. If you choose a note without ingredients and instructions as the source, its text goes to ChatGPT; Tagwerk reads a note with both sections on the iPhone. Private notes (journal, Bible Study, Dream Log) are never offered."
+          }
+        }
+      }
+    },
     "Für eine geteilte Mail sendet Tagwerk nur dann Betreff, Absendername und Text (höchstens 12 000 Zeichen) an ChatGPT, wenn du in der Einstellung „Mails von ChatGPT zusammenfassen“ zugestimmt hast und auf „Mit ChatGPT zusammenfassen“ tippst. Anhänge, Adressen, Empfänger und der Link zur Mail gehören nicht zur Zusammenfassung. Fragst du später den Assistenten nach der Aufgabe, kann deren Notiz mit dem Link an ChatGPT gehen, wie bei jeder Aufgabe. Der Eingang für geteilte Inhalte liegt nur auf diesem iPhone und gehört nicht zur Datensicherung.": {
       "localizations": {
         "en": {
@@ -11986,6 +12018,16 @@
         }
       }
     },
+    "Neues Rezept": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New recipe"
+          }
+        }
+      }
+    },
     "Neues Testament": {
       "localizations": {
         "en": {
@@ -12369,7 +12411,18 @@
         }
       }
     },
+    "Notizen liegen nur auf diesem iPhone. An ChatGPT geht eine Brain-Dump-Notiz nur, wenn du bei ihr auf „Vorschläge holen“ tippst, und eine Notiz nur, wenn du sie bei „Rezept hinzufügen“ als Quelle wählst.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notes stay on this iPhone only. A Brain Dump note goes to ChatGPT only when you tap “Get suggestions” on it, and a note only when you choose it as the source in “Add recipe”."
+          }
+        }
+      }
+    },
     "Notizen liegen nur auf diesem iPhone. An ChatGPT geht eine Brain-Dump-Notiz nur, wenn du bei ihr auf „Vorschläge holen“ tippst.": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
