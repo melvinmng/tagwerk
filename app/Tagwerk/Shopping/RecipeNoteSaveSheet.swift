@@ -24,7 +24,7 @@ struct RecipeNoteSaveSheet: View {
         NavigationStack {
             RecipeInputView(purpose: .saveOnly, model: nil) { recipe, _ in result = Found(recipe: recipe) }
                 .navigationTitle("Rezept mit ChatGPT anlegen")
-                .navigationBarTitleDisplayMode(.inline)
+                .modifier(LargeTitleAtAccessibilitySizes())
                 .toolbar {
                     ToolbarItem(placement: .cancellationAction) { Button("Abbrechen") { dismiss() } }
                 }
@@ -38,6 +38,18 @@ struct RecipeNoteSaveSheet: View {
                 }
         }
         .presentationDetents([.large])
+        // A sheet does not take the forced text size of the UI test mode from the window; no effect outside that mode.
+        .modifier(UITestAppearance())
+    }
+}
+
+/// The inline title of a navigation bar is cut at accessibility text sizes; the large title wraps. Read where the view is
+/// shown (not in the sheet itself), so the forced size of the UI test mode counts too.
+private struct LargeTitleAtAccessibilitySizes: ViewModifier {
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+
+    func body(content: Content) -> some View {
+        content.navigationBarTitleDisplayMode(dynamicTypeSize.isAccessibilitySize ? .large : .inline)
     }
 }
 
@@ -45,6 +57,7 @@ struct RecipeNoteSaveSheet: View {
 /// the rest is the recipe as it was read.
 struct RecipeNoteSaveView: View {
     @Environment(AppEnvironment.self) private var environment
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     let result: RecipeImporter.Result
     let store: NoteStore
     let onSaved: (UUID) -> Void
@@ -75,7 +88,12 @@ struct RecipeNoteSaveView: View {
     var body: some View {
         List {
             Section("Titel") {
-                TextField("Titel", text: $title)
+                if dynamicTypeSize.isAccessibilitySize {
+                    // A single line cuts a long title at accessibility sizes.
+                    TextField("Titel", text: $title, axis: .vertical).lineLimit(1...5)
+                } else {
+                    TextField("Titel", text: $title)
+                }
             }
             Section {
                 ValueStepper("Portionen", value: $servings, start: RecipeResultView.startServings, in: RecipeResultView.servingsRange)

@@ -104,6 +104,11 @@ enum DemoData {
         if let discarded = notes.create(text: "Alte Einkaufsidee\nNicht mehr nötig") {
             notes.trash(discarded.id)
         }
+        // A recipe note in the folder "Rezepte" (invented dish), to try the recipe note and "Zutaten auf die Einkaufsliste".
+        let soup = RecipeNote(title: "Demo Linsensuppe", servings: 4,
+                              ingredients: ["250 g rote Linsen", "1 Zwiebel", "2 Karotten", "1 l Gemüsebrühe", "Salz"],
+                              steps: ["Zwiebel und Karotten würfeln und andünsten.", "Linsen und Brühe zugeben und 20 Minuten köcheln."])
+        RecipeNoteWriter.save(soup, language: .german, store: notes)
     }
 
     /// A local task repeating every three days from today, to try ticking off and "Rückgängig" (plan 2026-11-18,

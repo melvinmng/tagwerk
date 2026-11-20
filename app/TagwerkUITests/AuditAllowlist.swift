@@ -27,10 +27,18 @@ enum AuditAllowlist {
         "\\d\\d:\\d\\d–\\d\\d:\\d\\d( · .*)?", "Seminar", "Sprechstunde", "Mittagspause", "(⚑ )?Abgabe Kurzbericht",
     ]
 
+    /// The screens of the recipe audits (`AccessibilityAuditRecipesUITests`) in the default size and their AX5/dark names.
+    private static let recipeScreens = [
+        "Rezepte", "Rezept-Notiz", "Zutaten (Rezept)", "Rezept anlegen (Eingabe)", "Rezept anlegen (Einwilligung)",
+        "Rezept anlegen (Bestätigung)", "Einkauf › Rezept hinzufügen", "Einkauf › Rezept hinzufügen (Notiz)",
+        "Einstellungen › KI › Sprache", "Einstellungen › Erfassen", "Einstellungen › Einkaufsliste",
+    ]
+    private static let recipeScreensLargeText = recipeScreens.map { "AX5/dark " + $0 }
+
     private static let entries: [Entry] = [
         // MARK: Contrast (every group needs a colour decision, section "Designpunkte für #188")
         Entry(auditType: .contrast, labels: [
-            "Nichts offen", "zuletzt: „Römer“ · heute \\d+:\\d+", "8", "HEUTE · KW \\d+", "FR\\. .* · KW \\d+", "Ablauf", "\\d\\d:\\d\\d",
+            "Nichts offen", "zuletzt: „(Römer|Demo Linsensuppe)“ · heute \\d+:\\d+", "[89]", "HEUTE · KW \\d+", "FR\\. .* · KW \\d+", "Ablauf", "\\d\\d:\\d\\d",
             "Schlafzeit \\d+:\\d+", "Ganztägig", "Überfällig", "Heute", "Einkaufsliste", "Notizen", "\\d+\\.\\d+\\.", "·", "Demo Aufgaben",
             "Lokal", "Routinen", "Gewohnheiten", "Woche", "Starten", "noch [\\d.]+", "Wasser", "Schritte", "Training · Woche",
             "\\d+ offen · Liste „Demo Einkauf“ in Erinnerungen", "Brot & Backwaren", "Kühlregal", "Aufgaben, 1 offen", "Vergangene Termine",
@@ -42,7 +50,7 @@ enum AuditAllowlist {
             "Tagebuch · .*",
             // Titles and previews of the demo notes (the label of a note preview can have several lines). The preview of a note whose
             // title is a heading line starts with the first body line, so these lines are listed as well.
-            "(?s)(Ideen Hausarbeit|Gliederung|Generelle Gedanken|Literaturliste|Handwerker anrufen|Heute lief die Gliederung gut|Geschenkidee für Lea|Kochbuch oder Konzertkarten|Römer|Allgemeine Stimmung|Alte Einkaufsidee|Ruhig und dankbar\\.|Heizung entlüften|1 Einleitung, 2 Methode, 3 Ergebnisse|Drei Quellen zur Statistik).*",
+            "(?s)(Demo Linsensuppe|Portionen: 4|Ideen Hausarbeit|Gliederung|Generelle Gedanken|Literaturliste|Handwerker anrufen|Heute lief die Gliederung gut|Geschenkidee für Lea|Kochbuch oder Konzertkarten|Römer|Allgemeine Stimmung|Alte Einkaufsidee|Ruhig und dankbar\\.|Heizung entlüften|1 Einleitung, 2 Methode, 3 Ergebnisse|Drei Quellen zur Statistik).*",
         ], reason: "Secondary text in the system grey (.secondary) on the grouped background or on a card: captions, counts, section "
             + "headers. Darkening it would change the look of the default size; decided together with the other grey texts in #188."),
         Entry(auditType: .contrast, labels: [
@@ -86,7 +94,7 @@ enum AuditAllowlist {
             + "in #188."),
         Entry(auditType: .textClipped, labels: [
             "Mit ChatGPT planen: in Einstellungen › KI anmelden", "1 Aufgabe ohne Aufwand mit Standarddauer gerechnet",
-            "zuletzt: „Römer“ · heute \\d+:\\d+", "Wochenrückblick", "Punkte in den Einstellungen anlegen",
+            "zuletzt: „(Römer|Demo Linsensuppe)“ · heute \\d+:\\d+", "Wochenrückblick", "Punkte in den Einstellungen anlegen",
             "Ältere Termine durchsuchen · vor .*",
         ], reason: "Reported in the default size for texts that are shown completely on the screenshot of the run (cards of \"Planen\", "
             + "entry rows of \"Aufgaben\", \"Erfassen\"). Not reproducible by eye; stays on the device test list (large text)."),
@@ -96,6 +104,40 @@ enum AuditAllowlist {
         Entry(auditType: .textClipped, labels: [""], elementType: .textField, reason:
             "Text fields (shopping input, search field) report their placeholder as clipped; the field itself is a single line with a fixed "
             + "pill height. Layout for AX sizes: #188."),
+
+        // MARK: Recipe screens and settings (G1, G2)
+        Entry(auditType: .contrast, labels: [
+            "Rezepttext", "Füge die Zutatenliste oder das ganze Rezept ein\\. .*", "Du kannst das in den Einstellungen unter „Einkaufsliste“ widerrufen\\.",
+            "Das Rezept wird als Notiz im Ordner „Rezepte“ gespeichert\\. .*", "Portionen", "\\d+", "Die Kategorien kommen aus deiner Einkaufsliste\\.",
+            "Vorlesen", "ChatGPT", "Notiz", "(?s)Eine Notiz mit den Abschnitten .*", "(?s)Notizen liegen nur auf diesem iPhone\\..*",
+            "(?s)Die gewählte Liste erscheint als Einkaufsliste\\..*", "(?s)Sendet auf dein Tippen die Namen .*", "(?s)„Rezept hinzufügen“ sendet .*",
+            "(?s)Portionen: \\d+\\nZutaten.*", "strukturiert", "wird mit ChatGPT gelesen",
+            "(?s)(Gesendet wird|Nicht gesendet werden|Um ein Rezept zu lesen).*", "(?s)„In Planen anzeigen“ zeigt .*",
+        ], screens: recipeScreens + recipeScreensLargeText, reason: "Section headers, footers, values and previews in the system grey (.secondary) on the "
+            + "grouped background of a form or list; the last footer of a settings page also lies behind the tab bar. Same group as the "
+            + "grey texts above; darkening it would change the look of the default size, decided in #188."),
+        Entry(auditType: .contrast, labels: [
+            "Einverstanden", "Nicht jetzt", "Rezept speichern", "\\d+ Artikel hinzufügen", "Verwerfen", "Neues Rezept", "Rezept mit ChatGPT anlegen",
+            "Andere Notiz wählen …", "Demo Linsensuppe",
+        ], screens: recipeScreens + recipeScreensLargeText, reason: "Texts in the accent colour (list buttons, note title in the picker), white on the "
+            + "prominent button (system style) and \"Verwerfen\" in the navigation bar, whose Liquid Glass background lets the list scroll behind it. "
+            + "The system draws the background; no own colour to change without replacing the system style (#188)."),
+
+        Entry(auditType: .dynamicType, labels: [
+            "Abbrechen", "Verwerfen", "Die Kategorien kommen aus deiner Einkaufsliste\\.", "Das Rezept wird als Notiz im Ordner „Rezepte“ gespeichert\\. .*",
+            "\\d\\. .*", "Vorlesen", "Eiweiß-Ziel", "(?s)Sendet auf dein Tippen die Namen .*", "Rezepte mit ChatGPT lesen", "ChatGPT",
+            "(?s)Notizen liegen nur auf diesem iPhone\\..*",
+        ], screens: recipeScreens, reason: "Navigation bar buttons, form rows, footers and steps use text styles; the audit still reports a partial lack of "
+            + "support. In the AX5 run of the same screens (`AccessibilityAuditRecipesLargeTextUITests`, screenshots checked) every one of these texts "
+            + "grows and wraps."),
+        Entry(auditType: .textClipped, labels: [
+            "Rezept mit ChatGPT anlegen", "Neues Rezept", "Demo Linsensuppe", "Andere Notiz wählen …", "Füge die Zutatenliste oder das ganze Rezept ein\\. .*",
+            "(?s)(Um ein Rezept zu lesen|Gesendet wird|Nicht gesendet werden|Eine Notiz mit den Abschnitten|Die gewählte Liste erscheint|Portionen: \\d+\\nZutaten).*",
+            "Du kannst das in den Einstellungen unter „Einkaufsliste“ widerrufen\\.", "Mikrofon in Gesprächen",
+        ], screens: recipeScreens + recipeScreensLargeText, reason: "The audit warns that these texts \"may be clipped at larger Dynamic Type sizes\". "
+            + "Checked on the AX5 screenshots of these screens: headings, buttons, notes and footers wrap completely, some run past the lower edge "
+            + "of the scroll view (the audit counts that as clipped). The navigation title \"Rezept mit ChatGPT anlegen\" is truncated by the "
+            + "system bar (large title at AX sizes still cuts it): device test list, design decision in #188."),
 
         // MARK: Hit area
         Entry(auditType: .hitRegion, labels: ["Eingabe löschen"], reason:

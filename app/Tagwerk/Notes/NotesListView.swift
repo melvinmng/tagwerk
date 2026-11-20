@@ -5,6 +5,7 @@ import TagwerkCore
 /// capture at the bottom, pinning, moving and deleting. Notes stay on this device. It has no navigation stack of its own.
 struct NotesListView: View {
     @Environment(AppEnvironment.self) private var environment
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     let store: NoteStore
     let scope: NotesScope
 
@@ -262,7 +263,8 @@ struct NotesListView: View {
             HStack(alignment: .top, spacing: 10) {
                 VStack(alignment: .leading, spacing: 4) {
                     HStack(alignment: .firstTextBaseline) {
-                        Text(title).font(.body.weight(.semibold)).foregroundStyle(.primary).lineLimit(1)
+                        Text(title).font(.body.weight(.semibold)).foregroundStyle(.primary)
+                            .lineLimit(dynamicTypeSize.isAccessibilitySize ? nil : 1)
                         Spacer(minLength: 4)
                         if attachmentInfo.fileCount > 0 {
                             Label("\(attachmentInfo.fileCount)", systemImage: "paperclip")
@@ -275,7 +277,7 @@ struct NotesListView: View {
                         }
                     }
                     if !preview.isEmpty {
-                        Text(preview).font(.subheadline).foregroundStyle(.secondary).lineLimit(2)
+                        Text(preview).font(.subheadline).foregroundStyle(.secondary).lineLimit(dynamicTypeSize.isAccessibilitySize ? nil : 2)
                     }
                     Text(footerText(for: note))
                         .font(.caption).foregroundStyle(.secondary)

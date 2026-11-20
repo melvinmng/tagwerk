@@ -88,7 +88,8 @@ private struct RecipeNoteRowLabel: View {
             Image(systemName: isOn ? "checkmark.circle.fill" : "circle").foregroundStyle(isOn ? Color.accentColor : Color.secondary)
             VStack(alignment: .leading, spacing: 2) {
                 Text(entry.title).foregroundStyle(.primary)
-                Text(entry.isStructured ? "strukturiert" : "wird mit ChatGPT gelesen").font(.subheadline).foregroundStyle(.secondary)
+                // A fixed grey: the hierarchical `.secondary` takes the tint of the button around it and fails the contrast audit.
+                Text(entry.isStructured ? "strukturiert" : "wird mit ChatGPT gelesen").font(.subheadline).foregroundStyle(Color.secondary)
             }
             Spacer(minLength: 0)
         }
