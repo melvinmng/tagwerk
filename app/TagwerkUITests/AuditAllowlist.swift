@@ -45,7 +45,7 @@ enum AuditAllowlist {
             "Ältere Termine durchsuchen · vor .*", "Durchsucht: 6 Monate zurück, 12 Monate voraus\\.",
             "ab \\d+:\\d+ bis \\d+:\\d+ · ganzer Tag .*", "1 Aufgabe ohne Aufwand mit Standarddauer gerechnet", "Pflanzen gießen",
             "Erledigt: Erinnerungen und lokale Aufgaben, ohne GitHub\\.", "Abend-Checkliste · Schlafzeit .*", "Punkte in den Einstellungen anlegen",
-            "Brain Dump", "Leitfragen einfügen", "Schreib auf, was in deinen Kopf kommt\\. Sortier deine Gedanken\\.",
+            "Trinkportionen", "Brain Dump", "Leitfragen einfügen", "Schreib auf, was in deinen Kopf kommt\\. Sortier deine Gedanken\\.",
             "Der Eintrag bleibt auf deinem iPhone und geht nie an ChatGPT\\.", "heute \\d+:\\d+( · diktiert)?", "Bible Study · heute .*",
             "Tagebuch · .*",
             // Titles and previews of the demo notes (the label of a note preview can have several lines). The preview of a note whose
