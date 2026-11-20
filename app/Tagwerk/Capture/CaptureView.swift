@@ -167,7 +167,8 @@ struct CaptureView: View {
                 quickButton("Training", symbol: "figure.run") { sheet = .newWorkout() }
             }
             HStack(spacing: 8) {
-                ForEach(DrinkValue.quickAmounts, id: \.self) { amount in
+                // By index: two portions may be equal, so the amount is no identity.
+                ForEach(Array(model.settings.drinkPresets.enumerated()), id: \.offset) { _, amount in
                     Button {
                         Task { await model.addWater(amount) }
                     } label: {

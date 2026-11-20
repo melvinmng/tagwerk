@@ -6357,6 +6357,16 @@
         }
       }
     },
+    "Die drei Schnellknöpfe im Tab „Erfassen“ tragen diese Mengen ein, in dieser Reihenfolge.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The three quick buttons in the Capture tab add these amounts, in this order."
+          }
+        }
+      }
+    },
     "Die gewählte Liste erscheint als Einkaufsliste. Ihre Einträge stehen nicht mehr unter „Aufgaben“, werden nicht eingeplant, zählen nicht im Wochenrückblick und lösen keine Tagwerk-Mitteilungen aus. In der App „Erinnerungen“ ändert sich nichts.": {
       "localizations": {
         "en": {
@@ -13403,6 +13413,16 @@
         }
       }
     },
+    "Portion %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Portion %lld"
+          }
+        }
+      }
+    },
     "Portionen": {
       "localizations": {
         "en": {
@@ -15770,6 +15790,16 @@
         }
       }
     },
+    "Trinkportionen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Drink portions"
+          }
+        }
+      }
+    },
     "Trotzdem sichern": {
       "localizations": {
         "en": {
@@ -17743,6 +17773,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Back to the AI’s suggestion (%@)"
+          }
+        }
+      }
+    },
+    "Zurücksetzen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reset"
           }
         }
       }

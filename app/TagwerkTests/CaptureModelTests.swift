@@ -31,6 +31,17 @@ struct CaptureModelTests {
                             now: { clock.now }, waitsForHealth: true)
     }
 
+    @Test func drinkPresets_ofTheSettings_driveTheQuickButtons() async {
+        let model = make()
+        await model.reload()
+        #expect(model.settings.drinkPresets == [250, 330, 500])
+        settings.drinkPresets = [800, 330, 500]
+        // The quick buttons read these values and add exactly the tapped portion.
+        #expect(model.settings.drinkPresets == [800, 330, 500])
+        await model.addWater(model.settings.drinkPresets[0], offersUndo: false)
+        #expect(model.drinks.map(\.milliliters) == [800])
+    }
+
     @Test func newDay_whileShowingToday_followsToday() async {
         let model = make()
         await model.reload()

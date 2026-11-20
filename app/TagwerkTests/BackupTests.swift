@@ -483,6 +483,34 @@ struct BackupTests {
         #expect(target.settings.recipeLanguage == "en-US")
     }
 
+    // MARK: Drink portions
+
+    @Test func drinkPresets_roundTripThroughABackup() throws {
+        let origin = try makeTarget()
+        origin.settings.drinkPresets = [800, 200, 1000]
+        try origin.container.mainContext.save()
+        let target = try makeTarget()
+        #expect(target.settings.drinkPresets == [250, 330, 500])
+        try target.service.restore(try target.service.inspect(try origin.service.makeBackupData()))
+        #expect(target.settings.drinkPresets == [800, 200, 1000])
+    }
+
+    @Test func oldBackupWithoutDrinkPresets_restores_andKeepsTheDevicePortions() throws {
+        let data = try backup.makeBackupData()
+        var object = try #require(try JSONSerialization.jsonObject(with: data) as? [String: Any])
+        var entities = try #require(object["entities"] as? [String: Any])
+        var settings = try #require(entities["settings"] as? [String: Any])
+        settings.removeValue(forKey: "drinkPresets")
+        entities["settings"] = settings
+        object["entities"] = entities
+        let old = try JSONSerialization.data(withJSONObject: object)
+        let target = try makeTarget()
+        target.settings.drinkPresets = [800, 330, 500]
+        try target.container.mainContext.save()
+        try target.service.restore(try target.service.inspect(old))
+        #expect(target.settings.drinkPresets == [800, 330, 500])
+    }
+
     @Test func oldBackupWithoutRecipeLanguage_restores_andKeepsTheDeviceValue() throws {
         let data = try backup.makeBackupData()
         var object = try #require(try JSONSerialization.jsonObject(with: data) as? [String: Any])

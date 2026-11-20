@@ -33,6 +33,21 @@ struct CaptureSettingsView: View {
             }
 
             Section {
+                ForEach(0..<DrinkPresets.defaults.count, id: \.self) { index in
+                    ValueStepper("Portion \(index + 1)", value: presetBinding(index), in: DrinkPresets.range,
+                                 step: DrinkPresets.step, unit: "ml") { "\($0) ml" }
+                        .accessibilityIdentifier("drinkPreset\(index + 1)")
+                }
+                Button("Zurücksetzen") { settings.drinkPresets = DrinkPresets.defaults }
+                    .disabled(settings.drinkPresets == DrinkPresets.defaults)
+                    .accessibilityIdentifier("drinkPresetsReset")
+            } header: {
+                Text("Trinkportionen")
+            } footer: {
+                Text("Die drei Schnellknöpfe im Tab „Erfassen“ tragen diese Mengen ein, in dieser Reihenfolge.")
+            }
+
+            Section {
                 Toggle("Mahlzeiten von ChatGPT schätzen", isOn: $settings.mealEstimationConsent)
                     .disabled(!environment.ai.isSignedIn)
             } header: {
@@ -79,6 +94,17 @@ struct CaptureSettingsView: View {
         }
         .navigationTitle("Erfassen")
         .navigationBarTitleDisplayMode(.inline)
+    }
+
+    /// One portion of the quick buttons; every write goes through the rules, so the three values stay inside the range.
+    private func presetBinding(_ index: Int) -> Binding<Int> {
+        let settings = environment.settings
+        return Binding(get: { settings.drinkPresets[index] },
+                       set: { newValue in
+                           var presets = settings.drinkPresets
+                           presets[index] = newValue
+                           settings.drinkPresets = presets
+                       })
     }
 
     /// "2 h 30 min"; "aus" when the goal is off.

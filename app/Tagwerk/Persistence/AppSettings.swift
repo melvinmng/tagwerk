@@ -66,6 +66,10 @@ final class AppSettings {
     var workoutGoalMigrated: Bool = false
     var proteinGoalEnabled: Bool = false
     var goalProteinGrams: Int = 120
+    /// The three quick-button portions of the tab ("Trinkportionen"), see `DrinkPresets`. Read and set through `drinkPresets`.
+    var drinkPreset1Milliliters: Int = 250
+    var drinkPreset2Milliliters: Int = 330
+    var drinkPreset3Milliliters: Int = 500
     /// The one-time consent for meal estimates (main design §7). The settings switch binds to it; off means typing values.
     var mealEstimationConsent: Bool = false
     /// Phase 5: the reminder list that serves as the shopping list; `nil` means none. Its reminders are not tasks.
@@ -185,6 +189,17 @@ final class AppSettings {
             focusLongBreakMinutes = clamped.longBreakMinutes
             focusRounds = clamped.rounds
             focusUsesPomodoro = clamped.isPomodoro
+        }
+    }
+
+    /// The quick-button portions as the rules want them (three values, each inside the range, in the user's order).
+    var drinkPresets: [Int] {
+        get { DrinkPresets.resolved([drinkPreset1Milliliters, drinkPreset2Milliliters, drinkPreset3Milliliters]) }
+        set {
+            let resolved = DrinkPresets.resolved(newValue)
+            drinkPreset1Milliliters = resolved[0]
+            drinkPreset2Milliliters = resolved[1]
+            drinkPreset3Milliliters = resolved[2]
         }
     }
 

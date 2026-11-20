@@ -25,6 +25,25 @@ struct CaptureSettingsTests {
         #expect(settings.workoutGoalMigrated == false)
     }
 
+    @Test func drinkPresets_defaultToTheFormerButtons() {
+        #expect(settings.drinkPresets == [250, 330, 500])
+    }
+
+    @Test func drinkPresets_setterKeepsTheOrderAndClampsEachPortion() {
+        settings.drinkPresets = [800, 250, 5000]
+        #expect(settings.drinkPresets == [800, 250, 2000])
+        #expect(settings.drinkPreset1Milliliters == 800)
+        #expect(settings.drinkPreset2Milliliters == 250)
+        #expect(settings.drinkPreset3Milliliters == 2000)
+        settings.drinkPresets = [10]
+        #expect(settings.drinkPresets == [50, 330, 500], "a short list keeps the defaults of the missing slots")
+    }
+
+    @Test func drinkPresets_corruptStoredValue_isClampedOnRead() {
+        settings.drinkPreset2Milliliters = -40
+        #expect(settings.drinkPresets == [250, 50, 500])
+    }
+
     @Test func migration_oldGoalZero_setsMinutesGoalZero_once() {
         settings.goalWorkoutsPerWeek = 0
         settings.migrateWorkoutGoalIfNeeded()

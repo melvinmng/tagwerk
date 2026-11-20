@@ -138,9 +138,28 @@ public struct DrinkValue: Sendable, Hashable, Identifiable {
         self.date = date
         self.milliliters = milliliters
     }
+}
 
-    /// Quick buttons of the tab (mockup E4a).
-    public static let quickAmounts = [250, 330, 500]
+/// The three portions of the quick buttons in the tab (mockup E4a), adjustable in Einstellungen › Erfassen.
+///
+/// The user's order is kept: the settings rows map one to one to the buttons, so sorting would swap rows while a value
+/// is typed. Two equal portions are allowed.
+public enum DrinkPresets {
+    /// The portions before the user changes them.
+    public static let defaults = [250, 330, 500]
+    /// Same bounds as the amount fields of the drink sheet.
+    public static let range = 50...2000
+    /// Step of the settings rows; fine enough to keep 330 ml on the grid.
+    public static let step = 10
+
+    public static func clamped(_ milliliters: Int) -> Int {
+        min(max(milliliters, range.lowerBound), range.upperBound)
+    }
+
+    /// Exactly `defaults.count` portions, each inside `range`: missing slots take the default, surplus values are dropped.
+    public static func resolved(_ stored: [Int]) -> [Int] {
+        defaults.indices.map { index in index < stored.count ? clamped(stored[index]) : defaults[index] }
+    }
 }
 
 /// Workout types offered for manual entries (mockup E5a).
