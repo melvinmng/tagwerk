@@ -10,7 +10,7 @@ class UITestCase: XCTestCase {
     /// Default wait for an element that the app shows after some work.
     static let timeout: TimeInterval = 10
 
-    /// Extra launch arguments of a test class (e.g. a large text size); set before `launchApp`.
+    /// Extra launch arguments of a test class (e.g. a large text size).
     var extraLaunchArguments: [String] { [] }
 
     override func setUp() async throws {

@@ -50,6 +50,7 @@ struct TagwerkApp: App {
         WindowGroup {
             RootView()
                 .environment(environment)
+                .modifier(UITestAppearance())
                 .task {
                     // A focus session that survived the app being closed or killed; first, before the slow network calls.
                     await environment.focus.restore()
