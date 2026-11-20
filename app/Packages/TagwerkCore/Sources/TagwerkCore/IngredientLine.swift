@@ -151,7 +151,7 @@ public struct IngredientLine: Sendable, Hashable {
     }
 
     /// The amount and the unit alone ("1,5 Dosen"); empty for a line without an amount.
-    func quantityText(locale: Locale) -> String {
+    public func quantityText(locale: Locale) -> String {
         guard let amount else { return "" }
         var text = Self.format(amount, locale: locale)
         if let amountUpper { text += "–" + Self.format(amountUpper, locale: locale) }

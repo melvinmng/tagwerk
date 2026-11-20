@@ -74,6 +74,19 @@ struct RecipeScalerTests {
         #expect(RecipeScaler.scale("250 g", from: 0, to: 6, locale: german) == "250 g")
     }
 
+    @Test func shoppingNames_stayInTheSingular() {
+        let line = IngredientLine(amount: 1, name: "Ei")
+        #expect(RecipeScaler.scale(line, from: 4, to: 6, adjustsName: false).formatted(locale: german) == "2 Ei")
+        #expect(RecipeScaler.scale(line, from: 4, to: 6).formatted(locale: german) == "2 Eier")
+    }
+
+    @Test func agreed_putsUnitAndCountedNamesIntoTheRightNumber() {
+        #expect(RecipeScaler.agreed(IngredientLine.parse("2 Zwiebel")).formatted(locale: german) == "2 Zwiebeln")
+        #expect(RecipeScaler.agreed(IngredientLine.parse("2 Dose Tomaten")).formatted(locale: german) == "2 Dosen Tomaten")
+        #expect(RecipeScaler.agreed(IngredientLine.parse("1 Dosen Tomaten")).formatted(locale: german) == "1 Dose Tomaten")
+        #expect(RecipeScaler.agreed(IngredientLine.parse("Salz nach Geschmack")).formatted(locale: german) == "Salz nach Geschmack")
+    }
+
     @Test func quantityText_scalesFreeQuantities() {
         #expect(RecipeScaler.scale("500 g", from: 4, to: 6, locale: german) == "750 g")
         #expect(RecipeScaler.scale("2 Dosen", from: 4, to: 6, locale: german) == "3 Dosen")

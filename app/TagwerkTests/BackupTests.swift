@@ -471,6 +471,34 @@ struct BackupTests {
         #expect(!target.settings.effortHistoryInPlanning)
     }
 
+    // MARK: Recipe language
+
+    @Test func recipeLanguage_roundTripsThroughABackup() throws {
+        let origin = try makeTarget()
+        origin.settings.recipeLanguage = "en-US"
+        try origin.container.mainContext.save()
+        let target = try makeTarget()
+        #expect(target.settings.recipeLanguage == "auto")
+        try target.service.restore(try target.service.inspect(try origin.service.makeBackupData()))
+        #expect(target.settings.recipeLanguage == "en-US")
+    }
+
+    @Test func oldBackupWithoutRecipeLanguage_restores_andKeepsTheDeviceValue() throws {
+        let data = try backup.makeBackupData()
+        var object = try #require(try JSONSerialization.jsonObject(with: data) as? [String: Any])
+        var entities = try #require(object["entities"] as? [String: Any])
+        var settings = try #require(entities["settings"] as? [String: Any])
+        settings.removeValue(forKey: "recipeLanguage")
+        entities["settings"] = settings
+        object["entities"] = entities
+        let old = try JSONSerialization.data(withJSONObject: object)
+        let target = try makeTarget()
+        target.settings.recipeLanguage = "de-DE"
+        try target.container.mainContext.save()
+        try target.service.restore(try target.service.inspect(old))
+        #expect(target.settings.recipeLanguage == "de-DE")
+    }
+
     @Test func aRunningFocusSession_isNotBackedUp_andSurvivesARestore() throws {
         let running = FocusSessionRecord(taskKey: "local|2", blockEventID: nil, title: "Läuft", state: FocusTimerState(start: clock.now, settings: FocusTimerSettings()))
         source.mainContext.insert(running)
@@ -561,6 +589,20 @@ struct BackupTests {
         #expect(roles == ["brainDump", "eveningRoutine", "dreamLog"])
         let texts = Set(inspection.entities.notes.map(\.text))
         #expect(texts.contains("Kopf leeren") && texts.contains("Ruhiger Tag") && texts.contains("Traum vom Meer"))
+    }
+
+    @Test func backupWithoutPrivate_keepsTheRecipesFolderAndItsNotes() throws {
+        let source = try makeTarget()
+        let context = source.container.mainContext
+        let folder = NoteFolderRecord(name: "Rezepte", order: 6, role: .recipes, now: clock.now)
+        context.insert(folder)
+        let recipe = NoteRecord(text: "# Linsencurry\n\n## Zutaten\n- 250 g Linsen\n", now: clock.now)
+        recipe.folderID = folder.id
+        context.insert(recipe)
+        try context.save()
+        let inspection = try makeTarget().service.inspect(try source.service.makeBackupData(includePrivate: false))
+        #expect(inspection.entities.noteFolders.compactMap(\.roleRaw).contains("recipes"))
+        #expect(inspection.entities.notes.contains { $0.text.contains("250 g Linsen") && $0.folderID == folder.id })
     }
 
     @Test func backupWithoutPrivate_dropsJournalAndBibleStudyFolders() throws {

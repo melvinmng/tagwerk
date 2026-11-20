@@ -18,6 +18,7 @@ struct NotesListView: View {
     @State private var confirmsEmptyTrash = false
     @State private var deletingForGood: [UUID] = []
     @State private var isStartingBibleStudy = false
+    @State private var isCreatingRecipe = false
 
     init(store: NoteStore, scope: NotesScope = .all) {
         self.store = store
@@ -62,6 +63,14 @@ struct NotesListView: View {
             }
             if isBibleStudy, !editMode.isEditing {
                 bibleStudySection
+            }
+            if folderRole == .recipes, !editMode.isEditing {
+                Section {
+                    Button { isCreatingRecipe = true } label: {
+                        Label("Rezept mit ChatGPT anlegen", systemImage: "sparkles").foregroundStyle(.tint)
+                    }
+                    .buttonStyle(.plain)
+                }
             }
             if notes.isEmpty {
                 Text(emptyText)
@@ -116,6 +125,9 @@ struct NotesListView: View {
                 selection.subtract(deletingForGood)
             }
             Button("Abbrechen", role: .cancel) {}
+        }
+        .sheet(isPresented: $isCreatingRecipe) {
+            RecipeNoteSaveSheet(store: store) { noteID in environment.tasksPath.append(.note(noteID)) }
         }
         .sheet(isPresented: $isStartingBibleStudy) {
             BibleStudyStartSheet(store: store) { noteID in environment.tasksPath.append(.note(noteID)) }

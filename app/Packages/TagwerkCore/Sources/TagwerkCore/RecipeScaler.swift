@@ -4,8 +4,9 @@ import Foundation
 public enum RecipeScaler {
     /// The line for `target` servings of a recipe written for `base`. Lines without an amount, "to taste" lines and
     /// pinches stay as they are, as does a base or target below 1 or equal servings. The unit and a few counted names
-    /// ("Ei" → "Eier", "Dose" → "Dosen") follow the new amount.
-    public static func scale(_ line: IngredientLine, from base: Int, to target: Int) -> IngredientLine {
+    /// ("Ei" → "Eier", "Dose" → "Dosen") follow the new amount; `adjustsName: false` leaves the name alone, for the
+    /// names on a shopping list, which stay in the singular.
+    public static func scale(_ line: IngredientLine, from base: Int, to target: Int, adjustsName: Bool = true) -> IngredientLine {
         guard base > 0, target > 0, base != target, !line.isToTaste, let amount = line.amount else { return line }
         // "1 große Dose": the container is part of the name, so it is rounded like a unit.
         let kind = line.unitKind ?? (line.unit == nil ? nameContainerKind(line.name) : nil)
@@ -16,13 +17,22 @@ public enum RecipeScaler {
         scaled.amountUpper = line.amountUpper.map { rounded($0 * factor, kind: kind) }
         // A range that collapsed to one value is a single amount now.
         if let upper = scaled.amountUpper, let lower = scaled.amount, upper <= lower { scaled.amountUpper = nil }
-        let shown = scaled.amountUpper ?? scaled.amount ?? 1
+        return agreed(scaled, adjustsName: adjustsName)
+    }
+
+    /// The line with its unit and counted name in the singular or the plural that its amount asks for ("2 Zwiebel" →
+    /// "2 Zwiebeln", "1,5 Dose" → "1,5 Dosen"). A line without an amount stays as it is.
+    public static func agreed(_ line: IngredientLine, adjustsName: Bool = true) -> IngredientLine {
+        guard !line.isToTaste, let amount = line.amount else { return line }
+        let kind = line.unitKind ?? (line.unit == nil ? nameContainerKind(line.name) : nil)
+        var result = line
+        let shown = line.amountUpper ?? amount
         if let unit = line.unit, let info = IngredientLine.unitInfo(for: unit) {
-            scaled.unit = shown == 1 ? info.singular : info.plural
-        } else if line.unit == nil || kind == .count {
-            scaled.name = adjustedName(line.name, singular: shown == 1)
+            result.unit = shown == 1 ? info.singular : info.plural
+        } else if adjustsName, line.unit == nil || kind == .count {
+            result.name = adjustedName(line.name, singular: shown == 1)
         }
-        return scaled
+        return result
     }
 
     /// Scales the free quantity text of an import ("500 g", "2 Dosen"); `nil` stays `nil`, and text that holds no amount
