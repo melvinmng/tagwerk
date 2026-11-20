@@ -48,7 +48,7 @@ Festlegungen der Hauptsitzung zum G3-Plan: offene Fragen nach Empfehlung; Zeilen
 | Branch | Inhalt | Stand |
 |---|---|---|
 | `feat/recipe-translate` | #232 Block A | läuft (Sonnet) |
-| `feat/closed-issues-in-reviews` | #173 Strang C (Tasks 6, 7, 7a) | läuft (Sonnet) |
+| `feat/closed-issues-in-reviews` | #173 Strang C (Tasks 6, 7, 7a) | umgesetzt (Head `7f8c597`); Review-Korrekturen laufen: DUPLICATE zählt fälschlich, stille 0 vor dem Laden der Projekte, UI-Audit „Portionen“ prüfen |
 | `feat/evening-reminders-per-day` | #173 Strang E (Tasks 10, 11) | läuft (Sonnet) |
 | `feat/assistant-assign-and-search` | #173 Stränge A, B und Task 5 | pausiert, WIP-Commit `430fb8e` (Task 1 fertig, Task 2 begonnen, ungetestet); Worktree entfernt |
 | `feat/g3-search-menu` | G3 Strang U | pausiert, WIP-Commit `25b57f0` (U1 begonnen, ungetestet); Worktree entfernt |
