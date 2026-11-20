@@ -24,6 +24,11 @@ class UITestCase: XCTestCase {
             }
             return false
         }
+        // A failed test prints what the app showed, so a failure in a CI log can be understood without a rerun.
+        addTeardownBlock { [weak self] in
+            guard let self, let run = self.testRun, !run.hasSucceeded, let app = self.app else { return }
+            print("UI TEST FAILED, accessibility tree:\n\(app.debugDescription)")
+        }
         launchApp()
     }
 
@@ -46,6 +51,42 @@ class UITestCase: XCTestCase {
         button.tap()
     }
 
+    /// Polls until `condition` holds; fails with `message` after the timeout. Only used where an element query cannot express the wait.
+    func eventually(timeout: TimeInterval = UITestCase.timeout, _ message: String, file: StaticString = #filePath, line: UInt = #line,
+                    _ condition: () -> Bool) {
+        let deadline = Date().addingTimeInterval(timeout)
+        while Date() < deadline {
+            if condition() { return }
+            RunLoop.current.run(until: Date().addingTimeInterval(0.25))
+        }
+        XCTAssertTrue(condition(), message, file: file, line: line)
+    }
+
+    /// The first element of this type with a label matching the predicate format that is on screen (waits for it).
+    /// "Planen" and "Erfassen" keep the neighbouring days as page previews in the tree, and a sheet leaves the tab behind
+    /// it in the tree, so a plain label query can find a copy that cannot be tapped.
+    func onScreen(_ type: XCUIElement.ElementType = .button, label: String, matching: Bool = false,
+                  timeout: TimeInterval = UITestCase.timeout, file: StaticString = #filePath, line: UInt = #line) -> XCUIElement {
+        let query = app.descendants(matching: type)
+        let candidates = { query.matching(NSPredicate(format: matching ? "label MATCHES %@" : "label == %@", label)).allElementsBoundByIndex }
+        var found: XCUIElement?
+        eventually(timeout: timeout, "\(label) is not on screen", file: file, line: line) {
+            found = candidates().first { $0.isHittable }
+            return found != nil
+        }
+        return found ?? query.matching(identifier: label).firstMatch
+    }
+
+    /// Scrolls a list or form up until the element exists and is hittable.
+    func scrollTo(_ element: XCUIElement, maxSwipes: Int = 8, file: StaticString = #filePath, line: UInt = #line) {
+        var swipes = 0
+        while !(element.exists && element.isHittable), swipes < maxSwipes {
+            app.swipeUp()
+            swipes += 1
+        }
+        XCTAssertTrue(element.exists && element.isHittable, "\(element) is not reachable by scrolling", file: file, line: line)
+    }
+
     /// Taps the button with this title or identifier.
     @discardableResult
     func tapButton(_ title: String, file: StaticString = #filePath, line: UInt = #line) -> XCUIElement {
@@ -64,6 +105,20 @@ class UITestCase: XCTestCase {
         field.typeText(text)
     }
 
+    /// Replaces the text of a field: a tap at its right end puts the cursor behind the text, then the old text is deleted.
+    func replaceText(of field: XCUIElement, with text: String, file: StaticString = #filePath, line: UInt = #line) {
+        XCTAssertTrue(field.waitForExistence(timeout: Self.timeout), "Field missing", file: file, line: line)
+        let current = (field.value as? String) ?? ""
+        field.coordinate(withNormalizedOffset: CGVector(dx: 0.98, dy: 0.5)).tap()
+        field.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: current.count) + text)
+    }
+
+    /// Waits until the element is gone.
+    func waitUntilGone(_ element: XCUIElement, timeout: TimeInterval = UITestCase.timeout,
+                       file: StaticString = #filePath, line: UInt = #line) {
+        XCTAssertTrue(element.waitForNonExistence(timeout: timeout), "\(element) did not disappear", file: file, line: line)
+    }
+
     /// Waits for an element of any type with this label or identifier.
     @discardableResult
     func waitFor(_ text: String, timeout: TimeInterval = UITestCase.timeout,
@@ -71,5 +126,37 @@ class UITestCase: XCTestCase {
         let element = app.descendants(matching: .any)[text].firstMatch
         XCTAssertTrue(element.waitForExistence(timeout: timeout), "\(text) did not appear", file: file, line: line)
         return element
+    }
+}
+
+// MARK: Screens shared by several tests
+
+extension UITestCase {
+    /// Aufgaben › Einkaufsliste.
+    func openShoppingList(file: StaticString = #filePath, line: UInt = #line) {
+        tab("Aufgaben", file: file, line: line)
+        let entry = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Einkaufsliste")).firstMatch
+        XCTAssertTrue(entry.waitForExistence(timeout: Self.timeout), "Shopping list entry missing", file: file, line: line)
+        entry.tap()
+        XCTAssertTrue(app.textFields["Artikel hinzufügen"].waitForExistence(timeout: Self.timeout),
+                      "Shopping list did not open", file: file, line: line)
+    }
+
+    /// Opens the search sheet with the magnifier of the current tab and types the text.
+    func openSearch(typing text: String, file: StaticString = #filePath, line: UInt = #line) {
+        app.buttons["Suchen"].firstMatch.tap()
+        let field = app.textFields["Suchen"]
+        XCTAssertTrue(field.waitForExistence(timeout: Self.timeout), "Search field missing", file: file, line: line)
+        field.tap()
+        field.typeText(text)
+    }
+
+    /// Aufgaben › Notizen.
+    func openNotes(file: StaticString = #filePath, line: UInt = #line) {
+        tab("Aufgaben", file: file, line: line)
+        let entry = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Notizen")).firstMatch
+        XCTAssertTrue(entry.waitForExistence(timeout: Self.timeout), "Notes entry missing", file: file, line: line)
+        entry.tap()
+        XCTAssertTrue(app.navigationBars["Notizen"].waitForExistence(timeout: Self.timeout), "Notes did not open", file: file, line: line)
     }
 }
