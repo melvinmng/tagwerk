@@ -28,8 +28,26 @@ struct ShareNoteSheet: View {
             let link = mail.messageID.flatMap { MailLink.url(messageID: $0) }?.absoluteString
             return [item.title, sender, mail.bodyText, link].compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: "\n\n")
         }
-        return [item.title, NewTaskPrefill.sharedNotes(title: item.title, text: item.text), item.url?.absoluteString]
+        guard let url = item.url else {
+            return [item.title, NewTaskPrefill.sharedNotes(title: item.title, text: item.text)]
+                .compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: "\n\n")
+        }
+        // The link is a line of its own, "[Seitentitel](https://…)", instead of the raw address. When its text is the title
+        // of the item already (a plain page share), the title line would only repeat it.
+        let linkTitle = Self.linkTitle(for: item)
+        let link = NewTaskPrefill.markdownLink(title: linkTitle, url: url)
+        let title = linkTitle == item.title ? nil : item.title
+        return [title, NewTaskPrefill.sharedNotes(title: item.title, text: item.text), link]
             .compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: "\n\n")
+    }
+
+    /// The text of the link: the title of the page if Safari told it. Otherwise the title of the item, but only when it is
+    /// the page title that was shared as text (no text, or text equal to the title); a selection is no page title, then the
+    /// host stands there (`nil`).
+    static func linkTitle(for item: ShareInboxItem) -> String? {
+        if let pageTitle = item.pageTitle, !pageTitle.isEmpty { return pageTitle }
+        guard let text = item.text, !text.isEmpty else { return item.title }
+        return text.trimmingCharacters(in: .whitespacesAndNewlines) == item.title ? item.title : nil
     }
 
     var body: some View {

@@ -1200,6 +1200,8 @@ struct AppSettingsBackup: Codable, Equatable {
     var focusRounds: Int?
     var focusUsesPomodoro: Bool?
     var effortHistoryInPlanning: Bool?
+    /// Optional, so a backup written before the recipe language existed still decodes; a missing value keeps "auto".
+    var recipeLanguage: String?
     var showsRoutinesInPlan: Bool
     var noteSuggestionConsent: Bool
     var noteSortOrderRaw: String
@@ -1277,6 +1279,7 @@ struct AppSettingsBackup: Codable, Equatable {
         focusRounds = record.focusRounds
         focusUsesPomodoro = record.focusUsesPomodoro
         effortHistoryInPlanning = record.effortHistoryInPlanning
+        recipeLanguage = record.recipeLanguage
         showsRoutinesInPlan = record.showsRoutinesInPlan
         noteSuggestionConsent = record.noteSuggestionConsent
         noteSortOrderRaw = record.noteSortOrderRaw
@@ -1354,6 +1357,7 @@ struct AppSettingsBackup: Codable, Equatable {
         if let focusRounds { record.focusRounds = focusRounds }
         if let focusUsesPomodoro { record.focusUsesPomodoro = focusUsesPomodoro }
         if let effortHistoryInPlanning { record.effortHistoryInPlanning = effortHistoryInPlanning }
+        if let recipeLanguage { record.recipeLanguage = recipeLanguage }
         record.showsRoutinesInPlan = showsRoutinesInPlan
         record.noteSuggestionConsent = noteSuggestionConsent
         record.noteSortOrderRaw = noteSortOrderRaw

@@ -1539,6 +1539,26 @@
         }
       }
     },
+    "Portionen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Servings"
+          }
+        }
+      }
+    },
+    "Quelle": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Source"
+          }
+        }
+      }
+    },
     "Radfahren": {
       "localizations": {
         "en": {
@@ -1821,12 +1841,32 @@
         }
       }
     },
+    "Zubereitung": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Instructions"
+          }
+        }
+      }
+    },
     "Zum Zeitpunkt": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "At time of event"
+          }
+        }
+      }
+    },
+    "Zutaten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ingredients"
           }
         }
       }

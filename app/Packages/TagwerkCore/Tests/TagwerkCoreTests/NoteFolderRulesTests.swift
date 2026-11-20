@@ -61,7 +61,14 @@ struct NoteFolderRulesTests {
         #expect(NoteFolderRole.morningRoutine.rawValue == "morningRoutine")
         #expect(NoteFolderRole.eveningRoutine.rawValue == "eveningRoutine")
         #expect(NoteFolderRole.dreamLog.rawValue == "dreamLog")
+        #expect(NoteFolderRole.recipes.rawValue == "recipes")
         #expect(NoteKind.dream.rawValue == "dream")
+    }
+
+    @Test func recipes_acceptsOwnNotes_notPrivate_inDefaultBackup() {
+        #expect(NoteFolderRole.recipes.acceptsOwnNotes && !NoteFolderRole.recipes.isPrivate && NoteFolderRole.recipes.isInDefaultBackup)
+        #expect(NoteFolderRole.recipes.noteKind == nil)
+        #expect(NoteFolderRole.role(for: .free) == nil)
     }
 
     @Test func role_isPrivate_journalBibleStudyAndDreamLog() {

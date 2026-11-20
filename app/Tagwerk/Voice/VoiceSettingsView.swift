@@ -68,6 +68,17 @@ struct VoiceSettingsView: View {
             }
 
             Section {
+                Picker("Sprache für Rezepte", selection: $settings.recipeLanguage) {
+                    Text("Wie die App").tag(RecipeLanguage.automatic)
+                    ForEach(RecipeLanguage.choices, id: \.self) { Text(Self.name($0)).tag($0.rawValue) }
+                }
+            } header: {
+                Text("Rezepte")
+            } footer: {
+                Text("Titel, Zutaten und Zubereitung eines Rezepts schreibt ChatGPT in dieser Sprache und übersetzt, wenn das Rezept eine andere hat. Die Artikel auf der Einkaufsliste folgen ihr. „Wie die App“ nimmt die Sprache der App.")
+            }
+
+            Section {
                 Picker("Antworten vorlesen", selection: $settings.voiceReadAloud) {
                     ForEach(ReadAloudPolicy.allCases, id: \.self) { Text($0.title).tag($0.rawValue) }
                 }

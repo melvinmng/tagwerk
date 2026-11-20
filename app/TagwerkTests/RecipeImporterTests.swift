@@ -55,7 +55,7 @@ struct RecipeImporterTests {
     }
 
     private func validate(_ items: [(String, String?, String)], open: Set<String> = []) throws -> [RecipeImporter.Candidate] {
-        try RecipeImporter.validate(Data(answer(items).utf8), categoryNames: categories + ["Sonstiges"], openItemKeys: open)
+        try RecipeImporter.validate(Data(answer(items).utf8), categoryNames: categories + ["Sonstiges"], openItemKeys: open).candidates
     }
 
     private func sentText(_ index: Int = 0) -> String {
@@ -72,17 +72,17 @@ struct RecipeImporterTests {
 
     @Test func noConsent_sendsNothing() async {
         await #expect(throws: RecipeImporter.Failure.consentMissing) {
-            try await importer(consent: false).read(.text("500 g Mehl"), categoryNames: categories, openItemKeys: [])
+            try await importer(consent: false).read(.text("500 g Mehl"), language: .german, categoryNames: categories, openItemKeys: [])
         }
         await #expect(throws: RecipeImporter.Failure.consentMissing) {
-            try await importer(consent: false).read(.photo(jpeg: Data([1, 2, 3])), categoryNames: categories, openItemKeys: [])
+            try await importer(consent: false).read(.photo(jpeg: Data([1, 2, 3])), language: .german, categoryNames: categories, openItemKeys: [])
         }
         #expect(responder.calls.isEmpty && modelCalls.models == 0)
     }
 
     @Test func noConsent_doesNotFetchLink() async {
         await #expect(throws: RecipeImporter.Failure.consentMissing) {
-            try await importer(consent: false).read(.link(URL(string: "https://example.com/rezept")!), categoryNames: categories, openItemKeys: [])
+            try await importer(consent: false).read(.link(URL(string: "https://example.com/rezept")!), language: .german, categoryNames: categories, openItemKeys: [])
         }
         #expect(fetcher.urls.isEmpty && responder.calls.isEmpty)
     }
@@ -91,8 +91,8 @@ struct RecipeImporterTests {
 
     @Test func text_sendsTheRecipeAndTheCategoryNames_butNothingElse() async throws {
         responder.enqueue(answer([("Mehl", "500 g", "Vorrat & Konserven")]))
-        let result = try await importer().read(.text("  500 g Mehl, 2 Eier  "), categoryNames: categories, openItemKeys: ["milch"])
-        #expect(result.map(\.name) == ["Mehl"])
+        let result = try await importer().read(.text("  500 g Mehl, 2 Eier  "), language: .german, categoryNames: categories, openItemKeys: ["milch"])
+        #expect(result.candidates.map(\.name) == ["Mehl"])
         #expect(responder.calls.count == 1 && responder.calls[0].schema == "recipe_ingredients")
         let text = sentText()
         #expect(text.contains("500 g Mehl, 2 Eier") && text.contains("Kühlregal") && text.contains("Sonstiges"))
@@ -102,17 +102,17 @@ struct RecipeImporterTests {
 
     @Test func text_isCutAtTheLimit_andEmptyTextSendsNothing() async throws {
         responder.enqueue(answer([("Mehl", nil, "Sonstiges")]))
-        _ = try await importer().read(.text(String(repeating: "Zutat ", count: 5000)), categoryNames: categories, openItemKeys: [])
+        _ = try await importer().read(.text(String(repeating: "Zutat ", count: 5000)), language: .german, categoryNames: categories, openItemKeys: [])
         #expect(sentText().count < RecipeText.maximumLength + 400)
         await #expect(throws: RecipeImporter.Failure.nothingFound) {
-            try await importer().read(.text("  \n "), categoryNames: categories, openItemKeys: [])
+            try await importer().read(.text("  \n "), language: .german, categoryNames: categories, openItemKeys: [])
         }
         #expect(responder.calls.count == 1)
     }
 
     @Test func photo_sendsTheImageWithTheCategoryNames() async throws {
         responder.enqueue(answer([("Butter", nil, "Kühlregal")]))
-        _ = try await importer().read(.photo(jpeg: Data([9, 8, 7])), categoryNames: categories, openItemKeys: [])
+        _ = try await importer().read(.photo(jpeg: Data([9, 8, 7])), language: .german, categoryNames: categories, openItemKeys: [])
         guard case .userImage(let text, let jpeg) = responder.calls[0].input[0] else { Issue.record("no image sent"); return }
         #expect(jpeg == Data([9, 8, 7]) && text.contains("Kühlregal") && text.contains("photo"))
     }
@@ -122,7 +122,7 @@ struct RecipeImporterTests {
     @Test func link_onlyHttp() async {
         for address in ["file:///etc/passwd", "ftp://example.com/x", "javascript:alert(1)", "data:text/html,x", "tagwerk://task/1", "https://"] {
             await #expect(throws: RecipeImporter.Failure.linkUnreadable, "\(address)") {
-                try await importer().read(.link(URL(string: address)!), categoryNames: categories, openItemKeys: [])
+                try await importer().read(.link(URL(string: address)!), language: .german, categoryNames: categories, openItemKeys: [])
             }
         }
         #expect(fetcher.urls.isEmpty && responder.calls.isEmpty)
@@ -136,7 +136,7 @@ struct RecipeImporterTests {
         """)
         responder.enqueue(answer([("Linsen", "200 g", "Vorrat & Konserven")]))
         let url = URL(string: "https://geheim.example.com/rezepte/linsensuppe?utm=abc")!
-        _ = try await importer().read(.link(url), categoryNames: categories, openItemKeys: [])
+        _ = try await importer().read(.link(url), language: .german, categoryNames: categories, openItemKeys: [])
         #expect(fetcher.urls == [url])
         let text = sentText()
         #expect(text.contains("200 g Linsen\n1 Zwiebel"))
@@ -146,7 +146,7 @@ struct RecipeImporterTests {
     @Test func link_withoutStructuredData_sendsThePageText() async throws {
         fetcher.page = .success("<html><nav>Menü</nav><main><h1>Pfannkuchen</h1><li>250 g Mehl</li></main><script>x()</script></html>")
         responder.enqueue(answer([("Mehl", "250 g", "Vorrat & Konserven")]))
-        _ = try await importer().read(.link(URL(string: "https://example.com/p")!), categoryNames: categories, openItemKeys: [])
+        _ = try await importer().read(.link(URL(string: "https://example.com/p")!), language: .german, categoryNames: categories, openItemKeys: [])
         let text = sentText()
         #expect(text.contains("Pfannkuchen\n250 g Mehl") && !text.contains("Menü") && !text.contains("x()"))
     }
@@ -154,11 +154,11 @@ struct RecipeImporterTests {
     @Test func link_failuresMapToLinkUnreadable() async {
         fetcher.page = .failure(URLError(.notConnectedToInternet))
         await #expect(throws: RecipeImporter.Failure.linkUnreadable) {
-            try await importer().read(.link(URL(string: "https://example.com/p")!), categoryNames: categories, openItemKeys: [])
+            try await importer().read(.link(URL(string: "https://example.com/p")!), language: .german, categoryNames: categories, openItemKeys: [])
         }
         fetcher.page = .success("<html><script>only()</script></html>")
         await #expect(throws: RecipeImporter.Failure.linkUnreadable) {
-            try await importer().read(.link(URL(string: "https://example.com/p")!), categoryNames: categories, openItemKeys: [])
+            try await importer().read(.link(URL(string: "https://example.com/p")!), language: .german, categoryNames: categories, openItemKeys: [])
         }
         #expect(responder.calls.isEmpty)
     }
@@ -167,7 +167,7 @@ struct RecipeImporterTests {
 
     @Test func timeout_mapsToFailed() async {
         await #expect(throws: RecipeImporter.Failure.failed) {
-            try await importer(StallingResponder(), timeout: .milliseconds(50)).read(.text("Mehl"), categoryNames: categories, openItemKeys: [])
+            try await importer(StallingResponder(), timeout: .milliseconds(50)).read(.text("Mehl"), language: .german, categoryNames: categories, openItemKeys: [])
         }
     }
 
@@ -176,16 +176,16 @@ struct RecipeImporterTests {
                                   (.usageLimit, .usageLimit), (.incomplete, .failed)] {
             responder.enqueueFailure(error)
             await #expect(throws: expected) {
-                try await importer().read(.text("Mehl"), categoryNames: categories, openItemKeys: [])
+                try await importer().read(.text("Mehl"), language: .german, categoryNames: categories, openItemKeys: [])
             }
         }
         responder.enqueue("kein JSON")
         await #expect(throws: RecipeImporter.Failure.failed) {
-            try await importer().read(.text("Mehl"), categoryNames: categories, openItemKeys: [])
+            try await importer().read(.text("Mehl"), language: .german, categoryNames: categories, openItemKeys: [])
         }
         responder.enqueue(#"{"items": []}"#)
         await #expect(throws: RecipeImporter.Failure.nothingFound) {
-            try await importer().read(.text("Mehl"), categoryNames: categories, openItemKeys: [])
+            try await importer().read(.text("Mehl"), language: .german, categoryNames: categories, openItemKeys: [])
         }
     }
 

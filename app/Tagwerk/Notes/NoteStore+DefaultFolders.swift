@@ -1,11 +1,11 @@
 import Foundation
 import TagwerkCore
 
-/// The fixed folders "Brain Dump", "Tagesstart", "Tagesabschluss" and "Dream Log" on top of the notes store.
+/// The fixed folders "Brain Dump", "Tagesstart", "Tagesabschluss", "Dream Log" and "Rezepte" on top of the notes store.
 /// Writing still goes only through `NoteStore`.
 extension NoteStore {
     /// The fixed folders in display order.
-    static let defaultFolderRoles: [NoteFolderRole] = [.brainDump, .morningRoutine, .eveningRoutine, .dreamLog]
+    static let defaultFolderRoles: [NoteFolderRole] = [.brainDump, .morningRoutine, .eveningRoutine, .dreamLog, .recipes]
 
     /// The name a fixed folder gets when it is created. The user may rename it afterwards; a rename is kept.
     static func defaultFolderName(for role: NoteFolderRole) -> String {
@@ -16,6 +16,7 @@ extension NoteStore {
         case .morningRoutine: String(localized: "Tagesstart")
         case .eveningRoutine: String(localized: "Tagesabschluss")
         case .dreamLog: String(localized: "Dream Log")
+        case .recipes: String(localized: "Rezepte")
         }
     }
 

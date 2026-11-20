@@ -27,6 +27,8 @@ struct NoteEditorView: View {
     @State private var previewURL: URL?
     @State private var shareURLs: [URL] = []
     @State private var failureText: String?
+    @State private var isAddingToShopping = false
+    @State private var shoppingNotice: String?
 
     init(noteID: UUID, store: NoteStore) {
         self.noteID = noteID
@@ -71,6 +73,10 @@ struct NoteEditorView: View {
             }
             .quickLookPreview($previewURL)
             .alert(failureText ?? "", isPresented: failureBinding) { Button("OK", role: .cancel) {} }
+            .alert(shoppingNotice ?? "", isPresented: noticeBinding) { Button("OK", role: .cancel) {} }
+            .sheet(isPresented: $isAddingToShopping) {
+                RecipeSheet(model: environment.shopping, onFinished: { shoppingNotice = $0 }, start: .note(noteID))
+            }
             .onAppear {
                 guard !isLoaded else { return }
                 text = note?.text ?? ""
@@ -80,6 +86,7 @@ struct NoteEditorView: View {
                 let isRunningSession = store.openSession(noteID: noteID) != nil
                 let isUntouched = text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
                     || (note?.kind == .journal && JournalTemplate.isOnlyTemplate(text))
+                    || (note?.kind == .free && RecipeNote.isOnlyTemplate(text))
                 mode = isRunningSession || isUntouched ? .edit : .view
                 // A running Bible Study session starts with the cursor below its new section.
                 if isRunningSession { selection = TextSelection(insertionPoint: text.endIndex) }
@@ -156,6 +163,13 @@ struct NoteEditorView: View {
                     store.completeSession(session.id)
                 } label: { Label("Bible Study abschließen", systemImage: "checkmark.circle") }
             }
+            if let note, isRecipeNote(note) {
+                Button {
+                    // The recipe sheet reads the saved text of the note.
+                    store.updateText(noteID, text: text)
+                    isAddingToShopping = true
+                } label: { Label("Zutaten auf die Einkaufsliste", systemImage: "cart.badge.plus") }
+            }
             ShareLink(item: text) { Label("Teilen", systemImage: "square.and.arrow.up") }
             if !shareURLs.isEmpty {
                 ShareLink(items: shareURLs) { Label("Anhänge teilen", systemImage: "paperclip") }
@@ -171,6 +185,16 @@ struct NoteEditorView: View {
             Image(systemName: "ellipsis")
         }
         .accessibilityLabel("Mehr")
+    }
+
+    /// A note of the folder "Rezepte" offers "Zutaten auf die Einkaufsliste".
+    private func isRecipeNote(_ note: NoteRecord) -> Bool {
+        guard note.kind == .free, let folderID = note.folderID else { return false }
+        return store.folder(id: folderID)?.role == .recipes
+    }
+
+    private var noticeBinding: Binding<Bool> {
+        Binding(get: { shoppingNotice != nil }, set: { if !$0 { shoppingNotice = nil } })
     }
 
     // MARK: Actions

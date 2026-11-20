@@ -12,6 +12,7 @@ struct VoiceSettingsTests {
         #expect(settings.voiceReadAloud == ReadAloudPolicy.never.rawValue)
         #expect(settings.voiceGermanVoiceID == nil)
         #expect(settings.voiceAnnounceActions)
+        #expect(settings.recipeLanguage == "auto")
     }
 
     @Test func recognitionLanguage_autoFollowsLocale() {

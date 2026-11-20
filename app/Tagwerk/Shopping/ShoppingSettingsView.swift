@@ -46,7 +46,7 @@ struct ShoppingSettingsView: View {
             } footer: {
                 VStack(alignment: .leading, spacing: 6) {
                     Text("Sendet auf dein Tippen die Namen der offenen Artikel und deiner Kategorien an ChatGPT. Fragst du den Assistenten nach der Einkaufsliste, gehen die Artikelnamen ebenfalls an ChatGPT.")
-                    Text("„Rezept hinzufügen“ sendet auf dein Tippen den Rezepttext oder das Foto und die Namen deiner Kategorien. Bei einem Link geht nur der gelesene Text der Seite weg, nicht die Adresse. Schaltest du das aus, fragt Tagwerk beim nächsten Rezept erneut.")
+                    Text("„Rezept hinzufügen“ sendet auf dein Tippen den Rezepttext oder das Foto und die Namen deiner Kategorien, „Rezept mit ChatGPT anlegen“ nur den Rezepttext oder das Foto. Bei einem Link geht nur der gelesene Text der Seite weg, nicht die Adresse. Eine Rezept-Notiz mit Zutaten und Zubereitung liest Tagwerk auf dem iPhone. Schaltest du das aus, fragt Tagwerk beim nächsten Rezept erneut.")
                 }
             }
         }

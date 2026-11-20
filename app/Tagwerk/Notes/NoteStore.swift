@@ -157,7 +157,9 @@ final class NoteStore {
     func deleteIfEmpty(_ id: UUID) {
         guard let record = note(id: id) else { return }
         let isBlank = record.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-        guard isBlank || (record.kind == .journal && JournalTemplate.isOnlyTemplate(record.text)) else { return }
+        // A journal entry or a recipe that is still the untouched template counts as empty.
+        guard isBlank || (record.kind == .journal && JournalTemplate.isOnlyTemplate(record.text))
+                || (record.kind == .free && RecipeNote.isOnlyTemplate(record.text)) else { return }
         attachments?.deleteAll(of: id)
         context.delete(record)
         save()
