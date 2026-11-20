@@ -371,9 +371,9 @@ struct MealSheet: View {
                         }
                     }
                     .tint(.primary)
-                    Stepper(value: $item.factor, in: MealItem.factorRange, step: MealItem.factorStep) {
-                        Text("Menge \(IntakeFormat.factor(item.factor))").font(.subheadline).foregroundStyle(.secondary)
-                    }
+                    ValueStepper("Menge", value: $item.factor, in: MealItem.factorRange, step: MealItem.factorStep,
+                                 kind: .decimal(fractionDigits: 2)) { IntakeFormat.factor($0) }
+                        .font(.subheadline)
                 }
                 .swipeActions {
                     let id = item.id
