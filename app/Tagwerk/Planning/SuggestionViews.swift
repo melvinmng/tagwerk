@@ -442,9 +442,9 @@ struct SuggestionMoveSection: View {
             DatePicker("Tag", selection: dayBinding, in: environment.planning.today.startDate(in: calendar)..., displayedComponents: .date)
             if suggestion.kind == .block, let start = suggestion.startMinutes, let minutes = suggestion.minutes {
                 DatePicker("Beginn", selection: startBinding(start), displayedComponents: .hourAndMinute)
-                Stepper(value: durationBinding(minutes), in: 15...(6 * 60), step: 15) {
-                    LabeledContent("Dauer", value: CapacityText.duration(minutes))
-                }
+                // Moving the suggestion plans again, so the typed value is applied when the field closes.
+                ValueStepper("Dauer", value: durationBinding(minutes), in: 15...(6 * 60), step: 15, kind: .durationMinutes,
+                             unit: "min", appliesWhileTyping: false, display: CapacityText.duration)
             }
             if let ai = suggestion.aiPosition {
                 Button {
