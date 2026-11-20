@@ -2015,5 +2015,13 @@
   "%@ ist dem Issue nicht zugewiesen.": "%@ is not assigned to the issue.",
   "%@ steht in add und in remove.": "%@ is in both add and remove.",
   "Zuweisen geht nur bei GitHub-Issues.": "Assigning only works for GitHub issues.",
-  "Wenn du KI-Funktionen nutzt, gehen die dafür nötigen Daten (Termine, Aufgaben, bei Issues auch Repo-Inhalte und GitHub-Benutzernamen zuweisbarer und zugewiesener Personen) an OpenAI.": "When you use AI features, the data they need (events, tasks, and for issues also repo contents and GitHub usernames of assignable and assigned people) goes to OpenAI."
+  "Wenn du KI-Funktionen nutzt, gehen die dafür nötigen Daten (Termine, Aufgaben, bei Issues auch Repo-Inhalte und GitHub-Benutzernamen zuweisbarer und zugewiesener Personen) an OpenAI.": "When you use AI features, the data they need (events, tasks, and for issues also repo contents and GitHub usernames of assignable and assigned people) goes to OpenAI.",
+  "%@ (nicht mehr dir)": "%@ (no longer you)",
+  "%@ dazu": "%@ added",
+  "%@ nicht mehr": "%@ removed",
+  "Zugewiesen: %@ → %@": "Assigned: %@ → %@",
+  "Zuweisung ändern: %@": "Change assignment: %@",
+  "Zuweisungen bestätigst du einzeln.": "You confirm assignments one at a time.",
+  "du": "you",
+  "niemand": "nobody"
 }

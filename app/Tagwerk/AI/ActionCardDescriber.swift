@@ -112,6 +112,8 @@ struct ActionCardDescriber {
             if !additions.isEmpty { parts.append(text("Hinzufügen: \(additions.joined(separator: ", "))")) }
             if !checks.isEmpty { parts.append(text("Abhaken: \(checks.joined(separator: ", "))")) }
             return AssistantModel.ActionCard(title: text("Einkaufsliste ändern"), change: parts.joined(separator: " · "))
+        case "assign_task":
+            return describeAssignment(task: task, args: args, title: title, language: language, spoken: spoken)
         case "create_event", "update_event", "delete_event":
             return describeEvent(call.name, series: args["series"] as? Bool == true, language: language, string: string)
         default:
@@ -155,6 +157,55 @@ struct ActionCardDescriber {
         let names = AssigneeSelection.names(selected: assignees, me: me, summarize: false, language: language)
         let includesMe = assignees.contains { AssigneeSelection.isMe($0, me: me) }
         return includesMe ? text("Zugewiesen: \(names)") : text("Zugewiesen: \(names) (nicht dir)")
+    }
+
+    /// Card of `assign_task` (mockups ZU1a, ZU2): who is assigned before and after, and for a hand-over what it costs.
+    /// The plan comes from the same function as the execution; when the issue is not loaded any more (or the change
+    /// cannot be resolved) the card lists the requested change and the execution reports what is wrong.
+    private func describeAssignment(task: TaskItem?, args: [String: Any], title: String, language: VoiceLanguage,
+                                    spoken: Bool) -> AssistantModel.ActionCard {
+        func text(_ key: String.LocalizationValue) -> String { Localized.string(key, in: language, bundle: .main) }
+        let me = gitHubDirectory()?.login
+        let add = args["add"] as? [String] ?? [], remove = args["remove"] as? [String] ?? []
+        func names(_ logins: [String]) -> String { AssigneeSelection.names(selected: logins, me: me, summarize: false, language: language) }
+        func spokenNames(_ logins: [String]) -> String {
+            let parts = logins.map { AssigneeSelection.isMe($0, me: me) ? text("du") : $0 }
+            return parts.formatted(.list(type: .and).locale(AssistantModel.formatLocale(language)))
+        }
+        func requested() -> String {
+            guard spoken else {
+                var parts: [String] = []
+                if !add.isEmpty { parts.append("＋ " + names(add)) }
+                if !remove.isEmpty { parts.append("− " + names(remove)) }
+                return text("Zuweisung ändern: \(parts.joined(separator: " · "))")
+            }
+            var parts: [String] = []
+            if !add.isEmpty { parts.append(text("\(spokenNames(add)) dazu")) }
+            if !remove.isEmpty { parts.append(text("\(spokenNames(remove)) nicht mehr")) }
+            return text("Zuweisung ändern: \(parts.joined(separator: ", "))")
+        }
+
+        guard let task, case .success(let plan) = AppTools.assignmentPlan(current: task.assignees ?? [], add: add, remove: remove, me: me) else {
+            return AssistantModel.ActionCard(title: title, change: requested())
+        }
+        let warning = plan.handsOver
+            ? TaskEditorModel.handOverMessage(number: task.issueNumber, futureBlocks: planning.futureBlockCount(for: task.id),
+                                              leavesUnassigned: plan.after.isEmpty)
+            : nil
+        let before = plan.before.isEmpty ? text("niemand") : names(plan.before)
+        let after: String
+        if plan.after.isEmpty {
+            after = text("niemand")
+        } else if plan.handsOver {
+            after = text("\(names(plan.after)) (nicht mehr dir)")
+        } else {
+            after = names(plan.after)
+        }
+        var change = spoken ? requested() : text("Zugewiesen: \(before) → \(after)")
+        // By voice the card is the only place that names the consequences, so they are read out as well.
+        if spoken, let warning { change += ". " + warning }
+        return AssistantModel.ActionCard(title: title, change: change, warning: spoken ? nil : warning,
+                                         confirmTitle: plan.handsOver ? text("Abgeben") : nil, isDestructive: plan.handsOver)
     }
 
     private func describeEvent(_ name: String, series: Bool, language: VoiceLanguage,

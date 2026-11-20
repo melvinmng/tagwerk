@@ -178,7 +178,28 @@ final class AssistantModel {
         let pending = conversation?.pendingActions ?? []
         let me = gitHubDirectory()?.login
         return OpenCards(ids: pending.map(\.id), deletes: pending.filter { $0.name == "delete_event" }.count,
-                         guarded: pending.filter { Self.assignsBeyondMe($0, me: me) }.count)
+                         guarded: pending.filter { Self.needsSingleConfirmation($0, me: me) }.count)
+    }
+
+    /// Tools whose cards are always confirmed alone, never with "Alle bestätigen" and never together with other
+    /// cards by voice. The note tools of the notes chat are added here.
+    static let singleConfirmationTools: Set<String> = ["assign_task"]
+
+    /// True for a card that must be confirmed alone: a tool of `singleConfirmationTools`, or creating a task that is
+    /// assigned beyond the user (`assignsBeyondMe`).
+    static func needsSingleConfirmation(_ call: ToolCall, me: String?) -> Bool {
+        singleConfirmationTools.contains(call.name) || assignsBeyondMe(call, me: me)
+    }
+
+    /// The open cards that "Alle bestätigen" may confirm: every pending call except the guarded ones.
+    var batchConfirmable: [ToolCall] {
+        let me = gitHubDirectory()?.login
+        return (conversation?.pendingActions ?? []).filter { !Self.needsSingleConfirmation($0, me: me) }
+    }
+
+    /// The line below "Alle bestätigen" that names what is confirmed alone; `nil` without guarded cards.
+    static func singleConfirmationNotice(for calls: [ToolCall], me: String? = nil) -> String? {
+        calls.contains { needsSingleConfirmation($0, me: me) } ? String(localized: "Zuweisungen bestätigst du einzeln.") : nil
     }
 
     /// True for a `create_task` call that assigns an issue to other people or to no one. Such a card is
@@ -199,7 +220,7 @@ final class AssistantModel {
         // are issues assigned to other people or to no one.
         let me = gitHubDirectory()?.login
         guard !calls.isEmpty, calls.count == ids.count,
-              calls.count == 1 || !calls.contains(where: { $0.name == "delete_event" || Self.assignsBeyondMe($0, me: me) }) else {
+              calls.count == 1 || !calls.contains(where: { $0.name == "delete_event" || Self.needsSingleConfirmation($0, me: me) }) else {
             onTurnFinished?(.rejected)
             return
         }
@@ -310,7 +331,8 @@ final class AssistantModel {
     func confirmAll() async {
         guard let conversation else { return }
         let index = conversation.history.count
-        let calls = conversation.pendingActions
+        // Guarded cards stay open: they are confirmed one by one.
+        let calls = batchConfirmable
         for call in calls {
             actionTimes[call.id] = now()
             await conversation.confirm(call)
@@ -452,6 +474,12 @@ final class AssistantModel {
         let title: String
         /// "Vorher → Nachher" or what will happen.
         let change: String
+        /// Shown in red below `change`: what the action costs (a hand-over deletes blocks).
+        var warning: String? = nil
+        /// Replaces "Bestätigen" on the button ("Abgeben").
+        var confirmTitle: String? = nil
+        /// A red confirm button, for an action that cannot be undone by the user.
+        var isDestructive = false
     }
 
     /// Text of an action card (mockup e): what the change is about and how it changes it. `language` is the app

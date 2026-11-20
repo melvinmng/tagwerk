@@ -118,6 +118,16 @@
         }
       }
     },
+    "%@ (nicht mehr dir)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ (no longer you)"
+          }
+        }
+      }
+    },
     "%@ / %@ kcal": {
       "localizations": {
         "de": {
@@ -232,6 +242,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "%1$@ to %2$@ · all day"
+          }
+        }
+      }
+    },
+    "%@ dazu": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ added"
           }
         }
       }
@@ -374,6 +394,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "%@ ml of water logged."
+          }
+        }
+      }
+    },
+    "%@ nicht mehr": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ removed"
           }
         }
       }
@@ -17677,6 +17707,16 @@
         }
       }
     },
+    "Zugewiesen: %@ → %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Assigned: %@ → %@"
+          }
+        }
+      }
+    },
     "Zugriff": {
       "localizations": {
         "en": {
@@ -17968,6 +18008,26 @@
         }
       }
     },
+    "Zuweisung ändern: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Change assignment: %@"
+          }
+        }
+      }
+    },
+    "Zuweisungen bestätigst du einzeln.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You confirm assignments one at a time."
+          }
+        }
+      }
+    },
     "Zählt ab": {
       "localizations": {
         "en": {
@@ -18197,6 +18257,16 @@
       }
     },
     "dir": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "you"
+          }
+        }
+      }
+    },
+    "du": {
       "localizations": {
         "en": {
           "stringUnit": {
@@ -18803,6 +18873,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "unassigned"
+          }
+        }
+      }
+    },
+    "niemand": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "nobody"
           }
         }
       }
