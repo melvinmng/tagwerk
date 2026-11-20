@@ -2244,6 +2244,9 @@
         }
       }
     },
+    "%lld.": {
+      "shouldTranslate": false
+    },
     "%lld. %@": {
       "localizations": {
         "de": {
@@ -6183,6 +6186,16 @@
         }
       }
     },
+    "Die Sprache gilt für die Spracherkennung (auch beim Diktieren in Notizen, Einkauf und Mahlzeiten), für die Antwort von ChatGPT im Sprechmodus und für die Stimme beim Vorlesen. „Wie die App“ nimmt die Sprache der App; ChatGPT antwortet dann in der Sprache, in der du sprichst. Im getippten Chat antwortet ChatGPT weiter in der Sprache, in der du schreibst.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The language applies to speech recognition (also when dictating in notes, shopping and meals), to ChatGPT’s answer in the voice mode and to the voice that reads answers aloud. “Same as the app” uses the app’s language; ChatGPT then answers in the language you speak. In the typed chat, ChatGPT keeps answering in the language you write in."
+          }
+        }
+      }
+    },
     "Die Standard-Erinnerungen legen fest, wann Tagwerk an Aufgaben und Deadline-Termine der eingeschalteten Quellen erinnert. Einzelne Aufgaben und Deadlines lassen sich abweichend einstellen. Deadline-Termine sind Termine aus Deadline-Kalendern und als Deadline markierte Termine.": {
       "localizations": {
         "en": {
@@ -7350,6 +7363,7 @@
       "shouldTranslate": false
     },
     "Erkennung in": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -10663,6 +10677,26 @@
         }
       }
     },
+    "Kopieren": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copy"
+          }
+        }
+      }
+    },
+    "Kopiert": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copied"
+          }
+        }
+      }
+    },
     "Krafttraining": {
       "localizations": {
         "en": {
@@ -12852,6 +12886,16 @@
         }
       }
     },
+    "Offen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open"
+          }
+        }
+      }
+    },
     "Offline: Änderungen an GitHub sind gerade nicht möglich.": {
       "localizations": {
         "en": {
@@ -14384,6 +14428,16 @@
         }
       }
     },
+    "Sprachchat": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voice chat"
+          }
+        }
+      }
+    },
     "Sprachdienste": {
       "shouldTranslate": false
     },
@@ -14433,6 +14487,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Recipe language"
+          }
+        }
+      }
+    },
+    "Sprache im Sprachchat": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voice chat language"
           }
         }
       }
@@ -19649,6 +19713,9 @@
           }
         }
       }
+    },
+    "•": {
+      "shouldTranslate": false
     },
     "↻ %@ reserviert": {
       "localizations": {
