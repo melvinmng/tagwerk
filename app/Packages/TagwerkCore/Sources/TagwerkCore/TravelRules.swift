@@ -96,17 +96,28 @@ public enum TravelRules {
     /// A longer gap between two events means the trip starts at home.
     public static let homeGapMinutes = 180
 
-    /// Words that name an online meeting. Whole words only, so "Teamsitzung" is not "Teams".
-    private static let onlineWords: Set<String> = ["zoom", "teams", "webex", "online", "facetime"]
+    /// Meeting services that name an online meeting. Whole words only, so "Teamsitzung" is not "Teams".
+    private static let onlineServiceWords: Set<String> = ["zoom", "teams", "webex", "facetime", "skype", "jitsi"]
 
-    /// A place someone can travel to: not empty, no web address, no online meeting.
+    /// Texts that are online only when they are the whole location. As a part of a name they say nothing:
+    /// "Online Business Center" or "Online-Shop GmbH, Hauptstr. 1" are places.
+    private static let onlineOnlyTexts: Set<String> = ["online", "online-meeting", "online meeting", "virtuell", "virtual"]
+
+    /// A place someone can travel to: not empty, and not recognisably online. Online is a web address (also without a scheme), a known meeting
+    /// service as a whole word, or a location that consists only of "online" / "virtuell" (see `onlineOnlyTexts`).
     public static func isPhysicalLocation(_ text: String) -> Bool {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return false }
         let lower = trimmed.lowercased()
-        if lower.contains("://") || lower.hasPrefix("www.") { return false }
+        if lower.contains("://") || onlineOnlyTexts.contains(lower) { return false }
+        // A web address without a scheme: "www.example.com", "meet.example.com/room" (a dotted host with letters at the end,
+        // followed by a slash). "Hauptstr. 1" and "Raum 2.14" are no addresses.
+        let tokens = lower.split(whereSeparator: \.isWhitespace)
+        if tokens.contains(where: { $0.hasPrefix("www.") || $0.range(of: #"^[a-z0-9-]+(\.[a-z0-9-]+)*\.[a-z]{2,}(:\d+)?/"#, options: .regularExpression) != nil }) {
+            return false
+        }
         let words = lower.split { !$0.isLetter && !$0.isNumber }.map(String.init)
-        if words.contains(where: onlineWords.contains) { return false }
+        if words.contains(where: onlineServiceWords.contains) { return false }
         for index in words.indices.dropLast() where words[index] == "google" && words[index + 1] == "meet" { return false }
         return true
     }
