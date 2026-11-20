@@ -1966,5 +1966,19 @@
   "Priorität %lld": "Priority %lld",
   "Wert eingeben": "Enter value",
   "Bitte eine Zahl eingeben.": "Please enter a number.",
-  "Angepasst auf %@": "Adjusted to %@"
+  "Angepasst auf %@": "Adjusted to %@",
+  "Intervall": "Interval",
+  "Anzahl": "Count",
+  "%lld Mal": {"one": "%lld time", "other": "%lld times"},
+  "Andere Menge": "Other amount",
+  "Puffer": "Buffer",
+  "Runden": "Rounds",
+  "Schritte pro Tag": "Steps per day",
+  "Standarddauer": "Default duration",
+  "Tage vorher": "Days before",
+  "Training pro Woche": "Training per week",
+  "g": "g",
+  "l": "l",
+  "min": "min",
+  "ml": "ml"
 }

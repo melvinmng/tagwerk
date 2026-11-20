@@ -1251,6 +1251,46 @@
         }
       }
     },
+    "%lld Mal": {
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld time"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld times"
+                }
+              }
+            }
+          }
+        },
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Mal"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Mal"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "%lld Milliliter Wasser erfassen": {
       "localizations": {
         "en": {
@@ -3336,7 +3376,18 @@
         }
       }
     },
+    "Andere Menge": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Other amount"
+          }
+        }
+      }
+    },
     "Andere Menge: %lld ml": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -3602,7 +3653,18 @@
         }
       }
     },
+    "Anzahl": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Count"
+          }
+        }
+      }
+    },
     "Anzahl: %lld Mal": {
+      "extractionState": "stale",
       "localizations": {
         "de": {
           "variations": {
@@ -5263,6 +5325,7 @@
       }
     },
     "Dauer: %@": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -5273,6 +5336,7 @@
       }
     },
     "Dauer: %lld min": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -7040,6 +7104,7 @@
       }
     },
     "Eiweiß: %lld g": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -7913,6 +7978,7 @@
       }
     },
     "Fokus: %lld min": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -9777,6 +9843,16 @@
         }
       }
     },
+    "Intervall": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Interval"
+          }
+        }
+      }
+    },
     "Issue #%@": {
       "localizations": {
         "en": {
@@ -9968,6 +10044,7 @@
       }
     },
     "Kalorien: %@ kcal": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -10683,6 +10760,7 @@
       }
     },
     "Lange Pause: %lld min": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -11266,6 +11344,7 @@
       }
     },
     "Menge %@": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -11286,6 +11365,7 @@
       }
     },
     "Menge: %lld": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -11296,6 +11376,7 @@
       }
     },
     "Menge: %lld ml": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -13050,6 +13131,7 @@
       }
     },
     "Pause: %lld min": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -13357,7 +13439,18 @@
     "Prüfe …": {
       "shouldTranslate": false
     },
+    "Puffer": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Buffer"
+          }
+        }
+      }
+    },
     "Puffer: %lld min": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -13669,7 +13762,18 @@
         }
       }
     },
+    "Runden": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rounds"
+          }
+        }
+      }
+    },
     "Runden: %lld": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -13819,7 +13923,18 @@
         }
       }
     },
+    "Schritte pro Tag": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Steps per day"
+          }
+        }
+      }
+    },
     "Schritte pro Tag: %@": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -14518,7 +14633,18 @@
         }
       }
     },
+    "Standarddauer": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Default duration"
+          }
+        }
+      }
+    },
     "Standarddauer: %@": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -14768,7 +14894,18 @@
         }
       }
     },
+    "Tage vorher": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Days before"
+          }
+        }
+      }
+    },
     "Tage vorher: %lld": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -15436,7 +15573,18 @@
         }
       }
     },
+    "Training pro Woche": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Training per week"
+          }
+        }
+      }
+    },
     "Training pro Woche: %@": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -16433,6 +16581,7 @@
       }
     },
     "Wasser: %@": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -17876,6 +18025,16 @@
         }
       }
     },
+    "g": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "g"
+          }
+        }
+      }
+    },
     "ganztägig": {
       "localizations": {
         "en": {
@@ -18156,6 +18315,16 @@
         }
       }
     },
+    "l": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "l"
+          }
+        }
+      }
+    },
     "lokale Aufgaben": {
       "localizations": {
         "en": {
@@ -18186,6 +18355,16 @@
         }
       }
     },
+    "min": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "min"
+          }
+        }
+      }
+    },
     "mit Bus und Bahn": {
       "localizations": {
         "en": {
@@ -18212,6 +18391,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "by bike"
+          }
+        }
+      }
+    },
+    "ml": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ml"
           }
         }
       }
