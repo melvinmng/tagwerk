@@ -155,6 +155,8 @@ final class AppSettings {
     var voiceExplained: Bool = false
     /// "auto" follows the iPhone language; otherwise a `VoiceLanguage` raw value.
     var voiceRecognitionLanguage: String = "auto"
+    /// The language recipes are created in (#216): "auto" follows the app language, otherwise a `VoiceLanguage` raw value.
+    var recipeLanguage: String = "auto"
     /// `ReadAloudPolicy` raw value; "never" by default (SP3).
     var voiceReadAloud: String = "never"
     /// Chosen system voices per language; nil picks the best installed voice.
