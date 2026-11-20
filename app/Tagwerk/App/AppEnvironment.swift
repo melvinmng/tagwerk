@@ -83,6 +83,8 @@ final class AppEnvironment {
     let effort: EffortTracker
     /// Writes the snapshot file the widget reads (phase 4); `directory == nil` in tests and unsigned builds.
     let snapshotWriter: WidgetSnapshotWriter
+    /// What the controls read while the app is closed (App Group); `nil` in tests and without the group.
+    let controlState: ControlState?
     /// Reads events for the search away from the main thread; its own read-only store.
     let eventSearcher: any EventSearching
     /// Reminders as tasks; also the source of the completed ones for the search.
@@ -124,8 +126,10 @@ final class AppEnvironment {
          health: (any HealthStoring)? = nil, snapshotWriter: WidgetSnapshotWriter? = nil,
          reminderStore: (any ReminderStore)? = nil, eventSearcher: (any EventSearching)? = nil,
          focusNotificationCenter: (any FocusNotificationCenter)? = nil,
-         travelTimes: TravelTimeService? = nil, shareInbox: ShareInbox? = nil) throws {
+         travelTimes: TravelTimeService? = nil, shareInbox: ShareInbox? = nil,
+         controlState: ControlState? = nil, controlReloader: ControlReloading? = nil) throws {
         self.modelContainer = modelContainer
+        self.controlState = controlState
         self.snapshotWriter = snapshotWriter ?? WidgetSnapshotWriter(directory: nil, reload: {})
         let context = modelContainer.mainContext
         let settings = try AppSettings.current(in: context)
@@ -287,7 +291,8 @@ final class AppEnvironment {
         let focusStore = FocusStore(context: context)
         self.focusStore = focusStore
         let focus = FocusTimerModel(store: focusStore, settings: { settings.focusTimerSettings }, activity: FocusActivityController(),
-                                    notifications: FocusNotificationScheduler(center: focusNotificationCenter))
+                                    notifications: FocusNotificationScheduler(center: focusNotificationCenter),
+                                    controlState: controlState, controlReloader: controlReloader)
         self.focus = focus
         focus.postponeTask = { key in
             guard let id = TaskID(key: key) else { return }
@@ -460,6 +465,18 @@ final class AppEnvironment {
     /// Replaces whatever was pushed there; used by the deep link and the shortcut.
     func openShopping() {
         tasksPath = [settings.shoppingListID == nil ? .shoppingSettings : .shopping]
+        requestedTab = 1
+    }
+
+    /// Shows the notes of "Brain Dump" in the "Aufgaben" tab; the list starts a recording (`AppRouter.dictationRequested`).
+    /// The note is created by the list's own send action, so nothing is written here.
+    func openDictatedNote() {
+        guard let folder = notes.folder(role: .brainDump) else {
+            tasksPath = [.notes]
+            requestedTab = 1
+            return
+        }
+        tasksPath = [.notes, .notesFolder(.folder(folder.id))]
         requestedTab = 1
     }
 
@@ -851,6 +868,14 @@ final class AppEnvironment {
         }
     }
 
+    /// The habits active today, as names and symbols only, for the configuration dialog of the habit control (#167).
+    func writeControlHabits() {
+        guard let controlState else { return }
+        let today = habits.today
+        controlState.writeHabits(habits.habits.filter { HabitRules.isActive($0, on: today, today: today) }
+            .map { ControlHabit(id: $0.id, name: $0.name, symbol: $0.symbol) })
+    }
+
     /// Rewrites the snapshot whenever the plan, tasks, today's intake or the widget-relevant settings change.
     func startSnapshotUpdates() {
         guard snapshotUpdates == nil else { return }
@@ -859,7 +884,11 @@ final class AppEnvironment {
             self?.scheduleSnapshot()
         }
         habits.onChanged = { [weak self] in self?.scheduleSnapshot() }
-        habits.onListChanged = { TagwerkShortcuts.updateAppShortcutParameters() }
+        habits.onListChanged = { [weak self] in
+            TagwerkShortcuts.updateAppShortcutParameters()
+            self?.writeControlHabits()
+        }
+        writeControlHabits()
         // Refreshes the speakable article names once at start; later changes are reported by the hook that
         // `TagwerkApp` installs at launch (it must also exist when an intent launches the app in the background).
         TagwerkShortcuts.updateAppShortcutParameters()

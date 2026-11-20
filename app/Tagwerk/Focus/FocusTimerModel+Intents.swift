@@ -14,6 +14,24 @@ extension FocusTimerModel {
         }
     }
 
+    /// The focus toggle of the control: "on" starts a free session, "off" ends the running one. Runs in the background and
+    /// never opens the sheet; the session shows in the Live Activity.
+    func setRunning(_ on: Bool) async {
+        // The app may have been started in the background by the control; the session is then still in the store only.
+        if !isRunning { await restore() }
+        if on {
+            // A session whose timer ran out waits for a choice and would block the start: close it as completed, which
+            // completes no task.
+            if snapshot(at: now())?.phase == .finished { await stop() }
+            // Running or paused already: leave it as it is (a second start would only show the sheet).
+            guard !isRunning else { return }
+            await start(task: nil, block: nil)
+            isPresented = false
+        } else {
+            await stop()
+        }
+    }
+
     /// Lets the Live Activity buttons reach this model. Called once by the app environment.
     func installIntentHandler() {
         FocusActionBridge.handler = { [weak self] action in await self?.handle(action) }

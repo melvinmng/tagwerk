@@ -39,19 +39,25 @@ final class FocusTimerModel {
     @ObservationIgnored private let activity: FocusActivityControlling
     @ObservationIgnored private let notifications: FocusNotificationScheduling
     @ObservationIgnored private let wakesAtPhaseEnd: Bool
+    /// Where the focus control reads its state (App Group); `nil` in tests and without the group.
+    @ObservationIgnored private let controlState: ControlState?
+    @ObservationIgnored private let controlReloader: ControlReloading?
     @ObservationIgnored private var record: FocusSessionRecord?
     /// A link of the Live Activity arrived before the session was restored; the sheet opens once it is.
     @ObservationIgnored var showsWhenRestored = false
     @ObservationIgnored private var wake: Task<Void, Never>?
 
     init(store: FocusStore, settings: @escaping () -> FocusTimerSettings, activity: FocusActivityControlling,
-         notifications: FocusNotificationScheduling, now: @escaping () -> Date = Date.init, wakesAtPhaseEnd: Bool = true) {
+         notifications: FocusNotificationScheduling, now: @escaping () -> Date = Date.init, wakesAtPhaseEnd: Bool = true,
+         controlState: ControlState? = nil, controlReloader: ControlReloading? = nil) {
         self.store = store
         self.settings = settings
         self.activity = activity
         self.notifications = notifications
         self.now = now
         self.wakesAtPhaseEnd = wakesAtPhaseEnd
+        self.controlState = controlState
+        self.controlReloader = controlReloader
     }
 
     var isRunning: Bool { session != nil }
@@ -167,6 +173,7 @@ final class FocusTimerModel {
         let open = store.openSessions().sorted { $0.start > $1.start }
         guard let newest = open.first else {
             if activity.adopt() { await activity.end() }
+            publishControlState()
             return
         }
         for leftover in open.dropFirst() { close(leftover, at: now(), as: nil) }
@@ -175,6 +182,7 @@ final class FocusTimerModel {
             close(newest, at: moment, as: nil)
             if activity.adopt() { await activity.end() }
             await notifications.cancel()
+            publishControlState()
             return
         }
         record = newest
@@ -213,7 +221,23 @@ final class FocusTimerModel {
         return FocusActivityContent(title: session.title, state: session.state, snapshot: snap)
     }
 
+    /// Tells the focus control whether a session runs and when it ends, and reloads the control when that changed. A
+    /// finished session that waits for a choice counts as not running.
+    private func publishControlState() {
+        guard let controlState else { return }
+        var isRunning = false
+        var endsAt: Date?
+        if let session, let snap = snapshot(at: now()), snap.phase != .finished {
+            isRunning = true
+            endsAt = snap.isPaused ? nil : FocusTimerRules.sessionEnd(of: session.state)
+        }
+        if controlState.writeFocus(isRunning: isRunning, endsAt: endsAt) {
+            controlReloader?.reloadControls(ofKind: ControlKind.focus)
+        }
+    }
+
     private func syncOutputs() async {
+        defer { publishControlState() }
         guard let session, let snap = snapshot(at: now()), let content = currentContent() else { return }
         await activity.update(content)
         if let phaseEnd = snap.phaseEnd {
@@ -246,6 +270,7 @@ final class FocusTimerModel {
         session = nil
         isPresented = false
         self.record = nil
+        publishControlState()
         await activity.end()
         await notifications.cancel()
     }

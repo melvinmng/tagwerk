@@ -8,6 +8,13 @@ struct TagwerkWidgetBundle: WidgetBundle {
         NextUpWidget()
         TodayWidget()
         FocusLiveActivity()
+        WaterControl()
+        HabitControl()
+        DictateControl()
+        FocusControl()
+        CaptureControl()
+        RoutineControl()
+        ShoppingControl()
     }
 }
 

@@ -33,36 +33,6 @@ struct LogWaterIntent: AppIntent {
     }
 }
 
-/// A habit as Siri and Shortcuts see it: only its name, never streaks or rates.
-struct HabitEntity: AppEntity {
-    static let typeDisplayRepresentation: TypeDisplayRepresentation = "Gewohnheit"
-    static let defaultQuery = HabitEntityQuery()
-
-    var id: UUID
-    @Property(title: "Name") var name: String
-
-    var displayRepresentation: DisplayRepresentation { DisplayRepresentation(title: LocalizedStringResource(stringLiteral: name)) }
-
-    init(_ habit: Habit) {
-        id = habit.id
-        name = habit.name
-    }
-}
-
-struct HabitEntityQuery: EntityQuery {
-    @Dependency private var services: IntentServices
-
-    @MainActor
-    func entities(for identifiers: [UUID]) async throws -> [HabitEntity] {
-        services.activeHabits().filter { identifiers.contains($0.id) }.map(HabitEntity.init)
-    }
-
-    @MainActor
-    func suggestedEntities() async throws -> [HabitEntity] {
-        services.activeHabits().map(HabitEntity.init)
-    }
-}
-
 /// "Gewohnheit abhaken": runs in the background and checks a habit off for today. There is no undo by voice.
 struct CheckHabitIntent: AppIntent {
     static let title: LocalizedStringResource = "Gewohnheit abhaken"

@@ -25,6 +25,21 @@ struct FocusTimerRulesTests {
         #expect(finished.finishedAt == at(25))
     }
 
+    @Test func sessionEnd_isTheEndOfTheLastPhase() {
+        #expect(FocusTimerRules.sessionEnd(of: state(pomodoro: false)) == at(25))
+        // 4 x 25 min work, 3 x 5 min short break, 15 min long break.
+        #expect(FocusTimerRules.sessionEnd(of: state()) == at(130))
+    }
+
+    @Test func sessionEnd_movesBehindEveryFinishedPause() {
+        let paused = state(pomodoro: false, pauses: [DateInterval(start: at(5), end: at(8))])
+        #expect(FocusTimerRules.sessionEnd(of: paused) == at(28))
+    }
+
+    @Test func sessionEnd_isNilWhilePaused() {
+        #expect(FocusTimerRules.sessionEnd(of: state(pomodoro: false, pausedSince: at(5))) == nil)
+    }
+
     @Test func pomodoro_sequenceOfFourRounds_endsWithLongBreak() {
         let pomodoro = state()
         let expected: [(Double, FocusPhase)] = [

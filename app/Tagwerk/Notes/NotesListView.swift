@@ -130,7 +130,9 @@ struct NotesListView: View {
         .onAppear {
             store.purgeExpired(calendar: environment.planning.calendar)
             prepareVoice()
+            startRequestedDictation()
         }
+        .onChange(of: environment.router.dictationRequested) { _, _ in startRequestedDictation() }
         .onDisappear { voice?.cancel() }
     }
 
@@ -360,6 +362,14 @@ struct NotesListView: View {
         .onChange(of: draft) { _, newValue in
             if newValue.isEmpty { draftWasDictated = false }
         }
+    }
+
+    /// "Notiz diktieren" (control): the recording starts as if the microphone was tapped. The request is used up even
+    /// when dictation is off, so it cannot start a recording later.
+    private func startRequestedDictation() {
+        guard environment.router.dictationRequested else { return }
+        let wanted = environment.router.takeDictationRequest()
+        if wanted, allowsCapture, environment.settings.voiceInputEnabled { voice?.tapMicrophone() }
     }
 
     private func prepareVoice() {
