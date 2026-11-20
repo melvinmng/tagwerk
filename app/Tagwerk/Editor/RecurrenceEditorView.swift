@@ -109,7 +109,7 @@ struct RecurrenceEditorView: View {
                 Text("Jahr").tag(RecurrenceEditorModel.Frequency.year)
             }
             .pickerStyle(.segmented)
-            Stepper(intervalText, value: interval, in: model.intervalRange)
+            ValueStepper("Intervall", value: interval, in: model.intervalRange, display: intervalText)
             if model.frequency == .week { weekdayCircles }
             if model.frequency == .month { monthOptions }
         } footer: {
@@ -168,7 +168,7 @@ struct RecurrenceEditorView: View {
                     .environment(\.timeZone, calendar.timeZone)
             }
             if model.endKind == .count {
-                Stepper(String(localized: "Anzahl: \(model.count) Mal"), value: count, in: 1...999)
+                ValueStepper("Anzahl", value: count, in: 1...999) { String(localized: "\($0) Mal") }
             }
         }
     }
@@ -243,9 +243,9 @@ struct RecurrenceEditorView: View {
 
     private var usesWeekdayOfMonth: Bool { model.monthOption == .weekdayOfMonth && model.canUseWeekdayOfMonth }
 
-    private var intervalText: String {
-        let value = model.interval
-        return switch model.frequency {
+    /// "Alle 2 Wochen" for the given interval.
+    private func intervalText(_ value: Int) -> String {
+        switch model.frequency {
         case .week: String(localized: "Alle \(value) Wochen")
         case .month: String(localized: "Alle \(value) Monate")
         case .year: String(localized: "Alle \(value) Jahre")
