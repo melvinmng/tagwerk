@@ -125,6 +125,14 @@ public enum RoutineSchedule {
         return minutes < eveningBoundaryMinutes ? today.adding(days: -1, calendar: calendar) : today
     }
 
+    /// Which routine a single entry point ("Tagesroutine" control, #167) opens at `date`: the morning start from 04:00
+    /// to 11:59 (the span of the morning card, rule 11), the evening wrap-up otherwise. Between 00:00 and 03:59 that is
+    /// still the evening of the day before (rule 10; `routineDay` names the day).
+    public static func currentRoutine(at date: Date, calendar: Calendar) -> AppRoute {
+        let minutes = minutesOfDay(date, calendar: calendar)
+        return minutes >= eveningBoundaryMinutes && minutes < morningCardEndMinutes ? .routineStart : .routineEvening
+    }
+
     /// Minutes since midnight of `date`.
     public static func minutesOfDay(_ date: Date, calendar: Calendar) -> Int {
         let parts = calendar.dateComponents([.hour, .minute], from: date)

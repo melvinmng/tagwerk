@@ -15,6 +15,10 @@ public enum AppRoute: String, Sendable, Hashable, CaseIterable {
     case routineEvening = "routine/evening"
     /// The guided weekly planning (#164).
     case routineWeek = "routine/week"
+    /// A new brain-dump note with dictation running (Control Center control, #167).
+    case notesDictate = "notes/dictate"
+    /// The routine that fits the time of day: morning start or evening wrap-up (Control Center control, #167).
+    case routineNow = "routine/now"
 
     public static let scheme = "tagwerk"
 

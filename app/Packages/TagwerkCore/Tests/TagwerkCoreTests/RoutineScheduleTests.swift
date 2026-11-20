@@ -21,6 +21,24 @@ struct RoutineScheduleTests {
         #expect(RoutineSchedule.routineDay(at: instant(2026, 12, 1, 0, 10), calendar: calendar) == PlanDay(year: 2026, month: 11, day: 30))
     }
 
+    @Test func currentRoutine_beforeNoon_isStart() {
+        #expect(RoutineSchedule.currentRoutine(at: instant(2026, 11, 19, 4, 0), calendar: calendar) == .routineStart)
+        #expect(RoutineSchedule.currentRoutine(at: instant(2026, 11, 19, 11, 59), calendar: calendar) == .routineStart)
+    }
+
+    @Test func currentRoutine_fromNoon_isEvening() {
+        #expect(RoutineSchedule.currentRoutine(at: instant(2026, 11, 19, 12, 0), calendar: calendar) == .routineEvening)
+        #expect(RoutineSchedule.currentRoutine(at: instant(2026, 11, 19, 23, 59), calendar: calendar) == .routineEvening)
+    }
+
+    @Test func currentRoutine_at0330_isEvening() {
+        // Still the wrap-up of the day before (rule 10).
+        let moment = instant(2026, 11, 19, 3, 30)
+        #expect(RoutineSchedule.currentRoutine(at: moment, calendar: calendar) == .routineEvening)
+        #expect(RoutineSchedule.routineDay(at: moment, calendar: calendar) == PlanDay(year: 2026, month: 11, day: 18))
+        #expect(RoutineSchedule.currentRoutine(at: instant(2026, 11, 19, 3, 59), calendar: calendar) == .routineEvening)
+    }
+
     @Test func morningCard_showsFromFourToNoon() {
         #expect(!RoutineSchedule.showsMorningCard(minutesOfDay: 239, completed: false, dismissed: false))
         #expect(RoutineSchedule.showsMorningCard(minutesOfDay: 240, completed: false, dismissed: false))
