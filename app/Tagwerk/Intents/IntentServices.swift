@@ -17,10 +17,15 @@ final class IntentServices {
     /// Records water now (not on the day the tab shows), mirrors it to Health and updates the widget.
     /// The reply names no daily total: Siri may speak it on a locked device.
     func logWater(milliliters: Int?) async -> LocalizedStringResource {
+        await logWater(milliliters: milliliters, entryID: UUID())
+    }
+
+    /// The same with the ID of the new entry chosen by the caller, so an undo can delete exactly this entry.
+    func logWater(milliliters: Int?, entryID: UUID) async -> LocalizedStringResource {
         let amount = min(max(milliliters ?? Self.defaultWaterMilliliters, Self.waterRange.lowerBound), Self.waterRange.upperBound)
         let capture = environment.capture
         await capture.reload()
-        await capture.addWater(amount, at: .now, offersUndo: false)
+        await capture.addWater(amount, at: .now, offersUndo: false, entryID: entryID)
         await capture.waitForHealth()
         environment.writeSnapshot()
         // Plain digits (no grouping), as before: "2000 ml".

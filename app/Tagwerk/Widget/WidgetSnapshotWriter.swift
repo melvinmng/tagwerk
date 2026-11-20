@@ -24,6 +24,8 @@ final class WidgetSnapshotWriter {
     let directory: URL?
     private let reload: () -> Void
     private var lastFingerprint: Data?
+    /// Called after every `write`, also when nothing could be written; the watch bridge follows the snapshot with it.
+    var onWritten: (() -> Void)?
 
     init(directory: URL?, reload: @escaping () -> Void) {
         self.directory = directory
@@ -43,6 +45,7 @@ final class WidgetSnapshotWriter {
     /// Writes atomically and reloads the widgets only when the content (without the creation time) changed,
     /// to spare the reload budget. Without a container nothing happens.
     func write(_ snapshot: WidgetSnapshot) {
+        defer { onWritten?() }
         guard var directory, let data = try? snapshot.encoded() else { return }
         let fingerprint = snapshot.contentFingerprint()
         let previous = lastFingerprint ?? current()?.contentFingerprint()

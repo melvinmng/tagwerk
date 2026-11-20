@@ -85,6 +85,8 @@ final class AppEnvironment {
     let snapshotWriter: WidgetSnapshotWriter
     /// What the controls read while the app is closed (App Group); `nil` in tests and without the group.
     let controlState: ControlState?
+    /// Talks to the Apple Watch app; `TagwerkApp` installs it at launch, `nil` in tests and where the watch is unsupported.
+    @ObservationIgnored var watchBridge: WatchBridge?
     /// Reads events for the search away from the main thread; its own read-only store.
     let eventSearcher: any EventSearching
     /// Reminders as tasks; also the source of the completed ones for the search.

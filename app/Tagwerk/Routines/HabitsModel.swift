@@ -188,6 +188,14 @@ final class HabitsModel {
         return changed
     }
 
+    /// The watch's "abwählen" and the undo of its check: removes today's manual check. `false` when there was none.
+    @discardableResult
+    func uncheckToday(_ id: UUID) async -> Bool {
+        let changed = store.setCheck(id, on: today, checked: false, at: now())
+        refreshLocal()
+        return changed
+    }
+
     /// Whether a habit with `source` exists and is not paused.
     func hasActiveHabit(source: HabitSource) -> Bool {
         habits.contains { $0.source == source && $0.pausedSince == nil }

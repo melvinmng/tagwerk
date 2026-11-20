@@ -32,6 +32,8 @@ struct TagwerkApp: App {
             AppDependencyManager.shared.add(dependency: services)
             // The controls run their intents here, also when the system starts the app in the background for one.
             ControlActionRouter(writer: services, focus: environment.focus).install()
+            // The watch app talks to the phone here too; hosted tests never activate the system session.
+            if !isTestHost { WatchBridge.install(environment: environment, services: services) }
             HabitEntitySource.activeHabits = { services.activeHabits() }
             // New article names become speakable, also after a Siri add that launched the app in the background
             // (`RootView.task` does not run then). Hosted unit tests do not talk to the system.

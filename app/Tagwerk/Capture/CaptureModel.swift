@@ -359,8 +359,9 @@ final class CaptureModel {
     // MARK: Entries
 
     /// `offersUndo: false` for Siri: a "Widerrufen" bar hours later, on the next opening, would only confuse.
-    func addWater(_ milliliters: Int, at date: Date? = nil, offersUndo: Bool = true) async {
-        let drink = DrinkValue(id: UUID(), date: date ?? entryDate, milliliters: milliliters)
+    /// `entryID` lets the caller delete exactly this entry later (the watch's "Rückgängig").
+    func addWater(_ milliliters: Int, at date: Date? = nil, offersUndo: Bool = true, entryID: UUID = UUID()) async {
+        let drink = DrinkValue(id: entryID, date: date ?? entryDate, milliliters: milliliters)
         store.addDrink(drink)
         if offersUndo { undo = UndoNotice(text: String(localized: "\(String(milliliters)) ml Wasser erfasst"), action: .remove(drink.id)) }
         await changed()
@@ -419,6 +420,13 @@ final class CaptureModel {
             store.restore(deleted)
             await changed()
         }
+    }
+
+    /// Deletes an entry without a banner, like "Widerrufen" of the entry just made; the Health deletion follows at once.
+    /// For callers that took back their own action (the watch), so the phone shows no "Eintrag gelöscht" bar.
+    func removeEntry(_ id: UUID) async {
+        guard store.delete(id, healthNotBefore: now()) != nil else { return }
+        await changed()
     }
 
     func clearUndo(_ notice: UndoNotice) {
