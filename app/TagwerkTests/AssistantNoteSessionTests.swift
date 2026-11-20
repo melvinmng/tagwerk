@@ -107,6 +107,134 @@ struct AssistantNoteSessionTests {
         #expect(!sent.contains(Self.title))
     }
 
+    // MARK: read_note
+
+    static let fullText = "Zimtsternrezept Vollständiger Notizinhalt: erst Eiweiß schlagen"
+
+    /// A model whose notes come from a real store: one normal note, found by the search and read in full.
+    private func makeWithStore() async throws -> (AssistantModel, ChatStore, AppTools, NoteRecord) {
+        let notes = NoteStore(context: container.mainContext)
+        let note = try #require(notes.create(text: "Backliste\n" + Self.fullText))
+        await taskList.reload()
+        let planStore = PlanStore(context: container.mainContext)
+        let blocks = BlockPlanner(store: calendarStore, planStore: planStore, links: EventLinkStore(context: container.mainContext),
+                                  settings: settings, calendar: calendar)
+        let planning = PlanningModel(taskList: taskList, calendarStore: calendarStore, reminderStore: FakeAccessStore(),
+                                     planStore: planStore, efforts: RecurringEffortStore(context: container.mainContext),
+                                     blocks: blocks, settings: settings, marks: EventMarkStore(context: container.mainContext),
+                                     now: testNow, calendar: calendar)
+        await planning.reload()
+        let access = NoteToolAccess(store: notes)
+        let sources = SearchToolSources(events: { _ in [] }, calendarNames: { [:] }, completedTasks: { [] },
+                                        notes: { access.visibleNotes().map { AppEnvironment.searchItem(for: $0, folderNames: [:]) } },
+                                        notesAllowed: { true })
+        let tools = AppTools(taskList: taskList, planning: planning, planner: nil, events: { _ in [] }, search: sources, noteAccess: access)
+        let store = ChatStore(context: container.mainContext)
+        let model = AssistantModel(responder: responder, tools: tools, model: { "gpt-test" }, store: store, planning: planning, now: testNow)
+        model.language = { .german }
+        return (model, store, tools, note)
+    }
+
+    private func readCall(_ note: NoteRecord) -> StreamEvent {
+        .functionCall(callID: "r1", name: "read_note", arguments: #"{"note_ids":["\#(NoteToolAccess.key(for: note.id))"]}"#)
+    }
+
+    private func readTurn(_ model: AssistantModel, _ note: NoteRecord) async {
+        model.open(context: .settings)
+        responder.enqueueEvents([readCall(note), .completed(usage: nil)])
+        responder.enqueue("Die Notiz handelt von Zimtsternen.")
+        await model.send("Lies meine Backliste")
+    }
+
+    @Test func readNote_storedHistoryHoldsTitlesOnly_memoryHoldsText() async throws {
+        let (model, store, tools, note) = try await makeWithStore()
+        await readTurn(model, note)
+        #expect(model.conversation?.history.map { "\($0)" }.joined().contains(Self.fullText) == true)
+        #expect(tools.noteSession.readTexts[note.id] == note.text)
+        let stored = storedText(store)
+        #expect(!stored.contains("Eiweiß schlagen") && !stored.contains("Vollständiger Notizinhalt"))
+        #expect(stored.contains("Backliste") && stored.contains("nicht mehr verfügbar"))
+    }
+
+    @Test func readNote_textStaysAvailableInFollowingTurns() async throws {
+        let (model, _, _, note) = try await makeWithStore()
+        await readTurn(model, note)
+        responder.enqueue("Gern.")
+        await model.send("Und was kommt danach?")
+        let sent = responder.calls.last?.input.map { "\($0)" }.joined() ?? ""
+        #expect(sent.contains(Self.fullText))
+    }
+
+    @Test func switchingChat_resetsSession() async throws {
+        let (model, _, tools, note) = try await makeWithStore()
+        await readTurn(model, note)
+        #expect(!tools.noteSession.readTexts.isEmpty)
+        model.open(task: makeTask("Fahrrad", source: .local))
+        #expect(tools.noteSession.readTexts.isEmpty)
+        // The other chat is built from the stored form.
+        let memory = model.conversation?.history.map { "\($0)" }.joined(separator: "\n") ?? ""
+        #expect(!memory.contains(Self.fullText), "\(memory)")
+    }
+
+    @Test func clear_resetsSession() async throws {
+        let (model, _, tools, note) = try await makeWithStore()
+        await readTurn(model, note)
+        model.clear()
+        #expect(tools.noteSession.readTexts.isEmpty)
+        #expect(model.conversation?.history.isEmpty == true)
+    }
+
+    @Test func endNoteSession_resetsSession() async throws {
+        let (model, store, tools, note) = try await makeWithStore()
+        await readTurn(model, note)
+        model.endNoteSession()
+        #expect(tools.noteSession.readTexts.isEmpty)
+        let memory = model.conversation?.history.map { "\($0)" }.joined(separator: "\n") ?? ""
+        #expect(!memory.contains(Self.fullText), "\(memory)")
+        #expect(!storedText(store).contains(Self.fullText))
+    }
+
+    @Test func reopenedAfterRestart_noteTextIsGone() async throws {
+        let (model, _, _, note) = try await makeWithStore()
+        await readTurn(model, note)
+        let (reopened, _, tools, _) = try await makeWithStore()
+        reopened.open(context: .settings)
+        #expect(tools.noteSession.readTexts.isEmpty)
+        let restored = reopened.conversation?.history.map { "\($0)" }.joined() ?? ""
+        #expect(!restored.isEmpty && !restored.contains(Self.fullText) && restored.contains("Backliste"))
+    }
+
+    @Test func activityText_fromFullAndFromStoredOutput() async throws {
+        let (model, store, _, note) = try await makeWithStore()
+        await readTurn(model, note)
+        let call = ToolCall(id: "r1", name: "read_note", arguments: Data("{}".utf8))
+        // Full form (this session) and stored form (after a restart) give the same line.
+        let full = try #require(model.conversation?.history.compactMap { item -> String? in
+            if case .functionOutput("r1", let output) = item { return output }
+            return nil
+        }.first)
+        #expect(model.activityText(call, output: full) == "Gelesen: „Backliste“")
+        let storedOutput = try #require(store.history(for: ChatStore.assistantKey).compactMap { item -> String? in
+            if case .functionOutput("r1", let output) = item { return output }
+            return nil
+        }.first)
+        #expect(model.activityText(call, output: storedOutput) == "Gelesen: „Backliste“")
+        #expect(model.activityText(call, output: nil) == nil)
+        #expect(model.activityText(call, output: AppTools.error("Notiz nicht gefunden.")) == nil)
+        #expect(model.activityText(ToolCall(id: "x", name: "search", arguments: Data("{}".utf8)), output: full) == nil)
+        // The chat shows it as an activity message.
+        let activities = model.conversation?.messages.filter { if case .activity = $0.content { true } else { false } }
+        #expect(activities?.count == 1)
+    }
+
+    @Test func instructions_containNoNoteText() async throws {
+        let (model, _, _, note) = try await makeWithStore()
+        await readTurn(model, note)
+        let text = model.instructions()
+        #expect(!text.contains("Backliste") && !text.contains(Self.fullText))
+        #expect(text.contains("read_note"))
+    }
+
     // MARK: Consent withdrawn
 
     @Test func withdrawingConsent_reducesHistoryInMemory() async {

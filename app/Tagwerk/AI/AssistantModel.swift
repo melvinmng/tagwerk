@@ -105,7 +105,11 @@ final class AssistantModel {
 
     private func switchThread(to newKey: String, tools handler: ToolHandler) {
         guard conversation == nil || key != newKey else { return }
-        if conversation != nil { persist() }
+        if conversation != nil {
+            persist()
+            // Leaving a chat ends the note session: the next chat starts from its stored form.
+            tools.noteSession.reset()
+        }
         key = newKey
         actionTimes = store.actionTimes(for: newKey)
         spokenMarks = store.spokenMarks(for: newKey)
@@ -369,6 +373,7 @@ final class AssistantModel {
     func clear() {
         guard conversation?.isBusy != true else { return }
         conversation?.clear()
+        tools.noteSession.reset()
         actionTimes = [:]
         spokenMarks = []
         taskContext = nil
@@ -380,8 +385,19 @@ final class AssistantModel {
     /// While a turn is running the reduction follows when the turn ends (`persist()` runs after every turn).
     func endNoteSession() {
         pendingNoteSessionEnd = true
+        tools.noteSession.reset()
         applyNoteSessionEnd()
         persist()
+    }
+
+    /// "Gelesen: „A“, „B“" for a `read_note` call; built from the output, so it works with the full and with the stored
+    /// form. `nil` while there is no output, for an error and for other calls.
+    func activityText(_ call: ToolCall, output: String?) -> String? {
+        guard call.name == "read_note", let output else { return nil }
+        let titles = AppTools.readNoteTitles(in: output)
+        guard !titles.isEmpty else { return nil }
+        let quoted = titles.map { String(localized: "„\($0)“") }.joined(separator: ", ")
+        return String(localized: "Gelesen: \(quoted)")
     }
 
     private func applyNoteSessionEnd() {
@@ -440,11 +456,21 @@ final class AssistantModel {
         Wortlaut. Meldet search notesLocked, sag dem Nutzer, dass er „Notizen mit ChatGPT“ unter Einstellungen › KI \
         einschalten kann. github_online setzt du nur, wenn es um Issues geht, die nicht in den Aufgaben stehen, oder \
         wenn die lokale Suche nichts ergibt.
+        \(noteInstructions())
         Einkaufsartikel stehen nicht in list_tasks: Die Einkaufsliste liest du mit list_shopping und änderst sie mit \
         update_shopping (hinzufügen, abhaken). Lege Einkaufsartikel nie über create_task an.
         \(gitHubInstructions())
         \(onTurnFinished == nil ? "" : voiceModeText())
         \(contextText())
+        """
+    }
+
+    /// How to read notes; only while the consent is on and the context has notes.
+    private func noteInstructions() -> String {
+        guard tools.offersNotes else { return "" }
+        return """
+        Reicht der Ausschnitt eines Notiztreffers nicht, lies die Notiz mit read_note. Lies nur Notizen, die für die \
+        Bitte nötig sind.
         """
     }
 

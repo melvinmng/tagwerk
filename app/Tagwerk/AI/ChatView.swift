@@ -205,9 +205,12 @@ struct ChatView: View {
             ActionCardView(card: assistant.describe(call), status: status, time: assistant.actionTimes[call.id],
                            onConfirm: { Task { await assistant.confirm(call) } },
                            onDecline: { Task { await assistant.decline(call) } })
-        case .activity:
-            // No tool shows an activity line yet (`read_note` does).
-            EmptyView()
+        case .activity(let call, let output):
+            // A read call the user should see ("Gelesen: „Titel“"); small and grey, not an answer.
+            if let text = assistant.activityText(call, output: output) {
+                Label(text, systemImage: "doc.text").font(.caption).foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
         }
     }
 

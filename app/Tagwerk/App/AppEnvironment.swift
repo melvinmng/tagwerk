@@ -219,7 +219,8 @@ final class AppEnvironment {
                                  },
                                  shopping: Self.searchShoppingSource(shopping: shopping),
                                  searchOnline: Self.searchOnlineSource(taskList: taskList),
-                                 notesAllowed: { settings.noteAssistantConsent }))
+                                 notesAllowed: { settings.noteAssistantConsent }),
+                             noteAccess: NoteToolAccess(store: noteStore))
         self.assistant = AssistantModel(responder: ai.client, tools: tools, model: { try await ai.selectedModel() },
                                         store: ChatStore(context: context), planning: planning)
         self.voiceOutput = VoiceOutputModel(speaker: SystemSpeaker(), audio: SystemVoiceAudioSession.shared, preferences: {

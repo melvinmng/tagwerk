@@ -11,7 +11,7 @@ import TagwerkCore
 @MainActor
 final class AppTools: ToolHandler {
     static let readTools: Set<String> = ["list_tasks", "list_events", "list_calendars", "get_task",
-                                         "list_github_targets", "list_assignees", "list_shopping", "search"]
+                                         "list_github_targets", "list_assignees", "list_shopping", "search", "read_note"]
     static let maxListedTasks = 60
     static let maxSearchResults = 20
     /// The longest period one search may cover (a single EventKit request reads at most four years).
@@ -28,14 +28,22 @@ final class AppTools: ToolHandler {
     let shopping: ShoppingModel?
     /// Where `search` reads events and completed tasks; `nil` in contexts without a search.
     let search: SearchToolSources?
+    /// The notes the assistant may see (never private ones); `nil` in contexts without notes.
+    var noteAccess: NoteToolAccess?
+    /// The note texts read in the running session; emptied when the session ends.
+    let noteSession: NoteSession
+    /// Whether the consent "Notizen mit ChatGPT" is on (decision D5).
+    var notesAllowed: Bool { search?.notesAllowed() ?? false }
     /// After "plan_period": the chat closes and "Planen" shows the suggestions (review item 11).
     var onPlanned: (() -> Void)?
 
     init(taskList: TaskListModel, planning: PlanningModel, planner: AIPlanner?,
          events: @escaping (DateInterval) -> [CalendarEvent],
          gitHub: @escaping () -> (any GitHubDirectory)? = { nil }, shopping: ShoppingModel? = nil,
-         search: SearchToolSources? = nil) {
+         search: SearchToolSources? = nil, noteAccess: NoteToolAccess? = nil, noteSession: NoteSession = NoteSession()) {
         self.search = search
+        self.noteAccess = noteAccess
+        self.noteSession = noteSession
         self.gitHub = gitHub
         self.shopping = shopping
         self.taskList = taskList
@@ -45,19 +53,25 @@ final class AppTools: ToolHandler {
     }
 
     /// The GitHub read tools are only registered while GitHub is signed in.
-    var definitions: [ToolDefinition] { Self.allDefinitions + (gitHub() != nil ? Self.gitHubDefinitions : []) }
+    var definitions: [ToolDefinition] {
+        Self.allDefinitions + (gitHub() != nil ? Self.gitHubDefinitions : []) + (offersNotes ? Self.noteDefinitions : [])
+    }
 
     func kind(of name: String) -> ToolKind { Self.readTools.contains(name) ? .read : .write }
 
-    /// What a stored chat keeps of a call: the output of `search` without note titles and excerpts, everything else as is.
+    /// What a stored chat keeps of a call: `search` without note titles and excerpts, `read_note` without the text, everything else as is.
     func storedForm(of call: ToolCall, output: String?) -> (arguments: String, output: String?) {
         let arguments = String(decoding: call.arguments, as: UTF8.self)
-        guard call.name == "search", let output else { return (arguments, output) }
-        return (arguments, Self.redactedSearchOutput(output))
+        guard let output else { return (arguments, output) }
+        switch call.name {
+        case "search": return (arguments, Self.redactedSearchOutput(output))
+        case "read_note": return (arguments, Self.storedReadNoteOutput(output))
+        default: return (arguments, output)
+        }
     }
 
-    /// Read calls that are shown as a line in the chat; none yet (`read_note` joins them).
-    func showsActivity(_ name: String) -> Bool { false }
+    /// `read_note` is shown as a line in the chat ("Gelesen: …"); other read calls stay invisible.
+    func showsActivity(_ name: String) -> Bool { name == "read_note" }
 
     func run(_ call: ToolCall) async -> String {
         guard let arguments = try? JSONSerialization.jsonObject(with: call.arguments) as? [String: Any] else {
@@ -83,6 +97,7 @@ final class AppTools: ToolHandler {
             return Self.json(answer)
         case "list_events": return try listEvents(from: args.day("from"), to: args.day("to"))
         case "search": return try await runSearch(args)
+        case "read_note": return try readNote(args)
         case "list_calendars": return listCalendars()
         case "list_github_targets": return try await listGitHubTargets()
         case "list_assignees": return try await listAssignees(repository: args.require("repository"))

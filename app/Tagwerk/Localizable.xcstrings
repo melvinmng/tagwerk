@@ -5098,6 +5098,16 @@
         }
       }
     },
+    "Das Argument note_ids fehlt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The argument note_ids is missing."
+          }
+        }
+      }
+    },
     "Das Datum %@ ist ungültig.": {
       "localizations": {
         "en": {
@@ -6031,6 +6041,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "The file could not be read."
+          }
+        }
+      }
+    },
+    "Die Einwilligung „Notizen mit ChatGPT“ fehlt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The consent “Notes with ChatGPT” is missing."
           }
         }
       }
@@ -8625,6 +8645,16 @@
         }
       }
     },
+    "Gelesen: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Read: %@"
+          }
+        }
+      }
+    },
     "Gelöscht": {
       "localizations": {
         "en": {
@@ -9575,6 +9605,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "At most 30 items per call."
+          }
+        }
+      }
+    },
+    "Höchstens fünf Notizen auf einmal.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "At most five notes at once."
           }
         }
       }
@@ -12644,6 +12684,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Dictate a note in Tagwerk"
+          }
+        }
+      }
+    },
+    "Notiz nicht gefunden.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Note not found."
           }
         }
       }
