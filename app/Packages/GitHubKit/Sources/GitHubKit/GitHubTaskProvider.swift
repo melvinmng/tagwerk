@@ -96,8 +96,10 @@ public final class GitHubTaskProvider: TaskProvider {
         } else {
             do { viewer = try await api.viewerLogin() } catch { throw IssueSearchError.from(error) }
         }
-        // The search starts one day early (UTC date); the interval itself is applied on the device.
-        let issues = try await api.closedIssues(assignedTo: viewer, closedSince: Self.utcDayBefore(interval.start))
+        // The search starts one day early and ends on the UTC date of the interval's end (both inclusive, whole UTC days);
+        // the interval itself is applied on the device.
+        let issues = try await api.closedIssues(assignedTo: viewer, closedSince: Self.utcDate(interval.start, addingDays: -1),
+                                                closedUntil: Self.utcDate(interval.end))
         let shown = selectedProjectIDs() ?? defaultSelectedProjectIDs
         return issues
             .filter { $0.isCompleted && $0.closedAt >= interval.start && $0.closedAt < interval.end && !$0.projectIDs.isDisjoint(with: shown) }

@@ -60,11 +60,13 @@ extension GitHubAPI {
     /// keeps a review at three search requests (GitHub allows 30 search requests per minute).
     static let closedIssuesMaxPages = 3
 
-    /// Issues assigned to `login` that were closed on or after `day` (UTC date, "yyyy-MM-dd"). GitHub rounds
-    /// `closed:>=` to whole UTC days, so callers pass the day before their interval and filter on `closedAt` themselves.
-    /// Throws `IssueSearchError`.
-    public func closedIssues(assignedTo login: String, closedSince day: String) async throws -> [ClosedIssue] {
-        let search = "is:issue is:closed assignee:\(login) closed:>=\(day)"
+    /// Issues assigned to `login` that were closed on or after `day` (UTC date, "yyyy-MM-dd"), and, when `closedUntil` is
+    /// given, on or before that UTC date. GitHub rounds `closed:` to whole UTC days, so callers pass the day before their
+    /// interval and filter on `closedAt` themselves. Without an upper bound an older week would read everything closed
+    /// since, which can exceed the page limit. Throws `IssueSearchError`.
+    public func closedIssues(assignedTo login: String, closedSince day: String, closedUntil lastDay: String? = nil) async throws -> [ClosedIssue] {
+        let closed = lastDay.map { "closed:\(day)..\($0)" } ?? "closed:>=\(day)"
+        let search = "is:issue is:closed assignee:\(login) \(closed)"
         var issues: [ClosedIssue] = []
         var cursor: String?
         for _ in 0..<Self.closedIssuesMaxPages {
@@ -89,12 +91,12 @@ extension GitHubAPI {
 }
 
 extension GitHubTaskProvider {
-    /// UTC date ("yyyy-MM-dd") of the day before `date`.
-    static func utcDayBefore(_ date: Date) -> String {
+    /// UTC date ("yyyy-MM-dd") of `date`, moved by `days`.
+    static func utcDate(_ date: Date, addingDays days: Int = 0) -> String {
         var calendar = Calendar(identifier: .gregorian)
         calendar.timeZone = TimeZone(identifier: "UTC")!
-        let before = calendar.date(byAdding: .day, value: -1, to: date) ?? date
-        let parts = calendar.dateComponents([.year, .month, .day], from: before)
+        let moved = calendar.date(byAdding: .day, value: days, to: date) ?? date
+        let parts = calendar.dateComponents([.year, .month, .day], from: moved)
         return String(format: "%04d-%02d-%02d", parts.year ?? 1970, parts.month ?? 1, parts.day ?? 1)
     }
 }

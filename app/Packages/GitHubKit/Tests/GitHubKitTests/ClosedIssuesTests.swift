@@ -64,6 +64,13 @@ struct ClosedIssuesTests {
         #expect(document.contains("stateReason") && document.contains("closedAt"))
     }
 
+    @Test func closedIssues_withUpperBound_buildsRange() async throws {
+        transport.enqueueJSON("/graphql", Fixtures.closedResponse([]))
+        _ = try await makeAPI().0.closedIssues(assignedTo: "octo", closedSince: "2026-11-02", closedUntil: "2026-11-08")
+        #expect(try variables(of: transport.requests.last)["query"] as? String
+                == "is:issue is:closed assignee:octo closed:2026-11-02..2026-11-08")
+    }
+
     @Test func closedIssues_decodesStateReasonAndProjects() async throws {
         transport.enqueueJSON("/graphql", Fixtures.closedResponse([
             Fixtures.closedNode(id: "I_1", closedAt: "2026-11-20T09:00:00Z", projectIDs: ["PVT_1", "PVT_2"], archivedProjectIDs: ["PVT_3"]),
@@ -114,7 +121,7 @@ struct ClosedIssuesTests {
         #expect(nineteenth == [Self.date("2026-11-19T22:30:00Z")])
         // The query starts one day before the interval (UTC date), so the zone offset never hides an issue.
         #expect(try variables(of: transport.requests[1])["query"] as? String
-                == "is:issue is:closed assignee:octo closed:>=2026-11-18")
+                == "is:issue is:closed assignee:octo closed:2026-11-18..2026-11-20")
     }
 
     @Test func closedIssueCount_skipsNotPlanned() async throws {
@@ -162,7 +169,7 @@ struct ClosedIssuesTests {
         transport.enqueueJSON("/graphql", Fixtures.closedResponse([Fixtures.closedNode(id: "I_1", closedAt: "2026-11-20T09:00:00Z")]))
         #expect(try await makeProvider().closedIssueCount(in: Self.day(2026, 11, 20)) == 1)
         #expect(try variables(of: transport.requests.last)["query"] as? String
-                == "is:issue is:closed assignee:octo closed:>=2026-11-18")
+                == "is:issue is:closed assignee:octo closed:2026-11-18..2026-11-20")
     }
 
     @Test func closedIssueCount_mapsOfflineError() async {
@@ -186,6 +193,6 @@ struct ClosedIssuesTests {
         #expect(dates.count == 7)
         #expect(dates.first == Self.date("2026-11-16T12:00:00Z") && dates.last == Self.date("2026-11-22T12:00:00Z"))
         #expect(try variables(of: transport.requests.last)["query"] as? String
-                == "is:issue is:closed assignee:octo closed:>=2026-11-14")
+                == "is:issue is:closed assignee:octo closed:2026-11-14..2026-11-22")
     }
 }
