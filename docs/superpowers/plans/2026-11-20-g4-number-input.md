@@ -201,7 +201,12 @@ Umgesetzt am 20.11.2026 auf Branch `feat/g4-number-input` (statt `feat/number-in
 
 **Fertig:** Task 1 bis 7 (alle 26 Fundstellen auf `ValueStepper`), Task 8 geprüft, Task 9 (Tests, Kataloge).
 
+**Test:** `app/test-all.sh` grün: TagwerkCore 1120 Tests, App 1699 Tests, Kataloge ohne Befund (`check-strings.py --require-english`, `sync-strings.sh --check`). Neu: `NumberEntryTests` (12) und `ValueEntryModelTests` (7).
+
 **Abweichungen und eigene Entscheidungen**
+
+- **Plandatei:** `2026-11-20-g4-number-input.md` statt `2026-11-19-…` (Datum der Umsetzung, wie bei G2).
+- **Bereich im Modell:** `ValueEntryModel` bekommt Bereich und Schritt vor jeder Nutzung neu übergeben (`update`), weil der Intervall-Bereich der Wiederholung von der Häufigkeit abhängt.
 
 - **Tastatur bei Dauern:** `.numbersAndPunctuation` statt `.decimalPad`. Auf dem Dezimalblock lassen sich „1:30“ und „1 h 30“ nicht tippen; ohne sie wären die geplanten Dauer-Formate unerreichbar. Ganzzahlen: `.numberPad`, Dezimalzahlen: `.decimalPad`.
 - **Live übernehmen:** Jeder lesbare Tastenanschlag setzt den (begrenzten, gerundeten) Wert sofort, wie bei `EstimateField`; so geht beim Sichern eines Blatts mit offener Tastatur nichts verloren. Beim Schließen (Fertig, Verlassen des Felds) wird der Text neu geschrieben und der Hinweis gezeigt. Ist der Text dann leer oder nicht lesbar, kehrt der Wert von vor der Eingabe zurück. Ausnahme: `SuggestionViews` (Dauer im Vorschlag) übernimmt erst beim Schließen (`appliesWhileTyping: false`), weil jede Änderung neu plant.
