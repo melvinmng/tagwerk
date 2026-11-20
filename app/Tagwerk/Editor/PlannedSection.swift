@@ -29,14 +29,16 @@ struct PlannedSection: View {
                 if !block.isDeleted {
                     DatePicker("Zeitblock", selection: $block.start, displayedComponents: [.date, .hourAndMinute])
                         .environment(\.calendar, calendar)
-                    Stepper("Dauer: \(CapacityText.duration(block.minutes))", value: $block.minutes, in: 15...720, step: 15)
+                    ValueStepper("Dauer", value: $block.minutes, in: 15...720, step: 15, kind: .durationMinutes, unit: "min",
+                                 display: CapacityText.duration)
                     Button("Zeitblock löschen", role: .destructive) { block.isDeleted = true }
                 }
             }
             ForEach($edit.newBlocks) { $block in
                 DatePicker("Neuer Zeitblock", selection: $block.start, displayedComponents: [.date, .hourAndMinute])
                     .environment(\.calendar, calendar)
-                Stepper("Dauer: \(CapacityText.duration(block.minutes))", value: $block.minutes, in: 15...720, step: 15)
+                ValueStepper("Dauer", value: $block.minutes, in: 15...720, step: 15, kind: .durationMinutes, unit: "min",
+                                 display: CapacityText.duration)
             }
             Button("Zeitblock hinzufügen") {
                 let day = edit.day ?? PlanDay(date: .now, calendar: calendar)
