@@ -24,6 +24,7 @@ final class AppEnvironment {
     /// "Mit ChatGPT sortieren"; sends item names only after consent and on the user's tap.
     let shoppingSorter: ShoppingSorter
     let recipeImporter: RecipeImporter
+    let recipeTranslator: RecipeTranslator
     /// Items the share extension left for the app (#165); read when the app becomes active, confirmed by the user.
     let shareInbox: ShareInboxModel
     /// "Mit ChatGPT zusammenfassen" on a shared mail (#166); sends only after consent and on the user's tap.
@@ -274,6 +275,8 @@ final class AppEnvironment {
                                              hasConsent: { settings.shoppingSortConsent })
         self.recipeImporter = RecipeImporter(responder: ai.client, model: { try await ai.selectedModel() },
                                              hasConsent: { settings.shoppingRecipeConsent })
+        self.recipeTranslator = RecipeTranslator(responder: ai.client, model: { try await ai.selectedModel() },
+                                                 hasConsent: { settings.shoppingRecipeConsent })
         self.shareInbox = ShareInboxModel(inbox: shareInbox, isSetupCompleted: { settings.setupCompleted })
         self.mailSummarizer = MailSummarizer(responder: ai.client, model: { try await ai.selectedModel() },
                                              hasConsent: { settings.mailSummaryConsent })

@@ -6126,6 +6126,36 @@
         }
       }
     },
+    "Die Notiz hat keinen Abschnitt „Zutaten“.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The note has no “Ingredients” section."
+          }
+        }
+      }
+    },
+    "Die Notiz ist zu lang zum Übersetzen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The note is too long to translate."
+          }
+        }
+      }
+    },
+    "Die Notiz ließ sich nicht übersetzen. Versuch es noch einmal.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The note couldn’t be translated. Try again."
+          }
+        }
+      }
+    },
     "Die Quelle ist nicht verfügbar.": {
       "localizations": {
         "en": {
@@ -6373,6 +6403,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "The chosen list appears as your shopping list. Its entries no longer show under “Tasks”, are not planned, do not count in the weekly review and trigger no Tagwerk notifications. Nothing changes in the Reminders app."
+          }
+        }
+      }
+    },
+    "Die Übersetzung passt nicht zur Notiz. Versuch es noch einmal.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The translation doesn’t match the note. Try again."
           }
         }
       }
@@ -10529,6 +10569,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "No connection. Sorting needs the internet."
+          }
+        }
+      }
+    },
+    "Keine Verbindung. Das Übersetzen braucht Internet.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No connection. Translating needs the internet."
           }
         }
       }
@@ -17793,6 +17843,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Say something about the suggestion …"
+          }
+        }
+      }
+    },
+    "Zum Übersetzen ist deine Einwilligung nötig.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Translating needs your consent."
           }
         }
       }

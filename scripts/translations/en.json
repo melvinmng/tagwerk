@@ -2011,5 +2011,11 @@
   "Ziel": "Target",
   "Nur als Rezept speichern": "Save as recipe only",
   "Was soll mit dem Rezept geschehen?": "What should happen to the recipe?",
-  "Du wählst die Zutaten aus und kannst das Rezept zusätzlich als Notiz im Ordner „Rezepte“ sichern.": "You choose the ingredients and can also keep the recipe as a note in the “Recipes” folder."
+  "Du wählst die Zutaten aus und kannst das Rezept zusätzlich als Notiz im Ordner „Rezepte“ sichern.": "You choose the ingredients and can also keep the recipe as a note in the “Recipes” folder.",
+  "Zum Übersetzen ist deine Einwilligung nötig.": "Translating needs your consent.",
+  "Keine Verbindung. Das Übersetzen braucht Internet.": "No connection. Translating needs the internet.",
+  "Die Notiz ließ sich nicht übersetzen. Versuch es noch einmal.": "The note couldn’t be translated. Try again.",
+  "Die Notiz ist zu lang zum Übersetzen.": "The note is too long to translate.",
+  "Die Notiz hat keinen Abschnitt „Zutaten“.": "The note has no “Ingredients” section.",
+  "Die Übersetzung passt nicht zur Notiz. Versuch es noch einmal.": "The translation doesn’t match the note. Try again."
 }
