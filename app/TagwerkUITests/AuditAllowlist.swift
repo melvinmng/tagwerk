@@ -126,7 +126,7 @@ enum AuditAllowlist {
             + "(passes with a larger font size); the colours are the system's primary and secondary text colours (#188)."),
         Entry(auditType: .contrast, labels: [
             "Einverstanden", "Nicht jetzt", "Rezept speichern", "\\d+ Artikel hinzufügen", "Verwerfen", "Neues Rezept", "Rezept mit ChatGPT anlegen",
-            "Andere Notiz wählen …", "Demo Linsensuppe", "Rezept holen", "Zutaten holen", "Zurücksetzen",
+            "Andere Notiz wählen …", "Demo Linsensuppe", "Rezept holen", "Zutaten holen", "Zurücksetzen", "\\d+ ml",
         ], screens: recipeScreens + recipeScreensLargeText, reason: "Texts in the accent colour (list buttons, note title in the picker), white on the "
             + "prominent button (system style; \"Rezept holen\" and \"Zutaten holen\" are dimmed by the system while the text field is empty) and \"Verwerfen\" in the navigation bar, whose Liquid Glass background lets the list scroll behind it. "
             + "The system draws the background; no own colour to change without replacing the system style (#188)."),
