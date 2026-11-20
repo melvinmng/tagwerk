@@ -62,6 +62,13 @@ struct ValueEntryModelTests {
         #expect(model.hint != nil)
     }
 
+    @Test func update_changedRange_appliesToTypedValue() {
+        var model = ValueEntryModel(kind: .integer, range: 1...52, step: 1, locale: german)
+        model.begin(value: 2)
+        model.update(range: 1...24, step: 1)
+        #expect(model.typed("40") == 24)
+    }
+
     @Test func begin_showsEditingTextWithoutUnit() {
         var kilocalories = ValueEntryModel(kind: .integer, range: 1000...6000, step: 50, locale: german)
         kilocalories.begin(value: 2300)

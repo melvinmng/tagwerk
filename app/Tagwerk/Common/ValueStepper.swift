@@ -137,16 +137,19 @@ struct ValueStepper: View {
     }
 
     private func beginEditing() {
+        model.update(range: range, step: step)
         model.begin(value: value)
     }
 
     private func typed(_ text: String) {
+        model.update(range: range, step: step)
         let live = model.typed(text)
         if appliesWhileTyping, let live, live != value { value = live }
     }
 
     private func finishEditing() {
         guard model.isEditing else { return }
+        model.update(range: range, step: step)
         let committed = model.commit(current: value, display: display)
         if committed != value { value = committed }
     }

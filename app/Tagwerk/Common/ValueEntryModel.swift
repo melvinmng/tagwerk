@@ -8,9 +8,9 @@ import TagwerkCore
 struct ValueEntryModel {
     let kind: NumberEntryKind
     /// Allowed values in the stored unit.
-    let range: ClosedRange<Double>
+    private(set) var range: ClosedRange<Double>
     /// Step in the stored unit; typed values are rounded to it, counted from `range.lowerBound`.
-    let step: Double
+    private(set) var step: Double
     let scale: Double
     let locale: Locale
 
@@ -27,6 +27,13 @@ struct ValueEntryModel {
         self.step = step
         self.scale = scale
         self.locale = locale
+    }
+
+    /// Takes over a changed range or step. The view keeps the model in state, so a range that depends on other input
+    /// (the recurrence interval per frequency) must be passed again before each use.
+    mutating func update(range: ClosedRange<Double>, step: Double) {
+        self.range = range
+        self.step = step
     }
 
     /// Opens the field with the current value, without unit and without grouping separator.

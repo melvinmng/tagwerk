@@ -194,3 +194,25 @@ Je Datei ein Commit, nur die `Stepper`-Aufrufe ersetzen, Anzeige-Funktionen (`In
 5. VoiceOver: Wischen hoch/runter ändert, Rotor-Aktion „Wert eingeben“ öffnet die Eingabe.
 6. Größte Schrift (AX5): Zeilen brechen um, nichts abgeschnitten, Knöpfe erreichbar.
 7. Datum/Uhrzeit-Stichprobe: Fälligkeit (Kalender), Ruhezeiten/Schlafzeit (Rad) unverändert.
+
+## Stand der Umsetzung
+
+Umgesetzt am 20.11.2026 auf Branch `feat/g4-number-input` (statt `feat/number-input`, der Branch war vorgegeben).
+
+**Fertig:** Task 1 bis 7 (alle 26 Fundstellen auf `ValueStepper`), Task 8 geprüft, Task 9 (Tests, Kataloge).
+
+**Abweichungen und eigene Entscheidungen**
+
+- **Tastatur bei Dauern:** `.numbersAndPunctuation` statt `.decimalPad`. Auf dem Dezimalblock lassen sich „1:30“ und „1 h 30“ nicht tippen; ohne sie wären die geplanten Dauer-Formate unerreichbar. Ganzzahlen: `.numberPad`, Dezimalzahlen: `.decimalPad`.
+- **Live übernehmen:** Jeder lesbare Tastenanschlag setzt den (begrenzten, gerundeten) Wert sofort, wie bei `EstimateField`; so geht beim Sichern eines Blatts mit offener Tastatur nichts verloren. Beim Schließen (Fertig, Verlassen des Felds) wird der Text neu geschrieben und der Hinweis gezeigt. Ist der Text dann leer oder nicht lesbar, kehrt der Wert von vor der Eingabe zurück. Ausnahme: `SuggestionViews` (Dauer im Vorschlag) übernimmt erst beim Schließen (`appliesWhileTyping: false`), weil jede Änderung neu plant.
+- **Titel statt Wert im Titel:** Die Zeilen heißen jetzt „Dauer“, „Puffer“ usw.; der Wert steht rechts als antippbarer Akzentwert (vorher „Dauer: 45 min“ als Titel). Neue Titel/Einheiten haben deutsche und englische Texte.
+- **Wiederholung:** Titel „Intervall“ / „Anzahl“; der Satz „Alle 2 Wochen“ bleibt als Anzeige des Werts.
+- **Hinweis:** verschwindet nach 3 s und wird per VoiceOver angesagt.
+- **Mahlzeit-Menge:** `.font(.subheadline)` auf der Zeile; die graue Titelfarbe von vorher entfällt.
+- **Katalogformat:** Kataloge nicht neu formatiert; neue Schlüssel im bestehenden JSON-Format ergänzt.
+
+**Fund außerhalb des Plans:** `Planning/EntrySheet.swift` (`stepRow`, Mittagspause „Beginn“ und „Dauer“ je Tag) hat eigene −/+-Knöpfe in 15-Minuten-Schritten. Der Plan nannte keine weiteren −/+-Steuerungen. Nicht umgestellt, weil die Datei von parallelen Paketen geändert wird, die Schritte relativ über das Modell laufen und „Beginn“ eine Uhrzeit ist. Offener Punkt: „Beginn“ als `DatePicker` (Rad), „Dauer“ als `ValueStepper`.
+
+**Task 8:** `grep "Stepper("` ohne `ValueStepper` ist leer. 33 `DatePicker` (vier `.graphical`, sonst Kompaktstil); außer der Mittagspause im Eintragsblatt wird kein Datum und keine Uhrzeit über −/+ bedient.
+
+**Offene Gerätetests:** alle Punkte aus „Gerätetests“. Layout und Tastatur sind nur durch Unit-Tests der Regeln abgedeckt, nicht visuell geprüft (ein Snapshot im Test-Host blieb leer). Insbesondere zu prüfen: Fokus beim Antippen des Werts in einer `Form`-Zeile, Zeilenumbruch bei AX5, Aktion „Wert eingeben“, Identifier-Weitergabe für G3 (die Zeile ist jetzt ein einstellbares Element statt eines `Stepper`).

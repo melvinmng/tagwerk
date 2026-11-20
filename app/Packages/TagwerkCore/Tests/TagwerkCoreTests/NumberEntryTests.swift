@@ -85,7 +85,7 @@ struct NumberEntryTests {
         #expect(NumberEntry.normalize(1.7, range: 0.5...3, step: 0.5) == 1.5)
     }
 
-    @Test func normalize_waterInLiters_roundedToStep() {
+    @Test func quantity_litersToMilliliters_roundedToStep() {
         // Typed liters become milliliters on the 250 ml grid that starts at 500 ml.
         #expect(NumberEntry.normalize(2.25 * 1000, range: 500...6000, step: 250) == 2250)
         #expect(NumberEntry.normalize(2.1 * 1000, range: 500...6000, step: 250) == 2000)
