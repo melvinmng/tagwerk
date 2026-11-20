@@ -1,0 +1,958 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tagwerk · Designrunde G2, Teil 1 · Notizen, Einkauf, Tagebuch, Bible Study · Mockups NO, EK, TB, BS</title>
+<style>
+  /* Mockup frame uses the host theme (with fallbacks); phone screens depict the app in iOS dark or light mode. */
+  :root { color-scheme: light dark; }
+  body { font: 14px var(--font-sans, system-ui, sans-serif); color: var(--foreground, CanvasText); margin: 16px; }
+  h1 { font-size: 20px; margin: 0 0 4px; }
+  h2 { font-size: 18px; margin: 38px 0 4px; padding-top: 16px; border-top: 1px solid rgba(128,128,128,.3); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  h2.part { font-size: 22px; border-top: 3px solid rgba(128,128,128,.5); margin-top: 54px; }
+  .area { display: inline-grid; place-items: center; min-width: 34px; height: 34px; padding: 0 8px; border-radius: 9px; background: #0a84ff; color: #fff; font: 800 14px system-ui; flex-shrink: 0; box-sizing: border-box; }
+  .area.q { background: #8e8e93; }
+  .lead { color: var(--muted-foreground, #777); margin: 0 0 14px; line-height: 1.5; max-width: 980px; }
+  .lead b { color: var(--foreground, CanvasText); }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(392px, 1fr)); gap: 22px; align-items: start; }
+  .label { font: 600 13px var(--font-sans, system-ui); color: var(--muted-foreground, #777); margin: 0 0 8px 4px; }
+  .label b { color: var(--foreground, CanvasText); }
+  .code { display: inline-block; background: rgba(128,128,128,.28); color: var(--foreground, CanvasText); border-radius: 6px; padding: 1px 8px; font: 800 13px system-ui; margin-right: 4px; }
+  .code.r { background: #30d158; color: #000; }
+  .rec { background: #30d158; color: #000; font-size: 11px; font-weight: 700; padding: 1px 7px; border-radius: 99px; margin-left: 4px; }
+  .same { background: rgba(128,128,128,.28); font-size: 11px; font-weight: 700; padding: 1px 7px; border-radius: 99px; margin-left: 4px; }
+  .pc { font-size: 12.5px; color: var(--muted-foreground, #777); line-height: 1.5; margin: 8px 4px 0; max-width: 390px; }
+  .pc b { color: var(--foreground, CanvasText); }
+  .box { border: 1px solid rgba(48,209,88,.5); background: rgba(48,209,88,.07); border-radius: 12px; padding: 12px 16px; margin-top: 16px; line-height: 1.55; font-size: 13px; max-width: 1100px; }
+  .box h3 { margin: 0 0 6px; font-size: 14px; }
+  .box ul, .box ol { margin: 4px 0 0; padding-left: 20px; }
+  .box li { margin-bottom: 3px; }
+  .box.neutral { border-color: rgba(128,128,128,.4); background: rgba(128,128,128,.07); }
+  .box.warn { border-color: rgba(255,159,10,.6); background: rgba(255,159,10,.08); }
+  code { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; background: rgba(128,128,128,.16); padding: 1px 4px; border-radius: 4px; }
+  .tablewrap { overflow-x: auto; }
+  table.sum { border-collapse: collapse; font-size: 13px; margin-top: 6px; }
+  table.sum td, table.sum th { padding: 5px 14px 5px 0; vertical-align: top; text-align: left; border-bottom: 1px solid rgba(128,128,128,.22); }
+  table.sum th { font-size: 12px; color: var(--muted-foreground, #777); }
+  table.sum td:first-child { white-space: nowrap; font-weight: 700; }
+
+  .phone {
+    --bg: #000; --card: #1c1c1e; --card2: #2c2c2e; --sep: #38383a; --text: #fff; --sub: #8e8e93; --dim: #c7c7cc;
+    --blue: #0a84ff; --green: #30d158; --orange: #ff9f0a; --red: #ff453a; --purple: #bf5af2; --indigo: #5e5ce6; --sheet: #1c1c1e; --row: #2c2c2e;
+    --segon: #636366; --frame: #2a2a2c; --redbg: rgba(255,69,58,.16); --greenbg: rgba(48,209,88,.16);
+    --glass: rgba(72,72,78,.62); --glassline: rgba(255,255,255,.16); --glassshadow: inset 0 1px 0 rgba(255,255,255,.18), 0 8px 24px rgba(0,0,0,.55);
+    background: var(--bg); color: var(--text); border-radius: 40px; padding: 14px 12px 12px;
+    font: 15px -apple-system, "SF Pro Text", system-ui, sans-serif; border: 6px solid var(--frame);
+    width: 390px; max-width: 100%; box-sizing: border-box; height: 700px;
+    display: flex; flex-direction: column; position: relative; overflow: hidden;
+  }
+  .phone.light {
+    --bg: #f2f2f7; --card: #fff; --card2: #e3e3e8; --sep: #d1d1d6; --text: #000; --sub: #6c6c70; --dim: #3c3c43;
+    --blue: #007aff; --green: #34c759; --orange: #ff9500; --red: #ff3b30; --purple: #af52de; --indigo: #5856d6; --sheet: #f2f2f7; --row: #fff;
+    --segon: #fff; --frame: #c7c7cc; --redbg: rgba(255,59,48,.12); --greenbg: rgba(52,199,89,.16);
+    --glass: rgba(255,255,255,.78); --glassline: rgba(0,0,0,.06); --glassshadow: inset 0 1px 0 rgba(255,255,255,.9), 0 4px 14px rgba(0,0,0,.14);
+  }
+  /* Sheet look: the phone content is the sheet itself. */
+  .phone.sh { --bg: #111113; }
+  .phone.sh.light { --bg: #f2f2f7; }
+  /* Cropped frames: only the upper part of the screen matters. */
+  .phone.crop { height: 440px; border-bottom-left-radius: 0; border-bottom-right-radius: 0; border-bottom: 0; }
+  .phone.crop.s { height: 330px; }
+  .phone.crop.l { height: 560px; }
+  .phone.crop::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 40px; background: linear-gradient(transparent, var(--bg)); z-index: 4; pointer-events: none; }
+  .status { display: flex; justify-content: space-between; font: 600 13px system-ui; padding: 0 12px 10px; flex-shrink: 0; }
+  .glass { background: var(--glass); backdrop-filter: blur(18px) saturate(1.6); -webkit-backdrop-filter: blur(18px) saturate(1.6); border: 1px solid var(--glassline); box-shadow: var(--glassshadow); }
+  .scr { flex: 1; min-height: 0; overflow: hidden; display: flex; flex-direction: column; }
+  .scr > * { flex-shrink: 0; }
+
+  .nav { display: flex; align-items: center; justify-content: space-between; gap: 8px; height: 44px; padding: 0 2px; margin-bottom: 4px; flex-shrink: 0; }
+  .nav .r { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+  .nav .c { font: 600 16px system-ui; }
+  .gb { width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; font-size: 17px; flex-shrink: 0; color: var(--text); box-sizing: border-box; }
+  .gb.new { outline: 2px solid #ffd60a; outline-offset: 1px; }
+  .gt { height: 40px; border-radius: 99px; display: grid; place-items: center; padding: 0 14px; font: 600 15px system-ui; color: var(--blue); }
+  .back { color: var(--blue); font: 400 16px system-ui; padding-left: 4px; }
+  .lt { font: 800 30px system-ui; letter-spacing: -.4px; margin: 2px 6px 10px; }
+  .list { background: var(--card); border-radius: 18px; overflow: hidden; margin-bottom: 8px; }
+  .tl { display: flex; gap: 10px; padding: 10px 12px; border-bottom: 1px solid var(--sep); font-size: 14.5px; align-items: center; }
+  .tl:last-child { border-bottom: 0; }
+  .tl .tx { flex: 1; min-width: 0; }
+  .tl .tx small { display: block; color: var(--sub); font-size: 12px; margin-top: 1px; line-height: 1.35; }
+  .tl .ch { color: var(--sub); font-size: 13px; white-space: nowrap; }
+  .tl .ic { width: 24px; text-align: center; color: var(--blue); flex-shrink: 0; }
+  .tl.new, .fr.new, .card.new { box-shadow: inset 3px 0 0 #ffd60a; }
+  .tl.a { color: var(--blue); }
+  .tl.d1 { padding-left: 30px; } .tl.d2 { padding-left: 48px; }
+  .plus { width: 28px; height: 28px; border-radius: 50%; background: var(--card2); color: var(--blue); display: grid; place-items: center; font: 600 17px system-ui; flex-shrink: 0; }
+  .section { color: var(--sub); font: 600 12px system-ui; text-transform: uppercase; letter-spacing: .4px; margin: 10px 12px 4px; display: flex; justify-content: space-between; }
+  .section span { color: var(--blue); text-transform: none; letter-spacing: 0; font-weight: 400; font-size: 13px; }
+  .foot1 { color: var(--sub); font-size: 11.5px; line-height: 1.4; margin: 2px 12px 8px; }
+  .tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
+  .tile { background: var(--card); border-radius: 16px; padding: 10px 12px; font: 600 14px system-ui; }
+  .tile i { font-style: normal; display: flex; justify-content: space-between; font-size: 19px; margin-bottom: 8px; }
+  .tile i b { font: 700 19px system-ui; }
+  .badge { display: inline-block; font: 600 10.5px system-ui; color: var(--sub); border: 1px solid var(--sep); border-radius: 99px; padding: 0 6px; margin-left: 6px; vertical-align: 1px; }
+  .badge.g { color: var(--green); border-color: var(--green); }
+  .badge.o { color: var(--orange); border-color: var(--orange); }
+
+  /* Note cards and note page */
+  .card { background: var(--card); border-bottom: 1px solid var(--sep); padding: 9px 12px; display: flex; gap: 10px; }
+  .card:last-child { border-bottom: 0; }
+  .card .b { flex: 1; min-width: 0; }
+  .card .t { font: 600 15px system-ui; display: flex; justify-content: space-between; gap: 6px; }
+  .card .t small { font: 400 12px system-ui; color: var(--sub); white-space: nowrap; }
+  .card .p { color: var(--sub); font-size: 13px; line-height: 1.35; margin: 2px 0; }
+  .card .f { color: var(--sub); font-size: 11.5px; }
+  .thumb { width: 48px; height: 48px; border-radius: 8px; background: linear-gradient(135deg, #5e8f6a, #c9a86a); flex-shrink: 0; }
+  .selc { width: 22px; height: 22px; border-radius: 50%; border: 1.6px solid var(--sub); flex-shrink: 0; box-sizing: border-box; margin-top: 12px; display: grid; place-items: center; font: 700 12px system-ui; color: #fff; }
+  .selc.on { background: var(--blue); border-color: var(--blue); }
+  .botbar { display: flex; justify-content: space-between; align-items: center; border-radius: 99px; padding: 11px 18px; margin: auto 4px 0; font-size: 14.5px; color: var(--blue); }
+  .botbar .x { color: var(--red); }
+  .note { padding: 0 8px; font-size: 14.5px; line-height: 1.45; }
+  .note h4 { font: 800 23px system-ui; margin: 0 0 8px; letter-spacing: -.3px; }
+  .note h5 { font: 700 16.5px system-ui; margin: 12px 0 4px; }
+  .note p { margin: 0 0 4px; }
+  .note ul { margin: 0; padding-left: 20px; }
+  .note .cb { display: flex; gap: 8px; align-items: center; margin: 3px 0; }
+  .note .raw { font: 13.5px ui-monospace, Menlo, monospace; color: var(--dim); white-space: pre-wrap; line-height: 1.5; }
+  .ck { width: 20px; height: 20px; border-radius: 50%; border: 1.6px solid var(--sub); flex-shrink: 0; box-sizing: border-box; position: relative; }
+  .ck.sq { border-radius: 6px; }
+  .ck.done { background: var(--blue); border-color: var(--blue); }
+  .ck.done.g { background: var(--green); border-color: var(--green); }
+  .ck.done::after { content: "✓"; position: absolute; inset: 0; display: grid; place-items: center; color: #fff; font: 700 11px system-ui; }
+  .img { border-radius: 12px; background: linear-gradient(135deg, #3d6b8f, #8fb5a0 60%, #d9c58a); margin: 8px 0; }
+  .chip { display: inline-flex; align-items: center; gap: 6px; background: var(--card); border: 1px solid var(--sep); border-radius: 10px; padding: 6px 10px; font-size: 13px; margin: 4px 6px 4px 0; }
+  .chip small { color: var(--sub); }
+  .pill { display: inline-block; background: var(--card2); border-radius: 99px; padding: 5px 11px; font: 600 12.5px system-ui; margin: 0 6px 6px 0; }
+  .pill.on { background: var(--blue); color: #fff; }
+  .kb { margin: auto -12px -12px; background: var(--card2); padding: 8px 10px 60px; display: flex; flex-direction: column; gap: 8px; }
+  .kbbar { display: flex; align-items: center; gap: 4px; font: 600 15px system-ui; }
+  .kbbar span { width: 38px; height: 34px; border-radius: 8px; display: grid; place-items: center; background: var(--card); }
+  .kbbar .done { margin-left: auto; width: auto; padding: 0 12px; color: var(--blue); background: none; }
+  .kbkeys { height: 22px; border-radius: 6px; background: var(--card); opacity: .6; }
+  .gra { background: var(--card); border-radius: 14px; padding: 9px 12px; margin: 0 4px 10px; font-size: 13.5px; line-height: 1.5; }
+  .gra b { display: block; font: 600 11.5px system-ui; text-transform: uppercase; letter-spacing: .4px; color: var(--sub); margin-bottom: 2px; }
+  .sessbar { display: flex; align-items: center; gap: 8px; background: var(--greenbg); border-radius: 12px; padding: 8px 12px; margin: 0 4px 10px; font-size: 13px; }
+  .sessbar b { flex: 1; font-weight: 600; }
+  .sessbar span { color: var(--green); font-weight: 700; }
+
+  /* Sheets, forms */
+  .bar { display: flex; justify-content: center; position: relative; font: 600 15.5px system-ui; padding: 6px 0 12px; flex-shrink: 0; }
+  .bar span { position: absolute; right: 4px; color: var(--blue); }
+  .bar span.l { right: auto; left: 4px; font-weight: 400; }
+  .fs { background: var(--row); border-radius: 14px; margin-bottom: 4px; overflow: hidden; }
+  .fr { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 10px 12px; border-bottom: 1px solid var(--sep); font-size: 14px; }
+  .fr:last-child { border-bottom: 0; }
+  .fr .v { color: var(--sub); text-align: right; font-size: 13px; }
+  .fr.a { color: var(--blue); } .fr.x { color: var(--red); }
+  .fr .tx { flex: 1; min-width: 0; }
+  .fr .tx small { display: block; color: var(--sub); font-size: 12px; margin-top: 1px; line-height: 1.35; }
+  .fr.ph { color: var(--sub); min-height: 44px; align-items: flex-start; }
+  .fh { color: var(--sub); font: 600 11.5px system-ui; text-transform: uppercase; letter-spacing: .4px; margin: 10px 12px 4px; }
+  .ff { color: var(--sub); font-size: 11.5px; line-height: 1.4; margin: 3px 12px 8px; }
+  .seg2 { display: flex; background: var(--card2); border-radius: 9px; padding: 2px; margin: 0 0 8px; }
+  .seg2 span { flex: 1; text-align: center; padding: 6px 2px; font-size: 13px; border-radius: 7px; color: var(--dim); }
+  .seg2 span.on { background: var(--segon); color: var(--text); font-weight: 600; }
+  .big { display: block; text-align: center; font: 600 15px system-ui; border-radius: 14px; padding: 12px; margin: 8px 0 0; background: var(--blue); color: #fff; }
+  .big.s { background: var(--card2); color: var(--blue); }
+  .menu { border-radius: 16px; overflow: hidden; font-size: 15px; width: 270px; align-self: flex-end; margin: 0 4px 8px; }
+  .menu div { display: flex; justify-content: space-between; padding: 11px 14px; border-bottom: 1px solid var(--glassline); }
+  .menu div:last-child { border-bottom: 0; }
+  .menu div.new { box-shadow: inset 3px 0 0 #ffd60a; }
+  .menu div.x { color: var(--red); }
+  .menu div.gap { border-bottom: 7px solid rgba(128,128,128,.25); }
+  .menu div.h { font: 600 11.5px system-ui; color: var(--sub); padding: 7px 14px 4px; border-bottom: 0; }
+  .hint { background: rgba(255,159,10,.14); border-radius: 12px; padding: 8px 12px; margin: 0 4px 8px; font-size: 12.5px; line-height: 1.4; }
+  .hint b { color: var(--orange); }
+  .tog { width: 46px; height: 28px; border-radius: 99px; background: rgba(120,120,128,.36); position: relative; flex-shrink: 0; }
+  .tog::after { content: ""; position: absolute; top: 2px; left: 2px; width: 24px; height: 24px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.3); }
+  .tog.on { background: var(--green); } .tog.on::after { left: 20px; }
+  .undo { display: flex; justify-content: space-between; align-items: center; border-radius: 99px; padding: 10px 16px; margin: auto 6px 4px; font-size: 13.5px; }
+  .undo span { color: var(--blue); font-weight: 600; }
+  .dots { display: flex; gap: 6px; justify-content: center; margin: 0 0 10px; }
+  .dots i { width: 28px; height: 4px; border-radius: 99px; background: var(--card2); }
+  .dots i.on { background: var(--blue); }
+  .lockscr { flex: 1; display: grid; place-items: center; text-align: center; color: var(--sub); font-size: 14px; line-height: 1.5; }
+  .lockscr b { display: block; font-size: 38px; margin-bottom: 6px; }
+</style>
+</head>
+<body>
+
+<h1>Designrunde G2, Teil 1 · Notizen, Einkauf, Tagebuch mit Gott, Bible Study</h1>
+<p class="lead">Offene Designfragen aus #188 für die Sinngruppe „Notizen, Routinen und Persönliches“. Teil 2 (Gewohnheiten, Datensicherung, Routinen) liegt in <code>2026-11-20-g2-routinen-gewohnheiten-sicherung-mockups.html</code>. Jede Frage hat eine Kurz-ID, zwei bis drei Varianten und eine Empfehlung <span class="rec">Empfehlung</span>. <span class="same">heute</span> zeigt den gebauten Stand laut Code. Ein gelber Strich links markiert, was sich gegenüber heute ändert. Symbole sind Platzhalter; der gemeinte SF-Symbol-Name steht im Text. Nicht Teil dieser Datei: Notizen und Rezepte mit ChatGPT (#232, #233), siehe <code>2026-11-20-notes-chatgpt-mockups.html</code>.</p>
+
+<div class="box neutral">
+<h3>Übersicht der Entscheidungen (Teil 1)</h3>
+<div class="tablewrap"><table class="sum">
+<tr><th>ID</th><th>Frage</th><th>Varianten</th><th>Empfehlung</th></tr>
+<tr><td>NO1</td><td>Aufbau der Ordneransicht, Ordnerbaum</td><td>a heute · b benannte Abschnitte, eingerückt · c aufklappbare Gruppen</td><td><b>b</b></td></tr>
+<tr><td>NO2</td><td>Brain Dump und Dream Log: Platz, Symbol, Farbe</td><td>a heute · b gemeinsamer Abschnitt, eigene Farben · c Kacheln</td><td><b>b</b></td></tr>
+<tr><td>NO3</td><td>Brain-Dump-Notiz schnell anlegen</td><td>a Wischen (heute) · b Plus-Knopf in der Zeile · c Halten auf dem Tab</td><td><b>b</b></td></tr>
+<tr><td>NO4</td><td>Feste Ordner umbenennen</td><td>ja (heute) · nein</td><td><b>ja</b>, Löschen und Bewegen bleiben gesperrt</td></tr>
+<tr><td>NO5</td><td>Virtueller Ordner „Gedanken“</td><td>a weglassen · b Sammelzeile</td><td><b>a</b></td></tr>
+<tr><td>NO6</td><td>„Zuletzt gelöscht“</td><td>a heute · b Kopfhinweis und Löschdatum</td><td><b>b</b></td></tr>
+<tr><td>NO7</td><td>Sortiermenü</td><td>a heute · b mit Richtung und Datumsgruppen · c je Ordner</td><td><b>b</b></td></tr>
+<tr><td>NO8</td><td>Mehrfachauswahl</td><td>a heute · b mit Zähler, „Alle“, Anheften · c Einstieg über Halten</td><td><b>b</b></td></tr>
+<tr><td>NO9</td><td>Tags</td><td>ja · nein</td><td><b>nein</b></td></tr>
+<tr><td>NO10</td><td>Sperren</td><td>a nein · b je Notiz · c private Ordner mit Face ID</td><td><b>c</b></td></tr>
+<tr><td>NO11</td><td>Teilen mit anderen (gemeinsames Bearbeiten)</td><td>ja · nein</td><td><b>nein</b></td></tr>
+<tr><td>NO12</td><td>Abgleich mit Apple Notizen: Umfang bestätigen</td><td>bestätigen · erweitern</td><td><b>bestätigen</b></td></tr>
+<tr><td>NO13</td><td>Ordner „Tagesstart“: Dankbarkeit</td><td>a graue Zeile (heute) · b Kopfkarte · c im Text</td><td><b>b</b></td></tr>
+<tr><td>NO14</td><td>Tage nur mit Dankbarkeit im Ordner zeigen</td><td>ja · nein (heute)</td><td><b>ja</b></td></tr>
+<tr><td>NO15</td><td>Markdown: Startmodus und Umschalter</td><td>a Auge/Stift (heute) · b Tippen in den Text, „Fertig“ · c Segment</td><td><b>b</b></td></tr>
+<tr><td>NO16</td><td>Formatierungsleiste</td><td>a keine (heute) · b Leiste über der Tastatur · c Menü „Aa“</td><td><b>b</b></td></tr>
+<tr><td>NO17</td><td>Checkboxen in der Ansicht antippbar</td><td>ja (heute) · nein</td><td><b>ja</b></td></tr>
+<tr><td>NO18</td><td>Anhänge in der Notiz: Bildgröße, Datei-Chips</td><td>a volle Breite · b begrenzte Höhe · c Raster</td><td><b>b</b></td></tr>
+<tr><td>NO19</td><td>Vorschaubild auf der Notizkarte</td><td>a 48 pt rechts (heute) · b keines · c großes Bild</td><td><b>a</b></td></tr>
+<tr><td>EK1</td><td>Sammelaktionen: Wortlaut und Reihenfolge</td><td>a heute · b gruppiert mit Zahl · c Untermenü „Aufräumen“</td><td><b>b</b></td></tr>
+<tr><td>EK2</td><td>Rückfragen bei Sammelaktionen</td><td>a immer (heute) · b nur „Liste leeren“ · c nie, mit Rückgängig</td><td><b>a</b></td></tr>
+<tr><td>EK3</td><td>Rezept: Eingabeblatt</td><td>a heute · b Zweck als zwei Knöpfe am Ende · c Quellen als Kacheln</td><td><b>b</b></td></tr>
+<tr><td>EK4</td><td>Rezept: Ergebnisliste</td><td>a heute · b „schon auf der Liste“ als eigener Abschnitt, Menge antippbar · c Stepper je Zeile</td><td><b>b</b></td></tr>
+<tr><td>TB1</td><td>Einstieg im Tagesabschluss</td><td>a heute · b Abschnitt „Zeit mit Gott“ mit Zustand · c Feld im Blatt</td><td><b>b</b></td></tr>
+<tr><td>TB2</td><td>Vorlage als Text oder Felder</td><td>a Text (heute) · b Felder · c Text mit Stimmungs-Chips</td><td><b>a</b></td></tr>
+<tr><td>TB3</td><td>Verhältnis zur Gedanken-Notiz</td><td>a getrennt (heute) · b „Ins Tagebuch übernehmen“ · c zusammenlegen</td><td><b>a</b></td></tr>
+<tr><td>TB4</td><td>Ablauf des Notion-Imports</td><td>a heute · b drei Schritte mit Anzeige, Einstieg im leeren Ordner</td><td><b>b</b></td></tr>
+<tr><td>TB5</td><td>Import bei Konflikten</td><td>a anhängen (heute) · b je Tag fragen · c überspringen</td><td><b>a</b>, mit Liste der betroffenen Tage</td></tr>
+<tr><td>BS1</td><td>Ablauf einer Sitzung</td><td>a heute · b Sitzungsleiste in der Notiz · c eigener Bildschirm mit Feldern</td><td><b>b</b></td></tr>
+<tr><td>BS2</td><td>Buchauswahl</td><td>a Auswahlliste (heute) · b „Zuletzt“ plus Suche · c Raster</td><td><b>b</b></td></tr>
+<tr><td>BS3</td><td>Leseplan</td><td>ja · nein</td><td><b>nein</b></td></tr>
+<tr><td>BS4</td><td>Erinnerung zur gewohnten Zeit</td><td>ja · nein</td><td><b>ja</b>, feste Uhrzeit unter „Routinen“</td></tr>
+<tr><td>BS5</td><td>Action Items als Tagwerk-Aufgaben</td><td>a nein · b „Als Aufgabe anlegen“ an der Checkbox · c automatisch</td><td><b>b</b></td></tr>
+<tr><td>BS6</td><td>Zeile „Bible Study starten“ in den Routinen</td><td>a immer im Tagesabschluss (heute) · b nur mit Gewohnheit · c Ort einstellbar</td><td><b>c</b></td></tr>
+</table></div>
+</div>
+
+<!-- ====================================================================== NOTIZEN -->
+<h2 class="part">Notizen (#152, #180, #155)</h2>
+
+<h2><span class="area">NO1</span> Aufbau der Ordneransicht und Ordnerbaum</h2>
+<p class="lead">Heute: vier Abschnitte ohne Überschrift außer „Ordner“; Unterordner sind um 18 pt eingerückt (höchstens drei Ebenen). Die festen Ordner stehen an zwei Stellen: „Brain Dump“ und „Rezepte“ oben, die übrigen in einem Abschnitt ohne Namen.</p>
+<div class="grid">
+<div>
+<p class="label"><span class="code">NO1a</span> <b>Abschnitte ohne Namen</b> <span class="same">heute</span></p>
+<div class="phone crop l"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="nav"><span class="back">‹ Aufgaben</span><span class="r"><span class="gb glass">⊞</span></span></div>
+<div class="lt">Notizen</div>
+<div class="list"><div class="tl"><span class="ic">▤</span><span class="tx">Alle Notizen</span><span class="ch">84 ›</span></div><div class="tl"><span class="ic">≡</span><span class="tx">Notizen</span><span class="ch">31 ›</span></div><div class="tl"><span class="ic">◉</span><span class="tx">Brain Dump</span><span class="ch">12 ›</span></div><div class="tl"><span class="ic">⑂</span><span class="tx">Rezepte</span><span class="ch">9 ›</span></div></div>
+<div class="section">Ordner</div>
+<div class="list"><div class="tl"><span class="ic">▱</span><span class="tx">Studium</span><span class="ch">6 ›</span></div><div class="tl d1"><span class="ic">▱</span><span class="tx">Seminararbeit</span><span class="ch">4 ›</span></div><div class="tl"><span class="ic">▱</span><span class="tx">Wohnung</span><span class="ch">3 ›</span></div></div>
+<div class="list" style="margin-top:14px"><div class="tl"><span class="ic">☼</span><span class="tx">Tagesstart</span><span class="ch">18 ›</span></div><div class="tl"><span class="ic">☾</span><span class="tx">Tagesabschluss</span><span class="ch">21 ›</span></div><div class="tl"><span class="ic">☾</span><span class="tx">Dream Log</span><span class="ch">4 ›</span></div><div class="tl"><span class="ic">▣</span><span class="tx">Tagebuch mit Gott</span><span class="ch">40 ›</span></div><div class="tl"><span class="ic">▤</span><span class="tx">Bible Study</span><span class="ch">5 ›</span></div></div>
+</div></div>
+<p class="pc">Der dritte Block hat keinen Namen, man erkennt nicht, warum diese Ordner getrennt stehen. „Dream Log“ und „Tagesabschluss“ tragen fast dasselbe Mond-Symbol.</p>
+</div>
+<div>
+<p class="label"><span class="code r">NO1b</span> <b>Benannte Abschnitte, Baum eingerückt</b> <span class="rec">Empfehlung</span></p>
+<div class="phone crop l"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="nav"><span class="back">‹ Aufgaben</span><span class="r"><span class="gb glass">⊞</span></span></div>
+<div class="lt">Notizen</div>
+<div class="list"><div class="tl"><span class="ic">▤</span><span class="tx">Alle Notizen</span><span class="ch">84 ›</span></div><div class="tl"><span class="ic">≡</span><span class="tx">Notizen</span><span class="ch">31 ›</span></div><div class="tl"><span class="ic">⑂</span><span class="tx">Rezepte</span><span class="ch">9 ›</span></div></div>
+<div class="section">Meine Ordner <span>＋</span></div>
+<div class="list"><div class="tl"><span class="ic">▱</span><span class="tx">Studium</span><span class="ch">6 ›</span></div><div class="tl d1"><span class="ic">▱</span><span class="tx">Seminararbeit</span><span class="ch">4 ›</span></div><div class="tl"><span class="ic">▱</span><span class="tx">Wohnung</span><span class="ch">3 ›</span></div></div>
+<div class="section new">Routinen</div>
+<div class="list"><div class="tl new"><span class="ic" style="color:var(--purple)">◉</span><span class="tx">Brain Dump</span><span class="ch">12 ›</span></div><div class="tl"><span class="ic" style="color:var(--orange)">☼</span><span class="tx">Tagesstart</span><span class="ch">18 ›</span></div><div class="tl"><span class="ic" style="color:var(--indigo)">☾</span><span class="tx">Tagesabschluss</span><span class="ch">21 ›</span></div><div class="tl"><span class="ic" style="color:var(--indigo)">☁</span><span class="tx">Dream Log</span><span class="ch">4 ›</span></div></div>
+<div class="section new">Persönlich</div>
+<div class="list"><div class="tl"><span class="ic">▣</span><span class="tx">Tagebuch mit Gott</span><span class="ch">40 ›</span></div><div class="tl"><span class="ic">▤</span><span class="tx">Bible Study</span><span class="ch">5 ›</span></div></div>
+</div></div>
+<p class="pc"><b>Grund:</b> Die Überschriften erklären die Trennung, und der Baum bleibt mit höchstens drei Ebenen ohne zusätzliches Tippen vollständig sichtbar. „Zuletzt gelöscht“ bleibt als letzte Zeile.</p>
+</div>
+<div>
+<p class="label"><span class="code">NO1c</span> <b>Aufklappbare Gruppen</b></p>
+<div class="phone crop l"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="nav"><span class="back">‹ Aufgaben</span><span class="r"><span class="gb glass">⊞</span></span></div>
+<div class="lt">Notizen</div>
+<div class="list"><div class="tl"><span class="ic">▤</span><span class="tx">Alle Notizen</span><span class="ch">84 ›</span></div><div class="tl"><span class="ic">≡</span><span class="tx">Notizen</span><span class="ch">31 ›</span></div></div>
+<div class="section">Meine Ordner</div>
+<div class="list"><div class="tl new"><span class="ic">▱</span><span class="tx">Studium</span><span class="ch">6 ⌄</span></div><div class="tl d1"><span class="ic">▱</span><span class="tx">Seminararbeit</span><span class="ch">4 ›</span></div><div class="tl new"><span class="ic">▱</span><span class="tx">Wohnung</span><span class="ch">3 ›</span></div></div>
+<div class="section">Feste Ordner</div>
+<div class="list"><div class="tl new"><span class="ic">◉</span><span class="tx">Routinen</span><span class="ch">55 ›</span></div><div class="tl new"><span class="ic">▣</span><span class="tx">Persönlich</span><span class="ch">45 ⌄</span></div><div class="tl d1"><span class="ic">▣</span><span class="tx">Tagebuch mit Gott</span><span class="ch">40 ›</span></div><div class="tl d1"><span class="ic">▤</span><span class="tx">Bible Study</span><span class="ch">5 ›</span></div></div>
+</div></div>
+<p class="pc">Kürzere Liste, aber jeder feste Ordner kostet einen Tipp mehr, und eine Zeile hat dann zwei Ziele (öffnen oder aufklappen). Lohnt sich erst ab deutlich mehr Ordnern.</p>
+</div>
+</div>
+
+<h2><span class="area">NO2</span> Brain Dump und Dream Log: Platz, Symbol und Farbe</h2>
+<p class="lead">Heute steht „Brain Dump“ im ersten Abschnitt (<code>brain.head.profile</code>), „Dream Log“ (<code>moon.zzz</code>) im dritten, alle Symbole in Akzentblau. Frage aus #180: Dream Log neben Brain Dump?</p>
+<div class="grid">
+<div>
+<p class="label"><span class="code">NO2a</span> <b>Getrennt, alles blau</b> <span class="same">heute</span></p>
+<div class="phone crop s"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="list"><div class="tl"><span class="ic">≡</span><span class="tx">Notizen</span><span class="ch">31 ›</span></div><div class="tl"><span class="ic">◉</span><span class="tx">Brain Dump</span><span class="ch">12 ›</span></div><div class="tl"><span class="ic">⑂</span><span class="tx">Rezepte</span><span class="ch">9 ›</span></div></div>
+<div class="list" style="margin-top:14px"><div class="tl"><span class="ic">☼</span><span class="tx">Tagesstart</span><span class="ch">18 ›</span></div><div class="tl"><span class="ic">☾</span><span class="tx">Tagesabschluss</span><span class="ch">21 ›</span></div><div class="tl"><span class="ic">☾</span><span class="tx">Dream Log</span><span class="ch">4 ›</span></div></div>
+</div></div>
+<p class="pc">Schnell erreichbar, aber zwei Monde untereinander und kein Bezug zwischen Brain Dump und Dream Log.</p>
+</div>
+<div>
+<p class="label"><span class="code r">NO2b</span> <b>Gemeinsamer Abschnitt „Routinen“, eigene Farben</b> <span class="rec">Empfehlung</span></p>
+<div class="phone crop s"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="section">Routinen</div>
+<div class="list"><div class="tl new"><span class="ic" style="color:var(--purple)">◉</span><span class="tx">Brain Dump<small>brain.head.profile · Violett</small></span><span class="ch">12 ›</span></div><div class="tl"><span class="ic" style="color:var(--orange)">☼</span><span class="tx">Tagesstart<small>sun.horizon · Orange</small></span><span class="ch">18 ›</span></div><div class="tl"><span class="ic" style="color:var(--indigo)">☾</span><span class="tx">Tagesabschluss<small>moon.stars · Indigo</small></span><span class="ch">21 ›</span></div><div class="tl new"><span class="ic" style="color:var(--indigo)">☁</span><span class="tx">Dream Log<small>cloud.moon · Indigo</small></span><span class="ch">4 ›</span></div></div>
+</div></div>
+<p class="pc"><b>Grund:</b> Alle vier Ordner entstehen aus den Routinen, und die Farbe trennt sie auf einen Blick von eigenen Ordnern. Violett ist in der App schon die Farbe des Assistenten; falls das stört, Brain Dump in Teal.</p>
+</div>
+<div>
+<p class="label"><span class="code">NO2c</span> <b>Zwei Kacheln oben</b></p>
+<div class="phone crop s"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="tiles"><div class="tile new"><i><span style="color:var(--purple)">◉</span><b>12</b></i>Brain Dump</div><div class="tile new"><i><span style="color:var(--indigo)">☁</span><b>4</b></i>Dream Log</div></div>
+<div class="list"><div class="tl"><span class="ic">▤</span><span class="tx">Alle Notizen</span><span class="ch">84 ›</span></div><div class="tl"><span class="ic">≡</span><span class="tx">Notizen</span><span class="ch">31 ›</span></div><div class="tl"><span class="ic">⑂</span><span class="tx">Rezepte</span><span class="ch">9 ›</span></div></div>
+</div></div>
+<p class="pc">Auffällig und nah am Daumen, bricht aber mit dem Listenmuster der übrigen App (Kacheln gibt es sonst nirgends in den Notizen).</p>
+</div>
+</div>
+
+<h2><span class="area">NO3</span> Brain-Dump-Notiz schnell anlegen · <span class="area q">NO4</span> Feste Ordner umbenennen</h2>
+<p class="lead">Heute legt ein Wisch von links auf der Zeile „Brain Dump“ eine neue Notiz an (auch im Kontextmenü). Das findet man nicht ohne Hinweis.</p>
+<div class="grid">
+<div>
+<p class="label"><span class="code">NO3a</span> <b>Wischen von links</b> <span class="same">heute</span></p>
+<div class="phone crop s"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="section">Routinen</div>
+<div class="list"><div class="tl" style="padding-left:0"><span style="background:var(--blue);color:#fff;padding:12px 14px;margin:-10px 0;font-size:12px">✎ Neu</span><span class="ic" style="color:var(--purple)">◉</span><span class="tx">Brain Dump</span><span class="ch">12 ›</span></div><div class="tl"><span class="ic">☼</span><span class="tx">Tagesstart</span><span class="ch">18 ›</span></div></div>
+</div></div>
+<p class="pc">Kein sichtbarer Hinweis auf die Geste.</p>
+</div>
+<div>
+<p class="label"><span class="code r">NO3b</span> <b>Plus-Knopf in der Zeile</b> <span class="rec">Empfehlung</span></p>
+<div class="phone crop s"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="section">Routinen</div>
+<div class="list"><div class="tl new"><span class="ic" style="color:var(--purple)">◉</span><span class="tx">Brain Dump</span><span class="ch">12</span><span class="plus">＋</span></div><div class="tl"><span class="ic" style="color:var(--orange)">☼</span><span class="tx">Tagesstart</span><span class="ch">18 ›</span></div></div>
+<div class="foot1">Tipp auf die Zeile öffnet den Ordner, ＋ öffnet eine leere Notiz mit Tastatur. Wischen bleibt zusätzlich.</div>
+</div></div>
+<p class="pc"><b>Grund:</b> Der häufigste Weg in diesen Ordner ist „etwas loswerden“, und ein sichtbarer Knopf kostet einen Tipp statt einer unbekannten Geste. Der Knopf braucht 44 pt Trefferfläche.</p>
+</div>
+<div>
+<p class="label"><span class="code">NO3c</span> <b>Halten auf dem Tab „Aufgaben“</b></p>
+<div class="phone crop s"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="menu glass" style="align-self:center;margin-top:60px"><div class="new">Brain Dump schreiben <span>◉</span></div><div>Brain Dump diktieren <span>🎙</span></div><div>Neue Notiz <span>✎</span></div></div>
+</div></div>
+<p class="pc">Von überall erreichbar, aber wieder versteckt; „Brain Dump diktieren“ gibt es bereits über Siri und das Kontrollzentrum.</p>
+</div>
+</div>
+<div class="box"><h3>NO4 · Feste Ordner umbenennen: ja (wie heute)</h3>Umbenennen bleibt erlaubt, Löschen und Bewegen bleiben gesperrt (<code>NoteFolderRules.MoveError.systemFolder</code>). Empfohlene Ergänzung: Im Kontextmenü eines umbenannten festen Ordners steht „Namen zurücksetzen“, und die Routinen-Blätter zeigen weiterhin die festen Bezeichnungen „Brain Dump“ und „Dream Log“. <b>Grund:</b> Ein Name ist Geschmack, der Ort einer Routine-Notiz dagegen Teil der Funktion.</div>
+
+<h2><span class="area">NO5</span> Virtueller Ordner „Gedanken“ · <span class="area">NO6</span> „Zuletzt gelöscht“</h2>
+<p class="lead">Der virtuelle Ordner „Gedanken“ stammt aus der Zeit vor #180. Seit die Routine-Notizen eigene Ordner haben, gibt es im Code keine Zeile „Gedanken“ mehr (nur noch einen Kommentar in <code>NoteRecord.swift</code>).</p>
+<div class="grid">
+<div>
+<p class="label"><span class="code r">NO5a</span> <b>„Gedanken“ weglassen</b> <span class="rec">Empfehlung</span> <span class="same">heute</span></p>
+<div class="phone crop s"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="section">Routinen</div>
+<div class="list"><div class="tl"><span class="ic" style="color:var(--purple)">◉</span><span class="tx">Brain Dump</span><span class="ch">12 ›</span></div><div class="tl"><span class="ic" style="color:var(--orange)">☼</span><span class="tx">Tagesstart</span><span class="ch">18 ›</span></div><div class="tl"><span class="ic" style="color:var(--indigo)">☾</span><span class="tx">Tagesabschluss</span><span class="ch">21 ›</span></div><div class="tl"><span class="ic" style="color:var(--indigo)">☁</span><span class="tx">Dream Log</span><span class="ch">4 ›</span></div></div>
+</div></div>
+<p class="pc"><b>Grund:</b> Die vier festen Ordner decken dieselben Notizen ab; eine fünfte Zeile würde jede Notiz doppelt zeigen. Der Abschnitt „Routinen“ aus NO1b übernimmt die Klammer.</p>
+</div>
+<div>
+<p class="label"><span class="code">NO5b</span> <b>Sammelzeile „Gedanken“</b></p>
+<div class="phone crop s"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="list"><div class="tl"><span class="ic">▤</span><span class="tx">Alle Notizen</span><span class="ch">84 ›</span></div><div class="tl new"><span class="ic">◌</span><span class="tx">Gedanken<small>Brain Dump, Tagesstart, Tagesabschluss</small></span><span class="ch">51 ›</span></div><div class="tl"><span class="ic">≡</span><span class="tx">Notizen</span><span class="ch">31 ›</span></div></div>
+</div></div>
+<p class="pc">Zeigt alle Gedanken-Notizen nach Datum gemischt. Nützlich nur, wenn man quer über die Routinen lesen will; dafür reicht die Suche.</p>
+</div>
+<div>
+<p class="label"><span class="code r">NO6b</span> <b>„Zuletzt gelöscht“ mit Kopfhinweis</b> <span class="rec">Empfehlung</span></p>
+<div class="phone crop s"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="nav"><span class="gt glass" style="color:var(--red)">Alle löschen</span><span class="r"><span class="gt glass">Bearbeiten</span></span></div>
+<div class="lt">Zuletzt gelöscht</div>
+<div class="foot1 new" style="font-size:12.5px">Notizen bleiben 30 Tage hier und werden dann endgültig gelöscht, mit ihren Anhängen.</div>
+<div class="list"><div class="card new"><div class="b"><div class="t">Packliste Skiurlaub <small style="color:var(--orange)">noch 3 Tage</small></div><div class="p">Helm, Handschuhe, Thermowäsche</div><div class="f">Gelöscht am 23.10. · aus „Notizen“</div></div></div><div class="card"><div class="b"><div class="t">Idee Geschenk <small>noch 27 Tage</small></div><div class="f">Gelöscht am 16.11. · aus „Wohnung“</div></div></div></div>
+</div></div>
+<p class="pc"><b>NO6a (heute):</b> nur „Noch 12 Tage“ als Fußzeile der Karte. <b>Grund für b:</b> Die Frist und der Herkunftsordner sind die zwei Angaben, die man vor dem Wiederherstellen braucht; unter 7 Tagen wird die Frist orange.</p>
+</div>
+</div>
+
+<h2><span class="area">NO7</span> Sortiermenü · <span class="area">NO8</span> Mehrfachauswahl</h2>
+<p class="lead">Heute: Menü mit „Bearbeitet / Erstellt / Titel“, gilt für alle Ordner; Routine-Ordner sind immer nach Tag absteigend sortiert. „Bearbeiten“ schaltet die Auswahl ein, unten stehen „Bewegen“ und „Löschen“.</p>
+<div class="grid">
+<div>
+<p class="label"><span class="code">NO7a</span> <b>Drei Optionen</b> <span class="same">heute</span></p>
+<div class="phone crop s"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="nav"><span class="back">‹ Notizen</span><span class="r"><span class="gt glass">Bearbeiten</span><span class="gb glass">⇅</span><span class="gb glass">⋯</span></span></div>
+<div class="menu glass"><div class="h">Sortieren nach</div><div>Bearbeitet <span>✓</span></div><div>Erstellt</div><div>Titel</div></div>
+</div></div>
+<p class="pc">Reicht für kleine Ordner. Keine Richtung, keine Orientierung im Datum bei langen Listen.</p>
+</div>
+<div>
+<p class="label"><span class="code r">NO7b</span> <b>Mit Richtung und Datumsgruppen</b> <span class="rec">Empfehlung</span></p>
+<div class="phone crop"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="nav"><span class="back">‹ Notizen</span><span class="r"><span class="gb glass">⋯</span></span></div>
+<div class="menu glass"><div class="new">Notizen auswählen <span>◎</span></div><div class="gap h" style="display:none"></div><div class="h">Sortieren nach</div><div>Bearbeitet <span>✓</span></div><div>Erstellt</div><div class="gap">Titel</div><div class="new">Neueste zuerst <span>✓</span></div><div class="new gap">Älteste zuerst</div><div class="new">Nach Datum gruppieren <span>✓</span></div></div>
+<div class="section">Heute</div><div class="list"><div class="card"><div class="b"><div class="t">Fragen an Vermieter</div><div class="f">09:12</div></div></div></div>
+<div class="section">Letzte 7 Tage</div>
+</div></div>
+<p class="pc"><b>Grund:</b> Ein Menü „⋯“ statt zwei Knöpfen spart Platz in der Leiste, und Datumsgruppen („Heute“, „Letzte 7 Tage“, Monat) geben langen Listen Halt. Die Wahl gilt weiter für alle Ordner; bei „Titel“ entfallen die Gruppen.</p>
+</div>
+<div>
+<p class="label"><span class="code">NO7c</span> <b>Sortierung je Ordner</b></p>
+<div class="phone crop s"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="nav"><span class="back">‹ Notizen</span><span class="r"><span class="gb glass">⋯</span></span></div>
+<div class="menu glass"><div class="h">Sortieren in „Studium“</div><div>Standard (Bearbeitet)</div><div>Erstellt</div><div>Titel <span>✓</span></div></div>
+</div></div>
+<p class="pc">Flexibel, braucht aber ein neues Feld am Ordner (<code>NoteFolderRecord</code>) samt Sicherung, und man verliert den Überblick, wo was gilt.</p>
+</div>
+</div>
+<div class="grid" style="margin-top:22px">
+<div>
+<p class="label"><span class="code">NO8a</span> <b>Bewegen und Löschen</b> <span class="same">heute</span></p>
+<div class="phone crop"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="nav"><span class="back">‹ Notizen</span><span class="r"><span class="gt glass">Fertig</span></span></div>
+<div class="lt">Studium</div>
+<div class="list"><div class="card"><span class="selc on">✓</span><div class="b"><div class="t">Gliederung Seminararbeit</div><div class="p">1 Einleitung, 2 Stand der Forschung</div><div class="f">Gestern</div></div></div><div class="card"><span class="selc on">✓</span><div class="b"><div class="t">Literatur Kapitel 2</div><div class="f">14.11.</div></div></div><div class="card"><span class="selc"></span><div class="b"><div class="t">Fragen an Betreuer</div><div class="f">12.11.</div></div></div></div>
+<div class="botbar glass"><span>Bewegen</span><span class="x">Löschen</span></div>
+</div></div>
+<p class="pc">Funktioniert. Es fehlt die Zahl der gewählten Notizen und „Alle auswählen“.</p>
+</div>
+<div>
+<p class="label"><span class="code r">NO8b</span> <b>Zähler, „Alle“, Anheften</b> <span class="rec">Empfehlung</span></p>
+<div class="phone crop"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="nav"><span class="gt glass">Alle auswählen</span><span class="c">2 ausgewählt</span><span class="r"><span class="gt glass">Fertig</span></span></div>
+<div class="list" style="margin-top:8px"><div class="card"><span class="selc on">✓</span><div class="b"><div class="t">Gliederung Seminararbeit</div><div class="p">1 Einleitung, 2 Stand der Forschung</div><div class="f">Gestern</div></div></div><div class="card"><span class="selc on">✓</span><div class="b"><div class="t">Literatur Kapitel 2</div><div class="f">14.11.</div></div></div><div class="card"><span class="selc"></span><div class="b"><div class="t">Fragen an Betreuer</div><div class="f">12.11.</div></div></div></div>
+<div class="botbar glass"><span>Bewegen</span><span>Anheften</span><span class="x">Löschen</span></div>
+</div></div>
+<p class="pc"><b>Grund:</b> Der Zähler im Titel bestätigt die Auswahl, bevor man löscht, und „Alle auswählen“ ist der übliche Weg, einen Ordner zu räumen. In Routine-Ordnern entfällt „Bewegen“ (nur freie Notizen sind beweglich).</p>
+</div>
+<div>
+<p class="label"><span class="code">NO8c</span> <b>Einstieg nur über Halten</b></p>
+<div class="phone crop"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="nav"><span class="back">‹ Notizen</span><span class="r"><span class="gb glass">⋯</span></span></div>
+<div class="lt">Studium</div>
+<div class="menu glass" style="align-self:center"><div>Anheften <span>⚲</span></div><div>Bewegen <span>▱</span></div><div>Teilen <span>⇪</span></div><div class="new">Auswählen <span>◎</span></div><div class="x">Löschen <span>🗑</span></div></div>
+</div></div>
+<p class="pc">Spart den Knopf „Bearbeiten“, versteckt die Mehrfachauswahl aber hinter einer Geste. Als Zusatz zu b sinnvoll, nicht als einziger Weg.</p>
+</div>
+</div>
+
+<h2><span class="area q">NO9</span> Tags · <span class="area q">NO10</span> Sperren · <span class="area q">NO11</span> Teilen mit anderen · <span class="area q">NO12</span> Abgleich mit Apple Notizen</h2>
+<div class="grid">
+<div>
+<p class="label"><span class="code">NO10b</span> <b>Sperren je Notiz</b></p>
+<div class="phone crop s"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="lt">Notizen</div>
+<div class="list"><div class="card"><div class="b"><div class="t">Zugangsdaten Router <small>🔒</small></div><div class="p">Gesperrt</div><div class="f">12.11.</div></div></div><div class="card"><div class="b"><div class="t">Fragen an Vermieter</div><div class="p">Nebenkosten, Kellerabteil</div><div class="f">Gestern</div></div></div></div>
+</div></div>
+<p class="pc">Wie in Apple Notizen. Braucht eine Regel für Suche, Vorschau, Widgets, Teilen und den Assistenten je Notiz; hoher Aufwand für wenige Notizen.</p>
+</div>
+<div>
+<p class="label"><span class="code r">NO10c</span> <b>Private Ordner mit Face ID</b> <span class="rec">Empfehlung</span></p>
+<div class="phone crop s"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="nav"><span class="back">‹ Notizen</span></div>
+<div class="lt">Tagebuch mit Gott</div>
+<div class="lockscr"><div><b>🔒</b>Dieser Ordner ist gesperrt.<br><span style="color:var(--blue)">Mit Face ID öffnen</span></div></div>
+</div></div>
+<p class="pc"><b>Grund:</b> Schützenswert sind genau die Ordner, die der Code schon als privat führt (Tagebuch, Bible Study, Dream Log; <code>NoteFolderRole.isPrivate</code>), also ein Schalter „Private Ordner mit Face ID sperren“ statt einer Regel je Notiz. Entsperrt bis die App in den Hintergrund geht. Die Sperre schützt vor Mitlesen am entsperrten iPhone, nicht die Datei der Sicherung (siehe DS6).</p>
+</div>
+<div>
+<div class="box" style="margin-top:0"><h3>Ja/Nein-Fragen</h3>
+<ul>
+<li><b>NO9 Tags: nein.</b> Grund: Ordner bis drei Ebenen plus Volltextsuche decken das Wiederfinden ab; Tags bräuchten Eingabe, Verwaltung, Filter und ein Feld in Sicherung und Assistent. Wer will, schreibt „#thema“ in den Text, die Suche findet es.</li>
+<li><b>NO10 Sperren: ja, als Variante c.</b> NO10a „nein“ bleibt die Rückfallebene.</li>
+<li><b>NO11 Teilen mit anderen: nein.</b> Grund: Notizen liegen nur auf diesem iPhone (kein Abgleich, keine Konten); gemeinsames Bearbeiten setzt einen Server oder CloudKit voraus. „Teilen“ als Kopie über das Teilen-Menü gibt es schon.</li>
+<li><b>NO12 Abgleich mit Apple Notizen: Umfang bestätigen.</b> Übernommen: Ordner und Unterordner, Anheften, Suche, „Zuletzt gelöscht“ (30 Tage), Sortieren, Mehrfachauswahl, Checklisten, Formatierung, Bilder und Dateien (#155). Bewusst nicht: Tags, intelligente Ordner, Sperren je Notiz, gemeinsame Notizen, Scannen, Zeichnen, Tabellen-Editor (Tabellen werden nur angezeigt). Grund: Der Rest wäre jeweils eine eigene Funktion ohne Bezug zu Planung und Routinen.</li>
+</ul></div>
+</div>
+</div>
+
+<h2><span class="area">NO13</span> Ordner „Tagesstart“: Dankbarkeit · <span class="area q">NO14</span> Tage nur mit Dankbarkeit</h2>
+<p class="lead">Die Dankbarkeit liegt im Routine-Eintrag des Tages (<code>RoutineDayValue.gratitude</code>), nicht im Notiztext. Heute zeigt der Editor sie als graue Zeile über dem Text. Ein Tag, an dem nur Dankbarkeit eingetragen wurde, hat keine Notiz und fehlt deshalb im Ordner.</p>
+<div class="grid">
+<div>
+<p class="label"><span class="code">NO13a</span> <b>Graue Zeile über dem Text</b> <span class="same">heute</span></p>
+<div class="phone crop s"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="nav"><span class="back">‹ Tagesstart</span><span class="c">Do., 19. Nov.</span><span class="r"><span class="gb glass">✎</span><span class="gb glass">⋯</span></span></div>
+<div class="note"><p style="color:var(--sub);font-size:13px;margin-bottom:10px">Dankbar für: Kaffee mit Jonas · Sonne · ruhiger Morgen</p><p>Heute steht die Abgabe an. Ich merke, dass ich das Kapitel 3 vor mir herschiebe, weil mir die Quellen fehlen.</p></div>
+</div></div>
+<p class="pc">Leicht zu übersehen, liest sich wie eine Bildunterschrift.</p>
+</div>
+<div>
+<p class="label"><span class="code r">NO13b</span> <b>Kopfkarte „Dankbar für“</b> <span class="rec">Empfehlung</span></p>
+<div class="phone crop s"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="nav"><span class="back">‹ Tagesstart</span><span class="c">Do., 19. Nov.</span><span class="r"><span class="gb glass">⋯</span></span></div>
+<div class="gra card new" style="display:block;border:0"><b>Dankbar für</b>1. Kaffee mit Jonas<br>2. Sonne<br>3. Ruhiger Morgen</div>
+<div class="note"><h5 style="margin-top:0">Brain Dump</h5><p>Heute steht die Abgabe an. Ich merke, dass ich das Kapitel 3 vor mir herschiebe, weil mir die Quellen fehlen.</p></div>
+</div></div>
+<p class="pc"><b>Grund:</b> Die Karte zeigt die Dankbarkeit als eigenen Teil des Morgens, ohne sie in den Notiztext zu kopieren (eine Quelle, keine doppelten Daten). Tipp auf die Karte öffnet den Tagesstart dieses Tages zum Ändern.</p>
+</div>
+<div>
+<p class="label"><span class="code">NO13c</span> <b>Im Text als Abschnitt</b></p>
+<div class="phone crop s"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="nav"><span class="back">‹ Tagesstart</span><span class="c">Do., 19. Nov.</span><span class="r"><span class="gb glass">⋯</span></span></div>
+<div class="note"><h5 style="margin-top:0" >Dankbar für</h5><ul><li>Kaffee mit Jonas</li><li>Sonne</li><li>Ruhiger Morgen</li></ul><h5>Brain Dump</h5><p>Heute steht die Abgabe an. Ich merke, dass …</p></div>
+</div></div>
+<p class="pc">Sieht einheitlich aus und lässt sich als Ganzes teilen, verlangt aber, dass Dankbarkeit an zwei Stellen gespeichert und abgeglichen wird, und der Text ginge bei „Vorschläge holen“ mit an ChatGPT.</p>
+</div>
+</div>
+<div class="grid" style="margin-top:22px">
+<div>
+<p class="label"><span class="code r">NO14</span> <b>Tage nur mit Dankbarkeit zeigen: ja</b> <span class="rec">Empfehlung</span></p>
+<div class="phone crop s"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="nav"><span class="back">‹ Notizen</span><span class="r"><span class="gb glass">⋯</span></span></div>
+<div class="lt">Tagesstart</div>
+<div class="list"><div class="card"><div class="b"><div class="t">Donnerstag, 19. November</div><div class="p">Heute steht die Abgabe an. Ich merke, dass ich …</div><div class="f">Dankbar für: Kaffee mit Jonas · Sonne · ruhiger Morgen</div></div></div><div class="card new"><div class="b"><div class="t">Mittwoch, 18. November</div><div class="f">Dankbar für: Telefonat mit Mama · freier Abend</div></div></div><div class="card"><div class="b"><div class="t">Dienstag, 17. November</div><div class="p">Kopf voll wegen Umzug. Liste machen.</div><div class="f">1 Aufgabe daraus</div></div></div></div>
+</div></div>
+<p class="pc"><b>Grund:</b> Der Ordner ist das Archiv des Morgens, und ein Tag mit Dankbarkeit ohne Brain Dump ist kein leerer Tag. Der Eintrag ohne Notiz lässt sich nicht anheften, bewegen oder löschen; ein Tipp öffnet die Kopfkarte ohne Text.</p>
+</div>
+</div>
+
+<h2><span class="area">NO15</span> Markdown: Startmodus und Umschalter · <span class="area">NO16</span> Formatierungsleiste · <span class="area q">NO17</span> Checkboxen</h2>
+<p class="lead">Heute: Eine Notiz mit Text öffnet als gerenderte Seite (WebView), eine leere zum Schreiben. Umschalten über das Auge bzw. den Stift oben rechts. Beim Schreiben sieht man reines Markdown; über der Tastatur gibt es nur das Anhängen-Menü und „Fertig“.</p>
+<div class="grid">
+<div>
+<p class="label"><span class="code">NO15a</span> <b>Auge und Stift in der Leiste</b> <span class="same">heute</span></p>
+<div class="phone crop"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="nav"><span class="back">‹ Wohnung</span><span class="r"><span class="gb glass">✎</span><span class="gb glass">⌕</span><span class="gb glass">⋯</span></span></div>
+<div class="note"><h4>Umzug</h4><h5>Vor dem Termin</h5><div class="cb"><span class="ck sq done"></span>Zählerstände notieren</div><div class="cb"><span class="ck sq"></span>Nachsendeauftrag</div><div class="cb"><span class="ck sq"></span>Kaution klären</div><h5>Maße</h5><p>Schlafzimmer <b>3,40 × 4,10 m</b>, Nische 92 cm.</p></div>
+</div></div>
+<p class="pc">Drei runde Knöpfe nebeneinander; Stift und Auge sind als Paar nicht selbsterklärend. (⌕ steht hier für das Anhängen-Menü.)</p>
+</div>
+<div>
+<p class="label"><span class="code r">NO15b</span> <b>Tippen in den Text schreibt, „Fertig“ zeigt</b> <span class="rec">Empfehlung</span></p>
+<div class="phone crop"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="nav"><span class="back">‹ Wohnung</span><span class="r"><span class="gt glass new" style="outline:2px solid #ffd60a">Fertig</span><span class="gb glass">⋯</span></span></div>
+<div class="note"><div class="raw"># Umzug
+
+## Vor dem Termin
+- [x] Zählerstände notieren
+- [ ] Nachsendeauftrag
+- [ ] Kaution klären▏</div></div>
+<div class="kb"><div class="kbbar"><span>H</span><span><b>B</b></span><span><i>I</i></span><span>☰</span><span>☑</span><span>⌕</span><span class="done">⌄</span></div><div class="kbkeys"></div><div class="kbkeys"></div></div>
+</div></div>
+<p class="pc"><b>Grund:</b> Lesen ist der Normalfall und Schreiben beginnt dort, wo man hintippt; „Fertig“ ist in der App schon das Wort für „Eingabe beenden“. Die Schreibmarke landet in der angetippten Zeile; ein Tipp auf eine Checkbox oder einen Link schaltet nicht um. In der Ansicht steht statt „Fertig“ kein Knopf.</p>
+</div>
+<div>
+<p class="label"><span class="code">NO15c</span> <b>Segment „Lesen | Schreiben“</b></p>
+<div class="phone crop"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="nav"><span class="back">‹</span><span class="seg2" style="margin:0;width:190px"><span class="on">Lesen</span><span>Schreiben</span></span><span class="r"><span class="gb glass">⋯</span></span></div>
+<div class="note"><h4>Umzug</h4><h5>Vor dem Termin</h5><div class="cb"><span class="ck sq done"></span>Zählerstände notieren</div><div class="cb"><span class="ck sq"></span>Nachsendeauftrag</div></div>
+</div></div>
+<p class="pc">Eindeutig beschriftet, belegt aber dauerhaft die Mitte der Leiste, wo sonst der Titel der Notiz steht.</p>
+</div>
+</div>
+<div class="grid" style="margin-top:22px">
+<div>
+<p class="label"><span class="code">NO16a</span> <b>Keine Leiste</b> <span class="same">heute</span></p>
+<div class="phone crop s"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="note"><div class="raw">- [ ] Kaution klären▏</div></div>
+<div class="kb"><div class="kbbar"><span>⌕</span><span class="done">Fertig</span></div><div class="kbkeys"></div><div class="kbkeys"></div></div>
+</div></div>
+<p class="pc">Wer Markdown nicht auswendig kann, bekommt keine Checkbox und keine Überschrift zustande.</p>
+</div>
+<div>
+<p class="label"><span class="code r">NO16b</span> <b>Leiste über der Tastatur</b> <span class="rec">Empfehlung</span></p>
+<div class="phone crop s"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="note"><div class="raw">- [ ] Kaution klären▏</div></div>
+<div class="kb"><div class="kbbar"><span>H</span><span><b>B</b></span><span><i>I</i></span><span>☰</span><span>☑</span><span>⌕</span><span class="done">⌄</span></div><div class="kbkeys"></div><div class="kbkeys"></div></div>
+</div></div>
+<p class="pc"><b>Grund:</b> Sechs Knöpfe decken ab, was die Ansicht darstellt: Überschrift (H wechselt #, ##, keine), fett, kursiv, Liste, Checkbox, Anhang; rechts schließt ⌄ die Tastatur. Jeder Knopf fügt nur Markdown-Zeichen ein, der Text bleibt reines Markdown.</p>
+</div>
+<div>
+<p class="label"><span class="code">NO16c</span> <b>Menü „Aa“</b></p>
+<div class="phone crop s"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="menu glass" style="align-self:flex-start;margin-top:20px"><div>Überschrift</div><div>Fett</div><div>Liste</div><div>Checkbox</div></div>
+<div class="kb" style="padding-bottom:20px"><div class="kbbar"><span>Aa</span><span>⌕</span><span class="done">Fertig</span></div></div>
+</div></div>
+<p class="pc">Ruhiger, aber zwei Tipps je Format; gerade die Checkbox wird oft gebraucht.</p>
+</div>
+</div>
+<div class="box"><h3>NO17 · Checkboxen in der Ansicht antippbar: ja (wie heute) · Typografie</h3>Ein Tipp hakt ab und speichert sofort (<code>MarkdownText.togglingCheckbox</code>). Empfohlene Typografie der Ansicht: Titel (#) 24 pt fett, ## 17 pt halbfett, Text in der Systemgröße (Dynamic Type), Zeilenabstand 1,45, Checkboxen als abgerundete Quadrate mit 44 pt Trefferfläche, erledigte Zeilen grau ohne Durchstreichen. <b>Grund:</b> Quadrate unterscheiden Checklisten in Notizen von den runden Haken der Aufgaben und Gewohnheiten.</div>
+
+<h2><span class="area">NO18</span> Anhänge in der Notiz · <span class="area">NO19</span> Vorschaubild auf der Notizkarte</h2>
+<p class="lead">Bilder werden als JPEG mit höchstens 2048 px Kantenlänge gespeichert, Dateien bis 25 MB. In der Liste zeigt die Karte heute das erste Bild als 48-pt-Quadrat und eine Büroklammer mit der Zahl der Dateien.</p>
+<div class="grid">
+<div>
+<p class="label"><span class="code">NO18a</span> <b>Bild in voller Breite</b></p>
+<div class="phone crop"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="note"><h4>Grundriss neue Wohnung</h4><p>Vom Makler, Stand 12.11.</p><div class="img" style="height:290px"></div><p>Nische im Flur 92 cm.</p></div>
+</div></div>
+<p class="pc">Ein Hochformat-Foto füllt den ganzen Bildschirm; der Text darunter rutscht aus dem Blick.</p>
+</div>
+<div>
+<p class="label"><span class="code r">NO18b</span> <b>Volle Breite, Höhe begrenzt, Datei-Chips</b> <span class="rec">Empfehlung</span></p>
+<div class="phone crop"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="note"><h4>Grundriss neue Wohnung</h4><p>Vom Makler, Stand 12.11.</p><div class="img" style="height:170px"></div><p>Nische im Flur 92 cm.</p><span class="chip">▤ Mietvertrag.pdf <small>1,2 MB</small></span><span class="chip">▤ Übergabeprotokoll.pdf <small>340 KB</small></span></div>
+</div></div>
+<p class="pc"><b>Grund:</b> Höchstens 40 % der Bildschirmhöhe halten Bild und Text gemeinsam sichtbar; ein Tipp öffnet das Bild groß (Quick Look, wie heute). Dateien als Chip mit Symbol, Name und Größe; ein Tipp öffnet die Vorschau.</p>
+</div>
+<div>
+<p class="label"><span class="code">NO18c</span> <b>Raster bei mehreren Bildern</b></p>
+<div class="phone crop"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="note"><h4>Grundriss neue Wohnung</h4><div style="display:grid;grid-template-columns:1fr 1fr;gap:6px"><div class="img" style="height:110px;margin:0"></div><div class="img" style="height:110px;margin:0"></div><div class="img" style="height:110px;margin:0"></div><div class="img" style="height:110px;margin:0"></div></div><p style="margin-top:8px">Nische im Flur 92 cm.</p></div>
+</div></div>
+<p class="pc">Kompakt bei Fotoserien. Bilder stehen aber als einzelne Verweise im Text; ein Raster müsste aufeinanderfolgende Verweise erkennen und ändert die Lesereihenfolge.</p>
+</div>
+</div>
+<div class="grid" style="margin-top:22px">
+<div>
+<p class="label"><span class="code r">NO19a</span> <b>48 pt rechts, Klammer mit Zahl</b> <span class="rec">Empfehlung</span> <span class="same">heute</span></p>
+<div class="phone crop s"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="list"><div class="card"><div class="b"><div class="t">Grundriss neue Wohnung <small>⌕ 2</small></div><div class="p">Vom Makler, Stand 12.11. Nische im Flur 92 cm.</div><div class="f">Gestern</div></div><span class="thumb"></span></div><div class="card"><div class="b"><div class="t">Fragen an Vermieter</div><div class="p">Nebenkosten, Kellerabteil</div><div class="f">12.11.</div></div></div></div>
+</div></div>
+<p class="pc"><b>Grund:</b> Das kleine Bild hilft beim Wiederfinden, ohne die Zeilenhöhe zu ändern; die Liste bleibt ruhig.</p>
+</div>
+<div>
+<p class="label"><span class="code">NO19b</span> <b>Kein Bild, nur Symbole</b></p>
+<div class="phone crop s"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="list"><div class="card"><div class="b"><div class="t">Grundriss neue Wohnung <small>▨ 1 · ⌕ 2</small></div><div class="p">Vom Makler, Stand 12.11. Nische im Flur 92 cm.</div><div class="f">Gestern</div></div></div><div class="card"><div class="b"><div class="t">Fragen an Vermieter</div><div class="p">Nebenkosten, Kellerabteil</div><div class="f">12.11.</div></div></div></div>
+</div></div>
+<p class="pc">Am sparsamsten; sinnvoll nur, wenn Bilder in privaten Ordnern nicht in der Liste erscheinen sollen. Das lässt sich mit a verbinden: in gesperrten Ordnern (NO10c) kein Vorschaubild.</p>
+</div>
+<div>
+<p class="label"><span class="code">NO19c</span> <b>Großes Bild über der Karte</b></p>
+<div class="phone crop s"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="list"><div class="card" style="display:block"><div class="img" style="height:110px;margin:0 0 8px"></div><div class="t">Grundriss neue Wohnung <small>⌕ 2</small></div><div class="f">Gestern</div></div></div>
+</div></div>
+<p class="pc">Schön für Rezepte, macht gemischte Listen aber unruhig und halbiert die Zahl sichtbarer Notizen.</p>
+</div>
+</div>
+
+<!-- ====================================================================== EINKAUF -->
+<h2 class="part">Einkaufsliste und Rezept (#156, #150)</h2>
+
+<h2><span class="area">EK1</span> Sammelaktionen: Wortlaut und Reihenfolge · <span class="area">EK2</span> Rückfragen</h2>
+<p class="lead">Heute stehen im Menü „⋯“ fünf Einträge ohne Trennung; beide Löschaktionen fragen nach und nennen die Zahl („5 erledigte Artikel löschen?“, „Sie verschwinden auch aus Apple Erinnerungen.“).</p>
+<div class="grid">
+<div>
+<p class="label"><span class="code">EK1a</span> <b>Fünf Einträge in einer Gruppe</b> <span class="same">heute</span></p>
+<div class="phone crop"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="nav"><span class="back">‹ Aufgaben</span><span class="r"><span class="gb glass">⋯</span></span></div>
+<div class="menu glass"><div>Mit ChatGPT sortieren <span>✦</span></div><div>Rezept hinzufügen … <span>⑂</span></div><div>Kategorien verwalten <span>☰</span></div><div class="x">Alle erledigten löschen <span>🗑</span></div><div class="x">Liste leeren <span>🗑</span></div></div>
+</div></div>
+<p class="pc">Zwei rote Einträge direkt untereinander, die unterschiedlich viel löschen; „Alle erledigten löschen“ ist sperrig.</p>
+</div>
+<div>
+<p class="label"><span class="code r">EK1b</span> <b>Drei Gruppen, Zahl im Eintrag</b> <span class="rec">Empfehlung</span></p>
+<div class="phone crop"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="nav"><span class="back">‹ Aufgaben</span><span class="r"><span class="gb glass">⋯</span></span></div>
+<div class="menu glass"><div>Rezept hinzufügen … <span>⑂</span></div><div class="gap">Mit ChatGPT sortieren <span>✦</span></div><div class="gap">Kategorien verwalten <span>☰</span></div><div class="new">Erledigte entfernen (5) <span>✓</span></div><div class="x new">Liste leeren (17) … <span>🗑</span></div></div>
+</div></div>
+<p class="pc"><b>Grund:</b> Hinzufügen, Ordnen und Aufräumen sind getrennt, die Zahl sagt vor dem Tippen, was betroffen ist, und nur die Aktion mit dem größeren Schaden ist rot. Ohne erledigte Artikel ist „Erledigte entfernen“ grau statt einer Meldung danach.</p>
+</div>
+<div>
+<p class="label"><span class="code">EK1c</span> <b>Untermenü „Aufräumen“</b></p>
+<div class="phone crop"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="nav"><span class="back">‹ Aufgaben</span><span class="r"><span class="gb glass">⋯</span></span></div>
+<div class="menu glass"><div>Rezept hinzufügen … <span>⑂</span></div><div>Mit ChatGPT sortieren <span>✦</span></div><div>Kategorien verwalten <span>☰</span></div><div class="new">Aufräumen <span>›</span></div></div>
+<div class="menu glass" style="width:230px"><div>Erledigte entfernen (5)</div><div class="x">Liste leeren (17) …</div></div>
+</div></div>
+<p class="pc">Schützt vor Fehltipps, kostet aber bei der häufigen Aktion „Erledigte entfernen“ jedes Mal einen Tipp mehr.</p>
+</div>
+</div>
+<div class="grid" style="margin-top:22px">
+<div>
+<p class="label"><span class="code r">EK2a</span> <b>Rückfrage bei beiden</b> <span class="rec">Empfehlung</span> <span class="same">heute</span></p>
+<div class="phone crop s sh"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="fs" style="margin-top:120px;text-align:center"><div class="fr" style="display:block;color:var(--sub);font-size:12.5px;line-height:1.4"><b style="color:var(--text);font-size:13.5px">5 erledigte Artikel entfernen?</b><br>Sie verschwinden auch aus Apple Erinnerungen.</div><div class="fr x" style="justify-content:center;font-size:16px">Entfernen</div></div>
+<div class="fs"><div class="fr a" style="justify-content:center;font:600 16px system-ui">Abbrechen</div></div>
+</div></div>
+<p class="pc"><b>Grund:</b> Die Artikel werden in Apple Erinnerungen gelöscht; ein „Rückgängig“ müsste sie neu anlegen und verlöre dabei Reihenfolge und Erledigt-Zeitpunkt. Wortlaut angepasst an EK1b: „entfernen“ für Erledigte, „leeren“ für alles.</p>
+</div>
+<div>
+<p class="label"><span class="code">EK2b</span> <b>Nur „Liste leeren“ fragt</b></p>
+<div class="phone crop s"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="list"><div class="tl"><span class="ck"></span><span class="tx">Haferflocken</span><span class="ch">500 g</span></div><div class="tl"><span class="ck"></span><span class="tx">Zitronen</span><span class="ch">2</span></div></div>
+<div class="undo glass"><b style="font-weight:400">5 Erledigte entfernt</b><span>Rückgängig</span></div>
+</div></div>
+<p class="pc">Schneller, setzt aber ein verlässliches „Rückgängig“ über Erinnerungen voraus (siehe Grund bei a). Erst sinnvoll, wenn das technisch sauber gelöst ist.</p>
+</div>
+</div>
+
+<h2><span class="area">EK3</span> Rezept: Eingabeblatt · <span class="area">EK4</span> Ergebnisliste</h2>
+<p class="lead">Heute: oben die Frage „Was soll mit dem Rezept geschehen?“ (Zutaten auf die Einkaufsliste / Nur als Rezept speichern), darunter das Segment Text, Foto, Link, Notiz und der Knopf „Zutaten holen“ bzw. „Rezept holen“. Die Ergebnisliste hat zwei Stepper für Portionen, eine Auswahlliste und den Schalter „Auch als Rezept-Notiz sichern“.</p>
+<div class="grid">
+<div>
+<p class="label"><span class="code">EK3a</span> <b>Zweck zuerst</b> <span class="same">heute</span></p>
+<div class="phone crop l sh"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="bar"><span class="l">Abbrechen</span>Rezept hinzufügen</div>
+<div class="fh">Was soll mit dem Rezept geschehen?</div>
+<div class="fs"><div class="fr">Zutaten auf die Einkaufsliste <span style="color:var(--blue)">✓</span></div><div class="fr">Nur als Rezept speichern</div></div>
+<div class="ff">Du wählst die Zutaten aus und kannst das Rezept zusätzlich als Notiz im Ordner „Rezepte“ sichern.</div>
+<div class="seg2" style="margin-top:6px"><span>Text</span><span>Foto</span><span class="on">Link</span><span>Notiz</span></div>
+<div class="fh">Link zum Rezept</div>
+<div class="fs"><div class="fr ph">https://…</div><div class="fr a">Einsetzen</div></div>
+<div class="ff">Tagwerk lädt die Seite erst, wenn du „Zutaten holen“ tippst, und sendet nur den gelesenen Text, nicht die Adresse.</div>
+<span class="big">Zutaten holen</span>
+</div></div>
+<p class="pc">Die erste Entscheidung steht vor der eigentlichen Eingabe, und der Knopftext wechselt je nach Zweck.</p>
+</div>
+<div>
+<p class="label"><span class="code r">EK3b</span> <b>Quelle zuerst, Zweck als zwei Knöpfe</b> <span class="rec">Empfehlung</span></p>
+<div class="phone crop l sh"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="bar"><span class="l">Abbrechen</span>Rezept hinzufügen</div>
+<div class="seg2"><span>Text</span><span>Foto</span><span class="on">Link</span><span>Notiz</span></div>
+<div class="fh">Link zum Rezept</div>
+<div class="fs"><div class="fr">chefkoch.de/rezepte/linsen-dal</div><div class="fr a">Einsetzen</div></div>
+<div class="ff">Tagwerk lädt die Seite erst beim Tippen auf einen der Knöpfe und sendet nur den gelesenen Text, nicht die Adresse.</div>
+<span class="big" style="box-shadow:inset 3px 0 0 #ffd60a">Zutaten auf die Einkaufsliste</span>
+<span class="big s" style="box-shadow:inset 3px 0 0 #ffd60a">Nur als Rezept speichern</span>
+<div class="ff" style="margin-top:8px">Beides legt auf Wunsch eine Notiz im Ordner „Rezepte“ an.</div>
+</div></div>
+<p class="pc"><b>Grund:</b> Man gibt zuerst ein, was man hat, und entscheidet mit dem letzten Tipp, was daraus wird; das spart einen Abschnitt und einen wechselnden Knopftext. Kommt das Blatt aus der Teilen-Erweiterung oder aus einer Rezept-Notiz, ist die Quelle schon gesetzt und es bleiben nur die zwei Knöpfe.</p>
+</div>
+<div>
+<p class="label"><span class="code">EK3c</span> <b>Quellen als Kacheln</b></p>
+<div class="phone crop l sh"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="bar"><span class="l">Abbrechen</span>Rezept hinzufügen</div>
+<div class="tiles"><div class="tile"><i><span>¶</span></i>Text einfügen</div><div class="tile"><i><span>▨</span></i>Fotos</div><div class="tile"><i><span>⛓</span></i>Link</div><div class="tile"><i><span>≡</span></i>Aus Notiz</div></div>
+<div class="ff">Fotos: bis zu 6 Seiten, die zusammen als ein Rezept gelesen werden.</div>
+</div></div>
+<p class="pc">Freundlicher Einstieg, aber ein Bildschirm mehr; mit eingefügtem Link in der Zwischenablage ist man bei b sofort fertig.</p>
+</div>
+</div>
+<div class="grid" style="margin-top:22px">
+<div>
+<p class="label"><span class="code">EK4a</span> <b>Eine Liste, Hinweis in der Unterzeile</b> <span class="same">heute</span></p>
+<div class="phone crop l sh"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="bar"><span class="l">Verwerfen</span>Linsen-Dal</div>
+<div class="fh">Portionen</div>
+<div class="fs"><div class="fr">Rezept für <span class="v">4 − ＋</span></div><div class="fr">Ich koche für <span class="v">2 − ＋</span></div></div>
+<div class="fs" style="margin-top:8px"><div class="fr"><span class="ck done"></span><span class="tx">Rote Linsen <span style="color:var(--sub)">125 g</span><small>Vorrat</small></span></div><div class="fr"><span class="ck done"></span><span class="tx">Kokosmilch <span style="color:var(--sub)">200 ml</span><small>Konserven</small></span></div><div class="fr"><span class="ck done"></span><span class="tx">Zwiebeln <span style="color:var(--sub)">1</span><small>Obst &amp; Gemüse · schon auf der Liste</small></span></div><div class="fr"><span class="ck done"></span><span class="tx">Ingwer <span style="color:var(--sub)">10 g</span><small>Obst &amp; Gemüse</small></span></div></div>
+<div class="fs" style="margin-top:8px"><div class="fr">Auch als Rezept-Notiz sichern <span class="tog on"></span></div></div>
+<span class="big">4 Artikel hinzufügen</span>
+</div></div>
+<p class="pc">„schon auf der Liste“ steht klein in der Unterzeile, der Artikel ist trotzdem angehakt; was beim Hinzufügen passiert, bleibt offen.</p>
+</div>
+<div>
+<p class="label"><span class="code r">EK4b</span> <b>Eigener Abschnitt „Schon auf der Liste“, Menge antippbar</b> <span class="rec">Empfehlung</span></p>
+<div class="phone crop l sh"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="bar"><span class="l">Verwerfen</span>Linsen-Dal</div>
+<div class="fs"><div class="fr new">Portionen <span class="v" style="color:var(--text)">4 im Rezept → <b>2</b> − ＋</span></div></div>
+<div class="fh">Neu · 3</div>
+<div class="fs"><div class="fr"><span class="ck done"></span><span class="tx">Rote Linsen<small>Vorrat</small></span><span class="v new" style="color:var(--blue)">125 g</span></div><div class="fr"><span class="ck done"></span><span class="tx">Kokosmilch<small>Konserven</small></span><span class="v" style="color:var(--blue)">200 ml</span></div><div class="fr"><span class="ck done"></span><span class="tx">Ingwer<small>Obst &amp; Gemüse</small></span><span class="v" style="color:var(--blue)">10 g</span></div></div>
+<div class="fh">Schon auf der Liste · 1</div>
+<div class="fs"><div class="fr new"><span class="ck"></span><span class="tx">Zwiebeln<small>auf der Liste: 2 · anhaken erhöht auf 3</small></span><span class="v" style="color:var(--blue)">1</span></div></div>
+<div class="fs" style="margin-top:8px"><div class="fr">Auch als Rezept-Notiz sichern <span class="tog on"></span></div></div>
+<span class="big">3 Artikel hinzufügen</span>
+</div></div>
+<p class="pc"><b>Grund:</b> Vorhandenes ist abgewählt und sagt, was Anhaken bewirkt; so entstehen keine Doppelten und keine stillen Mengenänderungen. Ein Tipp auf die blaue Menge öffnet ein kleines Feld zum Ändern. Portionen in einer Zeile statt zwei; „im Rezept“ wird nur editierbar, wenn das Rezept keine Zahl nennt.</p>
+</div>
+<div>
+<p class="label"><span class="code">EK4c</span> <b>Stepper je Zeile</b></p>
+<div class="phone crop l sh"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="bar"><span class="l">Verwerfen</span>Linsen-Dal</div>
+<div class="fs"><div class="fr"><span class="ck done"></span><span class="tx">Rote Linsen<small>Vorrat</small></span><span class="v">− 125 g ＋</span></div><div class="fr"><span class="ck done"></span><span class="tx">Kokosmilch<small>Konserven</small></span><span class="v">− 200 ml ＋</span></div><div class="fr"><span class="ck"></span><span class="tx">Zwiebeln<small>schon auf der Liste</small></span><span class="v">− 1 ＋</span></div></div>
+</div></div>
+<p class="pc">Mengen sind sofort änderbar, aber Schritte bei „125 g“ oder „1 Prise“ sind unklar, und die Zeilen werden voll.</p>
+</div>
+</div>
+
+<!-- ====================================================================== TAGEBUCH -->
+<h2 class="part">Tagebuch mit Gott (#182)</h2>
+
+<h2><span class="area">TB1</span> Einstieg im Tagesabschluss</h2>
+<p class="lead">Heute stehen im Tagesabschluss nach dem Brain Dump zwei einzelne Zeilen: „Tagebuch schreiben“ (mit Fußnote) und „Bible Study starten“. Ob heute schon geschrieben wurde, sieht man nicht.</p>
+<div class="grid">
+<div>
+<p class="label"><span class="code">TB1a</span> <b>Zwei einzelne Zeilen</b> <span class="same">heute</span></p>
+<div class="phone crop sh"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="bar">Tagesabschluss<span>Fertig</span></div>
+<div class="fh">Brain Dump</div>
+<div class="fs"><div class="fr ph">Schreib auf, was in deinen Kopf kommt. Sortier deine Gedanken.</div></div>
+<div class="fs" style="margin-top:14px"><div class="fr">▣ Tagebuch schreiben <span class="v">›</span></div></div>
+<div class="ff">Der Eintrag bleibt auf deinem iPhone und geht nie an ChatGPT.</div>
+<div class="fs" style="margin-top:6px"><div class="fr">▤ Bible Study starten <span class="v">›</span></div></div>
+</div></div>
+<p class="pc">Zwei verwandte Dinge in zwei Blöcken, ohne Zustand.</p>
+</div>
+<div>
+<p class="label"><span class="code r">TB1b</span> <b>Abschnitt „Zeit mit Gott“ mit Zustand</b> <span class="rec">Empfehlung</span></p>
+<div class="phone crop sh"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="bar">Tagesabschluss<span>Fertig</span></div>
+<div class="fh">Brain Dump</div>
+<div class="fs"><div class="fr ph">Schreib auf, was in deinen Kopf kommt. Sortier deine Gedanken.</div></div>
+<div class="fh">Zeit mit Gott</div>
+<div class="fs"><div class="fr new"><span class="tx">▣ Tagebuch schreiben<small style="color:var(--green)">✓ Heute geschrieben · 21:40</small></span><span class="v">›</span></div><div class="fr new"><span class="tx">▤ Bible Study starten<small>Zuletzt: Römer 3,21–31 · Dienstag</small></span><span class="v">›</span></div></div>
+<div class="ff">Beides bleibt auf deinem iPhone und geht nie an ChatGPT.</div>
+</div></div>
+<p class="pc"><b>Grund:</b> Eine Überschrift, eine Fußnote, und die Unterzeile zeigt, ob der Tag schon einen Eintrag hat; nach dem Schreiben heißt die Zeile „Tagebuch öffnen“. Die Überschrift ist ein Vorschlag, alternativ „Persönlich“.</p>
+</div>
+<div>
+<p class="label"><span class="code">TB1c</span> <b>Feld direkt im Blatt</b></p>
+<div class="phone crop sh"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="bar">Tagesabschluss<span>Fertig</span></div>
+<div class="fh">Tagebuch mit Gott</div>
+<div class="fs"><div class="fr ph" style="min-height:120px">Allgemeine Stimmung
+Wie geht es mir im Moment grundsätzlich?</div></div>
+<div class="ff">Bleibt auf deinem iPhone.</div>
+</div></div>
+<p class="pc">Kein Wechsel in einen Editor, aber das Blatt wird sehr lang, und Brain Dump (kann an ChatGPT gehen) und Tagebuch (nie) stünden als gleich aussehende Felder untereinander.</p>
+</div>
+</div>
+
+<h2><span class="area">TB2</span> Vorlage als Text oder als Felder · <span class="area">TB3</span> Verhältnis zur Gedanken-Notiz</h2>
+<p class="lead">Heute ist die Vorlage reiner Text mit drei Überschriften: „Allgemeine Stimmung“ (mit Leitfrage), „Haupterlebnisse des heutigen Tages“, „Tagebuch“. Ein unberührter Eintrag wird beim Schließen wieder entfernt.</p>
+<div class="grid">
+<div>
+<p class="label"><span class="code r">TB2a</span> <b>Text mit drei Überschriften</b> <span class="rec">Empfehlung</span> <span class="same">heute</span></p>
+<div class="phone crop"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="nav"><span class="back">‹ Tagebuch</span><span class="c">Fr., 20. Nov.</span><span class="r"><span class="gb glass">⋯</span></span></div>
+<div class="note"><h5 style="margin-top:0">Allgemeine Stimmung</h5><p style="color:var(--sub)">Wie geht es mir im Moment grundsätzlich?</p><p>Müde, aber ruhig.▏</p><h5>Haupterlebnisse des heutigen Tages</h5><p style="color:var(--sub)">&nbsp;</p><h5>Tagebuch</h5></div>
+</div></div>
+<p class="pc"><b>Grund:</b> Text bleibt mit dem Notion-Import, der Suche und der Sicherung deckungsgleich und zwingt keine Reihenfolge auf. Mit NO15b und NO16b sind die Überschriften beim Schreiben erkennbar; die Leitfrage erscheint grau und verschwindet nicht.</p>
+</div>
+<div>
+<p class="label"><span class="code">TB2b</span> <b>Drei Felder</b></p>
+<div class="phone crop sh"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="bar"><span class="l">Schließen</span>Fr., 20. Nov.<span>Fertig</span></div>
+<div class="fh">Allgemeine Stimmung</div><div class="fs"><div class="fr ph">Wie geht es mir im Moment grundsätzlich?</div></div>
+<div class="fh">Haupterlebnisse des heutigen Tages</div><div class="fs"><div class="fr ph">&nbsp;</div></div>
+<div class="fh">Tagebuch</div><div class="fs"><div class="fr ph" style="min-height:90px">&nbsp;</div></div>
+</div></div>
+<p class="pc">Geführter, aber importierte Einträge aus Notion haben oft andere oder keine Abschnitte und müssten beim Öffnen in Felder zerlegt werden; freie Formatierung und Anhänge je Feld werden schwierig.</p>
+</div>
+<div>
+<p class="label"><span class="code">TB2c</span> <b>Text, Stimmung als Auswahl</b></p>
+<div class="phone crop"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="nav"><span class="back">‹ Tagebuch</span><span class="c">Fr., 20. Nov.</span><span class="r"><span class="gb glass">⋯</span></span></div>
+<div style="margin:0 8px 8px"><span class="pill">schwer</span><span class="pill">müde</span><span class="pill on">ruhig</span><span class="pill">dankbar</span><span class="pill">froh</span></div>
+<div class="note"><h5 style="margin-top:0">Haupterlebnisse des heutigen Tages</h5><p style="color:var(--sub)">&nbsp;</p><h5>Tagebuch</h5></div>
+</div></div>
+<p class="pc">Macht die Stimmung auswertbar (Verlauf), reduziert sie aber auf ein Wort und braucht ein neues Feld am Eintrag. Nur sinnvoll, wenn ein Stimmungsverlauf gewünscht ist.</p>
+</div>
+</div>
+<div class="box"><h3>TB3 · Verhältnis zur Gedanken-Notiz: getrennt lassen (a, wie heute)</h3>
+<ul>
+<li><b>a Getrennt (Empfehlung):</b> Der Brain Dump des Abends ist Arbeitsmaterial (kann zu Aufgaben werden, kann auf Wunsch an ChatGPT gehen); das Tagebuch ist privat und verlässt das iPhone nie. <b>Grund:</b> Die Trennung ist zugleich die Datenschutzgrenze und sollte sichtbar bleiben.</li>
+<li><b>b „Ins Tagebuch übernehmen“:</b> Aktion im Menü der Brain-Dump-Notiz, die den Text unter „Tagebuch“ anhängt. Klein und ungefährlich (Richtung nur vom Offenen ins Private), aber ein seltener Fall.</li>
+<li><b>c Zusammenlegen:</b> Ein Feld für beides. Nicht empfohlen, weil dann entweder das Tagebuch sendbar oder der Brain Dump nicht mehr auswertbar wäre.</li>
+</ul></div>
+
+<h2><span class="area">TB4</span> Ablauf des Notion-Imports · <span class="area">TB5</span> Konflikte</h2>
+<p class="lead">Heute: Einstellungen › Notizen › „Aus Notion importieren“. Eine Seite mit Segment (Tagebuch mit Gott / Bible Study), „Export-Ordner wählen“, langer Anleitung im Fußtext, dann Vorschau mit Zahlen und „Importieren“. Bei einem Tag mit vorhandenem Eintrag wird der importierte Text hinter einer Trennlinie angehängt.</p>
+<div class="grid">
+<div>
+<p class="label"><span class="code">TB4a</span> <b>Eine Seite in den Einstellungen</b> <span class="same">heute</span></p>
+<div class="phone crop l"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="nav"><span class="back">‹ Notizen</span><span class="c">Aus Notion importieren</span><span></span></div>
+<div class="list"><div class="tl" style="display:block"><div class="seg2" style="margin:0"><span class="on">Tagebuch mit Gott</span><span>Bible Study</span></div></div><div class="tl a">▱ Export-Ordner wählen</div></div>
+<div class="foot1">Exportiere in Notion mit „Markdown &amp; CSV“, entpacke die Datei in der Dateien-App (Tipp auf die ZIP-Datei) und wähle dann den entpackten Ordner. Eine ZIP-Datei liest Tagwerk nicht.</div>
+<div class="list"><div class="tl" style="color:var(--sub);font-size:12.5px">Importiert werden die Seiten, die in Notion zu „Tagebuch mit Gott“ gehören. Der Text bleibt auf deinem iPhone.</div></div>
+</div></div>
+<p class="pc">Die Anleitung steht als Fließtext unter dem Knopf, und der Import ist tief in den Einstellungen versteckt.</p>
+</div>
+<div>
+<p class="label"><span class="code r">TB4b</span> <b>Drei Schritte mit Anzeige</b> <span class="rec">Empfehlung</span></p>
+<div class="phone crop l sh"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="bar"><span class="l">Schließen</span>Aus Notion importieren</div>
+<div class="dots"><i class="on"></i><i class="on"></i><i></i></div>
+<div class="fh">2 · Vorschau</div>
+<div class="fs"><div class="fr">Einträge im Export <span class="v">212</span></div><div class="fr">Zeitraum <span class="v">3. März 2024 – 14. Nov. 2026</span></div><div class="fr">Neu <span class="v" style="color:var(--green)">198</span></div><div class="fr new">Tag hat schon einen Eintrag <span class="v" style="color:var(--orange)">9 ›</span></div><div class="fr">Schon importiert <span class="v">5</span></div><div class="fr new">Ohne erkennbares Datum <span class="v">3 ›</span></div></div>
+<div class="ff">Gibt es für einen Tag schon einen Text, wird der importierte Text darunter angehängt, hinter einer Trennlinie. Nichts wird überschrieben.</div>
+<span class="big">207 Einträge importieren</span><span class="big s">Anderen Ordner wählen</span>
+</div></div>
+<p class="pc"><b>Grund:</b> Schritt 1 (Anleitung als drei nummerierte Punkte mit „Ordner wählen“), Schritt 2 (Vorschau), Schritt 3 (Ergebnis mit „Zum Tagebuch“) passen je auf einen Bildschirm. Einstieg zusätzlich im leeren Ordner „Tagebuch mit Gott“ bzw. „Bible Study“ als Zeile „Aus Notion importieren“; dort ist das Ziel schon gewählt, das Segment entfällt.</p>
+</div>
+<div>
+<p class="label"><span class="code r">TB5a</span> <b>Konflikte: anhängen, mit Liste der Tage</b> <span class="rec">Empfehlung</span></p>
+<div class="phone crop l sh"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="bar"><span class="l">‹ Vorschau</span>9 Tage mit Eintrag</div>
+<div class="ff" style="font-size:12.5px">An diesen Tagen wird der Text aus Notion unter deinem Eintrag angehängt.</div>
+<div class="fs"><div class="fr"><span class="tx">Samstag, 14. November 2026<small>Tagwerk: „Müde, aber ruhig …“ · Notion: „Heute im Hauskreis …“</small></span></div><div class="fr"><span class="tx">Donnerstag, 12. November 2026<small>Tagwerk: „Viel Unruhe wegen …“ · Notion: „Psalm 23 gelesen …“</small></span></div><div class="fr"><span class="tx">Montag, 9. November 2026<small>Tagwerk: „Guter Start …“ · Notion: „Gebet für …“</small></span></div></div>
+</div></div>
+<p class="pc"><b>Grund:</b> Anhängen verliert nie Text und braucht keine Entscheidung je Tag; die Liste macht vorher sichtbar, welche Tage betroffen sind. <b>TB5b</b> (je Tag fragen: anhängen, ersetzen, überspringen) lohnt bei neun Tagen nicht und erlaubt Überschreiben. <b>TB5c</b> (überspringen) lässt Notion-Text stillschweigend weg.</p>
+</div>
+</div>
+
+<!-- ====================================================================== BIBLE STUDY -->
+<h2 class="part">Bible Study (#186)</h2>
+
+<h2><span class="area">BS1</span> Ablauf einer Sitzung</h2>
+<p class="lead">Heute: „Bible Study starten“ öffnet ein Blatt (Buch, Stelle), dann die Notiz des Buches mit einem neuen Abschnitt „19.11.2026 · 3,21–31“. Abgeschlossen wird über „⋯ › Bible Study abschließen“ oder in der Ordnerliste über „Abschließen“. Erst das Abschließen erfüllt die Gewohnheit.</p>
+<div class="grid">
+<div>
+<p class="label"><span class="code">BS1a</span> <b>Abschließen im Menü</b> <span class="same">heute</span></p>
+<div class="phone crop"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="nav"><span class="back">‹ Bible Study</span><span class="c">Römer</span><span class="r"><span class="gb glass">⋯</span></span></div>
+<div class="menu glass"><div>Anheften <span>⚲</span></div><div>Bible Study abschließen <span>✓</span></div><div>Teilen <span>⇪</span></div><div class="x">Löschen <span>🗑</span></div></div>
+<div class="note"><h5>20.11.2026 · 3,21–31</h5><p>Gerechtigkeit ohne Gesetz …▏</p></div>
+</div></div>
+<p class="pc">Der Schritt, der die Gewohnheit erfüllt, liegt im Menü; wer nur zurückgeht, lässt die Sitzung offen und merkt es nicht.</p>
+</div>
+<div>
+<p class="label"><span class="code r">BS1b</span> <b>Sitzungsleiste in der Notiz</b> <span class="rec">Empfehlung</span></p>
+<div class="phone crop"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="nav"><span class="back">‹ Bible Study</span><span class="c">Römer</span><span class="r"><span class="gb glass">⋯</span></span></div>
+<div class="sessbar"><b>Sitzung läuft · Römer 3,21–31</b><span>Abschließen</span></div>
+<div class="note"><h5 style="color:var(--sub)">17.11.2026 · 3,1–20</h5><p style="color:var(--sub)">Alle sind schuldig; das Gesetz zeigt …</p><h5>20.11.2026 · 3,21–31</h5><p>Gerechtigkeit ohne Gesetz …▏</p></div>
+</div></div>
+<p class="pc"><b>Grund:</b> Die Leiste zeigt, dass eine Sitzung offen ist, und „Abschließen“ ist ein Tipp; danach wird sie kurz grün („Sitzung abgeschlossen ✓“) und verschwindet. Beim Zurückgehen mit offener Sitzung bleibt die Sitzung offen und steht in der Ordnerliste wie heute. Ältere Abschnitte bleiben lesbar darüber.</p>
+</div>
+<div>
+<p class="label"><span class="code">BS1c</span> <b>Eigener Bildschirm mit Feldern</b></p>
+<div class="phone crop sh"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="bar"><span class="l">Später</span>Römer 3,21–31<span>Abschließen</span></div>
+<div class="fh">Was steht da?</div><div class="fs"><div class="fr ph">Beobachtung</div></div>
+<div class="fh">Was bedeutet es?</div><div class="fs"><div class="fr ph">Auslegung</div></div>
+<div class="fh">Was heißt das für mich?</div><div class="fs"><div class="fr ph">Anwendung</div></div>
+</div></div>
+<p class="pc">Führt durch eine Methode, legt sie aber fest; die Buchnotiz als fortlaufender Text (und der Notion-Import „je Buch eine Notiz“) passt nicht mehr dazu.</p>
+</div>
+</div>
+
+<h2><span class="area">BS2</span> Buchauswahl</h2>
+<div class="grid">
+<div>
+<p class="label"><span class="code">BS2a</span> <b>Auswahlliste auf eigener Seite</b> <span class="same">heute</span></p>
+<div class="phone crop s sh"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="bar"><span class="l">Abbrechen</span>Bible Study starten<span>Starten</span></div>
+<div class="fs"><div class="fr">Buch <span class="v">Römer ›</span></div><div class="fr ph">Stelle, z. B. 3,21-31</div></div>
+<div class="ff">Der Text deiner Notizen bleibt auf deinem iPhone und geht nie an ChatGPT.</div>
+</div></div>
+<p class="pc">Das zuletzt gelesene Buch ist vorgewählt (gut). Ein anderes Buch heißt: Seite öffnen, durch 66 Einträge scrollen.</p>
+</div>
+<div>
+<p class="label"><span class="code r">BS2b</span> <b>„Zuletzt“ als Chips, Liste mit Suche</b> <span class="rec">Empfehlung</span></p>
+<div class="phone crop sh"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="bar"><span class="l">Abbrechen</span>Bible Study starten<span>Starten</span></div>
+<div class="fh">Buch</div>
+<div style="margin:0 4px 4px"><span class="pill on">Römer</span><span class="pill">Psalmen</span><span class="pill">Johannes</span><span class="pill" style="box-shadow:inset 3px 0 0 #ffd60a">Anderes …</span></div>
+<div class="fh">Stelle</div>
+<div class="fs"><div class="fr new"><span class="tx">3,21–31<small>Zuletzt in Römer: 3,1–20 am 17.11.</small></span></div></div>
+<div class="ff">Der Text deiner Notizen bleibt auf deinem iPhone und geht nie an ChatGPT.</div>
+<span class="big">Sitzung starten</span>
+</div></div>
+<p class="pc"><b>Grund:</b> Die letzten drei Bücher decken fast jede Sitzung ab, und die Unterzeile sagt, wo man aufgehört hat. „Anderes …“ öffnet die Liste Altes/Neues Testament mit Suchfeld. Der Knopf unten ist leichter zu treffen als „Starten“ in der Leiste.</p>
+</div>
+<div>
+<p class="label"><span class="code">BS2c</span> <b>Raster der Kürzel</b></p>
+<div class="phone crop sh"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="bar"><span class="l">Abbrechen</span>Buch wählen</div>
+<div class="fh">Neues Testament</div>
+<div style="display:grid;grid-template-columns:repeat(6,1fr);gap:6px;font:600 12px system-ui;text-align:center">
+<span class="pill" style="margin:0;padding:8px 0">Mt</span><span class="pill" style="margin:0;padding:8px 0">Mk</span><span class="pill" style="margin:0;padding:8px 0">Lk</span><span class="pill" style="margin:0;padding:8px 0">Joh</span><span class="pill" style="margin:0;padding:8px 0">Apg</span><span class="pill on" style="margin:0;padding:8px 0">Röm</span><span class="pill" style="margin:0;padding:8px 0">1Kor</span><span class="pill" style="margin:0;padding:8px 0">2Kor</span><span class="pill" style="margin:0;padding:8px 0">Gal</span><span class="pill" style="margin:0;padding:8px 0">Eph</span><span class="pill" style="margin:0;padding:8px 0">Phil</span><span class="pill" style="margin:0;padding:8px 0">Kol</span></div>
+</div></div>
+<p class="pc">Schnell für Geübte. Setzt Kürzel voraus, die im Code nicht vorliegen (<code>BibleBooks</code> hat Namen), und ist mit großer Schrift eng.</p>
+</div>
+</div>
+
+<h2><span class="area q">BS3</span> Leseplan · <span class="area q">BS4</span> Erinnerung · <span class="area">BS5</span> Action Items als Aufgaben · <span class="area">BS6</span> Zeile „Bible Study starten“</h2>
+<div class="grid">
+<div>
+<p class="label"><span class="code r">BS5b</span> <b>„Als Aufgabe anlegen“ an der Checkbox</b> <span class="rec">Empfehlung</span></p>
+<div class="phone crop"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="nav"><span class="back">‹ Bible Study</span><span class="c">Römer</span><span class="r"><span class="gb glass">⋯</span></span></div>
+<div class="note"><h5 style="margin-top:0">20.11.2026 · 3,21–31</h5><p>Gerechtigkeit ohne Gesetz, durch Glauben.</p><div class="cb"><span class="ck sq"></span>Mit Jonas über Vers 23 sprechen</div></div>
+<div class="menu glass" style="align-self:flex-start;margin-top:6px"><div class="new">Als Aufgabe anlegen <span>＋</span></div><div>Abhaken <span>✓</span></div></div>
+<div class="hint"><b>Hinweis im Blatt „Neue Aufgabe“:</b> Der Titel wird eine normale Aufgabe und ist dann nicht mehr privat (Erinnerungen, Assistent).</div>
+</div></div>
+<p class="pc"><b>Grund:</b> Der Wunsch entsteht an einer konkreten Zeile, und eine bewusste Aktion hält die Grenze „Bible Study verlässt das iPhone nie“ sichtbar. Halten auf einer Checkbox-Zeile in der Ansicht; die Zeile bekommt danach „→ Aufgabe“ als graue Marke. <b>BS5a</b> (gar nicht) ist die Rückfallebene; <b>BS5c</b> (jede Checkbox wird automatisch Aufgabe) würde private Zeilen ungefragt nach außen tragen.</p>
+</div>
+<div>
+<p class="label"><span class="code r">BS6c</span> <b>Ort der Zeile einstellbar</b> <span class="rec">Empfehlung</span></p>
+<div class="phone crop sh"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="bar"><span class="l">‹ Einstellungen</span>Routinen</div>
+<div class="fh">Bible Study</div>
+<div class="fs"><div class="fr new">Anbieten im <span class="v">Tagesabschluss ›</span></div><div class="fr new">Erinnerung <span class="tog on"></span></div><div class="fr new">Uhrzeit <span class="v">06:45</span></div></div>
+<div class="ff">„Anbieten im“: Tagesstart, Tagesabschluss, beides oder nicht anzeigen. Die Erinnerung entfällt an Tagen, an denen schon eine Sitzung abgeschlossen ist.</div>
+</div></div>
+<p class="pc"><b>Grund:</b> Wann jemand liest, ist persönlich; eine Auswahl mit vier Werten ersetzt die versteckte Regel. <b>BS6a</b> (heute im Code: immer im Tagesabschluss, nie im Tagesstart) und <b>BS6b</b> (laut Prüfnotiz in #188: nur wenn eine Gewohnheit mit dieser Quelle aktiv ist) sind beides Sonderfälle davon. Die Zeile zeigt den Zustand wie in TB1b.</p>
+</div>
+<div>
+<div class="box" style="margin-top:0"><h3>Ja/Nein-Fragen</h3>
+<ul>
+<li><b>BS3 Leseplan: nein (vorerst).</b> Grund: Ein Plan braucht Planquellen, Tagesabschnitte, Nachholen und eine Fortschrittsansicht; die Unterzeile „Zuletzt in Römer: 3,1–20“ (BS2b) deckt „wo war ich“ ohne das alles ab.</li>
+<li><b>BS4 Erinnerung zur gewohnten Zeit: ja,</b> als feste Uhrzeit unter Einstellungen › Routinen (siehe BS6c), nicht als gelernte Zeit. Grund: Eine feste Zeit ist vorhersagbar und nutzt den vorhandenen Planer der Routine-Erinnerungen; eine aus dem Verhalten abgeleitete Zeit wäre schwer zu erklären. Sie zählt zu den Routine-Erinnerungen (kommen laut heutigem Text auch in Ruhezeiten).</li>
+</ul></div>
+<div class="box warn"><h3>Widerspruch zwischen #188 und Code</h3>Die Prüfnotiz sagt, die Zeile erscheine „im Tagesstart nur, wenn eine Gewohnheit mit dieser Quelle aktiv ist“. Im Code steht sie ausschließlich im Tagesabschluss und dort immer (<code>EveningSheet.swift</code>, Kommentar „Always offered“); <code>MorningSheet.swift</code> hat keine solche Zeile. BS6 sollte deshalb vor der Umsetzung als Soll festgelegt werden.</div>
+</div>
+</div>
+
+</body>
+</html>

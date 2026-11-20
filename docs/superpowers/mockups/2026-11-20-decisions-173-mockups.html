@@ -1,0 +1,384 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tagwerk · Entscheidungen aus #173 · Mockups ZU, SU, TR, GI, AE</title>
+<style>
+  /* Mockup frame uses the host theme (with fallbacks); phone screens depict the app in iOS dark or light mode. */
+  :root { color-scheme: light dark; }
+  body { font: 14px var(--font-sans, system-ui, sans-serif); color: var(--foreground, CanvasText); margin: 16px; }
+  h1 { font-size: 20px; margin: 0 0 4px; }
+  h2 { font-size: 18px; margin: 38px 0 4px; padding-top: 16px; border-top: 1px solid rgba(128,128,128,.3); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .area { display: inline-grid; place-items: center; min-width: 34px; height: 34px; padding: 0 6px; border-radius: 9px; background: #0a84ff; color: #fff; font: 800 14px system-ui; flex-shrink: 0; box-sizing: border-box; }
+  .lead { color: var(--muted-foreground, #777); margin: 0 0 14px; line-height: 1.5; max-width: 980px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(392px, 1fr)); gap: 22px; align-items: start; }
+  .label { font: 600 13px var(--font-sans, system-ui); color: var(--muted-foreground, #777); margin: 0 0 8px 4px; }
+  .label b { color: var(--foreground, CanvasText); }
+  .code { display: inline-block; background: rgba(128,128,128,.28); color: var(--foreground, CanvasText); border-radius: 6px; padding: 1px 8px; font: 800 13px system-ui; margin-right: 4px; }
+  .code.r { background: #30d158; color: #000; }
+  .rec { background: #30d158; color: #000; font-size: 11px; font-weight: 700; padding: 1px 7px; border-radius: 99px; margin-left: 4px; }
+  .pc { font-size: 12.5px; color: var(--muted-foreground, #777); line-height: 1.5; margin: 8px 4px 0; max-width: 390px; }
+  .pc b { color: var(--foreground, CanvasText); }
+  .box { border: 1px solid rgba(48,209,88,.5); background: rgba(48,209,88,.07); border-radius: 12px; padding: 12px 16px; margin-top: 16px; line-height: 1.55; font-size: 13px; max-width: 1100px; }
+  .box h3 { margin: 0 0 6px; font-size: 14px; }
+  .box ul { margin: 4px 0 0; padding-left: 20px; }
+  .box li { margin-bottom: 3px; }
+  .box.neutral { border-color: rgba(128,128,128,.4); background: rgba(128,128,128,.07); }
+  .box.warn { border-color: rgba(255,159,10,.6); background: rgba(255,159,10,.08); }
+  code { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; background: rgba(128,128,128,.16); padding: 1px 4px; border-radius: 4px; }
+  .tablewrap { overflow-x: auto; }
+  table.sum { border-collapse: collapse; font-size: 13px; margin-top: 6px; }
+  table.sum td, table.sum th { padding: 5px 14px 5px 0; vertical-align: top; text-align: left; border-bottom: 1px solid rgba(128,128,128,.22); }
+  table.sum th { font-size: 12px; color: var(--muted-foreground, #777); }
+
+  .phone {
+    --bg: #000; --card: #1c1c1e; --card2: #2c2c2e; --sep: #38383a; --text: #fff; --sub: #8e8e93; --dim: #c7c7cc;
+    --blue: #0a84ff; --green: #30d158; --orange: #ff9f0a; --red: #ff453a; --purple: #bf5af2; --frame: #2a2a2c;
+    background: var(--bg); color: var(--text); border-radius: 40px; padding: 14px 12px 12px;
+    font: 15px -apple-system, "SF Pro Text", system-ui, sans-serif; border: 6px solid var(--frame);
+    width: 390px; max-width: 100%; box-sizing: border-box; height: 620px;
+    display: flex; flex-direction: column; position: relative; overflow: hidden;
+  }
+  .phone.light {
+    --bg: #f2f2f7; --card: #fff; --card2: #e3e3e8; --sep: #d1d1d6; --text: #000; --sub: #6c6c70; --dim: #3c3c43;
+    --blue: #007aff; --green: #34c759; --orange: #ff9500; --red: #ff3b30; --purple: #af52de; --frame: #c7c7cc;
+  }
+  /* Cropped frame: only the upper part of the screen matters. */
+  .phone.crop { height: 400px; border-bottom-left-radius: 0; border-bottom-right-radius: 0; border-bottom: 0; }
+  .status { display: flex; justify-content: space-between; font: 600 13px system-ui; padding: 0 12px 10px; flex-shrink: 0; }
+  .scr { flex: 1; min-height: 0; overflow: hidden; display: flex; flex-direction: column; gap: 8px; }
+  .bar { display: flex; justify-content: space-between; align-items: center; padding: 2px 6px 6px; font-weight: 600; }
+  .bar .l, .bar .r { color: var(--blue); font-weight: 400; }
+  .bar .r.b { font-weight: 600; }
+  .ctx { font-size: 12px; color: var(--sub); text-align: center; }
+  .me { align-self: flex-end; background: var(--blue); color: #fff; border-radius: 18px; padding: 8px 12px; max-width: 78%; }
+  .ai { align-self: flex-start; max-width: 92%; line-height: 1.4; }
+  /* Action card as built: dashed purple outline while pending */
+  .acard { background: var(--card); border: 1px dashed var(--purple); border-radius: 14px; padding: 12px; display: flex; flex-direction: column; gap: 6px; }
+  .acard .h { font-size: 12px; color: var(--purple); }
+  .acard .t { font-weight: 600; font-size: 14.5px; }
+  .acard .c { font-size: 14px; color: var(--sub); line-height: 1.35; }
+  .acard .w { font-size: 12.5px; color: var(--red); line-height: 1.35; }
+  .acard .row { display: flex; justify-content: space-between; margin-top: 4px; }
+  .btn { border-radius: 99px; padding: 7px 14px; font-size: 14px; background: var(--card2); color: var(--blue); }
+  .btn.p { background: var(--blue); color: #fff; }
+  .btn.d { background: var(--red); color: #fff; }
+  .btn.off { opacity: .4; }
+  .wide { text-align: center; border-radius: 12px; padding: 10px; background: var(--blue); color: #fff; font-weight: 600; }
+  .new { outline: 2px dashed #ffd60a; outline-offset: 2px; border-radius: 8px; }
+  .tgt { display: flex; justify-content: space-between; font-size: 13.5px; padding: 6px 8px; background: var(--card2); border-radius: 8px; }
+  .tgt.miss { color: var(--orange); }
+  .tgt span:last-child { color: var(--sub); }
+  .sec { font-size: 12px; text-transform: uppercase; color: var(--sub); padding: 6px 14px 0; }
+  .list { background: var(--card); border-radius: 12px; }
+  .list > div { display: flex; justify-content: space-between; gap: 10px; padding: 11px 14px; border-bottom: 1px solid var(--sep); }
+  .list > div:last-child { border-bottom: 0; }
+  .list .v { color: var(--sub); text-align: right; }
+  .foot { font-size: 12.5px; color: var(--sub); padding: 0 14px; line-height: 1.4; }
+  .tog { width: 46px; height: 28px; border-radius: 99px; background: var(--card2); position: relative; flex-shrink: 0; }
+  .tog::after { content: ""; position: absolute; top: 2px; left: 2px; width: 24px; height: 24px; border-radius: 50%; background: #fff; }
+  .tog.on { background: var(--green); }
+  .tog.on::after { left: 20px; }
+  .dialog { position: absolute; left: 12px; right: 12px; bottom: 12px; background: var(--card2); border-radius: 14px; overflow: hidden; text-align: center; box-shadow: 0 0 0 999px rgba(0,0,0,.45); }
+  .dialog p { margin: 0; padding: 12px 14px; font-size: 13px; color: var(--sub); border-bottom: 1px solid var(--sep); }
+  .dialog div { padding: 13px; font-size: 17px; border-bottom: 1px solid var(--sep); }
+  .dialog div.red { color: var(--red); }
+  .dialog div.blue { color: var(--blue); font-weight: 600; border-bottom: 0; }
+  .days { display: grid; grid-template-columns: 110px repeat(3, 1fr); gap: 6px; font-size: 12.5px; max-width: 720px; margin-top: 8px; }
+  .days div { padding: 6px 8px; border-radius: 8px; background: rgba(128,128,128,.14); }
+  .days .hd { background: none; font-weight: 700; }
+  .days .x { background: rgba(255,69,58,.16); text-decoration: line-through; }
+  .days .ok { background: rgba(48,209,88,.16); }
+</style>
+</head>
+<body>
+
+<h1>Tagwerk · Entscheidungen aus #173 · Mockups ZU, SU, TR, GI, AE</h1>
+<p class="lead">Anlass: Kommentar vom 20.11. in #173 (Punkte 1, 8, 10, 13, 15). Plan: <code>docs/superpowers/plans/2026-11-20-decisions-173.md</code>. Diese Datei zeigt nur, was sich sichtbar ändert. Grün markiert ist jeweils die Empfehlung, gelb gestrichelt sind neue Elemente. Bildschirme abwechselnd dunkel und hell; alle Texte deutsch, englische Fassung in den Tabellen.</p>
+
+<div class="box neutral">
+<h3>Offene Entscheidungen auf einen Blick</h3>
+<div class="tablewrap"><table class="sum">
+<tr><th>ID</th><th>Frage</th><th>Varianten</th><th>Empfehlung</th></tr>
+<tr><td><span class="code">D1</span></td><td>Form des Werkzeugs</td><td>eigenes <code>assign_task</code> (hinzufügen/entfernen) · Feld in <code>update_task</code></td><td>eigenes Werkzeug (kein sichtbarer Unterschied)</td></tr>
+<tr><td><span class="code">D2</span></td><td>Bestätigung beim Abgeben</td><td>ZU1a Karte mit Warnzeile und rotem Knopf · ZU1b Karte plus Rückfrage</td><td>ZU1a</td></tr>
+<tr><td><span class="code">D3</span></td><td>Auch Issues außerhalb der eigenen Aufgaben</td><td>ja (über die Online-Suche) · nur eigene</td><td>ja (ZU3)</td></tr>
+<tr><td><span class="code">D4</span></td><td>Notizinhalt in Suchtreffern</td><td>Titel und Ausschnitt, nach dem Zug aus dem Verlauf entfernt · nur Titel · nur Feldnamen wie heute</td><td>Titel und Ausschnitt, gekürzter Verlauf (SU2)</td></tr>
+<tr><td><span class="code">D5</span></td><td>Zustimmung für Notiztreffer</td><td>Schalter unter Einstellungen › KI · nur Datenschutzhinweis</td><td>Schalter, Vorgabe aus (SU1)</td></tr>
+<tr><td><span class="code">D6</span></td><td>Welche geschlossenen Issues zählen</td><td>mir zugewiesen, in angezeigtem Project, als erledigt geschlossen · alle mir zugewiesenen</td><td>erste Variante (TR1)</td></tr>
+<tr><td><span class="code">D7</span></td><td>Ziel eines Issues aus einer Notiz</td><td>GI1a auf dem Gerät wählen · GI1b Zielliste an ChatGPT mitsenden</td><td>GI1a</td></tr>
+<tr><td><span class="code">D8</span></td><td>Personen bei Issues aus Notizen</td><td>Zeile „Zugewiesen“ im Ziel-Blatt · immer „Ich“</td><td>Zeile im Blatt (GI2)</td></tr>
+<tr><td><span class="code">D9</span></td><td>Vorausplanung der Abend-Erinnerungen</td><td>3 Tage (Budget 46/14/1/3) · 2 Tage (50/10/1/3)</td><td>3 Tage (AE1)</td></tr>
+<tr><td><span class="code">D10</span></td><td>Ruhezeiten</td><td>Abend-Erinnerungen ausgenommen wie bisher · im Fenster unterdrücken</td><td>ausgenommen</td></tr>
+<tr><td><span class="code">D11</span></td><td>Tagesabschluss schon abgeschlossen</td><td>offene Punkte erinnern weiter · entfallen</td><td>erinnern weiter</td></tr>
+</table></div>
+</div>
+
+<!-- ZU -->
+<h2><span class="area">ZU</span> Zuständigkeit bestehender Issues ändern (Punkt 1)</h2>
+<p class="lead">Heute weist der Assistent nur beim Anlegen zu. Neu: eine Karte für jede Änderung der Zuständigkeit. Verlässt du selbst das Issue, verschwindet es aus Aufgaben und Planung, und künftige Zeitblöcke werden gelöscht (Entscheidung 2). Die Zahl der Blöcke steht vor der Bestätigung auf der Karte.</p>
+<div class="grid">
+  <div>
+    <p class="label"><span class="code r">ZU1a</span><b>Abgeben: Karte mit Warnzeile</b><span class="rec">Empfehlung</span></p>
+    <div class="phone crop"><div class="status"><span>9:41</span><span>●●● 5G</span></div><div class="scr">
+      <div class="ctx">Assistent · Aufgaben</div>
+      <div class="me">Gib #212 an Lea ab</div>
+      <div class="acard new">
+        <div class="h">Vorgeschlagene Änderung · noch nicht ausgeführt</div>
+        <div class="t">Export für Wochenbericht</div>
+        <div class="c">Zugewiesen: dir → lea-m (nicht mehr dir)</div>
+        <div class="w">⚠ #212 verschwindet aus Aufgaben und Planung. 2 geplante Zeitblöcke werden gelöscht.</div>
+        <div class="row"><span class="btn">Verwerfen</span><span class="btn d">Abgeben</span></div>
+      </div>
+    </div></div>
+    <p class="pc"><b>Für:</b> ein Tipp, alle Folgen sichtbar; gleicher Wortlaut wie die Rückfrage im Editor. Die Karte ist nie Teil von „Alle bestätigen“ und per Sprache nur einzeln bestätigbar. <b>Gegen:</b> wer Karten gewohnheitsmäßig bestätigt, liest die rote Zeile vielleicht nicht.</p>
+  </div>
+  <div>
+    <p class="label"><span class="code">ZU1b</span><b>Abgeben: Karte plus Rückfrage</b></p>
+    <div class="phone light crop"><div class="status"><span>9:41</span><span>●●● 5G</span></div><div class="scr">
+      <div class="ctx">Assistent · Aufgaben</div>
+      <div class="me">Gib #212 an Lea ab</div>
+      <div class="acard">
+        <div class="h">Vorgeschlagene Änderung · noch nicht ausgeführt</div>
+        <div class="t">Export für Wochenbericht</div>
+        <div class="c">Zugewiesen: dir → lea-m (nicht mehr dir)</div>
+        <div class="row"><span class="btn">Verwerfen</span><span class="btn p">Bestätigen</span></div>
+      </div>
+      <div class="dialog new"><p>#212 verschwindet aus Aufgaben und Planung. 2 geplante Zeitblöcke werden gelöscht.</p><div class="red">Abgeben</div><div class="blue">Abbrechen</div></div>
+    </div></div>
+    <p class="pc"><b>Für:</b> zwei bewusste Schritte wie im Editor. <b>Gegen:</b> der Dialog wiederholt nur die Karte; im Sprachmodus und bei Notiz-Vorschlägen bräuchte er eine eigene Lösung.</p>
+  </div>
+  <div>
+    <p class="label"><span class="code r">ZU2</span><b>Person dazu, mehrere Karten</b></p>
+    <div class="phone crop"><div class="status"><span>9:41</span><span>●●● 5G</span></div><div class="scr">
+      <div class="acard">
+        <div class="h">Vorgeschlagene Änderung · noch nicht ausgeführt</div>
+        <div class="t">API-Schlüssel rotieren</div>
+        <div class="c">Zugewiesen: dir → dir und jonas-k</div>
+        <div class="row"><span class="btn">Verwerfen</span><span class="btn p">Bestätigen</span></div>
+      </div>
+      <div class="acard"><div class="h">Vorgeschlagene Änderung · noch nicht ausgeführt</div><div class="t">Release-Notizen schreiben</div><div class="c">Fälligkeit: keine → Fr. 27. Nov.</div><div class="row"><span class="btn">Verwerfen</span><span class="btn p">Bestätigen</span></div></div>
+      <div class="acard"><div class="h">Vorgeschlagene Änderung · noch nicht ausgeführt</div><div class="t">Changelog prüfen</div><div class="c">Als erledigt markieren</div><div class="row"><span class="btn">Verwerfen</span><span class="btn p">Bestätigen</span></div></div>
+      <div class="wide">Alle bestätigen (2)</div>
+      <div class="foot new">Zuweisungen bestätigst du einzeln.</div>
+    </div></div>
+    <p class="pc">Drei Karten offen, „Alle bestätigen“ zählt nur die zwei ohne Zuweisung. Das gilt für jede Zuweisungskarte, nicht nur fürs Abgeben: Eine Zuweisung ist für andere auf GitHub sichtbar.</p>
+  </div>
+  <div>
+    <p class="label"><span class="code r">ZU3</span><b>Issue außerhalb der eigenen Aufgaben (D3)</b></p>
+    <div class="phone light crop"><div class="status"><span>9:41</span><span>●●● 5G</span></div><div class="scr">
+      <div class="me">Weis mir das Issue zum Dark Mode zu</div>
+      <div class="ai">Ich habe auf GitHub gesucht: #151 „Dark Mode: Kontrast der Karten“ in melvinmng/tagwerk, bisher niemandem zugewiesen.</div>
+      <div class="acard new">
+        <div class="h">Vorgeschlagene Änderung · noch nicht ausgeführt</div>
+        <div class="t">#151 Dark Mode: Kontrast der Karten</div>
+        <div class="c">melvinmng/tagwerk · Zugewiesen: niemand → dir</div>
+        <div class="row"><span class="btn">Verwerfen</span><span class="btn p">Bestätigen</span></div>
+      </div>
+    </div></div>
+    <p class="pc">Das Issue steht nicht in den Aufgaben; der Assistent findet es über die Online-Suche (SU). Die Karte nennt deshalb Nummer und Repository. Liegt es in einem angezeigten Project, erscheint es danach in den Aufgaben.</p>
+  </div>
+</div>
+<div class="tablewrap"><table class="sum">
+<tr><th>Deutsch</th><th>Englisch</th></tr>
+<tr><td>Zugewiesen: dir → lea-m (nicht mehr dir)</td><td>Assigned: you → lea-m (no longer you)</td></tr>
+<tr><td>Zugewiesen: dir → dir und jonas-k</td><td>Assigned: you → you and jonas-k</td></tr>
+<tr><td>Zugewiesen: dir → niemand</td><td>Assigned: you → no one</td></tr>
+<tr><td>Abgeben</td><td>Hand over</td></tr>
+<tr><td>Zuweisungen bestätigst du einzeln.</td><td>You confirm assignments one at a time.</td></tr>
+<tr><td>Zuweisen geht nur bei GitHub-Issues.</td><td>Only GitHub issues can be assigned.</td></tr>
+</table></div>
+
+<!-- SU -->
+<h2><span class="area">SU</span> Suche des Assistenten findet alles (Punkt 8)</h2>
+<p class="lead">Die Suche des Assistenten liefert künftig auch Notizen und Einkaufsartikel, auf Anforderung auch GitHub-Treffer. Tagebuch, Bible Study und Dream Log (samt Unterordnern) bleiben ausgeschlossen. Sichtbar wird davon nur ein Schalter und die Art, wie der Assistent über Notizen spricht.</p>
+<div class="grid">
+  <div>
+    <p class="label"><span class="code r">SU1</span><b>Schalter unter Einstellungen › KI (D5)</b><span class="rec">Empfehlung</span></p>
+    <div class="phone crop"><div class="status"><span>9:41</span><span>●●● 5G</span></div><div class="scr">
+      <div class="bar"><span class="l">‹ Einstellungen</span><span>KI</span><span></span></div>
+      <div class="sec">Assistent</div>
+      <div class="list">
+        <div><span>Modell</span><span class="v">Automatisch ›</span></div>
+        <div class="new"><span>Notizen in der Suche des Assistenten</span><span class="tog"></span></div>
+      </div>
+      <div class="foot new">Der Assistent sieht von passenden Notizen Titel und einen kurzen Ausschnitt. Tagebuch, Bible Study und Dream Log bleiben immer auf dem iPhone.</div>
+      <div class="list"><div><span style="color:var(--blue)">Datenschutzhinweis</span><span class="v">›</span></div></div>
+    </div></div>
+    <p class="pc">Vorgabe aus. <b>Für:</b> Notiztext ist eine neue Datenart für den Assistenten; #233 braucht denselben Schalter. <b>Gegen:</b> ohne Einschalten erfüllt die Suche Entscheidung 8 nur für Aufgaben, Termine und Einkauf. Variante ohne Schalter: nur der Datenschutzhinweis wird ergänzt.</p>
+  </div>
+  <div>
+    <p class="label"><span class="code r">SU2</span><b>Treffer im Chat, Schalter an (D4)</b></p>
+    <div class="phone light crop"><div class="status"><span>9:41</span><span>●●● 5G</span></div><div class="scr">
+      <div class="me">Wo hatte ich das mit dem Steuerberater notiert?</div>
+      <div class="ai">Zwei Treffer:<br>· Notiz „Steuer 2026“ (Ordner Finanzen, 12. Nov.)<br>· Tagesabschluss vom 18. Nov.<br>Dazu die Aufgabe „Belege an Steuerberater“ (fällig Fr. 27. Nov.).</div>
+      <div class="ai" style="color:var(--sub);font-size:13px">Der Assistent nennt Titel, Art und Datum, kein wörtliches Zitat. Öffnen kannst du die Notiz über die Suche.</div>
+    </div></div>
+    <p class="pc">An ChatGPT gehen je Notiz Titel (höchstens 80 Zeichen) und ein Ausschnitt um die Fundstelle (höchstens 80 Zeichen), nie der ganze Text. Nach der Antwort werden beide aus dem gespeicherten Verlauf entfernt.</p>
+  </div>
+  <div>
+    <p class="label"><span class="code">SU3</span><b>Schalter aus</b></p>
+    <div class="phone crop"><div class="status"><span>9:41</span><span>●●● 5G</span></div><div class="scr">
+      <div class="me">Wo hatte ich das mit dem Steuerberater notiert?</div>
+      <div class="ai">In deinen Aufgaben steht „Belege an Steuerberater“ (fällig Fr. 27. Nov.). Dazu passen 2 Notizen, die ich nicht lesen darf. Du kannst das unter Einstellungen › KI erlauben oder in der Suche nachsehen.</div>
+    </div></div>
+    <p class="pc">Der Assistent erfährt nur die Anzahl nicht privater Treffer. Private Notizen zählen auch hier nicht mit.</p>
+  </div>
+</div>
+<div class="box warn">
+<h3>Was das Gerät verlässt und was gespeichert bleibt (D4)</h3>
+<ul>
+<li><b>Im laufenden Zug an ChatGPT:</b> Titel und Ausschnitt nicht privater Notizen, Name und Menge offener Einkaufsartikel, wie bisher Termine und Aufgaben.</li>
+<li><b>Im gespeicherten Verlauf</b> (und damit bei jeder späteren Nachricht erneut gesendet): von Notizen nur Kennung, Art, Datum und die Feldnamen der Fundstelle.</li>
+<li><b>Grenze:</b> Gibt der Assistent einen Ausschnitt in seiner Antwort wörtlich wieder, steht dieser Satz im Verlauf. Die Anweisung untersagt das; technisch erzwingen lässt es sich nicht.</li>
+<li><b>GitHub-Online-Suche:</b> nur wenn der Assistent sie ausdrücklich anfordert (Frage nach Issues, die nicht in den Aufgaben stehen, oder lokale Suche ohne Ergebnis). Der Suchtext geht dann an GitHub.</li>
+</ul>
+</div>
+<div class="tablewrap"><table class="sum">
+<tr><th>Deutsch</th><th>Englisch</th></tr>
+<tr><td>Notizen in der Suche des Assistenten</td><td>Notes in the assistant's search</td></tr>
+<tr><td>Der Assistent sieht von passenden Notizen Titel und einen kurzen Ausschnitt. Tagebuch, Bible Study und Dream Log bleiben immer auf dem iPhone.</td><td>The assistant sees the title and a short excerpt of matching notes. Journal, Bible Study and Dream Log always stay on the iPhone.</td></tr>
+</table></div>
+
+<!-- TR -->
+<h2><span class="area">TR</span> Tagesrückblick zählt geschlossene Issues (Punkt 10)</h2>
+<p class="lead">„Aufgaben erledigt e von n“ zählt zusätzlich die GitHub-Issues, die an dem Tag geschlossen wurden: dir zugewiesen, in einem angezeigten Project, als erledigt geschlossen (D6). e und n steigen um dieselbe Zahl. Die lokalen Zahlen erscheinen sofort, GitHub kommt nach.</p>
+<div class="grid">
+  <div>
+    <p class="label"><span class="code r">TR1</span><b>GitHub gezählt</b></p>
+    <div class="phone crop" style="height:300px"><div class="status"><span>21:40</span><span>●●● 5G</span></div><div class="scr">
+      <div class="bar"><span class="l">Schließen</span><span>Tagesabschluss</span><span></span></div>
+      <div class="sec">Heute</div>
+      <div class="list"><div><span>Aufgaben erledigt</span><span class="v">6 von 9</span></div><div><span>Gewohnheiten</span><span class="v">3 von 4</span></div></div>
+      <div class="foot new">Erledigt: Erinnerungen, lokale Aufgaben und heute geschlossene GitHub-Issues.</div>
+    </div></div>
+  </div>
+  <div>
+    <p class="label"><span class="code">TR2</span><b>GitHub nicht erreichbar</b></p>
+    <div class="phone light crop" style="height:300px"><div class="status"><span>21:40</span><span>✈</span></div><div class="scr">
+      <div class="bar"><span class="l">Schließen</span><span>Tagesabschluss</span><span></span></div>
+      <div class="sec">Heute</div>
+      <div class="list"><div><span>Aufgaben erledigt</span><span class="v">4 von 7</span></div><div><span>Gewohnheiten</span><span class="v">3 von 4</span></div></div>
+      <div class="foot new">Erledigt: Erinnerungen und lokale Aufgaben. GitHub ist gerade nicht erreichbar.</div>
+    </div></div>
+  </div>
+  <div>
+    <p class="label"><span class="code">TR3</span><b>GitHub nicht verbunden</b></p>
+    <div class="phone crop" style="height:300px"><div class="status"><span>21:40</span><span>●●● 5G</span></div><div class="scr">
+      <div class="bar"><span class="l">Schließen</span><span>Tagesabschluss</span><span></span></div>
+      <div class="sec">Heute</div>
+      <div class="list"><div><span>Aufgaben erledigt</span><span class="v">4 von 7</span></div></div>
+      <div class="foot new">Erledigt: Erinnerungen und lokale Aufgaben.</div>
+    </div></div>
+  </div>
+</div>
+<div class="tablewrap"><table class="sum">
+<tr><th>Zustand</th><th>Deutsch</th><th>Englisch</th></tr>
+<tr><td>gezählt</td><td>Erledigt: Erinnerungen, lokale Aufgaben und heute geschlossene GitHub-Issues.</td><td>Completed: reminders, local tasks and GitHub issues closed today.</td></tr>
+<tr><td>gezählt, anderer Tag</td><td>Erledigt: Erinnerungen, lokale Aufgaben und an diesem Tag geschlossene GitHub-Issues.</td><td>Completed: reminders, local tasks and GitHub issues closed that day.</td></tr>
+<tr><td>lädt</td><td>Erledigt: Erinnerungen und lokale Aufgaben. GitHub wird geladen …</td><td>Completed: reminders and local tasks. Loading GitHub …</td></tr>
+<tr><td>nicht erreichbar</td><td>Erledigt: Erinnerungen und lokale Aufgaben. GitHub ist gerade nicht erreichbar.</td><td>Completed: reminders and local tasks. GitHub cannot be reached right now.</td></tr>
+<tr><td>nicht verbunden</td><td>Erledigt: Erinnerungen und lokale Aufgaben.</td><td>Completed: reminders and local tasks.</td></tr>
+</table></div>
+<div class="box neutral"><h3>Nicht gezählt</h3><ul><li>Issues, die als „not planned“ geschlossen wurden.</li><li>Issues, die im Project auf „Done“ stehen, aber offen sind (GitHub kennt dafür keinen Zeitpunkt).</li><li>Der Wochenrückblick bleibt vorerst „ohne GitHub“ (nicht Teil von #173).</li></ul></div>
+
+<!-- GI -->
+<h2><span class="area">GI</span> GitHub-Issues aus Gedanken-Notizen (Punkt 13)</h2>
+<p class="lead">„Vorschläge holen“ darf künftig ein GitHub-Issue vorschlagen. Offen ist, woher Repository und Projects kommen (D7) und wer zugewiesen wird (D8).</p>
+<div class="grid">
+  <div>
+    <p class="label"><span class="code r">GI1a</span><b>Ziel auf dem Gerät, Zeile auf der Karte</b><span class="rec">Empfehlung</span></p>
+    <div class="phone crop"><div class="status"><span>22:05</span><span>●●● 5G</span></div><div class="scr">
+      <div class="sec">2 Vorschläge aus der Notiz</div>
+      <div class="acard">
+        <div class="h">Vorgeschlagene Änderung · noch nicht ausgeführt</div>
+        <div class="t">Export bricht bei leeren Tagen ab</div>
+        <div class="c">Issue anlegen · Zugewiesen: dir</div>
+        <div class="tgt new"><span>Ziel: melvinmng/tagwerk · Project Tagwerk</span><span>›</span></div>
+        <div class="row"><span class="btn">Verwerfen</span><span class="btn p">Bestätigen</span></div>
+      </div>
+      <div class="acard">
+        <div class="h">Vorgeschlagene Änderung · noch nicht ausgeführt</div>
+        <div class="t">Onboarding-Text kürzen</div>
+        <div class="c">Issue anlegen · Zugewiesen: dir</div>
+        <div class="tgt miss new"><span>Ziel wählen</span><span>›</span></div>
+        <div class="row"><span class="btn">Verwerfen</span><span class="btn p off">Bestätigen</span></div>
+      </div>
+      <div class="foot">„Alle bestätigen“ erscheint erst ab zwei Karten mit Ziel.</div>
+    </div></div>
+    <p class="pc"><b>Für:</b> an ChatGPT geht nichts Neues; die Zustimmung zu Gedanken-Notizen bleibt wahr. Nennt die Notiz ein Repository, löst Tagwerk es selbst auf (obere Karte); sonst wählst du (untere Karte). <b>Gegen:</b> bei mehreren Repositories ein zusätzlicher Tipp.</p>
+  </div>
+  <div>
+    <p class="label"><span class="code">GI1b</span><b>Zielliste an ChatGPT mitsenden</b></p>
+    <div class="phone light crop"><div class="status"><span>22:05</span><span>●●● 5G</span></div><div class="scr">
+      <div class="bar"><span></span><span>Notizen von ChatGPT auswerten lassen</span><span></span></div>
+      <div class="ai" style="max-width:100%"><b>Gesendet wird</b> der Text dieser einen Notiz, dazu deine offenen Aufgaben und Termine der nächsten 7 Tage <span class="new">und die Namen deiner GitHub-Repositories und Projects</span>.</div>
+      <div class="wide">Einverstanden und Vorschläge holen</div>
+      <div class="foot">Die Zustimmung müsste einmal neu eingeholt werden.</div>
+    </div></div>
+    <p class="pc"><b>Für:</b> das Modell trifft das Ziel öfter selbst. <b>Gegen:</b> Repository- und Project-Namen gehen bei jedem „Vorschläge holen“ mit, auch wenn kein Issue entsteht; geänderte Zustimmung.</p>
+  </div>
+  <div>
+    <p class="label"><span class="code r">GI2</span><b>Blatt „Ziel wählen“ (D8)</b></p>
+    <div class="phone crop"><div class="status"><span>22:06</span><span>●●● 5G</span></div><div class="scr">
+      <div class="bar"><span class="l">Abbrechen</span><span>Ziel wählen</span><span class="r b">Übernehmen</span></div>
+      <div class="list">
+        <div><span>Repository</span><span class="v">melvinmng/tagwerk ⌄</span></div>
+        <div><span>Projects</span><span class="v">Tagwerk ⌄</span></div>
+        <div><span>Zugewiesen</span><span class="v">Ich ⌄</span></div>
+      </div>
+      <div class="foot">Dieselben Zeilen wie in „Neue Aufgabe“. Ohne Project erscheint das Issue nicht in deinen Aufgaben.</div>
+    </div></div>
+    <p class="pc">Die drei Zeilen stammen aus dem Blatt „Neue Aufgabe“. Personen wählst du hier; vom Modell genannte Personen werden nicht übernommen, weil es keine Logins kennt. Variante „immer Ich“: die dritte Zeile entfällt.</p>
+  </div>
+</div>
+<div class="tablewrap"><table class="sum">
+<tr><th>Deutsch</th><th>Englisch</th></tr>
+<tr><td>Ziel: melvinmng/tagwerk · Project Tagwerk</td><td>Target: melvinmng/tagwerk · Project Tagwerk</td></tr>
+<tr><td>Ziel wählen</td><td>Choose target</td></tr>
+<tr><td>Übernehmen</td><td>Apply</td></tr>
+</table></div>
+
+<!-- AE -->
+<h2><span class="area">AE</span> Abend-Erinnerungen je Tag (Punkt 15)</h2>
+<p class="lead">Heute wiederholt sich jede Erinnerung täglich, auch wenn der Punkt abgehakt ist. Neu: einzelne Mitteilungen für die nächsten Tage; ein abgehakter Punkt verliert die Mitteilung dieses Abends. Sichtbar ist nur ein Fußtext.</p>
+<div class="grid">
+  <div>
+    <p class="label"><span class="code r">AE1</span><b>Einstellungen › Routinen</b></p>
+    <div class="phone light crop" style="height:340px"><div class="status"><span>9:41</span><span>●●● 5G</span></div><div class="scr">
+      <div class="bar"><span class="l">‹ Einstellungen</span><span>Routinen</span><span></span></div>
+      <div class="sec">Tagesabschluss</div>
+      <div class="list"><div><span>Zielschlafzeit</span><span class="v">23:00</span></div><div><span>Erinnerungen am Abend</span><span class="tog on"></span></div></div>
+      <div class="foot new">Abgehakte Punkte erinnern an dem Abend nicht mehr. Tagwerk plant die Erinnerungen für die nächsten 3 Tage und füllt sie nach, sobald du die App öffnest.</div>
+    </div></div>
+    <p class="pc">Der bestehende Hinweis „Eine dieser Erinnerungen liegt in den Ruhezeiten. Routine-Erinnerungen kommen trotzdem.“ bleibt (D10).</p>
+  </div>
+  <div>
+    <p class="label"><b>Beispiel: Freitag 21:15, „Fertig machen“ schon abgehakt</b></p>
+    <div class="days">
+      <div class="hd">Punkt</div><div class="hd">Fr. (heute)</div><div class="hd">Sa.</div><div class="hd">So.</div>
+      <div>Aufgaben erledigen · 21:30</div><div class="ok">21:30</div><div class="ok">21:30</div><div class="ok">21:30</div>
+      <div>Fertig machen · 22:00</div><div class="x">22:00</div><div class="ok">22:00</div><div class="ok">22:00</div>
+      <div>Ins Bett · 22:30</div><div class="ok">22:30</div><div class="ok">22:30</div><div class="ok">22:30</div>
+    </div>
+    <div class="box neutral">
+      <h3>Budget der 64 ausstehenden Mitteilungen (D9)</h3>
+      <div class="tablewrap"><table class="sum">
+        <tr><th></th><th>heute</th><th>3 Tage (Empfehlung)</th><th>2 Tage</th></tr>
+        <tr><td>Aufgaben und Deadlines</td><td>50</td><td>46</td><td>50</td></tr>
+        <tr><td>Routinen (Abend + Tagesstart + Wochenplanung)</td><td>6</td><td>14 (12 + 1 + 1)</td><td>10 (8 + 1 + 1)</td></tr>
+        <tr><td>Fokus-Timer</td><td>1</td><td>1</td><td>1</td></tr>
+        <tr><td>Reserve</td><td>7</td><td>3</td><td>3</td></tr>
+      </table></div>
+      <ul><li>Wird die App länger nicht geöffnet und bleibt auch der Hintergrund-Refresh aus, enden die Abend-Erinnerungen nach dem letzten geplanten Tag. Mit 3 Tagen übersteht das ein Wochenende.</li><li>Punkte nach Mitternacht (z. B. Schlafzeit 00:30) gehören zum Abend davor.</li></ul>
+    </div>
+  </div>
+</div>
+<div class="tablewrap"><table class="sum">
+<tr><th>Deutsch</th><th>Englisch</th></tr>
+<tr><td>Abgehakte Punkte erinnern an dem Abend nicht mehr. Tagwerk plant die Erinnerungen für die nächsten 3 Tage und füllt sie nach, sobald du die App öffnest.</td><td>Checked items no longer remind you that evening. Tagwerk plans the reminders for the next 3 days and tops them up whenever you open the app.</td></tr>
+</table></div>
+
+</body>
+</html>

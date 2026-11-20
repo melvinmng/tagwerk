@@ -1,0 +1,759 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tagwerk · Notizen und Rezepte mit ChatGPT · Mockups RT1–RT5, NC1–NC6</title>
+<style>
+  /* Mockup frame uses the host theme (with fallbacks); phone screens depict the app in iOS dark or light mode. */
+  :root { color-scheme: light dark; }
+  body { font: 14px var(--font-sans, system-ui, sans-serif); color: var(--foreground, CanvasText); margin: 16px; }
+  h1 { font-size: 20px; margin: 0 0 4px; }
+  h2 { font-size: 18px; margin: 38px 0 4px; padding-top: 16px; border-top: 1px solid rgba(128,128,128,.3); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .area { display: inline-grid; place-items: center; min-width: 34px; height: 34px; padding: 0 6px; border-radius: 9px; background: #0a84ff; color: #fff; font: 800 14px system-ui; flex-shrink: 0; box-sizing: border-box; }
+  .area.p { background: #af52de; }
+  .lead { color: var(--muted-foreground, #777); margin: 0 0 14px; line-height: 1.5; max-width: 980px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(392px, 1fr)); gap: 22px; align-items: start; }
+  .label { font: 600 13px var(--font-sans, system-ui); color: var(--muted-foreground, #777); margin: 0 0 8px 4px; }
+  .label b { color: var(--foreground, CanvasText); }
+  .code { display: inline-block; background: rgba(128,128,128,.28); color: var(--foreground, CanvasText); border-radius: 6px; padding: 1px 8px; font: 800 13px system-ui; margin-right: 4px; }
+  .code.r { background: #30d158; color: #000; }
+  .rec { background: #30d158; color: #000; font-size: 11px; font-weight: 700; padding: 1px 7px; border-radius: 99px; margin-left: 4px; }
+  .pc { font-size: 12.5px; color: var(--muted-foreground, #777); line-height: 1.5; margin: 8px 4px 0; max-width: 390px; }
+  .pc b { color: var(--foreground, CanvasText); }
+  .box { border: 1px solid rgba(48,209,88,.5); background: rgba(48,209,88,.07); border-radius: 12px; padding: 12px 16px; margin-top: 16px; line-height: 1.55; font-size: 13px; max-width: 1100px; }
+  .box h3 { margin: 0 0 6px; font-size: 14px; }
+  .box ul, .box ol { margin: 4px 0 0; padding-left: 20px; }
+  .box li { margin-bottom: 3px; }
+  .box.neutral { border-color: rgba(128,128,128,.4); background: rgba(128,128,128,.07); }
+  .box.warn { border-color: rgba(255,159,10,.6); background: rgba(255,159,10,.08); }
+  code { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; background: rgba(128,128,128,.16); padding: 1px 4px; border-radius: 4px; }
+  .tablewrap { overflow-x: auto; }
+  table.sum { border-collapse: collapse; font-size: 13px; margin-top: 6px; }
+  table.sum td, table.sum th { padding: 5px 14px 5px 0; vertical-align: top; text-align: left; border-bottom: 1px solid rgba(128,128,128,.22); }
+  table.sum th { font-size: 12px; color: var(--muted-foreground, #777); }
+
+  .phone {
+    --bg: #000; --card: #1c1c1e; --card2: #2c2c2e; --sep: #38383a; --text: #fff; --sub: #8e8e93; --dim: #c7c7cc;
+    --blue: #0a84ff; --green: #30d158; --orange: #ff9f0a; --red: #ff453a; --purple: #bf5af2; --sheet: #1c1c1e; --row: #2c2c2e;
+    --segon: #636366; --frame: #2a2a2c; --redbg: rgba(255,69,58,.16); --greenbg: rgba(48,209,88,.16);
+    --glass: rgba(72,72,78,.62); --glassline: rgba(255,255,255,.16); --glassshadow: inset 0 1px 0 rgba(255,255,255,.18), 0 8px 24px rgba(0,0,0,.55);
+    background: var(--bg); color: var(--text); border-radius: 40px; padding: 14px 12px 12px;
+    font: 15px -apple-system, "SF Pro Text", system-ui, sans-serif; border: 6px solid var(--frame);
+    width: 390px; max-width: 100%; box-sizing: border-box; height: 760px;
+    display: flex; flex-direction: column; position: relative; overflow: hidden;
+  }
+  .phone.light {
+    --bg: #f2f2f7; --card: #fff; --card2: #e3e3e8; --sep: #d1d1d6; --text: #000; --sub: #6c6c70; --dim: #3c3c43;
+    --blue: #007aff; --green: #34c759; --orange: #ff9500; --red: #ff3b30; --purple: #af52de; --sheet: #f2f2f7; --row: #fff;
+    --segon: #fff; --frame: #c7c7cc; --redbg: rgba(255,59,48,.12); --greenbg: rgba(52,199,89,.16);
+    --glass: rgba(255,255,255,.78); --glassline: rgba(0,0,0,.06); --glassshadow: inset 0 1px 0 rgba(255,255,255,.9), 0 4px 14px rgba(0,0,0,.14);
+  }
+  /* Cropped frame: only the upper part of the screen matters. */
+  .phone.crop { height: 470px; border-bottom-left-radius: 0; border-bottom-right-radius: 0; border-bottom: 0; }
+  .phone.crop::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 50px; background: linear-gradient(transparent, var(--bg)); z-index: 4; pointer-events: none; }
+  .status { display: flex; justify-content: space-between; font: 600 13px system-ui; padding: 0 12px 10px; flex-shrink: 0; }
+  .glass { background: var(--glass); backdrop-filter: blur(18px) saturate(1.6); -webkit-backdrop-filter: blur(18px) saturate(1.6);
+    border: 1px solid var(--glassline); box-shadow: var(--glassshadow); }
+  .scr { flex: 1; min-height: 0; overflow: hidden; display: flex; flex-direction: column; }
+  .scr > * { flex-shrink: 0; }
+
+  .nav { display: flex; align-items: center; justify-content: space-between; gap: 8px; height: 44px; padding: 0 2px; margin-bottom: 6px; flex-shrink: 0; }
+  .nav .r { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+  .gb { width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; font-size: 18px; flex-shrink: 0; color: var(--text); box-sizing: border-box; }
+  .gb.ai { background: rgba(175,82,222,.86); color: #fff; border-color: rgba(255,255,255,.22); font-size: 16px; }
+  .gb.new { outline: 2px dashed #ffd60a; outline-offset: 2px; }
+  .back { color: var(--blue); font: 400 16px system-ui; padding-left: 4px; }
+  .lt { font: 800 30px system-ui; letter-spacing: -.4px; margin: 2px 6px 10px; }
+  .list { background: var(--card); border-radius: 18px; overflow: hidden; margin-bottom: 8px; }
+  .tl { display: flex; gap: 10px; padding: 10px 12px; border-bottom: 1px solid var(--sep); font-size: 14.5px; align-items: center; }
+  .tl:last-child { border-bottom: 0; }
+  .tl .tx { flex: 1; min-width: 0; }
+  .tl .tx small { display: block; color: var(--sub); font-size: 12px; margin-top: 1px; }
+  .tl .ch { color: var(--sub); font-size: 13px; white-space: nowrap; }
+  .tl .ic { width: 22px; text-align: center; color: var(--blue); }
+  .tl.new { box-shadow: inset 3px 0 0 #ffd60a; }
+  .tl.a { color: var(--blue); }
+  .lockb { display: inline-block; font: 600 10.5px system-ui; color: var(--sub); border: 1px solid var(--sep); border-radius: 99px; padding: 0 6px; margin-left: 6px; vertical-align: 1px; }
+  .section { color: var(--sub); font: 600 12px system-ui; text-transform: uppercase; letter-spacing: .4px; margin: 10px 8px 4px; }
+
+  /* Note in view mode */
+  .note { padding: 0 8px; font-size: 14.5px; line-height: 1.45; }
+  .note h4 { font: 800 24px system-ui; margin: 0 0 8px; letter-spacing: -.3px; }
+  .note h5 { font: 700 17px system-ui; margin: 12px 0 4px; }
+  .note p { margin: 0 0 4px; }
+  .note ul, .note ol { margin: 0; padding-left: 20px; }
+  .note .src { color: var(--sub); font-size: 13px; margin-top: 10px; }
+  .note .src u { color: var(--blue); text-decoration: none; }
+  .langbar { display: flex; align-items: center; justify-content: space-between; gap: 8px; background: var(--card); border-radius: 12px; padding: 8px 12px; margin: 0 4px 10px; font-size: 13px; color: var(--sub); }
+  .langbar span { color: var(--blue); font-weight: 600; }
+  .langbar.new { box-shadow: inset 3px 0 0 #ffd60a; }
+
+  /* Sheets, forms */
+  .dim { position: absolute; inset: 0; background: rgba(0,0,0,.45); z-index: 5; }
+  .sheet { position: absolute; left: 0; right: 0; bottom: 0; top: 64px; background: var(--sheet); border-radius: 30px 30px 0 0; z-index: 6; padding: 8px 14px 0; overflow: hidden; display: flex; flex-direction: column; }
+  .sheet.half { top: 330px; }
+  .phone:not(.light) .sheet { background: #111113; }
+  .sheet .grab { width: 36px; height: 5px; border-radius: 99px; background: var(--sub); opacity: .5; margin: 0 auto 6px; flex-shrink: 0; }
+  .sheet .bar { display: flex; justify-content: center; position: relative; font: 600 15px system-ui; padding: 4px 0 10px; flex-shrink: 0; }
+  .sheet .bar span { position: absolute; right: 2px; color: var(--blue); }
+  .sheet .bar span.l { right: auto; left: 2px; font-weight: 400; }
+  .fs { background: var(--row); border-radius: 14px; margin-bottom: 4px; overflow: hidden; }
+  .fr { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 9px 12px; border-bottom: 1px solid var(--sep); font-size: 14px; }
+  .fr:last-child { border-bottom: 0; }
+  .fr .v { color: var(--sub); text-align: right; font-size: 13px; }
+  .fr.new { box-shadow: inset 3px 0 0 #ffd60a; }
+  .fh { color: var(--sub); font: 600 11.5px system-ui; text-transform: uppercase; letter-spacing: .4px; margin: 10px 12px 4px; }
+  .ff { color: var(--sub); font-size: 11.5px; line-height: 1.4; margin: 3px 12px 8px; }
+  .seg2 { display: flex; background: var(--card2); border-radius: 9px; padding: 2px; margin: 0 0 8px; }
+  .seg2 span { flex: 1; text-align: center; padding: 6px 2px; font-size: 13px; border-radius: 7px; color: var(--dim); }
+  .seg2 span.on { background: var(--segon); color: var(--text); font-weight: 600; }
+  .big { display: block; text-align: center; font: 600 15px system-ui; border-radius: 14px; padding: 12px; margin: 8px 0 0; background: var(--blue); color: #fff; }
+  .big.s { background: var(--card2); color: var(--blue); }
+  .big.t { background: none; color: var(--blue); font-weight: 400; }
+  .foot { margin-top: auto; padding-bottom: 14px; }
+  .pt { display: flex; gap: 10px; font-size: 13.5px; line-height: 1.4; margin: 0 4px 10px; }
+  .pt i { font-style: normal; color: var(--blue); width: 22px; text-align: center; flex-shrink: 0; }
+  .intro { font-size: 13.5px; line-height: 1.4; margin: 0 4px 12px; }
+
+  /* Context menu */
+  .menu { position: absolute; z-index: 8; width: 268px; border-radius: 16px; overflow: hidden; font-size: 15px; }
+  .menu div { display: flex; justify-content: space-between; padding: 11px 14px; border-bottom: 1px solid var(--glassline); }
+  .menu div:last-child { border-bottom: 0; }
+  .menu div.new { box-shadow: inset 3px 0 0 #ffd60a; }
+  .menu div.x { color: var(--red); }
+  .menu div.off { color: var(--sub); }
+
+  /* Chat */
+  .ctx { align-self: center; font: 600 11.5px system-ui; color: var(--sub); background: var(--card); border-radius: 99px; padding: 4px 10px; margin: 0 0 8px; }
+  .ctx.new { outline: 1.5px dashed #ffd60a; outline-offset: 2px; }
+  .msg { max-width: 84%; border-radius: 18px; padding: 8px 12px; margin: 0 4px 8px; font-size: 13.5px; line-height: 1.4; }
+  .msg.u { align-self: flex-end; background: var(--blue); color: #fff; }
+  .msg.a { align-self: flex-start; background: var(--card); }
+  .rd { align-self: flex-start; font-size: 11.5px; color: var(--sub); margin: -2px 12px 8px; }
+  .act { align-self: stretch; background: var(--card); border: 1px solid var(--sep); border-radius: 16px; padding: 10px 12px; margin: 0 4px 8px; font-size: 13.5px; }
+  .act b { display: block; margin-bottom: 3px; }
+  .act small { display: block; color: var(--sub); font-size: 12.5px; margin-bottom: 8px; line-height: 1.4; }
+  .act .st { color: var(--purple); font-size: 11.5px; margin: 0 0 6px; }
+  .act.del { border-color: var(--red); }
+  .act .lnk { color: var(--blue); font: 600 12.5px system-ui; margin-bottom: 8px; }
+  .btns { display: flex; gap: 8px; justify-content: flex-end; }
+  .btn { font: 600 12.5px system-ui; border-radius: 99px; padding: 6px 12px; background: var(--card2); color: var(--blue); }
+  .btn.b { background: var(--blue); color: #fff; }
+  .btn.p { background: var(--red); color: #fff; }
+  .allbtn { text-align: center; font: 600 13.5px system-ui; border-radius: 12px; padding: 9px; margin: 0 4px 8px; background: var(--card2); color: var(--blue); }
+  .inp { display: flex; align-items: center; gap: 8px; border-radius: 99px; padding: 6px 6px 6px 14px; margin: auto 2px 0; font-size: 14px; color: var(--sub); }
+  .inp b { flex: 1; font-weight: 400; color: var(--sub); }
+  .inp i { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; background: var(--card2); font-style: normal; font-size: 15px; color: var(--text); flex-shrink: 0; }
+  .diff { font-size: 12.5px; line-height: 1.45; border-radius: 10px; overflow: hidden; margin-bottom: 8px; }
+  .diff div { padding: 3px 8px; }
+  .diff .m { background: var(--redbg); text-decoration: line-through; color: var(--dim); }
+  .diff .pl { background: var(--greenbg); }
+  .diff .k { color: var(--sub); }
+  .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; font-size: 12px; line-height: 1.4; }
+  .cols div { background: var(--row); border-radius: 10px; padding: 7px 9px; }
+  .cols h6 { margin: 0 0 3px; font: 600 10.5px system-ui; text-transform: uppercase; color: var(--sub); letter-spacing: .3px; }
+  .undo { display: flex; justify-content: space-between; align-items: center; border-radius: 99px; padding: 10px 16px; margin: auto 6px 4px; font-size: 13.5px; }
+  .undo span { color: var(--blue); font-weight: 600; }
+  .hint { background: rgba(255,159,10,.14); border-radius: 12px; padding: 8px 12px; margin: 0 4px 8px; font-size: 12.5px; line-height: 1.4; }
+  .hint b { color: var(--orange); }
+  .tog { width: 46px; height: 28px; border-radius: 99px; background: rgba(120,120,128,.36); position: relative; flex-shrink: 0; }
+  .tog::after { content: ""; position: absolute; top: 2px; left: 2px; width: 24px; height: 24px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.3); }
+  .ckrow { display: flex; gap: 10px; align-items: flex-start; padding: 9px 12px; border-bottom: 1px solid var(--sep); font-size: 13.5px; }
+  .ckrow:last-child { border-bottom: 0; }
+  .ckrow small { display: block; color: var(--sub); font-size: 12px; }
+  .ck { width: 20px; height: 20px; border-radius: 50%; border: 1.6px solid var(--sub); flex-shrink: 0; box-sizing: border-box; margin-top: 1px; position: relative; }
+  .ck.done { background: var(--blue); border-color: var(--blue); }
+  .ck.done::after { content: "✓"; position: absolute; inset: 0; display: grid; place-items: center; color: #fff; font: 700 11px system-ui; }
+</style>
+</head>
+<body>
+
+<h1>Tagwerk · Notizen und Rezepte mit ChatGPT · Mockups RT1–RT5 und NC1–NC6</h1>
+<p class="lead">Anlass: #232 „Rezept nachträglich übersetzen“ und #233 „Notizen mit ChatGPT durchgehen, überarbeiten, anlegen und löschen“ (Mockup-Auftrag aus #188). Diese Datei zeigt elf offene Entscheidungen mit je zwei bis drei Varianten. Grün markiert ist jeweils die Empfehlung. Gelb gestrichelt oder mit gelbem Rand links: neue Elemente. Bildschirme abwechselnd dunkel und hell; alle Texte deutsch, englische Bezeichnungen nur dort, wo die Wortwahl heikel ist.</p>
+
+<div class="box neutral">
+  <h3>Die elf Entscheidungen auf einen Blick</h3>
+  <div class="tablewrap"><table class="sum">
+    <tr><th>Nr.</th><th>Frage</th><th>Varianten</th><th>Empfehlung</th><th>Warum</th></tr>
+    <tr><td colspan="5"><b>#232 Rezept übersetzen</b></td></tr>
+    <tr><td>RT1</td><td>Einstieg in der Rezept-Notiz</td><td><span class="code r">RT1a</span> Zeile im Mehr-Menü · <span class="code">RT1b</span> Sprachleiste über dem Rezept · <span class="code">RT1c</span> nur über den Assistenten</td><td><span class="code r">RT1a</span></td><td>steht neben „Zutaten auf die Einkaufsliste“, kostet keinen dauerhaften Platz</td></tr>
+    <tr><td>RT2</td><td>Vorschau vor dem Übernehmen</td><td><span class="code r">RT2a</span> Vorschau-Blatt mit Umschalter Original/Übersetzung · <span class="code">RT2b</span> zwei Spalten nebeneinander · <span class="code">RT2c</span> sofort anwenden, „Rückgängig“</td><td><span class="code r">RT2a</span></td><td>bleibt bei „Antwort ist ein Vorschlag“ wie beim Rezept-Import; lesbar auf schmalem Bildschirm</td></tr>
+    <tr><td>RT3</td><td>Original behalten oder ersetzen</td><td><span class="code">RT3a</span> immer ersetzen · <span class="code">RT3b</span> immer Kopie · <span class="code r">RT3c</span> Wahl im Vorschau-Blatt</td><td><span class="code r">RT3c</span></td><td>beide Absichten kommen vor (Import-Fehler korrigieren / zweisprachig behalten); ein Knopf mehr, kein Schritt mehr</td></tr>
+    <tr><td>RT4</td><td>Zielsprachen</td><td><span class="code r">RT4a</span> Deutsch und Englisch · <span class="code">RT4b</span> freie Sprachliste</td><td><span class="code r">RT4a</span></td><td>nur diese beiden liest Tagwerk als Rezept (Portionen, Zutaten, Einkaufsliste)</td></tr>
+    <tr><td>RT5</td><td>Einwilligung</td><td><span class="code r">RT5a</span> bestehende Rezept-Einwilligung · <span class="code">RT5b</span> eigene Einwilligung</td><td><span class="code r">RT5a</span></td><td>gleiche Daten (Rezepttext), gleicher Empfänger, gleicher Auslöser (Tippen)</td></tr>
+    <tr><td colspan="5"><b>#233 Notizen mit ChatGPT</b></td></tr>
+    <tr><td>NC1</td><td>Einstieg</td><td><span class="code">NC1a</span> Assistent in der Notiz-Übersicht · <span class="code">NC1b</span> nur in der Notiz · <span class="code r">NC1c</span> beides, ein Chat mit zwei Kontexten</td><td><span class="code r">NC1c</span></td><td>„durchgehen“ braucht die Übersicht, „überarbeiten“ die einzelne Notiz; gleiches Muster wie der Aufgaben-Chat</td></tr>
+    <tr><td>NC2</td><td>Darstellung eines Änderungsvorschlags</td><td><span class="code">NC2a</span> Karte mit Kurztext · <span class="code r">NC2b</span> Karte + „Änderung ansehen“ (Vorher/Nachher-Blatt) · <span class="code">NC2c</span> Diff in der Karte</td><td><span class="code r">NC2b</span></td><td>Karte bleibt kurz, der ganze Text ist einen Tipp entfernt; lange Notizen passen nicht in den Chat</td></tr>
+    <tr><td>NC3</td><td>Bestätigung bei mehreren Vorschlägen</td><td><span class="code r">NC3a</span> jede Notiz-Karte einzeln · <span class="code">NC3b</span> „Alle bestätigen“ außer Löschen · <span class="code">NC3c</span> Sammelblatt mit Häkchen</td><td><span class="code r">NC3a</span></td><td>entspricht dem Wortlaut von #233; umgeschriebenen Text kann man nicht im Paket beurteilen</td></tr>
+    <tr><td>NC4</td><td>Löschen</td><td><span class="code r">NC4a</span> nach „Zuletzt gelöscht“ (30 Tage) · <span class="code">NC4b</span> endgültig mit zweiter Rückfrage</td><td><span class="code r">NC4a</span></td><td>Papierkorb existiert schon; ein Irrtum bleibt behebbar</td></tr>
+    <tr><td>NC5</td><td>Ausschluss privater Ordner mitteilen</td><td><span class="code">NC5a</span> nur Einwilligung · <span class="code r">NC5b</span> Einwilligung + dauerhafte Zeile im Chat · <span class="code">NC5c</span> zusätzlich Schloss an Ordnern</td><td><span class="code r">NC5b</span></td><td>sichtbar genau dort, wo gesendet wird; keine Dauer-Markierung für alle, die ChatGPT nicht nutzen</td></tr>
+    <tr><td>NC6</td><td>Was ChatGPT zu lesen bekommt</td><td><span class="code r">NC6a</span> Titelliste, Text nur bei Bedarf, sichtbar als „Gelesen“ · <span class="code">NC6b</span> Auswahl vorab · <span class="code">NC6c</span> alles auf einmal</td><td><span class="code r">NC6a</span></td><td>sendet so wenig wie nötig und zeigt, was gelesen wurde, ohne Vorarbeit</td></tr>
+  </table></div>
+</div>
+
+<div class="box neutral">
+  <h3>Befund aus dem Quelltext (Pfade unter <code>app/</code>)</h3>
+  <ul>
+    <li><b>Der Assistent kennt keine Notizen.</b> Es gibt keine Notiz-Funktion in <code>Tagwerk/AI/AppTools+Definitions.swift</code>; die Suche schließt Notizen ausdrücklich aus (<code>Tagwerk/AI/AppTools.swift:128–129</code>). <code>AssistantModel.Context</code> hat keinen Notiz-Fall (<code>Tagwerk/AI/AssistantModel.swift:12–19</code>), und in <code>Tagwerk/Notes/</code> gibt es keinen Assistent-Knopf. Phase 5 hatte Notiz-Funktionen bewusst zurückgestellt (EA2).</li>
+    <li><b>Aktionskarten</b> haben heute Titel und einen Kurztext (<code>AssistantModel.ActionCard</code>, <code>AssistantModel.swift:449</code>; Ansicht <code>ChatView.swift:270–320</code>) mit „Verwerfen“/„Bestätigen“ und „Alle bestätigen (n)“ (<code>ChatView.swift:214–217</code>). Für Notiztext fehlt eine Detailansicht (betrifft NC2, NC3).</li>
+    <li><b>Privat</b> ist an zwei Stellen definiert: Notizart (<code>NoteKind.isPrivate</code>, <code>TagwerkCore/NoteText.swift:14</code>) und Ordnerrolle (<code>NoteFolderRole.isPrivate</code>, <code>TagwerkCore/NoteFolderRules.swift:24–29</code>: Tagebuch, Bible Study, Dream Log). Der bestehende Filter prüft nur die Rolle des direkten Ordners (<code>Tagwerk/Shopping/RecipeNotePicker.swift:34</code>); ob Unterordner privater Ordner damit sicher erfasst sind, ist vor der Umsetzung zu prüfen.</li>
+    <li><b>Chatverlauf wird gespeichert</b>, samt Funktionsergebnissen (<code>Tagwerk/AI/ChatStore.swift:22–23</code>). Gelesene Notiztexte lägen damit im Verlauf und würden bei jeder weiteren Nachricht erneut gesendet. Die Vorschläge aus Gedanken-Notizen vermeiden das bewusst (<code>Tagwerk/Routines/NoteSuggestionModel.swift:6–9</code>). Betrifft NC6.</li>
+    <li><b>Einwilligungen</b> sind einzelne Schalter in <code>AppSettings</code>: <code>shoppingRecipeConsent</code> (<code>Persistence/AppSettings.swift:85</code>) und <code>noteSuggestionConsent</code> („eine Gedanken-Notiz, nur auf Tippen“, <code>:109</code>). Keiner deckt „Assistent liest und ändert Notizen“ ab; dafür ist ein neuer Schalter nötig. Blatt-Muster: <code>ShoppingSortConsentSheet</code> (<code>Shopping/ShoppingSortSheets.swift:5–37</code>).</li>
+    <li><b>Rezeptsprachen</b> sind genau die App-Sprachen Deutsch und Englisch (<code>TagwerkCore/RecipeLanguage.swift:10</code>); <code>RecipeNote.parse</code> erkennt nur deutsche und englische Überschriften (<code>TagwerkCore/RecipeNote.swift:39–42</code>). Der Import übersetzt bereits über den Prompt (<code>Shopping/RecipeImporter.swift:397–399</code>).</li>
+    <li><b>Text außerhalb der Rezept-Abschnitte</b> ignoriert <code>RecipeNote.parse</code> (<code>RecipeNote.swift:47–48</code>). Eine Übersetzung über das Rezept-Modell würde eigene Anmerkungen und Anhang-Verweise in der Notiz verlieren; die Vorschau muss das zeigen oder die Übersetzung muss den ganzen Notiztext behandeln.</li>
+    <li><b>Notizen</b>: Text ändern <code>updateText</code>, Papierkorb <code>trash</code>/<code>restore</code>, endgültig <code>delete</code> (löscht Anhänge mit) in <code>Tagwerk/Notes/NoteStore.swift:127, 148, 171, 179</code>; Aufbewahrung 30 Tage (<code>NoteFolderRules.swift:94</code>). Eine Versionsgeschichte gibt es nicht: „Ersetzen“ ist nach dem Verlassen der Notiz nicht mehr umkehrbar (betrifft RT3, NC2).</li>
+    <li><b>Mehr-Menü der Notiz</b>: <code>Tagwerk/Notes/NoteEditorView.swift:151–187</code>; die Rezept-Zeile „Zutaten auf die Einkaufsliste“ erscheint nur im Ordner „Rezepte“ (<code>:166–171, 191–193</code>).</li>
+  </ul>
+</div>
+
+<!-- ====================================================================== -->
+<h2><span class="area">RT1</span> #232 · Wo beginnt das Übersetzen in der Rezept-Notiz?</h2>
+<p class="lead">Heute hat eine Notiz im Ordner „Rezepte“ im Mehr-Menü die Zeile „Zutaten auf die Einkaufsliste“. Das Übersetzen ist eine seltene Handlung je Rezept.</p>
+<div class="grid">
+  <div>
+    <p class="label"><span class="code r">RT1a</span> <b>Zeile im Mehr-Menü</b> <span class="rec">Empfehlung</span></p>
+    <div class="phone crop">
+      <div class="status"><span>9:41</span><span>●●● 5G</span></div>
+      <div class="scr">
+        <div class="nav"><span class="back">‹ Rezepte</span><div class="r"><span class="gb glass">✎</span><span class="gb glass">⋯</span></div></div>
+        <div class="note"><h4>Red Lentil Curry</h4><p>Servings: 4</p><h5>Ingredients</h5><ul><li>250 g red lentils</li><li>1 can coconut milk</li><li>2 tbsp curry paste</li></ul><h5>Instructions</h5><ol><li>Dice the onion and fry until soft.</li><li>Add lentils and coconut milk.</li></ol></div>
+      </div>
+      <div class="menu glass" style="right:14px; top:104px;">
+        <div>Anheften <span>📌</span></div>
+        <div>Zutaten auf die Einkaufsliste <span>🛒</span></div>
+        <div class="new">Übersetzen … <span>🌐</span></div>
+        <div>Teilen <span>⇪</span></div>
+        <div class="x">Löschen <span>🗑</span></div>
+      </div>
+    </div>
+    <p class="pc"><b>Für:</b> gleiche Stelle wie die andere Rezept-Aktion, kein dauerhafter Platz. <b>Gegen:</b> wer das Menü nicht öffnet, findet es nicht. Englisch: „Translate …“.</p>
+  </div>
+  <div>
+    <p class="label"><span class="code">RT1b</span> <b>Sprachleiste über dem Rezept</b></p>
+    <div class="phone light crop">
+      <div class="status"><span>9:41</span><span>●●● 5G</span></div>
+      <div class="scr">
+        <div class="nav"><span class="back">‹ Rezepte</span><div class="r"><span class="gb glass">✎</span><span class="gb glass">⋯</span></div></div>
+        <div class="langbar new"><div>🌐 Rezept auf Englisch</div><span>Auf Deutsch übersetzen</span></div>
+        <div class="note"><h4>Red Lentil Curry</h4><p>Servings: 4</p><h5>Ingredients</h5><ul><li>250 g red lentils</li><li>1 can coconut milk</li><li>2 tbsp curry paste</li></ul><h5>Instructions</h5><ol><li>Dice the onion and fry until soft.</li></ol></div>
+      </div>
+    </div>
+    <p class="pc"><b>Für:</b> sofort sichtbar, wenn die Rezeptsprache von der Einstellung „Sprache für Rezepte“ abweicht. <b>Gegen:</b> Tagwerk müsste die Sprache der Notiz erkennen (heute nicht vorhanden); die Leiste steht auch bei Rezepten, die absichtlich englisch sind.</p>
+  </div>
+  <div>
+    <p class="label"><span class="code">RT1c</span> <b>Nur über den Assistenten</b></p>
+    <div class="phone crop">
+      <div class="status"><span>9:41</span><span>●●● 5G</span></div>
+      <div class="scr">
+        <div class="ctx">Kontext: Notiz „Red Lentil Curry“</div>
+        <div class="msg u">Übersetz das Rezept auf Deutsch</div>
+        <div class="act"><p class="st">Vorgeschlagene Änderung · noch nicht ausgeführt</p><b>Notiz „Red Lentil Curry“ übersetzen</b><small>Deutsch · Titel, 3 Zutaten, 2 Schritte</small><div class="lnk">Änderung ansehen ›</div><div class="btns"><span class="btn">Verwerfen</span><span class="btn b">Bestätigen</span></div></div>
+        <div class="inp glass"><b>Nachricht</b><i>🎙</i></div>
+      </div>
+    </div>
+    <p class="pc"><b>Für:</b> kein eigener Ablauf, fällt aus #233 ab. <b>Gegen:</b> hängt #232 an #233 und an die größere Notiz-Einwilligung; drei Schritte statt zwei für eine einfache Handlung.</p>
+  </div>
+</div>
+
+<!-- ====================================================================== -->
+<h2><span class="area">RT2</span> #232 · Wie sieht die Vorschau aus?</h2>
+<p class="lead">Der Rezept-Import zeigt die Antwort von ChatGPT als Vorschlag, der erst nach einem Tipp gilt. Übersetzungen können Mengen, Einheiten oder Eigennamen verfälschen; ohne Versionsgeschichte ist ein stilles Überschreiben riskant.</p>
+<div class="grid">
+  <div>
+    <p class="label"><span class="code r">RT2a</span> <b>Vorschau-Blatt mit Umschalter</b> <span class="rec">Empfehlung</span></p>
+    <div class="phone">
+      <div class="status"><span>9:41</span><span>●●● 5G</span></div>
+      <div class="scr"><div class="nav"><span class="back">‹ Rezepte</span></div></div>
+      <div class="dim"></div>
+      <div class="sheet">
+        <div class="grab"></div>
+        <div class="bar"><span class="l">Verwerfen</span>Übersetzung</div>
+        <div class="seg2"><span>Original</span><span class="on">Deutsch</span></div>
+        <div class="fs" style="padding:10px 4px;"><div class="note"><h4 style="font-size:20px">Rotes Linsencurry</h4><p>Portionen: 4</p><h5>Zutaten</h5><ul><li>250 g rote Linsen</li><li>1 Dose Kokosmilch</li><li>2 EL Currypaste</li></ul><h5>Zubereitung</h5><ol><li>Zwiebel würfeln und glasig anbraten.</li><li>Linsen und Kokosmilch zugeben.</li></ol><p class="src">Quelle: <u>bbcgoodfood.com</u></p></div></div>
+        <p class="ff">Vorschlag von ChatGPT. Mengen und Einheiten bleiben unverändert; bitte kurz prüfen. Anmerkungen und Anhänge der Notiz bleiben erhalten.</p>
+        <div class="foot"><span class="big">Übernehmen</span></div>
+      </div>
+    </div>
+    <p class="pc"><b>Für:</b> ganzes Rezept in voller Breite lesbar; ein Tipp zeigt das Original. <b>Gegen:</b> kein direkter Zeilenvergleich. Die Knöpfe unten hängen von RT3 ab.</p>
+  </div>
+  <div>
+    <p class="label"><span class="code">RT2b</span> <b>Zwei Spalten nebeneinander</b></p>
+    <div class="phone light">
+      <div class="status"><span>9:41</span><span>●●● 5G</span></div>
+      <div class="scr"><div class="nav"><span class="back">‹ Rezepte</span></div></div>
+      <div class="dim"></div>
+      <div class="sheet">
+        <div class="grab"></div>
+        <div class="bar"><span class="l">Verwerfen</span>Übersetzung</div>
+        <div class="cols">
+          <div><h6>Original</h6>Red Lentil Curry</div><div><h6>Deutsch</h6>Rotes Linsencurry</div>
+          <div>250 g red lentils</div><div>250 g rote Linsen</div>
+          <div>1 can coconut milk</div><div>1 Dose Kokosmilch</div>
+          <div>2 tbsp curry paste</div><div>2 EL Currypaste</div>
+          <div>Dice the onion and fry until soft.</div><div>Zwiebel würfeln und glasig anbraten.</div>
+          <div>Add lentils and coconut milk.</div><div>Linsen und Kokosmilch zugeben.</div>
+        </div>
+        <div class="foot"><span class="big">Übernehmen</span></div>
+      </div>
+    </div>
+    <p class="pc"><b>Für:</b> jede Zeile direkt prüfbar. <b>Gegen:</b> bei 390 pt Breite sehr schmal, lange Schritte werden zu hohen Kästen; setzt voraus, dass Original und Übersetzung zeilengleich sind.</p>
+  </div>
+  <div>
+    <p class="label"><span class="code">RT2c</span> <b>Sofort anwenden, „Rückgängig“</b></p>
+    <div class="phone crop">
+      <div class="status"><span>9:41</span><span>●●● 5G</span></div>
+      <div class="scr">
+        <div class="nav"><span class="back">‹ Rezepte</span><div class="r"><span class="gb glass">✎</span><span class="gb glass">⋯</span></div></div>
+        <div class="note"><h4>Rotes Linsencurry</h4><p>Portionen: 4</p><h5>Zutaten</h5><ul><li>250 g rote Linsen</li><li>1 Dose Kokosmilch</li><li>2 EL Currypaste</li></ul><h5>Zubereitung</h5><ol><li>Zwiebel würfeln und glasig anbraten.</li></ol></div>
+        <div class="undo glass" style="position:absolute; left:8px; right:8px; bottom:60px; z-index:5;"><div>Auf Deutsch übersetzt</div><span>Rückgängig</span></div>
+      </div>
+    </div>
+    <p class="pc"><b>Für:</b> schnellster Weg. <b>Gegen:</b> bricht mit „Antwort ist ein Vorschlag“; „Rückgängig“ verschwindet nach Sekunden, danach ist das Original weg.</p>
+  </div>
+</div>
+
+<!-- ====================================================================== -->
+<h2><span class="area">RT3</span> #232 · Original ersetzen, Kopie anlegen oder wählen?</h2>
+<p class="lead">Gezeigt ist jeweils der Fuß des Vorschau-Blatts aus RT2a. Eine Kopie ist eine neue Notiz im Ordner „Rezepte“; Anhänge hängen an der Notiz-ID und wandern nicht automatisch mit.</p>
+<div class="grid">
+  <div>
+    <p class="label"><span class="code">RT3a</span> <b>Immer ersetzen</b></p>
+    <div class="phone light crop" style="height:300px">
+      <div class="scr"></div>
+      <div class="sheet" style="top:20px">
+        <div class="grab"></div><div class="bar"><span class="l">Verwerfen</span>Übersetzung</div>
+        <div class="seg2"><span>Original</span><span class="on">Deutsch</span></div>
+        <p class="ff">Der bisherige Text der Notiz wird ersetzt.</p>
+        <span class="big">Übersetzung übernehmen</span>
+      </div>
+    </div>
+    <p class="pc"><b>Für:</b> eine Notiz je Rezept, keine Dubletten. <b>Gegen:</b> das Original ist danach nicht wiederherstellbar (keine Versionsgeschichte).</p>
+  </div>
+  <div>
+    <p class="label"><span class="code">RT3b</span> <b>Immer als Kopie</b></p>
+    <div class="phone crop" style="height:300px">
+      <div class="scr"></div>
+      <div class="sheet" style="top:20px">
+        <div class="grab"></div><div class="bar"><span class="l">Verwerfen</span>Übersetzung</div>
+        <div class="seg2"><span>Original</span><span class="on">Deutsch</span></div>
+        <p class="ff">Legt „Rotes Linsencurry“ als neue Notiz im Ordner „Rezepte“ an. Das Original bleibt.</p>
+        <span class="big">Als neue Notiz sichern</span>
+      </div>
+    </div>
+    <p class="pc"><b>Für:</b> nichts geht verloren. <b>Gegen:</b> zwei Rezepte je Gericht; in der Rezeptauswahl für die Einkaufsliste erscheinen beide.</p>
+  </div>
+  <div>
+    <p class="label"><span class="code r">RT3c</span> <b>Wahl im Vorschau-Blatt</b> <span class="rec">Empfehlung</span></p>
+    <div class="phone light crop" style="height:300px">
+      <div class="scr"></div>
+      <div class="sheet" style="top:20px">
+        <div class="grab"></div><div class="bar"><span class="l">Verwerfen</span>Übersetzung</div>
+        <div class="seg2"><span>Original</span><span class="on">Deutsch</span></div>
+        <span class="big">Original ersetzen</span>
+        <span class="big s">Als Kopie sichern</span>
+      </div>
+    </div>
+    <p class="pc"><b>Für:</b> deckt „Import kam in der falschen Sprache“ (ersetzen) und „beide Fassungen behalten“ (Kopie) ohne Zusatzschritt. <b>Gegen:</b> eine Entscheidung mehr. Englisch: „Replace original“ / „Save as copy“.</p>
+  </div>
+</div>
+
+<!-- ====================================================================== -->
+<h2><span class="area">RT4</span> #232 · Welche Zielsprachen?</h2>
+<p class="lead">Das Blatt nach „Übersetzen …“. Die Sprache, in der das Rezept nicht steht, ist vorgewählt, soweit sie an den Überschriften erkennbar ist.</p>
+<div class="grid">
+  <div>
+    <p class="label"><span class="code r">RT4a</span> <b>Deutsch und Englisch</b> <span class="rec">Empfehlung</span></p>
+    <div class="phone crop">
+      <div class="scr"></div><div class="dim"></div>
+      <div class="sheet" style="top:120px">
+        <div class="grab"></div><div class="bar"><span class="l">Abbrechen</span>Rezept übersetzen</div>
+        <div class="fh">Übersetzen nach</div>
+        <div class="fs"><div class="fr">Deutsch <span style="color:var(--blue)">✓</span></div><div class="fr">Englisch</div></div>
+        <p class="ff">Tagwerk sendet den Text dieser Notiz an ChatGPT. Du siehst die Übersetzung, bevor sich etwas ändert.</p>
+        <span class="big">Übersetzen</span>
+      </div>
+    </div>
+    <p class="pc"><b>Für:</b> das Ergebnis bleibt ein Rezept, das Tagwerk lesen, skalieren und auf die Einkaufsliste bringen kann. <b>Gegen:</b> keine dritte Sprache.</p>
+  </div>
+  <div>
+    <p class="label"><span class="code">RT4b</span> <b>Freie Sprachliste</b></p>
+    <div class="phone light crop">
+      <div class="scr"></div><div class="dim"></div>
+      <div class="sheet" style="top:120px">
+        <div class="grab"></div><div class="bar"><span class="l">Abbrechen</span>Rezept übersetzen</div>
+        <div class="fh">Übersetzen nach</div>
+        <div class="fs"><div class="fr">Deutsch <span style="color:var(--blue)">✓</span></div><div class="fr">Englisch</div><div class="fr">Französisch</div><div class="fr">Italienisch</div><div class="fr">Andere Sprache … <span class="v">›</span></div></div>
+        <p class="ff">Bei anderen Sprachen bleiben die Überschriften „Zutaten“ und „Zubereitung“ deutsch, damit Tagwerk das Rezept weiter lesen kann.</p>
+      </div>
+    </div>
+    <p class="pc"><b>Für:</b> Rezept für Gäste oder zum Sprachenlernen. <b>Gegen:</b> gemischte Notiz (deutsche Überschriften, fremder Text); Zutatennamen passen nicht mehr zu den Kategorien der Einkaufsliste; über #232 hinaus.</p>
+  </div>
+</div>
+
+<!-- ====================================================================== -->
+<h2><span class="area">RT5</span> #232 · Welche Einwilligung gilt?</h2>
+<p class="lead">Es gibt bereits die einmalige Einwilligung „Rezepte mit ChatGPT lesen“ (Schalter unter Einstellungen › Einkaufsliste). Wer ein Rezept per ChatGPT importiert hat, hat sie schon gegeben.</p>
+<div class="grid">
+  <div>
+    <p class="label"><span class="code r">RT5a</span> <b>Bestehende Rezept-Einwilligung</b> <span class="rec">Empfehlung</span></p>
+    <div class="phone">
+      <div class="status"><span>9:41</span><span>●●● 5G</span></div>
+      <div class="scr"></div><div class="dim"></div>
+      <div class="sheet">
+        <div class="grab"></div><div class="bar">Rezepte mit ChatGPT</div>
+        <p class="intro">Um ein Rezept zu lesen oder zu übersetzen, sendet Tagwerk den Rezepttext oder die Fotos an ChatGPT (OpenAI), über das Konto, mit dem du angemeldet bist.</p>
+        <div class="pt"><i>✈</i><div><b>Gesendet wird:</b> beim Übersetzen der Text dieser einen Notiz.</div></div>
+        <div class="pt"><i>🚫</i><div><b>Nicht gesendet werden:</b> andere Notizen, Anhänge, Aufgaben, Termine, Daten aus Health.</div></div>
+        <div class="pt"><i>👆</i><div><b>Nur auf dein Tippen:</b> Ohne „Übersetzen“ verlässt nichts das iPhone.</div></div>
+        <div class="foot"><span class="big">Einverstanden und übersetzen</span><span class="big t">Nicht jetzt</span><p class="ff" style="text-align:center">Du kannst das in den Einstellungen unter „Einkaufsliste“ widerrufen.</p></div>
+      </div>
+    </div>
+    <p class="pc">Erscheint nur, wenn die Rezept-Einwilligung noch fehlt; sonst startet die Übersetzung direkt. Der Text des bestehenden Blatts und der Datenschutzhinweis in Einstellungen › KI werden um „übersetzen“ ergänzt. <b>Gegen:</b> der Schalter liegt unter „Einkaufsliste“, obwohl es um eine Notiz geht.</p>
+  </div>
+  <div>
+    <p class="label"><span class="code">RT5b</span> <b>Eigene Einwilligung „Rezepte übersetzen“</b></p>
+    <div class="phone light crop">
+      <div class="status"><span>9:41</span><span>●●● 5G</span></div>
+      <div class="scr">
+        <div class="nav"><span class="back">‹ Einstellungen</span></div>
+        <div class="lt">KI</div>
+        <div class="fs"><div class="fr">Mails von ChatGPT zusammenfassen <span class="tog"></span></div><div class="fr new">Rezepte von ChatGPT übersetzen <span class="tog"></span></div></div>
+        <p class="ff">Für eine Übersetzung sendet Tagwerk auf dein Tippen den Text der Rezept-Notiz an ChatGPT.</p>
+      </div>
+    </div>
+    <p class="pc"><b>Für:</b> jede Funktion einzeln abschaltbar. <b>Gegen:</b> ein weiterer Schalter und ein weiteres Blatt für dieselben Daten an denselben Empfänger; wer importiert hat, wird ein zweites Mal gefragt.</p>
+  </div>
+</div>
+
+<!-- ====================================================================== -->
+<h2><span class="area p">NC1</span> #233 · Wo beginnt die Arbeit mit ChatGPT an Notizen?</h2>
+<p class="lead">Der Assistent öffnet sich heute aus Planen, Aufgaben, Erfassen und Einstellungen sowie als eigener Chat je Aufgabe („Über diese Aufgabe sprechen“). In den Notizen gibt es keinen Einstieg.</p>
+<div class="grid">
+  <div>
+    <p class="label"><span class="code">NC1a</span> <b>Assistent in der Notiz-Übersicht</b></p>
+    <div class="phone crop">
+      <div class="status"><span>9:41</span><span>●●● 5G</span></div>
+      <div class="scr">
+        <div class="nav"><span class="back">‹ Aufgaben</span><div class="r"><span class="gb glass ai new">✦</span><span class="gb glass">📁</span></div></div>
+        <div class="lt">Notizen</div>
+        <div class="list">
+          <div class="tl"><span class="ic">🗂</span><div class="tx">Alle Notizen</div><span class="ch">42</span></div>
+          <div class="tl"><span class="ic">🧠</span><div class="tx">Brain Dump</div><span class="ch">9</span></div>
+          <div class="tl"><span class="ic">🍲</span><div class="tx">Rezepte</div><span class="ch">12</span></div>
+          <div class="tl"><span class="ic">📓</span><div class="tx">Tagebuch mit Gott</div><span class="ch">31</span></div>
+          <div class="tl"><span class="ic">📖</span><div class="tx">Bible Study</div><span class="ch">6</span></div>
+          <div class="tl"><span class="ic">🌙</span><div class="tx">Dream Log</div><span class="ch">14</span></div>
+        </div>
+      </div>
+    </div>
+    <p class="pc"><b>Für:</b> ein Einstieg, passt zu „durchgehen“. <b>Gegen:</b> aus einer geöffneten Notiz muss man zurück und die Notiz im Chat benennen.</p>
+  </div>
+  <div>
+    <p class="label"><span class="code">NC1b</span> <b>Nur in der Notiz</b></p>
+    <div class="phone light crop">
+      <div class="status"><span>9:41</span><span>●●● 5G</span></div>
+      <div class="scr">
+        <div class="nav"><span class="back">‹ Brain Dump</span><div class="r"><span class="gb glass">✎</span><span class="gb glass">⋯</span></div></div>
+        <div class="note"><h4>Umzug Ideen</h4><p>kartons bei obi?? oder kleinanzeigen</p><p>termin vermieter übergabe noch offen, anrufen</p><p>internet ummelden – frist 4 wochen glaub ich</p></div>
+      </div>
+      <div class="menu glass" style="right:14px; top:104px;">
+        <div>Anheften <span>📌</span></div>
+        <div class="new">Mit ChatGPT überarbeiten … <span>✦</span></div>
+        <div>Teilen <span>⇪</span></div>
+        <div class="x">Löschen <span>🗑</span></div>
+      </div>
+    </div>
+    <p class="pc"><b>Für:</b> sendet nur diese eine Notiz, kleinster Datenumfang. <b>Gegen:</b> „durchgehen“, „anlegen“ und „löschen“ über mehrere Notizen sind so nicht möglich; erfüllt #233 nur zum Teil.</p>
+  </div>
+  <div>
+    <p class="label"><span class="code r">NC1c</span> <b>Beides: ein Chat, zwei Kontexte</b> <span class="rec">Empfehlung</span></p>
+    <div class="phone crop">
+      <div class="status"><span>9:41</span><span>●●● 5G</span></div>
+      <div class="scr">
+        <div class="nav"><span class="back">‹ Brain Dump</span><div class="r"><span class="gb glass ai new">✦</span><span class="gb glass">✎</span><span class="gb glass">⋯</span></div></div>
+        <div class="note"><h4>Umzug Ideen</h4><p>kartons bei obi?? oder kleinanzeigen</p><p>termin vermieter übergabe noch offen, anrufen</p></div>
+      </div>
+      <div class="dim"></div>
+      <div class="sheet half">
+        <div class="grab"></div><div class="bar">Assistent<span>Fertig</span></div>
+        <div class="ctx new" style="align-self:center">Kontext: Notiz „Umzug Ideen“</div>
+        <div class="inp glass" style="margin-top:8px"><b>Nachricht</b><i>🎙</i></div>
+      </div>
+    </div>
+    <p class="pc">Lila Knopf in der Notiz-Übersicht und in den Ordnerlisten (Kontext „Notizen“) sowie in der geöffneten Notiz (Kontext „Notiz …“). In privaten Notizen und Ordnern fehlt der Knopf. <b>Für:</b> gleiche Mechanik wie der Aufgaben-Chat, keine zweite Oberfläche. <b>Gegen:</b> zwei Stellen zu pflegen.</p>
+  </div>
+</div>
+
+<!-- ====================================================================== -->
+<h2><span class="area p">NC2</span> #233 · Wie zeigt der Assistent einen Änderungsvorschlag?</h2>
+<p class="lead">Heutige Aktionskarte: Zeile „Vorgeschlagene Änderung · noch nicht ausgeführt“, Titel, Kurztext, „Verwerfen“ und „Bestätigen“. Für Termine und Aufgaben genügt der Kurztext; ein umgeschriebener Notiztext passt dort nicht hinein.</p>
+<div class="grid">
+  <div>
+    <p class="label"><span class="code">NC2a</span> <b>Karte mit Kurztext (wie heute)</b></p>
+    <div class="phone light crop">
+      <div class="status"><span>9:41</span><span>●●● 5G</span></div>
+      <div class="scr">
+        <div class="ctx">Kontext: Notiz „Umzug Ideen“</div>
+        <div class="msg u">Mach daraus eine saubere Liste</div>
+        <div class="msg a">Ich habe die drei Punkte als Liste gegliedert und die Frist ergänzt.</div>
+        <div class="act"><p class="st">Vorgeschlagene Änderung · noch nicht ausgeführt</p><b>Notiz „Umzug Ideen“ überarbeiten</b><small>Text → „# Umzug · Kartons besorgen (Obi oder Kleinanzeigen) · Vermieter wegen Übergabe anrufen · Internet …“</small><div class="btns"><span class="btn">Verwerfen</span><span class="btn b">Bestätigen</span></div></div>
+        <div class="inp glass"><b>Nachricht</b><i>🎙</i></div>
+      </div>
+    </div>
+    <p class="pc"><b>Für:</b> keine neue Ansicht. <b>Gegen:</b> der Text wird abgeschnitten; man bestätigt, ohne den ganzen neuen Text gesehen zu haben.</p>
+  </div>
+  <div>
+    <p class="label"><span class="code r">NC2b</span> <b>Karte + „Änderung ansehen“</b> <span class="rec">Empfehlung</span></p>
+    <div class="phone">
+      <div class="status"><span>9:41</span><span>●●● 5G</span></div>
+      <div class="scr">
+        <div class="ctx">Kontext: Notiz „Umzug Ideen“</div>
+        <div class="msg u">Mach daraus eine saubere Liste</div>
+        <div class="act"><p class="st">Vorgeschlagene Änderung · noch nicht ausgeführt</p><b>Notiz „Umzug Ideen“ überarbeiten</b><small>3 Zeilen geändert · Titel ergänzt</small><div class="lnk">Änderung ansehen ›</div><div class="btns"><span class="btn">Verwerfen</span><span class="btn b">Bestätigen</span></div></div>
+      </div>
+      <div class="dim"></div>
+      <div class="sheet" style="top:250px">
+        <div class="grab"></div><div class="bar"><span class="l">Schließen</span>Umzug Ideen</div>
+        <div class="seg2"><span>Vorher</span><span class="on">Nachher</span><span>Änderungen</span></div>
+        <div class="fs" style="padding:10px 4px"><div class="note" style="font-size:13.5px"><h5 style="margin-top:0">Umzug</h5><ul><li>Kartons besorgen (Obi oder Kleinanzeigen)</li><li>Vermieter wegen Übergabe-Termin anrufen</li><li>Internet ummelden, Frist: 4 Wochen (prüfen)</li></ul></div></div>
+        <div class="foot" style="display:flex; gap:8px"><span class="big s" style="flex:1">Verwerfen</span><span class="big" style="flex:1">Bestätigen</span></div>
+      </div>
+    </div>
+    <p class="pc">Die Karte nennt nur den Umfang; das Blatt zeigt „Vorher“, „Nachher“ und „Änderungen“ (Diff wie in NC2c) und hat dieselben zwei Knöpfe. Für „Neue Notiz“ zeigt das Blatt nur den neuen Text, für „Löschen“ den Text, der wegfällt. <b>Gegen:</b> ein zusätzliches Blatt.</p>
+  </div>
+  <div>
+    <p class="label"><span class="code">NC2c</span> <b>Diff direkt in der Karte</b></p>
+    <div class="phone light crop">
+      <div class="status"><span>9:41</span><span>●●● 5G</span></div>
+      <div class="scr">
+        <div class="ctx">Kontext: Notiz „Umzug Ideen“</div>
+        <div class="msg u">Mach daraus eine saubere Liste</div>
+        <div class="act"><p class="st">Vorgeschlagene Änderung · noch nicht ausgeführt</p><b>Notiz „Umzug Ideen“ überarbeiten</b>
+          <div class="diff"><div class="pl">+ # Umzug</div><div class="m">kartons bei obi?? oder kleinanzeigen</div><div class="pl">+ Kartons besorgen (Obi oder Kleinanzeigen)</div><div class="m">termin vermieter übergabe noch offen, anrufen</div><div class="pl">+ Vermieter wegen Übergabe-Termin anrufen</div><div class="k">… 2 weitere Zeilen</div></div>
+          <div class="btns"><span class="btn">Verwerfen</span><span class="btn b">Bestätigen</span></div></div>
+      </div>
+    </div>
+    <p class="pc"><b>Für:</b> alles im Chat, kein Blatt. <b>Gegen:</b> lange Notizen sprengen den Chat oder werden doch gekürzt; durchgestrichener Text ist schwer zu lesen, per VoiceOver und Vorlesen kaum brauchbar.</p>
+  </div>
+</div>
+
+<!-- ====================================================================== -->
+<h2><span class="area p">NC3</span> #233 · Wie wird bei mehreren Vorschlägen bestätigt?</h2>
+<p class="lead">Heute erscheint ab zwei offenen Karten „Alle bestätigen (n)“. #233 verlangt eine „Bestätigung vor jeder Änderung“. Beim Durchgehen entstehen leicht fünf bis zehn Vorschläge.</p>
+<div class="grid">
+  <div>
+    <p class="label"><span class="code r">NC3a</span> <b>Jede Notiz-Karte einzeln</b> <span class="rec">Empfehlung</span></p>
+    <div class="phone">
+      <div class="status"><span>9:41</span><span>●●● 5G</span></div>
+      <div class="scr">
+        <div class="ctx">Kontext: Notizen · ohne private Ordner</div>
+        <div class="msg u">Räum den Brain Dump auf</div>
+        <div class="msg a">Drei Vorschläge. Notiz-Änderungen bestätigst du einzeln.</div>
+        <div class="act"><p class="st">Vorschlag 1 von 3 · noch nicht ausgeführt</p><b>Notiz „Umzug Ideen“ überarbeiten</b><small>3 Zeilen geändert · Titel ergänzt</small><div class="lnk">Änderung ansehen ›</div><div class="btns"><span class="btn">Verwerfen</span><span class="btn b">Bestätigen</span></div></div>
+        <div class="act"><p class="st">Vorschlag 2 von 3 · noch nicht ausgeführt</p><b>Neue Notiz „Umzug Checkliste“</b><small>Ordner „Brain Dump“ · 8 Zeilen</small><div class="lnk">Notiz ansehen ›</div><div class="btns"><span class="btn">Verwerfen</span><span class="btn b">Anlegen</span></div></div>
+        <div class="act del"><p class="st">Vorschlag 3 von 3 · noch nicht ausgeführt</p><b>Notiz „umzug??“ löschen</b><small>Doppelt zu „Umzug Ideen“ · 2 Zeilen</small><div class="lnk">Notiz ansehen ›</div><div class="btns"><span class="btn">Verwerfen</span><span class="btn p">Löschen</span></div></div>
+        <div class="inp glass"><b>Nachricht</b><i>🎙</i></div>
+      </div>
+    </div>
+    <p class="pc">Kein „Alle bestätigen“, solange Notiz-Karten offen sind. Der Knopf benennt die Handlung („Anlegen“, „Löschen“); Löschen ist rot. <b>Gegen:</b> bei vielen Vorschlägen viele Tipps.</p>
+  </div>
+  <div>
+    <p class="label"><span class="code">NC3b</span> <b>„Alle bestätigen“ außer Löschen</b></p>
+    <div class="phone light">
+      <div class="status"><span>9:41</span><span>●●● 5G</span></div>
+      <div class="scr">
+        <div class="ctx">Kontext: Notizen · ohne private Ordner</div>
+        <div class="msg u">Räum den Brain Dump auf</div>
+        <div class="act"><p class="st">Vorgeschlagene Änderung · noch nicht ausgeführt</p><b>Notiz „Umzug Ideen“ überarbeiten</b><small>3 Zeilen geändert · Titel ergänzt</small><div class="lnk">Änderung ansehen ›</div><div class="btns"><span class="btn">Verwerfen</span><span class="btn b">Bestätigen</span></div></div>
+        <div class="act"><p class="st">Vorgeschlagene Änderung · noch nicht ausgeführt</p><b>Neue Notiz „Umzug Checkliste“</b><small>Ordner „Brain Dump“ · 8 Zeilen</small><div class="lnk">Notiz ansehen ›</div><div class="btns"><span class="btn">Verwerfen</span><span class="btn b">Anlegen</span></div></div>
+        <div class="act del"><p class="st">Vorgeschlagene Änderung · noch nicht ausgeführt</p><b>Notiz „umzug??“ löschen</b><small>Doppelt zu „Umzug Ideen“ · 2 Zeilen</small><div class="btns"><span class="btn">Verwerfen</span><span class="btn p">Löschen</span></div></div>
+        <div class="allbtn">Alle bestätigen (2) · Löschen einzeln</div>
+        <div class="inp glass"><b>Nachricht</b><i>🎙</i></div>
+      </div>
+    </div>
+    <p class="pc"><b>Für:</b> schneller, nah am heutigen Verhalten. <b>Gegen:</b> umgeschriebene Texte werden ungelesen bestätigt; weicht vom Wortlaut „vor jeder Änderung“ ab.</p>
+  </div>
+  <div>
+    <p class="label"><span class="code">NC3c</span> <b>Sammelblatt mit Häkchen</b></p>
+    <div class="phone">
+      <div class="status"><span>9:41</span><span>●●● 5G</span></div>
+      <div class="scr"></div><div class="dim"></div>
+      <div class="sheet">
+        <div class="grab"></div><div class="bar"><span class="l">Verwerfen</span>Vorschlag von ChatGPT</div>
+        <div class="fh">3 Änderungen an Notizen</div>
+        <div class="fs">
+          <div class="ckrow"><span class="ck done"></span><div>„Umzug Ideen“ überarbeiten<small>3 Zeilen geändert · Ansehen ›</small></div></div>
+          <div class="ckrow"><span class="ck done"></span><div>Neue Notiz „Umzug Checkliste“<small>Brain Dump · 8 Zeilen · Ansehen ›</small></div></div>
+          <div class="ckrow"><span class="ck"></span><div style="color:var(--red)">„umzug??“ löschen<small>Doppelt · Ansehen ›</small></div></div>
+        </div>
+        <p class="ff">Löschungen sind anfangs nicht angehakt.</p>
+        <div class="foot"><span class="big">2 Änderungen übernehmen</span></div>
+      </div>
+    </div>
+    <p class="pc">Muster wie „Mit ChatGPT sortieren“ in der Einkaufsliste. <b>Für:</b> guter Überblick bei vielen Vorschlägen. <b>Gegen:</b> zweite Bestätigungs-Oberfläche neben den Karten; per Sprache nicht bedienbar; ein Tipp übernimmt mehrere Texte.</p>
+  </div>
+</div>
+
+<!-- ====================================================================== -->
+<h2><span class="area p">NC4</span> #233 · Was heißt „löschen“ durch den Assistenten?</h2>
+<p class="lead">Von Hand gelöschte Notizen liegen 30 Tage in „Zuletzt gelöscht“ und lassen sich wiederherstellen; erst „Endgültig löschen“ entfernt sie samt Anhängen.</p>
+<div class="grid">
+  <div>
+    <p class="label"><span class="code r">NC4a</span> <b>Nach „Zuletzt gelöscht“</b> <span class="rec">Empfehlung</span></p>
+    <div class="phone crop" style="height:330px">
+      <div class="status"><span>9:41</span><span>●●● 5G</span></div>
+      <div class="scr">
+        <div class="act del"><p class="st">Vorgeschlagene Änderung · noch nicht ausgeführt</p><b>Notiz „umzug??“ löschen</b><small>Kommt nach „Zuletzt gelöscht“ und bleibt dort 30 Tage wiederherstellbar.</small><div class="lnk">Notiz ansehen ›</div><div class="btns"><span class="btn">Verwerfen</span><span class="btn p">Löschen</span></div></div>
+        <div class="act"><b>Notiz „umzug??“ gelöscht</b><small style="margin-bottom:0">Ausgeführt 9:42 · In „Zuletzt gelöscht“</small></div>
+      </div>
+    </div>
+    <p class="pc"><b>Für:</b> gleiches Verhalten wie das Wischen in der Liste; ein Fehlgriff ist behebbar. Der Assistent leert den Papierkorb nie. <b>Gegen:</b> keines von Gewicht.</p>
+  </div>
+  <div>
+    <p class="label"><span class="code">NC4b</span> <b>Endgültig, mit zweiter Rückfrage</b></p>
+    <div class="phone light crop" style="height:330px">
+      <div class="status"><span>9:41</span><span>●●● 5G</span></div>
+      <div class="scr">
+        <div class="act del"><p class="st">Vorgeschlagene Änderung · noch nicht ausgeführt</p><b>Notiz „umzug??“ löschen</b><small>Wird endgültig entfernt, mit 1 Anhang.</small><div class="btns"><span class="btn">Verwerfen</span><span class="btn p">Löschen</span></div></div>
+      </div>
+      <div class="menu glass" style="left:60px; top:190px; width:270px"><div style="justify-content:center; font-weight:600; font-size:13px; color:var(--sub)">Notiz endgültig löschen?</div><div class="x" style="justify-content:center">Endgültig löschen</div><div style="justify-content:center; color:var(--blue)">Abbrechen</div></div>
+    </div>
+    <p class="pc"><b>Für:</b> nichts bleibt im Papierkorb liegen. <b>Gegen:</b> härter als das Löschen von Hand; zwei Rückfragen und trotzdem nicht umkehrbar.</p>
+  </div>
+</div>
+
+<!-- ====================================================================== -->
+<h2><span class="area p">NC5</span> #233 · Wie erfährt man, dass private Ordner ausgeschlossen sind?</h2>
+<p class="lead">Tagebuch mit Gott, Bible Study und Dream Log verlassen das iPhone nie. Der Ausschluss ist fest und kein Schalter. Die Frage ist nur, wo er steht.</p>
+<div class="grid">
+  <div>
+    <p class="label"><span class="code">NC5a</span> <b>Nur im Einwilligungsblatt</b></p>
+    <div class="phone">
+      <div class="status"><span>9:41</span><span>●●● 5G</span></div>
+      <div class="scr"></div><div class="dim"></div>
+      <div class="sheet">
+        <div class="grab"></div><div class="bar">Notizen mit ChatGPT</div>
+        <p class="intro">Damit der Assistent deine Notizen durchgehen, überarbeiten, anlegen und löschen kann, sendet Tagwerk Notizen an ChatGPT (OpenAI), über das Konto, mit dem du angemeldet bist.</p>
+        <div class="pt"><i>✈</i><div><b>Gesendet wird:</b> die Titel deiner Notizen und der Text der Notizen, um die es im Gespräch geht.</div></div>
+        <div class="pt"><i>🔒</i><div><b>Nie gesendet werden:</b> Tagebuch mit Gott, Bible Study und Dream Log, gelöschte Notizen, Anhänge.</div></div>
+        <div class="pt"><i>✓</i><div><b>Nichts ändert sich ohne dich:</b> Jede Änderung, jede neue Notiz und jedes Löschen bestätigst du einzeln.</div></div>
+        <div class="pt"><i>👆</i><div><b>Nur im Gespräch:</b> Ohne deine Nachricht an den Assistenten verlässt nichts das iPhone.</div></div>
+        <div class="foot"><span class="big">Einverstanden</span><span class="big t">Nicht jetzt</span><p class="ff" style="text-align:center">Du kannst das in den Einstellungen unter „KI“ widerrufen.</p></div>
+      </div>
+    </div>
+    <p class="pc">Dieses Blatt ist in allen drei Varianten nötig (neue Einwilligung, siehe Befund). <b>Gegen NC5a allein:</b> einmal gelesen und vergessen; im Chat erklärt nichts, warum der Assistent das Tagebuch „nicht findet“.</p>
+  </div>
+  <div>
+    <p class="label"><span class="code r">NC5b</span> <b>Blatt + dauerhafte Zeile im Chat</b> <span class="rec">Empfehlung</span></p>
+    <div class="phone light">
+      <div class="status"><span>9:41</span><span>●●● 5G</span></div>
+      <div class="scr">
+        <div class="nav"><span></span><b style="font:600 16px system-ui">Assistent</b><span style="color:var(--blue); font-weight:600; padding-right:6px">Fertig</span></div>
+        <div class="ctx new">Kontext: Notizen · 🔒 ohne Tagebuch, Bible Study, Dream Log</div>
+        <div class="msg u">Was steht in meinem Tagebuch von gestern?</div>
+        <div class="msg a">Darauf habe ich keinen Zugriff. Tagebuch mit Gott, Bible Study und Dream Log bleiben auf deinem iPhone und werden nie an ChatGPT gesendet.</div>
+        <div class="msg u">Dann zeig mir, was im Brain Dump liegt</div>
+        <div class="msg a">Im Brain Dump liegen 9 Notizen, zuletzt „Umzug Ideen“ und „Geschenk Mama“.</div>
+        <div class="rd">Gelesen: 9 Titel aus „Brain Dump“</div>
+        <div class="inp glass"><b>Nachricht</b><i>🎙</i></div>
+      </div>
+    </div>
+    <p class="pc">Die Kontextzeile nennt den Ausschluss bei jedem Notiz-Gespräch; fragt man danach, antwortet der Assistent mit einem festen Satz (kommt von Tagwerk, nicht von ChatGPT, denn die Funktionen liefern private Notizen gar nicht aus). In privaten Notizen fehlt der Assistent-Knopf. <b>Gegen:</b> lange Kontextzeile.</p>
+  </div>
+  <div>
+    <p class="label"><span class="code">NC5c</span> <b>Zusätzlich Schloss an Ordnern</b></p>
+    <div class="phone crop">
+      <div class="status"><span>9:41</span><span>●●● 5G</span></div>
+      <div class="scr">
+        <div class="nav"><span class="back">‹ Aufgaben</span><div class="r"><span class="gb glass ai">✦</span><span class="gb glass">📁</span></div></div>
+        <div class="lt">Notizen</div>
+        <div class="list">
+          <div class="tl"><span class="ic">🧠</span><div class="tx">Brain Dump</div><span class="ch">9</span></div>
+          <div class="tl"><span class="ic">🍲</span><div class="tx">Rezepte</div><span class="ch">12</span></div>
+          <div class="tl new"><span class="ic">📓</span><div class="tx">Tagebuch mit Gott <span class="lockb">🔒 privat</span></div><span class="ch">31</span></div>
+          <div class="tl new"><span class="ic">📖</span><div class="tx">Bible Study <span class="lockb">🔒 privat</span></div><span class="ch">6</span></div>
+          <div class="tl new"><span class="ic">🌙</span><div class="tx">Dream Log <span class="lockb">🔒 privat</span></div><span class="ch">14</span></div>
+        </div>
+        <p class="ff">🔒 Private Ordner bleiben auf dem iPhone und gehen nie an ChatGPT.</p>
+      </div>
+    </div>
+    <p class="pc"><b>Für:</b> der Ausschluss ist schon vor dem Chat sichtbar. <b>Gegen:</b> dauerhafte Markierung auch für alle, die ChatGPT nie nutzen; „privat“ könnte als Sperre oder Verschlüsselung missverstanden werden, die es nicht gibt.</p>
+  </div>
+</div>
+
+<!-- ====================================================================== -->
+<h2><span class="area p">NC6</span> #233 · Was bekommt ChatGPT zu lesen?</h2>
+<p class="lead">„Durchgehen“ braucht Zugriff auf mehrere Notizen. Der Chatverlauf wird auf dem Gerät gespeichert und bei jeder weiteren Nachricht mitgesendet; gelesene Notiztexte blieben also im Verlauf, bis er gelöscht wird oder die Nachrichten herausfallen.</p>
+<div class="grid">
+  <div>
+    <p class="label"><span class="code r">NC6a</span> <b>Titelliste, Text nur bei Bedarf</b> <span class="rec">Empfehlung</span></p>
+    <div class="phone crop">
+      <div class="status"><span>9:41</span><span>●●● 5G</span></div>
+      <div class="scr">
+        <div class="ctx">Kontext: Notizen · 🔒 ohne Tagebuch, Bible Study, Dream Log</div>
+        <div class="msg u">Welche Notizen zum Umzug sind doppelt?</div>
+        <div class="rd">Gelesen: 42 Titel</div>
+        <div class="rd">Gelesen: „Umzug Ideen“, „umzug??“, „Umzug Kosten“</div>
+        <div class="msg a">„umzug??“ wiederholt zwei Punkte aus „Umzug Ideen“. „Umzug Kosten“ ist eigenständig.</div>
+        <div class="act del"><p class="st">Vorgeschlagene Änderung · noch nicht ausgeführt</p><b>Notiz „umzug??“ löschen</b><small>Doppelt zu „Umzug Ideen“</small><div class="btns"><span class="btn">Verwerfen</span><span class="btn p">Löschen</span></div></div>
+      </div>
+    </div>
+    <p class="pc">Der Assistent holt zuerst Titel, Ordner und Datum, dann den Text einzelner Notizen. Jede Lesung steht als graue Zeile „Gelesen: …“ im Chat. Im Kontext „Notiz …“ wird nur diese Notiz gelesen. <b>Gegen:</b> Titel aller nicht-privaten Notizen gehen mit.</p>
+  </div>
+  <div>
+    <p class="label"><span class="code">NC6b</span> <b>Auswahl vorab</b></p>
+    <div class="phone light crop">
+      <div class="status"><span>9:41</span><span>●●● 5G</span></div>
+      <div class="scr">
+        <div class="nav"><span class="back">Abbrechen</span><b style="font:600 16px system-ui">3 ausgewählt</b><span></span></div>
+        <div class="list">
+          <div class="ckrow"><span class="ck done"></span><div>Umzug Ideen<small>Gestern · kartons bei obi?? oder …</small></div></div>
+          <div class="ckrow"><span class="ck done"></span><div>umzug??<small>Mo. · vermieter anrufen</small></div></div>
+          <div class="ckrow"><span class="ck done"></span><div>Umzug Kosten<small>12.11. · Transporter 89 €</small></div></div>
+          <div class="ckrow"><span class="ck"></span><div>Geschenk Mama<small>10.11. · Gutschein?</small></div></div>
+        </div>
+        <span class="big" style="margin:8px 4px 0">✦ Mit ChatGPT durchgehen (3)</span>
+      </div>
+    </div>
+    <p class="pc"><b>Für:</b> volle Kontrolle, nichts Ungewähltes geht hinaus, auch keine Titel. <b>Gegen:</b> man muss vorher wissen, welche Notizen betroffen sind; „finde Doppeltes“ oder „was habe ich zu X notiert“ geht nicht.</p>
+  </div>
+  <div>
+    <p class="label"><span class="code">NC6c</span> <b>Alles auf einmal</b></p>
+    <div class="phone crop">
+      <div class="status"><span>9:41</span><span>●●● 5G</span></div>
+      <div class="scr">
+        <div class="ctx">Kontext: Notizen · 🔒 ohne Tagebuch, Bible Study, Dream Log</div>
+        <div class="msg u">Welche Notizen zum Umzug sind doppelt?</div>
+        <div class="rd">Gelesen: 42 Notizen (alle außer privaten)</div>
+        <div class="msg a">„umzug??“ wiederholt zwei Punkte aus „Umzug Ideen“.</div>
+        <div class="hint"><b>Hinweis:</b> Der Text aller 42 Notizen liegt jetzt im Verlauf und geht mit jeder weiteren Nachricht erneut mit.</div>
+      </div>
+    </div>
+    <p class="pc"><b>Für:</b> einfachste Umsetzung, beste Antworten bei Querfragen. <b>Gegen:</b> sendet weit mehr als nötig, bei vielen Notizen teuer und langsam; widerspricht der Linie „so wenig wie nötig“ der bisherigen Einwilligungen.</p>
+  </div>
+</div>
+
+<div class="box">
+  <h3>Empfohlener Zuschnitt: RT1a · RT2a · RT3c · RT4a · RT5a · NC1c · NC2b · NC3a · NC4a · NC5b · NC6a</h3>
+  <ul>
+    <li><b>Rezept übersetzen:</b> „Übersetzen …“ im Mehr-Menü der Rezept-Notiz → Sprache (Deutsch/Englisch) → Vorschau-Blatt mit Umschalter Original/Übersetzung → „Original ersetzen“ oder „Als Kopie sichern“. Es gilt die bestehende Rezept-Einwilligung.</li>
+    <li><b>Notizen mit ChatGPT:</b> lila Assistent-Knopf in Notiz-Übersicht, Ordnerliste und Notiz; ein Chat mit Kontext „Notizen“ oder „Notiz …“. Vorschläge als Aktionskarten mit „Änderung ansehen“, jede einzeln bestätigt, Löschen nach „Zuletzt gelöscht“.</li>
+    <li><b>Privat:</b> eigenes Einwilligungsblatt „Notizen mit ChatGPT“, dauerhafte Kontextzeile mit dem Ausschluss, fester Antwortsatz, kein Assistent-Knopf in privaten Notizen.</li>
+    <li><b>Lesen:</b> Titelliste zuerst, Text nur der betroffenen Notizen, jeweils als Zeile „Gelesen: …“ sichtbar.</li>
+  </ul>
+</div>
+
+<div class="box warn">
+  <h3>Offen, vor der Umsetzung zu klären</h3>
+  <ul>
+    <li><b>Reihenfolge:</b> Mit RT1a und RT5a ist #232 unabhängig von #233 umsetzbar. RT1c würde #232 an #233 binden.</li>
+    <li><b>Verlauf:</b> Ob gelesene Notiztexte im gespeicherten Chatverlauf bleiben dürfen oder nach der Antwort durch einen Platzhalter ersetzt werden, ist eine technische Entscheidung mit Wirkung auf den Text der Einwilligung (NC5).</li>
+    <li><b>Unterordner privater Ordner:</b> Der Ausschluss muss auch für Notizen in Unterordnern gelten; der bestehende Filter prüft nur den direkten Ordner.</li>
+    <li><b>Sprachmodus:</b> Per Stimme werden Karten heute nur angesagt oder nach Rückfrage bestätigt; Löschungen zählen gesondert (<code>AssistantModel.swift:178–181</code>). Ob Notiz-Karten per Stimme bestätigt werden dürfen, ist nicht Teil dieser Mockups; NC3a legt „nein, nur auf dem Bildschirm“ nahe.</li>
+    <li><b>Nicht im Umfang:</b> Umrechnen von Einheiten (cups → g) beim Übersetzen, Übersetzen anderer Notizen als Rezepte, Verschieben von Notizen zwischen Ordnern durch den Assistenten, Anhänge.</li>
+  </ul>
+</div>
+
+</body>
+</html>
