@@ -111,16 +111,24 @@ enum AuditAllowlist {
             "Das Rezept wird als Notiz im Ordner „Rezepte“ gespeichert\\. .*", "Portionen", "\\d+", "Die Kategorien kommen aus deiner Einkaufsliste\\.",
             "Vorlesen", "ChatGPT", "Notiz", "(?s)Eine Notiz mit den Abschnitten .*", "(?s)Notizen liegen nur auf diesem iPhone\\..*",
             "(?s)Die gewählte Liste erscheint als Einkaufsliste\\..*", "(?s)Sendet auf dein Tippen die Namen .*", "(?s)„Rezept hinzufügen“ sendet .*",
-            "(?s)Portionen: \\d+\\nZutaten.*", "strukturiert", "wird mit ChatGPT gelesen",
+            "(?s)Portionen: \\d+\\nZutaten.*", "strukturiert", "wird mit ChatGPT gelesen", "Vorrat & Konserven", "\\d+ h \\d+ min", "Spracheingabe",
+            "Titel", "Zutaten", "Zubereitung", "Sprachchat", "Rezepte", "Ziele", "Schätzung", "Anzeige", "Liste", "Kategorien", "Erinnerungen", "Keine",
+            "Demo Einkauf", "[\\d.,]+( kcal| l)?", "Sprache für Rezepte", "In Planen anzeigen",
+            "(?s)(Tagwerk wandelt Sprache|Die Sprache gilt für|Titel, Zutaten und Zubereitung eines Rezepts|Die Vorgaben sind Platzhalter|Zum Schätzen sendet).*",
             "(?s)(Gesendet wird|Nicht gesendet werden|Um ein Rezept zu lesen).*", "(?s)„In Planen anzeigen“ zeigt .*",
         ], screens: recipeScreens + recipeScreensLargeText, reason: "Section headers, footers, values and previews in the system grey (.secondary) on the "
             + "grouped background of a form or list; the last footer of a settings page also lies behind the tab bar. Same group as the "
             + "grey texts above; darkening it would change the look of the default size, decided in #188."),
         Entry(auditType: .contrast, labels: [
+            "(rote|Rote) Linsen", "Zwiebel", "Karotten", "Gemüsebrühe", "Salz", "Obst & Gemüse", "\\d+ (g|l)",
+        ], screens: ["Zutaten (Rezept)", "AX5/dark Zutaten (Rezept)"], reason: "Ingredient names, quantities and categories of the demo recipe in the "
+            + "ingredient list of the sheet (primary and secondary text on the grouped background of the sheet). The audit reports \"nearly passed\" "
+            + "(passes with a larger font size); the colours are the system's primary and secondary text colours (#188)."),
+        Entry(auditType: .contrast, labels: [
             "Einverstanden", "Nicht jetzt", "Rezept speichern", "\\d+ Artikel hinzufügen", "Verwerfen", "Neues Rezept", "Rezept mit ChatGPT anlegen",
-            "Andere Notiz wählen …", "Demo Linsensuppe",
+            "Andere Notiz wählen …", "Demo Linsensuppe", "Rezept holen", "Zutaten holen",
         ], screens: recipeScreens + recipeScreensLargeText, reason: "Texts in the accent colour (list buttons, note title in the picker), white on the "
-            + "prominent button (system style) and \"Verwerfen\" in the navigation bar, whose Liquid Glass background lets the list scroll behind it. "
+            + "prominent button (system style; \"Rezept holen\" and \"Zutaten holen\" are dimmed by the system while the text field is empty) and \"Verwerfen\" in the navigation bar, whose Liquid Glass background lets the list scroll behind it. "
             + "The system draws the background; no own colour to change without replacing the system style (#188)."),
 
         Entry(auditType: .dynamicType, labels: [
@@ -183,9 +191,11 @@ enum AuditAllowlist {
     private static func matchesAllowlist(_ issue: XCUIAccessibilityAuditIssue, element: XCUIElement?) -> Bool {
         // Findings without an element cannot be matched by label; only the ones named here are accepted, per screen.
         guard let element else {
-            return currentScreen == "Notizenliste" && issue.auditType == .textClipped
             // Reason: the audit reports one clipped text without an element (frame 0×0) in the note list; nothing on the
-            // screen is cut off visually. Stays on the device test list (large text).
+            // screen is cut off visually. Stays on the device test list (large text). The recipe folder is a note list with the same
+            // system search bar and reports the same single finding for the "UISearchBarTextField".
+            guard issue.auditType == .textClipped else { return false }
+            return currentScreen == "Notizenliste" || (currentScreen == "Rezepte" && issue.detailedDescription.contains("UISearchBarTextField"))
         }
         func matches(_ text: String, _ pattern: String) -> Bool { text.range(of: "^(\(pattern))$", options: .regularExpression) != nil }
         // Every read of an element property is a query of its own and slow, so each is read once per finding.
