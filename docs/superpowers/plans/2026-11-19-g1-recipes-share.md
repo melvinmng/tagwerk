@@ -6,6 +6,7 @@
 
 **Goal:**
 - **#214:** Rezepte liegen als Notizen in einem festen Ordner „Rezepte“, mit Titel, Portionen, Zutaten und Anleitung. Der Rezept-Import kann zusätzlich eine Rezept-Notiz anlegen. „Rezept hinzufügen“ nimmt eine Rezept-Notiz als Quelle. Ist die Notiz strukturiert, läuft das ohne ChatGPT.
+- **#214, Erweiterung (Product Owner):** Ein Rezept lässt sich auch nur speichern, ohne die Einkaufsliste anzufassen. In den Notizen, Ordner „Rezepte“, gibt es dafür „Rezept mit ChatGPT anlegen“ (neben dem normalen „Neu“). Der Einstieg nutzt denselben Import (Foto, Text, Link, dieselben Einwilligungsregeln) und endet in einem Bestätigungsschritt, der das Ergebnis als strukturierte Rezept-Notiz (Titel, Portionen, Zutaten, Schritte) im Ordner „Rezepte“ sichert. Aus dieser Notiz läuft später „Zutaten zur Einkaufsliste“ mit der Portionsfrage. Umgekehrt behält der Einkaufs-Import den Schalter „Auch als Rezept-Notiz sichern“. Beide Wege teilen einen Lese-Schritt (`RecipeImporter.read`).
 - **#215:** Vor dem Hinzufügen fragt Tagwerk nach der Portionszahl. Vorschlag ist die Zahl aus dem Rezept, die Mengen werden umgerechnet.
 - **#216:** Die Zutaten kommen in der Sprache der App.
 - **#217:** Geteilter Text aus Safari trägt die Adresse der Seite als Markdown-Link.
@@ -204,6 +205,16 @@ Quelle: [chefkoch.de](https://www.chefkoch.de/rezepte/…)
   - `RecipeNoteSaveTests.switchOff_savesNothing`
   - `RecipeSourceTests.recipesFolderListsNewestFirst_noPrivateNotes`
 
+## Task 7b: Rezept nur speichern, ohne Einkaufsliste (#214, Erweiterung)
+
+**Files:** Modify `RecipeSheets.swift` (gemeinsame Eingabe), `NotesFoldersView.swift`/Notizliste für den Einstieg; Create `Tagwerk/Shopping/RecipeNoteSaveSheet.swift` (Bestätigungsschritt), `TagwerkTests/RecipeSaveOnlyTests.swift`
+
+- [ ] **Ein gemeinsamer Lese-Schritt:** `RecipeInputView` und `RecipeImporter.read` bleiben die einzige Stelle, die Foto, Text, Link und Notiz liest. Der Zweck (Einkaufsliste oder nur speichern) ändert nur, was nach dem Ergebnis passiert. Beim reinen Speichern gehen keine Kategorienamen und keine offenen Artikel in die Anfrage (nur „Sonstiges“); es gibt keine Abhängigkeit von `ShoppingModel`.
+- [ ] **Einstieg:** Im Ordner „Rezepte“ steht in der Notizliste neben „Neu“ der Eintrag „Rezept mit ChatGPT anlegen“. Er öffnet `RecipeNoteSaveSheet` (Navigation: Einwilligung nur wenn die Quelle ChatGPT braucht → Eingabe → Bestätigung).
+- [ ] **Bestätigung:** Zeigt Titel (bearbeitbar), Portionen (Stepper 1–50, leer erlaubt), Zutaten und Schritte. „Rezept speichern“ legt per `RecipeNoteWriter.save` eine Notiz im Ordner „Rezepte“ an (Originalmengen, `RecipeNote.markdown`). Es wird nichts auf die Einkaufsliste geschrieben und keine Zuordnung gelernt.
+- [ ] **Danach:** In der Notiz bleibt „Zutaten auf die Einkaufsliste“ (Task 7) der Weg zur Liste, mit Portionsfrage.
+- [ ] **Tests:** `RecipeSaveOnlyTests.saveOnly_writesNoteInRecipesFolder_andNoShoppingItems`, `saveOnly_noteIsStructured_roundTrips`, `saveOnly_requestSendsNoCategoryNamesOrOpenItems`, `saveOnly_withoutConsent_readsNothing`, `saveOnly_cancelSavesNothing`, `sharedRead_sameResultForBothPurposes`.
+
 ## Task 8: Link beim Teilen aus Safari (#217)
 
 **Files:** Modify `Packages/TagwerkCore/Sources/TagwerkCore/Share/NewTaskPrefill.swift`, `Tagwerk/Share/ShareNoteSheet.swift`, `app/TagwerkShare/Info.plist`, `app/TagwerkShare/ShareExtractor.swift`; Create `app/TagwerkShare/SafariPreprocessing.js` (als Ressource der Erweiterung in `project.yml`)
@@ -240,6 +251,7 @@ Quelle: [chefkoch.de](https://www.chefkoch.de/rezepte/…)
 
 ## Gerätetests
 
+0. Notizen › Ordner „Rezepte“ › „Rezept mit ChatGPT anlegen“ (Foto, Text und Link): Nach der Bestätigung liegt eine strukturierte Notiz im Ordner, die Einkaufsliste ist unverändert. Danach „Zutaten auf die Einkaufsliste“ mit Portionsfrage.
 1. Rezept per Link (deutsche Seite) bei englischer App-Sprache: Die Zutaten stehen englisch auf der Liste, die Rezept-Notiz ist englisch, und „Quelle“ verlinkt die Seite.
 2. Rezept mit „für 4 Personen“ → 6 Portionen: Die Mengen stimmen und sind sinnvoll gerundet, „Salz nach Geschmack“ bleibt.
 3. Rezept ohne Portionszahl (Foto): „Rezept für“ ist leer, „hinzufügen“ ist gesperrt, bis eine Zahl gesetzt ist.
