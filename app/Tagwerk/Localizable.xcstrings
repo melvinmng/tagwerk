@@ -5595,6 +5595,16 @@
         }
       }
     },
+    "Der Assistent findet Notizen über seine Suche (Titel und ein kurzer Ausschnitt), liest bei Bedarf die ganze Notiz und kann Notizen ändern, anlegen und löschen; jede Änderung bestätigst du einzeln. Gelesene Notiztexte werden nicht im Verlauf gespeichert, die Antworten des Assistenten schon. Tagebuch mit Gott, Bible Study und Dream Log bleiben immer auf dem iPhone.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The assistant finds notes through its search (title and a short excerpt), reads the whole note when needed and can change, create and delete notes; you confirm every change individually. Note texts it has read are not saved in the history, the assistant's replies are. Journal, Bible Study and Dream Log always stay on the iPhone."
+          }
+        }
+      }
+    },
     "Der Assistent hat zu viele Schritte gebraucht und angehalten. Formuliere die Bitte genauer.": {
       "localizations": {
         "en": {
@@ -12688,6 +12698,16 @@
         }
       }
     },
+    "Notizen gehen nur mit dem Schalter „Notizen mit ChatGPT“ an den Assistenten: Titel und Ausschnitte der Treffer seiner Suche, bei Bedarf der ganze Text einer Notiz und, im Notiz-Chat, Änderungen daran. Ist der Schalter aus, erfährt der Assistent nur, wie viele Notizen zu einer Suche passen. Was der Assistent aus Notizen liest, gilt nur für das laufende Gespräch und geht beim Beenden der App, beim Wechsel des Chats und beim Löschen des Verlaufs verloren. Antworten des Assistenten und deine Nachrichten bleiben im Verlauf und können Notizinhalt zitieren. Tagebuch mit Gott, Bible Study und Dream Log verlassen das iPhone nie.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notes go to the assistant only with the switch “Notes with ChatGPT”: title and excerpt of the hits of its search, the whole text of a note when needed and, in the notes chat, changes to it. With the switch off, the assistant only learns how many notes match a search. What the assistant reads from notes applies only to the current conversation and is lost when the app is quit, when you switch chats and when you clear the history. The assistant's replies and your messages stay in the history and can quote note content. Journal, Bible Study and Dream Log never leave the iPhone."
+          }
+        }
+      }
+    },
     "Notizen liegen nur auf diesem iPhone. An ChatGPT geht eine Brain-Dump-Notiz nur, wenn du bei ihr auf „Vorschläge holen“ tippst, und eine Notiz nur, wenn du sie bei „Rezept hinzufügen“ als Quelle wählst.": {
       "localizations": {
         "en": {
@@ -12705,6 +12725,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Notes stay on this iPhone only. A Brain Dump note goes to ChatGPT only when you tap “Get suggestions” on it."
+          }
+        }
+      }
+    },
+    "Notizen mit ChatGPT": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notes with ChatGPT"
           }
         }
       }
@@ -16958,6 +16988,16 @@
         }
       }
     },
+    "Wenn du KI-Funktionen nutzt, gehen die dafür nötigen Daten (Termine, Aufgaben, Einkaufsartikel, bei Issues auch Repo-Inhalte und GitHub-Benutzernamen zuweisbarer und zugewiesener Personen und, wenn eingeschaltet, Titel, Ausschnitte und Text deiner Notizen) an OpenAI.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "When you use AI features, the data they need (events, tasks, shopping items, and for issues also repo contents and GitHub usernames of assignable and assigned people and, if switched on, titles, excerpts and text of your notes) goes to OpenAI."
+          }
+        }
+      }
+    },
     "Wenn du KI-Funktionen nutzt, gehen die dafür nötigen Daten (Termine, Aufgaben, bei Issues auch Repo-Inhalte und GitHub-Benutzernamen zuweisbarer Personen) an OpenAI.": {
       "extractionState": "stale",
       "localizations": {
@@ -16977,7 +17017,8 @@
             "value": "When you use AI features, the data they need (events, tasks, and for issues also repo contents and GitHub usernames of assignable and assigned people) goes to OpenAI."
           }
         }
-      }
+      },
+      "extractionState": "stale"
     },
     "Werktags": {
       "localizations": {

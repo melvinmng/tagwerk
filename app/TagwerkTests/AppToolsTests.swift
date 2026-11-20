@@ -77,7 +77,7 @@ struct AppToolsTests {
     // MARK: search
 
     private func makeSearch(events: [CalendarEvent] = [], completed: [CompletedTask] = [], access: Bool = true,
-                            notes: [NoteSearchItem] = [], notesAllowed: Bool = true, shopping: [ShoppingSearchItem] = [],
+                            notes: [NoteSearchItem] = [], notesAllowed: Bool = true, consent: (@MainActor () -> Bool)? = nil, shopping: [ShoppingSearchItem] = [],
                             online: (@MainActor (String) async throws -> [OnlineIssue])? = nil) async -> AppTools {
         calendarStore.storedEvents = events
         await taskList.reload()
@@ -91,7 +91,7 @@ struct AppToolsTests {
             events: { interval in access ? calendarStore.events(in: interval, calendarIDs: nil) : nil },
             calendarNames: { ["cal": "Uni"] },
             completedTasks: { completed },
-            notes: { notes }, shopping: { shopping }, searchOnline: online, notesAllowed: { notesAllowed })
+            notes: { notes }, shopping: { shopping }, searchOnline: online, notesAllowed: consent ?? { notesAllowed })
         return AppTools(taskList: taskList, planning: planning, planner: nil,
                         events: { interval in calendarStore.events(in: interval, calendarIDs: nil) }, search: sources)
     }
@@ -206,6 +206,17 @@ struct AppToolsTests {
         #expect(result["noteCount"] as? Int == 2)
         #expect(result["notes"] == nil)
         #expect(!output.contains("Alpha") && !output.contains("Beta"))
+    }
+
+    @Test func search_respectsNoteConsent() async throws {
+        let settings = self.settings
+        let tools = await makeSearch(notes: [noteItem("Teigplan Sonntag")], consent: { settings.noteAssistantConsent })
+        #expect(!settings.noteAssistantConsent)
+        let off = await run(tools, "search", searchArguments("teigplan"))
+        #expect(off["notesLocked"] as? Bool == true && off["noteCount"] as? Int == 1 && off["notes"] == nil)
+        settings.noteAssistantConsent = true
+        let on = await run(tools, "search", searchArguments("teigplan"))
+        #expect(on["notesLocked"] == nil && (on["notes"] as? [[String: Any]])?.count == 1)
     }
 
     @Test func search_returnsShoppingItems() async throws {

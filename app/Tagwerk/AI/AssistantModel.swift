@@ -58,6 +58,8 @@ final class AssistantModel {
     @ObservationIgnored private let planning: PlanningModel
     @ObservationIgnored private let now: () -> Date
     @ObservationIgnored private var key = ChatStore.assistantKey
+    /// The consent was withdrawn while a turn was running; the history is reduced as soon as the turn ends.
+    @ObservationIgnored private var pendingNoteSessionEnd = false
     /// GitHub access and issue lookup for chats about one task.
     @ObservationIgnored var reader: RepositoryReading?
     @ObservationIgnored var issueReference: (TaskID) -> IssueReference? = { _ in nil }
@@ -373,8 +375,24 @@ final class AssistantModel {
         store.delete(key)
     }
 
+    /// Called when the consent "Notizen mit ChatGPT" was withdrawn: ends the note session. The history in memory is
+    /// reduced to its stored form (the model no longer sees note texts it read earlier), the saved chat is updated.
+    /// While a turn is running the reduction follows when the turn ends (`persist()` runs after every turn).
+    func endNoteSession() {
+        pendingNoteSessionEnd = true
+        applyNoteSessionEnd()
+        persist()
+    }
+
+    private func applyNoteSessionEnd() {
+        guard pendingNoteSessionEnd, let conversation, !conversation.isBusy else { return }
+        conversation.reduceToStoredForm()
+        pendingNoteSessionEnd = false
+    }
+
     private func persist() {
         guard let conversation else { return }
+        applyNoteSessionEnd()
         // Only the stored form: note text read in this session must not survive in the saved chat.
         store.save(conversation.storableHistory, actionTimes: actionTimes, for: key, now: now())
         store.saveSpokenMarks(spokenMarks, for: key)

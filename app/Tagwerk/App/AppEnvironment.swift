@@ -218,7 +218,8 @@ final class AppEnvironment {
                                      return access.visibleNotes().map { Self.searchItem(for: $0, folderNames: folderNames) }
                                  },
                                  shopping: Self.searchShoppingSource(shopping: shopping),
-                                 searchOnline: Self.searchOnlineSource(taskList: taskList)))
+                                 searchOnline: Self.searchOnlineSource(taskList: taskList),
+                                 notesAllowed: { settings.noteAssistantConsent }))
         self.assistant = AssistantModel(responder: ai.client, tools: tools, model: { try await ai.selectedModel() },
                                         store: ChatStore(context: context), planning: planning)
         self.voiceOutput = VoiceOutputModel(speaker: SystemSpeaker(), audio: SystemVoiceAudioSession.shared, preferences: {
