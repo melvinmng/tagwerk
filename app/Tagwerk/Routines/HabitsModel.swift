@@ -120,6 +120,17 @@ final class HabitsModel {
         refreshLocal()
     }
 
+    /// The rows of any day from the facts already loaded: the page of a neighbour day shows them while it is dragged
+    /// in, and the shown page does not wait for `show(_:)`.
+    func rows(for day: PlanDay) -> [Row] {
+        let today = self.today
+        let day = min(day, today)
+        return habits.filter { HabitRules.isActive($0, on: day, today: today) }.map { habit in
+            Row(habit: habit, isFulfilled: HabitRules.isFulfilled(habit, on: day, facts: facts),
+                isAutomatic: HabitRules.isSourceFulfilled(habit, on: day, facts: facts))
+        }
+    }
+
     /// Shows another day at once from the stores; Health is read by `reload`.
     func show(_ target: PlanDay) {
         day = min(target, today)

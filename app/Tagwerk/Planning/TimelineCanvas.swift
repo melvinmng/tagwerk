@@ -41,6 +41,8 @@ struct TimelineCanvas: View {
     private let labelWidth: CGFloat = 44
 
     @Environment(AppEnvironment.self) private var environment
+    /// Set in the preview of a neighbour page: the marks of its events.
+    @Environment(\.dayPageExtras) private var pageExtras
     @State private var openSuggestion: PlanSuggestion?
     @State private var editingTask: TaskItem?
     @State private var selectedID: String?
@@ -188,7 +190,7 @@ struct TimelineCanvas: View {
 
     @ViewBuilder
     private func entryView(_ entry: DayEntry, range: Range<Int>) -> some View {
-        let style = EntryStyle(entry: entry, model: model)
+        let style = EntryStyle(entry: entry, model: model, extras: pageExtras)
         let isSelected = selectedID == entry.id
         let isPicked = { if case .event(let event, _) = entry { selectingIDs?.contains(event.id) == true } else { false } }()
         ZStack {
@@ -421,7 +423,8 @@ struct EntryStyle {
     let suffix: String
 
     @MainActor
-    init(entry: DayEntry, model: PlanningModel) {
+    init(entry: DayEntry, model: PlanningModel, extras: DayPageExtras? = nil) {
+        let marks = extras ?? model.currentExtras
         switch entry {
         case .lunch:
             title = String(localized: "Mittagspause"); color = .gray; isFree = false; canMove = true; isSelectable = false; suffix = ""
@@ -432,7 +435,7 @@ struct EntryStyle {
             let isBlock = taskID != nil && model.canEditAsBlock(event)
             isSelectable = !isBlock
             // Deadline events (deadline calendars and marked) are red in the timeline, with a text mark (DL2).
-            let isDeadline = model.deadlineEventIDs.contains(event.id)
+            let isDeadline = marks.deadlineEventIDs.contains(event.id)
             if isDeadline { title = "⚑ " + event.title }
             // The time block of today's focus task carries the star as well (phase 7).
             if let taskID, model.focusTaskIDs.contains(taskID), PlanDay(date: event.start, calendar: model.calendar) == model.today {
@@ -442,7 +445,7 @@ struct EntryStyle {
             var parts: [String] = []
             let text = DeadlineText(calendar: model.calendar)
             if isDeadline { parts.append(text.timelineMark(isMarked: !model.isInDeadlineCalendar(event))) }
-            if let target = model.preparationTarget(forEventID: event.id) { parts.append(text.preparationMark(target, today: model.today)) }
+            if let target = marks.preparationTargets[event.id] { parts.append(text.preparationMark(target, today: model.today)) }
             if isFree { parts.append(String(localized: "Frei")) }
             if !event.isEditable { parts.append("🔒") } else if event.isInvitation { parts.append(String(localized: "Einladung")) }
             if event.isRecurring { parts.append("↻") }

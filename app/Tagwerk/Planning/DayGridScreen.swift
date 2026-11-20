@@ -16,7 +16,13 @@ struct DayGridScreen<Summary: View, Header: View>: View {
     let onPlanTask: (TaskItem) -> Void
     /// Set while a block or a task is dragged, so the page container ignores sideways drags.
     var isLocked: Binding<Bool> = .constant(false)
+    /// The page writes its vertical offset here (read when a drag starts).
+    var offsetBox: ScrollOffsetBox?
+    /// A preview of a neighbour page scrolls to this offset, the one of the shown page.
+    var previewOffset: CGFloat?
 
+    @Environment(\.dayPageExtras) private var pageExtras
+    @Environment(\.isPagePreview) private var isPreview
     @State private var isDragging = false
     @State private var canvasFrame: CGRect = .zero
     @State private var taskDrag: (task: TaskItem, location: CGPoint)?
@@ -40,6 +46,9 @@ struct DayGridScreen<Summary: View, Header: View>: View {
     /// The day whose grid is being aligned to the current time, until `nowAlignmentEnds` or the first touch scroll.
     /// The content above the grid can still grow while it loads, so the alignment repeats in that window only.
     @State private var canvasTopInContent: CGFloat = 0
+    /// The day this screen showed when it first appeared: only that day is aligned to the current time, and only
+    /// when it is today. Paging to another day never scrolls.
+    @State private var openedDay: PlanDay?
     @State private var nowAlignedDay: PlanDay?
     @State private var nowAlignmentEnds = Date.distantPast
     @State private var userScrolled = false
@@ -64,7 +73,13 @@ struct DayGridScreen<Summary: View, Header: View>: View {
             .coordinateSpace(.named("gridContent"))
         }
         .scrollPosition($scrollPosition)
-        .onScrollGeometryChange(for: CGFloat.self) { $0.contentOffset.y } action: { _, offset in contentOffsetY = offset }
+        .onScrollGeometryChange(for: CGFloat.self) { $0.contentOffset.y } action: { _, offset in
+            contentOffsetY = offset
+            offsetBox?.y = offset
+        }
+        .onChange(of: previewOffset) { _, offset in
+            if isPreview, let offset { scrollPosition.scrollTo(y: offset) }
+        }
         .onScrollPhaseChange { _, phase in if phase == .interacting { userScrolled = true } }
         .contentMargins(.bottom, 80, for: .scrollContent)  // room for the collapsed panel
         .onGeometryChange(for: CGRect.self) { $0.frame(in: .named("screen")) } action: { scrollFrame = $0 }
@@ -118,7 +133,9 @@ struct DayGridScreen<Summary: View, Header: View>: View {
     /// Opening today puts the current time at a third of the visible height. It repeats while the content above
     /// the grid is still loading (a few seconds at most) and stops at the first scroll by the user.
     private func scrollToNowOnOpening() {
-        guard plan.day == model.today, canvasFrame.height > 0, scrollFrame.height > 0,
+        guard !isPreview, canvasFrame.height > 0, scrollFrame.height > 0 else { return }
+        if openedDay == nil { openedDay = plan.day }
+        guard NowMarker.alignsOnOpening(openedDay: openedDay, shownDay: plan.day, today: model.today),
               let minutes = NowMarker.minutes(now: model.now(), day: plan.day, calendar: model.calendar) else { return }
         if nowAlignedDay != plan.day {
             nowAlignedDay = plan.day
@@ -216,7 +233,8 @@ struct DayGridScreen<Summary: View, Header: View>: View {
             }
             .background(.bar, in: RoundedRectangle(cornerRadius: 16))
             // Moves sit at their task rows, so the panel opens when there are any (proposal §5).
-            .onChange(of: moveSuggestions.count) { _, count in if count > 0 { panelExpanded = true } }
+            // Not in a preview: `panelExpanded` is shared by every page, a neighbour must not open the shown panel.
+            .onChange(of: moveSuggestions.count) { _, count in if count > 0, !isPreview { panelExpanded = true } }
             // While dragging, the panel slides down to its header so the grid behind is free; the dragged row
             // stays in the hierarchy so its gesture keeps running.
             .offset(y: dragging && panelExpanded ? panelBodyHeight : 0)
@@ -492,7 +510,7 @@ struct DayGridScreen<Summary: View, Header: View>: View {
 
     private var daySuggestions: [MergeSuggestion] {
         let ids = Set((plan.events + plan.blocks).map(\.id))
-        return model.mergeSuggestions.filter { ids.contains($0.placeholderID) && ids.contains($0.keptID) }
+        return (pageExtras?.mergeSuggestions ?? model.mergeSuggestions).filter { ids.contains($0.placeholderID) && ids.contains($0.keptID) }
     }
 
     private func mergeCard(_ suggestion: MergeSuggestion) -> some View {

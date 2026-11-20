@@ -14,6 +14,13 @@ public enum NowMarker {
         shown.contains(nowMinutes) ? nowMinutes : nil
     }
 
+    /// Whether a day view aligns itself to the current time: only for the day it showed when it first appeared
+    /// (`openedDay`, `nil` before that) and only when that day is today. Paging to another day, even to today, never
+    /// scrolls.
+    public static func alignsOnOpening(openedDay: PlanDay?, shownDay: PlanDay, today: PlanDay) -> Bool {
+        shownDay == today && (openedDay ?? shownDay) == shownDay
+    }
+
     /// Index in a time-ordered row list before which the "Jetzt" line goes: before the first row that starts
     /// after now. A row that is running now (or has ended) keeps the line after it.
     public static func insertionIndex(rowStarts: [Int], nowMinutes: Int) -> Int {

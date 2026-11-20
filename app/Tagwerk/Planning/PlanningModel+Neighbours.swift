@@ -19,17 +19,29 @@ extension PlanningModel {
         }
     }
 
-    /// Loads `neighbourPlans` for the shown scope and anchor. The plans carry no AI suggestions. The result is
-    /// dropped when the scope or the anchor changed in the meantime.
+    /// Loads `neighbourPlans` for the shown scope and anchor. Day scope: the plans carry the stored AI suggestions and
+    /// come with the state of the page (`neighbourExtras`), so a preview and the page after it show the same cards.
+    /// Week scope: no suggestions. The result is dropped when the scope or the anchor changed in the meantime.
     func loadNeighbours() async {
         let scope = self.scope, anchor = self.anchor
         let ranges = Self.neighbourRanges(scope: scope, anchor: anchor, weekStart: range.lowerBound, calendar: calendar)
-        var result: [PlanDay: DayPlan] = [:]
+        var plans: [PlanDay: DayPlan] = [:]
+        var extras: [PlanDay: DayPageExtras] = [:]
         for range in ranges {
-            for plan in await dayPlans(in: range) { result[plan.day] = plan }
+            if scope == .day {
+                if let page = await dayPage(range.lowerBound) {
+                    plans[range.lowerBound] = page.plan
+                    extras[range.lowerBound] = page.extras
+                }
+                // The next day's work starts in a later turn, so a gesture in between is not held up.
+                await Task.yield()
+            } else {
+                for plan in await dayPlans(in: range) { plans[plan.day] = plan }
+            }
         }
         guard !Task.isCancelled, self.scope == scope, self.anchor == anchor else { return }
-        neighbourPlans = result
+        neighbourPlans = plans
+        neighbourExtras = extras
     }
 
     /// Starts the loads that follow a reload: the neighbour plans (an earlier run that is still going is cancelled) and

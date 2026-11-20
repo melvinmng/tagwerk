@@ -40,9 +40,9 @@ struct CaptureView: View {
             PagedContainer(canGoBack: true, canGoForward: model.canGoForward, isLocked: false,
                            onPage: daySwipe, onBlockedEdge: { limitBumps += 1 }) { slot in
                 switch slot {
-                case .current: dayList
-                case .previous, .arrived: CapturePagePreview(model: model, day: model.day.adding(days: -1, calendar: model.calendar))
-                case .next: CapturePagePreview(model: model, day: model.day.adding(days: 1, calendar: model.calendar))
+                case .current: dayList(model.current)
+                case .previous, .arrived: preview(of: model.day.adding(days: -1, calendar: model.calendar))
+                case .next: preview(of: model.day.adding(days: 1, calendar: model.calendar))
                 }
             }
             .navigationTitle("Erfassen")
@@ -94,12 +94,19 @@ struct CaptureView: View {
         }
     }
 
+    /// The neighbouring day beside the shown page: the same list from the day's entries and the cached Health numbers,
+    /// without interaction, so the page that follows does not change when it arrives.
+    private func preview(of day: PlanDay) -> some View {
+        dayList(model.page(for: day), isPreview: true)
+            .allowsHitTesting(false)
+    }
+
     /// The day: summary, quick entry and the entries by kind.
-    private var dayList: some View {
+    private func dayList(_ data: CaptureDay, isPreview: Bool = false) -> some View {
         List {
                 Section {
-                    DayNavigation(model: model)
-                    DaySummary(model: model)
+                    DayNavigation(model: model, day: data.day)
+                    DaySummary(model: model, data: data)
                     // R3a: entry to the weekly review (a row of its own, so VoiceOver keeps the summary as one element).
                     Button { showsReview = true } label: {
                         HStack {
@@ -115,21 +122,23 @@ struct CaptureView: View {
                 Section {
                     quickEntry
                 } footer: {
-                    if !model.hasEntries {
-                        Text(model.isToday ? "Noch nichts erfasst. Tippe oben auf Essen, Trinken oder Training."
-                                           : "An diesem Tag ist nichts erfasst.")
+                    if !data.hasEntries {
+                        Text(data.day == model.today ? "Noch nichts erfasst. Tippe oben auf Essen, Trinken oder Training."
+                                                     : "An diesem Tag ist nichts erfasst.")
                     }
                 }
                 if model.showsHealthCard {
                     Section { HealthCard(model: model) }
                 }
-                RoutinesSection(model: environment.routines, day: model.day)
-                HabitsSection(model: environment.habits, capture: model) { showsHabitList = true }
-                mealSection
-                drinkSection
-                workoutSection
+                RoutinesSection(model: environment.routines, day: data.day)
+                HabitsSection(model: environment.habits, capture: model, day: data.day) { showsHabitList = true }
+                mealSection(data)
+                drinkSection(data)
+                workoutSection(data)
                 FocusCaptureSection()
         }
+        // A page opens at its top, with the large title: every day is a new list, so no scroll position carries over.
+        .id(data.day)
     }
 
     /// A link or shortcut asked for a sheet: entries from Siri belong to now, so the tab returns to today first.
@@ -187,10 +196,10 @@ struct CaptureView: View {
     // MARK: Sections
 
     @ViewBuilder
-    private var mealSection: some View {
-        if !model.meals.isEmpty {
+    private func mealSection(_ data: CaptureDay) -> some View {
+        if !data.meals.isEmpty {
             Section {
-                ForEach(model.meals) { meal in
+                ForEach(data.meals) { meal in
                     Button { sheet = .meal(meal) } label: { MealRow(meal: meal, calendar: model.calendar) }
                         .tint(.primary)
                         .contextMenu { deleteButton(meal.id) }
@@ -199,24 +208,24 @@ struct CaptureView: View {
                 HStack {
                     Text("Essen")
                     Spacer()
-                    Text(IntakeFormat.kcal(model.intake.kcal, estimated: model.intake.hasEstimate))
+                    Text(IntakeFormat.kcal(data.intake.kcal, estimated: data.intake.hasEstimate))
                 }
             }
         }
     }
 
     @ViewBuilder
-    private var drinkSection: some View {
-        if !model.drinks.isEmpty {
+    private func drinkSection(_ data: CaptureDay) -> some View {
+        if !data.drinks.isEmpty {
             Section("Trinken") {
                 Button { sheet = .drinks } label: {
                     HStack {
                         VStack(alignment: .leading, spacing: 2) {
                             Text("Wasser")
-                            Text(drinkCaption).font(.caption).foregroundStyle(.secondary)
+                            Text(drinkCaption(data)).font(.caption).foregroundStyle(.secondary)
                         }
                         Spacer()
-                        Text(IntakeFormat.liters(model.intake.waterMilliliters)).foregroundStyle(.secondary)
+                        Text(IntakeFormat.liters(data.intake.waterMilliliters)).foregroundStyle(.secondary)
                         Image(systemName: "chevron.right").font(.caption.weight(.semibold)).foregroundStyle(.tertiary)
                     }
                 }
@@ -225,18 +234,18 @@ struct CaptureView: View {
         }
     }
 
-    private var drinkCaption: String {
-        let count = model.drinks.count
+    private func drinkCaption(_ data: CaptureDay) -> String {
+        let count = data.drinks.count
         let entries = String(localized: "\(count) Einträge")
-        guard let last = model.drinks.last else { return entries }
+        guard let last = data.drinks.last else { return entries }
         return entries + " · " + String(localized: "zuletzt \(CaptureText.time(last.date, calendar: model.calendar))")
     }
 
     @ViewBuilder
-    private var workoutSection: some View {
-        if !model.workouts.isEmpty {
+    private func workoutSection(_ data: CaptureDay) -> some View {
+        if !data.workouts.isEmpty {
             Section {
-                ForEach(model.workouts) { workout in
+                ForEach(data.workouts) { workout in
                     if workout.isOwn {
                         Button { sheet = .workout(workout) } label: { WorkoutRow(workout: workout, calendar: model.calendar) }
                             .tint(.primary)
@@ -252,11 +261,11 @@ struct CaptureView: View {
                 HStack {
                     Text("Training")
                     Spacer()
-                    Text(IntakeFormat.duration(minutes: model.dayMinutes))
-                        .accessibilityLabel(IntakeFormat.spokenDuration(minutes: model.dayMinutes))
+                    Text(IntakeFormat.duration(minutes: data.dayMinutes))
+                        .accessibilityLabel(IntakeFormat.spokenDuration(minutes: data.dayMinutes))
                 }
             } footer: {
-                if model.workouts.contains(where: { !$0.isOwn }) {
+                if data.workouts.contains(where: { !$0.isOwn }) {
                     Text("Trainings aus Health änderst oder löschst du in der App „Fitness“ oder „Health“.")
                 }
             }
@@ -276,35 +285,38 @@ struct CaptureView: View {
 
 private struct DayNavigation: View {
     let model: CaptureModel
+    /// The day of the page this header belongs to.
+    let day: PlanDay
     @State private var picking = false
 
     /// "MI., 18. NOV. · KW 47" above the short title "Heute" / "Gestern" / "Montag" (mockup EK1).
     private var caption: String {
-        let week = model.calendar.component(.weekOfYear, from: model.day.startDate(in: model.calendar))
-        return "\(CaptureText.date(model.day, calendar: model.calendar)) · \(String(localized: "KW \(week)"))".uppercased()
+        let week = model.calendar.component(.weekOfYear, from: day.startDate(in: model.calendar))
+        return "\(CaptureText.date(day, calendar: model.calendar)) · \(String(localized: "KW \(week)"))".uppercased()
     }
 
     var body: some View {
-        let title = CaptureText.relativeDay(model.day, today: model.today, calendar: model.calendar)
+        let isToday = day == model.today
+        let title = CaptureText.relativeDay(day, today: model.today, calendar: model.calendar)
         HStack(spacing: 8) {
             Button { picking = true } label: {
-                PageTitleLabel(caption: caption, title: title, isCurrent: model.isToday)
+                PageTitleLabel(caption: caption, title: title, isCurrent: isToday)
             }
             .buttonStyle(.plain)
             .accessibilityElement(children: .ignore)
             .accessibilityLabel(title)
-            .accessibilityValue(CaptureText.date(model.day, calendar: model.calendar))
+            .accessibilityValue(CaptureText.date(day, calendar: model.calendar))
             .accessibilityHint("Datum wählen")
             .accessibilityAddTraits(.isHeader)
             .popover(isPresented: $picking) {
-                DateJumpPopover(selected: model.day, today: model.today, latest: model.today, calendar: model.calendar,
+                DateJumpPopover(selected: day, today: model.today, latest: model.today, calendar: model.calendar,
                                 todayTitle: "Heute") { day in
                     picking = false
                     model.navigate(to: day)
                 }
             }
             Spacer(minLength: 8)
-            if !model.isToday { PageTodayButton { model.navigate(to: model.today) } }
+            if !isToday { PageTodayButton { model.navigate(to: model.today) } }
             PageArrowCapsule(backLabel: String(localized: "Vorheriger Tag"), forwardLabel: String(localized: "Nächster Tag"),
                              canGoForward: model.canGoForward) { model.navigate(by: $0) }
         }
@@ -329,10 +341,11 @@ extension CaptureModel {
 
 private struct DaySummary: View {
     let model: CaptureModel
+    let data: CaptureDay
 
     var body: some View {
         let settings = model.settings
-        let intake = model.intake
+        let intake = data.intake
         let remaining = IntakeFormat.remaining(goal: settings.goalKilocalories, intake: intake)
         VStack(alignment: .leading, spacing: 10) {
             VStack(alignment: .leading, spacing: 4) {
@@ -347,7 +360,7 @@ private struct DaySummary: View {
             }
             .accessibilityElement(children: .combine)
             // ST1: water and protein, then steps and the weekly training; single tiles share one row.
-            ForEach(Array(model.summaryRows.enumerated()), id: \.offset) { _, row in
+            ForEach(Array(model.summaryRows(steps: data.steps).enumerated()), id: \.offset) { _, row in
                 HStack(alignment: .top, spacing: 16) {
                     ForEach(row, id: \.self) { tile($0) }
                 }
@@ -361,7 +374,7 @@ private struct DaySummary: View {
     @ViewBuilder
     private func tile(_ tile: CaptureModel.SummaryTile) -> some View {
         let settings = model.settings
-        let intake = model.intake
+        let intake = data.intake
         switch tile {
         case .water:
             metric("Wasser", "\(IntakeFormat.liters(intake.waterMilliliters)) / \(IntakeFormat.liters(settings.goalWaterMilliliters))",
@@ -374,17 +387,17 @@ private struct DaySummary: View {
             stepsTile
         case .training:
             let goal = settings.goalWorkoutMinutesPerWeek
-            metric("Training · Woche", IntakeFormat.duration(minutes: model.weekMinutes, goal: goal),
-                   progress: Double(model.weekMinutes) / Double(max(1, goal)), tint: .mint,
+            metric("Training · Woche", IntakeFormat.duration(minutes: data.weekMinutes, goal: goal),
+                   progress: Double(data.weekMinutes) / Double(max(1, goal)), tint: .mint,
                    spokenLabel: String(localized: "Training diese Woche"),
-                   spokenValue: String(localized: "\(IntakeFormat.spokenDuration(minutes: model.weekMinutes)) von \(IntakeFormat.spokenDuration(minutes: goal))"))
+                   spokenValue: String(localized: "\(IntakeFormat.spokenDuration(minutes: data.weekMinutes)) von \(IntakeFormat.spokenDuration(minutes: goal))"))
         }
     }
 
     @ViewBuilder
     private var stepsTile: some View {
         let goal = model.settings.goalStepsPerDay
-        switch model.stepsTile {
+        switch model.stepsTile(for: data.steps) {
         case .hidden:
             EmptyView()
         case .allow:

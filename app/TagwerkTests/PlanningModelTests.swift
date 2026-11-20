@@ -2011,7 +2011,7 @@ struct PlanningModelTests {
         #expect(model.neighbourPlans.isEmpty)
     }
 
-    @Test func neighbourPlans_doNotContainSuggestions() async {
+    @Test func neighbourPlans_dayScope_carryTheStoredSuggestionsOfTheirDay() async {
         let store = SuggestionStore(context: container.mainContext)
         let tomorrow = today.adding(days: 1, calendar: calendar)
         let block = PlanSuggestion(id: UUID(), kind: .block, taskKey: "local:Fahrrad", title: "Fahrrad", day: tomorrow,
@@ -2026,8 +2026,77 @@ struct PlanningModelTests {
         model.anchor = tomorrow
         await model.reload()
         #expect(model.days.first?.suggestions.count == 1)
+        // From today, tomorrow is the next page: its plan and its batches show the stored suggestion, like the page will.
+        model.anchor = today
+        await model.reload()
         await model.loadNeighbours()
-        #expect(model.neighbourPlans.values.allSatisfy { $0.suggestions.isEmpty })
+        #expect(model.neighbourPlans[tomorrow]?.suggestions.count == 1)
+        #expect(model.neighbourExtras[tomorrow]?.suggestionBatches.count == 1)
+        #expect(model.neighbourPlans[today.adding(days: -1, calendar: calendar)]?.suggestions.isEmpty == true)
+    }
+
+    @Test func neighbourExtras_dayScope_holdTheDeadlinesFromThatDayOn() async {
+        settings.deadlineCalendarIDs = ["uni"]
+        // 14 days after today: inside the 14-day deadline window of tomorrow, outside the one of today.
+        let start = today.adding(days: 14, calendar: calendar).startDate(in: calendar).addingTimeInterval(10 * 3600)
+        calendarStore.storedEvents = [timetableEvent("exam", "Klausur", start: start, calendarID: "uni")]
+        let model = await model()
+        await model.loadNeighbours()
+        let tomorrow = today.adding(days: 1, calendar: calendar)
+        #expect(model.upcomingDeadlines.isEmpty)
+        #expect(model.neighbourExtras[tomorrow]?.upcomingDeadlines.map(\.title) == ["Klausur"])
+        #expect(model.neighbourExtras[today.adding(days: -1, calendar: calendar)]?.upcomingDeadlines.isEmpty == true)
+    }
+
+    @Test func neighbourExtras_dayScope_markTheDeadlineEventsOfThatDay() async {
+        settings.deadlineCalendarIDs = ["uni"]
+        let tomorrow = today.adding(days: 1, calendar: calendar)
+        let start = tomorrow.startDate(in: calendar).addingTimeInterval(9 * 3600)
+        calendarStore.storedEvents = [timetableEvent("exam", "Klausur", start: start, calendarID: "uni")]
+        let model = await model()
+        await model.loadNeighbours()
+        // The shown day has no such event; the page of tomorrow knows it before it is shown.
+        #expect(model.deadlineEventIDs.isEmpty)
+        #expect(model.neighbourExtras[tomorrow]?.deadlineEventIDs == ["exam"])
+        model.step(1)
+        #expect(model.deadlineEventIDs == ["exam"])
+    }
+
+    @Test func step_withLoadedNeighbour_showsTheNewDayBeforeAnyReload() async {
+        settings.deadlineCalendarIDs = ["uni"]
+        let start = today.adding(days: 14, calendar: calendar).startDate(in: calendar).addingTimeInterval(10 * 3600)
+        calendarStore.storedEvents = [timetableEvent("exam", "Klausur", start: start, calendarID: "uni")]
+        let model = await model()
+        await model.loadNeighbours()
+        let tomorrow = today.adding(days: 1, calendar: calendar)
+        // No await: the page change itself carries the plan and the deadline card of the new day.
+        model.step(1)
+        #expect(model.anchor == tomorrow)
+        #expect(model.days.map(\.day) == [tomorrow])
+        #expect(model.upcomingDeadlines.map(\.title) == ["Klausur"])
+        // The reload that follows shows the same.
+        await model.reload()
+        #expect(model.days.map(\.day) == [tomorrow])
+        #expect(model.upcomingDeadlines.map(\.title) == ["Klausur"])
+    }
+
+    @Test func step_keepsTheLeftDayAsNeighbourOfTheNewOne() async {
+        let model = await model()
+        await model.loadNeighbours()
+        model.step(1)
+        #expect(model.neighbourPlans[today] != nil)
+        #expect(model.neighbourExtras[today] != nil)
+        model.step(-1)
+        #expect(model.days.map(\.day) == [today])
+    }
+
+    @Test func step_withoutLoadedNeighbour_keepsTheShownDayUntilReload() async {
+        let model = await model()
+        model.step(1)
+        #expect(!model.adoptCachedPage())
+        #expect(model.days.map(\.day) == [today])
+        await model.reload()
+        #expect(model.days.map(\.day) == [today.adding(days: 1, calendar: calendar)])
     }
 
     @Test func neighbourPlans_followTheShownDayAfterReload() async {
