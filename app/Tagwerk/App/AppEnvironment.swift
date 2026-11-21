@@ -38,6 +38,8 @@ final class AppEnvironment {
     let planning: PlanningModel
     /// Travel times before events with a place; asks Apple Maps only for addresses (#168).
     let travelTimes: TravelTimeService
+    /// Address completion for the home address in the settings; the simulator can answer with fixed suggestions.
+    let addressSuggester: any AddressSuggesting
     let gitHubTokens: TokenManager
     let gitHubLoginClient: DeviceFlowClient
     let gitHub: GitHubTaskProvider
@@ -127,11 +129,18 @@ final class AppEnvironment {
         return TravelTimeService()
     }
 
+    private static func makeAddressSuggester() -> any AddressSuggesting {
+        #if DEBUG && targetEnvironment(simulator)
+        if DemoTravelEstimator.isRequested { return DemoAddressSuggester() }
+        #endif
+        return MapKitAddressSuggester()
+    }
+
     init(modelContainer: ModelContainer, notificationCenter: (any NotificationCenterClient)? = nil,
          health: (any HealthStoring)? = nil, snapshotWriter: WidgetSnapshotWriter? = nil,
          reminderStore: (any ReminderStore)? = nil, eventSearcher: (any EventSearching)? = nil,
          focusNotificationCenter: (any FocusNotificationCenter)? = nil,
-         travelTimes: TravelTimeService? = nil, shareInbox: ShareInbox? = nil,
+         travelTimes: TravelTimeService? = nil, addressSuggester: (any AddressSuggesting)? = nil, shareInbox: ShareInbox? = nil,
          controlState: ControlState? = nil, controlReloader: ControlReloading? = nil) throws {
         self.modelContainer = modelContainer
         self.controlState = controlState
@@ -172,6 +181,7 @@ final class AppEnvironment {
                                         settings: settings, calendar: .tagwerk)
         let travelTimes = travelTimes ?? Self.makeTravelTimes()
         self.travelTimes = travelTimes
+        self.addressSuggester = addressSuggester ?? Self.makeAddressSuggester()
         self.planning = PlanningModel(taskList: taskList, calendarStore: gateway, reminderStore: reminderStore, planStore: planStore,
                                       efforts: RecurringEffortStore(context: context), blocks: blockPlanner, settings: settings,
                                       marks: EventMarkStore(context: context), suggestions: suggestionStore,
