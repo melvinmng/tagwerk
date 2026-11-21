@@ -4,41 +4,35 @@ import TagwerkCore
 /// What the capsule shows after an issue left the user's lists: its number, why, the people it is
 /// assigned to now and the link to GitHub.
 struct HandedOverNotice: Equatable, Identifiable {
-    /// Why the issue is not in the lists.
-    enum Reason: Equatable {
-        /// It was assigned to someone else ("Vergeben").
-        case handedOver
-        /// It sits in no Project, so none of the lists reads it.
-        case noProject
-    }
-
     let id: TaskID
     let number: Int?
     let assignees: [String]
     let url: URL?
-    let reason: Reason
+    /// Why the issue is not in the lists; the provider decides.
+    let reason: UnlistedReason
 
-    /// An issue without a placement is explained by the missing Project, even when it is assigned to
-    /// others as well: that reason is certain from the item, the assignee relation needs the login.
-    init(item: TaskItem) {
+    init(item: TaskItem, reason: UnlistedReason) {
         id = item.id
         number = item.issueNumber
         assignees = item.assignees ?? []
         url = item.url
-        reason = item.statuses.isEmpty ? .noProject : .handedOver
+        self.reason = reason
     }
 
     var title: String {
         switch reason {
         case .handedOver: AssigneeSelection.capsuleTitle(number: number, assignees: assignees)
-        case .noProject: AssigneeSelection.noProjectTitle(number: number)
+        case .noProject(let others): AssigneeSelection.noProjectTitle(number: number, others: others)
+        case .doneInSelection(_, let openIn): AssigneeSelection.openElsewhereTitle(number: number, openIn: openIn)
         }
     }
 
     var caption: LocalizedStringResource {
         switch reason {
         case .handedOver: "Vergeben"
-        case .noProject: "Angelegt"
+        case .noProject: "Angelegt · nicht in Aufgaben"
+        case .doneInSelection(let doneIn, _):
+            doneIn.count == 1 ? LocalizedStringResource("In „\(doneIn[0])“ erledigt") : LocalizedStringResource("In \(doneIn.count) Projekten erledigt")
         }
     }
 
@@ -46,13 +40,15 @@ struct HandedOverNotice: Equatable, Identifiable {
         switch reason {
         case .handedOver: "person.crop.circle.badge.checkmark"
         case .noProject: "tray"
+        case .doneInSelection: "checkmark.circle"
         }
     }
 
     var announcement: String {
         switch reason {
         case .handedOver: AssigneeSelection.announcement(number: number, assignees: assignees)
-        case .noProject: AssigneeSelection.noProjectAnnouncement(number: number)
+        case .noProject(let others): AssigneeSelection.noProjectAnnouncement(number: number, others: others)
+        case .doneInSelection(let doneIn, _): AssigneeSelection.doneInSelectionAnnouncement(doneIn: doneIn, title: title)
         }
     }
 }

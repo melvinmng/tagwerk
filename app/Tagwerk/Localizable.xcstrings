@@ -220,7 +220,35 @@
         }
       }
     },
+    "%@ an %@ · ohne Projekt": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@ an %2$@ · ohne Projekt"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ to %2$@ · no project"
+          }
+        }
+      }
+    },
     "%@ angelegt · ohne Project": {
+      "extractionState": "stale",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ created · no project"
+          }
+        }
+      }
+    },
+    "%@ angelegt · ohne Projekt": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -418,12 +446,54 @@
         }
       }
     },
+    "%@ noch offen in %lld Projekten": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@ noch offen in %2$lld Projekten"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ still open in %2$lld projects"
+          }
+        }
+      }
+    },
+    "%@ noch offen in „%@“": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@ noch offen in „%2$@“"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ still open in “%2$@”"
+          }
+        }
+      }
+    },
     "%@ offen": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "%@ open"
+          }
+        }
+      }
+    },
+    "%@ ohne Projekt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ without a project"
           }
         }
       }
@@ -1457,6 +1527,16 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "%lld Status": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld statuses"
           }
         }
       }
@@ -3183,6 +3263,17 @@
       }
     },
     "Alle Projects": {
+      "extractionState": "stale",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All projects"
+          }
+        }
+      }
+    },
+    "Alle Projekte": {
       "localizations": {
         "en": {
           "stringUnit": {
@@ -3624,6 +3715,7 @@
       }
     },
     "Angelegt": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -3633,7 +3725,28 @@
         }
       }
     },
+    "Angelegt · nicht in Aufgaben": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Created · not in Tasks"
+          }
+        }
+      }
+    },
+    "Angelegt, nicht in Aufgaben: %@. Auf GitHub öffnen verfügbar.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Created, not in Tasks: %@. Open on GitHub available."
+          }
+        }
+      }
+    },
     "Angelegt: %@. Auf GitHub öffnen verfügbar.": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -5868,6 +5981,17 @@
       }
     },
     "Der Status gilt je Project, unabhängig von „Ändern in“.": {
+      "extractionState": "stale",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The status applies per project, regardless of “Change in”."
+          }
+        }
+      }
+    },
+    "Der Status gilt je Projekt, unabhängig von „Ändern in“.": {
       "localizations": {
         "en": {
           "stringUnit": {
@@ -6374,6 +6498,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "The note has been changed in the meantime."
+          }
+        }
+      }
+    },
+    "Die Projekte haben keine gemeinsame Stufe; jedes Issue startet in der ersten Stufe seines Projekts.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The projects share no stage; each issue starts in the first stage of its project."
           }
         }
       }
@@ -9631,6 +9765,16 @@
         }
       }
     },
+    "GitHub-Projekt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "GitHub project"
+          }
+        }
+      }
+    },
     "GitHub: Stand von %@": {
       "localizations": {
         "en": {
@@ -10202,6 +10346,22 @@
         }
       }
     },
+    "In %@ erledigt: %@. Auf GitHub öffnen verfügbar.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "In %1$@ erledigt: %2$@. Auf GitHub öffnen verfügbar."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Done in %1$@: %2$@. Open on GitHub available."
+          }
+        }
+      }
+    },
     "In %lld Kalendern": {
       "localizations": {
         "de": {
@@ -10238,6 +10398,32 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "In %lld Projekten erledigt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Done in %lld projects"
+          }
+        }
+      }
+    },
+    "In %lld Projekten erledigt: %@. Auf GitHub öffnen verfügbar.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "In %1$lld Projekten erledigt: %2$@. Auf GitHub öffnen verfügbar."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Done in %1$lld projects: %2$@. Open on GitHub available."
           }
         }
       }
@@ -10398,6 +10584,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Nothing was logged this week."
+          }
+        }
+      }
+    },
+    "In „%@“ erledigt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Done in “%@”"
           }
         }
       }
@@ -10727,6 +10923,16 @@
       }
     },
     "Kein Project": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No project"
+          }
+        }
+      }
+    },
+    "Kein Projekt": {
       "localizations": {
         "en": {
           "stringUnit": {
@@ -11097,6 +11303,17 @@
       }
     },
     "Keine zugewiesenen Issues in offenen Projects": {
+      "extractionState": "stale",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No assigned issues in open projects"
+          }
+        }
+      }
+    },
+    "Keine zugewiesenen Issues in offenen Projekten": {
       "localizations": {
         "en": {
           "stringUnit": {
@@ -13542,6 +13759,28 @@
       }
     },
     "Ohne Project erscheint das Issue nicht in deinen Aufgaben.": {
+      "extractionState": "stale",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Without a project, the issue does not appear in your tasks."
+          }
+        }
+      }
+    },
+    "Ohne Projekt erscheint das Issue nicht in deinen Aufgaben, nur auf GitHub.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Without a project, the issue does not appear in your tasks, only on GitHub."
+          }
+        }
+      }
+    },
+    "Ohne Projekt erscheint das Issue nicht in deinen Aufgaben.": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -13612,6 +13851,17 @@
       }
     },
     "Online-Treffer öffnen sich auf GitHub. Zum Bearbeiten in Tagwerk muss ein Issue dir zugewiesen sein und in einem Project liegen.": {
+      "extractionState": "stale",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Online results open on GitHub. To edit an issue in Tagwerk it must be assigned to you and belong to a project."
+          }
+        }
+      }
+    },
+    "Online-Treffer öffnen sich auf GitHub. Zum Bearbeiten in Tagwerk muss ein Issue dir zugewiesen sein und in einem Projekt liegen.": {
       "localizations": {
         "en": {
           "stringUnit": {
@@ -14056,6 +14306,7 @@
       "shouldTranslate": false
     },
     "Project": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -14086,6 +14337,7 @@
       }
     },
     "Projects": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -15444,6 +15696,16 @@
         }
       }
     },
+    "Status %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Status %@"
+          }
+        }
+      }
+    },
     "Status · %@": {
       "localizations": {
         "en": {
@@ -15949,11 +16211,22 @@
       }
     },
     "Tagwerk zeigt dir zugewiesene Issues aus deinen offenen GitHub Projects und kann sie bearbeiten.": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Tagwerk shows you assigned issues from your open GitHub Projects and can edit them."
+          }
+        }
+      }
+    },
+    "Tagwerk zeigt dir zugewiesene Issues aus deinen offenen GitHub-Projekten und kann sie bearbeiten.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tagwerk shows you assigned issues from your open GitHub projects and can edit them."
           }
         }
       }
@@ -19514,6 +19787,17 @@
       }
     },
     "ohne Project": {
+      "extractionState": "stale",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "no project"
+          }
+        }
+      }
+    },
+    "ohne Projekt": {
       "localizations": {
         "en": {
           "stringUnit": {

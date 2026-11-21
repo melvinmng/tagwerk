@@ -241,7 +241,8 @@ final class TaskListModel {
             await onCompletedItem?(updated, now())
             await onCompletionChanged?(id, true)
         } else {
-            await settle(updated, provider: provider, announce: false)
+            // Done in the selected project only: the issue leaves the list with a capsule that says why.
+            await settle(updated, provider: provider, announce: true)
         }
     }
 
@@ -404,8 +405,8 @@ final class TaskListModel {
             items.removeAll { $0.id == item.id }
             // Completed in the editor ("Erledigt" or a Done status): same "Rückgängig" capsule as in the list.
             if previousCompletion == false { lastCompleted = item }
-        } else if let provider = provider(for: item.id.source), !provider.isListed(item) {
-            handOver(item, announce: true)
+        } else if let provider = provider(for: item.id.source), let reason = provider.unlistedReason(item) {
+            handOver(item, reason: reason, announce: true)
             if let hook = onHandedOver {
                 Task { await hook(item.id) }
             }
@@ -508,18 +509,19 @@ final class TaskListModel {
     /// to the user's lists. Returns whether the item is listed.
     @discardableResult
     private func settle(_ item: TaskItem, provider: any TaskProvider, announce: Bool) async -> Bool {
-        guard !provider.isListed(item) else {
+        guard let reason = provider.unlistedReason(item) else {
             replace(item)
             return true
         }
-        handOver(item, announce: announce)
+        handOver(item, reason: reason, announce: announce)
         await onHandedOver?(item.id)
         return false
     }
 
-    private func handOver(_ item: TaskItem, announce: Bool) {
+    /// Takes the item out of the list. The planned day and future time blocks go with it (`onHandedOver`).
+    private func handOver(_ item: TaskItem, reason: UnlistedReason, announce: Bool) {
         items.removeAll { $0.id == item.id }
-        if announce { lastHandedOver = HandedOverNotice(item: item) }
+        if announce { lastHandedOver = HandedOverNotice(item: item, reason: reason) }
     }
 
     /// Warning for people the source dropped silently. `created` names the new issue number first.
