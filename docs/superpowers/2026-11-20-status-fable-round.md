@@ -86,7 +86,7 @@ Issues: #254 Ernährung, Gewicht und Ziele (Entscheidungen als Kommentar), #255 
 1a. #250: läuft; Plan fertig (`docs/superpowers/plans/2026-11-21-issue-250-audits-strings.md`, offene Fragen nach Empfehlung); Umsetzung durch Sonnet auf `fix/ui-audits-and-strings` ab `origin/main`, nächster freier Platz nach dem Integrationsauftrag
 2. G1 Strang E (Basis `fix/ui-test-stability`)
 
-2b. **#260 Kapazität falsch** (Überschneidungen doppelt, freie Termine; Beispiel 24.11. „3 h 10 frei von 3 h 10“): Fable analysiert und plant (`2026-11-21-kapazitaet.md`, läuft), danach KA-Entscheidungen des Nutzers, dann Sonnet
+2b. **#260 Kapazität falsch** (Überschneidungen doppelt, freie Termine; Beispiel 24.11. „3 h 10 frei von 3 h 10“): Plan + Mockup fertig (`a091125`): Kernrechnung vereinigt korrekt; 3 h 10 vermutlich durch reservierten Aufwand wiederkehrender Aufgaben oder kürzere Arbeitszeit am Dienstag (Task 0 klärt); Fehler F1–F4 (Karte erklärt Abzug nicht, Puffer in der Pause, Zeitblöcke summiert, „Frei gibt frei“ summiert). Wartet auf KA1–KA6 und Angaben des Nutzers (Arbeitszeit Di., wiederkehrende Aufgaben); Start nach Merge von #256
 2a. **#259 Wochenansicht mit allen Terminen** (Nutzerwunsch 21.11., in dieser Runde): kleiner Punkt ohne Fable – Gestaltung vom Nutzer vorgegeben (wie bisher bzw. wie die Listenansicht eines Tages). Nutzer: erst nach der von Fable geplanten Neugestaltung von Planen, damit es sich am finalen Design orientiert → Start nach Merge von G1 P (#256) **und** G1 V (Fahrzeit am Termin, Zeile „Losfahren“); Termine in der Woche zeigen dann dieselbe Zeilenform inkl. Fahrzeit-Hinweis wie die Tagesliste
 3. #233 Block B (PR #258)
 4. Strang K (T, L, S gemergt – jetzt möglich); G2 Welle 1; G1 E, danach V/F8 nach P, R nach E
