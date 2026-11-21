@@ -168,6 +168,9 @@ final class AssistantModel {
                                     history: store.history(for: newKey))
     }
 
+    /// The next message revises all open cards (the chip "Zu allen … Vorschlägen" is set); reset by `send`.
+    var composesRevision = false
+
     func send(_ text: String, spoken: Bool = false) async {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty, let conversation, !conversation.isBusy else {
@@ -183,7 +186,16 @@ final class AssistantModel {
             if Task.isCancelled { return }
         }
         let start = conversation.history.count
-        await conversation.send(trimmed)
+        // "Alle anpassen …" (the chip over the input) and a message spoken in the voice mode while cards are open send the
+        // open cards back with their state instead of rejecting them (plan ki-vorschlaege-anpassen, task B5). Typing
+        // without the chip stays what it was: the open cards count as declined.
+        let revises = (composesRevision || (spoken && onTurnFinished != nil)) && !conversation.pendingActions.isEmpty
+        composesRevision = false
+        if revises {
+            await conversation.revise(comment: trimmed)
+        } else {
+            await conversation.send(trimmed)
+        }
         // `send` may first close open calls; the user message is the first `.user` item from `start` on.
         let index = conversation.history.indices.dropFirst(start).first { conversation.history[$0] == .user(trimmed) } ?? start
         if spoken {
@@ -588,7 +600,12 @@ final class AssistantModel {
         Heute ist \(AIPlanner.dayString(today)), es ist \(time) Uhr (Zeitzone \(planning.calendar.timeZone.identifier)).
         Nutze die Funktionen: lesende darfst du jederzeit aufrufen, um nachzusehen. Ändernde Funktionen rufst du \
         direkt auf, ohne vorher im Text um Erlaubnis zu fragen; die App zeigt sie als Karte und führt sie erst nach \
-        Bestätigung aus. Danach erhältst du das Ergebnis oder den Fehler und kannst reagieren.
+        Bestätigung aus. Danach erhältst du das Ergebnis oder den Fehler und kannst reagieren. \
+        Hat der Nutzer offene Vorschläge überarbeiten lassen, ist das Ergebnis dieser Vorschläge „revision_requested“: \
+        „current“ ist ihr Stand, „adjusted_by_user“ sagt, ob der Nutzer Werte selbst geändert hat, und seine nächste \
+        Nachricht sagt, was anders sein soll. Lege die offenen Vorschläge mit denselben Funktionen neu vor. Werte, die der \
+        Nutzer geändert hat, behältst du bei, außer die Nachricht betrifft sie; Vorschläge, die die Nachricht nicht \
+        betrifft, wiederholst du unverändert.
         Aufgaben-IDs haben die Form quelle:kennung (z. B. github:… oder local:…); verwende sie genau so.
         Termine kannst du anlegen, ändern und löschen (create_event, update_event, delete_event), in jedem \
         beschreibbaren Kalender; ohne Nennung eines Kalenders im Standardkalender. Nennt der Nutzer keine Dauer, \
@@ -771,11 +788,11 @@ final class AssistantModel {
         guard isOpen else { return card }
         card.canAdjust = canAdjust(call)
         if let original = conversation?.originalArguments(of: call) {
-            card.mark = .byUser
+            card.mark = adjustmentMarks[call.id] ?? .byUser
             let proposed = describer.describe(ToolCall(id: call.id, name: call.name, arguments: original), language: language, spoken: spoken)
             card.proposedChange = proposed.change
             // A card the user changed on screen and then confirms by voice says so.
-            if spoken { card.change += ". " + ProposalMark.byUser.label(in: language) }
+            if spoken, let mark = card.mark { card.change += ". " + mark.label(in: language) }
         }
         return card
     }
@@ -783,29 +800,94 @@ final class AssistantModel {
     // MARK: Adjusting cards (plan ki-vorschlaege-anpassen, AN1a, AN2a, AN11a)
 
     /// The functions whose cards have an editor and so offer "Anpassen". A function without one (complete, delete,
-    /// link, mark free) keeps two buttons. Strands B to E register their editors here.
-    static let adjustableToolNames: Set<String> = []
+    /// link, mark free) keeps two buttons. The set follows the registry of the editors (`ProposalEditors`), so a function
+    /// has "Anpassen" exactly when an editor exists for it.
+    static var adjustableToolNames: Set<String> { ProposalEditors.toolNames }
 
     /// Replaceable so the tests and the strands can name the functions that have an editor.
     var adjustableTools = AssistantModel.adjustableToolNames
 
-    /// True for an open card of a function with an editor.
+    /// True for an open card of a function with an editor that can open for this call (an `assign_task` for an issue the
+    /// app does not know any more has none).
     func canAdjust(_ call: ToolCall) -> Bool {
-        adjustableTools.contains(call.name) && conversation?.pendingActions.contains { $0.id == call.id } == true
+        // The voice mode has no sheet with fields: whoever speaks says the change (AN12a).
+        guard onTurnFinished == nil, adjustableTools.contains(call.name),
+              let current = conversation?.pendingActions.first(where: { $0.id == call.id }) else { return false }
+        return makeEditor(for: current) != nil
     }
 
-    /// Writes the user's values into the open card. Nothing is sent, run or saved: the card stays a proposal and is
-    /// carried out only by "Bestätigen". The guards (`needsSingleConfirmation`) and the texts follow the new values.
+    /// The editor for an open card; `nil` for a function without one and for a call that is no longer open. The editor
+    /// starts from the current call, so an adjusted card opens with the user's values.
+    func proposalEditor(for call: ToolCall) -> (any ProposalEditor)? {
+        guard adjustableTools.contains(call.name),
+              let current = conversation?.pendingActions.first(where: { $0.id == call.id }) else { return nil }
+        return makeEditor(for: current)
+    }
+
+    /// An editor that starts from other arguments than the call holds, e.g. the answer of ChatGPT to a follow-up.
+    func proposalEditor(for call: ToolCall, arguments: Data) -> (any ProposalEditor)? {
+        guard let current = conversation?.pendingActions.first(where: { $0.id == call.id }), adjustableTools.contains(current.name) else { return nil }
+        return makeEditor(for: ToolCall(id: current.id, name: current.name, arguments: arguments))
+    }
+
+    private func makeEditor(for call: ToolCall) -> (any ProposalEditor)? {
+        let current = call
+        let tools = tools
+        let planning = planning
+        let context = ProposalEditorContext(
+            calendar: planning.calendar, now: now, gitHubDirectory: gitHubDirectory,
+            writableCalendars: { planning.writableCalendars }, shoppingItemName: shoppingItemName,
+            assignment: { key in
+                if let task = planning.taskList.items.first(where: { $0.id.key == key }), task.id.source == .github {
+                    return ProposalAssignment(repository: task.container.id, current: task.assignees ?? [])
+                }
+                return tools.foundIssues[key].map { ProposalAssignment(repository: $0.repository, current: $0.assignees) }
+            })
+        return ProposalEditors.make(for: current, context: context)
+    }
+
+    // MARK: Follow-up about one card (plan ki-vorschlaege-anpassen, task B4)
+
+    /// The consent a follow-up about a card needs: in a notes chat (the card may stem from note text) the consent
+    /// "Notizen mit ChatGPT"; elsewhere the sign-in is the only condition, like for the chat itself.
+    var cardFollowUpHasConsent: Bool {
+        switch context {
+        case .notes, .note: hasNoteConsent()
+        default: true
+        }
+    }
+
+    @ObservationIgnored private lazy var cardReviser = CardReviser(
+        responder: responder, model: model, hasConsent: { [weak self] in self?.cardFollowUpHasConsent ?? false },
+        language: { [weak self] in self?.language() ?? .app }, now: now, calendar: planning.calendar)
+
+    /// One request about one open card: the answer fills the fields of the sheet. The chat history, the other cards and
+    /// the stored conversation stay as they are; nothing is stored. `current` are the arguments as the sheet shows them.
+    func reviseCard(_ call: ToolCall, current: Data, comment: String) async throws -> CardReviser.Answer {
+        guard let pending = conversation?.pendingActions.first(where: { $0.id == call.id }) else { throw CardReviser.Failure.unknownFunction }
+        return try await cardReviser.revise(name: pending.name, current: current,
+                                            proposed: conversation?.originalArguments(of: pending) ?? pending.arguments, comment: comment)
+    }
+
+    /// Who last changed each adjusted card; a card without an entry that is adjusted counts as changed by the user.
+    private(set) var adjustmentMarks: [String: ProposalMark] = [:]
+
+    /// Writes the values into the open card, by the user (`.byUser`) or taken from an answer of ChatGPT (`.byAssistant`).
+    /// Nothing is sent, run or saved: the card stays a proposal and is carried out by "Bestätigen" only. The guards
+    /// (`needsSingleConfirmation`) and the texts follow the new values.
     @discardableResult
-    func adjust(_ call: ToolCall, arguments: Data) -> ToolCall? {
-        guard canAdjust(call) else { return nil }
-        return conversation?.adjust(call, arguments: arguments)
+    func adjust(_ call: ToolCall, arguments: Data, mark: ProposalMark = .byUser) -> ToolCall? {
+        guard canAdjust(call), let adjusted = conversation?.adjust(call, arguments: arguments) else { return nil }
+        // Back to what the model proposed is no adjustment, so no mark either.
+        adjustmentMarks[call.id] = conversation?.isAdjusted(adjusted) == true ? mark : nil
+        return adjusted
     }
 
     /// Puts the proposal of the model back; `nil` when the card was not adjusted.
     @discardableResult
     func resetAdjustment(_ call: ToolCall) -> ToolCall? {
-        conversation?.resetAdjustment(call)
+        adjustmentMarks[call.id] = nil
+        return conversation?.resetAdjustment(call)
     }
 }
 

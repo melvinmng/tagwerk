@@ -47,6 +47,8 @@ struct ChatView: View {
                 environment.voiceOutput.stop()
             }
             .onChange(of: draft) { _, text in if text.isEmpty { voice?.draftConsumed() } }
+            // Nothing left to revise: the reference of the next message goes away with the cards.
+            .onChange(of: conversation?.pendingActions.isEmpty) { _, isEmpty in if isEmpty == true { assistant.composesRevision = false } }
             .toolbar {
                 ToolbarItem(placement: .principal) {
                     Label("ChatGPT", systemImage: "sparkles").labelStyle(.titleAndIcon).font(.headline)
@@ -63,6 +65,9 @@ struct ChatView: View {
             .confirmationDialog("Verlauf löschen?", isPresented: $askingClear, titleVisibility: .visible) {
                 Button("Verlauf löschen", role: .destructive) { assistant.clear() }
             }
+            .sheet(item: $adjusting) { call in
+                ProposalAdjustSheet(assistant: assistant, call: call)
+            }
             .sheet(item: $noteDetail) { request in
                 if let detail = request.card.detail {
                     NoteChangeSheet(card: request.card, detail: detail,
@@ -71,6 +76,8 @@ struct ChatView: View {
                 }
             }
         }
+        // A sheet does not take the forced text size of the UI test mode from the window; no effect outside that mode.
+        .modifier(UITestAppearance())
     }
 
     // MARK: Voice
@@ -268,22 +275,70 @@ struct ChatView: View {
         return (index + 1, open.count)
     }
 
+    /// "Alle anpassen …": the next message goes out together with the state of all open cards (AN5a).
+    private func reviseAllButton(count: Int) -> some View {
+        Button {
+            assistant.composesRevision = true
+            composing = true
+        } label: {
+            Text("Alle anpassen …").frame(maxWidth: .infinity)
+        }
+        .buttonStyle(.bordered)
+        .disabled(!canSend)
+    }
+
+    private func confirmAllButton(_ batch: Int) -> some View {
+        Button {
+            Task { await assistant.confirmAll() }
+        } label: {
+            Text("Alle bestätigen (\(batch))").frame(maxWidth: .infinity)
+        }
+        .buttonStyle(.borderedProminent)
+    }
+
+    /// The reference of the next message, above the input: "Zu allen 3 Vorschlägen ✕", with what "Senden" sends below.
+    private func revisionChip(count: Int) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack(spacing: 4) {
+                Text(count == 1 ? String(localized: "Zum offenen Vorschlag") : String(localized: "Zu allen \(count) Vorschlägen"))
+                    .font(.caption.weight(.semibold))
+                Button { assistant.composesRevision = false } label: { Image(systemName: "xmark.circle.fill") }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("Bezug entfernen")
+            }
+            .foregroundStyle(.purple)
+            .padding(.horizontal, 10).padding(.vertical, 4)
+            .background(Color.purple.opacity(0.15), in: Capsule())
+            Text("Senden gibt die offenen Vorschläge mit deinen Änderungen an ChatGPT; es legt sie überarbeitet neu vor.")
+                .font(.footnote).foregroundStyle(.secondary)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
     private var composer: some View {
         VStack(spacing: 6) {
-            if let pending = conversation?.pendingActions, pending.count > 1 {
+            if let pending = conversation?.pendingActions, !pending.isEmpty {
                 // Guarded cards (assignments) are confirmed one by one and are not part of the count.
                 let batch = assistant.batchConfirmable.count
-                if batch > 1 {
-                    Button {
-                        Task { await assistant.confirmAll() }
-                    } label: {
-                        Text("Alle bestätigen (\(batch))").frame(maxWidth: .infinity)
+                let confirmsAll = pending.count > 1 && batch > 1
+                ViewThatFits(in: .horizontal) {
+                    HStack(spacing: 8) {
+                        reviseAllButton(count: pending.count)
+                        if confirmsAll { confirmAllButton(batch) }
                     }
-                    .buttonStyle(.borderedProminent)
+                    VStack(spacing: 8) {
+                        reviseAllButton(count: pending.count)
+                        if confirmsAll { confirmAllButton(batch) }
+                    }
                 }
-                if let notice = AssistantModel.singleConfirmationNotice(for: pending, me: assistant.gitHubDirectory()?.login) {
+                // As before: the note under the buttons names the cards that are confirmed alone, from two open cards on.
+                if pending.count > 1,
+                   let notice = AssistantModel.singleConfirmationNotice(for: pending, me: assistant.gitHubDirectory()?.login) {
                     Text(notice).font(.footnote).foregroundStyle(.secondary).frame(maxWidth: .infinity, alignment: .leading)
                 }
+            }
+            if assistant.composesRevision, let pending = conversation?.pendingActions, !pending.isEmpty {
+                revisionChip(count: pending.count)
             }
             if explainingVoiceMode {
                 VoiceModeExplanation(onStart: startVoiceMode, onCancel: { explainingVoiceMode = false })
@@ -358,12 +413,7 @@ struct ActionCardView: View {
             header
             Text(card.title).font(.subheadline.weight(.semibold))
             if let mark = card.mark, status == .pending { ProposalMarkLabel(mark: mark) }
-            Text(card.change).font(.subheadline).foregroundStyle(.secondary)
-            if let proposed = card.proposedChange, status == .pending {
-                // What the model proposed, so the user sees what was changed (AN2a).
-                Text("Vorschlag der KI: \(proposed)").font(.caption).foregroundStyle(.secondary).strikethrough()
-                    .accessibilityLabel(Text("Vorschlag der KI: \(proposed)"))
-            }
+            changeText
             if let accessory { accessory }
             if let onShowDetail {
                 Button(action: onShowDetail) {
@@ -389,6 +439,24 @@ struct ActionCardView: View {
         }
         .accessibilityActions {
             if status == .pending, let onAdjust { Button("Anpassen", action: onAdjust) }
+        }
+    }
+
+    /// What the card changes. An adjusted card shows the old value of each changed part struck through before the new one
+    /// (AN2a); when the two texts do not have the same parts, the whole proposal of the model follows below.
+    @ViewBuilder
+    private var changeText: some View {
+        if let proposed = card.proposedChange, status == .pending {
+            if let parts = ProposalChangeText.parts(current: card.change, proposed: proposed) {
+                Text(ProposalChangeText.attributed(parts)).font(.subheadline).foregroundStyle(.secondary)
+                    .accessibilityLabel(Text(ProposalChangeText.spoken(parts)))
+            } else {
+                Text(card.change).font(.subheadline).foregroundStyle(.secondary)
+                Text("Vorschlag der KI: \(proposed)").font(.caption).foregroundStyle(.secondary).strikethrough()
+                    .accessibilityLabel(Text("Vorschlag der KI: \(proposed)"))
+            }
+        } else {
+            Text(card.change).font(.subheadline).foregroundStyle(.secondary)
         }
     }
 
@@ -459,6 +527,8 @@ struct ActionCardView: View {
             }
         case .declined:
             Text("Verworfen").font(.caption).foregroundStyle(.secondary)
+        case .revised:
+            Text("Überarbeitet").font(.caption).foregroundStyle(.secondary)
         }
     }
 
