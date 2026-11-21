@@ -302,6 +302,11 @@ final class AppEnvironment {
                                                              all: reminderStore.lists().map(\.id), shopping: settings.shoppingListID)
                 return await reminderStore.completionDates(in: interval, listIDs: listIDs).count
                     + localTasks.completionDates(in: interval).count
+            },
+            // GitHub issues closed that day; `nil` while GitHub is not connected (asked at every use).
+            closedIssueCount: { [taskList] in
+                guard let gitHub = taskList.provider(for: .github) as? GitHubTaskProvider else { return nil }
+                return { interval in try await gitHub.closedIssueCount(in: interval) }
             })
         self.routineNotifications = RoutineNotificationScheduler(center: notificationCenter ?? SystemNotificationCenter(),
                                                                  store: routineStore, settings: settings)
@@ -809,6 +814,10 @@ final class AppEnvironment {
         let reminderStore = self.reminderStore
         let settings = self.settings
         let local = LocalTaskProvider(context: modelContainer.mainContext)
+        var closedIssueDates: (@MainActor (DateInterval) async throws -> [Date])?
+        if let gitHub = taskList.provider(for: .github) as? GitHubTaskProvider {
+            closedIssueDates = { interval in try await gitHub.closedIssueDates(in: interval) }
+        }
         return WeekReviewModel(store: intake, health: health, settings: settings, calendar: capture.calendar,
                                completedReminders: { [weak self] interval in
                                    await reminderStore.completionDates(in: interval, listIDs: self?.taskReminderListIDs())
@@ -820,7 +829,9 @@ final class AppEnvironment {
                                    planning.scope = .week
                                    planning.anchor = week
                                    requestedTab = 0
-                               })
+                               },
+                               // Closed GitHub issues of the week; `nil` while GitHub is not connected.
+                               closedIssueDates: closedIssueDates)
     }
 
     /// The guided weekly planning (#164): the weekly review moved to the reviewed week, plus the deadlines of the planned one.

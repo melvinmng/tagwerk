@@ -2,6 +2,14 @@ import Foundation
 import Observation
 import TagwerkCore
 
+/// Whether the GitHub issues closed in a period are part of a review's "completed" numbers (day and week review).
+enum GitHubClosed: Equatable {
+    case notConnected, loading
+    /// The number of issues that were added.
+    case counted(Int)
+    case unavailable
+}
+
 /// The daily routines of "Planen" and "Erfassen" (phase 7): which sheet is open, the evening line, the evening wrap-up.
 /// Everything is calculated from the stores; nothing here reaches the network.
 @MainActor
@@ -32,6 +40,8 @@ final class RoutinesModel {
         var tasksTotal: Int
         var habits: HabitCounter?
         var focus: HabitCounter?
+        /// Whether the GitHub issues closed that day are part of `tasksDone` and `tasksTotal`.
+        var gitHub: GitHubClosed = .notConnected
     }
 
     /// The line in the capacity card of "Planen".
@@ -53,6 +63,9 @@ final class RoutinesModel {
     let settings: AppSettings
     let calendar: Calendar
     @ObservationIgnored private let completedCount: (DateInterval) async -> Int
+    /// The counter of the GitHub issues closed within an interval, or `nil` while GitHub is not connected. Asked at every
+    /// use, because GitHub can be connected (or signed out) while the app runs.
+    @ObservationIgnored private let closedIssueCount: @MainActor () -> (@MainActor (DateInterval) async throws -> Int)?
     @ObservationIgnored private let now: () -> Date
     /// Whether a task is an occurrence of a recurring reminder (not selectable as focus); defaults to the plan's list.
     @ObservationIgnored private let isRecurringOverride: ((TaskItem) -> Bool)?
@@ -61,7 +74,9 @@ final class RoutinesModel {
 
     init(store: RoutineStore, planning: PlanningModel, taskList: TaskListModel, habits: HabitsModel, settings: AppSettings,
          completedCount: @escaping (DateInterval) async -> Int, calendar: Calendar = .tagwerk, now: @escaping () -> Date = Date.init,
-         isRecurring: ((TaskItem) -> Bool)? = nil) {
+         isRecurring: ((TaskItem) -> Bool)? = nil,
+         closedIssueCount: @escaping @MainActor () -> (@MainActor (DateInterval) async throws -> Int)? = { nil }) {
+        self.closedIssueCount = closedIssueCount
         self.isRecurringOverride = isRecurring
         self.store = store
         self.planning = planning
@@ -131,14 +146,55 @@ final class RoutinesModel {
 
     // MARK: Evening
 
-    /// "Aufgaben erledigt e von n": completions of the day from reminders and local tasks (GitHub issues have no
-    /// completion dates, deviation A1) plus the open tasks of the day.
+    /// "Aufgaben erledigt e von n": completions of the day from reminders and local tasks plus the open tasks of the day.
+    /// The GitHub issues closed that day come afterwards from `addingClosedIssues(to:day:)`, so the sheet shows these
+    /// numbers at once; the review says with `gitHub` whether that step follows.
     func dayReview(_ day: PlanDay) async -> DayReview {
-        let interval = DateInterval(start: day.startDate(in: calendar), end: day.adding(days: 1, calendar: calendar).startDate(in: calendar))
-        let done = await completedCount(interval)
+        let done = await completedCount(interval(of: day))
         let marks = store.focusMarks(on: day)
         let focus = marks.isEmpty ? nil : HabitCounter(done: marks.filter { $0.doneAt != nil }.count, total: marks.count)
-        return DayReview(tasksDone: done, tasksTotal: done + tasks(of: day).count, habits: habits.counter(on: day), focus: focus)
+        return DayReview(tasksDone: done, tasksTotal: done + tasks(of: day).count, habits: habits.counter(on: day), focus: focus,
+                         gitHub: closedIssueCount() == nil ? .notConnected : .loading)
+    }
+
+    /// The review with the closed issues of the day added to done and total (done and open tasks of the day); `.unavailable`
+    /// with the local numbers unchanged when GitHub did not answer. Only a review that is `.loading` changes.
+    func addingClosedIssues(to review: DayReview, day: PlanDay) async -> DayReview {
+        guard review.gitHub == .loading else { return review }
+        var result = review
+        guard let count = closedIssueCount() else {
+            result.gitHub = .notConnected
+            return result
+        }
+        do {
+            let closed = try await count(interval(of: day))
+            result.tasksDone += closed
+            result.tasksTotal += closed
+            result.gitHub = .counted(closed)
+        } catch {
+            result.gitHub = .unavailable
+        }
+        return result
+    }
+
+    /// The calendar day of a routine day: from midnight to midnight, also for the wrap-up that runs after midnight.
+    private func interval(of day: PlanDay) -> DateInterval {
+        DateInterval(start: day.startDate(in: calendar), end: day.adding(days: 1, calendar: calendar).startDate(in: calendar))
+    }
+
+    /// The footer under "Aufgaben erledigt"; `isToday` is `false` for a wrap-up after midnight (rule 10).
+    static func reviewFooter(_ state: GitHubClosed, isToday: Bool = true) -> String {
+        switch state {
+        case .notConnected:
+            String(localized: "Erledigt: Erinnerungen und lokale Aufgaben.")
+        case .loading:
+            String(localized: "Erledigt: Erinnerungen und lokale Aufgaben. GitHub wird geladen …")
+        case .counted:
+            isToday ? String(localized: "Erledigt: Erinnerungen, lokale Aufgaben und heute geschlossene GitHub-Issues.")
+                    : String(localized: "Erledigt: Erinnerungen, lokale Aufgaben und an diesem Tag geschlossene GitHub-Issues.")
+        case .unavailable:
+            String(localized: "Erledigt: Erinnerungen und lokale Aufgaben. GitHub ist gerade nicht erreichbar.")
+        }
     }
 
     /// The evening line in "Planen" (rule 11); `nil` when switched off or not yet due.
