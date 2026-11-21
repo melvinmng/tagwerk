@@ -13,12 +13,15 @@ struct FocusStartButton: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.isPresented) private var isInSheet
     private let subject: Subject
+    /// A host that closes its own sheet before the start (the search sheet) passes its action; the title stays the same.
+    private let customAction: (() -> Void)?
 
-    init(block: CalendarEvent) { subject = .block(block) }
-    init(task: TaskItem) { subject = .task(task) }
+    init(block: CalendarEvent) { subject = .block(block); customAction = nil }
+    init(task: TaskItem, action: (() -> Void)? = nil) { subject = .task(task); customAction = action }
 
     var body: some View {
         Button {
+            if let customAction { customAction(); return }
             let target = resolved()
             // A sheet that is closing cannot present another one at once; the start or focus sheet follows after it.
             let wasInSheet = isInSheet
