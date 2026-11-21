@@ -228,6 +228,8 @@ final class AppEnvironment {
                                          rate: settings.voiceRate)
         })
         let voiceOutput = self.voiceOutput
+        // Withdrawing the consent ends the note session, from the settings screen as well as from a backup restore.
+        assistant.watchNoteConsent { settings.noteAssistantConsent }
         assistant.readPolicy = { ReadAloudPolicy(rawValue: settings.voiceReadAloud) ?? .never }
         assistant.announcesActions = { settings.voiceAnnounceActions }
         assistant.fixedVoiceLanguage = { VoiceChatLanguage.fixed(setting: settings.voiceRecognitionLanguage) }

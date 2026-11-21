@@ -24,6 +24,7 @@ struct AssistantNoteSessionTests {
         container = try ModelContainerFactory.make(inMemory: true)
         settings = try AppSettings.current(in: container.mainContext)
         settings.planCalendarID = "plan"
+        settings.noteAssistantConsent = true
         local = FakeTaskProvider(source: .local, tasks: [makeTask("Fahrrad", source: .local, due: DueDate(year: 2026, month: 11, day: 18))])
         taskList = TaskListModel(providers: [local], now: testNow, calendar: calendar)
     }
@@ -112,7 +113,7 @@ struct AssistantNoteSessionTests {
     static let fullText = "Zimtsternrezept Vollständiger Notizinhalt: erst Eiweiß schlagen"
 
     /// A model whose notes come from a real store: one normal note, found by the search and read in full.
-    private func makeWithStore() async throws -> (AssistantModel, ChatStore, AppTools, NoteRecord) {
+    private func makeWithStore(responder override: ResponseStreaming? = nil) async throws -> (AssistantModel, ChatStore, AppTools, NoteRecord) {
         let notes = NoteStore(context: container.mainContext)
         let note = try #require(notes.create(text: "Backliste\n" + Self.fullText))
         await taskList.reload()
@@ -125,13 +126,17 @@ struct AssistantNoteSessionTests {
                                      now: testNow, calendar: calendar)
         await planning.reload()
         let access = NoteToolAccess(store: notes)
+        let settings = self.settings
         let sources = SearchToolSources(events: { _ in [] }, calendarNames: { [:] }, completedTasks: { [] },
                                         notes: { access.visibleNotes().map { AppEnvironment.searchItem(for: $0, folderNames: [:]) } },
-                                        notesAllowed: { true })
+                                        notesAllowed: { settings.noteAssistantConsent })
         let tools = AppTools(taskList: taskList, planning: planning, planner: nil, events: { _ in [] }, search: sources, noteAccess: access)
         let store = ChatStore(context: container.mainContext)
-        let model = AssistantModel(responder: responder, tools: tools, model: { "gpt-test" }, store: store, planning: planning, now: testNow)
+        let model = AssistantModel(responder: override ?? responder, tools: tools, model: { "gpt-test" }, store: store,
+                                   planning: planning, now: testNow)
         model.language = { .german }
+        // The same wiring as in `AppEnvironment`: the consent in the settings object drives the session.
+        model.watchNoteConsent { settings.noteAssistantConsent }
         return (model, store, tools, note)
     }
 
@@ -169,6 +174,8 @@ struct AssistantNoteSessionTests {
         let (model, _, tools, note) = try await makeWithStore()
         await readTurn(model, note)
         #expect(!tools.noteSession.readTexts.isEmpty)
+        // A switch only happens while no turn runs; this shows in the failure message if a turn is still going.
+        #expect(model.conversation?.isBusy == false)
         model.open(task: makeTask("Fahrrad", source: .local))
         #expect(tools.noteSession.readTexts.isEmpty)
         // The other chat is built from the stored form.
@@ -187,6 +194,8 @@ struct AssistantNoteSessionTests {
     @Test func endNoteSession_resetsSession() async throws {
         let (model, store, tools, note) = try await makeWithStore()
         await readTurn(model, note)
+        // A reduction does nothing while a turn runs; this shows in the failure message if a turn is still going.
+        #expect(model.conversation?.isBusy == false)
         model.endNoteSession()
         #expect(tools.noteSession.readTexts.isEmpty)
         let memory = model.conversation?.history.map { "\($0)" }.joined(separator: "\n") ?? ""
@@ -233,6 +242,119 @@ struct AssistantNoteSessionTests {
         let text = model.instructions()
         #expect(!text.contains("Backliste") && !text.contains(Self.fullText))
         #expect(text.contains("read_note"))
+    }
+
+    // MARK: Consent withdrawn in the settings object (no view involved)
+
+    /// Waits (bounded) for the model to react to a settings change; the observation hands over on the next run loop turn.
+    private func waitUntil(_ condition: () -> Bool) async {
+        var spins = 0
+        while !condition() && spins < 2_000 {
+            await Task.yield()
+            spins += 1
+        }
+    }
+
+    @Test func consentWithdrawnInSettings_endsTheSession() async throws {
+        let (model, store, tools, note) = try await makeWithStore()
+        await readTurn(model, note)
+        #expect(model.conversation?.history.map { "\($0)" }.joined().contains(Self.fullText) == true)
+        // The way a backup restore or any other code path withdraws the consent: through the settings object.
+        settings.noteAssistantConsent = false
+        await waitUntil { tools.noteSession.readTexts.isEmpty }
+        #expect(tools.noteSession.readTexts.isEmpty)
+        let memory = model.conversation?.history.map { "\($0)" }.joined(separator: "\n") ?? ""
+        #expect(!memory.isEmpty && !memory.contains(Self.fullText), "\(memory)")
+        #expect(!storedText(store).contains(Self.fullText))
+        #expect(storedText(store).contains("Backliste"))
+    }
+
+    @Test func consentWithdrawnInSettings_nextTurnSendsNoNoteText_evenBeforeTheObservationRan() async throws {
+        let (model, _, tools, note) = try await makeWithStore()
+        await readTurn(model, note)
+        settings.noteAssistantConsent = false
+        // No suspension point between the change and the send: only the check at the start of the turn can help here.
+        responder.enqueue("Okay.")
+        await model.send("Und jetzt?")
+        let sent = responder.calls.last?.input.map { "\($0)" }.joined() ?? ""
+        #expect(!sent.contains(Self.fullText), "note text was sent after the consent was withdrawn")
+        #expect(sent.contains("Backliste"))
+        #expect(tools.noteSession.readTexts.isEmpty)
+    }
+
+    @Test func consentGivenAgain_laterWithdrawalEndsTheSessionAgain() async throws {
+        let (model, _, tools, note) = try await makeWithStore()
+        await readTurn(model, note)
+        settings.noteAssistantConsent = false
+        await waitUntil { tools.noteSession.readTexts.isEmpty }
+        #expect(tools.noteSession.readTexts.isEmpty)
+        // The observation keeps running: give the consent again, read again, withdraw again.
+        settings.noteAssistantConsent = true
+        responder.enqueueEvents([readCall(note), .completed(usage: nil)])
+        responder.enqueue("Wieder gelesen.")
+        await model.send("Lies sie noch einmal")
+        #expect(!tools.noteSession.readTexts.isEmpty)
+        settings.noteAssistantConsent = false
+        await waitUntil { tools.noteSession.readTexts.isEmpty }
+        #expect(tools.noteSession.readTexts.isEmpty)
+        let memory = model.conversation?.history.map { "\($0)" }.joined(separator: "\n") ?? ""
+        #expect(!memory.contains(Self.fullText), "\(memory)")
+    }
+
+    @Test func appEnvironment_followsTheConsentOfItsSettings() async throws {
+        let environment = try AppEnvironment(modelContainer: container, notificationCenter: FakeNotificationCenter(),
+                                             health: FakeHealthStore())
+        let session = environment.assistant.tools.noteSession
+        #expect(environment.settings.noteAssistantConsent)   // switched on by this suite's setup
+        session.remember(UUID(), text: Self.fullText, truncated: false)
+        #expect(!session.readTexts.isEmpty)
+        environment.settings.noteAssistantConsent = false
+        await waitUntil { session.readTexts.isEmpty }
+        #expect(session.readTexts.isEmpty)
+    }
+
+    // MARK: Chat switch while a turn runs
+
+    @Test func switchingChat_duringTurn_waitsForTheTurn_andLeavesNoStaleSession() async throws {
+        let gate = TurnGate()
+        let (model, store, tools, note) = try await makeWithStore(responder: gate)
+        model.open(context: .settings)
+        gate.enqueue([readCall(note), .completed(usage: nil)], blocked: true)
+        gate.enqueue([.textDelta("Die Notiz handelt von Zimtsternen."), .completed(usage: nil)], blocked: false)
+        let sending = Task { await model.send("Lies meine Backliste") }
+        // The first request is held back: the turn runs and has not read the note yet.
+        while !gate.isHolding { await Task.yield() }
+        #expect(model.conversation?.isBusy == true)
+        model.open(task: makeTask("Fahrrad", source: .local))
+        // The running chat stays; the other chat opens only after the turn.
+        #expect(model.task == nil && model.context == .settings)
+        #expect(model.isPresented)
+        gate.release()
+        await sending.value
+        // The note was read in the chat that is still shown, and its stored form holds no text.
+        #expect(model.conversation?.history.map { "\($0)" }.joined().contains(Self.fullText) == true)
+        #expect(!tools.noteSession.readTexts.isEmpty)
+        #expect(!storedText(store).contains(Self.fullText) && storedText(store).contains("Backliste"))
+        // Now the switch works and ends the session.
+        model.open(task: makeTask("Fahrrad", source: .local))
+        #expect(model.task != nil)
+        #expect(tools.noteSession.readTexts.isEmpty)
+        let memory = model.conversation?.history.map { "\($0)" }.joined(separator: "\n") ?? ""
+        #expect(!memory.contains(Self.fullText), "\(memory)")
+    }
+
+    @Test func openingTheSameChatWithAnotherContext_duringTurn_stillWorks() async throws {
+        let gate = TurnGate()
+        let (model, _, _, _) = try await makeWithStore(responder: gate)
+        model.open(context: .settings)
+        gate.enqueue([.textDelta("Hallo."), .completed(usage: nil)], blocked: true)
+        let sending = Task { await model.send("Hallo") }
+        while !gate.isHolding { await Task.yield() }
+        // Same chat ("assistant"), only the view context differs: no switch, so nothing to hold back.
+        model.open(context: .tasks)
+        #expect(model.context == .tasks)
+        gate.release()
+        await sending.value
     }
 
     // MARK: Consent withdrawn

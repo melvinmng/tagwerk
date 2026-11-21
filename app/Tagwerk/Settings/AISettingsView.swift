@@ -36,10 +36,6 @@ struct AISettingsView: View {
             #endif
         }
         .scrollDismissesKeyboard(.interactively)
-        // Withdrawing the consent ends the note session: read texts are forgotten, the chat itself stays.
-        .onChange(of: environment.settings.noteAssistantConsent) { _, allowed in
-            if !allowed { environment.assistant.endNoteSession() }
-        }
         .navigationTitle("KI")
         .navigationBarTitleDisplayMode(.inline)
         .task {
