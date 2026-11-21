@@ -58,7 +58,8 @@ Festlegungen der Hauptsitzung zum G3-Plan: offene Fragen nach Empfehlung; Zeilen
 | `feat/g3-keyboard-siri` | G3 Strang T | fertig und geprüft, Head `43b277c`, `test-all` grün; T4 (Siri am Gerät) offen; Allowlist-Einträge für K vorgemerkt; ein unbenannter AX5-Befund „Text clipped“ auf Einstellungen › KI › Sprache flackert |
 | `feat/g1-plan-grid` | G1 Strang P auf Basis `fix/ui-test-stability` | läuft (Sonnet) |
 | `fix/ui-test-stability` | vorbestehende UI-Testfehler | fertig und geprüft, Head `e34c1fd`, `test-all` zweimal grün; zuerst mergen. Allowlist-Einträge „Unerledigt von heute“ und Leftover-Zeile bei Strang K (K5) neu bewerten |
-| `feat/g3-github-status` | G3 Strang G (G1–G4, G5 später) auf Basis `fix/ui-test-stability` | läuft (Sonnet) |
+| `feat/g3-github-status` | G3 Strang G (G1–G4) | fertig und geprüft, Head `f7eae41`, `test-all` grün; G5 offen (nach #173 A/B), dort auch GH9-Fußtext „erste Stufe“ vs. Startstufe „Ready“ und VoiceOver-Anführungszeichen im Englischen klären |
+| `feat/g1-focus` | G1 Strang F (F1–F7) auf Basis `fix/ui-test-stability` | läuft (Sonnet) |
 
 ## Warteschlange Umsetzung (je freier Xcode-Platz, nach Prüfung des fertigen Branches)
 
@@ -69,5 +70,5 @@ Festlegungen der Hauptsitzung zum G3-Plan: offene Fragen nach Empfehlung; Zeilen
 
 ## Bekannte Probleme
 
-- UI-Barrierefreiheits-Audits flackern unter Last, auch auf unverändertem Stand (Strang C und E beobachtet).
+- UI-Barrierefreiheits-Audits flackern unter Last, auch auf unverändertem Stand (Strang C und E beobachtet). Nach `fix/ui-test-stability` noch beobachtet: „Unerledigtes verschieben“ (Kontrast, Planen Tag), „Nicht jetzt“ (Rezept-Einwilligung, Dynamic Type), unbenannter AX5-Befund auf Einstellungen › KI › Sprache.
 - `scripts/sync-strings.sh` formatiert die Kataloge um (~24.000 Zeilen); Agents fügen Einträge im vorhandenen Format ein.
