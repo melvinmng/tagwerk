@@ -1795,46 +1795,6 @@
         }
       }
     },
-    "%lld Termine, %@ bis %@: %@": {
-      "localizations": {
-        "de": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld Termin, %@ bis %@: %@"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld Termine, %@ bis %@: %@"
-                }
-              }
-            }
-          }
-        },
-        "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld event, %@ to %@: %@"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld events, %@ to %@: %@"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "%lld Termine · %@": {
       "localizations": {
         "de": {
@@ -1868,6 +1828,46 @@
                 "stringUnit": {
                   "state": "translated",
                   "value": "%lld events · %@"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "%lld Termine, %@ bis %@: %@": {
+      "localizations": {
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Termin, %@ bis %@: %@"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Termine, %@ bis %@: %@"
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld event, %@ to %@: %@"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld events, %@ to %@: %@"
                 }
               }
             }
@@ -3112,22 +3112,22 @@
         }
       }
     },
-    "1 Artikel wurde inzwischen geändert und bleibt.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "1 item has changed in the meantime and stays."
-          }
-        }
-      }
-    },
     "+%lld weitere": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "+%lld more"
+          }
+        }
+      }
+    },
+    "1 Artikel wurde inzwischen geändert und bleibt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 item has changed in the meantime and stays."
           }
         }
       }
@@ -6948,16 +6948,6 @@
         }
       }
     },
-    "Die Einwilligung „Notizen mit ChatGPT“ fehlt.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "The consent “Notes with ChatGPT” is missing."
-          }
-        }
-      }
-    },
     "Die Einwilligung gilt auch für „Artikel übersetzen“; dabei gehen die Namen deiner Artikel und die Zielsprache an ChatGPT, ohne Kategorien.": {
       "localizations": {
         "en": {
@@ -6974,6 +6964,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "The consent also covers “Sort with ChatGPT”; that also sends the names of your categories."
+          }
+        }
+      }
+    },
+    "Die Einwilligung „Notizen mit ChatGPT“ fehlt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The consent “Notes with ChatGPT” is missing."
           }
         }
       }
@@ -7440,22 +7440,22 @@
         }
       }
     },
-    "Die Übersetzung passt nicht zur Notiz. Versuch es noch einmal.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "The translation doesn’t match the note. Try again."
-          }
-        }
-      }
-    },
     "Die Übersetzung passt nicht zur Liste. Versuch es noch einmal.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "The translation does not match the list. Try again."
+          }
+        }
+      }
+    },
+    "Die Übersetzung passt nicht zur Notiz. Versuch es noch einmal.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The translation doesn’t match the note. Try again."
           }
         }
       }
@@ -11003,22 +11003,22 @@
         }
       }
     },
-    "Im Ordner „Rezepte“ ist noch keine Notiz.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "There’s no note in the “Recipes” folder yet."
-          }
-        }
-      }
-    },
     "Im Ordner zeigen": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Show in folder"
+          }
+        }
+      }
+    },
+    "Im Ordner „Rezepte“ ist noch keine Notiz.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "There’s no note in the “Recipes” folder yet."
           }
         }
       }
@@ -12673,56 +12673,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Running"
-          }
-        }
-      }
-    },
-    "läuft, noch %lld Minuten": {
-      "localizations": {
-        "de": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "läuft, noch %lld Minute"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "läuft, noch %lld Minuten"
-                }
-              }
-            }
-          }
-        },
-        "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "running, %lld minute left"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "running, %lld minutes left"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "läuft · noch %lld min": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "running · %lld min left"
           }
         }
       }
@@ -18848,6 +18798,7 @@
       }
     },
     "Wenn du KI-Funktionen nutzt, gehen die dafür nötigen Daten (Termine, Aufgaben, bei Issues auch Repo-Inhalte und GitHub-Benutzernamen zuweisbarer und zugewiesener Personen) an OpenAI.": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -18855,8 +18806,7 @@
             "value": "When you use AI features, the data they need (events, tasks, and for issues also repo contents and GitHub usernames of assignable and assigned people) goes to OpenAI."
           }
         }
-      },
-      "extractionState": "stale"
+      }
     },
     "Werktags": {
       "localizations": {
@@ -19810,6 +19760,16 @@
         }
       }
     },
+    "Zum Verschieben den Eintrag öffnen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open the entry to move it."
+          }
+        }
+      }
+    },
     "Zum Vorschlag etwas sagen …": {
       "localizations": {
         "en": {
@@ -19836,16 +19796,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "To translate, Tagwerk sends the names of your open items and the target language to ChatGPT (OpenAI), through the account you are signed in with."
-          }
-        }
-      }
-    },
-    "Zum Verschieben den Eintrag öffnen.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Open the entry to move it."
           }
         }
       }
@@ -20722,6 +20672,56 @@
           "stringUnit": {
             "state": "translated",
             "value": "local tasks"
+          }
+        }
+      }
+    },
+    "läuft · noch %lld min": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "running · %lld min left"
+          }
+        }
+      }
+    },
+    "läuft, noch %lld Minuten": {
+      "localizations": {
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "läuft, noch %lld Minute"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "läuft, noch %lld Minuten"
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "running, %lld minute left"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "running, %lld minutes left"
+                }
+              }
+            }
           }
         }
       }
