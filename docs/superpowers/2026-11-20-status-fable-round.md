@@ -55,7 +55,8 @@ Festlegungen der Hauptsitzung zum G3-Plan: offene Fragen nach Empfehlung; Zeilen
 | `feat/closed-issues-in-reviews` | #173 Strang C (Tasks 6, 7, 7a) | PR #243; fertig und geprüft, Head `e428cf4` (Review-Korrekturen drin); UI-Stufe rot nur durch vorbestehende Fehler; Folge-Idee: Projekte beim Kaltstart aus dem Cache laden |
 | `feat/note-issue-suggestions` | #173 Strang D (Tasks 8, 9), abgezweigt von `33dfc26` | PR #244 (Basis #242); fertig und geprüft, Head `afc05d6`; nach Merge von A/B rebasen |
 | `feat/g3-share-mail` | G3 Strang S | PR #247; fertig und geprüft, Head `3908715`; UI-Stufe rot nur durch vorbestehende Fehler (Basis ohne `fix/ui-test-stability`) |
-| `feat/g3-languages` | G3 Strang L mit SP5c auf Basis `fix/ui-test-stability` (ggf. L6–L9 auf `feat/g3-shopping-translate`) | läuft (Sonnet) |
+| `feat/g3-languages` | G3 Strang L (L1–L5) | PR #251; geprüft, Head `37a2f8a`, `test-all` grün; L5-Assistentenzeile nach #242 offen |
+| `feat/g3-shopping-translate` | SP5c (L6–L9), Basis `feat/g3-languages` | PR #252 (Basis #251); geprüft, Head `805d645`, `test-all` grün; Grenze: sind die ersten 100 Namen schon in Zielsprache, werden spätere nie angeboten |
 | `feat/evening-reminders-per-day` | #173 Strang E (Tasks 10, 11) | PR #245; fertig und geprüft, Head `c4c281a`, `test-all` grün; bereit für PR |
 | `feat/assistant-assign-and-search` | #173 Stränge A, B und Task 5 | PR #242; fertig und geprüft, Head `e032f71` (Review-Korrekturen drin: Einwilligung wird beobachtet, kein Chatwechsel während laufender Runde) |
 | `feat/g3-search-menu` | G3 Strang U | PR #246; fertig und geprüft, Head `9694508` |
@@ -70,7 +71,7 @@ Festlegungen der Hauptsitzung zum G3-Plan: offene Fragen nach Empfehlung; Zeilen
 PRs #240–#249 angelegt (21.11.). Merge-Reihenfolge vom Nutzer bestätigt: #240 (gemergt 21.11., `95f28be`), dann #241, #242, #243, #245, #246, #247, #248, #249, zuletzt #244. #248/#249 zielen jetzt auf `main`.
 Probe-Merge in dieser Reihenfolge: Konflikte in `scripts/translations/en.json` (fast alle), `AISettingsView.swift` (#242, #244), `EveningSheet.swift` (#248), `Localizable.xcstrings` (#249).
 
-1. **Integrationsauftrag (Sonnet, nächster freier Xcode-Platz):** zuerst Nachtrag #241 (Zahlenprüfung lockern), dann jeden PR-Branch der Reihe nach mit dem kumulierten Stand der vorherigen zusammenführen und Konflikte lösen, am Ende `test-all` auf dem letzten Stand. Danach prüfe ich, pushe und merge in Reihenfolge.
+1. **Integrationsauftrag (Sonnet, läuft seit 21.11. vormittags, jetzt inkl. #251/#252 am Ende der Kette):** zuerst Nachtrag #241 (Zahlenprüfung lockern), dann jeden PR-Branch der Reihe nach mit dem kumulierten Stand der vorherigen zusammenführen und Konflikte lösen, am Ende `test-all` auf dem letzten Stand. Danach prüfe ich, pushe und merge in Reihenfolge.
 1a. #250: Plan fertig (`docs/superpowers/plans/2026-11-21-issue-250-audits-strings.md`, offene Fragen nach Empfehlung); Umsetzung durch Sonnet auf `fix/ui-audits-and-strings` ab `origin/main`, nächster freier Platz nach dem Integrationsauftrag
 2. G1 Strang E (Basis `fix/ui-test-stability`)
 
