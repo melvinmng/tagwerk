@@ -54,12 +54,13 @@ Festlegungen der Hauptsitzung zum G3-Plan: offene Fragen nach Empfehlung; Zeilen
 | `feat/evening-reminders-per-day` | #173 Strang E (Tasks 10, 11) | fertig und geprüft, Head `c4c281a`, `test-all` grün; bereit für PR |
 | `feat/assistant-assign-and-search` | #173 Stränge A, B und Task 5 | umgesetzt, Head `33dfc26`; Review-Korrekturen laufen: Widerruf der Einwilligung außerhalb der Einstellungen beendet die Notiz-Sitzung nicht; einmal roter Sitzungstest klären |
 | `feat/g3-search-menu` | G3 Strang U | umgesetzt, Head `1205562`; Review-Korrektur läuft (Notiz ohne Ordner → „Notizen“) |
-| `fix/ui-test-stability` | vorbestehende UI-Testfehler (AX5-Datum Erfassen, Kontrast „Unerledigt von heute“, PlanUITests 23–24 Uhr, Audit-Timeouts) | läuft (Sonnet) |
+| `fix/ui-test-stability` | vorbestehende UI-Testfehler | fertig und geprüft, Head `e34c1fd`, `test-all` zweimal grün; zuerst mergen. Allowlist-Einträge „Unerledigt von heute“ und Leftover-Zeile bei Strang K (K5) neu bewerten |
+| `feat/g3-github-status` | G3 Strang G (G1–G4, G5 später) auf Basis `fix/ui-test-stability` | läuft (Sonnet) |
 
 ## Warteschlange Umsetzung (je freier Xcode-Platz, nach Prüfung des fertigen Branches)
 
 3. #233 Block B (nach Merge von #173 A/B)
-4. G3 Stränge G, T, L (mit SP5c); Strang K zuletzt nach T, L, S
+4. G3 Stränge T, L (mit SP5c), danach G5; Strang K zuletzt nach T, L, S
 5. Gruppen 1 und 2 nach ihren Plänen
 6. Danach: Geräteprüfungen (Task 12 in #173, Z1 in G3, Gerätetests der übrigen Pläne)
 
