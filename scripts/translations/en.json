@@ -117,6 +117,7 @@
   "Laufen": "Running",
   "Mittagessen": "Lunch",
   "Nach gesprochenen Nachrichten": "After spoken messages",
+  "Nach Hause · %@": "Home · %@",
   "Nie": "Never",
   "Ohne Datum": "No date",
   "Ohne Titel": "Untitled",
@@ -154,6 +155,7 @@
   "%@ ml Wasser erfasst": "%@ ml of water logged",
   "%@ ml Wasser erfasst.": "%@ ml of water logged.",
   "%@ noch frei": "%@ still free",
+  "%@ nach Hause": "%@ home",
   "%@ offen": "%@ open",
   "%@ reserviert": "%@ reserved",
   "%@ s%@ · Überbuchung vorher %lld min": {
@@ -163,6 +165,7 @@
   "%@ von %@ eingeplant": "%1$@ of %2$@ scheduled",
   "%@ vorgeschlagen · nach dem Übernehmen %@ frei": "%1$@ suggested · %2$@ free after accepting",
   "%@ zu viel": "%@ over",
+  "%@ zu früh": "%@ early",
   "%@ · %@": "%1$@ · %2$@",
   "%@ · %@ bis %@": "%1$@ · %2$@ to %3$@",
   "%@ · %@ · %@": {
@@ -776,6 +779,8 @@
     "shouldTranslate": false
   },
   "Rückgängig": "Undo",
+  "Rückweg %lld Minuten, manuell festgelegt": "Way back %lld minutes, set manually",
+  "Rückweg %lld Minuten %@, nach Hause": "Way back %lld minutes %@, home",
   "Schließen": "Close",
   "Schätze …": "Estimating …",
   "Schätzen": "Estimate",
@@ -1719,6 +1724,10 @@
     "one": "%lld minute before",
     "other": "%lld minutes before"
   },
+  "%lld Minuten vor dem Ende des vorherigen Termins": {
+    "one": "%lld minute before the previous event ends",
+    "other": "%lld minutes before the previous event ends"
+  },
   "%lld Stunden vorher": {
     "one": "%lld hour before",
     "other": "%lld hours before"
@@ -1839,7 +1848,6 @@
   "%@ · Zuhause gesetzt": "%@ · home set",
   "%@ · knapp": "%@ · tight",
   "%@ · ohne Heimadresse": "%@ · no home address",
-  "%@, knapp": "%@, tight",
   "Adresse nicht gefunden": "Address not found",
   "Adresse wird geprüft …": "Checking address …",
   "Auto": "Car",
@@ -1847,9 +1855,6 @@
   "Die Fahrzeit berechnet Apple Karten aus dem Ort des vorherigen Termins oder deiner Heimadresse. Dafür gehen Ort und Adresse an Apple. Tagwerk nutzt deinen Standort nicht. Ohne Netz oder ohne Ort gibt es keinen Puffer.": "Apple Maps calculates the travel time from the place of the previous event or from your home address. The place and the address are sent to Apple for this. Tagwerk does not use your location. Without a network or without a place, there is no buffer.",
   "Die Fahrzeit berechnet Apple Karten aus dem Ort des vorherigen Termins oder deiner Heimadresse. Dafür gehen Ort und Adresse an Apple. Tagwerk nutzt deinen Standort nicht. Berechnete Werte bleiben gespeichert und gelten auch ohne Netz. Fehlt ein Wert und gibt es kein Netz, schätzt Tagwerk die Fahrzeit vorläufig: mit dem letzten bekannten Wert zum selben Ziel, sonst mit 30 Minuten. Ohne Ort gibt es keine Fahrzeit. Im Termin lässt sie sich auch von Hand festlegen.": "Apple Maps calculates the travel time from the place of the previous event or from your home address. The place and the address are sent to Apple for this. Tagwerk does not use your location. Calculated values stay stored and also apply without a network. If a value is missing and there is no network, Tagwerk estimates the travel time for now: with the last known value to the same destination, otherwise with 30 minutes. Without a place there is no travel time. You can also set it by hand in the event.",
   "Fahrrad": "Bicycle",
-  "Fahrzeit %@ · ab Zuhause": "Travel time %@ · from home",
-  "Fahrzeit %@ · ab vorherigem Termin": "Travel time %@ · from the previous event",
-  "Fahrzeit %@ · manuell": "Travel time %@ · manual",
   "Fahrzeit %lld Minuten %@, %@": "Travel time %lld minutes %@, %@",
   "Fahrzeit %lld Minuten, manuell festgelegt": "Travel time %lld minutes, set manually",
   "Fahrzeit berücksichtigen": "Include travel time",
@@ -2036,6 +2041,10 @@
   "Danach": "Next",
   "Blockende": "End of block",
   "Losfahren · %lld min": "Leave · %lld min",
+  "Losfahren · %@ %@": "Leave now · %@ %@",
+  "Losfahren · %@ · manuell": "Leave now · %@ · manual",
+  "Los %@ · %@": "Leave %@ · %@",
+  "Los %@": "Leave %@",
   "%@–%@": "%1$@–%2$@",
   "Fokus starten · %lld min": "Start focus · %lld min",
   "%lld × %lld / %lld": "%1$lld × %2$lld / %3$lld",

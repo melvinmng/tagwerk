@@ -436,6 +436,16 @@
         }
       }
     },
+    "%@ nach Hause": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ home"
+          }
+        }
+      }
+    },
     "%@ noch frei": {
       "localizations": {
         "en": {
@@ -711,6 +721,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "%@ over"
+          }
+        }
+      }
+    },
+    "%@ zu früh": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ early"
           }
         }
       }
@@ -996,16 +1016,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "%@, no steps"
-          }
-        }
-      }
-    },
-    "%@, knapp": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@, tight"
           }
         }
       }
@@ -1591,6 +1601,46 @@
           "stringUnit": {
             "state": "translated",
             "value": "Log %lld milliliters of water"
+          }
+        }
+      }
+    },
+    "%lld Minuten vor dem Ende des vorherigen Termins": {
+      "localizations": {
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Minute vor dem Ende des vorherigen Termins"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Minuten vor dem Ende des vorherigen Termins"
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld minute before the previous event ends"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld minutes before the previous event ends"
+                }
+              }
+            }
           }
         }
       }
@@ -8964,36 +9014,6 @@
         }
       }
     },
-    "Fahrzeit %@ · ab Zuhause": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Travel time %@ · from home"
-          }
-        }
-      }
-    },
-    "Fahrzeit %@ · ab vorherigem Termin": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Travel time %@ · from the previous event"
-          }
-        }
-      }
-    },
-    "Fahrzeit %@ · manuell": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Travel time %@ · manual"
-          }
-        }
-      }
-    },
     "Fahrzeit %lld Minuten %@, %@": {
       "localizations": {
         "en": {
@@ -12637,6 +12657,46 @@
         }
       }
     },
+    "Losfahren · %@ %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leave now · %@ %@"
+          }
+        }
+      }
+    },
+    "Losfahren · %@ · manuell": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leave now · %@ · manual"
+          }
+        }
+      }
+    },
+    "Los %@ · %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leave %@ · %@"
+          }
+        }
+      }
+    },
+    "Los %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leave %@"
+          }
+        }
+      }
+    },
     "Längere Notiz, in Erinnerungen bearbeiten": {
       "localizations": {
         "en": {
@@ -13559,6 +13619,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "After count"
+          }
+        }
+      }
+    },
+    "Nach Hause · %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Home · %@"
           }
         }
       }
@@ -15709,6 +15779,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Review · %@"
+          }
+        }
+      }
+    },
+    "Rückweg %lld Minuten, manuell festgelegt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Way back %lld minutes, set manually"
+          }
+        }
+      }
+    },
+    "Rückweg %lld Minuten %@, nach Hause": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Way back %lld minutes %@, home"
           }
         }
       }

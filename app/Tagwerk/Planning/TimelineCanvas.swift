@@ -75,9 +75,12 @@ struct TimelineCanvas: View {
         GeometryReader { geometry in
             let width = geometry.size.width - labelWidth - 6
             let ranges = entries.map(displayRange)
-            let columns = TagwerkCore.columns(for: ranges)
+            // The columns also reserve the room of the travel attachments, so a trip that starts before the previous event
+            // ends sits beside it instead of behind it (PL10b).
+            let layout = layoutRanges(ranges)
+            let columns = TagwerkCore.columns(for: layout)
             // Overlapping entries whose columns would be too narrow become one block each (BF1c); never while choosing "Frei".
-            let groups = collapsedGroups(ranges: ranges, columns: columns, width: width)
+            let groups = collapsedGroups(ranges: ranges, layout: layout, columns: columns, width: width)
             let collapsed = Set(groups.flatMap { $0 })
             ZStack(alignment: .topLeading) {
                 hourLines(shown)
@@ -86,15 +89,24 @@ struct TimelineCanvas: View {
                 if let line = snapLine {
                     snapIndicator(minutes: line, shown: shown, width: geometry.size.width)
                 }
-                // Travel time lies behind the entries, in the column of the event it leads to (#168).
+                // The travel time is an attachment to its event, flush above it (the way home: below), in the column of the
+                // event (#168, PL8b).
                 ForEach(plan.travel) { segment in
                     if let index = entries.firstIndex(where: { $0.id == segment.eventID }) {
                         // Behind a collapsed group the travel time takes the full width.
                         let isCollapsed = collapsed.contains(index)
-                        let columnWidth = isCollapsed ? width : width / CGFloat(columnCount(index: index, ranges: ranges, columns: columns))
-                        TravelSegmentView(segment: segment, transport: segment.transport ?? model.settings.travelTransport)
-                            .frame(width: columnWidth - 2, height: max(14, height(segment.range.count)))
-                            .offset(x: labelWidth + 6 + CGFloat(isCollapsed ? 0 : columns[index]) * columnWidth, y: y(segment.range.lowerBound, shown))
+                        let columnWidth = isCollapsed ? width : width / CGFloat(columnCount(index: index, ranges: layout, columns: columns))
+                        let attachmentHeight = max(14, height(segment.range.count))
+                        let top = segment.direction == .returnHome ? segment.range.lowerBound : segment.range.upperBound
+                        TravelSegmentView(segment: segment, transport: segment.transport ?? model.settings.travelTransport,
+                                          color: EntryStyle(entry: entries[index], model: model, extras: pageExtras).color,
+                                          departure: clock(segment.range.lowerBound))
+                            .frame(width: columnWidth - 2, height: attachmentHeight)
+                            .offset(x: labelWidth + 6 + CGFloat(isCollapsed ? 0 : columns[index]) * columnWidth,
+                                    y: segment.direction == .returnHome ? y(top, shown) : y(top, shown) - attachmentHeight)
+                            // Above the entries: a neighbour with wider columns must not cover the capsule. A selected or moved
+                            // entry (zIndex 1 and 2) stays above it.
+                            .zIndex(0.5)
                             .allowsHitTesting(false)
                     }
                 }
@@ -103,7 +115,7 @@ struct TimelineCanvas: View {
                 }
                 ForEach(Array(entries.enumerated()).filter { !collapsed.contains($0.offset) }, id: \.element.id) { index, entry in
                     let range = liveRange(entry)
-                    let count = columnCount(index: index, ranges: ranges, columns: columns)
+                    let count = columnCount(index: index, ranges: layout, columns: columns)
                     let columnWidth = width / CGFloat(count)
                     entryView(entry, range: range)
                         .frame(width: columnWidth - 2, height: max(18, height(range.count)))
@@ -212,14 +224,25 @@ struct TimelineCanvas: View {
         shownRange.lowerBound + Int((y - Self.lineInset) / Self.hourHeight * 60)
     }
 
+    /// The ranges the columns are computed from: each entry widened by its travel attachment (before it for the way
+    /// there, after it for the way home). Without travel time they are the plain ranges.
+    private func layoutRanges(_ ranges: [Range<Int>]) -> [Range<Int>] {
+        var result = ranges
+        for segment in plan.travel {
+            guard let index = entries.firstIndex(where: { $0.id == segment.eventID }) else { continue }
+            result[index] = min(result[index].lowerBound, segment.range.lowerBound)..<max(result[index].upperBound, segment.range.upperBound)
+        }
+        return result
+    }
+
     // MARK: Collapsed groups (BF1c)
 
     /// The groups of entries (indices) that become one block: they overlap, need more than one column and a column would be
     /// narrower than `minimumColumnWidth`. A group is never made of one entry.
-    private func collapsedGroups(ranges: [Range<Int>], columns: [Int], width: CGFloat) -> [[Int]] {
+    private func collapsedGroups(ranges: [Range<Int>], layout: [Range<Int>], columns: [Int], width: CGFloat) -> [[Int]] {
         guard selectingIDs == nil else { return [] }
         return TagwerkCore.overlapGroups(for: ranges).filter { group in
-            let columnCount = group.map { columnCount(index: $0, ranges: ranges, columns: columns) }.max() ?? 1
+            let columnCount = group.map { columnCount(index: $0, ranges: layout, columns: columns) }.max() ?? 1
             return group.count > 1 && GridCollapse.collapses(columnCount: columnCount, availableWidth: Double(width),
                                                             minimumColumnWidth: Double(minimumColumnWidth))
         }
