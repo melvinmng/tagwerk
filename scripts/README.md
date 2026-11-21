@@ -89,13 +89,6 @@ Kalender- und Erinnerungszugriff vorher im Simulator erteilen, dann mit dem Argu
 
 `scripts/stress-audits.sh [--collect] [Wiederholungen] [Testauswahl …]` wiederholt die vier Audit-Klassen der UI-Tests (jede Wiederholung ein eigener Lauf, ohne Wiederholen bei Fehlschlag) und gibt je Test die Zahl der Läufe und Fehlschläge, die gruppierten Fehlermeldungen und die Zahl der Audit-Timeout-Wiederholungen aus. Mit `--collect` schlagen die Audits nicht fehl; stattdessen steht jeder Befund, der nicht auf der Allowlist steht, mit der Zahl der Wiederholungen im Bericht, in denen er auftrat (nicht in jeder Wiederholung = flackernd). Das Skript nimmt dieselbe Sperre wie `app/test-all.sh`: je Arbeitskopie läuft nur ein Testlauf. Nötig bei Änderungen an den Audits, an `UITestMode`, an `DemoData` oder am Start-Task, nicht vor jedem Merge.
 
-Last für einen Lauf unter Belastung, mit Prozessen, die nach 40 Minuten von selbst enden:
-
-```zsh
-for i in {1..8}; do perl -e 'alarm 2400; 1 while 1' & done
-scripts/stress-audits.sh 20
-```
-
 ## String-Kataloge
 
 Die elf `.xcstrings`-Kataloge sind JSON im festen Format `json.dumps(…, ensure_ascii=False, indent=2, sort_keys=True)`: Schlüssel auf jeder Ebene nach Codepunkt sortiert, leere Objekte als `{}`. Je Datei unterscheiden sich nur der Trenner nach dem Schlüssel (`": "` oder `" : "`) und das Zeilenende am Dateiende. `scripts/catalog_format.py` erkennt das und schreibt Kataloge in genau dem Stil der Datei, sodass sich nur die Zeilen der geänderten Einträge ändern.
