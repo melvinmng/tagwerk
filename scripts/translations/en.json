@@ -2025,5 +2025,7 @@
   "In %@ erledigt: %@. Auf GitHub öffnen verfügbar.": "Done in %1$@: %2$@. Open on GitHub available.",
   "In %lld Projekten erledigt": "Done in %lld projects",
   "In %lld Projekten erledigt: %@. Auf GitHub öffnen verfügbar.": "Done in %1$lld projects: %2$@. Open on GitHub available.",
-  "In „%@“ erledigt": "Done in “%@”"
+  "In „%@“ erledigt": "Done in “%@”",
+  "Die Projekte haben keine gemeinsame Stufe; jedes Issue startet in der ersten Stufe seines Projekts.": "The projects share no stage; each issue starts in the first stage of its project.",
+  "Ohne Projekt erscheint das Issue nicht in deinen Aufgaben, nur auf GitHub.": "Without a project, the issue does not appear in your tasks, only on GitHub."
 }

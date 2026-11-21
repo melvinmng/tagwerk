@@ -276,12 +276,12 @@ extension NewTaskSheet {
     /// Stands for the signed-in user in the footer while nothing was chosen (the login may not be known yet).
     private static let defaultAssigneeMarker = "me"
 
-    /// Says before saving who gets the issue; without a project it first says where the issue will not appear.
+    /// Says before saving who gets the issue; before that it says what the project choice means (no project, no shared stage).
     private var gitHubFooter: String {
         let assignment = assigneesChosen ? AssigneeSelection.footer(selected: selectedAssignees, me: gitHub?.login)
             : AssigneeSelection.footer(selected: [Self.defaultAssigneeMarker], me: Self.defaultAssigneeMarker)
-        guard repository != nil, projectIDs.isEmpty else { return assignment }
-        return String(localized: "Ohne Projekt erscheint das Issue nicht in deinen Aufgaben.") + " " + assignment
+        return ProjectSelection.footer(repositoryChosen: repository != nil, hasProject: !projectIDs.isEmpty,
+                                       optionLists: selectedProjects.map(GitHubMapping.statusOptions(in:)), assignment: assignment)
     }
 
     /// Loads the assignable people of the chosen repository. Every repository change resets the choice to

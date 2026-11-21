@@ -6250,6 +6250,16 @@
         }
       }
     },
+    "Die Projekte haben keine gemeinsame Stufe; jedes Issue startet in der ersten Stufe seines Projekts.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The projects share no stage; each issue starts in the first stage of its project."
+          }
+        }
+      }
+    },
     "Die Quelle ist nicht verfügbar.": {
       "localizations": {
         "en": {
@@ -13256,7 +13266,18 @@
         }
       }
     },
+    "Ohne Projekt erscheint das Issue nicht in deinen Aufgaben, nur auf GitHub.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Without a project, the issue does not appear in your tasks, only on GitHub."
+          }
+        }
+      }
+    },
     "Ohne Projekt erscheint das Issue nicht in deinen Aufgaben.": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {

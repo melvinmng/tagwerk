@@ -28,6 +28,24 @@ enum ProjectSelection {
         }
     }
 
+    /// True when several projects are selected, each has stages, and they share none: the row "Status" is not offered.
+    static func lacksCommonStatus(_ optionLists: [[String]]) -> Bool {
+        optionLists.count > 1 && optionLists.allSatisfy { !$0.isEmpty } && commonStatusOptions(optionLists).isEmpty
+    }
+
+    /// Footer of the GitHub section in "Neue Aufgabe": what the project choice means, then who gets the issue.
+    static func footer(repositoryChosen: Bool, hasProject: Bool, optionLists: [[String]], assignment: String) -> String {
+        var sentences: [String] = []
+        if lacksCommonStatus(optionLists) {
+            sentences.append(String(localized: "Die Projekte haben keine gemeinsame Stufe; jedes Issue startet in der ersten Stufe seines Projekts."))
+        }
+        if repositoryChosen, !hasProject {
+            sentences.append(String(localized: "Ohne Projekt erscheint das Issue nicht in deinen Aufgaben, nur auf GitHub."))
+        }
+        sentences.append(assignment)
+        return sentences.joined(separator: " ")
+    }
+
     /// Preselected start stage: "Ready" when offered, otherwise the first option in board order.
     static func defaultStartStatus(in options: [String]) -> String? {
         options.first { $0.caseInsensitiveCompare(GitHubMapping.reopenStatus) == .orderedSame } ?? options.first

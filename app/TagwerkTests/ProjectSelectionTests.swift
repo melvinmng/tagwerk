@@ -43,4 +43,43 @@ struct ProjectSelectionTests {
         #expect(ProjectSelection.startStatus(current: "Blocked", options: ["Backlog", "Ready"]) == "Ready")
         #expect(ProjectSelection.startStatus(current: "Ready", options: []) == nil)
     }
+
+    // MARK: Footer of "Neue Aufgabe" (GH5c, GH9)
+
+    @Test func lacksCommonStatus_twoBoardsWithDifferentNames_isTrue() {
+        #expect(ProjectSelection.lacksCommonStatus([["Todo", "Doing", "Done"], ["Backlog", "Ready", "Done"]]))
+    }
+
+    @Test func lacksCommonStatus_oneProject_isFalse() {
+        #expect(!ProjectSelection.lacksCommonStatus([["Todo", "Doing", "Done"]]))
+        #expect(!ProjectSelection.lacksCommonStatus([]))
+    }
+
+    @Test func lacksCommonStatus_projectWithoutStatusField_isFalse() {
+        #expect(!ProjectSelection.lacksCommonStatus([["Todo", "Done"], []]))
+    }
+
+    @Test func lacksCommonStatus_sharedStageOnlyDone_isTrue() {
+        #expect(ProjectSelection.lacksCommonStatus([["Todo", "Done"], ["Open", "done"]]))
+    }
+
+    @Test func lacksCommonStatus_sharedOpenStage_isFalse() {
+        #expect(!ProjectSelection.lacksCommonStatus([["Todo", "Ready", "Done"], ["Backlog", "ready", "Done"]]))
+    }
+
+    @Test func footer_withoutProject_saysTheIssueIsOnlyOnGitHub() {
+        let footer = ProjectSelection.footer(repositoryChosen: true, hasProject: false, optionLists: [], assignment: "Das Issue wird dir zugewiesen.")
+        #expect(footer == "Ohne Projekt erscheint das Issue nicht in deinen Aufgaben, nur auf GitHub. Das Issue wird dir zugewiesen.")
+    }
+
+    @Test func footer_noCommonStage_saysSoFirst() {
+        let footer = ProjectSelection.footer(repositoryChosen: true, hasProject: true, optionLists: [["Todo", "Done"], ["Open", "Done"]],
+                                             assignment: "Das Issue wird dir zugewiesen.")
+        #expect(footer == "Die Projekte haben keine gemeinsame Stufe; jedes Issue startet in der ersten Stufe seines Projekts. Das Issue wird dir zugewiesen.")
+    }
+
+    @Test func footer_withoutRepository_isTheAssignmentOnly() {
+        #expect(ProjectSelection.footer(repositoryChosen: false, hasProject: false, optionLists: [], assignment: "Das Issue wird dir zugewiesen.")
+            == "Das Issue wird dir zugewiesen.")
+    }
 }
