@@ -5,6 +5,8 @@
 # Usage: scripts/install-dev.sh
 # Exit codes: 0 installed, 1 build failed, 2 install failed, 64 configuration missing
 # On success it sets last-installed.<bundle> to "dev", which disables the refresh fallback until the next refresh install.
+# The hourly refresh job keeps the dev build on the device until origin/main differs from the last refresh install
+# (new commit on main), the profile is due, or refresh-install.sh --force is used.
 
 set -euo pipefail
 
