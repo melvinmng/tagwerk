@@ -63,6 +63,9 @@ struct ChatView: View {
             .confirmationDialog("Verlauf löschen?", isPresented: $askingClear, titleVisibility: .visible) {
                 Button("Verlauf löschen", role: .destructive) { assistant.clear() }
             }
+            .sheet(item: $adjusting) { call in
+                ProposalAdjustSheet(assistant: assistant, call: call)
+            }
             .sheet(item: $noteDetail) { request in
                 if let detail = request.card.detail {
                     NoteChangeSheet(card: request.card, detail: detail,
@@ -71,6 +74,8 @@ struct ChatView: View {
                 }
             }
         }
+        // A sheet does not take the forced text size of the UI test mode from the window; no effect outside that mode.
+        .modifier(UITestAppearance())
     }
 
     // MARK: Voice
@@ -358,12 +363,7 @@ struct ActionCardView: View {
             header
             Text(card.title).font(.subheadline.weight(.semibold))
             if let mark = card.mark, status == .pending { ProposalMarkLabel(mark: mark) }
-            Text(card.change).font(.subheadline).foregroundStyle(.secondary)
-            if let proposed = card.proposedChange, status == .pending {
-                // What the model proposed, so the user sees what was changed (AN2a).
-                Text("Vorschlag der KI: \(proposed)").font(.caption).foregroundStyle(.secondary).strikethrough()
-                    .accessibilityLabel(Text("Vorschlag der KI: \(proposed)"))
-            }
+            changeText
             if let accessory { accessory }
             if let onShowDetail {
                 Button(action: onShowDetail) {
@@ -389,6 +389,24 @@ struct ActionCardView: View {
         }
         .accessibilityActions {
             if status == .pending, let onAdjust { Button("Anpassen", action: onAdjust) }
+        }
+    }
+
+    /// What the card changes. An adjusted card shows the old value of each changed part struck through before the new one
+    /// (AN2a); when the two texts do not have the same parts, the whole proposal of the model follows below.
+    @ViewBuilder
+    private var changeText: some View {
+        if let proposed = card.proposedChange, status == .pending {
+            if let parts = ProposalChangeText.parts(current: card.change, proposed: proposed) {
+                Text(ProposalChangeText.attributed(parts)).font(.subheadline).foregroundStyle(.secondary)
+                    .accessibilityLabel(Text(ProposalChangeText.spoken(parts)))
+            } else {
+                Text(card.change).font(.subheadline).foregroundStyle(.secondary)
+                Text("Vorschlag der KI: \(proposed)").font(.caption).foregroundStyle(.secondary).strikethrough()
+                    .accessibilityLabel(Text("Vorschlag der KI: \(proposed)"))
+            }
+        } else {
+            Text(card.change).font(.subheadline).foregroundStyle(.secondary)
         }
     }
 

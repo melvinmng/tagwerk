@@ -783,8 +783,9 @@ final class AssistantModel {
     // MARK: Adjusting cards (plan ki-vorschlaege-anpassen, AN1a, AN2a, AN11a)
 
     /// The functions whose cards have an editor and so offer "Anpassen". A function without one (complete, delete,
-    /// link, mark free) keeps two buttons. Strands B to E register their editors here.
-    static let adjustableToolNames: Set<String> = []
+    /// link, mark free) keeps two buttons. The set follows the registry of the editors (`ProposalEditors`), so a function
+    /// has "Anpassen" exactly when an editor exists for it.
+    static var adjustableToolNames: Set<String> { ProposalEditors.toolNames }
 
     /// Replaceable so the tests and the strands can name the functions that have an editor.
     var adjustableTools = AssistantModel.adjustableToolNames
@@ -792,6 +793,14 @@ final class AssistantModel {
     /// True for an open card of a function with an editor.
     func canAdjust(_ call: ToolCall) -> Bool {
         adjustableTools.contains(call.name) && conversation?.pendingActions.contains { $0.id == call.id } == true
+    }
+
+    /// The editor for an open card; `nil` for a function without one and for a call that is no longer open. The editor
+    /// starts from the current call, so an adjusted card opens with the user's values.
+    func proposalEditor(for call: ToolCall) -> (any ProposalEditor)? {
+        guard let current = conversation?.pendingActions.first(where: { $0.id == call.id }), canAdjust(current) else { return nil }
+        let context = ProposalEditorContext(calendar: planning.calendar, now: now, gitHubDirectory: gitHubDirectory)
+        return ProposalEditors.make(for: current, context: context)
     }
 
     /// Writes the user's values into the open card. Nothing is sent, run or saved: the card stays a proposal and is

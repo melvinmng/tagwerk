@@ -82,14 +82,18 @@ struct AssistantAdjustCardTests {
         #expect(model.conversation?.isAdjusted(call) == false)
     }
 
-    @Test func card_noAdjust_whenNoToolHasAnEditorYet() async throws {
+    @Test func card_adjustableTools_followTheEditorRegistry() async throws {
         let (model, _) = await make()
         model.adjustableTools = AssistantModel.adjustableToolNames
+        #expect(model.adjustableTools == ProposalEditors.toolNames)
         model.open(context: .tasks)
-        await pendingCards(model, [("c1", "create_task", issueArguments())])
-        let call = try #require(model.conversation?.pendingActions.first)
+        await pendingCards(model, [("c1", "create_task", issueArguments()),
+                                   ("c2", "complete_task", Data(#"{"id":"github:ISSUE_1"}"#.utf8))])
+        let create = try #require(model.conversation?.pendingActions.first { $0.id == "c1" })
+        let complete = try #require(model.conversation?.pendingActions.first { $0.id == "c2" })
 
-        #expect(!model.describe(call).canAdjust)
+        #expect(model.describe(create).canAdjust)
+        #expect(!model.describe(complete).canAdjust)
     }
 
     @Test func card_noAdjust_onceItIsNotOpen() async throws {
@@ -231,5 +235,124 @@ struct AssistantAdjustCardTests {
         await model.confirmAll()
 
         #expect(github.createdDrafts.map(\.title) == ["Eins", "Zwei geändert"])
+    }
+
+    // MARK: Editor and sheet (task B1)
+
+    @Test func adjust_withoutChanges_leavesCardUnmarked() async throws {
+        let (model, _) = await make()
+        model.open(context: .tasks)
+        await pendingCards(model, [("c1", "create_task", issueArguments(due: #""2026-11-27""#))])
+        let call = try #require(model.conversation?.pendingActions.first)
+        let editor = try #require(model.proposalEditor(for: call))
+
+        // "Fertig" without a change: the editor writes the arguments in another key order, which is no adjustment.
+        let adjusted = try #require(model.adjust(call, arguments: editor.arguments()))
+
+        #expect(model.describe(adjusted).mark == nil)
+        #expect(model.describe(adjusted).proposedChange == nil)
+        #expect(model.conversation?.isAdjusted(adjusted) == false)
+    }
+
+    @Test func editor_opensWithTheAdjustedValues() async throws {
+        let (model, _) = await make()
+        model.open(context: .tasks)
+        await pendingCards(model, [("c1", "create_task", issueArguments("Export"))])
+        let call = try #require(model.conversation?.pendingActions.first)
+        let first = try #require(model.proposalEditor(for: call) as? TaskProposalEditor)
+        first.title = "Export neu"
+        model.adjust(call, arguments: first.arguments())
+
+        // The view still holds the call as the model proposed it.
+        let second = try #require(model.proposalEditor(for: call) as? TaskProposalEditor)
+        #expect(second.title == "Export neu")
+    }
+
+    @Test func editor_missingForToolsWithoutOneAndForClosedCards() async throws {
+        let (model, _) = await make()
+        model.open(context: .tasks)
+        await pendingCards(model, [("c1", "complete_task", Data(#"{"id":"github:ISSUE_1"}"#.utf8)),
+                                   ("c2", "create_task", issueArguments())])
+        let complete = try #require(model.conversation?.pendingActions.first { $0.id == "c1" })
+        let create = try #require(model.conversation?.pendingActions.first { $0.id == "c2" })
+        #expect(model.proposalEditor(for: complete) == nil)
+        #expect(model.proposalEditor(for: create) != nil)
+
+        responder.enqueue("Ok.")
+        await model.decline(create)
+        #expect(model.proposalEditor(for: create) == nil)
+    }
+
+    @Test func adjust_thenConfirm_createsEditedTask() async throws {
+        let (model, _) = await make()
+        model.open(context: .tasks)
+        await pendingCards(model, [("c1", "create_task", issueArguments("Export"))])
+        let call = try #require(model.conversation?.pendingActions.first)
+        let editor = try #require(model.proposalEditor(for: call) as? TaskProposalEditor)
+        editor.title = "Export für Montag"
+        editor.due = ProposalDue(day: PlanDay(year: 2026, month: 11, day: 23), minutes: nil)
+        let adjusted = try #require(model.adjust(call, arguments: editor.arguments()))
+        #expect(model.describe(adjusted).mark == .byUser)
+
+        responder.enqueue("Angelegt.")
+        await model.confirm(adjusted)
+
+        #expect(github.createdDrafts.map(\.title) == ["Export für Montag"])
+        #expect(github.createdDrafts.first?.due == DueDate(year: 2026, month: 11, day: 23))
+    }
+
+    @Test func adjust_invalidCombination_showsToolErrorOnCard() async throws {
+        let (model, _) = await make()
+        model.open(context: .tasks)
+        await pendingCards(model, [("c1", "create_task", Data(#"{"title":"Lokal","due":null,"priority":null,"minutes":null,"notes":null,"source":"local","repository":null,"project_ids":null,"assignees":null}"#.utf8))])
+        let call = try #require(model.conversation?.pendingActions.first)
+        // A source this session does not have is refused by the tool with its known error; nothing is created.
+        let invalid = Data(#"{"title":"Lokal","due":null,"priority":null,"minutes":null,"notes":null,"source":"local","repository":"beispiel/app","project_ids":null,"assignees":null}"#.utf8)
+        let adjusted = try #require(model.adjust(call, arguments: invalid))
+
+        responder.enqueue("Das ging nicht.")
+        await model.confirm(adjusted)
+
+        let result = try output(of: "c1", in: model)
+        #expect(ActionCardView.error(in: result) != nil)
+        #expect(github.createdDrafts.isEmpty)
+    }
+
+    @Test func resetToAssistant_restoresProposal() async throws {
+        let (model, _) = await make()
+        model.open(context: .tasks)
+        await pendingCards(model, [("c1", "create_task", issueArguments("Export"))])
+        let call = try #require(model.conversation?.pendingActions.first)
+        let editor = try #require(model.proposalEditor(for: call) as? TaskProposalEditor)
+        editor.title = "Export neu"
+        let adjusted = try #require(model.adjust(call, arguments: editor.arguments()))
+        #expect(model.conversation?.isAdjusted(adjusted) == true)
+
+        let reset = try #require(model.resetAdjustment(adjusted))
+
+        #expect(model.describe(reset).mark == nil)
+        #expect(model.describe(reset).title == "Export")
+        #expect((try #require(model.proposalEditor(for: reset) as? TaskProposalEditor)).title == "Export")
+    }
+
+    @Test func rescheduleAndAssignToDay_cardsShowTheNewValues() async throws {
+        let (model, _) = await make()
+        model.adjustableTools = AssistantModel.adjustableToolNames
+        model.open(context: .tasks)
+        await pendingCards(model, [("c1", "reschedule_task", Data(#"{"id":"github:ISSUE_1","due":"2026-11-27"}"#.utf8)),
+                                   ("c2", "assign_to_day", Data(#"{"id":"github:ISSUE_1","day":"2026-11-27"}"#.utf8))])
+        let reschedule = try #require(model.conversation?.pendingActions.first { $0.id == "c1" })
+        let assign = try #require(model.conversation?.pendingActions.first { $0.id == "c2" })
+        let dueEditor = try #require(model.proposalEditor(for: reschedule) as? TaskProposalEditor)
+        dueEditor.due = ProposalDue(day: PlanDay(year: 2026, month: 11, day: 30), minutes: nil)
+        let dayEditor = try #require(model.proposalEditor(for: assign) as? TaskProposalEditor)
+        dayEditor.day = PlanDay(year: 2026, month: 11, day: 30)
+
+        let newReschedule = try #require(model.adjust(reschedule, arguments: dueEditor.arguments()))
+        let newAssign = try #require(model.adjust(assign, arguments: dayEditor.arguments()))
+
+        #expect(model.describe(newReschedule).mark == .byUser)
+        #expect(model.describe(newReschedule).change != model.describe(newReschedule).proposedChange)
+        #expect(model.describe(newAssign).change.contains("30"))
     }
 }

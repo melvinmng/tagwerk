@@ -2317,5 +2317,14 @@
   "Vorschlag der KI: %@": "AI proposal: %@",
   "Keine Verbindung. Ändern von Hand geht weiter.": "No connection. Editing by hand still works.",
   "Bezug entfernen": "Remove scope",
-  "Wenn du zu einem Vorschlag etwas zurückschreibst, sendet Tagwerk dieselben Angaben noch einmal, dazu den Vorschlag mit deinen Änderungen und deine Nachricht.": "If you write back about a suggestion, Tagwerk sends the same details again, plus the suggestion with your changes and your message."
+  "Wenn du zu einem Vorschlag etwas zurückschreibst, sendet Tagwerk dieselben Angaben noch einmal, dazu den Vorschlag mit deinen Änderungen und deine Nachricht.": "If you write back about a suggestion, Tagwerk sends the same details again, plus the suggestion with your changes and your message.",
+  "Aufwand ändern": "Change effort",
+  "Felder, die du nicht änderst, bleiben unverändert.": "Fields you do not change stay as they are.",
+  "Frist ändern": "Change due date",
+  "Geändert wird nur der Vorschlag. Ausgeführt wird erst mit „Bestätigen“ auf der Karte.": "Only the proposal is changed. Nothing is carried out until you tap “Confirm” on the card.",
+  "Ohne Datum wird die Frist entfernt.": "Without a date the due date is removed.",
+  "Unverändert": "Unchanged",
+  "Vorschlag anpassen": "Adjust proposal",
+  "Ziel und Personen lassen sich nur ändern, solange GitHub verbunden ist.": "The target and people can only be changed while GitHub is connected.",
+  "Zurück zum Vorschlag der KI": "Back to the AI proposal"
 }
