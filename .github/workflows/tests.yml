@@ -1,23 +1,37 @@
 name: Tests
 
-# Runs the full local test script (app/test-all.sh) on a GitHub-hosted macOS runner for every pull request,
-# so the developer machine only has to run the fast stages. The work is split into two parallel jobs:
+# Runs the local test script (app/test-all.sh) on a GitHub-hosted macOS runner. CI is the gate before a merge; locally
+# only the fast stages and the UI test classes a change touches are run (see README, "Tests auf GitHub Actions").
+# Two parallel jobs:
 #   fast  package tests, app unit tests and String Catalog check (UI tests skipped)
 #   ui    UI tests including the accessibility audits (the slow stage)
+# Triggers:
+#   pull_request       reduced UI test set (TAGWERK_UI_TEST_SET=pr, see app/TagwerkUITests/nightly-only.txt) with one
+#                      retry per failed UI test; retried tests are listed in the job summary
+#   schedule           nightly, only when main has new commits since the last successful nightly run; full UI test
+#                      set, no retries
+#   workflow_dispatch  full UI test set, no retries, for any branch
+# A pull request that changes only documentation (docs/**, *.md, TODO.md) runs no tests: the jobs below still start
+# and finish green, so the checks stay usable as required status checks. The filter lives in the "changes" job and
+# not in on.paths, because a workflow that is never triggered would leave a required check pending forever.
 # No secrets are used: everything runs in the iOS Simulator without code signing, with demo data only.
 
 on:
   pull_request:
     types: [opened, synchronize, reopened]
+  schedule:
+    # Nightly, 02:17 UTC (an odd minute avoids the busy start of the hour).
+    - cron: "17 2 * * *"
   workflow_dispatch:
 
 permissions:
   contents: read
 
-# A new push to the same pull request cancels the run that is still in progress.
+# A new push to the same pull request cancels the run that is still in progress. Nightly and manual runs are never
+# cancelled by a later trigger; they queue instead.
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || format('{0}-{1}', github.event_name, github.ref) }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 env:
   # The project is built and tested with exactly this toolchain (see README). The xcode-27 image ships
@@ -29,11 +43,94 @@ env:
   XCODEGEN_SHA256: 4d9e34b62172d645eed6457cac13fc222569974098ef4ee9c3368bedf0196806
 
 jobs:
+  changes:
+    name: Changes
+    # Decides whether the macOS jobs run any tests. A cheap Linux runner, so no macOS slot is used for the decision.
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      actions: read
+    outputs:
+      run_tests: ${{ steps.decide.outputs.run_tests }}
+      reason: ${{ steps.decide.outputs.reason }}
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v7
+        with:
+          # Two commits are enough to diff a pull request's merge commit against its base branch.
+          fetch-depth: 2
+          persist-credentials: false
+
+      - name: Decide whether tests are needed
+        id: decide
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT_NAME: ${{ github.event_name }}
+          REPOSITORY: ${{ github.repository }}
+          REF_NAME: ${{ github.ref_name }}
+          CURRENT_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          run_tests=true
+          reason="Tests run."
+
+          case "$EVENT_NAME" in
+            schedule)
+              # The nightly run skips itself when main has not moved since the last successful nightly run. An early
+              # exit is also a successful run, but only for a commit that an earlier successful run has tested.
+              last_sha=$(gh api "repos/$REPOSITORY/actions/workflows/tests.yml/runs?event=schedule&status=success&branch=$REF_NAME&per_page=1" \
+                --jq '.workflow_runs[0].head_sha // ""')
+              if [[ "$last_sha" == "$CURRENT_SHA" ]]; then
+                run_tests=false
+                reason="Nightly run skipped: no new commits on $REF_NAME since the last successful nightly run ($CURRENT_SHA)."
+              else
+                reason="Nightly run: $REF_NAME has new commits (last successful nightly run: ${last_sha:-none})."
+              fi
+              ;;
+            pull_request)
+              # --no-renames lists both paths of a rename, so moving a file out of a code folder is never "docs only".
+              changed_files=$(git diff --name-only --no-renames HEAD^1 HEAD)
+              echo "Changed files:"
+              echo "$changed_files"
+              only_docs=true
+              count=0
+              while IFS= read -r changed_file; do
+                [[ -n "$changed_file" ]] || continue
+                count=$((count + 1))
+                case "$changed_file" in
+                  # TODO.md is covered by *.md.
+                  docs/*|*.md) ;;
+                  *) only_docs=false ;;
+                esac
+              done <<<"$changed_files"
+              if [[ "$only_docs" == "true" && "$count" -gt 0 ]]; then
+                run_tests=false
+                reason="Tests skipped: the pull request changes only documentation ($count files: docs/**, *.md, TODO.md)."
+              fi
+              ;;
+            *)
+              reason="Manual run: full UI test set."
+              ;;
+          esac
+
+          echo "$reason"
+          {
+            echo "run_tests=$run_tests"
+            echo "reason=$reason"
+          } >> "$GITHUB_OUTPUT"
+          echo "### Changes" >> "$GITHUB_STEP_SUMMARY"
+          echo "$reason" >> "$GITHUB_STEP_SUMMARY"
+
   tests:
     name: Tests (${{ matrix.name }})
+    needs: changes
     # Xcode-based runner image: macOS 27, Xcode 27.x, Apple silicon only (3 cores, 7 GB RAM on public repositories).
     runs-on: xcode-27
-    timeout-minutes: 90
+    # The first CI run had not finished when these limits were set (no measured CI durations yet). They follow the
+    # plan's guide values: at most 60 minutes for ui, and fast gets two thirds of that. The step limit stays below the
+    # job limit, so the artifact upload still runs when the tests hang. Adjust to twice the measured duration.
+    timeout-minutes: ${{ matrix.job_timeout }}
     strategy:
       fail-fast: false
       matrix:
@@ -41,17 +138,33 @@ jobs:
           - name: fast
             skip_ui_tests: "1"
             only_ui_tests: ""
+            job_timeout: 40
+            step_timeout: 35
           - name: ui
             skip_ui_tests: ""
             only_ui_tests: "1"
+            job_timeout: 60
+            step_timeout: 55
 
+    # Without tests to run (documentation-only pull request, nightly run without new commits) every step except the
+    # summary below is skipped and the job still ends green, so "Tests (fast)" and "Tests (ui)" always report a result.
     steps:
+      - name: Report skipped tests
+        if: needs.changes.outputs.run_tests != 'true'
+        env:
+          REASON: ${{ needs.changes.outputs.reason }}
+        run: |
+          echo "### Tests (${{ matrix.name }})" >> "$GITHUB_STEP_SUMMARY"
+          echo "$REASON" >> "$GITHUB_STEP_SUMMARY"
+
       - name: Check out the repository
+        if: needs.changes.outputs.run_tests == 'true'
         uses: actions/checkout@v7
         with:
           persist-credentials: false
 
       - name: Select Xcode and verify the toolchain
+        if: needs.changes.outputs.run_tests == 'true'
         run: |
           set -euo pipefail
           developer_dir="$XCODE_APP/Contents/Developer"
@@ -89,6 +202,7 @@ jobs:
           df -h /
 
       - name: Install XcodeGen ${{ env.XCODEGEN_VERSION }}
+        if: needs.changes.outputs.run_tests == 'true'
         run: |
           set -euo pipefail
           archive="$RUNNER_TEMP/xcodegen.zip"
@@ -104,17 +218,45 @@ jobs:
           "$install_dir/xcodegen/bin/xcodegen" --version
 
       - name: Run test stages (${{ matrix.name }})
+        if: needs.changes.outputs.run_tests == 'true'
         # Limits the test step below the job timeout, so the artifact upload still runs when the tests hang.
-        timeout-minutes: 80
+        timeout-minutes: ${{ matrix.step_timeout }}
         env:
           TAGWERK_SKIP_UI_TESTS: ${{ matrix.skip_ui_tests }}
           TAGWERK_ONLY_UI_TESTS: ${{ matrix.only_ui_tests }}
+          # Pull requests run the reduced UI test set with one retry per failed UI test (the unit stages never retry).
+          # Nightly and manual runs run every UI test once, so wobbling tests stay visible.
+          TAGWERK_UI_TEST_SET: ${{ github.event_name == 'pull_request' && 'pr' || 'full' }}
+          TAGWERK_UI_TEST_RETRIES: ${{ github.event_name == 'pull_request' && '1' || '' }}
           TAGWERK_TEST_LOG_DIR: ${{ runner.temp }}/tagwerk-test-logs
           TAGWERK_TEST_RESULTS_DIR: ${{ runner.temp }}/tagwerk-test-results
         run: app/test-all.sh
 
+      - name: Write job summary
+        if: ${{ !cancelled() && needs.changes.outputs.run_tests == 'true' }}
+        env:
+          JOB_NAME: ${{ matrix.name }}
+          JOB_STATUS: ${{ job.status }}
+          UI_TEST_SET: ${{ github.event_name == 'pull_request' && 'pr' || 'full' }}
+          UI_TEST_RETRIES: ${{ github.event_name == 'pull_request' && '1' || '' }}
+          RETRIED_LIST: ${{ runner.temp }}/tagwerk-test-logs/retried-ui-tests.md
+        run: |
+          {
+            echo "### Tests ($JOB_NAME)"
+            echo "Result: $JOB_STATUS"
+            if [[ "$JOB_NAME" == "ui" ]]; then
+              echo "UI test set: $UI_TEST_SET, retries: ${UI_TEST_RETRIES:-none}"
+              if [[ -f "$RETRIED_LIST" ]]; then
+                echo
+                echo '```'
+                cat "$RETRIED_LIST"
+                echo '```'
+              fi
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
       - name: Upload test logs and result bundles
-        if: failure()
+        if: ${{ failure() && needs.changes.outputs.run_tests == 'true' }}
         uses: actions/upload-artifact@v7
         with:
           name: test-failure-${{ matrix.name }}

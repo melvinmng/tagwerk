@@ -1,12 +1,29 @@
 #!/bin/zsh
 # Runs all test stages: every local Swift package under app/Packages, the app scheme and the UI tests.
 # Stops at the first failing stage and reports which one failed.
-# TAGWERK_SKIP_UI_TESTS=1 skips the UI test stage (quick iterations only; the full run is required before a merge).
 #
-# Environment overrides (used by the CI workflow; unset means the local behaviour):
+# Gate rule: CI (GitHub Actions, jobs "Tests (fast)" and "Tests (ui)") is the gate before a merge.
+# Locally, run the fast stages after every commit (TAGWERK_SKIP_UI_TESTS=1) and, while working on a screen, only the
+# UI test classes the change touches (TAGWERK_UI_ONLY). The full local UI run is only the fallback when CI is
+# unavailable (GitHub outage, queue longer than 30 minutes).
+#
+# Environment overrides (unset means the local behaviour):
+#   TAGWERK_SKIP_UI_TESTS=1    skip the UI test stage (fast local iterations)
 #   TAGWERK_DEVELOPER_DIR      Xcode developer directory instead of /Applications/Xcode.app
 #   TAGWERK_ONLY_UI_TESTS=1    run only the UI test stage (no package stages, no app unit tests, no String Catalog check)
 #   TAGWERK_TEST_RESULTS_DIR   folder for one .xcresult bundle per stage (see run_tests)
+#
+# UI test selection (only affects the "app UI tests" stage):
+#   TAGWERK_UI_TEST_SET        "full" (default): all UI tests; "pr": skips the tests listed in
+#                              app/TagwerkUITests/nightly-only.txt (one test class or Class/testMethod per line,
+#                              empty lines and lines starting with # are ignored). CI uses "pr" for pull requests
+#                              and "full" for the nightly and manual runs.
+#   TAGWERK_UI_ONLY            space-separated test classes or Class/testMethod entries to run (-only-testing);
+#                              implies TAGWERK_ONLY_UI_TESTS=1 and takes precedence over TAGWERK_UI_TEST_SET
+#   TAGWERK_UI_TEST_RETRIES=1  retry each failed UI test once (-retry-tests-on-failure -test-iterations 2) and list the
+#                              tests that only passed on the second attempt under "RETRIED UI TESTS". UI stage only;
+#                              the package and app unit stages never retry.
+#   TAGWERK_NIGHTLY_ONLY_FILE  alternative path of the nightly-only list (used by scripts/tests/test-all-ui-selection.zsh)
 
 set -euo pipefail
 
@@ -14,6 +31,123 @@ export DEVELOPER_DIR="${TAGWERK_DEVELOPER_DIR:-/Applications/Xcode.app/Contents/
 
 SCRIPT_DIR="${0:A:h}"
 CURRENT_STAGE="setup"
+
+# Test target that contains the UI tests; -only-testing and -skip-testing entries are prefixed with it.
+UI_TEST_TARGET="TagwerkUITests"
+
+# Fills UI_SELECTION_ARGS with the xcodebuild arguments that select and retry UI tests from the environment
+# (TAGWERK_UI_ONLY, TAGWERK_UI_TEST_SET, TAGWERK_UI_TEST_RETRIES). Prints a one-line summary on stdout.
+# Without any of these variables the array stays empty, so the UI stage runs every UI test once.
+build_ui_selection_args() {
+  UI_SELECTION_ARGS=()
+  local test_set="${TAGWERK_UI_TEST_SET:-full}"
+  local nightly_file="${TAGWERK_NIGHTLY_ONLY_FILE:-$SCRIPT_DIR/TagwerkUITests/nightly-only.txt}"
+  local identifier line entries=0 summary
+
+  case "$test_set" in
+    pr|full) ;;
+    *) echo "Invalid TAGWERK_UI_TEST_SET \"$test_set\" (expected \"pr\" or \"full\")" >&2; return 1 ;;
+  esac
+  case "${TAGWERK_UI_TEST_RETRIES:-}" in
+    ""|0|1) ;;
+    *) echo "Invalid TAGWERK_UI_TEST_RETRIES \"$TAGWERK_UI_TEST_RETRIES\" (expected empty, 0 or 1)" >&2; return 1 ;;
+  esac
+
+  if [[ -n "${TAGWERK_UI_ONLY:-}" ]]; then
+    for identifier in ${=TAGWERK_UI_ONLY}; do
+      if [[ ! "$identifier" =~ '^[A-Za-z0-9_]+(/[A-Za-z0-9_]+)?$' ]]; then
+        echo "Invalid TAGWERK_UI_ONLY entry \"$identifier\" (expected Class or Class/testMethod)" >&2
+        return 1
+      fi
+      UI_SELECTION_ARGS+=("-only-testing:$UI_TEST_TARGET/$identifier")
+      entries=$((entries + 1))
+    done
+    summary="only $entries selected entries (TAGWERK_UI_ONLY: ${=TAGWERK_UI_ONLY})"
+  elif [[ "$test_set" == "pr" ]]; then
+    if [[ ! -f "$nightly_file" ]]; then
+      echo "TAGWERK_UI_TEST_SET=pr needs the nightly-only list, but $nightly_file does not exist" >&2
+      return 1
+    fi
+    while IFS= read -r line || [[ -n "$line" ]]; do
+      identifier="${line//[[:space:]]/}"
+      [[ -z "$identifier" || "$identifier" == \#* ]] && continue
+      if [[ ! "$identifier" =~ '^[A-Za-z0-9_]+(/[A-Za-z0-9_]+)?$' ]]; then
+        echo "Invalid entry \"$identifier\" in $nightly_file (expected Class or Class/testMethod)" >&2
+        return 1
+      fi
+      UI_SELECTION_ARGS+=("-skip-testing:$UI_TEST_TARGET/$identifier")
+      entries=$((entries + 1))
+    done < "$nightly_file"
+    summary="pr set, $entries nightly-only entries skipped (${nightly_file:t})"
+  else
+    summary="full set"
+  fi
+
+  if [[ "${TAGWERK_UI_TEST_RETRIES:-}" == "1" ]]; then
+    UI_SELECTION_ARGS+=(-retry-tests-on-failure -test-iterations 2)
+    summary="$summary, one retry per failed test"
+  fi
+  echo "    UI tests: $summary"
+}
+
+# Lists the UI tests that failed at least once and passed in the end, based on the stage log, under the heading
+# "RETRIED UI TESTS". The list is also written to <log dir>/retried-ui-tests.md (the CI workflow copies it into the job
+# summary). A test counts as retried when its last reported result is "passed" and an earlier attempt failed.
+report_retried_ui_tests() {
+  local log="$1" report="$2"
+  local retried
+  retried=$(/usr/bin/python3 -c '
+import re, sys
+results = {}
+failed_once = set()
+summary_failures = 0
+pattern = re.compile(r"Test [Cc]ase \x27([^\x27]+)\x27 (passed|failed)")
+failure_summary = re.compile(r"Executed \d+ tests?, with ([1-9]\d*) failures?")
+with open(sys.argv[1], errors="replace") as handle:
+    for line in handle:
+        match = pattern.search(line)
+        if match:
+            raw, outcome = match.groups()
+            if raw.startswith("-["):
+                suite, _, method = raw[2:-1].partition(" ")
+            else:
+                suite, _, method = raw.rstrip("()").rpartition(".")
+            name = suite.split(".")[-1] + "/" + method
+            results[name] = outcome
+            if outcome == "failed":
+                failed_once.add(name)
+        elif failure_summary.search(line):
+            summary_failures += 1
+for name in sorted(failed_once):
+    if results.get(name) == "passed":
+        print(name)
+if not failed_once and summary_failures:
+    print("UNPARSED")
+' "$log") || retried=""
+
+  {
+    echo "RETRIED UI TESTS"
+    if [[ -z "$retried" ]]; then
+      echo "  none"
+    elif [[ "$retried" == "UNPARSED" ]]; then
+      echo "  The log reports failed attempts, but no test names could be read from it (log: $log)"
+    else
+      print -r -- "$retried" | sed 's/^/  - /'
+    fi
+  } | tee "$report"
+}
+
+# TAGWERK_UI_ONLY selects UI tests, so the other stages are skipped; combining it with the skip switch is a mistake.
+if [[ -n "${TAGWERK_UI_ONLY:-}" ]]; then
+  if [[ -n "${TAGWERK_SKIP_UI_TESTS:-}" ]]; then
+    echo "TAGWERK_UI_ONLY and TAGWERK_SKIP_UI_TESTS exclude each other" >&2
+    exit 1
+  fi
+  TAGWERK_ONLY_UI_TESTS=1
+fi
+
+# Sourced by scripts/tests/test-all-ui-selection.zsh: only the functions above are needed, not the test run.
+if [[ -n "${TAGWERK_SOURCE_ONLY:-}" ]]; then return 0; fi
 
 # Reports the failing stage and stops the script.
 stage_failed() {
@@ -131,7 +265,15 @@ for devices in json.load(sys.stdin)["devices"].values():
   for service in calendar reminders; do
     xcrun simctl privacy "$UI_SIMULATOR" grant "$service" "$APP_BUNDLE_ID" || stage_failed
   done
-  run_tests -project "$SCRIPT_DIR/Tagwerk.xcodeproj" -scheme TagwerkUITests -destination "$DESTINATION" -derivedDataPath "$DERIVED" || stage_failed
+  build_ui_selection_args || stage_failed
+  ui_status=0
+  run_tests -project "$SCRIPT_DIR/Tagwerk.xcodeproj" -scheme TagwerkUITests -destination "$DESTINATION" -derivedDataPath "$DERIVED" \
+    "${UI_SELECTION_ARGS[@]}" || ui_status=$?
+  # The list is reported even when the stage fails: a test that wobbles twice in one run is worth knowing about.
+  if [[ "${TAGWERK_UI_TEST_RETRIES:-}" == "1" ]]; then
+    report_retried_ui_tests "$LOG_DIR/app-UI-tests.log" "$LOG_DIR/retried-ui-tests.md"
+  fi
+  (( ui_status == 0 )) || stage_failed
 fi
 
 CURRENT_STAGE="string catalogs"
