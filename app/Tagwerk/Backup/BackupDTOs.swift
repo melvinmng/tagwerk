@@ -1178,10 +1178,15 @@ struct AppSettingsBackup: Codable, Equatable {
     var shoppingSuggestionDismissed: Bool
     var shoppingCategoriesSeeded: Bool
     var shoppingSortConsent: Bool
+    /// Optional, so a backup written before the consent was versioned still decodes; it then counts as the old text (0) and the
+    /// user is asked once more.
+    var shoppingSortConsentVersion: Int?
     /// Added with "Rezept hinzufügen"; files without it read as `nil`, which leaves the setting as it is.
     var shoppingRecipeConsent: Bool?
     /// Added with the mail summary (#166); files without it read as `nil`, which leaves the setting as it is.
     var mailSummaryConsent: Bool?
+    /// Added with the assistant's access to notes (#173); files without it read as `nil`, which leaves the setting as it is.
+    var noteAssistantConsent: Bool?
     var healthCardDismissed: Bool
     var showsIntakeInPlan: Bool
     var widgetShowsNutrition: Bool
@@ -1199,9 +1204,16 @@ struct AppSettingsBackup: Codable, Equatable {
     var focusLongBreakMinutes: Int?
     var focusRounds: Int?
     var focusUsesPomodoro: Bool?
+    /// Optional, so a backup written before the start sheet still decodes; a missing value keeps the default.
+    var focusAsksDurationAtStart: Bool?
+    var focusLastStartMinutes: Int?
     var effortHistoryInPlanning: Bool?
     /// Optional, so a backup written before the recipe language existed still decodes; a missing value keeps "auto".
     var recipeLanguage: String?
+    /// Optional, so a backup written before the separate answer and shopping languages still decodes. A missing answer language
+    /// is derived again from the restored dictation language; a missing shopping language keeps the device's value.
+    var voiceAnswerLanguage: String?
+    var shoppingLanguage: String?
     /// Optional, so a backup written before the adjustable drink portions still decodes; a missing value keeps the device's portions.
     var drinkPresets: [Int]?
     var showsRoutinesInPlan: Bool
@@ -1263,8 +1275,10 @@ struct AppSettingsBackup: Codable, Equatable {
         shoppingSuggestionDismissed = record.shoppingSuggestionDismissed
         shoppingCategoriesSeeded = record.shoppingCategoriesSeeded
         shoppingSortConsent = record.shoppingSortConsent
+        shoppingSortConsentVersion = record.shoppingSortConsentVersion
         shoppingRecipeConsent = record.shoppingRecipeConsent
         mailSummaryConsent = record.mailSummaryConsent
+        noteAssistantConsent = record.noteAssistantConsent
         healthCardDismissed = record.healthCardDismissed
         showsIntakeInPlan = record.showsIntakeInPlan
         widgetShowsNutrition = record.widgetShowsNutrition
@@ -1280,8 +1294,12 @@ struct AppSettingsBackup: Codable, Equatable {
         focusLongBreakMinutes = record.focusLongBreakMinutes
         focusRounds = record.focusRounds
         focusUsesPomodoro = record.focusUsesPomodoro
+        focusAsksDurationAtStart = record.focusAsksDurationAtStart
+        focusLastStartMinutes = record.focusLastStartMinutes
         effortHistoryInPlanning = record.effortHistoryInPlanning
         recipeLanguage = record.recipeLanguage
+        voiceAnswerLanguage = record.voiceAnswerLanguage
+        shoppingLanguage = record.shoppingLanguage
         drinkPresets = record.drinkPresets
         showsRoutinesInPlan = record.showsRoutinesInPlan
         noteSuggestionConsent = record.noteSuggestionConsent
@@ -1342,8 +1360,10 @@ struct AppSettingsBackup: Codable, Equatable {
         record.shoppingSuggestionDismissed = shoppingSuggestionDismissed
         record.shoppingCategoriesSeeded = shoppingCategoriesSeeded
         record.shoppingSortConsent = shoppingSortConsent
+        record.shoppingSortConsentVersion = shoppingSortConsentVersion ?? 0
         if let shoppingRecipeConsent { record.shoppingRecipeConsent = shoppingRecipeConsent }
         if let mailSummaryConsent { record.mailSummaryConsent = mailSummaryConsent }
+        if let noteAssistantConsent { record.noteAssistantConsent = noteAssistantConsent }
         record.healthCardDismissed = healthCardDismissed
         record.showsIntakeInPlan = showsIntakeInPlan
         record.widgetShowsNutrition = widgetShowsNutrition
@@ -1359,8 +1379,11 @@ struct AppSettingsBackup: Codable, Equatable {
         if let focusLongBreakMinutes { record.focusLongBreakMinutes = focusLongBreakMinutes }
         if let focusRounds { record.focusRounds = focusRounds }
         if let focusUsesPomodoro { record.focusUsesPomodoro = focusUsesPomodoro }
+        if let focusAsksDurationAtStart { record.focusAsksDurationAtStart = focusAsksDurationAtStart }
+        if let focusLastStartMinutes { record.focusLastStartMinutes = focusLastStartMinutes }
         if let effortHistoryInPlanning { record.effortHistoryInPlanning = effortHistoryInPlanning }
         if let recipeLanguage { record.recipeLanguage = recipeLanguage }
+        if let shoppingLanguage { record.shoppingLanguage = shoppingLanguage }
         if let drinkPresets { record.drinkPresets = drinkPresets }
         record.showsRoutinesInPlan = showsRoutinesInPlan
         record.noteSuggestionConsent = noteSuggestionConsent
@@ -1369,6 +1392,11 @@ struct AppSettingsBackup: Codable, Equatable {
         record.voiceInputEnabled = voiceInputEnabled
         record.voiceExplained = voiceExplained
         record.voiceRecognitionLanguage = voiceRecognitionLanguage
+        // Device state, not part of the backup: the restored list adopts its language again instead of offering a translation.
+        record.shoppingItemsLanguage = nil
+        // The answer language of an older backup is derived from the restored dictation language, once.
+        record.voiceAnswerLanguage = voiceAnswerLanguage
+        record.migrateVoiceAnswerLanguageIfNeeded()
         record.voiceReadAloud = voiceReadAloud
         record.voiceGermanVoiceID = voiceGermanVoiceID
         record.voiceEnglishVoiceID = voiceEnglishVoiceID

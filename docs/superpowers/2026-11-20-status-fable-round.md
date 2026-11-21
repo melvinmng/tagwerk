@@ -48,14 +48,16 @@ Festlegungen der Hauptsitzung zum G3-Plan: offene Fragen nach Empfehlung; Zeilen
 | Branch | Inhalt | Stand |
 |---|---|---|
 | `feat/recipe-translate` | #232 Block A | fertig und geprüft, Head `d8856a7`, `test-all` grün; bereit für PR. Hinweis für #233: `NoteEditorSync` lässt Änderungen von außen über ungespeichertes Tippen gewinnen |
-| `feat/closed-issues-in-reviews` | #173 Strang C (Tasks 6, 7, 7a) | umgesetzt (Head `7f8c597`); Review-Korrekturen laufen: DUPLICATE zählt fälschlich, stille 0 vor dem Laden der Projekte, UI-Audit „Portionen“ prüfen |
+| `feat/closed-issues-in-reviews` | #173 Strang C (Tasks 6, 7, 7a) | fertig und geprüft, Head `e428cf4` (Review-Korrekturen drin); UI-Stufe rot nur durch vorbestehende Fehler; Folge-Idee: Projekte beim Kaltstart aus dem Cache laden |
+| `feat/note-issue-suggestions` | #173 Strang D (Tasks 8, 9), abgezweigt von `33dfc26` | läuft (Sonnet) |
 | `feat/evening-reminders-per-day` | #173 Strang E (Tasks 10, 11) | fertig und geprüft, Head `c4c281a`, `test-all` grün; bereit für PR |
-| `feat/assistant-assign-and-search` | #173 Stränge A, B und Task 5 | läuft wieder (Sonnet), ab WIP `430fb8e` |
-| `feat/g3-search-menu` | G3 Strang U | läuft wieder (Sonnet), ab WIP `25b57f0` |
+| `feat/assistant-assign-and-search` | #173 Stränge A, B und Task 5 | umgesetzt, Head `33dfc26`; Review-Korrekturen laufen: Widerruf der Einwilligung außerhalb der Einstellungen beendet die Notiz-Sitzung nicht; einmal roter Sitzungstest klären |
+| `feat/g3-search-menu` | G3 Strang U | umgesetzt, Head `1205562`; Review-Korrektur läuft (Notiz ohne Ordner → „Notizen“) |
+| `fix/ui-test-stability` | vorbestehende UI-Testfehler (AX5-Datum Erfassen, Kontrast „Unerledigt von heute“, PlanUITests 23–24 Uhr, Audit-Timeouts) | läuft (Sonnet) |
 
 ## Warteschlange Umsetzung (je freier Xcode-Platz, nach Prüfung des fertigen Branches)
 
-3. #173 Strang D (Tasks 8, 9), danach #233 Block B
+3. #233 Block B (nach Merge von #173 A/B)
 4. G3 Stränge S, G, T, L (mit SP5c); Strang K zuletzt nach T, L, S
 5. Gruppen 1 und 2 nach ihren Plänen
 6. Danach: Geräteprüfungen (Task 12 in #173, Z1 in G3, Gerätetests der übrigen Pläne)

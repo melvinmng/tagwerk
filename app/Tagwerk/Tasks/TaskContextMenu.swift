@@ -45,6 +45,10 @@ struct TaskContextMenu: View {
     }
 
     var body: some View {
+        // FO3b: "Fokus starten" is the first section.
+        if Self.showsFocusStart(for: item) {
+            Section { FocusStartButton(task: item) }
+        }
         // Mockup F1: the planned day lives in Tagwerk only; the due date changes the source.
         Section("Einplanen · nur in Tagwerk") {
             if typeSize >= .accessibility1 {
@@ -83,9 +87,6 @@ struct TaskContextMenu: View {
                 }
             }
         }
-        if Self.showsFocusStart(for: item) {
-            Section { FocusStartButton(task: item) }
-        }
         if actions.createBlock != nil || actions.unassign != nil || actions.editEffort != nil {
             Section {
                 if let createBlock = actions.createBlock {
@@ -106,7 +107,7 @@ struct TaskContextMenu: View {
                     let day = Self.aiPlanAnchor(shownDay: actions.shownDay, today: planning.today)
                     environment.requestedTab = 0
                     planning.scope = .day
-                    planning.anchor = day
+                    planning.jump(to: day)
                     environment.planner.start(scope: .day, anchor: day, taskID: item.id)
                 }
                 Button("Über diese Aufgabe sprechen", systemImage: "bubble.left.and.text.bubble.right") {
@@ -160,12 +161,7 @@ struct TaskContextMenu: View {
     }
 
     private func planButton(_ option: RescheduleOption) -> some View {
-        switch option {
-        case .today: Button("Heute", systemImage: "sun.max") { actions.plan(.today) }
-        case .tomorrow: Button("Morgen", systemImage: "sunrise") { actions.plan(.tomorrow) }
-        case .weekend: Button("Wochenende", systemImage: "sofa") { actions.plan(.weekend) }
-        default: Button("Nächste Woche", systemImage: "arrow.forward.to.line") { actions.plan(.nextMonday) }
-        }
+        TaskPlanButton(option: option) { actions.plan(option) }
     }
 
     private var sourceName: String {
@@ -179,5 +175,20 @@ struct TaskContextMenu: View {
     private var dueText: String {
         guard let due = item.due else { return String(localized: "keine Fälligkeit") }
         return String(localized: "jetzt \(DueText.text(due, now: .now, calendar: .tagwerk))")
+    }
+}
+
+/// One of the planning buttons ("Heute", "Morgen", "Wochenende", "Nächste Woche") shared by the task menu and the search.
+struct TaskPlanButton: View {
+    let option: RescheduleOption
+    let action: () -> Void
+
+    var body: some View {
+        switch option {
+        case .today: Button("Heute", systemImage: "sun.max", action: action)
+        case .tomorrow: Button("Morgen", systemImage: "sunrise", action: action)
+        case .weekend: Button("Wochenende", systemImage: "sofa", action: action)
+        default: Button("Nächste Woche", systemImage: "arrow.forward.to.line", action: action)
+        }
     }
 }

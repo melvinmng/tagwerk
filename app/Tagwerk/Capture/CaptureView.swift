@@ -166,6 +166,10 @@ struct CaptureView: View {
                 quickButton("Trinken", symbol: "drop.fill") { sheet = .drinks }
                 quickButton("Training", symbol: "figure.run") { sheet = .newWorkout() }
             }
+            // SI3: shown once, directly above the portions; renders nothing when the shortcuts are not registered.
+            if SiriTipPolicy.isVisible(done: model.settings.siriTipWaterDone) {
+                SiriTip(intent: LogWaterIntent(), isDone: siriTipDone)
+            }
             HStack(spacing: 8) {
                 // By index: two portions may be equal, so the amount is no identity.
                 ForEach(Array(model.settings.drinkPresets.enumerated()), id: \.offset) { _, amount in
@@ -181,6 +185,11 @@ struct CaptureView: View {
             }
         }
         .padding(.vertical, 4)
+    }
+
+    private var siriTipDone: Binding<Bool> {
+        let settings = model.settings
+        return Binding(get: { settings.siriTipWaterDone }, set: { settings.siriTipWaterDone = $0 })
     }
 
     private func quickButton(_ title: LocalizedStringKey, symbol: String, action: @escaping () -> Void) -> some View {

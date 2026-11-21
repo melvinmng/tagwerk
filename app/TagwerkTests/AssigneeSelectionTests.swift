@@ -114,4 +114,23 @@ struct AssigneeLoadTests {
         #expect(load.logins(for: "a/y") == [])
         #expect(AssigneeLoad.failed(repository: "a/x").logins(for: "a/x") == [])
     }
+
+    @Test func noProjectTitle_onlyMe_hasNoPerson() {
+        #expect(AssigneeSelection.noProjectTitle(number: 151, others: []) == "#151 ohne Projekt")
+        #expect(AssigneeSelection.noProjectTitle(number: nil, others: []) == "Issue ohne Projekt")
+    }
+
+    @Test func noProjectTitle_withOthers_namesThem() {
+        #expect(AssigneeSelection.noProjectTitle(number: 151, others: ["lea-m"]) == "#151 an lea-m · ohne Projekt")
+        #expect(AssigneeSelection.noProjectTitle(number: 151, others: ["a", "b", "c"]) == "#151 an 3 Personen · ohne Projekt")
+    }
+
+    @Test func openElsewhereTitle_namesTheProjectOrCountsThem() {
+        #expect(AssigneeSelection.openElsewhereTitle(number: 154, openIn: ["Roadmap 2027"]) == "#154 noch offen in „Roadmap 2027“")
+        #expect(AssigneeSelection.openElsewhereTitle(number: 154, openIn: ["A", "B"]) == "#154 noch offen in 2 Projekten")
+        #expect(AssigneeSelection.openElsewhereTitle(number: nil, openIn: ["A"]) == "Issue noch offen in „A“")
+        // The spoken form has no quotation marks, whatever language the quotes of the written form belong to.
+        #expect(AssigneeSelection.openElsewhereTitle(number: 154, openIn: ["Roadmap 2027"], quoted: false) == "#154 noch offen in Roadmap 2027")
+        #expect(AssigneeSelection.openElsewhereTitle(number: 154, openIn: ["A", "B"], quoted: false) == "#154 noch offen in 2 Projekten")
+    }
 }

@@ -94,7 +94,21 @@ struct SettingsView: View {
                     } label: {
                         LabeledContent("Datensicherung", value: BackupSettingsView.lastBackupText(settings.lastAutoBackupAt))
                     }
-                    NavigationLink("Fokus-Timer") { FocusSettingsView() }
+                    NavigationLink {
+                        FocusSettingsView()
+                    } label: {
+                        LabeledContent("Fokus-Timer", value: FocusTimerText.settingsSummary(settings.focusTimerSettings))
+                    }
+                    NavigationLink {
+                        SiriShortcutsSettingsView()
+                    } label: {
+                        LabeledContent("Siri & Kurzbefehle", value: String(localized: "\(SiriPhraseCatalog.shortcutCount) Kurzbefehle"))
+                    }
+                    NavigationLink {
+                        LanguageSettingsView()
+                    } label: {
+                        LabeledContent("Sprachen", value: LanguageSettingsText.summary(settings.contentLanguages))
+                    }
                 }
 
                 Section {

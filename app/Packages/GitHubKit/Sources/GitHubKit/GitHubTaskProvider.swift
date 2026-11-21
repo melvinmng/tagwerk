@@ -87,6 +87,38 @@ public final class GitHubTaskProvider: TaskProvider {
         }
     }
 
+    /// Closing moments of the issues assigned to the user, placed in a shown project and closed as completed
+    /// within `interval`. Used by the day review (one day) and the week review (one week). Throws `IssueSearchError`,
+    /// also when the user has not chosen projects and the projects are not loaded yet (no count instead of a false zero).
+    public func closedIssueDates(in interval: DateInterval) async throws -> [Date] {
+        // Without a stored choice the shown projects are derived from the loaded projects and issues. Before the first
+        // load that default is empty, and an empty default would report a false zero instead of "not available".
+        let explicitSelection = selectedProjectIDs()
+        if explicitSelection == nil, projects.isEmpty {
+            throw IssueSearchError.failed(String(localized: "Die GitHub-Projekte sind noch nicht geladen.", bundle: .module))
+        }
+        let viewer: String
+        if let login {
+            viewer = login
+        } else {
+            do { viewer = try await api.viewerLogin() } catch { throw IssueSearchError.from(error) }
+        }
+        // The search starts one day early and ends on the UTC date of the interval's end (both inclusive, whole UTC days);
+        // the interval itself is applied on the device.
+        let issues = try await api.closedIssues(assignedTo: viewer, closedSince: Self.utcDate(interval.start, addingDays: -1),
+                                                closedUntil: Self.utcDate(interval.end))
+        let shown = explicitSelection ?? defaultSelectedProjectIDs
+        return issues
+            .filter { $0.isCompleted && $0.closedAt >= interval.start && $0.closedAt < interval.end && !$0.projectIDs.isDisjoint(with: shown) }
+            .map(\.closedAt)
+            .sorted()
+    }
+
+    /// `closedIssueDates(in:).count`.
+    public func closedIssueCount(in interval: DateInterval) async throws -> Int {
+        try await closedIssueDates(in: interval).count
+    }
+
     public func containers() async throws -> [TaskContainer] {
         Set(records.values.map(\.repository)).sorted().map { TaskContainer(id: $0, name: $0, colorHex: nil) }
     }
@@ -134,7 +166,11 @@ public final class GitHubTaskProvider: TaskProvider {
                 records[fresh.issueID] = fresh
             }
             offlineSince = nil
-            return GitHubMapping.taskItem(fresh)
+            let full = GitHubMapping.taskItem(fresh)
+            // A listed issue comes back as the list shows it (placements of the selection only). An issue that left
+            // the lists keeps all placements, so the capsule can name the other projects.
+            guard unlistedReason(full) == nil else { return full }
+            return displayedItem(fresh, selection: selectedProjectIDs() ?? defaultSelectedProjectIDs) ?? full
         } catch {
             throw Self.taskError(error)
         }
@@ -225,7 +261,7 @@ public final class GitHubTaskProvider: TaskProvider {
     }
 
     private static func missingStatus(_ status: String, in project: ProjectInfo) -> TaskWriteError {
-        .failed(String(localized: "Den Status „\(status)“ gibt es im Project „\(project.title)“ nicht.", bundle: .module))
+        .failed(String(localized: "Den Status „\(status)“ gibt es im Projekt „\(project.title)“ nicht.", bundle: .module))
     }
 
     private static var tooManyAssignees: TaskWriteError {
@@ -295,9 +331,29 @@ public final class GitHubTaskProvider: TaskProvider {
     /// issue sits in at least one project (`statuses` has one entry per placement, writable or not).
     /// Reading keeps using `GitHubMapping.isVisible`; this only covers the moment after a write.
     public func isListed(_ item: TaskItem) -> Bool {
-        guard !item.statuses.isEmpty else { return false }
-        guard let login else { return true }
-        return AssigneeRules.contains(item.assignees, login)
+        unlistedReason(item) == nil
+    }
+
+    /// Why a written issue is not in the lists: it sits in no project (the certain reason, also when others are
+    /// assigned as well), it is not assigned to the user, or it is done in every selected project while it is
+    /// still open in others. A closed issue is completed, not unlisted.
+    public func unlistedReason(_ item: TaskItem) -> UnlistedReason? {
+        let assignees = item.assignees ?? []
+        if item.statuses.isEmpty {
+            return .noProject(others: assignees.filter { !isLogin($0) })
+        }
+        if login != nil, !assignees.contains(where: isLogin) { return .handedOver }
+        guard !item.isCompleted else { return nil }
+        let selection = selectedProjectIDs() ?? defaultSelectedProjectIDs
+        let inSelection = item.statuses.filter { selection.contains($0.subContainerID) }
+        guard !inSelection.isEmpty, inSelection.allSatisfy({ GitHubMapping.isDone($0.current) }) else { return nil }
+        let openElsewhere = item.statuses.filter { !selection.contains($0.subContainerID) && !GitHubMapping.isDone($0.current) }
+        guard !openElsewhere.isEmpty else { return nil }
+        return .doneInSelection(doneIn: inSelection.map(\.subContainerName), openIn: openElsewhere.map(\.subContainerName))
+    }
+
+    private func isLogin(_ candidate: String) -> Bool {
+        login.map { $0.lowercased() == candidate.lowercased() } ?? false
     }
 
     /// Repositories offered when creating an issue.
@@ -395,7 +451,7 @@ public final class GitHubTaskProvider: TaskProvider {
         var resolved: [String: String] = [:]
         for (projectID, name) in changes {
             guard let placement = writable.first(where: { $0.project.id == projectID }) else {
-                throw TaskWriteError.failed(String(localized: "Der Status lässt sich in diesem Project nicht ändern.", bundle: .module))
+                throw TaskWriteError.failed(String(localized: "Der Status lässt sich in diesem Projekt nicht ändern.", bundle: .module))
             }
             guard let option = GitHubMapping.statusOption(named: name, in: placement.project) else {
                 throw missingStatus(name, in: placement.project)
@@ -414,15 +470,18 @@ public final class GitHubTaskProvider: TaskProvider {
         let selection = selectedProjectIDs() ?? defaultSelectedProjectIDs
         return records.values
             .sorted { ($0.repository, $0.number) < ($1.repository, $1.number) }
-            .compactMap { record in
-                var shown = record
-                shown.placements = record.placements.filter { selection.contains($0.project.id) }
-                guard shown.placements.contains(where: { !GitHubMapping.isDone($0.status) }) else { return nil }
-                var item = GitHubMapping.taskItem(shown)
-                // The version must describe the whole issue, because writes compare against all its items.
-                item.version = GitHubMapping.version(record)
-                return item
-            }
+            .compactMap { displayedItem($0, selection: selection) }
+    }
+
+    /// The issue as the list shows it: placements of the selected projects only. `nil` when it is not open in any of them.
+    private func displayedItem(_ record: GitHubIssueRecord, selection: Set<String>) -> TaskItem? {
+        var shown = record
+        shown.placements = record.placements.filter { selection.contains($0.project.id) }
+        guard shown.placements.contains(where: { !GitHubMapping.isDone($0.status) }) else { return nil }
+        var item = GitHubMapping.taskItem(shown)
+        // The version must describe the whole issue, because writes compare against all its items.
+        item.version = GitHubMapping.version(record)
+        return item
     }
 
     static func projects(in records: [GitHubIssueRecord]) -> [ProjectInfo] {

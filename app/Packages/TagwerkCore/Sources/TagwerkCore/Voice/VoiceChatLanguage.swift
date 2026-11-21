@@ -1,13 +1,13 @@
 import Foundation
 
-/// The preferred language of the voice chat ("Sprache im Sprachchat", Einstellungen › KI › Sprache). It replaces the old
-/// setting "Erkennung in" and keeps its stored values, so nothing has to be migrated: "auto" ("Wie die App"), "de-DE" and
-/// "en-US" mean what they meant before. The setting applies to
-/// - speech recognition (dictation everywhere in the app, as before),
-/// - the language ChatGPT is asked to answer in while the voice mode runs,
-/// - the language of the read-aloud voice when the text itself gives no clear hint.
+/// The stored values of the dictation language ("Diktat", Einstellungen › Sprachen) and the helpers to read them. The key
+/// `voiceRecognitionLanguage` once held the one shared "Sprache im Sprachchat" ("auto", "de-DE", "en-US"); since the
+/// separate content languages (`ContentLanguages`) it is the dictation language only. It applies to
+/// - speech recognition (dictation everywhere in the app, also in the voice mode),
+/// - the language of the read-aloud voice when no answer language is fixed and the text gives no clear hint.
 ///
-/// A typed chat keeps answering in the language the user writes.
+/// The language ChatGPT answers in during the voice mode is its own setting (`ContentLanguages.fixedAnswerLanguage`), derived
+/// once from the former shared value. A typed chat keeps answering in the language the user writes.
 public enum VoiceChatLanguage {
     /// The stored value that follows the language of the app.
     public static let automatic = "auto"

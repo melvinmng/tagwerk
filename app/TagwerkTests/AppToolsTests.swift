@@ -76,7 +76,9 @@ struct AppToolsTests {
 
     // MARK: search
 
-    private func makeSearch(events: [CalendarEvent] = [], completed: [CompletedTask] = [], access: Bool = true) async -> AppTools {
+    private func makeSearch(events: [CalendarEvent] = [], completed: [CompletedTask] = [], access: Bool = true,
+                            notes: [NoteSearchItem] = [], notesAllowed: Bool = true, consent: (@MainActor () -> Bool)? = nil, shopping: [ShoppingSearchItem] = [],
+                            online: (@MainActor (String) async throws -> [OnlineIssue])? = nil) async -> AppTools {
         calendarStore.storedEvents = events
         await taskList.reload()
         let planning = PlanningModel(taskList: taskList, calendarStore: calendarStore, reminderStore: FakeAccessStore(),
@@ -88,9 +90,19 @@ struct AppToolsTests {
         let sources = SearchToolSources(
             events: { interval in access ? calendarStore.events(in: interval, calendarIDs: nil) : nil },
             calendarNames: { ["cal": "Uni"] },
-            completedTasks: { completed })
+            completedTasks: { completed },
+            notes: { notes }, shopping: { shopping }, searchOnline: online, notesAllowed: consent ?? { notesAllowed })
         return AppTools(taskList: taskList, planning: planning, planner: nil,
                         events: { interval in calendarStore.events(in: interval, calendarIDs: nil) }, search: sources)
+    }
+
+    private func noteItem(_ text: String, kind: String = "Notiz", day: String? = nil, updated: Date? = nil) -> NoteSearchItem {
+        NoteSearchItem(id: UUID(), text: text, kindLabel: kind, updatedAt: updated ?? testNow(), dayKey: day)
+    }
+
+    private func onlineIssue(_ id: String, number: Int, marker: OnlineIssueMarker?, assignees: [String] = []) -> OnlineIssue {
+        OnlineIssue(id: id, number: number, title: "Issue \(number)", repository: "octo/r",
+                    url: URL(string: "https://github.com/octo/r/issues/\(number)")!, updatedAt: testNow(), marker: marker, assignees: assignees)
     }
 
     private func searchEvent(_ title: String, id: String? = nil, on day: DateComponents, recurring: Bool = false,
@@ -104,9 +116,10 @@ struct AppToolsTests {
         return event
     }
 
-    private func searchArguments(_ query: String, kind: String = "all", completed: Bool = false, from: String? = nil, to: String? = nil) -> String {
+    private func searchArguments(_ query: String, kind: String = "all", completed: Bool = false, from: String? = nil, to: String? = nil,
+                                 online: Bool = false) -> String {
         func quoted(_ value: String?) -> String { value.map { "\"\($0)\"" } ?? "null" }
-        return #"{"query":"\#(query)","kind":"\#(kind)","include_completed":\#(completed),"from":\#(quoted(from)),"to":\#(quoted(to))}"#
+        return #"{"query":"\#(query)","kind":"\#(kind)","include_completed":\#(completed),"from":\#(quoted(from)),"to":\#(quoted(to)),"github_online":\#(online)}"#
     }
 
     @Test func search_isAReadToolWithStrictSchema() async throws {
@@ -114,9 +127,10 @@ struct AppToolsTests {
         #expect(tools.kind(of: "search") == .read)
         let definition = try #require(tools.definitions.first { $0.name == "search" })
         let schema = try #require(try JSONSerialization.jsonObject(with: definition.parameters) as? [String: Any])
-        #expect(Set(schema["required"] as? [String] ?? []) == ["query", "kind", "include_completed", "from", "to"])
+        #expect(Set(schema["required"] as? [String] ?? []) == ["query", "kind", "include_completed", "from", "to", "github_online"])
         #expect(definition.strict)
-        #expect(definition.description.hasPrefix("Searches calendar events and tasks by text"))
+        #expect(definition.description.hasPrefix("Searches calendar events, tasks, notes and shopping items by text"))
+        #expect(definition.description.contains("Private notes (journal, Bible Study, dream log) are never included."))
     }
 
     @Test func search_findsEventsAndTasksInDefaultWindow() async throws {
@@ -143,6 +157,222 @@ struct AppToolsTests {
         #expect((result["events"] as? [[String: Any]])?.first?["matchedIn"] as? [String] == ["notes"])
         #expect((result["tasks"] as? [[String: Any]])?.first?["matchedIn"] as? [String] == ["notes"])
         #expect(result["eventCount"] as? Int == 1 && result["taskCount"] as? Int == 1)
+    }
+
+    // MARK: search: notes, shopping, GitHub
+
+    @Test func search_returnsNotesWithTitleAndSnippet() async throws {
+        let body = String(repeating: "Füllwort ", count: 120) + "Zugangscode Blau-77 " + String(repeating: "Ende ", count: 120)
+        let note = noteItem("Reiseplanung\n" + body, day: nil)
+        let tools = await makeSearch(notes: [note])
+        let output = await tools.run(ToolCall(id: "c", name: "search", arguments: Data(searchArguments("zugangscode").utf8)))
+        let result = try #require(try JSONSerialization.jsonObject(with: Data(output.utf8)) as? [String: Any])
+        let entry = try #require((result["notes"] as? [[String: Any]])?.first)
+        #expect(entry["id"] as? String == "note:\(note.id.uuidString)")
+        #expect(entry["title"] as? String == "Reiseplanung")
+        #expect(entry["kind"] as? String == "Notiz")
+        #expect(entry["matchedIn"] as? [String] == ["notes"])
+        let snippet = try #require(entry["snippet"] as? String)
+        #expect(snippet.contains("Zugangscode") && snippet.count <= 80)
+        #expect(entry["updated"] as? String == "2026-11-18")
+        #expect(result["noteCount"] as? Int == 1)
+        // Never the whole text of a 2 000 character note.
+        #expect(output.count < 1_500)
+        #expect(!output.contains(String(repeating: "Füllwort ", count: 20)))
+    }
+
+    @Test func search_noteDayIsReportedForRoutineNotes() async throws {
+        let tools = await makeSearch(notes: [noteItem("Gedanken zum Morgen", kind: "Tagesstart", day: "2026-11-17")])
+        let result = await run(tools, "search", searchArguments("morgen"))
+        let entry = try #require((result["notes"] as? [[String: Any]])?.first)
+        #expect(entry["day"] as? String == "2026-11-17" && entry["kind"] as? String == "Tagesstart")
+    }
+
+    @Test func search_titleIsCutAt80() async throws {
+        let title = String(repeating: "Lang ", count: 40)
+        let tools = await makeSearch(notes: [noteItem(title + "\nInhalt")])
+        let result = await run(tools, "search", searchArguments("lang"))
+        let entry = try #require((result["notes"] as? [[String: Any]])?.first)
+        let shown = try #require(entry["title"] as? String)
+        #expect(shown.count <= AppTools.maxNoteTitleLength && shown.hasSuffix("…"))
+        #expect(AppTools.truncated("kurz", to: 80) == "kurz")
+    }
+
+    @Test func search_notesLocked_returnsOnlyCount() async throws {
+        let tools = await makeSearch(notes: [noteItem("Geheimplan Alpha"), noteItem("Geheimplan Beta")], notesAllowed: false)
+        let output = await tools.run(ToolCall(id: "c", name: "search", arguments: Data(searchArguments("geheimplan").utf8)))
+        let result = try #require(try JSONSerialization.jsonObject(with: Data(output.utf8)) as? [String: Any])
+        #expect(result["notesLocked"] as? Bool == true)
+        #expect(result["noteCount"] as? Int == 2)
+        #expect(result["notes"] == nil)
+        #expect(!output.contains("Alpha") && !output.contains("Beta"))
+    }
+
+    @Test func search_respectsNoteConsent() async throws {
+        let settings = self.settings
+        let tools = await makeSearch(notes: [noteItem("Teigplan Sonntag")], consent: { settings.noteAssistantConsent })
+        #expect(!settings.noteAssistantConsent)
+        let off = await run(tools, "search", searchArguments("teigplan"))
+        #expect(off["notesLocked"] as? Bool == true && off["noteCount"] as? Int == 1 && off["notes"] == nil)
+        settings.noteAssistantConsent = true
+        let on = await run(tools, "search", searchArguments("teigplan"))
+        #expect(on["notesLocked"] == nil && (on["notes"] as? [[String: Any]])?.count == 1)
+    }
+
+    @Test func search_returnsShoppingItems() async throws {
+        let tools = await makeSearch(shopping: [ShoppingSearchItem(id: "r1", name: "Hafermilch", quantity: "2"),
+                                                ShoppingSearchItem(id: "r2", name: "Brot", quantity: nil)])
+        let result = await run(tools, "search", searchArguments("hafer"))
+        let items = try #require(result["shopping"] as? [[String: Any]])
+        #expect(items.count == 1)
+        #expect(items.first?["id"] as? String == "r1" && items.first?["name"] as? String == "Hafermilch")
+        #expect(items.first?["quantity"] as? String == "2" && items.first?["matchedIn"] as? [String] == ["title"])
+        #expect(result["shoppingCount"] as? Int == 1)
+    }
+
+    @Test func search_kindEvents_hasNoNotesOrShopping() async throws {
+        let tools = await makeSearch(notes: [noteItem("Statistik Notiz")], shopping: [ShoppingSearchItem(id: "r", name: "Statistikbuch", quantity: nil)])
+        for kind in ["events", "tasks"] {
+            let result = await run(tools, "search", searchArguments("statistik", kind: kind))
+            #expect(result["notes"] == nil && result["noteCount"] == nil && result["notesLocked"] == nil, "\(kind)")
+            #expect(result["shopping"] == nil && result["shoppingCount"] == nil, "\(kind)")
+        }
+    }
+
+    @Test func search_withoutFlag_doesNotCallGitHub() async throws {
+        final class Counter { var calls = 0 }
+        let counter = Counter()
+        let tools = await makeSearch(online: { _ in counter.calls += 1; return [] })
+        let result = await run(tools, "search", searchArguments("statistik"))
+        #expect(counter.calls == 0)
+        #expect(result["issues"] == nil && result["githubError"] == nil)
+        // Not for events only either, even with the flag.
+        _ = await run(tools, "search", searchArguments("statistik", kind: "events", online: true))
+        #expect(counter.calls == 0)
+    }
+
+    @Test func search_withFlag_returnsIssues() async throws {
+        final class Recorder { var texts: [String] = [] }
+        let recorder = Recorder()
+        let issues = [onlineIssue("I_9", number: 9, marker: .closed, assignees: ["lea-m"]), onlineIssue("I_8", number: 8, marker: .unassigned),
+                      onlineIssue("I_7", number: 7, marker: .assignedToOthers, assignees: ["max"]), onlineIssue("I_6", number: 6, marker: .noProject),
+                      onlineIssue("I_5", number: 5, marker: nil)]
+        let tools = await makeSearch(online: { text in recorder.texts.append(text); return issues })
+        let result = await run(tools, "search", searchArguments("export", online: true))
+        #expect(recorder.texts == ["export"])
+        let listed = try #require(result["issues"] as? [[String: Any]])
+        #expect(listed.map { $0["state"] as? String } == ["closed", "unassigned", "assigned_to_others", "no_project", "open"])
+        #expect(listed.first?["id"] as? String == "github:I_9")
+        #expect(listed.first?["number"] as? Int == 9 && listed.first?["repository"] as? String == "octo/r")
+        #expect(listed.first?["url"] as? String == "https://github.com/octo/r/issues/9")
+        #expect(listed.first?["assignees"] as? [String] == ["lea-m"])
+        #expect(result["githubError"] == nil)
+        // The ids of the answer are the keys a following assign_task takes.
+        #expect(Set(tools.foundIssues.keys) == ["github:I_9", "github:I_8", "github:I_7", "github:I_6", "github:I_5"])
+        #expect(tools.foundIssues["github:I_9"]?.assignees == ["lea-m"])
+    }
+
+    @Test func search_onlineFailure_reportsGithubError_keepsLocalResults() async throws {
+        local.tasks.append(makeTask("Export lokal", source: .local))
+        for (error, name) in [(IssueSearchError.offline, "offline"), (.rateLimited, "rate_limited"), (.signedOut, "signed_out"),
+                              (.failed("Secret detail"), "failed")] {
+            let tools = await makeSearch(online: { _ in throw error })
+            let output = await tools.run(ToolCall(id: "c", name: "search", arguments: Data(searchArguments("export", online: true).utf8)))
+            let result = try #require(try JSONSerialization.jsonObject(with: Data(output.utf8)) as? [String: Any])
+            #expect(result["githubError"] as? String == name)
+            #expect(result["issues"] == nil)
+            #expect(result["taskCount"] as? Int == 1)
+            #expect(!output.contains("Secret detail"))
+        }
+    }
+
+    @Test func search_capsEachListAtTwenty() async throws {
+        let notes = (1...30).map { noteItem("Treffer-Notiz \($0)") }
+        let shopping = (1...30).map { ShoppingSearchItem(id: "r\($0)", name: "Treffer-Artikel \($0)", quantity: nil) }
+        let issues = (1...30).map { onlineIssue("I_\($0)", number: $0, marker: .closed) }
+        let tools = await makeSearch(notes: notes, shopping: shopping, online: { _ in issues })
+        let result = await run(tools, "search", searchArguments("treffer", online: true))
+        #expect((result["notes"] as? [[String: Any]])?.count == 20 && result["noteCount"] as? Int == 30)
+        #expect((result["shopping"] as? [[String: Any]])?.count == 20 && result["shoppingCount"] as? Int == 30)
+        #expect((result["issues"] as? [[String: Any]])?.count == 20)
+    }
+
+    // MARK: stored form
+
+    @Test func redactedSearchOutput_dropsTitleAndSnippet_keepsIdsAndCounts() async throws {
+        let tools = await makeSearch(notes: [noteItem("Geheimtitel Eins\nDer Teigplan für Sonntag", updated: testNow()),
+                                             noteItem("Anderer Teigplan", kind: "Tagesstart", day: "2026-11-17")])
+        let output = await tools.run(ToolCall(id: "c", name: "search", arguments: Data(searchArguments("teigplan").utf8)))
+        #expect(output.contains("Geheimtitel") && output.contains("Der Teigplan"))
+        let redacted = AppTools.redactedSearchOutput(output)
+        #expect(!redacted.contains("Geheimtitel") && !redacted.contains("Anderer Teigplan") && !redacted.contains("Der Teigplan"))
+        let result = try #require(try JSONSerialization.jsonObject(with: Data(redacted.utf8)) as? [String: Any])
+        let notes = try #require(result["notes"] as? [[String: Any]])
+        #expect(notes.count == 2)
+        for entry in notes {
+            #expect(entry["redacted"] as? Bool == true)
+            #expect(entry["title"] == nil && entry["snippet"] == nil)
+            #expect((entry["id"] as? String)?.hasPrefix("note:") == true)
+            #expect(entry["kind"] != nil && entry["updated"] != nil && entry["matchedIn"] != nil)
+        }
+        #expect(notes.contains { $0["day"] as? String == "2026-11-17" })
+        #expect(result["noteCount"] as? Int == 2 && result["eventCount"] as? Int == 0 && result["taskCount"] as? Int == 0)
+    }
+
+    @Test func redactedSearchOutput_isIdempotent() async throws {
+        let tools = await makeSearch(notes: [noteItem("Geheimtitel\nInhalt mit Teigplan")])
+        let output = await tools.run(ToolCall(id: "c", name: "search", arguments: Data(searchArguments("teigplan").utf8)))
+        let once = AppTools.redactedSearchOutput(output)
+        #expect(AppTools.redactedSearchOutput(once) == once)
+    }
+
+    @Test func redactedSearchOutput_keepsEventsTasksShoppingAndIssues() async throws {
+        local.tasks.append(makeTask("Teig kneten", source: .local))
+        let tools = await makeSearch(notes: [noteItem("Teig Notiz")], shopping: [ShoppingSearchItem(id: "r1", name: "Teigwaren", quantity: nil)],
+                                     online: { _ in [self.onlineIssue("I_1", number: 1, marker: .closed)] })
+        let output = await tools.run(ToolCall(id: "c", name: "search", arguments: Data(searchArguments("teig", online: true).utf8)))
+        let before = try #require(try JSONSerialization.jsonObject(with: Data(output.utf8)) as? [String: Any])
+        let after = try #require(try JSONSerialization.jsonObject(with: Data(AppTools.redactedSearchOutput(output).utf8)) as? [String: Any])
+        for key in ["tasks", "events", "shopping", "issues", "taskCount", "eventCount", "shoppingCount", "noteCount", "searched"] {
+            #expect(NSDictionary(dictionary: [key: before[key] as Any]).isEqual(to: [key: after[key] as Any]), "\(key)")
+        }
+    }
+
+    @Test func redactedSearchOutput_clippedOutputWithNotes_isReplacedByMarker() {
+        // `Conversation.clipped` cuts in the middle of the JSON; a title must not survive in that case.
+        let clipped = #"{"notes":[{"id":"note:3F2504E0-4F89-41D3-9A0C-0305E82C3301","title":"Geheimtitel","sni"#
+        let result = AppTools.redactedSearchOutput(clipped)
+        #expect(!result.contains("Geheimtitel"))
+    }
+
+    @Test func storedForm_otherTools_areUnchanged() async throws {
+        let (tools, _) = await make()
+        let call = ToolCall(id: "c", name: "list_tasks", arguments: Data(#"{"filter":"all"}"#.utf8))
+        let output = #"{"tasks":[{"title":"Geheim"}]}"#
+        let stored = tools.storedForm(of: call, output: output)
+        #expect(stored.arguments == #"{"filter":"all"}"# && stored.output == output)
+        #expect(tools.storedForm(of: call, output: nil).output == nil)
+        let open = tools.storedForm(of: ToolCall(id: "s", name: "search", arguments: Data("{}".utf8)), output: nil)
+        #expect(open.output == nil)
+    }
+
+    @Test func storedForm_invalidJSON_isUnchanged() async throws {
+        let (tools, _) = await make()
+        let call = ToolCall(id: "c", name: "search", arguments: Data("{}".utf8))
+        #expect(tools.storedForm(of: call, output: "kein JSON").output == "kein JSON")
+        #expect(AppTools.redactedSearchOutput(#"{"error":"Der Suchtext braucht mindestens zwei Zeichen."}"#)
+                == #"{"error":"Der Suchtext braucht mindestens zwei Zeichen."}"#)
+    }
+
+    @Test func taskChatTools_forwardStoredForm() async throws {
+        let (tools, _) = await make()
+        let handler = TaskChatTools(base: tools, reader: NoRepositoryReader(), reference: nil)
+        let call = ToolCall(id: "c", name: "search", arguments: Data("{}".utf8))
+        let output = #"{"notes":[{"id":"note:3F2504E0-4F89-41D3-9A0C-0305E82C3301","title":"Geheimtitel","snippet":"Teig"}],"noteCount":1}"#
+        let stored = handler.storedForm(of: call, output: output)
+        #expect(stored.output?.contains("Geheimtitel") == false)
+        #expect(stored.output?.contains("redacted") == true)
+        #expect(handler.showsActivity("search") == false)
     }
 
     @Test func search_seriesCarriesMoreOccurrences() async throws {
@@ -540,7 +770,14 @@ struct AppToolsGitHubTests {
     }
 
     private func make(signedIn: Bool = true) async -> AppTools {
+        await makeWithPlanning(signedIn: signedIn).tools
+    }
+
+    /// The tools together with the planning model and its stores, for tests that look at blocks and planned days.
+    private func makeWithPlanning(signedIn: Bool = true) async
+        -> (tools: AppTools, planning: PlanningModel, blocks: BlockPlanner, planStore: PlanStore) {
         await taskList.reload()
+        settings.planCalendarID = "plan"
         let planStore = PlanStore(context: container.mainContext)
         let blocks = BlockPlanner(store: calendarStore, planStore: planStore, links: EventLinkStore(context: container.mainContext),
                                   settings: settings, calendar: calendar)
@@ -548,9 +785,12 @@ struct AppToolsGitHubTests {
                                      planStore: planStore, efforts: RecurringEffortStore(context: container.mainContext),
                                      blocks: blocks, settings: settings, marks: EventMarkStore(context: container.mainContext),
                                      now: testNow, calendar: calendar)
+        // Like AppEnvironment: a hand-over deletes the planned day and the future blocks.
+        taskList.onHandedOver = { id in await planning.didHandOver(id) }
         let directory = self.directory
-        return AppTools(taskList: taskList, planning: planning, planner: nil, events: { _ in [] },
-                        gitHub: { signedIn ? directory : nil })
+        let tools = AppTools(taskList: taskList, planning: planning, planner: nil, events: { _ in [] },
+                             gitHub: { signedIn ? directory : nil })
+        return (tools, planning, blocks, planStore)
     }
 
     private func run(_ tools: AppTools, _ name: String, _ arguments: String) async -> [String: Any] {
@@ -763,6 +1003,20 @@ struct AppToolsGitHubTests {
         #expect(local.createdDrafts.count == 1)
     }
 
+    /// The error texts the assistant reads say "Projekt" (decision #249); the tool descriptions stay English.
+    @Test func gitHubTargetErrors_sayProjekt() async {
+        #expect(AppTools.GitHubTargetError.projectMissing.message == "Bitte ein Projekt nennen.")
+        #expect(AppTools.GitHubTargetError.projectUnknown.message == "Dieses Projekt steht nicht in der Liste von list_github_targets.")
+        let unknown = await run(await make(), "create_task", issue(repository: "beispiel/app", projects: ["PVT_9"]))
+        #expect(unknown["error"] as? String == "Dieses Projekt steht nicht in der Liste von list_github_targets.")
+    }
+
+    @Test func createLocalTask_withRepository_saysProjekteAreGitHubOnly() async {
+        let result = await run(await make(), "create_task", issue(repository: "beispiel/app", source: "local"))
+        #expect(result["error"] as? String == "Repository, Projekte und Zugewiesene gibt es nur bei GitHub-Issues.")
+        #expect(local.createdDrafts.isEmpty)
+    }
+
     @Test func gitHubTarget_noLinkedProjects_fallsBackToOnlyProject_orAsks() {
         let unlinked = ProjectInfo(id: "PVT_1", number: 1, title: "App", fields: [], repositories: [])
         let other = ProjectInfo(id: "PVT_2", number: 2, title: "Web", fields: [], repositories: [])
@@ -782,3 +1036,288 @@ struct AppToolsGitHubTests {
             == .success(AppTools.GitHubTarget(repository: "beispiel/app", projectIDs: [])))
     }
 }
+
+// MARK: assign_task (issue #173, decision 1)
+
+extension AppToolsGitHubTests {
+    private func issue(_ number: Int, assignees: [String]) -> TaskItem {
+        TaskItem(id: TaskID(source: .github, rawValue: "ISSUE_\(number)"), title: "Export \(number)", notes: nil, due: nil,
+                 priority: nil, estimateMinutes: nil, isCompleted: false,
+                 container: TaskContainer(id: "beispiel/app", name: "beispiel/app", colorHex: nil),
+                 url: URL(string: "https://github.com/beispiel/app/issues/\(number)"), version: "1",
+                 editableFields: [.title, .notes, .due, .priority, .assignees], assignees: assignees)
+    }
+
+    private func assignArguments(_ task: TaskItem, add: [String] = [], remove: [String] = []) -> String {
+        func json(_ values: [String]) -> String {
+            String(decoding: try! JSONSerialization.data(withJSONObject: values), as: UTF8.self)
+        }
+        return #"{"id":"\#(task.id.key)","add":\#(json(add)),"remove":\#(json(remove))}"#
+    }
+
+    private func at(_ day: Int, _ hour: Int) -> Date {
+        calendar.date(from: DateComponents(year: 2026, month: 11, day: day, hour: hour))!
+    }
+
+    // MARK: Plan
+
+    @Test func assignmentPlan_addAndRemove_keepsOrderAndSpelling() throws {
+        let plan = try AppTools.assignmentPlan(current: ["Octo", "Lea-M"], add: ["jonas-k"], remove: ["lea-m"], me: "octo").get()
+        #expect(plan.change == AssigneeChange(add: ["jonas-k"], remove: ["Lea-M"]))
+        #expect(plan.before == ["Octo", "Lea-M"])
+        #expect(plan.after == ["Octo", "jonas-k"])
+        #expect(!plan.handsOver)
+    }
+
+    @Test func assignmentPlan_removingUnassigned_fails() {
+        #expect(AppTools.assignmentPlan(current: ["octo"], add: [], remove: ["ghost", "lea-m"], me: "octo")
+            == .failure(.notAssigned(["ghost", "lea-m"])))
+    }
+
+    @Test func assignmentPlan_sameLoginInBoth_fails() {
+        #expect(AppTools.assignmentPlan(current: ["octo", "lea-m"], add: ["Lea-M"], remove: ["lea-m"], me: "octo")
+            == .failure(.conflicting(["Lea-M"])))
+    }
+
+    @Test func assignmentPlan_moreThanTen_fails() {
+        let current = (1...9).map { "user-\($0)" }
+        #expect(AppTools.assignmentPlan(current: current, add: ["a-1", "a-2"], remove: [], me: nil) == .failure(.tooMany))
+        // Exactly ten is allowed.
+        #expect((try? AppTools.assignmentPlan(current: current, add: ["a-1"], remove: [], me: nil).get())?.after.count == 10)
+    }
+
+    @Test func assignmentPlan_emptyChange_fails() {
+        #expect(AppTools.assignmentPlan(current: ["octo"], add: [], remove: [], me: "octo") == .failure(.nothingToChange))
+        // Adding someone who is assigned already changes nothing.
+        #expect(AppTools.assignmentPlan(current: ["octo"], add: ["OCTO"], remove: [], me: "octo") == .failure(.nothingToChange))
+    }
+
+    @Test func assignmentPlan_ignoresCaseOfOwnLogin() throws {
+        let plan = try AppTools.assignmentPlan(current: ["Octo", "lea-m"], add: [], remove: ["OCTO"], me: "octo").get()
+        #expect(plan.change == AssigneeChange(remove: ["Octo"]))
+        #expect(plan.handsOver)
+        let giveBack = try AppTools.assignmentPlan(current: ["lea-m"], add: ["OCTO"], remove: [], me: "octo").get()
+        #expect(giveBack.change == AssigneeChange(add: ["octo"]))
+        #expect(!giveBack.handsOver)
+    }
+
+    // MARK: Execution
+
+    @Test func assignTask_addsValidatedPerson() async throws {
+        let task = issue(212, assignees: ["octo"])
+        github.tasks = [task]
+        let result = await run(await make(), "assign_task", assignArguments(task, add: ["Lea-M"]))
+        #expect(result["ok"] as? Bool == true)
+        #expect(result["assignees"] as? [String] == ["octo", "lea-m"])
+        #expect(result["handed_over"] as? Bool == false)
+        #expect(result["deleted_blocks"] as? Int == 0)
+        #expect(result["not_assigned"] == nil)
+        let applied = try #require(github.appliedEdits.last)
+        guard case .set(let change) = applied.edit.assignees else { Issue.record("assignees not set"); return }
+        #expect(change == AssigneeChange(add: ["lea-m"]))
+        #expect(applied.edit.title.isUnchanged)
+        #expect(directory.assignableRequests == ["beispiel/app"])
+        #expect(taskList.items.contains { $0.id == task.id })
+    }
+
+    @Test func assignTask_ownLoginNeedsNoAssignableList() async {
+        let task = issue(212, assignees: ["lea-m"])
+        github.tasks = [task]
+        directory.assignable = [:]
+        let result = await run(await make(), "assign_task", assignArguments(task, add: ["OCTO"]))
+        #expect(result["ok"] as? Bool == true)
+        #expect(directory.assignableRequests.isEmpty)
+    }
+
+    @Test func assignTask_unknownLogin_writesNothing() async {
+        let task = issue(212, assignees: ["octo"])
+        github.tasks = [task]
+        let result = await run(await make(), "assign_task", assignArguments(task, add: ["ghost"]))
+        #expect(result["error"] as? String == "ghost ist in beispiel/app nicht zuweisbar.")
+        #expect(github.appliedEdits.isEmpty)
+    }
+
+    @Test func assignTask_assignableListFails_writesNothing() async {
+        let task = issue(212, assignees: ["octo"])
+        github.tasks = [task]
+        directory.assignable = [:]
+        let result = await run(await make(), "assign_task", assignArguments(task, add: ["lea-m"]))
+        #expect(result["error"] as? String == "Personen konnten nicht geladen werden")
+        #expect(github.appliedEdits.isEmpty)
+    }
+
+    @Test func assignTask_removingUnassignedPerson_writesNothing() async {
+        let task = issue(212, assignees: ["octo"])
+        github.tasks = [task]
+        let result = await run(await make(), "assign_task", assignArguments(task, remove: ["lea-m"]))
+        #expect(result["error"] != nil)
+        #expect(github.appliedEdits.isEmpty)
+    }
+
+    @Test func assignTask_handOver_deletesOnlyFutureBlocks() async throws {
+        let task = issue(212, assignees: ["octo", "lea-m"])
+        github.tasks = [task]
+        let (tools, planning, blocks, planStore) = await makeWithPlanning()
+        // testNow is 2026-11-18 10:00: one block lies in the past, two start later.
+        let past = try blocks.createBlock(for: task, start: at(17, 9), minutes: 60)
+        _ = try blocks.createBlock(for: task, start: at(18, 14), minutes: 60)
+        _ = try blocks.createBlock(for: task, start: at(19, 9), minutes: 60)
+        #expect(planning.futureBlockCount(for: task.id) == 2)
+
+        let result = await run(tools, "assign_task", assignArguments(task, remove: ["octo"]))
+
+        #expect(result["ok"] as? Bool == true)
+        #expect(result["handed_over"] as? Bool == true)
+        #expect(result["deleted_blocks"] as? Int == 2)
+        #expect(result["assignees"] as? [String] == ["lea-m"])
+        #expect(result["number"] as? Int == 212)
+        #expect(result["url"] as? String == "https://github.com/beispiel/app/issues/212")
+        #expect(!taskList.items.contains { $0.id == task.id })
+        #expect(calendarStore.storedEvents.map(\.id) == [past.id])
+        #expect(planStore.assignment(for: task.id) == nil)
+    }
+
+    @Test func assignTask_removeFails_keepsBlocks() async throws {
+        let task = issue(212, assignees: ["octo", "lea-m"])
+        github.tasks = [task]
+        let (tools, _, blocks, planStore) = await makeWithPlanning()
+        _ = try blocks.createBlock(for: task, start: at(19, 9), minutes: 60)
+        let day = planStore.assignment(for: task.id)
+        #expect(day != nil)
+        github.applyError = .failed("Netzwerkfehler")
+
+        let result = await run(tools, "assign_task", assignArguments(task, remove: ["octo"]))
+
+        #expect(result["error"] != nil)
+        #expect(result["ok"] == nil)
+        #expect(taskList.items.contains { $0.id == task.id })
+        #expect(calendarStore.storedEvents.count == 1)
+        #expect(planStore.assignment(for: task.id) == day)
+    }
+
+    @Test func assignTask_localTask_fails() async {
+        let task = makeTask("Fahrrad", source: .local)
+        local.tasks = [task]
+        let result = await run(await make(), "assign_task", assignArguments(task, add: ["lea-m"]))
+        #expect(result["error"] as? String == "Zuweisen geht nur bei GitHub-Issues.")
+        #expect(github.appliedEdits.isEmpty && local.appliedEdits.isEmpty)
+    }
+
+    @Test func assignTask_droppedPerson_isReported() async {
+        let task = issue(212, assignees: ["octo"])
+        github.tasks = [task]
+        github.droppedAssignees = ["lea-m"]
+        let result = await run(await make(), "assign_task", assignArguments(task, add: ["lea-m"]))
+        #expect(result["ok"] as? Bool == true)
+        #expect(result["not_assigned"] as? [String] == ["lea-m"])
+    }
+
+    @Test func getTask_listsAssignees() async throws {
+        let task = issue(212, assignees: ["octo", "lea-m"])
+        github.tasks = [task]
+        let result = await run(await make(), "get_task", #"{"id":"\#(task.id.key)"}"#)
+        let detail = try #require(result["task"] as? [String: Any])
+        #expect(detail["assignees"] as? [String] == ["octo", "lea-m"])
+        #expect(result["me"] as? String == "octo")
+    }
+
+    @Test func definitions_withoutGitHub_haveNoAssignTask() async {
+        #expect(!(await make(signedIn: false)).definitions.contains { $0.name == "assign_task" })
+        let signedIn = await make()
+        #expect(signedIn.definitions.contains { $0.name == "assign_task" })
+        #expect(signedIn.kind(of: "assign_task") == .write)
+    }
+
+    // MARK: Issues outside the user's tasks (decision D3)
+
+    /// An issue the GitHub search found: the provider holds it, the task list does not.
+    private func foundIssue(_ number: Int, assignees: [String], marker: OnlineIssueMarker? = .unassigned) -> (TaskItem, OnlineIssue) {
+        let item = issue(number, assignees: assignees)
+        let online = OnlineIssue(id: item.id.rawValue, number: number, title: item.title, repository: "beispiel/app",
+                                 url: item.url!, updatedAt: testNow(), marker: marker, assignees: assignees)
+        return (item, online)
+    }
+
+    @Test func assignTask_unlistedIssue_takeOver_joinsList() async throws {
+        let (item, online) = foundIssue(151, assignees: [])
+        let tools = await make()
+        // The provider holds the issue, the loaded list does not (the search found it online).
+        github.tasks = [item]
+        #expect(!taskList.items.contains { $0.id == item.id })
+        tools.rememberFoundIssues([online])
+
+        let result = await run(tools, "assign_task", assignArguments(item, add: ["octo"]))
+
+        #expect(result["ok"] as? Bool == true)
+        #expect(result["assignees"] as? [String] == ["octo"])
+        #expect(result["handed_over"] as? Bool == false && result["deleted_blocks"] as? Int == 0)
+        #expect(result["in_tasks"] as? Bool == true)
+        #expect(result["number"] as? Int == 151 && result["url"] as? String == "https://github.com/beispiel/app/issues/151")
+        #expect(taskList.items.contains { $0.id == item.id })
+        let applied = try #require(github.appliedEdits.last)
+        #expect(applied.expectedVersion == nil)
+        guard case .set(let change) = applied.edit.assignees else { Issue.record("assignees not set"); return }
+        #expect(change == AssigneeChange(add: ["octo"]))
+    }
+
+    @Test func assignTask_unlistedIssue_assignOther_staysOut() async {
+        let (item, online) = foundIssue(151, assignees: ["max"], marker: .assignedToOthers)
+        let tools = await make()
+        // The provider holds the issue, the loaded list does not (the search found it online).
+        github.tasks = [item]
+        tools.rememberFoundIssues([online])
+
+        let result = await run(tools, "assign_task", assignArguments(item, add: ["Lea-M"], remove: ["max"]))
+
+        #expect(result["ok"] as? Bool == true)
+        #expect(result["assignees"] as? [String] == ["lea-m"])
+        #expect(result["in_tasks"] as? Bool == false)
+        #expect(!taskList.items.contains { $0.id == item.id })
+        #expect(directory.assignableRequests == ["beispiel/app"])
+    }
+
+    @Test func assignTask_unlistedIssue_unknownLoginOrPerson_writesNothing() async {
+        let (item, online) = foundIssue(151, assignees: ["max"], marker: .assignedToOthers)
+        let tools = await make()
+        // The provider holds the issue, the loaded list does not (the search found it online).
+        github.tasks = [item]
+        tools.rememberFoundIssues([online])
+        let unknown = await run(tools, "assign_task", assignArguments(item, add: ["ghost"]))
+        #expect(unknown["error"] as? String == "ghost ist in beispiel/app nicht zuweisbar.")
+        let notAssigned = await run(tools, "assign_task", assignArguments(item, remove: ["lea-m"]))
+        #expect(notAssigned["error"] != nil)
+        #expect(github.appliedEdits.isEmpty)
+    }
+
+    @Test func assignTask_unknownId_fails() async {
+        let (item, _) = foundIssue(151, assignees: [])
+        let tools = await make()
+        github.tasks = [item]
+        // Neither among the tasks nor among the found issues.
+        let result = await run(tools, "assign_task", assignArguments(item, add: ["octo"]))
+        #expect(result["error"] as? String == "Diese Aufgabe gibt es nicht.")
+        #expect(github.appliedEdits.isEmpty)
+    }
+
+    @Test func assignTask_closedIssue_fails() async {
+        let (item, online) = foundIssue(151, assignees: [], marker: .closed)
+        let tools = await make()
+        // The provider holds the issue, the loaded list does not (the search found it online).
+        github.tasks = [item]
+        tools.rememberFoundIssues([online])
+        let result = await run(tools, "assign_task", assignArguments(item, add: ["octo"]))
+        #expect(result["error"] as? String == "Geschlossene Issues lassen sich hier nicht zuweisen.")
+        #expect(github.appliedEdits.isEmpty)
+    }
+
+    @Test func foundIssues_areReplacedByEveryRememberCall() async {
+        let tools = await make()
+        let (_, first) = foundIssue(151, assignees: [])
+        let (_, second) = foundIssue(152, assignees: [])
+        tools.rememberFoundIssues([first])
+        #expect(Set(tools.foundIssues.keys) == ["github:ISSUE_151"])
+        tools.rememberFoundIssues([second])
+        #expect(Set(tools.foundIssues.keys) == ["github:ISSUE_152"])
+    }
+}
+

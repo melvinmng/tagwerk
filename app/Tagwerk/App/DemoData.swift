@@ -10,6 +10,8 @@ import TagwerkCore
 @MainActor
 enum DemoData {
     static let launchArgument = "-TagwerkDemoData"
+    /// Adds three appointments at the same time today (13:30–14:30), for the block that collapses overlapping entries.
+    static let overlapArgument = "-TagwerkDemoOverlap"
     private static let prefix = "Demo "
     private static let planCalendarTitle = "Demo Tagwerk"
 
@@ -313,6 +315,11 @@ enum DemoData {
         try event("Seminar", work, at(0, 10), at(0, 12, 30), location: "Universität, Unter den Linden 6, Berlin")
         try event("Seminar", copy, at(0, 10), at(0, 12, 30))
         try event("Sprechstunde", work, at(0, 15), at(0, 16), location: "Praxis Dr. Muster, Hauptstraße 5, Berlin")
+        if ProcessInfo.processInfo.arguments.contains(overlapArgument) {
+            for title in ["Projektbesprechung", "Zahnarzt Kontrolle", "Anruf Steuerberater"] {
+                try event(title, work, at(0, 13, 30), at(0, 14, 30))
+            }
+        }
         try event("Projektwoche", work, at(0, 0), at(1, 0), allDay: true)
         try event("Anmeldung Abschlussarbeit", uni, at(0, 0), at(1, 0), allDay: true)
         try event("Klausur Statistik", uni, at(3, 10), at(3, 12))

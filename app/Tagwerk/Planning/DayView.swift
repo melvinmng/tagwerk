@@ -34,7 +34,8 @@ struct DayView: View {
                 PagedContainer(canGoBack: true, canGoForward: true, isLocked: gridLocked,
                                contentID: { model.days.first?.day },
                                onPage: { model.step($0.step) },
-                               onDragBegan: { previewOffset = offsetBox.y }, onBlockedEdge: {}) { slot in
+                               onDragBegan: { previewOffset = offsetBox.y },
+                               onPrevailingPage: { model.titlePreviewStep = $0?.step }, onBlockedEdge: {}) { slot in
                     switch slot {
                     case .current: pageContent(plan)
                     case .previous: preview(of: plan.day.adding(days: -1, calendar: model.calendar))
@@ -164,6 +165,7 @@ struct DayView: View {
 
     private func listContent(_ plan: DayPlan, extras: DayPageExtras? = nil, isPreview: Bool = false) -> some View {
         let marks = extras ?? model.currentExtras
+        let rows = model.timelineWithGaps(for: plan)
         return List {
             Section {
                 summary(plan)
@@ -172,7 +174,6 @@ struct DayView: View {
                     .listRowSeparator(.hidden)
             }
             Section {
-                let rows = model.timelineWithGaps(for: plan)
                 let nowIndex = nowTick >= 0 ? model.nowRowIndex(in: rows, on: plan.day) : nil
                 if rows.isEmpty { Text("Keine Termine").foregroundStyle(.secondary) }
                 ForEach(rows.prefix(nowIndex ?? rows.count)) { row in timelineRow(row, plan: plan, marks: marks) }
@@ -189,7 +190,8 @@ struct DayView: View {
             TaskSections(model: model, plan: plan, onOpenTask: onOpenTask, onEditRecurring: onEditRecurring,
                          menuActions: plannedActions)
         }
-        .modifier(NowListBehavior(model: model, day: plan.day, tick: $nowTick, isEnabled: !isPreview))
+        .modifier(NowListBehavior(model: model, day: plan.day, tick: $nowTick, isEnabled: !isPreview,
+                                  openingRowID: rows.first.map { AnyHashable($0.id) }))
     }
 
     @ViewBuilder
@@ -197,25 +199,32 @@ struct DayView: View {
         switch row {
         case .event(let event):
             let isDeadline = marks.deadlineEventIDs.contains(event.id)
+            let remaining = model.runningRemaining(of: event, on: plan.day)
             Button { sheetEntry = .event(event, nil) } label: {
-                TimelineLine(time: event.start, title: (isDeadline ? "⚑ " : "") + event.title, detail: eventDetail(event, marks: marks),
-                             color: isDeadline ? .red : (event.isBusy ? .blue : .gray))
+                TimelineLine(time: event.start, title: (isDeadline ? "⚑ " : "") + event.title,
+                             detail: eventDetail(event, marks: marks, remaining: remaining),
+                             color: isDeadline ? .red : (event.isBusy ? .blue : .gray), isRunning: remaining != nil)
             }
             .foregroundStyle(.primary)
             .contextMenu { eventMenu(event, taskID: nil) }
         case .block(let event, let taskID):
+            let remaining = model.runningRemaining(of: event, on: plan.day)
             Button { sheetEntry = .event(event, taskID) } label: {
                 TimelineLine(time: event.start,
                              title: (plan.day == model.today && model.focusTaskIDs.contains(taskID) ? "★ " : "") + event.title,
-                             detail: CapacityText.duration(Int(event.end.timeIntervalSince(event.start) / 60)) + " · "
+                             detail: (remaining.map { NowText.runningDetail(remainingMinutes: $0) }
+                                 ?? CapacityText.duration(Int(event.end.timeIntervalSince(event.start) / 60))) + " · "
                                  + (model.canEditAsBlock(event) ? String(localized: "Zeitblock") : String(localized: "verknüpft")),
-                             color: .green)
+                             color: .green, isRunning: remaining != nil)
             }
             .foregroundStyle(.primary)
         case .lunch(let start, let minutes):
+            let remaining = model.runningRemaining(range: start..<(start + minutes), on: plan.day)
             Button { sheetEntry = .lunch(day: plan.day, range: start..<(start + minutes)) } label: {
                 TimelineLine(time: plan.day.startDate(in: model.calendar).addingTimeInterval(TimeInterval(start * 60)),
-                             title: String(localized: "Mittagspause"), detail: CapacityText.duration(minutes), color: .gray)
+                             title: String(localized: "Mittagspause"),
+                             detail: remaining.map { NowText.runningDetail(remainingMinutes: $0) } ?? CapacityText.duration(minutes),
+                             color: .gray, isRunning: remaining != nil)
             }
             .foregroundStyle(.primary)
         case .travel(let segment):
@@ -238,8 +247,10 @@ struct DayView: View {
                           onConfirmUnmark: { unmarking = event })
     }
 
-    private func eventDetail(_ event: CalendarEvent, marks: DayPageExtras) -> String {
-        var parts = [String(localized: "bis \(event.end.formatted(date: .omitted, time: .shortened))")]
+    private func eventDetail(_ event: CalendarEvent, marks: DayPageExtras, remaining: Int? = nil) -> String {
+        // A running entry shows what is left instead of its end (PL3c).
+        var parts = [remaining.map { NowText.runningDetail(remainingMinutes: $0) }
+            ?? String(localized: "bis \(event.end.formatted(date: .omitted, time: .shortened))")]
         if !event.isBusy { parts.append(String(localized: "Frei")) }
         if !event.mergedCalendarIDs.isEmpty { parts.append(String(localized: "\(event.mergedCalendarIDs.count + 1) Kalender")) }
         let text = DeadlineText(calendar: model.calendar)
@@ -288,7 +299,7 @@ struct CapacityCard: View {
         .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 14))
     }
 
-    /// "🛏 Tagesabschluss · Schlafzeit 23:00 · Checkliste 0 von 3 ›", independent of "Morgen planen"; after "Fertig"
+    /// "🛏 Tagesabschluss · Schlafzeit 23:00 · Checkliste 0 von 3 ›", independent of "Morgen planen"; after "Abschließen"
     /// with a checkmark. Opens the sheet; nothing is written by looking at it.
     private var wrapUpLine: some View {
         let routines = environment.routines
@@ -316,7 +327,7 @@ struct CapacityCard: View {
     /// nothing is sent.
     private func eveningLine(_ entry: PlanningModel.EveningEntry) -> some View {
         Button {
-            model.anchor = entry.day
+            model.jump(to: entry.day)
         } label: {
             HStack(spacing: 10) {
                 Image(systemName: "moon.stars").foregroundStyle(Color.accentColor)
@@ -508,12 +519,14 @@ private struct TimelineLine: View {
     let title: String
     let detail: String
     let color: Color
+    /// The entry runs now: the colour bar is wider (PL3c).
+    var isRunning = false
 
     var body: some View {
         HStack(alignment: .top, spacing: 10) {
             Text(time.formatted(date: .omitted, time: .shortened))
                 .font(.caption.monospacedDigit()).foregroundStyle(.secondary).frame(width: 48, alignment: .leading)
-            RoundedRectangle(cornerRadius: 2).fill(color).frame(width: 4)
+            RoundedRectangle(cornerRadius: 2).fill(color).frame(width: isRunning ? 6 : 4)
             VStack(alignment: .leading, spacing: 2) {
                 Text(title)
                 Text(detail).font(.caption).foregroundStyle(.secondary)

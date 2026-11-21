@@ -24,6 +24,9 @@ final class AppEnvironment {
     /// "Mit ChatGPT sortieren"; sends item names only after consent and on the user's tap.
     let shoppingSorter: ShoppingSorter
     let recipeImporter: RecipeImporter
+    let recipeTranslator: RecipeTranslator
+    /// "Artikel übersetzen"; one checked request with item names only, after the same consent as sorting and on the user's tap.
+    let shoppingTranslator: ShoppingTranslator
     /// Items the share extension left for the app (#165); read when the app becomes active, confirmed by the user.
     let shareInbox: ShareInboxModel
     /// "Mit ChatGPT zusammenfassen" on a shared mail (#166); sends only after consent and on the user's tap.
@@ -140,6 +143,7 @@ final class AppEnvironment {
         let context = modelContainer.mainContext
         let settings = try AppSettings.current(in: context)
         settings.migrateWorkoutGoalIfNeeded()
+        settings.migrateVoiceAnswerLanguageIfNeeded()
         let gateway = EventKitGateway()
         let reminderStore: any ReminderStore = reminderStore ?? gateway
         let reminders = RemindersTaskProvider(store: reminderStore, estimates: SwiftDataEstimateStore(context: context),
@@ -214,7 +218,17 @@ final class AppEnvironment {
                              search: SearchToolSources(
                                  events: Self.searchEventSource(searcher: searcher, store: reminderStore, planning: planning, settings: settings),
                                  calendarNames: Self.searchCalendarNames(planning: planning),
-                                 completedTasks: Self.searchCompletedSource(reminders: reminders, taskList: taskList)))
+                                 completedTasks: Self.searchCompletedSource(reminders: reminders, taskList: taskList),
+                                 // The only source of notes for the assistant: `NoteToolAccess` leaves private notes out.
+                                 notes: { [noteStore] in
+                                     let access = NoteToolAccess(store: noteStore)
+                                     let folderNames = Self.folderNames(noteStore)
+                                     return access.visibleNotes().map { Self.searchItem(for: $0, folderNames: folderNames) }
+                                 },
+                                 shopping: Self.searchShoppingSource(shopping: shopping),
+                                 searchOnline: Self.searchOnlineSource(taskList: taskList),
+                                 notesAllowed: { settings.noteAssistantConsent }),
+                             noteAccess: NoteToolAccess(store: noteStore))
         self.assistant = AssistantModel(responder: ai.client, tools: tools, model: { try await ai.selectedModel() },
                                         store: ChatStore(context: context), planning: planning)
         self.voiceOutput = VoiceOutputModel(speaker: SystemSpeaker(), audio: SystemVoiceAudioSession.shared, preferences: {
@@ -222,9 +236,12 @@ final class AppEnvironment {
                                          rate: settings.voiceRate)
         })
         let voiceOutput = self.voiceOutput
+        // Withdrawing the consent ends the note session, from the settings screen as well as from a backup restore.
+        assistant.watchNoteConsent { settings.noteAssistantConsent }
         assistant.readPolicy = { ReadAloudPolicy(rawValue: settings.voiceReadAloud) ?? .never }
         assistant.announcesActions = { settings.voiceAnnounceActions }
-        assistant.fixedVoiceLanguage = { VoiceChatLanguage.fixed(setting: settings.voiceRecognitionLanguage) }
+        assistant.fixedVoiceLanguage = { settings.contentLanguages.fixedAnswerLanguage }
+        assistant.shoppingLanguage = { settings.contentLanguages.shoppingLanguage() }
         assistant.readAutomatically = { id, text, fallback in voiceOutput.speak(id: id, text: text, explicit: false, fallback: fallback) }
         let demoVoice = ProcessInfo.processInfo.arguments.contains("-TagwerkDemoVoice")
         let makeRecognizer: @MainActor () -> SpeechRecognizing = {
@@ -235,7 +252,7 @@ final class AppEnvironment {
             assistant: assistant, makeRecognizer: makeRecognizer, output: voiceOutput, tone: SystemTonePlayer(),
             audio: SystemVoiceAudioSession.shared,
             settings: {
-                VoiceModeController.Settings(language: VoiceAvailability.recognitionLanguage(setting: settings.voiceRecognitionLanguage),
+                VoiceModeController.Settings(language: settings.contentLanguages.dictationLanguage(at: .chat),
                                              sendDelay: settings.voiceModeSendDelay, silenceLimit: settings.voiceModeSilenceLimit)
             })
         let gitHubProvider = self.gitHub
@@ -275,9 +292,13 @@ final class AppEnvironment {
         self.mealEstimator = MealEstimator(responder: ai.client, model: { try await ai.selectedModel() },
                                            hasConsent: { settings.mealEstimationConsent })
         self.shoppingSorter = ShoppingSorter(responder: ai.client, model: { try await ai.selectedModel() },
-                                             hasConsent: { settings.shoppingSortConsent })
+                                             hasConsent: { settings.hasShoppingSortConsent })
+        self.shoppingTranslator = ShoppingTranslator(responder: ai.client, model: { try await ai.selectedModel() },
+                                                     hasConsent: { settings.hasShoppingSortConsent })
         self.recipeImporter = RecipeImporter(responder: ai.client, model: { try await ai.selectedModel() },
                                              hasConsent: { settings.shoppingRecipeConsent })
+        self.recipeTranslator = RecipeTranslator(responder: ai.client, model: { try await ai.selectedModel() },
+                                                 hasConsent: { settings.shoppingRecipeConsent })
         self.shareInbox = ShareInboxModel(inbox: shareInbox, isSetupCompleted: { settings.setupCompleted })
         self.mailSummarizer = MailSummarizer(responder: ai.client, model: { try await ai.selectedModel() },
                                              hasConsent: { settings.mailSummaryConsent })
@@ -291,15 +312,30 @@ final class AppEnvironment {
                                                              all: reminderStore.lists().map(\.id), shopping: settings.shoppingListID)
                 return await reminderStore.completionDates(in: interval, listIDs: listIDs).count
                     + localTasks.completionDates(in: interval).count
+            },
+            // GitHub issues closed that day; `nil` while GitHub is not connected (asked at every use).
+            closedIssueCount: { [taskList] in
+                guard let gitHub = taskList.provider(for: .github) as? GitHubTaskProvider else { return nil }
+                return { interval in try await gitHub.closedIssueCount(in: interval) }
             })
         self.routineNotifications = RoutineNotificationScheduler(center: notificationCenter ?? SystemNotificationCenter(),
                                                                  store: routineStore, settings: settings)
         let routines = self.routines
+        let routineNotifications = self.routineNotifications
+        // A checked point must not remind on that evening any more; unchecking plans the reminder again while it is ahead.
+        routines.onChecklistToggled = { id, day, isChecked in
+            if isChecked {
+                await routineNotifications.itemChecked(id, on: day)
+            } else {
+                await routineNotifications.reschedule()
+            }
+        }
         let focusStore = FocusStore(context: context)
         self.focusStore = focusStore
         let focus = FocusTimerModel(store: focusStore, settings: { settings.focusTimerSettings }, activity: FocusActivityController(),
                                     notifications: FocusNotificationScheduler(center: focusNotificationCenter),
-                                    controlState: controlState, controlReloader: controlReloader)
+                                    controlState: controlState, controlReloader: controlReloader,
+                                    asksDurationAtStart: { settings.focusAsksDurationAtStart })
         self.focus = focus
         focus.postponeTask = { key in
             guard let id = TaskID(key: key) else { return }
@@ -369,7 +405,8 @@ final class AppEnvironment {
                 NoteSuggestionContext.make(taskList: taskList, planning: planning,
                                            events: { gateway.events(in: $0, calendarIDs: planning.readableCalendarIDs()) },
                                            planCalendarID: settings.planCalendarID, now: .now)
-            })
+            },
+            gitHubDirectory: { [assistant] in assistant.gitHubDirectory() })
     }
 
     /// The background refresh: GitHub is registered without the catalog, every source loads once, then the
@@ -380,7 +417,11 @@ final class AppEnvironment {
                 await self?.registerGitHubIfSignedIn() ?? false  // a registration loads all sources
             },
             reload: { [weak self] in await self?.taskList.reload() },
-            reschedule: { [weak self] in await self?.notifications.reschedule() },
+            reschedule: { [weak self] in
+                await self?.notifications.reschedule()
+                // The dated evening reminders run out after three days: fill them up as well.
+                await self?.routineNotifications.reschedule()
+            },
             writeSnapshot: { [weak self] in self?.writeSnapshot() },
             nextRefill: { [weak self] in self?.notifications.nextRefill })
     }
@@ -490,6 +531,23 @@ final class AppEnvironment {
         requestedTab = 1
     }
 
+    /// Opens a notes list in the tab "Aufgaben", on top of the folder overview. Replaces whatever was pushed there.
+    /// A locked folder asks for Face ID in its list like at every other opening.
+    func showNotes(_ scope: NotesScope) {
+        tasksPath = [.notes, .notesFolder(scope)]
+        requestedTab = 1
+    }
+
+    /// The list "Im Ordner zeigen" opens for a note: its folder; "Notizen" for a note without a folder or whose folder is
+    /// gone (where `NoteStore` lists it, but only own notes, not thought notes); "Zuletzt gelöscht" for a note in the trash.
+    /// "Alle Notizen" is the fallback for a note that does not exist or would not appear in "Notizen".
+    func notesScope(ofNote noteID: UUID) -> NotesScope {
+        guard let note = notes.note(id: noteID) else { return .all }
+        if note.deletedAt != nil { return .trash }
+        if let folderID = note.folderID, notes.folder(id: folderID) != nil { return .folder(folderID) }
+        return note.kind == .free ? .standard : .all
+    }
+
     /// The only place that changes the shopping list. Everything that shows reminders as tasks follows at once:
     /// the task list, the plan, the notifications and the widget snapshot.
     func setShoppingList(_ id: String?) async {
@@ -514,6 +572,32 @@ final class AppEnvironment {
     func closeSearch() {
         isSearchPresented = false
         activeSearch?.close()
+    }
+
+    /// Folder names by id, the label of a note in a folder.
+    static func folderNames(_ notes: NoteStore) -> [UUID: String] {
+        Dictionary(notes.folders().map { ($0.id, $0.name) }, uniquingKeysWith: { first, _ in first })
+    }
+
+    /// Open items of a list that is set up; completed ones stay out (spec F7). Shared by the search sheet and the assistant.
+    static func searchShoppingSource(shopping: ShoppingModel) -> @MainActor () -> [ShoppingSearchItem] {
+        {
+            guard shopping.state == .ready else { return [] }
+            return shopping.openItems.map { ShoppingSearchItem(id: $0.id, name: $0.name, quantity: $0.quantity) }
+        }
+    }
+
+    /// The online issue search of the search sheet and the assistant; reads the GitHub provider when it runs, so a
+    /// sign-in after the start counts. Throws `IssueSearchError.signedOut` without one.
+    static func searchOnlineSource(taskList: TaskListModel) -> @MainActor (String) async throws -> [OnlineIssue] {
+        { [weak taskList] text in
+            guard let taskList, let gitHub = taskList.provider(for: .github) as? GitHubTaskProvider else {
+                throw IssueSearchError.signedOut
+            }
+            // Issues that are among the tasks already stay out; the search adds closed and unassigned ones.
+            let loaded = Set(taskList.items.filter { $0.id.source == .github }.map(\.id.rawValue))
+            return try await gitHub.searchOnline(text, excluding: loaded)
+        }
     }
 
     /// A note as the search sees it. The search reads the plain text only: no Markdown, no HTML, no attachment references.
@@ -572,17 +656,7 @@ final class AppEnvironment {
         let reminderStore = self.reminderStore
         let searcher = self.eventSearcher
         let reminders = self.remindersProvider
-        var searchOnline: (@MainActor (String) async throws -> [OnlineIssue])?
-        if isGitHubActive {
-            searchOnline = { [weak self] text in
-                guard let self, let gitHub = self.taskList.provider(for: .github) as? GitHubTaskProvider else {
-                    throw IssueSearchError.signedOut
-                }
-                // Issues that are among the tasks already stay out; the search adds closed and unassigned ones.
-                let loaded = Set(self.taskList.items.filter { $0.id.source == .github }.map(\.id.rawValue))
-                return try await gitHub.searchOnline(text, excluding: loaded)
-            }
-        }
+        let searchOnline = isGitHubActive ? Self.searchOnlineSource(taskList: taskList) : nil
         let notes = self.notes
         let shopping = self.shopping
         var sources = SearchSources(
@@ -592,14 +666,10 @@ final class AppEnvironment {
             completedTasks: Self.searchCompletedSource(reminders: reminders, taskList: taskList),
             notes: {
                 // A note in a folder shows the folder name as its label; the trash is not searched.
-                let folderNames = Dictionary(notes.folders().map { ($0.id, $0.name) }, uniquingKeysWith: { first, _ in first })
+                let folderNames = Self.folderNames(notes)
                 return notes.notes().map { Self.searchItem(for: $0, folderNames: folderNames) }
             },
-            shopping: {
-                // Only open items of a list that is set up; completed ones stay out (spec F7).
-                guard shopping.state == .ready else { return [] }
-                return shopping.openItems.map { ShoppingSearchItem(id: $0.id, name: $0.name, quantity: $0.quantity) }
-            },
+            shopping: Self.searchShoppingSource(shopping: shopping),
             searchOnline: searchOnline)
         if settings.shoppingListID != nil {
             // A failed write leaves the item on the list; the model reads the rows again either way.
@@ -789,6 +859,10 @@ final class AppEnvironment {
         let reminderStore = self.reminderStore
         let settings = self.settings
         let local = LocalTaskProvider(context: modelContainer.mainContext)
+        var closedIssueDates: (@MainActor (DateInterval) async throws -> [Date])?
+        if let gitHub = taskList.provider(for: .github) as? GitHubTaskProvider {
+            closedIssueDates = { interval in try await gitHub.closedIssueDates(in: interval) }
+        }
         return WeekReviewModel(store: intake, health: health, settings: settings, calendar: capture.calendar,
                                completedReminders: { [weak self] interval in
                                    await reminderStore.completionDates(in: interval, listIDs: self?.taskReminderListIDs())
@@ -800,7 +874,9 @@ final class AppEnvironment {
                                    planning.scope = .week
                                    planning.anchor = week
                                    requestedTab = 0
-                               })
+                               },
+                               // Closed GitHub issues of the week; `nil` while GitHub is not connected.
+                               closedIssueDates: closedIssueDates)
     }
 
     /// The guided weekly planning (#164): the weekly review moved to the reviewed week, plus the deadlines of the planned one.

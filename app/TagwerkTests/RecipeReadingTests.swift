@@ -73,8 +73,9 @@ struct RecipeReadingTests {
         #expect(schema["additionalProperties"] as? Bool == false)
         let items = try #require((properties["items"] as? [String: Any])?["items"] as? [String: Any])
         let entry = try #require(items["properties"] as? [String: Any])
-        #expect(Set(entry.keys) == ["name", "amount", "unit", "quantity", "category"])
-        #expect(Set(try #require(items["required"] as? [String])) == ["name", "amount", "unit", "quantity", "category"])
+        let itemKeys: Set<String> = ["name", "amount", "unit", "quantity", "category", "shopping_name", "shopping_unit"]
+        #expect(Set(entry.keys) == itemKeys)
+        #expect(Set(try #require(items["required"] as? [String])) == itemKeys)
         #expect(items["additionalProperties"] as? Bool == false)
     }
 

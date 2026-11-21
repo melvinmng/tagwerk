@@ -65,6 +65,21 @@ public enum MarkdownText {
         }
     }
 
+    /// The text with the attachment IDs in `mapping` replaced by their new IDs, for a copy of a note whose attachments were
+    /// copied too. Only references the attachment pattern matches change; an ID without an entry stays as it is.
+    public static func replacingAttachmentIDs(in markdown: String, with mapping: [UUID: UUID]) -> String {
+        guard !mapping.isEmpty else { return markdown }
+        var result = markdown
+        let matches = attachmentReference.matches(in: markdown, range: NSRange(markdown.startIndex..., in: markdown))
+        // Back to front, so the ranges of the earlier matches stay valid.
+        for match in matches.reversed() {
+            guard let idRange = Range(match.range(at: 1), in: markdown), let id = UUID(uuidString: String(markdown[idRange])),
+                  let replacement = mapping[id], let target = Range(match.range(at: 1), in: result) else { continue }
+            result.replaceSubrange(target, with: replacement.uuidString)
+        }
+        return result
+    }
+
     /// The Markdown reference to an attachment: `![name](attachment:ID)` for an image, `[name](attachment:ID)` for a file.
     /// Brackets, parentheses and backslashes in the name are escaped.
     public static func reference(for id: UUID, name: String, isImage: Bool) -> String {

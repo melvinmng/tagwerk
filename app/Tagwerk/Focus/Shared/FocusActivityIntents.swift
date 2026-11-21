@@ -9,6 +9,8 @@ enum FocusIntentAction: String, Sendable {
     /// Skips a running break, or starts the next session after a finished one.
     case keepGoing
     case postpone
+    /// Brings the activity in line with the phase that runs now ("Pause starten" after the work phase ended).
+    case showCurrent
 }
 
 /// Connects the Live Activity buttons to the app. Only the app sets the handler. Live Activity intents run in the app's
@@ -54,6 +56,16 @@ struct FocusPostponeIntent: LiveActivityIntent {
 
     func perform() async throws -> some IntentResult {
         await FocusActionBridge.handler?(.postpone)
+        return .result()
+    }
+}
+
+struct FocusShowCurrentIntent: LiveActivityIntent {
+    static let title: LocalizedStringResource = "Aktuelle Phase zeigen"
+    static let isDiscoverable = false
+
+    func perform() async throws -> some IntentResult {
+        await FocusActionBridge.handler?(.showCurrent)
         return .result()
     }
 }

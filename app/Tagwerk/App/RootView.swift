@@ -4,6 +4,7 @@ import TagwerkCore
 struct RootView: View {
     @Environment(AppEnvironment.self) private var environment
     @State private var selectedTab = 0
+    @Environment(\.scenePhase) private var scenePhase
     @State private var editingTask: TaskItem?
     @State private var openEvent: CalendarEvent?
     @State private var recurringEdit: RecurringEdit?
@@ -19,6 +20,10 @@ struct RootView: View {
 
     private var focusPresented: Binding<Bool> {
         Binding(get: { environment.focus.isPresented }, set: { environment.focus.isPresented = $0 })
+    }
+
+    private var startRequest: Binding<FocusTimerModel.StartRequest?> {
+        Binding(get: { environment.focus.pendingStart }, set: { environment.focus.pendingStart = $0 })
     }
 
     private var routinesSheet: Binding<RoutinesModel.Sheet?> {
@@ -37,6 +42,7 @@ struct RootView: View {
     private var hasOpenSheet: Bool {
         editingTask != nil || openEvent != nil || recurringEdit != nil || environment.routines.sheet != nil
             || environment.isSearchPresented || environment.assistant.isPresented || environment.focus.isPresented
+            || environment.focus.pendingStart != nil
     }
 
     struct RecurringEdit: Identifiable {
@@ -76,6 +82,10 @@ struct RootView: View {
             }
 
         }
+        // FO5b: the running focus session sits in the accessory of the tab bar, in every tab.
+        .tabViewBottomAccessory(isEnabled: environment.focus.isRunning) {
+            FocusAccessoryBar()
+        }
         .overlay(alignment: .topLeading) {
             // UI tests only: tells them that the demo data exists. Never shown outside the UI test mode.
             if UITestMode.isActive && environment.isDemoDataReady {
@@ -91,14 +101,21 @@ struct RootView: View {
         .sheet(isPresented: focusPresented) {
             FocusTimerView()
         }
+        .sheet(item: startRequest) { request in
+            FocusStartSheet(request: request, base: environment.settings.focusTimerSettings,
+                            lastMinutes: environment.settings.focusLastStartMinutes)
+        }
         .sheet(isPresented: searchPresented, onDismiss: { environment.closeSearch() }) {
             if let model = environment.activeSearch {
                 SearchSheet(model: model,
                             onShowDay: { day in environment.closeSearch(); showDay(day) },
-                            onShowTask: { id in environment.closeSearch(); showTask(id) })
+                            onShowTask: { id in environment.closeSearch(); showTask(id) },
+                            onShowNoteFolder: { scope in environment.closeSearch(); environment.showNotes(scope) })
             }
         }
         .background(KeyboardDismissalInstaller())
+        // The Return key of every single-line field reads "Fertig" (#188 TA1a); fields with their own value keep it.
+        .submitLabel(.done)
         .onChange(of: environment.assistant.isPresented) { _, presented in
             // The chat is its own sheet over the tabs; other sheets close first.
             if presented { editingTask = nil; openEvent = nil; recurringEdit = nil; environment.routines.sheet = nil; environment.closeSearch(); environment.focus.isPresented = false }
@@ -106,6 +123,11 @@ struct RootView: View {
         .onChange(of: environment.focus.isPresented) { _, presented in
             // The focus timer is a sheet over the tabs like the chat; other sheets close first.
             if presented { editingTask = nil; openEvent = nil; recurringEdit = nil; environment.routines.sheet = nil; environment.closeSearch(); environment.assistant.isPresented = false }
+        }
+        .onChange(of: planIsVisible) { _, visible in
+            // Returning to the plan after a longer absence aligns the day view to "now" again (PL4b).
+            let planning = environment.planning
+            if visible { planning.planBecameVisible(at: planning.now()) } else { planning.planBecameHidden(at: planning.now()) }
         }
         .onChange(of: environment.notificationNavigator.receivedCount) { _, _ in openNotificationTarget() }
         .onChange(of: environment.router.receivedCount) { _, _ in openRouterTarget() }
@@ -254,9 +276,12 @@ struct RootView: View {
         }
     }
 
+    /// The plan tab is selected and the app is in the foreground.
+    private var planIsVisible: Bool { selectedTab == 0 && scenePhase == .active }
+
     private func showDay(_ day: PlanDay) {
-        environment.planning.anchor = day
         environment.planning.scope = .day
+        environment.planning.jump(to: day)
         selectedTab = 0
     }
 

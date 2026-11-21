@@ -411,8 +411,8 @@ struct VoiceModeMachineTests {
     @Test func confirmAll_withGuardedCard_asksForSingleConfirmation() {
         var machine = listeningWithCards(OpenCards(ids: ["a", "g"], deletes: 0, guarded: 1))
         #expect(reply(&machine, "Alle bestätigen", at: 8) == [.prompt(.guardedNeedTap)])
-        #expect(ActionAnnouncement.prompt(.guardedNeedTap, language: .german) == "Zuweisungen an andere bitte einzeln bestätigen.")
-        #expect(ActionAnnouncement.prompt(.guardedNeedTap, language: .english) == "Please confirm assignments to others one by one.")
+        #expect(ActionAnnouncement.prompt(.guardedNeedTap, language: .german) == "Zuweisungen bitte einzeln bestätigen.")
+        #expect(ActionAnnouncement.prompt(.guardedNeedTap, language: .english) == "Please confirm assignments one by one.")
     }
 
     @Test func confirm_singleGuardedCard_confirms() {

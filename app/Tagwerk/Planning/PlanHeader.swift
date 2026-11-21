@@ -9,6 +9,17 @@ enum PlanHeaderText {
         return scope != .month || (anchor.month == today.month && anchor.year == today.year)
     }
 
+    /// The anchor one page further (`step` ±1): a day, a week or a month, as `PlanningModel.step` moves it.
+    static func shiftedAnchor(scope: PlanScope, anchor: PlanDay, step: Int, calendar: Calendar) -> PlanDay {
+        switch scope {
+        case .day: anchor.adding(days: step, calendar: calendar)
+        case .week: anchor.adding(days: 7 * step, calendar: calendar)
+        case .month:
+            calendar.date(byAdding: .month, value: step, to: anchor.startDate(in: calendar))
+                .map { PlanDay(date: $0, calendar: calendar) } ?? anchor
+        }
+    }
+
     /// Day "Mittwoch, 18. Nov.", week "16.–22. Nov.", month "November".
     static func title(scope: PlanScope, anchor: PlanDay, range: ClosedRange<PlanDay>, calendar: Calendar) -> String {
         let start = anchor.startDate(in: calendar)
@@ -44,12 +55,22 @@ enum PlanHeaderText {
         return candidates.filter { seen.insert($0).inserted }
     }
 
+    /// The longest candidate that is not wider than `availableWidth`; the shortest when none fits. The candidates run
+    /// from the longest to the shortest form (`titleCandidates`).
+    static func fittingTitle(_ candidates: [String], availableWidth: CGFloat, width: (String) -> CGFloat) -> String {
+        candidates.first { width($0) <= availableWidth } ?? candidates.last ?? ""
+    }
+
     /// The title the header shows. `ViewThatFits` in a toolbar item gets no usable width (it always took the
-    /// shortest candidate, seen on the iPhone 17 simulator), so the form is fixed: the day view takes the middle
-    /// candidate, the others the full one, and with accessibility text sizes everything takes the shortest.
+    /// shortest candidate, seen on the iPhone 17 simulator), so the width is computed: with `availableWidth` the longest
+    /// form that fits is shown (PL16b), measured in the font of the title, so the same rule holds at every text size.
+    /// Without it (`nil`, the fallback PL16a) the form is fixed: the day view takes the middle candidate, the others the
+    /// full one, and with accessibility text sizes everything takes the shortest.
     static func displayedTitle(scope: PlanScope, anchor: PlanDay, range: ClosedRange<PlanDay>, calendar: Calendar,
-                               largeText: Bool) -> String {
+                               largeText: Bool, availableWidth: CGFloat? = nil,
+                               width: (String) -> CGFloat = { PlanHeaderMetrics.titleWidth($0) }) -> String {
         let candidates = titleCandidates(scope: scope, anchor: anchor, range: range, calendar: calendar)
+        if let availableWidth { return fittingTitle(candidates, availableWidth: availableWidth, width: width) }
         if largeText { return candidates[candidates.count - 1] }
         return scope == .day && candidates.count > 1 ? candidates[1] : candidates[0]
     }
@@ -103,20 +124,30 @@ enum PlanHeaderText {
 /// Leading item of the navigation bar (PK2): caption above the date title, ▾ opens the month picker.
 struct PlanTitleButton: View {
     @Bindable var model: PlanningModel
+    /// Width of the window, 0 before it is known; the title takes the longest form that fits next to the buttons (PL16b).
+    var windowWidth: CGFloat = 0
     @State private var picking = false
     @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
-        let current = PlanHeaderText.isCurrent(scope: model.scope, anchor: model.anchor, today: model.today, range: model.range)
-        let caption = PlanHeaderText.caption(scope: model.scope, anchor: model.anchor, today: model.today,
-                                             range: model.range, calendar: model.calendar)
-        let title = PlanHeaderText.title(scope: model.scope, anchor: model.anchor, range: model.range, calendar: model.calendar)
-        let shown = PlanHeaderText.displayedTitle(scope: model.scope, anchor: model.anchor, range: model.range,
-                                                  calendar: model.calendar, largeText: typeSize.isAccessibilitySize)
+        // While a neighbour page prevails during a drag, the header already shows its period (PL6b).
+        let anchor = model.titleAnchor, range = model.titleRange
+        let current = PlanHeaderText.isCurrent(scope: model.scope, anchor: anchor, today: model.today, range: range)
+        let caption = PlanHeaderText.caption(scope: model.scope, anchor: anchor, today: model.today,
+                                             range: range, calendar: model.calendar)
+        let title = PlanHeaderText.title(scope: model.scope, anchor: anchor, range: range, calendar: model.calendar)
+        let shown = PlanHeaderText.displayedTitle(scope: model.scope, anchor: anchor, range: range,
+                                                  calendar: model.calendar, largeText: typeSize.isAccessibilitySize,
+                                                  availableWidth: windowWidth > 0
+                                                      ? PlanHeaderMetrics.availableTitleWidth(windowWidth: windowWidth, typeSize: typeSize) : nil,
+                                                  width: { PlanHeaderMetrics.titleWidth($0, typeSize: typeSize) })
         Button { picking = true } label: {
             // VoiceOver always reads the full title (below).
             PageTitleLabel(caption: caption, title: shown, isCurrent: current, titleScales: false).fixedSize()
+                .contentTransition(.opacity)
+                .animation(.easeInOut(duration: 0.15), value: shown)
         }
+        .sensoryFeedback(.selection, trigger: model.titlePreviewStep)
         .buttonStyle(.plain)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(title)
@@ -127,7 +158,7 @@ struct PlanTitleButton: View {
             DateJumpPopover(selected: model.anchor, today: model.today, calendar: model.calendar, todayTitle: "Heute",
                             secondaryTitle: model.scope == .month ? nil : "Monatsansicht ›",
                             onSecondary: { picking = false; model.scope = .month }) { day in
-                model.anchor = day
+                model.jump(to: day)
                 picking = false
             }
         }
@@ -145,7 +176,7 @@ struct PlanControlRow: View {
                 ForEach(PlanScope.allCases, id: \.self) { Text($0.title).tag($0) }
             }
             .pickerStyle(.segmented)
-            if !current { PageTodayButton { model.anchor = model.today } }
+            if !current { PageTodayButton { model.showToday() } }
             PageArrowCapsule(backLabel: PlanHeaderText.stepLabel(scope: model.scope, direction: -1),
                              forwardLabel: PlanHeaderText.stepLabel(scope: model.scope, direction: 1)) { model.step($0.step) }
         }
@@ -177,6 +208,55 @@ struct PlanIntakeLine: View {
             }
             .buttonStyle(.plain)
             .accessibilityHint("Öffnet Erfassen")
+        }
+    }
+}
+
+/// Measurements for the title of the plan header (PL16b).
+enum PlanHeaderMetrics {
+    /// Width that the three trailing bar buttons, the chevron of the title, the gaps and the margins take. Measured on the
+    /// simulators iPhone 17e, 18 Pro and 18 Pro Max with `PlanHeaderLayoutUITests` (the first guess, 196, let the title touch
+    /// the buttons on the iPhone 18 Pro): the buttons start 169 to 173 pt from the trailing edge, the title starts 16 to 20 pt
+    /// from the leading edge, its chevron takes about 20 pt, and 8 pt stay free between them.
+    static let trailingReserve: CGFloat = 220
+    /// The same above the default text size: the buttons and the chevron grow (up to 185 pt and 26 pt).
+    static let trailingReserveLargeText: CGFloat = 240
+
+    /// Width the title text may take in a window of `windowWidth`. `nil` switches the measurement off: the title then
+    /// keeps its fixed form (fallback PL16a).
+    static func availableTitleWidth(windowWidth: CGFloat, typeSize: DynamicTypeSize = .large) -> CGFloat? {
+        max(0, windowWidth - (typeSize > .large ? trailingReserveLargeText : trailingReserve))
+    }
+
+    /// Width of a title in the header font (bold title3), measured with UIKit. `typeSize` is the text size the view
+    /// renders with (an app-wide override does not reach UIKit); `nil` uses the size of the system.
+    static func titleWidth(_ text: String, typeSize: DynamicTypeSize? = nil) -> CGFloat {
+        // The navigation bar stops growing its text early: the title is exactly as wide at XXXL and at accessibility sizes
+        // (214 pt for "Samstag, 21. Nov.", measured with `PlanHeaderLayoutUITests`, about the size of XXL), so the
+        // measurement stops there as well. A larger measurement would only choose a shorter form than needed.
+        let traits = typeSize.map { UITraitCollection(preferredContentSizeCategory: min($0, .xxLarge).contentSizeCategory) }
+        let base = UIFont.preferredFont(forTextStyle: .title3, compatibleWith: traits)
+        let font = base.fontDescriptor.withSymbolicTraits(.traitBold).map { UIFont(descriptor: $0, size: base.pointSize) } ?? base
+        return ceil((text as NSString).size(withAttributes: [.font: font]).width)
+    }
+}
+
+private extension DynamicTypeSize {
+    var contentSizeCategory: UIContentSizeCategory {
+        switch self {
+        case .xSmall: .extraSmall
+        case .small: .small
+        case .medium: .medium
+        case .large: .large
+        case .xLarge: .extraLarge
+        case .xxLarge: .extraExtraLarge
+        case .xxxLarge: .extraExtraExtraLarge
+        case .accessibility1: .accessibilityMedium
+        case .accessibility2: .accessibilityLarge
+        case .accessibility3: .accessibilityExtraLarge
+        case .accessibility4: .accessibilityExtraExtraLarge
+        case .accessibility5: .accessibilityExtraExtraExtraLarge
+        @unknown default: .large
         }
     }
 }

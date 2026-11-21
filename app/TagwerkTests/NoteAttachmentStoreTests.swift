@@ -176,4 +176,82 @@ struct NoteAttachmentStoreTests {
     @Test func schema_containsNoteAttachmentRecord() {
         #expect(ModelContainerFactory.schema.entities.contains { $0.name == "NoteAttachmentRecord" })
     }
+
+    // MARK: Duplicating
+
+    @Test func duplicateAttachments_newRecordsNewFiles() throws {
+        let source = try #require(notes.create(text: "Original"))
+        let target = try #require(notes.create(text: "Kopie"))
+        let file = try attachments.addFile(at: makeFile(named: "Rechnung.pdf", bytes: 64), to: source.id)
+        let image = try attachments.addImage(makeImage(width: 40, height: 30), to: source.id)
+        clock.now = clock.now.addingTimeInterval(3_600)
+        let mapping = attachments.duplicate(ids: [file.id, image.id], to: target.id)
+        #expect(Set(mapping.keys) == [file.id, image.id])
+        #expect(Set(mapping.values).isDisjoint(with: [file.id, image.id]))
+        let copiedFileID = try #require(mapping[file.id])
+        let copiedFile = try #require(attachments.record(id: copiedFileID))
+        #expect(copiedFile.noteID == target.id && copiedFile.fileName == "Rechnung.pdf" && copiedFile.typeIdentifier == "com.adobe.pdf")
+        #expect(copiedFile.byteCount == 64 && copiedFile.createdAt == file.createdAt)
+        #expect(attachments.data(for: copiedFile.id) == attachments.data(for: file.id))
+        let copiedImageID = try #require(mapping[image.id])
+        let copiedImage = try #require(attachments.record(id: copiedImageID))
+        #expect(copiedImage.fileName == "Foto.jpg" && copiedImage.noteID == target.id)
+        #expect(attachments.attachments(of: target.id).count == 2 && filesOnDisk().count == 4)
+    }
+
+    @Test func duplicateAttachments_missingFileIsSkipped() throws {
+        let source = try #require(notes.create(text: "Original"))
+        let target = try #require(notes.create(text: "Kopie"))
+        let kept = try attachments.addFile(at: makeFile(named: "a.pdf", bytes: 8), to: source.id)
+        let lost = try attachments.addFile(at: makeFile(named: "b.pdf", bytes: 8), to: source.id)
+        let lostURL = try #require(attachments.url(for: lost.id))
+        try FileManager.default.removeItem(at: lostURL)
+        let mapping = attachments.duplicate(ids: [kept.id, lost.id, UUID()], to: target.id)
+        #expect(Set(mapping.keys) == [kept.id])
+        #expect(attachments.attachments(of: target.id).count == 1)
+    }
+
+    @Test func duplicate_createsNoteInSameFolderWithRewrittenReferences() throws {
+        let folder = try notes.createFolder(name: "Rezepte")
+        let original = try #require(notes.create(text: "Curry", folderID: folder.id))
+        let image = try attachments.addImage(makeImage(width: 40, height: 30), to: original.id)
+        let file = try attachments.addFile(at: makeFile(named: "Quelle.pdf", bytes: 16), to: original.id)
+        let text = "# Curry\n\n" + MarkdownText.reference(for: image.id, name: "Foto", isImage: true)
+            + "\n" + MarkdownText.reference(for: file.id, name: "Quelle.pdf", isImage: false) + "\n"
+        notes.updateText(original.id, text: text)
+        original.isPinned = true
+        let copy = try #require(notes.duplicate(original.id, text: "# Rotes Curry\n\n" + text.components(separatedBy: "\n\n")[1]))
+        #expect(copy.id != original.id && copy.folderID == folder.id && copy.kind == .free && !copy.isPinned)
+        let ids = MarkdownText.attachmentIDs(in: copy.text)
+        #expect(ids.count == 2 && ids.isDisjoint(with: [image.id, file.id]))
+        #expect(Set(attachments.attachments(of: copy.id).map(\.id)) == ids)
+        #expect(copy.text.hasPrefix("# Rotes Curry"))
+        // The original is untouched.
+        #expect(original.text == text)
+    }
+
+    @Test func duplicate_copySurvivesDeletingTheOriginal() throws {
+        let original = try #require(notes.create(text: "Curry"))
+        let image = try attachments.addImage(makeImage(width: 40, height: 30), to: original.id)
+        notes.updateText(original.id, text: "# Curry\n" + MarkdownText.reference(for: image.id, name: "Foto", isImage: true))
+        let copy = try #require(notes.duplicate(original.id, text: original.text))
+        notes.trash(original.id)
+        notes.emptyTrash()
+        #expect(attachments.url(for: image.id) == nil)
+        let copiedID = try #require(MarkdownText.attachmentReferences(in: copy.text).first)
+        #expect(attachments.url(for: copiedID) != nil)
+        // Closing the copy's editor must not remove its pictures either.
+        attachments.removeUnreferenced(noteID: copy.id, text: copy.text)
+        #expect(attachments.url(for: copiedID) != nil)
+    }
+
+    @Test func duplicate_originalKeepsItsAttachments() throws {
+        let original = try #require(notes.create(text: "Curry"))
+        let image = try attachments.addImage(makeImage(width: 40, height: 30), to: original.id)
+        notes.updateText(original.id, text: "# Curry\n" + MarkdownText.reference(for: image.id, name: "Foto", isImage: true))
+        _ = try #require(notes.duplicate(original.id, text: original.text))
+        #expect(attachments.url(for: image.id) != nil)
+        #expect(attachments.attachments(of: original.id).map(\.id) == [image.id])
+        #expect(MarkdownText.attachmentIDs(in: original.text) == [image.id])
+    }
 }
