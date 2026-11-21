@@ -1,5 +1,8 @@
 # „Anpassen“ für alle KI-Vorschläge – Implementation Plan (Entwurf)
 
+
+> **Entscheidungen des Nutzers (21.11.2026, Kommentar in #255):** AN1a, AN2a, AN3a, AN4a, AN5a, AN6a, AN7b, AN8a, AN9a, AN10a, AN11a, AN12a, AN13a, AN14a – alle Empfehlungen. Offene Fragen des Plans nach Empfehlung.
+
 > **For agentic workers:** Dieser Plan ist ein **Entwurf vor den Entscheidungen des Nutzers**. Kein Task wird begonnen, bevor die Entscheidungen im Abschnitt „Entscheidungen des Nutzers“ getroffen und hier eingetragen sind. Jeder Task nennt unter „Hängt ab von“ die Kürzel, gegen deren Empfehlung er geschrieben ist; fällt eine Entscheidung anders aus, wird der Task vor der Umsetzung überarbeitet. Danach gilt: Task für Task, jeweils mit TDD, Schritte als Checkbox (`- [ ]`).
 
 > **Status:** Stand 21.11.2026, Code-Grundlage `origin/main` bei `8326a3c` (enthält PR #240–#252). Mockups: `docs/superpowers/mockups/2026-11-21-ki-vorschlaege-anpassen-mockups.html` (14 Entscheidungen, Kürzel AN). Nichts davon ist gebaut, nichts am Gerät geprüft. Es gibt noch kein Issue zu diesem Vorhaben.
