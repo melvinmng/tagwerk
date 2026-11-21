@@ -60,7 +60,7 @@ final class MailTaskModelTests {
         #expect(modelCalls == 0)
         // The sheet shows the subject as the title and the link back to the mail.
         #expect(model.title == "Angebot")
-        #expect(model.notes.contains("message://%3Cabc123@mail.example.com%3E"))
+        #expect(model.prefill.notes.contains("message://%3Cabc123@mail.example.com%3E"))
     }
 
     @Test func withConsent_callsOnce() async throws {
@@ -72,7 +72,8 @@ final class MailTaskModelTests {
         #expect(responder.calls.count == 1)
         #expect(model.title == "Angebot bis Freitag senden")
         #expect(model.due == DueDate(year: 2026, month: 11, day: 27))
-        #expect(model.notes.hasPrefix("Erika bittet um das Angebot."))
+        #expect(model.notes == "Erika bittet um das Angebot.")
+        #expect(model.prefill.notes.hasPrefix("Erika bittet um das Angebot."))
         #expect(model.suggestedFields == [.title, .notes, .due])
         #expect(try #require(responder.calls.first).schema == "mail_task")
     }
@@ -146,12 +147,77 @@ final class MailTaskModelTests {
         #expect(model.phase == .failed(MailSummarizer.Failure.network.message))
     }
 
-    @Test func notesContainMailLinkWhenMessageIDPresent() {
+    @Test func prefill_keepsSenderAndLinkInTheNotes() {
         let model = makeModel()
-        #expect(model.notes == "Von: Erika Muster\nmessage://%3Cabc123@mail.example.com%3E")
+        #expect(model.prefill.notes == "Von: Erika Muster\nmessage://%3Cabc123@mail.example.com%3E")
         var withoutID = mail
         withoutID.messageID = nil
-        #expect(makeModel(mail: withoutID).notes == "Von: Erika Muster")
+        #expect(makeModel(mail: withoutID).prefill.notes == "Von: Erika Muster")
+    }
+
+    @Test func notes_withoutSummary_isEmpty() {
+        let model = makeModel()
+        #expect(model.notes.isEmpty)
+        #expect(!model.suggestedFields.contains(.notes))
+    }
+
+    @Test func editNotes_thenSummary_keepsTheUsersText() async {
+        responder.enqueue(Self.answer)
+        let model = makeModel()
+        model.editNotes("Meine Notiz")
+        model.summarize()
+        await settle(model)
+        #expect(model.notes == "Meine Notiz")
+        #expect(!model.suggestedFields.contains(.notes))
+        #expect(model.title == "Angebot bis Freitag senden")
+    }
+
+    @Test func prefill_afterEditingNotes_stillAppendsSenderAndLink() {
+        let model = makeModel()
+        model.editNotes("Eigener Text")
+        #expect(model.prefill.notes == "Eigener Text\n\nVon: Erika Muster\nmessage://%3Cabc123@mail.example.com%3E")
+        // Emptying the field leaves sender and link, without a leading gap.
+        model.editNotes("")
+        #expect(model.prefill.notes == "Von: Erika Muster\nmessage://%3Cabc123@mail.example.com%3E")
+    }
+
+    @Test func senderNote_neverContainsTheAddress() {
+        let model = makeModel()
+        #expect(model.senderNote == "Von: Erika Muster")
+        #expect(model.hasMailLink)
+        // Without a name the row stays empty instead of falling back to the address, which would reach the notes.
+        var anonymous = mail
+        anonymous.senderName = nil
+        let unnamed = makeModel(mail: anonymous)
+        #expect(unnamed.senderNote == nil)
+        #expect(!unnamed.prefill.notes.contains("erika@example.com"))
+        #expect(!(model.senderNote ?? "").contains("@"))
+    }
+
+    @Test func plainText_hasNoSenderNoteAndNoLink() {
+        let model = makeModel(text: "Rechnung 4711 offen\nBitte bis Montag zahlen.")
+        #expect(model.senderNote == nil)
+        #expect(!model.hasMailLink)
+    }
+
+    @Test func bodyPreview_cutsAtWordBoundary() {
+        var long = mail
+        long.bodyText = (1...60).map { "Wort\($0)" }.joined(separator: " ")
+        let model = makeModel(mail: long)
+        let preview = model.bodyPreview
+        #expect(preview.count <= MailTaskModel.previewLength)
+        #expect(long.bodyText.hasPrefix(preview))
+        // The cut falls on a space: the next character of the mail is white space.
+        let next = long.bodyText[long.bodyText.index(long.bodyText.startIndex, offsetBy: preview.count)]
+        #expect(next == " ")
+        #expect(model.bodyIsTruncated)
+        // A short mail is shown whole.
+        let short = makeModel()
+        #expect(short.bodyPreview == mail.bodyText)
+        #expect(!short.bodyIsTruncated)
+        // A text without any space is cut hard instead of being dropped.
+        long.bodyText = String(repeating: "x", count: 400)
+        #expect(makeModel(mail: long).bodyPreview.count == MailTaskModel.previewLength)
     }
 
     @Test func sentInput_excludesAddressesAndMessageID() async throws {

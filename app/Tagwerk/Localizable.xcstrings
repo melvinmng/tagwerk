@@ -10999,6 +10999,16 @@
         }
       }
     },
+    "Link zur Mail": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Link to the mail"
+          }
+        }
+      }
+    },
     "Liste": {
       "localizations": {
         "en": {
@@ -18613,6 +18623,16 @@
         }
       }
     },
+    "mehr": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "more"
+          }
+        }
+      }
+    },
     "min": {
       "localizations": {
         "en": {
@@ -19559,16 +19579,6 @@
         }
       }
     },
-    "Übernimmt den Vorschlag": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Accepts the suggestion"
-          }
-        }
-      }
-    },
     "Übernommen": {
       "localizations": {
         "en": {
@@ -19994,6 +20004,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "✦ Sort"
+          }
+        }
+      }
+    },
+    "✦ Vorschlag von ChatGPT. Ändern oder so lassen; gesichert wird erst im nächsten Schritt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "✦ Suggested by ChatGPT. Change it or leave it; nothing is saved until the next step."
           }
         }
       }

@@ -1883,7 +1883,6 @@
   "Richte zuerst unter Einstellungen › Einkaufsliste eine Liste ein.": "First set up a list under Settings › Shopping list.",
   "Von: %@": "From: %@",
   "Wird hinzugefügt": "Will be added",
-  "Übernimmt den Vorschlag": "Accepts the suggestion",
   "Es gab nichts zum Sichern.": "There was nothing to save.",
   "In Tagwerk sichern": "Save to Tagwerk",
   "Mail": "Mail",
@@ -2018,5 +2017,8 @@
   "Für die Einkaufsliste gesichert": "Saved for the shopping list",
   "Als Rezept gesichert": "Saved as a recipe",
   "Mail gesichert": "Mail saved",
-  "Tagwerk zeigt es dir beim nächsten Öffnen.": "Tagwerk shows it to you the next time you open it."
+  "Tagwerk zeigt es dir beim nächsten Öffnen.": "Tagwerk shows it to you the next time you open it.",
+  "mehr": "more",
+  "Link zur Mail": "Link to the mail",
+  "✦ Vorschlag von ChatGPT. Ändern oder so lassen; gesichert wird erst im nächsten Schritt.": "✦ Suggested by ChatGPT. Change it or leave it; nothing is saved until the next step."
 }
