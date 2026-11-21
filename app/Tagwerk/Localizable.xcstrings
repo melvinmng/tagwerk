@@ -11179,6 +11179,56 @@
         }
       }
     },
+    "läuft, noch %lld Minuten": {
+      "localizations": {
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "läuft, noch %lld Minute"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "läuft, noch %lld Minuten"
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "running, %lld minute left"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "running, %lld minutes left"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "läuft · noch %lld min": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "running · %lld min left"
+          }
+        }
+      }
+    },
     "Löschen": {
       "localizations": {
         "en": {

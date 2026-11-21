@@ -34,4 +34,15 @@ public enum NowMarker {
         let nowY = canvasTop + inset + Double(nowMinutes - shown.lowerBound) / 60 * hourHeight
         return max(0, nowY - viewportHeight / 3)
     }
+
+    /// Whether an entry is running: `nowMinutes` lies in its range (start inclusive, end exclusive). `nil` is another day.
+    public static func isRunning(range: Range<Int>, nowMinutes: Int?) -> Bool {
+        guard let nowMinutes else { return false }
+        return range.contains(nowMinutes)
+    }
+
+    /// Minutes left of a running entry, rounded up to at least 1.
+    public static func remainingMinutes(range: Range<Int>, nowMinutes: Int) -> Int {
+        max(1, range.upperBound - nowMinutes)
+    }
 }

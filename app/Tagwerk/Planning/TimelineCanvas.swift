@@ -190,10 +190,24 @@ struct TimelineCanvas: View {
 
     // MARK: Entries
 
-    @ViewBuilder
+    /// An entry; the content is rebuilt every full minute, so a running entry changes its state on time (PL2b).
     private func entryView(_ entry: DayEntry, range: Range<Int>) -> some View {
+        TimelineView(.everyMinute) { _ in entryContent(entry, range: range) }
+    }
+
+    /// Minutes left when the entry is running now (a break and calendar events, also time blocks; never all-day).
+    private func runningRemaining(_ entry: DayEntry) -> Int? {
+        switch entry {
+        case .lunch(_, let range): model.runningRemaining(range: range, on: plan.day)
+        case .event(let event, _): model.runningRemaining(of: event, on: plan.day)
+        }
+    }
+
+    @ViewBuilder
+    private func entryContent(_ entry: DayEntry, range: Range<Int>) -> some View {
         let style = EntryStyle(entry: entry, model: model, extras: pageExtras)
         let isSelected = selectedID == entry.id
+        let remaining = runningRemaining(entry)
         let isPicked = { if case .event(let event, _) = entry { selectingIDs?.contains(event.id) == true } else { false } }()
         ZStack {
             VStack(alignment: .leading, spacing: 1) {
@@ -201,15 +215,20 @@ struct TimelineCanvas: View {
                     if isPicked { Image(systemName: "checkmark.circle.fill").foregroundStyle(Color.accentColor) }
                     Text(style.title).font(.caption.weight(.semibold)).lineLimit(2)
                 }
-                Text(timeText(range) + style.suffix).font(.caption2).foregroundStyle(.secondary).lineLimit(1)
+                Text((remaining.map { NowText.runningDetail(remainingMinutes: $0) } ?? timeText(range)) + style.suffix)
+                    .font(.caption2).foregroundStyle(.secondary).lineLimit(1)
+                    .accessibilityLabel((remaining.map { NowText.runningAccessibility(remainingMinutes: $0) } ?? timeText(range))
+                        + style.suffix)
             }
             .padding(6)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             .background(style.color.opacity(style.isFree ? 0.08 : 0.24), in: RoundedRectangle(cornerRadius: 7))
             .overlay {
                 RoundedRectangle(cornerRadius: 7)
-                    .strokeBorder(isSelected ? style.color : (style.isFree ? Color.secondary : .clear),
-                                  style: StrokeStyle(lineWidth: isSelected ? 2 : 1, dash: style.isFree ? [4, 3] : []))
+                    // The selection keeps priority; a running entry has the same 2-pt frame in its colour (PL2b).
+                    .strokeBorder(isSelected || remaining != nil ? style.color : (style.isFree ? Color.secondary : .clear),
+                                  style: StrokeStyle(lineWidth: isSelected || remaining != nil ? 2 : 1,
+                                                     dash: style.isFree && !isSelected && remaining == nil ? [4, 3] : []))
             }
             .overlay(alignment: .leading) {
                 Rectangle().fill(style.isFree ? Color.secondary : style.color).frame(width: 3)

@@ -17,6 +17,16 @@ enum NowText {
     static func accessibilityLabel(time: String) -> String {
         String(localized: "Jetzt, \(time)")
     }
+
+    /// The time line of a running entry: "läuft · noch 28 min" (EN "running · 28 min left").
+    static func runningDetail(remainingMinutes: Int) -> String {
+        String(localized: "läuft · noch \(remainingMinutes) min")
+    }
+
+    /// What VoiceOver reads for a running entry: "läuft, noch 28 Minuten" (singular and plural by the catalog).
+    static func runningAccessibility(remainingMinutes: Int) -> String {
+        String(localized: "läuft, noch \(remainingMinutes) Minuten")
+    }
 }
 
 /// The time of the "now" marker: white on `nowMarkerFill`, bold caption2 with monospaced digits (PL1b). The fill is
@@ -162,5 +172,26 @@ extension PlanningModel {
     func nowRowIndex(in rows: [TimelineRow], on day: PlanDay) -> Int? {
         guard !rows.isEmpty, let minutes = NowMarker.minutes(now: now(), day: day, calendar: calendar) else { return nil }
         return NowMarker.insertionIndex(rowStarts: rows.map { startMinutes(of: $0, on: day) }, nowMinutes: minutes)
+    }
+}
+
+extension PlanningModel {
+    /// Minutes left when `range` (minutes since the start of `day`) is running now; nil when it is not or `day` is not
+    /// today. Same time basis as the grid: the interval since the start of the day.
+    func runningRemaining(range: Range<Int>, on day: PlanDay) -> Int? {
+        let current = now()
+        guard PlanDay(date: current, calendar: calendar) == day else { return nil }
+        let nowMinutes = Int(current.timeIntervalSince(day.startDate(in: calendar)) / 60)
+        guard NowMarker.isRunning(range: range, nowMinutes: nowMinutes) else { return nil }
+        return NowMarker.remainingMinutes(range: range, nowMinutes: nowMinutes)
+    }
+
+    /// The same for a calendar event (its real start and end, not the minimum height the grid draws).
+    func runningRemaining(of event: CalendarEvent, on day: PlanDay) -> Int? {
+        let dayStart = day.startDate(in: calendar)
+        let start = Int(event.start.timeIntervalSince(dayStart) / 60)
+        let end = Int(event.end.timeIntervalSince(dayStart) / 60)
+        guard end > start else { return nil }
+        return runningRemaining(range: start..<end, on: day)
     }
 }

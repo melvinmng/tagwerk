@@ -197,25 +197,32 @@ struct DayView: View {
         switch row {
         case .event(let event):
             let isDeadline = marks.deadlineEventIDs.contains(event.id)
+            let remaining = model.runningRemaining(of: event, on: plan.day)
             Button { sheetEntry = .event(event, nil) } label: {
-                TimelineLine(time: event.start, title: (isDeadline ? "⚑ " : "") + event.title, detail: eventDetail(event, marks: marks),
-                             color: isDeadline ? .red : (event.isBusy ? .blue : .gray))
+                TimelineLine(time: event.start, title: (isDeadline ? "⚑ " : "") + event.title,
+                             detail: eventDetail(event, marks: marks, remaining: remaining),
+                             color: isDeadline ? .red : (event.isBusy ? .blue : .gray), isRunning: remaining != nil)
             }
             .foregroundStyle(.primary)
             .contextMenu { eventMenu(event, taskID: nil) }
         case .block(let event, let taskID):
+            let remaining = model.runningRemaining(of: event, on: plan.day)
             Button { sheetEntry = .event(event, taskID) } label: {
                 TimelineLine(time: event.start,
                              title: (plan.day == model.today && model.focusTaskIDs.contains(taskID) ? "★ " : "") + event.title,
-                             detail: CapacityText.duration(Int(event.end.timeIntervalSince(event.start) / 60)) + " · "
+                             detail: (remaining.map { NowText.runningDetail(remainingMinutes: $0) }
+                                 ?? CapacityText.duration(Int(event.end.timeIntervalSince(event.start) / 60))) + " · "
                                  + (model.canEditAsBlock(event) ? String(localized: "Zeitblock") : String(localized: "verknüpft")),
-                             color: .green)
+                             color: .green, isRunning: remaining != nil)
             }
             .foregroundStyle(.primary)
         case .lunch(let start, let minutes):
+            let remaining = model.runningRemaining(range: start..<(start + minutes), on: plan.day)
             Button { sheetEntry = .lunch(day: plan.day, range: start..<(start + minutes)) } label: {
                 TimelineLine(time: plan.day.startDate(in: model.calendar).addingTimeInterval(TimeInterval(start * 60)),
-                             title: String(localized: "Mittagspause"), detail: CapacityText.duration(minutes), color: .gray)
+                             title: String(localized: "Mittagspause"),
+                             detail: remaining.map { NowText.runningDetail(remainingMinutes: $0) } ?? CapacityText.duration(minutes),
+                             color: .gray, isRunning: remaining != nil)
             }
             .foregroundStyle(.primary)
         case .travel(let segment):
@@ -238,8 +245,10 @@ struct DayView: View {
                           onConfirmUnmark: { unmarking = event })
     }
 
-    private func eventDetail(_ event: CalendarEvent, marks: DayPageExtras) -> String {
-        var parts = [String(localized: "bis \(event.end.formatted(date: .omitted, time: .shortened))")]
+    private func eventDetail(_ event: CalendarEvent, marks: DayPageExtras, remaining: Int? = nil) -> String {
+        // A running entry shows what is left instead of its end (PL3c).
+        var parts = [remaining.map { NowText.runningDetail(remainingMinutes: $0) }
+            ?? String(localized: "bis \(event.end.formatted(date: .omitted, time: .shortened))")]
         if !event.isBusy { parts.append(String(localized: "Frei")) }
         if !event.mergedCalendarIDs.isEmpty { parts.append(String(localized: "\(event.mergedCalendarIDs.count + 1) Kalender")) }
         let text = DeadlineText(calendar: model.calendar)
@@ -508,12 +517,14 @@ private struct TimelineLine: View {
     let title: String
     let detail: String
     let color: Color
+    /// The entry runs now: the colour bar is wider (PL3c).
+    var isRunning = false
 
     var body: some View {
         HStack(alignment: .top, spacing: 10) {
             Text(time.formatted(date: .omitted, time: .shortened))
                 .font(.caption.monospacedDigit()).foregroundStyle(.secondary).frame(width: 48, alignment: .leading)
-            RoundedRectangle(cornerRadius: 2).fill(color).frame(width: 4)
+            RoundedRectangle(cornerRadius: 2).fill(color).frame(width: isRunning ? 6 : 4)
             VStack(alignment: .leading, spacing: 2) {
                 Text(title)
                 Text(detail).font(.caption).foregroundStyle(.secondary)

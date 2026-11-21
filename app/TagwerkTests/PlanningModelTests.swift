@@ -2396,4 +2396,39 @@ struct PlanningModelTests {
         let second = try #require(model.days.first?.travel.first { $0.eventID == "b" })
         #expect(second.origin == .previousEvent(id: "a"))
     }
+
+    // MARK: Running entry (PL2b)
+
+    private func timedEvent(from start: Date, to end: Date) -> CalendarEvent {
+        CalendarEvent(id: "run|1", externalID: nil, calendarID: "cal", title: "Lauf", start: start, end: end,
+                      isAllDay: false, url: nil, isBusy: true, version: "1")
+    }
+
+    @Test func runningRemaining_eventAroundNow_countsTheMinutesLeft() async {
+        let model = await model()   // now is 10:00
+        #expect(model.runningRemaining(of: timedEvent(from: at(18, 9, 30), to: at(18, 10, 28)), on: today) == 28)
+        // Starting now counts as running, ending now does not.
+        #expect(model.runningRemaining(of: timedEvent(from: at(18, 10), to: at(18, 11)), on: today) == 60)
+        #expect(model.runningRemaining(of: timedEvent(from: at(18, 9), to: at(18, 10)), on: today) == nil)
+    }
+
+    @Test func runningRemaining_otherDay_isNil() async {
+        let model = await model()
+        let event = timedEvent(from: at(18, 9, 30), to: at(18, 10, 30))
+        #expect(model.runningRemaining(of: event, on: today.adding(days: 1, calendar: calendar)) == nil)
+    }
+
+    @Test func runningRemaining_eventFromTheDayBefore_runsOnToday() async {
+        let model = await model()
+        // An overnight event is still running at 10:00 of the next day.
+        let event = timedEvent(from: at(17, 22), to: at(18, 11))
+        #expect(model.runningRemaining(of: event, on: today) == 60)
+    }
+
+    @Test func runningRemaining_range_followsTheSameRule() async {
+        let model = await model()
+        #expect(model.runningRemaining(range: 600..<630, on: today) == 30)
+        #expect(model.runningRemaining(range: 660..<700, on: today) == nil)
+    }
 }
+
