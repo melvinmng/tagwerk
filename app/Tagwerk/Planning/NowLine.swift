@@ -19,7 +19,27 @@ enum NowText {
     }
 }
 
-/// The current time in the hour grid of today: a red line with a dot and the time in the label column.
+/// The time of the "now" marker: white on `nowMarkerFill`, bold caption2 with monospaced digits (PL1b). The fill is
+/// a capsule, not a text colour: the text keeps 4.5:1 in both appearances, which a red text on the background would not.
+struct NowTimeCapsule: View {
+    let time: String
+    /// The width of the capsule, the label column in the grid. Nil: as wide as the text (list row).
+    var width: CGFloat?
+    private static let horizontalPadding: CGFloat = 2
+
+    var body: some View {
+        Text(time)
+            .font(.caption2.weight(.bold).monospacedDigit()).foregroundStyle(.onNowMarker)
+            // "2:32 PM" in English is wider than "14:32"; in the fixed column it shrinks instead of being cut off.
+            .lineLimit(width == nil ? nil : 1).minimumScaleFactor(width == nil ? 1 : 0.6)
+            // The text keeps the whole inner width, like the label it replaces (the audit reports a text that has no room).
+            .frame(width: width.map { max(0, $0 - 2 * Self.horizontalPadding) })
+            .padding(.horizontal, Self.horizontalPadding).padding(.vertical, 2)
+            .background(.nowMarkerFill, in: Capsule())
+    }
+}
+
+/// The current time in the hour grid of today: the time as a capsule in the label column and a 2-pt line.
 /// Draws nothing when the shown day is not today or the time lies outside the shown hours. Moves once a minute.
 struct NowLine: View {
     let model: PlanningModel
@@ -35,16 +55,10 @@ struct NowLine: View {
                let position = NowMarker.position(nowMinutes: minutes, shown: shown) {
                 let time = NowText.time(minutes: minutes, calendar: model.calendar)
                 HStack(spacing: 6) {
-                    Text(time)
-                        .font(.caption2.weight(.semibold).monospacedDigit()).foregroundStyle(.red)
-                        .lineLimit(1).minimumScaleFactor(0.6)
-                        .frame(width: labelWidth, alignment: .leading)
+                    NowTimeCapsule(time: time, width: labelWidth)
                         // Covers the hour label when the line passes it.
                         .background(.background)
-                    ZStack(alignment: .leading) {
-                        Rectangle().fill(.red).frame(height: 1)
-                        Circle().fill(.red).frame(width: 7, height: 7).offset(x: -3)
-                    }
+                    Rectangle().fill(.nowMarkerFill).frame(height: 2)
                 }
                 .frame(width: width)
                 .offset(y: TimelineCanvas.y(position, shown) - 7)
@@ -58,7 +72,7 @@ struct NowLine: View {
     }
 }
 
-/// The "Jetzt · 14:32" row in the list mode of today; no action, no separator.
+/// The "Jetzt · 14:32" row in the list mode of today: the same capsule and a 2-pt line; no action, no separator.
 struct NowRow: View {
     let minutes: Int
     let calendar: Calendar
@@ -66,8 +80,8 @@ struct NowRow: View {
     var body: some View {
         let time = NowText.time(minutes: minutes, calendar: calendar)
         HStack(spacing: 8) {
-            Text(NowText.rowTitle(time: time)).font(.caption.weight(.semibold).monospacedDigit()).foregroundStyle(.red)
-            Rectangle().fill(.red).frame(height: 1)
+            NowTimeCapsule(time: NowText.rowTitle(time: time))
+            Rectangle().fill(.nowMarkerFill).frame(height: 2)
         }
         .frame(minHeight: 20)
         .accessibilityElement(children: .ignore)

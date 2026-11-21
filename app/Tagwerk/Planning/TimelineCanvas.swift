@@ -342,12 +342,10 @@ struct TimelineCanvas: View {
     }
 
     private func snapIndicator(minutes: Int, shown: Range<Int>, width: CGFloat) -> some View {
-        HStack(spacing: 4) {
-            Text(clock(minutes)).font(.caption2.weight(.bold).monospacedDigit()).foregroundStyle(.red)
-                // "10:00 AM" in English is wider than "10:00"; it shrinks instead of wrapping.
-                .lineLimit(1).minimumScaleFactor(0.6)
-                .frame(width: labelWidth, alignment: .leading)
-            Rectangle().fill(.red).frame(height: 1.5)
+        HStack(spacing: 6) {
+            // Same capsule as the "now" marker, so the time keeps its contrast on the dark grid as well.
+            NowTimeCapsule(time: clock(minutes), width: labelWidth)
+            Rectangle().fill(.nowMarkerFill).frame(height: 1.5)
         }
         .frame(width: width)
         .offset(y: y(minutes, shown) - 7)
