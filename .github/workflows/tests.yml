@@ -11,6 +11,7 @@ name: Tests
 #   schedule           nightly, only when main has new commits since the last successful nightly run; full UI test
 #                      set, no retries
 #   workflow_dispatch  full UI test set, no retries, for any branch
+#   push to main       build only, no tests: refreshes the build caches after every merge (see "Build cache" below)
 # A pull request that changes only documentation (docs/**, *.md, TODO.md) runs no tests: the jobs below still start
 # and finish green, so the checks stay usable as required status checks. The filter lives in the "changes" job and
 # not in on.paths, because a workflow that is never triggered would leave a required check pending forever.
@@ -18,6 +19,12 @@ name: Tests
 # (restore always, save only for runs on main, see the cache steps below) and the sources get the modification time of
 # their last commit, which lets Xcode skip everything that did not change. Pull requests restore the cache that main
 # saved and build only the difference.
+# Cache refresh on merge: every push to main (a merged pull request) runs the same two jobs in build-only mode
+# (TAGWERK_BUILD_ONLY=1 in app/test-all.sh: xcodebuild build-for-testing instead of xcodebuild test, same schemes,
+# destination and DerivedData folders) and saves the cache, so a pull request starts from a cache that is at most one
+# merge old instead of one from the last nightly run. No test runs there; the nightly run stays the full test run.
+# Pushes that change only documentation (docs/**, *.md) do not start the workflow (paths-ignore on the push trigger);
+# the sources, and therefore the cache, are unchanged by them.
 # Time zone: the jobs run in Europe/Berlin like the developer machines, because the tests expect German dates and the
 # runners use UTC.
 # Durations (first run, cold build, runner xcode-27 with 3 cores and 7 GB RAM) and the timeouts derived from them:
@@ -37,16 +44,29 @@ on:
     # Nightly, 02:17 UTC (an odd minute avoids the busy start of the hour).
     - cron: "17 2 * * *"
   workflow_dispatch:
+  push:
+    branches: [main]
+    # A push that changes only documentation leaves the build unchanged, so its cache is still current. Here the filter
+    # can live in the trigger (unlike for pull requests, see above): nothing requires a check on a push to main, and
+    # GitHub evaluates it over the whole push (all commits of a merge, a rebase or a squash), while a diff of the last
+    # commit in the "changes" job could miss earlier commits of the same push. A push that touches any other file
+    # (code, project.yml, Package.swift, scripts, this workflow) runs.
+    paths-ignore:
+      - "docs/**"
+      - "**.md"
 
 permissions:
   contents: read
 
-# A new push to the same pull request cancels the run that is still in progress. Nightly and manual runs of the same
-# kind are not cancelled while they run; they run one after another, and a newer waiting run replaces an older
-# waiting one (GitHub keeps at most one pending run per concurrency group).
+# A new push to the same pull request cancels the run that is still in progress. A new merge to main cancels the cache
+# build of the previous merge: only the newest commit matters for the cache, and its build starts from whatever the
+# cancelled build has not saved anyway (a cancelled run saves no cache). Nightly and manual runs of the same kind are
+# not cancelled while they run; they run one after another, and a newer waiting run replaces an older waiting one
+# (GitHub keeps at most one pending run per concurrency group). Push runs have their own group (the event name is part
+# of it), so a cache build never cancels or queues behind a nightly or manual run and the other way round.
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || format('{0}-{1}', github.event_name, github.ref) }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' || github.event_name == 'push' }}
 
 env:
   # The project is built and tested with exactly this toolchain (see README). The xcode-27 image ships
@@ -103,6 +123,10 @@ jobs:
                 reason="Nightly run: $REF_NAME has new commits (last successful nightly run: ${last_sha:-none})."
               fi
               ;;
+            push)
+              # Documentation-only pushes never get here (paths-ignore on the trigger). The jobs below build only.
+              reason="Push to $REF_NAME: build only, refreshes the build caches. No tests run."
+              ;;
             pull_request)
               # --no-renames lists both paths of a rename, so moving a file out of a code folder is never "docs only".
               changed_files=$(git diff --name-only --no-renames HEAD^1 HEAD)
@@ -138,18 +162,22 @@ jobs:
           echo "$reason" >> "$GITHUB_STEP_SUMMARY"
 
   tests:
-    name: Tests (${{ matrix.name }})
+    # A push to main only builds; its name says so. Pull requests, nightly and manual runs keep the name "Tests (...)".
+    name: ${{ github.event_name == 'push' && format('Build cache ({0})', matrix.name) || format('Tests ({0})', matrix.name) }}
     needs: changes
     # Xcode-based runner image: macOS 27, Xcode 27.x, Apple silicon only (3 cores, 7 GB RAM on public repositories).
     runs-on: xcode-27
     # Limits from the measured cold run, see the header. The nightly and manual runs use the full UI test set and have
-    # their own, higher limits (the fast job is not affected by the test set, so both values are equal there).
-    timeout-minutes: ${{ github.event_name == 'pull_request' && matrix.job_timeout || matrix.job_timeout_full }}
+    # their own, higher limits (the fast job is not affected by the test set, so both values are equal there). The
+    # build-only run after a merge has no test time, so its limit only has to cover a cold build.
+    timeout-minutes: ${{ github.event_name == 'push' && matrix.job_timeout_build || github.event_name == 'pull_request' && matrix.job_timeout || matrix.job_timeout_full }}
     env:
       # The simulator follows the time zone of the host. TZ sets it for the build and for xcodebuild; TEST_RUNNER_TZ
       # is passed (without the prefix) to the test runner process, which xcodebuild does not give other variables.
       TZ: Europe/Berlin
       TEST_RUNNER_TZ: Europe/Berlin
+      # Build only (build-for-testing, no tests) for pushes to main, see "Cache refresh on merge" in the header.
+      TAGWERK_BUILD_ONLY: ${{ github.event_name == 'push' && '1' || '' }}
     strategy:
       fail-fast: false
       matrix:
@@ -159,15 +187,19 @@ jobs:
             only_ui_tests: ""
             job_timeout: 55
             job_timeout_full: 55
+            job_timeout_build: 55
             step_timeout: 45
             step_timeout_full: 45
+            step_timeout_build: 45
           - name: ui
             skip_ui_tests: ""
             only_ui_tests: "1"
             job_timeout: 80
             job_timeout_full: 90
+            job_timeout_build: 55
             step_timeout: 70
             step_timeout_full: 80
+            step_timeout_build: 45
 
     # Without tests to run (documentation-only pull request, nightly run without new commits) every step except the
     # summary below is skipped and the job still ends green, so "Tests (fast)" and "Tests (ui)" always report a result.
@@ -279,12 +311,14 @@ jobs:
             derived-${{ matrix.name }}-${{ env.XCODE_BUILD_VERSION }}-${{ steps.toolchain.outputs.image_version }}-
             derived-${{ matrix.name }}-${{ env.XCODE_BUILD_VERSION }}-
 
-      - name: Run test stages (${{ matrix.name }})
+      - name: ${{ github.event_name == 'push' && format('Build stages, no tests ({0})', matrix.name) || format('Run test stages ({0})', matrix.name) }}
         id: tests
         if: needs.changes.outputs.run_tests == 'true'
         # Limits the test step below the job timeout, so the artifact upload still runs when the tests hang.
-        timeout-minutes: ${{ github.event_name == 'pull_request' && matrix.step_timeout || matrix.step_timeout_full }}
+        timeout-minutes: ${{ github.event_name == 'push' && matrix.step_timeout_build || github.event_name == 'pull_request' && matrix.step_timeout || matrix.step_timeout_full }}
         env:
+          # The matrix picks the stages for both modes: fast = packages and app scheme, ui = UI test scheme (app and UI test
+          # runner). With TAGWERK_BUILD_ONLY (job environment) the stages are built, not tested.
           TAGWERK_SKIP_UI_TESTS: ${{ matrix.skip_ui_tests }}
           TAGWERK_ONLY_UI_TESTS: ${{ matrix.only_ui_tests }}
           # Pull requests run the reduced UI test set with one retry per failed UI test (the unit stages never retry).
@@ -300,6 +334,7 @@ jobs:
         env:
           JOB_NAME: ${{ matrix.name }}
           JOB_STATUS: ${{ job.status }}
+          BUILD_ONLY: ${{ github.event_name == 'push' && '1' || '' }}
           UI_TEST_SET: ${{ github.event_name == 'pull_request' && 'pr' || 'full' }}
           UI_TEST_RETRIES: ${{ github.event_name == 'pull_request' && '1' || '' }}
           RETRIED_LIST: ${{ runner.temp }}/tagwerk-test-logs/retried-ui-tests.md
@@ -307,8 +342,13 @@ jobs:
           CACHE_MATCHED_KEY: ${{ steps.build_cache.outputs.cache-matched-key }}
         run: |
           {
-            echo "### Tests ($JOB_NAME)"
-            echo "Result: $JOB_STATUS"
+            if [[ -n "$BUILD_ONLY" ]]; then
+              echo "### Build cache ($JOB_NAME)"
+              echo "Result: $JOB_STATUS (build only, no tests were run)"
+            else
+              echo "### Tests ($JOB_NAME)"
+              echo "Result: $JOB_STATUS"
+            fi
             # Shows whether the build cache pays off: which cache was restored and how many compile steps still ran.
             # A warm cache needs few compile steps; a count close to a cold run means the cache did not take effect.
             echo
@@ -324,7 +364,7 @@ jobs:
               echo "- $(basename "$log" .log): $compile_steps compile steps"
             done
             echo
-            if [[ "$JOB_NAME" == "ui" ]]; then
+            if [[ "$JOB_NAME" == "ui" && -z "$BUILD_ONLY" ]]; then
               echo "UI test set: $UI_TEST_SET, retries: ${UI_TEST_RETRIES:-none}"
               if [[ -f "$RETRIED_LIST" ]]; then
                 echo
@@ -346,10 +386,12 @@ jobs:
           if-no-files-found: warn
           retention-days: 7
 
-      # Only runs on main (nightly and manual runs) write the cache. A cache written by a pull request is only visible
-      # to that pull request, and every push would add another multi-gigabyte entry to the 10 GB limit of the
-      # repository, so pull requests only restore the newest cache of main. The cache is also saved after failed
-      # tests: the build state is valid, and the UI job would otherwise never save while an audit fails.
+      # Only runs on main (pushes after a merge, nightly and manual runs) write the cache. A cache written by a pull
+      # request is only visible to that pull request, and every push would add another multi-gigabyte entry to the
+      # 10 GB limit of the repository, so pull requests only restore the newest cache of main. The cache is also saved
+      # after failed tests: the build state is valid, and the UI job would otherwise never save while an audit fails.
+      # A build-only run saves the cache with the same key scheme as the test runs (the key has no event or mode part), so
+      # pull requests restore it like any other cache of main; the newest one wins.
       - name: Shrink the build cache
         if: ${{ !cancelled() && needs.changes.outputs.run_tests == 'true' && github.ref == 'refs/heads/main' && github.event_name != 'pull_request' }}
         run: |
