@@ -164,6 +164,7 @@ enum AuditAllowlist {
             "Rezept mit ChatGPT anlegen", "Neues Rezept", "Demo Linsensuppe", "Andere Notiz wählen …", "Füge die Zutatenliste oder das ganze Rezept ein\\. .*",
             "(?s)(Um ein Rezept zu lesen|Gesendet wird|Nicht gesendet werden|Eine Notiz mit den Abschnitten|Die gewählte Liste erscheint|Portionen: \\d+\\nZutaten).*",
             "Du kannst das in den Einstellungen unter „Einkaufsliste“ widerrufen\\.", "Mikrofon in Gesprächen",
+            "Rezepte mit ChatGPT lesen", "Mit ChatGPT sortieren und übersetzen", "(?s)Sendet auf dein Tippen die Namen .*",
         ], screens: recipeScreens + recipeScreensLargeText, reason: "The audit warns that these texts \"may be clipped at larger Dynamic Type sizes\". "
             + "Checked on the AX5 screenshots of these screens: headings, buttons, notes and footers wrap completely, some run past the lower edge "
             + "of the scroll view (the audit counts that as clipped). The navigation title \"Rezept mit ChatGPT anlegen\" is truncated by the "

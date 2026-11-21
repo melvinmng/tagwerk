@@ -79,8 +79,12 @@ final class AppSettings {
     var shoppingSuggestionDismissed: Bool = false
     /// The built-in shopping categories were created once; deleting them later does not bring them back.
     var shoppingCategoriesSeeded: Bool = false
-    /// The one-time consent for "Mit ChatGPT sortieren"; the settings switch binds to it.
+    /// The one-time consent for "Mit ChatGPT sortieren" and "Artikel übersetzen"; the settings switch binds to it. It only counts
+    /// together with `shoppingSortConsentVersion`.
     var shoppingSortConsent: Bool = false
+    /// The version of the text the consent was given for: 0 is the text that named sorting only, so a consent given before
+    /// translating existed counts again only after the user agreed to the new text.
+    var shoppingSortConsentVersion: Int = 0
     /// The one-time consent for "Rezept hinzufügen" (reading a recipe with ChatGPT); the settings switch binds to it.
     var shoppingRecipeConsent: Bool = false
     /// The one-time consent for "Mit ChatGPT zusammenfassen" on a shared mail (#166); the settings switch binds to it.
@@ -277,6 +281,18 @@ extension AppSettings {
             shoppingLanguage = language.rawValue
         } else {
             dictationPlaceLanguagesData = ContentLanguages.encodePlaces(contentLanguages.places(switching: place, to: language))
+        }
+    }
+
+    /// The text of the consent for sorting and translating shopping items that is current now (version 1 names translating too).
+    static let currentShoppingSortConsentVersion = 1
+
+    /// Whether the user agreed to the current text of the consent; a consent given for an earlier text asks again once.
+    var hasShoppingSortConsent: Bool {
+        get { shoppingSortConsent && shoppingSortConsentVersion >= Self.currentShoppingSortConsentVersion }
+        set {
+            shoppingSortConsent = newValue
+            shoppingSortConsentVersion = newValue ? Self.currentShoppingSortConsentVersion : 0
         }
     }
 

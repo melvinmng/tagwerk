@@ -2320,6 +2320,16 @@
         }
       }
     },
+    "**Gesendet wird:** Artikelnamen. In einer geteilten Liste auch Artikel, die andere eingetragen haben.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "**What is sent:** item names. In a shared list also items that others added."
+          }
+        }
+      }
+    },
     "**Gesendet wird:** der Rezepttext oder das Foto und die Kategorienamen, oder der Text einer Notiz, die du ausdrücklich als Quelle wählst. Bei einem Link nur der gelesene Text der Seite, nicht die Adresse.": {
       "extractionState": "stale",
       "localizations": {
@@ -2481,6 +2491,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "**Only when you tap:** without “Get ingredients”, nothing leaves the iPhone. A link is loaded only then, too."
+          }
+        }
+      }
+    },
+    "**Nur auf dein Tippen:** Ohne „Übersetzen“ verlässt nichts das iPhone.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "**Only on your tap:** Without “Translate”, nothing leaves the iPhone."
           }
         }
       }
@@ -5268,6 +5288,16 @@
         }
       }
     },
+    "Das Übersetzen ist fehlgeschlagen. Versuch es noch einmal.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Translating failed. Try again."
+          }
+        }
+      }
+    },
     "Datei": {
       "localizations": {
         "en": {
@@ -5995,6 +6025,26 @@
         }
       }
     },
+    "Die Einwilligung gilt auch für „Artikel übersetzen“; dabei gehen die Namen deiner Artikel und die Zielsprache an ChatGPT, ohne Kategorien.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The consent also covers “Translate items”; that sends the names of your items and the target language to ChatGPT, without categories."
+          }
+        }
+      }
+    },
+    "Die Einwilligung gilt auch für „Mit ChatGPT sortieren“; dabei gehen zusätzlich die Namen deiner Kategorien mit.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The consent also covers “Sort with ChatGPT”; that also sends the names of your categories."
+          }
+        }
+      }
+    },
     "Die Erinnerungen-App ist nicht erreichbar.": {
       "localizations": {
         "en": {
@@ -6403,6 +6453,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "The chosen list appears as your shopping list. Its entries no longer show under “Tasks”, are not planned, do not count in the weekly review and trigger no Tagwerk notifications. Nothing changes in the Reminders app."
+          }
+        }
+      }
+    },
+    "Die Übersetzung passt nicht zur Liste. Versuch es noch einmal.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The translation does not match the list. Try again."
           }
         }
       }
@@ -7160,6 +7220,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Agree and summarize"
+          }
+        }
+      }
+    },
+    "Einverstanden und übersetzen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Agree and translate"
           }
         }
       }
@@ -10580,6 +10650,16 @@
         }
       }
     },
+    "Keine Verbindung. Das Übersetzen braucht Internet.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No connection. Translating needs internet."
+          }
+        }
+      }
+    },
     "Keine Verbindung. Die Schätzung braucht Internet.": {
       "localizations": {
         "en": {
@@ -11719,12 +11799,32 @@
         }
       }
     },
+    "Mit ChatGPT sortieren und übersetzen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sort and translate with ChatGPT"
+          }
+        }
+      }
+    },
     "Mit ChatGPT zusammenfassen": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Summarize with ChatGPT"
+          }
+        }
+      }
+    },
+    "Mit ChatGPT übersetzen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Translate with ChatGPT"
           }
         }
       }
@@ -14367,12 +14467,12 @@
         }
       }
     },
-    "Sendet auf dein Tippen die Namen der offenen Artikel und deiner Kategorien an ChatGPT. Fragst du den Assistenten nach der Einkaufsliste, gehen die Artikelnamen ebenfalls an ChatGPT.": {
+    "Sendet auf dein Tippen die Namen der offenen Artikel an ChatGPT, beim Sortieren auch die Namen deiner Kategorien. Fragst du den Assistenten nach der Einkaufsliste, gehen die Artikelnamen ebenfalls an ChatGPT.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "On your tap, sends the names of the open items and of your categories to ChatGPT. If you ask the assistant about the shopping list, the item names go to ChatGPT as well."
+            "value": "On your tap, sends the names of the open items to ChatGPT, and when sorting also the names of your categories. If you ask the assistant about the shopping list, the item names also go to ChatGPT."
           }
         }
       }
@@ -17900,6 +18000,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Say something about the suggestion …"
+          }
+        }
+      }
+    },
+    "Zum Übersetzen ist deine Einwilligung nötig.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your consent is needed to translate."
+          }
+        }
+      }
+    },
+    "Zum Übersetzen sendet Tagwerk die Namen deiner offenen Artikel und die Zielsprache an ChatGPT (OpenAI), über das Konto, mit dem du angemeldet bist.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "To translate, Tagwerk sends the names of your open items and the target language to ChatGPT (OpenAI), through the account you are signed in with."
           }
         }
       }

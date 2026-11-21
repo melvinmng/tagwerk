@@ -59,7 +59,7 @@ struct ShoppingListView: View {
             }
             .sheet(isPresented: $showsSortConsent) {
                 ShoppingSortConsentSheet {
-                    environment.settings.shoppingSortConsent = true
+                    environment.settings.hasShoppingSortConsent = true
                     showsSortConsent = false
                     sort()
                 } onDecline: {
@@ -387,7 +387,7 @@ struct ShoppingListView: View {
     /// The first tap asks for consent; nothing is sent before the user agreed.
     private func startSorting() {
         guard environment.ai.isSignedIn, sorting == nil else { return }
-        if environment.settings.shoppingSortConsent { sort() } else { showsSortConsent = true }
+        if environment.settings.hasShoppingSortConsent { sort() } else { showsSortConsent = true }
     }
 
     private func sort() {
