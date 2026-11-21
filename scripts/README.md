@@ -95,3 +95,12 @@ Last für einen Lauf unter Belastung, mit Prozessen, die nach 40 Minuten von sel
 for i in {1..8}; do perl -e 'alarm 2400; 1 while 1' & done
 scripts/stress-audits.sh 20
 ```
+
+## String-Kataloge
+
+Die elf `.xcstrings`-Kataloge sind JSON im festen Format `json.dumps(…, ensure_ascii=False, indent=2, sort_keys=True)`: Schlüssel auf jeder Ebene nach Codepunkt sortiert, leere Objekte als `{}`. Je Datei unterscheiden sich nur der Trenner nach dem Schlüssel (`": "` oder `" : "`) und das Zeilenende am Dateiende. `scripts/catalog_format.py` erkennt das und schreibt Kataloge in genau dem Stil der Datei, sodass sich nur die Zeilen der geänderten Einträge ändern.
+
+- `scripts/sync-strings.sh [--check] [--no-build]` gleicht die Kataloge mit dem Quelltext ab. `xcstringstool` schreibt nur in eine Kopie, übernommen wird der Inhalt im Stil des Katalogs; ohne inhaltliche Änderung bleibt die Datei unberührt.
+- `scripts/apply-translations.py` schreibt Übersetzungen aus `scripts/translations/en.json` ebenso im Stil der Datei.
+- `scripts/check-strings.py` (Stufe „string catalogs“ von `app/test-all.sh`) meldet einen Katalog, der nicht im Repository-Format steht, mit der ersten abweichenden Zeile. Das passiert zum Beispiel, wenn ein Eintrag von Hand an der falschen Stelle eingefügt wurde oder Xcode die Datei in der Oberfläche neu geschrieben hat; `scripts/sync-strings.sh` stellt das Format wieder her.
+- Tests: `/usr/bin/python3 -m unittest discover -s scripts/tests -p 'test_*.py' -v` und `zsh scripts/tests/sync-strings-format.zsh` (braucht `xcrun xcstringstool`, aber keinen Build und keinen Simulator).

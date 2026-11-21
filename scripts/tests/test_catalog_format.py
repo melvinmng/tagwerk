@@ -236,5 +236,37 @@ class ApplyTranslationsTests(unittest.TestCase):
         self.assertIn(" changed", added[0])
 
 
+class CheckStringsFormatTests(unittest.TestCase):
+    def load_check_strings(self):
+        spec = importlib.util.spec_from_file_location("check_strings", ROOT / "scripts" / "check-strings.py")
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        return module
+
+    def test_handwritten_key_in_the_wrong_place_is_reported_with_its_line(self):
+        module = self.load_check_strings()
+        text = COLON_CATALOG.read_text(encoding="utf-8")
+        lines = text.split("\n")
+        index = next(number for number, line in enumerate(lines) if line.startswith('  "strings"'))
+        lines.insert(index + 1, '    "zz handwritten": {},')
+        with tempfile.TemporaryDirectory() as folder:
+            catalog = Path(folder) / "Localizable.xcstrings"
+            problems = []
+            catalog.write_text(text, encoding="utf-8")
+            module.check_format(catalog, problems)
+            self.assertEqual(problems, [])
+            catalog.write_text("\n".join(lines), encoding="utf-8")
+            module.check_format(catalog, problems)
+        self.assertEqual(len(problems), 1)
+        self.assertIn(f"not in the repository format (first difference at line {index + 2})", problems[0])
+
+    def test_repository_catalogs_are_in_the_format(self):
+        module = self.load_check_strings()
+        problems = []
+        for path in all_catalogs():
+            module.check_format(path, problems)
+        self.assertEqual(problems, [])
+
+
 if __name__ == "__main__":
     unittest.main()
