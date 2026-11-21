@@ -84,4 +84,59 @@ struct ReminderListModelTests {
         #expect(!model.isUsingDefault)
         #expect(model.result == .custom([.before(amount: 1, unit: .days)]))
     }
+
+    @Test func toggle_setsAndRemoves() {
+        let model = ReminderListModel(offsets: [], defaultOffsets: defaults, isAllDay: false)
+        model.toggle(.before(amount: 15, unit: .minutes))
+        #expect(model.offsets == [.before(amount: 15, unit: .minutes)])
+        #expect(model.isSelected(.before(amount: 15, unit: .minutes)))
+        model.toggle(.before(amount: 15, unit: .minutes))
+        #expect(model.offsets.isEmpty)
+        #expect(model.result == .custom([]))
+    }
+
+    @Test func toggle_whileDefault_startsFromTheDefault() {
+        let model = ReminderListModel(offsets: nil, defaultOffsets: defaults, isAllDay: false)
+        model.toggle(.before(amount: 1, unit: .weeks))
+        #expect(!model.isUsingDefault)
+        #expect(model.offsets == [.before(amount: 1, unit: .weeks)] + defaults)
+        #expect(model.defaultOffsets == ReminderOffset.normalized(defaults, isAllDay: false))
+    }
+
+    @Test func toggle_whileDefault_onADefaultRow_removesItFromTheCopy() {
+        let model = ReminderListModel(offsets: nil, defaultOffsets: defaults, isAllDay: false)
+        model.toggle(.before(amount: 2, unit: .hours))
+        #expect(model.offsets == [.before(amount: 1, unit: .days)])
+    }
+
+    @Test func toggle_equivalentDistance_countsAsSelected() {
+        let model = ReminderListModel(offsets: [.before(amount: 60, unit: .minutes)], defaultOffsets: [], isAllDay: false)
+        #expect(model.isSelected(.before(amount: 1, unit: .hours)))
+        model.toggle(.before(amount: 1, unit: .hours))
+        #expect(model.offsets.isEmpty)
+    }
+
+    @Test func isSelected_whileDefault_followsTheDefault() {
+        let model = ReminderListModel(offsets: nil, defaultOffsets: defaults, isAllDay: false)
+        #expect(model.isSelected(.before(amount: 2, unit: .hours)))
+        #expect(!model.isSelected(.before(amount: 15, unit: .minutes)))
+        #expect(model.isUsingDefault)
+    }
+
+    @Test func choiceRows_listTheCommonDistancesAndTheSetOnes() {
+        let model = ReminderListModel(offsets: [.at(daysBefore: 1, hour: 18, minute: 0)], defaultOffsets: defaults, isAllDay: false)
+        #expect(model.choiceRows.count == 6)
+        #expect(model.choiceRows.contains(.at(daysBefore: 1, hour: 18, minute: 0)))
+    }
+
+    @Test func rowSummary_prefixesTheDefaultAndNamesTheSubject() {
+        let german = Locale(identifier: "de_DE")
+        let model = ReminderListModel(offsets: nil, defaultOffsets: [.before(amount: 0, unit: .minutes)], isAllDay: false)
+        #expect(model.rowSummary(subject: .task, locale: german) == "Standard · Zur Fälligkeit")
+        model.toggle(.before(amount: 15, unit: .minutes))
+        #expect(model.rowSummary(subject: .task, locale: german) == "15 Minuten vorher + 1 weitere")
+        model.toggle(.before(amount: 15, unit: .minutes))
+        model.toggle(.before(amount: 0, unit: .minutes))
+        #expect(model.rowSummary(subject: .task, locale: german) == "Keine")
+    }
 }

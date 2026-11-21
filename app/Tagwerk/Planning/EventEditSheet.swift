@@ -64,7 +64,7 @@ struct EventEditSheet: View {
                     TextField("Notiz", text: notes, axis: .vertical).lineLimit(2...6).keyboardDoneButton()
                 }
                 Section {
-                    ReminderListEditor(model: reminderList, subject: .event, defaultSwitchTitle: nil, calendar: model.calendar)
+                    ReminderSelectionRows(model: reminderList, subject: .event, defaultSwitchTitle: nil, calendar: model.calendar)
                 } header: {
                     Text("Erinnerungen")
                 } footer: {

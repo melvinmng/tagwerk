@@ -4132,6 +4132,16 @@
         }
       }
     },
+    "Antippen setzt oder entfernt eine Erinnerung.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tap to add or remove a reminder."
+          }
+        }
+      }
+    },
     "Antworten vorlesen": {
       "localizations": {
         "en": {
@@ -5343,6 +5353,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Brain Dump with dictation running"
+          }
+        }
+      }
+    },
+    "Braucht eine Fälligkeit": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Needs a due date"
           }
         }
       }
@@ -7570,6 +7590,16 @@
         }
       }
     },
+    "Eigene Erinnerung": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Custom reminder"
+          }
+        }
+      }
+    },
     "Eigene Erinnerungen werden in der Erinnerungen-App gespeichert. Ruhezeiten gelten dafür nicht.": {
       "localizations": {
         "en": {
@@ -7586,6 +7616,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Custom rule from Reminders"
+          }
+        }
+      }
+    },
+    "Eigene …": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Custom …"
           }
         }
       }
@@ -8144,16 +8184,6 @@
         }
       }
     },
-    "Erinnerung hinzufügen": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Add reminder"
-          }
-        }
-      }
-    },
     "Erinnerungen": {
       "localizations": {
         "en": {
@@ -8170,16 +8200,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Evening reminders"
-          }
-        }
-      }
-    },
-    "Erinnerungen brauchen ein Fälligkeitsdatum.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Reminders need a due date."
           }
         }
       }
@@ -11455,16 +11475,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "No entries"
-          }
-        }
-      }
-    },
-    "Keine Erinnerungen": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "No reminders"
           }
         }
       }
@@ -15287,16 +15297,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Close"
-          }
-        }
-      }
-    },
-    "Schnellauswahl": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Quick picks"
           }
         }
       }
@@ -19189,16 +19189,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Your consent is needed to read recipes."
-          }
-        }
-      }
-    },
-    "Zum Löschen nach links wischen": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Swipe left to delete"
           }
         }
       }

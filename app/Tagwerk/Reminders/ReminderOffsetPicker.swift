@@ -50,13 +50,8 @@ struct ReminderOffsetPicker: View {
             Section("Vorschau") {
                 Text(preview)
             }
-            Section("Schnellauswahl") {
-                ForEach(quickChoices, id: \.self) { choice in
-                    Button(ReminderText.describe(choice, subject: subject, isAllDay: isAllDay, locale: .current, calendar: calendar)) { select(choice) }
-                }
-            }
         }
-        .navigationTitle("Erinnerung hinzufügen")
+        .navigationTitle("Eigene Erinnerung")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .confirmationAction) {
@@ -82,19 +77,6 @@ struct ReminderOffsetPicker: View {
     }
 
     private var preview: String { ReminderText.describe(offset, subject: subject, isAllDay: isAllDay, locale: .current, calendar: calendar) }
-
-    private var quickChoices: [ReminderOffset] {
-        var choices: [ReminderOffset] = [.before(amount: 0, unit: isAllDay ? .days : .minutes)]
-        if !isAllDay { choices.append(.before(amount: 1, unit: .hours)) }
-        return choices + [.before(amount: 1, unit: .days), .before(amount: 1, unit: .weeks)]
-    }
-
-    private func select(_ choice: ReminderOffset) {
-        guard case .before(let newAmount, let newUnit) = choice else { return }
-        mode = .before
-        amount = newAmount
-        unit = newUnit
-    }
 
     static func name(of unit: ReminderUnit) -> LocalizedStringKey {
         switch unit {

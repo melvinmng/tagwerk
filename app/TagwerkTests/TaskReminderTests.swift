@@ -77,6 +77,31 @@ struct TaskReminderTests {
         #expect(overrides.overrides().isEmpty)
     }
 
+    @Test func openingAndClosing_writesNothing() async {
+        let (model, reminders, provider) = editor(task("Issue", source: .github))
+        // Opening the selection page reads the rows, the checkmarks and the short form; none of it changes the list.
+        _ = reminders.list.choiceRows
+        _ = reminders.list.isSelected(.before(amount: 2, unit: .hours))
+        _ = reminders.list.rowSummary(subject: .task)
+        #expect(reminders.list.isUsingDefault)
+        #expect(!reminders.hasChanges)
+        #expect(await model.save())
+        #expect(overrides.overrides().isEmpty)
+        #expect(provider.appliedEdits.isEmpty)
+    }
+
+    @Test func tapOnADefaultRow_startsAnOwnListFromTheDefault() async {
+        let item = task("Issue", source: .github)
+        let (model, reminders, _) = editor(item)
+        reminders.list.toggle(.before(amount: 1, unit: .weeks))
+        #expect(!reminders.list.isUsingDefault)
+        #expect(reminders.list.offsets == [.before(amount: 1, unit: .weeks), .before(amount: 2, unit: .hours)])
+        #expect(await model.save())
+        let stored = overrides.overrides(for: ReminderOverride.key(task: item.id))
+        #expect(stored.count == 1)
+        #expect(stored.first?.offsets == [.before(amount: 1, unit: .weeks), .before(amount: 2, unit: .hours)])
+    }
+
     @Test func useDefault_removesTheOwnList() async throws {
         let item = task("Issue", source: .github)
         try overrides.save(ReminderOverride(itemKey: ReminderOverride.key(task: item.id), scope: .always, offsets: []))

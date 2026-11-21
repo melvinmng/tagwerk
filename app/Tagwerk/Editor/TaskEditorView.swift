@@ -104,6 +104,7 @@ struct TaskEditorView: View {
                         }
                     }
                     if model.isVisible(.due) { dueFields }
+                    if model.isVisible(.due) { remindersRow }
                     if model.showsRecurrenceRow { recurrenceRow }
                     if model.removesRecurrenceWithDue {
                         Text("Ohne Fälligkeit entfällt die Wiederholung.")
@@ -119,8 +120,6 @@ struct TaskEditorView: View {
                         EstimateField(minutes: $model.draft.estimateMinutes)
                     }
                 }
-
-                remindersSection
 
                 statusSection
 
@@ -294,20 +293,22 @@ struct TaskEditorView: View {
         model.reminders = created
     }
 
-    /// The list of reminders; without a due date only a hint, because the reminders count from it. The picker opens as
-    /// a page of the navigation stack, so no sheet hangs on a row.
-    @ViewBuilder private var remindersSection: some View {
-        if let reminders, model.isVisible(.due) {
-            Section {
-                if model.draft.due == nil {
-                    Text("Erinnerungen brauchen ein Fälligkeitsdatum.").foregroundStyle(.secondary)
-                } else {
-                    ReminderListEditor(model: reminders.list, subject: .task, calendar: calendar)
+    /// One row under "Fällig" with the short form of the reminders; the list opens as a page of the navigation stack, so no
+    /// sheet hangs on a row. Without a due date the row is grey, because the reminders count from it.
+    @ViewBuilder private var remindersRow: some View {
+        if let reminders {
+            if model.draft.due == nil {
+                LabeledContent("Erinnerungen", value: String(localized: "Braucht eine Fälligkeit"))
+                    .foregroundStyle(.secondary)
+                    .accessibilityElement(children: .combine)
+            } else {
+                NavigationLink {
+                    ReminderSelectionPage(model: reminders.list, subject: .task, calendar: calendar,
+                                          footer: remindersFooter(reminders))
+                } label: {
+                    LabeledContent("Erinnerungen",
+                                   value: reminders.list.rowSummary(subject: .task, calendar: calendar))
                 }
-            } header: {
-                Text("Erinnerungen")
-            } footer: {
-                if model.draft.due != nil, let footer = remindersFooter(reminders) { Text(footer) }
             }
         }
     }

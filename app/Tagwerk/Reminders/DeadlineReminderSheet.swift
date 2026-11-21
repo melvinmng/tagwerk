@@ -21,7 +21,7 @@ struct DeadlineReminderSheet: View {
                         Label(errorMessage, systemImage: "exclamationmark.triangle").foregroundStyle(.red)
                     }
                     Section {
-                        ReminderListEditor(model: model.list, subject: .deadline, calendar: calendar)
+                        ReminderSelectionRows(model: model.list, subject: .deadline, calendar: calendar)
                     } header: {
                         Text("Erinnerungen")
                     } footer: {
