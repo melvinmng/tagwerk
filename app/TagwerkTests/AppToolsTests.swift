@@ -1003,6 +1003,20 @@ struct AppToolsGitHubTests {
         #expect(local.createdDrafts.count == 1)
     }
 
+    /// The error texts the assistant reads say "Projekt" (decision #249); the tool descriptions stay English.
+    @Test func gitHubTargetErrors_sayProjekt() async {
+        #expect(AppTools.GitHubTargetError.projectMissing.message == "Bitte ein Projekt nennen.")
+        #expect(AppTools.GitHubTargetError.projectUnknown.message == "Dieses Projekt steht nicht in der Liste von list_github_targets.")
+        let unknown = await run(await make(), "create_task", issue(repository: "beispiel/app", projects: ["PVT_9"]))
+        #expect(unknown["error"] as? String == "Dieses Projekt steht nicht in der Liste von list_github_targets.")
+    }
+
+    @Test func createLocalTask_withRepository_saysProjekteAreGitHubOnly() async {
+        let result = await run(await make(), "create_task", issue(repository: "beispiel/app", source: "local"))
+        #expect(result["error"] as? String == "Repository, Projekte und Zugewiesene gibt es nur bei GitHub-Issues.")
+        #expect(local.createdDrafts.isEmpty)
+    }
+
     @Test func gitHubTarget_noLinkedProjects_fallsBackToOnlyProject_orAsks() {
         let unlinked = ProjectInfo(id: "PVT_1", number: 1, title: "App", fields: [], repositories: [])
         let other = ProjectInfo(id: "PVT_2", number: 2, title: "Web", fields: [], repositories: [])

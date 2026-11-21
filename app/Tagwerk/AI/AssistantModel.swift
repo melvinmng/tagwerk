@@ -39,6 +39,10 @@ final class AssistantModel {
     /// It decides the answer language of the voice mode and the language that is read when the text gives no clear hint.
     @ObservationIgnored var fixedVoiceLanguage: () -> VoiceLanguage? = { nil }
 
+    /// The language of new shopping items (Einstellungen › Sprachen › "Einkaufsliste"): the assistant writes the names of the
+    /// items it adds in this language, whatever language the conversation uses.
+    @ObservationIgnored var shoppingLanguage: () -> VoiceLanguage = { .app }
+
     /// The language spoken text falls back to when it is too short to tell: the chosen voice chat language, else the app's.
     private var speechFallback: VoiceLanguage { fixedVoiceLanguage() ?? .app }
 
@@ -599,11 +603,20 @@ final class AssistantModel {
         \(noteInstructions())
         \(notesChatInstructions())
         Einkaufsartikel stehen nicht in list_tasks: Die Einkaufsliste liest du mit list_shopping und änderst sie mit \
-        update_shopping (hinzufügen, abhaken). Lege Einkaufsartikel nie über create_task an.
+        update_shopping (hinzufügen, abhaken). Lege Einkaufsartikel nie über create_task an. \
+        \(Self.shoppingLanguageInstruction(shoppingLanguage()))
         \(gitHubInstructions())
         \(onTurnFinished == nil ? "" : voiceModeText())
         \(contextText())
         """
+    }
+
+    /// The order to write new shopping items in the language of the shopping list setting (plan G3, task L5).
+    static func shoppingLanguageInstruction(_ language: VoiceLanguage) -> String {
+        switch language {
+        case .german: "Schreibe neue Einkaufsartikel auf Deutsch."
+        case .english: "Schreibe neue Einkaufsartikel auf Englisch."
+        }
     }
 
     /// How to read notes; only while the consent is on and the context has notes.
@@ -654,7 +667,7 @@ final class AssistantModel {
         guard gitHubDirectory() != nil else { return "" }
         var text = """
         Für ein GitHub-Issue rufst du zuerst list_github_targets auf und übergibst repository und project_ids \
-        ausdrücklich. Will der Nutzer das Issue ohne Project anlegen, übergibst du project_ids als leere Liste []; es \
+        ausdrücklich. Will der Nutzer das Issue ohne Projekt anlegen, übergibst du project_ids als leere Liste []; es \
         erscheint dann nicht in seinen Aufgaben, und du sagst ihm das mit Nummer und Link. list_assignees rufst du nur \
         auf, wenn der Nutzer das Issue jemandem zuweisen will. Passt ein genannter Name zu keinem oder zu mehreren \
         Logins, frag nach, statt zu raten. Um die Zuständigkeit eines bestehenden Issues zu ändern, nutze assign_task. \
