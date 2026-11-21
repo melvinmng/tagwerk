@@ -23,6 +23,7 @@ Branch mit Plänen und Mockups: `chore/fable-open-items` (Worktree `t3-638057bd-
 
 - Start: `git fetch origin`; neuer Branch von `origin/main` bzw. `origin/main` in den vorhandenen Branch mergen (auch Job 2 eines verketteten Auftrags). Existiert der Branchname lokal mit fremden Commits: anderen Namen nehmen und melden, nichts zurücksetzen.
 - Tests: vor jedem Commit `TAGWERK_SKIP_UI_TESTS=1 app/test-all.sh`; am Strangende `git fetch origin && git merge origin/main`, dann ein voller `app/test-all.sh`. Bekannte wacklige Audits: einmal wiederholen, jeden Fehler mit Laufnummer melden.
+- Ab GitHub-Pflicht-Check (nach #261): `main` nur beim Start holen, kein Nachziehen vor dem Abschlusslauf; GitHub testet das Merge-Ergebnis; nachziehen nur bei Konflikt oder rotem CI (Nutzer 21.11.).
 - Determinismus: Datums-Tests zeitzonenunabhängig (Formatierung mit `calendar.timeZone`); GitHub-CI läuft in UTC auf iPhone 18 Pro.
 - Kataloge: kompaktes Format; `sync-strings.sh` erst nutzen, wenn #261 auf `main` ist (danach formattreu); `check-strings.py`; Englisch in `scripts/translations/en.json`; „Projekt“ statt „Project“.
 - Rechner: keine künstliche Last, keine Prozesse beenden, nur ein Testlauf je Arbeitskopie, Simulator nach UI-Lauf herunterfahren; am Ende eigenen Simulator, DerivedData und Xcode-DerivedData mit Pfad in die Arbeitskopie löschen.
