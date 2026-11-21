@@ -1,0 +1,743 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tagwerk · Designrunde G2, Teil 2 · Gewohnheiten, Datensicherung, Routinen · Mockups GW, DS, RO</title>
+<style>
+  /* Mockup frame uses the host theme (with fallbacks); phone screens depict the app in iOS dark or light mode. */
+  :root { color-scheme: light dark; }
+  body { font: 14px var(--font-sans, system-ui, sans-serif); color: var(--foreground, CanvasText); margin: 16px; }
+  h1 { font-size: 20px; margin: 0 0 4px; }
+  h2 { font-size: 18px; margin: 38px 0 4px; padding-top: 16px; border-top: 1px solid rgba(128,128,128,.3); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  h2.part { font-size: 22px; border-top: 3px solid rgba(128,128,128,.5); margin-top: 54px; }
+  .area { display: inline-grid; place-items: center; min-width: 34px; height: 34px; padding: 0 8px; border-radius: 9px; background: #0a84ff; color: #fff; font: 800 14px system-ui; flex-shrink: 0; box-sizing: border-box; }
+  .area.q { background: #8e8e93; }
+  .lead { color: var(--muted-foreground, #777); margin: 0 0 14px; line-height: 1.5; max-width: 980px; }
+  .lead b { color: var(--foreground, CanvasText); }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(392px, 1fr)); gap: 22px; align-items: start; }
+  .label { font: 600 13px var(--font-sans, system-ui); color: var(--muted-foreground, #777); margin: 0 0 8px 4px; }
+  .label b { color: var(--foreground, CanvasText); }
+  .code { display: inline-block; background: rgba(128,128,128,.28); color: var(--foreground, CanvasText); border-radius: 6px; padding: 1px 8px; font: 800 13px system-ui; margin-right: 4px; }
+  .code.r { background: #30d158; color: #000; }
+  .rec { background: #30d158; color: #000; font-size: 11px; font-weight: 700; padding: 1px 7px; border-radius: 99px; margin-left: 4px; }
+  .same { background: rgba(128,128,128,.28); font-size: 11px; font-weight: 700; padding: 1px 7px; border-radius: 99px; margin-left: 4px; }
+  .pc { font-size: 12.5px; color: var(--muted-foreground, #777); line-height: 1.5; margin: 8px 4px 0; max-width: 390px; }
+  .pc b { color: var(--foreground, CanvasText); }
+  .box { border: 1px solid rgba(48,209,88,.5); background: rgba(48,209,88,.07); border-radius: 12px; padding: 12px 16px; margin-top: 16px; line-height: 1.55; font-size: 13px; max-width: 1100px; }
+  .box h3 { margin: 0 0 6px; font-size: 14px; }
+  .box ul, .box ol { margin: 4px 0 0; padding-left: 20px; }
+  .box li { margin-bottom: 3px; }
+  .box.neutral { border-color: rgba(128,128,128,.4); background: rgba(128,128,128,.07); }
+  .box.warn { border-color: rgba(255,159,10,.6); background: rgba(255,159,10,.08); }
+  code { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; background: rgba(128,128,128,.16); padding: 1px 4px; border-radius: 4px; }
+  .tablewrap { overflow-x: auto; }
+  table.sum { border-collapse: collapse; font-size: 13px; margin-top: 6px; }
+  table.sum td, table.sum th { padding: 5px 14px 5px 0; vertical-align: top; text-align: left; border-bottom: 1px solid rgba(128,128,128,.22); }
+  table.sum th { font-size: 12px; color: var(--muted-foreground, #777); }
+  table.sum td:first-child { white-space: nowrap; font-weight: 700; }
+
+  .phone {
+    --bg: #000; --card: #1c1c1e; --card2: #2c2c2e; --sep: #38383a; --text: #fff; --sub: #8e8e93; --dim: #c7c7cc;
+    --blue: #0a84ff; --green: #30d158; --orange: #ff9f0a; --red: #ff453a; --purple: #bf5af2; --indigo: #5e5ce6; --sheet: #1c1c1e; --row: #2c2c2e;
+    --segon: #636366; --frame: #2a2a2c; --redbg: rgba(255,69,58,.16); --greenbg: rgba(48,209,88,.16);
+    --glass: rgba(72,72,78,.62); --glassline: rgba(255,255,255,.16); --glassshadow: inset 0 1px 0 rgba(255,255,255,.18), 0 8px 24px rgba(0,0,0,.55);
+    background: var(--bg); color: var(--text); border-radius: 40px; padding: 14px 12px 12px;
+    font: 15px -apple-system, "SF Pro Text", system-ui, sans-serif; border: 6px solid var(--frame);
+    width: 390px; max-width: 100%; box-sizing: border-box; height: 700px;
+    display: flex; flex-direction: column; position: relative; overflow: hidden;
+  }
+  .phone.light {
+    --bg: #f2f2f7; --card: #fff; --card2: #e3e3e8; --sep: #d1d1d6; --text: #000; --sub: #6c6c70; --dim: #3c3c43;
+    --blue: #007aff; --green: #34c759; --orange: #ff9500; --red: #ff3b30; --purple: #af52de; --indigo: #5856d6; --sheet: #f2f2f7; --row: #fff;
+    --segon: #fff; --frame: #c7c7cc; --redbg: rgba(255,59,48,.12); --greenbg: rgba(52,199,89,.16);
+    --glass: rgba(255,255,255,.78); --glassline: rgba(0,0,0,.06); --glassshadow: inset 0 1px 0 rgba(255,255,255,.9), 0 4px 14px rgba(0,0,0,.14);
+  }
+  /* Sheet look: the phone content is the sheet itself. */
+  .phone.sh { --bg: #111113; }
+  .phone.sh.light { --bg: #f2f2f7; }
+  /* Cropped frames: only the upper part of the screen matters. */
+  .phone.crop { height: 440px; border-bottom-left-radius: 0; border-bottom-right-radius: 0; border-bottom: 0; }
+  .phone.crop.s { height: 330px; }
+  .phone.crop.l { height: 560px; }
+  .phone.crop::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 40px; background: linear-gradient(transparent, var(--bg)); z-index: 4; pointer-events: none; }
+  .status { display: flex; justify-content: space-between; font: 600 13px system-ui; padding: 0 12px 10px; flex-shrink: 0; }
+  .glass { background: var(--glass); backdrop-filter: blur(18px) saturate(1.6); -webkit-backdrop-filter: blur(18px) saturate(1.6); border: 1px solid var(--glassline); box-shadow: var(--glassshadow); }
+  .scr { flex: 1; min-height: 0; overflow: hidden; display: flex; flex-direction: column; }
+  .scr > * { flex-shrink: 0; }
+
+  .nav { display: flex; align-items: center; justify-content: space-between; gap: 8px; height: 44px; padding: 0 2px; margin-bottom: 4px; flex-shrink: 0; }
+  .nav .r { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+  .nav .c { font: 600 16px system-ui; }
+  .gb { width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; font-size: 17px; flex-shrink: 0; color: var(--text); box-sizing: border-box; }
+  .gb.new { outline: 2px solid #ffd60a; outline-offset: 1px; }
+  .gt { height: 40px; border-radius: 99px; display: grid; place-items: center; padding: 0 14px; font: 600 15px system-ui; color: var(--blue); }
+  .back { color: var(--blue); font: 400 16px system-ui; padding-left: 4px; }
+  .lt { font: 800 30px system-ui; letter-spacing: -.4px; margin: 2px 6px 10px; }
+  .list { background: var(--card); border-radius: 18px; overflow: hidden; margin-bottom: 8px; }
+  .tl { display: flex; gap: 10px; padding: 10px 12px; border-bottom: 1px solid var(--sep); font-size: 14.5px; align-items: center; }
+  .tl:last-child { border-bottom: 0; }
+  .tl .tx { flex: 1; min-width: 0; }
+  .tl .tx small { display: block; color: var(--sub); font-size: 12px; margin-top: 1px; line-height: 1.35; }
+  .tl .ch { color: var(--sub); font-size: 13px; white-space: nowrap; }
+  .tl .ic { width: 24px; text-align: center; color: var(--blue); flex-shrink: 0; }
+  .tl.new, .fr.new, .card.new { box-shadow: inset 3px 0 0 #ffd60a; }
+  .tl.a { color: var(--blue); }
+  .tl.d1 { padding-left: 30px; } .tl.d2 { padding-left: 48px; }
+  .plus { width: 28px; height: 28px; border-radius: 50%; background: var(--card2); color: var(--blue); display: grid; place-items: center; font: 600 17px system-ui; flex-shrink: 0; }
+  .section { color: var(--sub); font: 600 12px system-ui; text-transform: uppercase; letter-spacing: .4px; margin: 10px 12px 4px; display: flex; justify-content: space-between; }
+  .section span { color: var(--blue); text-transform: none; letter-spacing: 0; font-weight: 400; font-size: 13px; }
+  .foot1 { color: var(--sub); font-size: 11.5px; line-height: 1.4; margin: 2px 12px 8px; }
+  .tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
+  .tile { background: var(--card); border-radius: 16px; padding: 10px 12px; font: 600 14px system-ui; }
+  .tile i { font-style: normal; display: flex; justify-content: space-between; font-size: 19px; margin-bottom: 8px; }
+  .tile i b { font: 700 19px system-ui; }
+  .badge { display: inline-block; font: 600 10.5px system-ui; color: var(--sub); border: 1px solid var(--sep); border-radius: 99px; padding: 0 6px; margin-left: 6px; vertical-align: 1px; }
+  .badge.g { color: var(--green); border-color: var(--green); }
+  .badge.o { color: var(--orange); border-color: var(--orange); }
+
+  /* Note cards and note page */
+  .card { background: var(--card); border-bottom: 1px solid var(--sep); padding: 9px 12px; display: flex; gap: 10px; }
+  .card:last-child { border-bottom: 0; }
+  .card .b { flex: 1; min-width: 0; }
+  .card .t { font: 600 15px system-ui; display: flex; justify-content: space-between; gap: 6px; }
+  .card .t small { font: 400 12px system-ui; color: var(--sub); white-space: nowrap; }
+  .card .p { color: var(--sub); font-size: 13px; line-height: 1.35; margin: 2px 0; }
+  .card .f { color: var(--sub); font-size: 11.5px; }
+  .thumb { width: 48px; height: 48px; border-radius: 8px; background: linear-gradient(135deg, #5e8f6a, #c9a86a); flex-shrink: 0; }
+  .selc { width: 22px; height: 22px; border-radius: 50%; border: 1.6px solid var(--sub); flex-shrink: 0; box-sizing: border-box; margin-top: 12px; display: grid; place-items: center; font: 700 12px system-ui; color: #fff; }
+  .selc.on { background: var(--blue); border-color: var(--blue); }
+  .botbar { display: flex; justify-content: space-between; align-items: center; border-radius: 99px; padding: 11px 18px; margin: auto 4px 0; font-size: 14.5px; color: var(--blue); }
+  .botbar .x { color: var(--red); }
+  .note { padding: 0 8px; font-size: 14.5px; line-height: 1.45; }
+  .note h4 { font: 800 23px system-ui; margin: 0 0 8px; letter-spacing: -.3px; }
+  .note h5 { font: 700 16.5px system-ui; margin: 12px 0 4px; }
+  .note p { margin: 0 0 4px; }
+  .note ul { margin: 0; padding-left: 20px; }
+  .note .cb { display: flex; gap: 8px; align-items: center; margin: 3px 0; }
+  .note .raw { font: 13.5px ui-monospace, Menlo, monospace; color: var(--dim); white-space: pre-wrap; line-height: 1.5; }
+  .ck { width: 20px; height: 20px; border-radius: 50%; border: 1.6px solid var(--sub); flex-shrink: 0; box-sizing: border-box; position: relative; }
+  .ck.sq { border-radius: 6px; }
+  .ck.done { background: var(--blue); border-color: var(--blue); }
+  .ck.done.g { background: var(--green); border-color: var(--green); }
+  .ck.done::after { content: "✓"; position: absolute; inset: 0; display: grid; place-items: center; color: #fff; font: 700 11px system-ui; }
+  .img { border-radius: 12px; background: linear-gradient(135deg, #3d6b8f, #8fb5a0 60%, #d9c58a); margin: 8px 0; }
+  .chip { display: inline-flex; align-items: center; gap: 6px; background: var(--card); border: 1px solid var(--sep); border-radius: 10px; padding: 6px 10px; font-size: 13px; margin: 4px 6px 4px 0; }
+  .chip small { color: var(--sub); }
+  .pill { display: inline-block; background: var(--card2); border-radius: 99px; padding: 5px 11px; font: 600 12.5px system-ui; margin: 0 6px 6px 0; }
+  .pill.on { background: var(--blue); color: #fff; }
+  .kb { margin: auto -12px -12px; background: var(--card2); padding: 8px 10px 60px; display: flex; flex-direction: column; gap: 8px; }
+  .kbbar { display: flex; align-items: center; gap: 4px; font: 600 15px system-ui; }
+  .kbbar span { width: 38px; height: 34px; border-radius: 8px; display: grid; place-items: center; background: var(--card); }
+  .kbbar .done { margin-left: auto; width: auto; padding: 0 12px; color: var(--blue); background: none; }
+  .kbkeys { height: 22px; border-radius: 6px; background: var(--card); opacity: .6; }
+  .gra { background: var(--card); border-radius: 14px; padding: 9px 12px; margin: 0 4px 10px; font-size: 13.5px; line-height: 1.5; }
+  .gra b { display: block; font: 600 11.5px system-ui; text-transform: uppercase; letter-spacing: .4px; color: var(--sub); margin-bottom: 2px; }
+  .sessbar { display: flex; align-items: center; gap: 8px; background: var(--greenbg); border-radius: 12px; padding: 8px 12px; margin: 0 4px 10px; font-size: 13px; }
+  .sessbar b { flex: 1; font-weight: 600; }
+  .sessbar span { color: var(--green); font-weight: 700; }
+
+  /* Sheets, forms */
+  .bar { display: flex; justify-content: center; position: relative; font: 600 15.5px system-ui; padding: 6px 0 12px; flex-shrink: 0; }
+  .bar span { position: absolute; right: 4px; color: var(--blue); }
+  .bar span.l { right: auto; left: 4px; font-weight: 400; }
+  .fs { background: var(--row); border-radius: 14px; margin-bottom: 4px; overflow: hidden; }
+  .fr { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 10px 12px; border-bottom: 1px solid var(--sep); font-size: 14px; }
+  .fr:last-child { border-bottom: 0; }
+  .fr .v { color: var(--sub); text-align: right; font-size: 13px; }
+  .fr.a { color: var(--blue); } .fr.x { color: var(--red); }
+  .fr .tx { flex: 1; min-width: 0; }
+  .fr .tx small { display: block; color: var(--sub); font-size: 12px; margin-top: 1px; line-height: 1.35; }
+  .fr.ph { color: var(--sub); min-height: 44px; align-items: flex-start; }
+  .fh { color: var(--sub); font: 600 11.5px system-ui; text-transform: uppercase; letter-spacing: .4px; margin: 10px 12px 4px; }
+  .ff { color: var(--sub); font-size: 11.5px; line-height: 1.4; margin: 3px 12px 8px; }
+  .seg2 { display: flex; background: var(--card2); border-radius: 9px; padding: 2px; margin: 0 0 8px; }
+  .seg2 span { flex: 1; text-align: center; padding: 6px 2px; font-size: 13px; border-radius: 7px; color: var(--dim); }
+  .seg2 span.on { background: var(--segon); color: var(--text); font-weight: 600; }
+  .big { display: block; text-align: center; font: 600 15px system-ui; border-radius: 14px; padding: 12px; margin: 8px 0 0; background: var(--blue); color: #fff; }
+  .big.s { background: var(--card2); color: var(--blue); }
+  .menu { border-radius: 16px; overflow: hidden; font-size: 15px; width: 270px; align-self: flex-end; margin: 0 4px 8px; }
+  .menu div { display: flex; justify-content: space-between; padding: 11px 14px; border-bottom: 1px solid var(--glassline); }
+  .menu div:last-child { border-bottom: 0; }
+  .menu div.new { box-shadow: inset 3px 0 0 #ffd60a; }
+  .menu div.x { color: var(--red); }
+  .menu div.gap { border-bottom: 7px solid rgba(128,128,128,.25); }
+  .menu div.h { font: 600 11.5px system-ui; color: var(--sub); padding: 7px 14px 4px; border-bottom: 0; }
+  .hint { background: rgba(255,159,10,.14); border-radius: 12px; padding: 8px 12px; margin: 0 4px 8px; font-size: 12.5px; line-height: 1.4; }
+  .hint b { color: var(--orange); }
+  .tog { width: 46px; height: 28px; border-radius: 99px; background: rgba(120,120,128,.36); position: relative; flex-shrink: 0; }
+  .tog::after { content: ""; position: absolute; top: 2px; left: 2px; width: 24px; height: 24px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.3); }
+  .tog.on { background: var(--green); } .tog.on::after { left: 20px; }
+  .undo { display: flex; justify-content: space-between; align-items: center; border-radius: 99px; padding: 10px 16px; margin: auto 6px 4px; font-size: 13.5px; }
+  .undo span { color: var(--blue); font-weight: 600; }
+  .dots { display: flex; gap: 6px; justify-content: center; margin: 0 0 10px; }
+  .dots i { width: 28px; height: 4px; border-radius: 99px; background: var(--card2); }
+  .dots i.on { background: var(--blue); }
+  .lockscr { flex: 1; display: grid; place-items: center; text-align: center; color: var(--sub); font-size: 14px; line-height: 1.5; }
+  .lockscr b { display: block; font-size: 38px; margin-bottom: 6px; }
+</style>
+<style>
+  /* Habit rows (HabitsSection as built: check button, symbol and name, statistics line, source line, info button) */
+  .hb { display: flex; gap: 12px; align-items: center; padding: 9px 12px; border-bottom: 1px solid var(--sep); }
+  .hb:last-child { border-bottom: 0; }
+  .hb.new { box-shadow: inset 3px 0 0 #ffd60a; }
+  .hb .b { flex: 1; min-width: 0; }
+  .hb .n { font-size: 15px; }
+  .hb .n i { font-style: normal; color: var(--sub); margin-right: 5px; }
+  .hb .s { font-size: 12px; color: var(--sub); margin-top: 1px; }
+  .hb .a { font-size: 11.5px; color: var(--sub); margin-top: 1px; }
+  .hb .a.g { color: var(--green); }
+  .hb .inf { color: var(--sub); font-size: 17px; }
+  .hc { width: 28px; height: 28px; border-radius: 50%; border: 2px solid var(--sub); box-sizing: border-box; flex-shrink: 0; position: relative; display: grid; place-items: center; font: 700 14px system-ui; color: #fff; }
+  .hc.on { background: var(--green); border-color: var(--green); }
+  .hc.lock::after { content: "⚡"; position: absolute; right: -6px; bottom: -6px; width: 15px; height: 15px; border-radius: 50%; background: var(--card); border: 1px solid var(--sep); font-size: 9px; display: grid; place-items: center; }
+  .hc.src { background: var(--green); border-color: var(--green); font-size: 13px; }
+  .hc.ring { border-color: transparent; background: conic-gradient(var(--blue) 0 70%, var(--card2) 70% 100%); }
+  .hc.ring::before { content: ""; position: absolute; inset: 3px; border-radius: 50%; background: var(--card); }
+  .toast { border-radius: 16px; padding: 10px 14px; margin: auto 6px 4px; font-size: 13px; line-height: 1.4; }
+  .cap { background: var(--card); border-radius: 16px; padding: 9px 12px; margin: 0 0 8px; font-size: 13px; }
+  .cap b { font-size: 15px; display: block; }
+  .cap i { display: block; height: 5px; border-radius: 99px; background: var(--green); margin: 6px 0 2px; }
+  .cap small { color: var(--sub); font-size: 11.5px; display: block; }
+  .cap .ln { display: flex; justify-content: space-between; border-top: 1px solid var(--sep); margin-top: 7px; padding-top: 7px; font: 600 13px system-ui; }
+  .cap .ln span { color: var(--sub); font-weight: 400; }
+  .stat { background: var(--card); border-radius: 18px; padding: 12px 14px; margin-bottom: 10px; }
+  .stat b { font: 700 17px system-ui; display: block; }
+  .stat small { color: var(--sub); font-size: 12.5px; display: block; margin-top: 2px; line-height: 1.4; }
+  .stat .ok { color: var(--green); font: 600 12.5px system-ui; }
+  .cmp { display: grid; grid-template-columns: 1.3fr 1fr 1fr; font-size: 13px; }
+  .cmp span { padding: 7px 12px; border-bottom: 1px solid var(--sep); }
+  .cmp .h { color: var(--sub); font: 600 11px system-ui; text-transform: uppercase; letter-spacing: .3px; }
+  .cmp .r { text-align: right; font-variant-numeric: tabular-nums; }
+  .stars { color: var(--orange); letter-spacing: 2px; }
+  .fld { min-height: 58px; align-items: flex-start !important; color: var(--sub); }
+  .q { font: 600 14px system-ui; padding: 10px 12px 2px; }
+  .opt { display: flex; gap: 12px; align-items: center; padding: 11px 12px; border-bottom: 1px solid var(--sep); }
+  .opt:last-child { border-bottom: 0; }
+  .opt i { font-style: normal; color: var(--blue); width: 24px; text-align: center; font-size: 17px; }
+  .opt b { display: block; font: 600 15px system-ui; }
+  .opt small { display: block; color: var(--sub); font-size: 12px; margin-top: 1px; line-height: 1.35; }
+  .stepttl { font: 800 22px system-ui; margin: 0 6px 2px; }
+  .stepsub { color: var(--sub); font-size: 12.5px; margin: 0 6px 10px; }
+  .navbtn { display: flex; gap: 8px; margin: auto 0 4px; }
+  .navbtn .big { flex: 1; margin: 0; }
+</style>
+</head>
+<body>
+
+<h1>Designrunde G2, Teil 2 · Gewohnheiten, Datensicherung, Routinen</h1>
+<p class="lead">Fortsetzung von <code>2026-11-20-g2-notizen-routinen-mockups.html</code> (Notizen, Einkauf, Tagebuch, Bible Study). Gleiche Konventionen: Kurz-ID je Frage, zwei bis drei Varianten, eine Empfehlung <span class="rec">Empfehlung</span>, <span class="same">heute</span> für den gebauten Stand, gelber Strich für Änderungen.</p>
+
+<div class="box neutral">
+<h3>Übersicht der Entscheidungen (Teil 2)</h3>
+<div class="tablewrap"><table class="sum">
+<tr><th>ID</th><th>Frage</th><th>Varianten</th><th>Empfehlung</th></tr>
+<tr><td>GW1</td><td>Zuordnung der Quellen (v. a. „Bewegung“)</td><td>a Training (heute) · b Schrittziel · c Training oder Schrittziel</td><td><b>c</b></td></tr>
+<tr><td>GW2</td><td>Symbole der Gewohnheiten</td><td>a grau neben dem Namen (heute) · b farbige Kachel · c Symbol statt Kreis</td><td><b>a</b></td></tr>
+<tr><td>GW3</td><td>Marke für automatisch erfüllte Gewohnheiten (#173, Punkt 11)</td><td>a Textzeile (heute) · b Haken mit Blitz-Marke und Fortschritt · c Quellen-Symbol im Kreis</td><td><b>b</b></td></tr>
+<tr><td>GW4</td><td>Tipp auf eine automatisch erfüllte Gewohnheit</td><td>a nichts (heute) · b kurzer Hinweis · c öffnet das Blatt</td><td><b>b</b></td></tr>
+<tr><td>GW5</td><td>Häkchen-Historie aus Notion importieren</td><td>ja · nein</td><td><b>nein</b></td></tr>
+<tr><td>DS1</td><td>Aufbau der Seite „Datensicherung“</td><td>a heute · b Statuskarte oben · c zwei Unterseiten</td><td><b>b</b></td></tr>
+<tr><td>DS2</td><td>Chatverlauf sichern</td><td>ja · nein (heute)</td><td><b>nein</b></td></tr>
+<tr><td>DS3</td><td>Intervall und Anzahl automatischer Sicherungen</td><td>a 24 h, 7 Dateien (heute) · b wählbar · c gestaffelt</td><td><b>a</b></td></tr>
+<tr><td>DS4</td><td>Wiederherstellen: Ersetzen oder Zusammenführen</td><td>a Ersetzen mit Dialog (heute) · b Ersetzen mit Vergleichsblatt · c Zusammenführen</td><td><b>b</b></td></tr>
+<tr><td>DS5</td><td>Standard von „Tagebuch und Bible Study einschließen“</td><td>an (heute) · aus</td><td><b>an</b></td></tr>
+<tr><td>DS6</td><td>Sicherungen verschlüsseln</td><td>a nein (heute) · b optional mit Passwort · c immer</td><td><b>b</b></td></tr>
+<tr><td>DS7</td><td>Sicherheitskopien vor dem Wiederherstellen</td><td>a unbegrenzt, in „Dateien“ sichtbar (heute) · b sichtbar, begrenzt · c verborgen, begrenzt, Liste in der App</td><td><b>c</b></td></tr>
+<tr><td>RO1</td><td>Tagesstart: Reihenfolge und Aussehen</td><td>a Brain Dump, Dankbarkeit, Dream Log (heute) · b Dream Log, Dankbarkeit, Brain Dump · c aufklappbar</td><td><b>b</b></td></tr>
+<tr><td>RO2</td><td>Dream Log mit Bewertung wie in Notion</td><td>ja · nein (heute)</td><td><b>nein</b></td></tr>
+<tr><td>RO3</td><td>Tagesfokus</td><td>a weglassen · b in „Planen“ setzen, Hinweiszeile im Tagesstart · c zurück in den Tagesstart</td><td><b>b</b></td></tr>
+<tr><td>RO4</td><td>Brain-Dump-Feld: Symbol passend zum Ordner</td><td>ja · nein (heute)</td><td><b>ja</b></td></tr>
+<tr><td>RO5</td><td>Platz von „Willst du etwas ändern?“</td><td>a Fußtext (heute) · b eigene Karte nach dem ersten Text · c am Ende des Blatts</td><td><b>b</b></td></tr>
+<tr><td>RO6</td><td>„Helle Lichter ausmachen ab 22:00“</td><td>a feste Uhrzeit · b relativ zur Schlafzeit · c je Punkt wählbar</td><td><b>b</b></td></tr>
+<tr><td>RO7</td><td>Welche Punkte der Abend-Checkliste erinnern</td><td>a 90, 60, 30 min (heute) · b zusätzlich „Lichter“ · c nur einer</td><td><b>b</b></td></tr>
+<tr><td>RO8</td><td>Wochenreflexion: Felder oder aufklappbar</td><td>a Platzhalter im Feld (heute) · b Frage über dem Feld · c aufklappbar</td><td><b>b</b></td></tr>
+<tr><td>RO9</td><td>„Unerledigtes verschieben“: Blatt oder Aktionsmenü</td><td>a Blatt mit drei Optionen (heute) · b Aktionsmenü · c Blatt mit Vorschau</td><td><b>c</b></td></tr>
+<tr><td>RO10</td><td>Zeile in der Kapazitätskarte</td><td>a dritte Zeile in der Karte · b eigene Kapsel darunter · c nur im Tagesabschluss</td><td><b>a</b></td></tr>
+<tr><td>RO11</td><td>Anzeige „kein freier Platz“</td><td>a Zahl im Ergebnis (heute) · b Liste mit Aktionen · c Warnung vorab</td><td><b>b</b></td></tr>
+<tr><td>RO12</td><td>Wochenplanung: Schrittanzeige</td><td>a „Schritt 2 von 5“ (heute) · b Balken und Schritt-Titel · c Punkte</td><td><b>b</b></td></tr>
+<tr><td>RO13</td><td>Wochenplanung: Blatt oder Vollbild</td><td>Blatt (heute) · Vollbild</td><td><b>Blatt</b></td></tr>
+<tr><td>RO14</td><td>Rückblick-Schritt</td><td>a kompakt (heute) · b weglassen · c ganzer Wochenrückblick</td><td><b>a</b></td></tr>
+<tr><td>RO15</td><td>Einstieg in die Wochenplanung</td><td>a Wochenrückblick und Sonntags-Tagesabschluss (heute) · b zusätzlich Karte in „Planen“ am Planungstag</td><td><b>b</b></td></tr>
+<tr><td>RO16</td><td>Epics zeigen (Labels, Unter-Issues)</td><td>a weglassen · b nach Label gruppieren · c Unter-Issues</td><td><b>a</b></td></tr>
+</table></div>
+</div>
+
+<!-- ====================================================================== GEWOHNHEITEN -->
+<h2 class="part">Gewohnheiten (#181, #173 Punkt 11)</h2>
+
+<h2><span class="area">GW1</span> Zuordnung der Quellen</h2>
+<p class="lead">Zehn Vorschläge aus dem früheren Notion-Tracker; jede automatische Quelle gilt für höchstens eine Gewohnheit. Zur Bestätigung:</p>
+<div class="box neutral" style="margin-top:0">
+<div class="tablewrap"><table class="sum">
+<tr><th>Gewohnheit</th><th>Symbol (SF)</th><th>Quelle heute</th><th>Vorschlag</th></tr>
+<tr><td>Tag reflektieren</td><td><code>moon.stars</code></td><td>Tagesabschluss erledigt</td><td>bestätigen</td></tr>
+<tr><td>Bett machen</td><td><code>bed.double</code></td><td>von Hand</td><td>bestätigen</td></tr>
+<tr><td>Bewegung</td><td><code>figure.walk</code></td><td>Training erfasst (mind. die Mindestdauer)</td><td><b>GW1c:</b> Training <i>oder</i> Schrittziel</td></tr>
+<tr><td>Journal schreiben</td><td><code>book.closed</code></td><td>Tagebuch geschrieben (mehr als die leere Vorlage)</td><td>bestätigen</td></tr>
+<tr><td>Duschen</td><td><code>shower</code></td><td>von Hand</td><td>bestätigen</td></tr>
+<tr><td>Sonnenlicht</td><td><code>sun.max</code></td><td>von Hand (Quelle „Zeit bei Tageslicht“ ist im Code angelegt, aber nicht wählbar)</td><td>von Hand lassen, bis die Quelle gebaut ist</td></tr>
+<tr><td>Wasser trinken</td><td><code>drop</code></td><td>Wasserziel erreicht</td><td>bestätigen</td></tr>
+<tr><td>Lernen</td><td><code>graduationcap</code></td><td>von Hand</td><td>bestätigen</td></tr>
+<tr><td>Lesen</td><td><code>book</code></td><td>von Hand</td><td>bestätigen</td></tr>
+<tr><td>Bible Study</td><td><code>book.pages</code></td><td>Sitzung abgeschlossen</td><td>bestätigen</td></tr>
+</table></div>
+</div>
+<div class="grid" style="margin-top:18px">
+<div>
+<p class="label"><span class="code">GW1a</span> <b>Bewegung = Training erfasst</b> <span class="same">heute</span></p>
+<div class="phone crop s sh"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="bar"><span class="l">Abbrechen</span>Gewohnheit<span>Fertig</span></div>
+<div class="fh">Erfüllt durch</div>
+<div class="fs"><div class="fr">Von Hand abhaken</div><div class="fr" style="color:var(--sub)">Wasserziel erreicht</div><div class="fr">Training erfasst <span style="color:var(--blue)">✓</span></div><div class="fr">Schrittziel erreicht</div></div>
+</div></div>
+<p class="pc">Bei „täglich“ verlangt das an jedem Tag ein Training; ein Tag mit 12.000 Schritten zählt nicht.</p>
+</div>
+<div>
+<p class="label"><span class="code">GW1b</span> <b>Bewegung = Schrittziel erreicht</b></p>
+<div class="phone crop s sh"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="bar"><span class="l">Abbrechen</span>Gewohnheit<span>Fertig</span></div>
+<div class="fh">Erfüllt durch</div>
+<div class="fs"><div class="fr">Von Hand abhaken</div><div class="fr" style="color:var(--sub)">Wasserziel erreicht</div><div class="fr">Training erfasst</div><div class="fr">Schrittziel erreicht <span style="color:var(--blue)">✓</span></div></div>
+</div></div>
+<p class="pc">Alltagstauglicher, aber ein Tag mit Schwimmen oder Krafttraining ohne Schritte zählt nicht. Ohne Codeänderung möglich (nur den Vorschlag umstellen).</p>
+</div>
+<div>
+<p class="label"><span class="code r">GW1c</span> <b>Training oder Schrittziel</b> <span class="rec">Empfehlung</span></p>
+<div class="phone crop s sh"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="bar"><span class="l">Abbrechen</span>Gewohnheit<span>Fertig</span></div>
+<div class="fh">Erfüllt durch</div>
+<div class="fs"><div class="fr">Von Hand abhaken</div><div class="fr" style="color:var(--sub)">Wasserziel erreicht</div><div class="fr new"><span class="tx">Bewegung<small>Training erfasst oder Schrittziel erreicht</small></span><span style="color:var(--blue)">✓</span></div><div class="fr">Training erfasst</div><div class="fr">Schrittziel erreicht</div></div>
+</div></div>
+<p class="pc"><b>Grund:</b> „Bewegung“ meint, dass man sich bewegt hat, gleich auf welche Art; die kombinierte Quelle bildet das ab. Braucht einen neuen Fall in <code>HabitSource</code>; die Quellzeile nennt dann, was gezählt hat („Laufen 42 min“ oder „10.412 von 8.000 Schritten“). Falls der Aufwand jetzt nicht passt: GW1b.</p>
+</div>
+</div>
+
+<h2><span class="area">GW2</span> Symbole · <span class="area">GW3</span> Marke für automatisch erfüllte Gewohnheiten · <span class="area">GW4</span> Tipp darauf</h2>
+<p class="lead"><b>Entschieden (#173, Punkt 11):</b> Hat die Quelle eine Gewohnheit erfüllt, lässt sie sich nicht von Hand abwählen; solange die Quelle sie noch nicht erfüllt hat, kann man von Hand abhaken (und wieder abwählen). Offen ist das Aussehen. Jede Variante zeigt dieselben vier Zustände: (1) von Hand, offen · (2) automatisch erfüllt · (3) automatische Quelle, noch offen · (4) von Hand abgehakt, Quelle noch offen.</p>
+<div class="grid">
+<div>
+<p class="label"><span class="code">GW3a</span> <b>Textzeile „automatisch“</b> <span class="same">heute</span></p>
+<div class="phone crop l"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="section">Gewohnheiten · 2 von 4 <span>Bearbeiten</span></div>
+<div class="list">
+<div class="hb"><span class="hc"></span><div class="b"><div class="n"><i>▭</i>Bett machen</div><div class="s">7 Tage 5/7 · 30 Tage 73 % · Serie 3</div></div><span class="inf">ⓘ</span></div>
+<div class="hb"><span class="hc on">✓</span><div class="b"><div class="n"><i>◊</i>Wasser trinken</div><div class="s">7 Tage 6/7 · 30 Tage 80 % · Serie 6</div><div class="a">⚡ automatisch · 2,1 l von 2,0 l</div></div><span class="inf">ⓘ</span></div>
+<div class="hb"><span class="hc"></span><div class="b"><div class="n"><i>♟</i>Bewegung</div><div class="s">7 Tage 3/7 · 30 Tage 51 % · Serie 0</div></div><span class="inf">ⓘ</span></div>
+<div class="hb"><span class="hc on">✓</span><div class="b"><div class="n"><i>▣</i>Journal schreiben</div><div class="s">7 Tage 4/7 · 30 Tage 60 % · Serie 1</div></div><span class="inf">ⓘ</span></div>
+</div>
+</div></div>
+<p class="pc">Zustand 2 und 4 sehen am Haken gleich aus; nur die dritte Textzeile verrät den Unterschied. Bei Zustand 3 fehlt jeder Hinweis, dass sich die Zeile später selbst abhakt. Ein Tipp auf Zustand 2 tut nichts und sagt nichts.</p>
+</div>
+<div>
+<p class="label"><span class="code r">GW3b</span> <b>Haken mit Blitz-Marke, Fortschritt der Quelle</b> <span class="rec">Empfehlung</span></p>
+<div class="phone crop l"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="section">Gewohnheiten · 2 von 4 <span>Bearbeiten</span></div>
+<div class="list">
+<div class="hb"><span class="hc"></span><div class="b"><div class="n"><i>▭</i>Bett machen</div><div class="s">7 Tage 5/7 · 30 Tage 73 % · Serie 3</div></div><span class="inf">ⓘ</span></div>
+<div class="hb new"><span class="hc on lock">✓</span><div class="b"><div class="n"><i>◊</i>Wasser trinken</div><div class="s">7 Tage 6/7 · 30 Tage 80 % · Serie 6</div><div class="a g">Automatisch erfüllt · 2,1 l von 2,0 l</div></div><span class="inf">ⓘ</span></div>
+<div class="hb new"><span class="hc ring"></span><div class="b"><div class="n"><i>♟</i>Bewegung</div><div class="s">7 Tage 3/7 · 30 Tage 51 % · Serie 0</div><div class="a">⚡ 5.600 von 8.000 Schritten · hakt sich selbst ab</div></div><span class="inf">ⓘ</span></div>
+<div class="hb new"><span class="hc on">✓</span><div class="b"><div class="n"><i>▣</i>Journal schreiben</div><div class="s">7 Tage 4/7 · 30 Tage 60 % · Serie 1</div><div class="a">Von Hand abgehakt · ⚡ Tagebuch noch offen</div></div><span class="inf">ⓘ</span></div>
+</div>
+<div class="toast glass"><b>Automatisch erfüllt durch das Wasserziel.</b><br>Lässt sich nicht abwählen.</div>
+</div></div>
+<p class="pc"><b>Grund:</b> Der Haken bleibt das eine Zeichen für „erfüllt“, und die kleine Blitz-Marke an seiner Ecke unterscheidet „von der Quelle“ von „von Hand“, ohne eine zweite Hakenform einzuführen. Zustand 3 zeigt einen Fortschrittsring statt des leeren Kreises (Tipp hakt von Hand ab); Zustand 4 ist ein normaler Haken, der sich abwählen lässt. <b>GW4b:</b> Ein Tipp auf Zustand 2 zeigt für etwa drei Sekunden den Hinweis unten und gibt eine leichte Rückmeldung (Haptik „Warnung“), statt nichts zu tun.</p>
+</div>
+<div>
+<p class="label"><span class="code">GW3c</span> <b>Quellen-Symbol im Kreis</b></p>
+<div class="phone crop l"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="section">Gewohnheiten · 2 von 4 <span>Bearbeiten</span></div>
+<div class="list">
+<div class="hb"><span class="hc"></span><div class="b"><div class="n">Bett machen</div><div class="s">7 Tage 5/7 · 30 Tage 73 % · Serie 3</div></div><span class="inf">ⓘ</span></div>
+<div class="hb new"><span class="hc src">◊</span><div class="b"><div class="n">Wasser trinken</div><div class="s">7 Tage 6/7 · 30 Tage 80 % · Serie 6</div><div class="a">2,1 l von 2,0 l</div></div><span class="inf">ⓘ</span></div>
+<div class="hb new"><span class="hc" style="border-style:dashed;color:var(--sub);font-size:13px">♟</span><div class="b"><div class="n">Bewegung</div><div class="s">7 Tage 3/7 · 30 Tage 51 % · Serie 0</div><div class="a">5.600 von 8.000 Schritten</div></div><span class="inf">ⓘ</span></div>
+<div class="hb"><span class="hc on">✓</span><div class="b"><div class="n">Journal schreiben</div><div class="s">7 Tage 4/7 · 30 Tage 60 % · Serie 1</div></div><span class="inf">ⓘ</span></div>
+</div>
+</div></div>
+<p class="pc">Sehr kompakt, das Symbol der Gewohnheit wandert in den Kreis. Der gefüllte Kreis ohne Haken liest sich aber nicht eindeutig als „erledigt“, und für VoiceOver und Farbschwäche fehlt das vertraute Zeichen.</p>
+</div>
+</div>
+<div class="box"><h3>GW2 · Symbole: grau neben dem Namen lassen (a, wie heute)</h3>
+<ul>
+<li><b>a Grau neben dem Namen (Empfehlung).</b> Grund: Farbe bleibt in dieser Liste dem Zustand vorbehalten (Grün = erfüllt, Blau = Fortschritt), und das Symbol dient nur dem Wiedererkennen.</li>
+<li><b>b Farbige Kachel je Gewohnheit:</b> lebendiger, aber zehn Farben neben Haken, Ring und Blitz-Marke machen die Zeile unruhig und brauchen eine Farbwahl im Blatt.</li>
+<li><b>c Symbol statt Kreis:</b> siehe GW3c.</li>
+<li>Für das Raster im Blatt „Gewohnheit“: Die 22 Symbole (<code>HabitText.symbols</code>) bekommen VoiceOver-Namen auf Deutsch; heute wird der SF-Name vorgelesen („figure.walk“).</li>
+</ul></div>
+<div class="box warn"><h3>Fußtext im Blatt „Gewohnheit“ widerspricht der Entscheidung</h3>Der Fußtext unter „Erfüllt durch“ endet heute mit „Du kannst jede Gewohnheit zusätzlich von Hand abhaken.“ Nach Punkt 11 stimmt das nur, bis die Quelle erfüllt hat. Vorschlag: „Automatische Quellen haken sich selbst ab, auch an Tagen ohne App-Start. Bis dahin kannst du von Hand abhaken; ein automatisch gesetzter Haken lässt sich nicht abwählen. Jede Quelle gilt für höchstens eine Gewohnheit.“</div>
+<div class="box"><h3>GW5 · Häkchen-Historie aus Notion importieren: nein</h3><b>Grund:</b> Alle Auswertungen lesen höchstens 90 Tage zurück (<code>HabitRules.windowDays</code>); eine importierte Historie wäre nach drei Monaten wirkungslos, verlangt aber eine Zuordnung über Namen aus der CSV (dieselbe Unsicherheit wie beim Seiten-Import) und eine Regel für Tage mit automatischer Quelle. Wer die alten Serien sehen will, behält den Notion-Export. Falls doch gewünscht: einmaliger Import nur der letzten 90 Tage, nur für Gewohnheiten „von Hand“, im vorhandenen Import-Assistenten als drittes Ziel.</div>
+
+<!-- ====================================================================== DATENSICHERUNG -->
+<h2 class="part">Datensicherung (#158)</h2>
+
+<h2><span class="area">DS1</span> Aufbau der Seite</h2>
+<p class="lead">Heute: ein Formular mit vier Abschnitten und drei langen Fußtexten (Format und Speicherort, private Inhalte, automatische Sicherung, was nicht gesichert wird).</p>
+<div class="grid">
+<div>
+<p class="label"><span class="code">DS1a</span> <b>Formular mit Fußtexten</b> <span class="same">heute</span></p>
+<div class="phone l crop"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="nav"><span class="back">‹ Einstellungen</span><span class="c">Datensicherung</span><span></span></div>
+<div class="list"><div class="tl a">⇪ Jetzt sichern</div><div class="tl a">↺ Wiederherstellen …</div><div class="tl"><span class="tx">Anhänge in Notizen</span><span class="ch">12 · 34 MB</span></div></div>
+<div class="foot1">Die Sicherung ist eine einzelne Datei mit allen eigenen Daten, auch den Bildern und Dateien in Notizen. Sie ist nicht verschlüsselt und liegt dort, wo du sie speicherst, zum Beispiel in iCloud Drive.</div>
+<div class="list"><div class="tl"><span class="tx">Tagebuch und Bible Study einschließen</span><span class="tog on"></span></div></div>
+<div class="foot1">Gilt für „Jetzt sichern“ und die automatische Sicherung. Ohne diese Inhalte bleiben beim Wiederherstellen vorhandene Einträge erhalten.</div>
+<div class="section">Automatische Sicherung</div>
+<div class="list"><div class="tl"><span class="tx">Automatisch sichern</span><span class="tog on"></span></div><div class="tl"><span class="tx">Sicherungsordner</span><span class="ch">Tagwerk</span></div><div class="tl"><span class="tx">Letzte Sicherung</span><span class="ch">20. Nov. 2026, 07:12</span></div></div>
+</div></div>
+<p class="pc">Alles da, aber die wichtigste Frage („bin ich gesichert?“) beantwortet erst die neunte Zeile, und die Regeln stehen in Fließtext.</p>
+</div>
+<div>
+<p class="label"><span class="code r">DS1b</span> <b>Statuskarte oben, kurze Abschnitte</b> <span class="rec">Empfehlung</span></p>
+<div class="phone l crop"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="nav"><span class="back">‹ Einstellungen</span><span class="c">Datensicherung</span><span></span></div>
+<div class="stat card new" style="display:block;border:0"><span class="ok">✓ Gesichert</span><b>Heute, 07:12</b><small>Automatisch nach iCloud Drive › Tagwerk · 7 Sicherungen · 41 MB · mit Tagebuch und Bible Study · verschlüsselt</small></div>
+<div class="list"><div class="tl a">⇪ Jetzt sichern</div><div class="tl a">↺ Wiederherstellen …</div></div>
+<div class="section">Automatisch</div>
+<div class="list"><div class="tl"><span class="tx">Automatisch sichern<small>Täglich beim Verlassen der App, die letzten 7 bleiben</small></span><span class="tog on"></span></div><div class="tl"><span class="tx">Sicherungsordner</span><span class="ch">Tagwerk ›</span></div></div>
+<div class="section">Inhalt</div>
+<div class="list"><div class="tl"><span class="tx">Tagebuch und Bible Study einschließen</span><span class="tog on"></span></div><div class="tl new"><span class="tx">Mit Passwort verschlüsseln</span><span class="ch">Ein ›</span></div><div class="tl new"><span class="tx">Was wird gesichert?</span><span class="ch">›</span></div></div>
+<div class="section new">Vor dem Wiederherstellen</div>
+<div class="list"><div class="tl new"><span class="tx">Sicherheitskopien</span><span class="ch">2 ›</span></div></div>
+</div></div>
+<p class="pc"><b>Grund:</b> Die Karte beantwortet auf einen Blick, ob, wann, wohin und mit welchem Inhalt gesichert wurde; ohne Ordner oder nach einem Fehler wird sie orange („Nicht gesichert seit 3 Tagen · Ordner nicht erreichbar“). Die langen Erklärungen wandern auf die Unterseite „Was wird gesichert?“ (Liste gesichert / nicht gesichert / an dieses Gerät gebunden).</p>
+</div>
+<div>
+<p class="label"><span class="code">DS1c</span> <b>Zwei Unterseiten</b></p>
+<div class="phone crop s"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="nav"><span class="back">‹ Einstellungen</span><span class="c">Datensicherung</span><span></span></div>
+<div class="list"><div class="tl"><span class="tx">Sichern<small>Heute, 07:12 · automatisch</small></span><span class="ch">›</span></div><div class="tl"><span class="tx">Wiederherstellen<small>Aus Datei oder Sicherheitskopie</small></span><span class="ch">›</span></div></div>
+</div></div>
+<p class="pc">Sehr aufgeräumt, aber jede Aktion liegt einen Tipp tiefer, und Einstellungen, die für beides gelten (privat, Verschlüsselung), haben keinen klaren Platz.</p>
+</div>
+</div>
+
+<h2><span class="area">DS4</span> Wiederherstellen: Ersetzen oder Zusammenführen</h2>
+<p class="lead">Heute: Nach der Dateiwahl fragt ein Dialog „Alle Daten durch die Sicherung ersetzen?“ mit einem Satz Zahlen. Vorher schreibt Tagwerk eine Sicherheitskopie; schlägt das Ersetzen fehl, kommt der alte Stand aus ihr zurück.</p>
+<div class="grid">
+<div>
+<p class="label"><span class="code">DS4a</span> <b>Ersetzen, Dialog</b> <span class="same">heute</span></p>
+<div class="phone crop sh"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="fs" style="margin-top:150px;text-align:center"><div class="fr" style="display:block;color:var(--sub);font-size:12.5px;line-height:1.4"><b style="color:var(--text);font-size:13.5px">Alle Daten durch die Sicherung ersetzen?</b><br>Sicherung vom 19. Nov. 2026, 07:10: 212 Aufgaben, 84 Notizen, 8 Gewohnheiten, 431 Mahlzeiten. Mit Tagebuch und Bible Study. Das ersetzt die gesicherten Daten auf diesem iPhone.</div><div class="fr x" style="justify-content:center;font-size:16px">Wiederherstellen</div></div>
+<div class="fs"><div class="fr a" style="justify-content:center;font:600 16px system-ui">Abbrechen</div></div>
+</div></div>
+<p class="pc">Man sieht, was in der Datei steht, aber nicht, was auf dem iPhone dadurch verloren geht.</p>
+</div>
+<div>
+<p class="label"><span class="code r">DS4b</span> <b>Ersetzen, Blatt mit Vergleich</b> <span class="rec">Empfehlung</span></p>
+<div class="phone crop l sh"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="bar"><span class="l">Abbrechen</span>Wiederherstellen</div>
+<div class="fh">Sicherung vom 19. Nov. 2026, 07:10</div>
+<div class="fs cmp"><span class="h"></span><span class="h r">Dieses iPhone</span><span class="h r">Sicherung</span><span>Aufgaben</span><span class="r">218</span><span class="r">212</span><span>Notizen</span><span class="r">86</span><span class="r">84</span><span>Gewohnheiten</span><span class="r">8</span><span class="r">8</span><span>Mahlzeiten</span><span class="r">437</span><span class="r">431</span><span>Tagebuch, Bible Study</span><span class="r">45</span><span class="r">45</span></div>
+<div class="hint" style="margin:10px 0 0"><b>Alles auf diesem iPhone wird ersetzt.</b> Was seit dem 19. Nov. dazugekommen ist, steht danach nur noch in der Sicherheitskopie, die Tagwerk jetzt anlegt.</div>
+<span class="big" style="background:var(--red)">Daten ersetzen</span>
+<div class="ff" style="text-align:center;margin-top:8px">Nicht betroffen: Chatverlauf, Anmeldung bei ChatGPT und GitHub.</div>
+</div></div>
+<p class="pc"><b>Grund:</b> Ersetzen bleibt (eindeutiges Ergebnis, kein doppeltes Anlegen), aber der Vergleich zeigt vor dem Tippen, was verloren ginge, und der Hinweis nennt den Rückweg. Enthält die Datei keine privaten Notizen, steht in der letzten Zeile „bleibt erhalten“. Die Spalte „Dieses iPhone“ muss neu gezählt werden.</p>
+</div>
+<div>
+<p class="label"><span class="code">DS4c</span> <b>Zusammenführen</b></p>
+<div class="phone crop sh"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="bar"><span class="l">Abbrechen</span>Wiederherstellen</div>
+<div class="fs"><div class="fr">Alles ersetzen</div><div class="fr new"><span class="tx">Zusammenführen<small>Fehlendes ergänzen, bei gleicher ID gewinnt der neuere Stand</small></span><span style="color:var(--blue)">✓</span></div></div>
+<div class="ff">6 Aufgaben und 2 Notizen gibt es nur auf diesem iPhone; sie bleiben.</div>
+</div></div>
+<p class="pc">Klingt sicherer, ist aber schwer vorherzusagen: Gelöschtes kommt zurück, Aufgaben in Erinnerungen und Einträge in Health haben keine gemeinsame ID, und „neuerer Stand“ ist bei Tageswerten nicht definiert. Nicht empfohlen.</p>
+</div>
+</div>
+
+<h2><span class="area">DS6</span> Verschlüsselung · <span class="area">DS7</span> Sicherheitskopien · <span class="area q">DS2</span> <span class="area q">DS3</span> <span class="area q">DS5</span></h2>
+<p class="lead">Heute ist die Sicherung eine unverschlüsselte JSON-Datei. Sicherheitskopien („Tagwerk-Vor-Wiederherstellung-…“) liegen in Dokumente/Sicherungen, sind über die Dateien-App und den Finder sichtbar (<code>UIFileSharingEnabled</code>), enthalten immer auch Tagebuch und Bible Study und werden nie gelöscht.</p>
+<div class="grid">
+<div>
+<p class="label"><span class="code r">DS6b</span> <b>Optional mit Passwort</b> <span class="rec">Empfehlung</span></p>
+<div class="phone crop sh"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="bar"><span class="l">‹ Datensicherung</span>Verschlüsselung</div>
+<div class="fs"><div class="fr new">Mit Passwort verschlüsseln <span class="tog on"></span></div><div class="fr new">Passwort ändern <span class="v">›</span></div></div>
+<div class="ff">Gilt für „Jetzt sichern“, die automatische Sicherung und Sicherheitskopien. Das Passwort liegt im Schlüsselbund dieses iPhones, damit automatisch gesichert werden kann.</div>
+<div class="hint"><b>Ohne Passwort lässt sich eine verschlüsselte Sicherung nicht öffnen.</b> Tagwerk kann es nicht zurücksetzen. Auf einem neuen iPhone wirst du beim Wiederherstellen danach gefragt.</div>
+</div></div>
+<p class="pc"><b>Grund:</b> Die Datei enthält Tagebuch und Bible Study und liegt typischerweise in iCloud Drive; ein Passwort schützt sie dort, ohne alle zu zwingen. <b>DS6a</b> (nie) lässt den privatesten Inhalt im Klartext; <b>DS6c</b> (immer) macht jede Sicherung von einem Passwort abhängig, das man verlieren kann. Dateiendung bei verschlüsselten Sicherungen z. B. <code>.tagwerk</code>, damit niemand sie für JSON hält.</p>
+</div>
+<div>
+<p class="label"><span class="code r">DS7c</span> <b>Sicherheitskopien verborgen, begrenzt, Liste in der App</b> <span class="rec">Empfehlung</span></p>
+<div class="phone crop sh"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="bar"><span class="l">‹ Datensicherung</span>Sicherheitskopien</div>
+<div class="ff" style="font-size:12.5px">Vor jedem Wiederherstellen legt Tagwerk eine Kopie des bisherigen Stands an. Die letzten 3 bleiben, höchstens 30 Tage. Sie enthalten immer auch Tagebuch und Bible Study.</div>
+<div class="fs"><div class="fr new"><span class="tx">20. Nov. 2026, 18:02<small>Stand vor dem Wiederherstellen · 41 MB · noch 30 Tage</small></span><span class="v">⋯</span></div><div class="fr new"><span class="tx">2. Nov. 2026, 09:40<small>38 MB · noch 12 Tage</small></span><span class="v">⋯</span></div></div>
+<div class="menu glass" style="margin-top:8px"><div>Diesen Stand zurückholen <span>↺</span></div><div>Als Datei sichern <span>⇪</span></div><div class="x">Löschen <span>🗑</span></div></div>
+</div></div>
+<p class="pc"><b>Grund:</b> Eine Kopie, die immer die privaten Notizen enthält, gehört nicht in einen Ordner, den Dateien-App und Finder offen zeigen; in der App bleibt sie auffindbar und bekommt mit „zurückholen“ erst ihren Zweck. Technisch: Ablage in Application Support statt Dokumente. <b>DS7a</b> (heute) wächst unbegrenzt und liegt offen; <b>DS7b</b> (sichtbar, aber 3 Stück / 30 Tage) löst nur das Wachstum.</p>
+</div>
+<div>
+<div class="box" style="margin-top:0"><h3>Ja/Nein-Fragen</h3>
+<ul>
+<li><b>DS2 Chatverlauf sichern: nein (wie heute).</b> Grund: Der Verlauf ist Arbeitsprotokoll, kein eigener Datenbestand; alles, was der Assistent angelegt hat (Aufgaben, Notizen, Blöcke), ist ohnehin gesichert, und der Verlauf würde die Datei mit Inhalten füllen, die auch an ChatGPT gingen. Auf der Seite „Was wird gesichert?“ steht er ausdrücklich unter „Nicht gesichert“.</li>
+<li><b>DS3 Intervall und Anzahl: 24 Stunden und 7 Dateien fest lassen (a).</b> Grund: Zwei Einstellungen mehr für eine Entscheidung, die fast niemand treffen will; die Werte stehen in der Statuskarte. <b>b</b> (täglich/wöchentlich, 3/7/30) kostet Oberfläche. <b>c</b> (7 tägliche plus 4 wöchentliche) wäre die sachlich bessere Stufe, falls ein Verlust erst nach über einer Woche auffällt; als spätere Verbesserung ohne Einstellung möglich, mit Anhängen aber bis zu elfmal die Dateigröße.</li>
+<li><b>DS5 Standard „Tagebuch und Bible Study einschließen“: an (wie heute).</b> Grund: Eine Sicherung, die ausgerechnet das Unwiederbringliche auslässt, erfüllt ihren Zweck nicht. Zusammen mit DS6b: Beim Einschalten der automatischen Sicherung ohne Passwort erscheint einmal der Hinweis „Die Sicherung enthält dein Tagebuch unverschlüsselt. Passwort festlegen?“</li>
+</ul></div>
+</div>
+</div>
+
+<!-- ====================================================================== ROUTINEN -->
+<h2 class="part">Routinen nach dem Abgleich mit Notion (#141–#146, #163, #164)</h2>
+
+<h2><span class="area">RO1</span> Tagesstart: Reihenfolge und Aussehen · <span class="area q">RO2</span> Bewertung im Dream Log · <span class="area">RO3</span> Tagesfokus</h2>
+<p class="lead">Heute: Brain Dump, „Dankbar für“ (ein Feld, weitere erscheinen beim Füllen, höchstens drei), Dream Log; „Fertig“ oben rechts. Planung und Tagesfokus gehören nicht mehr dazu.</p>
+<div class="grid">
+<div>
+<p class="label"><span class="code">RO1a</span> <b>Brain Dump, Dankbarkeit, Dream Log</b> <span class="same">heute</span></p>
+<div class="phone crop l sh"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="bar">Tagesstart<span>Fertig</span></div>
+<div class="fh" style="display:flex;justify-content:space-between">Brain Dump <span style="color:var(--blue);text-transform:none">Leitfragen einfügen</span></div>
+<div class="fs"><div class="fr fld">Schreib auf, was in deinen Kopf kommt. Sortier deine Gedanken. <span>🎙</span></div></div>
+<div class="ff">Willst du etwas ändern? Vielleicht hat dir der Brain Dump Klarheit gegeben. „Vorschläge holen“ prüft ihn gegen deine Aufgaben und Termine der nächsten 7 Tage …</div>
+<div class="fh">Dankbar für</div>
+<div class="fs"><div class="fr ph">Dankbar für</div></div>
+<div class="fh">Dream Log</div>
+<div class="fs"><div class="fr fld">Was hast du geträumt? <span>🎙</span></div></div>
+<div class="ff">Der Dream Log bleibt auf diesem iPhone und wird nie an ChatGPT gesendet.</div>
+</div></div>
+<p class="pc">Der Traum, der am schnellsten verblasst, steht zuletzt; das schwerste Feld (leerer Brain Dump mit langem Fußtext) zuerst.</p>
+</div>
+<div>
+<p class="label"><span class="code r">RO1b</span> <b>Dream Log, Dankbarkeit, Brain Dump</b> <span class="rec">Empfehlung</span></p>
+<div class="phone crop l sh"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="bar">Tagesstart<span>Fertig</span></div>
+<div class="fh new"><span style="color:var(--indigo)">☁</span> Dream Log</div>
+<div class="fs"><div class="fr fld new">Was hast du geträumt? <span>🎙</span></div></div>
+<div class="ff">Bleibt auf diesem iPhone, geht nie an ChatGPT.</div>
+<div class="fh"><span style="color:var(--orange)">☼</span> Dankbar für</div>
+<div class="fs"><div class="fr">1 &nbsp;Kaffee mit Jonas</div><div class="fr ph">2 &nbsp;Dankbar für</div></div>
+<div class="fh" style="display:flex;justify-content:space-between"><span><span style="color:var(--purple)">◉</span> Brain Dump</span><span style="color:var(--blue);text-transform:none">Leitfragen einfügen</span></div>
+<div class="fs"><div class="fr fld new">Schreib auf, was in deinen Kopf kommt. Sortier deine Gedanken. <span>🎙</span></div></div>
+<div class="fs" style="margin-top:12px"><div class="fr new"><span class="tx">★ Fokus für heute<small>In „Planen“ setzen · 1 von 3 gewählt</small></span><span class="v">›</span></div></div>
+</div></div>
+<p class="pc"><b>Grund:</b> Vom Flüchtigsten zum Aufwendigsten: erst der Traum, dann ein leichter Einstieg mit Dankbarkeit, dann der freie Text, der bei Bedarf in Vorschläge mündet (RO5b). Die Überschriften tragen Symbol und Farbe des jeweiligen Ordners (RO4). Die letzte Zeile ist RO3b.</p>
+</div>
+<div>
+<p class="label"><span class="code">RO1c</span> <b>Drei aufklappbare Zeilen</b></p>
+<div class="phone crop l sh"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="bar">Tagesstart<span>Fertig</span></div>
+<div class="fs"><div class="fr"><span class="tx">☁ Dream Log<small>Noch nichts</small></span><span class="v">⌄</span></div><div class="fr"><span class="tx">☼ Dankbar für<small style="color:var(--green)">✓ Kaffee mit Jonas</small></span><span class="v">⌄</span></div><div class="fr"><span class="tx">◉ Brain Dump<small>Noch nichts</small></span><span class="v">⌃</span></div><div class="fr fld">Schreib auf, was in deinen Kopf kommt. <span>🎙</span></div></div>
+</div></div>
+<p class="pc">Kurz und mit Zustand je Teil, aber jedes Feld kostet einen Tipp, bevor man schreiben kann; bei nur drei freiwilligen Feldern unnötig.</p>
+</div>
+</div>
+<div class="grid" style="margin-top:22px">
+<div>
+<p class="label"><span class="code">RO2</span> <b>Dream Log mit Bewertung (wie in Notion)</b></p>
+<div class="phone crop s sh"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="fh">☁ Dream Log</div>
+<div class="fs"><div class="fr fld">Ich war wieder in der alten Schule, aber …</div><div class="fr new">Bewertung <span class="stars">★★★★<span style="color:var(--card2)">★</span></span></div></div>
+</div></div>
+<p class="pc"><b>Empfehlung: nein.</b> Grund: Eine Bewertung lohnt nur, wenn sie irgendwo ausgewertet wird (Verlauf, Filter); dafür gibt es weder eine Ansicht noch ein Feld an der Notiz. Wer bewerten will, schreibt es in den Text. Falls ja: fünf Sterne unter dem Feld, in der Ordnerliste als „★ 4“ in der Fußzeile.</p>
+</div>
+<div>
+<div class="box" style="margin-top:0"><h3>RO3 · Tagesfokus: in „Planen“ setzen, Hinweiszeile im Tagesstart (b)</h3>
+<ul>
+<li><b>b (Empfehlung):</b> Der Fokus bleibt, wo die Aufgaben stehen: Stern an der Aufgabe in „Planen“, Karte „Fokus heute · 1 von 3“ wie gebaut (<code>RoutineCard</code>). Der Tagesstart bekommt als letzte Zeile nur einen Sprung dorthin (siehe RO1b). <b>Grund:</b> Der Fokus ist eine Planungsentscheidung und braucht die Aufgabenliste vor Augen; der Tagesstart bleibt „sanft“.</li>
+<li><b>a Ganz weglassen:</b> Dann entfallen auch „★ Fokus“ im Tagesabschluss und die Karte; ein Verlust, weil der Abendrückblick sonst nur Mengen zählt.</li>
+<li><b>c Zurück in den Tagesstart:</b> Widerspricht der Entscheidung „ohne Planung“ und verdoppelt die Auswahl aus „Planen“.</li>
+</ul></div>
+</div>
+</div>
+
+<h2><span class="area q">RO4</span> Symbol am Brain-Dump-Feld · <span class="area">RO5</span> Platz von „Willst du etwas ändern?“</h2>
+<p class="lead">Heute steht die Einladung als Fußtext unter dem Brain-Dump-Feld, zusammen mit dem Datenschutzsatz, auch wenn das Feld noch leer ist; „Vorschläge holen“ folgt als eigene Zeile darunter.</p>
+<div class="grid">
+<div>
+<p class="label"><span class="code">RO5a</span> <b>Fußtext unter dem Feld</b> <span class="same">heute</span></p>
+<div class="phone crop sh"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="fh">Brain Dump</div>
+<div class="fs"><div class="fr fld" style="color:var(--text)">Kopf voll wegen Umzug. Vermieter hat noch nicht geantwortet, Kaution unklar …</div><div class="fr a">＋ Als Aufgabe anlegen</div></div>
+<div class="fs" style="margin-top:8px"><div class="fr a">✦ Vorschläge holen</div></div>
+<div class="ff">Willst du etwas ändern? Vielleicht hat dir der Brain Dump Klarheit gegeben. „Vorschläge holen“ prüft ihn gegen deine Aufgaben und Termine der nächsten 7 Tage. „Vorschläge holen“ sendet diese Notiz an ChatGPT. Nichts wird ohne deine Bestätigung geändert.</div>
+</div></div>
+<p class="pc">Die Frage, die zum Handeln einladen soll, steht im kleinsten Text des Blatts und nach dem Knopf, den sie erklärt.</p>
+</div>
+<div>
+<p class="label"><span class="code r">RO5b</span> <b>Eigene Karte, sobald Text da ist</b> <span class="rec">Empfehlung</span></p>
+<div class="phone crop sh"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="fh new"><span style="color:var(--purple)">◉</span> Brain Dump</div>
+<div class="fs"><div class="fr fld" style="color:var(--text)">Kopf voll wegen Umzug. Vermieter hat noch nicht geantwortet, Kaution unklar …</div></div>
+<div class="fs" style="margin-top:10px;box-shadow:inset 3px 0 0 #ffd60a"><div class="q">Willst du etwas ändern?</div><div class="ff" style="margin:2px 12px 8px;font-size:12.5px">Vielleicht hat dir der Brain Dump Klarheit gegeben.</div><div class="fr a" style="border-top:1px solid var(--sep)">✦ Vorschläge holen</div><div class="fr a">＋ Als Aufgabe anlegen</div></div>
+<div class="ff">„Vorschläge holen“ sendet diese Notiz mit deinen Aufgaben und Terminen der nächsten 7 Tage an ChatGPT. Nichts wird ohne deine Bestätigung geändert.</div>
+</div></div>
+<p class="pc"><b>Grund:</b> Die Frage wird zur Überschrift der beiden Handlungen und erscheint erst, wenn es etwas zu ändern gibt; der Datenschutzsatz bleibt als Fußtext direkt unter dem Knopf, den er betrifft. Gilt gleich in Tagesstart und Tagesabschluss. <b>RO4: ja</b>, das Symbol des Ordners (<code>brain.head.profile</code>, Farbe aus NO2b) steht vor der Überschrift; Grund: Feld und Ordner werden als dasselbe erkannt.</p>
+</div>
+<div>
+<p class="label"><span class="code">RO5c</span> <b>Am Ende des Blatts</b></p>
+<div class="phone crop sh"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="fh">Zeit mit Gott</div>
+<div class="fs"><div class="fr">▣ Tagebuch schreiben <span class="v">›</span></div></div>
+<div class="fs" style="margin-top:12px"><div class="q">Willst du etwas ändern?</div><div class="fr a" style="margin-top:6px;border-top:1px solid var(--sep)">✦ Vorschläge aus dem Brain Dump holen</div></div>
+</div></div>
+<p class="pc">Liest sich als Abschlussfrage des ganzen Blatts, trennt den Knopf aber vom Text, den er sendet; im Tagesabschluss läge er unter dem privaten Tagebuch, was die Datenschutzgrenze verwischt.</p>
+</div>
+</div>
+
+<h2><span class="area">RO6</span> „Helle Lichter ausmachen“ · <span class="area">RO7</span> Welche Punkte erinnern</h2>
+<p class="lead">Heute: fünf vorgeschlagene Punkte; Zeiten sind Abstände zur Schlafzeit (Vorgabe 23:00). „Helle Lichter ausmachen“ und „Zähne putzen …“ haben keine Zeit und erinnern nicht; es erinnern 90, 60 und 30 Minuten vorher (höchstens vier möglich). Nach #173, Punkt 15, werden Erinnerungen je Tag einzeln geplant; ein abgehakter Punkt erinnert an dem Abend nicht mehr.</p>
+<div class="grid">
+<div>
+<p class="label"><span class="code">RO6a</span> <b>Feste Uhrzeit 22:00</b></p>
+<div class="phone crop sh"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="fh">Abend-Checkliste · Schlafzeit 23:30</div>
+<div class="fs"><div class="fr new"><span class="ck"></span><span class="tx">Helle Lichter ausmachen</span><span class="v">🔔 22:00</span></div><div class="fr"><span class="ck"></span><span class="tx">Alle Aufgaben bis eine Stunde vorm Schlafen erledigen</span><span class="v">22:00</span></div><div class="fr"><span class="ck"></span><span class="tx">Eine Stunde vorm Schlafen fertig machen</span><span class="v">22:30</span></div></div>
+</div></div>
+<p class="pc">Entspricht dem Wortlaut aus Notion, passt aber nicht mehr, sobald die Schlafzeit verschoben wird (hier 23:30): „Lichter“ bliebe bei 22:00 stehen.</p>
+</div>
+<div>
+<p class="label"><span class="code r">RO6b · RO7b</span> <b>Relativ zur Schlafzeit, „Lichter“ erinnert mit</b> <span class="rec">Empfehlung</span></p>
+<div class="phone crop l sh"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="fh">Abend-Checkliste · Schlafzeit 23:00</div>
+<div class="fs"><div class="fr new"><span class="ck"></span><span class="tx">Helle Lichter ausmachen<small>60 min vorher</small></span><span class="v">🔔 22:00</span></div><div class="fr"><span class="ck"></span><span class="tx">Alle Aufgaben bis eine Stunde vorm Schlafen erledigen<small>90 min vorher</small></span><span class="v">🔔 21:30</span></div><div class="fr"><span class="ck done g"></span><span class="tx" style="color:var(--sub)">Eine Stunde vorm Schlafen fertig machen<small>abgehakt, erinnert heute nicht mehr</small></span><span class="v" style="text-decoration:line-through">22:00</span></div><div class="fr"><span class="ck"></span><span class="tx">Zähne putzen, umziehen, Haus/Wohnung aufräumen</span><span class="v"></span></div><div class="fr"><span class="ck"></span><span class="tx">Eine halbe Stunde vorm Schlafen ins Bett legen<small>30 min vorher</small></span><span class="v">🔔 22:30</span></div></div>
+<div class="ff">🔔 erinnert zur Uhrzeit. Die Zeiten folgen der Schlafzeit. Höchstens vier Punkte erinnern.</div>
+</div></div>
+<p class="pc"><b>Grund RO6b:</b> Alle anderen Punkte hängen schon an der Schlafzeit; „60 min vorher“ ergibt bei 23:00 genau die 22:00 aus Notion und wandert mit. <b>Grund RO7b:</b> „Lichter aus“ ist der Punkt, den man ohne Anstoß vergisst; damit erinnern vier Punkte (die Obergrenze), „Zähne putzen …“ bleibt ohne Zeit. Die Glocke zeigt in der Liste, welche Punkte erinnern; heute ist das nur in den Einstellungen sichtbar. Im Blatt steht die Uhrzeit, in den Einstellungen zusätzlich der Abstand.</p>
+</div>
+<div>
+<p class="label"><span class="code">RO6c</span> <b>Je Punkt wählbar</b></p>
+<div class="phone crop sh"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="bar"><span class="l">Abbrechen</span>Punkt<span>Fertig</span></div>
+<div class="fs"><div class="fr">Helle Lichter ausmachen</div></div>
+<div class="fs" style="margin-top:10px"><div class="fr">Erinnerung <span class="tog on"></span></div><div class="fr new" style="display:block"><div class="seg2" style="margin:0"><span>Vor der Schlafzeit</span><span class="on">Feste Uhrzeit</span></div></div><div class="fr">Uhrzeit <span class="v">22:00</span></div></div>
+</div></div>
+<p class="pc">Deckt beide Wünsche ab, braucht aber ein zweites Zeitfeld am Punkt (<code>ChecklistItem.offsetMinutes</code> reicht nicht) und erklärt sich in der Liste schlechter. <b>RO7c</b> (nur ein Punkt erinnert) wäre ruhiger, verfehlt aber den Zweck der gestaffelten Abendroutine.</p>
+</div>
+</div>
+
+<h2><span class="area">RO8</span> Wochenreflexion: drei Fragen</h2>
+<div class="grid">
+<div>
+<p class="label"><span class="code">RO8a</span> <b>Frage als Platzhalter im Feld</b> <span class="same">heute</span></p>
+<div class="phone crop sh"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="fh">Reflexion</div>
+<div class="fs"><div class="fr fld" style="color:var(--text)">Seminararbeit Kapitel 2 fertig, zweimal laufen gewesen.</div><div class="fr fld">Belastet mich etwas?</div><div class="fr fld">Wie laufen meine Ziele, Projekte und Tasks?</div></div>
+<div class="ff">Alle Felder sind freiwillig. Die Reflexion liegt nur auf diesem iPhone.</div>
+</div></div>
+<p class="pc">Sobald man schreibt, verschwindet die Frage; beim späteren Lesen weiß man beim ersten Feld nicht mehr, worauf der Text antwortet.</p>
+</div>
+<div>
+<p class="label"><span class="code r">RO8b</span> <b>Frage als Überschrift über dem Feld</b> <span class="rec">Empfehlung</span></p>
+<div class="phone crop sh"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="fh">Reflexion</div>
+<div class="fs"><div class="q new">Was lief gut?</div><div class="fr" style="color:var(--text)">Seminararbeit Kapitel 2 fertig, zweimal laufen gewesen.</div><div class="q">Belastet mich etwas?</div><div class="fr ph" style="min-height:40px">Antwort</div><div class="q">Wie laufen meine Ziele, Projekte und Tasks?</div><div class="fr ph" style="min-height:40px">Antwort</div></div>
+<div class="ff">Alle Felder sind freiwillig. Die Reflexion liegt nur auf diesem iPhone.</div>
+</div></div>
+<p class="pc"><b>Grund:</b> Alle drei Fragen bleiben sichtbar, auch mit Antwort, und man kann ohne Tippen sehen, was noch offen ist. Gleicher Aufbau im Wochenrückblick und im Schritt „Reflexion“ der Wochenplanung.</p>
+</div>
+<div>
+<p class="label"><span class="code">RO8c</span> <b>Aufklappbar wie in Notion</b></p>
+<div class="phone crop sh"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="fh">Reflexion</div>
+<div class="fs"><div class="fr"><span class="tx">Was lief gut?<small style="color:var(--green)">✓ Seminararbeit Kapitel 2 fertig, zweimal …</small></span><span class="v">›</span></div><div class="fr"><span class="tx">Belastet mich etwas?</span><span class="v">⌄</span></div><div class="fr ph" style="min-height:50px">Antwort</div><div class="fr"><span class="tx">Wie laufen meine Ziele, Projekte und Tasks?</span><span class="v">›</span></div></div>
+</div></div>
+<p class="pc">Vertraut aus Notion und kompakt, aber jede Antwort kostet einen Tipp mehr, und längere Antworten sind zugeklappt abgeschnitten. Sinnvoll erst bei deutlich mehr als drei Fragen.</p>
+</div>
+</div>
+
+<h2><span class="area">RO9</span> „Unerledigtes verschieben“ · <span class="area">RO10</span> Zeile in der Kapazitätskarte · <span class="area">RO11</span> „kein freier Platz“</h2>
+<p class="lead">Heute: Die Zeile „Unerledigtes verschieben · 3 Aufgaben“ öffnet ein Blatt mit drei Optionen (alles auf den nächsten Arbeitstag, in den nächsten freien Block, einzeln entscheiden). Danach steht im Tagesabschluss „2 verschoben, 1 ohne freien Platz“ mit „Rückgängig“.</p>
+<div class="grid">
+<div>
+<p class="label"><span class="code">RO9a</span> <b>Blatt mit drei Optionen</b> <span class="same">heute</span></p>
+<div class="phone crop sh"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="bar"><span class="l">Schließen</span>Unerledigtes verschieben</div>
+<div class="fh">3 Aufgaben</div>
+<div class="fs"><div class="opt"><i>→</i><div><b>Alles auf morgen</b></div></div><div class="opt"><i>◷</i><div><b>In den nächsten freien Block</b><small>Ab morgen, vor der Fälligkeit, ohne Überschneidung</small></div></div><div class="opt"><i>☰</i><div><b>Einzeln entscheiden</b></div></div></div>
+</div></div>
+<p class="pc">Klar, aber man erfährt erst nach dem Tippen, ob morgen Platz ist und welche Aufgaben gemeint sind.</p>
+</div>
+<div>
+<p class="label"><span class="code">RO9b</span> <b>Aktionsmenü</b></p>
+<div class="phone crop sh"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="fs" style="margin-top:130px;text-align:center"><div class="fr" style="justify-content:center;color:var(--sub);font-size:12.5px">3 unerledigte Aufgaben von heute</div><div class="fr a" style="justify-content:center;font-size:16px">Alles auf morgen</div><div class="fr a" style="justify-content:center;font-size:16px">In den nächsten freien Block</div><div class="fr a" style="justify-content:center;font-size:16px">Einzeln entscheiden …</div></div>
+<div class="fs"><div class="fr a" style="justify-content:center;font:600 16px system-ui">Abbrechen</div></div>
+</div></div>
+<p class="pc">Ein Tipp weniger Gewicht, aber kein Platz für Unterzeilen, Vorschau oder die Aufgabenliste; „Einzeln entscheiden“ braucht trotzdem ein Blatt.</p>
+</div>
+<div>
+<p class="label"><span class="code r">RO9c · RO11b</span> <b>Blatt mit Vorschau und Ergebnisliste</b> <span class="rec">Empfehlung</span></p>
+<div class="phone crop l sh"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="bar"><span class="l">Schließen</span>Unerledigtes verschieben</div>
+<div class="fh">3 Aufgaben · 2 h 30</div>
+<div class="fs"><div class="opt"><i>→</i><div><b>Alles auf morgen</b><small class="new">Samstag hat 4 h frei · passt</small></div></div><div class="opt"><i>◷</i><div><b>In den nächsten freien Block</b><small>Ab morgen, vor der Fälligkeit, ohne Überschneidung</small></div></div><div class="opt"><i>☰</i><div><b>Einzeln entscheiden</b><small class="new">Exposé Kapitel 2 · Mail an Vermieter · Wäsche</small></div></div></div>
+<div class="fh" style="margin-top:14px">Nach dem Verschieben</div>
+<div class="fs"><div class="fr"><span class="tx" style="color:var(--green)">✓ 2 verschoben</span><span class="v" style="color:var(--blue)">Rückgängig</span></div><div class="fr new"><span class="tx">Exposé Kapitel 2<small style="color:var(--orange)">Kein freier Platz vor der Fälligkeit (Mo.)</small></span><span class="v" style="color:var(--blue)">Datum … ›</span></div></div>
+</div></div>
+<p class="pc"><b>Grund RO9c:</b> Das Blatt bleibt (drei erklärungsbedürftige Wege brauchen Unterzeilen), sagt aber vorher, ob der Zieltag Platz hat und welche Aufgaben gemeint sind. <b>Grund RO11b:</b> „1 ohne freien Platz“ als Zahl lässt offen, welche Aufgabe; die Zeile nennt sie mit dem Grund und einem direkten Ausweg („Datum …“, im Menü auch „Trotzdem auf morgen“ und „Erledigt“).</p>
+</div>
+</div>
+<div class="grid" style="margin-top:22px">
+<div>
+<p class="label"><span class="code r">RO10a</span> <b>Dritte Zeile in der Kapazitätskarte</b> <span class="rec">Empfehlung</span></p>
+<div class="phone crop s"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="cap"><b>0 h 45 frei</b><i style="background:var(--orange)"></i><small>09:00 bis 18:00 · 8 h 15 belegt oder geplant</small><div class="ln" style="box-shadow:inset 3px 0 0 #ffd60a;padding-left:8px"><b style="font-size:13px;display:inline">↪ Unerledigtes verschieben</b><span>3 Aufgaben ›</span></div></div>
+</div></div>
+<p class="pc"><b>Grund:</b> Die Karte beantwortet „passt mein Tag?“, und das Verschieben ist die Antwort auf „nein“; die Zeile erscheint nur, wenn es Unerledigtes gibt (ab dem späten Nachmittag oder wenn die Kapazität überschritten ist), sonst bleibt die Karte zweizeilig.</p>
+</div>
+<div>
+<p class="label"><span class="code">RO10b</span> <b>Eigene Kapsel unter der Karte</b></p>
+<div class="phone crop s"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="cap"><b>0 h 45 frei</b><i style="background:var(--orange)"></i><small>09:00 bis 18:00 · 8 h 15 belegt oder geplant</small></div>
+<div class="undo glass" style="margin:0 0 8px"><b style="font-weight:600">↪ 3 Aufgaben von heute offen</b><span>Verschieben</span></div>
+</div></div>
+<p class="pc">Auffälliger, aber ein weiteres schwebendes Element neben der „Rückgängig“-Kapsel, die „Planen“ schon nutzt; beides zugleich wäre zu viel.</p>
+</div>
+<div>
+<p class="label"><span class="code">RO10c</span> <b>Nur im Tagesabschluss</b> <span class="same">heute im Blatt</span></p>
+<div class="phone crop s sh"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="bar">Tagesabschluss<span>Fertig</span></div>
+<div class="fh">Unerledigt von heute</div>
+<div class="fs"><div class="fr"><span class="tx" style="font-weight:600"><span style="color:var(--blue)">↪</span> Unerledigtes verschieben · 3 Aufgaben</span><span class="v">›</span></div></div>
+</div></div>
+<p class="pc">Am ruhigsten. Wer den Tagesabschluss auslässt, schleppt die Aufgaben aber ungesehen in den nächsten Tag.</p>
+</div>
+</div>
+
+<h2><span class="area">RO12</span> Wochenplanung: Schrittanzeige · <span class="area q">RO13</span> Blatt oder Vollbild · <span class="area q">RO14</span> Rückblick · <span class="area">RO15</span> Einstieg · <span class="area q">RO16</span> Epics</h2>
+<p class="lead">Heute: Blatt „Wochenplanung“ mit fünf Schritten (Rückblick, Reflexion, Fälligkeiten, Woche planen, Gewohnheiten), oben die Textzeile „Schritt 2 von 5“, unten „Zurück“ und „Weiter“. Einstiege: Wochenrückblick („Wochenplanung starten“) und sonntags der Tagesabschluss.</p>
+<div class="grid">
+<div>
+<p class="label"><span class="code">RO12a</span> <b>Textzeile „Schritt 2 von 5“</b> <span class="same">heute</span></p>
+<div class="phone crop sh"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="bar"><span class="l">Schließen</span>Wochenplanung</div>
+<div class="fs"><div class="fr" style="color:var(--sub);font-size:13px">Schritt 2 von 5</div></div>
+<div class="fh">Reflexion</div>
+<div class="fs"><div class="fr fld">Was lief gut?</div><div class="fr fld">Belastet mich etwas?</div></div>
+<div class="navbtn"><span class="big s">Zurück</span><span class="big">Weiter</span></div>
+</div></div>
+<p class="pc">Man weiß, wo man ist, aber nicht, was noch kommt; die Zeile sieht aus wie ein Formularfeld.</p>
+</div>
+<div>
+<p class="label"><span class="code r">RO12b</span> <b>Balken und Schritt-Titel</b> <span class="rec">Empfehlung</span></p>
+<div class="phone crop sh"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="bar"><span class="l">Schließen</span>Wochenplanung<span style="font-weight:400">Überspringen</span></div>
+<div class="dots"><i class="on"></i><i class="on"></i><i></i><i></i><i></i></div>
+<div class="stepttl">Reflexion</div>
+<div class="stepsub">Schritt 2 von 5 · danach: Fälligkeiten der neuen Woche</div>
+<div class="fs"><div class="q">Was lief gut?</div><div class="fr ph" style="min-height:40px">Antwort</div><div class="q">Belastet mich etwas?</div><div class="fr ph" style="min-height:40px">Antwort</div></div>
+<div class="navbtn"><span class="big s">Zurück</span><span class="big">Weiter</span></div>
+</div></div>
+<p class="pc"><b>Grund:</b> Fünf Segmente zeigen Fortschritt und Rest auf einen Blick, der große Titel sagt, worum es jetzt geht, und die Unterzeile nennt den nächsten Schritt. „Überspringen“ macht sichtbar, dass jeder Schritt freiwillig ist (heute nur über „Weiter“). <b>RO12c</b> (nur Punkte ohne Titel) spart Höhe, verliert aber die Vorschau.</p>
+</div>
+<div>
+<p class="label"><span class="code r">RO15b</span> <b>Einstieg: Karte in „Planen“ am Planungstag</b> <span class="rec">Empfehlung</span></p>
+<div class="phone crop"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="nav"><span style="padding-left:6px"><small style="display:block;font:600 11px system-ui;color:var(--blue);text-transform:uppercase">Heute</small><b style="font:700 19px system-ui">So., 22. Nov.</b></span><span class="r"><span class="gb glass">✦</span></span></div>
+<div class="cap" style="box-shadow:inset 3px 0 0 #ffd60a"><b>Wochenplanung</b><small>Rückblick auf KW 47, dann KW 48 planen · etwa 10 min</small><div class="ln"><b style="font-size:13px;display:inline;color:var(--blue)">Starten</b><span>✕ Heute ausblenden</span></div></div>
+<div class="cap"><b>5 h 00 frei</b><i></i><small>Sonntag · nichts geplant</small></div>
+</div></div>
+<p class="pc"><b>Grund:</b> Am eingestellten Wochentag (Erinnerung „Wochenplanung“) steht der Einstieg dort, wo geplant wird, im selben Muster wie die Karte „Tagesstart“; die beiden heutigen Einstiege (<b>RO15a</b>) bleiben. Die Karte erscheint nur an diesem Tag und nur, bis die Planung beendet oder ausgeblendet wurde.</p>
+</div>
+</div>
+<div class="box"><h3>Ja/Nein-Fragen zur Wochenplanung</h3>
+<ul>
+<li><b>RO13 Blatt oder Vollbild: Blatt (wie heute).</b> Grund: Schritt 4 springt nach „Planen“; ein Blatt lässt sich dafür schließen und zeigt, dass die Planung über der App liegt. Ein Vollbild würde eine eigene Navigation brauchen und bringt bei Formularinhalt keinen Platzgewinn.</li>
+<li><b>RO14 Rückblick-Schritt: kompakt behalten (a, wie heute).</b> Grund: Drei Zahlen und die Gewohnheiten reichen als Anlauf für die Reflexion; der ganze Wochenrückblick bleibt einen Tipp entfernt („Ganzen Wochenrückblick öffnen“). Weglassen (b) nähme der Reflexion die Grundlage, die volle Ansicht (c) macht Schritt 1 länger als alle anderen zusammen.</li>
+<li><b>RO16 Epics zeigen: weglassen (a).</b> Grund: Schritt 3 soll zeigen, was in der neuen Woche fällig ist; Gruppen nach Label (b) oder Unter-Issues (c) setzen voraus, dass GitHub-Issues durchgehend so gepflegt sind, und brauchen zusätzliche Abfragen (Unter-Issues liegen nicht im Zwischenspeicher). Wenn gewünscht, später als Gruppierung „nach Project“ in der Fälligkeitsliste, das ist schon vorhanden.</li>
+</ul></div>
+
+</body>
+</html>
