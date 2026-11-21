@@ -16,7 +16,7 @@ Branch mit Plänen und Mockups: `chore/fable-open-items` (Worktree `t3-638057bd-
 
 ## Offene Kleinigkeiten
 
-- Wacklige `AIKit`-Tests auf CI: `LoopbackServerTests.stop_failsPendingWait` (Zeitüberschreitung statt Abbruch), `ChatGPTLoginTests.cancel_stopsServerAndFreesPort` (`portInUse`) – feste Wartezeiten/Port; ohne Zeitabhängigkeit und mit freiem Port umbauen (zu „Tests schlanker“).
+- Wacklige `AIKit`-Tests auf CI (Reparatur läuft, `fix/aikit-loopback-tests`): `LoopbackServerTests.stop_failsPendingWait` (Zeitüberschreitung statt Abbruch), `ChatGPTLoginTests.cancel_stopsServerAndFreesPort` (`portInUse`) – feste Wartezeiten/Port; ohne Zeitabhängigkeit und mit freiem Port umbauen (zu „Tests schlanker“).
 - Regel: GitHub-Checks vor jedem Merge abwarten (Fehler bei #269: zu früh gemergt).
 
 ## Baustein „Vorbereitung“ für jeden Sonnet-Auftrag (in jeden Auftrag übernehmen)
@@ -83,7 +83,7 @@ Festlegungen der Hauptsitzung zum G3-Plan: offene Fragen nach Empfehlung; Zeilen
 | `feat/notes-assistant` | #233 Block B (B3–B9) | PR #258; geprüft, Head `3c00fa1` (main `85c982b` + VoiceOver-Fix), wird mit #262 auf `811bcda` verkettet; 10 Gerätetests offen. Hinweis für G2 NL1a (Notizen sperren): gesperrte Notizen müssen über `NoteToolAccess` ausgeschlossen werden |
 | `feat/g1-reminders` | G1 Strang E (E1–E6) | PR #262; geprüft, Head `1456d14`, `test-all` je Task grün |
 | `feat/ai-proposal-editing-strand-a` | #255 Strang A (A1–A4), auf #262 | PR #265 (Basis #262); geprüft, Head `067cf17`, voll grün; #258 `2c95998` und #262 `1046293` auf `811bcda` voll grün. Läuft: Kette auf `099f2e8` bringen, ein voller Lauf, dann Merge #258 → #262 → #265 |
-| `feat/ai-proposal-editing-cards` | #255 Strang B (B1–B5) | PR #270 (Basis #265); Kette #258→#262→#265→#270 auf `b6f66a9` voll grün (45 UI-Tests); gepusht, warte auf GitHub-Checks, dann Merge in Reihenfolge |
+| `feat/ai-proposal-editing-cards` | #255 Strang B (B1–B5) | **gemergt: #258, #262, #265, #270** (`4726c1e`); PR #270 (Basis #265); Kette #258→#262→#265→#270 auf `b6f66a9` voll grün (45 UI-Tests); gepusht, warte auf GitHub-Checks, dann Merge in Reihenfolge |
 | `fix/ui-test-stability` | vorbestehende UI-Testfehler | PR #240; fertig und geprüft, Head `e34c1fd`, `test-all` zweimal grün; zuerst mergen. Allowlist-Einträge „Unerledigt von heute“ und Leftover-Zeile bei Strang K (K5) neu bewerten |
 | `feat/g3-github-status` | G3 Strang G (G1–G4) | PR #249 (Basis #240); fertig und geprüft, Head `f7eae41`, `test-all` grün; G5 offen (nach #173 A/B), dort auch GH9-Fußtext „erste Stufe“ vs. Startstufe „Ready“ und VoiceOver-Anführungszeichen im Englischen klären |
 | `feat/g1-focus` | G1 Strang F (F1–F7) | **gemergt (#253)**; geprüft, Head `683677d`, `test-all` grün; F8 nach P. Achtung: Menütitel jetzt „Fokus starten · 25 min“ – beim Zusammenführen mit #246 (Strang U) UI-Tests auf den Titel prüfen |
@@ -91,7 +91,7 @@ Festlegungen der Hauptsitzung zum G3-Plan: offene Fragen nach Empfehlung; Zeilen
 | `feat/g3-contrast` | G3 Strang K (K1–K5), auf #261 | läuft (Sonnet, nach Job 1) |
 | `feat/g1-travel-time`, `feat/g1-focus-in-plan` | G1 Strang V (V1–V5) und F8 | **gemergt (#263, #264, `main` = `099f2e8`)**; PL10b gebaut (Kapsel 9,6/10,2:1) |
 | `fix/day-capacity` | #260 Kapazität | **gemergt (#268, `main` = `bafd1c3`)**, voll grün; Beispieltag „8 h frei von 8 h“; offen: `TimeGrid.freeGaps` (Raster) kennt Fahrzeit/KA1c nicht; `RecurringEffortStore.reservedMinutes` tot |
-| `feat/week-all-events-2` | #259 Wochenansicht mit allen Terminen | PR #271; geprüft, Head `7796c1f`, voll grün (40 UI-Tests); warte auf GitHub-Checks. Offen: Audit „Planen (Woche)“ zeigt vorhandene Kontrastbefunde (Kopfzeile „DIESE WOCHE · KW“, Kapazitätstext, Schublade) – an K/Nachfolger |
+| `feat/week-all-events-2` | #259 Wochenansicht mit allen Terminen | **gemergt (#271, `main` = `04b50fb`)**; PR #271; geprüft, Head `7796c1f`, voll grün (40 UI-Tests); warte auf GitHub-Checks. Offen: Audit „Planen (Woche)“ zeigt vorhandene Kontrastbefunde (Kopfzeile „DIESE WOCHE · KW“, Kapazitätstext, Schublade) – an K/Nachfolger |
 | `feat/ai-proposal-editing-previews` | #255 Stränge C–E | läuft (Sonnet) |
 
 ## Neues Thema (21.11.): Ernährung, Gewicht, Ziele mit ChatGPT
