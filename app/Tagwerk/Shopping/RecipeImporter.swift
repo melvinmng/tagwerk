@@ -59,6 +59,14 @@ final class RecipeImporter {
         var language: VoiceLanguage
         /// Read on the device from a structured recipe note: nothing was sent to ChatGPT.
         var readLocally = false
+        /// The language of the shopping list when it differs from `language`: every candidate may carry a second name and unit
+        /// in it. `nil` while list and recipe share one language, and for a recipe that is only saved.
+        var shoppingLanguage: VoiceLanguage? = nil
+        /// The recipe note was read on the device in a language other than the shopping list's: the names stay in the language of
+        /// the note, as there is no translation without ChatGPT.
+        var keepsNoteLanguage = false
+        /// The language of the note a local read came from (`RecipeNote.headingLanguage`); `nil` for every other source.
+        var noteLanguage: VoiceLanguage? = nil
     }
 
     /// One ingredient of the proposal.
@@ -72,7 +80,12 @@ final class RecipeImporter {
         var category: String
         /// An open item of that name is on the list already; the result sheet leaves it unselected.
         var alreadyOnList: Bool
-        var id: String { ShoppingName.key(name) }
+        /// The name and the unit in the language of the shopping list, when that differs from the recipe's (SP2b).
+        var shoppingName: String? = nil
+        var shoppingUnit: String? = nil
+        /// The name that goes on the list; duplicates and categories are decided on it.
+        var listName: String { shoppingName ?? name }
+        var id: String { ShoppingName.key(listName) }
     }
 
     static let maxItems = 40
@@ -106,14 +119,22 @@ final class RecipeImporter {
     ///
     /// A structured recipe note is read on the device, without ChatGPT and without the consent; `localClassifier` gives the
     /// category name of an ingredient key from the user's own assignments and the dictionary, or `nil` for "Sonstiges".
-    func read(_ input: Input, language: VoiceLanguage, categoryNames: [String], openItemKeys: Set<String>,
-              localClassifier: (String) -> String? = { _ in nil }) async throws -> Result {
+    ///
+    /// `shoppingLanguage` is the language of the shopping list when it differs from `language`, otherwise `nil`; it is only
+    /// passed when the ingredients go onto the list. ChatGPT then also gives each ingredient's name and unit in that language.
+    func read(_ input: Input, language: VoiceLanguage, shoppingLanguage: VoiceLanguage? = nil, categoryNames: [String],
+              openItemKeys: Set<String>, localClassifier: (String) -> String? = { _ in nil }) async throws -> Result {
         var input = input
         let names = categoryNames + [ShoppingSorter.otherName]
         if case .note(_, let text) = input {
             if let note = RecipeNote.parse(text) {
-                return try Self.result(for: note, language: language, categoryNames: names, openItemKeys: openItemKeys,
-                                       classifier: localClassifier)
+                var local = try Self.result(for: note, language: language, categoryNames: names, openItemKeys: openItemKeys,
+                                            classifier: localClassifier)
+                // No translation on the device: the names stay in the language of the note, and nothing is sent.
+                let noteLanguage = RecipeNote.headingLanguage(text) ?? language
+                local.noteLanguage = noteLanguage
+                local.keepsNoteLanguage = shoppingLanguage.map { $0 != noteLanguage } ?? false
+                return local
             }
             input = .text(text)
         }
@@ -125,13 +146,14 @@ final class RecipeImporter {
         case .text(let text), .note(_, let text):
             let recipe = RecipeText.limited(text.trimmingCharacters(in: .whitespacesAndNewlines))
             guard !recipe.isEmpty else { throw Failure.nothingFound }
-            message = .user(Self.inputText(recipe: recipe, categories: names, language: language))
+            message = .user(Self.inputText(recipe: recipe, categories: names, language: language, shoppingLanguage: shoppingLanguage))
         case .photos(let jpegs):
             guard !jpegs.isEmpty else { throw Failure.nothingFound }
             guard RecipePhotos.isSendable(byteCounts: jpegs.map(\.count)) else { throw Failure.photosTooLarge }
-            message = Self.photoMessage(jpegs, categories: names, language: language)
+            message = Self.photoMessage(jpegs, categories: names, language: language, shoppingLanguage: shoppingLanguage)
         case .link(let url):
-            message = .user(Self.inputText(recipe: try await pageText(of: url), categories: names, language: language))
+            message = .user(Self.inputText(recipe: try await pageText(of: url), categories: names, language: language,
+                                           shoppingLanguage: shoppingLanguage))
             sourceURL = url
         }
         let answer: String
@@ -150,7 +172,8 @@ final class RecipeImporter {
         } catch {
             throw Failure.failed
         }
-        return try Self.validate(Data(answer.utf8), categoryNames: names, openItemKeys: openItemKeys, language: language, sourceURL: sourceURL)
+        return try Self.validate(Data(answer.utf8), categoryNames: names, openItemKeys: openItemKeys, language: language,
+                                 shoppingLanguage: shoppingLanguage, sourceURL: sourceURL)
     }
 
     /// A structured recipe note as a result, read on the device.
@@ -240,6 +263,8 @@ final class RecipeImporter {
             var amount: Double?
             var unit: String?
             var category: String
+            var shopping_name: String?
+            var shopping_unit: String?
         }
         var title: String?
         var servings: Double?
@@ -250,9 +275,11 @@ final class RecipeImporter {
     /// Checks the answer: empty names go, an unknown category becomes "Sonstiges", entries of the same name are merged
     /// (the first quantity wins, a later one fills a gap), an item that is open on the list is marked, and at most
     /// `maxItems` remain. The servings count only between 1 and 50, the steps are cut to 20 of 300 characters. No new
-    /// category is ever created. `categoryNames` ends with "Sonstiges".
+    /// category is ever created. `categoryNames` ends with "Sonstiges". With a `shoppingLanguage`, each entry's name and unit in
+    /// that language are kept (empty ones are ignored, a name is cut at the limit); duplicates, the marks for items on the list
+    /// and the categories then go by the name that goes on the list.
     static func validate(_ answer: Data, categoryNames: [String], openItemKeys: Set<String>, language: VoiceLanguage = .german,
-                         sourceURL: URL? = nil) throws -> Result {
+                         shoppingLanguage: VoiceLanguage? = nil, sourceURL: URL? = nil) throws -> Result {
         guard let decoded = try? JSONDecoder().decode(Answer.self, from: answer) else { throw Failure.failed }
         let other = categoryNames.last ?? ShoppingSorter.otherName
         let known = Dictionary(categoryNames.map { ($0.trimmingCharacters(in: .whitespacesAndNewlines).lowercased(), $0) },
@@ -261,8 +288,16 @@ final class RecipeImporter {
         var indexByKey: [String: Int] = [:]
         for entry in decoded.items {
             let name = String(entry.name.trimmingCharacters(in: .whitespacesAndNewlines).prefix(ShoppingInputParser.maxNameLength))
-            let key = ShoppingName.key(name)
-            guard !key.isEmpty else { continue }
+            guard !ShoppingName.key(name).isEmpty else { continue }
+            var shoppingName: String?
+            var shoppingUnit: String?
+            if shoppingLanguage != nil {
+                shoppingName = entry.shopping_name.map { String($0.trimmingCharacters(in: .whitespacesAndNewlines).prefix(ShoppingInputParser.maxNameLength)) }
+                    .flatMap { ShoppingName.key($0).isEmpty ? nil : $0 }
+                shoppingUnit = entry.shopping_unit.map { String($0.trimmingCharacters(in: .whitespacesAndNewlines).prefix(15)) }
+                    .flatMap { $0.isEmpty ? nil : $0 }
+            }
+            let key = ShoppingName.key(shoppingName ?? name)
             var quantity = entry.quantity.map { String($0.trimmingCharacters(in: .whitespacesAndNewlines).prefix(maxQuantityLength)) }
                 .flatMap { $0.isEmpty ? nil : $0 }
             var line: IngredientLine?
@@ -284,13 +319,14 @@ final class RecipeImporter {
             let category = known[entry.category.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()] ?? other
             indexByKey[key] = candidates.count
             candidates.append(Candidate(name: name, quantity: quantity, line: line, category: category,
-                                        alreadyOnList: openItemKeys.contains(key)))
+                                        alreadyOnList: openItemKeys.contains(key), shoppingName: shoppingName, shoppingUnit: shoppingUnit))
         }
         guard !candidates.isEmpty else { throw Failure.nothingFound }
         let servings = decoded.servings.flatMap { Int(exactly: $0.rounded()) }.flatMap { servingsRange.contains($0) ? $0 : nil }
         let title = String((decoded.title ?? "").trimmingCharacters(in: .whitespacesAndNewlines).prefix(maxTitleLength))
         return Result(title: title, servings: servings, candidates: Array(candidates.prefix(maxItems)),
-                      steps: checked(steps: decoded.steps ?? []), sourceURL: sourceURL, language: language)
+                      steps: checked(steps: decoded.steps ?? []), sourceURL: sourceURL, language: language,
+                      shoppingLanguage: shoppingLanguage)
     }
 
     /// The category name of an ingredient key from the user's own assignments and the bundled dictionary, for reading a
@@ -305,11 +341,25 @@ final class RecipeImporter {
 
     // MARK: Applying
 
+    /// What goes on the list for a candidate: its list name, and its amount with the unit of the shopping language, formatted
+    /// for `locale` ("2 cans" → "2 Dosen", "1.5 l" → "1,5 l"). A candidate without a second name or unit keeps its quantity
+    /// as it is, so nothing changes while list and recipe share one language; a free text such as "nach Geschmack" is never
+    /// translated.
+    static func listItem(for candidate: Candidate, locale: Locale) -> ParsedItem {
+        guard candidate.shoppingName != nil || candidate.shoppingUnit != nil, var line = candidate.line, line.amount != nil else {
+            return ParsedItem(name: candidate.listName, quantity: candidate.quantity)
+        }
+        line.unit = candidate.shoppingUnit ?? line.unit
+        return ParsedItem(name: candidate.listName, quantity: quantityText(of: line, locale: locale) ?? candidate.quantity)
+    }
+
     /// Puts the selected ingredients on the list and remembers each one's category as an automatic assignment, so a choice
-    /// the user makes later by hand takes precedence. Returns what the list reported.
+    /// the user makes later by hand takes precedence. Returns what the list reported. The items carry the names and units of
+    /// the shopping list (`listItem`), formatted for `locale`, and their category is remembered under that name.
     @discardableResult
-    static func apply(_ selected: [Candidate], model: ShoppingModel, categories: ShoppingCategoryStore) async -> ShoppingModel.AddReport {
-        let report = await model.add(selected.map { ParsedItem(name: $0.name, quantity: $0.quantity) })
+    static func apply(_ selected: [Candidate], model: ShoppingModel, categories: ShoppingCategoryStore,
+                      locale: Locale = .current) async -> ShoppingModel.AddReport {
+        let report = await model.add(selected.map { listItem(for: $0, locale: locale) })
         let all = categories.categories()
         let other = ShoppingSorter.otherName.lowercased()
         let failed = Set(report.failed.map(ShoppingName.key))
@@ -340,8 +390,10 @@ final class RecipeImporter {
 
     /// The user message: the recipe text (or a note that the photo is the recipe), and the category names and the language
     /// of the result as JSON.
-    static func inputText(recipe: String?, categories: [String], language: VoiceLanguage, photoCount: Int = 1) -> String {
-        let object: [String: Any] = ["categories": categories, "language": RecipeLanguage.promptName(language)]
+    static func inputText(recipe: String?, categories: [String], language: VoiceLanguage, shoppingLanguage: VoiceLanguage? = nil,
+                          photoCount: Int = 1) -> String {
+        let object: [String: Any] = ["categories": categories, "language": RecipeLanguage.promptName(language),
+                                     "shopping_language": shoppingLanguage.map(RecipeLanguage.promptName) ?? NSNull()]
         let data = (try? JSONSerialization.data(withJSONObject: object, options: [.sortedKeys])) ?? Data()
         let json = String(decoding: data, as: UTF8.self)
         guard let recipe else {
@@ -354,8 +406,10 @@ final class RecipeImporter {
     }
 
     /// The request message for photos: one message with the text and one image per photo, so ChatGPT reads one recipe.
-    static func photoMessage(_ jpegs: [Data], categories: [String], language: VoiceLanguage) -> InputItem {
-        let text = inputText(recipe: nil, categories: categories, language: language, photoCount: jpegs.count)
+    static func photoMessage(_ jpegs: [Data], categories: [String], language: VoiceLanguage,
+                             shoppingLanguage: VoiceLanguage? = nil) -> InputItem {
+        let text = inputText(recipe: nil, categories: categories, language: language, shoppingLanguage: shoppingLanguage,
+                             photoCount: jpegs.count)
         return jpegs.count == 1 ? .userImage(text: text, jpeg: jpegs[0]) : .userImages(text: text, jpegs: jpegs)
     }
 
@@ -363,7 +417,8 @@ final class RecipeImporter {
     Du liest ein Rezept und gibst es strukturiert zurück: Titel, Portionen, Zutaten und Zubereitungsschritte. Die Eingabe ist \
     der Rezepttext oder ein Foto des Rezepts (mehrere Fotos sind die Seiten eines einzigen Rezepts: lies sie zusammen und gib \
     ein Rezept zurück), dazu JSON mit "categories" (die Kategorien der Einkaufsliste; die letzte steht \
-    für alles ohne Kategorie) und "language" (die Sprache des Ergebnisses).
+    für alles ohne Kategorie), "language" (die Sprache des Ergebnisses) und "shopping_language" (die Sprache der Einkaufsliste \
+    oder null).
     - Schreibe title, name, unit, quantity und steps in der Sprache aus "language". Übersetze, wenn das Rezept eine andere \
     Sprache hat. Übersetze keine Eigennamen.
     - title ist der Name des Rezepts. servings ist die Portionszahl aus dem Rezept, null wenn keine genannt ist; rate sie nicht.
@@ -376,6 +431,8 @@ final class RecipeImporter {
     Erfinde keine Kategorie.
     - Gib keine Zutaten zurück, die nicht im Rezept stehen. Lass Wasser, Salz und Pfeffer nur weg, wenn das Rezept sie nicht \
     ausdrücklich als Zutat nennt, und ignoriere Werbung und Kommentare.
+    - Ist "shopping_language" gesetzt und eine andere Sprache als "language", schreibe in shopping_name den kurzen Namen der \
+    Zutat und in shopping_unit die Einheit in dieser Sprache; übersetze keine Eigennamen. Sonst sind beide null.
     - Gib höchstens 40 Zutaten zurück.
     """
 
@@ -395,9 +452,11 @@ final class RecipeImporter {
               "amount": { "type": ["number", "null"] },
               "unit": { "type": ["string", "null"] },
               "quantity": { "type": ["string", "null"] },
-              "category": { "type": "string" }
+              "category": { "type": "string" },
+              "shopping_name": { "type": ["string", "null"] },
+              "shopping_unit": { "type": ["string", "null"] }
             },
-            "required": ["name", "amount", "unit", "quantity", "category"],
+            "required": ["name", "amount", "unit", "quantity", "category", "shopping_name", "shopping_unit"],
             "additionalProperties": false
           }
         }

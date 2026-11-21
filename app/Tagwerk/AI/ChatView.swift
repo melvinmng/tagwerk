@@ -67,7 +67,7 @@ struct ChatView: View {
     private var showsMicrophone: Bool { environment.settings.voiceInputEnabled }
     private var canSend: Bool { conversation?.isBusy != true && environment.ai.isSignedIn }
     private var recognitionLanguage: VoiceLanguage {
-        VoiceAvailability.recognitionLanguage(setting: environment.settings.voiceRecognitionLanguage)
+        environment.settings.dictationLanguage(at: .chat)
     }
 
     private var voiceModeRunning: Bool { environment.voiceMode.isRunning }
@@ -94,7 +94,7 @@ struct ChatView: View {
 
     private func setUpVoice() {
         guard voice == nil else { return }
-        let model = VoiceInputFactory.make(environment)
+        let model = VoiceInputFactory.make(environment, place: .chat)
         model.readDraft = { draft }
         model.writeDraft = { draft = $0 }
         model.onSend = { text in

@@ -31,7 +31,8 @@ enum AuditAllowlist {
     private static let recipeScreens = [
         "Rezepte", "Rezept-Notiz", "Zutaten (Rezept)", "Rezept anlegen (Eingabe)", "Rezept anlegen (Einwilligung)",
         "Rezept anlegen (Bestätigung)", "Einkauf › Rezept hinzufügen", "Einkauf › Rezept hinzufügen (Notiz)",
-        "Einstellungen › KI › Sprache", "Einstellungen › Erfassen", "Einstellungen › Einkaufsliste", "Einstellungen › Siri & Kurzbefehle",
+        "Einstellungen › Sprachen", "Einstellungen › KI › Sprache", "Einstellungen › Erfassen", "Einstellungen › Einkaufsliste",
+        "Einstellungen › Siri & Kurzbefehle",
     ]
     private static let recipeScreensLargeText = recipeScreens.map { "AX5/dark " + $0 }
     /// The page "Siri & Kurzbefehle" in both audit runs.
@@ -104,6 +105,11 @@ enum AuditAllowlist {
         ], reason: "Priority capsule and the hint rows of the search sheet use text styles; the audit still reports a partial lack of "
             + "support. Not reproduced by eye in the large text run (no clipping there); stays on the device test list."),
 
+        Entry(auditType: .dynamicType, labels: ["DE", "EN"], screens: ["Einkaufsliste"], reason:
+            "Language mark of the shopping list (\"DE\"/\"EN\" in the input field): a capsule with a text style (caption2), like the priority "
+            + "capsule above; the audit reports a partial lack of support. The mark keeps its 44 pt hit area and has a full VoiceOver label "
+            + "(\"Sprache der Einkaufsliste …\"); not reported in the large text run. Stays on the device test list (large text)."),
+
         // MARK: Text clipped
         Entry(auditType: .textClipped, labels: gridCellLabels, screens: gridScreens, reason:
             "Title and time of the entries in the hour grid of \"Planen\": the grid is time-proportional with a fixed height per hour, and "
@@ -135,9 +141,9 @@ enum AuditAllowlist {
             "Vorlesen", "ChatGPT", "Notiz", "(?s)Eine Notiz mit den Abschnitten .*", "(?s)Notizen liegen nur auf diesem iPhone\\..*",
             "(?s)Die gewählte Liste erscheint als Einkaufsliste\\..*", "(?s)Sendet auf dein Tippen die Namen .*", "(?s)„Rezept hinzufügen“ sendet .*",
             "(?s)Portionen: \\d+\\nZutaten.*", "strukturiert", "wird mit ChatGPT gelesen", "Vorrat & Konserven", "\\d+ h \\d+ min", "Spracheingabe",
-            "Titel", "Zutaten", "Zubereitung", "Sprachchat", "Rezepte", "Ziele", "Schätzung", "Anzeige", "Liste", "Kategorien", "Erinnerungen", "Keine",
-            "Demo Einkauf", "[\\d.,]+( kcal| l)?", "Sprache für Rezepte", "In Planen anzeigen",
-            "(?s)(Tagwerk wandelt Sprache|Die Sprache gilt für|Titel, Zutaten und Zubereitung eines Rezepts|Die Vorgaben sind Platzhalter|Zum Schätzen sendet).*",
+            "Titel", "Zutaten", "Zubereitung", "Inhalte", "Stimme", "Deutsch", "Rezepte", "Ziele", "Schätzung", "Anzeige", "Liste", "Kategorien", "Erinnerungen", "Keine",
+            "Demo Einkauf", "[\\d.,]+( kcal| l)?", "In Planen anzeigen",
+            "(?s)(Tagwerk wandelt Sprache|Beim Diktieren und in der Einkaufsliste|Mikrofon, Sprachpakete|Die Sprache der Oberfläche|Die Vorgaben sind Platzhalter|Zum Schätzen sendet).*",
             "(?s)(Gesendet wird|Nicht gesendet werden|Um ein Rezept zu lesen).*", "(?s)„In Planen anzeigen“ zeigt .*", "Die drei Schnellknöpfe im Tab .*",
         ], screens: recipeScreens + recipeScreensLargeText, reason: "Section headers, footers, values and previews in the system grey (.secondary) on the "
             + "grouped background of a form or list; the last footer of a settings page also lies behind the tab bar. Same group as the "
@@ -160,7 +166,7 @@ enum AuditAllowlist {
             + "(passes with a larger font size); the colours are the system's primary and secondary text colours (#188)."),
         Entry(auditType: .contrast, labels: [
             "Einverstanden", "Nicht jetzt", "Rezept speichern", "\\d+ Artikel hinzufügen", "Verwerfen", "Neues Rezept", "Rezept mit ChatGPT anlegen",
-            "Andere Notiz wählen …", "Demo Linsensuppe", "Rezept holen", "Zutaten holen", "Zurücksetzen", "\\d+ ml",
+            "Andere Notiz wählen …", "Demo Linsensuppe", "Rezept holen", "Zutaten holen", "Zurücksetzen", "\\d+ ml", "Probe hören",
         ], screens: recipeScreens + recipeScreensLargeText, reason: "Texts in the accent colour (list buttons, note title in the picker), white on the "
             + "prominent button (system style; \"Rezept holen\" and \"Zutaten holen\" are dimmed by the system while the text field is empty) and \"Verwerfen\" in the navigation bar, whose Liquid Glass background lets the list scroll behind it. "
             + "The system draws the background; no own colour to change without replacing the system style (#188)."),
@@ -168,7 +174,8 @@ enum AuditAllowlist {
         Entry(auditType: .dynamicType, labels: [
             "Abbrechen", "Verwerfen", "Die Kategorien kommen aus deiner Einkaufsliste\\.", "Das Rezept wird als Notiz im Ordner „Rezepte“ gespeichert\\. .*",
             "\\d\\. .*", "Vorlesen", "Eiweiß-Ziel", "(?s)Sendet auf dein Tippen die Namen .*", "Rezepte mit ChatGPT lesen und übersetzen", "ChatGPT",
-            "(?s)Notizen liegen nur auf diesem iPhone\\..*",
+            "(?s)Notizen liegen nur auf diesem iPhone\\..*", "Stimme", "Sprachchat-Antwort", "Einkaufsliste",
+            "Stimme (Deutsch|English)", "Tempo", "Mikrofon, Sprachpakete, Stimmen, Tempo und Sprechmodus\\.",
         ], screens: recipeScreens, reason: "Navigation bar buttons, form rows, footers and steps use text styles; the audit still reports a partial lack of "
             + "support. In the AX5 run of the same screens (`AccessibilityAuditRecipesLargeTextUITests`, screenshots checked) every one of these texts "
             + "grows and wraps."),

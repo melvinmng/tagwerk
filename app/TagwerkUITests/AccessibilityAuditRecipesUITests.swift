@@ -74,12 +74,18 @@ class RecipeScreensAuditCase: UITestCase {
         try audit("Einkauf › Rezept hinzufügen (Notiz)")
     }
 
-    /// Einstellungen › KI › Sprache (recipe language), › Erfassen (goal water), › Einkaufsliste (consent) and › Siri & Kurzbefehle (phrases, G3).
+    /// Einstellungen › Sprachen (content languages), › KI › Spracheingabe und Vorlesen (voice settings), › Erfassen (goal water),
+    /// › Einkaufsliste (consent) and › Siri & Kurzbefehle (phrases, G3).
     func auditSettings(_ audit: Audit) throws {
         tab("Einstellungen")
+        openSettingsRow("Sprachen")
+        XCTAssertTrue(app.navigationBars["Sprachen"].waitForExistence(timeout: Self.timeout), "Language settings did not open")
+        try audit("Einstellungen › Sprachen")
+        app.navigationBars.buttons.firstMatch.tap()
+
         openSettingsRow("KI")
-        openSettingsRow("Sprache")
-        XCTAssertTrue(app.navigationBars["Sprache"].waitForExistence(timeout: Self.timeout), "Language settings did not open")
+        openSettingsRow("Spracheingabe und Vorlesen")
+        XCTAssertTrue(app.navigationBars["Spracheingabe und Vorlesen"].waitForExistence(timeout: Self.timeout), "Voice settings did not open")
         try audit("Einstellungen › KI › Sprache")
         app.navigationBars.buttons.firstMatch.tap()
         app.navigationBars.buttons.firstMatch.tap()

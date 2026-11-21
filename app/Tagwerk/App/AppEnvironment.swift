@@ -137,6 +137,7 @@ final class AppEnvironment {
         let context = modelContainer.mainContext
         let settings = try AppSettings.current(in: context)
         settings.migrateWorkoutGoalIfNeeded()
+        settings.migrateVoiceAnswerLanguageIfNeeded()
         let gateway = EventKitGateway()
         let reminderStore: any ReminderStore = reminderStore ?? gateway
         let reminders = RemindersTaskProvider(store: reminderStore, estimates: SwiftDataEstimateStore(context: context),
@@ -233,7 +234,7 @@ final class AppEnvironment {
         assistant.watchNoteConsent { settings.noteAssistantConsent }
         assistant.readPolicy = { ReadAloudPolicy(rawValue: settings.voiceReadAloud) ?? .never }
         assistant.announcesActions = { settings.voiceAnnounceActions }
-        assistant.fixedVoiceLanguage = { VoiceChatLanguage.fixed(setting: settings.voiceRecognitionLanguage) }
+        assistant.fixedVoiceLanguage = { settings.contentLanguages.fixedAnswerLanguage }
         assistant.readAutomatically = { id, text, fallback in voiceOutput.speak(id: id, text: text, explicit: false, fallback: fallback) }
         let demoVoice = ProcessInfo.processInfo.arguments.contains("-TagwerkDemoVoice")
         let makeRecognizer: @MainActor () -> SpeechRecognizing = {
@@ -244,7 +245,7 @@ final class AppEnvironment {
             assistant: assistant, makeRecognizer: makeRecognizer, output: voiceOutput, tone: SystemTonePlayer(),
             audio: SystemVoiceAudioSession.shared,
             settings: {
-                VoiceModeController.Settings(language: VoiceAvailability.recognitionLanguage(setting: settings.voiceRecognitionLanguage),
+                VoiceModeController.Settings(language: settings.contentLanguages.dictationLanguage(at: .chat),
                                              sendDelay: settings.voiceModeSendDelay, silenceLimit: settings.voiceModeSilenceLimit)
             })
         let gitHubProvider = self.gitHub

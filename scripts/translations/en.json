@@ -415,9 +415,7 @@
   "Dieser Monat · %@": "This month · %@",
   "Dieser Termin lässt sich nicht ändern.": "This event can’t be changed.",
   "Dieser Termin wiederholt sich": "This event repeats",
-  "Diktat": {
-    "shouldTranslate": false
-  },
+  "Diktat": "Dictation",
   "Du": "You",
   "Du hast %@ gewählt": "You chose %@",
   "Du kannst das in den Einstellungen unter „Erfassen“ widerrufen.": "You can revoke this in Settings under “Log”.",
@@ -1959,9 +1957,7 @@
   "Rezept mit ChatGPT anlegen": "Create recipe with ChatGPT",
   "Rezept speichern": "Save recipe",
   "Rezepte": "Recipes",
-  "Sprache für Rezepte": "Recipe language",
   "Tagwerk lädt die Seite erst, wenn du „Rezept holen“ tippst, und sendet nur den gelesenen Text, nicht die Adresse.": "Tagwerk loads the page only when you tap “Get recipe”, and sends only the text it read, not the address.",
-  "Titel, Zutaten und Zubereitung eines Rezepts schreibt ChatGPT in dieser Sprache und übersetzt, wenn das Rezept eine andere hat. Die Artikel auf der Einkaufsliste folgen ihr. „Wie die App“ nimmt die Sprache der App.": "ChatGPT writes the title, ingredients and instructions of a recipe in this language and translates if the recipe is in another one. The items on the shopping list follow it. “Same as the app” uses the app’s language.",
   "Wie die App": "Same as the app",
   "Zutaten auf die Einkaufsliste": "Add ingredients to the shopping list",
   "Zutaten übernehmen": "Use ingredients",
@@ -2000,12 +1996,9 @@
   "•": {
     "shouldTranslate": false
   },
-  "Die Sprache gilt für die Spracherkennung (auch beim Diktieren in Notizen, Einkauf und Mahlzeiten), für die Antwort von ChatGPT im Sprechmodus und für die Stimme beim Vorlesen. „Wie die App“ nimmt die Sprache der App; ChatGPT antwortet dann in der Sprache, in der du sprichst. Im getippten Chat antwortet ChatGPT weiter in der Sprache, in der du schreibst.": "The language applies to speech recognition (also when dictating in notes, shopping and meals), to ChatGPT’s answer in the voice mode and to the voice that reads answers aloud. “Same as the app” uses the app’s language; ChatGPT then answers in the language you speak. In the typed chat, ChatGPT keeps answering in the language you write in.",
   "Kopieren": "Copy",
   "Kopiert": "Copied",
   "Offen": "Open",
-  "Sprachchat": "Voice chat",
-  "Sprache im Sprachchat": "Voice chat language",
   "Die Fotos sind zu viele oder zu groß. Nimm höchstens %lld Fotos.": "There are too many photos or they are too large. Use at most %lld photos.",
   "Foto %lld": "Photo %lld",
   "Foto %lld entfernen": "Remove photo %lld",
@@ -2111,5 +2104,20 @@
   "Ohne Projekt erscheint das Issue nicht in deinen Aufgaben, nur auf GitHub.": "Without a project, the issue does not appear in your tasks, only on GitHub.",
   "Ziel wählen": "Choose target",
   "Ziel: %@": "Target: %@",
-  "Öffnet die Auswahl": "Opens the selection"
+  "Öffnet die Auswahl": "Opens the selection",
+  "App-Sprache": "App language",
+  "Inhalte": "Content",
+  "Wie Rezepte": "Like recipes",
+  "Wie gesprochen": "As spoken",
+  "Sprachchat-Antwort": "Voice chat reply",
+  "Stimme": "Voice",
+  "Sprachen": "Languages",
+  "Spracheingabe und Vorlesen": "Voice input and read-aloud",
+  "Die Sprache der Oberfläche stellst du in den iOS-Einstellungen ein.": "You set the language of the interface in the iOS settings.",
+  "Beim Diktieren und in der Einkaufsliste wechselst du die Sprache auch direkt am Feld. Rezepte übersetzt ChatGPT in die gewählte Sprache; die Artikel der Einkaufsliste entstehen in der Sprache der Einkaufsliste.": "You can also switch the language right at the field when dictating and in the shopping list. ChatGPT translates recipes into the chosen language; items on the shopping list are created in the language of the shopping list.",
+  "Mikrofon, Sprachpakete, Stimmen, Tempo und Sprechmodus.": "Microphone, language packs, voices, speed and voice mode.",
+  "Rezept: %@": "Recipe: %@",
+  "Die Zutaten stehen in der Sprache der Notiz (%@). Neue Artikel aus dieser Notiz kommen so auf die Liste.": "The ingredients are in the language of the note (%@). New items from this note go on the list like this.",
+  "Sprache der Einkaufsliste Deutsch, auf Englisch wechseln": "Shopping list language German, switch to English",
+  "Sprache der Einkaufsliste Englisch, auf Deutsch wechseln": "Shopping list language English, switch to German"
 }

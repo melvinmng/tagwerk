@@ -3983,6 +3983,16 @@
         }
       }
     },
+    "App-Sprache": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "App language"
+          }
+        }
+      }
+    },
     "Apple Erinnerungen mit Uhrzeit": {
       "localizations": {
         "en": {
@@ -4797,6 +4807,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Both open “Plan” in the week you are planning. You start the AI plan there with the AI button; nothing is sent from here."
+          }
+        }
+      }
+    },
+    "Beim Diktieren und in der Einkaufsliste wechselst du die Sprache auch direkt am Feld. Rezepte übersetzt ChatGPT in die gewählte Sprache; die Artikel der Einkaufsliste entstehen in der Sprache der Einkaufsliste.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You can also switch the language right at the field when dictating and in the shopping list. ChatGPT translates recipes into the chosen language; items on the shopping list are created in the language of the shopping list."
           }
         }
       }
@@ -6593,12 +6613,12 @@
         }
       }
     },
-    "Die Sprache gilt für die Spracherkennung (auch beim Diktieren in Notizen, Einkauf und Mahlzeiten), für die Antwort von ChatGPT im Sprechmodus und für die Stimme beim Vorlesen. „Wie die App“ nimmt die Sprache der App; ChatGPT antwortet dann in der Sprache, in der du sprichst. Im getippten Chat antwortet ChatGPT weiter in der Sprache, in der du schreibst.": {
+    "Die Sprache der Oberfläche stellst du in den iOS-Einstellungen ein.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "The language applies to speech recognition (also when dictating in notes, shopping and meals), to ChatGPT’s answer in the voice mode and to the voice that reads answers aloud. “Same as the app” uses the app’s language; ChatGPT then answers in the language you speak. In the typed chat, ChatGPT keeps answering in the language you write in."
+            "value": "You set the language of the interface in the iOS settings."
           }
         }
       }
@@ -6719,6 +6739,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "The summary failed. Try again or enter the task yourself."
+          }
+        }
+      }
+    },
+    "Die Zutaten stehen in der Sprache der Notiz (%@). Neue Artikel aus dieser Notiz kommen so auf die Liste.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The ingredients are in the language of the note (%@). New items from this note go on the list like this."
           }
         }
       }
@@ -7020,7 +7050,14 @@
       }
     },
     "Diktat": {
-      "shouldTranslate": false
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dictation"
+          }
+        }
+      }
     },
     "Dream Log": {
       "localizations": {
@@ -10598,6 +10635,16 @@
         }
       }
     },
+    "Inhalte": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Content"
+          }
+        }
+      }
+    },
     "Ins Raster ziehen": {
       "localizations": {
         "en": {
@@ -12278,6 +12325,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Microphone not allowed. You can keep typing."
+          }
+        }
+      }
+    },
+    "Mikrofon, Sprachpakete, Stimmen, Tempo und Sprechmodus.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Microphone, language packs, voices, speed and voice mode."
           }
         }
       }
@@ -14630,6 +14687,16 @@
         }
       }
     },
+    "Rezept: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recipe: %@"
+          }
+        }
+      }
+    },
     "Rezepte": {
       "localizations": {
         "en": {
@@ -15355,12 +15422,12 @@
         }
       }
     },
-    "Sprachchat": {
+    "Sprachchat-Antwort": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Voice chat"
+            "value": "Voice chat reply"
           }
         }
       }
@@ -15408,22 +15475,22 @@
         }
       }
     },
-    "Sprache für Rezepte": {
+    "Sprache der Einkaufsliste Deutsch, auf Englisch wechseln": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Recipe language"
+            "value": "Shopping list language German, switch to English"
           }
         }
       }
     },
-    "Sprache im Sprachchat": {
+    "Sprache der Einkaufsliste Englisch, auf Deutsch wechseln": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Voice chat language"
+            "value": "Shopping list language English, switch to German"
           }
         }
       }
@@ -15434,6 +15501,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Voice input"
+          }
+        }
+      }
+    },
+    "Spracheingabe und Vorlesen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voice input and read-aloud"
+          }
+        }
+      }
+    },
+    "Sprachen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Languages"
           }
         }
       }
@@ -15751,6 +15838,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Passage, e.g. 3,21-31"
+          }
+        }
+      }
+    },
+    "Stimme": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voice"
           }
         }
       }
@@ -16551,16 +16648,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Title → %@"
-          }
-        }
-      }
-    },
-    "Titel, Zutaten und Zubereitung eines Rezepts schreibt ChatGPT in dieser Sprache und übersetzt, wenn das Rezept eine andere hat. Die Artikel auf der Einkaufsliste folgen ihr. „Wie die App“ nimmt die Sprache der App.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ChatGPT writes the title, ingredients and instructions of a recipe in this language and translates if the recipe is in another one. The items on the shopping list follow it. “Same as the app” uses the app’s language."
           }
         }
       }
@@ -17877,12 +17964,32 @@
         }
       }
     },
+    "Wie Rezepte": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Like recipes"
+          }
+        }
+      }
+    },
     "Wie die App": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Same as the app"
+          }
+        }
+      }
+    },
+    "Wie gesprochen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "As spoken"
           }
         }
       }

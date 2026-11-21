@@ -100,6 +100,11 @@ struct SettingsView: View {
                     } label: {
                         LabeledContent("Siri & Kurzbefehle", value: String(localized: "\(SiriPhraseCatalog.shortcutCount) Kurzbefehle"))
                     }
+                    NavigationLink {
+                        LanguageSettingsView()
+                    } label: {
+                        LabeledContent("Sprachen", value: LanguageSettingsText.summary(settings.contentLanguages))
+                    }
                 }
 
                 Section {

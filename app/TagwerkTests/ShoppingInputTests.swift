@@ -39,3 +39,47 @@ struct ShoppingInputTests {
         #expect(ShoppingInput.accessibilityLabel(ShoppingItem(id: "2", name: "Eier", isCompleted: true)) == "Eier, erledigt")
     }
 }
+
+@MainActor
+struct ShoppingLanguageChipTests {
+    private let germanApp = Locale(identifier: "de_DE")
+
+    @Test func chip_togglesBetweenTheTwoLanguages_andStoresAFixedValue() {
+        let settings = AppSettings()
+        settings.shoppingLanguage = "de-DE"
+        settings.toggleShoppingLanguage()
+        #expect(settings.shoppingLanguage == "en-US")
+        settings.toggleShoppingLanguage()
+        #expect(settings.shoppingLanguage == "de-DE")
+    }
+
+    @Test func chip_fromLikeRecipes_switchesToTheOtherLanguage() {
+        let settings = AppSettings()
+        settings.recipeLanguage = "en-US"
+        #expect(settings.shoppingLanguage == "recipes" && settings.contentLanguages.shoppingLanguage(locale: germanApp) == .english)
+        settings.toggleShoppingLanguage()
+        #expect(settings.shoppingLanguage == "de-DE", "a fixed value, so changing the recipe language later does not switch the list")
+        settings.recipeLanguage = "de-DE"
+        #expect(settings.contentLanguages.shoppingLanguage(locale: germanApp) == .german)
+        settings.recipeLanguage = "en-US"
+        #expect(settings.contentLanguages.shoppingLanguage(locale: germanApp) == .german)
+    }
+
+    @Test func chip_fromLikeTheApp_switchesToTheOtherLanguage() {
+        let settings = AppSettings()
+        settings.shoppingLanguage = "auto"
+        // The tests run in German: the list follows the app in German, so a tap makes it English.
+        settings.toggleShoppingLanguage()
+        #expect(settings.shoppingLanguage == (VoiceLanguage.from(locale: .current) == .german ? "en-US" : "de-DE"))
+    }
+
+    @Test func dictationAtShopping_usesTheShoppingLanguage() {
+        let settings = AppSettings()
+        settings.voiceRecognitionLanguage = "de-DE"
+        settings.shoppingLanguage = "en-US"
+        #expect(settings.dictationLanguage(at: .shopping) == .english)
+        #expect(settings.dictationLanguage(at: .notes) == .german)
+        settings.toggleShoppingLanguage()
+        #expect(settings.dictationLanguage(at: .shopping) == .german)
+    }
+}
