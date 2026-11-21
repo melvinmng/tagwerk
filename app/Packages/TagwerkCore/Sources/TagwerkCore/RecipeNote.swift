@@ -37,8 +37,8 @@ public struct RecipeNote: Sendable, Hashable {
 
     private static let ingredientHeadings: Set<String> = ["zutaten", "ingredients"]
     private static let stepHeadings: Set<String> = ["zubereitung", "anleitung", "instructions", "directions"]
-    private static let servingsLabels: Set<String> = ["portionen", "servings", "personen"]
-    private static let sourceLabels: Set<String> = ["quelle", "source"]
+    static let servingsLabels: Set<String> = ["portionen", "servings", "personen"]
+    static let sourceLabels: Set<String> = ["quelle", "source"]
 
     private enum Section { case none, ingredients, steps, other }
 
@@ -112,7 +112,7 @@ public struct RecipeNote: Sendable, Hashable {
     }
 
     /// "Portionen: 4" → ("portionen", "4"); `nil` without a colon or when the label is longer than three words.
-    private static func labelled(_ line: String) -> (label: String, value: String)? {
+    static func labelled(_ line: String) -> (label: String, value: String)? {
         guard let colon = line.firstIndex(of: ":") else { return nil }
         let label = line[..<colon].trimmingCharacters(in: .whitespaces).lowercased()
         guard !label.isEmpty, label.split(separator: " ").count <= 3 else { return nil }

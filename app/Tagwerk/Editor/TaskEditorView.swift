@@ -99,7 +99,7 @@ struct TaskEditorView: View {
                 Section {
                     if model.original.subContainers.count > 1 {
                         Picker("Ändern in", selection: projectTarget) {
-                            Text("Alle Projects").tag(String?.none)
+                            Text("Alle Projekte").tag(String?.none)
                             ForEach(model.original.subContainers, id: \.id) { Text($0.name).tag(Optional($0.id)) }
                         }
                     }
@@ -511,7 +511,7 @@ struct TaskEditorView: View {
                 Text("Status")
             } footer: {
                 if model.statusRows.count > 1 {
-                    Text("Der Status gilt je Project, unabhängig von „Ändern in“.")
+                    Text("Der Status gilt je Projekt, unabhängig von „Ändern in“.")
                 }
             }
         }

@@ -168,4 +168,65 @@ struct SearchEntryTests {
         let interval = store.completedIntervals[0]
         #expect(interval.end >= now && interval.duration > 360 * 24 * 3600 && interval.duration < 370 * 24 * 3600)
     }
+
+    // MARK: Note hits: "Im Ordner zeigen"
+
+    @Test func showNotes_folder_setsThePathToTheFolder() throws {
+        let folderID = UUID()
+        environment.showNotes(.folder(folderID))
+        #expect(environment.tasksPath == [.notes, .notesFolder(.folder(folderID))])
+        #expect(environment.requestedTab == 1)
+    }
+
+    @Test func showNotes_standard_opensTheDefaultFolder() {
+        environment.tasksPath = [.shopping]
+        environment.showNotes(.standard)
+        #expect(environment.tasksPath == [.notes, .notesFolder(.standard)])
+        #expect(environment.requestedTab == 1)
+    }
+
+    @Test func notesScope_isTheFolderOfTheNote() throws {
+        let folder = try environment.notes.createFolder(name: "Ideen")
+        let note = environment.notes.createBlank(folderID: folder.id)
+        #expect(environment.notesScope(ofNote: note.id) == .folder(folder.id))
+    }
+
+    @Test func notesScope_noteWithoutFolder_isTheDefaultFolder() {
+        let loose = environment.notes.createBlank(folderID: nil)
+        #expect(environment.notesScope(ofNote: loose.id) == .standard)
+    }
+
+    @Test func notesScope_folderThatIsGone_isTheDefaultFolder() throws {
+        // Deleting a folder sends its notes to the trash, so a live note with a missing folder is a leftover (for example
+        // from a backup or a sync); `NoteStore` lists it under "Notizen" (`Filter.own`), and so does the jump.
+        let note = environment.notes.createBlank(folderID: nil)
+        note.folderID = UUID()
+        #expect(environment.notes.folder(id: try #require(note.folderID)) == nil)
+        #expect(environment.notes.notes(.own).contains { $0.id == note.id })
+        #expect(environment.notesScope(ofNote: note.id) == .standard)
+    }
+
+    @Test func notesScope_thoughtNote_isItsSystemFolder() throws {
+        let thought = try #require(environment.notes.create(text: "Dankbar für den Tag", kind: .evening, dayKey: "2026-11-20"))
+        let folderID = try #require(thought.folderID)
+        #expect(environment.notesScope(ofNote: thought.id) == .folder(folderID))
+    }
+
+    @Test func notesScope_nonFreeNoteWithoutFolder_opensAllNotes() throws {
+        // "Notizen" lists the user's own notes only, so such a note would not be found there.
+        let study = try #require(environment.notes.create(text: "Römer 8", kind: .bibleStudy, dayKey: "2026-11-20"))
+        #expect(study.folderID == nil)
+        #expect(!environment.notes.notes(.own).contains { $0.id == study.id })
+        #expect(environment.notesScope(ofNote: study.id) == .all)
+    }
+
+    @Test func notesScope_deletedNote_opensTheTrash() throws {
+        let note = environment.notes.createBlank(folderID: nil)
+        environment.notes.trash(note.id)
+        #expect(environment.notesScope(ofNote: note.id) == .trash)
+    }
+
+    @Test func notesScope_unknownNote_opensAllNotes() {
+        #expect(environment.notesScope(ofNote: UUID()) == .all)
+    }
 }

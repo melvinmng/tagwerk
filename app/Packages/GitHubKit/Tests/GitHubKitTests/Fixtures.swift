@@ -199,3 +199,23 @@ extension Fixtures {
         """
     }
 }
+
+extension Fixtures {
+    /// One closed issue node of the closed-issues search: `projectIDs` become project items, `archivedProjectIDs` archived ones.
+    static func closedNode(id: String, closedAt: String, stateReason: String? = "COMPLETED",
+                           projectIDs: [String] = ["PVT_1"], archivedProjectIDs: [String] = []) -> String {
+        let reason = stateReason.map { #""\#($0)""# } ?? "null"
+        let items = (projectIDs.map { (id: $0, archived: false) } + archivedProjectIDs.map { (id: $0, archived: true) })
+            .map { #"{"isArchived":\#($0.archived),"project":{"id":"\#($0.id)"}}"# }.joined(separator: ",")
+        return """
+        {"id":"\(id)","closedAt":"\(closedAt)","stateReason":\(reason),"projectItems":{"nodes":[\(items)]}}
+        """
+    }
+
+    static func closedResponse(_ nodes: [String], hasNextPage: Bool = false, endCursor: String? = nil) -> String {
+        let cursor = endCursor.map { #""\#($0)""# } ?? "null"
+        return """
+        {"data":{"search":{"pageInfo":{"hasNextPage":\(hasNextPage),"endCursor":\(cursor)},"nodes":[\(nodes.joined(separator: ","))]}}}
+        """
+    }
+}

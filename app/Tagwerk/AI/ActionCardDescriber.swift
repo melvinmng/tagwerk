@@ -12,6 +12,11 @@ struct ActionCardDescriber {
     var gitHubDirectory: () -> (any GitHubDirectory)? = { nil }
     /// Name of an open shopping item by its id, for the card of `update_shopping`.
     var shoppingItemName: (String) -> String? = { _ in nil }
+    /// An issue of the last GitHub search by task key, for the card of `assign_task` on an issue outside the user's tasks.
+    var foundIssue: (String) -> OnlineIssue? = { _ in nil }
+    /// Names repository and projects of an issue in the card text. The suggestions of a note show the target in a row of
+    /// their own (it can be changed there), so their text leaves it out.
+    var showsIssueTarget = true
 
     /// `spoken`: the card is read aloud; texts then avoid symbols that speech drops (the screen keeps them).
     func describe(_ call: ToolCall, language: VoiceLanguage = .app, spoken: Bool = false) -> AssistantModel.ActionCard {
@@ -28,13 +33,14 @@ struct ActionCardDescriber {
         func duration(_ minutes: Int) -> String { CapacityText.duration(minutes) }
         switch call.name {
         case "create_task" where string("source") == "github":
-            var parts = [text("Issue anlegen")] + issueTarget(args, text: text)
+            var parts = [text("Issue anlegen")] + (showsIssueTarget ? issueTarget(args, text: text) : [])
             if let due = string("due") { parts.append(text("fällig \(dayText(due))")) }
             if let priority = string("priority") { parts.append(priority) }
             // Everyone the issue goes to is named in full before the user confirms.
-            let assignment = "\n" + issueAssignment(args["assignees"] as? [String], language: language, text: text)
+            let people = issueAssignment(args["assignees"] as? [String], language: language, text: text)
             let notes = string("notes").map { "\n" + text("Notizen: „\($0)“") } ?? ""
-            return AssistantModel.ActionCard(title: title, change: parts.joined(separator: " · ") + assignment + notes)
+            if !showsIssueTarget { return AssistantModel.ActionCard(title: title, change: (parts + [people]).joined(separator: " · ") + notes) }
+            return AssistantModel.ActionCard(title: title, change: parts.joined(separator: " · ") + "\n" + people + notes)
         case "create_task":
             var parts = [text("Neue Aufgabe")]
             if let source = string("source") { parts.append(source == "github" ? text("als GitHub-Issue") : source) }
@@ -112,6 +118,10 @@ struct ActionCardDescriber {
             if !additions.isEmpty { parts.append(text("Hinzufügen: \(additions.joined(separator: ", "))")) }
             if !checks.isEmpty { parts.append(text("Abhaken: \(checks.joined(separator: ", "))")) }
             return AssistantModel.ActionCard(title: text("Einkaufsliste ändern"), change: parts.joined(separator: " · "))
+        case "assign_task":
+            // An issue outside the user's tasks comes from the last GitHub search.
+            let found = task == nil ? string("id").flatMap(foundIssue) : nil
+            return describeAssignment(task: task, found: found, args: args, title: found?.title ?? title, language: language, spoken: spoken)
         case "create_event", "update_event", "delete_event":
             return describeEvent(call.name, series: args["series"] as? Bool == true, language: language, string: string)
         default:
@@ -155,6 +165,66 @@ struct ActionCardDescriber {
         let names = AssigneeSelection.names(selected: assignees, me: me, summarize: false, language: language)
         let includesMe = assignees.contains { AssigneeSelection.isMe($0, me: me) }
         return includesMe ? text("Zugewiesen: \(names)") : text("Zugewiesen: \(names) (nicht dir)")
+    }
+
+    /// Card of `assign_task` (mockups ZU1a, ZU2): who is assigned before and after, and for a hand-over what it costs.
+    /// The plan comes from the same function as the execution; when the issue is not loaded any more (or the change
+    /// cannot be resolved) the card lists the requested change and the execution reports what is wrong.
+    private func describeAssignment(task: TaskItem?, found: OnlineIssue?, args: [String: Any], title: String, language: VoiceLanguage,
+                                    spoken: Bool) -> AssistantModel.ActionCard {
+        func text(_ key: String.LocalizationValue) -> String { Localized.string(key, in: language, bundle: .main) }
+        let me = gitHubDirectory()?.login
+        let add = args["add"] as? [String] ?? [], remove = args["remove"] as? [String] ?? []
+        func names(_ logins: [String]) -> String { AssigneeSelection.names(selected: logins, me: me, summarize: false, language: language) }
+        func spokenNames(_ logins: [String]) -> String {
+            let parts = logins.map { AssigneeSelection.isMe($0, me: me) ? text("du") : $0 }
+            return parts.formatted(.list(type: .and).locale(AssistantModel.formatLocale(language)))
+        }
+        func requested() -> String {
+            guard spoken else {
+                var parts: [String] = []
+                if !add.isEmpty { parts.append("＋ " + names(add)) }
+                if !remove.isEmpty { parts.append("− " + names(remove)) }
+                return text("Zuweisung ändern: \(parts.joined(separator: " · "))")
+            }
+            var parts: [String] = []
+            if !add.isEmpty { parts.append(text("\(spokenNames(add)) dazu")) }
+            if !remove.isEmpty { parts.append(text("\(spokenNames(remove)) nicht mehr")) }
+            return text("Zuweisung ändern: \(parts.joined(separator: ", "))")
+        }
+
+        // An issue outside the lists is named by repository and number; nothing is planned for it, so no consequences.
+        let location = found.map { "\($0.repository) #\($0.number)" }
+        func prefixed(_ line: String) -> String {
+            guard let location else { return line }
+            return spoken ? location + ". " + line : location + "\n" + line
+        }
+        guard let current = task?.assignees ?? found?.assignees ?? (task == nil ? nil : [String]()),
+              case .success(let plan) = AppTools.assignmentPlan(current: current, add: add, remove: remove, me: me) else {
+            return AssistantModel.ActionCard(title: title, change: prefixed(requested()))
+        }
+        // Only an issue of the user's lists is handed over; an issue found by the search was never in them.
+        let handsOver = task != nil && plan.handsOver
+        let warning = handsOver
+            ? task.flatMap { task in
+                TaskEditorModel.handOverMessage(number: task.issueNumber, futureBlocks: planning.futureBlockCount(for: task.id),
+                                                leavesUnassigned: plan.after.isEmpty)
+            }
+            : nil
+        let before = plan.before.isEmpty ? text("niemand") : names(plan.before)
+        let after: String
+        if plan.after.isEmpty {
+            after = text("niemand")
+        } else if handsOver {
+            after = text("\(names(plan.after)) (nicht mehr dir)")
+        } else {
+            after = names(plan.after)
+        }
+        var change = spoken ? requested() : text("Zugewiesen: \(before) → \(after)")
+        // By voice the card is the only place that names the consequences, so they are read out as well.
+        if spoken, let warning { change += ". " + warning }
+        return AssistantModel.ActionCard(title: title, change: prefixed(change), warning: spoken ? nil : warning,
+                                         confirmTitle: handsOver ? text("Abgeben") : nil, isDestructive: handsOver)
     }
 
     private func describeEvent(_ name: String, series: Bool, language: VoiceLanguage,

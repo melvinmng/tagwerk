@@ -118,6 +118,16 @@
         }
       }
     },
+    "%@ (nicht mehr dir)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ (no longer you)"
+          }
+        }
+      }
+    },
     "%@ / %@ kcal": {
       "localizations": {
         "de": {
@@ -210,7 +220,35 @@
         }
       }
     },
+    "%@ an %@ · ohne Projekt": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@ an %2$@ · ohne Projekt"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ to %2$@ · no project"
+          }
+        }
+      }
+    },
     "%@ angelegt · ohne Project": {
+      "extractionState": "stale",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ created · no project"
+          }
+        }
+      }
+    },
+    "%@ angelegt · ohne Projekt": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -232,6 +270,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "%1$@ to %2$@ · all day"
+          }
+        }
+      }
+    },
+    "%@ dazu": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ added"
           }
         }
       }
@@ -288,6 +336,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "%@ h"
+          }
+        }
+      }
+    },
+    "%@ ist dem Issue nicht zugewiesen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ is not assigned to the issue."
           }
         }
       }
@@ -368,6 +426,16 @@
         }
       }
     },
+    "%@ nicht mehr": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ removed"
+          }
+        }
+      }
+    },
     "%@ noch frei": {
       "localizations": {
         "en": {
@@ -378,12 +446,54 @@
         }
       }
     },
+    "%@ noch offen in %lld Projekten": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@ noch offen in %2$lld Projekten"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ still open in %2$lld projects"
+          }
+        }
+      }
+    },
+    "%@ noch offen in „%@“": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@ noch offen in „%2$@“"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ still open in “%2$@”"
+          }
+        }
+      }
+    },
     "%@ offen": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "%@ open"
+          }
+        }
+      }
+    },
+    "%@ ohne Projekt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ without a project"
           }
         }
       }
@@ -445,6 +555,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "%@ are already on the list"
+          }
+        }
+      }
+    },
+    "%@ steht in add und in remove.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ is in both add and remove."
           }
         }
       }
@@ -1251,6 +1371,16 @@
         }
       }
     },
+    "%lld Kurzbefehle": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld shortcuts"
+          }
+        }
+      }
+    },
     "%lld Mal": {
       "localizations": {
         "de": {
@@ -1397,6 +1527,16 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "%lld Status": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld statuses"
           }
         }
       }
@@ -2343,11 +2483,22 @@
       }
     },
     "**Gesendet wird:** der Rezepttext oder die Fotos und die Kategorienamen, oder der Text einer Notiz, die du ausdrücklich als Quelle wählst. Bei einem Link nur der gelesene Text der Seite, nicht die Adresse.": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "**Sent:** the recipe text or the photos and the category names, or the text of a note you explicitly choose as the source. For a link, only the text read from the page, not the address."
+          }
+        }
+      }
+    },
+    "**Gesendet wird:** der Rezepttext oder die Fotos und die Kategorienamen, oder der Text einer Notiz, die du ausdrücklich als Quelle wählst. Bei einem Link nur der gelesene Text der Seite, nicht die Adresse. Beim Übersetzen der Text der einen Rezept-Notiz, ohne Anhänge.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "**Sent:** the recipe text or the photos and the category names, or the text of a note you explicitly choose as the source. For a link, only the text read from the page, not the address. When translating, the text of the one recipe note, without attachments."
           }
         }
       }
@@ -2465,6 +2616,7 @@
       }
     },
     "**Nur auf dein Tippen:** Ohne „Zutaten holen“ oder „Rezept holen“ verlässt nichts das iPhone. Auch ein Link wird erst dann geladen.": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -2481,6 +2633,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "**Only when you tap:** without “Get ingredients”, nothing leaves the iPhone. A link is loaded only then, too."
+          }
+        }
+      }
+    },
+    "**Nur auf dein Tippen:** Ohne „Zutaten holen“, „Rezept holen“ oder „Übersetzen“ verlässt nichts das iPhone. Auch ein Link wird erst dann geladen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "**Only when you tap:** without “Get ingredients”, “Get recipe” or “Translate”, nothing leaves the iPhone. A link is loaded only then, too."
           }
         }
       }
@@ -2595,6 +2757,16 @@
         }
       }
     },
+    "250 ml, im Hintergrund": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "250 ml, in the background"
+          }
+        }
+      }
+    },
     "30 Tage %@": {
       "localizations": {
         "en": {
@@ -2703,6 +2875,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Hand over"
+          }
+        }
+      }
+    },
+    "Abgehakte Punkte erinnern an dem Abend nicht mehr. Tagwerk plant die Erinnerungen für die nächsten 3 Tage und füllt sie nach, sobald du die App öffnest.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Checked items no longer remind you that evening. Tagwerk plans the reminders for the next 3 days and tops them up whenever you open the app."
           }
         }
       }
@@ -3081,11 +3263,32 @@
       }
     },
     "Alle Projects": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "All projects"
+          }
+        }
+      }
+    },
+    "Alle Projekte": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All projects"
+          }
+        }
+      }
+    },
+    "Alle Sätze stehen dort bereit, auch für Aktionstaste und Home-Bildschirm.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All phrases are ready there, also for the Action button and the Home Screen."
           }
         }
       }
@@ -3260,6 +3463,16 @@
         }
       }
     },
+    "Als Kopie sichern": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save as copy"
+          }
+        }
+      }
+    },
     "Als Liste zeigen": {
       "localizations": {
         "en": {
@@ -3306,6 +3519,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Close as not planned"
+          }
+        }
+      }
+    },
+    "Als „%@“ gesichert.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved as “%@”."
           }
         }
       }
@@ -3441,6 +3664,16 @@
         }
       }
     },
+    "Anderen Tag einplanen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plan for another day"
+          }
+        }
+      }
+    },
     "Anderer Tag": {
       "localizations": {
         "en": {
@@ -3482,6 +3715,7 @@
       }
     },
     "Angelegt": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -3491,7 +3725,28 @@
         }
       }
     },
+    "Angelegt · nicht in Aufgaben": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Created · not in Tasks"
+          }
+        }
+      }
+    },
+    "Angelegt, nicht in Aufgaben: %@. Auf GitHub öffnen verfügbar.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Created, not in Tasks: %@. Open on GitHub available."
+          }
+        }
+      }
+    },
     "Angelegt: %@. Auf GitHub öffnen verfügbar.": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -3884,6 +4139,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Add item"
+          }
+        }
+      }
+    },
+    "Artikel im Satz, im Hintergrund": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Item in the sentence, in the background"
           }
         }
       }
@@ -4792,6 +5057,26 @@
         }
       }
     },
+    "Blatt „Essen“": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“Food” sheet"
+          }
+        }
+      }
+    },
+    "Blatt „Training“": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“Workout” sheet"
+          }
+        }
+      }
+    },
     "Blöcke löschen": {
       "localizations": {
         "en": {
@@ -4808,6 +5093,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Brain Dump"
+          }
+        }
+      }
+    },
+    "Brain Dump mit laufendem Diktat": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Brain Dump with dictation running"
           }
         }
       }
@@ -5064,6 +5359,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "The argument %@ is missing."
+          }
+        }
+      }
+    },
+    "Das Argument note_ids fehlt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The argument note_ids is missing."
           }
         }
       }
@@ -5565,6 +5870,16 @@
         }
       }
     },
+    "Der Assistent findet Notizen über seine Suche (Titel und ein kurzer Ausschnitt), liest bei Bedarf die ganze Notiz und kann Notizen ändern, anlegen und löschen; jede Änderung bestätigst du einzeln. Gelesene Notiztexte werden nicht im Verlauf gespeichert, die Antworten des Assistenten schon. Tagebuch mit Gott, Bible Study und Dream Log bleiben immer auf dem iPhone.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The assistant finds notes through its search (title and a short excerpt), reads the whole note when needed and can change, create and delete notes; you confirm every change individually. Note texts it has read are not saved in the history, the assistant's replies are. Journal, Bible Study and Dream Log always stay on the iPhone."
+          }
+        }
+      }
+    },
     "Der Assistent hat zu viele Schritte gebraucht und angehalten. Formuliere die Bitte genauer.": {
       "localizations": {
         "en": {
@@ -5686,6 +6001,17 @@
       }
     },
     "Der Status gilt je Project, unabhängig von „Ändern in“.": {
+      "extractionState": "stale",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The status applies per project, regardless of “Change in”."
+          }
+        }
+      }
+    },
+    "Der Status gilt je Projekt, unabhängig von „Ändern in“.": {
       "localizations": {
         "en": {
           "stringUnit": {
@@ -5995,6 +6321,16 @@
         }
       }
     },
+    "Die Einwilligung „Notizen mit ChatGPT“ fehlt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The consent “Notes with ChatGPT” is missing."
+          }
+        }
+      }
+    },
     "Die Erinnerungen-App ist nicht erreichbar.": {
       "localizations": {
         "en": {
@@ -6142,6 +6478,56 @@
           "stringUnit": {
             "state": "translated",
             "value": "The model list couldn’t be loaded. %@"
+          }
+        }
+      }
+    },
+    "Die Notiz hat keinen Abschnitt „Zutaten“.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The note has no “Ingredients” section."
+          }
+        }
+      }
+    },
+    "Die Notiz ist zu lang zum Übersetzen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The note is too long to translate."
+          }
+        }
+      }
+    },
+    "Die Notiz ließ sich nicht übersetzen. Versuch es noch einmal.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The note couldn’t be translated. Try again."
+          }
+        }
+      }
+    },
+    "Die Notiz wurde inzwischen geändert.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The note has been changed in the meantime."
+          }
+        }
+      }
+    },
+    "Die Projekte haben keine gemeinsame Stufe; jedes Issue startet in der ersten Stufe seines Projekts.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The projects share no stage; each issue starts in the first stage of its project."
           }
         }
       }
@@ -6403,6 +6789,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "The chosen list appears as your shopping list. Its entries no longer show under “Tasks”, are not planned, do not count in the weekly review and trigger no Tagwerk notifications. Nothing changes in the Reminders app."
+          }
+        }
+      }
+    },
+    "Die Übersetzung passt nicht zur Notiz. Versuch es noch einmal.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The translation doesn’t match the note. Try again."
           }
         }
       }
@@ -6914,6 +7310,16 @@
         }
       }
     },
+    "Eingeplant für %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Planned for %@"
+          }
+        }
+      }
+    },
     "Einheit": {
       "localizations": {
         "en": {
@@ -7235,6 +7641,16 @@
         }
       }
     },
+    "Englisch": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "English"
+          }
+        }
+      }
+    },
     "English": {
       "localizations": {
         "en": {
@@ -7388,6 +7804,16 @@
         }
       }
     },
+    "Erinnerungen und lokale Aufgaben": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reminders and local tasks"
+          }
+        }
+      }
+    },
     "Erinnerungen und lokale Aufgaben werden gelöscht, GitHub-Issues als „nicht geplant“ geschlossen.": {
       "localizations": {
         "en": {
@@ -7398,12 +7824,22 @@
         }
       }
     },
-    "Erinnerungen und lokale Aufgaben, ohne GitHub": {
+    "Erinnerungen und lokale Aufgaben. GitHub ist gerade nicht erreichbar.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Reminders and local tasks, without GitHub"
+            "value": "Reminders and local tasks. GitHub cannot be reached right now."
+          }
+        }
+      }
+    },
+    "Erinnerungen und lokale Aufgaben. GitHub wird geladen …": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reminders and local tasks. Loading GitHub …"
           }
         }
       }
@@ -7414,6 +7850,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Change reminders"
+          }
+        }
+      }
+    },
+    "Erinnerungen, lokale Aufgaben und geschlossene GitHub-Issues": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reminders, local tasks and closed GitHub issues"
           }
         }
       }
@@ -7433,6 +7879,16 @@
     },
     "Erkenner": {
       "shouldTranslate": false
+    },
+    "Erkennt Siri einen Satz nicht, prüfe in der App „Kurzbefehle“, ob dort die Tagwerk-Kurzbefehle stehen, und probiere den Satz als Text über „Tippen für Siri“.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "If Siri does not recognize a phrase, check in the Shortcuts app that the Tagwerk shortcuts are listed there, and try the phrase as text with Type to Siri."
+          }
+        }
+      }
     },
     "Erkennt Sprache auf dem iPhone, ohne Ton zu senden. Lädt beim ersten Mal das Sprachpaket.": {
       "shouldTranslate": false
@@ -7531,12 +7987,52 @@
         }
       }
     },
-    "Erledigt: Erinnerungen und lokale Aufgaben, ohne GitHub.": {
+    "Erledigt: Erinnerungen und lokale Aufgaben.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Completed: reminders and local tasks, without GitHub."
+            "value": "Completed: reminders and local tasks."
+          }
+        }
+      }
+    },
+    "Erledigt: Erinnerungen und lokale Aufgaben. GitHub ist gerade nicht erreichbar.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Completed: reminders and local tasks. GitHub cannot be reached right now."
+          }
+        }
+      }
+    },
+    "Erledigt: Erinnerungen und lokale Aufgaben. GitHub wird geladen …": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Completed: reminders and local tasks. Loading GitHub …"
+          }
+        }
+      }
+    },
+    "Erledigt: Erinnerungen, lokale Aufgaben und an diesem Tag geschlossene GitHub-Issues.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Completed: reminders, local tasks and GitHub issues closed on that day."
+          }
+        }
+      }
+    },
+    "Erledigt: Erinnerungen, lokale Aufgaben und heute geschlossene GitHub-Issues.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Completed: reminders, local tasks and GitHub issues closed today."
           }
         }
       }
@@ -7923,6 +8419,16 @@
         }
       }
     },
+    "Fokus beenden in Tagwerk": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stop focus in Tagwerk"
+          }
+        }
+      }
+    },
     "Fokus beendet.": {
       "localizations": {
         "en": {
@@ -8221,6 +8727,16 @@
         }
       }
     },
+    "Freier Fokus-Timer, im Hintergrund": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Free focus timer, in the background"
+          }
+        }
+      }
+    },
     "Freier Tag": {
       "localizations": {
         "en": {
@@ -8370,16 +8886,6 @@
         }
       }
     },
-    "Fügt Artikel hinzu, ohne Tagwerk zu öffnen": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Adds items without opening Tagwerk"
-          }
-        }
-      }
-    },
     "Fügt Artikel zur Einkaufsliste hinzu, ohne Tagwerk zu öffnen.": {
       "localizations": {
         "en": {
@@ -8511,11 +9017,22 @@
       }
     },
     "Für ein Rezept sendet Tagwerk auf dein Tippen den Rezepttext, das Foto oder den gelesenen Text einer Seite an ChatGPT, bei „Rezept hinzufügen“ dazu die Namen deiner Kategorien, wenn du in der Einkaufsliste zugestimmt hast. Wählst du eine Notiz ohne Zutaten und Zubereitung als Quelle, geht ihr Text an ChatGPT; eine Notiz mit beiden Abschnitten liest Tagwerk auf dem iPhone. Private Notizen (Tagebuch, Bible Study, Dream Log) stehen dafür nie zur Auswahl.": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "For a recipe, Tagwerk sends the recipe text, the photo or the text read from a page to ChatGPT when you tap, and with “Add recipe” also the names of your categories, if you agreed in the shopping list settings. If you choose a note without ingredients and instructions as the source, its text goes to ChatGPT; Tagwerk reads a note with both sections on the iPhone. Private notes (journal, Bible Study, Dream Log) are never offered."
+          }
+        }
+      }
+    },
+    "Für ein Rezept sendet Tagwerk auf dein Tippen den Rezepttext, das Foto oder den gelesenen Text einer Seite an ChatGPT, bei „Rezept hinzufügen“ dazu die Namen deiner Kategorien, wenn du in der Einkaufsliste zugestimmt hast. Wählst du eine Notiz ohne Zutaten und Zubereitung als Quelle, geht ihr Text an ChatGPT; eine Notiz mit beiden Abschnitten liest Tagwerk auf dem iPhone. Übersetzt du eine Rezept-Notiz, geht ihr Text zeilenweise an ChatGPT; Überschriften, Anhänge und die Quelle bleiben auf dem iPhone. Private Notizen (Tagebuch, Bible Study, Dream Log) stehen dafür nie zur Auswahl.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "For a recipe, Tagwerk sends the recipe text, the photo or the text read from a page to ChatGPT when you tap, and with “Add recipe” also the names of your categories, if you agreed in the shopping list settings. If you choose a note without ingredients and instructions as the source, its text goes to ChatGPT; Tagwerk reads a note with both sections on the iPhone. If you translate a recipe note, its text goes to ChatGPT line by line; the headings, the attachments and the source stay on the iPhone. Private notes (journal, Bible Study, Dream Log) are never offered."
           }
         }
       }
@@ -8537,6 +9054,46 @@
           "stringUnit": {
             "state": "translated",
             "value": "For a shared mail, Tagwerk sends the subject, the sender’s name and the text (at most 12,000 characters) to ChatGPT only if you agreed in the setting “Summarize mails with ChatGPT” and tap “Summarize with ChatGPT”. Attachments, addresses, recipients and the link to the mail are never sent. The inbox for shared content exists only on this iPhone and is not part of the data backup."
+          }
+        }
+      }
+    },
+    "Für heute eingeplant": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Planned for today"
+          }
+        }
+      }
+    },
+    "Für heute einplanen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plan for today"
+          }
+        }
+      }
+    },
+    "Für morgen eingeplant": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Planned for tomorrow"
+          }
+        }
+      }
+    },
+    "Für morgen einplanen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plan for tomorrow"
           }
         }
       }
@@ -8598,6 +9155,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Loaded · on iPhone"
+          }
+        }
+      }
+    },
+    "Gelesen: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Read: %@"
           }
         }
       }
@@ -8688,6 +9255,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Closed issues are only found by the GitHub search."
+          }
+        }
+      }
+    },
+    "Geschlossene Issues lassen sich hier nicht zuweisen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Closed issues cannot be assigned here."
           }
         }
       }
@@ -9225,6 +9802,16 @@
         }
       }
     },
+    "GitHub-Projekt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "GitHub project"
+          }
+        }
+      }
+    },
     "GitHub: Stand von %@": {
       "localizations": {
         "en": {
@@ -9556,6 +10143,16 @@
         }
       }
     },
+    "Höchstens fünf Notizen auf einmal.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "At most five notes at once."
+          }
+        }
+      }
+    },
     "Höchstens vier Punkte erinnern. Schalte bei einem anderen Punkt die Erinnerung aus.": {
       "localizations": {
         "en": {
@@ -9676,6 +10273,16 @@
         }
       }
     },
+    "Im Ordner zeigen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show in folder"
+          }
+        }
+      }
+    },
     "Im Plan zeigen": {
       "localizations": {
         "en": {
@@ -9776,6 +10383,22 @@
         }
       }
     },
+    "In %@ erledigt: %@. Auf GitHub öffnen verfügbar.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "In %1$@ erledigt: %2$@. Auf GitHub öffnen verfügbar."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Done in %1$@: %2$@. Open on GitHub available."
+          }
+        }
+      }
+    },
     "In %lld Kalendern": {
       "localizations": {
         "de": {
@@ -9812,6 +10435,32 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "In %lld Projekten erledigt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Done in %lld projects"
+          }
+        }
+      }
+    },
+    "In %lld Projekten erledigt: %@. Auf GitHub öffnen verfügbar.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "In %1$lld Projekten erledigt: %2$@. Auf GitHub öffnen verfügbar."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Done in %1$lld projects: %2$@. Open on GitHub available."
           }
         }
       }
@@ -9972,6 +10621,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Nothing was logged this week."
+          }
+        }
+      }
+    },
+    "In „%@“ erledigt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Done in “%@”"
           }
         }
       }
@@ -10320,6 +10979,16 @@
         }
       }
     },
+    "Kein Projekt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No project"
+          }
+        }
+      }
+    },
     "Kein Wasser erfasst": {
       "localizations": {
         "en": {
@@ -10580,6 +11249,16 @@
         }
       }
     },
+    "Keine Verbindung. Das Übersetzen braucht Internet.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No connection. Translating needs the internet."
+          }
+        }
+      }
+    },
     "Keine Verbindung. Die Schätzung braucht Internet.": {
       "localizations": {
         "en": {
@@ -10671,6 +11350,17 @@
       }
     },
     "Keine zugewiesenen Issues in offenen Projects": {
+      "extractionState": "stale",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No assigned issues in open projects"
+          }
+        }
+      }
+    },
+    "Keine zugewiesenen Issues in offenen Projekten": {
       "localizations": {
         "en": {
           "stringUnit": {
@@ -11042,6 +11732,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Link to the recipe"
+          }
+        }
+      }
+    },
+    "Link zur Mail": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Link to the mail"
           }
         }
       }
@@ -12092,32 +12792,12 @@
         }
       }
     },
-    "Nennt Termine, Blöcke und Deadlines von heute": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Lists today’s events, blocks and deadlines"
-          }
-        }
-      }
-    },
     "Nennt Termine, Blöcke und Deadlines von heute.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Lists today’s events, blocks and deadlines."
-          }
-        }
-      }
-    },
-    "Nennt den Artikel im Satz; Siri kennt deine bisherigen Artikel": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Names the item in the sentence; Siri knows the items you used before"
           }
         }
       }
@@ -12645,6 +13325,16 @@
         }
       }
     },
+    "Notiz nicht gefunden.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Note not found."
+          }
+        }
+      }
+    },
     "Notiz sichern": {
       "localizations": {
         "en": {
@@ -12695,6 +13385,16 @@
         }
       }
     },
+    "Notizen gehen nur mit dem Schalter „Notizen mit ChatGPT“ an den Assistenten: Titel und Ausschnitte der Treffer seiner Suche, bei Bedarf der ganze Text einer Notiz und, im Notiz-Chat, Änderungen daran. Ist der Schalter aus, erfährt der Assistent nur, wie viele Notizen zu einer Suche passen. Was der Assistent aus Notizen liest, gilt nur für das laufende Gespräch und geht beim Beenden der App, beim Wechsel des Chats und beim Löschen des Verlaufs verloren. Antworten des Assistenten und deine Nachrichten bleiben im Verlauf und können Notizinhalt zitieren. Tagebuch mit Gott, Bible Study und Dream Log verlassen das iPhone nie.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notes go to the assistant only with the switch “Notes with ChatGPT”: title and excerpt of the hits of its search, the whole text of a note when needed and, in the notes chat, changes to it. With the switch off, the assistant only learns how many notes match a search. What the assistant reads from notes applies only to the current conversation and is lost when the app is quit, when you switch chats and when you clear the history. The assistant's replies and your messages stay in the history and can quote note content. Journal, Bible Study and Dream Log never leave the iPhone."
+          }
+        }
+      }
+    },
     "Notizen liegen nur auf diesem iPhone. An ChatGPT geht eine Brain-Dump-Notiz nur, wenn du bei ihr auf „Vorschläge holen“ tippst, und eine Notiz nur, wenn du sie bei „Rezept hinzufügen“ als Quelle wählst.": {
       "localizations": {
         "en": {
@@ -12712,6 +13412,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Notes stay on this iPhone only. A Brain Dump note goes to ChatGPT only when you tap “Get suggestions” on it."
+          }
+        }
+      }
+    },
+    "Notizen mit ChatGPT": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notes with ChatGPT"
+          }
+        }
+      }
+    },
+    "Notizen und Gewohnheiten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notes and habits"
           }
         }
       }
@@ -13096,6 +13816,28 @@
       }
     },
     "Ohne Project erscheint das Issue nicht in deinen Aufgaben.": {
+      "extractionState": "stale",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Without a project, the issue does not appear in your tasks."
+          }
+        }
+      }
+    },
+    "Ohne Projekt erscheint das Issue nicht in deinen Aufgaben, nur auf GitHub.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Without a project, the issue does not appear in your tasks, only on GitHub."
+          }
+        }
+      }
+    },
+    "Ohne Projekt erscheint das Issue nicht in deinen Aufgaben.": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -13166,6 +13908,17 @@
       }
     },
     "Online-Treffer öffnen sich auf GitHub. Zum Bearbeiten in Tagwerk muss ein Issue dir zugewiesen sein und in einem Project liegen.": {
+      "extractionState": "stale",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Online results open on GitHub. To edit an issue in Tagwerk it must be assigned to you and belong to a project."
+          }
+        }
+      }
+    },
+    "Online-Treffer öffnen sich auf GitHub. Zum Bearbeiten in Tagwerk muss ein Issue dir zugewiesen sein und in einem Projekt liegen.": {
       "localizations": {
         "en": {
           "stringUnit": {
@@ -13221,6 +13974,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Delete folder “%@”?"
+          }
+        }
+      }
+    },
+    "Original": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Original"
+          }
+        }
+      }
+    },
+    "Original ersetzen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Replace original"
           }
         }
       }
@@ -13590,6 +14363,7 @@
       "shouldTranslate": false
     },
     "Project": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -13620,6 +14394,7 @@
       }
     },
     "Projects": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -13883,6 +14658,26 @@
         }
       }
     },
+    "Rezept wird übersetzt …": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Translating recipe …"
+          }
+        }
+      }
+    },
+    "Rezept übersetzen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Translate recipe"
+          }
+        }
+      }
+    },
     "Rezept: %@": {
       "localizations": {
         "en": {
@@ -13904,11 +14699,22 @@
       }
     },
     "Rezepte mit ChatGPT lesen": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Read recipes with ChatGPT"
+          }
+        }
+      }
+    },
+    "Rezepte mit ChatGPT lesen und übersetzen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Read and translate recipes with ChatGPT"
           }
         }
       }
@@ -14022,16 +14828,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Undo"
-          }
-        }
-      }
-    },
-    "Sag einen der Sätze zu Siri oder füge ihn in der App „Kurzbefehle“ hinzu. „Wasser erfassen“ lässt sich dort auch auf die Aktionstaste oder den Home-Bildschirm legen. Erkennt Siri einen Satz nicht, prüfe in der App „Kurzbefehle“, ob dort die Tagwerk-Kurzbefehle stehen, und probiere den Satz als Text über „Tippen für Siri“.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Say one of the phrases to Siri or add it in the Shortcuts app. “Log water” can also be put on the Action button or the Home Screen there. If Siri does not recognize a phrase, check in the Shortcuts app that the Tagwerk shortcuts are listed there, and try the phrase as text with Type to Siri."
           }
         }
       }
@@ -14546,6 +15342,16 @@
         }
       }
     },
+    "Siri fragt nach den Artikeln": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Siri asks for the items"
+          }
+        }
+      }
+    },
     "Sitzung abgeschlossen": {
       "localizations": {
         "en": {
@@ -14947,16 +15753,6 @@
         }
       }
     },
-    "Startet oder beendet einen freien Fokus-Timer": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Starts or stops a free focus timer"
-          }
-        }
-      }
-    },
     "Startet oder beendet einen freien Fokus-Timer.": {
       "localizations": {
         "en": {
@@ -14983,6 +15779,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Status"
+          }
+        }
+      }
+    },
+    "Status %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Status %@"
           }
         }
       }
@@ -15123,6 +15929,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Plan day"
+          }
+        }
+      }
+    },
+    "Tag und Fokus": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Day and focus"
           }
         }
       }
@@ -15438,6 +16254,16 @@
         }
       }
     },
+    "Tagwerk sendet den Text dieser Notiz an ChatGPT. Du siehst die Übersetzung, bevor sich etwas ändert.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tagwerk sends the text of this note to ChatGPT. You see the translation before anything changes."
+          }
+        }
+      }
+    },
     "Tagwerk speichert Mahlzeiten, Wasser und Trainings zusätzlich in Health und zeigt deine Schritte sowie Trainings der Apple Watch und anderer Apps. Deine Einträge bleiben auch ohne Health in Tagwerk.": {
       "localizations": {
         "en": {
@@ -15482,11 +16308,22 @@
       }
     },
     "Tagwerk zeigt dir zugewiesene Issues aus deinen offenen GitHub Projects und kann sie bearbeiten.": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Tagwerk shows you assigned issues from your open GitHub Projects and can edit them."
+          }
+        }
+      }
+    },
+    "Tagwerk zeigt dir zugewiesene Issues aus deinen offenen GitHub-Projekten und kann sie bearbeiten.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tagwerk shows you assigned issues from your open GitHub projects and can edit them."
           }
         }
       }
@@ -15517,6 +16354,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Pause Tagwerk notifications"
+          }
+        }
+      }
+    },
+    "Tastatur ausblenden": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hide Keyboard"
           }
         }
       }
@@ -15746,6 +16593,16 @@
         }
       }
     },
+    "Termine, Blöcke, Deadlines; nur entsperrt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Events, blocks, deadlines; unlocked only"
+          }
+        }
+      }
+    },
     "Text": {
       "localizations": {
         "en": {
@@ -15927,16 +16784,6 @@
         }
       }
     },
-    "Trägt 250 ml ein, ohne Tagwerk zu öffnen": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Logs 250 ml without opening Tagwerk"
-          }
-        }
-      }
-    },
     "Trägt Wasser ein, ohne Tagwerk zu öffnen.": {
       "localizations": {
         "en": {
@@ -15997,6 +16844,16 @@
         }
       }
     },
+    "Um ein Rezept zu lesen oder zu übersetzen, sendet Tagwerk den Rezepttext oder die Fotos und die Namen deiner Kategorien an ChatGPT (OpenAI), über das Konto, mit dem du angemeldet bist.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "To read or translate a recipe, Tagwerk sends the recipe text or the photos and the names of your categories to ChatGPT (OpenAI), through the account you are signed in with."
+          }
+        }
+      }
+    },
     "Um ein Rezept zu lesen, sendet Tagwerk den Rezepttext oder das Foto und die Namen deiner Kategorien an ChatGPT (OpenAI), über das Konto, mit dem du angemeldet bist.": {
       "extractionState": "stale",
       "localizations": {
@@ -16009,6 +16866,7 @@
       }
     },
     "Um ein Rezept zu lesen, sendet Tagwerk den Rezepttext oder die Fotos und die Namen deiner Kategorien an ChatGPT (OpenAI), über das Konto, mit dem du angemeldet bist.": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -16631,6 +17489,16 @@
         }
       }
     },
+    "Vorschlag von ChatGPT. Mengen bleiben unverändert; bitte kurz prüfen. Anmerkungen und Anhänge der Notiz bleiben erhalten.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suggestion from ChatGPT. Amounts stay unchanged; please check them briefly. Remarks and attachments of the note are kept."
+          }
+        }
+      }
+    },
     "Vorschlag · %@": {
       "localizations": {
         "en": {
@@ -16995,7 +17863,18 @@
         }
       }
     },
+    "Wenn du KI-Funktionen nutzt, gehen die dafür nötigen Daten (Termine, Aufgaben, Einkaufsartikel, bei Issues auch Repo-Inhalte und GitHub-Benutzernamen zuweisbarer und zugewiesener Personen und, wenn eingeschaltet, Titel, Ausschnitte und Text deiner Notizen) an OpenAI.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "When you use AI features, the data they need (events, tasks, shopping items, and for issues also repo contents and GitHub usernames of assignable and assigned people and, if switched on, titles, excerpts and text of your notes) goes to OpenAI."
+          }
+        }
+      }
+    },
     "Wenn du KI-Funktionen nutzt, gehen die dafür nötigen Daten (Termine, Aufgaben, bei Issues auch Repo-Inhalte und GitHub-Benutzernamen zuweisbarer Personen) an OpenAI.": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -17004,6 +17883,17 @@
           }
         }
       }
+    },
+    "Wenn du KI-Funktionen nutzt, gehen die dafür nötigen Daten (Termine, Aufgaben, bei Issues auch Repo-Inhalte und GitHub-Benutzernamen zuweisbarer und zugewiesener Personen) an OpenAI.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "When you use AI features, the data they need (events, tasks, and for issues also repo contents and GitHub usernames of assignable and assigned people) goes to OpenAI."
+          }
+        }
+      },
+      "extractionState": "stale"
     },
     "Werktags": {
       "localizations": {
@@ -17653,6 +18543,26 @@
         }
       }
     },
+    "Ziel wählen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose target"
+          }
+        }
+      }
+    },
+    "Ziel: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Target: %@"
+          }
+        }
+      }
+    },
     "Ziele": {
       "localizations": {
         "en": {
@@ -17749,6 +18659,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Assigned to: %@ (not you)"
+          }
+        }
+      }
+    },
+    "Zugewiesen: %@ → %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Assigned: %@ → %@"
           }
         }
       }
@@ -17904,6 +18824,16 @@
         }
       }
     },
+    "Zum Übersetzen ist deine Einwilligung nötig.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Translating needs your consent."
+          }
+        }
+      }
+    },
     "Zuordnung lösen": {
       "localizations": {
         "en": {
@@ -18030,6 +18960,36 @@
           "stringUnit": {
             "state": "translated",
             "value": "Use ingredients"
+          }
+        }
+      }
+    },
+    "Zuweisen geht nur bei GitHub-Issues.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Assigning only works for GitHub issues."
+          }
+        }
+      }
+    },
+    "Zuweisung ändern: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Change assignment: %@"
+          }
+        }
+      }
+    },
+    "Zuweisungen bestätigst du einzeln.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You confirm assignments one at a time."
           }
         }
       }
@@ -18166,6 +19126,16 @@
         }
       }
     },
+    "auch: „%@“": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "also: “%@”"
+          }
+        }
+      }
+    },
     "aus": {
       "localizations": {
         "en": {
@@ -18263,6 +19233,16 @@
       }
     },
     "dir": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "you"
+          }
+        }
+      }
+    },
+    "du": {
       "localizations": {
         "en": {
           "stringUnit": {
@@ -18720,6 +19700,16 @@
         }
       }
     },
+    "mehr": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "more"
+          }
+        }
+      }
+    },
     "min": {
       "localizations": {
         "en": {
@@ -18873,6 +19863,16 @@
         }
       }
     },
+    "niemand": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "nobody"
+          }
+        }
+      }
+    },
     "noch %@": {
       "localizations": {
         "en": {
@@ -18914,6 +19914,17 @@
       }
     },
     "ohne Project": {
+      "extractionState": "stale",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "no project"
+          }
+        }
+      }
+    },
+    "ohne Projekt": {
       "localizations": {
         "en": {
           "stringUnit": {
@@ -19424,16 +20435,6 @@
         }
       }
     },
-    "Öffnet Brain Dump und startet das Diktat": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Opens Brain Dump and starts dictation"
-          }
-        }
-      }
-    },
     "Öffnet ChatGPT mit dem Kontext dieses Bildschirms": {
       "localizations": {
         "en": {
@@ -19464,32 +20465,12 @@
         }
       }
     },
-    "Öffnet das Blatt „Essen“": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Opens the “Food” sheet"
-          }
-        }
-      }
-    },
     "Öffnet das Blatt „Essen“ in Tagwerk.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Opens the “Food” sheet in Tagwerk."
-          }
-        }
-      }
-    },
-    "Öffnet das Blatt „Training“": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Opens the “Workout” sheet"
           }
         }
       }
@@ -19534,22 +20515,22 @@
         }
       }
     },
+    "Öffnet die Auswahl": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opens the selection"
+          }
+        }
+      }
+    },
     "Öffnet die Auswahl, wohin das Unerledigte soll": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Opens the choice of where the leftovers go"
-          }
-        }
-      }
-    },
-    "Öffnet die Einkaufsliste": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Opens the shopping list"
           }
         }
       }
@@ -19666,16 +20647,6 @@
         }
       }
     },
-    "Übernimmt den Vorschlag": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Accepts the suggestion"
-          }
-        }
-      }
-    },
     "Übernommen": {
       "localizations": {
         "en": {
@@ -19702,12 +20673,62 @@
         }
       }
     },
+    "Übersetzen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Translate"
+          }
+        }
+      }
+    },
+    "Übersetzen nach": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Translate to"
+          }
+        }
+      }
+    },
+    "Übersetzen …": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Translate …"
+          }
+        }
+      }
+    },
+    "Übersetzung": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Translation"
+          }
+        }
+      }
+    },
     "Überspringen": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Skip"
+          }
+        }
+      }
+    },
+    "öffnet Tagwerk": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "opens Tagwerk"
           }
         }
       }
@@ -19987,11 +21008,22 @@
       }
     },
     "„Rezept hinzufügen“ sendet auf dein Tippen den Rezepttext oder die Fotos und die Namen deiner Kategorien, „Rezept mit ChatGPT anlegen“ nur den Rezepttext oder die Fotos. Bei einem Link geht nur der gelesene Text der Seite weg, nicht die Adresse. Eine Rezept-Notiz mit Zutaten und Zubereitung liest Tagwerk auf dem iPhone. Schaltest du das aus, fragt Tagwerk beim nächsten Rezept erneut.": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "“Add recipe” sends the recipe text or the photos and the names of your categories when you tap; “Create recipe with ChatGPT” sends only the recipe text or the photos. For a link, only the text read from the page leaves, not the address. Tagwerk reads a recipe note with ingredients and instructions on the iPhone. If you turn this off, Tagwerk asks again for the next recipe."
+          }
+        }
+      }
+    },
+    "„Rezept hinzufügen“ sendet auf dein Tippen den Rezepttext oder die Fotos und die Namen deiner Kategorien, „Rezept mit ChatGPT anlegen“ nur den Rezepttext oder die Fotos. Bei einem Link geht nur der gelesene Text der Seite weg, nicht die Adresse. Eine Rezept-Notiz mit Zutaten und Zubereitung liest Tagwerk auf dem iPhone. „Übersetzen …“ in einer Rezept-Notiz sendet auf dein Tippen den Text dieser Notiz, ohne Anhänge. Schaltest du das aus, fragt Tagwerk beim nächsten Rezept erneut.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“Add recipe” sends the recipe text or the photos and the names of your categories when you tap; “Create recipe with ChatGPT” sends only the recipe text or the photos. For a link, only the text read from the page leaves, not the address. Tagwerk reads a recipe note with ingredients and instructions on the iPhone. “Translate …” in a recipe note sends the text of that note when you tap, without attachments. If you turn this off, Tagwerk asks again for the next recipe."
           }
         }
       }
@@ -20101,6 +21133,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "✦ Sort"
+          }
+        }
+      }
+    },
+    "✦ Vorschlag von ChatGPT. Ändern oder so lassen; gesichert wird erst im nächsten Schritt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "✦ Suggested by ChatGPT. Change it or leave it; nothing is saved until the next step."
           }
         }
       }

@@ -60,11 +60,12 @@ struct RoutinesModelTests {
         routineStore = RoutineStore(context: container.mainContext, now: { now.now })
     }
 
-    private func makeModel(taskList override: TaskListModel? = nil, isRecurring: ((TaskItem) -> Bool)? = nil) -> RoutinesModel {
+    private func makeModel(taskList override: TaskListModel? = nil, isRecurring: ((TaskItem) -> Bool)? = nil,
+                           closedIssueCount: @escaping @MainActor () -> (@MainActor (DateInterval) async throws -> Int)? = { nil }) -> RoutinesModel {
         let clock = self.clock, completed = self.completed
         return RoutinesModel(store: routineStore, planning: planning, taskList: override ?? taskList, habits: habits,
                              settings: settings, completedCount: { _ in completed.count }, calendar: calendar,
-                             now: { clock.now }, isRecurring: isRecurring)
+                             now: { clock.now }, isRecurring: isRecurring, closedIssueCount: closedIssueCount)
     }
 
     private func task(_ title: String) -> TaskItem { local.tasks.first { $0.title == title }! }
@@ -129,6 +130,25 @@ struct RoutinesModelTests {
         #expect(model.value(today).checkedItemIDs.isEmpty)
     }
 
+    @Test func toggleItem_callsHook() async {
+        addChecklist()
+        let model = makeModel()
+        let id = model.checklist()[0].id
+        var calls: [(UUID, PlanDay, Bool)] = []
+        await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
+            var remaining = 2
+            model.onChecklistToggled = { id, day, isChecked in
+                calls.append((id, day, isChecked))
+                remaining -= 1
+                if remaining == 0 { continuation.resume() }
+            }
+            model.toggleItem(id, on: today)
+            model.toggleItem(id, on: today)
+        }
+        #expect(calls.map(\.2) == [true, false])
+        #expect(calls.allSatisfy { $0.0 == id && $0.1 == today })
+    }
+
     @Test func eveningLine_hiddenBeforeTheEarliestAnchor_andWhenSwitchedOff() {
         addChecklist()
         let model = makeModel()
@@ -155,6 +175,79 @@ struct RoutinesModelTests {
         let review = await model.dayReview(today)
         #expect(review.tasksDone == 4)
         #expect(review.tasksTotal == 6)
+    }
+
+    // MARK: Closed GitHub issues in the day review
+
+    private struct GitHubDown: Error {}
+
+    @Test func dayReview_withoutGitHub_isNotConnected() async {
+        let review = await makeModel().dayReview(today)
+        #expect(review.gitHub == .notConnected)
+        // Nothing is added without GitHub, also when the second step runs.
+        let after = await makeModel().addingClosedIssues(to: review, day: today)
+        #expect(after == review)
+    }
+
+    @Test func dayReview_withGitHub_startsLoading() async {
+        completed.count = 4
+        let review = await makeModel(closedIssueCount: { { _ in 9 } }).dayReview(today)
+        #expect(review.gitHub == .loading)
+        // The local numbers come first and do not include GitHub yet.
+        let withoutGitHub = await makeModel().dayReview(today)
+        #expect(review.tasksDone == 4 && review.tasksDone == withoutGitHub.tasksDone)
+        #expect(review.tasksTotal == withoutGitHub.tasksTotal)
+    }
+
+    @Test func addingClosedIssues_addsToDoneAndTotal() async {
+        planStore.assign(TaskID(source: .local, rawValue: "Geplant"), to: today)
+        completed.count = 4
+        let model = makeModel(closedIssueCount: { { _ in 2 } })
+        let local = await model.dayReview(today)
+        let review = await model.addingClosedIssues(to: local, day: today)
+        // e and n rise by the same number: a closed issue is no longer an open task of the day.
+        #expect(review.tasksDone == local.tasksDone + 2)
+        #expect(review.tasksTotal == local.tasksTotal + 2)
+        #expect(review.gitHub == .counted(2))
+        #expect(review.habits == local.habits && review.focus == local.focus)
+    }
+
+    @Test func addingClosedIssues_calledTwice_addsOnce() async {
+        let model = makeModel(closedIssueCount: { { _ in 2 } })
+        let local = await model.dayReview(today)
+        let once = await model.addingClosedIssues(to: local, day: today)
+        #expect(await model.addingClosedIssues(to: once, day: today) == once)
+    }
+
+    @Test func addingClosedIssues_failure_isUnavailable_keepsLocalNumbers() async {
+        completed.count = 4
+        let model = makeModel(closedIssueCount: { { _ in throw GitHubDown() } })
+        let local = await model.dayReview(today)
+        let review = await model.addingClosedIssues(to: local, day: today)
+        #expect(review.gitHub == .unavailable)
+        #expect(review.tasksDone == 4 && review.tasksTotal == local.tasksTotal)
+    }
+
+    @Test func reviewFooter_coversAllStates() {
+        #expect(RoutinesModel.reviewFooter(.notConnected) == "Erledigt: Erinnerungen und lokale Aufgaben.")
+        #expect(RoutinesModel.reviewFooter(.loading) == "Erledigt: Erinnerungen und lokale Aufgaben. GitHub wird geladen …")
+        #expect(RoutinesModel.reviewFooter(.counted(3))
+                == "Erledigt: Erinnerungen, lokale Aufgaben und heute geschlossene GitHub-Issues.")
+        #expect(RoutinesModel.reviewFooter(.counted(0), isToday: false)
+                == "Erledigt: Erinnerungen, lokale Aufgaben und an diesem Tag geschlossene GitHub-Issues.")
+        #expect(RoutinesModel.reviewFooter(.unavailable)
+                == "Erledigt: Erinnerungen und lokale Aufgaben. GitHub ist gerade nicht erreichbar.")
+    }
+
+    @Test func addingClosedIssues_usesCalendarDayOfRoutineDay() async {
+        // The wrap-up after midnight belongs to the 17th although the clock shows the 18th (rule 10).
+        final class Seen { var intervals: [DateInterval] = [] }
+        let seen = Seen()
+        let model = makeModel(closedIssueCount: { { interval in seen.intervals.append(interval); return 1 } })
+        let yesterday = PlanDay(year: 2026, month: 11, day: 17)
+        let local = await model.dayReview(yesterday)
+        _ = await model.addingClosedIssues(to: local, day: yesterday)
+        #expect(seen.intervals == [DateInterval(start: at(17, 0), end: at(18, 0))])
     }
 
     @Test func dayReview_withoutFocus_hasNoFocusLine() async {

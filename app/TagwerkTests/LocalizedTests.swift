@@ -30,11 +30,11 @@ struct LocalizedTests {
     // MARK: Issue assignees (#136)
 
     @Test func privacyNotice_namesGitHubUsernames() {
-        #expect(AIStatusMessage.privacyNotice.contains("GitHub-Benutzernamen zuweisbarer Personen"))
+        #expect(AIStatusMessage.privacyNotice.contains("GitHub-Benutzernamen zuweisbarer und zugewiesener Personen"))
         let english = Localized.string(
-            "Wenn du KI-Funktionen nutzt, gehen die dafür nötigen Daten (Termine, Aufgaben, bei Issues auch Repo-Inhalte und GitHub-Benutzernamen zuweisbarer Personen) an OpenAI.",
+            "Wenn du KI-Funktionen nutzt, gehen die dafür nötigen Daten (Termine, Aufgaben, bei Issues auch Repo-Inhalte und GitHub-Benutzernamen zuweisbarer und zugewiesener Personen) an OpenAI.",
             in: .english, bundle: .main)
-        #expect(english.contains("GitHub usernames of assignable people"))
+        #expect(english.contains("GitHub usernames of assignable and assigned people"))
         #expect(english.hasPrefix("When you use AI features"))
     }
 

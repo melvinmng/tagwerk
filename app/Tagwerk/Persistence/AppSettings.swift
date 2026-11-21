@@ -85,6 +85,9 @@ final class AppSettings {
     var shoppingRecipeConsent: Bool = false
     /// The one-time consent for "Mit ChatGPT zusammenfassen" on a shared mail (#166); the settings switch binds to it.
     var mailSummaryConsent: Bool = false
+    /// The assistant may find non-private notes (title and excerpt), read them in full and, in the notes chat, change them
+    /// (issue #173, decision D5). One switch for the whole scope; off by default. Journal, Bible Study and Dream Log never count.
+    var noteAssistantConsent: Bool = false
     /// The Health card in the tab was dismissed with "Nicht jetzt".
     var healthCardDismissed: Bool = false
     /// Phase 4: the calories/water line in the head of "Planen" (today's day view, from the first entry).
@@ -185,6 +188,11 @@ final class AppSettings {
     var voiceModeSendDelay: Double = 2
     var voiceModeSilenceLimit: Double = 30
     var voiceModeExplained: Bool = false
+
+    /// The Siri tip above the shopping list / the drink buttons was closed or its shortcut ran once (#188 SI3). Hint state of the
+    /// device; not part of the backup.
+    var siriTipShoppingDone: Bool = false
+    var siriTipWaterDone: Bool = false
 
     /// The focus timer durations as the rules want them (clamped).
     var focusTimerSettings: FocusTimerSettings {

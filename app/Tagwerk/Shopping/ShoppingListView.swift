@@ -41,6 +41,11 @@ struct ShoppingListView: View {
 
     private var categories: [ShoppingCategoryInfo] { environment.shoppingCategories.categories() }
 
+    private var siriTipDone: Binding<Bool> {
+        let settings = environment.settings
+        return Binding(get: { settings.siriTipShoppingDone }, set: { settings.siriTipShoppingDone = $0 })
+    }
+
     var body: some View {
         content
             .navigationTitle("Einkaufsliste")
@@ -155,6 +160,14 @@ struct ShoppingListView: View {
     private var list: some View {
         List {
             Section {
+                // SI3: shown once; renders nothing, and takes no height, when the shortcuts are not registered.
+                if SiriTipPolicy.isVisible(done: environment.settings.siriTipShoppingDone) {
+                    SiriTip(intent: AddShoppingArticleIntent(), isDone: siriTipDone)
+                        .listRowInsets(EdgeInsets())
+                        .listRowBackground(Color.clear)
+                        .listRowSeparator(.hidden)
+                        .environment(\.defaultMinListRowHeight, 0)
+                }
                 Text("\(model.openItems.count) offen · Liste „\(model.listTitle ?? "")“ in Erinnerungen")
                     .font(.subheadline).foregroundStyle(.secondary)
                     .listRowBackground(Color.clear)

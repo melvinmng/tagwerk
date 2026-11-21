@@ -85,6 +85,24 @@ final class NoteAttachmentStore {
         context.insert(record)
     }
 
+    /// Copies attachments for another note: each one gets a new record (new ID, same name, type and date) and a copy of its
+    /// file with the same file protection as `write`. An attachment without a record or without a file is left out.
+    /// Returns old ID → new ID.
+    @discardableResult
+    func duplicate(ids: [UUID], to noteID: UUID) -> [UUID: UUID] {
+        var mapping: [UUID: UUID] = [:]
+        for id in ids where mapping[id] == nil {
+            guard let source = record(id: id), let data = data(for: id) else { continue }
+            let copy = NoteAttachmentRecord(noteID: noteID, fileName: source.fileName, typeIdentifier: source.typeIdentifier,
+                                            byteCount: data.count, createdAt: source.createdAt)
+            guard (try? write(data, for: copy)) != nil else { continue }
+            context.insert(copy)
+            mapping[id] = copy.id
+        }
+        if !mapping.isEmpty { save() }
+        return mapping
+    }
+
     // MARK: Reading
 
     func records() -> [NoteAttachmentRecord] {

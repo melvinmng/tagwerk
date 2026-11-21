@@ -53,7 +53,7 @@ class RecipeScreensAuditCase: UITestCase {
         XCTAssertTrue(editor.waitForExistence(timeout: Self.timeout), "Recipe text field missing")
         editor.tap()
         editor.typeText("Gemüsepfanne für 2: 2 Paprika, 150 g Reis, Salz")
-        if app.buttons["Fertig"].exists { app.buttons["Fertig"].tap() }
+        if app.buttons["Tastatur ausblenden"].exists { app.buttons["Tastatur ausblenden"].tap() }
         tapScrolling("Rezept holen")
         waitFor("Einverstanden")
         try audit("Rezept anlegen (Einwilligung)")
@@ -74,8 +74,8 @@ class RecipeScreensAuditCase: UITestCase {
         try audit("Einkauf › Rezept hinzufügen (Notiz)")
     }
 
-    /// Einstellungen › Sprachen (content languages), › KI › Spracheingabe und Vorlesen (voice settings), › Erfassen (goal water,
-    /// shortcut phrases of G2) and › Einkaufsliste (consent).
+    /// Einstellungen › Sprachen (content languages), › KI › Spracheingabe und Vorlesen (voice settings), › Erfassen (goal water),
+    /// › Einkaufsliste (consent) and › Siri & Kurzbefehle (phrases, G3).
     func auditSettings(_ audit: Audit) throws {
         tab("Einstellungen")
         openSettingsRow("Sprachen")
@@ -98,6 +98,11 @@ class RecipeScreensAuditCase: UITestCase {
         openSettingsRow("Einkaufsliste")
         XCTAssertTrue(app.navigationBars["Einkaufsliste"].waitForExistence(timeout: Self.timeout), "Shopping settings did not open")
         try audit("Einstellungen › Einkaufsliste")
+        app.navigationBars.buttons.firstMatch.tap()
+
+        openSettingsRow("Siri & Kurzbefehle")
+        XCTAssertTrue(app.navigationBars["Siri & Kurzbefehle"].waitForExistence(timeout: Self.timeout), "Siri settings did not open")
+        try audit("Einstellungen › Siri & Kurzbefehle")
     }
 
     /// Taps a button that can lie below the fold in the large text size: scrolls to it first.

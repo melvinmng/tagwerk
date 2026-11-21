@@ -205,18 +205,31 @@ struct ChatView: View {
             ActionCardView(card: assistant.describe(call), status: status, time: assistant.actionTimes[call.id],
                            onConfirm: { Task { await assistant.confirm(call) } },
                            onDecline: { Task { await assistant.decline(call) } })
+        case .activity(let call, let output):
+            // A read call the user should see ("Gelesen: „Titel“"); small and grey, not an answer.
+            if let text = assistant.activityText(call, output: output) {
+                Label(text, systemImage: "doc.text").font(.caption).foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
         }
     }
 
     private var composer: some View {
         VStack(spacing: 6) {
             if let pending = conversation?.pendingActions, pending.count > 1 {
-                Button {
-                    Task { await assistant.confirmAll() }
-                } label: {
-                    Text("Alle bestätigen (\(pending.count))").frame(maxWidth: .infinity)
+                // Guarded cards (assignments) are confirmed one by one and are not part of the count.
+                let batch = assistant.batchConfirmable.count
+                if batch > 1 {
+                    Button {
+                        Task { await assistant.confirmAll() }
+                    } label: {
+                        Text("Alle bestätigen (\(batch))").frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.borderedProminent)
                 }
-                .buttonStyle(.borderedProminent)
+                if let notice = AssistantModel.singleConfirmationNotice(for: pending, me: assistant.gitHubDirectory()?.login) {
+                    Text(notice).font(.footnote).foregroundStyle(.secondary).frame(maxWidth: .infinity, alignment: .leading)
+                }
             }
             if explainingVoiceMode {
                 VoiceModeExplanation(onStart: startVoiceMode, onCancel: { explainingVoiceMode = false })
@@ -275,12 +288,20 @@ struct ActionCardView: View {
     let time: Date?
     let onConfirm: () -> Void
     let onDecline: () -> Void
+    /// False while the card lacks something the user has to choose first: "Bestätigen" is then disabled.
+    var canConfirm = true
+    /// A row below the change text, e.g. the target of an issue suggested from a note.
+    var accessory: AnyView? = nil
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             header
             Text(card.title).font(.subheadline.weight(.semibold))
             Text(card.change).font(.subheadline).foregroundStyle(.secondary)
+            if let accessory { accessory }
+            if let warning = card.warning {
+                Label(warning, systemImage: "exclamationmark.triangle").font(.caption).foregroundStyle(.red)
+            }
             if case .done(let output) = status, let error = Self.error(in: output) {
                 Label(error, systemImage: "exclamationmark.triangle").font(.caption).foregroundStyle(.orange)
             }
@@ -288,7 +309,12 @@ struct ActionCardView: View {
                 HStack {
                     Button("Verwerfen", action: onDecline).buttonStyle(.bordered)
                     Spacer()
-                    Button("Bestätigen", action: onConfirm).buttonStyle(.borderedProminent)
+                    Button(role: card.isDestructive ? .destructive : nil, action: onConfirm) {
+                        Text(card.confirmTitle ?? String(localized: "Bestätigen"))
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .tint(card.isDestructive ? .red : nil)
+                    .disabled(!canConfirm)
                 }
             }
         }
