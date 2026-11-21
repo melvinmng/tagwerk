@@ -28,6 +28,8 @@ final class FakeTaskProvider: TaskProvider {
     var droppedAssignees: Set<String> = []
     /// Like GitHub: an item that sits in no sub-container (Project) is not listed.
     var requiresPlacementToBeListed = false
+    /// Like GitHub: the sub-containers (Projects) the user selected; `nil` selects all of them.
+    var selectedSubContainerIDs: Set<String>?
     /// Stages of every sub-container the fake creates for a GitHub issue.
     var statusOptions = ["Backlog", "Ready", "In progress", "Done"]
     private(set) var createdDrafts: [TaskDraft] = []
@@ -106,9 +108,22 @@ final class FakeTaskProvider: TaskProvider {
     }
 
     func isListed(_ item: TaskItem) -> Bool {
-        if requiresPlacementToBeListed, item.statuses.isEmpty { return false }
-        guard let viewerLogin else { return true }
-        return AssigneeRules.contains(item.assignees, viewerLogin)
+        unlistedReason(item) == nil
+    }
+
+    func unlistedReason(_ item: TaskItem) -> UnlistedReason? {
+        if requiresPlacementToBeListed, item.statuses.isEmpty {
+            return .noProject(others: (item.assignees ?? []).filter { login in viewerLogin.map { $0.lowercased() != login.lowercased() } ?? true })
+        }
+        if let viewerLogin, !AssigneeRules.contains(item.assignees, viewerLogin) { return .handedOver }
+        if let selected = selectedSubContainerIDs, !item.isCompleted {
+            let inSelection = item.statuses.filter { selected.contains($0.subContainerID) }
+            let openElsewhere = item.statuses.filter { !selected.contains($0.subContainerID) && $0.current?.lowercased() != "done" }
+            if !inSelection.isEmpty, inSelection.allSatisfy({ $0.current?.lowercased() == "done" }), !openElsewhere.isEmpty {
+                return .doneInSelection(doneIn: inSelection.map(\.subContainerName), openIn: openElsewhere.map(\.subContainerName))
+            }
+        }
+        return nil
     }
 
     func create(_ draft: TaskDraft) async throws -> TaskItem {

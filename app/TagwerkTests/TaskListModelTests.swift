@@ -704,7 +704,7 @@ struct TaskListAssigneeTests {
 
     @Test func handedOverNotice_readsNumberFromURL() {
         var item = makeTask("Ohne", source: .github)
-        #expect(HandedOverNotice(item: item).number == nil)
+        #expect(HandedOverNotice(item: item, reason: .handedOver).number == nil)
         item.url = URL(string: "https://github.com/beispiel/app/issues/9")
         #expect(item.issueNumber == 9)
     }
@@ -799,9 +799,9 @@ struct TaskListStatusTests {
         #expect(created != nil)
         #expect(model.items.count == 1)   // only the existing issue
         #expect(!model.items.contains { $0.title == "Export" })
-        #expect(model.lastHandedOver?.reason == .noProject)
+        #expect(model.lastHandedOver?.reason == .noProject(others: []))
         #expect(model.lastHandedOver?.number == 151)
-        #expect(model.lastHandedOver?.title == "#151 angelegt · ohne Projekt")
+        #expect(model.lastHandedOver?.title == "#151 ohne Projekt")
         #expect(model.lastHandedOver?.url == URL(string: "https://github.com/beispiel/app/issues/151"))
         #expect(model.lastError == nil)
     }
@@ -821,10 +821,83 @@ struct TaskListStatusTests {
         #expect(model.lastHandedOver?.title == "#151 an lea-m")
     }
 
+    @Test func create_withoutProjectForOthers_namesThemInTheCapsule() async {
+        let draft = TaskDraft(title: "Export", containerID: "beispiel/app", subContainerIDs: [], assignees: ["lea-m"])
+        await model.create(draft, in: .github)
+        #expect(model.lastHandedOver?.reason == .noProject(others: ["lea-m"]))
+        #expect(model.lastHandedOver?.title == "#151 an lea-m · ohne Projekt")
+    }
+
     @Test func noProjectNotice_texts() {
-        #expect(AssigneeSelection.noProjectTitle(number: 7) == "#7 angelegt · ohne Projekt")
-        #expect(AssigneeSelection.noProjectTitle(number: nil) == "Issue angelegt · ohne Projekt")
-        #expect(AssigneeSelection.noProjectAnnouncement(number: 7) == "Angelegt: #7 angelegt · ohne Projekt. Auf GitHub öffnen verfügbar.")
+        #expect(AssigneeSelection.noProjectTitle(number: 7) == "#7 ohne Projekt")
+        #expect(AssigneeSelection.noProjectTitle(number: nil) == "Issue ohne Projekt")
+        #expect(AssigneeSelection.noProjectAnnouncement(number: 7)
+            == "Angelegt, nicht in Aufgaben: #7 ohne Projekt. Auf GitHub öffnen verfügbar.")
+    }
+
+    // MARK: Done in the selected project only (GH7b)
+
+    @Test func setStatus_doneInOnlySelectedProject_removesItemAndShowsNotice() async {
+        github.selectedSubContainerIDs = ["PVT_1"]
+        var handedOver: [TaskID] = []
+        model.onHandedOver = { handedOver.append($0) }
+        await model.reload()
+        await model.setStatus(issueID, subContainerID: "PVT_1", to: "Done")
+        #expect(model.items.isEmpty)
+        #expect(model.lastCompleted == nil)
+        #expect(model.lastHandedOver?.reason == .doneInSelection(doneIn: ["App"], openIn: ["Studium"]))
+        #expect(model.lastHandedOver?.title == "#42 noch offen in „Studium“")
+        #expect(model.lastHandedOver?.url == URL(string: "https://github.com/beispiel/app/issues/42"))
+        #expect(handedOver == [issueID])
+    }
+
+    @Test func setStatus_doneInAllProjects_showsUndoCapsule() async {
+        github.selectedSubContainerIDs = ["PVT_1"]
+        await model.reload()
+        await model.setStatus(issueID, subContainerID: "PVT_1", to: "In progress")
+        await model.setStatus(issueID, subContainerID: "PVT_2", to: "Done")
+        await model.setStatus(issueID, subContainerID: "PVT_1", to: "Done")
+        #expect(model.items.isEmpty)
+        #expect(model.lastCompleted?.id == issueID)
+        #expect(model.lastHandedOver == nil)
+    }
+
+    @Test func setStatus_openInASelectedProject_staysListedWithoutNotice() async {
+        github.selectedSubContainerIDs = ["PVT_1", "PVT_2"]
+        await model.reload()
+        await model.setStatus(issueID, subContainerID: "PVT_1", to: "Done")
+        #expect(model.items.count == 1)
+        #expect(model.lastHandedOver == nil)
+    }
+
+    @Test func editorSave_doneInSelection_showsNotice() async {
+        github.selectedSubContainerIDs = ["PVT_1"]
+        await model.reload()
+        var handedOver: [TaskID] = []
+        model.onHandedOver = { handedOver.append($0) }
+        var saved = github.tasks[0]
+        saved.statuses[0].current = "Done"
+
+        model.didSave(saved)
+        await waitUntil { !handedOver.isEmpty }
+
+        #expect(model.items.isEmpty)
+        #expect(model.lastHandedOver?.reason == .doneInSelection(doneIn: ["App"], openIn: ["Studium"]))
+    }
+
+    @Test func assistantWrite_doneInSelection_showsNoCapsule() async throws {
+        github.selectedSubContainerIDs = ["PVT_1"]
+        await model.reload()
+        var handedOver: [TaskID] = []
+        model.onHandedOver = { handedOver.append($0) }
+        var edit = TaskEdit()
+        edit.statusChanges = ["PVT_1": "Done"]
+
+        _ = try await model.applyReturning(edit, to: issueID)
+
+        #expect(model.items.isEmpty)
+        #expect(handedOver == [issueID])
+        #expect(model.lastHandedOver == nil)
     }
 }
 

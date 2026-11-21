@@ -134,7 +134,11 @@ public final class GitHubTaskProvider: TaskProvider {
                 records[fresh.issueID] = fresh
             }
             offlineSince = nil
-            return GitHubMapping.taskItem(fresh)
+            let full = GitHubMapping.taskItem(fresh)
+            // A listed issue comes back as the list shows it (placements of the selection only). An issue that left
+            // the lists keeps all placements, so the capsule can name the other projects.
+            guard unlistedReason(full) == nil else { return full }
+            return displayedItem(fresh, selection: selectedProjectIDs() ?? defaultSelectedProjectIDs) ?? full
         } catch {
             throw Self.taskError(error)
         }
@@ -295,9 +299,29 @@ public final class GitHubTaskProvider: TaskProvider {
     /// issue sits in at least one project (`statuses` has one entry per placement, writable or not).
     /// Reading keeps using `GitHubMapping.isVisible`; this only covers the moment after a write.
     public func isListed(_ item: TaskItem) -> Bool {
-        guard !item.statuses.isEmpty else { return false }
-        guard let login else { return true }
-        return AssigneeRules.contains(item.assignees, login)
+        unlistedReason(item) == nil
+    }
+
+    /// Why a written issue is not in the lists: it sits in no project (the certain reason, also when others are
+    /// assigned as well), it is not assigned to the user, or it is done in every selected project while it is
+    /// still open in others. A closed issue is completed, not unlisted.
+    public func unlistedReason(_ item: TaskItem) -> UnlistedReason? {
+        let assignees = item.assignees ?? []
+        if item.statuses.isEmpty {
+            return .noProject(others: assignees.filter { !isLogin($0) })
+        }
+        if login != nil, !assignees.contains(where: isLogin) { return .handedOver }
+        guard !item.isCompleted else { return nil }
+        let selection = selectedProjectIDs() ?? defaultSelectedProjectIDs
+        let inSelection = item.statuses.filter { selection.contains($0.subContainerID) }
+        guard !inSelection.isEmpty, inSelection.allSatisfy({ GitHubMapping.isDone($0.current) }) else { return nil }
+        let openElsewhere = item.statuses.filter { !selection.contains($0.subContainerID) && !GitHubMapping.isDone($0.current) }
+        guard !openElsewhere.isEmpty else { return nil }
+        return .doneInSelection(doneIn: inSelection.map(\.subContainerName), openIn: openElsewhere.map(\.subContainerName))
+    }
+
+    private func isLogin(_ candidate: String) -> Bool {
+        login.map { $0.lowercased() == candidate.lowercased() } ?? false
     }
 
     /// Repositories offered when creating an issue.
@@ -414,15 +438,18 @@ public final class GitHubTaskProvider: TaskProvider {
         let selection = selectedProjectIDs() ?? defaultSelectedProjectIDs
         return records.values
             .sorted { ($0.repository, $0.number) < ($1.repository, $1.number) }
-            .compactMap { record in
-                var shown = record
-                shown.placements = record.placements.filter { selection.contains($0.project.id) }
-                guard shown.placements.contains(where: { !GitHubMapping.isDone($0.status) }) else { return nil }
-                var item = GitHubMapping.taskItem(shown)
-                // The version must describe the whole issue, because writes compare against all its items.
-                item.version = GitHubMapping.version(record)
-                return item
-            }
+            .compactMap { displayedItem($0, selection: selection) }
+    }
+
+    /// The issue as the list shows it: placements of the selected projects only. `nil` when it is not open in any of them.
+    private func displayedItem(_ record: GitHubIssueRecord, selection: Set<String>) -> TaskItem? {
+        var shown = record
+        shown.placements = record.placements.filter { selection.contains($0.project.id) }
+        guard shown.placements.contains(where: { !GitHubMapping.isDone($0.status) }) else { return nil }
+        var item = GitHubMapping.taskItem(shown)
+        // The version must describe the whole issue, because writes compare against all its items.
+        item.version = GitHubMapping.version(record)
+        return item
     }
 
     static func projects(in records: [GitHubIssueRecord]) -> [ProjectInfo] {

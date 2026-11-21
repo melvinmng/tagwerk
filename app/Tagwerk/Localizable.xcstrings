@@ -210,6 +210,22 @@
         }
       }
     },
+    "%@ an %@ · ohne Projekt": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@ an %2$@ · ohne Projekt"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ to %2$@ · no project"
+          }
+        }
+      }
+    },
     "%@ angelegt · ohne Project": {
       "extractionState": "stale",
       "localizations": {
@@ -222,6 +238,7 @@
       }
     },
     "%@ angelegt · ohne Projekt": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -389,12 +406,54 @@
         }
       }
     },
+    "%@ noch offen in %lld Projekten": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@ noch offen in %2$lld Projekten"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ still open in %2$lld projects"
+          }
+        }
+      }
+    },
+    "%@ noch offen in „%@“": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@ noch offen in „%2$@“"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ still open in “%2$@”"
+          }
+        }
+      }
+    },
     "%@ offen": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "%@ open"
+          }
+        }
+      }
+    },
+    "%@ ohne Projekt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ without a project"
           }
         }
       }
@@ -3514,6 +3573,7 @@
       }
     },
     "Angelegt": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -3523,7 +3583,28 @@
         }
       }
     },
+    "Angelegt · nicht in Aufgaben": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Created · not in Tasks"
+          }
+        }
+      }
+    },
+    "Angelegt, nicht in Aufgaben: %@. Auf GitHub öffnen verfügbar.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Created, not in Tasks: %@. Open on GitHub available."
+          }
+        }
+      }
+    },
     "Angelegt: %@. Auf GitHub öffnen verfügbar.": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -9792,6 +9873,22 @@
         }
       }
     },
+    "In %@ erledigt: %@. Auf GitHub öffnen verfügbar.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "In %1$@ erledigt: %2$@. Auf GitHub öffnen verfügbar."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Done in %1$@: %2$@. Open on GitHub available."
+          }
+        }
+      }
+    },
     "In %lld Kalendern": {
       "localizations": {
         "de": {
@@ -9828,6 +9925,32 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "In %lld Projekten erledigt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Done in %lld projects"
+          }
+        }
+      }
+    },
+    "In %lld Projekten erledigt: %@. Auf GitHub öffnen verfügbar.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "In %1$lld Projekten erledigt: %2$@. Auf GitHub öffnen verfügbar."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Done in %1$lld projects: %2$@. Open on GitHub available."
           }
         }
       }
@@ -9988,6 +10111,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Nothing was logged this week."
+          }
+        }
+      }
+    },
+    "In „%@“ erledigt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Done in “%@”"
           }
         }
       }

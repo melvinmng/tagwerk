@@ -2015,5 +2015,15 @@
   "Den Status „%@“ gibt es im Projekt „%@“ nicht.": "The status “%1$@” does not exist in the project “%2$@”.",
   "Der Status lässt sich in diesem Projekt nicht ändern.": "The status cannot be changed in this project.",
   "%lld Status": "%lld statuses",
-  "Status %@": "Status %@"
+  "Status %@": "Status %@",
+  "%@ an %@ · ohne Projekt": "%1$@ to %2$@ · no project",
+  "%@ noch offen in %lld Projekten": "%1$@ still open in %2$lld projects",
+  "%@ noch offen in „%@“": "%1$@ still open in “%2$@”",
+  "%@ ohne Projekt": "%@ without a project",
+  "Angelegt · nicht in Aufgaben": "Created · not in Tasks",
+  "Angelegt, nicht in Aufgaben: %@. Auf GitHub öffnen verfügbar.": "Created, not in Tasks: %@. Open on GitHub available.",
+  "In %@ erledigt: %@. Auf GitHub öffnen verfügbar.": "Done in %1$@: %2$@. Open on GitHub available.",
+  "In %lld Projekten erledigt": "Done in %lld projects",
+  "In %lld Projekten erledigt: %@. Auf GitHub öffnen verfügbar.": "Done in %1$lld projects: %2$@. Open on GitHub available.",
+  "In „%@“ erledigt": "Done in “%@”"
 }
