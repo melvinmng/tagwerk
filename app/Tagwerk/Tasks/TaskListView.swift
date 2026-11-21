@@ -285,7 +285,7 @@ struct TaskListView: View {
                 Text("\(selection.count) ausgewählt · \(CapacityText.duration(minutes))").font(.subheadline.weight(.semibold))
                 if let remaining {
                     Text("heute noch \(CapacityText.duration(max(0, remaining))) frei")
-                        .font(.caption).foregroundStyle(minutes > remaining ? .red : .secondary)
+                        .font(.caption).foregroundStyle(minutes > remaining ? Color.redText : Color.secondaryText)
                 }
             }
             Spacer()
@@ -407,7 +407,7 @@ struct TaskListView: View {
                         Text(reason).font(.subheadline)
                     }
                     Text("GitHub-Aufgaben sind nur lesbar, bis GitHub wieder antwortet.")
-                        .font(.subheadline).foregroundStyle(.secondary)
+                        .font(.subheadline).foregroundStyle(.secondaryText)
                     Button("Erneut versuchen") {
                         showsOfflineInfo = false
                         Task { await model.reload(only: [.github]) }
@@ -517,24 +517,24 @@ private struct SourceProblemRow: View {
                 if canRequest {
                     Text("Erlaube den Zugriff, damit Tagwerk sie anzeigen kann.")
                         .font(.subheadline)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.secondaryText)
                     Button("Zugriff erlauben", action: requestAccess)
                 } else {
                     Text("Erlaube den Vollzugriff in den Einstellungen, damit Tagwerk sie anzeigen kann.")
                         .font(.subheadline)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.secondaryText)
                     Button("Einstellungen öffnen", action: openSettings)
                 }
             }
         case .failed(let message):
             Label("\(name): \(message)", systemImage: "exclamationmark.triangle")
-                .foregroundStyle(.orange)
+                .foregroundStyle(.orangeText)
         case .signedOut:
             VStack(alignment: .leading, spacing: 8) {
                 Text("\(name): Anmeldung abgelaufen").font(.headline)
                 Text("Melde dich neu an, damit Tagwerk deine Issues wieder anzeigt.")
                     .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.secondaryText)
                 Button("Mit GitHub anmelden", action: signIn)
             }
         case .offline, .loaded, nil:

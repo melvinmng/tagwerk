@@ -260,7 +260,7 @@ extension NewTaskSheet {
             } label: {
                 Label("Wiederholen", systemImage: "repeat")
             }
-            .foregroundStyle(.secondary)
+            .foregroundStyle(.secondaryText)
             .accessibilityHint(reason)
         }
     }

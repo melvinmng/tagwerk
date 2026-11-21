@@ -66,10 +66,10 @@ struct TaskEditorView: View {
                 }
                 if isReadOnly {
                     Label("Offline: Änderungen sind gerade nicht möglich.", systemImage: "wifi.slash")
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.secondaryText)
                 }
                 if let message = model.errorMessage {
-                    Label(message, systemImage: "exclamationmark.triangle").foregroundStyle(.red)
+                    Label(message, systemImage: "exclamationmark.triangle").foregroundStyle(.redText)
                 }
 
                 Section {
@@ -107,14 +107,14 @@ struct TaskEditorView: View {
                     if model.showsRecurrenceRow { recurrenceRow }
                     if model.removesRecurrenceWithDue {
                         Text("Ohne Fälligkeit entfällt die Wiederholung.")
-                            .font(.caption).foregroundStyle(.secondary)
+                            .font(.caption).foregroundStyle(.secondaryText)
                     }
                     if model.isVisible(.priority) { PriorityPicker(priority: $model.draft.priority, choices: model.priorityChoices) }
                     if isRecurring {
                         // One effort for a recurring reminder: the value of this day (design §13.15 R1).
                         EstimateField(minutes: recurringMinutes)
                         Text(recurringEffortHint)
-                            .font(.caption).foregroundStyle(.secondary)
+                            .font(.caption).foregroundStyle(.secondaryText)
                     } else if model.isVisible(.estimate) {
                         EstimateField(minutes: $model.draft.estimateMinutes)
                     }
@@ -300,7 +300,7 @@ struct TaskEditorView: View {
         if let reminders, model.isVisible(.due) {
             Section {
                 if model.draft.due == nil {
-                    Text("Erinnerungen brauchen ein Fälligkeitsdatum.").foregroundStyle(.secondary)
+                    Text("Erinnerungen brauchen ein Fälligkeitsdatum.").foregroundStyle(.secondaryText)
                 } else {
                     ReminderListEditor(model: reminders.list, calendar: calendar)
                 }

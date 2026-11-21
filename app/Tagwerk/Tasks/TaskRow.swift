@@ -20,7 +20,7 @@ struct TaskRow: View {
             Button(action: onComplete) {
                 Image(systemName: isReadOnly ? "circle.dashed" : "circle")
                     .font(.title3)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.secondaryText)
                     .opacity(isReadOnly ? 0.45 : 1)
             }
             .buttonStyle(.plain)
@@ -48,7 +48,7 @@ struct TaskRow: View {
                     }
                 }
                 .font(.caption)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.secondaryText)
             }
 
             Spacer(minLength: 4)
