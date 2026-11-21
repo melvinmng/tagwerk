@@ -21,6 +21,9 @@ Branch mit Plänen und Mockups: `chore/fable-open-items` (Worktree `t3-638057bd-
 | Designgruppen 1–3, Notiz-Erweiterungen, Bible Study, SP5c, FO13a | Kommentare in #188 |
 | Ein gemeinsamer Schalter „Notizen mit ChatGPT“ für Suche, Lesen, Ändern | #173 und #188 |
 | Bible-Study-Leseplan zurückgestellt | #239 (Backlog) |
+| DS7c: Sicherheitskopien verborgen in `.Sicherheitskopien` im Sicherungsordner, DS0 entfällt (21.11.) | G2-Plan Teil 2, DS4 |
+| Zahlenprüfung beim Rezept-Übersetzen darf gelockert werden (21.11.) | Nachtrag auf `feat/recipe-translate` (#241) |
+| Wacklige Audits und `sync-strings.sh` | #250 |
 
 ## Mockups (`docs/superpowers/mockups/`)
 
@@ -47,21 +50,26 @@ Festlegungen der Hauptsitzung zum G3-Plan: offene Fragen nach Empfehlung; Zeilen
 
 | Branch | Inhalt | Stand |
 |---|---|---|
-| `feat/recipe-translate` | #232 Block A | fertig und geprüft, Head `d8856a7`, `test-all` grün; bereit für PR. Hinweis für #233: `NoteEditorSync` lässt Änderungen von außen über ungespeichertes Tippen gewinnen |
-| `feat/closed-issues-in-reviews` | #173 Strang C (Tasks 6, 7, 7a) | fertig und geprüft, Head `e428cf4` (Review-Korrekturen drin); UI-Stufe rot nur durch vorbestehende Fehler; Folge-Idee: Projekte beim Kaltstart aus dem Cache laden |
-| `feat/note-issue-suggestions` | #173 Strang D (Tasks 8, 9), abgezweigt von `33dfc26` | fertig und geprüft, Head `afc05d6`; nach Merge von A/B rebasen |
-| `feat/g3-share-mail` | G3 Strang S | fertig und geprüft, Head `3908715`; UI-Stufe rot nur durch vorbestehende Fehler (Basis ohne `fix/ui-test-stability`) |
+| `feat/recipe-translate` | #232 Block A | PR #241; Head `d8856a7`; Nachtrag offen: Dezimaltrennzeichen-Prüfung lockern, `test-all` grün; bereit für PR. Hinweis für #233: `NoteEditorSync` lässt Änderungen von außen über ungespeichertes Tippen gewinnen |
+| `feat/closed-issues-in-reviews` | #173 Strang C (Tasks 6, 7, 7a) | PR #243; fertig und geprüft, Head `e428cf4` (Review-Korrekturen drin); UI-Stufe rot nur durch vorbestehende Fehler; Folge-Idee: Projekte beim Kaltstart aus dem Cache laden |
+| `feat/note-issue-suggestions` | #173 Strang D (Tasks 8, 9), abgezweigt von `33dfc26` | PR #244 (Basis #242); fertig und geprüft, Head `afc05d6`; nach Merge von A/B rebasen |
+| `feat/g3-share-mail` | G3 Strang S | PR #247; fertig und geprüft, Head `3908715`; UI-Stufe rot nur durch vorbestehende Fehler (Basis ohne `fix/ui-test-stability`) |
 | `feat/g3-languages` | G3 Strang L mit SP5c auf Basis `fix/ui-test-stability` (ggf. L6–L9 auf `feat/g3-shopping-translate`) | läuft (Sonnet) |
-| `feat/evening-reminders-per-day` | #173 Strang E (Tasks 10, 11) | fertig und geprüft, Head `c4c281a`, `test-all` grün; bereit für PR |
-| `feat/assistant-assign-and-search` | #173 Stränge A, B und Task 5 | fertig und geprüft, Head `e032f71` (Review-Korrekturen drin: Einwilligung wird beobachtet, kein Chatwechsel während laufender Runde) |
-| `feat/g3-search-menu` | G3 Strang U | fertig und geprüft, Head `9694508` |
-| `feat/g3-keyboard-siri` | G3 Strang T | fertig und geprüft, Head `43b277c`, `test-all` grün; T4 (Siri am Gerät) offen; Allowlist-Einträge für K vorgemerkt; ein unbenannter AX5-Befund „Text clipped“ auf Einstellungen › KI › Sprache flackert |
+| `feat/evening-reminders-per-day` | #173 Strang E (Tasks 10, 11) | PR #245; fertig und geprüft, Head `c4c281a`, `test-all` grün; bereit für PR |
+| `feat/assistant-assign-and-search` | #173 Stränge A, B und Task 5 | PR #242; fertig und geprüft, Head `e032f71` (Review-Korrekturen drin: Einwilligung wird beobachtet, kein Chatwechsel während laufender Runde) |
+| `feat/g3-search-menu` | G3 Strang U | PR #246; fertig und geprüft, Head `9694508` |
+| `feat/g3-keyboard-siri` | G3 Strang T | PR #248 (Basis #240); fertig und geprüft, Head `43b277c`, `test-all` grün; T4 (Siri am Gerät) offen; Allowlist-Einträge für K vorgemerkt; ein unbenannter AX5-Befund „Text clipped“ auf Einstellungen › KI › Sprache flackert |
 | `feat/g1-plan-grid` | G1 Strang P auf Basis `fix/ui-test-stability` | läuft (Sonnet) |
-| `fix/ui-test-stability` | vorbestehende UI-Testfehler | fertig und geprüft, Head `e34c1fd`, `test-all` zweimal grün; zuerst mergen. Allowlist-Einträge „Unerledigt von heute“ und Leftover-Zeile bei Strang K (K5) neu bewerten |
-| `feat/g3-github-status` | G3 Strang G (G1–G4) | fertig und geprüft, Head `f7eae41`, `test-all` grün; G5 offen (nach #173 A/B), dort auch GH9-Fußtext „erste Stufe“ vs. Startstufe „Ready“ und VoiceOver-Anführungszeichen im Englischen klären |
+| `fix/ui-test-stability` | vorbestehende UI-Testfehler | PR #240; fertig und geprüft, Head `e34c1fd`, `test-all` zweimal grün; zuerst mergen. Allowlist-Einträge „Unerledigt von heute“ und Leftover-Zeile bei Strang K (K5) neu bewerten |
+| `feat/g3-github-status` | G3 Strang G (G1–G4) | PR #249 (Basis #240); fertig und geprüft, Head `f7eae41`, `test-all` grün; G5 offen (nach #173 A/B), dort auch GH9-Fußtext „erste Stufe“ vs. Startstufe „Ready“ und VoiceOver-Anführungszeichen im Englischen klären |
 | `feat/g1-focus` | G1 Strang F (F1–F7) auf Basis `fix/ui-test-stability` | läuft (Sonnet) |
 
 ## Warteschlange Umsetzung (je freier Xcode-Platz, nach Prüfung des fertigen Branches)
+
+PRs #240–#249 angelegt (21.11.), nichts gemergt. Merge-Reihenfolge: #240, dann #241, #242, #243, #245, #246, #247, #248, #249, zuletzt #244. Vor jedem Merge `test-all` auf aktuellem `main`.
+
+1. Nachtrag #241: Zahlenprüfung lockern (kleiner Sonnet-Auftrag, kein Plan)
+2. G1 Strang E (Basis `fix/ui-test-stability`)
 
 3. #233 Block B (nach Merge von #173 A/B)
 4. G5 und L5-Anweisungszeile nach Merge von #173 A/B; Strang K nach T, L, S; Strang K zuletzt nach T, L, S

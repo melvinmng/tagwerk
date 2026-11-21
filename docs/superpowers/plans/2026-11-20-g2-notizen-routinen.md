@@ -40,7 +40,7 @@
 | Tagebuch | TB1b, TB2a, TB3a, TB4b, TB5a | Teil 2 (TB1b im Strang RO, Import im Strang TB). | RO, TB |
 | Bible Study | BS1b, BS2b (mit Ergänzung), BS4 ja, BS5b, BS6c, BV1b, BV2b, BV3a, BE1c, BE2b, BE3b | Teil 2. | BS, RO |
 | Gewohnheiten | GW1c, GW2a, GW3b, GW4b, Fußtext | Teil 2. | GW |
-| Datensicherung | DS1b, DS4b, DS6b, DS7c (bedingt) | Teil 2. | DS |
+| Datensicherung | DS1b, DS4b, DS6b, DS7c (verborgen im Sicherungsordner) | Teil 2. | DS |
 | Routinen | RO1b, RO3b, RO4 ja, RO5b, RO6b, RO7b, RO8b, RO9c, RO10a, RO11b, RO12b, RO15b | Teil 2. | RO |
 
 ## Global Constraints
@@ -91,7 +91,7 @@
 8. **Verszahlen belegt (BV3a):** Die Tabelle nennt ihre Quelle und das Abrufdatum, ist gegen eine zweite Quelle geprüft, und die Tests für die Abweichungen zur englischen Zählung stammen aus der Quelle, nicht aus dem Gedächtnis. → Teil 2, BS1.
 9. **Budget:** Summe 64; Bible Study plant höchstens drei Mitteilungen; an einem Tag mit abgeschlossener Sitzung oder „Heute nicht“ steht keine aus. → Teil 2, BS7.
 10. **Passwort (DS6b):** Ohne das richtige Passwort wird nichts entschlüsselt und nichts ersetzt; die Seite warnt vor dem Einschalten; der Schlüssel liegt nur im Schlüsselbund dieses Geräts; eine unverschlüsselte Sicherung bleibt lesbar. → Teil 2, DS3.
-11. **DS7c nur mit iCloud:** Ohne bestandene Machbarkeitsprüfung (DS0) ändert sich an den Sicherheitskopien nichts. → Teil 2, DS0, DS4.
+11. **DS7c im Sicherungsordner:** Sicherheitskopien liegen verborgen in `.Sicherheitskopien` im gewählten Sicherungsordner (z. B. iCloud Drive), ohne neue Berechtigung; ohne Sicherungsordner wie heute. DS0 entfällt. → Teil 2, DS4.
 12. **Farben benannt, Trefferflächen 44 pt.** → NF1, NF2, GW2.
 
 ## Ausgangslage (Befund)
@@ -140,7 +140,7 @@ Pfade relativ zu `app/Tagwerk/`, Paketdateien mit `TagwerkCore/…` = `app/Packa
 | `Routines/RoutineSettingsView.swift` | RO3, RO4, BS6 | RO vor BS6. |
 | `Routines/EveningSheet.swift`, `MorningSheet.swift` | nur RO | TB1b und BS6c (Platz der Zeilen) werden in RO3 gebaut, damit nur ein Strang die Blätter anfasst. |
 | `Backup/BackupSettingsView.swift` | DS (Umbau), NS (Zeile „Gesperrte Notizen“) | NS fügt die Zeile in die Form ein, die zum Zeitpunkt seines Rebase gilt. |
-| `project.yml` | NS (`NSFaceIDUsageDescription`), DS0/DS3 (iCloud-Berechtigung nur bei bestandener Prüfung, Dateityp `.tagwerk`) | Verschiedene Schlüssel. |
+| `project.yml` | NS (`NSFaceIDUsageDescription`), DS3 (Dateityp `.tagwerk`) | Verschiedene Schlüssel. |
 | `Assets.xcassets` | NF1, GW2 | Je eigene Farbsets. |
 
 ## Reihenfolge und Abhängigkeiten
@@ -156,7 +156,7 @@ NX Einfügen:                      (nach NE)               NX1 ─► NX2 ─►
 RO Routinen:        RO1 ─► RO2 ─► RO3 ─► RO4 (nach #173 E) ─► RO5 ─► RO6 ─► RO7 ─► RO8
 BS Bible Study:     BS1 ─► BS2 ─► BS3 ─► BS4 (nach NE) ─► BS5 (nach NE) ─► BS6 (nach RO3) ─► BS7 (nach #173 E) ─► BS8
 GW Gewohnheiten:    GW1 ─► GW2 ─► GW3
-DS Datensicherung:  DS0 ─► DS1 ─► DS2 ─► DS3 ─► DS4 (nur bei bestandenem DS0)
+DS Datensicherung:  DS1 ─► DS2 ─► DS3 ─► DS4
 EK Einkauf:         EK1      EK2 ─► EK3 (nach G3 L)
 TB Import:          TB1 ─► TB2
 Abschluss:          Z1 (Geräteprüfung, Hauptsitzung mit Nutzer)
@@ -168,7 +168,7 @@ Abschluss:          Z1 (Geräteprüfung, Hauptsitzung mit Nutzer)
 |---|---|---|
 | 1 | **NE**, **NF**, **BS (nur BS1 und BS2)** | Block A auf `main`. BS1 ist eine Rechercheaufgabe ohne Überschneidung, BS2 reine Regeln in `TagwerkCore`. |
 | 2 | **NS**, **NX**, **RO** | NE und NF gemergt; #173 Strang B (für NS) und Strang E (für RO4) auf `main`; G3 T gemergt. NX6 kann innerhalb von NX vorgezogen werden (reine Regeln). |
-| 3 | **BS (BS3–BS8)**, **DS**, **GW** | NE und RO3 gemergt, #173 E auf `main`. DS0 läuft zuerst und entscheidet über DS4. |
+| 3 | **BS (BS3–BS8)**, **DS**, **GW** | NE und RO3 gemergt, #173 E auf `main`. |
 | 4 | **EK**, **TB** | G3 L gemergt (EK2, EK3). |
 | 5 | **Z1** | alles gemergt; danach G3 Strang K. |
 
@@ -925,7 +925,7 @@ Verhalten:
 | 3 | **NO14, Suche:** Dankbarkeit in der App-Suche auffindbar (bisher gar nicht durchsucht)? | Ja, nur in der App-Suche, nie beim Assistenten (NF5). |
 | 4 | **NL, Wiederherstellung:** Nach dem Wiederherstellen einer Sicherung mit gesperrten Notizen den Schutz automatisch einschalten? | Ja (Regel 9), sonst wären die Notizen auf dem neuen Gerät offen, bis der Schalter gefunden wird. |
 | 5 | **Mitteilungskontingent:** Aufgaben und Deadlines 44, Routinen 17, Fokus 1, Reserve 2? | Ja. Alternative mit zwei Tagen Vorlauf für Bible Study: 45/16/1/2; drei Tage passen zum Vorlauf der Abend-Erinnerungen. Zu prüfen, ob Designgruppe 1 (Erinnerungen ER) eigene Plätze braucht. |
-| 6 | **DS7c:** Der iCloud-Container setzt voraus, dass das Entwicklerkonto die iCloud-Berechtigung vergeben kann; mit dem kostenlosen „Personal Team“ ist das voraussichtlich nicht möglich (DS0 prüft es). Bleibt es dann wirklich beim heutigen Stand (sichtbar, unbegrenzt)? | Entscheidung gilt: bleibt wie heute. Als kleine Verbesserung ohne iCloud käme nur DS7b (sichtbar, 3 Stück/30 Tage) in Frage; nicht bauen ohne neue Entscheidung. |
+| 6 | **DS7c:** Der iCloud-Container setzt voraus, dass das Entwicklerkonto die iCloud-Berechtigung vergeben kann; mit dem kostenlosen „Personal Team“ ist das voraussichtlich nicht möglich (DS0 prüft es). Bleibt es dann wirklich beim heutigen Stand (sichtbar, unbegrenzt)? | Erledigt (21.11.2026): verborgen in `.Sicherheitskopien` im gewählten Sicherungsordner, ohne iCloud-Berechtigung; DS0 entfällt. |
 | 7 | **DS6b, Schlüsselbund:** Abgeleiteten Schlüssel (nicht das Passwort) speichern; Passwort mindestens 8 Zeichen; ältere Dateien behalten ihr altes Passwort nach „Passwort ändern“? | Ja zu allen drei (Teil 2, DS3). |
 | 8 | **GW1c:** Vorhandene Gewohnheit „Bewegung“ mit Quelle „Training erfasst“ einmalig auf die kombinierte Quelle umstellen? | Ja, einmalig und nur, wenn Name und Quelle dem alten Vorschlag entsprechen (Teil 2, GW1). |
 | 9 | **RO10a, RO15b und Designgruppe 1:** Beide ändern `DayView`. Reihenfolge? | RO7 und RO8 nach dem G1-Strang „Planen“ umsetzen oder dessen Umsetzer mitgeben. |
