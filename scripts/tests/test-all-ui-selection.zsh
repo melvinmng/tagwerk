@@ -42,6 +42,15 @@ check "full set with one retry" \
   $'-retry-tests-on-failure\n-test-iterations\n2\nrc=0' \
   "$(selection TAGWERK_UI_TEST_RETRIES=1)"
 
+# Every entry of the repository list must name an existing UI test class (a typo would silently skip nothing).
+missing_classes=""
+while IFS= read -r line || [[ -n "$line" ]]; do
+  entry="${line//[[:space:]]/}"
+  [[ -z "$entry" || "$entry" == \#* ]] && continue
+  grep -qE "^(final )?class ${entry%%/*}\b" "$ROOT"/app/TagwerkUITests/*.swift || missing_classes+="$entry "
+done < "$ROOT/app/TagwerkUITests/nightly-only.txt"
+check "nightly-only entries name existing classes" "" "$missing_classes"
+
 # A synthetic list: comments, empty lines, whitespace and CRLF line endings are tolerated, the last line has no newline.
 print -n $'# comment\n\n  ClassA  \r\nClassB/testOne\n   # indented comment\nClassC' > "$WORK_DIR/list.txt"
 check "list parsing" \

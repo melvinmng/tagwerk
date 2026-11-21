@@ -27,8 +27,9 @@ on:
 permissions:
   contents: read
 
-# A new push to the same pull request cancels the run that is still in progress. Nightly and manual runs are never
-# cancelled by a later trigger; they queue instead.
+# A new push to the same pull request cancels the run that is still in progress. Nightly and manual runs of the same
+# kind are not cancelled while they run; they run one after another, and a newer waiting run replaces an older
+# waiting one (GitHub keeps at most one pending run per concurrency group).
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || format('{0}-{1}', github.event_name, github.ref) }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
