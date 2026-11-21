@@ -14,6 +14,9 @@ struct ActionCardDescriber {
     var shoppingItemName: (String) -> String? = { _ in nil }
     /// An issue of the last GitHub search by task key, for the card of `assign_task` on an issue outside the user's tasks.
     var foundIssue: (String) -> OnlineIssue? = { _ in nil }
+    /// Names repository and projects of an issue in the card text. The suggestions of a note show the target in a row of
+    /// their own (it can be changed there), so their text leaves it out.
+    var showsIssueTarget = true
 
     /// `spoken`: the card is read aloud; texts then avoid symbols that speech drops (the screen keeps them).
     func describe(_ call: ToolCall, language: VoiceLanguage = .app, spoken: Bool = false) -> AssistantModel.ActionCard {
@@ -30,13 +33,14 @@ struct ActionCardDescriber {
         func duration(_ minutes: Int) -> String { CapacityText.duration(minutes) }
         switch call.name {
         case "create_task" where string("source") == "github":
-            var parts = [text("Issue anlegen")] + issueTarget(args, text: text)
+            var parts = [text("Issue anlegen")] + (showsIssueTarget ? issueTarget(args, text: text) : [])
             if let due = string("due") { parts.append(text("fällig \(dayText(due))")) }
             if let priority = string("priority") { parts.append(priority) }
             // Everyone the issue goes to is named in full before the user confirms.
-            let assignment = "\n" + issueAssignment(args["assignees"] as? [String], language: language, text: text)
+            let people = issueAssignment(args["assignees"] as? [String], language: language, text: text)
             let notes = string("notes").map { "\n" + text("Notizen: „\($0)“") } ?? ""
-            return AssistantModel.ActionCard(title: title, change: parts.joined(separator: " · ") + assignment + notes)
+            if !showsIssueTarget { return AssistantModel.ActionCard(title: title, change: (parts + [people]).joined(separator: " · ") + notes) }
+            return AssistantModel.ActionCard(title: title, change: parts.joined(separator: " · ") + "\n" + people + notes)
         case "create_task":
             var parts = [text("Neue Aufgabe")]
             if let source = string("source") { parts.append(source == "github" ? text("als GitHub-Issue") : source) }

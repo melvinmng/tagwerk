@@ -1,5 +1,6 @@
 import AIKit
 import Foundation
+import GitHubKit
 import Observation
 import TagwerkCore
 
@@ -17,10 +18,18 @@ final class NoteSuggestionModel {
 
     struct Card: Identifiable, Equatable {
         var id: String { call.id }
-        let call: ToolCall
-        let text: AssistantModel.ActionCard
+        /// For an issue the call carries the resolved target (`setTarget` rewrites it).
+        var call: ToolCall
+        var text: AssistantModel.ActionCard
         var status: ChatMessage.ActionStatus
         var time: Date?
+        /// The call creates a GitHub issue.
+        var isIssue = false
+        /// Repository and projects of an issue; `nil` while the user has to choose them.
+        var target: AppTools.GitHubTarget?
+
+        /// A GitHub issue without a resolved target: it cannot be confirmed before the user chooses one.
+        var needsTarget: Bool { isIssue && target == nil }
     }
 
     private(set) var phase: Phase = .idle
@@ -33,6 +42,7 @@ final class NoteSuggestionModel {
     @ObservationIgnored private let notes: NoteStore
     @ObservationIgnored private let hasConsent: @MainActor () -> Bool
     @ObservationIgnored private let context: @MainActor () -> NoteSuggestionContext
+    @ObservationIgnored private let gitHubDirectory: @MainActor () -> (any GitHubDirectory)?
     @ObservationIgnored private let now: () -> Date
     @ObservationIgnored private let timeout: Duration
     /// Counts resets and requests; an answer that arrives for an older count is dropped (review focus 5).
@@ -42,7 +52,7 @@ final class NoteSuggestionModel {
     init(responder: any ResponseStreaming, model: @escaping @MainActor () async throws -> String, tools: any ToolHandler,
          describer: ActionCardDescriber, notes: NoteStore, hasConsent: @escaping @MainActor () -> Bool,
          context: @escaping @MainActor () -> NoteSuggestionContext, now: @escaping () -> Date = Date.init,
-         timeout: Duration = .seconds(60)) {
+         timeout: Duration = .seconds(60), gitHubDirectory: @escaping @MainActor () -> (any GitHubDirectory)? = { nil }) {
         self.responder = responder
         self.model = model
         self.tools = tools
@@ -52,9 +62,13 @@ final class NoteSuggestionModel {
         self.context = context
         self.now = now
         self.timeout = timeout
+        self.gitHubDirectory = gitHubDirectory
     }
 
     var openCount: Int { cards.filter { $0.status == .pending }.count }
+
+    /// The open cards "Alle bestätigen" may confirm: those that do not wait for a target.
+    var confirmableCount: Int { cards.filter { $0.status == .pending && !$0.needsTarget }.count }
 
     // MARK: Request
 
@@ -73,16 +87,20 @@ final class NoteSuggestionModel {
             let slug = try await model()
             guard mine == generation else { return }
             let sent = context()
+            // A GitHub issue may be suggested when the target list is on the device. It is never sent: the target of an
+            // issue is resolved here (decision D7).
+            let catalog = gitHubDirectory()?.storedCatalog
             let request = Self.request(text: text, kind: kind, context: sent, now: now())
-            let tools = self.tools.definitions.filter { NoteSuggestionRules.allowedTools.contains($0.name) }
+            let tools = NoteSuggestionRules.definitions(from: self.tools.definitions, gitHub: catalog != nil)
+            let instructions = Self.instructions(gitHub: catalog != nil)
             let calls = try await withTimeout { [responder] in
-                try await Self.collect(responder.respond(model: slug, instructions: Self.instructions, input: [.user(request)],
+                try await Self.collect(responder.respond(model: slug, instructions: instructions, input: [.user(request)],
                                                          tools: tools, jsonSchema: nil))
             }
             guard mine == generation else { return }
             notes.markProcessed(noteID, at: now())
-            let accepted = NoteSuggestionRules.accepted(calls, context: sent)
-            cards = accepted.map { Card(call: $0, text: describer.describe($0), status: .pending, time: nil) }
+            let accepted = NoteSuggestionRules.accepted(calls, context: sent, gitHub: catalog != nil)
+            cards = accepted.map { makeCard($0, catalog: catalog) }
             phase = cards.isEmpty ? .empty : .loaded
         } catch is CancellationError {
             if mine == generation { phase = .idle }
@@ -92,9 +110,42 @@ final class NoteSuggestionModel {
         }
     }
 
-    /// Runs the function of a card once; no further request follows.
+    /// The card of an accepted call; for an issue the target is resolved against the catalog first.
+    private func makeCard(_ call: ToolCall, catalog: GitHubCatalog?) -> Card {
+        guard NoteSuggestionRules.isIssue(call), let catalog else {
+            return Card(call: call, text: describer.describe(call), status: .pending, time: nil)
+        }
+        let draft = NoteSuggestionRules.issueDraft(for: call, catalog: catalog)
+        return Card(call: draft.call, text: issueDescriber.describe(draft.call), status: .pending, time: nil, isIssue: true,
+                    target: draft.target)
+    }
+
+    /// Describes an issue without its target: the card shows that in a row of its own.
+    private var issueDescriber: ActionCardDescriber {
+        var copy = describer
+        copy.showsIssueTarget = false
+        return copy
+    }
+
+    /// Rewrites repository, projects and people of a pending issue card after the user chose them, and describes it again.
+    /// `assignees == nil` stands for the user. The people are checked when the issue is created, like in the chat.
+    func setTarget(_ id: String, repository: String, projectIDs: [String], assignees: [String]?) {
+        guard let index = cards.firstIndex(where: { $0.id == id }), cards[index].status == .pending, cards[index].isIssue,
+              var arguments = try? JSONSerialization.jsonObject(with: cards[index].call.arguments) as? [String: Any] else { return }
+        arguments["repository"] = repository
+        arguments["project_ids"] = projectIDs
+        arguments["assignees"] = assignees as Any? ?? NSNull()
+        guard let data = try? JSONSerialization.data(withJSONObject: arguments, options: [.sortedKeys, .withoutEscapingSlashes]) else { return }
+        let call = ToolCall(id: cards[index].call.id, name: cards[index].call.name, arguments: data)
+        cards[index].call = call
+        cards[index].text = issueDescriber.describe(call)
+        cards[index].target = AppTools.GitHubTarget(repository: repository, projectIDs: projectIDs)
+    }
+
+    /// Runs the function of a card once; no further request follows. An issue without a target is not run.
     func confirm(_ id: String) async {
-        guard let index = cards.firstIndex(where: { $0.id == id }), cards[index].status == .pending else { return }
+        guard let index = cards.firstIndex(where: { $0.id == id }), cards[index].status == .pending,
+              !cards[index].needsTarget else { return }
         let call = cards[index].call
         let mine = generation
         cards[index].status = .running
@@ -111,8 +162,9 @@ final class NoteSuggestionModel {
         cards[index].status = .declined
     }
 
+    /// Confirms every open card that has what it needs; issues that wait for a target stay open.
     func confirmAll() async {
-        for card in cards where card.status == .pending { await confirm(card.id) }
+        for card in cards where card.status == .pending && !card.needsTarget { await confirm(card.id) }
     }
 
     /// The sheet closed or the text changed: drops the cards and any answer that is still on its way.
@@ -124,14 +176,21 @@ final class NoteSuggestionModel {
 
     // MARK: Prompt
 
-    static var instructions: String {
-        """
+    static var instructions: String { instructions(gitHub: false) }
+
+    /// With `gitHub` the model may name a GitHub issue; the target is resolved on the device and nothing about the user's
+    /// repositories is sent.
+    static func instructions(gitHub: Bool) -> String {
+        let newTask = gitHub
+            ? #"A new task needs no id. Use source "github" only when the note asks for a GitHub issue or names a repository; then pass the repository name from the note if there is one (else null), project_ids null and assignees null. Otherwise use source null, "local" or "reminders"."#
+            : #"A new task needs no id; create it with source null or "local" or "reminders", never "github"."#
+        return """
         You turn one short personal note into suggested changes for a task and calendar app. You may only answer with \
         function calls; write no text.
         - Suggest at most 5 function calls, and only what the note clearly asks for or implies. Suggest nothing when the \
         note holds no such wish: then answer with no function call.
         - Use only ids that appear in the given tasks and events. Never invent an id. update_event works only on events \
-        marked time_block. A new task needs no id; create it with source null or "local" or "reminders", never "github".
+        marked time_block. \(newTask)
         - Dates are in the user's time zone. Today's date and time are given. Resolve words such as "tomorrow" from it.
         - Write titles in the language of the note and keep them short.
         - Every change is shown to the user and applied only after they confirm it.
