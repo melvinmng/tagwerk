@@ -2198,5 +2198,33 @@
   "Gelesen: %lld Titel aus „%@“": {
     "one": "Read: %1$lld title from “%2$@”",
     "other": "Read: %1$lld titles from “%2$@”"
-  }
+  },
+  "Notiz „%@“ überarbeiten": "Revise note “%@”",
+  "%lld Zeilen neu": {
+    "one": "%lld new line",
+    "other": "%lld new lines"
+  },
+  "%lld entfernt": "%lld removed",
+  "Titel geändert": "Title changed",
+  "Keine Änderung": "No change",
+  "Text überarbeiten": "Revise text",
+  "Text überarbeitet": "Text revised",
+  "%lld Zeilen": {
+    "one": "%lld line",
+    "other": "%lld lines"
+  },
+  "Ordner „%@“": "Folder “%@”",
+  "Neue Notiz „%@“": "New note “%@”",
+  "Grund: %@": "Reason: %@",
+  "Kommt nach „Zuletzt gelöscht“ und bleibt dort 30 Tage wiederherstellbar.": "Goes to “Recently deleted” and can be restored there for 30 days.",
+  "In „Zuletzt gelöscht“": "In “Recently deleted”",
+  "Notiz „%@“ löschen": "Delete note “%@”",
+  "Vorschlag %lld von %lld · noch nicht ausgeführt": "Suggestion %1$lld of %2$lld · not applied yet",
+  "Änderung ansehen": "View change",
+  "Notiz ansehen": "View note",
+  "Nachher": "After",
+  "neu: %@": "new: %@",
+  "entfernt: %@": "removed: %@",
+  "Notiz-Änderungen bestätigst du einzeln.": "You confirm changes to notes one at a time.",
+  "Zuweisungen und Notiz-Änderungen bestätigst du einzeln.": "You confirm assignments and changes to notes one at a time."
 }

@@ -1843,6 +1843,86 @@
         }
       }
     },
+    "%lld Zeilen": {
+      "localizations": {
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%1$lld Zeile"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%1$lld Zeilen"
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld line"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld lines"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "%lld Zeilen neu": {
+      "localizations": {
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%1$lld Zeile neu"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%1$lld Zeilen neu"
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld new line"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld new lines"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "%lld angehängt": {
       "localizations": {
         "en": {
@@ -1881,6 +1961,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "%1$lld selected · “Free” releases %2$@"
+          }
+        }
+      }
+    },
+    "%lld entfernt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld removed"
           }
         }
       }
@@ -10456,6 +10546,16 @@
         }
       }
     },
+    "Grund: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reason: %@"
+          }
+        }
+      }
+    },
     "HIIT": {
       "localizations": {
         "en": {
@@ -11269,6 +11369,16 @@
         }
       }
     },
+    "In „Zuletzt gelöscht“": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In “Recently deleted”"
+          }
+        }
+      }
+    },
     "Inhalte": {
       "localizations": {
         "en": {
@@ -12004,6 +12114,16 @@
         }
       }
     },
+    "Keine Änderung": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No change"
+          }
+        }
+      }
+    },
     "Keiner": {
       "localizations": {
         "en": {
@@ -12050,6 +12170,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Comment: “%@”"
+          }
+        }
+      }
+    },
+    "Kommt nach „Zuletzt gelöscht“ und bleibt dort 30 Tage wiederherstellbar.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Goes to “Recently deleted” and can be restored there for 30 days."
           }
         }
       }
@@ -13448,6 +13578,16 @@
         }
       }
     },
+    "Nachher": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "After"
+          }
+        }
+      }
+    },
     "Nachricht …": {
       "localizations": {
         "en": {
@@ -13644,6 +13784,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "New note"
+          }
+        }
+      }
+    },
+    "Neue Notiz „%@“": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New note “%@”"
           }
         }
       }
@@ -14041,6 +14191,16 @@
         }
       }
     },
+    "Notiz ansehen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "View note"
+          }
+        }
+      }
+    },
     "Notiz diktieren": {
       "localizations": {
         "en": {
@@ -14087,6 +14247,36 @@
           "stringUnit": {
             "state": "translated",
             "value": "Save note"
+          }
+        }
+      }
+    },
+    "Notiz „%@“ löschen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete note “%@”"
+          }
+        }
+      }
+    },
+    "Notiz „%@“ überarbeiten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revise note “%@”"
+          }
+        }
+      }
+    },
+    "Notiz-Änderungen bestätigst du einzeln.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You confirm changes to notes one at a time."
           }
         }
       }
@@ -14719,6 +14909,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Rename folder"
+          }
+        }
+      }
+    },
+    "Ordner „%@“": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Folder “%@”"
           }
         }
       }
@@ -17398,6 +17598,26 @@
         }
       }
     },
+    "Text überarbeiten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revise text"
+          }
+        }
+      }
+    },
+    "Text überarbeitet": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Text revised"
+          }
+        }
+      }
+    },
     "Tippen": {
       "localizations": {
         "en": {
@@ -17414,6 +17634,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Title"
+          }
+        }
+      }
+    },
+    "Titel geändert": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Title changed"
           }
         }
       }
@@ -18260,6 +18490,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Suggestion"
+          }
+        }
+      }
+    },
+    "Vorschlag %lld von %lld · noch nicht ausgeführt": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Vorschlag %1$lld von %2$lld · noch nicht ausgeführt"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suggestion %1$lld of %2$lld · not applied yet"
           }
         }
       }
@@ -19789,6 +20035,16 @@
         }
       }
     },
+    "Zuweisungen und Notiz-Änderungen bestätigst du einzeln.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You confirm assignments and changes to notes one at a time."
+          }
+        }
+      }
+    },
     "Zählt ab": {
       "localizations": {
         "en": {
@@ -20063,6 +20319,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "logged"
+          }
+        }
+      }
+    },
+    "entfernt: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "removed: %@"
           }
         }
       }
@@ -20635,6 +20901,16 @@
         }
       }
     },
+    "neu: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "new: %@"
+          }
+        }
+      }
+    },
     "nicht angemeldet": {
       "localizations": {
         "en": {
@@ -21196,6 +21472,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Change"
+          }
+        }
+      }
+    },
+    "Änderung ansehen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "View change"
           }
         }
       }

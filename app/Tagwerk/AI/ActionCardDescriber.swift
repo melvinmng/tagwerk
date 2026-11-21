@@ -17,6 +17,12 @@ struct ActionCardDescriber {
     /// Names repository and projects of an issue in the card text. The suggestions of a note show the target in a row of
     /// their own (it can be changed there), so their text leaves it out.
     var showsIssueTarget = true
+    /// The notes the assistant may see, for the cards of the note tools; `nil` where there are none.
+    var noteAccess: NoteToolAccess?
+    /// The folder the notes chat was opened from; a new note goes there when the model names no folder.
+    var noteDefaultFolderID: () -> UUID? = { nil }
+    /// False for a card that was answered: it then carries no `detail` and no summary of the text (the note holds it already).
+    var isOpen = true
 
     /// `spoken`: the card is read aloud; texts then avoid symbols that speech drops (the screen keeps them).
     func describe(_ call: ToolCall, language: VoiceLanguage = .app, spoken: Bool = false) -> AssistantModel.ActionCard {
@@ -122,6 +128,8 @@ struct ActionCardDescriber {
             // An issue outside the user's tasks comes from the last GitHub search.
             let found = task == nil ? string("id").flatMap(foundIssue) : nil
             return describeAssignment(task: task, found: found, args: args, title: found?.title ?? title, language: language, spoken: spoken)
+        case "create_note", "update_note", "delete_note":
+            return describeNote(call.name, args: args, language: language, spoken: spoken)
         case "create_event", "update_event", "delete_event":
             return describeEvent(call.name, series: args["series"] as? Bool == true, language: language, string: string)
         default:

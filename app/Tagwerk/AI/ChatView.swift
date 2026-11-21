@@ -15,6 +15,8 @@ struct ChatView: View {
     /// Sheet height; the voice mode uses half height so the calendar stays visible (SP5a).
     @State private var detent: PresentationDetent = .large
     @State private var explainingVoiceMode = false
+    /// The note card whose proposal is shown in `NoteChangeSheet`.
+    @State private var noteDetail: NoteDetailRequest?
 
     private var conversation: Conversation? { assistant.conversation }
 
@@ -58,6 +60,13 @@ struct ChatView: View {
             }
             .confirmationDialog("Verlauf löschen?", isPresented: $askingClear, titleVisibility: .visible) {
                 Button("Verlauf löschen", role: .destructive) { assistant.clear() }
+            }
+            .sheet(item: $noteDetail) { request in
+                if let detail = request.card.detail {
+                    NoteChangeSheet(card: request.card, detail: detail,
+                                    onDecline: { Task { await assistant.decline(request.call) } },
+                                    onConfirm: { Task { await assistant.confirm(request.call) } })
+                }
             }
         }
     }
@@ -226,9 +235,12 @@ struct ChatView: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
         case .action(let call, let status):
-            ActionCardView(card: assistant.describe(call), status: status, time: assistant.actionTimes[call.id],
+            let card = assistant.describe(call, isOpen: status == .pending)
+            ActionCardView(card: card, status: status, time: assistant.actionTimes[call.id],
                            onConfirm: { Task { await assistant.confirm(call) } },
-                           onDecline: { Task { await assistant.decline(call) } })
+                           onDecline: { Task { await assistant.decline(call) } },
+                           proposal: proposalPosition(of: call),
+                           onShowDetail: card.detail == nil ? nil : { noteDetail = NoteDetailRequest(call: call, card: card) })
         case .activity(let call, let output):
             // A read call the user should see ("Gelesen: „Titel“"); small and grey, not an answer.
             if let text = assistant.activityText(call, output: output) {
@@ -236,6 +248,13 @@ struct ChatView: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
         }
+    }
+
+    /// "Vorschlag i von n" while several note cards are open; `nil` for one card and for other cards.
+    private func proposalPosition(of call: ToolCall) -> (index: Int, count: Int)? {
+        let open = (conversation?.pendingActions ?? []).filter { NoteChatTools.noteWriteTools.contains($0.name) }
+        guard open.count > 1, let index = open.firstIndex(where: { $0.id == call.id }) else { return nil }
+        return (index + 1, open.count)
     }
 
     private var composer: some View {
@@ -316,6 +335,10 @@ struct ActionCardView: View {
     var canConfirm = true
     /// A row below the change text, e.g. the target of an issue suggested from a note.
     var accessory: AnyView? = nil
+    /// The place of a note card among several open ones: "Vorschlag 2 von 3 · noch nicht ausgeführt".
+    var proposal: (index: Int, count: Int)? = nil
+    /// Opens the sheet "Änderung ansehen"; `nil` for cards without a proposal to look at.
+    var onShowDetail: (() -> Void)? = nil
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
@@ -323,6 +346,12 @@ struct ActionCardView: View {
             Text(card.title).font(.subheadline.weight(.semibold))
             Text(card.change).font(.subheadline).foregroundStyle(.secondary)
             if let accessory { accessory }
+            if let onShowDetail {
+                Button(action: onShowDetail) {
+                    Label(detailTitle, systemImage: "doc.text.magnifyingglass").font(.subheadline)
+                }
+                .buttonStyle(.borderless)
+            }
             if let warning = card.warning {
                 Label(warning, systemImage: "exclamationmark.triangle").font(.caption).foregroundStyle(.red)
             }
@@ -356,19 +385,29 @@ struct ActionCardView: View {
     private var header: some View {
         switch status {
         case .pending:
-            Text("Vorgeschlagene Änderung · noch nicht ausgeführt").font(.caption).foregroundStyle(.purple)
+            if let proposal {
+                Text("Vorschlag \(proposal.index) von \(proposal.count) · noch nicht ausgeführt").font(.caption).foregroundStyle(.purple)
+            } else {
+                Text("Vorgeschlagene Änderung · noch nicht ausgeführt").font(.caption).foregroundStyle(.purple)
+            }
         case .running:
             HStack(spacing: 6) { ProgressView(); Text("Wird ausgeführt …").font(.caption).foregroundStyle(.secondary) }
         case .done(let output):
             if Self.error(in: output) != nil {
                 Text("Nicht ausgeführt").font(.caption).foregroundStyle(.orange)
             } else {
-                Text(time.map { String(localized: "✓ Ausgeführt · \($0.formatted(date: .omitted, time: .shortened))") } ?? String(localized: "✓ Ausgeführt"))
-                    .font(.caption).foregroundStyle(.green)
+                let done = time.map { String(localized: "✓ Ausgeführt · \($0.formatted(date: .omitted, time: .shortened))") } ?? String(localized: "✓ Ausgeführt")
+                Text(card.doneNote.map { done + " · " + $0 } ?? done).font(.caption).foregroundStyle(.green)
             }
         case .declined:
             Text("Verworfen").font(.caption).foregroundStyle(.secondary)
         }
+    }
+
+    /// "Notiz ansehen" for a new note and a deletion, "Änderung ansehen" for a revision.
+    private var detailTitle: LocalizedStringKey {
+        if case .update = card.detail { return "Änderung ansehen" }
+        return "Notiz ansehen"
     }
 
     /// The `error` of a function output, if it reports one.

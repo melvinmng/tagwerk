@@ -236,7 +236,7 @@ final class AssistantModel {
 
     /// Tools whose cards are always confirmed alone, never with "Alle bestätigen" and never together with other
     /// cards by voice. The note tools of the notes chat are added here.
-    static let singleConfirmationTools: Set<String> = ["assign_task"]
+    static let singleConfirmationTools: Set<String> = Set(["assign_task"]).union(NoteChatTools.noteWriteTools)
 
     /// True for a card that must be confirmed alone: a tool of `singleConfirmationTools`, or creating a task that is
     /// assigned beyond the user (`assignsBeyondMe`).
@@ -252,7 +252,14 @@ final class AssistantModel {
 
     /// The line below "Alle bestätigen" that names what is confirmed alone; `nil` without guarded cards.
     static func singleConfirmationNotice(for calls: [ToolCall], me: String? = nil) -> String? {
-        calls.contains { needsSingleConfirmation($0, me: me) } ? String(localized: "Zuweisungen bestätigst du einzeln.") : nil
+        let hasNotes = calls.contains { NoteChatTools.noteWriteTools.contains($0.name) }
+        let hasAssignments = calls.contains { needsSingleConfirmation($0, me: me) && !NoteChatTools.noteWriteTools.contains($0.name) }
+        switch (hasAssignments, hasNotes) {
+        case (true, true): return String(localized: "Zuweisungen und Notiz-Änderungen bestätigst du einzeln.")
+        case (true, false): return String(localized: "Zuweisungen bestätigst du einzeln.")
+        case (false, true): return String(localized: "Notiz-Änderungen bestätigst du einzeln.")
+        case (false, false): return nil
+        }
     }
 
     /// True for a `create_task` call that assigns an issue to other people or to no one. Such a card is
@@ -351,6 +358,7 @@ final class AssistantModel {
         actionTimes[call.id] = now()
         let index = conversation.history.count
         await conversation.confirm(call)
+        await declineStaleNoteCards(after: call)
         persist()
         if onTurnFinished != nil {
             let executed: Bool
@@ -359,6 +367,22 @@ final class AssistantModel {
         } else {
             readAfterConfirmation(from: index, call: call)
         }
+    }
+
+    /// After `update_note` or `delete_note` ran, other open cards for the same note are declined: they rest on the text from
+    /// before. The check "unchanged since read" does not catch them, because the session holds the new text after the write.
+    private func declineStaleNoteCards(after call: ToolCall) async {
+        guard let conversation, call.name == "update_note" || call.name == "delete_note",
+              case .done(let output) = status(of: call), ActionCardView.error(in: output) == nil,
+              let noteID = Self.noteID(of: call) else { return }
+        for other in conversation.pendingActions where other.id != call.id && Self.noteID(of: other) == noteID
+            && (other.name == "update_note" || other.name == "delete_note") {
+            await conversation.decline(other)
+        }
+    }
+
+    private static func noteID(of call: ToolCall) -> String? {
+        (try? JSONSerialization.jsonObject(with: call.arguments) as? [String: Any])?["note_id"] as? String
     }
 
     /// "Ausgeführt." and whatever the model says next, when answers are being read (SP4a).
@@ -691,6 +715,17 @@ final class AssistantModel {
         var confirmTitle: String? = nil
         /// A red confirm button, for an action that cannot be undone by the user.
         var isDestructive = false
+        /// The proposal of a note card, as raw values; `nil` for other cards and for cards that are no longer open.
+        var detail: NoteCardDetail? = nil
+        /// Shown after the card was carried out, behind the time ("In „Zuletzt gelöscht“").
+        var doneNote: String? = nil
+    }
+
+    /// What a note card proposes, for the sheet "Änderung ansehen": the values only, the sentences are in `ActionCard`.
+    enum NoteCardDetail: Equatable {
+        case update(title: String, before: String, after: String)
+        case create(text: String)
+        case delete(text: String)
     }
 
     /// Text of an action card (mockup e): what the change is about and how it changes it. `language` is the app
@@ -703,10 +738,14 @@ final class AssistantModel {
 
     /// `spoken`: the card is read aloud; texts then avoid symbols that speech drops (the screen keeps them).
     /// The texts come from `ActionCardDescriber`, which the thoughts note's suggestions use as well.
-    func describe(_ call: ToolCall, language: VoiceLanguage = .app, spoken: Bool = false) -> ActionCard {
-        ActionCardDescriber(planning: planning, gitHubDirectory: gitHubDirectory, shoppingItemName: shoppingItemName,
-                            foundIssue: { [tools] in tools.foundIssues[$0] })
-            .describe(call, language: language, spoken: spoken)
+    /// `isOpen`: the card still waits for an answer; only then it carries the proposal of a note card (`detail`).
+    func describe(_ call: ToolCall, language: VoiceLanguage = .app, spoken: Bool = false, isOpen: Bool = true) -> ActionCard {
+        var describer = ActionCardDescriber(planning: planning, gitHubDirectory: gitHubDirectory, shoppingItemName: shoppingItemName,
+                                            foundIssue: { [tools] in tools.foundIssues[$0] })
+        describer.noteAccess = noteTools?.access ?? tools.noteAccess
+        describer.noteDefaultFolderID = { [weak self] in self?.noteTools?.defaultFolderID }
+        describer.isOpen = isOpen
+        return describer.describe(call, language: language, spoken: spoken)
     }
 }
 

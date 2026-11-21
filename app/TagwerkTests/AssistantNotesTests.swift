@@ -356,4 +356,93 @@ struct AssistantNotesTests {
         #expect(rig.model.activityText(all, output: AppTools.error("Ordner nicht gefunden.")) == nil)
     }
 
+
+    // MARK: Cards and single confirmation (B7)
+
+    private static func completeCall(_ name: String, id: String) -> StreamEvent {
+        .functionCall(callID: id, name: "complete_task", arguments: #"{"id":"local:\#(name)"}"#)
+    }
+
+    /// A notes chat where the note was read and one turn ended with the given function calls (open cards).
+    private func openCards(_ rig: Rig, note: NoteRecord, calls: [StreamEvent]) async {
+        rig.model.open(notes: nil)
+        responder.enqueueEvents([readCall(note), .completed(usage: nil)])
+        responder.enqueueEvents(calls + [.completed(usage: nil)])
+        await rig.model.send("Mach das alles")
+    }
+
+    @Test func confirmAll_skipsNoteCards() async throws {
+        let rig = await make()
+        let note = try #require(rig.notes.create(text: "Plan\nMontag"))
+        await openCards(rig, note: note, calls: [Self.completeCall("Fahrrad", id: "t1"), Self.completeCall("Auto", id: "t2"),
+                                                updateCall(note, text: "Plan\nMontag\nDienstag")])
+        #expect(Set(rig.model.conversation?.pendingActions.map(\.id) ?? []) == ["t1", "t2", "u1"])
+        #expect(rig.model.batchConfirmable.map(\.id) == ["t1", "t2"])
+        responder.enqueue("Okay.")
+        await rig.model.confirmAll()
+        #expect(rig.model.conversation?.pendingActions.map(\.id) == ["u1"])
+        #expect(rig.notes.note(id: note.id)?.text == "Plan\nMontag")
+        let notice = AssistantModel.singleConfirmationNotice(for: rig.model.conversation?.pendingActions ?? [])
+        #expect(notice == "Notiz-Änderungen bestätigst du einzeln.")
+    }
+
+    @Test func batchConfirmable_onlyNoteCards_isEmpty() async throws {
+        let rig = await make()
+        let note = try #require(rig.notes.create(text: "Plan\nMontag"))
+        let other = try #require(rig.notes.create(text: "Idee\nA"))
+        await openCards(rig, note: note, calls: [updateCall(note, text: "Plan\nMontag\nDienstag"),
+                                                .functionCall(callID: "n1", name: "create_note", arguments: #"{"text":"Neu\nZeile","folder_id":null}"#),
+                                                .functionCall(callID: "d1", name: "delete_note", arguments: #"{"note_id":"\#(key(other))","reason":null}"#)])
+        #expect(rig.model.conversation?.pendingActions.count == 3)
+        #expect(rig.model.batchConfirmable.isEmpty)
+        // `confirmAll` does nothing for them.
+        await rig.model.confirmAll()
+        #expect(rig.model.conversation?.pendingActions.count == 3)
+        #expect(rig.notes.note(id: note.id)?.text == "Plan\nMontag" && rig.notes.note(id: other.id)?.deletedAt == nil)
+    }
+
+    @Test func confirmUpdate_declinesOtherOpenCardsForTheSameNote() async throws {
+        let rig = await make()
+        let note = try #require(rig.notes.create(text: "Plan\nMontag"))
+        let other = try #require(rig.notes.create(text: "Idee\nA"))
+        await openCards(rig, note: note, calls: [updateCall(note, text: "Plan\nMontag\nDienstag", id: "u1"),
+                                                updateCall(note, text: "Plan\nMontag\nMittwoch", id: "u2"),
+                                                .functionCall(callID: "d1", name: "delete_note", arguments: #"{"note_id":"\#(key(note))","reason":null}"#),
+                                                .functionCall(callID: "u3", name: "update_note", arguments: #"{"note_id":"\#(key(other))","text":"Idee\nA\nB"}"#)])
+        // The note of u3 was not read: its card stays open (and fails when confirmed); the three cards of `note` rest on one text.
+        let first = try #require(rig.model.conversation?.pendingActions.first { $0.id == "u1" })
+        await rig.model.confirm(first)
+        #expect(rig.notes.note(id: note.id)?.text == "Plan\nMontag\nDienstag")
+        #expect(rig.notes.note(id: note.id)?.deletedAt == nil)
+        // u2 and d1 are declined without running; u3 belongs to another note and stays.
+        #expect(rig.model.conversation?.pendingActions.map(\.id) == ["u3"])
+        let outputs = rig.model.conversation?.history.compactMap { item -> (String, String)? in
+            if case .functionOutput(let id, let output) = item { return (id, output) }
+            return nil
+        } ?? []
+        #expect(outputs.contains { $0.0 == "u2" && $0.1 == Conversation.declinedOutput })
+        #expect(outputs.contains { $0.0 == "d1" && $0.1 == Conversation.declinedOutput })
+    }
+
+    @Test func confirmDelete_movesToTrashAndDeclinesTheOtherCard() async throws {
+        let rig = await make()
+        let note = try #require(rig.notes.create(text: "Doppelt\nText"))
+        await openCards(rig, note: note, calls: [.functionCall(callID: "d1", name: "delete_note", arguments: #"{"note_id":"\#(key(note))","reason":"Doppelt"}"#),
+                                                updateCall(note, text: "Doppelt\nText\nMehr", id: "u1")])
+        responder.enqueue("Erledigt.")
+        await rig.model.confirm(try #require(rig.model.conversation?.pendingActions.first { $0.id == "d1" }))
+        #expect(rig.notes.note(id: note.id)?.deletedAt != nil)
+        #expect(rig.model.conversation?.pendingActions.isEmpty == true)
+        #expect(rig.notes.note(id: note.id)?.text == "Doppelt\nText")
+    }
+
+    @Test func cardDescription_forAnOpenNoteCard_carriesTheProposal() async throws {
+        let rig = await make()
+        let note = try #require(rig.notes.create(text: "Plan\nMontag"))
+        await openCards(rig, note: note, calls: [updateCall(note, text: "Plan\nMontag\nDienstag")])
+        let call = try #require(rig.model.conversation?.pendingActions.first)
+        let open = rig.model.describe(call)
+        #expect(open.title == "Notiz „Plan“ überarbeiten" && open.detail == .update(title: "Plan", before: "Plan\nMontag", after: "Plan\nMontag\nDienstag"))
+        #expect(rig.model.describe(call, isOpen: false).detail == nil)
+    }
 }
