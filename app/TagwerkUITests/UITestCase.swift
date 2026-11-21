@@ -1,7 +1,8 @@
 import XCTest
 
 /// Base class of all UI tests: starts the app in the UI test mode (in-memory store, demo data, offline,
-/// German) and waits until the demo data exists. Tests wait only with `waitForExistence`, never with `sleep`.
+/// German) and waits until the demo data exists. Tests wait only with `waitForExistence`, never with `sleep`;
+/// `waitUntilScreenIsStable()` waits for a condition too (two identical snapshots of the screen in a row).
 /// The simulator needs calendar and reminder access before the run (`app/test-all.sh` grants it with `simctl privacy`).
 @MainActor
 class UITestCase: XCTestCase {
@@ -116,6 +117,52 @@ class UITestCase: XCTestCase {
         let current = (field.value as? String) ?? ""
         field.coordinate(withNormalizedOffset: CGVector(dx: 0.98, dy: 0.5)).tap()
         field.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: current.count) + text)
+    }
+
+    /// Waits until the screen does not change any more: two snapshots of the accessibility tree in a row, 0.3 s apart, give the same
+    /// signature (type, label, value and rounded frame of every element; activity indicators and scroll bars are left out). An element
+    /// that exists is not an element that has finished loading, so a screen is only audited after this. It is a wait for a condition,
+    /// not a `sleep`: a screen that never settles fails with the elements that kept changing, instead of an accidental audit finding.
+    func waitUntilScreenIsStable(timeout: TimeInterval = 8, file: StaticString = #filePath, line: UInt = #line) {
+        do {
+            if let changing = try Self.unstableElements(of: app, timeout: timeout) {
+                XCTFail("The screen did not settle within \(Int(timeout)) s; elements that changed last: \(changing)", file: file, line: line)
+            }
+        } catch {
+            XCTFail("Could not take a snapshot of the screen: \(error)", file: file, line: line)
+        }
+    }
+
+    /// `nil` when the screen is stable; otherwise the description of the elements that differed between the last two snapshots.
+    static func unstableElements(of app: XCUIApplication, timeout: TimeInterval = 8, interval: TimeInterval = 0.3) throws -> String? {
+        var previous = try screenSignature(of: app)
+        var lastDifference = ""
+        let deadline = Date().addingTimeInterval(timeout)
+        while Date() < deadline {
+            RunLoop.current.run(until: Date().addingTimeInterval(interval))
+            let current = try screenSignature(of: app)
+            if current == previous { return nil }
+            let before = Set(previous), after = Set(current)
+            lastDifference = (after.subtracting(before).sorted().prefix(4) + before.subtracting(after).sorted().prefix(4).map { "was: " + $0 })
+                .joined(separator: " | ")
+            previous = current
+        }
+        return lastDifference
+    }
+
+    /// One line per element of the tree of the app; see `waitUntilScreenIsStable`.
+    private static func screenSignature(of app: XCUIApplication) throws -> [String] {
+        var lines: [String] = []
+        func walk(_ node: any XCUIElementSnapshot, depth: Int) {
+            if node.elementType != .activityIndicator && node.elementType != .scrollBar {
+                let frame = node.frame
+                lines.append("\(depth) \(node.elementType.rawValue) \(node.label) = \(node.value.map { String(describing: $0) } ?? "") "
+                    + "@\(Int(frame.minX.rounded())),\(Int(frame.minY.rounded())),\(Int(frame.width.rounded())),\(Int(frame.height.rounded()))")
+            }
+            for child in node.children { walk(child, depth: depth + 1) }
+        }
+        walk(try app.snapshot(), depth: 0)
+        return lines
     }
 
     /// Waits until the element is gone.

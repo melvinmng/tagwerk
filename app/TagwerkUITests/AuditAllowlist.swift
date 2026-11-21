@@ -181,6 +181,10 @@ enum AuditAllowlist {
         currentScreen = screen
         let passes = auditTypes.contains(.contrast) && auditTypes != .contrast ? [.contrast, auditTypes.subtracting(.contrast)] : [auditTypes]
         for pass in passes {
+            // Before each pass: a screen that is still changing (late loading, layout, an animation) gives findings that
+            // depend on the speed of the run. The Dynamic Type pass switches the system text size, so the wait also runs
+            // between the passes and after the last one, so that the switch back does not run into the next test step.
+            try waitForStableScreen(app, screen: screen, file: file, line: line)
             var findings: [(issue: XCUIAccessibilityAuditIssue, element: XCUIElement?)] = []
             try runAudit(app, for: pass) { issue in
                 findings.append((issue, issue.element))
@@ -190,6 +194,18 @@ enum AuditAllowlist {
                 XCTFail("\(screen): \(finding.issue.compactDescription) | \(finding.issue.detailedDescription) | "
                     + "label=\(element?.label ?? "-") id=\(element?.identifier ?? "-") frame=\(element?.frame ?? .zero)", file: file, line: line)
             }
+        }
+        try waitForStableScreen(app, screen: screen, file: file, line: line)
+    }
+
+    /// Fails with the elements that kept changing when the screen does not settle. In collect mode the instability is
+    /// written to the collect file as a finding of its own and the run goes on, so the flaky screens can be listed.
+    private static func waitForStableScreen(_ app: XCUIApplication, screen: String, file: StaticString, line: UInt) throws {
+        guard let changing = try UITestCase.unstableElements(of: app) else { return }
+        if collectsFindings {
+            recordLine("\(screen) | unstable screen | \(changing)\n")
+        } else {
+            XCTFail("\(screen): the screen did not settle before the audit; elements that changed last: \(changing)", file: file, line: line)
         }
     }
 
@@ -267,9 +283,12 @@ enum AuditAllowlist {
     static var currentScreen = ""
 
     private static func record(_ issue: XCUIAccessibilityAuditIssue, element: XCUIElement?) {
+        recordLine("\(currentScreen) | \(issue.auditType.rawValue) | \(issue.compactDescription) | label=\(element?.label ?? "-") "
+            + "frame=\(element?.frame ?? .zero) id=\(element?.identifier ?? "-") type=\(element?.elementType.rawValue ?? 0)\n")
+    }
+
+    private static func recordLine(_ line: String) {
         guard let path = collectFile else { return }
-        let line = "\(currentScreen) | \(issue.auditType.rawValue) | \(issue.compactDescription) | label=\(element?.label ?? "-") "
-            + "frame=\(element?.frame ?? .zero) id=\(element?.identifier ?? "-") type=\(element?.elementType.rawValue ?? 0)\n"
         if let handle = FileHandle(forWritingAtPath: path) {
             handle.seekToEndOfFile()
             handle.write(Data(line.utf8))
