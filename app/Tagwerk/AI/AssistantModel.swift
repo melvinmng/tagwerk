@@ -543,7 +543,7 @@ final class AssistantModel {
         guard gitHubDirectory() != nil else { return "" }
         var text = """
         Für ein GitHub-Issue rufst du zuerst list_github_targets auf und übergibst repository und project_ids \
-        ausdrücklich. Will der Nutzer das Issue ohne Project anlegen, übergibst du project_ids als leere Liste []; es \
+        ausdrücklich. Will der Nutzer das Issue ohne Projekt anlegen, übergibst du project_ids als leere Liste []; es \
         erscheint dann nicht in seinen Aufgaben, und du sagst ihm das mit Nummer und Link. list_assignees rufst du nur \
         auf, wenn der Nutzer das Issue jemandem zuweisen will. Passt ein genannter Name zu keinem oder zu mehreren \
         Logins, frag nach, statt zu raten. Um die Zuständigkeit eines bestehenden Issues zu ändern, nutze assign_task. \

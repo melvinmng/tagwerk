@@ -8,6 +8,8 @@ Default: structure checks of every catalog in app/
     shown on the page "Siri & Kurzbefehle" (`phrase:` and `alternative:` in SiriPhraseCatalog.swift) is a real phrase
   - the German usage texts in InfoPlist.xcstrings equal those in app/project.yml
   - no source key of a catalog contains the English word "Project"/"Projects" (German UI text says "Projekt"/"Projekte")
+  - no Swift string literal in the app sources contains it either (texts the assistant reads, prompts, error messages),
+    except the English tool descriptions of the assistant and the English "Projects:" line of the task chat
 --require-english: additionally every key that should be translated has a translated English value
 --same A B: exits 1 when two catalogs differ (used by sync-strings.sh --check)
 """
@@ -169,6 +171,69 @@ def check_project_wording(problems):
                 problems.append(f"{path.relative_to(ROOT)}: German text says \"Project\" instead of \"Projekt\": {key!r}")
 
 
+# Swift literals that name GitHub projects in English on purpose: the English tool descriptions of the assistant and the
+# English context line of the task chat. Everything else that is shown or sent in German says "Projekt/Projekte".
+ENGLISH_PROJECT_FILES = {"app/Tagwerk/AI/AppTools+Definitions.swift"}
+ENGLISH_PROJECT_LITERALS = {("app/Tagwerk/AI/TaskChat.swift", "Projects: ")}
+SWIFT_SOURCE_ROOTS = ("app/Tagwerk", "app/TagwerkShare", "app/TagwerkWidget")
+
+
+def swift_sources():
+    paths = [path for root in SWIFT_SOURCE_ROOTS for path in (ROOT / root).rglob("*.swift")]
+    paths += (ROOT / "app" / "Packages").glob("*/Sources/**/*.swift")
+    return sorted(path for path in paths if ".build" not in path.parts)
+
+
+def swift_string_literals(text):
+    """Yields (line number, content) of the string literals of Swift source without comments.
+
+    Handles single-line literals with escapes, triple-quoted literals and `//` comments outside of literals. Nested
+    literals inside an interpolation are not parsed; the sources have none that name a project."""
+    line, index, length = 1, 0, len(text)
+    while index < length:
+        char = text[index]
+        if char == "\n":
+            line += 1
+            index += 1
+        elif text.startswith("//", index):
+            while index < length and text[index] != "\n":
+                index += 1
+        elif text.startswith("/*", index):
+            end = text.find("*/", index + 2)
+            end = length if end < 0 else end + 2
+            line += text.count("\n", index, end)
+            index = end
+        elif text.startswith('"""', index):
+            end = text.find('"""', index + 3)
+            end = length if end < 0 else end
+            yield line, text[index + 3:end]
+            line += text.count("\n", index, end)
+            index = end + 3
+        elif char == '"':
+            start = index + 1
+            index = start
+            while index < length and text[index] not in '"\n':
+                index += 2 if text[index] == "\\" else 1
+            yield line, text[start:index]
+            index += 1
+        else:
+            index += 1
+
+
+def check_swift_project_wording(problems):
+    """German texts in the Swift sources say "Projekt"/"Projekte" (decision #249); `ProjectV2` and other identifiers
+    are no whole word and stay."""
+    for path in swift_sources():
+        relative = path.relative_to(ROOT).as_posix()
+        if relative in ENGLISH_PROJECT_FILES:
+            continue
+        for line, literal in swift_string_literals(path.read_text(encoding="utf-8")):
+            if PROJECT_WORD.search(literal) and not any(relative == file and literal.startswith(prefix)
+                                                         for file, prefix in ENGLISH_PROJECT_LITERALS):
+                shown = " ".join(literal.split())[:80]
+                problems.append(f"{relative}:{line}: Swift text says \"Project\" instead of \"Projekt\": {shown!r}")
+
+
 def same(first, second):
     a, b = load(first), load(second)
     if a == b:
@@ -192,6 +257,7 @@ def main(arguments):
     check_info_plist(problems)
     check_shortcut_phrases(problems)
     check_project_wording(problems)
+    check_swift_project_wording(problems)
     for problem in problems:
         print(problem, file=sys.stderr)
     if problems:

@@ -642,6 +642,9 @@ struct AssistantGitHubCardTests {
         signedIn.open(context: .tasks)
         #expect(signedIn.instructions().contains("list_github_targets"))
         #expect(signedIn.instructions().contains("list_assignees"))
+        // The assistant reads German with "Projekt" (decision #249); the English word is not in the instruction.
+        #expect(signedIn.instructions().contains("das Issue ohne Projekt anlegen"))
+        #expect(!signedIn.instructions().contains("Project"))
         let signedOut = await make(signedIn: false)
         signedOut.open(context: .tasks)
         #expect(!signedOut.instructions().contains("list_github_targets"))
