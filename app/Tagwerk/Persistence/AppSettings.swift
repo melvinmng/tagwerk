@@ -171,6 +171,10 @@ final class AppSettings {
     /// JSON of `[String: String]`: the language last chosen on the dictation switch per place (`DictationPlace`). Stays on
     /// this device and is not part of the backup.
     var dictationPlaceLanguagesData: Data? = nil
+    /// The raw value of the language the open shopping items were last translated into, or kept in with "So lassen" (L6). `nil`
+    /// before the first run. Stays on this device and is not part of the backup: after a restore the list adopts its current
+    /// language and shows no card.
+    var shoppingItemsLanguage: String? = nil
     /// `ReadAloudPolicy` raw value; "never" by default (SP3).
     var voiceReadAloud: String = "never"
     /// Chosen system voices per language; nil picks the best installed voice.
