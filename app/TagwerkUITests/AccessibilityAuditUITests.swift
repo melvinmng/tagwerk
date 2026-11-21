@@ -35,7 +35,7 @@ final class AccessibilityAuditUITests: UITestCase {
         }
         // The notice above the input ("1 hinzugefügt") fades out after four seconds; audited while it is visible, it adds a
         // finding that depends on how fast the run is.
-        waitUntilGone(app.staticTexts.matching(NSPredicate(format: "label ENDSWITH %@", "hinzugefügt")).firstMatch)
+        waitUntilStaysGone(app.staticTexts.matching(NSPredicate(format: "label ENDSWITH %@", "hinzugefügt")).firstMatch)
         try audit("Einkaufsliste")
         app.navigationBars.buttons.firstMatch.tap()
 

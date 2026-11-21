@@ -176,6 +176,23 @@ class UITestCase: XCTestCase {
         XCTAssertTrue(element.waitForNonExistence(timeout: timeout), "\(element) did not disappear", file: file, line: line)
     }
 
+    /// Waits until the element is gone and stays gone for `seconds`. A notice that is replaced by the next one (the shopping list
+    /// counts "1 hinzugefügt", "2 hinzugefügt") can be missing for a moment before the new one shows; a plain wait for
+    /// non-existence ends in that gap, and the audit then runs while the notice is on screen.
+    func waitUntilStaysGone(_ element: XCUIElement, for seconds: TimeInterval = 1.5, timeout: TimeInterval = UITestCase.timeout + 5,
+                            file: StaticString = #filePath, line: UInt = #line) {
+        var goneSince: Date?
+        eventually(timeout: timeout, "\(element) did not stay gone", file: file, line: line) {
+            if element.exists {
+                goneSince = nil
+                return false
+            }
+            let since = goneSince ?? Date()
+            goneSince = since
+            return Date().timeIntervalSince(since) >= seconds
+        }
+    }
+
     /// Waits for an element of any type with this label or identifier.
     @discardableResult
     func waitFor(_ text: String, timeout: TimeInterval = UITestCase.timeout,

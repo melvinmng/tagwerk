@@ -46,7 +46,7 @@ enum AuditAllowlist {
             "Lokal", "Routinen", "Gewohnheiten", "Woche", "Starten", "noch [\\d.]+", "Wasser", "Schritte", "Training · Woche",
             "\\d+ offen · Liste „Demo Einkauf“ in Erinnerungen", "Brot & Backwaren", "Kühlregal", "Aufgaben, 1 offen", "Vergangene Termine",
             "Ältere Termine durchsuchen · vor .*", "Durchsucht: 6 Monate zurück, 12 Monate voraus\\.",
-            "ab \\d+:\\d+ bis \\d+:\\d+ · ganzer Tag .*", "1 Aufgabe ohne Aufwand mit Standarddauer gerechnet", "Pflanzen gießen",
+            "ab (jetzt · )?\\d+:\\d+ bis \\d+:\\d+ · ganzer Tag .*", "1 Aufgabe ohne Aufwand mit Standarddauer gerechnet", "Pflanzen gießen",
             "Erledigt: Erinnerungen und lokale Aufgaben, ohne GitHub\\.", "Abend-Checkliste · Schlafzeit .*", "Punkte in den Einstellungen anlegen",
             "Trinkportionen", "Brain Dump", "Leitfragen einfügen", "Schreib auf, was in deinen Kopf kommt\\. Sortier deine Gedanken\\.",
             "Der Eintrag bleibt auf deinem iPhone und geht nie an ChatGPT\\.", "heute \\d+:\\d+( · diktiert)?", "Bible Study · heute .*",
@@ -75,12 +75,14 @@ enum AuditAllowlist {
 
         Entry(auditType: .contrast, labels: [
             "Morgen planen", "30 min zu viel", "Arbeitszeit vorbei · .*", "[A-Z][a-z]\\. \\d+\\. [A-Za-zä]+\\. · .* frei · \\d+ von heute übrig",
-            "Unerledigtes verschieben · \\d+ Aufgaben?",
+            "Unerledigtes verschieben · \\d+ Aufgaben?", "Klausur Statistik", "Anmeldung Abschlussarbeit",
         ], screens: eveningPlanScreens, reason:
             "Texts of the capacity card of today after the end of work (\"Arbeitszeit vorbei\", the next planning day, the leftover row): text on the "
             + "translucent `.thinMaterial` card, whose colour depends on the part of the hour grid behind it. The same group as the other texts on "
             + "tinted cards above (#188, \"Sekundärtexte auf getönten Karten\"); the card is audited in the pinned evening run only. Most of them "
-            + "appear in one of three repetitions (collect mode), \"von heute übrig\" in all of them."),
+            + "appear in one of three repetitions (collect mode), \"von heute übrig\" in all of them. \"Klausur Statistik\" and \"Anmeldung "
+            + "Abschlussarbeit\" are rows of the deadline card above it (red card colour, see \"Abgabe Kurzbericht\" above); they are on screen "
+            + "only in this run, and the finding showed up in 1 of 10 repetitions of the stress run."),
         Entry(auditType: .contrast, labels: gridCellLabels, screens: gridScreens, reason:
             "Title and time of the entries in the hour grid of \"Planen\": text in the primary or secondary colour on the event colour at 24 % "
             + "(blue, green, red, grey). The tint is the colour code of the grid (calendar, block, deadline, break); contrast on tint is a "
