@@ -295,7 +295,8 @@ final class AppEnvironment {
         self.focusStore = focusStore
         let focus = FocusTimerModel(store: focusStore, settings: { settings.focusTimerSettings }, activity: FocusActivityController(),
                                     notifications: FocusNotificationScheduler(center: focusNotificationCenter),
-                                    controlState: controlState, controlReloader: controlReloader)
+                                    controlState: controlState, controlReloader: controlReloader,
+                                    asksDurationAtStart: { settings.focusAsksDurationAtStart })
         self.focus = focus
         focus.postponeTask = { key in
             guard let id = TaskID(key: key) else { return }

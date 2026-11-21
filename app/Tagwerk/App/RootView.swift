@@ -21,6 +21,10 @@ struct RootView: View {
         Binding(get: { environment.focus.isPresented }, set: { environment.focus.isPresented = $0 })
     }
 
+    private var startRequest: Binding<FocusTimerModel.StartRequest?> {
+        Binding(get: { environment.focus.pendingStart }, set: { environment.focus.pendingStart = $0 })
+    }
+
     private var routinesSheet: Binding<RoutinesModel.Sheet?> {
         Binding(get: { environment.routines.sheet }, set: { environment.routines.sheet = $0 })
     }
@@ -37,6 +41,7 @@ struct RootView: View {
     private var hasOpenSheet: Bool {
         editingTask != nil || openEvent != nil || recurringEdit != nil || environment.routines.sheet != nil
             || environment.isSearchPresented || environment.assistant.isPresented || environment.focus.isPresented
+            || environment.focus.pendingStart != nil
     }
 
     struct RecurringEdit: Identifiable {
@@ -76,6 +81,10 @@ struct RootView: View {
             }
 
         }
+        // FO5b: the running focus session sits in the accessory of the tab bar, in every tab.
+        .tabViewBottomAccessory(isEnabled: environment.focus.isRunning) {
+            FocusAccessoryBar()
+        }
         .overlay(alignment: .topLeading) {
             // UI tests only: tells them that the demo data exists. Never shown outside the UI test mode.
             if UITestMode.isActive && environment.isDemoDataReady {
@@ -90,6 +99,10 @@ struct RootView: View {
         }
         .sheet(isPresented: focusPresented) {
             FocusTimerView()
+        }
+        .sheet(item: startRequest) { request in
+            FocusStartSheet(request: request, base: environment.settings.focusTimerSettings,
+                            lastMinutes: environment.settings.focusLastStartMinutes)
         }
         .sheet(isPresented: searchPresented, onDismiss: { environment.closeSearch() }) {
             if let model = environment.activeSearch {

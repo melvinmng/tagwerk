@@ -19,9 +19,10 @@ struct FocusTimerModelTests {
     }
 
     private func makeModel(settings: FocusTimerSettings = FocusTimerSettings(), store: FocusStore? = nil,
-                           activity: FakeFocusActivity? = nil) -> FocusTimerModel {
+                           activity: FakeFocusActivity? = nil, asksDuration: Bool = true) -> FocusTimerModel {
         FocusTimerModel(store: store ?? self.store, settings: { settings }, activity: activity ?? self.activity,
-                        notifications: notifications, now: { [clock] in clock.now }, wakesAtPhaseEnd: false)
+                        notifications: notifications, now: { [clock] in clock.now }, wakesAtPhaseEnd: false,
+                        asksDurationAtStart: { asksDuration })
     }
 
     private func block(from start: Date, minutes: Int) -> CalendarEvent {
@@ -43,6 +44,58 @@ struct FocusTimerModelTests {
         clock.advance(minutes: 38)
         await model.start(task: nil, block: block(from: testNow(), minutes: 60))
         #expect(model.session?.state.settings.workMinutes == 5)
+    }
+
+    @Test func requestStart_showsTheSheet() async {
+        let model = makeModel()
+        let task = makeTask("Aufgabe", source: .local)
+        await model.requestStart(task: task, block: nil)
+        #expect(model.pendingStart?.task == task)
+        #expect(model.session == nil && !model.isPresented)
+        #expect(activity.started.isEmpty)
+    }
+
+    @Test func requestStart_switchOff_startsAtOnce() async {
+        let model = makeModel(asksDuration: false)
+        await model.requestStart(task: makeTask("Aufgabe", source: .local), block: nil)
+        #expect(model.pendingStart == nil)
+        #expect(model.session != nil && model.isPresented)
+        #expect(model.session?.state.settings.workMinutes == 25)
+    }
+
+    @Test func requestStart_whileRunning_opensTheSession() async {
+        let model = makeModel()
+        await model.start(task: nil, block: nil)
+        model.isPresented = false
+        await model.requestStart(task: makeTask("Andere", source: .local), block: nil)
+        #expect(model.pendingStart == nil)
+        #expect(model.isPresented)
+        #expect(activity.started.count == 1)
+    }
+
+    @Test func start_withMinutes_storesTheSessionSettings() async {
+        let model = makeModel()
+        model.pendingStart = FocusTimerModel.StartRequest(task: nil, block: nil)
+        await model.start(task: nil, block: nil, choice: .minutes(45))
+        #expect(model.pendingStart == nil)
+        #expect(model.session?.state.settings.workMinutes == 45 && model.session?.state.settings.isPomodoro == false)
+        // The stored session carries the settings it started with, not the current ones.
+        #expect(store.runningSession()?.state.settings.workMinutes == 45)
+        #expect(notifications.pending?.fireDate == testNow().addingTimeInterval(45 * 60))
+    }
+
+    @Test func start_untilBlockEnd_runsToTheEndOfTheBlock() async {
+        let model = makeModel()
+        clock.advance(minutes: 20)
+        await model.start(task: nil, block: block(from: testNow(), minutes: 60), choice: .untilBlockEnd)
+        #expect(model.session?.state.settings.workMinutes == 40 && model.session?.state.settings.isPomodoro == false)
+    }
+
+    @Test func setRunning_neverShowsTheSheet() async {
+        let model = makeModel()
+        #expect(await model.setRunning(true))
+        #expect(model.pendingStart == nil)
+        #expect(model.session != nil && !model.isPresented)
     }
 
     @Test func start_schedulesOneNotificationAndStartsTheActivity() async {
@@ -96,7 +149,7 @@ struct FocusTimerModelTests {
         #expect(completed == ["local:Aufgabe"])
         #expect(sessionWasSaved)
         #expect(model.session == nil)
-        #expect(model.lastPiece == .grown(.three))
+        #expect(model.lastPiece == .completed(.three))
         #expect(activity.endCount == 1)
         #expect(notifications.pending == nil)
         // A second tap changes nothing.
@@ -139,12 +192,60 @@ struct FocusTimerModelTests {
         #expect(activity.endCount == 1)
     }
 
-    @Test func stopAfterTenMinutes_wiltsAPiece() async {
+    @Test func stopDuringThePhase_leavesAnEarlyPiece() async {
         let model = makeModel()
         await model.start(task: nil, block: nil)
         clock.advance(minutes: 10)
         await model.stop()
-        #expect(model.lastPiece == .wilted(.two))
+        #expect(model.lastPiece == .endedEarly(.two))
+        #expect(store.finishedSessions().first?.outcome == .aborted)
+    }
+
+    @Test func completeDuringTheWorkPhase_isCompleted_withTheReachedStage() async {
+        let model = makeModel()
+        var completed: [String] = []
+        model.completeTask = { completed.append($0) }
+        await model.start(task: makeTask("Aufgabe", source: .local), block: nil)
+        // 18 of 25 minutes: "Erledigt" ends the session as completed, with the stage reached and not marked early.
+        clock.advance(minutes: 18)
+        await model.finish(.complete)
+        #expect(completed == ["local:Aufgabe"])
+        #expect(store.finishedSessions().first?.outcome == .completed)
+        #expect(store.finishedSessions().first?.focusedSeconds == 18 * 60)
+        #expect(model.lastPiece == .completed(.two))
+        #expect(model.lastPiece?.isEndedEarly == false)
+    }
+
+    @Test func completeDuringABreak_isCompleted() async {
+        let model = makeModel()
+        await model.start(task: makeTask("Aufgabe", source: .local), block: nil)
+        // 25 minutes of work, 2 minutes into the short break.
+        clock.advance(minutes: 27)
+        #expect(model.snapshot(at: clock.now)?.phase == .shortBreak(round: 1))
+        await model.finish(.complete)
+        #expect(store.finishedSessions().first?.outcome == .completed)
+        #expect(model.lastPiece == .completed(.three))
+    }
+
+    @Test func completeWithinTheFirstMinute_leavesNoPiece() async {
+        let model = makeModel()
+        await model.start(task: makeTask("Aufgabe", source: .local), block: nil)
+        clock.advance(minutes: 0.5)
+        await model.finish(.complete)
+        #expect(model.session == nil)
+        #expect(model.lastPiece == nil)
+        #expect(store.finishedSessions().first?.piece == nil)
+    }
+
+    @Test func storedAbortedSession_readsAsEndedEarly() {
+        // Sessions stored before the rename keep their raw value "aborted" and read as "ended early".
+        let record = FocusSessionRecord(taskKey: nil, blockEventID: nil, title: "Alt",
+                                        state: FocusTimerState(start: clock.now, settings: FocusTimerSettings()))
+        record.outcomeRaw = "aborted"
+        record.focusedSeconds = 12 * 60
+        #expect(record.piece == .endedEarly(.two))
+        record.outcomeRaw = "completed"
+        #expect(record.piece == .completed(.two))
     }
 
     @Test func relaunch_restoresTheRunningSession() async {
