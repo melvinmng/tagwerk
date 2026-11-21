@@ -23,6 +23,7 @@ final class IntentServices {
         await capture.addWater(amount, at: .now, offersUndo: false)
         await capture.waitForHealth()
         environment.writeSnapshot()
+        markTipDone(\.siriTipWaterDone)
         // Plain digits (no grouping), as before: "2000 ml".
         let amountText = String(amount)
         return "\(amountText) ml Wasser erfasst."
@@ -120,7 +121,16 @@ final class IntentServices {
     /// "Füge Milch zur Einkaufsliste hinzu": adds the chosen article through the same path as the text shortcut.
     /// A free-typed name may still hold a quantity or several items; it is split like spoken text.
     func addToShopping(article: ShoppingArticleEntity) async -> LocalizedStringResource {
-        await addToShopping(text: article.name)
+        markTipDone(\.siriTipShoppingDone)
+        return await addToShopping(text: article.name)
+    }
+
+    /// The shortcut ran once, so its tip card (#188 SI3) is not shown again.
+    private func markTipDone(_ flag: ReferenceWritableKeyPath<AppSettings, Bool>) {
+        let settings = environment.settings
+        guard !settings[keyPath: flag] else { return }
+        settings[keyPath: flag] = true
+        try? environment.modelContainer.mainContext.save()
     }
 
     /// The article names Siri can speak, see `ShoppingSuggestions`: own names (open and completed) first,

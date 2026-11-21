@@ -4,8 +4,8 @@ import Observation
 import TagwerkCore
 import UIKit
 
-/// The state of the share sheet: reads the shared content, lets the user check target, title and text, and writes the
-/// item into the inbox of the App Group. It makes no network call and reads neither the keychain nor the store.
+/// The state of the share sheet: reads the shared content, lets the user choose the target and check the title, and writes
+/// the item into the inbox of the App Group. The text goes along unchanged. It makes no network call and reads neither the keychain nor the store.
 @MainActor
 @Observable
 final class ShareModel {
@@ -13,7 +13,8 @@ final class ShareModel {
         case loading
         case ready
         case saving
-        case saved
+        /// Carries the target, so the confirmation can name where the item went.
+        case saved(ShareTarget)
         case failed(String)
     }
 
@@ -22,9 +23,10 @@ final class ShareModel {
     private(set) var thumbnail: UIImage?
     var target: ShareTarget = .task
     var title = ""
-    var text = ""
+    private(set) var text = ""
 
     private var extracted: ExtractedShare?
+    private var isFinished = false
     private let extensionContext: NSExtensionContext?
     private let inboxDirectory: () -> URL?
 
@@ -41,12 +43,12 @@ final class ShareModel {
         return ShareInbox.defaultDirectory(in: container)
     }
 
-    /// Whether the files of the share are dropped for the chosen target.
-    var dropsFiles: Bool { target != .note && target != .recipe && !(extracted?.files.isEmpty ?? true) }
+    /// What the share contains, for the hints of the chosen target (`ShareSheetText.hints`).
+    var hasFiles: Bool { !(extracted?.files.isEmpty ?? true) }
+    var hasText: Bool { !(payload?.text ?? "").isEmpty }
+    var hasURL: Bool { payload?.url != nil }
     var fileNames: [String] { extracted?.files.map(\.name) ?? [] }
     var hostText: String? { payload?.url?.host(percentEncoded: false) }
-    /// The mail text is not edited here; the app shows it.
-    var showsTextField: Bool { payload?.mail == nil }
     var canSave: Bool { state == .ready && !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
 
     // MARK: Loading
@@ -94,12 +96,20 @@ final class ShareModel {
         do {
             try inbox.write(item, copying: sources)
             try? FileManager.default.removeItem(at: extracted.directory)
-            state = .saved
-            try? await Task.sleep(for: .milliseconds(1200))
-            extensionContext?.completeRequest(returningItems: [])
+            state = .saved(target)
+            // Two lines of confirmation need a moment; a tap closes the sheet earlier.
+            try? await Task.sleep(for: .seconds(2))
+            finish()
         } catch {
             state = .failed(String(localized: "Tagwerk kann gerade nichts übernehmen."))
         }
+    }
+
+    /// Closes the sheet after saving; safe to call twice (tap and timer).
+    func finish() {
+        guard !isFinished else { return }
+        isFinished = true
+        extensionContext?.completeRequest(returningItems: [])
     }
 
     func cancel() {

@@ -22,14 +22,16 @@ struct WeekReviewModelTests {
 
     final class Calls { var reminderIntervals: [DateInterval] = [] }
 
-    private func make(_ health: FakeHealthStore, calls: Calls = Calls(), reminders: [Date] = [], local: [Date] = []) -> WeekReviewModel {
+    private func make(_ health: FakeHealthStore, calls: Calls = Calls(), reminders: [Date] = [], local: [Date] = [],
+                      closedIssueDates: (@MainActor (DateInterval) async throws -> [Date])? = nil) -> WeekReviewModel {
         let now = self.now
         return WeekReviewModel(store: store, health: health, settings: settings, calendar: calendar, now: { now },
                                completedReminders: { interval in
                                    calls.reminderIntervals.append(interval)
                                    return reminders.filter { interval.contains($0) }
                                },
-                               completedLocalTasks: { interval in local.filter { interval.contains($0) } })
+                               completedLocalTasks: { interval in local.filter { interval.contains($0) } },
+                               closedIssueDates: closedIssueDates)
     }
 
     @Test func review_readsHealthOnlyWhenAsked() async {
@@ -87,6 +89,98 @@ struct WeekReviewModelTests {
         #expect(model.review?.waterGoalDays == 1)
         #expect(model.review?.completedTasks == 2)
         #expect(model.review?.isCurrentWeek == true)
+    }
+
+    // MARK: Closed GitHub issues (D6)
+
+    private struct GitHubDown: Error {}
+
+    /// Calls of the closed-issues reader, in order.
+    final class ClosedCalls { var intervals: [DateInterval] = [] }
+
+    /// Lets a test hold an answer of GitHub back until it decides to deliver it.
+    @MainActor final class Gate {
+        var continuation: CheckedContinuation<[Date], Never>?
+        func wait() async -> [Date] { await withCheckedContinuation { continuation = $0 } }
+        func open(_ dates: [Date]) { continuation?.resume(returning: dates); continuation = nil }
+    }
+
+    @Test func reload_withoutGitHub_isNotConnected_countsLocalOnly() async {
+        let model = make(FakeHealthStore(), reminders: [now], local: [now])
+        await model.reload()
+        #expect(model.gitHub == .notConnected)
+        #expect(model.review?.completedTasks == 2)
+    }
+
+    @Test func reload_withGitHub_addsClosedIssuesToCompletedTasks() async {
+        let closed = [now, now.addingTimeInterval(-86_400)]
+        let model = make(FakeHealthStore(), reminders: [now], local: [now], closedIssueDates: { _ in closed })
+        await model.reload()
+        #expect(model.gitHub == .counted(2))
+        #expect(model.review?.completedTasks == 4)
+    }
+
+    @Test func reload_gitHubFails_isUnavailable_keepsLocalNumbers() async {
+        let model = make(FakeHealthStore(), reminders: [now], local: [now], closedIssueDates: { _ in throw GitHubDown() })
+        await model.reload()
+        #expect(model.gitHub == .unavailable)
+        #expect(model.review?.completedTasks == 2)
+    }
+
+    @Test func reload_showsLocalNumbersFirst_thenAddsGitHub() async {
+        let gate = Gate()
+        let model = make(FakeHealthStore(), reminders: [now], local: [now], closedIssueDates: { _ in await gate.wait() })
+        let loading = Task { await model.reload() }
+        while gate.continuation == nil { await Task.yield() }
+        #expect(model.gitHub == .loading)
+        #expect(model.review?.completedTasks == 2)
+        gate.open([now])
+        await loading.value
+        #expect(model.gitHub == .counted(1))
+        #expect(model.review?.completedTasks == 3)
+    }
+
+    @Test func reload_usesIntervalOfTheShownWeek() async {
+        let calls = ClosedCalls()
+        let model = make(FakeHealthStore(), closedIssueDates: { interval in calls.intervals.append(interval); return [] })
+        await model.reload()
+        let thisWeek = PlanDay(year: 2026, month: 11, day: 16)
+        let before = PlanDay(year: 2026, month: 10, day: 19)
+        #expect(calls.intervals.last == DateInterval(start: thisWeek.startDate(in: calendar),
+                                                      end: thisWeek.adding(days: 7, calendar: calendar).startDate(in: calendar)))
+        await model.go(toWeekOf: PlanDay(year: 2026, month: 10, day: 22))
+        #expect(calls.intervals.last == DateInterval(start: before.startDate(in: calendar),
+                                                      end: before.adding(days: 7, calendar: calendar).startDate(in: calendar)))
+    }
+
+    @Test func reload_lateAnswerOfAnotherWeek_isDropped() async {
+        let gate = Gate()
+        let currentWeek = PlanDay(year: 2026, month: 11, day: 16).startDate(in: calendar)
+        let model = make(FakeHealthStore(), closedIssueDates: { interval in
+            // The answer for the running week is held back; the earlier week answers at once with one issue.
+            if interval.start == currentWeek { return await gate.wait() }
+            return [interval.start.addingTimeInterval(3600)]
+        })
+        let late = Task { await model.reload() }
+        while gate.continuation == nil { await Task.yield() }
+        await model.goBack()
+        #expect(model.gitHub == .counted(1))
+        #expect(model.review?.completedTasks == 1)
+        // Two issues of the week that was left arrive now and must not touch the week on screen.
+        gate.open([now, now])
+        await late.value
+        #expect(model.weekStart == PlanDay(year: 2026, month: 11, day: 9))
+        #expect(model.gitHub == .counted(1))
+        #expect(model.review?.weekStart == PlanDay(year: 2026, month: 11, day: 9))
+        #expect(model.review?.completedTasks == 1)
+    }
+
+    @Test func completedFooter_coversAllStates() {
+        #expect(WeekReviewModel.completedFooter(.notConnected) == "Erinnerungen und lokale Aufgaben")
+        #expect(WeekReviewModel.completedFooter(.loading) == "Erinnerungen und lokale Aufgaben. GitHub wird geladen …")
+        #expect(WeekReviewModel.completedFooter(.counted(2)) == "Erinnerungen, lokale Aufgaben und geschlossene GitHub-Issues")
+        #expect(WeekReviewModel.completedFooter(.unavailable)
+                == "Erinnerungen und lokale Aufgaben. GitHub ist gerade nicht erreichbar.")
     }
 
     @Test func review_goBack_onlyPast() async {

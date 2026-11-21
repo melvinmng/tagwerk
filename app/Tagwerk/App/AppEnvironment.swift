@@ -24,6 +24,7 @@ final class AppEnvironment {
     /// "Mit ChatGPT sortieren"; sends item names only after consent and on the user's tap.
     let shoppingSorter: ShoppingSorter
     let recipeImporter: RecipeImporter
+    let recipeTranslator: RecipeTranslator
     /// Items the share extension left for the app (#165); read when the app becomes active, confirmed by the user.
     let shareInbox: ShareInboxModel
     /// "Mit ChatGPT zusammenfassen" on a shared mail (#166); sends only after consent and on the user's tap.
@@ -228,6 +229,8 @@ final class AppEnvironment {
                                          rate: settings.voiceRate)
         })
         let voiceOutput = self.voiceOutput
+        // Withdrawing the consent ends the note session, from the settings screen as well as from a backup restore.
+        assistant.watchNoteConsent { settings.noteAssistantConsent }
         assistant.readPolicy = { ReadAloudPolicy(rawValue: settings.voiceReadAloud) ?? .never }
         assistant.announcesActions = { settings.voiceAnnounceActions }
         assistant.fixedVoiceLanguage = { VoiceChatLanguage.fixed(setting: settings.voiceRecognitionLanguage) }
@@ -284,6 +287,8 @@ final class AppEnvironment {
                                              hasConsent: { settings.shoppingSortConsent })
         self.recipeImporter = RecipeImporter(responder: ai.client, model: { try await ai.selectedModel() },
                                              hasConsent: { settings.shoppingRecipeConsent })
+        self.recipeTranslator = RecipeTranslator(responder: ai.client, model: { try await ai.selectedModel() },
+                                                 hasConsent: { settings.shoppingRecipeConsent })
         self.shareInbox = ShareInboxModel(inbox: shareInbox, isSetupCompleted: { settings.setupCompleted })
         self.mailSummarizer = MailSummarizer(responder: ai.client, model: { try await ai.selectedModel() },
                                              hasConsent: { settings.mailSummaryConsent })
@@ -297,10 +302,24 @@ final class AppEnvironment {
                                                              all: reminderStore.lists().map(\.id), shopping: settings.shoppingListID)
                 return await reminderStore.completionDates(in: interval, listIDs: listIDs).count
                     + localTasks.completionDates(in: interval).count
+            },
+            // GitHub issues closed that day; `nil` while GitHub is not connected (asked at every use).
+            closedIssueCount: { [taskList] in
+                guard let gitHub = taskList.provider(for: .github) as? GitHubTaskProvider else { return nil }
+                return { interval in try await gitHub.closedIssueCount(in: interval) }
             })
         self.routineNotifications = RoutineNotificationScheduler(center: notificationCenter ?? SystemNotificationCenter(),
                                                                  store: routineStore, settings: settings)
         let routines = self.routines
+        let routineNotifications = self.routineNotifications
+        // A checked point must not remind on that evening any more; unchecking plans the reminder again while it is ahead.
+        routines.onChecklistToggled = { id, day, isChecked in
+            if isChecked {
+                await routineNotifications.itemChecked(id, on: day)
+            } else {
+                await routineNotifications.reschedule()
+            }
+        }
         let focusStore = FocusStore(context: context)
         self.focusStore = focusStore
         let focus = FocusTimerModel(store: focusStore, settings: { settings.focusTimerSettings }, activity: FocusActivityController(),
@@ -387,7 +406,11 @@ final class AppEnvironment {
                 await self?.registerGitHubIfSignedIn() ?? false  // a registration loads all sources
             },
             reload: { [weak self] in await self?.taskList.reload() },
-            reschedule: { [weak self] in await self?.notifications.reschedule() },
+            reschedule: { [weak self] in
+                await self?.notifications.reschedule()
+                // The dated evening reminders run out after three days: fill them up as well.
+                await self?.routineNotifications.reschedule()
+            },
             writeSnapshot: { [weak self] in self?.writeSnapshot() },
             nextRefill: { [weak self] in self?.notifications.nextRefill })
     }
@@ -495,6 +518,23 @@ final class AppEnvironment {
         }
         tasksPath = [.notes, .notesFolder(.folder(folder.id))]
         requestedTab = 1
+    }
+
+    /// Opens a notes list in the tab "Aufgaben", on top of the folder overview. Replaces whatever was pushed there.
+    /// A locked folder asks for Face ID in its list like at every other opening.
+    func showNotes(_ scope: NotesScope) {
+        tasksPath = [.notes, .notesFolder(scope)]
+        requestedTab = 1
+    }
+
+    /// The list "Im Ordner zeigen" opens for a note: its folder; "Notizen" for a note without a folder or whose folder is
+    /// gone (where `NoteStore` lists it, but only own notes, not thought notes); "Zuletzt gelöscht" for a note in the trash.
+    /// "Alle Notizen" is the fallback for a note that does not exist or would not appear in "Notizen".
+    func notesScope(ofNote noteID: UUID) -> NotesScope {
+        guard let note = notes.note(id: noteID) else { return .all }
+        if note.deletedAt != nil { return .trash }
+        if let folderID = note.folderID, notes.folder(id: folderID) != nil { return .folder(folderID) }
+        return note.kind == .free ? .standard : .all
     }
 
     /// The only place that changes the shopping list. Everything that shows reminders as tasks follows at once:
@@ -805,6 +845,10 @@ final class AppEnvironment {
         let reminderStore = self.reminderStore
         let settings = self.settings
         let local = LocalTaskProvider(context: modelContainer.mainContext)
+        var closedIssueDates: (@MainActor (DateInterval) async throws -> [Date])?
+        if let gitHub = taskList.provider(for: .github) as? GitHubTaskProvider {
+            closedIssueDates = { interval in try await gitHub.closedIssueDates(in: interval) }
+        }
         return WeekReviewModel(store: intake, health: health, settings: settings, calendar: capture.calendar,
                                completedReminders: { [weak self] interval in
                                    await reminderStore.completionDates(in: interval, listIDs: self?.taskReminderListIDs())
@@ -816,7 +860,9 @@ final class AppEnvironment {
                                    planning.scope = .week
                                    planning.anchor = week
                                    requestedTab = 0
-                               })
+                               },
+                               // Closed GitHub issues of the week; `nil` while GitHub is not connected.
+                               closedIssueDates: closedIssueDates)
     }
 
     /// The guided weekly planning (#164): the weekly review moved to the reviewed week, plus the deadlines of the planned one.

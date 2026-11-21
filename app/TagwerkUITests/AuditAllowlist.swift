@@ -7,7 +7,7 @@ import XCTest
 enum AuditAllowlist {
     /// Pins the time of day of the app for the audits (see `UITestMode.now`): morning, so the hour grid of "Planen" shows the
     /// seminar, the lunch break, the demo deadline and the "now" line, and "Tagesabschluss" is still reachable.
-    static let fixedClockArguments = ["-TagwerkUITestNow", "09:30"]
+    static let fixedClockArguments = UITestCase.morningClockArguments
 
     /// One accepted group of findings of one audit type. `labels` are regular expressions that must match the whole label
     /// (or the identifier) of the element; there is no entry without labels.
@@ -31,20 +31,22 @@ enum AuditAllowlist {
     private static let recipeScreens = [
         "Rezepte", "Rezept-Notiz", "Zutaten (Rezept)", "Rezept anlegen (Eingabe)", "Rezept anlegen (Einwilligung)",
         "Rezept anlegen (Bestätigung)", "Einkauf › Rezept hinzufügen", "Einkauf › Rezept hinzufügen (Notiz)",
-        "Einstellungen › KI › Sprache", "Einstellungen › Erfassen", "Einstellungen › Einkaufsliste",
+        "Einstellungen › KI › Sprache", "Einstellungen › Erfassen", "Einstellungen › Einkaufsliste", "Einstellungen › Siri & Kurzbefehle",
     ]
     private static let recipeScreensLargeText = recipeScreens.map { "AX5/dark " + $0 }
+    /// The page "Siri & Kurzbefehle" in both audit runs.
+    private static let siriScreens = ["Einstellungen › Siri & Kurzbefehle", "AX5/dark Einstellungen › Siri & Kurzbefehle"]
 
     private static let entries: [Entry] = [
         // MARK: Contrast (every group needs a colour decision, section "Designpunkte für #188")
         Entry(auditType: .contrast, labels: [
-            "Nichts offen", "zuletzt: „(Römer|Demo Linsensuppe)“ · heute \\d+:\\d+", "[89]", "HEUTE · KW \\d+", "FR\\. .* · KW \\d+", "Ablauf", "\\d\\d:\\d\\d",
+            "Nichts offen", "zuletzt: „(Römer|Demo Linsensuppe)“ · heute \\d+:\\d+", "[89]", "HEUTE · KW \\d+", "[A-Z]{2}\\.,? .* · KW \\d+", "Ablauf", "\\d\\d:\\d\\d",
             "Schlafzeit \\d+:\\d+", "Ganztägig", "Überfällig", "Heute", "Einkaufsliste", "Notizen", "\\d+\\.\\d+\\.", "·", "Demo Aufgaben",
             "Lokal", "Routinen", "Gewohnheiten", "Woche", "Starten", "noch [\\d.]+", "Wasser", "Schritte", "Training · Woche",
             "\\d+ offen · Liste „Demo Einkauf“ in Erinnerungen", "Brot & Backwaren", "Kühlregal", "Aufgaben, 1 offen", "Vergangene Termine",
             "Ältere Termine durchsuchen · vor .*", "Durchsucht: 6 Monate zurück, 12 Monate voraus\\.",
             "ab \\d+:\\d+ bis \\d+:\\d+ · ganzer Tag .*", "1 Aufgabe ohne Aufwand mit Standarddauer gerechnet", "Pflanzen gießen",
-            "Erledigt: Erinnerungen und lokale Aufgaben, ohne GitHub\\.", "Abend-Checkliste · Schlafzeit .*", "Punkte in den Einstellungen anlegen",
+            "Erledigt: Erinnerungen.*", "Abend-Checkliste · Schlafzeit .*", "Punkte in den Einstellungen anlegen",
             "Trinkportionen", "Brain Dump", "Leitfragen einfügen", "Schreib auf, was in deinen Kopf kommt\\. Sortier deine Gedanken\\.",
             "Der Eintrag bleibt auf deinem iPhone und geht nie an ChatGPT\\.", "heute \\d+:\\d+( · diktiert)?", "Bible Study · heute .*",
             "Tagebuch · .*",
@@ -64,6 +66,17 @@ enum AuditAllowlist {
         ], reason: "Button and segment texts in the accent colour or on Liquid Glass / bordered tint (navigation bar, filter marks, quick entry). "
             + "The system draws the background; no own colour to change without replacing the system style (#188)."),
 
+        Entry(auditType: .contrast, labels: ["Abschließen"], screens: ["Tagesabschluss"], reason:
+            "Confirmation button of the wrap-up sheet in the navigation bar: the text sits on the Liquid Glass of the bar, whose background "
+            + "lets the list scroll behind it. \"Fertig\" was narrower and passed; the longer \"Abschließen\" (#188 TA3) reaches over more of the "
+            + "list and is reported. The system draws the background; same group as \"Verwerfen\" and \"Auswählen\" above (#188, "
+            + "\"Schrift auf Liquid Glass\")."),
+        Entry(auditType: .contrast, labels: ["Unerledigt von heute"], screens: ["Tagesabschluss"], reason:
+            "Section header of the leftover section of the wrap-up, in the system grey of a grouped list header on the grouped background "
+            + "(\"nearly passed\"). It is the same group as the other section headers above; the system draws the header colour, and an own "
+            + "78 % tone for this one header would duplicate the `TextSecondary` asset that strand K (plan g3-system-anbindungen, KO1a) "
+            + "introduces for all grey texts at once. Removed with the other entries of the group in task K5 (#160)."),
+
         Entry(auditType: .contrast, labels: gridCellLabels, screens: gridScreens, reason:
             "Title and time of the entries in the hour grid of \"Planen\": text in the primary or secondary colour on the event colour at 24 % "
             + "(blue, green, red, grey). The tint is the colour code of the grid (calendar, block, deadline, break); contrast on tint is a "
@@ -78,9 +91,14 @@ enum AuditAllowlist {
             "The date title in the bar of \"Planen\" is fixed in size on purpose (a toolbar item gets no width; with accessibility sizes it shows the "
             + "shortest form, see PlanHeaderText.displayedTitle); \"Auswählen\" is a system bar button. Header design: #188 / #175."),
         Entry(auditType: .dynamicType, labels: [
-            "Punkte in den Einstellungen anlegen", "Mo\\. planen", "Fertig", "Brain Dump", "Leitfragen einfügen", "\\d+\\.\\d+\\.",
+            "Punkte in den Einstellungen anlegen", "Mo\\. planen", "Abschließen", "Brain Dump", "Leitfragen einfügen", "\\d+\\.\\d+\\.",
         ], screens: ["Tagesabschluss"], reason: "Texts of the evening sheet (hint line, buttons, date of the next planning day) report a partial lack of "
             + "Dynamic Type support; no clipping in the large text run. Stays on the device test list."),
+        Entry(auditType: .dynamicType, labels: ["Unerledigtes verschieben · \\d+ Aufgaben?"], screens: ["Tagesabschluss"], reason:
+            "Row \"Unerledigtes verschieben\" of the wrap-up (`LeftoverLine`): one `Text` with a text style and no line limit, so it grows and wraps "
+            + "with the text size; the audit still reports a partial lack of support (the same row is reported as \"may be clipped\" in the "
+            + "text clipped group below, and as soon as the height is fixed to the text it switches to this finding). Not part of the "
+            + "AX5 run; stays on the device test list (large text)."),
         Entry(auditType: .dynamicType, labels: [
             "P1", "Ältere Termine durchsuchen · vor .*", "Durchsucht: 6 Monate zurück, 12 Monate voraus\\.",
         ], reason: "Priority capsule and the hint rows of the search sheet use text styles; the audit still reports a partial lack of "
@@ -98,9 +116,14 @@ enum AuditAllowlist {
             "Ältere Termine durchsuchen · vor .*",
         ], reason: "Reported in the default size for texts that are shown completely on the screenshot of the run (cards of \"Planen\", "
             + "entry rows of \"Aufgaben\", \"Erfassen\"). Not reproducible by eye; stays on the device test list (large text)."),
-        Entry(auditType: .textClipped, labels: ["FR\\. .* · KW \\d+", "[\\d.]+ / [\\d.]+"], reason:
-            "Date caption and steps value of \"Erfassen\" in the largest text size: single-line summary cells. Layout for AX sizes is a "
-            + "design decision (#188, \"Layout bei Bedienungshilfen-Schriftgrößen\")."),
+        Entry(auditType: .textClipped, labels: ["Unerledigtes verschieben · \\d+ Aufgaben?"], screens: ["Tagesabschluss"], reason:
+            "The row \"Unerledigtes verschieben\" of the wrap-up is a single `Text` without a line limit, so it wraps instead of being cut; "
+            + "the audit's generic warning \"may be clipped at larger Dynamic Type sizes\" comes with the new row of the leftover section "
+            + "(same group as the entries above). Not part of the AX5 run; stays on the device test list (large text)."),
+        Entry(auditType: .textClipped, labels: ["[\\d.]+ / [\\d.]+"], reason:
+            "Steps value of \"Erfassen\" in the largest text size: single-line summary cell. Layout for AX sizes is a "
+            + "design decision (#188, \"Layout bei Bedienungshilfen-Schriftgrößen\"). The date caption above the day title wraps at "
+            + "accessibility sizes (`PageTitleLabel`), so it needs no entry; its weekday changes every day."),
         Entry(auditType: .textClipped, labels: [""], elementType: .textField, reason:
             "Text fields (shopping input, search field) report their placeholder as clipped; the field itself is a single line with a fixed "
             + "pill height. Layout for AX sizes: #188."),
@@ -120,6 +143,17 @@ enum AuditAllowlist {
             + "grouped background of a form or list; the last footer of a settings page also lies behind the tab bar. Same group as the "
             + "grey texts above; darkening it would change the look of the default size, decided in #188."),
         Entry(auditType: .contrast, labels: [
+            "Alle Sätze stehen dort bereit, auch für Aktionstaste und Home-Bildschirm\\.", "Erfassen", "Einkauf", "Tag und Fokus", "Notizen und Gewohnheiten",
+            "250 ml, im Hintergrund", "Blatt „(Essen|Training)“", "öffnet Tagwerk", "Artikel im Satz, im Hintergrund", "Siri fragt nach den Artikeln",
+            "Einkaufsliste", "Termine, Blöcke, Deadlines; nur entsperrt", "Freier Fokus-Timer, im Hintergrund", "Brain Dump mit laufendem Diktat",
+            "Hakt eine Gewohnheit für heute ab", "auch: „Fokus beenden in Tagwerk“", "(?s)Erkennt Siri einen Satz nicht.*",
+        ], screens: siriScreens, reason: "Section headers, footers and the effect line of each phrase on the page \"Siri & Kurzbefehle\", in the system grey "
+            + "(.secondary) on the grouped background. Same group as the grey texts above (\"Sekundärtext\"); the page moved here from \"Erfassen\" "
+            + "(#188 SI1b) and brings its texts along. Removed with the group in task K5 (#160)."),
+        Entry(auditType: .textClipped, labels: ["Tagwerk-Kurzbefehle"], screens: siriScreens, reason: "The `ShortcutsLink` is a system control; its "
+            + "label \"Tagwerk-Kurzbefehle\" is drawn by the system, and the audit reports it as possibly clipped (default size and AX5). The control "
+            + "is not part of the app's own layout and cannot be given a line limit or another style (#188 SI2b)."),
+        Entry(auditType: .contrast, labels: [
             "(rote|Rote) Linsen", "Zwiebel", "Karotten", "Gemüsebrühe", "Salz", "Obst & Gemüse", "\\d+ (g|l)",
         ], screens: ["Zutaten (Rezept)", "AX5/dark Zutaten (Rezept)"], reason: "Ingredient names, quantities and categories of the demo recipe in the "
             + "ingredient list of the sheet (primary and secondary text on the grouped background of the sheet). The audit reports \"nearly passed\" "
@@ -133,14 +167,14 @@ enum AuditAllowlist {
 
         Entry(auditType: .dynamicType, labels: [
             "Abbrechen", "Verwerfen", "Die Kategorien kommen aus deiner Einkaufsliste\\.", "Das Rezept wird als Notiz im Ordner „Rezepte“ gespeichert\\. .*",
-            "\\d\\. .*", "Vorlesen", "Eiweiß-Ziel", "(?s)Sendet auf dein Tippen die Namen .*", "Rezepte mit ChatGPT lesen", "ChatGPT",
+            "\\d\\. .*", "Vorlesen", "Eiweiß-Ziel", "(?s)Sendet auf dein Tippen die Namen .*", "Rezepte mit ChatGPT lesen und übersetzen", "ChatGPT",
             "(?s)Notizen liegen nur auf diesem iPhone\\..*",
         ], screens: recipeScreens, reason: "Navigation bar buttons, form rows, footers and steps use text styles; the audit still reports a partial lack of "
             + "support. In the AX5 run of the same screens (`AccessibilityAuditRecipesLargeTextUITests`, screenshots checked) every one of these texts "
             + "grows and wraps."),
         Entry(auditType: .textClipped, labels: [
             "Rezept mit ChatGPT anlegen", "Neues Rezept", "Demo Linsensuppe", "Andere Notiz wählen …", "Füge die Zutatenliste oder das ganze Rezept ein\\. .*",
-            "(?s)(Um ein Rezept zu lesen|Gesendet wird|Nicht gesendet werden|Eine Notiz mit den Abschnitten|Die gewählte Liste erscheint|Portionen: \\d+\\nZutaten).*",
+            "(?s)(Um ein Rezept zu lesen|Gesendet wird|Nicht gesendet werden|Nur auf dein Tippen|Eine Notiz mit den Abschnitten|Die gewählte Liste erscheint|Portionen: \\d+\\nZutaten).*",
             "Du kannst das in den Einstellungen unter „Einkaufsliste“ widerrufen\\.", "Mikrofon in Gesprächen",
         ], screens: recipeScreens + recipeScreensLargeText, reason: "The audit warns that these texts \"may be clipped at larger Dynamic Type sizes\". "
             + "Checked on the AX5 screenshots of these screens: headings, buttons, notes and footers wrap completely, some run past the lower edge "
@@ -166,15 +200,43 @@ enum AuditAllowlist {
         let passes = auditTypes.contains(.contrast) && auditTypes != .contrast ? [.contrast, auditTypes.subtracting(.contrast)] : [auditTypes]
         for pass in passes {
             var findings: [(issue: XCUIAccessibilityAuditIssue, element: XCUIElement?)] = []
-            try app.performAccessibilityAudit(for: pass) { issue in
+            try runAudit(app, for: pass) { issue in
                 findings.append((issue, issue.element))
-                return true
             }
             for finding in findings where !isAccepted(finding.issue, element: finding.element) {
                 let element = finding.element
                 XCTFail("\(screen): \(finding.issue.compactDescription) | \(finding.issue.detailedDescription) | "
                     + "label=\(element?.label ?? "-") id=\(element?.identifier ?? "-") frame=\(element?.frame ?? .zero)", file: file, line: line)
             }
+        }
+    }
+
+    /// Error of `performAccessibilityAudit` when the audit did not finish in its (not configurable) time limit: domain
+    /// "com.apple.xcode.xctest.accessibilityAudit", code -56, "Audit failed to complete in time".
+    private static func isAuditTimeout(_ error: Error) -> Bool {
+        let nsError = error as NSError
+        return nsError.domain == "com.apple.xcode.xctest.accessibilityAudit" && nsError.code == -56
+    }
+
+    /// Runs one audit pass and hands every issue to `collect`. The audit has no timeout setting, and it runs out of time when the
+    /// machine is loaded (several checkouts testing at once). Such a run reports nothing about the screen, so it is repeated
+    /// from scratch, up to three attempts; the issues of an aborted attempt are dropped, so no finding is lost or counted twice.
+    /// Every other error, and a timeout in the last attempt, still fails the test.
+    private static func runAudit(_ app: XCUIApplication, for auditTypes: XCUIAccessibilityAuditType,
+                                 attempts: Int = 3, collect: (XCUIAccessibilityAuditIssue) -> Void) throws {
+        for attempt in 1...attempts {
+            var issues: [XCUIAccessibilityAuditIssue] = []
+            do {
+                try app.performAccessibilityAudit(for: auditTypes) { issue in
+                    issues.append(issue)
+                    return true
+                }
+            } catch where isAuditTimeout(error) && attempt < attempts {
+                print("Accessibility audit timed out (attempt \(attempt) of \(attempts)), running it again")
+                continue
+            }
+            issues.forEach(collect)
+            return
         }
     }
 

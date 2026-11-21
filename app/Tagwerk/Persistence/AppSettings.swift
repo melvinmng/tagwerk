@@ -179,6 +179,11 @@ final class AppSettings {
     var voiceModeSilenceLimit: Double = 30
     var voiceModeExplained: Bool = false
 
+    /// The Siri tip above the shopping list / the drink buttons was closed or its shortcut ran once (#188 SI3). Hint state of the
+    /// device; not part of the backup.
+    var siriTipShoppingDone: Bool = false
+    var siriTipWaterDone: Bool = false
+
     /// The focus timer durations as the rules want them (clamped).
     var focusTimerSettings: FocusTimerSettings {
         get {

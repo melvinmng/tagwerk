@@ -127,14 +127,15 @@ struct NotificationPlanTests {
         #expect(result.isEmpty)
     }
 
-    @Test func limit_keepsEarliestFifty() {
+    @Test func limit_keepsEarliestWithinTheTaskBudget() {
         let tasks = Array(0..<60).reversed().map { (minute: Int) in
             task("T\(minute)", source: .local, due: DueDate(year: 2026, month: 12, day: 1, hour: 10, minute: minute))
         }
         let result = plan(tasks)
-        #expect(result.count == 50)
+        #expect(NotificationBudget.tasksAndDeadlines == 46)
+        #expect(result.count == NotificationBudget.tasksAndDeadlines)
         #expect(result.first?.title == "T0")
-        #expect(result.last?.title == "T49")
+        #expect(result.last?.title == "T45")
     }
 
     @Test func identifiers_areStable() {

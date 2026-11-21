@@ -85,9 +85,9 @@ struct NotificationSchedulerQuietHoursTests {
         await scheduler(now: testNow()).reschedule()
         #expect(center.pending.count == NotificationScheduler.limit)
         #expect(center.pending.values.allSatisfy { $0.fireDate == at(19, 7) })
-        // All share one time: the order falls back to the identifier, so the first fifty identifiers stay.
-        #expect(center.pendingIDs.contains("tagwerk.task.local:T49#0"))
-        #expect(!center.pendingIDs.contains("tagwerk.task.local:T50#0"))
+        // All share one time: the order falls back to the identifier, so the first 46 identifiers stay.
+        #expect(center.pendingIDs.contains("tagwerk.task.local:T45#0"))
+        #expect(!center.pendingIDs.contains("tagwerk.task.local:T46#0"))
     }
 
     // MARK: Focus filter

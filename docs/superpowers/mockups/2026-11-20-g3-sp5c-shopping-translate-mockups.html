@@ -1,0 +1,639 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tagwerk · Einkaufsartikel übersetzen (SP5c, #188) · Mockups SPC1–SPC8</title>
+<style>
+  /* Mockup frame uses the host theme (with fallbacks); phone screens depict the app in iOS dark or light mode. */
+  :root { color-scheme: light dark; }
+  body { font: 14px var(--font-sans, system-ui, sans-serif); color: var(--foreground, CanvasText); margin: 16px; }
+  h1 { font-size: 20px; margin: 0 0 4px; }
+  h2 { font-size: 18px; margin: 38px 0 4px; padding-top: 16px; border-top: 1px solid rgba(128,128,128,.3); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .area { display: inline-grid; place-items: center; min-width: 34px; height: 34px; padding: 0 6px; border-radius: 9px; background: #0a84ff; color: #fff; font: 800 14px system-ui; flex-shrink: 0; box-sizing: border-box; }
+  .area.g { background: #30d158; color: #000; }
+  .area.n { background: #8e8e93; }
+  .lead { color: var(--muted-foreground, #777); margin: 0 0 14px; line-height: 1.5; max-width: 980px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(392px, 1fr)); gap: 22px; align-items: start; }
+  .label { font: 600 13px var(--font-sans, system-ui); color: var(--muted-foreground, #777); margin: 0 0 8px 4px; }
+  .label b { color: var(--foreground, CanvasText); }
+  .code { display: inline-block; background: rgba(128,128,128,.28); color: var(--foreground, CanvasText); border-radius: 6px; padding: 1px 8px; font: 800 13px system-ui; margin-right: 4px; }
+  .code.r { background: #30d158; color: #000; }
+  .rec { background: #30d158; color: #000; font-size: 11px; font-weight: 700; padding: 1px 7px; border-radius: 99px; margin-left: 4px; }
+  .same { background: rgba(128,128,128,.28); font-size: 11px; font-weight: 700; padding: 1px 7px; border-radius: 99px; margin-left: 4px; }
+  .pc { font-size: 12.5px; color: var(--muted-foreground, #777); line-height: 1.5; margin: 8px 4px 0; max-width: 390px; }
+  .pc b { color: var(--foreground, CanvasText); }
+  .box { border: 1px solid rgba(48,209,88,.5); background: rgba(48,209,88,.07); border-radius: 12px; padding: 12px 16px; margin-top: 16px; line-height: 1.55; font-size: 13px; max-width: 1100px; }
+  .box h3 { margin: 0 0 6px; font-size: 14px; }
+  .box ul, .box ol { margin: 4px 0 0; padding-left: 20px; }
+  .box li { margin-bottom: 3px; }
+  .box.neutral { border-color: rgba(128,128,128,.4); background: rgba(128,128,128,.07); }
+  .box.warn { border-color: rgba(255,159,10,.6); background: rgba(255,159,10,.08); }
+  code { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; background: rgba(128,128,128,.16); padding: 1px 4px; border-radius: 4px; }
+  .tablewrap { overflow-x: auto; }
+  table.sum { border-collapse: collapse; font-size: 13px; margin-top: 6px; }
+  table.sum td, table.sum th { padding: 5px 14px 5px 0; vertical-align: top; text-align: left; border-bottom: 1px solid rgba(128,128,128,.22); }
+  table.sum th { font-size: 12px; color: var(--muted-foreground, #777); }
+
+  .phone {
+    --bg: #000; --card: #1c1c1e; --card2: #2c2c2e; --sep: #38383a; --text: #fff; --sub: #8e8e93; --dim: #c7c7cc;
+    --blue: #0a84ff; --green: #30d158; --orange: #ff9f0a; --red: #ff453a; --purple: #bf5af2; --sheet: #1c1c1e; --row: #2c2c2e;
+    --segon: #636366; --frame: #2a2a2c; --redbg: rgba(255,69,58,.16);
+    --glass: rgba(72,72,78,.62); --glassline: rgba(255,255,255,.16); --glassshadow: inset 0 1px 0 rgba(255,255,255,.18), 0 8px 24px rgba(0,0,0,.55);
+    background: var(--bg); color: var(--text); border-radius: 40px; padding: 14px 12px 12px;
+    font: 15px -apple-system, "SF Pro Text", system-ui, sans-serif; border: 6px solid var(--frame);
+    width: 390px; max-width: 100%; box-sizing: border-box; height: 760px;
+    display: flex; flex-direction: column; position: relative; overflow: hidden;
+  }
+  .phone.light {
+    --bg: #f2f2f7; --card: #fff; --card2: #e3e3e8; --sep: #d1d1d6; --text: #000; --sub: #6c6c70; --dim: #3c3c43;
+    --blue: #007aff; --green: #34c759; --orange: #ff9500; --red: #ff3b30; --purple: #af52de; --sheet: #f2f2f7; --row: #fff;
+    --segon: #fff; --frame: #c7c7cc; --redbg: rgba(255,59,48,.12);
+    --glass: rgba(255,255,255,.78); --glassline: rgba(0,0,0,.06); --glassshadow: inset 0 1px 0 rgba(255,255,255,.9), 0 4px 14px rgba(0,0,0,.14);
+  }
+  /* Cropped frame: only the upper part of the screen matters. */
+  .phone.crop { height: 430px; border-bottom-left-radius: 0; border-bottom-right-radius: 0; border-bottom: 0; }
+  .phone.crop::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 50px; background: linear-gradient(transparent, var(--bg)); z-index: 4; pointer-events: none; }
+  .status { display: flex; justify-content: space-between; font: 600 13px system-ui; padding: 0 12px 10px; flex-shrink: 0; }
+  .glass { background: var(--glass); backdrop-filter: blur(18px) saturate(1.6); -webkit-backdrop-filter: blur(18px) saturate(1.6);
+    border: 1px solid var(--glassline); box-shadow: var(--glassshadow); }
+  .scr { flex: 1; min-height: 0; overflow: hidden; display: flex; flex-direction: column; }
+  .scr > * { flex-shrink: 0; }
+
+  /* Head of "Planen" as built (PK2): date title in the bar, one control row below */
+  .nav { display: flex; align-items: center; justify-content: space-between; gap: 8px; height: 44px; padding: 0 2px; margin-bottom: 6px; flex-shrink: 0; }
+  .nav .r { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+  .gb { width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; font-size: 21px; flex-shrink: 0; color: var(--text); box-sizing: border-box; }
+  .gb.ai { background: rgba(175,82,222,.86); color: #fff; border-color: rgba(255,255,255,.22); font-size: 18px; }
+  .seg { display: flex; background: var(--card2); border-radius: 99px; padding: 2px; }
+  .seg span { flex: 1; text-align: center; padding: 9px 2px; font-size: 13px; border-radius: 99px; color: var(--dim); white-space: nowrap; }
+  .seg span.on { background: var(--segon); color: var(--text); font-weight: 600; box-shadow: 0 1px 3px rgba(0,0,0,.18); }
+  .ttl { min-width: 0; padding-left: 6px; line-height: 1.15; }
+  .ttl b { display: block; font: 700 19px system-ui; letter-spacing: -.2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .ttl small { display: block; font: 600 11px system-ui; text-transform: uppercase; letter-spacing: .4px; color: var(--sub); }
+  .ttl small.now { color: var(--blue); }
+  .car { font-size: .72em; color: var(--sub); vertical-align: .25em; margin-left: 2px; }
+  .row2 { display: flex; align-items: center; gap: 8px; padding: 0 2px; margin-bottom: 10px; flex-shrink: 0; }
+  .row2 .seg { flex: 1; min-width: 0; }
+  .today { color: var(--blue); font: 600 14px system-ui; padding: 0 6px; }
+  .stepper { display: flex; border-radius: 99px; flex-shrink: 0; height: 44px; box-sizing: border-box; }
+  .stepper span { width: 44px; display: grid; place-items: center; font-size: 19px; }
+  .stepper span + span { border-left: 1px solid var(--glassline); }
+  .tb { margin: 8px auto 0; width: 96%; display: flex; border-radius: 99px; padding: 5px; font-size: 10px; color: var(--dim); text-align: center; box-sizing: border-box; flex-shrink: 0; position: relative; z-index: 3; }
+  .tb span { flex: 1; padding: 4px 0 3px; border-radius: 99px; }
+  .tb .on { color: var(--blue); background: rgba(128,128,128,.22); font-weight: 600; }
+  .ico { font-size: 17px; display: block; font-style: normal; line-height: 20px; }
+
+  /* Deadline card (DeadlineCard as built: red tint, flag, title, kind line, relative day) */
+  .dlc { background: var(--redbg); border-radius: 14px; padding: 10px 12px; margin: 0 0 8px; }
+  .dlc .h { color: var(--red); font: 700 12px system-ui; margin-bottom: 6px; }
+  .dl { display: flex; align-items: baseline; gap: 8px; padding: 3px 0; }
+  .dl .f { color: var(--red); font-size: 12px; width: 12px; flex-shrink: 0; }
+  .dl .t { flex: 1; min-width: 0; font: 600 14px system-ui; }
+  .dl .t small { display: block; font: 400 12px system-ui; color: var(--sub); margin-top: 1px; }
+  .dl .w { color: var(--red); font: 600 12px system-ui; white-space: nowrap; }
+  .dl.gone .t, .dl.gone .f { color: var(--sub); }
+  .dl.gone .w { color: var(--sub); }
+  .mk { display: inline-block; font: 700 10px system-ui; color: var(--red); border: 1px solid var(--red); border-radius: 99px; padding: 0 6px; margin-right: 4px; vertical-align: 1px; }
+  .lk { display: inline-block; font: 600 10.5px system-ui; color: var(--red); background: var(--redbg); border-radius: 99px; padding: 1px 7px; margin-top: 3px; }
+  .btns { display: flex; gap: 8px; margin: 6px 0 2px 20px; }
+  .btn { font: 600 12px system-ui; border-radius: 99px; padding: 5px 11px; background: var(--card2); color: var(--blue); }
+  .btn.d { color: var(--red); }
+  .btn.p { background: var(--red); color: #fff; }
+
+  /* Capacity stub, timeline grid, list rows */
+  .cap { background: var(--card); border-radius: 16px; padding: 9px 12px; margin: 0 0 8px; font-size: 13px; }
+  .cap b { font-size: 15px; display: block; }
+  .cap i { display: block; height: 5px; border-radius: 99px; background: var(--green); margin: 6px 0 2px; }
+  .cap small { color: var(--sub); font-size: 11.5px; }
+  .abl { display: flex; justify-content: space-between; align-items: center; color: var(--sub); font: 600 12px system-ui; text-transform: uppercase; letter-spacing: .4px; margin: 4px 8px 12px; }
+  .abl span { text-transform: none; letter-spacing: 0; color: var(--blue); font-size: 13px; }
+  .hg { position: relative; margin: 2px 0 6px 44px; border-left: 1px solid var(--sep); height: 340px; }
+  .hg .hl { position: absolute; left: -44px; right: 0; border-top: 1px solid var(--sep); font: 11px ui-monospace, monospace; color: var(--sub); padding-left: 2px; height: 0; }
+  .hg .hl span { position: relative; top: -8px; background: var(--bg); padding-right: 4px; }
+  .hg .ev { position: absolute; left: 4px; right: 4px; border-radius: 9px; padding: 4px 8px; font-size: 12.5px; box-sizing: border-box; overflow: hidden; }
+  .hg .ev small { color: var(--sub); font-size: 11px; display: block; }
+  .hg .ev.e { background: rgba(10,132,255,.22); border-left: 4px solid var(--blue); }
+  .hg .ev.p { background: rgba(48,209,88,.2); border-left: 4px solid var(--green); }
+  .hg .ev.d { background: rgba(255,69,58,.24); border-left: 4px solid var(--red); font-weight: 600; }
+  .hg .ev.d small { font-weight: 400; }
+  .list { background: var(--card); border-radius: 18px; overflow: hidden; margin-bottom: 8px; }
+  .tl { display: flex; gap: 10px; padding: 9px 12px; border-bottom: 1px solid var(--sep); font-size: 14px; }
+  .tl:last-child { border-bottom: 0; }
+  .tl .tm { font: 11.5px ui-monospace, monospace; color: var(--sub); width: 42px; flex-shrink: 0; padding-top: 2px; }
+  .tl .bar { width: 4px; border-radius: 2px; background: var(--blue); flex-shrink: 0; }
+  .tl .bar.d { background: var(--red); }
+  .tl .bar.p { background: var(--green); }
+  .tl .tx { flex: 1; min-width: 0; }
+  .tl .tx small { display: block; color: var(--sub); font-size: 12px; margin-top: 1px; }
+  .tl.hot { background: var(--card2); }
+  .section { color: var(--sub); font: 600 12px system-ui; text-transform: uppercase; letter-spacing: .4px; margin: 10px 8px 4px; }
+  .wkrow { background: var(--card); border-radius: 14px; padding: 9px 12px; margin-bottom: 6px; font-size: 13.5px; }
+  .wkrow .hd { display: flex; justify-content: space-between; font: 600 13px system-ui; margin-bottom: 4px; }
+  .wkrow .hd span { color: var(--sub); font-weight: 400; font-size: 12px; }
+  .wkrow .dd { color: var(--red); padding: 2px 0; }
+  .wkrow .ta { padding: 2px 0; }
+  .wkrow .no { color: var(--sub); }
+
+  /* Sheet ("Termin", EntrySheet as built: grouped form) */
+  .dim { position: absolute; inset: 0; background: rgba(0,0,0,.45); z-index: 5; }
+  .sheet { position: absolute; left: 0; right: 0; bottom: 0; top: 64px; background: var(--sheet); border-radius: 30px 30px 0 0; z-index: 6; padding: 8px 14px 0; overflow: hidden; }
+  .phone:not(.light) .sheet { background: #111113; }
+  .sheet .grab { width: 36px; height: 5px; border-radius: 99px; background: var(--sub); opacity: .5; margin: 0 auto 6px; }
+  .sheet .bar { display: flex; justify-content: center; position: relative; font: 600 15px system-ui; padding: 4px 0 10px; }
+  .sheet .bar span { position: absolute; right: 2px; color: var(--blue); }
+  .fs { background: var(--row); border-radius: 14px; margin-bottom: 4px; overflow: hidden; }
+  .fr { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 9px 12px; border-bottom: 1px solid var(--sep); font-size: 14px; }
+  .fr:last-child { border-bottom: 0; }
+  .fr .v { color: var(--sub); text-align: right; font-size: 13px; }
+  .fr.col { display: block; }
+  .fr.col small { display: block; color: var(--sub); font-size: 12px; margin-top: 1px; }
+  .fr.a { color: var(--blue); }
+  .fr.x { color: var(--red); }
+  .fr.new { box-shadow: inset 3px 0 0 #ffd60a; }
+  .fh { color: var(--sub); font: 600 11.5px system-ui; text-transform: uppercase; letter-spacing: .4px; margin: 10px 12px 4px; }
+  .ff { color: var(--sub); font-size: 11.5px; line-height: 1.4; margin: 3px 12px 8px; }
+  .tog { width: 46px; height: 28px; border-radius: 99px; background: rgba(120,120,128,.36); position: relative; flex-shrink: 0; }
+  .tog::after { content: ""; position: absolute; top: 2px; left: 2px; width: 24px; height: 24px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.3); }
+  .tog.on { background: var(--green); }
+  .tog.on::after { left: 20px; }
+  .seg2 { display: flex; background: var(--card2); border-radius: 9px; padding: 2px; flex: 1; }
+  .seg2 span { flex: 1; text-align: center; padding: 5px 2px; font-size: 13px; border-radius: 7px; color: var(--dim); }
+  .seg2 span.on { background: var(--segon); color: var(--text); font-weight: 600; }
+
+  /* Context menu and dialogs */
+  .menu { position: absolute; z-index: 8; width: 262px; border-radius: 16px; overflow: hidden; font-size: 15px; }
+  .menu div { display: flex; justify-content: space-between; padding: 11px 14px; border-bottom: 1px solid var(--glassline); }
+  .menu div:last-child { border-bottom: 0; }
+  .menu div.new { box-shadow: inset 3px 0 0 #ffd60a; }
+  .menu div.x { color: var(--red); }
+  .dialog { position: absolute; z-index: 9; left: 14px; right: 14px; bottom: 16px; border-radius: 22px; padding: 12px 14px 8px; font-size: 14px; }
+  .dialog b { display: block; text-align: center; font-size: 13px; color: var(--sub); font-weight: 600; margin-bottom: 8px; line-height: 1.4; }
+  .dialog div { text-align: center; padding: 11px 0; border-top: 1px solid var(--glassline); color: var(--blue); font-size: 16px; }
+  .dialog div.x { color: var(--red); }
+  .sug { background: var(--card); border: 1px dashed var(--red); border-radius: 14px; padding: 10px 12px; margin: 0 0 8px; font-size: 13.5px; }
+  .sug small { display: block; color: var(--sub); font-size: 12px; margin: 2px 0 8px; }
+  .sug .btns { margin-left: 0; }
+
+  /* Lock screen notification and widget */
+  .lock { text-align: center; padding: 26px 0 14px; }
+  .lock b { display: block; font: 300 64px/1 system-ui; }
+  .lock span { color: var(--dim); font-size: 15px; }
+  .note { border-radius: 20px; padding: 10px 12px; margin: 0 2px 10px; font-size: 13.5px; }
+  .note .a { display: flex; justify-content: space-between; color: var(--dim); font-size: 11.5px; margin-bottom: 2px; }
+  .note b { display: block; }
+  .wdg { background: var(--card); border-radius: 22px; padding: 12px 14px; margin: 0 2px; font-size: 13px; }
+  .wdg .d { color: var(--red); font: 700 11px system-ui; text-transform: uppercase; }
+  .wdg .rw { display: flex; gap: 8px; padding: 4px 0; }
+  .wdg .rw i { width: 3px; border-radius: 2px; background: var(--blue); font-style: normal; }
+  .wdg .rw i.d { background: var(--red); }
+  .wdg .rw small { color: var(--sub); display: block; font-size: 11px; }
+  .wdg .ft { color: var(--red); font: 600 12px system-ui; margin-top: 4px; }
+
+  /* Annotations */
+  .zone { position: absolute; border: 1.5px dashed #ffd60a; border-radius: 12px; z-index: 7; pointer-events: none; box-sizing: border-box; }
+  .zone.bad { border-color: #ff453a; }
+  .zl { position: absolute; z-index: 8; font: 700 10px system-ui; color: #ffd60a; background: rgba(0,0,0,.82); border-radius: 5px; padding: 2px 6px; white-space: nowrap; }
+  .zl.bad { color: #ff8a82; }
+
+  /* Additions for this file: full sheet bar, avatars, checkmarks, capsule, chat card */
+  .sheet .bar .l { position: absolute; left: 2px; right: auto; color: var(--blue); font-weight: 400; }
+  .sheet .bar .off { opacity: .4; }
+  .av { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; font: 700 10px system-ui; color: #fff; background: var(--blue); flex-shrink: 0; vertical-align: -5px; margin-right: 6px; }
+  .av.b { background: var(--purple); } .av.c { background: var(--orange); } .av.d { background: var(--green); color: #000; }
+  .ck { color: var(--blue); font-weight: 700; width: 18px; text-align: right; flex-shrink: 0; }
+  .fr .n { flex: 1; min-width: 0; }
+  .fr .n small { display: block; color: var(--sub); font-size: 12px; }
+  .srch { background: var(--card2); border-radius: 10px; padding: 7px 10px; color: var(--sub); font-size: 14px; margin: 0 0 8px; }
+  .caps { position: absolute; left: 16px; right: 16px; bottom: 74px; border-radius: 99px; padding: 10px 16px; z-index: 6; display: flex; justify-content: space-between; align-items: center; font-size: 13.5px; }
+  .caps span { color: var(--blue); font-weight: 600; white-space: nowrap; margin-left: 8px; }
+  .big { font: 700 30px system-ui; margin: 4px 6px 10px; }
+  .tr { display: flex; gap: 10px; padding: 9px 12px; border-bottom: 1px solid var(--sep); font-size: 14.5px; align-items: flex-start; }
+  .tr:last-child { border-bottom: 0; }
+  .tr .o { width: 20px; height: 20px; border-radius: 50%; border: 1.6px solid var(--sub); flex-shrink: 0; margin-top: 1px; box-sizing: border-box; }
+  .tr .o.ro { border-style: dashed; opacity: .5; }
+  .tr .tx { flex: 1; min-width: 0; }
+  .tr .tx small { display: block; color: var(--sub); font-size: 12px; margin-top: 1px; }
+  .tr .pr { font: 600 11px system-ui; background: var(--card2); border-radius: 99px; padding: 2px 7px; }
+  .tr.new { box-shadow: inset 3px 0 0 #ffd60a; }
+  .who { display: inline-block; font: 600 10.5px system-ui; color: var(--purple); border: 1px solid var(--purple); border-radius: 99px; padding: 0 6px; margin-left: 4px; }
+  .bub { border-radius: 18px; padding: 9px 12px; margin: 0 0 8px; font-size: 14px; max-width: 86%; line-height: 1.4; }
+  .bub.u { background: var(--blue); color: #fff; margin-left: auto; }
+  .bub.a { background: var(--card); }
+  .card { background: var(--card); border-radius: 16px; padding: 11px 12px; margin: 0 0 8px; font-size: 13.5px; }
+  .card h4 { margin: 0 0 4px; font: 600 14px system-ui; }
+  .card small { color: var(--sub); display: block; line-height: 1.45; }
+  .card .btns { margin: 9px 0 0; }
+  .card .btn.ok { background: var(--blue); color: #fff; }
+  .pop { position: absolute; z-index: 8; right: 20px; width: 250px; border-radius: 16px; overflow: hidden; font-size: 15px; }
+  .pop div { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; border-bottom: 1px solid var(--glassline); }
+  .pop div:last-child { border-bottom: 0; }
+  .pop .hd { font: 600 11.5px system-ui; color: var(--sub); padding: 7px 14px 5px; }
+  .pop .dis { color: var(--sub); }
+
+  /* Search mockups: task list head as built, search field, chips, result rows, chat */
+  .nb { display: flex; align-items: center; justify-content: space-between; height: 44px; padding: 0 4px; flex-shrink: 0; }
+  .nb .l { color: var(--blue); font-size: 16px; padding-left: 6px; }
+  .nb .r { display: flex; gap: 10px; }
+  .seg.flt { margin: 0 2px 8px; }
+  .seg.flt span { padding: 6px 2px; }
+  .item { display: flex; align-items: flex-start; gap: 10px; padding: 9px 12px; border-bottom: 1px solid var(--sep); }
+  .item:last-child { border-bottom: 0; }
+  .item .t { flex: 1; font-size: 14px; min-width: 0; }
+  .item .s { color: var(--sub); font-size: 12px; margin-top: 2px; }
+  .item .ck { width: 18px; height: 18px; border-radius: 50%; border: 1.5px solid var(--sub); flex-shrink: 0; margin-top: 1px; box-sizing: border-box; }
+  .item .ck.done { background: var(--sub); border-color: var(--sub); position: relative; }
+  .item .ck.done::after { content: "✓"; position: absolute; inset: 0; display: grid; place-items: center; font: 700 11px system-ui; color: var(--card); }
+  .item .ck.ro { border-style: dashed; opacity: .6; }
+  .item.done .t { color: var(--sub); }
+  .item.new, .tl.new { box-shadow: inset 3px 0 0 #ffd60a; }
+  .chip { font-size: 11px; padding: 2px 7px; border-radius: 99px; background: var(--card2); color: var(--dim); white-space: nowrap; }
+  .chip.p1 { background: rgba(255,69,58,.25); color: var(--red); }
+  .dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--blue); margin-right: 3px; }
+  .dot.g { background: var(--green); } .dot.o { background: var(--orange); } .dot.p { background: var(--purple); } .dot.n { background: var(--sub); }
+  .sf { display: flex; align-items: center; gap: 8px; background: var(--card2); border-radius: 99px; padding: 9px 12px; font-size: 15px; margin: 0 0 8px; }
+  .sf .q { flex: 1; }
+  .sf .q.ph { color: var(--sub); }
+  .sf .q i { display: inline-block; width: 2px; height: 17px; background: var(--blue); vertical-align: -3px; margin-left: 1px; }
+  .sf span { color: var(--sub); }
+  .sfrow { display: flex; align-items: center; gap: 10px; }
+  .sfrow .sf { flex: 1; }
+  .sfrow > b { color: var(--blue); font: 400 15px system-ui; margin-bottom: 8px; }
+  .chips { display: flex; gap: 6px; margin: 0 0 6px; flex-wrap: wrap; }
+  .chips span { font: 600 12.5px system-ui; padding: 6px 11px; border-radius: 99px; background: var(--card2); color: var(--dim); }
+  .chips span.on { background: var(--blue); color: #fff; }
+  .chips span.new { box-shadow: 0 0 0 1.5px #ffd60a; }
+  .section { display: flex; justify-content: space-between; }
+  .section span { text-transform: none; letter-spacing: 0; font-weight: 400; }
+  mark { background: rgba(255,214,10,.32); color: inherit; border-radius: 3px; padding: 0 1px; }
+  .more { padding: 10px 12px; color: var(--blue); font-size: 14px; display: flex; justify-content: space-between; border-top: 1px solid var(--sep); }
+  .more small { color: var(--sub); }
+  .more.off { color: var(--sub); }
+  .foot { color: var(--sub); font-size: 11.5px; line-height: 1.4; margin: 2px 12px 8px; }
+  .tag { display: inline-block; font: 700 10px system-ui; border-radius: 99px; padding: 0 6px; margin-left: 4px; vertical-align: 1px; border: 1px solid var(--sub); color: var(--sub); }
+  .tag.r { border-color: var(--red); color: var(--red); }
+  .tag.pu { border-color: var(--purple); color: var(--purple); }
+  .empty { text-align: center; color: var(--sub); padding: 60px 30px; font-size: 14px; line-height: 1.5; }
+  .empty b { display: block; font-size: 34px; margin-bottom: 8px; font-weight: 400; }
+  .toolc { font: 11.5px ui-monospace, monospace; color: var(--sub); margin: 0 10px 8px; }
+  .sheet.full { top: 46px; }
+  .hot { background: rgba(255,214,10,.14) !important; }
+
+
+  /* Additions for this file: short frame, keyboard, navigation page, tiles, swatches */
+  .phone.short { height: 500px; }
+  .phone.mid { height: 620px; }
+  .pg { display: flex; align-items: center; justify-content: center; position: relative; height: 40px; font: 600 16px system-ui; margin-bottom: 6px; flex-shrink: 0; }
+  .pg .l { position: absolute; left: 4px; color: var(--blue); font-weight: 400; font-size: 15px; }
+  .pg .r { position: absolute; right: 4px; color: var(--blue); font-weight: 600; font-size: 15px; }
+  .kb { position: absolute; left: 0; right: 0; bottom: 0; z-index: 10; background: #2a2a2d; padding: 0 4px 16px; }
+  .phone.light .kb { background: #d3d5db; }
+  .kbar { display: flex; justify-content: flex-end; align-items: center; gap: 18px; height: 42px; padding: 0 14px; font: 600 16px system-ui; color: var(--blue); border-bottom: 1px solid var(--glassline); margin: 0 -4px 6px; background: rgba(120,120,128,.18); }
+  .kbar .lft { margin-right: auto; display: flex; gap: 20px; font-weight: 400; font-size: 19px; }
+  .kbar .sym { font-size: 20px; font-weight: 400; }
+  .kbar.new, .ret.new { box-shadow: inset 0 0 0 1.5px #ffd60a; }
+  .keys { display: flex; gap: 5px; margin-bottom: 8px; justify-content: center; }
+  .keys i { flex: 1; height: 36px; border-radius: 6px; background: #6b6b70; max-width: 34px; }
+  .phone.light .keys i { background: #fff; }
+  .keys .w { max-width: 46px; background: #47474b; }
+  .phone.light .keys .w { background: #abb0ba; }
+  .keys .sp { flex: 5; max-width: none; }
+  .keys .ret { flex: 2.2; max-width: none; background: #47474b; display: grid; place-items: center; font: 500 13px system-ui; color: #fff; font-style: normal; border-radius: 6px; height: 36px; }
+  .keys .ret.b { background: var(--blue); }
+  .phone.light .keys .ret { background: #abb0ba; color: #000; }
+  .phone.light .keys .ret.b { background: var(--blue); color: #fff; }
+  .cur { display: inline-block; width: 2px; height: 16px; background: var(--blue); vertical-align: -3px; margin-left: 1px; }
+  .tiles { display: flex; gap: 8px; margin: 0 0 8px; }
+  .tile { flex: 1; background: var(--row); border-radius: 14px; padding: 10px 4px 8px; text-align: center; font-size: 12px; color: var(--dim); }
+  .tile b { display: block; font-size: 20px; font-weight: 400; margin-bottom: 3px; }
+  .tile.on { background: var(--blue); color: #fff; font-weight: 600; }
+  .cta { background: var(--blue); color: #fff; text-align: center; font: 600 16px system-ui; border-radius: 14px; padding: 13px 0; margin: 8px 0 4px; }
+  .cta.ghost { background: transparent; color: var(--blue); font-weight: 400; padding: 8px 0; }
+  .prev { display: flex; gap: 12px; align-items: center; background: var(--row); border-radius: 14px; padding: 10px 12px; margin-bottom: 8px; }
+  .prev .th { width: 52px; height: 52px; border-radius: 9px; background: linear-gradient(135deg, #ff9f0a, #ff453a); flex-shrink: 0; display: grid; place-items: center; font-size: 22px; }
+  .prev b { display: block; font: 600 14.5px system-ui; }
+  .prev small { color: var(--sub); font-size: 12.5px; display: block; margin-top: 2px; line-height: 1.35; }
+  .tip { display: flex; align-items: center; gap: 10px; border-radius: 16px; padding: 10px 12px; background: var(--card2); margin: 0 0 8px; font-size: 14px; }
+  .tip .orb { width: 30px; height: 30px; border-radius: 50%; background: conic-gradient(#0a84ff, #bf5af2, #ff375f, #ff9f0a, #0a84ff); flex-shrink: 0; }
+  .tip .x { margin-left: auto; color: var(--sub); }
+  .tip small { display: block; color: var(--sub); font-size: 11.5px; }
+  .slink { display: flex; align-items: center; justify-content: center; gap: 8px; background: #1c1c1e; color: #fff; border: 1px solid #48484a; border-radius: 12px; padding: 10px 0; font: 600 14px system-ui; margin: 0 0 8px; }
+  .phone.light .slink { background: #000; }
+  .slink i { width: 18px; height: 18px; border-radius: 5px; background: linear-gradient(135deg, #ff375f, #5e5ce6); display: inline-block; }
+  .st { display: inline-block; font: 600 10.5px system-ui; border-radius: 99px; padding: 1px 7px; background: rgba(10,132,255,.22); color: var(--blue); white-space: nowrap; }
+  .st.g { background: rgba(48,209,88,.2); color: var(--green); }
+  .st.o { background: rgba(255,159,10,.2); color: var(--orange); }
+  .st.n { background: var(--card2); color: var(--dim); }
+  .lang { display: inline-block; font: 700 10.5px system-ui; border-radius: 99px; padding: 2px 7px; background: rgba(128,128,128,.3); }
+  .lang.big { font-size: 12.5px; padding: 6px 10px; }
+  .inbar { position: absolute; left: 0; right: 0; bottom: 0; z-index: 6; padding: 8px 12px 14px; background: var(--card); border-top: 1px solid var(--sep); }
+  .infield { display: flex; align-items: center; gap: 8px; background: var(--card2); border-radius: 22px; padding: 0 8px 0 14px; height: 44px; color: var(--sub); font-size: 15px; }
+  .infield .sp { flex: 1; }
+  .rec2 { border: 1.5px solid rgba(255,69,58,.8); border-radius: 18px; padding: 8px 12px; background: var(--card2); font-size: 14px; }
+  .rec2 .hd { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--sub); margin-bottom: 4px; }
+  .rec2 .hd .sp { flex: 1; }
+  .rec2 .lv { height: 4px; border-radius: 99px; background: linear-gradient(90deg, var(--red) 62%, var(--sep) 62%); margin-top: 6px; }
+  .mail { background: var(--row); border-radius: 14px; padding: 10px 12px; margin-bottom: 8px; font-size: 13.5px; }
+  .mail b { display: block; font: 600 15px system-ui; }
+  .mail small { color: var(--sub); display: block; font-size: 12.5px; margin-top: 1px; }
+  .mail p { margin: 7px 0 0; color: var(--dim); line-height: 1.4; font-size: 13px; }
+  .mail .ai { margin-top: 9px; padding-top: 9px; border-top: 1px solid var(--sep); color: var(--purple); font-weight: 600; }
+  .sgs { display: inline-block; font: 600 10.5px system-ui; border: 1px solid var(--blue); color: var(--blue); border-radius: 7px; padding: 1px 6px; flex-shrink: 0; }
+  .fr.sg { background: rgba(191,90,242,.13); }
+  .spk { color: var(--purple); margin-right: 5px; }
+  .sw { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 10px; margin: 10px 0 0; max-width: 1100px; }
+  .swc { border: 1px solid rgba(128,128,128,.3); border-radius: 12px; overflow: hidden; font-size: 12px; }
+  .swc .smp { padding: 10px 12px; font: 13.5px -apple-system, system-ui; }
+  .swc .smp + .smp { border-top: 1px solid rgba(128,128,128,.25); }
+  .swc .cap2 { padding: 7px 12px; background: rgba(128,128,128,.1); line-height: 1.45; }
+  .ok { color: #1f7a35; font-weight: 700; } .no { color: #c01c13; font-weight: 700; }
+  @media (prefers-color-scheme: dark) { .ok { color: #30d158; } .no { color: #ff6961; } }
+  .gridc { position: relative; height: 150px; margin: 4px 0 8px 44px; border-left: 1px solid var(--sep); }
+  .gridc .ev { position: absolute; left: 4px; right: 4px; border-radius: 9px; padding: 4px 8px; font-size: 12.5px; box-sizing: border-box; }
+  .gridc .ev small { display: block; font-size: 11px; }
+  .menu .sec { font: 600 11px system-ui; color: var(--sub); padding: 6px 14px 4px; display: block; border-bottom: 0; }
+  .menu .cg { padding: 6px 8px; gap: 6px; }
+  .menu .cg span { flex: 1; text-align: center; background: rgba(128,128,128,.25); border-radius: 10px; padding: 7px 0; font-size: 12px; }
+  .menu div small { color: var(--sub); font-size: 12px; }
+  .menu .thick { border-bottom: 6px solid rgba(0,0,0,.28); }
+  table.sum td.c { white-space: nowrap; }
+  .kico { display: inline-flex; flex-direction: column; align-items: center; font-size: 11px; line-height: .7; font-weight: 700; }
+  .kico i { width: 26px; height: 15px; border: 1.6px solid currentColor; border-radius: 4px; box-sizing: border-box; background: repeating-linear-gradient(90deg, currentColor 0 2px, transparent 2px 5px) 3px 3px / 18px 2px no-repeat, linear-gradient(currentColor, currentColor) 6px 9px / 12px 2px no-repeat; }
+  .tr .st { flex-shrink: 0; margin-top: 2px; }
+  .bad-o { outline: 1.5px dashed #ff453a; outline-offset: 3px; border-radius: 6px; }
+  .fill { flex: 1 1 auto !important; }
+
+  /* Additions for this file: offer card above the input bar, notice line, check rows, consent text, overlay */
+  .offer { position: absolute; left: 12px; right: 12px; bottom: 74px; z-index: 6; margin: 0; background: var(--card2); box-shadow: inset 3px 0 0 #ffd60a, 0 6px 18px rgba(0,0,0,.35); }
+  .offer .btns { flex-wrap: wrap; }
+  .offer .btn { background: var(--card); padding: 7px 12px; font-size: 12.5px; }
+  .offer small.e, .nt.e { color: var(--orange); }
+  .nt { font-size: 12.5px; color: var(--dim); margin: 0 4px 7px; line-height: 1.35; }
+  .caps div { min-width: 0; }
+  .caps small { display: block; color: var(--sub); font-size: 11.5px; }
+  .caps.new2 { box-shadow: 0 0 0 1.5px #ffd60a, var(--glassshadow); }
+  .cb { width: 22px; height: 22px; border-radius: 50%; border: 1.6px solid var(--sub); display: grid; place-items: center; font: 700 12px system-ui; color: transparent; flex-shrink: 0; box-sizing: border-box; }
+  .cb.on { background: var(--blue); border-color: var(--blue); color: #fff; }
+  .cb.off { border-style: dashed; color: var(--sub); opacity: .7; }
+  .fr.tr2 { justify-content: flex-start; }
+  .fr.tr2 .v { margin-left: auto; white-space: nowrap; }
+  .ed { display: inline-block; border-bottom: 1px solid var(--sep); padding-bottom: 1px; min-width: 120px; }
+  .cs { display: flex; gap: 10px; margin: 0 4px 11px; font-size: 13.5px; line-height: 1.42; }
+  .cs .ci { color: var(--blue); width: 20px; flex-shrink: 0; text-align: center; }
+  .ov { position: absolute; left: 50%; top: 44%; transform: translate(-50%, -50%); z-index: 9; border-radius: 18px; padding: 16px 22px 12px; text-align: center; font-size: 14px; white-space: nowrap; }
+  .ov b { display: block; font-size: 22px; font-weight: 400; color: var(--sub); margin-bottom: 4px; }
+  .ov span { display: block; color: var(--blue); margin-top: 10px; font-size: 15px; }
+</style>
+</head>
+<body>
+
+<h1>Tagwerk · Einkaufsartikel übersetzen (SP5c) · Mockups SPC1 bis SPC8</h1>
+<p class="lead">Anlass: Ergänzung zu Designgruppe 3 (Issue #188, Kommentar „Ergänzung zu SP5“). Entschieden sind SP2b (die Einkaufsliste hat eine eigene Sprache, Vorgabe „Wie Rezepte“) und SP5b (Marke im Eingabefeld). Neu in der ersten Fassung: Nach einem Wechsel der Sprache bietet eine Karte an, die vorhandenen Artikel mit ChatGPT zu übersetzen. Die Datei zeigt den ganzen Ablauf; wo eine Frage offen ist, stehen zwei bis drei Wege mit einer Empfehlung (grünes Kürzel). Beispiel durchgehend: deutsche Liste, Wechsel auf Englisch. Gelbe Markierung = neu.</p>
+
+<div class="box neutral">
+  <h3>Entscheidungen auf einen Blick</h3>
+  <div class="tablewrap"><table class="sum">
+    <tr><th>Kürzel</th><th>Frage</th><th>Varianten</th><th>Empfehlung</th></tr>
+    <tr><td><span class="code">SPC1</span></td><td>Form des Angebots nach dem Wechsel</td><td>SPC1a Karte über dem Eingabefeld · SPC1b Kapsel, die nach 8 s verschwindet · SPC1c nur Menüeintrag</td><td class="c"><span class="code r">SPC1a</span></td></tr>
+    <tr><td><span class="code">SPC2</span></td><td>Wann erscheint die Karte wieder?</td><td>SPC2a bleibt bis zur Entscheidung, danach erst beim nächsten Wechsel · SPC2b nur bis zum Verlassen der Seite · SPC2c wie a, zusätzlich „Nicht mehr anbieten“</td><td class="c"><span class="code r">SPC2a</span></td></tr>
+    <tr><td><span class="code">SPC3</span></td><td>Vorschau der Übersetzung</td><td>SPC3a Liste „alt → neu“ mit Haken · SPC3b wie a, neuer Name zusätzlich änderbar</td><td class="c"><span class="code r">SPC3a</span></td></tr>
+    <tr><td><span class="code">SPC4</span></td><td>Welche Einwilligung deckt das Senden der Artikelnamen?</td><td>SPC4a keine eigene, der Tipp genügt (wie Entscheidung 6 in #173) · SPC4b die Einwilligung „Mit ChatGPT sortieren“, im Wortlaut erweitert · SPC4c eigene dritte Einwilligung</td><td class="c"><span class="code r">SPC4b</span></td></tr>
+    <tr><td><span class="code">SPC5</span></td><td>Welche Artikel werden übersetzt?</td><td>SPC5a nur offene · SPC5b offene und die unter „Erledigt“ (7 Tage)</td><td class="c"><span class="code r">SPC5a</span></td></tr>
+    <tr><td><span class="code">SPC6</span></td><td>Übersetzung ergibt einen Namen, der schon auf der Liste steht</td><td>SPC6a Artikel bleibt unverändert, Zeile ist markiert · SPC6b zusammenführen (einen der beiden löschen)</td><td class="c"><span class="code r">SPC6a</span></td></tr>
+    <tr><td><span class="code">SPC7</span></td><td>Geteilte Listen</td><td>SPC7a Hinweis in der Vorschau, immer · SPC7b zusätzliche Rückfrage vor dem Umbenennen</td><td class="c"><span class="code r">SPC7a</span></td></tr>
+    <tr><td><span class="code">SPC8</span></td><td>Rückmeldung nach dem Übernehmen</td><td>SPC8a Hinweiszeile · SPC8b Kapsel mit „Rückgängig“</td><td class="c"><span class="code r">SPC8b</span></td></tr>
+  </table></div>
+</div>
+
+<div class="box warn"><h3>Technische Randbedingungen aus dem Quelltext (Stand <code>547a88b</code>)</h3><ul>
+  <li><b>Artikel sind Erinnerungen.</b> Der Name ist der Titel, die Menge die erste Zeile der Notiz (<code>ShoppingModel.swift:151–155</code>). Tagwerk speichert keine Artikel selbst. Umbenennen heißt: Titel in Apple Erinnerungen ändern (<code>ShoppingModel.update</code>, Zeile 251). Die Menge wird beim Übersetzen weder gesendet noch geändert.</li>
+  <li><b>Die Sprache eines Artikels ist auf dem Gerät nicht bestimmbar.</b> Das mitgelieferte Wörterbuch (<code>ShoppingDictionary.json</code>) enthält deutsche und englische Wörter ohne Kennzeichnung. Die Karte nennt deshalb nicht „4 Artikel sind deutsch“ (so im Mockup SP5c), sondern die Zahl der offenen Artikel. Was schon in der Zielsprache steht, kommt unverändert zurück und erscheint nicht in der Vorschau.</li>
+  <li><b>Ob eine Liste geteilt ist, erfährt Tagwerk nicht.</b> <code>ListInfo</code> (<code>ReminderRecord.swift:49–56</code>) kennt nur Titel, Farbe, Art und Schreibbarkeit; ob EventKit das Teilen einer Erinnerungsliste überhaupt meldet, ist nicht geprüft. Der Hinweis auf geteilte Listen kann deshalb nicht bedingt erscheinen (SPC7).</li>
+  <li><b>Kategorien hängen am Namen.</b> Gelernte Zuordnungen sind unter dem Namensschlüssel gespeichert (<code>ShoppingCategoryStore.assign(nameKey:)</code>); „Karotten“ und „carrots“ sind zwei Schlüssel. Ohne Vorkehrung könnte ein übersetzter Artikel den Abschnitt wechseln.</li>
+  <li><b>Dubletten</b> erkennt die Liste über <code>ShoppingName.key</code> (Kleinschreibung, Umlaute gefaltet). „Milch“ und „milk“ gelten als zwei Artikel.</li>
+  <li><b>Vorbild für Anfrage und Vorschau:</b> „Mit ChatGPT sortieren“ (<code>ShoppingSorter.swift</code>, <code>ShoppingSortSheets.swift</code>): Einwilligung vor allem anderen, eine Anfrage mit striktem Schema, Antwort wird geprüft, Vorschlag mit Haken, nichts wird ohne „Übernehmen“ gespeichert.</li>
+</ul></div>
+
+<h2><span class="area">1</span> Angebot nach dem Wechsel</h2>
+<p class="lead"><b>SPC1 · Form des Angebots.</b> Der Wechsel geschieht über die Marke im Eingabefeld (SP5b) oder unter Einstellungen › Sprachen. In allen drei Varianten steht zusätzlich „Artikel übersetzen …“ im Menü „•••“ der Liste, damit das Übersetzen auch später erreichbar ist.</p>
+<div class="grid">
+  <div><p class="label"><span class="code r">SPC1a</span><b>Karte über dem Eingabefeld</b><span class="rec">Empfehlung</span></p>
+    <div class="phone mid"><div class="status"><span>13:20</span><span>●●● 5G</span></div><div class="scr">
+      <div class="pg"><span class="l">‹</span>Einkaufsliste<span class="r">•••</span></div>
+      <div class="fh">Obst &amp; Gemüse</div><div class="fs"><div class="fr"><span>◯ Äpfel</span></div><div class="fr"><span>◯ Karotten</span><span class="v">500 g</span></div></div>
+      <div class="fh">Kühlregal</div><div class="fs"><div class="fr"><span>◯ Milch</span></div><div class="fr"><span>◯ Butter</span></div></div>
+      <div class="fh">Vorrat</div><div class="fs"><div class="fr"><span>◯ Rote Linsen</span><span class="v">250 g</span></div><div class="fr"><span>◯ Kokosmilch</span><span class="v">1 Dose</span></div></div>
+      <div class="card offer"><h4>Einkaufsliste jetzt auf Englisch</h4><small>Neue Artikel kommen auf Englisch. Die 10 offenen Artikel bleiben, wie sie sind.</small><div class="btns"><span class="btn ok">✦ Mit ChatGPT übersetzen</span><span class="btn">So lassen</span></div></div>
+      <div class="inbar"><div class="infield"><span>Artikel hinzufügen</span><span class="sp"></span><span class="lang big">EN</span><span>🎙</span></div></div>
+    </div></div>
+    <p class="pc">Die Karte sitzt fest über dem Eingabefeld (dort, wo heute die Rückmeldung nach dem Hinzufügen steht) und verdeckt keine Zeile dauerhaft, weil die Liste darunter scrollt. Sie nennt, was sich geändert hat und was nicht. Empfehlung, weil das Angebot dort erscheint, wo der Wechsel getippt wurde, und so lange stehen bleibt, bis entschieden ist.</p></div>
+
+  <div><p class="label"><span class="code">SPC1b</span><b>Kapsel, verschwindet nach 8 s</b></p>
+    <div class="phone mid"><div class="status"><span>13:20</span><span>●●● 5G</span></div><div class="scr">
+      <div class="pg"><span class="l">‹</span>Einkaufsliste<span class="r">•••</span></div>
+      <div class="fh">Obst &amp; Gemüse</div><div class="fs"><div class="fr"><span>◯ Äpfel</span></div><div class="fr"><span>◯ Karotten</span><span class="v">500 g</span></div></div>
+      <div class="fh">Kühlregal</div><div class="fs"><div class="fr"><span>◯ Milch</span></div><div class="fr"><span>◯ Butter</span></div></div>
+      <div class="fh">Vorrat</div><div class="fs"><div class="fr"><span>◯ Rote Linsen</span><span class="v">250 g</span></div><div class="fr"><span>◯ Kokosmilch</span><span class="v">1 Dose</span></div></div>
+      <div class="caps glass new2"><div>Jetzt auf Englisch<small>10 Artikel bleiben, wie sie sind</small></div><span>Übersetzen</span></div>
+      <div class="inbar"><div class="infield"><span>Artikel hinzufügen</span><span class="sp"></span><span class="lang big">EN</span><span>🎙</span></div></div>
+    </div></div>
+    <p class="pc">Wie die Kapsel „Rückgängig“ in der Aufgabenliste. Stört am wenigsten, ist aber weg, bevor man sie gelesen hat, wenn man gerade diktiert; „ChatGPT“ passt nicht in den Knopf, und ein „So lassen“ gibt es nicht.</p></div>
+
+  <div><p class="label"><span class="code">SPC1c</span><b>Nur Menüeintrag</b></p>
+    <div class="phone mid"><div class="status"><span>13:20</span><span>●●● 5G</span></div><div class="scr">
+      <div class="pg"><span class="l">‹</span>Einkaufsliste<span class="r">•••</span></div>
+      <div class="fh">Obst &amp; Gemüse</div><div class="fs"><div class="fr"><span>◯ Äpfel</span></div><div class="fr"><span>◯ Karotten</span><span class="v">500 g</span></div></div>
+      <div class="fh">Kühlregal</div><div class="fs"><div class="fr"><span>◯ Milch</span></div><div class="fr"><span>◯ Butter</span></div></div>
+      <div class="pop glass" style="top:92px;right:10px;width:270px"><div><span>Mit ChatGPT sortieren</span><span>✦</span></div><div class="new" style="box-shadow:inset 3px 0 0 #ffd60a"><span>Artikel übersetzen …<br><small style="color:var(--sub);font-size:12px">ins Englische, mit ChatGPT</small></span><span>🌐</span></div><div><span>Rezept hinzufügen …</span><span>🍴</span></div><div><span>Kategorien verwalten</span><span>☰</span></div><div style="color:var(--red)"><span>Alle erledigten löschen</span><span>🗑</span></div></div>
+      <div class="inbar"><div class="infield"><span>Artikel hinzufügen</span><span class="sp"></span><span class="lang big">EN</span><span>🎙</span></div></div>
+    </div></div>
+    <p class="pc">Kein Angebot nach dem Wechsel; wer übersetzen will, öffnet das Menü. Erfüllt den Wunsch aus #188 („eine Karte bietet an“) nicht. Der Eintrag selbst ist in SPC1a und SPC1b ebenfalls vorhanden und zeigt die Zielsprache in der Unterzeile.</p></div>
+</div>
+
+<div class="box neutral"><h3>Wann die Karte erscheint (gilt für SPC1a)</h3><ol>
+  <li>Tagwerk merkt sich die Sprache, in der die Liste zuletzt „geklärt“ wurde (neuer Wert, zunächst leer). Beim ersten Öffnen nach dem Update wird die geltende Sprache übernommen: <b>keine Karte ohne Wechsel.</b></li>
+  <li>Die Karte erscheint auf der Seite „Einkaufsliste“, wenn die geltende Einkaufssprache von der gemerkten abweicht und mindestens ein offener Artikel da ist. Der Anlass ist gleich: Marke im Eingabefeld, Einstellungen › Sprachen, „Wie Rezepte“ nach geänderter Rezeptsprache, „Wie die App“ nach geänderter App-Sprache.</li>
+  <li>Sie verschwindet durch „So lassen“ (die neue Sprache wird gemerkt), nach dem Übernehmen einer Übersetzung, und ohne weiteres Zutun, wenn man zurückschaltet (DE → EN → DE).</li>
+  <li>Ist die Liste beim Wechsel leer, wird die neue Sprache still gemerkt.</li>
+  <li>Ohne Anmeldung bei ChatGPT zeigt die Karte den Knopf ausgegraut mit der Unterzeile „Anmeldung unter Einstellungen › KI“ (wie die Menüeinträge heute); „So lassen“ bleibt.</li>
+</ol></div>
+
+<div class="box neutral"><h3>SPC2 · Wann erscheint die Karte wieder?</h3><ul>
+  <li><b>SPC2a</b> <span class="rec">Empfehlung</span> Die Karte bleibt stehen, auch über einen Neustart der App, bis „So lassen“ oder „Übersetzen“ getippt oder zurückgeschaltet wurde. Danach kommt sie erst beim nächsten Wechsel wieder. Ein Wechsel, eine Frage; wer kurz zum Diktieren eines englischen Artikels umschaltet und zurück, wird nicht gefragt.</li>
+  <li><b>SPC2b</b> Die Karte gilt nur bis zum Verlassen der Seite; danach bleibt der Menüeintrag. Weniger aufdringlich, aber wer den Wechsel in den Einstellungen vornimmt und die Liste später öffnet, sähe sie genau einmal und könnte sie verpassen.</li>
+  <li><b>SPC2c</b> Wie SPC2a, dazu eine dritte Wahl „Nicht mehr anbieten“ samt Schalter unter Einstellungen › Sprachen. Sinnvoll erst, wenn sich im Alltag zeigt, dass häufig gewechselt und nie übersetzt wird; drei Knöpfe passen bei großer Schrift nicht in eine Zeile.</li>
+</ul></div>
+
+<h2><span class="area">2</span> Einwilligung</h2>
+<p class="lead"><b>SPC4 · Welche Einwilligung deckt das Senden der Artikelnamen?</b> Gesendet werden die Namen der offenen Artikel und der Name der Zielsprache; keine Mengen, keine Kategorien, keine erledigten Artikel.</p>
+<div class="grid">
+  <div><p class="label"><span class="code r">SPC4b</span><b>Einwilligung „Sortieren“, erweitert</b><span class="rec">Empfehlung</span></p>
+    <div class="phone mid"><div class="status"><span>13:20</span><span>●●● 5G</span></div><div class="scr"><div class="dim"></div>
+      <div class="sheet full"><div class="grab"></div><div class="bar">Mit ChatGPT übersetzen</div>
+        <p class="cs">Zum Übersetzen sendet Tagwerk die Namen deiner offenen Artikel und die Zielsprache an ChatGPT (OpenAI), über das Konto, mit dem du angemeldet bist.</p>
+        <p class="cs"><span class="ci">➤</span><span><b>Gesendet wird:</b> Artikelnamen. In einer geteilten Liste auch Artikel, die andere eingetragen haben.</span></p>
+        <p class="cs"><span class="ci">⦸</span><span><b>Nicht gesendet werden:</b> Mengen, erledigte Artikel, Aufgaben, Termine, Notizen, Daten aus Health.</span></p>
+        <p class="cs"><span class="ci">☝</span><span><b>Nur auf dein Tippen:</b> Ohne „Übersetzen“ verlässt nichts das iPhone.</span></p>
+        <p class="cs hot" style="border-radius:8px;padding:6px 8px"><span class="ci">✦</span><span>Die Einwilligung gilt auch für „Mit ChatGPT sortieren“; dabei gehen zusätzlich die Namen deiner Kategorien mit.</span></p>
+        <div class="cta">Einverstanden und übersetzen</div><div class="cta ghost">Nicht jetzt</div>
+        <div class="ff" style="text-align:center">Du kannst das in den Einstellungen unter „Einkaufsliste“ widerrufen.</div>
+      </div>
+    </div></div>
+    <p class="pc">Dasselbe Blatt wie beim Sortieren, mit Überschrift, erstem Satz und Knopf je nach Anlass. Es erscheint nur, wenn der Schalter noch aus ist. Der Schalter in Einstellungen › Einkaufsliste heißt künftig „Mit ChatGPT sortieren und übersetzen“.</p></div>
+
+  <div><div class="box neutral" style="margin-top:0"><h3>Abwägung</h3><ul>
+    <li><b>SPC4a · keine eigene Einwilligung.</b> Entscheidung 6 in #173 gilt für den Assistenten: Dort bittet man im Chat ausdrücklich darum, und der Chat selbst macht klar, wohin der Text geht. Ein Knopf auf einer Karte ist das nicht dasselbe. Außerdem sendet „Mit ChatGPT sortieren“ dieselben Daten und fragt vorher; ein Knopf mit und ein Knopf ohne Blatt auf derselben Seite wäre widersprüchlich.</li>
+    <li><b>SPC4b · Einwilligung „Sortieren“ erweitern</b> <span class="rec">Empfehlung</span> Gleiche Daten (Namen der offenen Artikel, auch fremde in geteilten Listen), gleicher Empfänger, gleiche Auslösung auf Tippen; das Übersetzen sendet sogar weniger (keine Kategorienamen). Dasselbe Vorgehen wie bei der Rezept-Übersetzung (#232), die die Rezept-Einwilligung erweitert. Kein vierter Schalter.<br><b>Schwäche:</b> Wer dem Sortieren schon zugestimmt hat, wird beim ersten Übersetzen nicht erneut gefragt, obwohl der alte Text nur vom Sortieren sprach. Der Knopf nennt ChatGPT, und der Fußtext der Einstellungen wird angepasst; eine neue Zustimmung ist das nicht.</li>
+    <li><b>SPC4c · eigene Einwilligung „Artikel übersetzen“.</b> Behebt die Schwäche von SPC4b: Jeder wird beim ersten Übersetzen gefragt. Kostet einen dritten Schalter unter „ChatGPT“ in den Einstellungen der Einkaufsliste und ein drittes, fast gleichlautendes Blatt.</li>
+  </ul></div>
+  <div class="box warn"><h3>In allen Varianten</h3><ul><li>Die Prüfung der Einwilligung steht vor allem, was OpenAI erreichen könnte, auch vor dem Laden der Modellliste (wie <code>ShoppingSorter.sort</code>).</li><li>„Nicht jetzt“ sendet nichts und lässt die Karte stehen.</li><li>Der Fußtext unter Einstellungen › Einkaufsliste nennt das Übersetzen.</li></ul></div></div>
+</div>
+
+<h2><span class="area">3</span> Vorschau</h2>
+<p class="lead"><b>SPC3 · Vorschau der Übersetzung.</b> Nach der Antwort öffnet sich ein Blatt (halbhoch, aufziehbar). Es zeigt nur Artikel, deren Name sich ändert; „Butter“, „Nutella“ und Artikel, die schon englisch sind, fehlen. Nichts ist gespeichert, bevor „Übernehmen“ getippt wird.</p>
+<div class="grid">
+  <div><p class="label"><span class="code r">SPC3a</span><b>„alt → neu“ mit Haken</b><span class="rec">Empfehlung</span></p>
+    <div class="phone"><div class="status"><span>13:21</span><span>●●● 5G</span></div><div class="scr"><div class="dim"></div>
+      <div class="sheet full"><div class="grab"></div><div class="bar"><span class="l">Verwerfen</span>Übersetzung<span>Übernehmen</span></div>
+        <div class="fh">6 von 7 Artikeln · Englisch</div>
+        <div class="fs">
+          <div class="fr tr2"><span class="cb on">✓</span><span class="n">Apples<small>Äpfel</small></span></div>
+          <div class="fr tr2"><span class="cb on">✓</span><span class="n">Carrots<small>Karotten</small></span><span class="v">500 g</span></div>
+          <div class="fr tr2"><span class="cb on">✓</span><span class="n">Milk<small>Milch</small></span></div>
+          <div class="fr tr2"><span class="cb"></span><span class="n" style="color:var(--sub)">Cream<small>Sahne · abgewählt, bleibt „Sahne“</small></span></div>
+          <div class="fr tr2"><span class="cb on">✓</span><span class="n">Red lentils<small>Rote Linsen</small></span><span class="v">250 g</span></div>
+          <div class="fr tr2"><span class="cb on">✓</span><span class="n">Coconut milk<small>Kokosmilch</small></span><span class="v">1 Dose</span></div>
+          <div class="fr tr2"><span class="cb on">✓</span><span class="n">Dish soap<small>Spülmittel</small></span></div>
+        </div>
+        <div class="fh">Bleibt unverändert</div>
+        <div class="fs"><div class="fr tr2 new"><span class="cb off">–</span><span class="n" style="color:var(--sub)">Möhren<small>„Carrots“ steht dann schon auf der Liste</small></span></div></div>
+        <div class="ff">Mengen bleiben, wie sie sind. Die Namen ändern sich in Apple Erinnerungen; in einer geteilten Liste sehen auch die anderen die neuen Namen.</div>
+      </div>
+    </div></div>
+    <p class="pc">Aufbau wie „Vorschlag von ChatGPT“ beim Sortieren: je Zeile ein Haken, der neue Name groß, der alte klein darunter, die Menge unverändert rechts. Abgewählte Artikel bleiben, wie sie sind. „Übernehmen“ ist aus, solange nichts gewählt ist. „Butter“ und „Nutella“ fehlen, weil ihr Name gleich bleibt.</p></div>
+
+  <div><p class="label"><span class="code">SPC3b</span><b>Neuer Name änderbar</b></p>
+    <div class="phone"><div class="status"><span>13:21</span><span>●●● 5G</span></div><div class="scr"><div class="dim"></div>
+      <div class="sheet full"><div class="grab"></div><div class="bar"><span class="l">Verwerfen</span>Übersetzung<span>Übernehmen</span></div>
+        <div class="fh">7 von 7 Artikeln · Englisch</div>
+        <div class="fs">
+          <div class="fr tr2"><span class="cb on">✓</span><span class="n"><span class="ed">Apples</span><small>Äpfel</small></span></div>
+          <div class="fr tr2"><span class="cb on">✓</span><span class="n"><span class="ed">Carrots</span><small>Karotten</small></span><span class="v">500 g</span></div>
+          <div class="fr tr2"><span class="cb on">✓</span><span class="n"><span class="ed">Milk</span><small>Milch</small></span></div>
+          <div class="fr tr2 new"><span class="cb on">✓</span><span class="n"><span class="ed">Cream<i class="cur"></i></span><small>Sahne</small></span></div>
+          <div class="fr tr2"><span class="cb on">✓</span><span class="n"><span class="ed">Red lentils</span><small>Rote Linsen</small></span><span class="v">250 g</span></div>
+          <div class="fr tr2"><span class="cb on">✓</span><span class="n"><span class="ed">Coconut milk</span><small>Kokosmilch</small></span><span class="v">1 Dose</span></div>
+        </div>
+        <div class="ff">Tippe auf einen Namen, um ihn zu ändern. Mengen bleiben, wie sie sind …</div>
+        <div class="kb" style="position:static;margin:8px -14px 0"><div class="keys"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="keys"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="keys"><i class="w"></i><i class="sp"></i><i class="ret b">Fertig</i></div></div>
+      </div>
+    </div></div>
+    <p class="pc">Jeder neue Name ist ein Textfeld, etwa um „Cream“ in „Heavy cream“ zu ändern. Fängt unglückliche Übersetzungen vor dem Umbenennen ab, macht aus der Prüfliste aber ein Formular mit Tastatur, eigener Dubletten-Prüfung je Tastendruck und mehr Fehlerfällen. Dasselbe leistet danach „Bearbeiten“ am einzelnen Artikel.</p></div>
+
+  <div><div class="box neutral" style="margin-top:0"><h3>Regeln der Vorschau (ohne Variante)</h3><ul>
+    <li><b>Mengen und Einheiten bleiben.</b> „1 Dose“ steht nach dem Übersetzen weiter neben „Coconut milk“. Die Menge wird nicht gesendet. Grenze: Eine Liste ist danach im Namen einsprachig, in den Einheiten nicht.</li>
+    <li><b>Zahlen im Namen bleiben.</b> Ändert die Antwort eine Zahl („Cola 0,5 l“), bleibt der Artikel unverändert.</li>
+    <li><b>Eigennamen und Marken</b> soll ChatGPT stehen lassen; kommt derselbe Name zurück, erscheint der Artikel nicht.</li>
+    <li><b>Gleiche Namen</b> (zwei Erinnerungen „Milch“) gehen einmal hinaus und werden gemeinsam umbenannt.</li>
+    <li><b>Reihenfolge</b> wie in der Liste, also nach Abschnitten.</li>
+    <li><b>Mehr als 100 offene Artikel:</b> Die ersten 100 werden übersetzt; die Fußzeile nennt den Rest („23 weitere Artikel: danach noch einmal über „•••“ übersetzen“). Schon Übersetztes kommt beim zweiten Lauf unverändert zurück.</li>
+  </ul></div></div>
+</div>
+
+<div class="box neutral"><h3>SPC5 · Welche Artikel werden übersetzt?</h3><ul>
+  <li><b>SPC5a</b> <span class="rec">Empfehlung</span> Nur offene Artikel. Erledigte bleiben in ihrer Sprache; der Abschnitt „Erledigt“ zeigt sie höchstens sieben Tage. Es geht so wenig wie möglich hinaus (so sagt es auch das Einwilligungsblatt), und die Historie in Apple Erinnerungen bleibt, wie sie eingekauft wurde. Folge: Wer „Milk“ hinzufügt, während „Milch“ unter „Erledigt“ steht, bekommt einen neuen Artikel statt des wieder geöffneten alten.</li>
+  <li><b>SPC5b</b> Offene und die unter „Erledigt“ sichtbaren. Die Seite ist danach ganz einsprachig und das Wiederöffnen greift weiter, dafür gehen erledigte Artikel an ChatGPT (das Einwilligungsblatt des Sortierens schließt sie heute aus) und es werden mehr Erinnerungen geändert, in geteilten Listen auch bereits abgehakte anderer.</li>
+</ul></div>
+
+<div class="box neutral"><h3>SPC6 · Die Übersetzung ergibt einen Namen, der schon auf der Liste steht</h3><ul>
+  <li><b>SPC6a</b> <span class="rec">Empfehlung</span> Der Artikel wird nicht umbenannt. Die Vorschau zeigt ihn unter „Bleibt unverändert“ mit dem Grund (oben: „Möhren“ neben einem vorhandenen oder gleichzeitig entstehenden „Carrots“). Es wird nie etwas gelöscht oder zusammengezählt; aufräumen kann man von Hand. Dasselbe gilt, wenn zwei Artikel denselben neuen Namen bekämen: Der erste in Listenreihenfolge wird umbenannt, der zweite bleibt.</li>
+  <li><b>SPC6b</b> Zusammenführen: Der übersetzte Artikel ersetzt den vorhandenen, einer der beiden wird gelöscht. Hält die Liste frei von Dubletten, löscht aber Erinnerungen (in geteilten Listen auch fremde) und muss über zwei Mengen entscheiden („500 g“ und „2“ lassen sich nicht addieren).</li>
+</ul></div>
+
+<div class="box neutral"><h3>SPC7 · Geteilte Listen</h3><ul>
+  <li><b>SPC7a</b> <span class="rec">Empfehlung</span> Ein Satz in der Fußzeile der Vorschau, immer: „… in einer geteilten Liste sehen auch die anderen die neuen Namen.“ Tagwerk kann nicht erkennen, ob die Liste geteilt ist; ein bedingter Hinweis wäre nur möglich, wenn EventKit das meldet (nicht geprüft).</li>
+  <li><b>SPC7b</b> Zusätzlich eine Rückfrage vor dem Umbenennen („12 Artikel in Apple Erinnerungen umbenennen?“). Die Vorschau ist bereits die Rückfrage; ein zweiter Dialog nach „Übernehmen“ würde jedes Mal erscheinen, auch bei Listen, die niemand teilt.</li>
+</ul></div>
+
+<div class="box"><h3>Umbenennen in Apple Erinnerungen · Regeln ohne Variante</h3><ul>
+  <li><b>Nur der Titel</b> der Erinnerung wird geschrieben. Notiz (Menge), Fälligkeit, Erledigt-Zustand und Liste bleiben. Jede Erinnerung wird vor dem Schreiben frisch gelesen und nur geändert, wenn sie in der Einkaufsliste liegt (wie jeder Schreibweg von <code>ShoppingModel</code>).</li>
+  <li><b>Zwischenzeitlich geändert:</b> Wurde ein Artikel seit der Vorschau abgehakt, gelöscht oder umbenannt (auch von anderen in einer geteilten Liste), wird er übersprungen.</li>
+  <li><b>Kategorien bleiben.</b> Der Artikel steht nach dem Umbenennen im selben Abschnitt wie vorher: Hat der neue Name noch keine eigene Zuordnung und würde er anders einsortiert, übernimmt er die Kategorie des alten Namens (von Hand gesetzte Zuordnungen bleiben von Hand gesetzt). Eine vorhandene Zuordnung des neuen Namens gewinnt. Die Zuordnung des alten Namens bleibt für künftige Artikel bestehen.</li>
+  <li><b>Siri</b> lernt die neuen Namen wie nach jedem Laden der Liste (<code>onNamesChanged</code>).</li>
+</ul></div>
+
+<h2><span class="area">4</span> Nach dem Übernehmen</h2>
+<p class="lead"><b>SPC8 · Rückmeldung.</b> Die Karte ist weg, die Liste zeigt die neuen Namen in denselben Abschnitten.</p>
+<div class="grid">
+  <div><p class="label"><span class="code">SPC8a</span><b>Hinweiszeile</b></p>
+    <div class="phone mid"><div class="status"><span>13:21</span><span>●●● 5G</span></div><div class="scr">
+      <div class="pg"><span class="l">‹</span>Einkaufsliste<span class="r">•••</span></div>
+      <div class="fh">Obst &amp; Gemüse</div><div class="fs"><div class="fr"><span>◯ Apples</span></div><div class="fr"><span>◯ Carrots</span><span class="v">500 g</span></div></div>
+      <div class="fh">Kühlregal</div><div class="fs"><div class="fr"><span>◯ Milk</span></div><div class="fr"><span>◯ Butter</span></div></div>
+      <div class="fh">Vorrat</div><div class="fs"><div class="fr"><span>◯ Red lentils</span><span class="v">250 g</span></div><div class="fr"><span>◯ Coconut milk</span><span class="v">1 Dose</span></div></div>
+      <div class="inbar"><div class="nt">6 Artikel übersetzt.</div><div class="infield"><span>Artikel hinzufügen</span><span class="sp"></span><span class="lang big">EN</span><span>🎙</span></div></div>
+    </div></div>
+    <p class="pc">Die vorhandene Zeile über dem Eingabefeld (<code>notice</code>). Kein neues Element, aber auch kein Weg zurück außer Artikel für Artikel.</p></div>
+
+  <div><p class="label"><span class="code r">SPC8b</span><b>Kapsel mit „Rückgängig“</b><span class="rec">Empfehlung</span></p>
+    <div class="phone mid"><div class="status"><span>13:21</span><span>●●● 5G</span></div><div class="scr">
+      <div class="pg"><span class="l">‹</span>Einkaufsliste<span class="r">•••</span></div>
+      <div class="fh">Obst &amp; Gemüse</div><div class="fs"><div class="fr"><span>◯ Apples</span></div><div class="fr"><span>◯ Carrots</span><span class="v">500 g</span></div></div>
+      <div class="fh">Kühlregal</div><div class="fs"><div class="fr"><span>◯ Milk</span></div><div class="fr"><span>◯ Butter</span></div></div>
+      <div class="fh">Vorrat</div><div class="fs"><div class="fr"><span>◯ Red lentils</span><span class="v">250 g</span></div><div class="fr"><span>◯ Coconut milk</span><span class="v">1 Dose</span></div></div>
+      <div class="caps glass new2"><div>6 Artikel übersetzt<small>Englisch</small></div><span>↩ Rückgängig</span></div>
+      <div class="inbar"><div class="infield"><span>Artikel hinzufügen</span><span class="sp"></span><span class="lang big">EN</span><span>🎙</span></div></div>
+    </div></div>
+    <p class="pc">Die Kapsel der Aufgabenliste (<code>UndoCapsule</code>), 8 Sekunden. „Rückgängig“ setzt die alten Namen zurück, sofern ein Artikel seither nicht erneut geändert wurde, und die Karte erscheint wieder. Empfehlung, weil das Umbenennen in einer geteilten Liste die eine Folge ist, die sich sonst nur mühsam zurücknehmen lässt. Nach Ablauf bleibt der Weg über den Sprachwechsel zurück und erneutes Übersetzen.</p></div>
+</div>
+
+<h2><span class="area n">5</span> Laden, Fehler, offline</h2>
+<p class="lead">Keine Varianten; Verhalten wie bei „Mit ChatGPT sortieren“. In jedem Fehlerfall bleibt die Liste unverändert und die Karte stehen, sodass ein zweiter Versuch einen Tipp kostet.</p>
+<div class="grid">
+  <div><p class="label"><b>Anfrage läuft</b></p>
+    <div class="phone short"><div class="status"><span>13:20</span><span>●●● 5G</span></div><div class="scr">
+      <div class="pg"><span class="l">‹</span>Einkaufsliste<span class="r">•••</span></div>
+      <div class="fh">Obst &amp; Gemüse</div><div class="fs"><div class="fr"><span>◯ Äpfel</span></div><div class="fr"><span>◯ Karotten</span><span class="v">500 g</span></div></div>
+      <div class="fh">Kühlregal</div><div class="fs"><div class="fr"><span>◯ Milch</span></div><div class="fr"><span>◯ Butter</span></div></div>
+      <div class="ov glass"><b>◌</b>ChatGPT übersetzt …<span>Abbrechen</span></div>
+      <div class="inbar"><div class="infield"><span>Artikel hinzufügen</span><span class="sp"></span><span class="lang big">EN</span><span>🎙</span></div></div>
+    </div></div>
+    <p class="pc">Dieselbe Überlagerung wie beim Sortieren. „Abbrechen“ verwirft die Antwort; eine späte oder halbe Antwort wird nie verwendet. Verlässt man die Seite, wird ebenfalls abgebrochen.</p></div>
+
+  <div><p class="label"><b>Offline oder Fehler</b></p>
+    <div class="phone short"><div class="status"><span>13:20</span><span>✈︎</span></div><div class="scr">
+      <div class="pg"><span class="l">‹</span>Einkaufsliste<span class="r">•••</span></div>
+      <div class="fh">Obst &amp; Gemüse</div><div class="fs"><div class="fr"><span>◯ Äpfel</span></div><div class="fr"><span>◯ Karotten</span><span class="v">500 g</span></div></div>
+      <div class="card offer err"><h4>Einkaufsliste jetzt auf Englisch</h4><small class="e">Keine Verbindung. Das Übersetzen braucht Internet.</small><div class="btns"><span class="btn ok">✦ Noch einmal versuchen</span><span class="btn">So lassen</span></div></div>
+      <div class="inbar"><div class="infield"><span>Artikel hinzufügen</span><span class="sp"></span><span class="lang big">EN</span><span>🎙</span></div></div>
+    </div></div>
+    <p class="pc">Die Meldung ersetzt den zweiten Satz der Karte. Weitere Texte an derselben Stelle: „Die Anmeldung bei ChatGPT ist abgelaufen. Melde dich unter Einstellungen › KI neu an.“ · „ChatGPT nimmt gerade keine Anfragen an. Versuch es später noch einmal.“ · „Die Übersetzung passt nicht zur Liste. Versuch es noch einmal.“ (Antwort mit fehlenden oder fremden Einträgen) · „Das Übersetzen ist fehlgeschlagen. Versuch es noch einmal.“</p></div>
+
+  <div><p class="label"><b>Nichts zu übersetzen</b></p>
+    <div class="phone short"><div class="status"><span>13:20</span><span>●●● 5G</span></div><div class="scr">
+      <div class="pg"><span class="l">‹</span>Einkaufsliste<span class="r">•••</span></div>
+      <div class="fh">Obst &amp; Gemüse</div><div class="fs"><div class="fr"><span>◯ Apples</span></div><div class="fr"><span>◯ Carrots</span><span class="v">500 g</span></div></div>
+      <div class="fh">Sonstiges</div><div class="fs"><div class="fr"><span>◯ Nutella</span></div></div>
+      <div class="inbar"><div class="nt">Alle Artikel sind schon auf Englisch.</div><div class="infield"><span>Artikel hinzufügen</span><span class="sp"></span><span class="lang big">EN</span><span>🎙</span></div></div>
+    </div></div>
+    <p class="pc">Kommt jeder Name unverändert zurück, öffnet sich kein leeres Blatt. Die Karte verschwindet, die Sprache gilt als geklärt.</p></div>
+
+  <div><p class="label"><b>Teilweise umbenannt</b></p>
+    <div class="phone short"><div class="status"><span>13:21</span><span>●●● 5G</span></div><div class="scr">
+      <div class="pg"><span class="l">‹</span>Einkaufsliste<span class="r">•••</span></div>
+      <div class="fh">Obst &amp; Gemüse</div><div class="fs"><div class="fr"><span>◯ Apples</span></div><div class="fr"><span>◯ Karotten</span><span class="v">500 g</span></div></div>
+      <div class="fh">Kühlregal</div><div class="fs"><div class="fr"><span>◯ Milk</span></div></div>
+      <div class="inbar"><div class="nt e">5 von 6 Artikeln übersetzt. 1 Artikel wurde inzwischen geändert und bleibt.</div><div class="infield"><span>Artikel hinzufügen</span><span class="sp"></span><span class="lang big">EN</span><span>🎙</span></div></div>
+    </div></div>
+    <p class="pc">Schlägt das Schreiben einzelner Erinnerungen fehl oder wurde ein Artikel inzwischen geändert, nennt die Hinweiszeile beide Zahlen; bei einem Schreibfehler steht dahinter die Meldung von Apple Erinnerungen (wie beim Hinzufügen). Die Karte verschwindet; der Rest lässt sich über „•••“ erneut übersetzen. Ohne Zugriff auf Erinnerungen gibt es die Seite und damit die Karte nicht.</p></div>
+</div>
+
+<div class="box warn"><h3>Nicht geprüft und nicht im Umfang</h3><ul>
+  <li>Nichts ist gebaut oder am Gerät geprüft. Die Qualität der Übersetzung kurzer Einzelwörter („Sahne“, „Quark“, „Schmand“) ist eine Annahme; die Vorschau ist die Absicherung.</li>
+  <li>Einheiten in Mengen werden nicht übersetzt (Vorgabe). Erledigte Artikel werden nicht übersetzt (SPC5a).</li>
+  <li>Der Assistent bekommt kein Werkzeug zum Umbenennen von Artikeln; „übersetze meine Einkaufsliste“ im Chat bleibt ohne Wirkung auf die Liste.</li>
+  <li>Artikel aus einer lokal gelesenen Rezept-Notiz in anderer Sprache (Plan L4, Regel 7) lösen die Karte nicht aus; der Hinweis im Ergebnisblatt verweist künftig auf „•••“ › „Artikel übersetzen …“.</li>
+</ul></div>
+
+</body>
+</html>

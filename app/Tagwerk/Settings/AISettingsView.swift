@@ -36,10 +36,6 @@ struct AISettingsView: View {
             #endif
         }
         .scrollDismissesKeyboard(.interactively)
-        // Withdrawing the consent ends the note session: read texts are forgotten, the chat itself stays.
-        .onChange(of: environment.settings.noteAssistantConsent) { _, allowed in
-            if !allowed { environment.assistant.endNoteSession() }
-        }
         .navigationTitle("KI")
         .navigationBarTitleDisplayMode(.inline)
         .task {
@@ -235,7 +231,7 @@ struct AIPrivacyView: View {
                 Text("Tagwerk ruft die KI nur auf, wenn du sie selbst startest, zum Beispiel mit „Tag planen“ oder einer Nachricht an den Assistenten. Im Hintergrund geschieht das nie, und Tagwerk fragt nicht bei jedem Aufruf erneut nach.")
                 Text("Beim Planen geht je Aufgabe auch eine erwartete Dauer in Minuten mit, abgeleitet aus deinen bisherigen Messungen. Die Messungen selbst und die Labels bleiben auf dem iPhone. Abschalten kannst du das unter Einstellungen › Fokus-Timer.")
                 Text("Für eine geteilte Mail sendet Tagwerk nur dann Betreff, Absendername und Text (höchstens 12 000 Zeichen) an ChatGPT, wenn du in der Einstellung „Mails von ChatGPT zusammenfassen“ zugestimmt hast und auf „Mit ChatGPT zusammenfassen“ tippst. Anhänge, Adressen, Empfänger und der Link zur Mail gehören nicht zur Zusammenfassung. Fragst du später den Assistenten nach der Aufgabe, kann deren Notiz mit dem Link an ChatGPT gehen, wie bei jeder Aufgabe. Der Eingang für geteilte Inhalte liegt nur auf diesem iPhone und gehört nicht zur Datensicherung.")
-                Text("Für ein Rezept sendet Tagwerk auf dein Tippen den Rezepttext, das Foto oder den gelesenen Text einer Seite an ChatGPT, bei „Rezept hinzufügen“ dazu die Namen deiner Kategorien, wenn du in der Einkaufsliste zugestimmt hast. Wählst du eine Notiz ohne Zutaten und Zubereitung als Quelle, geht ihr Text an ChatGPT; eine Notiz mit beiden Abschnitten liest Tagwerk auf dem iPhone. Private Notizen (Tagebuch, Bible Study, Dream Log) stehen dafür nie zur Auswahl.")
+                Text("Für ein Rezept sendet Tagwerk auf dein Tippen den Rezepttext, das Foto oder den gelesenen Text einer Seite an ChatGPT, bei „Rezept hinzufügen“ dazu die Namen deiner Kategorien, wenn du in der Einkaufsliste zugestimmt hast. Wählst du eine Notiz ohne Zutaten und Zubereitung als Quelle, geht ihr Text an ChatGPT; eine Notiz mit beiden Abschnitten liest Tagwerk auf dem iPhone. Übersetzt du eine Rezept-Notiz, geht ihr Text zeilenweise an ChatGPT; Überschriften, Anhänge und die Quelle bleiben auf dem iPhone. Private Notizen (Tagebuch, Bible Study, Dream Log) stehen dafür nie zur Auswahl.")
                 Text("Notizen gehen nur mit dem Schalter „Notizen mit ChatGPT“ an den Assistenten: Titel und Ausschnitte der Treffer seiner Suche, bei Bedarf der ganze Text einer Notiz und, im Notiz-Chat, Änderungen daran. Ist der Schalter aus, erfährt der Assistent nur, wie viele Notizen zu einer Suche passen. Was der Assistent aus Notizen liest, gilt nur für das laufende Gespräch und geht beim Beenden der App, beim Wechsel des Chats und beim Löschen des Verlaufs verloren. Antworten des Assistenten und deine Nachrichten bleiben im Verlauf und können Notizinhalt zitieren. Tagebuch mit Gott, Bible Study und Dream Log verlassen das iPhone nie.")
                 Text("„Abmelden“ löscht die Anmeldung bei ChatGPT von diesem iPhone. Danach sind die KI-Funktionen aus, bis du dich wieder anmeldest.")
             }

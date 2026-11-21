@@ -60,6 +60,10 @@ final class AssistantModel {
     @ObservationIgnored private var key = ChatStore.assistantKey
     /// The consent was withdrawn while a turn was running; the history is reduced as soon as the turn ends.
     @ObservationIgnored private var pendingNoteSessionEnd = false
+    /// The consent "Notizen mit ChatGPT" as the settings hold it; `nil` until `watchNoteConsent` is called.
+    @ObservationIgnored private var noteConsent: (() -> Bool)?
+    /// The consent as last seen, to notice the change to `false` (and nothing else).
+    @ObservationIgnored private var noteConsentWasGiven = false
     /// GitHub access and issue lookup for chats about one task.
     @ObservationIgnored var reader: RepositoryReading?
     @ObservationIgnored var issueReference: (TaskID) -> IssueReference? = { _ in nil }
@@ -85,6 +89,7 @@ final class AssistantModel {
     func open(context: Context) {
         // The voice mode keeps its conversation until it ends (stage 2 review 4).
         guard onTurnFinished == nil else { isPresented = true; return }
+        guard !isHoldingOtherChat(ChatStore.assistantKey) else { isPresented = true; return }
         self.context = context
         switchThread(to: ChatStore.assistantKey, tools: tools)
         task = nil
@@ -94,6 +99,7 @@ final class AssistantModel {
     /// "Über diese Aufgabe sprechen": the task's own chat, with the repository functions for GitHub issues.
     func open(task: TaskItem) {
         guard onTurnFinished == nil else { isPresented = true; return }
+        guard !isHoldingOtherChat("task:\(task.id.key)") else { isPresented = true; return }
         context = .task(task.id)
         let reference = task.id.source == .github ? issueReference(task.id) : nil
         let handler = TaskChatTools(base: tools, reader: reader ?? NoRepositoryReader(), reference: reader == nil ? nil : reference)
@@ -101,6 +107,13 @@ final class AssistantModel {
         self.task = task
         switchThread(to: "task:\(task.id.key)", tools: handler)
         isPresented = true
+    }
+
+    /// True while a turn runs in a chat other than `newKey`. Such a switch waits: the turn belongs to the running
+    /// conversation, and replacing it would let the turn read notes into the session of the new chat and save its result
+    /// under the wrong key. The chat that is shown stays until the turn ends (the same rule as the voice mode).
+    private func isHoldingOtherChat(_ newKey: String) -> Bool {
+        conversation?.isBusy == true && key != newKey
     }
 
     private func switchThread(to newKey: String, tools handler: ToolHandler) {
@@ -124,6 +137,7 @@ final class AssistantModel {
             onTurnFinished?(.rejected)
             return
         }
+        syncNoteConsent()
         if let task, taskContext == nil {
             // GitHub is asked only now, when the user starts the conversation.
             let reference = task.id.source == .github ? issueReference(task.id) : nil
@@ -231,6 +245,7 @@ final class AssistantModel {
             return
         }
         if calls.count == 1 { return await confirm(calls[0]) }
+        syncNoteConsent()
         let index = conversation.history.count
         for call in calls {
             actionTimes[call.id] = now()
@@ -297,6 +312,7 @@ final class AssistantModel {
 
     func confirm(_ call: ToolCall) async {
         guard let conversation else { return }
+        syncNoteConsent()
         actionTimes[call.id] = now()
         let index = conversation.history.count
         await conversation.confirm(call)
@@ -336,6 +352,7 @@ final class AssistantModel {
     /// "Alle bestätigen (N)" (mockup e).
     func confirmAll() async {
         guard let conversation else { return }
+        syncNoteConsent()
         let index = conversation.history.count
         // Guarded cards stay open: they are confirmed one by one.
         let calls = batchConfirmable
@@ -356,6 +373,7 @@ final class AssistantModel {
     }
 
     func decline(_ call: ToolCall) async {
+        syncNoteConsent()
         let index = conversation?.history.count ?? 0
         await conversation?.decline(call)
         persist()
@@ -363,6 +381,7 @@ final class AssistantModel {
     }
 
     func retry() async {
+        syncNoteConsent()
         let index = conversation?.history.count ?? 0
         await conversation?.retry()
         persist()
@@ -380,14 +399,45 @@ final class AssistantModel {
         store.delete(key)
     }
 
-    /// Called when the consent "Notizen mit ChatGPT" was withdrawn: ends the note session. The history in memory is
-    /// reduced to its stored form (the model no longer sees note texts it read earlier), the saved chat is updated.
+    /// Ends the note session (`watchNoteConsent` calls it when the consent "Notizen mit ChatGPT" was withdrawn). The history
+    /// in memory is reduced to its stored form (the model no longer sees note texts it read earlier), the saved chat is updated.
     /// While a turn is running the reduction follows when the turn ends (`persist()` runs after every turn).
     func endNoteSession() {
         pendingNoteSessionEnd = true
         tools.noteSession.reset()
         applyNoteSessionEnd()
         persist()
+    }
+
+    /// Starts following the consent "Notizen mit ChatGPT" (`AppEnvironment` passes the setting): every change to `false`
+    /// ends the note session, wherever it comes from (settings screen, backup restore, any later code path). The
+    /// observation hands over on the next main actor turn; `syncNoteConsent()` closes that gap at the start of a turn.
+    func watchNoteConsent(_ consent: @escaping () -> Bool) {
+        noteConsent = consent
+        noteConsentWasGiven = consent()
+        observeNoteConsent()
+    }
+
+    private func observeNoteConsent() {
+        guard let noteConsent else { return }
+        withObservationTracking {
+            _ = noteConsent()
+        } onChange: { [weak self] in
+            // `onChange` runs before the new value is set; read it one turn later and register again.
+            Task { @MainActor [weak self] in
+                self?.syncNoteConsent()
+                self?.observeNoteConsent()
+            }
+        }
+    }
+
+    /// Compares the consent with the last value seen and ends the session when it was withdrawn. Cheap and safe to call
+    /// at any time; the turn entry points call it so no request is built from a history that still holds note text.
+    private func syncNoteConsent() {
+        guard let noteConsent else { return }
+        let allowed = noteConsent()
+        defer { noteConsentWasGiven = allowed }
+        if noteConsentWasGiven && !allowed { endNoteSession() }
     }
 
     /// "Gelesen: „A“, „B“" for a `read_note` call; built from the output, so it works with the full and with the stored
