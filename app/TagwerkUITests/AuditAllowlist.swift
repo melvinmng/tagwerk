@@ -80,9 +80,13 @@ enum AuditAllowlist {
             "Hour labels and entries of the hour grid of \"Planen\": the grid is time-proportional (fixed height per hour), so its texts are "
             + "text styles but cannot grow with the size; the audit reports the partial support. Plan g3-uitests-a11y: the grid stays "
             + "proportional, visibility at large sizes is decided in #188; the full text is in the accessibility label of each entry."),
-        Entry(auditType: .dynamicType, labels: ["HEUTE · KW \\d+", "[A-Z][a-z]\\. \\d+\\. [A-Z][a-zä]+\\.", "Auswählen"], reason:
-            "The date title in the bar of \"Planen\" is fixed in size on purpose (a toolbar item gets no width; with accessibility sizes it shows the "
-            + "shortest form, see PlanHeaderText.displayedTitle); \"Auswählen\" is a system bar button. Header design: #188 / #175."),
+        Entry(auditType: .dynamicType, labels: [
+            "HEUTE · KW \\d+", "[A-Z][a-z]\\. \\d+\\. [A-Z][a-zä]+\\.", "[A-Z][a-zäöü]+, \\d+\\. [A-Z][a-zä]+\\.?", "Auswählen",
+        ], reason:
+            "The date title in the bar of \"Planen\" is fixed in size on purpose (a toolbar item gets no width; it shows the longest form that "
+            + "fits next to the bar buttons, measured in the font of the title, see PlanHeaderText.displayedTitle, PL16b; the full form "
+            + "\"Samstag, 21. Nov.\" is the same element as the shorter ones that were listed here before); \"Auswählen\" is a system bar button. "
+            + "Header design: #188 / #175."),
         Entry(auditType: .dynamicType, labels: [
             "Punkte in den Einstellungen anlegen", "Mo\\. planen", "Fertig", "Brain Dump", "Leitfragen einfügen", "\\d+\\.\\d+\\.",
         ], screens: ["Tagesabschluss"], reason: "Texts of the evening sheet (hint line, buttons, date of the next planning day) report a partial lack of "

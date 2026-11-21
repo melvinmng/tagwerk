@@ -103,7 +103,7 @@ struct DayGridScreen<Summary: View, Header: View>: View {
             .padding(.bottom, 8)
         }
         .task(id: OpenKey(day: plan.day, canvasTop: Int(canvasTopInContent.rounded()), isMeasured: canvasFrame.height > 0 && scrollFrame.height > 0,
-                          nowToken: model.nowAlignmentToken, opening: model.pendingOpeningDay)) {
+                          viewport: Int(scrollFrame.height.rounded()), nowToken: model.nowAlignmentToken, opening: model.pendingOpeningDay)) {
             scrollToNowOnOpening()
         }
         .task(id: edgeScroll) {
@@ -138,6 +138,8 @@ struct DayGridScreen<Summary: View, Header: View>: View {
         /// Grid top in the scroll content, rounded: changes when the content above it grows.
         let canvasTop: Int
         let isMeasured: Bool
+        /// Height of the visible grid, rounded: the target is a third of it, so a change while aligning aligns again.
+        let viewport: Int
         /// "Heute" or a return after a longer absence: aligns to "now" again.
         let nowToken: Int
         /// A jump to a day that is not today: the day to open.
