@@ -71,11 +71,10 @@ enum AuditAllowlist {
         ], reason: "Button and segment texts in the accent colour or on Liquid Glass / bordered tint (navigation bar, filter marks, quick entry). "
             + "The system draws the background; no own colour to change without replacing the system style (#188)."),
 
-        Entry(auditType: .contrast, labels: ["Abschließen"], screens: ["Tagesabschluss", "AX5/dark Tagesabschluss (Abend)"], reason:
+        Entry(auditType: .contrast, labels: ["Abschließen"], screens: ["Tagesabschluss", "Tagesabschluss (Abend)", "AX5/dark Tagesabschluss (Abend)"], reason:
             "Confirmation button of the wrap-up sheet in the navigation bar: the text sits on the Liquid Glass of the bar, whose background "
             + "lets the list scroll behind it. \"Fertig\" was narrower and passed; the longer \"Abschließen\" (#188 TA3) reaches over more of the "
-            + "list and is reported (default size of the morning run, and in the AX5 run of the evening sheet in dark mode; the default size of "
-            + "the evening run reports nothing). The system draws the background; same group as \"Verwerfen\" and \"Auswählen\" above (#188, "
+            + "list and is reported (morning and evening run at the default size, and the AX5 run of the evening sheet in dark mode). The system draws the background; same group as \"Verwerfen\" and \"Auswählen\" above (#188, "
             + "\"Schrift auf Liquid Glass\")."),
         Entry(auditType: .contrast, labels: ["Unerledigt von heute"], screens: ["Tagesabschluss (Abend)"], reason:
             "Section header of the leftover section of the wrap-up, in the system grey of a grouped list header on the grouped background "
@@ -328,7 +327,10 @@ enum AuditAllowlist {
             guard issue.auditType == .textClipped else { return false }
             // The card of "Artikel übersetzen" reports two clipped texts without an element (frame 0×0) in the default size; its texts are
             // reported with their own frames and covered by the entries below (the card is a plain stack of texts and buttons, nothing is cut).
-            return currentScreen == "Notizenliste" || currentScreen == "Einkaufsliste › Karte „übersetzen“"
+            // "Planen (Tag)" at the default size: once the screen has settled, the hour grid has scrolled to "now" (realign on "Heute") and the
+            // suggestion card above it ("Derselbe Termin?") lies partly behind the bar. The audit reports the cut card text as "may be clipped"
+            // without an element (frame 0×0); the screenshot of the run shows the text only scrolled under the bar, not cut in its own frame.
+            return currentScreen == "Notizenliste" || currentScreen == "Einkaufsliste › Karte „übersetzen“" || currentScreen == "Planen (Tag)"
                 || (currentScreen == "Rezepte" && issue.detailedDescription.contains("UISearchBarTextField"))
         }
         func matches(_ text: String, _ pattern: String) -> Bool { text.range(of: "^(\(pattern))$", options: .regularExpression) != nil }
