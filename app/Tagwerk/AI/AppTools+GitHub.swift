@@ -17,8 +17,8 @@ extension AppTools {
             switch self {
             case .repositoryMissing: String(localized: "Bitte ein Repository nennen.")
             case .repositoryUnknown: String(localized: "Dieses Repository steht nicht in der Liste von list_github_targets.")
-            case .projectMissing: String(localized: "Bitte ein Project nennen.")
-            case .projectUnknown: String(localized: "Dieses Project steht nicht in der Liste von list_github_targets.")
+            case .projectMissing: String(localized: "Bitte ein Projekt nennen.")
+            case .projectUnknown: String(localized: "Dieses Projekt steht nicht in der Liste von list_github_targets.")
             }
         }
     }

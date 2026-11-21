@@ -317,7 +317,7 @@ final class AppTools: ToolHandler {
             return try await createIssue(draft, repository: repository, projectIDs: projectIDs, assignees: assignees)
         }
         guard repository == nil, projectIDs == nil, assignees == nil else {
-            throw ToolError(String(localized: "Repository, Projects und Zugewiesene gibt es nur bei GitHub-Issues."))
+            throw ToolError(String(localized: "Repository, Projekte und Zugewiesene gibt es nur bei GitHub-Issues."))
         }
         let created = try await taskList.createReturning(draft, in: source)
         return Self.json(["ok": true, "id": created.id.key, "task": Self.summary(created)])

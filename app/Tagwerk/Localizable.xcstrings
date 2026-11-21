@@ -446,6 +446,22 @@
         }
       }
     },
+    "%@ noch offen in %@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@ noch offen in %2$@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ still open in %2$@"
+          }
+        }
+      }
+    },
     "%@ noch offen in %lld Projekten": {
       "localizations": {
         "de": {
@@ -5427,7 +5443,7 @@
         }
       }
     },
-    "Bitte ein Project nennen.": {
+    "Bitte ein Projekt nennen.": {
       "localizations": {
         "en": {
           "stringUnit": {
@@ -7063,12 +7079,12 @@
         }
       }
     },
-    "Die Projekte haben keine gemeinsame Stufe; jedes Issue startet in der ersten Stufe seines Projekts.": {
+    "Die Projekte haben keine gemeinsame Stufe; jedes Issue startet in „Ready“, sonst in der ersten Stufe seines Projekts, die nicht „Done“ ist.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "The projects share no stage; each issue starts in the first stage of its project."
+            "value": "The projects share no stage; each issue starts in “Ready”, otherwise in the first stage of its project that is not “Done”."
           }
         }
       }
@@ -7580,7 +7596,7 @@
         }
       }
     },
-    "Dieses Project steht nicht in der Liste von list_github_targets.": {
+    "Dieses Projekt steht nicht in der Liste von list_github_targets.": {
       "localizations": {
         "en": {
           "stringUnit": {
@@ -11614,16 +11630,6 @@
         }
       }
     },
-    "Kein Project": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "No project"
-          }
-        }
-      }
-    },
     "Kein Projekt": {
       "localizations": {
         "en": {
@@ -15118,26 +15124,6 @@
         }
       }
     },
-    "Project %@": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Project %@"
-          }
-        }
-      }
-    },
-    "Project fehlt": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Project missing"
-          }
-        }
-      }
-    },
     "Projects": {
       "extractionState": "stale",
       "localizations": {
@@ -15155,6 +15141,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Project %@"
+          }
+        }
+      }
+    },
+    "Projekt fehlt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Project missing"
           }
         }
       }
@@ -15333,7 +15329,7 @@
         }
       }
     },
-    "Repository, Projects und Zugewiesene gibt es nur bei GitHub-Issues.": {
+    "Repository, Projekte und Zugewiesene gibt es nur bei GitHub-Issues.": {
       "localizations": {
         "en": {
           "stringUnit": {

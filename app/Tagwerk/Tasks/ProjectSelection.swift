@@ -28,7 +28,9 @@ enum ProjectSelection {
         }
     }
 
-    /// True when several projects are selected, each has stages, and they share none: the row "Status" is not offered.
+    /// True when several projects are selected, each has stages, and they share none: the row "Status" is not offered
+    /// and each issue starts in the start stage of its project (`GitHubMapping.reopenOption`: "Ready", else the first
+    /// stage that is not "Done").
     static func lacksCommonStatus(_ optionLists: [[String]]) -> Bool {
         optionLists.count > 1 && optionLists.allSatisfy { !$0.isEmpty } && commonStatusOptions(optionLists).isEmpty
     }
@@ -37,7 +39,7 @@ enum ProjectSelection {
     static func footer(repositoryChosen: Bool, hasProject: Bool, optionLists: [[String]], assignment: String) -> String {
         var sentences: [String] = []
         if lacksCommonStatus(optionLists) {
-            sentences.append(String(localized: "Die Projekte haben keine gemeinsame Stufe; jedes Issue startet in der ersten Stufe seines Projekts."))
+            sentences.append(String(localized: "Die Projekte haben keine gemeinsame Stufe; jedes Issue startet in „Ready“, sonst in der ersten Stufe seines Projekts, die nicht „Done“ ist."))
         }
         if repositoryChosen, !hasProject {
             sentences.append(String(localized: "Ohne Projekt erscheint das Issue nicht in deinen Aufgaben, nur auf GitHub."))

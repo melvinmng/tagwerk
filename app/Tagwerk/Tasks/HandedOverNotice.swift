@@ -48,7 +48,8 @@ struct HandedOverNotice: Equatable, Identifiable {
         switch reason {
         case .handedOver: AssigneeSelection.announcement(number: number, assignees: assignees)
         case .noProject(let others): AssigneeSelection.noProjectAnnouncement(number: number, others: others)
-        case .doneInSelection(let doneIn, _): AssigneeSelection.doneInSelectionAnnouncement(doneIn: doneIn, title: title)
+        case .doneInSelection(let doneIn, let openIn):
+            AssigneeSelection.doneInSelectionAnnouncement(doneIn: doneIn, number: number, openIn: openIn)
         }
     }
 }

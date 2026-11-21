@@ -75,7 +75,7 @@ struct ProjectSelectionTests {
     @Test func footer_noCommonStage_saysSoFirst() {
         let footer = ProjectSelection.footer(repositoryChosen: true, hasProject: true, optionLists: [["Todo", "Done"], ["Open", "Done"]],
                                              assignment: "Das Issue wird dir zugewiesen.")
-        #expect(footer == "Die Projekte haben keine gemeinsame Stufe; jedes Issue startet in der ersten Stufe seines Projekts. Das Issue wird dir zugewiesen.")
+        #expect(footer == "Die Projekte haben keine gemeinsame Stufe; jedes Issue startet in „Ready“, sonst in der ersten Stufe seines Projekts, die nicht „Done“ ist. Das Issue wird dir zugewiesen.")
     }
 
     @Test func footer_withoutRepository_isTheAssignmentOnly() {
