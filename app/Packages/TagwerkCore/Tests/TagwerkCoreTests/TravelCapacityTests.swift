@@ -11,7 +11,7 @@ struct TravelCapacityTests {
     private func input(busy: [Range<Int>] = [], travel: [Range<Int>] = [], buffer: Int = 0,
                        now: Int? = nil) -> CapacityInput {
         var result = CapacityInput(hours: hours, lunchStartMinutes: 0, lunchMinutes: 0, bufferMinutes: buffer,
-                                   busyIntervals: busy, recurringMinutes: 0, plannedMinutes: 0, estimatedCount: 0,
+                                   busyIntervals: busy, untimedPlannedMinutes: 0, estimatedCount: 0,
                                    travelIntervals: travel)
         result.nowMinutes = now
         return result
@@ -53,7 +53,7 @@ struct TravelCapacityTests {
     private func planDay(travel: [Range<Int>], events: [CalendarEvent] = [], hours: WorkHours? = nil,
                          buffer: Int = 10) -> PlanInputDay {
         PlanInputDay(day: today, hours: hours ?? self.hours, lunch: nil, events: events, linkedEventIDs: [],
-                     deadlineCalendarIDs: [], blocks: [], recurringMinutes: 0, plannedMinutes: 0, bufferMinutes: buffer,
+                     deadlineCalendarIDs: [], blocks: [], untimedPlannedMinutes: 0, bufferMinutes: buffer,
                      calendar: calendar, travel: travel)
     }
 
@@ -120,8 +120,8 @@ struct TravelCapacityTests {
 
     @Test func freeGaps_leaveOutTravel() {
         let day = planDay(travel: [840..<870])
-        // 09:00-18:00 minus 14:00-14:30 with 10 minutes buffer on both sides.
-        #expect(freeGaps(day, fromMinutes: nil) == [540..<830, 880..<1080])
+        // 09:00-18:00 minus 14:00-14:30; travel time keeps no buffer, as in the capacity.
+        #expect(freeGaps(day, fromMinutes: nil) == [540..<840, 870..<1080])
     }
 
     // MARK: Return trip (V1)

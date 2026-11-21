@@ -8,7 +8,7 @@ struct BlockDurationTests {
 
     func planDay(busy: [CalendarEvent] = [], blocks: [Range<Int>] = [], lunch: Range<Int>? = 720..<780) -> PlanInputDay {
         PlanInputDay(day: day, hours: WorkHours(startMinutes: 540, endMinutes: 1080), lunch: lunch, events: busy,
-                     linkedEventIDs: [], deadlineCalendarIDs: [], blocks: blocks, recurringMinutes: 0, plannedMinutes: 0,
+                     linkedEventIDs: [], deadlineCalendarIDs: [], blocks: blocks, untimedPlannedMinutes: 0,
                      bufferMinutes: 0, calendar: calendar)
     }
 

@@ -152,6 +152,7 @@
   "%@ bis %@ · ganztägig": "%1$@ to %2$@ · all day",
   "%@ eingeplant": "%@ scheduled",
   "%@ erfasst": "%@ logged",
+  "%@ Fahrzeit": "%@ travel",
   "%@ frei von %@": "%1$@ free of %2$@",
   "%@ h": "%@ h",
   "%@ jetzt erfassen": "Log %@ now",
@@ -1192,6 +1193,7 @@
   "dir": "you",
   "%@ an %@": "%1$@ to %2$@",
   "%@ ohne Zuweisung": "%@ unassigned",
+  "%@ Pause": "%@ break",
   "Mindestens ein Projekt wählen.": "Choose at least one project.",
   "Vergeben": "Assigned",
   "Vergeben: %@. Auf GitHub öffnen verfügbar.": "Assigned: %@. Open on GitHub available.",
@@ -1227,6 +1229,7 @@
   "Es ist keine Einkaufsliste eingerichtet.": "No shopping list is set up.",
   "%@ stehen schon drauf": "%@ are already on the list",
   "%@ steht schon drauf": "%@ is already on the list",
+  "%@ Termine": "%@ events",
   "%@ wieder geöffnet": "%@ reopened",
   "%lld erledigte Artikel endgültig löschen?": {
     "one": "Permanently delete %lld completed item?",

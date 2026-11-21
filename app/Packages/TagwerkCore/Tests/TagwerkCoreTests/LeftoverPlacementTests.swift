@@ -12,7 +12,7 @@ struct LeftoverPlacementTests {
     /// A working day 09:00 to 17:00 without lunch or buffer.
     func day(_ day: PlanDay, hours: WorkHours? = WorkHours(startMinutes: 540, endMinutes: 1020), blocks: [Range<Int>] = []) -> PlanInputDay {
         PlanInputDay(day: day, hours: hours, lunch: nil, events: [], linkedEventIDs: [], deadlineCalendarIDs: [], blocks: blocks,
-                     recurringMinutes: 0, plannedMinutes: 0, bufferMinutes: 0, calendar: calendar)
+                     untimedPlannedMinutes: 0, bufferMinutes: 0, calendar: calendar)
     }
 
     func item(_ key: String, _ minutes: Int, due: PlanDay? = nil, priority: Priority? = nil) -> LeftoverPlacement.Item {
