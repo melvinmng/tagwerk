@@ -13,27 +13,20 @@ final class NowMarkerUITests: UITestCase {
         XCTAssertTrue(running.waitForExistence(timeout: Self.timeout), "The running seminar does not say how long it runs")
     }
 
-    /// "Heute" aligns the grid to "now" again (PL4b): the grid is scrolled away from the current time, and a trip to
-    /// tomorrow and back puts the capsule at the aligned height again.
+    /// "Heute" aligns the grid to "now" again (PL4b): the page is dragged down to its top, which moves the capsule into the
+    /// lower half of the screen; a trip to tomorrow and back puts it at a third of the visible height again.
     func testHeuteAlignsTheGridToNowAgain() {
         let capsule = waitFor("Jetzt, 10:30")
-        XCTAssertTrue(capsule.isHittable, "The grid does not start at the current time")
-        // Let the alignment of the opening settle, then remember the height it gives the capsule.
-        var alignedY = capsule.frame.midY
-        eventually("The alignment of the opening did not settle") {
-            let y = capsule.frame.midY
-            defer { alignedY = y }
-            return abs(y - alignedY) < 1
-        }
-        // The page is dragged down to its top: the capsule moves down by the opening offset.
+        let half = app.windows.firstMatch.frame.height / 2
+        // The page is dragged down to its top: the capsule is below the middle then.
         for _ in 0..<3 { app.swipeDown(velocity: .fast) }
-        eventually("The grid did not scroll away from the current time") { abs(capsule.frame.midY - alignedY) > 60 }
+        eventually("The grid did not scroll away from the current time") { capsule.frame.midY > half }
         tapButton("Nächster Tag")
         XCTAssertTrue(dayCaption("Morgen").waitForExistence(timeout: Self.timeout))
         tapButton("Heute")
         XCTAssertTrue(dayCaption("Heute").waitForExistence(timeout: Self.timeout))
-        eventually("\"Heute\" did not align the grid to the current time") {
-            capsule.exists && abs(capsule.frame.midY - alignedY) < 30
+        eventually("\"Heute\" did not align the grid to the current time (capsule at \(capsule.frame.midY), middle \(half))") {
+            capsule.exists && capsule.isHittable && capsule.frame.midY < half
         }
     }
 

@@ -138,7 +138,8 @@ struct DayGridScreen<Summary: View, Header: View>: View {
         /// Grid top in the scroll content, rounded: changes when the content above it grows.
         let canvasTop: Int
         let isMeasured: Bool
-        /// Height of the visible grid, rounded: the target is a third of it, so a change while aligning aligns again.
+        /// Height of the visible grid, rounded: the target is a third of it, so a change of it while aligning aligns again.
+        /// Without it "Heute" aligned to a stale height when the bar re-laid out after the title width was measured (PL16b).
         let viewport: Int
         /// "Heute" or a return after a longer absence: aligns to "now" again.
         let nowToken: Int

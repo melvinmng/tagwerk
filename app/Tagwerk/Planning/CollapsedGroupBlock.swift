@@ -66,6 +66,8 @@ struct CollapsedGroupBlock: View {
                     .clipShape(UnevenRoundedRectangle(topLeadingRadius: 7, bottomLeadingRadius: 7))
             }
             .contentShape(Rectangle())
+            // A short group at a large text size cannot hold its headline: it is cut at the block, not drawn over the entries around.
+            .clipShape(RoundedRectangle(cornerRadius: 7))
         }
         .buttonStyle(.plain)
         .accessibilityElement(children: .ignore)

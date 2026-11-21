@@ -38,7 +38,7 @@ enum AuditAllowlist {
     private static let entries: [Entry] = [
         // MARK: Contrast (every group needs a colour decision, section "Designpunkte für #188")
         Entry(auditType: .contrast, labels: [
-            "Nichts offen", "zuletzt: „(Römer|Demo Linsensuppe)“ · heute \\d+:\\d+", "[89]", "HEUTE · KW \\d+", "[A-Z]{2}\\.,? .* · KW \\d+", "Ablauf", "\\d\\d:\\d\\d",
+            "Nichts offen", "zuletzt: „(Römer|Demo Linsensuppe)“ · heute \\d+:\\d+", "[89]", "HEUTE · KW \\d+", "[A-Z]{2}\\.,? .* · KW \\d+", "Ablauf", "\\d\\d:00",
             "Schlafzeit \\d+:\\d+", "Ganztägig", "Überfällig", "Heute", "Einkaufsliste", "Notizen", "\\d+\\.\\d+\\.", "·", "Demo Aufgaben",
             "Lokal", "Routinen", "Gewohnheiten", "Woche", "Starten", "noch [\\d.]+", "Wasser", "Schritte", "Training · Woche",
             "\\d+ offen · Liste „Demo Einkauf“ in Erinnerungen", "Brot & Backwaren", "Kühlregal", "Aufgaben, 1 offen", "Vergangene Termine",
@@ -75,9 +75,9 @@ enum AuditAllowlist {
             + "(blue, green, red, grey). The tint is the colour code of the grid (calendar, block, deadline, break); contrast on tint is a "
             + "design question (#188, \"Sekundärtexte auf getönten Karten\")."),
 
-        Entry(auditType: .contrast, labels: ["\\d+ Termine · \\d\\d:\\d\\d–\\d\\d:\\d\\d", "\\+\\d+ weitere"], screens: ["AX5/dark Planen"], reason:
-            "Headline and rest line of the block that collapses overlapping entries of the hour grid (BF1c, `CollapsedGroupBlock`): "
-            + "primary and secondary text on grey at 24 %, the same tint pair as the entries above. The audit reports the headline in the "
+        Entry(auditType: .contrast, labels: ["\\d+ Termine · \\d\\d:\\d\\d–\\d\\d:\\d\\d"], screens: ["AX5/dark Planen"], reason:
+            "Headline of the block that collapses overlapping entries of the hour grid (BF1c, `CollapsedGroupBlock`): "
+            + "primary text on grey at 24 %, the same tint as the entries above. The audit reports the headline in the "
             + "AX5 run (the demo seminar, its copy and the deadline overlap in the morning); the rendered image of the block measures "
             + "16.5:1 in light and 15.9:1 in dark mode (`MarkerRenderContrastTests.collapsedBlock_renderedContrast`), so the finding is "
             + "the measurement of the audit on the translucent fill, not a lack of contrast."),
