@@ -14660,6 +14660,26 @@
         }
       }
     },
+    "Sprache der Einkaufsliste Deutsch, auf Englisch wechseln": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shopping list language German, switch to English"
+          }
+        }
+      }
+    },
+    "Sprache der Einkaufsliste Englisch, auf Deutsch wechseln": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shopping list language English, switch to German"
+          }
+        }
+      }
+    },
     "Spracheingabe": {
       "localizations": {
         "en": {

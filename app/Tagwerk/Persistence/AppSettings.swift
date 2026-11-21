@@ -276,6 +276,12 @@ extension AppSettings {
         }
     }
 
+    /// The tap on the language mark of the shopping list (SP5b): the other language, stored as a fixed value. From "Wie Rezepte"
+    /// or "Wie die App" it also becomes fixed, so a later change of the recipe or app language does not switch the list silently.
+    func toggleShoppingLanguage() {
+        shoppingLanguage = (contentLanguages.shoppingLanguage() == .german ? VoiceLanguage.english : .german).rawValue
+    }
+
     /// One-time takeover when the voice chat answer language became its own setting: it starts from the former shared value
     /// `voiceRecognitionLanguage`, so the app behaves as before the update. Writes only while the answer language has never
     /// been set, so a later change of the dictation language leaves the answer language alone.

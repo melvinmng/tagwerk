@@ -124,6 +124,8 @@ struct LanguageChip: View {
 
     let language: VoiceLanguage
     var style: Style = .named
+    /// VoiceOver text; the default names the dictation language.
+    var label: LocalizedStringKey? = nil
     let action: () -> Void
 
     var body: some View {
@@ -139,11 +141,11 @@ struct LanguageChip: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .accessibilityLabel(label)
+        .accessibilityLabel(label ?? defaultLabel)
     }
 
     /// Names the language and the one a tap switches to; both texts are German source keys.
-    private var label: LocalizedStringKey {
+    private var defaultLabel: LocalizedStringKey {
         language == .german ? "Sprache Deutsch, auf Englisch wechseln" : "Sprache Englisch, auf Deutsch wechseln"
     }
 }

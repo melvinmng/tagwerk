@@ -97,6 +97,11 @@ enum AuditAllowlist {
         ], reason: "Priority capsule and the hint rows of the search sheet use text styles; the audit still reports a partial lack of "
             + "support. Not reproduced by eye in the large text run (no clipping there); stays on the device test list."),
 
+        Entry(auditType: .dynamicType, labels: ["DE", "EN"], screens: ["Einkaufsliste"], reason:
+            "Language mark of the shopping list (\"DE\"/\"EN\" in the input field): a capsule with a text style (caption2), like the priority "
+            + "capsule above; the audit reports a partial lack of support. The mark keeps its 44 pt hit area and has a full VoiceOver label "
+            + "(\"Sprache der Einkaufsliste …\"); not reported in the large text run. Stays on the device test list (large text)."),
+
         // MARK: Text clipped
         Entry(auditType: .textClipped, labels: gridCellLabels, screens: gridScreens, reason:
             "Title and time of the entries in the hour grid of \"Planen\": the grid is time-proportional with a fixed height per hour, and "
