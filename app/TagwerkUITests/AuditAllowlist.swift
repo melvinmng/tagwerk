@@ -54,7 +54,7 @@ enum AuditAllowlist {
         ], reason: "Secondary text in the system grey (.secondary) on the grouped background or on a card: captions, counts, section "
             + "headers. Darkening it would change the look of the default size; decided together with the other grey texts in #188."),
         Entry(auditType: .contrast, labels: [
-            "Ohne Uhrzeit", "0 · 0 min", "\\+3 offen", "1 überfällig", "Abgabe Kurzbericht", "Pretest vorbereiten", "Deadlines", "heute",
+            "Ohne Uhrzeit", "0 · 0 min", "\\+\\d+ offen", "1 überfällig", "Abgabe Kurzbericht", "Pretest vorbereiten", "Deadlines", "heute",
             "morgen", "in 3 Tagen", "Kalender Demo Uni(, .*)?", "P1", "„Seminar“ aus „Demo Freigabe“ liegt zur selben Zeit wie „Seminar“\\.",
             "Künftig immer bei „Seminar“ aus „Demo Freigabe“", "Mit ChatGPT planen: in Einstellungen › KI anmelden", "Derselbe Termin\\?",
         ], reason: "Text on tinted cards (red deadline card, pink suggestion card) and on the translucent bar of the day view, in red, orange "
@@ -84,8 +84,8 @@ enum AuditAllowlist {
             "The date title in the bar of \"Planen\" is fixed in size on purpose (a toolbar item gets no width; with accessibility sizes it shows the "
             + "shortest form, see PlanHeaderText.displayedTitle); \"Auswählen\" is a system bar button. Header design: #188 / #175."),
         Entry(auditType: .dynamicType, labels: [
-            "Punkte in den Einstellungen anlegen", "Mo\\. planen", "Fertig", "Brain Dump", "Leitfragen einfügen", "\\d+\\.\\d+\\.",
-        ], screens: ["Tagesabschluss"], reason: "Texts of the evening sheet (hint line, buttons, date of the next planning day) report a partial lack of "
+            "Punkte in den Einstellungen anlegen", "Morgen planen", "Fertig", "Brain Dump", "Leitfragen einfügen", "\\d+\\.\\d+\\.",
+        ], screens: ["Tagesabschluss", "Tagesabschluss (Abend)"], reason: "Texts of the evening sheet (hint line, buttons, date of the next planning day) report a partial lack of "
             + "Dynamic Type support; no clipping in the large text run. Stays on the device test list."),
         Entry(auditType: .dynamicType, labels: ["Unerledigtes verschieben · \\d+ Aufgaben?"], screens: ["Tagesabschluss"], reason:
             "Row \"Unerledigtes verschieben\" of the wrap-up (`LeftoverLine`): one `Text` with a text style and no line limit, so it grows and wraps "

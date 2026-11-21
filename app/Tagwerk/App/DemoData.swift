@@ -43,6 +43,14 @@ enum DemoData {
             }
             settings.deadlineCalendarIDs = [ids.deadlineCalendar]
             seedRecurringLocalTask(environment)
+            // The UI tests show the same screens on every weekday: today and tomorrow are working days (see `uiTestWorkdayOverrides`).
+            if UITestMode.isActive {
+                let planning = environment.planning
+                let today = PlanDay(date: UITestMode.now(), calendar: planning.calendar)
+                for (day, value) in uiTestWorkdayOverrides(today: today, calendar: planning.calendar) {
+                    planning.planStore.setOverride(value, on: day)
+                }
+            }
             await environment.taskList.reload()
             await planSamples(environment)
             await environment.planning.reload()
@@ -55,17 +63,9 @@ enum DemoData {
             // The seeding wrote through its own store; the gateway's store reports that later and the app reloads.
             if UITestMode.isActive { await waitForStoreChangeEcho(environment, handledBeforeSeed: handledBeforeSeed) }
             print("DemoData: sample data created")
+            return true
         } catch {
             print("DemoData: seeding failed: \(error)")
-        }
-    }
-
-    /// Phase 5: three notes (one pinned, one dictated, one evening thought of yesterday, so the filter shows)
-    /// and the built-in shopping categories. There is no demo reminder store: the shopping list shows the
-    /// simulator's real reminders once a list is chosen.
-            return true
-    private static func seedNotes(_ environment: AppEnvironment) {
-        environment.shoppingCategories.seedIfNeeded()
             return false
         }
     }
@@ -76,6 +76,43 @@ enum DemoData {
         let clock = ContinuousClock()
         func seconds(_ duration: Duration) -> TimeInterval {
             TimeInterval(duration.components.seconds) + TimeInterval(duration.components.attoseconds) / 1e18
+        }
+        let started = clock.now
+        var lastActivity = started
+        var lastHandled = environment.storeChangesHandled
+        while true {
+            let now = clock.now
+            if environment.isHandlingStoreChange || environment.storeChangesHandled != lastHandled {
+                lastHandled = environment.storeChangesHandled
+                lastActivity = now
+            }
+            let state = StoreChangeSettle.state(handled: environment.storeChangesHandled, handledBeforeSeed: handledBeforeSeed,
+                                                isHandling: environment.isHandlingStoreChange,
+                                                quietFor: seconds(now - lastActivity), waited: seconds(now - started))
+            switch state {
+            case .settled: return
+            case .timedOut:
+                print("DemoData: no store change echo within \(Int(StoreChangeSettle.limit)) s")
+                return
+            case .waiting: try? await Task.sleep(for: .milliseconds(50))
+            }
+        }
+    }
+
+    /// Working hours of today and tomorrow in the UI test mode: the standard week (09:00–18:00) on every weekday. Without
+    /// them a Saturday or Sunday run shows "heute ist vorbei" ("Unerledigtes verschieben", "Unerledigt von heute") at 09:30
+    /// and the next planning day is Monday, so the audits would test different screens depending on the weekday.
+    /// Pure function so the weekday logic is covered by a unit test.
+    nonisolated static func uiTestWorkdayOverrides(today: PlanDay, calendar: Calendar) -> [PlanDay: DayOverride] {
+        let hours = DayOverride.hours(WorkHours(startMinutes: 540, endMinutes: 1080))
+        return [today: hours, today.adding(days: 1, calendar: calendar): hours]
+    }
+
+    /// Phase 5: three notes (one pinned, one dictated, one evening thought of yesterday, so the filter shows)
+    /// and the built-in shopping categories. There is no demo reminder store: the shopping list shows the
+    /// simulator's real reminders once a list is chosen.
+    private static func seedNotes(_ environment: AppEnvironment) {
+        environment.shoppingCategories.seedIfNeeded()
         let notes = environment.notes
         guard notes.count == 0 else { return }
         let planning = environment.planning
