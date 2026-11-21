@@ -248,6 +248,22 @@ struct AssistantModelTests {
         #expect(automatic.contains("in der Sprache der letzten Nachricht des Nutzers"))
     }
 
+    /// L5: the assistant writes new shopping items in the language of the shopping list setting.
+    @Test func instructions_nameTheShoppingLanguage() async throws {
+        let (model, _, _) = await make()
+        model.open(context: .settings)
+        model.shoppingLanguage = { .german }
+        #expect(model.instructions().contains("Schreibe neue Einkaufsartikel auf Deutsch."))
+        model.shoppingLanguage = { .english }
+        let english = model.instructions()
+        #expect(english.contains("Schreibe neue Einkaufsartikel auf Englisch."))
+        #expect(!english.contains("Schreibe neue Einkaufsartikel auf Deutsch."))
+        // The sentence belongs to the shopping list rules.
+        let rules = try #require(english.range(of: "Lege Einkaufsartikel nie über create_task an."))
+        let sentence = try #require(english.range(of: "Schreibe neue Einkaufsartikel auf Englisch."))
+        #expect(rules.upperBound <= sentence.lowerBound)
+    }
+
     @Test func autoRead_ofAShortAnswer_usesTheChosenVoiceLanguage() async throws {
         let (model, _, _) = await make()
         var languages: [VoiceLanguage] = []

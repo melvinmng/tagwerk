@@ -35,6 +35,10 @@ final class AssistantModel {
     /// It decides the answer language of the voice mode and the language that is read when the text gives no clear hint.
     @ObservationIgnored var fixedVoiceLanguage: () -> VoiceLanguage? = { nil }
 
+    /// The language of new shopping items (Einstellungen › Sprachen › "Einkaufsliste"): the assistant writes the names of the
+    /// items it adds in this language, whatever language the conversation uses.
+    @ObservationIgnored var shoppingLanguage: () -> VoiceLanguage = { .app }
+
     /// The language spoken text falls back to when it is too short to tell: the chosen voice chat language, else the app's.
     private var speechFallback: VoiceLanguage { fixedVoiceLanguage() ?? .app }
 
@@ -508,11 +512,20 @@ final class AssistantModel {
         wenn die lokale Suche nichts ergibt.
         \(noteInstructions())
         Einkaufsartikel stehen nicht in list_tasks: Die Einkaufsliste liest du mit list_shopping und änderst sie mit \
-        update_shopping (hinzufügen, abhaken). Lege Einkaufsartikel nie über create_task an.
+        update_shopping (hinzufügen, abhaken). Lege Einkaufsartikel nie über create_task an. \
+        \(Self.shoppingLanguageInstruction(shoppingLanguage()))
         \(gitHubInstructions())
         \(onTurnFinished == nil ? "" : voiceModeText())
         \(contextText())
         """
+    }
+
+    /// The order to write new shopping items in the language of the shopping list setting (plan G3, task L5).
+    static func shoppingLanguageInstruction(_ language: VoiceLanguage) -> String {
+        switch language {
+        case .german: "Schreibe neue Einkaufsartikel auf Deutsch."
+        case .english: "Schreibe neue Einkaufsartikel auf Englisch."
+        }
     }
 
     /// How to read notes; only while the consent is on and the context has notes.
