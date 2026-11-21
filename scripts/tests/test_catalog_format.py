@@ -4,6 +4,7 @@ Run: /usr/bin/python3 -m unittest discover -s scripts/tests -p 'test_*.py' -v
 """
 import contextlib
 import copy
+import importlib.util
 import difflib
 import io
 import json

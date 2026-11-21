@@ -154,7 +154,9 @@ def same(first, second):
     keys_a, keys_b = set(a.get("strings", {})), set(b.get("strings", {}))
     added = sorted(keys_b - keys_a)
     changed = sorted(k for k in keys_a & keys_b if a["strings"][k] != b["strings"][k])
-    print(f"{Path(first).relative_to(ROOT)}: {len(added)} new, {len(changed)} changed", file=sys.stderr)
+    shown = Path(first).resolve()
+    shown = shown.relative_to(ROOT) if shown.is_relative_to(ROOT) else shown
+    print(f"{shown}: {len(added)} new, {len(changed)} changed", file=sys.stderr)
     for key in (added + changed)[:20]:
         print(f"  {key!r}", file=sys.stderr)
     return 1
