@@ -26,4 +26,16 @@ struct NoteToolAccess {
     }
 
     static func key(for id: UUID) -> String { keyPrefix + id.uuidString }
+
+    /// The names of the folders that never leave the device, as the user sees them (a renamed folder keeps its new name);
+    /// a folder that does not exist yet shows its default name. Journal, Bible Study and Dream Log, in this order.
+    func privateFolderNames() -> [String] {
+        let roles: [NoteFolderRole] = [.journal, .bibleStudy, .dreamLog]
+        return roles.map { role in store.folder(role: role)?.name ?? NoteStore.defaultFolderName(for: role) }
+    }
+
+    /// "A, B und C" in the language of the user; used by the consent sheet and the context line of the notes chat.
+    static func listText(_ names: [String]) -> String {
+        names.formatted(.list(type: .and))
+    }
 }

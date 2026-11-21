@@ -2667,6 +2667,26 @@
         }
       }
     },
+    "**Gesendet wird:** die Titel deiner Notizen, kurze Ausschnitte zu Suchtreffern und der Text der Notizen, um die es im Gespräch geht, mit den Namen ihrer Anhänge.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "**Sent:** the titles of your notes, short excerpts of search hits and the text of the notes the conversation is about, with the names of their attachments."
+          }
+        }
+      }
+    },
+    "**Gilt überall beim Assistenten:** in diesem Notiz-Chat und für die Suche des Assistenten in allen anderen Gesprächen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "**Applies everywhere in the assistant:** in this notes chat and for the assistant’s search in all other conversations."
+          }
+        }
+      }
+    },
     "**Nicht gesendet werden** Anhänge, E-Mail-Adressen (auch im Text), Empfänger und der Link zur Mail.": {
       "localizations": {
         "en": {
@@ -2735,6 +2755,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "**Not sent:** your shopping list, amounts on the list, tasks, events, other notes, Health data. Tagwerk reads a note with ingredients and instructions on the iPhone, and private notes are never offered."
+          }
+        }
+      }
+    },
+    "**Nichts ändert sich ohne dich:** Jede Änderung, jede neue Notiz und jedes Löschen bestätigst du einzeln.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "**Nothing changes without you:** you confirm every change, every new note and every deletion one by one."
+          }
+        }
+      }
+    },
+    "**Nie gesendet werden:** %@, gelöschte Notizen und die Anhänge selbst.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "**Never sent:** %@, deleted notes and the attachments themselves."
           }
         }
       }
@@ -2817,6 +2857,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "**Only on your tap:** Without “Translate”, nothing leaves the iPhone."
+          }
+        }
+      }
+    },
+    "**Nur im Gespräch:** Ohne deine Nachricht an den Assistenten verlässt nichts das iPhone. Gelesene Notiztexte gelten nur für das laufende Gespräch und werden nicht im Verlauf gespeichert; die Antworten des Assistenten schon.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "**Only in conversation:** without your message to the assistant, nothing leaves the iPhone. Note texts it has read apply only to the running conversation and are not saved in the history; the assistant’s replies are."
           }
         }
       }
@@ -5543,6 +5593,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "iOS will ask for microphone access next."
+          }
+        }
+      }
+    },
+    "Damit der Assistent deine Notizen finden, lesen, überarbeiten, anlegen und löschen kann, sendet Tagwerk Notizen an ChatGPT (OpenAI), über das Konto, mit dem du angemeldet bist.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "To let the assistant find, read, revise, create and delete your notes, Tagwerk sends notes to ChatGPT (OpenAI) through the account you are signed in with."
           }
         }
       }
@@ -13809,12 +13869,12 @@
         }
       }
     },
-    "Notizen gehen nur mit dem Schalter „Notizen mit ChatGPT“ an den Assistenten: Titel und Ausschnitte der Treffer seiner Suche, bei Bedarf der ganze Text einer Notiz und, im Notiz-Chat, Änderungen daran. Ist der Schalter aus, erfährt der Assistent nur, wie viele Notizen zu einer Suche passen. Was der Assistent aus Notizen liest, gilt nur für das laufende Gespräch und geht beim Beenden der App, beim Wechsel des Chats und beim Löschen des Verlaufs verloren. Antworten des Assistenten und deine Nachrichten bleiben im Verlauf und können Notizinhalt zitieren. Tagebuch mit Gott, Bible Study und Dream Log verlassen das iPhone nie.": {
+    "Notizen gehen nur mit dem Schalter „Notizen mit ChatGPT“ an den Assistenten: Titel und Ausschnitte der Treffer seiner Suche, bei Bedarf der ganze Text einer Notiz und, im Notiz-Chat, Änderungen daran. Mit dem Text einer Notiz gehen die Namen ihrer Anhänge mit; die Anhänge selbst und gelöschte Notizen gehen nie an ChatGPT. Ist der Schalter aus, erfährt der Assistent nur, wie viele Notizen zu einer Suche passen. Was der Assistent aus Notizen liest, gilt nur für das laufende Gespräch und geht beim Beenden der App, beim Wechsel des Chats und beim Löschen des Verlaufs verloren. Antworten des Assistenten und deine Nachrichten bleiben im Verlauf und können Notizinhalt zitieren. Tagebuch mit Gott, Bible Study und Dream Log verlassen das iPhone nie.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Notes go to the assistant only with the switch “Notes with ChatGPT”: title and excerpt of the hits of its search, the whole text of a note when needed and, in the notes chat, changes to it. With the switch off, the assistant only learns how many notes match a search. What the assistant reads from notes applies only to the current conversation and is lost when the app is quit, when you switch chats and when you clear the history. The assistant's replies and your messages stay in the history and can quote note content. Journal, Bible Study and Dream Log never leave the iPhone."
+            "value": "Notes go to the assistant only with the switch “Notes with ChatGPT”: title and excerpt of the hits of its search, the whole text of a note when needed and, in the notes chat, changes to it. The names of a note’s attachments go with its text; the attachments themselves and deleted notes never go to ChatGPT. With the switch off, the assistant only learns how many notes match a search. What the assistant reads from notes applies only to the current conversation and is lost when the app is quit, when you switch chats and when you clear the history. The assistant's replies and your messages stay in the history and can quote note content. Journal, Bible Study and Dream Log never leave the iPhone."
           }
         }
       }
