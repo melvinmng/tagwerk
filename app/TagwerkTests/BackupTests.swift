@@ -254,6 +254,27 @@ struct BackupTests {
         #expect(fresh.settings.weekPlanningReminderWeekday == 1 && fresh.settings.weekPlanningReminderMinutes == 1080)
     }
 
+    @Test func backup_roundTripsNoteAssistantConsent() throws {
+        sourceSettings.noteAssistantConsent = true
+        let data = try JSONEncoder().encode(AppSettingsBackup(sourceSettings))
+        let decoded = try JSONDecoder().decode(AppSettingsBackup.self, from: data)
+        let target = try makeTarget()
+        #expect(!target.settings.noteAssistantConsent)
+        decoded.apply(to: target.settings)
+        #expect(target.settings.noteAssistantConsent)
+    }
+
+    @Test func backup_withoutTheField_keepsCurrentValue() throws {
+        let data = try JSONEncoder().encode(AppSettingsBackup(sourceSettings))
+        var object = try #require(try JSONSerialization.jsonObject(with: data) as? [String: Any])
+        object["noteAssistantConsent"] = nil
+        let older = try JSONDecoder().decode(AppSettingsBackup.self, from: JSONSerialization.data(withJSONObject: object))
+        let target = try makeTarget()
+        target.settings.noteAssistantConsent = true
+        older.apply(to: target.settings)
+        #expect(target.settings.noteAssistantConsent)
+    }
+
     @Test func weekReflectionBackup_roundTripsNewFields() throws {
         let record = WeekReflectionRecord(weekStart: PlanDay(year: 2026, month: 11, day: 16), updatedAt: clock.now)
         record.goalsProgress = "Projekt läuft"

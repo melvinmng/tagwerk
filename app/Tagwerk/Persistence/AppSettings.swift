@@ -85,6 +85,9 @@ final class AppSettings {
     var shoppingRecipeConsent: Bool = false
     /// The one-time consent for "Mit ChatGPT zusammenfassen" on a shared mail (#166); the settings switch binds to it.
     var mailSummaryConsent: Bool = false
+    /// The assistant may find non-private notes (title and excerpt), read them in full and, in the notes chat, change them
+    /// (issue #173, decision D5). One switch for the whole scope; off by default. Journal, Bible Study and Dream Log never count.
+    var noteAssistantConsent: Bool = false
     /// The Health card in the tab was dismissed with "Nicht jetzt".
     var healthCardDismissed: Bool = false
     /// Phase 4: the calories/water line in the head of "Planen" (today's day view, from the first entry).
