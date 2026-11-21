@@ -62,7 +62,8 @@ Festlegungen der Hauptsitzung zum G3-Plan: offene Fragen nach Empfehlung; Zeilen
 | `feat/g3-search-menu` | G3 Strang U | PR #246; fertig und geprüft, Head `9694508` |
 | `feat/g3-keyboard-siri` | G3 Strang T | PR #248 (Basis #240); fertig und geprüft, Head `43b277c`, `test-all` grün; T4 (Siri am Gerät) offen; Allowlist-Einträge für K vorgemerkt; ein unbenannter AX5-Befund „Text clipped“ auf Einstellungen › KI › Sprache flackert |
 | `feat/g1-plan-grid` | G1 Strang P (P1–P8) | PR #256; geprüft, Head `69cbd2b`, `test-all` grün; vor Merge `main` einarbeiten (nur Katalog-Konflikt) und `PlanHeaderLayoutUITests` kürzen (265 s je UI-Stufe; AX5 und Sonntag streichen); offene Designfrage: kurze Blöcke bei AX5 abgeschnitten |
-| `feat/notes-assistant` | #233 Block B (B3–B9) | läuft (Sonnet) |
+| `feat/notes-assistant` | #233 Block B (B3–B9) | PR #258; geprüft, Head `b7e9209`, `test-all` grün; läuft: `main` einarbeiten (Katalog/en.json) + VoiceOver „Kontext: Kontext:“; 10 Gerätetests offen. Hinweis für G2 NL1a (Notizen sperren): gesperrte Notizen müssen über `NoteToolAccess` ausgeschlossen werden |
+| `feat/g1-reminders` | G1 Strang E (E1–E6) | läuft (Sonnet, nach Job 1 desselben Agents) |
 | `fix/ui-test-stability` | vorbestehende UI-Testfehler | PR #240; fertig und geprüft, Head `e34c1fd`, `test-all` zweimal grün; zuerst mergen. Allowlist-Einträge „Unerledigt von heute“ und Leftover-Zeile bei Strang K (K5) neu bewerten |
 | `feat/g3-github-status` | G3 Strang G (G1–G4) | PR #249 (Basis #240); fertig und geprüft, Head `f7eae41`, `test-all` grün; G5 offen (nach #173 A/B), dort auch GH9-Fußtext „erste Stufe“ vs. Startstufe „Ready“ und VoiceOver-Anführungszeichen im Englischen klären |
 | `feat/g1-focus` | G1 Strang F (F1–F7) | PR #253; geprüft, Head `683677d`, `test-all` grün; F8 nach P. Achtung: Menütitel jetzt „Fokus starten · 25 min“ – beim Zusammenführen mit #246 (Strang U) UI-Tests auf den Titel prüfen |
@@ -83,7 +84,7 @@ Issues: #254 Ernährung, Gewicht und Ziele (Entscheidungen als Kommentar), #255 
 1a. #250: läuft; Plan fertig (`docs/superpowers/plans/2026-11-21-issue-250-audits-strings.md`, offene Fragen nach Empfehlung); Umsetzung durch Sonnet auf `fix/ui-audits-and-strings` ab `origin/main`, nächster freier Platz nach dem Integrationsauftrag
 2. G1 Strang E (Basis `fix/ui-test-stability`)
 
-3. #233 Block B (läuft)
+3. #233 Block B (PR #258)
 4. Strang K (T, L, S gemergt – jetzt möglich); G2 Welle 1; G1 E, danach V/F8 nach P, R nach E
 5. Gruppen 1 und 2 nach ihren Plänen
 6. Danach: Geräteprüfungen – Nutzerwunsch: sobald die neue Version auf seinem iPhone ist, ALLE Gerätetests gesammelt als eine Liste ausgeben; (Task 12 in #173, Z1 in G3, Gerätetests der übrigen Pläne)
