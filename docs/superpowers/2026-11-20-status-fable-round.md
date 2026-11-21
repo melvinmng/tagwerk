@@ -67,6 +67,10 @@ Festlegungen der Hauptsitzung zum G3-Plan: offene Fragen nach Empfehlung; Zeilen
 | `feat/g1-focus` | G1 Strang F (F1–F7) | PR #253; geprüft, Head `683677d`, `test-all` grün; F8 nach P. Achtung: Menütitel jetzt „Fokus starten · 25 min“ – beim Zusammenführen mit #246 (Strang U) UI-Tests auf den Titel prüfen |
 | `fix/ui-audits-and-strings` | #250 nach Plan 2026-11-21 | läuft (Sonnet) |
 
+## Neues Thema (21.11.): Ernährung, Gewicht, Ziele mit ChatGPT
+
+Nutzerwunsch: Gewicht, Kalorien, Makros, Ballaststoffe vollständig tracken, Fortschritt verfolgen; Ernährungs- und Aktivitätsziele mit ChatGPT planen; verbrannte Kalorien (Health und eigene Trainings, die nach Health gehen) erhöhen das Tagesziel. Fable erstellt Mockups `2026-11-21-ernaehrung-gewicht-ziele-mockups.html` und Planentwurf `2026-11-21-ernaehrung-gewicht-ziele.md` (läuft). Danach Entscheidungen des Nutzers. Nutzerauflage: Die bisherigen Punkte trotzdem vollständig abschließen und mergen.
+
 ## Warteschlange Umsetzung (je freier Xcode-Platz, nach Prüfung des fertigen Branches)
 
 PRs #240–#249 angelegt (21.11.). Merge-Reihenfolge vom Nutzer bestätigt: #240 (gemergt 21.11., `95f28be`), dann #241, #242, #243, #245, #246, #247, #248, #249, zuletzt #244. #248/#249 zielen jetzt auf `main`.
