@@ -123,6 +123,15 @@ struct PendingBlockDecision: Equatable {
 final class PlanningModel {
     var scope: PlanScope = .day
     var anchor: PlanDay
+    /// Bumped by "Heute" and by a return after `NowMarker.realignAfter`; the day views align to "now" when it changes.
+    private(set) var nowAlignmentToken = 0
+    /// Bumped when a day is opened by a jump (date picker, month, "Zeigen"), never by paging.
+    private(set) var dayOpeningToken = 0
+    /// The day a jump opened, until its day view took it over to scroll to the first entry (`openingHandled()`).
+    /// Paging, "Heute" and a jump to today clear it.
+    private(set) var pendingOpeningDay: PlanDay?
+    /// When the plan tab went out of sight (another tab or the background); the first one counts until it returns.
+    @ObservationIgnored private var hiddenSince: Date?
     private(set) var days: [DayPlan] = []
     /// Plans of the neighbouring days (day scope) or weeks (week scope) for the page previews while swiping. They
     /// carry no AI suggestions; see `loadNeighbours()`.
@@ -230,7 +239,10 @@ final class PlanningModel {
     var today: PlanDay { PlanDay(date: now(), calendar: calendar) }
 
     /// Day: the anchor; week: Monday–Sunday around it; month: full weeks covering its month.
-    var range: ClosedRange<PlanDay> {
+    var range: ClosedRange<PlanDay> { range(for: anchor) }
+
+    /// The range the shown scope covers for `anchor` (see `range`).
+    func range(for anchor: PlanDay) -> ClosedRange<PlanDay> {
         switch scope {
         case .day:
             return anchor...anchor
@@ -238,11 +250,44 @@ final class PlanningModel {
             let start = weekStart(of: anchor)
             return start...start.adding(days: 6, calendar: calendar)
         case .month:
-            let first = PlanDay(year: anchor.year, month: anchor.month, day: 1)
-            let nextMonth = calendar.date(byAdding: .month, value: 1, to: first.startDate(in: calendar)) ?? first.startDate(in: calendar)
-            let last = PlanDay(date: nextMonth, calendar: calendar).adding(days: -1, calendar: calendar)
-            return weekStart(of: first)...weekStart(of: last).adding(days: 6, calendar: calendar)
+            return Self.monthGridRange(anchor: anchor, calendar: calendar)
         }
+    }
+
+    /// Whole weeks around the month of `anchor`: the range the month scope loads.
+    private static func monthGridRange(anchor: PlanDay, calendar: Calendar) -> ClosedRange<PlanDay> {
+        let first = PlanDay(year: anchor.year, month: anchor.month, day: 1)
+        let nextMonth = calendar.date(byAdding: .month, value: 1, to: first.startDate(in: calendar)) ?? first.startDate(in: calendar)
+        let last = PlanDay(date: nextMonth, calendar: calendar).adding(days: -1, calendar: calendar)
+        return weekStart(of: first, calendar: calendar)...weekStart(of: last, calendar: calendar).adding(days: 6, calendar: calendar)
+    }
+
+    /// The days of the month grid for `anchor` (whole weeks around the month), the same range the month scope loads.
+    /// The page of a neighbouring month needs nothing else (PL7b).
+    static func monthGridDays(anchor: PlanDay, calendar: Calendar) -> [PlanDay] {
+        let range = monthGridRange(anchor: anchor, calendar: calendar)
+        var days: [PlanDay] = []
+        var day = range.lowerBound
+        while day <= range.upperBound {
+            days.append(day)
+            day = day.adding(days: 1, calendar: calendar)
+        }
+        return days
+    }
+
+    /// Set while a neighbour page prevails during a drag: the header shows that period. Never stored, never read by the
+    /// views of the pages.
+    var titlePreviewStep: Int?
+
+    /// Anchor the header shows: the neighbour while `titlePreviewStep` is set.
+    var titleAnchor: PlanDay {
+        guard let step = titlePreviewStep else { return anchor }
+        return PlanHeaderText.shiftedAnchor(scope: scope, anchor: anchor, step: step, calendar: calendar)
+    }
+
+    /// Range the header shows: that of `titleAnchor`.
+    var titleRange: ClosedRange<PlanDay> {
+        titlePreviewStep == nil ? range : range(for: titleAnchor)
     }
 
     /// Open reminders of all lists, read past the list selection to recognize recurring ones; the shopping
@@ -496,8 +541,47 @@ final class PlanningModel {
         selectedDay = next
     }
 
+    /// "Heute": shows today and aligns the day view to "now" (again).
+    func showToday() {
+        anchor = today
+        pendingOpeningDay = nil
+        nowAlignmentToken += 1
+    }
+
+    /// Opens `day` by a jump (date picker, month, search, "Zeigen"): today aligns to "now", another day starts at its
+    /// first entry. Paging with `step(_:)` never does this.
+    func jump(to day: PlanDay) {
+        anchor = day
+        if day == today {
+            pendingOpeningDay = nil
+            nowAlignmentToken += 1
+        } else {
+            pendingOpeningDay = day
+            dayOpeningToken += 1
+        }
+    }
+
+    /// The day view has taken over the opening of the jumped-to day.
+    func openingHandled() {
+        pendingOpeningDay = nil
+    }
+
+    /// The plan tab left the screen (another tab, or the app went to the background).
+    func planBecameHidden(at time: Date) {
+        if hiddenSince == nil { hiddenSince = time }
+    }
+
+    /// The plan tab is back; after a longer absence the day view of today aligns to "now" again.
+    func planBecameVisible(at time: Date) {
+        defer { hiddenSince = nil }
+        guard anchor == today, NowMarker.realignsOnReturn(hiddenSince: hiddenSince, now: time) else { return }
+        nowAlignmentToken += 1
+    }
+
     /// One day, week or month forward (`1`) or back (`-1`), for arrows and swiping.
     func step(_ direction: Int) {
+        pendingOpeningDay = nil
+        titlePreviewStep = nil
         switch scope {
         case .day:
             let target = anchor.adding(days: direction, calendar: calendar)
@@ -1070,8 +1154,8 @@ final class PlanningModel {
 
     /// Shows the day of `event` in "Tag" (a tap on a preparation row).
     func showDay(of event: CalendarEvent) {
-        anchor = PlanDay(date: event.start, calendar: calendar)
         scope = .day
+        jump(to: PlanDay(date: event.start, calendar: calendar))
     }
 
     /// The event is a deadline through a mark on its whole series.
@@ -1986,7 +2070,9 @@ final class PlanningModel {
         planStore.prune(keeping: keep)
     }
 
-    private func weekStart(of day: PlanDay) -> PlanDay {
+    private func weekStart(of day: PlanDay) -> PlanDay { Self.weekStart(of: day, calendar: calendar) }
+
+    private static func weekStart(of day: PlanDay, calendar: Calendar) -> PlanDay {
         let start = calendar.dateInterval(of: .weekOfYear, for: day.startDate(in: calendar))?.start ?? day.startDate(in: calendar)
         return PlanDay(date: start, calendar: calendar)
     }

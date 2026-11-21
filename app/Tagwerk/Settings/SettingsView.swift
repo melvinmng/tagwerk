@@ -94,7 +94,11 @@ struct SettingsView: View {
                     } label: {
                         LabeledContent("Datensicherung", value: BackupSettingsView.lastBackupText(settings.lastAutoBackupAt))
                     }
-                    NavigationLink("Fokus-Timer") { FocusSettingsView() }
+                    NavigationLink {
+                        FocusSettingsView()
+                    } label: {
+                        LabeledContent("Fokus-Timer", value: FocusTimerText.settingsSummary(settings.focusTimerSettings))
+                    }
                     NavigationLink {
                         SiriShortcutsSettingsView()
                     } label: {

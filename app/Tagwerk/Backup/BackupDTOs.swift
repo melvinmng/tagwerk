@@ -1204,6 +1204,9 @@ struct AppSettingsBackup: Codable, Equatable {
     var focusLongBreakMinutes: Int?
     var focusRounds: Int?
     var focusUsesPomodoro: Bool?
+    /// Optional, so a backup written before the start sheet still decodes; a missing value keeps the default.
+    var focusAsksDurationAtStart: Bool?
+    var focusLastStartMinutes: Int?
     var effortHistoryInPlanning: Bool?
     /// Optional, so a backup written before the recipe language existed still decodes; a missing value keeps "auto".
     var recipeLanguage: String?
@@ -1291,6 +1294,8 @@ struct AppSettingsBackup: Codable, Equatable {
         focusLongBreakMinutes = record.focusLongBreakMinutes
         focusRounds = record.focusRounds
         focusUsesPomodoro = record.focusUsesPomodoro
+        focusAsksDurationAtStart = record.focusAsksDurationAtStart
+        focusLastStartMinutes = record.focusLastStartMinutes
         effortHistoryInPlanning = record.effortHistoryInPlanning
         recipeLanguage = record.recipeLanguage
         voiceAnswerLanguage = record.voiceAnswerLanguage
@@ -1374,6 +1379,8 @@ struct AppSettingsBackup: Codable, Equatable {
         if let focusLongBreakMinutes { record.focusLongBreakMinutes = focusLongBreakMinutes }
         if let focusRounds { record.focusRounds = focusRounds }
         if let focusUsesPomodoro { record.focusUsesPomodoro = focusUsesPomodoro }
+        if let focusAsksDurationAtStart { record.focusAsksDurationAtStart = focusAsksDurationAtStart }
+        if let focusLastStartMinutes { record.focusLastStartMinutes = focusLastStartMinutes }
         if let effortHistoryInPlanning { record.effortHistoryInPlanning = effortHistoryInPlanning }
         if let recipeLanguage { record.recipeLanguage = recipeLanguage }
         if let shoppingLanguage { record.shoppingLanguage = shoppingLanguage }

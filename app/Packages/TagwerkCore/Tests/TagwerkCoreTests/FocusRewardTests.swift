@@ -9,13 +9,21 @@ struct FocusRewardTests {
         for (minutes, stage) in expected {
             #expect(FocusReward.stage(focusedMinutes: minutes) == stage, "\(minutes) minutes")
         }
-        #expect(FocusReward.piece(focusedMinutes: 25, outcome: .completed) == .grown(.three))
+        #expect(FocusReward.piece(focusedMinutes: 25, outcome: .completed) == .completed(.three))
         #expect(FocusReward.piece(focusedMinutes: 0, outcome: .completed) == nil)
     }
 
-    @Test func abortedSession_wilts() {
-        #expect(FocusReward.piece(focusedMinutes: 10, outcome: .aborted) == .wilted(.two))
-        #expect(FocusReward.piece(focusedMinutes: 10, outcome: .aborted)?.isWilted == true)
+    @Test func piece_aborted_keepsTheReachedStage_asEndedEarly() {
+        #expect(FocusReward.piece(focusedMinutes: 10, outcome: .aborted) == .endedEarly(.two))
+        #expect(FocusReward.piece(focusedMinutes: 10, outcome: .aborted)?.isEndedEarly == true)
+        #expect(FocusReward.piece(focusedMinutes: 10, outcome: .aborted)?.stage == .two)
+    }
+
+    @Test func piece_completedEarly_hasTheReachedStage() {
+        // Finished with "Erledigt" after 18 of 25 minutes: the brick of the reached stage, not marked as ended early.
+        let piece = FocusReward.piece(focusedMinutes: 18, outcome: .completed)
+        #expect(piece == .completed(.two))
+        #expect(piece?.isEndedEarly == false)
     }
 
     @Test func abortWithinAMinute_isDiscarded() {
@@ -25,10 +33,10 @@ struct FocusRewardTests {
         #expect(FocusReward.piece(focusedMinutes: 1, outcome: .discarded) == nil)
     }
 
-    @Test func collectionSummary_countsGrownAndWilted() {
-        let pieces: [FocusRewardPiece] = [.grown(.one), .grown(.five), .wilted(.two)]
+    @Test func summary_countsEndedEarly() {
+        let pieces: [FocusRewardPiece] = [.completed(.one), .completed(.five), .endedEarly(.two)]
         let summary = FocusReward.summary(of: pieces)
-        #expect(summary.grown == 2 && summary.wilted == 1 && summary.total == 3)
+        #expect(summary.completed == 2 && summary.endedEarly == 1 && summary.total == 3)
         #expect(FocusReward.summary(of: []).total == 0)
     }
 }

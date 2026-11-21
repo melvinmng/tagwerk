@@ -21,25 +21,19 @@ struct MonthView: View {
                 .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 14))
                 .padding(.horizontal)
                 .padding(.bottom, 8)
-            LazyVGrid(columns: columns, spacing: 4) {
-                ForEach(DateText.shortStandaloneWeekdaySymbols(calendar: model.calendar), id: \.self) { Text($0).font(.caption2).foregroundStyle(.secondary) }
-                ForEach(model.days) { plan in
-                    // First tap selects the day (mockup E1); a second tap opens it in "Tag".
-                    Button {
-                        if model.monthSelection == plan.day { onSelectDay(plan.day) } else { model.selectedDay = plan.day }
-                    } label: { cell(plan) }
-                        .buttonStyle(.plain)
-                        .contextMenu { dayMenu(plan.day) }
-                        .dropDestination(for: String.self) { keys, _ in
-                            let ids = keys.compactMap(TaskID.init(key:))
-                            Task { for id in ids { await model.assign(id, to: plan.day) } }
-                            return !ids.isEmpty
-                        }
+            // The container wraps only the grid: the vertical scroll view stays the one the navigation bar tracks, and the
+            // swipe over the day below keeps stepping the selected day.
+            PagedContainer(canGoBack: true, canGoForward: true, isLocked: false, contentID: { model.days.first?.day },
+                           sizesToCurrentPage: true,
+                           onPage: { model.step($0.step) }, onPrevailingPage: { model.titlePreviewStep = $0?.step },
+                           onBlockedEdge: {}) { slot in
+                switch slot {
+                case .current: monthGrid
+                case .previous: monthPreview(step: -1)
+                case .next: monthPreview(step: 1)
+                case .arrived: MonthPagePreview(model: model, anchor: model.anchor)
                 }
             }
-            .padding(.horizontal)
-            .contentShape(Rectangle())
-            .simultaneousGesture(pageSwipeGesture { model.step($0.step) })  // swiping over the calendar changes the month
 
             if let plan = model.days.first(where: { $0.day == model.monthSelection }) {
                 MonthDayDetail(model: model, plan: plan, onOpenDay: { onSelectDay(plan.day) },
@@ -78,6 +72,34 @@ struct MonthView: View {
             }
         }
         .sheet(item: $planningDay) { day in PlanTaskPicker(model: model, day: day) }
+    }
+
+    /// Weekday header and the days of the shown month, with load bars and marks.
+    private var monthGrid: some View {
+        LazyVGrid(columns: columns, spacing: 4) {
+            ForEach(DateText.shortStandaloneWeekdaySymbols(calendar: model.calendar), id: \.self) { Text($0).font(.caption2).foregroundStyle(.secondary) }
+            ForEach(model.days) { plan in
+                // First tap selects the day (mockup E1); a second tap opens it in "Tag".
+                Button {
+                    if model.monthSelection == plan.day { onSelectDay(plan.day) } else { model.selectedDay = plan.day }
+                } label: { cell(plan) }
+                    .buttonStyle(.plain)
+                    .contextMenu { dayMenu(plan.day) }
+                    .dropDestination(for: String.self) { keys, _ in
+                        let ids = keys.compactMap(TaskID.init(key:))
+                        Task { for id in ids { await model.assign(id, to: plan.day) } }
+                        return !ids.isEmpty
+                    }
+            }
+        }
+        .padding(.horizontal)
+        .contentShape(Rectangle())
+    }
+
+    /// The month before or after the shown one, as a plain page.
+    private func monthPreview(step: Int) -> some View {
+        MonthPagePreview(model: model, anchor: PlanHeaderText.shiftedAnchor(scope: .month, anchor: model.anchor, step: step,
+                                                                          calendar: model.calendar))
     }
 
     @ViewBuilder

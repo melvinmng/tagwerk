@@ -59,6 +59,16 @@
         }
       }
     },
+    "%lld min Fokus geschafft ✓" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld min of focus done ✓"
+          }
+        }
+      }
+    },
     "+%@ ml" : {
       "localizations" : {
         "en" : {
@@ -85,6 +95,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "UP NEXT"
+          }
+        }
+      }
+    },
+    "Aktuelle Phase zeigen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show current phase"
           }
         }
       }
@@ -199,6 +219,16 @@
         }
       }
     },
+    "Fokus geschafft ✓" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Focus done ✓"
+          }
+        }
+      }
+    },
     "Fokus pausieren" : {
       "localizations" : {
         "en" : {
@@ -215,6 +245,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Resume"
+          }
+        }
+      }
+    },
+    "Geschafft" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Finished"
           }
         }
       }
@@ -422,6 +462,26 @@
         }
       }
     },
+    "Pause starten · %lld min" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start break · %lld min"
+          }
+        }
+      }
+    },
+    "Pause vorbei" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Break over"
+          }
+        }
+      }
+    },
     "Pause überspringen" : {
       "localizations" : {
         "en" : {
@@ -443,11 +503,28 @@
       }
     },
     "Phase vorbei" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Phase over"
+          }
+        }
+      }
+    },
+    "Runde %lld von %lld" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Runde %1$lld von %2$lld"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Round %1$lld of %2$lld"
           }
         }
       }
@@ -513,6 +590,7 @@
       }
     },
     "Verschieben" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -572,6 +650,16 @@
         }
       }
     },
+    "bis %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "until %@"
+          }
+        }
+      }
+    },
     "danach %@" : {
       "localizations" : {
         "en" : {
@@ -594,6 +682,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "then %1$@ %2$@"
+          }
+        }
+      }
+    },
+    "pausiert" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "paused"
           }
         }
       }

@@ -1072,6 +1072,32 @@
         }
       }
     },
+    "%@: keine Bausteine": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@: no bricks"
+          }
+        }
+      }
+    },
+    "%@–%@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@–%2$@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@–%2$@"
+          }
+        }
+      }
+    },
     "%lld": {
       "localizations": {
         "en": {
@@ -1385,6 +1411,46 @@
           "stringUnit": {
             "state": "translated",
             "value": "%lld tasks, %lld notes, %lld habits, %lld meals"
+          }
+        }
+      }
+    },
+    "%lld Bausteine": {
+      "localizations": {
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Baustein"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Bausteine"
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld brick"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld bricks"
+                }
+              }
+            }
           }
         }
       }
@@ -1722,6 +1788,86 @@
                 "stringUnit": {
                   "state": "translated",
                   "value": "%lld events"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "%lld Termine, %@ bis %@: %@": {
+      "localizations": {
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Termin, %@ bis %@: %@"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Termine, %@ bis %@: %@"
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld event, %@ to %@: %@"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld events, %@ to %@: %@"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "%lld Termine · %@": {
+      "localizations": {
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Termin · %@"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Termine · %@"
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld event · %@"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld events · %@"
                 }
               }
             }
@@ -2093,6 +2239,7 @@
       }
     },
     "%lld gewachsen · %lld gewelkt": {
+      "extractionState": "stale",
       "localizations": {
         "de": {
           "stringUnit": {
@@ -2174,6 +2321,32 @@
         }
       }
     },
+    "%lld min bleiben als Fokuszeit für „%@“ gespeichert.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$lld min bleiben als Fokuszeit für „%2$@“ gespeichert."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld min are kept as focus time for “%2$@”."
+          }
+        }
+      }
+    },
+    "%lld min bleiben als Fokuszeit gespeichert.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld min are kept as focus time."
+          }
+        }
+      }
+    },
     "%lld min vorher": {
       "localizations": {
         "en": {
@@ -2196,6 +2369,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "%1$lld min before · %2$@"
+          }
+        }
+      }
+    },
+    "%lld min · Pomodoro aus": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld min · Pomodoro off"
           }
         }
       }
@@ -2410,6 +2593,22 @@
         }
       }
     },
+    "%lld von %lld Messungen": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$lld von %2$lld Messungen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld of %2$lld measurements"
+          }
+        }
+      }
+    },
     "%lld von %lld bisher": {
       "localizations": {
         "de": {
@@ -2458,6 +2657,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "%lld left from today"
+          }
+        }
+      }
+    },
+    "%lld vorzeitig beendet": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld ended early"
           }
         }
       }
@@ -2620,6 +2829,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "%1$lld · %2$@"
+          }
+        }
+      }
+    },
+    "%lld × %lld / %lld": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$lld × %2$lld / %3$lld"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld × %2$lld / %3$lld"
           }
         }
       }
@@ -3037,6 +3262,16 @@
         }
       }
     },
+    "+%lld weitere": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "+%lld more"
+          }
+        }
+      }
+    },
     "1 Aufgabe": {
       "localizations": {
         "en": {
@@ -3229,6 +3464,17 @@
         }
       }
     },
+    "Abgeschlossen, Stufe %lld": {
+      "extractionState": "stale",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Completed, stage %lld"
+          }
+        }
+      }
+    },
     "Abhaken": {
       "localizations": {
         "en": {
@@ -3378,6 +3624,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Actions"
+          }
+        }
+      }
+    },
+    "Aktuelle Phase zeigen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show current phase"
           }
         }
       }
@@ -4010,6 +4266,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Choose another note …"
+          }
+        }
+      }
+    },
+    "Andere …": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Other …"
           }
         }
       }
@@ -5371,6 +5637,16 @@
         }
       }
     },
+    "Bis Blockende · %lld min": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Until end of block · %lld min"
+          }
+        }
+      }
+    },
     "Bis Datum": {
       "localizations": {
         "en": {
@@ -5463,6 +5739,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Stays unchanged"
+          }
+        }
+      }
+    },
+    "Blockende": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "End of block"
           }
         }
       }
@@ -5719,6 +6005,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "To let the assistant find, read, revise, create and delete your notes, Tagwerk sends notes to ChatGPT (OpenAI) through the account you are signed in with."
+          }
+        }
+      }
+    },
+    "Danach": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Next"
           }
         }
       }
@@ -6093,6 +6389,16 @@
         }
       }
     },
+    "Dauer beim Start fragen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ask for the duration at the start"
+          }
+        }
+      }
+    },
     "Dauer: %@": {
       "extractionState": "stale",
       "localizations": {
@@ -6316,6 +6622,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "The assistant needed too many steps and stopped. Phrase your request more precisely."
+          }
+        }
+      }
+    },
+    "Der Baustein bleibt erhalten und wird als vorzeitig beendet markiert.": {
+      "extractionState": "stale",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The brick stays and is marked as ended early."
           }
         }
       }
@@ -7820,7 +8137,6 @@
       }
     },
     "Eigene": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -9030,6 +9346,7 @@
       }
     },
     "Fokus abbrechen?": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -9040,6 +9357,7 @@
       }
     },
     "Fokus abbrechen? Das Stück der Sammlung welkt.": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -9065,6 +9383,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Stop focus in Tagwerk"
+          }
+        }
+      }
+    },
+    "Fokus beenden?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "End focus?"
           }
         }
       }
@@ -9185,12 +9513,32 @@
         }
       }
     },
+    "Fokus starten · %lld min": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start focus · %lld min"
+          }
+        }
+      }
+    },
     "Fokus öffnen": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Open focus"
+          }
+        }
+      }
+    },
+    "Fokus-Einstellungen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Focus settings"
           }
         }
       }
@@ -10096,6 +10444,7 @@
       }
     },
     "Gewachsen, Stufe %lld": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -10106,6 +10455,7 @@
       }
     },
     "Gewelkt, Stufe %lld": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -10903,6 +11253,16 @@
         }
       }
     },
+    "Höhe nach Dauer (1, 10, 25, 50, 90 min) · gestrichelt: vorzeitig beendet": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Height by duration (1, 10, 25, 50, 90 min) · dashed: ended early"
+          }
+        }
+      }
+    },
     "Hört zu · auf dem iPhone": {
       "localizations": {
         "en": {
@@ -11455,7 +11815,18 @@
         }
       }
     },
+    "Jede Fokus-Sitzung ab einer Minute ergibt einen Baustein.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Every focus session of a minute or more gives you a brick."
+          }
+        }
+      }
+    },
     "Jede beendete Fokus-Sitzung ergibt ein Stück. Wer früher abbricht, bekommt ein gewelktes.": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -12708,6 +13079,16 @@
         }
       }
     },
+    "Losfahren · %lld min": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leave · %lld min"
+          }
+        }
+      }
+    },
     "Längere Notiz, in Erinnerungen bearbeiten": {
       "localizations": {
         "en": {
@@ -12744,6 +13125,56 @@
           "stringUnit": {
             "state": "translated",
             "value": "Running"
+          }
+        }
+      }
+    },
+    "läuft, noch %lld Minuten": {
+      "localizations": {
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "läuft, noch %lld Minute"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "läuft, noch %lld Minuten"
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "running, %lld minute left"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "running, %lld minutes left"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "läuft · noch %lld min": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "running · %lld min left"
           }
         }
       }
@@ -15198,6 +15629,16 @@
         }
       }
     },
+    "Planung": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Planning"
+          }
+        }
+      }
+    },
     "Planungsvorgaben · %lld von %lld": {
       "localizations": {
         "de": {
@@ -15215,11 +15656,32 @@
       }
     },
     "Pomodoro": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Pomodoro"
+          }
+        }
+      }
+    },
+    "Pomodoro (%@)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pomodoro (%@)"
+          }
+        }
+      }
+    },
+    "Pomodoro (Runden mit Pausen)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pomodoro (rounds with breaks)"
           }
         }
       }
@@ -15803,6 +16265,16 @@
         }
       }
     },
+    "Sammlung ansehen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "View collection"
+          }
+        }
+      }
+    },
     "Schlafzeit %@": {
       "localizations": {
         "en": {
@@ -15975,11 +16447,22 @@
       }
     },
     "Schätzung und Ist": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Estimate vs. actual"
+          }
+        }
+      }
+    },
+    "Schätzung und Ist · letzte 8 Wochen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Estimate vs. actual · last 8 weeks"
           }
         }
       }
@@ -18293,6 +18776,16 @@
         }
       }
     },
+    "Vor dem Start erscheint ein Blatt, in dem du die Dauer wählst. Siri, das Kontrollzentrum und Kurzbefehle starten immer ohne Blatt mit den Werten von oben.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A sheet appears before the start where you choose the duration. Siri, Control Center and shortcuts always start without it, using the values above."
+          }
+        }
+      }
+    },
     "Vorarbeiten, wenn Luft ist": {
       "localizations": {
         "en": {
@@ -18425,6 +18918,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Previous day"
+          }
+        }
+      }
+    },
+    "Vorlage": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Template"
           }
         }
       }
@@ -18648,6 +19151,17 @@
         }
       },
       "shouldTranslate": false
+    },
+    "Vorzeitig beendet, Stufe %lld": {
+      "extractionState": "stale",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ended early, stage %lld"
+          }
+        }
+      }
     },
     "Wandern": {
       "localizations": {
@@ -19223,11 +19737,28 @@
       }
     },
     "Woche ab %@": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Week of %@"
+          }
+        }
+      }
+    },
+    "Woche ab %@ · %@ Fokus": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Woche ab %1$@ · %2$@ Fokus"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Week of %1$@ · %2$@ focus"
           }
         }
       }
@@ -19480,6 +20011,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Time block %1$@ · %2$@ · %3$@"
+          }
+        }
+      }
+    },
+    "Zeitblock %@–%@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Zeitblock %1$@–%2$@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Time block %1$@–%2$@"
           }
         }
       }
@@ -19867,6 +20414,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "To translate, Tagwerk sends the names of your open items and the target language to ChatGPT (OpenAI), through the account you are signed in with."
+          }
+        }
+      }
+    },
+    "Zum Verschieben den Eintrag öffnen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open the entry to move it."
           }
         }
       }
@@ -21299,6 +21856,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "%lld days ago"
+          }
+        }
+      }
+    },
+    "wie geschätzt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "as estimated"
           }
         }
       }

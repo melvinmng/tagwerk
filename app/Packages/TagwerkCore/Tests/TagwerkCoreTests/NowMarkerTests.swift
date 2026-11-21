@@ -101,4 +101,50 @@ struct NowMarkerTests {
                                             canvasTop: 100, viewportHeight: 900)
         #expect(offset == 0)
     }
+
+    // MARK: Running entry (PL2b, PL3c)
+
+    @Test func isRunning_startInclusive_endExclusive() {
+        let range = 600..<660
+        #expect(!NowMarker.isRunning(range: range, nowMinutes: 599))
+        #expect(NowMarker.isRunning(range: range, nowMinutes: 600))
+        #expect(NowMarker.isRunning(range: range, nowMinutes: 659))
+        #expect(!NowMarker.isRunning(range: range, nowMinutes: 660))
+    }
+
+    @Test func isRunning_otherDay_isFalse() {
+        #expect(!NowMarker.isRunning(range: 600..<660, nowMinutes: nil))
+    }
+
+    @Test func remainingMinutes_roundsUp() {
+        #expect(NowMarker.remainingMinutes(range: 600..<660, nowMinutes: 632) == 28)
+        #expect(NowMarker.remainingMinutes(range: 600..<660, nowMinutes: 600) == 60)
+        // The last running minute still says one minute, never zero.
+        #expect(NowMarker.remainingMinutes(range: 600..<660, nowMinutes: 659) == 1)
+        #expect(NowMarker.remainingMinutes(range: 600..<660, nowMinutes: 700) == 1)
+    }
+
+    // MARK: Aligning again (PL4b)
+
+    @Test func realignsOnReturn_after30Minutes() {
+        let hidden = instant(2026, 11, 19, 10, 0)
+        #expect(NowMarker.realignsOnReturn(hiddenSince: hidden, now: instant(2026, 11, 19, 10, 30)))
+        #expect(NowMarker.realignsOnReturn(hiddenSince: hidden, now: instant(2026, 11, 19, 14, 0)))
+    }
+
+    @Test func realignsOnReturn_before30Minutes_isFalse() {
+        let hidden = instant(2026, 11, 19, 10, 0)
+        #expect(!NowMarker.realignsOnReturn(hiddenSince: hidden, now: instant(2026, 11, 19, 10, 29)))
+    }
+
+    @Test func realignsOnReturn_neverHidden_isFalse() {
+        #expect(!NowMarker.realignsOnReturn(hiddenSince: nil, now: instant(2026, 11, 19, 10, 0)))
+    }
+
+    @Test func openingMinutes_prefersFirstEntry() {
+        #expect(NowMarker.openingMinutes(firstEntryStart: 600, workStart: 540) == 600)
+        #expect(NowMarker.openingMinutes(firstEntryStart: nil, workStart: 540) == 540)
+        #expect(NowMarker.openingMinutes(firstEntryStart: nil, workStart: nil) == nil)
+    }
 }
+

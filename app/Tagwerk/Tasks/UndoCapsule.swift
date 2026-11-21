@@ -86,6 +86,19 @@ struct UndoCapsule: View {
     }
 }
 
+/// Where the confirmation capsules that float over a tab (not those inside a safe area inset) sit (FO5b).
+enum UndoCapsuleMetrics {
+    /// Distance of a capsule from the bottom edge without the focus bar.
+    static let baseInset: CGFloat = 60
+    /// Height the bar for a running focus session takes above the tab bar.
+    static let focusBarHeight: CGFloat = 52
+
+    /// Distance of an undo capsule from the bottom edge; larger while the focus bar is shown.
+    static func bottomInset(focusBarVisible: Bool) -> CGFloat {
+        baseInset + (focusBarVisible ? focusBarHeight : 0)
+    }
+}
+
 /// "Vergeben" after an issue left the user's lists (mockup ZD1): number and people, with the only way
 /// to the issue on GitHub. There is nothing to undo; the capsule stays 8 seconds.
 struct HandedOverCapsule: View {

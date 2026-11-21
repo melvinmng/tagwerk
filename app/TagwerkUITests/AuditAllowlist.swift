@@ -42,7 +42,7 @@ enum AuditAllowlist {
     private static let entries: [Entry] = [
         // MARK: Contrast (every group needs a colour decision, section "Designpunkte für #188")
         Entry(auditType: .contrast, labels: [
-            "Nichts offen", "zuletzt: „(Römer|Demo Linsensuppe)“ · heute \\d+:\\d+", "[89]", "HEUTE · KW \\d+", "[A-Z]{2}\\.,? .* · KW \\d+", "Ablauf", "\\d\\d:\\d\\d",
+            "Nichts offen", "zuletzt: „(Römer|Demo Linsensuppe)“ · heute \\d+:\\d+", "[89]", "HEUTE · KW \\d+", "[A-Z]{2}\\.,? .* · KW \\d+", "Ablauf", "\\d\\d:00",
             "Schlafzeit \\d+:\\d+", "Ganztägig", "Überfällig", "Heute", "Einkaufsliste", "Notizen", "\\d+\\.\\d+\\.", "·", "Demo Aufgaben",
             "Lokal", "Routinen", "Gewohnheiten", "Woche", "Starten", "noch [\\d.]+", "Wasser", "Schritte", "Training · Woche",
             "\\d+ offen · Liste „Demo Einkauf“ in Erinnerungen", "Brot & Backwaren", "Kühlregal", "Aufgaben, 1 offen", "Vergangene Termine",
@@ -84,14 +84,25 @@ enum AuditAllowlist {
             + "(blue, green, red, grey). The tint is the colour code of the grid (calendar, block, deadline, break); contrast on tint is a "
             + "design question (#188, \"Sekundärtexte auf getönten Karten\")."),
 
+        Entry(auditType: .contrast, labels: ["\\d+ Termine · \\d\\d:\\d\\d–\\d\\d:\\d\\d"], screens: ["AX5/dark Planen"], reason:
+            "Headline of the block that collapses overlapping entries of the hour grid (BF1c, `CollapsedGroupBlock`): "
+            + "primary text on grey at 24 %, the same tint as the entries above. The audit reports the headline in the "
+            + "AX5 run (the demo seminar, its copy and the deadline overlap in the morning); the rendered image of the block measures "
+            + "16.5:1 in light and 15.9:1 in dark mode (`MarkerRenderContrastTests.collapsedBlock_renderedContrast`), so the finding is "
+            + "the measurement of the audit on the translucent fill, not a lack of contrast."),
+
         // MARK: Dynamic Type
         Entry(auditType: .dynamicType, labels: ["\\d\\d:\\d\\d"] + gridCellLabels, screens: ["Planen (Tag)"], reason:
             "Hour labels and entries of the hour grid of \"Planen\": the grid is time-proportional (fixed height per hour), so its texts are "
             + "text styles but cannot grow with the size; the audit reports the partial support. Plan g3-uitests-a11y: the grid stays "
             + "proportional, visibility at large sizes is decided in #188; the full text is in the accessibility label of each entry."),
-        Entry(auditType: .dynamicType, labels: ["HEUTE · KW \\d+", "[A-Z][a-z]\\. \\d+\\. [A-Z][a-zä]+\\.", "Auswählen"], reason:
-            "The date title in the bar of \"Planen\" is fixed in size on purpose (a toolbar item gets no width; with accessibility sizes it shows the "
-            + "shortest form, see PlanHeaderText.displayedTitle); \"Auswählen\" is a system bar button. Header design: #188 / #175."),
+        Entry(auditType: .dynamicType, labels: [
+            "HEUTE · KW \\d+", "[A-Z][a-z]\\. \\d+\\. [A-Z][a-zä]+\\.", "[A-Z][a-zäöü]+, \\d+\\. [A-Z][a-zä]+\\.?", "Auswählen",
+        ], reason:
+            "The date title in the bar of \"Planen\" is fixed in size on purpose (a toolbar item gets no width; it shows the longest form that "
+            + "fits next to the bar buttons, measured in the font of the title, see PlanHeaderText.displayedTitle, PL16b; the full form "
+            + "\"Samstag, 21. Nov.\" is the same element as the shorter ones that were listed here before); \"Auswählen\" is a system bar button. "
+            + "Header design: #188 / #175."),
         Entry(auditType: .dynamicType, labels: [
             "Punkte in den Einstellungen anlegen", "Mo\\. planen", "Abschließen", "Brain Dump", "Leitfragen einfügen", "\\d+\\.\\d+\\.",
         ], screens: ["Tagesabschluss"], reason: "Texts of the evening sheet (hint line, buttons, date of the next planning day) report a partial lack of "

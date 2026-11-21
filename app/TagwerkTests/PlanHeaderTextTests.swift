@@ -93,4 +93,87 @@ struct PlanHeaderTextTests {
         #expect(PlanHeaderText.statusLine(intake: nil, habits: nil) == nil)
         #expect(PlanHeaderText.statusLine(intake: "~1.240 / 2.300 kcal", habits: nil) == "~1.240 / 2.300 kcal")
     }
+
+    // MARK: Title while dragging (PL6b)
+
+    @Test func shiftedAnchor_movesByTheScope() {
+        #expect(PlanHeaderText.shiftedAnchor(scope: .day, anchor: today, step: 1, calendar: calendar)
+                == PlanDay(year: 2026, month: 11, day: 19))
+        #expect(PlanHeaderText.shiftedAnchor(scope: .day, anchor: today, step: -1, calendar: calendar)
+                == PlanDay(year: 2026, month: 11, day: 17))
+        #expect(PlanHeaderText.shiftedAnchor(scope: .week, anchor: today, step: 1, calendar: calendar)
+                == PlanDay(year: 2026, month: 11, day: 25))
+        #expect(PlanHeaderText.shiftedAnchor(scope: .month, anchor: today, step: 1, calendar: calendar)
+                == PlanDay(year: 2026, month: 12, day: 18))
+        #expect(PlanHeaderText.shiftedAnchor(scope: .month, anchor: today, step: -1, calendar: calendar)
+                == PlanDay(year: 2026, month: 10, day: 18))
+    }
+
+    // MARK: Title by available width (PL16b)
+
+    /// Ten points per character: the tests do not depend on the font.
+    private let tenPerCharacter: (String) -> CGFloat = { CGFloat($0.count) * 10 }
+
+    @Test func fittingTitle_takesTheLongestThatFits() {
+        let candidates = ["Donnerstag, 19. Nov.", "Do. 19. Nov.", "19. Nov."]
+        #expect(PlanHeaderText.fittingTitle(candidates, availableWidth: 250, width: tenPerCharacter) == "Donnerstag, 19. Nov.")
+        #expect(PlanHeaderText.fittingTitle(candidates, availableWidth: 200, width: tenPerCharacter) == "Donnerstag, 19. Nov.")
+        #expect(PlanHeaderText.fittingTitle(candidates, availableWidth: 150, width: tenPerCharacter) == "Do. 19. Nov.")
+        #expect(PlanHeaderText.fittingTitle(candidates, availableWidth: 90, width: tenPerCharacter) == "19. Nov.")
+    }
+
+    @Test func fittingTitle_nothingFits_takesTheShortest() {
+        let candidates = ["Donnerstag, 19. Nov.", "Do. 19. Nov.", "19. Nov."]
+        #expect(PlanHeaderText.fittingTitle(candidates, availableWidth: 20, width: tenPerCharacter) == "19. Nov.")
+        #expect(PlanHeaderText.fittingTitle(candidates, availableWidth: 0, width: tenPerCharacter) == "19. Nov.")
+    }
+
+    @Test func fittingTitle_singleCandidate_isReturnedAlways() {
+        #expect(PlanHeaderText.fittingTitle(["November"], availableWidth: 5, width: tenPerCharacter) == "November")
+    }
+
+    @Test func displayedTitle_withoutWidth_keepsTheFixedForm() {
+        let thursday = PlanDay(year: 2026, month: 11, day: 19)
+        let fixed = PlanHeaderText.displayedTitle(scope: .day, anchor: thursday, range: thursday...thursday, calendar: calendar,
+                                                  largeText: false)
+        #expect(fixed == "Do. 19. Nov.")
+        let explicit = PlanHeaderText.displayedTitle(scope: .day, anchor: thursday, range: thursday...thursday, calendar: calendar,
+                                                     largeText: false, availableWidth: nil)
+        #expect(explicit == fixed)
+    }
+
+    @Test func displayedTitle_withWidth_choosesByWidthAlsoWithLargeText() {
+        let thursday = PlanDay(year: 2026, month: 11, day: 19)
+        func shown(width: CGFloat, large: Bool) -> String {
+            PlanHeaderText.displayedTitle(scope: .day, anchor: thursday, range: thursday...thursday, calendar: calendar,
+                                          largeText: large, availableWidth: width, width: tenPerCharacter)
+        }
+        // "Donnerstag, 19. Nov." is 20 characters, "Do. 19. Nov." 12.
+        #expect(shown(width: 220, large: false) == "Donnerstag, 19. Nov.")
+        #expect(shown(width: 130, large: false) == "Do. 19. Nov.")
+        #expect(shown(width: 60, large: false) == "19. Nov.")
+        // The measured font grows with the text size, so the same rule holds with large text.
+        #expect(shown(width: 220, large: true) == "Donnerstag, 19. Nov.")
+    }
+
+    @Test func headerMetrics_availableWidth_isTheWindowMinusTheReserve() {
+        #expect(PlanHeaderMetrics.availableTitleWidth(windowWidth: 402) == 402 - PlanHeaderMetrics.trailingReserve)
+        #expect(PlanHeaderMetrics.availableTitleWidth(windowWidth: 402, typeSize: .xxxLarge)
+                == 402 - PlanHeaderMetrics.trailingReserveLargeText)
+        #expect(PlanHeaderMetrics.availableTitleWidth(windowWidth: 100) == 0)
+    }
+
+    @Test func headerMetrics_titleWidth_growsWithTextAndTextSize() {
+        let short = PlanHeaderMetrics.titleWidth("19. Nov.", typeSize: .large)
+        let long = PlanHeaderMetrics.titleWidth("Donnerstag, 19. Nov.", typeSize: .large)
+        #expect(short > 0)
+        #expect(long > short)
+        #expect(PlanHeaderMetrics.titleWidth("Donnerstag, 19. Nov.", typeSize: .xxLarge) > long)
+        // The navigation bar does not grow its text beyond XXXL, so neither does the measurement.
+        #expect(PlanHeaderMetrics.titleWidth("Donnerstag, 19. Nov.", typeSize: .accessibility3)
+                == PlanHeaderMetrics.titleWidth("Donnerstag, 19. Nov.", typeSize: .xxxLarge))
+        #expect(PlanHeaderMetrics.titleWidth("Donnerstag, 19. Nov.", typeSize: .xxxLarge)
+                == PlanHeaderMetrics.titleWidth("Donnerstag, 19. Nov.", typeSize: .xxLarge))
+    }
 }
+

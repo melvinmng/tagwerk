@@ -23,7 +23,7 @@ struct FocusCaptureSection: View {
                 }
                 .foregroundStyle(.primary)
             } else {
-                Button { Task { await focus.start(task: nil, block: nil) } } label: {
+                Button { Task { await focus.requestStart(task: nil, block: nil) } } label: {
                     Label("Frei starten", systemImage: "timer")
                 }
             }

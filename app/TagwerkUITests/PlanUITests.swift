@@ -39,4 +39,29 @@ final class PlanUITests: UITestCase {
         app.windows.firstMatch.swipeRight()
         XCTAssertTrue(dayTitle(startingWith: "Heute").waitForExistence(timeout: Self.timeout), "The swipe did not return to today")
     }
+
+    /// The month pages by dragging sideways over the grid (PL7b): the title moves on to the next month.
+    func testMonthPagesBySwiping() {
+        waitFor("Sprechstunde")
+        tapButton("Monat")
+        let current = dayTitle(startingWith: "Dieser Monat")
+        XCTAssertTrue(current.waitForExistence(timeout: Self.timeout), "The month view does not show the current month")
+        let month = current.label
+        app.swipeLeft()
+        // A month that is not the current one carries only the year as its caption.
+        let other = app.staticTexts.matching(NSPredicate(format: "value MATCHES %@", "\\d{4}")).firstMatch
+        XCTAssertTrue(other.waitForExistence(timeout: Self.timeout), "The swipe did not page to the next month")
+        XCTAssertNotEqual(other.label, month)
+        // Swiping back returns to the current month.
+        app.swipeRight()
+        XCTAssertTrue(dayTitle(startingWith: "Dieser Monat").waitForExistence(timeout: Self.timeout), "The swipe did not return")
+        // A tap on a day still works inside the container, and scrolling up and down starts no page change.
+        let cell = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", " 15. ")).firstMatch
+        XCTAssertTrue(cell.waitForExistence(timeout: Self.timeout), "The 15th is not in the month grid")
+        cell.tap()
+        app.swipeUp()
+        app.swipeDown()
+        XCTAssertTrue(dayTitle(startingWith: "Dieser Monat").exists, "A vertical drag changed the month")
+    }
 }
+

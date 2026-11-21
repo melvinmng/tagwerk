@@ -197,12 +197,13 @@ struct SearchSheet: View {
             SearchTaskMenu.plannedAnnouncement(day: day, today: planning.today, calendar: calendar)).post()
     }
 
-    /// "Fokus starten" from a VoiceOver action: closes the sheet, then starts the focus like the menu button does.
+    /// "Fokus starten" from a VoiceOver action: closes the sheet, then asks for the start like the menu button does
+    /// (start sheet, or an immediate start when "Dauer beim Start fragen" is off).
     private func startFocus(_ item: TaskItem) {
         dismiss()
         Task {
             try? await Task.sleep(for: .milliseconds(400))
-            await environment.focus.start(task: item, block: nil)
+            await environment.focus.requestStart(task: item, block: nil)
         }
     }
 
