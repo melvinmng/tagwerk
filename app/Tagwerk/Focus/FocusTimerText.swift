@@ -49,6 +49,26 @@ enum FocusTimerText {
         return "\(bricks) · \(endedEarly)"
     }
 
+    /// "bis 14:51" (EN "until 2:51 PM"); `nil` while paused.
+    static func endsAt(_ phaseEnd: Date?, calendar: Calendar, locale: Locale = .current) -> String? {
+        guard let phaseEnd else { return nil }
+        let time = phaseEnd.formatted(Date.FormatStyle(date: .omitted, time: .shortened, locale: locale, calendar: calendar,
+                                                       timeZone: calendar.timeZone))
+        return String(localized: "bis \(time)")
+    }
+
+    /// "Fokus · Runde 1 von 4", "Fokus" without Pomodoro.
+    static func phaseLine(phase: FocusPhase, settings: FocusTimerSettings) -> String {
+        [phaseName(phase), roundText(phase: phase, settings: settings)].compactMap { $0 }.joined(separator: " · ")
+    }
+
+    /// "18 min bleiben als Fokuszeit für „Bericht schreiben“ gespeichert." / "… als Fokuszeit gespeichert." without a task.
+    static func stopMessage(focusedSeconds: Int, title: String) -> String {
+        let minutes = focusedSeconds / 60
+        if title.isEmpty { return String(localized: "\(minutes) min bleiben als Fokuszeit gespeichert.") }
+        return String(localized: "\(minutes) min bleiben als Fokuszeit für „\(title)“ gespeichert.")
+    }
+
     /// "Woche ab 16. Nov. · 4 h 35 min Fokus".
     static func weekHeader(start: Date, focusedMinutes: Int) -> String {
         let date = start.formatted(.dateTime.day().month())

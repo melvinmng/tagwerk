@@ -1655,7 +1655,6 @@
   "Aufgabe erledigen": "Complete task",
   "Aufgabe verschieben": "Postpone task",
   "Erfahrungswerte in der Planung nutzen": "Use past effort in planning",
-  "Fokus abbrechen?": "Cancel focus?",
   "Fokus fortsetzen": "Continue focus",
   "Fokus läuft": "Focus running",
   "Fokus pausieren": "Pause focus",
@@ -2014,9 +2013,16 @@
   "%lld vorzeitig beendet": "%lld ended early",
   "Abgeschlossen, Stufe %lld": "Completed, stage %lld",
   "Vorzeitig beendet, Stufe %lld": "Ended early, stage %lld",
-  "Der Baustein bleibt erhalten und wird als vorzeitig beendet markiert.": "The brick stays and is marked as ended early.",
   "Jede Fokus-Sitzung ab einer Minute ergibt einen Baustein.": "Every focus session of a minute or more gives you a brick.",
   "Woche ab %@ · %@ Fokus": "Week of %1$@ · %2$@ focus",
   "%@: keine Bausteine": "%@: no bricks",
-  "Höhe nach Dauer (1, 10, 25, 50, 90 min) · gestrichelt: vorzeitig beendet": "Height by duration (1, 10, 25, 50, 90 min) · dashed: ended early"
+  "Höhe nach Dauer (1, 10, 25, 50, 90 min) · gestrichelt: vorzeitig beendet": "Height by duration (1, 10, 25, 50, 90 min) · dashed: ended early",
+  "Fokus-Einstellungen": "Focus settings",
+  "%lld min bleiben als Fokuszeit für „%@“ gespeichert.": "%1$lld min are kept as focus time for “%2$@”.",
+  "%lld min bleiben als Fokuszeit gespeichert.": "%lld min are kept as focus time.",
+  "Fokus beenden?": "End focus?",
+  "Danach": "Next",
+  "Blockende": "End of block",
+  "Losfahren · %lld min": "Leave · %lld min",
+  "%@–%@": "%1$@–%2$@"
 }

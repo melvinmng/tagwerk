@@ -49,4 +49,30 @@ struct FocusTimerTextTests {
         #expect(FocusTimerText.dayAccessibility(weekday: "Montag", bricks: bricks) == "Montag: 2 Bausteine, 50 Minuten Fokus, 1 vorzeitig beendet")
         #expect(FocusTimerText.dayAccessibility(weekday: "Dienstag", bricks: []) == "Dienstag: keine Bausteine")
     }
+
+    @Test func endsAt_inBothLanguages() {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(identifier: "UTC")!
+        let end = calendar.date(from: DateComponents(year: 2026, month: 11, day: 20, hour: 14, minute: 51))!
+        #expect(FocusTimerText.endsAt(end, calendar: calendar, locale: Locale(identifier: "de_DE")) == "bis 14:51")
+        #expect(FocusTimerText.endsAt(nil, calendar: calendar) == nil)
+        let english = Localized.string("bis \("2:51 PM")", in: .english, bundle: .main)
+        #expect(english == "until 2:51 PM")
+        #expect(FocusTimerText.endsAt(end, calendar: calendar, locale: Locale(identifier: "en_US"))?.contains("2:51") == true)
+    }
+
+    @Test func phaseLine_namesPhaseAndRound() {
+        let pomodoro = FocusTimerSettings()
+        #expect(FocusTimerText.phaseLine(phase: .work(round: 1), settings: pomodoro) == "Fokus · Runde 1 von 4")
+        #expect(FocusTimerText.phaseLine(phase: .shortBreak(round: 2), settings: pomodoro) == "Kurze Pause · Runde 2 von 4")
+        #expect(FocusTimerText.phaseLine(phase: .work(round: 1), settings: FocusTimerSettings(isPomodoro: false)) == "Fokus")
+    }
+
+    @Test func stopMessage_withAndWithoutTitle() {
+        #expect(FocusTimerText.stopMessage(focusedSeconds: 18 * 60 + 40, title: "Bericht schreiben")
+                == "18 min bleiben als Fokuszeit für „Bericht schreiben“ gespeichert.")
+        #expect(FocusTimerText.stopMessage(focusedSeconds: 18 * 60, title: "") == "18 min bleiben als Fokuszeit gespeichert.")
+        #expect(Localized.string("\(18) min bleiben als Fokuszeit gespeichert.", in: .english, bundle: .main)
+                == "18 min are kept as focus time.")
+    }
 }

@@ -914,6 +914,22 @@
         }
       }
     },
+    "%@–%@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@–%2$@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@–%2$@"
+          }
+        }
+      }
+    },
     "%lld": {
       "localizations": {
         "en": {
@@ -1893,6 +1909,32 @@
           "stringUnit": {
             "state": "translated",
             "value": "%lld min of focus"
+          }
+        }
+      }
+    },
+    "%lld min bleiben als Fokuszeit für „%@“ gespeichert.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$lld min bleiben als Fokuszeit für „%2$@“ gespeichert."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld min are kept as focus time for “%2$@”."
+          }
+        }
+      }
+    },
+    "%lld min bleiben als Fokuszeit gespeichert.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld min are kept as focus time."
           }
         }
       }
@@ -4844,6 +4886,16 @@
         }
       }
     },
+    "Blockende": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "End of block"
+          }
+        }
+      }
+    },
     "Blöcke löschen": {
       "localizations": {
         "en": {
@@ -5066,6 +5118,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "iOS will ask for microphone access next."
+          }
+        }
+      }
+    },
+    "Danach": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Next"
           }
         }
       }
@@ -5628,6 +5690,7 @@
       }
     },
     "Der Baustein bleibt erhalten und wird als vorzeitig beendet markiert.": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -7939,6 +8002,7 @@
       }
     },
     "Fokus abbrechen?": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -7965,6 +8029,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Stop focus"
+          }
+        }
+      }
+    },
+    "Fokus beenden?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "End focus?"
           }
         }
       }
@@ -8091,6 +8165,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Open focus"
+          }
+        }
+      }
+    },
+    "Fokus-Einstellungen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Focus settings"
           }
         }
       }
@@ -11241,6 +11325,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Local tasks without a time"
+          }
+        }
+      }
+    },
+    "Losfahren · %lld min": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leave · %lld min"
           }
         }
       }
