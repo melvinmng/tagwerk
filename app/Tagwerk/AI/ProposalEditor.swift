@@ -1,5 +1,6 @@
 import AIKit
 import Foundation
+import RemindersKit
 import SwiftUI
 import TagwerkCore
 
@@ -9,6 +10,8 @@ struct ProposalEditorContext {
     var calendar: Calendar
     var now: () -> Date = { Date() }
     var gitHubDirectory: () -> (any GitHubDirectory)?
+    /// The event calendars Tagwerk can write to, for the calendar field of an event.
+    var writableCalendars: () -> [ListInfo] = { [] }
 }
 
 /// The fields of one function's proposal, for the sheet "Vorschlag anpassen". An editor reads the arguments of a call,
@@ -41,7 +44,7 @@ protocol ProposalEditor: AnyObject {
 @MainActor
 enum ProposalEditors {
     /// One entry per editor type; later strands add theirs here.
-    static let editorTypes: [any ProposalEditor.Type] = [TaskProposalEditor.self]
+    static let editorTypes: [any ProposalEditor.Type] = [TaskProposalEditor.self, EventProposalEditor.self, DayHoursProposalEditor.self]
 
     /// The functions whose cards offer "Anpassen".
     static var toolNames: Set<String> { editorTypes.reduce(into: Set<String>()) { $0.formUnion($1.toolNames) } }

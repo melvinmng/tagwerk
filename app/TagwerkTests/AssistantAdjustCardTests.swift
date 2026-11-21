@@ -355,4 +355,24 @@ struct AssistantAdjustCardTests {
         #expect(model.describe(newReschedule).change != model.describe(newReschedule).proposedChange)
         #expect(model.describe(newAssign).change.contains("30"))
     }
+
+    // MARK: Events (task B2)
+
+    @Test func updateEvent_adjusted_isStillCheckedByTheFunction() async throws {
+        let (model, _) = await make()
+        model.adjustableTools = AssistantModel.adjustableToolNames
+        model.open(context: .tasks)
+        let arguments = Data(#"{"event_id":"gone","title":null,"start":null,"end":null,"all_day":null,"calendar_id":null,"location":null,"notes":null,"series":false}"#.utf8)
+        await pendingCards(model, [("c1", "update_event", arguments)])
+        let call = try #require(model.conversation?.pendingActions.first)
+        let editor = try #require(model.proposalEditor(for: call) as? EventProposalEditor)
+        editor.title = "Neuer Titel"
+        let adjusted = try #require(model.adjust(call, arguments: editor.arguments()))
+
+        responder.enqueue("Das ging nicht.")
+        await model.confirm(adjusted)
+
+        // The function's own check applies to the adjusted values: nothing is written for an event that is not there.
+        #expect(ActionCardView.error(in: try output(of: "c1", in: model)) != nil)
+    }
 }

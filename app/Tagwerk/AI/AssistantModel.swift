@@ -799,7 +799,8 @@ final class AssistantModel {
     /// starts from the current call, so an adjusted card opens with the user's values.
     func proposalEditor(for call: ToolCall) -> (any ProposalEditor)? {
         guard let current = conversation?.pendingActions.first(where: { $0.id == call.id }), canAdjust(current) else { return nil }
-        let context = ProposalEditorContext(calendar: planning.calendar, now: now, gitHubDirectory: gitHubDirectory)
+        let context = ProposalEditorContext(calendar: planning.calendar, now: now, gitHubDirectory: gitHubDirectory,
+                                            writableCalendars: { [planning] in planning.writableCalendars })
         return ProposalEditors.make(for: current, context: context)
     }
 
