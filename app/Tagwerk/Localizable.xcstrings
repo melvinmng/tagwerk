@@ -4223,22 +4223,12 @@
         }
       }
     },
-    "Apple Erinnerungen mit Uhrzeit": {
+    "Apple Erinnerungen": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Apple Reminders with a time"
-          }
-        }
-      }
-    },
-    "Apple Erinnerungen ohne Uhrzeit": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Apple Reminders without a time"
+            "value": "Apple Reminders"
           }
         }
       }
@@ -6071,26 +6061,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Deadline events"
-          }
-        }
-      }
-    },
-    "Deadline-Termine ganztägig": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "All-day deadline events"
-          }
-        }
-      }
-    },
-    "Deadline-Termine mit Uhrzeit": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Deadline events with a time"
           }
         }
       }
@@ -9951,6 +9921,16 @@
         }
       }
     },
+    "Gilt für alles ohne eigene Erinnerungen. Für Kalendertermine nur beim Anlegen in Tagwerk.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Applies to everything without reminders of its own. For calendar events only when created in Tagwerk."
+          }
+        }
+      }
+    },
     "Gilt für Planen und Assistent. Höher denkt länger und gründlicher, braucht aber mehr Zeit und Kontingent.": {
       "localizations": {
         "en": {
@@ -10168,26 +10148,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "GitHub issues"
-          }
-        }
-      }
-    },
-    "GitHub-Issues mit Uhrzeit": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "GitHub issues with a time"
-          }
-        }
-      }
-    },
-    "GitHub-Issues ohne Uhrzeit": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "GitHub issues without a time"
           }
         }
       }
@@ -11145,6 +11105,16 @@
         }
       }
     },
+    "Kalendertermine": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Calendar events"
+          }
+        }
+      }
+    },
     "KI": {
       "localizations": {
         "en": {
@@ -11211,26 +11181,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Calendar diagnostics"
-          }
-        }
-      }
-    },
-    "Kalendertermine ganztägig": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "All-day calendar events"
-          }
-        }
-      }
-    },
-    "Kalendertermine mit Uhrzeit": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Calendar events with a time"
           }
         }
       }
@@ -12246,26 +12196,6 @@
         }
       }
     },
-    "Lokale Aufgaben mit Uhrzeit": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Local tasks with a time"
-          }
-        }
-      }
-    },
-    "Lokale Aufgaben ohne Uhrzeit": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Local tasks without a time"
-          }
-        }
-      }
-    },
     "Längere Notiz, in Erinnerungen bearbeiten": {
       "localizations": {
         "en": {
@@ -12895,6 +12825,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "With your ChatGPT account, Tagwerk can plan your day, week and month, and the assistant can change tasks for you."
+          }
+        }
+      }
+    },
+    "Mit Uhrzeit": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "With a time"
           }
         }
       }
