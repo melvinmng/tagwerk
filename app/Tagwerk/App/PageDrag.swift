@@ -44,4 +44,13 @@ struct PageDrag {
     static func isHorizontal(_ translation: CGSize) -> Bool {
         abs(translation.width) >= activationDistance && abs(translation.width) > horizontalRatio * abs(translation.height)
     }
+
+    /// The neighbour that covers more than half of the width during a drag; nil while the shown page prevails.
+    /// A damped rubber band at a blocked edge never gets there, and a blocked direction never prevails.
+    static func prevailingPage(offset: CGFloat, width: CGFloat, canGoBack: Bool, canGoForward: Bool) -> PageSwipe? {
+        guard width > 0 else { return nil }
+        if offset > width / 2, canGoBack { return .back }
+        if offset < -width / 2, canGoForward { return .forward }
+        return nil
+    }
 }

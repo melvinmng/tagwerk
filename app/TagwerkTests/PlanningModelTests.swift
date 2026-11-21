@@ -2396,4 +2396,175 @@ struct PlanningModelTests {
         let second = try #require(model.days.first?.travel.first { $0.eventID == "b" })
         #expect(second.origin == .previousEvent(id: "a"))
     }
+
+    // MARK: Running entry (PL2b)
+
+    private func timedEvent(from start: Date, to end: Date) -> CalendarEvent {
+        CalendarEvent(id: "run|1", externalID: nil, calendarID: "cal", title: "Lauf", start: start, end: end,
+                      isAllDay: false, url: nil, isBusy: true, version: "1")
+    }
+
+    @Test func runningRemaining_eventAroundNow_countsTheMinutesLeft() async {
+        let model = await model()   // now is 10:00
+        #expect(model.runningRemaining(of: timedEvent(from: at(18, 9, 30), to: at(18, 10, 28)), on: today) == 28)
+        // Starting now counts as running, ending now does not.
+        #expect(model.runningRemaining(of: timedEvent(from: at(18, 10), to: at(18, 11)), on: today) == 60)
+        #expect(model.runningRemaining(of: timedEvent(from: at(18, 9), to: at(18, 10)), on: today) == nil)
+    }
+
+    @Test func runningRemaining_otherDay_isNil() async {
+        let model = await model()
+        let event = timedEvent(from: at(18, 9, 30), to: at(18, 10, 30))
+        #expect(model.runningRemaining(of: event, on: today.adding(days: 1, calendar: calendar)) == nil)
+    }
+
+    @Test func runningRemaining_eventFromTheDayBefore_runsOnToday() async {
+        let model = await model()
+        // An overnight event is still running at 10:00 of the next day.
+        let event = timedEvent(from: at(17, 22), to: at(18, 11))
+        #expect(model.runningRemaining(of: event, on: today) == 60)
+    }
+
+    @Test func runningRemaining_range_followsTheSameRule() async {
+        let model = await model()
+        #expect(model.runningRemaining(range: 600..<630, on: today) == 30)
+        #expect(model.runningRemaining(range: 660..<700, on: today) == nil)
+    }
+
+    // MARK: Aligning to now (PL4b)
+
+    @Test func showToday_bumpsTheToken() async {
+        let model = await model()
+        model.anchor = today.adding(days: 3, calendar: calendar)
+        let before = model.nowAlignmentToken
+        model.showToday()
+        #expect(model.anchor == today)
+        #expect(model.nowAlignmentToken == before + 1)
+        #expect(model.dayOpeningToken == 0)
+    }
+
+    @Test func jump_toAnotherDay_bumpsTheOpeningToken() async {
+        let model = await model()
+        let target = today.adding(days: 2, calendar: calendar)
+        model.jump(to: target)
+        #expect(model.anchor == target)
+        #expect(model.dayOpeningToken == 1)
+        #expect(model.nowAlignmentToken == 0)
+    }
+
+    @Test func jump_toToday_bumpsTheNowToken() async {
+        let model = await model()
+        model.jump(to: today)
+        #expect(model.nowAlignmentToken == 1)
+        #expect(model.dayOpeningToken == 0)
+    }
+
+    @Test func step_neverBumpsATokens() async {
+        let model = await model()
+        model.step(1)
+        model.step(-1)
+        model.step(-1)
+        model.scope = .week
+        model.step(1)
+        #expect(model.nowAlignmentToken == 0)
+        #expect(model.dayOpeningToken == 0)
+    }
+
+    @Test func planBecameVisible_after31Minutes_bumps() async {
+        let model = await model()
+        let hidden = testNow()
+        model.planBecameHidden(at: hidden)
+        model.planBecameVisible(at: hidden.addingTimeInterval(31 * 60))
+        #expect(model.nowAlignmentToken == 1)
+    }
+
+    @Test func planBecameVisible_after10Minutes_doesNotBump() async {
+        let model = await model()
+        let hidden = testNow()
+        model.planBecameHidden(at: hidden)
+        model.planBecameVisible(at: hidden.addingTimeInterval(10 * 60))
+        #expect(model.nowAlignmentToken == 0)
+    }
+
+    @Test func planBecameVisible_keepsTheFirstHideAndForgetsItAfterwards() async {
+        let model = await model()
+        let hidden = testNow()
+        // Leaving the tab and then the app: the absence counts from the first one.
+        model.planBecameHidden(at: hidden)
+        model.planBecameHidden(at: hidden.addingTimeInterval(20 * 60))
+        model.planBecameVisible(at: hidden.addingTimeInterval(35 * 60))
+        #expect(model.nowAlignmentToken == 1)
+        // A second return without a new absence changes nothing.
+        model.planBecameVisible(at: hidden.addingTimeInterval(90 * 60))
+        #expect(model.nowAlignmentToken == 1)
+    }
+
+    @Test func planBecameVisible_onAnotherDay_doesNotBump() async {
+        let model = await model()
+        model.anchor = today.adding(days: 1, calendar: calendar)
+        let hidden = testNow()
+        model.planBecameHidden(at: hidden)
+        model.planBecameVisible(at: hidden.addingTimeInterval(60 * 60))
+        #expect(model.nowAlignmentToken == 0)
+    }
+
+    // MARK: Title while dragging (PL6b)
+
+    @Test func titleAnchor_followsThePreviewStep_inDayWeekAndMonth() async {
+        let model = await model()
+        // Without a preview the header shows the real period.
+        #expect(model.titleAnchor == model.anchor)
+        #expect(model.titleRange == model.range)
+
+        model.titlePreviewStep = 1
+        #expect(model.titleAnchor == today.adding(days: 1, calendar: calendar))
+        #expect(model.titleRange == model.titleAnchor...model.titleAnchor)
+
+        model.scope = .week
+        #expect(model.titleAnchor == today.adding(days: 7, calendar: calendar))
+        #expect(model.titleRange.lowerBound == PlanDay(year: 2026, month: 11, day: 23))   // the Monday of the next week
+        #expect(model.titleRange.upperBound == PlanDay(year: 2026, month: 11, day: 29))
+
+        model.scope = .month
+        model.titlePreviewStep = -1
+        #expect(model.titleAnchor == PlanDay(year: 2026, month: 10, day: 18))
+        // The grid of October starts on Monday 28 Sep and ends on Sunday 1 Nov.
+        #expect(model.titleRange == PlanDay(year: 2026, month: 9, day: 28)...PlanDay(year: 2026, month: 11, day: 1))
+
+        model.titlePreviewStep = nil
+        #expect(model.titleAnchor == model.anchor)
+        // The preview is never stored: the real anchor did not move.
+        #expect(model.anchor == today)
+    }
+
+    // MARK: Month page (PL7b)
+
+    @Test func monthGridDays_coversWholeWeeks() {
+        // November 2026: Sunday the 1st to Monday the 30th, so the grid runs Monday 26 Oct to Sunday 6 Dec.
+        let days = PlanningModel.monthGridDays(anchor: PlanDay(year: 2026, month: 11, day: 18), calendar: calendar)
+        #expect(days.first == PlanDay(year: 2026, month: 10, day: 26))
+        #expect(days.last == PlanDay(year: 2026, month: 12, day: 6))
+        #expect(days.count % 7 == 0)
+        #expect(days.count == 42)
+        // February 2027 has exactly four weeks (Monday 1 Feb to Sunday 28 Feb).
+        let february = PlanningModel.monthGridDays(anchor: PlanDay(year: 2027, month: 2, day: 10), calendar: calendar)
+        #expect(february.count == 28)
+        #expect(february.first == PlanDay(year: 2027, month: 2, day: 1))
+        // The days follow each other without a gap.
+        #expect(zip(days, days.dropFirst()).allSatisfy { $1 == $0.adding(days: 1, calendar: calendar) })
+    }
+
+    @Test func monthGridDays_matchesTheLoadedRange() async {
+        let model = await model()
+        model.scope = .month
+        await model.reload()
+        #expect(model.days.map(\.day) == PlanningModel.monthGridDays(anchor: model.anchor, calendar: calendar))
+        // The neighbouring month, as the preview of a drag draws it, is the grid the model loads after paging.
+        let next = PlanHeaderText.shiftedAnchor(scope: .month, anchor: model.anchor, step: 1, calendar: calendar)
+        model.step(1)
+        await model.reload()
+        #expect(model.anchor.month == next.month)
+        #expect(model.days.map(\.day) == PlanningModel.monthGridDays(anchor: next, calendar: calendar))
+    }
 }
+

@@ -13,6 +13,8 @@ struct PlanView: View {
     @State private var dueDateFor: TaskItem?
     @State private var creatingEvent = false
     @State private var preparingDeadline: ImportantDeadline?
+    /// Width of the window; the date title takes the longest form that fits next to the bar buttons (PL16b).
+    @State private var windowWidth: CGFloat = 0
 
     @Environment(AppEnvironment.self) private var environment
 
@@ -105,11 +107,12 @@ struct PlanView: View {
                 case .week: WeekView(model: model, onOpenTask: onOpenTask, menuActions: menuActions, deadlineActions: deadlineActions)
                 case .month:
                     MonthView(model: model, onSelectDay: { day in
-                        model.anchor = day
                         model.scope = .day
+                        model.jump(to: day)
                     }, onOpenEvent: onOpenEvent, onOpenTask: onOpenTask, deadlineActions: deadlineActions)
                 }
             }
+            .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { windowWidth = $0 }
             .safeAreaBar(edge: .top) { PlanControlRow(model: model) }
             .overlay(alignment: .bottom) { dismissUndo }
             .overlay(alignment: .bottom) { duplicateUndo }
@@ -125,7 +128,9 @@ struct PlanView: View {
             // The date title replaces the bar title; the tab bar already says "Planen" (mockup PK2).
             .toolbar(removing: .title)
             .toolbar {
-                ToolbarItem(placement: .topBarLeading) { PlanTitleButton(model: model) }
+                ToolbarItem(placement: .topBarLeading) {
+                    PlanTitleButton(model: model, windowWidth: windowWidth)
+                }
                     .sharedBackgroundVisibility(.hidden)
                 // Search and ＋ share one glass area; the assistant stays apart on the outside.
                 ToolbarItem(placement: .topBarTrailing) { SearchButton() }
@@ -178,8 +183,8 @@ struct PlanView: View {
     private var deadlineActions: DeadlineActions {
         DeadlineActions(openEvent: onOpenEvent, openTask: onOpenTask,
                         showDay: { day in
-                            model.anchor = day
                             model.scope = .day
+                            model.jump(to: day)
                         },
                         prepare: { preparingDeadline = $0 })
     }

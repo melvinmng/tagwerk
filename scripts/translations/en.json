@@ -64,6 +64,14 @@
     "one": "%lld event",
     "other": "%lld events"
   },
+  "%lld Termine, %@ bis %@: %@": {
+    "one": "%lld event, %@ to %@: %@",
+    "other": "%lld events, %@ to %@: %@"
+  },
+  "%lld Termine · %@": {
+    "one": "%lld event · %@",
+    "other": "%lld events · %@"
+  },
   "%lld h": "%lld h",
   "%lld h %@": "%1$lld h %2$@",
   "%lld min": "%lld min",
@@ -240,6 +248,7 @@
   "+%@ dieser Vorschlag": "+%@ this suggestion",
   "+%lld": "+%lld",
   "+%lld offen": "+%lld open",
+  "+%lld weitere": "+%lld more",
   "1 Stunde": "1 hour",
   "1 passt nicht mehr": "1 no longer fits",
   "Ab %@: %@ statt %@. Frühere Tage behalten ihren Wert.": "From %1$@: %2$@ instead of %3$@. Earlier days keep their value.",
@@ -992,6 +1001,7 @@
   "Zum Schätzen sendet Tagwerk nur Text und Foto der jeweiligen Mahlzeit an ChatGPT (OpenAI), und nur, wenn du auf „Schätzen“ tippst. Daten aus Health, Ziele und frühere Einträge werden nie gesendet. Ausgeschaltet trägst du Werte selbst ein.": "To estimate, Tagwerk only sends the text and photo of the meal in question to ChatGPT (OpenAI), and only when you tap “Estimate”. Data from Health, goals and earlier entries are never sent. When turned off, you enter values yourself.",
   "Zum Tag in „Planen“ ›": "To the day in “Plan” ›",
   "Zum Vorschlag etwas sagen …": "Say something about the suggestion …",
+  "Zum Verschieben den Eintrag öffnen.": "Open the entry to move it.",
   "Zurück zum Vorschlag der KI (%@)": "Back to the AI’s suggestion (%@)",
   "Zusammenfassen": "Merge",
   "Zusammenfassen-Regeln": "Merge rules",
@@ -1910,6 +1920,11 @@
   "Fokus starten oder beenden": "Start or stop focus",
   "Hakt eine Gewohnheit für heute ab, ohne Tagwerk zu öffnen.": "Checks off a habit for today without opening Tagwerk.",
   "Läuft": "Running",
+  "läuft, noch %lld Minuten": {
+    "one": "running, %lld minute left",
+    "other": "running, %lld minutes left"
+  },
+  "läuft · noch %lld min": "running · %lld min left",
   "Aus": "Off",
   "Notiz diktieren": "Dictate Note",
   "Notiz in Tagwerk diktieren": "Dictate a note in Tagwerk",

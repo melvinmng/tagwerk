@@ -32,7 +32,7 @@ enum UITestMode {
     static var dynamicTypeSize: DynamicTypeSize? {
         let arguments = ProcessInfo.processInfo.arguments
         guard isActive, let index = arguments.firstIndex(of: textSizeArgument), index + 1 < arguments.count else { return nil }
-        let sizes: [String: DynamicTypeSize] = ["accessibility1": .accessibility1, "accessibility2": .accessibility2,
+        let sizes: [String: DynamicTypeSize] = ["xxxLarge": .xxxLarge, "accessibility1": .accessibility1, "accessibility2": .accessibility2,
                                                 "accessibility3": .accessibility3, "accessibility4": .accessibility4,
                                                 "accessibility5": .accessibility5]
         return sizes[arguments[index + 1]]

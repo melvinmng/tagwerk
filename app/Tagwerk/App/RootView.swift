@@ -4,6 +4,7 @@ import TagwerkCore
 struct RootView: View {
     @Environment(AppEnvironment.self) private var environment
     @State private var selectedTab = 0
+    @Environment(\.scenePhase) private var scenePhase
     @State private var editingTask: TaskItem?
     @State private var openEvent: CalendarEvent?
     @State private var recurringEdit: RecurringEdit?
@@ -122,6 +123,11 @@ struct RootView: View {
         .onChange(of: environment.focus.isPresented) { _, presented in
             // The focus timer is a sheet over the tabs like the chat; other sheets close first.
             if presented { editingTask = nil; openEvent = nil; recurringEdit = nil; environment.routines.sheet = nil; environment.closeSearch(); environment.assistant.isPresented = false }
+        }
+        .onChange(of: planIsVisible) { _, visible in
+            // Returning to the plan after a longer absence aligns the day view to "now" again (PL4b).
+            let planning = environment.planning
+            if visible { planning.planBecameVisible(at: planning.now()) } else { planning.planBecameHidden(at: planning.now()) }
         }
         .onChange(of: environment.notificationNavigator.receivedCount) { _, _ in openNotificationTarget() }
         .onChange(of: environment.router.receivedCount) { _, _ in openRouterTarget() }
@@ -267,9 +273,12 @@ struct RootView: View {
         }
     }
 
+    /// The plan tab is selected and the app is in the foreground.
+    private var planIsVisible: Bool { selectedTab == 0 && scenePhase == .active }
+
     private func showDay(_ day: PlanDay) {
-        environment.planning.anchor = day
         environment.planning.scope = .day
+        environment.planning.jump(to: day)
         selectedTab = 0
     }
 

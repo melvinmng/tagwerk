@@ -29,7 +29,9 @@ targets:
   Tagwerk:
     type: application
     platform: iOS
-    sources: [Tagwerk]
+    sources:
+      - Tagwerk
+      - Design/Colors.xcassets
     dependencies:
       - package: TagwerkCore
       - package: SecureStore
