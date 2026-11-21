@@ -22,7 +22,7 @@ enum SetupStep: CaseIterable, Hashable {
         case .reminders: String(localized: "Tagwerk zeigt deine Erinnerungen zusammen mit deinen anderen Aufgaben und kann sie bearbeiten.")
         case .calendar: String(localized: "Tagwerk liest deine Termine, um deinen Tag zu planen. Der Kalender wird nicht verändert.")
         case .planCalendar: String(localized: "Tagwerk legt geplante Zeitblöcke als Termine in einem eigenen Kalender „Tagwerk“ an. Du siehst sie auch in der Kalender-App.")
-        case .github: String(localized: "Tagwerk zeigt dir zugewiesene Issues aus deinen offenen GitHub Projects und kann sie bearbeiten.")
+        case .github: String(localized: "Tagwerk zeigt dir zugewiesene Issues aus deinen offenen GitHub-Projekten und kann sie bearbeiten.")
         case .chatGPT: String(localized: "Mit deinem ChatGPT-Konto kann Tagwerk Tag, Woche und Monat für dich planen, und der Assistent kann Aufgaben für dich ändern.")
         case .notifications: String(localized: "Tagwerk erinnert dich vor der Fälligkeit an GitHub- und lokale Aufgaben und an Termine aus deinen Deadline-Kalendern. Erinnerungen aus der App „Erinnerungen“ melden sich weiterhin selbst.")
         }

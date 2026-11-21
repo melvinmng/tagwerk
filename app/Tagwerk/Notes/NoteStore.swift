@@ -65,6 +65,13 @@ final class NoteStore {
         all().first { $0.id == id }
     }
 
+    /// True when the note must never leave the device: a private kind, or a note in a private folder or below one.
+    /// The only rule the assistant's note access and the recipe picker use (`NoteFolderRules.mayLeaveDevice`).
+    func isPrivate(_ note: NoteRecord) -> Bool {
+        !NoteFolderRules.mayLeaveDevice(kind: note.kind, folderID: note.folderID,
+                                        privateFolderIDs: NoteFolderRules.privateFolderIDs(in: folders().map(\.info)))
+    }
+
     /// The thought note of a kind and day, if there is one (a note in the trash does not count).
     func note(kind: NoteKind, dayKey: String) -> NoteRecord? {
         all().first { $0.deletedAt == nil && $0.kind == kind && $0.dayKey == dayKey }
@@ -121,6 +128,24 @@ final class NoteStore {
         context.insert(record)
         save()
         return record
+    }
+
+    /// A copy of a note with `text` (trimmed; empty creates nothing): a new free note in the same folder, not pinned. The
+    /// pictures and files the text refers to are copied for the new note and the references are rewritten, so the copy keeps
+    /// them when the original is deleted for good. Without an attachment store the text stays as it is. A private, trashed or
+    /// unknown note is not copied.
+    @discardableResult
+    func duplicate(_ id: UUID, text: String) -> NoteRecord? {
+        guard let original = note(id: id), original.deletedAt == nil, original.kind == .free else { return nil }
+        if let folderID = original.folderID, folder(id: folderID)?.role?.isPrivate == true { return nil }
+        guard let copy = create(text: text, kind: .free, folderID: original.folderID) else { return nil }
+        guard let attachments else { return copy }
+        let referenced = MarkdownText.attachmentReferences(in: copy.text)
+        let mapping = attachments.duplicate(ids: referenced, to: copy.id)
+        guard !mapping.isEmpty else { return copy }
+        copy.text = MarkdownText.replacingAttachmentIDs(in: copy.text, with: mapping)
+        save()
+        return copy
     }
 
     /// Replaces the text; the change date moves only when the text differs.

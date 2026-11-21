@@ -550,7 +550,7 @@ struct SuggestionConversation: View {
                         .onSubmit { send(text) }
                     if environment.settings.voiceInputEnabled, let voice {
                         VoiceMicrophoneButton(voice: voice, isEnabled: environment.ai.isSignedIn,
-                                              language: VoiceAvailability.recognitionLanguage(setting: environment.settings.voiceRecognitionLanguage))
+                                              language: environment.settings.dictationLanguage(at: .planning))
                     }
                     Button {
                         send(text)
@@ -571,7 +571,7 @@ struct SuggestionConversation: View {
         }
         .onAppear {
             if voice == nil {
-                let model = VoiceInputFactory.make(environment)
+                let model = VoiceInputFactory.make(environment, place: .planning)
                 model.readDraft = { text }
                 model.writeDraft = { text = $0 }
                 voice = model

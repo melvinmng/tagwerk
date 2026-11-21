@@ -28,7 +28,7 @@ struct PlanView: View {
                         symbol: "sparkles", duration: 5,
                         onUndo: { Task { await environment.planner.undoDismissAll() } },
                         onExpire: { environment.planner.clearDismissUndo() })
-                .padding(.bottom, 60)
+                .padding(.bottom, capsuleInset)
         }
     }
 
@@ -39,7 +39,7 @@ struct PlanView: View {
             UndoCapsule(title: copy.title, caption: "Dupliziert", symbol: "plus.square.on.square", duration: 5,
                         onUndo: { Task { await model.undoDuplicate() } },
                         onExpire: { if model.lastDuplicate?.id == copy.id { model.clearDuplicateUndo() } })
-                .padding(.bottom, 60)
+                .padding(.bottom, capsuleInset)
         }
     }
 
@@ -54,7 +54,7 @@ struct PlanView: View {
             UndoCapsule(title: task.title, caption: caption, symbol: "arrow.left.arrow.right.circle.fill", duration: 5,
                         onUndo: { Task { await model.undoMove() } },
                         onExpire: { if model.lastMove == move { model.clearMoveUndo() } })
-                .padding(.bottom, 60)
+                .padding(.bottom, capsuleInset)
         }
     }
 
@@ -66,7 +66,7 @@ struct PlanView: View {
                         symbol: "arrow.left.arrow.right.circle.fill", duration: 5,
                         onUndo: { Task { await model.undoMoveGroup() } },
                         onExpire: { if model.lastMoveGroup == moves { model.clearMoveGroupUndo() } })
-                .padding(.bottom, 60)
+                .padding(.bottom, capsuleInset)
         }
     }
 
@@ -79,7 +79,7 @@ struct PlanView: View {
                         onUndo: { Task { await taskList.undoComplete(); await model.reload() } },
                         onExpire: { if taskList.lastCompleted?.id == completed.id { taskList.dismissUndo() } })
                 .id(completed.id)
-                .padding(.bottom, 60)
+                .padding(.bottom, capsuleInset)
         }
     }
 
@@ -91,9 +91,12 @@ struct PlanView: View {
                         symbol: "sparkles", duration: 6,
                         onUndo: { Task { await environment.planner.undoAcceptAll() } },
                         onExpire: { environment.planner.clearAcceptUndo() })
-                .padding(.bottom, 60)
+                .padding(.bottom, capsuleInset)
         }
     }
+
+    /// The capsules sit higher while the focus bar is shown above the tabs.
+    private var capsuleInset: CGFloat { UndoCapsuleMetrics.bottomInset(focusBarVisible: environment.focus.isRunning) }
 
     var body: some View {
         NavigationStack {
@@ -117,7 +120,7 @@ struct PlanView: View {
             .overlay(alignment: .bottom) { moveGroupUndo }
             .overlay(alignment: .bottom) { acceptAllUndo }
             .overlay(alignment: .bottom) { completeUndo }
-            .overlay(alignment: .bottom) { HandedOverCapsule(model: environment.taskList).padding(.bottom, 60) }
+            .overlay(alignment: .bottom) { HandedOverCapsule(model: environment.taskList).padding(.bottom, capsuleInset) }
             .animation(.spring(duration: 0.35), value: environment.taskList.lastHandedOver)
             .animation(.spring(duration: 0.35), value: environment.taskList.lastCompleted?.id)
             .navigationTitle("Planen")

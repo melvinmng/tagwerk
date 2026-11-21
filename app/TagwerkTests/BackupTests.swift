@@ -19,6 +19,8 @@ struct BackupTests {
     init() throws {
         source = try ModelContainerFactory.make(inMemory: true)
         sourceSettings = try AppSettings.current(in: source.mainContext)
+        // The app takes the answer language over at launch, so a backup always carries it.
+        sourceSettings.migrateVoiceAnswerLanguageIfNeeded()
         let clock = self.clock
         sourceFiles = NoteAttachmentStore(context: source.mainContext, directory: sourceDirectory, now: { clock.now })
         backup = BackupService(context: source.mainContext, settings: sourceSettings, calendar: calendar, appVersion: "1.0-test",
@@ -254,6 +256,43 @@ struct BackupTests {
         #expect(fresh.settings.weekPlanningReminderWeekday == 1 && fresh.settings.weekPlanningReminderMinutes == 1080)
     }
 
+    @Test func focusStartSettings_roundTrip() throws {
+        sourceSettings.focusAsksDurationAtStart = false
+        sourceSettings.focusLastStartMinutes = 45
+        let data = try JSONEncoder().encode(AppSettingsBackup(sourceSettings))
+        let target = try makeTarget()
+        try JSONDecoder().decode(AppSettingsBackup.self, from: data).apply(to: target.settings)
+        #expect(!target.settings.focusAsksDurationAtStart && target.settings.focusLastStartMinutes == 45)
+        // A backup written before the start sheet keeps the defaults of the target.
+        var object = try #require(try JSONSerialization.jsonObject(with: data) as? [String: Any])
+        for key in ["focusAsksDurationAtStart", "focusLastStartMinutes"] { object[key] = nil }
+        let older = try JSONDecoder().decode(AppSettingsBackup.self, from: JSONSerialization.data(withJSONObject: object))
+        let fresh = try makeTarget()
+        older.apply(to: fresh.settings)
+        #expect(fresh.settings.focusAsksDurationAtStart && fresh.settings.focusLastStartMinutes == nil)
+    }
+
+    @Test func backup_roundTripsNoteAssistantConsent() throws {
+        sourceSettings.noteAssistantConsent = true
+        let data = try JSONEncoder().encode(AppSettingsBackup(sourceSettings))
+        let decoded = try JSONDecoder().decode(AppSettingsBackup.self, from: data)
+        let target = try makeTarget()
+        #expect(!target.settings.noteAssistantConsent)
+        decoded.apply(to: target.settings)
+        #expect(target.settings.noteAssistantConsent)
+    }
+
+    @Test func backup_withoutTheField_keepsCurrentValue() throws {
+        let data = try JSONEncoder().encode(AppSettingsBackup(sourceSettings))
+        var object = try #require(try JSONSerialization.jsonObject(with: data) as? [String: Any])
+        object["noteAssistantConsent"] = nil
+        let older = try JSONDecoder().decode(AppSettingsBackup.self, from: JSONSerialization.data(withJSONObject: object))
+        let target = try makeTarget()
+        target.settings.noteAssistantConsent = true
+        older.apply(to: target.settings)
+        #expect(target.settings.noteAssistantConsent)
+    }
+
     @Test func weekReflectionBackup_roundTripsNewFields() throws {
         let record = WeekReflectionRecord(weekStart: PlanDay(year: 2026, month: 11, day: 16), updatedAt: clock.now)
         record.goalsProgress = "Projekt läuft"
@@ -481,6 +520,104 @@ struct BackupTests {
         #expect(target.settings.recipeLanguage == "auto")
         try target.service.restore(try target.service.inspect(try origin.service.makeBackupData()))
         #expect(target.settings.recipeLanguage == "en-US")
+    }
+
+    // MARK: Content languages (L1)
+
+    @Test func backup_roundTripsBothLanguageFields() throws {
+        let origin = try makeTarget()
+        origin.settings.voiceAnswerLanguage = "en-US"
+        origin.settings.shoppingLanguage = "de-DE"
+        origin.settings.dictationPlaceLanguagesData = ContentLanguages.encodePlaces(["notes": "en-US"])
+        try origin.container.mainContext.save()
+        let target = try makeTarget()
+        try target.service.restore(try target.service.inspect(try origin.service.makeBackupData()))
+        #expect(target.settings.voiceAnswerLanguage == "en-US")
+        #expect(target.settings.shoppingLanguage == "de-DE")
+        #expect(target.settings.dictationPlaceLanguagesData == nil, "the place switches stay on the device")
+    }
+
+    @Test func restore_backupWithoutAnswerLanguage_migratesFromRestoredDictation() throws {
+        let origin = try makeTarget()
+        origin.settings.voiceRecognitionLanguage = "en-US"
+        try origin.container.mainContext.save()
+        let data = try origin.service.makeBackupData()
+        let old = try removingSettingsKeys(["voiceAnswerLanguage", "shoppingLanguage"], from: data)
+        let target = try makeTarget()
+        target.settings.voiceAnswerLanguage = "de-DE"
+        try target.container.mainContext.save()
+        try target.service.restore(try target.service.inspect(old))
+        #expect(target.settings.voiceRecognitionLanguage == "en-US")
+        #expect(target.settings.voiceAnswerLanguage == "en-US", "the answer language is derived from the restored dictation language")
+    }
+
+    @Test func restore_backupWithoutAnswerLanguage_withAutoDictation_answersAsSpoken() throws {
+        let origin = try makeTarget()
+        let old = try removingSettingsKeys(["voiceAnswerLanguage", "shoppingLanguage"], from: try origin.service.makeBackupData())
+        let target = try makeTarget()
+        target.settings.voiceAnswerLanguage = "en-US"
+        try target.container.mainContext.save()
+        try target.service.restore(try target.service.inspect(old))
+        #expect(target.settings.voiceAnswerLanguage == ContentLanguages.spoken)
+    }
+
+    @Test func restore_backupWithoutShoppingLanguage_keepsLikeRecipes() throws {
+        let origin = try makeTarget()
+        let old = try removingSettingsKeys(["voiceAnswerLanguage", "shoppingLanguage"], from: try origin.service.makeBackupData())
+        let target = try makeTarget()
+        try target.service.restore(try target.service.inspect(old))
+        #expect(target.settings.shoppingLanguage == ContentLanguages.likeRecipes)
+        // A value chosen on this device is kept, like the recipe language.
+        target.settings.shoppingLanguage = "en-US"
+        try target.container.mainContext.save()
+        try target.service.restore(try target.service.inspect(old))
+        #expect(target.settings.shoppingLanguage == "en-US")
+    }
+
+    /// A backup as an older app version wrote it: the settings object lacks `keys`.
+    private func removingSettingsKeys(_ keys: [String], from data: Data) throws -> Data {
+        var object = try #require(try JSONSerialization.jsonObject(with: data) as? [String: Any])
+        var entities = try #require(object["entities"] as? [String: Any])
+        var settings = try #require(entities["settings"] as? [String: Any])
+        for key in keys { settings.removeValue(forKey: key) }
+        entities["settings"] = settings
+        object["entities"] = entities
+        return try JSONSerialization.data(withJSONObject: object)
+    }
+
+    @Test func restore_clearsTheSettledShoppingLanguage_soNoCardAppears() throws {
+        let origin = try makeTarget()
+        origin.settings.shoppingLanguage = "en-US"
+        try origin.container.mainContext.save()
+        let target = try makeTarget()
+        target.settings.shoppingItemsLanguage = "de-DE"
+        try target.container.mainContext.save()
+        try target.service.restore(try target.service.inspect(try origin.service.makeBackupData()))
+        #expect(target.settings.shoppingLanguage == "en-US")
+        #expect(target.settings.shoppingItemsLanguage == nil, "device state: the restored list adopts its language instead of offering a translation")
+    }
+
+    // MARK: Shopping consent (SPC4b)
+
+    @Test func shoppingConsent_roundTripsWithItsVersion() throws {
+        let origin = try makeTarget()
+        origin.settings.hasShoppingSortConsent = true
+        try origin.container.mainContext.save()
+        let target = try makeTarget()
+        try target.service.restore(try target.service.inspect(try origin.service.makeBackupData()))
+        #expect(target.settings.hasShoppingSortConsent)
+    }
+
+    @Test func shoppingConsent_ofAnOldBackup_asksAgain() throws {
+        let origin = try makeTarget()
+        origin.settings.shoppingSortConsent = true
+        try origin.container.mainContext.save()
+        let old = try removingSettingsKeys(["shoppingSortConsentVersion"], from: try origin.service.makeBackupData())
+        let target = try makeTarget()
+        target.settings.hasShoppingSortConsent = true
+        try target.container.mainContext.save()
+        try target.service.restore(try target.service.inspect(old))
+        #expect(target.settings.shoppingSortConsent && !target.settings.hasShoppingSortConsent)
     }
 
     // MARK: Drink portions

@@ -3,10 +3,10 @@ import SwiftUI
 
 /// Texts and preselection of the GitHub project row in "Neue Aufgabe" (multi-select menu like the repository row).
 enum ProjectSelection {
-    /// Collapsed value: "Kein Project", one or two names, from three on the count.
+    /// Collapsed value: "Kein Projekt", one or two names, from three on the count.
     static func value(titles: [String]) -> String {
         switch titles.count {
-        case 0: String(localized: "Kein Project")
+        case 0: String(localized: "Kein Projekt")
         case 1, 2: titles.joined(separator: ", ")
         default: String(localized: "\(titles.count) Projekte")
         }
@@ -26,6 +26,26 @@ enum ProjectSelection {
             !GitHubMapping.isDone(option)
                 && optionLists.dropFirst().allSatisfy { list in list.contains { $0.caseInsensitiveCompare(option) == .orderedSame } }
         }
+    }
+
+    /// True when several projects are selected, each has stages, and they share none: the row "Status" is not offered
+    /// and each issue starts in the start stage of its project (`GitHubMapping.reopenOption`: "Ready", else the first
+    /// stage that is not "Done").
+    static func lacksCommonStatus(_ optionLists: [[String]]) -> Bool {
+        optionLists.count > 1 && optionLists.allSatisfy { !$0.isEmpty } && commonStatusOptions(optionLists).isEmpty
+    }
+
+    /// Footer of the GitHub section in "Neue Aufgabe": what the project choice means, then who gets the issue.
+    static func footer(repositoryChosen: Bool, hasProject: Bool, optionLists: [[String]], assignment: String) -> String {
+        var sentences: [String] = []
+        if lacksCommonStatus(optionLists) {
+            sentences.append(String(localized: "Die Projekte haben keine gemeinsame Stufe; jedes Issue startet in „Ready“, sonst in der ersten Stufe seines Projekts, die nicht „Done“ ist."))
+        }
+        if repositoryChosen, !hasProject {
+            sentences.append(String(localized: "Ohne Projekt erscheint das Issue nicht in deinen Aufgaben, nur auf GitHub."))
+        }
+        sentences.append(assignment)
+        return sentences.joined(separator: " ")
     }
 
     /// Preselected start stage: "Ready" when offered, otherwise the first option in board order.
@@ -50,7 +70,7 @@ struct ProjectSelectionRow: View {
 
     var body: some View {
         Menu {
-            Toggle("Kein Project", isOn: Binding(
+            Toggle("Kein Projekt", isOn: Binding(
                 get: { selection.isEmpty },
                 set: { isOn in
                     guard isOn else { return }

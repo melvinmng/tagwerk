@@ -11,12 +11,32 @@
         }
       }
     },
-    "Ablegen als" : {
+    "Als Aufgabe gesichert" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Save as"
+            "value" : "Saved as a task"
+          }
+        }
+      }
+    },
+    "Als Notiz gesichert" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Saved as a note"
+          }
+        }
+      }
+    },
+    "Als Rezept gesichert" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Saved as a recipe"
           }
         }
       }
@@ -31,12 +51,12 @@
         }
       }
     },
-    "Dateien werden nur bei Notizen übernommen." : {
+    "Dateien werden nur bei Notizen und Rezepten übernommen." : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Files are only kept with notes."
+            "value" : "Files are only kept with notes and recipes."
           }
         }
       }
@@ -61,12 +81,12 @@
         }
       }
     },
-    "Gesichert. Öffne Tagwerk, um es zu übernehmen." : {
+    "Für die Einkaufsliste gesichert" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Saved. Open Tagwerk to take it over."
+            "value" : "Saved for the shopping list"
           }
         }
       }
@@ -81,12 +101,32 @@
         }
       }
     },
+    "Jede Zeile wird ein Artikel." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Each line becomes an item."
+          }
+        }
+      }
+    },
     "Mail" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Mail"
+          }
+        }
+      }
+    },
+    "Mail gesichert" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mail saved"
           }
         }
       }
@@ -121,12 +161,12 @@
         }
       }
     },
-    "Tagwerk" : {
+    "Sichern" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tagwerk"
+            "value" : "Save"
           }
         }
       }
@@ -141,12 +181,42 @@
         }
       }
     },
-    "Text" : {
+    "Tagwerk zeigt dir die Mail und schlägt eine Aufgabe vor." : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Text"
+            "value" : "Tagwerk shows you the mail and suggests a task."
+          }
+        }
+      }
+    },
+    "Tagwerk zeigt es dir beim nächsten Öffnen." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tagwerk shows it to you the next time you open it."
+          }
+        }
+      }
+    },
+    "Text und Link gehen mit." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Text and link are included."
+          }
+        }
+      }
+    },
+    "Text und Link gehen mit. In Tagwerk wählst du, ob die Zutaten auf die Einkaufsliste kommen." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Text and link are included. In Tagwerk you choose whether the ingredients go on the shopping list."
           }
         }
       }

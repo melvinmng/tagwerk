@@ -2,7 +2,7 @@ import SwiftUI
 import TagwerkCore
 
 /// The morning start (design §7.4): a gentle start with the brain dump, up to three things to be grateful for and an
-/// optional dream log. Planning is not part of it; "Planen" covers that. Everything is optional. "Fertig" saves and marks
+/// optional dream log. Planning is not part of it; "Planen" covers that. Everything is optional. "Abschließen" saves and marks
 /// the start as done; swiping the sheet away saves the input without completing.
 struct MorningSheet: View {
     let model: RoutinesModel
@@ -42,7 +42,7 @@ struct MorningSheet: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Fertig") {
+                    Button("Abschließen") {
                         note.flush()
                         dream.flush()
                         model.setGratitude(gratitude, on: day)

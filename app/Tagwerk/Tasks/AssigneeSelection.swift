@@ -79,14 +79,39 @@ enum AssigneeSelection {
         }
     }
 
-    /// Title of the capsule for an issue without a Project: "#151 angelegt · ohne Project".
-    static func noProjectTitle(number: Int?) -> String {
+    /// Title of the capsule for an issue without a project: "#151 ohne Projekt", "#151 an lea-m · ohne Projekt",
+    /// from three other people on "#151 an 3 Personen · ohne Projekt".
+    static func noProjectTitle(number: Int?, others: [String] = []) -> String {
         let issue = number.map { "#\($0)" } ?? "Issue"
-        return String(localized: "\(issue) angelegt · ohne Project")
+        switch others.count {
+        case 0: return String(localized: "\(issue) ohne Projekt")
+        case 1, 2: return String(localized: "\(issue) an \(others.formatted(.list(type: .and))) · ohne Projekt")
+        default: return String(localized: "\(issue) an \(String(localized: "\(others.count) Personen")) · ohne Projekt")
+        }
     }
 
-    static func noProjectAnnouncement(number: Int?) -> String {
-        String(localized: "Angelegt: \(noProjectTitle(number: number)). Auf GitHub öffnen verfügbar.")
+    static func noProjectAnnouncement(number: Int?, others: [String] = []) -> String {
+        String(localized: "Angelegt, nicht in Aufgaben: \(noProjectTitle(number: number, others: others)). Auf GitHub öffnen verfügbar.")
+    }
+
+    /// Title of the capsule for an issue that is done in the selected projects only: "#154 noch offen in „Roadmap 2027“",
+    /// for several projects "#154 noch offen in 2 Projekten". `quoted: false` leaves the quotation marks out for speech.
+    static func openElsewhereTitle(number: Int?, openIn: [String], quoted: Bool = true) -> String {
+        let issue = number.map { "#\($0)" } ?? "Issue"
+        if openIn.count == 1 {
+            return quoted ? String(localized: "\(issue) noch offen in „\(openIn[0])“") : String(localized: "\(issue) noch offen in \(openIn[0])")
+        }
+        return String(localized: "\(issue) noch offen in \(openIn.count) Projekten")
+    }
+
+    /// VoiceOver announcement of the capsule "In … erledigt"; the project names come without quotation marks, so no
+    /// quote of one language is left over in the text of the other.
+    static func doneInSelectionAnnouncement(doneIn: [String], number: Int?, openIn: [String]) -> String {
+        let title = openElsewhereTitle(number: number, openIn: openIn, quoted: false)
+        if doneIn.count == 1 {
+            return String(localized: "In \(doneIn[0]) erledigt: \(title). Auf GitHub öffnen verfügbar.")
+        }
+        return String(localized: "In \(doneIn.count) Projekten erledigt: \(title). Auf GitHub öffnen verfügbar.")
     }
 
     /// VoiceOver announcement of the "Vergeben" capsule.

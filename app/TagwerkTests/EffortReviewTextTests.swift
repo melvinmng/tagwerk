@@ -40,4 +40,33 @@ struct EffortReviewTextTests {
         }
         #expect(EffortReviewText.detail(of: group(deviation: 6), language: .german).hasSuffix("länger als geschätzt"))
     }
+
+    /// The percent format of the language separates the number and the sign with a no-break space; the tests compare plain spaces.
+    private func plain(_ text: String) -> String { text.replacingOccurrences(of: "\u{00A0}", with: " ").replacingOccurrences(of: "\u{202F}", with: " ") }
+
+    @Test func position_centreIsAThird() {
+        #expect(abs(EffortReviewText.position(deviationPercent: 0) - 1.0 / 3.0) < 0.0001)
+        #expect(EffortReviewText.position(deviationPercent: -50) == 0)
+        #expect(EffortReviewText.position(deviationPercent: 100) == 1)
+        #expect(abs(EffortReviewText.position(deviationPercent: 25) - 0.5) < 0.0001)
+    }
+
+    @Test func position_clampsAtBothEnds() {
+        #expect(EffortReviewText.position(deviationPercent: -90) == 0)
+        #expect(EffortReviewText.position(deviationPercent: 250) == 1)
+    }
+
+    @Test func deviationLabel_signsAndTolerance() {
+        #expect(plain(EffortReviewText.deviationLabel(40, language: .german)) == "+40 %")
+        #expect(plain(EffortReviewText.deviationLabel(-15, language: .german)) == "−15 %")
+        #expect(plain(EffortReviewText.deviationLabel(3, language: .german)) == "±0 %")
+        #expect(plain(EffortReviewText.deviationLabel(-5, language: .german)) == "±0 %")
+        #expect(plain(EffortReviewText.deviationLabel(6, language: .german)) == "+6 %")
+        #expect(EffortReviewText.deviationLabel(40, language: .english) == "+40%")
+    }
+
+    @Test func pendingLabel_inBothLanguages() {
+        #expect(EffortReviewText.pendingLabel(count: 2, language: .german) == "2 von 3 Messungen")
+        #expect(EffortReviewText.pendingLabel(count: 2, language: .english) == "2 of 3 measurements")
+    }
 }

@@ -15,6 +15,8 @@ final class WeekReviewModel {
     /// Phase 7: the habits active in the shown week and the written reflection (empty without a routine store).
     private(set) var habitSummaries: [HabitWeekSummary] = []
     var reflection = WeekReflection()
+    /// Whether the GitHub issues closed in the shown week are part of "Erledigt" (D6): the local numbers show first.
+    private(set) var gitHub: GitHubClosed = .notConnected
 
     private let store: IntakeStore
     private let health: any HealthStoring
@@ -26,12 +28,17 @@ final class WeekReviewModel {
     @ObservationIgnored private let habits: HabitsModel?
     @ObservationIgnored private let routineStore: RoutineStore?
     @ObservationIgnored private let openPlanWeek: ((PlanDay) -> Void)?
+    /// Closing moments of the issues assigned to the user that count as completed within an interval; `nil` while GitHub
+    /// is not connected.
+    @ObservationIgnored private let closedIssueDates: (@MainActor (DateInterval) async throws -> [Date])?
 
     init(store: IntakeStore, health: any HealthStoring, settings: AppSettings, calendar: Calendar = .tagwerk,
          now: @escaping () -> Date = Date.init,
          completedReminders: @escaping (DateInterval) async -> [Date],
          completedLocalTasks: @escaping (DateInterval) -> [Date],
-         habits: HabitsModel? = nil, routineStore: RoutineStore? = nil, openPlanWeek: ((PlanDay) -> Void)? = nil) {
+         habits: HabitsModel? = nil, routineStore: RoutineStore? = nil, openPlanWeek: ((PlanDay) -> Void)? = nil,
+         closedIssueDates: (@MainActor (DateInterval) async throws -> [Date])? = nil) {
+        self.closedIssueDates = closedIssueDates
         self.habits = habits
         self.routineStore = routineStore
         self.openPlanWeek = openPlanWeek
@@ -122,7 +129,36 @@ final class WeekReviewModel {
                                      proteinGrams: settings.proteinGoalEnabled ? settings.goalProteinGrams : nil)
         showsSteps = stepsAsked
         loadRoutineParts(for: requested)
-        review = WeekReview.make(weekStart: requested, now: now(), meals: meals, drinks: drinks, workouts: workouts,
-                                 steps: steps, completedDates: completed, goals: goals, calendar: calendar)
+        /// `completedDates` are the completions of reminders, local tasks and (once they arrived) closed GitHub issues.
+        func makeReview(completedDates: [Date]) -> WeekReview {
+            WeekReview.make(weekStart: requested, now: now(), meals: meals, drinks: drinks, workouts: workouts,
+                            steps: steps, completedDates: completedDates, goals: goals, calendar: calendar)
+        }
+        review = makeReview(completedDates: completed)
+        guard let closedIssueDates else {
+            gitHub = .notConnected
+            return
+        }
+        gitHub = .loading
+        do {
+            let closed = try await closedIssueDates(interval)
+            // The answer belongs to the week that was asked for; the week on screen may be another one by now.
+            guard weekStart == requested else { return }
+            review = makeReview(completedDates: completed + closed)
+            gitHub = .counted(closed.count)
+        } catch {
+            guard weekStart == requested else { return }
+            gitHub = .unavailable
+        }
+    }
+
+    /// The footer under "Erledigt".
+    static func completedFooter(_ state: GitHubClosed) -> String {
+        switch state {
+        case .notConnected: String(localized: "Erinnerungen und lokale Aufgaben")
+        case .loading: String(localized: "Erinnerungen und lokale Aufgaben. GitHub wird geladen …")
+        case .counted: String(localized: "Erinnerungen, lokale Aufgaben und geschlossene GitHub-Issues")
+        case .unavailable: String(localized: "Erinnerungen und lokale Aufgaben. GitHub ist gerade nicht erreichbar.")
+        }
     }
 }

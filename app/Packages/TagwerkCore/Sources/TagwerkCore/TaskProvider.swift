@@ -13,6 +13,16 @@ public enum TaskWriteError: Error, Equatable, Sendable {
     case failed(String)
 }
 
+/// Why a task that was just written is not part of the user's lists any more.
+public enum UnlistedReason: Equatable, Sendable {
+    /// Assigned to other people only.
+    case handedOver
+    /// In no project; `others` are the assignees besides the user.
+    case noProject(others: [String])
+    /// Done in every selected project, still open in projects that are not selected (names in board order).
+    case doneInSelection(doneIn: [String], openIn: [String])
+}
+
 /// Common interface of all task sources (Reminders, GitHub, local tasks).
 @MainActor
 public protocol TaskProvider: AnyObject {
@@ -38,6 +48,8 @@ public protocol TaskProvider: AnyObject {
     /// Whether a task that was just written still belongs to the user's lists.
     /// GitHub answers `false` for an issue the user is no longer assigned to.
     func isListed(_ item: TaskItem) -> Bool
+    /// `nil` while the item belongs to the lists. Default: `isListed(item) ? nil : .handedOver`.
+    func unlistedReason(_ item: TaskItem) -> UnlistedReason?
 }
 
 extension TaskProvider {
@@ -46,6 +58,8 @@ extension TaskProvider {
     }
 
     public func isListed(_ item: TaskItem) -> Bool { true }
+
+    public func unlistedReason(_ item: TaskItem) -> UnlistedReason? { isListed(item) ? nil : .handedOver }
 
     public var offlineSince: Date? { nil }
     public var offlineReason: String? { nil }

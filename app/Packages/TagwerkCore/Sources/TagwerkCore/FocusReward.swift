@@ -4,7 +4,7 @@ import Foundation
 public enum FocusOutcome: String, Sendable, Codable, Equatable {
     /// The timer ran through or was finished by the user.
     case completed
-    /// The user stopped it early.
+    /// The user stopped it before its phase ended; it reads as "ended early" and keeps the stage reached.
     case aborted
     /// Stopped within the first minute; it leaves nothing behind.
     case discarded
@@ -29,29 +29,35 @@ public enum FocusRewardStage: Int, Sendable, Codable, CaseIterable, Comparable {
     }
 }
 
-/// One piece of the collection.
+/// One piece of the collection: a brick of the stage reached. `endedEarly` marks a session that was stopped before
+/// its phase ended; it keeps its stage (FO9b). A task finished early with "Erledigt" is `completed` in its stage.
 public enum FocusRewardPiece: Sendable, Equatable, Codable {
-    case grown(FocusRewardStage)
-    case wilted(FocusRewardStage)
+    case completed(FocusRewardStage)
+    case endedEarly(FocusRewardStage)
 
     public var stage: FocusRewardStage {
         switch self {
-        case .grown(let stage), .wilted(let stage): stage
+        case .completed(let stage), .endedEarly(let stage): stage
         }
     }
 
-    public var isWilted: Bool {
-        if case .wilted = self { return true }
+    public var isEndedEarly: Bool {
+        if case .endedEarly = self { return true }
         return false
     }
 }
 
 /// Counts of a collection.
 public struct FocusCollectionSummary: Sendable, Equatable {
-    public let grown: Int
-    public let wilted: Int
+    public let completed: Int
+    public let endedEarly: Int
 
-    public var total: Int { grown + wilted }
+    public init(completed: Int, endedEarly: Int) {
+        self.completed = completed
+        self.endedEarly = endedEarly
+    }
+
+    public var total: Int { completed + endedEarly }
 }
 
 public enum FocusReward {
@@ -68,14 +74,14 @@ public enum FocusReward {
         FocusRewardStage.allCases.last { focusedMinutes >= $0.minimumMinutes }
     }
 
-    /// The piece a session leaves: grown when completed, wilted when aborted, none when discarded or when less than
-    /// a minute was focused.
+    /// The piece a session leaves: a completed brick when completed, an early-ended brick when aborted, none when
+    /// discarded or when less than a minute was focused. `aborted` is stored for sessions the user ended early.
     public static func piece(focusedMinutes: Int, outcome: FocusOutcome) -> FocusRewardPiece? {
         guard outcome != .discarded, let stage = stage(focusedMinutes: focusedMinutes) else { return nil }
-        return outcome == .completed ? .grown(stage) : .wilted(stage)
+        return outcome == .completed ? .completed(stage) : .endedEarly(stage)
     }
 
     public static func summary(of pieces: [FocusRewardPiece]) -> FocusCollectionSummary {
-        FocusCollectionSummary(grown: pieces.filter { !$0.isWilted }.count, wilted: pieces.filter(\.isWilted).count)
+        FocusCollectionSummary(completed: pieces.filter { !$0.isEndedEarly }.count, endedEarly: pieces.filter(\.isEndedEarly).count)
     }
 }

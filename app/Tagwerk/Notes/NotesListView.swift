@@ -362,7 +362,7 @@ struct NotesListView: View {
                         .padding(.vertical, 10)
                     if environment.settings.voiceInputEnabled, let voice {
                         VoiceMicrophoneButton(voice: voice, isEnabled: true,
-                                              language: VoiceAvailability.recognitionLanguage(setting: environment.settings.voiceRecognitionLanguage))
+                                              language: environment.settings.dictationLanguage(at: .notes))
                     }
                     if !draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                         Button {
@@ -400,7 +400,7 @@ struct NotesListView: View {
 
     private func prepareVoice() {
         guard voice == nil else { return }
-        let model = VoiceInputFactory.make(environment)
+        let model = VoiceInputFactory.make(environment, place: .notes)
         model.readDraft = { draft }
         model.writeDraft = { spoken in
             draft = spoken

@@ -248,6 +248,22 @@ struct AssistantModelTests {
         #expect(automatic.contains("in der Sprache der letzten Nachricht des Nutzers"))
     }
 
+    /// L5: the assistant writes new shopping items in the language of the shopping list setting.
+    @Test func instructions_nameTheShoppingLanguage() async throws {
+        let (model, _, _) = await make()
+        model.open(context: .settings)
+        model.shoppingLanguage = { .german }
+        #expect(model.instructions().contains("Schreibe neue Einkaufsartikel auf Deutsch."))
+        model.shoppingLanguage = { .english }
+        let english = model.instructions()
+        #expect(english.contains("Schreibe neue Einkaufsartikel auf Englisch."))
+        #expect(!english.contains("Schreibe neue Einkaufsartikel auf Deutsch."))
+        // The sentence belongs to the shopping list rules.
+        let rules = try #require(english.range(of: "Lege Einkaufsartikel nie über create_task an."))
+        let sentence = try #require(english.range(of: "Schreibe neue Einkaufsartikel auf Englisch."))
+        #expect(rules.upperBound <= sentence.lowerBound)
+    }
+
     @Test func autoRead_ofAShortAnswer_usesTheChosenVoiceLanguage() async throws {
         let (model, _, _) = await make()
         var languages: [VoiceLanguage] = []
@@ -422,7 +438,7 @@ struct AssistantGitHubCardTests {
         #expect(card.title == "Export")
         let lines = card.change.split(separator: "\n").map(String.init)
         #expect(lines.count == 3)
-        #expect(lines[0].hasPrefix("Issue anlegen · beispiel/app · Project App · fällig "))
+        #expect(lines[0].hasPrefix("Issue anlegen · beispiel/app · Projekt App · fällig "))
         #expect(lines[1] == "Zugewiesen: lea-m (nicht dir)")
         #expect(lines[2] == "Notizen: „Details“")
     }
@@ -442,16 +458,16 @@ struct AssistantGitHubCardTests {
     @Test func describe_gitHubIssue_nullTargets_resolveFromStoredCatalog() async {
         let model = await make()
         let card = model.describe(call(arguments(repository: "null", projects: "null")))
-        #expect(card.change.hasPrefix("Issue anlegen · beispiel/app · Project App"))
+        #expect(card.change.hasPrefix("Issue anlegen · beispiel/app · Projekt App"))
     }
 
     @Test func describe_gitHubIssue_emptyProjectList_saysNoProject_notMissing() async {
         let model = await make()
         let card = model.describe(call(arguments(repository: #""beispiel/app""#, projects: "[]")))
-        #expect(card.change.hasPrefix("Issue anlegen · beispiel/app · Kein Project"))
-        #expect(!card.change.contains("Project fehlt"))
+        #expect(card.change.hasPrefix("Issue anlegen · beispiel/app · Kein Projekt"))
+        #expect(!card.change.contains("Projekt fehlt"))
         let inferred = model.describe(call(arguments(repository: "null", projects: "[]")))
-        #expect(inferred.change.hasPrefix("Issue anlegen · beispiel/app · Kein Project"))
+        #expect(inferred.change.hasPrefix("Issue anlegen · beispiel/app · Kein Projekt"))
     }
 
     @Test func describe_gitHubIssue_unresolvableTargets_sayMissing() async {
@@ -459,9 +475,9 @@ struct AssistantGitHubCardTests {
                                                 fetchedAt: Date(timeIntervalSince1970: 0))
         let model = await make()
         let card = model.describe(call(arguments(repository: "null", projects: "null")))
-        #expect(card.change.hasPrefix("Issue anlegen · Repository fehlt · Project fehlt"))
+        #expect(card.change.hasPrefix("Issue anlegen · Repository fehlt · Projekt fehlt"))
         let named = model.describe(call(arguments(repository: #""beispiel/web""#, projects: "null")))
-        #expect(named.change.hasPrefix("Issue anlegen · beispiel/web · Project fehlt"))
+        #expect(named.change.hasPrefix("Issue anlegen · beispiel/web · Projekt fehlt"))
     }
 
     @Test func describe_gitHubIssue_inEnglish() async {
@@ -527,11 +543,108 @@ struct AssistantGitHubCardTests {
         #expect(model.openCards.ids == ["c2"])
     }
 
+    // MARK: Guarded cards (assign_task)
+
+    private func issue(_ number: Int, assignees: [String] = ["octo"]) -> TaskItem {
+        TaskItem(id: TaskID(source: .github, rawValue: "ISSUE_\(number)"), title: "Export \(number)", notes: nil, due: nil,
+                 priority: nil, estimateMinutes: nil, isCompleted: false,
+                 container: TaskContainer(id: "beispiel/app", name: "beispiel/app", colorHex: nil),
+                 url: URL(string: "https://github.com/beispiel/app/issues/\(number)"), version: "1",
+                 editableFields: [.title, .notes, .due, .priority, .assignees], assignees: assignees)
+    }
+
+    private func assignCall(_ id: String = "c1", task: String = "github:ISSUE_212", add: [String] = ["lea-m"]) -> ToolCall {
+        let list = add.map { "\"\($0)\"" }.joined(separator: ",")
+        return ToolCall(id: id, name: "assign_task", arguments: Data(#"{"id":"\#(task)","add":[\#(list)],"remove":[]}"#.utf8))
+    }
+
+    private func renameCall(_ id: String, task: String, title: String) -> ToolCall {
+        ToolCall(id: id, name: "update_task", arguments: Data(
+            #"{"id":"\#(task)","title":"\#(title)","notes":null,"due":null,"priority":null,"minutes":null}"#.utf8))
+    }
+
+    /// Two ordinary cards and one assign_task card are open.
+    private func sendGuardedBatch(_ model: AssistantModel) async {
+        github.tasks = [issue(212), issue(213), issue(214)]
+        await taskList.reload()
+        responder.enqueueEvents([
+            .functionCall(callID: "c1", name: "update_task", arguments: #"{"id":"github:ISSUE_213","title":"Neu 213","notes":null,"due":null,"priority":null,"minutes":null}"#),
+            .functionCall(callID: "c2", name: "update_task", arguments: #"{"id":"github:ISSUE_214","title":"Neu 214","notes":null,"due":null,"priority":null,"minutes":null}"#),
+            .functionCall(callID: "c3", name: "assign_task", arguments: #"{"id":"github:ISSUE_212","add":["lea-m"],"remove":[]}"#),
+            .completed(usage: nil)])
+        await model.send("Mach drei Änderungen")
+    }
+
+    @Test func needsSingleConfirmation_coversAssignTask() {
+        #expect(AssistantModel.needsSingleConfirmation(assignCall(), me: "octo"))
+        #expect(AssistantModel.needsSingleConfirmation(assignCall(), me: nil))
+        #expect(!AssistantModel.needsSingleConfirmation(renameCall("c", task: "github:x", title: "y"), me: "octo"))
+        // The rule for issues created for others stays.
+        #expect(AssistantModel.needsSingleConfirmation(call(arguments(assignees: #"["lea-m"]"#)), me: "octo"))
+        #expect(!AssistantModel.needsSingleConfirmation(call(arguments()), me: "octo"))
+    }
+
+    @Test func needsSingleConfirmation_usesSingleConfirmationTools() {
+        #expect(AssistantModel.singleConfirmationTools.contains("assign_task"))
+        for name in AssistantModel.singleConfirmationTools {
+            let guarded = ToolCall(id: "c", name: name, arguments: Data("{}".utf8))
+            #expect(AssistantModel.needsSingleConfirmation(guarded, me: "octo"), "\(name)")
+        }
+    }
+
+    @Test func confirmAll_skipsGuardedCards() async {
+        let model = await make()
+        model.open(context: .tasks)
+        await sendGuardedBatch(model)
+        #expect(model.batchConfirmable.map(\.id) == ["c1", "c2"])
+
+        responder.enqueue("Zwei geändert.")
+        await model.confirmAll()
+
+        #expect(taskList.items.first { $0.id.rawValue == "ISSUE_213" }?.title == "Neu 213")
+        #expect(taskList.items.first { $0.id.rawValue == "ISSUE_214" }?.title == "Neu 214")
+        #expect(model.conversation?.pendingActions.map(\.id) == ["c3"])
+        #expect(github.appliedEdits.allSatisfy { if case .set = $0.edit.assignees { false } else { true } })
+    }
+
+    @Test func confirmCards_rejectsGuardedInBatch() async {
+        let model = await make()
+        var turns: [AssistantModel.TurnOutcome] = []
+        model.open(context: .tasks)
+        model.onTurnFinished = { turns.append($0) }
+        await sendGuardedBatch(model)
+
+        await model.confirmCards(["c1", "c3"])
+        #expect(turns.last == .rejected)
+        #expect(github.appliedEdits.isEmpty)
+
+        responder.enqueue("Zugewiesen.")
+        await model.confirmCards(["c3"])
+        #expect(github.appliedEdits.count == 1)
+    }
+
+    @Test func openCards_countsAssignTaskAsGuarded() async {
+        let model = await make()
+        model.open(context: .tasks)
+        await sendGuardedBatch(model)
+        #expect(model.openCards == OpenCards(ids: ["c1", "c2", "c3"], deletes: 0, guarded: 1))
+    }
+
+    @Test func singleConfirmationNotice_onlyWithGuardedCards() {
+        #expect(AssistantModel.singleConfirmationNotice(for: [renameCall("c1", task: "github:x", title: "y")], me: "octo") == nil)
+        #expect(AssistantModel.singleConfirmationNotice(for: [], me: "octo") == nil)
+        #expect(AssistantModel.singleConfirmationNotice(
+            for: [renameCall("c1", task: "github:x", title: "y"), assignCall("c2")], me: "octo") == "Zuweisungen bestätigst du einzeln.")
+    }
+
     @Test func instructions_mentionGitHubToolsOnlyWithGitHub() async {
         let signedIn = await make()
         signedIn.open(context: .tasks)
         #expect(signedIn.instructions().contains("list_github_targets"))
         #expect(signedIn.instructions().contains("list_assignees"))
+        // The assistant reads German with "Projekt" (decision #249); the English word is not in the instruction.
+        #expect(signedIn.instructions().contains("das Issue ohne Projekt anlegen"))
+        #expect(!signedIn.instructions().contains("Project"))
         let signedOut = await make(signedIn: false)
         signedOut.open(context: .tasks)
         #expect(!signedOut.instructions().contains("list_github_targets"))
