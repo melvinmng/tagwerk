@@ -69,7 +69,7 @@ Festlegungen der Hauptsitzung zum G3-Plan: offene Fragen nach Empfehlung; Zeilen
 
 ## Neues Thema (21.11.): Ernährung, Gewicht, Ziele mit ChatGPT
 
-Nutzerwunsch: Gewicht, Kalorien, Makros, Ballaststoffe vollständig tracken, Fortschritt verfolgen; Ernährungs- und Aktivitätsziele mit ChatGPT planen; verbrannte Kalorien (Health und eigene Trainings, die nach Health gehen) erhöhen das Tagesziel. Fable erstellt Mockups `2026-11-21-ernaehrung-gewicht-ziele-mockups.html` und Planentwurf `2026-11-21-ernaehrung-gewicht-ziele.md` (läuft). Danach Entscheidungen des Nutzers. Nutzerauflage: Die bisherigen Punkte trotzdem vollständig abschließen und mergen.
+Nutzerwunsch: Gewicht, Kalorien, Makros, Ballaststoffe vollständig tracken, Fortschritt verfolgen; Ernährungs- und Aktivitätsziele mit ChatGPT planen; verbrannte Kalorien (Health und eigene Trainings, die nach Health gehen) erhöhen das Tagesziel. Mockups `2026-11-21-ernaehrung-gewicht-ziele-mockups.html` und Planentwurf `2026-11-21-ernaehrung-gewicht-ziele.md` fertig (`2864e05`): 32 Entscheidungen (BU, NU, LM, KG, ZI, PV, OR), 7 Stränge/33 Tasks. Wartet auf Entscheidungen des Nutzers und Zustimmung zu einem Issue. Nutzerauflage: Die bisherigen Punkte trotzdem vollständig abschließen und mergen.
 
 ## Warteschlange Umsetzung (je freier Xcode-Platz, nach Prüfung des fertigen Branches)
 
