@@ -19496,6 +19496,16 @@
       },
       "extractionState": "stale"
     },
+    "Wenn du zu einem Vorschlag etwas zurückschreibst, sendet Tagwerk dieselben Angaben noch einmal, dazu den Vorschlag mit deinen Änderungen und deine Nachricht.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "If you write back about a suggestion, Tagwerk sends the same details again, plus the suggestion with your changes and your message."
+          }
+        }
+      }
+    },
     "Werktags": {
       "localizations": {
         "en": {
