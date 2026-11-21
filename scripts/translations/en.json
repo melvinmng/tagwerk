@@ -1185,6 +1185,7 @@
   "Repository, Projects und Zugewiesene gibt es nur bei GitHub-Issues.": "Repository, projects and assignees only exist for GitHub issues.",
   "Issue anlegen": "Create issue",
   "Project %@": "Project %@",
+  "Projekt %@": "Project %@",
   "Repository fehlt": "Repository missing",
   "Project fehlt": "Project missing",
   "Zugewiesen: %@": "Assigned to: %@",

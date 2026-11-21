@@ -114,11 +114,11 @@ struct IssueTargetSheetModelTests {
 
     @Test func summary_namesRepositoryAndProjects() {
         let tagwerk = AppTools.GitHubTarget(repository: "melvinmng/tagwerk", projectIDs: ["PVT_T"])
-        #expect(IssueTargetText.summary(of: tagwerk, in: catalog) == "Ziel: melvinmng/tagwerk · Project Tagwerk")
+        #expect(IssueTargetText.summary(of: tagwerk, in: catalog) == "Ziel: melvinmng/tagwerk · Projekt Tagwerk")
         #expect(IssueTargetText.summary(of: AppTools.GitHubTarget(repository: "melvinmng/app", projectIDs: []), in: catalog)
-                == "Ziel: melvinmng/app · Kein Project")
+                == "Ziel: melvinmng/app · Kein Projekt")
         #expect(IssueTargetText.summary(of: AppTools.GitHubTarget(repository: "melvinmng/tagwerk", projectIDs: ["PVT_T", "PVT_O"]), in: catalog)
-                == "Ziel: melvinmng/tagwerk · Project Tagwerk, Sonstiges")
+                == "Ziel: melvinmng/tagwerk · Projekt Tagwerk, Sonstiges")
         #expect(IssueTargetText.summary(of: nil, in: catalog) == "Ziel wählen")
     }
 }
