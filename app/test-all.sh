@@ -2,10 +2,15 @@
 # Runs all test stages: every local Swift package under app/Packages, the app scheme and the UI tests.
 # Stops at the first failing stage and reports which one failed.
 # TAGWERK_SKIP_UI_TESTS=1 skips the UI test stage (quick iterations only; the full run is required before a merge).
+#
+# Environment overrides (used by the CI workflow; unset means the local behaviour):
+#   TAGWERK_DEVELOPER_DIR      Xcode developer directory instead of /Applications/Xcode.app
+#   TAGWERK_ONLY_UI_TESTS=1    run only the UI test stage (no package stages, no app unit tests, no String Catalog check)
+#   TAGWERK_TEST_RESULTS_DIR   folder for one .xcresult bundle per stage (see run_tests)
 
 set -euo pipefail
 
-export DEVELOPER_DIR="/Applications/Xcode.app/Contents/Developer"
+export DEVELOPER_DIR="${TAGWERK_DEVELOPER_DIR:-/Applications/Xcode.app/Contents/Developer}"
 
 SCRIPT_DIR="${0:A:h}"
 CURRENT_STAGE="setup"
@@ -23,13 +28,20 @@ LOG_DIR="$TAGWERK_TEST_LOG_DIR"
 # The app stage builds here, so the String Catalog check can reuse its .stringsdata.
 DERIVED="$TAGWERK_TEST_DERIVED"
 mkdir -p "$LOG_DIR"
+RESULTS_DIR="${TAGWERK_TEST_RESULTS_DIR:-}"
+[[ -z "$RESULTS_DIR" ]] || mkdir -p "$RESULTS_DIR"
 echo "==> setup: $DESTINATION, derived data $DERIVED"
 
 # Runs xcodebuild test, keeps the full log and fails when no test was executed.
 run_tests() {
   local log="$LOG_DIR/${CURRENT_STAGE// /-}.log"
+  # The result bundle name is unique per stage because xcodebuild refuses to overwrite an existing bundle.
+  local result_args=()
+  if [[ -n "$RESULTS_DIR" ]]; then
+    result_args=(-resultBundlePath "$RESULTS_DIR/${CURRENT_STAGE// /-}.xcresult")
+  fi
   # German is the source language; tests expect German texts and formats (plan english-app, Task 1).
-  if ! xcodebuild test -testLanguage de -testRegion DE "$@" > "$log" 2>&1; then
+  if ! xcodebuild test -testLanguage de -testRegion DE "${result_args[@]}" "$@" > "$log" 2>&1; then
     grep -E "error:|✘|failed" "$log" | tail -n 30 >&2 || true
     echo "Full log: $log" >&2
     return 1
@@ -66,6 +78,7 @@ print(name if name in schemes else name + "-Package")
 }
 
 for package_dir in "$SCRIPT_DIR"/Packages/*(/N); do
+  [[ -z "${TAGWERK_ONLY_UI_TESTS:-}" ]] || break
   package_name="${package_dir:t}"
   CURRENT_STAGE="package $package_name"
   echo "==> $CURRENT_STAGE"
@@ -85,7 +98,11 @@ xcodegen --quiet || stage_failed
 
 CURRENT_STAGE="app scheme Tagwerk"
 echo "==> $CURRENT_STAGE"
-run_tests -project "$SCRIPT_DIR/Tagwerk.xcodeproj" -scheme Tagwerk -destination "$DESTINATION" -derivedDataPath "$DERIVED" || stage_failed
+if [[ -n "${TAGWERK_ONLY_UI_TESTS:-}" ]]; then
+  echo "    skipped (TAGWERK_ONLY_UI_TESTS)"
+else
+  run_tests -project "$SCRIPT_DIR/Tagwerk.xcodeproj" -scheme Tagwerk -destination "$DESTINATION" -derivedDataPath "$DERIVED" || stage_failed
+fi
 
 CURRENT_STAGE="app UI tests"
 echo "==> $CURRENT_STAGE"
@@ -119,9 +136,13 @@ fi
 
 CURRENT_STAGE="string catalogs"
 echo "==> $CURRENT_STAGE"
-/usr/bin/python3 "$SCRIPT_DIR/../scripts/check-strings.py" --require-english || stage_failed
-"$SCRIPT_DIR/../scripts/sync-strings.sh" --check --no-build --derived-data "$DERIVED" || stage_failed
-echo "    catalogs match the source code"
+if [[ -n "${TAGWERK_ONLY_UI_TESTS:-}" ]]; then
+  echo "    skipped (TAGWERK_ONLY_UI_TESTS)"
+else
+  /usr/bin/python3 "$SCRIPT_DIR/../scripts/check-strings.py" --require-english || stage_failed
+  "$SCRIPT_DIR/../scripts/sync-strings.sh" --check --no-build --derived-data "$DERIVED" || stage_failed
+  echo "    catalogs match the source code"
+fi
 
 CURRENT_STAGE="done"
 echo "ALL TESTS PASSED"
