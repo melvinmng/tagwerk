@@ -7,35 +7,67 @@ public struct CapacityInput: Sendable, Hashable {
     public var lunchMinutes: Int
     public var bufferMinutes: Int
     public var busyIntervals: [Range<Int>]
-    public var recurringMinutes: Int
-    public var plannedMinutes: Int
+    /// Load without a clock time: tasks planned for the day that have no time block. Effort that a recurring task only
+    /// reserves counts as nothing; time is taken once a time block is booked (`blockIntervals`).
+    public var untimedPlannedMinutes: Int
     public var estimatedCount: Int
     /// Current time in minutes since midnight; set only for today to compute the remaining time.
     public var nowMinutes: Int?
-    /// Load still ahead today: unblocked tasks in full and the part of time blocks after now.
-    public var remainingPlannedMinutes: Int?
-    /// Travel time before events with a place (minutes since midnight). Blocked like the lunch break: without buffer,
-    /// and counted once where it overlaps the buffer of another event.
+    /// Travel time before and after events with a place (minutes since midnight). Blocked like the lunch break: without
+    /// buffer, and counted once where it overlaps the buffer of another event.
     public var travelIntervals: [Range<Int>]
+    /// Time blocks of the day (events linked to a task). They are load, not blocked time: the part inside the working
+    /// hours that is not already blocked counts, once even where blocks overlap.
+    public var blockIntervals: [Range<Int>]
 
     public init(hours: WorkHours?, lunchStartMinutes: Int, lunchMinutes: Int, bufferMinutes: Int,
-                busyIntervals: [Range<Int>], recurringMinutes: Int, plannedMinutes: Int, estimatedCount: Int,
-                travelIntervals: [Range<Int>] = []) {
-        self.travelIntervals = travelIntervals
+                busyIntervals: [Range<Int>], untimedPlannedMinutes: Int, estimatedCount: Int,
+                travelIntervals: [Range<Int>] = [], blockIntervals: [Range<Int>] = []) {
         self.hours = hours
         self.lunchStartMinutes = lunchStartMinutes
         self.lunchMinutes = lunchMinutes
         self.bufferMinutes = bufferMinutes
         self.busyIntervals = busyIntervals
-        self.recurringMinutes = recurringMinutes
-        self.plannedMinutes = plannedMinutes
+        self.untimedPlannedMinutes = untimedPlannedMinutes
         self.estimatedCount = estimatedCount
+        self.travelIntervals = travelIntervals
+        self.blockIntervals = blockIntervals
+    }
+
+    /// The lunch break as an interval; `nil` without one.
+    var lunch: Range<Int>? {
+        lunchMinutes > 0 ? lunchStartMinutes..<(lunchStartMinutes + lunchMinutes) : nil
     }
 }
 
+/// Where the minutes of the working window went. Every minute belongs to one part, in this order: lunch, travel, events
+/// (with buffer), time blocks, free. The parts up to the events add up to the blocked time.
+public struct CapacityBreakdown: Sendable, Hashable {
+    public let windowMinutes: Int
+    public let lunchMinutes: Int
+    /// Travel time outside the lunch break.
+    public let travelMinutes: Int
+    /// Events with buffer, outside lunch and travel.
+    public let eventMinutes: Int
+    /// Time blocks inside the window, outside the blocked time; overlapping blocks count once.
+    public let blockMinutes: Int
+    /// Time blocks outside the working hours; they use no free time.
+    public let outsideBlockMinutes: Int
+    /// Tasks without a time block.
+    public let untimedMinutes: Int
+
+    public var blockedMinutes: Int { lunchMinutes + travelMinutes + eventMinutes }
+    /// Time blocks and tasks without a time block.
+    public var plannedMinutes: Int { blockMinutes + untimedMinutes }
+
+    static let empty = CapacityBreakdown(windowMinutes: 0, lunchMinutes: 0, travelMinutes: 0, eventMinutes: 0, blockMinutes: 0,
+                                         outsideBlockMinutes: 0, untimedMinutes: 0)
+}
+
 public struct DayCapacity: Sendable, Hashable {
-    /// Working time left for tasks after events (with buffer), lunch and recurring effort.
+    /// Working time left for tasks: the working hours minus lunch, travel and events (with buffer).
     public let availableMinutes: Int
+    /// Time blocks inside the working hours plus tasks without a time block.
     public let plannedMinutes: Int
     /// May be negative when the day is overbooked.
     public let freeMinutes: Int
@@ -43,36 +75,74 @@ public struct DayCapacity: Sendable, Hashable {
     public let isDayOff: Bool
     /// Tasks counted with the default duration because they have no effort.
     public let estimatedCount: Int
+    public let breakdown: CapacityBreakdown
     /// Free time from now until the end of work (today only); negative when overbooked.
     public var remainingMinutes: Int? = nil
 }
 
-/// Blocked time is the union of lunch and busy intervals (each widened by the buffer on both sides),
-/// limited to the working hours; recurring effort comes off the rest.
+/// Intervals of the events that block time, widened by the buffer on both sides. An event that lies completely inside
+/// the lunch break or a trip gets no buffer: that time is blocked anyway.
+public func bufferedEventIntervals(_ events: [Range<Int>], lunch: Range<Int>?, travel: [Range<Int>],
+                                   buffer: Int) -> [Range<Int>] {
+    let unbuffered = (lunch.map { [$0] } ?? []) + travel
+    return events.map { event in
+        unbuffered.contains { $0.lowerBound <= event.lowerBound && event.upperBound <= $0.upperBound }
+            ? event : (event.lowerBound - buffer)..<(event.upperBound + buffer)
+    }
+}
+
+/// Every minute of the working hours counts once: as blocked time (lunch, travel, events with buffer), as a time block
+/// or as free. Blocked time is the union of its intervals, limited to the working hours. Time blocks and tasks without
+/// a time are the load; effort that recurring tasks only reserve is not.
 public func capacity(_ input: CapacityInput) -> DayCapacity {
+    let blockUnion = merged(input.blockIntervals)
     guard let hours = input.hours, hours.minutes > 0 else {
-        return DayCapacity(availableMinutes: 0, plannedMinutes: input.plannedMinutes, freeMinutes: -input.plannedMinutes,
-                           isOverbooked: input.plannedMinutes > 0, isDayOff: true, estimatedCount: input.estimatedCount)
+        let planned = length(blockUnion) + input.untimedPlannedMinutes
+        return DayCapacity(availableMinutes: 0, plannedMinutes: planned, freeMinutes: -planned, isOverbooked: planned > 0,
+                           isDayOff: true, estimatedCount: input.estimatedCount, breakdown: .empty)
     }
-    var blocks = input.busyIntervals.map { ($0.lowerBound - input.bufferMinutes)..<($0.upperBound + input.bufferMinutes) }
-    if input.lunchMinutes > 0 {
-        blocks.append(input.lunchStartMinutes..<(input.lunchStartMinutes + input.lunchMinutes))
-    }
-    blocks += input.travelIntervals
+    let events = bufferedEventIntervals(input.busyIntervals, lunch: input.lunch, travel: input.travelIntervals,
+                                        buffer: input.bufferMinutes)
+    let lunch = input.lunch.map { [$0] } ?? []
     let work = hours.startMinutes..<hours.endMinutes
-    let blocked = mergedLength(blocks.compactMap { clip($0, to: work) })
-    let available = max(0, hours.minutes - blocked - input.recurringMinutes)
-    var result = DayCapacity(availableMinutes: available, plannedMinutes: input.plannedMinutes,
-                             freeMinutes: available - input.plannedMinutes, isOverbooked: input.plannedMinutes > available,
-                             isDayOff: false, estimatedCount: input.estimatedCount)
+    let blocked = merged(lunch + input.travelIntervals + events, within: work)
+    let withLunch = length(merged(lunch, within: work))
+    let withTravel = length(merged(lunch + input.travelIntervals, within: work))
+    let withBlocks = length(merged(lunch + input.travelIntervals + events + input.blockIntervals, within: work))
+    let breakdown = CapacityBreakdown(
+        windowMinutes: work.count, lunchMinutes: withLunch, travelMinutes: withTravel - withLunch,
+        eventMinutes: length(blocked) - withTravel, blockMinutes: withBlocks - length(blocked),
+        outsideBlockMinutes: length(blockUnion) - length(merged(input.blockIntervals, within: work)),
+        untimedMinutes: input.untimedPlannedMinutes)
+    let available = work.count - length(blocked)
+    let planned = breakdown.plannedMinutes
+    var result = DayCapacity(availableMinutes: available, plannedMinutes: planned, freeMinutes: available - planned,
+                             isOverbooked: planned > available, isDayOff: false, estimatedCount: input.estimatedCount,
+                             breakdown: breakdown)
     if let now = input.nowMinutes {
         let start = min(max(hours.startMinutes, now), hours.endMinutes)
         let window = start..<hours.endMinutes
-        let blockedAhead = mergedLength(blocks.compactMap { clip($0, to: window) })
-        let ahead = max(0, window.count - blockedAhead - input.recurringMinutes)
-        result.remainingMinutes = ahead - (input.remainingPlannedMinutes ?? input.plannedMinutes)
+        let blockedAhead = length(merged(lunch + input.travelIntervals + events, within: window))
+        let withBlocksAhead = length(merged(lunch + input.travelIntervals + events + input.blockIntervals, within: window))
+        let blocksAhead = withBlocksAhead - blockedAhead
+        result.remainingMinutes = window.count - blockedAhead - blocksAhead - input.untimedPlannedMinutes
     }
     return result
+}
+
+/// Time a "free" mark gives back: the available minutes after the given busy intervals no longer block, minus the
+/// available minutes now. Overlapping events, events outside the working hours and events inside the lunch break give
+/// back only what really becomes free. Each interval removes one equal busy interval (a copy in a second calendar
+/// keeps blocking until it is freed too). A freed event loses its trips as well: pass the trips of the day without it
+/// as `travelIntervals`.
+public func freedMinutes(_ input: CapacityInput, removing intervals: [Range<Int>],
+                         travelIntervals: [Range<Int>]? = nil) -> Int {
+    var reduced = input
+    if let travelIntervals { reduced.travelIntervals = travelIntervals }
+    for interval in intervals {
+        if let index = reduced.busyIntervals.firstIndex(of: interval) { reduced.busyIntervals.remove(at: index) }
+    }
+    return capacity(reduced).availableMinutes - capacity(input).availableMinutes
 }
 
 /// Busy minutes of `day` from timed events that are not free/declined and not linked to a task.
@@ -96,16 +166,20 @@ private func clip(_ range: Range<Int>, to bounds: Range<Int>) -> Range<Int>? {
     return lower < upper ? lower..<upper : nil
 }
 
-private func mergedLength(_ ranges: [Range<Int>]) -> Int {
-    var total = 0
-    var current: Range<Int>?
-    for range in ranges.sorted(by: { $0.lowerBound < $1.lowerBound }) {
-        if let open = current, range.lowerBound <= open.upperBound {
-            current = open.lowerBound..<max(open.upperBound, range.upperBound)
+/// The union of the ranges as sorted, separate ranges; with `bounds` each range is limited to them first.
+private func merged(_ ranges: [Range<Int>], within bounds: Range<Int>? = nil) -> [Range<Int>] {
+    let candidates = bounds.map { limit in ranges.compactMap { clip($0, to: limit) } } ?? ranges.filter { !$0.isEmpty }
+    var result: [Range<Int>] = []
+    for range in candidates.sorted(by: { $0.lowerBound < $1.lowerBound }) {
+        if let last = result.last, range.lowerBound <= last.upperBound {
+            result[result.count - 1] = last.lowerBound..<max(last.upperBound, range.upperBound)
         } else {
-            if let open = current { total += open.count }
-            current = range
+            result.append(range)
         }
     }
-    return total + (current?.count ?? 0)
+    return result
+}
+
+private func length(_ ranges: [Range<Int>]) -> Int {
+    ranges.reduce(0) { $0 + $1.count }
 }
