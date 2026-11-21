@@ -84,6 +84,9 @@ class RecipeScreensAuditCase: UITestCase {
         waitFor("Milch, nicht erledigt")
         tapButton("Sprache der Einkaufsliste Deutsch, auf Englisch wechseln")
         waitFor("Einkaufsliste jetzt auf Englisch")
+        // The notice above the input ("1 hinzugefügt") fades out after four seconds; when it disappears during the audit, the audit
+        // fails to read the element it already found. The other shopping audit waits for it in the same way.
+        waitUntilGone(app.staticTexts.matching(NSPredicate(format: "label ENDSWITH %@", "hinzugefügt")).firstMatch)
         try audit("Einkaufsliste › Karte „übersetzen“")
         tapButton("Mit ChatGPT übersetzen")
         tapScrolling("Einverstanden und übersetzen")
