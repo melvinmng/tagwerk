@@ -13,4 +13,9 @@ enum AccessibilityID {
         /// The title field of the task editor (a filled field has no placeholder to find it by).
         static let editorTitle = "tasks.editorTitle"
     }
+
+    enum Common {
+        /// The symbol button above the keyboard that closes it.
+        static let hideKeyboard = "common.hideKeyboard"
+    }
 }

@@ -117,6 +117,14 @@ struct ShoppingSiriTests {
         #expect(test.store.records["eggs"]?.isCompleted == false)
     }
 
+    @Test func addArticle_marksTheTipAsDone() async throws {
+        let test = try ShoppingSiriTests()
+        #expect(!test.environment.settings.siriTipShoppingDone)
+        _ = await test.services.addToShopping(article: ShoppingArticleEntity(name: "Hafermilch"))
+        #expect(test.environment.settings.siriTipShoppingDone)
+        #expect(!test.environment.settings.siriTipWaterDone, "running one shortcut must not close the other tip")
+    }
+
     @Test func addArticle_typedTextWithQuantity_isSplitLikeTheTextShortcut() async throws {
         let test = try ShoppingSiriTests()
         #expect(String(localized: await test.services.addToShopping(article: ShoppingArticleEntity(name: "2 Zwiebeln")))

@@ -131,6 +131,11 @@ struct RoutineStoreTests {
         #expect(!settings.noteSuggestionConsent)
     }
 
+    @Test func noteAssistantConsent_defaultsToFalse() throws {
+        let settings = try AppSettings.current(in: container.mainContext)
+        #expect(!settings.noteAssistantConsent)
+    }
+
     @Test func schema_containsTheRoutineTypes() {
         let names = Set(ModelContainerFactory.schema.entities.map(\.name))
         #expect(names.isSuperset(of: ["RoutineDayRecord", "EveningChecklistItemRecord"]))

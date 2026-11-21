@@ -927,4 +927,62 @@ struct TaskContextMenuStatusTests {
                          editableFields: [.status], statuses: [row("A")])
         #expect(TaskContextMenu.statusRows(of: local).isEmpty)
     }
+
+    // MARK: assignUnlisted (the assistant takes over an issue found by the GitHub search)
+
+    private func unlistedIssue(assignees: [String]) -> (FakeTaskProvider, TaskItem) {
+        let github = FakeTaskProvider(source: .github)
+        github.viewerLogin = "octo"
+        let item = TaskItem(id: TaskID(source: .github, rawValue: "ISSUE_151"), title: "Export prüfen", notes: nil, due: nil,
+                            priority: nil, estimateMinutes: nil, isCompleted: false,
+                            container: TaskContainer(id: "beispiel/app", name: "beispiel/app", colorHex: nil),
+                            url: URL(string: "https://github.com/beispiel/app/issues/151"), version: "1",
+                            editableFields: [.title, .assignees], assignees: assignees)
+        return (github, item)
+    }
+
+    @Test func assignUnlisted_takeOver_joinsListWithoutVersionCheck() async throws {
+        let (github, item) = unlistedIssue(assignees: [])
+        let model = TaskListModel(providers: [github], now: testNow, calendar: testCalendar())
+        await model.reload()
+        github.tasks = [item]   // the provider holds the issue, the loaded list does not
+        #expect(model.items.isEmpty)
+        let updated = try await model.assignUnlisted(AssigneeChange(add: ["octo"]), to: item.id)
+        #expect(updated.assignees == ["octo"])
+        #expect(model.items.map(\.id) == [item.id])
+        #expect(github.appliedEdits.last?.expectedVersion == nil)
+    }
+
+    @Test func assignUnlisted_assignOther_staysOutOfTheList() async throws {
+        let (github, item) = unlistedIssue(assignees: [])
+        let model = TaskListModel(providers: [github], now: testNow, calendar: testCalendar())
+        await model.reload()
+        github.tasks = [item]
+        _ = try await model.assignUnlisted(AssigneeChange(add: ["lea-m"]), to: item.id)
+        #expect(model.items.isEmpty)
+    }
+
+    @Test func assignUnlisted_handOverHookNotCalled() async throws {
+        let (github, item) = unlistedIssue(assignees: [])
+        let model = TaskListModel(providers: [github], now: testNow, calendar: testCalendar())
+        await model.reload()
+        github.tasks = [item]
+        var handedOver: [TaskID] = []
+        model.onHandedOver = { handedOver.append($0) }
+        _ = try await model.assignUnlisted(AssigneeChange(add: ["lea-m"]), to: item.id)
+        _ = try await model.assignUnlisted(AssigneeChange(add: ["octo"]), to: item.id)
+        #expect(handedOver.isEmpty)
+        // No capsule either: nothing left the lists.
+        #expect(model.lastHandedOver == nil)
+    }
+
+    @Test func assignUnlisted_unknownSource_throws() async {
+        let (github, item) = unlistedIssue(assignees: [])
+        let model = TaskListModel(providers: [FakeTaskProvider(source: .local)], now: testNow, calendar: testCalendar())
+        _ = github
+        await #expect(throws: TaskWriteError.self) {
+            _ = try await model.assignUnlisted(AssigneeChange(add: ["octo"]), to: item.id)
+        }
+    }
 }
+

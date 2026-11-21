@@ -288,7 +288,7 @@ struct CapacityCard: View {
         .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 14))
     }
 
-    /// "🛏 Tagesabschluss · Schlafzeit 23:00 · Checkliste 0 von 3 ›", independent of "Morgen planen"; after "Fertig"
+    /// "🛏 Tagesabschluss · Schlafzeit 23:00 · Checkliste 0 von 3 ›", independent of "Morgen planen"; after "Abschließen"
     /// with a checkmark. Opens the sheet; nothing is written by looking at it.
     private var wrapUpLine: some View {
         let routines = environment.routines

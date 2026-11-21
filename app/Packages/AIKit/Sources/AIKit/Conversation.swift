@@ -36,6 +36,20 @@ public protocol ToolHandler: AnyObject {
     var definitions: [ToolDefinition] { get }
     func kind(of name: String) -> ToolKind
     func run(_ call: ToolCall) async -> String
+    /// What a stored chat keeps of one call: its arguments and its output (`nil` while the call is still open).
+    /// The default keeps both unchanged. A tool whose output must not outlive the session (note text) shortens it here.
+    func storedForm(of call: ToolCall, output: String?) -> (arguments: String, output: String?)
+    /// Whether a read call is shown as a line in the chat (for example "Gelesen: …"). The default is `false`:
+    /// read calls are invisible.
+    func showsActivity(_ name: String) -> Bool
+}
+
+extension ToolHandler {
+    public func storedForm(of call: ToolCall, output: String?) -> (arguments: String, output: String?) {
+        (String(decoding: call.arguments, as: UTF8.self), output)
+    }
+
+    public func showsActivity(_ name: String) -> Bool { false }
 }
 
 /// One entry of the visible chat.
@@ -52,6 +66,8 @@ public struct ChatMessage: Identifiable, Equatable, Sendable {
         case assistant(String)
         /// A write function as an action card.
         case action(ToolCall, ActionStatus)
+        /// A read function the tool handler shows as a line (`ToolHandler.showsActivity`); `output` is `nil` while it runs.
+        case activity(ToolCall, output: String?)
     }
 
     public let id: Int
@@ -161,6 +177,42 @@ public final class Conversation {
         state = .idle
     }
 
+    // MARK: Stored form
+
+    /// The history with every function call and output reduced by `ToolHandler.storedForm`; this is what gets saved.
+    /// Order, items and call IDs stay, so indices into the history remain valid. `history` itself is not changed:
+    /// during the session the model keeps seeing the full results.
+    public var storableHistory: [InputItem] {
+        var calls: [String: ToolCall] = [:]
+        var outputs: [String: String] = [:]
+        for item in history {
+            switch item {
+            case .functionCall(let id, let name, let arguments): calls[id] = ToolCall(id: id, name: name, arguments: Data(arguments.utf8))
+            case .functionOutput(let id, let output): outputs[id] = output
+            default: break
+            }
+        }
+        return history.map { item in
+            switch item {
+            case .functionCall(let id, let name, _):
+                guard let call = calls[id] else { return item }
+                return .functionCall(callID: id, name: name, arguments: tools.storedForm(of: call, output: outputs[id]).arguments)
+            case .functionOutput(let id, let output):
+                guard let call = calls[id] else { return item }
+                return .functionOutput(callID: id, output: tools.storedForm(of: call, output: output).output ?? output)
+            default:
+                return item
+            }
+        }
+    }
+
+    /// Replaces the history in memory by `storableHistory`: the chat goes on, what the model read earlier is gone
+    /// (it ends a note session without ending the chat). Does nothing while a turn is running.
+    public func reduceToStoredForm() {
+        guard !isBusy else { return }
+        history = storableHistory
+    }
+
     // MARK: Visible messages
 
     public var messages: [ChatMessage] {
@@ -174,9 +226,12 @@ public final class Conversation {
             case .assistant(let text):
                 result.append(ChatMessage(id: index, content: .assistant(text)))
             case .functionCall(let id, let name, let arguments):
-                guard tools.kind(of: name) == .write else { continue }
                 let call = ToolCall(id: id, name: name, arguments: Data(arguments.utf8))
-                result.append(ChatMessage(id: index, content: .action(call, status(of: id, output: outputs[id]))))
+                if tools.kind(of: name) == .write {
+                    result.append(ChatMessage(id: index, content: .action(call, status(of: id, output: outputs[id]))))
+                } else if tools.showsActivity(name) {
+                    result.append(ChatMessage(id: index, content: .activity(call, output: outputs[id])))
+                }
             case .functionOutput:
                 continue
             }

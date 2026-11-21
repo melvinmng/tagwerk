@@ -448,6 +448,24 @@ final class TaskListModel {
         }
     }
 
+    /// Applies an assignee change to a GitHub issue that is not in `items` (found by the online search). No version
+    /// check: the provider reads the issue fresh. The issue joins the list when it is listed afterwards (the user
+    /// took it over). `onHandedOver` is not called: an issue that was never in the lists has no blocks to plan away.
+    @discardableResult
+    func assignUnlisted(_ change: AssigneeChange, to id: TaskID) async throws -> TaskItem {
+        guard let provider = provider(for: id.source) else { throw TaskWriteError.accessDenied }
+        var edit = TaskEdit()
+        edit.assignees = .set(change)
+        let updated = try await provider.apply(edit, to: id, expectedVersion: nil)
+        nextGeneration(for: id.source)
+        if provider.isListed(updated), !updated.isCompleted {
+            replace(updated)
+        } else {
+            items.removeAll { $0.id == id }
+        }
+        return updated
+    }
+
     func createReturning(_ draft: TaskDraft, in source: TaskSource) async throws -> TaskItem {
         guard let provider = provider(for: source) else { throw TaskWriteError.accessDenied }
         let created = try await provider.create(draft)

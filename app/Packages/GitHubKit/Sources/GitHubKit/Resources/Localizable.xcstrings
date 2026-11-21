@@ -75,6 +75,16 @@
         }
       }
     },
+    "Die GitHub-Projekte sind noch nicht geladen." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The GitHub projects haven’t been loaded yet."
+          }
+        }
+      }
+    },
     "Ein neues Issue kann nicht mit dem Status „Done“ beginnen." : {
       "localizations" : {
         "en" : {

@@ -27,7 +27,10 @@ struct RoutineSettingsView: View {
             } header: {
                 Text("Tagesabschluss")
             } footer: {
-                if conflict.evening { Text(Self.quietHoursNote) }
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Abgehakte Punkte erinnern an dem Abend nicht mehr. Tagwerk plant die Erinnerungen für die nächsten 3 Tage und füllt sie nach, sobald du die App öffnest.")
+                    if conflict.evening { Text(Self.quietHoursNote) }
+                }
             }
 
             Section {
