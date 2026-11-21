@@ -6357,6 +6357,16 @@
         }
       }
     },
+    "Die Zutaten stehen in der Sprache der Notiz (%@). Neue Artikel aus dieser Notiz kommen so auf die Liste.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The ingredients are in the language of the note (%@). New items from this note go on the list like this."
+          }
+        }
+      }
+    },
     "Die Zwischenablage enthält keinen Text.": {
       "localizations": {
         "en": {
@@ -13869,6 +13879,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Save recipe"
+          }
+        }
+      }
+    },
+    "Rezept: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recipe: %@"
           }
         }
       }

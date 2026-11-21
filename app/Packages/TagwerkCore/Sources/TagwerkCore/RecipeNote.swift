@@ -42,6 +42,17 @@ public struct RecipeNote: Sendable, Hashable {
 
     private enum Section { case none, ingredients, steps, other }
 
+    /// What a heading introduces: the ingredients, the steps or anything else.
+    public enum SectionKind: Sendable, Equatable { case ingredients, steps, other }
+
+    /// The kind of a section from the text of its heading, without hashes. Shared by `parse`, `outline` and the translation.
+    static func sectionKind(ofHeading text: String) -> SectionKind {
+        let name = text.lowercased().trimmingCharacters(in: CharacterSet(charactersIn: ": "))
+        if ingredientHeadings.contains(name) { return .ingredients }
+        if stepHeadings.contains(name) { return .steps }
+        return .other
+    }
+
     // MARK: Reading
 
     /// Reads a note. `nil` when it is not a structured recipe: there has to be a section "Zutaten" ("Ingredients") with at
@@ -59,13 +70,10 @@ public struct RecipeNote: Sendable, Hashable {
             if line.isEmpty { continue }
             if let found = heading(line) {
                 if found.level == 1, headingTitle == nil { headingTitle = found.text }
-                let name = found.text.lowercased().trimmingCharacters(in: CharacterSet(charactersIn: ": "))
-                if ingredientHeadings.contains(name) {
-                    section = .ingredients
-                } else if stepHeadings.contains(name) {
-                    section = .steps
-                } else {
-                    section = .other
+                switch sectionKind(ofHeading: found.text) {
+                case .ingredients: section = .ingredients
+                case .steps: section = .steps
+                case .other: section = .other
                 }
                 continue
             }
@@ -95,7 +103,7 @@ public struct RecipeNote: Sendable, Hashable {
     }
 
     /// A Markdown heading: its level and its text without the hashes.
-    private static func heading(_ line: String) -> (level: Int, text: String)? {
+    static func heading(_ line: String) -> (level: Int, text: String)? {
         let hashes = line.prefix { $0 == "#" }
         guard (1...6).contains(hashes.count) else { return nil }
         let rest = line.dropFirst(hashes.count)
@@ -142,6 +150,30 @@ public struct RecipeNote: Sendable, Hashable {
             if rest.first == " " { text = rest }
         }
         return text.trimmingCharacters(in: .whitespaces)
+    }
+
+    // MARK: Outline
+
+    /// The sections of a note in order, classified like `parse` does: the headings from level 2 on, plus a level 1 heading
+    /// when `parse` reads it as the section "Zutaten" or "Zubereitung". The translation compares the outline before and
+    /// after, so a heading that changed its role is noticed.
+    public static func outline(_ markdown: String) -> [SectionKind] {
+        markdown.split(omittingEmptySubsequences: true, whereSeparator: \.isNewline).compactMap { raw in
+            guard let found = heading(raw.trimmingCharacters(in: .whitespaces)) else { return nil }
+            let kind = sectionKind(ofHeading: found.text)
+            return found.level >= 2 || kind != .other ? kind : nil
+        }
+    }
+
+    /// The language of the section headings: German for "Zutaten", English for "Ingredients", `nil` when the note has
+    /// neither heading.
+    public static func headingLanguage(_ markdown: String) -> VoiceLanguage? {
+        for raw in markdown.split(omittingEmptySubsequences: true, whereSeparator: \.isNewline) {
+            guard let found = heading(raw.trimmingCharacters(in: .whitespaces)),
+                  sectionKind(ofHeading: found.text) == .ingredients else { continue }
+            return found.text.lowercased().trimmingCharacters(in: CharacterSet(charactersIn: ": ")) == "zutaten" ? .german : .english
+        }
+        return nil
     }
 
     // MARK: Template

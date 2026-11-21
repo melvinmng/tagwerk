@@ -461,14 +461,17 @@ struct RecipeInputView: View {
         let names = purpose == .shopping ? environment.shoppingCategories.categories().map(\.name) : []
         let classifier = RecipeImporter.localClassifier(assignments: environment.shoppingCategories.assignments(),
                                                         categories: environment.shoppingCategories.categories())
+        // The list's own language only matters when ingredients go onto the list, and only when it differs from the recipe's.
+        let shoppingLanguage = purpose == .shopping ? environment.settings.contentLanguages.shoppingLanguageIfDifferent() : nil
         let fromNote = source == .note
         let id = UUID()
         readingID = id
         reading = Task {
             defer { if readingID == id { reading = nil } }
             do {
-                let found = try await environment.recipeImporter.read(input, language: language, categoryNames: names,
-                                                                      openItemKeys: openKeys, localClassifier: classifier)
+                let found = try await environment.recipeImporter.read(input, language: language, shoppingLanguage: shoppingLanguage,
+                                                                      categoryNames: names, openItemKeys: openKeys,
+                                                                      localClassifier: classifier)
                 // A cancelled request must not show a late answer.
                 guard !Task.isCancelled else { return }
                 onResult(found, fromNote)
@@ -532,6 +535,8 @@ struct RecipeResultView: View {
     private var selected: [RecipeImporter.Candidate] { Self.selection(candidates, deselected: deselected) }
     private var target: Int? { Self.targetServings(base: baseServings, cooking: cookingServings) }
     private var locale: Locale { result.language.locale }
+    /// The language the items go on the list in: the second language of the import, else the recipe's.
+    private var listLocale: Locale { (result.shoppingLanguage ?? result.language).locale }
 
     /// What "hinzufügen" puts on the list.
     static func selection(_ candidates: [RecipeImporter.Candidate], deselected: Set<String>) -> [RecipeImporter.Candidate] {
@@ -609,6 +614,9 @@ struct RecipeResultView: View {
             } footer: {
                 if result.readLocally {
                     Text("Die Kategorien kommen aus deiner Einkaufsliste.")
+                    if result.keepsNoteLanguage, let noteLanguage = result.noteLanguage {
+                        Text("Die Zutaten stehen in der Sprache der Notiz (\(LanguageSettingsText.name(noteLanguage))). Neue Artikel aus dieser Notiz kommen so auf die Liste.")
+                    }
                 } else {
                     Text("Die Kategorien kommen von ChatGPT und lassen sich später in der Liste ändern.")
                 }
@@ -645,9 +653,14 @@ struct RecipeResultView: View {
                 .foregroundStyle(isOn ? Color.accentColor : Color.secondary)
             VStack(alignment: .leading, spacing: 2) {
                 HStack {
-                    Text(candidate.name).foregroundStyle(.primary)
+                    Text(candidate.listName).foregroundStyle(.primary)
                     // A fixed grey: the hierarchical `.secondary` takes the tint of the button around the row and fails the contrast audit.
-                    if let quantity = candidate.quantity { Text(quantity).foregroundStyle(Color.secondary) }
+                    if let quantity = RecipeImporter.listItem(for: candidate, locale: listLocale).quantity {
+                        Text(quantity).foregroundStyle(Color.secondary)
+                    }
+                }
+                if candidate.shoppingName != nil, candidate.shoppingName != candidate.name {
+                    Text("Rezept: \(candidate.name)").font(.footnote).foregroundStyle(Color.secondary)
                 }
                 Text(candidate.alreadyOnList ? candidate.category + " · " + String(localized: "schon auf der Liste") : candidate.category)
                     .font(.subheadline).foregroundStyle(Color.secondary)
@@ -667,7 +680,7 @@ struct RecipeResultView: View {
         // The note keeps the title, the servings and the amounts of the recipe, not the scaled ones.
         let note = Self.noteToSave(result, fromNote: fromNote, savesNote: savesNote, servings: baseServings)
         Task {
-            let report = await RecipeImporter.apply(chosen, model: model, categories: environment.shoppingCategories)
+            let report = await RecipeImporter.apply(chosen, model: model, categories: environment.shoppingCategories, locale: listLocale)
             var line = Self.resultLine(report)
             if let note, RecipeNoteWriter.save(note, language: result.language, store: environment.notes) != nil {
                 line += " " + String(localized: "Das Rezept liegt als Notiz im Ordner „Rezepte“.")

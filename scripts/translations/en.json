@@ -2015,5 +2015,7 @@
   "Spracheingabe und Vorlesen": "Voice input and read-aloud",
   "Die Sprache der Oberfläche stellst du in den iOS-Einstellungen ein.": "You set the language of the interface in the iOS settings.",
   "Beim Diktieren und in der Einkaufsliste wechselst du die Sprache auch direkt am Feld. Rezepte übersetzt ChatGPT in die gewählte Sprache; die Artikel der Einkaufsliste entstehen in der Sprache der Einkaufsliste.": "You can also switch the language right at the field when dictating and in the shopping list. ChatGPT translates recipes into the chosen language; items on the shopping list are created in the language of the shopping list.",
-  "Mikrofon, Sprachpakete, Stimmen, Tempo und Sprechmodus.": "Microphone, language packs, voices, speed and voice mode."
+  "Mikrofon, Sprachpakete, Stimmen, Tempo und Sprechmodus.": "Microphone, language packs, voices, speed and voice mode.",
+  "Rezept: %@": "Recipe: %@",
+  "Die Zutaten stehen in der Sprache der Notiz (%@). Neue Artikel aus dieser Notiz kommen so auf die Liste.": "The ingredients are in the language of the note (%@). New items from this note go on the list like this."
 }
