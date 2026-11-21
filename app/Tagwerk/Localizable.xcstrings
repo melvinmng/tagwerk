@@ -304,6 +304,16 @@
         }
       }
     },
+    "%@ Fahrzeit": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ travel"
+          }
+        }
+      }
+    },
     "%@ frei": {
       "localizations": {
         "en": {
@@ -534,6 +544,16 @@
         }
       }
     },
+    "%@ Pause": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ break"
+          }
+        }
+      }
+    },
     "%@ planen": {
       "localizations": {
         "en": {
@@ -611,6 +631,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "%@ is already on the list"
+          }
+        }
+      }
+    },
+    "%@ Termine": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ events"
           }
         }
       }

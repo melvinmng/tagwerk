@@ -1,0 +1,11 @@
+# UI tests that run only in the nightly and manual full runs, not in the pull request set.
+# One test class (or Class/testMethod) per line; empty lines and lines starting with # are ignored.
+# app/test-all.sh turns every entry into -skip-testing:TagwerkUITests/<entry> when TAGWERK_UI_TEST_SET=pr.
+# Rationale: AX5/dark variants of the recipe and settings screens mostly check clipped text and contrast, which
+# change rarely; the AX5/dark variant of the four core screens (AccessibilityAuditLargeTextUITests) stays in the
+# pull request set. Re-evaluate with the data from the nightly runs.
+
+AccessibilityAuditRecipesLargeTextUITests
+
+# Add AccessibilityAuditEveningLargeTextUITests as soon as PR #261 (which introduces it) is merged into main.
+# It is not listed yet because the class does not exist on main.
