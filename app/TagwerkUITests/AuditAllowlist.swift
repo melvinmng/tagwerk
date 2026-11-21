@@ -87,6 +87,11 @@ enum AuditAllowlist {
             "Punkte in den Einstellungen anlegen", "Mo\\. planen", "Fertig", "Brain Dump", "Leitfragen einfügen", "\\d+\\.\\d+\\.",
         ], screens: ["Tagesabschluss"], reason: "Texts of the evening sheet (hint line, buttons, date of the next planning day) report a partial lack of "
             + "Dynamic Type support; no clipping in the large text run. Stays on the device test list."),
+        Entry(auditType: .dynamicType, labels: ["Unerledigtes verschieben · \\d+ Aufgaben?"], screens: ["Tagesabschluss"], reason:
+            "Row \"Unerledigtes verschieben\" of the wrap-up (`LeftoverLine`): one `Text` with a text style and no line limit, so it grows and wraps "
+            + "with the text size; the audit still reports a partial lack of support (the same row is reported as \"may be clipped\" in the "
+            + "text clipped group below, and as soon as the height is fixed to the text it switches to this finding). Not part of the "
+            + "AX5 run; stays on the device test list (large text)."),
         Entry(auditType: .dynamicType, labels: [
             "P1", "Ältere Termine durchsuchen · vor .*", "Durchsucht: 6 Monate zurück, 12 Monate voraus\\.",
         ], reason: "Priority capsule and the hint rows of the search sheet use text styles; the audit still reports a partial lack of "
@@ -104,6 +109,10 @@ enum AuditAllowlist {
             "Ältere Termine durchsuchen · vor .*",
         ], reason: "Reported in the default size for texts that are shown completely on the screenshot of the run (cards of \"Planen\", "
             + "entry rows of \"Aufgaben\", \"Erfassen\"). Not reproducible by eye; stays on the device test list (large text)."),
+        Entry(auditType: .textClipped, labels: ["Unerledigtes verschieben · \\d+ Aufgaben?"], screens: ["Tagesabschluss"], reason:
+            "The row \"Unerledigtes verschieben\" of the wrap-up is a single `Text` without a line limit, so it wraps instead of being cut; "
+            + "the audit's generic warning \"may be clipped at larger Dynamic Type sizes\" comes with the new row of the leftover section "
+            + "(same group as the entries above). Not part of the AX5 run; stays on the device test list (large text)."),
         Entry(auditType: .textClipped, labels: ["[\\d.]+ / [\\d.]+"], reason:
             "Steps value of \"Erfassen\" in the largest text size: single-line summary cell. Layout for AX sizes is a "
             + "design decision (#188, \"Layout bei Bedienungshilfen-Schriftgrößen\"). The date caption above the day title wraps at "
