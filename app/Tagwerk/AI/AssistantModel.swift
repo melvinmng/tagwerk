@@ -58,6 +58,12 @@ final class AssistantModel {
     @ObservationIgnored private let planning: PlanningModel
     @ObservationIgnored private let now: () -> Date
     @ObservationIgnored private var key = ChatStore.assistantKey
+    /// The consent was withdrawn while a turn was running; the history is reduced as soon as the turn ends.
+    @ObservationIgnored private var pendingNoteSessionEnd = false
+    /// The consent "Notizen mit ChatGPT" as the settings hold it; `nil` until `watchNoteConsent` is called.
+    @ObservationIgnored private var noteConsent: (() -> Bool)?
+    /// The consent as last seen, to notice the change to `false` (and nothing else).
+    @ObservationIgnored private var noteConsentWasGiven = false
     /// GitHub access and issue lookup for chats about one task.
     @ObservationIgnored var reader: RepositoryReading?
     @ObservationIgnored var issueReference: (TaskID) -> IssueReference? = { _ in nil }
@@ -83,6 +89,7 @@ final class AssistantModel {
     func open(context: Context) {
         // The voice mode keeps its conversation until it ends (stage 2 review 4).
         guard onTurnFinished == nil else { isPresented = true; return }
+        guard !isHoldingOtherChat(ChatStore.assistantKey) else { isPresented = true; return }
         self.context = context
         switchThread(to: ChatStore.assistantKey, tools: tools)
         task = nil
@@ -92,6 +99,7 @@ final class AssistantModel {
     /// "Über diese Aufgabe sprechen": the task's own chat, with the repository functions for GitHub issues.
     func open(task: TaskItem) {
         guard onTurnFinished == nil else { isPresented = true; return }
+        guard !isHoldingOtherChat("task:\(task.id.key)") else { isPresented = true; return }
         context = .task(task.id)
         let reference = task.id.source == .github ? issueReference(task.id) : nil
         let handler = TaskChatTools(base: tools, reader: reader ?? NoRepositoryReader(), reference: reader == nil ? nil : reference)
@@ -101,9 +109,20 @@ final class AssistantModel {
         isPresented = true
     }
 
+    /// True while a turn runs in a chat other than `newKey`. Such a switch waits: the turn belongs to the running
+    /// conversation, and replacing it would let the turn read notes into the session of the new chat and save its result
+    /// under the wrong key. The chat that is shown stays until the turn ends (the same rule as the voice mode).
+    private func isHoldingOtherChat(_ newKey: String) -> Bool {
+        conversation?.isBusy == true && key != newKey
+    }
+
     private func switchThread(to newKey: String, tools handler: ToolHandler) {
         guard conversation == nil || key != newKey else { return }
-        if conversation != nil { persist() }
+        if conversation != nil {
+            persist()
+            // Leaving a chat ends the note session: the next chat starts from its stored form.
+            tools.noteSession.reset()
+        }
         key = newKey
         actionTimes = store.actionTimes(for: newKey)
         spokenMarks = store.spokenMarks(for: newKey)
@@ -118,6 +137,7 @@ final class AssistantModel {
             onTurnFinished?(.rejected)
             return
         }
+        syncNoteConsent()
         if let task, taskContext == nil {
             // GitHub is asked only now, when the user starts the conversation.
             let reference = task.id.source == .github ? issueReference(task.id) : nil
@@ -178,7 +198,28 @@ final class AssistantModel {
         let pending = conversation?.pendingActions ?? []
         let me = gitHubDirectory()?.login
         return OpenCards(ids: pending.map(\.id), deletes: pending.filter { $0.name == "delete_event" }.count,
-                         guarded: pending.filter { Self.assignsBeyondMe($0, me: me) }.count)
+                         guarded: pending.filter { Self.needsSingleConfirmation($0, me: me) }.count)
+    }
+
+    /// Tools whose cards are always confirmed alone, never with "Alle bestätigen" and never together with other
+    /// cards by voice. The note tools of the notes chat are added here.
+    static let singleConfirmationTools: Set<String> = ["assign_task"]
+
+    /// True for a card that must be confirmed alone: a tool of `singleConfirmationTools`, or creating a task that is
+    /// assigned beyond the user (`assignsBeyondMe`).
+    static func needsSingleConfirmation(_ call: ToolCall, me: String?) -> Bool {
+        singleConfirmationTools.contains(call.name) || assignsBeyondMe(call, me: me)
+    }
+
+    /// The open cards that "Alle bestätigen" may confirm: every pending call except the guarded ones.
+    var batchConfirmable: [ToolCall] {
+        let me = gitHubDirectory()?.login
+        return (conversation?.pendingActions ?? []).filter { !Self.needsSingleConfirmation($0, me: me) }
+    }
+
+    /// The line below "Alle bestätigen" that names what is confirmed alone; `nil` without guarded cards.
+    static func singleConfirmationNotice(for calls: [ToolCall], me: String? = nil) -> String? {
+        calls.contains { needsSingleConfirmation($0, me: me) } ? String(localized: "Zuweisungen bestätigst du einzeln.") : nil
     }
 
     /// True for a `create_task` call that assigns an issue to other people or to no one. Such a card is
@@ -199,11 +240,12 @@ final class AssistantModel {
         // are issues assigned to other people or to no one.
         let me = gitHubDirectory()?.login
         guard !calls.isEmpty, calls.count == ids.count,
-              calls.count == 1 || !calls.contains(where: { $0.name == "delete_event" || Self.assignsBeyondMe($0, me: me) }) else {
+              calls.count == 1 || !calls.contains(where: { $0.name == "delete_event" || Self.needsSingleConfirmation($0, me: me) }) else {
             onTurnFinished?(.rejected)
             return
         }
         if calls.count == 1 { return await confirm(calls[0]) }
+        syncNoteConsent()
         let index = conversation.history.count
         for call in calls {
             actionTimes[call.id] = now()
@@ -270,6 +312,7 @@ final class AssistantModel {
 
     func confirm(_ call: ToolCall) async {
         guard let conversation else { return }
+        syncNoteConsent()
         actionTimes[call.id] = now()
         let index = conversation.history.count
         await conversation.confirm(call)
@@ -309,8 +352,10 @@ final class AssistantModel {
     /// "Alle bestätigen (N)" (mockup e).
     func confirmAll() async {
         guard let conversation else { return }
+        syncNoteConsent()
         let index = conversation.history.count
-        let calls = conversation.pendingActions
+        // Guarded cards stay open: they are confirmed one by one.
+        let calls = batchConfirmable
         for call in calls {
             actionTimes[call.id] = now()
             await conversation.confirm(call)
@@ -328,6 +373,7 @@ final class AssistantModel {
     }
 
     func decline(_ call: ToolCall) async {
+        syncNoteConsent()
         let index = conversation?.history.count ?? 0
         await conversation?.decline(call)
         persist()
@@ -335,6 +381,7 @@ final class AssistantModel {
     }
 
     func retry() async {
+        syncNoteConsent()
         let index = conversation?.history.count ?? 0
         await conversation?.retry()
         persist()
@@ -345,15 +392,75 @@ final class AssistantModel {
     func clear() {
         guard conversation?.isBusy != true else { return }
         conversation?.clear()
+        tools.noteSession.reset()
         actionTimes = [:]
         spokenMarks = []
         taskContext = nil
         store.delete(key)
     }
 
+    /// Ends the note session (`watchNoteConsent` calls it when the consent "Notizen mit ChatGPT" was withdrawn). The history
+    /// in memory is reduced to its stored form (the model no longer sees note texts it read earlier), the saved chat is updated.
+    /// While a turn is running the reduction follows when the turn ends (`persist()` runs after every turn).
+    func endNoteSession() {
+        pendingNoteSessionEnd = true
+        tools.noteSession.reset()
+        applyNoteSessionEnd()
+        persist()
+    }
+
+    /// Starts following the consent "Notizen mit ChatGPT" (`AppEnvironment` passes the setting): every change to `false`
+    /// ends the note session, wherever it comes from (settings screen, backup restore, any later code path). The
+    /// observation hands over on the next main actor turn; `syncNoteConsent()` closes that gap at the start of a turn.
+    func watchNoteConsent(_ consent: @escaping () -> Bool) {
+        noteConsent = consent
+        noteConsentWasGiven = consent()
+        observeNoteConsent()
+    }
+
+    private func observeNoteConsent() {
+        guard let noteConsent else { return }
+        withObservationTracking {
+            _ = noteConsent()
+        } onChange: { [weak self] in
+            // `onChange` runs before the new value is set; read it one turn later and register again.
+            Task { @MainActor [weak self] in
+                self?.syncNoteConsent()
+                self?.observeNoteConsent()
+            }
+        }
+    }
+
+    /// Compares the consent with the last value seen and ends the session when it was withdrawn. Cheap and safe to call
+    /// at any time; the turn entry points call it so no request is built from a history that still holds note text.
+    private func syncNoteConsent() {
+        guard let noteConsent else { return }
+        let allowed = noteConsent()
+        defer { noteConsentWasGiven = allowed }
+        if noteConsentWasGiven && !allowed { endNoteSession() }
+    }
+
+    /// "Gelesen: „A“, „B“" for a `read_note` call; built from the output, so it works with the full and with the stored
+    /// form. `nil` while there is no output, for an error and for other calls.
+    func activityText(_ call: ToolCall, output: String?) -> String? {
+        guard call.name == "read_note", let output else { return nil }
+        let titles = AppTools.readNoteTitles(in: output)
+        guard !titles.isEmpty else { return nil }
+        let quoted = titles.map { String(localized: "„\($0)“") }.joined(separator: ", ")
+        return String(localized: "Gelesen: \(quoted)")
+    }
+
+    private func applyNoteSessionEnd() {
+        guard pendingNoteSessionEnd, let conversation, !conversation.isBusy else { return }
+        conversation.reduceToStoredForm()
+        pendingNoteSessionEnd = false
+    }
+
     private func persist() {
         guard let conversation else { return }
-        store.save(conversation.history, actionTimes: actionTimes, for: key, now: now())
+        applyNoteSessionEnd()
+        // Only the stored form: note text read in this session must not survive in the saved chat.
+        store.save(conversation.storableHistory, actionTimes: actionTimes, for: key, now: now())
         store.saveSpokenMarks(spokenMarks, for: key)
     }
 
@@ -394,11 +501,26 @@ final class AssistantModel {
         dauert ein neuer Termin eine Stunde.
         Fragt der Nutzer nach einem bestimmten Termin oder einer bestimmten Aufgabe, nutze search, statt mit list_events \
         Zeiträume zu raten.
+        search findet auch Notizen und Einkaufsartikel. Von Notizen siehst du Titel und einen kurzen Ausschnitt. Gib \
+        Notiztext nicht wörtlich wieder, sondern nenne Titel und Datum, außer der Nutzer bittet ausdrücklich um den \
+        Wortlaut. Meldet search notesLocked, sag dem Nutzer, dass er „Notizen mit ChatGPT“ unter Einstellungen › KI \
+        einschalten kann. github_online setzt du nur, wenn es um Issues geht, die nicht in den Aufgaben stehen, oder \
+        wenn die lokale Suche nichts ergibt.
+        \(noteInstructions())
         Einkaufsartikel stehen nicht in list_tasks: Die Einkaufsliste liest du mit list_shopping und änderst sie mit \
         update_shopping (hinzufügen, abhaken). Lege Einkaufsartikel nie über create_task an.
         \(gitHubInstructions())
         \(onTurnFinished == nil ? "" : voiceModeText())
         \(contextText())
+        """
+    }
+
+    /// How to read notes; only while the consent is on and the context has notes.
+    private func noteInstructions() -> String {
+        guard tools.offersNotes else { return "" }
+        return """
+        Reicht der Ausschnitt eines Notiztreffers nicht, lies die Notiz mit read_note. Lies nur Notizen, die für die \
+        Bitte nötig sind.
         """
     }
 
@@ -411,7 +533,11 @@ final class AssistantModel {
         ausdrücklich. Will der Nutzer das Issue ohne Project anlegen, übergibst du project_ids als leere Liste []; es \
         erscheint dann nicht in seinen Aufgaben, und du sagst ihm das mit Nummer und Link. list_assignees rufst du nur \
         auf, wenn der Nutzer das Issue jemandem zuweisen will. Passt ein genannter Name zu keinem oder zu mehreren \
-        Logins, frag nach, statt zu raten.
+        Logins, frag nach, statt zu raten. Um die Zuständigkeit eines bestehenden Issues zu ändern, nutze assign_task. \
+        Lies vorher mit get_task, wer zugewiesen ist, und mit list_assignees, wer zuweisbar ist. Entfernst du den \
+        Nutzer selbst, gibt er das Issue ab; sag ihm danach Nummer und Link. Auch ein offenes Issue, das search mit \
+        github_online gefunden hat und das nicht in den Aufgaben steht, kannst du mit assign_task zuweisen, etwa wenn \
+        der Nutzer es übernehmen will; die id aus dem Suchergebnis gilt dafür bis zur nächsten GitHub-Suche.
         """
         if case .task(let id) = context, id.source == .github, let reference = issueReference(id) {
             text += " Naheliegendes Ziel für neue Issues: \(reference.repository)."
@@ -450,6 +576,12 @@ final class AssistantModel {
         let title: String
         /// "Vorher → Nachher" or what will happen.
         let change: String
+        /// Shown in red below `change`: what the action costs (a hand-over deletes blocks).
+        var warning: String? = nil
+        /// Replaces "Bestätigen" on the button ("Abgeben").
+        var confirmTitle: String? = nil
+        /// A red confirm button, for an action that cannot be undone by the user.
+        var isDestructive = false
     }
 
     /// Text of an action card (mockup e): what the change is about and how it changes it. `language` is the app
@@ -463,7 +595,8 @@ final class AssistantModel {
     /// `spoken`: the card is read aloud; texts then avoid symbols that speech drops (the screen keeps them).
     /// The texts come from `ActionCardDescriber`, which the thoughts note's suggestions use as well.
     func describe(_ call: ToolCall, language: VoiceLanguage = .app, spoken: Bool = false) -> ActionCard {
-        ActionCardDescriber(planning: planning, gitHubDirectory: gitHubDirectory, shoppingItemName: shoppingItemName)
+        ActionCardDescriber(planning: planning, gitHubDirectory: gitHubDirectory, shoppingItemName: shoppingItemName,
+                            foundIssue: { [tools] in tools.foundIssues[$0] })
             .describe(call, language: language, spoken: spoken)
     }
 }

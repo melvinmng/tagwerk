@@ -133,14 +133,14 @@ enum AuditAllowlist {
 
         Entry(auditType: .dynamicType, labels: [
             "Abbrechen", "Verwerfen", "Die Kategorien kommen aus deiner Einkaufsliste\\.", "Das Rezept wird als Notiz im Ordner „Rezepte“ gespeichert\\. .*",
-            "\\d\\. .*", "Vorlesen", "Eiweiß-Ziel", "(?s)Sendet auf dein Tippen die Namen .*", "Rezepte mit ChatGPT lesen", "ChatGPT",
+            "\\d\\. .*", "Vorlesen", "Eiweiß-Ziel", "(?s)Sendet auf dein Tippen die Namen .*", "Rezepte mit ChatGPT lesen und übersetzen", "ChatGPT",
             "(?s)Notizen liegen nur auf diesem iPhone\\..*",
         ], screens: recipeScreens, reason: "Navigation bar buttons, form rows, footers and steps use text styles; the audit still reports a partial lack of "
             + "support. In the AX5 run of the same screens (`AccessibilityAuditRecipesLargeTextUITests`, screenshots checked) every one of these texts "
             + "grows and wraps."),
         Entry(auditType: .textClipped, labels: [
             "Rezept mit ChatGPT anlegen", "Neues Rezept", "Demo Linsensuppe", "Andere Notiz wählen …", "Füge die Zutatenliste oder das ganze Rezept ein\\. .*",
-            "(?s)(Um ein Rezept zu lesen|Gesendet wird|Nicht gesendet werden|Eine Notiz mit den Abschnitten|Die gewählte Liste erscheint|Portionen: \\d+\\nZutaten).*",
+            "(?s)(Um ein Rezept zu lesen|Gesendet wird|Nicht gesendet werden|Nur auf dein Tippen|Eine Notiz mit den Abschnitten|Die gewählte Liste erscheint|Portionen: \\d+\\nZutaten).*",
             "Du kannst das in den Einstellungen unter „Einkaufsliste“ widerrufen\\.", "Mikrofon in Gesprächen",
         ], screens: recipeScreens + recipeScreensLargeText, reason: "The audit warns that these texts \"may be clipped at larger Dynamic Type sizes\". "
             + "Checked on the AX5 screenshots of these screens: headings, buttons, notes and footers wrap completely, some run past the lower edge "
