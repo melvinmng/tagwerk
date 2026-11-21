@@ -790,17 +790,34 @@ final class AssistantModel {
     /// Replaceable so the tests and the strands can name the functions that have an editor.
     var adjustableTools = AssistantModel.adjustableToolNames
 
-    /// True for an open card of a function with an editor.
+    /// True for an open card of a function with an editor that can open for this call (an `assign_task` for an issue the
+    /// app does not know any more has none).
     func canAdjust(_ call: ToolCall) -> Bool {
         adjustableTools.contains(call.name) && conversation?.pendingActions.contains { $0.id == call.id } == true
+            && makeEditor(for: call) != nil
     }
 
     /// The editor for an open card; `nil` for a function without one and for a call that is no longer open. The editor
     /// starts from the current call, so an adjusted card opens with the user's values.
     func proposalEditor(for call: ToolCall) -> (any ProposalEditor)? {
-        guard let current = conversation?.pendingActions.first(where: { $0.id == call.id }), canAdjust(current) else { return nil }
-        let context = ProposalEditorContext(calendar: planning.calendar, now: now, gitHubDirectory: gitHubDirectory,
-                                            writableCalendars: { [planning] in planning.writableCalendars })
+        guard adjustableTools.contains(call.name),
+              let current = conversation?.pendingActions.first(where: { $0.id == call.id }) else { return nil }
+        return makeEditor(for: current)
+    }
+
+    private func makeEditor(for call: ToolCall) -> (any ProposalEditor)? {
+        let current = conversation?.pendingActions.first { $0.id == call.id } ?? call
+        let tools = tools
+        let planning = planning
+        let context = ProposalEditorContext(
+            calendar: planning.calendar, now: now, gitHubDirectory: gitHubDirectory,
+            writableCalendars: { planning.writableCalendars }, shoppingItemName: shoppingItemName,
+            assignment: { key in
+                if let task = planning.taskList.items.first(where: { $0.id.key == key }), task.id.source == .github {
+                    return ProposalAssignment(repository: task.container.id, current: task.assignees ?? [])
+                }
+                return tools.foundIssues[key].map { ProposalAssignment(repository: $0.repository, current: $0.assignees) }
+            })
         return ProposalEditors.make(for: current, context: context)
     }
 

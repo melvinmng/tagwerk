@@ -375,4 +375,65 @@ struct AssistantAdjustCardTests {
         // The function's own check applies to the adjusted values: nothing is written for an event that is not there.
         #expect(ActionCardView.error(in: try output(of: "c1", in: model)) != nil)
     }
+
+    // MARK: Hand-over (task B3)
+
+    private func assignedIssue(_ number: Int, assignees: [String]) -> TaskItem {
+        TaskItem(id: TaskID(source: .github, rawValue: "ISSUE_\(number)"), title: "Export \(number)", notes: nil, due: nil,
+                 priority: nil, estimateMinutes: nil, isCompleted: false,
+                 container: TaskContainer(id: "beispiel/app", name: "beispiel/app", colorHex: nil),
+                 url: URL(string: "https://github.com/beispiel/app/issues/\(number)"), version: "1",
+                 editableFields: [.title, .notes, .due, .priority, .assignees], assignees: assignees)
+    }
+
+    @Test func assignEditor_warningFollowsNewPeople() async throws {
+        github.tasks = [assignedIssue(212, assignees: ["octo"])]
+        let (model, _) = await make()
+        model.adjustableTools = AssistantModel.adjustableToolNames
+        model.open(context: .tasks)
+        await pendingCards(model, [("c1", "assign_task", Data(#"{"id":"github:ISSUE_212","add":["lea-m"],"remove":[]}"#.utf8)),
+                                   ("c2", "create_task", issueArguments("Zweite"))])
+        let call = try #require(model.conversation?.pendingActions.first { $0.id == "c1" })
+        #expect(model.describe(call).canAdjust)
+        #expect(model.describe(call).warning == nil)
+        let editor = try #require(model.proposalEditor(for: call) as? AssignProposalEditor)
+        await editor.load()
+        #expect(editor.selection == ["octo", "lea-m"])
+
+        // The user takes themselves off: the card becomes a hand-over with its warning and its own button.
+        editor.choose(["lea-m"])
+        let adjusted = try #require(model.adjust(call, arguments: editor.arguments()))
+
+        let card = model.describe(adjusted)
+        #expect(card.mark == .byUser)
+        #expect(card.warning?.contains("#212") == true)
+        #expect(card.confirmTitle == "Abgeben")
+        #expect(card.isDestructive)
+    }
+
+    @Test func assign_staysSingleConfirmation() async throws {
+        github.tasks = [assignedIssue(212, assignees: ["octo"])]
+        let (model, _) = await make()
+        model.adjustableTools = AssistantModel.adjustableToolNames
+        model.open(context: .tasks)
+        await pendingCards(model, [("c1", "assign_task", Data(#"{"id":"github:ISSUE_212","add":["lea-m"],"remove":[]}"#.utf8))])
+        let call = try #require(model.conversation?.pendingActions.first)
+        let editor = try #require(model.proposalEditor(for: call) as? AssignProposalEditor)
+        editor.choose(["octo"])
+        let adjusted = try #require(model.adjust(call, arguments: editor.arguments()))
+
+        #expect(model.batchConfirmable.isEmpty)
+        #expect(AssistantModel.needsSingleConfirmation(adjusted, me: "octo"))
+    }
+
+    @Test func assign_forAnUnknownIssue_hasNoAdjustButton() async throws {
+        let (model, _) = await make()
+        model.adjustableTools = AssistantModel.adjustableToolNames
+        model.open(context: .tasks)
+        await pendingCards(model, [("c1", "assign_task", Data(#"{"id":"github:GONE","add":["lea-m"],"remove":[]}"#.utf8))])
+        let call = try #require(model.conversation?.pendingActions.first)
+
+        #expect(!model.describe(call).canAdjust)
+        #expect(model.proposalEditor(for: call) == nil)
+    }
 }

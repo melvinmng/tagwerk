@@ -142,8 +142,10 @@ struct TaskProposalEditorTests {
 
     @Test func registry_coversExactlyTheFunctionsWithAnEditor() throws {
         #expect(ProposalEditors.toolNames == AssistantModel.adjustableToolNames)
+        var full = context()
+        full.assignment = { _ in ProposalAssignment(repository: "beispiel/app", current: ["octo"]) }
         for name in ProposalEditors.toolNames {
-            #expect(ProposalEditors.make(for: call(name, #"{"title":"A","id":"t1","day":"2026-11-27"}"#), context: context()) != nil)
+            #expect(ProposalEditors.make(for: call(name, #"{"title":"A","id":"t1","day":"2026-11-27","body":"x"}"#), context: full) != nil, "\(name)")
         }
         #expect(ProposalEditors.make(for: call("complete_task", #"{"id":"t1"}"#), context: context()) == nil)
         #expect(ProposalEditors.make(for: call("delete_event", #"{"event_id":"e1"}"#), context: context()) == nil)

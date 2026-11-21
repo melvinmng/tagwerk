@@ -12,6 +12,16 @@ struct ProposalEditorContext {
     var gitHubDirectory: () -> (any GitHubDirectory)?
     /// The event calendars Tagwerk can write to, for the calendar field of an event.
     var writableCalendars: () -> [ListInfo] = { [] }
+    /// The name of a shopping item by its id, for the items an `update_shopping` call checks off.
+    var shoppingItemName: (String) -> String? = { _ in nil }
+    /// Repository and current people of the issue an `assign_task` call is about; `nil` when the issue is not known any more.
+    var assignment: (String) -> ProposalAssignment? = { _ in nil }
+}
+
+/// The issue of an `assign_task` call as far as the editor needs it.
+struct ProposalAssignment: Equatable {
+    var repository: String
+    var current: [String]
 }
 
 /// The fields of one function's proposal, for the sheet "Vorschlag anpassen". An editor reads the arguments of a call,
@@ -44,7 +54,8 @@ protocol ProposalEditor: AnyObject {
 @MainActor
 enum ProposalEditors {
     /// One entry per editor type; later strands add theirs here.
-    static let editorTypes: [any ProposalEditor.Type] = [TaskProposalEditor.self, EventProposalEditor.self, DayHoursProposalEditor.self]
+    static let editorTypes: [any ProposalEditor.Type] = [TaskProposalEditor.self, EventProposalEditor.self, DayHoursProposalEditor.self,
+                                                                ShoppingProposalEditor.self, CommentProposalEditor.self, AssignProposalEditor.self]
 
     /// The functions whose cards offer "Anpassen".
     static var toolNames: Set<String> { editorTypes.reduce(into: Set<String>()) { $0.formUnion($1.toolNames) } }

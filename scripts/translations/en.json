@@ -2326,5 +2326,6 @@
   "Unverändert": "Unchanged",
   "Vorschlag anpassen": "Adjust proposal",
   "Ziel und Personen lassen sich nur ändern, solange GitHub verbunden ist.": "The target and people can only be changed while GitHub is connected.",
-  "Zurück zum Vorschlag der KI": "Back to the AI proposal"
+  "Zurück zum Vorschlag der KI": "Back to the AI proposal",
+  "Wer nach der Änderung zugewiesen ist. Nur Personen, die in diesem Repository zuweisbar sind, stehen zur Auswahl.": "Who is assigned after the change. Only people who can be assigned in this repository can be chosen."
 }

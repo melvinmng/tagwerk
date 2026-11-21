@@ -19816,6 +19816,16 @@
         }
       }
     },
+    "Wer nach der Änderung zugewiesen ist. Nur Personen, die in diesem Repository zuweisbar sind, stehen zur Auswahl.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Who is assigned after the change. Only people who can be assigned in this repository can be chosen."
+          }
+        }
+      }
+    },
     "Werktags": {
       "localizations": {
         "en": {
