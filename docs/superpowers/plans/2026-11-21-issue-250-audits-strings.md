@@ -245,7 +245,7 @@ xcodebuild test-without-building \
 2. Dasselbe unter Last. Bevorzugt, während in den anderen Arbeitskopien Testläufe laufen (jede Kopie hat eigenen Simulator und eigenes DerivedData). Sonst mit selbst endenden Lastprozessen, die nach 40 Minuten von allein aufhören und nicht beendet werden müssen:
 
 ```zsh
-for i in {1..8}; do perl -e 'alarm 2400; 1 while 1' & done
+# entfällt (Entscheidung 21.11.2026): keine künstliche Last, keine Endlosschleifen
 scripts/stress-audits.sh 20
 ```
 
