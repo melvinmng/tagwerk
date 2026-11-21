@@ -12,6 +12,12 @@ enum DayEntry: Identifiable, Equatable {
         case .lunch: "lunch"
         }
     }
+
+    /// The calendar event of an event entry; `nil` for the lunch break.
+    var calendarEvent: CalendarEvent? {
+        if case .event(let event, _) = self { return event }
+        return nil
+    }
 }
 
 /// A finished change in the canvas, handed to the screen to write (and to ask for a series span first).
@@ -45,10 +51,15 @@ struct TimelineCanvas: View {
     /// Narrowest a column of overlapping entries may get before the group becomes one block (about six characters of
     /// the title font; grows with the text size, BF1c).
     @ScaledMetric(relativeTo: .caption) private var minimumColumnWidth: CGFloat = 44
+    /// Below this column width the focus button shows only its symbol and the text of a cut block its short form.
+    private static let narrowColumnWidth: CGFloat = 150
 
     @Environment(AppEnvironment.self) private var environment
     /// Set in the preview of a neighbour page: the marks of its events.
     @Environment(\.dayPageExtras) private var pageExtras
+    @Environment(\.isPagePreview) private var isPreview
+    /// Opens the sheet "Fahrzeit" of an event; set by the day view (PL11b).
+    @Environment(\.editTravel) private var editTravel
     @State private var openSuggestion: PlanSuggestion?
     @State private var editingTask: TaskItem?
     @State private var selectedID: String?
@@ -75,9 +86,12 @@ struct TimelineCanvas: View {
         GeometryReader { geometry in
             let width = geometry.size.width - labelWidth - 6
             let ranges = entries.map(displayRange)
-            let columns = TagwerkCore.columns(for: ranges)
+            // The columns also reserve the room of the travel attachments, so a trip that starts before the previous event
+            // ends sits beside it instead of behind it (PL10b).
+            let layout = layoutRanges(ranges)
+            let columns = TagwerkCore.columns(for: layout)
             // Overlapping entries whose columns would be too narrow become one block each (BF1c); never while choosing "Frei".
-            let groups = collapsedGroups(ranges: ranges, columns: columns, width: width)
+            let groups = collapsedGroups(ranges: ranges, layout: layout, columns: columns, width: width)
             let collapsed = Set(groups.flatMap { $0 })
             ZStack(alignment: .topLeading) {
                 hourLines(shown)
@@ -86,16 +100,34 @@ struct TimelineCanvas: View {
                 if let line = snapLine {
                     snapIndicator(minutes: line, shown: shown, width: geometry.size.width)
                 }
-                // Travel time lies behind the entries, in the column of the event it leads to (#168).
+                // The travel time is an attachment to its event, flush above it (the way home: below), in the column of the
+                // event (#168, PL8b).
                 ForEach(plan.travel) { segment in
                     if let index = entries.firstIndex(where: { $0.id == segment.eventID }) {
                         // Behind a collapsed group the travel time takes the full width.
                         let isCollapsed = collapsed.contains(index)
-                        let columnWidth = isCollapsed ? width : width / CGFloat(columnCount(index: index, ranges: ranges, columns: columns))
-                        TravelSegmentView(segment: segment, transport: model.settings.travelTransport)
-                            .frame(width: columnWidth - 2, height: max(14, height(segment.range.count)))
-                            .offset(x: labelWidth + 6 + CGFloat(isCollapsed ? 0 : columns[index]) * columnWidth, y: y(segment.range.lowerBound, shown))
-                            .allowsHitTesting(false)
+                        let columnWidth = isCollapsed ? width : width / CGFloat(columnCount(index: index, ranges: layout, columns: columns))
+                        let attachmentHeight = max(14, height(segment.range.count))
+                        // The tappable area is at least 28 pt high and grows away from the event, never over it.
+                        let hitHeight = max(28, attachmentHeight)
+                        let isReturn = segment.direction == .returnHome
+                        let top = isReturn ? segment.range.lowerBound : segment.range.upperBound
+                        let event = entries[index].calendarEvent
+                        TravelSegmentView(segment: segment, transport: segment.transport ?? model.settings.travelTransport,
+                                          color: EntryStyle(entry: entries[index], model: model, extras: pageExtras).color,
+                                          departure: clock(segment.range.lowerBound), visualHeight: attachmentHeight,
+                                          hitHeight: hitHeight,
+                                          menu: editTravel.flatMap { edit in
+                                              event.map { event in TravelMenuContext(event: event, model: model) { edit(event) } }
+                                          })
+                            .frame(width: columnWidth - 2, height: hitHeight)
+                            .offset(x: labelWidth + 6 + CGFloat(isCollapsed ? 0 : columns[index]) * columnWidth,
+                                    y: isReturn ? y(top, shown) : y(top, shown) - hitHeight)
+                            // Above the entries: a neighbour with wider columns must not cover the capsule. A selected or moved
+                            // entry (zIndex 1 and 2) stays above it.
+                            .zIndex(0.5)
+                            // A selection of events ("Frei") only takes taps on entries.
+                            .allowsHitTesting(selectingIDs == nil && !isPreview)
                     }
                 }
                 ForEach(groups, id: \.self) { group in
@@ -103,9 +135,9 @@ struct TimelineCanvas: View {
                 }
                 ForEach(Array(entries.enumerated()).filter { !collapsed.contains($0.offset) }, id: \.element.id) { index, entry in
                     let range = liveRange(entry)
-                    let count = columnCount(index: index, ranges: ranges, columns: columns)
+                    let count = columnCount(index: index, ranges: layout, columns: columns)
                     let columnWidth = width / CGFloat(count)
-                    entryView(entry, range: range)
+                    entryView(entry, range: range, columnWidth: columnWidth - 2)
                         .frame(width: columnWidth - 2, height: max(18, height(range.count)))
                         .offset(x: labelWidth + 6 + CGFloat(columns[index]) * columnWidth, y: y(range.lowerBound, shown))
                         .zIndex(session?.id == entry.id ? 2 : (selectedID == entry.id ? 1 : 0))
@@ -212,14 +244,25 @@ struct TimelineCanvas: View {
         shownRange.lowerBound + Int((y - Self.lineInset) / Self.hourHeight * 60)
     }
 
+    /// The ranges the columns are computed from: each entry widened by its travel attachment (before it for the way
+    /// there, after it for the way home). Without travel time they are the plain ranges.
+    private func layoutRanges(_ ranges: [Range<Int>]) -> [Range<Int>] {
+        var result = ranges
+        for segment in plan.travel {
+            guard let index = entries.firstIndex(where: { $0.id == segment.eventID }) else { continue }
+            result[index] = min(result[index].lowerBound, segment.range.lowerBound)..<max(result[index].upperBound, segment.range.upperBound)
+        }
+        return result
+    }
+
     // MARK: Collapsed groups (BF1c)
 
     /// The groups of entries (indices) that become one block: they overlap, need more than one column and a column would be
     /// narrower than `minimumColumnWidth`. A group is never made of one entry.
-    private func collapsedGroups(ranges: [Range<Int>], columns: [Int], width: CGFloat) -> [[Int]] {
+    private func collapsedGroups(ranges: [Range<Int>], layout: [Range<Int>], columns: [Int], width: CGFloat) -> [[Int]] {
         guard selectingIDs == nil else { return [] }
         return TagwerkCore.overlapGroups(for: ranges).filter { group in
-            let columnCount = group.map { columnCount(index: $0, ranges: ranges, columns: columns) }.max() ?? 1
+            let columnCount = group.map { columnCount(index: $0, ranges: layout, columns: columns) }.max() ?? 1
             return group.count > 1 && GridCollapse.collapses(columnCount: columnCount, availableWidth: Double(width),
                                                             minimumColumnWidth: Double(minimumColumnWidth))
         }
@@ -255,8 +298,8 @@ struct TimelineCanvas: View {
     // MARK: Entries
 
     /// An entry; the content is rebuilt every full minute, so a running entry changes its state on time (PL2b).
-    private func entryView(_ entry: DayEntry, range: Range<Int>) -> some View {
-        TimelineView(.everyMinute) { _ in entryContent(entry, range: range) }
+    private func entryView(_ entry: DayEntry, range: Range<Int>, columnWidth: CGFloat) -> some View {
+        TimelineView(.everyMinute) { _ in entryContent(entry, range: range, columnWidth: columnWidth) }
     }
 
     /// Minutes left when the entry is running now (a break and calendar events, also time blocks; never all-day).
@@ -268,8 +311,15 @@ struct TimelineCanvas: View {
     }
 
     @ViewBuilder
-    private func entryContent(_ entry: DayEntry, range: Range<Int>) -> some View {
+    private func entryContent(_ entry: DayEntry, range: Range<Int>, columnWidth: CGFloat) -> some View {
         let style = EntryStyle(entry: entry, model: model, extras: pageExtras)
+        // A block that ended early says so in its title and its time line (FO15b).
+        let trimmed = entry.calendarEvent.flatMap { (pageExtras ?? model.currentExtras).trimmedBlocks[$0.id] }
+        // The button of the focus (FO4b): on the running block or the next one, not while choosing "Frei" or in a preview.
+        let focusEvent = entry.calendarEvent.flatMap { event in
+            selectingIDs == nil && !isPreview && model.focusBlockID(in: plan) == event.id ? event : nil
+        }
+        let narrow = columnWidth < Self.narrowColumnWidth
         let isSelected = selectedID == entry.id
         let remaining = runningRemaining(entry)
         let isPicked = { if case .event(let event, _) = entry { selectingIDs?.contains(event.id) == true } else { false } }()
@@ -277,13 +327,16 @@ struct TimelineCanvas: View {
             VStack(alignment: .leading, spacing: 1) {
                 HStack(spacing: 4) {
                     if isPicked { Image(systemName: "checkmark.circle.fill").foregroundStyle(Color.accentColor) }
-                    Text(style.title).font(.caption.weight(.semibold)).lineLimit(2)
+                    Text((trimmed != nil ? "✓ " : "") + style.title).font(.caption.weight(.semibold)).lineLimit(2)
                 }
-                Text((remaining.map { NowText.runningDetail(remainingMinutes: $0) } ?? timeText(range)) + style.suffix)
+                Text((trimmed.map { FocusTimerText.trimDetail($0, short: narrow) }
+                    ?? remaining.map { NowText.runningDetail(remainingMinutes: $0) } ?? timeText(range)) + style.suffix)
                     .font(.caption2).foregroundStyle(.gridTimeText).lineLimit(1)
-                    .accessibilityLabel((remaining.map { NowText.runningAccessibility(remainingMinutes: $0) } ?? timeText(range))
-                        + style.suffix)
+                    .accessibilityLabel((trimmed.map { FocusTimerText.trimDetail($0) }
+                        ?? remaining.map { NowText.runningAccessibility(remainingMinutes: $0) } ?? timeText(range)) + style.suffix)
             }
+            // Room for the focus button at the right edge.
+            .padding(.trailing, focusEvent == nil ? 0 : (narrow ? 34 : 62))
             .padding(6)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             .background(style.color.opacity(style.isFree ? 0.08 : 0.24), in: RoundedRectangle(cornerRadius: 7))
@@ -314,6 +367,12 @@ struct TimelineCanvas: View {
                     grip(entry, mode: .end, color: style.color, alignment: .leading, label: String(localized: "Ende ändern"))
                         .offset(y: 8)
                 }
+            }
+        }
+        // A sibling of the card, not a part of it: the card is one element for VoiceOver and takes the tap and the hold.
+        .overlay(alignment: .topTrailing) {
+            if let focusEvent {
+                FocusPlanButton(event: focusEvent, model: model, iconOnly: narrow)
             }
         }
     }

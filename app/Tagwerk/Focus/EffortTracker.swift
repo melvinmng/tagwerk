@@ -97,6 +97,26 @@ final class EffortTracker {
         return restored
     }
 
+    // MARK: Blocks that ended early (FO15b)
+
+    /// The cut blocks among `events`: a sample names the event and its stored new end still equals the event's end. A block
+    /// whose end somebody changed afterwards is no longer marked.
+    func trimmedBlocks(among events: [CalendarEvent]) -> [String: TrimmedBlock] {
+        guard let first = events.map(\.start).min(), let last = events.map(\.end).max() else { return [:] }
+        // A block is cut when its task is completed, which lies in or right after the block.
+        let window = DateInterval(start: first.addingTimeInterval(-86_400), end: last.addingTimeInterval(86_400))
+        let byID = Dictionary(events.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
+        var result: [String: TrimmedBlock] = [:]
+        for sample in store.samples(in: window) {
+            guard let id = sample.trimmedEventID, let event = byID[id], let newEnd = sample.trimmedNewEnd, event.end == newEnd,
+                  let originalEnd = sample.trimmedOriginalEnd, originalEnd > event.end else { continue }
+            let planned = Int(originalEnd.timeIntervalSince(event.start) / 60)
+            let actual = Int(event.end.timeIntervalSince(event.start) / 60)
+            result[id] = TrimmedBlock(plannedMinutes: planned, actualMinutes: actual)
+        }
+        return result
+    }
+
     // MARK: Statistics
 
     /// The samples of the last eight weeks up to `date`.

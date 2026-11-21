@@ -38,7 +38,7 @@ enum TimelineRow: Identifiable, Equatable {
         case .event(let event), .block(let event, _): event.id
         case .lunch: "lunch"
         case .gap(let range): "gap-\(range.lowerBound)"
-        case .travel(let segment): "travel-\(segment.eventID)"
+        case .travel(let segment): "travel-\(segment.id)"
         }
     }
 
@@ -57,6 +57,8 @@ struct DayPlan: Identifiable, Equatable {
     var id: PlanDay { day }
     let day: PlanDay
     let capacity: DayCapacity
+    /// What `capacity` was computed from, to answer "what if" questions with `freedMinutes`.
+    let capacityInput: CapacityInput
     let deadlines: [ImportantDeadline]
     /// Events of the day that are not linked to a task.
     let events: [CalendarEvent]
@@ -212,6 +214,10 @@ final class PlanningModel {
     private(set) var deadlineSuggestions: [CalendarEvent] = []
     /// Event ID → the deadline it prepares for, for the shown range.
     private var preparationTargets: [String: PreparationTarget] = [:]
+    /// Time blocks of the shown range that were cut when their task was completed, by event ID (FO15b).
+    private(set) var trimmedBlocks: [String: TrimmedBlock] = [:]
+    /// Finds the cut blocks among events; set by the app environment (the effort tracker knows the samples).
+    var trimmedBlockLookup: (@MainActor ([CalendarEvent]) -> [String: TrimmedBlock])?
     /// Called after marks change, so notifications and the widget follow.
     var onDeadlinesChanged: (() -> Void)?
 
@@ -320,6 +326,7 @@ final class PlanningModel {
         let deadlineIDs = deadlineIDs(in: events, marked: marked)
         deadlineEventIDs = deadlineIDs
         preparationTargets = deadlineMarks.preparationTargets(for: events)
+        trimmedBlocks = trimmedBlockLookup?(events) ?? [:]
         let resolved = resolveLinks(events: events, tasks: open, manual: blocks.links.manualLinks())
         resolvedLinks = Dictionary(resolved.map { ($0.eventID, $0) }, uniquingKeysWith: { first, _ in first })
         recurringTaskIDs = recurringIDs
@@ -422,7 +429,7 @@ final class PlanningModel {
     /// event IDs and preparation targets. Changes nothing that is shown.
     private func dayPlansAndState(in range: ClosedRange<PlanDay>, withDeadlines: Bool = true) async
         -> (plans: [DayPlan], mergeSuggestions: [MergeSuggestion], deadlineEventIDs: Set<String>,
-            preparationTargets: [String: PreparationTarget]) {
+            preparationTargets: [String: PreparationTarget], trimmedBlocks: [String: TrimmedBlock]) {
         let open = taskList.items.filter { !$0.isCompleted }
         let series = await recurringSeries(open: open)
         let recurringIDs = Set(series.map(\.id))
@@ -452,14 +459,14 @@ final class PlanningModel {
                                   deadlineIDs: deadlineIDs))
             day = day.adding(days: 1, calendar: calendar)
         }
-        return (result, merges, deadlineIDs, deadlineMarks.preparationTargets(for: events))
+        return (result, merges, deadlineIDs, deadlineMarks.preparationTargets(for: events), trimmedBlockLookup?(events) ?? [:])
     }
 
     /// The state of the shown day page besides `days`.
     var currentExtras: DayPageExtras {
         DayPageExtras(upcomingDeadlines: upcomingDeadlines, deadlineSuggestions: deadlineSuggestions, preparation: preparation,
                       mergeSuggestions: mergeSuggestions, deadlineEventIDs: deadlineEventIDs,
-                      preparationTargets: preparationTargets, suggestionBatches: suggestionBatches)
+                      preparationTargets: preparationTargets, suggestionBatches: suggestionBatches, trimmedBlocks: trimmedBlocks)
     }
 
     /// The plan of one day with everything its page shows, computed like `reload()` does for the shown day but
@@ -478,7 +485,7 @@ final class PlanningModel {
         let extras = DayPageExtras(upcomingDeadlines: upcoming.deadlines, deadlineSuggestions: upcoming.suggestions,
                                    preparation: upcoming.preparation, mergeSuggestions: state.mergeSuggestions,
                                    deadlineEventIDs: state.deadlineEventIDs, preparationTargets: state.preparationTargets,
-                                   suggestionBatches: batches)
+                                   suggestionBatches: batches, trimmedBlocks: state.trimmedBlocks)
         return (plan, extras)
     }
 
@@ -613,6 +620,7 @@ final class PlanningModel {
         deadlineEventIDs = extras.deadlineEventIDs
         preparationTargets = extras.preparationTargets
         suggestionBatches = extras.suggestionBatches
+        trimmedBlocks = extras.trimmedBlocks
         return true
     }
 
@@ -760,6 +768,19 @@ final class PlanningModel {
 
     func linkedTask(eventID: String) -> TaskItem? {
         resolvedLinks[eventID].flatMap { link in taskList.items.first { $0.id == link.taskID } }
+    }
+
+    /// The time block of `plan` that carries the focus button now (FO4b): the running one with a linked task, else the
+    /// next that starts after now; `nil` on another day than today.
+    func focusBlockID(in plan: DayPlan) -> String? {
+        let candidates = plan.blocks.filter { plan.links[$0.id] != nil && !$0.isAllDay }
+        let dayStart = plan.day.startDate(in: calendar)
+        let ranges = candidates.map { block -> Range<Int> in
+            let start = max(0, Int(block.start.timeIntervalSince(dayStart) / 60))
+            return start..<max(start + 1, Int(block.end.timeIntervalSince(dayStart) / 60))
+        }
+        let nowMinutes = NowMarker.minutes(now: now(), day: plan.day, calendar: calendar)
+        return NowMarker.focusBlockIndex(blockRanges: ranges, nowMinutes: nowMinutes).map { candidates[$0].id }
     }
 
     /// "Nur dieser Tag" (`forAll == false`) or "Alle" from this day on.
@@ -963,9 +984,20 @@ final class PlanningModel {
         await reload()
     }
 
-    /// Busy minutes the selection would free on its day (shown before "Auf Frei setzen").
-    func busyMinutes(of events: [CalendarEvent]) -> Int {
-        events.filter { $0.isBusy && !$0.isAllDay }.reduce(0) { $0 + Int($1.end.timeIntervalSince($1.start) / 60) }
+    /// Time the selection gives back to the capacity of its day (shown before "Auf Frei setzen"). Overlaps, events
+    /// outside the working hours and events inside the lunch break free nothing; the trips of freed events go too, so
+    /// the text matches the card afterwards.
+    func freedMinutes(of events: [CalendarEvent], in plan: DayPlan) -> Int {
+        let selected = busyIntervals(events: events, on: plan.day, calendar: calendar, excluding: Set(plan.links.keys))
+        // A free event has no trip: the trips of the day are worked out again without the selected events.
+        let chosen = Set(events.map(\.id))
+        let remaining = (plan.events + plan.blocks).map { event -> CalendarEvent in
+            var copy = event
+            if chosen.contains(event.id) { copy.isBusy = false }
+            return copy
+        }.sorted { $0.start < $1.start }
+        let travel = travelSegments(for: plan.day, events: remaining).map(\.range)
+        return TagwerkCore.freedMinutes(plan.capacityInput, removing: selected, travelIntervals: travel)
     }
 
     /// Stored merge rules ("künftig immer"): title, calendar name and whether they merge or keep apart.
@@ -1847,73 +1879,42 @@ final class PlanningModel {
             }, calendar: calendar)
             : []
 
-        var planned = linkedEvents.reduce(0) { total, event in
-            let from = max(event.start, start), to = min(event.end, end)
-            return total + max(0, Int(to.timeIntervalSince(from) / 60))
+        // Time blocks go to the capacity as intervals: overlapping blocks count once and blocks outside the working
+        // hours use no free time. Tasks without a block count with their effort.
+        let blockIntervals = linkedEvents.compactMap { event -> Range<Int>? in
+            let from = max(0, minutes(event.start, from: start)), to = min(minutes(end, from: start), minutes(event.end, from: start))
+            return from < to ? from..<to : nil
         }
+        var untimedPlanned = 0
         var estimated = 0
         var counted: [String: Int] = [:]
         for task in assignedSorted + openToday where !tasksWithBlocks.contains(task.id) {
-            // Repeating tasks count once, through their recurring effort.
+            // Repeating tasks count only through their time blocks; the effort they reserve takes no time (decision KA3).
             if recurringIDs.contains(task.id) { continue }
             let minutes = task.estimateMinutes ?? settings.defaultTaskMinutes
             if task.estimateMinutes == nil { estimated += 1 }
-            planned += minutes
+            untimedPlanned += minutes
             counted[task.id.key, default: 0] += minutes
         }
         let hours = TagwerkCore.workHours(on: day, schedule: settings.weekSchedule, overrides: overrides, calendar: calendar)
         let linkedIDs = Set(links.keys).union(copiesOfLinked(dayEvents, links: links))
-        // A block for a recurring reminder is that reminder's work: its reserved effort counts only for the
-        // part the blocks of the day do not cover (otherwise the time would count twice).
-        var blockMinutesByTask: [TaskID: Int] = [:]
-        for event in linkedEvents {
-            guard let id = links[event.id] else { continue }
-            let from = max(event.start, start), to = min(event.end, end)
-            blockMinutesByTask[id, default: 0] += max(0, Int(to.timeIntervalSince(from) / 60))
-        }
-        let coveredRecurring = series.reduce(0) { total, item in
-            guard let blocked = blockMinutesByTask[item.id], let reserved = efforts.minutes(for: item.id, on: day) else { return total }
-            return total + min(reserved, blocked)
-        }
-        let recurringMinutes = max(0, efforts.reservedMinutes(on: day, series: series, calendar: calendar) - coveredRecurring)
         let travel = travelSegments(for: day, events: dayEvents)
         var input = CapacityInput(
             hours: hours,
             lunchStartMinutes: lunch(on: day)?.lowerBound ?? 0, lunchMinutes: lunch(on: day)?.count ?? 0,
             bufferMinutes: settings.bufferMinutes,
             busyIntervals: busyIntervals(events: dayEvents, on: day, calendar: calendar, excluding: linkedIDs),
-            recurringMinutes: recurringMinutes,
-            plannedMinutes: planned, estimatedCount: estimated, travelIntervals: travel.map(\.range)
+            untimedPlannedMinutes: untimedPlanned, estimatedCount: estimated, travelIntervals: travel.map(\.range),
+            blockIntervals: blockIntervals
         )
-        // For the AI, the reserved effort of recurring reminders is the load of those tasks: a block for one
-        // of them replaces its reservation instead of adding to it.
-        var aiCounted = counted
-        var reservedLoad = 0
-        for item in series {
-            let key = item.id
-            guard let reserved = efforts.minutes(for: key, on: day), reserved > 0,
-                  !occurrences(of: item.recurrence, in: day...day, calendar: calendar).isEmpty else { continue }
-            let open = max(0, reserved - (blockMinutesByTask[key] ?? 0))
-            guard open > 0 else { continue }
-            aiCounted[key.key, default: 0] += open
-            reservedLoad += open
-        }
         let planInput = PlanInputDay(
             day: day, hours: hours, lunch: lunch(on: day), events: dayEvents, linkedEventIDs: linkedIDs,
             deadlineCalendarIDs: Set(settings.deadlineCalendarIDs ?? []),
-            blocks: linkedEvents.map { minutes($0.start, from: start)..<minutes($0.end, from: start) },
-            recurringMinutes: max(0, recurringMinutes - reservedLoad), plannedMinutes: planned + reservedLoad,
-            bufferMinutes: settings.bufferMinutes, calendar: calendar, countedTaskMinutes: aiCounted,
+            blocks: blockIntervals, untimedPlannedMinutes: untimedPlanned,
+            bufferMinutes: settings.bufferMinutes, calendar: calendar, countedTaskMinutes: counted,
             deadlineEventIDs: deadlineIDs, travel: travel.map(\.range)
         )
-        if day == today {
-            let current = now()
-            input.nowMinutes = minutes(current, from: start)
-            input.remainingPlannedMinutes = planned - linkedEvents.reduce(0) { total, event in
-                let from = max(event.start, start), to = min(event.end, end, max(current, start))
-                return total + max(0, Int(to.timeIntervalSince(from) / 60))
-            }
-        }
+        if day == today { input.nowMinutes = minutes(now(), from: start) }
         let pastDue = Set(assigned.filter { task in task.due.map { PlanDay($0) < day } ?? false }.map(\.id))
         let recurring = series.compactMap { item -> RecurringItem? in
             guard !occurrences(of: item.recurrence, in: day...day, calendar: calendar).isEmpty,
@@ -1923,7 +1924,7 @@ final class PlanningModel {
         // Merging only affects the display; capacity above used every event (overlaps are unified).
         // Merged copies were removed in `markedEvents` (only after the user's answer, design §13.15 M1).
         let shown = dayEvents
-        return DayPlan(day: day, capacity: capacity(input), deadlines: deadlines.filter { $0.day == day },
+        return DayPlan(day: day, capacity: capacity(input), capacityInput: input, deadlines: deadlines.filter { $0.day == day },
                        events: shown.filter { links[$0.id] == nil }, blocks: shown.filter { links[$0.id] != nil && !$0.isAllDay },
                        assigned: assignedSorted, openToday: openToday, links: links.filter { id, _ in linkedEvents.contains { $0.id == id } },
                        isPastDue: pastDue, recurring: recurring, planInput: planInput, isPast: day < today, travel: travel)

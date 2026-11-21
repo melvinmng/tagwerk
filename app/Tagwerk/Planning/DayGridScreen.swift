@@ -517,7 +517,7 @@ struct DayGridScreen<Summary: View, Header: View>: View {
         let events = selectedEvents
         return VStack(alignment: .leading, spacing: 8) {
             Text(events.isEmpty ? "Termine antippen, um sie auszuwählen"
-                 : "\(events.count) ausgewählt · „Frei“ gibt \(CapacityText.duration(model.busyMinutes(of: events))) frei")
+                 : "\(events.count) ausgewählt · „Frei“ gibt \(CapacityText.duration(model.freedMinutes(of: events, in: plan))) frei")
                 .font(.subheadline)
             HStack {
                 Button("Alle Termine") { selection = Set(plan.events.filter { !$0.isAllDay }.map(\.id)) }

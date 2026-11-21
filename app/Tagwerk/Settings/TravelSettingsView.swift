@@ -1,35 +1,26 @@
 import SwiftUI
 import TagwerkCore
 
-/// Settings of the travel time before events with a place (#168): switch, home address and transport.
+/// Settings of the travel time before events with a place (#168): switch, home address with suggestions, transport and
+/// the way home (PL12b, PL15c).
 struct TravelSettingsView: View {
     @Environment(AppEnvironment.self) private var environment
-    @State private var addressText = ""
-    @State private var status: AddressStatus = .idle
+    @State private var address: HomeAddressModel?
+    @State private var searchTask: Task<Void, Never>?
     @FocusState private var addressFocused: Bool
-
-    private enum AddressStatus: Equatable {
-        case idle, checking, found(String), notFound
-    }
 
     var body: some View {
         @Bindable var settings = environment.settings
         Form {
             Section {
                 Toggle("Fahrzeit berücksichtigen", isOn: $settings.travelTimeEnabled)
+                NavigationLink("Mehr dazu") { TravelInfoView() }
             } footer: {
-                Text("Die Fahrzeit berechnet Apple Karten aus dem Ort des vorherigen Termins oder deiner Heimadresse. Dafür gehen Ort und Adresse an Apple. Tagwerk nutzt deinen Standort nicht. Berechnete Werte bleiben gespeichert und gelten auch ohne Netz. Fehlt ein Wert und gibt es kein Netz, schätzt Tagwerk die Fahrzeit vorläufig: mit dem letzten bekannten Wert zum selben Ziel, sonst mit 30 Minuten. Ohne Ort gibt es keine Fahrzeit. Im Termin lässt sie sich auch von Hand festlegen.")
+                Text("Berechnet von Apple Karten. Tagwerk nutzt deinen Standort nicht.")
             }
             if settings.travelTimeEnabled {
-                Section {
-                    TextField("Straße, Ort", text: $addressText)
-                        .textContentType(.fullStreetAddress)
-                        .submitLabel(.done)
-                        .focused($addressFocused)
-                        .onSubmit { Task { await checkAddress() } }
-                    statusRow
-                } header: {
-                    Text("Heimadresse")
+                if let address {
+                    addressSection(address)
                 }
                 Section {
                     Picker("Verkehrsmittel", selection: $settings.travelTransport) {
@@ -37,59 +28,85 @@ struct TravelSettingsView: View {
                             Label(TravelText.name(transport), systemImage: TravelText.symbol(transport)).tag(transport)
                         }
                     }
+                    Toggle("Rückweg anzeigen", isOn: $settings.travelShowsReturn)
+                } footer: {
+                    Text("Verkehrsmittel und Start lassen sich je Termin ändern.")
                 }
             }
         }
         .navigationTitle("Fahrzeit")
         .onAppear {
-            addressText = settings.homeAddress ?? ""
-            if settings.homePlace != nil, settings.homeLatitude != nil { status = .found(addressText) }
+            if address == nil {
+                address = HomeAddressModel(settings: environment.settings, suggester: environment.addressSuggester,
+                                           lookUp: { try await environment.travelTimes.lookUp(address: $0) },
+                                           reload: { await environment.planning.reload() })
+            }
         }
-        .onDisappear { if addressFocused { Task { await checkAddress() } } }
+        .onDisappear { searchTask?.cancel() }
         .onChange(of: settings.travelTimeEnabled) { _, _ in Task { await environment.planning.reload() } }
         .onChange(of: settings.travelTransportRaw) { _, _ in Task { await environment.planning.reload() } }
+        .onChange(of: settings.travelShowsReturn) { _, _ in Task { await environment.planning.reload() } }
     }
 
     @ViewBuilder
-    private var statusRow: some View {
-        switch status {
-        case .idle:
-            EmptyView()
-        case .checking:
-            HStack(spacing: 8) { ProgressView(); Text("Adresse wird geprüft …").foregroundStyle(.secondaryText) }
-        case .found(let description):
-            Label(String(localized: "Gefunden: \(description)"), systemImage: "checkmark.circle.fill")
-                .font(.subheadline).foregroundStyle(.greenText)
-        case .notFound:
-            Label("Adresse nicht gefunden", systemImage: "exclamationmark.triangle.fill")
-                .font(.subheadline).foregroundStyle(.orangeText)
+    private func addressSection(_ model: HomeAddressModel) -> some View {
+        @Bindable var model = model
+        Section {
+            HStack {
+                TextField("Straße, Ort", text: $model.query)
+                    .textContentType(.fullStreetAddress)
+                    .submitLabel(.search)
+                    .focused($addressFocused)
+                    .onChange(of: model.query) { _, _ in
+                        // A later keystroke replaces the running search; the model drops the answer of the earlier one.
+                        searchTask?.cancel()
+                        searchTask = Task { await model.queryChanged() }
+                    }
+                if !model.query.isEmpty {
+                    Button {
+                        Task { await model.clear() }
+                    } label: {
+                        Image(systemName: "xmark.circle.fill").foregroundStyle(.secondaryText)
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("Adresse löschen")
+                }
+            }
+            ForEach(model.suggestions) { suggestion in
+                Button {
+                    addressFocused = false
+                    Task { await model.choose(suggestion) }
+                } label: {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(suggestion.title).foregroundStyle(.primary)
+                        if !suggestion.subtitle.isEmpty {
+                            Text(suggestion.subtitle).font(.subheadline).foregroundStyle(.secondaryText)
+                        }
+                    }
+                }
+            }
+            statusRow(model)
+        } header: {
+            Text("Zuhause")
         }
     }
 
-    /// Checks the typed address with Apple Maps and stores it with its coordinates; an empty field removes it.
-    /// An address that is not found is not stored.
-    private func checkAddress() async {
-        let settings = environment.settings
-        let text = addressText.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard text != (settings.homeAddress ?? "") || settings.homeLatitude == nil else { return }
-        guard !text.isEmpty else {
-            settings.homeAddress = nil
-            settings.homeLatitude = nil
-            settings.homeLongitude = nil
-            status = .idle
-            await environment.planning.reload()
-            return
-        }
-        status = .checking
-        do {
-            let found = try await environment.travelTimes.lookUp(address: text)
-            settings.homeAddress = text
-            settings.homeLatitude = found.latitude
-            settings.homeLongitude = found.longitude
-            status = .found(found.description)
-            await environment.planning.reload()
-        } catch {
-            status = .notFound
+    @ViewBuilder
+    private func statusRow(_ model: HomeAddressModel) -> some View {
+        switch model.status {
+        case .idle:
+            EmptyView()
+        case .searching:
+            HStack(spacing: 8) { ProgressView(); Text("Adresse wird gesucht …").foregroundStyle(.secondaryText) }
+        case .noSuggestions:
+            Text("Keine Vorschläge").foregroundStyle(.secondaryText)
+            Button("Adresse trotzdem prüfen") { Task { await model.checkTypedAddress() } }
+        case .saved(let description):
+            Label(String(localized: "Gesichert: \(description)"), systemImage: "checkmark.circle.fill")
+                .font(.subheadline).foregroundStyle(.greenText)
+        case .failed:
+            Label("Adresse nicht gefunden", systemImage: "exclamationmark.triangle.fill")
+                .font(.subheadline).foregroundStyle(.orangeText)
         }
     }
 }

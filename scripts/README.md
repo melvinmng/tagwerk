@@ -4,9 +4,14 @@ Die vollständige Einrichtung für neue Nutzer steht in der [Tagwerk-README](../
 
 ## So arbeitet die Erneuerung
 
-- `de.tagwerk.refresh` ruft `refresh-install.sh` beim Anmelden und stündlich auf. Fehlt ein gespeichertes Ablaufdatum oder hat das Profil weniger als drei Tage Restlaufzeit, versucht das Skript die Neuinstallation.
-- Das Skript baut das Scheme `Tagwerk` aus `~/Library/Developer/Tagwerk/src`. Es aktualisiert den dortigen Branch `main` per Fast-forward von `origin`. Mit `TAGWERK_BRANCH` lässt sich der Branch für einen Skriptaufruf auswählen.
-- Team-ID, Geräte-ID, Bundle-ID und gegebenenfalls GitHub-Client-ID kommen aus `~/Library/Application Support/Tagwerk/config`. Vor dem Build legt das Skript zwischengespeicherte Profile für das konfigurierte Team und die konfigurierte Bundle-ID nach `~/Library/Developer/Tagwerk/profiles-aside` beiseite. Gelingt der Build, verwirft es sie; scheitert er, legt es sie zurück, damit `install-dev.sh` weiter signieren kann. Es liest das neue Ablaufdatum nach der Installation aus der gebauten App und legt es unter `profile-expiry.<Bundle-ID>` im selben Ordner ab.
+- `de.tagwerk.refresh` ruft `refresh-install.sh` beim Anmelden und stündlich auf. Jeder Lauf holt zuerst per `git fetch` den Stand von `origin/main` (ohne Checkout oder Build) und installiert dann in zwei Fällen:
+  1. **Profil-Erneuerung:** Es fehlt ein gespeichertes Ablaufdatum oder das Profil hat weniger als drei Tage Restlaufzeit.
+  2. **Neuer Commit:** `origin/main` enthält einen Commit, der nicht auf dem iPhone ist. Es gibt keine Begrenzung auf einen Lauf pro Nacht.
+- Die Regel für neue Commits (`should_install`): Ist der Commit von `origin/main` schon installiert, passiert nichts. Ist er der zuletzt gescheiterte Commit (`last-failed-commit.<Bundle-ID>`), wartet das Skript, bis sich `origin/main` ändert, statt ihn stündlich erneut zu bauen. Ist der Gerätestand unbekannt (`last-installed` ist `dev` nach `install-dev.sh` oder fehlt), installiert das Skript nur, wenn `origin/main` vom Commit der letzten Refresh-Installation (`last-good-commit`) abweicht. Ein mit `install-dev.sh` installierter Entwicklungsstand bleibt also bis zum nächsten neuen Commit auf `main`, bis zur fälligen Profil-Erneuerung oder bis zu `--force` auf dem iPhone. Ist das Profil fällig, installiert das Skript immer.
+- Lastbremse: Liegt die Load Average der letzten 5 Minuten über dem Dreifachen der CPU-Anzahl (`LOAD_SKIP_PER_CPU` im Skript) und ist das Profil nicht fällig, überspringt der Lauf die Installation mit einem Logeintrag; der nächste stündliche Lauf versucht es erneut.
+- Ist das Gerät nicht erreichbar oder schlägt der `git fetch` fehl und das Profil ist nicht fällig, beendet sich der Lauf ohne Mitteilung. Der Grund steht einmal pro Phase im Log (`skip-note.<Bundle-ID>` merkt sich den letzten Grund). Mitteilungen gibt es nur kurz vor Ablauf, beim Rückfall und einmal, wenn die Installation eines neuen Commits scheitert.
+- Das Skript baut das Scheme `Tagwerk` aus `~/Library/Developer/Tagwerk/src`. Es aktualisiert den dortigen Branch `main` per Fast-forward von `origin`, sobald eine Installation ansteht. Mit `TAGWERK_BRANCH` lässt sich der Branch für einen Skriptaufruf auswählen.
+- Team-ID, Geräte-ID, Bundle-ID und gegebenenfalls GitHub-Client-ID kommen aus `~/Library/Application Support/Tagwerk/config`. Vor einem Build zur Profil-Erneuerung legt das Skript zwischengespeicherte Profile für das konfigurierte Team und die konfigurierte Bundle-ID nach `~/Library/Developer/Tagwerk/profiles-aside` beiseite. Gelingt der Build, verwirft es sie; scheitert er, legt es sie zurück, damit `install-dev.sh` weiter signieren kann. Bei einer Installation wegen eines neuen Commits, solange das Profil noch gültig ist, bleibt das zwischengespeicherte Profil unangetastet und das Ablaufdatum unverändert. Es liest das neue Ablaufdatum nach der Installation aus der gebauten App und legt es unter `profile-expiry.<Bundle-ID>` im selben Ordner ab.
 - Das Protokoll liegt unter `~/Library/Logs/Tagwerk/refresh.log`. In `build.log` im selben Ordner stehen die Details von Build und Installation. Bei Fehlern mit weniger als zwei Tagen Restlaufzeit versucht das Skript eine macOS-Mitteilung anzuzeigen.
 
 ## Widget-Extension, Merker und Rückfall
@@ -16,9 +21,9 @@ Die vollständige Einrichtung für neue Nutzer steht in der [Tagwerk-README](../
 - `profile-expiry.<Bundle-ID>` enthält das früheste Ablaufdatum aus App-Profil und allen Extension-Profilen der installierten App. Lässt sich ein vorhandenes Extension-Profil nicht lesen, schreibt das Skript einen Logeintrag und speichert kein neues Ablaufdatum, damit der Wert nicht zu optimistisch ausfällt.
 - Fehlt die Apple-ID in Xcode (Build-Log „No Accounts“), meldet das Skript das schon beim ersten Verlängerungsversuch (drei Tage vor Ablauf) mit dem Ablaufdatum, nicht erst zwei Tage vorher, höchstens alle 12 Stunden (Zeitstempel in `account-notice.<Bundle-ID>`). Der Rückfall auf den letzten funktionierenden Commit entfällt dann, weil auch er das Profil nicht verlängern könnte.
 - Fehler bei der Signierung der Extension (zum Beispiel zur App Group) gelten wie App-Fehler als Signierfehler (Exit-Code 3).
-- Nach jeder erfolgreichen Installation schreibt das Skript den installierten Commit nach `last-good-commit.<Bundle-ID>` und `last-installed.<Bundle-ID>`. `scripts/install-dev.sh` setzt `last-installed.<Bundle-ID>` auf `dev`, weil der Stand des Arbeitsverzeichnisses unbekannt ist.
-- Scheitern Build oder Signierung des neuen Stands, baut das Skript einmal den Commit aus `last-good-commit`, aber nur wenn `last-installed` diesem Commit entspricht und er vom aktuellen Stand abweicht. Der Build läuft in einem eigenen `git worktree` unter `~/Library/Developer/Tagwerk/fallback` mit eigenem DerivedData-Ordner und eigenem Log (`build-fallback.log`); der Arbeitsbaum von `src` bleibt unverändert und der Worktree wird danach entfernt. Bei Erfolg aktualisiert das Skript das Ablaufdatum aus dem installierten Rückfall-Build, meldet es immer per Mitteilung und im Log und endet mit Exit-Code 4. Scheitert auch der Rückfall, bleibt das Ablaufdatum unverändert und das Skript meldet den ursprünglichen Fehler (Exit-Code 1 oder 3). Fehler bei Git-Update und Geräteinstallation lösen keinen Rückfall aus.
-- Nach dem Git-Update startet sich das Skript einmal mit der frisch geholten Version neu (`TAGWERK_REEXECED=1` verhindert eine Schleife), damit Änderungen am Skript sofort gelten. Ist die neue Version nicht ausführbar oder syntaktisch fehlerhaft, läuft die bisherige weiter.
+- Nach jeder erfolgreichen Installation schreibt das Skript den installierten Commit nach `last-good-commit.<Bundle-ID>` und `last-installed.<Bundle-ID>`. `scripts/install-dev.sh` setzt `last-installed.<Bundle-ID>` auf `dev`, weil der Stand des Arbeitsverzeichnisses unbekannt ist. Scheitert Build oder Signierung eines Commits, schreibt das Skript ihn nach `last-failed-commit.<Bundle-ID>`; die nächste erfolgreiche Installation löscht den Merker.
+- Scheitern Build oder Signierung des neuen Stands bei fälligem Profil, baut das Skript einmal den Commit aus `last-good-commit`, aber nur wenn `last-installed` diesem Commit entspricht und er vom aktuellen Stand abweicht. Der Build läuft in einem eigenen `git worktree` unter `~/Library/Developer/Tagwerk/fallback` mit eigenem DerivedData-Ordner und eigenem Log (`build-fallback.log`); der Arbeitsbaum von `src` bleibt unverändert und der Worktree wird danach entfernt. Bei Erfolg aktualisiert das Skript das Ablaufdatum aus dem installierten Rückfall-Build, meldet es immer per Mitteilung und im Log und endet mit Exit-Code 4. Scheitert auch der Rückfall, bleibt das Ablaufdatum unverändert und das Skript meldet den ursprünglichen Fehler (Exit-Code 1 oder 3). Fehler bei Git-Update und Geräteinstallation lösen keinen Rückfall aus. Ist das Profil nicht fällig, entfällt der Rückfall: Der letzte funktionierende Stand ist dann ohnehin auf dem iPhone und die Neuinstallation würde nichts ändern.
+- Nach dem Git-Update (nur wenn eine Installation ansteht) startet sich das Skript einmal mit der frisch geholten Version neu (`TAGWERK_REEXECED=1` verhindert eine Schleife), damit Änderungen am Skript sofort gelten. Ist die neue Version nicht ausführbar oder syntaktisch fehlerhaft, läuft die bisherige weiter. Der Hintergrund-Klon führt das Skript aus `~/Library/Developer/Tagwerk/src` aus: Eine ältere Version dort holt `origin/main` erst, wenn das Profil fällig ist. Nach dem Merge dieser Änderung einmal `git -C "$HOME/Library/Developer/Tagwerk/src" pull --ff-only` ausführen (oder `refresh-install.sh --force` aufrufen), damit der stündliche Lauf neue Commits sofort erkennt.
 
 ## Status prüfen und manuell erneuern
 
@@ -29,9 +34,9 @@ launchctl print "gui/$(id -u)/de.tagwerk.refresh"
 tail "$HOME/Library/Logs/Tagwerk/refresh.log"
 ```
 
-`--dry-run` zeigt Ablaufdatum, Fälligkeit und Erreichbarkeit des Geräts an, ohne zu bauen oder zu installieren. `signing identity: present` zeigt ein vorhandenes Apple-Development-Zertifikat an. Ob das konfigurierte Team tatsächlich signieren kann, zeigt der Build.
+`--dry-run` zeigt Ablaufdatum, Fälligkeit, die Installationsentscheidung (auf Basis des zuletzt geholten `origin/main`, ohne `git fetch`), Load Average und Erreichbarkeit des Geräts an, ohne zu bauen oder zu installieren. `signing identity: present` zeigt ein vorhandenes Apple-Development-Zertifikat an. Ob das konfigurierte Team tatsächlich signieren kann, zeigt der Build.
 
-Sofort neu installieren, zum Beispiel nach einer Änderung der GitHub-Client-ID oder nach Ablauf des Profils:
+Sofort neu installieren, zum Beispiel nach einer Änderung der GitHub-Client-ID oder nach Ablauf des Profils (ignoriert Fälligkeit, installierten Commit und den Merker des zuletzt gescheiterten Commits):
 
 ```zsh
 "$HOME/Library/Developer/Tagwerk/src/scripts/refresh-install.sh" --force
@@ -65,11 +70,11 @@ rm "$HOME/Library/LaunchAgents/de.tagwerk.refresh.plist"
 
 | Code | Bedeutung |
 |---|---|
-| 0 | Installation erfolgreich, Prüfung abgeschlossen oder Neuinstallation noch nicht fällig |
+| 0 | Installation erfolgreich, nichts zu installieren oder Lauf übersprungen (Last, Gerät nicht erreichbar bei nicht fälligem Profil) |
 | 1 | Quellcode konnte nicht aktualisiert werden, Projektgenerierung oder Build fehlgeschlagen |
 | 2 | iPhone nicht erreichbar oder Installation fehlgeschlagen |
 | 3 | Signierung fehlgeschlagen (auch bei der Widget-Extension) |
-| 4 | Der neue Stand ließ sich nicht bauen oder signieren; der letzte funktionierende Stand wurde stattdessen neu installiert |
+| 4 | Der neue Stand ließ sich bei fälligem Profil nicht bauen oder signieren; der letzte funktionierende Stand wurde stattdessen neu installiert |
 | 64 | Konfiguration oder Skriptargument ungültig |
 
 Entscheidungslogik und lokale Konfiguration testen:

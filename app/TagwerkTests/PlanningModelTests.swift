@@ -763,6 +763,95 @@ struct PlanningModelTests {
         #expect(day.capacity.plannedMinutes == 120)
     }
 
+    // MARK: Day capacity (issue #260)
+
+    private let tuesday = PlanDay(year: 2026, month: 11, day: 24)
+
+    private func event(_ id: String, _ title: String, day: Int = 24, _ from: (Int, Int), _ to: (Int, Int), allDay: Bool = false,
+                       busy: Bool = true) -> CalendarEvent {
+        CalendarEvent(id: id, externalID: nil, calendarID: "work", title: title, start: at(day, from.0, from.1),
+                      end: at(day, to.0, to.1), isAllDay: allDay, url: nil, isBusy: busy, version: "1")
+    }
+
+    /// A daily recurring reminder with `effort` minutes reserved from the 10th on.
+    private func addDailyReminder(_ title: String, effort: Int) async throws -> TaskItem {
+        accessStore.openRecords = [ReminderRecord(id: title, title: title, notes: nil, due: DueDate(year: 2026, month: 11, day: 18),
+                                                  ekPriority: 0, isCompleted: false, listID: "l", lastModified: nil,
+                                                  recurrence: Recurrence(rule: .daily(interval: 1), start: PlanDay(year: 2026, month: 11, day: 10),
+                                                                         end: nil, count: nil))]
+        accessStore.accessState = .fullAccess
+        await taskList.register(FakeTaskProvider(source: .reminders, tasks: [makeTask(title, source: .reminders, due: DueDate(year: 2026, month: 11, day: 18))]))
+        RecurringEffortStore(context: container.mainContext).setForAll(effort, task: TaskID(source: .reminders, rawValue: title),
+                                                                       from: PlanDay(year: 2026, month: 11, day: 10))
+        return try #require(taskList.items.first { $0.id.source == .reminders })
+    }
+
+    private func monthDay(_ model: PlanningModel, _ day: PlanDay) async throws -> DayPlan {
+        model.scope = .month
+        await model.reload()
+        return try #require(model.days.first { $0.day == day })
+    }
+
+    /// Tue 24 Nov as reported: all-day "Away" and a birthday, "Selbststudium" 8–18 free, "Away" 12–13 busy, "RT" 18:30–22
+    /// free, lunch 12–13, hours 9–18, and a recurring task "Karteikarten" with 4 h reserved effort but no time block.
+    @Test func capacity_reportedDay_isEightHoursFreeOfEight() async throws {
+        settings.bufferMinutes = 10
+        calendarStore.storedEvents = [
+            event("a1", "Away", (0, 0), (23, 59), allDay: true),
+            event("a2", "Oma Bärbel's 66th Birthday", (0, 0), (23, 59), allDay: true),
+            event("s", "Selbststudium", (8, 0), (18, 0), busy: false),
+            event("a3", "Away", (12, 0), (13, 0)),
+            event("rt", "RT Young Generation", (18, 30), (22, 0), busy: false),
+        ]
+        _ = try await addDailyReminder("Karteikarten", effort: 240)
+        let day = try await monthDay(await model(), tuesday)
+        #expect(day.recurring.map(\.minutes) == [240])
+        #expect(day.capacity.availableMinutes == 480)
+        #expect(day.capacity.plannedMinutes == 0)
+        #expect(day.capacity.freeMinutes == 480)
+        #expect(CapacityText.summary(day.capacity) == "8 h frei von 8 h")
+    }
+
+    @Test func capacity_overlappingBlocks_countOnce() async throws {
+        await taskList.reload()
+        let first = try #require(taskList.items.first { $0.title == "Fahrrad" })
+        let second = try #require(taskList.items.first { $0.title == "Abgabe" })
+        _ = try blocks.createBlock(for: first, start: at(24, 10), minutes: 60)
+        _ = try blocks.createBlock(for: second, start: at(24, 10, 30), minutes: 60)
+        let day = try await monthDay(await model(), tuesday)
+        #expect(day.capacity.plannedMinutes == 90)
+    }
+
+    @Test func capacity_blockAfterWork_usesNoFreeTime() async throws {
+        await taskList.reload()
+        let task = try #require(taskList.items.first { $0.title == "Fahrrad" })
+        _ = try blocks.createBlock(for: task, start: at(24, 19), minutes: 60)
+        let day = try await monthDay(await model(), tuesday)
+        #expect(day.capacity.freeMinutes == 480)
+        #expect(day.capacity.breakdown.outsideBlockMinutes == 60)
+    }
+
+    @Test func capacity_recurringReminder_countsOnlyItsBlock() async throws {
+        let task = try await addDailyReminder("Karteikarten", effort: 240)
+        _ = try blocks.createBlock(for: task, start: at(24, 14), minutes: 90)
+        let day = try await monthDay(await model(), tuesday)
+        #expect(day.capacity.availableMinutes == 480)
+        #expect(day.capacity.plannedMinutes == 90)
+    }
+
+    @Test func freedMinutes_matchesTheCardAfterwards() async throws {
+        settings.bufferMinutes = 10
+        calendarStore.storedEvents = [event("e1", "Vorlesung", (10, 0), (11, 0)), event("e2", "Seminar", (10, 30), (11, 30))]
+        let model = await model()
+        let day = try await monthDay(model, tuesday)
+        #expect(day.capacity.availableMinutes == 480 - 110)
+        let both = model.freedMinutes(of: day.events, in: day)
+        #expect(both == 110)
+        await model.setFree(day.events, free: true, series: false)
+        let after = try await monthDay(model, tuesday)
+        #expect(after.capacity.freeMinutes - day.capacity.freeMinutes == both)
+    }
+
     @Test func assign_afterDue_marksPastDue() async {
         let model = await model()
         model.scope = .week
@@ -903,7 +992,9 @@ struct PlanningModelTests {
         RecurringEffortStore(context: container.mainContext).setForAll(180, task: TaskID(source: .reminders, rawValue: "k"), from: PlanDay(year: 2026, month: 11, day: 1))
         let model = await model()
         #expect(model.days.first?.recurring == [RecurringItem(taskID: TaskID(source: .reminders, rawValue: "k"), title: "Karteikarten", minutes: 180)])
-        #expect(model.days.first?.capacity.availableMinutes == 300)
+        // The reserved effort is no load: it takes no time until a time block is booked (decision KA3).
+        #expect(model.days.first?.capacity.availableMinutes == 480)
+        #expect(model.days.first?.capacity.plannedMinutes == 0)
     }
 
     @Test func recurringItem_onlyForRecurringReminders_withCurrentEffort() async throws {
@@ -961,15 +1052,16 @@ struct PlanningModelTests {
         RecurringEffortStore(context: container.mainContext).setForAll(60, task: TaskID(source: .reminders, rawValue: "k"), from: today)
     }
 
-    @Test func completingRecurringToday_freesItsEffort() async {
+    @Test func completingRecurringToday_marksTheOccurrenceAndKeepsTheCapacity() async {
         recurringTraining()
         let model = await model()
-        #expect(model.days.first?.capacity.remainingMinutes == 360)
+        #expect(model.days.first?.capacity.remainingMinutes == 420)
         await model.didChangeCompletion(TaskID(source: .reminders, rawValue: "k"), isCompleted: true)
         #expect(model.days.first?.capacity.remainingMinutes == 420)
         #expect(model.days.first?.recurring.first?.isDone == true)
         await model.didChangeCompletion(TaskID(source: .reminders, rawValue: "k"), isCompleted: false)
-        #expect(model.days.first?.capacity.remainingMinutes == 360)
+        #expect(model.days.first?.capacity.remainingMinutes == 420)
+        #expect(model.days.first?.recurring.first?.isDone == false)
     }
 
     @Test func completingNonRecurring_doesNotMarkOccurrence() async {
@@ -977,7 +1069,7 @@ struct PlanningModelTests {
         let model = await model()
         await model.didChangeCompletion(id("Fahrrad"), isCompleted: true)
         #expect(model.efforts.isDone(task: id("Fahrrad"), day: today) == false)
-        #expect(model.days.first?.capacity.remainingMinutes == 360)
+        #expect(model.days.first?.recurring.first?.isDone == false)
     }
 
     // MARK: Recurring local tasks (plan 2026-11-18, stage 2)
@@ -997,7 +1089,7 @@ struct PlanningModelTests {
         let model = await model()
         #expect(model.recurringTaskIDs == [reading])
         #expect(model.days.first?.recurring == [RecurringItem(taskID: reading, title: "Lesen", minutes: 60)])
-        #expect(model.days.first?.capacity.remainingMinutes == 360)
+        #expect(model.days.first?.capacity.remainingMinutes == 420)
         let task = try #require(taskList.items.first { $0.id == reading })
         #expect(model.recurringItem(for: task, on: today) == RecurringItem(taskID: reading, title: "Lesen", minutes: 60))
         #expect(model.effortMinutes(of: task) == 60)
@@ -1019,14 +1111,15 @@ struct PlanningModelTests {
         #expect(model.days.filter { $0.recurring.contains { $0.taskID == reading } }.map(\.day.day) == [18, 19, 20, 21, 22])
     }
 
-    @Test func completingRecurringLocalToday_freesItsEffort() async {
+    @Test func completingRecurringLocalToday_marksTheOccurrence() async {
         let reading = recurringLocalReading()
         let model = await model()
         await model.didChangeCompletion(reading, isCompleted: true)
         #expect(model.efforts.isDone(task: reading, day: today))
         #expect(model.days.first?.capacity.remainingMinutes == 420)
         await model.didChangeCompletion(reading, isCompleted: false)
-        #expect(model.days.first?.capacity.remainingMinutes == 360)
+        #expect(model.efforts.isDone(task: reading, day: today) == false)
+        #expect(model.days.first?.capacity.remainingMinutes == 420)
     }
 
     @Test func recurringLocalTask_settingEffortUsesTaskKey() async throws {
@@ -1054,7 +1147,7 @@ struct PlanningModelTests {
         await taskList.register(FakeTaskProvider(source: .reminders, tasks: [listed]))
         let model = await model()
         #expect(model.days.first?.recurring.count == 1)
-        #expect(model.days.first?.capacity.remainingMinutes == 360)
+        #expect(model.days.first?.capacity.remainingMinutes == 420)
     }
 
     /// Blocks count against the occurrence of the series (daily: the same day), not against the last 60 days.
@@ -2158,6 +2251,22 @@ struct PlanningModelTests {
         #expect((before.remainingMinutes ?? 0) - (after.remainingMinutes ?? 0) == 25)
     }
 
+    @Test func freedMinutes_includesTheTripOfTheFreedEvent() async throws {
+        calendarStore.storedEvents = [meeting()]
+        let (model, _) = await travelModel()
+        await model.refreshTravelTimes()
+        let day = try #require(model.days.first)
+        #expect(day.travel.count == 1)
+        // The meeting 14:00–15:00 and its trip of 25 minutes.
+        let freed = model.freedMinutes(of: day.events, in: day)
+        #expect(freed == 85)
+        await model.setFree(day.events, free: true, series: false)
+        await model.refreshTravelTimes()
+        let after = try #require(model.days.first)
+        #expect(after.travel.isEmpty)
+        #expect(after.capacity.freeMinutes - day.capacity.freeMinutes == freed)
+    }
+
     @Test func travel_disabledSetting_addsNothing() async {
         calendarStore.storedEvents = [meeting()]
         let (model, estimator) = await travelModel(enabled: false)
@@ -2289,6 +2398,60 @@ struct PlanningModelTests {
         await model.setTravelOverride(.automatic, for: event, series: false)
         #expect(model.days.first?.travel.first?.minutes == 25)
         #expect(model.travelOverrideMode(for: event) == .automatic)
+    }
+
+    @Test func setTravelChoice_reloadsAndChangesTheSegment() async throws {
+        calendarStore.storedEvents = [meeting()]
+        let (model, estimator) = await travelModel()
+        await model.refreshTravelTimes()
+        let event = try #require(model.days.first?.events.first)
+        #expect(model.days.first?.travel.first?.transport == nil)
+        await model.setTravelChoice(TravelChoice(transport: .transit), for: event, series: false)
+        #expect(model.travelChoice(for: event) == TravelChoice(transport: .transit))
+        // The trip with the other transport is asked for once, then the block carries it.
+        await model.refreshTravelTimes()
+        #expect(estimator.tripCalls.last?.hasSuffix(">transit") == true)
+        #expect(model.days.first?.travel.first?.transport == .transit)
+        // A fixed time keeps the transport that was chosen before.
+        await model.setTravelOverride(.fixed(minutes: 40), for: event, series: false)
+        #expect(model.travelChoice(for: event) == TravelChoice(mode: .fixed(minutes: 40), transport: .transit))
+    }
+
+    @Test func setTravelChoice_default_removesTheEntry() async throws {
+        calendarStore.storedEvents = [meeting()]
+        let (model, _) = await travelModel()
+        let event = try #require(model.days.first?.events.first)
+        await model.setTravelChoice(TravelChoice(start: .home), for: event, series: false)
+        #expect(TravelOverrideStore(context: container.mainContext).all().count == 1)
+        await model.setTravelChoice(TravelChoice(), for: event, series: false)
+        #expect(TravelOverrideStore(context: container.mainContext).all().isEmpty)
+    }
+
+    @Test func returnTrip_showsOnlyWithTheSwitch() async throws {
+        calendarStore.storedEvents = [meeting()]
+        let (model, _) = await travelModel()
+        await model.refreshTravelTimes()
+        #expect(model.days.first?.travel.contains { $0.direction == .returnHome } == false)
+        settings.travelShowsReturn = true
+        await model.reload()
+        await model.refreshTravelTimes()
+        let back = try #require(model.days.first?.travel.first { $0.direction == .returnHome })
+        #expect(back.range.lowerBound == 900)
+        // The way home counts as busy time like the way there (the part inside the buffer after the event counts once).
+        let withReturn = try #require(model.days.first?.capacity)
+        settings.travelShowsReturn = false
+        await model.reload()
+        let without = try #require(model.days.first?.capacity)
+        #expect(without.availableMinutes - withReturn.availableMinutes == back.range.upperBound - (900 + settings.bufferMinutes))
+    }
+
+    @Test func previousPlace_isKnownOnlyAfterAnEventWithAPlace() async throws {
+        calendarStore.storedEvents = [meeting("early", hour: 9), meeting("late", hour: 14), meeting("online", hour: 11, location: "Zoom")]
+        let (model, _) = await travelModel()
+        let early = try #require(model.days.first?.events.first { $0.id == "early" })
+        let late = try #require(model.days.first?.events.first { $0.id == "late" })
+        #expect(!model.hasPreviousPlace(before: early))
+        #expect(model.hasPreviousPlace(before: late))
     }
 
     @Test func manualTravelTime_worksOfflineAndWithoutHomeAddress() async throws {

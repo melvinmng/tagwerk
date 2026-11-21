@@ -342,6 +342,9 @@ struct EventTravelOverrideBackup: BackupEntity {
     var seriesFrom: Date?
     var modeName: String
     var minutes: Int
+    /// Transport and start per event (V1); absent in files written before, which read as "not chosen".
+    var transportRaw: String?
+    var startRaw: String?
 
     init(_ record: EventTravelOverride) {
         key = record.key
@@ -349,6 +352,8 @@ struct EventTravelOverrideBackup: BackupEntity {
         seriesFrom = record.seriesFrom
         modeName = record.modeName
         minutes = record.minutes
+        transportRaw = record.transportRaw
+        startRaw = record.startRaw
     }
 
     func makeRecord() -> EventTravelOverride {
@@ -357,6 +362,8 @@ struct EventTravelOverrideBackup: BackupEntity {
         record.key = key
         record.modeName = modeName
         record.minutes = minutes
+        record.transportRaw = transportRaw
+        record.startRaw = startRaw
         return record
     }
 }
