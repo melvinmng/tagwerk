@@ -59,4 +59,15 @@ public enum NowMarker {
     public static func openingMinutes(firstEntryStart: Int?, workStart: Int?) -> Int? {
         firstEntryStart ?? workStart
     }
+
+    /// The block that carries the focus button today: the running one (of several, the one that started first), else the
+    /// next that starts after now; nil on another day (`nowMinutes` nil) and when no block is left. Returns the index in
+    /// `blockRanges`, whatever the order of the list is.
+    public static func focusBlockIndex(blockRanges: [Range<Int>], nowMinutes: Int?) -> Int? {
+        guard let nowMinutes else { return nil }
+        let running = blockRanges.indices.filter { blockRanges[$0].contains(nowMinutes) }
+        if let first = running.min(by: { (blockRanges[$0].lowerBound, $0) < (blockRanges[$1].lowerBound, $1) }) { return first }
+        let upcoming = blockRanges.indices.filter { blockRanges[$0].lowerBound > nowMinutes }
+        return upcoming.min { (blockRanges[$0].lowerBound, $0) < (blockRanges[$1].lowerBound, $1) }
+    }
 }

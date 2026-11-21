@@ -24,6 +24,33 @@ struct TravelTimeServiceTests {
         TravelLeg(eventID: id, origin: .home, from: home, to: TravelPlace(text: to), arrival: clock.now.addingTimeInterval(3600))
     }
 
+    // MARK: Transport per event and the way home (V1)
+
+    @Test func perLegTransport_usesItsOwnCacheKey() async {
+        let service = service()
+        var trip = leg()
+        trip.transport = .transit
+        #expect(await service.fetchMissing(legs: [trip], transport: .automobile, home: home))
+        #expect(estimator.tripCalls == ["Zuhause, Berlin>Büro, Berlin>transit"])
+        #expect(service.cachedMinutes(for: [trip], transport: .automobile) == ["e1": 25])
+        // The same trip with the transport of the setting is another entry and still unknown.
+        #expect(service.cachedMinutes(for: [leg()], transport: .automobile).isEmpty)
+        // The transport of the setting applies to a leg without its own.
+        #expect(await service.fetchMissing(legs: [leg()], transport: .walking, home: home))
+        #expect(estimator.tripCalls.last == "Zuhause, Berlin>Büro, Berlin>walking")
+    }
+
+    @Test func returnLeg_isAskedByItsDeparture_andKeyedByItsID() async {
+        let service = service()
+        let office = TravelPlace(text: "Büro, Berlin", latitude: 52.51, longitude: 13.38)
+        let back = TravelLeg(eventID: "e1", origin: .previousEvent(id: "e1"), from: office, to: home,
+                             arrival: clock.now.addingTimeInterval(3600), direction: .returnHome)
+        #expect(back.id == "e1#return")
+        #expect(await service.fetchMissing(legs: [back], transport: .automobile, home: home))
+        #expect(estimator.departureCalls == ["Büro, Berlin>Zuhause, Berlin>automobile"])
+        #expect(service.cachedMinutes(for: [back], transport: .automobile) == ["e1#return": 25])
+    }
+
     @Test func cachedValue_isReturnedWithoutRequest() async {
         var cache = TravelTimeCache(fileURL: fileURL)
         let known = leg()
