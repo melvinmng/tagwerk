@@ -2013,5 +2013,7 @@
   "Du wählst die Zutaten aus und kannst das Rezept zusätzlich als Notiz im Ordner „Rezepte“ sichern.": "You choose the ingredients and can also keep the recipe as a note in the “Recipes” folder.",
   "Kein Projekt": "No project",
   "Den Status „%@“ gibt es im Projekt „%@“ nicht.": "The status “%1$@” does not exist in the project “%2$@”.",
-  "Der Status lässt sich in diesem Projekt nicht ändern.": "The status cannot be changed in this project."
+  "Der Status lässt sich in diesem Projekt nicht ändern.": "The status cannot be changed in this project.",
+  "%lld Status": "%lld statuses",
+  "Status %@": "Status %@"
 }

@@ -1412,6 +1412,16 @@
         }
       }
     },
+    "%lld Status": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld statuses"
+          }
+        }
+      }
+    },
     "%lld Tage pro Woche": {
       "localizations": {
         "en": {
@@ -14984,6 +14994,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Status"
+          }
+        }
+      }
+    },
+    "Status %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Status %@"
           }
         }
       }
