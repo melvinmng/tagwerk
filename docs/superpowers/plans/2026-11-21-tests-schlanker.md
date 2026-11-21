@@ -1,5 +1,8 @@
 # Tests schlanker und schneller – Analyse, Optionen und Zielbild
 
+
+> **Entscheidung des Nutzers (21.11.2026):** Alle Empfehlungen, vollständig umsetzen (TS1b, TS2b, TS3b, TS4b, TS5b, TS6b, TS7a, TS8b, TS9b, TS10b, TS11b, TS12b), inklusive Branch-Schutz mit Pflicht-Checks, sobald CI grün läuft. Rückfall: Ist GitHub zu langsam, laufen die (verbesserten) UI-Tests wieder auf dem Mac.
+
 > **For agentic workers:** Implement task by task. Steps use checkbox (`- [ ]`) syntax for tracking. Erst die TS-Entscheidungen der Hauptsitzung abwarten; die Tasks setzen die jeweils empfohlene Variante um.
 
 > **Status:** Entwurf vom 21.11.2026. Grundlage: `origin/main` (`1d6364a`), `origin/fix/ui-audits-and-strings` (`4f73e1f`, PR #261) und `origin/ci/github-full-tests` (`af4116c`, PR #267). **Kein Build, kein Simulator, kein Testlauf für diesen Plan.** Die Zeiten stammen aus den vorhandenen lokalen Logs unter `$TMPDIR/tagwerk-tests/` (nur gelesen) und sind als **gemessen** markiert; alles andere ist als **Schätzung** oder **ungeprüft** markiert. Zeilenangaben beziehen sich auf `origin/main`, sofern nicht anders genannt.
