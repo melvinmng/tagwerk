@@ -1,0 +1,1010 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tagwerk · Designrunde G2 · Notizen-Erweiterungen und Bible Study · Mockups NL, SC, ZE, TX, BV, BE</title>
+<style>
+  /* Mockup frame uses the host theme (with fallbacks); phone screens depict the app in iOS dark or light mode. */
+  :root { color-scheme: light dark; }
+  body { font: 14px var(--font-sans, system-ui, sans-serif); color: var(--foreground, CanvasText); margin: 16px; }
+  h1 { font-size: 20px; margin: 0 0 4px; }
+  h2 { font-size: 18px; margin: 38px 0 4px; padding-top: 16px; border-top: 1px solid rgba(128,128,128,.3); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  h2.part { font-size: 22px; border-top: 3px solid rgba(128,128,128,.5); margin-top: 54px; }
+  .area { display: inline-grid; place-items: center; min-width: 34px; height: 34px; padding: 0 8px; border-radius: 9px; background: #0a84ff; color: #fff; font: 800 14px system-ui; flex-shrink: 0; box-sizing: border-box; }
+  .area.q { background: #8e8e93; }
+  .lead { color: var(--muted-foreground, #777); margin: 0 0 14px; line-height: 1.5; max-width: 980px; }
+  .lead b { color: var(--foreground, CanvasText); }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(392px, 1fr)); gap: 22px; align-items: start; }
+  .label { font: 600 13px var(--font-sans, system-ui); color: var(--muted-foreground, #777); margin: 0 0 8px 4px; }
+  .label b { color: var(--foreground, CanvasText); }
+  .code { display: inline-block; background: rgba(128,128,128,.28); color: var(--foreground, CanvasText); border-radius: 6px; padding: 1px 8px; font: 800 13px system-ui; margin-right: 4px; }
+  .code.r { background: #30d158; color: #000; }
+  .rec { background: #30d158; color: #000; font-size: 11px; font-weight: 700; padding: 1px 7px; border-radius: 99px; margin-left: 4px; }
+  .same { background: rgba(128,128,128,.28); font-size: 11px; font-weight: 700; padding: 1px 7px; border-radius: 99px; margin-left: 4px; }
+  .pc { font-size: 12.5px; color: var(--muted-foreground, #777); line-height: 1.5; margin: 8px 4px 0; max-width: 390px; }
+  .pc b { color: var(--foreground, CanvasText); }
+  .box { border: 1px solid rgba(48,209,88,.5); background: rgba(48,209,88,.07); border-radius: 12px; padding: 12px 16px; margin-top: 16px; line-height: 1.55; font-size: 13px; max-width: 1100px; }
+  .box h3 { margin: 0 0 6px; font-size: 14px; }
+  .box ul, .box ol { margin: 4px 0 0; padding-left: 20px; }
+  .box li { margin-bottom: 3px; }
+  .box.neutral { border-color: rgba(128,128,128,.4); background: rgba(128,128,128,.07); }
+  .box.warn { border-color: rgba(255,159,10,.6); background: rgba(255,159,10,.08); }
+  code { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; background: rgba(128,128,128,.16); padding: 1px 4px; border-radius: 4px; }
+  .tablewrap { overflow-x: auto; }
+  table.sum { border-collapse: collapse; font-size: 13px; margin-top: 6px; }
+  table.sum td, table.sum th { padding: 5px 14px 5px 0; vertical-align: top; text-align: left; border-bottom: 1px solid rgba(128,128,128,.22); }
+  table.sum th { font-size: 12px; color: var(--muted-foreground, #777); }
+  table.sum td:first-child { white-space: nowrap; font-weight: 700; }
+
+  .phone {
+    --bg: #000; --card: #1c1c1e; --card2: #2c2c2e; --sep: #38383a; --text: #fff; --sub: #8e8e93; --dim: #c7c7cc;
+    --blue: #0a84ff; --green: #30d158; --orange: #ff9f0a; --red: #ff453a; --purple: #bf5af2; --indigo: #5e5ce6; --sheet: #1c1c1e; --row: #2c2c2e;
+    --segon: #636366; --frame: #2a2a2c; --redbg: rgba(255,69,58,.16); --greenbg: rgba(48,209,88,.16);
+    --glass: rgba(72,72,78,.62); --glassline: rgba(255,255,255,.16); --glassshadow: inset 0 1px 0 rgba(255,255,255,.18), 0 8px 24px rgba(0,0,0,.55);
+    background: var(--bg); color: var(--text); border-radius: 40px; padding: 14px 12px 12px;
+    font: 15px -apple-system, "SF Pro Text", system-ui, sans-serif; border: 6px solid var(--frame);
+    width: 390px; max-width: 100%; box-sizing: border-box; height: 700px;
+    display: flex; flex-direction: column; position: relative; overflow: hidden;
+  }
+  .phone.light {
+    --bg: #f2f2f7; --card: #fff; --card2: #e3e3e8; --sep: #d1d1d6; --text: #000; --sub: #6c6c70; --dim: #3c3c43;
+    --blue: #007aff; --green: #34c759; --orange: #ff9500; --red: #ff3b30; --purple: #af52de; --indigo: #5856d6; --sheet: #f2f2f7; --row: #fff;
+    --segon: #fff; --frame: #c7c7cc; --redbg: rgba(255,59,48,.12); --greenbg: rgba(52,199,89,.16);
+    --glass: rgba(255,255,255,.78); --glassline: rgba(0,0,0,.06); --glassshadow: inset 0 1px 0 rgba(255,255,255,.9), 0 4px 14px rgba(0,0,0,.14);
+  }
+  /* Sheet look: the phone content is the sheet itself. */
+  .phone.sh { --bg: #111113; }
+  .phone.sh.light { --bg: #f2f2f7; }
+  /* Cropped frames: only the upper part of the screen matters. */
+  .phone.crop { height: 440px; border-bottom-left-radius: 0; border-bottom-right-radius: 0; border-bottom: 0; }
+  .phone.crop.s { height: 330px; }
+  .phone.crop.l { height: 560px; }
+  .phone.crop::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 40px; background: linear-gradient(transparent, var(--bg)); z-index: 4; pointer-events: none; }
+  .status { display: flex; justify-content: space-between; font: 600 13px system-ui; padding: 0 12px 10px; flex-shrink: 0; }
+  .glass { background: var(--glass); backdrop-filter: blur(18px) saturate(1.6); -webkit-backdrop-filter: blur(18px) saturate(1.6); border: 1px solid var(--glassline); box-shadow: var(--glassshadow); }
+  .scr { flex: 1; min-height: 0; overflow: hidden; display: flex; flex-direction: column; }
+  .scr > * { flex-shrink: 0; }
+
+  .nav { display: flex; align-items: center; justify-content: space-between; gap: 8px; height: 44px; padding: 0 2px; margin-bottom: 4px; flex-shrink: 0; }
+  .nav .r { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+  .nav .c { font: 600 16px system-ui; }
+  .gb { width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; font-size: 17px; flex-shrink: 0; color: var(--text); box-sizing: border-box; }
+  .gb.new { outline: 2px solid #ffd60a; outline-offset: 1px; }
+  .gt { height: 40px; border-radius: 99px; display: grid; place-items: center; padding: 0 14px; font: 600 15px system-ui; color: var(--blue); }
+  .back { color: var(--blue); font: 400 16px system-ui; padding-left: 4px; }
+  .lt { font: 800 30px system-ui; letter-spacing: -.4px; margin: 2px 6px 10px; }
+  .list { background: var(--card); border-radius: 18px; overflow: hidden; margin-bottom: 8px; }
+  .tl { display: flex; gap: 10px; padding: 10px 12px; border-bottom: 1px solid var(--sep); font-size: 14.5px; align-items: center; }
+  .tl:last-child { border-bottom: 0; }
+  .tl .tx { flex: 1; min-width: 0; }
+  .tl .tx small { display: block; color: var(--sub); font-size: 12px; margin-top: 1px; line-height: 1.35; }
+  .tl .ch { color: var(--sub); font-size: 13px; white-space: nowrap; }
+  .tl .ic { width: 24px; text-align: center; color: var(--blue); flex-shrink: 0; }
+  .tl.new, .fr.new, .card.new { box-shadow: inset 3px 0 0 #ffd60a; }
+  .tl.a { color: var(--blue); }
+  .tl.d1 { padding-left: 30px; } .tl.d2 { padding-left: 48px; }
+  .plus { width: 28px; height: 28px; border-radius: 50%; background: var(--card2); color: var(--blue); display: grid; place-items: center; font: 600 17px system-ui; flex-shrink: 0; }
+  .section { color: var(--sub); font: 600 12px system-ui; text-transform: uppercase; letter-spacing: .4px; margin: 10px 12px 4px; display: flex; justify-content: space-between; }
+  .section span { color: var(--blue); text-transform: none; letter-spacing: 0; font-weight: 400; font-size: 13px; }
+  .foot1 { color: var(--sub); font-size: 11.5px; line-height: 1.4; margin: 2px 12px 8px; }
+  .tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
+  .tile { background: var(--card); border-radius: 16px; padding: 10px 12px; font: 600 14px system-ui; }
+  .tile i { font-style: normal; display: flex; justify-content: space-between; font-size: 19px; margin-bottom: 8px; }
+  .tile i b { font: 700 19px system-ui; }
+  .badge { display: inline-block; font: 600 10.5px system-ui; color: var(--sub); border: 1px solid var(--sep); border-radius: 99px; padding: 0 6px; margin-left: 6px; vertical-align: 1px; }
+  .badge.g { color: var(--green); border-color: var(--green); }
+  .badge.o { color: var(--orange); border-color: var(--orange); }
+
+  /* Note cards and note page */
+  .card { background: var(--card); border-bottom: 1px solid var(--sep); padding: 9px 12px; display: flex; gap: 10px; }
+  .card:last-child { border-bottom: 0; }
+  .card .b { flex: 1; min-width: 0; }
+  .card .t { font: 600 15px system-ui; display: flex; justify-content: space-between; gap: 6px; }
+  .card .t small { font: 400 12px system-ui; color: var(--sub); white-space: nowrap; }
+  .card .p { color: var(--sub); font-size: 13px; line-height: 1.35; margin: 2px 0; }
+  .card .f { color: var(--sub); font-size: 11.5px; }
+  .thumb { width: 48px; height: 48px; border-radius: 8px; background: linear-gradient(135deg, #5e8f6a, #c9a86a); flex-shrink: 0; }
+  .selc { width: 22px; height: 22px; border-radius: 50%; border: 1.6px solid var(--sub); flex-shrink: 0; box-sizing: border-box; margin-top: 12px; display: grid; place-items: center; font: 700 12px system-ui; color: #fff; }
+  .selc.on { background: var(--blue); border-color: var(--blue); }
+  .botbar { display: flex; justify-content: space-between; align-items: center; border-radius: 99px; padding: 11px 18px; margin: auto 4px 0; font-size: 14.5px; color: var(--blue); }
+  .botbar .x { color: var(--red); }
+  .note { padding: 0 8px; font-size: 14.5px; line-height: 1.45; }
+  .note h4 { font: 800 23px system-ui; margin: 0 0 8px; letter-spacing: -.3px; }
+  .note h5 { font: 700 16.5px system-ui; margin: 12px 0 4px; }
+  .note p { margin: 0 0 4px; }
+  .note ul { margin: 0; padding-left: 20px; }
+  .note .cb { display: flex; gap: 8px; align-items: center; margin: 3px 0; }
+  .note .raw { font: 13.5px ui-monospace, Menlo, monospace; color: var(--dim); white-space: pre-wrap; line-height: 1.5; }
+  .ck { width: 20px; height: 20px; border-radius: 50%; border: 1.6px solid var(--sub); flex-shrink: 0; box-sizing: border-box; position: relative; }
+  .ck.sq { border-radius: 6px; }
+  .ck.done { background: var(--blue); border-color: var(--blue); }
+  .ck.done.g { background: var(--green); border-color: var(--green); }
+  .ck.done::after { content: "✓"; position: absolute; inset: 0; display: grid; place-items: center; color: #fff; font: 700 11px system-ui; }
+  .img { border-radius: 12px; background: linear-gradient(135deg, #3d6b8f, #8fb5a0 60%, #d9c58a); margin: 8px 0; }
+  .chip { display: inline-flex; align-items: center; gap: 6px; background: var(--card); border: 1px solid var(--sep); border-radius: 10px; padding: 6px 10px; font-size: 13px; margin: 4px 6px 4px 0; }
+  .chip small { color: var(--sub); }
+  .pill { display: inline-block; background: var(--card2); border-radius: 99px; padding: 5px 11px; font: 600 12.5px system-ui; margin: 0 6px 6px 0; }
+  .pill.on { background: var(--blue); color: #fff; }
+  .kb { margin: auto -12px -12px; background: var(--card2); padding: 8px 10px 60px; display: flex; flex-direction: column; gap: 8px; }
+  .kbbar { display: flex; align-items: center; gap: 4px; font: 600 15px system-ui; }
+  .kbbar span { width: 38px; height: 34px; border-radius: 8px; display: grid; place-items: center; background: var(--card); }
+  .kbbar .done { margin-left: auto; width: auto; padding: 0 12px; color: var(--blue); background: none; }
+  .kbkeys { height: 22px; border-radius: 6px; background: var(--card); opacity: .6; }
+  .gra { background: var(--card); border-radius: 14px; padding: 9px 12px; margin: 0 4px 10px; font-size: 13.5px; line-height: 1.5; }
+  .gra b { display: block; font: 600 11.5px system-ui; text-transform: uppercase; letter-spacing: .4px; color: var(--sub); margin-bottom: 2px; }
+  .sessbar { display: flex; align-items: center; gap: 8px; background: var(--greenbg); border-radius: 12px; padding: 8px 12px; margin: 0 4px 10px; font-size: 13px; }
+  .sessbar b { flex: 1; font-weight: 600; }
+  .sessbar span { color: var(--green); font-weight: 700; }
+
+  /* Sheets, forms */
+  .bar { display: flex; justify-content: center; position: relative; font: 600 15.5px system-ui; padding: 6px 0 12px; flex-shrink: 0; }
+  .bar span { position: absolute; right: 4px; color: var(--blue); }
+  .bar span.l { right: auto; left: 4px; font-weight: 400; }
+  .fs { background: var(--row); border-radius: 14px; margin-bottom: 4px; overflow: hidden; }
+  .fr { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 10px 12px; border-bottom: 1px solid var(--sep); font-size: 14px; }
+  .fr:last-child { border-bottom: 0; }
+  .fr .v { color: var(--sub); text-align: right; font-size: 13px; }
+  .fr.a { color: var(--blue); } .fr.x { color: var(--red); }
+  .fr .tx { flex: 1; min-width: 0; }
+  .fr .tx small { display: block; color: var(--sub); font-size: 12px; margin-top: 1px; line-height: 1.35; }
+  .fr.ph { color: var(--sub); min-height: 44px; align-items: flex-start; }
+  .fh { color: var(--sub); font: 600 11.5px system-ui; text-transform: uppercase; letter-spacing: .4px; margin: 10px 12px 4px; }
+  .ff { color: var(--sub); font-size: 11.5px; line-height: 1.4; margin: 3px 12px 8px; }
+  .seg2 { display: flex; background: var(--card2); border-radius: 9px; padding: 2px; margin: 0 0 8px; }
+  .seg2 span { flex: 1; text-align: center; padding: 6px 2px; font-size: 13px; border-radius: 7px; color: var(--dim); }
+  .seg2 span.on { background: var(--segon); color: var(--text); font-weight: 600; }
+  .big { display: block; text-align: center; font: 600 15px system-ui; border-radius: 14px; padding: 12px; margin: 8px 0 0; background: var(--blue); color: #fff; }
+  .big.s { background: var(--card2); color: var(--blue); }
+  .menu { border-radius: 16px; overflow: hidden; font-size: 15px; width: 270px; align-self: flex-end; margin: 0 4px 8px; }
+  .menu div { display: flex; justify-content: space-between; padding: 11px 14px; border-bottom: 1px solid var(--glassline); }
+  .menu div:last-child { border-bottom: 0; }
+  .menu div.new { box-shadow: inset 3px 0 0 #ffd60a; }
+  .menu div.x { color: var(--red); }
+  .menu div.gap { border-bottom: 7px solid rgba(128,128,128,.25); }
+  .menu div.h { font: 600 11.5px system-ui; color: var(--sub); padding: 7px 14px 4px; border-bottom: 0; }
+  .hint { background: rgba(255,159,10,.14); border-radius: 12px; padding: 8px 12px; margin: 0 4px 8px; font-size: 12.5px; line-height: 1.4; }
+  .hint b { color: var(--orange); }
+  .tog { width: 46px; height: 28px; border-radius: 99px; background: rgba(120,120,128,.36); position: relative; flex-shrink: 0; }
+  .tog::after { content: ""; position: absolute; top: 2px; left: 2px; width: 24px; height: 24px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.3); }
+  .tog.on { background: var(--green); } .tog.on::after { left: 20px; }
+  .undo { display: flex; justify-content: space-between; align-items: center; border-radius: 99px; padding: 10px 16px; margin: auto 6px 4px; font-size: 13.5px; }
+  .undo span { color: var(--blue); font-weight: 600; }
+  .dots { display: flex; gap: 6px; justify-content: center; margin: 0 0 10px; }
+  .dots i { width: 28px; height: 4px; border-radius: 99px; background: var(--card2); }
+  .dots i.on { background: var(--blue); }
+  .lockscr { flex: 1; display: grid; place-items: center; text-align: center; color: var(--sub); font-size: 14px; line-height: 1.5; }
+  .lockscr b { display: block; font-size: 38px; margin-bottom: 6px; }
+</style>
+<style>
+  /* Additions for this file: tables, grid editor, drawing canvas, scans, pickers, reminders. */
+  .tbl { border-collapse: collapse; font-size: 13px; margin: 6px 0; }
+  .tbl th, .tbl td { border: 1px solid var(--sep); padding: 5px 8px; text-align: left; vertical-align: top; }
+  .tbl th { background: var(--card); font-weight: 600; }
+  .ge { display: grid; gap: 1px; background: var(--sep); border-radius: 10px; overflow: hidden; margin: 0 0 8px; }
+  .ge span { background: var(--row); padding: 9px 8px; font-size: 13px; min-height: 18px; }
+  .ge span.h { font-weight: 600; background: var(--card2); }
+  .ge span.cur { box-shadow: inset 0 0 0 2px var(--blue); }
+  .ge span.add { color: var(--blue); text-align: center; font-weight: 600; }
+  .paper { background: #fbfaf6; border-radius: 12px; margin: 8px 0; overflow: hidden; border: 1px solid var(--sep); position: relative; }
+  .paper svg { display: block; width: 100%; }
+  .paper .tag { position: absolute; right: 8px; bottom: 6px; font: 600 11px system-ui; color: #6c6c70; }
+  .page { background: #fff repeating-linear-gradient(#fff 0 9px, #d8d8dc 9px 10px); background-origin: content-box; background-clip: content-box, border-box; border: 1px solid #c7c7cc; border-radius: 6px; padding: 12px 10px; box-sizing: border-box; flex-shrink: 0; }
+  .pages { display: flex; gap: 8px; margin: 8px 0; align-items: flex-start; }
+  .pdfcard { display: flex; gap: 10px; align-items: center; background: var(--card); border: 1px solid var(--sep); border-radius: 12px; padding: 8px; margin: 8px 0; font-size: 13.5px; }
+  .pdfcard small { display: block; color: var(--sub); font-size: 12px; margin-top: 2px; }
+  .wheel { display: flex; background: var(--row); border-radius: 14px; height: 112px; position: relative; overflow: hidden; text-align: center; margin-bottom: 6px; }
+  .wheel::before { content: ""; position: absolute; left: 8px; right: 8px; top: 40px; height: 32px; border-radius: 8px; background: rgba(120,120,128,.24); }
+  .wheel div { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 7px; font-size: 16px; color: var(--sub); position: relative; }
+  .wheel div b { color: var(--text); font: 600 19px system-ui; }
+  .wheel div i { font: 600 10.5px system-ui; text-transform: uppercase; letter-spacing: .4px; position: absolute; top: 5px; left: 0; right: 0; font-style: normal; }
+  .wd { display: inline-grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; background: var(--card2); font: 600 12px system-ui; margin-right: 3px; }
+  .wd.on { background: var(--blue); color: #fff; }
+  .vg { display: grid; grid-template-columns: repeat(8, 1fr); gap: 5px; font: 600 12.5px system-ui; text-align: center; }
+  .vg span { background: var(--card2); border-radius: 8px; padding: 7px 0; }
+  .vg span.r { background: var(--sep); color: var(--sub); }
+  .vg span.on { background: var(--blue); color: #fff; }
+  .alert { align-self: center; width: 250px; border-radius: 16px; text-align: center; padding: 16px 14px 0; margin: 60px 0 0; font-size: 13px; line-height: 1.4; overflow: hidden; }
+  .alert b { display: block; font-size: 15.5px; margin-bottom: 4px; }
+  .alert .bt { display: flex; margin: 14px -14px 0; border-top: 1px solid var(--glassline); }
+  .alert .bt span { flex: 1; padding: 11px 0; color: var(--blue); font-size: 15px; }
+  .alert .bt span + span { border-left: 1px solid var(--glassline); font-weight: 600; }
+  .banner { border-radius: 20px; padding: 10px 12px; margin: 30px 0 8px; font-size: 13.5px; line-height: 1.4; }
+  .banner b { display: flex; justify-content: space-between; font-size: 13.5px; }
+  .banner b small { font-weight: 400; color: var(--sub); }
+  .banner .act { display: flex; gap: 6px; margin-top: 8px; }
+  .banner .act span { flex: 1; text-align: center; background: var(--card2); border-radius: 10px; padding: 7px 0; font-weight: 600; font-size: 13px; }
+  .tools { display: flex; justify-content: space-around; align-items: flex-end; border-radius: 22px; padding: 10px 12px 8px; margin: auto 4px 4px; }
+  .tools i { width: 16px; border-radius: 4px 4px 0 0; background: var(--dim); display: block; }
+  .tools i.sel { box-shadow: 0 -5px 0 var(--blue); }
+  .tools em { width: 24px; height: 24px; border-radius: 50%; display: block; }
+  .kbbar span.new { outline: 2px solid #ffd60a; outline-offset: -1px; }
+  .kbbar span.w { width: auto; padding: 0 9px; font-size: 13px; }
+</style>
+</head>
+<body>
+
+<h1>Designrunde G2 · Notizen-Erweiterungen und Bible Study</h1>
+<p class="lead">Mockups zu den Anforderungen, die mit den Entscheidungen zu Teil 1 hinzugekommen sind (Kommentar in #188 vom 20.11.): <b>einzelne Notizen sperren</b>, <b>Dokumente scannen</b>, <b>Zeichnen</b>, <b>Tabellen-Editor</b>, <b>Versauswahl in Bible Study</b> und <b>Erinnerung zu den gewohnten Zeiten</b>. Alles baut auf den gewählten Varianten aus <code>2026-11-20-g2-notizen-routinen-mockups.html</code> auf (NO1b, NO10c, NO15b, NO16b, NO18b, BS1b, BS2b). Jede Frage hat eine Kurz-ID, zwei bis drei Varianten und eine Empfehlung <span class="rec">Empfehlung</span>. <span class="same">heute</span> zeigt den gebauten Stand laut Code. Ein gelber Strich oder Rahmen markiert, was neu ist. Symbole sind Platzhalter; der gemeinte SF-Symbol-Name steht im Text. Die Bildschirme zeigen die App abwechselnd im dunklen und im hellen Modus. Technische Randbedingungen stehen am Ende; sie sind aus dem Code gelesen, nicht am Gerät geprüft.</p>
+
+<div class="box neutral">
+<h3>Übersicht der Entscheidungen</h3>
+<div class="tablewrap"><table class="sum">
+<tr><th>ID</th><th>Frage</th><th>Varianten</th><th>Empfehlung</th></tr>
+<tr><td>NL1</td><td>Eine Sperre oder zwei (Verhältnis zu NO10c)</td><td>a eine gemeinsame Sperre · b je Notiz eigene Abfrage · c nur über gesperrte Ordner</td><td>a</td></tr>
+<tr><td>NL2</td><td>Sperren und Entsperren auslösen</td><td>a Menü „⋯“ und Kontextmenü · b Schloss-Knopf in der Leiste · c nur Wischen in der Liste</td><td>a</td></tr>
+<tr><td>NL3</td><td>Gesperrte Notiz in Listen</td><td>a Titel sichtbar, Vorschau „Gesperrt“ · b Titel verborgen · c eigene eingeklappte Gruppe</td><td>a</td></tr>
+<tr><td>NL4</td><td>Gesperrte Notiz in der Suche</td><td>a nur Titel · b Volltext ohne Ausschnitt · c gar nicht</td><td>a</td></tr>
+<tr><td>NL5</td><td>Entsperren und Rückfallebene</td><td>a Face ID, sonst Gerätecode · b nur Face ID · c eigenes Passwort</td><td>a</td></tr>
+<tr><td>NL6</td><td>Gesperrte Notizen in der Sicherung</td><td>a wie bisher nach Notizart · b nur mit dem Schalter für Privates · c nie</td><td>a</td></tr>
+<tr><td>SC1</td><td>Einstieg für Scannen, Zeichnen, Tabelle</td><td>a gruppiertes Einfügen-Menü · b eigene Knöpfe in der Leiste · c Plus-Knopf oben</td><td>a</td></tr>
+<tr><td>SC2</td><td>Ergebnis eines Scans</td><td>a Seiten als Bilder · b eine PDF als Datei-Chip · c eine PDF mit Vorschau der ersten Seite</td><td>c</td></tr>
+<tr><td>SC3</td><td>Texterkennung</td><td>a Text in die Notiz einfügen · b unsichtbar durchsuchbar, Einfügen auf Wunsch · c keine</td><td>b</td></tr>
+<tr><td>ZE1</td><td>Ort des Zeichnens</td><td>a Vollbild-Zeichenfläche · b Block im Text · c eigene Zeichnungs-Notiz</td><td>a</td></tr>
+<tr><td>ZE2</td><td>Speicherform der Zeichnung</td><td>a nur Bild · b Bild und Strichdaten · c nur Strichdaten</td><td>b</td></tr>
+<tr><td>ZE3</td><td>Tipp auf eine vorhandene Zeichnung</td><td>a Vorschau (Quick Look) · b sofort Zeichenfläche · c Großansicht mit „Bearbeiten“</td><td>c</td></tr>
+<tr><td>TX1</td><td>Art des Tabellen-Editors</td><td>a nur Markdown-Text mit Gerüst · b Raster-Editor als Blatt · c direkt in der Ansicht</td><td>b</td></tr>
+<tr><td>TX2</td><td>Vorhandene Tabelle öffnen</td><td>a nur beim Schreiben · b nur aus der Ansicht · c beides</td><td>c</td></tr>
+<tr><td>TX3</td><td>Zeilen und Spalten ändern</td><td>a Plus an den Rändern, Halten zum Löschen · b Leiste über der Tastatur · c Bearbeiten-Modus mit Griffen</td><td>b</td></tr>
+<tr><td>TX4</td><td>Tabelle in der Ansicht</td><td>a natürliche Breite, seitlich scrollen · b Umbruch bis zur Höchstbreite, dann scrollen · c Karten je Zeile</td><td>b</td></tr>
+<tr><td>BV1</td><td>Eingabe von Kapitel und Versen</td><td>a Textfeld vorbelegt · b Zeilen „Von“/„Bis“ mit Rädern · c Vers-Raster</td><td>b</td></tr>
+<tr><td>BV2</td><td>Vorbelegtes Ende der Stelle</td><td>a Kapitelende · b offen, beim Abschließen bestätigen · c so lang wie zuletzt</td><td>b</td></tr>
+<tr><td>BV3</td><td>Kapitel- und Verszahlen</td><td>a Tabelle mit Verszahlen · b nur Kapitelzahlen · c keine Daten</td><td>a</td></tr>
+<tr><td>BE1</td><td>Woher die Erinnerungszeit kommt</td><td>a feste Zeiten · b gelernt · c gelernter Vorschlag, den man bestätigt</td><td>c</td></tr>
+<tr><td>BE2</td><td>Feinheit der Zeiten</td><td>a eine Zeit täglich · b Zeiten mit Wochentagen (Wecker-Modell) · c sieben Zeilen</td><td>b</td></tr>
+<tr><td>BE3</td><td>Wo der Vorschlag erscheint</td><td>a nur in den Einstellungen · b nach dem Abschließen einer Sitzung · c als Mitteilung</td><td>b</td></tr>
+</table></div>
+</div>
+
+<!-- ====================================================================== SPERREN -->
+<h2 class="part">Einzelne Notizen sperren (NO12 erweitert, zusätzlich zu NO10c)</h2>
+<p class="lead">Heute gibt es keine Sperre im Code (kein <code>LocalAuthentication</code>, kein Feld an <code>NoteRecord</code>). „Privat“ ist bisher eine feste Eigenschaft der Notizart bzw. des Systemordners (Tagebuch, Bible Study, Dream Log) und regelt nur, was das Gerät verlässt. Die Sperre ist in allen Varianten eine <b>Sichtsperre der App</b>, keine Verschlüsselung: Die Notiz liegt weiter in der Datenbank, geschützt durch die Gerätesperre von iOS.</p>
+
+<h2><span class="area">NL1</span> Eine Sperre oder zwei</h2>
+<div class="grid">
+<div>
+<p class="label"><span class="code r">NL1a</span> <b>Eine gemeinsame Sperre</b> <span class="rec">Empfehlung</span></p>
+<div class="phone crop l sh"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="bar"><span class="l">‹ Einstellungen</span>Notizen</div>
+<div class="fh">Sperre</div>
+<div class="fs"><div class="fr new"><span class="tx">Mit Face ID schützen<small>Gilt für gesperrte Notizen und private Ordner.</small></span><span class="tog on"></span></div><div class="fr">Private Ordner sperren <span class="tog on"></span></div><div class="fr new">Gesperrte Notizen <span class="v">3 ›</span></div></div>
+<div class="ff">Einmal entsperren öffnet alles Gesperrte, bis du Tagwerk verlässt. Private Ordner: Tagebuch mit Gott, Bible Study, Dream Log.</div>
+<div class="fh">Was die Sperre tut</div>
+<div class="fs"><div class="fr"><span class="tx">Verbirgt den Inhalt<small>In Listen, Suche und Vorschau steht nur der Titel.</small></span></div><div class="fr"><span class="tx">Bleibt auf dem iPhone<small>Gesperrte Notizen gehen nie an ChatGPT.</small></span></div><div class="fr"><span class="tx">Verschlüsselt nicht<small>Die Sicherungsdatei enthält gesperrte Notizen im Klartext.</small></span></div></div>
+</div></div>
+<p class="pc"><b>Grund:</b> Für die Nutzerin gibt es nur eine Frage („ist das gerade entsperrt?“) und im Code nur eine Stelle, die sie beantwortet; „geschützt“ ist eine Notiz, wenn sie selbst gesperrt ist oder in einem gesperrten privaten Ordner liegt. Die Entsperrung gilt wie in NO10c, bis die App in den Hintergrund geht.</p>
+</div>
+<div>
+<p class="label"><span class="code">NL1b</span> <b>Zwei Mechanismen, Abfrage je Notiz</b></p>
+<div class="phone crop l light"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="nav"><span class="back">‹ Wohnung</span><span class="r"><span class="gb glass">⋯</span></span></div>
+<div class="lt" style="font-size:23px">Zugangsdaten Router</div>
+<div class="alert glass"><b>Face ID</b>Tagwerk möchte „Zugangsdaten Router“ entsperren.<div class="bt"><span>Abbrechen</span><span>Code eingeben</span></div></div>
+</div></div>
+<p class="pc">Jede gesperrte Notiz fragt einzeln, die privaten Ordner haben ihre eigene Sitzung. Strenger, aber wer drei gesperrte Notizen nacheinander öffnet, wird dreimal gefragt, und zwei Zustände („Ordner offen, Notiz zu“) sind schwer zu erklären.</p>
+</div>
+<div>
+<p class="label"><span class="code">NL1c</span> <b>Nur Ordner sperrbar</b></p>
+<div class="phone crop l"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="lt">Notizen</div>
+<div class="section">Meine Ordner</div>
+<div class="list"><div class="tl"><span class="ic">▤</span><span class="tx">Notizen</span><span class="ch">24</span></div><div class="tl d1"><span class="ic">▤</span><span class="tx">Wohnung</span><span class="ch">6</span></div><div class="tl new"><span class="ic">🔒</span><span class="tx">Gesperrt<small>Eigener Ordner, als privat markiert</small></span><span class="ch">3</span></div></div>
+<div class="menu glass" style="align-self:flex-start"><div>Umbenennen</div><div class="new">Ordner sperren <span>🔒</span></div><div class="x">Löschen</div></div>
+</div></div>
+<p class="pc">Nutzt NO10c unverändert: Eigene Ordner lassen sich als privat markieren, eine Notiz sperrt man durch Verschieben. Kein Feld je Notiz, aber die Anforderung „einzelne Notiz sperren“ ist nur über einen Umweg erfüllt, und die Notiz verliert ihren Platz im Ordnerbaum.</p>
+</div>
+</div>
+
+<h2><span class="area">NL2</span> Sperren und Entsperren auslösen</h2>
+<div class="grid">
+<div>
+<p class="label"><span class="code r">NL2a</span> <b>Menü „⋯“ in der Notiz, Kontextmenü in der Liste</b> <span class="rec">Empfehlung</span></p>
+<div class="phone crop"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="nav"><span class="back">‹ Wohnung</span><span class="r"><span class="gb glass">⋯</span></span></div>
+<div class="menu glass"><div>Anheften <span>⚲</span></div><div>In Ordner bewegen <span>▤</span></div><div class="new gap">Sperren <span>🔒</span></div><div>Teilen <span>⇪</span></div><div class="x">Löschen <span>🗑</span></div></div>
+<div class="note"><h4>Zugangsdaten Router</h4><p>SSID Fritz-7590 …</p></div>
+</div></div>
+<p class="pc"><b>Grund:</b> Sperren ist selten und gehört zu den Verwaltungsaktionen neben Anheften und Bewegen; dieselbe Zeile steht im Kontextmenü der Notizkarte und in der Mehrfachauswahl (NO8b). Bei einer gesperrten Notiz heißt der Eintrag „Sperre aufheben“ (<code>lock.open</code>) und verlangt Face ID. Symbol <code>lock</code>.</p>
+</div>
+<div>
+<p class="label"><span class="code">NL2a</span> <b>Beim ersten Sperren: Erklärung, einmalig</b></p>
+<div class="phone crop sh light"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="bar"><span class="l">Abbrechen</span>Notiz sperren</div>
+<div class="lockscr" style="flex:0;padding:6px 0 10px"><div><b>🔒</b></div></div>
+<div class="fs"><div class="fr"><span class="tx">Öffnen nur mit Face ID oder Gerätecode</span></div><div class="fr"><span class="tx">In Listen und Suche bleibt der Titel sichtbar<small>Der Titel ist die erste Zeile der Notiz.</small></span></div><div class="fr"><span class="tx">Geht nie an ChatGPT</span></div><div class="fr"><span class="tx">Steht unverschlüsselt in der Sicherung</span></div></div>
+<span class="big">Mit Face ID sperren</span>
+</div></div>
+<p class="pc">Erscheint nur, solange „Mit Face ID schützen“ noch aus ist; „Mit Face ID sperren“ schaltet den Schalter ein und fragt Face ID einmal ab. So entsteht die Sperre dort, wo man sie zum ersten Mal braucht, ohne Umweg über die Einstellungen.</p>
+</div>
+<div>
+<p class="label"><span class="code">NL2b</span> <b>Schloss-Knopf in der Leiste</b> · <span class="code">NL2c</span> <b>Nur Wischen in der Liste</b></p>
+<div class="phone crop s"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="nav"><span class="back">‹ Wohnung</span><span class="r"><span class="gb glass new">🔓</span><span class="gb glass">⋯</span></span></div>
+<div class="note"><h4>Zugangsdaten Router</h4><p>SSID Fritz-7590 …</p></div>
+</div></div>
+<p class="pc"><b>b:</b> Der Zustand ist immer sichtbar und ein Tipp sperrt sofort; dafür steht in jeder Notiz ein Knopf, den die meisten Notizen nie brauchen, und NO15b hat die Leiste gerade erst geleert. <b>c:</b> Wischen nach links zeigt „Sperren“ neben „Löschen“; schnell, aber in der geöffneten Notiz gäbe es keinen Weg.</p>
+</div>
+</div>
+
+<h2><span class="area">NL3</span> Gesperrte Notiz in Listen und beim Öffnen</h2>
+<div class="grid">
+<div>
+<p class="label"><span class="code r">NL3a</span> <b>Titel sichtbar, Vorschau „Gesperrt“</b> <span class="rec">Empfehlung</span></p>
+<div class="phone crop"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="nav"><span class="back">‹ Notizen</span><span class="r"><span class="gb glass">⋯</span></span></div>
+<div class="lt">Wohnung</div>
+<div class="list"><div class="card new"><div class="b"><div class="t">Zugangsdaten Router <small>🔒</small></div><div class="p">Gesperrt</div><div class="f">12.11.</div></div></div><div class="card"><div class="b"><div class="t">Grundriss neue Wohnung <small>⌕ 2</small></div><div class="p">Vom Makler, Stand 12.11.</div><div class="f">Gestern</div></div><span class="thumb"></span></div><div class="card new"><div class="b"><div class="t">Kaution und Konto <small>🔓</small></div><div class="p">IBAN DE12 …, Betrag 2.400 €</div><div class="f">Gestern</div></div></div></div>
+</div></div>
+<p class="pc"><b>Grund:</b> Wie in Apple Notizen bleibt die Notiz am gewohnten Platz auffindbar; verborgen sind Vorschautext, Vorschaubild (NO19a) und Anhang-Zähler. Nach dem Entsperren zeigt die Karte den Text wieder und ein offenes Schloss. <b>Folge:</b> Die erste Zeile ist der Titel und damit sichtbar; die Erklärung in NL2a sagt das.</p>
+</div>
+<div>
+<p class="label"><span class="code">NL3a</span> <b>Geöffnet: gesperrt und entsperrt</b></p>
+<div class="phone crop light"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="nav"><span class="back">‹ Wohnung</span><span class="r"><span class="gb glass">⋯</span></span></div>
+<div class="lt" style="font-size:23px">Zugangsdaten Router</div>
+<div class="lockscr"><div><b>🔒</b>Diese Notiz ist gesperrt.<br><span style="color:var(--blue)">Mit Face ID öffnen</span></div></div>
+</div></div>
+<p class="pc">Derselbe Bildschirm wie beim gesperrten Ordner (NO10c). Face ID wird beim Öffnen sofort abgefragt; schlägt es fehl, bleibt dieser Bildschirm stehen. Entsperrt sieht die Notiz aus wie jede andere; im Menü steht „Jetzt sperren“ (schließt alles Gesperrte sofort) und „Sperre aufheben“. Im App-Umschalter wird eine offene geschützte Notiz abgedeckt.</p>
+</div>
+<div>
+<p class="label"><span class="code">NL3b</span> <b>Titel verborgen</b> · <span class="code">NL3c</span> <b>Eigene Gruppe</b></p>
+<div class="phone crop"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="lt">Wohnung</div>
+<div class="list"><div class="card"><div class="b"><div class="t">Gesperrte Notiz <small>🔒</small></div><div class="f">12.11.</div></div></div><div class="card"><div class="b"><div class="t">Grundriss neue Wohnung</div><div class="p">Vom Makler, Stand 12.11.</div><div class="f">Gestern</div></div></div></div>
+<div class="section" style="margin-top:14px">Variante c</div>
+<div class="list"><div class="tl"><span class="ic">🔒</span><span class="tx">Gesperrt</span><span class="ch">2 ›</span></div></div>
+</div></div>
+<p class="pc"><b>b:</b> Verrät nichts, aber mehrere gesperrte Notizen sind nur am Datum zu unterscheiden; man entsperrt, um zu suchen. <b>c:</b> Eine Zeile „Gesperrt“ am Listenende, die sich erst nach Face ID aufklappt; am dichtesten, nimmt die Notizen aber aus Sortierung und Datumsgruppen (NO7b).</p>
+</div>
+</div>
+
+<h2><span class="area">NL4</span> Gesperrte Notiz in der Suche</h2>
+<div class="grid">
+<div>
+<p class="label"><span class="code r">NL4a</span> <b>Nur der Titel wird durchsucht</b> <span class="rec">Empfehlung</span></p>
+<div class="phone crop s sh"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="fs"><div class="fr">⌕ router</div></div>
+<div class="fh">Notizen · 2</div>
+<div class="fs"><div class="fr new"><span class="tx">Zugangsdaten Router 🔒<small>Wohnung · Gesperrt</small></span></div><div class="fr"><span class="tx">Fragen an Vermieter<small>… ob der <b>Router</b> im Keller bleiben darf …</small></span></div></div>
+<div class="ff">Gesperrte Notizen werden nur über den Titel gefunden.</div>
+</div></div>
+<p class="pc"><b>Grund:</b> Schon ein Treffer ohne Ausschnitt verrät, dass ein Wort im gesperrten Text steht; wer das iPhone in der Hand hat, könnte den Inhalt so erraten. Solange entsperrt ist, sucht die Suche wieder im ganzen Text. Dieselbe Regel gilt dann für Notizen in gesperrten privaten Ordnern.</p>
+</div>
+<div>
+<p class="label"><span class="code">NL4b</span> <b>Volltext, Treffer ohne Ausschnitt</b></p>
+<div class="phone crop s sh"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="fs"><div class="fr">⌕ fritz</div></div>
+<div class="fh">Notizen · 1</div>
+<div class="fs"><div class="fr"><span class="tx">Zugangsdaten Router 🔒<small>Wohnung · Treffer im gesperrten Text</small></span></div></div>
+</div></div>
+<p class="pc">Am bequemsten und nah am heutigen Verhalten (die Suche ist lokal und zeigt private Notizen). Macht die Suche aber zu einem Ja/Nein-Orakel über den gesperrten Inhalt.</p>
+</div>
+<div>
+<p class="label"><span class="code">NL4c</span> <b>Gar nicht in der Suche</b></p>
+<div class="phone crop s sh"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="fs"><div class="fr">⌕ router</div></div>
+<div class="fh">Notizen · 1</div>
+<div class="fs"><div class="fr"><span class="tx">Fragen an Vermieter<small>… ob der <b>Router</b> im Keller bleiben darf …</small></span></div></div>
+<div class="ff">1 gesperrte Notiz ist nicht durchsucht. <span style="color:var(--blue)">Entsperren</span></div>
+</div></div>
+<p class="pc">Am strengsten; widerspricht aber NL3a (der Titel steht ohnehin in der Liste) und macht gesperrte Notizen unauffindbar, wenn man den Ordner nicht mehr weiß.</p>
+</div>
+</div>
+
+<h2><span class="area">NL5</span> Entsperren und Rückfallebene</h2>
+<div class="grid">
+<div>
+<p class="label"><span class="code r">NL5a</span> <b>Face ID, sonst Gerätecode</b> <span class="rec">Empfehlung</span></p>
+<div class="phone crop s light"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="alert glass" style="margin-top:24px"><b>Face ID nicht erkannt</b>Erneut versuchen oder den Code des iPhone eingeben, um „Zugangsdaten Router“ zu öffnen.<div class="bt"><span>Abbrechen</span><span>Code eingeben</span></div></div>
+</div></div>
+<p class="pc"><b>Grund:</b> Es gibt kein eigenes Passwort, das man vergessen kann, also keinen Weg, sich auszusperren; das ist die Systemprüfung „Geräteinhaber“ und dieselbe Regel wie für NO10c. <b>Grenze:</b> Wer den Gerätecode kennt, kommt hinein. Ist am iPhone kein Code eingerichtet, lässt sich nichts sperren; die Zeile „Sperren“ erklärt das dann.</p>
+</div>
+<div>
+<p class="label"><span class="code">NL5b</span> <b>Nur Face ID</b></p>
+<div class="phone crop s"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="alert glass" style="margin-top:24px"><b>Face ID nicht erkannt</b>Diese Notiz lässt sich nur mit Face ID öffnen.<div class="bt"><span>Abbrechen</span><span>Erneut</span></div></div>
+</div></div>
+<p class="pc">Schützt auch vor Mitwissern des Gerätecodes. Aber: Mit Maske, nach einem Sturz der Kamera oder nach dem Neuaufsetzen von Face ID kommt man nicht mehr an die eigene Notiz, und iOS selbst verlangt nach mehreren Fehlversuchen den Code.</p>
+</div>
+<div>
+<p class="label"><span class="code">NL5c</span> <b>Eigenes Passwort für Notizen</b></p>
+<div class="phone crop s sh"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="bar"><span class="l">Abbrechen</span>Passwort festlegen<span>Sichern</span></div>
+<div class="fs"><div class="fr ph">Passwort</div><div class="fr ph">Wiederholen</div><div class="fr ph">Merkhilfe</div></div>
+<div class="ff">Ein vergessenes Passwort kann nicht zurückgesetzt werden.</div>
+</div></div>
+<p class="pc">Wie Apple Notizen in der alten Form; sinnvoll nur zusammen mit echter Verschlüsselung. Bringt Passwortverwaltung, Merkhilfe und das Risiko endgültig verlorener Notizen, ohne dass die Sperre hier mehr schützen würde.</p>
+</div>
+</div>
+
+<h2><span class="area">NL6</span> Sicherung · Assistent und alles, was das Gerät verlässt</h2>
+<div class="grid">
+<div>
+<p class="label"><span class="code r">NL6a</span> <b>Sicherung wie bisher, mit Hinweis</b> <span class="rec">Empfehlung</span></p>
+<div class="phone crop sh"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="bar"><span class="l">‹ Einstellungen</span>Datensicherung</div>
+<div class="fh">Inhalt</div>
+<div class="fs"><div class="fr">Tagebuch und Bible Study einschließen <span class="tog"></span></div><div class="fr new"><span class="tx">Gesperrte Notizen<small>3 Notizen, in der Datei unverschlüsselt enthalten</small></span><span class="v">enthalten</span></div></div>
+<div class="ff">Die Sperre schützt vor Mitlesen in Tagwerk, nicht die Sicherungsdatei. Bewahre die Datei an einem geschützten Ort auf.</div>
+</div></div>
+<p class="pc"><b>Grund:</b> Eine Sicherung, der die wichtigsten Notizen fehlen, ist die teurere Überraschung; die Sperre ändert deshalb nichts daran, ob eine Notiz gesichert wird (das regelt weiter die Notizart), und der Zustand „gesperrt“ wird mitgesichert. Das deckt sich mit der Aussage zu NO10c, dass die Sperre die Datei nicht schützt.</p>
+</div>
+<div>
+<p class="label"><span class="code">NL6b</span> <b>Nur mit dem Schalter für Privates</b> · <span class="code">NL6c</span> <b>Nie</b></p>
+<div class="phone crop sh light"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="bar"><span class="l">‹ Einstellungen</span>Datensicherung</div>
+<div class="fh">Inhalt</div>
+<div class="fs"><div class="fr new"><span class="tx">Privates einschließen<small>Tagebuch, Bible Study und gesperrte Notizen</small></span><span class="tog"></span></div></div>
+<div class="hint"><b>Nicht gesichert:</b> 3 gesperrte Notizen, Tagebuch und Bible Study. Beim Wiederherstellen fehlen sie.</div>
+</div></div>
+<p class="pc"><b>b:</b> Ein Schalter für alles Schützenswerte; dann fehlen gesperrte Notizen in der Standardsicherung, solange niemand den Schalter umlegt. <b>c:</b> Gesperrte Notizen stehen nie in einer Datei; sicher gegen Abfluss, aber ein Gerätewechsel verliert sie ohne Warnung.</p>
+</div>
+<div>
+<p class="label"><b>Assistent (#233): keine Variante, feste Regel</b></p>
+<div class="phone crop"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="nav"><span class="back">‹ Wohnung</span><span class="r"><span class="gb glass">⋯</span></span></div>
+<div class="menu glass"><div>Anheften <span>⚲</span></div><div>Sperre aufheben <span>🔓</span></div><div style="color:var(--sub)" class="new">Mit ChatGPT bearbeiten <span>🔒</span></div><div>Teilen <span>⇪</span></div></div>
+<div class="hint"><b>Gesperrt:</b> Diese Notiz geht nicht an ChatGPT. Hebe die Sperre auf, wenn der Assistent sie lesen soll.</div>
+</div></div>
+<p class="pc">Eine gesperrte Notiz gilt für alles, was das Gerät verlässt, als privat, <b>auch während sie entsperrt ist</b>: kein Werkzeug des Assistenten nennt Titel, Text oder Existenz, „Vorschläge holen“ und „Rezept übersetzen“ sind nicht angeboten, die Rezeptauswahl lässt sie aus. „Teilen“ bleibt nach dem Entsperren möglich, weil es eine bewusste Handlung ist.</p>
+</div>
+</div>
+<div class="box"><h3>Sperren · weitere Regeln (für alle Varianten gleich)</h3>
+<ul>
+<li><b>Welche Notizen:</b> eigene Notizen sowie Notizen aus Tagesstart, Tagesabschluss, Brain Dump und Rezepten. In privaten Ordnern entfällt der Eintrag, solange „Private Ordner sperren“ an ist.</li>
+<li><b>Löschen und Bewegen</b> einer gesperrten Notiz verlangt die Entsperrung; in „Zuletzt gelöscht“ bleibt sie gesperrt.</li>
+<li><b>Anhänge</b> einer gesperrten Notiz (Bilder, Scans, Zeichnungen) erscheinen nirgends als Vorschau; erkannter Text aus Scans (SC3) wird nicht durchsucht.</li>
+<li><b>„Mit Face ID schützen“ ausschalten</b> verlangt Face ID und hebt keine Sperre auf: Die Notizen bleiben markiert, sind aber ohne Abfrage offen, bis der Schalter wieder an ist. Der Schalter sagt das.</li>
+</ul></div>
+
+<!-- ====================================================================== SCANNEN -->
+<h2 class="part">Dokumente in eine Notiz scannen</h2>
+<p class="lead">Heute: Das Büroklammer-Menü der Notiz kennt „Foto auswählen“, „Foto aufnehmen“, „Einfügen“ und „Datei“ (<code>NoteAttachmentMenu.swift</code>). Bilder werden als JPEG mit höchstens 2048 px gespeichert, Dateien bis 25 MB; im Text steht ein Verweis <code>![Name](attachment:ID)</code> bzw. <code>[Name](attachment:ID)</code>. Die Dokumentenkamera des Systems bringt Kantenerkennung, Entzerren, Filter und mehrere Seiten mit und liefert die Seiten als Bilder.</p>
+
+<h2><span class="area">SC1</span> Einstieg für Scannen, Zeichnen und Tabelle</h2>
+<div class="grid">
+<div>
+<p class="label"><span class="code r">SC1a</span> <b>Ein gruppiertes Einfügen-Menü</b> <span class="rec">Empfehlung</span></p>
+<div class="phone crop l"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="nav"><span class="back">‹ Wohnung</span><span class="r"><span class="gt glass">Fertig</span><span class="gb glass">⋯</span></span></div>
+<div class="note"><div class="raw"># Mietvertrag
+
+Unterschrieben am 12.11.▏</div></div>
+<div class="menu glass" style="align-self:flex-start;margin:8px 4px 0 150px;width:220px"><div class="h">Aufnehmen</div><div>Foto auswählen <span>▨</span></div><div>Foto aufnehmen <span>◉</span></div><div class="new">Dokument scannen <span>▤</span></div><div class="gap">Datei <span>▯</span></div><div class="h">Erstellen</div><div class="new">Zeichnung <span>✎</span></div><div class="new">Tabelle <span>▦</span></div></div>
+<div class="kb" style="padding-bottom:16px"><div class="kbbar"><span>H</span><span><b>B</b></span><span><i>I</i></span><span>☰</span><span>☑</span><span class="new">＋</span><span class="done">⌄</span></div></div>
+</div></div>
+<p class="pc"><b>Grund:</b> Die Leiste aus NO16b bleibt bei sechs Knöpfen, und alles, was einen Block in die Notiz setzt, steht an einer Stelle. Der Knopf wechselt von der Büroklammer zu „＋“ (<code>plus.circle</code>), weil Zeichnung und Tabelle keine Anhänge im engeren Sinn sind. „Einfügen“ aus der Zwischenablage bleibt als Zeile erhalten (im Bild weggelassen). „Dokument scannen“ fehlt, wo die Dokumentenkamera nicht verfügbar ist.</p>
+</div>
+<div>
+<p class="label"><span class="code">SC1b</span> <b>Eigene Knöpfe in der Leiste</b></p>
+<div class="phone crop s light"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="note"><div class="raw">Unterschrieben am 12.11.▏</div></div>
+<div class="kb"><div class="kbbar"><span>H</span><span><b>B</b></span><span>☰</span><span>☑</span><span>⌕</span><span class="new">▤</span><span class="new">✎</span><span class="new">▦</span><span class="done">⌄</span></div><div class="kbkeys"></div><div class="kbkeys"></div></div>
+</div></div>
+<p class="pc">Ein Tipp statt zwei. Neun Knöpfe passen aber nur mit seitlichem Scrollen oder indem „kursiv“ weicht, und drei wenig bekannte Symbole ohne Beschriftung müssen erraten werden.</p>
+</div>
+<div>
+<p class="label"><span class="code">SC1c</span> <b>Plus-Knopf oben in der Notiz</b></p>
+<div class="phone crop s"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="nav"><span class="back">‹ Wohnung</span><span class="r"><span class="gb glass new">＋</span><span class="gb glass">⋯</span></span></div>
+<div class="note"><h4>Mietvertrag</h4><p>Unterschrieben am 12.11.</p></div>
+</div></div>
+<p class="pc">Auch in der Ansicht erreichbar, ohne erst zu schreiben. Dann ist aber unklar, wo der Block landet (es gibt keine Schreibmarke), und die Leiste bekommt wieder einen zweiten Knopf.</p>
+</div>
+</div>
+
+<h2><span class="area">SC2</span> Ergebnis eines Scans</h2>
+<div class="grid">
+<div>
+<p class="label"><span class="code">SC2a</span> <b>Jede Seite als Bild</b></p>
+<div class="phone crop"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="note"><h4>Mietvertrag</h4><p>Unterschrieben am 12.11.</p><div class="page" style="height:170px;margin:8px 0"></div><div class="page" style="height:170px;margin:8px 0"></div></div>
+</div></div>
+<p class="pc">Nutzt den vorhandenen Bildweg ohne Änderung. Ein Vertrag mit acht Seiten ergibt aber acht Verweise im Text und acht Bilder untereinander, jede Seite auf 40 % der Höhe begrenzt (NO18b) und damit unleserlich; teilen lässt sich nur Seite für Seite.</p>
+</div>
+<div>
+<p class="label"><span class="code">SC2b</span> <b>Eine PDF als Datei-Chip</b></p>
+<div class="phone crop light"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="note"><h4>Mietvertrag</h4><p>Unterschrieben am 12.11.</p><span class="chip">▤ Scan 20.11.2026.pdf <small>8 Seiten · 3,1 MB</small></span><p style="margin-top:6px">Kündigungsfrist drei Monate.</p></div>
+</div></div>
+<p class="pc">Ein Verweis, eine Datei, in der Vorschau blätterbar und als Ganzes teilbar; passt zum Chip aus NO18b. Nachteil: Ein einzelner Kassenzettel ist in der Notiz nicht zu sehen, und die Notizkarte bekommt kein Vorschaubild.</p>
+</div>
+<div>
+<p class="label"><span class="code r">SC2c</span> <b>Eine PDF, erste Seite als Vorschau</b> <span class="rec">Empfehlung</span></p>
+<div class="phone crop"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="note"><h4>Mietvertrag</h4><p>Unterschrieben am 12.11.</p>
+<div class="pdfcard" style="box-shadow:inset 3px 0 0 #ffd60a"><div class="page" style="width:74px;height:100px"></div><div><b>Scan 20.11.2026</b><small>8 Seiten · 3,1 MB · PDF</small><small style="color:var(--blue);margin-top:8px">Öffnen</small></div></div>
+<p>Kündigungsfrist drei Monate.</p></div>
+</div></div>
+<p class="pc"><b>Grund:</b> Ein Dokument bleibt eine Datei (ein Verweis, blättern in der Vorschau, als PDF teilen), ist aber in der Notiz und als Vorschaubild auf der Karte zu erkennen. Der Name ist „Scan“ plus Datum und lässt sich durch Halten umbenennen. Die Seiten werden wie Fotos auf 2048 px verkleinert; über 25 MB erscheint die vorhandene Meldung „Datei zu groß“.</p>
+</div>
+</div>
+
+<h2><span class="area">SC3</span> Texterkennung</h2>
+<div class="grid">
+<div>
+<p class="label"><span class="code">SC3a</span> <b>Erkannten Text in die Notiz einfügen</b></p>
+<div class="phone crop"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="note"><h4>Mietvertrag</h4><div class="pdfcard"><div class="page" style="width:52px;height:70px"></div><div><b>Scan 20.11.2026</b><small>8 Seiten · PDF</small></div></div><p style="color:var(--dim)">§ 1 Mietsache. Vermietet wird die Wohnung im 2. OG links, bestehend aus 3 Zimmern, Küche, Bad … § 2 Mietzeit. Das Mietverhältnis beginnt am 01.12.2026 und läuft auf unbestimmte Zeit … § 3 Miete. Die Grundmiete beträgt monatlich …</p></div>
+</div></div>
+<p class="pc">Der Text ist sofort bearbeitbar und über die normale Suche auffindbar. Acht Seiten Vertragstext mit Erkennungsfehlern überschwemmen aber die Notiz, und der Text ginge mit der Notiz an den Assistenten.</p>
+</div>
+<div>
+<p class="label"><span class="code r">SC3b</span> <b>Unsichtbar durchsuchbar, Einfügen auf Wunsch</b> <span class="rec">Empfehlung</span></p>
+<div class="phone crop light"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="note"><h4>Mietvertrag</h4><div class="pdfcard"><div class="page" style="width:52px;height:70px"></div><div><b>Scan 20.11.2026</b><small>8 Seiten · PDF · Text erkannt</small></div></div></div>
+<div class="menu glass" style="align-self:flex-start;margin-left:20px"><div>Öffnen <span>▤</span></div><div class="new">Erkannten Text einfügen <span>¶</span></div><div class="new">Erkannten Text kopieren <span>⎘</span></div><div>Umbenennen <span>✎</span></div><div>Teilen <span>⇪</span></div></div>
+</div></div>
+<p class="pc"><b>Grund:</b> Der Scan wird über die Suche gefunden („Kündigungsfrist“), ohne dass fehlerhafter Text die Notiz füllt; wer den Text braucht, holt ihn mit einem Tipp. Die Erkennung läuft auf dem Gerät, deutsch und englisch. Der erkannte Text liegt am Anhang, nicht in der Notiz, und geht deshalb nicht an ChatGPT, solange er nicht eingefügt wurde.</p>
+</div>
+<div>
+<p class="label"><span class="code r">SC3b</span> <b>Treffer in der Suche</b> · <span class="code">SC3c</span> <b>Keine Erkennung</b></p>
+<div class="phone crop s sh"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="fs"><div class="fr">⌕ kündigungsfrist</div></div>
+<div class="fh">Notizen · 1</div>
+<div class="fs"><div class="fr new"><span class="tx">Mietvertrag<small>▤ Im Scan: … die <b>Kündigungsfrist</b> beträgt drei Monate zum …</small></span></div></div>
+</div></div>
+<p class="pc">Der Treffer nennt die Notiz und sagt „Im Scan“, damit klar ist, warum das Wort im Text nicht vorkommt. <b>c:</b> Ohne Erkennung ist ein Scan nur ein Bild; am einfachsten, aber gescannte Unterlagen findet man dann nur über den selbst getippten Titel.</p>
+</div>
+</div>
+<div class="box"><h3>Scannen · Ablauf</h3>
+<ol>
+<li>„＋ › Dokument scannen“ öffnet die Dokumentenkamera des Systems (automatischer Auslöser, mehrere Seiten, Zuschneiden, Filter). Beim ersten Mal fragt iOS nach dem Kamerazugriff; der Text dafür ist schon vorhanden.</li>
+<li>„Sichern“ in der Kamera setzt den Scan an der Schreibmarke in die Notiz. Es gibt kein Zwischenblatt; Name und Texterkennung lassen sich danach über das Menü am Scan ändern.</li>
+<li>Die Texterkennung läuft danach im Hintergrund; bis sie fertig ist, steht „Text wird erkannt …“ in der Unterzeile.</li>
+</ol></div>
+
+<!-- ====================================================================== ZEICHNEN -->
+<h2 class="part">Zeichnen in einer Notiz</h2>
+<p class="lead">Die Notiz ist Markdown-Text: Geschrieben wird in einem reinen Textfeld, gelesen in einer gerenderten Seite ohne JavaScript. Eine Zeichnung kann deshalb nur als Verweis im Text stehen, so wie Bilder heute. Die Zeichenfläche des Systems bringt Stifte, Radierer, Lineal und Farben mit und arbeitet mit Finger und Apple Pencil.</p>
+
+<h2><span class="area">ZE1</span> Ort des Zeichnens</h2>
+<div class="grid">
+<div>
+<p class="label"><span class="code r">ZE1a</span> <b>Vollbild-Zeichenfläche</b> <span class="rec">Empfehlung</span></p>
+<div class="phone light"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="nav"><span class="back">Abbrechen</span><span class="r"><span class="gb glass">↶</span><span class="gb glass">↷</span><span class="gt glass" style="outline:2px solid #ffd60a">Fertig</span></span></div>
+<div class="paper" style="flex:1;margin:0 0 8px"><svg viewBox="0 0 360 470" style="height:100%"><rect x="60" y="70" width="230" height="170" fill="none" stroke="#1c1c1e" stroke-width="3" stroke-linejoin="round"/><path d="M60 150h110v90" fill="none" stroke="#1c1c1e" stroke-width="3"/><path d="M170 150h120" fill="none" stroke="#1c1c1e" stroke-width="3" stroke-dasharray="6 6"/><path d="M95 70v-22h60v22" fill="none" stroke="#0a84ff" stroke-width="3"/><path d="M70 270c40-14 70 12 110 0s60-10 100 2" fill="none" stroke="#ff453a" stroke-width="4" stroke-linecap="round"/><text x="92" y="118" font-size="17" fill="#1c1c1e" font-family="Bradley Hand, cursive">Schlafen 3,40</text><text x="188" y="205" font-size="17" fill="#1c1c1e" font-family="Bradley Hand, cursive">Flur</text><text x="74" y="300" font-size="15" fill="#ff453a" font-family="Bradley Hand, cursive">Nische 92 cm!</text></svg></div>
+<div class="tools glass"><i style="height:34px" class="sel"></i><i style="height:26px"></i><i style="height:26px;background:#ffd60a"></i><i style="height:22px;background:#ff8a80"></i><i style="height:26px"></i><em style="background:#1c1c1e"></em><em style="background:#0a84ff"></em><em style="background:#ff453a"></em></div>
+</div></div>
+<p class="pc"><b>Grund:</b> Auf dem iPhone braucht eine Zeichnung die ganze Fläche, und im Vollbild streiten Zeichnen und Scrollen der Notiz nicht um denselben Finger. „Fertig“ setzt die Zeichnung an der Schreibmarke in die Notiz, „Abbrechen“ fragt nach, wenn schon gezeichnet wurde. Die Fläche ist hell wie Papier, in beiden Modi, damit Striche so aussehen wie später in der Notiz.</p>
+</div>
+<div>
+<p class="label"><span class="code">ZE1b</span> <b>Zeichenblock im Text</b></p>
+<div class="phone crop l"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="nav"><span class="back">‹ Wohnung</span><span class="r"><span class="gt glass">Fertig</span><span class="gb glass">⋯</span></span></div>
+<div class="note"><h4>Grundriss neue Wohnung</h4><p>Vom Makler, Stand 12.11.</p>
+<div class="paper" style="box-shadow:0 0 0 2px #ffd60a"><svg viewBox="0 0 360 190"><rect x="60" y="22" width="200" height="120" fill="none" stroke="#1c1c1e" stroke-width="3"/><path d="M60 82h90v60" fill="none" stroke="#1c1c1e" stroke-width="3"/></svg><span class="tag">⇕ Höhe ziehen</span></div>
+<p>Nische im Flur 92 cm.</p></div>
+<div class="tools glass"><i style="height:30px" class="sel"></i><i style="height:24px"></i><i style="height:24px;background:#ffd60a"></i><i style="height:22px"></i><em style="background:#1c1c1e"></em><em style="background:#ff453a"></em></div>
+</div></div>
+<p class="pc">Wie in Apple Notizen: Die Zeichnung steht zwischen den Absätzen und wächst nach unten. Setzt aber einen Editor voraus, der Text und Flächen mischt; das heutige Textfeld zeigt nur Markdown-Zeichen und die Ansicht ist eine Webseite ohne Skripte. Das wäre ein Neubau des Editors, nicht eine Ergänzung.</p>
+</div>
+<div>
+<p class="label"><span class="code">ZE1c</span> <b>Eigene Zeichnungs-Notiz</b></p>
+<div class="phone crop l light"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="lt">Wohnung</div>
+<div class="list"><div class="card new"><div class="b"><div class="t">Skizze Schlafzimmer <small>✎</small></div><div class="p">Zeichnung</div><div class="f">Heute</div></div><span class="thumb" style="background:#fbfaf6;border:1px solid var(--sep)"></span></div><div class="card"><div class="b"><div class="t">Grundriss neue Wohnung</div><div class="p">Vom Makler, Stand 12.11.</div><div class="f">Gestern</div></div></div></div>
+</div></div>
+<p class="pc">Eine neue Notizart, die nur aus einer Zeichenfläche besteht. Technisch sauber getrennt, erfüllt aber „Zeichnen <i>in</i> einer Notiz“ nicht: Skizze und Text zum selben Thema liegen in zwei Notizen.</p>
+</div>
+</div>
+
+<h2><span class="area">ZE2</span> Speicherform · <span class="area">ZE3</span> Tipp auf eine vorhandene Zeichnung</h2>
+<div class="grid">
+<div>
+<p class="label"><span class="code r">ZE2b</span> <b>Bild und Strichdaten, ein Verweis im Text</b> <span class="rec">Empfehlung</span></p>
+<div class="phone crop"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="nav"><span class="back">‹ Wohnung</span><span class="r"><span class="gt glass">Fertig</span><span class="gb glass">⋯</span></span></div>
+<div class="note"><div class="raw"># Grundriss neue Wohnung
+
+Vom Makler, Stand 12.11.
+
+<span style="box-shadow:inset 3px 0 0 #ffd60a;padding-left:6px">![Zeichnung](attachment:3F2A…91C)</span>
+
+Nische im Flur 92 cm.▏</div></div>
+</div></div>
+<p class="pc"><b>Grund:</b> Das Bild (PNG) zeigt die Ansicht, die Liste und jede Vorschau ohne Sonderfall, die Strichdaten machen die Zeichnung später Strich für Strich bearbeitbar. Im Text steht derselbe Verweis wie bei einem Foto; wer die Zeile löscht, löscht die Zeichnung (wie heute bei Bildern). <b>a</b> (nur Bild) ist einfacher, aber jede Korrektur heißt neu zeichnen. <b>c</b> (nur Strichdaten) müsste bei jedem Anzeigen rendern und wäre in Sicherung und Teilen kein Bild.</p>
+</div>
+<div>
+<p class="label"><span class="code r">ZE3c</span> <b>Großansicht mit „Bearbeiten“</b> <span class="rec">Empfehlung</span></p>
+<div class="phone crop light"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="nav"><span class="back">‹ Wohnung</span><span class="r"><span class="gb glass">⋯</span></span></div>
+<div class="note"><h4>Grundriss neue Wohnung</h4><p>Vom Makler, Stand 12.11.</p>
+<div class="paper"><svg viewBox="0 0 360 170"><rect x="70" y="18" width="200" height="110" fill="none" stroke="#1c1c1e" stroke-width="3"/><path d="M70 74h90v54" fill="none" stroke="#1c1c1e" stroke-width="3"/><path d="M80 148c40-12 70 10 110 0" fill="none" stroke="#ff453a" stroke-width="4" stroke-linecap="round"/></svg><span class="tag" style="color:#007aff">✎ Bearbeiten</span></div>
+<p>Nische im Flur 92 cm.</p></div>
+</div></div>
+<p class="pc"><b>Grund:</b> Ein Tipp zeigt die Zeichnung groß und zoombar, erst „Bearbeiten“ öffnet die Zeichenfläche aus ZE1a; so entstehen beim Ansehen keine versehentlichen Striche mit dem Finger. In der Ansicht steht die Zeichnung auf heller Papierfläche in voller Breite, Höhe begrenzt wie Bilder (NO18b). Halten zeigt „Bearbeiten“, „Teilen“, „Löschen“.</p>
+</div>
+<div>
+<p class="label"><span class="code">ZE3a</span> <b>Nur Vorschau</b> · <span class="code">ZE3b</span> <b>Sofort Zeichenfläche</b></p>
+<div class="phone crop s"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="nav"><span class="back">Fertig</span><span class="c">Zeichnung</span><span class="r"><span class="gb glass">⇪</span></span></div>
+<div class="paper" style="margin:0"><svg viewBox="0 0 360 200"><rect x="70" y="28" width="200" height="120" fill="none" stroke="#1c1c1e" stroke-width="3"/><path d="M70 88h90v60" fill="none" stroke="#1c1c1e" stroke-width="3"/></svg></div>
+</div></div>
+<p class="pc"><b>a:</b> Tipp öffnet die Bildvorschau wie bei Fotos; Bearbeiten nur über Halten, also kaum zu finden. <b>b:</b> Tipp öffnet sofort die Zeichenfläche; schnellster Weg, aber jede Berührung beim Verschieben kann ein Strich werden, und „Abbrechen“ muss dann jedes Mal nachfragen.</p>
+</div>
+</div>
+
+<!-- ====================================================================== TABELLEN -->
+<h2 class="part">Tabellen-Editor</h2>
+<p class="lead">Heute werden Markdown-Tabellen in der Ansicht dargestellt (mit Ausrichtung, seitlich scrollbar), geschrieben werden sie von Hand als Text mit senkrechten Strichen. Die Notiz bleibt Markdown: Jede Variante schreibt am Ende eine Markdown-Tabelle in den Text.</p>
+
+<h2><span class="area">TX1</span> Art des Editors</h2>
+<div class="grid">
+<div>
+<p class="label"><span class="code">TX1a</span> <b>Nur Text, Knopf fügt ein Gerüst ein</b></p>
+<div class="phone crop"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="nav"><span class="back">‹ Wohnung</span><span class="r"><span class="gt glass">Fertig</span><span class="gb glass">⋯</span></span></div>
+<div class="note"><div class="raw">## Angebote Umzug
+
+| Firma | Preis | Termin |
+| --- | --- | --- |
+| Möbel-Taxi | 480 € | 28.11. |
+| Umzug Kern▏ |  |  |</div></div>
+<div class="kb"><div class="kbbar"><span>H</span><span><b>B</b></span><span><i>I</i></span><span>☰</span><span>☑</span><span>＋</span><span class="done">⌄</span></div><div class="kbkeys"></div></div>
+</div></div>
+<p class="pc">Kein neuer Bildschirm, der Text bleibt vollständig in der Hand der Nutzerin. Auf dem iPhone sind Striche aber mühsam zu tippen, die Spalten stehen nie untereinander, und eine fehlende Trennzeile macht aus der Tabelle Fließtext.</p>
+</div>
+<div>
+<p class="label"><span class="code r">TX1b</span> <b>Raster-Editor als Blatt</b> <span class="rec">Empfehlung</span></p>
+<div class="phone crop l sh"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="bar"><span class="l">Abbrechen</span>Tabelle<span>Fertig</span></div>
+<div class="ge" style="grid-template-columns:1.4fr 1fr 1fr"><span class="h">Firma</span><span class="h">Preis</span><span class="h">Termin</span><span>Möbel-Taxi</span><span>480 €</span><span>28.11.</span><span>Umzug Kern</span><span class="cur">520 €▏</span><span></span><span></span><span></span><span></span></div>
+<div class="ff">Die erste Zeile ist die Kopfzeile. In der Notiz steht die Tabelle als Markdown-Text.</div>
+<div class="kb" style="padding-bottom:16px"><div class="kbbar"><span class="new w">＋ Zeile</span><span class="new w">＋ Spalte</span><span class="new">⋯</span><span class="new w" style="margin-left:auto">Weiter ⇥</span></div><div class="kbkeys"></div><div class="kbkeys"></div></div>
+</div></div>
+<p class="pc"><b>Grund:</b> Zellen als Felder sind auf dem iPhone die einzige Form, in der man eine Tabelle ohne Syntaxkenntnis füllt; das Blatt liest die Markdown-Tabelle an der Schreibmarke, „Fertig“ schreibt sie sauber ausgerichtet zurück. Wer will, bearbeitet weiter den Text (Variante a bleibt immer möglich). Neue Tabelle: 3 Spalten, Kopfzeile und 2 Zeilen.</p>
+</div>
+<div>
+<p class="label"><span class="code">TX1c</span> <b>Direkt in der Ansicht bearbeiten</b></p>
+<div class="phone crop light"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="nav"><span class="back">‹ Wohnung</span><span class="r"><span class="gb glass">⋯</span></span></div>
+<div class="note"><h5 style="margin-top:0">Angebote Umzug</h5>
+<table class="tbl"><tr><th>Firma</th><th>Preis</th><th>Termin</th></tr><tr><td>Möbel-Taxi</td><td>480 €</td><td>28.11.</td></tr><tr><td>Umzug Kern</td><td style="box-shadow:inset 0 0 0 2px var(--blue)">520 €▏</td><td></td></tr></table></div>
+</div></div>
+<p class="pc">Am direktesten: Tipp in eine Zelle, schreiben. Die Ansicht ist aber eine gerenderte Seite ohne Skripte und kann keine Eingabe annehmen; das ginge nur mit einem neuen Editor (siehe ZE1b) und widerspricht NO15b, wo ein Tipp in den Text in den Markdown-Text wechselt.</p>
+</div>
+</div>
+
+<h2><span class="area">TX2</span> Vorhandene Tabelle öffnen · <span class="area">TX3</span> Zeilen und Spalten ändern</h2>
+<div class="grid">
+<div>
+<p class="label"><span class="code r">TX2c</span> <b>Aus der Ansicht und beim Schreiben</b> <span class="rec">Empfehlung</span></p>
+<div class="phone crop"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="nav"><span class="back">‹ Wohnung</span><span class="r"><span class="gb glass">⋯</span></span></div>
+<div class="note"><h5 style="margin-top:0">Angebote Umzug</h5>
+<table class="tbl" style="box-shadow:0 0 0 2px #ffd60a"><tr><th>Firma</th><th>Preis</th><th>Termin</th></tr><tr><td>Möbel-Taxi</td><td>480 €</td><td>28.11.</td></tr><tr><td>Umzug Kern</td><td>520 €</td><td></td></tr></table>
+<p style="color:var(--sub);font-size:12px">Tipp auf die Tabelle öffnet den Editor.</p></div>
+<div class="kb" style="padding-bottom:14px"><div class="kbbar"><span>H</span><span><b>B</b></span><span><i>I</i></span><span>☰</span><span>☑</span><span class="new" style="color:var(--blue)">▦</span><span class="done">⌄</span></div></div>
+</div></div>
+<p class="pc"><b>Grund:</b> In der Ansicht ist ein Tipp auf die Tabelle der erwartete Weg (wie bei Bild und Zeichnung; der Rest der Seite wechselt nach NO15b ins Schreiben). Beim Schreiben wird aus „＋“ der Knopf „▦“ (<code>tablecells</code>), sobald die Schreibmarke in einer Tabelle steht. <b>a</b> (nur beim Schreiben) versteckt den Editor hinter dem Markdown-Text, <b>b</b> (nur Ansicht) lässt beim Schreiben keinen Weg zurück ins Raster.</p>
+</div>
+<div>
+<p class="label"><span class="code r">TX3b</span> <b>Leiste über der Tastatur</b> <span class="rec">Empfehlung</span></p>
+<div class="phone crop l sh light"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="bar"><span class="l">Abbrechen</span>Tabelle<span>Fertig</span></div>
+<div class="ge" style="grid-template-columns:1.4fr 1fr 1fr"><span class="h">Firma</span><span class="h">Preis</span><span class="h">Termin</span><span>Möbel-Taxi</span><span>480 €</span><span>28.11.</span><span>Umzug Kern</span><span class="cur">520 €▏</span><span></span></div>
+<div class="menu glass" style="align-self:flex-start;margin-left:90px;width:240px"><div>Zeile darüber einfügen</div><div class="gap">Spalte links einfügen</div><div>Zeile nach oben</div><div class="gap">Ausrichtung <span>links ›</span></div><div class="x">Zeile löschen</div><div class="x">Spalte löschen</div></div>
+</div></div>
+<p class="pc"><b>Grund:</b> Alle Aktionen beziehen sich auf die Zelle mit der Schreibmarke und bleiben erreichbar, während die Tastatur offen ist: „＋ Zeile“ und „＋ Spalte“ hängen dahinter an, „⋯“ öffnet dieses Menü, „Weiter“ springt in die nächste Zelle und legt am Ende eine neue Zeile an. Löschen der Kopfzeile oder der letzten Spalte ist nicht angeboten.</p>
+</div>
+<div>
+<p class="label"><span class="code">TX3a</span> <b>Plus an den Rändern</b> · <span class="code">TX3c</span> <b>Bearbeiten-Modus</b></p>
+<div class="phone crop sh"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="bar"><span class="l">Abbrechen</span>Tabelle<span>Fertig</span></div>
+<div class="ge" style="grid-template-columns:1.4fr 1fr 1fr 34px"><span class="h">Firma</span><span class="h">Preis</span><span class="h">Termin</span><span class="add">＋</span><span>Möbel-Taxi</span><span>480 €</span><span>28.11.</span><span></span><span>Umzug Kern</span><span>520 €</span><span></span><span></span><span class="add" style="grid-column:1 / span 4">＋ Zeile</span></div>
+<div class="ff">Halten auf einer Zelle: Zeile oder Spalte löschen.</div>
+</div></div>
+<p class="pc"><b>a:</b> Hinzufügen ist sichtbar, Löschen und Verschieben liegen aber hinter „Halten“, und die Plus-Spalte kostet auf 390 pt Breite eine halbe Spalte. <b>c:</b> „Bearbeiten“ blendet rote Minus-Knöpfe und Griffe ein wie in Listen; vertraut, aber ein zweiter Modus in einem Blatt, das schon ein Modus ist.</p>
+</div>
+</div>
+
+<h2><span class="area">TX4</span> Tabelle in der Ansicht</h2>
+<div class="grid">
+<div>
+<p class="label"><span class="code">TX4a</span> <b>Natürliche Breite, seitlich scrollen</b> <span class="same">heute</span></p>
+<div class="phone crop s"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="note"><table class="tbl" style="white-space:nowrap"><tr><th>Firma</th><th>Preis</th><th>Termin</th><th>Bemerkung</th></tr><tr><td>Möbel-Taxi</td><td>480 €</td><td>28.11.</td><td>Zwei Träger, Halteverbot nicht inbegr…</td></tr><tr><td>Umzug Kern</td><td>520 €</td><td>29.11.</td><td>Mit Kartons</td></tr></table></div>
+</div></div>
+<p class="pc">Zeilen bleiben einzeilig. Eine lange Zelle schiebt aber alle folgenden Spalten aus dem Bild, und nichts zeigt, dass es rechts weitergeht.</p>
+</div>
+<div>
+<p class="label"><span class="code r">TX4b</span> <b>Umbruch bis zur Höchstbreite, dann scrollen</b> <span class="rec">Empfehlung</span></p>
+<div class="phone crop s light"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="note"><table class="tbl" style="width:100%"><tr><th>Firma</th><th>Preis</th><th>Termin</th><th>Bemerkung</th></tr><tr><td>Möbel-Taxi</td><td style="text-align:right;white-space:nowrap">480 €</td><td>28.11.</td><td>Zwei Träger, Halteverbot nicht inbegriffen</td></tr><tr><td>Umzug Kern</td><td style="text-align:right;white-space:nowrap">520 €</td><td>29.11.</td><td>Mit Kartons</td></tr></table></div>
+</div></div>
+<p class="pc"><b>Grund:</b> Bis vier Spalten passt eine Tabelle so fast immer ohne Scrollen: Zellen brechen ab 200 pt Spaltenbreite um, erst breitere Tabellen scrollen seitlich und zeigen dann rechts einen weichen Rand. Kopfzeile halbfett auf getöntem Grund, Zahlen nach der Ausrichtung aus dem Markdown (<code>---:</code>).</p>
+</div>
+<div>
+<p class="label"><span class="code">TX4c</span> <b>Karten je Zeile</b></p>
+<div class="phone crop s"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="fs" style="margin:0 6px 8px"><div class="fr">Firma <span class="v">Möbel-Taxi</span></div><div class="fr">Preis <span class="v">480 €</span></div><div class="fr">Termin <span class="v">28.11.</span></div></div>
+<div class="fs" style="margin:0 6px"><div class="fr">Firma <span class="v">Umzug Kern</span></div><div class="fr">Preis <span class="v">520 €</span></div></div>
+</div></div>
+<p class="pc">Nie zu breit, auch mit acht Spalten. Der Vergleich über die Zeilen hinweg, wofür man eine Tabelle anlegt, geht aber verloren, und die Notiz wird sehr lang.</p>
+</div>
+</div>
+<div class="box"><h3>Tabellen · Grenzen des Rasters</h3>
+<ul>
+<li>Zellen sind einzeilig; ein Zeilenumbruch in einer Zelle ist in Markdown-Tabellen nicht darstellbar. Ein senkrechter Strich in einer Zelle wird beim Schreiben maskiert.</li>
+<li>Fett, kursiv und Links in einer Zelle bleiben als Markdown-Zeichen erhalten; das Raster zeigt sie als Text, die Ansicht formatiert sie.</li>
+<li>Bis 8 Spalten im Raster; breitere Tabellen öffnet das Blatt nicht und verweist auf den Text.</li>
+<li>Der Assistent (#233) sieht Tabellen als Text der Notiz, wie heute.</li>
+</ul></div>
+
+<!-- ====================================================================== BIBLE STUDY -->
+<h2 class="part">Bible Study: Versauswahl (BS2 erweitert)</h2>
+<p class="lead">Entschieden ist BS2b (Bücher als Chips „Zuletzt“, Liste mit Suche). Neu: Kapitel und Verse bleiben auch bei vorgewähltem Buch anpassbar, und eine neue Sitzung beginnt standardmäßig beim nächsten Vers nach dem Ende der letzten Sitzung in diesem Buch. Heute ist die Stelle ein freies Textfeld („3,21-31“) und wird nur so gespeichert, wie sie getippt wurde. Beispiel in allen Bildern: Letzte Sitzung in Römer am 17.11. mit 3,1–20.</p>
+
+<h2><span class="area">BV1</span> Eingabe von Kapitel und Versen</h2>
+<div class="grid">
+<div>
+<p class="label"><span class="code">BV1a</span> <b>Textfeld, vorbelegt</b></p>
+<div class="phone crop sh"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="bar"><span class="l">Abbrechen</span>Bible Study starten</div>
+<div class="fh">Buch</div>
+<div style="margin:0 4px 4px"><span class="pill on">Römer</span><span class="pill">Psalmen</span><span class="pill">Johannes</span><span class="pill">Anderes …</span></div>
+<div class="fh">Stelle</div>
+<div class="fs"><div class="fr new"><span class="tx">3,21–▏<small>Weiter nach 3,1–20 vom 17.11.</small></span></div></div>
+<div class="ff">Der Text deiner Notizen bleibt auf deinem iPhone und geht nie an ChatGPT.</div>
+<span class="big">Sitzung starten</span>
+</div></div>
+<p class="pc">Kleinste Änderung gegenüber BS2b: Das Feld ist mit dem nächsten Vers vorbelegt, das Ende tippt man dazu. Freitext bleibt aber Freitext; „3, 21 bis Ende“ oder „Kap. 3“ lassen sich nicht auswerten, und dann gibt es beim nächsten Mal keinen Vorschlag.</p>
+</div>
+<div>
+<p class="label"><span class="code r">BV1b</span> <b>Zeilen „Von“ und „Bis“ mit Rädern</b> <span class="rec">Empfehlung</span></p>
+<div class="phone crop l sh light"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="bar"><span class="l">Abbrechen</span>Bible Study starten</div>
+<div class="fh">Buch</div>
+<div style="margin:0 4px 4px"><span class="pill on">Römer</span><span class="pill">Psalmen</span><span class="pill">Johannes</span><span class="pill">Anderes …</span></div>
+<div class="fh">Stelle</div>
+<div class="fs"><div class="fr new"><span class="tx">Von<small>Weiter nach 3,1–20 vom 17.11.</small></span><span class="v" style="color:var(--blue);font-weight:600;font-size:15px">3,21</span></div></div>
+<div class="wheel"><div><i>Kapitel</i><span>2</span><b>3</b><span>4</span></div><div><i>Vers</i><span>20</span><b>21</b><span>22</span></div></div>
+<div class="fs"><div class="fr new">Bis <span class="v">offen ›</span></div></div>
+<div class="ff">Geht nie an ChatGPT.</div>
+<span class="big">Sitzung starten · Römer 3,21</span>
+</div></div>
+<p class="pc"><b>Grund:</b> Der Vorschlag steht fertig da und ist mit einem Tipp auf „Von“ änderbar; Räder für Kapitel und Vers kennen die gültigen Zahlen, und die gespeicherte Stelle ist immer auswertbar. Ein Buchwechsel über die Chips stellt „Von“ auf den nächsten Vers in <i>diesem</i> Buch (oder 1,1). Der Knopf wiederholt die Stelle, damit man ohne Lesen des Blatts starten kann.</p>
+</div>
+<div>
+<p class="label"><span class="code">BV1c</span> <b>Vers-Raster</b></p>
+<div class="phone crop l sh"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="bar"><span class="l">‹ Römer</span>Kapitel 3<span>Starten</span></div>
+<div class="seg2"><span>1</span><span>2</span><span class="on">3</span><span>4</span><span>5</span><span>6</span><span>…</span></div>
+<div class="vg"><span class="r">1</span><span class="r">2</span><span class="r">3</span><span class="r">4</span><span class="r">5</span><span class="r">6</span><span class="r">7</span><span class="r">8</span><span class="r">9</span><span class="r">10</span><span class="r">11</span><span class="r">12</span><span class="r">13</span><span class="r">14</span><span class="r">15</span><span class="r">16</span><span class="r">17</span><span class="r">18</span><span class="r">19</span><span class="r">20</span><span class="on">21</span><span class="on">22</span><span class="on">23</span><span class="on">24</span><span class="on">25</span><span class="on">26</span><span>27</span><span>28</span><span>29</span><span>30</span><span>31</span></div>
+<div class="ff">Grau: schon gelesen. Ersten und letzten Vers antippen.</div>
+</div></div>
+<p class="pc">Zeigt auf einen Blick, was gelesen ist, und wählt einen Bereich mit zwei Tipps. Kostet aber einen eigenen Bildschirm je Sitzung, braucht zwingend Verszahlen für jedes Kapitel und ist bei Psalm 119 (176 Verse) ein langes Raster.</p>
+</div>
+</div>
+
+<h2><span class="area">BV2</span> Vorbelegtes Ende der Stelle</h2>
+<div class="grid">
+<div>
+<p class="label"><span class="code">BV2a</span> <b>Bis zum Kapitelende</b></p>
+<div class="phone crop s sh"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="fh">Stelle</div>
+<div class="fs"><div class="fr">Von <span class="v">3,21</span></div><div class="fr new">Bis <span class="v">3,31 · Kapitelende ›</span></div></div>
+<span class="big">Sitzung starten · Römer 3,21–31</span>
+</div></div>
+<p class="pc">Plausibel und sofort vollständig. Wer nur bis Vers 26 kommt und das Ende nicht nachträgt, bekommt beim nächsten Mal „4,1“ vorgeschlagen und überspringt fünf Verse.</p>
+</div>
+<div>
+<p class="label"><span class="code r">BV2b</span> <b>Offen lassen, beim Abschließen bestätigen</b> <span class="rec">Empfehlung</span></p>
+<div class="phone crop"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="nav"><span class="back">‹ Bible Study</span><span class="c">Römer</span><span class="r"><span class="gb glass">⋯</span></span></div>
+<div class="sessbar"><b>Sitzung läuft · Römer ab 3,21</b><span>Abschließen</span></div>
+<div class="note"><h5 style="margin-top:0">20.11.2026 · 3,21–</h5><p>Gerechtigkeit ohne Gesetz …</p></div>
+<div class="fh" style="margin-top:14px">Bis wohin gelesen?</div>
+<div class="wheel" style="box-shadow:0 0 0 2px #ffd60a"><div><i>Kapitel</i><span>&nbsp;</span><b>3</b><span>4</span></div><div><i>Vers</i><span>25</span><b>26</b><span>27</span></div></div>
+<span class="big">Abschließen · 3,21–26</span>
+</div></div>
+<p class="pc"><b>Grund:</b> Der Vorschlag „nächster Vers“ ist nur so gut wie das gespeicherte Ende, und das Ende weiß man erst nach dem Lesen. „Abschließen“ in der Sitzungsleiste (BS1b) klappt deshalb das Rad auf, vorbelegt mit dem Kapitelende oder dem vorher gewählten „Bis“; ein zweiter Tipp schließt ab und ergänzt die Überschrift des Abschnitts. Wer „Bis“ schon beim Start setzt, bestätigt hier nur.</p>
+</div>
+<div>
+<p class="label"><span class="code">BV2c</span> <b>So lang wie zuletzt</b></p>
+<div class="phone crop s sh light"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="fh">Stelle</div>
+<div class="fs"><div class="fr">Von <span class="v">3,21</span></div><div class="fr new">Bis <span class="v">4,9 · 20 Verse wie zuletzt ›</span></div></div>
+<span class="big">Sitzung starten · Römer 3,21–4,9</span>
+</div></div>
+<p class="pc">Lernt die übliche Länge. Schneidet aber mitten durch Sinnabschnitte und Kapitelgrenzen; der Vorschlag wirkt genau, ist aber geraten.</p>
+</div>
+</div>
+
+<h2><span class="area">BV3</span> Kapitel- und Verszahlen · Sonderfälle</h2>
+<div class="grid">
+<div>
+<p class="label"><span class="code r">BV3a</span> <b>Sonderfall: Kapitel zu Ende</b> <span class="rec">Empfehlung</span></p>
+<div class="phone crop s sh"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="fh">Stelle</div>
+<div class="fs"><div class="fr new"><span class="tx">Von<small>Kapitel 3 ist gelesen (bis 3,31 am 20.11.)</small></span><span class="v" style="color:var(--blue);font-weight:600;font-size:15px">4,1</span></div><div class="fr">Bis <span class="v">offen ›</span></div></div>
+<span class="big">Sitzung starten · Römer 4,1</span>
+</div></div>
+<p class="pc">Mit Verszahlen weiß das Blatt, dass 3,31 der letzte Vers ist, und schlägt 4,1 vor statt des nicht vorhandenen 3,32.</p>
+</div>
+<div>
+<p class="label"><span class="code r">BV3a</span> <b>Sonderfall: Buch zu Ende</b></p>
+<div class="phone crop s sh light"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="fh">Buch</div>
+<div style="margin:0 4px 4px"><span class="pill on">Römer ✓</span><span class="pill">Psalmen</span><span class="pill">Johannes</span><span class="pill">Anderes …</span></div>
+<div class="hint"><b>Römer ist zu Ende gelesen</b> (16,27 am 14.01.). Wähle ein anderes Buch oder beginne Römer neu.</div>
+<div class="fs"><div class="fr new">Von <span class="v">1,1 · von vorn</span></div></div>
+</div></div>
+<p class="pc">Kein automatischer Sprung ins nächste Buch: Die Reihenfolge der Bücher im Kanon ist selten die Lesereihenfolge. Ein Leseplan ist bewusst zurückgestellt (#239).</p>
+</div>
+<div>
+<div class="box" style="margin-top:0"><h3>BV3 · Welche Zahlen kennt die App?</h3>
+<ul>
+<li><b>a · Tabelle mit Verszahlen je Kapitel</b> <span class="rec">Empfehlung</span> (66 Bücher, 1189 Kapitel, eine Zahl je Kapitel, fest im Code). <b>Grund:</b> Nur damit sind Kapitelende, Buchende und die Grenzen der Räder richtig.</li>
+<li><b>b · Nur Kapitelzahlen.</b> Räder für Verse laufen dann bis 176; „3,32“ wäre wählbar und der Vorschlag am Kapitelende falsch.</li>
+<li><b>c · Keine Daten</b> (heute): nur Freitext möglich, also BV1a.</li>
+</ul>
+<p style="margin:8px 0 0"><b>Zu klären vor der Umsetzung:</b> Die Zählung unterscheidet sich zwischen deutschen und englischen Ausgaben an einzelnen Stellen (z. B. Psalmüberschriften, Joel, Maleachi). Vorschlag: eine Zählung für beide Sprachen, die der deutschen Ausgaben, und im Rad „Von“ zusätzlich die Zeile „Stelle frei eingeben“ als Ausweg. Welche Ausgabe du liest, ist die offene Frage.</p>
+<p style="margin:8px 0 0"><b>Weitere Regeln:</b> Erste Sitzung in einem Buch: 1,1. Maßgeblich ist die zuletzt <i>begonnene</i> Sitzung des Buchs, auch wenn sie noch offen ist (dann „Weiter ab …“ mit ihrem Anfang). Aus Notion importierte Notizen haben keine Sitzungen und liefern keinen Vorschlag. Alte Sitzungen mit frei getippter Stelle werden gelesen, soweit sie dem Muster „Kapitel,Vers–Vers“ folgen.</p></div>
+</div>
+</div>
+
+<!-- ====================================================================== ERINNERUNG -->
+<h2 class="part">Bible Study: Erinnerung zu den gewohnten Zeiten (BS4)</h2>
+<p class="lead">Entschieden ist „ja“. In Teil 1 stand dazu eine einzelne feste Uhrzeit unter Einstellungen › Routinen (BS6c). Offen ist, was „gewohnte Zeiten“ heißt: selbst gesetzt, aus den bisherigen Sitzungen gelernt oder beides. Die App kennt von jeder Sitzung den Startzeitpunkt. Die Erinnerung entfällt in jeder Variante an Tagen, an denen schon eine Sitzung abgeschlossen ist.</p>
+
+<h2><span class="area">BE1</span> Woher die Zeit kommt</h2>
+<div class="grid">
+<div>
+<p class="label"><span class="code">BE1a</span> <b>Feste Zeiten, selbst gesetzt</b></p>
+<div class="phone crop sh"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="bar"><span class="l">‹ Einstellungen</span>Routinen</div>
+<div class="fh">Bible Study</div>
+<div class="fs"><div class="fr">Anbieten im <span class="v">Tagesabschluss ›</span></div><div class="fr">Erinnerung <span class="tog on"></span></div><div class="fr">Uhrzeit <span class="v">06:45</span></div></div>
+<div class="ff">Die Erinnerung entfällt an Tagen, an denen schon eine Sitzung abgeschlossen ist.</div>
+</div></div>
+<p class="pc">Vorhersagbar und sofort verständlich (Stand BS6c). Die Zeit muss man aber selbst wissen und pflegen; verschiebt sich die Gewohnheit, erinnert die App zur falschen Zeit, bis man es merkt.</p>
+</div>
+<div>
+<p class="label"><span class="code">BE1b</span> <b>Gelernt, ohne Einstellung</b></p>
+<div class="phone crop sh light"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="bar"><span class="l">‹ Einstellungen</span>Routinen</div>
+<div class="fh">Bible Study</div>
+<div class="fs"><div class="fr">Anbieten im <span class="v">Tagesabschluss ›</span></div><div class="fr new"><span class="tx">Zur gewohnten Zeit erinnern<small>Zurzeit: Mo–Fr gegen 06:40, Sa und So gegen 08:30</small></span><span class="tog on"></span></div></div>
+<div class="ff">Tagwerk leitet die Zeit aus deinen letzten Sitzungen ab und passt sie an.</div>
+</div></div>
+<p class="pc">Kein Pflegeaufwand, wandert mit der Gewohnheit. Aber: Warum es heute um 06:40 und nächste Woche um 07:05 klingelt, ist nicht nachvollziehbar; nach einer Urlaubswoche stimmt nichts mehr, und am Anfang gibt es gar keine Daten.</p>
+</div>
+<div>
+<p class="label"><span class="code r">BE1c</span> <b>Gelernter Vorschlag, den man bestätigt</b> <span class="rec">Empfehlung</span></p>
+<div class="phone crop l sh"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="bar"><span class="l">‹ Routinen</span>Bible Study</div>
+<div class="fs"><div class="fr">Anbieten im <span class="v">Tagesabschluss ›</span></div><div class="fr">Erinnerung <span class="tog on"></span></div></div>
+<div class="fh">Zeiten</div>
+<div class="fs"><div class="fr"><span class="tx">06:45<small>Mo Di Mi Do Fr</small></span><span class="v">›</span></div><div class="fr a">Zeit hinzufügen</div></div>
+<div class="fh">Vorschlag aus deinen Sitzungen</div>
+<div class="fs"><div class="fr new"><span class="tx">Sa und So gegen 08:30<small>An 7 der letzten 8 Wochenenden hast du zwischen 08:10 und 08:50 begonnen.</small></span></div><div class="fr new" style="justify-content:flex-end;gap:18px"><span style="color:var(--sub)">Nicht jetzt</span><span style="color:var(--blue);font-weight:600">Übernehmen</span></div></div>
+<div class="ff">Übernommene Zeiten ändern sich nicht von selbst. Entfällt an Tagen mit abgeschlossener Sitzung.</div>
+</div></div>
+<p class="pc"><b>Grund:</b> Die Zeiten gehören der Nutzerin und stehen sichtbar in einer Liste, die App nimmt ihr nur das Herausfinden ab; „gewohnt“ ist erfüllt, ohne dass sich eine Mitteilung unerklärt verschiebt. Ein Vorschlag erscheint erst ab genug Sitzungen und nur, wenn er von den gesetzten Zeiten abweicht; „Nicht jetzt“ unterdrückt ihn für vier Wochen.</p>
+</div>
+</div>
+
+<h2><span class="area">BE2</span> Feinheit der Zeiten</h2>
+<div class="grid">
+<div>
+<p class="label"><span class="code">BE2a</span> <b>Eine Zeit für alle Tage</b></p>
+<div class="phone crop s sh"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="fh">Erinnerung</div>
+<div class="fs"><div class="fr">Erinnern <span class="tog on"></span></div><div class="fr">Uhrzeit <span class="v">06:45</span></div></div>
+</div></div>
+<p class="pc">Am einfachsten. Wer am Wochenende später liest, wird samstags um 06:45 erinnert oder schaltet die Erinnerung ganz aus.</p>
+</div>
+<div>
+<p class="label"><span class="code r">BE2b</span> <b>Zeiten mit Wochentagen (Wecker-Modell)</b> <span class="rec">Empfehlung</span></p>
+<div class="phone crop sh light"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="bar"><span class="l">Abbrechen</span>Zeit<span>Fertig</span></div>
+<div class="wheel"><div><span>07</span><b>08</b><span>09</span></div><div><span>25</span><b>30</b><span>35</span></div></div>
+<div class="fh">An diesen Tagen</div>
+<div style="margin:0 6px 8px"><span class="wd">Mo</span><span class="wd">Di</span><span class="wd">Mi</span><span class="wd">Do</span><span class="wd">Fr</span><span class="wd on">Sa</span><span class="wd on">So</span></div>
+<div class="ff">Mo–Fr sind schon bei 06:45 vergeben und hier nicht wählbar.</div>
+<div class="fs"><div class="fr x">Zeit löschen</div></div>
+</div></div>
+<p class="pc"><b>Grund:</b> Eine Zeit mit einer Auswahl von Tagen deckt „werktags früh, am Wochenende später“ mit zwei Einträgen ab und bleibt beim einfachen Fall ein Eintrag; das Muster kennt jeder vom Wecker. Jeder Wochentag gehört zu höchstens einer Zeit, also höchstens eine Erinnerung am Tag.</p>
+</div>
+<div>
+<p class="label"><span class="code">BE2c</span> <b>Sieben Zeilen</b></p>
+<div class="phone crop sh"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="fh">Erinnerung je Wochentag</div>
+<div class="fs"><div class="fr">Montag <span class="v">06:45</span></div><div class="fr">Dienstag <span class="v">06:45</span></div><div class="fr">Mittwoch <span class="v">06:45</span></div><div class="fr">Donnerstag <span class="v">aus</span></div><div class="fr">Freitag <span class="v">06:45</span></div><div class="fr">Samstag <span class="v">08:30</span></div><div class="fr">Sonntag <span class="v">08:30</span></div></div>
+</div></div>
+<p class="pc">Volle Freiheit und nichts zu erklären. Für den häufigen Fall „jeden Tag gleich“ sind es aber sieben Einstellungen statt einer.</p>
+</div>
+</div>
+
+<h2><span class="area">BE3</span> Wo der Vorschlag erscheint · Die Mitteilung</h2>
+<div class="grid">
+<div>
+<p class="label"><span class="code r">BE3b</span> <b>Nach dem Abschließen einer Sitzung</b> <span class="rec">Empfehlung</span></p>
+<div class="phone crop"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="nav"><span class="back">‹ Bible Study</span><span class="c">Römer</span><span class="r"><span class="gb glass">⋯</span></span></div>
+<div class="sessbar"><b>Sitzung abgeschlossen ✓</b></div>
+<div class="gra" style="box-shadow:inset 3px 0 0 #ffd60a"><b>Erinnerung</b>Du beginnst werktags meist gegen 06:40. Soll Tagwerk dich Mo–Fr um 06:45 erinnern?<div style="display:flex;justify-content:flex-end;gap:18px;margin-top:8px"><span style="color:var(--sub)">Nicht jetzt</span><span style="color:var(--blue)">Zeit ändern</span><span style="color:var(--blue);font-weight:600">Erinnern</span></div></div>
+<div class="note"><h5 style="margin-top:0">20.11.2026 · 3,21–26</h5><p>Gerechtigkeit ohne Gesetz …</p></div>
+</div></div>
+<p class="pc"><b>Grund:</b> Direkt nach einer Sitzung ist die Frage am plausibelsten, und die Karte stört keinen anderen Ablauf; sie erscheint einmal je neuem Vorschlag, derselbe Vorschlag steht danach in den Einstellungen (BE1c). Die Zeit wird auf fünf Minuten gerundet. Fehlt die Mitteilungserlaubnis, fragt „Erinnern“ danach.</p>
+</div>
+<div>
+<p class="label"><span class="code">BE3a</span> <b>Nur in den Einstellungen</b> · <span class="code">BE3c</span> <b>Als Mitteilung</b></p>
+<div class="phone crop light"><div class="status"><span>9:41</span><span>▮▮▮</span></div><div class="scr">
+<div class="banner glass"><b>Tagwerk <small>jetzt</small></b>Du liest werktags meist gegen 06:40. Erinnerung dafür einrichten?</div>
+<div class="section" style="margin-top:14px">Variante a</div>
+<div class="fs"><div class="fr"><span class="tx">Vorschlag aus deinen Sitzungen<small>Mo–Fr gegen 06:40</small></span><span class="v">›</span></div></div>
+</div></div>
+<p class="pc"><b>a:</b> Still und sauber, aber wer die Einstellungen nicht öffnet, erfährt nie davon; dann bleibt es faktisch bei BE1a. <b>c:</b> Eine Mitteilung, die fragt, ob man Mitteilungen will, setzt die Erlaubnis schon voraus und wirkt aufdringlich.</p>
+</div>
+<div>
+<p class="label"><b>Die Erinnerung selbst (für alle Varianten gleich)</b></p>
+<div class="phone crop"><div class="status"><span>6:45</span><span>▮▮▮</span></div><div class="scr">
+<div class="banner glass" style="box-shadow:inset 3px 0 0 #ffd60a"><b>Bible Study <small>jetzt</small></b>Zeit für Bible Study. Weiter in Römer ab 3,27.<div class="act"><span>Starten</span><span>Heute nicht</span></div></div>
+<div class="ff" style="margin-top:10px">Ein Tipp öffnet das Startblatt mit Buch und Stelle (BV1b). „Heute nicht“ lässt die Erinnerung für diesen Tag fallen.</div>
+</div></div>
+<p class="pc">Der Text nennt Buch und nächsten Vers aus der Versauswahl. <b>Hinweis:</b> Das ist der einzige Text, in dem eine Bibelstelle auf dem Sperrbildschirm steht; der Inhalt der Notizen erscheint nie. Wer das nicht will, bekommt mit dem Schalter „Stelle in der Mitteilung zeigen“ nur „Zeit für Bible Study.“ Wie die übrigen Routine-Erinnerungen kommt sie auch in Ruhezeiten.</p>
+</div>
+</div>
+<div class="box"><h3>Erinnerung · Regel für den Vorschlag (BE1c)</h3>
+<ul>
+<li><b>Daten:</b> Startzeiten der abgeschlossenen Sitzungen der letzten 8 Wochen, getrennt nach Werktagen (Mo–Fr) und Wochenende. Ein Vorschlag je Gruppe ab 5 Sitzungen, wenn mindestens zwei Drittel davon in einem Fenster von 60 Minuten liegen; vorgeschlagen wird die Mitte dieses Fensters, auf 5 Minuten gerundet.</li>
+<li><b>Kein Vorschlag,</b> wenn die Zeit weniger als 20 Minuten von der gesetzten abweicht, wenn die Sitzungen über den Tag streuen oder wenn „Nicht jetzt“ jünger als vier Wochen ist.</li>
+<li><b>Annahme, nicht belegt:</b> Die Schwellen (8 Wochen, 5 Sitzungen, zwei Drittel, 60 Minuten) sind gesetzte Startwerte ohne Messung; sie sollten nach einigen Wochen Nutzung überprüft werden.</li>
+</ul></div>
+
+<!-- ====================================================================== TECHNIK -->
+<h2 class="part">Technische Randbedingungen</h2>
+<p class="lead">Aus dem Code gelesen (Stand Branch <code>chore/fable-open-items</code>), nichts davon gebaut oder am Gerät geprüft. Pfade relativ zu <code>app/</code>.</p>
+<div class="box neutral"><h3>Sperren</h3>
+<ul>
+<li><b>Kein Baustein vorhanden:</b> Im Code gibt es weder <code>LocalAuthentication</code> noch die Sperre der privaten Ordner (NO10c); <code>Tagwerk/Info.plist</code> hat keinen Eintrag <code>NSFaceIDUsageDescription</code>, ohne den Face ID nicht abgefragt werden kann. NL1a setzt voraus, dass NO10c und die Notizsperre als ein Baustein entstehen.</li>
+<li><b>Neues Feld:</b> <code>Tagwerk/Notes/NoteRecord.swift</code> braucht <code>isLocked</code> mit Vorgabewert (Schemaregel der Datei: überall Vorgabewerte, keine Beziehungen). Das Feld muss in <code>Tagwerk/Backup/BackupDTOs.swift</code> mit, sonst sind wiederhergestellte Notizen offen.</li>
+<li><b>Privat-Regel:</b> „Privat“ hängt heute nur an Art und Ordnerrolle (<code>Packages/TagwerkCore/Sources/TagwerkCore/NoteText.swift</code>, <code>NoteFolderRules.swift</code>). <code>NoteStore.isPrivate</code> und <code>NoteToolAccess</code> sind im Plan <code>docs/superpowers/plans/2026-11-20-decisions-173.md</code> (Task 3) vorgesehen, aber noch nicht gebaut; die Sperre muss dort als dritte Bedingung hinein, sonst erreicht eine gesperrte Notiz den Assistenten (#233). Weitere Stellen mit eigener Prüfung: <code>Tagwerk/Shopping/RecipeNotePicker.swift</code>, <code>Tagwerk/Routines/NoteSuggestionModel.swift</code>.</li>
+<li><b>Suche:</b> <code>Tagwerk/App/AppEnvironment.swift</code> (um Zeile 518) baut <code>NoteSearchItem</code> aus dem ganzen Text; für NL4a muss dort bei gesperrtem Zustand nur die Titelzeile hineingehen.</li>
+<li><b>Schutzumfang:</b> Anhänge liegen mit vollständigem Dateischutz (<code>Tagwerk/Notes/NoteAttachmentStore.swift</code>), die Datenbank und die Sicherung (<code>Tagwerk/Backup/BackupService.swift</code>, JSON) sind nicht zusätzlich verschlüsselt. Die Sicherheitskopien vor dem Wiederherstellen enthalten immer alles und sind in der Dateien-App sichtbar (offener Punkt in #188).</li>
+</ul></div>
+<div class="box neutral"><h3>Scannen</h3>
+<ul>
+<li><b>Dokumentenkamera:</b> VisionKit, nur auf Geräten mit Kamera; im Simulator nicht verfügbar, also nur am Gerät prüfbar. <code>NSCameraUsageDescription</code> ist vorhanden.</li>
+<li><b>Speicher:</b> <code>NoteAttachmentStore.addFile</code> nimmt nur eine Datei-URL, <code>store</code> ist privat; für eine erzeugte PDF braucht es einen neuen Weg. Grenze 25 MB je Datei (<code>maximumFileBytes</code>).</li>
+<li><b>Vorschau der ersten Seite (SC2c):</b> Die Ansicht liefert über <code>tagwerk-attachment://</code> nur Bilder (<code>Tagwerk/Notes/NoteMarkdownView.swift</code>, <code>AttachmentSchemeHandler</code>); für PDF muss der Handler die erste Seite rendern, und <code>NoteAttachmentStore.cardInfo</code> zählt PDF bisher als Datei ohne Vorschaubild. Die Karte mit Seitenzahl ist neues HTML in <code>Packages/TagwerkCore/Sources/TagwerkCore/NoteHTMLRenderer.swift</code>.</li>
+<li><b>Texterkennung (SC3b):</b> Vision auf dem Gerät; der erkannte Text braucht ein neues Feld an <code>Tagwerk/Notes/NoteAttachmentRecord.swift</code> (heute nur Name, Typ, Größe, Datum) und muss in Sicherung und Suche (<code>NoteSearchItem</code>) aufgenommen werden. Die Erkennungsqualität bei Handschrift und schlechten Scans ist nicht geprüft.</li>
+</ul></div>
+<div class="box neutral"><h3>Zeichnen</h3>
+<ul>
+<li><b>Editor:</b> Schreiben ist ein <code>TextEditor</code> mit reinem Text, Lesen eine <code>WKWebView</code> ohne JavaScript (<code>Tagwerk/Notes/NoteEditorView.swift</code>, <code>NoteMarkdownView.swift</code>). Ein Zeichenblock im Text (ZE1b) oder Bearbeiten in der Ansicht (TX1c) ist damit nicht möglich.</li>
+<li><b>Bildformat:</b> <code>addImage</code> speichert immer JPEG und verliert Transparenz; die Zeichnung braucht einen PNG-Weg. Ein durchsichtiges Bild mit schwarzen Strichen wäre im dunklen Modus unsichtbar, deshalb die helle Papierfläche.</li>
+<li><b>Zwei Dateien je Zeichnung (ZE2b):</b> Ein Anhang ist heute genau eine Datei <code>&lt;ID&gt;.&lt;Endung&gt;</code>. <code>purgeOrphans</code> löscht jede Datei im Ordner, die zu keinem Eintrag gehört, und <code>restore</code> kennt nur einen Datenblock je Eintrag; die Strichdaten brauchen also entweder einen zweiten Eintrag oder eine Erweiterung von Store und Sicherung.</li>
+<li><b>Aufräumen:</b> <code>removeUnreferenced</code> löscht beim Schließen des Editors jeden Anhang, dessen Verweis nicht mehr im Text steht. Das gilt dann auch für Zeichnungen und Scans.</li>
+<li><b>Assistent:</b> <code>create_note</code> und <code>update_note</code> lehnen Text mit <code>attachment:</code>-Verweisen ab bzw. müssen sie erhalten (Plan <code>docs/superpowers/plans/2026-11-20-notes-chatgpt.md</code>, Block B); Zeichnungen und Scans erben diese Regel.</li>
+</ul></div>
+<div class="box neutral"><h3>Tabellen</h3>
+<ul>
+<li><b>Anzeige vorhanden:</b> <code>NoteHTMLRenderer.visitTable</code> rendert Tabellen mit Ausrichtung, <code>HTMLSanitizer</code> lässt die Tabellen-Elemente zu; das Styling steht in der CSS desselben Renderers (heute <code>display: block; overflow-x: auto</code>).</li>
+<li><b>Tipp auf die Tabelle (TX2c):</b> Ohne JavaScript geht das nur über einen Link, wie beim Abhaken (<code>NoteHTMLRenderer.toggleScheme</code> mit Index); die Tabelle bräuchte ein eigenes Schema mit ihrer Nummer im Text.</li>
+<li><b>Neu zu bauen:</b> Erkennen des Tabellenblocks an der Schreibmarke, Lesen und Schreiben der Markdown-Tabelle samt Maskierung, als reine Funktionen in <code>TagwerkCore</code> neben <code>MarkdownText.swift</code> (dort gibt es bisher nur das Entfernen der Striche für die Vorschau).</li>
+</ul></div>
+<div class="box neutral"><h3>Bible Study</h3>
+<ul>
+<li><b>Stelle ist Freitext:</b> <code>Tagwerk/Notes/BibleStudySessionRecord.swift</code> speichert <code>passage</code> „wie getippt“. Für den Vorschlag braucht es entweder neue Zahlenfelder (Kapitel/Vers für Anfang und Ende, mit Vorgabewerten) oder ein Auswerten des Textes; bestehende Einträge sind nur auswertbar, soweit sie dem Muster folgen.</li>
+<li><b>Keine Kapitel- oder Verszahlen:</b> <code>Packages/TagwerkCore/Sources/TagwerkCore/BibleBooks.swift</code> kennt nur Nummer, Namen und Aliase. Die Tabelle aus BV3a muss aus einer benannten Quelle übernommen und gegen sie geprüft werden; die Unterschiede der Zählung sind hier nur benannt, nicht im Einzelnen belegt.</li>
+<li><b>Vorschlag je Buch:</b> <code>Tagwerk/Notes/NoteStore+BibleStudy.swift</code> hat nur <code>lastBookKey</code> über alle Bücher; es fehlt „letzte Sitzung dieses Buchs“.</li>
+<li><b>Überschrift ergänzen (BV2b):</b> <code>startSession</code> schreibt „Datum · Stelle“ beim Start fest in den Notiztext (<code>BibleStudyTemplate.appendingSession</code>). Das Ende beim Abschließen nachzutragen heißt, diese Zeile im Text zu suchen und zu ersetzen; hat die Nutzerin sie geändert, bleibt sie unberührt und nur die Sitzung bekommt das Ende.</li>
+<li><b>Startblatt:</b> <code>Tagwerk/Notes/BibleStudyStartSheet.swift</code> ist heute ein Formular mit Auswahlliste und Textfeld; BS2b und BV1b ersetzen beides.</li>
+</ul></div>
+<div class="box neutral"><h3>Erinnerung</h3>
+<ul>
+<li><b>Kontingent:</b> iOS lässt 64 geplante Mitteilungen zu; verteilt sind 50 Aufgaben und Deadlines, 6 Routinen, 1 Fokus, 7 Reserve (<code>Packages/TagwerkCore/Sources/TagwerkCore/NotificationBudget.swift</code>, <code>RoutineSchedule.maximumRoutineNotifications</code>). Die sechs Routine-Plätze sind mit Checkliste, Tagesstart und Wochenplanung belegbar. Bible Study mit Wochentagen braucht bis zu 7 Plätze und würde die Reserve vollständig verbrauchen. Das muss vor der Umsetzung entschieden werden.</li>
+<li><b>Entfällt nach abgeschlossener Sitzung:</b> <code>Tagwerk/Routines/RoutineNotificationScheduler.swift</code> plant heute wiederkehrende Mitteilungen und kann einzelne Tage nicht auslassen. Nötig ist je Wochentag eine eigene Anfrage, die beim Abschließen (<code>NoteStore.completeSession</code>) für heute entfernt und beim nächsten Start der App oder im Hintergrundabruf (<code>Tagwerk/Notifications/BackgroundRefresh.swift</code>) wieder eingesetzt wird. Wird die App eine Woche nicht geöffnet, fehlt die Erinnerung am selben Wochentag der Folgewoche.</li>
+<li><b>Text mit nächstem Vers:</b> Der Text einer geplanten Mitteilung steht beim Planen fest; „Weiter in Römer ab 3,27“ stimmt nur, wenn nach jeder Sitzung neu geplant wird.</li>
+<li><b>Lerndaten:</b> <code>BibleStudySessionRecord.startedAt</code> und <code>completedAt</code> liegen vor; aus Notion importierte Notizen erzeugen keine Sitzungen (<code>importBibleNotes</code>), liefern also keine Zeiten.</li>
+<li><b>Einstellungen:</b> Felder für Zeiten und Wochentage fehlen in <code>Tagwerk/Persistence/AppSettings.swift</code>; die Seite ist <code>Tagwerk/Routines/RoutineSettingsView.swift</code>.</li>
+</ul></div>
+
+</body>
+</html>

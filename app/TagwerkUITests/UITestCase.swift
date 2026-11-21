@@ -10,6 +10,11 @@ class UITestCase: XCTestCase {
     /// Default wait for an element that the app shows after some work.
     static let timeout: TimeInterval = 10
 
+    /// Pins the time of day of the app to the morning (the date stays today's; see `UITestMode.now`). Tests that depend on the
+    /// time (the hour grid scrolls to "now", a new time block starts at the next full hour) use it, so they give the same result
+    /// at every hour of the day, also shortly before midnight, when the next full hour is already the next day.
+    static let morningClockArguments = ["-TagwerkUITestNow", "09:30"]
+
     /// Extra launch arguments of a test class (e.g. a large text size).
     var extraLaunchArguments: [String] { [] }
 

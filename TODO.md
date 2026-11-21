@@ -159,6 +159,7 @@ GitHub-Konto: @melvinmng · bestätigt zuweisbar · geprüft 2026-11-17 · ich
 - [ ] [#232](https://github.com/melvinmng/tagwerk/issues/232) Rezept nachträglich übersetzen {status: Ready; prio: P3 (Medium); epic: #113}
 - [ ] [#233](https://github.com/melvinmng/tagwerk/issues/233) Notizen mit ChatGPT durchgehen, überarbeiten, anlegen und löschen {status: Ready; prio: P3 (Medium); epic: #113}
 - [ ] [#236](https://github.com/melvinmng/tagwerk/issues/236) App-Sperre im Fokus-Modus {status: Blocked; prio: P4 (Low)}
+- [ ] [#239](https://github.com/melvinmng/tagwerk/issues/239) Bible Study: Leseplan {status: Backlog; prio: P4 (Low)}
 
 ## Notizen
 
@@ -167,10 +168,11 @@ GitHub-Konto: @melvinmng · bestätigt zuweisbar · geprüft 2026-11-17 · ich
 
 _Automatisch aus [Tagwerk](https://github.com/users/melvinmng/projects/17) erzeugt. Nicht von Hand bearbeiten; Aufgaben oben unter den Personen pflegen._
 
-### Backlog (3)
+### Backlog (4)
 - [#115](https://github.com/melvinmng/tagwerk/issues/115) Phase 6: Jira als Aufgabenquelle anbinden · @melvinmng · Prio P4 (Low)
 - [#170](https://github.com/melvinmng/tagwerk/issues/170) Apple Watch: Komplikation „Als Nächstes“ und Abhaken · @melvinmng · Prio P4 (Low)
 - [#188](https://github.com/melvinmng/tagwerk/issues/188) Designrunde nach der technischen Umsetzung: Tastatur, Siri, GitHub-Status, Ruhezeiten, Notizen, Tagebuch, Bible Study, Gewohnheiten, Datensicherung · @melvinmng · Prio P3 (Medium)
+- [#239](https://github.com/melvinmng/tagwerk/issues/239) Bible Study: Leseplan · @melvinmng · Prio P4 (Low)
 
 ### Bereit (3)
 - [#173](https://github.com/melvinmng/tagwerk/issues/173) Designrunde zu PR #172: Befunde der Sichtprüfung und offene Entscheidungen · @melvinmng · Prio P3 (Medium)
