@@ -52,27 +52,38 @@ enum AuditAllowlist {
             // Titles and previews of the demo notes (the label of a note preview can have several lines). The preview of a note whose
             // title is a heading line starts with the first body line, so these lines are listed as well.
             "(?s)(Demo Linsensuppe|Portionen: 4|Ideen Hausarbeit|Gliederung|Generelle Gedanken|Literaturliste|Handwerker anrufen|Heute lief die Gliederung gut|Geschenkidee für Lea|Kochbuch oder Konzertkarten|Römer|Allgemeine Stimmung|Alte Einkaufsidee|Ruhig und dankbar\\.|Heizung entlüften|1 Einleitung, 2 Methode, 3 Ergebnisse|Drei Quellen zur Statistik).*",
+            "Ganztägig", "Leitfragen einfügen", "Punkte in den Einstellungen anlegen",
+            "Schreib auf, was in deinen Kopf kommt\\. Sortier deine Gedanken\\.", "[A-Z]{2}\\.,? .* · KW \\d+", "Ablauf", "Schlafzeit \\d+:\\d+",
+            "Routinen", "Gewohnheiten", "Woche", "Starten", "noch [\\d.]+", "Wasser", "Schritte", "Training · Woche",
+            "ab (jetzt · )?\\d+:\\d+ bis \\d+:\\d+ · ganzer Tag .*",
         ], reason: "Secondary text in the tone `secondaryText` (78 % of the label colour, strand K) on the grouped background or on a card: captions, "
             + "counts, section headers, hour labels. Strand K cut the findings of this group from 279 to 102 in three repetitions each "
             + "(measured with `--collect-all`, see docs/superpowers/reports/2026-11-21-g3-contrast-measurements.md); these patterns were still reported "
             + "in at least one repetition after the change. The audit measures the rendered small text, and 78 % is the value the calculation "
             + "gave (KO1a). Next step (plan K5, step 3): raise the asset value and measure again; not done within the measurement limit of "
-            + "three repetitions, and a darker grey changes the look of the default size, so the value is the user's decision (#188)."),
+            + "three repetitions, and a darker grey changes the look of the default size, so the value is the user's decision (#188)."
+            + " Patterns that no finding matched in either measurement stay: the evening runs of the measurement are incomplete (one of three failed "
+            + "each time) and earlier runs reported them; only patterns that were reported in every repetition before and in none after were struck."),
         Entry(auditType: .contrast, labels: [
             "Ohne Uhrzeit", "0 · 0 min", "\\+\\d+ offen", "heute", "Kalender Demo Uni(, .*)?",
             "„Seminar“ aus „Demo Freigabe“ liegt zur selben Zeit wie „Seminar“\\.", "Künftig immer bei „Seminar“ aus „Demo Freigabe“",
-            "Mit ChatGPT planen: in Einstellungen › KI anmelden", "Derselbe Termin\\?",
+            "Mit ChatGPT planen: in Einstellungen › KI anmelden", "Derselbe Termin\\?", "1 überfällig", "Abgabe Kurzbericht", "Pretest vorbereiten",
+            "Deadlines", "in 3 Tagen", "P1",
         ], reason: "Text on tinted cards (red deadline card, pink suggestion card) and on the translucent bar of the day view, in the tones "
             + "`redText`, `orangeText`, `purpleText` or `secondaryText`. The overdue/deadline texts (\"1 überfällig\", \"morgen\", \"Abgabe "
             + "Kurzbericht\") pass since strand K; these patterns were still reported in at least one repetition (default size and AX5: 65 findings "
             + "before, 26 after, three repetitions each). The tint of the card changes with the content behind the translucent bar, so the "
-            + "pair is not fixed by a colour alone (#188, \"Sekundärtexte auf getönten Karten\")."),
+            + "pair is not fixed by a colour alone (#188, \"Sekundärtexte auf getönten Karten\")."
+            + " Patterns that no finding matched in either measurement stay: the evening runs of the measurement are incomplete (one of three failed "
+            + "each time) and earlier runs reported them; only patterns that were reported in every repetition before and in none after were struck."),
         Entry(auditType: .contrast, labels: [
-            "Auswählen", "Getrennt lassen", "Zusammenfassen", "Abbrechen", "Termine", "✓ Erledigte",
+            "Auswählen", "Getrennt lassen", "Zusammenfassen", "Abbrechen", "Termine", "✓ Erledigte", "Projektwoche", "Essen", "Trinken", "Training",
         ], reason: "Button and segment texts on Liquid Glass or on bordered tint (navigation bar, filter marks, quick entry). The accent colour "
             + "(`AccentColor`, #005FCC) is not the cause any more: \"Alle\" and the accent texts of the recipe screens pass since strand K. What "
             + "remains is text whose background the system draws and lets the list scroll behind; no own colour to change without replacing the "
-            + "system style (#188, \"Schrift auf Liquid Glass\")."),
+            + "system style (#188, \"Schrift auf Liquid Glass\")."
+            + " Patterns that no finding matched in either measurement stay: the evening runs of the measurement are incomplete (one of three failed "
+            + "each time) and earlier runs reported them; only patterns that were reported in every repetition before and in none after were struck."),
 
         Entry(auditType: .contrast, labels: ["Abschließen"], screens: ["Tagesabschluss", "Tagesabschluss (Abend)", "AX5/dark Tagesabschluss (Abend)"], reason:
             "Confirmation button of the wrap-up sheet in the navigation bar: the text sits on the Liquid Glass of the bar, whose background "
@@ -85,14 +96,17 @@ enum AuditAllowlist {
             + "does not change it; reported in 2 of 2 completed evening runs (default size). Open: a custom header or another tone (#188)."),
 
         Entry(auditType: .contrast, labels: [
-            "30 min zu viel", "Arbeitszeit vorbei · .*", "Unerledigtes verschieben · \\d+ Aufgaben?",
+            "Morgen planen", "30 min zu viel", "Arbeitszeit vorbei · .*", "[A-Z][a-z]\\. \\d+\\. [A-Za-zä]+\\. · .* frei · \\d+ von heute übrig",
+            "Unerledigtes verschieben · \\d+ Aufgaben?", "Klausur Statistik", "Anmeldung Abschlussarbeit", "Tagesabschluss",
         ], screens: eveningPlanScreens, reason:
-            "Texts of the capacity card of today after the end of work (\"Arbeitszeit vorbei\", the leftover row): text on the translucent "
-            + "`.thinMaterial` card, whose colour depends on the part of the hour grid behind it. The same group as the other texts on tinted "
-            + "cards above (#188, \"Sekundärtexte auf getönten Karten\"); the card is audited in the pinned evening run only. Since strand K "
-            + "\"Morgen planen\", \"von heute übrig\" and the deadline rows are not reported any more; the three patterns left each appear in one "
-            + "of the completed repetitions (one evening run of the three failed for load reasons in the measurement)."),
-        Entry(auditType: .contrast, labels: ["Sprechstunde", "Mittagspause"], screens: gridScreens, reason:
+            "Texts of the capacity card of today after the end of work (\"Arbeitszeit vorbei\", the next planning day, the leftover row, the "
+            + "\"Tagesabschluss\" line): text on the translucent `.thinMaterial` card, whose colour depends on the part of the hour grid behind it. "
+            + "The same group as the other texts on tinted cards above (#188, \"Sekundärtexte auf getönten Karten\"); the card is audited in the pinned "
+            + "evening run only. Each of these patterns is reported in some repetitions and not in others: strand K's measurement (two completed "
+            + "evening runs after the change) showed none of the struck candidates, and the next full run reported \"von heute übrig\" and "
+            + "\"Tagesabschluss\" again, a CI run \"Anmeldung Abschlussarbeit\"; so the whole group stays. The cause is the material, not the "
+            + "tone: a solid card fill (as the card of \"Artikel übersetzen\" has) would remove the group."),
+        Entry(auditType: .contrast, labels: gridCellLabels, screens: gridScreens, reason:
             "Title of the grey entries of the hour grid of \"Planen\" (\"Sprechstunde\", \"Mittagspause\"): primary text on the event colour at "
             + "24 % (grey). The time line (`gridTimeText`, 85 %, KO3a) and the titles on blue, green and red pass since strand K; the grey "
             + "tint is the colour code of the grid (break, appointment without calendar colour), and the audit still reports its title in "
@@ -169,12 +183,16 @@ enum AuditAllowlist {
             "(?s)„Rezept hinzufügen“ sendet .*", "Vorrat & Konserven", "\\d+ h \\d+ min", "Spracheingabe", "Titel", "Zutaten", "Zubereitung",
             "Inhalte", "Stimme", "Ziele", "Liste", "Kategorien",
             "(?s)(Tagwerk wandelt Sprache|Beim Diktieren und in der Einkaufsliste|Mikrofon, Sprachpakete|Die Sprache der Oberfläche|Die Vorgaben sind Platzhalter|Zum Schätzen sendet).*",
-            "Die drei Schnellknöpfe im Tab .*", "\\d+ von \\d+ Artikeln · .*",
+            "Die drei Schnellknöpfe im Tab .*", "\\d+ von \\d+ Artikeln · .*", "(?s)Portionen: \\d+\\nZutaten.*", "wird mit ChatGPT gelesen",
+            "Rezepte", "Schätzung", "Anzeige", "In Planen anzeigen", "(?s)(Gesendet wird|Nicht gesendet werden|Um ein Rezept zu lesen).*",
+            "(?s)„In Planen anzeigen“ zeigt .*", "Einkaufsliste jetzt auf (Englisch|Deutsch)",
         ], screens: recipeScreens + recipeScreensLargeText, reason: "Section headers, footers, values and previews in the secondary text tone on the "
             + "grouped background of a form or list; the last footer of a settings page also lies behind the tab bar. Same group as the "
             + "grey texts above (`secondaryText`, 78 %): section headers, footers and values of forms and lists still report in at least one "
             + "repetition after strand K (168 findings before, 102 after, three repetitions each; the patterns that no longer report were struck). "
-            + "The same next step as above: the asset value is the open decision (plan K5, step 3)."),
+            + "The same next step as above: the asset value is the open decision (plan K5, step 3).
+            + " Patterns that no finding matched in either measurement stay: the evening runs of the measurement are incomplete (one of three failed "
+            + "each time) and earlier runs reported them; only patterns that were reported in every repetition before and in none after were struck."),
         Entry(auditType: .contrast, labels: ["Milk", "Milch"], screens: ["Einkaufsliste › Übersetzung", "AX5/dark Einkaufsliste › Übersetzung"], reason:
             "Names in the rows of the translation preview: primary text and `secondaryText` of the second line inside a row button on the grouped "
             + "background of a half-height sheet; the audit reports \"failed\" or \"nearly passed\" depending on the text size (12 findings before "
@@ -182,16 +200,19 @@ enum AuditAllowlist {
             + "these rows sit in a button, whose tint the audit may measure instead of the row background. Open (#188)."),
         Entry(auditType: .contrast, labels: [
             "Alle Sätze stehen dort bereit, auch für Aktionstaste und Home-Bildschirm\\.", "Erfassen", "Einkauf", "Tag und Fokus",
-            "250 ml, im Hintergrund",
+            "250 ml, im Hintergrund", "Notizen und Gewohnheiten", "Einkaufsliste", "Termine, Blöcke, Deadlines; nur entsperrt",
+            "Freier Fokus-Timer, im Hintergrund", "Brain Dump mit laufendem Diktat", "Hakt eine Gewohnheit für heute ab",
+            "auch: „Fokus beenden in Tagwerk“", "(?s)Erkennt Siri einen Satz nicht.*",
         ], screens: siriScreens, reason: "Section headers, footers and the effect line of each phrase on the page \"Siri & Kurzbefehle\", in the system grey "
             + "(`secondaryText`) on the grouped background. Same group as the grey texts above; 36 findings before, 13 after strand K (three repetitions "
-            + "each), the patterns that no longer report were struck. The asset value is the open decision (plan K5, step 3)."),
+            + "each), the patterns that no longer report were struck. The asset value is the open decision (plan K5, step 3).
+            + " Patterns that no finding matched in either measurement stay: the evening runs of the measurement are incomplete (one of three failed "
+            + "each time) and earlier runs reported them; only patterns that were reported in every repetition before and in none after were struck."),
         Entry(auditType: .textClipped, labels: ["Tagwerk-Kurzbefehle"], screens: siriScreens, reason: "The `ShortcutsLink` is a system control; its "
             + "label \"Tagwerk-Kurzbefehle\" is drawn by the system, and the audit reports it as possibly clipped (default size and AX5). The control "
             + "is not part of the app's own layout and cannot be given a line limit or another style (#188 SI2b)."),
         Entry(auditType: .contrast, labels: [
-            "Verwerfen",
-            "Rezept holen", "Zutaten holen", "Zurücksetzen", "Probe hören", "Übernehmen",
+            "Verwerfen", "Rezept holen", "Zutaten holen", "Zurücksetzen", "Probe hören", "Übernehmen", "Demo Linsensuppe",
         ], screens: recipeScreens + recipeScreensLargeText, reason: "What the accent colour did not fix: \"Rezept holen\" and \"Zutaten holen\" are dimmed by the system "
             + "while the text field is empty (gewollt schwach), \"Verwerfen\" and \"Übernehmen\" sit in the navigation bar, whose Liquid Glass "
             + "background lets the list scroll behind it, and \"Zurücksetzen\" and \"Probe hören\" are list buttons in the accent colour on a "

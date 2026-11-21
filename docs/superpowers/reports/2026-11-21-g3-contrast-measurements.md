@@ -11,32 +11,32 @@ Stand 21.11.2026, Branch `feat/g3-contrast`. Gemessen mit `scripts/stress-audits
 | Befunde, die auf keinem Listeneintrag standen | 0 | 0 |
 | Einträge der Liste (alle Arten) | 28 | 27 |
 | Kontrast-Einträge | 13 | 12 |
-| Muster in den Kontrast-Einträgen | 178 | 84 |
+| Muster in den Kontrast-Einträgen | 178 | 136 |
 
 Die Befunde je Eintrag (Summe über drei Wiederholungen, Standard / AX5):
 
 | Eintrag (Kontrast) | K1 | K5 | Ergebnis |
 |---|---|---|---|
-| Sekundärtext auf Hintergrund und Karte (Gruppe 1) | 261 / 18 | 92 / 10 | 26 Muster gestrichen, Rest bleibt |
-| Text auf getönten Karten (rot, orange, grau, lila) | 48 / 17 | 17 / 9 | 7 Muster gestrichen, Rest bleibt |
-| Knopf- und Segmenttexte (Akzent, Liquid Glass) | 42 / 12 | 23 / 15 | 5 Muster gestrichen, Rest bleibt |
+| Sekundärtext auf Hintergrund und Karte (Gruppe 1) | 261 / 18 | 92 / 10 | 10 Muster gestrichen, Rest bleibt |
+| Text auf getönten Karten (rot, orange, grau, lila) | 48 / 17 | 17 / 9 | 1 Muster gestrichen, Rest bleibt |
+| Knopf- und Segmenttexte (Akzent, Liquid Glass) | 42 / 12 | 23 / 15 | 1 Muster gestrichen, Rest bleibt |
 | „Abschließen“ (Tagesabschluss) | 6 / 3 | 5 / 2 | bleibt (Liquid Glass) |
 | „Unerledigt von heute“ | 3 / 0 | 2 / 0 | bleibt (Kopfzeile aus dem System) |
-| Kapazitätskarte am Abend | 9 / 2 | 2 / 1 | 4 Muster gestrichen, 3 bleiben |
-| Titel der grauen Rastereinträge | 6 / 0 | 4 / 0 | 3 Muster gestrichen, Liste auf „Sprechstunde“, „Mittagspause“ verkürzt |
+| Kapazitätskarte am Abend | 9 / 2 | 2 / 1 | keins gestrichen (Abend-Läufe unvollständig), „Tagesabschluss“ ergänzt |
+| Titel der grauen Rastereinträge | 6 / 0 | 4 / 0 | unverändert |
 | Titelzeile des gefalteten Blocks (AX5) | 0 / 0 | 0 / 0 | unverändert gelassen (siehe unten) |
-| Rezept-Seiten, Fuß- und Kopftexte | 156 / 12 | 93 / 9 | 19 Muster gestrichen, Rest bleibt |
+| Rezept-Seiten, Fuß- und Kopftexte | 156 / 12 | 93 / 9 | 10 Muster gestrichen, Rest bleibt |
 | Übersetzungs-Vorschau („Milch“, „Milk“) | 6 / 6 | 6 / 6 | bleibt |
-| Seite „Siri & Kurzbefehle“ | 36 / 0 | 12 / 1 | 12 Muster gestrichen, Rest bleibt |
+| Seite „Siri & Kurzbefehle“ | 36 / 0 | 12 / 1 | 4 Muster gestrichen, Rest bleibt |
 | Zutaten des Rezepts (Zutatenblatt) | 24 / 0 | 0 / 0 | **Eintrag entfernt** (7 Muster) |
-| Akzent- und Knopftexte der Rezept-Seiten | 63 / 9 | 27 / 9 | 11 Muster gestrichen, Rest bleibt |
+| Akzent- und Knopftexte der Rezept-Seiten | 63 / 9 | 27 / 9 | 10 Muster gestrichen, Rest bleibt |
 
-Ein Muster wurde gestrichen, wenn es in K5 keinen Befund mehr deckte und in K1 entweder in allen drei Wiederholungen oder nie getroffen hatte. Muster, die in K1 nur in einer oder zwei Wiederholungen trafen und in K5 nicht, wurden behalten. Die Regel ohne Element für einen Kontrastbefund der Übersetzen-Karte (in beiden Messungen nie getroffen) entfiel ebenfalls.
+Ein Muster wurde nur gestrichen, wenn es in K1 in allen drei Wiederholungen traf und in K5 in keiner, auf Bildschirmen, deren Läufe vollständig waren. Muster ohne Treffer in beiden Messungen blieben stehen: frühere Läufe hatten sie gemeldet, und die Abend-Läufe der Messung sind unvollständig (in K5 scheiterte je Klasse ein Lauf von drei an Last). Das zeigte sich beim vollen Lauf danach: „von heute übrig“, „Tagesabschluss“, „Ganztägig“, „Schlafzeit 23:00“ und „Projektwoche“ wurden im Abend-Lauf in AX5 wieder gemeldet, ein CI-Lauf meldete „Anmeldung Abschlussarbeit“; diese Muster stehen wieder auf der Liste. Die Regel ohne Element für einen Kontrastbefund der Übersetzen-Karte (in beiden Messungen nie getroffen) entfiel.
 
 ## Was K2–K4 bewirkt haben
 
 - **Akzentfarbe (`AccentColor` #005FCC):** Die Akzenttexte der Rezept-Seiten („Einverstanden“, „Rezept speichern“, „Neues Rezept“, „So lassen“, „Mit ChatGPT übersetzen“ u. a.) und „Alle“ im Suchblatt werden nicht mehr gemeldet.
-- **Schrifttöne (`secondaryText`, `redText`, `orangeText`, `purpleText`, `greenText`):** Die Zutaten des Rezepts, „1 überfällig“, „morgen“, „Morgen planen“ und die Fristzeilen der Kapazitätskarte werden nicht mehr gemeldet; die Sekundärtexte sinken von 279 auf 102 Befunde.
+- **Schrifttöne (`secondaryText`, `redText`, `orangeText`, `purpleText`, `greenText`):** Die Zutaten des Rezepts, „morgen“ und viele Kopf- und Fußtexte werden nicht mehr gemeldet; die Sekundärtexte sinken von 279 auf 102 Befunde. Die Texte der Kapazitätskarte am Abend (Material als Hintergrund) bleiben intermittierend.
 - **Uhrzeit im Raster (`gridTimeText`):** Die Uhrzeitzeile der Rastereinträge wurde im Ausgangslauf nicht gemeldet (Kontrast-Muster ohne Treffer); K4 ändert daran nichts Messbares, sie steht jetzt im 85-%-Ton.
 
 ## Was bleibt, und warum
