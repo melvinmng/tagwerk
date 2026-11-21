@@ -113,7 +113,8 @@ enum TravelText {
     }
 
     /// The value of the row "Fahrzeit" in the entry sheet: what applies to the event now.
-    /// "Automatisch" without a block, "25 min mit dem Auto ab Zuhause", "~30 min · geschätzt", "Keine" or "25 min · manuell".
+    /// "Automatisch" without a block, "25 min mit dem Auto ab Zuhause" (with the transport chosen for the event, if any),
+    /// "~30 min · geschätzt", "Keine" or "25 min · manuell"; "· 10 min zu früh" when the trip starts too early.
     static func overrideSummary(_ mode: TravelOverrideMode, segment: TravelSegment?, transport: TravelTransport) -> String {
         switch mode {
         case .none:
@@ -123,10 +124,26 @@ enum TravelText {
         case .automatic:
             guard let segment else { return String(localized: "Automatisch") }
             let value = duration(segment)
-            var text = [value, phrase(transport), origin(segment.origin)].joined(separator: " ")
+            var text = [value, phrase(segment.transport ?? transport), origin(segment.origin)].joined(separator: " ")
             if segment.source == .provisional { text = String(localized: "\(value) · geschätzt") }
-            return segment.isTight ? String(localized: "\(text) · knapp") : text
+            return segment.isTight ? String(localized: "\(text) · \(overlapText(minutes: segment.overlapMinutes))") : text
         }
+    }
+
+    /// The minutes of a block as the page "Fahrzeit" shows them next to "Automatisch": "25 min", "~30 min".
+    static func valueText(_ segment: TravelSegment) -> String { duration(segment) }
+
+    /// The option "no choice" of the start: "Automatisch (Zuhause)" or "Automatisch (Vorheriger Termin)", after the rule that applies.
+    static func startRule(_ origin: TravelLeg.Origin) -> String {
+        switch origin {
+        case .home: String(localized: "Automatisch (Zuhause)")
+        case .previousEvent: String(localized: "Automatisch (Vorheriger Termin)")
+        }
+    }
+
+    /// The option "no choice" of the transport: "Wie eingestellt (Auto)".
+    static func transportRule(_ transport: TravelTransport) -> String {
+        String(localized: "Wie eingestellt (\(name(transport)))")
     }
 
     /// The row in the planning settings: "Auto · Zuhause gesetzt", "Auto · ohne Heimadresse" or "Aus".

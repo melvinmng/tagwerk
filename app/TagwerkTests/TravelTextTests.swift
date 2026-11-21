@@ -106,10 +106,23 @@ struct TravelTextTests {
         #expect(TravelText.overrideSummary(.automatic, segment: nil, transport: .automobile) == "Automatisch")
         #expect(TravelText.overrideSummary(.automatic, segment: segment(), transport: .automobile) == "25 min mit dem Auto ab Zuhause")
         #expect(TravelText.overrideSummary(.automatic, segment: segment(origin: .previousEvent(id: "a"), overlap: 10), transport: .walking)
-                == "25 min zu Fuß ab vorherigem Termin · knapp")
+                == "25 min zu Fuß ab vorherigem Termin · 10 min zu früh")
         #expect(TravelText.overrideSummary(.automatic, segment: segment(30, source: .provisional), transport: .automobile) == "~30 min · geschätzt")
         #expect(TravelText.overrideSummary(.none, segment: nil, transport: .automobile) == "Keine")
         #expect(TravelText.overrideSummary(.fixed(minutes: 45), segment: segment(45, source: .manual), transport: .automobile) == "45 min · manuell")
+    }
+
+    @Test func overrideSummary_namesTheEventsTransport() {
+        // The transport chosen for the event wins over the one of the setting.
+        let transit = TravelSegment(eventID: "e", range: 815..<840, minutes: 25, origin: .home, transport: .transit)
+        #expect(TravelText.overrideSummary(.automatic, segment: transit, transport: .automobile) == "25 min mit Bus und Bahn ab Zuhause")
+        #expect(TravelText.overrideSummary(.automatic, segment: segment(), transport: .automobile) == "25 min mit dem Auto ab Zuhause")
+    }
+
+    @Test func startRule_names_theRuleThatApplies() {
+        #expect(TravelText.startRule(.home) == "Automatisch (Zuhause)")
+        #expect(TravelText.startRule(.previousEvent(id: "a")) == "Automatisch (Vorheriger Termin)")
+        #expect(TravelText.transportRule(.automobile) == "Wie eingestellt (Auto)")
     }
 
     @Test func settingsSummary_off() {

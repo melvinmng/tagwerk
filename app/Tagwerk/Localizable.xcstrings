@@ -850,16 +850,6 @@
         }
       }
     },
-    "%@ · knapp": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ · tight"
-          }
-        }
-      }
-    },
     "%@ · manuell": {
       "localizations": {
         "en": {
@@ -5217,22 +5207,42 @@
         }
       }
     },
-    "Automatisch berechnet Apple Karten die Fahrzeit. „Keine“ und eine feste Zeit gelten nur in Tagwerk, auch ohne Netz, und haben Vorrang.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Apple Maps calculates the travel time automatically. “None” and a fixed time apply only in Tagwerk, also without a network, and take precedence."
-          }
-        }
-      }
-    },
     "Automatisch sichern": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Back up automatically"
+          }
+        }
+      }
+    },
+    "Automatisch berechnet Apple Karten die Fahrzeit. „Keine“ und eine feste Dauer gelten nur in Tagwerk, auch ohne Netz, und haben Vorrang.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apple Maps calculates the travel time automatically. “None” and a fixed duration apply only in Tagwerk, also without a network, and take precedence."
+          }
+        }
+      }
+    },
+    "Automatisch (Vorheriger Termin)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Automatic (previous event)"
+          }
+        }
+      }
+    },
+    "Automatisch (Zuhause)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Automatic (home)"
           }
         }
       }
@@ -9125,12 +9135,12 @@
         }
       }
     },
-    "Feste Zeit": {
+    "Feste Dauer": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Fixed time"
+            "value": "Fixed duration"
           }
         }
       }
@@ -16845,6 +16855,16 @@
         }
       }
     },
+    "Start": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start"
+          }
+        }
+      }
+    },
     "Startet einen freien Fokus-Timer oder beendet den laufenden, ohne Tagwerk zu öffnen.": {
       "localizations": {
         "en": {
@@ -18550,6 +18570,16 @@
         }
       }
     },
+    "Vorheriger Termin": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Previous event"
+          }
+        }
+      }
+    },
     "Vorlage": {
       "localizations": {
         "en": {
@@ -19104,6 +19134,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "How OpenAI handles the data sent depends on the settings of your ChatGPT account."
+          }
+        }
+      }
+    },
+    "Wie eingestellt (%@)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "As set (%@)"
           }
         }
       }

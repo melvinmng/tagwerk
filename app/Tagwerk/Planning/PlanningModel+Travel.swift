@@ -84,11 +84,30 @@ extension PlanningModel {
         travelChoices(for: events).compactMapValues { $0.mode == .automatic ? nil : $0.mode }
     }
 
-    /// Sets the travel time of an event by hand; `series` applies to this and all following occurrences of a repeating event.
+    /// Sets the travel time of an event by hand; `series` applies to this and all following occurrences of a repeating
+    /// event. Transport and start chosen before stay.
     func setTravelOverride(_ mode: TravelOverrideMode, for event: CalendarEvent, series: Bool) async {
-        TravelOverrideStore(context: marks.modelContext).set(mode, eventID: event.id, seriesID: travelSeriesID(of: event),
+        var choice = travelChoice(for: event)
+        choice.mode = mode
+        await setTravelChoice(choice, for: event, series: series)
+    }
+
+    /// Sets what the user decided for the event (mode, transport, start) and reloads the plan. The default choice removes
+    /// the entry. `series` applies to this and all following occurrences of a repeating event.
+    func setTravelChoice(_ choice: TravelChoice, for event: CalendarEvent, series: Bool) async {
+        TravelOverrideStore(context: marks.modelContext).set(choice, eventID: event.id, seriesID: travelSeriesID(of: event),
                                                              start: event.start, series: series && event.isRecurring)
         await reload()
+    }
+
+    /// Is there an event with a physical place that has ended before this one on the same day? Without one the start
+    /// "Vorheriger Termin" has nothing to start from.
+    func hasPreviousPlace(before event: CalendarEvent) -> Bool {
+        days.lazy.flatMap { $0.events + $0.blocks }.contains { other in
+            other.id != event.id && !other.isAllDay && other.isBusy && other.end <= event.start
+                && calendar.isDate(other.start, inSameDayAs: event.start)
+                && other.location.map(TravelRules.isPhysicalLocation) == true
+        }
     }
 
     // MARK: Route (PL11b)
