@@ -392,4 +392,30 @@ struct NoteStoreTests {
     @Test func schema_containsNoteFolderRecord() {
         #expect(ModelContainerFactory.schema.entities.contains { $0.name == "NoteFolderRecord" })
     }
+
+    // MARK: Duplicating
+
+    @Test func duplicate_withoutAttachmentStore_keepsTextAndFolder() throws {
+        let folder = try store.createFolder(name: "Rezepte")
+        let original = try #require(store.create(text: "Alt", folderID: folder.id))
+        advance()
+        let copy = try #require(store.duplicate(original.id, text: "\n  Neu mit Rand \n"))
+        #expect(copy.text == "Neu mit Rand" && copy.folderID == folder.id && copy.kind == .free)
+        #expect(copy.createdAt == clock.now && original.text == "Alt")
+        #expect(store.count == 2)
+    }
+
+    @Test func duplicate_emptyTextPrivateOrTrashedNote_createsNothing() throws {
+        let note = try #require(store.create(text: "Alt"))
+        #expect(store.duplicate(note.id, text: "  \n") == nil)
+        #expect(store.duplicate(UUID(), text: "Text") == nil)
+        let journal = store.ensureJournalFolder()
+        let entry = try #require(store.create(text: "Tagebuch", kind: .journal, dayKey: "2026-11-20"))
+        #expect(store.duplicate(entry.id, text: "Kopie") == nil)
+        let inJournalFolder = try #require(store.create(text: "Frei im Tagebuch-Ordner", folderID: journal.id))
+        #expect(store.duplicate(inJournalFolder.id, text: "Kopie") == nil)
+        store.trash(note.id)
+        #expect(store.duplicate(note.id, text: "Kopie") == nil)
+        #expect(store.count == 2)
+    }
 }
