@@ -219,7 +219,7 @@ struct ReadAloudButton: View {
         let output = environment.voiceOutput
         let playing = output.speakingID == id
         return Button {
-            output.toggle(id: id, text: text, fallback: VoiceChatLanguage.resolve(setting: environment.settings.voiceRecognitionLanguage))
+            output.toggle(id: id, text: text, fallback: environment.settings.contentLanguages.readAloudFallback())
         } label: {
             Label(playing ? "Liest vor · Stopp" : "Vorlesen", systemImage: playing ? "stop.fill" : "speaker.wave.2")
                 .font(.caption)

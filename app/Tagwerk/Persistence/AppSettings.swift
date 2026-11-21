@@ -161,6 +161,16 @@ final class AppSettings {
     var voiceRecognitionLanguage: String = "auto"
     /// The language recipes are created in (#216): "auto" follows the app language, otherwise a `VoiceLanguage` raw value.
     var recipeLanguage: String = "auto"
+    /// The language the voice chat answers in (Einstellungen › Sprachen): "spoken" answers in the language the user speaks,
+    /// otherwise a `VoiceLanguage` raw value. `nil` until `migrateVoiceAnswerLanguageIfNeeded()` derived it from the former
+    /// shared value `voiceRecognitionLanguage`, which is now the dictation language only.
+    var voiceAnswerLanguage: String? = nil
+    /// The language of new shopping items: "recipes" follows the recipe language, "auto" the app language, otherwise a
+    /// `VoiceLanguage` raw value.
+    var shoppingLanguage: String = "recipes"
+    /// JSON of `[String: String]`: the language last chosen on the dictation switch per place (`DictationPlace`). Stays on
+    /// this device and is not part of the backup.
+    var dictationPlaceLanguagesData: Data? = nil
     /// `ReadAloudPolicy` raw value; "never" by default (SP3).
     var voiceReadAloud: String = "never"
     /// Chosen system voices per language; nil picks the best installed voice.
@@ -242,6 +252,20 @@ extension AppSettings {
         guard !workoutGoalMigrated else { return }
         if goalWorkoutsPerWeek == 0 { goalWorkoutMinutesPerWeek = 0 }
         workoutGoalMigrated = true
+    }
+
+    /// The stored language settings as the rules read them.
+    var contentLanguages: ContentLanguages {
+        ContentLanguages(dictation: voiceRecognitionLanguage, answer: voiceAnswerLanguage, recipe: recipeLanguage,
+                         shopping: shoppingLanguage, places: ContentLanguages.decodePlaces(dictationPlaceLanguagesData))
+    }
+
+    /// One-time takeover when the voice chat answer language became its own setting: it starts from the former shared value
+    /// `voiceRecognitionLanguage`, so the app behaves as before the update. Writes only while the answer language has never
+    /// been set, so a later change of the dictation language leaves the answer language alone.
+    func migrateVoiceAnswerLanguageIfNeeded() {
+        guard voiceAnswerLanguage == nil else { return }
+        voiceAnswerLanguage = ContentLanguages.migratedAnswer(fromDictation: voiceRecognitionLanguage)
     }
 
     /// The quiet hours the settings describe; `nil` when switched off or empty.

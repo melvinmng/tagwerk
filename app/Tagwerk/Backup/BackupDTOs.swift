@@ -1202,6 +1202,10 @@ struct AppSettingsBackup: Codable, Equatable {
     var effortHistoryInPlanning: Bool?
     /// Optional, so a backup written before the recipe language existed still decodes; a missing value keeps "auto".
     var recipeLanguage: String?
+    /// Optional, so a backup written before the separate answer and shopping languages still decodes. A missing answer language
+    /// is derived again from the restored dictation language; a missing shopping language keeps the device's value.
+    var voiceAnswerLanguage: String?
+    var shoppingLanguage: String?
     /// Optional, so a backup written before the adjustable drink portions still decodes; a missing value keeps the device's portions.
     var drinkPresets: [Int]?
     var showsRoutinesInPlan: Bool
@@ -1282,6 +1286,8 @@ struct AppSettingsBackup: Codable, Equatable {
         focusUsesPomodoro = record.focusUsesPomodoro
         effortHistoryInPlanning = record.effortHistoryInPlanning
         recipeLanguage = record.recipeLanguage
+        voiceAnswerLanguage = record.voiceAnswerLanguage
+        shoppingLanguage = record.shoppingLanguage
         drinkPresets = record.drinkPresets
         showsRoutinesInPlan = record.showsRoutinesInPlan
         noteSuggestionConsent = record.noteSuggestionConsent
@@ -1361,6 +1367,7 @@ struct AppSettingsBackup: Codable, Equatable {
         if let focusUsesPomodoro { record.focusUsesPomodoro = focusUsesPomodoro }
         if let effortHistoryInPlanning { record.effortHistoryInPlanning = effortHistoryInPlanning }
         if let recipeLanguage { record.recipeLanguage = recipeLanguage }
+        if let shoppingLanguage { record.shoppingLanguage = shoppingLanguage }
         if let drinkPresets { record.drinkPresets = drinkPresets }
         record.showsRoutinesInPlan = showsRoutinesInPlan
         record.noteSuggestionConsent = noteSuggestionConsent
@@ -1369,6 +1376,9 @@ struct AppSettingsBackup: Codable, Equatable {
         record.voiceInputEnabled = voiceInputEnabled
         record.voiceExplained = voiceExplained
         record.voiceRecognitionLanguage = voiceRecognitionLanguage
+        // The answer language of an older backup is derived from the restored dictation language, once.
+        record.voiceAnswerLanguage = voiceAnswerLanguage
+        record.migrateVoiceAnswerLanguageIfNeeded()
         record.voiceReadAloud = voiceReadAloud
         record.voiceGermanVoiceID = voiceGermanVoiceID
         record.voiceEnglishVoiceID = voiceEnglishVoiceID
