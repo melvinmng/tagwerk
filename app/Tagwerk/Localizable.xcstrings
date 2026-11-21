@@ -4548,6 +4548,16 @@
         }
       }
     },
+    "Anpassen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adjust"
+          }
+        }
+      }
+    },
     "Ansicht": {
       "localizations": {
         "en": {
@@ -18676,6 +18686,26 @@
         }
       }
     },
+    "von ChatGPT angepasst": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "adjusted by ChatGPT"
+          }
+        }
+      }
+    },
+    "von dir angepasst": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "adjusted by you"
+          }
+        }
+      }
+    },
     "Von Hand abhaken": {
       "localizations": {
         "en": {
@@ -19005,6 +19035,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Suggestion %1$lld of %2$lld · not applied yet"
+          }
+        }
+      }
+    },
+    "Vorschlag der KI: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AI proposal: %@"
           }
         }
       }

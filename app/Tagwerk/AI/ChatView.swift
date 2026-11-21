@@ -17,6 +17,8 @@ struct ChatView: View {
     @State private var explainingVoiceMode = false
     /// The note card whose proposal is shown in `NoteChangeSheet`.
     @State private var noteDetail: NoteDetailRequest?
+    /// The card whose sheet "Vorschlag anpassen" is open; set by "Anpassen" on a card with an editor.
+    @State private var adjusting: ToolCall?
 
     private var conversation: Conversation? { assistant.conversation }
 
@@ -248,7 +250,8 @@ struct ChatView: View {
                            onConfirm: { Task { await assistant.confirm(call) } },
                            onDecline: { Task { await assistant.decline(call) } },
                            proposal: proposalPosition(of: call),
-                           onShowDetail: card.detail == nil ? nil : { noteDetail = NoteDetailRequest(call: call, card: card) })
+                           onShowDetail: card.detail == nil ? nil : { noteDetail = NoteDetailRequest(call: call, card: card) },
+                           onAdjust: status == .pending && card.canAdjust ? { adjusting = call } : nil)
         case .activity(let call, let output):
             // A read call the user should see ("Gelesen: „Titel“"); small and grey, not an answer.
             if let text = assistant.activityText(call, output: output) {
@@ -347,12 +350,20 @@ struct ActionCardView: View {
     var proposal: (index: Int, count: Int)? = nil
     /// Opens the sheet "Änderung ansehen"; `nil` for cards without a proposal to look at.
     var onShowDetail: (() -> Void)? = nil
+    /// Opens the sheet "Vorschlag anpassen"; `nil` for cards without an editor (no third button, AN11a).
+    var onAdjust: (() -> Void)? = nil
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             header
             Text(card.title).font(.subheadline.weight(.semibold))
+            if let mark = card.mark, status == .pending { ProposalMarkLabel(mark: mark) }
             Text(card.change).font(.subheadline).foregroundStyle(.secondary)
+            if let proposed = card.proposedChange, status == .pending {
+                // What the model proposed, so the user sees what was changed (AN2a).
+                Text("Vorschlag der KI: \(proposed)").font(.caption).foregroundStyle(.secondary).strikethrough()
+                    .accessibilityLabel(Text("Vorschlag der KI: \(proposed)"))
+            }
             if let accessory { accessory }
             if let onShowDetail {
                 Button(action: onShowDetail) {
@@ -366,18 +377,7 @@ struct ActionCardView: View {
             if case .done(let output) = status, let error = Self.error(in: output) {
                 Label(error, systemImage: "exclamationmark.triangle").font(.caption).foregroundStyle(.orange)
             }
-            if status == .pending {
-                HStack {
-                    Button("Verwerfen", action: onDecline).buttonStyle(.bordered)
-                    Spacer()
-                    Button(role: card.isDestructive ? .destructive : nil, action: onConfirm) {
-                        Text(card.confirmTitle ?? String(localized: "Bestätigen"))
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .tint(card.isDestructive ? .red : nil)
-                    .disabled(!canConfirm)
-                }
-            }
+            if status == .pending { buttons }
         }
         .padding(12)
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -387,6 +387,56 @@ struct ActionCardView: View {
                 RoundedRectangle(cornerRadius: 14).strokeBorder(Color.purple, style: StrokeStyle(lineWidth: 1, dash: [4, 3]))
             }
         }
+        .accessibilityActions {
+            if status == .pending, let onAdjust { Button("Anpassen", action: onAdjust) }
+        }
+    }
+
+    /// "Verwerfen", "Bestätigen" and, for a card with an editor, "Anpassen" in between. With large text the three
+    /// buttons do not fit in a row: "Bestätigen" then gets its own full-width row below the other two.
+    @ViewBuilder
+    private var buttons: some View {
+        if let onAdjust {
+            ViewThatFits(in: .horizontal) {
+                HStack {
+                    declineButton
+                    Spacer()
+                    adjustButton(onAdjust)
+                    confirmButton
+                }
+                VStack(spacing: 8) {
+                    HStack {
+                        declineButton
+                        Spacer()
+                        adjustButton(onAdjust)
+                    }
+                    confirmButton.frame(maxWidth: .infinity)
+                }
+            }
+        } else {
+            HStack {
+                declineButton
+                Spacer()
+                confirmButton
+            }
+        }
+    }
+
+    private var declineButton: some View {
+        Button("Verwerfen", action: onDecline).buttonStyle(.bordered)
+    }
+
+    private func adjustButton(_ action: @escaping () -> Void) -> some View {
+        Button("Anpassen", action: action).buttonStyle(.bordered)
+    }
+
+    private var confirmButton: some View {
+        Button(role: card.isDestructive ? .destructive : nil, action: onConfirm) {
+            Text(card.confirmTitle ?? String(localized: "Bestätigen"))
+        }
+        .buttonStyle(.borderedProminent)
+        .tint(card.isDestructive ? .red : nil)
+        .disabled(!canConfirm)
     }
 
     @ViewBuilder
