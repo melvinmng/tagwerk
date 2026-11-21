@@ -72,7 +72,8 @@ Festlegungen der Hauptsitzung zum G3-Plan: offene Fragen nach Empfehlung; Zeilen
 | `feat/g1-focus` | G1 Strang F (F1–F7) | **gemergt (#253)**; geprüft, Head `683677d`, `test-all` grün; F8 nach P. Achtung: Menütitel jetzt „Fokus starten · 25 min“ – beim Zusammenführen mit #246 (Strang U) UI-Tests auf den Titel prüfen |
 | `fix/ui-audits-and-strings` | #250 nach Plan 2026-11-21 | PR #261; geprüft, Head `4f73e1f`, `test-all` grün; `sync-strings.sh` formattreu (1 Zeile je Schlüssel); Allowlist −2/+4/~4; läuft: `main` einarbeiten (Konflikte Allowlist, Rezept-Audit) |
 | `feat/g3-contrast` | G3 Strang K (K1–K5), auf #261 | läuft (Sonnet, nach Job 1) |
-| `feat/g1-travel-time`, danach `feat/g1-focus-in-plan` | G1 Strang V (V1–V5) und F8 | läuft (Sonnet, neue Testregel) |
+| `feat/g1-travel-time`, `feat/g1-focus-in-plan` | G1 Strang V (V1–V5) und F8 | **gemergt (#263, #264, `main` = `099f2e8`)**; PL10b gebaut (Kapsel 9,6/10,2:1) |
+| `fix/day-capacity` | #260 Kapazität | läuft (Sonnet) |
 
 ## Neues Thema (21.11.): Ernährung, Gewicht, Ziele mit ChatGPT
 
