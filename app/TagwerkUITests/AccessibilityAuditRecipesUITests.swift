@@ -53,9 +53,14 @@ class RecipeScreensAuditCase: UITestCase {
         XCTAssertTrue(editor.waitForExistence(timeout: Self.timeout), "Recipe text field missing")
         editor.tap()
         editor.typeText("Gemüsepfanne für 2: 2 Paprika, 150 g Reis, Salz")
-        if app.buttons["Fertig"].exists { app.buttons["Fertig"].tap() }
+        // The keyboard is a process of its own, and animations of the app cannot be turned off there: wait for its "Fertig" button
+        // (it exists as soon as the keyboard is up), close it, and wait until it is really gone before the next step.
+        tapButton("Fertig")
+        XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout: Self.timeout), "The keyboard did not close")
         tapScrolling("Rezept holen")
         waitFor("Einverstanden")
+        // The decline button is the lowest control of the sheet (below the fold in the large text size): audit only when it exists.
+        waitFor("Nicht jetzt")
         try audit("Rezept anlegen (Einwilligung)")
         tapScrolling("Einverstanden")
         XCTAssertTrue(app.navigationBars["Rezept speichern"].waitForExistence(timeout: 20), "Confirmation did not open")
@@ -80,6 +85,9 @@ class RecipeScreensAuditCase: UITestCase {
         openSettingsRow("KI")
         openSettingsRow("Sprache")
         XCTAssertTrue(app.navigationBars["Sprache"].waitForExistence(timeout: Self.timeout), "Language settings did not open")
+        // The rows "Sprachpaket …" show "…" until the state of the language packs is known and then a longer text (more lines in
+        // the large text size). The audit must not run in between.
+        waitUntilGone(app.staticTexts["…"].firstMatch)
         try audit("Einstellungen › KI › Sprache")
         app.navigationBars.buttons.firstMatch.tap()
         app.navigationBars.buttons.firstMatch.tap()
