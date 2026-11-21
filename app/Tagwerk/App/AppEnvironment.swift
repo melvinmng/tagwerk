@@ -95,6 +95,10 @@ final class AppEnvironment {
     @ObservationIgnored private(set) var activeSearch: SearchModel?
     /// Set by `DemoData` once the sample data is created; the UI tests wait for the marker view it drives.
     var isDemoDataReady = false
+    /// Number of EventKit changes `startObservingChanges()` has finished handling, and whether one is being handled now.
+    /// The UI test mode waits for them (`StoreChangeSettle`) before it reports the app as ready.
+    @ObservationIgnored private(set) var storeChangesHandled = 0
+    @ObservationIgnored private(set) var isHandlingStoreChange = false
     /// A tab another view asks to show (e.g. "Mit KI planen" from the task list jumps to "Planen").
     var requestedTab: Int?
     /// Pages on top of the task list (shopping list, notes); a deep link sets it to open the shopping list.
@@ -653,6 +657,7 @@ final class AppEnvironment {
         let changes = gateway.changes
         changeObservation = Task { [weak self] in
             for await _ in changes {
+                self?.isHandlingStoreChange = true
                 // EventKit changes concern Reminders only; GitHub and local tasks stay as they are.
                 await self?.taskList.reload(only: [.reminders])
                 await self?.planning.reload()
@@ -664,6 +669,8 @@ final class AppEnvironment {
                 self?.notifications.scheduleSoon()
                 // Today's events may have changed while "Planen" shows another period.
                 self?.scheduleSnapshot()
+                self?.storeChangesHandled += 1
+                self?.isHandlingStoreChange = false
             }
         }
     }

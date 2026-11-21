@@ -15,13 +15,16 @@ enum DemoData {
 
     static var isRequested: Bool { ProcessInfo.processInfo.arguments.contains(launchArgument) || UITestMode.isActive }
 
-    static func seedIfRequested(_ environment: AppEnvironment) async {
-        guard isRequested else { return }
+    /// Creates the sample data. Returns `true` when it exists; the caller reports the app as ready (`isDemoDataReady`)
+    /// only after the rest of the start, so the UI tests never see a screen that is still changing.
+    static func seedIfRequested(_ environment: AppEnvironment) async -> Bool {
+        guard isRequested else { return false }
         let store = EKEventStore()
+        let handledBeforeSeed = environment.storeChangesHandled
         do {
             guard try await store.requestFullAccessToEvents(), try await store.requestFullAccessToReminders() else {
                 print("DemoData: calendar or reminder access denied; grant it with simctl privacy")
-                return
+                return false
             }
             try wipe(store)
             let ids = try seed(store, leadTimeMinutes: environment.settings.leadTimeMinutes)
@@ -49,7 +52,8 @@ enum DemoData {
             seedNotes(environment)
             // Phase 4: the widget reads the demo plan right away.
             environment.writeSnapshot()
-            environment.isDemoDataReady = true
+            // The seeding wrote through its own store; the gateway's store reports that later and the app reloads.
+            if UITestMode.isActive { await waitForStoreChangeEcho(environment, handledBeforeSeed: handledBeforeSeed) }
             print("DemoData: sample data created")
         } catch {
             print("DemoData: seeding failed: \(error)")
@@ -59,8 +63,19 @@ enum DemoData {
     /// Phase 5: three notes (one pinned, one dictated, one evening thought of yesterday, so the filter shows)
     /// and the built-in shopping categories. There is no demo reminder store: the shopping list shows the
     /// simulator's real reminders once a list is chosen.
+            return true
     private static func seedNotes(_ environment: AppEnvironment) {
         environment.shoppingCategories.seedIfNeeded()
+            return false
+        }
+    }
+
+    /// UI test mode: waits until the app has handled the EventKit changes of the seeding and nothing new arrived for
+    /// `StoreChangeSettle.quietTime`, at most `StoreChangeSettle.limit` seconds (then the run continues with a log line).
+    private static func waitForStoreChangeEcho(_ environment: AppEnvironment, handledBeforeSeed: Int) async {
+        let clock = ContinuousClock()
+        func seconds(_ duration: Duration) -> TimeInterval {
+            TimeInterval(duration.components.seconds) + TimeInterval(duration.components.attoseconds) / 1e18
         let notes = environment.notes
         guard notes.count == 0 else { return }
         let planning = environment.planning
