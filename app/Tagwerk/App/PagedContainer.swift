@@ -29,6 +29,9 @@ struct PagedContainer<Page: View>: View {
     /// Identity of the real content. After paging, the neighbour preview stays until this changes (the model has
     /// loaded the new day); `nil` pages without waiting.
     var contentID: () -> AnyHashable? = { nil }
+    /// The container is as tall as the real page: the neighbours (and the arrival preview) are laid behind and over it
+    /// instead of beside it in the same stack. The month needs this, its neighbour can have another number of weeks.
+    var sizesToCurrentPage = false
     let onPage: (PageSwipe) -> Void
     /// A drag begins; the neighbour pages take over what they need from the shown page (e.g. its scroll offset).
     var onDragBegan: () -> Void = {}
@@ -52,16 +55,19 @@ struct PagedContainer<Page: View>: View {
     var body: some View {
         let id = contentID()
         ZStack {
-            // The neighbours stay in place beside the screen, so a drag finds them built (as in a paged scroll view)
-            // and they have already taken their data.
-            if canGoBack { neighbour(.previous, at: dragOffset - width) }
-            if canGoForward { neighbour(.next, at: dragOffset + width) }
-            // The real page stays in place (it keeps its scroll position and state). When the model has the new page
-            // at once (cached neighbour), `contentID` changes with the paging and nothing lies over it. Otherwise the
-            // preview of the new page lies over it until the real content has caught up.
-            page(.current).offset(x: dragOffset)
-            if isArriving {
-                page(.arrived).background(.background, ignoresSafeAreaEdges: []).allowsHitTesting(false)
+            if sizesToCurrentPage {
+                page(.current).offset(x: dragOffset)
+                    .background(alignment: .top) { neighbours }
+                    .overlay(alignment: .top) { arrivedPreview }
+            } else {
+                // The neighbours stay in place beside the screen, so a drag finds them built (as in a paged scroll view)
+                // and they have already taken their data.
+                neighbours
+                // The real page stays in place (it keeps its scroll position and state). When the model has the new page
+                // at once (cached neighbour), `contentID` changes with the paging and nothing lies over it. Otherwise the
+                // preview of the new page lies over it until the real content has caught up.
+                page(.current).offset(x: dragOffset)
+                arrivedPreview
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -81,6 +87,19 @@ struct PagedContainer<Page: View>: View {
                 withAnimation(.snappy) { dragOffset = 0 }
             }
         })
+    }
+
+    @ViewBuilder
+    private var neighbours: some View {
+        if canGoBack { neighbour(.previous, at: dragOffset - width) }
+        if canGoForward { neighbour(.next, at: dragOffset + width) }
+    }
+
+    @ViewBuilder
+    private var arrivedPreview: some View {
+        if isArriving {
+            page(.arrived).background(.background, ignoresSafeAreaEdges: []).allowsHitTesting(false)
+        }
     }
 
     private func neighbour(_ slot: PageSlot, at x: CGFloat) -> some View {

@@ -2536,5 +2536,35 @@ struct PlanningModelTests {
         // The preview is never stored: the real anchor did not move.
         #expect(model.anchor == today)
     }
+
+    // MARK: Month page (PL7b)
+
+    @Test func monthGridDays_coversWholeWeeks() {
+        // November 2026: Sunday the 1st to Monday the 30th, so the grid runs Monday 26 Oct to Sunday 6 Dec.
+        let days = PlanningModel.monthGridDays(anchor: PlanDay(year: 2026, month: 11, day: 18), calendar: calendar)
+        #expect(days.first == PlanDay(year: 2026, month: 10, day: 26))
+        #expect(days.last == PlanDay(year: 2026, month: 12, day: 6))
+        #expect(days.count % 7 == 0)
+        #expect(days.count == 42)
+        // February 2027 has exactly four weeks (Monday 1 Feb to Sunday 28 Feb).
+        let february = PlanningModel.monthGridDays(anchor: PlanDay(year: 2027, month: 2, day: 10), calendar: calendar)
+        #expect(february.count == 28)
+        #expect(february.first == PlanDay(year: 2027, month: 2, day: 1))
+        // The days follow each other without a gap.
+        #expect(zip(days, days.dropFirst()).allSatisfy { $1 == $0.adding(days: 1, calendar: calendar) })
+    }
+
+    @Test func monthGridDays_matchesTheLoadedRange() async {
+        let model = await model()
+        model.scope = .month
+        await model.reload()
+        #expect(model.days.map(\.day) == PlanningModel.monthGridDays(anchor: model.anchor, calendar: calendar))
+        // The neighbouring month, as the preview of a drag draws it, is the grid the model loads after paging.
+        let next = PlanHeaderText.shiftedAnchor(scope: .month, anchor: model.anchor, step: 1, calendar: calendar)
+        model.step(1)
+        await model.reload()
+        #expect(model.anchor.month == next.month)
+        #expect(model.days.map(\.day) == PlanningModel.monthGridDays(anchor: next, calendar: calendar))
+    }
 }
 

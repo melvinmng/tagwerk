@@ -250,11 +250,29 @@ final class PlanningModel {
             let start = weekStart(of: anchor)
             return start...start.adding(days: 6, calendar: calendar)
         case .month:
-            let first = PlanDay(year: anchor.year, month: anchor.month, day: 1)
-            let nextMonth = calendar.date(byAdding: .month, value: 1, to: first.startDate(in: calendar)) ?? first.startDate(in: calendar)
-            let last = PlanDay(date: nextMonth, calendar: calendar).adding(days: -1, calendar: calendar)
-            return weekStart(of: first)...weekStart(of: last).adding(days: 6, calendar: calendar)
+            return Self.monthGridRange(anchor: anchor, calendar: calendar)
         }
+    }
+
+    /// Whole weeks around the month of `anchor`: the range the month scope loads.
+    private static func monthGridRange(anchor: PlanDay, calendar: Calendar) -> ClosedRange<PlanDay> {
+        let first = PlanDay(year: anchor.year, month: anchor.month, day: 1)
+        let nextMonth = calendar.date(byAdding: .month, value: 1, to: first.startDate(in: calendar)) ?? first.startDate(in: calendar)
+        let last = PlanDay(date: nextMonth, calendar: calendar).adding(days: -1, calendar: calendar)
+        return weekStart(of: first, calendar: calendar)...weekStart(of: last, calendar: calendar).adding(days: 6, calendar: calendar)
+    }
+
+    /// The days of the month grid for `anchor` (whole weeks around the month), the same range the month scope loads.
+    /// The page of a neighbouring month needs nothing else (PL7b).
+    static func monthGridDays(anchor: PlanDay, calendar: Calendar) -> [PlanDay] {
+        let range = monthGridRange(anchor: anchor, calendar: calendar)
+        var days: [PlanDay] = []
+        var day = range.lowerBound
+        while day <= range.upperBound {
+            days.append(day)
+            day = day.adding(days: 1, calendar: calendar)
+        }
+        return days
     }
 
     /// Set while a neighbour page prevails during a drag: the header shows that period. Never stored, never read by the
@@ -2052,7 +2070,9 @@ final class PlanningModel {
         planStore.prune(keeping: keep)
     }
 
-    private func weekStart(of day: PlanDay) -> PlanDay {
+    private func weekStart(of day: PlanDay) -> PlanDay { Self.weekStart(of: day, calendar: calendar) }
+
+    private static func weekStart(of day: PlanDay, calendar: Calendar) -> PlanDay {
         let start = calendar.dateInterval(of: .weekOfYear, for: day.startDate(in: calendar))?.start ?? day.startDate(in: calendar)
         return PlanDay(date: start, calendar: calendar)
     }
