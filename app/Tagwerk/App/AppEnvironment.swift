@@ -234,6 +234,10 @@ final class AppEnvironment {
         let voiceOutput = self.voiceOutput
         // Withdrawing the consent ends the note session, from the settings screen as well as from a backup restore.
         assistant.watchNoteConsent { settings.noteAssistantConsent }
+        // The notes chat: the tools wrap the app tools and select notes only through `NoteToolAccess`.
+        let noteAccess = NoteToolAccess(store: noteStore)
+        assistant.noteTools = NoteChatTools(base: tools, access: noteAccess, hasConsent: { settings.noteAssistantConsent })
+        assistant.hasNoteConsent = { settings.noteAssistantConsent }
         assistant.readPolicy = { ReadAloudPolicy(rawValue: settings.voiceReadAloud) ?? .never }
         assistant.announcesActions = { settings.voiceAnnounceActions }
         assistant.fixedVoiceLanguage = { settings.contentLanguages.fixedAnswerLanguage }
@@ -331,7 +335,8 @@ final class AppEnvironment {
         self.focusStore = focusStore
         let focus = FocusTimerModel(store: focusStore, settings: { settings.focusTimerSettings }, activity: FocusActivityController(),
                                     notifications: FocusNotificationScheduler(center: focusNotificationCenter),
-                                    controlState: controlState, controlReloader: controlReloader)
+                                    controlState: controlState, controlReloader: controlReloader,
+                                    asksDurationAtStart: { settings.focusAsksDurationAtStart })
         self.focus = focus
         focus.postponeTask = { key in
             guard let id = TaskID(key: key) else { return }

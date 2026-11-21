@@ -33,10 +33,10 @@ final class SearchUITests: UITestCase {
         let hit = app.descendants(matching: .any)[AccessibilityID.Tasks.row("Karteikarten")].firstMatch
         XCTAssertTrue(hit.waitForExistence(timeout: 20), "The task is not among the hits")
         hit.press(forDuration: 1.0)
-        let start = app.buttons["Fokus starten"].firstMatch
-        XCTAssertTrue(start.waitForExistence(timeout: Self.timeout), "The menu has no entry \"Fokus starten\"")
-        start.tap()
-        // The search sheet closes and the focus timer opens after it.
+        // The menu entry names the planned minutes (FO3b); the start sheet follows it.
+        onScreen(label: "Fokus starten · 25 min").tap()
+        // The search sheet closes, the start sheet opens after it and starts the focus timer.
+        onScreen(label: "Starten").tap()
         XCTAssertTrue(app.navigationBars["Fokus-Timer"].waitForExistence(timeout: Self.timeout), "The focus timer did not open")
         XCTAssertFalse(app.textFields["Suchen"].exists, "The search sheet is still open")
     }

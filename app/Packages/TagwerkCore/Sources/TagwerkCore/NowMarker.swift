@@ -34,4 +34,29 @@ public enum NowMarker {
         let nowY = canvasTop + inset + Double(nowMinutes - shown.lowerBound) / 60 * hourHeight
         return max(0, nowY - viewportHeight / 3)
     }
+
+    /// Whether an entry is running: `nowMinutes` lies in its range (start inclusive, end exclusive). `nil` is another day.
+    public static func isRunning(range: Range<Int>, nowMinutes: Int?) -> Bool {
+        guard let nowMinutes else { return false }
+        return range.contains(nowMinutes)
+    }
+
+    /// Minutes left of a running entry, rounded up to at least 1.
+    public static func remainingMinutes(range: Range<Int>, nowMinutes: Int) -> Int {
+        max(1, range.upperBound - nowMinutes)
+    }
+
+    /// How long the day view of today has to be out of sight before returning aligns it to "now" again.
+    public static let realignAfter: TimeInterval = 30 * 60
+
+    /// Returning to the day view of today aligns to "now" again when it was not visible for at least `realignAfter`.
+    public static func realignsOnReturn(hiddenSince: Date?, now: Date) -> Bool {
+        guard let hiddenSince else { return false }
+        return now.timeIntervalSince(hiddenSince) >= realignAfter
+    }
+
+    /// Where a day that is not today starts when it is opened by a jump: the first entry, else the work start.
+    public static func openingMinutes(firstEntryStart: Int?, workStart: Int?) -> Int? {
+        firstEntryStart ?? workStart
+    }
 }

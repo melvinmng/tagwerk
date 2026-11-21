@@ -29,9 +29,15 @@ struct PagedContainer<Page: View>: View {
     /// Identity of the real content. After paging, the neighbour preview stays until this changes (the model has
     /// loaded the new day); `nil` pages without waiting.
     var contentID: () -> AnyHashable? = { nil }
+    /// The container is as tall as the real page: the neighbours (and the arrival preview) are laid behind and over it
+    /// instead of beside it in the same stack. The month needs this, its neighbour can have another number of weeks.
+    var sizesToCurrentPage = false
     let onPage: (PageSwipe) -> Void
     /// A drag begins; the neighbour pages take over what they need from the shown page (e.g. its scroll offset).
     var onDragBegan: () -> Void = {}
+    /// Called when the prevailing page changes during a drag (a neighbour covers more than half of the width), and with
+    /// nil when it ends: the page settles, pages or the drag is cancelled. The header shows the period of that page.
+    var onPrevailingPage: (PageSwipe?) -> Void = { _ in }
     /// A drag at a blocked edge ended (no later day in "Erfassen").
     let onBlockedEdge: () -> Void
     @ViewBuilder let page: (_ slot: PageSlot) -> Page
@@ -44,25 +50,31 @@ struct PagedContainer<Page: View>: View {
     @State private var commitGeneration = 0
     @State private var isArriving = false
     @State private var arrivalGeneration = 0
+    @State private var prevailing: PageSwipe?
 
     var body: some View {
         let id = contentID()
         ZStack {
-            // The neighbours stay in place beside the screen, so a drag finds them built (as in a paged scroll view)
-            // and they have already taken their data.
-            if canGoBack { neighbour(.previous, at: dragOffset - width) }
-            if canGoForward { neighbour(.next, at: dragOffset + width) }
-            // The real page stays in place (it keeps its scroll position and state). When the model has the new page
-            // at once (cached neighbour), `contentID` changes with the paging and nothing lies over it. Otherwise the
-            // preview of the new page lies over it until the real content has caught up.
-            page(.current).offset(x: dragOffset)
-            if isArriving {
-                page(.arrived).background(.background, ignoresSafeAreaEdges: []).allowsHitTesting(false)
+            if sizesToCurrentPage {
+                page(.current).offset(x: dragOffset)
+                    .background(alignment: .top) { neighbours }
+                    .overlay(alignment: .top) { arrivedPreview }
+            } else {
+                // The neighbours stay in place beside the screen, so a drag finds them built (as in a paged scroll view)
+                // and they have already taken their data.
+                neighbours
+                // The real page stays in place (it keeps its scroll position and state). When the model has the new page
+                // at once (cached neighbour), `contentID` changes with the paging and nothing lies over it. Otherwise the
+                // preview of the new page lies over it until the real content has caught up.
+                page(.current).offset(x: dragOffset)
+                arrivedPreview
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { width = $0 }
         .onChange(of: id) { _, _ in isArriving = false }
+        // A container that goes away in the middle of a drag must not leave the header on the neighbour.
+        .onDisappear { setPrevailing(nil) }
         .gesture(PagePanRecognizer(isLocked: isLocked, excludesLeadingEdge: excludesLeadingEdge) { event in
             switch event {
             case .began:
@@ -70,9 +82,24 @@ struct PagedContainer<Page: View>: View {
                 onDragBegan()
             case .changed(let translation): follow(translation)
             case .ended(let translation, let predicted): release(translation: translation, predicted: predicted)
-            case .cancelled: withAnimation(.snappy) { dragOffset = 0 }
+            case .cancelled:
+                setPrevailing(nil)
+                withAnimation(.snappy) { dragOffset = 0 }
             }
         })
+    }
+
+    @ViewBuilder
+    private var neighbours: some View {
+        if canGoBack { neighbour(.previous, at: dragOffset - width) }
+        if canGoForward { neighbour(.next, at: dragOffset + width) }
+    }
+
+    @ViewBuilder
+    private var arrivedPreview: some View {
+        if isArriving {
+            page(.arrived).background(.background, ignoresSafeAreaEdges: []).allowsHitTesting(false)
+        }
     }
 
     private func neighbour(_ slot: PageSlot, at x: CGFloat) -> some View {
@@ -89,6 +116,14 @@ struct PagedContainer<Page: View>: View {
         guard !isLocked, !reduceMotion else { return }
         dragOffset = PageDrag.offset(translation: CGSize(width: translation, height: 0),
                                      canGoBack: canGoBack, canGoForward: canGoForward) ?? 0
+        setPrevailing(PageDrag.prevailingPage(offset: dragOffset, width: width, canGoBack: canGoBack, canGoForward: canGoForward))
+    }
+
+    /// Reports a change of the prevailing page once, not on every move of the finger.
+    private func setPrevailing(_ page: PageSwipe?) {
+        guard page != prevailing else { return }
+        prevailing = page
+        onPrevailingPage(page)
     }
 
     private func release(translation: CGFloat, predicted: CGFloat) {
@@ -96,6 +131,7 @@ struct PagedContainer<Page: View>: View {
                                                         predicted: CGSize(width: predicted, height: 0),
                                                         width: width, canGoBack: canGoBack, canGoForward: canGoForward)
         guard let outcome else {
+            setPrevailing(nil)
             let atBlockedEdge = (translation > 0 && !canGoBack) || (translation < 0 && !canGoForward)
             if atBlockedEdge, abs(translation) >= PageDrag.activationDistance { onBlockedEdge() }
             withAnimation(.snappy) { dragOffset = 0 }
@@ -121,6 +157,8 @@ struct PagedContainer<Page: View>: View {
         transaction.disablesAnimations = true
         withTransaction(transaction) {
             let before = contentID()
+            // The preview of the title ends in the same update in which the page changes.
+            setPrevailing(nil)
             onPage(outcome)
             dragOffset = 0
             isArriving = before != nil && contentID() == before

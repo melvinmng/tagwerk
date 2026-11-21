@@ -15,7 +15,8 @@ struct WeekView: View {
 
     var body: some View {
         PagedContainer(canGoBack: true, canGoForward: true, isLocked: false, contentID: { model.days.first?.day },
-                       onPage: { model.step($0.step) }, onBlockedEdge: {}) { slot in
+                       onPage: { model.step($0.step) }, onPrevailingPage: { model.titlePreviewStep = $0?.step },
+                       onBlockedEdge: {}) { slot in
             switch slot {
             case .current: weekList
             case .previous: weekPreview(offset: -7)

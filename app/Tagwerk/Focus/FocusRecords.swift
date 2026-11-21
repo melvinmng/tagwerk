@@ -59,7 +59,7 @@ final class FocusSessionRecord {
         endedAt = state.endedAt
     }
 
-    /// The piece of the collection this session left, if any.
+    /// The brick of the collection this session left, if any. A stored `aborted` outcome reads as "ended early".
     var piece: FocusRewardPiece? {
         guard let outcome else { return nil }
         return FocusReward.piece(focusedMinutes: focusedSeconds / 60, outcome: outcome)

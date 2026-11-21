@@ -30,9 +30,10 @@ class RecipeScreensAuditCase: UITestCase {
         }
         note.tap()
         XCTAssertTrue(app.buttons["Mehr"].firstMatch.waitForExistence(timeout: Self.timeout), "Recipe note did not open")
-        // The note view loads its content after the page opened; the audit must not run on the empty page.
+        // The note view loads its content after the page opened; the audit must not run on the empty page. On a busy machine
+        // the content took longer than the usual wait (a failed run showed it right after the 10 seconds), so this wait is longer.
         let content = app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS %@ OR value CONTAINS %@", "rote Linsen", "rote Linsen")).firstMatch
-        XCTAssertTrue(content.waitForExistence(timeout: Self.timeout), "The recipe note shows no content")
+        XCTAssertTrue(content.waitForExistence(timeout: 3 * Self.timeout), "The recipe note shows no content")
         try audit("Rezept-Notiz")
 
         app.buttons["Mehr"].firstMatch.tap()

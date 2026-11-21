@@ -24,6 +24,8 @@ final class ChatThreadRecord {
 @MainActor
 final class ChatStore {
     static let assistantKey = "assistant"
+    /// The chat about notes; one history for the chat about all notes and the chat about one note (#233).
+    static let notesKey = "notes"
     private let context: ModelContext
 
     init(context: ModelContext) {

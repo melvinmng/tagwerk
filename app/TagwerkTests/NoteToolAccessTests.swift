@@ -61,3 +61,22 @@ struct NoteToolAccessTests {
         #expect(NoteToolAccess.key(for: id) == "note:\(id.uuidString)")
     }
 }
+
+@MainActor
+struct NoteToolAccessFolderNamesTests {
+    @Test func privateFolderNames_defaultNamesWithoutFolders() throws {
+        let container = try ModelContainerFactory.make(inMemory: true)
+        let access = NoteToolAccess(store: NoteStore(context: container.mainContext))
+        #expect(access.privateFolderNames() == ["Tagebuch mit Gott", "Bible Study", "Dream Log"])
+    }
+
+    @Test func privateFolderNames_followsRenamedFolders() throws {
+        let container = try ModelContainerFactory.make(inMemory: true)
+        let store = NoteStore(context: container.mainContext)
+        store.ensureDefaultFolders()
+        _ = store.ensureJournalFolder()
+        try store.renameFolder(try #require(store.folder(role: .journal)).id, to: "Gebet")
+        let access = NoteToolAccess(store: store)
+        #expect(access.privateFolderNames() == ["Gebet", "Bible Study", "Dream Log"])
+    }
+}

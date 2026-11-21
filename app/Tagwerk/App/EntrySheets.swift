@@ -56,7 +56,7 @@ struct NoteEditorSheet: View {
 
     var body: some View {
         NavigationStack {
-            NoteEditorView(noteID: noteID, store: environment.notes)
+            NoteEditorView(noteID: noteID, store: environment.notes, showsAssistant: false)
                 .toolbar { ToolbarItem(placement: .topBarLeading) { Button("Fertig") { dismiss() } } }
         }
     }
