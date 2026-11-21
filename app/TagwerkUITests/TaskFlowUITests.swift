@@ -29,6 +29,27 @@ final class TaskFlowUITests: UITestCase {
         scrollTo(edited)
     }
 
+    /// The row "Erinnerungen" appears in the sheet once a due date is set, shows the default and opens the selection page.
+    func testNewTaskOffersRemindersOnceDueIsSet() {
+        tab("Aufgaben")
+        tapButton("Neue Aufgabe")
+        onScreen(label: "Lokal").tap()
+        let row = app.descendants(matching: .any).matching(NSPredicate(format: "label BEGINSWITH 'Erinnerungen'"))
+        // The tab behind a sheet stays in the tree, so only elements on screen count.
+        XCTAssertTrue(row.allElementsBoundByIndex.filter(\.isHittable).isEmpty, "The reminders row must not show before a due date is set")
+
+        let due = app.switches["Fällig"].firstMatch
+        XCTAssertTrue(due.waitForExistence(timeout: Self.timeout), "The due switch is missing")
+        // The switch sits at the right end of its row; a tap in the middle of the row does not reach it.
+        due.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5)).tap()
+        XCTAssertEqual(due.value as? String, "1", "The due switch did not turn on")
+        // The row says "Standard" while the default applies.
+        let reminders = onScreen(.any, label: "Erinnerungen.*Standard.*", matching: true)
+        reminders.tap()
+        waitFor("Antippen setzt oder entfernt eine Erinnerung.")
+        XCTAssertTrue(app.buttons["Eigene …"].firstMatch.exists, "The page does not offer an own reminder")
+    }
+
     /// The button above the keyboard is a symbol ("Tastatur ausblenden"), there is no second "Fertig", and the sheet stays open.
     func testKeyboardButtonHidesKeyboard() {
         tab("Aufgaben")

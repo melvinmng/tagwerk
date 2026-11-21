@@ -6571,6 +6571,16 @@
         }
       }
     },
+    "Die Aufgabe ist angelegt. Die Erinnerungen kannst du im Editor setzen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The task was created. You can set the reminders in the editor."
+          }
+        }
+      }
+    },
     "Die Aufgabe ist gesichert, die Erinnerungen nicht: %@": {
       "localizations": {
         "en": {

@@ -2171,5 +2171,6 @@
   "iOS meldet diese Hinweise selbst, auch in Apple Kalender. Ruhezeiten gelten dafür nicht.": "iOS delivers these alerts itself, also in Apple Calendar. Quiet hours do not apply to them.",
   "%lld eigene Erinnerungen": "%lld custom reminders",
   "1 eigene Erinnerung": "1 custom reminder",
-  "keine Erinnerungen": "no reminders"
+  "keine Erinnerungen": "no reminders",
+  "Die Aufgabe ist angelegt. Die Erinnerungen kannst du im Editor setzen.": "The task was created. You can set the reminders in the editor."
 }

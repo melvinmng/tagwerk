@@ -265,4 +265,74 @@ struct TaskReminderTests {
         #expect(overrides.overrides().count == 1)
         #expect(!model.reminderFailureAfterSave)
     }
+
+    // MARK: Reminders while creating a task (plan g1, ER9b)
+
+    @Test func newTask_untouched_writesNoOverride() throws {
+        let reminders = NewTaskReminders(defaults: defaults, source: .local, hasTime: true)
+        #expect(reminders.ownList == nil)
+        try reminders.save(for: task("Neu", source: .local), overrides: overrides, reminderStore: nil)
+        #expect(overrides.overrides().isEmpty)
+    }
+
+    @Test func newTask_openingAndClosingThePage_writesNothing() throws {
+        let reminders = NewTaskReminders(defaults: defaults, source: .github, hasTime: false)
+        _ = reminders.list.choiceRows
+        _ = reminders.list.rowSummary(subject: .task)
+        try reminders.save(for: task("Neu", source: .github), overrides: overrides, reminderStore: nil)
+        #expect(overrides.overrides().isEmpty)
+    }
+
+    @Test func newTask_ownList_isStoredForTheCreatedTask() throws {
+        let reminders = NewTaskReminders(defaults: defaults, source: .local, hasTime: true)
+        reminders.list.toggle(.before(amount: 1, unit: .weeks))
+        #expect(reminders.ownList == [.before(amount: 1, unit: .weeks), .before(amount: 2, unit: .hours)])
+        let created = task("Neu", source: .local)
+        try reminders.save(for: created, overrides: overrides, reminderStore: nil)
+        let stored = overrides.overrides(for: ReminderOverride.key(task: created.id))
+        #expect(stored.map(\.scope) == [.always])
+        #expect(stored.first?.storage == .tagwerk)
+        #expect(stored.first?.offsets == [.before(amount: 1, unit: .weeks), .before(amount: 2, unit: .hours)])
+    }
+
+    @Test func newTask_ownList_ofARepeatingTask_countsForAllFollowing() throws {
+        let reminders = NewTaskReminders(defaults: defaults, source: .local, hasTime: true)
+        reminders.list.toggle(.before(amount: 1, unit: .weeks))
+        let created = task("Neu", source: .local, recurrence: weekly(from: due))
+        try reminders.save(for: created, overrides: overrides, reminderStore: nil)
+        #expect(overrides.overrides(for: ReminderOverride.key(task: created.id)).map(\.scope) == [.always])
+    }
+
+    @Test func newTask_ownList_ofAnAppleReminder_isWrittenAsAlarms() throws {
+        let record = ReminderRecord(id: "r1", title: "Neu", notes: nil, due: due, ekPriority: 0, isCompleted: false, listID: "list",
+                                    lastModified: Date(timeIntervalSince1970: 1))
+        let store = InMemoryReminderStore(lists: [ListInfo(id: "list", title: "Liste", colorHex: nil, kind: .local)], records: [record])
+        let created = TaskItem(id: TaskID(source: .reminders, rawValue: "r1"), title: "Neu", notes: nil, due: due, priority: nil,
+                               estimateMinutes: nil, isCompleted: false, container: TaskContainer(id: "list", name: "Liste", colorHex: nil),
+                               url: nil, version: "1", editableFields: [.due])
+        let reminders = NewTaskReminders(defaults: defaults, source: .reminders, hasTime: true)
+        reminders.list.toggle(.before(amount: 1, unit: .days))
+        try reminders.save(for: created, overrides: overrides, reminderStore: store)
+        #expect(store.records["r1"]?.alarms.contains(.before(amount: 1, unit: .days)) == true)
+        #expect(overrides.overrides(for: ReminderOverride.key(task: created.id)).first?.storage == .eventKit)
+    }
+
+    @Test func newTask_sourceChange_resetsToThatDefault() {
+        var perSource = defaults
+        perSource.set([.before(amount: 1, unit: .days)], for: .githubIssue, isAllDay: false)
+        perSource.set([.before(amount: 30, unit: .minutes)], for: .appleReminder, isAllDay: false)
+        let reminders = NewTaskReminders(defaults: perSource, source: .github, hasTime: true)
+        #expect(reminders.list.displayed == [.before(amount: 1, unit: .days)])
+        reminders.list.toggle(.before(amount: 1, unit: .weeks))
+        reminders.configure(source: .reminders, hasTime: true)
+        #expect(reminders.ownList == nil)
+        #expect(reminders.list.displayed == [.before(amount: 30, unit: .minutes)])
+    }
+
+    @Test func newTask_timeChange_keepsAnOwnList_withoutHourDistances() {
+        let reminders = NewTaskReminders(defaults: defaults, source: .local, hasTime: true)
+        reminders.list.setList([.before(amount: 1, unit: .weeks), .before(amount: 1, unit: .hours)])
+        reminders.configure(source: .local, hasTime: false)
+        #expect(reminders.ownList == [.before(amount: 1, unit: .weeks)])
+    }
 }
