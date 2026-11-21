@@ -18,8 +18,10 @@ struct TravelRulesTests {
         return result
     }
 
-    private func legs(_ events: [CalendarEvent], home: TravelPlace? = nil) -> [TravelLeg] {
-        TravelRules.legs(events: events, on: day, home: home ?? self.home, calendar: calendar)
+    private func legs(_ events: [CalendarEvent], home: TravelPlace? = nil, choices: [String: TravelChoice] = [:],
+                      includesReturn: Bool = false) -> [TravelLeg] {
+        TravelRules.legs(events: events, on: day, home: home ?? self.home, calendar: calendar, choices: choices,
+                         includesReturn: includesReturn)
     }
 
     // MARK: Which events get a leg
@@ -164,8 +166,10 @@ struct TravelRulesTests {
 
     // MARK: Segments
 
-    private func segments(_ events: [CalendarEvent], minutes: [String: Int]) -> [TravelSegment] {
-        TravelRules.segments(legs: legs(events), minutes: minutes, events: events, on: day, calendar: calendar)
+    private func segments(_ events: [CalendarEvent], minutes: [String: Int], choices: [String: TravelChoice] = [:],
+                          overrides: [String: TravelOverrideMode] = [:], includesReturn: Bool = false) -> [TravelSegment] {
+        TravelRules.segments(legs: legs(events, choices: choices, includesReturn: includesReturn), minutes: minutes,
+                             overrides: overrides, events: events, on: day, calendar: calendar)
     }
 
     @Test func segment_endsAtEventStart() throws {
@@ -175,6 +179,7 @@ struct TravelRulesTests {
         #expect(segment.eventID == "a")
         #expect(segment.origin == .home)
         #expect(!segment.isTight)
+        #expect(segment.overlapMinutes == 0)
     }
 
     @Test func segment_isTightWhenOverlappingPreviousEvent() throws {
@@ -231,5 +236,118 @@ struct TravelRulesTests {
     @Test func transport_roundTripsThroughRawValue() {
         for transport in TravelTransport.allCases { #expect(TravelTransport(rawValue: transport.rawValue) == transport) }
         #expect(TravelTransport.allCases.count == 4)
+    }
+
+    // MARK: Overlap, start and transport per event, return trip (V1)
+
+    @Test func overlapMinutes_isTheTimeBeforeThePreviousEnds() throws {
+        // Previous event ends 10:00, the trip of 35 minutes before 10:20 starts at 09:45: 15 minutes too early.
+        let events = [event("a", 540, 600, location: "Büro, Berlin"), event("b", 620, 680, location: "Kunde, Potsdam")]
+        let tight = try #require(segments(events, minutes: ["b": 35]).last)
+        #expect(tight.overlapMinutes == 15)
+        #expect(tight.isTight)
+        let exact = try #require(segments(events, minutes: ["b": 20]).last)
+        #expect(exact.overlapMinutes == 0)
+        #expect(!exact.isTight)
+    }
+
+    @Test func startHome_ignoresANearPreviousEvent() throws {
+        let events = [event("a", 540, 600, location: "Büro, Berlin"), event("b", 620, 680, location: "Kunde, Potsdam")]
+        let found = legs(events, choices: ["b": TravelChoice(start: .home)])
+        let leg = try #require(found.last)
+        #expect(leg.origin == .home)
+        #expect(leg.from == home)
+    }
+
+    @Test func startPrevious_ignoresTheGap() throws {
+        // Four hours between the events: the rule would start at home.
+        let events = [event("a", 540, 600, location: "Büro, Berlin"), event("b", 840, 900, location: "Kunde, Potsdam")]
+        #expect(try #require(legs(events).last).origin == .home)
+        let leg = try #require(legs(events, choices: ["b": TravelChoice(start: .previousEvent)]).last)
+        #expect(leg.origin == .previousEvent(id: "a"))
+        #expect(leg.from.text == "Büro, Berlin")
+    }
+
+    @Test func startPrevious_withoutOne_fallsBackToTheRule() throws {
+        let events = [event("b", 840, 900, location: "Kunde, Potsdam")]
+        let leg = try #require(legs(events, choices: ["b": TravelChoice(start: .previousEvent)]).first)
+        #expect(leg.origin == .home)
+    }
+
+    @Test func transportPerEvent_reachesTheLeg() throws {
+        let events = [event("a", 540, 600, location: "Büro, Berlin"), event("b", 840, 900, location: "Kunde, Potsdam")]
+        let found = legs(events, choices: ["b": TravelChoice(transport: .transit)])
+        #expect(try #require(found.first { $0.eventID == "a" }).transport == nil)
+        #expect(try #require(found.first { $0.eventID == "b" }).transport == .transit)
+        let segment = try #require(segments(events, minutes: ["a": 10, "b": 20], choices: ["b": TravelChoice(transport: .transit)])
+            .first { $0.eventID == "b" })
+        #expect(segment.transport == .transit)
+    }
+
+    @Test func returnLeg_afterTheLastPlacedEvent() throws {
+        let events = [event("a", 600, 660, location: "Büro, Berlin")]
+        let found = try #require(segments(events, minutes: ["a": 25, "a#return": 20], includesReturn: true)
+            .first { $0.direction == .returnHome })
+        #expect(found.id == "a#return")
+        #expect(found.eventID == "a")
+        #expect(found.range == 660..<680)
+        #expect(found.minutes == 20)
+        #expect(found.overlapMinutes == 0)
+    }
+
+    @Test func returnLeg_beforeAGapOverThreeHours() {
+        let events = [event("a", 540, 600, location: "Büro, Berlin"), event("b", 840, 900, location: "Kunde, Potsdam")]
+        let returns = legs(events, includesReturn: true).filter { $0.direction == .returnHome }
+        #expect(returns.map(\.eventID) == ["a", "b"])
+        // Exactly three hours is still "the next event follows": no trip home in between.
+        let near = [event("a", 540, 600, location: "Büro, Berlin"), event("b", 780, 840, location: "Kunde, Potsdam")]
+        #expect(legs(near, includesReturn: true).filter { $0.direction == .returnHome }.map(\.eventID) == ["b"])
+    }
+
+    @Test func returnLeg_waitsForAnEventThatStillRuns() {
+        // "b" lies inside "a": the way home starts when "a" ends.
+        let events = [event("a", 540, 720, location: "Büro, Berlin"), event("b", 600, 660, location: "Büro, Berlin")]
+        #expect(legs(events, includesReturn: true).filter { $0.direction == .returnHome }.map(\.eventID) == ["a"])
+    }
+
+    @Test func returnLeg_offByDefault() {
+        let events = [event("a", 600, 660, location: "Büro, Berlin")]
+        #expect(legs(events).allSatisfy { $0.direction == .toEvent })
+        #expect(segments(events, minutes: ["a": 25, "a#return": 20]).allSatisfy { $0.direction == .toEvent })
+    }
+
+    @Test func returnLeg_withoutHome_hasNoTrip() {
+        let events = [event("a", 600, 660, location: "Büro, Berlin")]
+        #expect(TravelRules.legs(events: events, on: day, home: nil, calendar: calendar, includesReturn: true).isEmpty)
+    }
+
+    @Test func returnLeg_noneMode_hasNeitherTrip() {
+        let events = [event("a", 600, 660, location: "Büro, Berlin")]
+        let choices = ["a": TravelChoice(mode: .none)]
+        #expect(legs(events, choices: choices, includesReturn: true).isEmpty)
+        #expect(segments(events, minutes: ["a": 25, "a#return": 20], choices: choices, overrides: ["a": .none],
+                         includesReturn: true).isEmpty)
+    }
+
+    @Test func returnLeg_fixedMode_usesTheSameDuration() throws {
+        let events = [event("a", 600, 660, location: "Büro, Berlin")]
+        let found = segments(events, minutes: [:], overrides: ["a": .fixed(minutes: 30)], includesReturn: true)
+        let back = try #require(found.first { $0.direction == .returnHome })
+        #expect(back.range == 660..<690)
+        #expect(back.source == .manual)
+        #expect(try #require(found.first { $0.direction == .toEvent }).minutes == 30)
+    }
+
+    @Test func returnLeg_isCutAtMidnight() throws {
+        let events = [event("a", 1300, 1430, location: "Büro, Berlin")]
+        let back = try #require(segments(events, minutes: ["a": 25, "a#return": 25], includesReturn: true)
+            .first { $0.direction == .returnHome })
+        #expect(back.range == 1430..<1440)
+        #expect(back.minutes == 10)
+    }
+
+    @Test func returnLeg_endingAtMidnight_hasNoBlock() {
+        let events = [event("a", 1300, 1440, location: "Büro, Berlin")]
+        #expect(segments(events, minutes: ["a": 25, "a#return": 25], includesReturn: true).allSatisfy { $0.direction == .toEvent })
     }
 }

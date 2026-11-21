@@ -35,5 +35,22 @@ struct MarkerRenderContrastTests {
         print("MEASURED collapsed block \(scheme == .dark ? "dark" : "light"): \(String(format: "%.2f", ratio)):1")
         #expect(ratio >= 4.5, "rendered contrast of the collapsed block is \(ratio)")
     }
-}
 
+    /// The capsule "10 min zu früh" of a tight trip (PL10b), measured on the rendered image; one of the four proofs that
+    /// decide between the capsule and the text mark PL10a (plan g1, V2).
+    private func travelCapsuleRatio(_ scheme: ColorScheme) throws -> Double {
+        let ratio = try #require(ContrastMath.renderedRatio(of: TravelWarningCapsule(minutes: 10), colorScheme: scheme))
+        print("MEASURED travel capsule \(scheme == .dark ? "dark" : "light"): \(String(format: "%.2f", ratio)):1")
+        return ratio
+    }
+
+    @Test func travelCapsule_renderedContrast_light() throws {
+        let ratio = try travelCapsuleRatio(.light)
+        #expect(ratio >= 4.5, "rendered contrast of the travel capsule (light) is \(ratio)")
+    }
+
+    @Test func travelCapsule_renderedContrast_dark() throws {
+        let ratio = try travelCapsuleRatio(.dark)
+        #expect(ratio >= 4.5, "rendered contrast of the travel capsule (dark) is \(ratio)")
+    }
+}

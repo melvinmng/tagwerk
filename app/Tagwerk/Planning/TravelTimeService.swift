@@ -11,9 +11,16 @@ protocol TravelTimeEstimating: Sendable {
     func lookUp(address: String, near: TravelCoordinate?) async throws -> PlaceLookup
     /// The travel time in minutes, rounded up to 5; 0 under 3 minutes. Both places have coordinates.
     func minutes(from: TravelPlace, to: TravelPlace, transport: TravelTransport, arrival: Date) async throws -> Int
+    /// The travel time of a trip that starts at `departure` (the way home after an event). The default asks as for
+    /// an arrival at that time.
+    func minutes(from: TravelPlace, to: TravelPlace, transport: TravelTransport, departure: Date) async throws -> Int
 }
 
 extension TravelTimeEstimating {
+    func minutes(from: TravelPlace, to: TravelPlace, transport: TravelTransport, departure: Date) async throws -> Int {
+        try await minutes(from: from, to: to, transport: transport, arrival: departure)
+    }
+
     /// A lookup without a reference point (the home address in the settings).
     func lookUp(address: String) async throws -> PlaceLookup { try await lookUp(address: address, near: nil) }
 }
@@ -54,13 +61,26 @@ struct MapKitTravelEstimator: TravelTimeEstimating {
     }
 
     func minutes(from: TravelPlace, to: TravelPlace, transport: TravelTransport, arrival: Date) async throws -> Int {
+        try await eta(from: from, to: to, transport: transport) { request in
+            // Past events have no arrival date to plan for; MapKit answers for now then.
+            if arrival > .now { request.arrivalDate = arrival }
+        }
+    }
+
+    func minutes(from: TravelPlace, to: TravelPlace, transport: TravelTransport, departure: Date) async throws -> Int {
+        try await eta(from: from, to: to, transport: transport) { request in
+            if departure > .now { request.departureDate = departure }
+        }
+    }
+
+    private func eta(from: TravelPlace, to: TravelPlace, transport: TravelTransport,
+                     timing: (MKDirections.Request) -> Void) async throws -> Int {
         guard let source = Self.mapItem(from), let destination = Self.mapItem(to) else { throw TravelTimeError.missingCoordinates }
         let request = MKDirections.Request()
         request.source = source
         request.destination = destination
         request.transportType = Self.mapKitType(transport)
-        // Past events have no arrival date to plan for; MapKit answers for now then.
-        if arrival > .now { request.arrivalDate = arrival }
+        timing(request)
         let response = try await MKDirections(request: request).calculateETA()
         return TravelRules.roundedMinutes(seconds: response.expectedTravelTime)
     }
@@ -127,7 +147,7 @@ final class TravelTimeService {
         self.now = now
     }
 
-    /// Event ID → known travel time (0 for a trip under 3 minutes). Trips without a value are left out.
+    /// Trip ID (`TravelLeg.id`) → known travel time (0 for a trip under 3 minutes). Trips without a value are left out.
     func cachedMinutes(for legs: [TravelLeg], transport: TravelTransport) -> [String: Int] {
         resolvedTimes(for: legs, transport: transport).minutes
     }
@@ -136,12 +156,13 @@ final class TravelTimeService {
     func resolvedTimes(for legs: [TravelLeg], transport: TravelTransport) -> ResolvedTravelTimes {
         var result = ResolvedTravelTimes()
         for leg in legs {
-            let key = TravelTimeCache.tripKey(from: leg.from, to: leg.to, transport: transport)
+            let legTransport = leg.transport ?? transport
+            let key = TravelTimeCache.tripKey(from: leg.from, to: leg.to, transport: legTransport)
             if let minutes = cache.minutes(forTrip: key) {
-                result.minutes[leg.eventID] = minutes
+                result.minutes[leg.id] = minutes
             } else if !cache.isRejected(forTrip: key), provisionalKeys.contains(key) {
-                result.provisionalMinutes[leg.eventID] = TravelRules.provisionalMinutes(
-                    lastKnownToDestination: cache.latestMinutes(toDestination: leg.to.key, transport: transport))
+                result.provisionalMinutes[leg.id] = TravelRules.provisionalMinutes(
+                    lastKnownToDestination: cache.latestMinutes(toDestination: leg.to.key, transport: legTransport))
             }
         }
         return result
@@ -160,7 +181,8 @@ final class TravelTimeService {
         var changesCache = false
         var seen = Set<String>()
         for leg in legs {
-            let key = TravelTimeCache.tripKey(from: leg.from, to: leg.to, transport: transport)
+            let legTransport = leg.transport ?? transport
+            let key = TravelTimeCache.tripKey(from: leg.from, to: leg.to, transport: legTransport)
             guard seen.insert(key).inserted, cache.needsRefresh(forTrip: key, now: now()), !failedKeys.contains(key),
                   (retryAfter[key] ?? .distantPast) <= now() else { continue }
             guard requests < Self.requestsPerRun else { break }
@@ -170,7 +192,13 @@ final class TravelTimeService {
             do {
                 let from = try await located(leg.from, otherEnd: leg.to, home: home)
                 let to = try await located(leg.to, otherEnd: leg.from, home: home)
-                let minutes = try await estimator.minutes(from: from, to: to, transport: transport, arrival: leg.arrival)
+                let minutes: Int
+                switch leg.direction {
+                case .toEvent:
+                    minutes = try await estimator.minutes(from: from, to: to, transport: legTransport, arrival: leg.arrival)
+                case .returnHome:
+                    minutes = try await estimator.minutes(from: from, to: to, transport: legTransport, departure: leg.arrival)
+                }
                 guard TravelPlausibility.isPlausibleTravelTime(minutes: minutes) else { throw TravelTimeError.addressNotFound }
                 cache.store(minutes: minutes, forTrip: key, now: now())
                 provisionalKeys.remove(key)

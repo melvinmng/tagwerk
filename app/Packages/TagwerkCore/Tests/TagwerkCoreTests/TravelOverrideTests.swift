@@ -149,4 +149,47 @@ struct TravelOverrideTests {
         #expect(TravelOverride(eventKey: "s", seriesFrom: Date(timeIntervalSince1970: 1_800_000_000), mode: .none).key
                 == "s|from 1800000000")
     }
+
+    // MARK: Transport and start per event (V1)
+
+    private func choice(_ overrides: [TravelOverride], eventID: String = "s|100", start: Date? = nil) -> TravelChoice {
+        TravelOverrideRules.choice(eventID: eventID, seriesID: "s", start: start ?? self.start, overrides: overrides)
+    }
+
+    @Test func choice_seriesThenOccurrence() {
+        let series = TravelOverride(eventKey: "s", seriesFrom: start, mode: .automatic, transport: .transit, start: .home)
+        let own = TravelOverride(eventKey: "s|200", seriesFrom: nil, mode: .automatic, transport: nil, start: .previousEvent)
+        let overrides = [series, own]
+        #expect(choice(overrides, eventID: "s|100") == TravelChoice(transport: .transit, start: .home))
+        // An occurrence's own entry wins as a whole; it does not inherit the series' transport.
+        #expect(choice(overrides, eventID: "s|200", start: start.addingTimeInterval(86_400))
+                == TravelChoice(start: .previousEvent))
+        #expect(choice([]).isDefault)
+        // The old read of the mode keeps working.
+        #expect(mode(overrides) == .automatic)
+    }
+
+    @Test func updated_defaultChoice_leavesNoEntry() {
+        let first = TravelOverrideRules.updated([], eventID: "s|100", seriesID: "s", start: start,
+                                                choice: TravelChoice(transport: .cycling), series: false)
+        #expect(first == [TravelOverride(eventKey: "s|100", seriesFrom: nil, mode: .automatic, transport: .cycling, start: nil)])
+        let cleared = TravelOverrideRules.updated(first, eventID: "s|100", seriesID: "s", start: start, choice: TravelChoice(),
+                                                  series: false)
+        #expect(cleared.isEmpty)
+        // Below a series entry that is not the default, "default only for this one" must stay as an entry.
+        let series = TravelOverrideRules.updated([], eventID: "s|100", seriesID: "s", start: start,
+                                                 choice: TravelChoice(transport: .walking), series: true)
+        let single = TravelOverrideRules.updated(series, eventID: "s|100", seriesID: "s", start: start, choice: TravelChoice(),
+                                                 series: false)
+        #expect(single.count == 2)
+        #expect(choice(single).isDefault)
+    }
+
+    @Test func choice_isDefault_onlyWithoutAnyChoice() {
+        #expect(TravelChoice().isDefault)
+        #expect(!TravelChoice(mode: .none).isDefault)
+        #expect(!TravelChoice(transport: .walking).isDefault)
+        #expect(!TravelChoice(start: .home).isDefault)
+        #expect(!TravelChoice(mode: .fixed(minutes: 20)).isDefault)
+    }
 }

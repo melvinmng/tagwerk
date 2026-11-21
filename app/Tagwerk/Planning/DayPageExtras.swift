@@ -15,6 +15,14 @@ struct DayPageExtras {
     var deadlineEventIDs: Set<String> = []
     var preparationTargets: [String: PreparationTarget] = [:]
     var suggestionBatches: [SuggestionBatch] = []
+    /// Blocks that were cut when their task was completed, by event ID (FO15b).
+    var trimmedBlocks: [String: TrimmedBlock] = [:]
+}
+
+/// A time block that ended early: how long it was planned and how long it ran (FO15b).
+struct TrimmedBlock: Equatable {
+    let plannedMinutes: Int
+    let actualMinutes: Int
 }
 
 private struct DayPageExtrasKey: EnvironmentKey {
