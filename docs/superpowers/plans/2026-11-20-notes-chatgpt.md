@@ -1,39 +1,39 @@
 # Notizen und Rezepte mit ChatGPT (#232, #233) – Implementation Plan
 
-> **For agentic workers:** Setze den Plan Task für Task um, jeweils mit TDD. Schritte stehen als Checkbox (`- [ ]`). Block A (#232) ist allein lauffähig und wird zuerst gebaut; Block B (#233) baut auf nichts aus Block A auf, außer auf Task A5 (Editor übernimmt fremde Textänderungen).
+> **For agentic workers:** Setze den Plan Task für Task um, jeweils mit TDD. Schritte stehen als Checkbox (`- [ ]`). Block A (#232) ist allein lauffähig und wird zuerst gebaut. Block B (#233) setzt aus Block A nur Task A5 voraus (Editor übernimmt fremde Textänderungen), dazu die Stränge A und B aus `2026-11-20-decisions-173.md` (dort Tasks 2, 3, 4, 4a, 4b): Die gemeinsamen Bausteine werden dort gebaut und hier nur genutzt.
 
-> **Status:** Entwurf vom 20.11.2026. Grundlage ist `main` auf `e236b5d`. Mockups: `docs/superpowers/mockups/2026-11-20-notes-chatgpt-mockups.html`. Entscheidungen: RT1a, RT2a, RT3c, RT4a, RT5a, NC1c, NC2b, NC3a, NC4a, NC5b, NC6a (Kommentare in #232 und #233). Nichts ist gebaut und nichts am Gerät geprüft.
+> **Status:** Stand 20.11.2026, nach den Entscheidungen des Nutzers. Grundlage ist `main` auf `e236b5d`. Mockups: `docs/superpowers/mockups/2026-11-20-notes-chatgpt-mockups.html`. Entscheidungen: RT1a, RT2a, RT3c, RT4a, RT5a, NC1c, NC2b, NC3a, NC4a, NC5b, NC6a (Kommentare in #232 und #233); Sitzungsregel, ein gemeinsamer Schalter und die Aufteilung der Bausteine (Kommentar „Entscheidungen zum Plan …“ in #173). Block A wird auf einem eigenen Branch umgesetzt und ist in diesem Planstand unverändert. Von Block B ist nichts gebaut und nichts am Gerät geprüft.
 
 **Goal:**
 - **#232:** Eine strukturierte Rezept-Notiz im Ordner „Rezepte“ lässt sich über „Übersetzen …“ im Mehr-Menü nach Deutsch oder Englisch übersetzen. Übersetzt wird der ganze Notiztext. Ein Vorschau-Blatt zeigt Original und Übersetzung; erst „Original ersetzen“ oder „Als Kopie sichern“ ändert etwas. Die Rezept-Struktur bleibt lesbar (`RecipeNote.parse`), Anhang-Verweise bleiben erhalten, eine Kopie bekommt eigene Anhänge.
-- **#233:** Der Assistent kann nicht-private Notizen auflisten, lesen, überarbeiten, anlegen und löschen. Einstieg aus der Notiz-Übersicht, den Ordnerlisten und der geöffneten Notiz, in einem eigenen Chat mit Kontext „Notizen“ oder „Notiz …“. Jede Notiz-Karte wird einzeln bestätigt, Löschen geht nach „Zuletzt gelöscht“. Private Notizen (Tagebuch, Bible Study, Dream Log) verlassen das Gerät nie. Gelesene Notiztexte liegen nur im Arbeitsspeicher der laufenden Sitzung; gespeichert wird nur „Gelesen: Titel“.
+- **#233:** Der Assistent kann nicht-private Notizen auflisten, lesen, überarbeiten, anlegen und löschen. Einstieg aus der Notiz-Übersicht, den Ordnerlisten und der geöffneten Notiz, in einem eigenen Chat mit Kontext „Notizen“ oder „Notiz …“. Jede Notiz-Karte wird einzeln bestätigt, Löschen geht nach „Zuletzt gelöscht“. Private Notizen (Tagebuch, Bible Study, Dream Log) verlassen das Gerät nie. Notiztexte liegen nur im Arbeitsspeicher der laufenden Sitzung; gespeichert wird nur „Gelesen: Titel“. Die Zustimmung läuft über den einen Schalter „Notizen mit ChatGPT“, der auch die Notiztreffer der Suche und das Lesen im allgemeinen Assistenten abdeckt (#173).
 
 **Architecture:**
 - **Reine Regeln in `TagwerkCore`:**
   - `RecipeTranslationPlan`: zerlegt den Notiztext in Zeilen-Segmente, baut die Anfrage, setzt die Antwort wieder zusammen und prüft sie (Block A).
   - `RecipeNote.outline` und `RecipeNote.headingLanguage`: Abschnittsfolge und erkannte Sprache einer Rezept-Notiz (Block A).
   - `MarkdownText.replacingAttachmentIDs`: Verweise auf neue Anhang-IDs umschreiben (Block A).
-  - `NoteFolderRules.privateFolderIDs` und `mayLeaveDevice`: Privat-Regel über die ganze Ordnerkette (Block B; gleiche Namen wie in `2026-11-20-decisions-173.md`).
+  - `NoteFolderRules.privateFolderIDs` und `mayLeaveDevice`: Privat-Regel über die ganze Ordnerkette (gebaut in `2026-11-20-decisions-173.md`, Task 3; Block B nutzt sie über `NoteStore.isPrivate` und `NoteToolAccess`).
   - `NoteDiff`: Zeilenvergleich für Karte und Blatt „Änderungen“ (Block B).
   - `OpenCards.notes` und `VoiceModeMachine`: „alle“ wird bei Notiz-Karten abgelehnt (Block B).
-- **`AIKit`:** `ToolHandler` bekommt zwei Hooks mit Standardverhalten (`storedForm`, `showsActivity`), `Conversation` bekommt `storableHistory` und den Nachrichtentyp `.activity`. Das ist der gemeinsame Baustein „nicht gespeichertes Funktionsergebnis“ (siehe Abschnitt „Abstimmung mit `2026-11-20-decisions-173.md`“).
+- **`AIKit`:** Block B ändert `AIKit` nicht. `ToolHandler.storedForm` und `showsActivity`, `Conversation.storableHistory` und der Nachrichtentyp `.activity` kommen aus #173 (Task 4).
 - **App:**
   - Block A: `RecipeTranslator` (eine Anfrage, wie `RecipeImporter`), `RecipeTranslationModel`, `RecipeTranslationSheet`, `NoteStore.duplicate`, `NoteAttachmentStore.duplicate`, Eintrag im Mehr-Menü von `NoteEditorView`.
-  - Block B: `NoteToolAccess` (einzige Stelle, die Notizen für ChatGPT filtert), `NoteSession` (Texte der laufenden Sitzung), `NoteChatTools` (`ToolHandler` um `AppTools`, nach dem Muster von `TaskChatTools`), `AssistantModel.Context.notes/.note`, `NoteAssistantConsentSheet`, Notiz-Karten mit `NoteChangeSheet`.
+  - Block B: `NoteToolAccess` (einzige Stelle, die Notizen für ChatGPT filtert; aus #173 Task 3, hier um Ordner und Titellisten erweitert), `NoteSession` und `read_note` (aus #173 Task 4b), `NoteChatTools` (`ToolHandler` um `AppTools`, nach dem Muster von `TaskChatTools`; bringt `list_notes` und die schreibenden Werkzeuge), `AssistantModel.Context.notes/.note`, `NoteAssistantConsentSheet`, Notiz-Karten mit `NoteChangeSheet`.
 
 **Tech Stack:** Swift 6, SwiftUI (iOS 27), SwiftData, Swift Testing, XcodeGen. Kein neues SwiftData-Modell, keine neue Abhängigkeit.
 
-**Issues:** #232, #233. **Branches:** `feat/recipe-translate` (Block A), `feat/notes-assistant` (Block B, zweigt nach dem Merge von Block A ab).
+**Issues:** #232, #233. **Branches:** `feat/recipe-translate` (Block A), `feat/notes-assistant` (Block B; zweigt erst ab, wenn Block A und die Stränge A und B von #173 auf `main` sind).
 
 ## Global Constraints
 
 - **Strings:** Deutsch ist Quellsprache. Jeder neue Text steht deutsch und englisch im Katalog (`Tagwerk/Localizable.xcstrings`, für `TagwerkCore` `Packages/TagwerkCore/Sources/TagwerkCore/Resources/Localizable.xcstrings`) und in `scripts/translations/en.json`. Bestehendes JSON-Format beibehalten, nie den ganzen Katalog neu formatieren. Prüfen mit `scripts/sync-strings.sh --check --no-build --derived-data <dir>` und `scripts/check-strings.py --require-english`.
 - **Code:** Kommentare, Logs und Testnamen englisch. Anweisungen an ChatGPT für eine Einzelanfrage englisch (wie `RecipeImporter`), Anweisungen des Assistenten deutsch (wie `AssistantModel.instructions`).
 - **Datenschutz:**
-  - Private Notizen gehen nie an ChatGPT. Maßgeblich ist ab Block B `NoteStore.isPrivate(_:)`. Block A arbeitet mit einer Positivliste: nur freie Notizen direkt im Ordner mit der Rolle `.recipes`.
+  - Private Notizen gehen nie an ChatGPT. Maßgeblich ist für Block B `NoteStore.isPrivate(_:)` (aus #173 Task 3). Block A arbeitet mit einer Positivliste: nur freie Notizen direkt im Ordner mit der Rolle `.recipes`.
   - Notiztext steht in keinem Log, keiner Fehlermeldung und keiner Diagnose (`PlanningDiagnostics`, `VoiceDiagnostics`).
   - Anhänge (Dateien) werden nie gesendet. Die Verweise im Text (`[Name](attachment:UUID)`) gehören zum Notiztext.
-- **SwiftData:** kein neues Modell. `AppSettings` bekommt ein Feld mit Standardwert; `BackupDTOs` ein optionales Feld (Muster `mailSummaryConsent`, `BackupDTOs.swift:1184/1267/1346`).
+- **SwiftData:** kein neues Modell. Das Feld `AppSettings.noteAssistantConsent` samt optionalem Feld in `BackupDTOs` kommt aus #173 (Task 4a); dieser Plan fügt kein weiteres Feld hinzu.
 - **SwiftUI-Falle:** Nie `.sheet`, `.confirmationDialog` oder `.alert` an eine `Section` oder Zeile in `Form`/`List` hängen.
 - **Commits:** Conventional Commits auf Englisch, ohne Hinweis auf KI.
 - **Tests:** Ab dem ersten Task mit App-Code läuft `app/test-all.sh` nach jedem Task (`TAGWERK_SKIP_UI_TESTS=1` für Zwischenstände, der volle Lauf vor dem letzten Commit jedes Blocks).
@@ -43,23 +43,24 @@
 1. **`RecipeNote.parse` ignoriert Text außerhalb der Abschnitte** (`RecipeNote.swift:47–48`). Eine Übersetzung über `RecipeNote` → `markdown(language:)` würde eigene Anmerkungen und Anhang-Verweise verlieren. Deshalb arbeitet Block A zeilenweise auf dem Originaltext.
 2. **Der Editor hält den Text als `@State`** und schreibt ihn nach 500 ms und beim Schließen zurück (`NoteEditorView.swift:95–110`). Jede Änderung von außen (Übersetzung ersetzen, Assistent überarbeitet) würde dadurch überschrieben. Task A5 behebt das für beide Blöcke.
 3. **Anhänge hängen an `noteID` und an der eigenen ID im Text.** `removeUnreferenced` (`NoteAttachmentStore.swift:186`) löscht Anhänge einer Notiz, deren ID nicht mehr im Text steht; `NoteStore.delete` löscht alle Anhänge der Notiz. Eine Kopie mit den alten IDs würde ihre Bilder verlieren, sobald das Original endgültig gelöscht wird. Die Kopie braucht eigene Datensätze, eigene Dateien und umgeschriebene Verweise.
-4. **Privat-Filter prüft nur den direkten Ordner** (`RecipeNotePicker.swift:34`). `NoteFolderRules.canCreateFolder` verbietet Unterordner unter Systemordnern (`NoteFolderRules.swift:149–154`); ob `validateMove` das Verschieben eines eigenen Ordners unter einen Systemordner verbietet, ist nicht geprüft. Block B prüft deshalb die ganze Ordnerkette und belegt das mit einem Test.
-5. **`ChatStore` speichert `conversation.history` vollständig** (`AssistantModel.swift:346–350`), also auch Funktionsergebnisse und die Argumente von Funktionsaufrufen. Für Notizen müssen beide Seiten bereinigt werden: das Ergebnis von `read_note` und die Argumente von `create_note`/`update_note` (sie enthalten den vollen neuen Text).
-6. **Lesende Funktionen sind im Chat unsichtbar** (`Conversation.messages`, `Conversation.swift:165–185`). „Gelesen: …“ braucht einen neuen Nachrichtentyp.
-7. **`confirmAll` bestätigt alle offenen Karten** (`AssistantModel.swift:308–318`), der Knopf erscheint ab zwei offenen Karten (`ChatView.swift:214–221`). Im Sprachmodus sind Löschungen und fremd zugewiesene Issues gesondert behandelt (`AssistantModel.swift:177–206`, `VoiceModeMachine.swift:390–398`).
+4. **Privat-Filter prüft nur den direkten Ordner** (`RecipeNotePicker.swift:34`). Geklärt: `NoteFolderRules.canCreateFolder` und `validateMove` verbieten Unterordner unter Systemordnern (`NoteFolderRules.swift:149–167`, jeweils `parent.role == nil`); eine Notiz im Unterordner eines privaten Ordners kann über die Oberfläche nicht entstehen. Die Prüfung der ganzen Ordnerkette ist eine reine Absicherung; sie und ihr Test stehen in #173 Task 3.
+5. **`ChatStore` speichert `conversation.history` vollständig** (`AssistantModel.swift:346–350`), also auch Funktionsergebnisse und die Argumente von Funktionsaufrufen. #173 Task 4 stellt auf `storableHistory` um. Für Notizen müssen beide Seiten gekürzt werden: das Ergebnis von `read_note` (#173 Task 4b) und die Argumente von `create_note`/`update_note` (sie enthalten den vollen neuen Text; Task B5).
+6. **Lesende Funktionen sind im Chat unsichtbar** (`Conversation.messages`, `Conversation.swift:165–185`). „Gelesen: …“ braucht den Nachrichtentyp `.activity` (#173 Task 4).
+7. **`confirmAll` bestätigt alle offenen Karten** (`AssistantModel.swift:308–318`), der Knopf erscheint ab zwei offenen Karten (`ChatView.swift:214–221`). Im Sprachmodus sind Löschungen und fremd zugewiesene Issues gesondert behandelt (`AssistantModel.swift:177–206`, `VoiceModeMachine.swift:390–398`). #173 Task 2 führt `singleConfirmationTools` und `batchConfirmable` ein; Block B trägt nur die Notiz-Werkzeuge ein.
 8. **Der Chat ist ein Blatt über den Tabs** (`RootView.swift:88–90`). Eine Notiz kann auch in einem eigenen Blatt offen sein (`NoteEditorSheet`, `EntrySheets.swift:52–62`); von dort kann das Chat-Blatt nicht zusätzlich erscheinen.
 
-## Abstimmung mit `2026-11-20-decisions-173.md`
+## Bausteine aus `2026-11-20-decisions-173.md` (Voraussetzung für Block B)
 
-Jener Plan (Stand beim Schreiben dieses Plans gelesen) berührt dieselben Stellen in fünf Punkten. Die Namen in diesem Plan sind bereits an ihn angeglichen, wo das ohne Bedeutungsverlust ging. Die Hauptsitzung entscheidet die Reihenfolge; wer zuerst landet, baut den gemeinsamen Baustein, der andere Branch nutzt ihn.
+Entschieden am 20.11.: Die gemeinsamen Bausteine werden einmal gebaut, im Plan zu #173. Block B baut keinen davon neu und ändert ihre Bedeutung nicht. Die verbindliche Sitzungsregel steht dort im Abschnitt „Sitzungsregel für Notiztext“.
 
-| Thema | #173 (Task) | Dieser Plan (Task) | Vorschlag zur Zusammenführung |
-|---|---|---|---|
-| Privat-Regel | `NoteFolderRules.privateFolderIDs(in:)`, `mayLeaveDevice(kind:folderID:privateFolderIDs:)`; stellt `RecipeNotePicker.swift:34` um (Task 3) | B1 | **Identisch übernommen.** B1 baut genau diese zwei Funktionen und darauf `NoteStore.isPrivate`. Landet #173 zuerst, entfällt in B1 alles bis auf `NoteStore.isPrivate` und dessen Tests. |
-| Gekürzter Verlauf | `ToolHandler.storedOutput(of:output:)`, `Conversation.storableHistory`; zusätzlich ersetzt `Conversation` nach Zugende alle Ergebnisse im Arbeitsspeicher (D4, Task 4) | B2: `storedForm(of:output:)` kürzt Ergebnis **und Argumente**; `storableHistory` | **Ein Hook, zwei Abweichungen klären.** (a) #233 muss auch Argumente kürzen (`update_note` trägt den vollen neuen Text); `storedForm` ist die Obermenge von `storedOutput`. (b) Das Ersetzen im Arbeitsspeicher nach Zugende widerspricht für `read_note` der Entscheidung „gilt für die laufende Sitzung“: Der Text muss über mehrere Nachrichten hinweg verfügbar bleiben. Vorschlag: zweiter Hook `forgetsAfterTurn(_ name: String) -> Bool` (Standard `false`); `search` liefert `true`, `read_note` `false`. |
-| Einwilligung | `assistantNoteSearchConsent`, Schalter „Notizen in der Suche des Assistenten“ (D5); nennt #233 als Nutzer desselben Schalters | B3: `noteAssistantConsent`, Schalter „Notizen mit ChatGPT“, eigenes Blatt (NC5b) | **Offene Entscheidung, siehe Offene Fragen 7.** Die Umfänge unterscheiden sich (Titel und 80 Zeichen Ausschnitt gegen ganzen Text und Änderungen). Empfehlung: zwei Schalter; der weitere (`noteAssistantConsent`) schließt die Suche ein, d. h. `notesAllowed = assistantNoteSearchConsent || noteAssistantConsent`. |
-| Einzelbestätigung | `needsSingleConfirmation(_:me:)`, `batchConfirmable`, Kartenfelder `warning` und `confirmTitle` (gesetzt = roter Knopf), `OpenCards.guarded` mit der Ansage „Zuweisungen …“ (Task 2) | B7, B8 | **Namen übernommen:** `batchConfirmable`, `confirmTitle`. `needsSingleConfirmation` wird um die Notiz-Werkzeuge erweitert. Zwei Unterschiede: „Anlegen“ ist ein eigener Knopftext ohne Rot, deshalb zusätzlich `isDestructive` (für #173: bei „Abgeben“ gesetzt). Notiz-Karten zählen im Sprachmodus als `OpenCards.notes`, nicht als `guarded`, weil die Ansage anders lautet. |
-| Notizen finden | `search` liefert `note:<uuid>`, Titel, Ausschnitt (Task 3) | B4: `list_notes` mit `query` | Gleiche ID-Form. `search` bleibt im allgemeinen Assistenten, `list_notes`/`read_note` gibt es nur im Notiz-Chat. Beide filtern über dieselbe Privat-Regel. |
+| Baustein | Gebaut in #173 | Was Block B damit tut |
+|---|---|---|
+| Schutz vor Sammelbestätigung: `ActionCard.warning`, `confirmTitle`, `isDestructive`; `AssistantModel.singleConfirmationTools`, `needsSingleConfirmation`, `batchConfirmable`, `singleConfirmationNotice`; `OpenCards.guarded` | Task 2 | B7 trägt `create_note`, `update_note`, `delete_note` in `singleConfirmationTools` ein und ergänzt den Hinweistext. B8 gibt Notiz-Karten im Sprachmodus eine eigene Ansage (`OpenCards.notes`). |
+| Privat-Regel: `NoteFolderRules.privateFolderIDs`, `mayLeaveDevice`, `NoteStore.isPrivate`; `NoteToolAccess.visibleNotes`, `visibleNote(key:)`; `RecipeNotePicker` umgestellt | Task 3 | B4 erweitert `NoteToolAccess` um `visibleFolders`, `acceptsNewNote`, `entries`. B9 nutzt die Regel für die Einstiege. |
+| Kurzform des Verlaufs: `ToolHandler.storedForm(of:output:)` (kürzt Argumente und Ergebnis), `showsActivity`, `Conversation.storableHistory`, `reduceToStoredForm()`, `ChatMessage.Content.activity`; `persist()` speichert `storableHistory` | Task 4 | B4 und B5 liefern `storedForm` für `list_notes`, `create_note`, `update_note`. B6 ergänzt den Lesetext für `list_notes`. |
+| Einwilligung: `AppSettings.noteAssistantConsent`, Schalter „Notizen mit ChatGPT“ unter Einstellungen › KI, Datenschutzhinweis, `AssistantModel.endNoteSession()` | Task 4a | B3 baut das Einwilligungsblatt (NC5b). B4, B6 und B9 lesen dasselbe Feld. |
+| Lesen und Sitzung: `read_note` in `AppTools` (auch im allgemeinen Assistenten und im Aufgaben-Chat), `NoteSession`, Zeile „Gelesen: „Titel““ | Task 4b | `NoteChatTools` reicht `read_note` an `AppTools` durch. B5 prüft `update_note` gegen `NoteSession`. |
+| Notizen finden: `search` liefert `note:<uuid>`, Titel, Ausschnitt | Task 3 | Gleiche ID-Form. `search` und `read_note` stehen überall zur Verfügung, wo `AppTools` läuft; `list_notes` mit eigenem `query` und die schreibenden Werkzeuge gibt es nur im Notiz-Chat. |
 
 ## Review Focus
 
@@ -67,9 +68,9 @@ Jener Plan (Stand beim Schreiben dieses Plans gelesen) berührt dieselben Stelle
 2. **Nichts geht verloren (#232):** Zeilen außerhalb der Rezept-Abschnitte, Leerzeilen, Listenzeichen und Anhang-Verweise stehen nach der Übersetzung an derselben Stelle. Die Menge der Anhang-IDs ist gleich. Tests in Task A1.
 3. **Kopie mit eigenen Anhängen (#232):** Nach „Als Kopie sichern“ und endgültigem Löschen des Originals zeigt die Kopie ihre Bilder noch. Test `duplicate_copySurvivesDeletingTheOriginal` in Task A3.
 4. **Editor überschreibt nichts (#232, #233):** Nach „Original ersetzen“ und nach einer bestätigten Karte des Assistenten zeigt die offene Notiz den neuen Text; der verzögerte Speicherlauf schreibt den alten nicht zurück. Tests in Task A5.
-5. **Privat bleibt privat (#233):** Kein Werkzeug liefert Titel, Text oder Existenz einer privaten oder gelöschten Notiz, auch nicht über eine geratene ID, auch nicht in Unterordnern. Schreibende Werkzeuge lehnen sie ab. Tests in Task B1 und B4.
-6. **Gespeicherter Verlauf ohne Notiztext (#233):** Nach `read_note`, `update_note` und `create_note` enthält `ChatStore.history(for:)` weder den gelesenen noch den geschriebenen Text; im Arbeitsspeicher steht er weiter. Tests in Task B2 und B6.
-7. **Einzeln bestätigen (#233):** „Alle bestätigen“ erfasst nie eine Notiz-Karte, auch nicht per Stimme. Tests in Task B7 und B8.
+5. **Privat bleibt privat (#233):** Kein Werkzeug liefert Titel, Text oder Existenz einer privaten oder gelöschten Notiz, auch nicht über eine geratene ID, auch nicht in Unterordnern (Absicherung). Schreibende Werkzeuge lehnen sie ab. Tests in #173 Task 3 und 4b sowie hier in Task B4 und B5.
+6. **Gespeicherter Verlauf ohne Notiztext (#233):** Nach `list_notes`, `update_note` und `create_note` enthält `ChatStore.history(for:)` weder Titel noch den geschriebenen Text; im Arbeitsspeicher steht er für die laufende Sitzung weiter und wird nicht am Zugende gekürzt. Tests in Task B4, B5 und B6 (für `read_note` in #173 Task 4b).
+7. **Einzeln bestätigen (#233):** „Alle bestätigen“ erfasst nie eine Notiz-Karte, auch nicht per Stimme. Tests in Task B7 und B8; der Mechanismus selbst ist in #173 Task 2 getestet.
 8. **Veraltete Vorschläge (#233):** Eine Überarbeitung wird abgelehnt, wenn die Notiz seit dem Lesen geändert wurde (Task B5). Eine zweite offene Karte zur selben Notiz verfällt, sobald die erste bestätigt ist (Task B7).
 
 ---
@@ -243,111 +244,92 @@ Der Text wird zeilenweise zerlegt. Was Struktur ist, bleibt auf dem Gerät und w
 
 # Block B: Notizen mit ChatGPT (#233)
 
+**Voraussetzung:** `2026-11-20-decisions-173.md`, Tasks 2, 3, 4, 4a und 4b, sowie Task A5 dieses Plans. Die Tasks B1 und B2 sind dorthin gewandert; ihre Nummern bleiben als Verweis stehen.
+
 ## Regeln (verbindlich)
 
 - **Sichtbar für ChatGPT** ist eine Notiz, wenn sie nicht gelöscht ist und `NoteStore.isPrivate` falsch ergibt. Für alles andere antworten die Werkzeuge wie bei einer unbekannten ID („Notiz nicht gefunden.“). Die Existenz privater Notizen ist damit nicht ablesbar.
-- **Sitzung:** die Lebensdauer der `Conversation` des Notiz-Chats im Arbeitsspeicher. Sie endet mit dem Beenden der App, dem Wechsel in einen anderen Chat (`switchThread`), „Verlauf löschen“ und dem Widerruf der Einwilligung. Danach muss ChatGPT eine Notiz neu lesen.
+- **Einwilligung:** ein Schalter „Notizen mit ChatGPT“ (`noteAssistantConsent`, Vorgabe aus) für Suchtreffer, das Lesen ganzer Notizen und das Ändern von Notizen. Ohne ihn gibt es keinen Notiz-Chat und keine Notiz-Werkzeuge; `search` meldet dann nur die Anzahl passender Notizen (#173).
+- **Sitzung:** wie in #173 („Sitzungsregel für Notiztext“). Solange die `Conversation` im Arbeitsspeicher lebt, sieht das Modell die vollen Ergebnisse über alle Züge hinweg; am Zugende wird nichts gekürzt. Die Sitzung endet mit dem Beenden der App, dem Wechsel in einen anderen Chat (`switchThread`), „Verlauf löschen“ und dem Widerruf der Einwilligung. Danach muss ChatGPT eine Notiz neu lesen. `NoteSession` ist eine Instanz für alle Chats; ein im allgemeinen Assistenten gelesener Text gilt nach dem Wechsel in den Notiz-Chat nicht mehr als gelesen.
 - **Gespeichert** wird für `list_notes` nur die Anzahl, für `read_note` nur die Titel, für `create_note`/`update_note` nur Titel und IDs. Antworten des Assistenten und Nachrichten des Nutzers bleiben wie bisher im Verlauf und können Notizinhalt zitieren; das steht im Einwilligungsblatt.
 - **Ändern:** `update_note` setzt voraus, dass die Notiz in dieser Sitzung gelesen wurde und seitdem unverändert ist. Die Menge der Anhang-IDs im neuen Text muss gleich der im alten sein. Eine Notiz, die beim Lesen gekürzt wurde, kann nicht überarbeitet werden.
 - **Anlegen:** nur freie Notizen, in „Notizen“ oder in einem sichtbaren Ordner, der eigene Notizen annimmt (`acceptsOwnNotes`, nicht privat).
 - **Löschen:** `NoteStore.trash`. Kein Werkzeug leert den Papierkorb, stellt wieder her, verschiebt oder heftet an.
-- **Chat:** ein eigener Verlauf mit dem Schlüssel `"notes"` für beide Kontexte. Die Notiz-Werkzeuge gibt es nur dort.
+- **Chat:** ein eigener Verlauf mit dem Schlüssel `"notes"` für beide Kontexte. `list_notes` und die schreibenden Werkzeuge gibt es nur dort; `search` und `read_note` gehören zu `AppTools` und stehen in jedem Chat zur Verfügung.
 
 ## Werkzeuge (verbindlich)
 
-| Name | Art | Argumente | Ergebnis |
-|---|---|---|---|
-| `list_notes` | lesend | `folder_id` (nullable), `query` (nullable, mindestens 2 Zeichen) | `notes`: ID `note:<UUID>`, `title`, `folder`, `updated` (YYYY-MM-DD), bei `query` zusätzlich `matched_in` (`title`/`text`); `folders`: ID und Name der sichtbaren Ordner; `total`. Höchstens 200 Notizen, neueste zuerst. Nie Text. |
-| `read_note` | lesend | `note_ids` (1 bis 5) | je Notiz `id`, `title`, `text`, `truncated`; `not_read` für IDs, die nicht mehr in das Ergebnis passten. Text je Notiz höchstens 12 000 Zeichen, Ergebnis insgesamt höchstens 14 000 Zeichen (unter der 16-KB-Grenze von `Conversation.clipped`). |
-| `create_note` | schreibend | `text` (erste Zeile ist der Titel), `folder_id` (nullable) | `ok`, `id`, `title` |
-| `update_note` | schreibend | `note_id`, `text` (vollständiger neuer Text) | `ok`, `title` |
-| `delete_note` | schreibend | `note_id`, `reason` (nullable, kurzer Grund für die Karte) | `ok`, `title`, `trash_days: 30` |
+| Name | Art | Gebaut in | Argumente | Ergebnis |
+|---|---|---|---|---|
+| `read_note` | lesend | #173 Task 4b | `note_ids` (1 bis 5) | je Notiz `id`, `title`, `text`, `truncated`; `not_read` für IDs, die nicht mehr in das Ergebnis passten. Text je Notiz höchstens 12 000 Zeichen, Ergebnis insgesamt höchstens 14 000 Zeichen. |
+| `list_notes` | lesend | B4 | `folder_id` (nullable), `query` (nullable, mindestens 2 Zeichen) | `notes`: ID `note:<UUID>`, `title`, `folder`, `updated` (YYYY-MM-DD), bei `query` zusätzlich `matched_in` (`title`/`text`); `folders`: ID und Name der sichtbaren Ordner; `total`. Höchstens 200 Notizen, neueste zuerst. Nie Text, kein Ausschnitt. |
+| `create_note` | schreibend | B5 | `text` (erste Zeile ist der Titel), `folder_id` (nullable) | `ok`, `id`, `title` |
+| `update_note` | schreibend | B5 | `note_id`, `text` (vollständiger neuer Text) | `ok`, `title` |
+| `delete_note` | schreibend | B5 | `note_id`, `reason` (nullable, kurzer Grund für die Karte) | `ok`, `title`, `trash_days: 30` |
 
-Im Kontext „Notiz …“ (`scope` gesetzt) fehlt `list_notes`; `read_note`, `update_note` und `delete_note` nehmen nur diese eine ID an. `create_note` bleibt möglich.
+Im Kontext „Notiz …“ (`scope` gesetzt) fehlt `list_notes`; `update_note` und `delete_note` nehmen nur diese eine ID an. `create_note` bleibt möglich. `read_note` ist nicht auf die eine Notiz beschränkt: Es ist das Werkzeug aus `AppTools`, und `search` kann in jedem Chat ohnehin zu anderen Notizen führen.
 
-## Task B1: Privat-Regel über die Ordnerkette
+`list_notes` behält sein eigenes `query`: Es durchsucht alle sichtbaren Notizen (bis 200) und liefert nur Titel, während `search` höchstens 20 Treffer mit Ausschnitt bringt.
 
-**Files:** Modify `Packages/TagwerkCore/Sources/TagwerkCore/NoteFolderRules.swift`, `Tagwerk/Notes/NoteStore.swift`, `Tagwerk/Shopping/RecipeNotePicker.swift`. Tests in `NoteFolderRulesTests.swift`, `PrivateNotesTests.swift`.
+## Task B1: entfällt (Privat-Regel über die Ordnerkette)
 
-- [ ] `NoteFolderRules.privateFolderIDs(in folders: [NoteFolderInfo]) -> Set<UUID>`: jeder Ordner mit privater Rolle und alle Ordner darunter. Ein Zyklus bricht ab (wie `tree`).
-- [ ] `NoteFolderRules.mayLeaveDevice(kind: NoteKind, folderID: UUID?, privateFolderIDs: Set<UUID>) -> Bool`.
-- [ ] `NoteStore.isPrivate(_ note: NoteRecord) -> Bool`: `!NoteFolderRules.mayLeaveDevice(kind: note.kind, folderID: note.folderID, privateFolderIDs: …)`.
-- [ ] `RecipeNoteSource.isOffered` nutzt `store.isPrivate(note)` (schließt eine heute mögliche Lücke bei Unterordnern, Befund 4).
-- [ ] Tests:
-  - `privateFolderIDs_includesSubfolders`, `privateFolderIDs_ignoresRecipesAndBrainDump`, `privateFolderIDs_cycleTerminates`, `mayLeaveDevice_freeNoteInJournalFolder_isFalse`, `mayLeaveDevice_dreamKind_isFalse`
-  - `storeIsPrivate_freeNoteInJournalFolder`, `storeIsPrivate_freeNoteInSubfolderOfBibleStudy`, `storeIsPrivate_dreamNote`
-  - `recipeSource_neverOffersNoteBelowPrivateFolder`
-  - `moveFolder_intoSystemFolder_isRejectedOrStaysPrivate`: klärt Befund 4; das Ergebnis in den Abschnitt „Stand der Umsetzung“ schreiben.
-- [ ] `app/test-all.sh`. Commit: `fix: treat notes below a private folder as private`
+Gebaut in `2026-11-20-decisions-173.md`, Task 3: `NoteFolderRules.privateFolderIDs`, `mayLeaveDevice`, `NoteStore.isPrivate`, Umstellung von `RecipeNoteSource.isOffered`, alle Tests einschließlich des Absicherungstests `subfolderBelowSystemFolder_cannotBeCreatedOrMovedThere`. Hier ist nichts zu tun.
 
-## Task B2: AIKit – gespeicherte Kurzform und sichtbare Lesezeilen
+## Task B2: entfällt (gespeicherte Kurzform und sichtbare Lesezeilen)
 
-**Files:** Modify `Packages/AIKit/Sources/AIKit/Conversation.swift`. Tests in `Packages/AIKit/Tests/AIKitTests/ConversationTests.swift`.
+Gebaut in `2026-11-20-decisions-173.md`, Task 4: `ToolHandler.storedForm`, `showsActivity`, `Conversation.storableHistory`, `reduceToStoredForm()`, `ChatMessage.Content.activity`, `persist()` mit `storableHistory`. Hier ist nichts zu tun.
 
-- [ ] `ToolHandler` (Protokollerweiterung mit Standardverhalten, bestehende Handler bleiben unverändert):
-  - `func storedForm(of call: ToolCall, output: String?) -> (arguments: String, output: String?)`: Standard gibt beides unverändert zurück.
-  - `func showsActivity(_ name: String) -> Bool`: Standard `false`.
-- [ ] `Conversation.storableHistory: [InputItem]`: wie `history`, aber jedes Paar aus `.functionCall` und `.functionOutput` läuft durch `tools.storedForm`. Die Reihenfolge und die `callID`s bleiben; ein Aufruf ohne Ergebnis wird mit `output: nil` übergeben.
-- [ ] `ChatMessage.Content` bekommt `case activity(ToolCall, output: String?)`. `Conversation.messages` liefert ihn für lesende Aufrufe mit `tools.showsActivity(name) == true`, an der Stelle des Aufrufs. Alle anderen lesenden Aufrufe bleiben unsichtbar.
-- [ ] Tests:
-  - `storableHistory_defaultEqualsHistory`
-  - `storableHistory_usesStoredFormForCallAndOutput`
-  - `storableHistory_keepsCallIDsAndOrder`
-  - `messages_showActivityOnlyForOptedInReadTools`
-  - `restoredFromPersistableHistory_isValidInput` (keine offenen Aufrufe, `openCallIDs` leer)
-- [ ] Alle `switch`-Stellen über `ChatMessage.Content` prüfen (`ChatView.row`, `VoiceModeSheet`, `AssistantModel.reportTurn`/`readNewOutput`); wo `default` steht, ändert sich nichts.
-- [ ] `swift test` in `Packages/AIKit`, dann `app/test-all.sh`. Commit: `feat: let tool handlers shorten what a stored chat keeps`
+## Task B3: Einwilligungsblatt „Notizen mit ChatGPT“ (NC5b)
 
-## Task B3: Einwilligung „Notizen mit ChatGPT“
+Feld, Schalter, Fußtext und Datenschutzhinweis kommen aus #173 Task 4a. Dieser Task baut nur das Blatt, das die Einstiege (B9) zeigen, solange die Einwilligung fehlt.
 
-**Files:** Modify `Tagwerk/Persistence/AppSettings.swift`, `Tagwerk/Backup/BackupDTOs.swift`, `Tagwerk/Settings/AISettingsView.swift`. Create `Tagwerk/Notes/NoteAssistantConsentSheet.swift`. Tests in `BackupTests.swift`, `RoutineStoreTests.swift` (Standardwert).
+**Files:** Create `Tagwerk/Notes/NoteAssistantConsentSheet.swift`. Kataloge.
 
-- [ ] `AppSettings.noteAssistantConsent: Bool = false` mit Kommentar („the assistant may list, read and change non-private notes“). `BackupDTOs`: optionales Feld nach dem Muster `mailSummaryConsent`; alte Sicherungen bleiben lesbar.
 - [ ] `NoteAssistantConsentSheet` (Aufbau wie `NoteConsentSheet`), Titel „Notizen mit ChatGPT“:
-  - Einleitung: „Damit der Assistent deine Notizen durchgehen, überarbeiten, anlegen und löschen kann, sendet Tagwerk Notizen an ChatGPT (OpenAI), über das Konto, mit dem du angemeldet bist.“
-  - „**Gesendet wird:** die Titel deiner Notizen und der Text der Notizen, um die es im Gespräch geht, mit den Namen ihrer Anhänge.“
+  - Einleitung: „Damit der Assistent deine Notizen finden, lesen, überarbeiten, anlegen und löschen kann, sendet Tagwerk Notizen an ChatGPT (OpenAI), über das Konto, mit dem du angemeldet bist.“
+  - „**Gesendet wird:** die Titel deiner Notizen, kurze Ausschnitte zu Suchtreffern und der Text der Notizen, um die es im Gespräch geht, mit den Namen ihrer Anhänge.“
+  - „**Gilt überall beim Assistenten:** in diesem Notiz-Chat und für die Suche des Assistenten in allen anderen Gesprächen.“
   - „**Nie gesendet werden:** Tagebuch mit Gott, Bible Study und Dream Log, gelöschte Notizen und die Anhänge selbst.“
   - „**Nichts ändert sich ohne dich:** Jede Änderung, jede neue Notiz und jedes Löschen bestätigst du einzeln.“
-  - „**Nur im Gespräch:** Ohne deine Nachricht an den Assistenten verlässt nichts das iPhone. Gelesene Notiztexte werden nicht im Verlauf gespeichert; die Antworten des Assistenten schon.“
+  - „**Nur im Gespräch:** Ohne deine Nachricht an den Assistenten verlässt nichts das iPhone. Gelesene Notiztexte gelten nur für das laufende Gespräch und werden nicht im Verlauf gespeichert; die Antworten des Assistenten schon.“
   - Knöpfe „Einverstanden“ und „Nicht jetzt“; Fußzeile „Du kannst das in den Einstellungen unter „KI“ widerrufen.“
-- [ ] Einstellungen › KI: Schalter „Notizen mit ChatGPT“ mit Fußnote („Der Assistent liest und ändert Notizen nur im Notiz-Chat. Tagebuch mit Gott, Bible Study und Dream Log gehen nie an ChatGPT.“). `AIPrivacyView`: eigener Absatz mit denselben Aussagen und der Sitzungsregel.
-- [ ] Tests: `noteAssistantConsent_defaultsToFalse`, `backup_roundTripsNoteAssistantConsent`, `backup_withoutTheField_keepsCurrentValue`.
-- [ ] `app/test-all.sh`. Commit: `feat: add the consent for the assistant to work with notes`
+- [ ] „Einverstanden“ setzt `settings.noteAssistantConsent` (dasselbe Feld wie der Schalter). Die Namen der privaten Ordner kommen aus dem Store (umbenannte Ordner).
+- [ ] Der Wortlaut muss mit Fußtext und Datenschutzhinweis aus #173 Task 4a übereinstimmen; weicht er ab, werden beide Stellen im selben Commit angeglichen.
+- [ ] Englische Texte in `scripts/translations/en.json`, String-Prüfungen.
+- [ ] `app/test-all.sh`. Commit: `feat: add the consent sheet for the assistant to work with notes`
 
-## Task B4: `NoteToolAccess`, `NoteSession` und die lesenden Werkzeuge
+## Task B4: `NoteChatTools` und `list_notes`
 
-**Files:** Create `Tagwerk/AI/NoteToolAccess.swift`, `Tagwerk/AI/NoteSession.swift`, `Tagwerk/AI/NoteChatTools.swift`, `Tagwerk/AI/NoteChatTools+Definitions.swift`, `TagwerkTests/NoteChatToolsTests.swift`.
+**Files:** Create `Tagwerk/AI/NoteChatTools.swift`, `Tagwerk/AI/NoteChatTools+Definitions.swift`, `TagwerkTests/NoteChatToolsTests.swift`. Modify `Tagwerk/AI/NoteToolAccess.swift`.
 
-- [ ] `@MainActor struct NoteToolAccess { let store: NoteStore }` – die einzige Stelle, die Notizen für ChatGPT auswählt:
-  - `func visibleNotes() -> [NoteRecord]` (nicht gelöscht, nicht privat), `func visibleNote(key: String) -> NoteRecord?` (`note:<UUID>`), `func visibleFolders() -> [NoteFolderInfo]`, `func acceptsNewNote(folderID: UUID?) -> Bool`.
+- [ ] `NoteToolAccess` (aus #173 Task 3) erweitern, weiterhin die einzige Stelle, die Notizen für ChatGPT auswählt:
+  - `func visibleFolders() -> [NoteFolderInfo]`, `func acceptsNewNote(folderID: UUID?) -> Bool`.
   - `func entries(folderID: UUID?, query: String?) -> [Entry]` (Titel über `NoteText.title`, leer → „Ohne Titel“; `query` prüft Titel und Text lokal, jedes Wort muss vorkommen).
-- [ ] `@MainActor final class NoteSession`: `private(set) var readTexts: [UUID: String]`, `truncated: Set<UUID>`, `func remember(_:text:truncated:)`, `func reset()`. Wird nirgends gespeichert.
 - [ ] `@MainActor final class NoteChatTools: ToolHandler` (Muster `TaskChatTools`):
-  - `init(base: AppTools, access: NoteToolAccess, session: NoteSession, hasConsent:, now:)`, `var scope: UUID?`
-  - `static let noteReadTools: Set<String> = ["list_notes", "read_note"]`, `static let noteWriteTools: Set<String> = ["create_note", "update_note", "delete_note"]`
-  - `definitions`: `base.definitions` plus Notiz-Definitionen (ohne `list_notes` bei gesetztem `scope`); ohne Einwilligung nur `base.definitions`.
-  - `run`: ohne Einwilligung `{"error":"Die Einwilligung „Notizen mit ChatGPT“ fehlt."}`.
-  - `showsActivity`: wahr für `list_notes` und `read_note`.
-  - `storedForm`: `list_notes` → `{"ok":true,"listed":N}`; `read_note` → `{"ok":true,"read":["Titel",…],"note":"Der Text ist nicht mehr verfügbar. Lies die Notiz erneut, wenn du ihn brauchst."}`; `create_note`/`update_note` → Argumente ohne `text`, dafür `title` (erste Zeile, höchstens 80 Zeichen); alles andere unverändert über `base`.
-- [ ] `read_note` schreibt jeden gelieferten Text in `NoteSession`. Anhang-Verweise bleiben im Text.
-- [ ] Die Schema-Helfer aus `AppTools+Definitions.swift` (`tool`, `string`, `strings`, `object`) von `private` auf intern (`static`) stellen, damit `NoteChatTools+Definitions.swift` sie nutzt statt sie zu kopieren.
+  - `init(base: AppTools, access: NoteToolAccess, hasConsent:, now:)`, `var scope: UUID?`. Der Sitzungsspeicher ist `base.noteSession` (eine Instanz, #173 Task 4b).
+  - `static let noteReadTools: Set<String> = ["list_notes"]`, `static let noteWriteTools: Set<String> = ["create_note", "update_note", "delete_note"]`
+  - `definitions`: `base.definitions` (enthält `search` und `read_note`) plus `list_notes` (nicht bei gesetztem `scope`) und, ab B5, die schreibenden Werkzeuge; ohne Einwilligung nur `base.definitions`.
+  - `run`: eigene Werkzeuge selbst, alles andere über `base`. Ohne Einwilligung `{"error":"Die Einwilligung „Notizen mit ChatGPT“ fehlt."}`.
+  - `showsActivity`: wahr für `list_notes`, sonst `base.showsActivity` (`read_note`).
+  - `storedForm`: `list_notes` → `{"ok":true,"listed":N}`; alles andere über `base.storedForm` (`search`, `read_note`).
+- [ ] Die Schema-Helfer (`tool`, `string`, `strings`, `object`) sind seit #173 Task 4b intern; `NoteChatTools+Definitions.swift` nutzt sie.
 - [ ] Tests:
   - `listNotes_excludesPrivateTrashedAndSubfolderOfPrivate`
   - `listNotes_neverContainsText`, `listNotes_queryMatchesTextButReturnsOnlyTitle`
   - `listNotes_folderFilter`, `listNotes_privateFolderID_answersNotFound`
-  - `readNote_privateOrTrashedID_answersLikeUnknown` (gleicher Fehlertext wie bei einer erfundenen ID)
-  - `readNote_longNote_isTruncatedAndFlagged`, `readNote_overBudget_reportsNotRead`
-  - `readNote_remembersTextInSession`
-  - `scope_hidesListNotesAndRejectsOtherIDs`
+  - `scope_hidesListNotes`
   - `withoutConsent_offersNoNoteToolsAndRunsNone`
-  - `storedForm_readNote_keepsTitlesOnly`, `storedForm_listNotes_keepsCountOnly`
+  - `storedForm_listNotes_keepsCountOnly`, `storedForm_readNote_isForwardedToBase`
+  - `readNote_runsThroughBaseAndFillsTheSharedSession`
   - `baseToolsStillWork` (`list_tasks` läuft über `base`)
-- [ ] `app/test-all.sh`. Commit: `feat: add note tools that list and read non-private notes`
+- [ ] `app/test-all.sh`. Commit: `feat: add a notes tool set that lists non-private notes`
 
 ## Task B5: Schreibende Werkzeuge
 
 **Files:** Modify `Tagwerk/AI/NoteChatTools.swift`. Tests in `NoteChatToolsTests.swift`.
 
+- [ ] Voraussetzung im Sitzungsspeicher: `base.noteSession` (`readTexts`, `truncated`) aus #173 Task 4b; er wird von `read_note` gefüllt, gleich in welchem Chat der laufenden Sitzung.
+- [ ] `storedForm`: `create_note`/`update_note` → Argumente ohne `text`, dafür `title` (erste Zeile, höchstens 80 Zeichen); `delete_note` unverändert.
 - [ ] `create_note`: Text getrimmt, nicht leer, höchstens 12 000 Zeichen; `folder_id` über `access.acceptsNewNote`; ohne `folder_id` der Ordner des Kontexts (siehe B6), sonst „Notizen“. Keine `attachment:`-Verweise im Text (Fehler). Der neue Text gilt in der Sitzung als gelesen.
 - [ ] `update_note`, in dieser Reihenfolge geprüft, jeweils mit eigenem deutschem Fehlertext:
   1. sichtbar (sonst „Notiz nicht gefunden.“)
@@ -374,8 +356,7 @@ Im Kontext „Notiz …“ (`scope` gesetzt) fehlt `list_notes`; `read_note`, `u
 - [ ] `AssistantModel.Context`: `case notes(folderID: UUID?)`, `case note(UUID)`.
 - [ ] `ChatStore.notesKey = "notes"`. `AssistantModel`: `@ObservationIgnored var noteTools: NoteChatTools?`, `var hasNoteConsent: () -> Bool`.
   - `func open(notes folderID: UUID?)` und `func open(note id: UUID)`: ohne Einwilligung oder ohne `noteTools` geschieht nichts (die Oberfläche fragt vorher). Setzt `noteTools.scope`, wechselt mit `switchThread(to: ChatStore.notesKey, tools: noteTools)`.
-  - `switchThread` ruft beim Verlassen des Notiz-Chats `noteTools.session.reset()`; `clear()` ebenso.
-  - `persist()` speichert `conversation.storableHistory` statt `conversation.history`.
+  - Sitzungsende (`noteSession.reset()` in `switchThread`, `clear()`, `endNoteSession()`) und `persist()` mit `storableHistory` stammen aus #173 Task 4, 4a und 4b; hier wird nur geprüft, dass sie auch für den Notiz-Chat greifen. Bei widerrufener Einwilligung bietet ein offener Notiz-Chat keine Notiz-Werkzeuge mehr an (`definitions`).
 - [ ] `instructions()`: bei Notiz-Kontext ein zusätzlicher deutscher Abschnitt:
   - Werkzeuge und Reihenfolge: zuerst `list_notes`, Text nur der Notizen lesen, die für die Bitte nötig sind.
   - Jede Änderung als eigener Funktionsaufruf, nie mehrere Notizen in einem und höchstens eine Änderung je Notiz und Antwort; nicht im Text um Bestätigung bitten.
@@ -385,18 +366,20 @@ Im Kontext „Notiz …“ (`scope` gesetzt) fehlt `list_notes`; `read_note`, `u
   - `contextText()`: „Ansicht: Notizen (N sichtbare Notizen; Einzelheiten über list_notes).“ bzw. mit Ordnername und -ID; für `.note`: „Das Gespräch betrifft die Notiz „Titel“ (id note:…). Lies sie mit read_note.“ Kein Notiztext in den Anweisungen.
 - [ ] `ChatView`:
   - `contextText`: „Kontext: Notizen · ohne Tagebuch, Bible Study, Dream Log“ (mit `lock`-Symbol statt `scope`), mit Ordner „Kontext: Notizen in „Brain Dump“ · ohne …“, für eine Notiz „Kontext: Notiz „Titel“ · ohne …“. Die Namen der privaten Ordner kommen aus dem Store (umbenannte Ordner).
-  - Zeile für `.activity`: grau, klein, `assistant.activityText(call, output:)` → „Gelesen: 42 Titel“, „Gelesen: 9 Titel aus „Brain Dump““, „Gelesen: „A“, „B““. Die Texte entstehen aus dem Ergebnis-JSON und funktionieren auch mit der gespeicherten Kurzform.
+  - Zeile für `.activity` (Darstellung aus #173 Task 4b): `assistant.activityText` um `list_notes` ergänzen → „Gelesen: 42 Titel“, „Gelesen: 9 Titel aus „Brain Dump““; „Gelesen: „A“, „B““ für `read_note` gibt es bereits. Die Texte entstehen aus dem Ergebnis-JSON und funktionieren auch mit der gespeicherten Kurzform.
   - Leerer Notiz-Chat: eigener Hinweistext („Frag nach deinen Notizen oder bitte um Änderungen. Jede Änderung bestätigst du einzeln.“).
-- [ ] `AppEnvironment`: `NoteChatTools` aus `tools`, `notes`, `settings.noteAssistantConsent` bauen und an `assistant` hängen.
+- [ ] `AppEnvironment`: `NoteChatTools` aus `tools`, `NoteToolAccess` und `settings.noteAssistantConsent` bauen und an `assistant` hängen.
 - [ ] Tests (mit `FakePlanResponder`, der Funktionsaufrufe liefert):
   - `openNotes_withoutConsent_doesNothing`
   - `openNotes_usesNotesThreadAndOffersNoteTools`, `openGeneral_offersNoNoteTools`
-  - `readNote_storedHistoryHoldsTitlesOnly_memoryHoldsText`
+  - `listNotes_storedHistoryHoldsCountOnly_memoryHoldsTitles`
   - `updateNote_storedHistoryHoldsNoText` (weder alter noch neuer Text in `ChatStore.history(for: "notes")`)
+  - `noteText_staysAvailableAcrossTurnsOfTheSession` (lesen, zwei weitere Nachrichten, dann `update_note` ohne erneutes Lesen)
   - `reopenedAfterRestart_updateNeedsNewRead`
-  - `switchingToGeneralChat_resetsSession`
+  - `switchingToGeneralChat_resetsSession`, `readInGeneralChat_thenNotesChat_updateNeedsNewRead`
+  - `consentWithdrawn_notesChatOffersNoNoteTools`
   - `instructions_notesContext_containPrivateSentenceAndNoNoteText`
-  - `activityText_fromFullAndFromStoredOutput`
+  - `activityText_listNotes_fromFullAndFromStoredOutput`
 - [ ] `app/test-all.sh`. Commit: `feat: open a notes chat with its own context and session-only note text`
 
 ## Task B7: Notiz-Karten, „Änderung ansehen“ und Einzelbestätigung
@@ -404,20 +387,20 @@ Im Kontext „Notiz …“ (`scope` gesetzt) fehlt `list_notes`; `read_note`, `u
 **Files:** Create `Packages/TagwerkCore/Sources/TagwerkCore/NoteDiff.swift`, `Tests/TagwerkCoreTests/NoteDiffTests.swift`, `Tagwerk/AI/NoteChangeSheet.swift`. Modify `Tagwerk/AI/ActionCardDescriber.swift`, `Tagwerk/AI/AssistantModel.swift`, `Tagwerk/AI/ChatView.swift`. Tests in `AssistantNotesTests.swift`, `ActionCardDescriberTests` (bestehende Datei suchen, sonst neu).
 
 - [ ] `NoteDiff` (TagwerkCore): `static func lines(old: String, new: String) -> [Line]` mit `Line.Kind { same, added, removed }` (über `CollectionDifference` auf Zeilen); `struct Summary { added: Int, removed: Int, titleChanged: Bool }`, `static func summary(old:new:)`.
-- [ ] `AssistantModel.ActionCard` bekommt optionale Felder mit Standardwerten: `detail: NoteCardDetail? = nil`, `confirmTitle: String? = nil`, `isDestructive = false`. `enum NoteCardDetail: Equatable { case update(title: String, before: String, after: String); case create(text: String); case delete(text: String) }`. Bestehende Karten bleiben unverändert.
+- [ ] `AssistantModel.ActionCard` bekommt ein weiteres optionales Feld: `detail: NoteCardDetail? = nil`. `warning`, `confirmTitle` und `isDestructive` gibt es seit #173 Task 2. `enum NoteCardDetail: Equatable { case update(title: String, before: String, after: String); case create(text: String); case delete(text: String) }`. Bestehende Karten bleiben unverändert.
 - [ ] `ActionCardDescriber`: `var noteAccess: NoteToolAccess?`. Texte:
   - `update_note`: Titel „Notiz „X“ überarbeiten“, Kurztext aus `NoteDiff.summary` („3 Zeilen neu · 2 entfernt · Titel geändert“; gesprochen ohne „·“).
   - `create_note`: „Neue Notiz „Titel““, „Ordner „Brain Dump“ · 8 Zeilen“, `confirmTitle` „Anlegen“.
   - `delete_note`: „Notiz „X“ löschen“, Grund (falls gegeben) und „Kommt nach „Zuletzt gelöscht“ und bleibt dort 30 Tage wiederherstellbar.“, `confirmTitle` „Löschen“, `isDestructive`.
   - Mit gespeicherter Kurzform (kein `text`) oder nicht mehr sichtbarer Notiz: Titel aus `title`, kein `detail`.
   - `detail` wird nur für offene Karten gefüllt; der Text stammt aus dem Store bzw. den Argumenten und wird nur angezeigt, nicht gesendet.
-- [ ] `ActionCardView`: Verweis „Änderung ansehen ›“ bzw. „Notiz ansehen ›“ bei `detail != nil`; Knopfbeschriftung aus `confirmTitle`; roter Knopf bei `isDestructive`; Kopfzeile „Vorschlag i von n · noch nicht ausgeführt“, wenn mehrere Notiz-Karten offen sind; nach dem Löschen „✓ Ausgeführt · 09:42 · In „Zuletzt gelöscht““.
+- [ ] `ActionCardView`: Verweis „Änderung ansehen ›“ bzw. „Notiz ansehen ›“ bei `detail != nil`; Knopfbeschriftung und Rot kommen aus `confirmTitle` und `isDestructive` (#173 Task 2); Kopfzeile „Vorschlag i von n · noch nicht ausgeführt“, wenn mehrere Notiz-Karten offen sind; nach dem Löschen „✓ Ausgeführt · 09:42 · In „Zuletzt gelöscht““.
 - [ ] `NoteChangeSheet`: für `update` Umschalter „Vorher“ / „Nachher“ / „Änderungen“ (Änderungen als Zeilenliste mit „+“/„−“, Farbe und Accessibility-Label „neu“/„entfernt“, keine Durchstreichung), für `create` und `delete` nur der Text. Unten „Verwerfen“ und der Bestätigungsknopf; beide schließen das Blatt und rufen `assistant.decline`/`confirm`. Das Blatt hängt an der `ChatView`, nicht an der Kartenzeile im `LazyVStack`.
 - [ ] `AssistantModel`:
-  - `var batchConfirmable: [ToolCall]`: offene Karten ohne `NoteChatTools.noteWriteTools`.
-  - `confirmAll()` bestätigt nur `batchConfirmable`.
+  - `singleConfirmationTools` (#173 Task 2) um `NoteChatTools.noteWriteTools` erweitern. `needsSingleConfirmation`, `batchConfirmable` und `confirmAll()` bleiben unverändert und erfassen Notiz-Karten damit nicht.
+  - `singleConfirmationNotice` um den Notiz-Fall ergänzen: „Notiz-Änderungen bestätigst du einzeln.“; sind zugleich Zuweisungskarten offen: „Zuweisungen und Notiz-Änderungen bestätigst du einzeln.“
   - Nach einer erfolgreich bestätigten Karte von `update_note` oder `delete_note` werden weitere offene Karten zur selben `note_id` automatisch verworfen (`conversation.decline`). Ohne das würde eine zweite Überarbeitung, die noch auf dem alten Text beruht, die erste überschreiben: Die Prüfung „seit dem Lesen unverändert“ greift hier nicht, weil die Sitzung nach dem ersten Schreiben den neuen Text als gelesen führt.
-- [ ] `ChatView.composer`: „Alle bestätigen (n)“ nur bei `batchConfirmable.count > 1`, n ist deren Zahl. Sind Notiz-Karten offen, darunter klein „Notiz-Änderungen bestätigst du einzeln.“
+- [ ] `ChatView.composer`: keine Änderung an „Alle bestätigen (n)“ (zählt `batchConfirmable`, #173 Task 2); der Hinweis darunter kommt aus `singleConfirmationNotice`.
 - [ ] Tests:
   - `NoteDiffTests`: `summary_addedRemovedAndTitle`, `lines_keepOrder`, `summary_identicalTexts_isEmpty`
   - `describe_updateNote_summarisesAndCarriesBeforeAfter`, `describe_createNote_namesFolderAndLines`, `describe_deleteNote_mentionsTrash`
@@ -431,9 +414,9 @@ Im Kontext „Notiz …“ (`scope` gesetzt) fehlt `list_notes`; `read_note`, `u
 
 **Files:** Modify `Packages/TagwerkCore/Sources/TagwerkCore/Voice/VoiceReply.swift`, `VoiceModeMachine.swift`, `ActionAnnouncement.swift`, `Tagwerk/AI/AssistantModel.swift`. Tests in `VoiceModeMachineTests.swift`, `VoiceReplyTests.swift`, `AssistantNotesTests.swift`.
 
-- [ ] `OpenCards`: neues Feld `notes: Int = 0` (Karten von `create_note`/`update_note`). `delete_note` zählt zu `deletes` und braucht damit wie heute „Ja, löschen“.
-- [ ] `VoiceModeMachine`: `.confirmAll where cards.notes > 0` → `say(.notesNeedSingle)`, eingeordnet nach der Prüfung auf `deletes`. Neue Ansage: „Notiz-Änderungen bitte einzeln bestätigen.“ / „Please confirm changes to notes one by one.“
-- [ ] `AssistantModel.openCards` füllt `notes` und zählt `delete_note` bei `deletes` mit. `confirmCards`: mehrere Karten nur, wenn keine davon eine Notiz-Karte ist (zusätzlich zur bestehenden Bedingung).
+- [ ] `OpenCards` (hat seit Längerem `guarded`, das #173 Task 2 für Zuweisungen nutzt): neues Feld `notes: Int = 0` (Karten von `create_note`/`update_note`). Notiz-Karten zählen nicht zusätzlich als `guarded`, weil die Ansage anders lautet. `delete_note` zählt zu `deletes` und braucht damit wie heute „Ja, löschen“.
+- [ ] `VoiceModeMachine`: `.confirmAll where cards.notes > 0` → `say(.notesNeedSingle)`, eingeordnet nach der Prüfung auf `deletes` und vor der auf `guarded`. Neue Ansage: „Notiz-Änderungen bitte einzeln bestätigen.“ / „Please confirm changes to notes one by one.“
+- [ ] `AssistantModel.openCards` füllt `notes` und zählt `delete_note` bei `deletes` mit. `confirmCards` lehnt mehrere Karten bereits über `needsSingleConfirmation` ab (#173 Task 2, mit B7 auch für Notiz-Karten); hier nur der Test.
 - [ ] Tests:
   - `confirmAll_withNoteCard_isRejectedWithNotice`
   - `confirm_singleNoteCard_startsCountdown`
@@ -468,8 +451,9 @@ Im Kontext „Notiz …“ (`scope` gesetzt) fehlt `list_notes`; `read_note`, `u
 5. Drei Notiz-Vorschläge: kein „Alle bestätigen“; zusammen mit zwei Aufgaben-Karten erfasst „Alle bestätigen (2)“ nur diese.
 6. App beenden und neu öffnen: Verlauf zeigt „Gelesen: …“ und die erledigten Karten; eine erneute Überarbeitung liest die Notiz neu.
 7. Sprachmodus: „ja“ bestätigt eine einzelne Notiz-Karte, „alle bestätigen“ wird mit der Ansage abgelehnt, Löschen verlangt „ja, löschen“.
-8. Einwilligung in Einstellungen › KI ausschalten: Der Knopf fragt wieder, ein offener Notiz-Chat hat keine Notiz-Werkzeuge mehr.
-9. Englische Oberfläche: Einwilligung, Kontextzeile, Karten, Blatt.
+8. Einwilligung in Einstellungen › KI ausschalten: Der Knopf fragt wieder, ein offener Notiz-Chat hat keine Notiz-Werkzeuge mehr, und der Assistent kennt zuvor gelesene Texte nicht mehr (Sitzungsende). Im allgemeinen Assistenten meldet die Suche danach nur noch die Anzahl passender Notizen.
+9. Im allgemeinen Assistenten eine Notiz suchen und lesen lassen, dann in den Notiz-Chat wechseln und um eine Überarbeitung bitten: Die Notiz wird neu gelesen („Gelesen: …“), bevor die Karte kommt.
+10. Englische Oberfläche: Einwilligung, Kontextzeile, Karten, Blatt.
 
 ---
 
@@ -480,39 +464,43 @@ Block A (#232):  A1 → A2 → A6
                  A3 ─────→ A6
                  A4 ─────→ A6
                  A5 ─────→ A6
-Block B (#233):  B1 → B4 → B5 → B6 → B7 → B8
-                 B2 ──────────→ B6
-                 B3 → B4
-                 A5, B6, B7 → B9
+
+#173 (2026-11-20-decisions-173.md), Stränge A und B:
+                 Task 1 → Task 2 → Task 3 → Task 4 → Task 4a → Task 4b
+
+Block B (#233):  #173 Task 4a ───────────→ B3
+                 #173 Task 3, 4, 4b ─────→ B4 → B5 → B6 → B7 → B8
+                 #173 Task 2 ────────────────────────────→ B7
+                 A5, B3, B6, B7 ─────────→ B9
 ```
 
 - A1, A3, A4 und A5 sind voneinander unabhängig und können parallel laufen.
-- B1, B2 und B3 sind voneinander unabhängig. B1 und B2 sind die Bausteine, die auch `2026-11-20-decisions-173.md` baut (dort Task 3 und 4); B7 überschneidet sich mit dessen Task 2. Nur einer der beiden Branches baut sie, der andere setzt darauf auf.
+- **Block B beginnt erst, wenn die Stränge A und B von #173 (Tasks 1 bis 4b) und Task A5 auf `main` sind.** B1 und B2 entfallen; B3 ist von B4 bis B8 unabhängig und kann parallel laufen.
+- Reihenfolge für einen Umsetzer von Block B: B3, B4, B5, B6, B7, B8, B9.
 - Block B setzt aus Block A nur A5 voraus.
 
 ## Nicht im Umfang
 
 - Umrechnen von Einheiten beim Übersetzen, Übersetzen anderer Notizen als Rezept-Notizen, weitere Sprachen.
 - Verschieben, Anheften und Wiederherstellen von Notizen durch den Assistenten, Papierkorb leeren, Anhänge lesen oder anlegen.
-- Notiz-Werkzeuge im allgemeinen Assistenten und im Aufgaben-Chat (Ausnahme: `search` nach #173, siehe Abstimmung).
+- Schreibende Notiz-Werkzeuge und `list_notes` im allgemeinen Assistenten und im Aufgaben-Chat. `search` und `read_note` stehen dort zur Verfügung (#173).
 - Versionsgeschichte für Notizen.
 
 ## Offene Fragen (mit Empfehlung)
 
+Entschieden und hier entfernt (20.11.): Sitzungsende wie empfohlen; `list_notes` behält `query`; ein gemeinsamer Schalter „Notizen mit ChatGPT“; keine Kürzung am Zugende und kein `forgetsAfterTurn`.
+
 1. **Fester Antwortsatz zu privaten Notizen (NC5b).** Das Mockup sagt, der Satz komme von Tagwerk. Technisch gesichert ist nur, dass die Werkzeuge nichts Privates liefern; den Wortlaut der Antwort schreibt das Modell nach Anweisung. Eine lokale Abfangregel (Nachricht nennt einen privaten Ordner → Tagwerk antwortet selbst) würde auch harmlose Bitten blockieren („Leg die Notiz „Tagebuch kaufen“ an“). **Empfehlung:** Satz in den Anweisungen, Wortlaut nicht garantiert; keine lokale Abfangregel.
-2. **Sitzungsende.** Der Plan nimmt die Lebensdauer der `Conversation` im Arbeitsspeicher. Strenger wäre: Texte verfallen schon beim Schließen des Chat-Blatts. Das würde offene Karten ungültig machen. **Empfehlung:** wie geplant.
-3. **Dateinamen von Anhängen** stehen im Notiztext und gehen beim Lesen mit. Maskieren wäre möglich, kostet aber eine Rückübersetzung beim Schreiben. **Empfehlung:** mitsenden, im Einwilligungsblatt nennen (ist eingeplant).
-4. **Mengenprüfung beim Übersetzen.** Die Regel „gleiche Zahlen in Zutatenzeilen“ lehnt ab, wenn ChatGPT „1 1/2“ zu „1,5“ macht. **Empfehlung:** streng bleiben und in der Anweisung verlangen, Zahlen unverändert zu lassen; lockern erst, wenn Gerätetests häufige Ablehnungen zeigen.
-5. **Unstrukturierte Notizen im Ordner „Rezepte“** bekommen kein „Übersetzen …“. **Empfehlung:** so lassen; ohne Abschnitt „Zutaten“ gibt es keine Struktur, die zu prüfen wäre.
-6. **`list_notes` mit `query`** überschneidet sich mit der Notiz-Suche aus #173. **Empfehlung:** `query` behalten (der Notiz-Chat braucht die Suche auch ohne #173, und `list_notes` liefert anders als `search` keinen Ausschnitt).
-7. **Ein oder zwei Schalter für Notizen beim Assistenten.** #173 plant „Notizen in der Suche des Assistenten“ (Titel und Ausschnitt), dieser Plan „Notizen mit ChatGPT“ (ganzer Text, Ändern, Anlegen, Löschen). Ein gemeinsamer Schalter wäre einfacher, würde aber jeden, der nur die Suche will, in den weiteren Umfang einwilligen lassen. **Empfehlung:** zwei Schalter; der weitere schließt die Suche ein.
-8. **Kürzen im Arbeitsspeicher nach Zugende** (#173, D4) gegen „gilt für die laufende Sitzung“ (#233). **Empfehlung:** je Werkzeug wählbar (`forgetsAfterTurn`), `read_note` behält den Text bis zum Sitzungsende.
+2. **Dateinamen von Anhängen** stehen im Notiztext und gehen beim Lesen mit. Maskieren wäre möglich, kostet aber eine Rückübersetzung beim Schreiben. **Empfehlung:** mitsenden, im Einwilligungsblatt nennen (ist eingeplant).
+3. **Mengenprüfung beim Übersetzen.** Die Regel „gleiche Zahlen in Zutatenzeilen“ lehnt ab, wenn ChatGPT „1 1/2“ zu „1,5“ macht. **Empfehlung:** streng bleiben und in der Anweisung verlangen, Zahlen unverändert zu lassen; lockern erst, wenn Gerätetests häufige Ablehnungen zeigen.
+4. **Unstrukturierte Notizen im Ordner „Rezepte“** bekommen kein „Übersetzen …“. **Empfehlung:** so lassen; ohne Abschnitt „Zutaten“ gibt es keine Struktur, die zu prüfen wäre.
 
 ## Risiken
 
 - **Zeilenweise Übersetzung:** Ein Absatz über mehrere Zeilen wird zeilenweise übersetzt; die Zeilen gehen in einer Anfrage mit, ChatGPT sieht also den Zusammenhang, die Satzstellung kann trotzdem holpern. Die Vorschau zeigt das vor dem Übernehmen.
 - **Strenge Prüfung:** Jede Abweichung führt zu einer Fehlermeldung statt zu einem Ergebnis. Bei langen Rezepten kann das mehrere Versuche kosten.
-- **`ChatMessage.Content` wächst um einen Fall:** Jede erschöpfende `switch`-Stelle muss angepasst werden (Task B2 listet sie).
+- **`ChatMessage.Content` wächst um einen Fall:** Jede erschöpfende `switch`-Stelle muss angepasst werden (geschieht in #173 Task 4).
+- **Ein Sitzungsspeicher für alle Chats:** Ein Chatwechsel verwirft gelesene Texte; der Notiz-Chat liest eine Notiz neu, die im allgemeinen Assistenten schon gelesen war. Das kostet eine Anfrage, hält die Regel aber einfach.
 - **Gespeicherte Argumente werden verändert:** Der wiederhergestellte Verlauf enthält für `update_note` Argumente ohne `text`. Das Modell sieht dann einen eigenen früheren Aufruf, der nicht zum Schema passt. Die Responses-API prüft frühere Aufrufe nicht gegen das Schema (Annahme, am Gerät zu prüfen, Gerätetest 6).
 - **Antworten zitieren Notizen:** Der gespeicherte Verlauf kann über die Antworten des Assistenten Notizinhalt enthalten. Das ist benannt, aber nicht verhindert.
 - **Voller Text je Überarbeitung:** `update_note` schickt den ganzen neuen Text als Argument. Bei langen Notizen ist das langsam; über 12 000 Zeichen ist Überarbeiten ausgeschlossen.

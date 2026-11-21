@@ -42,4 +42,34 @@ struct BlockStartTests {
     @Test func todayOff_isNextFullHour() {
         #expect(suggestedBlockStart(on: today, hours: nil, minutes: 60, now: at(18, 14, 20), calendar: calendar) == at(18, 15))
     }
+
+    // MARK: Late evening: the suggestion stays on the day
+
+    @Test func today_after23_staysOnTheSameDay() {
+        // The next full hour would be 24:00, which is the next day; the next quarter hour is used instead.
+        let start = suggestedBlockStart(on: today, hours: hours, minutes: 60, now: at(18, 23, 20), calendar: calendar)
+        #expect(start == at(18, 23, 30))
+        #expect(PlanDay(date: start, calendar: calendar) == today)
+    }
+
+    @Test func today_afterWorkEndingAtMidnight_staysOnTheSameDay() {
+        let lateHours = WorkHours(startMinutes: 9 * 60, endMinutes: 24 * 60)
+        #expect(suggestedBlockStart(on: today, hours: lateHours, minutes: 60, now: at(18, 23, 30), calendar: calendar) == at(18, 23, 45))
+    }
+
+    @Test func todayOff_after23_staysOnTheSameDay() {
+        #expect(suggestedBlockStart(on: today, hours: nil, minutes: 60, now: at(18, 23, 5), calendar: calendar) == at(18, 23, 15))
+    }
+
+    @Test func today_inTheLastQuarterHour_isTheLastMinuteOfTheDayAndNeverInThePast() {
+        let now = at(18, 23, 50)
+        let start = suggestedBlockStart(on: today, hours: hours, minutes: 60, now: now, calendar: calendar)
+        #expect(start == at(18, 23, 59))
+        #expect(start > now)
+        #expect(PlanDay(date: start, calendar: calendar) == today)
+    }
+
+    @Test func today_at2259_stillTakesTheFullHour() {
+        #expect(suggestedBlockStart(on: today, hours: hours, minutes: 60, now: at(18, 22, 59), calendar: calendar) == at(18, 23))
+    }
 }
