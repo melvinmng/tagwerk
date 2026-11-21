@@ -5,7 +5,7 @@
 > **Status:** Stand 21.11.2026, Code-Grundlage `origin/main` bei `8326a3c` (enthält PR #240–#252, darunter #242 mit `storedForm`, `storableHistory`, `singleConfirmationTools` und dem Nachrichtentyp `.activity`). Mockups: `docs/superpowers/mockups/2026-11-21-ernaehrung-gewicht-ziele-mockups.html` (32 Entscheidungen, gewählte Varianten tragen die Marke „Gewählt“). Nichts davon ist gebaut, nichts am Gerät geprüft. Es gibt noch kein Issue zu diesem Vorhaben. Die Vorschlagskarten der Zielplanung teilen sich ihre Bauteile mit dem Plan `2026-11-21-ki-vorschlaege-anpassen.md` („Anpassen“ für alle KI-Vorschläge).
 
 **Goal:**
-- **Tagesbudget:** Der Tageskopf in „Erfassen“ rechnet „Ziel + angerechnete Aktivität − Gegessen = Noch“. Die Aktivitätsenergie kommt als Tagessumme aus Health; in Tagwerk eingetragene Trainings zählen genau einmal. Der angerechnete Anteil ist einstellbar (Voreinstellung 100 %).
+- **Tagesbudget:** Der Tageskopf in „Erfassen“ rechnet „Ziel + angerechnete Aktivität − Gegessen = Noch“. Die Aktivitätsenergie kommt als Tagessumme aus Health; in Tagwerk eingetragene Trainings zählen genau einmal. Der angerechnete Anteil ist einstellbar (Voreinstellung 50 %).
 - **Nährwerte:** Neben Kalorien, Eiweiß, Kohlenhydraten und Fett führt Tagwerk Ballaststoffe und Zucker, zuschaltbar gesättigte Fettsäuren und Salz, mit Zielen, Tagesübersicht und Spiegelung nach Health. Fehlende Angaben bleiben „unbekannt“. Ernährungseinträge anderer Apps aus Health zählen mit, wenn der Nutzer das einschaltet.
 - **Lebensmittel:** Eine eigene Liste „Meine Lebensmittel“ mit Werten je 100 g, je 100 ml oder je Stück; Anlegen durch Tippen, Etikett-Foto, Übernahme aus einer Schätzung oder aus der Online-Suche in Open Food Facts (Text). Strichcode als zweite Ausbaustufe hinter demselben Schalter.
 - **Gewicht:** Erfassen in „Erfassen“ und im Tagesstart, Spiegelung nach Health, fremde Messungen aus Health, Verlauf mit 7-Tage-Mittel, Ziellinie und Trend; Körperfett zuschaltbar.
@@ -81,10 +81,10 @@ Pfade unter `app/`, sofern nicht anders genannt.
 ## Rechenregeln (verbindlich)
 
 - **Aktiv des Tages** = Tagessumme der Aktivitätsenergie aus Health + Kalorien eigener Trainings dieses Tages, die noch nicht in Health stehen (`healthSynced == false`) oder deren Kalorien Health nicht annehmen durfte. Ohne lesbare Health-Summe: nur die eigenen Trainings, Anzeige „Aktiv“ mit dem Zusatz, dass Health keine Werte liefert. Es gibt **keine Abzugsregel** für Trainings, die zugleich die Uhr aufgezeichnet hat (BU2a; Anmerkung des Nutzers: „Wenn es von der Uhr eingetragen wurde, schreibe ich es eh nicht nochmal in Tagwerk.“). Der Gerätetest dazu bleibt.
-- **Angerechnet** = Anteil × Aktiv, auf 10 kcal gerundet; Anteil ∈ {0, 0,5, 0,75, 1}, Voreinstellung 1 (BU1b).
+- **Angerechnet** = Anteil × Aktiv, auf 10 kcal gerundet; Anteil ∈ {0, 0,5, 0,75, 1}, Voreinstellung 0,5 (BU1b; Festlegung des Nutzers vom 21.11.2026 nach der Faktenprüfung, abweichend von den 100 % im Mockup).
 - **Gegessen** = eigene Einträge aus Tagwerks Datenbank + Tagessumme fremder Einträge aus Health (nur bei eingeschaltetem „Einträge anderer Apps mitzählen“). Eigene Einträge kommen nie aus Health, fremde nie aus der Datenbank; so zählt nichts doppelt.
 - **Budget** = Grundziel des Tages + Angerechnet. **Noch** = Budget − Gegessen.
-- **Makros (BU3c):** Eiweiß und Ballaststoffe bleiben in Gramm. Mit Grundzielen KH₀ und F₀ (Gramm) gilt: Kohlenhydrat-Ziel = KH₀ + Angerechnet × (4 × KH₀) / (4 × KH₀ + 9 × F₀) / 4; Fett-Ziel = F₀ + Angerechnet × (9 × F₀) / (4 × KH₀ + 9 × F₀) / 9. Beispiel: 250 g, 78 g, 520 kcal → 326 g und 102 g.
+- **Makros (BU3c):** Eiweiß und Ballaststoffe bleiben in Gramm. Mit Grundzielen KH₀ und F₀ (Gramm) gilt: Kohlenhydrat-Ziel = KH₀ + Angerechnet × (4 × KH₀) / (4 × KH₀ + 9 × F₀) / 4; Fett-Ziel = F₀ + Angerechnet × (9 × F₀) / (4 × KH₀ + 9 × F₀) / 9. Beispiel bei voller Anrechnung: 250 g, 78 g, 520 kcal → 326 g und 102 g.
 - **Grundziel** gilt für einen Tag ohne angerechnete Aktivität. Das steht im Einstellungs- und Kartentext.
 - **Gewicht des Tages** = früheste Messung des Tages (eigene und fremde). **7-Tage-Mittel** = Mittel der Tageswerte der letzten sieben Tage, ab drei Werten. **Trend** = Differenz der 7-Tage-Mittel im Abstand von 28 Tagen, geteilt durch 4, in kg je Woche; ohne ausreichende Werte „–“.
 - **Gegenrechnung (ZI2b), alle Zahlen als benannte Konstanten in `GoalGuardConstants` – wird geprüft:**
@@ -136,7 +136,7 @@ Pfade unter `app/`, sofern nicht anders genannt.
 
 **Files:**
 - Create: `Packages/TagwerkCore/Sources/TagwerkCore/GoalPlan.swift`, Tests; `Tagwerk/Capture/GoalRecords.swift` (`GoalPlanRecord`), `Tagwerk/Capture/GoalStore.swift`, Tests
-- Modify: `Tagwerk/Persistence/ModelContainerFactory.swift`, `Tagwerk/Persistence/AppSettings.swift` (`goalPlansMigrated`, `activityCreditPercent` = 100), `Tagwerk/App/AppEnvironment.swift`
+- Modify: `Tagwerk/Persistence/ModelContainerFactory.swift`, `Tagwerk/Persistence/AppSettings.swift` (`goalPlansMigrated`, `activityCreditPercent` = 50), `Tagwerk/App/AppEnvironment.swift`
 
 - [ ] **Step 1: Tests.** `timeline_planForDay_picksLatestNotAfter`, `timeline_beforeFirstPlan_usesFirst`, `migration_createsOnePlanFromSettings` (Eiweiß nur bei `proteinGoalEnabled`), `migration_runsOnce`, `store_adopt_sameDayReplaces`.
 - [ ] **Step 2:** `GoalPlan`: `validFrom: PlanDay`, `kcal`, `proteinGrams?`, `carbsGrams?`, `fatGrams?`, `fiberGrams?`, `sugarLimitGrams?`, `waterMilliliters`, `stepsPerDay`, `workoutMinutesPerWeek`, `activeKcalPerDay` (0 = aus), `targetWeightKg?`, `paceKgPerWeek?`, `origin` (`manual`, `assistant`), `note`.
@@ -150,7 +150,7 @@ Pfade unter `app/`, sofern nicht anders genannt.
 
 **Files:** Create `Packages/TagwerkCore/Sources/TagwerkCore/EnergyBudget.swift`, Tests.
 
-- [ ] **Step 1: Tests.** `credited_roundsToTens`, `credited_shareZero_isZero`, `credited_share75` (520 → 390), `budget_exampleDay` (2.300, 520, 1.340 → 2.820, 1.480), `macros_proteinFixed_restScales` (250/78/520 → 326/102), `macros_withoutCarbOrFatGoal_staysNil`, `remaining_over_isNegativeAndMarked`, `activeUnknown_usesOwnWorkoutsOnly`, `eaten_includesForeignIntake`.
+- [ ] **Step 1: Tests.** `credited_roundsToTens`, `credited_shareZero_isZero`, `credited_share75` (520 → 390), `credited_defaultShareIsHalf` (520 → 260), `budget_exampleDay_fullCredit` (2.300, 520, 1.340 → 2.820, 1.480), `budget_exampleDay_defaultCredit` (→ 2.560, 1.220), `macros_proteinFixed_restScales` (250/78/520 → 326/102), `macros_withoutCarbOrFatGoal_staysNil`, `remaining_over_isNegativeAndMarked`, `activeUnknown_usesOwnWorkoutsOnly`, `eaten_includesForeignIntake`.
 - [ ] **Step 2:** `struct ActiveEnergy { healthKcal: Double?; unsyncedOwnKcal: Double }`, `EnergyBudget.make(plan:active:creditPercent:eatenKcal:)` mit `base`, `credited`, `budget`, `remaining`, `scaledCarbs`, `scaledFat`, `isEstimated`.
 - [ ] **Step 3:** `IntakeFormat.budgetRemaining` („noch ~1.480“, „~120 über Budget“) und `planHeaderLine` mit Budget (alte Signatur bleibt bis C4).
 - [ ] **Step 4:** Commit `feat: add the daily energy budget rules`.
@@ -274,7 +274,7 @@ Gruppen (jede mit eigenem Status und eigener Anfrage, nie zusammen mit der beste
 **Files:** Modify `Tagwerk/Settings/CaptureSettingsView.swift`, `AppSettings.swift` (`countsForeignNutrition` = false, `saturatedFatEnabled`, `saltEnabled`, `bodyFatEnabled`); Create `Tagwerk/Settings/GoalPlanView.swift` (aktueller Zielstand bearbeiten, frühere Stände).
 
 - [ ] **Step 1: Tests.** `editingGoal_createsNewPlanFromToday`, `editingSameDayTwice_replaces`, `foreignSwitch_on_requestsGroupOnce`, `foreignSwitch_off_hidesForeignRowsAndSums`.
-- [ ] **Step 2:** „Aktivität anrechnen“ (aus, 50 %, 75 %, 100 %) mit Fußtext zum Grundziel; Ziele aus `GoalStore` statt aus Einzelfeldern; Schalter für gesättigte Fettsäuren, Salz und Körperfett.
+- [ ] **Step 2:** „Aktivität anrechnen“ (aus, 50 %, 75 %, 100 %; Voreinstellung 50 %) mit Fußtext zum Grundziel; Ziele aus `GoalStore` statt aus Einzelfeldern; Schalter für gesättigte Fettsäuren, Salz und Körperfett.
 - [ ] **Step 3:** Schalter „Einträge anderer Apps mitzählen“ mit Fußtext: „Tagwerk liest dafür Ernährungseinträge aus Health, die nicht von Tagwerk stammen. iOS teilt Tagwerk nicht mit, ob du das Lesen erlaubt hast; ohne Erlaubnis sieht es so aus, als gäbe es keine fremden Einträge. Prüfen kannst du es in Health › Teilen › Apps › Tagwerk.“
 - [ ] **Step 4:** Commit `feat: edit goal plans, the activity credit and foreign entries in the settings`.
 
@@ -361,7 +361,7 @@ Gruppen (jede mit eigenem Status und eigener Anfrage, nie zusammen mit der beste
 
 **Entscheidungen:** LM1d, LM2b. **Hängt ab von:** E1. **Vor dem Bau:** Ergebnisse der Recherche (Tabelle unten) eintragen.
 
-**Files:** Create `Packages/TagwerkCore/Sources/TagwerkCore/ProductSearchRules.swift` (Abfragegrenze, Zuordnung der Antwort), Tests; `Tagwerk/Capture/ProductLookup.swift` (Protokoll `ProductLookingUp`, Transport austauschbar), `FoodLookupConsentSheet.swift`; Modify `AppSettings.swift` (`foodLookupConsent`), `BackupDTOs.swift`, `CaptureSettingsView.swift`, `Tagwerk/AI/DemoAITransport.swift` bzw. ein eigener Demo-Transport.
+**Files:** Create `Packages/TagwerkCore/Sources/TagwerkCore/ProductSearchRules.swift` (Abfragegrenze, Zuordnung der Antwort), Tests; `Tagwerk/Capture/ProductLookup.swift` (Protokoll `ProductLookingUp`, Transport austauschbar), `FoodLookupConsentSheet.swift`; Modify `AppSettings.swift` (`foodLookupConsent`, `foodLookupContact: String?`), `BackupDTOs.swift`, `CaptureSettingsView.swift`, `Tagwerk/AI/DemoAITransport.swift` bzw. ein eigener Demo-Transport.
 
 **Fakten über Open Food Facts – alle zu prüfen (Recherche läuft, Hauptsitzung trägt nach):**
 
@@ -370,18 +370,19 @@ Gruppen (jede mit eigenem Status und eigener Anfrage, nie zusammen mit der beste
 | Schnittstelle für die Textsuche (Adresse, Version, Parameter, Sprache/Land der Treffer) | Eine Suchanfrage liefert Name, Marke, Menge, Nährwerte je 100 g und Strichcode | zu prüfen |
 | Schnittstelle für die Abfrage per Strichcode | Eine Anfrage je Strichcode, begrenzbar auf die benötigten Felder | zu prüfen |
 | Abfragegrenzen (getrennt für Suche und Produktabfrage) | Es gibt Grenzen je Minute; die Suche ist enger begrenzt als die Produktabfrage | zu prüfen; Werte kommen als Konstanten in `ProductSearchRules` |
-| Pflichtangaben im Anfragekopf (App-Kennung, Kontakt) | Ein eigener `User-Agent` mit App-Name und Version wird verlangt | zu prüfen; welche Kontaktangabe genannt wird, entscheidet der Nutzer (offene Frage 2) |
+| Pflichtangaben im Anfragekopf (App-Kennung, Kontakt) | Ein eigener `User-Agent` mit App-Name, Version und Kontaktadresse wird verlangt | Format zu prüfen. Entschieden (Nutzer, 21.11.2026): Die Kontaktadresse fragt die App beim Nutzer ab; ohne Adresse keine Anfrage; Tagwerk trägt nie selbst eine Adresse ein. |
 | Konto oder Schlüssel für lesenden Zugriff | Nicht nötig | zu prüfen |
 | Lizenz der Datenbank und der Inhalte (ODbL), Pflicht zur Namensnennung, Folgen für das Speichern einzelner Produkte in „Meine Lebensmittel“ und in der Sicherung | Namensnennung mit Verweis; einzelne übernommene Produkte in einer privaten Liste lösen keine Weitergabepflicht aus | zu prüfen |
 | Lizenz der Produktbilder | Bilder werden nicht geladen und nicht gespeichert | zu prüfen, falls Bilder später gewünscht sind |
 | Regeln für das Zwischenspeichern | Kein dauerhafter Zwischenspeicher für Suchergebnisse | zu prüfen |
 
-- [ ] **Step 1: Tests.** `lookup_withoutConsent_sendsNothing`, `lookup_offline_sendsNothingAndReportsOffline`, `limiter_blocksAboveLimit_andReportsWaitTime`, `limiter_sameQueryWithinSession_servedFromMemory`, `map_missingFieldsStayUnknown`, `map_kJOnly_convertsToKcal`, `map_saltOrSodium`, `map_perServingOnly_marksReference`, `request_hasNoCookiesNoAccountNoDeviceIdentifiers`.
+- [ ] **Step 1: Tests.** `lookup_withoutConsent_sendsNothing`, `lookup_withoutContactAddress_sendsNothing`, `contactAddress_neverPrefilled`, `contactAddress_invalid_notAccepted`, `contactAddress_cleared_switchesLookupOff`, `lookup_offline_sendsNothingAndReportsOffline`, `limiter_blocksAboveLimit_andReportsWaitTime`, `limiter_sameQueryWithinSession_servedFromMemory`, `map_missingFieldsStayUnknown`, `map_kJOnly_convertsToKcal`, `map_saltOrSodium`, `map_perServingOnly_marksReference`, `request_hasNoCookiesNoAccountNoDeviceIdentifiers`.
 - [ ] **Step 2:** Einwilligungsblatt „Online-Suche in Open Food Facts“ nach dem Aufbau von `ShoppingSortConsentSheet`:
-  - Gesendet wird: das Suchwort oder der Strichcode, technisch unvermeidbar die IP-Adresse, dazu die App-Kennung.
+  - Gesendet wird: das Suchwort oder der Strichcode, technisch unvermeidbar die IP-Adresse, dazu die App-Kennung und die Kontaktadresse, die der Nutzer im Blatt einträgt.
+  - Feld „Kontaktadresse für Open Food Facts“: leer vorbelegt, vom Nutzer auszufüllen; Tagwerk schlägt keine Adresse vor und übernimmt keine aus dem Gerät oder aus einem Konto. „Einverstanden“ ist erst mit einer gültigen Adresse aktiv. Der Fußtext sagt, dass der Betreiber die Adresse mit jeder Anfrage sieht und wofür er sie verlangt (Wortlaut nach der Prüfung).
   - Nicht gesendet wird: Mengen, Mahlzeiten, Ziele, Gewicht, Daten aus Health, ein Konto.
   - Hinweis: Wer sucht, verrät dem Betreiber, was er isst oder kaufen will. Die Daten stammen von Freiwilligen und können fehlen oder falsch sein.
-  - Schalter „Online-Suche in Open Food Facts“ unter Einstellungen › Erfassen (Widerruf). Derselbe Schalter gilt für Textsuche und Strichcode.
+  - Schalter „Online-Suche in Open Food Facts“ unter Einstellungen › Erfassen (Widerruf), darunter die Kontaktadresse zum Ändern. Wird sie geleert, schaltet sich die Online-Suche aus. Derselbe Schalter gilt für Textsuche und Strichcode. Die Adresse steht in der Sicherung, in keinem Log.
 - [ ] **Step 3:** `ProductLookup`: eine Anfrage je ausdrücklichem Tippen; Abfragegrenze lokal (`ProductSearchRules.searchLimit`, `productLimit` als benannte Konstanten, Werte **zu prüfen**); bei Überschreitung keine Anfrage, sondern der Text „Bitte kurz warten“ mit Restzeit. Keine Cookies, keine gespeicherten Kennungen, Zeitlimit, kein Wiederholen ohne Tippen.
 - [ ] **Step 4:** Zwischenspeicher: Treffer und Produkte liegen nur im Arbeitsspeicher des offenen Blatts (gleiche Anfrage in derselben Sitzung wird nicht erneut gesendet). Dauerhaft gespeichert wird nur ein Produkt, das der Nutzer als Lebensmittel übernimmt, mit `origin = openFoodFacts`, Strichcode und `sourceNote` („Open Food Facts, abgerufen am …“). Keine Protokollierung von Suchwörtern.
 - [ ] **Step 5:** Namensnennung: Fußzeile unter jeder Trefferliste und Produktvorschau („Daten: Open Food Facts, Lizenz ODbL“ mit Verweis) und ein Eintrag unter Einstellungen › Über. Wortlaut und Verweisziel **zu prüfen**.
@@ -631,7 +632,7 @@ Drei Entscheidungen weichen von der Empfehlung des Entwurfs ab (NU5, LM1, PV4); 
 
 | Kürzel | Frage | Gewählt | Folge im Plan |
 |---|---|---|---|
-| BU1 | Wie viel der verbrannten Energie wird angerechnet? | **BU1b** Anteil einstellbar, Voreinstellung 100 % | A2, A3, C3 |
+| BU1 | Wie viel der verbrannten Energie wird angerechnet? | **BU1b** Anteil einstellbar; Voreinstellung **50 %** (Nutzer, 21.11.2026, nach der Faktenprüfung; das Mockup zeigt noch 100 %) | A2, A3, C3 |
 | BU2 | Woher kommt „Aktiv“, und wie wird Doppelzählung vermieden? | **BU2a** Tagessumme aus Health, eigene Trainings nur als Lückenfüller | B3, C1; keine Abzugsregel, Gerätetest bleibt |
 | BU3 | Wie verändern sich die Makro-Ziele mit dem Budget? | **BU3c** Eiweiß und Ballaststoffe fest, Rest wächst | A3, D3 |
 | BU4 | Tageskopf in „Erfassen“ | **BU4b** Rechenzeile mit Budgetbalken | C2 |
@@ -675,12 +676,14 @@ Drei Entscheidungen weichen von der Empfehlung des Entwurfs ab (NU5, LM1, PV4); 
 | 5 | Fremde Ernährung umfasst auch Wasser. | Trink-Apps sind die wahrscheinlichste fremde Quelle; ein Schalter für alles. |
 | 6 | Ein Schalter für Textsuche und Strichcode. | Derselbe Dienst, dieselbe Art von Angabe (was der Nutzer isst oder kauft). |
 
+Nach der Faktenprüfung (`docs/superpowers/research/2026-11-21-ernaehrung-faktenpruefung.md`) hat der Nutzer am 21.11.2026 zwei weitere Punkte festgelegt, die oben eingearbeitet sind: die Voreinstellung des Anrechnungsanteils (50 %) und die Abfrage der Kontaktadresse für Open Food Facts in der App. Die übrigen Ergebnisse der Faktenprüfung (Rechenwerte der Gegenrechnung, Grenzen und Lizenz von Open Food Facts, HealthKit) sind **noch nicht** in diesen Plan übernommen; die Stellen tragen weiter „wird geprüft“ bzw. „zu prüfen“.
+
 ### Weitere offene Fragen
 
 | Nr. | Frage | Empfehlung |
 |---|---|---|
 | 1 | **Werte der Gegenrechnung** (Tabelle in „Rechenregeln“): nach der Quellenprüfung übernehmen oder ändern? | Geprüfte Werte übernehmen; Abweichungen der Recherche in die Tabelle eintragen. Schwellen nicht einstellbar machen. |
-| 2 | **Kontaktangabe im Anfragekopf an Open Food Facts**, falls der Dienst eine verlangt: eine Projektadresse, die Adresse des Repositorys oder keine? | Eine unpersönliche Projektangabe (z. B. die Adresse des Repositorys), nie die private Mailadresse. Erst entscheiden, wenn die Recherche die Pflicht bestätigt. |
+| 2 | **Kontaktangabe im Anfragekopf an Open Food Facts** – entschieden (Nutzer, 21.11.2026): Die App fragt die Adresse beim Einschalten der Online-Suche ab; ohne Adresse keine Anfrage; nie selbsttätig eine Adresse eintragen. | In E4 eingeplant. Offen bleibt nur das genaue Format des Anfragekopfs (zu prüfen). |
 | 3 | **Fremde Einträge im Datenpaket für ChatGPT:** mitrechnen oder nur eigene? | Mitrechnen, sonst passen Durchschnitt und Gewichtstrend nicht zusammen; Einwilligungstext sagt es (G3). |
 | 4 | **Körperdaten: Vorrang.** Soll ein in Tagwerk getippter Wert einen Health-Wert überstimmen können? | Nein. Health gilt, wo es liefert; die Felder sind Ersatz. Wer abweichen will, ändert den Wert in Health. |
 | 5 | **Issue-Schnitt:** ein Issue je Strang (A–G) oder ein Sammel-Issue? | Je Strang eines; E4–E5 (Online-Suche) und E6 (Strichcode) je ein eigenes. |
@@ -693,7 +696,7 @@ Drei Entscheidungen weichen von der Empfehlung des Entwurfs ab (NU5, LM1, PV4); 
 4. **Fremde Werte sind nicht prüfbar.** Tagwerk kennt weder Qualität noch Vollständigkeit fremder Einträge und zeigt sie ohne „~“. Zwei fremde Apps mit denselben Mahlzeiten können doppelt zählen. Gegenmaßnahme: Quellenname in der Zeile, Schalter im Standard aus.
 5. **Unsichtbares Lesen.** Bei Aktivität, fremder Ernährung und Körperdaten kann Tagwerk ein Verbot nicht erkennen. Die Texte erklären das; ob Nutzer sie lesen, ist offen.
 6. **Open Food Facts.** Nutzungsbedingungen, Abfragegrenzen und Lizenzfolgen sind ungeprüft (Tabelle in E4). Fällt die Prüfung ungünstig aus (z. B. Suche für Apps nicht erlaubt oder eng begrenzt), entfällt E5 und LM1d wird auf die Strichcode-Abfrage reduziert. Datenqualität schwankt; die Vorschau mit Prüfhinweis ist die einzige Absicherung.
-7. **Genauigkeit der Aktivitätsenergie.** Volle Anrechnung kann das Budget systematisch zu hoch ansetzen. Gegenmaßnahme ist der einstellbare Anteil und der Abgleich mit dem Gewichtstrend im Rückblick; belegt ist die Wirksamkeit damit nicht.
+7. **Genauigkeit der Aktivitätsenergie.** Die Anrechnung kann das Budget systematisch zu hoch ansetzen. Gegenmaßnahme ist die Voreinstellung von 50 %, der einstellbare Anteil und der Abgleich mit dem Gewichtstrend im Rückblick; belegt ist die Wirksamkeit damit nicht.
 8. **Gesundheitsbezogene Vorschläge eines Sprachmodells.** Ein unpassendes Ziel kann schaden. Gegenmaßnahmen: Gegenrechnung mit Warnung, zweite Bestätigung, Hinweis auf ärztlichen Rat, keine selbsttätige Übernahme. Die Schwellen werden noch geprüft; auch geprüft bleiben sie Rechenhilfen.
 9. **Datenschutz.** Die Nachrichten des Zielchats bleiben auf dem Gerät gespeichert und können Zahlen enthalten, die der Assistent genannt hat (PV3b). Was OpenAI mit den gesendeten Daten tut, liegt außerhalb der App. Mit NU5b können Durchschnitte Werte anderer Apps enthalten.
 10. **Datenmigration der Ziele.** Der erste Zielstand entsteht aus Platzhaltern; eine falsche `validFrom`-Wahl verfälscht den Wochenrückblick.
