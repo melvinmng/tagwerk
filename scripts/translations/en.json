@@ -171,6 +171,7 @@
   "%@ zu früh": "%@ early",
   "%@ · %@": "%1$@ · %2$@",
   "%@ · %@ bis %@": "%1$@ · %2$@ to %3$@",
+  "%@ · %@ früher fertig": "%@ · finished %@ early",
   "%@ · %@ · %@": {
     "shouldTranslate": false
   },
@@ -1425,6 +1426,7 @@
   "%@ von %@ Schritten": "%1$@ of %2$@ steps",
   "%lld Tage pro Woche": "%lld days per week",
   "%lld von %lld min Tageslicht": "%1$lld of %2$lld min daylight",
+  "%lld von %lld min": "%lld of %lld min",
   "1 Tag pro Woche": "1 day per week",
   "30 Tage %@": "30 days %@",
   "7 Tage %lld/%lld": "7 days %1$lld/%2$lld",

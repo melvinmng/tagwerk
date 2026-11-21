@@ -767,6 +767,16 @@
         }
       }
     },
+    "%@ · %@ früher fertig": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ · finished %@ early"
+          }
+        }
+      }
+    },
     "%@ · %@ · %@": {
       "localizations": {
         "de": {
@@ -2587,6 +2597,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "%1$lld of %2$lld min daylight"
+          }
+        }
+      }
+    },
+    "%lld von %lld min": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld of %lld min"
           }
         }
       }

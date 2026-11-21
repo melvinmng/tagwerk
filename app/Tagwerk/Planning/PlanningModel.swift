@@ -212,6 +212,10 @@ final class PlanningModel {
     private(set) var deadlineSuggestions: [CalendarEvent] = []
     /// Event ID → the deadline it prepares for, for the shown range.
     private var preparationTargets: [String: PreparationTarget] = [:]
+    /// Time blocks of the shown range that were cut when their task was completed, by event ID (FO15b).
+    private(set) var trimmedBlocks: [String: TrimmedBlock] = [:]
+    /// Finds the cut blocks among events; set by the app environment (the effort tracker knows the samples).
+    var trimmedBlockLookup: (@MainActor ([CalendarEvent]) -> [String: TrimmedBlock])?
     /// Called after marks change, so notifications and the widget follow.
     var onDeadlinesChanged: (() -> Void)?
 
@@ -320,6 +324,7 @@ final class PlanningModel {
         let deadlineIDs = deadlineIDs(in: events, marked: marked)
         deadlineEventIDs = deadlineIDs
         preparationTargets = deadlineMarks.preparationTargets(for: events)
+        trimmedBlocks = trimmedBlockLookup?(events) ?? [:]
         let resolved = resolveLinks(events: events, tasks: open, manual: blocks.links.manualLinks())
         resolvedLinks = Dictionary(resolved.map { ($0.eventID, $0) }, uniquingKeysWith: { first, _ in first })
         recurringTaskIDs = recurringIDs
@@ -422,7 +427,7 @@ final class PlanningModel {
     /// event IDs and preparation targets. Changes nothing that is shown.
     private func dayPlansAndState(in range: ClosedRange<PlanDay>, withDeadlines: Bool = true) async
         -> (plans: [DayPlan], mergeSuggestions: [MergeSuggestion], deadlineEventIDs: Set<String>,
-            preparationTargets: [String: PreparationTarget]) {
+            preparationTargets: [String: PreparationTarget], trimmedBlocks: [String: TrimmedBlock]) {
         let open = taskList.items.filter { !$0.isCompleted }
         let series = await recurringSeries(open: open)
         let recurringIDs = Set(series.map(\.id))
@@ -452,14 +457,14 @@ final class PlanningModel {
                                   deadlineIDs: deadlineIDs))
             day = day.adding(days: 1, calendar: calendar)
         }
-        return (result, merges, deadlineIDs, deadlineMarks.preparationTargets(for: events))
+        return (result, merges, deadlineIDs, deadlineMarks.preparationTargets(for: events), trimmedBlockLookup?(events) ?? [:])
     }
 
     /// The state of the shown day page besides `days`.
     var currentExtras: DayPageExtras {
         DayPageExtras(upcomingDeadlines: upcomingDeadlines, deadlineSuggestions: deadlineSuggestions, preparation: preparation,
                       mergeSuggestions: mergeSuggestions, deadlineEventIDs: deadlineEventIDs,
-                      preparationTargets: preparationTargets, suggestionBatches: suggestionBatches)
+                      preparationTargets: preparationTargets, suggestionBatches: suggestionBatches, trimmedBlocks: trimmedBlocks)
     }
 
     /// The plan of one day with everything its page shows, computed like `reload()` does for the shown day but
@@ -478,7 +483,7 @@ final class PlanningModel {
         let extras = DayPageExtras(upcomingDeadlines: upcoming.deadlines, deadlineSuggestions: upcoming.suggestions,
                                    preparation: upcoming.preparation, mergeSuggestions: state.mergeSuggestions,
                                    deadlineEventIDs: state.deadlineEventIDs, preparationTargets: state.preparationTargets,
-                                   suggestionBatches: batches)
+                                   suggestionBatches: batches, trimmedBlocks: state.trimmedBlocks)
         return (plan, extras)
     }
 
@@ -613,6 +618,7 @@ final class PlanningModel {
         deadlineEventIDs = extras.deadlineEventIDs
         preparationTargets = extras.preparationTargets
         suggestionBatches = extras.suggestionBatches
+        trimmedBlocks = extras.trimmedBlocks
         return true
     }
 
@@ -760,6 +766,19 @@ final class PlanningModel {
 
     func linkedTask(eventID: String) -> TaskItem? {
         resolvedLinks[eventID].flatMap { link in taskList.items.first { $0.id == link.taskID } }
+    }
+
+    /// The time block of `plan` that carries the focus button now (FO4b): the running one with a linked task, else the
+    /// next that starts after now; `nil` on another day than today.
+    func focusBlockID(in plan: DayPlan) -> String? {
+        let candidates = plan.blocks.filter { plan.links[$0.id] != nil && !$0.isAllDay }
+        let dayStart = plan.day.startDate(in: calendar)
+        let ranges = candidates.map { block -> Range<Int> in
+            let start = max(0, Int(block.start.timeIntervalSince(dayStart) / 60))
+            return start..<max(start + 1, Int(block.end.timeIntervalSince(dayStart) / 60))
+        }
+        let nowMinutes = NowMarker.minutes(now: now(), day: plan.day, calendar: calendar)
+        return NowMarker.focusBlockIndex(blockRanges: ranges, nowMinutes: nowMinutes).map { candidates[$0].id }
     }
 
     /// "Nur dieser Tag" (`forAll == false`) or "Alle" from this day on.

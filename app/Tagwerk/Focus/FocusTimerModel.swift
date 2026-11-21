@@ -80,6 +80,9 @@ final class FocusTimerModel {
         session.map { FocusTimerRules.snapshot(of: $0.state, at: date) }
     }
 
+    /// Whether the running session belongs to this time block (the event ID).
+    func isRunning(forBlockID id: String) -> Bool { session?.blockEventID == id }
+
     /// Whether the running session belongs to this task (`TaskID.key`).
     func isRunning(forTaskKey key: String) -> Bool { session?.taskKey == key }
 

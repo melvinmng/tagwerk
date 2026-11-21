@@ -51,6 +51,8 @@ struct TimelineCanvas: View {
     /// Narrowest a column of overlapping entries may get before the group becomes one block (about six characters of
     /// the title font; grows with the text size, BF1c).
     @ScaledMetric(relativeTo: .caption) private var minimumColumnWidth: CGFloat = 44
+    /// Below this column width the focus button shows only its symbol and the text of a cut block its short form.
+    private static let narrowColumnWidth: CGFloat = 150
 
     @Environment(AppEnvironment.self) private var environment
     /// Set in the preview of a neighbour page: the marks of its events.
@@ -135,7 +137,7 @@ struct TimelineCanvas: View {
                     let range = liveRange(entry)
                     let count = columnCount(index: index, ranges: layout, columns: columns)
                     let columnWidth = width / CGFloat(count)
-                    entryView(entry, range: range)
+                    entryView(entry, range: range, columnWidth: columnWidth - 2)
                         .frame(width: columnWidth - 2, height: max(18, height(range.count)))
                         .offset(x: labelWidth + 6 + CGFloat(columns[index]) * columnWidth, y: y(range.lowerBound, shown))
                         .zIndex(session?.id == entry.id ? 2 : (selectedID == entry.id ? 1 : 0))
@@ -296,8 +298,8 @@ struct TimelineCanvas: View {
     // MARK: Entries
 
     /// An entry; the content is rebuilt every full minute, so a running entry changes its state on time (PL2b).
-    private func entryView(_ entry: DayEntry, range: Range<Int>) -> some View {
-        TimelineView(.everyMinute) { _ in entryContent(entry, range: range) }
+    private func entryView(_ entry: DayEntry, range: Range<Int>, columnWidth: CGFloat) -> some View {
+        TimelineView(.everyMinute) { _ in entryContent(entry, range: range, columnWidth: columnWidth) }
     }
 
     /// Minutes left when the entry is running now (a break and calendar events, also time blocks; never all-day).
@@ -309,8 +311,15 @@ struct TimelineCanvas: View {
     }
 
     @ViewBuilder
-    private func entryContent(_ entry: DayEntry, range: Range<Int>) -> some View {
+    private func entryContent(_ entry: DayEntry, range: Range<Int>, columnWidth: CGFloat) -> some View {
         let style = EntryStyle(entry: entry, model: model, extras: pageExtras)
+        // A block that ended early says so in its title and its time line (FO15b).
+        let trimmed = entry.calendarEvent.flatMap { (pageExtras ?? model.currentExtras).trimmedBlocks[$0.id] }
+        // The button of the focus (FO4b): on the running block or the next one, not while choosing "Frei" or in a preview.
+        let focusEvent = entry.calendarEvent.flatMap { event in
+            selectingIDs == nil && !isPreview && model.focusBlockID(in: plan) == event.id ? event : nil
+        }
+        let narrow = columnWidth < Self.narrowColumnWidth
         let isSelected = selectedID == entry.id
         let remaining = runningRemaining(entry)
         let isPicked = { if case .event(let event, _) = entry { selectingIDs?.contains(event.id) == true } else { false } }()
@@ -318,13 +327,16 @@ struct TimelineCanvas: View {
             VStack(alignment: .leading, spacing: 1) {
                 HStack(spacing: 4) {
                     if isPicked { Image(systemName: "checkmark.circle.fill").foregroundStyle(Color.accentColor) }
-                    Text(style.title).font(.caption.weight(.semibold)).lineLimit(2)
+                    Text((trimmed != nil ? "✓ " : "") + style.title).font(.caption.weight(.semibold)).lineLimit(2)
                 }
-                Text((remaining.map { NowText.runningDetail(remainingMinutes: $0) } ?? timeText(range)) + style.suffix)
+                Text((trimmed.map { FocusTimerText.trimDetail($0, short: narrow) }
+                    ?? remaining.map { NowText.runningDetail(remainingMinutes: $0) } ?? timeText(range)) + style.suffix)
                     .font(.caption2).foregroundStyle(.secondary).lineLimit(1)
-                    .accessibilityLabel((remaining.map { NowText.runningAccessibility(remainingMinutes: $0) } ?? timeText(range))
-                        + style.suffix)
+                    .accessibilityLabel((trimmed.map { FocusTimerText.trimDetail($0) }
+                        ?? remaining.map { NowText.runningAccessibility(remainingMinutes: $0) } ?? timeText(range)) + style.suffix)
             }
+            // Room for the focus button at the right edge.
+            .padding(.trailing, focusEvent == nil ? 0 : (narrow ? 34 : 62))
             .padding(6)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             .background(style.color.opacity(style.isFree ? 0.08 : 0.24), in: RoundedRectangle(cornerRadius: 7))
@@ -355,6 +367,12 @@ struct TimelineCanvas: View {
                     grip(entry, mode: .end, color: style.color, alignment: .leading, label: String(localized: "Ende ändern"))
                         .offset(y: 8)
                 }
+            }
+        }
+        // A sibling of the card, not a part of it: the card is one element for VoiceOver and takes the tap and the hold.
+        .overlay(alignment: .topTrailing) {
+            if let focusEvent {
+                FocusPlanButton(event: focusEvent, model: model, iconOnly: narrow)
             }
         }
     }

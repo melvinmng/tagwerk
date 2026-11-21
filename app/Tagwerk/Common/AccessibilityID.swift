@@ -14,6 +14,8 @@ enum AccessibilityID {
         static let stop = "focus.stop"
         static let pause = "focus.pause"
         static let done = "focus.done"
+        /// "▶ Fokus" on a time block in the plan.
+        static let planButton = "focus.planButton"
     }
 
     enum Tasks {
