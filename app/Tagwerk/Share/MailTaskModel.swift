@@ -21,7 +21,11 @@ final class MailTaskModel {
         var due: DueDate?
     }
 
+    /// The characters of the mail the card shows before "mehr".
+    static let previewLength = 160
+
     private(set) var title: String
+    /// The summary or what the user wrote; sender and link are not part of it, `prefill` adds them.
     private(set) var notes: String
     private(set) var due: DueDate?
     private(set) var phase: Phase = .idle
@@ -45,7 +49,6 @@ final class MailTaskModel {
     @ObservationIgnored private let summarizer: MailSummarizer
     @ObservationIgnored private let hasConsent: @MainActor () -> Bool
     @ObservationIgnored private let grantConsent: @MainActor () -> Void
-    @ObservationIgnored private var summary = ""
     @ObservationIgnored private var edited: Set<Field> = []
     @ObservationIgnored private var request: Task<Void, Never>?
 
@@ -64,7 +67,6 @@ final class MailTaskModel {
         self.hasConsent = hasConsent
         self.grantConsent = grantConsent
         self.notes = ""
-        self.notes = composeNotes()
     }
 
     /// Plain text (selected in Mail, or pasted): the first line is the title.
@@ -82,10 +84,33 @@ final class MailTaskModel {
         self.hasConsent = hasConsent
         self.grantConsent = grantConsent
         self.notes = ""
-        self.notes = composeNotes()
     }
 
-    var prefill: Prefill { Prefill(title: title.trimmingCharacters(in: .whitespacesAndNewlines), notes: notes, due: due) }
+    /// The fields of the task that is created: the notes, then the sender line and the link to the mail.
+    var prefill: Prefill {
+        Prefill(title: title.trimmingCharacters(in: .whitespacesAndNewlines), notes: composeNotes(), due: due)
+    }
+
+    /// "Von: Erika Muster"; only the name, never the address, because the notes can reach other places (an issue, the assistant).
+    var senderNote: String? {
+        guard let senderName, !senderName.isEmpty else { return nil }
+        return String(localized: "Von: \(senderName)")
+    }
+    var hasMailLink: Bool { mailLink != nil }
+
+    /// The first lines of the mail for the card: at most `previewLength` characters, cut at a word boundary.
+    var bodyPreview: String {
+        guard bodyText.count > Self.previewLength else { return bodyText }
+        let limit = bodyText.index(bodyText.startIndex, offsetBy: Self.previewLength)
+        // The cut is clean when the next character is white space; otherwise step back to the last space.
+        if bodyText[limit].isWhitespace { return String(bodyText[..<limit]).trimmingCharacters(in: .whitespacesAndNewlines) }
+        if let space = bodyText[..<limit].lastIndex(where: \.isWhitespace) {
+            let cut = String(bodyText[..<space]).trimmingCharacters(in: .whitespacesAndNewlines)
+            if !cut.isEmpty { return cut }
+        }
+        return String(bodyText[..<limit])
+    }
+    var bodyIsTruncated: Bool { bodyPreview.count < bodyText.count }
     var canContinue: Bool { !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && phase != .loading }
 
     // MARK: Editing
@@ -163,9 +188,8 @@ final class MailTaskModel {
             suggestedFields.insert(.title)
         }
         if !edited.contains(.notes) {
-            summary = result.summary
-            notes = composeNotes()
-            if !summary.isEmpty { suggestedFields.insert(.notes) }
+            notes = result.summary
+            if !notes.isEmpty { suggestedFields.insert(.notes) }
         }
         if !edited.contains(.due), let due = result.due {
             self.due = due
@@ -175,14 +199,13 @@ final class MailTaskModel {
 
     // MARK: Helpers
 
-    /// The summary (when fetched), the sender and the link back to the mail.
+    /// The notes of the task: what the user sees in the field, the sender and the link back to the mail.
     private func composeNotes() -> String {
         var lines: [String] = []
-        // The notes can reach other places (an issue, the assistant); only the name goes in, never the address.
-        if let senderName, !senderName.isEmpty { lines.append(String(localized: "Von: \(senderName)")) }
+        if let senderNote { lines.append(senderNote) }
         if let mailLink { lines.append(mailLink.absoluteString) }
         let details = lines.joined(separator: "\n")
-        return [summary, details].filter { !$0.isEmpty }.joined(separator: "\n\n")
+        return [notes, details].filter { !$0.isEmpty }.joined(separator: "\n\n")
     }
 
     private static func firstLine(of text: String) -> String {
