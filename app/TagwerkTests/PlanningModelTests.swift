@@ -2291,6 +2291,60 @@ struct PlanningModelTests {
         #expect(model.travelOverrideMode(for: event) == .automatic)
     }
 
+    @Test func setTravelChoice_reloadsAndChangesTheSegment() async throws {
+        calendarStore.storedEvents = [meeting()]
+        let (model, estimator) = await travelModel()
+        await model.refreshTravelTimes()
+        let event = try #require(model.days.first?.events.first)
+        #expect(model.days.first?.travel.first?.transport == nil)
+        await model.setTravelChoice(TravelChoice(transport: .transit), for: event, series: false)
+        #expect(model.travelChoice(for: event) == TravelChoice(transport: .transit))
+        // The trip with the other transport is asked for once, then the block carries it.
+        await model.refreshTravelTimes()
+        #expect(estimator.tripCalls.last?.hasSuffix(">transit") == true)
+        #expect(model.days.first?.travel.first?.transport == .transit)
+        // A fixed time keeps the transport that was chosen before.
+        await model.setTravelOverride(.fixed(minutes: 40), for: event, series: false)
+        #expect(model.travelChoice(for: event) == TravelChoice(mode: .fixed(minutes: 40), transport: .transit))
+    }
+
+    @Test func setTravelChoice_default_removesTheEntry() async throws {
+        calendarStore.storedEvents = [meeting()]
+        let (model, _) = await travelModel()
+        let event = try #require(model.days.first?.events.first)
+        await model.setTravelChoice(TravelChoice(start: .home), for: event, series: false)
+        #expect(TravelOverrideStore(context: container.mainContext).all().count == 1)
+        await model.setTravelChoice(TravelChoice(), for: event, series: false)
+        #expect(TravelOverrideStore(context: container.mainContext).all().isEmpty)
+    }
+
+    @Test func returnTrip_showsOnlyWithTheSwitch() async throws {
+        calendarStore.storedEvents = [meeting()]
+        let (model, _) = await travelModel()
+        await model.refreshTravelTimes()
+        #expect(model.days.first?.travel.contains { $0.direction == .returnHome } == false)
+        settings.travelShowsReturn = true
+        await model.reload()
+        await model.refreshTravelTimes()
+        let back = try #require(model.days.first?.travel.first { $0.direction == .returnHome })
+        #expect(back.range.lowerBound == 900)
+        // The way home counts as busy time like the way there (the part inside the buffer after the event counts once).
+        let withReturn = try #require(model.days.first?.capacity)
+        settings.travelShowsReturn = false
+        await model.reload()
+        let without = try #require(model.days.first?.capacity)
+        #expect(without.availableMinutes - withReturn.availableMinutes == back.range.upperBound - (900 + settings.bufferMinutes))
+    }
+
+    @Test func previousPlace_isKnownOnlyAfterAnEventWithAPlace() async throws {
+        calendarStore.storedEvents = [meeting("early", hour: 9), meeting("late", hour: 14), meeting("online", hour: 11, location: "Zoom")]
+        let (model, _) = await travelModel()
+        let early = try #require(model.days.first?.events.first { $0.id == "early" })
+        let late = try #require(model.days.first?.events.first { $0.id == "late" })
+        #expect(!model.hasPreviousPlace(before: early))
+        #expect(model.hasPreviousPlace(before: late))
+    }
+
     @Test func manualTravelTime_worksOfflineAndWithoutHomeAddress() async throws {
         calendarStore.storedEvents = [meeting()]
         let estimator = FakeTravelEstimator()

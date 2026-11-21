@@ -16,6 +16,10 @@ final class EventTravelOverride {
     var modeName: String
     /// Only for the mode "fixed".
     var minutes: Int
+    /// `TravelTransport` raw value chosen for this event; `nil` uses the setting.
+    var transportRaw: String? = nil
+    /// `TravelStart` raw value; `nil` applies the rule.
+    var startRaw: String? = nil
 
     init(_ value: TravelOverride) {
         key = value.key
@@ -23,10 +27,15 @@ final class EventTravelOverride {
         seriesFrom = value.seriesFrom
         modeName = value.mode.storedName
         minutes = value.mode.storedMinutes
+        transportRaw = value.transport?.rawValue
+        startRaw = value.start?.rawValue
     }
 
     var asOverride: TravelOverride {
-        TravelOverride(eventKey: eventKey, seriesFrom: seriesFrom, mode: TravelOverrideMode(storedName: modeName, minutes: minutes))
+        // An unknown raw value (a later version) reads as "not chosen", so a newer file never breaks the plan.
+        TravelOverride(eventKey: eventKey, seriesFrom: seriesFrom, mode: TravelOverrideMode(storedName: modeName, minutes: minutes),
+                       transport: transportRaw.flatMap(TravelTransport.init(rawValue:)),
+                       start: startRaw.flatMap(TravelStart.init(rawValue:)))
     }
 }
 
@@ -46,15 +55,22 @@ final class TravelOverrideStore {
     /// Sets the mode for one occurrence, or (`series`) for the series from this occurrence on; see
     /// `TravelOverrideRules.updated` for what stays and what goes.
     func set(_ mode: TravelOverrideMode, eventID: String, seriesID: String, start: Date, series: Bool) {
+        set(TravelChoice(mode: mode), eventID: eventID, seriesID: seriesID, start: start, series: series)
+    }
+
+    /// Sets the decision (mode, transport, start) for one occurrence or the series from it on.
+    func set(_ choice: TravelChoice, eventID: String, seriesID: String, start: Date, series: Bool) {
         let stored = records()
         let updated = TravelOverrideRules.updated(stored.map(\.asOverride), eventID: eventID, seriesID: seriesID, start: start,
-                                                  mode: mode, series: series)
+                                                  choice: choice, series: series)
         let wanted = Dictionary(updated.map { ($0.key, $0) }, uniquingKeysWith: { _, last in last })
         var present = Set<String>()
         for record in stored {
             if let value = wanted[record.key], present.insert(record.key).inserted {
                 record.modeName = value.mode.storedName
                 record.minutes = value.mode.storedMinutes
+                record.transportRaw = value.transport?.rawValue
+                record.startRaw = value.start?.rawValue
             } else {
                 context.delete(record)
             }

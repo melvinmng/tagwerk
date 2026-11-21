@@ -23,6 +23,11 @@ enum AccessibilityID {
         static let editorTitle = "tasks.editorTitle"
     }
 
+    enum Travel {
+        /// The capsule "10 min zu früh" of a trip that starts before the previous event ends.
+        static let warningCapsule = "travel.warningCapsule"
+    }
+
     enum Common {
         /// The symbol button above the keyboard that closes it.
         static let hideKeyboard = "common.hideKeyboard"

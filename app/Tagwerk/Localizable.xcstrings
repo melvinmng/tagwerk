@@ -436,6 +436,16 @@
         }
       }
     },
+    "%@ nach Hause": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ home"
+          }
+        }
+      }
+    },
     "%@ noch frei": {
       "localizations": {
         "en": {
@@ -715,6 +725,16 @@
         }
       }
     },
+    "%@ zu früh": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ early"
+          }
+        }
+      }
+    },
     "%@ · %@": {
       "localizations": {
         "de": {
@@ -826,16 +846,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "%@ · estimated"
-          }
-        }
-      }
-    },
-    "%@ · knapp": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ · tight"
           }
         }
       }
@@ -996,16 +1006,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "%@, no steps"
-          }
-        }
-      }
-    },
-    "%@, knapp": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@, tight"
           }
         }
       }
@@ -1591,6 +1591,46 @@
           "stringUnit": {
             "state": "translated",
             "value": "Log %lld milliliters of water"
+          }
+        }
+      }
+    },
+    "%lld Minuten vor dem Ende des vorherigen Termins": {
+      "localizations": {
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Minute vor dem Ende des vorherigen Termins"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Minuten vor dem Ende des vorherigen Termins"
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld minute before the previous event ends"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld minutes before the previous event ends"
+                }
+              }
+            }
           }
         }
       }
@@ -3458,12 +3498,32 @@
         }
       }
     },
-    "Adresse wird geprüft …": {
+    "Adresse wird gesucht …": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Checking address …"
+            "value": "Searching for the address …"
+          }
+        }
+      }
+    },
+    "Adresse löschen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete address"
+          }
+        }
+      }
+    },
+    "Adresse trotzdem prüfen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check the address anyway"
           }
         }
       }
@@ -5147,22 +5207,42 @@
         }
       }
     },
-    "Automatisch berechnet Apple Karten die Fahrzeit. „Keine“ und eine feste Zeit gelten nur in Tagwerk, auch ohne Netz, und haben Vorrang.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Apple Maps calculates the travel time automatically. “None” and a fixed time apply only in Tagwerk, also without a network, and take precedence."
-          }
-        }
-      }
-    },
     "Automatisch sichern": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Back up automatically"
+          }
+        }
+      }
+    },
+    "Automatisch berechnet Apple Karten die Fahrzeit. „Keine“ und eine feste Dauer gelten nur in Tagwerk, auch ohne Netz, und haben Vorrang.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apple Maps calculates the travel time automatically. “None” and a fixed duration apply only in Tagwerk, also without a network, and take precedence."
+          }
+        }
+      }
+    },
+    "Automatisch (Vorheriger Termin)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Automatic (previous event)"
+          }
+        }
+      }
+    },
+    "Automatisch (Zuhause)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Automatic (home)"
           }
         }
       }
@@ -5193,6 +5273,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Edit"
+          }
+        }
+      }
+    },
+    "Berechnet von Apple Karten. Tagwerk nutzt deinen Standort nicht.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Calculated by Apple Maps. Tagwerk does not use your location."
           }
         }
       }
@@ -5313,6 +5403,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "You can also switch the language right at the field when dictating and in the shopping list. ChatGPT translates recipes into the chosen language; items on the shopping list are created in the language of the shopping list."
+          }
+        }
+      }
+    },
+    "Beim Tippen der Adresse gehen deine Eingaben an Apple Karten.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "While you type the address, your input goes to Apple Maps."
           }
         }
       }
@@ -6442,6 +6542,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "The assistant finds notes through its search (title and a short excerpt), reads the whole note when needed and can change, create and delete notes; you confirm every change individually. Note texts it has read are not saved in the history, the assistant's replies are. Journal, Bible Study and Dream Log always stay on the iPhone."
+          }
+        }
+      }
+    },
+    "Der Rückweg gilt nach dem letzten Termin des Tages und vor Pausen von mehr als drei Stunden. Er zählt wie die Hinfahrt als belegte Zeit.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The way home applies after the last event of the day and before breaks of more than three hours. It counts as busy time like the way there."
           }
         }
       }
@@ -8964,42 +9074,22 @@
         }
       }
     },
-    "Fahrzeit %@ · ab Zuhause": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Travel time %@ · from home"
-          }
-        }
-      }
-    },
-    "Fahrzeit %@ · ab vorherigem Termin": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Travel time %@ · from the previous event"
-          }
-        }
-      }
-    },
-    "Fahrzeit %@ · manuell": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Travel time %@ · manual"
-          }
-        }
-      }
-    },
     "Fahrzeit %lld Minuten %@, %@": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Travel time %lld minutes %@, %@"
+          }
+        }
+      }
+    },
+    "Fahrzeit ändern …": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Change travel time …"
           }
         }
       }
@@ -9045,12 +9135,12 @@
         }
       }
     },
-    "Feste Zeit": {
+    "Feste Dauer": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Fixed time"
+            "value": "Fixed duration"
           }
         }
       }
@@ -9857,16 +9947,6 @@
         }
       }
     },
-    "Gefunden: %@": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Found: %@"
-          }
-        }
-      }
-    },
     "Gehen": {
       "localizations": {
         "en": {
@@ -9953,6 +10033,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Total"
+          }
+        }
+      }
+    },
+    "Gesichert: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved: %@"
           }
         }
       }
@@ -10649,16 +10739,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Open Health"
-          }
-        }
-      }
-    },
-    "Heimadresse": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Home address"
           }
         }
       }
@@ -11850,6 +11930,16 @@
         }
       }
     },
+    "Keine Fahrzeit für diesen Termin": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No travel time for this event"
+          }
+        }
+      }
+    },
     "Keine Mahlzeiten erfasst": {
       "localizations": {
         "en": {
@@ -12637,6 +12727,46 @@
         }
       }
     },
+    "Losfahren · %@ %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leave now · %@ %@"
+          }
+        }
+      }
+    },
+    "Losfahren · %@ · manuell": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leave now · %@ · manual"
+          }
+        }
+      }
+    },
+    "Los %@ · %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leave %@ · %@"
+          }
+        }
+      }
+    },
+    "Los %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leave %@"
+          }
+        }
+      }
+    },
     "Längere Notiz, in Erinnerungen bearbeiten": {
       "localizations": {
         "en": {
@@ -12923,6 +13053,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "More than 30 categories are not possible."
+          }
+        }
+      }
+    },
+    "Mehr dazu": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "More about this"
           }
         }
       }
@@ -13559,6 +13699,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "After count"
+          }
+        }
+      }
+    },
+    "Nach Hause · %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Home · %@"
           }
         }
       }
@@ -15643,6 +15793,16 @@
     "Route": {
       "shouldTranslate": false
     },
+    "Route in Karten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Route in Maps"
+          }
+        }
+      }
+    },
     "Routinen": {
       "localizations": {
         "en": {
@@ -15709,6 +15869,36 @@
           "stringUnit": {
             "state": "translated",
             "value": "Review · %@"
+          }
+        }
+      }
+    },
+    "Rückweg %lld Minuten, manuell festgelegt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Way back %lld minutes, set manually"
+          }
+        }
+      }
+    },
+    "Rückweg anzeigen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show the way home"
+          }
+        }
+      }
+    },
+    "Rückweg %lld Minuten %@, nach Hause": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Way back %lld minutes %@, home"
           }
         }
       }
@@ -16656,6 +16846,16 @@
       }
     },
     "Starten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start"
+          }
+        }
+      }
+    },
+    "Start": {
       "localizations": {
         "en": {
           "stringUnit": {
@@ -17968,6 +18168,16 @@
         }
       }
     },
+    "Verkehrsmittel und Start lassen sich je Termin ändern.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transport and start can be changed per event."
+          }
+        }
+      }
+    },
     "Verknüpfung lösen": {
       "localizations": {
         "en": {
@@ -18356,6 +18566,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Previous day"
+          }
+        }
+      }
+    },
+    "Vorheriger Termin": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Previous event"
           }
         }
       }
@@ -18914,6 +19134,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "How OpenAI handles the data sent depends on the settings of your ChatGPT account."
+          }
+        }
+      }
+    },
+    "Wie eingestellt (%@)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "As set (%@)"
           }
         }
       }
@@ -19585,6 +19815,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Add to deadline …"
+          }
+        }
+      }
+    },
+    "Zuhause": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Home"
           }
         }
       }
@@ -21487,6 +21727,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Opens Brain Dump in Tagwerk and starts dictation."
+          }
+        }
+      }
+    },
+    "Öffnet Aktionen zur Fahrzeit": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opens actions for the travel time"
           }
         }
       }
