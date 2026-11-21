@@ -3000,6 +3000,16 @@
         }
       }
     },
+    "Aktuelle Phase zeigen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show current phase"
+          }
+        }
+      }
+    },
     "Alle": {
       "localizations": {
         "en": {

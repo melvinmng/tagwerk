@@ -11,7 +11,10 @@ extension FocusTimerModel {
         case .complete: await finish(.complete)
         case .keepGoing: await finish(.keepGoing)
         case .postpone: await finish(.postpone)
+        case .showCurrent: break
         }
+        // Every button leaves the Live Activity in line with the phase that runs now, also when nothing else changed.
+        await refresh()
     }
 
     /// The focus toggle of the control: "on" starts a free session, "off" ends the running one. Runs in the background and

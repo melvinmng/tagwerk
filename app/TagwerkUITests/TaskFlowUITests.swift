@@ -44,14 +44,16 @@ final class TaskFlowUITests: UITestCase {
         onScreen(label: "Fokus starten · 25 min").tap()
         onScreen(label: "Starten").tap()
 
-        // The task list behind the sheet has its own "Erledigt" (swipe action, completion capsule), so ask for the visible one.
-        let done = onScreen(label: "Erledigt")
-        XCTAssertTrue(onScreen(label: "Pausieren").exists)
-        XCTAssertTrue(onScreen(label: "Beenden").exists)
+        // The task list behind the sheet has its own "Erledigt" buttons, so the sheet's buttons are found by identifier.
+        let done = app.buttons[AccessibilityID.Focus.done]
+        XCTAssertTrue(done.waitForExistence(timeout: Self.timeout), "Erledigt is offered while the timer runs")
+        XCTAssertEqual(done.label, "Erledigt")
+        XCTAssertTrue(app.buttons[AccessibilityID.Focus.pause].exists)
+        XCTAssertTrue(app.buttons[AccessibilityID.Focus.stop].exists)
         XCTAssertTrue(onScreen(.staticText, label: "UI-Test Fokus").exists)
 
         // "Erledigt" completes the task during the phase and closes the sheet.
         done.tap()
-        waitUntilGone(app.buttons["Pausieren"])
+        waitUntilGone(app.buttons[AccessibilityID.Focus.pause])
     }
 }

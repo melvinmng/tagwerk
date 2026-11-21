@@ -85,12 +85,15 @@ struct FocusTimerView: View {
 
     /// Beenden, Pausieren/Fortsetzen and Erledigt; "Erledigt" only for a session with a task (nothing to tick off otherwise).
     private func buttons(session: FocusTimerModel.Session, snapshot: FocusTimerSnapshot) -> some View {
-        let stop = FocusRoundButton(title: "Beenden", systemImage: "stop.fill") { askToStop(snapshot) }
+        let stop = FocusRoundButton(title: "Beenden", systemImage: "stop.fill", identifier: AccessibilityID.Focus.stop) { askToStop(snapshot) }
         let pause = FocusRoundButton(title: snapshot.isPaused ? "Fortsetzen" : "Pausieren",
-                                     systemImage: snapshot.isPaused ? "play.fill" : "pause.fill", isProminent: true) {
+                                     systemImage: snapshot.isPaused ? "play.fill" : "pause.fill", isProminent: true,
+                                     identifier: AccessibilityID.Focus.pause) {
             Task { await snapshot.isPaused ? focus.resume() : focus.pause() }
         }
-        let done = FocusRoundButton(title: "Erledigt", systemImage: "checkmark") { Task { await focus.finish(.complete) } }
+        let done = FocusRoundButton(title: "Erledigt", systemImage: "checkmark", identifier: AccessibilityID.Focus.done) {
+            Task { await focus.finish(.complete) }
+        }
         let hasTask = session.taskKey != nil
         return ViewThatFits(in: .horizontal) {
             HStack(alignment: .top, spacing: 28) {
@@ -248,6 +251,7 @@ struct FocusRoundButton: View {
     let title: LocalizedStringKey
     let systemImage: String
     var isProminent = false
+    let identifier: String
     let action: () -> Void
 
     var body: some View {
@@ -264,5 +268,6 @@ struct FocusRoundButton: View {
             .frame(minWidth: 72)
         }
         .buttonStyle(.plain)
+        .accessibilityIdentifier(identifier)
     }
 }

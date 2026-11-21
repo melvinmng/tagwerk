@@ -244,7 +244,7 @@ final class FocusTimerModel {
 
     private func currentContent() -> FocusActivityContent? {
         guard let session, let snap = snapshot(at: now()) else { return nil }
-        return FocusActivityContent(title: session.title, state: session.state, snapshot: snap)
+        return FocusActivityContent(title: session.title, state: session.state, snapshot: snap, hasTask: session.taskKey != nil)
     }
 
     /// Tells the focus control whether a session runs and when it ends, and reloads the control when that changed. A

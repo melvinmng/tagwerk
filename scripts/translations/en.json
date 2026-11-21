@@ -1676,7 +1676,6 @@
   "Pause vorbei": "Break over",
   "Pause überspringen": "Skip break",
   "Pause: %lld min": "Break: %lld min",
-  "Phase vorbei": "Phase over",
   "Pomodoro": "Pomodoro",
   "Runde %lld von %lld": "Round %1$lld of %2$lld",
   "Runden: %lld": "Rounds: %lld",
@@ -2037,5 +2036,9 @@
   "Vorlage": "Template",
   "Bis Blockende · %lld min": "Until end of block · %lld min",
   "Andere …": "Other …",
-  "Zeitblock %@–%@": "Time block %1$@–%2$@"
+  "Zeitblock %@–%@": "Time block %1$@–%2$@",
+  "%lld min Fokus geschafft ✓": "%lld min of focus done ✓",
+  "Fokus geschafft ✓": "Focus done ✓",
+  "Pause starten · %lld min": "Start break · %lld min",
+  "Aktuelle Phase zeigen": "Show current phase"
 }
