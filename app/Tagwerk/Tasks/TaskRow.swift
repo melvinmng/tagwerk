@@ -95,9 +95,9 @@ struct TaskRow: View {
 
     private var dueColor: Color {
         switch section {
-        case .overdue: .red
-        case .today: .orange
-        default: .secondary
+        case .overdue: .redText
+        case .today: .orangeText
+        default: .secondaryText
         }
     }
 }

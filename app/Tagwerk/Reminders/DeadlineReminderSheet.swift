@@ -18,7 +18,7 @@ struct DeadlineReminderSheet: View {
             Form {
                 if let model {
                     if let errorMessage {
-                        Label(errorMessage, systemImage: "exclamationmark.triangle").foregroundStyle(.red)
+                        Label(errorMessage, systemImage: "exclamationmark.triangle").foregroundStyle(.redText)
                     }
                     Section {
                         ReminderListEditor(model: model.list, calendar: calendar)

@@ -29,7 +29,7 @@ struct VoiceMicrophoneButton: View {
         } label: {
             Image(systemName: isEnabled ? "mic" : "mic.slash")
                 .font(.body)
-                .foregroundStyle(isEnabled ? Color.secondary : Color.secondary.opacity(0.5))
+                .foregroundStyle(isEnabled ? Color.secondaryText : Color.secondaryText.opacity(0.5))
                 .frame(width: 44, height: 44)
                 .contentShape(Rectangle())
         }
@@ -52,11 +52,11 @@ struct VoiceRecordingBar: View {
             if !compact {
                 HStack(spacing: 6) {
                     Circle().fill(.red).frame(width: 8, height: 8)
-                    Text("Hört zu · auf dem iPhone").font(.caption).foregroundStyle(.secondary)
+                    Text("Hört zu · auf dem iPhone").font(.caption).foregroundStyle(.secondaryText)
                     Spacer()
                     LanguageChip(language: voice.language, style: .named) { voice.switchLanguage() }
                     TimelineView(.periodic(from: .now, by: 1)) { _ in
-                        Text(Self.clock(voice.elapsed())).font(.caption.monospacedDigit()).foregroundStyle(.secondary)
+                        Text(Self.clock(voice.elapsed())).font(.caption.monospacedDigit()).foregroundStyle(.secondaryText)
                     }
                 }
             }
@@ -102,10 +102,10 @@ struct VoiceRecordingBar: View {
         return Group {
             if placeholder {
                 Text(compact ? "Sprich jetzt …" : "Sprich jetzt, nichts wird gesendet, bevor du ↑ tippst.")
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.secondaryText)
             } else {
                 Text(typed) + Text(machine.volatileText.isEmpty ? "" : (typed.isEmpty ? "" : " ") + machine.volatileText)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.secondaryText)
             }
         }
         .lineLimit(compact ? 2 : 5)
@@ -176,8 +176,8 @@ struct VoiceNoticeRow: View {
             VStack(alignment: .leading, spacing: 8) {
                 Label("Mit Tagwerk sprechen", systemImage: "mic").font(.subheadline.weight(.semibold))
                 Text("Tagwerk wandelt deine Sprache auf dem iPhone in Text um. Der Ton verlässt das Gerät nicht. Gesendet wird erst, wenn du ↑ tippst.")
-                    .font(.footnote).foregroundStyle(.secondary)
-                Text("Dafür fragt iOS gleich nach dem Mikrofon.").font(.footnote).foregroundStyle(.secondary)
+                    .font(.footnote).foregroundStyle(.secondaryText)
+                Text("Dafür fragt iOS gleich nach dem Mikrofon.").font(.footnote).foregroundStyle(.secondaryText)
                 HStack {
                     Button("Nicht jetzt") { voice.dismissExplanation() }.buttonStyle(.bordered)
                     Spacer()
@@ -188,7 +188,7 @@ struct VoiceNoticeRow: View {
             .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 14))
         case .notice(let notice):
             HStack(alignment: .firstTextBaseline) {
-                Label(Self.text(notice), systemImage: Self.symbol(notice)).font(.footnote).foregroundStyle(.secondary)
+                Label(Self.text(notice), systemImage: Self.symbol(notice)).font(.footnote).foregroundStyle(.secondaryText)
                 Spacer()
                 if notice == .permissionDenied {
                     Button("Einstellungen öffnen") {
@@ -245,7 +245,7 @@ struct ReadAloudButton: View {
                 .background(.thinMaterial, in: Capsule())
         }
         .buttonStyle(.plain)
-        .foregroundStyle(playing ? Color.accentColor : .secondary)
+        .foregroundStyle(playing ? Color.accentColor : Color.secondaryText)
         .accessibilityLabel(playing ? "Vorlesen stoppen" : "Vorlesen")
     }
 }
@@ -307,6 +307,6 @@ struct CopyAnswerButton: View {
                 .background(.thinMaterial, in: Capsule())
         }
         .buttonStyle(.plain)
-        .foregroundStyle(.secondary)
+        .foregroundStyle(.secondaryText)
     }
 }

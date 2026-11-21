@@ -183,7 +183,7 @@ struct NoteField: View {
                             .overlay(alignment: .topLeading) {
                                 if model.text.isEmpty {
                                     Text(isDreamLog ? "Was hast du geträumt?" : "Schreib auf, was in deinen Kopf kommt. Sortier deine Gedanken.")
-                                        .foregroundStyle(.tertiary).padding(.top, 8).padding(.leading, 5)
+                                        .foregroundStyle(.secondaryText).padding(.top, 8).padding(.leading, 5)
                                         .allowsHitTesting(false)
                                 }
                             }

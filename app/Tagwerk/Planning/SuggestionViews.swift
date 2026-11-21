@@ -11,6 +11,15 @@ extension SuggestionFacts.Urgency {
         case .none: .secondary
         }
     }
+
+    /// The same colours as text: the darker tones for the light appearance (fills keep `color`).
+    var textColor: Color {
+        switch self {
+        case .high: .redText
+        case .medium: .orangeText
+        case .none: .secondaryText
+        }
+    }
 }
 
 /// "P1" next to the title: red for P1, orange for P2, neutral otherwise.
@@ -34,6 +43,13 @@ struct FactCapsule: View {
     var symbol: String?
     var urgency: SuggestionFacts.Urgency = .none
     var tint: Color?
+    /// The colour of the text when `tint` is set (the fill keeps the system colour).
+    var tintText: Color?
+
+    private var textColor: Color {
+        if let tint { return tintText ?? tint }
+        return urgency == .none ? Color.primary.opacity(0.75) : urgency.textColor
+    }
 
     var body: some View {
         HStack(spacing: 3) {
@@ -44,7 +60,7 @@ struct FactCapsule: View {
         .lineLimit(1)
         .padding(.horizontal, 6)
         .padding(.vertical, 2)
-        .foregroundStyle(tint ?? (urgency == .none ? Color.primary.opacity(0.75) : urgency.color))
+        .foregroundStyle(textColor)
         .background((tint ?? (urgency == .none ? Color.secondary : urgency.color)).opacity(0.15), in: Capsule())
         .fixedSize()
     }
@@ -69,7 +85,7 @@ struct SuggestionCapsules: View {
         HStack(spacing: 4) {
             if withMove, let target = facts.moveTarget {
                 FactCapsule(text: target.text, symbol: "arrow.uturn.right", urgency: target.urgency,
-                            tint: target.urgency == .none ? .purple : nil)
+                            tint: target.urgency == .none ? .purple : nil, tintText: .purpleText)
             }
             if let due { FactCapsule(text: due, symbol: "flag.fill", urgency: facts.due?.urgency ?? .none) }
             if let effort { FactCapsule(text: effort) }

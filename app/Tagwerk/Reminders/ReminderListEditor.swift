@@ -16,7 +16,7 @@ struct ReminderListEditor: View {
         }
         ForEach(Array(model.displayed.enumerated()), id: \.offset) { index, offset in
             Text(ReminderText.describe(offset, locale: .current, calendar: calendar))
-                .foregroundStyle(model.isUsingDefault ? .secondary : .primary)
+                .foregroundStyle(model.isUsingDefault ? Color.secondaryText : Color.primary)
                 .swipeActions(edge: .trailing, allowsFullSwipe: !model.isUsingDefault) {
                     if !model.isUsingDefault {
                         Button(role: .destructive) { withAnimation { model.remove(at: index) } } label: {
@@ -27,7 +27,7 @@ struct ReminderListEditor: View {
                 .accessibilityHint(model.isUsingDefault ? Text("Standard") : Text("Zum Löschen nach links wischen"))
         }
         if model.displayed.isEmpty {
-            Text("Keine Erinnerungen").foregroundStyle(.secondary)
+            Text("Keine Erinnerungen").foregroundStyle(.secondaryText)
         }
         if !model.isUsingDefault {
             NavigationLink {

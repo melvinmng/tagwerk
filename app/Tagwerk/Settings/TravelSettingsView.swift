@@ -56,13 +56,13 @@ struct TravelSettingsView: View {
         case .idle:
             EmptyView()
         case .checking:
-            HStack(spacing: 8) { ProgressView(); Text("Adresse wird geprüft …").foregroundStyle(.secondary) }
+            HStack(spacing: 8) { ProgressView(); Text("Adresse wird geprüft …").foregroundStyle(.secondaryText) }
         case .found(let description):
             Label(String(localized: "Gefunden: \(description)"), systemImage: "checkmark.circle.fill")
-                .font(.subheadline).foregroundStyle(.green)
+                .font(.subheadline).foregroundStyle(.greenText)
         case .notFound:
             Label("Adresse nicht gefunden", systemImage: "exclamationmark.triangle.fill")
-                .font(.subheadline).foregroundStyle(.orange)
+                .font(.subheadline).foregroundStyle(.orangeText)
         }
     }
 

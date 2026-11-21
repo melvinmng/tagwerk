@@ -209,7 +209,7 @@ struct SettingsView: View {
             Spacer()
             switch healthAccess {
             case .unavailable:
-                Text("nicht verfügbar").foregroundStyle(.secondary)
+                Text("nicht verfügbar").foregroundStyle(.secondaryText)
             case .notDetermined:
                 Button("Verbinden") {
                     Task {
@@ -219,7 +219,7 @@ struct SettingsView: View {
                     }
                 }
             case .authorized:
-                Text("verbunden").foregroundStyle(.secondary)
+                Text("verbunden").foregroundStyle(.secondaryText)
             case .partial:
                 Button("teilweise · Health öffnen") { openHealth() }
             case .denied:
@@ -281,7 +281,7 @@ struct SettingsView: View {
             Spacer()
             switch state {
             case .fullAccess:
-                Text("erlaubt").foregroundStyle(.secondary)
+                Text("erlaubt").foregroundStyle(.secondaryText)
             case .notDetermined:
                 Button("Erlauben") {
                     Task {

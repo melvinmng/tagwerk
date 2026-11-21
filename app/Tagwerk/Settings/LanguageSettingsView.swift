@@ -28,8 +28,8 @@ struct LanguageSettingsView: View {
                     HStack {
                         Text("App-Sprache")
                         Spacer()
-                        Text(LanguageSettingsText.name(.from(locale: .current))).foregroundStyle(.secondary)
-                        Image(systemName: "arrow.up.forward").font(.footnote).foregroundStyle(.secondary)
+                        Text(LanguageSettingsText.name(.from(locale: .current))).foregroundStyle(.secondaryText)
+                        Image(systemName: "arrow.up.forward").font(.footnote).foregroundStyle(.secondaryText)
                     }
                     .contentShape(Rectangle())
                 }

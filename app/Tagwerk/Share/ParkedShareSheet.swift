@@ -14,7 +14,7 @@ struct ParkedShareSheet: View {
                 ForEach(model.parked) { item in
                     VStack(alignment: .leading, spacing: 8) {
                         Text(item.title).font(.headline).lineLimit(2)
-                        Text(item.createdAt.formatted(date: .abbreviated, time: .shortened)).font(.footnote).foregroundStyle(.secondary)
+                        Text(item.createdAt.formatted(date: .abbreviated, time: .shortened)).font(.footnote).foregroundStyle(.secondaryText)
                         HStack {
                             Button("Übernehmen") {
                                 model.accept(item.id)

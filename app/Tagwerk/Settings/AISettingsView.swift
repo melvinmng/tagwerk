@@ -53,12 +53,12 @@ struct AISettingsView: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("ChatGPT")
                     if ai.isSignedIn, let email = ai.accountEmail {
-                        Text(email).font(.footnote).foregroundStyle(.secondary)
+                        Text(email).font(.footnote).foregroundStyle(.secondaryText)
                     }
                 }
                 Spacer()
                 Text(ai.isSignedIn ? "angemeldet" : "nicht angemeldet")
-                    .foregroundStyle(ai.isSignedIn ? Color.green : Color.secondary)
+                    .foregroundStyle(ai.isSignedIn ? Color.greenText : Color.secondaryText)
             }
             if ai.isSignedIn {
                 Button("Abmelden", role: .destructive) {
@@ -69,7 +69,7 @@ struct AISettingsView: View {
                 if signIn?.isSigningIn == true {
                     HStack(spacing: 8) {
                         ProgressView()
-                        Text("Anmeldung läuft …").foregroundStyle(.secondary)
+                        Text("Anmeldung läuft …").foregroundStyle(.secondaryText)
                     }
                 } else {
                     Button("Mit ChatGPT anmelden") {
@@ -96,13 +96,13 @@ struct AISettingsView: View {
             Picker("Modell", selection: $ai.selectedModelSlug) {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Automatisch")
-                    Text("Tagwerk nimmt das Standardmodell deines Abos").font(.footnote).foregroundStyle(.secondary)
+                    Text("Tagwerk nimmt das Standardmodell deines Abos").font(.footnote).foregroundStyle(.secondaryText)
                 }
                 .tag(String?.none)
                 ForEach(ai.models) { model in
                     VStack(alignment: .leading, spacing: 2) {
                         Text(model.displayName)
-                        Text(model.slug).font(.footnote).foregroundStyle(.secondary)
+                        Text(model.slug).font(.footnote).foregroundStyle(.secondaryText)
                     }
                     .tag(String?.some(model.slug))
                 }
@@ -112,7 +112,7 @@ struct AISettingsView: View {
             if isLoadingModels && ai.models.isEmpty {
                 HStack(spacing: 8) {
                     ProgressView()
-                    Text("Modelle werden geladen …").foregroundStyle(.secondary)
+                    Text("Modelle werden geladen …").foregroundStyle(.secondaryText)
                 }
             }
             if let modelError {
@@ -168,7 +168,7 @@ struct AISettingsView: View {
             Picker("Denkaufwand", selection: $ai.selectedReasoning) {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Automatisch")
-                    Text(automatic).font(.footnote).foregroundStyle(.secondary)
+                    Text(automatic).font(.footnote).foregroundStyle(.secondaryText)
                 }
                 .tag(String?.none)
                 ForEach(model.reasoningLevels, id: \.self) { level in
