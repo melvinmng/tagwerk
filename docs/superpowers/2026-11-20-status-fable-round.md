@@ -55,7 +55,8 @@ Festlegungen der Hauptsitzung zum G3-Plan: offene Fragen nach Empfehlung; Zeilen
 | `feat/evening-reminders-per-day` | #173 Strang E (Tasks 10, 11) | fertig und geprüft, Head `c4c281a`, `test-all` grün; bereit für PR |
 | `feat/assistant-assign-and-search` | #173 Stränge A, B und Task 5 | fertig und geprüft, Head `e032f71` (Review-Korrekturen drin: Einwilligung wird beobachtet, kein Chatwechsel während laufender Runde) |
 | `feat/g3-search-menu` | G3 Strang U | fertig und geprüft, Head `9694508` |
-| `feat/g3-keyboard-siri` | G3 Strang T auf Basis `fix/ui-test-stability` | läuft (Sonnet) |
+| `feat/g3-keyboard-siri` | G3 Strang T | fertig und geprüft, Head `43b277c`, `test-all` grün; T4 (Siri am Gerät) offen; Allowlist-Einträge für K vorgemerkt; ein unbenannter AX5-Befund „Text clipped“ auf Einstellungen › KI › Sprache flackert |
+| `feat/g1-plan-grid` | G1 Strang P auf Basis `fix/ui-test-stability` | läuft (Sonnet) |
 | `fix/ui-test-stability` | vorbestehende UI-Testfehler | fertig und geprüft, Head `e34c1fd`, `test-all` zweimal grün; zuerst mergen. Allowlist-Einträge „Unerledigt von heute“ und Leftover-Zeile bei Strang K (K5) neu bewerten |
 | `feat/g3-github-status` | G3 Strang G (G1–G4, G5 später) auf Basis `fix/ui-test-stability` | läuft (Sonnet) |
 
