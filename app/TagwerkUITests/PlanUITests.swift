@@ -1,6 +1,10 @@
 import XCTest
 
 final class PlanUITests: UITestCase {
+    // A new time block starts at the next full hour of "now", and the hour grid scrolls to "now". A fixed morning time keeps the
+    // test independent of the hour of the run; the late-evening rounding is covered by `BlockStartTests`.
+    override var extraLaunchArguments: [String] { Self.morningClockArguments }
+
     /// The day title element carries the relative day ("Heute", "Morgen") as its value and the date as its label.
     private func dayTitle(startingWith caption: String) -> XCUIElement {
         app.staticTexts.matching(NSPredicate(format: "value BEGINSWITH[c] %@", caption)).firstMatch
