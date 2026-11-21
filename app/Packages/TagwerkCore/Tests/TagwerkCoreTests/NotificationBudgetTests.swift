@@ -8,10 +8,20 @@ struct NotificationBudgetTests {
     }
 
     @Test func budget_assignsTheAgreedPlaces() {
-        #expect(NotificationBudget.tasksAndDeadlines == 50)
-        #expect(NotificationBudget.routines == 6)
+        #expect(NotificationBudget.tasksAndDeadlines == 46)
+        #expect(NotificationBudget.routines == 14)
         #expect(NotificationBudget.focusTimer == 1)
-        #expect(NotificationBudget.reserve == 7)
+        #expect(NotificationBudget.reserve == 3)
+    }
+
+    @Test func allocated_isExactlyTheSystemLimit() {
+        #expect(NotificationBudget.allocated == NotificationBudget.system)
+    }
+
+    @Test func routineBudget_matchesTheScheduleLimits() {
+        #expect(NotificationBudget.routines == RoutineSchedule.maximumRoutineNotifications)
+        #expect(RoutineSchedule.maximumRoutineNotifications == RoutineSchedule.maximumEveningNotifications + 2)
+        #expect(RoutineSchedule.maximumEveningNotifications == RoutineSchedule.maximumReminders * RoutineSchedule.eveningHorizonDays)
     }
 
     @Test func rules_defaultLimitIsTheTaskBudget() {

@@ -137,9 +137,9 @@ final class RecipeImporter {
         let answer: String
         do {
             let slug = try await model()
-            answer = try await withTimeout { [responder] in
-                try await Self.collect(responder.respond(model: slug, instructions: Self.instructions, input: [message], tools: [],
-                                                         jsonSchema: (name: "recipe_ingredients", schema: Self.schema)))
+            answer = try await RecipeRequest.withTimeout(timeout) { [responder] in
+                try await RecipeRequest.collect(responder.respond(model: slug, instructions: Self.instructions, input: [message], tools: [],
+                                                                  jsonSchema: (name: "recipe_ingredients", schema: Self.schema)))
             }
         } catch is CancellationError {
             throw CancellationError()
@@ -328,42 +328,11 @@ final class RecipeImporter {
     // MARK: Transport
 
     private static func failure(for error: ChatGPTError) -> Failure {
-        switch error {
+        switch RecipeRequest.failure(for: error) {
         case .network: .network
-        case .notSignedIn, .invalidUser: .signedOut
+        case .signedOut: .signedOut
         case .usageLimit: .usageLimit
-        case .server, .incomplete: .failed
-        }
-    }
-
-    /// Text of a completed answer; a stream that ends without `completed` is an error.
-    nonisolated private static func collect(_ stream: AsyncThrowingStream<StreamEvent, Error>) async throws -> String {
-        var text = ""
-        var completed = false
-        for try await event in stream {
-            switch event {
-            case .textDelta(let delta): text += delta
-            case .completed: completed = true
-            case .functionCall: break
-            }
-        }
-        guard completed else { throw ChatGPTError.incomplete }
-        return text
-    }
-
-    private struct TimedOut: Error {}
-
-    private func withTimeout(_ operation: @escaping @Sendable () async throws -> String) async throws -> String {
-        let limit = timeout
-        return try await withThrowingTaskGroup(of: String.self) { group in
-            group.addTask { try await operation() }
-            group.addTask {
-                try await Task.sleep(for: limit)
-                throw TimedOut()
-            }
-            defer { group.cancelAll() }
-            guard let first = try await group.next() else { throw TimedOut() }
-            return first
+        case .failed: .failed
         }
     }
 

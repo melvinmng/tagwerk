@@ -24,8 +24,11 @@ public struct OnlineIssue: Sendable, Hashable, Identifiable {
     public let url: URL
     public let updatedAt: Date
     public let marker: OnlineIssueMarker?
+    /// GitHub logins assigned to the issue.
+    public let assignees: [String]
 
-    public init(id: String, number: Int, title: String, repository: String, url: URL, updatedAt: Date, marker: OnlineIssueMarker?) {
+    public init(id: String, number: Int, title: String, repository: String, url: URL, updatedAt: Date, marker: OnlineIssueMarker?,
+                assignees: [String] = []) {
         self.id = id
         self.number = number
         self.title = title
@@ -33,6 +36,7 @@ public struct OnlineIssue: Sendable, Hashable, Identifiable {
         self.url = url
         self.updatedAt = updatedAt
         self.marker = marker
+        self.assignees = assignees
     }
 }
 
