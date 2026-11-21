@@ -11,7 +11,7 @@ struct SearchSheet: View {
     /// Shows a task in "Aufgaben"; the sheet closes first.
     let onShowTask: (TaskID) -> Void
     /// Shows the folder list of a note in "Aufgaben" (`nil`: "Alle Notizen"); the sheet closes first.
-    let onShowNoteFolder: (UUID?) -> Void
+    let onShowNoteFolder: (NotesScope) -> Void
 
     @Environment(AppEnvironment.self) private var environment
     @Environment(\.dismiss) private var dismiss
@@ -28,7 +28,7 @@ struct SearchSheet: View {
     @State private var notice: String?
 
     init(model: SearchModel, onShowDay: @escaping (PlanDay) -> Void, onShowTask: @escaping (TaskID) -> Void,
-         onShowNoteFolder: @escaping (UUID?) -> Void = { _ in }) {
+         onShowNoteFolder: @escaping (NotesScope) -> Void = { _ in }) {
         self.model = model
         self.onShowDay = onShowDay
         self.onShowTask = onShowTask
@@ -206,9 +206,9 @@ struct SearchSheet: View {
         }
     }
 
-    /// "Im Ordner zeigen": the folder list of the note in "Aufgaben"; a note without a folder shows "Alle Notizen".
+    /// "Im Ordner zeigen": the list of the note in "Aufgaben"; a note without a folder lies in "Notizen".
     private func showNoteFolder(_ note: NoteSearchItem) {
-        onShowNoteFolder(environment.notesFolderID(ofNote: note.id))
+        onShowNoteFolder(environment.notesScope(ofNote: note.id))
     }
 
     private func reopen(_ task: TaskItem) {

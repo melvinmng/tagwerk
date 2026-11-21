@@ -486,16 +486,21 @@ final class AppEnvironment {
         requestedTab = 1
     }
 
-    /// Opens the folder list of a note in the tab "Aufgaben"; `nil` opens "Alle Notizen".
-    /// Replaces whatever was pushed there. A locked folder asks for Face ID in its list like at every other opening.
-    func showNotesFolder(_ folderID: UUID?) {
-        tasksPath = [.notes, .notesFolder(folderID.map(NotesScope.folder) ?? .all)]
+    /// Opens a notes list in the tab "Aufgaben", on top of the folder overview. Replaces whatever was pushed there.
+    /// A locked folder asks for Face ID in its list like at every other opening.
+    func showNotes(_ scope: NotesScope) {
+        tasksPath = [.notes, .notesFolder(scope)]
         requestedTab = 1
     }
 
-    /// The folder a note lies in, for "Im Ordner zeigen"; `nil` when the note has no folder or its folder is gone.
-    func notesFolderID(ofNote noteID: UUID) -> UUID? {
-        notes.note(id: noteID)?.folderID.flatMap { notes.folder(id: $0) }?.id
+    /// The list "Im Ordner zeigen" opens for a note: its folder; "Notizen" for a note without a folder or whose folder is
+    /// gone (where `NoteStore` lists it, but only own notes, not thought notes); "Zuletzt gelöscht" for a note in the trash.
+    /// "Alle Notizen" is the fallback for a note that does not exist or would not appear in "Notizen".
+    func notesScope(ofNote noteID: UUID) -> NotesScope {
+        guard let note = notes.note(id: noteID) else { return .all }
+        if note.deletedAt != nil { return .trash }
+        if let folderID = note.folderID, notes.folder(id: folderID) != nil { return .folder(folderID) }
+        return note.kind == .free ? .standard : .all
     }
 
     /// The only place that changes the shopping list. Everything that shows reminders as tasks follows at once:
