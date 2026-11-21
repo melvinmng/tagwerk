@@ -66,15 +66,17 @@ Festlegungen der Hauptsitzung zum G3-Plan: offene Fragen nach Empfehlung; Zeilen
 
 ## Warteschlange Umsetzung (je freier Xcode-Platz, nach Prüfung des fertigen Branches)
 
-PRs #240–#249 angelegt (21.11.), nichts gemergt. Merge-Reihenfolge: #240, dann #241, #242, #243, #245, #246, #247, #248, #249, zuletzt #244. Vor jedem Merge `test-all` auf aktuellem `main`.
+PRs #240–#249 angelegt (21.11.). Merge-Reihenfolge vom Nutzer bestätigt: #240 (gemergt 21.11., `95f28be`), dann #241, #242, #243, #245, #246, #247, #248, #249, zuletzt #244. #248/#249 zielen jetzt auf `main`.
+Probe-Merge in dieser Reihenfolge: Konflikte in `scripts/translations/en.json` (fast alle), `AISettingsView.swift` (#242, #244), `EveningSheet.swift` (#248), `Localizable.xcstrings` (#249).
 
-1. Nachtrag #241: Zahlenprüfung lockern (kleiner Sonnet-Auftrag, kein Plan)
+1. **Integrationsauftrag (Sonnet, nächster freier Xcode-Platz):** zuerst Nachtrag #241 (Zahlenprüfung lockern), dann jeden PR-Branch der Reihe nach mit dem kumulierten Stand der vorherigen zusammenführen und Konflikte lösen, am Ende `test-all` auf dem letzten Stand. Danach prüfe ich, pushe und merge in Reihenfolge.
+1a. #250: Plan bei Fable (läuft, Planungs-Pool), danach Umsetzung durch Sonnet auf `fix/ui-audits-and-strings`
 2. G1 Strang E (Basis `fix/ui-test-stability`)
 
 3. #233 Block B (nach Merge von #173 A/B)
 4. G5 und L5-Anweisungszeile nach Merge von #173 A/B; Strang K nach T, L, S; Strang K zuletzt nach T, L, S
 5. Gruppen 1 und 2 nach ihren Plänen
-6. Danach: Geräteprüfungen (Task 12 in #173, Z1 in G3, Gerätetests der übrigen Pläne)
+6. Danach: Geräteprüfungen – Nutzerwunsch: sobald die neue Version auf seinem iPhone ist, ALLE Gerätetests gesammelt als eine Liste ausgeben; (Task 12 in #173, Z1 in G3, Gerätetests der übrigen Pläne)
 
 ## Bekannte Probleme
 
