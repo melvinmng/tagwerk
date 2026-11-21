@@ -67,8 +67,24 @@ final class NoteSuggestionModel {
 
     var openCount: Int { cards.filter { $0.status == .pending }.count }
 
-    /// The open cards "Alle bestätigen" may confirm: those that do not wait for a target.
-    var confirmableCount: Int { cards.filter { $0.status == .pending && !$0.needsTarget }.count }
+    /// The open cards "Alle bestätigen" may confirm: those that do not wait for a target and that are not confirmed alone
+    /// (an issue for other people or for no one, like in the chat).
+    var confirmableCount: Int { cards.filter(isBatchConfirmable).count }
+
+    /// An open card the user has to confirm alone: a guarded issue (`AssistantModel.needsSingleConfirmation`).
+    var hasSingleConfirmationCards: Bool {
+        let me = gitHubDirectory()?.login
+        return cards.contains { $0.status == .pending && AssistantModel.needsSingleConfirmation($0.call, me: me) }
+    }
+
+    /// The line below "Alle bestätigen" when open cards are confirmed alone; `nil` otherwise.
+    var singleConfirmationNotice: String? {
+        hasSingleConfirmationCards ? String(localized: "Zuweisungen bestätigst du einzeln.") : nil
+    }
+
+    private func isBatchConfirmable(_ card: Card) -> Bool {
+        card.status == .pending && !card.needsTarget && !AssistantModel.needsSingleConfirmation(card.call, me: gitHubDirectory()?.login)
+    }
 
     // MARK: Request
 
@@ -142,6 +158,29 @@ final class NoteSuggestionModel {
         cards[index].target = AppTools.GitHubTarget(repository: repository, projectIDs: projectIDs)
     }
 
+    /// The model of the sheet "Ziel wählen" for a pending issue card; `nil` for any other card or without a stored catalog.
+    func targetSheetModel(for id: String) -> IssueTargetSheetModel? {
+        guard let card = cards.first(where: { $0.id == id }), card.status == .pending, card.isIssue,
+              let directory = gitHubDirectory(), let catalog = directory.storedCatalog,
+              let arguments = try? JSONSerialization.jsonObject(with: card.call.arguments) as? [String: Any] else { return nil }
+        let repository = card.target?.repository ?? arguments["repository"] as? String
+        let projectIDs = card.target?.projectIDs ?? arguments["project_ids"] as? [String] ?? []
+        return IssueTargetSheetModel(catalog: catalog, me: directory.login, repository: repository, projectIDs: projectIDs,
+                                     loadAssignable: { await directory.assignableUsers(in: $0, maxAge: AppEnvironment.catalogMaxAge) })
+    }
+
+    /// The text of the target row of an issue card ("Ziel: owner/repo · Project X", "Ziel wählen"); `nil` for other cards.
+    func targetSummary(of card: Card) -> String? {
+        guard card.isIssue, let catalog = gitHubDirectory()?.storedCatalog else { return nil }
+        return IssueTargetText.summary(of: card.target, in: catalog)
+    }
+
+    /// "owner/repo · Project X" for the VoiceOver value of the target row; `nil` while there is no target.
+    func targetValue(of card: Card) -> String? {
+        guard let target = card.target, let catalog = gitHubDirectory()?.storedCatalog else { return nil }
+        return IssueTargetText.value(of: target, in: catalog)
+    }
+
     /// Runs the function of a card once; no further request follows. An issue without a target is not run.
     func confirm(_ id: String) async {
         guard let index = cards.firstIndex(where: { $0.id == id }), cards[index].status == .pending,
@@ -162,9 +201,9 @@ final class NoteSuggestionModel {
         cards[index].status = .declined
     }
 
-    /// Confirms every open card that has what it needs; issues that wait for a target stay open.
+    /// Confirms every open card that has what it needs; issues that wait for a target or that are confirmed alone stay open.
     func confirmAll() async {
-        for card in cards where card.status == .pending && !card.needsTarget { await confirm(card.id) }
+        for card in cards where isBatchConfirmable(card) { await confirm(card.id) }
     }
 
     /// The sheet closed or the text changed: drops the cards and any answer that is still on its way.

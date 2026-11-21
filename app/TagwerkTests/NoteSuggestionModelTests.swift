@@ -566,6 +566,29 @@ struct NoteSuggestionModelTests {
         #expect(model.confirmableCount == 0 && model.openCount == 1)
     }
 
+    @Test func confirmAll_skipsIssueCardsAssignedBeyondMe() async {
+        let model = await fetchIssueCards([call("c1", "create_task", #"{"title":"Zahnarzt anrufen"}"#),
+                                           call("c2", "create_task", #"{"title":"Für Lea","source":"github","repository":"tagwerk"}"#),
+                                           call("c3", "create_task", #"{"title":"Für niemanden","source":"github","repository":"tagwerk"}"#),
+                                           call("c4", "create_task", #"{"title":"Für mich","source":"github","repository":"tagwerk"}"#)],
+                                          directory: twoRepositoryDirectory())
+        #expect(model.confirmableCount == 4)
+        model.setTarget("c2", repository: "melvinmng/tagwerk", projectIDs: ["PVT_T"], assignees: ["lea-m"])
+        model.setTarget("c3", repository: "melvinmng/tagwerk", projectIDs: ["PVT_T"], assignees: [])
+        model.setTarget("c4", repository: "melvinmng/tagwerk", projectIDs: ["PVT_T"], assignees: ["octo"])
+        // Issues for other people or for no one are confirmed alone, as in the chat.
+        #expect(model.confirmableCount == 2)
+        #expect(model.openCount == 4 && model.hasSingleConfirmationCards)
+        await model.confirmAll()
+        #expect(tools.runs.map(\.id) == ["c1", "c4"])
+        #expect(model.cards[1].status == .pending && model.cards[2].status == .pending)
+        // A tap on the card itself still confirms it.
+        await model.confirm("c2")
+        await model.confirm("c3")
+        #expect(tools.runs.map(\.id) == ["c1", "c4", "c2", "c3"])
+        #expect(!model.hasSingleConfirmationCards)
+    }
+
     @Test func setTarget_rewritesArgumentsAndDescription() async {
         let model = await fetchIssueCards([call("c1", "create_task", #"{"title":"Export prüfen","source":"github","repository":null,"assignees":["fremd"]}"#)],
                                           directory: twoRepositoryDirectory())
@@ -609,6 +632,34 @@ struct NoteSuggestionModelTests {
         model.setTarget("c2", repository: "melvinmng/app", projectIDs: [], assignees: nil)   // not an issue
         model.setTarget("fehlt", repository: "melvinmng/app", projectIDs: [], assignees: nil)
         #expect(model.cards == before)
+    }
+
+    @Test func targetSheetModel_startsFromTheCard() async throws {
+        let directory = twoRepositoryDirectory()
+        let model = await fetchIssueCards([call("c1", "create_task", #"{"title":"A","source":"github","repository":"melvinmng/app"}"#),
+                                           call("c2", "create_task", #"{"title":"B","source":"github","repository":"tagwerk"}"#),
+                                           call("c3", "create_task", #"{"title":"C"}"#)], directory: directory)
+        // The repository is clear, no project is: the sheet opens with the repository and without projects.
+        let open = try #require(model.targetSheetModel(for: "c1"))
+        #expect(open.repository == "melvinmng/app" && open.projectIDs.isEmpty && !open.assigneesChosen && open.me == "octo")
+        await open.loadAssignees()
+        #expect(open.assigneeCandidates == ["octo"])
+        let resolved = try #require(model.targetSheetModel(for: "c2"))
+        #expect(resolved.repository == "melvinmng/tagwerk" && resolved.projectIDs == ["PVT_T"])
+        #expect(model.targetSheetModel(for: "c3") == nil)          // not an issue
+        #expect(model.targetSheetModel(for: "fehlt") == nil)
+        #expect(model.targetSheetModel(for: "c1") != nil)
+        await model.confirm("c2")
+        #expect(model.targetSheetModel(for: "c2") == nil)          // done
+    }
+
+    @Test func targetSummary_followsTheCard() async {
+        let model = await fetchIssueCards([call("c1", "create_task", #"{"title":"A","source":"github","repository":"tagwerk"}"#),
+                                           call("c2", "create_task", #"{"title":"B","source":"github"}"#),
+                                           call("c3", "create_task", #"{"title":"C"}"#)], directory: twoRepositoryDirectory())
+        #expect(model.targetSummary(of: model.cards[0]) == "Ziel: melvinmng/tagwerk · Project Tagwerk")
+        #expect(model.targetSummary(of: model.cards[1]) == "Ziel wählen")
+        #expect(model.targetSummary(of: model.cards[2]) == nil)
     }
 
     @Test func request_containsNoRepositoryNames() async {

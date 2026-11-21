@@ -288,12 +288,17 @@ struct ActionCardView: View {
     let time: Date?
     let onConfirm: () -> Void
     let onDecline: () -> Void
+    /// False while the card lacks something the user has to choose first: "Bestätigen" is then disabled.
+    var canConfirm = true
+    /// A row below the change text, e.g. the target of an issue suggested from a note.
+    var accessory: AnyView? = nil
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             header
             Text(card.title).font(.subheadline.weight(.semibold))
             Text(card.change).font(.subheadline).foregroundStyle(.secondary)
+            if let accessory { accessory }
             if let warning = card.warning {
                 Label(warning, systemImage: "exclamationmark.triangle").font(.caption).foregroundStyle(.red)
             }
@@ -309,6 +314,7 @@ struct ActionCardView: View {
                     }
                     .buttonStyle(.borderedProminent)
                     .tint(card.isDestructive ? .red : nil)
+                    .disabled(!canConfirm)
                 }
             }
         }

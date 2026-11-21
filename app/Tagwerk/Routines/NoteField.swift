@@ -161,6 +161,8 @@ struct NoteField: View {
     @State private var creatingTask = false
     @State private var suggestions: NoteSuggestionModel?
     @State private var asksConsent = false
+    /// The issue card whose target is being chosen.
+    @State private var targetCardID: String?
 
     private var isDreamLog: Bool { model.kind == .dream }
 
@@ -214,6 +216,13 @@ struct NoteField: View {
             }
             .sheet(isPresented: $creatingTask) {
                 NewTaskSheet(model: environment.taskList, prefilledTitle: model.taskTitle, onCreated: { model.taskCreated() })
+            }
+            .sheet(item: Binding(get: { targetCardID.map(TargetRequest.init) }, set: { targetCardID = $0?.id })) { request in
+                if let suggestions, let sheet = suggestions.targetSheetModel(for: request.id) {
+                    IssueTargetSheet(model: sheet) { repository, projectIDs, assignees in
+                        suggestions.setTarget(request.id, repository: repository, projectIDs: projectIDs, assignees: assignees)
+                    }
+                }
             }
             .sheet(isPresented: $asksConsent) {
                 NoteConsentSheet(
@@ -290,18 +299,47 @@ struct NoteField: View {
                 ForEach(suggestions.cards) { card in
                     ActionCardView(card: card.text, status: card.status, time: card.time,
                                    onConfirm: { Task { await suggestions.confirm(card.id) } },
-                                   onDecline: { suggestions.decline(card.id) })
+                                   onDecline: { suggestions.decline(card.id) },
+                                   canConfirm: !card.needsTarget,
+                                   accessory: targetRow(card, in: suggestions))
                 }
-                if suggestions.openCount > 1 {
+                // Cards that wait for a target are not part of it (review focus 10).
+                if suggestions.confirmableCount > 1 {
                     Button { Task { await suggestions.confirmAll() } } label: {
-                        Text("Alle bestätigen (\(suggestions.openCount))").frame(maxWidth: .infinity)
+                        Text("Alle bestätigen (\(suggestions.confirmableCount))").frame(maxWidth: .infinity)
                     }
                     .buttonStyle(.borderedProminent)
+                }
+                if let notice = suggestions.singleConfirmationNotice {
+                    Text(notice).font(.footnote).foregroundStyle(.secondary)
                 }
             } header: {
                 Text("\(suggestions.cards.count) Vorschläge aus der Notiz")
             }
         }
+    }
+
+    /// The row below an issue card: the target as a button while the card is open, as plain text afterwards.
+    private func targetRow(_ card: NoteSuggestionModel.Card, in suggestions: NoteSuggestionModel) -> AnyView? {
+        guard let summary = suggestions.targetSummary(of: card) else { return nil }
+        guard card.status == .pending else {
+            return card.target == nil ? nil : AnyView(Text(summary).font(.caption).foregroundStyle(.secondary))
+        }
+        let value = suggestions.targetValue(of: card)
+        return AnyView(
+            Button { targetCardID = card.id } label: {
+                HStack(spacing: 4) {
+                    Text(summary).font(.subheadline)
+                    Image(systemName: "chevron.right").imageScale(.small)
+                    Spacer(minLength: 0)
+                }
+                .foregroundStyle(card.needsTarget ? Color.orange : Color.accentColor)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Ziel")
+            .accessibilityValue(value ?? String(localized: "Nicht gewählt"))
+            .accessibilityHint("Öffnet die Auswahl"))
     }
 
     /// Saves the note first, so the text that is sent is the text that is stored.

@@ -2033,5 +2033,8 @@
   "Gelesen: %@": "Read: %@",
   "Höchstens fünf Notizen auf einmal.": "At most five notes at once.",
   "Notiz nicht gefunden.": "Note not found.",
-  "Geschlossene Issues lassen sich hier nicht zuweisen.": "Closed issues cannot be assigned here."
+  "Geschlossene Issues lassen sich hier nicht zuweisen.": "Closed issues cannot be assigned here.",
+  "Ziel wählen": "Choose target",
+  "Ziel: %@": "Target: %@",
+  "Öffnet die Auswahl": "Opens the selection"
 }
