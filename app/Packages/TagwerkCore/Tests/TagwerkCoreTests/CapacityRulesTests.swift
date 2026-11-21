@@ -174,6 +174,13 @@ struct CapacityRulesTests {
         #expect(freedMinutes(value, removing: [600..<660]) == 110 - 80)
     }
 
+    @Test func freedMinutes_withTravelOfTheDayWithoutTheEvent_givesBackTheTripToo() {
+        let value = input(busy: [840..<900], travel: [815..<840])
+        // Blocked: trip 13:35–14:00 and the event with buffer 13:50–15:10 = 13:35–15:10 = 95 min.
+        #expect(freedMinutes(value, removing: [840..<900]) == 70)  // the trip still blocks 25 min
+        #expect(freedMinutes(value, removing: [840..<900], travelIntervals: []) == 95)
+    }
+
     @Test func freedMinutes_eventInLunch_givesNothing() {
         #expect(freedMinutes(input(busy: [720..<780]), removing: [720..<780]) == 0)
     }

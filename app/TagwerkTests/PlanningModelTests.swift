@@ -2251,6 +2251,22 @@ struct PlanningModelTests {
         #expect((before.remainingMinutes ?? 0) - (after.remainingMinutes ?? 0) == 25)
     }
 
+    @Test func freedMinutes_includesTheTripOfTheFreedEvent() async throws {
+        calendarStore.storedEvents = [meeting()]
+        let (model, _) = await travelModel()
+        await model.refreshTravelTimes()
+        let day = try #require(model.days.first)
+        #expect(day.travel.count == 1)
+        // The meeting 14:00–15:00 and its trip of 25 minutes.
+        let freed = model.freedMinutes(of: day.events, in: day)
+        #expect(freed == 85)
+        await model.setFree(day.events, free: true, series: false)
+        await model.refreshTravelTimes()
+        let after = try #require(model.days.first)
+        #expect(after.travel.isEmpty)
+        #expect(after.capacity.freeMinutes - day.capacity.freeMinutes == freed)
+    }
+
     @Test func travel_disabledSetting_addsNothing() async {
         calendarStore.storedEvents = [meeting()]
         let (model, estimator) = await travelModel(enabled: false)

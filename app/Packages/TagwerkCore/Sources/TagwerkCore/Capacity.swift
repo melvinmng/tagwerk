@@ -133,9 +133,12 @@ public func capacity(_ input: CapacityInput) -> DayCapacity {
 /// Time a "free" mark gives back: the available minutes after the given busy intervals no longer block, minus the
 /// available minutes now. Overlapping events, events outside the working hours and events inside the lunch break give
 /// back only what really becomes free. Each interval removes one equal busy interval (a copy in a second calendar
-/// keeps blocking until it is freed too).
-public func freedMinutes(_ input: CapacityInput, removing intervals: [Range<Int>]) -> Int {
+/// keeps blocking until it is freed too). A freed event loses its trips as well: pass the trips of the day without it
+/// as `travelIntervals`.
+public func freedMinutes(_ input: CapacityInput, removing intervals: [Range<Int>],
+                         travelIntervals: [Range<Int>]? = nil) -> Int {
     var reduced = input
+    if let travelIntervals { reduced.travelIntervals = travelIntervals }
     for interval in intervals {
         if let index = reduced.busyIntervals.firstIndex(of: interval) { reduced.busyIntervals.remove(at: index) }
     }

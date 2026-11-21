@@ -985,10 +985,19 @@ final class PlanningModel {
     }
 
     /// Time the selection gives back to the capacity of its day (shown before "Auf Frei setzen"). Overlaps, events
-    /// outside the working hours and events inside the lunch break free nothing, so the text matches the card.
+    /// outside the working hours and events inside the lunch break free nothing; the trips of freed events go too, so
+    /// the text matches the card afterwards.
     func freedMinutes(of events: [CalendarEvent], in plan: DayPlan) -> Int {
         let selected = busyIntervals(events: events, on: plan.day, calendar: calendar, excluding: Set(plan.links.keys))
-        return TagwerkCore.freedMinutes(plan.capacityInput, removing: selected)
+        // A free event has no trip: the trips of the day are worked out again without the selected events.
+        let chosen = Set(events.map(\.id))
+        let remaining = (plan.events + plan.blocks).map { event -> CalendarEvent in
+            var copy = event
+            if chosen.contains(event.id) { copy.isBusy = false }
+            return copy
+        }.sorted { $0.start < $1.start }
+        let travel = travelSegments(for: plan.day, events: remaining).map(\.range)
+        return TagwerkCore.freedMinutes(plan.capacityInput, removing: selected, travelIntervals: travel)
     }
 
     /// Stored merge rules ("künftig immer"): title, calendar name and whether they merge or keep apart.

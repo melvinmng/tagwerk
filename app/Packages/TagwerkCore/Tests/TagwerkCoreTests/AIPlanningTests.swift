@@ -159,7 +159,7 @@ struct AIPlanningTests {
     }
 
     @Test func validate_overCapacity_rejectsLatest() {
-        // 9–18 minus lunch = 480 min; 300 min recurring and 60 min planned leave 120 min.
+        // 9–18 minus lunch = 480 min; 300 min less available and 60 min planned leave 120 min.
         let day = planDay(today, lessAvailable: 300, planned: 60)
         let result = validate(dayOutput([block("b", "16:00", 60), block("a", "14:00", 60), block("c", "11:00", 30)]),
                               input: input(days: [day], tasks: [task("a"), task("b"), task("c")]))
@@ -211,6 +211,19 @@ struct AIPlanningTests {
         #expect(result.violations == [PlanViolation(taskId: "local:nebensache", reason: PlanViolation.Reason.overCapacity)])
         guard case .day(let plan) = result.accepted else { return }
         #expect(plan.risks.last == "Danach noch 55 min zu viel.")
+    }
+
+    /// The hard time rule follows from the real intervals: the free stretches of the day are what is left after the events
+    /// with buffer, lunch and trips, so blocks beyond them are rejected (reserved recurring effort takes no time).
+    @Test func validate_blocksBeyondFreeTime_rejected() {
+        // From 10:00 the event 10:00–17:00 (buffer to 17:10) leaves 17:10–18:00 = 50 min.
+        let day = planDay(today, events: [event("Klausur", 10, to: 17)])
+        #expect(freeGaps(day, fromMinutes: nowMinutes).reduce(0) { $0 + $1.count } == 50)
+        var a = task("a"); a.priority = .p1
+        var b = task("b"); b.priority = .p1
+        let result = validate(dayOutput([block("a", "17:10", 30), block("b", "17:40", 25)]), input: input(days: [day], tasks: [a, b]))
+        #expect(acceptedBlocks(result.accepted) == ["local:a"])
+        #expect(result.violations.map(\.reason) == [PlanViolation.Reason.outsideWorkHours])
     }
 
     @Test func dayChange_withoutEffect_isDropped() {
