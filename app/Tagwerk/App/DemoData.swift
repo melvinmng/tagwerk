@@ -315,6 +315,11 @@ enum DemoData {
         try event("Seminar", work, at(0, 10), at(0, 12, 30), location: "Universität, Unter den Linden 6, Berlin")
         try event("Seminar", copy, at(0, 10), at(0, 12, 30))
         try event("Sprechstunde", work, at(0, 15), at(0, 16), location: "Praxis Dr. Muster, Hauptstraße 5, Berlin")
+        if DemoTravelEstimator.isRequested {
+            // The trip to the seminar takes 30 minutes in the demo estimator, so it starts at 09:30, ten minutes before the
+            // call ends: the capsule "10 min zu früh" (PL10b).
+            try event("Team-Call", work, at(0, 8, 30), at(0, 9, 40), location: "Büro, Friedrichstraße 10, Berlin")
+        }
         if ProcessInfo.processInfo.arguments.contains(overlapArgument) {
             for title in ["Projektbesprechung", "Zahnarzt Kontrolle", "Anruf Steuerberater"] {
                 try event(title, work, at(0, 13, 30), at(0, 14, 30))

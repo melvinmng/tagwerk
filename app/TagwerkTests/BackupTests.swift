@@ -476,6 +476,37 @@ struct BackupTests {
         #expect(restored.contains { $0.eventKey == "evt-8|1800000000" && $0.seriesFrom == nil && $0.mode == .none })
     }
 
+    @Test func travelOverride_withoutNewFields_restoresAsBefore() throws {
+        // A file written before transport and start per event existed has neither key in its entries.
+        let data = try backup.makeBackupData()
+        var object = try #require(try JSONSerialization.jsonObject(with: data) as? [String: Any])
+        var entities = try #require(object["entities"] as? [String: Any])
+        var entries = try #require(entities["eventTravelOverrides"] as? [[String: Any]])
+        #expect(!entries.isEmpty)
+        for index in entries.indices {
+            entries[index].removeValue(forKey: "transportRaw")
+            entries[index].removeValue(forKey: "startRaw")
+        }
+        entities["eventTravelOverrides"] = entries
+        object["entities"] = entities
+        let old = try JSONSerialization.data(withJSONObject: object)
+        let target = try makeTarget()
+        try target.service.restore(try target.service.inspect(old))
+        let restored = try target.container.mainContext.fetch(FetchDescriptor<EventTravelOverride>()).map(\.asOverride)
+        #expect(restored == [TravelOverride(eventKey: "evt-2", seriesFrom: clock.now, mode: .fixed(minutes: 35))])
+    }
+
+    @Test func travelOverride_withTransportAndStart_roundTrips() throws {
+        let context = source.mainContext
+        context.insert(EventTravelOverride(TravelOverride(eventKey: "evt-10", seriesFrom: nil, mode: .automatic,
+                                                          transport: .transit, start: .home)))
+        try context.save()
+        let target = try makeTarget()
+        try target.service.restore(try target.service.inspect(try backup.makeBackupData()))
+        let restored = try target.container.mainContext.fetch(FetchDescriptor<EventTravelOverride>()).map(\.asOverride)
+        #expect(restored.contains(TravelOverride(eventKey: "evt-10", seriesFrom: nil, mode: .automatic, transport: .transit, start: .home)))
+    }
+
     @Test func oldBackupWithoutManualTravelTimes_restores() throws {
         let data = try backup.makeBackupData()
         var object = try #require(try JSONSerialization.jsonObject(with: data) as? [String: Any])

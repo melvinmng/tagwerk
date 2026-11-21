@@ -96,4 +96,14 @@ struct FocusTimerTextTests {
                 == "noch 5 Minuten, Kurze Pause")
         #expect(Localized.string("noch \("18 minutes")", in: .english, bundle: .main) == "18 minutes left")
     }
+
+    // MARK: Block ended early (FO15b)
+
+    @Test func trimDetail_longAndShort() {
+        let block = TrimmedBlock(plannedMinutes: 60, actualMinutes: 35)
+        #expect(FocusTimerText.trimDetail(block) == "35 von 60 min · 25 min früher fertig")
+        #expect(FocusTimerText.trimDetail(block, short: true) == "35 von 60 min")
+        // Hours read like everywhere else in the plan.
+        #expect(FocusTimerText.trimDetail(TrimmedBlock(plannedMinutes: 120, actualMinutes: 90)) == "1 h 30 von 2 h · 30 min früher fertig")
+    }
 }

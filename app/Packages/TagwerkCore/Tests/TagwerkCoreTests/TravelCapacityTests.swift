@@ -11,7 +11,7 @@ struct TravelCapacityTests {
     private func input(busy: [Range<Int>] = [], travel: [Range<Int>] = [], buffer: Int = 0,
                        now: Int? = nil) -> CapacityInput {
         var result = CapacityInput(hours: hours, lunchStartMinutes: 0, lunchMinutes: 0, bufferMinutes: buffer,
-                                   busyIntervals: busy, recurringMinutes: 0, plannedMinutes: 0, estimatedCount: 0,
+                                   busyIntervals: busy, untimedPlannedMinutes: 0, estimatedCount: 0,
                                    travelIntervals: travel)
         result.nowMinutes = now
         return result
@@ -53,7 +53,7 @@ struct TravelCapacityTests {
     private func planDay(travel: [Range<Int>], events: [CalendarEvent] = [], hours: WorkHours? = nil,
                          buffer: Int = 10) -> PlanInputDay {
         PlanInputDay(day: today, hours: hours ?? self.hours, lunch: nil, events: events, linkedEventIDs: [],
-                     deadlineCalendarIDs: [], blocks: [], recurringMinutes: 0, plannedMinutes: 0, bufferMinutes: buffer,
+                     deadlineCalendarIDs: [], blocks: [], untimedPlannedMinutes: 0, bufferMinutes: buffer,
                      calendar: calendar, travel: travel)
     }
 
@@ -120,7 +120,26 @@ struct TravelCapacityTests {
 
     @Test func freeGaps_leaveOutTravel() {
         let day = planDay(travel: [840..<870])
-        // 09:00-18:00 minus 14:00-14:30 with 10 minutes buffer on both sides.
-        #expect(freeGaps(day, fromMinutes: nil) == [540..<830, 880..<1080])
+        // 09:00-18:00 minus 14:00-14:30; travel time keeps no buffer, as in the capacity.
+        #expect(freeGaps(day, fromMinutes: nil) == [540..<840, 870..<1080])
+    }
+
+    // MARK: Return trip (V1)
+
+    @Test func returnTrip_countsAsBusyTime() {
+        // The way home after an event until 11:00 takes 30 minutes; it is one more interval of the union.
+        var event = CalendarEvent(id: "a", externalID: nil, calendarID: "work", title: "a", start: instant(2026, 11, 18, 10, 0),
+                                  end: instant(2026, 11, 18, 11, 0), isAllDay: false, url: nil, isBusy: true, version: "1")
+        event.location = "Büro, Berlin"
+        let legs = TravelRules.legs(events: [event], on: today, home: TravelPlace(text: "Musterstraße 1, Berlin"),
+                                    calendar: calendar, includesReturn: true)
+        let segments = TravelRules.segments(legs: legs, minutes: ["a": 20, "a#return": 30], events: [event], on: today,
+                                            calendar: calendar)
+        let back = segments.first { $0.direction == .returnHome }
+        #expect(back?.range == 660..<690)
+        let free = capacity(input(travel: segments.map(\.range))).availableMinutes
+        #expect(free == 540 - 20 - 30)
+        // Without the return trip only the way there counts.
+        #expect(capacity(input(travel: segments.filter { $0.direction == .toEvent }.map(\.range))).availableMinutes == 540 - 20)
     }
 }

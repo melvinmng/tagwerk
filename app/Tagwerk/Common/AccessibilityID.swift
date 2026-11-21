@@ -14,6 +14,8 @@ enum AccessibilityID {
         static let stop = "focus.stop"
         static let pause = "focus.pause"
         static let done = "focus.done"
+        /// "▶ Fokus" on a time block in the plan.
+        static let planButton = "focus.planButton"
     }
 
     enum Tasks {
@@ -21,6 +23,11 @@ enum AccessibilityID {
         static func row(_ title: String) -> String { "tasks.row.\(title)" }
         /// The title field of the task editor (a filled field has no placeholder to find it by).
         static let editorTitle = "tasks.editorTitle"
+    }
+
+    enum Travel {
+        /// The capsule "10 min zu früh" of a trip that starts before the previous event ends.
+        static let warningCapsule = "travel.warningCapsule"
     }
 
     enum Common {

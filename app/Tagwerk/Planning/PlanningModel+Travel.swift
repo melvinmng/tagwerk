@@ -7,7 +7,8 @@ extension PlanningModel {
     /// The trips of `day` for the events given; empty while the setting is off or no time service exists.
     func travelLegs(for day: PlanDay, events: [CalendarEvent]) -> [TravelLeg] {
         guard settings.travelTimeEnabled, travelTimes != nil else { return [] }
-        return TravelRules.legs(events: events, on: day, home: settings.homePlace, calendar: calendar)
+        return TravelRules.legs(events: events, on: day, home: settings.homePlace, calendar: calendar,
+                                choices: travelChoices(for: events), includesReturn: settings.travelShowsReturn)
     }
 
     /// The travel blocks of `day`. Manual times (F2) come first and need neither the network nor the cache; the others
@@ -16,8 +17,10 @@ extension PlanningModel {
     /// `refreshTravelTimes()`. Empty while the setting "Fahrzeit berücksichtigen" is off.
     func travelSegments(for day: PlanDay, events: [CalendarEvent]) -> [TravelSegment] {
         guard settings.travelTimeEnabled else { return [] }
-        let overrides = travelOverrideModes(for: events)
-        let legs = TravelRules.legs(events: events, on: day, home: settings.homePlace, calendar: calendar)
+        let choices = travelChoices(for: events)
+        let overrides = choices.compactMapValues { $0.mode == .automatic ? nil : $0.mode }
+        let legs = TravelRules.legs(events: events, on: day, home: settings.homePlace, calendar: calendar, choices: choices,
+                                    includesReturn: settings.travelShowsReturn)
         var resolved = ResolvedTravelTimes()
         if let travelTimes {
             resolved = travelTimes.resolvedTimes(for: legs.filter { overrides[$0.eventID] == nil }, transport: settings.travelTransport)
@@ -52,28 +55,79 @@ extension PlanningModel {
         event.isRecurring ? CalendarBlockRules.parseOccurrenceID(event.id).0 : event.id
     }
 
-    /// What the user decided for the travel time of this event; `automatic` without a decision.
-    func travelOverrideMode(for event: CalendarEvent) -> TravelOverrideMode {
-        TravelOverrideRules.mode(eventID: event.id, seriesID: travelSeriesID(of: event), start: event.start,
-                                 overrides: TravelOverrideStore(context: marks.modelContext).all())
+    /// What the user decided for this event: mode, transport and start; the default without a decision.
+    func travelChoice(for event: CalendarEvent) -> TravelChoice {
+        TravelOverrideRules.choice(eventID: event.id, seriesID: travelSeriesID(of: event), start: event.start,
+                                   overrides: TravelOverrideStore(context: marks.modelContext).all())
     }
 
-    /// The decisions for these events by event ID; events without a decision (`automatic`) are left out.
-    func travelOverrideModes(for events: [CalendarEvent]) -> [String: TravelOverrideMode] {
+    /// What the user decided for the travel time of this event; `automatic` without a decision.
+    func travelOverrideMode(for event: CalendarEvent) -> TravelOverrideMode {
+        travelChoice(for: event).mode
+    }
+
+    /// The decisions for these events by event ID; events without any decision (the default) are left out.
+    func travelChoices(for events: [CalendarEvent]) -> [String: TravelChoice] {
         let stored = TravelOverrideStore(context: marks.modelContext).all()
         guard !stored.isEmpty else { return [:] }
-        var result: [String: TravelOverrideMode] = [:]
+        var result: [String: TravelChoice] = [:]
         for event in events where result[event.id] == nil {
-            let mode = TravelOverrideRules.mode(eventID: event.id, seriesID: travelSeriesID(of: event), start: event.start, overrides: stored)
-            if mode != .automatic { result[event.id] = mode }
+            let choice = TravelOverrideRules.choice(eventID: event.id, seriesID: travelSeriesID(of: event), start: event.start,
+                                                    overrides: stored)
+            if !choice.isDefault { result[event.id] = choice }
         }
         return result
     }
 
-    /// Sets the travel time of an event by hand; `series` applies to this and all following occurrences of a repeating event.
+    /// The modes decided for these events by event ID; events without a decision (`automatic`) are left out.
+    func travelOverrideModes(for events: [CalendarEvent]) -> [String: TravelOverrideMode] {
+        travelChoices(for: events).compactMapValues { $0.mode == .automatic ? nil : $0.mode }
+    }
+
+    /// Sets the travel time of an event by hand; `series` applies to this and all following occurrences of a repeating
+    /// event. Transport and start chosen before stay.
     func setTravelOverride(_ mode: TravelOverrideMode, for event: CalendarEvent, series: Bool) async {
-        TravelOverrideStore(context: marks.modelContext).set(mode, eventID: event.id, seriesID: travelSeriesID(of: event),
+        var choice = travelChoice(for: event)
+        choice.mode = mode
+        await setTravelChoice(choice, for: event, series: series)
+    }
+
+    /// Sets what the user decided for the event (mode, transport, start) and reloads the plan. The default choice removes
+    /// the entry. `series` applies to this and all following occurrences of a repeating event.
+    func setTravelChoice(_ choice: TravelChoice, for event: CalendarEvent, series: Bool) async {
+        TravelOverrideStore(context: marks.modelContext).set(choice, eventID: event.id, seriesID: travelSeriesID(of: event),
                                                              start: event.start, series: series && event.isRecurring)
         await reload()
+    }
+
+    /// Is there an event with a physical place that has ended before this one on the same day? Without one the start
+    /// "Vorheriger Termin" has nothing to start from.
+    func hasPreviousPlace(before event: CalendarEvent) -> Bool {
+        days.lazy.flatMap { $0.events + $0.blocks }.contains { other in
+            other.id != event.id && !other.isAllDay && other.isBusy && other.end <= event.start
+                && calendar.isDate(other.start, inSameDayAs: event.start)
+                && other.location.map(TravelRules.isPhysicalLocation) == true
+        }
+    }
+
+    // MARK: Route (PL11b)
+
+    /// The two ends of the trip a segment stands for: for the way there the origin (home or the previous event) and the
+    /// event's place, for the way home the event's place and home. `nil` when an end is unknown (no home address, no place).
+    func travelPlaces(of segment: TravelSegment, event: CalendarEvent) -> (from: TravelPlace, to: TravelPlace)? {
+        func place(of event: CalendarEvent) -> TravelPlace? {
+            event.location.map { TravelPlace(text: $0, latitude: event.latitude, longitude: event.longitude) }
+        }
+        guard let eventPlace = place(of: event) else { return nil }
+        if segment.direction == .returnHome {
+            return settings.homePlace.map { (eventPlace, $0) }
+        }
+        switch segment.origin {
+        case .home:
+            return settings.homePlace.map { ($0, eventPlace) }
+        case .previousEvent(let id):
+            let previous = days.lazy.flatMap { $0.events + $0.blocks }.first { $0.id == id }
+            return previous.flatMap(place(of:)).map { ($0, eventPlace) }
+        }
     }
 }

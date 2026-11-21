@@ -69,6 +69,19 @@ enum FocusTimerText {
         return String(localized: "\(minutes) min bleiben als Fokuszeit für „\(title)“ gespeichert.")
     }
 
+    /// The line of a block that ended early: "35 von 60 min · 25 min früher fertig"; short form "35 von 60 min".
+    static func trimDetail(_ block: TrimmedBlock, short: Bool = false) -> String {
+        let ran: String
+        if block.plannedMinutes < 120 {
+            ran = String(localized: "\(block.actualMinutes) von \(block.plannedMinutes) min")
+        } else {
+            ran = String(localized: "\(CapacityText.duration(block.actualMinutes)) von \(CapacityText.duration(block.plannedMinutes))")
+        }
+        guard !short else { return ran }
+        let saved = CapacityText.duration(block.plannedMinutes - block.actualMinutes)
+        return String(localized: "\(ran) · \(saved) früher fertig")
+    }
+
     /// "Woche ab 16. Nov. · 4 h 35 min Fokus".
     static func weekHeader(start: Date, focusedMinutes: Int) -> String {
         let date = start.formatted(.dateTime.day().month())

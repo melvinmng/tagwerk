@@ -46,43 +46,75 @@ enum TravelText {
         return segment.source == .provisional ? String(localized: "~\(value)") : value
     }
 
-    /// Inside the block in the grid: "25 min", "~30 min" for an estimate, "25 min · manuell" for a time set by hand;
-    /// "· knapp" is added when the trip starts before the previous event ends.
-    static func gridText(_ segment: TravelSegment) -> String {
+    /// Inside the attachment in the grid: "Los 15:05 · 25 min", "Los 15:05 · ~30 min" for an estimate, "Los 15:05 · 25 min ·
+    /// manuell" for a time set by hand; the way home reads "25 min nach Hause". How much too early the trip starts is
+    /// not part of it (the capsule says that, `TravelWarningCapsule`).
+    static func gridText(_ segment: TravelSegment, departure: String) -> String {
         let value = duration(segment)
-        let text = segment.source == .manual ? String(localized: "\(value) · manuell") : value
-        return segment.isTight ? String(localized: "\(text) · knapp") : text
+        let timeText = segment.source == .manual ? String(localized: "\(value) · manuell") : value
+        switch segment.direction {
+        case .toEvent: return String(localized: "Los \(departure) · \(timeText)")
+        case .returnHome: return String(localized: "\(timeText) nach Hause")
+        }
     }
 
-    /// The list row: "Fahrzeit 25 min · ab Zuhause", "Fahrzeit ~30 min · ab Zuhause · geschätzt" for an estimate,
-    /// "Fahrzeit 25 min · manuell" for a time set by hand, with "· knapp" when tight.
+    /// The same content in shorter forms for a narrow column, longest first: the whole text, then what matters most (the
+    /// departure; for the way home the time), the shortest last.
+    static func gridCandidates(_ segment: TravelSegment, departure: String) -> [String] {
+        switch segment.direction {
+        case .toEvent:
+            return [gridText(segment, departure: departure), String(localized: "Los \(departure)"), departure]
+        case .returnHome:
+            return [gridText(segment, departure: departure), duration(segment)]
+        }
+    }
+
+    /// The list row: "Losfahren · 25 min ab Zuhause", "… ab vorherigem Termin", "Losfahren · 25 min · manuell", with
+    /// "· geschätzt" for an estimate; the way home: "Nach Hause · 25 min".
     static func rowText(_ segment: TravelSegment) -> String {
         let value = duration(segment)
         var text: String
-        switch (segment.source, segment.origin) {
-        case (.manual, _): text = String(localized: "Fahrzeit \(value) · manuell")
-        case (_, .home): text = String(localized: "Fahrzeit \(value) · ab Zuhause")
-        case (_, .previousEvent): text = String(localized: "Fahrzeit \(value) · ab vorherigem Termin")
+        switch (segment.direction, segment.source) {
+        case (.returnHome, _):
+            let home = String(localized: "Nach Hause · \(value)")
+            text = segment.source == .manual ? String(localized: "\(home) · manuell") : home
+        case (.toEvent, .manual): text = String(localized: "Losfahren · \(value) · manuell")
+        case (.toEvent, _): text = String(localized: "Losfahren · \(value) \(origin(segment.origin))")
         }
         if segment.source == .provisional { text = String(localized: "\(text) · geschätzt") }
-        return segment.isTight ? String(localized: "\(text) · knapp") : text
+        return text
+    }
+
+    /// The capsule of a trip that starts before the previous event ends: "10 min zu früh".
+    static func overlapText(minutes: Int) -> String {
+        String(localized: "\(CapacityText.duration(minutes)) zu früh")
+    }
+
+    /// What VoiceOver reads for the capsule: "10 Minuten vor dem Ende des vorherigen Termins" (singular and plural by the catalog).
+    static func overlapAccessibility(minutes: Int) -> String {
+        String(localized: "\(minutes) Minuten vor dem Ende des vorherigen Termins")
     }
 
     /// What VoiceOver reads: "Fahrzeit 25 Minuten mit dem Auto, ab Zuhause"; an estimate adds "geschätzt", a time set by
-    /// hand reads "Fahrzeit 25 Minuten, manuell festgelegt".
+    /// hand reads "Fahrzeit 25 Minuten, manuell festgelegt", the way home "Rückweg 25 Minuten zu Fuß, nach Hause".
     static func accessibilityLabel(_ segment: TravelSegment, transport: TravelTransport) -> String {
         var text: String
         if segment.source == .manual {
-            text = String(localized: "Fahrzeit \(segment.minutes) Minuten, manuell festgelegt")
+            text = segment.direction == .returnHome
+                ? String(localized: "Rückweg \(segment.minutes) Minuten, manuell festgelegt")
+                : String(localized: "Fahrzeit \(segment.minutes) Minuten, manuell festgelegt")
+        } else if segment.direction == .returnHome {
+            text = String(localized: "Rückweg \(segment.minutes) Minuten \(phrase(transport)), nach Hause")
         } else {
             text = String(localized: "Fahrzeit \(segment.minutes) Minuten \(phrase(transport)), \(origin(segment.origin))")
-            if segment.source == .provisional { text = String(localized: "\(text), geschätzt") }
         }
-        return segment.isTight ? String(localized: "\(text), knapp") : text
+        if segment.source == .provisional { text = String(localized: "\(text), geschätzt") }
+        return text
     }
 
     /// The value of the row "Fahrzeit" in the entry sheet: what applies to the event now.
-    /// "Automatisch" without a block, "25 min mit dem Auto ab Zuhause", "~30 min · geschätzt", "Keine" or "25 min · manuell".
+    /// "Automatisch" without a block, "25 min mit dem Auto ab Zuhause" (with the transport chosen for the event, if any),
+    /// "~30 min · geschätzt", "Keine" or "25 min · manuell"; "· 10 min zu früh" when the trip starts too early.
     static func overrideSummary(_ mode: TravelOverrideMode, segment: TravelSegment?, transport: TravelTransport) -> String {
         switch mode {
         case .none:
@@ -92,10 +124,26 @@ enum TravelText {
         case .automatic:
             guard let segment else { return String(localized: "Automatisch") }
             let value = duration(segment)
-            var text = [value, phrase(transport), origin(segment.origin)].joined(separator: " ")
+            var text = [value, phrase(segment.transport ?? transport), origin(segment.origin)].joined(separator: " ")
             if segment.source == .provisional { text = String(localized: "\(value) · geschätzt") }
-            return segment.isTight ? String(localized: "\(text) · knapp") : text
+            return segment.isTight ? String(localized: "\(text) · \(overlapText(minutes: segment.overlapMinutes))") : text
         }
+    }
+
+    /// The minutes of a block as the page "Fahrzeit" shows them next to "Automatisch": "25 min", "~30 min".
+    static func valueText(_ segment: TravelSegment) -> String { duration(segment) }
+
+    /// The option "no choice" of the start: "Automatisch (Zuhause)" or "Automatisch (Vorheriger Termin)", after the rule that applies.
+    static func startRule(_ origin: TravelLeg.Origin) -> String {
+        switch origin {
+        case .home: String(localized: "Automatisch (Zuhause)")
+        case .previousEvent: String(localized: "Automatisch (Vorheriger Termin)")
+        }
+    }
+
+    /// The option "no choice" of the transport: "Wie eingestellt (Auto)".
+    static func transportRule(_ transport: TravelTransport) -> String {
+        String(localized: "Wie eingestellt (\(name(transport)))")
     }
 
     /// The row in the planning settings: "Auto · Zuhause gesetzt", "Auto · ohne Heimadresse" or "Aus".
