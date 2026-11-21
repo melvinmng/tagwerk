@@ -22,7 +22,7 @@ struct TravelSegmentView: View {
                 context.stroke(path, with: .color(color.opacity(0.35)), lineWidth: 1)
             }
             Label(TravelText.gridText(segment), systemImage: TravelText.symbol(transport))
-                .font(.caption2.weight(.semibold)).foregroundStyle(segment.isTight ? Color.orange : Color.secondary)
+                .font(.caption2.weight(.semibold)).foregroundStyle(segment.isTight ? Color.orangeText : Color.secondaryText)
                 .labelStyle(.titleAndIcon).lineLimit(1)
                 .padding(.horizontal, 5).padding(.top, 1)
         }
@@ -40,10 +40,10 @@ struct TravelRow: View {
 
     var body: some View {
         HStack(alignment: .top, spacing: 10) {
-            Text(time).font(.caption.monospacedDigit()).foregroundStyle(.secondary).frame(width: 48, alignment: .leading)
+            Text(time).font(.caption.monospacedDigit()).foregroundStyle(.secondaryText).frame(width: 48, alignment: .leading)
             RoundedRectangle(cornerRadius: 2).fill(segment.isTight ? Color.orange : Color.gray.opacity(0.6)).frame(width: 4)
             Label(TravelText.rowText(segment), systemImage: TravelText.symbol(transport))
-                .font(.subheadline).foregroundStyle(segment.isTight ? Color.orange : Color.secondary)
+                .font(.subheadline).foregroundStyle(segment.isTight ? Color.orangeText : Color.secondaryText)
         }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(TravelText.accessibilityLabel(segment, transport: transport))
@@ -66,7 +66,7 @@ struct TravelInfoRow: View {
             } label: {
                 LabeledContent {
                     Text(TravelText.overrideSummary(model.travelOverrideMode(for: event), segment: segment, transport: transport))
-                        .foregroundStyle(segment?.isTight == true ? Color.orange : Color.secondary)
+                        .foregroundStyle(segment?.isTight == true ? Color.orangeText : Color.secondaryText)
                 } label: {
                     Label("Fahrzeit", systemImage: TravelText.symbol(transport))
                 }

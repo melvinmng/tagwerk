@@ -77,7 +77,7 @@ struct WeekView: View {
                             .deadlineInteractions(deadline, model: model, actions: deadlineActions)
                     }
                     if plan.assigned.isEmpty && plan.deadlines.isEmpty && plan.suggestions.isEmpty {
-                        Text(targetedDay == plan.day ? "Hier ablegen" : "–").foregroundStyle(.secondary).font(.caption)
+                        Text(targetedDay == plan.day ? "Hier ablegen" : "–").foregroundStyle(.secondaryText).font(.caption)
                     }
                 } header: {
                     VStack(alignment: .leading, spacing: 4) {
@@ -88,7 +88,7 @@ struct WeekView: View {
                             Spacer()
                             Text(CapacityText.summary(plan.capacity))
                                 .font(.caption)
-                                .foregroundStyle(plan.capacity.isOverbooked ? .red : .secondary)
+                                .foregroundStyle(plan.capacity.isOverbooked ? Color.redText : Color.secondaryText)
                         }
                         CapacityBar(capacity: plan.capacity)
                     }
@@ -116,7 +116,7 @@ struct DeadlineLine: View {
     var body: some View {
         HStack(spacing: 6) {
             Label(deadline.title, systemImage: deadline.kind == .epic ? "diamond.fill" : "flag.fill")
-                .foregroundStyle(.red).font(.subheadline)
+                .foregroundStyle(.redText).font(.subheadline)
             if deadline.kind == .markedEvent { DeadlineBadge(text: String(localized: "markiert")) }
             Spacer(minLength: 0)
         }

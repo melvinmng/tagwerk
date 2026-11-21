@@ -50,7 +50,7 @@ struct CollapsedGroupBlock: View {
                     Text(title).font(.caption).lineLimit(1).frame(maxWidth: .infinity, alignment: .leading)
                 }
                 if shownTitles.hidden > 0 {
-                    Text("+\(shownTitles.hidden) weitere").font(.caption).foregroundStyle(.secondary).lineLimit(1)
+                    Text("+\(shownTitles.hidden) weitere").font(.caption).foregroundStyle(.secondaryText).lineLimit(1)
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
             }
@@ -102,7 +102,7 @@ struct CollapsedGroupList: View {
                                 RoundedRectangle(cornerRadius: 2).fill(row.color).frame(width: 4)
                                 VStack(alignment: .leading, spacing: 2) {
                                     Text(row.title).foregroundStyle(.primary)
-                                    Text(row.time + row.suffix).font(.caption).foregroundStyle(.secondary)
+                                    Text(row.time + row.suffix).font(.caption).foregroundStyle(.secondaryText)
                                 }
                                 Spacer(minLength: 0)
                             }

@@ -114,7 +114,7 @@ struct DayView: View {
         if !model.allDayEvents(for: plan).isEmpty {
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 6) {
-                    Text("Ganztägig").font(.caption.weight(.semibold)).foregroundStyle(.secondary)
+                    Text("Ganztägig").font(.caption.weight(.semibold)).foregroundStyle(.secondaryText)
                     ForEach(model.allDayEvents(for: plan)) { event in
                         Button { sheetEntry = .event(event, plan.links[event.id]) } label: {
                             Text(event.title).font(.subheadline).lineLimit(1)
@@ -175,7 +175,7 @@ struct DayView: View {
             }
             Section {
                 let nowIndex = nowTick >= 0 ? model.nowRowIndex(in: rows, on: plan.day) : nil
-                if rows.isEmpty { Text("Keine Termine").foregroundStyle(.secondary) }
+                if rows.isEmpty { Text("Keine Termine").foregroundStyle(.secondaryText) }
                 ForEach(rows.prefix(nowIndex ?? rows.count)) { row in timelineRow(row, plan: plan, marks: marks) }
                 NowRowSlot(model: model, day: plan.day, isShown: nowIndex != nil)
                 ForEach(rows.dropFirst(nowIndex ?? rows.count)) { row in timelineRow(row, plan: plan, marks: marks) }
@@ -312,10 +312,10 @@ struct CapacityCard: View {
                     .foregroundStyle(isDone ? Color.green : Color.accentColor)
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Tagesabschluss").font(.subheadline.weight(.semibold))
-                    Text(routines.captureEveningDetail(routines.eveningDay)).font(.caption).foregroundStyle(.secondary)
+                    Text(routines.captureEveningDetail(routines.eveningDay)).font(.caption).foregroundStyle(.secondaryText)
                 }
                 Spacer()
-                Image(systemName: "chevron.right").font(.caption).foregroundStyle(.secondary)
+                Image(systemName: "chevron.right").font(.caption).foregroundStyle(.secondaryText)
             }
             .contentShape(Rectangle())
         }
@@ -336,10 +336,10 @@ struct CapacityCard: View {
                         .font(.subheadline.weight(.semibold))
                     Text(DayPanelText.eveningDetail(day: entry.day, freeMinutes: entry.freeMinutes, leftCount: entry.leftCount,
                                                     calendar: model.calendar))
-                        .font(.caption).foregroundStyle(.secondary)
+                        .font(.caption).foregroundStyle(.secondaryText)
                 }
                 Spacer()
-                Image(systemName: "chevron.right").font(.caption).foregroundStyle(.secondary)
+                Image(systemName: "chevron.right").font(.caption).foregroundStyle(.secondaryText)
             }
             .contentShape(Rectangle())
         }
@@ -355,15 +355,15 @@ struct CapacityCard: View {
                 HStack {
                     Text(plan.isPast ? String(localized: "Vergangen") : CapacityText.remaining(plan.capacity)).font(.headline)
                     Spacer()
-                    Image(systemName: "slider.horizontal.3").foregroundStyle(.secondary)
+                    Image(systemName: "slider.horizontal.3").foregroundStyle(.secondaryText)
                 }
                 if plan.capacity.remainingMinutes != nil, let hours = model.workHours(on: plan.day) {
-                    Text(remainingDetail(hours)).font(.caption).foregroundStyle(.secondary)
+                    Text(remainingDetail(hours)).font(.caption).foregroundStyle(.secondaryText)
                 }
                 CapacityBar(capacity: plan.capacity)
                 if plan.capacity.estimatedCount > 0 {
                     Text("\(plan.capacity.estimatedCount) Aufgabe(n) ohne Aufwand mit Standarddauer gerechnet")
-                        .font(.caption).foregroundStyle(.secondary)
+                        .font(.caption).foregroundStyle(.secondaryText)
                 }
                 if suggestedMinutes > 0 {
                     let suggested = CapacityText.duration(suggestedMinutes)
@@ -371,7 +371,7 @@ struct CapacityCard: View {
                         free: plan.capacity.remainingMinutes ?? plan.capacity.freeMinutes, suggestions: plan.suggestions,
                         counted: plan.planInput?.countedTaskMinutes ?? [:]))
                     Label(String(localized: "\(suggested) vorgeschlagen · nach dem Übernehmen \(freeAfter) frei"), systemImage: "sparkles")
-                        .font(.caption).foregroundStyle(.purple)
+                        .font(.caption).foregroundStyle(.purpleText)
                 }
             }
             .contentShape(Rectangle())
@@ -413,7 +413,7 @@ struct TaskSections: View {
             Section("Geplant ohne Uhrzeit") {
                 if plan.assigned.isEmpty {
                     Text(DayPanelText.emptyPlannedHint(day: plan.day, today: today, calendar: model.calendar))
-                        .font(.subheadline).foregroundStyle(.secondary)
+                        .font(.subheadline).foregroundStyle(.secondaryText)
                 }
                 ForEach(plan.assigned) { task in taskRow(task, isPastDue: plan.isPastDue.contains(task.id)) }
             }
@@ -474,13 +474,13 @@ struct TaskSections: View {
                         Text(EstimateHours.text(minutes: task.estimateMinutes))
                     }
                     if overdue, let due = task.due {
-                        Text("fällig \(DueText.text(due, now: model.now(), calendar: model.calendar))").foregroundStyle(.red)
+                        Text("fällig \(DueText.text(due, now: model.now(), calendar: model.calendar))").foregroundStyle(.redText)
                     } else if overdue, let planned = model.planStore.assignment(for: task.id) {
                         Text("geplant \(planned.startDate(in: model.calendar).formatted(.dateTime.weekday(.abbreviated).day().month()))")
-                            .foregroundStyle(.orange)
+                            .foregroundStyle(.orangeText)
                     }
                 }
-                .font(.caption).foregroundStyle(.secondary)
+                .font(.caption).foregroundStyle(.secondaryText)
             }
             Spacer()
             Button(DayPanelText.commitTitle(day: plan.day, today: model.today, calendar: model.calendar)) {
@@ -505,7 +505,7 @@ private struct GapLine: View {
         HStack(spacing: 10) {
             Color.clear.frame(width: 48)
             RoundedRectangle(cornerRadius: 2).strokeBorder(.secondary, style: StrokeStyle(lineWidth: 1, dash: [3])).frame(width: 4)
-            Text(text).font(.caption).foregroundStyle(.secondary)
+            Text(text).font(.caption).foregroundStyle(.secondaryText)
             Spacer()
             Image(systemName: "plus.circle").font(.caption).foregroundStyle(.tertiary)
         }
@@ -525,11 +525,11 @@ private struct TimelineLine: View {
     var body: some View {
         HStack(alignment: .top, spacing: 10) {
             Text(time.formatted(date: .omitted, time: .shortened))
-                .font(.caption.monospacedDigit()).foregroundStyle(.secondary).frame(width: 48, alignment: .leading)
+                .font(.caption.monospacedDigit()).foregroundStyle(.secondaryText).frame(width: 48, alignment: .leading)
             RoundedRectangle(cornerRadius: 2).fill(color).frame(width: isRunning ? 6 : 4)
             VStack(alignment: .leading, spacing: 2) {
                 Text(title)
-                Text(detail).font(.caption).foregroundStyle(.secondary)
+                Text(detail).font(.caption).foregroundStyle(.secondaryText)
             }
         }
         .accessibilityElement(children: .combine)
@@ -549,9 +549,9 @@ struct PlannedTaskRow: View {
                 Text((isFocus ? "★ " : "") + task.title).lineLimit(2)
                 HStack(spacing: 6) {
                     Text(EstimateHours.text(minutes: task.estimateMinutes))
-                    if isPastDue { Label("nach Fälligkeit", systemImage: "exclamationmark.triangle.fill").foregroundStyle(.orange) }
+                    if isPastDue { Label("nach Fälligkeit", systemImage: "exclamationmark.triangle.fill").foregroundStyle(.orangeText) }
                 }
-                .font(.caption).foregroundStyle(.secondary)
+                .font(.caption).foregroundStyle(.secondaryText)
             }
             Spacer()
             if let priority = task.priority {

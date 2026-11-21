@@ -49,13 +49,13 @@ struct UnplannedDrawer: View {
             Capsule().fill(.tertiary).frame(width: 36, height: 5).padding(.top, 6)
             HStack {
                 Text("Ungeplant").font(.headline)
-                Text("\(model.unplanned.count)").font(.subheadline.monospacedDigit()).foregroundStyle(.secondary)
+                Text("\(model.unplanned.count)").font(.subheadline.monospacedDigit()).foregroundStyle(.secondaryText)
                 Spacer()
                 let due = model.unplannedSections(search: "").dueInRange.count
                 if due > 0 {
-                    Text("\(due) fällig in diesem Zeitraum").font(.caption.weight(.semibold)).foregroundStyle(.orange)
+                    Text("\(due) fällig in diesem Zeitraum").font(.caption.weight(.semibold)).foregroundStyle(.orangeText)
                 }
-                Image(systemName: height == .large ? "chevron.down" : "chevron.up").foregroundStyle(.secondary)
+                Image(systemName: height == .large ? "chevron.down" : "chevron.up").foregroundStyle(.secondaryText)
             }
             .padding(.horizontal)
         }
@@ -112,7 +112,7 @@ struct UnplannedDrawer: View {
                     }
                     Text(EstimateHours.text(minutes: task.estimateMinutes))
                 }
-                .font(.caption).foregroundStyle(.secondary)
+                .font(.caption).foregroundStyle(.secondaryText)
             }
             Spacer()
             Menu {

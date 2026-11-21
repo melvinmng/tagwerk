@@ -14,12 +14,12 @@ struct MonthPagePreview: View {
     var body: some View {
         LazyVGrid(columns: columns, spacing: 4) {
             ForEach(DateText.shortStandaloneWeekdaySymbols(calendar: model.calendar), id: \.self) {
-                Text($0).font(.caption2).foregroundStyle(.secondary)
+                Text($0).font(.caption2).foregroundStyle(.secondaryText)
             }
             ForEach(PlanningModel.monthGridDays(anchor: anchor, calendar: model.calendar), id: \.self) { day in
                 Text("\(day.day)")
                     .font(.callout.weight(day == model.today ? .bold : .regular))
-                    .foregroundStyle(day.month == anchor.month ? .primary : .secondary)
+                    .foregroundStyle(day.month == anchor.month ? Color.primary : Color.secondaryText)
                     .frame(maxWidth: .infinity, minHeight: 48)
                     .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(day == model.today ? Color.accentColor : .clear, lineWidth: 2))
                     .opacity(day.month == anchor.month ? 1 : 0.45)

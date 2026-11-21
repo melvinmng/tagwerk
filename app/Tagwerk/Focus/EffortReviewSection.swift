@@ -12,7 +12,7 @@ struct EffortReviewSection: View {
         let data = reviewData
         Section {
             if data.groups.isEmpty {
-                Text("Noch zu wenige Messungen.").foregroundStyle(.secondary)
+                Text("Noch zu wenige Messungen.").foregroundStyle(.secondaryText)
             } else {
                 EffortScaleRow()
             }
@@ -77,7 +77,7 @@ private struct EffortScaleRow: View {
             }
         }
         .font(.caption2)
-        .foregroundStyle(.secondary)
+        .foregroundStyle(.secondaryText)
         .frame(height: 18)
         .accessibilityHidden(true)
     }
@@ -98,7 +98,7 @@ private struct EffortGroupRow: View {
                 if let deviation = group.deviationPercent {
                     Text(EffortReviewText.deviationLabel(deviation)).monospacedDigit().fontWeight(.semibold)
                 } else {
-                    Text(EffortReviewText.pendingLabel(count: group.count)).font(.subheadline).foregroundStyle(.secondary)
+                    Text(EffortReviewText.pendingLabel(count: group.count)).font(.subheadline).foregroundStyle(.secondaryText)
                 }
             }
             if let deviation = group.deviationPercent {
@@ -106,9 +106,9 @@ private struct EffortGroupRow: View {
                     .frame(height: 12)
                     .accessibilityHidden(true)
             }
-            Text(EffortReviewText.count(group.count)).font(.caption).foregroundStyle(.secondary)
+            Text(EffortReviewText.count(group.count)).font(.caption).foregroundStyle(.secondaryText)
         }
-        .foregroundStyle(group.deviationPercent == nil ? Color.secondary : Color.primary)
+        .foregroundStyle(group.deviationPercent == nil ? Color.secondaryText : Color.primary)
         .padding(.leading, isIndented ? 16 : 0)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(Text("\(name) · \(EffortReviewText.count(group.count))"))
