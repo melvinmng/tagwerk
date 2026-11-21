@@ -16,6 +16,11 @@ class UITestCase: XCTestCase {
     /// at every hour of the day, also shortly before midnight, when the next full hour is already the next day.
     static let morningClockArguments = ["-TagwerkUITestNow", "09:30"]
 
+    /// Pins the time of day to the evening, after the end of work (18:00): "heute ist vorbei", so "Planen" and "Tagesabschluss" show the
+    /// leftover row ("Unerledigtes verschieben"). With `-TagwerkUITest` today is a working day on every weekday (see
+    /// `DemoData.uiTestWorkdayOverrides`), so only the clock decides, not the weekday.
+    static let eveningClockArguments = ["-TagwerkUITestNow", "19:30"]
+
     /// Extra launch arguments of a test class (e.g. a large text size).
     var extraLaunchArguments: [String] { [] }
 

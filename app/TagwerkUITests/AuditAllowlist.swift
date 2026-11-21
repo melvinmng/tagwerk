@@ -20,8 +20,11 @@ enum AuditAllowlist {
         let reason: String
     }
 
-    /// The two screens that show the hour grid of "Planen": default size and AX5 in dark mode.
-    private static let gridScreens = ["Planen (Tag)", "AX5/dark Planen"]
+    /// The screens that show the hour grid of "Planen": default size and AX5 in dark mode, in the morning run and in the evening run.
+    private static let gridScreens = ["Planen (Tag)", "AX5/dark Planen", "Planen (Abend)", "AX5/dark Planen (Abend)"]
+    /// The two screens of the pinned evening run (after the end of work): the capacity card with the leftover row on top of the hour grid.
+    private static let eveningSheetScreens = ["Tagesabschluss (Abend)", "AX5/dark Tagesabschluss (Abend)"]
+    private static let eveningPlanScreens = ["Planen (Abend)", "AX5/dark Planen (Abend)"]
     /// Texts of the entries in the hour grid: titles of the demo events and their time line ("10:00–12:30", with marks after a dot).
     private static let gridCellLabels = [
         "\\d\\d:\\d\\d–\\d\\d:\\d\\d( · .*)?", "Seminar", "Sprechstunde", "Mittagspause", "(⚑ )?Abgabe Kurzbericht",
@@ -64,19 +67,27 @@ enum AuditAllowlist {
         ], reason: "Button and segment texts in the accent colour or on Liquid Glass / bordered tint (navigation bar, filter marks, quick entry). "
             + "The system draws the background; no own colour to change without replacing the system style (#188)."),
 
-        Entry(auditType: .contrast, labels: ["Unerledigt von heute"], screens: ["Tagesabschluss"], reason:
+        Entry(auditType: .contrast, labels: ["Unerledigt von heute"], screens: ["Tagesabschluss (Abend)"], reason:
             "Section header of the leftover section of the wrap-up, in the system grey of a grouped list header on the grouped background "
             + "(\"nearly passed\"). It is the same group as the other section headers above; the system draws the header colour, and an own "
             + "78 % tone for this one header would duplicate the `TextSecondary` asset that strand K (plan g3-system-anbindungen, KO1a) "
             + "introduces for all grey texts at once. Removed with the other entries of the group in task K5 (#160)."),
 
+        Entry(auditType: .contrast, labels: [
+            "Morgen planen", "30 min zu viel", "Arbeitszeit vorbei · .*", "[A-Z][a-z]\\. \\d+\\. [A-Za-zä]+\\. · .* frei · \\d+ von heute übrig",
+            "Unerledigtes verschieben · \\d+ Aufgaben?",
+        ], screens: eveningPlanScreens, reason:
+            "Texts of the capacity card of today after the end of work (\"Arbeitszeit vorbei\", the next planning day, the leftover row): text on the "
+            + "translucent `.thinMaterial` card, whose colour depends on the part of the hour grid behind it. The same group as the other texts on "
+            + "tinted cards above (#188, \"Sekundärtexte auf getönten Karten\"); the card is audited in the pinned evening run only. Most of them "
+            + "appear in one of three repetitions (collect mode), \"von heute übrig\" in all of them."),
         Entry(auditType: .contrast, labels: gridCellLabels, screens: gridScreens, reason:
             "Title and time of the entries in the hour grid of \"Planen\": text in the primary or secondary colour on the event colour at 24 % "
             + "(blue, green, red, grey). The tint is the colour code of the grid (calendar, block, deadline, break); contrast on tint is a "
             + "design question (#188, \"Sekundärtexte auf getönten Karten\")."),
 
         // MARK: Dynamic Type
-        Entry(auditType: .dynamicType, labels: ["\\d\\d:\\d\\d"] + gridCellLabels, screens: ["Planen (Tag)"], reason:
+        Entry(auditType: .dynamicType, labels: ["\\d\\d:\\d\\d"] + gridCellLabels, screens: ["Planen (Tag)", "Planen (Abend)"], reason:
             "Hour labels and entries of the hour grid of \"Planen\": the grid is time-proportional (fixed height per hour), so its texts are "
             + "text styles but cannot grow with the size; the audit reports the partial support. Plan g3-uitests-a11y: the grid stays "
             + "proportional, visibility at large sizes is decided in #188; the full text is in the accessibility label of each entry."),
@@ -87,11 +98,6 @@ enum AuditAllowlist {
             "Punkte in den Einstellungen anlegen", "Morgen planen", "Fertig", "Brain Dump", "Leitfragen einfügen", "\\d+\\.\\d+\\.",
         ], screens: ["Tagesabschluss", "Tagesabschluss (Abend)"], reason: "Texts of the evening sheet (hint line, buttons, date of the next planning day) report a partial lack of "
             + "Dynamic Type support; no clipping in the large text run. Stays on the device test list."),
-        Entry(auditType: .dynamicType, labels: ["Unerledigtes verschieben · \\d+ Aufgaben?"], screens: ["Tagesabschluss"], reason:
-            "Row \"Unerledigtes verschieben\" of the wrap-up (`LeftoverLine`): one `Text` with a text style and no line limit, so it grows and wraps "
-            + "with the text size; the audit still reports a partial lack of support (the same row is reported as \"may be clipped\" in the "
-            + "text clipped group below, and as soon as the height is fixed to the text it switches to this finding). Not part of the "
-            + "AX5 run; stays on the device test list (large text)."),
         Entry(auditType: .dynamicType, labels: [
             "P1", "Ältere Termine durchsuchen · vor .*", "Durchsucht: 6 Monate zurück, 12 Monate voraus\\.",
         ], reason: "Priority capsule and the hint rows of the search sheet use text styles; the audit still reports a partial lack of "
@@ -109,10 +115,15 @@ enum AuditAllowlist {
             "Ältere Termine durchsuchen · vor .*",
         ], reason: "Reported in the default size for texts that are shown completely on the screenshot of the run (cards of \"Planen\", "
             + "entry rows of \"Aufgaben\", \"Erfassen\"). Not reproducible by eye; stays on the device test list (large text)."),
-        Entry(auditType: .textClipped, labels: ["Unerledigtes verschieben · \\d+ Aufgaben?"], screens: ["Tagesabschluss"], reason:
-            "The row \"Unerledigtes verschieben\" of the wrap-up is a single `Text` without a line limit, so it wraps instead of being cut; "
-            + "the audit's generic warning \"may be clipped at larger Dynamic Type sizes\" comes with the new row of the leftover section "
-            + "(same group as the entries above). Not part of the AX5 run; stays on the device test list (large text)."),
+        Entry(auditType: .textClipped, labels: ["Unerledigtes verschieben · \\d+ Aufgaben?"], screens: eveningPlanScreens + eveningSheetScreens, reason:
+            "Row \"Unerledigtes verschieben\" (`LeftoverLine`): the text wraps (`fixedSize(horizontal: false, vertical: true)`) and the row is at least "
+            + "44 pt high. Checked on the frames of the findings: 266 × 18 pt (one line) in the capacity card at the default size, 206 × 38 pt "
+            + "(two lines, nothing cut) in the wrap-up. The audit reports its generic warning \"may be clipped at larger Dynamic Type sizes\" "
+            + "for the row; the AX5 run of the capacity card (screen \"AX5/dark Planen (Abend)\") reports nothing for it."),
+        Entry(auditType: .textClipped, labels: ["Erledigt: Erinnerungen und lokale Aufgaben, ohne GitHub\\."], screens: ["AX5/dark Tagesabschluss (Abend)"], reason:
+            "Footer of the wrap-up in the AX5 run of the evening sheet. Checked on the frame of the finding: 370 × 217 pt, completely inside the "
+            + "screen (874 pt high), so the text wraps and nothing is cut; the audit reports its generic warning \"may be clipped at larger "
+            + "Dynamic Type sizes\". Stays on the device test list (large text)."),
         Entry(auditType: .textClipped, labels: ["[\\d.]+ / [\\d.]+"], reason:
             "Steps value of \"Erfassen\" in the largest text size: single-line summary cell. Layout for AX sizes is a "
             + "design decision (#188, \"Layout bei Bedienungshilfen-Schriftgrößen\"). The date caption above the day title wraps at "
@@ -163,6 +174,10 @@ enum AuditAllowlist {
             + "of the scroll view (the audit counts that as clipped). The navigation title \"Rezept mit ChatGPT anlegen\" is truncated by the "
             + "system bar (large title at AX sizes still cuts it): device test list, design decision in #188."),
 
+        Entry(auditType: .contrast, labels: ["Fertig"], screens: ["AX5/dark Tagesabschluss (Abend)"], reason:
+            "The \"Fertig\" button of the navigation bar of the wrap-up sheet in dark mode at AX5: the system draws the label and the Liquid Glass "
+            + "background (same group as \"Abbrechen\" and \"Auswählen\" above, #188). In the default size the same button reports nothing."),
+
         // MARK: Hit area
         Entry(auditType: .hitRegion, labels: ["Eingabe löschen"], reason:
             "The clear button of the search field is a 17 pt glyph inside the 44 pt high field; a bigger frame would shift the field text. "
@@ -179,6 +194,7 @@ enum AuditAllowlist {
     static func audit(_ app: XCUIApplication, screen: String, for auditTypes: XCUIAccessibilityAuditType,
                       file: StaticString = #filePath, line: UInt = #line) throws {
         currentScreen = screen
+        logDefinitionsOnce()
         let passes = auditTypes.contains(.contrast) && auditTypes != .contrast ? [.contrast, auditTypes.subtracting(.contrast)] : [auditTypes]
         for pass in passes {
             // Before each pass: a screen that is still changing (late loading, layout, an animation) gives findings that
@@ -264,12 +280,33 @@ enum AuditAllowlist {
         func matches(_ text: String, _ pattern: String) -> Bool { text.range(of: "^(\(pattern))$", options: .regularExpression) != nil }
         // Every read of an element property is a query of its own and slow, so each is read once per finding.
         let label = element.label, identifier = element.identifier, elementType = element.elementType
-        return entries.contains { entry in
+        let index = entries.firstIndex { entry in
             guard entry.auditType == issue.auditType, entry.screens == nil || entry.screens?.contains(currentScreen) == true,
                   entry.elementType == nil || entry.elementType == elementType else { return false }
             return entry.labels.contains { pattern in
                 matches(label, pattern) || (!identifier.isEmpty && matches(identifier, pattern))
             }
+        }
+        if let index { noteHit(of: index) }
+        return index != nil
+    }
+
+    /// Collect mode only: lets the report of `scripts/stress-audits.sh --collect` list the entries that no finding of a full
+    /// run matched (dead entries). Every entry is written once per process as ENTRY-DEFINED, every first match as ENTRY-HIT.
+    private static var matchedEntries: Set<Int> = []
+    private static var loggedDefinitions = false
+
+    private static func noteHit(of index: Int) {
+        guard collectsFindings, matchedEntries.insert(index).inserted else { return }
+        recordLine("ENTRY-HIT \(index)\n")
+    }
+
+    private static func logDefinitionsOnce() {
+        guard collectsFindings, !loggedDefinitions else { return }
+        loggedDefinitions = true
+        for (index, entry) in entries.enumerated() {
+            let screens = entry.screens.map { "\($0.count) screen(s): \($0.prefix(2).joined(separator: ", "))" } ?? "all screens"
+            recordLine("ENTRY-DEFINED \(index) | \(entry.auditType.rawValue) | \(screens) | \(entry.labels.prefix(3).joined(separator: ", "))\n")
         }
     }
 

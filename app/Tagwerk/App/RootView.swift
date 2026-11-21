@@ -137,7 +137,10 @@ struct RootView: View {
         }
         .sheet(item: routinesSheet) { sheet in
             switch sheet {
-            case .evening(let day): EveningSheet(model: environment.routines, day: day, notes: environment.notes, isSignedIn: { environment.ai.isSignedIn })
+            case .evening(let day):
+                // A sheet is a hierarchy of its own: without the modifier the large text audit of "Tagesabschluss" would run in the standard size.
+                EveningSheet(model: environment.routines, day: day, notes: environment.notes, isSignedIn: { environment.ai.isSignedIn })
+                    .modifier(UITestAppearance())
             case .start(let day): MorningSheet(model: environment.routines, day: day, notes: environment.notes, isSignedIn: { environment.ai.isSignedIn })
             case .leftover: LeftoverSheet(planning: environment.planning, taskList: environment.taskList, onFinished: { _ in })
             case .week: WeekPlanningSheet(model: environment.makeWeekPlanningModel())
