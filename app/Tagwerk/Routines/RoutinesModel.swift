@@ -69,6 +69,9 @@ final class RoutinesModel {
     @ObservationIgnored private let now: () -> Date
     /// Whether a task is an occurrence of a recurring reminder (not selectable as focus); defaults to the plan's list.
     @ObservationIgnored private let isRecurringOverride: ((TaskItem) -> Bool)?
+    /// Called after a point of the evening checklist was checked or unchecked on a routine day; the app keeps the evening
+    /// reminders in line with it.
+    @ObservationIgnored var onChecklistToggled: ((_ id: UUID, _ day: PlanDay, _ isChecked: Bool) async -> Void)?
     /// The overview shown in the morning card; refreshed by the card.
     private(set) var cardOverview: Overview?
 
@@ -121,10 +124,18 @@ final class RoutinesModel {
     func checklist() -> [ChecklistItem] { store.checklist() }
 
     func toggleItem(_ id: UUID, on day: PlanDay) {
+        var isChecked = false
         store.update(day) { value in
-            if value.checkedItemIDs.contains(id) { value.checkedItemIDs.remove(id) } else { value.checkedItemIDs.insert(id) }
+            if value.checkedItemIDs.contains(id) {
+                value.checkedItemIDs.remove(id)
+            } else {
+                value.checkedItemIDs.insert(id)
+                isChecked = true
+            }
         }
         revision += 1
+        // The evening reminders follow the check: a checked point must not remind on that evening any more.
+        if let hook = onChecklistToggled { Task { await hook(id, day, isChecked) } }
     }
 
     /// Writes the day the sheet was opened for, not the day the clock shows now (rule 10, review focus 1).

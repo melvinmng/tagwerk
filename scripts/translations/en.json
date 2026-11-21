@@ -2067,5 +2067,6 @@
   "Gelesen: %@": "Read: %@",
   "Höchstens fünf Notizen auf einmal.": "At most five notes at once.",
   "Notiz nicht gefunden.": "Note not found.",
-  "Geschlossene Issues lassen sich hier nicht zuweisen.": "Closed issues cannot be assigned here."
+  "Geschlossene Issues lassen sich hier nicht zuweisen.": "Closed issues cannot be assigned here.",
+  "Abgehakte Punkte erinnern an dem Abend nicht mehr. Tagwerk plant die Erinnerungen für die nächsten 3 Tage und füllt sie nach, sobald du die App öffnest.": "Checked items no longer remind you that evening. Tagwerk plans the reminders for the next 3 days and tops them up whenever you open the app."
 }
