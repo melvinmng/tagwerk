@@ -1,5 +1,8 @@
 # Tageskapazität richtig rechnen – Implementation Plan (Entwurf)
 
+
+> **Stand 21.11.2026 (Nutzer):** KA6a gewählt. Ursache der 3 h 10 bestätigt: Arbeitszeit am Dienstag ist die normale; wiederkehrende Aufgabe „Karteikarten“ mit 4 h reserviertem Aufwand (7 h 40 − 4 h 30 = 3 h 10). **KA3 entschieden:** Reservierter Aufwand wiederkehrender Aufgaben verringert die freie Zeit gar nicht mehr; Zeit wird erst abgezogen, wenn Zeitblöcke gebucht sind (strenger als KA3a: auch kein Abzug als „eingeplant“). KA1, KA2, KA4, KA5 noch offen. Task 0 entfällt.
+
 > **For agentic workers:** Dieser Plan ist ein **Entwurf vor den Entscheidungen des Nutzers**. Kein Task wird begonnen, bevor die Entscheidungen im Abschnitt „Entscheidungen des Nutzers“ getroffen und hier eingetragen sind. Jeder Task nennt unter „Hängt ab von“ die Kürzel, gegen deren Empfehlung er geschrieben ist; fällt eine Entscheidung anders aus, wird der Task vor der Umsetzung überarbeitet. Danach gilt: Task für Task, jeweils mit TDD, Schritte als Checkbox (`- [ ]`).
 
 > **Status:** Stand 21.11.2026, Code-Grundlage `origin/main` bei `85c982b` (enthält PR #257). Mockups: `docs/superpowers/mockups/2026-11-21-kapazitaet-mockups.html` (Kürzel KA, nur KA6 hat ein Bild). Nichts davon ist gebaut, nichts am Gerät geprüft, kein Test wurde für diesen Plan ausgeführt. Es gibt noch kein Issue zu diesem Vorhaben.
