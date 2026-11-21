@@ -219,15 +219,22 @@ struct DayView: View {
             .contextMenu { eventMenu(event, taskID: nil) }
         case .block(let event, let taskID):
             let remaining = model.runningRemaining(of: event, on: plan.day)
-            Button { sheetEntry = .event(event, taskID) } label: {
-                TimelineLine(time: event.start,
-                             title: (plan.day == model.today && model.focusTaskIDs.contains(taskID) ? "★ " : "") + event.title,
-                             detail: (remaining.map { NowText.runningDetail(remainingMinutes: $0) }
-                                 ?? CapacityText.duration(Int(event.end.timeIntervalSince(event.start) / 60))) + " · "
-                                 + (model.canEditAsBlock(event) ? String(localized: "Zeitblock") : String(localized: "verknüpft")),
-                             color: .green, isRunning: remaining != nil)
+            let trimmed = marks.trimmedBlocks[event.id]
+            HStack(spacing: 8) {
+                Button { sheetEntry = .event(event, taskID) } label: {
+                    TimelineLine(time: event.start,
+                                 title: (trimmed != nil ? "✓ " : "")
+                                     + (plan.day == model.today && model.focusTaskIDs.contains(taskID) ? "★ " : "") + event.title,
+                                 detail: trimmed.map { FocusTimerText.trimDetail($0) }
+                                     ?? ((remaining.map { NowText.runningDetail(remainingMinutes: $0) }
+                                         ?? CapacityText.duration(Int(event.end.timeIntervalSince(event.start) / 60))) + " · "
+                                         + (model.canEditAsBlock(event) ? String(localized: "Zeitblock") : String(localized: "verknüpft"))),
+                                 color: .green, isRunning: remaining != nil)
+                }
+                .foregroundStyle(.primary)
+                // The button of the focus (FO4b) next to the row, not inside its button.
+                if model.focusBlockID(in: plan) == event.id { FocusPlanButton(event: event, model: model) }
             }
-            .foregroundStyle(.primary)
         case .lunch(let start, let minutes):
             let remaining = model.runningRemaining(range: start..<(start + minutes), on: plan.day)
             Button { sheetEntry = .lunch(day: plan.day, range: start..<(start + minutes)) } label: {

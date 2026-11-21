@@ -146,5 +146,34 @@ struct NowMarkerTests {
         #expect(NowMarker.openingMinutes(firstEntryStart: nil, workStart: 540) == 540)
         #expect(NowMarker.openingMinutes(firstEntryStart: nil, workStart: nil) == nil)
     }
-}
 
+    // MARK: Which block carries the focus button (FO4b)
+
+    @Test func focusBlockIndex_prefersTheRunningBlock() {
+        let blocks = [540..<600, 600..<660, 720..<780]
+        #expect(NowMarker.focusBlockIndex(blockRanges: blocks, nowMinutes: 630) == 1)
+        // Of two blocks running at once, the one that started first.
+        #expect(NowMarker.focusBlockIndex(blockRanges: [600..<700, 630..<660], nowMinutes: 640) == 0)
+    }
+
+    @Test func focusBlockIndex_elseTheNext() {
+        let blocks = [540..<600, 720..<780, 840..<900]
+        // Between two blocks: the next one that starts after now.
+        #expect(NowMarker.focusBlockIndex(blockRanges: blocks, nowMinutes: 650) == 1)
+        // Before the first.
+        #expect(NowMarker.focusBlockIndex(blockRanges: blocks, nowMinutes: 500) == 0)
+        // The end of a block is no longer "running": the next one carries the button.
+        #expect(NowMarker.focusBlockIndex(blockRanges: blocks, nowMinutes: 600) == 1)
+        // Independent of the order of the list.
+        #expect(NowMarker.focusBlockIndex(blockRanges: [840..<900, 540..<600], nowMinutes: 650) == 0)
+    }
+
+    @Test func focusBlockIndex_otherDay_isNil() {
+        #expect(NowMarker.focusBlockIndex(blockRanges: [540..<600], nowMinutes: nil) == nil)
+    }
+
+    @Test func focusBlockIndex_noBlockLeft_isNil() {
+        #expect(NowMarker.focusBlockIndex(blockRanges: [540..<600], nowMinutes: 700) == nil)
+        #expect(NowMarker.focusBlockIndex(blockRanges: [], nowMinutes: 700) == nil)
+    }
+}
