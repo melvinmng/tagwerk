@@ -7007,6 +7007,16 @@
         }
       }
     },
+    "Die Suche braucht mindestens 2 Zeichen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The search needs at least 2 characters."
+          }
+        }
+      }
+    },
     "Die Suche ist nicht verfügbar.": {
       "localizations": {
         "en": {
@@ -7409,6 +7419,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "This event repeats"
+          }
+        }
+      }
+    },
+    "Dieses Gespräch betrifft nur eine Notiz.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This conversation is about one note only."
           }
         }
       }
@@ -14437,6 +14457,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Folders can be nested three levels deep at most."
+          }
+        }
+      }
+    },
+    "Ordner nicht gefunden.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Folder not found."
           }
         }
       }

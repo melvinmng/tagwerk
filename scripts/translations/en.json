@@ -2172,5 +2172,8 @@
   "**Gilt überall beim Assistenten:** in diesem Notiz-Chat und für die Suche des Assistenten in allen anderen Gesprächen.": "**Applies everywhere in the assistant:** in this notes chat and for the assistant’s search in all other conversations.",
   "**Nie gesendet werden:** %@, gelöschte Notizen und die Anhänge selbst.": "**Never sent:** %@, deleted notes and the attachments themselves.",
   "**Nichts ändert sich ohne dich:** Jede Änderung, jede neue Notiz und jedes Löschen bestätigst du einzeln.": "**Nothing changes without you:** you confirm every change, every new note and every deletion one by one.",
-  "**Nur im Gespräch:** Ohne deine Nachricht an den Assistenten verlässt nichts das iPhone. Gelesene Notiztexte gelten nur für das laufende Gespräch und werden nicht im Verlauf gespeichert; die Antworten des Assistenten schon.": "**Only in conversation:** without your message to the assistant, nothing leaves the iPhone. Note texts it has read apply only to the running conversation and are not saved in the history; the assistant’s replies are."
+  "**Nur im Gespräch:** Ohne deine Nachricht an den Assistenten verlässt nichts das iPhone. Gelesene Notiztexte gelten nur für das laufende Gespräch und werden nicht im Verlauf gespeichert; die Antworten des Assistenten schon.": "**Only in conversation:** without your message to the assistant, nothing leaves the iPhone. Note texts it has read apply only to the running conversation and are not saved in the history; the assistant’s replies are.",
+  "Dieses Gespräch betrifft nur eine Notiz.": "This conversation is about one note only.",
+  "Die Suche braucht mindestens 2 Zeichen.": "The search needs at least 2 characters.",
+  "Ordner nicht gefunden.": "Folder not found."
 }
