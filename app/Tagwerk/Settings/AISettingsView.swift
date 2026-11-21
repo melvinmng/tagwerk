@@ -138,7 +138,7 @@ struct AISettingsView: View {
                 Text("Nur im Notfall").tag(AIPlanner.LongerDays.emergencyOnly.rawValue)
             }
             NavigationLink { VoiceSettingsView() } label: {
-                LabeledContent("Sprache", value: VoiceAvailability.summary(inputEnabled: environment.settings.voiceInputEnabled,
+                LabeledContent("Spracheingabe und Vorlesen", value: VoiceAvailability.summary(inputEnabled: environment.settings.voiceInputEnabled,
                                                                             readAloud: environment.settings.voiceReadAloud))
             }
             NavigationLink("Diagnose") { PlanningDiagnosticsView() }

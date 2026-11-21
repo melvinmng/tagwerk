@@ -95,6 +95,11 @@ struct SettingsView: View {
                         LabeledContent("Datensicherung", value: BackupSettingsView.lastBackupText(settings.lastAutoBackupAt))
                     }
                     NavigationLink("Fokus-Timer") { FocusSettingsView() }
+                    NavigationLink {
+                        LanguageSettingsView()
+                    } label: {
+                        LabeledContent("Sprachen", value: LanguageSettingsText.summary(settings.contentLanguages))
+                    }
                 }
 
                 Section {
