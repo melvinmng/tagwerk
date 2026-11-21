@@ -34,6 +34,26 @@ enum EffortReviewText {
         Localized.string("\(number) Aufgaben", in: language, bundle: .main)
     }
 
+    /// Scale of the bars: −50 % … +100 %, with "wie geschätzt" at a third of the width.
+    static let scale = -50...100
+
+    /// Position of a deviation on the scale, 0...1, clamped; 1/3 is "as estimated".
+    static func position(deviationPercent: Int) -> Double {
+        let clamped = min(max(deviationPercent, scale.lowerBound), scale.upperBound)
+        return Double(clamped - scale.lowerBound) / Double(scale.upperBound - scale.lowerBound)
+    }
+
+    /// "+40 %", "±0 %" (within the tolerance), "−15 %" (with the minus sign).
+    static func deviationLabel(_ percent: Int, language: VoiceLanguage = .app) -> String {
+        if abs(percent) <= tolerancePercent { return "±\(Self.percent(0, language: language))" }
+        return (percent > 0 ? "+" : "−") + Self.percent(abs(percent), language: language)
+    }
+
+    /// "2 von 3 Messungen" for a group below the minimum.
+    static func pendingLabel(count: Int, language: VoiceLanguage = .app) -> String {
+        Localized.string("\(count) von \(EffortStats.minimumSamples) Messungen", in: language, bundle: .main)
+    }
+
     private static func percent(_ value: Int, language: VoiceLanguage) -> String {
         (Double(value) / 100).formatted(.percent.precision(.fractionLength(0)).locale(language == .app ? .current : language.locale))
     }

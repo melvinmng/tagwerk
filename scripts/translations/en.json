@@ -1693,7 +1693,6 @@
   "Messungen in dieser Woche": "Measurements this week",
   "Noch zu wenige Messungen.": "Not enough measurements yet.",
   "Ohne Schätzung gemessen": "Measured without estimate",
-  "Schätzung und Ist": "Estimate vs. actual",
   "Zum Zeitpunkt": "At time of event",
   "%lld Minuten vorher": {
     "one": "%lld minute before",
@@ -2040,5 +2039,8 @@
   "%lld min Fokus geschafft ✓": "%lld min of focus done ✓",
   "Fokus geschafft ✓": "Focus done ✓",
   "Pause starten · %lld min": "Start break · %lld min",
-  "Aktuelle Phase zeigen": "Show current phase"
+  "Aktuelle Phase zeigen": "Show current phase",
+  "%lld von %lld Messungen": "%1$lld of %2$lld measurements",
+  "wie geschätzt": "as estimated",
+  "Schätzung und Ist · letzte 8 Wochen": "Estimate vs. actual · last 8 weeks"
 }
