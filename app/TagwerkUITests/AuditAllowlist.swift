@@ -31,9 +31,11 @@ enum AuditAllowlist {
     private static let recipeScreens = [
         "Rezepte", "Rezept-Notiz", "Zutaten (Rezept)", "Rezept anlegen (Eingabe)", "Rezept anlegen (Einwilligung)",
         "Rezept anlegen (Bestätigung)", "Einkauf › Rezept hinzufügen", "Einkauf › Rezept hinzufügen (Notiz)",
-        "Einstellungen › KI › Sprache", "Einstellungen › Erfassen", "Einstellungen › Einkaufsliste",
+        "Einstellungen › KI › Sprache", "Einstellungen › Erfassen", "Einstellungen › Einkaufsliste", "Einstellungen › Siri & Kurzbefehle",
     ]
     private static let recipeScreensLargeText = recipeScreens.map { "AX5/dark " + $0 }
+    /// The page "Siri & Kurzbefehle" in both audit runs.
+    private static let siriScreens = ["Einstellungen › Siri & Kurzbefehle", "AX5/dark Einstellungen › Siri & Kurzbefehle"]
 
     private static let entries: [Entry] = [
         // MARK: Contrast (every group needs a colour decision, section "Designpunkte für #188")
@@ -64,6 +66,11 @@ enum AuditAllowlist {
         ], reason: "Button and segment texts in the accent colour or on Liquid Glass / bordered tint (navigation bar, filter marks, quick entry). "
             + "The system draws the background; no own colour to change without replacing the system style (#188)."),
 
+        Entry(auditType: .contrast, labels: ["Abschließen"], screens: ["Tagesabschluss"], reason:
+            "Confirmation button of the wrap-up sheet in the navigation bar: the text sits on the Liquid Glass of the bar, whose background "
+            + "lets the list scroll behind it. \"Fertig\" was narrower and passed; the longer \"Abschließen\" (#188 TA3) reaches over more of the "
+            + "list and is reported. The system draws the background; same group as \"Verwerfen\" and \"Auswählen\" above (#188, "
+            + "\"Schrift auf Liquid Glass\")."),
         Entry(auditType: .contrast, labels: ["Unerledigt von heute"], screens: ["Tagesabschluss"], reason:
             "Section header of the leftover section of the wrap-up, in the system grey of a grouped list header on the grouped background "
             + "(\"nearly passed\"). It is the same group as the other section headers above; the system draws the header colour, and an own "
@@ -84,7 +91,7 @@ enum AuditAllowlist {
             "The date title in the bar of \"Planen\" is fixed in size on purpose (a toolbar item gets no width; with accessibility sizes it shows the "
             + "shortest form, see PlanHeaderText.displayedTitle); \"Auswählen\" is a system bar button. Header design: #188 / #175."),
         Entry(auditType: .dynamicType, labels: [
-            "Punkte in den Einstellungen anlegen", "Mo\\. planen", "Fertig", "Brain Dump", "Leitfragen einfügen", "\\d+\\.\\d+\\.",
+            "Punkte in den Einstellungen anlegen", "Mo\\. planen", "Abschließen", "Brain Dump", "Leitfragen einfügen", "\\d+\\.\\d+\\.",
         ], screens: ["Tagesabschluss"], reason: "Texts of the evening sheet (hint line, buttons, date of the next planning day) report a partial lack of "
             + "Dynamic Type support; no clipping in the large text run. Stays on the device test list."),
         Entry(auditType: .dynamicType, labels: ["Unerledigtes verschieben · \\d+ Aufgaben?"], screens: ["Tagesabschluss"], reason:
@@ -135,6 +142,17 @@ enum AuditAllowlist {
         ], screens: recipeScreens + recipeScreensLargeText, reason: "Section headers, footers, values and previews in the system grey (.secondary) on the "
             + "grouped background of a form or list; the last footer of a settings page also lies behind the tab bar. Same group as the "
             + "grey texts above; darkening it would change the look of the default size, decided in #188."),
+        Entry(auditType: .contrast, labels: [
+            "Alle Sätze stehen dort bereit, auch für Aktionstaste und Home-Bildschirm\\.", "Erfassen", "Einkauf", "Tag und Fokus", "Notizen und Gewohnheiten",
+            "250 ml, im Hintergrund", "Blatt „(Essen|Training)“", "öffnet Tagwerk", "Artikel im Satz, im Hintergrund", "Siri fragt nach den Artikeln",
+            "Einkaufsliste", "Termine, Blöcke, Deadlines; nur entsperrt", "Freier Fokus-Timer, im Hintergrund", "Brain Dump mit laufendem Diktat",
+            "Hakt eine Gewohnheit für heute ab", "auch: „Fokus beenden in Tagwerk“", "(?s)Erkennt Siri einen Satz nicht.*",
+        ], screens: siriScreens, reason: "Section headers, footers and the effect line of each phrase on the page \"Siri & Kurzbefehle\", in the system grey "
+            + "(.secondary) on the grouped background. Same group as the grey texts above (\"Sekundärtext\"); the page moved here from \"Erfassen\" "
+            + "(#188 SI1b) and brings its texts along. Removed with the group in task K5 (#160)."),
+        Entry(auditType: .textClipped, labels: ["Tagwerk-Kurzbefehle"], screens: siriScreens, reason: "The `ShortcutsLink` is a system control; its "
+            + "label \"Tagwerk-Kurzbefehle\" is drawn by the system, and the audit reports it as possibly clipped (default size and AX5). The control "
+            + "is not part of the app's own layout and cannot be given a line limit or another style (#188 SI2b)."),
         Entry(auditType: .contrast, labels: [
             "(rote|Rote) Linsen", "Zwiebel", "Karotten", "Gemüsebrühe", "Salz", "Obst & Gemüse", "\\d+ (g|l)",
         ], screens: ["Zutaten (Rezept)", "AX5/dark Zutaten (Rezept)"], reason: "Ingredient names, quantities and categories of the demo recipe in the "

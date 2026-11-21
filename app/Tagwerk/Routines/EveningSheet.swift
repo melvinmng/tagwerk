@@ -2,7 +2,7 @@ import SwiftUI
 import TagwerkCore
 
 /// The evening wrap-up (mockup GS·B, design §7.5): the day in numbers, the checklist, "Morgen planen". Everything is
-/// optional; "Fertig" marks the day as closed, swiping the sheet away keeps what was checked.
+/// optional; "Abschließen" marks the day as closed, swiping the sheet away keeps what was checked.
 struct EveningSheet: View {
     let model: RoutinesModel
     let day: PlanDay
@@ -145,7 +145,7 @@ struct EveningSheet: View {
             .scrollDismissesKeyboard(.interactively)
             .navigationTitle("Tagesabschluss")
             .navigationBarTitleDisplayMode(.inline)
-            .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Fertig") { note.flush(); model.finishEvening(day) } } }
+            .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Abschließen") { note.flush(); model.finishEvening(day) } } }
             .task {
                 // The local numbers show at once; the closed GitHub issues follow when GitHub answered.
                 let local = await model.dayReview(day)

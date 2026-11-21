@@ -1301,6 +1301,16 @@
         }
       }
     },
+    "%lld Kurzbefehle": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld shortcuts"
+          }
+        }
+      }
+    },
     "%lld Mal": {
       "localizations": {
         "de": {
@@ -2667,6 +2677,16 @@
         }
       }
     },
+    "250 ml, im Hintergrund": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "250 ml, in the background"
+          }
+        }
+      }
+    },
     "30 Tage %@": {
       "localizations": {
         "en": {
@@ -3168,6 +3188,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "All projects"
+          }
+        }
+      }
+    },
+    "Alle Sätze stehen dort bereit, auch für Aktionstaste und Home-Bildschirm.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All phrases are ready there, also for the Action button and the Home Screen."
           }
         }
       }
@@ -3986,6 +4016,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Add item"
+          }
+        }
+      }
+    },
+    "Artikel im Satz, im Hintergrund": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Item in the sentence, in the background"
           }
         }
       }
@@ -4884,6 +4924,26 @@
         }
       }
     },
+    "Blatt „Essen“": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“Food” sheet"
+          }
+        }
+      }
+    },
+    "Blatt „Training“": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“Workout” sheet"
+          }
+        }
+      }
+    },
     "Blöcke löschen": {
       "localizations": {
         "en": {
@@ -4900,6 +4960,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Brain Dump"
+          }
+        }
+      }
+    },
+    "Brain Dump mit laufendem Diktat": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Brain Dump with dictation running"
           }
         }
       }
@@ -7639,6 +7709,16 @@
     "Erkenner": {
       "shouldTranslate": false
     },
+    "Erkennt Siri einen Satz nicht, prüfe in der App „Kurzbefehle“, ob dort die Tagwerk-Kurzbefehle stehen, und probiere den Satz als Text über „Tippen für Siri“.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "If Siri does not recognize a phrase, check in the Shortcuts app that the Tagwerk shortcuts are listed there, and try the phrase as text with Type to Siri."
+          }
+        }
+      }
+    },
     "Erkennt Sprache auf dem iPhone, ohne Ton zu senden. Lädt beim ersten Mal das Sprachpaket.": {
       "shouldTranslate": false
     },
@@ -8168,6 +8248,16 @@
         }
       }
     },
+    "Fokus beenden in Tagwerk": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stop focus in Tagwerk"
+          }
+        }
+      }
+    },
     "Fokus beendet.": {
       "localizations": {
         "en": {
@@ -8466,6 +8556,16 @@
         }
       }
     },
+    "Freier Fokus-Timer, im Hintergrund": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Free focus timer, in the background"
+          }
+        }
+      }
+    },
     "Freier Tag": {
       "localizations": {
         "en": {
@@ -8611,16 +8711,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Paste the ingredient list or the whole recipe. At most %lld characters are read."
-          }
-        }
-      }
-    },
-    "Fügt Artikel hinzu, ohne Tagwerk zu öffnen": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Adds items without opening Tagwerk"
           }
         }
       }
@@ -12428,32 +12518,12 @@
         }
       }
     },
-    "Nennt Termine, Blöcke und Deadlines von heute": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Lists today’s events, blocks and deadlines"
-          }
-        }
-      }
-    },
     "Nennt Termine, Blöcke und Deadlines von heute.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Lists today’s events, blocks and deadlines."
-          }
-        }
-      }
-    },
-    "Nennt den Artikel im Satz; Siri kennt deine bisherigen Artikel": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Names the item in the sentence; Siri knows the items you used before"
           }
         }
       }
@@ -13078,6 +13148,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Notes with ChatGPT"
+          }
+        }
+      }
+    },
+    "Notizen und Gewohnheiten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notes and habits"
           }
         }
       }
@@ -14433,16 +14513,6 @@
         }
       }
     },
-    "Sag einen der Sätze zu Siri oder füge ihn in der App „Kurzbefehle“ hinzu. „Wasser erfassen“ lässt sich dort auch auf die Aktionstaste oder den Home-Bildschirm legen. Erkennt Siri einen Satz nicht, prüfe in der App „Kurzbefehle“, ob dort die Tagwerk-Kurzbefehle stehen, und probiere den Satz als Text über „Tippen für Siri“.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Say one of the phrases to Siri or add it in the Shortcuts app. “Log water” can also be put on the Action button or the Home Screen there. If Siri does not recognize a phrase, check in the Shortcuts app that the Tagwerk shortcuts are listed there, and try the phrase as text with Type to Siri."
-          }
-        }
-      }
-    },
     "Sammlung": {
       "localizations": {
         "en": {
@@ -14953,6 +15023,16 @@
         }
       }
     },
+    "Siri fragt nach den Artikeln": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Siri asks for the items"
+          }
+        }
+      }
+    },
     "Sitzung abgeschlossen": {
       "localizations": {
         "en": {
@@ -15334,16 +15414,6 @@
         }
       }
     },
-    "Startet oder beendet einen freien Fokus-Timer": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Starts or stops a free focus timer"
-          }
-        }
-      }
-    },
     "Startet oder beendet einen freien Fokus-Timer.": {
       "localizations": {
         "en": {
@@ -15500,6 +15570,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Plan day"
+          }
+        }
+      }
+    },
+    "Tag und Fokus": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Day and focus"
           }
         }
       }
@@ -15908,6 +15988,16 @@
         }
       }
     },
+    "Tastatur ausblenden": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hide Keyboard"
+          }
+        }
+      }
+    },
     "Teilen": {
       "localizations": {
         "en": {
@@ -16133,6 +16223,16 @@
         }
       }
     },
+    "Termine, Blöcke, Deadlines; nur entsperrt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Events, blocks, deadlines; unlocked only"
+          }
+        }
+      }
+    },
     "Text": {
       "localizations": {
         "en": {
@@ -16320,16 +16420,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Save anyway"
-          }
-        }
-      }
-    },
-    "Trägt 250 ml ein, ohne Tagwerk zu öffnen": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Logs 250 ml without opening Tagwerk"
           }
         }
       }
@@ -18636,6 +18726,16 @@
         }
       }
     },
+    "auch: „%@“": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "also: “%@”"
+          }
+        }
+      }
+    },
     "aus": {
       "localizations": {
         "en": {
@@ -19924,16 +20024,6 @@
         }
       }
     },
-    "Öffnet Brain Dump und startet das Diktat": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Opens Brain Dump and starts dictation"
-          }
-        }
-      }
-    },
     "Öffnet ChatGPT mit dem Kontext dieses Bildschirms": {
       "localizations": {
         "en": {
@@ -19964,32 +20054,12 @@
         }
       }
     },
-    "Öffnet das Blatt „Essen“": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Opens the “Food” sheet"
-          }
-        }
-      }
-    },
     "Öffnet das Blatt „Essen“ in Tagwerk.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Opens the “Food” sheet in Tagwerk."
-          }
-        }
-      }
-    },
-    "Öffnet das Blatt „Training“": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Opens the “Workout” sheet"
           }
         }
       }
@@ -20040,16 +20110,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Opens the choice of where the leftovers go"
-          }
-        }
-      }
-    },
-    "Öffnet die Einkaufsliste": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Opens the shopping list"
           }
         }
       }
@@ -20238,6 +20298,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Skip"
+          }
+        }
+      }
+    },
+    "öffnet Tagwerk": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "opens Tagwerk"
           }
         }
       }

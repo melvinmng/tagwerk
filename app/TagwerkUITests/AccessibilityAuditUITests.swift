@@ -24,7 +24,7 @@ final class AccessibilityAuditUITests: UITestCase {
         onScreen(label: "Tagesabschluss.*", matching: true).tap()
         XCTAssertTrue(app.navigationBars["Tagesabschluss"].waitForExistence(timeout: Self.timeout))
         try audit("Tagesabschluss")
-        tapButton("Fertig")
+        tapButton("Abschließen")
         waitUntilGone(app.navigationBars["Tagesabschluss"])
 
         openShoppingList()
