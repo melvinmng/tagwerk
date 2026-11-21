@@ -86,6 +86,7 @@ Issues: #254 Ernährung, Gewicht und Ziele (Entscheidungen als Kommentar), #255 
 1a. #250: läuft; Plan fertig (`docs/superpowers/plans/2026-11-21-issue-250-audits-strings.md`, offene Fragen nach Empfehlung); Umsetzung durch Sonnet auf `fix/ui-audits-and-strings` ab `origin/main`, nächster freier Platz nach dem Integrationsauftrag
 2. G1 Strang E (Basis `fix/ui-test-stability`)
 
+2a. **#259 Wochenansicht mit allen Terminen** (Nutzerwunsch 21.11., in dieser Runde): kleiner Punkt ohne Fable – Gestaltung vom Nutzer vorgegeben (wie bisher bzw. wie die Listenansicht eines Tages). Sonnet, nächster freier Platz, Basis `main` nach Merge von #256 (überschneidet sich mit Planen-Ansichten)
 3. #233 Block B (PR #258)
 4. Strang K (T, L, S gemergt – jetzt möglich); G2 Welle 1; G1 E, danach V/F8 nach P, R nach E
 5. Gruppen 1 und 2 nach ihren Plänen
