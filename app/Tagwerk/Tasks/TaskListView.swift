@@ -218,7 +218,8 @@ struct TaskListView: View {
 
     private func row(_ item: TaskItem, section: TaskSection) -> some View {
         TaskRow(item: item, section: section, now: model.now(), calendar: model.calendar, isReadOnly: !isWritable(item),
-                isRecurring: item.recurrence != nil || environment.planning.recurringTaskIDs.contains(item.id)) {
+                isRecurring: item.recurrence != nil || environment.planning.recurringTaskIDs.contains(item.id),
+                reminderMark: model.reminderMarks[item.id.key]) {
             if isWritable(item) { Task { await model.complete(item.id) } } else { showsOfflineInfo = true }
         }
         .tag(item.id)

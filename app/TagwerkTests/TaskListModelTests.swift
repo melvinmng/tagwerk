@@ -19,6 +19,32 @@ struct TaskListModelTests {
         return task
     }
 
+    @Test func reminderMarks_refreshAfterSaving() async {
+        let due = DueDate(year: 2026, month: 11, day: 27, hour: 12)
+        let task = makeTask("Bericht", source: .local, due: due)
+        let provider = FakeTaskProvider(source: .local, tasks: [task, makeTask("Ohne Datum", source: .local)])
+        let model = TaskListModel(providers: [provider], now: testNow, calendar: testCalendar())
+        var stored: [String: [ReminderOverride]] = [:]
+        model.reminderMarkInputs = { (stored, ReminderDefaults.legacy(leadTimeMinutes: 120)) }
+        await model.reload()
+        #expect(model.reminderMarks.isEmpty)
+        // The editor saved an own list: the mark appears without another reload.
+        let key = ReminderOverride.key(task: task.id)
+        stored[key] = [ReminderOverride(itemKey: key, scope: .always, offsets: [.before(amount: 1, unit: .days), .before(amount: 1, unit: .weeks)])]
+        model.refreshReminderMarks()
+        #expect(model.reminderMarks == [task.id.key: .custom(count: 2)])
+        // Back to the default: the mark goes.
+        stored = [:]
+        model.refreshReminderMarks()
+        #expect(model.reminderMarks.isEmpty)
+    }
+
+    @Test func reminderMarks_withoutInputs_stayEmpty() async {
+        let model = makeModel()
+        await model.reload()
+        #expect(model.reminderMarks.isEmpty)
+    }
+
     @Test func reopen_insertsTaskAndReportsCompletionChange() async {
         let done = completedTask("Fahrrad-Pumpe", source: .local)
         local.tasks.append(done)                                       // the provider holds it completed, items do not

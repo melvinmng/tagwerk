@@ -117,7 +117,7 @@ struct SettingsView: View {
                     } label: {
                         LabeledContent("Standard-Erinnerungen",
                                        value: ReminderText.summary(settings.reminderDefaults.offsets(for: .localTask, isAllDay: false),
-                                                                   locale: .current, calendar: .tagwerk))
+                                                                   subject: .task, locale: .current, calendar: .tagwerk))
                     }
                     Toggle("GitHub-Issues", isOn: $settings.githubTaskNotifications)
                     Toggle("Erinnerungen", isOn: $settings.reminderTaskNotifications)

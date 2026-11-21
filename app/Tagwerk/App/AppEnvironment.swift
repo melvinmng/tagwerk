@@ -276,6 +276,7 @@ final class AppEnvironment {
         let deadlineMarks = self.planning.deadlineMarks
         let reminderOverrides = ReminderOverrideStore(context: context)
         self.reminderOverrides = reminderOverrides
+        taskList.reminderMarkInputs = { [reminderOverrides, settings] in (reminderOverrides.overrides(), settings.reminderDefaults) }
         self.notifications = NotificationScheduler(
             center: notificationCenter ?? SystemNotificationCenter(), taskList: taskList,
             deadlineEvents: { interval, ids in

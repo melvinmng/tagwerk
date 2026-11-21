@@ -50,6 +50,29 @@ final class ReminderListModel {
         offsets = ReminderOffset.normalized(offsets + [offset], isAllDay: isAllDay)
     }
 
+    /// Whether a reminder of this distance is on the list the rows show (60 minutes and 1 hour are one reminder).
+    func isSelected(_ offset: ReminderOffset) -> Bool { displayed.contains { $0.isEquivalent(to: offset) } }
+
+    /// Sets the reminder when it is missing and removes it when it is there. While the default applies, the own list starts
+    /// from the default first, so a tap changes a copy and never the default itself.
+    func toggle(_ offset: ReminderOffset) {
+        if isUsingDefault { customize() }
+        if let index = offsets.firstIndex(where: { $0.isEquivalent(to: offset) }) {
+            offsets.remove(at: index)
+        } else {
+            offsets = ReminderOffset.normalized(offsets + [offset], isAllDay: isAllDay)
+        }
+    }
+
+    /// The rows of the selection page: the usual distances and everything that is set.
+    var choiceRows: [ReminderOffset] { ReminderChoices.rows(selected: displayed, isAllDay: isAllDay) }
+
+    /// The short form for a row of a form: "Standard · 1 Tag vorher um 18:00 + 1 weitere".
+    func rowSummary(subject: ReminderSubject, calendar: Calendar = .tagwerk, locale: Locale = .current) -> String {
+        ReminderText.rowSummary(displayed, isDefault: isUsingDefault, subject: subject, isAllDay: isAllDay,
+                                locale: locale, calendar: calendar)
+    }
+
     func remove(at index: Int) {
         guard !isUsingDefault, offsets.indices.contains(index) else { return }
         offsets.remove(at: index)
