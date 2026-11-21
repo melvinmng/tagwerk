@@ -5597,6 +5597,16 @@
         }
       }
     },
+    "Bezug entfernen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove scope"
+          }
+        }
+      }
+    },
     "Bible Study": {
       "localizations": {
         "en": {
@@ -11942,6 +11952,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "no reminders"
+          }
+        }
+      }
+    },
+    "Keine Verbindung. Ändern von Hand geht weiter.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No connection. Editing by hand still works."
           }
         }
       }
