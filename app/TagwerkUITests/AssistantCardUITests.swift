@@ -98,3 +98,22 @@ final class AssistantCardFollowUpUITests: AssistantCardUITestCase {
         XCTAssertTrue(app.buttons["Bestätigen"].firstMatch.exists, "The adjusted card must stay a proposal")
     }
 }
+
+/// "Alle anpassen …": the chip over the input names the reference, "Senden" revises the open cards, the old card stays in the
+/// chat as "Überarbeitet" and the demo ChatGPT proposes a new one (task B5).
+final class AssistantReviseAllUITests: AssistantCardUITestCase {
+    func testReviseAll_marksOldCardAsRevisedAndProposesNew() {
+        openProposedCard()
+        tapButton("Alle anpassen …")
+        waitFor("Zum offenen Vorschlag")
+        let field = app.textFields["Nachricht …"].firstMatch
+        field.tap()
+        field.typeText("Lieber nächste Woche")
+        tapButton("Senden")
+
+        waitFor("Überarbeitet")
+        // A new proposal follows; the chip is gone with the send.
+        XCTAssertTrue(app.buttons["Bestätigen"].firstMatch.waitForExistence(timeout: 20), "No new proposal after the revision")
+        XCTAssertFalse(app.descendants(matching: .any)["Zum offenen Vorschlag"].exists, "The reference must end with the send")
+    }
+}

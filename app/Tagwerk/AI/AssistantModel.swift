@@ -168,6 +168,9 @@ final class AssistantModel {
                                     history: store.history(for: newKey))
     }
 
+    /// The next message revises all open cards (the chip "Zu allen … Vorschlägen" is set); reset by `send`.
+    var composesRevision = false
+
     func send(_ text: String, spoken: Bool = false) async {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty, let conversation, !conversation.isBusy else {
@@ -183,7 +186,16 @@ final class AssistantModel {
             if Task.isCancelled { return }
         }
         let start = conversation.history.count
-        await conversation.send(trimmed)
+        // "Alle anpassen …" (the chip over the input) and a message spoken in the voice mode while cards are open send the
+        // open cards back with their state instead of rejecting them (plan ki-vorschlaege-anpassen, task B5). Typing
+        // without the chip stays what it was: the open cards count as declined.
+        let revises = (composesRevision || (spoken && onTurnFinished != nil)) && !conversation.pendingActions.isEmpty
+        composesRevision = false
+        if revises {
+            await conversation.revise(comment: trimmed)
+        } else {
+            await conversation.send(trimmed)
+        }
         // `send` may first close open calls; the user message is the first `.user` item from `start` on.
         let index = conversation.history.indices.dropFirst(start).first { conversation.history[$0] == .user(trimmed) } ?? start
         if spoken {
@@ -588,7 +600,12 @@ final class AssistantModel {
         Heute ist \(AIPlanner.dayString(today)), es ist \(time) Uhr (Zeitzone \(planning.calendar.timeZone.identifier)).
         Nutze die Funktionen: lesende darfst du jederzeit aufrufen, um nachzusehen. Ändernde Funktionen rufst du \
         direkt auf, ohne vorher im Text um Erlaubnis zu fragen; die App zeigt sie als Karte und führt sie erst nach \
-        Bestätigung aus. Danach erhältst du das Ergebnis oder den Fehler und kannst reagieren.
+        Bestätigung aus. Danach erhältst du das Ergebnis oder den Fehler und kannst reagieren. \
+        Hat der Nutzer offene Vorschläge überarbeiten lassen, ist das Ergebnis dieser Vorschläge „revision_requested“: \
+        „current“ ist ihr Stand, „adjusted_by_user“ sagt, ob der Nutzer Werte selbst geändert hat, und seine nächste \
+        Nachricht sagt, was anders sein soll. Lege die offenen Vorschläge mit denselben Funktionen neu vor. Werte, die der \
+        Nutzer geändert hat, behältst du bei, außer die Nachricht betrifft sie; Vorschläge, die die Nachricht nicht \
+        betrifft, wiederholst du unverändert.
         Aufgaben-IDs haben die Form quelle:kennung (z. B. github:… oder local:…); verwende sie genau so.
         Termine kannst du anlegen, ändern und löschen (create_event, update_event, delete_event), in jedem \
         beschreibbaren Kalender; ohne Nennung eines Kalenders im Standardkalender. Nennt der Nutzer keine Dauer, \
@@ -793,7 +810,9 @@ final class AssistantModel {
     /// True for an open card of a function with an editor that can open for this call (an `assign_task` for an issue the
     /// app does not know any more has none).
     func canAdjust(_ call: ToolCall) -> Bool {
-        guard adjustableTools.contains(call.name), let current = conversation?.pendingActions.first(where: { $0.id == call.id }) else { return false }
+        // The voice mode has no sheet with fields: whoever speaks says the change (AN12a).
+        guard onTurnFinished == nil, adjustableTools.contains(call.name),
+              let current = conversation?.pendingActions.first(where: { $0.id == call.id }) else { return false }
         return makeEditor(for: current) != nil
     }
 

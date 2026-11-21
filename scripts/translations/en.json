@@ -2339,5 +2339,10 @@
   "Nur mich": "Only me",
   "Ohne Mengen": "Without quantities",
   "Senden gibt diesen Vorschlag mit deinen Änderungen und deiner Nachricht an ChatGPT. Die anderen Karten bleiben, wie sie sind.": "Sending gives this proposal with your changes and your message to ChatGPT. The other cards stay as they are.",
-  "Zu diesem Vorschlag gibt es keine Rückfrage.": "There is no follow-up for this proposal."
+  "Zu diesem Vorschlag gibt es keine Rückfrage.": "There is no follow-up for this proposal.",
+  "Alle anpassen …": "Adjust all …",
+  "Senden gibt die offenen Vorschläge mit deinen Änderungen an ChatGPT; es legt sie überarbeitet neu vor.": "Sending gives the open proposals with your changes to ChatGPT; it proposes them again, revised.",
+  "Zu allen %lld Vorschlägen": "About all %lld proposals",
+  "Zum offenen Vorschlag": "About the open proposal",
+  "Überarbeitet": "Revised"
 }

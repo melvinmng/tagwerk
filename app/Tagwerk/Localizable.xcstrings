@@ -3918,6 +3918,16 @@
         }
       }
     },
+    "Alle anpassen …": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adjust all …"
+          }
+        }
+      }
+    },
     "Alle Artikel sind schon auf Deutsch.": {
       "localizations": {
         "en": {
@@ -16967,6 +16977,16 @@
         }
       }
     },
+    "Senden gibt die offenen Vorschläge mit deinen Änderungen an ChatGPT; es legt sie überarbeitet neu vor.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sending gives the open proposals with your changes to ChatGPT; it proposes them again, revised."
+          }
+        }
+      }
+    },
     "Senden gibt diesen Vorschlag mit deinen Änderungen und deiner Nachricht an ChatGPT. Die anderen Karten bleiben, wie sie sind.": {
       "localizations": {
         "en": {
@@ -18724,6 +18744,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Daily"
+          }
+        }
+      }
+    },
+    "Überarbeitet": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revised"
           }
         }
       }
@@ -20687,6 +20717,16 @@
         }
       }
     },
+    "Zu allen %lld Vorschlägen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "About all %lld proposals"
+          }
+        }
+      }
+    },
     "Zu Deadline zuordnen …": {
       "localizations": {
         "en": {
@@ -20864,6 +20904,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Your consent is needed to read recipes."
+          }
+        }
+      }
+    },
+    "Zum offenen Vorschlag": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "About the open proposal"
           }
         }
       }
