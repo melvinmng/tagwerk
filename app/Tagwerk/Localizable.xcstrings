@@ -2085,6 +2085,86 @@
         }
       }
     },
+    "%lld Zeilen": {
+      "localizations": {
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%1$lld Zeile"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%1$lld Zeilen"
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld line"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld lines"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "%lld Zeilen neu": {
+      "localizations": {
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%1$lld Zeile neu"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%1$lld Zeilen neu"
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld new line"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld new lines"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "%lld angehängt": {
       "localizations": {
         "en": {
@@ -2123,6 +2203,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "%1$lld selected · “Free” releases %2$@"
+          }
+        }
+      }
+    },
+    "%lld entfernt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld removed"
           }
         }
       }
@@ -2998,6 +3088,26 @@
         }
       }
     },
+    "**Gesendet wird:** die Titel deiner Notizen, kurze Ausschnitte zu Suchtreffern und der Text der Notizen, um die es im Gespräch geht, mit den Namen ihrer Anhänge.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "**Sent:** the titles of your notes, short excerpts of search hits and the text of the notes the conversation is about, with the names of their attachments."
+          }
+        }
+      }
+    },
+    "**Gilt überall beim Assistenten:** in diesem Notiz-Chat und für die Suche des Assistenten in allen anderen Gesprächen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "**Applies everywhere in the assistant:** in this notes chat and for the assistant’s search in all other conversations."
+          }
+        }
+      }
+    },
     "**Nicht gesendet werden** Anhänge, E-Mail-Adressen (auch im Text), Empfänger und der Link zur Mail.": {
       "localizations": {
         "en": {
@@ -3066,6 +3176,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "**Not sent:** your shopping list, amounts on the list, tasks, events, other notes, Health data. Tagwerk reads a note with ingredients and instructions on the iPhone, and private notes are never offered."
+          }
+        }
+      }
+    },
+    "**Nichts ändert sich ohne dich:** Jede Änderung, jede neue Notiz und jedes Löschen bestätigst du einzeln.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "**Nothing changes without you:** you confirm every change, every new note and every deletion one by one."
+          }
+        }
+      }
+    },
+    "**Nie gesendet werden:** %@, gelöschte Notizen und die Anhänge selbst.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "**Never sent:** %@, deleted notes and the attachments themselves."
           }
         }
       }
@@ -3148,6 +3278,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "**Only on your tap:** Without “Translate”, nothing leaves the iPhone."
+          }
+        }
+      }
+    },
+    "**Nur im Gespräch:** Ohne deine Nachricht an den Assistenten verlässt nichts das iPhone. Gelesene Notiztexte gelten nur für das laufende Gespräch und werden nicht im Verlauf gespeichert; die Antworten des Assistenten schon.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "**Only in conversation:** without your message to the assistant, nothing leaves the iPhone. Note texts it has read apply only to the running conversation and are not saved in the history; the assistant’s replies are."
           }
         }
       }
@@ -4424,6 +4564,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Attachments in notes"
+          }
+        }
+      }
+    },
+    "Anhänge kann der Assistent nicht anlegen. Nimm den Verweis auf den Anhang nicht in den Text auf.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The assistant cannot create attachments. Leave the reference to an attachment out of the text."
           }
         }
       }
@@ -5999,6 +6149,16 @@
         }
       }
     },
+    "Damit der Assistent deine Notizen finden, lesen, überarbeiten, anlegen und löschen kann, sendet Tagwerk Notizen an ChatGPT (OpenAI), über das Konto, mit dem du angemeldet bist.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "To let the assistant find, read, revise, create and delete your notes, Tagwerk sends notes to ChatGPT (OpenAI) through the account you are signed in with."
+          }
+        }
+      }
+    },
     "Danach": {
       "localizations": {
         "en": {
@@ -6025,6 +6185,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Grateful for: %@"
+          }
+        }
+      }
+    },
+    "Darauf habe ich keinen Zugriff. %@ bleiben auf deinem iPhone und werden nie an ChatGPT gesendet.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I don’t have access to that. %@ stay on your iPhone and are never sent to ChatGPT."
           }
         }
       }
@@ -6798,6 +6968,16 @@
         }
       }
     },
+    "Der Text der Notiz fehlt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The text of the note is missing."
+          }
+        }
+      }
+    },
     "Der Ton wird auf dem iPhone in Text umgewandelt. Änderungen führt Tagwerk erst aus, wenn du sie bestätigst.": {
       "localizations": {
         "en": {
@@ -6854,6 +7034,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "The chosen folder is no longer available. Choose it again."
+          }
+        }
+      }
+    },
+    "Der neue Text ist gleich dem alten.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The new text is the same as the old one."
           }
         }
       }
@@ -6934,6 +7124,16 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "Die Anhänge der Notiz müssen im Text bleiben. Übernimm die Verweise auf Anhänge unverändert.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The attachments of the note have to stay in the text. Keep the references to attachments unchanged."
           }
         }
       }
@@ -7299,6 +7499,26 @@
         }
       }
     },
+    "Die Notiz ist zu lang (höchstens 12 000 Zeichen).": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The note is too long (12,000 characters at most)."
+          }
+        }
+      }
+    },
+    "Die Notiz ist zu lang und wurde beim Lesen gekürzt. Sie lässt sich nicht überarbeiten.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The note is too long and was cut when read. It cannot be revised."
+          }
+        }
+      }
+    },
     "Die Notiz ist zu lang zum Übersetzen.": {
       "localizations": {
         "en": {
@@ -7325,6 +7545,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "The note has been changed in the meantime."
+          }
+        }
+      }
+    },
+    "Die Notiz wurde inzwischen geändert. Lies sie erneut.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The note has changed in the meantime. Read it again."
           }
         }
       }
@@ -7436,6 +7666,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "The default reminders set when Tagwerk reminds you of tasks and deadline events from the enabled sources. You can set individual tasks and deadlines differently. Deadline events are events from deadline calendars and events marked as deadlines."
+          }
+        }
+      }
+    },
+    "Die Suche braucht mindestens 2 Zeichen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The search needs at least 2 characters."
           }
         }
       }
@@ -7842,6 +8082,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "This event repeats"
+          }
+        }
+      }
+    },
+    "Dieses Gespräch betrifft nur eine Notiz.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This conversation is about one note only."
+          }
+        }
+      }
+    },
+    "Dieses Gespräch betrifft nur eine andere Notiz.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This conversation is about another note."
           }
         }
       }
@@ -9575,6 +9835,16 @@
         }
       }
     },
+    "Frag nach deinen Notizen oder bitte um Änderungen. Jede Änderung bestätigst du einzeln.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ask about your notes or request changes. You confirm every change one by one."
+          }
+        }
+      }
+    },
     "Frei": {
       "localizations": {
         "en": {
@@ -10023,6 +10293,86 @@
           "stringUnit": {
             "state": "translated",
             "value": "Read: %@"
+          }
+        }
+      }
+    },
+    "Gelesen: %lld Titel": {
+      "localizations": {
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Gelesen: %1$lld Titel"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Gelesen: %1$lld Titel"
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Read: %lld title"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Read: %lld titles"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Gelesen: %lld Titel aus „%@“": {
+      "localizations": {
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Gelesen: %1$lld Titel aus „%2$@“"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Gelesen: %1$lld Titel aus „%2$@“"
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Read: %1$lld title from “%2$@”"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Read: %1$lld titles from “%2$@”"
+                }
+              }
+            }
           }
         }
       }
@@ -10698,6 +11048,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tagwerk will listen again in a moment"
+          }
+        }
+      }
+    },
+    "Grund: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reason: %@"
           }
         }
       }
@@ -11475,6 +11835,16 @@
         }
       }
     },
+    "In diesen Ordner kann der Assistent keine Notiz anlegen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The assistant cannot create a note in this folder."
+          }
+        }
+      }
+    },
     "In dieser Woche war keine Gewohnheit aktiv.": {
       "localizations": {
         "en": {
@@ -11501,6 +11871,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Done in “%@”"
+          }
+        }
+      }
+    },
+    "In „Zuletzt gelöscht“": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In “Recently deleted”"
           }
         }
       }
@@ -12251,6 +12631,16 @@
         }
       }
     },
+    "Keine Änderung": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No change"
+          }
+        }
+      }
+    },
     "Keiner": {
       "localizations": {
         "en": {
@@ -12297,6 +12687,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Comment: “%@”"
+          }
+        }
+      }
+    },
+    "Kommt nach „Zuletzt gelöscht“ und bleibt dort 30 Tage wiederherstellbar.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Goes to “Recently deleted” and can be restored there for 30 days."
           }
         }
       }
@@ -12363,6 +12763,48 @@
           "stringUnit": {
             "state": "translated",
             "value": "Context: Log"
+          }
+        }
+      }
+    },
+    "Kontext: Notiz „%@“ · ohne %@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Kontext: Notiz „%1$@“ · ohne %2$@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Context: Note “%1$@” · without %2$@"
+          }
+        }
+      }
+    },
+    "Kontext: Notizen in „%@“ · ohne %@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Kontext: Notizen in „%1$@“ · ohne %2$@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Context: Notes in “%1$@” · without %2$@"
+          }
+        }
+      }
+    },
+    "Kontext: Notizen · ohne %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Context: Notes · without %@"
           }
         }
       }
@@ -12563,6 +13005,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Last occurrence: %@"
+          }
+        }
+      }
+    },
+    "Lies die Notiz zuerst mit read_note, bevor du sie überarbeitest.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Read the note with read_note first, before you revise it."
           }
         }
       }
@@ -13763,6 +14215,16 @@
         }
       }
     },
+    "Nachher": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "After"
+          }
+        }
+      }
+    },
     "Nachricht …": {
       "localizations": {
         "en": {
@@ -13959,6 +14421,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "New note"
+          }
+        }
+      }
+    },
+    "Neue Notiz „%@“": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New note “%@”"
           }
         }
       }
@@ -14356,6 +14828,16 @@
         }
       }
     },
+    "Notiz ansehen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "View note"
+          }
+        }
+      }
+    },
     "Notiz diktieren": {
       "localizations": {
         "en": {
@@ -14406,6 +14888,36 @@
         }
       }
     },
+    "Notiz „%@“ löschen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete note “%@”"
+          }
+        }
+      }
+    },
+    "Notiz „%@“ überarbeiten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revise note “%@”"
+          }
+        }
+      }
+    },
+    "Notiz-Änderungen bestätigst du einzeln.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You confirm changes to notes one at a time."
+          }
+        }
+      }
+    },
     "Notizen": {
       "localizations": {
         "en": {
@@ -14446,12 +14958,12 @@
         }
       }
     },
-    "Notizen gehen nur mit dem Schalter „Notizen mit ChatGPT“ an den Assistenten: Titel und Ausschnitte der Treffer seiner Suche, bei Bedarf der ganze Text einer Notiz und, im Notiz-Chat, Änderungen daran. Ist der Schalter aus, erfährt der Assistent nur, wie viele Notizen zu einer Suche passen. Was der Assistent aus Notizen liest, gilt nur für das laufende Gespräch und geht beim Beenden der App, beim Wechsel des Chats und beim Löschen des Verlaufs verloren. Antworten des Assistenten und deine Nachrichten bleiben im Verlauf und können Notizinhalt zitieren. Tagebuch mit Gott, Bible Study und Dream Log verlassen das iPhone nie.": {
+    "Notizen gehen nur mit dem Schalter „Notizen mit ChatGPT“ an den Assistenten: Titel und Ausschnitte der Treffer seiner Suche, bei Bedarf der ganze Text einer Notiz und, im Notiz-Chat, Änderungen daran. Mit dem Text einer Notiz gehen die Namen ihrer Anhänge mit; die Anhänge selbst und gelöschte Notizen gehen nie an ChatGPT. Ist der Schalter aus, erfährt der Assistent nur, wie viele Notizen zu einer Suche passen. Was der Assistent aus Notizen liest, gilt nur für das laufende Gespräch und geht beim Beenden der App, beim Wechsel des Chats und beim Löschen des Verlaufs verloren. Antworten des Assistenten und deine Nachrichten bleiben im Verlauf und können Notizinhalt zitieren. Tagebuch mit Gott, Bible Study und Dream Log verlassen das iPhone nie.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Notes go to the assistant only with the switch “Notes with ChatGPT”: title and excerpt of the hits of its search, the whole text of a note when needed and, in the notes chat, changes to it. With the switch off, the assistant only learns how many notes match a search. What the assistant reads from notes applies only to the current conversation and is lost when the app is quit, when you switch chats and when you clear the history. The assistant's replies and your messages stay in the history and can quote note content. Journal, Bible Study and Dream Log never leave the iPhone."
+            "value": "Notes go to the assistant only with the switch “Notes with ChatGPT”: title and excerpt of the hits of its search, the whole text of a note when needed and, in the notes chat, changes to it. The names of a note’s attachments go with its text; the attachments themselves and deleted notes never go to ChatGPT. With the switch off, the assistant only learns how many notes match a search. What the assistant reads from notes applies only to the current conversation and is lost when the app is quit, when you switch chats and when you clear the history. The assistant's replies and your messages stay in the history and can quote note content. Journal, Bible Study and Dream Log never leave the iPhone."
           }
         }
       }
@@ -15018,12 +15530,32 @@
         }
       }
     },
+    "Ordner nicht gefunden.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Folder not found."
+          }
+        }
+      }
+    },
     "Ordner umbenennen": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Rename folder"
+          }
+        }
+      }
+    },
+    "Ordner „%@“": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Folder “%@”"
           }
         }
       }
@@ -17795,6 +18327,26 @@
         }
       }
     },
+    "Text überarbeiten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revise text"
+          }
+        }
+      }
+    },
+    "Text überarbeitet": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Text revised"
+          }
+        }
+      }
+    },
     "Tippen": {
       "localizations": {
         "en": {
@@ -17811,6 +18363,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Title"
+          }
+        }
+      }
+    },
+    "Titel geändert": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Title changed"
           }
         }
       }
@@ -18697,6 +19259,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Suggestion"
+          }
+        }
+      }
+    },
+    "Vorschlag %lld von %lld · noch nicht ausgeführt": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Vorschlag %1$lld von %2$lld · noch nicht ausgeführt"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suggestion %1$lld of %2$lld · not applied yet"
           }
         }
       }
@@ -20300,6 +20878,16 @@
         }
       }
     },
+    "Zuweisungen und Notiz-Änderungen bestätigst du einzeln.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You confirm assignments and changes to notes one at a time."
+          }
+        }
+      }
+    },
     "Zählt ab": {
       "localizations": {
         "en": {
@@ -20574,6 +21162,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "logged"
+          }
+        }
+      }
+    },
+    "entfernt: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "removed: %@"
           }
         }
       }
@@ -21142,6 +21740,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "no"
+          }
+        }
+      }
+    },
+    "neu: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "new: %@"
           }
         }
       }
@@ -21721,6 +22329,16 @@
         }
       }
     },
+    "Änderung ansehen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "View change"
+          }
+        }
+      }
+    },
     "Änderungen": {
       "localizations": {
         "en": {
@@ -21787,6 +22405,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Opens actions for the travel time"
+          }
+        }
+      }
+    },
+    "Öffnet ChatGPT für deine Notizen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opens ChatGPT for your notes"
           }
         }
       }

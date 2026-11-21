@@ -12,6 +12,9 @@ struct NoteEditorView: View {
     @Environment(\.dismiss) private var dismiss
     let noteID: UUID
     let store: NoteStore
+    /// Whether the page offers the assistant. The note in its own sheet (`NoteEditorSheet`) does not: the chat is a sheet
+    /// over the tabs and cannot appear on top of another sheet.
+    let showsAssistant: Bool
 
     private enum Mode { case view, edit }
 
@@ -34,9 +37,10 @@ struct NoteEditorView: View {
     /// A hint after an action that ends in a sheet ("Als „…“ gesichert.", the result of the shopping list).
     @State private var notice: String?
 
-    init(noteID: UUID, store: NoteStore) {
+    init(noteID: UUID, store: NoteStore, showsAssistant: Bool = true) {
         self.noteID = noteID
         self.store = store
+        self.showsAssistant = showsAssistant
     }
 
     var body: some View {
@@ -59,6 +63,8 @@ struct NoteEditorView: View {
                 }
                 ToolbarItem(placement: .topBarTrailing) { moreMenu(note) }
             }
+            // The page saves first, so the assistant reads what is on the screen.
+            .noteAssistantEntry(.note(noteID), store: store, isEnabled: showsAssistant, beforeOpening: saveText)
             .photosPicker(isPresented: $isChoosingPhotos, selection: $photoItems, matching: .images)
             .onChange(of: photoItems) { _, items in
                 guard !items.isEmpty else { return }
