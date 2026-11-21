@@ -52,9 +52,10 @@ struct WorkScheduleTests {
 struct CapacityTests {
     let nineToSix = WorkHours(startMinutes: 540, endMinutes: 1080)
 
-    private func input(busy: [Range<Int>] = [], recurring: Int = 0, planned: Int = 0, hours: WorkHours? = nil) -> CapacityInput {
+    private func input(busy: [Range<Int>] = [], blocks: [Range<Int>] = [], untimed: Int = 0,
+                       hours: WorkHours? = nil) -> CapacityInput {
         CapacityInput(hours: hours ?? nineToSix, lunchStartMinutes: 720, lunchMinutes: 60, bufferMinutes: 10,
-                      busyIntervals: busy, recurringMinutes: recurring, plannedMinutes: planned, estimatedCount: 0)
+                      busyIntervals: busy, untimedPlannedMinutes: untimed, estimatedCount: 0, blockIntervals: blocks)
     }
 
     @Test func capacity_noEvents() {
@@ -73,18 +74,24 @@ struct CapacityTests {
         #expect(capacity(input(busy: [690..<750])).availableMinutes == 440)
     }
 
-    @Test func capacity_recurringAndPlanned() {
-        let result = capacity(input(recurring: 180, planned: 360))
-        #expect(result.availableMinutes == 300)
+    @Test func capacity_untimedAndBlocksAreLoad() {
+        // 120 min of tasks without a time and a block of 3 h: 480 available, 300 planned.
+        let result = capacity(input(blocks: [840..<1020], untimed: 120))
+        #expect(result.availableMinutes == 480)
+        #expect(result.plannedMinutes == 300)
+        #expect(result.freeMinutes == 180)
+        #expect(!result.isOverbooked)
+    }
+
+    @Test func capacity_overbooked() {
+        let result = capacity(input(untimed: 540))
         #expect(result.freeMinutes == -60)
         #expect(result.isOverbooked)
     }
 
-    private func now(_ minutes: Int, busy: [Range<Int>] = [], recurring: Int = 0, planned: Int = 0,
-                     remainingPlanned: Int = 0) -> DayCapacity {
-        var value = input(busy: busy, recurring: recurring, planned: planned)
+    private func now(_ minutes: Int, busy: [Range<Int>] = [], blocks: [Range<Int>] = [], untimed: Int = 0) -> DayCapacity {
+        var value = input(busy: busy, blocks: blocks, untimed: untimed)
         value.nowMinutes = minutes
-        value.remainingPlannedMinutes = remainingPlanned
         return capacity(value)
     }
 
@@ -98,8 +105,9 @@ struct CapacityTests {
         #expect(now(14 * 60, busy: [810..<900]).remainingMinutes == 170)  // 14:00–15:10 blocked
     }
 
-    @Test func capacity_withNow_subtractsRecurringAndRemainingPlanned() {
-        #expect(now(14 * 60, recurring: 60, planned: 200, remainingPlanned: 90).remainingMinutes == 90)
+    @Test func capacity_withNow_subtractsUntimedInFullAndBlocksAhead() {
+        // Block 13:00–15:00 is half over at 14:00; 30 min of tasks without a time still wait.
+        #expect(now(14 * 60, blocks: [780..<900], untimed: 30).remainingMinutes == 240 - 60 - 30)
     }
 
     @Test func capacity_nowAfterWork_remainingZero() {
@@ -116,7 +124,7 @@ struct CapacityTests {
 
     @Test func capacity_dayOff() {
         let result = capacity(CapacityInput(hours: nil, lunchStartMinutes: 720, lunchMinutes: 60, bufferMinutes: 10,
-                                            busyIntervals: [], recurringMinutes: 0, plannedMinutes: 30, estimatedCount: 1))
+                                            busyIntervals: [], untimedPlannedMinutes: 30, estimatedCount: 1))
         #expect(result.availableMinutes == 0)
         #expect(result.isDayOff)
         #expect(result.isOverbooked)

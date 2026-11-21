@@ -43,19 +43,19 @@ public struct PlanInputDay: Sendable, Hashable {
     /// Existing time blocks and other task-linked events.
     public var blocks: [Range<Int>]
     public var bufferMinutes: Int
-    public var recurringMinutes: Int
-    /// Load already on the day: assigned tasks and blocks.
+    /// Load already on the day: assigned tasks and the part of the time blocks that uses free working time. Effort
+    /// that recurring tasks only reserve is not load; their time blocks are.
     public var plannedMinutes: Int
     /// Part of `plannedMinutes` per task (`TaskID.key`), for tasks counted without a block (assigned,
     /// due today). A new block or assignment for such a task replaces this load instead of adding to it.
     public var countedTaskMinutes: [String: Int]
-    /// Working time left for tasks after events with buffer, lunch and recurring effort.
+    /// Working time left for tasks after events with buffer, lunch and travel time.
     public var availableMinutes: Int
     public var events: [PlanInputEvent]
 
     /// Builds a day from calendar events; occupied time and capacity come from `busyIntervals` and `capacity`.
     public init(day: PlanDay, hours: WorkHours?, lunch: Range<Int>?, events: [CalendarEvent], linkedEventIDs: Set<String>,
-                deadlineCalendarIDs: Set<String>, blocks: [Range<Int>], recurringMinutes: Int, plannedMinutes: Int,
+                deadlineCalendarIDs: Set<String>, blocks: [Range<Int>], untimedPlannedMinutes: Int,
                 bufferMinutes: Int, calendar: Calendar, countedTaskMinutes: [String: Int] = [:],
                 deadlineEventIDs: Set<String> = [], travel: [Range<Int>] = []) {
         self.day = day
@@ -64,17 +64,16 @@ public struct PlanInputDay: Sendable, Hashable {
         self.lunch = lunch
         self.blocks = blocks
         self.bufferMinutes = bufferMinutes
-        self.recurringMinutes = recurringMinutes
-        self.plannedMinutes = plannedMinutes
         let busy = busyIntervals(events: events, on: day, calendar: calendar, excluding: linkedEventIDs)
         self.eventBusy = busy
         self.travel = travel
         self.busy = busy + travel
-        let capacityInput = CapacityInput(hours: hours, lunchStartMinutes: lunch?.lowerBound ?? 0,
-                                          lunchMinutes: lunch?.count ?? 0, bufferMinutes: bufferMinutes,
-                                          busyIntervals: busy, recurringMinutes: recurringMinutes,
-                                          plannedMinutes: plannedMinutes, estimatedCount: 0, travelIntervals: travel)
-        self.availableMinutes = capacity(capacityInput).availableMinutes
+        let dayCapacity = capacity(CapacityInput(
+            hours: hours, lunchStartMinutes: lunch?.lowerBound ?? 0, lunchMinutes: lunch?.count ?? 0,
+            bufferMinutes: bufferMinutes, busyIntervals: busy, untimedPlannedMinutes: untimedPlannedMinutes,
+            estimatedCount: 0, travelIntervals: travel, blockIntervals: blocks))
+        self.availableMinutes = dayCapacity.availableMinutes
+        self.plannedMinutes = dayCapacity.plannedMinutes
 
         let dayStart = day.startDate(in: calendar)
         let dayEnd = day.adding(days: 1, calendar: calendar).startDate(in: calendar)
@@ -107,15 +106,20 @@ public struct PlanInputDay: Sendable, Hashable {
 }
 
 extension PlanInputDay {
-    /// The same day with other working hours; capacity is computed again.
+    /// The same day with other working hours; capacity is computed again. The time blocks keep counting for the part
+    /// inside the new hours; load added since (moved tasks) stays.
     public func withHours(_ hours: WorkHours) -> PlanInputDay {
+        func capacity(for hours: WorkHours?) -> DayCapacity {
+            TagwerkCore.capacity(CapacityInput(
+                hours: hours, lunchStartMinutes: lunch?.lowerBound ?? 0, lunchMinutes: lunch?.count ?? 0,
+                bufferMinutes: bufferMinutes, busyIntervals: eventBusy, untimedPlannedMinutes: 0, estimatedCount: 0,
+                travelIntervals: travel, blockIntervals: blocks))
+        }
         var day = self
         day.hours = hours
-        day.availableMinutes = capacity(CapacityInput(
-            hours: hours, lunchStartMinutes: lunch?.lowerBound ?? 0, lunchMinutes: lunch?.count ?? 0,
-            bufferMinutes: bufferMinutes, busyIntervals: eventBusy, recurringMinutes: recurringMinutes,
-            plannedMinutes: plannedMinutes, estimatedCount: 0, travelIntervals: travel
-        )).availableMinutes
+        let updated = capacity(for: hours)
+        day.availableMinutes = updated.availableMinutes
+        day.plannedMinutes = plannedMinutes - capacity(for: self.hours).plannedMinutes + updated.plannedMinutes
         return day
     }
 }
@@ -380,14 +384,13 @@ public func makePlanInput(scope: PlanScope, days: [PlanInputDay], tasks: [TaskIt
     return input
 }
 
-/// Free time of the period for the selection budget: the day's free stretches from now (minus recurring
-/// effort), or the free minutes of the working days of a week or month.
+/// Free time of the period for the selection budget: the day's free stretches from now, or the free minutes of the
+/// working days of a week or month.
 func periodFreeMinutes(days: [PlanInputDay], scope: PlanScope, nowMinutes: Int, today: PlanDay) -> Int {
     switch scope {
     case .day:
         guard let day = days.first else { return 0 }
-        let gaps = freeGaps(day, fromMinutes: day.day == today ? nowMinutes : nil).reduce(0) { $0 + $1.count }
-        return max(0, gaps - day.recurringMinutes)
+        return freeGaps(day, fromMinutes: day.day == today ? nowMinutes : nil).reduce(0) { $0 + $1.count }
     case .week, .month:
         return days.filter { $0.day >= today && $0.hours != nil }.reduce(0) { $0 + max(0, $1.availableMinutes - $1.plannedMinutes) }
     }
@@ -742,7 +745,8 @@ private func validateBlocks(_ blocks: [PlanBlock], input: PlanInput,
     guard let day = input.days.first else {
         return ([], blocks.map { PlanViolation(taskId: $0.taskId, reason: .outsidePeriod) }, 0)
     }
-    let busy = day.busy.map { ($0.lowerBound - day.bufferMinutes)..<($0.upperBound + day.bufferMinutes) }
+    // Events keep the buffer distance, travel time does not (as in `capacity(_:)`).
+    let busy = bufferedEventIntervals(day.eventBusy, lunch: day.lunch, travel: day.travel, buffer: day.bufferMinutes) + day.travel
     var seen = Set<String>()
     var accepted: [(block: PlanBlock, range: Range<Int>)] = []
 
@@ -770,11 +774,9 @@ private func validateBlocks(_ blocks: [PlanBlock], input: PlanInput,
         accepted.append((block, range))
     }
 
-    // Time is hard (proposal 2026-11-18, §3): the new blocks must fit into the free stretches minus the
-    // recurring effort of the day.
+    // Time is hard (proposal 2026-11-18, §3): the new blocks must fit into the free stretches of the day.
     accepted.sort { $0.range.lowerBound < $1.range.lowerBound }
     let freeTime = freeGaps(day, fromMinutes: day.day == input.today ? input.nowMinutes : nil).reduce(0) { $0 + $1.count }
-        - day.recurringMinutes
     while let last = accepted.last, accepted.reduce(0, { $0 + $1.block.minutes }) > freeTime {
         accepted.removeLast()
         violations.append(PlanViolation(taskId: last.block.taskId, reason: .overCapacity))
@@ -941,7 +943,7 @@ extension PlanInput {
             return Day(day: dayString(day.day), dayOff: day.hours == nil,
                        workStart: day.hours.map { timeString($0.startMinutes) }, workEnd: day.hours.map { timeString($0.endMinutes) },
                        freeSlots: gaps.map { Span(start: timeString($0.lowerBound), end: timeString($0.upperBound)) },
-                       freeMinutes: max(0, gaps.reduce(0) { $0 + $1.count } - day.recurringMinutes),
+                       freeMinutes: gaps.reduce(0) { $0 + $1.count },
                        overbookedBy: day.plannedMinutes > day.availableMinutes ? day.plannedMinutes - day.availableMinutes : nil,
                        busyEvents: busy.isEmpty ? nil : busy, deadlines: deadlines(day))
         }
@@ -1037,14 +1039,17 @@ public enum AIPlanSchemas {
 
 // MARK: - Block duration
 
-/// Free stretches of the day in minutes: working hours minus busy events (with buffer), lunch and
-/// existing blocks; with `fromMinutes` (today) only from then on.
+/// Free stretches of the day in minutes: working hours minus busy events (with buffer), travel time (without
+/// buffer), lunch and existing blocks; with `fromMinutes` (today) only from then on. Events, lunch and travel
+/// are blocked as in `capacity(_:)`; the gaps keep the buffer distance to existing time blocks as well.
 public func freeGaps(_ day: PlanInputDay, fromMinutes: Int?) -> [Range<Int>] {
     guard let hours = day.hours, hours.minutes > 0 else { return [] }
     let start = max(hours.startMinutes, fromMinutes ?? hours.startMinutes)
     guard start < hours.endMinutes else { return [] }
     // The buffer keeps distance to busy events and to existing time blocks alike (setting "Puffer").
-    var taken = (day.busy + day.blocks).map { ($0.lowerBound - day.bufferMinutes)..<($0.upperBound + day.bufferMinutes) }
+    var taken = bufferedEventIntervals(day.eventBusy, lunch: day.lunch, travel: day.travel, buffer: day.bufferMinutes)
+    taken += day.blocks.map { ($0.lowerBound - day.bufferMinutes)..<($0.upperBound + day.bufferMinutes) }
+    taken += day.travel
     if let lunch = day.lunch { taken.append(lunch) }
     var gaps: [Range<Int>] = []
     var cursor = start
