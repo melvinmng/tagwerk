@@ -248,6 +248,22 @@ struct AssistantModelTests {
         #expect(automatic.contains("in der Sprache der letzten Nachricht des Nutzers"))
     }
 
+    /// L5: the assistant writes new shopping items in the language of the shopping list setting.
+    @Test func instructions_nameTheShoppingLanguage() async throws {
+        let (model, _, _) = await make()
+        model.open(context: .settings)
+        model.shoppingLanguage = { .german }
+        #expect(model.instructions().contains("Schreibe neue Einkaufsartikel auf Deutsch."))
+        model.shoppingLanguage = { .english }
+        let english = model.instructions()
+        #expect(english.contains("Schreibe neue Einkaufsartikel auf Englisch."))
+        #expect(!english.contains("Schreibe neue Einkaufsartikel auf Deutsch."))
+        // The sentence belongs to the shopping list rules.
+        let rules = try #require(english.range(of: "Lege Einkaufsartikel nie über create_task an."))
+        let sentence = try #require(english.range(of: "Schreibe neue Einkaufsartikel auf Englisch."))
+        #expect(rules.upperBound <= sentence.lowerBound)
+    }
+
     @Test func autoRead_ofAShortAnswer_usesTheChosenVoiceLanguage() async throws {
         let (model, _, _) = await make()
         var languages: [VoiceLanguage] = []
@@ -422,7 +438,7 @@ struct AssistantGitHubCardTests {
         #expect(card.title == "Export")
         let lines = card.change.split(separator: "\n").map(String.init)
         #expect(lines.count == 3)
-        #expect(lines[0].hasPrefix("Issue anlegen · beispiel/app · Project App · fällig "))
+        #expect(lines[0].hasPrefix("Issue anlegen · beispiel/app · Projekt App · fällig "))
         #expect(lines[1] == "Zugewiesen: lea-m (nicht dir)")
         #expect(lines[2] == "Notizen: „Details“")
     }
@@ -442,16 +458,16 @@ struct AssistantGitHubCardTests {
     @Test func describe_gitHubIssue_nullTargets_resolveFromStoredCatalog() async {
         let model = await make()
         let card = model.describe(call(arguments(repository: "null", projects: "null")))
-        #expect(card.change.hasPrefix("Issue anlegen · beispiel/app · Project App"))
+        #expect(card.change.hasPrefix("Issue anlegen · beispiel/app · Projekt App"))
     }
 
     @Test func describe_gitHubIssue_emptyProjectList_saysNoProject_notMissing() async {
         let model = await make()
         let card = model.describe(call(arguments(repository: #""beispiel/app""#, projects: "[]")))
-        #expect(card.change.hasPrefix("Issue anlegen · beispiel/app · Kein Project"))
-        #expect(!card.change.contains("Project fehlt"))
+        #expect(card.change.hasPrefix("Issue anlegen · beispiel/app · Kein Projekt"))
+        #expect(!card.change.contains("Projekt fehlt"))
         let inferred = model.describe(call(arguments(repository: "null", projects: "[]")))
-        #expect(inferred.change.hasPrefix("Issue anlegen · beispiel/app · Kein Project"))
+        #expect(inferred.change.hasPrefix("Issue anlegen · beispiel/app · Kein Projekt"))
     }
 
     @Test func describe_gitHubIssue_unresolvableTargets_sayMissing() async {
@@ -459,9 +475,9 @@ struct AssistantGitHubCardTests {
                                                 fetchedAt: Date(timeIntervalSince1970: 0))
         let model = await make()
         let card = model.describe(call(arguments(repository: "null", projects: "null")))
-        #expect(card.change.hasPrefix("Issue anlegen · Repository fehlt · Project fehlt"))
+        #expect(card.change.hasPrefix("Issue anlegen · Repository fehlt · Projekt fehlt"))
         let named = model.describe(call(arguments(repository: #""beispiel/web""#, projects: "null")))
-        #expect(named.change.hasPrefix("Issue anlegen · beispiel/web · Project fehlt"))
+        #expect(named.change.hasPrefix("Issue anlegen · beispiel/web · Projekt fehlt"))
     }
 
     @Test func describe_gitHubIssue_inEnglish() async {
@@ -626,6 +642,9 @@ struct AssistantGitHubCardTests {
         signedIn.open(context: .tasks)
         #expect(signedIn.instructions().contains("list_github_targets"))
         #expect(signedIn.instructions().contains("list_assignees"))
+        // The assistant reads German with "Projekt" (decision #249); the English word is not in the instruction.
+        #expect(signedIn.instructions().contains("das Issue ohne Projekt anlegen"))
+        #expect(!signedIn.instructions().contains("Project"))
         let signedOut = await make(signedIn: false)
         signedOut.open(context: .tasks)
         #expect(!signedOut.instructions().contains("list_github_targets"))

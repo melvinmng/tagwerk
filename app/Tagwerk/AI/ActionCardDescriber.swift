@@ -135,14 +135,14 @@ struct ActionCardDescriber {
     private func issueTarget(_ args: [String: Any], text: (String.LocalizationValue) -> String) -> [String] {
         let repository = (args["repository"] as? String).flatMap { $0.isEmpty ? nil : $0 }
         let projectIDs = args["project_ids"] as? [String]
-        // An explicitly empty list is a choice ("Kein Project"), not a gap.
-        let missingProject = projectIDs?.isEmpty == true ? text("Kein Project") : text("Project fehlt")
+        // An explicitly empty list is a choice ("Kein Projekt"), not a gap.
+        let missingProject = projectIDs?.isEmpty == true ? text("Kein Projekt") : text("Projekt fehlt")
         guard let catalog = gitHubDirectory()?.storedCatalog else {
             return [repository ?? text("Repository fehlt"), missingProject]
         }
         func titles(_ ids: [String]) -> String? {
             let found = ids.compactMap { id in catalog.projects.first { $0.id == id }?.title }
-            return found.count == ids.count && !found.isEmpty ? text("Project \(found.joined(separator: ", "))") : nil
+            return found.count == ids.count && !found.isEmpty ? text("Projekt \(found.joined(separator: ", "))") : nil
         }
         switch AppTools.gitHubTarget(repository: repository, projectIDs: projectIDs, catalog: catalog) {
         case .success(let target):
