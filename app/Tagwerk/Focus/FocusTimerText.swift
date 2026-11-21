@@ -48,4 +48,29 @@ enum FocusTimerText {
         let endedEarly = String(localized: "\(summary.endedEarly) vorzeitig beendet")
         return "\(bricks) · \(endedEarly)"
     }
+
+    /// "Woche ab 16. Nov. · 4 h 35 min Fokus".
+    static func weekHeader(start: Date, focusedMinutes: Int) -> String {
+        let date = start.formatted(.dateTime.day().month())
+        return String(localized: "Woche ab \(date) · \(IntakeFormat.duration(minutes: focusedMinutes)) Fokus")
+    }
+
+    /// Weekday names in the order of the calendar's week: short ("Mo") and long ("Montag").
+    static func weekdayNames(calendar: Calendar) -> (short: [String], long: [String]) {
+        let first = calendar.firstWeekday - 1
+        let short = calendar.shortStandaloneWeekdaySymbols, long = calendar.standaloneWeekdaySymbols
+        let order = (0..<7).map { (first + $0) % 7 }
+        return (order.map { short[$0].trimmingCharacters(in: CharacterSet(charactersIn: ".")) }, order.map { long[$0] })
+    }
+
+    /// For VoiceOver, one element per weekday: "Montag: 2 Bausteine, 50 Minuten Fokus, 1 vorzeitig beendet".
+    static func dayAccessibility(weekday: String, bricks: [FocusBrick]) -> String {
+        guard !bricks.isEmpty else { return String(localized: "\(weekday): keine Bausteine") }
+        let count = String(localized: "\(bricks.count) Bausteine")
+        let minutes = IntakeFormat.spokenDuration(minutes: bricks.reduce(0) { $0 + $1.focusedMinutes })
+        let endedEarly = bricks.filter(\.piece.isEndedEarly).count
+        var text = "\(weekday): \(count), \(minutes) \(String(localized: "Fokus"))"
+        if endedEarly > 0 { text += ", \(String(localized: "\(endedEarly) vorzeitig beendet"))" }
+        return text
+    }
 }

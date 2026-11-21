@@ -2015,5 +2015,8 @@
   "Abgeschlossen, Stufe %lld": "Completed, stage %lld",
   "Vorzeitig beendet, Stufe %lld": "Ended early, stage %lld",
   "Der Baustein bleibt erhalten und wird als vorzeitig beendet markiert.": "The brick stays and is marked as ended early.",
-  "Jede Fokus-Sitzung ab einer Minute ergibt einen Baustein.": "Every focus session of a minute or more gives you a brick."
+  "Jede Fokus-Sitzung ab einer Minute ergibt einen Baustein.": "Every focus session of a minute or more gives you a brick.",
+  "Woche ab %@ · %@ Fokus": "Week of %1$@ · %2$@ focus",
+  "%@: keine Bausteine": "%@: no bricks",
+  "Höhe nach Dauer (1, 10, 25, 50, 90 min) · gestrichelt: vorzeitig beendet": "Height by duration (1, 10, 25, 50, 90 min) · dashed: ended early"
 }

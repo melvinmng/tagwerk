@@ -904,6 +904,16 @@
         }
       }
     },
+    "%@: keine Bausteine": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@: no bricks"
+          }
+        }
+      }
+    },
     "%lld": {
       "localizations": {
         "en": {
@@ -2759,6 +2769,7 @@
       }
     },
     "Abgeschlossen, Stufe %lld": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -9599,6 +9610,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "At most four items remind you. Turn off the reminder of another item first."
+          }
+        }
+      }
+    },
+    "Höhe nach Dauer (1, 10, 25, 50, 90 min) · gestrichelt: vorzeitig beendet": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Height by duration (1, 10, 25, 50, 90 min) · dashed: ended early"
           }
         }
       }
@@ -16753,6 +16774,7 @@
       "shouldTranslate": false
     },
     "Vorzeitig beendet, Stufe %lld": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -17294,11 +17316,28 @@
       }
     },
     "Woche ab %@": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Week of %@"
+          }
+        }
+      }
+    },
+    "Woche ab %@ · %@ Fokus": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Woche ab %1$@ · %2$@ Fokus"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Week of %1$@ · %2$@ focus"
           }
         }
       }

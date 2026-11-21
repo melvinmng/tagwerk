@@ -1,3 +1,4 @@
+import Foundation
 import Testing
 import TagwerkCore
 @testable import Tagwerk
@@ -26,5 +27,26 @@ struct FocusTimerTextTests {
         let mixed: [FocusRewardPiece] = Array(repeating: .completed(.two), count: 5) + [.endedEarly(.one), .endedEarly(.three)]
         #expect(FocusTimerText.collectionSummary(FocusReward.summary(of: mixed)) == "7 Bausteine · 2 vorzeitig beendet")
         #expect(FocusTimerText.focusedText(seconds: 42 * 60 + 10) == "42 min Fokus")
+    }
+
+    @Test func weekHeader_showsTheStartAndTheFocusTime() {
+        let start = Calendar.tagwerk.date(from: DateComponents(year: 2026, month: 11, day: 16))!
+        #expect(FocusTimerText.weekHeader(start: start, focusedMinutes: 275) == "Woche ab 16. Nov. · 4 h 35 min Fokus")
+        #expect(FocusTimerText.weekHeader(start: start, focusedMinutes: 40) == "Woche ab 16. Nov. · 40 min Fokus")
+    }
+
+    @Test func weekdayNames_followTheCalendarsWeek() {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.locale = Locale(identifier: "de_DE")
+        calendar.firstWeekday = 2
+        let names = FocusTimerText.weekdayNames(calendar: calendar)
+        #expect(names.short.first == "Mo" && names.short.last == "So")
+        #expect(names.long.first == "Montag" && names.long.last == "Sonntag")
+    }
+
+    @Test func dayAccessibility_countsBricksMinutesAndEarlyEnds() {
+        let bricks = [FocusBrick(piece: .completed(.three), focusedMinutes: 25), FocusBrick(piece: .endedEarly(.three), focusedMinutes: 25)]
+        #expect(FocusTimerText.dayAccessibility(weekday: "Montag", bricks: bricks) == "Montag: 2 Bausteine, 50 Minuten Fokus, 1 vorzeitig beendet")
+        #expect(FocusTimerText.dayAccessibility(weekday: "Dienstag", bricks: []) == "Dienstag: keine Bausteine")
     }
 }

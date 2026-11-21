@@ -1,24 +1,18 @@
 import SwiftUI
 import TagwerkCore
 
-/// The collection: one brick per focus session of a minute or more, grouped by week. The symbols are neutral
-/// placeholders until the bricks per weekday replace them (F2).
+/// The collection: one brick per focus session of a minute or more, stacked per weekday and grouped by week (FO8c).
+/// The height of a brick follows its stage, a dashed outline marks a session that ended early. Drawn with shapes only.
 struct FocusCollectionView: View {
     @Environment(AppEnvironment.self) private var environment
+    @ScaledMetric(relativeTo: .body) private var columnHeight = 150.0
 
-    private struct Week: Identifiable {
-        let start: Date
-        let pieces: [FocusRewardPiece]
-        var id: Date { start }
-    }
-
-    private var weeks: [Week] {
-        let calendar = Calendar.tagwerk
-        let finished = environment.focusStore.finishedSessions().filter { $0.piece != nil }
-        let grouped = Dictionary(grouping: finished) {
-            calendar.dateInterval(of: .weekOfYear, for: $0.endedAt ?? $0.start)?.start ?? $0.start
+    private var weeks: [FocusCollectionWeek] {
+        let sessions = environment.focusStore.finishedSessions().compactMap { record -> (endedAt: Date, piece: FocusRewardPiece, focusedSeconds: Int)? in
+            guard let piece = record.piece else { return nil }
+            return (record.endedAt ?? record.start, piece, record.focusedSeconds)
         }
-        return grouped.map { Week(start: $0.key, pieces: $0.value.compactMap(\.piece)) }.sorted { $0.start > $1.start }
+        return FocusCollection.weeks(sessions: sessions, calendar: .tagwerk)
     }
 
     var body: some View {
@@ -30,23 +24,67 @@ struct FocusCollectionView: View {
             }
             ForEach(weeks) { week in
                 Section {
-                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 44))], spacing: 12) {
-                        ForEach(Array(week.pieces.enumerated()), id: \.offset) { _, piece in
-                            Image(systemName: piece.isEndedEarly ? "\(piece.stage.rawValue).circle" : "\(piece.stage.rawValue).circle.fill")
-                                .font(.title)
-                                .foregroundStyle(piece.isEndedEarly ? Color.secondary : Color.accentColor)
-                                .accessibilityLabel(piece.isEndedEarly ? Text("Vorzeitig beendet, Stufe \(piece.stage.rawValue)") : Text("Abgeschlossen, Stufe \(piece.stage.rawValue)"))
-                        }
-                    }
-                    .padding(.vertical, 4)
+                    weekView(week)
+                        .padding(.vertical, 4)
                 } header: {
-                    Text("Woche ab \(week.start.formatted(.dateTime.day().month()))")
+                    Text(FocusTimerText.weekHeader(start: week.start, focusedMinutes: week.focusedMinutes))
                 } footer: {
-                    Text(FocusTimerText.collectionSummary(FocusReward.summary(of: week.pieces)))
+                    Text(FocusTimerText.collectionSummary(week.summary))
+                }
+            }
+            if !weeks.isEmpty {
+                Section {} footer: {
+                    Text("Höhe nach Dauer (1, 10, 25, 50, 90 min) · gestrichelt: vorzeitig beendet")
                 }
             }
         }
         .navigationTitle("Sammlung")
         .navigationBarTitleDisplayMode(.inline)
+    }
+
+    private func weekView(_ week: FocusCollectionWeek) -> some View {
+        let names = FocusTimerText.weekdayNames(calendar: .tagwerk)
+        return HStack(alignment: .bottom, spacing: 6) {
+            ForEach(0..<7, id: \.self) { index in
+                VStack(spacing: 6) {
+                    stack(of: week.days[index])
+                    Text(names.short[index])
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.6)
+                }
+                .frame(maxWidth: .infinity)
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel(FocusTimerText.dayAccessibility(weekday: names.long[index], bricks: week.days[index]))
+            }
+        }
+    }
+
+    private func stack(of bricks: [FocusBrick]) -> some View {
+        let heights = FocusCollection.heights(of: bricks, available: columnHeight)
+        return VStack(spacing: FocusCollection.brickSpacing) {
+            Spacer(minLength: 0)
+            // The newest brick sits on top, the first of the day at the bottom.
+            ForEach(Array(bricks.enumerated()).reversed(), id: \.offset) { index, brick in
+                BrickShape(isEndedEarly: brick.piece.isEndedEarly)
+                    .frame(height: heights[index])
+            }
+        }
+        .frame(height: columnHeight)
+    }
+}
+
+/// One brick: filled in the accent colour, or a dashed outline without fill when the session ended early.
+private struct BrickShape: View {
+    let isEndedEarly: Bool
+
+    var body: some View {
+        let shape = RoundedRectangle(cornerRadius: 3, style: .continuous)
+        if isEndedEarly {
+            shape.strokeBorder(Color.accentColor, style: StrokeStyle(lineWidth: 1.5, dash: [3, 2]))
+        } else {
+            shape.fill(Color.accentColor)
+        }
     }
 }
