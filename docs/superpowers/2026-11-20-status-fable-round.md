@@ -10,6 +10,8 @@ Branch mit Plänen und Mockups: `chore/fable-open-items` (Worktree `t3-638057bd-
 - Höchstens 3 Agents mit Xcode gleichzeitig (Umsetzung), dazu höchstens 3 für Planung/Prüfung.
 - Kleine Punkte ohne eigenen Planungsschritt: Sonnet setzt direkt nach Mockup und Entscheidung um.
 - Nach jeder Umsetzung Simulator und DerivedData des Agents löschen (`scripts/test-env.sh`).
+- Tests (ab 21.11.): vor jedem Task-Commit `TAGWERK_SKIP_UI_TESTS=1 app/test-all.sh`; voller Lauf mit UI-Tests einmal am Strangende und vor jedem Merge (mit aktuellem `main`).
+- Keine künstliche Last (Endlosschleifen, zusätzliche Simulatoren) in Agent-Aufträgen.
 
 ## Entscheidungen (verbindlich, auf GitHub)
 
