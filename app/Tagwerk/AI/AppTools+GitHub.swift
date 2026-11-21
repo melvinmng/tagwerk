@@ -142,4 +142,144 @@ extension AppTools {
         }
         return Self.json(response)
     }
+
+    // MARK: Assignments
+
+    /// What an `assign_task` call resolves to; shared by execution and confirmation card.
+    struct AssignmentPlan: Equatable {
+        /// GitHub's spelling, each person once; people who are assigned already are not part of `add`.
+        let change: AssigneeChange
+        let before: [String]
+        let after: [String]
+        /// The user was assigned before and is not afterwards.
+        let handsOver: Bool
+    }
+
+    enum AssignmentError: Error, Equatable {
+        case notAnIssue, nothingToChange, tooMany, notAssigned([String]), conflicting([String])
+
+        var message: String {
+            switch self {
+            case .notAnIssue: String(localized: "Zuweisen geht nur bei GitHub-Issues.")
+            case .nothingToChange: String(localized: "Es gibt nichts zu ändern.")
+            case .tooMany: String(localized: "Höchstens 10 Personen je Issue.")
+            case .notAssigned(let names): String(localized: "\(names.formatted(.list(type: .and))) ist dem Issue nicht zugewiesen.")
+            case .conflicting(let names): String(localized: "\(names.formatted(.list(type: .and))) steht in add und in remove.")
+            }
+        }
+    }
+
+    /// Turns the requested people into a difference against the current state. `add` holds logins in GitHub's
+    /// spelling already (the user's own login is spelled as `me`); `remove` is matched against `current`.
+    /// People who are assigned already drop out of `add`.
+    static func assignmentPlan(current: [String], add: [String], remove: [String], me: String?) -> Result<AssignmentPlan, AssignmentError> {
+        func unique(_ logins: [String]) -> [String] {
+            var seen: [String] = []
+            for login in logins where !AssigneeRules.contains(seen, login) { seen.append(login) }
+            return seen
+        }
+        let requestedAdd = unique(add.map { AssigneeSelection.isMe($0, me: me) ? (me ?? $0) : $0 })
+        let requestedRemove = unique(remove)
+        let overlap = requestedAdd.filter { AssigneeRules.contains(requestedRemove, $0) }
+        guard overlap.isEmpty else { return .failure(.conflicting(overlap)) }
+        let unassigned = requestedRemove.filter { !AssigneeRules.contains(current, $0) }
+        guard unassigned.isEmpty else { return .failure(.notAssigned(unassigned)) }
+
+        let newPeople = requestedAdd.filter { !AssigneeRules.contains(current, $0) }
+        // Removed people are written the way GitHub spells them, which is the way `current` lists them.
+        let removed = current.filter { AssigneeRules.contains(requestedRemove, $0) }
+        let change = AssigneeChange(add: newPeople, remove: removed)
+        guard !newPeople.isEmpty || !removed.isEmpty else { return .failure(.nothingToChange) }
+        let after = AssigneeRules.applying(change, to: current)
+        guard after.count <= AssigneeRules.maximum else { return .failure(.tooMany) }
+        let handsOver = me.map { AssigneeRules.contains(current, $0) && !AssigneeRules.contains(after, $0) } ?? false
+        return .success(AssignmentPlan(change: change, before: current, after: after, handsOver: handsOver))
+    }
+
+    /// The issue an `assign_task` call is about: one of the user's tasks, or one the online search found.
+    private struct AssignmentTarget {
+        let id: TaskID
+        let repository: String
+        let current: [String]
+        /// A task of the user's lists; otherwise an issue from `foundIssues`.
+        let task: TaskItem?
+        let found: OnlineIssue?
+    }
+
+    private func assignmentTarget(for key: String) throws -> AssignmentTarget {
+        if let task = taskList.items.first(where: { $0.id.key == key }) {
+            guard task.id.source == .github else { throw ToolError(AssignmentError.notAnIssue.message) }
+            return AssignmentTarget(id: task.id, repository: task.container.id, current: task.assignees ?? [], task: task, found: nil)
+        }
+        guard let found = foundIssues[key] else { throw ToolError(String(localized: "Diese Aufgabe gibt es nicht.")) }
+        guard found.marker != .closed else { throw ToolError(String(localized: "Geschlossene Issues lassen sich hier nicht zuweisen.")) }
+        return AssignmentTarget(id: TaskID(source: .github, rawValue: found.id), repository: found.repository, current: found.assignees,
+                                task: nil, found: found)
+    }
+
+    /// Changes who is assigned to an issue after the confirmation: one of the user's tasks or one that the GitHub
+    /// search found (taking over "weis mir #151 zu"). A person who is added must be assignable in the repository
+    /// (no blind assigning); an unknown login or a list that cannot be loaded writes nothing. Giving one of the user's
+    /// issues away removes it from the lists; `onHandedOver` deletes its future blocks.
+    func assignTask(_ args: Arguments) async throws -> String {
+        let target = try assignmentTarget(for: args.require("id"))
+        guard let directory = gitHub() else { throw ToolError(String(localized: "Diese Quelle ist nicht verfügbar.")) }
+        let me = directory.login
+        let current = target.current
+
+        var add: [String] = []
+        let requested = args.strings("add")
+        let others = requested.filter { !AssigneeSelection.isMe($0, me: me) && !AssigneeRules.contains(current, $0) }
+        var assignable: [String] = []
+        if !others.isEmpty {
+            guard let loaded = await directory.assignableUsers(in: target.repository, maxAge: AppEnvironment.catalogMaxAge) else {
+                throw ToolError(String(localized: "Personen konnten nicht geladen werden"))
+            }
+            assignable = loaded
+            let unknown = others.filter { AssigneeRules.canonical($0, in: loaded) == nil }
+            guard unknown.isEmpty else {
+                throw ToolError(String(localized: "\(unknown.formatted(.list(type: .and))) ist in \(target.repository) nicht zuweisbar."))
+            }
+        }
+        for login in requested {
+            add.append(AssigneeRules.canonical(login, in: assignable) ?? login)
+        }
+
+        let plan: AssignmentPlan
+        switch Self.assignmentPlan(current: current, add: add, remove: args.strings("remove"), me: me) {
+        case .success(let resolved): plan = resolved
+        case .failure(let error): throw ToolError(error.message)
+        }
+
+        guard let task = target.task else {
+            // An issue outside the user's lists: nothing to plan away; it joins the lists when the user took it over.
+            let updated = try await taskList.assignUnlisted(plan.change, to: target.id)
+            var response: [String: Any] = ["ok": true, "assignees": updated.assignees ?? [], "handed_over": false, "deleted_blocks": 0,
+                                           "in_tasks": taskList.items.contains { $0.id == target.id }]
+            if let found = target.found {
+                response["number"] = found.number
+                response["url"] = found.url.absoluteString
+            }
+            let missing = AssigneeRules.missing(requested: plan.change.add, actual: updated.assignees)
+            if !missing.isEmpty { response["not_assigned"] = missing }
+            return Self.json(response)
+        }
+
+        let futureBlocks = planning.futureBlockCount(for: task.id)
+        var edit = TaskEdit()
+        edit.assignees = .set(plan.change)
+        let updated = try await taskList.applyReturning(edit, to: task.id)
+
+        let listed = taskList.items.contains { $0.id == task.id }
+        var response: [String: Any] = ["ok": true, "assignees": updated.assignees ?? [], "handed_over": !listed,
+                                       "deleted_blocks": listed ? 0 : futureBlocks]
+        if !listed {
+            if let number = task.issueNumber { response["number"] = number }
+            if let url = task.url { response["url"] = url.absoluteString }
+        }
+        // GitHub drops people silently; the model must be able to tell the user.
+        let missing = AssigneeRules.missing(requested: plan.change.add, actual: updated.assignees)
+        if !missing.isEmpty { response["not_assigned"] = missing }
+        return Self.json(response)
+    }
 }

@@ -65,6 +65,13 @@ final class NoteStore {
         all().first { $0.id == id }
     }
 
+    /// True when the note must never leave the device: a private kind, or a note in a private folder or below one.
+    /// The only rule the assistant's note access and the recipe picker use (`NoteFolderRules.mayLeaveDevice`).
+    func isPrivate(_ note: NoteRecord) -> Bool {
+        !NoteFolderRules.mayLeaveDevice(kind: note.kind, folderID: note.folderID,
+                                        privateFolderIDs: NoteFolderRules.privateFolderIDs(in: folders().map(\.info)))
+    }
+
     /// The thought note of a kind and day, if there is one (a note in the trash does not count).
     func note(kind: NoteKind, dayKey: String) -> NoteRecord? {
         all().first { $0.deletedAt == nil && $0.kind == kind && $0.dayKey == dayKey }

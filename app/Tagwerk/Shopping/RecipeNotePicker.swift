@@ -31,8 +31,7 @@ enum RecipeNoteSource {
     static func isOffered(_ note: NoteRecord, store: NoteStore) -> Bool {
         guard note.kind == .free, note.deletedAt == nil,
               !note.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return false }
-        if let folderID = note.folderID, store.folder(id: folderID)?.role?.isPrivate == true { return false }
-        return true
+        return !store.isPrivate(note)
     }
 
     @MainActor

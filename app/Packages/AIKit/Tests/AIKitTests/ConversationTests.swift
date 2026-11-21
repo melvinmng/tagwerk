@@ -52,6 +52,9 @@ final class FakeToolHandler: ToolHandler {
     var outputs: [String: String] = [:]
     private(set) var ran: [ToolCall] = []
     let writeTools: Set<String>
+    /// Replaces `storedForm` for the calls it returns a value for; `nil` keeps the protocol default.
+    var storedFormOverride: ((ToolCall, String?) -> (arguments: String, output: String?)?)?
+    var activityTools: Set<String> = []
 
     init(writeTools: Set<String> = ["create_task"]) {
         self.writeTools = writeTools
@@ -68,6 +71,12 @@ final class FakeToolHandler: ToolHandler {
         ran.append(call)
         return outputs[call.name] ?? #"{"ok":true}"#
     }
+
+    func storedForm(of call: ToolCall, output: String?) -> (arguments: String, output: String?) {
+        storedFormOverride?(call, output) ?? (String(decoding: call.arguments, as: UTF8.self), output)
+    }
+
+    func showsActivity(_ name: String) -> Bool { activityTools.contains(name) }
 }
 
 func call(_ id: String, _ name: String, _ arguments: String = "{}") -> StreamEvent {
@@ -405,3 +414,157 @@ final class GatedToolHandler: ToolHandler {
         return #"{"ok":true}"#
     }
 }
+
+/// The stored form of a chat (issue #173, point 8): the history in memory stays complete, what is saved is reduced.
+@MainActor
+struct ConversationStoredFormTests {
+    let responder = FakeResponder()
+    let handler = FakeToolHandler()
+
+    func makeConversation(history: [InputItem] = []) -> Conversation {
+        Conversation(responder: responder, tools: handler, model: { "gpt-test" }, instructions: { "Kontext" }, history: history)
+    }
+
+    /// `list_tasks` keeps only a marker; the argument `secret` is dropped from every call.
+    private func reducing() {
+        handler.storedFormOverride = { call, output in
+            guard call.name == "list_tasks" else { return nil }
+            return (#"{"reduced":true}"#, output.map { _ in #"{"ok":true,"note":"gone"}"# })
+        }
+    }
+
+    private func readTurn(_ conversation: Conversation) async {
+        responder.enqueue(.events([call("c1", "list_tasks", #"{"secret":"x"}"#), .completed(usage: nil)]))
+        responder.enqueue(.events([.textDelta("Zwei Aufgaben."), .completed(usage: nil)]))
+        handler.outputs["list_tasks"] = #"{"text":"Notiztext"}"#
+        await conversation.send("Was steht an?")
+    }
+
+    @Test func storableHistory_defaultEqualsHistory() async {
+        let conversation = makeConversation()
+        await readTurn(conversation)
+        #expect(conversation.storableHistory == conversation.history)
+    }
+
+    @Test func storableHistory_usesStoredFormForCallAndOutput() async {
+        reducing()
+        let conversation = makeConversation()
+        await readTurn(conversation)
+        #expect(conversation.storableHistory == [
+            .user("Was steht an?"),
+            .functionCall(callID: "c1", name: "list_tasks", arguments: #"{"reduced":true}"#),
+            .functionOutput(callID: "c1", output: #"{"ok":true,"note":"gone"}"#),
+            .assistant("Zwei Aufgaben."),
+        ])
+        // The history in memory is untouched.
+        #expect(conversation.history.contains(.functionOutput(callID: "c1", output: #"{"text":"Notiztext"}"#)))
+    }
+
+    @Test func storableHistory_keepsCallIDsAndOrder() async {
+        reducing()
+        let conversation = makeConversation()
+        await readTurn(conversation)
+        responder.enqueue(.events([call("c2", "list_tasks"), call("c3", "create_task", #"{"title":"A"}"#), .completed(usage: nil)]))
+        await conversation.send("Noch mal")
+        let kinds = conversation.storableHistory.map { item -> String in
+            switch item {
+            case .user: "user"
+            case .assistant: "assistant"
+            case .functionCall(let id, _, _): "call \(id)"
+            case .functionOutput(let id, _): "output \(id)"
+            default: "other"
+            }
+        }
+        let original = conversation.history.map { item -> String in
+            switch item {
+            case .user: "user"
+            case .assistant: "assistant"
+            case .functionCall(let id, _, _): "call \(id)"
+            case .functionOutput(let id, _): "output \(id)"
+            default: "other"
+            }
+        }
+        #expect(kinds == original)
+    }
+
+    @Test func storableHistory_openCall_passesNilOutput() async {
+        var seen: [String?] = []
+        handler.storedFormOverride = { call, output in
+            if call.name == "create_task" { seen.append(output) }
+            return nil
+        }
+        responder.enqueue(.events([call("c1", "create_task", #"{"title":"A"}"#), .completed(usage: nil)]))
+        let conversation = makeConversation()
+        await conversation.send("Lege A an")
+        #expect(conversation.state == .waitingForConfirmation)
+        _ = conversation.storableHistory
+        #expect(seen == [nil])
+    }
+
+    @Test func history_keepsFullOutputAcrossTurns() async {
+        reducing()
+        let conversation = makeConversation()
+        await readTurn(conversation)
+        responder.enqueue(.events([.textDelta("Gern."), .completed(usage: nil)]))
+        await conversation.send("Danke")
+        let lastInput = responder.inputs.last ?? []
+        #expect(lastInput.contains(.functionOutput(callID: "c1", output: #"{"text":"Notiztext"}"#)))
+        #expect(lastInput.contains(.functionCall(callID: "c1", name: "list_tasks", arguments: #"{"secret":"x"}"#)))
+    }
+
+    @Test func reduceToStoredForm_replacesHistory() async {
+        reducing()
+        let conversation = makeConversation()
+        await readTurn(conversation)
+        conversation.reduceToStoredForm()
+        #expect(conversation.history == conversation.storableHistory)
+        #expect(!conversation.history.contains(.functionOutput(callID: "c1", output: #"{"text":"Notiztext"}"#)))
+        responder.enqueue(.events([.textDelta("Gern."), .completed(usage: nil)]))
+        await conversation.send("Danke")
+        #expect(!(responder.inputs.last ?? []).contains(.functionOutput(callID: "c1", output: #"{"text":"Notiztext"}"#)))
+    }
+
+    @Test func reduceToStoredForm_whileBusy_doesNothing() async {
+        reducing()
+        let gate = Gate()
+        let slow = SlowResponder(gate: gate)
+        let conversation = Conversation(responder: slow, tools: handler, model: { "gpt-test" }, instructions: { "" },
+                                        history: [.user("Alt"), .functionCall(callID: "c1", name: "list_tasks", arguments: "{}"),
+                                                  .functionOutput(callID: "c1", output: #"{"text":"Notiztext"}"#)])
+        let sending = Task { await conversation.send("Los") }
+        while conversation.state != .streaming { await Task.yield() }
+        let before = conversation.history
+        conversation.reduceToStoredForm()
+        #expect(conversation.history == before)
+        gate.open()
+        await sending.value
+        conversation.reduceToStoredForm()
+        #expect(!conversation.history.contains(.functionOutput(callID: "c1", output: #"{"text":"Notiztext"}"#)))
+    }
+
+    @Test func restoredFromStorableHistory_isValidInput() async {
+        reducing()
+        let conversation = makeConversation()
+        await readTurn(conversation)
+        let restored = makeConversation(history: conversation.storableHistory)
+        #expect(Conversation.openCallIDs(in: restored.history).isEmpty)
+        #expect(restored.pendingActions.isEmpty)
+        #expect(restored.history == conversation.storableHistory)
+    }
+
+    @Test func messages_showActivityOnlyForOptedInReadTools() async {
+        handler.activityTools = ["read_note"]
+        responder.enqueue(.events([call("c1", "list_tasks"), call("c2", "read_note", #"{"note_ids":["note:1"]}"#), .completed(usage: nil)]))
+        responder.enqueue(.events([.textDelta("Fertig."), .completed(usage: nil)]))
+        handler.outputs["read_note"] = #"{"notes":[]}"#
+        let conversation = makeConversation()
+        await conversation.send("Lies")
+        let activities = conversation.messages.compactMap { message -> String? in
+            if case .activity(let call, let output) = message.content { return "\(call.name)|\(output ?? "nil")" }
+            return nil
+        }
+        #expect(activities == [#"read_note|{"notes":[]}"#])
+        #expect(conversation.messages.count == 3)   // user, activity, assistant
+    }
+}
+

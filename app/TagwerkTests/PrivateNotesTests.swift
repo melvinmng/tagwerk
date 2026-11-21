@@ -24,11 +24,61 @@ struct PrivateNotesTests {
         for name in NoteSuggestionRules.allowedTools { #expect(!name.localizedCaseInsensitiveContains("note")) }
     }
 
-    @Test func assistantSearch_hasNoSourceForNotes() {
-        // The assistant's `search` tool reads events and tasks only. It is built from these sources, so a note cannot reach it.
+    @Test func assistantSearch_hasNoNoteSourceWithoutWiring() {
+        // `SearchToolSources.notes` is the only door for notes into the assistant's `search`; without wiring it is empty.
+        // `AppEnvironment` fills it from `NoteToolAccess`, which leaves private notes out (`NoteToolAccessTests`).
         let sources = SearchToolSources(events: { _ in nil }, calendarNames: { [:] }, completedTasks: { [] })
         let labels = Mirror(reflecting: sources).children.compactMap(\.label)
-        #expect(labels.sorted() == ["calendarNames", "completedTasks", "events"])
+        #expect(labels.sorted() == ["calendarNames", "completedTasks", "events", "notes", "notesAllowed", "searchOnline", "shopping"])
+        #expect(sources.notes().isEmpty)
+        #expect(!sources.notesAllowed())
+    }
+
+    @Test func storeIsPrivate_freeNoteInJournalFolder() throws {
+        let container = try ModelContainerFactory.make(inMemory: true)
+        let notes = NoteStore(context: container.mainContext)
+        let journalFolder = notes.ensureJournalFolder()
+        let inJournal = try #require(notes.create(text: "Frei im Tagebuch-Ordner", folderID: journalFolder.id))
+        let own = try #require(notes.create(text: "Normal"))
+        #expect(notes.isPrivate(inJournal))
+        #expect(!notes.isPrivate(own))
+    }
+
+    @Test func storeIsPrivate_freeNoteInSubfolderOfBibleStudy() throws {
+        // Guard only: the app cannot create subfolders below system folders, so this needs directly inserted data.
+        let container = try ModelContainerFactory.make(inMemory: true)
+        let notes = NoteStore(context: container.mainContext)
+        let bibleFolder = notes.ensureSystemFolder(.bibleStudy, name: "Bible Study")
+        let sub = NoteFolderRecord(name: "Römer", parentID: bibleFolder.id, order: 0)
+        container.mainContext.insert(sub)
+        notes.save()
+        let inSub = try #require(notes.create(text: "Notiz im Unterordner", folderID: sub.id))
+        #expect(notes.isPrivate(inSub))
+    }
+
+    @Test func storeIsPrivate_dreamNote() throws {
+        let container = try ModelContainerFactory.make(inMemory: true)
+        let notes = NoteStore(context: container.mainContext)
+        let dream = try #require(notes.create(text: "Traum", kind: .dream, dayKey: "2026-11-18"))
+        let morning = try #require(notes.create(text: "Gedanken", kind: .morning, dayKey: "2026-11-18"))
+        #expect(notes.isPrivate(dream))
+        #expect(!notes.isPrivate(morning))
+    }
+
+    @Test func recipeSource_neverOffersNoteBelowPrivateFolder() throws {
+        // Guard only (see `storeIsPrivate_freeNoteInSubfolderOfBibleStudy`).
+        let container = try ModelContainerFactory.make(inMemory: true)
+        let notes = NoteStore(context: container.mainContext)
+        let journalFolder = notes.ensureJournalFolder()
+        let sub = NoteFolderRecord(name: "Unterordner", parentID: journalFolder.id, order: 0)
+        container.mainContext.insert(sub)
+        notes.save()
+        let inSub = try #require(notes.create(text: "Rezept im Unterordner", folderID: sub.id))
+        let direct = try #require(notes.create(text: "Rezept im Tagebuch-Ordner", folderID: journalFolder.id))
+        let own = try #require(notes.create(text: "Rezept frei"))
+        #expect(!RecipeNoteSource.isOffered(inSub, store: notes))
+        #expect(!RecipeNoteSource.isOffered(direct, store: notes))
+        #expect(RecipeNoteSource.isOffered(own, store: notes))
     }
 
     @Test func search_matchesPlainText_notMarkup() throws {
