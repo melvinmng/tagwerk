@@ -7,7 +7,9 @@ import UIKit
 // - A window-wide tap recognizer (installed once through `KeyboardDismissalInstaller`) closes the keyboard on a tap
 //   outside of any text input. Sheets live in the same window, so they are covered without extra work.
 // - `.keepsKeyboardOnTap()` marks an input bar at the screen edge: a tap on it (for example "send") keeps the keyboard open.
-// - `.keyboardDoneButton()` adds a "Fertig" button above the keyboard for fields without a Return key.
+// - `.keyboardDoneButton()` adds a keyboard symbol button ("Tastatur ausblenden") above the keyboard for fields without a
+//   closing Return key (multi-line fields, number pads). Single-line fields close with the Return key, which reads "Fertig"
+//   because the root view sets `.submitLabel(.done)` (#188 TA1a, TA2a).
 // - Scrolling closes the keyboard through `.scrollDismissesKeyboard(.interactively)` on each Form, List and ScrollView
 //   that contains inputs or sits above an input bar.
 
@@ -134,8 +136,9 @@ extension View {
     /// Marks an input bar (chat composer, shopping bar, quick capture): a tap on it keeps the keyboard open.
     func keepsKeyboardOnTap() -> some View { modifier(KeepsKeyboardOnTap()) }
 
-    /// Shows a "Fertig" button above the keyboard while this field has focus. For fields without a Return key
-    /// (multi-line fields, number pads). Apply it directly to the field; the focus state is kept internally.
+    /// Shows a keyboard symbol button above the keyboard while this field has focus. For fields without a closing Return key
+    /// (multi-line fields, number pads). Apply it directly to the field; the focus state is kept internally. The Return key of
+    /// the field inserts a line, so it keeps the label "return" instead of the app-wide "Fertig".
     func keyboardDoneButton() -> some View { modifier(OwnFocusDoneButton()) }
 
     /// Same as `keyboardDoneButton()` for a field that already tracks its focus.
@@ -178,7 +181,9 @@ private struct KeyboardDoneButton: ViewModifier {
             if focus.wrappedValue {
                 ToolbarItemGroup(placement: .keyboard) {
                     Spacer()
-                    Button("Fertig") { focus.wrappedValue = false }
+                    Button { focus.wrappedValue = false } label: { Image(systemName: "keyboard.chevron.compact.down") }
+                        .accessibilityLabel("Tastatur ausblenden")
+                        .accessibilityIdentifier(AccessibilityID.Common.hideKeyboard)
                 }
             }
         }
@@ -191,6 +196,7 @@ private struct OwnFocusDoneButton: ViewModifier {
     func body(content: Content) -> some View {
         content
             .focused($isFocused)
+            .submitLabel(.return)
             .modifier(KeyboardDoneButton(focus: $isFocused))
     }
 }

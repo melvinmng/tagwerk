@@ -53,7 +53,7 @@ class RecipeScreensAuditCase: UITestCase {
         XCTAssertTrue(editor.waitForExistence(timeout: Self.timeout), "Recipe text field missing")
         editor.tap()
         editor.typeText("Gemüsepfanne für 2: 2 Paprika, 150 g Reis, Salz")
-        if app.buttons["Fertig"].exists { app.buttons["Fertig"].tap() }
+        if app.buttons["Tastatur ausblenden"].exists { app.buttons["Tastatur ausblenden"].tap() }
         tapScrolling("Rezept holen")
         waitFor("Einverstanden")
         try audit("Rezept anlegen (Einwilligung)")

@@ -64,6 +64,11 @@ enum AuditAllowlist {
         ], reason: "Button and segment texts in the accent colour or on Liquid Glass / bordered tint (navigation bar, filter marks, quick entry). "
             + "The system draws the background; no own colour to change without replacing the system style (#188)."),
 
+        Entry(auditType: .contrast, labels: ["Abschließen"], screens: ["Tagesabschluss"], reason:
+            "Confirmation button of the wrap-up sheet in the navigation bar: the text sits on the Liquid Glass of the bar, whose background "
+            + "lets the list scroll behind it. \"Fertig\" was narrower and passed; the longer \"Abschließen\" (#188 TA3) reaches over more of the "
+            + "list and is reported. The system draws the background; same group as \"Verwerfen\" and \"Auswählen\" above (#188, "
+            + "\"Schrift auf Liquid Glass\")."),
         Entry(auditType: .contrast, labels: ["Unerledigt von heute"], screens: ["Tagesabschluss"], reason:
             "Section header of the leftover section of the wrap-up, in the system grey of a grouped list header on the grouped background "
             + "(\"nearly passed\"). It is the same group as the other section headers above; the system draws the header colour, and an own "
@@ -84,7 +89,7 @@ enum AuditAllowlist {
             "The date title in the bar of \"Planen\" is fixed in size on purpose (a toolbar item gets no width; with accessibility sizes it shows the "
             + "shortest form, see PlanHeaderText.displayedTitle); \"Auswählen\" is a system bar button. Header design: #188 / #175."),
         Entry(auditType: .dynamicType, labels: [
-            "Punkte in den Einstellungen anlegen", "Mo\\. planen", "Fertig", "Brain Dump", "Leitfragen einfügen", "\\d+\\.\\d+\\.",
+            "Punkte in den Einstellungen anlegen", "Mo\\. planen", "Abschließen", "Brain Dump", "Leitfragen einfügen", "\\d+\\.\\d+\\.",
         ], screens: ["Tagesabschluss"], reason: "Texts of the evening sheet (hint line, buttons, date of the next planning day) report a partial lack of "
             + "Dynamic Type support; no clipping in the large text run. Stays on the device test list."),
         Entry(auditType: .dynamicType, labels: ["Unerledigtes verschieben · \\d+ Aufgaben?"], screens: ["Tagesabschluss"], reason:

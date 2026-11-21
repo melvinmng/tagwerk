@@ -15424,6 +15424,16 @@
         }
       }
     },
+    "Tastatur ausblenden": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hide Keyboard"
+          }
+        }
+      }
+    },
     "Teilen": {
       "localizations": {
         "en": {

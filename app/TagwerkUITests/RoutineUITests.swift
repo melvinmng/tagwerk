@@ -12,7 +12,7 @@ final class RoutineUITests: UITestCase {
         XCTAssertTrue(brainDump.waitForExistence(timeout: Self.timeout))
         brainDump.tap()
         brainDump.typeText("UI-Test")
-        tapButton("Fertig")
+        tapButton("Abschließen")
         waitUntilGone(app.navigationBars["Tagesstart"])
 
         onScreen(label: "Tagesabschluss.*", matching: true).tap()
