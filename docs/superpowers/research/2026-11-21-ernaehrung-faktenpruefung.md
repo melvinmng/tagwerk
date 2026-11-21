@@ -69,6 +69,6 @@ Recherche durch Sonnet für #254. Quellen sind jeweils verlinkt; **Interpretatio
 3. 7.700 kcal/kg nur als kurzfristige grobe Schätzung; Hauptprüfung über das tägliche Defizit.
 4. Abnahmetempo: Warnung über `min(1 % Körpergewicht, 1 kg)` pro Woche, als App-Regel formuliert.
 5. Untergrenzen wie Tabelle: weiche Warnung 1.200/1.500 kcal, harte Grenze 1.000 kcal; Eiweiß 0,8 g/kg (ab 65: 1,0) auf Referenzgewicht; Ballaststoffe und Wasser nur Hinweise.
-6. Anrechnungsanteil (BU1b): Entscheidung des Nutzers zur Voreinstellung offen (100 % gewählt, Recherche spricht für weniger).
-7. Open Food Facts: Limits einhalten (Suche nur auf Absenden, höchstens 10/min), Attribution in den Einstellungen, OFF-Daten getrennt von „Meine Lebensmittel“ (Übernahme als eigener Eintrag mit Quellenangabe), Kontaktadresse im User-Agent mit dem Nutzer klären (nicht die private Adresse).
+6. Anrechnungsanteil (BU1b): einstellbar, **Voreinstellung 50 %** (Nutzer, 21.11.2026).
+7. Open Food Facts: Limits einhalten (Suche nur auf Absenden, höchstens 10/min), Attribution in den Einstellungen, OFF-Daten getrennt von „Meine Lebensmittel“ (Übernahme als eigener Eintrag mit Quellenangabe), Kontaktadresse im User-Agent **fragt die App beim Nutzer ab** (Feld beim Einschalten der Online-Suche; ohne Adresse keine Anfrage an OFF; nie automatisch eine Adresse eintragen) (Nutzer, 21.11.2026).
 8. HealthKit: eigene Samples ausschließen und Überlappung Uhr/iPhone am Gerät prüfen; fehlende Werte als „unbekannt“.
