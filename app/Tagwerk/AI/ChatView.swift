@@ -122,7 +122,15 @@ struct ChatView: View {
             .padding(.horizontal, 12).padding(.vertical, 6)
             .background(.thinMaterial, in: Capsule())
             .padding(.vertical, 6)
-            .accessibilityLabel("Kontext: \(contextText)")
+            .accessibilityLabel(Self.contextAccessibilityLabel(for: contextText))
+    }
+
+    /// The chip text already starts with "Kontext:" in most contexts; only the bare planning text lacks it.
+    /// Prefixing blindly made VoiceOver read "Kontext: Kontext: …".
+    static func contextAccessibilityLabel(for text: String) -> String {
+        // Reuses the "Kontext: %@" key, so the prefix follows the language and no extra catalog entry is needed.
+        let prefix = String(localized: "Kontext: \("")")
+        return text.hasPrefix(prefix) ? text : String(localized: "Kontext: \(text)")
     }
 
     private var contextText: String {
