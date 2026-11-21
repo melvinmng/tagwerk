@@ -106,7 +106,7 @@ struct TaskContextMenu: View {
                     let day = Self.aiPlanAnchor(shownDay: actions.shownDay, today: planning.today)
                     environment.requestedTab = 0
                     planning.scope = .day
-                    planning.anchor = day
+                    planning.jump(to: day)
                     environment.planner.start(scope: .day, anchor: day, taskID: item.id)
                 }
                 Button("Über diese Aufgabe sprechen", systemImage: "bubble.left.and.text.bubble.right") {

@@ -164,6 +164,7 @@ struct DayView: View {
 
     private func listContent(_ plan: DayPlan, extras: DayPageExtras? = nil, isPreview: Bool = false) -> some View {
         let marks = extras ?? model.currentExtras
+        let rows = model.timelineWithGaps(for: plan)
         return List {
             Section {
                 summary(plan)
@@ -172,7 +173,6 @@ struct DayView: View {
                     .listRowSeparator(.hidden)
             }
             Section {
-                let rows = model.timelineWithGaps(for: plan)
                 let nowIndex = nowTick >= 0 ? model.nowRowIndex(in: rows, on: plan.day) : nil
                 if rows.isEmpty { Text("Keine Termine").foregroundStyle(.secondary) }
                 ForEach(rows.prefix(nowIndex ?? rows.count)) { row in timelineRow(row, plan: plan, marks: marks) }
@@ -189,7 +189,8 @@ struct DayView: View {
             TaskSections(model: model, plan: plan, onOpenTask: onOpenTask, onEditRecurring: onEditRecurring,
                          menuActions: plannedActions)
         }
-        .modifier(NowListBehavior(model: model, day: plan.day, tick: $nowTick, isEnabled: !isPreview))
+        .modifier(NowListBehavior(model: model, day: plan.day, tick: $nowTick, isEnabled: !isPreview,
+                                  openingRowID: rows.first.map { AnyHashable($0.id) }))
     }
 
     @ViewBuilder
@@ -325,7 +326,7 @@ struct CapacityCard: View {
     /// nothing is sent.
     private func eveningLine(_ entry: PlanningModel.EveningEntry) -> some View {
         Button {
-            model.anchor = entry.day
+            model.jump(to: entry.day)
         } label: {
             HStack(spacing: 10) {
                 Image(systemName: "moon.stars").foregroundStyle(Color.accentColor)

@@ -45,4 +45,18 @@ public enum NowMarker {
     public static func remainingMinutes(range: Range<Int>, nowMinutes: Int) -> Int {
         max(1, range.upperBound - nowMinutes)
     }
+
+    /// How long the day view of today has to be out of sight before returning aligns it to "now" again.
+    public static let realignAfter: TimeInterval = 30 * 60
+
+    /// Returning to the day view of today aligns to "now" again when it was not visible for at least `realignAfter`.
+    public static func realignsOnReturn(hiddenSince: Date?, now: Date) -> Bool {
+        guard let hiddenSince else { return false }
+        return now.timeIntervalSince(hiddenSince) >= realignAfter
+    }
+
+    /// Where a day that is not today starts when it is opened by a jump: the first entry, else the work start.
+    public static func openingMinutes(firstEntryStart: Int?, workStart: Int?) -> Int? {
+        firstEntryStart ?? workStart
+    }
 }

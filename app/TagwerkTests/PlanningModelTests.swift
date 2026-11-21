@@ -2430,5 +2430,82 @@ struct PlanningModelTests {
         #expect(model.runningRemaining(range: 600..<630, on: today) == 30)
         #expect(model.runningRemaining(range: 660..<700, on: today) == nil)
     }
+
+    // MARK: Aligning to now (PL4b)
+
+    @Test func showToday_bumpsTheToken() async {
+        let model = await model()
+        model.anchor = today.adding(days: 3, calendar: calendar)
+        let before = model.nowAlignmentToken
+        model.showToday()
+        #expect(model.anchor == today)
+        #expect(model.nowAlignmentToken == before + 1)
+        #expect(model.dayOpeningToken == 0)
+    }
+
+    @Test func jump_toAnotherDay_bumpsTheOpeningToken() async {
+        let model = await model()
+        let target = today.adding(days: 2, calendar: calendar)
+        model.jump(to: target)
+        #expect(model.anchor == target)
+        #expect(model.dayOpeningToken == 1)
+        #expect(model.nowAlignmentToken == 0)
+    }
+
+    @Test func jump_toToday_bumpsTheNowToken() async {
+        let model = await model()
+        model.jump(to: today)
+        #expect(model.nowAlignmentToken == 1)
+        #expect(model.dayOpeningToken == 0)
+    }
+
+    @Test func step_neverBumpsATokens() async {
+        let model = await model()
+        model.step(1)
+        model.step(-1)
+        model.step(-1)
+        model.scope = .week
+        model.step(1)
+        #expect(model.nowAlignmentToken == 0)
+        #expect(model.dayOpeningToken == 0)
+    }
+
+    @Test func planBecameVisible_after31Minutes_bumps() async {
+        let model = await model()
+        let hidden = testNow()
+        model.planBecameHidden(at: hidden)
+        model.planBecameVisible(at: hidden.addingTimeInterval(31 * 60))
+        #expect(model.nowAlignmentToken == 1)
+    }
+
+    @Test func planBecameVisible_after10Minutes_doesNotBump() async {
+        let model = await model()
+        let hidden = testNow()
+        model.planBecameHidden(at: hidden)
+        model.planBecameVisible(at: hidden.addingTimeInterval(10 * 60))
+        #expect(model.nowAlignmentToken == 0)
+    }
+
+    @Test func planBecameVisible_keepsTheFirstHideAndForgetsItAfterwards() async {
+        let model = await model()
+        let hidden = testNow()
+        // Leaving the tab and then the app: the absence counts from the first one.
+        model.planBecameHidden(at: hidden)
+        model.planBecameHidden(at: hidden.addingTimeInterval(20 * 60))
+        model.planBecameVisible(at: hidden.addingTimeInterval(35 * 60))
+        #expect(model.nowAlignmentToken == 1)
+        // A second return without a new absence changes nothing.
+        model.planBecameVisible(at: hidden.addingTimeInterval(90 * 60))
+        #expect(model.nowAlignmentToken == 1)
+    }
+
+    @Test func planBecameVisible_onAnotherDay_doesNotBump() async {
+        let model = await model()
+        model.anchor = today.adding(days: 1, calendar: calendar)
+        let hidden = testNow()
+        model.planBecameHidden(at: hidden)
+        model.planBecameVisible(at: hidden.addingTimeInterval(60 * 60))
+        #expect(model.nowAlignmentToken == 0)
+    }
 }
 

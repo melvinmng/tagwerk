@@ -125,8 +125,8 @@ struct EveningSheet: View {
                 if let next = model.planning.nextPlanDay {
                     Section {
                         Button {
-                            environment.planning.anchor = next
                             environment.planning.scope = .day
+                            environment.planning.jump(to: next)
                             environment.requestedTab = 0
                             model.closeSheet()
                         } label: {

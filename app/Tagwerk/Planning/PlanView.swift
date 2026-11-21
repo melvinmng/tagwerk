@@ -102,8 +102,8 @@ struct PlanView: View {
                 case .week: WeekView(model: model, onOpenTask: onOpenTask, menuActions: menuActions, deadlineActions: deadlineActions)
                 case .month:
                     MonthView(model: model, onSelectDay: { day in
-                        model.anchor = day
                         model.scope = .day
+                        model.jump(to: day)
                     }, onOpenEvent: onOpenEvent, onOpenTask: onOpenTask, deadlineActions: deadlineActions)
                 }
             }
@@ -175,8 +175,8 @@ struct PlanView: View {
     private var deadlineActions: DeadlineActions {
         DeadlineActions(openEvent: onOpenEvent, openTask: onOpenTask,
                         showDay: { day in
-                            model.anchor = day
                             model.scope = .day
+                            model.jump(to: day)
                         },
                         prepare: { preparingDeadline = $0 })
     }

@@ -123,4 +123,28 @@ struct NowMarkerTests {
         #expect(NowMarker.remainingMinutes(range: 600..<660, nowMinutes: 659) == 1)
         #expect(NowMarker.remainingMinutes(range: 600..<660, nowMinutes: 700) == 1)
     }
+
+    // MARK: Aligning again (PL4b)
+
+    @Test func realignsOnReturn_after30Minutes() {
+        let hidden = instant(2026, 11, 19, 10, 0)
+        #expect(NowMarker.realignsOnReturn(hiddenSince: hidden, now: instant(2026, 11, 19, 10, 30)))
+        #expect(NowMarker.realignsOnReturn(hiddenSince: hidden, now: instant(2026, 11, 19, 14, 0)))
+    }
+
+    @Test func realignsOnReturn_before30Minutes_isFalse() {
+        let hidden = instant(2026, 11, 19, 10, 0)
+        #expect(!NowMarker.realignsOnReturn(hiddenSince: hidden, now: instant(2026, 11, 19, 10, 29)))
+    }
+
+    @Test func realignsOnReturn_neverHidden_isFalse() {
+        #expect(!NowMarker.realignsOnReturn(hiddenSince: nil, now: instant(2026, 11, 19, 10, 0)))
+    }
+
+    @Test func openingMinutes_prefersFirstEntry() {
+        #expect(NowMarker.openingMinutes(firstEntryStart: 600, workStart: 540) == 600)
+        #expect(NowMarker.openingMinutes(firstEntryStart: nil, workStart: 540) == 540)
+        #expect(NowMarker.openingMinutes(firstEntryStart: nil, workStart: nil) == nil)
+    }
 }
+

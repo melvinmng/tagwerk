@@ -127,7 +127,7 @@ struct PlanTitleButton: View {
             DateJumpPopover(selected: model.anchor, today: model.today, calendar: model.calendar, todayTitle: "Heute",
                             secondaryTitle: model.scope == .month ? nil : "Monatsansicht ›",
                             onSecondary: { picking = false; model.scope = .month }) { day in
-                model.anchor = day
+                model.jump(to: day)
                 picking = false
             }
         }
@@ -145,7 +145,7 @@ struct PlanControlRow: View {
                 ForEach(PlanScope.allCases, id: \.self) { Text($0.title).tag($0) }
             }
             .pickerStyle(.segmented)
-            if !current { PageTodayButton { model.anchor = model.today } }
+            if !current { PageTodayButton { model.showToday() } }
             PageArrowCapsule(backLabel: PlanHeaderText.stepLabel(scope: model.scope, direction: -1),
                              forwardLabel: PlanHeaderText.stepLabel(scope: model.scope, direction: 1)) { model.step($0.step) }
         }

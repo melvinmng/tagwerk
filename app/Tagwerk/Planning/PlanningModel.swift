@@ -123,6 +123,15 @@ struct PendingBlockDecision: Equatable {
 final class PlanningModel {
     var scope: PlanScope = .day
     var anchor: PlanDay
+    /// Bumped by "Heute" and by a return after `NowMarker.realignAfter`; the day views align to "now" when it changes.
+    private(set) var nowAlignmentToken = 0
+    /// Bumped when a day is opened by a jump (date picker, month, "Zeigen"), never by paging.
+    private(set) var dayOpeningToken = 0
+    /// The day a jump opened, until its day view took it over to scroll to the first entry (`openingHandled()`).
+    /// Paging, "Heute" and a jump to today clear it.
+    private(set) var pendingOpeningDay: PlanDay?
+    /// When the plan tab went out of sight (another tab or the background); the first one counts until it returns.
+    @ObservationIgnored private var hiddenSince: Date?
     private(set) var days: [DayPlan] = []
     /// Plans of the neighbouring days (day scope) or weeks (week scope) for the page previews while swiping. They
     /// carry no AI suggestions; see `loadNeighbours()`.
@@ -496,8 +505,46 @@ final class PlanningModel {
         selectedDay = next
     }
 
+    /// "Heute": shows today and aligns the day view to "now" (again).
+    func showToday() {
+        anchor = today
+        pendingOpeningDay = nil
+        nowAlignmentToken += 1
+    }
+
+    /// Opens `day` by a jump (date picker, month, search, "Zeigen"): today aligns to "now", another day starts at its
+    /// first entry. Paging with `step(_:)` never does this.
+    func jump(to day: PlanDay) {
+        anchor = day
+        if day == today {
+            pendingOpeningDay = nil
+            nowAlignmentToken += 1
+        } else {
+            pendingOpeningDay = day
+            dayOpeningToken += 1
+        }
+    }
+
+    /// The day view has taken over the opening of the jumped-to day.
+    func openingHandled() {
+        pendingOpeningDay = nil
+    }
+
+    /// The plan tab left the screen (another tab, or the app went to the background).
+    func planBecameHidden(at time: Date) {
+        if hiddenSince == nil { hiddenSince = time }
+    }
+
+    /// The plan tab is back; after a longer absence the day view of today aligns to "now" again.
+    func planBecameVisible(at time: Date) {
+        defer { hiddenSince = nil }
+        guard anchor == today, NowMarker.realignsOnReturn(hiddenSince: hiddenSince, now: time) else { return }
+        nowAlignmentToken += 1
+    }
+
     /// One day, week or month forward (`1`) or back (`-1`), for arrows and swiping.
     func step(_ direction: Int) {
+        pendingOpeningDay = nil
         switch scope {
         case .day:
             let target = anchor.adding(days: direction, calendar: calendar)
@@ -1070,8 +1117,8 @@ final class PlanningModel {
 
     /// Shows the day of `event` in "Tag" (a tap on a preparation row).
     func showDay(of event: CalendarEvent) {
-        anchor = PlanDay(date: event.start, calendar: calendar)
         scope = .day
+        jump(to: PlanDay(date: event.start, calendar: calendar))
     }
 
     /// The event is a deadline through a mark on its whole series.

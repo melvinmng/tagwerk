@@ -120,22 +120,47 @@ struct NowRowSlot: View {
 }
 
 /// List mode of today: bumps `tick` every minute (the row index is recomputed, not the rows) and scrolls to the
-/// "now" row once when a day opens; later reloads leave the position alone.
+/// "now" row once when a day opens, and again on "Heute" and after a longer absence (PL4b); later reloads leave the
+/// position alone. A day opened by a jump starts at the first row of the timeline.
 struct NowListBehavior: ViewModifier {
     let model: PlanningModel
     let day: PlanDay
     @Binding var tick: Int
     /// Off in the preview of a neighbour page: it neither scrolls nor ticks.
     var isEnabled = true
+    /// The first row of the timeline, where a day that is not today starts after a jump.
+    var openingRowID: AnyHashable?
     /// The day this list first showed: only that day is scrolled to the current time, and only when it is today.
     @State private var openedDay: PlanDay?
     @State private var scrolledFor: PlanDay?
+    @State private var seenNowToken = 0
+
+    private struct AlignKey: Equatable {
+        let day: PlanDay
+        let nowToken: Int
+        let opening: PlanDay?
+    }
 
     func body(content: Content) -> some View {
         ScrollViewReader { proxy in
             content
-                .task(id: day) {
+                .task(id: AlignKey(day: day, nowToken: model.nowAlignmentToken, opening: model.pendingOpeningDay)) {
                     guard isEnabled else { return }
+                    if seenNowToken != model.nowAlignmentToken {
+                        seenNowToken = model.nowAlignmentToken
+                        if model.anchor == model.today {
+                            openedDay = model.anchor
+                            scrolledFor = nil
+                        }
+                    }
+                    if let opening = model.pendingOpeningDay, opening == day {
+                        model.openingHandled()
+                        if let openingRowID {
+                            await Task.yield()
+                            withAnimation(nil) { proxy.scrollTo(openingRowID, anchor: .top) }
+                        }
+                        return
+                    }
                     if openedDay == nil { openedDay = day }
                     guard NowMarker.alignsOnOpening(openedDay: openedDay, shownDay: day, today: model.today),
                           scrolledFor != day else { return }
