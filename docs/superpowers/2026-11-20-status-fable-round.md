@@ -50,7 +50,8 @@ Festlegungen der Hauptsitzung zum G3-Plan: offene Fragen nach Empfehlung; Zeilen
 | `feat/recipe-translate` | #232 Block A | fertig und geprüft, Head `d8856a7`, `test-all` grün; bereit für PR. Hinweis für #233: `NoteEditorSync` lässt Änderungen von außen über ungespeichertes Tippen gewinnen |
 | `feat/closed-issues-in-reviews` | #173 Strang C (Tasks 6, 7, 7a) | fertig und geprüft, Head `e428cf4` (Review-Korrekturen drin); UI-Stufe rot nur durch vorbestehende Fehler; Folge-Idee: Projekte beim Kaltstart aus dem Cache laden |
 | `feat/note-issue-suggestions` | #173 Strang D (Tasks 8, 9), abgezweigt von `33dfc26` | fertig und geprüft, Head `afc05d6`; nach Merge von A/B rebasen |
-| `feat/g3-share-mail` | G3 Strang S | läuft (Sonnet) |
+| `feat/g3-share-mail` | G3 Strang S | fertig und geprüft, Head `3908715`; UI-Stufe rot nur durch vorbestehende Fehler (Basis ohne `fix/ui-test-stability`) |
+| `feat/g3-languages` | G3 Strang L mit SP5c auf Basis `fix/ui-test-stability` (ggf. L6–L9 auf `feat/g3-shopping-translate`) | läuft (Sonnet) |
 | `feat/evening-reminders-per-day` | #173 Strang E (Tasks 10, 11) | fertig und geprüft, Head `c4c281a`, `test-all` grün; bereit für PR |
 | `feat/assistant-assign-and-search` | #173 Stränge A, B und Task 5 | fertig und geprüft, Head `e032f71` (Review-Korrekturen drin: Einwilligung wird beobachtet, kein Chatwechsel während laufender Runde) |
 | `feat/g3-search-menu` | G3 Strang U | fertig und geprüft, Head `9694508` |
@@ -61,7 +62,7 @@ Festlegungen der Hauptsitzung zum G3-Plan: offene Fragen nach Empfehlung; Zeilen
 ## Warteschlange Umsetzung (je freier Xcode-Platz, nach Prüfung des fertigen Branches)
 
 3. #233 Block B (nach Merge von #173 A/B)
-4. G3 Strang L (mit SP5c), danach G5; Strang K zuletzt nach T, L, S
+4. G5 und L5-Anweisungszeile nach Merge von #173 A/B; Strang K nach T, L, S; Strang K zuletzt nach T, L, S
 5. Gruppen 1 und 2 nach ihren Plänen
 6. Danach: Geräteprüfungen (Task 12 in #173, Z1 in G3, Gerätetests der übrigen Pläne)
 
