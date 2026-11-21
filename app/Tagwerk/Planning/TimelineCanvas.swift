@@ -12,6 +12,12 @@ enum DayEntry: Identifiable, Equatable {
         case .lunch: "lunch"
         }
     }
+
+    /// The calendar event of an event entry; `nil` for the lunch break.
+    var calendarEvent: CalendarEvent? {
+        if case .event(let event, _) = self { return event }
+        return nil
+    }
 }
 
 /// A finished change in the canvas, handed to the screen to write (and to ask for a series span first).
@@ -49,6 +55,9 @@ struct TimelineCanvas: View {
     @Environment(AppEnvironment.self) private var environment
     /// Set in the preview of a neighbour page: the marks of its events.
     @Environment(\.dayPageExtras) private var pageExtras
+    @Environment(\.isPagePreview) private var isPreview
+    /// Opens the sheet "Fahrzeit" of an event; set by the day view (PL11b).
+    @Environment(\.editTravel) private var editTravel
     @State private var openSuggestion: PlanSuggestion?
     @State private var editingTask: TaskItem?
     @State private var selectedID: String?
@@ -97,17 +106,26 @@ struct TimelineCanvas: View {
                         let isCollapsed = collapsed.contains(index)
                         let columnWidth = isCollapsed ? width : width / CGFloat(columnCount(index: index, ranges: layout, columns: columns))
                         let attachmentHeight = max(14, height(segment.range.count))
-                        let top = segment.direction == .returnHome ? segment.range.lowerBound : segment.range.upperBound
+                        // The tappable area is at least 28 pt high and grows away from the event, never over it.
+                        let hitHeight = max(28, attachmentHeight)
+                        let isReturn = segment.direction == .returnHome
+                        let top = isReturn ? segment.range.lowerBound : segment.range.upperBound
+                        let event = entries[index].calendarEvent
                         TravelSegmentView(segment: segment, transport: segment.transport ?? model.settings.travelTransport,
                                           color: EntryStyle(entry: entries[index], model: model, extras: pageExtras).color,
-                                          departure: clock(segment.range.lowerBound))
-                            .frame(width: columnWidth - 2, height: attachmentHeight)
+                                          departure: clock(segment.range.lowerBound), visualHeight: attachmentHeight,
+                                          hitHeight: hitHeight,
+                                          menu: editTravel.flatMap { edit in
+                                              event.map { event in TravelMenuContext(event: event, model: model) { edit(event) } }
+                                          })
+                            .frame(width: columnWidth - 2, height: hitHeight)
                             .offset(x: labelWidth + 6 + CGFloat(isCollapsed ? 0 : columns[index]) * columnWidth,
-                                    y: segment.direction == .returnHome ? y(top, shown) : y(top, shown) - attachmentHeight)
+                                    y: isReturn ? y(top, shown) : y(top, shown) - hitHeight)
                             // Above the entries: a neighbour with wider columns must not cover the capsule. A selected or moved
                             // entry (zIndex 1 and 2) stays above it.
                             .zIndex(0.5)
-                            .allowsHitTesting(false)
+                            // A selection of events ("Frei") only takes taps on entries.
+                            .allowsHitTesting(selectingIDs == nil && !isPreview)
                     }
                 }
                 ForEach(groups, id: \.self) { group in

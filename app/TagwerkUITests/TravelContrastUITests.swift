@@ -18,11 +18,24 @@ final class TravelContrastUITests: UITestCase {
     private func auditCapsules(_ screen: String, file: StaticString = #filePath, line: UInt = #line) throws {
         XCTAssertTrue(capsules.firstMatch.waitForExistence(timeout: Self.timeout),
                       "\(screen): no capsule on screen, the audit would prove nothing", file: file, line: line)
-        try app.performAccessibilityAudit(for: .contrast) { issue in
-            guard issue.element?.identifier == "travel.warningCapsule" else { return true }
-            XCTFail("\(screen): contrast finding on the capsule: \(issue.compactDescription) | \(issue.detailedDescription)",
-                    file: file, line: line)
-            return true
+        // The audit has no time setting and runs out of time on a loaded machine; such a run says nothing, so it is repeated
+        // (like `AuditAllowlist`), up to three attempts. The issues of an aborted attempt are dropped.
+        for attempt in 1...3 {
+            var onCapsule: [XCUIAccessibilityAuditIssue] = []
+            do {
+                try app.performAccessibilityAudit(for: .contrast) { issue in
+                    if issue.element?.identifier == "travel.warningCapsule" { onCapsule.append(issue) }
+                    return true
+                }
+            } catch let error as NSError where error.code == -56 && attempt < 3 {
+                print("Accessibility audit timed out (attempt \(attempt) of 3), running it again")
+                continue
+            }
+            for issue in onCapsule {
+                XCTFail("\(screen): contrast finding on the capsule: \(issue.compactDescription) | \(issue.detailedDescription)",
+                        file: file, line: line)
+            }
+            return
         }
     }
 

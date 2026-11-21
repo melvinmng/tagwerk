@@ -9024,6 +9024,16 @@
         }
       }
     },
+    "Fahrzeit ändern …": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Change travel time …"
+          }
+        }
+      }
+    },
     "Fahrzeit %lld Minuten, manuell festgelegt": {
       "localizations": {
         "en": {
@@ -11866,6 +11876,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Nothing is due in the new week."
+          }
+        }
+      }
+    },
+    "Keine Fahrzeit für diesen Termin": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No travel time for this event"
           }
         }
       }
@@ -15712,6 +15732,16 @@
     },
     "Route": {
       "shouldTranslate": false
+    },
+    "Route in Karten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Route in Maps"
+          }
+        }
+      }
     },
     "Routinen": {
       "localizations": {
@@ -21577,6 +21607,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Opens Brain Dump in Tagwerk and starts dictation."
+          }
+        }
+      }
+    },
+    "Öffnet Aktionen zur Fahrzeit": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opens actions for the travel time"
           }
         }
       }

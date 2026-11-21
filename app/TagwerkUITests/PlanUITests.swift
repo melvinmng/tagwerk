@@ -3,7 +3,7 @@ import XCTest
 final class PlanUITests: UITestCase {
     // A new time block starts at the next full hour of "now", and the hour grid scrolls to "now". A fixed morning time keeps the
     // test independent of the hour of the run; the late-evening rounding is covered by `BlockStartTests`.
-    override var extraLaunchArguments: [String] { Self.morningClockArguments }
+    override var extraLaunchArguments: [String] { Self.morningClockArguments + (name.contains("TravelMenu") ? ["-TagwerkDemoTravel"] : []) }
 
     /// The day title element carries the relative day ("Heute", "Morgen") as its value and the date as its label.
     private func dayTitle(startingWith caption: String) -> XCUIElement {
@@ -63,5 +63,18 @@ final class PlanUITests: UITestCase {
         app.swipeDown()
         XCTAssertTrue(dayTitle(startingWith: "Dieser Monat").exists, "A vertical drag changed the month")
     }
-}
 
+    /// The travel block opens a menu with three actions (PL11b); "Fahrzeit ändern …" opens the page of the event as a sheet.
+    func testTravelMenuOffersThreeActions() {
+        let travel = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Fahrzeit ")).firstMatch
+        XCTAssertTrue(travel.waitForExistence(timeout: Self.timeout), "No travel block on screen")
+        travel.tap()
+        for action in ["Route in Karten", "Fahrzeit ändern …", "Keine Fahrzeit für diesen Termin"] {
+            XCTAssertTrue(app.buttons[action].firstMatch.waitForExistence(timeout: Self.timeout), "\(action) is not in the menu")
+        }
+        app.buttons["Fahrzeit ändern …"].firstMatch.tap()
+        XCTAssertTrue(app.navigationBars["Fahrzeit"].waitForExistence(timeout: Self.timeout), "The page \"Fahrzeit\" does not open")
+        app.buttons["Abbrechen"].firstMatch.tap()
+        waitUntilGone(app.navigationBars["Fahrzeit"])
+    }
+}

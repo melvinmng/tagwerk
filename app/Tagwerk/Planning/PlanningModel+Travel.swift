@@ -90,4 +90,25 @@ extension PlanningModel {
                                                              start: event.start, series: series && event.isRecurring)
         await reload()
     }
+
+    // MARK: Route (PL11b)
+
+    /// The two ends of the trip a segment stands for: for the way there the origin (home or the previous event) and the
+    /// event's place, for the way home the event's place and home. `nil` when an end is unknown (no home address, no place).
+    func travelPlaces(of segment: TravelSegment, event: CalendarEvent) -> (from: TravelPlace, to: TravelPlace)? {
+        func place(of event: CalendarEvent) -> TravelPlace? {
+            event.location.map { TravelPlace(text: $0, latitude: event.latitude, longitude: event.longitude) }
+        }
+        guard let eventPlace = place(of: event) else { return nil }
+        if segment.direction == .returnHome {
+            return settings.homePlace.map { (eventPlace, $0) }
+        }
+        switch segment.origin {
+        case .home:
+            return settings.homePlace.map { ($0, eventPlace) }
+        case .previousEvent(let id):
+            let previous = days.lazy.flatMap { $0.events + $0.blocks }.first { $0.id == id }
+            return previous.flatMap(place(of:)).map { ($0, eventPlace) }
+        }
+    }
 }

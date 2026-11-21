@@ -22,6 +22,7 @@ struct TravelWarningCapsule: View {
 /// The travel time as an attachment to its event in the hour grid (PL8b): a lighter area in the colour of the event, flush
 /// above it (the way home: flush below), with the departure and the minutes ("Los 15:05 · 25 min"). The capsule with the
 /// overlap sits on the right; when the width does not suffice, the text gets shorter first and then only the capsule is left.
+/// With a `menu` a tap opens the travel menu (PL11b); the tappable area is `hitHeight` high and grows away from the event.
 struct TravelSegmentView: View {
     let segment: TravelSegment
     let transport: TravelTransport
@@ -29,16 +30,26 @@ struct TravelSegmentView: View {
     let color: Color
     /// The time the trip starts ("15:05").
     let departure: String
+    /// The height of the visible area.
+    let visualHeight: CGFloat
+    /// The height of the tappable area, at least `visualHeight`.
+    var hitHeight: CGFloat?
+    var menu: TravelMenuContext?
+
+    private var isReturn: Bool { segment.direction == .returnHome }
+    private var fullHeight: CGFloat { max(visualHeight, hitHeight ?? visualHeight) }
+    /// The visible area sits at the event, the extra tappable height lies on the far side.
+    private var edge: Alignment { isReturn ? .top : .bottom }
 
     var body: some View {
-        let isReturn = segment.direction == .returnHome
-        ZStack(alignment: .topLeading) {
+        ZStack(alignment: edge) {
             UnevenRoundedRectangle(topLeadingRadius: isReturn ? 0 : 7, bottomLeadingRadius: isReturn ? 7 : 0,
                                    bottomTrailingRadius: isReturn ? 7 : 0, topTrailingRadius: isReturn ? 0 : 7)
                 .fill(color.opacity(0.12))
+                .frame(height: visualHeight)
             content
-                .padding(.horizontal, 5).padding(.top, 2)
         }
+        .frame(height: fullHeight)
         .accessibilityElement(children: .contain)
     }
 
@@ -49,15 +60,40 @@ struct TravelSegmentView: View {
             .accessibilityLabel(TravelText.accessibilityLabel(segment, transport: transport))
     }
 
+    /// Puts a part of the row into the visible area and widens it to the tappable height.
+    private func placed<Part: View>(_ part: Part, fillsWidth: Bool = false) -> some View {
+        part
+            .frame(maxWidth: fillsWidth ? .infinity : nil, alignment: .leading)
+            .padding(.horizontal, 5)
+            .frame(height: visualHeight, alignment: .top)
+            .padding(.top, 2)
+            .frame(height: fullHeight, alignment: edge)
+            .contentShape(Rectangle())
+    }
+
+    @ViewBuilder
+    private func wrapped<Part: View>(_ part: Part, announcesOverlap: Bool = false) -> some View {
+        if let menu {
+            TravelMenu(segment: segment, transport: transport, context: menu, announcesOverlap: announcesOverlap) { part }
+        } else {
+            part
+        }
+    }
+
+    /// One layout: the text (a menu area of its own when there is a menu) and the capsule beside it. Without text only
+    /// the capsule is left, and it takes the menu.
     private func option(_ title: String?) -> some View {
-        HStack(spacing: 4) {
-            if let title { label(title) }
-            if segment.isTight {
-                Spacer(minLength: 2)
-                TravelWarningCapsule(minutes: segment.overlapMinutes)
+        HStack(spacing: 0) {
+            if let title {
+                wrapped(placed(label(title), fillsWidth: true))
+                if segment.isTight { placed(capsule) }
+            } else {
+                wrapped(placed(capsule), announcesOverlap: true)
             }
         }
     }
+
+    private var capsule: some View { TravelWarningCapsule(minutes: segment.overlapMinutes) }
 
     /// The text candidates longest first, each with the capsule; then only the capsule; for a trip without overlap the
     /// shortest text repeats, so `ViewThatFits` always has four options.
@@ -74,11 +110,22 @@ struct TravelSegmentView: View {
     }
 }
 
-/// The travel time as a row in the list mode (PL9b): "Losfahren · 25 min ab Zuhause" with the capsule behind it.
+/// The travel time as a row in the list mode (PL9b): "Losfahren · 25 min ab Zuhause" with the capsule behind it. With a
+/// `menu` a tap on the text opens the travel menu (PL11b).
 struct TravelRow: View {
     let segment: TravelSegment
     let transport: TravelTransport
     let time: String
+    /// The event the trip belongs to and the model: they give the row its menu (not in the preview of a neighbour page).
+    var event: CalendarEvent?
+    var model: PlanningModel?
+    @Environment(\.editTravel) private var editTravel
+    @Environment(\.isPagePreview) private var isPreview
+
+    private var menu: TravelMenuContext? {
+        guard !isPreview, let editTravel, let event, let model else { return nil }
+        return TravelMenuContext(event: event, model: model) { editTravel(event) }
+    }
 
     var body: some View {
         HStack(alignment: .top, spacing: 10) {
@@ -86,8 +133,8 @@ struct TravelRow: View {
                 .accessibilityHidden(true)
             RoundedRectangle(cornerRadius: 2).fill(Color.gray.opacity(0.6)).frame(width: 4)
             ViewThatFits(in: .horizontal) {
-                HStack(spacing: 8) { title; capsule }
-                VStack(alignment: .leading, spacing: 4) { title; capsule }
+                HStack(spacing: 8) { menuTitle; capsule }
+                VStack(alignment: .leading, spacing: 4) { menuTitle; capsule }
             }
         }
         .accessibilityElement(children: .contain)
@@ -97,6 +144,15 @@ struct TravelRow: View {
         Label(TravelText.rowText(segment), systemImage: TravelText.symbol(transport))
             .font(.subheadline).foregroundStyle(.secondary)
             .accessibilityLabel(TravelText.accessibilityLabel(segment, transport: transport))
+    }
+
+    @ViewBuilder
+    private var menuTitle: some View {
+        if let menu {
+            TravelMenu(segment: segment, transport: transport, context: menu) { title.frame(minHeight: 28).contentShape(Rectangle()) }
+        } else {
+            title
+        }
     }
 
     @ViewBuilder
