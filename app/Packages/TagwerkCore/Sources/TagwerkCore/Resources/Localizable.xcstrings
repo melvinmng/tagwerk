@@ -579,6 +579,16 @@
         }
       }
     },
+    "Ab %@ für alle folgenden": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "From %@ on, for all following"
+          }
+        }
+      }
+    },
     "Abendessen": {
       "localizations": {
         "en": {
@@ -1009,6 +1019,16 @@
         }
       }
     },
+    "Doppelt: „%@“ – Tagwerk und Kalender erinnern beide am %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Duplicate: “%1$@” – Tagwerk and the calendar both remind you on %2$@"
+          }
+        }
+      }
+    },
     "Drogerie": {
       "localizations": {
         "en": {
@@ -1065,6 +1085,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Go to bed half an hour before sleep"
+          }
+        }
+      }
+    },
+    "Erinnerungen für welche Fälligkeiten ändern?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Change reminders for which due dates?"
+          }
+        }
+      }
+    },
+    "Erinnerungen für welche Termine ändern?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Change reminders for which events?"
           }
         }
       }
@@ -1505,6 +1545,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Notes"
+          }
+        }
+      }
+    },
+    "Nur am %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only on %@"
           }
         }
       }

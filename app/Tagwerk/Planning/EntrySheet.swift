@@ -188,7 +188,7 @@ struct EntrySheet: View {
                     EventEditSheet(model: model, existing: event, day: PlanDay(date: event.start, calendar: model.calendar))
                 }
                 .sheet(isPresented: $movingDay) { BlockDaySheet(block: event, model: model) { dismiss() } }
-                .sheet(isPresented: $editingReminders) { DeadlineReminderSheet(event: event, calendar: model.calendar) }
+                .sheet(isPresented: $editingReminders) { DeadlineReminderSheet(event: event, calendar: model.calendar, planning: model) }
                 .confirmationDialog(event.isRecurring ? "Dieser Termin wiederholt sich" : "Löschen?", isPresented: $askingDelete,
                                     titleVisibility: .visible) {
                     if event.isRecurring {

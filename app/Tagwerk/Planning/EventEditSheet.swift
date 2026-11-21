@@ -64,11 +64,12 @@ struct EventEditSheet: View {
                     TextField("Notiz", text: notes, axis: .vertical).lineLimit(2...6).keyboardDoneButton()
                 }
                 Section {
-                    ReminderSelectionRows(model: reminderList, subject: .event, defaultSwitchTitle: nil, calendar: model.calendar)
+                    ReminderSelectionRows(model: reminderList, subject: .event, defaultSwitchTitle: nil, customTitle: "Hinweis hinzufügen",
+                                          calendar: model.calendar)
                 } header: {
-                    Text("Erinnerungen")
+                    Text("Hinweise im Kalender")
                 } footer: {
-                    Text("iOS meldet diese Erinnerungen selbst, auch in Apple Kalender. Ruhezeiten gelten dafür nicht.")
+                    Text("iOS meldet diese Hinweise selbst, auch in Apple Kalender. Ruhezeiten gelten dafür nicht.")
                 }
                 Section {
                     Button("Weitere Optionen …") { openSystemEditor() }

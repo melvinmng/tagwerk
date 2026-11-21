@@ -216,11 +216,11 @@ struct TaskEditorView: View {
                 case .handOver:
                     Button("Abgeben", role: .destructive) { Task { await finish(model.save()) } }
                 case .remindersReach:
-                    Button("Nur diese") {
+                    Button(ReminderReachText.onlyThis(reachDay, calendar: calendar)) {
                         reminders?.reach = .onlyThis
                         Task { await finish(model.save()) }
                     }
-                    Button("Alle folgenden") {
+                    Button(ReminderReachText.fromThis(reachDay, calendar: calendar)) {
                         reminders?.reach = .allFollowing
                         Task { await finish(model.save()) }
                     }
@@ -367,6 +367,11 @@ struct TaskEditorView: View {
         return planning.today.startDate(in: calendar).formatted(.dateTime.weekday(.abbreviated).day().month(.abbreviated))
     }
 
+    /// The due date the reminder question names: the reminders of a repeating task count from it.
+    private var reachDay: PlanDay {
+        model.draft.due.map(PlanDay.init) ?? PlanDay(date: .now, calendar: calendar)
+    }
+
     private var askingSaveQuestion: Binding<Bool> {
         Binding(get: { saveQuestion != nil }, set: { if !$0 { saveQuestion = nil } })
     }
@@ -374,7 +379,7 @@ struct TaskEditorView: View {
     private var saveQuestionTitle: String {
         switch saveQuestion {
         case .keepBlocks: String(localized: "Wiederholung geändert")
-        case .remindersReach: String(localized: "Erinnerungen ändern")
+        case .remindersReach: ReminderReachText.title(.task)
         case .handOver: String(localized: "Du bist danach nicht mehr zugewiesen.")
         case .effortReach, nil: effortQuestion
         }

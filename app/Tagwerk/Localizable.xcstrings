@@ -3593,16 +3593,6 @@
         }
       }
     },
-    "Alle folgenden": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "All following"
-          }
-        }
-      }
-    },
     "Alle löschen": {
       "localizations": {
         "en": {
@@ -7163,16 +7153,6 @@
         }
       }
     },
-    "Diese Deadline wiederholt sich": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "This deadline repeats"
-          }
-        }
-      }
-    },
     "Diese Gewohnheit gibt es nicht mehr.": {
       "localizations": {
         "en": {
@@ -7269,16 +7249,6 @@
         }
       }
     },
-    "Diese und alle folgenden": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "This and all following"
-          }
-        }
-      }
-    },
     "Diesen Ordner gibt es auf dieser Ebene schon.": {
       "localizations": {
         "en": {
@@ -7315,6 +7285,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Delete this and all following"
+          }
+        }
+      }
+    },
+    "Dieser Kalender ist schreibgeschützt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This calendar is read-only."
           }
         }
       }
@@ -7820,6 +7800,16 @@
         }
       }
     },
+    "Einladungen lassen sich hier nicht ändern.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Invitations cannot be changed here."
+          }
+        }
+      }
+    },
     "Einplanen": {
       "localizations": {
         "en": {
@@ -8210,16 +8200,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Reminders and local tasks. Loading GitHub …"
-          }
-        }
-      }
-    },
-    "Erinnerungen ändern": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Change reminders"
           }
         }
       }
@@ -9519,6 +9499,16 @@
         }
       }
     },
+    "Gehören zum Kalendertermin und erscheinen auf allen Geräten. Ruhezeiten gelten dafür nicht.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "They belong to the calendar event and appear on all devices. Quiet hours do not apply to them."
+          }
+        }
+      }
+    },
     "Geladen · auf dem iPhone": {
       "localizations": {
         "en": {
@@ -10383,12 +10373,42 @@
         }
       }
     },
+    "Hinweis hinzufügen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add alert"
+          }
+        }
+      }
+    },
     "Hinweis, z. B. „halbe Portion“": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Note, e.g. “half portion”"
+          }
+        }
+      }
+    },
+    "Hinweise im Kalender": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Calendar alerts"
+          }
+        }
+      }
+    },
+    "Hinweise im Kalender (Apple)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Calendar alerts (Apple)"
           }
         }
       }
@@ -11025,6 +11045,16 @@
         }
       }
     },
+    "iOS meldet diese Hinweise selbst, auch in Apple Kalender. Ruhezeiten gelten dafür nicht.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iOS delivers these alerts itself, also in Apple Calendar. Quiet hours do not apply to them."
+          }
+        }
+      }
+    },
     "Issue #%@": {
       "localizations": {
         "en": {
@@ -11131,6 +11161,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Create AI weekly plan"
+          }
+        }
+      }
+    },
+    "Kommen als Mitteilung von Tagwerk. Ruhezeiten und Fokus-Filter gelten.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delivered as a notification from Tagwerk. Quiet hours and Focus filters apply."
           }
         }
       }
@@ -13962,26 +14002,6 @@
         }
       }
     },
-    "Nur diese": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Only this one"
-          }
-        }
-      }
-    },
-    "Nur diese Deadline": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Only this deadline"
-          }
-        }
-      }
-    },
     "Nur diesen Termin": {
       "localizations": {
         "en": {
@@ -16523,16 +16543,6 @@
         }
       }
     },
-    "Tagwerk erinnert mit Mitteilungen. Ruhezeiten und Fokus-Filter gelten dafür.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Tagwerk reminds you with notifications. Quiet hours and Focus filters apply to them."
-          }
-        }
-      }
-    },
     "Tagwerk hat keinen Zugriff auf Erinnerungen.": {
       "localizations": {
         "en": {
@@ -16733,6 +16743,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tagwerk block"
+          }
+        }
+      }
+    },
+    "Tagwerk-Mitteilungen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tagwerk notifications"
           }
         }
       }
@@ -19905,16 +19925,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "https://…"
-          }
-        }
-      }
-    },
-    "iOS meldet diese Erinnerungen selbst, auch in Apple Kalender. Ruhezeiten gelten dafür nicht.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "iOS delivers these reminders itself, also in Apple Calendar. Quiet hours do not apply to them."
           }
         }
       }

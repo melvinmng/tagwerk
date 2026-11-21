@@ -11,6 +11,8 @@ struct ReminderSelectionRows: View {
     let subject: ReminderSubject
     /// Title of the switch for the default list; `nil` for lists that have no default behind them.
     var defaultSwitchTitle: LocalizedStringKey? = "Standard verwenden"
+    /// Title of the row that opens the page for an own distance.
+    var customTitle: LocalizedStringKey = "Eigene …"
     var calendar: Calendar = .tagwerk
 
     var body: some View {
@@ -40,7 +42,7 @@ struct ReminderSelectionRows: View {
         NavigationLink {
             ReminderOffsetPicker(isAllDay: model.isAllDay, subject: subject, calendar: calendar) { model.add($0) }
         } label: {
-            Text("Eigene …")
+            Text(customTitle)
         }
     }
 
