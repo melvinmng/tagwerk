@@ -110,4 +110,11 @@ enum FocusTimerText {
     static func settingsSummary(_ settings: FocusTimerSettings) -> String {
         settings.isPomodoro ? pomodoroSummary(settings) : String(localized: "\(settings.workMinutes) min · Pomodoro aus")
     }
+
+    /// "Bericht schreiben, noch 18 Minuten 42 Sekunden, Fokus" for VoiceOver; without a title "noch 18 Minuten, Fokus".
+    static func barAccessibility(title: String, remainingSeconds: Int, phase: FocusPhase) -> String {
+        let remaining = String(localized: "noch \(spoken(remainingSeconds))")
+        let parts = [title.isEmpty ? nil : title, remaining, phaseName(phase)].compactMap { $0 }
+        return parts.joined(separator: ", ")
+    }
 }

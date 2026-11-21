@@ -81,6 +81,10 @@ struct RootView: View {
             }
 
         }
+        // FO5b: the running focus session sits in the accessory of the tab bar, in every tab.
+        .tabViewBottomAccessory(isEnabled: environment.focus.isRunning) {
+            FocusAccessoryBar()
+        }
         .overlay(alignment: .topLeading) {
             // UI tests only: tells them that the demo data exists. Never shown outside the UI test mode.
             if UITestMode.isActive && environment.isDemoDataReady {

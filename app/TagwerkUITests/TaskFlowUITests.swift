@@ -56,4 +56,32 @@ final class TaskFlowUITests: UITestCase {
         done.tap()
         waitUntilGone(app.buttons[AccessibilityID.Focus.pause])
     }
+
+    /// The running session stays visible above the tabs; a tap on the bar brings the sheet back (FO5b).
+    func testFocusBarReturnsToTheSheet() {
+        tab("Aufgaben")
+        tapButton("Neue Aufgabe")
+        onScreen(label: "Lokal").tap()
+        typeIn("Titel", text: "UI-Test Leiste")
+        tapButton("Hinzufügen")
+        let created = app.descendants(matching: .any)[AccessibilityID.Tasks.row("UI-Test Leiste")]
+        scrollTo(created)
+        created.press(forDuration: 1.0)
+        onScreen(label: "Fokus starten · 25 min").tap()
+        onScreen(label: "Starten").tap()
+        XCTAssertTrue(app.buttons[AccessibilityID.Focus.pause].waitForExistence(timeout: Self.timeout))
+        onScreen(label: "Schließen").tap()
+
+        // The bar is there in another tab, too, and opens the sheet again.
+        tab("Planen")
+        let bar = app.descendants(matching: .any)[AccessibilityID.Focus.bar]
+        XCTAssertTrue(bar.waitForExistence(timeout: Self.timeout), "The focus bar is shown above the tabs")
+        tab("Aufgaben")
+        XCTAssertTrue(bar.waitForExistence(timeout: Self.timeout))
+        bar.tap()
+        XCTAssertTrue(app.buttons[AccessibilityID.Focus.pause].waitForExistence(timeout: Self.timeout))
+        // Ending within the first minute needs no question.
+        app.buttons[AccessibilityID.Focus.stop].tap()
+        waitUntilGone(bar)
+    }
 }

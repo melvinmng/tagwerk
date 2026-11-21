@@ -88,4 +88,12 @@ struct FocusTimerTextTests {
         #expect(FocusTimerText.settingsSummary(FocusTimerSettings(workMinutes: 40, isPomodoro: false)) == "40 min · Pomodoro aus")
         #expect(FocusTimerText.pomodoroSummary(FocusTimerSettings(workMinutes: 50, shortBreakMinutes: 10, rounds: 3)) == "3 × 50 / 10")
     }
+
+    @Test func barAccessibility_inBothLanguages() {
+        #expect(FocusTimerText.barAccessibility(title: "Bericht schreiben", remainingSeconds: 18 * 60 + 42, phase: .work(round: 1))
+                == "Bericht schreiben, noch 18 Minuten und 42 Sekunden, Fokus")
+        #expect(FocusTimerText.barAccessibility(title: "", remainingSeconds: 5 * 60, phase: .shortBreak(round: 1))
+                == "noch 5 Minuten, Kurze Pause")
+        #expect(Localized.string("noch \("18 minutes")", in: .english, bundle: .main) == "18 minutes left")
+    }
 }
