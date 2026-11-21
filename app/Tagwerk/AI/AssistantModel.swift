@@ -230,8 +230,11 @@ final class AssistantModel {
     var openCards: OpenCards {
         let pending = conversation?.pendingActions ?? []
         let me = gitHubDirectory()?.login
-        return OpenCards(ids: pending.map(\.id), deletes: pending.filter { $0.name == "delete_event" }.count,
-                         guarded: pending.filter { Self.needsSingleConfirmation($0, me: me) }.count)
+        // Note cards are not "guarded": the voice mode answers them with its own sentence.
+        return OpenCards(ids: pending.map(\.id),
+                         deletes: pending.filter { $0.name == "delete_event" || $0.name == "delete_note" }.count,
+                         guarded: pending.filter { Self.needsSingleConfirmation($0, me: me) && !NoteChatTools.noteWriteTools.contains($0.name) }.count,
+                         notes: pending.filter { $0.name == "create_note" || $0.name == "update_note" }.count)
     }
 
     /// Tools whose cards are always confirmed alone, never with "Alle bestätigen" and never together with other

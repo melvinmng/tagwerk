@@ -445,4 +445,36 @@ struct AssistantNotesTests {
         #expect(open.title == "Notiz „Plan“ überarbeiten" && open.detail == .update(title: "Plan", before: "Plan\nMontag", after: "Plan\nMontag\nDienstag"))
         #expect(rig.model.describe(call, isOpen: false).detail == nil)
     }
+
+    // MARK: Voice mode (B8)
+
+    @Test func openCards_countsNoteCards() async throws {
+        let rig = await make()
+        let note = try #require(rig.notes.create(text: "Plan\nMontag"))
+        let other = try #require(rig.notes.create(text: "Idee\nA"))
+        await openCards(rig, note: note, calls: [Self.completeCall("Fahrrad", id: "t1"), updateCall(note, text: "Plan\nMontag\nDienstag"),
+                                                .functionCall(callID: "n1", name: "create_note", arguments: #"{"text":"Neu\nZeile","folder_id":null}"#),
+                                                .functionCall(callID: "d1", name: "delete_note", arguments: #"{"note_id":"\#(key(other))","reason":null}"#)])
+        let cards = rig.model.openCards
+        #expect(cards.count == 4)
+        #expect(cards.notes == 2)        // update_note and create_note
+        #expect(cards.deletes == 1)      // delete_note counts as a deletion
+        #expect(cards.guarded == 0)      // note cards are not "guarded": the voice mode has its own sentence
+    }
+
+    @Test func confirmCards_twoIDsWithNoteCard_isRejected() async throws {
+        let rig = await make()
+        let note = try #require(rig.notes.create(text: "Plan\nMontag"))
+        await openCards(rig, note: note, calls: [Self.completeCall("Fahrrad", id: "t1"), updateCall(note, text: "Plan\nMontag\nDienstag")])
+        var outcomes: [AssistantModel.TurnOutcome] = []
+        rig.model.onTurnFinished = { outcomes.append($0) }
+        await rig.model.confirmCards(["t1", "u1"])
+        #expect(outcomes == [.rejected])
+        #expect(rig.notes.note(id: note.id)?.text == "Plan\nMontag")
+        #expect(rig.model.conversation?.pendingActions.count == 2)
+        // A single note card is confirmed.
+        responder.enqueue("Okay.")
+        await rig.model.confirmCards(["u1"])
+        #expect(rig.notes.note(id: note.id)?.text == "Plan\nMontag\nDienstag")
+    }
 }
