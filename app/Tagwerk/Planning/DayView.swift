@@ -379,6 +379,9 @@ struct CapacityCard: View {
                     Text(remainingDetail(hours)).font(.caption).foregroundStyle(.secondary)
                 }
                 CapacityBar(capacity: plan.capacity)
+                if !plan.isPast, let explanation = CapacityText.explanation(plan.capacity, hours: model.workHours(on: plan.day), clock: clock) {
+                    Text(explanation).font(.caption).foregroundStyle(.secondary)
+                }
                 if plan.capacity.estimatedCount > 0 {
                     Text("\(plan.capacity.estimatedCount) Aufgabe(n) ohne Aufwand mit Standarddauer gerechnet")
                         .font(.caption).foregroundStyle(.secondary)

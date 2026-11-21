@@ -104,7 +104,9 @@ extension SuggestionFacts {
 
     /// "Mo", "Fr": the short weekday without a dot.
     static func weekday(_ day: PlanDay, calendar: Calendar) -> String {
-        day.startDate(in: calendar).formatted(.dateTime.weekday(.abbreviated).locale(calendar.locale ?? .current))
+        // The time zone is the calendar's, so the weekday matches the day that built the date (the default is the system zone).
+        let style = Date.FormatStyle(locale: calendar.locale ?? .current, timeZone: calendar.timeZone).weekday(.abbreviated)
+        return day.startDate(in: calendar).formatted(style)
             .replacingOccurrences(of: ".", with: "")
     }
 }
