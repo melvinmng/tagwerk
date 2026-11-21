@@ -130,6 +130,16 @@ struct IssueSearchTests {
         #expect(hits.first?.repository == "octo/r" && hits.first?.number == 9)
     }
 
+    @Test func searchOnline_carriesAssignees() async throws {
+        transport.enqueueJSON("/graphql", Fixtures.viewerProjects)
+        transport.enqueueJSON("/graphql", Fixtures.searchResponse([
+            Fixtures.searchNode(id: "I_8", number: 8, assignees: ["lea-m", "octo"]),
+            Fixtures.searchNode(id: "I_6", number: 6),
+        ]))
+        let hits = try await makeProvider().searchOnline("issue", excluding: [])
+        #expect(hits.map(\.assignees) == [["lea-m", "octo"], []])
+    }
+
     @Test func providerSearchesTheRepositoriesOfProjectsAndTheCatalog() async throws {
         transport.enqueueJSON("/graphql", Fixtures.viewerProjects)                    // the own login
         transport.enqueueJSON("/graphql", Fixtures.searchResponse([]))
