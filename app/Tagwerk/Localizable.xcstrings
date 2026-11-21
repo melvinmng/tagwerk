@@ -21546,6 +21546,16 @@
         }
       }
     },
+    "Öffnet ChatGPT für deine Notizen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opens ChatGPT for your notes"
+          }
+        }
+      }
+    },
     "Öffnet ChatGPT mit dem Kontext dieses Bildschirms": {
       "localizations": {
         "en": {

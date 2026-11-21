@@ -2226,5 +2226,6 @@
   "neu: %@": "new: %@",
   "entfernt: %@": "removed: %@",
   "Notiz-Änderungen bestätigst du einzeln.": "You confirm changes to notes one at a time.",
-  "Zuweisungen und Notiz-Änderungen bestätigst du einzeln.": "You confirm assignments and changes to notes one at a time."
+  "Zuweisungen und Notiz-Änderungen bestätigst du einzeln.": "You confirm assignments and changes to notes one at a time.",
+  "Öffnet ChatGPT für deine Notizen": "Opens ChatGPT for your notes"
 }

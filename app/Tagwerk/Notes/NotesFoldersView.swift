@@ -72,6 +72,7 @@ struct NotesFoldersView: View {
                 .accessibilityLabel("Neuer Ordner")
             }
         }
+        .noteAssistantEntry(.overview, store: store)
         .onAppear { store.purgeExpired(calendar: environment.planning.calendar) }
         .alert(creatingParentID == nil ? "Neuer Ordner" : "Neuer Unterordner", isPresented: $isCreating) {
             TextField("Name", text: $nameText)
