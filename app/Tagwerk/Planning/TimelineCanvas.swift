@@ -42,6 +42,10 @@ struct TimelineCanvas: View {
     @ScaledMetric(relativeTo: .caption2) private var scaledLabelWidth: CGFloat = 44
     private var labelWidth: CGFloat { min(scaledLabelWidth, 76) }
 
+    /// Narrowest a column of overlapping entries may get before the group becomes one block (about six characters of
+    /// the title font; grows with the text size, BF1c).
+    @ScaledMetric(relativeTo: .caption) private var minimumColumnWidth: CGFloat = 44
+
     @Environment(AppEnvironment.self) private var environment
     /// Set in the preview of a neighbour page: the marks of its events.
     @Environment(\.dayPageExtras) private var pageExtras
@@ -54,6 +58,8 @@ struct TimelineCanvas: View {
     /// The hold-and-drag on an entry (UIKit recognizer, SR1 path B).
     @State private var hold = HoldMoveState()
     @State private var pending: [String: Range<Int>] = [:]
+    /// The collapsed group whose list is open.
+    @State private var openGroup: CollapsedGroup?
 
     private enum Mode { case move, start, end }
 
@@ -70,6 +76,9 @@ struct TimelineCanvas: View {
             let width = geometry.size.width - labelWidth - 6
             let ranges = entries.map(displayRange)
             let columns = TagwerkCore.columns(for: ranges)
+            // Overlapping entries whose columns would be too narrow become one block each (BF1c); never while choosing "Frei".
+            let groups = collapsedGroups(ranges: ranges, columns: columns, width: width)
+            let collapsed = Set(groups.flatMap { $0 })
             ZStack(alignment: .topLeading) {
                 hourLines(shown)
                     .contentShape(Rectangle())
@@ -80,14 +89,19 @@ struct TimelineCanvas: View {
                 // Travel time lies behind the entries, in the column of the event it leads to (#168).
                 ForEach(plan.travel) { segment in
                     if let index = entries.firstIndex(where: { $0.id == segment.eventID }) {
-                        let columnWidth = width / CGFloat(columnCount(index: index, ranges: ranges, columns: columns))
+                        // Behind a collapsed group the travel time takes the full width.
+                        let isCollapsed = collapsed.contains(index)
+                        let columnWidth = isCollapsed ? width : width / CGFloat(columnCount(index: index, ranges: ranges, columns: columns))
                         TravelSegmentView(segment: segment, transport: model.settings.travelTransport)
                             .frame(width: columnWidth - 2, height: max(14, height(segment.range.count)))
-                            .offset(x: labelWidth + 6 + CGFloat(columns[index]) * columnWidth, y: y(segment.range.lowerBound, shown))
+                            .offset(x: labelWidth + 6 + CGFloat(isCollapsed ? 0 : columns[index]) * columnWidth, y: y(segment.range.lowerBound, shown))
                             .allowsHitTesting(false)
                     }
                 }
-                ForEach(Array(entries.enumerated()), id: \.element.id) { index, entry in
+                ForEach(groups, id: \.self) { group in
+                    collapsedBlock(group, ranges: ranges, shown: shown, width: width)
+                }
+                ForEach(Array(entries.enumerated()).filter { !collapsed.contains($0.offset) }, id: \.element.id) { index, entry in
                     let range = liveRange(entry)
                     let count = columnCount(index: index, ranges: ranges, columns: columns)
                     let columnWidth = width / CGFloat(count)
@@ -141,6 +155,16 @@ struct TimelineCanvas: View {
         .sensoryFeedback(.selection, trigger: snapLine)
         .sensoryFeedback(.impact(weight: .light), trigger: selectedID) { _, new in new != nil }
         .onChange(of: plan) { _, _ in pending.removeAll() }
+        .sheet(item: $openGroup) { group in
+            CollapsedGroupList(rows: group.rows) { entry in
+                // No sheet over a sheet: the list closes first, the entry opens afterwards.
+                openGroup = nil
+                Task {
+                    try? await Task.sleep(for: .milliseconds(400))
+                    onTap(entry)
+                }
+            }
+        }
         .sheet(item: $openSuggestion) { suggestion in SuggestionSheet(suggestion: suggestion) }
         .sheet(item: $editingTask) { TaskEditorSheet(task: $0) }
         // Scrolling stops as soon as an entry is held, not only once it moves (SR1).
@@ -186,6 +210,46 @@ struct TimelineCanvas: View {
     /// Minutes for a y position in the canvas (used for drops from the "Ohne Uhrzeit" bar).
     func minutes(atY y: CGFloat) -> Int {
         shownRange.lowerBound + Int((y - Self.lineInset) / Self.hourHeight * 60)
+    }
+
+    // MARK: Collapsed groups (BF1c)
+
+    /// The groups of entries (indices) that become one block: they overlap, need more than one column and a column would be
+    /// narrower than `minimumColumnWidth`. A group is never made of one entry.
+    private func collapsedGroups(ranges: [Range<Int>], columns: [Int], width: CGFloat) -> [[Int]] {
+        guard selectingIDs == nil else { return [] }
+        return TagwerkCore.overlapGroups(for: ranges).filter { group in
+            let columnCount = group.map { columnCount(index: $0, ranges: ranges, columns: columns) }.max() ?? 1
+            return group.count > 1 && GridCollapse.collapses(columnCount: columnCount, availableWidth: Double(width),
+                                                            minimumColumnWidth: Double(minimumColumnWidth))
+        }
+    }
+
+    /// The block of one collapsed group over its whole time span; its running state follows the minute.
+    private func collapsedBlock(_ group: [Int], ranges: [Range<Int>], shown: Range<Int>, width: CGFloat) -> some View {
+        let members = group.map { entries[$0] }
+        let span = (group.map { ranges[$0].lowerBound }.min() ?? 0)..<(group.map { ranges[$0].upperBound }.max() ?? 0)
+        let marks = pageExtras ?? model.currentExtras
+        let styles = members.map { EntryStyle(entry: $0, model: model, extras: pageExtras) }
+        let hasDeadline = members.contains { member in
+            if case .event(let event, _) = member { return marks.deadlineEventIDs.contains(event.id) }
+            return false
+        }
+        let rows = zip(members, group).map { member, index in
+            let style = EntryStyle(entry: member, model: model, extras: pageExtras)
+            return CollapsedGroupRow(entry: member, time: timeText(ranges[index]), title: style.title, suffix: style.suffix,
+                                     color: style.isFree ? .secondary : style.color)
+        }
+        return TimelineView(.everyMinute) { _ in
+            CollapsedGroupBlock(count: members.count, timeText: timeText(span), startText: clock(span.lowerBound),
+                                endText: clock(span.upperBound), titles: styles.map(\.title), hasDeadline: hasDeadline,
+                                isRunning: members.contains { runningRemaining($0) != nil },
+                                height: max(18, height(span.count))) {
+                openGroup = CollapsedGroup(rows: rows)
+            }
+        }
+        .frame(width: width - 2, height: max(18, height(span.count)))
+        .offset(x: labelWidth + 6, y: y(span.lowerBound, shown))
     }
 
     // MARK: Entries

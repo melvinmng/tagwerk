@@ -49,3 +49,30 @@ public func columns(for intervals: [Range<Int>]) -> [Int] {
     }
     return result
 }
+
+/// Indices grouped by overlap, directly or through others, each group in start order; single entries are groups of one.
+/// The groups run from the early to the late one. Intervals that only touch (one ends when the next starts) do not overlap.
+public func overlapGroups(for intervals: [Range<Int>]) -> [[Int]] {
+    var groups: [[Int]] = []
+    var groupEnd = Int.min
+    for index in intervals.indices.sorted(by: { (intervals[$0].lowerBound, $0) < (intervals[$1].lowerBound, $1) }) {
+        let interval = intervals[index]
+        if !groups.isEmpty, interval.lowerBound < groupEnd {
+            groups[groups.count - 1].append(index)
+            groupEnd = max(groupEnd, interval.upperBound)
+        } else {
+            groups.append([index])
+            groupEnd = interval.upperBound
+        }
+    }
+    return groups
+}
+
+/// When the hour grid gives up its side-by-side columns for one block (BF1c).
+public enum GridCollapse {
+    /// A group becomes one block when it needs more than one column and a column would be narrower than the minimum.
+    public static func collapses(columnCount: Int, availableWidth: Double, minimumColumnWidth: Double) -> Bool {
+        columnCount > 1 && availableWidth / Double(columnCount) < minimumColumnWidth
+    }
+}
+

@@ -1491,6 +1491,86 @@
         }
       }
     },
+    "%lld Termine, %@ bis %@: %@": {
+      "localizations": {
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Termin, %@ bis %@: %@"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Termine, %@ bis %@: %@"
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld event, %@ to %@: %@"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld events, %@ to %@: %@"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "%lld Termine · %@": {
+      "localizations": {
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Termin · %@"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Termine · %@"
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld event · %@"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld events · %@"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "%lld Vorschläge": {
       "localizations": {
         "de": {
@@ -2531,6 +2611,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "+%lld open"
+          }
+        }
+      }
+    },
+    "+%lld weitere": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "+%lld more"
           }
         }
       }
@@ -17843,6 +17933,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Say something about the suggestion …"
+          }
+        }
+      }
+    },
+    "Zum Verschieben den Eintrag öffnen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open the entry to move it."
           }
         }
       }

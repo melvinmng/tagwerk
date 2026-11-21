@@ -21,4 +21,19 @@ struct MarkerRenderContrastTests {
         print("MEASURED now row capsule \(scheme == .dark ? "dark" : "light"): \(String(format: "%.2f", ratio)):1")
         #expect(ratio >= 4.5, "rendered contrast of the row capsule is \(ratio)")
     }
+
+    /// The block of collapsed entries (BF1c) puts primary text on grey at 24 %. The accessibility audit reports its headline
+    /// as a contrast finding in the AX5 run; this measures the rendered image instead (on the app background).
+    @Test(arguments: [ColorScheme.light, .dark])
+    func collapsedBlock_renderedContrast(scheme: ColorScheme) throws {
+        let block = CollapsedGroupBlock(count: 3, timeText: "10:00–12:30", startText: "10:00", endText: "12:30",
+                                        titles: ["Seminar", "Seminar", "Abgabe Kurzbericht"], hasDeadline: false,
+                                        isRunning: false, height: 90) {}
+            .frame(width: 280, height: 90)
+            .background(.background)
+        let ratio = try #require(ContrastMath.renderedRatio(of: block, colorScheme: scheme))
+        print("MEASURED collapsed block \(scheme == .dark ? "dark" : "light"): \(String(format: "%.2f", ratio)):1")
+        #expect(ratio >= 4.5, "rendered contrast of the collapsed block is \(ratio)")
+    }
 }
+

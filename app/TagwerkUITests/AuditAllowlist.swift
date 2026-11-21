@@ -75,6 +75,13 @@ enum AuditAllowlist {
             + "(blue, green, red, grey). The tint is the colour code of the grid (calendar, block, deadline, break); contrast on tint is a "
             + "design question (#188, \"Sekundärtexte auf getönten Karten\")."),
 
+        Entry(auditType: .contrast, labels: ["\\d+ Termine · \\d\\d:\\d\\d–\\d\\d:\\d\\d", "\\+\\d+ weitere"], screens: ["AX5/dark Planen"], reason:
+            "Headline and rest line of the block that collapses overlapping entries of the hour grid (BF1c, `CollapsedGroupBlock`): "
+            + "primary and secondary text on grey at 24 %, the same tint pair as the entries above. The audit reports the headline in the "
+            + "AX5 run (the demo seminar, its copy and the deadline overlap in the morning); the rendered image of the block measures "
+            + "16.5:1 in light and 15.9:1 in dark mode (`MarkerRenderContrastTests.collapsedBlock_renderedContrast`), so the finding is "
+            + "the measurement of the audit on the translucent fill, not a lack of contrast."),
+
         // MARK: Dynamic Type
         Entry(auditType: .dynamicType, labels: ["\\d\\d:\\d\\d"] + gridCellLabels, screens: ["Planen (Tag)"], reason:
             "Hour labels and entries of the hour grid of \"Planen\": the grid is time-proportional (fixed height per hour), so its texts are "
