@@ -771,11 +771,11 @@ final class AssistantModel {
         guard isOpen else { return card }
         card.canAdjust = canAdjust(call)
         if let original = conversation?.originalArguments(of: call) {
-            card.mark = .byUser
+            card.mark = adjustmentMarks[call.id] ?? .byUser
             let proposed = describer.describe(ToolCall(id: call.id, name: call.name, arguments: original), language: language, spoken: spoken)
             card.proposedChange = proposed.change
             // A card the user changed on screen and then confirms by voice says so.
-            if spoken { card.change += ". " + ProposalMark.byUser.label(in: language) }
+            if spoken, let mark = card.mark { card.change += ". " + mark.label(in: language) }
         }
         return card
     }
@@ -793,8 +793,8 @@ final class AssistantModel {
     /// True for an open card of a function with an editor that can open for this call (an `assign_task` for an issue the
     /// app does not know any more has none).
     func canAdjust(_ call: ToolCall) -> Bool {
-        adjustableTools.contains(call.name) && conversation?.pendingActions.contains { $0.id == call.id } == true
-            && makeEditor(for: call) != nil
+        guard adjustableTools.contains(call.name), let current = conversation?.pendingActions.first(where: { $0.id == call.id }) else { return false }
+        return makeEditor(for: current) != nil
     }
 
     /// The editor for an open card; `nil` for a function without one and for a call that is no longer open. The editor
@@ -805,8 +805,14 @@ final class AssistantModel {
         return makeEditor(for: current)
     }
 
+    /// An editor that starts from other arguments than the call holds, e.g. the answer of ChatGPT to a follow-up.
+    func proposalEditor(for call: ToolCall, arguments: Data) -> (any ProposalEditor)? {
+        guard let current = conversation?.pendingActions.first(where: { $0.id == call.id }), adjustableTools.contains(current.name) else { return nil }
+        return makeEditor(for: ToolCall(id: current.id, name: current.name, arguments: arguments))
+    }
+
     private func makeEditor(for call: ToolCall) -> (any ProposalEditor)? {
-        let current = conversation?.pendingActions.first { $0.id == call.id } ?? call
+        let current = call
         let tools = tools
         let planning = planning
         let context = ProposalEditorContext(
@@ -821,18 +827,48 @@ final class AssistantModel {
         return ProposalEditors.make(for: current, context: context)
     }
 
-    /// Writes the user's values into the open card. Nothing is sent, run or saved: the card stays a proposal and is
-    /// carried out only by "Bestätigen". The guards (`needsSingleConfirmation`) and the texts follow the new values.
+    // MARK: Follow-up about one card (plan ki-vorschlaege-anpassen, task B4)
+
+    /// The consent a follow-up about a card needs: in a notes chat (the card may stem from note text) the consent
+    /// "Notizen mit ChatGPT"; elsewhere the sign-in is the only condition, like for the chat itself.
+    var cardFollowUpHasConsent: Bool {
+        switch context {
+        case .notes, .note: hasNoteConsent()
+        default: true
+        }
+    }
+
+    @ObservationIgnored private lazy var cardReviser = CardReviser(
+        responder: responder, model: model, hasConsent: { [weak self] in self?.cardFollowUpHasConsent ?? false },
+        language: { [weak self] in self?.language() ?? .app }, now: now, calendar: planning.calendar)
+
+    /// One request about one open card: the answer fills the fields of the sheet. The chat history, the other cards and
+    /// the stored conversation stay as they are; nothing is stored. `current` are the arguments as the sheet shows them.
+    func reviseCard(_ call: ToolCall, current: Data, comment: String) async throws -> CardReviser.Answer {
+        guard let pending = conversation?.pendingActions.first(where: { $0.id == call.id }) else { throw CardReviser.Failure.unknownFunction }
+        return try await cardReviser.revise(name: pending.name, current: current,
+                                            proposed: conversation?.originalArguments(of: pending) ?? pending.arguments, comment: comment)
+    }
+
+    /// Who last changed each adjusted card; a card without an entry that is adjusted counts as changed by the user.
+    private(set) var adjustmentMarks: [String: ProposalMark] = [:]
+
+    /// Writes the values into the open card, by the user (`.byUser`) or taken from an answer of ChatGPT (`.byAssistant`).
+    /// Nothing is sent, run or saved: the card stays a proposal and is carried out by "Bestätigen" only. The guards
+    /// (`needsSingleConfirmation`) and the texts follow the new values.
     @discardableResult
-    func adjust(_ call: ToolCall, arguments: Data) -> ToolCall? {
-        guard canAdjust(call) else { return nil }
-        return conversation?.adjust(call, arguments: arguments)
+    func adjust(_ call: ToolCall, arguments: Data, mark: ProposalMark = .byUser) -> ToolCall? {
+        guard canAdjust(call), let adjusted = conversation?.adjust(call, arguments: arguments) else { return nil }
+        // Back to what the model proposed is no adjustment, so no mark either.
+        adjustmentMarks[call.id] = conversation?.isAdjusted(adjusted) == true ? mark : nil
+        return adjusted
     }
 
     /// Puts the proposal of the model back; `nil` when the card was not adjusted.
     @discardableResult
     func resetAdjustment(_ call: ToolCall) -> ToolCall? {
-        conversation?.resetAdjustment(call)
+        adjustmentMarks[call.id] = nil
+        return conversation?.resetAdjustment(call)
     }
 }
 

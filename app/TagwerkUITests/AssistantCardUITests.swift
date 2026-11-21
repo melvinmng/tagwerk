@@ -67,3 +67,34 @@ final class AssistantCardLargeTextUITests: AssistantCardUITestCase {
                                     + "(Verwerfen \(decline.frame), Anpassen \(adjust.frame), Bestätigen \(confirm.frame))")
     }
 }
+
+/// The follow-up line of the sheet "Vorschlag anpassen": the answer of the demo ChatGPT fills the title field and carries the
+/// mark of ChatGPT, "Rückgängig" brings back the title from before, and the card changes only with "Fertig".
+final class AssistantCardFollowUpUITests: AssistantCardUITestCase {
+    func testFollowUp_fillsFieldsUndoAndCardChangesOnlyWithDone() {
+        openProposedCard()
+        tapButton("Anpassen")
+        let sheet = app.navigationBars["Vorschlag anpassen"]
+        XCTAssertTrue(sheet.waitForExistence(timeout: Self.timeout), "The sheet did not open")
+
+        // A quick reply sends the message; the demo answer adds "(später)" to the title.
+        let reply = app.buttons["Später"].firstMatch
+        XCTAssertTrue(reply.waitForExistence(timeout: Self.timeout), "The sheet has no quick reply")
+        reply.tap()
+        waitFor("von ChatGPT angepasst")
+        let title = app.textFields["Titel"].firstMatch
+        eventually("The title field did not take the answer") { ((title.value as? String) ?? "").contains("(später)") }
+
+        // The card behind the sheet has not changed yet.
+        tapButton("Rückgängig")
+        eventually("Rückgängig did not bring the title back") { ((title.value as? String) ?? "") == "Demo-Aufgabe" }
+
+        // Answer again and take it over with "Fertig": the card shows the new title and the mark of ChatGPT.
+        app.buttons["Später"].firstMatch.tap()
+        eventually("The title field did not take the second answer") { ((title.value as? String) ?? "").contains("(später)") }
+        sheet.buttons["Fertig"].tap()
+        waitFor("Demo-Aufgabe (später)")
+        waitFor("von ChatGPT angepasst")
+        XCTAssertTrue(app.buttons["Bestätigen"].firstMatch.exists, "The adjusted card must stay a proposal")
+    }
+}

@@ -6083,6 +6083,16 @@
         }
       }
     },
+    "ChatGPT sagen, was anders sein soll …": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tell ChatGPT what should be different …"
+          }
+        }
+      }
+    },
     "ChatGPT schlägt keine andere Einteilung vor.": {
       "localizations": {
         "en": {
@@ -7198,6 +7208,16 @@
         }
       }
     },
+    "Die Antwort passte nicht zum Vorschlag. Es wurde nichts geändert.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The answer did not fit the proposal. Nothing was changed."
+          }
+        }
+      }
+    },
     "Die Antwort von ChatGPT ließ sich nicht lesen. Versuche es erneut.": {
       "localizations": {
         "en": {
@@ -7585,6 +7605,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "The source isn’t available."
+          }
+        }
+      }
+    },
+    "Die Rückfrage ist fehlgeschlagen. Versuch es noch einmal.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The follow-up failed. Please try again."
           }
         }
       }
@@ -9895,12 +9925,32 @@
         }
       }
     },
+    "Freundlicher": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Friendlier"
+          }
+        }
+      }
+    },
     "Frist ändern": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Change due date"
+          }
+        }
+      }
+    },
+    "Früher": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Earlier"
           }
         }
       }
@@ -10060,6 +10110,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Adds an item to the shopping list without opening Tagwerk."
+          }
+        }
+      }
+    },
+    "Für diese Rückfrage ist deine Einwilligung nötig.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This follow-up needs your consent."
           }
         }
       }
@@ -13772,6 +13832,16 @@
         }
       }
     },
+    "Mengen verdoppeln": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Double the quantities"
+          }
+        }
+      }
+    },
     "Merken": {
       "localizations": {
         "en": {
@@ -14775,6 +14845,16 @@
         }
       }
     },
+    "Niemanden entfernen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove nobody"
+          }
+        }
+      }
+    },
     "Noch %lld Tage": {
       "localizations": {
         "en": {
@@ -15149,6 +15229,16 @@
         }
       }
     },
+    "Nur mich": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only me"
+          }
+        }
+      }
+    },
     "Nur Tage dieser Planung.": {
       "localizations": {
         "en": {
@@ -15384,6 +15474,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Without a date the due date is removed."
+          }
+        }
+      }
+    },
+    "Ohne Mengen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Without quantities"
           }
         }
       }
@@ -16867,6 +16967,16 @@
         }
       }
     },
+    "Senden gibt diesen Vorschlag mit deinen Änderungen und deiner Nachricht an ChatGPT. Die anderen Karten bleiben, wie sie sind.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sending gives this proposal with your changes and your message to ChatGPT. The other cards stay as they are."
+          }
+        }
+      }
+    },
     "Senden gibt diesen Vorschlag, die übrigen der Planung, deine Änderungen, deine Vorgaben und die Termine dieser Tage an ChatGPT.": {
       "localizations": {
         "en": {
@@ -17153,6 +17263,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Sort by"
+          }
+        }
+      }
+    },
+    "Später": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Later"
           }
         }
       }
@@ -20573,6 +20693,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Add to deadline …"
+          }
+        }
+      }
+    },
+    "Zu diesem Vorschlag gibt es keine Rückfrage.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "There is no follow-up for this proposal."
           }
         }
       }
