@@ -19,7 +19,8 @@
 
 set -euo pipefail
 
-export DEVELOPER_DIR="/Applications/Xcode.app/Contents/Developer"
+# TAGWERK_DEVELOPER_DIR selects another Xcode (used by the CI workflow); unset keeps the default.
+export DEVELOPER_DIR="${TAGWERK_DEVELOPER_DIR:-/Applications/Xcode.app/Contents/Developer}"
 
 REPO_ROOT="${0:A:h:h}"
 APP_DIR="$REPO_ROOT/app"

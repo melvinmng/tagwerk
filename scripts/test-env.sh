@@ -6,6 +6,7 @@
 # Environment overrides:
 #   TAGWERK_TEST_SIMULATOR     simulator name or UDID to use instead of the checkout's own simulator
 #   TAGWERK_TEST_DERIVED_DATA  derived data folder for the app build
+#   TAGWERK_TEST_LOG_DIR       log folder (the CI workflow sets it to find the logs for the artifact upload)
 #
 # Sets: TAGWERK_CHECKOUT_KEY, TAGWERK_TEST_DERIVED, TAGWERK_TEST_LOG_DIR
 # Provides: tagwerk_test_destination (prints the xcodebuild destination, creates the simulator if needed),
@@ -20,7 +21,7 @@ _tagwerk_repo_root="${${(%):-%x}:A:h:h}"
 TAGWERK_CHECKOUT_KEY="${_tagwerk_repo_root:t}-$(print -rn -- "$_tagwerk_repo_root" | /usr/bin/shasum | cut -c1-8)"
 
 TAGWERK_TEST_DERIVED="${TAGWERK_TEST_DERIVED_DATA:-$HOME/Library/Developer/Tagwerk/DerivedData-tests-$TAGWERK_CHECKOUT_KEY}"
-TAGWERK_TEST_LOG_DIR="${TMPDIR:-/tmp}/tagwerk-tests/$TAGWERK_CHECKOUT_KEY"
+TAGWERK_TEST_LOG_DIR="${TAGWERK_TEST_LOG_DIR:-${TMPDIR:-/tmp}/tagwerk-tests/$TAGWERK_CHECKOUT_KEY}"
 
 # Prints the destination for xcodebuild. Without TAGWERK_TEST_SIMULATOR it looks up the simulator
 # "Tagwerk Tests <checkout key>" and creates it from the default device type on first use.

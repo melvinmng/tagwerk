@@ -27,7 +27,9 @@ enum SearchTaskMenu {
            day == PlanDay(date: tomorrow, calendar: calendar) {
             return String(localized: "Für morgen eingeplant")
         }
-        let text = day.startDate(in: calendar).formatted(.dateTime.weekday(.abbreviated).day().month())
+        // The style takes the time zone of the calendar that built the date; the default would use the system zone.
+        let style = Date.FormatStyle(timeZone: calendar.timeZone).weekday(.abbreviated).day().month()
+        let text = day.startDate(in: calendar).formatted(style)
         return String(localized: "Eingeplant für \(text)")
     }
 }
