@@ -280,7 +280,7 @@ struct TimelineCanvas: View {
                     Text(style.title).font(.caption.weight(.semibold)).lineLimit(2)
                 }
                 Text((remaining.map { NowText.runningDetail(remainingMinutes: $0) } ?? timeText(range)) + style.suffix)
-                    .font(.caption2).foregroundStyle(.secondaryText).lineLimit(1)
+                    .font(.caption2).foregroundStyle(.gridTimeText).lineLimit(1)
                     .accessibilityLabel((remaining.map { NowText.runningAccessibility(remainingMinutes: $0) } ?? timeText(range))
                         + style.suffix)
             }

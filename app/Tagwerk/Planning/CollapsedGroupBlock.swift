@@ -50,7 +50,7 @@ struct CollapsedGroupBlock: View {
                     Text(title).font(.caption).lineLimit(1).frame(maxWidth: .infinity, alignment: .leading)
                 }
                 if shownTitles.hidden > 0 {
-                    Text("+\(shownTitles.hidden) weitere").font(.caption).foregroundStyle(.secondaryText).lineLimit(1)
+                    Text("+\(shownTitles.hidden) weitere").font(.caption).foregroundStyle(.gridTimeText).lineLimit(1)
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
             }
