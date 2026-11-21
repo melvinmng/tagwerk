@@ -28,6 +28,10 @@ struct ShoppingListView: View {
     /// Identifies the running request, so a cancelled one cannot clear the state of its successor.
     @State private var sortingID: UUID?
     @State private var proposal: SortProposal?
+    /// The card, preview and undo of "Artikel übersetzen"; created with the page, because it needs the environment.
+    @State private var translation: ShoppingTranslationModel?
+    @State private var showsTranslateConsent = false
+    @Environment(\.scenePhase) private var scenePhase
 
     /// The proposal of one request, identifiable for the result sheet.
     private struct SortProposal: Identifiable {
@@ -42,6 +46,91 @@ struct ShoppingListView: View {
     private var categories: [ShoppingCategoryInfo] { environment.shoppingCategories.categories() }
 
     var body: some View {
+        translationLayer
+            .alert("Neue Kategorie", isPresented: newCategoryBinding) {
+                TextField("Name", text: $newCategoryName)
+                Button("Anlegen", action: createCategory)
+                Button("Abbrechen", role: .cancel) {}
+            }
+            .confirmationDialog(Self.removeCompletedQuestion(count: completedTotal), isPresented: $confirmsRemoveCompleted,
+                                titleVisibility: .visible) {
+                Button("Alle erledigten löschen", role: .destructive) {
+                    Task {
+                        await model.removeAllCompleted()
+                        completedTotal = await model.allCompletedCount()
+                    }
+                }
+                Button("Abbrechen", role: .cancel) {}
+            } message: {
+                Text(Self.remindersNotice)
+            }
+            .confirmationDialog(Self.clearListQuestion(count: clearListTotal), isPresented: $confirmsClearList, titleVisibility: .visible) {
+                Button("Liste leeren", role: .destructive) {
+                    Task {
+                        await model.clearList()
+                        completedTotal = await model.allCompletedCount()
+                    }
+                }
+                Button("Abbrechen", role: .cancel) {}
+            } message: {
+                Text(Self.remindersNotice)
+            }
+            .task {
+                if translation == nil {
+                    translation = ShoppingTranslationModel(shopping: model, settings: environment.settings,
+                                                           translator: environment.shoppingTranslator)
+                }
+                environment.shoppingCategories.seedIfNeeded()
+                await model.reload()
+                translation?.refreshOffer()
+                completedTotal = await model.allCompletedCount()
+            }
+    }
+
+    /// The page with the sheets and hooks of "Artikel übersetzen"; split from `body` to keep the modifier chains type-checkable.
+    private var translationLayer: some View {
+        pageWithSheets
+            .sheet(isPresented: $showsTranslateConsent) {
+                ShoppingSortConsentSheet(purpose: .translate) {
+                    environment.settings.hasShoppingSortConsent = true
+                    showsTranslateConsent = false
+                    translate()
+                } onDecline: {
+                    showsTranslateConsent = false
+                }
+            }
+            .sheet(item: Binding(get: { translation?.preview }, set: { if $0 == nil { translation?.discard() } })) { preview in
+                ShoppingTranslationResultSheet(preview: preview, language: environment.settings.contentLanguages.shoppingLanguage()) { selected in
+                    Task {
+                        if let line = await translation?.apply(selected) { notice = line }
+                    }
+                } onDiscard: {
+                    translation?.discard()
+                }
+            }
+            .overlay {
+                if sorting != nil {
+                    busyOverlay(title: "ChatGPT sortiert …", cancel: cancelSorting)
+                } else if translation?.isTranslating == true {
+                    busyOverlay(title: "ChatGPT übersetzt …") { translation?.cancel() }
+                }
+            }
+            .onDisappear {
+                cancelSorting()
+                translation?.cancel()
+            }
+            .onChange(of: model.openItems.count) { translation?.refreshOffer() }
+            .onChange(of: model.state) { translation?.refreshOffer() }
+            .onChange(of: environment.settings.contentLanguages.shoppingLanguage()) { translation?.refreshOffer() }
+            .onChange(of: scenePhase) { _, phase in if phase == .active { translation?.refreshOffer() } }
+            .onChange(of: translation?.notice) { _, line in
+                guard let line else { return }
+                notice = line
+                translation?.notice = nil
+            }
+    }
+
+    private var pageWithSheets: some View {
         content
             .navigationTitle("Einkaufsliste")
             .navigationBarTitleDisplayMode(.large)
@@ -77,43 +166,6 @@ struct ShoppingListView: View {
                     self.proposal = nil
                 }
             }
-            .overlay {
-                if sorting != nil { sortingOverlay }
-            }
-            .onDisappear { cancelSorting() }
-            .alert("Neue Kategorie", isPresented: newCategoryBinding) {
-                TextField("Name", text: $newCategoryName)
-                Button("Anlegen", action: createCategory)
-                Button("Abbrechen", role: .cancel) {}
-            }
-            .confirmationDialog(Self.removeCompletedQuestion(count: completedTotal), isPresented: $confirmsRemoveCompleted,
-                                titleVisibility: .visible) {
-                Button("Alle erledigten löschen", role: .destructive) {
-                    Task {
-                        await model.removeAllCompleted()
-                        completedTotal = await model.allCompletedCount()
-                    }
-                }
-                Button("Abbrechen", role: .cancel) {}
-            } message: {
-                Text(Self.remindersNotice)
-            }
-            .confirmationDialog(Self.clearListQuestion(count: clearListTotal), isPresented: $confirmsClearList, titleVisibility: .visible) {
-                Button("Liste leeren", role: .destructive) {
-                    Task {
-                        await model.clearList()
-                        completedTotal = await model.allCompletedCount()
-                    }
-                }
-                Button("Abbrechen", role: .cancel) {}
-            } message: {
-                Text(Self.remindersNotice)
-            }
-            .task {
-                environment.shoppingCategories.seedIfNeeded()
-                await model.reload()
-                completedTotal = await model.allCompletedCount()
-            }
     }
 
     // MARK: States
@@ -122,7 +174,13 @@ struct ShoppingListView: View {
         switch model.state {
         case .ready:
             list
-                .safeAreaInset(edge: .bottom) { ShoppingInputBar(model: model, notice: $notice) }
+                .safeAreaInset(edge: .bottom, spacing: 0) {
+                    VStack(spacing: 0) {
+                        translationCard
+                        undoCapsule
+                        ShoppingInputBar(model: model, notice: $notice)
+                    }
+                }
         case .accessDenied:
             ContentUnavailableView {
                 Label("Kein Zugriff auf Erinnerungen", systemImage: "lock")
@@ -278,7 +336,13 @@ struct ShoppingListView: View {
                 Label("Mit ChatGPT sortieren", systemImage: "sparkles")
                 if !environment.ai.isSignedIn { Text("Anmeldung unter Einstellungen › KI") }
             }
-            .disabled(!environment.ai.isSignedIn || sorting != nil)
+            .disabled(!environment.ai.isSignedIn || sorting != nil || translation?.isTranslating == true)
+            Button(action: startTranslating) {
+                Label("Artikel übersetzen …", systemImage: "globe")
+                Text(environment.ai.isSignedIn ? Self.translateSubtitle(environment.settings.contentLanguages.shoppingLanguage())
+                                               : String(localized: "Anmeldung unter Einstellungen › KI"))
+            }
+            .disabled(!environment.ai.isSignedIn || model.openItems.isEmpty || sorting != nil || translation?.isTranslating == true)
             Button { showsRecipe = true } label: {
                 Label("Rezept hinzufügen …", systemImage: "fork.knife")
                 if !environment.ai.isSignedIn { Text("Anmeldung unter Einstellungen › KI") }
@@ -375,10 +439,10 @@ struct ShoppingListView: View {
 
     // MARK: Sorting with ChatGPT
 
-    private var sortingOverlay: some View {
+    private func busyOverlay(title: LocalizedStringKey, cancel: @escaping () -> Void) -> some View {
         VStack(spacing: 12) {
-            ProgressView("ChatGPT sortiert …")
-            Button("Abbrechen", action: cancelSorting)
+            ProgressView(title)
+            Button("Abbrechen", action: cancel)
         }
         .padding(20)
         .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
@@ -386,7 +450,7 @@ struct ShoppingListView: View {
 
     /// The first tap asks for consent; nothing is sent before the user agreed.
     private func startSorting() {
-        guard environment.ai.isSignedIn, sorting == nil else { return }
+        guard environment.ai.isSignedIn, sorting == nil, translation?.isTranslating != true else { return }
         if environment.settings.hasShoppingSortConsent { sort() } else { showsSortConsent = true }
     }
 
@@ -414,6 +478,42 @@ struct ShoppingListView: View {
                 // Cancelled by the user: nothing to report.
             }
         }
+    }
+
+    // MARK: Translating with ChatGPT
+
+    /// "ins Englische, mit ChatGPT"
+    static func translateSubtitle(_ language: VoiceLanguage) -> String {
+        language == .english ? String(localized: "ins Englische, mit ChatGPT") : String(localized: "ins Deutsche, mit ChatGPT")
+    }
+
+    @ViewBuilder private var translationCard: some View {
+        if let translation, let offer = translation.offer, translation.preview == nil {
+            ShoppingTranslationCard(offer: offer, isSignedIn: environment.ai.isSignedIn, onTranslate: startTranslating,
+                                    onKeep: { translation.keepAsIs() })
+        }
+    }
+
+    @ViewBuilder private var undoCapsule: some View {
+        if let translation, !translation.undo.isEmpty {
+            let caption: LocalizedStringResource = environment.settings.contentLanguages.shoppingLanguage() == .english ? "Englisch" : "Deutsch"
+            UndoCapsule(title: String(localized: "\(translation.undo.count) Artikel übersetzt"), caption: caption, duration: 8,
+                        actionHint: "Stellt die alten Namen wieder her",
+                        onUndo: { Task { await translation.undoLast() } },
+                        onExpire: { translation.capsuleExpired() })
+                .id(translation.undo.map(\.id))
+                .transition(.move(edge: .bottom).combined(with: .opacity))
+        }
+    }
+
+    /// The first tap asks for the consent; nothing is sent before the user agreed.
+    private func startTranslating() {
+        guard environment.ai.isSignedIn, sorting == nil, translation?.isTranslating != true else { return }
+        if environment.settings.hasShoppingSortConsent { translate() } else { showsTranslateConsent = true }
+    }
+
+    private func translate() {
+        Task { await translation?.translate() }
     }
 
     private func cancelSorting() {

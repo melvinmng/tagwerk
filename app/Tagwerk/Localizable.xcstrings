@@ -553,6 +553,22 @@
         }
       }
     },
+    "%@ wird %@, %@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@ wird %2$@, %3$@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ becomes %2$@, %3$@"
+          }
+        }
+      }
+    },
     "%@ zu viel": {
       "localizations": {
         "en": {
@@ -628,6 +644,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "%@ · home set"
+          }
+        }
+      }
+    },
+    "%@ · abgewählt, bleibt „%@“": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@ · abgewählt, bleibt „%2$@“"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ · deselected, stays “%2$@”"
           }
         }
       }
@@ -1007,6 +1039,56 @@
                 "stringUnit": {
                   "state": "translated",
                   "value": "%lld items will be sorted again, usually under “Other”."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "%lld Artikel wurden inzwischen geändert und bleiben.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld items have changed in the meantime and stay."
+          }
+        }
+      }
+    },
+    "%lld Artikel übersetzt": {
+      "localizations": {
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Artikel übersetzt"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Artikel übersetzt"
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld item translated"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld items translated"
                 }
               }
             }
@@ -2050,6 +2132,38 @@
         }
       }
     },
+    "%lld von %lld Artikeln · %@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$lld von %2$lld Artikeln · %3$@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld of %2$lld items · %3$@"
+          }
+        }
+      }
+    },
+    "%lld von %lld Artikeln übersetzt.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$lld von %2$lld Artikeln übersetzt."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld of %2$lld items translated."
+          }
+        }
+      }
+    },
     "%lld von %lld bisher": {
       "localizations": {
         "de": {
@@ -2108,6 +2222,46 @@
           "stringUnit": {
             "state": "translated",
             "value": "%lld more"
+          }
+        }
+      }
+    },
+    "%lld weitere Artikel: danach noch einmal über „•••“ übersetzen.": {
+      "localizations": {
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld weiterer Artikel: danach noch einmal über „•••“ übersetzen."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld weitere Artikel: danach noch einmal über „•••“ übersetzen."
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld more item: afterwards translate again via “•••”."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld more items: afterwards translate again via “•••”."
+                }
+              }
+            }
           }
         }
       }
@@ -2551,6 +2705,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "+%lld open"
+          }
+        }
+      }
+    },
+    "1 Artikel wurde inzwischen geändert und bleibt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 item has changed in the meantime and stays."
           }
         }
       }
@@ -3056,6 +3220,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Every 2 weeks"
+          }
+        }
+      }
+    },
+    "Alle Artikel sind schon auf Deutsch.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All items are already in German."
+          }
+        }
+      }
+    },
+    "Alle Artikel sind schon auf Englisch.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All items are already in English."
           }
         }
       }
@@ -3904,6 +4088,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Add item"
+          }
+        }
+      }
+    },
+    "Artikel übersetzen …": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Translate items …"
           }
         }
       }
@@ -4812,6 +5006,16 @@
         }
       }
     },
+    "Bleibt unverändert": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stays unchanged"
+          }
+        }
+      }
+    },
     "Blöcke löschen": {
       "localizations": {
         "en": {
@@ -4988,6 +5192,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "ChatGPT is speaking … · Microphone off"
+          }
+        }
+      }
+    },
+    "ChatGPT übersetzt …": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ChatGPT is translating …"
           }
         }
       }
@@ -5825,6 +6039,16 @@
         }
       }
     },
+    "Der offene Artikel bleibt, wie er ist.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The open item stays as it is."
+          }
+        }
+      }
+    },
     "Derselbe Termin?": {
       "localizations": {
         "en": {
@@ -5851,6 +6075,46 @@
           "stringUnit": {
             "state": "translated",
             "value": "Diagnostics"
+          }
+        }
+      }
+    },
+    "Die %lld offenen Artikel bleiben, wie sie sind.": {
+      "localizations": {
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Die %lld offenen Artikel bleiben, wie sie sind."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Die %lld offenen Artikel bleiben, wie sie sind."
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "The %lld open item stays as it is."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "The %lld open items stay as they are."
+                }
+              }
+            }
           }
         }
       }
@@ -6407,12 +6671,12 @@
         }
       }
     },
-    "Die Zutaten stehen in der Sprache der Notiz (%@). Neue Artikel aus dieser Notiz kommen so auf die Liste.": {
+    "Die Zutaten stehen in der Sprache der Notiz (%@). Neue Artikel aus dieser Notiz kommen so auf die Liste. Über „•••“ › „Artikel übersetzen …“ kannst du sie danach übersetzen.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "The ingredients are in the language of the note (%@). New items from this note go on the list like this."
+            "value": "The ingredients are in the language of the note (%@). New items from this note go on the list like this. Afterwards you can translate them via “•••” › “Translate items …”."
           }
         }
       }
@@ -6914,6 +7178,16 @@
         }
       }
     },
+    "Ein Artikel ließ sich nicht schreiben.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "One item could not be written."
+          }
+        }
+      }
+    },
     "Ein Ordner lässt sich nicht in sich selbst bewegen.": {
       "localizations": {
         "en": {
@@ -7020,6 +7294,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Show shopping list in Tagwerk"
+          }
+        }
+      }
+    },
+    "Einkaufsliste jetzt auf Deutsch": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shopping list is now in German"
+          }
+        }
+      }
+    },
+    "Einkaufsliste jetzt auf Englisch": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shopping list is now in English"
           }
         }
       }
@@ -7301,6 +7595,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Delete permanently"
+          }
+        }
+      }
+    },
+    "Englisch": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "English"
           }
         }
       }
@@ -11639,6 +11943,16 @@
         }
       }
     },
+    "Mengen bleiben, wie sie sind. Die Namen ändern sich in Apple Erinnerungen; in einer geteilten Liste sehen auch die anderen die neuen Namen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quantities stay as they are. The names change in Apple Reminders; in a shared list, others see the new names too."
+          }
+        }
+      }
+    },
     "Merken": {
       "localizations": {
         "en": {
@@ -12262,6 +12576,26 @@
         }
       }
     },
+    "Neue Artikel kommen auf Deutsch.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New items will be in German."
+          }
+        }
+      }
+    },
+    "Neue Artikel kommen auf Englisch.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New items will be in English."
+          }
+        }
+      }
+    },
     "Neue Aufgabe": {
       "localizations": {
         "en": {
@@ -12608,6 +12942,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "%lld days left"
+          }
+        }
+      }
+    },
+    "Noch einmal versuchen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Try again"
           }
         }
       }
@@ -14677,6 +15021,16 @@
         }
       }
     },
+    "So lassen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leave as is"
+          }
+        }
+      }
+    },
     "Sonstiges": {
       "localizations": {
         "en": {
@@ -15123,6 +15477,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Passage, e.g. 3,21-31"
+          }
+        }
+      }
+    },
+    "Stellt die alten Namen wieder her": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restores the old names"
           }
         }
       }
@@ -18296,6 +18660,16 @@
         }
       }
     },
+    "ausgewählt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "selected"
+          }
+        }
+      }
+    },
     "automatisch": {
       "localizations": {
         "en": {
@@ -18696,6 +19070,26 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "ins Deutsche, mit ChatGPT": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "into German, with ChatGPT"
+          }
+        }
+      }
+    },
+    "ins Englische, mit ChatGPT": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "into English, with ChatGPT"
           }
         }
       }
@@ -19822,6 +20216,16 @@
         }
       }
     },
+    "Übersetzung": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Translation"
+          }
+        }
+      }
+    },
     "Überspringen": {
       "localizations": {
         "en": {
@@ -19980,6 +20384,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Delete “%@”?"
+          }
+        }
+      }
+    },
+    "„%@“ steht dann schon auf der Liste": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%@” is on the list then"
           }
         }
       }

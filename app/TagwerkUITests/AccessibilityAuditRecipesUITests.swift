@@ -74,6 +74,23 @@ class RecipeScreensAuditCase: UITestCase {
         try audit("Einkauf › Rezept hinzufügen (Notiz)")
     }
 
+    /// Shopping list: the card after the language of the list changed ("Mit ChatGPT übersetzen" / "So lassen") and the preview sheet
+    /// of the translation (demo answers; the consent of sorting does not cover translating yet, so its sheet comes first).
+    func auditShoppingTranslate(_ audit: Audit) throws {
+        openShoppingList()
+        let field = app.textFields["Artikel hinzufügen"]
+        field.tap()
+        field.typeText("Milch\n")
+        waitFor("Milch, nicht erledigt")
+        tapButton("Sprache der Einkaufsliste Deutsch, auf Englisch wechseln")
+        waitFor("Einkaufsliste jetzt auf Englisch")
+        try audit("Einkaufsliste › Karte „übersetzen“")
+        tapButton("Mit ChatGPT übersetzen")
+        tapScrolling("Einverstanden und übersetzen")
+        XCTAssertTrue(app.navigationBars["Übersetzung"].waitForExistence(timeout: Self.timeout), "The preview did not open")
+        try audit("Einkaufsliste › Übersetzung")
+    }
+
     /// Einstellungen › Sprachen (content languages), › KI › Spracheingabe und Vorlesen (voice settings), › Erfassen (goal water,
     /// shortcut phrases of G2) and › Einkaufsliste (consent).
     func auditSettings(_ audit: Audit) throws {
@@ -143,6 +160,7 @@ final class AccessibilityAuditRecipesUITests: RecipeScreensAuditCase {
     func testAuditRecipeFolderAndNote() throws { try auditRecipeFolderAndNote(audit) }
     func testAuditCreateRecipe() throws { try auditCreateRecipe(audit) }
     func testAuditShoppingRecipeEntry() throws { try auditShoppingRecipeEntry(audit) }
+    func testAuditShoppingTranslate() throws { try auditShoppingTranslate(audit) }
     func testAuditSettings() throws { try auditSettings(audit) }
 }
 
@@ -158,5 +176,6 @@ final class AccessibilityAuditRecipesLargeTextUITests: RecipeScreensAuditCase {
     func testAuditRecipeFolderAndNote() throws { try auditRecipeFolderAndNote(audit) }
     func testAuditCreateRecipe() throws { try auditCreateRecipe(audit) }
     func testAuditShoppingRecipeEntry() throws { try auditShoppingRecipeEntry(audit) }
+    func testAuditShoppingTranslate() throws { try auditShoppingTranslate(audit) }
     func testAuditSettings() throws { try auditSettings(audit) }
 }

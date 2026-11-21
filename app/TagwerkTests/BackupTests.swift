@@ -548,6 +548,18 @@ struct BackupTests {
         return try JSONSerialization.data(withJSONObject: object)
     }
 
+    @Test func restore_clearsTheSettledShoppingLanguage_soNoCardAppears() throws {
+        let origin = try makeTarget()
+        origin.settings.shoppingLanguage = "en-US"
+        try origin.container.mainContext.save()
+        let target = try makeTarget()
+        target.settings.shoppingItemsLanguage = "de-DE"
+        try target.container.mainContext.save()
+        try target.service.restore(try target.service.inspect(try origin.service.makeBackupData()))
+        #expect(target.settings.shoppingLanguage == "en-US")
+        #expect(target.settings.shoppingItemsLanguage == nil, "device state: the restored list adopts its language instead of offering a translation")
+    }
+
     // MARK: Shopping consent (SPC4b)
 
     @Test func shoppingConsent_roundTripsWithItsVersion() throws {

@@ -35,6 +35,10 @@ final class DemoAITransport: AIHTTPTransport {
             return Self.stream([Self.event(["type": "response.output_text.delta", "delta": recipe]),
                                 Self.event(["type": "response.completed", "response": [:]])], request: request)
         }
+        if let translation = Self.shoppingTranslationAnswer(for: request) {
+            return Self.stream([Self.event(["type": "response.output_text.delta", "delta": translation]),
+                                Self.event(["type": "response.completed", "response": [:]])], request: request)
+        }
         if let sort = Self.shoppingSortAnswer(for: request) {
             return Self.stream([Self.event(["type": "response.output_text.delta", "delta": sort]),
                                 Self.event(["type": "response.completed", "response": [:]])], request: request)
@@ -122,6 +126,25 @@ final class DemoAITransport: AIHTTPTransport {
                       ["name": "Salz", "quantity": "nach Geschmack", "category": "Sonstiges"]],
         ]
         return String(decoding: (try? JSONSerialization.data(withJSONObject: answer)) ?? Data(), as: UTF8.self)
+    }
+
+    /// Shopping translation demo: a few known names go German ⇄ English, every other name comes back unchanged.
+    static func shoppingTranslationAnswer(for request: URLRequest) -> String? {
+        guard let body = request.httpBody,
+              let json = try? JSONSerialization.jsonObject(with: body) as? [String: Any],
+              let format = (json["text"] as? [String: Any])?["format"] as? [String: Any],
+              format["name"] as? String == "shopping_translation" else { return nil }
+        let content = ((json["input"] as? [[String: Any]])?.first?["content"] as? [[String: Any]]) ?? []
+        let text = content.compactMap { $0["text"] as? String }.joined()
+        let sent = (try? JSONSerialization.jsonObject(with: Data(text.utf8)) as? [String: Any]) ?? [:]
+        let toEnglish = (sent["target"] as? String) == "English"
+        let pairs = [("Milch", "Milk"), ("Brot", "Bread"), ("Eier", "Eggs"), ("Äpfel", "Apples")]
+        let dictionary = Dictionary(uniqueKeysWithValues: pairs.map { toEnglish ? ($0.0, $0.1) : ($0.1, $0.0) })
+        let items = (sent["items"] as? [[String: Any]] ?? []).map { item -> [String: Any] in
+            let name = item["text"] as? String ?? ""
+            return ["i": item["i"] as? Int ?? 0, "text": dictionary[name] ?? name]
+        }
+        return String(decoding: (try? JSONSerialization.data(withJSONObject: ["items": items])) ?? Data(), as: UTF8.self)
     }
 
     static func shoppingSortAnswer(for request: URLRequest) -> String? {

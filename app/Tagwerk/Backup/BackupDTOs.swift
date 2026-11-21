@@ -1381,6 +1381,8 @@ struct AppSettingsBackup: Codable, Equatable {
         record.voiceInputEnabled = voiceInputEnabled
         record.voiceExplained = voiceExplained
         record.voiceRecognitionLanguage = voiceRecognitionLanguage
+        // Device state, not part of the backup: the restored list adopts its language again instead of offering a translation.
+        record.shoppingItemsLanguage = nil
         // The answer language of an older backup is derived from the restored dictation language, once.
         record.voiceAnswerLanguage = voiceAnswerLanguage
         record.migrateVoiceAnswerLanguageIfNeeded()
