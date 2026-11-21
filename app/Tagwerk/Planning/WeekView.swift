@@ -161,6 +161,7 @@ struct WeekView: View {
                           onMarkSeries: { markingSeries = event }, onLinkToDeadline: { linkingToDeadline = event },
                           onConfirmUnmark: { unmarking = event })
         if let deadline {
+            Button("Zum Tag springen", systemImage: "arrow.right") { deadlineActions.showDay(deadline.day) }
             Button("Termin zuordnen …", systemImage: "link") { deadlineActions.prepare(deadline) }
         }
     }
