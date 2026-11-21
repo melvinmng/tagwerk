@@ -20,10 +20,13 @@ struct AIPlanningTests {
 
     func planDay(_ day: PlanDay, hours: WorkHours? = WorkHours(startMinutes: 540, endMinutes: 1080),
                  lunch: Range<Int>? = 720..<780, events: [CalendarEvent] = [], blocks: [Range<Int>] = [],
-                 recurring: Int = 0, planned: Int = 0, counted: [String: Int] = [:]) -> PlanInputDay {
-        PlanInputDay(day: day, hours: hours, lunch: lunch, events: events, linkedEventIDs: [], deadlineCalendarIDs: [],
-                     blocks: blocks, recurringMinutes: recurring, plannedMinutes: planned, bufferMinutes: 10,
-                     calendar: calendar, countedTaskMinutes: counted)
+                 lessAvailable: Int = 0, planned: Int = 0, counted: [String: Int] = [:]) -> PlanInputDay {
+        var result = PlanInputDay(day: day, hours: hours, lunch: lunch, events: events, linkedEventIDs: [],
+                                  deadlineCalendarIDs: [], blocks: blocks, untimedPlannedMinutes: planned, bufferMinutes: 10,
+                                  calendar: calendar, countedTaskMinutes: counted)
+        // Shortcut for tests of the load rules: takes working time away without an event or a trip.
+        result.availableMinutes = max(0, result.availableMinutes - lessAvailable)
+        return result
     }
 
     func task(_ name: String, due: DueDate? = nil, minutes: Int? = 60, plannedDay: PlanDay? = nil,
@@ -156,8 +159,8 @@ struct AIPlanningTests {
     }
 
     @Test func validate_overCapacity_rejectsLatest() {
-        // 9–18 minus lunch = 480 min; 300 min recurring and 60 min planned leave 120 min.
-        let day = planDay(today, recurring: 300, planned: 60)
+        // 9–18 minus lunch = 480 min; 300 min less available and 60 min planned leave 120 min.
+        let day = planDay(today, lessAvailable: 300, planned: 60)
         let result = validate(dayOutput([block("b", "16:00", 60), block("a", "14:00", 60), block("c", "11:00", 30)]),
                               input: input(days: [day], tasks: [task("a"), task("b"), task("c")]))
         #expect(Set(acceptedBlocks(result.accepted)) == ["local:a", "local:c"])
@@ -167,7 +170,7 @@ struct AIPlanningTests {
     @Test func validate_blockForTaskAlreadyPlannedThatDay_replacesItsLoad() {
         // The 60 planned minutes are task a itself; giving it a block must not count it twice.
         // Available 180, planned 120 (task a 60 + other 60); without replacing a's load, b would not fit.
-        let day = planDay(today, recurring: 300, planned: 120, counted: ["local:a": 60])
+        let day = planDay(today, lessAvailable: 300, planned: 120, counted: ["local:a": 60])
         let result = validate(dayOutput([block("a", "14:00", 60), block("b", "16:00", 60)]),
                               input: input(days: [day], tasks: [task("a", plannedDay: today), task("b")]))
         #expect(Set(acceptedBlocks(result.accepted)) == ["local:a", "local:b"])
@@ -175,7 +178,7 @@ struct AIPlanningTests {
 
     @Test func validate_blockForDueTodayTask_replacesItsLoad() {
         // Due today without assignment: the day counts it already (openToday), plannedDay is nil.
-        let day = planDay(today, recurring: 300, planned: 90, counted: ["local:a": 30])
+        let day = planDay(today, lessAvailable: 300, planned: 90, counted: ["local:a": 30])
         let result = validate(dayOutput([block("a", "14:00", 60), block("b", "16:00", 60)]),
                               input: input(days: [day], tasks: [task("a", due: DueDate(year: 2026, month: 11, day: 18)), task("b")]))
         #expect(Set(acceptedBlocks(result.accepted)) == ["local:a", "local:b"])
@@ -183,7 +186,7 @@ struct AIPlanningTests {
 
     @Test func validate_blockForUncountedTask_addsFullLoad() {
         // planned 60 belongs to another task; a and b need 120 of 120 free → b no longer fits.
-        let day = planDay(today, recurring: 360, planned: 60)
+        let day = planDay(today, lessAvailable: 360, planned: 60)
         let result = validate(dayOutput([block("a", "14:00", 60), block("b", "16:00", 60)]),
                               input: input(days: [day], tasks: [task("a", plannedDay: today), task("b")]))
         #expect(acceptedBlocks(result.accepted) == ["local:a"])
@@ -191,7 +194,7 @@ struct AIPlanningTests {
 
     @Test func validate_assignDueTodayTaskToToday_addsOnlyDifference() {
         // Today: 120 free, 90 planned of which 60 are task a (due today) → assigning a adds 0.
-        let days = [planDay(today, recurring: 360, planned: 90, counted: ["local:a": 60]), planDay(tomorrow)]
+        let days = [planDay(today, lessAvailable: 360, planned: 90, counted: ["local:a": 60]), planDay(tomorrow)]
         let result = validate(periodOutput([assign("a", "2026-11-18")]),
                               input: periodInput([task("a", due: DueDate(year: 2026, month: 11, day: 18))], days: days))
         #expect(acceptedAssignments(result.accepted) == ["local:a"])
@@ -199,7 +202,7 @@ struct AIPlanningTests {
 
     @Test func validate_overbookedDay_keepsP1BlockThatFitsInTime_andReportsRisk() {
         // Load 160 min on 120 available (overbooked by 40) – but 14:00 is free in time.
-        let day = planDay(today, recurring: 360, planned: 160)
+        let day = planDay(today, lessAvailable: 360, planned: 160)
         var p1 = task("wichtig", minutes: 15)
         p1.priority = .p1
         let result = validate(dayOutput([block("wichtig", "14:00", 15), block("nebensache", "15:00", 30)]),
@@ -210,13 +213,17 @@ struct AIPlanningTests {
         #expect(plan.risks.last == "Danach noch 55 min zu viel.")
     }
 
+    /// The hard time rule follows from the real intervals: the free stretches of the day are what is left after the events
+    /// with buffer, lunch and trips, so blocks beyond them are rejected (reserved recurring effort takes no time).
     @Test func validate_blocksBeyondFreeTime_rejected() {
-        // From 10:00: 10–12 and 13–18 free = 420 min; recurring 360 leaves 60.
-        let day = planDay(today, recurring: 360)
+        // From 10:00 the event 10:00–17:00 (buffer to 17:10) leaves 17:10–18:00 = 50 min.
+        let day = planDay(today, events: [event("Klausur", 10, to: 17)])
+        #expect(freeGaps(day, fromMinutes: nowMinutes).reduce(0) { $0 + $1.count } == 50)
         var a = task("a"); a.priority = .p1
         var b = task("b"); b.priority = .p1
-        let result = validate(dayOutput([block("a", "14:00", 60), block("b", "16:00", 60)]), input: input(days: [day], tasks: [a, b]))
+        let result = validate(dayOutput([block("a", "17:10", 30), block("b", "17:40", 25)]), input: input(days: [day], tasks: [a, b]))
         #expect(acceptedBlocks(result.accepted) == ["local:a"])
+        #expect(result.violations.map(\.reason) == [PlanViolation.Reason.outsideWorkHours])
     }
 
     @Test func dayChange_withoutEffect_isDropped() {
@@ -289,7 +296,7 @@ struct AIPlanningTests {
     }
 
     @Test func validate_assignmentOverCapacity_rejectsLatest() {
-        let days = [planDay(today), planDay(tomorrow, recurring: 360)]
+        let days = [planDay(today), planDay(tomorrow, lessAvailable: 360)]
         let result = validate(periodOutput([assign("a", "2026-11-19"), assign("b", "2026-11-19")]),
                               input: periodInput([task("a", minutes: 90), task("b", minutes: 60)], days: days))
         #expect(acceptedAssignments(result.accepted) == ["local:a"])
@@ -298,7 +305,7 @@ struct AIPlanningTests {
 
     @Test func validate_assignmentUsesModelEstimate_forCapacity() {
         // 120 min free tomorrow; without effort each task would count 30 min, the model says 90.
-        let days = [planDay(today), planDay(tomorrow, recurring: 360)]
+        let days = [planDay(today), planDay(tomorrow, lessAvailable: 360)]
         let output = PlanOutput.period(PeriodPlanOutput(
             assignments: [assign("a", "2026-11-19"), assign("b", "2026-11-19")], unscheduled: [], risks: [],
             estimates: [PlanEstimate(taskId: "local:a", minutes: 90), PlanEstimate(taskId: "local:b", minutes: 90)]))
@@ -316,7 +323,7 @@ struct AIPlanningTests {
     // MARK: Longer days and moves
 
     @Test func dayChange_extendsHours_andMakesRoomForLateBlock() {
-        let day = planDay(today, recurring: 360, planned: 60)  // 120 free, 60 planned → 60 left
+        let day = planDay(today, lessAvailable: 360, planned: 60)  // 120 free, 60 planned → 60 left
         let output = PlanOutput.day(DayPlanOutput(
             blocks: [block("a", "18:00", 90)], unscheduled: [], risks: [], estimates: [], summary: "Voll",
             dayChanges: [PlanDayChange(day: "2026-11-18", start: "09:00", end: "20:00", reason: "Frist")]))
@@ -343,7 +350,7 @@ struct AIPlanningTests {
             PlanDayChange(day: "2026-11-18", start: "08:00", end: "20:00", reason: "Notfall"),
         ]))
         // The day is overbooked, so a longer day has an effect.
-        let result = validate(output, input: input(days: [planDay(today, recurring: 360, planned: 200)], tasks: [task("a")]))
+        let result = validate(output, input: input(days: [planDay(today, lessAvailable: 360, planned: 200)], tasks: [task("a")]))
         guard case .day(let plan) = result.accepted else { return }
         #expect(plan.dayChanges.map(\.start) == ["08:00"])
         #expect(result.violations.map(\.reason) == [PlanViolation.Reason.notAnExtension])
@@ -351,7 +358,7 @@ struct AIPlanningTests {
 
     @Test func move_toLaterDay_relievesToday() {
         // Today: 120 free, 120 planned (task a 60 + b 60) → nothing fits; moving a frees 60.
-        var dayInput = input(days: [planDay(today, recurring: 360, planned: 120, counted: ["local:a": 60, "local:b": 60])],
+        var dayInput = input(days: [planDay(today, lessAvailable: 360, planned: 120, counted: ["local:a": 60, "local:b": 60])],
                              tasks: [task("a", plannedDay: today), task("b", plannedDay: today), task("c")])
         dayInput.laterDays = [planDay(tomorrow)]
         let output = PlanOutput.day(DayPlanOutput(blocks: [block("c", "16:00", 60)], unscheduled: [], risks: [], estimates: [],
@@ -364,7 +371,7 @@ struct AIPlanningTests {
 
     @Test func move_rejectedWhenNotPlannedOrTargetFull() {
         var dayInput = input(days: [planDay(today)], tasks: [task("a"), task("b", plannedDay: today)])
-        dayInput.laterDays = [planDay(tomorrow, recurring: 480)]
+        dayInput.laterDays = [planDay(tomorrow, lessAvailable: 480)]
         let output = PlanOutput.day(DayPlanOutput(blocks: [], unscheduled: [], risks: [], estimates: [], moves: [
             PlanMove(taskId: "local:a", day: "2026-11-19", reason: "r"),
             PlanMove(taskId: "local:b", day: "2026-11-19", reason: "r"),
@@ -470,7 +477,7 @@ struct AIPlanningTests {
     @Test func makePlanInput_week_movableFromOverbookedDay() {
         let full = item("voll")
         let calm = item("ruhig")
-        let days = [planDay(today, recurring: 470, planned: 60), planDay(tomorrow)]
+        let days = [planDay(today, lessAvailable: 470, planned: 60), planDay(tomorrow)]
         let result = makeInput(.week, days: days, tasks: [full, calm],
                                assignments: [full.id: today, calm.id: tomorrow])
         #expect(result.tasks.map(\.title) == ["voll"])
@@ -531,8 +538,8 @@ struct AIPlanningTests {
     @Test func markedEventIsFlaggedAsDeadline() {
         let day = PlanInputDay(day: today, hours: WorkHours(startMinutes: 540, endMinutes: 1080), lunch: nil,
                                events: [event("Klausur", 10, to: 12), event("Vorlesung", 14, to: 15)],
-                               linkedEventIDs: [], deadlineCalendarIDs: [], blocks: [], recurringMinutes: 0,
-                               plannedMinutes: 0, bufferMinutes: 0, calendar: calendar, deadlineEventIDs: ["Klausur"])
+                               linkedEventIDs: [], deadlineCalendarIDs: [], blocks: [], untimedPlannedMinutes: 0,
+                               bufferMinutes: 0, calendar: calendar, deadlineEventIDs: ["Klausur"])
         #expect(day.events.map(\.deadline) == [true, false])
         #expect(day.events[0].busy)
     }
@@ -540,8 +547,8 @@ struct AIPlanningTests {
     @Test func planInputDay_linkedEventCountsNotAsBusy() {
         let day = PlanInputDay(day: today, hours: WorkHours(startMinutes: 540, endMinutes: 1080), lunch: nil,
                                events: [event("Linked", 14, to: 15), event("Other", 16, to: 17)],
-                               linkedEventIDs: ["Linked"], deadlineCalendarIDs: [], blocks: [], recurringMinutes: 0,
-                               plannedMinutes: 0, bufferMinutes: 0, calendar: calendar)
+                               linkedEventIDs: ["Linked"], deadlineCalendarIDs: [], blocks: [], untimedPlannedMinutes: 0,
+                               bufferMinutes: 0, calendar: calendar)
         #expect(day.busy == [960..<1020])
         #expect(day.availableMinutes == 480)
     }
@@ -628,7 +635,7 @@ struct AIPlanningTests {
     /// A day plan for `tomorrow` with no free time, so only core tasks are selected beyond eight fillers.
     func tomorrowInput(_ tasks: [TaskItem], assignments: [TaskID: PlanDay] = [:], earliestWorkDay: PlanDay? = nil,
                        blocked: [TaskID: Int] = [:]) -> PlanInput {
-        makePlanInput(scope: .day, days: [planDay(tomorrow, recurring: 480)], tasks: tasks, assignments: assignments,
+        makePlanInput(scope: .day, days: [planDay(tomorrow, lessAvailable: 480)], tasks: tasks, assignments: assignments,
                       anchors: [:], today: today, nowMinutes: nowMinutes, timeZoneID: "Europe/Berlin",
                       defaultTaskMinutes: 30, blockedMinutes: blocked, earliestWorkDay: earliestWorkDay, calendar: calendar)
     }
