@@ -831,10 +831,14 @@ final class AssistantModel {
     }
 
     private func makeEditor(for call: ToolCall) -> (any ProposalEditor)? {
-        let current = call
+        ProposalEditors.make(for: call, context: proposalEditorContext())
+    }
+
+    /// What the editors need from the app; the suggestions of a thoughts note use the same one.
+    func proposalEditorContext() -> ProposalEditorContext {
         let tools = tools
         let planning = planning
-        let context = ProposalEditorContext(
+        return ProposalEditorContext(
             calendar: planning.calendar, now: now, gitHubDirectory: gitHubDirectory,
             writableCalendars: { planning.writableCalendars }, shoppingItemName: shoppingItemName,
             assignment: { key in
@@ -843,8 +847,10 @@ final class AssistantModel {
                 }
                 return tools.foundIssues[key].map { ProposalAssignment(repository: $0.repository, current: $0.assignees) }
             })
-        return ProposalEditors.make(for: current, context: context)
     }
+
+    /// True while the open call differs from what the model proposed.
+    func isAdjusted(_ call: ToolCall) -> Bool { conversation?.isAdjusted(call) == true }
 
     // MARK: Follow-up about one card (plan ki-vorschlaege-anpassen, task B4)
 

@@ -28,6 +28,11 @@ final class NoteSuggestionModel {
         /// Repository and projects of an issue; `nil` while the user has to choose them.
         var target: AppTools.GitHubTarget?
 
+        /// Who last changed the open card; `nil` for a card as the model proposed it.
+        var mark: ProposalMark?
+        /// What the model proposed, for a card the user adjusted (or ChatGPT revised); `nil` for an unchanged card.
+        var proposed: ToolCall?
+
         /// A GitHub issue without a resolved target: it cannot be confirmed before the user chooses one.
         var needsTarget: Bool { isIssue && target == nil }
     }
@@ -43,6 +48,8 @@ final class NoteSuggestionModel {
     @ObservationIgnored private let hasConsent: @MainActor () -> Bool
     @ObservationIgnored private let context: @MainActor () -> NoteSuggestionContext
     @ObservationIgnored private let gitHubDirectory: @MainActor () -> (any GitHubDirectory)?
+    /// What the editors of the sheet "Vorschlag anpassen" need; without it no card offers "Anpassen".
+    @ObservationIgnored private let editorContext: (@MainActor () -> ProposalEditorContext)?
     @ObservationIgnored private let now: () -> Date
     @ObservationIgnored private let timeout: Duration
     /// Counts resets and requests; an answer that arrives for an older count is dropped (review focus 5).
@@ -52,7 +59,8 @@ final class NoteSuggestionModel {
     init(responder: any ResponseStreaming, model: @escaping @MainActor () async throws -> String, tools: any ToolHandler,
          describer: ActionCardDescriber, notes: NoteStore, hasConsent: @escaping @MainActor () -> Bool,
          context: @escaping @MainActor () -> NoteSuggestionContext, now: @escaping () -> Date = Date.init,
-         timeout: Duration = .seconds(60), gitHubDirectory: @escaping @MainActor () -> (any GitHubDirectory)? = { nil }) {
+         timeout: Duration = .seconds(60), gitHubDirectory: @escaping @MainActor () -> (any GitHubDirectory)? = { nil },
+         editorContext: (@MainActor () -> ProposalEditorContext)? = nil) {
         self.responder = responder
         self.model = model
         self.tools = tools
@@ -63,6 +71,7 @@ final class NoteSuggestionModel {
         self.now = now
         self.timeout = timeout
         self.gitHubDirectory = gitHubDirectory
+        self.editorContext = editorContext
     }
 
     var openCount: Int { cards.filter { $0.status == .pending }.count }
@@ -128,12 +137,16 @@ final class NoteSuggestionModel {
 
     /// The card of an accepted call; for an issue the target is resolved against the catalog first.
     private func makeCard(_ call: ToolCall, catalog: GitHubCatalog?) -> Card {
-        guard NoteSuggestionRules.isIssue(call), let catalog else {
-            return Card(call: call, text: describer.describe(call), status: .pending, time: nil)
+        var card: Card
+        if NoteSuggestionRules.isIssue(call), let catalog {
+            let draft = NoteSuggestionRules.issueDraft(for: call, catalog: catalog)
+            card = Card(call: draft.call, text: issueDescriber.describe(draft.call), status: .pending, time: nil, isIssue: true,
+                        target: draft.target)
+        } else {
+            card = Card(call: call, text: describer.describe(call), status: .pending, time: nil)
         }
-        let draft = NoteSuggestionRules.issueDraft(for: call, catalog: catalog)
-        return Card(call: draft.call, text: issueDescriber.describe(draft.call), status: .pending, time: nil, isIssue: true,
-                    target: draft.target)
+        card.text = describe(card)
+        return card
     }
 
     /// Describes an issue without its target: the card shows that in a row of its own.
@@ -141,6 +154,21 @@ final class NoteSuggestionModel {
         var copy = describer
         copy.showsIssueTarget = false
         return copy
+    }
+
+    /// The texts of a card from its current call: the mark and the proposal of the model for an adjusted card, and
+    /// whether it offers "Anpassen".
+    private func describe(_ card: Card) -> AssistantModel.ActionCard {
+        let describer = card.isIssue ? issueDescriber : self.describer
+        var text = describer.describe(card.call)
+        guard card.status == .pending else { return text }
+        text.mark = card.mark
+        if let proposed = card.proposed {
+            text.mark = card.mark ?? .byUser
+            text.proposedChange = describer.describe(proposed).change
+        }
+        text.canAdjust = canAdjust(card)
+        return text
     }
 
     /// Rewrites repository, projects and people of a pending issue card after the user chose them, and describes it again.
@@ -154,8 +182,8 @@ final class NoteSuggestionModel {
         guard let data = try? JSONSerialization.data(withJSONObject: arguments, options: [.sortedKeys, .withoutEscapingSlashes]) else { return }
         let call = ToolCall(id: cards[index].call.id, name: cards[index].call.name, arguments: data)
         cards[index].call = call
-        cards[index].text = issueDescriber.describe(call)
         cards[index].target = AppTools.GitHubTarget(repository: repository, projectIDs: projectIDs)
+        cards[index].text = describe(cards[index])
     }
 
     /// The model of the sheet "Ziel wählen" for a pending issue card; `nil` for any other card or without a stored catalog.
@@ -179,6 +207,72 @@ final class NoteSuggestionModel {
     func targetValue(of card: Card) -> String? {
         guard let target = card.target, let catalog = gitHubDirectory()?.storedCatalog else { return nil }
         return IssueTargetText.value(of: target, in: catalog)
+    }
+
+    // MARK: Adjusting (plan ki-vorschlaege-anpassen, task C1)
+
+    /// True for an open card of a function with an editor; the voice-free sheet needs the context of the app.
+    private func canAdjust(_ card: Card) -> Bool {
+        guard let editorContext, card.status == .pending, NoteSuggestionRules.allowedTools.contains(card.call.name) else { return false }
+        return ProposalEditors.make(for: card.call, context: editorContext()) != nil
+    }
+
+    /// Writes the values into an open card, by the user (`.byUser`) or taken from an answer of ChatGPT (`.byAssistant`), like
+    /// `setTarget` does for the target: the call is rewritten and the card is described again. Nothing is sent or run; the card
+    /// is carried out by "Bestätigen" only, with the values it shows now. The target of an issue stays as it is unless the new
+    /// values name another one. Returns the new call, or `nil` for a card that is not open.
+    @discardableResult
+    func adjust(_ call: ToolCall, arguments: Data, mark: ProposalMark = .byUser) -> ToolCall? {
+        guard let index = cards.firstIndex(where: { $0.id == call.id }), cards[index].status == .pending,
+              let new = ProposalArguments.decode(arguments) else { return nil }
+        let before = cards[index]
+        let original = before.proposed ?? before.call
+        let adjusted = ToolCall(id: before.call.id, name: before.call.name, arguments: arguments)
+        let isProposal = (ProposalArguments.decode(original.arguments) as NSDictionary?)?.isEqual(to: new) == true
+        cards[index].call = adjusted
+        // Adjusting back to the proposal is no adjustment.
+        cards[index].proposed = isProposal ? nil : original
+        cards[index].mark = isProposal ? nil : mark
+        if before.isIssue { cards[index].target = target(of: new, replacing: before) }
+        cards[index].text = describe(cards[index])
+        return adjusted
+    }
+
+    /// Puts the proposal of the model back; `nil` when the card was not adjusted.
+    @discardableResult
+    func resetAdjustment(_ call: ToolCall) -> ToolCall? {
+        guard let index = cards.firstIndex(where: { $0.id == call.id }), cards[index].status == .pending,
+              let original = cards[index].proposed else { return nil }
+        return adjust(call, arguments: original.arguments)
+    }
+
+    func isAdjusted(_ call: ToolCall) -> Bool {
+        cards.first { $0.id == call.id }?.proposed != nil
+    }
+
+    /// The target of an issue after its arguments changed: unchanged repository and projects keep what was resolved; other
+    /// values are resolved against the stored catalog, and a target that cannot be resolved is chosen again.
+    private func target(of arguments: [String: Any], replacing card: Card) -> AppTools.GitHubTarget? {
+        let repository = (arguments["repository"] as? String).flatMap { $0.isEmpty ? nil : $0 }
+        let projectIDs = arguments["project_ids"] as? [String]
+        if let target = card.target, target.repository == repository, projectIDs == nil || projectIDs == target.projectIDs { return target }
+        guard let repository, let catalog = gitHubDirectory()?.storedCatalog,
+              case .success(let resolved) = AppTools.gitHubTarget(repository: repository, projectIDs: projectIDs, catalog: catalog) else { return nil }
+        return resolved
+    }
+
+    /// The editor for an open card; `nil` for a function without one and for a card that is not open.
+    func proposalEditor(for call: ToolCall) -> (any ProposalEditor)? {
+        guard let editorContext, let card = cards.first(where: { $0.id == call.id }), card.status == .pending,
+              NoteSuggestionRules.allowedTools.contains(card.call.name) else { return nil }
+        return ProposalEditors.make(for: card.call, context: editorContext())
+    }
+
+    /// An editor that starts from other arguments than the card holds, e.g. the answer of ChatGPT to a follow-up.
+    func proposalEditor(for call: ToolCall, arguments: Data) -> (any ProposalEditor)? {
+        guard let editorContext, let card = cards.first(where: { $0.id == call.id }), card.status == .pending,
+              NoteSuggestionRules.allowedTools.contains(card.call.name) else { return nil }
+        return ProposalEditors.make(for: ToolCall(id: card.call.id, name: card.call.name, arguments: arguments), context: editorContext())
     }
 
     /// Runs the function of a card once; no further request follows. An issue without a target is not run.
@@ -292,5 +386,16 @@ final class NoteSuggestionModel {
         case .usageLimit: String(localized: "ChatGPT nimmt gerade keine Anfragen an. Versuch es später noch einmal.")
         default: String(localized: "Die Vorschläge konnten nicht geholt werden. Versuch es noch einmal.")
         }
+    }
+}
+
+// MARK: Sheet "Vorschlag anpassen"
+
+extension NoteSuggestionModel: CardAdjusting {
+    /// The follow-up about one card arrives with task C2; until then the sheet shows only the fields.
+    var cardFollowUpHasConsent: Bool { false }
+
+    func reviseCard(_ call: ToolCall, current: Data, comment: String) async throws -> CardReviser.Answer {
+        throw CardReviser.Failure.consentMissing
     }
 }

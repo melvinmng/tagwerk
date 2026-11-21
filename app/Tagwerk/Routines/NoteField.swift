@@ -163,6 +163,8 @@ struct NoteField: View {
     @State private var asksConsent = false
     /// The issue card whose target is being chosen.
     @State private var targetCardID: String?
+    /// The card whose sheet "Vorschlag anpassen" is open.
+    @State private var adjustingCardID: String?
 
     private var isDreamLog: Bool { model.kind == .dream }
 
@@ -222,6 +224,11 @@ struct NoteField: View {
                     IssueTargetSheet(model: sheet) { repository, projectIDs, assignees in
                         suggestions.setTarget(request.id, repository: repository, projectIDs: projectIDs, assignees: assignees)
                     }
+                }
+            }
+            .sheet(item: Binding(get: { adjustingCardID.map(TargetRequest.init) }, set: { adjustingCardID = $0?.id })) { request in
+                if let suggestions, let card = suggestions.cards.first(where: { $0.id == request.id }) {
+                    ProposalAdjustSheet(assistant: suggestions, call: card.call)
                 }
             }
             .sheet(isPresented: $asksConsent) {
@@ -301,7 +308,8 @@ struct NoteField: View {
                                    onConfirm: { Task { await suggestions.confirm(card.id) } },
                                    onDecline: { suggestions.decline(card.id) },
                                    canConfirm: !card.needsTarget,
-                                   accessory: targetRow(card, in: suggestions))
+                                   accessory: targetRow(card, in: suggestions),
+                                   onAdjust: card.status == .pending && card.text.canAdjust ? { adjustingCardID = card.id } : nil)
                 }
                 // Cards that wait for a target are not part of it (review focus 10).
                 if suggestions.confirmableCount > 1 {
