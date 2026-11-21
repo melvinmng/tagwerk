@@ -3543,6 +3543,16 @@
         }
       }
     },
+    "Anderen Tag einplanen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plan for another day"
+          }
+        }
+      }
+    },
     "Anderer Tag": {
       "localizations": {
         "en": {
@@ -7059,6 +7069,16 @@
         }
       }
     },
+    "Eingeplant für %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Planned for %@"
+          }
+        }
+      }
+    },
     "Einheit": {
       "localizations": {
         "en": {
@@ -8777,6 +8797,46 @@
         }
       }
     },
+    "Für heute eingeplant": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Planned for today"
+          }
+        }
+      }
+    },
+    "Für heute einplanen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plan for today"
+          }
+        }
+      }
+    },
+    "Für morgen eingeplant": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Planned for tomorrow"
+          }
+        }
+      }
+    },
+    "Für morgen einplanen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plan for tomorrow"
+          }
+        }
+      }
+    },
     "Ganzen Wochenrückblick öffnen": {
       "localizations": {
         "en": {
@@ -9938,6 +9998,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "There’s no note in the “Recipes” folder yet."
+          }
+        }
+      }
+    },
+    "Im Ordner zeigen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show in folder"
           }
         }
       }

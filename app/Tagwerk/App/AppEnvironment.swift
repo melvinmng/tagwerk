@@ -519,6 +519,23 @@ final class AppEnvironment {
         requestedTab = 1
     }
 
+    /// Opens a notes list in the tab "Aufgaben", on top of the folder overview. Replaces whatever was pushed there.
+    /// A locked folder asks for Face ID in its list like at every other opening.
+    func showNotes(_ scope: NotesScope) {
+        tasksPath = [.notes, .notesFolder(scope)]
+        requestedTab = 1
+    }
+
+    /// The list "Im Ordner zeigen" opens for a note: its folder; "Notizen" for a note without a folder or whose folder is
+    /// gone (where `NoteStore` lists it, but only own notes, not thought notes); "Zuletzt gelöscht" for a note in the trash.
+    /// "Alle Notizen" is the fallback for a note that does not exist or would not appear in "Notizen".
+    func notesScope(ofNote noteID: UUID) -> NotesScope {
+        guard let note = notes.note(id: noteID) else { return .all }
+        if note.deletedAt != nil { return .trash }
+        if let folderID = note.folderID, notes.folder(id: folderID) != nil { return .folder(folderID) }
+        return note.kind == .free ? .standard : .all
+    }
+
     /// The only place that changes the shopping list. Everything that shows reminders as tasks follows at once:
     /// the task list, the plan, the notifications and the widget snapshot.
     func setShoppingList(_ id: String?) async {

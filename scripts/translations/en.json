@@ -2068,5 +2068,12 @@
   "Höchstens fünf Notizen auf einmal.": "At most five notes at once.",
   "Notiz nicht gefunden.": "Note not found.",
   "Geschlossene Issues lassen sich hier nicht zuweisen.": "Closed issues cannot be assigned here.",
-  "Abgehakte Punkte erinnern an dem Abend nicht mehr. Tagwerk plant die Erinnerungen für die nächsten 3 Tage und füllt sie nach, sobald du die App öffnest.": "Checked items no longer remind you that evening. Tagwerk plans the reminders for the next 3 days and tops them up whenever you open the app."
+  "Abgehakte Punkte erinnern an dem Abend nicht mehr. Tagwerk plant die Erinnerungen für die nächsten 3 Tage und füllt sie nach, sobald du die App öffnest.": "Checked items no longer remind you that evening. Tagwerk plans the reminders for the next 3 days and tops them up whenever you open the app.",
+  "Anderen Tag einplanen": "Plan for another day",
+  "Eingeplant für %@": "Planned for %@",
+  "Für heute eingeplant": "Planned for today",
+  "Für heute einplanen": "Plan for today",
+  "Für morgen eingeplant": "Planned for tomorrow",
+  "Für morgen einplanen": "Plan for tomorrow",
+  "Im Ordner zeigen": "Show in folder"
 }
