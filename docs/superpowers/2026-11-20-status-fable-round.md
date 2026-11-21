@@ -79,7 +79,7 @@ Issues: #254 Ernährung, Gewicht und Ziele (Entscheidungen als Kommentar), #255 
 
 **Gemergt am 21.11.:** #240–#249 und #251, #252 in der bestätigten Reihenfolge (`main` = `8326a3c`, identisch mit dem getesteten Gesamtstand, `test-all` grün). Zahlenprüfung in #241 gelockert (`c72b6dd`).
 
-1. **Läuft (Sonnet):** #253 auf `main` bringen (Konflikte, `SearchUITests` auf neuen Menütitel), danach `feat/g3-github-status-g5`: G5, GH9-Fußtext vs. „Ready“, englische Anführungszeichen, L5-Assistentenzeile, „Project“-Reste aus #242 → „Projekt“
+1. **Gemergt:** #257 (G5, GH9-Fußtext, VoiceOver-Anführungszeichen, L5-Zeile, „Projekt“ auch in Swift-Texten geprüft), `main` = `85c982b`. **Läuft (Sonnet):** #253 stabilisieren (Fokus-Leisten-Test ohne Zeitannahme, Hänger „Wait for app to idle“ prüfen) bis grün, dann #256 mit #253 zusammenführen und `PlanHeaderLayoutUITests` kürzen. Merge-Reihenfolge: #253, dann #256. Neuer Audit-Befund für #250: Kontrast „Vorgelesen wird mit den Stimmen …“ (KI › Sprache). Veraltete Katalogschlüssel mit „Project“ (10 + 2, stale) bei Gelegenheit entfernen.
 1a. #250: läuft; Plan fertig (`docs/superpowers/plans/2026-11-21-issue-250-audits-strings.md`, offene Fragen nach Empfehlung); Umsetzung durch Sonnet auf `fix/ui-audits-and-strings` ab `origin/main`, nächster freier Platz nach dem Integrationsauftrag
 2. G1 Strang E (Basis `fix/ui-test-stability`)
 
