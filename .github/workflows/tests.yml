@@ -14,6 +14,20 @@ name: Tests
 # A pull request that changes only documentation (docs/**, *.md, TODO.md) runs no tests: the jobs below still start
 # and finish green, so the checks stay usable as required status checks. The filter lives in the "changes" job and
 # not in on.paths, because a workflow that is never triggered would leave a required check pending forever.
+# Build cache: a cold build takes about 34 minutes (ui) and 37 minutes (fast), so DerivedData is cached per job
+# (restore always, save only for runs on main, see the cache steps below) and the sources get the modification time of
+# their last commit, which lets Xcode skip everything that did not change. Pull requests restore the cache that main
+# saved and build only the difference.
+# Time zone: the jobs run in Europe/Berlin like the developer machines, because the tests expect German dates and the
+# runners use UTC.
+# Durations (first run, cold build, runner xcode-27 with 3 cores and 7 GB RAM) and the timeouts derived from them:
+#   fast  37 min in total: packages 4.5 + 5.4 + 5.0 + 3.7 + 6.5 min (almost only compiling), app scheme about 10 min
+#         -> job 55 min, test step 45 min
+#   ui    54 min in total: about 34 min cold build (app and UI test runner), then 20.5 min of UI tests (27 tests, full
+#         set, no retries); the pull request set is smaller, but may run retries
+#         -> pull request: job 80 min, test step 70 min; nightly and manual (full set): job 90 min, test step 80 min
+# The job limit is 10 minutes above the step limit, so the log and artifact upload and the cache save still run when
+# the test step hits its limit. A run with a warm cache needs well below these limits; they must also fit a cold run.
 # No secrets are used: everything runs in the iOS Simulator without code signing, with demo data only.
 
 on:
@@ -128,10 +142,14 @@ jobs:
     needs: changes
     # Xcode-based runner image: macOS 27, Xcode 27.x, Apple silicon only (3 cores, 7 GB RAM on public repositories).
     runs-on: xcode-27
-    # The first CI run had not finished when these limits were set (no measured CI durations yet). They follow the
-    # plan's guide values: at most 60 minutes for ui, and fast gets two thirds of that. The step limit stays below the
-    # job limit, so the artifact upload still runs when the tests hang. Adjust to twice the measured duration.
-    timeout-minutes: ${{ matrix.job_timeout }}
+    # Limits from the measured cold run, see the header. The nightly and manual runs use the full UI test set and have
+    # their own, higher limits (the fast job is not affected by the test set, so both values are equal there).
+    timeout-minutes: ${{ github.event_name == 'pull_request' && matrix.job_timeout || matrix.job_timeout_full }}
+    env:
+      # The simulator follows the time zone of the host. TZ sets it for the build and for xcodebuild; TEST_RUNNER_TZ
+      # is passed (without the prefix) to the test runner process, which xcodebuild does not give other variables.
+      TZ: Europe/Berlin
+      TEST_RUNNER_TZ: Europe/Berlin
     strategy:
       fail-fast: false
       matrix:
@@ -139,13 +157,17 @@ jobs:
           - name: fast
             skip_ui_tests: "1"
             only_ui_tests: ""
-            job_timeout: 40
-            step_timeout: 35
+            job_timeout: 55
+            job_timeout_full: 55
+            step_timeout: 45
+            step_timeout_full: 45
           - name: ui
             skip_ui_tests: ""
             only_ui_tests: "1"
-            job_timeout: 60
-            step_timeout: 55
+            job_timeout: 80
+            job_timeout_full: 90
+            step_timeout: 70
+            step_timeout_full: 80
 
     # Without tests to run (documentation-only pull request, nightly run without new commits) every step except the
     # summary below is skipped and the job still ends green, so "Tests (fast)" and "Tests (ui)" always report a result.
@@ -162,9 +184,17 @@ jobs:
         if: needs.changes.outputs.run_tests == 'true'
         uses: actions/checkout@v7
         with:
+          # The full history (about 8 MB) is needed to restore the modification times of the sources.
+          fetch-depth: 0
           persist-credentials: false
 
+      - name: Restore the modification times of the sources
+        if: needs.changes.outputs.run_tests == 'true'
+        # Every checked-out file would otherwise get the current time and be compiled again, cached or not.
+        run: /usr/bin/python3 -I scripts/ci-restore-mtimes.py
+
       - name: Select Xcode and verify the toolchain
+        id: toolchain
         if: needs.changes.outputs.run_tests == 'true'
         run: |
           set -euo pipefail
@@ -202,6 +232,21 @@ jobs:
           fi
           df -h /
 
+          # The cache key contains the runner image version, so a new image does not reuse an older build.
+          echo "image_version=${ImageVersion:-unknown}" >> "$GITHUB_OUTPUT"
+          # The app build folder is fixed, so the cached folder does not depend on the checkout key that
+          # scripts/test-env.sh derives from the checkout path. The package stages build in the default
+          # DerivedData folder (xcodebuild is called there without -derivedDataPath).
+          echo "TAGWERK_TEST_DERIVED_DATA=$HOME/Library/Developer/Tagwerk/DerivedData-ci" >> "$GITHUB_ENV"
+
+      - name: Set the time zone
+        if: needs.changes.outputs.run_tests == 'true'
+        # TZ and TEST_RUNNER_TZ (job environment) cover the build and the test runner. Setting the system time zone as
+        # well is best effort and also covers processes that do not inherit the environment (the app in the UI tests).
+        run: |
+          sudo systemsetup -settimezone "$TZ" || echo "::warning::Could not set the system time zone; only TZ and TEST_RUNNER_TZ apply."
+          echo "System time zone: $(readlink /etc/localtime || echo unknown), TZ=$TZ, now: $(date)"
+
       - name: Install XcodeGen ${{ env.XCODEGEN_VERSION }}
         if: needs.changes.outputs.run_tests == 'true'
         run: |
@@ -218,10 +263,27 @@ jobs:
           echo "$install_dir/xcodegen/bin" >> "$GITHUB_PATH"
           "$install_dir/xcodegen/bin/xcodegen" --version
 
+      - name: Restore the build cache
+        id: build_cache
+        if: needs.changes.outputs.run_tests == 'true'
+        uses: actions/cache/restore@v6
+        with:
+          path: |
+            ~/Library/Developer/Tagwerk/DerivedData-ci
+            ~/Library/Developer/Xcode/DerivedData
+          # Exact key: toolchain, image, manifests and commit; it never exists for a new commit, so the restore keys
+          # below pick the newest cache that main saved: same manifests first, then same image, then same Xcode.
+          key: derived-${{ matrix.name }}-${{ env.XCODE_BUILD_VERSION }}-${{ steps.toolchain.outputs.image_version }}-${{ hashFiles('app/project.yml', 'app/Packages/*/Package.swift', 'app/Packages/*/Package.resolved') }}-${{ github.sha }}
+          restore-keys: |
+            derived-${{ matrix.name }}-${{ env.XCODE_BUILD_VERSION }}-${{ steps.toolchain.outputs.image_version }}-${{ hashFiles('app/project.yml', 'app/Packages/*/Package.swift', 'app/Packages/*/Package.resolved') }}-
+            derived-${{ matrix.name }}-${{ env.XCODE_BUILD_VERSION }}-${{ steps.toolchain.outputs.image_version }}-
+            derived-${{ matrix.name }}-${{ env.XCODE_BUILD_VERSION }}-
+
       - name: Run test stages (${{ matrix.name }})
+        id: tests
         if: needs.changes.outputs.run_tests == 'true'
         # Limits the test step below the job timeout, so the artifact upload still runs when the tests hang.
-        timeout-minutes: ${{ matrix.step_timeout }}
+        timeout-minutes: ${{ github.event_name == 'pull_request' && matrix.step_timeout || matrix.step_timeout_full }}
         env:
           TAGWERK_SKIP_UI_TESTS: ${{ matrix.skip_ui_tests }}
           TAGWERK_ONLY_UI_TESTS: ${{ matrix.only_ui_tests }}
@@ -241,10 +303,27 @@ jobs:
           UI_TEST_SET: ${{ github.event_name == 'pull_request' && 'pr' || 'full' }}
           UI_TEST_RETRIES: ${{ github.event_name == 'pull_request' && '1' || '' }}
           RETRIED_LIST: ${{ runner.temp }}/tagwerk-test-logs/retried-ui-tests.md
+          LOG_DIR: ${{ runner.temp }}/tagwerk-test-logs
+          CACHE_MATCHED_KEY: ${{ steps.build_cache.outputs.cache-matched-key }}
         run: |
           {
             echo "### Tests ($JOB_NAME)"
             echo "Result: $JOB_STATUS"
+            # Shows whether the build cache pays off: which cache was restored and how many compile steps still ran.
+            # A warm cache needs few compile steps; a count close to a cold run means the cache did not take effect.
+            echo
+            echo "Build cache restored: ${CACHE_MATCHED_KEY:-none (cold build)}"
+            for folder in "$HOME/Library/Developer/Tagwerk/DerivedData-ci" "$HOME/Library/Developer/Xcode/DerivedData"; do
+              if [[ -d "$folder" ]]; then
+                echo "- ${folder/#$HOME/~}: $(du -sh "$folder" | cut -f1)"
+              fi
+            done
+            for log in "$LOG_DIR"/*.log; do
+              [[ -f "$log" ]] || continue
+              compile_steps=$(grep -cE '^(SwiftCompile|CompileSwift|CompileC|SwiftDriver) ' "$log" || true)
+              echo "- $(basename "$log" .log): $compile_steps compile steps"
+            done
+            echo
             if [[ "$JOB_NAME" == "ui" ]]; then
               echo "UI test set: $UI_TEST_SET, retries: ${UI_TEST_RETRIES:-none}"
               if [[ -f "$RETRIED_LIST" ]]; then
@@ -266,3 +345,56 @@ jobs:
             ${{ runner.temp }}/tagwerk-test-results
           if-no-files-found: warn
           retention-days: 7
+
+      # Only runs on main (nightly and manual runs) write the cache. A cache written by a pull request is only visible
+      # to that pull request, and every push would add another multi-gigabyte entry to the 10 GB limit of the
+      # repository, so pull requests only restore the newest cache of main. The cache is also saved after failed
+      # tests: the build state is valid, and the UI job would otherwise never save while an audit fails.
+      - name: Shrink the build cache
+        if: ${{ !cancelled() && needs.changes.outputs.run_tests == 'true' && github.ref == 'refs/heads/main' && github.event_name != 'pull_request' }}
+        run: |
+          # The index and the logs are not needed to build; they only take space.
+          for folder in "$HOME/Library/Developer/Tagwerk/DerivedData-ci" "$HOME/Library/Developer/Xcode/DerivedData"; do
+            [[ -d "$folder" ]] || continue
+            rm -rf "$folder"/Index.noindex "$folder"/*/Index.noindex "$folder"/Logs "$folder"/*/Logs
+            echo "${folder/#$HOME/~}: $(du -sh "$folder" | cut -f1)"
+          done
+
+      - name: Save the build cache
+        if: ${{ !cancelled() && needs.changes.outputs.run_tests == 'true' && github.ref == 'refs/heads/main' && github.event_name != 'pull_request' }}
+        uses: actions/cache/save@v6
+        with:
+          path: |
+            ~/Library/Developer/Tagwerk/DerivedData-ci
+            ~/Library/Developer/Xcode/DerivedData
+          key: derived-${{ matrix.name }}-${{ env.XCODE_BUILD_VERSION }}-${{ steps.toolchain.outputs.image_version }}-${{ hashFiles('app/project.yml', 'app/Packages/*/Package.swift', 'app/Packages/*/Package.resolved') }}-${{ github.sha }}
+
+  prune-caches:
+    name: Prune build caches
+    needs: tests
+    # Keeps the newest two build caches per job on main. Eviction by the 10 GB limit removes the least recently used
+    # entries anyway; this keeps the list short and avoids evicting a cache that pull requests still restore.
+    # Separate job on a Linux runner, because deleting caches needs the actions: write permission, which the job
+    # that builds the code should not have.
+    if: ${{ !cancelled() && github.ref == 'refs/heads/main' && github.event_name != 'pull_request' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      actions: write
+    steps:
+      - name: Delete older caches
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          # Keys look like derived-<job>-<xcode build>-<image>-<hash>-<sha>; the job name is the second field.
+          caches=$(gh cache list --repo "$REPOSITORY" --ref refs/heads/main --key derived- --sort created_at --order desc \
+            --limit 100 --json id,key)
+          stale_ids=$(jq -r 'group_by(.key | split("-")[1]) | map(.[2:]) | flatten | .[].id' <<<"$caches")
+          for id in $stale_ids; do
+            echo "Deleting cache $id"
+            gh cache delete "$id" --repo "$REPOSITORY"
+          done
+          echo "Kept the newest two caches per job; deleted $(wc -w <<<"$stale_ids") older ones."
