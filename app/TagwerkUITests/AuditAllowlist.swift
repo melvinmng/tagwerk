@@ -302,37 +302,55 @@ enum AuditAllowlist {
     }
 
     private static func isAccepted(_ issue: XCUIAccessibilityAuditIssue, element: XCUIElement?) -> Bool {
-        let accepted = matchesAllowlist(issue, element: element)
-        // Collect mode lists the findings that the allowlist does not cover yet; nothing fails.
+        let coverage = coverage(of: issue, element: element)
+        let accepted = coverage != .none
+        // Collect mode lists the findings that the allowlist does not cover yet; nothing fails. With `AUDIT_COLLECT_ALL=1`
+        // every finding is listed, the accepted ones with the entry and the pattern that covers them.
         if collectsFindings {
-            if !accepted { record(issue, element: element) }
+            if !accepted || collectsAll { record(issue, element: element, coverage: coverage) }
             return true
         }
         return accepted
     }
 
-    private static func matchesAllowlist(_ issue: XCUIAccessibilityAuditIssue, element: XCUIElement?) -> Bool {
-        // Findings without an element cannot be matched by label; only the ones named here are accepted, per screen.
-        guard let element else {
-            // Reason: the audit reports one clipped text without an element (frame 0×0) in the note list; nothing on the
-            // screen is cut off visually. Stays on the device test list (large text). The recipe folder is a note list with the same
-            // system search bar and reports the same single finding for the "UISearchBarTextField".
-            // The input of "Rezept mit ChatGPT anlegen" (text field, photos, link) reports two "Potentially inaccessible text" findings
-            // (element detection) without an element in this environment, also without the share choice; it reproduces on the code before
-            // that change; the element cannot be resolved. Stays on the device test list (VoiceOver).
-            if issue.auditType == .elementDetection { return currentScreen == "Rezept anlegen (Eingabe)" }
-            // The card of "Artikel übersetzen" also reports one "nearly passed" contrast finding without an element (the grey second line or the
-            // button on the material of the card; the same texts are reported with their frames and covered by the entries below).
-            if issue.auditType == .contrast { return currentScreen == "Einkaufsliste › Karte „übersetzen“" }
-            guard issue.auditType == .textClipped else { return false }
-            // The card of "Artikel übersetzen" reports two clipped texts without an element (frame 0×0) in the default size; its texts are
-            // reported with their own frames and covered by the entries below (the card is a plain stack of texts and buttons, nothing is cut).
-            // "Planen (Tag)" at the default size: once the screen has settled, the hour grid has scrolled to "now" (realign on "Heute") and the
-            // suggestion card above it ("Derselbe Termin?") lies partly behind the bar. The audit reports the cut card text as "may be clipped"
-            // without an element (frame 0×0); the screenshot of the run shows the text only scrolled under the bar, not cut in its own frame.
-            return currentScreen == "Notizenliste" || currentScreen == "Einkaufsliste › Karte „übersetzen“" || currentScreen == "Planen (Tag)"
-                || (currentScreen == "Rezepte" && issue.detailedDescription.contains("UISearchBarTextField"))
-        }
+    /// What covers a finding: an entry of the list (index and the first pattern that matched), one of the fixed rules for findings
+    /// without an element, or nothing.
+    enum Coverage: Equatable {
+        case entry(index: Int, pattern: String)
+        case elementlessRule
+        case none
+    }
+
+    private static func coverage(of issue: XCUIAccessibilityAuditIssue, element: XCUIElement?) -> Coverage {
+        guard let element else { return acceptsFindingWithoutElement(issue) ? .elementlessRule : .none }
+        guard let match = matchingEntry(issue, element: element) else { return .none }
+        return .entry(index: match.index, pattern: match.pattern)
+    }
+
+    /// Findings without an element cannot be matched by label; only the ones named here are accepted, per screen.
+    private static func acceptsFindingWithoutElement(_ issue: XCUIAccessibilityAuditIssue) -> Bool {
+        // Reason: the audit reports one clipped text without an element (frame 0×0) in the note list; nothing on the
+        // screen is cut off visually. Stays on the device test list (large text). The recipe folder is a note list with the same
+        // system search bar and reports the same single finding for the "UISearchBarTextField".
+        // The input of "Rezept mit ChatGPT anlegen" (text field, photos, link) reports two "Potentially inaccessible text" findings
+        // (element detection) without an element in this environment, also without the share choice; it reproduces on the code before
+        // that change; the element cannot be resolved. Stays on the device test list (VoiceOver).
+        if issue.auditType == .elementDetection { return currentScreen == "Rezept anlegen (Eingabe)" }
+        // The card of "Artikel übersetzen" also reports one "nearly passed" contrast finding without an element (the grey second line or the
+        // button on the material of the card; the same texts are reported with their frames and covered by the entries below).
+        if issue.auditType == .contrast { return currentScreen == "Einkaufsliste › Karte „übersetzen“" }
+        guard issue.auditType == .textClipped else { return false }
+        // The card of "Artikel übersetzen" reports two clipped texts without an element (frame 0×0) in the default size; its texts are
+        // reported with their own frames and covered by the entries below (the card is a plain stack of texts and buttons, nothing is cut).
+        // "Planen (Tag)" at the default size: once the screen has settled, the hour grid has scrolled to "now" (realign on "Heute") and the
+        // suggestion card above it ("Derselbe Termin?") lies partly behind the bar. The audit reports the cut card text as "may be clipped"
+        // without an element (frame 0×0); the screenshot of the run shows the text only scrolled under the bar, not cut in its own frame.
+        return currentScreen == "Notizenliste" || currentScreen == "Einkaufsliste › Karte „übersetzen“" || currentScreen == "Planen (Tag)"
+            || (currentScreen == "Rezepte" && issue.detailedDescription.contains("UISearchBarTextField"))
+    }
+
+    /// The first entry of the list that covers a finding with an element, with the pattern that matched.
+    private static func matchingEntry(_ issue: XCUIAccessibilityAuditIssue, element: XCUIElement) -> (index: Int, pattern: String)? {
         func matches(_ text: String, _ pattern: String) -> Bool { text.range(of: "^(\(pattern))$", options: .regularExpression) != nil }
         // Every read of an element property is a query of its own and slow, so each is read once per finding.
         let label = element.label, identifier = element.identifier, elementType = element.elementType
@@ -343,8 +361,10 @@ enum AuditAllowlist {
                 matches(label, pattern) || (!identifier.isEmpty && matches(identifier, pattern))
             }
         }
-        if let index { noteHit(of: index) }
-        return index != nil
+        guard let index else { return nil }
+        noteHit(of: index)
+        let pattern = entries[index].labels.first { matches(label, $0) || (!identifier.isEmpty && matches(identifier, $0)) } ?? ""
+        return (index, pattern)
     }
 
     /// Collect mode only: lets the report of `scripts/stress-audits.sh --collect` list the entries that no finding of a full
@@ -357,27 +377,42 @@ enum AuditAllowlist {
         recordLine("ENTRY-HIT \(index)\n")
     }
 
+    /// Collect mode with `AUDIT_COLLECT_ALL=1` (`scripts/stress-audits.sh --collect-all`): every finding is written, the accepted ones with
+    /// the index and the pattern of the entry that covers them ("accepted=3:Überfällig"; "accepted=rule" for the fixed rules for
+    /// findings without an element), the others with "accepted=-". The patterns of all entries are written as PATTERN-DEFINED.
+    private static var collectsAll: Bool { collectsFindings && ProcessInfo.processInfo.environment["AUDIT_COLLECT_ALL"] == "1" }
+
     private static func logDefinitionsOnce() {
         guard collectsFindings, !loggedDefinitions else { return }
         loggedDefinitions = true
         for (index, entry) in entries.enumerated() {
             let screens = entry.screens.map { "\($0.count) screen(s): \($0.prefix(2).joined(separator: ", "))" } ?? "all screens"
             recordLine("ENTRY-DEFINED \(index) | \(entry.auditType.rawValue) | \(screens) | \(entry.labels.prefix(3).joined(separator: ", "))\n")
+            if collectsAll { entry.labels.forEach { recordLine("PATTERN-DEFINED \(index) | \($0)\n") } }
         }
     }
 
     // MARK: Collect mode
 
-    /// With `TEST_RUNNER_AUDIT_COLLECT_FILE=<path>` the audits do not fail; every finding that is not on the allowlist is appended to the file instead.
-    /// Used to list the findings that are neither fixed nor on the allowlist.
+    /// With `TEST_RUNNER_AUDIT_COLLECT_FILE=<path>` the audits do not fail; every finding that is not on the allowlist is appended to the file instead
+    /// (with `TEST_RUNNER_AUDIT_COLLECT_ALL=1` every finding, see `collectsAll`). Used to list the findings that are neither fixed nor on the allowlist,
+    /// and to measure which entries still cover a finding.
     private static var collectFile: String? { ProcessInfo.processInfo.environment["AUDIT_COLLECT_FILE"] }
     static var collectsFindings: Bool { collectFile != nil }
 
     static var currentScreen = ""
 
-    private static func record(_ issue: XCUIAccessibilityAuditIssue, element: XCUIElement?) {
-        recordLine("\(currentScreen) | \(issue.auditType.rawValue) | \(issue.compactDescription) | label=\(element?.label ?? "-") "
-            + "frame=\(element?.frame ?? .zero) id=\(element?.identifier ?? "-") type=\(element?.elementType.rawValue ?? 0)\n")
+    private static func record(_ issue: XCUIAccessibilityAuditIssue, element: XCUIElement?, coverage: Coverage) {
+        var accepted = ""
+        if collectsAll {
+            switch coverage {
+            case .entry(let index, let pattern): accepted = " accepted=\(index):\(pattern)"
+            case .elementlessRule: accepted = " accepted=rule"
+            case .none: accepted = " accepted=-"
+            }
+        }
+        recordLine("\(currentScreen) | \(issue.auditType.rawValue) | \(issue.compactDescription) | label=\(element?.label.replacingOccurrences(of: "\n", with: "⏎") ?? "-") "
+            + "frame=\(element?.frame ?? .zero) id=\(element?.identifier ?? "-") type=\(element?.elementType.rawValue ?? 0)\(accepted)\n")
     }
 
     private static func recordLine(_ line: String) {
