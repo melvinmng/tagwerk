@@ -13,7 +13,6 @@
   "Keine Verbindung zu ChatGPT.": "No connection to ChatGPT.",
   "Melde dich in den Einstellungen mit ChatGPT an.": "Sign in with ChatGPT in Settings.",
   "Anmeldung derzeit nicht lesbar.": "Sign-in can’t be read right now.",
-  "Bitte Repository und mindestens ein Project wählen.": "Choose a repository and at least one project.",
   "GitHub antwortet mit Fehler %lld.": "GitHub responded with error %lld.",
   "GitHub-Anmeldung: %@": "GitHub sign-in: %@",
   "Keine Verbindung zu GitHub.": "No connection to GitHub.",
@@ -256,7 +255,7 @@
   "Abstand zwischen Terminen und eingeplanten Aufgaben.": "Buffer between events and scheduled tasks.",
   "Aktionen": "Actions",
   "Alle": "All",
-  "Alle Projects": "All projects",
+  "Alle Projekte": "All projects",
   "Alle Termine": "All events",
   "Alle ab diesem Tag": "All from this day on",
   "Alle bestätigen (%lld)": "Confirm all (%lld)",
@@ -589,7 +588,7 @@
   "Keine Verbindung. Die Schätzung braucht Internet.": "No connection. The estimate needs internet.",
   "Keine Vorschläge": "No suggestions",
   "Keine offenen Aufgaben zum Planen.": "No open tasks to plan.",
-  "Keine zugewiesenen Issues in offenen Projects": "No assigned issues in open projects",
+  "Keine zugewiesenen Issues in offenen Projekten": "No assigned issues in open projects",
   "Keiner": "None",
   "Kommentar": "Comment",
   "Kommentar schreiben": "Write comment",
@@ -748,7 +747,7 @@
   "Probeaufnahme starten": {
     "shouldTranslate": false
   },
-  "Projects": "Projects",
+  "Projekte": "Projects",
   "Prüfe …": {
     "shouldTranslate": false
   },
@@ -843,7 +842,7 @@
   "Tagwerk wandelt Sprache auf dem iPhone in Text um. Der Ton verlässt das Gerät nicht. An ChatGPT geht nur der Text, den du sendest.": "Tagwerk converts speech to text on your iPhone. The audio doesn’t leave the device. Only the text you send goes to ChatGPT.",
   "Tagwerk wandelt deine Sprache auf dem iPhone in Text um. Der Ton verlässt das Gerät nicht. Gesendet wird erst, wenn du ↑ tippst.": "Tagwerk converts your speech to text on your iPhone. The audio doesn’t leave the device. Nothing is sent until you tap ↑.",
   "Tagwerk zeigt deine Erinnerungen zusammen mit deinen anderen Aufgaben und kann sie bearbeiten.": "Tagwerk shows your reminders together with your other tasks and can edit them.",
-  "Tagwerk zeigt dir zugewiesene Issues aus deinen offenen GitHub Projects und kann sie bearbeiten.": "Tagwerk shows you assigned issues from your open GitHub Projects and can edit them.",
+  "Tagwerk zeigt dir zugewiesene Issues aus deinen offenen GitHub-Projekten und kann sie bearbeiten.": "Tagwerk shows you assigned issues from your open GitHub projects and can edit them.",
   "Tagwerk-Block": "Tagwerk block",
   "Tempo": "Speed",
   "Termin": "Event",
@@ -1343,7 +1342,7 @@
   "Notizen · %lld": "Notes · %lld",
   "Notizen, %lld": "Notes, %lld",
   "Nummer": "Number",
-  "Project": "Project",
+  "GitHub-Projekt": "GitHub project",
   "Suchen": "Search",
   "Termine": "Events",
   "Termine werden durchsucht …": "Searching events …",
@@ -1372,12 +1371,12 @@
   "GitHub wird durchsucht …": "Searching GitHub …",
   "Keine weiteren Treffer auf GitHub.": "No further results on GitHub.",
   "Link kopieren": "Copy link",
-  "Online-Treffer öffnen sich auf GitHub. Zum Bearbeiten in Tagwerk muss ein Issue dir zugewiesen sein und in einem Project liegen.": "Online results open on GitHub. To edit an issue in Tagwerk it must be assigned to you and belong to a project.",
+  "Online-Treffer öffnen sich auf GitHub. Zum Bearbeiten in Tagwerk muss ein Issue dir zugewiesen sein und in einem Projekt liegen.": "Online results open on GitHub. To edit an issue in Tagwerk it must be assigned to you and belong to a project.",
   "anderen zugewiesen": "assigned to others",
   "auch geschlossene und fremde": "including closed and unassigned issues",
   "geschlossen": "closed",
   "nicht zugewiesen": "unassigned",
-  "ohne Project": "no project",
+  "ohne Projekt": "no project",
   "Öffnet das Issue auf GitHub": "Opens the issue on GitHub",
   "Einkauf": "Shopping",
   "Einkaufsliste öffnen": "Open shopping list",
@@ -2011,5 +2010,8 @@
   "Ziel": "Target",
   "Nur als Rezept speichern": "Save as recipe only",
   "Was soll mit dem Rezept geschehen?": "What should happen to the recipe?",
-  "Du wählst die Zutaten aus und kannst das Rezept zusätzlich als Notiz im Ordner „Rezepte“ sichern.": "You choose the ingredients and can also keep the recipe as a note in the “Recipes” folder."
+  "Du wählst die Zutaten aus und kannst das Rezept zusätzlich als Notiz im Ordner „Rezepte“ sichern.": "You choose the ingredients and can also keep the recipe as a note in the “Recipes” folder.",
+  "Kein Projekt": "No project",
+  "Den Status „%@“ gibt es im Projekt „%@“ nicht.": "The status “%1$@” does not exist in the project “%2$@”.",
+  "Der Status lässt sich in diesem Projekt nicht ändern.": "The status cannot be changed in this project."
 }

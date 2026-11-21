@@ -784,9 +784,9 @@ struct TaskListStatusTests {
 
     @Test func setStatus_failure_showsErrorAndLeavesTheList() async {
         await model.reload()
-        github.applyError = .failed("Den Status „Blocked“ gibt es im Project „App“ nicht.")
+        github.applyError = .failed("Den Status „Blocked“ gibt es im Projekt „App“ nicht.")
         await model.setStatus(issueID, subContainerID: "PVT_1", to: "Blocked")
-        #expect(model.lastError == "Den Status „Blocked“ gibt es im Project „App“ nicht.")
+        #expect(model.lastError == "Den Status „Blocked“ gibt es im Projekt „App“ nicht.")
         #expect(model.items.first?.statuses.first?.current == "Ready")
     }
 
@@ -801,7 +801,7 @@ struct TaskListStatusTests {
         #expect(!model.items.contains { $0.title == "Export" })
         #expect(model.lastHandedOver?.reason == .noProject)
         #expect(model.lastHandedOver?.number == 151)
-        #expect(model.lastHandedOver?.title == "#151 angelegt · ohne Project")
+        #expect(model.lastHandedOver?.title == "#151 angelegt · ohne Projekt")
         #expect(model.lastHandedOver?.url == URL(string: "https://github.com/beispiel/app/issues/151"))
         #expect(model.lastError == nil)
     }
@@ -822,9 +822,9 @@ struct TaskListStatusTests {
     }
 
     @Test func noProjectNotice_texts() {
-        #expect(AssigneeSelection.noProjectTitle(number: 7) == "#7 angelegt · ohne Project")
-        #expect(AssigneeSelection.noProjectTitle(number: nil) == "Issue angelegt · ohne Project")
-        #expect(AssigneeSelection.noProjectAnnouncement(number: 7) == "Angelegt: #7 angelegt · ohne Project. Auf GitHub öffnen verfügbar.")
+        #expect(AssigneeSelection.noProjectTitle(number: 7) == "#7 angelegt · ohne Projekt")
+        #expect(AssigneeSelection.noProjectTitle(number: nil) == "Issue angelegt · ohne Projekt")
+        #expect(AssigneeSelection.noProjectAnnouncement(number: 7) == "Angelegt: #7 angelegt · ohne Projekt. Auf GitHub öffnen verfügbar.")
     }
 }
 

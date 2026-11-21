@@ -3,10 +3,10 @@ import SwiftUI
 
 /// Texts and preselection of the GitHub project row in "Neue Aufgabe" (multi-select menu like the repository row).
 enum ProjectSelection {
-    /// Collapsed value: "Kein Project", one or two names, from three on the count.
+    /// Collapsed value: "Kein Projekt", one or two names, from three on the count.
     static func value(titles: [String]) -> String {
         switch titles.count {
-        case 0: String(localized: "Kein Project")
+        case 0: String(localized: "Kein Projekt")
         case 1, 2: titles.joined(separator: ", ")
         default: String(localized: "\(titles.count) Projekte")
         }
@@ -50,7 +50,7 @@ struct ProjectSelectionRow: View {
 
     var body: some View {
         Menu {
-            Toggle("Kein Project", isOn: Binding(
+            Toggle("Kein Projekt", isOn: Binding(
                 get: { selection.isEmpty },
                 set: { isOn in
                     guard isOn else { return }

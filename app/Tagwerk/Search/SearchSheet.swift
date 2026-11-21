@@ -358,7 +358,7 @@ struct SearchSheet: View {
         case .completedTasks:
             Text("Geschlossene Issues findet nur die GitHub-Suche.")
         case .online:
-            Text("Online-Treffer öffnen sich auf GitHub. Zum Bearbeiten in Tagwerk muss ein Issue dir zugewiesen sein und in einem Project liegen.")
+            Text("Online-Treffer öffnen sich auf GitHub. Zum Bearbeiten in Tagwerk muss ein Issue dir zugewiesen sein und in einem Projekt liegen.")
         default:
             EmptyView()
         }

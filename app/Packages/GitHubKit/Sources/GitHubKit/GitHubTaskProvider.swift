@@ -225,7 +225,7 @@ public final class GitHubTaskProvider: TaskProvider {
     }
 
     private static func missingStatus(_ status: String, in project: ProjectInfo) -> TaskWriteError {
-        .failed(String(localized: "Den Status „\(status)“ gibt es im Project „\(project.title)“ nicht.", bundle: .module))
+        .failed(String(localized: "Den Status „\(status)“ gibt es im Projekt „\(project.title)“ nicht.", bundle: .module))
     }
 
     private static var tooManyAssignees: TaskWriteError {
@@ -395,7 +395,7 @@ public final class GitHubTaskProvider: TaskProvider {
         var resolved: [String: String] = [:]
         for (projectID, name) in changes {
             guard let placement = writable.first(where: { $0.project.id == projectID }) else {
-                throw TaskWriteError.failed(String(localized: "Der Status lässt sich in diesem Project nicht ändern.", bundle: .module))
+                throw TaskWriteError.failed(String(localized: "Der Status lässt sich in diesem Projekt nicht ändern.", bundle: .module))
             }
             guard let option = GitHubMapping.statusOption(named: name, in: placement.project) else {
                 throw missingStatus(name, in: placement.project)

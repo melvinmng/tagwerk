@@ -3,7 +3,7 @@ import Testing
 
 struct ProjectSelectionTests {
     @Test func value_perCount() {
-        #expect(ProjectSelection.value(titles: []) == "Kein Project")
+        #expect(ProjectSelection.value(titles: []) == "Kein Projekt")
         #expect(ProjectSelection.value(titles: ["Tagwerk"]) == "Tagwerk")
         #expect(ProjectSelection.value(titles: ["Tagwerk", "Bachelorarbeit"]) == "Tagwerk, Bachelorarbeit")
         #expect(ProjectSelection.value(titles: ["A", "B", "C"]) == "3 Projekte")

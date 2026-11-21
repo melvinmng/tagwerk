@@ -7,6 +7,7 @@ Default: structure checks of every catalog in app/
   - the phrases in TagwerkIntents.swift and AppShortcuts.xcstrings match in both directions, and every phrase
     listed in the "Siri & Kurzbefehle" section of CaptureSettingsView is a real phrase
   - the German usage texts in InfoPlist.xcstrings equal those in app/project.yml
+  - no source key of a catalog contains the English word "Project"/"Projects" (German UI text says "Projekt"/"Projekte")
 --require-english: additionally every key that should be translated has a translated English value
 --same A B: exits 1 when two catalogs differ (used by sync-strings.sh --check)
 """
@@ -147,6 +148,34 @@ def check_info_plist(problems):
                 problems.append(f"{path.relative_to(ROOT)}: German {key} differs from project.yml")
 
 
+PROJECT_WORD = re.compile(r"\bProjects?\b")
+# Keys of the assistant files, reworded in task G5 once the assistant branches are on main.
+# removed in G5
+PROJECT_WORDING_EXCEPTIONS = {
+    "Kein Project",
+    "Project fehlt",
+    "Project %@",
+    "Bitte ein Project nennen.",
+    "Dieses Project steht nicht in der Liste von list_github_targets.",
+    "Repository, Projects und Zugewiesene gibt es nur bei GitHub-Issues.",
+}
+
+
+def check_project_wording(problems):
+    """German UI text says "Projekt"/"Projekte" for GitHub projects; the English value stays "Project".
+
+    Stale entries (kept by the sync for keys that are no longer in the source) are skipped."""
+    for path in catalogs():
+        if path.name == "InfoPlist.xcstrings" or path.name == "AppShortcuts.xcstrings":
+            continue
+        for key, entry in load(path).get("strings", {}).items():
+            if entry.get("shouldTranslate") is False or entry.get("extractionState") == "stale" or key in PROJECT_WORDING_EXCEPTIONS:
+                continue
+            source = entry.get("localizations", {}).get("de", {}).get("stringUnit", {}).get("value", key)
+            if PROJECT_WORD.search(source):
+                problems.append(f"{path.relative_to(ROOT)}: German text says \"Project\" instead of \"Projekt\": {key!r}")
+
+
 def same(first, second):
     a, b = load(first), load(second)
     if a == b:
@@ -169,6 +198,7 @@ def main(arguments):
         check_structure(path, load(path), require_english, problems)
     check_info_plist(problems)
     check_shortcut_phrases(problems)
+    check_project_wording(problems)
     for problem in problems:
         print(problem, file=sys.stderr)
     if problems:

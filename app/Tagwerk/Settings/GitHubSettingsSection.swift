@@ -13,11 +13,11 @@ struct GitHubSettingsSection: View {
             if environment.isGitHubActive {
                 LabeledContent("Angemeldet als", value: environment.gitHub.login ?? "…")
                 NavigationLink {
-                    SourceSelectionView(title: "Projects", items: projectItems,
+                    SourceSelectionView(title: "Projekte", items: projectItems,
                                         defaultSelection: environment.gitHub.defaultSelectedProjectIDs,
                                         selection: $settings.selectedProjectIDs)
                 } label: {
-                    LabeledContent("Projects", value: projectSummary)
+                    LabeledContent("Projekte", value: projectSummary)
                 }
                 Button("Abmelden", role: .destructive) {
                     Task { await (loginModel ?? environment.makeGitHubLoginModel()).signOut() }

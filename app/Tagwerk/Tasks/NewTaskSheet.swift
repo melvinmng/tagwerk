@@ -281,7 +281,7 @@ extension NewTaskSheet {
         let assignment = assigneesChosen ? AssigneeSelection.footer(selected: selectedAssignees, me: gitHub?.login)
             : AssigneeSelection.footer(selected: [Self.defaultAssigneeMarker], me: Self.defaultAssigneeMarker)
         guard repository != nil, projectIDs.isEmpty else { return assignment }
-        return String(localized: "Ohne Project erscheint das Issue nicht in deinen Aufgaben.") + " " + assignment
+        return String(localized: "Ohne Projekt erscheint das Issue nicht in deinen Aufgaben.") + " " + assignment
     }
 
     /// Loads the assignable people of the chosen repository. Every repository change resets the choice to

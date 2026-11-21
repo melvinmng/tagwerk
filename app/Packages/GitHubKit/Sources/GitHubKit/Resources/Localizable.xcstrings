@@ -22,6 +22,7 @@
       }
     },
     "Den Status „%@“ gibt es im Project „%@“ nicht." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -37,7 +38,34 @@
         }
       }
     },
+    "Den Status „%@“ gibt es im Projekt „%@“ nicht." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Den Status „%1$@“ gibt es im Projekt „%2$@“ nicht."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The status “%1$@” does not exist in the project “%2$@”."
+          }
+        }
+      }
+    },
     "Der Status lässt sich in diesem Project nicht ändern." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The status cannot be changed in this project."
+          }
+        }
+      }
+    },
+    "Der Status lässt sich in diesem Projekt nicht ändern." : {
       "localizations" : {
         "en" : {
           "stringUnit" : {

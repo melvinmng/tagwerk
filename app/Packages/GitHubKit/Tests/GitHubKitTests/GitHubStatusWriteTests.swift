@@ -128,7 +128,7 @@ struct GitHubStatusWriteTests {
         let item = try await load(provider, boards)
         transport.enqueueJSON("/graphql", Fixtures.boardIssue(boards: boards))
 
-        await #expect(throws: TaskWriteError.failed("Den Status „In progress“ gibt es im Project „Projekt 2“ nicht.")) {
+        await #expect(throws: TaskWriteError.failed("Den Status „In progress“ gibt es im Projekt „Projekt 2“ nicht.")) {
             try await provider.apply(edit {
                 $0.title = .set("Neu")
                 $0.statusChanges = ["PVT_1": "In progress", "PVT_2": "In progress"]

@@ -82,7 +82,7 @@ enum AssigneeSelection {
     /// Title of the capsule for an issue without a Project: "#151 angelegt · ohne Project".
     static func noProjectTitle(number: Int?) -> String {
         let issue = number.map { "#\($0)" } ?? "Issue"
-        return String(localized: "\(issue) angelegt · ohne Project")
+        return String(localized: "\(issue) angelegt · ohne Projekt")
     }
 
     static func noProjectAnnouncement(number: Int?) -> String {
