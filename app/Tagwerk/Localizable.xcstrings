@@ -13780,7 +13780,6 @@
       }
     },
     "Ohne Projekt erscheint das Issue nicht in deinen Aufgaben.": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -14343,6 +14342,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Projects"
+          }
+        }
+      }
+    },
+    "Projekt %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Project %@"
           }
         }
       }

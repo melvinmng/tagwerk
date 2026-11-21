@@ -657,7 +657,7 @@ struct NoteSuggestionModelTests {
         let model = await fetchIssueCards([call("c1", "create_task", #"{"title":"A","source":"github","repository":"tagwerk"}"#),
                                            call("c2", "create_task", #"{"title":"B","source":"github"}"#),
                                            call("c3", "create_task", #"{"title":"C"}"#)], directory: twoRepositoryDirectory())
-        #expect(model.targetSummary(of: model.cards[0]) == "Ziel: melvinmng/tagwerk · Project Tagwerk")
+        #expect(model.targetSummary(of: model.cards[0]) == "Ziel: melvinmng/tagwerk · Projekt Tagwerk")
         #expect(model.targetSummary(of: model.cards[1]) == "Ziel wählen")
         #expect(model.targetSummary(of: model.cards[2]) == nil)
     }
