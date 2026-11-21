@@ -114,6 +114,8 @@ public final class Conversation {
     @ObservationIgnored private let instructions: @MainActor () -> String
     @ObservationIgnored private var rounds = 0
     @ObservationIgnored private var runningCallID: String?
+    /// The arguments the model proposed for each pending call the user has adjusted; kept in memory only.
+    @ObservationIgnored private var proposedArguments: [String: Data] = [:]
 
     /// Restores a conversation. Calls without an output (the app ended while a card was open)
     /// are closed with a fixed output, so the history is always valid input.
@@ -142,20 +144,78 @@ public final class Conversation {
         await runRound()
     }
 
+    /// Runs the pending call with the given ID. A view may still hold the call as the model proposed it, so the call
+    /// that runs is always the current one, with the user's adjustments.
     public func confirm(_ call: ToolCall) async {
-        guard pendingActions.contains(call), runningCallID == nil else { return }
-        runningCallID = call.id
+        guard let current = pendingActions.first(where: { $0.id == call.id }), runningCallID == nil else { return }
+        runningCallID = current.id
         state = .runningAction
-        let output = Self.clipped(await tools.run(call))
+        var output = await tools.run(current)
+        if let proposed = originalArguments(of: current) {
+            output = Self.annotated(output, proposedArguments: proposed)
+        }
+        output = Self.clipped(output)
         runningCallID = nil
-        resolve(call, output: output)
+        resolve(current, output: output)
         await continueIfResolved()
     }
 
     public func decline(_ call: ToolCall) async {
-        guard pendingActions.contains(call), runningCallID != call.id else { return }
-        resolve(call, output: Self.declinedOutput)
+        guard let current = pendingActions.first(where: { $0.id == call.id }), runningCallID != current.id else { return }
+        resolve(current, output: Self.declinedOutput)
         await continueIfResolved()
+    }
+
+    // MARK: Adjusting pending calls
+
+    /// Replaces the arguments of a pending call by the user's values, in the pending list and in the history, so the
+    /// card, the stored form and the confirmation all see the same call. The arguments the model proposed are kept
+    /// in memory for `resetAdjustment` and for the output of `confirm`. Returns the new call, or `nil` when the call is
+    /// not pending, is running, or the arguments are not a JSON object. Nothing is sent and nothing runs.
+    @discardableResult
+    public func adjust(_ call: ToolCall, arguments: Data) -> ToolCall? {
+        guard runningCallID != call.id,
+              let index = pendingActions.firstIndex(where: { $0.id == call.id }),
+              (try? JSONSerialization.jsonObject(with: arguments)) is [String: Any] else { return nil }
+        let current = pendingActions[index]
+        let original = proposedArguments[current.id] ?? current.arguments
+        let adjusted = ToolCall(id: current.id, name: current.name, arguments: arguments)
+        guard replaceArguments(of: adjusted) else { return nil }
+        pendingActions[index] = adjusted
+        // Adjusting back to the proposal is no adjustment.
+        proposedArguments[current.id] = Self.sameJSON(original, arguments) ? nil : original
+        return adjusted
+    }
+
+    /// Puts the arguments of the model back. `nil` when the call was not adjusted.
+    @discardableResult
+    public func resetAdjustment(_ call: ToolCall) -> ToolCall? {
+        guard runningCallID != call.id, let original = proposedArguments[call.id],
+              let index = pendingActions.firstIndex(where: { $0.id == call.id }) else { return nil }
+        let restored = ToolCall(id: call.id, name: call.name, arguments: original)
+        guard replaceArguments(of: restored) else { return nil }
+        pendingActions[index] = restored
+        proposedArguments[call.id] = nil
+        return restored
+    }
+
+    /// The arguments of the model for a pending call the user adjusted; `nil` for a call that is not adjusted.
+    public func originalArguments(of call: ToolCall) -> Data? {
+        proposedArguments[call.id]
+    }
+
+    /// True while the pending call differs from what the model proposed.
+    public func isAdjusted(_ call: ToolCall) -> Bool {
+        proposedArguments[call.id] != nil
+    }
+
+    /// Swaps the arguments of the open call in the history.
+    private func replaceArguments(of call: ToolCall) -> Bool {
+        guard let index = history.lastIndex(where: {
+            if case .functionCall(let id, _, _) = $0 { id == call.id } else { false }
+        }) else { return false }
+        history[index] = .functionCall(callID: call.id, name: call.name, arguments: String(decoding: call.arguments, as: UTF8.self))
+        return true
     }
 
     /// Repeats the failed call with the same history.
@@ -170,6 +230,7 @@ public final class Conversation {
         guard !isBusy else { return }
         history = []
         pendingActions = []
+        proposedArguments = [:]
         streamingText = ""
         truncatedNotice = false
         roundLimitReached = false
@@ -299,7 +360,8 @@ public final class Conversation {
 
     private func resolve(_ call: ToolCall, output: String) {
         history.append(.functionOutput(callID: call.id, output: output))
-        pendingActions.removeAll { $0 == call }
+        pendingActions.removeAll { $0.id == call.id }
+        proposedArguments[call.id] = nil
     }
 
     private func continueIfResolved() async {
@@ -317,6 +379,7 @@ public final class Conversation {
             history.append(.functionOutput(callID: id, output: output))
         }
         pendingActions = []
+        proposedArguments = [:]
     }
 
     // MARK: Helpers
@@ -345,6 +408,29 @@ public final class Conversation {
             return Array(history[lastUser...])
         }
         return Array(history.suffix(maxInputItems))
+    }
+
+    /// Tells the model that the user changed the call: a JSON object output gets `adjusted_by_user` and `proposed`
+    /// (the arguments of the model) next to its own fields, so errors stay readable on the top level; any other output
+    /// gets a sentence.
+    static func annotated(_ output: String, proposedArguments: Data) -> String {
+        if let object = (try? JSONSerialization.jsonObject(with: Data(output.utf8))) as? [String: Any],
+           let proposed = try? JSONSerialization.jsonObject(with: proposedArguments) {
+            var annotated = object
+            annotated["adjusted_by_user"] = true
+            annotated["proposed"] = proposed
+            if let data = try? JSONSerialization.data(withJSONObject: annotated, options: [.sortedKeys, .withoutEscapingSlashes]) {
+                return String(decoding: data, as: UTF8.self)
+            }
+        }
+        return output + "\nDer Nutzer hat die Werte geändert. Vorgeschlagen war: "
+            + String(decoding: proposedArguments, as: UTF8.self)
+    }
+
+    /// Equal as JSON values, whatever the key order.
+    static func sameJSON(_ a: Data, _ b: Data) -> Bool {
+        guard let first = try? JSONSerialization.jsonObject(with: a), let second = try? JSONSerialization.jsonObject(with: b) else { return a == b }
+        return (first as? NSObject) == (second as? NSObject)
     }
 
     /// Keeps a tool output within 16 KB (UTF-8), cut at a character boundary.
