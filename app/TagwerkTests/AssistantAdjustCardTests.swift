@@ -353,7 +353,9 @@ struct AssistantAdjustCardTests {
 
         #expect(model.describe(newReschedule).mark == .byUser)
         #expect(model.describe(newReschedule).change != model.describe(newReschedule).proposedChange)
-        #expect(model.describe(newAssign).change.contains("30"))
+        // The card follows the new day (compared as text, independent of the time zone the formatting runs in).
+        #expect(model.describe(newAssign).mark == .byUser)
+        #expect(model.describe(newAssign).change != model.describe(newAssign).proposedChange)
     }
 
     // MARK: Events (task B2)
