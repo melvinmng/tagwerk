@@ -1,6 +1,6 @@
 # Ernährung, Gewicht und Ziele – Implementation Plan
 
-> **For agentic workers:** Die Entscheidungen des Nutzers vom 21.11.2026 sind eingetragen (Abschnitt „Entscheidungen des Nutzers“); jeder Task folgt der gewählten Variante, nicht gewählte Varianten sind entfernt. Umsetzung Task für Task, jeweils mit TDD, Schritte als Checkbox (`- [ ]`). Stellen mit der Marke **„zu prüfen“** oder **„wird geprüft“** hängen an einer laufenden Recherche; die Hauptsitzung trägt die Ergebnisse nach. Ein Task mit einer solchen Marke wird erst begonnen, wenn das Ergebnis hier steht.
+> **For agentic workers:** Die Entscheidungen des Nutzers vom 21.11.2026 sind eingetragen (Abschnitt „Entscheidungen des Nutzers“); jeder Task folgt der gewählten Variante, nicht gewählte Varianten sind entfernt. Umsetzung Task für Task, jeweils mit TDD, Schritte als Checkbox (`- [ ]`). Die Recherche ist eingetragen (Rechenregeln, Open Food Facts); offen sind nur noch Gerätetests (HealthKit).
 
 > **Status:** Stand 21.11.2026, Code-Grundlage `origin/main` bei `8326a3c` (enthält PR #240–#252, darunter #242 mit `storedForm`, `storableHistory`, `singleConfirmationTools` und dem Nachrichtentyp `.activity`). Mockups: `docs/superpowers/mockups/2026-11-21-ernaehrung-gewicht-ziele-mockups.html` (32 Entscheidungen, gewählte Varianten tragen die Marke „Gewählt“). Nichts davon ist gebaut, nichts am Gerät geprüft. Es gibt noch kein Issue zu diesem Vorhaben. Die Vorschlagskarten der Zielplanung teilen sich ihre Bauteile mit dem Plan `2026-11-21-ki-vorschlaege-anpassen.md` („Anpassen“ für alle KI-Vorschläge).
 
@@ -87,17 +87,25 @@ Pfade unter `app/`, sofern nicht anders genannt.
 - **Makros (BU3c):** Eiweiß und Ballaststoffe bleiben in Gramm. Mit Grundzielen KH₀ und F₀ (Gramm) gilt: Kohlenhydrat-Ziel = KH₀ + Angerechnet × (4 × KH₀) / (4 × KH₀ + 9 × F₀) / 4; Fett-Ziel = F₀ + Angerechnet × (9 × F₀) / (4 × KH₀ + 9 × F₀) / 9. Beispiel bei voller Anrechnung: 250 g, 78 g, 520 kcal → 326 g und 102 g.
 - **Grundziel** gilt für einen Tag ohne angerechnete Aktivität. Das steht im Einstellungs- und Kartentext.
 - **Gewicht des Tages** = früheste Messung des Tages (eigene und fremde). **7-Tage-Mittel** = Mittel der Tageswerte der letzten sieben Tage, ab drei Werten. **Trend** = Differenz der 7-Tage-Mittel im Abstand von 28 Tagen, geteilt durch 4, in kg je Woche; ohne ausreichende Werte „–“.
-- **Gegenrechnung (ZI2b), alle Zahlen als benannte Konstanten in `GoalGuardConstants` – wird geprüft:**
+- **Gegenrechnung (ZI2b), alle Zahlen als benannte Konstanten in `GoalGuardConstants` – geprüft am 21.11.2026** (Quelle: `docs/superpowers/research/2026-11-21-ernaehrung-faktenpruefung.md`):
 
   | Konstante | Wert | Bedeutung | Stand |
   |---|---|---|---|
-  | `mifflinWeightFactor`, `mifflinHeightFactor`, `mifflinAgeFactor`, `mifflinMaleOffset`, `mifflinFemaleOffset` | 10 · 6,25 · 5 · +5 · −161 | Ruheumsatz = 10 × Gewicht in kg + 6,25 × Größe in cm − 5 × Alter + 5 bzw. − 161 (Mifflin und St Jeor, 1990) | wird geprüft (Originalquelle) |
-  | `sedentaryActivityFactor` | 1,2 | Bedarf ohne Training = Ruheumsatz × Faktor | wird geprüft |
-  | `kcalPerKilogramBodyMass` | 7.700 | Tagesdefizit für ein Tempo = Tempo in kg je Woche × Wert / 7 | wird geprüft |
-  | `maxWeeklyChangeShare` | 0,01 | Warnung, wenn das Tempo 1 % des Körpergewichts je Woche übersteigt | wird geprüft |
+  | `mifflinWeightFactor`, `mifflinHeightFactor`, `mifflinAgeFactor`, `mifflinMaleOffset`, `mifflinFemaleOffset` | 10 · 6,25 · 5 · +5 · −161 | Ruheumsatz = 10 × kg + 6,25 × cm − 5 × Alter + 5 bzw. − 161 (Mifflin et al. 1990, doi:10.1093/ajcn/51.2.241). Text: „Schätzwert, Einzelfehler von ±10 % und mehr möglich“ | bestätigt |
+  | `baseNeedFactor` | 1,2 | **Grundbedarf ohne Bewegung** = Ruheumsatz × 1,2; Grundlage des Tagesbudgets, zu dem die angerechnete Aktivenergie kommt (Modell wie Apple Health: Ruhe- plus Aktivenergie). Nie als „Bedarf“ beschriften | bestätigt in dieser Rolle (als Gesamtbedarf zu niedrig, FAO/WHO/UNU 2004, DGE, EFSA) |
+  | `fallbackActivityFactor` | 1,4 | Gesamtumsatz für die Defizitwarnung, wenn keine Aktivenergie aus Health vorliegt (PAL „sitzend“, DGE/EFSA/FAO) | neu |
+  | `activityAverageDays` | 14 | Gesamtumsatz für die Defizitwarnung = Grundbedarf + mittlere Aktivenergie (voll, nicht der angerechnete Anteil) der letzten 14 Tage | neu, Festlegung der Hauptsitzung |
+  | `kcalPerKilogramBodyMass` | 7.700 | Nur kurzfristige Näherung (4–8 Wochen) für Tempo ↔ Tagesdefizit; Text: „grobe Schätzung, der tatsächliche Verlauf flacht ab“; Verweis auf den NIDDK Body Weight Planner. Hauptprüfung über das tägliche Defizit | bestätigt mit Einschränkung (Hall et al. 2011) |
+  | `maxWeeklyChangeShare`, `maxWeeklyChangeKilograms` | 0,01 · 1,0 | Warnung, wenn das Tempo `min(1 % Körpergewicht, 1 kg)` je Woche übersteigt; als Regel der App formulieren, nicht als Leitlinie (CDC: 0,45–0,9 kg/Woche) | angepasst |
+  | `softMinimumKcalFemale`, `softMinimumKcalMale` | 1.200 · 1.500 | Warnung bei Grundziel darunter (AHA/ACC/TOS 2013, sekundär) | neu |
+  | `hardMinimumKcal` | 1.000 | Ziel darunter lässt sich nicht übernehmen (NIDDK Body Weight Planner) | neu |
+  | `minimumProteinPerKilogram`, `minimumProteinPerKilogramFrom65` | 0,8 · 1,0 | Warnung darunter, bezogen auf das Referenzgewicht (bei BMI über 25: Gewicht bei BMI 22) (DGE) | neu |
+  | `fibreHint`, `fibreHintPer1000Kcal` | 30 g · 14,6 g | Nur Hinweis, keine Warnung (DGE) | neu |
+  | `drinkHintLitres` | 1,5 | Nur Hinweis zur Trinkmenge (DGE: Getränke etwa 1,2–1,5 l) | neu |
+  | `activityCreditShareDefault` | 0,5 | Voreinstellung des Anrechnungsanteils (BU1b, Nutzer 21.11.2026); Handgelenk-Geräte schätzen ungenau, Apple eher zu hoch (Fuller et al. 2020) | entschieden |
   | `macroEnergyTolerance` | 0,10 | Warnung, wenn 4 × Eiweiß + 4 × Kohlenhydrate + 9 × Fett um mehr als 10 % vom Grundziel abweicht | Festlegung dieses Plans |
 
-  Weitere Warnung ohne eigene Konstante: Grundziel unter dem geschätzten Ruheumsatz. Kein anderer Ort im Quelltext nennt diese Zahlen; Texte auf der Karte lesen sie aus den Konstanten. Sie sind Rechenhilfen, keine medizinischen Grenzwerte; ändert die Recherche einen Wert, ändert sich genau eine Datei samt ihren Tests.
+  Weitere Warnung ohne eigene Konstante: Grundziel unter dem geschätzten Ruheumsatz. Kein anderer Ort im Quelltext nennt diese Zahlen; Texte auf der Karte lesen sie aus den Konstanten, jede Konstante trägt ihren Quellenkommentar aus dem Prüfbericht. Sie sind Rechenhilfen, keine medizinischen Grenzwerte.
 
 ## Review Focus
 
@@ -363,18 +371,20 @@ Gruppen (jede mit eigenem Status und eigener Anfrage, nie zusammen mit der beste
 
 **Files:** Create `Packages/TagwerkCore/Sources/TagwerkCore/ProductSearchRules.swift` (Abfragegrenze, Zuordnung der Antwort), Tests; `Tagwerk/Capture/ProductLookup.swift` (Protokoll `ProductLookingUp`, Transport austauschbar), `FoodLookupConsentSheet.swift`; Modify `AppSettings.swift` (`foodLookupConsent`, `foodLookupContact: String?`), `BackupDTOs.swift`, `CaptureSettingsView.swift`, `Tagwerk/AI/DemoAITransport.swift` bzw. ein eigener Demo-Transport.
 
-**Fakten über Open Food Facts – alle zu prüfen (Recherche läuft, Hauptsitzung trägt nach):**
+**Fakten über Open Food Facts – geprüft am 21.11.2026** (Quelle: `docs/superpowers/research/2026-11-21-ernaehrung-faktenpruefung.md`, API-Doku, Terms, Privacy):
 
-| Punkt | Annahme dieses Plans | Stand |
+| Punkt | Festlegung | Stand |
 |---|---|---|
-| Schnittstelle für die Textsuche (Adresse, Version, Parameter, Sprache/Land der Treffer) | Eine Suchanfrage liefert Name, Marke, Menge, Nährwerte je 100 g und Strichcode | zu prüfen |
-| Schnittstelle für die Abfrage per Strichcode | Eine Anfrage je Strichcode, begrenzbar auf die benötigten Felder | zu prüfen |
-| Abfragegrenzen (getrennt für Suche und Produktabfrage) | Es gibt Grenzen je Minute; die Suche ist enger begrenzt als die Produktabfrage | zu prüfen; Werte kommen als Konstanten in `ProductSearchRules` |
-| Pflichtangaben im Anfragekopf (App-Kennung, Kontakt) | Ein eigener `User-Agent` mit App-Name, Version und Kontaktadresse wird verlangt | Format zu prüfen. Entschieden (Nutzer, 21.11.2026): Die Kontaktadresse fragt die App beim Nutzer ab; ohne Adresse keine Anfrage; Tagwerk trägt nie selbst eine Adresse ein. |
-| Konto oder Schlüssel für lesenden Zugriff | Nicht nötig | zu prüfen |
-| Lizenz der Datenbank und der Inhalte (ODbL), Pflicht zur Namensnennung, Folgen für das Speichern einzelner Produkte in „Meine Lebensmittel“ und in der Sicherung | Namensnennung mit Verweis; einzelne übernommene Produkte in einer privaten Liste lösen keine Weitergabepflicht aus | zu prüfen |
-| Lizenz der Produktbilder | Bilder werden nicht geladen und nicht gespeichert | zu prüfen, falls Bilder später gewünscht sind |
-| Regeln für das Zwischenspeichern | Kein dauerhafter Zwischenspeicher für Suchergebnisse | zu prüfen |
+| Textsuche | Search-a-licious (`search.openfoodfacts.org`) als empfohlener Weg, Ersatz `/cgi/search.pl`; v2/v3 haben keine Volltextsuche. Suche nur auf „Suchen“-Tippen, kein Suchen beim Tippen | geprüft; Bedingungen von Search-a-licious nicht gefunden → vor E4 Ersatzweg über `/cgi/search.pl` als Standard, Search-a-licious nur, wenn Bedingungen auffindbar |
+| Abfrage per Strichcode | `/api/v2/product/<code>` mit `fields=` auf die benötigten Felder | geprüft |
+| Abfragegrenzen | `ProductSearchRules.searchLimit` = 10 je Minute, `productLimit` = 15 je Minute (gelten pro Nutzer) | geprüft |
+| Anfragekopf | `User-Agent: Tagwerk/<Version> (<Kontaktadresse des Nutzers>)`; Adresse fragt die App ab, ohne Adresse keine Anfrage | geprüft + entschieden |
+| Konto/Schlüssel | Lesen ohne Konto | geprüft |
+| Lizenz | Datenbank ODbL, Inhalte DbCL; Namensnennung mit Verweis auf Open Food Facts. Übernommene Produkte werden als eigener Eintrag in „Meine Lebensmittel“ mit Quellenangabe „Open Food Facts“ gespeichert; OFF-Daten nie mit eigenen Werten in einem Datensatz vermischen | geprüft |
+| Bilder | CC BY-SA 3.0; werden nicht geladen | geprüft |
+| Zwischenspeicher | Kein dauerhafter Zwischenspeicher für Treffer (Doku rät für nutzergetriebene Apps davon ab) | geprüft |
+| Datenschutz | OFF speichert IP und Logs 3 Jahre; das steht im Einwilligungstext | geprüft |
+
 
 - [ ] **Step 1: Tests.** `lookup_withoutConsent_sendsNothing`, `lookup_withoutContactAddress_sendsNothing`, `contactAddress_neverPrefilled`, `contactAddress_invalid_notAccepted`, `contactAddress_cleared_switchesLookupOff`, `lookup_offline_sendsNothingAndReportsOffline`, `limiter_blocksAboveLimit_andReportsWaitTime`, `limiter_sameQueryWithinSession_servedFromMemory`, `map_missingFieldsStayUnknown`, `map_kJOnly_convertsToKcal`, `map_saltOrSodium`, `map_perServingOnly_marksReference`, `request_hasNoCookiesNoAccountNoDeviceIdentifiers`.
 - [ ] **Step 2:** Einwilligungsblatt „Online-Suche in Open Food Facts“ nach dem Aufbau von `ShoppingSortConsentSheet`:
@@ -383,9 +393,9 @@ Gruppen (jede mit eigenem Status und eigener Anfrage, nie zusammen mit der beste
   - Nicht gesendet wird: Mengen, Mahlzeiten, Ziele, Gewicht, Daten aus Health, ein Konto.
   - Hinweis: Wer sucht, verrät dem Betreiber, was er isst oder kaufen will. Die Daten stammen von Freiwilligen und können fehlen oder falsch sein.
   - Schalter „Online-Suche in Open Food Facts“ unter Einstellungen › Erfassen (Widerruf), darunter die Kontaktadresse zum Ändern. Wird sie geleert, schaltet sich die Online-Suche aus. Derselbe Schalter gilt für Textsuche und Strichcode. Die Adresse steht in der Sicherung, in keinem Log.
-- [ ] **Step 3:** `ProductLookup`: eine Anfrage je ausdrücklichem Tippen; Abfragegrenze lokal (`ProductSearchRules.searchLimit`, `productLimit` als benannte Konstanten, Werte **zu prüfen**); bei Überschreitung keine Anfrage, sondern der Text „Bitte kurz warten“ mit Restzeit. Keine Cookies, keine gespeicherten Kennungen, Zeitlimit, kein Wiederholen ohne Tippen.
+- [ ] **Step 3:** `ProductLookup`: eine Anfrage je ausdrücklichem Tippen; Abfragegrenze lokal (`ProductSearchRules.searchLimit` = 10/min, `productLimit` = 15/min); bei Überschreitung keine Anfrage, sondern der Text „Bitte kurz warten“ mit Restzeit. Keine Cookies, keine gespeicherten Kennungen, Zeitlimit, kein Wiederholen ohne Tippen.
 - [ ] **Step 4:** Zwischenspeicher: Treffer und Produkte liegen nur im Arbeitsspeicher des offenen Blatts (gleiche Anfrage in derselben Sitzung wird nicht erneut gesendet). Dauerhaft gespeichert wird nur ein Produkt, das der Nutzer als Lebensmittel übernimmt, mit `origin = openFoodFacts`, Strichcode und `sourceNote` („Open Food Facts, abgerufen am …“). Keine Protokollierung von Suchwörtern.
-- [ ] **Step 5:** Namensnennung: Fußzeile unter jeder Trefferliste und Produktvorschau („Daten: Open Food Facts, Lizenz ODbL“ mit Verweis) und ein Eintrag unter Einstellungen › Über. Wortlaut und Verweisziel **zu prüfen**.
+- [ ] **Step 5:** Namensnennung: Fußzeile unter jeder Trefferliste und Produktvorschau („Daten: Open Food Facts, Lizenz ODbL“ mit Verweis) und ein Eintrag unter Einstellungen › Über. Wortlaut „Daten: Open Food Facts (ODbL)“, Verweis auf openfoodfacts.org.
 - [ ] **Step 6:** Commit `feat: add the consent and client for Open Food Facts`.
 
 ### Task E5: Online-Textsuche im Mahlzeitenblatt
@@ -477,8 +487,8 @@ Die Bausteine aus #173 sind vorhanden (Ausgangslage Nr. 13). G6 braucht zusätzl
 
 **Files:** Create `Packages/TagwerkCore/Sources/TagwerkCore/GoalGuard.swift` (enthält `GoalGuardConstants`), Tests.
 
-- [ ] **Step 1: Tests.** `restingEnergy_example` (82,1 kg, 180 cm, 34, männlich → ~1.780), `warning_belowRestingEnergy`, `warning_paceAboveShareOfBodyWeight`, `warning_macrosDoNotAddUp`, `noBodyData_noCheckButNotice`, `check_text_alwaysSaysEstimate`, `constants_areTheOnlySourceOfNumbers` (die Texte der Prüfung enthalten die Werte aus `GoalGuardConstants`, nicht eigene Literale).
-- [ ] **Step 2:** `enum GoalGuardConstants` mit den Werten aus „Rechenregeln“, jeder mit Quellenkommentar; die Kommentare nennen die Quelle erst, wenn die Recherche sie bestätigt hat.
+- [ ] **Step 1: Tests.** `restingEnergy_example` (82,1 kg, 180 cm, 34, männlich → ~1.780), `warning_belowRestingEnergy`, `warning_paceAboveShareOfBodyWeight`, `warning_paceAboveOneKilogram`, `warning_belowSoftMinimum`, `block_belowHardMinimum`, `warning_proteinBelowReferenceWeight`, `deficitCheck_usesAverageActivity_orFallbackFactor`, `warning_macrosDoNotAddUp`, `noBodyData_noCheckButNotice`, `check_text_alwaysSaysEstimate`, `constants_areTheOnlySourceOfNumbers` (die Texte der Prüfung enthalten die Werte aus `GoalGuardConstants`, nicht eigene Literale).
+- [ ] **Step 2:** `enum GoalGuardConstants` mit den Werten aus „Rechenregeln“, jeder mit Quellenkommentar; die Kommentare nennen die Quelle aus dem Prüfbericht.
 - [ ] **Step 3:** `GoalGuard.check(proposal:body:weight:) -> GoalCheck` (Vergleichswerte, Warnungen, Text).
 - [ ] **Step 4:** Commit `feat: add the local cross-check for goal proposals`.
 
@@ -651,7 +661,7 @@ Drei Entscheidungen weichen von der Empfehlung des Entwurfs ab (NU5, LM1, PV4); 
 | KG4 | Körperfettanteil | **KG4b** Zuschaltbar, im Standard aus | B1, B4, C3, F2 |
 | KG5 | Erinnerung ans Wiegen | **KG5a** Keine eigene Mitteilung | F2 |
 | ZI1 | Form der Zielplanung | **ZI1b** Geführtes Gespräch im eigenen Chat „Ziele planen“ | G5 |
-| ZI2 | Wer rechnet die Zahlen? | **ZI2b** ChatGPT schlägt vor, Tagwerk rechnet gegen und warnt | G2, G6; Konstanten „wird geprüft“ |
+| ZI2 | Wer rechnet die Zahlen? | **ZI2b** ChatGPT schlägt vor, Tagwerk rechnet gegen und warnt | G2, G6; Konstanten geprüft |
 | ZI3 | Vorschlagskarte | **ZI3b** Getrennte Karten für Ernährung und Aktivität | G5, G6 |
 | ZI4 | Umfang der Aktivitätsziele | **ZI4b** Dazu Aktivitätsenergie pro Tag | A2, G5 |
 | ZI5 | Ziele mit Geschichte | **ZI5b** Zielstände mit „gültig ab“ | A2, C3 |
@@ -676,14 +686,14 @@ Drei Entscheidungen weichen von der Empfehlung des Entwurfs ab (NU5, LM1, PV4); 
 | 5 | Fremde Ernährung umfasst auch Wasser. | Trink-Apps sind die wahrscheinlichste fremde Quelle; ein Schalter für alles. |
 | 6 | Ein Schalter für Textsuche und Strichcode. | Derselbe Dienst, dieselbe Art von Angabe (was der Nutzer isst oder kauft). |
 
-Nach der Faktenprüfung (`docs/superpowers/research/2026-11-21-ernaehrung-faktenpruefung.md`) hat der Nutzer am 21.11.2026 zwei weitere Punkte festgelegt, die oben eingearbeitet sind: die Voreinstellung des Anrechnungsanteils (50 %) und die Abfrage der Kontaktadresse für Open Food Facts in der App. Die übrigen Ergebnisse der Faktenprüfung (Rechenwerte der Gegenrechnung, Grenzen und Lizenz von Open Food Facts, HealthKit) sind **noch nicht** in diesen Plan übernommen; die Stellen tragen weiter „wird geprüft“ bzw. „zu prüfen“.
+Nach der Faktenprüfung (`docs/superpowers/research/2026-11-21-ernaehrung-faktenpruefung.md`) hat der Nutzer am 21.11.2026 zwei weitere Punkte festgelegt, die oben eingearbeitet sind: die Voreinstellung des Anrechnungsanteils (50 %) und die Abfrage der Kontaktadresse für Open Food Facts in der App. Die übrigen Ergebnisse der Faktenprüfung sind am 21.11.2026 von der Hauptsitzung eingetragen (Rechenregeln, Open Food Facts). HealthKit-Fragen bleiben Gerätetests.
 
 ### Weitere offene Fragen
 
 | Nr. | Frage | Empfehlung |
 |---|---|---|
 | 1 | **Werte der Gegenrechnung** (Tabelle in „Rechenregeln“): nach der Quellenprüfung übernehmen oder ändern? | Geprüfte Werte übernehmen; Abweichungen der Recherche in die Tabelle eintragen. Schwellen nicht einstellbar machen. |
-| 2 | **Kontaktangabe im Anfragekopf an Open Food Facts** – entschieden (Nutzer, 21.11.2026): Die App fragt die Adresse beim Einschalten der Online-Suche ab; ohne Adresse keine Anfrage; nie selbsttätig eine Adresse eintragen. | In E4 eingeplant. Offen bleibt nur das genaue Format des Anfragekopfs (zu prüfen). |
+| 2 | **Kontaktangabe im Anfragekopf an Open Food Facts** – entschieden (Nutzer, 21.11.2026): Die App fragt die Adresse beim Einschalten der Online-Suche ab; ohne Adresse keine Anfrage; nie selbsttätig eine Adresse eintragen. | In E4 eingeplant. Format: `Tagwerk/<Version> (<Adresse>)`. |
 | 3 | **Fremde Einträge im Datenpaket für ChatGPT:** mitrechnen oder nur eigene? | Mitrechnen, sonst passen Durchschnitt und Gewichtstrend nicht zusammen; Einwilligungstext sagt es (G3). |
 | 4 | **Körperdaten: Vorrang.** Soll ein in Tagwerk getippter Wert einen Health-Wert überstimmen können? | Nein. Health gilt, wo es liefert; die Felder sind Ersatz. Wer abweichen will, ändert den Wert in Health. |
 | 5 | **Issue-Schnitt:** ein Issue je Strang (A–G) oder ein Sammel-Issue? | Je Strang eines; E4–E5 (Online-Suche) und E6 (Strichcode) je ein eigenes. |
