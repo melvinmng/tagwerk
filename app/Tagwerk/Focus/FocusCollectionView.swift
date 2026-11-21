@@ -1,8 +1,8 @@
 import SwiftUI
 import TagwerkCore
 
-/// The collection: one piece per finished focus session, grouped by week. The symbols are neutral placeholders; the
-/// look of the stages is a design decision (#188).
+/// The collection: one brick per focus session of a minute or more, grouped by week. The symbols are neutral
+/// placeholders until the bricks per weekday replace them (F2).
 struct FocusCollectionView: View {
     @Environment(AppEnvironment.self) private var environment
 
@@ -26,16 +26,16 @@ struct FocusCollectionView: View {
         List {
             if weeks.isEmpty {
                 ContentUnavailableView("Noch nichts gesammelt", systemImage: "timer",
-                                       description: Text("Jede beendete Fokus-Sitzung ergibt ein Stück. Wer früher abbricht, bekommt ein gewelktes."))
+                                       description: Text("Jede Fokus-Sitzung ab einer Minute ergibt einen Baustein."))
             }
             ForEach(weeks) { week in
                 Section {
                     LazyVGrid(columns: [GridItem(.adaptive(minimum: 44))], spacing: 12) {
                         ForEach(Array(week.pieces.enumerated()), id: \.offset) { _, piece in
-                            Image(systemName: piece.isWilted ? "\(piece.stage.rawValue).circle" : "\(piece.stage.rawValue).circle.fill")
+                            Image(systemName: piece.isEndedEarly ? "\(piece.stage.rawValue).circle" : "\(piece.stage.rawValue).circle.fill")
                                 .font(.title)
-                                .foregroundStyle(piece.isWilted ? Color.secondary : Color.accentColor)
-                                .accessibilityLabel(piece.isWilted ? Text("Gewelkt, Stufe \(piece.stage.rawValue)") : Text("Gewachsen, Stufe \(piece.stage.rawValue)"))
+                                .foregroundStyle(piece.isEndedEarly ? Color.secondary : Color.accentColor)
+                                .accessibilityLabel(piece.isEndedEarly ? Text("Vorzeitig beendet, Stufe \(piece.stage.rawValue)") : Text("Abgeschlossen, Stufe \(piece.stage.rawValue)"))
                         }
                     }
                     .padding(.vertical, 4)

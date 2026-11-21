@@ -1171,6 +1171,46 @@
         }
       }
     },
+    "%lld Bausteine": {
+      "localizations": {
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Baustein"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Bausteine"
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld brick"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld bricks"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "%lld Einträge": {
       "localizations": {
         "de": {
@@ -1765,6 +1805,7 @@
       }
     },
     "%lld gewachsen · %lld gewelkt": {
+      "extractionState": "stale",
       "localizations": {
         "de": {
           "stringUnit": {
@@ -2098,6 +2139,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "%lld left from today"
+          }
+        }
+      }
+    },
+    "%lld vorzeitig beendet": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld ended early"
           }
         }
       }
@@ -2703,6 +2754,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Hand over"
+          }
+        }
+      }
+    },
+    "Abgeschlossen, Stufe %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Completed, stage %lld"
           }
         }
       }
@@ -5555,6 +5616,16 @@
         }
       }
     },
+    "Der Baustein bleibt erhalten und wird als vorzeitig beendet markiert.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The brick stays and is marked as ended early."
+          }
+        }
+      }
+    },
     "Der Beginn fehlt.": {
       "localizations": {
         "en": {
@@ -7867,6 +7938,7 @@
       }
     },
     "Fokus abbrechen? Das Stück der Sammlung welkt.": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -8752,6 +8824,7 @@
       }
     },
     "Gewachsen, Stufe %lld": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -8762,6 +8835,7 @@
       }
     },
     "Gewelkt, Stufe %lld": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -9989,7 +10063,18 @@
         }
       }
     },
+    "Jede Fokus-Sitzung ab einer Minute ergibt einen Baustein.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Every focus session of a minute or more gives you a brick."
+          }
+        }
+      }
+    },
     "Jede beendete Fokus-Sitzung ergibt ein Stück. Wer früher abbricht, bekommt ein gewelktes.": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -16666,6 +16751,16 @@
         }
       },
       "shouldTranslate": false
+    },
+    "Vorzeitig beendet, Stufe %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ended early, stage %lld"
+          }
+        }
+      }
     },
     "Wandern": {
       "localizations": {

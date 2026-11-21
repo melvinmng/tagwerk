@@ -21,7 +21,10 @@ struct FocusTimerTextTests {
 
     @Test func collectionSummary_germanTexts() {
         #expect(FocusTimerText.collectionSummary(FocusReward.summary(of: [])) == "Noch leer")
-        #expect(FocusTimerText.collectionSummary(FocusReward.summary(of: [.grown(.one), .grown(.two), .wilted(.one)])) == "2 gewachsen · 1 gewelkt")
+        #expect(FocusTimerText.collectionSummary(FocusReward.summary(of: [.completed(.one)])) == "1 Baustein")
+        #expect(FocusTimerText.collectionSummary(FocusReward.summary(of: Array(repeating: FocusRewardPiece.completed(.two), count: 7))) == "7 Bausteine")
+        let mixed: [FocusRewardPiece] = Array(repeating: .completed(.two), count: 5) + [.endedEarly(.one), .endedEarly(.three)]
+        #expect(FocusTimerText.collectionSummary(FocusReward.summary(of: mixed)) == "7 Bausteine · 2 vorzeitig beendet")
         #expect(FocusTimerText.focusedText(seconds: 42 * 60 + 10) == "42 min Fokus")
     }
 }

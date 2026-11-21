@@ -40,9 +40,12 @@ enum FocusTimerText {
         return String(localized: "\(minutes) min Fokus")
     }
 
-    /// Summary line of the collection: "12 gewachsen · 3 gewelkt".
+    /// Summary line of the collection: "7 Bausteine", "7 Bausteine · 2 vorzeitig beendet", "Noch leer".
     static func collectionSummary(_ summary: FocusCollectionSummary) -> String {
         if summary.total == 0 { return String(localized: "Noch leer") }
-        return String(localized: "\(summary.grown) gewachsen · \(summary.wilted) gewelkt")
+        let bricks = String(localized: "\(summary.total) Bausteine")
+        guard summary.endedEarly > 0 else { return bricks }
+        let endedEarly = String(localized: "\(summary.endedEarly) vorzeitig beendet")
+        return "\(bricks) · \(endedEarly)"
     }
 }

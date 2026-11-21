@@ -26,7 +26,7 @@ final class FocusTimerModel {
     private(set) var session: Session?
     /// The focus sheet is shown.
     var isPresented = false
-    /// The piece the last ended session left, for the line "Stück gewachsen"; `nil` when none.
+    /// The piece the last ended session left; `nil` when none.
     private(set) var lastPiece: FocusRewardPiece?
     /// Completes a task of the list (`TaskID.key`); set by the app environment.
     @ObservationIgnored var completeTask: ((String) async -> Void)?
@@ -122,14 +122,16 @@ final class FocusTimerModel {
         await syncOutputs()
     }
 
-    /// The user gives up. Within the first minute nothing is left of the session; later its piece wilts.
+    /// The user ends the session before its phase is over. Within the first minute nothing is left of it; later it
+    /// stays as an early-ended piece (`aborted`) in the stage reached (FO9b).
     func stop() async {
         guard let snap = snapshot(at: now()) else { return }
         await end(snap.phase == .finished ? .completed : FocusReward.outcomeOfStop(focusedSeconds: snap.focusedSeconds))
     }
 
-    /// The choices at the end of a phase or of the whole session. The session is ended and saved before the task is
-    /// changed, so the effort of the completion sees this session's focus time.
+    /// The choices during a phase and at its end. "Erledigt" (`.complete`) ends the session as completed in every
+    /// phase, with the stage reached so far (FO1b, FO9b). The session is ended and saved before the task is changed,
+    /// so the effort of the completion sees this session's focus time.
     func finish(_ action: FocusEndAction) async {
         guard let current = session, let snap = snapshot(at: now()) else { return }
         switch action {

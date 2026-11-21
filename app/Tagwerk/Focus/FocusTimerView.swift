@@ -31,7 +31,7 @@ struct FocusTimerView: View {
                 Button("Abbrechen", role: .destructive) { Task { await focus.stop() } }
                 Button("Weitermachen", role: .cancel) {}
             } message: {
-                Text("Fokus abbrechen? Das Stück der Sammlung welkt.")
+                Text("Der Baustein bleibt erhalten und wird als vorzeitig beendet markiert.")
             }
         }
     }
@@ -116,7 +116,7 @@ struct FocusTimerView: View {
         }
     }
 
-    /// Within the first minute nothing is left to wilt, so no question is needed.
+    /// Within the first minute nothing is left of the session, so no question is needed.
     private func askToStop(_ snapshot: FocusTimerSnapshot) {
         if snapshot.focusedSeconds < FocusReward.discardSeconds {
             Task { await focus.stop() }
