@@ -45,31 +45,34 @@ enum AuditAllowlist {
     private static let entries: [Entry] = [
         // MARK: Contrast (every group needs a colour decision, section "Designpunkte für #188")
         Entry(auditType: .contrast, labels: [
-            "Nichts offen", "zuletzt: „(Römer|Demo Linsensuppe)“ · heute \\d+:\\d+", "[89]", "HEUTE · KW \\d+", "[A-Z]{2}\\.,? .* · KW \\d+", "Ablauf", "\\d\\d:00",
-            "Schlafzeit \\d+:\\d+", "Ganztägig", "Überfällig", "Heute", "Einkaufsliste", "Notizen", "\\d+\\.\\d+\\.", "·", "Demo Aufgaben",
-            "Lokal", "Routinen", "Gewohnheiten", "Woche", "Starten", "noch [\\d.]+", "Wasser", "Schritte", "Training · Woche",
-            "\\d+ offen · Liste „Demo Einkauf“ in Erinnerungen", "Brot & Backwaren", "Kühlregal", "Aufgaben, 1 offen", "Vergangene Termine",
-            "Ältere Termine durchsuchen · vor .*", "Durchsucht: 6 Monate zurück, 12 Monate voraus\\.",
-            "ab (jetzt · )?\\d+:\\d+ bis \\d+:\\d+ · ganzer Tag .*", "1 Aufgabe ohne Aufwand mit Standarddauer gerechnet", "Pflanzen gießen",
-            "Erledigt: Erinnerungen.*", "Abend-Checkliste · Schlafzeit .*", "Punkte in den Einstellungen anlegen",
-            "Trinkportionen", "Brain Dump", "Leitfragen einfügen", "Schreib auf, was in deinen Kopf kommt\\. Sortier deine Gedanken\\.",
-            "Der Eintrag bleibt auf deinem iPhone und geht nie an ChatGPT\\.", "heute \\d+:\\d+( · diktiert)?", "Bible Study · heute .*",
-            "Tagebuch · .*",
+            "zuletzt: „(Römer|Demo Linsensuppe)“ · heute \\d+:\\d+", "HEUTE · KW \\d+", "\\d\\d:00", "Überfällig", "Heute", "·", "Lokal",
+            "Brot & Backwaren", "Kühlregal", "Aufgaben, 1 offen", "Vergangene Termine", "Durchsucht: 6 Monate zurück, 12 Monate voraus\\.",
+            "1 Aufgabe ohne Aufwand mit Standarddauer gerechnet", "Pflanzen gießen", "Erledigt: Erinnerungen.*", "Abend-Checkliste · Schlafzeit .*",
+            "Trinkportionen", "Brain Dump", "Der Eintrag bleibt auf deinem iPhone und geht nie an ChatGPT\\.", "heute \\d+:\\d+( · diktiert)?",
             // Titles and previews of the demo notes (the label of a note preview can have several lines). The preview of a note whose
             // title is a heading line starts with the first body line, so these lines are listed as well.
             "(?s)(Demo Linsensuppe|Portionen: 4|Ideen Hausarbeit|Gliederung|Generelle Gedanken|Literaturliste|Handwerker anrufen|Heute lief die Gliederung gut|Geschenkidee für Lea|Kochbuch oder Konzertkarten|Römer|Allgemeine Stimmung|Alte Einkaufsidee|Ruhig und dankbar\\.|Heizung entlüften|1 Einleitung, 2 Methode, 3 Ergebnisse|Drei Quellen zur Statistik).*",
-        ], reason: "Secondary text in the system grey (.secondary) on the grouped background or on a card: captions, counts, section "
-            + "headers. Darkening it would change the look of the default size; decided together with the other grey texts in #188."),
+        ], reason: "Secondary text in the tone `secondaryText` (78 % of the label colour, strand K) on the grouped background or on a card: captions, "
+            + "counts, section headers, hour labels. Strand K cut the findings of this group from 279 to 102 in three repetitions each "
+            + "(measured with `--collect-all`, see docs/superpowers/reports/2026-11-21-g3-contrast-measurements.md); these patterns were still reported "
+            + "in at least one repetition after the change. The audit measures the rendered small text, and 78 % is the value the calculation "
+            + "gave (KO1a). Next step (plan K5, step 3): raise the asset value and measure again; not done within the measurement limit of "
+            + "three repetitions, and a darker grey changes the look of the default size, so the value is the user's decision (#188)."),
         Entry(auditType: .contrast, labels: [
-            "Ohne Uhrzeit", "0 · 0 min", "\\+\\d+ offen", "1 überfällig", "Abgabe Kurzbericht", "Pretest vorbereiten", "Deadlines", "heute",
-            "morgen", "in 3 Tagen", "Kalender Demo Uni(, .*)?", "P1", "„Seminar“ aus „Demo Freigabe“ liegt zur selben Zeit wie „Seminar“\\.",
-            "Künftig immer bei „Seminar“ aus „Demo Freigabe“", "Mit ChatGPT planen: in Einstellungen › KI anmelden", "Derselbe Termin\\?",
-        ], reason: "Text on tinted cards (red deadline card, pink suggestion card) and on the translucent bar of the day view, in red, orange "
-            + "or grey. The colours are part of the card design; contrast on tint is a design question (#188, \"Sekundärtexte auf getönten Karten\")."),
+            "Ohne Uhrzeit", "0 · 0 min", "\\+\\d+ offen", "heute", "Kalender Demo Uni(, .*)?",
+            "„Seminar“ aus „Demo Freigabe“ liegt zur selben Zeit wie „Seminar“\\.", "Künftig immer bei „Seminar“ aus „Demo Freigabe“",
+            "Mit ChatGPT planen: in Einstellungen › KI anmelden", "Derselbe Termin\\?",
+        ], reason: "Text on tinted cards (red deadline card, pink suggestion card) and on the translucent bar of the day view, in the tones "
+            + "`redText`, `orangeText`, `purpleText` or `secondaryText`. The overdue/deadline texts (\"1 überfällig\", \"morgen\", \"Abgabe "
+            + "Kurzbericht\") pass since strand K; these patterns were still reported in at least one repetition (default size and AX5: 65 findings "
+            + "before, 26 after, three repetitions each). The tint of the card changes with the content behind the translucent bar, so the "
+            + "pair is not fixed by a colour alone (#188, \"Sekundärtexte auf getönten Karten\")."),
         Entry(auditType: .contrast, labels: [
-            "Auswählen", "Getrennt lassen", "Zusammenfassen", "Projektwoche", "Abbrechen", "Alle", "Termine", "✓ Erledigte", "Essen", "Trinken", "Training",
-        ], reason: "Button and segment texts in the accent colour or on Liquid Glass / bordered tint (navigation bar, filter marks, quick entry). "
-            + "The system draws the background; no own colour to change without replacing the system style (#188)."),
+            "Auswählen", "Getrennt lassen", "Zusammenfassen", "Abbrechen", "Termine", "✓ Erledigte",
+        ], reason: "Button and segment texts on Liquid Glass or on bordered tint (navigation bar, filter marks, quick entry). The accent colour "
+            + "(`AccentColor`, #005FCC) is not the cause any more: \"Alle\" and the accent texts of the recipe screens pass since strand K. What "
+            + "remains is text whose background the system draws and lets the list scroll behind; no own colour to change without replacing the "
+            + "system style (#188, \"Schrift auf Liquid Glass\")."),
 
         Entry(auditType: .contrast, labels: ["Abschließen"], screens: ["Tagesabschluss", "Tagesabschluss (Abend)", "AX5/dark Tagesabschluss (Abend)"], reason:
             "Confirmation button of the wrap-up sheet in the navigation bar: the text sits on the Liquid Glass of the bar, whose background "
@@ -78,24 +81,22 @@ enum AuditAllowlist {
             + "\"Schrift auf Liquid Glass\")."),
         Entry(auditType: .contrast, labels: ["Unerledigt von heute"], screens: ["Tagesabschluss (Abend)"], reason:
             "Section header of the leftover section of the wrap-up, in the system grey of a grouped list header on the grouped background "
-            + "(\"nearly passed\"). It is the same group as the other section headers above; the system draws the header colour, and an own "
-            + "78 % tone for this one header would duplicate the `TextSecondary` asset that strand K (plan g3-system-anbindungen, KO1a) "
-            + "introduces for all grey texts at once. Removed with the other entries of the group in task K5 (#160)."),
+            + "(\"nearly passed\"). The header colour is drawn by the system (a `Section` header is not styled with `secondaryText`), so strand K "
+            + "does not change it; reported in 2 of 2 completed evening runs (default size). Open: a custom header or another tone (#188)."),
 
         Entry(auditType: .contrast, labels: [
-            "Morgen planen", "30 min zu viel", "Arbeitszeit vorbei · .*", "[A-Z][a-z]\\. \\d+\\. [A-Za-zä]+\\. · .* frei · \\d+ von heute übrig",
-            "Unerledigtes verschieben · \\d+ Aufgaben?", "Klausur Statistik", "Anmeldung Abschlussarbeit",
+            "30 min zu viel", "Arbeitszeit vorbei · .*", "Unerledigtes verschieben · \\d+ Aufgaben?",
         ], screens: eveningPlanScreens, reason:
-            "Texts of the capacity card of today after the end of work (\"Arbeitszeit vorbei\", the next planning day, the leftover row): text on the "
-            + "translucent `.thinMaterial` card, whose colour depends on the part of the hour grid behind it. The same group as the other texts on "
-            + "tinted cards above (#188, \"Sekundärtexte auf getönten Karten\"); the card is audited in the pinned evening run only. Most of them "
-            + "appear in one of three repetitions (collect mode), \"von heute übrig\" in all of them. \"Klausur Statistik\" and \"Anmeldung "
-            + "Abschlussarbeit\" are rows of the deadline card above it (red card colour, see \"Abgabe Kurzbericht\" above); they are on screen "
-            + "only in this run, and the finding showed up in 1 of 10 repetitions of the stress run."),
-        Entry(auditType: .contrast, labels: gridCellLabels, screens: gridScreens, reason:
-            "Title and time of the entries in the hour grid of \"Planen\": text in the primary or secondary colour on the event colour at 24 % "
-            + "(blue, green, red, grey). The tint is the colour code of the grid (calendar, block, deadline, break); contrast on tint is a "
-            + "design question (#188, \"Sekundärtexte auf getönten Karten\")."),
+            "Texts of the capacity card of today after the end of work (\"Arbeitszeit vorbei\", the leftover row): text on the translucent "
+            + "`.thinMaterial` card, whose colour depends on the part of the hour grid behind it. The same group as the other texts on tinted "
+            + "cards above (#188, \"Sekundärtexte auf getönten Karten\"); the card is audited in the pinned evening run only. Since strand K "
+            + "\"Morgen planen\", \"von heute übrig\" and the deadline rows are not reported any more; the three patterns left each appear in one "
+            + "of the completed repetitions (one evening run of the three failed for load reasons in the measurement)."),
+        Entry(auditType: .contrast, labels: ["Sprechstunde", "Mittagspause"], screens: gridScreens, reason:
+            "Title of the grey entries of the hour grid of \"Planen\" (\"Sprechstunde\", \"Mittagspause\"): primary text on the event colour at "
+            + "24 % (grey). The time line (`gridTimeText`, 85 %, KO3a) and the titles on blue, green and red pass since strand K; the grey "
+            + "tint is the colour code of the grid (break, appointment without calendar colour), and the audit still reports its title in "
+            + "default size (6 findings before, 4 after, three repetitions each). Contrast on tint is a design question (#188)."),
 
         Entry(auditType: .contrast, labels: ["\\d+ Termine · \\d\\d:\\d\\d–\\d\\d:\\d\\d"], screens: ["AX5/dark Planen"], reason:
             "Headline of the block that collapses overlapping entries of the hour grid (BF1c, `CollapsedGroupBlock`): "
@@ -161,49 +162,41 @@ enum AuditAllowlist {
 
         // MARK: Recipe screens and settings (G1, G2)
         Entry(auditType: .contrast, labels: [
-            "Rezepttext", "Füge die Zutatenliste oder das ganze Rezept ein\\. .*", "Du kannst das in den Einstellungen unter „Einkaufsliste“ widerrufen\\.",
-            "Das Rezept wird als Notiz im Ordner „Rezepte“ gespeichert\\. .*", "Portionen", "\\d+", "Die Kategorien kommen aus deiner Einkaufsliste\\.",
-            "Vorlesen", "ChatGPT", "Notiz", "(?s)Eine Notiz mit den Abschnitten .*", "(?s)Notizen liegen nur auf diesem iPhone\\..*",
-            "(?s)Die gewählte Liste erscheint als Einkaufsliste\\..*", "(?s)Sendet auf dein Tippen die Namen .*", "(?s)„Rezept hinzufügen“ sendet .*",
-            "(?s)Portionen: \\d+\\nZutaten.*", "strukturiert", "wird mit ChatGPT gelesen", "Vorrat & Konserven", "\\d+ h \\d+ min", "Spracheingabe",
-            "Titel", "Zutaten", "Zubereitung", "Inhalte", "Stimme", "Deutsch", "Rezepte", "Ziele", "Schätzung", "Anzeige", "Liste", "Kategorien", "Erinnerungen", "Keine",
-            "Demo Einkauf", "[\\d.,]+( kcal| l)?", "In Planen anzeigen",
+            "Rezepttext", "Füge die Zutatenliste oder das ganze Rezept ein\\. .*", "Das Rezept wird als Notiz im Ordner „Rezepte“ gespeichert\\. .*",
+            "Portionen", "Die Kategorien kommen aus deiner Einkaufsliste\\.", "Vorlesen", "ChatGPT", "Notiz",
+            "(?s)Eine Notiz mit den Abschnitten .*", "(?s)Notizen liegen nur auf diesem iPhone\\..*",
+            "(?s)Die gewählte Liste erscheint als Einkaufsliste\\..*", "(?s)Sendet auf dein Tippen die Namen .*",
+            "(?s)„Rezept hinzufügen“ sendet .*", "Vorrat & Konserven", "\\d+ h \\d+ min", "Spracheingabe", "Titel", "Zutaten", "Zubereitung",
+            "Inhalte", "Stimme", "Ziele", "Liste", "Kategorien",
             "(?s)(Tagwerk wandelt Sprache|Beim Diktieren und in der Einkaufsliste|Mikrofon, Sprachpakete|Die Sprache der Oberfläche|Die Vorgaben sind Platzhalter|Zum Schätzen sendet).*",
-            "(?s)(Gesendet wird|Nicht gesendet werden|Um ein Rezept zu lesen).*", "(?s)„In Planen anzeigen“ zeigt .*", "Die drei Schnellknöpfe im Tab .*",
-            "Neue Artikel kommen auf (Englisch|Deutsch)\\. .*", "\\d+ von \\d+ Artikeln · .*", "(?s)Mengen bleiben, wie sie sind\\..*",
-            "Einkaufsliste jetzt auf (Englisch|Deutsch)",
-        ], screens: recipeScreens + recipeScreensLargeText, reason: "Section headers, footers, values and previews in the system grey (.secondary) on the "
+            "Die drei Schnellknöpfe im Tab .*", "\\d+ von \\d+ Artikeln · .*",
+        ], screens: recipeScreens + recipeScreensLargeText, reason: "Section headers, footers, values and previews in the secondary text tone on the "
             + "grouped background of a form or list; the last footer of a settings page also lies behind the tab bar. Same group as the "
-            + "grey texts above; darkening it would change the look of the default size, decided in #188. The card and the preview of "
-            + "\"Artikel übersetzen\" use the same grey (second line of the card, section header and footer of the preview); strand K replaces it. The heading of the card "
-            + "(primary text on the card's solid fill) is reported as \"nearly passed\" in some runs and not in others on the same screen; the "
-            + "colours are the system's, the value is not reproducible by eye, and strand K measures the pair."),
+            + "grey texts above (`secondaryText`, 78 %): section headers, footers and values of forms and lists still report in at least one "
+            + "repetition after strand K (168 findings before, 102 after, three repetitions each; the patterns that no longer report were struck). "
+            + "The same next step as above: the asset value is the open decision (plan K5, step 3)."),
         Entry(auditType: .contrast, labels: ["Milk", "Milch"], screens: ["Einkaufsliste › Übersetzung", "AX5/dark Einkaufsliste › Übersetzung"], reason:
-            "Names in the rows of the translation preview: primary text and the system grey of the second line inside a row button on the grouped "
-            + "background of a half-height sheet; the audit reports \"failed\" or \"nearly passed\" depending on the text size, like the ingredient "
-            + "rows of the recipe result (same group, #188). The colours are the system's; strand K measures them."),
+            "Names in the rows of the translation preview: primary text and `secondaryText` of the second line inside a row button on the grouped "
+            + "background of a half-height sheet; the audit reports \"failed\" or \"nearly passed\" depending on the text size (12 findings before "
+            + "and after strand K, in every repetition). The ingredient rows of the recipe result, which looked the same, pass since strand K; "
+            + "these rows sit in a button, whose tint the audit may measure instead of the row background. Open (#188)."),
         Entry(auditType: .contrast, labels: [
-            "Alle Sätze stehen dort bereit, auch für Aktionstaste und Home-Bildschirm\\.", "Erfassen", "Einkauf", "Tag und Fokus", "Notizen und Gewohnheiten",
-            "250 ml, im Hintergrund", "Blatt „(Essen|Training)“", "öffnet Tagwerk", "Artikel im Satz, im Hintergrund", "Siri fragt nach den Artikeln",
-            "Einkaufsliste", "Termine, Blöcke, Deadlines; nur entsperrt", "Freier Fokus-Timer, im Hintergrund", "Brain Dump mit laufendem Diktat",
-            "Hakt eine Gewohnheit für heute ab", "auch: „Fokus beenden in Tagwerk“", "(?s)Erkennt Siri einen Satz nicht.*",
+            "Alle Sätze stehen dort bereit, auch für Aktionstaste und Home-Bildschirm\\.", "Erfassen", "Einkauf", "Tag und Fokus",
+            "250 ml, im Hintergrund",
         ], screens: siriScreens, reason: "Section headers, footers and the effect line of each phrase on the page \"Siri & Kurzbefehle\", in the system grey "
-            + "(.secondary) on the grouped background. Same group as the grey texts above (\"Sekundärtext\"); the page moved here from \"Erfassen\" "
-            + "(#188 SI1b) and brings its texts along. Removed with the group in task K5 (#160)."),
+            + "(`secondaryText`) on the grouped background. Same group as the grey texts above; 36 findings before, 13 after strand K (three repetitions "
+            + "each), the patterns that no longer report were struck. The asset value is the open decision (plan K5, step 3)."),
         Entry(auditType: .textClipped, labels: ["Tagwerk-Kurzbefehle"], screens: siriScreens, reason: "The `ShortcutsLink` is a system control; its "
             + "label \"Tagwerk-Kurzbefehle\" is drawn by the system, and the audit reports it as possibly clipped (default size and AX5). The control "
             + "is not part of the app's own layout and cannot be given a line limit or another style (#188 SI2b)."),
         Entry(auditType: .contrast, labels: [
-            "(rote|Rote) Linsen", "Zwiebel", "Karotten", "Gemüsebrühe", "Salz", "Obst & Gemüse", "\\d+ (g|l)",
-        ], screens: ["Zutaten (Rezept)", "AX5/dark Zutaten (Rezept)"], reason: "Ingredient names, quantities and categories of the demo recipe in the "
-            + "ingredient list of the sheet (primary and secondary text on the grouped background of the sheet). The audit reports \"nearly passed\" "
-            + "(passes with a larger font size); the colours are the system's primary and secondary text colours (#188)."),
-        Entry(auditType: .contrast, labels: [
-            "Einverstanden", "Nicht jetzt", "Rezept speichern", "\\d+ Artikel hinzufügen", "Verwerfen", "Neues Rezept", "Rezept mit ChatGPT anlegen",
-            "Andere Notiz wählen …", "Demo Linsensuppe", "Rezept holen", "Zutaten holen", "Zurücksetzen", "\\d+ ml", "Probe hören", "So lassen", "Mit ChatGPT übersetzen", "Übernehmen",
-        ], screens: recipeScreens + recipeScreensLargeText, reason: "Texts in the accent colour (list buttons, note title in the picker), white on the "
-            + "prominent button (system style; \"Rezept holen\" and \"Zutaten holen\" are dimmed by the system while the text field is empty) and \"Verwerfen\" in the navigation bar, whose Liquid Glass background lets the list scroll behind it. "
-            + "The system draws the background; no own colour to change without replacing the system style (#188)."),
+            "Verwerfen",
+            "Rezept holen", "Zutaten holen", "Zurücksetzen", "Probe hören", "Übernehmen",
+        ], screens: recipeScreens + recipeScreensLargeText, reason: "What the accent colour did not fix: \"Rezept holen\" and \"Zutaten holen\" are dimmed by the system "
+            + "while the text field is empty (gewollt schwach), \"Verwerfen\" and \"Übernehmen\" sit in the navigation bar, whose Liquid Glass "
+            + "background lets the list scroll behind it, and \"Zurücksetzen\" and \"Probe hören\" are list buttons in the accent colour on a "
+            + "grouped row. The system draws the background; no own colour to change without replacing the system style (#188). All other "
+            + "accent texts of these screens pass since strand K (72 findings before, 36 after, three repetitions each)."),
 
         Entry(auditType: .dynamicType, labels: [
             "Abbrechen", "Verwerfen", "Die Kategorien kommen aus deiner Einkaufsliste\\.", "Das Rezept wird als Notiz im Ordner „Rezepte“ gespeichert\\. .*",
@@ -336,9 +329,6 @@ enum AuditAllowlist {
         // (element detection) without an element in this environment, also without the share choice; it reproduces on the code before
         // that change; the element cannot be resolved. Stays on the device test list (VoiceOver).
         if issue.auditType == .elementDetection { return currentScreen == "Rezept anlegen (Eingabe)" }
-        // The card of "Artikel übersetzen" also reports one "nearly passed" contrast finding without an element (the grey second line or the
-        // button on the material of the card; the same texts are reported with their frames and covered by the entries below).
-        if issue.auditType == .contrast { return currentScreen == "Einkaufsliste › Karte „übersetzen“" }
         guard issue.auditType == .textClipped else { return false }
         // The card of "Artikel übersetzen" reports two clipped texts without an element (frame 0×0) in the default size; its texts are
         // reported with their own frames and covered by the entries below (the card is a plain stack of texts and buttons, nothing is cut).
