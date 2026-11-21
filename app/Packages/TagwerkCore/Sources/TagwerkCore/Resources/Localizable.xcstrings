@@ -669,12 +669,22 @@
         }
       }
     },
-    "Am selben Tag um %@": {
+    "Am Tag selbst": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "On the same day at %@"
+            "value": "On the day"
+          }
+        }
+      }
+    },
+    "Am Tag selbst um %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "On the day at %@"
           }
         }
       }
@@ -1629,6 +1639,16 @@
         }
       }
     },
+    "Standard · %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Default · %@"
+          }
+        }
+      }
+    },
     "Tag reflektieren": {
       "localizations": {
         "en": {
@@ -1851,12 +1871,32 @@
         }
       }
     },
-    "Zum Zeitpunkt": {
+    "Zum Beginn": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "At time of event"
+            "value": "At start"
+          }
+        }
+      }
+    },
+    "Zur Deadline": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "At the deadline"
+          }
+        }
+      }
+    },
+    "Zur Fälligkeit": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "At due time"
           }
         }
       }

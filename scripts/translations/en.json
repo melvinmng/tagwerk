@@ -1710,7 +1710,6 @@
   "Noch zu wenige Messungen.": "Not enough measurements yet.",
   "Ohne Schätzung gemessen": "Measured without estimate",
   "Schätzung und Ist": "Estimate vs. actual",
-  "Zum Zeitpunkt": "At time of event",
   "%lld Minuten vorher": {
     "one": "%lld minute before",
     "other": "%lld minutes before"
@@ -1727,7 +1726,6 @@
     "one": "%lld week before",
     "other": "%lld weeks before"
   },
-  "Am selben Tag um %@": "On the same day at %@",
   "1 Tag vorher um %@": "1 day before at %@",
   "%lld Tage vorher um %@": "%1$lld days before at %2$@",
   "%@ + %lld weitere": "%1$@ + %2$lld more",
@@ -2166,5 +2164,11 @@
   "Projekt fehlt": "Project missing",
   "Bitte ein Projekt nennen.": "Please name a project.",
   "Dieses Projekt steht nicht in der Liste von list_github_targets.": "This project is not in the list from list_github_targets.",
-  "Repository, Projekte und Zugewiesene gibt es nur bei GitHub-Issues.": "Repository, projects and assignees only exist for GitHub issues."
+  "Repository, Projekte und Zugewiesene gibt es nur bei GitHub-Issues.": "Repository, projects and assignees only exist for GitHub issues.",
+  "Zur Fälligkeit": "At due time",
+  "Zum Beginn": "At start",
+  "Zur Deadline": "At the deadline",
+  "Am Tag selbst": "On the day",
+  "Am Tag selbst um %@": "On the day at %@",
+  "Standard · %@": "Default · %@"
 }

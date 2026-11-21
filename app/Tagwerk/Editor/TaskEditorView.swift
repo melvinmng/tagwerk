@@ -302,7 +302,7 @@ struct TaskEditorView: View {
                 if model.draft.due == nil {
                     Text("Erinnerungen brauchen ein Fälligkeitsdatum.").foregroundStyle(.secondary)
                 } else {
-                    ReminderListEditor(model: reminders.list, calendar: calendar)
+                    ReminderListEditor(model: reminders.list, subject: .task, calendar: calendar)
                 }
             } header: {
                 Text("Erinnerungen")

@@ -12,7 +12,7 @@ struct ReminderDefaultsView: View {
             if let model {
                 ForEach(ReminderDefaultsModel.slots) { slot in
                     Section {
-                        ReminderListEditor(model: model.list(slot), defaultSwitchTitle: nil, calendar: .tagwerk)
+                        ReminderListEditor(model: model.list(slot), subject: slot.kind.subject, defaultSwitchTitle: nil, calendar: .tagwerk)
                     } header: {
                         Text(Self.header(for: slot))
                     } footer: {

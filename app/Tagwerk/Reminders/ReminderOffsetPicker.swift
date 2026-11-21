@@ -4,6 +4,7 @@ import TagwerkCore
 /// Page for one new reminder: a distance before ("2 Stunden vorher") or a time of day some days before ("1 Tag vorher um 18:00").
 struct ReminderOffsetPicker: View {
     let isAllDay: Bool
+    let subject: ReminderSubject
     var calendar: Calendar = .tagwerk
     let onAdd: (ReminderOffset) -> Void
     @Environment(\.dismiss) private var dismiss
@@ -16,8 +17,9 @@ struct ReminderOffsetPicker: View {
     @State private var daysBefore = 1
     @State private var time: Date
 
-    init(isAllDay: Bool, calendar: Calendar = .tagwerk, onAdd: @escaping (ReminderOffset) -> Void) {
+    init(isAllDay: Bool, subject: ReminderSubject, calendar: Calendar = .tagwerk, onAdd: @escaping (ReminderOffset) -> Void) {
         self.isAllDay = isAllDay
+        self.subject = subject
         self.calendar = calendar
         self.onAdd = onAdd
         _unit = State(initialValue: isAllDay ? .days : .hours)
@@ -50,7 +52,7 @@ struct ReminderOffsetPicker: View {
             }
             Section("Schnellauswahl") {
                 ForEach(quickChoices, id: \.self) { choice in
-                    Button(ReminderText.describe(choice, locale: .current, calendar: calendar)) { select(choice) }
+                    Button(ReminderText.describe(choice, subject: subject, isAllDay: isAllDay, locale: .current, calendar: calendar)) { select(choice) }
                 }
             }
         }
@@ -79,7 +81,7 @@ struct ReminderOffsetPicker: View {
         }
     }
 
-    private var preview: String { ReminderText.describe(offset, locale: .current, calendar: calendar) }
+    private var preview: String { ReminderText.describe(offset, subject: subject, isAllDay: isAllDay, locale: .current, calendar: calendar) }
 
     private var quickChoices: [ReminderOffset] {
         var choices: [ReminderOffset] = [.before(amount: 0, unit: isAllDay ? .days : .minutes)]

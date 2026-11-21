@@ -241,7 +241,7 @@ struct EntrySheet: View {
         return Button { editingReminders = true } label: {
             LabeledContent("Erinnerungen") {
                 HStack(spacing: 4) {
-                    Text(ReminderText.summary(offsets, locale: .current, calendar: model.calendar))
+                    Text(ReminderText.summary(offsets, subject: .deadline, isAllDay: event.isAllDay, locale: .current, calendar: model.calendar))
                     Image(systemName: "chevron.right").font(.footnote.weight(.semibold)).foregroundStyle(.tertiary)
                 }
             }

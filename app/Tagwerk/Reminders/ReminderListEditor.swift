@@ -6,6 +6,8 @@ import TagwerkCore
 /// `NavigationStack`, so no sheet is attached to a section or a row (see PR #202).
 struct ReminderListEditor: View {
     @Bindable var model: ReminderListModel
+    /// What the reminders count from; decides the wording of the distance 0.
+    let subject: ReminderSubject
     /// Title of the switch for the default list; `nil` for lists that have no default behind them.
     var defaultSwitchTitle: LocalizedStringKey? = "Standard verwenden"
     var calendar: Calendar = .tagwerk
@@ -15,7 +17,7 @@ struct ReminderListEditor: View {
             Toggle(defaultSwitchTitle, isOn: usesDefault.animation())
         }
         ForEach(Array(model.displayed.enumerated()), id: \.offset) { index, offset in
-            Text(ReminderText.describe(offset, locale: .current, calendar: calendar))
+            Text(ReminderText.describe(offset, subject: subject, isAllDay: model.isAllDay, locale: .current, calendar: calendar))
                 .foregroundStyle(model.isUsingDefault ? .secondary : .primary)
                 .swipeActions(edge: .trailing, allowsFullSwipe: !model.isUsingDefault) {
                     if !model.isUsingDefault {
@@ -31,7 +33,7 @@ struct ReminderListEditor: View {
         }
         if !model.isUsingDefault {
             NavigationLink {
-                ReminderOffsetPicker(isAllDay: model.isAllDay, calendar: calendar) { model.add($0) }
+                ReminderOffsetPicker(isAllDay: model.isAllDay, subject: subject, calendar: calendar) { model.add($0) }
             } label: {
                 Label("Erinnerung hinzufügen", systemImage: "plus.circle")
             }
