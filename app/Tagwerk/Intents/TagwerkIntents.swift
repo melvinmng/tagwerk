@@ -273,7 +273,7 @@ struct TodayOverviewSnippet: View {
 /// Few, short and clearly separated phrases per shortcut (Apple HIG "App Shortcuts", editorial guidelines): two
 /// variants at most, no phrase that is a prefix or a loose paraphrase of another one, and no generic request such
 /// as "Neuer Artikel" that Siri could also read as a general question. Keep `AppShortcuts.xcstrings` and the phrase
-/// list in `CaptureSettingsView` in step; `scripts/check-strings.py` fails when they drift apart.
+/// list in `SiriPhraseCatalog` in step; `scripts/check-strings.py` fails when they drift apart.
 struct TagwerkShortcuts: AppShortcutsProvider {
     static var appShortcuts: [AppShortcut] {
         AppShortcut(intent: LogWaterIntent(), phrases: [

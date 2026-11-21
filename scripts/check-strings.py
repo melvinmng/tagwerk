@@ -5,7 +5,7 @@ Default: structure checks of every catalog in app/
   - placeholders (%@, %lld, %1$@ …) of the English value match the German key
   - every App Shortcuts phrase names the app (${applicationName})
   - the phrases in TagwerkIntents.swift and AppShortcuts.xcstrings match in both directions, and every phrase
-    listed in the "Siri & Kurzbefehle" section of CaptureSettingsView is a real phrase
+    shown on the page "Siri & Kurzbefehle" (`phrase:` and `alternative:` in SiriPhraseCatalog.swift) is a real phrase
   - the German usage texts in InfoPlist.xcstrings equal those in app/project.yml
 --require-english: additionally every key that should be translated has a translated English value
 --same A B: exits 1 when two catalogs differ (used by sync-strings.sh --check)
@@ -96,7 +96,7 @@ def check_structure(path, data, require_english, problems):
 
 
 SHORTCUT_PHRASES_SOURCE = APP / "Tagwerk" / "Intents" / "TagwerkIntents.swift"
-SHORTCUT_SETTINGS_SOURCE = APP / "Tagwerk" / "Settings" / "CaptureSettingsView.swift"
+SHORTCUT_SETTINGS_SOURCE = APP / "Tagwerk" / "Intents" / "SiriPhraseCatalog.swift"
 
 
 def source_phrases(text):
@@ -129,7 +129,10 @@ def check_shortcut_phrases(problems):
         for phrase in phrases:
             pattern = re.escape(phrase).replace(re.escape("${applicationName}"), "Tagwerk")
             patterns.append(re.compile("^" + re.sub(r"\\\$\\\{\w+\\\}", ".+", pattern) + "$"))
-        shown = re.findall(r'^\s*phrase\("([^"]+)",', SHORTCUT_SETTINGS_SOURCE.read_text(encoding="utf-8"), re.MULTILINE)
+        # Both `phrase:` and `alternative:` of a `SiriPhrase` are shown on the page, so both must be registered phrases.
+        shown = re.findall(r'\b(?:phrase|alternative):\s*"([^"]+)"', SHORTCUT_SETTINGS_SOURCE.read_text(encoding="utf-8"))
+        if not shown:
+            problems.append(f"{SHORTCUT_SETTINGS_SOURCE.relative_to(ROOT)}: no phrase found, the pattern in check-strings.py no longer matches")
         for text in shown:
             if not any(pattern.match(text.rstrip("?")) for pattern in patterns):
                 problems.append(f"{SHORTCUT_SETTINGS_SOURCE.relative_to(ROOT)}: listed phrase is not an App Shortcuts phrase: {text!r}")

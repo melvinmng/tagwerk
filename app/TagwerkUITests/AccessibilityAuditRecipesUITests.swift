@@ -74,7 +74,7 @@ class RecipeScreensAuditCase: UITestCase {
         try audit("Einkauf › Rezept hinzufügen (Notiz)")
     }
 
-    /// Einstellungen › KI › Sprache (recipe language), › Erfassen (goal water, shortcut phrases of G2) and › Einkaufsliste (consent).
+    /// Einstellungen › KI › Sprache (recipe language), › Erfassen (goal water), › Einkaufsliste (consent) and › Siri & Kurzbefehle (phrases, G3).
     func auditSettings(_ audit: Audit) throws {
         tab("Einstellungen")
         openSettingsRow("KI")
@@ -92,6 +92,11 @@ class RecipeScreensAuditCase: UITestCase {
         openSettingsRow("Einkaufsliste")
         XCTAssertTrue(app.navigationBars["Einkaufsliste"].waitForExistence(timeout: Self.timeout), "Shopping settings did not open")
         try audit("Einstellungen › Einkaufsliste")
+        app.navigationBars.buttons.firstMatch.tap()
+
+        openSettingsRow("Siri & Kurzbefehle")
+        XCTAssertTrue(app.navigationBars["Siri & Kurzbefehle"].waitForExistence(timeout: Self.timeout), "Siri settings did not open")
+        try audit("Einstellungen › Siri & Kurzbefehle")
     }
 
     /// Taps a button that can lie below the fold in the large text size: scrolls to it first.
