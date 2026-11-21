@@ -65,8 +65,8 @@ struct SearchTaskMenuContent: View {
             Button("Anderer Tag …", systemImage: "calendar") { actions.planOnDate() }
         }
         if entries.contains(.startFocus) {
-            // Closes the search sheet itself and starts the focus afterwards.
-            Section { FocusStartButton(task: item) }
+            // The search sheet closes first, then the start sheet follows (no sheet over a sheet).
+            Section { FocusStartButton(task: item, action: actions.startFocus) }
         }
         if entries.contains(.openOnGitHub) {
             Button("Auf GitHub öffnen", systemImage: "arrow.up.right.square") { actions.openOnGitHub() }

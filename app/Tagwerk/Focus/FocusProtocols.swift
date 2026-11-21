@@ -16,8 +16,16 @@ struct FocusActivityContent: Equatable, Sendable {
     var phaseEnd: Date?
     /// Seconds left while the timer is paused.
     var pausedRemaining: Int?
+    /// Planned length of the running phase in seconds, for the bar and the ring; `nil` once the session is finished.
+    var phaseSeconds: Int?
+    /// The phase that follows; `nil` when the session ends with the running phase.
+    var nextKind: Kind?
+    var nextPhaseMinutes: Int?
+    /// Whether the session belongs to a task ("Erledigt" has something to tick off).
+    var hasTask = true
 
-    init(title: String, state: FocusTimerState, snapshot: FocusTimerSnapshot) {
+    init(title: String, state: FocusTimerState, snapshot: FocusTimerSnapshot, hasTask: Bool = true) {
+        self.hasTask = hasTask
         self.title = title
         isPomodoro = state.settings.isPomodoro
         rounds = state.settings.isPomodoro ? state.settings.rounds : 1
@@ -29,6 +37,23 @@ struct FocusActivityContent: Equatable, Sendable {
         }
         phaseEnd = snapshot.phaseEnd
         pausedRemaining = snapshot.isPaused ? snapshot.remainingSeconds : nil
+        phaseSeconds = snapshot.phase == .finished ? nil : snapshot.phaseSeconds
+        let settings = state.settings
+        switch snapshot.phase {
+        case .work(let round) where settings.isPomodoro:
+            if round < settings.rounds {
+                nextKind = .shortBreak
+                nextPhaseMinutes = settings.shortBreakMinutes
+            } else {
+                nextKind = .longBreak
+                nextPhaseMinutes = settings.longBreakMinutes
+            }
+        case .shortBreak:
+            nextKind = .work
+            nextPhaseMinutes = settings.workMinutes
+        case .work, .longBreak, .finished:
+            break
+        }
     }
 
     init(title: String, isPomodoro: Bool, kind: Kind, round: Int, rounds: Int, phaseEnd: Date?, pausedRemaining: Int?) {

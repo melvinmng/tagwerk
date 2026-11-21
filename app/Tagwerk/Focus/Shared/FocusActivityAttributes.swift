@@ -16,11 +16,19 @@ struct FocusActivityAttributes: ActivityAttributes {
         var pausedRemaining: Int?
         var round: Int
         var rounds: Int
+        // The fields below are optional, so an activity that runs while the app is updated still decodes.
+        /// Planned length of the running phase in seconds, for the bar and the ring.
+        var phaseSeconds: Int?
+        /// The phase that follows; `nil` when the session ends.
+        var nextKind: Kind?
+        var nextPhaseMinutes: Int?
     }
 
     /// Title of the task or block; empty for a free session.
     var title: String
     var isPomodoro: Bool
+    /// Whether the session belongs to a task, so "Erledigt" has something to tick off; `nil` for an older activity.
+    var hasTask: Bool? = nil
 }
 
 /// The link a tap on the Live Activity opens.
