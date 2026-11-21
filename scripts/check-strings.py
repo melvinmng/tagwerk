@@ -5,8 +5,9 @@ Default: structure checks of every catalog in app/
   - placeholders (%@, %lld, %1$@ …) of the English value match the German key
   - every App Shortcuts phrase names the app (${applicationName})
   - the phrases in TagwerkIntents.swift and AppShortcuts.xcstrings match in both directions, and every phrase
-    listed in the "Siri & Kurzbefehle" section of CaptureSettingsView is a real phrase
+    shown on the page "Siri & Kurzbefehle" (`phrase:` and `alternative:` in SiriPhraseCatalog.swift) is a real phrase
   - the German usage texts in InfoPlist.xcstrings equal those in app/project.yml
+  - no source key of a catalog contains the English word "Project"/"Projects" (German UI text says "Projekt"/"Projekte")
 --require-english: additionally every key that should be translated has a translated English value
 --same A B: exits 1 when two catalogs differ (used by sync-strings.sh --check)
 """
@@ -96,7 +97,7 @@ def check_structure(path, data, require_english, problems):
 
 
 SHORTCUT_PHRASES_SOURCE = APP / "Tagwerk" / "Intents" / "TagwerkIntents.swift"
-SHORTCUT_SETTINGS_SOURCE = APP / "Tagwerk" / "Settings" / "CaptureSettingsView.swift"
+SHORTCUT_SETTINGS_SOURCE = APP / "Tagwerk" / "Intents" / "SiriPhraseCatalog.swift"
 
 
 def source_phrases(text):
@@ -129,7 +130,10 @@ def check_shortcut_phrases(problems):
         for phrase in phrases:
             pattern = re.escape(phrase).replace(re.escape("${applicationName}"), "Tagwerk")
             patterns.append(re.compile("^" + re.sub(r"\\\$\\\{\w+\\\}", ".+", pattern) + "$"))
-        shown = re.findall(r'^\s*phrase\("([^"]+)",', SHORTCUT_SETTINGS_SOURCE.read_text(encoding="utf-8"), re.MULTILINE)
+        # Both `phrase:` and `alternative:` of a `SiriPhrase` are shown on the page, so both must be registered phrases.
+        shown = re.findall(r'\b(?:phrase|alternative):\s*"([^"]+)"', SHORTCUT_SETTINGS_SOURCE.read_text(encoding="utf-8"))
+        if not shown:
+            problems.append(f"{SHORTCUT_SETTINGS_SOURCE.relative_to(ROOT)}: no phrase found, the pattern in check-strings.py no longer matches")
         for text in shown:
             if not any(pattern.match(text.rstrip("?")) for pattern in patterns):
                 problems.append(f"{SHORTCUT_SETTINGS_SOURCE.relative_to(ROOT)}: listed phrase is not an App Shortcuts phrase: {text!r}")
@@ -145,6 +149,34 @@ def check_info_plist(problems):
             german = entry.get("localizations", {}).get("de", {}).get("stringUnit", {}).get("value")
             if match and german is not None and german != match.group(1):
                 problems.append(f"{path.relative_to(ROOT)}: German {key} differs from project.yml")
+
+
+PROJECT_WORD = re.compile(r"\bProjects?\b")
+# Keys of the assistant files, reworded in task G5 once the assistant branches are on main.
+# removed in G5
+PROJECT_WORDING_EXCEPTIONS = {
+    "Kein Project",
+    "Project fehlt",
+    "Project %@",
+    "Bitte ein Project nennen.",
+    "Dieses Project steht nicht in der Liste von list_github_targets.",
+    "Repository, Projects und Zugewiesene gibt es nur bei GitHub-Issues.",
+}
+
+
+def check_project_wording(problems):
+    """German UI text says "Projekt"/"Projekte" for GitHub projects; the English value stays "Project".
+
+    Stale entries (kept by the sync for keys that are no longer in the source) are skipped."""
+    for path in catalogs():
+        if path.name == "InfoPlist.xcstrings" or path.name == "AppShortcuts.xcstrings":
+            continue
+        for key, entry in load(path).get("strings", {}).items():
+            if entry.get("shouldTranslate") is False or entry.get("extractionState") == "stale" or key in PROJECT_WORDING_EXCEPTIONS:
+                continue
+            source = entry.get("localizations", {}).get("de", {}).get("stringUnit", {}).get("value", key)
+            if PROJECT_WORD.search(source):
+                problems.append(f"{path.relative_to(ROOT)}: German text says \"Project\" instead of \"Projekt\": {key!r}")
 
 
 def same(first, second):
@@ -169,6 +201,7 @@ def main(arguments):
         check_structure(path, load(path), require_english, problems)
     check_info_plist(problems)
     check_shortcut_phrases(problems)
+    check_project_wording(problems)
     for problem in problems:
         print(problem, file=sys.stderr)
     if problems:

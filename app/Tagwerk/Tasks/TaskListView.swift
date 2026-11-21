@@ -76,7 +76,7 @@ struct TaskListView: View {
                         if !model.loadingSources.isDisjoint(with: model.filter.sources) {
                             ProgressView("Aufgaben werden geladen …")
                         } else if model.filter == .github {
-                            ContentUnavailableView("Keine zugewiesenen Issues in offenen Projects", systemImage: "checkmark.circle")
+                            ContentUnavailableView("Keine zugewiesenen Issues in offenen Projekten", systemImage: "checkmark.circle")
                         } else {
                             ContentUnavailableView("Keine Aufgaben", systemImage: "checkmark.circle")
                         }

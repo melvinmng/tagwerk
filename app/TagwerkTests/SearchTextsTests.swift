@@ -96,7 +96,7 @@ struct SearchTextsTests {
         #expect(SearchTexts.snippetLabel(.location) == "Ort")
         #expect(SearchTexts.snippetLabel(.calendar) == "Kalender")
         #expect(SearchTexts.snippetLabel(.container) == "Liste")
-        #expect(SearchTexts.snippetLabel(.project) == "Project")
+        #expect(SearchTexts.snippetLabel(.project) == "GitHub-Projekt")
         #expect(SearchTexts.snippetLabel(.label) == "Label")
     }
 
@@ -107,7 +107,7 @@ struct SearchTextsTests {
         let old = OnlineIssue(id: "I", number: 1, title: "Alt", repository: "octo/app", url: issue.url, updatedAt: date(2025, 3, 4), marker: nil)
         #expect(SearchTexts.onlineSubtitle(old, now: now, calendar: calendar) == "octo/app · 04.03.2025")
         #expect([OnlineIssueMarker.closed, .unassigned, .assignedToOthers, .noProject].map(SearchTexts.markerText)
-                == ["geschlossen", "nicht zugewiesen", "anderen zugewiesen", "ohne Project"])
+                == ["geschlossen", "nicht zugewiesen", "anderen zugewiesen", "ohne Projekt"])
         #expect(SearchTexts.onlineError(.offline) == "Keine Verbindung zu GitHub.")
         #expect(SearchTexts.onlineError(.rateLimited) == "GitHub nimmt gerade keine Suche an. Später erneut versuchen.")
         #expect(SearchTexts.onlineError(.failed("Boom")) == "Boom")

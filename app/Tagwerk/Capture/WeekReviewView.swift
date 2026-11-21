@@ -66,7 +66,7 @@ struct WeekReviewView: View {
                 Section {
                     Text("\(review.completedTasks) Aufgaben")
                 } header: { header("Erledigt", review) } footer: {
-                    Text("Erinnerungen und lokale Aufgaben, ohne GitHub")
+                    Text(WeekReviewModel.completedFooter(model.gitHub))
                 }
             }
             EffortReviewSection(model: model)
