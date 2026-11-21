@@ -141,6 +141,10 @@ final class AppSettings {
     var focusLongBreakMinutes: Int = 15
     var focusRounds: Int = 4
     var focusUsesPomodoro: Bool = true
+    /// "Dauer beim Start fragen": the start sheet (FO7b) is shown before a session starts.
+    var focusAsksDurationAtStart: Bool = true
+    /// Minutes of the last choice in the start sheet; `nil` before the first one.
+    var focusLastStartMinutes: Int? = nil
     /// "Erfahrungswerte in der Planung nutzen" (#162): the AI planning gets an expected effort per task.
     var effortHistoryInPlanning: Bool = true
 

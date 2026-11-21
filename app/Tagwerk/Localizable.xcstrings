@@ -1965,6 +1965,16 @@
         }
       }
     },
+    "%lld min · Pomodoro aus": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld min · Pomodoro off"
+          }
+        }
+      }
+    },
     "%lld ml": {
       "localizations": {
         "en": {
@@ -2323,6 +2333,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "%1$lld · %2$@"
+          }
+        }
+      }
+    },
+    "%lld × %lld / %lld": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$lld × %2$lld / %3$lld"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld × %2$lld / %3$lld"
           }
         }
       }
@@ -3541,6 +3567,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Choose another note …"
+          }
+        }
+      }
+    },
+    "Andere …": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Other …"
           }
         }
       }
@@ -4820,6 +4856,16 @@
         }
       }
     },
+    "Bis Blockende · %lld min": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Until end of block · %lld min"
+          }
+        }
+      }
+    },
     "Bis Datum": {
       "localizations": {
         "en": {
@@ -5468,6 +5514,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Duration"
+          }
+        }
+      }
+    },
+    "Dauer beim Start fragen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ask for the duration at the start"
           }
         }
       }
@@ -6932,7 +6988,6 @@
       }
     },
     "Eigene": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -8155,6 +8210,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Start or stop focus"
+          }
+        }
+      }
+    },
+    "Fokus starten · %lld min": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start focus · %lld min"
           }
         }
       }
@@ -13607,6 +13672,16 @@
         }
       }
     },
+    "Planung": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Planning"
+          }
+        }
+      }
+    },
     "Planungsvorgaben · %lld von %lld": {
       "localizations": {
         "de": {
@@ -13624,11 +13699,32 @@
       }
     },
     "Pomodoro": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Pomodoro"
+          }
+        }
+      }
+    },
+    "Pomodoro (%@)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pomodoro (%@)"
+          }
+        }
+      }
+    },
+    "Pomodoro (Runden mit Pausen)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pomodoro (rounds with breaks)"
           }
         }
       }
@@ -14175,6 +14271,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Collection"
+          }
+        }
+      }
+    },
+    "Sammlung ansehen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "View collection"
           }
         }
       }
@@ -16537,6 +16643,16 @@
         }
       }
     },
+    "Vor dem Start erscheint ein Blatt, in dem du die Dauer wählst. Siri, das Kontrollzentrum und Kurzbefehle starten immer ohne Blatt mit den Werten von oben.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A sheet appears before the start where you choose the duration. Siri, Control Center and shortcuts always start without it, using the values above."
+          }
+        }
+      }
+    },
     "Vorarbeiten, wenn Luft ist": {
       "localizations": {
         "en": {
@@ -16669,6 +16785,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Previous day"
+          }
+        }
+      }
+    },
+    "Vorlage": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Template"
           }
         }
       }
@@ -17684,6 +17810,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Time block %1$@ · %2$@ · %3$@"
+          }
+        }
+      }
+    },
+    "Zeitblock %@–%@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Zeitblock %1$@–%2$@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Time block %1$@–%2$@"
           }
         }
       }

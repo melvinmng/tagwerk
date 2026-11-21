@@ -20,12 +20,21 @@ final class FocusTimerModel {
         var state: FocusTimerState
     }
 
+    /// A request to start a session; the start sheet is shown for it (FO7b).
+    struct StartRequest: Identifiable, Equatable {
+        let id = UUID()
+        let task: TaskItem?
+        let block: CalendarEvent?
+    }
+
     /// A session older than this is treated as lost when the app starts again.
     static let staleAge: TimeInterval = 12 * 3600
 
     private(set) var session: Session?
     /// The focus sheet is shown.
     var isPresented = false
+    /// The start sheet is shown for this request.
+    var pendingStart: StartRequest?
     /// The piece the last ended session left; `nil` when none.
     private(set) var lastPiece: FocusRewardPiece?
     /// Completes a task of the list (`TaskID.key`); set by the app environment.
@@ -35,6 +44,8 @@ final class FocusTimerModel {
 
     @ObservationIgnored private let store: FocusStore
     @ObservationIgnored private let settings: () -> FocusTimerSettings
+    /// Whether "Dauer beim Start fragen" is on.
+    @ObservationIgnored private let asksDurationAtStart: () -> Bool
     @ObservationIgnored let now: () -> Date
     @ObservationIgnored private let activity: FocusActivityControlling
     @ObservationIgnored private let notifications: FocusNotificationScheduling
@@ -49,9 +60,11 @@ final class FocusTimerModel {
 
     init(store: FocusStore, settings: @escaping () -> FocusTimerSettings, activity: FocusActivityControlling,
          notifications: FocusNotificationScheduling, now: @escaping () -> Date = Date.init, wakesAtPhaseEnd: Bool = true,
-         controlState: ControlState? = nil, controlReloader: ControlReloading? = nil) {
+         controlState: ControlState? = nil, controlReloader: ControlReloading? = nil,
+         asksDurationAtStart: @escaping () -> Bool = { true }) {
         self.store = store
         self.settings = settings
+        self.asksDurationAtStart = asksDurationAtStart
         self.activity = activity
         self.notifications = notifications
         self.now = now
@@ -72,20 +85,31 @@ final class FocusTimerModel {
 
     // MARK: Start and control
 
-    /// Starts a session. While one runs, it is shown instead. A block without Pomodoro sets the work time to what is left
-    /// of the block (at least 5 minutes).
-    func start(task: TaskItem?, block: CalendarEvent?) async {
+    /// Shows the start sheet, or starts at once with the settings when "Dauer beim Start fragen" is off. While a session
+    /// runs, that session is opened instead. Siri, the control and shortcuts call `start` and never show the sheet.
+    func requestStart(task: TaskItem?, block: CalendarEvent?) async {
         guard session == nil else {
             isPresented = true
             return
         }
-        let moment = now()
-        var timerSettings = settings()
-        if let block, !timerSettings.isPomodoro {
-            let remaining = block.end.timeIntervalSince(max(moment, block.start))
-            timerSettings.workMinutes = max(FocusTimerSettings.workRange.lowerBound, Int((remaining / 60).rounded(.up)))
-            timerSettings = timerSettings.clamped
+        if asksDurationAtStart() {
+            pendingStart = StartRequest(task: task, block: block)
+        } else {
+            await start(task: task, block: block)
         }
+    }
+
+    /// Starts a session. While one runs, it is shown instead. Without a `choice` the settings apply, and a block without
+    /// Pomodoro sets the work time to what is left of the block (at least 5 minutes).
+    func start(task: TaskItem?, block: CalendarEvent?, choice: FocusStartChoice? = nil) async {
+        guard session == nil else {
+            isPresented = true
+            return
+        }
+        pendingStart = nil
+        let moment = now()
+        let remaining = block.map { FocusStart.remainingMinutes(blockStart: $0.start, blockEnd: $0.end, now: moment) }
+        let timerSettings = FocusStart.settings(base: settings(), choice: choice, blockRemainingMinutes: remaining)
         let state = FocusTimerState(start: moment, settings: timerSettings)
         let new = FocusSessionRecord(taskKey: task?.id.key, blockEventID: block?.id, title: task?.title ?? block?.title ?? "", state: state)
         store.insert(new)

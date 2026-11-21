@@ -40,7 +40,9 @@ final class TaskFlowUITests: UITestCase {
         let created = app.descendants(matching: .any)[AccessibilityID.Tasks.row("UI-Test Fokus")]
         scrollTo(created)
         created.press(forDuration: 1.0)
-        tapButton("Fokus starten")
+        // The menu entry names the planned minutes; the start sheet follows.
+        onScreen(label: "Fokus starten · 25 min").tap()
+        onScreen(label: "Starten").tap()
 
         // The task list behind the sheet has its own "Erledigt" (swipe action, completion capsule), so ask for the visible one.
         let done = onScreen(label: "Erledigt")

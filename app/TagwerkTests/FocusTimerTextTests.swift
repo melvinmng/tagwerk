@@ -75,4 +75,17 @@ struct FocusTimerTextTests {
         #expect(Localized.string("\(18) min bleiben als Fokuszeit gespeichert.", in: .english, bundle: .main)
                 == "18 min are kept as focus time.")
     }
+
+    @Test func startTitle_namesTheMinutesOrTheRunningSession() {
+        #expect(FocusTimerText.startTitle(plannedMinutes: 25, isRunning: false) == "Fokus starten · 25 min")
+        #expect(FocusTimerText.startTitle(plannedMinutes: nil, isRunning: false) == "Fokus starten")
+        #expect(FocusTimerText.startTitle(plannedMinutes: 25, isRunning: true) == "Fokus öffnen")
+        #expect(Localized.string("Fokus starten · \(25) min", in: .english, bundle: .main) == "Start focus · 25 min")
+    }
+
+    @Test func settingsSummary_showsTheDurationOrThePomodoroRhythm() {
+        #expect(FocusTimerText.settingsSummary(FocusTimerSettings()) == "4 × 25 / 5")
+        #expect(FocusTimerText.settingsSummary(FocusTimerSettings(workMinutes: 40, isPomodoro: false)) == "40 min · Pomodoro aus")
+        #expect(FocusTimerText.pomodoroSummary(FocusTimerSettings(workMinutes: 50, shortBreakMinutes: 10, rounds: 3)) == "3 × 50 / 10")
+    }
 }

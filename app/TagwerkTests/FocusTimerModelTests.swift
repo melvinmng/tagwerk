@@ -19,9 +19,10 @@ struct FocusTimerModelTests {
     }
 
     private func makeModel(settings: FocusTimerSettings = FocusTimerSettings(), store: FocusStore? = nil,
-                           activity: FakeFocusActivity? = nil) -> FocusTimerModel {
+                           activity: FakeFocusActivity? = nil, asksDuration: Bool = true) -> FocusTimerModel {
         FocusTimerModel(store: store ?? self.store, settings: { settings }, activity: activity ?? self.activity,
-                        notifications: notifications, now: { [clock] in clock.now }, wakesAtPhaseEnd: false)
+                        notifications: notifications, now: { [clock] in clock.now }, wakesAtPhaseEnd: false,
+                        asksDurationAtStart: { asksDuration })
     }
 
     private func block(from start: Date, minutes: Int) -> CalendarEvent {
@@ -43,6 +44,58 @@ struct FocusTimerModelTests {
         clock.advance(minutes: 38)
         await model.start(task: nil, block: block(from: testNow(), minutes: 60))
         #expect(model.session?.state.settings.workMinutes == 5)
+    }
+
+    @Test func requestStart_showsTheSheet() async {
+        let model = makeModel()
+        let task = makeTask("Aufgabe", source: .local)
+        await model.requestStart(task: task, block: nil)
+        #expect(model.pendingStart?.task == task)
+        #expect(model.session == nil && !model.isPresented)
+        #expect(activity.started.isEmpty)
+    }
+
+    @Test func requestStart_switchOff_startsAtOnce() async {
+        let model = makeModel(asksDuration: false)
+        await model.requestStart(task: makeTask("Aufgabe", source: .local), block: nil)
+        #expect(model.pendingStart == nil)
+        #expect(model.session != nil && model.isPresented)
+        #expect(model.session?.state.settings.workMinutes == 25)
+    }
+
+    @Test func requestStart_whileRunning_opensTheSession() async {
+        let model = makeModel()
+        await model.start(task: nil, block: nil)
+        model.isPresented = false
+        await model.requestStart(task: makeTask("Andere", source: .local), block: nil)
+        #expect(model.pendingStart == nil)
+        #expect(model.isPresented)
+        #expect(activity.started.count == 1)
+    }
+
+    @Test func start_withMinutes_storesTheSessionSettings() async {
+        let model = makeModel()
+        model.pendingStart = FocusTimerModel.StartRequest(task: nil, block: nil)
+        await model.start(task: nil, block: nil, choice: .minutes(45))
+        #expect(model.pendingStart == nil)
+        #expect(model.session?.state.settings.workMinutes == 45 && model.session?.state.settings.isPomodoro == false)
+        // The stored session carries the settings it started with, not the current ones.
+        #expect(store.runningSession()?.state.settings.workMinutes == 45)
+        #expect(notifications.pending?.fireDate == testNow().addingTimeInterval(45 * 60))
+    }
+
+    @Test func start_untilBlockEnd_runsToTheEndOfTheBlock() async {
+        let model = makeModel()
+        clock.advance(minutes: 20)
+        await model.start(task: nil, block: block(from: testNow(), minutes: 60), choice: .untilBlockEnd)
+        #expect(model.session?.state.settings.workMinutes == 40 && model.session?.state.settings.isPomodoro == false)
+    }
+
+    @Test func setRunning_neverShowsTheSheet() async {
+        let model = makeModel()
+        #expect(await model.setRunning(true))
+        #expect(model.pendingStart == nil)
+        #expect(model.session != nil && !model.isPresented)
     }
 
     @Test func start_schedulesOneNotificationAndStartsTheActivity() async {

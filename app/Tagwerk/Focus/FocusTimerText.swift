@@ -93,4 +93,21 @@ enum FocusTimerText {
         if endedEarly > 0 { text += ", \(String(localized: "\(endedEarly) vorzeitig beendet"))" }
         return text
     }
+
+    /// "Fokus starten · 25 min" with the planned minutes, "Fokus starten" without, "Fokus öffnen" while a session runs.
+    static func startTitle(plannedMinutes: Int?, isRunning: Bool) -> String {
+        if isRunning { return String(localized: "Fokus öffnen") }
+        guard let plannedMinutes else { return String(localized: "Fokus starten") }
+        return String(localized: "Fokus starten · \(plannedMinutes) min")
+    }
+
+    /// "4 × 25 / 5": rounds, work minutes and short break minutes of a Pomodoro session.
+    static func pomodoroSummary(_ settings: FocusTimerSettings) -> String {
+        String(localized: "\(settings.rounds) × \(settings.workMinutes) / \(settings.shortBreakMinutes)")
+    }
+
+    /// The value of the settings row: "25 min · Pomodoro aus", or "4 × 25 / 5" with Pomodoro.
+    static func settingsSummary(_ settings: FocusTimerSettings) -> String {
+        settings.isPomodoro ? pomodoroSummary(settings) : String(localized: "\(settings.workMinutes) min · Pomodoro aus")
+    }
 }

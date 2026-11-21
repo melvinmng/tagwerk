@@ -2024,5 +2024,18 @@
   "Danach": "Next",
   "Blockende": "End of block",
   "Losfahren · %lld min": "Leave · %lld min",
-  "%@–%@": "%1$@–%2$@"
+  "%@–%@": "%1$@–%2$@",
+  "Fokus starten · %lld min": "Start focus · %lld min",
+  "%lld × %lld / %lld": "%1$lld × %2$lld / %3$lld",
+  "%lld min · Pomodoro aus": "%lld min · Pomodoro off",
+  "Pomodoro (%@)": "Pomodoro (%@)",
+  "Pomodoro (Runden mit Pausen)": "Pomodoro (rounds with breaks)",
+  "Dauer beim Start fragen": "Ask for the duration at the start",
+  "Vor dem Start erscheint ein Blatt, in dem du die Dauer wählst. Siri, das Kontrollzentrum und Kurzbefehle starten immer ohne Blatt mit den Werten von oben.": "A sheet appears before the start where you choose the duration. Siri, Control Center and shortcuts always start without it, using the values above.",
+  "Sammlung ansehen": "View collection",
+  "Planung": "Planning",
+  "Vorlage": "Template",
+  "Bis Blockende · %lld min": "Until end of block · %lld min",
+  "Andere …": "Other …",
+  "Zeitblock %@–%@": "Time block %1$@–%2$@"
 }

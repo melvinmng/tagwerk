@@ -254,6 +254,22 @@ struct BackupTests {
         #expect(fresh.settings.weekPlanningReminderWeekday == 1 && fresh.settings.weekPlanningReminderMinutes == 1080)
     }
 
+    @Test func focusStartSettings_roundTrip() throws {
+        sourceSettings.focusAsksDurationAtStart = false
+        sourceSettings.focusLastStartMinutes = 45
+        let data = try JSONEncoder().encode(AppSettingsBackup(sourceSettings))
+        let target = try makeTarget()
+        try JSONDecoder().decode(AppSettingsBackup.self, from: data).apply(to: target.settings)
+        #expect(!target.settings.focusAsksDurationAtStart && target.settings.focusLastStartMinutes == 45)
+        // A backup written before the start sheet keeps the defaults of the target.
+        var object = try #require(try JSONSerialization.jsonObject(with: data) as? [String: Any])
+        for key in ["focusAsksDurationAtStart", "focusLastStartMinutes"] { object[key] = nil }
+        let older = try JSONDecoder().decode(AppSettingsBackup.self, from: JSONSerialization.data(withJSONObject: object))
+        let fresh = try makeTarget()
+        older.apply(to: fresh.settings)
+        #expect(fresh.settings.focusAsksDurationAtStart && fresh.settings.focusLastStartMinutes == nil)
+    }
+
     @Test func weekReflectionBackup_roundTripsNewFields() throws {
         let record = WeekReflectionRecord(weekStart: PlanDay(year: 2026, month: 11, day: 16), updatedAt: clock.now)
         record.goalsProgress = "Projekt läuft"
