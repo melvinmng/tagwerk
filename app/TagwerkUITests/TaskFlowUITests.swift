@@ -80,8 +80,9 @@ final class TaskFlowUITests: UITestCase {
         XCTAssertTrue(bar.waitForExistence(timeout: Self.timeout))
         bar.tap()
         XCTAssertTrue(app.buttons[AccessibilityID.Focus.pause].waitForExistence(timeout: Self.timeout))
-        // Ending within the first minute needs no question.
-        app.buttons[AccessibilityID.Focus.stop].tap()
+        // "Erledigt" ends the session at once, however long the test took. "Beenden" asks for confirmation after the first
+        // minute, so using it here would make the test depend on the speed of the run.
+        app.buttons[AccessibilityID.Focus.done].tap()
         waitUntilGone(bar)
     }
 
