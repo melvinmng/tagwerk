@@ -260,6 +260,22 @@ extension AppSettings {
                          shopping: shoppingLanguage, places: ContentLanguages.decodePlaces(dictationPlaceLanguagesData))
     }
 
+    /// The dictation language at `place`: the language remembered there, else the dictation setting (shopping: its own language).
+    func dictationLanguage(at place: DictationPlace) -> VoiceLanguage {
+        contentLanguages.dictationLanguage(at: place)
+    }
+
+    /// Remembers the language the user switched to while dictating at `place` (SP4b). The switch applies at this place only and
+    /// goes away again when it is switched back to the dictation setting. The shopping list has no entry of its own: its switch
+    /// is the shopping language (SP5b).
+    func rememberDictationLanguage(_ language: VoiceLanguage, at place: DictationPlace) {
+        if place == .shopping {
+            shoppingLanguage = language.rawValue
+        } else {
+            dictationPlaceLanguagesData = ContentLanguages.encodePlaces(contentLanguages.places(switching: place, to: language))
+        }
+    }
+
     /// One-time takeover when the voice chat answer language became its own setting: it starts from the former shared value
     /// `voiceRecognitionLanguage`, so the app behaves as before the update. Writes only while the answer language has never
     /// been set, so a later change of the dictation language leaves the answer language alone.

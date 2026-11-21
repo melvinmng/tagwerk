@@ -187,7 +187,7 @@ struct NoteField: View {
                             }
                         if environment.settings.voiceInputEnabled, let voice {
                             VoiceMicrophoneButton(voice: voice, isEnabled: true,
-                                                  language: VoiceAvailability.recognitionLanguage(setting: environment.settings.voiceRecognitionLanguage))
+                                                  language: environment.settings.dictationLanguage(at: .notes))
                         }
                     }
                 }
@@ -318,7 +318,7 @@ struct NoteField: View {
         // The dream log has no suggestions, so it needs no model that could send anything.
         if suggestions == nil, !isDreamLog { suggestions = environment.makeNoteSuggestionModel() }
         guard voice == nil else { return }
-        let input = VoiceInputFactory.make(environment)
+        let input = VoiceInputFactory.make(environment, place: .notes)
         input.readDraft = { model.draftBeforeCursor() }
         input.writeDraft = { model.writeDictation($0) }
         input.onSend = { _ in }

@@ -153,6 +153,38 @@ struct VoiceInputModelTests {
         #expect(harness.model.language == .english)
     }
 
+    // MARK: Language switch per place (L3)
+
+    @Test func switchLanguage_notifiesWithTheNewLanguage() async {
+        let harness = VoiceInputModelHarness()
+        var notified: [VoiceLanguage] = []
+        harness.model.onLanguageSwitched = { notified.append($0) }
+        harness.model.tapMicrophone()
+        await harness.settle()
+        harness.model.switchLanguage()
+        await harness.settle()
+        harness.model.switchLanguage()
+        await harness.settle()
+        #expect(notified == [.english, .german])
+    }
+
+    @Test func switchLanguage_whileIdle_doesNotNotify() {
+        let harness = VoiceInputModelHarness()
+        var notified: [VoiceLanguage] = []
+        harness.model.onLanguageSwitched = { notified.append($0) }
+        harness.model.switchLanguage()
+        #expect(notified.isEmpty)
+        #expect(harness.model.language == .german)
+    }
+
+    @Test func place_defaultsToNotes_andIsKept() {
+        let harness = VoiceInputModelHarness()
+        #expect(harness.model.place == .notes)
+        let model = VoiceInputModel(language: .german, place: .meal, makeRecognizer: { harness.recognizer }, isExplained: { true },
+                                    markExplained: {})
+        #expect(model.place == .meal)
+    }
+
     @Test func draftConsumed_clearsSpokenFlag() async {
         let harness = VoiceInputModelHarness()
         harness.model.tapMicrophone()

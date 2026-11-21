@@ -114,7 +114,7 @@ struct ShoppingInputBar: View {
                 .onSubmit(submit)
             if environment.settings.voiceInputEnabled, let voice {
                 VoiceMicrophoneButton(voice: voice, isEnabled: !isAdding,
-                                      language: VoiceAvailability.recognitionLanguage(setting: environment.settings.voiceRecognitionLanguage))
+                                      language: environment.settings.dictationLanguage(at: .shopping))
             }
             if !items.isEmpty {
                 Button(action: submit) {
@@ -132,7 +132,7 @@ struct ShoppingInputBar: View {
 
     private func prepareVoice() {
         guard voice == nil else { return }
-        let model = VoiceInputFactory.make(environment)
+        let model = VoiceInputFactory.make(environment, place: .shopping)
         model.readDraft = { text }
         model.writeDraft = { spoken in
             text = spoken
