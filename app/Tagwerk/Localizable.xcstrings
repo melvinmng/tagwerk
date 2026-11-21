@@ -13780,7 +13780,6 @@
       }
     },
     "Ohne Projekt erscheint das Issue nicht in deinen Aufgaben.": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -14343,6 +14342,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Projects"
+          }
+        }
+      }
+    },
+    "Projekt %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Project %@"
           }
         }
       }
@@ -18436,6 +18445,26 @@
         }
       }
     },
+    "Ziel wählen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose target"
+          }
+        }
+      }
+    },
+    "Ziel: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Target: %@"
+          }
+        }
+      }
+    },
     "Ziele": {
       "localizations": {
         "en": {
@@ -20384,6 +20413,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Opens the evening wrap-up"
+          }
+        }
+      }
+    },
+    "Öffnet die Auswahl": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opens the selection"
           }
         }
       }

@@ -394,7 +394,8 @@ final class AppEnvironment {
                 NoteSuggestionContext.make(taskList: taskList, planning: planning,
                                            events: { gateway.events(in: $0, calendarIDs: planning.readableCalendarIDs()) },
                                            planCalendarID: settings.planCalendarID, now: .now)
-            })
+            },
+            gitHubDirectory: { [assistant] in assistant.gitHubDirectory() })
     }
 
     /// The background refresh: GitHub is registered without the catalog, every source loads once, then the
