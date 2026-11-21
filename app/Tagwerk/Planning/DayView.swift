@@ -34,7 +34,8 @@ struct DayView: View {
                 PagedContainer(canGoBack: true, canGoForward: true, isLocked: gridLocked,
                                contentID: { model.days.first?.day },
                                onPage: { model.step($0.step) },
-                               onDragBegan: { previewOffset = offsetBox.y }, onBlockedEdge: {}) { slot in
+                               onDragBegan: { previewOffset = offsetBox.y },
+                               onPrevailingPage: { model.titlePreviewStep = $0?.step }, onBlockedEdge: {}) { slot in
                     switch slot {
                     case .current: pageContent(plan)
                     case .previous: preview(of: plan.day.adding(days: -1, calendar: model.calendar))

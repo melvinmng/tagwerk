@@ -239,7 +239,10 @@ final class PlanningModel {
     var today: PlanDay { PlanDay(date: now(), calendar: calendar) }
 
     /// Day: the anchor; week: Monday–Sunday around it; month: full weeks covering its month.
-    var range: ClosedRange<PlanDay> {
+    var range: ClosedRange<PlanDay> { range(for: anchor) }
+
+    /// The range the shown scope covers for `anchor` (see `range`).
+    func range(for anchor: PlanDay) -> ClosedRange<PlanDay> {
         switch scope {
         case .day:
             return anchor...anchor
@@ -252,6 +255,21 @@ final class PlanningModel {
             let last = PlanDay(date: nextMonth, calendar: calendar).adding(days: -1, calendar: calendar)
             return weekStart(of: first)...weekStart(of: last).adding(days: 6, calendar: calendar)
         }
+    }
+
+    /// Set while a neighbour page prevails during a drag: the header shows that period. Never stored, never read by the
+    /// views of the pages.
+    var titlePreviewStep: Int?
+
+    /// Anchor the header shows: the neighbour while `titlePreviewStep` is set.
+    var titleAnchor: PlanDay {
+        guard let step = titlePreviewStep else { return anchor }
+        return PlanHeaderText.shiftedAnchor(scope: scope, anchor: anchor, step: step, calendar: calendar)
+    }
+
+    /// Range the header shows: that of `titleAnchor`.
+    var titleRange: ClosedRange<PlanDay> {
+        titlePreviewStep == nil ? range : range(for: titleAnchor)
     }
 
     /// Open reminders of all lists, read past the list selection to recognize recurring ones; the shopping
@@ -545,6 +563,7 @@ final class PlanningModel {
     /// One day, week or month forward (`1`) or back (`-1`), for arrows and swiping.
     func step(_ direction: Int) {
         pendingOpeningDay = nil
+        titlePreviewStep = nil
         switch scope {
         case .day:
             let target = anchor.adding(days: direction, calendar: calendar)

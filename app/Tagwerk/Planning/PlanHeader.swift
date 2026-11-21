@@ -9,6 +9,17 @@ enum PlanHeaderText {
         return scope != .month || (anchor.month == today.month && anchor.year == today.year)
     }
 
+    /// The anchor one page further (`step` ±1): a day, a week or a month, as `PlanningModel.step` moves it.
+    static func shiftedAnchor(scope: PlanScope, anchor: PlanDay, step: Int, calendar: Calendar) -> PlanDay {
+        switch scope {
+        case .day: anchor.adding(days: step, calendar: calendar)
+        case .week: anchor.adding(days: 7 * step, calendar: calendar)
+        case .month:
+            calendar.date(byAdding: .month, value: step, to: anchor.startDate(in: calendar))
+                .map { PlanDay(date: $0, calendar: calendar) } ?? anchor
+        }
+    }
+
     /// Day "Mittwoch, 18. Nov.", week "16.–22. Nov.", month "November".
     static func title(scope: PlanScope, anchor: PlanDay, range: ClosedRange<PlanDay>, calendar: Calendar) -> String {
         let start = anchor.startDate(in: calendar)
@@ -107,16 +118,21 @@ struct PlanTitleButton: View {
     @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
-        let current = PlanHeaderText.isCurrent(scope: model.scope, anchor: model.anchor, today: model.today, range: model.range)
-        let caption = PlanHeaderText.caption(scope: model.scope, anchor: model.anchor, today: model.today,
-                                             range: model.range, calendar: model.calendar)
-        let title = PlanHeaderText.title(scope: model.scope, anchor: model.anchor, range: model.range, calendar: model.calendar)
-        let shown = PlanHeaderText.displayedTitle(scope: model.scope, anchor: model.anchor, range: model.range,
+        // While a neighbour page prevails during a drag, the header already shows its period (PL6b).
+        let anchor = model.titleAnchor, range = model.titleRange
+        let current = PlanHeaderText.isCurrent(scope: model.scope, anchor: anchor, today: model.today, range: range)
+        let caption = PlanHeaderText.caption(scope: model.scope, anchor: anchor, today: model.today,
+                                             range: range, calendar: model.calendar)
+        let title = PlanHeaderText.title(scope: model.scope, anchor: anchor, range: range, calendar: model.calendar)
+        let shown = PlanHeaderText.displayedTitle(scope: model.scope, anchor: anchor, range: range,
                                                   calendar: model.calendar, largeText: typeSize.isAccessibilitySize)
         Button { picking = true } label: {
             // VoiceOver always reads the full title (below).
             PageTitleLabel(caption: caption, title: shown, isCurrent: current, titleScales: false).fixedSize()
+                .contentTransition(.opacity)
+                .animation(.easeInOut(duration: 0.15), value: shown)
         }
+        .sensoryFeedback(.selection, trigger: model.titlePreviewStep)
         .buttonStyle(.plain)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(title)

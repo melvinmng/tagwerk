@@ -2507,5 +2507,34 @@ struct PlanningModelTests {
         model.planBecameVisible(at: hidden.addingTimeInterval(60 * 60))
         #expect(model.nowAlignmentToken == 0)
     }
+
+    // MARK: Title while dragging (PL6b)
+
+    @Test func titleAnchor_followsThePreviewStep_inDayWeekAndMonth() async {
+        let model = await model()
+        // Without a preview the header shows the real period.
+        #expect(model.titleAnchor == model.anchor)
+        #expect(model.titleRange == model.range)
+
+        model.titlePreviewStep = 1
+        #expect(model.titleAnchor == today.adding(days: 1, calendar: calendar))
+        #expect(model.titleRange == model.titleAnchor...model.titleAnchor)
+
+        model.scope = .week
+        #expect(model.titleAnchor == today.adding(days: 7, calendar: calendar))
+        #expect(model.titleRange.lowerBound == PlanDay(year: 2026, month: 11, day: 23))   // the Monday of the next week
+        #expect(model.titleRange.upperBound == PlanDay(year: 2026, month: 11, day: 29))
+
+        model.scope = .month
+        model.titlePreviewStep = -1
+        #expect(model.titleAnchor == PlanDay(year: 2026, month: 10, day: 18))
+        // The grid of October starts on Monday 28 Sep and ends on Sunday 1 Nov.
+        #expect(model.titleRange == PlanDay(year: 2026, month: 9, day: 28)...PlanDay(year: 2026, month: 11, day: 1))
+
+        model.titlePreviewStep = nil
+        #expect(model.titleAnchor == model.anchor)
+        // The preview is never stored: the real anchor did not move.
+        #expect(model.anchor == today)
+    }
 }
 

@@ -93,4 +93,20 @@ struct PlanHeaderTextTests {
         #expect(PlanHeaderText.statusLine(intake: nil, habits: nil) == nil)
         #expect(PlanHeaderText.statusLine(intake: "~1.240 / 2.300 kcal", habits: nil) == "~1.240 / 2.300 kcal")
     }
+
+    // MARK: Title while dragging (PL6b)
+
+    @Test func shiftedAnchor_movesByTheScope() {
+        #expect(PlanHeaderText.shiftedAnchor(scope: .day, anchor: today, step: 1, calendar: calendar)
+                == PlanDay(year: 2026, month: 11, day: 19))
+        #expect(PlanHeaderText.shiftedAnchor(scope: .day, anchor: today, step: -1, calendar: calendar)
+                == PlanDay(year: 2026, month: 11, day: 17))
+        #expect(PlanHeaderText.shiftedAnchor(scope: .week, anchor: today, step: 1, calendar: calendar)
+                == PlanDay(year: 2026, month: 11, day: 25))
+        #expect(PlanHeaderText.shiftedAnchor(scope: .month, anchor: today, step: 1, calendar: calendar)
+                == PlanDay(year: 2026, month: 12, day: 18))
+        #expect(PlanHeaderText.shiftedAnchor(scope: .month, anchor: today, step: -1, calendar: calendar)
+                == PlanDay(year: 2026, month: 10, day: 18))
+    }
 }
+
