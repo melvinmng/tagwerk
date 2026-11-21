@@ -87,19 +87,19 @@ final class IssueTargetSheetModel {
 
 /// The row on the card of a suggested issue: where the issue goes.
 enum IssueTargetText {
-    /// "melvinmng/tagwerk · Project Tagwerk", "melvinmng/tagwerk · Kein Project".
+    /// "melvinmng/tagwerk · Projekt Tagwerk", "melvinmng/tagwerk · Kein Projekt".
     static func value(of target: AppTools.GitHubTarget, in catalog: GitHubCatalog) -> String {
         let titles = target.projectIDs.compactMap { id in catalog.projects.first { $0.id == id }?.title }
         let projects: String
         switch titles.count {
-        case 0: projects = String(localized: "Kein Project")
-        case 1, 2: projects = String(localized: "Project \(titles.joined(separator: ", "))")
+        case 0: projects = String(localized: "Kein Projekt")
+        case 1, 2: projects = String(localized: "Projekt \(titles.joined(separator: ", "))")
         default: projects = String(localized: "\(titles.count) Projekte")
         }
         return target.repository + " · " + projects
     }
 
-    /// "Ziel: melvinmng/tagwerk · Project Tagwerk", or "Ziel wählen" while there is no target.
+    /// "Ziel: melvinmng/tagwerk · Projekt Tagwerk", or "Ziel wählen" while there is no target.
     static func summary(of target: AppTools.GitHubTarget?, in catalog: GitHubCatalog) -> String {
         guard let target else { return String(localized: "Ziel wählen") }
         return String(localized: "Ziel: \(value(of: target, in: catalog))")
@@ -132,7 +132,7 @@ struct IssueTargetSheet: View {
                                          selection: Binding(get: { model.assignees }, set: { model.choose($0) }),
                                          isEnabled: model.repository != nil, showsDefaultMe: !model.assigneesChosen)
                 } footer: {
-                    Text("Ohne Project erscheint das Issue nicht in deinen Aufgaben.")
+                    Text("Ohne Projekt erscheint das Issue nicht in deinen Aufgaben.")
                 }
             }
             .navigationTitle("Ziel wählen")

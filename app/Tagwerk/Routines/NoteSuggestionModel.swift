@@ -169,13 +169,13 @@ final class NoteSuggestionModel {
                                      loadAssignable: { await directory.assignableUsers(in: $0, maxAge: AppEnvironment.catalogMaxAge) })
     }
 
-    /// The text of the target row of an issue card ("Ziel: owner/repo · Project X", "Ziel wählen"); `nil` for other cards.
+    /// The text of the target row of an issue card ("Ziel: owner/repo · Projekt X", "Ziel wählen"); `nil` for other cards.
     func targetSummary(of card: Card) -> String? {
         guard card.isIssue, let catalog = gitHubDirectory()?.storedCatalog else { return nil }
         return IssueTargetText.summary(of: card.target, in: catalog)
     }
 
-    /// "owner/repo · Project X" for the VoiceOver value of the target row; `nil` while there is no target.
+    /// "owner/repo · Projekt X" for the VoiceOver value of the target row; `nil` while there is no target.
     func targetValue(of card: Card) -> String? {
         guard let target = card.target, let catalog = gitHubDirectory()?.storedCatalog else { return nil }
         return IssueTargetText.value(of: target, in: catalog)
