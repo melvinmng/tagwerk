@@ -107,7 +107,7 @@ struct ChatView: View {
     // MARK: Parts
 
     private var contextChip: some View {
-        Label(contextText, systemImage: "scope")
+        Label(contextText, systemImage: isNotesContext ? "lock" : "scope")
             .font(.caption)
             .foregroundStyle(.secondary)
             .padding(.horizontal, 12).padding(.vertical, 6)
@@ -129,6 +129,24 @@ struct ChatView: View {
         case .settings: return String(localized: "Kontext: allgemein")
         case .capture: return String(localized: "Kontext: Erfassen")
         case .task: return assistant.task.map { String(localized: "Kontext: \($0.title)") } ?? String(localized: "Kontext: Aufgabe")
+        case .notes(let folderID):
+            // The line says what stays out, so the user sees why the assistant does not find the private folders.
+            let excluded = NoteToolAccess.listText(assistant.privateFolderNames)
+            if let folderID, let name = assistant.noteFolderName(folderID) {
+                return String(localized: "Kontext: Notizen in „\(name)“ · ohne \(excluded)")
+            }
+            return String(localized: "Kontext: Notizen · ohne \(excluded)")
+        case .note(let id):
+            let excluded = NoteToolAccess.listText(assistant.privateFolderNames)
+            guard let title = assistant.noteTitle(id) else { return String(localized: "Kontext: Notizen · ohne \(excluded)") }
+            return String(localized: "Kontext: Notiz „\(title)“ · ohne \(excluded)")
+        }
+    }
+
+    private var isNotesContext: Bool {
+        switch assistant.context {
+        case .notes, .note: true
+        default: false
         }
     }
 
@@ -145,8 +163,14 @@ struct ChatView: View {
                               systemImage: "person.crop.circle.badge.exclamationmark")
                             .font(.subheadline).foregroundStyle(.secondary)
                     } else if conversation?.history.isEmpty != false {
-                        Text("Frag nach deinem Tag, deinen Aufgaben oder bitte um Änderungen. Änderungen führt Tagwerk erst aus, wenn du sie bestätigst.")
-                            .font(.subheadline).foregroundStyle(.secondary)
+                        if isNotesContext {
+                            Text("Frag nach deinen Notizen oder bitte um Änderungen. Jede Änderung bestätigst du einzeln.")
+                                .font(.subheadline).foregroundStyle(.secondary)
+                        } else {
+                            Text("Frag nach deinem Tag, deinen Aufgaben oder bitte um Änderungen. Änderungen führt Tagwerk erst aus, wenn du sie bestätigst.")
+                                .font(.subheadline).foregroundStyle(.secondary)
+                        }
+
                     }
                     ForEach(conversation?.messages ?? []) { message in
                         row(message).id(message.id)

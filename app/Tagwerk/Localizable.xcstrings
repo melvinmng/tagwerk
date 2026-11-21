@@ -5637,6 +5637,16 @@
         }
       }
     },
+    "Darauf habe ich keinen Zugriff. %@ bleiben auf deinem iPhone und werden nie an ChatGPT gesendet.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I don’t have access to that. %@ stay on your iPhone and are never sent to ChatGPT."
+          }
+        }
+      }
+    },
     "Darin war kein Essen zu erkennen. Beschreib die Mahlzeit genauer oder trag die Werte selbst ein.": {
       "localizations": {
         "en": {
@@ -9231,6 +9241,16 @@
         }
       }
     },
+    "Frag nach deinen Notizen oder bitte um Änderungen. Jede Änderung bestätigst du einzeln.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ask about your notes or request changes. You confirm every change one by one."
+          }
+        }
+      }
+    },
     "Frei": {
       "localizations": {
         "en": {
@@ -9689,6 +9709,86 @@
           "stringUnit": {
             "state": "translated",
             "value": "Read: %@"
+          }
+        }
+      }
+    },
+    "Gelesen: %lld Titel": {
+      "localizations": {
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Gelesen: %1$lld Titel"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Gelesen: %1$lld Titel"
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Read: %lld title"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Read: %lld titles"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Gelesen: %lld Titel aus „%@“": {
+      "localizations": {
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Gelesen: %1$lld Titel aus „%2$@“"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Gelesen: %1$lld Titel aus „%2$@“"
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Read: %1$lld title from “%2$@”"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Read: %1$lld titles from “%2$@”"
+                }
+              }
+            }
           }
         }
       }
@@ -12016,6 +12116,48 @@
           "stringUnit": {
             "state": "translated",
             "value": "Context: Log"
+          }
+        }
+      }
+    },
+    "Kontext: Notiz „%@“ · ohne %@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Kontext: Notiz „%1$@“ · ohne %2$@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Context: Note “%1$@” · without %2$@"
+          }
+        }
+      }
+    },
+    "Kontext: Notizen in „%@“ · ohne %@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Kontext: Notizen in „%1$@“ · ohne %2$@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Context: Notes in “%1$@” · without %2$@"
+          }
+        }
+      }
+    },
+    "Kontext: Notizen · ohne %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Context: Notes · without %@"
           }
         }
       }

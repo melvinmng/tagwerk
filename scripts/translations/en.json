@@ -2185,5 +2185,18 @@
   "Der neue Text ist gleich dem alten.": "The new text is the same as the old one.",
   "Die Anhänge der Notiz müssen im Text bleiben. Übernimm die Verweise auf Anhänge unverändert.": "The attachments of the note have to stay in the text. Keep the references to attachments unchanged.",
   "Dieses Gespräch betrifft nur eine andere Notiz.": "This conversation is about another note.",
-  "Die Notiz ist zu lang (höchstens 12 000 Zeichen).": "The note is too long (12,000 characters at most)."
+  "Die Notiz ist zu lang (höchstens 12 000 Zeichen).": "The note is too long (12,000 characters at most).",
+  "Kontext: Notizen · ohne %@": "Context: Notes · without %@",
+  "Kontext: Notizen in „%@“ · ohne %@": "Context: Notes in “%1$@” · without %2$@",
+  "Kontext: Notiz „%@“ · ohne %@": "Context: Note “%1$@” · without %2$@",
+  "Frag nach deinen Notizen oder bitte um Änderungen. Jede Änderung bestätigst du einzeln.": "Ask about your notes or request changes. You confirm every change one by one.",
+  "Darauf habe ich keinen Zugriff. %@ bleiben auf deinem iPhone und werden nie an ChatGPT gesendet.": "I don’t have access to that. %@ stay on your iPhone and are never sent to ChatGPT.",
+  "Gelesen: %lld Titel": {
+    "one": "Read: %lld title",
+    "other": "Read: %lld titles"
+  },
+  "Gelesen: %lld Titel aus „%@“": {
+    "one": "Read: %1$lld title from “%2$@”",
+    "other": "Read: %1$lld titles from “%2$@”"
+  }
 }

@@ -16,6 +16,10 @@ final class AssistantModel {
         case capture
         /// "Über diese Aufgabe sprechen": its own chat per task (design §8.3).
         case task(TaskID)
+        /// "Notizen mit ChatGPT" from the notes overview or a folder (`nil` is the overview); #233.
+        case notes(folderID: UUID?)
+        /// The chat about one note.
+        case note(UUID)
     }
 
     private(set) var conversation: Conversation?
@@ -67,6 +71,11 @@ final class AssistantModel {
     /// GitHub access and issue lookup for chats about one task.
     @ObservationIgnored var reader: RepositoryReading?
     @ObservationIgnored var issueReference: (TaskID) -> IssueReference? = { _ in nil }
+    /// The tools of the notes chat (#233); `nil` where the app has no notes. The chat offers the note tools only while
+    /// the consent "Notizen mit ChatGPT" is on.
+    @ObservationIgnored var noteTools: NoteChatTools?
+    /// Whether the consent "Notizen mit ChatGPT" is on; the entries ask before they open the notes chat.
+    @ObservationIgnored var hasNoteConsent: () -> Bool = { false }
     /// GitHub catalog and login for the issue card and the instructions; `nil` while GitHub is not signed in.
     @ObservationIgnored var gitHubDirectory: () -> (any GitHubDirectory)? = { nil }
     /// Name of an open shopping item by its id, for the card of `update_shopping`.
@@ -106,6 +115,30 @@ final class AssistantModel {
         if self.task?.id != task.id { taskContext = nil }
         self.task = task
         switchThread(to: "task:\(task.id.key)", tools: handler)
+        isPresented = true
+    }
+
+    /// The chat about all notes (`folderID` `nil`) or about the notes of one folder. Does nothing without the consent
+    /// "Notizen mit ChatGPT" and without note tools: the entries in the notes ask for the consent first.
+    func open(notes folderID: UUID?) {
+        openNotesChat(context: .notes(folderID: folderID), scope: nil, defaultFolderID: folderID)
+    }
+
+    /// The chat about one note: `update_note` and `delete_note` take only this note.
+    func open(note id: UUID) {
+        openNotesChat(context: .note(id), scope: id, defaultFolderID: nil)
+    }
+
+    private func openNotesChat(context newContext: Context, scope: UUID?, defaultFolderID: UUID?) {
+        guard hasNoteConsent(), let noteTools else { return }
+        guard onTurnFinished == nil else { isPresented = true; return }
+        guard !isHoldingOtherChat(ChatStore.notesKey) else { isPresented = true; return }
+        noteTools.scope = scope
+        noteTools.defaultFolderID = defaultFolderID
+        context = newContext
+        task = nil
+        taskContext = nil
+        switchThread(to: ChatStore.notesKey, tools: noteTools)
         isPresented = true
     }
 
@@ -312,6 +345,8 @@ final class AssistantModel {
 
     func confirm(_ call: ToolCall) async {
         guard let conversation else { return }
+        // The card may come from the stored form of the history (no note text in its arguments); the call that runs is the open one.
+        let call = conversation.pendingActions.first { $0.id == call.id } ?? call
         syncNoteConsent()
         actionTimes[call.id] = now()
         let index = conversation.history.count
@@ -373,6 +408,7 @@ final class AssistantModel {
     }
 
     func decline(_ call: ToolCall) async {
+        let call = conversation?.pendingActions.first { $0.id == call.id } ?? call
         syncNoteConsent()
         let index = conversation?.history.count ?? 0
         await conversation?.decline(call)
@@ -440,14 +476,41 @@ final class AssistantModel {
         if noteConsentWasGiven && !allowed { endNoteSession() }
     }
 
+    /// Names of the folders that never leave the device, for the context line of the notes chat.
+    var privateFolderNames: [String] { noteTools?.access.privateFolderNames() ?? [] }
+
+    /// Name of a visible folder, for the context line; `nil` for private and unknown folders.
+    func noteFolderName(_ id: UUID) -> String? {
+        noteTools?.access.visibleFolders().first { $0.id == id }?.name
+    }
+
+    /// Title of a visible note, for the context line; `nil` for private, trashed and unknown notes.
+    func noteTitle(_ id: UUID) -> String? {
+        noteTools?.access.visibleNote(key: NoteToolAccess.key(for: id)).map(NoteToolAccess.displayTitle)
+    }
+
     /// "Gelesen: „A“, „B“" for a `read_note` call; built from the output, so it works with the full and with the stored
     /// form. `nil` while there is no output, for an error and for other calls.
     func activityText(_ call: ToolCall, output: String?) -> String? {
-        guard call.name == "read_note", let output else { return nil }
-        let titles = AppTools.readNoteTitles(in: output)
-        guard !titles.isEmpty else { return nil }
-        let quoted = titles.map { String(localized: "„\($0)“") }.joined(separator: ", ")
-        return String(localized: "Gelesen: \(quoted)")
+        guard let output else { return nil }
+        switch call.name {
+        case "read_note":
+            let titles = AppTools.readNoteTitles(in: output)
+            guard !titles.isEmpty else { return nil }
+            let quoted = titles.map { String(localized: "„\($0)“") }.joined(separator: ", ")
+            return String(localized: "Gelesen: \(quoted)")
+        case "list_notes":
+            // "Gelesen: 42 Titel", with the folder when the call named one; built from the output and the call, so it
+            // works with the stored form as well. The folder name is looked up now, a renamed folder shows its new name.
+            guard let count = NoteChatTools.listedCount(in: output) else { return nil }
+            let arguments = (try? JSONSerialization.jsonObject(with: call.arguments) as? [String: Any]) ?? [:]
+            if let key = arguments["folder_id"] as? String, let folder = noteTools?.access.visibleFolder(key: key) {
+                return String(localized: "Gelesen: \(count) Titel aus „\(folder.name)“")
+            }
+            return String(localized: "Gelesen: \(count) Titel")
+        default:
+            return nil
+        }
     }
 
     private func applyNoteSessionEnd() {
@@ -507,6 +570,7 @@ final class AssistantModel {
         einschalten kann. github_online setzt du nur, wenn es um Issues geht, die nicht in den Aufgaben stehen, oder \
         wenn die lokale Suche nichts ergibt.
         \(noteInstructions())
+        \(notesChatInstructions())
         Einkaufsartikel stehen nicht in list_tasks: Die Einkaufsliste liest du mit list_shopping und änderst sie mit \
         update_shopping (hinzufügen, abhaken). Lege Einkaufsartikel nie über create_task an.
         \(gitHubInstructions())
@@ -521,6 +585,39 @@ final class AssistantModel {
         return """
         Reicht der Ausschnitt eines Notiztreffers nicht, lies die Notiz mit read_note. Lies nur Notizen, die für die \
         Bitte nötig sind.
+        """
+    }
+
+    /// The sentence the assistant answers with when the user asks for the private folders; it names the folders as the user
+    /// sees them (a renamed folder keeps its new name). `language` is the language of the answer.
+    static func privateNotesSentence(folderNames: [String], language: VoiceLanguage) -> String {
+        let names = NoteToolAccess.listText(folderNames, locale: formatLocale(language))
+        return Localized.string("Darauf habe ich keinen Zugriff. \(names) bleiben auf deinem iPhone und werden nie an ChatGPT gesendet.",
+                                in: language, bundle: .main)
+    }
+
+    /// The view text of a notes context while the assistant may not see notes (no consent, or the note is not visible).
+    private static let notesWithoutConsentText = "Ansicht: Notizen. Notizen stehen dir nicht zur Verfügung."
+
+    /// What the notes chat may do and how; only in the notes contexts and while the consent is on. It holds no note text.
+    private func notesChatInstructions() -> String {
+        switch context {
+        case .notes, .note: break
+        default: return ""
+        }
+        guard tools.offersNotes, let noteTools else { return "" }
+        let names = noteTools.access.privateFolderNames()
+        let german = Self.privateNotesSentence(folderNames: names, language: .german)
+        let english = Self.privateNotesSentence(folderNames: names, language: .english)
+        return """
+        In diesem Gespräch arbeitest du mit den Notizen des Nutzers. Rufe zuerst list_notes auf und lies mit read_note nur \
+        die Notizen, die für die Bitte nötig sind. Jede Änderung (create_note, update_note, delete_note) ist ein eigener \
+        Funktionsaufruf: nie mehrere Notizen in einem Aufruf und höchstens eine Änderung je Notiz und Antwort; bitte nicht im \
+        Text um Bestätigung. update_note braucht den vollständigen neuen Text; die erste Zeile ist der Titel; schreibe \
+        Markdown und übernimm Verweise der Form (attachment:…) unverändert. delete_note legt die Notiz in „Zuletzt gelöscht“. \
+        Papierkorb leeren, Verschieben, Anheften und Anhänge stehen dir nicht zur Verfügung.
+        Fragt der Nutzer nach Tagebuch mit Gott, Bible Study oder Dream Log, antworte mit genau diesem Satz, in der Sprache \
+        deiner Antwort: Deutsch „\(german)“, Englisch „\(english)“
         """
     }
 
@@ -554,6 +651,18 @@ final class AssistantModel {
         case .capture:
             // Meals, water and workouts never go to the assistant (main design §7).
             return "Ansicht: Erfassen (Essen, Trinken, Training). Diese Daten stehen dir nicht zur Verfügung."
+        case .notes(let folderID):
+            // No note text and no titles: the assistant asks for them with list_notes.
+            guard tools.offersNotes, let access = noteTools?.access else { return Self.notesWithoutConsentText }
+            if let folderID, let folder = access.visibleFolders().first(where: { $0.id == folderID }) {
+                let count = access.entries(folderID: folderID, query: nil).count
+                return "Ansicht: Notizen im Ordner „\(folder.name)“ (id \(NoteToolAccess.folderKey(for: folderID)); \(count) sichtbare Notizen; Einzelheiten über list_notes)."
+            }
+            return "Ansicht: Notizen (\(access.entries(folderID: nil, query: nil).count) sichtbare Notizen; Einzelheiten über list_notes)."
+        case .note(let id):
+            let key = NoteToolAccess.key(for: id)
+            guard tools.offersNotes, let note = noteTools?.access.visibleNote(key: key) else { return Self.notesWithoutConsentText }
+            return "Das Gespräch betrifft die Notiz „\(NoteToolAccess.displayTitle(note))“ (id \(key)). Lies sie mit read_note."
         case .tasks:
             let open = planning.taskList.items.filter { !$0.isCompleted }.count
             return "Ansicht: Aufgaben (\(open) offene Aufgaben; Einzelheiten über list_tasks)."

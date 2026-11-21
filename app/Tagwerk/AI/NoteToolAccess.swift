@@ -34,8 +34,9 @@ struct NoteToolAccess {
         return roles.map { role in store.folder(role: role)?.name ?? NoteStore.defaultFolderName(for: role) }
     }
 
-    /// "A, B und C" in the language of the user; used by the consent sheet and the context line of the notes chat.
-    static func listText(_ names: [String]) -> String {
-        names.formatted(.list(type: .and))
+    /// "A, B und C" in the language of the user (or of `locale`); used by the consent sheet, the context line and the
+    /// sentence about private notes.
+    static func listText(_ names: [String], locale: Locale = .autoupdatingCurrent) -> String {
+        names.formatted(.list(type: .and).locale(locale))
     }
 }
