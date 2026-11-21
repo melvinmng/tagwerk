@@ -425,9 +425,9 @@ struct TimelineCanvas: View {
     }
 
     private func snapIndicator(minutes: Int, shown: Range<Int>, width: CGFloat) -> some View {
-        HStack(spacing: 6) {
+        HStack(spacing: NowTimeCapsule.lineSpacing) {
             // Same capsule as the "now" marker, so the time keeps its contrast on the dark grid as well.
-            NowTimeCapsule(time: clock(minutes), width: labelWidth)
+            NowTimeCapsule(time: clock(minutes), width: labelWidth + NowTimeCapsule.columnOverhang)
             Rectangle().fill(.nowMarkerFill).frame(height: 1.5)
         }
         .frame(width: width)

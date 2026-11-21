@@ -33,9 +33,16 @@ enum NowText {
 /// a capsule, not a text colour: the text keeps 4.5:1 in both appearances, which a red text on the background would not.
 struct NowTimeCapsule: View {
     let time: String
-    /// The width of the capsule, the label column in the grid. Nil: as wide as the text (list row).
+    /// The width of the capsule, the label column plus `columnOverhang` in the grid. Nil: as wide as the text (list row).
     var width: CGFloat?
-    private static let horizontalPadding: CGFloat = 2
+
+    /// The capsule reaches this far beyond the label column into the gap to the line, so the time keeps room at both ends
+    /// of the rounded shape even when it is scaled down (English "10:30 AM").
+    static let columnOverhang: CGFloat = 4
+    /// Gap between the capsule and the line when the capsule reaches `columnOverhang` into it.
+    static let lineSpacing: CGFloat = 2
+
+    private var horizontalPadding: CGFloat { width == nil ? 8 : 4 }
 
     var body: some View {
         Text(time)
@@ -43,8 +50,8 @@ struct NowTimeCapsule: View {
             // "2:32 PM" in English is wider than "14:32"; in the fixed column it shrinks instead of being cut off.
             .lineLimit(width == nil ? nil : 1).minimumScaleFactor(width == nil ? 1 : 0.6)
             // The text keeps the whole inner width, like the label it replaces (the audit reports a text that has no room).
-            .frame(width: width.map { max(0, $0 - 2 * Self.horizontalPadding) })
-            .padding(.horizontal, Self.horizontalPadding).padding(.vertical, 2)
+            .frame(width: width.map { max(0, $0 - 2 * horizontalPadding) })
+            .padding(.horizontal, horizontalPadding).padding(.vertical, 2)
             .background(.nowMarkerFill, in: Capsule())
     }
 }
@@ -64,8 +71,8 @@ struct NowLine: View {
             if let minutes = NowMarker.minutes(now: model.now(), day: day, calendar: model.calendar),
                let position = NowMarker.position(nowMinutes: minutes, shown: shown) {
                 let time = NowText.time(minutes: minutes, calendar: model.calendar)
-                HStack(spacing: 6) {
-                    NowTimeCapsule(time: time, width: labelWidth)
+                HStack(spacing: NowTimeCapsule.lineSpacing) {
+                    NowTimeCapsule(time: time, width: labelWidth + NowTimeCapsule.columnOverhang)
                         // Covers the hour label when the line passes it.
                         .background(.background)
                     Rectangle().fill(.nowMarkerFill).frame(height: 2)
