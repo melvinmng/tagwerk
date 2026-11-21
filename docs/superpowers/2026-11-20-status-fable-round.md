@@ -64,7 +64,8 @@ Festlegungen der Hauptsitzung zum G3-Plan: offene Fragen nach Empfehlung; Zeilen
 | `feat/g1-plan-grid` | G1 Strang P auf Basis `fix/ui-test-stability` | läuft (Sonnet) |
 | `fix/ui-test-stability` | vorbestehende UI-Testfehler | PR #240; fertig und geprüft, Head `e34c1fd`, `test-all` zweimal grün; zuerst mergen. Allowlist-Einträge „Unerledigt von heute“ und Leftover-Zeile bei Strang K (K5) neu bewerten |
 | `feat/g3-github-status` | G3 Strang G (G1–G4) | PR #249 (Basis #240); fertig und geprüft, Head `f7eae41`, `test-all` grün; G5 offen (nach #173 A/B), dort auch GH9-Fußtext „erste Stufe“ vs. Startstufe „Ready“ und VoiceOver-Anführungszeichen im Englischen klären |
-| `feat/g1-focus` | G1 Strang F (F1–F7) auf Basis `fix/ui-test-stability` | läuft (Sonnet) |
+| `feat/g1-focus` | G1 Strang F (F1–F7) | PR #253; geprüft, Head `683677d`, `test-all` grün; F8 nach P. Achtung: Menütitel jetzt „Fokus starten · 25 min“ – beim Zusammenführen mit #246 (Strang U) UI-Tests auf den Titel prüfen |
+| `fix/ui-audits-and-strings` | #250 nach Plan 2026-11-21 | läuft (Sonnet) |
 
 ## Warteschlange Umsetzung (je freier Xcode-Platz, nach Prüfung des fertigen Branches)
 
@@ -72,7 +73,7 @@ PRs #240–#249 angelegt (21.11.). Merge-Reihenfolge vom Nutzer bestätigt: #240
 Probe-Merge in dieser Reihenfolge: Konflikte in `scripts/translations/en.json` (fast alle), `AISettingsView.swift` (#242, #244), `EveningSheet.swift` (#248), `Localizable.xcstrings` (#249).
 
 1. **Integrationsauftrag (Sonnet, läuft seit 21.11. vormittags, jetzt inkl. #251/#252 am Ende der Kette):** zuerst Nachtrag #241 (Zahlenprüfung lockern), dann jeden PR-Branch der Reihe nach mit dem kumulierten Stand der vorherigen zusammenführen und Konflikte lösen, am Ende `test-all` auf dem letzten Stand. Danach prüfe ich, pushe und merge in Reihenfolge.
-1a. #250: Plan fertig (`docs/superpowers/plans/2026-11-21-issue-250-audits-strings.md`, offene Fragen nach Empfehlung); Umsetzung durch Sonnet auf `fix/ui-audits-and-strings` ab `origin/main`, nächster freier Platz nach dem Integrationsauftrag
+1a. #250: läuft; Plan fertig (`docs/superpowers/plans/2026-11-21-issue-250-audits-strings.md`, offene Fragen nach Empfehlung); Umsetzung durch Sonnet auf `fix/ui-audits-and-strings` ab `origin/main`, nächster freier Platz nach dem Integrationsauftrag
 2. G1 Strang E (Basis `fix/ui-test-stability`)
 
 3. #233 Block B (nach Merge von #173 A/B)
