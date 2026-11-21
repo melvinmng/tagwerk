@@ -10,13 +10,17 @@ The translations file maps the German key to one of
 
 Only the target language entry of a key is replaced; German values and variations, comments and
 extraction states are kept. Keys that are in a catalog but not in the file are reported, and so are
-keys in the file that no catalog contains. Run scripts/sync-strings.sh afterwards to normalize the
-catalog formatting, and scripts/check-strings.py --require-english to verify the result.
+keys in the file that no catalog contains. A catalog is written in the format it already has (separator,
+final line break; see scripts/catalog_format.py) and only when its content changes, so only the lines of
+changed entries differ. Run scripts/check-strings.py --require-english afterwards to verify the result.
 """
 import argparse
 import json
 import sys
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import catalog_format  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
 APP = ROOT / "app"
@@ -75,6 +79,14 @@ def apply_to_catalog(path, translations, language, seen):
     return data, written, excluded, missing
 
 
+def write_catalog(path, data):
+    """Writes the catalog in its own format; the file stays untouched when the content did not change."""
+    original_text = Path(path).read_text(encoding="utf-8")
+    result = catalog_format.adopt(original_text, json.dumps(data))
+    if result is not None:
+        Path(path).write_text(result, encoding="utf-8")
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--language", default="en")
@@ -95,9 +107,7 @@ def main():
             print(f"    missing: {key!r}", file=sys.stderr)
         total_missing += len(missing)
         if not arguments.dry_run:
-            with open(path, "w", encoding="utf-8") as handle:
-                json.dump(data, handle, ensure_ascii=False, indent=2, separators=(",", " : "))
-                handle.write("\n")
+            write_catalog(path, data)
 
     unused = sorted(set(translations) - seen)
     for key in unused:

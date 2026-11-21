@@ -199,5 +199,42 @@ class CommandLineTests(unittest.TestCase):
             self.assertIn(f"first difference at line {index + 2}", messages.getvalue())
 
 
+def load_apply_translations():
+    spec = importlib.util.spec_from_file_location("apply_translations", ROOT / "scripts" / "apply-translations.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+class ApplyTranslationsTests(unittest.TestCase):
+    def apply(self, translations):
+        module = load_apply_translations()
+        with tempfile.TemporaryDirectory() as folder:
+            catalog = Path(folder) / "Localizable.xcstrings"
+            before = COLON_CATALOG.read_text(encoding="utf-8")
+            catalog.write_text(before, encoding="utf-8")
+            data, *_ = module.apply_to_catalog(catalog, translations, "en", set())
+            module.write_catalog(catalog, data)
+            return before, catalog.read_text(encoding="utf-8")
+
+    def translated_entry(self):
+        data = json.loads(COLON_CATALOG.read_text(encoding="utf-8"))
+        return next((key, entry["localizations"]["en"]["stringUnit"]["value"]) for key, entry in data["strings"].items()
+                    if entry.get("localizations", {}).get("en", {}).get("stringUnit", {}).get("state") == "translated"
+                    and "shouldTranslate" not in entry)
+
+    def test_unchanged_translation_leaves_the_file_byte_for_byte(self):
+        key, value = self.translated_entry()
+        before, after = self.apply({key: value})
+        self.assertEqual(before, after)
+
+    def test_changed_translation_changes_one_line_pair(self):
+        key, value = self.translated_entry()
+        before, after = self.apply({key: value + " changed"})
+        removed, added = changed_lines(before, after)
+        self.assertEqual((len(removed), len(added)), (1, 1))
+        self.assertIn(" changed", added[0])
+
+
 if __name__ == "__main__":
     unittest.main()
