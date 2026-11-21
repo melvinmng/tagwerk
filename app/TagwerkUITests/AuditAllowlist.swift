@@ -7,7 +7,7 @@ import XCTest
 enum AuditAllowlist {
     /// Pins the time of day of the app for the audits (see `UITestMode.now`): morning, so the hour grid of "Planen" shows the
     /// seminar, the lunch break, the demo deadline and the "now" line, and "Tagesabschluss" is still reachable.
-    static let fixedClockArguments = ["-TagwerkUITestNow", "09:30"]
+    static let fixedClockArguments = UITestCase.morningClockArguments
 
     /// One accepted group of findings of one audit type. `labels` are regular expressions that must match the whole label
     /// (or the identifier) of the element; there is no entry without labels.
@@ -38,7 +38,7 @@ enum AuditAllowlist {
     private static let entries: [Entry] = [
         // MARK: Contrast (every group needs a colour decision, section "Designpunkte für #188")
         Entry(auditType: .contrast, labels: [
-            "Nichts offen", "zuletzt: „(Römer|Demo Linsensuppe)“ · heute \\d+:\\d+", "[89]", "HEUTE · KW \\d+", "FR\\. .* · KW \\d+", "Ablauf", "\\d\\d:\\d\\d",
+            "Nichts offen", "zuletzt: „(Römer|Demo Linsensuppe)“ · heute \\d+:\\d+", "[89]", "HEUTE · KW \\d+", "[A-Z]{2}\\.,? .* · KW \\d+", "Ablauf", "\\d\\d:\\d\\d",
             "Schlafzeit \\d+:\\d+", "Ganztägig", "Überfällig", "Heute", "Einkaufsliste", "Notizen", "\\d+\\.\\d+\\.", "·", "Demo Aufgaben",
             "Lokal", "Routinen", "Gewohnheiten", "Woche", "Starten", "noch [\\d.]+", "Wasser", "Schritte", "Training · Woche",
             "\\d+ offen · Liste „Demo Einkauf“ in Erinnerungen", "Brot & Backwaren", "Kühlregal", "Aufgaben, 1 offen", "Vergangene Termine",
@@ -64,6 +64,12 @@ enum AuditAllowlist {
         ], reason: "Button and segment texts in the accent colour or on Liquid Glass / bordered tint (navigation bar, filter marks, quick entry). "
             + "The system draws the background; no own colour to change without replacing the system style (#188)."),
 
+        Entry(auditType: .contrast, labels: ["Unerledigt von heute"], screens: ["Tagesabschluss"], reason:
+            "Section header of the leftover section of the wrap-up, in the system grey of a grouped list header on the grouped background "
+            + "(\"nearly passed\"). It is the same group as the other section headers above; the system draws the header colour, and an own "
+            + "78 % tone for this one header would duplicate the `TextSecondary` asset that strand K (plan g3-system-anbindungen, KO1a) "
+            + "introduces for all grey texts at once. Removed with the other entries of the group in task K5 (#160)."),
+
         Entry(auditType: .contrast, labels: gridCellLabels, screens: gridScreens, reason:
             "Title and time of the entries in the hour grid of \"Planen\": text in the primary or secondary colour on the event colour at 24 % "
             + "(blue, green, red, grey). The tint is the colour code of the grid (calendar, block, deadline, break); contrast on tint is a "
@@ -81,6 +87,11 @@ enum AuditAllowlist {
             "Punkte in den Einstellungen anlegen", "Mo\\. planen", "Fertig", "Brain Dump", "Leitfragen einfügen", "\\d+\\.\\d+\\.",
         ], screens: ["Tagesabschluss"], reason: "Texts of the evening sheet (hint line, buttons, date of the next planning day) report a partial lack of "
             + "Dynamic Type support; no clipping in the large text run. Stays on the device test list."),
+        Entry(auditType: .dynamicType, labels: ["Unerledigtes verschieben · \\d+ Aufgaben?"], screens: ["Tagesabschluss"], reason:
+            "Row \"Unerledigtes verschieben\" of the wrap-up (`LeftoverLine`): one `Text` with a text style and no line limit, so it grows and wraps "
+            + "with the text size; the audit still reports a partial lack of support (the same row is reported as \"may be clipped\" in the "
+            + "text clipped group below, and as soon as the height is fixed to the text it switches to this finding). Not part of the "
+            + "AX5 run; stays on the device test list (large text)."),
         Entry(auditType: .dynamicType, labels: [
             "P1", "Ältere Termine durchsuchen · vor .*", "Durchsucht: 6 Monate zurück, 12 Monate voraus\\.",
         ], reason: "Priority capsule and the hint rows of the search sheet use text styles; the audit still reports a partial lack of "
@@ -98,9 +109,14 @@ enum AuditAllowlist {
             "Ältere Termine durchsuchen · vor .*",
         ], reason: "Reported in the default size for texts that are shown completely on the screenshot of the run (cards of \"Planen\", "
             + "entry rows of \"Aufgaben\", \"Erfassen\"). Not reproducible by eye; stays on the device test list (large text)."),
-        Entry(auditType: .textClipped, labels: ["FR\\. .* · KW \\d+", "[\\d.]+ / [\\d.]+"], reason:
-            "Date caption and steps value of \"Erfassen\" in the largest text size: single-line summary cells. Layout for AX sizes is a "
-            + "design decision (#188, \"Layout bei Bedienungshilfen-Schriftgrößen\")."),
+        Entry(auditType: .textClipped, labels: ["Unerledigtes verschieben · \\d+ Aufgaben?"], screens: ["Tagesabschluss"], reason:
+            "The row \"Unerledigtes verschieben\" of the wrap-up is a single `Text` without a line limit, so it wraps instead of being cut; "
+            + "the audit's generic warning \"may be clipped at larger Dynamic Type sizes\" comes with the new row of the leftover section "
+            + "(same group as the entries above). Not part of the AX5 run; stays on the device test list (large text)."),
+        Entry(auditType: .textClipped, labels: ["[\\d.]+ / [\\d.]+"], reason:
+            "Steps value of \"Erfassen\" in the largest text size: single-line summary cell. Layout for AX sizes is a "
+            + "design decision (#188, \"Layout bei Bedienungshilfen-Schriftgrößen\"). The date caption above the day title wraps at "
+            + "accessibility sizes (`PageTitleLabel`), so it needs no entry; its weekday changes every day."),
         Entry(auditType: .textClipped, labels: [""], elementType: .textField, reason:
             "Text fields (shopping input, search field) report their placeholder as clipped; the field itself is a single line with a fixed "
             + "pill height. Layout for AX sizes: #188."),
@@ -166,15 +182,43 @@ enum AuditAllowlist {
         let passes = auditTypes.contains(.contrast) && auditTypes != .contrast ? [.contrast, auditTypes.subtracting(.contrast)] : [auditTypes]
         for pass in passes {
             var findings: [(issue: XCUIAccessibilityAuditIssue, element: XCUIElement?)] = []
-            try app.performAccessibilityAudit(for: pass) { issue in
+            try runAudit(app, for: pass) { issue in
                 findings.append((issue, issue.element))
-                return true
             }
             for finding in findings where !isAccepted(finding.issue, element: finding.element) {
                 let element = finding.element
                 XCTFail("\(screen): \(finding.issue.compactDescription) | \(finding.issue.detailedDescription) | "
                     + "label=\(element?.label ?? "-") id=\(element?.identifier ?? "-") frame=\(element?.frame ?? .zero)", file: file, line: line)
             }
+        }
+    }
+
+    /// Error of `performAccessibilityAudit` when the audit did not finish in its (not configurable) time limit: domain
+    /// "com.apple.xcode.xctest.accessibilityAudit", code -56, "Audit failed to complete in time".
+    private static func isAuditTimeout(_ error: Error) -> Bool {
+        let nsError = error as NSError
+        return nsError.domain == "com.apple.xcode.xctest.accessibilityAudit" && nsError.code == -56
+    }
+
+    /// Runs one audit pass and hands every issue to `collect`. The audit has no timeout setting, and it runs out of time when the
+    /// machine is loaded (several checkouts testing at once). Such a run reports nothing about the screen, so it is repeated
+    /// from scratch, up to three attempts; the issues of an aborted attempt are dropped, so no finding is lost or counted twice.
+    /// Every other error, and a timeout in the last attempt, still fails the test.
+    private static func runAudit(_ app: XCUIApplication, for auditTypes: XCUIAccessibilityAuditType,
+                                 attempts: Int = 3, collect: (XCUIAccessibilityAuditIssue) -> Void) throws {
+        for attempt in 1...attempts {
+            var issues: [XCUIAccessibilityAuditIssue] = []
+            do {
+                try app.performAccessibilityAudit(for: auditTypes) { issue in
+                    issues.append(issue)
+                    return true
+                }
+            } catch where isAuditTimeout(error) && attempt < attempts {
+                print("Accessibility audit timed out (attempt \(attempt) of \(attempts)), running it again")
+                continue
+            }
+            issues.forEach(collect)
+            return
         }
     }
 
