@@ -9,4 +9,21 @@ extension NoteChatTools {
             "query": AppTools.string("Words that all have to occur in the title or text, at least 2 characters; null for no filter", nullable: true),
         ])
     }
+
+    static var changeDefinitions: [ToolDefinition] {
+        [
+            AppTools.tool("create_note", "Creates a new note. The first line of text is the title; the text is Markdown. Without folder_id it goes to the folder this chat was opened from, otherwise to Notizen. Cannot attach files or pictures. Needs confirmation.", [
+                "text": AppTools.string("The complete text of the new note; the first line is the title"),
+                "folder_id": AppTools.string("Folder id from list_notes; null for the default", nullable: true),
+            ]),
+            AppTools.tool("update_note", "Replaces the text of a note you have read with read_note in this conversation and that has not changed since. text is the complete new text; the first line is the title; keep every reference of the form (attachment:<uuid>) unchanged. Only one change per note and answer. A note that was cut when read cannot be revised. Needs confirmation.", [
+                "note_id": AppTools.string("Note id of the form note:<uuid>"),
+                "text": AppTools.string("The complete new text of the note"),
+            ]),
+            AppTools.tool("delete_note", "Moves a note to Zuletzt gelöscht, where the user can restore it for 30 days. It cannot empty that folder or delete for good. Needs confirmation.", [
+                "note_id": AppTools.string("Note id of the form note:<uuid>"),
+                "reason": AppTools.string("Short reason, shown on the card; null for none", nullable: true),
+            ]),
+        ]
+    }
 }

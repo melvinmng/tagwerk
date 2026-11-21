@@ -4086,6 +4086,16 @@
         }
       }
     },
+    "Anhänge kann der Assistent nicht anlegen. Nimm den Verweis auf den Anhang nicht in den Text auf.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The assistant cannot create attachments. Leave the reference to an attachment out of the text."
+          }
+        }
+      }
+    },
     "Anhänge teilen": {
       "localizations": {
         "en": {
@@ -6365,6 +6375,16 @@
         }
       }
     },
+    "Der Text der Notiz fehlt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The text of the note is missing."
+          }
+        }
+      }
+    },
     "Der Ton wird auf dem iPhone in Text umgewandelt. Änderungen führt Tagwerk erst aus, wenn du sie bestätigst.": {
       "localizations": {
         "en": {
@@ -6421,6 +6441,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "The chosen folder is no longer available. Choose it again."
+          }
+        }
+      }
+    },
+    "Der neue Text ist gleich dem alten.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The new text is the same as the old one."
           }
         }
       }
@@ -6501,6 +6531,16 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "Die Anhänge der Notiz müssen im Text bleiben. Übernimm die Verweise auf Anhänge unverändert.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The attachments of the note have to stay in the text. Keep the references to attachments unchanged."
           }
         }
       }
@@ -6866,6 +6906,26 @@
         }
       }
     },
+    "Die Notiz ist zu lang (höchstens 12 000 Zeichen).": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The note is too long (12,000 characters at most)."
+          }
+        }
+      }
+    },
+    "Die Notiz ist zu lang und wurde beim Lesen gekürzt. Sie lässt sich nicht überarbeiten.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The note is too long and was cut when read. It cannot be revised."
+          }
+        }
+      }
+    },
     "Die Notiz ist zu lang zum Übersetzen.": {
       "localizations": {
         "en": {
@@ -6892,6 +6952,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "The note has been changed in the meantime."
+          }
+        }
+      }
+    },
+    "Die Notiz wurde inzwischen geändert. Lies sie erneut.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The note has changed in the meantime. Read it again."
           }
         }
       }
@@ -7429,6 +7499,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "This conversation is about one note only."
+          }
+        }
+      }
+    },
+    "Dieses Gespräch betrifft nur eine andere Notiz.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This conversation is about another note."
           }
         }
       }
@@ -11049,6 +11129,16 @@
         }
       }
     },
+    "In diesen Ordner kann der Assistent keine Notiz anlegen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The assistant cannot create a note in this folder."
+          }
+        }
+      }
+    },
     "In dieser Woche war keine Gewohnheit aktiv.": {
       "localizations": {
         "en": {
@@ -12126,6 +12216,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Last occurrence: %@"
+          }
+        }
+      }
+    },
+    "Lies die Notiz zuerst mit read_note, bevor du sie überarbeitest.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Read the note with read_note first, before you revise it."
           }
         }
       }

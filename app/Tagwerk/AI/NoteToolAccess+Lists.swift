@@ -43,6 +43,33 @@ extension NoteToolAccess {
         return folder.role?.acceptsOwnNotes ?? true
     }
 
+    enum FolderChoiceError: Error {
+        /// The key names no visible folder.
+        case unknown
+        /// The folder is visible but takes no notes of the assistant (the routine folders).
+        case notAccepted
+    }
+
+    /// The folder a new note of the assistant goes to: the folder `key` names; without a key the default folder of the chat
+    /// when it takes new notes, else "Notizen" (`nil`). Used by the tool and by the card, so both agree.
+    func newNoteFolder(key: String?, defaultFolderID: UUID?) throws -> UUID? {
+        if let key {
+            guard let folder = visibleFolder(key: key) else { throw FolderChoiceError.unknown }
+            guard acceptsNewNote(folderID: folder.id) else { throw FolderChoiceError.notAccepted }
+            return folder.id
+        }
+        if let defaultFolderID, acceptsNewNote(folderID: defaultFolderID) { return defaultFolderID }
+        return nil
+    }
+
+    /// Title of a note for a card that is shown on the screen only: also a note that went to the trash meanwhile, never a
+    /// private one. Nothing of it is sent.
+    func cardTitle(key: String) -> String? {
+        guard key.hasPrefix(Self.keyPrefix), let id = UUID(uuidString: String(key.dropFirst(Self.keyPrefix.count))),
+              let note = store.note(id: id), !store.isPrivate(note) else { return nil }
+        return Self.displayTitle(note)
+    }
+
     /// The visible notes, newest change first (pinned notes get no precedence). `folderID` limits the list to the folder and
     /// the folders below it, `query` to notes in which every word occurs in the title or the text.
     func entries(folderID: UUID?, query: String?) -> [Entry] {

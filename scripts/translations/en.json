@@ -2175,5 +2175,15 @@
   "**Nur im Gespräch:** Ohne deine Nachricht an den Assistenten verlässt nichts das iPhone. Gelesene Notiztexte gelten nur für das laufende Gespräch und werden nicht im Verlauf gespeichert; die Antworten des Assistenten schon.": "**Only in conversation:** without your message to the assistant, nothing leaves the iPhone. Note texts it has read apply only to the running conversation and are not saved in the history; the assistant’s replies are.",
   "Dieses Gespräch betrifft nur eine Notiz.": "This conversation is about one note only.",
   "Die Suche braucht mindestens 2 Zeichen.": "The search needs at least 2 characters.",
-  "Ordner nicht gefunden.": "Folder not found."
+  "Ordner nicht gefunden.": "Folder not found.",
+  "Anhänge kann der Assistent nicht anlegen. Nimm den Verweis auf den Anhang nicht in den Text auf.": "The assistant cannot create attachments. Leave the reference to an attachment out of the text.",
+  "In diesen Ordner kann der Assistent keine Notiz anlegen.": "The assistant cannot create a note in this folder.",
+  "Der Text der Notiz fehlt.": "The text of the note is missing.",
+  "Lies die Notiz zuerst mit read_note, bevor du sie überarbeitest.": "Read the note with read_note first, before you revise it.",
+  "Die Notiz ist zu lang und wurde beim Lesen gekürzt. Sie lässt sich nicht überarbeiten.": "The note is too long and was cut when read. It cannot be revised.",
+  "Die Notiz wurde inzwischen geändert. Lies sie erneut.": "The note has changed in the meantime. Read it again.",
+  "Der neue Text ist gleich dem alten.": "The new text is the same as the old one.",
+  "Die Anhänge der Notiz müssen im Text bleiben. Übernimm die Verweise auf Anhänge unverändert.": "The attachments of the note have to stay in the text. Keep the references to attachments unchanged.",
+  "Dieses Gespräch betrifft nur eine andere Notiz.": "This conversation is about another note.",
+  "Die Notiz ist zu lang (höchstens 12 000 Zeichen).": "The note is too long (12,000 characters at most)."
 }

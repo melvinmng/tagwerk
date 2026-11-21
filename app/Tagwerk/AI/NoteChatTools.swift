@@ -33,7 +33,7 @@ final class NoteChatTools: ToolHandler {
 
     var definitions: [ToolDefinition] {
         guard hasConsent() else { return base.definitions }
-        return base.definitions + (scope == nil ? [Self.listNotesDefinition] : [])
+        return base.definitions + (scope == nil ? [Self.listNotesDefinition] : []) + Self.changeDefinitions
     }
 
     func kind(of name: String) -> ToolKind {
@@ -42,12 +42,21 @@ final class NoteChatTools: ToolHandler {
         return base.kind(of: name)
     }
 
-    /// `list_notes` keeps only the number of titles it delivered; the other tools follow the base.
+    /// `list_notes` keeps only the number of titles it delivered, `create_note` and `update_note` their arguments without the
+    /// text but with its title; the other tools follow the base.
     func storedForm(of call: ToolCall, output: String?) -> (arguments: String, output: String?) {
-        guard call.name == "list_notes" else { return base.storedForm(of: call, output: output) }
         let arguments = String(decoding: call.arguments, as: UTF8.self)
-        guard let output else { return (arguments, nil) }
-        return (arguments, Self.storedListOutput(output))
+        switch call.name {
+        case "list_notes":
+            guard let output else { return (arguments, nil) }
+            return (arguments, Self.storedListOutput(output))
+        case "create_note", "update_note":
+            return (Self.storedChangeArguments(arguments), output)
+        case "delete_note":
+            return (arguments, output)
+        default:
+            return base.storedForm(of: call, output: output)
+        }
     }
 
     /// `list_notes` and `read_note` are shown as lines in the chat. This does not depend on the consent: the lines of the
@@ -63,6 +72,9 @@ final class NoteChatTools: ToolHandler {
         do {
             switch call.name {
             case "list_notes": return try listNotes(AppTools.Arguments(arguments))
+            case "create_note": return try createNote(AppTools.Arguments(arguments))
+            case "update_note": return try updateNote(AppTools.Arguments(arguments))
+            case "delete_note": return try deleteNote(AppTools.Arguments(arguments))
             default: throw AppTools.ToolError(String(localized: "Unbekannte Funktion \(call.name)."))
             }
         } catch let error as AppTools.ToolError {
