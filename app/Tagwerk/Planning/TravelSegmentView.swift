@@ -132,10 +132,9 @@ struct TravelRow: View {
             Text(time).font(.caption.monospacedDigit()).foregroundStyle(.secondary).frame(width: 48, alignment: .leading)
                 .accessibilityHidden(true)
             RoundedRectangle(cornerRadius: 2).fill(Color.gray.opacity(0.6)).frame(width: 4)
-            ViewThatFits(in: .horizontal) {
-                HStack(spacing: 8) { menuTitle; capsule }
-                VStack(alignment: .leading, spacing: 4) { menuTitle; capsule }
-            }
+            // One layout, no `ViewThatFits` with two menu copies and no min-height frame in the label: both made the contrast audit run out of time. The title
+            // wraps at large text sizes, the capsule keeps its size.
+            HStack(alignment: .firstTextBaseline, spacing: 8) { menuTitle; capsule }
         }
         .accessibilityElement(children: .contain)
     }
@@ -149,7 +148,7 @@ struct TravelRow: View {
     @ViewBuilder
     private var menuTitle: some View {
         if let menu {
-            TravelMenu(segment: segment, transport: transport, context: menu) { title.frame(minHeight: 28).contentShape(Rectangle()) }
+            TravelMenu(segment: segment, transport: transport, context: menu) { title.padding(.vertical, 5) }
         } else {
             title
         }
