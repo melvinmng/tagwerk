@@ -80,13 +80,14 @@ struct SearchTaskRow: View {
     let now: Date
     let calendar: Calendar
     var isReadOnly = false
+    var reminderMark: ReminderMark?
     let onComplete: () -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 2) {
             TaskRow(item: item, section: section(for: item, now: now, calendar: calendar), now: now, calendar: calendar,
-                    isReadOnly: isReadOnly, titleText: SearchTexts.highlighted(item.title, ranges: match.titleRanges),
-                    onComplete: onComplete)
+                    isReadOnly: isReadOnly, reminderMark: reminderMark,
+                    titleText: SearchTexts.highlighted(item.title, ranges: match.titleRanges), onComplete: onComplete)
             if let snippet = match.snippet {
                 SearchSnippetLine(snippet: snippet).padding(.leading, 34)
             }

@@ -2168,5 +2168,8 @@
   "Hinweise im Kalender (Apple)": "Calendar alerts (Apple)",
   "Kommen als Mitteilung von Tagwerk. Ruhezeiten und Fokus-Filter gelten.": "Delivered as a notification from Tagwerk. Quiet hours and Focus filters apply.",
   "Tagwerk-Mitteilungen": "Tagwerk notifications",
-  "iOS meldet diese Hinweise selbst, auch in Apple Kalender. Ruhezeiten gelten dafür nicht.": "iOS delivers these alerts itself, also in Apple Calendar. Quiet hours do not apply to them."
+  "iOS meldet diese Hinweise selbst, auch in Apple Kalender. Ruhezeiten gelten dafür nicht.": "iOS delivers these alerts itself, also in Apple Calendar. Quiet hours do not apply to them.",
+  "%lld eigene Erinnerungen": "%lld custom reminders",
+  "1 eigene Erinnerung": "1 custom reminder",
+  "keine Erinnerungen": "no reminders"
 }

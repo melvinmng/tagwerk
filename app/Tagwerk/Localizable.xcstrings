@@ -1389,6 +1389,16 @@
         }
       }
     },
+    "%lld eigene Erinnerungen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld custom reminders"
+          }
+        }
+      }
+    },
     "%lld Einträge": {
       "localizations": {
         "de": {
@@ -2913,6 +2923,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "1 task from it"
+          }
+        }
+      }
+    },
+    "1 eigene Erinnerung": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 custom reminder"
           }
         }
       }
@@ -11141,6 +11161,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Calendar events"
+          }
+        }
+      }
+    },
+    "keine Erinnerungen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "no reminders"
           }
         }
       }

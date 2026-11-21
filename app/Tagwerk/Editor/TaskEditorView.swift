@@ -337,7 +337,10 @@ struct TaskEditorView: View {
 
     private func finish(_ success: Bool) {
         guard success else { return }
-        if reminders?.hasChanges == true { environment.notifications.scheduleSoon() }
+        if reminders?.hasChanges == true {
+            environment.notifications.scheduleSoon()
+            environment.taskList.refreshReminderMarks()
+        }
         if let saved = model.saved { onSaved(saved, model.requestedAssignees) }
         // A handed-over issue leaves the plan; its planning edits must not create a day or block again.
         if model.savedIsListed, let planning, let plannedEdit, plannedEdit != planning.plannedEdit(for: model.original) {
