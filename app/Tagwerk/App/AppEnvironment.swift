@@ -25,6 +25,8 @@ final class AppEnvironment {
     let shoppingSorter: ShoppingSorter
     let recipeImporter: RecipeImporter
     let recipeTranslator: RecipeTranslator
+    /// "Artikel übersetzen"; one checked request with item names only, after the same consent as sorting and on the user's tap.
+    let shoppingTranslator: ShoppingTranslator
     /// Items the share extension left for the app (#165); read when the app becomes active, confirmed by the user.
     let shareInbox: ShareInboxModel
     /// "Mit ChatGPT zusammenfassen" on a shared mail (#166); sends only after consent and on the user's tap.
@@ -285,7 +287,9 @@ final class AppEnvironment {
         self.mealEstimator = MealEstimator(responder: ai.client, model: { try await ai.selectedModel() },
                                            hasConsent: { settings.mealEstimationConsent })
         self.shoppingSorter = ShoppingSorter(responder: ai.client, model: { try await ai.selectedModel() },
-                                             hasConsent: { settings.shoppingSortConsent })
+                                             hasConsent: { settings.hasShoppingSortConsent })
+        self.shoppingTranslator = ShoppingTranslator(responder: ai.client, model: { try await ai.selectedModel() },
+                                                     hasConsent: { settings.hasShoppingSortConsent })
         self.recipeImporter = RecipeImporter(responder: ai.client, model: { try await ai.selectedModel() },
                                              hasConsent: { settings.shoppingRecipeConsent })
         self.recipeTranslator = RecipeTranslator(responder: ai.client, model: { try await ai.selectedModel() },

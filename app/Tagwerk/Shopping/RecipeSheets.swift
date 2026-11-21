@@ -615,7 +615,7 @@ struct RecipeResultView: View {
                 if result.readLocally {
                     Text("Die Kategorien kommen aus deiner Einkaufsliste.")
                     if result.keepsNoteLanguage, let noteLanguage = result.noteLanguage {
-                        Text("Die Zutaten stehen in der Sprache der Notiz (\(LanguageSettingsText.name(noteLanguage))). Neue Artikel aus dieser Notiz kommen so auf die Liste.")
+                        Text("Die Zutaten stehen in der Sprache der Notiz (\(LanguageSettingsText.name(noteLanguage))). Neue Artikel aus dieser Notiz kommen so auf die Liste. Über „•••“ › „Artikel übersetzen …“ kannst du sie danach übersetzen.")
                     }
                 } else {
                     Text("Die Kategorien kommen von ChatGPT und lassen sich später in der Liste ändern.")

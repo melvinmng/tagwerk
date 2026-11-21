@@ -198,4 +198,11 @@ struct RecipeShoppingLanguageTests {
                                                                      categoryNames: fixture.categories, openItemKeys: [])
         #expect(result.noteLanguage == .german && !result.keepsNoteLanguage)
     }
+    @Test func noteInput_listAndRecipeEnglish_germanNote_marksKeepsNoteLanguage() async throws {
+        // The recipe language and the list share English (no second language), but the note is German: its names stay German.
+        let german = noteText(headings: ("Zutaten", "Zubereitung"))
+        let result = try await fixture.importer(consent: false).read(.note(UUID(), text: german), language: .english,
+                                                                     categoryNames: fixture.categories, openItemKeys: [])
+        #expect(result.keepsNoteLanguage && result.noteLanguage == .german)
+    }
 }

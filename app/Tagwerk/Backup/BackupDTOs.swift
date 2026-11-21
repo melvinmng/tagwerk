@@ -1178,6 +1178,9 @@ struct AppSettingsBackup: Codable, Equatable {
     var shoppingSuggestionDismissed: Bool
     var shoppingCategoriesSeeded: Bool
     var shoppingSortConsent: Bool
+    /// Optional, so a backup written before the consent was versioned still decodes; it then counts as the old text (0) and the
+    /// user is asked once more.
+    var shoppingSortConsentVersion: Int?
     /// Added with "Rezept hinzufügen"; files without it read as `nil`, which leaves the setting as it is.
     var shoppingRecipeConsent: Bool?
     /// Added with the mail summary (#166); files without it read as `nil`, which leaves the setting as it is.
@@ -1269,6 +1272,7 @@ struct AppSettingsBackup: Codable, Equatable {
         shoppingSuggestionDismissed = record.shoppingSuggestionDismissed
         shoppingCategoriesSeeded = record.shoppingCategoriesSeeded
         shoppingSortConsent = record.shoppingSortConsent
+        shoppingSortConsentVersion = record.shoppingSortConsentVersion
         shoppingRecipeConsent = record.shoppingRecipeConsent
         mailSummaryConsent = record.mailSummaryConsent
         noteAssistantConsent = record.noteAssistantConsent
@@ -1351,6 +1355,7 @@ struct AppSettingsBackup: Codable, Equatable {
         record.shoppingSuggestionDismissed = shoppingSuggestionDismissed
         record.shoppingCategoriesSeeded = shoppingCategoriesSeeded
         record.shoppingSortConsent = shoppingSortConsent
+        record.shoppingSortConsentVersion = shoppingSortConsentVersion ?? 0
         if let shoppingRecipeConsent { record.shoppingRecipeConsent = shoppingRecipeConsent }
         if let mailSummaryConsent { record.mailSummaryConsent = mailSummaryConsent }
         if let noteAssistantConsent { record.noteAssistantConsent = noteAssistantConsent }
@@ -1380,6 +1385,8 @@ struct AppSettingsBackup: Codable, Equatable {
         record.voiceInputEnabled = voiceInputEnabled
         record.voiceExplained = voiceExplained
         record.voiceRecognitionLanguage = voiceRecognitionLanguage
+        // Device state, not part of the backup: the restored list adopts its language again instead of offering a translation.
+        record.shoppingItemsLanguage = nil
         // The answer language of an older backup is derived from the restored dictation language, once.
         record.voiceAnswerLanguage = voiceAnswerLanguage
         record.migrateVoiceAnswerLanguageIfNeeded()

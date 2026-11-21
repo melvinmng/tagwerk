@@ -39,13 +39,13 @@ struct ShoppingSettingsView: View {
                 }
             }
             Section {
-                Toggle("Mit ChatGPT sortieren", isOn: $settings.shoppingSortConsent)
+                Toggle("Mit ChatGPT sortieren und übersetzen", isOn: $settings.hasShoppingSortConsent)
                 Toggle("Rezepte mit ChatGPT lesen und übersetzen", isOn: $settings.shoppingRecipeConsent)
             } header: {
                 Text("ChatGPT")
             } footer: {
                 VStack(alignment: .leading, spacing: 6) {
-                    Text("Sendet auf dein Tippen die Namen der offenen Artikel und deiner Kategorien an ChatGPT. Fragst du den Assistenten nach der Einkaufsliste, gehen die Artikelnamen ebenfalls an ChatGPT.")
+                    Text("Sendet auf dein Tippen die Namen der offenen Artikel an ChatGPT, beim Sortieren auch die Namen deiner Kategorien. Fragst du den Assistenten nach der Einkaufsliste, gehen die Artikelnamen ebenfalls an ChatGPT.")
                     Text("„Rezept hinzufügen“ sendet auf dein Tippen den Rezepttext oder die Fotos und die Namen deiner Kategorien, „Rezept mit ChatGPT anlegen“ nur den Rezepttext oder die Fotos. Bei einem Link geht nur der gelesene Text der Seite weg, nicht die Adresse. Eine Rezept-Notiz mit Zutaten und Zubereitung liest Tagwerk auf dem iPhone. „Übersetzen …“ in einer Rezept-Notiz sendet auf dein Tippen den Text dieser Notiz, ohne Anhänge. Schaltest du das aus, fragt Tagwerk beim nächsten Rezept erneut.")
                 }
             }

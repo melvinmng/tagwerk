@@ -569,6 +569,41 @@ struct BackupTests {
         return try JSONSerialization.data(withJSONObject: object)
     }
 
+    @Test func restore_clearsTheSettledShoppingLanguage_soNoCardAppears() throws {
+        let origin = try makeTarget()
+        origin.settings.shoppingLanguage = "en-US"
+        try origin.container.mainContext.save()
+        let target = try makeTarget()
+        target.settings.shoppingItemsLanguage = "de-DE"
+        try target.container.mainContext.save()
+        try target.service.restore(try target.service.inspect(try origin.service.makeBackupData()))
+        #expect(target.settings.shoppingLanguage == "en-US")
+        #expect(target.settings.shoppingItemsLanguage == nil, "device state: the restored list adopts its language instead of offering a translation")
+    }
+
+    // MARK: Shopping consent (SPC4b)
+
+    @Test func shoppingConsent_roundTripsWithItsVersion() throws {
+        let origin = try makeTarget()
+        origin.settings.hasShoppingSortConsent = true
+        try origin.container.mainContext.save()
+        let target = try makeTarget()
+        try target.service.restore(try target.service.inspect(try origin.service.makeBackupData()))
+        #expect(target.settings.hasShoppingSortConsent)
+    }
+
+    @Test func shoppingConsent_ofAnOldBackup_asksAgain() throws {
+        let origin = try makeTarget()
+        origin.settings.shoppingSortConsent = true
+        try origin.container.mainContext.save()
+        let old = try removingSettingsKeys(["shoppingSortConsentVersion"], from: try origin.service.makeBackupData())
+        let target = try makeTarget()
+        target.settings.hasShoppingSortConsent = true
+        try target.container.mainContext.save()
+        try target.service.restore(try target.service.inspect(old))
+        #expect(target.settings.shoppingSortConsent && !target.settings.hasShoppingSortConsent)
+    }
+
     // MARK: Drink portions
 
     @Test func drinkPresets_roundTripThroughABackup() throws {

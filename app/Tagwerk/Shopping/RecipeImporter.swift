@@ -133,7 +133,7 @@ final class RecipeImporter {
                 // No translation on the device: the names stay in the language of the note, and nothing is sent.
                 let noteLanguage = RecipeNote.headingLanguage(text) ?? language
                 local.noteLanguage = noteLanguage
-                local.keepsNoteLanguage = shoppingLanguage.map { $0 != noteLanguage } ?? false
+                local.keepsNoteLanguage = (shoppingLanguage ?? language) != noteLanguage
                 return local
             }
             input = .text(text)
