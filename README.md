@@ -150,21 +150,38 @@ Der Tab **Planen** zeigt Tag, Woche oder Monat. Der **Arbeitstag** einer Aufgabe
 
 Die Tests verwenden Xcode 27.2, XcodeGen 2.46 und einen iOS-Simulator vom Typ **iPhone 18 Pro**. Für die Simulator-Tests genügt die heruntergeladene iOS-Simulatorlaufzeit in Xcode.
 
+**Gate-Regel:** GitHub Actions ist das Gate vor dem Merge, nicht der lokale Rechner.
+
+1. Je Commit lokal: die schnellen Stufen (`TAGWERK_SKIP_UI_TESTS=1 app/test-all.sh`) müssen grün sein.
+2. Bei Arbeit an einem Screen lokal zusätzlich nur die berührten UI-Klassen, z. B. `TAGWERK_UI_ONLY="TaskFlowUITests SearchUITests/testFoo" app/test-all.sh`.
+3. Vor dem Merge: die CI-Jobs `Tests (fast)` und `Tests (ui)` sind grün. Ein UI-Test, der erst im zweiten Versuch besteht, zählt als grün und steht in der Zusammenfassung des Jobs.
+4. Ein roter nächtlicher Lauf blockiert keinen PR, ist aber ein Auftrag: ein Issue von Hand anlegen (keine automatische Anlage). Wackelt derselbe Test zweimal in einer Woche, kommt er mit Issue in Quarantäne und wird vor dem nächsten Release-Stand behoben.
+5. Nur wenn CI ausfällt (GitHub-Störung, Warteschlange über 30 Minuten), gilt ersatzweise der volle lokale Lauf `app/test-all.sh` mit allen UI-Tests.
+
 Jeder Checkout (Hauptordner oder Worktree) testet mit eigenem Simulator, eigenem DerivedData-Ordner und eigenen Logs, damit mehrere Checkouts gleichzeitig testen können. Die Einstellungen stehen in [`scripts/test-env.sh`](scripts/test-env.sh):
 
 - Beim ersten Lauf legt `test-all.sh` den Simulator „Tagwerk Tests &lt;Checkout&gt;“ an.
 - `TAGWERK_TEST_SIMULATOR` wählt stattdessen einen vorhandenen Simulator (Name oder UDID).
 - `TAGWERK_TEST_DERIVED_DATA` setzt einen anderen DerivedData-Ordner.
-- Die Stufe „app UI tests“ startet die App mit dem Startargument `-TagwerkUITest` (nur Debug-Build im Simulator): Speicher-Store, Demo-Daten, Demo-Einkaufsliste, offline. Vorher erteilt `test-all.sh` per `simctl privacy` Zugriff auf Kalender und Erinnerungen. Die Stufe dauert mehrere Minuten; beim schnellen Iterieren lässt sie sich mit `TAGWERK_SKIP_UI_TESTS=1 app/test-all.sh` überspringen, vor einem Merge läuft sie immer mit.
+- Die Stufe „app UI tests“ startet die App mit dem Startargument `-TagwerkUITest` (nur Debug-Build im Simulator): Speicher-Store, Demo-Daten, Demo-Einkaufsliste, offline. Vorher erteilt `test-all.sh` per `simctl privacy` Zugriff auf Kalender und Erinnerungen. Die Stufe dauert lokal gut eine halbe Stunde; deshalb läuft sie im Regelfall auf GitHub Actions (siehe Gate-Regel). Lokal lässt sie sich mit `TAGWERK_SKIP_UI_TESTS=1` überspringen oder mit `TAGWERK_UI_ONLY=<Klasse>[/<Test>] …` auf einzelne Klassen oder Tests beschränken.
 - Der Barrierefreiheits-Audit listet mit `TEST_RUNNER_AUDIT_COLLECT_FILE=<Datei>` die Befunde, die weder behoben noch auf der Ausnahmenliste (`app/TagwerkUITests/AuditAllowlist.swift`) stehen, in eine Datei, statt zu scheitern.
 - Nach dem Entfernen eines Worktrees bleiben Simulator und `~/Library/Developer/Tagwerk/DerivedData-tests-<Checkout>` liegen; sie lassen sich mit `xcrun simctl delete "Tagwerk Tests <Checkout>"` bzw. durch Löschen des Ordners entfernen.
 
 ### Tests auf GitHub Actions
 
-Der Workflow [`.github/workflows/tests.yml`](.github/workflows/tests.yml) führt `app/test-all.sh` für jeden Pull Request (geöffnet, neuer Push, wieder geöffnet) und auf Abruf (`workflow_dispatch`) auf einem GitHub-gehosteten macOS-Runner aus. Ein neuer Push auf denselben PR bricht den laufenden Lauf ab. Der Workflow braucht keine Secrets und hat nur Lesezugriff auf den Code (`contents: read`); getestet wird im Simulator ohne Signierung, die UI-Tests nutzen ausschließlich Demo-Daten.
+Der Workflow [`.github/workflows/tests.yml`](.github/workflows/tests.yml) führt `app/test-all.sh` auf einem GitHub-gehosteten macOS-Runner aus, und zwar:
+
+- **für jeden Pull Request** (geöffnet, neuer Push, wieder geöffnet) mit dem PR-Satz der UI-Tests und einem Wiederholungsversuch je fehlgeschlagenem UI-Test;
+- **nächtlich** (02:17 UTC) auf `main` mit allen UI-Tests ohne Wiederholung, aber nur, wenn `main` seit dem letzten erfolgreichen nächtlichen Lauf neue Commits hat; sonst endet der Lauf sofort grün;
+- **auf Abruf** (`workflow_dispatch`, für jeden Branch) ebenfalls mit allen UI-Tests ohne Wiederholung.
+
+Ein neuer Push auf denselben PR bricht den laufenden Lauf ab; nächtliche und manuelle Läufe werden nie abgebrochen. Der Workflow braucht keine Secrets und hat nur Lesezugriff auf den Code (`contents: read`, im Job `changes` zusätzlich `actions: read` für die Abfrage des letzten nächtlichen Laufs); getestet wird im Simulator ohne Signierung, die UI-Tests nutzen ausschließlich Demo-Daten.
 
 - **Runner:** Label `xcode-27` (Apple-Silicon-Image mit macOS 27 und Xcode 27.x; 3 Kerne, 7 GB RAM, für öffentliche Repositories kostenlos). Das Image enthält Xcode 27.2 (Build 27B52) unter `/Applications/Xcode_27.2.app` und die iOS-27.2-Simulatorlaufzeit samt iPhone 18 Pro vorinstalliert, es muss nichts heruntergeladen werden. `/Applications/Xcode.app` zeigt dort auf 27.1; deshalb wählt der Workflow 27.2 über `TAGWERK_DEVELOPER_DIR` und bricht ab, wenn Build, Laufzeit oder Gerätetyp fehlen (das Image kann sich ändern).
-- **Zwei parallele Jobs:** `Tests (fast)` führt Pakettests, App-Tests und die String-Catalog-Prüfung aus (`TAGWERK_SKIP_UI_TESTS=1`), `Tests (ui)` nur die UI-Tests mit den Barrierefreiheits-Audits (`TAGWERK_ONLY_UI_TESTS=1`). So liegt das Ergebnis der schnellen Stufen früh vor, und die lange UI-Stufe läuft nebenher. Der Testschritt hat 80 Minuten, der Job 90 Minuten Zeitlimit.
+- **Zwei parallele Jobs:** `Tests (fast)` führt Pakettests, App-Tests und die String-Catalog-Prüfung aus (`TAGWERK_SKIP_UI_TESTS=1`), `Tests (ui)` nur die UI-Tests mit den Barrierefreiheits-Audits (`TAGWERK_ONLY_UI_TESTS=1`). So liegt das Ergebnis der schnellen Stufen früh vor, und die lange UI-Stufe läuft nebenher. Das UI-Testen ist bewusst nicht auf mehrere Runner verteilt (kein Sharding): Das Limit liegt bei 5 gleichzeitigen macOS-Jobs, und jeder Shard baut selbst. Zeitlimits: `fast` 40 Minuten (Testschritt 35), `ui` 60 Minuten (Testschritt 55). Das sind Richtwerte aus dem Plan, weil beim Setzen noch keine gemessene CI-Dauer vorlag; sie sind auf das Doppelte der gemessenen Dauer anzupassen.
+- **PR-Satz und nächtlicher Satz:** `TAGWERK_UI_TEST_SET=pr` lässt die Tests aus [`app/TagwerkUITests/nightly-only.txt`](app/TagwerkUITests/nightly-only.txt) aus (eine Testklasse oder `Klasse/Test` je Zeile, `#` beginnt einen Kommentar). Aktuell sind das die AX5/Dunkel-Audits der Rezept- und Einstellungsscreens; die Audit-Varianten in Standardgröße und der AX5/Dunkel-Audit der vier Kernscreens bleiben im PR-Satz. Nächtliche und manuelle Läufe verwenden `TAGWERK_UI_TEST_SET=full`. Lokal und auf CI gilt dieselbe Liste.
+- **Wiederholung (Flakiness):** Im PR-Lauf wiederholt `TAGWERK_UI_TEST_RETRIES=1` jeden fehlgeschlagenen UI-Test einmal (`-retry-tests-on-failure -test-iterations 2`). Die Tests, die erst im zweiten Versuch bestanden haben, stehen unter `RETRIED UI TESTS` im Log und in der Zusammenfassung des Jobs. Die Pakettests und die App-Tests wiederholen nie. Nächtliche Läufe wiederholen nicht, damit Wackler sichtbar bleiben.
+- **Reine Doku-Änderungen:** Der Job `changes` (Linux-Runner) vergleicht die geänderten Dateien des PR mit der Positivliste `docs/**` und `**/*.md` (einschließlich `TODO.md`). Trifft jede geänderte Datei die Liste, überspringen `Tests (fast)` und `Tests (ui)` alle Schritte und enden grün. Der Filter sitzt im Job und nicht in `on.paths`, damit die beiden Checks immer ein Ergebnis melden und als Pflicht-Checks nicht hängen bleiben.
 - **XcodeGen** wird in der festgelegten Version 2.46.0 aus dem GitHub-Release geladen und per SHA-256 geprüft.
 - **Fehlerfall:** Bei einem fehlgeschlagenen Job lädt der Workflow die Logs und die `.xcresult`-Bundles als Artefakt `test-failure-fast` bzw. `test-failure-ui` hoch (7 Tage Aufbewahrung). Das Artefakt ist bei einem öffentlichen Repository für angemeldete GitHub-Nutzer abrufbar; die Logs enthalten nur Build- und Testausgaben, keine privaten Daten. Ein `.xcresult` lässt sich in Xcode öffnen.
 - **Kein Cache für DerivedData:** Beim Checkout erhalten alle Quelldateien einen neuen Änderungszeitpunkt, sodass Xcode ohnehin vollständig neu baut. Die einzigen externen Abhängigkeiten (swift-markdown, swift-cmark) sind klein.
@@ -174,14 +191,21 @@ Zusätzliche Umgebungsvariablen von `app/test-all.sh` und `scripts/test-env.sh` 
 - `TAGWERK_DEVELOPER_DIR` wählt ein anderes Xcode statt `/Applications/Xcode.app` (auch für `scripts/sync-strings.sh`).
 - `TAGWERK_ONLY_UI_TESTS=1` führt nur die Stufe „app UI tests“ aus (keine Pakettests, keine App-Tests, keine Katalogprüfung).
 - `TAGWERK_TEST_LOG_DIR` setzt den Ordner für die Logs, `TAGWERK_TEST_RESULTS_DIR` legt pro Stufe ein `.xcresult`-Bundle dort ab.
+- `TAGWERK_UI_TEST_SET` wählt den UI-Testsatz: `full` (Standard) führt alle UI-Tests aus, `pr` lässt die Tests aus `nightly-only.txt` aus. Fehlt die Datei, bricht die Stufe mit einer Meldung ab.
+- `TAGWERK_UI_ONLY` führt nur die genannten UI-Testklassen oder `Klasse/Test`-Einträge aus (durch Leerzeichen getrennt, übersetzt in `-only-testing:`). Die Variable setzt implizit `TAGWERK_ONLY_UI_TESTS=1`, gilt vor `TAGWERK_UI_TEST_SET` und lässt sich nicht mit `TAGWERK_SKIP_UI_TESTS=1` kombinieren.
+- `TAGWERK_UI_TEST_RETRIES=1` wiederholt fehlgeschlagene UI-Tests einmal und listet die wiederholten Tests (`RETRIED UI TESTS`, zusätzlich in `<Log-Ordner>/retried-ui-tests.md`). Nur die UI-Stufe wiederholt.
 
 Einen CI-Lauf lokal nachstellen (jeweils eine Stufengruppe wie im Workflow):
 
 ```zsh
 TAGWERK_SKIP_UI_TESTS=1 app/test-all.sh   # entspricht „Tests (fast)“
-TAGWERK_ONLY_UI_TESTS=1 app/test-all.sh   # entspricht „Tests (ui)“
+TAGWERK_ONLY_UI_TESTS=1 TAGWERK_UI_TEST_SET=pr TAGWERK_UI_TEST_RETRIES=1 app/test-all.sh   # entspricht „Tests (ui)“ im PR-Lauf
+TAGWERK_ONLY_UI_TESTS=1 app/test-all.sh   # entspricht „Tests (ui)“ im nächtlichen Lauf (alle UI-Tests)
+TAGWERK_UI_ONLY="TaskFlowUITests SearchUITests/testFoo" app/test-all.sh   # nur einzelne UI-Klassen oder -Tests
 TAGWERK_ONLY_UI_TESTS=1 TAGWERK_TEST_RESULTS_DIR=/tmp/tagwerk-results app/test-all.sh   # zusätzlich mit .xcresult-Bundle
 ```
+
+Die Auswahl der UI-Tests und die Auswertung der Wiederholungen prüft `zsh scripts/tests/test-all-ui-selection.zsh` ohne Simulator.
 
 Den Workflow selbst prüft `actionlint` (Homebrew: `brew install actionlint`, Aufruf im Repository-Root); `.github/actionlint.yaml` ergänzt das Label `xcode-27`, das die mitgelieferte Labelliste noch nicht kennt.
 
