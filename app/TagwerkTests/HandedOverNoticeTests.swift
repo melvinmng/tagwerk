@@ -57,4 +57,15 @@ struct HandedOverNoticeTests {
         #expect(notice.title == "#154 noch offen in 2 Projekten")
         #expect(notice.announcement == "In 2 Projekten erledigt: #154 noch offen in 2 Projekten. Auf GitHub öffnen verfügbar.")
     }
+
+    /// The announcement is read in the language of the app: the English texts carry no German or English quotation marks.
+    @Test func doneInSelection_englishAnnouncementHasNoQuotationMarks() {
+        let title = Localized.string("\("#154") noch offen in \("Roadmap 2027")", in: .english, bundle: .main)
+        #expect(title == "#154 still open in Roadmap 2027")
+        let spoken = Localized.string("In \("Tagwerk") erledigt: \(title). Auf GitHub öffnen verfügbar.", in: .english, bundle: .main)
+        #expect(spoken == "Done in Tagwerk: #154 still open in Roadmap 2027. Open on GitHub available.")
+        // The written form keeps the English quotation marks.
+        let written = Localized.string("\("#154") noch offen in „\("Roadmap 2027")“", in: .english, bundle: .main)
+        #expect(written == "#154 still open in “Roadmap 2027”")
+    }
 }

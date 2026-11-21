@@ -129,5 +129,8 @@ struct AssigneeLoadTests {
         #expect(AssigneeSelection.openElsewhereTitle(number: 154, openIn: ["Roadmap 2027"]) == "#154 noch offen in „Roadmap 2027“")
         #expect(AssigneeSelection.openElsewhereTitle(number: 154, openIn: ["A", "B"]) == "#154 noch offen in 2 Projekten")
         #expect(AssigneeSelection.openElsewhereTitle(number: nil, openIn: ["A"]) == "Issue noch offen in „A“")
+        // The spoken form has no quotation marks, whatever language the quotes of the written form belong to.
+        #expect(AssigneeSelection.openElsewhereTitle(number: 154, openIn: ["Roadmap 2027"], quoted: false) == "#154 noch offen in Roadmap 2027")
+        #expect(AssigneeSelection.openElsewhereTitle(number: 154, openIn: ["A", "B"], quoted: false) == "#154 noch offen in 2 Projekten")
     }
 }

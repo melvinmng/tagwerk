@@ -95,17 +95,21 @@ enum AssigneeSelection {
     }
 
     /// Title of the capsule for an issue that is done in the selected projects only: "#154 noch offen in „Roadmap 2027“",
-    /// for several projects "#154 noch offen in 2 Projekten".
-    static func openElsewhereTitle(number: Int?, openIn: [String]) -> String {
+    /// for several projects "#154 noch offen in 2 Projekten". `quoted: false` leaves the quotation marks out for speech.
+    static func openElsewhereTitle(number: Int?, openIn: [String], quoted: Bool = true) -> String {
         let issue = number.map { "#\($0)" } ?? "Issue"
-        if openIn.count == 1 { return String(localized: "\(issue) noch offen in „\(openIn[0])“") }
+        if openIn.count == 1 {
+            return quoted ? String(localized: "\(issue) noch offen in „\(openIn[0])“") : String(localized: "\(issue) noch offen in \(openIn[0])")
+        }
         return String(localized: "\(issue) noch offen in \(openIn.count) Projekten")
     }
 
-    /// VoiceOver announcement of the capsule "In … erledigt"; the project names come without quotation marks.
-    static func doneInSelectionAnnouncement(doneIn: [String], title: String) -> String {
+    /// VoiceOver announcement of the capsule "In … erledigt"; the project names come without quotation marks, so no
+    /// quote of one language is left over in the text of the other.
+    static func doneInSelectionAnnouncement(doneIn: [String], number: Int?, openIn: [String]) -> String {
+        let title = openElsewhereTitle(number: number, openIn: openIn, quoted: false)
         if doneIn.count == 1 {
-            return String(localized: "In \(doneIn[0]) erledigt: \(title.replacingOccurrences(of: "„", with: "").replacingOccurrences(of: "“", with: "")). Auf GitHub öffnen verfügbar.")
+            return String(localized: "In \(doneIn[0]) erledigt: \(title). Auf GitHub öffnen verfügbar.")
         }
         return String(localized: "In \(doneIn.count) Projekten erledigt: \(title). Auf GitHub öffnen verfügbar.")
     }

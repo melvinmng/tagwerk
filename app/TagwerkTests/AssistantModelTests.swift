@@ -422,7 +422,7 @@ struct AssistantGitHubCardTests {
         #expect(card.title == "Export")
         let lines = card.change.split(separator: "\n").map(String.init)
         #expect(lines.count == 3)
-        #expect(lines[0].hasPrefix("Issue anlegen · beispiel/app · Project App · fällig "))
+        #expect(lines[0].hasPrefix("Issue anlegen · beispiel/app · Projekt App · fällig "))
         #expect(lines[1] == "Zugewiesen: lea-m (nicht dir)")
         #expect(lines[2] == "Notizen: „Details“")
     }
@@ -442,16 +442,16 @@ struct AssistantGitHubCardTests {
     @Test func describe_gitHubIssue_nullTargets_resolveFromStoredCatalog() async {
         let model = await make()
         let card = model.describe(call(arguments(repository: "null", projects: "null")))
-        #expect(card.change.hasPrefix("Issue anlegen · beispiel/app · Project App"))
+        #expect(card.change.hasPrefix("Issue anlegen · beispiel/app · Projekt App"))
     }
 
     @Test func describe_gitHubIssue_emptyProjectList_saysNoProject_notMissing() async {
         let model = await make()
         let card = model.describe(call(arguments(repository: #""beispiel/app""#, projects: "[]")))
-        #expect(card.change.hasPrefix("Issue anlegen · beispiel/app · Kein Project"))
-        #expect(!card.change.contains("Project fehlt"))
+        #expect(card.change.hasPrefix("Issue anlegen · beispiel/app · Kein Projekt"))
+        #expect(!card.change.contains("Projekt fehlt"))
         let inferred = model.describe(call(arguments(repository: "null", projects: "[]")))
-        #expect(inferred.change.hasPrefix("Issue anlegen · beispiel/app · Kein Project"))
+        #expect(inferred.change.hasPrefix("Issue anlegen · beispiel/app · Kein Projekt"))
     }
 
     @Test func describe_gitHubIssue_unresolvableTargets_sayMissing() async {
@@ -459,9 +459,9 @@ struct AssistantGitHubCardTests {
                                                 fetchedAt: Date(timeIntervalSince1970: 0))
         let model = await make()
         let card = model.describe(call(arguments(repository: "null", projects: "null")))
-        #expect(card.change.hasPrefix("Issue anlegen · Repository fehlt · Project fehlt"))
+        #expect(card.change.hasPrefix("Issue anlegen · Repository fehlt · Projekt fehlt"))
         let named = model.describe(call(arguments(repository: #""beispiel/web""#, projects: "null")))
-        #expect(named.change.hasPrefix("Issue anlegen · beispiel/web · Project fehlt"))
+        #expect(named.change.hasPrefix("Issue anlegen · beispiel/web · Projekt fehlt"))
     }
 
     @Test func describe_gitHubIssue_inEnglish() async {

@@ -152,16 +152,6 @@ def check_info_plist(problems):
 
 
 PROJECT_WORD = re.compile(r"\bProjects?\b")
-# Keys of the assistant files, reworded in task G5 once the assistant branches are on main.
-# removed in G5
-PROJECT_WORDING_EXCEPTIONS = {
-    "Kein Project",
-    "Project fehlt",
-    "Project %@",
-    "Bitte ein Project nennen.",
-    "Dieses Project steht nicht in der Liste von list_github_targets.",
-    "Repository, Projects und Zugewiesene gibt es nur bei GitHub-Issues.",
-}
 
 
 def check_project_wording(problems):
@@ -172,7 +162,7 @@ def check_project_wording(problems):
         if path.name == "InfoPlist.xcstrings" or path.name == "AppShortcuts.xcstrings":
             continue
         for key, entry in load(path).get("strings", {}).items():
-            if entry.get("shouldTranslate") is False or entry.get("extractionState") == "stale" or key in PROJECT_WORDING_EXCEPTIONS:
+            if entry.get("shouldTranslate") is False or entry.get("extractionState") == "stale":
                 continue
             source = entry.get("localizations", {}).get("de", {}).get("stringUnit", {}).get("value", key)
             if PROJECT_WORD.search(source):
