@@ -123,9 +123,9 @@ final class RecipeTranslator {
     of objects with an index "i" and a "text". Return every line translated into the target language, with the same index.
     - Translate each line on its own. Return exactly the indices you received, each once. Never merge, split, summarize, \
     reorder or leave out a line, and never add one.
-    - Keep every number exactly as written: amounts, fractions (½, 1/2), times, temperatures and counts, with the decimal point \
-    or comma as written ("1.5" stays "1.5", "1,5" stays "1,5"). Do not convert units or recalculate amounts. \
-    You may replace a unit by the usual abbreviation of the target language ("tbsp" becomes "EL" in German, "EL" becomes "tbsp" in English).
+    - Keep every number exactly as written: amounts, fractions (½, 1/2), times, temperatures and counts. Only the decimal point \
+    or comma may follow the target language ("1.5" may become "1,5"); the digits stay the same ("1.5" never becomes "15" or \
+    "1 1/2"). Do not convert units or recalculate amounts. You may replace a unit by the usual abbreviation of the target language ("tbsp" becomes "EL" in German, "EL" becomes "tbsp" in English).
     - Keep Markdown links, web addresses and "attachment:" references exactly as written, character by character. Translate \
     only the visible link text.
     - Keep proper names, brand names and the names of dishes that are usually not translated.

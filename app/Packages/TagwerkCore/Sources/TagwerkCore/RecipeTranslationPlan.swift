@@ -118,7 +118,7 @@ public struct RecipeTranslationPlan: Sendable, Equatable {
                     throw .attachmentsChanged
                 }
                 guard Self.linkTargets(in: body) == Self.linkTargets(in: translated) else { throw .linksChanged }
-                if isIngredient, Self.numberTokens(in: body) != Self.numberTokens(in: translated) { throw .amountsChanged }
+                if isIngredient, Self.comparableNumberTokens(in: body) != Self.comparableNumberTokens(in: translated) { throw .amountsChanged }
                 lines.append(prefix + translated)
             }
         }
@@ -198,9 +198,16 @@ public struct RecipeTranslationPlan: Sendable, Equatable {
         }
     }
 
+    /// The numbers of a line in order, as they are compared: like `numberTokens(in:)`, but a decimal point and a decimal comma
+    /// read the same. A translation may write "1.5" as "1,5" (the digits are the same); "15", "1 5", "1 1/2" or "1,6" are
+    /// other amounts and stay a failure.
+    static func comparableNumberTokens(in text: String) -> [String] {
+        numberTokens(in: text).map { $0.replacingOccurrences(of: ",", with: ".") }
+    }
+
     /// The numbers of a line in order, written as they are: a run of digits is one number, and a decimal point or comma between
-    /// two digits belongs to it ("1.5" and "1,5" are different, "1.000" and "1000" too). Every other numeric character
-    /// (½ ¼ ¾ ⅓ ⅔ …) is a number of its own, so "½" and "1/2" differ as well. Any such change is a failure.
+    /// two digits belongs to it ("1.5" and "1,5" are different tokens, "1.000" and "1000" too). Every other numeric character
+    /// (½ ¼ ¾ ⅓ ⅔ …) is a number of its own, so "½" and "1/2" differ as well.
     static func numberTokens(in text: String) -> [String] {
         let characters = Array(text)
         func isDigit(_ index: Int) -> Bool { characters.indices.contains(index) && characters[index].isASCII && characters[index].isNumber }

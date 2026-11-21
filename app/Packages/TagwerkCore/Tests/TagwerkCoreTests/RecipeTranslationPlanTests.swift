@@ -243,17 +243,33 @@ struct RecipeTranslationPlanTests {
         }
     }
 
-    @Test func assembled_changedDecimalSeparator_throws() throws {
+    @Test func assembled_changedDecimalSeparator_isAccepted() throws {
+        let plan = RecipeTranslationPlan(markdown: "## Ingredients\n- 1.5 cups milk\n- 2,5 l water\n- 1.000 g flour\n")
+        let entries = plan.request
+        let translations = [entries[0].index: "1,5 Tassen Milch", entries[1].index: "2.5 l Wasser", entries[2].index: "1,000 g Mehl"]
+        let result = try plan.assembled(translations: translations, language: .german)
+        #expect(result == "## Zutaten\n- 1,5 Tassen Milch\n- 2.5 l Wasser\n- 1,000 g Mehl\n")
+    }
+
+    @Test func assembled_changedDigits_throws() throws {
         let plan = RecipeTranslationPlan(markdown: "## Ingredients\n- 1.5 cups milk\n")
         let entry = plan.request[0]
-        #expect(throws: RecipeTranslationPlan.Failure.amountsChanged) {
-            try plan.assembled(translations: [entry.index: "1,5 Tassen Milch"], language: .german)
-        }
-        #expect(throws: RecipeTranslationPlan.Failure.amountsChanged) {
-            try plan.assembled(translations: [entry.index: "1 1/2 Tassen Milch"], language: .german)
+        // A removed separator, a fraction instead of a decimal, a different number and a separator turned into a space.
+        for answer in ["15 Tassen Milch", "1 1/2 Tassen Milch", "2 Tassen Milch", "1 5 Tassen Milch", "1,6 Tassen Milch"] {
+            #expect(throws: RecipeTranslationPlan.Failure.amountsChanged) {
+                try plan.assembled(translations: [entry.index: answer], language: .german)
+            }
         }
         // The same notation passes.
         #expect(try plan.assembled(translations: [entry.index: "1.5 Tassen Milch"], language: .german) == "## Zutaten\n- 1.5 Tassen Milch\n")
+    }
+
+    @Test func comparableNumberTokens_ignoreTheDecimalSeparatorOnly() {
+        #expect(RecipeTranslationPlan.comparableNumberTokens(in: "1.5 cups") == RecipeTranslationPlan.comparableNumberTokens(in: "1,5 Tassen"))
+        #expect(RecipeTranslationPlan.comparableNumberTokens(in: "1.000 g") == RecipeTranslationPlan.comparableNumberTokens(in: "1,000 g"))
+        #expect(RecipeTranslationPlan.comparableNumberTokens(in: "1.5 cups") != RecipeTranslationPlan.comparableNumberTokens(in: "15 Tassen"))
+        #expect(RecipeTranslationPlan.comparableNumberTokens(in: "1.5 cups") != RecipeTranslationPlan.comparableNumberTokens(in: "1 5 Tassen"))
+        #expect(RecipeTranslationPlan.comparableNumberTokens(in: "1.5 cups") != RecipeTranslationPlan.comparableNumberTokens(in: "1 1/2 Tassen"))
     }
 
     @Test func numberTokens_keepSeparatorsBetweenDigits() {
