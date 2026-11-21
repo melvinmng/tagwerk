@@ -162,7 +162,7 @@ struct NotesFoldersView: View {
             Image(systemName: symbol).font(.title3).foregroundStyle(.tint).frame(width: 28)
             title.foregroundStyle(.primary)
             Spacer(minLength: 8)
-            Text("\(count)").monospacedDigit().foregroundStyle(.secondary)
+            Text("\(count)").monospacedDigit().foregroundStyle(.secondaryText)
             Image(systemName: "chevron.right").font(.footnote.weight(.semibold)).foregroundStyle(.tertiary)
         }
         .padding(.leading, CGFloat(depth - 1) * 18)

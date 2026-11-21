@@ -14,10 +14,10 @@ struct HabitListView: View {
                 ForEach(model.habits) { habit in
                     Button { sheet = habit } label: {
                         HStack(spacing: 12) {
-                            Image(systemName: habit.symbol).frame(width: 28).foregroundStyle(.secondary)
+                            Image(systemName: habit.symbol).frame(width: 28).foregroundStyle(.secondaryText)
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(habit.name)
-                                Text(caption(habit)).font(.caption).foregroundStyle(.secondary)
+                                Text(caption(habit)).font(.caption).foregroundStyle(.secondaryText)
                             }
                             Spacer(minLength: 0)
                             Image(systemName: "chevron.right").font(.caption.weight(.semibold)).foregroundStyle(.tertiary)

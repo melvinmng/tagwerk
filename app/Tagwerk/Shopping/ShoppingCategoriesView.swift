@@ -30,7 +30,7 @@ struct ShoppingCategoriesView: View {
                         HStack {
                             Text(category.name).foregroundStyle(.primary)
                             Spacer()
-                            Text("\(openCount(category.id))").monospacedDigit().foregroundStyle(.secondary)
+                            Text("\(openCount(category.id))").monospacedDigit().foregroundStyle(.secondaryText)
                         }
                         .contentShape(Rectangle())
                     }
@@ -62,7 +62,7 @@ struct ShoppingCategoriesView: View {
                     Spacer()
                     Text("für alles ohne Kategorie")
                 }
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.secondaryText)
                 .moveDisabled(true)
                 .deleteDisabled(true)
             }

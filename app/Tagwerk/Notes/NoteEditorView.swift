@@ -152,7 +152,7 @@ struct NoteEditorView: View {
         let line = NotesListView.gratitudeLine(gratitude(of: store.note(id: noteID)))
         if !line.isEmpty {
             Text(line)
-                .font(.subheadline).foregroundStyle(.secondary)
+                .font(.subheadline).foregroundStyle(.secondaryText)
                 .padding(.horizontal, 17).padding(.vertical, 8)
                 .frame(maxWidth: .infinity, alignment: .leading)
         }
