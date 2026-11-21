@@ -138,10 +138,7 @@ struct PlanTitleButton: View {
         let title = PlanHeaderText.title(scope: model.scope, anchor: anchor, range: range, calendar: model.calendar)
         let shown = PlanHeaderText.displayedTitle(scope: model.scope, anchor: anchor, range: range,
                                                   calendar: model.calendar, largeText: typeSize.isAccessibilitySize,
-                                                  // With accessibility sizes the shortest form stays (PL16a): the bar does not grow
-                                                  // its text there, and the longer title changed the scroll position the AX5 audit
-                                                  // of "Planen" measures (a card cut off by the bar reported as contrast).
-                                                  availableWidth: windowWidth > 0 && !typeSize.isAccessibilitySize
+                                                  availableWidth: windowWidth > 0
                                                       ? PlanHeaderMetrics.availableTitleWidth(windowWidth: windowWidth, typeSize: typeSize) : nil,
                                                   width: { PlanHeaderMetrics.titleWidth($0, typeSize: typeSize) })
         Button { picking = true } label: {
