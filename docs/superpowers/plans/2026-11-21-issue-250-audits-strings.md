@@ -8,7 +8,9 @@
 
 **Architecture:** Teil A beseitigt drei Quellen von Nichtdeterminismus: den Wochentag (Arbeitstag wird im UI-Testmodus festgelegt), den zu frühen Bereit-Marker (er wird erst gesetzt, wenn Start und EventKit-Echo abgearbeitet sind) und fehlendes Warten auf einen ruhigen Bildschirm (ein Helfer vergleicht zwei aufeinanderfolgende Snapshots, bevor ein Audit startet). Teil B legt die Serialisierung der Kataloge in ein kleines Python-Modul, das den Stil je Datei erkennt und beibehält; `sync-strings.sh` und `apply-translations.py` schreiben nur noch darüber.
 
-**Branch:** `fix/ui-audits-and-strings`, abgezweigt von `origin/fix/ui-test-stability`. **Issue:** #250.
+**Branch:** `fix/ui-audits-and-strings`, abgezweigt von `origin/main` (#240 ist seit 21.11.2026 gemergt, `95f28be`).
+
+**Festlegung der Hauptsitzung (21.11.2026):** Alle offenen Fragen 1–8 nach Empfehlung des Plans. **Issue:** #250.
 
 ## Global Constraints
 
