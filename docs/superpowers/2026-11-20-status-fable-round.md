@@ -14,6 +14,11 @@ Branch mit Plänen und Mockups: `chore/fable-open-items` (Worktree `t3-638057bd-
 - Beim Start jedes Jobs (auch Job 2 eines verketteten Auftrags) und vor dem letzten vollen Lauf: `git fetch origin && git merge origin/main` bzw. Branch von `origin/main` (Nutzer 21.11.).
 - Keine künstliche Last (Endlosschleifen, zusätzliche Simulatoren) in Agent-Aufträgen.
 
+## Offene Kleinigkeiten
+
+- Wacklige `AIKit`-Tests auf CI: `LoopbackServerTests.stop_failsPendingWait` (Zeitüberschreitung statt Abbruch), `ChatGPTLoginTests.cancel_stopsServerAndFreesPort` (`portInUse`) – feste Wartezeiten/Port; ohne Zeitabhängigkeit und mit freiem Port umbauen (zu „Tests schlanker“).
+- Regel: GitHub-Checks vor jedem Merge abwarten (Fehler bei #269: zu früh gemergt).
+
 ## Baustein „Vorbereitung“ für jeden Sonnet-Auftrag (in jeden Auftrag übernehmen)
 
 - Start: `git fetch origin`; neuer Branch von `origin/main` bzw. `origin/main` in den vorhandenen Branch mergen (auch Job 2 eines verketteten Auftrags). Existiert der Branchname lokal mit fremden Commits: anderen Namen nehmen und melden, nichts zurücksetzen.
