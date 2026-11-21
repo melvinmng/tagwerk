@@ -19,4 +19,28 @@ final class NotesUITests: UITestCase {
         let hit = app.descendants(matching: .any).matching(NSPredicate(format: "label BEGINSWITH %@", "Notiz, UI-Test Notiz")).firstMatch
         XCTAssertTrue(hit.waitForExistence(timeout: 20), "The search did not find the note")
     }
+
+    func testShowNoteInFolderFromSearchHit() {
+        openNotes()
+        let folder = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Brain Dump")).firstMatch
+        XCTAssertTrue(folder.waitForExistence(timeout: Self.timeout))
+        folder.tap()
+        typeIn("Neue Notiz", text: "Ordner-Sprung Notiz")
+        tapButton("Notiz sichern")
+        XCTAssertTrue(app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Ordner-Sprung Notiz")).firstMatch
+            .waitForExistence(timeout: Self.timeout), "The note is not in the folder")
+        app.navigationBars.buttons.firstMatch.tap()
+        tab("Planen")
+        openSearch(typing: "Ordner-Sprung Notiz")
+        let hit = app.descendants(matching: .any).matching(NSPredicate(format: "label BEGINSWITH %@", "Notiz, Ordner-Sprung Notiz")).firstMatch
+        XCTAssertTrue(hit.waitForExistence(timeout: 20), "The search did not find the note")
+        hit.press(forDuration: 1.0)
+        let show = app.buttons["Im Ordner zeigen"].firstMatch
+        XCTAssertTrue(show.waitForExistence(timeout: Self.timeout), "The menu has no entry \"Im Ordner zeigen\"")
+        show.tap()
+        // The search closes and "Aufgaben" shows the list of the folder with the note.
+        XCTAssertTrue(app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Ordner-Sprung Notiz")).firstMatch
+            .waitForExistence(timeout: Self.timeout), "The folder list with the note did not open")
+        XCTAssertFalse(app.textFields["Suchen"].exists, "The search sheet is still open")
+    }
 }

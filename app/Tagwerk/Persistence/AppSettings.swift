@@ -79,12 +79,19 @@ final class AppSettings {
     var shoppingSuggestionDismissed: Bool = false
     /// The built-in shopping categories were created once; deleting them later does not bring them back.
     var shoppingCategoriesSeeded: Bool = false
-    /// The one-time consent for "Mit ChatGPT sortieren"; the settings switch binds to it.
+    /// The one-time consent for "Mit ChatGPT sortieren" and "Artikel übersetzen"; the settings switch binds to it. It only counts
+    /// together with `shoppingSortConsentVersion`.
     var shoppingSortConsent: Bool = false
+    /// The version of the text the consent was given for: 0 is the text that named sorting only, so a consent given before
+    /// translating existed counts again only after the user agreed to the new text.
+    var shoppingSortConsentVersion: Int = 0
     /// The one-time consent for "Rezept hinzufügen" (reading a recipe with ChatGPT); the settings switch binds to it.
     var shoppingRecipeConsent: Bool = false
     /// The one-time consent for "Mit ChatGPT zusammenfassen" on a shared mail (#166); the settings switch binds to it.
     var mailSummaryConsent: Bool = false
+    /// The assistant may find non-private notes (title and excerpt), read them in full and, in the notes chat, change them
+    /// (issue #173, decision D5). One switch for the whole scope; off by default. Journal, Bible Study and Dream Log never count.
+    var noteAssistantConsent: Bool = false
     /// The Health card in the tab was dismissed with "Nicht jetzt".
     var healthCardDismissed: Bool = false
     /// Phase 4: the calories/water line in the head of "Planen" (today's day view, from the first entry).
@@ -165,6 +172,20 @@ final class AppSettings {
     var voiceRecognitionLanguage: String = "auto"
     /// The language recipes are created in (#216): "auto" follows the app language, otherwise a `VoiceLanguage` raw value.
     var recipeLanguage: String = "auto"
+    /// The language the voice chat answers in (Einstellungen › Sprachen): "spoken" answers in the language the user speaks,
+    /// otherwise a `VoiceLanguage` raw value. `nil` until `migrateVoiceAnswerLanguageIfNeeded()` derived it from the former
+    /// shared value `voiceRecognitionLanguage`, which is now the dictation language only.
+    var voiceAnswerLanguage: String? = nil
+    /// The language of new shopping items: "recipes" follows the recipe language, "auto" the app language, otherwise a
+    /// `VoiceLanguage` raw value.
+    var shoppingLanguage: String = "recipes"
+    /// JSON of `[String: String]`: the language last chosen on the dictation switch per place (`DictationPlace`). Stays on
+    /// this device and is not part of the backup.
+    var dictationPlaceLanguagesData: Data? = nil
+    /// The raw value of the language the open shopping items were last translated into, or kept in with "So lassen" (L6). `nil`
+    /// before the first run. Stays on this device and is not part of the backup: after a restore the list adopts its current
+    /// language and shows no card.
+    var shoppingItemsLanguage: String? = nil
     /// `ReadAloudPolicy` raw value; "never" by default (SP3).
     var voiceReadAloud: String = "never"
     /// Chosen system voices per language; nil picks the best installed voice.
@@ -179,6 +200,11 @@ final class AppSettings {
     var voiceModeSendDelay: Double = 2
     var voiceModeSilenceLimit: Double = 30
     var voiceModeExplained: Bool = false
+
+    /// The Siri tip above the shopping list / the drink buttons was closed or its shortcut ran once (#188 SI3). Hint state of the
+    /// device; not part of the backup.
+    var siriTipShoppingDone: Bool = false
+    var siriTipWaterDone: Bool = false
 
     /// The focus timer durations as the rules want them (clamped).
     var focusTimerSettings: FocusTimerSettings {
@@ -246,6 +272,54 @@ extension AppSettings {
         guard !workoutGoalMigrated else { return }
         if goalWorkoutsPerWeek == 0 { goalWorkoutMinutesPerWeek = 0 }
         workoutGoalMigrated = true
+    }
+
+    /// The stored language settings as the rules read them.
+    var contentLanguages: ContentLanguages {
+        ContentLanguages(dictation: voiceRecognitionLanguage, answer: voiceAnswerLanguage, recipe: recipeLanguage,
+                         shopping: shoppingLanguage, places: ContentLanguages.decodePlaces(dictationPlaceLanguagesData))
+    }
+
+    /// The dictation language at `place`: the language remembered there, else the dictation setting (shopping: its own language).
+    func dictationLanguage(at place: DictationPlace) -> VoiceLanguage {
+        contentLanguages.dictationLanguage(at: place)
+    }
+
+    /// Remembers the language the user switched to while dictating at `place` (SP4b). The switch applies at this place only and
+    /// goes away again when it is switched back to the dictation setting. The shopping list has no entry of its own: its switch
+    /// is the shopping language (SP5b).
+    func rememberDictationLanguage(_ language: VoiceLanguage, at place: DictationPlace) {
+        if place == .shopping {
+            shoppingLanguage = language.rawValue
+        } else {
+            dictationPlaceLanguagesData = ContentLanguages.encodePlaces(contentLanguages.places(switching: place, to: language))
+        }
+    }
+
+    /// The text of the consent for sorting and translating shopping items that is current now (version 1 names translating too).
+    static let currentShoppingSortConsentVersion = 1
+
+    /// Whether the user agreed to the current text of the consent; a consent given for an earlier text asks again once.
+    var hasShoppingSortConsent: Bool {
+        get { shoppingSortConsent && shoppingSortConsentVersion >= Self.currentShoppingSortConsentVersion }
+        set {
+            shoppingSortConsent = newValue
+            shoppingSortConsentVersion = newValue ? Self.currentShoppingSortConsentVersion : 0
+        }
+    }
+
+    /// The tap on the language mark of the shopping list (SP5b): the other language, stored as a fixed value. From "Wie Rezepte"
+    /// or "Wie die App" it also becomes fixed, so a later change of the recipe or app language does not switch the list silently.
+    func toggleShoppingLanguage() {
+        shoppingLanguage = (contentLanguages.shoppingLanguage() == .german ? VoiceLanguage.english : .german).rawValue
+    }
+
+    /// One-time takeover when the voice chat answer language became its own setting: it starts from the former shared value
+    /// `voiceRecognitionLanguage`, so the app behaves as before the update. Writes only while the answer language has never
+    /// been set, so a later change of the dictation language leaves the answer language alone.
+    func migrateVoiceAnswerLanguageIfNeeded() {
+        guard voiceAnswerLanguage == nil else { return }
+        voiceAnswerLanguage = ContentLanguages.migratedAnswer(fromDictation: voiceRecognitionLanguage)
     }
 
     /// The quiet hours the settings describe; `nil` when switched off or empty.

@@ -122,7 +122,7 @@ struct MealSheet: View {
                             .disabled(phase == .estimating)
                         if environment.settings.voiceInputEnabled, let voice, phase != .estimating {
                             VoiceMicrophoneButton(voice: voice, isEnabled: true,
-                                                  language: VoiceAvailability.recognitionLanguage(setting: environment.settings.voiceRecognitionLanguage))
+                                                  language: environment.settings.dictationLanguage(at: .meal))
                         }
                         if isSignedIn {
                             if UIImagePickerController.isSourceTypeAvailable(.camera) {
@@ -193,7 +193,7 @@ struct MealSheet: View {
         .onAppear {
             textFocused = existing == nil
             if voice == nil {
-                let model = VoiceInputFactory.make(environment)
+                let model = VoiceInputFactory.make(environment, place: .meal)
                 model.readDraft = { text }
                 model.writeDraft = { text = $0 }
                 model.onSend = { spoken in

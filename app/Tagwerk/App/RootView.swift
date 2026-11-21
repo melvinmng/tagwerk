@@ -108,10 +108,13 @@ struct RootView: View {
             if let model = environment.activeSearch {
                 SearchSheet(model: model,
                             onShowDay: { day in environment.closeSearch(); showDay(day) },
-                            onShowTask: { id in environment.closeSearch(); showTask(id) })
+                            onShowTask: { id in environment.closeSearch(); showTask(id) },
+                            onShowNoteFolder: { scope in environment.closeSearch(); environment.showNotes(scope) })
             }
         }
         .background(KeyboardDismissalInstaller())
+        // The Return key of every single-line field reads "Fertig" (#188 TA1a); fields with their own value keep it.
+        .submitLabel(.done)
         .onChange(of: environment.assistant.isPresented) { _, presented in
             // The chat is its own sheet over the tabs; other sheets close first.
             if presented { editingTask = nil; openEvent = nil; recurringEdit = nil; environment.routines.sheet = nil; environment.closeSearch(); environment.focus.isPresented = false }

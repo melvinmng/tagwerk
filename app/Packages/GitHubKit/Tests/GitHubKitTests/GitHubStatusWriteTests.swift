@@ -9,12 +9,12 @@ struct GitHubStatusWriteTests {
     let transport = StubTransport()
     let issueID = TaskID(source: .github, rawValue: "I_1")
 
-    func makeProvider() -> GitHubTaskProvider {
+    func makeProvider(selection: Set<String>? = nil) -> GitHubTaskProvider {
         let credentials = GitHubCredentials(accessToken: "gho_valid", refreshToken: "ghr", accessExpiresAt: nil, refreshExpiresAt: nil)
         let client = DeviceFlowClient(clientID: "client", transport: transport, sleep: { _ in }, now: { fixedNow })
         let tokens = TokenManager(store: MemoryCredentialStore(credentials), client: client, now: { fixedNow })
         return GitHubTaskProvider(api: GitHubAPI(transport: transport, tokens: tokens), tokens: tokens, cache: MemoryGitHubCache(),
-                                  selectedProjectIDs: { nil }, now: { fixedNow })
+                                  selectedProjectIDs: { selection }, now: { fixedNow })
     }
 
     private func load(_ provider: GitHubTaskProvider, state: String = "OPEN", _ boards: [Board]) async throws -> TaskItem {
@@ -128,7 +128,7 @@ struct GitHubStatusWriteTests {
         let item = try await load(provider, boards)
         transport.enqueueJSON("/graphql", Fixtures.boardIssue(boards: boards))
 
-        await #expect(throws: TaskWriteError.failed("Den Status „In progress“ gibt es im Project „Projekt 2“ nicht.")) {
+        await #expect(throws: TaskWriteError.failed("Den Status „In progress“ gibt es im Projekt „Projekt 2“ nicht.")) {
             try await provider.apply(edit {
                 $0.title = .set("Neu")
                 $0.statusChanges = ["PVT_1": "In progress", "PVT_2": "In progress"]
@@ -342,5 +342,125 @@ struct GitHubStatusWriteTests {
 
         #expect(!provider.isListed(GitHubMapping.taskItem(makeRecord(placements: []))))
         #expect(!provider.isListed(GitHubMapping.taskItem(makeRecord(assignees: ["lea-m"], placements: [makePlacement(makeProject(1))]))))
+    }
+
+    // MARK: Why an issue is not listed any more (GH5c, GH7b)
+
+    private func item(assignees: [String] = ["octo"], isOpen: Bool = true, placements: [ProjectPlacement]) -> TaskItem {
+        GitHubMapping.taskItem(makeRecord(isOpen: isOpen, assignees: assignees, placements: placements))
+    }
+
+    /// A provider that knows the login "octo" and has the given projects selected.
+    private func signedInProvider(selection: Set<String>? = nil) async throws -> GitHubTaskProvider {
+        let provider = makeProvider(selection: selection)
+        Fixtures.enqueueAssignedIssues(on: transport)
+        _ = try await provider.openTasks()
+        return provider
+    }
+
+    @Test func unlistedReason_noPlacement_isNoProjectWithOthers() async throws {
+        let provider = try await signedInProvider()
+        #expect(provider.unlistedReason(item(placements: [])) == .noProject(others: []))
+        #expect(provider.unlistedReason(item(assignees: ["octo", "lea-m"], placements: [])) == .noProject(others: ["lea-m"]))
+        // Without a placement the missing project is the certain reason, also for an issue given to others.
+        #expect(provider.unlistedReason(item(assignees: ["lea-m"], placements: [])) == .noProject(others: ["lea-m"]))
+    }
+
+    @Test func unlistedReason_notAssigned_isHandedOver() async throws {
+        let provider = try await signedInProvider()
+        let placements = [makePlacement(makeProject(1))]
+        #expect(provider.unlistedReason(item(assignees: ["lea-m"], placements: placements)) == .handedOver)
+        #expect(provider.unlistedReason(item(assignees: [], placements: placements)) == .handedOver)
+        #expect(provider.unlistedReason(item(placements: placements)) == nil)
+    }
+
+    @Test func unlistedReason_doneInSelectedOpenElsewhere_namesBothProjects() async throws {
+        let provider = try await signedInProvider(selection: ["PVT_1"])
+        let placements = [makePlacement(makeProject(1), status: "Done"), makePlacement(makeProject(2), status: "In progress")]
+        #expect(provider.unlistedReason(item(placements: placements)) == .doneInSelection(doneIn: ["Projekt 1"], openIn: ["Projekt 2"]))
+        #expect(!provider.isListed(item(placements: placements)))
+    }
+
+    @Test func unlistedReason_openInASelectedProject_staysListed() async throws {
+        let provider = try await signedInProvider(selection: ["PVT_1", "PVT_2"])
+        let placements = [makePlacement(makeProject(1), status: "Done"), makePlacement(makeProject(2), status: "In progress")]
+        #expect(provider.unlistedReason(item(placements: placements)) == nil)
+        // A selected project without a stage value is not done either.
+        let withoutValue = [makePlacement(makeProject(1), status: nil), makePlacement(makeProject(2), status: "Done")]
+        #expect(provider.unlistedReason(item(placements: withoutValue)) == nil)
+    }
+
+    @Test func unlistedReason_doneEverywhereWritable_isNil() async throws {
+        let provider = try await signedInProvider(selection: ["PVT_1"])
+        // The issue is closed when every writable project is done: it completes, it is not "unlisted".
+        let closed = item(isOpen: false, placements: [makePlacement(makeProject(1), status: "Done"), makePlacement(makeProject(2), status: "Done")])
+        #expect(provider.unlistedReason(closed) == nil)
+        // Done in the selection, and not open anywhere else: nothing to explain.
+        let doneEverywhere = item(placements: [makePlacement(makeProject(1), status: "Done"), makePlacement(makeProject(2), status: "Done")])
+        #expect(provider.unlistedReason(doneEverywhere) == nil)
+    }
+
+    @Test func unlistedReason_namesSeveralProjectsInBoardOrder() async throws {
+        let provider = try await signedInProvider(selection: ["PVT_1", "PVT_3"])
+        let placements = [makePlacement(makeProject(3), status: "Done"), makePlacement(makeProject(1), status: "Done"),
+                          makePlacement(makeProject(4), status: "Ready"), makePlacement(makeProject(2), status: "In progress")]
+        #expect(provider.unlistedReason(item(placements: placements))
+            == .doneInSelection(doneIn: ["Projekt 1", "Projekt 3"], openIn: ["Projekt 2", "Projekt 4"]))
+    }
+
+    @Test func unlistedReason_onlyInProjectsOutsideTheSelection_staysListed() async throws {
+        let provider = try await signedInProvider(selection: ["PVT_9"])
+        #expect(provider.unlistedReason(item(placements: [makePlacement(makeProject(1), status: "In progress")])) == nil)
+    }
+
+    @Test func apply_returnsItemRestrictedToSelection() async throws {
+        let provider = makeProvider(selection: ["PVT_1"])
+        let boards = [Board(number: 1, status: "In progress"), Board(number: 2, status: "Ready")]
+        let item = try await load(provider, boards)
+        enqueueApply(before: boards, after: [Board(number: 1, status: "In review"), boards[1]], mutations: 1)
+
+        let result = try await provider.apply(edit { $0.statusChanges = ["PVT_1": "In review"] }, to: issueID, expectedVersion: item.version)
+
+        #expect(result.statuses.map(\.subContainerID) == ["PVT_1"])
+        #expect(result.statuses.first?.current == "In review")
+        // The version still describes the whole issue (the issue and both project items), because writes compare against all of them.
+        #expect(result.version.split(separator: "|").count == 3)
+    }
+
+    @Test func apply_defaultSelection_usesProjectsWithVisibleIssues() async throws {
+        // Without a chosen selection the projects holding a visible issue are shown: here PVT_1, PVT_2 and PVT_foreign.
+        let provider = try await signedInProvider(selection: nil)
+        let boards = [Board(number: 1, status: "In progress"), Board(number: 3, status: "Ready")]
+        enqueueApply(before: boards, after: boards, mutations: 1)
+
+        let result = try await provider.apply(edit { $0.statusChanges = ["PVT_1": "In review"] }, to: issueID, expectedVersion: nil)
+
+        #expect(result.statuses.map(\.subContainerID) == ["PVT_1"])
+    }
+
+    @Test func apply_doneInSelectedOnly_returnsTheFullItemForTheCapsule() async throws {
+        let provider = makeProvider(selection: ["PVT_1"])
+        let boards = [Board(number: 1, status: "In review"), Board(number: 2, status: "In progress")]
+        let item = try await load(provider, boards)
+        enqueueApply(before: boards, after: [Board(number: 1, status: "Done"), boards[1]], mutations: 1)
+
+        let result = try await provider.apply(edit { $0.statusChanges = ["PVT_1": "Done"] }, to: issueID, expectedVersion: item.version)
+
+        #expect(!result.isCompleted)
+        #expect(result.statuses.map(\.subContainerID) == ["PVT_1", "PVT_2"])
+        #expect(provider.unlistedReason(result) == .doneInSelection(doneIn: ["Projekt 1"], openIn: ["Projekt 2"]))
+    }
+
+    @Test func apply_onlyInUnselectedProjects_returnsTheFullItem() async throws {
+        let provider = makeProvider(selection: ["PVT_9"])
+        let boards = [Board(number: 1, status: "Ready")]
+        let item = try await load(provider, boards)
+        enqueueApply(before: boards, after: boards, mutations: 1)
+
+        let result = try await provider.apply(edit { $0.statusChanges = ["PVT_1": "In progress"] }, to: issueID, expectedVersion: item.version)
+
+        // Nothing of the selection is left to show; the item must not turn into an issue without a project.
+        #expect(result.statuses.map(\.subContainerID) == ["PVT_1"])
+        #expect(provider.unlistedReason(result) == nil)
     }
 }

@@ -527,6 +527,100 @@ struct AssistantGitHubCardTests {
         #expect(model.openCards.ids == ["c2"])
     }
 
+    // MARK: Guarded cards (assign_task)
+
+    private func issue(_ number: Int, assignees: [String] = ["octo"]) -> TaskItem {
+        TaskItem(id: TaskID(source: .github, rawValue: "ISSUE_\(number)"), title: "Export \(number)", notes: nil, due: nil,
+                 priority: nil, estimateMinutes: nil, isCompleted: false,
+                 container: TaskContainer(id: "beispiel/app", name: "beispiel/app", colorHex: nil),
+                 url: URL(string: "https://github.com/beispiel/app/issues/\(number)"), version: "1",
+                 editableFields: [.title, .notes, .due, .priority, .assignees], assignees: assignees)
+    }
+
+    private func assignCall(_ id: String = "c1", task: String = "github:ISSUE_212", add: [String] = ["lea-m"]) -> ToolCall {
+        let list = add.map { "\"\($0)\"" }.joined(separator: ",")
+        return ToolCall(id: id, name: "assign_task", arguments: Data(#"{"id":"\#(task)","add":[\#(list)],"remove":[]}"#.utf8))
+    }
+
+    private func renameCall(_ id: String, task: String, title: String) -> ToolCall {
+        ToolCall(id: id, name: "update_task", arguments: Data(
+            #"{"id":"\#(task)","title":"\#(title)","notes":null,"due":null,"priority":null,"minutes":null}"#.utf8))
+    }
+
+    /// Two ordinary cards and one assign_task card are open.
+    private func sendGuardedBatch(_ model: AssistantModel) async {
+        github.tasks = [issue(212), issue(213), issue(214)]
+        await taskList.reload()
+        responder.enqueueEvents([
+            .functionCall(callID: "c1", name: "update_task", arguments: #"{"id":"github:ISSUE_213","title":"Neu 213","notes":null,"due":null,"priority":null,"minutes":null}"#),
+            .functionCall(callID: "c2", name: "update_task", arguments: #"{"id":"github:ISSUE_214","title":"Neu 214","notes":null,"due":null,"priority":null,"minutes":null}"#),
+            .functionCall(callID: "c3", name: "assign_task", arguments: #"{"id":"github:ISSUE_212","add":["lea-m"],"remove":[]}"#),
+            .completed(usage: nil)])
+        await model.send("Mach drei Änderungen")
+    }
+
+    @Test func needsSingleConfirmation_coversAssignTask() {
+        #expect(AssistantModel.needsSingleConfirmation(assignCall(), me: "octo"))
+        #expect(AssistantModel.needsSingleConfirmation(assignCall(), me: nil))
+        #expect(!AssistantModel.needsSingleConfirmation(renameCall("c", task: "github:x", title: "y"), me: "octo"))
+        // The rule for issues created for others stays.
+        #expect(AssistantModel.needsSingleConfirmation(call(arguments(assignees: #"["lea-m"]"#)), me: "octo"))
+        #expect(!AssistantModel.needsSingleConfirmation(call(arguments()), me: "octo"))
+    }
+
+    @Test func needsSingleConfirmation_usesSingleConfirmationTools() {
+        #expect(AssistantModel.singleConfirmationTools.contains("assign_task"))
+        for name in AssistantModel.singleConfirmationTools {
+            let guarded = ToolCall(id: "c", name: name, arguments: Data("{}".utf8))
+            #expect(AssistantModel.needsSingleConfirmation(guarded, me: "octo"), "\(name)")
+        }
+    }
+
+    @Test func confirmAll_skipsGuardedCards() async {
+        let model = await make()
+        model.open(context: .tasks)
+        await sendGuardedBatch(model)
+        #expect(model.batchConfirmable.map(\.id) == ["c1", "c2"])
+
+        responder.enqueue("Zwei geändert.")
+        await model.confirmAll()
+
+        #expect(taskList.items.first { $0.id.rawValue == "ISSUE_213" }?.title == "Neu 213")
+        #expect(taskList.items.first { $0.id.rawValue == "ISSUE_214" }?.title == "Neu 214")
+        #expect(model.conversation?.pendingActions.map(\.id) == ["c3"])
+        #expect(github.appliedEdits.allSatisfy { if case .set = $0.edit.assignees { false } else { true } })
+    }
+
+    @Test func confirmCards_rejectsGuardedInBatch() async {
+        let model = await make()
+        var turns: [AssistantModel.TurnOutcome] = []
+        model.open(context: .tasks)
+        model.onTurnFinished = { turns.append($0) }
+        await sendGuardedBatch(model)
+
+        await model.confirmCards(["c1", "c3"])
+        #expect(turns.last == .rejected)
+        #expect(github.appliedEdits.isEmpty)
+
+        responder.enqueue("Zugewiesen.")
+        await model.confirmCards(["c3"])
+        #expect(github.appliedEdits.count == 1)
+    }
+
+    @Test func openCards_countsAssignTaskAsGuarded() async {
+        let model = await make()
+        model.open(context: .tasks)
+        await sendGuardedBatch(model)
+        #expect(model.openCards == OpenCards(ids: ["c1", "c2", "c3"], deletes: 0, guarded: 1))
+    }
+
+    @Test func singleConfirmationNotice_onlyWithGuardedCards() {
+        #expect(AssistantModel.singleConfirmationNotice(for: [renameCall("c1", task: "github:x", title: "y")], me: "octo") == nil)
+        #expect(AssistantModel.singleConfirmationNotice(for: [], me: "octo") == nil)
+        #expect(AssistantModel.singleConfirmationNotice(
+            for: [renameCall("c1", task: "github:x", title: "y"), assignCall("c2")], me: "octo") == "Zuweisungen bestätigst du einzeln.")
+    }
+
     @Test func instructions_mentionGitHubToolsOnlyWithGitHub() async {
         let signedIn = await make()
         signedIn.open(context: .tasks)

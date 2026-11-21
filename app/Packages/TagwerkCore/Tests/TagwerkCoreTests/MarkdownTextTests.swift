@@ -124,4 +124,22 @@ struct MarkdownTextTests {
     @Test func togglingCheckbox_keepsWindowsLineEndings() {
         #expect(MarkdownText.togglingCheckbox(at: 0, in: "- [ ] a\r\n- [ ] b") == "- [x] a\r\n- [ ] b")
     }
+
+    // MARK: Replacing attachment IDs
+
+    @Test func replacingAttachmentIDs_imageAndFileReference() {
+        let oldImage = UUID(), oldFile = UUID(), newImage = UUID(), newFile = UUID()
+        let text = "Foto\n![Dish](attachment:\(oldImage.uuidString))\nSiehe [Rechnung.pdf](attachment:\(oldFile.uuidString.lowercased())) und noch einmal ![Dish](attachment:\(oldImage.uuidString))"
+        let result = MarkdownText.replacingAttachmentIDs(in: text, with: [oldImage: newImage, oldFile: newFile])
+        #expect(result == "Foto\n![Dish](attachment:\(newImage.uuidString))\nSiehe [Rechnung.pdf](attachment:\(newFile.uuidString)) und noch einmal ![Dish](attachment:\(newImage.uuidString))")
+        #expect(MarkdownText.attachmentIDs(in: result) == [newImage, newFile])
+    }
+
+    @Test func replacingAttachmentIDs_unknownIDStays() {
+        let known = UUID(), unknown = UUID(), replacement = UUID()
+        let text = "[a](attachment:\(known.uuidString)) [b](attachment:\(unknown.uuidString)) https://example.com/attachment:\(known.uuidString)"
+        let result = MarkdownText.replacingAttachmentIDs(in: text, with: [known: replacement])
+        #expect(result == "[a](attachment:\(replacement.uuidString)) [b](attachment:\(unknown.uuidString)) https://example.com/attachment:\(known.uuidString)")
+        #expect(MarkdownText.replacingAttachmentIDs(in: text, with: [:]) == text)
+    }
 }

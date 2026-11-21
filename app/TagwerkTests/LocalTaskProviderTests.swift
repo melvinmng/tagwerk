@@ -20,6 +20,13 @@ struct LocalTaskProviderTests {
         return edit
     }
 
+    /// Sources without their own rule keep every written task in the lists (default of the protocol).
+    @Test func unlistedReason_defaultIsNil() async throws {
+        let created = try await provider.create(TaskDraft(title: "Fahrrad reparieren"))
+        #expect(provider.unlistedReason(created) == nil)
+        #expect(provider.isListed(created))
+    }
+
     @Test func create_thenOpenTasks_containsItem() async throws {
         let created = try await provider.create(TaskDraft(title: "Fahrrad reparieren", priority: .p3))
         let items = try await provider.openTasks()

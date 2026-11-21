@@ -4,13 +4,14 @@ import TagwerkCore
 /// Creates the dictation model of one message field from the app's settings and recognizer.
 @MainActor
 enum VoiceInputFactory {
-    static func make(_ environment: AppEnvironment) -> VoiceInputModel {
+    static func make(_ environment: AppEnvironment, place: DictationPlace) -> VoiceInputModel {
         let settings = environment.settings
-        let model = VoiceInputModel(language: VoiceAvailability.recognitionLanguage(setting: settings.voiceRecognitionLanguage),
+        let model = VoiceInputModel(language: settings.dictationLanguage(at: place), place: place,
                                     makeRecognizer: environment.makeRecognizer,
                                     isExplained: { settings.voiceExplained },
                                     markExplained: { settings.voiceExplained = true })
         model.onRecordingStarts = { environment.voiceOutput.stop() }
+        model.onLanguageSwitched = { settings.rememberDictationLanguage($0, at: place) }
         return model
     }
 }
@@ -53,7 +54,7 @@ struct VoiceRecordingBar: View {
                     Circle().fill(.red).frame(width: 8, height: 8)
                     Text("Hört zu · auf dem iPhone").font(.caption).foregroundStyle(.secondary)
                     Spacer()
-                    languageChip
+                    LanguageChip(language: voice.language, style: .named) { voice.switchLanguage() }
                     TimelineView(.periodic(from: .now, by: 1)) { _ in
                         Text(Self.clock(voice.elapsed())).font(.caption.monospacedDigit()).foregroundStyle(.secondary)
                     }
@@ -67,6 +68,7 @@ struct VoiceRecordingBar: View {
                         .onTapGesture { if compact { voice.finish() } }
                     LevelMeter(level: voice.level)
                 }
+                if compact { LanguageChip(language: voice.language, style: .short) { voice.switchLanguage() } }
                 Button { voice.cancel() } label: {
                     Image(systemName: "xmark").font(.body.weight(.semibold)).frame(width: 36, height: 36)
                 }
@@ -109,26 +111,42 @@ struct VoiceRecordingBar: View {
         .lineLimit(compact ? 2 : 5)
     }
 
-    /// Names the dictation language and the one a tap switches to; both texts are German source keys.
-    private var languageChipLabel: LocalizedStringKey {
-        voice.language == .german ? "Sprache Deutsch, auf Englisch wechseln" : "Sprache Englisch, auf Deutsch wechseln"
-    }
-
-    private var languageChip: some View {
-        Button {
-            voice.switchLanguage()
-        } label: {
-            Text(voice.language.shortName).font(.caption2.weight(.semibold))
-                .padding(.horizontal, 6).padding(.vertical, 2)
-                .background(.secondary.opacity(0.2), in: Capsule())
-        }
-        .buttonStyle(.plain)
-        .accessibilityLabel(languageChipLabel)
-    }
-
     static func clock(_ seconds: TimeInterval) -> String {
         let value = max(0, Int(seconds))
         return String(format: "%d:%02d", value / 60, value % 60)
+    }
+}
+
+/// The switch of the dictation language (mockups SP3b, SP5b): the language's name, or its short form where the row is narrow,
+/// with the switch symbol; 44 pt to tap. A tap changes to the other language.
+struct LanguageChip: View {
+    enum Style { case named, short }
+
+    let language: VoiceLanguage
+    var style: Style = .named
+    /// VoiceOver text; the default names the dictation language.
+    var label: LocalizedStringKey? = nil
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 4) {
+                Text(style == .named ? LanguageSettingsText.name(language) : language.shortName)
+                Image(systemName: "arrow.left.arrow.right")
+            }
+            .font(style == .named ? .footnote.weight(.semibold) : .caption2.weight(.semibold))
+            .padding(.horizontal, style == .named ? 10 : 6).padding(.vertical, 4)
+            .background(.secondary.opacity(0.2), in: Capsule())
+            .frame(minHeight: 44)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(label ?? defaultLabel)
+    }
+
+    /// Names the language and the one a tap switches to; both texts are German source keys.
+    private var defaultLabel: LocalizedStringKey {
+        language == .german ? "Sprache Deutsch, auf Englisch wechseln" : "Sprache Englisch, auf Deutsch wechseln"
     }
 }
 
@@ -219,7 +237,7 @@ struct ReadAloudButton: View {
         let output = environment.voiceOutput
         let playing = output.speakingID == id
         return Button {
-            output.toggle(id: id, text: text, fallback: VoiceChatLanguage.resolve(setting: environment.settings.voiceRecognitionLanguage))
+            output.toggle(id: id, text: text, fallback: environment.settings.contentLanguages.readAloudFallback())
         } label: {
             Label(playing ? "Liest vor · Stopp" : "Vorlesen", systemImage: playing ? "stop.fill" : "speaker.wave.2")
                 .font(.caption)

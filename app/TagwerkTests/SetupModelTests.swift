@@ -19,6 +19,12 @@ struct SetupModelTests {
         ]
     }
 
+    /// German UI text says "Projekt", not "Project" (G1).
+    @Test func githubExplanation_writesProjekt() {
+        #expect(SetupStep.github.explanation.contains("GitHub-Projekten"))
+        #expect(!SetupStep.github.explanation.contains("Project"))
+    }
+
     @Test func grant_reminders_advancesToCalendar() async {
         let model = SetupModel(store: store, settings: settings)
         #expect(model.current == .reminders)

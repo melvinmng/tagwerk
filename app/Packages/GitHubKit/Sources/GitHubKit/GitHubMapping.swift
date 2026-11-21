@@ -65,9 +65,45 @@ public enum GitHubMapping {
     /// Status for reopened issues and new issues without a chosen status: "Ready" when the project has
     /// it, otherwise the first option in board order that is not "Done"; `nil` without such an option.
     public static func reopenOption(in project: ProjectInfo) -> String? {
-        let options = statusOptions(in: project)
-        return options.first { $0.caseInsensitiveCompare(reopenStatus) == .orderedSame }
+        startOption(in: statusOptions(in: project))
+    }
+
+    /// The start stage of a board: "Ready" when it has it, otherwise the first stage that is not "Done".
+    static func startOption(in options: [String]) -> String? {
+        options.first { $0.caseInsensitiveCompare(reopenStatus) == .orderedSame }
             ?? options.first { !isDone($0) }
+    }
+
+    /// What a task row says about the progress of an issue.
+    public enum ProgressStatus: Equatable, Sendable {
+        /// One stage in work, or the same one in every project: "In Progress".
+        case stage(String)
+        /// Different stages in work: "2 Status".
+        case several(Int)
+    }
+
+    /// The stage is "in work" when it comes after the start stage (`startOption`) in board order and is not
+    /// "Done". Stages before the start stage ("Backlog" before "Ready") and stages without a value do not count.
+    public static func isInProgress(_ status: SubContainerStatus) -> Bool {
+        guard let current = status.current, !isDone(current),
+              let currentIndex = status.options.firstIndex(where: { $0.caseInsensitiveCompare(current) == .orderedSame }),
+              let start = startOption(in: status.options),
+              let startIndex = status.options.firstIndex(of: start) else { return false }
+        return currentIndex > startIndex
+    }
+
+    /// The progress to show in the task row, or `nil` when no project has the issue in work.
+    public static func progressStatus(of statuses: [SubContainerStatus]) -> ProgressStatus? {
+        var stages: [String] = []
+        for status in statuses where isInProgress(status) {
+            guard let current = status.current else { continue }
+            if !stages.contains(where: { $0.caseInsensitiveCompare(current) == .orderedSame }) { stages.append(current) }
+        }
+        switch stages.count {
+        case 0: return nil
+        case 1: return .stage(stages[0])
+        default: return .several(stages.count)
+        }
     }
 
     /// The option of `project` spelled like `name` (case-insensitive), or `nil`.

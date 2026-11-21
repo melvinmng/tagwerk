@@ -99,6 +99,16 @@ struct SettingsView: View {
                     } label: {
                         LabeledContent("Fokus-Timer", value: FocusTimerText.settingsSummary(settings.focusTimerSettings))
                     }
+                    NavigationLink {
+                        SiriShortcutsSettingsView()
+                    } label: {
+                        LabeledContent("Siri & Kurzbefehle", value: String(localized: "\(SiriPhraseCatalog.shortcutCount) Kurzbefehle"))
+                    }
+                    NavigationLink {
+                        LanguageSettingsView()
+                    } label: {
+                        LabeledContent("Sprachen", value: LanguageSettingsText.summary(settings.contentLanguages))
+                    }
                 }
 
                 Section {

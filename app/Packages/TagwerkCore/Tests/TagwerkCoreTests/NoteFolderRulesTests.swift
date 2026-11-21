@@ -113,6 +113,59 @@ struct NoteFolderRulesTests {
         #expect(NoteFolderRole.journal.acceptsOwnNotes && NoteFolderRole.bibleStudy.acceptsOwnNotes)
     }
 
+    @Test func privateFolderIDs_includesSubfolders() {
+        // Subfolders below system folders cannot be created in the app (`subfolderBelowSystemFolder_cannotBeCreatedOrMovedThere`);
+        // this data is built directly and only guards against future changes and damaged data.
+        let journal = folder("Tagebuch", role: .journal)
+        let sub = folder("Unter Tagebuch", parent: journal)
+        let subSub = folder("Tiefer", parent: sub)
+        let free = folder("Arbeit")
+        let ids = NoteFolderRules.privateFolderIDs(in: [journal, sub, subSub, free])
+        #expect(ids == [journal.id, sub.id, subSub.id])
+    }
+
+    @Test func privateFolderIDs_ignoresRecipesAndBrainDump() {
+        let folders = [folder("Rezepte", role: .recipes), folder("Gedanken", role: .brainDump),
+                       folder("Morgens", role: .morningRoutine), folder("Abends", role: .eveningRoutine), folder("Eigener")]
+        #expect(NoteFolderRules.privateFolderIDs(in: folders).isEmpty)
+    }
+
+    @Test func privateFolderIDs_coversAllPrivateRoles() {
+        let folders = [folder("Tagebuch", role: .journal), folder("Bible Study", role: .bibleStudy), folder("Dream Log", role: .dreamLog)]
+        #expect(NoteFolderRules.privateFolderIDs(in: folders) == Set(folders.map(\.id)))
+    }
+
+    @Test func privateFolderIDs_cycleTerminates() {
+        let idA = UUID(), idB = UUID()
+        let a = NoteFolderInfo(id: idA, name: "A", parentID: idB, role: .journal)
+        let b = NoteFolderInfo(id: idB, name: "B", parentID: idA)
+        let other = folder("Frei")
+        #expect(NoteFolderRules.privateFolderIDs(in: [a, b, other]) == [idA, idB])
+    }
+
+    @Test func mayLeaveDevice_freeNoteInJournalFolder_isFalse() {
+        let journal = folder("Tagebuch", role: .journal)
+        let ids = NoteFolderRules.privateFolderIDs(in: [journal])
+        #expect(!NoteFolderRules.mayLeaveDevice(kind: .free, folderID: journal.id, privateFolderIDs: ids))
+        #expect(NoteFolderRules.mayLeaveDevice(kind: .free, folderID: nil, privateFolderIDs: ids))
+        #expect(NoteFolderRules.mayLeaveDevice(kind: .morning, folderID: UUID(), privateFolderIDs: ids))
+    }
+
+    @Test func mayLeaveDevice_dreamKind_isFalse() {
+        #expect(!NoteFolderRules.mayLeaveDevice(kind: .dream, folderID: nil, privateFolderIDs: []))
+        #expect(!NoteFolderRules.mayLeaveDevice(kind: .journal, folderID: nil, privateFolderIDs: []))
+        #expect(!NoteFolderRules.mayLeaveDevice(kind: .bibleStudy, folderID: nil, privateFolderIDs: []))
+    }
+
+    @Test func subfolderBelowSystemFolder_cannotBeCreatedOrMovedThere() throws {
+        let journal = folder("Tagebuch", role: .journal)
+        let own = folder("Eigener")
+        #expect(!NoteFolderRules.canCreateFolder(under: journal.id, in: [journal, own]))
+        #expect(throws: NoteFolderRules.MoveError.systemFolder) {
+            try NoteFolderRules.validateMove(own.id, to: journal.id, in: [journal, own])
+        }
+    }
+
     @Test func canCreateFolder_belowBrainDump_isFalse() {
         let brainDump = folder("Brain Dump", role: .brainDump)
         #expect(!NoteFolderRules.canCreateFolder(under: brainDump.id, in: [brainDump]))

@@ -1,8 +1,12 @@
 import SwiftUI
 import TagwerkCore
 
-/// The one-time consent before the first "Mit ChatGPT sortieren" (phase 5 design §5.5).
+/// The one-time consent before the first "Mit ChatGPT sortieren" or "Artikel übersetzen" (phase 5 design §5.5, mockup SPC4b).
+/// One consent covers both; the text names the one that was tapped and says what the other one sends in addition.
 struct ShoppingSortConsentSheet: View {
+    enum Purpose { case sort, translate }
+
+    var purpose: Purpose = .sort
     let onAgree: () -> Void
     let onDecline: () -> Void
 
@@ -10,26 +14,40 @@ struct ShoppingSortConsentSheet: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
-                    Text("Zum Sortieren sendet Tagwerk die Namen deiner offenen Artikel und die Namen deiner Kategorien an ChatGPT (OpenAI), über das Konto, mit dem du angemeldet bist.")
-                    point("paperplane", "**Gesendet wird:** Artikelnamen und Kategorienamen. In einer geteilten Liste auch Artikel, die andere eingetragen haben.")
-                    point("eye.slash", "**Nicht gesendet werden:** Mengen, erledigte Artikel, Aufgaben, Termine, Notizen, Daten aus Health.")
-                    point("hand.tap", "**Nur auf dein Tippen:** Ohne „Sortieren“ verlässt nichts das iPhone.")
+                    switch purpose {
+                    case .sort:
+                        Text("Zum Sortieren sendet Tagwerk die Namen deiner offenen Artikel und die Namen deiner Kategorien an ChatGPT (OpenAI), über das Konto, mit dem du angemeldet bist.")
+                        point("paperplane", "**Gesendet wird:** Artikelnamen und Kategorienamen. In einer geteilten Liste auch Artikel, die andere eingetragen haben.")
+                        point("eye.slash", "**Nicht gesendet werden:** Mengen, erledigte Artikel, Aufgaben, Termine, Notizen, Daten aus Health.")
+                        point("hand.tap", "**Nur auf dein Tippen:** Ohne „Sortieren“ verlässt nichts das iPhone.")
+                    case .translate:
+                        Text("Zum Übersetzen sendet Tagwerk die Namen deiner offenen Artikel und die Zielsprache an ChatGPT (OpenAI), über das Konto, mit dem du angemeldet bist.")
+                        point("paperplane", "**Gesendet wird:** Artikelnamen. In einer geteilten Liste auch Artikel, die andere eingetragen haben.")
+                        point("eye.slash", "**Nicht gesendet werden:** Mengen, erledigte Artikel, Aufgaben, Termine, Notizen, Daten aus Health.")
+                        point("hand.tap", "**Nur auf dein Tippen:** Ohne „Übersetzen“ verlässt nichts das iPhone.")
+                    }
                     VStack(spacing: 10) {
                         Button(action: onAgree) {
-                            Text("Einverstanden und sortieren").fontWeight(.semibold).frame(maxWidth: .infinity)
+                            Text(purpose == .sort ? "Einverstanden und sortieren" : "Einverstanden und übersetzen")
+                                .fontWeight(.semibold).frame(maxWidth: .infinity)
                         }
                         .buttonStyle(.borderedProminent)
                         .controlSize(.large)
                         Button("Nicht jetzt", action: onDecline)
                     }
                     .padding(.top, 4)
+                    Text(purpose == .sort
+                         ? "Die Einwilligung gilt auch für „Artikel übersetzen“; dabei gehen die Namen deiner Artikel und die Zielsprache an ChatGPT, ohne Kategorien."
+                         : "Die Einwilligung gilt auch für „Mit ChatGPT sortieren“; dabei gehen zusätzlich die Namen deiner Kategorien mit.")
+                        .font(.footnote).foregroundStyle(.secondary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
                     Text("Du kannst das in den Einstellungen unter „Einkaufsliste“ widerrufen.")
                         .font(.footnote).foregroundStyle(.secondary)
                         .frame(maxWidth: .infinity)
                 }
                 .padding()
             }
-            .navigationTitle("Mit ChatGPT sortieren")
+            .navigationTitle(purpose == .sort ? "Mit ChatGPT sortieren" : "Mit ChatGPT übersetzen")
             .navigationBarTitleDisplayMode(.inline)
         }
         .presentationDetents([.large])

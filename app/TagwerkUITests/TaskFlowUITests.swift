@@ -84,4 +84,30 @@ final class TaskFlowUITests: UITestCase {
         app.buttons[AccessibilityID.Focus.stop].tap()
         waitUntilGone(bar)
     }
+
+    /// The button above the keyboard is a symbol ("Tastatur ausblenden"), there is no second "Fertig", and the sheet stays open.
+    func testKeyboardButtonHidesKeyboard() {
+        tab("Aufgaben")
+        tapButton("Neue Aufgabe")
+        onScreen(label: "Lokal").tap()
+        typeIn("Notiz", text: "UI-Test")
+        XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: Self.timeout), "The keyboard did not appear")
+        XCTAssertFalse(app.buttons["Fertig"].exists, "The keyboard button must not be labelled \"Fertig\" any more")
+        tapButton("Tastatur ausblenden")
+        waitUntilGone(app.keyboards.firstMatch)
+        XCTAssertTrue(app.textFields["Titel"].exists, "The sheet closed with the keyboard")
+    }
+
+    /// The root view sets the Return key of single-line fields to "Fertig", also inside sheets; a multi-line field keeps "return".
+    func testReturnKeyReadsFertigInSingleLineFields() {
+        tab("Aufgaben")
+        tapButton("Neue Aufgabe")
+        onScreen(label: "Lokal").tap()
+        typeIn("Titel", text: "UI-Test")
+        XCTAssertTrue(app.keyboards.buttons["Fertig"].waitForExistence(timeout: Self.timeout),
+                      "The Return key of the title field does not read \"Fertig\"")
+        typeIn("Notiz", text: "UI-Test")
+        XCTAssertTrue(app.keyboards.buttons["Fertig"].waitForNonExistence(timeout: Self.timeout),
+                      "The Return key of the multi-line field must not read \"Fertig\"")
+    }
 }

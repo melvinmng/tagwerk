@@ -203,7 +203,7 @@ struct GitHubCreateTests {
         chosen.subContainerIDs = ["PVT_1", "PVT_2"]
         chosen.startStatus = "In progress"
 
-        await #expect(throws: TaskWriteError.failed("Den Status „In progress“ gibt es im Project „Projekt 2“ nicht.")) {
+        await #expect(throws: TaskWriteError.failed("Den Status „In progress“ gibt es im Projekt „Projekt 2“ nicht.")) {
             try await makeProvider().create(chosen)
         }
         #expect(!transport.requests.contains { $0.httpMethod == "POST" && $0.url?.path.hasPrefix("/repos") == true })
