@@ -69,7 +69,8 @@ Festlegungen der Hauptsitzung zum G3-Plan: offene Fragen nach Empfehlung; Zeilen
 | `fix/ui-test-stability` | vorbestehende UI-Testfehler | PR #240; fertig und geprüft, Head `e34c1fd`, `test-all` zweimal grün; zuerst mergen. Allowlist-Einträge „Unerledigt von heute“ und Leftover-Zeile bei Strang K (K5) neu bewerten |
 | `feat/g3-github-status` | G3 Strang G (G1–G4) | PR #249 (Basis #240); fertig und geprüft, Head `f7eae41`, `test-all` grün; G5 offen (nach #173 A/B), dort auch GH9-Fußtext „erste Stufe“ vs. Startstufe „Ready“ und VoiceOver-Anführungszeichen im Englischen klären |
 | `feat/g1-focus` | G1 Strang F (F1–F7) | **gemergt (#253)**; geprüft, Head `683677d`, `test-all` grün; F8 nach P. Achtung: Menütitel jetzt „Fokus starten · 25 min“ – beim Zusammenführen mit #246 (Strang U) UI-Tests auf den Titel prüfen |
-| `fix/ui-audits-and-strings` | #250 nach Plan 2026-11-21 | läuft (Sonnet) |
+| `fix/ui-audits-and-strings` | #250 nach Plan 2026-11-21 | PR #261; geprüft, Head `4f73e1f`, `test-all` grün; `sync-strings.sh` formattreu (1 Zeile je Schlüssel); Allowlist −2/+4/~4; läuft: `main` einarbeiten (Konflikte Allowlist, Rezept-Audit) |
+| `feat/g3-contrast` | G3 Strang K (K1–K5), auf #261 | läuft (Sonnet, nach Job 1) |
 | `feat/g1-travel-time`, danach `feat/g1-focus-in-plan` | G1 Strang V (V1–V5) und F8 | läuft (Sonnet, neue Testregel) |
 
 ## Neues Thema (21.11.): Ernährung, Gewicht, Ziele mit ChatGPT
@@ -90,7 +91,7 @@ Issues: #254 Ernährung, Gewicht und Ziele (Entscheidungen als Kommentar), #255 
 2b. **#260 Kapazität falsch** (Überschneidungen doppelt, freie Termine; Beispiel 24.11. „3 h 10 frei von 3 h 10“): Plan + Mockup fertig (`a091125`): Kernrechnung vereinigt korrekt; 3 h 10 vermutlich durch reservierten Aufwand wiederkehrender Aufgaben oder kürzere Arbeitszeit am Dienstag (Task 0 klärt); Fehler F1–F4 (Karte erklärt Abzug nicht, Puffer in der Pause, Zeitblöcke summiert, „Frei gibt frei“ summiert). Wartet auf KA1–KA6 und Angaben des Nutzers (Arbeitszeit Di., wiederkehrende Aufgaben); Start nach Merge von #256
 2a. **#259 Wochenansicht mit allen Terminen** (Nutzerwunsch 21.11., in dieser Runde): kleiner Punkt ohne Fable – Gestaltung vom Nutzer vorgegeben (wie bisher bzw. wie die Listenansicht eines Tages). Nutzer: erst nach der von Fable geplanten Neugestaltung von Planen, damit es sich am finalen Design orientiert → Start nach Merge von G1 P (#256) **und** G1 V (Fahrzeit am Termin, Zeile „Losfahren“); Termine in der Woche zeigen dann dieselbe Zeilenform inkl. Fahrzeit-Hinweis wie die Tagesliste
 3. #233 Block B (PR #258)
-4. Strang K (T, L, S gemergt – jetzt möglich); G2 Welle 1; G1 E, danach V/F8 nach P, R nach E
+4. Strang K (läuft auf Basis #261); G2 Welle 1; G1 E, danach V/F8 nach P, R nach E
 5. Gruppen 1 und 2 nach ihren Plänen
 6. Danach: Geräteprüfungen – Nutzerwunsch: sobald die neue Version auf seinem iPhone ist, ALLE Gerätetests gesammelt als eine Liste ausgeben; (Task 12 in #173, Z1 in G3, Gerätetests der übrigen Pläne)
 
