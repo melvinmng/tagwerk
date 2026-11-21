@@ -44,9 +44,14 @@ final class PlanHeaderLayoutUITests: UITestCase {
                 launchApp()
             }
             let bar = app.navigationBars.firstMatch
-            XCTAssertTrue(bar.waitForExistence(timeout: Self.timeout))
+            XCTAssertTrue(bar.exists || bar.waitForExistence(timeout: Self.timeout), "\(variant.name): no navigation bar")
+            // `waitForExistence` first looks after a second, so the button is only waited for when it is not there yet.
+            let nextDay = app.buttons[variant.language == Self.english ? "Next day" : "Nächster Tag"].firstMatch
             for day in 0...5 {
-                if day > 0 { tapButton(variant.language == Self.english ? "Next day" : "Nächster Tag") }
+                if day > 0 {
+                    XCTAssertTrue(nextDay.exists || nextDay.waitForExistence(timeout: Self.timeout), "\(variant.name): no next day button")
+                    nextDay.tap()
+                }
                 if Self.measuredDays.contains(day) { check(variant, in: bar, day: day) }
             }
         }
@@ -59,7 +64,7 @@ final class PlanHeaderLayoutUITests: UITestCase {
         var elements = flattened(bar)
         if title(in: elements) == nil {
             XCTAssertTrue(bar.staticTexts.matching(NSPredicate(format: "value != nil AND value != ''")).firstMatch
-                .waitForExistence(timeout: Self.timeout), "\(variant.name): no date title in the bar")
+                .waitForExistence(timeout: Self.timeout), "\(variant.name) day+\(day): no date title in the bar")
             elements = flattened(bar)
         }
         guard let title = title(in: elements) else {
