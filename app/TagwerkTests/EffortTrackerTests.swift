@@ -48,6 +48,22 @@ struct EffortTrackerTests {
         focusStore.samples(in: DateInterval(start: at(1, 0), end: at(30, 0)))
     }
 
+    @Test func trimmedBlocks_onlyWhileTheEndIsUnchanged() async throws {
+        let item = task()
+        let block = try addBlock(item, from: (14, 0), to: (15, 0))
+        let other = try addBlock(task("Anderes"), from: (16, 0), to: (17, 0))
+        _ = await tracker().didComplete(item, at: at(18, 14, 35))
+        let cut = try #require(calendarStore.event(id: block.id))
+        let shown = tracker().trimmedBlocks(among: [cut, try #require(calendarStore.event(id: other.id))])
+        // 35 of the 60 planned minutes; the other block was not cut and has no entry.
+        #expect(shown == [block.id: TrimmedBlock(plannedMinutes: 60, actualMinutes: 35)])
+        // Somebody moves the end by hand afterwards: the mark is gone.
+        let moved = try calendarStore.moveBlock(id: block.id, to: cut.start, end: at(18, 14, 50), expectedVersion: cut.version)
+        #expect(tracker().trimmedBlocks(among: [moved]).isEmpty)
+        // An empty list asks nothing.
+        #expect(tracker().trimmedBlocks(among: []).isEmpty)
+    }
+
     @Test func earlyCompletion_trimsTheBlockAndRecordsTheElapsedTime() async throws {
         let item = task()
         let block = try addBlock(item, from: (14, 0), to: (15, 0))

@@ -19,6 +19,8 @@ struct DayView: View {
     @State private var unmarking: CalendarEvent?
     @State private var blockFor: TaskItem?
     @State private var sheetEntry: DayEntry?
+    /// The event whose travel time is edited from the travel menu (PL11b).
+    @State private var editingTravel: CalendarEvent?
     @State private var showsGrid = true
     /// A block or task is being dragged in the grid; the page container ignores sideways drags meanwhile.
     @State private var gridLocked = false
@@ -49,6 +51,14 @@ struct DayView: View {
             }
         }
         .onAppear { showsGrid = model.showsHourGrid }
+        .environment(\.editTravel) { editingTravel = $0 }
+        // The page "Fahrzeit" of the event with its own navigation stack (a sheet over the day, not over another sheet).
+        .sheet(item: $editingTravel) { event in
+            NavigationStack {
+                TravelOverrideView(event: event, model: model)
+                    .toolbar { ToolbarItem(placement: .cancellationAction) { TravelSheetCloseButton() } }
+            }
+        }
         .sheet(item: $sheetEntry) { entry in EntrySheet(entry: entry, model: model, onShowTask: onShowTask) }
         .sheet(item: $linkingToDeadline) { event in DeadlinePickerSheet(event: event, model: model) }
         .seriesMarkQuestion(isPresented: Binding(get: { markingSeries != nil }, set: { if !$0 { markingSeries = nil } }),
@@ -209,15 +219,22 @@ struct DayView: View {
             .contextMenu { eventMenu(event, taskID: nil) }
         case .block(let event, let taskID):
             let remaining = model.runningRemaining(of: event, on: plan.day)
-            Button { sheetEntry = .event(event, taskID) } label: {
-                TimelineLine(time: event.start,
-                             title: (plan.day == model.today && model.focusTaskIDs.contains(taskID) ? "★ " : "") + event.title,
-                             detail: (remaining.map { NowText.runningDetail(remainingMinutes: $0) }
-                                 ?? CapacityText.duration(Int(event.end.timeIntervalSince(event.start) / 60))) + " · "
-                                 + (model.canEditAsBlock(event) ? String(localized: "Zeitblock") : String(localized: "verknüpft")),
-                             color: .green, isRunning: remaining != nil)
+            let trimmed = marks.trimmedBlocks[event.id]
+            HStack(spacing: 8) {
+                Button { sheetEntry = .event(event, taskID) } label: {
+                    TimelineLine(time: event.start,
+                                 title: (trimmed != nil ? "✓ " : "")
+                                     + (plan.day == model.today && model.focusTaskIDs.contains(taskID) ? "★ " : "") + event.title,
+                                 detail: trimmed.map { FocusTimerText.trimDetail($0) }
+                                     ?? ((remaining.map { NowText.runningDetail(remainingMinutes: $0) }
+                                         ?? CapacityText.duration(Int(event.end.timeIntervalSince(event.start) / 60))) + " · "
+                                         + (model.canEditAsBlock(event) ? String(localized: "Zeitblock") : String(localized: "verknüpft"))),
+                                 color: .green, isRunning: remaining != nil)
+                }
+                .foregroundStyle(.primary)
+                // The button of the focus (FO4b) next to the row, not inside its button.
+                if model.focusBlockID(in: plan) == event.id { FocusPlanButton(event: event, model: model) }
             }
-            .foregroundStyle(.primary)
         case .lunch(let start, let minutes):
             let remaining = model.runningRemaining(range: start..<(start + minutes), on: plan.day)
             Button { sheetEntry = .lunch(day: plan.day, range: start..<(start + minutes)) } label: {
@@ -228,8 +245,9 @@ struct DayView: View {
             }
             .foregroundStyle(.primary)
         case .travel(let segment):
-            TravelRow(segment: segment, transport: model.settings.travelTransport,
-                      time: clock(segment.range.lowerBound, on: plan.day))
+            TravelRow(segment: segment, transport: segment.transport ?? model.settings.travelTransport,
+                      time: clock(segment.range.lowerBound, on: plan.day),
+                      event: (plan.events + plan.blocks).first { $0.id == segment.eventID }, model: model)
         case .gap(let range):
             GapLine(text: String(localized: "frei \(clock(range.lowerBound, on: plan.day))–\(clock(range.upperBound, on: plan.day))"))
                 .dropDestination(for: String.self) { keys, _ in

@@ -22,4 +22,18 @@ struct DemoTravelEstimator: TravelTimeEstimating {
         }
     }
 }
+
+/// Simulator-only address suggestions for `-TagwerkDemoTravel`: MapKit's completer is unreliable in the simulator, so every
+/// fragment of three characters or more gets two fixed suggestions in Berlin.
+struct DemoAddressSuggester: AddressSuggesting {
+    func suggestions(for query: String) async -> [AddressSuggestion] {
+        guard query.count >= HomeAddressModel.minimumQueryLength else { return [] }
+        return [AddressSuggestion(id: "demo-1", title: "\(query) 1", subtitle: "10115 Berlin"),
+                AddressSuggestion(id: "demo-2", title: "\(query) 22", subtitle: "10117 Berlin")]
+    }
+
+    func resolve(_ suggestion: AddressSuggestion) async throws -> PlaceLookup {
+        PlaceLookup(latitude: 52.52, longitude: 13.405, description: "\(suggestion.text), Deutschland")
+    }
+}
 #endif
