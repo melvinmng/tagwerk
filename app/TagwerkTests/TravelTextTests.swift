@@ -6,7 +6,7 @@ import TagwerkCore
 struct TravelTextTests {
     private func segment(_ minutes: Int = 25, origin: TravelLeg.Origin = .home, tight: Bool = false,
                          source: TravelSegment.Source = .automatic) -> TravelSegment {
-        TravelSegment(eventID: "e", range: (840 - minutes)..<840, minutes: minutes, origin: origin, isTight: tight, source: source)
+        TravelSegment(eventID: "e", range: (840 - minutes)..<840, minutes: minutes, origin: origin, overlapMinutes: tight ? 10 : 0, source: source)
     }
 
     @Test func segmentText_fromHome() {

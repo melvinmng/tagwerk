@@ -92,7 +92,7 @@ struct TimelineCanvas: View {
                         // Behind a collapsed group the travel time takes the full width.
                         let isCollapsed = collapsed.contains(index)
                         let columnWidth = isCollapsed ? width : width / CGFloat(columnCount(index: index, ranges: ranges, columns: columns))
-                        TravelSegmentView(segment: segment, transport: model.settings.travelTransport)
+                        TravelSegmentView(segment: segment, transport: segment.transport ?? model.settings.travelTransport)
                             .frame(width: columnWidth - 2, height: max(14, height(segment.range.count)))
                             .offset(x: labelWidth + 6 + CGFloat(isCollapsed ? 0 : columns[index]) * columnWidth, y: y(segment.range.lowerBound, shown))
                             .allowsHitTesting(false)

@@ -11,6 +11,7 @@ final class FakeTravelEstimator: TravelTimeEstimating, @unchecked Sendable {
     private var _isOffline = false
     private var _tripCalls: [String] = []
     private var _geocodeCalls: [String] = []
+    private var _departureCalls: [String] = []
     private var _geocodeReferences: [TravelCoordinate?] = []
     private var _locations: [String: TravelCoordinate] = [:]
 
@@ -37,6 +38,8 @@ final class FakeTravelEstimator: TravelTimeEstimating, @unchecked Sendable {
     var geocodeReferences: [TravelCoordinate?] { lock.withLock { _geocodeReferences } }
     var tripCalls: [String] { lock.withLock { _tripCalls } }
     var geocodeCalls: [String] { lock.withLock { _geocodeCalls } }
+    /// Trips asked by their departure (the way home), same format as `tripCalls`.
+    var departureCalls: [String] { lock.withLock { _departureCalls } }
 
     func lookUp(address: String, near: TravelCoordinate?) async throws -> PlaceLookup {
         lock.withLock {
@@ -54,5 +57,10 @@ final class FakeTravelEstimator: TravelTimeEstimating, @unchecked Sendable {
         if isOffline { throw URLError(.notConnectedToInternet) }
         if failingTexts.contains(from.text) || failingTexts.contains(to.text) { throw TravelTimeError.missingCoordinates }
         return minutes
+    }
+
+    func minutes(from: TravelPlace, to: TravelPlace, transport: TravelTransport, departure: Date) async throws -> Int {
+        lock.withLock { _departureCalls.append("\(from.text)>\(to.text)>\(transport.rawValue)") }
+        return try await minutes(from: from, to: to, transport: transport, arrival: departure)
     }
 }

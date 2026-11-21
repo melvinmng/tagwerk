@@ -60,7 +60,7 @@ struct TravelInfoRow: View {
     var body: some View {
         if model.settings.travelTimeEnabled, !event.isAllDay {
             let transport = model.settings.travelTransport
-            let segment = model.days.lazy.compactMap { $0.travel.first { $0.eventID == event.id } }.first
+            let segment = model.days.lazy.compactMap { $0.travel.first { $0.eventID == event.id && $0.direction == .toEvent } }.first
             NavigationLink {
                 TravelOverrideView(event: event, model: model)
             } label: {

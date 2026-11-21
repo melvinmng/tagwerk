@@ -7,7 +7,8 @@ extension PlanningModel {
     /// The trips of `day` for the events given; empty while the setting is off or no time service exists.
     func travelLegs(for day: PlanDay, events: [CalendarEvent]) -> [TravelLeg] {
         guard settings.travelTimeEnabled, travelTimes != nil else { return [] }
-        return TravelRules.legs(events: events, on: day, home: settings.homePlace, calendar: calendar)
+        return TravelRules.legs(events: events, on: day, home: settings.homePlace, calendar: calendar,
+                                choices: travelChoices(for: events), includesReturn: settings.travelShowsReturn)
     }
 
     /// The travel blocks of `day`. Manual times (F2) come first and need neither the network nor the cache; the others
@@ -16,8 +17,10 @@ extension PlanningModel {
     /// `refreshTravelTimes()`. Empty while the setting "Fahrzeit berücksichtigen" is off.
     func travelSegments(for day: PlanDay, events: [CalendarEvent]) -> [TravelSegment] {
         guard settings.travelTimeEnabled else { return [] }
-        let overrides = travelOverrideModes(for: events)
-        let legs = TravelRules.legs(events: events, on: day, home: settings.homePlace, calendar: calendar)
+        let choices = travelChoices(for: events)
+        let overrides = choices.compactMapValues { $0.mode == .automatic ? nil : $0.mode }
+        let legs = TravelRules.legs(events: events, on: day, home: settings.homePlace, calendar: calendar, choices: choices,
+                                    includesReturn: settings.travelShowsReturn)
         var resolved = ResolvedTravelTimes()
         if let travelTimes {
             resolved = travelTimes.resolvedTimes(for: legs.filter { overrides[$0.eventID] == nil }, transport: settings.travelTransport)
@@ -52,22 +55,33 @@ extension PlanningModel {
         event.isRecurring ? CalendarBlockRules.parseOccurrenceID(event.id).0 : event.id
     }
 
-    /// What the user decided for the travel time of this event; `automatic` without a decision.
-    func travelOverrideMode(for event: CalendarEvent) -> TravelOverrideMode {
-        TravelOverrideRules.mode(eventID: event.id, seriesID: travelSeriesID(of: event), start: event.start,
-                                 overrides: TravelOverrideStore(context: marks.modelContext).all())
+    /// What the user decided for this event: mode, transport and start; the default without a decision.
+    func travelChoice(for event: CalendarEvent) -> TravelChoice {
+        TravelOverrideRules.choice(eventID: event.id, seriesID: travelSeriesID(of: event), start: event.start,
+                                   overrides: TravelOverrideStore(context: marks.modelContext).all())
     }
 
-    /// The decisions for these events by event ID; events without a decision (`automatic`) are left out.
-    func travelOverrideModes(for events: [CalendarEvent]) -> [String: TravelOverrideMode] {
+    /// What the user decided for the travel time of this event; `automatic` without a decision.
+    func travelOverrideMode(for event: CalendarEvent) -> TravelOverrideMode {
+        travelChoice(for: event).mode
+    }
+
+    /// The decisions for these events by event ID; events without any decision (the default) are left out.
+    func travelChoices(for events: [CalendarEvent]) -> [String: TravelChoice] {
         let stored = TravelOverrideStore(context: marks.modelContext).all()
         guard !stored.isEmpty else { return [:] }
-        var result: [String: TravelOverrideMode] = [:]
+        var result: [String: TravelChoice] = [:]
         for event in events where result[event.id] == nil {
-            let mode = TravelOverrideRules.mode(eventID: event.id, seriesID: travelSeriesID(of: event), start: event.start, overrides: stored)
-            if mode != .automatic { result[event.id] = mode }
+            let choice = TravelOverrideRules.choice(eventID: event.id, seriesID: travelSeriesID(of: event), start: event.start,
+                                                    overrides: stored)
+            if !choice.isDefault { result[event.id] = choice }
         }
         return result
+    }
+
+    /// The modes decided for these events by event ID; events without a decision (`automatic`) are left out.
+    func travelOverrideModes(for events: [CalendarEvent]) -> [String: TravelOverrideMode] {
+        travelChoices(for: events).compactMapValues { $0.mode == .automatic ? nil : $0.mode }
     }
 
     /// Sets the travel time of an event by hand; `series` applies to this and all following occurrences of a repeating event.

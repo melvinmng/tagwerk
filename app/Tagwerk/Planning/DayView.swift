@@ -228,7 +228,7 @@ struct DayView: View {
             }
             .foregroundStyle(.primary)
         case .travel(let segment):
-            TravelRow(segment: segment, transport: model.settings.travelTransport,
+            TravelRow(segment: segment, transport: segment.transport ?? model.settings.travelTransport,
                       time: clock(segment.range.lowerBound, on: plan.day))
         case .gap(let range):
             GapLine(text: String(localized: "frei \(clock(range.lowerBound, on: plan.day))–\(clock(range.upperBound, on: plan.day))"))

@@ -163,6 +163,8 @@ final class AppSettings {
     var homeLongitude: Double? = nil
     /// `TravelTransport` raw value.
     var travelTransportRaw: String = "automobile"
+    /// "Rückweg anzeigen" (PL15c): the way home after the last event and before a long gap; off by default.
+    var travelShowsReturn: Bool = false
 
     /// Voice: microphone in conversations (plan voice-chat, SP7a).
     var voiceInputEnabled: Bool = true

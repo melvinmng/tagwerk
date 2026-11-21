@@ -34,30 +34,42 @@ public struct TravelPlace: Sendable, Hashable, Codable {
     }
 }
 
-/// One trip to an event: where from, where to, and when to arrive.
-public struct TravelLeg: Sendable, Hashable {
+/// One trip of a day: to an event, or from an event back home.
+public struct TravelLeg: Sendable, Hashable, Identifiable {
     public enum Origin: Sendable, Hashable {
         case previousEvent(id: String)
         case home
     }
 
+    public enum Direction: Sendable, Hashable { case toEvent, returnHome }
+
     public var eventID: String
+    public var direction: Direction
+    /// Where the trip starts. For the way home: the event itself.
     public var origin: Origin
     public var from: TravelPlace
     public var to: TravelPlace
-    /// The start of the event.
+    /// Transport chosen for this event; `nil` uses the setting.
+    public var transport: TravelTransport?
+    /// `toEvent`: the start of the event. `returnHome`: the end of the event, when the trip starts.
     public var arrival: Date
 
-    public init(eventID: String, origin: Origin, from: TravelPlace, to: TravelPlace, arrival: Date) {
+    /// Unique per trip: the way home of an event has its own ID, so both fit into one dictionary.
+    public var id: String { direction == .toEvent ? eventID : eventID + TravelSegment.returnSuffix }
+
+    public init(eventID: String, origin: Origin, from: TravelPlace, to: TravelPlace, arrival: Date,
+                direction: Direction = .toEvent, transport: TravelTransport? = nil) {
         self.eventID = eventID
+        self.direction = direction
         self.origin = origin
         self.from = from
         self.to = to
+        self.transport = transport
         self.arrival = arrival
     }
 }
 
-/// The travel time before an event as a block of the day.
+/// The travel time before an event, or after it on the way home, as a block of the day.
 public struct TravelSegment: Sendable, Hashable, Identifiable {
     /// Where the minutes come from.
     public enum Source: Sendable, Hashable {
@@ -69,23 +81,35 @@ public struct TravelSegment: Sendable, Hashable, Identifiable {
         case manual
     }
 
-    public var id: String { eventID }
+    /// Appended to the event ID for the way home.
+    public static let returnSuffix = "#return"
+
+    public var id: String { direction == .toEvent ? eventID : eventID + Self.returnSuffix }
+    /// The event the trip leads to, or leaves from (`returnHome`).
     public var eventID: String
-    /// Minutes of the day, ending at the start of the event.
+    public var direction: TravelLeg.Direction
+    /// Minutes of the day: `toEvent` ends at the start of the event, `returnHome` begins at its end.
     public var range: Range<Int>
     public var minutes: Int
     public var origin: TravelLeg.Origin
-    /// The trip starts before the previous event ends.
-    public var isTight: Bool
+    /// Transport chosen for this event; `nil` uses the setting.
+    public var transport: TravelTransport?
+    /// Minutes the trip starts before the previous event ends; 0 when it does not.
+    public var overlapMinutes: Int
     public var source: Source
 
-    public init(eventID: String, range: Range<Int>, minutes: Int, origin: TravelLeg.Origin, isTight: Bool,
-                source: Source = .automatic) {
+    /// The trip starts before the previous event ends.
+    public var isTight: Bool { overlapMinutes > 0 }
+
+    public init(eventID: String, range: Range<Int>, minutes: Int, origin: TravelLeg.Origin, overlapMinutes: Int = 0,
+                source: Source = .automatic, direction: TravelLeg.Direction = .toEvent, transport: TravelTransport? = nil) {
         self.eventID = eventID
+        self.direction = direction
         self.range = range
         self.minutes = minutes
         self.origin = origin
-        self.isTight = isTight
+        self.transport = transport
+        self.overlapMinutes = overlapMinutes
         self.source = source
     }
 }
@@ -125,7 +149,13 @@ public enum TravelRules {
     /// The trips of `day`: for every busy, timed event with a physical place, from the previous such event of the
     /// day that has ended by then, or from home when there is none or the gap is longer than `homeGapMinutes`.
     /// No trip without a starting point, and none between two equal places.
-    public static func legs(events: [CalendarEvent], on day: PlanDay, home: TravelPlace?, calendar: Calendar) -> [TravelLeg] {
+    ///
+    /// `choices` (by event ID) set the transport and the start per event: `home` starts at home even right after
+    /// another event, `previousEvent` starts at the last event that has ended whatever the gap is (without one the rule
+    /// applies). An event with the mode `none` has no trip at all. With `includesReturn` (and a home address) the way
+    /// home follows the last event of the day and every event that no other follows within `homeGapMinutes`.
+    public static func legs(events: [CalendarEvent], on day: PlanDay, home: TravelPlace?, calendar: Calendar,
+                            choices: [String: TravelChoice] = [:], includesReturn: Bool = false) -> [TravelLeg] {
         let dayStart = day.startDate(in: calendar)
         let dayEnd = day.adding(days: 1, calendar: calendar).startDate(in: calendar)
         let places: [(event: CalendarEvent, place: TravelPlace)] = events
@@ -138,11 +168,22 @@ public enum TravelRules {
 
         var result: [TravelLeg] = []
         for (index, current) in places.enumerated() {
+            let choice = choices[current.event.id] ?? TravelChoice()
+            if choice.mode == .none { continue }
             let earlier = places[..<index].filter { $0.event.end <= current.event.start }
             let previous = earlier.max { $0.event.end != $1.event.end ? $0.event.end < $1.event.end : $0.event.start < $1.event.start }
             let origin: TravelLeg.Origin
             let from: TravelPlace
-            if let previous, current.event.start.timeIntervalSince(previous.event.end) <= TimeInterval(homeGapMinutes * 60) {
+            let startsAtPrevious: Bool
+            switch choice.start {
+            case .home: startsAtPrevious = false
+            case .previousEvent: startsAtPrevious = previous != nil
+            case nil:
+                startsAtPrevious = previous.map {
+                    current.event.start.timeIntervalSince($0.event.end) <= TimeInterval(homeGapMinutes * 60)
+                } ?? false
+            }
+            if startsAtPrevious, let previous {
                 origin = .previousEvent(id: previous.event.id)
                 from = previous.place
             } else if let home {
@@ -153,7 +194,27 @@ public enum TravelRules {
             }
             guard from.key != current.place.key else { continue }
             result.append(TravelLeg(eventID: current.event.id, origin: origin, from: from, to: current.place,
-                                    arrival: current.event.start))
+                                    arrival: current.event.start, transport: choice.transport))
+        }
+
+        if includesReturn, let home {
+            for (index, current) in places.enumerated() {
+                let choice = choices[current.event.id] ?? TravelChoice()
+                guard choice.mode != .none, current.place.key != home.key else { continue }
+                let others = places.enumerated().filter { $0.offset != index }.map(\.element)
+                // Another event is still running when this one ends: the way home starts after that one.
+                let stillBusy = others.contains { other in
+                    other.event.start < current.event.end
+                        && (other.event.end > current.event.end
+                            || (other.event.end == current.event.end && other.event.id > current.event.id))
+                }
+                guard !stillBusy else { continue }
+                let next = others.filter { $0.event.start >= current.event.end }.min { $0.event.start < $1.event.start }
+                if let next, next.event.start.timeIntervalSince(current.event.end) <= TimeInterval(homeGapMinutes * 60) { continue }
+                result.append(TravelLeg(eventID: current.event.id, origin: .previousEvent(id: current.event.id),
+                                        from: current.place, to: home, arrival: current.event.end,
+                                        direction: .returnHome, transport: choice.transport))
+            }
         }
         return result
     }
@@ -171,17 +232,18 @@ public enum TravelRules {
         return known
     }
 
-    /// The travel blocks of `day`: `(start − minutes)..<start`, cut at midnight, in the order of the events.
+    /// The travel blocks of `day`: `(start − minutes)..<start`, cut at midnight, in the order of the events; the way
+    /// home (`returnHome`) runs `end..<(end + minutes)` from the end of the event, cut at midnight.
     ///
-    /// Per event, in this order:
+    /// Per trip, in this order:
     /// 1. An override decides first: `none` gives no block, `fixed` a block of that length (also without a trip, for an
-    ///    event without a place or without a home address).
-    /// 2. Otherwise the time in `minutes` (Apple Maps, event ID → minutes).
+    ///    event without a place or without a home address). The way home uses the same fixed length.
+    /// 2. Otherwise the time in `minutes` (Apple Maps, trip ID → minutes; the way home has the ID `<event ID>#return`).
     /// 3. Otherwise the estimate in `provisionalMinutes` (the trip could not be looked up, no network).
     /// 4. Otherwise no block.
     ///
     /// A time of 0, or longer than `TravelPlausibility.maximumTravelMinutes`, gives no block, except a manual one, which
-    /// is bounded to that maximum instead.
+    /// is bounded to that maximum instead. `overlapMinutes` is how long before the previous event ends the trip starts.
     public static func segments(legs: [TravelLeg], minutes: [String: Int], provisionalMinutes: [String: Int] = [:],
                                 overrides: [String: TravelOverrideMode] = [:], events: [CalendarEvent],
                                 on day: PlanDay, calendar: Calendar) -> [TravelSegment] {
@@ -189,20 +251,30 @@ public enum TravelRules {
         let dayEnd = day.adding(days: 1, calendar: calendar).startDate(in: calendar)
         let byID = Dictionary(events.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
 
-        func segment(eventID: String, arrival: Date, travel: Int, origin: TravelLeg.Origin, source: TravelSegment.Source) -> TravelSegment? {
-            let start = Int(arrival.timeIntervalSince(dayStart) / 60)
-            let from = max(0, start - travel)
-            guard from < start else { return nil }
-            var isTight = false
-            if case .previousEvent(let id) = origin, let previous = byID[id] {
-                isTight = Int(previous.end.timeIntervalSince(dayStart) / 60) > from
+        func segment(eventID: String, time: Date, travel: Int, origin: TravelLeg.Origin, source: TravelSegment.Source,
+                     direction: TravelLeg.Direction = .toEvent, transport: TravelTransport? = nil) -> TravelSegment? {
+            let minute = Int(time.timeIntervalSince(dayStart) / 60)
+            switch direction {
+            case .toEvent:
+                let from = max(0, minute - travel)
+                guard from < minute else { return nil }
+                var overlap = 0
+                if case .previousEvent(let id) = origin, let previous = byID[id] {
+                    overlap = max(0, Int(previous.end.timeIntervalSince(dayStart) / 60) - from)
+                }
+                return TravelSegment(eventID: eventID, range: from..<minute, minutes: minute - from, origin: origin,
+                                     overlapMinutes: overlap, source: source, transport: transport)
+            case .returnHome:
+                let until = min(24 * 60, minute + travel)
+                guard minute >= 0, minute < until else { return nil }
+                return TravelSegment(eventID: eventID, range: minute..<until, minutes: until - minute, origin: origin,
+                                     source: source, direction: .returnHome, transport: transport)
             }
-            return TravelSegment(eventID: eventID, range: from..<start, minutes: start - from, origin: origin, isTight: isTight, source: source)
         }
 
         var result: [TravelSegment] = []
         var handled = Set<String>()
-        for leg in legs where handled.insert(leg.eventID).inserted {
+        for leg in legs where handled.insert(leg.id).inserted {
             let travel: Int
             let source: TravelSegment.Source
             switch overrides[leg.eventID] ?? .automatic {
@@ -212,10 +284,10 @@ public enum TravelRules {
                 travel = TravelOverrideRules.clampedFixedMinutes(fixed)
                 source = .manual
             case .automatic:
-                if let known = minutes[leg.eventID] {
+                if let known = minutes[leg.id] {
                     travel = known
                     source = .automatic
-                } else if let estimate = provisionalMinutes[leg.eventID] {
+                } else if let estimate = provisionalMinutes[leg.id] {
                     travel = estimate
                     source = .provisional
                 } else {
@@ -223,7 +295,8 @@ public enum TravelRules {
                 }
                 guard travel > 0, TravelPlausibility.isPlausibleTravelTime(minutes: travel) else { continue }
             }
-            if let found = segment(eventID: leg.eventID, arrival: leg.arrival, travel: travel, origin: leg.origin, source: source) {
+            if let found = segment(eventID: leg.eventID, time: leg.arrival, travel: travel, origin: leg.origin, source: source,
+                                   direction: leg.direction, transport: leg.transport) {
                 result.append(found)
             }
         }
@@ -243,12 +316,12 @@ public enum TravelRules {
             } else {
                 origin = .home
             }
-            if let found = segment(eventID: event.id, arrival: event.start, travel: TravelOverrideRules.clampedFixedMinutes(fixed),
+            if let found = segment(eventID: event.id, time: event.start, travel: TravelOverrideRules.clampedFixedMinutes(fixed),
                                    origin: origin, source: .manual) {
                 result.append(found)
             }
         }
-        return result.sorted { $0.range.upperBound != $1.range.upperBound ? $0.range.upperBound < $1.range.upperBound : $0.eventID < $1.eventID }
+        return result.sorted { $0.range.upperBound != $1.range.upperBound ? $0.range.upperBound < $1.range.upperBound : $0.id < $1.id }
     }
 
     /// Rounds an estimated travel time up to 5 minutes; 0 when under 3 minutes.

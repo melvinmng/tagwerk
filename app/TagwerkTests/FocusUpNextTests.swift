@@ -18,7 +18,7 @@ struct FocusUpNextTests {
     }
 
     private func departure(_ eventID: String, at start: Int, minutes: Int) -> TimelineRow {
-        .travel(TravelSegment(eventID: eventID, range: start..<(start + minutes), minutes: minutes, origin: .home, isTight: false))
+        .travel(TravelSegment(eventID: eventID, range: start..<(start + minutes), minutes: minutes, origin: .home))
     }
 
     private var timeline: [TimelineRow] {

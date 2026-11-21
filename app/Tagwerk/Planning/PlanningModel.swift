@@ -38,7 +38,7 @@ enum TimelineRow: Identifiable, Equatable {
         case .event(let event), .block(let event, _): event.id
         case .lunch: "lunch"
         case .gap(let range): "gap-\(range.lowerBound)"
-        case .travel(let segment): "travel-\(segment.eventID)"
+        case .travel(let segment): "travel-\(segment.id)"
         }
     }
 

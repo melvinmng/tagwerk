@@ -18,7 +18,7 @@ struct TravelOverrideView: View {
         self.event = event
         self.model = model
         let current = model.travelOverrideMode(for: event)
-        let shown = model.days.lazy.compactMap { $0.travel.first { $0.eventID == event.id } }.first
+        let shown = model.days.lazy.compactMap { $0.travel.first { $0.eventID == event.id && $0.direction == .toEvent } }.first
         switch current {
         case .automatic: _choice = State(initialValue: .automatic)
         case .none: _choice = State(initialValue: .none)
