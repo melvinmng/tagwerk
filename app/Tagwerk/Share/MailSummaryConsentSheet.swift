@@ -13,6 +13,7 @@ struct MailSummaryConsentSheet: View {
                     point("paperplane", "**Gesendet wird** der Betreff, der Name des Absenders und der Text der Mail, höchstens 12 000 Zeichen.")
                     point("eye.slash", "**Nicht gesendet werden** Anhänge, E-Mail-Adressen (auch im Text), Empfänger und der Link zur Mail.")
                     point("hand.tap", "**Nur auf dein Tippen:** Ohne „Mit ChatGPT zusammenfassen“ verlässt nichts das iPhone. Die Vorschläge übernimmst du erst, wenn du sie bestätigst.")
+                    ConsentFollowUpPoint()
                     Text("Wie OpenAI die gesendeten Daten behandelt, richtet sich nach den Einstellungen deines ChatGPT-Kontos.")
                         .font(.footnote).foregroundStyle(.secondary)
                     VStack(spacing: 10) {

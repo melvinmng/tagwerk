@@ -4658,6 +4658,16 @@
         }
       }
     },
+    "Anpassen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adjust"
+          }
+        }
+      }
+    },
     "Ansicht": {
       "localizations": {
         "en": {
@@ -5733,6 +5743,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Move to"
+          }
+        }
+      }
+    },
+    "Bezug entfernen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove scope"
           }
         }
       }
@@ -12062,6 +12082,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "no reminders"
+          }
+        }
+      }
+    },
+    "Keine Verbindung. Ändern von Hand geht weiter.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No connection. Editing by hand still works."
           }
         }
       }
@@ -18936,6 +18966,26 @@
         }
       }
     },
+    "von ChatGPT angepasst": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "adjusted by ChatGPT"
+          }
+        }
+      }
+    },
+    "von dir angepasst": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "adjusted by you"
+          }
+        }
+      }
+    },
     "Von Hand abhaken": {
       "localizations": {
         "en": {
@@ -19275,6 +19325,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Suggestion %1$lld of %2$lld · not applied yet"
+          }
+        }
+      }
+    },
+    "Vorschlag der KI: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AI proposal: %@"
           }
         }
       }
@@ -19705,6 +19765,16 @@
         }
       },
       "extractionState": "stale"
+    },
+    "Wenn du zu einem Vorschlag etwas zurückschreibst, sendet Tagwerk dieselben Angaben noch einmal, dazu den Vorschlag mit deinen Änderungen und deine Nachricht.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "If you write back about a suggestion, Tagwerk sends the same details again, plus the suggestion with your changes and your message."
+          }
+        }
+      }
     },
     "Werktags": {
       "localizations": {

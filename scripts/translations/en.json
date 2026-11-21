@@ -2313,5 +2313,12 @@
   "%lld eigene Erinnerungen": "%lld custom reminders",
   "1 eigene Erinnerung": "1 custom reminder",
   "keine Erinnerungen": "no reminders",
-  "Die Aufgabe ist angelegt. Die Erinnerungen kannst du im Editor setzen.": "The task was created. You can set the reminders in the editor."
+  "Die Aufgabe ist angelegt. Die Erinnerungen kannst du im Editor setzen.": "The task was created. You can set the reminders in the editor.",
+  "von dir angepasst": "adjusted by you",
+  "von ChatGPT angepasst": "adjusted by ChatGPT",
+  "Anpassen": "Adjust",
+  "Vorschlag der KI: %@": "AI proposal: %@",
+  "Keine Verbindung. Ändern von Hand geht weiter.": "No connection. Editing by hand still works.",
+  "Bezug entfernen": "Remove scope",
+  "Wenn du zu einem Vorschlag etwas zurückschreibst, sendet Tagwerk dieselben Angaben noch einmal, dazu den Vorschlag mit deinen Änderungen und deine Nachricht.": "If you write back about a suggestion, Tagwerk sends the same details again, plus the suggestion with your changes and your message."
 }

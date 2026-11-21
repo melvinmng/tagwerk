@@ -724,7 +724,7 @@ final class AssistantModel {
     struct ActionCard: Equatable {
         let title: String
         /// "Vorher → Nachher" or what will happen.
-        let change: String
+        var change: String
         /// Shown in red below `change`: what the action costs (a hand-over deletes blocks).
         var warning: String? = nil
         /// Replaces "Bestätigen" on the button ("Abgeben").
@@ -735,6 +735,12 @@ final class AssistantModel {
         var detail: NoteCardDetail? = nil
         /// Shown after the card was carried out, behind the time ("In „Zuletzt gelöscht“").
         var doneNote: String? = nil
+        /// Who last changed the open card; `nil` for a card as the model proposed it.
+        var mark: ProposalMark? = nil
+        /// What the model proposed, for a card the user adjusted: `change` of the original call (shown next to the new one).
+        var proposedChange: String? = nil
+        /// True for an open card with an editor: the card then offers "Anpassen" (AN1a).
+        var canAdjust = false
     }
 
     /// What a note card proposes, for the sheet "Änderung ansehen": the values only, the sentences are in `ActionCard`.
@@ -761,7 +767,45 @@ final class AssistantModel {
         describer.noteAccess = noteTools?.access ?? tools.noteAccess
         describer.noteDefaultFolderID = { [weak self] in self?.noteTools?.defaultFolderID }
         describer.isOpen = isOpen
-        return describer.describe(call, language: language, spoken: spoken)
+        var card = describer.describe(call, language: language, spoken: spoken)
+        guard isOpen else { return card }
+        card.canAdjust = canAdjust(call)
+        if let original = conversation?.originalArguments(of: call) {
+            card.mark = .byUser
+            let proposed = describer.describe(ToolCall(id: call.id, name: call.name, arguments: original), language: language, spoken: spoken)
+            card.proposedChange = proposed.change
+            // A card the user changed on screen and then confirms by voice says so.
+            if spoken { card.change += ". " + ProposalMark.byUser.label(in: language) }
+        }
+        return card
+    }
+
+    // MARK: Adjusting cards (plan ki-vorschlaege-anpassen, AN1a, AN2a, AN11a)
+
+    /// The functions whose cards have an editor and so offer "Anpassen". A function without one (complete, delete,
+    /// link, mark free) keeps two buttons. Strands B to E register their editors here.
+    static let adjustableToolNames: Set<String> = []
+
+    /// Replaceable so the tests and the strands can name the functions that have an editor.
+    var adjustableTools = AssistantModel.adjustableToolNames
+
+    /// True for an open card of a function with an editor.
+    func canAdjust(_ call: ToolCall) -> Bool {
+        adjustableTools.contains(call.name) && conversation?.pendingActions.contains { $0.id == call.id } == true
+    }
+
+    /// Writes the user's values into the open card. Nothing is sent, run or saved: the card stays a proposal and is
+    /// carried out only by "Bestätigen". The guards (`needsSingleConfirmation`) and the texts follow the new values.
+    @discardableResult
+    func adjust(_ call: ToolCall, arguments: Data) -> ToolCall? {
+        guard canAdjust(call) else { return nil }
+        return conversation?.adjust(call, arguments: arguments)
+    }
+
+    /// Puts the proposal of the model back; `nil` when the card was not adjusted.
+    @discardableResult
+    func resetAdjustment(_ call: ToolCall) -> ToolCall? {
+        conversation?.resetAdjustment(call)
     }
 }
 
