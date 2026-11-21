@@ -190,7 +190,7 @@ enum AuditAllowlist {
             + "grouped background of a form or list; the last footer of a settings page also lies behind the tab bar. Same group as the "
             + "grey texts above (`secondaryText`, 78 %): section headers, footers and values of forms and lists still report in at least one "
             + "repetition after strand K (168 findings before, 102 after, three repetitions each; the patterns that no longer report were struck). "
-            + "The same next step as above: the asset value is the open decision (plan K5, step 3).
+            + "The same next step as above: the asset value is the open decision (plan K5, step 3)."
             + " Patterns that no finding matched in either measurement stay: the evening runs of the measurement are incomplete (one of three failed "
             + "each time) and earlier runs reported them; only patterns that were reported in every repetition before and in none after were struck."),
         Entry(auditType: .contrast, labels: ["Milk", "Milch"], screens: ["Einkaufsliste › Übersetzung", "AX5/dark Einkaufsliste › Übersetzung"], reason:
@@ -205,7 +205,7 @@ enum AuditAllowlist {
             "auch: „Fokus beenden in Tagwerk“", "(?s)Erkennt Siri einen Satz nicht.*",
         ], screens: siriScreens, reason: "Section headers, footers and the effect line of each phrase on the page \"Siri & Kurzbefehle\", in the system grey "
             + "(`secondaryText`) on the grouped background. Same group as the grey texts above; 36 findings before, 13 after strand K (three repetitions "
-            + "each), the patterns that no longer report were struck. The asset value is the open decision (plan K5, step 3).
+            + "each), the patterns that no longer report were struck. The asset value is the open decision (plan K5, step 3)."
             + " Patterns that no finding matched in either measurement stay: the evening runs of the measurement are incomplete (one of three failed "
             + "each time) and earlier runs reported them; only patterns that were reported in every repetition before and in none after were struck."),
         Entry(auditType: .textClipped, labels: ["Tagwerk-Kurzbefehle"], screens: siriScreens, reason: "The `ShortcutsLink` is a system control; its "
