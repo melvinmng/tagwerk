@@ -163,25 +163,28 @@ final class CaptureModel {
     }
 
     enum SummaryTile: Hashable {
-        case water, protein, steps, training
+        case water, steps, training
     }
 
-    /// Tiles of the summary (ST1): water and protein in the first row, steps and the weekly training in the second.
-    /// When each row would hold a single tile, they share one row.
-    static func summaryRows(protein: Bool, steps: Bool, training: Bool) -> [[SummaryTile]] {
-        let first: [SummaryTile] = protein ? [.water, .protein] : [.water]
-        let second: [SummaryTile] = (steps ? [.steps] : []) + (training ? [.training] : [])
-        if second.isEmpty { return [first] }
-        if first.count == 1 && second.count == 1 { return [first + second] }
-        return [first, second]
+    /// Tiles of the summary (ST1): water, steps and the weekly training. Protein moved to the card "Nährwerte" (decision NU2b).
+    /// Water and steps share the first row; the training follows alone or, with room, on the same row.
+    static func summaryRows(steps: Bool, training: Bool) -> [[SummaryTile]] {
+        let tiles: [SummaryTile] = [.water] + (steps ? [.steps] : []) + (training ? [.training] : [])
+        // Up to two tiles per row, so a tile keeps enough width for its value at larger text sizes.
+        return stride(from: 0, to: tiles.count, by: 2).map { Array(tiles[$0..<min($0 + 2, tiles.count)]) }
     }
 
     var summaryRows: [[SummaryTile]] { summaryRows(steps: steps, plan: figures.plan) }
 
-    /// The tiles of a page: protein and training follow the goal plan that holds on that page's day.
+    /// The tiles of a page: the training tile follows the goal plan that holds on that page's day.
     func summaryRows(steps: Int?, plan: GoalPlan) -> [[SummaryTile]] {
-        Self.summaryRows(protein: plan.proteinGrams != nil, steps: stepsTile(for: steps) != .hidden,
-                         training: plan.workoutMinutesPerWeek > 0)
+        Self.summaryRows(steps: stepsTile(for: steps) != .hidden, training: plan.workoutMinutesPerWeek > 0)
+    }
+
+    /// The rows of the card "Nährwerte" for a page: the totals of the day (own and, when switched on, other apps' entries) against the
+    /// goal plan and the budget of that day.
+    func nutrientRows(for figures: DayFigures) -> [NutrientRow] {
+        NutrientCard.rows(totals: figures.totals, plan: figures.plan, budget: figures.budget, visible: settings.visibleNutrients)
     }
 
     // MARK: Loading

@@ -2439,5 +2439,18 @@
   "Ø %@ g an %@": "Avg. %1$@ g on %2$@",
   "Nur Kalorien sind nötig. Leere Felder sind unbekannt und werden nicht nach Health geschrieben.": "Only calories are required. Empty fields are unknown and are not written to Health.",
   "Weitere Nährwerte": "Further nutrients",
-  "Werte je Menge ×1. Eigene Werte gelten als genau und stehen ohne „~“. Ein leeres Feld ist unbekannt, nicht 0.": "Values per quantity ×1. Your own values count as exact and appear without “~”. An empty field is unknown, not 0."
+  "Werte je Menge ×1. Eigene Werte gelten als genau und stehen ohne „~“. Ein leeres Feld ist unbekannt, nicht 0.": "Values per quantity ×1. Your own values count as exact and appear without “~”. An empty field is unknown, not 0.",
+  "%@ / %lld g": "%1$@ / %2$lld g",
+  "%@ Gramm": "%@ grams",
+  "%@ von %lld Gramm": "%1$@ of %2$lld grams",
+  "%@ von höchstens %lld Gramm": "%1$@ of at most %2$lld grams",
+  "%lld Gramm": "%lld grams",
+  "%lld von %lld Gramm": "%1$lld of %2$lld grams",
+  "etwa %@": "about %@",
+  "keine Angabe": "no value",
+  "max. %@": "max. %@",
+  "mindestens %@": "at least %@",
+  "Aus Health · andere Apps": "From Health · other apps",
+  "Obergrenze überschritten": "Limit exceeded",
+  "Tagwerk liest dafür Ernährungseinträge aus Health, die nicht von Tagwerk stammen. iOS teilt Tagwerk nicht mit, ob du das Lesen erlaubt hast; ohne Erlaubnis sieht es so aus, als gäbe es keine fremden Einträge. Prüfen kannst du es in Health › Teilen › Apps › Tagwerk. Ein Strich heißt: kein Wert bekannt.": "For this, Tagwerk reads nutrition entries from Health that do not come from Tagwerk. iOS does not tell Tagwerk whether you allowed reading; without permission it looks as if there were no entries of other apps. You can check it in Health › Sharing › Apps › Tagwerk. A dash means that no value is known."
 }

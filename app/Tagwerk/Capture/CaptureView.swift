@@ -18,6 +18,7 @@ struct CaptureView: View {
         case newWorkout(activity: WorkoutActivity? = nil, minutes: Int? = nil)
         case workout(WorkoutValue)
         case activeBreakdown
+        case foreignIntake
 
         var id: String {
             switch self {
@@ -27,6 +28,7 @@ struct CaptureView: View {
             case .newWorkout(let activity, let minutes): "newWorkout-\(activity?.rawValue ?? "")-\(minutes ?? 0)"
             case .workout(let workout): "workout-\(workout.id)"
             case .activeBreakdown: "activeBreakdown"
+            case .foreignIntake: "foreignIntake"
             }
         }
     }
@@ -92,6 +94,8 @@ struct CaptureView: View {
                     WorkoutSheet(model: model, existing: nil, initialActivity: activity, initialMinutes: minutes)
                 case .workout(let workout): WorkoutSheet(model: model, existing: workout)
                 case .activeBreakdown: BudgetBreakdownSheet(model: model)
+                case .foreignIntake:
+                    if let foreign = model.current.figures.totals.foreign { ForeignIntakeSheet(foreign: foreign) }
                 }
             }
         }
@@ -130,6 +134,7 @@ struct CaptureView: View {
                                                      : "An diesem Tag ist nichts erfasst.")
                     }
                 }
+                Section { NutrientCardView(rows: model.nutrientRows(for: data.figures)) }
                 if model.showsHealthCard {
                     Section { HealthCard(model: model) }
                 }
@@ -210,18 +215,25 @@ struct CaptureView: View {
 
     @ViewBuilder
     private func mealSection(_ data: CaptureDay) -> some View {
-        if !data.meals.isEmpty {
+        let foreign = data.figures.totals.foreign
+        if !data.meals.isEmpty || foreign != nil {
             Section {
                 ForEach(data.meals) { meal in
                     Button { sheet = .meal(meal) } label: { MealRow(meal: meal, calendar: model.calendar) }
                         .tint(.primary)
                         .contextMenu { deleteButton(meal.id) }
                 }
+                // Entries of other apps: one row with the day total and the app names; it has no editor and no delete.
+                if let foreign {
+                    Button { sheet = .foreignIntake } label: { ForeignIntakeRow(foreign: foreign) }
+                        .tint(.primary)
+                }
             } header: {
                 HStack {
                     Text("Essen")
                     Spacer()
-                    Text(IntakeFormat.kcal(data.intake.kcal, estimated: data.intake.hasEstimate))
+                    // Everything the day counts as eaten, the entries of other apps included.
+                    Text(IntakeFormat.kcal(data.figures.totals.kcal, estimated: data.figures.totals.hasEstimate))
                 }
             }
         }
@@ -382,11 +394,6 @@ private struct DaySummary: View {
         case .water:
             metric("Wasser", "\(IntakeFormat.liters(totals.waterMilliliters)) / \(IntakeFormat.liters(plan.waterMilliliters))",
                    progress: Double(totals.waterMilliliters) / Double(max(1, plan.waterMilliliters)), tint: .cyan)
-        case .protein:
-            let goal = plan.proteinGrams ?? 0
-            metric("Eiweiß", "\(IntakeFormat.grams(totals.protein, estimated: totals.hasEstimate)) / \(goal) g"
-                .replacingOccurrences(of: " g /", with: " /"),
-                   progress: totals.protein / Double(max(1, goal)), tint: .pink)
         case .steps:
             stepsTile
         case .training:

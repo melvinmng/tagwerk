@@ -361,6 +361,16 @@
         }
       }
     },
+    "%@ g": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ g"
+          }
+        }
+      }
+    },
     "%@ h": {
       "localizations": {
         "en": {
@@ -5575,6 +5585,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Off"
+          }
+        }
+      }
+    },
+    "Aus Health · andere Apps": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "From Health · other apps"
           }
         }
       }
@@ -16030,6 +16050,16 @@
         }
       }
     },
+    "Obergrenze überschritten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Limit exceeded"
+          }
+        }
+      }
+    },
     "Offen": {
       "localizations": {
         "en": {
@@ -18671,6 +18701,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tagwerk creates planned time blocks as events in its own “Tagwerk” calendar. You also see them in the Calendar app."
+          }
+        }
+      }
+    },
+    "Tagwerk liest dafür Ernährungseinträge aus Health, die nicht von Tagwerk stammen. iOS teilt Tagwerk nicht mit, ob du das Lesen erlaubt hast; ohne Erlaubnis sieht es so aus, als gäbe es keine fremden Einträge. Prüfen kannst du es in Health › Teilen › Apps › Tagwerk. Ein Strich heißt: kein Wert bekannt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "For this, Tagwerk reads nutrition entries from Health that do not come from Tagwerk. iOS does not tell Tagwerk whether you allowed reading; without permission it looks as if there were no entries of other apps. You can check it in Health › Sharing › Apps › Tagwerk. A dash means that no value is known."
           }
         }
       }
