@@ -24,7 +24,7 @@ public struct FocusCatchUp: Sendable, Hashable {
     }
 }
 
-/// Rules of the Focus filter "Mitteilungen ruhen lassen". iOS tells the app only when a Focus filter starts and when it
+/// Rules of the Focus filter "Mitteilungen zurückhalten". iOS tells the app only when a Focus filter starts and when it
 /// ends, never when it will end. So the app keeps the start, holds notifications back to a known target, and after the
 /// end lets those that came due meanwhile fire once.
 public enum FocusQuiet {
@@ -52,7 +52,7 @@ public enum FocusQuiet {
         }
     }
 
-    /// The state after iOS ran the filter with "ruhen lassen" on (`active`) or off. An active filter that runs again
+    /// The state after iOS ran the filter with "zurückhalten" on (`active`) or off. An active filter that runs again
     /// keeps its start. The end hands the start over to the catch-up only while the fallback target has not passed:
     /// what was held has been delivered at the target otherwise, and what came due after it was never held, so a catch-up
     /// would deliver it a second time. A start that is too old is dropped without catch-up.

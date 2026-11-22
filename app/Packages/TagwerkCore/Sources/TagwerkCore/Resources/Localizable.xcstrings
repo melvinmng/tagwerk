@@ -799,22 +799,28 @@
         }
       }
     },
-    "Deadline war %@": {
+    "Deadline seit %@ abgelaufen": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Deadline was %@"
+            "value": "Deadline passed %@"
           }
         }
       }
     },
-    "Deadline war %@, ganztägig": {
+    "Deadline seit %@, %@ abgelaufen": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Deadline seit %1$@, %2$@ abgelaufen"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Deadline was %@, all day"
+            "value": "Deadline passed %1$@, %2$@"
           }
         }
       }
@@ -1649,6 +1655,38 @@
         }
       }
     },
+    "Seit %@ fällig · %@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Seit %1$@ fällig · %2$@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Due since %1$@ · %2$@"
+          }
+        }
+      }
+    },
+    "Seit %@, %@ fällig · %@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Seit %1$@, %2$@ fällig · %3$@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Due since %1$@, %2$@ · %3$@"
+          }
+        }
+      }
+    },
     "Snack": {
       "localizations": {
         "en": {
@@ -1755,22 +1793,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Hiking"
-          }
-        }
-      }
-    },
-    "War fällig %@ · %@": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "new",
-            "value": "War fällig %1$@ · %2$@"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Was due %1$@ · %2$@"
           }
         }
       }

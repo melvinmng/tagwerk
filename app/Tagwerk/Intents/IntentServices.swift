@@ -46,7 +46,7 @@ final class IntentServices {
         environment.router.open(.notesDictate)
     }
 
-    /// The Focus filter "Mitteilungen ruhen lassen" (plan quiet-hours, decision 5): iOS runs it when a Focus with the
+    /// The Focus filter "Mitteilungen zurückhalten" (plan quiet-hours, decision 5): iOS runs it when a Focus with the
     /// filter starts (`active`) and, with the default value, when it ends. Remembers the state and plans the
     /// notifications again; the plan holds them back while active and lets those that came due fire after the end.
     func setFocusQuiet(active: Bool, now: Date = .now) async {

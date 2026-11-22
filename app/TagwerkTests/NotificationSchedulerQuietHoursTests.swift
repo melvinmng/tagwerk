@@ -54,7 +54,7 @@ struct NotificationSchedulerQuietHoursTests {
         local.tasks = [task("A", day: 19, hour: 1)]
         await scheduler(now: testNow()).reschedule()
         #expect(center.pending["tagwerk.task.local:A#0"]?.fireDate == at(19, 7))
-        #expect(center.added.last?.body == "War fällig heute um 01:00 · local")
+        #expect(center.added.last?.body == "Seit heute, 01:00 fällig · local")
     }
 
     @Test func windowStartFollowsTheBedtime_whileCoupled() async {
@@ -150,7 +150,7 @@ struct NotificationSchedulerQuietHoursTests {
         let catchUpMoment = now.addingTimeInterval(60)
         #expect(center.pending["tagwerk.task.local:A#0"]?.fireDate == catchUpMoment)
         #expect(center.pending["tagwerk.task.local:B#0"] == nil)  // came due before the Focus started
-        #expect(center.added.last?.body == "War fällig heute um 13:00 · local")
+        #expect(center.added.last?.body == "Seit heute, 13:00 fällig · local")
 
         // A second run before the moment plans the same one; after it, nothing is planned again.
         await scheduler(now: now.addingTimeInterval(30)).reschedule()

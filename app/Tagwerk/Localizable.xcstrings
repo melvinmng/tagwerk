@@ -5221,6 +5221,16 @@
         }
       }
     },
+    "Aufgaben und Deadlines zurückhalten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hold tasks and deadlines"
+          }
+        }
+      }
+    },
     "Aufgaben werden geladen …": {
       "localizations": {
         "en": {
@@ -11443,16 +11453,6 @@
         }
       }
     },
-    "Hält Mitteilungen zu Aufgaben und Deadline-Terminen zurück, solange der Fokus aktiv ist. Sie kommen nach den Ruhezeiten oder nach dem Fokus.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Holds back notifications for tasks and deadline events while the Focus is active. They arrive after quiet hours or after the Focus."
-          }
-        }
-      }
-    },
     "Häufigkeit": {
       "localizations": {
         "en": {
@@ -12071,6 +12071,46 @@
           "stringUnit": {
             "state": "translated",
             "value": "Interval"
+          }
+        }
+      }
+    },
+    "Mitteilungen nach dem Fokus": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notifications after the Focus"
+          }
+        }
+      }
+    },
+    "Mitteilungen zurückhalten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hold Notifications"
+          }
+        }
+      }
+    },
+    "Tagwerk meldet sich nach dem Fokus, spätestens nach 4 Stunden. Nichts entfällt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tagwerk notifies you after the Focus, after 4 hours at the latest. Nothing is dropped."
+          }
+        }
+      }
+    },
+    "Zusätzlich kannst du in den iOS-Einstellungen unter Fokus einen Fokus-Filter für Tagwerk hinzufügen und „Aufgaben und Deadlines zurückhalten“ wählen. Solange dieser Fokus aktiv ist, hält Tagwerk die Mitteilungen zurück, bis der Fokus endet, spätestens nach 4 Stunden. Danach kommen Mitteilungen, die inzwischen fällig wurden.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In the iOS settings under Focus, you can also add a Focus filter for Tagwerk and choose “Hold tasks and deadlines”. While that Focus is active, Tagwerk holds notifications back until the Focus ends, after 4 hours at the latest. Afterwards, notifications that came due in the meantime arrive."
           }
         }
       }
@@ -14181,26 +14221,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Notifications in Settings"
-          }
-        }
-      }
-    },
-    "Mitteilungen ruhen": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Notifications paused"
-          }
-        }
-      }
-    },
-    "Mitteilungen ruhen lassen": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Pause notifications"
           }
         }
       }
@@ -18282,16 +18302,6 @@
         }
       }
     },
-    "Tagwerk-Mitteilungen ruhen lassen": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Pause Tagwerk notifications"
-          }
-        }
-      }
-    },
     "Tastatur ausblenden": {
       "localizations": {
         "en": {
@@ -21134,16 +21144,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Merged at your request; the copy with the most details is shown."
-          }
-        }
-      }
-    },
-    "Zusätzlich kannst du in den iOS-Einstellungen unter Fokus einen Fokus-Filter für Tagwerk hinzufügen und „Mitteilungen ruhen lassen“ wählen. Solange dieser Fokus aktiv ist, hält Tagwerk die Mitteilungen bis zum Ende der Ruhezeit zurück, ohne Ruhezeit für höchstens 8 Stunden. Nach dem Fokus kommen Mitteilungen, die inzwischen fällig wurden.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "In the iOS settings under Focus, you can also add a Focus filter for Tagwerk and choose “Pause notifications”. While that Focus is active, Tagwerk holds notifications back until the end of quiet hours, or for 8 hours at most without quiet hours. After the Focus, notifications that came due in the meantime arrive."
           }
         }
       }

@@ -33,7 +33,7 @@ struct QuietHoursSettingsView: View {
             }
 
             Section {
-                Text("Zusätzlich kannst du in den iOS-Einstellungen unter Fokus einen Fokus-Filter für Tagwerk hinzufügen und „Mitteilungen ruhen lassen“ wählen. Solange dieser Fokus aktiv ist, hält Tagwerk die Mitteilungen bis zum Ende der Ruhezeit zurück, ohne Ruhezeit für höchstens 8 Stunden. Nach dem Fokus kommen Mitteilungen, die inzwischen fällig wurden.")
+                Text("Zusätzlich kannst du in den iOS-Einstellungen unter Fokus einen Fokus-Filter für Tagwerk hinzufügen und „Aufgaben und Deadlines zurückhalten“ wählen. Solange dieser Fokus aktiv ist, hält Tagwerk die Mitteilungen zurück, bis der Fokus endet, spätestens nach 4 Stunden. Danach kommen Mitteilungen, die inzwischen fällig wurden.")
                     .font(.footnote)
                     .foregroundStyle(.secondary)
             } header: {

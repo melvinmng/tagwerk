@@ -2347,5 +2347,14 @@
   "Senden gibt die offenen Vorschläge mit deinen Änderungen an ChatGPT; es legt sie überarbeitet neu vor.": "Sending gives the open proposals with your changes to ChatGPT; it proposes them again, revised.",
   "Zu allen %lld Vorschlägen": "About all %lld proposals",
   "Zum offenen Vorschlag": "About the open proposal",
-  "Überarbeitet": "Revised"
+  "Überarbeitet": "Revised",
+  "Seit %@, %@ fällig · %@": "Due since %1$@, %2$@ · %3$@",
+  "Seit %@ fällig · %@": "Due since %1$@ · %2$@",
+  "Deadline seit %@, %@ abgelaufen": "Deadline passed %1$@, %2$@",
+  "Deadline seit %@ abgelaufen": "Deadline passed %@",
+  "Mitteilungen zurückhalten": "Hold Notifications",
+  "Aufgaben und Deadlines zurückhalten": "Hold tasks and deadlines",
+  "Tagwerk meldet sich nach dem Fokus, spätestens nach 4 Stunden. Nichts entfällt.": "Tagwerk notifies you after the Focus, after 4 hours at the latest. Nothing is dropped.",
+  "Mitteilungen nach dem Fokus": "Notifications after the Focus",
+  "Zusätzlich kannst du in den iOS-Einstellungen unter Fokus einen Fokus-Filter für Tagwerk hinzufügen und „Aufgaben und Deadlines zurückhalten“ wählen. Solange dieser Fokus aktiv ist, hält Tagwerk die Mitteilungen zurück, bis der Fokus endet, spätestens nach 4 Stunden. Danach kommen Mitteilungen, die inzwischen fällig wurden.": "In the iOS settings under Focus, you can also add a Focus filter for Tagwerk and choose “Hold tasks and deadlines”. While that Focus is active, Tagwerk holds notifications back until the Focus ends, after 4 hours at the latest. Afterwards, notifications that came due in the meantime arrive."
 }
