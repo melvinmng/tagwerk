@@ -89,4 +89,25 @@ final class NoteEditorUITests: UITestCase {
         XCTAssertTrue(app.buttons["Fertig"].waitForExistence(timeout: Self.timeout), "The menu entry did not start writing")
         XCTAssertEqual(editorText, Self.demoText, "The text field shows another text")
     }
+
+    func testCheckboxButtonInsertsCheckbox() {
+        openDemoNote()
+        let second = pageText("Gliederung überarbeiten")
+        XCTAssertTrue(second.waitForExistence(timeout: 3 * Self.timeout))
+        second.tap()
+        // The bar above the keyboard turns the line of the cursor into a checkbox line.
+        let checkbox = app.buttons["Checkbox"]
+        XCTAssertTrue(checkbox.waitForExistence(timeout: Self.timeout), "The formatting bar did not show")
+        XCTAssertTrue(app.buttons["Überschrift"].exists && app.buttons["Fettschrift"].exists && app.buttons["Kursiv"].exists && app.buttons["Liste"].exists)
+        checkbox.tap()
+        let expected = "Ideen Hausarbeit\n- [ ] Gliederung überarbeiten\nZwei weitere Quellen suchen"
+        eventually("The line is not a checkbox line: \(editorText ?? "nil")") { editorText == expected }
+        // The keyboard stays open for the next action.
+        XCTAssertTrue(app.keyboards.firstMatch.exists, "A tap on the bar closed the keyboard")
+        app.buttons["Fettschrift"].tap()
+        eventually("Bold did not insert its markers: \(editorText ?? "nil")") { editorText == "Ideen Hausarbeit\n- [ ] Gliederung überarbeiten****\nZwei weitere Quellen suchen" }
+        app.buttons["Tastatur ausblenden"].tap()
+        eventually("The keyboard did not close") { !self.app.keyboards.firstMatch.exists }
+        XCTAssertTrue(app.buttons["Fertig"].exists, "Hiding the keyboard left the writing mode")
+    }
 }

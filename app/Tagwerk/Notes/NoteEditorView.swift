@@ -53,6 +53,12 @@ struct NoteEditorView: View {
         content
             .navigationTitle(title(of: note))
             .navigationBarTitleDisplayMode(.inline)
+            .safeAreaInset(edge: .bottom, spacing: 0) {
+                if mode == .edit, isTextFocused {
+                    NoteFormattingBar(onFormat: applyFormatting, onHideKeyboard: { isTextFocused = false },
+                                      attachments: store.attachments != nil ? AnyView(attachMenu) : nil)
+                }
+            }
             .toolbar {
                 if Self.usesTapToEdit {
                     // The page shows; a tap on its text writes. "Fertig" is the way back.
@@ -71,9 +77,9 @@ struct NoteEditorView: View {
                         .accessibilityLabel(mode == .edit ? "Ansicht" : "Bearbeiten")
                     }
                 }
-                if store.attachments != nil {
-                    if mode == .edit || !Self.usesTapToEdit { ToolbarItem(placement: .topBarTrailing) { attachMenu } }
-                    ToolbarItemGroup(placement: .keyboard) { attachMenu }
+                // The bar above the keyboard has its own attachment menu; this one stays for the writing page without a keyboard.
+                if store.attachments != nil, mode == .edit || !Self.usesTapToEdit {
+                    ToolbarItem(placement: .topBarTrailing) { attachMenu }
                 }
                 ToolbarItem(placement: .topBarTrailing) { moreMenu(note) }
             }
@@ -154,7 +160,7 @@ struct NoteEditorView: View {
                 gratitudeHeader
                 TextEditor(text: $text, selection: $selection)
                     .focused($isTextFocused)
-                    .keyboardDoneButton()
+                    .submitLabel(.return)
                     .padding(.horizontal, 12)
             }
         case .view:
@@ -235,6 +241,21 @@ struct NoteEditorView: View {
         mode = .edit
         // The text field exists only after this update; focusing it then brings up the keyboard at the cursor.
         Task { @MainActor in isTextFocused = true }
+    }
+
+    /// A button of the formatting bar: changes the text and the selection and saves like any other write of this page, so
+    /// the stored text is the one this page wrote itself and no "adopt" follows (`NoteEditorSync`).
+    func applyFormatting(_ action: MarkdownFormatting.Action) {
+        let offsets: Range<Int> = switch selection?.indices {
+        case .selection(let range)?: text.distance(from: text.startIndex, to: range.lowerBound) ..< text.distance(from: text.startIndex, to: range.upperBound)
+        default: text.count ..< text.count
+        }
+        let edit = MarkdownFormatting.apply(action, to: text, selection: offsets)
+        text = edit.text
+        let lower = edit.text.index(edit.text.startIndex, offsetBy: edit.selection.lowerBound)
+        let upper = edit.text.index(edit.text.startIndex, offsetBy: edit.selection.upperBound)
+        selection = lower == upper ? TextSelection(insertionPoint: lower) : TextSelection(range: lower ..< upper)
+        saveText()
     }
 
     /// "Fertig": saves at once, so the list and the page never show an older text, and shows the page.

@@ -6173,6 +6173,16 @@
         }
       }
     },
+    "Checkbox": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Checkbox"
+          }
+        }
+      }
+    },
     "Checkliste %lld von %lld": {
       "localizations": {
         "de": {
@@ -9541,6 +9551,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Fat"
+          }
+        }
+      }
+    },
+    "Fettschrift": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bold"
           }
         }
       }
@@ -13015,6 +13035,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Strength training"
+          }
+        }
+      }
+    },
+    "Kursiv": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Italic"
           }
         }
       }
@@ -22983,6 +23013,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Overlaps with “%1$@” (%2$@, %3$@). The workout would be counted twice."
+          }
+        }
+      }
+    },
+    "Überschrift": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Heading"
           }
         }
       }
