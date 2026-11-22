@@ -11,6 +11,14 @@ struct LeftoverSheet: View {
         var late: Int
         var unplaced: Int
         var moves: [PlanningModel.DayMove]
+        /// Tasks that found no free place, with what the result list of the wrap-up needs to name them (RO11b).
+        var unplacedTasks: [Unplaced] = []
+
+        struct Unplaced: Equatable, Identifiable {
+            let id: TaskID
+            let title: String
+            let due: PlanDay?
+        }
     }
 
     let planning: PlanningModel
@@ -20,6 +28,8 @@ struct LeftoverSheet: View {
     @State private var isDeciding = false
     @State private var isWorking = false
     @State private var pickingDateFor: DateTarget?
+    /// What the next planning day has free, for the preview of "Alles auf …" (RO9c); `nil` until it is read.
+    @State private var targetFit: LeftoverPreview.Fit?
 
     /// The task a date is picked for.
     struct DateTarget: Identifiable {
@@ -28,7 +38,7 @@ struct LeftoverSheet: View {
     }
 
     /// The tasks left from today; a snapshot of the model, which refreshes after every change.
-    private var tasks: [TaskItem] { planning.leftFromToday }
+    private var tasks: [TaskItem] { planning.openFromToday }
 
     var body: some View {
         NavigationStack {
@@ -58,6 +68,7 @@ struct LeftoverSheet: View {
                 }
             }
             .disabled(isWorking)
+            .task(id: planning.nextPlanDay) { await loadTargetFit() }
             .onChange(of: tasks.isEmpty) { _, isEmpty in if isEmpty && isDeciding { dismiss() } }
         }
     }
@@ -70,7 +81,9 @@ struct LeftoverSheet: View {
             Button { Task { await moveAll() } } label: {
                 optionLabel(title: next.map { LeftoverSheetText.moveAllTitle(day: $0, today: planning.today, calendar: planning.calendar) }
                                 ?? String(localized: "Alles auf den nächsten Arbeitstag"),
-                            subtitle: nil, symbol: "arrow.right.circle")
+                            subtitle: next.flatMap { day in
+                                targetFit.flatMap { LeftoverSheetText.moveAllSubtitle(fit: $0, day: day, today: planning.today, calendar: planning.calendar) }
+                            }, symbol: "arrow.right.circle")
             }
             .disabled(next == nil)
             Button { Task { await placeAll() } } label: {
@@ -79,10 +92,11 @@ struct LeftoverSheet: View {
                             symbol: "calendar.badge.clock")
             }
             Button { isDeciding = true } label: {
-                optionLabel(title: String(localized: "Einzeln entscheiden"), subtitle: nil, symbol: "list.bullet")
+                optionLabel(title: String(localized: "Einzeln entscheiden"), subtitle: LeftoverSheetText.taskList(tasks.map(\.title)),
+                            symbol: "list.bullet")
             }
         } header: {
-            Text(LeftoverSheetText.countLabel(tasks.count))
+            Text(LeftoverSheetText.header(count: tasks.count, minutes: neededMinutes))
         } footer: {
             if next == nil {
                 Text("In den nächsten fünf Tagen ist kein Arbeitstag. Wähle ein Datum unter „Einzeln entscheiden“.")
@@ -126,8 +140,21 @@ struct LeftoverSheet: View {
                 }
             }
         } header: {
-            Text(LeftoverSheetText.countLabel(tasks.count))
+            Text(LeftoverSheetText.header(count: tasks.count, minutes: neededMinutes))
         }
+    }
+
+    // MARK: Preview
+
+    /// The estimated minutes of the tasks; a task without an estimate counts with the default duration (RO9c).
+    private var neededMinutes: Int {
+        tasks.reduce(0) { $0 + ($1.estimateMinutes ?? planning.defaultTaskMinutes) }
+    }
+
+    private func loadTargetFit() async {
+        guard let next = planning.nextPlanDay else { targetFit = nil; return }
+        let capacity = await planning.leftoverTargetCapacity(on: next)
+        targetFit = LeftoverPreview.fit(neededMinutes: neededMinutes, freeMinutes: capacity.freeMinutes, isDayOff: capacity.isDayOff)
     }
 
     // MARK: Actions
@@ -142,9 +169,14 @@ struct LeftoverSheet: View {
 
     private func placeAll() async {
         let ids = tasks.map(\.id)
+        let named = Dictionary(tasks.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
         isWorking = true
         let outcome = await planning.placeInFreeBlocks(ids)
-        finish(Report(moved: outcome.placed, late: outcome.late, unplaced: outcome.unplaced, moves: planning.lastMoveGroup ?? []))
+        let unplaced = outcome.unplacedTaskIDs.compactMap { id in
+            named[id].map { Report.Unplaced(id: id, title: $0.title, due: $0.due.map { PlanDay($0) }) }
+        }
+        finish(Report(moved: outcome.placed, late: outcome.late, unplaced: outcome.unplaced, moves: planning.lastMoveGroup ?? [],
+                      unplacedTasks: unplaced))
     }
 
     /// One task from the list: the list shrinks, the sheet stays; the last one closes it.
@@ -188,6 +220,37 @@ enum LeftoverSheetText {
     /// "1 Aufgabe" / "3 Aufgaben".
     static func countLabel(_ count: Int) -> String {
         count == 1 ? String(localized: "1 Aufgabe") : String(localized: "\(count) Aufgaben")
+    }
+
+    /// "3 Aufgaben · 2 h 30": the count and the sum of the estimates, the heading of the sheet (RO9c).
+    static func header(count: Int, minutes: Int) -> String {
+        countLabel(count) + " · " + CapacityText.duration(minutes)
+    }
+
+    /// "Samstag hat 4 h frei · passt", "Samstag: knapp, 1 h 30 frei, 2 h 30 nötig", "Samstag ist kein Arbeitstag"; `nil` while
+    /// the capacity of the day is not known.
+    static func moveAllSubtitle(fit: LeftoverPreview.Fit, day: PlanDay, today: PlanDay, calendar: Calendar) -> String? {
+        let name = singleMoveTitle(day: day, today: today, calendar: calendar)
+        switch fit {
+        case .fits(let free): return String(localized: "\(name) hat \(CapacityText.duration(free)) frei · passt")
+        case .tight(let free, let needed):
+            return String(localized: "\(name): knapp, \(CapacityText.duration(free)) frei, \(CapacityText.duration(needed)) nötig")
+        case .dayOff: return String(localized: "\(name) ist kein Arbeitstag")
+        case .unknown: return nil
+        }
+    }
+
+    /// "Exposé Kapitel 2 · Mail an Vermieter · Wäsche"; after three titles "… und 2 weitere".
+    static func taskList(_ titles: [String]) -> String {
+        let shown = titles.prefix(3).joined(separator: " · ")
+        let rest = titles.count - 3
+        return rest > 0 ? String(localized: "\(shown) und \(rest) weitere") : shown
+    }
+
+    /// "Kein freier Platz vor der Fälligkeit (Mo.)", without a due date "Kein freier Platz in den nächsten Tagen".
+    static func unplacedReason(due: PlanDay?, calendar: Calendar) -> String {
+        guard let due else { return String(localized: "Kein freier Platz in den nächsten Tagen") }
+        return String(localized: "Kein freier Platz vor der Fälligkeit (\(DateText.shortWeekday(due, calendar: calendar)))")
     }
 
     /// "Unerledigtes verschieben · 3 Aufgaben", the row in the capacity card and in the wrap-up.

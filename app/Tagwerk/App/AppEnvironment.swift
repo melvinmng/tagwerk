@@ -842,6 +842,11 @@ final class AppEnvironment {
         guard routineUpdates == nil else { return }
         // An untouched three-point list of an earlier version is replaced before the first reminders are planned.
         routineStore.replaceLegacySuggestion()
+        // Once per installation: "Helle Lichter ausmachen" of an untouched five-point list reminds 60 minutes before bedtime.
+        if !settings.lightsOffsetUpgradeDone {
+            settings.lightsOffsetUpgradeDone = true
+            routineStore.upgradeLightsOffset()
+        }
         let changes = Observations { @MainActor [weak self] () -> Int in
             guard let self else { return 0 }
             var hasher = Hasher()

@@ -41,6 +41,11 @@ extension NoteStore {
         sessions().filter { $0.noteID == noteID && $0.completedAt == nil }.max { $0.startedAt < $1.startedAt }
     }
 
+    /// The latest session, open or completed.
+    var lastSession: BibleStudySessionRecord? {
+        sessions().max { $0.startedAt < $1.startedAt }
+    }
+
     /// The book of the latest session, to suggest it for the next one.
     var lastBookKey: String? {
         sessions().max { $0.startedAt < $1.startedAt }?.book

@@ -48,7 +48,7 @@ enum AuditAllowlist {
             "zuletzt: „(Römer|Demo Linsensuppe)“ · heute \\d+:\\d+", "HEUTE · KW \\d+", "\\d\\d:00", "Überfällig", "Heute", "·", "Lokal",
             "Brot & Backwaren", "Kühlregal", "Aufgaben, 1 offen", "Vergangene Termine", "Durchsucht: 6 Monate zurück, 12 Monate voraus\\.",
             "1 Aufgabe ohne Aufwand mit Standarddauer gerechnet", "Pflanzen gießen", "Erledigt: Erinnerungen.*", "Abend-Checkliste · Schlafzeit .*",
-            "Trinkportionen", "Brain Dump", "Der Eintrag bleibt auf deinem iPhone und geht nie an ChatGPT\\.", "heute \\d+:\\d+( · diktiert)?",
+            "Trinkportionen", "Brain Dump", "(Beides bleibt|Bleibt) auf deinem iPhone und geht nie an ChatGPT\\.", "heute \\d+:\\d+( · diktiert)?",
             // Section headers of the notes overview and the date groups of the notes list (NF1, NF3), in the tone `secondaryText` like the others.
             "Meine Ordner", "Persönlich", "Angeheftet", "Letzte 7 Tage",
             "(Januar|Februar|März|April|Mai|Juni|Juli|August|September|Oktober|November|Dezember) \\d{4}",
