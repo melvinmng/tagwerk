@@ -106,7 +106,7 @@ Festlegungen der Hauptsitzung zum G3-Plan: offene Fragen nach Empfehlung; Zeilen
 | (Integration) | #273 `1d1165d`, #275 `826b4f7`, #276 `2229707` auf main + Texttöne, gepusht; **#278 gemergt** („+4 weitere“ primär, Render-Test ≥ 7:1; CI-Befund verschwunden). Sonntags-DT: keine Ursache im Code, Allowlist-Eintrag bleibt (Positionsartefakt vermutet) | warte auf GitHub |
 | `feat/g2-shopping-recipe` | G2 Strang EK (EK1–EK3) | PR #280, Head `6dd28fa`; Reparatur `8861e0d` gepusht: Test fand Menüeintrag über ID statt Label; DT-Befunde Rezept waren doch von EK (leerer Footer entfernt, End-Buttons in Allowlist); main eingearbeitet; lokal ShoppingUITests + Rezept-Audits grün. UX-Frage: Menge über Mengen-Knopf und über Werte-Blatt doppelt |
 | (Kette) | #276, #273, #275 | **gemergt** (`main` = `0f0fce1`); CI schnell grün, UI nur wiederkehrende DT-/Tippflächen-Befunde |
-| `feat/g2-notion-import` | G2 Strang TB (Notion-Import) | PR #282, Head `455c3e0` (main `0f0fce1` eingearbeitet), schnell grün, gepusht → GitHub |
+| `feat/g2-notion-import` | G2 Strang TB (Notion-Import) | PR #282, Head `455c3e0`; CI schnell grün, UI: eigener Test `NotesUITests.testEmptyJournalFolderOffersImport` rot („Ordner des Tagebuchs fehlt“, vermutlich NF-Abschnitte) → Reparatur zusammen mit #283 |
 | `feat/g2-note-lock` | G2 Strang NS (Notizen sperren) | PR #284, Head `4eea8ff`; schnell grün, UI kompiliert → GitHub. Offen: Tagesstart/-abschluss zeigen Text gesperrter Notizen (an RO) |
 | (G2 NX) | G2 Welle 2, Strang NX (Scannen, Zeichnen, Tabellen) | läuft (Sonnet) |
 | (G2 RO) | G2 Welle 2, Strang RO (Routinen) inkl. Sperre in Tagesstart/-abschluss und DT-Ursache im Tagesabschluss | läuft (Sonnet) |
