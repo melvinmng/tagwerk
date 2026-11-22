@@ -104,7 +104,9 @@ final class RoutineUITests: UITestCase {
         onScreen(label: "Wochenrückblick, Woche.*", matching: true).tap()
         let question = app.staticTexts["Was lief gut?"].firstMatch
         scrollTo(question)
-        let field = app.textFields["Was lief gut?"].firstMatch
+        // A multi-line field shows up as a text view or as a text field, depending on the system version.
+        let asField = app.textFields["Was lief gut?"].firstMatch
+        let field = asField.waitForExistence(timeout: 2) ? asField : app.textViews["Was lief gut?"].firstMatch
         XCTAssertTrue(field.waitForExistence(timeout: Self.timeout), "The field of the first question is missing")
         field.tap()
         field.typeText("Kapitel 2 fertig")
